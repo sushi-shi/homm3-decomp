@@ -1,0 +1,32 @@
+--- a/ImmMouse.h
++++ b/ImmMouse.h
+@@ -106,8 +106,7 @@
+ 	Initialize(
+ 		HANDLE hinstApp,
+ 		HANDLE hwndApp,
+-		DWORD dwCooperativeFlag = IMM_COOPLEVEL_FOREGROUND,
+-		BOOL bEnumerate = TRUE
++		DWORD dwCooperativeFlag = IMM_COOPLEVEL_FOREGROUND
+ 		);
+ 
+ 	virtual BOOL 
+--- a/ImmEnclosure.h
++++ b/ImmEnclosure.h
+@@ -238,12 +238,14 @@
+ 		DWORD dwNoDownload = 0
+         );
+ 
++	BOOL
++	SetRect(
++		LPCRECT pRectOutside
++		);
+ 
+     virtual BOOL 
+ 	Start(
+-        DWORD dwIterations = 1,
+-        DWORD dwFlags = 0, 
+-		BOOL bAllowStartDelayEmulation = true
++		DWORD dwIterations = 1
+ 		);
+ 
+ 	virtual BOOL
