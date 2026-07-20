@@ -1,0 +1,13 @@
+--- a/bink.h
++++ b/bink.h
+@@ -1,8 +1,8 @@
+ #ifndef BINKH
+ #define BINKH
+ 
+-#define BINKVERSION "1.0a"
+-#define BINKDATE    "1999-12-05"
++#define BINKVERSION "0.5a"
++#define BINKDATE    "1999-01-20"
+ 
+ #ifndef __RADRES__
+ 

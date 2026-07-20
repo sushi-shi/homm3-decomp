@@ -1,0 +1,11 @@
+--- a/SMACK.H
++++ b/SMACK.H
+@@ -1,7 +1,7 @@
+ #ifndef SMACKH
+ #define SMACKH
+ 
+-#define SMACKVERSION "3.2f"
++#define SMACKVERSION "3.2h"
+ 
+ #ifndef __RADRES__
+ 
