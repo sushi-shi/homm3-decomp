@@ -85,6 +85,13 @@
         '';
       };
 
+      homm3-cli = pkgs.writeShellScriptBin "homm3" ''
+        project_dir="''${HOMM3_DIR:-$PWD}"
+        export PYTHONDONTWRITEBYTECODE=1
+        export PYTHONPATH="$project_dir/scripts''${PYTHONPATH:+:$PYTHONPATH}"
+        exec python3 -m homm3 "$@"
+      '';
+
       analysisPython = pkgs.python3.withPackages (ps: [
         ps.pyghidra
         ps.libclang
@@ -110,6 +117,7 @@
       '';
 
       commonTools = [
+        homm3-cli
         rust
         vostok-delinker
         objdiff
@@ -132,6 +140,8 @@
       commonShellHook = ''
         export HOMM3_DIR="$PWD"
         export HOMM3_CLANG="${pkgs.llvmPackages.clang-unwrapped}/bin/clang"
+        export PYTHONDONTWRITEBYTECODE=1
+        export PYTHONPATH="$HOMM3_DIR/scripts''${PYTHONPATH:+:$PYTHONPATH}"
         ${ghidraEnvHook}
         ${objdiffShimHook}
       '';
@@ -152,7 +162,7 @@
           name = "homm3-build";
           packages = commonTools ++ [ pkgs.wineWow64Packages.staging ];
           shellHook = commonShellHook + ''
-            export HOMM3_TOOLCHAIN="''${HOMM3_TOOLCHAIN:-$HOMM3_DIR/build/toolchain}"
+            export HOMM3_TOOLCHAIN="''${HOMM3_TOOLCHAIN:-$HOMM3_DIR/build/homm3-toolchain-vc6-sp3}"
             export MSVC_DIR="$HOMM3_TOOLCHAIN/msvc"
             export WINEPREFIX="$HOMM3_DIR/build/wineprefix"
             export WINEDEBUG="fixme-all,err-kerberos"

@@ -1,0 +1,88 @@
+# Translation units currently admitted to the matching build.
+
+[build]
+compiler = "msvc6.0"
+platform = "win32"
+
+[flags]
+zlib_o2_ml_gr_c_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/ML",
+  "/Gr",
+  "/TC",
+  "/D_WINDOWS",
+]
+
+# Verbatim zlib 1.1.3 release sources. This is the only component in the build
+# until another translation unit and its compiler profile are reviewed.
+[[unit]]
+unit = "adler32"
+source = "vendor/zlib-1.1.3/adler32.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "compress"
+source = "vendor/zlib-1.1.3/compress.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "crc32"
+source = "vendor/zlib-1.1.3/crc32.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "deflate"
+source = "vendor/zlib-1.1.3/deflate.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "gzio"
+source = "vendor/zlib-1.1.3/gzio.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "infblock"
+source = "vendor/zlib-1.1.3/infblock.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "infcodes"
+source = "vendor/zlib-1.1.3/infcodes.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "inffast"
+source = "vendor/zlib-1.1.3/inffast.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "inflate"
+source = "vendor/zlib-1.1.3/inflate.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "inftrees"
+source = "vendor/zlib-1.1.3/inftrees.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "infutil"
+source = "vendor/zlib-1.1.3/infutil.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "trees"
+source = "vendor/zlib-1.1.3/trees.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "uncompr"
+source = "vendor/zlib-1.1.3/uncompr.c"
+flags = "zlib_o2_ml_gr_c_windows"
+
+[[unit]]
+unit = "zutil"
+source = "vendor/zlib-1.1.3/zutil.c"
+flags = "zlib_o2_ml_gr_c_windows"
