@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
-"""cc_wrap.py - the `wine cl` compiler wrapper ninja's `cl` rule invokes.
+"""homm3.core.cc_wrap - the `wine cl` compiler wrapper.
+
+Shared toolchain engine: ninja's `cl` rule invokes it as a module
+(homm3.build.configure emits the rule), `homm3 init` smoke-tests through it,
+and homm3.build.link imports its helpers (msvc_dir, winepath_w, ...).
 
 ninja drives the base/recompile side natively on Linux; the compiler is VC6 SP3
 CL.EXE under Wine. This wrapper translates paths, sets the pinned MSVC include
 root, runs `wine cl <flags> /Fo<obj.w> <src.w>`, and exits
 non-zero if the .obj wasn't produced (wine noise can mask cl's real exit).
 
+The Wine prefix stays STATELESS: INCLUDE is passed per invocation and cl.exe is
+invoked by absolute path, so no registry PATH/INCLUDE/LIB setup exists to go
+stale (a deliberate divergence from the Gruntz template's init-time registry
+writes; homm3.build.link passes libraries per invocation the same way).
+
 Toolchain + prefix come from `nix develop .#build` (MSVC_DIR, WINEPREFIX).
-Usage (emitted into build.ninja by configure.py):
-    cc_wrap.py --out <obj> --src <src> -- <cl flags...>
+Usage (emitted into build.ninja by homm3.build.configure):
+    python3 -m homm3.core.cc_wrap --out <obj> --src <src> -- <cl flags...>
 """
 import argparse, os, re, shutil, signal, subprocess, sys, tempfile
 from pathlib import Path
