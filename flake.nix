@@ -8,7 +8,7 @@
       inputs.nixpkgs.follows = "nixpkgs";
     };
     vostok-delinker-src = {
-      url = "github:srp-survarium/vostok-delinker/81d34b204a0384a92cf3b4c641a8430256b2922e";
+      url = "github:srp-survarium/vostok-delinker/1393e24b4804cb357fdac147c68013f0aa5a9d95";
       flake = false;
     };
     objdiff-src = {
@@ -37,7 +37,7 @@
         pname = "vostok-delinker";
         version = "0.1.0";
         src = vostok-delinker-src;
-        cargoHash = "sha256-ry3TH1fz7Aj/JdbmlgQFFn29m8E7EQHyGaVXnZTEcXo=";
+        cargoHash = "sha256-ZwFdbqUyh4b0S+fUYKGMN1fWaxRu1zU2ozKpe7CbcYs=";
       };
 
       objdiffVersion = "3.7.1";
