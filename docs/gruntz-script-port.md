@@ -258,6 +258,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-04 — target pinned; P0.1 landed.** The RE target is attempt-1's
+  canonical image: English GOG Complete 4.0 (engine 3.2), 2,732,032 bytes,
+  SHA-256 `057c9d88…` (Collector's `0da1c777…` kept as comparison build; both
+  local copies preserved outside the repos at `../orig/`). NH3API's mapping was
+  verified against it: 873/874 embedded wrapper addresses land on x86 entry
+  patterns, identically in both pressings — NH3API describes the unpatched
+  Complete exe, not an HD Mod address space. `README.md`, `CLAUDE.md`, and
+  `AGENTS.md` written (homm2-decomp `decomp-pol-2.0` as the style template),
+  carrying the target identity, the supervised-review rule, the evidence
+  tiers, and the layout/gate contracts.
+
 - **2026-07-23 — layout + lifecycle (P1.1 partially done).** Approved and
   implemented: `scripts/homm3/{core,init,build}` areas; `cc_wrap.py` moved to
   `core/`; `configure.py` moved INTO the package as `homm3.build.configure`
