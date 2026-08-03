@@ -1,0 +1,92 @@
+# HoMM3 Decomp Project Guide
+
+Binary-matching decompilation of Heroes of Might and Magic III Complete. The goal is C++
+that reproduces the retail MSVC 6.0 object code.
+
+## The supervised-review rule
+
+**Nothing is ported, copied, or admitted into this repository — from decomp-attempt-1,
+Gruntz, NH3API, or anywhere else — without the user's explicit approval in a supervised
+session.** Survey, propose, and prepare; never land unrequested material. Approved
+decisions are recorded in the port plan's decision log (§5) in the same change.
+
+## Ground truth
+
+- The retail executable is authoritative for code, data, and addresses:
+  **English GOG Complete 4.0 (engine 3.2)**, `HEROES3.EXE`, 2,732,032 bytes, SHA-256
+  `057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274`, fixed base
+  `0x00400000`, no `.reloc` directory, no CodeView stream.
+- Evidence sources ranked below retail bytes:
+  - **Dreamcast CodeView dump** (`../homm3-symbols/HoMM3-Dreamcast-Dump`): proves names,
+    types, and layouts for the *Dreamcast* build. Cross-architecture — an x86 identity
+    still requires retail-byte proof.
+  - **NH3API** (`../homm3-symbols/NH3API`): external and unverified. Its 874 embedded
+    wrapper addresses fit the pinned image (873 land on x86 entry patterns; measured
+    2026-08-04, both pressings identical), but its names never seed the official map
+    without independent retail evidence.
+  - **decomp-attempt-1** (`../decomp-attempt-1`): the abandoned first attempt. Its
+    reviewed inventories (12,012 function boundaries, `text-map.tsv`, vtable tables,
+    synth-PDB/VC6 knowledge) are evidence pending re-admission — port plan P4.2 decides
+    which survive as reviewed inputs. Read-only; treat as a quarry, not a dependency.
+- Local retail copies live outside every repo at `../orig/` (safekeeping;
+  hash-verify before use). The repo never contains game bytes; `build/` is gitignored.
+
+## Toolchain
+
+- Compiler: VC6 SP3 `CL.EXE` under Wine; linker: VC6 `LINK.EXE` 6.00.8447 (the
+  generation that built retail). `homm3 init` fetches the toolchain tarball from the
+  pinned `toolchain-vc6-sp3` GitHub release via `gh` and verifies its SHA-256.
+- The Wine prefix is **stateless**: INCLUDE passes per invocation, `cl.exe` is invoked by
+  absolute path, libraries pass at link time. No registry PATH/INCLUDE/LIB writes exist
+  to go stale (deliberate divergence from the Gruntz template).
+- No MSDIS stub is needed for VC6 linking (unlike Gruntz's VC5): LINK 8447 statically
+  imports only mspdb60/msvcrt/kernel32.
+- zlib TUs compile with `/O2 /ML /Gr /TC /D_WINDOWS`. Game-TU profiles arrive with the
+  first game unit.
+- The Wine VC6 build is the sole verdict on a match; clang/clangd is editor tooling only.
+
+## Build
+
+```sh
+nix develop .#build       # from the repo root
+homm3 init                # one-time: toolchain + wine prefix + smoke compile
+homm3 build               # configure + ninja (all manifest units)
+homm3 link                # opt-in candidate link: /FORCE /NODEFAULTLIB /MAP,
+                          #   .map layout study + unresolved-externals punch list
+homm3 clean               # whole-build/ nuke; init restores everything
+```
+
+`ninja` alone works for rapid iteration once configured. `homm3 build` never invokes the
+delinker (that step is not yet ported).
+
+## Tooling layout
+
+One importable package (`scripts/homm3/`), one CLI (`homm3`), grouped by role:
+`core/` (shared primitives — `cc_wrap`), `build/` (ninja-graph actors — `configure`,
+`link`, `ninja_syntax`), `init/` (toolchain/prefix setup). Later phases add `ghidra/`,
+`match/`, `sema/`, `audit/`, and `scripts/archive/` per the port plan. Add a tool to its
+role package, not to a new top-level file.
+
+## Repository model (contracts; enforcement lands with each phase)
+
+- **Source is the authority for names** once game TUs land: annotation macros in source,
+  a generated label map re-derived every build, authority-checked against symbol tables.
+  No hand-maintained symbol ledger. (Annotation contract = open decision P0.2.)
+- **Vendored sources stay pristine**: no macros in `vendor/`; zlib's rva→symbol map will
+  be one reviewed CSV.
+- **Gates must be able to fail**: every future fatal gate ships with a negative control
+  proving it still detects its defect.
+- The delinker is vostok, pinned in the flake at the upstream stacked-queue head; it
+  recovers exact code relocations for stripped PEs directly from a synthesized PDB —
+  exactly what this `.reloc`-less target needs.
+
+## References
+
+- `docs/gruntz-script-port.md` — the port plan, module inventory, decision log, and
+  open decision points. Read it before proposing any new area.
+- `~/Projects/gruntz` — the architecture template (pipeline, gates, conventions).
+- `~/Projects/homm2/homm2-decomp` (branch `decomp-pol-2.0`) — the mature sibling
+  project; its README/CLAUDE/AGENTS are the style reference for this repo.
+- `../decomp-attempt-1/docs/` — target provenance (`target.md`), coverage and layout
+  evidence from the first attempt.
+- `AGENTS.md` — durable agent policy for this repo.
