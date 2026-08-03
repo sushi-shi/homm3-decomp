@@ -281,6 +281,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   tarball and unrecognized build/ entries (hand-built vostok PR fixtures),
   and lists what it kept.
 
+- **2026-08-04 — vostok pinned at the stack head** (resolves open decision
+  point 3): flake re-pinned from the stale `81d34b2` snapshot to `1393e24`
+  (`feature/pdb-linker-trampolines`), the open-PR queue head as rebased
+  upstream on 2026-08-01/02 = current master (incl. the runnable examples)
+  plus 18 stacked commits. This brings the flagless stripped-PE exact
+  code-relocation recovery (auto-enabled on `IMAGE_FILE_RELOCS_STRIPPED`
+  images) — delinking HEROES3.EXE needs no reloc symbols. Note: the
+  pre-rebase stack's top commit ("recover PDB-declared inline text data")
+  was NOT rebased into the new queue; HEROES3's `.text`-embedded data may
+  want it later — watch upstream.
+
 - **2026-07-23 — repo + toolchain distribution.** Private GitHub repo
   `sushi-shi/homm3-decomp` created and pushed; toolchain tarball published as
   release `toolchain-vc6-sp3`. `homm3 init` now downloads it via `gh` when
@@ -290,11 +301,12 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 6. Vostok upstream status (checked 2026-07-23)
 
-The flake pins `srp-survarium/vostok-delinker@81d34b2` ("delink: match MSVC
-4.2 COFF topology", 2026-07-16) — a stacked-queue snapshot that is NOT on
-master: it carries 21 commits master lacks, and master has since gained 11
-commits from the merged PRs. Nothing in the build graph invokes vostok yet, so
-the stale pin is harmless today; re-pin when the delink step (P2.2/P2.3) lands.
+The flake pins `srp-survarium/vostok-delinker@1393e24`
+(`feature/pdb-linker-trampolines`, re-pinned 2026-08-04 — see the decision
+log): the open-PR queue head as rebased onto current master on 2026-08-01/02.
+The triage below describes the state as of 2026-07-23 and is kept for the
+PR-number ↔ feature mapping; everything listed as "merged" plus the whole
+stacked queue is now in the pin.
 
 **Merged on master (2026-07-20/21)** — the stripped-PE foundation HEROES3
 needs: #38 optional `.reloc` + relocation-site rediscovery from the PDB, #40
@@ -338,10 +350,8 @@ longer needed as PR evidence.
 2. **P2.2** — synth-PDB reconciliation: Gruntz structure + attempt-1 VC6
    knowledge; which attempt-1 behaviors (EH funclets, alias records, data
    topology companion records) are in scope for the zlib-only milestone?
-3. **P2.5 / flake** — vostok re-pin: resolved in outline by §6 (triage done
-   2026-07-23). Remaining call: when the delink step lands, pin to upstream
-   master (merged foundation only) or to the open-PR queue head (everything,
-   but unreviewed upstream)?
+3. ~~**P2.5 / flake** — vostok re-pin~~ — RESOLVED 2026-08-04: pinned to the
+   open-PR queue head `1393e24` (see decision log).
 4. **P4.2** — attempt-1 evidence policy: which `config/*.csv` inventories are
    re-admitted as reviewed inputs (function denominator, boundary overrides,
    Dreamcast CodeView exports), and where do candidate-only sources
