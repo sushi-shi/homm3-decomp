@@ -1,0 +1,5 @@
+/build/
+/.nix-gc-roots/
+__pycache__/
+.ninja_log
+.ninja_deps
