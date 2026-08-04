@@ -1,0 +1,67 @@
+# generator: homm3.analysis.link_order
+# exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
+# date: 2026-08-04
+# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
+after_unit	before_unit	gap_start	gap_end	bytes	fns	candidate_owners
+adventuremapwindow	advmgr	0x40a4	0x5de0	7484	52	adventureoptionswindow
+advmgr	ai	0x1b0da	0x1eac0	14822	51	advspells
+ai	ai_combat	0x224d9	0x23c80	6055	25	
+ai_combat	ai_player	0x27323	0x28410	4333	23	
+ai_player	ai_tactical	0x2a2a7	0x35850	46505	132	
+ai_tactical	army	0x3cb08	0x3d540	2616	16	
+army	armygrp	0x48d1b	0x496a0	2437	19	
+armygrp	basemgr	0x4c606	0x4d530	3882	16	artifact
+basemgr	bitmap16	0x4d575	0x4e2b0	3387	16	binkmanager
+bitmap16	bitmap816	0x4e5e3	0x4f9d0	5101	19	bitmap24,bitmap8
+bitmap816	border	0x4fec0	0x4ff50	144	3	
+border	bottomviewsubwindow	0x50854	0x521f0	6556	33	
+bottomviewsubwindow	button	0x52ac4	0x560f0	13868	77	
+button	campaignbrief	0x56e4a	0x5afb0	16742	38	
+campaignbrief	castle	0x5b13f	0x610e0	24481	83	campaignmap,campaignwindow
+castle	cmbtmgr	0x61129	0x62760	5687	21	
+cmbtmgr	command	0x6a45c	0x74bf0	42900	135	combatcontrolsubwindow,combatoptionswindow,combatresultswindow,combatwindow
+command	csprite	0x7a2cd	0x7baf0	6179	34	creature_bank,creaturetype,csequence
+csprite	cspriteframe	0x7c23c	0x7c430	500	6	
+cspriteframe	dialogbox	0x7c557	0x90b20	83401	291	cursor,customcampaign,dc_input,dc_precompiledheaders
+dialogbox	drawing	0x90b4c	0x93710	11204	53	diff,dimensiondoorwindow
+drawing	event_record	0x9683a	0x9d160	26918	164	ds_engine,dxplay
+event_record	events	0x9d630	0x9e170	2880	20	
+events	exec	0xacc94	0xb0660	14796	32	
+exec	findpath	0xb0dc2	0xb1090	718	8	
+findpath	fly	0xb3f61	0xb4420	1215	7	
+fly	font	0xb447f	0xb5110	3217	14	
+font	game	0xb5b90	0xb8550	10688	57	
+game	hero	0xceca8	0xd7470	34760	167	gametypewindow,genericresource,global
+hero	herodefs	0xe6771	0xe67a0	47	1	
+herodefs	hexcell	0xe714f	0xe7150	1	0	
+hexcell	iconwdgt	0xe71fd	0xea7b0	13747	52	hillfortwindow,hiscore
+iconwdgt	inputmgr	0xeb33d	0xec460	4387	28	initialize
+inputmgr	kb	0xeccca	0xed490	1990	19	
+kb	kbwin	0xf7a04	0xf7fb0	1452	4	
+kbwin	lodfile	0xf8211	0xfa610	9215	33	levelupwindow
+lodfile	mapcell	0xfac34	0xfbf90	4956	28	mainmenu
+mapcell	misc	0x105d12	0x10b1d0	21694	80	
+misc	mousemgr	0x10c792	0x10cb50	958	5	monframeinfo
+mousemgr	palette	0x10da57	0x122940	85737	269	multiplayerwindow,newgame,overview
+palette	path	0x1235dc	0x1239d0	1012	11	
+path	philai	0x123e76	0x124550	1754	18	
+philai	recruit	0x12bc57	0x14e750	142073	392	playvideo,puzzlewindow,questlogwindow,quickherowindow,quickinfowindow,quicktownwindow
+recruit	remote	0x150934	0x153d00	13260	47	
+remote	resource	0x157e21	0x158720	2303	16	
+resource	resourcedisplay	0x1587a7	0x158ba0	1017	11	
+resourcedisplay	sample	0x1590c4	0x166e60	56732	183	resourcemanager,ressw,sacrifice_window
+sample	search	0x166e89	0x16a0d0	12871	32	scenarioinfo
+search	slider	0x16a352	0x196180	179758	434	seerhut,singleselectionpopups,singleselectionwindow
+slider	smackmgr	0x1961d9	0x1971b0	4055	13	
+smackmgr	soundmgr	0x197cf4	0x199760	6764	25	
+soundmgr	spells	0x19b07a	0x1a9360	58086	104	spellbookwindow,spelldefs
+spells	subwindow	0x1a939c	0x1aa410	4212	24	strip
+subwindow	textntry	0x1aa68a	0x1baae0	66646	185	swapmgr,systemoptionswindow,text
+textntry	textresource	0x1bac44	0x1bbdd0	4492	13	
+textresource	textwdgt	0x1bc1ef	0x1bc3b0	449	4	
+textwdgt	town	0x1bc75a	0x1bde80	5926	22	
+town	townmgr	0x1c14b9	0x1d2a40	71047	97	towngatewindow
+townmgr	victorylossconditions	0x1d2d75	0x1f15a0	124971	129	tradpost,u2dvers,university_window
+victorylossconditions	widget	0x1f2f70	0x1fe7c0	47184	104	viewarmywindow,viewwrld
+widget	window	0x1fe929	0x1fe9f0	199	3	
+window	winmgr	0x1ff955	0x202370	10779	55	winfile,wingraph
