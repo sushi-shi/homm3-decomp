@@ -3,9 +3,8 @@
 
 ONLY what build/ and match/ actually use lives here (measured, not
 wholesale): repo paths, the pinned-image hash gate, the PE image loader,
-and the provenance header. Carve-specific machinery (the sanitized
-llvm-objdump copy, target.json intake stamp, TSV read/write conventions)
-stays in homm3.carve.common, which imports these primitives from here.
+and the provenance header. The carve-era machinery that once surrounded
+these primitives is retired under scripts/archive/carve/.
 
 The gate is HARD: any byte deviation from the recorded sha256/size aborts.
 Game bytes are never copied into the repo - the exe is referenced in place
