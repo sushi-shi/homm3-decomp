@@ -18,7 +18,7 @@ from __future__ import annotations
 import subprocess
 import sys
 
-from homm3.carve import common
+from homm3.core import common
 
 ROOT = common.HOMM3_DIR
 PDB = ROOT / "build/pdb/HEROES3.pdb"

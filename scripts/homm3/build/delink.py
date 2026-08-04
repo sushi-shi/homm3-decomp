@@ -21,7 +21,7 @@ import sys
 
 from homm3.build import (configure, data_manifest, labels, normalize_objs,
                          synth_pdb)
-from homm3.carve import common
+from homm3.core import common
 
 DELINK_DIR = common.HOMM3_DIR / "build/delink"
 TARGET_DIR = common.HOMM3_DIR / "build/objdiff/target"

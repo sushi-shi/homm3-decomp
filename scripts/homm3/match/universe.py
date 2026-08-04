@@ -29,7 +29,7 @@ import struct
 import sys
 from pathlib import Path
 
-from homm3.carve import common
+from homm3.core import common
 
 FUNCTIONS = common.HOMM3_DIR / "config/retail-functions.tsv"
 RUNTIME_MAP = common.HOMM3_DIR / "config/retail-runtime-map.tsv"

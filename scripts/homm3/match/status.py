@@ -27,7 +27,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from homm3.carve import common
+from homm3.core import common
 
 OBJDIFF_DIR = common.HOMM3_DIR / "build/objdiff"
 REPORT = OBJDIFF_DIR / "report.json"

@@ -33,7 +33,7 @@ from __future__ import annotations
 
 import sys
 
-from homm3.carve import common
+from homm3.core import common
 
 DATA_OUT = common.HOMM3_DIR / "build/gen/delink_data_manifest.tsv"
 SECTIONS_OUT = common.HOMM3_DIR / "build/gen/delink_data_sections.tsv"

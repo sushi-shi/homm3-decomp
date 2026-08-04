@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 from homm3.build import canonicalize_data_symbols as canon
-from homm3.carve import common
+from homm3.core import common
 
 OBJDIFF = common.HOMM3_DIR / "build/objdiff"
 

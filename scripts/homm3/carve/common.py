@@ -1,76 +1,30 @@
 #!/usr/bin/env python3
-"""homm3.carve.common - paths, target intake gate, and TSV conventions.
+"""homm3.carve.common - carve-side paths, intake stamp, TSV conventions.
 
-Everything downstream keys off one pinned image, so intake is a HARD gate: any
-byte deviation from the recorded sha256/size aborts every stage. Game bytes are
-never copied into the repo - the exe is referenced in place ($HOMM3_EXE, then
-../orig/, then ../decomp-attempt-1/build/orig/) and only a fingerprint stamp
-(target.json) lands under gitignored build/carve/.
+The shared primitives (repo paths, the pinned-image hash gate, provenance)
+live in homm3.core.common and are re-exported here so carve stages keep
+their imports unchanged. What stays HERE is carve-specific: the
+build/carve/ workspace, the target.json intake stamp, the sanitized
+llvm-objdump working copy, the vendored-reader load_image, and the TSV
+read/write conventions.
 
-TSV convention shared by all stages: `#` provenance lines (generator, exe sha,
-date), then a tab-separated header, then rows. RVAs are 0x%x, sizes decimal.
+TSV convention shared by all stages: `#` provenance lines (generator, exe
+sha, date), then a tab-separated header, then rows. RVAs are 0x%x, sizes
+decimal.
 """
 from __future__ import annotations
 
 import datetime
-import hashlib
 import json
-import os
-import sys
 from pathlib import Path
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-HOMM3_DIR = Path(os.environ.get("HOMM3_DIR") or next(
-    (p for p in SCRIPT_DIR.parents if (p / "flake.nix").exists()), SCRIPT_DIR))
+from homm3.core.common import (  # noqa: F401  (re-exports for carve stages)
+    EVIDENCE_DIR, EXE_CANDIDATES, HOMM3_DIR, IMAGE_BASE, TARGET_SHA256,
+    TARGET_SIZE, die, gate_exe, provenance, resolve_exe, sha256_of,
+)
+
 CARVE_DIR = HOMM3_DIR / "build/carve"
-# evidence/ holds GENERATED analysis deliverables (regenerable, durable);
-# config/ holds only hand-admitted retail inventories + build manifests
-EVIDENCE_DIR = HOMM3_DIR / "evidence"
 TARGET_JSON = CARVE_DIR / "target.json"
-
-TARGET_SHA256 = "057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274"
-TARGET_SIZE = 2732032
-IMAGE_BASE = 0x400000
-
-EXE_CANDIDATES = [
-    HOMM3_DIR / "../orig/HEROES3.EXE",
-    HOMM3_DIR / "../decomp-attempt-1/build/orig/HEROES3.EXE",
-]
-
-
-def die(msg: str) -> None:
-    print(f"[carve] ERROR: {msg}", file=sys.stderr)
-    sys.exit(1)
-
-
-def sha256_of(path: Path) -> str:
-    digest = hashlib.sha256()
-    with path.open("rb") as stream:
-        for chunk in iter(lambda: stream.read(1 << 20), b""):
-            digest.update(chunk)
-    return digest.hexdigest()
-
-
-def resolve_exe() -> Path:
-    env = os.environ.get("HOMM3_EXE")
-    candidates = ([Path(env)] if env else []) + EXE_CANDIDATES
-    for cand in candidates:
-        if cand.is_file():
-            return cand.resolve()
-    die("HEROES3.EXE not found; set $HOMM3_EXE or place it at ../orig/")
-
-
-def gate_exe(path: Path) -> dict:
-    """The hard gate: refuse to analyze anything but the pinned pressing."""
-    size = path.stat().st_size
-    if size != TARGET_SIZE:
-        die(f"{path}: size {size} != pinned {TARGET_SIZE}")
-    sha = sha256_of(path)
-    if sha != TARGET_SHA256:
-        die(f"{path}: sha256 {sha} != pinned {TARGET_SHA256}")
-    return {"path": str(path), "sha256": sha, "size": size,
-            "image_base": IMAGE_BASE}
-
 
 SANITIZED_EXE = CARVE_DIR / "HEROES3.llvm-objdump.exe"
 _LOAD_CONFIG_INDEX = 10
@@ -130,16 +84,6 @@ MANUAL_BANNER = (
     "# (provenance below) and is hand-owned after admission: boundary\n"
     "# corrections are edited directly into these rows; do not regenerate\n"
     "# over hand edits.\n")
-
-
-def provenance(generator: str, extra: list[str] | None = None) -> list[str]:
-    lines = [
-        f"# generator: {generator}",
-        f"# exe: HEROES3.EXE sha256={TARGET_SHA256} size={TARGET_SIZE}",
-        f"# date: {datetime.date.today().isoformat()}",
-        "# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE",
-    ]
-    return lines + list(extra or [])
 
 
 def write_tsv(path: Path, generator: str, header: list[str], rows,
