@@ -26,6 +26,7 @@ game_o2_ml_gr_windows = [
   "/Oy-",
   "/ML",
   "/Gr",
+  "/GX",
   "/D_WINDOWS",
 ]
 

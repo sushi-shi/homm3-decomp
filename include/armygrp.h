@@ -19,15 +19,83 @@ enum TCreatureType {
 // armies @0 and numTroops @28, corroborated by retail codegen - the
 // 7-slot loops and the CREATURE_NONE sentinel in
 // GetNumArmies (0x44acc0) / IsMember (0x44ab80).
+// PROVEN layout (2026-08-04): stride 116 from the retail index math
+// (idx*29 dwords in HasAllUndead/get_AI_value), attributes @0x10 and
+// AI_value @0x40 from the same bodies; field names are the NH3API
+// roster, which lands exactly on those offsets with cost[7].
+struct TCreatureTypeTraits {
+    int townType;
+    int level;
+    const char* cSamplePrefix;
+    const char* m_sprite_name;
+    unsigned int attributes;
+    const char* m_name;
+    const char* m_plural_name;
+    const char* special_ability;
+    int cost[7];
+    int baseFightValue;
+    int AI_value;
+    int growthRate;
+    int horde_growth_rate;
+    int hitPoints;
+    int speed;
+    int attackSkill;
+    int defenseSkill;
+    int damageLowBound;
+    int damageHighBound;
+    int numShots;
+    int hasSpell;
+    int wanderingLow;
+    int wanderingHigh;
+};
+SIZE(TCreatureTypeTraits, 116);
+
+// attributes bit proven by HasAllUndead's test (retail 0x44ab20).
+const unsigned int CTA_UNDEAD = 0x40000;
+
+// The traits table is reached through a stored pointer (reference
+// global): retail loads [0x6747b0] before indexing. NH3API names it
+// akCreatureTypeTraits (a const reference to the 150-entry array).
+DATA(0x006747b0) extern const TCreatureTypeTraits (&akCreatureTypeTraits)[150];
+
+// Minimal stream interface for save/load: retail virtual-calls slot 1
+// to read and slot 2 to write (this in ecx, (buffer, size) on stack).
+class TAbstractFile {
+public:
+    virtual void _vslot0() = 0;
+    virtual int Read(void* data, int size) = 0;
+    virtual int Write(const void* data, int size) = 0;
+};
+
+// Army-size name tables (BSS at 0x6a5bb8, runtime-filled from game
+// text): nine threshold bands x three name sets, 12-byte row stride
+// proven by GetArmySizeName's nine reloc targets.
+DATA(0x006a5bb8) extern const char* apszArmySizeNames[9][3];
+
 class armyGroup {
 public:
     enum { ARMY_GROUP_SLOT_COUNT = 7 };
 
-    TCreatureType armies[ARMY_GROUP_SLOT_COUNT];
+    // Spelled int (not TCreatureType) so slot writes from int-typed
+    // parameters (Add) stay cast-free; the enum appears where the
+    // Dreamcast prototypes demand it.
+    int armies[ARMY_GROUP_SLOT_COUNT];
     int numTroops[ARMY_GROUP_SLOT_COUNT];
 
-    int GetNumArmies();
+    armyGroup();
+    armyGroup(TCreatureType type, int amount);
+    void Initialize();
+    unsigned char HasCreatures();
+    unsigned char HasAllUndead();
     unsigned char IsMember(TCreatureType monType);
+    int CanJoin(int monType);
+    long get_AI_value();
+    int GetNumArmies();
+    int Add(int armyType, int newNumTroops, int newIndex);
+    static const char* GetArmySizeName(int howMany, int iNameSet);
+    void Swap(int srcIndex, armyGroup* destGroup, int destIndex);
+    int save(TAbstractFile* outfile);
+    int load(TAbstractFile* infile);
 };
 SIZE(armyGroup, 56);
 

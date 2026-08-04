@@ -75,11 +75,11 @@ build build/objdiff/base/zutil.obj: cl vendor/zlib-1.1.3/zutil.c | $
   unit = zutil
 build build/objdiff/base/misc.obj: cl src/misc.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Oy- /ML /Gr /D_WINDOWS
+  flags = /nologo /c /O2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = misc
 build build/objdiff/base/armygrp.obj: cl src/armygrp.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Oy- /ML /Gr /D_WINDOWS
+  flags = /nologo /c /O2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = armygrp
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
