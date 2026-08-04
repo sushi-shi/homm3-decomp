@@ -23,12 +23,15 @@ normalize_objs
              thin driver: build/objdiff/{base,target} ->
              build/objdiff/normalized/ + .symbols.tsv sidecars
 
-Smoke delink (not yet the P2.3 loop):
-  vostok-delinker --pdb-path build/pdb/HEROES3.pdb \
-    --exe-path ../orig/HEROES3.EXE --output-path build/delink-smoke \
-    --engine-path 'c:\proj\' --reloc-manifest config/retail-relocs.tsv \
-    --data-manifest build/gen/delink_data_manifest.tsv
+delink       THE LOOP (explicit invocation only, never in `homm3 build`):
+             labels -> synth_pdb -> data_manifest -> vostok
+             -> build/delink/<unit>.c.obj -> copy units.toml scope to
+             build/objdiff/target/ -> normalize both sides -> re-emit
+             objdiff.json against the normalized copies
 ```
+
+Run `python3 -m homm3.build.delink`, then `objdiff-cli report generate`
+inside build/objdiff (or open the GUI) for real per-unit match numbers.
 
 The annotation macros live in `include/va.h` (absolute VAs in source, rvas
 in every artifact). The delinker never runs inside `homm3 build`; explicit

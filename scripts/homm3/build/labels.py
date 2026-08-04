@@ -315,10 +315,30 @@ def main(argv=None) -> int:
         put(r["rva"], r["name"], r["unit"], r["size"], r["kind"],
             r["provenance"])
 
-    # 2. zlib map
+    # 2. zlib map - per-MEMBER units so the delinked objects pair 1:1
+    # against our compiled base objs (inflate.c.obj vs base/inflate.obj).
+    # Member attribution from the DNA pass; the few unattributed stragglers
+    # inherit the nearest preceding member (contributions are contiguous
+    # in link order).
+    member_of = {}
+    for line in (common.EVIDENCE_DIR /
+                 "retail-function-libraries.tsv").open():
+        if not line.startswith("0x"):
+            continue
+        cells = line.rstrip("\n").split("\t")
+        if cells[1] == "zlib" and cells[3].endswith(".obj"):
+            member_of[int(cells[0], 16)] = cells[3][:-4]
     _h, zlib_rows = read_tsv_body(ZLIB_MAP)
-    for rva_text, size, name in zlib_rows:
-        put(int(rva_text, 16), name, "zlib", int(size), "func", "zlib-map")
+    ordered = sorted(zlib_rows, key=lambda r: int(r[0], 16))
+    members = [member_of.get(int(r[0], 16)) for r in ordered]
+    for i in range(1, len(members)):          # forward fill
+        members[i] = members[i] or members[i - 1]
+    for i in range(len(members) - 2, -1, -1):  # backward fill the head
+        members[i] = members[i] or members[i + 1]
+    if not any(members):
+        common.die("zlib map: no member attribution at all")
+    for (rva_text, size, name), member in zip(ordered, members):
+        put(int(rva_text, 16), name, member, int(size), "func", "zlib-map")
 
     # 3. runtime map (sizes from the universe)
     _h, runtime_rows = read_tsv_body(RUNTIME_MAP)

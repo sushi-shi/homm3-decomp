@@ -385,10 +385,18 @@ def _record_bytes(record: dict) -> bytes:
 
 
 def _digest(record: bytes, seen: dict[str, bytes]) -> str:
-    value = hashlib.sha256(record).hexdigest()
-    previous = seen.get(value)
-    if previous is not None and previous != record:
-        raise ValueError(f"SHA-256 collision for canonical data record {value}")
+    """Short content digest: 6 hex chars for readability (user decision
+    2026-08-04), lengthened by 2 only on an in-object prefix collision
+    between distinct records - deterministic per object."""
+    full = hashlib.sha256(record).hexdigest()
+    length = 6
+    value = full[:length]
+    while value in seen and seen[value] != record:
+        length += 2
+        if length > len(full):
+            raise ValueError(
+                f"SHA-256 collision for canonical data record {full}")
+        value = full[:length]
     seen[value] = record
     return value
 
