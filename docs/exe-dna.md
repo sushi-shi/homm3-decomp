@@ -130,6 +130,41 @@ library, and the band map deliberately says `unattributed`, never `game`.
   discrepancies between our recompile and retail; worth revisiting when zlib
   matching starts in earnest.
 
+## Relating names to functions and vtables
+
+`python3 -m homm3.carve relate` joins the three carve deliverables for the
+pinned image only (no Dreamcast/HD address ever enters — those are other
+pressings) into two generated CSVs:
+
+- **`config/retail-function-symbols.csv`** — one row per function in
+  `retail-functions.tsv` (11,943), carrying: its entry name/signature where we
+  have one (`retail-function-names.csv`, **entry rows only**), the library +
+  retail-proven symbol where the DNA pass placed it, and its vtable-slot
+  memberships (`vtable_rva#slot`, repeatable). **1,843 functions carry at
+  least one relation**: 565 named, 734 library-proven, 1,080 are vtable-slot
+  targets. The 988 vtable-slot targets that are still unnamed and non-library
+  are the naming frontier (game virtuals NH3API addresses only mid-function,
+  i.e. for a different pressing, or not at all).
+
+- **`config/retail-vtable-symbols.csv`** — one row per vtable slot (363
+  vtables, 3,040 slots): the slot's target function, that function's method
+  name where known, and the owning **class** where NH3API's
+  `NH3API_SPECIALIZE_TYPE_VFTABLE(addr, class)` lands on or inside the vtable.
+  **86 vtables are class-labeled**; the class channel is unverified but
+  checkable against our retail-derived vtable starts — 54 labels land exactly
+  on a start (`class_addr_offset 0`), 31 land 4–16 bytes in (our cut evidence,
+  a ctor's vptr store, begins the piece a few slots earlier: recorded as the
+  offset, never silently), 8 miss. The slot→function→method topology is fully
+  retail-derived; only the class *string* is a candidate. Worked example that
+  validates the whole chain: the `exe_strstreambuf` vtable at 0x245670 has
+  slots resolving to `?overflow@strstreambuf@std@@MAEHH@Z`,
+  `?underflow@…@std@@MAEHXZ` — **retail-byte-proven LIBCPMT symbols** from the
+  masked channel, in vtable order, under the class NH3API independently names.
+
+Both CSVs are GENERATED (regenerate, don't hand-edit) and stay candidates
+until a supervised admission; the source carcass that consumes them is a
+later stage.
+
 ## Caveats
 
 - The masked matcher proves presence, not absence: a library built into the
