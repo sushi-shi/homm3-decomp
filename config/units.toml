@@ -40,6 +40,9 @@ flags = "zlib_o2_ml_gr_c_windows"
 [[unit]]
 unit = "gzio"
 source = "vendor/zlib-1.1.3/gzio.c"
+# The one reviewed NWC deviation (int len in check_header); see the
+# patch header and vendor/README.md. Compiled from the staged copy.
+patch = "vendor/zlib-1.1.3/gzio.c.patch"
 flags = "zlib_o2_ml_gr_c_windows"
 
 [[unit]]

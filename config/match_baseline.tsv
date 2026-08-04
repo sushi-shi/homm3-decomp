@@ -12,7 +12,7 @@ deflate	@deflateEnd@4	100.0000
 deflate	@deflateInit2_@32	100.0000
 deflate	@deflateInit_@16	100.0000
 deflate	@deflateReset@4	100.0000
-deflate	@deflate_fast@8	0.0000
+deflate	@deflate_fast@8	100.0000
 deflate	@deflate_slow@8	100.0000
 deflate	@deflate_stored@8	100.0000
 deflate	@fill_window@4	100.0000
@@ -21,7 +21,7 @@ deflate	@lm_init@4	100.0000
 deflate	@longest_match@8	100.0000
 deflate	@putShortMSB@8	100.0000
 deflate	@read_buf@12	100.0000
-gzio	@check_header@4	99.5041
+gzio	@check_header@4	100.0000
 gzio	@destroy@4	100.0000
 gzio	@do_flush@8	100.0000
 gzio	@getLong@4	100.0000
@@ -40,7 +40,7 @@ infcodes	@inflate_codes@12	100.0000
 infcodes	@inflate_codes_free@8	100.0000
 infcodes	@inflate_codes_new@20	100.0000
 inffast	@inflate_fast@24	100.0000
-inflate	@inflate@8	99.7442
+inflate	@inflate@8	100.0000
 inflate	@inflateEnd@4	100.0000
 inflate	@inflateInit2_@16	100.0000
 inflate	@inflateInit_@12	100.0000
@@ -69,6 +69,7 @@ trees	@scan_tree@12	100.0000
 trees	@send_all_trees@16	100.0000
 trees	@send_tree@12	100.0000
 trees	@set_data_type@4	100.0000
-trees	zlib_206dd0_sub00_206e40	0.0000
+trees	@tr_static_init@0	100.0000
 uncompr	@uncompress@16	100.0000
 zutil	@zcalloc@12	100.0000
+zutil	@zcfree@8	100.0000

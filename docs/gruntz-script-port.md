@@ -260,6 +260,276 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-04 — the NWC gzio deviation admitted as a vendor patch;
+  zlib CLOSED at 69/69, 100.0% exact, 100.00% fuzzy.** User-approved
+  mechanism following the existing vendor convention (bink/smacker/ifc
+  `<file>.patch` beside the snapshot): `vendor/zlib-1.1.3/gzio.c.patch`
+  carries the single proven retail deviation (`uInt len` -> `int len`
+  in check_header - retail's jl at va 0x6064b5; no official zlib
+  1.0.4-1.2.1 ever spelled it signed, and the retail bytes bound NWC's
+  edit to exactly this one of the tree's 226 uInt sites, since every
+  other zlib function matches pristine source at 100%). The source
+  snapshot stays byte-identical to official 1.1.3; `units.toml` gained
+  a per-unit `patch` key; configure emits a `patchsrc` ninja edge;
+  `homm3.build.patch_src` applies the diff FAIL-CLOSED (exact context
+  + removed-line verification, no-op patches fatal) into
+  build/gen/patched/ with the snapshot's headers staged alongside for
+  MSVC's file-relative quoted includes. Drilled: corrupted patch
+  context dies naming the mismatched line; restore compiles. One
+  ratchet artifact hand-edited per doctrine: the renamed
+  tr_static_init's old synthetic baseline row removed. Full build
+  green: ratchet clean, all gates hold, README refreshed.
+
+- **2026-08-04 — objdiff pinned 3.7.1 -> 3.7.3 (user-approved); the
+  inflate phantom byte root-caused to an upstream ORDERING bug, fixed
+  by upstream #360.** The trailing `.byte 0x90` row was not a nop-trim
+  off-by-one: in 3.7.1, `infer_symbol_sizes` ran inside `map_symbols`
+  BEFORE `map_relocations`, so `infer_function_size`'s inline-reloc
+  skip iterated an EMPTY relocation list and the decoder read the
+  jump table's raw addend bytes - inflate's last entry `e9 03 00 00`
+  (case offset 0x3e9; low byte = the jmp-rel32 opcode) fabricated a
+  phantom 5-byte jmp that swallowed the first pad nop (zero-addend
+  tables decoded as harmless add-pairs, correct by luck - which hid
+  the bug from the first synthetic repros; the e9-addend minimal COFF
+  repro isolated it, archived in the session scratchpad). v3.7.3
+  moves the call after `map_relocations` ("must be done after
+  map_relocations is called") - shipped under the ARM-labeled
+  changelog line of #360, actually arch-generic. Verified end to end:
+  minimal repro 6->5, real pair both sides 1068, inflate fuzzy
+  100.0 on UNMODIFIED comparison objects. flake: objdiff-src
+  v3.7.3, objdiffVersion 3.7.3, new binary + cargo hashes; no
+  planned PR needed (already fixed upstream), and the
+  cbProcSize-trim normalization idea is retired as unnecessary.
+  Scoreboard: inflate 5/5, overall 68/69 exact (98.6%), 99.99%
+  fuzzy - the sole remaining zlib deficit is check_header's one
+  genuine source byte (jb/jl), gated on the vendor-patch decision.
+
+- **2026-08-04 — the 0.04% analyzed; deflate_fast boundary corrected
+  1→812 (user-approved config edit); root cause identified.** The
+  zlib deficit decomposed into 4 functions/9.3 weighted bytes:
+  (1) `deflate_fast` carved as 1 byte at 0x205220 — proven the real
+  812-byte body by full-byte comparison against the compiled base
+  (785/812 identical; all 27 diffs inside reloc operands) + three
+  configuration_table slots holding its VA + flush 4-nop fit against
+  longest_match. Corrected in retail-functions + zlib map; re-delink →
+  EXACT on first pairing: deflate 14/14, overall 66/69 (95.7%), fuzzy
+  99.98%. Root cause: carve `extents.synthesize` computes
+  size = max(range end) − entry; entries seeded from reloc-target
+  evidence (the fn-ptr table) with NO disassembled body ranges
+  degenerate to size 1. 35 such rows exist: 5 genuine 1-byte `ret`
+  functions, ~30 tiny CRT/EH fragments + 4 small holes in runtime
+  territory (excluded classes — harmless), deflate_fast the only one
+  in matchable territory. Its table-only reachability (no direct
+  caller) is why traversal missed it while deflate_slow/stored (same
+  table) happened to carve fully. (2) the 1-byte `ret` at 0x206e40 is
+  provably `@tr_static_init@0` (called by _tr_init at the same +3
+  offset as our base reloc; empty body under STDC static-trees;
+  rename APPROVED and applied: trees 20/20, overall 67/69 at 97.1%.
+  Post-hoc lesson: base trees.obj emission order and retail trees
+  address order agree position-for-position (modulo /OPT:REF-removed
+  _tr_tally), so an incremental-RVA positional join would have named
+  the content-free 1-byte body that byte fingerprinting structurally
+  cannot - position and content are complementary channels. Also
+  removed the phantom 0xf004e row (two alignment nops mis-seeded as a
+  target function; inventory 11,944 -> 11,943) and audited all size-1
+  rows: 5 genuine ret-stubs, ~30 mis-sized tiny CRT/EH fragments in
+  excluded runtime territory, correction batch optional).
+  (3) check_header 99.50%: retail source
+  variant `int len` vs stock 1.1.3 `uInt len` (jl vs jb) — reaching
+  100% needs a vendor-deviation decision — PROVEN fixable by an
+  out-of-tree wine-cl experiment: the one-token variant flips the
+  branch byte 0x72->0x7c (jl) and matches retail 310/310 modulo
+  relocs (10-byte nop tail = normal padding, present in stock too).
+  (4) inflate 99.74% — TWO earlier claims corrected in sequence:
+  not a source variant (stock 1.1.3 inflate.c is byte-EXACT with
+  retail modulo relocations, 0 non-reloc diffs across all 0x42c
+  bytes, all 14 jump-table case targets identical fn-relative), and
+  NOT the table representation either - objdiff-cli's own row diff
+  penalizes exactly SIX rows and zero of them are table rows:
+  5x DIFF_ARG_MISMATCH = the five `mov [esi+0x18], <errmsg>` sites
+  (inflate's z->msg strings "unknown compression method"/"invalid
+  window size"/"incorrect header check"/"incorrect data check"/"need
+  dictionary") where the compiled side names the literal ??_C@... and
+  the delinked side only has data_<rva> - zlib's DATA statics were
+  never named (the map is functions-only); 1x DIFF_INSERT = a
+  trailing alignment nop at 0x42c, candidate-only because COFF
+  symbols carry no size and objdiff extends to the section end while
+  the target symbol is exactly 1068 B (retail's identical 4-nop pad
+  sits outside its span). FINAL decomposition (user-driven, proven by
+  experiment): the report's byte-FUZZY - what the ratchet consumes -
+  charges ONLY the trailing pad: trimming the 4 nops from a scratch
+  copy of the candidate (arg mismatches untouched) yields fuzzy
+  100.0 exactly. The five ??_C@-vs-data_<rva> reloc-name rows are
+  display-level only under our scoring, which is sound because
+  vostok recovers reloc sites+targets exactly from the synth PDB -
+  names are presentation. So: inflate to 100% = trailing-pad
+  handling in normalize (tooling, tiny); string-literal naming
+  demoted to a navigation/readability nicety; check_header = the
+  same pad handling + the one genuinely-source jb/jl byte, gated on
+  the vendor-patch decision.
+
+- **2026-08-04 — HoMM2↔HoMM3 symbol overlap measured; report in
+  docs/homm2-symbol-overlap.md.** User-directed investigation of the
+  sibling homm2-decomp's CodeView-authoritative symbols against our
+  DC/NH3API corpora. Verdict: direct source-level lineage — 53/95 TU
+  stems recur, 43 exact class-name matches (basewin + game core), 611
+  normalized function-name pairs (461 backed by homm2's exact-matched
+  source), 57 rare-string anchors (50 naming still-unnamed HoMM3 fns;
+  flagship: the `%sattk.82M` family pins our creature-resource loaders
+  to homm2's `army::LoadResources`). Calibration on 20 name pairs
+  (sizes 0.26x–2.10x across MSVC 4.2→6.0) rules OUT a byte-identity
+  lane — the boost is names-via-anchors + source templates, both
+  external-candidate grade, admission paths in the report. Negative
+  controls held except the documented generic-name collision
+  (homm2 bzip `compress`/`uncompress` vs our zlib). Tables in
+  evidence/homm2-overlap/ (removable); the one-shot script retired to
+  scripts/archive/homm2_overlap.py on landing, per plan.
+
+- **2026-08-04 — single_view ported (user-picked): every global gets
+  ONE view.** gruntz audit/single_view landed as
+  `homm3.match.single_view` (our fatal-gate area, not audit/ - noted
+  divergence): a global declared under two (type, linkage) signatures
+  is a split view - only one spelling can match retail's symbol, the
+  other is a fake alias a candidate link cannot resolve. Frozen-backlog
+  shape shared with verify_va_claims (config/single-view-baseline.tsv;
+  new splits fatal; never in `--fast`). The tree declares zero externs
+  today, so it lands as pure arrival-prevention with an empty backlog.
+  Port fixed a real adaptation bug its own selftest caught on landing:
+  the shared string-stripper ate the `"C"` in `extern "C"`, erasing the
+  linkage distinction - now sentinel-protected before stripping.
+  Drilled live: a planted int/short split across include/ + src/ dies
+  naming both views and files. Known blind spot inherited from gruntz
+  (documented): template types with pointers/multiple args don't fit
+  DECL_RE. The 11-claim VA backlog stays frozen (drain deferred); the
+  strings probe already confirmed the real `Initialize*TraitsTable`
+  loaders are correctly claimed at 0x4e67a0/0x4e6920/0x4e6b10 via
+  their hotraits/hctraits/sstraits.txt literals.
+
+- **2026-08-04 — the VA-claims gate + three more board rows (the
+  user-picked ratchet batch); first real catch: 11 mis-landed
+  linkorder claims.** New FATAL gate `homm3.match.verify_va_claims`
+  in the normal build tail (never `--fast` - gates belong to the
+  orchestrator's loop, the matcher's inner loop stays lean): UNIQUE
+  (one VA = one claim tree-wide), RECONCILED (every claim is a carved
+  entry, claimed size == admitted size), CLASSIFIED (VA() must land on
+  target code; VA_COMPGEN may also claim init-thunks), IN ORDER
+  (VA() strictly increasing per file - VA only, DC_ONLY is being
+  removed as functions gain retail claims and is not order-checked).
+  Selftest (9 synthetic defects + clean control) runs every
+  invocation; live drills: size typo, duplicate, order swap each
+  fatal. **First run finding: all 750 claims are unique, sized
+  exactly, and in perfect link order, but 11 CLASS violations are
+  real** - linkorder-grade DC names (InitializeHeroTraits et al.)
+  bracketed onto addresses that are byte-provably compiler-generated
+  initializer thunks (guard byte + _atexit registration; e.g.
+  0x4e6d60). The transfer slid across interleaved $E thunks. Frozen
+  as a known backlog in `config/va-claims-baseline.tsv` (the gruntz
+  single_view shape: backlog reported as standing debt and drained in
+  supervised claim review; NEW violations fatal; `--write-baseline`
+  re-freezes only after review). Board grew three ratchet rows, all
+  floors blessed at 0: `.cpp-local enums`, `casts to enum types`
+  (static_cast into any tree-declared enum, found via a per-run enum
+  registry - an enum-to-enum cast usually means two mis-modeled
+  domains; floor raises only via explicit `--update`), and `unnamed
+  domain compares` (`== 0`/`== 1` exempt). 61 selftest samples across
+  8 metrics; all three new rows drilled fatal-and-unblessed live.
+
+- **2026-08-04 — sema first-wave adversarial review: fixes + one
+  inventory admission (branch `sema-review-fixes`, user-directed).**
+  Review confirmed the ported engine byte-faithful to homm2 and the
+  decision-log claims live (zcalloc's two registrations exact;
+  check_header jb→jl = SIGNEDNESS rc=1). Fixes: rc wording — the
+  default skeleton compares flow+size only, so "rc=1 when the sides
+  differ" overstated it (docstrings + cli help now say "when the
+  requested view differs"); `--asm`/`--verbose` documented as noisy on
+  matched functions (the delinked target names data relocs
+  synthetically — `data_<rva>`, or neighbor+addend folded into the
+  immediate — so reloc spellings diverge with zero retail-byte
+  difference; observed rc=1 on objdiff-100% `@deflateInit2_@32`);
+  `image_text` clamps a span to its section's raw extent;
+  `objdump()`'s missing-normalized hint said `homm3 delink`, now
+  `homm3 build`; `classify(image=)` stops the second load+hash of the
+  exe per `rva` run; `_src_locs` now matches VTBL/VTBL2 (address is
+  the LAST macro argument — the old first-argument pattern could never
+  hit) and anchors the macro name; the rva dossier prints the OWNER's
+  src claim for inside-body addresses and says "+N more" when >4
+  vtables hold an entry; `strings 0x<literal>` answers the reverse
+  question instead of printing `?`; `xref --raw` without `--flat` dies
+  instead of being silently ignored; the sema log records the argv the
+  call actually parsed; `normalize_objs` skip now uses
+  `freshness_problems` itself (content identity, not mtimes — kills
+  the stale-stamp wedge where build said fresh and sema said stale),
+  with the canonicalizer-code-identity trade-off documented
+  (STAMP_SCHEMA is the invalidation lever); the freshness gate gained
+  its CLAUDE.md-mandated negative controls
+  (`homm3.build.test_normalized_freshness`, 5 controls, standalone
+  runnable). **Inventory admission (needs the user's merge review):
+  `zcfree` at rva 0x206c90, 8 bytes** — `config/retail-functions.tsv`
+  had a hole between 0x206c70 (zcalloc) and 0x206ca0 (adler32); the
+  bytes there are `52 e8 4a 29 01 00 59 c3` (`push edx; call free;
+  pop ecx; ret`, fastcall @zcfree@8), and retail deflateInit2_ /
+  inflateInit2_ store this VA as the default `zfree` (site 0x2048b3
+  holds 0x606c90) — the delinker had been spelling it
+  `@zcalloc@12+0x20`, the direct cause of the false `--asm` diffs.
+  Rows added to retail-functions.tsv and retail-zlib-map.tsv
+  (`0x206c90 8 @zcfree@8 zutil`). NOT fixed (deliberate):
+  `parse_ins`'s byte-column/mnemonic ambiguity and the skeleton
+  census wording stay verbatim-homm2 (port fidelity, no observed
+  failure); the cli REMAINDER `--help` stub matches every other
+  subcommand.
+
+- **2026-08-04 — cleanliness area started: C-style casts BANNED at 0
+  (the first board metric).** User directive "ratchet that we don't use
+  C-casts at all"; both siblings surveyed first. gruntz precedent
+  adopted: `cleanliness/board.py` scoreboard over comment/string-stripped
+  src/ + include/, committed floors in `config/cleanliness-baseline.tsv`,
+  build rolls floors DOWN-only (min(count, floor) — a regression is never
+  blessed), `board --update` the one deliberate bless, FATAL gate in the
+  `homm3 build` tail when a ratcheted metric rises (gruntz's own
+  cast-metric-policy bans C-casts the same way; homm2 has no board — its
+  discipline is hard header-drift gates + the constants audit). Detected
+  shapes: builtin/numeric casts, pointer casts, casts applied to `this`;
+  the bare value-cast `(Foo)x` is a documented regex gap left to review
+  (same gap gruntz accepts). The gate self-tests on EVERY invocation
+  (8 embedded positives must be detected, 13 negatives must stay clean —
+  including the backtick-destructor apostrophe line), drilled live:
+  planted `(int*)`/`(void)` casts → build gate rc 1 naming file:line,
+  floor stayed 0, revert green. The tree starts clean: 0 casts across
+  66,580 lines. Future metrics land as board rows, not new packages.
+  Same day, user-directed, four more RATCHET rows (ratchets, not
+  policy bans - floors drain, no new arrivals): `reinterpret_casts`
+  (named-cast debt), `cpp extern decls` (violation message teaches the
+  fix: declare once in the owner header, consumers #include it),
+  `.cpp-local views` (a type's one true shape belongs in include/),
+  `magic case labels` (declare the domain enum). All five floors bless
+  at the tree's current 0; per-metric selftests (43 samples) run on
+  every invocation; extern + line-start `case 7:` drills fired with
+  their fix notes and left the floors un-blessed.
+  = xref / diff / disasm / rva / strings.** gruntz's architecture (one
+  process over a lazy `Context`, rc 0/1/2 with `die()`=2, the
+  `build/homm3_sema.log` usage feed `[date][time][rc]: cmd` ported
+  verbatim as a compatibility contract) + homm2's diff engine (one
+  llvm-objdump over the normalized objects, block-index CFG comparison,
+  symbolic `--branches`, freshness-guarded inputs — `normalize_objs`
+  now writes the provenance stamps the guard verifies). **Flag polarity
+  redesigned per user directive, diverging from BOTH siblings:** `diff`
+  is its own subcommand whose default is the block-SKELETON diff
+  (`--verbose` = block bodies, `--asm` = the old flat masked diff,
+  `--branches` = the flip/topology comparison); lite is the default
+  everywhere with `--verbose` opting into columns (killing the sibling
+  wart where `--diff --lite` was a silent no-op); `xref` defaults to
+  the caller TREE (depth 4, `--flat` opt-out). homm3 adaptations
+  stronger than either sibling: attribution over the COMPLETE 11,943-fn
+  universe; data refs from the admitted dir32 reloc sites (operand
+  read from the image - no blind byte scans, zcalloc's two fn-ptr
+  registrations found exactly); universe classification as the tree
+  frontier (`[runtime - frontier]`); capstone image path renders ANY
+  retail function with `<symbol>` annotations (the case homm2 cannot
+  do). Verified live: `--branches` classified check_header's real
+  jb→jl divergence SIGNEDNESS rc=1. SymbolDb stays in `sema/context.py`
+  until a second consumer justifies `core/symbols.py`. Deferred:
+  `--switch`, `--dot`, batch `sema -`, map/class/vtable, clangd, --rich.
+
 - **2026-08-04 — the build loop integrated (P3.1 partial): `homm3 build`,
   `--fast`, the ratchet, `delink`, `status`, README score block.** One
   module per command, cli.py is pure dispatch (`homm3.build.build`,

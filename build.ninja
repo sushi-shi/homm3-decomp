@@ -15,6 +15,10 @@ rule link
   command = PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=scripts python3 -m $
       homm3.build.link --out $out
   description = LINK $out
+rule patchsrc
+  command = PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=scripts python3 -m $
+      homm3.build.patch_src --src $in --patch $patch --out $out
+  description = PATCH $out
 build build.ninja: configure config/units.toml | $
     scripts/homm3/build/configure.py scripts/homm3/build/ninja_syntax.py
 build build/objdiff/base/adler32.obj: cl vendor/zlib-1.1.3/adler32.c | $
@@ -33,7 +37,16 @@ build build/objdiff/base/deflate.obj: cl vendor/zlib-1.1.3/deflate.c | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /ML /Gr /TC /D_WINDOWS
   unit = deflate
-build build/objdiff/base/gzio.obj: cl vendor/zlib-1.1.3/gzio.c | $
+build build/gen/patched/gzio.c: patchsrc vendor/zlib-1.1.3/gzio.c | $
+    vendor/zlib-1.1.3/gzio.c.patch scripts/homm3/build/patch_src.py $
+    vendor/zlib-1.1.3/deflate.h vendor/zlib-1.1.3/infblock.h $
+    vendor/zlib-1.1.3/infcodes.h vendor/zlib-1.1.3/inffast.h $
+    vendor/zlib-1.1.3/inffixed.h vendor/zlib-1.1.3/inftrees.h $
+    vendor/zlib-1.1.3/infutil.h vendor/zlib-1.1.3/trees.h $
+    vendor/zlib-1.1.3/zconf.h vendor/zlib-1.1.3/zlib.h $
+    vendor/zlib-1.1.3/zutil.h
+  patch = vendor/zlib-1.1.3/gzio.c.patch
+build build/objdiff/base/gzio.obj: cl build/gen/patched/gzio.c | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /ML /Gr /TC /D_WINDOWS
   unit = gzio
