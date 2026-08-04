@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
-"""homm3.build.zlib_names - recover real names for the zlib map's working
-labels from OUR OWN compiled base objects.
+"""ONE-OFF carve script (not a pipeline actor; already ran, 2026-08-04) -
+recovered real names for the zlib map's working labels from OUR OWN
+compiled base objects. Kept for provenance; rerunning is only meaningful
+after a boundary correction in the map.
 
 A label like `zlib_206ec0_sub00_208870` is a zlib static internal the DNA
 archive channel could not pin to a symbol. But the base objects we compile

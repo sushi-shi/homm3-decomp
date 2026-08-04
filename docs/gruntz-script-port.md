@@ -267,7 +267,9 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `evidence/` WILL BE REMOVED — the runtime pipeline may not depend on it.
   `labels.py` now derives VA-row names from the source declarator itself
   and treats evidence as optional enrichment (drilled: labels runs with
-  evidence/ absent); (3) `homm3.build.zlib_names` recovers real names for
+  evidence/ absent); (3) a one-off carve script
+  (`scripts/homm3/carve/zlib_names.py`, not a pipeline actor) recovered
+  real names for
   the map's working labels by masked per-function identity against OUR OWN
   compiled base objects (pass 1 unique-in-extent, pass 2 hdmap-style
   brackets, monotonicity gate): **32 of 33 labels became real symbols
