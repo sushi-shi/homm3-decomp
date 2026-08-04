@@ -6,22 +6,22 @@ Every consumer of the full-engine denominator uses this module so the
 filters cannot drift apart. Per function of config/retail-functions.tsv,
 in precedence order:
 
-  eh-funclet    FuncInfo unwind-action target, walked from RETAIL EH
-                metadata (carve.audit.gate_eh_funclets over the pinned
-                image - no evidence/ dependency). Matches with its parent.
+  eh-funclet    config/retail-funclets.tsv (admitted from the retail EH
+                metadata walk, with parentage). Matches with its parent.
   runtime       config/retail-runtime-map.tsv (LIBCMT + LIBCPMT): named,
                 not matched from source.
   zlib          config/retail-zlib-map.tsv: a matching TARGET (vendored
                 sources compile), counted inside the main table.
-  init-thunk    `.CRT$XCU` dynamic-initializer bodies (build/carve/
-                seed_log.tsv, the carve init-array walk; compiler-
-                generated, reconstructed implicitly by VA_COMPGEN).
-                Degrades to zero with a warning if the carve artifact is
-                absent - regenerate with `python3 -m homm3.carve relocs`.
+  init-thunk    config/retail-init-thunks.tsv: `.CRT$XCU` dynamic-
+                initializer bodies (compiler-generated, reconstructed
+                implicitly by VA_COMPGEN).
   import-thunk  a <=8-byte body that is a `FF 25 <IAT slot>` jump, read
                 from the image directly.
   target        everything else: the game code the decompilation exists
                 to reconstruct.
+
+Everything comes from config/ + the pinned image: no evidence/, no
+build/carve artifacts, no homm3.carve stage calls.
 """
 from __future__ import annotations
 
@@ -34,7 +34,8 @@ from homm3.carve import common
 FUNCTIONS = common.HOMM3_DIR / "config/retail-functions.tsv"
 RUNTIME_MAP = common.HOMM3_DIR / "config/retail-runtime-map.tsv"
 ZLIB_MAP = common.HOMM3_DIR / "config/retail-zlib-map.tsv"
-SEED_LOG = common.CARVE_DIR / "seed_log.tsv"
+FUNCLETS = common.HOMM3_DIR / "config/retail-funclets.tsv"
+INIT_THUNKS = common.HOMM3_DIR / "config/retail-init-thunks.tsv"
 
 EXCLUDED_NOTES = {
     "eh-funclet": "compiler EH unwind funclets; match with their parent "
@@ -58,27 +59,16 @@ def classify():
     category = {}
 
     image, info = common.load_image()
-    from homm3.carve import audit
-    _fi, funclets, _missing = audit.gate_eh_funclets(image, set(functions))
-    for rva in funclets:
-        category[rva] = "eh-funclet"
-
+    for r in _rows(FUNCLETS):
+        category[int(r[0], 16)] = "eh-funclet"
     for r in _rows(RUNTIME_MAP):
         category.setdefault(int(r[0], 16), "runtime")
     for r in _rows(ZLIB_MAP):
         category.setdefault(int(r[0], 16), "zlib")
-
-    if SEED_LOG.is_file():
-        for r in common.read_tsv(SEED_LOG):
-            if r["run"] == "1" and r["iter"] == "1" \
-                    and r["source"] == "init-array":
-                target = int(r["target_rva"], 16)
-                if target in functions:
-                    category.setdefault(target, "init-thunk")
-    else:
-        print("[universe] WARNING: no carve seed_log - init-thunk "
-              "category empty (run `python3 -m homm3.carve relocs`)",
-              file=sys.stderr)
+    for r in _rows(INIT_THUNKS):
+        rva = int(r[0], 16)
+        if rva in functions:
+            category.setdefault(rva, "init-thunk")
 
     text = next(s for s in image.sections if s.name == ".text")
     blob = image.blob(text)
