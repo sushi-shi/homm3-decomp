@@ -55,21 +55,21 @@ emit-config  render admission candidates -> build/carve/config-candidate/
 emit-relocs  render config/retail-relocs.tsv (vostok --reloc-manifest, format
              conformance-checked against its parser) + retail-reloc-evidence.tsv
 dna          static-library attribution: masked archive/zlib identity, stock
-             FID export, strings, imports, banding -> config/retail-library-
+             FID export, strings, imports, banding -> evidence/retail-library-
              bands.tsv + retail-function-libraries.tsv (GENERATED, not
              manually managed) + build/dna/*; see docs/exe-dna.md
 names        TEMPORARY bulk export of function-name candidates from NH3API
              wrappers + the Dreamcast CodeView dump (+ DNA archive symbols)
-             -> config/retail-function-names.csv (GENERATED; dissolves into
+             -> evidence/retail-function-names.csv (GENERATED; dissolves into
              source-tree annotations later)
 relate       join names <-> functions <-> vtables for the pinned image
-             -> config/retail-function-symbols.csv, retail-vtable-symbols.csv
+             -> evidence/retail-function-symbols.csv, retail-vtable-symbols.csv
 hdmap        transfer NH3API names from HD Mod's sibling Heroes3.exe by unique
-             masked byte identity ($HOMM3_HD_EXE) -> config/retail-hd-name-map.csv
+             masked byte identity ($HOMM3_HD_EXE) -> evidence/retail-hd-name-map.csv
 dcmap        transfer Dreamcast CodeView names by link order (anchor + LIS +
-             equal-count brackets) -> config/retail-dc-name-map.csv
+             equal-count brackets) -> evidence/retail-dc-name-map.csv
 naming       give EVERY carved function a name (total coverage, unique,
-             evidence-tiered) -> config/retail-symbols.csv; needs the Ghidra
+             evidence-tiered) -> evidence/retail-symbols.csv; needs the Ghidra
              xref export (ghidra/export_xrefs.py -> build/dna/
              function_xrefs.tsv)
 ```

@@ -1,8 +1,8 @@
 # The executable's DNA — static-library attribution
 
 What `HEROES3.EXE` was linked against and where each library lives in `.text`.
-Generated evidence: `config/retail-library-bands.tsv` (band map) and
-`config/retail-function-libraries.tsv` (per-function attribution) — both
+Generated evidence: `evidence/retail-library-bands.tsv` (band map) and
+`evidence/retail-function-libraries.tsv` (per-function attribution) — both
 regenerable via `python3 -m homm3.carve dna`; raw channel outputs under
 `build/dna/`. Everything below is against the pinned image
 (`057c9d88…`, 2,732,032 B) and the carve inventory (11,943 functions,
@@ -170,7 +170,7 @@ measurement.
 pinned image only (no Dreamcast/HD address ever enters — those are other
 pressings) into two generated CSVs:
 
-- **`config/retail-function-symbols.csv`** — one row per function in
+- **`evidence/retail-function-symbols.csv`** — one row per function in
   `retail-functions.tsv` (11,943), carrying: its entry name/signature where we
   have one (`retail-function-names.csv`, **entry rows only**), the library +
   retail-proven symbol where the DNA pass placed it, and its vtable-slot
@@ -181,7 +181,7 @@ pressings) into two generated CSVs:
   (game virtuals NH3API addresses only mid-function, i.e. for a different
   pressing, or not at all).
 
-- **`config/retail-vtable-symbols.csv`** — one row per vtable slot (363
+- **`evidence/retail-vtable-symbols.csv`** — one row per vtable slot (363
   vtables, 3,040 slots): the slot's target function, that function's method
   name where known, and the owning **class** where NH3API's
   `NH3API_SPECIALIZE_TYPE_VFTABLE(addr, class)` lands on or inside the vtable.
@@ -202,7 +202,7 @@ later stage.
 
 ## Naming every function
 
-`python3 -m homm3.carve naming` → **`config/retail-symbols.csv`**: one row per
+`python3 -m homm3.carve naming` → **`evidence/retail-symbols.csv`**: one row per
 carved function, **11,943 of 11,943 named, all unique, all valid C
 identifiers** (asserted, not hoped — the stage fails on any collision, gap, or
 malformed name). A name is a working label; the `tier`/`confidence` columns
@@ -308,7 +308,7 @@ our own bytes** — hence the distinct `crossbuild-verified` confidence class,
 above external-candidate and below retail-proven. That the transfer and the
 carve agree on 884 entries is mutual corroboration of both.
 
-Output: `config/retail-hd-name-map.csv` (`rva, hd_va, name, signature,
+Output: `evidence/retail-hd-name-map.csv` (`rva, hd_va, name, signature,
 match_bytes, fixed_bytes, pass, our_state, evidence`). The HD executable is the
 user's own download, referenced via `$HOMM3_HD_EXE` and never copied into the
 repository.
@@ -326,7 +326,7 @@ pairs are tiny COMDAT-style dtors (`CAdvPopup::~CAdvPopup`) that genuinely
 migrate between builds; LIS demotes them.
 
 `python3 -m homm3.carve dcmap` turns that into a transfer channel
-(`config/retail-dc-name-map.csv`):
+(`evidence/retail-dc-name-map.csv`):
 
 - **Pass 1**: 588 unique-name anchors, LIS-gated → 559.
 - **Pass 2**: globally ambiguous names (overloads, repeated dtor names)

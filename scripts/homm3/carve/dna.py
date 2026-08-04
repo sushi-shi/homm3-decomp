@@ -27,9 +27,9 @@ Channels (independent; disagreements are reported, never arbitrated away):
 
 Durable deliverables (GENERATED - regenerate with `python3 -m homm3.carve
 dna`, do not hand-edit; user decision, unlike the admitted carve TSVs):
-  config/retail-function-libraries.tsv   rva -> library/member/symbol where
+  evidence/retail-function-libraries.tsv   rva -> library/member/symbol where
                                          known, with evidence + confidence
-  config/retail-library-bands.tsv        address-ordered band map with
+  evidence/retail-library-bands.tsv        address-ordered band map with
                                          per-band EH-funclet share (the tail
                                          of .text is the .text$x group: COFF
                                          $-sorting places every unwind
@@ -48,8 +48,8 @@ from homm3.carve import common
 from homm3.carve.fixture import Coff
 
 DNA_DIR = common.HOMM3_DIR / "build/dna"
-CONFIG_FUNCTIONS = common.HOMM3_DIR / "config/retail-function-libraries.tsv"
-CONFIG_BANDS = common.HOMM3_DIR / "config/retail-library-bands.tsv"
+CONFIG_FUNCTIONS = common.EVIDENCE_DIR / "retail-function-libraries.tsv"
+CONFIG_BANDS = common.EVIDENCE_DIR / "retail-library-bands.tsv"
 
 TOOLCHAIN = common.HOMM3_DIR / "build/homm3-toolchain-vc6-sp3/msvc"
 # sha256 pins double as provenance: the same archives attempt-1 pinned, all
@@ -381,7 +381,7 @@ def game_channel(functions, per_function, allowed, funclet_entries,
     """The game's own code is a library too - label it by POSITIVE evidence,
     never by absence of library hits:
 
-      hd-crossbuild-name  entry rows of config/retail-hd-name-map.csv: an
+      hd-crossbuild-name  entry rows of evidence/retail-hd-name-map.csv: an
                       NH3API name carried onto OUR bytes by unique masked
                       identity against HD Mod's sibling build (carve hdmap).
                                                         [crossbuild-verified]
@@ -429,14 +429,14 @@ def game_channel(functions, per_function, allowed, funclet_entries,
                 line for line in fh if not line.startswith("#")))
 
     hits = {}
-    for row in load_csv(common.HOMM3_DIR / "config/retail-hd-name-map.csv"):
+    for row in load_csv(common.EVIDENCE_DIR / "retail-hd-name-map.csv"):
         if row["our_state"] != "entry":
             continue
         rva = int(row["rva"], 16)
         if rva in functions and rva not in per_function \
                 and rva < head_limit and in_allowed(rva, allowed):
             hits[rva] = "hd-crossbuild-name"
-    for row in load_csv(common.HOMM3_DIR / "config/retail-function-names.csv"):
+    for row in load_csv(common.EVIDENCE_DIR / "retail-function-names.csv"):
         if row["carve_state"] != "entry" or "nh3api" not in row["sources"]:
             continue
         rva = int(row["rva"], 16)
@@ -481,7 +481,7 @@ def game_channel(functions, per_function, allowed, funclet_entries,
         print("[carve dna] function_xrefs.tsv missing - game closure runs "
               "on vtable links only")
     slots = defaultdict(list)
-    for row in load_csv(common.HOMM3_DIR / "config/retail-vtable-symbols.csv"):
+    for row in load_csv(common.EVIDENCE_DIR / "retail-vtable-symbols.csv"):
         if row["target_state"] == "entry":
             slots[int(row["vtable_rva"], 16)].append(
                 int(row["target_rva"], 16))

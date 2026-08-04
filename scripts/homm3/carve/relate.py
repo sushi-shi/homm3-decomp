@@ -34,15 +34,15 @@ from collections import defaultdict
 
 from homm3.carve import common
 
-NAMES = common.HOMM3_DIR / "config/retail-function-names.csv"
+NAMES = common.EVIDENCE_DIR / "retail-function-names.csv"
 FUNCTIONS = common.CARVE_DIR / "functions.tsv"
 VTABLES = common.CARVE_DIR / "vtables.tsv"
 VTABLE_SLOTS = common.CARVE_DIR / "vtable_slots.tsv"
-LIBRARIES = common.HOMM3_DIR / "config/retail-function-libraries.tsv"
+LIBRARIES = common.EVIDENCE_DIR / "retail-function-libraries.tsv"
 NH3API_ROOT = common.HOMM3_DIR.parent / "homm3-symbols/NH3API/nh3api"
 
-OUT_SYMBOLS = common.HOMM3_DIR / "config/retail-function-symbols.csv"
-OUT_VTABLES = common.HOMM3_DIR / "config/retail-vtable-symbols.csv"
+OUT_SYMBOLS = common.EVIDENCE_DIR / "retail-function-symbols.csv"
+OUT_VTABLES = common.EVIDENCE_DIR / "retail-vtable-symbols.csv"
 
 VFTABLE = re.compile(r"NH3API_SPECIALIZE_TYPE_VFTABLE\s*\(\s*(0x[0-9A-Fa-f]+)"
                      r"\s*,\s*([^)]+?)\s*\)")

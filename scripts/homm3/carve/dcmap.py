@@ -28,7 +28,7 @@ That order is the transfer channel, in three passes:
           (Complete added sources RoE lacks) then fail the count instead of
           shifting names silently.
 
-The result is `config/retail-dc-name-map.csv`. Rows carry a `role`:
+The result is `evidence/retail-dc-name-map.csv`. Rows carry a `role`:
   anchor-global / anchor-bracket   the correlation skeleton (already named)
   corroborates                     pass-3 alignment agrees with the known name
   linkorder                        a NEW name for a function nothing else
@@ -50,9 +50,9 @@ from collections import Counter, defaultdict
 from homm3.carve import common
 from homm3.carve.names import DUMP, Dump
 
-OUT = common.HOMM3_DIR / "config/retail-dc-name-map.csv"
-HD_MAP = common.HOMM3_DIR / "config/retail-hd-name-map.csv"
-NAMES = common.HOMM3_DIR / "config/retail-function-names.csv"
+OUT = common.EVIDENCE_DIR / "retail-dc-name-map.csv"
+HD_MAP = common.EVIDENCE_DIR / "retail-hd-name-map.csv"
+NAMES = common.EVIDENCE_DIR / "retail-function-names.csv"
 
 
 def load_csv(path):

@@ -23,6 +23,9 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 HOMM3_DIR = Path(os.environ.get("HOMM3_DIR") or next(
     (p for p in SCRIPT_DIR.parents if (p / "flake.nix").exists()), SCRIPT_DIR))
 CARVE_DIR = HOMM3_DIR / "build/carve"
+# evidence/ holds GENERATED analysis deliverables (regenerable, durable);
+# config/ holds only hand-admitted retail inventories + build manifests
+EVIDENCE_DIR = HOMM3_DIR / "evidence"
 TARGET_JSON = CARVE_DIR / "target.json"
 
 TARGET_SHA256 = "057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274"
