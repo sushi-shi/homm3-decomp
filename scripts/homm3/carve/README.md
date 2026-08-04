@@ -62,6 +62,12 @@ names        TEMPORARY bulk export of function-name candidates from NH3API
              wrappers + the Dreamcast CodeView dump (+ DNA archive symbols)
              -> config/retail-function-names.csv (GENERATED; dissolves into
              source-tree annotations later)
+relate       join names <-> functions <-> vtables for the pinned image
+             -> config/retail-function-symbols.csv, retail-vtable-symbols.csv
+naming       give EVERY carved function a name (total coverage, unique,
+             evidence-tiered) -> config/retail-symbols.csv; needs the Ghidra
+             xref export (ghidra/export_xrefs.py -> build/dna/
+             function_xrefs.tsv)
 ```
 
 Stages read their upstream TSVs from `build/carve/`; every TSV carries `#` provenance
