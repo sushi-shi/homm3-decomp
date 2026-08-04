@@ -10,6 +10,7 @@ armygrp	??0armyGroup@@QAE@XZ	100.0000
 armygrp	?Add@armyGroup@@QAEHHHH@Z	100.0000
 armygrp	?CanJoin@armyGroup@@QAEHH@Z	100.0000
 armygrp	?Dismiss@armyGroup@@QAEXH@Z	100.0000
+armygrp	?GetAlignments@armyGroup@@QAEHPAE@Z	100.0000
 armygrp	?GetArmySizeName@armyGroup@@SIPBDHH@Z	100.0000
 armygrp	?GetNumArmies@armyGroup@@QAEHXZ	100.0000
 armygrp	?HasAllUndead@armyGroup@@QAEEXZ	100.0000
