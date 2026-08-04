@@ -61,6 +61,9 @@ def main(argv: list[str]) -> int:
     if stage == "gametree":
         from homm3.carve import gametree
         return gametree.main(rest)
+    if stage == "carcass":
+        from homm3.carve import carcass
+        return carcass.main(rest)
     if stage == "naming":
         from homm3.carve import naming
         return naming.main(rest)
