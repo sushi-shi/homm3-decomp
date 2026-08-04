@@ -259,6 +259,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-04 — function maps admitted (synth-PDB/delink prerequisite).**
+  `python3 -m homm3.carve funcmap` emitted, and the session admitted, the
+  two per-function name tables the delinker needs:
+  `config/retail-function-map.tsv` (game+zlib bands, rva/size/name — 5,905
+  functions, 2,089,901 B, names from the naming layer) and
+  `config/retail-runtime-map.tsv` (LIBCMT+LIBCPMT bands, rva/name — 1,144
+  functions, 408 carrying retail-proven raw linker symbols). No MFC table:
+  MFC is absent from the image (three-channel verdict, docs/exe-dna.md).
+  Both are MANUALLY MANAGED after admission. Synth-PDB generation and
+  delinking themselves are deliberately NOT started yet.
+
 - **2026-08-04 — source carcass admitted; P0.2 macro half resolved.**
   `src/` + `include/` created by `python3 -m homm3.carve carcass` and
   hand-owned from admission on: one .cpp per game compiland (128 TUs; 13
