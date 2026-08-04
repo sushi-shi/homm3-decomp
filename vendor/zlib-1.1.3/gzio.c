@@ -265,7 +265,7 @@ local void check_header(s)
 {
     int method; /* method byte */
     int flags;  /* flags byte */
-    uInt len;
+    int len;
     int c;
 
     /* Check the gzip magic header */
