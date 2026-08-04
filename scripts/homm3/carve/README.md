@@ -74,6 +74,9 @@ dcxref       the Dreamcast build's own xref graph (SH4 literal pools + BSR,
 gametree     materialize the game source tree (one carcass per Dreamcast
              compiland, retail VAs via the dcmap ties, per-TU unmatched
              residents) -> evidence/game-tree/ + evidence/retail-game-tree.csv
+carcass      ADMISSION: materialize src/ (one .cpp per game compiland,
+             RVA()/DC_ONLY() annotations, src/rva.h) + include/ (per-TU
+             prototype headers); hand-owned afterwards, refuses to overwrite
 naming       give EVERY carved function a name (total coverage, unique,
              evidence-tiered) -> evidence/retail-symbols.csv; needs the Ghidra
              xref export (ghidra/export_xrefs.py -> build/dna/

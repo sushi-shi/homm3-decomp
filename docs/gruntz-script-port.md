@@ -176,7 +176,8 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 - **P0.2** Decide the annotation contract for HoMM3: adopt `src/rva.h`
   `RVA()/DATA()` macros as-is, or adapt. Decide the vendored-zlib label CSV
   name/location. **Decision point — nothing else in Phase 2 starts before
-  this.**
+  this.** *(Macro half resolved 2026-08-04 — adopted as-is plus `DC_ONLY`;
+  see the decision log. The zlib label CSV half remains open.)*
 
 ### Phase 1 — core skeleton (target: `homm3 build` still green)
 
@@ -257,6 +258,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   LINK 8447 needs one under wine) when phase-2 whole-image linking starts.
 
 ## 5. Decision log (approved in supervised sessions)
+
+- **2026-08-04 — source carcass admitted; P0.2 macro half resolved.**
+  `src/` + `include/` created by `python3 -m homm3.carve carcass` and
+  hand-owned from admission on: one .cpp per game compiland (128 TUs; 13
+  zlib compilands stay vendored), functions in link order with Dreamcast
+  CodeView prototypes, and per-TU headers keeping prototypes as comments
+  until retail layouts are proven (attempt-1's vetted layouts remain a
+  quarry, P4.2). Annotation contract: gruntz `RVA(0x<rva>, size)`/`DATA()`
+  adopted as-is via `src/rva.h`, plus a `DC_ONLY(off, cb)` marker for
+  Dreamcast-only procs — a claim about the DC build, never the retail
+  image (750 RVA ties, 7,179 DC_ONLY at admission). The vendored-zlib
+  label CSV half of P0.2 stays open.
 
 - **2026-08-04 — target pinned; P0.1 landed.** The RE target is attempt-1's
   canonical image: English GOG Complete 4.0 (engine 3.2), 2,732,032 bytes,
