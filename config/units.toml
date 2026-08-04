@@ -14,6 +14,20 @@ zlib_o2_ml_gr_c_windows = [
   "/TC",
   "/D_WINDOWS",
 ]
+# Game C++ profile (2026-08-04, proven on the first three matches):
+# /Gr from retail's fastcall free functions (Random takes ecx/edx);
+# /Oy- from IsMember - retail keeps EBP frames wherever stack access
+# exists (frameless GetNumArmies proves the frame is conditional, so
+# this is /O2 /Oy-, not /O1 or /Od). Refined as game TUs accumulate.
+game_o2_ml_gr_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/Oy-",
+  "/ML",
+  "/Gr",
+  "/D_WINDOWS",
+]
 
 # Verbatim zlib 1.1.3 release sources. This is the only component in the build
 # until another translation unit and its compiler profile are reviewed.
@@ -86,3 +100,16 @@ flags = "zlib_o2_ml_gr_c_windows"
 unit = "zutil"
 source = "vendor/zlib-1.1.3/zutil.c"
 flags = "zlib_o2_ml_gr_c_windows"
+
+# First game TUs (2026-08-04): bootstrap-partial - implemented bodies
+# compile, remaining carcass stubs sit behind `#if 0 // @carcass`
+# (lexically present for labels + the va-claims gate).
+[[unit]]
+unit = "misc"
+source = "src/misc.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "armygrp"
+source = "src/armygrp.cpp"
+flags = "game_o2_ml_gr_windows"

@@ -310,6 +310,40 @@ def iat_slots(exe_path: Path):
     return slots
 
 
+def _demangle_key(mangled: str):
+    """Normalized join key for one MSVC public name: ?Method@Class@@... ->
+    class_method, matching scan_sources' declarator spelling (:: -> _).
+    Special members (??0 ctors, operators) return None - they are adopted
+    only when claims model them explicitly."""
+    if not mangled.startswith("?") or mangled.startswith("??"):
+        return None
+    components = mangled[1:].split("@@", 1)[0].split("@")
+    qualified = list(reversed(components[1:])) + [components[0]]
+    return "_".join(qualified).lower()
+
+
+def _base_authority_names(unit: str) -> dict:
+    """key -> mangled PUBLIC text symbol of the unit's compiled base obj
+    ({} when absent/ambiguous). The compiler is the naming authority for
+    everything our source actually defines."""
+    obj = common.HOMM3_DIR / f"build/objdiff/base/{unit}.obj"
+    if not obj.is_file():
+        return {}
+    import subprocess
+    proc = subprocess.run(["llvm-nm", "-P", str(obj)],
+                          capture_output=True, text=True)
+    if proc.returncode != 0:
+        return {}
+    keys = {}
+    for line in proc.stdout.splitlines():
+        fields = line.split()
+        if len(fields) >= 2 and fields[1] == "T":
+            key = _demangle_key(fields[0])
+            if key:
+                keys[key] = None if key in keys else fields[0]
+    return {key: name for key, name in keys.items() if name}
+
+
 def main(argv=None) -> int:
     _header, fn_rows = read_tsv_body(FUNCTIONS)
     functions = {int(r[0], 16): int(r[1]) for r in fn_rows}
@@ -341,6 +375,27 @@ def main(argv=None) -> int:
         seen_names.add(r["name"])
         put(r["rva"], r["name"], r["unit"], r["size"], r["kind"],
             r["provenance"])
+
+    # 1b. base-obj name authority: a compiled unit's public symbols carry
+    # the TRUE MSVC spellings; adopt them for uniquely-joined claims so
+    # the delinked target pairs against the base by identical names (the
+    # interim binding until the clang-IR labels path lands - P0.2).
+    src_by_unit = {}
+    for row in rows.values():
+        if row["provenance"] == "src-VA":
+            src_by_unit.setdefault(row["unit"], []).append(row)
+    for unit, unit_rows in src_by_unit.items():
+        authority = _base_authority_names(unit)
+        if not authority:
+            continue
+        claim_keys = {}
+        for row in unit_rows:
+            claim_keys.setdefault(row["name"].lower(), []).append(row)
+        for key, mangled in authority.items():
+            candidates = claim_keys.get(key)
+            if candidates and len(candidates) == 1:
+                candidates[0]["name"] = mangled
+                candidates[0]["provenance"] = "src-VA+base"
 
     # 2. zlib map - the admitted table carries the owning TU (unit column),
     # so the delinked objects pair 1:1 against our compiled base objs

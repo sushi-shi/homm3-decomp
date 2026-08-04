@@ -260,6 +260,34 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-04 — FIRST GAME-CODE MATCHES (P5.2 milestone): Random,
+  armyGroup::GetNumArmies, armyGroup::IsMember - all three EXACT
+  (100.0) — and the game compiler profile discovered: /O2 /Oy- /ML
+  /Gr.** User-directed ("match a few functions implemented in homm2";
+  in-tree, no scratchpads). Bodies adapted from homm2's exact-matched
+  source (the overlap report's h2-source-template lane working as
+  designed - Random is token-identical logic across the games); the
+  armyGroup layout admitted to include/armygrp.h from Dreamcast
+  CodeView (size 56, armies@0, numTroops@28) corroborated by retail
+  codegen (7-slot loops, CREATURE_NONE=-1), with SIZE(armyGroup, 56)
+  per the va.h contract. Evidence for the flags: /Gr from fastcall
+  free functions (Random's args in ecx/edx); /Oy- pinned by a
+  surgical sema-diff - IsMember's body was instruction-identical but
+  retail keeps an EBP frame exactly where stack access exists while
+  frameless GetNumArmies proves the frame is conditional (so /O2
+  /Oy-, not /O1//Od). Two enabling mechanisms landed: (1) the
+  `#if 0 // @carcass` bootstrap pattern - unimplemented carcass stubs
+  stay lexically present (labels + the va-claims gate scan text) but
+  outside compilation, so partial TUs build; (2) labels.py step 1b,
+  base-obj name AUTHORITY - a compiled unit's public symbols carry
+  the true MSVC spellings, adopted for uniquely-joined src claims
+  (provenance src-VA+base) so delinked targets pair against base objs
+  by identical names (the interim binding until the clang-IR labels
+  path, P0.2; without it every game row read 0.00 unpaired).
+  Scoreboard: 72/102 exact in linked units; misc + armygrp admitted
+  to units.toml as bootstrap-partial TUs; ratchet grew 33 rows; all
+  gates green.
+
 - **2026-08-04 — the NWC gzio deviation admitted as a vendor patch;
   zlib CLOSED at 69/69, 100.0% exact, 100.00% fuzzy.** User-approved
   mechanism following the existing vendor convention (bink/smacker/ifc

@@ -5,6 +5,35 @@
 # No src_hash epoch column yet: it arrives with the clang fingerprint
 # path when game TUs compile.
 adler32	@adler32@12	100.0000
+armygrp	?GetNumArmies@armyGroup@@QAEHXZ	100.0000
+armygrp	?IsMember@armyGroup@@QAEEW4TCreatureType@@@Z	100.0000
+armygrp	SplitSliderCallback	0.0000
+armygrp	TSplitWindow_SetRolloverText	0.0000
+armygrp	TSplitWindow_TSplitWindow	0.0000
+armygrp	TSplitWindow_TSplitWindow_49e20	0.0000
+armygrp	TSplitWindow_UpdateSplitArmy	0.0000
+armygrp	TSplitWindow_WindowHandler	0.0000
+armygrp	armyGroup_Add	0.0000
+armygrp	armyGroup_CanJoin	0.0000
+armygrp	armyGroup_GetArmyLuck	0.0000
+armygrp	armyGroup_GetArmyMorale	0.0000
+armygrp	armyGroup_GetArmySizeName	0.0000
+armygrp	armyGroup_GetLuck	0.0000
+armygrp	armyGroup_GetNativeTerrain	0.0000
+armygrp	armyGroup_HasAllUndead	0.0000
+armygrp	armyGroup_HasCreatures	0.0000
+armygrp	armyGroup_Initialize	0.0000
+armygrp	armyGroup_Merge	0.0000
+armygrp	armyGroup_SplitArmy	0.0000
+armygrp	armyGroup_Swap	0.0000
+armygrp	armyGroup_armyGroup	0.0000
+armygrp	armyGroup_armyGroup_4aaa0	0.0000
+armygrp	armyGroup_get_AI_value	0.0000
+armygrp	armyGroup_load	0.0000
+armygrp	armyGroup_merge_armies	0.0000
+armygrp	armyGroup_save	0.0000
+armygrp	get_spell_work_chance	0.0000
+armygrp	modify_spell_damage	0.0000
 compress	@compress2@20	100.0000
 crc32	@crc32@12	100.0000
 deflate	@deflate@8	100.0000
@@ -50,6 +79,10 @@ inftrees	@inflate_trees_bits@20	100.0000
 inftrees	@inflate_trees_dynamic@36	100.0000
 inftrees	@inflate_trees_fixed@20	100.0000
 infutil	@inflate_flush@12	100.0000
+misc	?Random@@YIHHH@Z	100.0000
+misc	SafeRandom	0.0000
+misc	TPickANumber_Pick	0.0000
+misc	TPickANumber_TPickANumber	0.0000
 trees	@_tr_align@4	100.0000
 trees	@_tr_flush_block@16	100.0000
 trees	@_tr_init@4	100.0000

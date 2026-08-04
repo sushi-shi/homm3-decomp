@@ -73,6 +73,14 @@ build build/objdiff/base/zutil.obj: cl vendor/zlib-1.1.3/zutil.c | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /ML /Gr /TC /D_WINDOWS
   unit = zutil
+build build/objdiff/base/misc.obj: cl src/misc.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Oy- /ML /Gr /D_WINDOWS
+  unit = misc
+build build/objdiff/base/armygrp.obj: cl src/armygrp.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Oy- /ML /Gr /D_WINDOWS
+  unit = armygrp
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -80,7 +88,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/inffast.obj build/objdiff/base/inflate.obj $
     build/objdiff/base/inftrees.obj build/objdiff/base/infutil.obj $
     build/objdiff/base/trees.obj build/objdiff/base/uncompr.obj $
-    build/objdiff/base/zutil.obj
+    build/objdiff/base/zutil.obj build/objdiff/base/misc.obj $
+    build/objdiff/base/armygrp.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -88,7 +97,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/inffast.obj build/objdiff/base/inflate.obj $
     build/objdiff/base/inftrees.obj build/objdiff/base/infutil.obj $
     build/objdiff/base/trees.obj build/objdiff/base/uncompr.obj $
-    build/objdiff/base/zutil.obj
+    build/objdiff/base/zutil.obj build/objdiff/base/misc.obj $
+    build/objdiff/base/armygrp.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -97,5 +107,6 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/inffast.obj build/objdiff/base/inflate.obj $
     build/objdiff/base/inftrees.obj build/objdiff/base/infutil.obj $
     build/objdiff/base/trees.obj build/objdiff/base/uncompr.obj $
-    build/objdiff/base/zutil.obj | scripts/homm3/build/link.py
+    build/objdiff/base/zutil.obj build/objdiff/base/misc.obj $
+    build/objdiff/base/armygrp.obj | scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE
