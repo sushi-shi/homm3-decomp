@@ -10,6 +10,18 @@ navigation surface, not proof of correctness.
 This repository does **not** contain the original game's executable or resources. Supply a
 legally obtained `HEROES3.EXE` locally to initialize the matching workspace.
 
+<!-- match-score:start -->
+
+**Match score** — 64/68 functions exact (94.1%), 99.96% fuzzy across 14 unit(s).
+
+| Module       | Units | Functions exact |  Fuzzy | Fuzzy Max |
+| :----------- | ----: | --------------: | -----: | --------: |
+| `zlib-1.1.3` |    14 | 64 / 68 (94.1%) | 99.96% |    99.96% |
+
+_Function universe: the linked units only; the full-engine denominator and excluded-category tables arrive with the universe classifier._
+
+<!-- match-score:end -->
+
 ## Pinned target
 
 The canonical image is the **English GOG Heroes III Complete 4.0 (engine 3.2)** executable:

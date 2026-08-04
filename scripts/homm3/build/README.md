@@ -28,10 +28,15 @@ delink       THE LOOP (explicit invocation only, never in `homm3 build`):
              -> build/delink/<unit>.c.obj -> copy units.toml scope to
              build/objdiff/target/ -> normalize both sides -> re-emit
              objdiff.json against the normalized copies
+build        the `homm3 build` command (homm3.build.build): configure ->
+             ninja -> normalize -> objdiff report -> overall line ->
+             [normal tier] baseline raise + ratchet check (FATAL on a drop)
+             + README score block + stale-delink warning. --fast stops
+             after the %% line. The ratchet lives in homm3.match.status
+             (config/match_baseline.tsv).
 ```
 
-Run `python3 -m homm3.build.delink`, then `objdiff-cli report generate`
-inside build/objdiff (or open the GUI) for real per-unit match numbers.
+`homm3 delink` runs the loop; `homm3 status` prints the per-unit table.
 
 The annotation macros live in `include/va.h` (absolute VAs in source, rvas
 in every artifact). The delinker never runs inside `homm3 build`; explicit
