@@ -260,6 +260,33 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-04 — armygrp wave 1: the module's whole small/medium
+  surface matched - 14 functions implemented, 13 EXACT (user scoped
+  out the big UI/morale family).** New exact matches: HasCreatures,
+  default ctor, Initialize, HasAllUndead, CanJoin, get_AI_value, Add,
+  Swap (retail's `short` temp quirk reproduced), save/load (both use
+  the -1/0 convention through a virtual stream interface - slot 1
+  Read, slot 2 Write - modeled as TAbstractFile), GetArmySizeName
+  (proven STATIC by its /Gr register args; nine 12-byte-stride BSS
+  string tables at 0x6a5bb8 modeled as one 9x3 array, thresholds
+  5/10/20/50/100/250/500/1000). Layouts admitted:
+  TCreatureTypeTraits (stride 116 from retail index math, attributes
+  @0x10 with CTA_UNDEAD=0x40000, AI_value @0x40; NH3API field roster
+  lands exactly), reached via the akCreatureTypeTraits reference
+  global [0x6747b0]. Profile gained /GX (funclet-proven; zero
+  regressions). labels step 1b extended: ctor/dtor keys (??0/??1 ->
+  class_class) and ordered-group overload adoption (claims by rva vs
+  base publics by COFF section number - definition order both sides);
+  claim keys strip the step-1 rva-dedup suffix. Two ratchet
+  rename-artifact cleanups hand-edited (19 stale declarator rows).
+  RESIDUAL: armyGroup(TCreatureType,int) at 40.5% - semantics match
+  line for line but retail's loop keeps short-indexed addressing and
+  memory-resident `amount` where our compile strength-reduces;
+  resisted /GX and three source shapes (guard-return, hoisted short
+  i); open codegen puzzle, candidate explanations: VC6 service-pack
+  optimizer delta or a source spelling not yet found. Scoreboard:
+  83/102 exact (81.4%) in linked units.
+
 - **2026-08-04 — FIRST GAME-CODE MATCHES (P5.2 milestone): Random,
   armyGroup::GetNumArmies, armyGroup::IsMember - all three EXACT
   (100.0) — and the game compiler profile discovered: /O2 /Oy- /ML

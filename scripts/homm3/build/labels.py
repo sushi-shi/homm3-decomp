@@ -313,8 +313,12 @@ def iat_slots(exe_path: Path):
 def _demangle_key(mangled: str):
     """Normalized join key for one MSVC public name: ?Method@Class@@... ->
     class_method, matching scan_sources' declarator spelling (:: -> _).
-    Special members (??0 ctors, operators) return None - they are adopted
-    only when claims model them explicitly."""
+    Ctors/dtors (??0/??1) key as class_class - the same collapse the
+    declarator scan produces for `armyGroup::armyGroup` and
+    `armyGroup::~armyGroup`; other specials (operators) return None."""
+    if mangled.startswith("??0") or mangled.startswith("??1"):
+        cls = mangled[3:].split("@@", 1)[0].split("@")[0]
+        return f"{cls}_{cls}".lower()
     if not mangled.startswith("?") or mangled.startswith("??"):
         return None
     components = mangled[1:].split("@@", 1)[0].split("@")
@@ -323,25 +327,39 @@ def _demangle_key(mangled: str):
 
 
 def _base_authority_names(unit: str) -> dict:
-    """key -> mangled PUBLIC text symbol of the unit's compiled base obj
-    ({} when absent/ambiguous). The compiler is the naming authority for
-    everything our source actually defines."""
+    """key -> [mangled...] PUBLIC text symbols of the unit's compiled
+    base obj, each key's list in DEFINITION order (COFF section order -
+    VC6 emits one COMDAT per function in source order, so an overload
+    group's order matches the claims' rva order)."""
     obj = common.HOMM3_DIR / f"build/objdiff/base/{unit}.obj"
     if not obj.is_file():
         return {}
-    import subprocess
-    proc = subprocess.run(["llvm-nm", "-P", str(obj)],
-                          capture_output=True, text=True)
-    if proc.returncode != 0:
-        return {}
-    keys = {}
-    for line in proc.stdout.splitlines():
-        fields = line.split()
-        if len(fields) >= 2 and fields[1] == "T":
-            key = _demangle_key(fields[0])
+    data = obj.read_bytes()
+    symoff, nsyms = struct.unpack_from("<II", data, 8)
+    strtab = symoff + nsyms * 18
+    def symname(o):
+        if struct.unpack_from("<I", data, o)[0] == 0:
+            so = struct.unpack_from("<I", data, o + 4)[0]
+            return data[strtab + so:data.index(b"\0", strtab + so)].decode(
+                errors="replace")
+        return data[o:o + 8].rstrip(b"\0").decode(errors="replace")
+    ordered = []
+    o, i = symoff, 0
+    while i < nsyms:
+        section = struct.unpack_from("<h", data, o + 12)[0]
+        storage = data[o + 16]
+        if storage == 2 and section > 0:  # external, defined
+            name = symname(o)
+            key = _demangle_key(name)
             if key:
-                keys[key] = None if key in keys else fields[0]
-    return {key: name for key, name in keys.items() if name}
+                ordered.append((section, key, name))
+        aux = data[o + 17]
+        o += 18 * (1 + aux)
+        i += 1 + aux
+    groups = {}
+    for _section, key, name in sorted(ordered):
+        groups.setdefault(key, []).append(name)
+    return groups
 
 
 def main(argv=None) -> int:
@@ -390,12 +408,23 @@ def main(argv=None) -> int:
             continue
         claim_keys = {}
         for row in unit_rows:
-            claim_keys.setdefault(row["name"].lower(), []).append(row)
-        for key, mangled in authority.items():
+            key = row["name"].lower()
+            suffix = f"_{row['rva']:x}"
+            if key.endswith(suffix):
+                key = key[:-len(suffix)]  # step-1 overload dedup suffix
+            claim_keys.setdefault(key, []).append(row)
+        for key, mangled_group in authority.items():
             candidates = claim_keys.get(key)
-            if candidates and len(candidates) == 1:
-                candidates[0]["name"] = mangled
-                candidates[0]["provenance"] = "src-VA+base"
+            if not candidates or len(candidates) != len(mangled_group):
+                continue  # unimplemented or ambiguous group: leave labeled
+            # overload groups zip in order: claims by rva (link order),
+            # mangled names by COFF section (definition order) - the same
+            # order for a VC6 TU
+            for row, mangled in zip(sorted(candidates,
+                                           key=lambda r: r["rva"]),
+                                    mangled_group):
+                row["name"] = mangled
+                row["provenance"] = "src-VA+base"
 
     # 2. zlib map - the admitted table carries the owning TU (unit column),
     # so the delinked objects pair 1:1 against our compiled base objs
