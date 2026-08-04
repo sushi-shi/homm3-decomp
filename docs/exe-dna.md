@@ -351,6 +351,46 @@ order alone, from a build of older sources — hence the dedicated
 remaining headroom: every new rva-anchored name (NH3API or future retail
 proof) splits brackets and can only grow the monotone backbone.
 
+## The Dreamcast xref graph (`carve dcxref`)
+
+The dump's own executable surfaced in the user's GD-ROM rips (both rips
+byte-identical: `H3.EXE`, 8,425,752 B, sha256 `cdbc7e75…`, WinCE SH4 PE,
+image base 0x10000). It is provably the binary the dump describes: the
+debug directory's type-2 entry points at the `NB11` CodeView stream whose
+extent ends exactly at the file end, the dump's module `lfo` values index
+into that stream, and spot bytes agree (`zlibVersion` at `[0001:0019C600]`
+is `mov.l @(pc),r0; rts; nop` — Cb 6, returning the `1.1.3` literal).
+
+That gives a second, symbol-accurate call graph. SH4 codegen makes it
+nearly declarative — `carve dcxref` reads two channels, attributing each
+reference to the function containing the *instruction* (pools cluster
+across proc boundaries, so pool-slot ownership would misattribute):
+
+- `MOV.L @(disp,PC),Rn` literal-pool loads whose 32-bit literal is a proc
+  start VA (36,594 edges — the `JSR @Rn` far-call idiom);
+- `BSR` ±4KB direct calls (3,749).
+
+**26,028 distinct edges; 7,986 of 9,684 procs have at least one caller**
+(`evidence/dc-xref-graph.tsv`). Sanity is visible in place:
+`heroWindowManager::DoDialog`'s callers are the `DoModal` methods; `zcalloc`
+is called by `deflateInit2_`/`inflateInit2_`.
+
+`evidence/retail-dc-xref-check.csv` then compares caller sets across the
+pressings for the 782 functions tied to a Dreamcast proc (dcmap
+correspondence, unique-name fallback): **321 corroborated** (≥1 caller
+shared by name — independent confirmation of the identification), 260
+no-signal, 142 one-sided, and **59 `disjoint-callers`** — both builds show
+comparable named callers and they disagree completely. Disjointness is the
+misattribution alarm (a missing single edge is not: virtual calls are
+invisible to both static graphs and inlining differs). The 59 split into
+two families: suspected wrong-function names on tiny COMDAT-style bodies —
+`CHeroWindowEx::~CHeroWindowEx` (0x1b110) is flagged here *and* was
+LIS-demoted by dcmap, two independent channels distrusting the same pair —
+and genuine RoE→Complete refactors (`advManager::DispatchEvent` call sites
+migrating into `DoAdvCommand`). Per-tier corroboration for the link-order
+names: 34 of the 145 `dc-linkorder` rows are corroborated by shared
+callers, 16 flagged disjoint — review candidates, not yet demotions.
+
 ## Caveats
 
 - The masked matcher proves presence, not absence: a library built into the

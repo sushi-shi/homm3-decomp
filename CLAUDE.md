@@ -19,7 +19,11 @@ decisions are recorded in the port plan's decision log (§5) in the same change.
 - Evidence sources ranked below retail bytes:
   - **Dreamcast CodeView dump** (`../homm3-symbols/HoMM3-Dreamcast-Dump`): proves names,
     types, and layouts for the *Dreamcast* build. Cross-architecture — an x86 identity
-    still requires retail-byte proof.
+    still requires retail-byte proof. The dump's own executable is at
+    `../orig/dreamcast/H3.EXE` (WinCE SH4 PE, 8,425,752 B, sha256 `cdbc7e75…`, from two
+    byte-identical GD-ROM rips; the embedded NB11 CodeView stream is what the dump
+    prints), referenced via `$HOMM3_DC_EXE` — its own xref graph lives in
+    `evidence/dc-xref-graph.tsv`.
   - **NH3API** (`../homm3-symbols/NH3API`): external and **contradicted on addresses**.
     Of its 874 embedded wrapper addresses, only **120 land on a carved function entry**;
     **751 fall inside a function body** — many mid-instruction (e.g. `0x5d70` is the last
