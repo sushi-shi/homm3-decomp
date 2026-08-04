@@ -36,6 +36,7 @@ armygrp	armyGroup_SplitArmy	0.0000
 armygrp	armyGroup_merge_armies	0.0000
 armygrp	get_spell_work_chance	0.0000
 armygrp	modify_spell_damage	0.0000
+basemgr	??0baseManager@@QAE@XZ	100.0000
 compress	@compress2@20	100.0000
 crc32	@crc32@12	100.0000
 deflate	@deflate@8	100.0000

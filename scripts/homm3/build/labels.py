@@ -460,6 +460,8 @@ def main(argv=None) -> int:
     _h, vt_rows = read_tsv_body(VTABLES)
     for rva_text, count in vt_rows:
         rva = int(rva_text, 16)
+        if rva in rows:
+            continue  # a src VTBL() claim owns it - source is the authority
         cls = vt_class.get(rva)
         name = f"??_7{cls}@@6B@" if cls else f"vtbl_{rva:x}"
         put(rva, name, "", int(count) * 4, "data",
