@@ -41,6 +41,29 @@ RESIDENTS (10 of them today).
   42,900 B between `cmbtmgr` and `command` belongs to the
   combat*window/subwindow family and nothing else.
 
+## Every game-band function is relatable
+
+`functions.tsv` covers the whole target band (0x1510..0x202cb3): all
+**4,663** target-class functions, each with either an owner or a
+bounded candidate set.
+
+| relation | functions | meaning |
+| :-- | --: | :-- |
+| `in-span` | 1,690 | inside a proven span - that TU's contribution holds it |
+| `bracketed` | 2,973 | between two spans - owner is the previous TU's tail, the next TU's head, or an unspanned compiland sorting between them |
+
+Bracketed candidate sets are small: 569 functions have just **2**
+candidates, 212 have 3, 452 have 4. Every new claim splits a bracket
+and shrinks the sets around it.
+
+**Ownership is placement, not definition.** "Function X is in TU Y"
+means the linker put it in Y's contribution. A header inline is emitted
+as a COMDAT by every TU that uses it and folded by the linker, so it
+can be resident in a TU that merely *used* it - which is exactly why
+such functions are barred from anchoring (see above). Treat in-span
+ownership as strong evidence of the owning module's *neighbourhood*,
+and confirm the defining file from the function's own evidence.
+
 ## Files
 
 | file | contents |
@@ -49,3 +72,4 @@ RESIDENTS (10 of them today).
 | `order.tsv` | units by first_rva with the gap to the next |
 | `gaps.tsv` | each gap, its function count, and the alphabetically admissible owners |
 | `attribution.tsv` | every unclaimed carved function inside a span, with its owning unit |
+| `functions.tsv` | EVERY game-band target function: owner (in-span) or bracket + candidate owners |

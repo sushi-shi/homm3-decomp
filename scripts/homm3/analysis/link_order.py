@@ -30,7 +30,16 @@ Outputs (evidence/link-order/):
   order.tsv        units sorted by first_rva, with inter-span gaps
   gaps.tsv         each gap + the alphabetically admissible owners
   attribution.tsv  unclaimed carved functions -> owning unit
+  functions.tsv    EVERY game-band function -> its owner or its bracket
   README.md        method, the header-origin rule, and the findings
+
+Every function in the game band is relatable: one inside a span is
+owned by that TU; one between spans is owned by the previous TU's tail,
+the next TU's head, or an unspanned compiland sorting between them -
+a bounded, named candidate set. Ownership here means "the linker placed
+it in that TU's contribution", NOT "the .cpp defines it": a header
+inline is emitted by every using TU and folded, so it can be resident
+in a TU that merely used it.
 
 Run: python3 -m homm3.analysis.link_order
 """
@@ -211,6 +220,39 @@ def main(argv=None) -> int:
                      f"0x{nxt['first']:x}\t{nxt['first'] - info['end']}\t"
                      f"{hi - lo}\t{','.join(cands)}\n")
 
+    # every game-band function: owned (inside a span) or bracketed
+    from homm3.match import universe
+    category, _sizes = universe.classify()
+    span_list = [(i["first"], i["end"], u) for u, i in ordered]
+    span_starts = [s0 for s0, _e, _u in span_list]
+    band_lo, band_hi = span_list[0][0], span_list[-1][1]
+    counts = {"in-span": 0, "bracketed": 0}
+    cand_sizes = {}
+    with (OUT / "functions.tsv").open("w") as fh:
+        fh.write("\n".join(prov) + "\n")
+        fh.write("rva\tsize\trelation\towner_or_bracket\tcandidates\t"
+                 "label\n")
+        for rva in starts:
+            if category.get(rva) != "target" or not (band_lo <= rva < band_hi):
+                continue
+            name = labels.get(rva, ("", ""))[0]
+            k = bisect.bisect_right(span_starts, rva) - 1
+            if k >= 0 and rva < span_list[k][1]:
+                unit = span_list[k][2]
+                counts["in-span"] += 1
+                fh.write(f"0x{rva:x}\t{functions[rva]}\tin-span\t{unit}\t"
+                         f"{unit}\t{name}\n")
+                continue
+            prev_unit = span_list[k][2] if k >= 0 else ""
+            nxt = span_list[k + 1][2] if k + 1 < len(span_list) else ""
+            cands = ([prev_unit] if prev_unit else []) \
+                + [m for m in unspanned if prev_unit < m < nxt] \
+                + ([nxt] if nxt else [])
+            counts["bracketed"] += 1
+            cand_sizes[len(cands)] = cand_sizes.get(len(cands), 0) + 1
+            fh.write(f"0x{rva:x}\t{functions[rva]}\tbracketed\t"
+                     f"{prev_unit}..{nxt}\t{','.join(cands)}\t{name}\n")
+
     covered = sum(i["end"] - i["first"] for _u, i in ordered)
     text_bytes = sum(functions.values())
     print(f"[link_order] {len(ordered)} units spanned, "
@@ -221,6 +263,14 @@ def main(argv=None) -> int:
           f"{text_bytes:,} carved function bytes "
           f"({100.0 * covered / text_bytes:.1f}%); "
           f"{len(attribution):,} unclaimed functions attributed")
+    total = counts["in-span"] + counts["bracketed"]
+    print(f"[link_order] game band 0x{band_lo:x}..0x{band_hi:x}: "
+          f"{total:,} target functions ALL relatable - "
+          f"{counts['in-span']:,} owned by a span, "
+          f"{counts['bracketed']:,} bracketed")
+    print("[link_order] bracketed candidate-set sizes: "
+          + ", ".join(f"{n} cand -> {c:,} fns"
+                      for n, c in sorted(cand_sizes.items())[:6]))
     print(f"[link_order] link order alphabetical: {alphabetical}"
           + ("" if alphabetical else " - INVERSIONS PRESENT"))
     if overlaps:
