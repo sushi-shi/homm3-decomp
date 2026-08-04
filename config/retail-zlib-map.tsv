@@ -23,7 +23,7 @@ rva	size	name	unit
 0x204f40	326	@deflate_stored@8	deflate
 0x205090	284	@fill_window@4	deflate
 0x2051b0	105	@read_buf@12	deflate
-0x205220	1	@deflate_fast@8	deflate
+0x205220	812	@deflate_fast@8	deflate
 0x205550	365	@longest_match@8	deflate
 0x2056c0	1061	@deflate_slow@8	deflate
 0x205af0	307	@crc32@12	crc32
@@ -46,9 +46,10 @@ rva	size	name	unit
 0x206b40	153	@compress2@20	compress
 0x206be0	141	@uncompress@16	uncompr
 0x206c70	17	@zcalloc@12	zutil
+0x206c90	8	@zcfree@8	zutil
 0x206ca0	300	@adler32@12	adler32
 0x206dd0	107	@_tr_init@4	trees
-0x206e40	1	zlib_206dd0_sub00_206e40	trees
+0x206e40	1	@tr_static_init@0	trees
 0x206e50	98	@init_block@4	trees
 0x206ec0	176	@_tr_stored_block@16	trees
 0x206f70	591	@_tr_align@4	trees
