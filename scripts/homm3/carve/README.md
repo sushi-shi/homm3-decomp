@@ -77,10 +77,11 @@ gametree     materialize the game source tree (one carcass per Dreamcast
 carcass      ADMISSION: materialize src/ (one .cpp per game compiland,
              RVA()/DC_ONLY() annotations, src/rva.h) + include/ (per-TU
              prototype headers); hand-owned afterwards, refuses to overwrite
-funcmap      ADMISSION: the function maps the delinker/synth-PDB needs ->
-             config/retail-function-map.tsv (game+zlib: rva, size, name) +
+funcmap      ADMISSION: the non-source function maps the synth-PDB needs ->
+             config/retail-zlib-map.tsv (rva, size, name) +
              config/retail-runtime-map.tsv (crt+cxx: rva, symbol-or-label);
-             hand-owned afterwards, refuses to overwrite
+             game code carries NO config map - its RVA() macros in src/ are
+             the map. Hand-owned afterwards, refuses to overwrite
 naming       give EVERY carved function a name (total coverage, unique,
              evidence-tiered) -> evidence/retail-symbols.csv; needs the Ghidra
              xref export (ghidra/export_xrefs.py -> build/dna/

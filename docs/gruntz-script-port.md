@@ -176,8 +176,9 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 - **P0.2** Decide the annotation contract for HoMM3: adopt `src/rva.h`
   `RVA()/DATA()` macros as-is, or adapt. Decide the vendored-zlib label CSV
   name/location. **Decision point — nothing else in Phase 2 starts before
-  this.** *(Macro half resolved 2026-08-04 — adopted as-is plus `DC_ONLY`;
-  see the decision log. The zlib label CSV half remains open.)*
+  this.** *(RESOLVED 2026-08-04 in two steps — macros adopted as-is plus
+  `DC_ONLY`; the zlib label CSV is `config/retail-zlib-map.tsv`. See the
+  decision log.)*
 
 ### Phase 1 — core skeleton (target: `homm3 build` still green)
 
@@ -259,16 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
-- **2026-08-04 — function maps admitted (synth-PDB/delink prerequisite).**
-  `python3 -m homm3.carve funcmap` emitted, and the session admitted, the
-  two per-function name tables the delinker needs:
-  `config/retail-function-map.tsv` (game+zlib bands, rva/size/name — 5,905
-  functions, 2,089,901 B, names from the naming layer) and
-  `config/retail-runtime-map.tsv` (LIBCMT+LIBCPMT bands, rva/name — 1,144
-  functions, 408 carrying retail-proven raw linker symbols). No MFC table:
-  MFC is absent from the image (three-channel verdict, docs/exe-dna.md).
-  Both are MANUALLY MANAGED after admission. Synth-PDB generation and
-  delinking themselves are deliberately NOT started yet.
+- **2026-08-04 — mapping architecture fixed; P0.2 fully resolved.** The
+  synth PDB's function map has four sources of truth: (1) game code — the
+  `RVA()` macros in `src/` ARE the map ("acts as a .csv"), re-derived every
+  build by the future label-map generator (P5.2), no config table; (2) zlib
+  — the only statically-linked code never reconstructed from `src/` —
+  `config/retail-zlib-map.tsv` (rva/size/name, 68 functions, 35 proven
+  symbols), which decides the zlib-CSV half of P0.2; (3) the CRT/C++
+  runtime, named-but-not-matched — `config/retail-runtime-map.tsv`
+  (rva/name, 1,144 functions, 408 proven symbols), rows properly mapped as
+  matching proceeds; (4) the universe — `config/retail-functions.tsv`
+  reused as-is to find still-unmatched functions by set difference. The
+  eventual consumer is a gruntz-style README coverage table; functions not
+  written directly in code (EH funclets, init/cleanup thunks, runtime
+  library, import thunks) are excluded there, derivable from
+  `evidence/retail-symbols.csv` tiers. Synth-PDB generation and delinking
+  themselves are deliberately NOT started yet.
+
+- **2026-08-04 — function maps admitted (superseded the same day).** An
+  earlier cut emitted a combined `config/retail-function-map.tsv`
+  (game+zlib); the mapping-architecture decision above removed it — game
+  names belong to `src/` annotations, zlib to its own reviewed TSV.
 
 - **2026-08-04 — source carcass admitted; P0.2 macro half resolved.**
   `src/` + `include/` created by `python3 -m homm3.carve carcass` and

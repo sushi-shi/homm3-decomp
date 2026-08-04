@@ -86,8 +86,8 @@ role package, not to a new top-level file.
   (functions, relocs, vtables — MANUALLY MANAGED after admission) and build manifests;
   `evidence/` holds GENERATED analysis deliverables (DNA bands, name maps, joins —
   regenerate, never hand-edit).
-- **Vendored sources stay pristine**: no macros in `vendor/`; zlib's rva→symbol map will
-  be one reviewed CSV.
+- **Vendored sources stay pristine**: no macros in `vendor/`; zlib's rva→symbol map is
+  the one reviewed table `config/retail-zlib-map.tsv`.
 - **Gates must be able to fail**: every future fatal gate ships with a negative control
   proving it still detects its defect.
 - The delinker is vostok, pinned in the flake at the upstream stacked-queue head; it
