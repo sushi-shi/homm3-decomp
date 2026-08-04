@@ -1,0 +1,1054 @@
+// E:\gamedcs\ai_combat.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module ai_combat.obj, 148 procs, 26 retail-tied.
+// retail extent 0x23c80..0x27771 (VA 0x423c80..0x427771)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x29718, cb 0x28) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x29740, cb 0x10) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x29750, cb 0x28) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x29778, cb 0x10) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x29788, cb 0x28) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x297b0, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x297c0, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x297e8, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x297f8, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x29820, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x29830, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x29858, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x29868, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x29890, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x298a0, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x298c8, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x298d8, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x29900, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x29910, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x29938, cb 0x40) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:36
+VA(0x00423c80, 0x79)  // anchor-global, dc 0x29978
+long type_monster_data::get_enchantment_value(type_spell_choice* choice, const hero* casting_hero, const hero* target_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:56
+// DC_ONLY(0x29a30, cb 0x162) - no retail tie yet
+void type_monster_data::cast_enchantment(long spell_value, unsigned char increase)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:84
+VA(0x00423d00, 0xDA)  // anchor-global, dc 0x29b94
+long type_monster_data::get_resurrection_value(type_spell_choice* choice, const hero* casting_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:110
+// DC_ONLY(0x29cac, cb 0x32) - no retail tie yet
+void type_monster_data::cast_resurrection(type_spell_choice* choice, const hero* casting_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:123
+VA(0x00423de0, 0xB1)  // anchor-global, dc 0x29ce0
+long type_monster_data::get_spell_damage(SpellID spell, const hero* casting_hero, const hero* target_hero, long damage)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:148
+VA(0x00423ea0, 0x36)  // anchor-global, dc 0x29dec
+long type_monster_data::take_damage(long damage)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:172
+VA(0x00423ee0, 0x233)  // anchor-bracket, dc 0x29e2c
+void type_AI_combat_data::type_AI_combat_data(const hero* new_hero, const armyGroup* new_army, double base_modifier, const hero* _enemy_hero, const town* enemy_town, NewmapCell* map_cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:221
+// DC_ONLY(0x29f58, cb 0x518) - no retail tie yet
+void type_AI_combat_data::initialize_creatures(double base_modifier, const hero* enemy_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:332
+// DC_ONLY(0x2a470, cb 0xBA) - no retail tie yet
+void type_AI_combat_data::check_wall_archery_penalty(const town* enemy_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:381
+// DC_ONLY(0x2a52c, cb 0x5C) - no retail tie yet
+type_speed_catagory type_AI_combat_data::get_catagory(TCreatureType creature, long speed)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:404
+VA(0x00424880, 0xDB)  // anchor-global, dc 0x2a588
+void type_AI_combat_data::adjust_army(unsigned char dismiss_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:437
+VA(0x00424960, 0x65)  // anchor-global, dc 0x2a644
+long type_AI_combat_data::get_fastest_speed()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:456
+VA(0x004249d0, 0x218)  // anchor-global, dc 0x2a694
+long type_AI_combat_data::get_next_chain_lightning_target(long excluded, const type_AI_combat_data* defender, long start, long damage)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:498
+// DC_ONLY(0x2a764, cb 0x80) - no retail tie yet
+void type_AI_combat_data::get_chain_lightning_value(type_spell_choice* choice, const type_AI_combat_data* defender, long damage)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:525
+VA(0x00424bf0, 0x123)  // anchor-global, dc 0x2a7e4
+void type_AI_combat_data::get_area_value(type_spell_choice* choice, const type_AI_combat_data* defender, long damage, long extra_targets)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:553
+VA(0x00424d20, 0x290)  // anchor-global, dc 0x2a868
+void type_AI_combat_data::get_damage_spell_value(type_spell_choice* choice, const type_AI_combat_data* defender)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:599
+VA(0x00424fb0, 0x145)  // anchor-global, dc 0x2a938
+void type_AI_combat_data::cast_chain_lightning(type_spell_choice* choice, type_AI_combat_data* defender, long damage)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:629
+VA(0x00425100, 0x15A)  // anchor-global, dc 0x2a9e8
+void type_AI_combat_data::cast_area_effect(type_spell_choice* choice, type_AI_combat_data* defender, long damage, long extra_targets)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:658
+VA(0x00425260, 0x180)  // anchor-global, dc 0x2aa7c
+void type_AI_combat_data::cast_damage_spell(type_spell_choice* choice, type_AI_combat_data* defender)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:694
+// DC_ONLY(0x2ab3c, cb 0x4C) - no retail tie yet
+unsigned char type_AI_combat_data::has_creature(TCreatureType creature)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:711
+// DC_ONLY(0x2ab88, cb 0x90) - no retail tie yet
+long type_AI_combat_data::get_mass_damage_value(type_spell_choice* choice, const hero* casting_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:731
+// DC_ONLY(0x2ac18, cb 0x3E) - no retail tie yet
+void type_AI_combat_data::get_mass_damage_value(type_spell_choice* choice, type_AI_combat_data* defender)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:747
+// DC_ONLY(0x2ac58, cb 0x8A) - no retail tie yet
+void type_AI_combat_data::cast_mass_damage_spell(type_spell_choice* choice, const hero* casting_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:768
+// DC_ONLY(0x2ace4, cb 0x72) - no retail tie yet
+void type_AI_combat_data::get_enchantment_value(type_spell_choice* choice, const hero* casting_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:792
+// DC_ONLY(0x2ad58, cb 0x108) - no retail tie yet
+void type_AI_combat_data::get_enchantment_value(type_spell_choice* choice, type_AI_combat_data* defender)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:844
+// DC_ONLY(0x2ae60, cb 0xA2) - no retail tie yet
+void type_AI_combat_data::cast_enchantment(type_spell_choice* choice, const hero* casting_hero, unsigned char increase)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:871
+// DC_ONLY(0x2af04, cb 0xB2) - no retail tie yet
+void type_AI_combat_data::cast_enchantment(type_spell_choice* choice, type_AI_combat_data* defender)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:907
+// DC_ONLY(0x2afb8, cb 0x7E) - no retail tie yet
+void type_AI_combat_data::get_summoning_value(type_spell_choice* choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:941
+// DC_ONLY(0x2b038, cb 0x5A) - no retail tie yet
+void type_AI_combat_data::cast_summoning(type_spell_choice* choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:965
+VA(0x00425bd0, 0x593)  // anchor-global, dc 0x2b094
+void type_AI_combat_data::cast_spell(type_AI_combat_data* defender, type_speed_catagory round)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1082
+// DC_ONLY(0x2b32c, cb 0x52) - no retail tie yet
+void type_AI_combat_data::cast_spells(type_AI_combat_data* defender, type_speed_catagory round)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1100
+// DC_ONLY(0x2b380, cb 0x88) - no retail tie yet
+long type_AI_combat_data::inflict_catagory_damage(long damage, type_speed_catagory catagory)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1122
+VA(0x00426170, 0x131)  // anchor-global, dc 0x2b408
+long type_AI_combat_data::inflict_melee_damage(long damage, long start, long speed_limit)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1150
+VA(0x004262b0, 0x4F)  // anchor-global, dc 0x2b5a4
+void type_AI_combat_data::kill()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1166
+VA(0x00426300, 0x8D)  // anchor-global, dc 0x2b5ec
+void type_AI_combat_data::inflict_damage(long damage, long blocker_speed)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1184
+VA(0x00426390, 0xBB)  // anchor-global, dc 0x2b624
+long type_AI_combat_data::get_attack(type_speed_catagory speed_limit, unsigned char shooters_blocked)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1209
+VA(0x00426450, 0x71)  // anchor-global, dc 0x2b7bc
+long type_AI_combat_data::get_final_melee_value()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1224
+// DC_ONLY(0x2b890, cb 0x3A) - no retail tie yet
+void type_AI_combat_data::do_ranged_combat(type_AI_combat_data* defender)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1240
+// DC_ONLY(0x2b8cc, cb 0x3E) - no retail tie yet
+void type_AI_combat_data::do_melee_combat(type_speed_catagory attacker_speed, type_AI_combat_data* defender)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1255
+// DC_ONLY(0x2b90c, cb 0x3A) - no retail tie yet
+void type_AI_combat_data::do_melee_combat(type_AI_combat_data* defender)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1270
+VA(0x004264d0, 0x2ED)  // anchor-global, dc 0x2b948
+void type_AI_combat_data::do_general_melee(type_AI_combat_data* defender)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1301
+VA(0x004267c0, 0x3FD)  // anchor-global, dc 0x2bad8
+unsigned char type_AI_combat_data::choose_melee(const type_AI_combat_data* enemy, type_speed_catagory current_round)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1363
+VA(0x00426bc0, 0x224)  // anchor-global, dc 0x2bc40
+void type_AI_combat_data::simulate_combat(type_AI_combat_data* defender)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1398
+// DC_ONLY(0x2bcd8, cb 0x92) - no retail tie yet
+void do_eagle_eye(hero* winner, hero* loser)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1424
+// DC_ONLY(0x2bd6c, cb 0xE8) - no retail tie yet
+void create_skeletons(const hero* current_hero, short amount, armyGroup* destination)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1440
+VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
+void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, town* enemy_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1511
+VA(0x004270c0, 0x149)  // anchor-global, dc 0x2c004
+unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero, armyGroup* defending_army, town* defending_town, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1539
+VA(0x00427210, 0x113)  // anchor-global, dc 0x2c140
+void AI_auto_combat(hero* attacking_hero, hero* defending_hero, armyGroup* attacking_army, armyGroup* defending_army, const town* defending_town, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1565
+// DC_ONLY(0x2c27c, cb 0x36C) - no retail tie yet
+long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero, const armyGroup* defending_army, const town* defending_town, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1656
+// DC_ONLY(0x2c5e8, cb 0x2C) - no retail tie yet
+long AI_value_of_combat(const hero* attacking_hero, TCreatureType type, long size, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1666
+// DC_ONLY(0x2c614, cb 0x14) - no retail tie yet
+long AI_approximate_strength(const hero* current_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1674
+// DC_ONLY(0x2c628, cb 0x40) - no retail tie yet
+long AI_approximate_strength(const hero* current_hero, const armyGroup* current_army)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:669
+// DC_ONLY(0x2c668, cb 0x28) - no retail tie yet
+int hero::GetPrimarySkill(int skill)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:960
+// DC_ONLY(0x2c690, cb 0x8) - no retail tie yet
+float hero::get_aggression()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.h:62
+// DC_ONLY(0x2c698, cb 0xA) - no retail tie yet
+unsigned char type_monster_data::operator<(const type_monster_data* arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.h:245
+// DC_ONLY(0x2c6a4, cb 0x4) - no retail tie yet
+long type_AI_combat_data::get_mana()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.h:250
+// DC_ONLY(0x2c6a8, cb 0x4) - no retail tie yet
+armyGroup* type_AI_combat_data::get_army()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.h:255
+VA(0x00427750, 0x21)  // anchor-global, dc 0x2c6ac
+long type_AI_combat_data::get_total()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.h:260
+// DC_ONLY(0x2c6b0, cb 0x4) - no retail tie yet
+hero* type_AI_combat_data::get_hero()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1356
+// DC_ONLY(0x2c6b4, cb 0x54) - no retail tie yet
+void type_AI_combat_data::type_AI_combat_data(const type_AI_combat_data* __that)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1356
+// DC_ONLY(0x2c708, cb 0x18) - no retail tie yet
+void type_AI_combat_data::~type_AI_combat_data()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x2c720, cb 0x4) - no retail tie yet
+type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0x2c724, cb 0x4) - no retail tie yet
+type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x2c728, cb 0x20) - no retail tie yet
+unsigned std::vector<type_monster_data,std::allocator<type_monster_data> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x2c748, cb 0x24) - no retail tie yet
+type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:204
+// DC_ONLY(0x2c76c, cb 0x24) - no retail tie yet
+const type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x2c790, cb 0x1C) - no retail tie yet
+void std::vector<type_monster_data,std::allocator<type_monster_data> >::vector<type_monster_data,std::allocator<type_monster_data> >(const std::allocator<type_monster_data>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:236
+// DC_ONLY(0x2c7ac, cb 0x60) - no retail tie yet
+void std::vector<type_monster_data,std::allocator<type_monster_data> >::vector<type_monster_data,std::allocator<type_monster_data> >(const std::vector<type_monster_data,std::allocator<type_monster_data>* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x2c80c, cb 0x28) - no retail tie yet
+void std::vector<type_monster_data,std::allocator<type_monster_data> >::~vector<type_monster_data,std::allocator<type_monster_data> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0x2c834, cb 0x3C) - no retail tie yet
+void std::vector<type_monster_data,std::allocator<type_monster_data> >::push_back(const type_monster_data* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x2c870, cb 0x4) - no retail tie yet
+void std::allocator<type_monster_data>::allocator<type_monster_data>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x2c874, cb 0x4) - no retail tie yet
+void std::allocator<type_monster_data>::~allocator<type_monster_data>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:153
+// DC_ONLY(0x2c878, cb 0x8) - no retail tie yet
+std::allocator<type_monster_data> std::vector<type_monster_data,std::allocator<type_monster_data> >::get_allocator(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:180
+// DC_ONLY(0x2c880, cb 0x4) - no retail tie yet
+const type_monster_data* std::vector<type_monster_data,std::allocator<type_monster_data> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x2c884, cb 0x2C) - no retail tie yet
+void std::_Vector_base<type_monster_data,std::allocator<type_monster_data> >::_Vector_base<type_monster_data,std::allocator<type_monster_data> >(const std::allocator<type_monster_data>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:94
+// DC_ONLY(0x2c8b0, cb 0x4C) - no retail tie yet
+void std::_Vector_base<type_monster_data,std::allocator<type_monster_data> >::_Vector_base<type_monster_data,std::allocator<type_monster_data> >(unsigned __n, const std::allocator<type_monster_data>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x2c8fc, cb 0x40) - no retail tie yet
+void std::_Vector_base<type_monster_data,std::allocator<type_monster_data> >::~_Vector_base<type_monster_data,std::allocator<type_monster_data> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:101
+// DC_ONLY(0x2c93c, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::~_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x2c954, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >(const std::allocator<type_monster_data>* __a, type_monster_data** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x2c960, cb 0x28) - no retail tie yet
+type_monster_data* std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x2c988, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<type_monster_data *,type_monster_data,std::allocator<type_monster_data> >::deallocate(type_monster_data* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x2c9b4, cb 0x28) - no retail tie yet
+type_monster_data* std::allocator<type_monster_data>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x2c9dc, cb 0x20) - no retail tie yet
+void std::allocator<type_monster_data>::deallocate(type_monster_data* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0x2c9fc, cb 0xDC) - no retail tie yet
+void std::vector<type_monster_data,std::allocator<type_monster_data> >::_M_insert_overflow(type_monster_data* __position, const type_monster_data* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.h:624
+// DC_ONLY(0x2cad8, cb 0x64) - no retail tie yet
+void std::sort(type_monster_data* __first, type_monster_data* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x2cb3c, cb 0x38) - no retail tie yet
+type_monster_data* std::uninitialized_copy(const type_monster_data* __first, const type_monster_data* __last, type_monster_data* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x2cb74, cb 0x30) - no retail tie yet
+void std::destroy(type_monster_data* __first, type_monster_data* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x2cba4, cb 0x44) - no retail tie yet
+void std::construct(type_monster_data* __p, const type_monster_data* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x2cbe8, cb 0x4) - no retail tie yet
+std::allocator<type_monster_data>* std::__stl_alloc_rebind(std::allocator<type_monster_data>* __a, const type_monster_data* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x2cbec, cb 0x38) - no retail tie yet
+type_monster_data* std::uninitialized_copy(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0x2cc24, cb 0x38) - no retail tie yet
+type_monster_data* std::uninitialized_fill_n(type_monster_data* __first, unsigned __n, const type_monster_data* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x2cc5c, cb 0x4) - no retail tie yet
+type_monster_data* std::value_type(const type_monster_data* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1081
+// DC_ONLY(0x2cc60, cb 0xF4) - no retail tie yet
+void std::__introsort_loop(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal, int __depth_limit)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1057
+// DC_ONLY(0x2cd54, cb 0x5C) - no retail tie yet
+void std::__final_insertion_sort(type_monster_data* __first, type_monster_data* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x2cdb0, cb 0x1C) - no retail tie yet
+type_monster_data* std::__uninitialized_copy(const type_monster_data* __first, const type_monster_data* __last, type_monster_data* __result, type_monster_data* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x2cdcc, cb 0x1C) - no retail tie yet
+void std::__destroy(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x2cde8, cb 0x1C) - no retail tie yet
+type_monster_data* std::__uninitialized_copy(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, type_monster_data* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0x2ce04, cb 0x1C) - no retail tie yet
+type_monster_data* std::__uninitialized_fill_n(type_monster_data* __first, unsigned __n, const type_monster_data* __x, type_monster_data* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.h:664
+// DC_ONLY(0x2ce20, cb 0x38) - no retail tie yet
+void std::partial_sort(type_monster_data* __first, type_monster_data* __middle, type_monster_data* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:44
+// DC_ONLY(0x2ce58, cb 0x68) - no retail tie yet
+const type_monster_data* std::__median(const type_monster_data* __a, const type_monster_data* __b, const type_monster_data* __c)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:923
+// DC_ONLY(0x2cec0, cb 0x6C) - no retail tie yet
+type_monster_data* std::__unguarded_partition(type_monster_data* __first, type_monster_data* __last, type_monster_data __pivot)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1012
+// DC_ONLY(0x2cf2c, cb 0x68) - no retail tie yet
+void std::__insertion_sort(type_monster_data* __first, type_monster_data* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1035
+// DC_ONLY(0x2cf94, cb 0x30) - no retail tie yet
+void std::__unguarded_insertion_sort(type_monster_data* __first, type_monster_data* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x2cfc4, cb 0x3C) - no retail tie yet
+type_monster_data* std::__uninitialized_copy_aux(const type_monster_data* __first, const type_monster_data* __last, type_monster_data* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x2d000, cb 0x30) - no retail tie yet
+void std::__destroy_aux(type_monster_data* __first, type_monster_data* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x2d030, cb 0x3C) - no retail tie yet
+type_monster_data* std::__uninitialized_copy_aux(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0x2d06c, cb 0x3C) - no retail tie yet
+type_monster_data* std::__uninitialized_fill_n_aux(type_monster_data* __first, unsigned __n, const type_monster_data* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1432
+// DC_ONLY(0x2d0a8, cb 0xF4) - no retail tie yet
+void std::__partial_sort(type_monster_data* __first, type_monster_data* __middle, type_monster_data* __last, type_monster_data* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:107
+// DC_ONLY(0x2d19c, cb 0x30) - no retail tie yet
+void std::iter_swap(type_monster_data* __a, type_monster_data* __b)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:987
+// DC_ONLY(0x2d1cc, cb 0xAC) - no retail tie yet
+void std::__linear_insert(type_monster_data* __first, type_monster_data* __last, type_monster_data __val)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1028
+// DC_ONLY(0x2d278, cb 0x98) - no retail tie yet
+void std::__unguarded_insertion_sort_aux(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x2d310, cb 0x1C) - no retail tie yet
+void std::destroy(type_monster_data* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:207
+// DC_ONLY(0x2d32c, cb 0x40) - no retail tie yet
+void std::make_heap(type_monster_data* __first, type_monster_data* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0x2d36c, cb 0x4) - no retail tie yet
+int* std::distance_type(const type_monster_data* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.h:64
+// DC_ONLY(0x2d370, cb 0x88) - no retail tie yet
+void std::__pop_heap(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, type_monster_data __value, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.h:108
+// DC_ONLY(0x2d3f8, cb 0x3C) - no retail tie yet
+void std::sort_heap(type_monster_data* __first, type_monster_data* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:96
+// DC_ONLY(0x2d434, cb 0x18) - no retail tie yet
+void std::__iter_swap(type_monster_data* __a, type_monster_data* __b, type_monster_data* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0x2d44c, cb 0x50) - no retail tie yet
+type_monster_data* std::copy_backward(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:960
+// DC_ONLY(0x2d49c, cb 0x84) - no retail tie yet
+void std::__unguarded_linear_insert(type_monster_data* __last, type_monster_data __val)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x2d520, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:192
+// DC_ONLY(0x2d524, cb 0xC8) - no retail tie yet
+void std::__make_heap(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:112
+// DC_ONLY(0x2d5ec, cb 0x110) - no retail tie yet
+void std::__adjust_heap(type_monster_data* __first, int __holeIndex, int __len, type_monster_data __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:142
+// DC_ONLY(0x2d6fc, cb 0x30) - no retail tie yet
+void std::pop_heap(type_monster_data* __first, type_monster_data* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:79
+// DC_ONLY(0x2d72c, cb 0x82) - no retail tie yet
+void std::swap(type_monster_data* __a, type_monster_data* __b)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0x2d7b0, cb 0xC) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_monster_data* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0x2d7bc, cb 0x68) - no retail tie yet
+type_monster_data* std::__copy_backward(type_monster_data* __first, type_monster_data* __last, type_monster_data* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:44
+// DC_ONLY(0x2d824, cb 0xC0) - no retail tie yet
+void std::__push_heap(type_monster_data* __first, int __holeIndex, int __topIndex, type_monster_data __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:134
+// DC_ONLY(0x2d8e4, cb 0x98) - no retail tie yet
+void std::__pop_heap_aux(type_monster_data* __first, type_monster_data* __last, type_monster_data* __formal)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x00424120 size  1646  game_23ee0_sub00_24120 [caller]
+//   0x00424790 size   229  game_23ee0_sub01_24790 [caller]
+//   0x004253e0 size   303  type_AI_combat_data_get_mass_damage_value [hd-crossbuild]
+//   0x00425510 size   898  type_AI_combat_data_get_enchantment_value [hd-crossbuild]
+//   0x004258a0 size   617  type_AI_combat_data_cast_enchantment [hd-crossbuild]
+//   0x00425b10 size   180  type_AI_combat_data_cast_enchantment_25b10 [hd-crossbuild]
+//   0x00426df0 size   237  game_26ee0_sub01_26df0 [caller]
+//   0x00427330 size   792  AI_value_of_combat [hd-crossbuild]
+//   0x00427650 size    51  AI_approximate_strength [hd-crossbuild]
+//   0x00427690 size    47  AI_approximate_strength_27690 [hd-crossbuild]
+//   0x004276c0 size   135  type_AI_combat_data_type_AI_combat_data_276c0 [hd-crossbuild]
+

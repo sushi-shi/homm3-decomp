@@ -1,0 +1,389 @@
+// E:\gamedcs\wingraph.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module wingraph.obj, 55 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x198870, cb 0x28) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x198898, cb 0x10) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x1988a8, cb 0x28) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x1988d0, cb 0x10) - no retail tie yet
+void $E475()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x1988e0, cb 0x28) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x198908, cb 0x10) - no retail tie yet
+void $E478()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x198918, cb 0x28) - no retail tie yet
+void $E480()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x198940, cb 0x10) - no retail tie yet
+void $E481()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x198950, cb 0x28) - no retail tie yet
+void $E483()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x198978, cb 0x10) - no retail tie yet
+void $E484()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x198988, cb 0x28) - no retail tie yet
+void $E486()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x1989b0, cb 0x10) - no retail tie yet
+void $E487()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x1989c0, cb 0x28) - no retail tie yet
+void $E489()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x1989e8, cb 0x10) - no retail tie yet
+void $E490()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x1989f8, cb 0x28) - no retail tie yet
+void $E492()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x198a20, cb 0x10) - no retail tie yet
+void $E493()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x198a30, cb 0x28) - no retail tie yet
+void $E495()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x198a58, cb 0x10) - no retail tie yet
+void $E496()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x198a68, cb 0x28) - no retail tie yet
+void $E498()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x198a90, cb 0x10) - no retail tie yet
+void $E499()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:37
+// DC_ONLY(0x198aa0, cb 0x16) - no retail tie yet
+void $E502()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:37
+// DC_ONLY(0x198ab8, cb 0x14) - no retail tie yet
+void $E503()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:37
+// DC_ONLY(0x198acc, cb 0x14) - no retail tie yet
+void $E504()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:37
+// DC_ONLY(0x198ae0, cb 0x14) - no retail tie yet
+void $E505()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:72
+// DC_ONLY(0x198af4, cb 0x26) - no retail tie yet
+void SetPlayerPaletteColors(unsigned short* pPalette, int whichPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:83
+// DC_ONLY(0x198b1c, cb 0x2A) - no retail tie yet
+void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:109
+// DC_ONLY(0x198b48, cb 0x1E) - no retail tie yet
+void DDCreatePrimary()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:130
+// DC_ONLY(0x198b68, cb 0x64) - no retail tie yet
+void DDSetupClipper()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:156
+// DC_ONLY(0x198bcc, cb 0x190) - no retail tie yet
+void DDInitGraphics(int Mode, unsigned char reinit)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:260
+// DC_ONLY(0x198d5c, cb 0x2D0) - no retail tie yet
+void RobAppBlit(tagRECT* comb_rect)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:370
+// DC_ONLY(0x19902c, cb 0x26) - no retail tie yet
+void DDAppBlit(const tagRECT* mregion)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:529
+// DC_ONLY(0x199054, cb 0x90) - no retail tie yet
+void DDAppBlitX(const tagRECT* region, int dx, int dy)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:719
+// DC_ONLY(0x1990e4, cb 0x86) - no retail tie yet
+void DDRestoreFrontBuffer(tagRECT* dst_rect)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:861
+// DC_ONLY(0x19916c, cb 0x4) - no retail tie yet
+void DDBlitFromFront()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:931
+// DC_ONLY(0x199170, cb 0x140) - no retail tie yet
+void DDBlit(IDirectDrawSurface4* dst_surface, const tagRECT* udst_rect, IDirectDrawSurface4* src_surface, const tagRECT* usrc_rect, unsigned long flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1013
+// DC_ONLY(0x1992b0, cb 0x1E0) - no retail tie yet
+IDirectDrawSurface4* DDCreateSurface(unsigned long width, unsigned long height, int bPrimary, IDirectDrawSurface4** oldsurface)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1110
+// DC_ONLY(0x199490, cb 0x108) - no retail tie yet
+IDirectDrawSurface4* BMCreateSurface(unsigned long width, unsigned long height)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1238
+// DC_ONLY(0x199598, cb 0x134) - no retail tie yet
+void DDCreateMouseSurfaces()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1289
+// DC_ONLY(0x1996cc, cb 0x58) - no retail tie yet
+void DDReleaseMouseSurfaces()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1313
+// DC_ONLY(0x199724, cb 0x978) - no retail tie yet
+void DDSD(int iDDErr, char* cFile, int iLine)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1476
+// DC_ONLY(0x19a09c, cb 0x76) - no retail tie yet
+void DDCleanUpWinGraphics()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1627
+// DC_ONLY(0x19a114, cb 0xF6) - no retail tie yet
+long DDRestoreSurfaces()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1691
+// DC_ONLY(0x19a20c, cb 0x28) - no retail tie yet
+void ResizeWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1712
+// DC_ONLY(0x19a234, cb 0x1AC) - no retail tie yet
+unsigned char DDSetFullScreenStatus(int iNewStatus)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1820
+// DC_ONLY(0x19a3e0, cb 0xA) - no retail tie yet
+void $E507()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1820
+// DC_ONLY(0x19a3ec, cb 0x10) - no retail tie yet
+void $E508()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1821
+// DC_ONLY(0x19a3fc, cb 0xA) - no retail tie yet
+void $E510()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1821
+// DC_ONLY(0x19a408, cb 0x10) - no retail tie yet
+void $E511()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1833
+// DC_ONLY(0x19a418, cb 0x4) - no retail tie yet
+unsigned char GetDesktopInfo()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1857
+// DC_ONLY(0x19a41c, cb 0x6) - no retail tie yet
+int GetDesktopWidth()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1870
+// DC_ONLY(0x19a424, cb 0x6) - no retail tie yet
+int GetDesktopHeight()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1876
+// DC_ONLY(0x19a42c, cb 0x14) - no retail tie yet
+void InitGraphics()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1882
+// DC_ONLY(0x19a440, cb 0x4) - no retail tie yet
+int AppPaint(void* hwnd, void* hdc)
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1916
+// DC_ONLY(0x19a444, cb 0x10) - no retail tie yet
+void CleanUpWinGraphics()
+{
+    // @stub
+}
+
+// E:\gamedcs\wingraph.cpp:1922
+// DC_ONLY(0x19a454, cb 0xD8) - no retail tie yet
+unsigned char SetFullScreenStatus(int bFullScreenOn)
+{
+    // @stub
+}
+

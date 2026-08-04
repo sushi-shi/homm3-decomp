@@ -1,0 +1,384 @@
+// E:\gamedcs\findpath.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module findpath.obj, 51 procs, 6 retail-tied.
+// retail extent 0xb1090..0xb3f61 (VA 0x4b1090..0x4b3f61)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x9eae0, cb 0x28) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x9eb08, cb 0x10) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x9eb18, cb 0x28) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x9eb40, cb 0x10) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x9eb50, cb 0x28) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x9eb78, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x9eb88, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x9ebb0, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x9ebc0, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x9ebe8, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x9ebf8, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x9ec20, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x9ec30, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x9ec58, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x9ec68, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x9ec90, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x9eca0, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x9ecc8, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x9ecd8, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x9ed00, cb 0x40) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:36
+VA(0x004b1090, 0x5F)  // anchor-bracket, dc 0x9ed40
+unsigned char type_point::is_valid()
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:45
+VA(0x004b1370, 0x62)  // anchor-global, dc 0x9ed88
+void searchArray::searchArray()
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:65
+VA(0x004b13e0, 0x78)  // anchor-global, dc 0x9ee08
+void searchArray::~searchArray()
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:71
+// DC_ONLY(0x9ee34, cb 0xB4) - no retail tie yet
+void searchArray::Init()
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:82
+// DC_ONLY(0x9eee8, cb 0x36) - no retail tie yet
+void searchArray::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:95
+// DC_ONLY(0x9ef20, cb 0x112) - no retail tie yet
+void searchArray::Clear(long fly_level, long start_z, long stop_z)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:131
+// DC_ONLY(0x9f034, cb 0x11E) - no retail tie yet
+int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left, TSkillMastery iPathfinding, TRoadType end_road, TSkillMastery flying, TSkillMastery water_walking, TTerrainType native_terrain)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:223
+// DC_ONLY(0x9f154, cb 0x30) - no retail tie yet
+int MinimumTerrainCost(const NewmapCell* cell, int points_left, TSkillMastery iPathfinding, TSkillMastery flying, TSkillMastery water_walking)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:233
+// DC_ONLY(0x9f184, cb 0x120) - no retail tie yet
+int GetTerrainCost(hero* current_hero, type_point start, int direction, int move_left)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:271
+// DC_ONLY(0x9f2a4, cb 0x472) - no retail tie yet
+void searchArray::PushPoint(const pathCell* old_cell, pathCell* point, int direction, int move_cost, int limit, long barrier_value, type_point monster, int isTrigger)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:461
+// DC_ONLY(0x9f718, cb 0xBB0) - no retail tie yet
+void searchArray::TestPossibleDirections(const hero* current_hero, pathCell* source, long turn_mobility, long maxMobility, unsigned char adjacent_monster, type_point monster_location, TSkillMastery iPathfinding, type_search_type search_type, TTerrainType native_terrain)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:877
+// DC_ONLY(0xa02c8, cb 0xC6) - no retail tie yet
+unsigned char searchArray::valid_move_adjacent(const army* current_army, int hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:905
+// DC_ONLY(0xa0390, cb 0x6C) - no retail tie yet
+unsigned char searchArray::valid_move_adjacent(const army* current_army, const army* enemy)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:921
+VA(0x004b2da0, 0x24B)  // anchor-global, dc 0xa03fc
+void searchArray::SeedCombatPosition(const army* thisArmy, long current_group, long limit, unsigned char in_placement_phase, long base_speed)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:1004
+// DC_ONLY(0xa0630, cb 0x1D2) - no retail tie yet
+void searchArray::mark_teleport(const army* current_army, long current_group)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:1080
+// DC_ONLY(0xa0804, cb 0x16A) - no retail tie yet
+void searchArray::set_moat(const army* current_army)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:1136
+// DC_ONLY(0xa0970, cb 0xD4) - no retail tie yet
+unsigned char searchArray::build_combat_path(const army* current_army, int start_hex, int end_hex, int destination)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:1172
+// DC_ONLY(0xa0a44, cb 0x48) - no retail tie yet
+void searchArray::mark_enemy(long hex, long cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:1187
+// DC_ONLY(0xa0a8c, cb 0x8C) - no retail tie yet
+unsigned char searchArray::check_enemy_armies(long hex, long cost, long current_group, long destination)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:1218
+VA(0x004b3400, 0x787)  // anchor-global, dc 0xa0b18
+unsigned char searchArray::FindCombatPath(const army* current_army, long current_group, long destination, unsigned char in_placement_phase, long limit, long base_speed)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:1372
+// DC_ONLY(0xa0f54, cb 0x15C) - no retail tie yet
+void searchArray::PushCombatPoint(int index, int direction, int cost, int flight_cost, int limit)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:1427
+// DC_ONLY(0xa10b0, cb 0x12) - no retail tie yet
+void searchArray::lower_door()
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:1434
+VA(0x004b3f20, 0x41)  // anchor-global, dc 0xa10c4
+long searchArray::get_travel_time(const army* current_army, long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:117
+// DC_ONLY(0xa113c, cb 0x8) - no retail tie yet
+unsigned char type_obscuring_object::obscured_is_trigger()
+{
+    // @stub
+}
+
+// E:\gamedcs\CmbtMgr.h:327
+// DC_ONLY(0xa1144, cb 0x16) - no retail tie yet
+unsigned char combatManager::TObstacle::IsVisible(int side)
+{
+    // @stub
+}
+
+// E:\gamedcs\findpath.cpp:79
+// DC_ONLY(0xa115c, cb 0x50) - no retail tie yet
+void pathCell::pathCell()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:365
+// DC_ONLY(0xa11ac, cb 0x18) - no retail tie yet
+pathCell* std::vector<pathCell,std::allocator<pathCell> >::back()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:393
+// DC_ONLY(0xa11c4, cb 0xE0) - no retail tie yet
+pathCell* std::vector<pathCell,std::allocator<pathCell> >::insert(pathCell* __position, const pathCell* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:474
+// DC_ONLY(0xa12a4, cb 0x1C) - no retail tie yet
+void std::vector<pathCell,std::allocator<pathCell> >::pop_back()
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xa12c0, cb 0x50) - no retail tie yet
+pathCell* std::copy_backward(pathCell* __first, pathCell* __last, pathCell* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xa1310, cb 0x4E) - no retail tie yet
+pathCell* std::__copy_backward(pathCell* __first, pathCell* __last, pathCell* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x004b10f0 size    95  cinit0372_b10f0 [init-ctor]
+//   0x004b1150 size    95  cinit0373_b1150 [init-ctor]
+//   0x004b11b0 size    95  cinit0374_b11b0 [init-ctor]
+//   0x004b1210 size    95  cinit0375_b1210 [init-ctor]
+//   0x004b1270 size    95  cinit0376_b1270 [init-ctor]
+//   0x004b12d0 size    95  cinit0377_b12d0 [init-ctor]
+//   0x004b1330 size    59  type_point_is_valid_b1330 [hd-crossbuild]
+//   0x004b1460 size   159  game_b2da0_sub00_b1460 [caller]
+//   0x004b1500 size    47  game_bcda0_sub04_b1500 [caller]
+//   0x004b1530 size   527  game_16b440_sub00_b1530 [caller]
+//   0x004b1740 size   318  game_b1880_sub00_b1740 [caller]
+//   0x004b1880 size    51  game_805e0_sub13_b1880 [caller]
+//   0x004b18c0 size   418  game_18dd0_sub02_b18c0 [caller]
+//   0x004b1a70 size  2189  game_b2300_sub01_b1a70 [caller]
+//   0x004b2300 size  2708  game_16b440_sub01_b2300 [caller]
+//   0x004b2ff0 size   664  game_21680_sub12_b2ff0 [caller]
+//   0x004b3290 size   367  game_b3400_sub00_b3290 [caller]
+//   0x004b3b90 size    32  searchArray_getCellData [hd-crossbuild]
+//   0x004b3bb0 size   860  game_b3400_sub02_b3bb0 [caller]
+//   0x004b3f10 size    15  game_671c0_sub00_b3f10 [caller]
+

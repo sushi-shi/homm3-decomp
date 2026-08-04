@@ -1,0 +1,268 @@
+// E:\gamedcs\button.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module button.obj, 36 procs, 4 retail-tied.
+// retail extent 0x560f0..0x56e4a (VA 0x4560f0..0x456e4a)
+
+// E:\gamedcs\button.cpp:43
+// DC_ONLY(0x570a4, cb 0x8C) - no retail tie yet
+void button::button()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:69
+// DC_ONLY(0x57130, cb 0xBC) - no retail tie yet
+void button::button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style, unsigned char focus)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:82
+VA(0x004560f0, 0x9A)  // anchor-global, dc 0x571ec
+void button::~button()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:104
+// DC_ONLY(0x57234, cb 0x32) - no retail tie yet
+void button::SetPalette(const char* palette_name)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:115
+// DC_ONLY(0x57268, cb 0x66) - no retail tie yet
+void button::initialize(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:131
+// DC_ONLY(0x572d0, cb 0x460) - no retail tie yet
+int button::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:366
+// DC_ONLY(0x57730, cb 0x122) - no retail tie yet
+int button::Select(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:401
+// DC_ONLY(0x57854, cb 0xBC) - no retail tie yet
+int button::Deselect(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:429
+// DC_ONLY(0x57910, cb 0x12) - no retail tie yet
+int button::GetRealWidth()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:435
+// DC_ONLY(0x57924, cb 0x12) - no retail tie yet
+int button::GetRealHeight()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:441
+// DC_ONLY(0x57938, cb 0x4) - no retail tie yet
+void button::zBufferDraw()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:446
+// DC_ONLY(0x5793c, cb 0xE6) - no retail tie yet
+void button::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:471
+// DC_ONLY(0x57a24, cb 0x4) - no retail tie yet
+void button::Dim()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:477
+VA(0x004569e0, 0x2E)  // anchor-global, dc 0x57a28
+void button::SetPlayerPaletteColors(int whichPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:487
+// DC_ONLY(0x57a5c, cb 0x58) - no retail tie yet
+void textButton::textButton()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:508
+// DC_ONLY(0x57ab4, cb 0xA8) - no retail tie yet
+void textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text_, const char* font_name, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor new_color)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:519
+VA(0x00456bf0, 0xAB)  // anchor-global, dc 0x57b5c
+void textButton::~textButton()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:525
+// DC_ONLY(0x57b98, cb 0xB4) - no retail tie yet
+void textButton::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:557
+// DC_ONLY(0x57c4c, cb 0x90) - no retail tie yet
+void type_func_button::type_func_button(long _x, long _y, long _width, long _height, long _id, const char* _image, int (*)()* _handler, int _normal, int _selected)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:565
+// DC_ONLY(0x57cdc, cb 0x6A) - no retail tie yet
+void type_func_button::type_func_button(const type_icon_definition* def, int _id, int (*)()* _handler)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:574
+// DC_ONLY(0x57d48, cb 0x5C) - no retail tie yet
+int type_func_button::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\Button.h:78
+// DC_ONLY(0x57da4, cb 0x18) - no retail tie yet
+void button::SetText(const char* new_text)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:284
+// DC_ONLY(0x57dbc, cb 0x24) - no retail tie yet
+TPalette24* CSprite::GetPalette24()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:51
+// DC_ONLY(0x57de0, cb 0x34) - no retail tie yet
+void* button::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:488
+// DC_ONLY(0x57e14, cb 0x34) - no retail tie yet
+void* textButton::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:559
+// DC_ONLY(0x57e48, cb 0x34) - no retail tie yet
+void* type_func_button::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\button.cpp:559
+VA(0x00456db0, 0x9A)  // anchor-global, dc 0x57e7c
+void type_func_button::~type_func_button()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x57e94, cb 0x20) - no retail tie yet
+int* std::vector<int,std::allocator<int> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x57eb4, cb 0x1C) - no retail tie yet
+void std::vector<int,std::allocator<int> >::vector<int,std::allocator<int> >(const std::allocator<int>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x57ed0, cb 0x28) - no retail tie yet
+void std::vector<int,std::allocator<int> >::~vector<int,std::allocator<int> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x57ef8, cb 0x4) - no retail tie yet
+void std::allocator<int>::allocator<int>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x57efc, cb 0x4) - no retail tie yet
+void std::allocator<int>::~allocator<int>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x57f00, cb 0x2C) - no retail tie yet
+void std::_Vector_base<int,std::allocator<int> >::_Vector_base<int,std::allocator<int> >(const std::allocator<int>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x57f2c, cb 0x30) - no retail tie yet
+void std::_Vector_base<int,std::allocator<int> >::~_Vector_base<int,std::allocator<int> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:101
+// DC_ONLY(0x57f5c, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<int *,int,std::allocator<int> >::~_STL_alloc_proxy<int *,int,std::allocator<int> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x57f74, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<int *,int,std::allocator<int> >::_STL_alloc_proxy<int *,int,std::allocator<int> >(const std::allocator<int>* __a, int** __p)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x00456190 size  1743  button_vslot02 [vtable-slot]
+//   0x00456860 size   218  calls_timeGetTime_56860 [import-wrapper]
+//   0x00456940 size   153  button_vslot04 [vtable-slot]
+//   0x00456a10 size    16  type_func_button_int32_t [nh3api]
+//   0x00456a20 size    33  textButton_vslot00 [vtable-slot]
+//   0x00456a50 size   403  textButton [hd-crossbuild]
+//   0x00456ca0 size   130  textButton_vslot04 [vtable-slot]
+//   0x00456d30 size    70  type_func_button_int32_t_56d30 [hd-crossbuild]
+//   0x00456d80 size    33  type_func_button_vslot00 [vtable-slot]
+

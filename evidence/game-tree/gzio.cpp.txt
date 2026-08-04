@@ -1,0 +1,116 @@
+// E:\gamedcs\zlib113\gzio.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module gzio.obj, 16 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\gzio.cpp:79
+// DC_ONLY(0xc9b60, cb 0x198) - no retail tie yet
+void* gz_open(const char* path, const char* mode, int fd)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:187
+// DC_ONLY(0xc9cf8, cb 0x10) - no retail tie yet
+void* gzopen@8(const char* path, const char* mode)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:197
+// DC_ONLY(0xc9d08, cb 0x36) - no retail tie yet
+void* gzdopen(int fd, char* mode)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:210
+// DC_ONLY(0xc9d40, cb 0x12) - no retail tie yet
+int gzsetparams@12(void* file, int level, int strategy)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:235
+// DC_ONLY(0xc9d54, cb 0x9E) - no retail tie yet
+int get_byte(gz_stream* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:263
+// DC_ONLY(0xc9df4, cb 0x132) - no retail tie yet
+void check_header(gz_stream* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:316
+// DC_ONLY(0xc9f28, cb 0xAC) - no retail tie yet
+int destroy(gz_stream* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:354
+// DC_ONLY(0xc9fd4, cb 0x1CC) - no retail tie yet
+int gzread@12(void* file, void* buf, unsigned len)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:454
+// DC_ONLY(0xca1a0, cb 0x24) - no retail tie yet
+int gzgetc@4(void* file)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:471
+// DC_ONLY(0xca1c4, cb 0x7E) - no retail tie yet
+char* gzgets@12(void* file, char* buf, int len)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:661
+// DC_ONLY(0xca244, cb 0xE0) - no retail tie yet
+long gzseek@12(void* file, long offset, int whence)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:766
+// DC_ONLY(0xca324, cb 0x12) - no retail tie yet
+long gztell@4(void* file)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:776
+// DC_ONLY(0xca338, cb 0x1E) - no retail tie yet
+int gzeof@4(void* file)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:800
+// DC_ONLY(0xca358, cb 0x42) - no retail tie yet
+unsigned long getLong(gz_stream* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:818
+// DC_ONLY(0xca39c, cb 0x26) - no retail tie yet
+int gzclose@4(void* file)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\gzio.cpp:846
+// DC_ONLY(0xca3c4, cb 0xE0) - no retail tie yet
+const char* gzerror@8(void* file, int* errnum)
+{
+    // @stub
+}
+

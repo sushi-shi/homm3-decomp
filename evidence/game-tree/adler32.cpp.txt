@@ -1,0 +1,11 @@
+// E:\gamedcs\zlib113\adler32.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module adler32.obj, 1 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\adler32.cpp:27
+// DC_ONLY(0x0, cb 0x110) - no retail tie yet
+unsigned long adler32@12(unsigned long adler, const unsigned char* buf, unsigned len)
+{
+    // @stub
+}
+

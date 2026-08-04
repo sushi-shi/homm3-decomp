@@ -1,0 +1,53 @@
+// E:\gamedcs\csequence.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module csequence.obj, 7 procs, 0 retail-tied.
+
+// E:\gamedcs\csequence.cpp:32
+// DC_ONLY(0x71f14, cb 0xC) - no retail tie yet
+void CSequence::CSequence()
+{
+    // @stub
+}
+
+// E:\gamedcs\csequence.cpp:39
+// DC_ONLY(0x71f20, cb 0x40) - no retail tie yet
+void CSequence::CSequence(const int num)
+{
+    // @stub
+}
+
+// E:\gamedcs\csequence.cpp:50
+// DC_ONLY(0x71f60, cb 0x18) - no retail tie yet
+void CSequence::~CSequence()
+{
+    // @stub
+}
+
+// E:\gamedcs\csequence.cpp:68
+// DC_ONLY(0x71f78, cb 0x4E) - no retail tie yet
+int CSequence::AddFrame(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\csequence.cpp:79
+// DC_ONLY(0x71fc8, cb 0x72) - no retail tie yet
+int CSequence::AddFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding)
+{
+    // @stub
+}
+
+// E:\gamedcs\csequence.cpp:91
+// DC_ONLY(0x7203c, cb 0x8A) - no retail tie yet
+int CSequence::AddFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding, int CroppedWidth, int CroppedHeight, int CroppedX, int CroppedY)
+{
+    // @stub
+}
+
+// E:\gamedcs\csequence.cpp:102
+// DC_ONLY(0x720c8, cb 0x38) - no retail tie yet
+int CSequence::AddFrame(CSpriteFrame* frame)
+{
+    // @stub
+}
+

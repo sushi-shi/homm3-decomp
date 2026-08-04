@@ -1,0 +1,313 @@
+// E:\gamedcs\inputmgr.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module inputmgr.obj, 43 procs, 5 retail-tied.
+// retail extent 0xec460..0xeccca (VA 0x4ec460..0x4eccca)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xdc634, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xdc65c, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xdc66c, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xdc694, cb 0x10) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xdc6a4, cb 0x28) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xdc6cc, cb 0x10) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xdc6dc, cb 0x28) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xdc704, cb 0x10) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xdc714, cb 0x28) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xdc73c, cb 0x10) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xdc74c, cb 0x28) - no retail tie yet
+void $E479()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xdc774, cb 0x10) - no retail tie yet
+void $E480()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xdc784, cb 0x28) - no retail tie yet
+void $E482()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xdc7ac, cb 0x10) - no retail tie yet
+void $E483()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xdc7bc, cb 0x28) - no retail tie yet
+void $E485()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xdc7e4, cb 0x10) - no retail tie yet
+void $E486()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xdc7f4, cb 0x28) - no retail tie yet
+void $E488()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xdc81c, cb 0x10) - no retail tie yet
+void $E489()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xdc82c, cb 0x28) - no retail tie yet
+void $E491()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xdc854, cb 0x40) - no retail tie yet
+void $E492()
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:48
+// DC_ONLY(0xdc894, cb 0x20C) - no retail tie yet
+int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:190
+// DC_ONLY(0xdcaa0, cb 0x1AC) - no retail tie yet
+int MouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:274
+// DC_ONLY(0xdcc4c, cb 0x7EC) - no retail tie yet
+void inputManager::FocusTheWidget(int direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:523
+// DC_ONLY(0xdd438, cb 0x164) - no retail tie yet
+int inputManager::CheckLeft(int x, int y, int width, int height, int id, unsigned char nd)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:586
+// DC_ONLY(0xdd59c, cb 0x166) - no retail tie yet
+int inputManager::CheckRight(int x, int y, int width, int height, int id, unsigned char nd)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:650
+// DC_ONLY(0xdd704, cb 0x13C) - no retail tie yet
+int inputManager::CheckUp(int x, int y, int width, int height, int id, unsigned char nd)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:714
+// DC_ONLY(0xdd840, cb 0x13C) - no retail tie yet
+int inputManager::CheckDown(int x, int y, int width, int height, int id, unsigned char nd)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:779
+VA(0x004ec460, 0x6F)  // anchor-bracket, dc 0xdd97c
+void inputManager::inputManager()
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:796
+// DC_ONLY(0xdd9e4, cb 0x4A) - no retail tie yet
+int inputManager::Open(int kFilter)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:821
+// DC_ONLY(0xdda30, cb 0x1E) - no retail tie yet
+void inputManager::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:844
+// DC_ONLY(0xdda50, cb 0x4) - no retail tie yet
+int inputManager::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:855
+VA(0x004ec570, 0x18)  // anchor-global, dc 0xdda54
+void inputManager::Flush()
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:864
+// DC_ONLY(0xdda74, cb 0x19E) - no retail tie yet
+message inputManager::GetEvent(message* __$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:913
+// DC_ONLY(0xddc14, cb 0xF2) - no retail tie yet
+message inputManager::PeekEvent(message* __$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:970
+// DC_ONLY(0xddd08, cb 0x42) - no retail tie yet
+int inputManager::GetCurrQuals()
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:984
+// DC_ONLY(0xddd4c, cb 0x12) - no retail tie yet
+void inputManager::SetKeyCodeType(int newType)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:991
+VA(0x004ec6f0, 0x1C6)  // anchor-global, dc 0xddd60
+void inputManager::AsciiConvert(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:1040
+VA(0x004ec8c0, 0x340)  // linkorder, dc 0xdde74
+void inputManager::MakeScanCodeTable()
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:1139
+VA(0x004ecc00, 0xCA)  // anchor-bracket, dc 0xde044
+void inputManager::ForceMouseMove()
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:1169
+// DC_ONLY(0xde0e8, cb 0xC48) - no retail tie yet
+void VRKeyboard::VRKeyboard(textWidget* w, int _min, int _max)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:1225
+// DC_ONLY(0xded30, cb 0x62) - no retail tie yet
+void VRKeyboard::~VRKeyboard()
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:1231
+// DC_ONLY(0xded94, cb 0x138) - no retail tie yet
+int VRKeyboard::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\inputmgr.cpp:1219
+// DC_ONLY(0xdeecc, cb 0x34) - no retail tie yet
+void* VRKeyboard::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x004ec4d0 size   109  inputManager_vslot00 [vtable-slot]
+//   0x004ec540 size    30  inputManager_inputManager_ec540 [nh3api]
+//   0x004ec560 size     5  TAdventureMapWindow_vslot03 [vtable-slot]
+//   0x004ec590 size   174  inputManager_result [hd-crossbuild]
+//   0x004ec640 size   173  inputManager_result_ec640 [hd-crossbuild]
+

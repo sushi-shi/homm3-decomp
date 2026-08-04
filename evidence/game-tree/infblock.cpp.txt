@@ -1,0 +1,46 @@
+// E:\gamedcs\zlib113\infblock.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module infblock.obj, 6 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\infblock.cpp:74
+// DC_ONLY(0xda04c, cb 0x64) - no retail tie yet
+void inflate_blocks_reset(inflate_blocks_state* s, z_stream_s* z, unsigned long* c)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\infblock.cpp:95
+// DC_ONLY(0xda0b0, cb 0x88) - no retail tie yet
+inflate_blocks_state* inflate_blocks_new(z_stream_s* z, unsigned long (*)()* c, unsigned w)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\infblock.cpp:123
+// DC_ONLY(0xda138, cb 0x972) - no retail tie yet
+int inflate_blocks(inflate_blocks_state* s, z_stream_s* z, int r)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\infblock.cpp:369
+// DC_ONLY(0xdaaac, cb 0x34) - no retail tie yet
+int inflate_blocks_free(inflate_blocks_state* s, z_stream_s* z)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\infblock.cpp:380
+// DC_ONLY(0xdaae0, cb 0x24) - no retail tie yet
+void inflate_set_dictionary(inflate_blocks_state* s, const unsigned char* d, unsigned n)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\infblock.cpp:391
+// DC_ONLY(0xdab04, cb 0x18) - no retail tie yet
+int inflate_blocks_sync_point(inflate_blocks_state* s)
+{
+    // @stub
+}
+

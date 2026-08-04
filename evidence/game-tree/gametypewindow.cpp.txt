@@ -1,0 +1,179 @@
+// E:\gamedcs\gametypewindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module gametypewindow.obj, 25 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xc8f04, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xc8f2c, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xc8f3c, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xc8f64, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xc8f74, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xc8f9c, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xc8fac, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xc8fd4, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xc8fe4, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xc900c, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xc901c, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xc9044, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xc9054, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xc907c, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xc908c, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xc90b4, cb 0x10) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xc90c4, cb 0x28) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xc90ec, cb 0x10) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xc90fc, cb 0x28) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xc9124, cb 0x40) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\gametypewindow.cpp:59
+// DC_ONLY(0xc9164, cb 0x32C) - no retail tie yet
+void TGameTypeWindow::TGameTypeWindow(unsigned char loadGameMode)
+{
+    // @stub
+}
+
+// E:\gamedcs\gametypewindow.cpp:96
+// DC_ONLY(0xc9490, cb 0x68) - no retail tie yet
+void TGameTypeWindow::~TGameTypeWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\gametypewindow.cpp:105
+// DC_ONLY(0xc94f8, cb 0x2C) - no retail tie yet
+void TGameTypeWindow::DoModal()
+{
+    // @stub
+}
+
+// E:\gamedcs\gametypewindow.cpp:138
+// DC_ONLY(0xc9524, cb 0x230) - no retail tie yet
+int GameTypeWindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\gametypewindow.cpp:92
+// DC_ONLY(0xc9754, cb 0x34) - no retail tie yet
+void* TGameTypeWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

@@ -1,0 +1,2502 @@
+// E:\gamedcs\advmgr.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module advmgr.obj, 347 procs, 46 retail-tied.
+// retail extent 0x5de0..0x1b0da (VA 0x405de0..0x41b0da)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x5414, cb 0x38) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x544c, cb 0x10) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x545c, cb 0x38) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x5494, cb 0x10) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x54a4, cb 0x38) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x54dc, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x54ec, cb 0x38) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x5524, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x5534, cb 0x38) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x556c, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x557c, cb 0x38) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x55b4, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x55c4, cb 0x38) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x55fc, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x560c, cb 0x38) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x5644, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x5654, cb 0x38) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x568c, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x569c, cb 0x38) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x56d4, cb 0x40) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:336
+// DC_ONLY(0x5714, cb 0xB6) - no retail tie yet
+unsigned char InitializeCreatureGeneratorNames()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:368
+// DC_ONLY(0x57cc, cb 0x62) - no retail tie yet
+unsigned char InitializeExtraInfoText()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:385
+// DC_ONLY(0x5830, cb 0x22) - no retail tie yet
+void $E493()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:385
+// DC_ONLY(0x5854, cb 0x10) - no retail tie yet
+void $E494()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:392
+VA(0x00405de0, 0xD)  // anchor-global, dc 0x5864
+BlackBoxData* ExtraInfoUnion::get_black_box()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:400
+VA(0x00405df0, 0x20)  // anchor-bracket, dc 0x5888
+type_creature_bank* ExtraInfoUnion::get_creature_bank()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:408
+VA(0x00405e10, 0x1C)  // anchor-global, dc 0x58bc
+type_university* ExtraInfoUnion::get_university()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:420
+// DC_ONLY(0x58f0, cb 0x6D8) - no retail tie yet
+CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:651
+// DC_ONLY(0x5fc8, cb 0x204) - no retail tie yet
+void CAdvMgrNetMsgHandler::HandleGiftRequestMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:677
+// DC_ONLY(0x61cc, cb 0x25C) - no retail tie yet
+void CAdvMgrNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:713
+// DC_ONLY(0x6428, cb 0x2CC) - no retail tie yet
+void CAdvMgrNetMsgHandler::HandleTradeRequestMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:734
+VA(0x00406df0, 0x1DF)  // anchor-global, dc 0x66f4
+void advManager::advManager()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:837
+// DC_ONLY(0x6b24, cb 0x9C8) - no retail tie yet
+int advManager::Open(int newPriority)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:1092
+// DC_ONLY(0x74ec, cb 0x450) - no retail tie yet
+void advManager::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:1217
+VA(0x00407ac0, 0x44)  // anchor-global, dc 0x793c
+int advManager::InMapArea(int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:1229
+// DC_ONLY(0x79b0, cb 0x52) - no retail tie yet
+void advManager::GetCursorSampleSet(int walkSpeed)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:1245
+// DC_ONLY(0x7a04, cb 0x88) - no retail tie yet
+type_point advManager::get_mouse_map_point(__$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:1253
+VA(0x00407b80, 0xBF0)  // anchor-global, dc 0x7a8c
+NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:1497
+// DC_ONLY(0x8644, cb 0x52A) - no retail tie yet
+int advManager::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:1688
+// DC_ONLY(0x8b70, cb 0x7C0) - no retail tie yet
+int advManager::ProcessKeyPress(const message* msg, unsigned char* exitFlag, type_point* trigger_point, NewmapCell** peventCell)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:1939
+// DC_ONLY(0x9330, cb 0x2E4) - no retail tie yet
+int advManager::ProcessSelect(const message* msg, type_point* trigger_point, NewmapCell** peventCell)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2031
+// DC_ONLY(0x9614, cb 0x47E) - no retail tie yet
+void advManager::ProcessAdvMenu(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2152
+// DC_ONLY(0x9a94, cb 0x6D4) - no retail tie yet
+int advManager::ProcessDeSelect(const message* msg, unsigned char* exitFlag, type_point* trigger_point, NewmapCell** peventCell)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2307
+// DC_ONLY(0xa168, cb 0x722) - no retail tie yet
+void advManager::ProcessRadarSelect(const message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2434
+// DC_ONLY(0xa88c, cb 0x6AE) - no retail tie yet
+void advManager::ProcessMapSelect(const message* msg, type_point* trigger_point, NewmapCell** peventCell)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2624
+// DC_ONLY(0xaf3c, cb 0x2CA) - no retail tie yet
+void advManager::ProcessMapSelect2(const message* msg, type_point* trigger_point, NewmapCell** peventCell)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2708
+// DC_ONLY(0xb208, cb 0x50) - no retail tie yet
+void set_town_help(char* buffer, const NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2721
+// DC_ONLY(0xb258, cb 0x60) - no retail tie yet
+void set_hero_help(char* buffer, const NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2736
+// DC_ONLY(0xb2b8, cb 0x104) - no retail tie yet
+void set_pyramid_help(char* buffer, const NewmapCell* cell, const hero* current_hero, const char* separator)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2762
+// DC_ONLY(0xb3bc, cb 0x3CC) - no retail tie yet
+void get_creature_bank_help_text(char* buffer, NewmapCell* cell, type_creature_bank_type type, long player_id, const char* separator, unsigned char show_full_list)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2835
+// DC_ONLY(0xb788, cb 0x1A8) - no retail tie yet
+void SetShrineHelpText(char* buffer, hero* current_hero, NewmapCell* cell, GlobalInfoFlags type, const char* separator_1, const char* separator_2)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2878
+// DC_ONLY(0xb930, cb 0x17C) - no retail tie yet
+void SetTreeHelpText(char* buffer, hero* current_hero, NewmapCell* cell, const char* separator_1, const char* separator_2)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2919
+// DC_ONLY(0xbaac, cb 0x96) - no retail tie yet
+void set_wagon_help_text(char* buffer, NewmapCell* cell, const char* separator)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2941
+// DC_ONLY(0xbb44, cb 0xBC) - no retail tie yet
+void set_tomb_help_text(char* buffer, NewmapCell* cell, const char* separator)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2959
+// DC_ONLY(0xbc00, cb 0xAC) - no retail tie yet
+void set_water_wheel_help_text(char* buffer, NewmapCell* cell, const char* separator)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:2981
+// DC_ONLY(0xbcac, cb 0xD8) - no retail tie yet
+void set_windmill_help_text(char* buffer, NewmapCell* cell, const char* separator)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:3002
+// DC_ONLY(0xbd84, cb 0x128) - no retail tie yet
+void set_witch_hut_help_text(char* buffer, hero* current_hero, NewmapCell* cell, const char* separator_1, const char* separator_2)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:3054
+// DC_ONLY(0xbeac, cb 0x1A) - no retail tie yet
+void type_cell_adjuster::type_cell_adjuster()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:3064
+// DC_ONLY(0xbec8, cb 0x54) - no retail tie yet
+void type_cell_adjuster::~type_cell_adjuster()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:3072
+// DC_ONLY(0xbf1c, cb 0x11C) - no retail tie yet
+NewmapCell* type_cell_adjuster::get_trigger_cell(NewmapCell* map_cell, int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:3111
+// DC_ONLY(0xc038, cb 0x5C) - no retail tie yet
+void type_cell_adjuster::restore_cell()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:3130
+VA(0x0040b0e0, 0x64)  // anchor-global, dc 0xc094
+void advManager::DrawRolloverText(char* text)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:3146
+VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
+void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:4385
+// DC_ONLY(0xed7c, cb 0x4C0) - no retail tie yet
+int advManager::ProcessWaitingHover(int mouseX, int mouseY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:4514
+// DC_ONLY(0xf23c, cb 0x84) - no retail tie yet
+type_adventure_cursor advManager::get_garrison_cursor(NewmapCell* currCell)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:4530
+VA(0x0040e280, 0xD3)  // anchor-global, dc 0xf2c0
+type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:4556
+// DC_ONLY(0xf3a8, cb 0x9C4) - no retail tie yet
+int advManager::ProcessHover(int mouseX, int mouseY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:4831
+// DC_ONLY(0xfd6c, cb 0x16) - no retail tie yet
+void advManager::Reseed(int targetX, int targetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:4840
+// DC_ONLY(0xfd84, cb 0x772) - no retail tie yet
+int advManager::ProcessSearch(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:4978
+// DC_ONLY(0x104f8, cb 0x16) - no retail tie yet
+void $E496()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:4978
+// DC_ONLY(0x10510, cb 0x10) - no retail tie yet
+void $E497()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:4983
+VA(0x0040f270, 0x7D)  // anchor-global, dc 0x10520
+void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5002
+VA(0x0040f2f0, 0xF8)  // linkorder, dc 0x10640
+void advManager::DrawAdventureMapGems()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5026
+VA(0x0040f3f0, 0x47D)  // linkorder, dc 0x10788
+void advManager::CompleteDraw(int start_x, int start_y, int z, unsigned char bForceDraw, unsigned char bUpdateBottomView)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5223
+VA(0x0040f870, 0x43)  // linkorder, dc 0x10c9c
+void advManager::CompleteDraw(unsigned char bForceDraw)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5505
+VA(0x0040f8c0, 0x265)  // anchor-global, dc 0x10cf4
+int advManager::GetCloudLookup(int srcX, int srcY, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5573
+VA(0x0040fb30, 0x167)  // linkorder, dc 0x110c0
+unsigned char advManager::ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type, []* parts)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5614
+VA(0x0040fca0, 0x7A)  // anchor-global, dc 0x11238
+unsigned char hasFlag(int objType)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5634
+VA(0x0040fd20, 0x10E)  // anchor-global, dc 0x1129c
+int GetFlaggedObjectOwner(NewmapCell* thisCell)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5688
+// DC_ONLY(0x11424, cb 0x534) - no retail tie yet
+void advManager::DrawHeroPart(int part, TDrawParts* heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5773
+// DC_ONLY(0x11958, cb 0x54C) - no retail tie yet
+void advManager::DrawHeroPartShadow(int part, TDrawParts* heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5863
+// DC_ONLY(0x11ea4, cb 0x248) - no retail tie yet
+void advManager::DrawBoatPart(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5900
+// DC_ONLY(0x120ec, cb 0x248) - no retail tie yet
+void advManager::DrawBoatPartShadow(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:5941
+// DC_ONLY(0x12334, cb 0xC98) - no retail tie yet
+void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:6239
+// DC_ONLY(0x12fcc, cb 0x8C4) - no retail tie yet
+void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:6441
+// DC_ONLY(0x13890, cb 0x1D4) - no retail tie yet
+void advManager::DrawRiver(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:6504
+// DC_ONLY(0x13a64, cb 0x204) - no retail tie yet
+void advManager::DrawRoad(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:6573
+// DC_ONLY(0x13c68, cb 0x1C0) - no retail tie yet
+void advManager::DrawArrowShadow(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:6637
+// DC_ONLY(0x13e28, cb 0x19E) - no retail tie yet
+void advManager::DrawArrow(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:6699
+// DC_ONLY(0x13fc8, cb 0x316) - no retail tie yet
+void advManager::DrawShroud(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:6805
+// DC_ONLY(0x142e0, cb 0x4E4) - no retail tie yet
+void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:6911
+// DC_ONLY(0x147c4, cb 0x342) - no retail tie yet
+void advManager::DrawGround(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:7019
+// DC_ONLY(0x14b08, cb 0x88) - no retail tie yet
+NewmapCell* advManager::GetCell(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:7026
+// DC_ONLY(0x14b90, cb 0x5A) - no retail tie yet
+NewmapCell* advManager::GetCell(type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:7037
+// DC_ONLY(0x14bec, cb 0x1390) - no retail tie yet
+void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heros, unsigned char view_towns)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:7537
+// DC_ONLY(0x15f7c, cb 0x5E) - no retail tie yet
+void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heroes, unsigned char view_towns)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:7543
+// DC_ONLY(0x15fdc, cb 0x2C50) - no retail tie yet
+void advManager::QuickInfo(int cellX, int cellY, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:8816
+// DC_ONLY(0x18c2c, cb 0x58) - no retail tie yet
+void advManager::ClearBottomView()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:8822
+VA(0x00415d60, 0x78)  // anchor-global, dc 0x18c84
+void advManager::OverrideBottomView(advManager::EBottomViewType view, int time)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:8864
+VA(0x00415de0, 0x140)  // anchor-global, dc 0x18d38
+void advManager::UpdBottomView(unsigned char force_update, unsigned char bDrawWindow, unsigned char bUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:8935
+VA(0x00415f20, 0x87)  // linkorder, dc 0x18f48
+unsigned char advManager::UpdBottomViewEnemyTurn(unsigned char force_update)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:8950
+VA(0x00415fb0, 0xB0)  // linkorder, dc 0x18fc4
+unsigned char advManager::UpdBottomViewNewTurn(unsigned char force_update)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:8968
+VA(0x00416060, 0xF7)  // anchor-global, dc 0x19098
+void advManager::BVResMsg(const char* cMsg, int iResType, int iResQty)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:8979
+VA(0x00416160, 0xAF)  // linkorder, dc 0x190fc
+unsigned char advManager::UpdBottomViewResMsg(unsigned char force_update)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:8994
+VA(0x00416210, 0xD7)  // anchor-global, dc 0x19194
+void advManager::BVMessage(const char* cMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9002
+// DC_ONLY(0x191d0, cb 0xAA) - no retail tie yet
+unsigned char advManager::UpdBottomViewMessage(unsigned char force_update)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9016
+// DC_ONLY(0x1927c, cb 0x8E) - no retail tie yet
+unsigned char advManager::UpdBottomViewKingdom(unsigned char force_update)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9032
+// DC_ONLY(0x1930c, cb 0x7C) - no retail tie yet
+unsigned char advManager::UpdBottomViewHero(unsigned char force_update)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9046
+// DC_ONLY(0x19388, cb 0x98) - no retail tie yet
+unsigned char advManager::UpdBottomViewTown(unsigned char force_update)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9063
+// DC_ONLY(0x19420, cb 0x9C) - no retail tie yet
+TSkillMastery get_identify_level(type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9085
+// DC_ONLY(0x194bc, cb 0x1B8) - no retail tie yet
+void advManager::HeroQuickView(int heroId, int x, int y, unsigned char display_drop_shadow)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9115
+// DC_ONLY(0x19674, cb 0x668) - no retail tie yet
+void advManager::TownQuickView(int townId, int x, int y, unsigned char display_drop_shadow)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9243
+// DC_ONLY(0x19cdc, cb 0x1A4) - no retail tie yet
+void advManager::garrison_quick_view(int id, int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9284
+// DC_ONLY(0x19e80, cb 0x3B0) - no retail tie yet
+void advManager::MonsterQuickView(const NewmapCell* cell, int cellx, int celly)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9349
+VA(0x00417420, 0x146)  // anchor-global, dc 0x1a230
+void advManager::RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9388
+VA(0x00417570, 0x2A)  // anchor-global, dc 0x1a3b0
+void advManager::DeactivateCurrTown(unsigned char waitingPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9396
+VA(0x004175a0, 0x3A)  // anchor-global, dc 0x1a3f0
+void advManager::DeactivateCurrHero(unsigned char waitingPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9406
+VA(0x004175e0, 0x9D)  // anchor-global, dc 0x1a440
+void advManager::MobilizeCurrHero(int bInMove, unsigned char waitingPlayer, unsigned char draw_changes)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9434
+VA(0x00417680, 0x1AF)  // anchor-global, dc 0x1a520
+void advManager::DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char draw_changes)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9476
+VA(0x00417830, 0x2EB)  // anchor-global, dc 0x1a65c
+void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9544
+VA(0x00417b20, 0x63E)  // anchor-global, dc 0x1a878
+void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPlayer, unsigned char draw_changes)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9693
+VA(0x00418160, 0x270)  // linkorder, dc 0x1ae38
+unsigned char SaveGame(unsigned char bCampaignWinMode)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9785
+VA(0x004183d0, 0x245)  // anchor-global, dc 0x1b164
+void advManager::SetEnvironmentOrigin(type_point point, int reset)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9929
+// DC_ONLY(0x1b520, cb 0x88) - no retail tie yet
+void advManager::CheckLoadSample(e_looping_sound_id id_num)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:9945
+VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
+e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10372
+VA(0x00418c10, 0x1B1)  // anchor-global, dc 0x1be10
+void advManager::InsertSound(int x, int y, int z, int soundPriority, int soundsType)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10436
+VA(0x00418dd0, 0x4DF)  // linkorder, dc 0x1c05c
+void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10526
+VA(0x004192b0, 0x44)  // linkorder, dc 0x1c484
+void advManager::HideRoute(int bUpdateScreen, int bRemoveTarget, int bChangeButton)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10558
+VA(0x00419300, 0x14C)  // linkorder, dc 0x1c580
+void advManager::CheckDimHero()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10571
+VA(0x00419450, 0x43)  // linkorder, dc 0x1c5ec
+void advManager::CheckDimNextHeroBut()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10579
+VA(0x004194a0, 0xC7)  // anchor-global, dc 0x1c64c
+void advManager::SeedTo(type_point target)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10609
+VA(0x00419570, 0x49)  // anchor-global, dc 0x1c750
+void advManager::ForceNewHover()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10624
+// DC_ONLY(0x1c7e4, cb 0x324) - no retail tie yet
+void advManager::ScreenScroll(int iDir, int bChangeMouse)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10696
+// DC_ONLY(0x1cb08, cb 0x1F0) - no retail tie yet
+void advManager::CheckScreenScroll()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10756
+// DC_ONLY(0x1ccf8, cb 0x6E) - no retail tie yet
+int advManager::MouseInScrollZone()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10778
+// DC_ONLY(0x1cd68, cb 0x352) - no retail tie yet
+void advManager::SetInitialMapOrigin()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10842
+// DC_ONLY(0x1d0bc, cb 0x250) - no retail tie yet
+void PopupPlayerTurnInfo()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10898
+// DC_ONLY(0x1d30c, cb 0x3E0) - no retail tie yet
+void advManager::StartLocalPlayerTurn()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:10987
+// DC_ONLY(0x1d6ec, cb 0x118) - no retail tie yet
+void advManager::LoadRemote(unsigned char makeOrig)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11021
+VA(0x0041a1e0, 0xF1)  // anchor-global, dc 0x1d804
+void advManager::TrimLoopingSounds(int iMaxSoundsAllowed)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11080
+VA(0x0041a2e0, 0xBC)  // linkorder, dc 0x1d9e0
+void advManager::DisableButtons()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11102
+VA(0x0041a3a0, 0xBC)  // linkorder, dc 0x1dafc
+void advManager::EnableButtons()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11125
+VA(0x0041a460, 0x1FB)  // anchor-global, dc 0x1dc24
+unsigned char advManager::FindAdjacentMonster(type_point point, type_point* result, type_point excluded)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11155
+// DC_ONLY(0x1dde4, cb 0x196) - no retail tie yet
+void ComputeAdvNetControl()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11196
+// DC_ONLY(0x1df7c, cb 0xEC) - no retail tie yet
+int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11220
+// DC_ONLY(0x1e068, cb 0x2F8) - no retail tie yet
+void advManager::ViewPuzzle()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11287
+// DC_ONLY(0x1e360, cb 0xE8) - no retail tie yet
+void advManager::PuzzleDraw(int startX, int startY, int z, int ultX, int ultY)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11310
+// DC_ONLY(0x1e448, cb 0x150) - no retail tie yet
+void advManager::DoAdventureOptions()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11352
+// DC_ONLY(0x1e598, cb 0x4E) - no retail tie yet
+void advManager::DoAdvMenu()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11362
+// DC_ONLY(0x1e5e8, cb 0x284) - no retail tie yet
+unsigned char advManager::DoSystemOptions()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11444
+// DC_ONLY(0x1e86c, cb 0x30C) - no retail tie yet
+int advManager::MoreTreesNear(type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11501
+// DC_ONLY(0x1eb78, cb 0x40) - no retail tie yet
+unsigned short advManager::GetRouteArray(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11507
+// DC_ONLY(0x1ebb8, cb 0x3C) - no retail tie yet
+unsigned short* advManager::GetRouteArrayPtr(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11521
+VA(0x0041b040, 0x9A)  // anchor-global, dc 0x1ebf4
+void CAdvPopup::CAdvPopup(int winX, int winY, int winWidth, int winHeight, unsigned winType)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11528
+// DC_ONLY(0x1ec80, cb 0x32) - no retail tie yet
+int CAdvPopup::ExitDialog(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11539
+// DC_ONLY(0x1ecb4, cb 0xF4) - no retail tie yet
+int CAdvPopup::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:100
+// DC_ONLY(0x1eda8, cb 0x8) - no retail tie yet
+void type_point::type_point()
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:102
+// DC_ONLY(0x1edb0, cb 0x6E) - no retail tie yet
+void type_point::type_point(short new_x, short new_y, short new_z)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:110
+// DC_ONLY(0x1ee20, cb 0x7A) - no retail tie yet
+unsigned char type_point::operator==(const type_point* arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:273
+// DC_ONLY(0x1ee9c, cb 0x26) - no retail tie yet
+void SLimitData::SLimitData(int minx, int miny, int maxx, int maxy)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:403
+// DC_ONLY(0x1eec4, cb 0x10) - no retail tie yet
+long GameTime::Elapsed(unsigned long stop, unsigned long start)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:411
+// DC_ONLY(0x1eed4, cb 0x30) - no retail tie yet
+long GameTime::ElapsedSince(unsigned long time)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:419
+// DC_ONLY(0x1ef04, cb 0x24) - no retail tie yet
+unsigned char GameTime::IsPast(unsigned long time)
+{
+    // @stub
+}
+
+// E:\gamedcs\includes.h:97
+// DC_ONLY(0x1ef28, cb 0x34) - no retail tie yet
+int max(int a, int b)
+{
+    // @stub
+}
+
+// E:\gamedcs\includes.h:134
+// DC_ONLY(0x1ef5c, cb 0x38) - no retail tie yet
+int limit(int min, int value, int max)
+{
+    // @stub
+}
+
+// E:\gamedcs\CreatureType.h:296
+// DC_ONLY(0x1ef94, cb 0x5C) - no retail tie yet
+const char* GetArmyName(int type, int count)
+{
+    // @stub
+}
+
+// E:\gamedcs\AdvMgr.h:187
+// DC_ONLY(0x1eff0, cb 0xE) - no retail tie yet
+void TDrawParts::TDrawParts()
+{
+    // @stub
+}
+
+// E:\gamedcs\AdvMgr.h:1245
+// DC_ONLY(0x1f000, cb 0x84) - no retail tie yet
+type_point advManager::get_map_center(__$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\AdvMgr.h:1254
+// DC_ONLY(0x1f084, cb 0x4C) - no retail tie yet
+int GetMapExtra(type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\MouseMgr.h:189
+// DC_ONLY(0x1f0d0, cb 0xE) - no retail tie yet
+int mouseManager::Enable()
+{
+    // @stub
+}
+
+// E:\gamedcs\MouseMgr.h:197
+// DC_ONLY(0x1f0e0, cb 0xE) - no retail tie yet
+int mouseManager::Disable()
+{
+    // @stub
+}
+
+// E:\gamedcs\MouseMgr.h:210
+// DC_ONLY(0x1f0f0, cb 0xE) - no retail tie yet
+int mouseManager::GetFrame()
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap16.h:111
+// DC_ONLY(0x1f100, cb 0xC) - no retail tie yet
+int Bitmap16Bit::GetWidth()
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap16.h:112
+// DC_ONLY(0x1f10c, cb 0xC) - no retail tie yet
+int Bitmap16Bit::GetHeight()
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap16.h:113
+// DC_ONLY(0x1f118, cb 0xC) - no retail tie yet
+int Bitmap16Bit::GetPitch()
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap16.h:150
+// DC_ONLY(0x1f124, cb 0x22) - no retail tie yet
+unsigned short* Bitmap16Bit::GetMap(int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:145
+// DC_ONLY(0x1f148, cb 0x2C) - no retail tie yet
+int CSprite::GetWidth()
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:146
+// DC_ONLY(0x1f174, cb 0x2C) - no retail tie yet
+int CSprite::GetHeight()
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:287
+// DC_ONLY(0x1f1a0, cb 0x3C) - no retail tie yet
+unsigned short CSprite::GetPaletteColor(unsigned char index)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:293
+// DC_ONLY(0x1f1dc, cb 0x58) - no retail tie yet
+int CSprite::GetNumFrames(int seqnum)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:294
+// DC_ONLY(0x1f234, cb 0x32) - no retail tie yet
+int CSprite::IsValidSeq(int seqnum)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:324
+// DC_ONLY(0x1f268, cb 0xBC) - no retail tie yet
+void CSprite::Draw(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned char tblit)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:354
+// DC_ONLY(0x1f324, cb 0xA4) - no retail tie yet
+void CSprite::DrawAdvObj(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:360
+// DC_ONLY(0x1f3c8, cb 0xB8) - no retail tie yet
+void CSprite::DrawAdvObjWithFlag(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned short outcolor, unsigned char hflip)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:372
+// DC_ONLY(0x1f480, cb 0xA4) - no retail tie yet
+void CSprite::DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:385
+// DC_ONLY(0x1f524, cb 0xA4) - no retail tie yet
+void CSprite::DrawInterface(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:392
+// DC_ONLY(0x1f5c8, cb 0xB8) - no retail tie yet
+void CSprite::DrawTile(int tilenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned char vflip)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:404
+// DC_ONLY(0x1f680, cb 0xB8) - no retail tie yet
+void CSprite::DrawTileShadow(int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hFlipped, unsigned char vFlipped)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:421
+// DC_ONLY(0x1f738, cb 0xB8) - no retail tie yet
+void CSprite::DrawShroudTile(int tilenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned char vflip)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:426
+// DC_ONLY(0x1f7f0, cb 0xB4) - no retail tie yet
+void CSprite::DrawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:432
+// DC_ONLY(0x1f8a4, cb 0xB4) - no retail tie yet
+void CSprite::DrawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:565
+// DC_ONLY(0x1f958, cb 0x1A) - no retail tie yet
+unsigned CObjectType::_getBitPos(unsigned x, unsigned y)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:850
+// DC_ONLY(0x1f974, cb 0x52) - no retail tie yet
+NewmapCell* NewfullMap::zCell(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:895
+// DC_ONLY(0x1f9c8, cb 0x2C) - no retail tie yet
+NewmapCell* NewfullMap::cell(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:906
+// DC_ONLY(0x1f9f4, cb 0x4C) - no retail tie yet
+NewmapCell* NewfullMap::cell(type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:914
+// DC_ONLY(0x1fa40, cb 0x40) - no retail tie yet
+unsigned char ExtraInfoUnion::PlayerKnowsCell(short player)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:979
+// DC_ONLY(0x1fa80, cb 0x12) - no retail tie yet
+short ExtraInfoUnion::GetItemId()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1121
+// DC_ONLY(0x1fa94, cb 0x14) - no retail tie yet
+SpellID ExtraInfoUnion::GetShrineSpell()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1141
+// DC_ONLY(0x1faa8, cb 0x12) - no retail tie yet
+WiseTreePrices ExtraInfoUnion::GetTreePrice()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1220
+// DC_ONLY(0x1fabc, cb 0x1A) - no retail tie yet
+short ExtraInfoUnion::get_wheel_gold()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1230
+// DC_ONLY(0x1fad8, cb 0x16) - no retail tie yet
+short ExtraInfoUnion::get_windmill_amount()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1246
+// DC_ONLY(0x1faf0, cb 0x14) - no retail tie yet
+TSecondarySkill ExtraInfoUnion::get_witch_skill()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:116
+// DC_ONLY(0x1fb04, cb 0xC) - no retail tie yet
+TAdventureObjectType type_obscuring_object::get_obscured_type()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:118
+// DC_ONLY(0x1fb10, cb 0xC) - no retail tie yet
+unsigned long type_obscuring_object::get_obscured_extra_info()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:145
+// DC_ONLY(0x1fb1c, cb 0x10) - no retail tie yet
+unsigned char type_obscuring_object::is_on_map()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:157
+// DC_ONLY(0x1fb2c, cb 0x60) - no retail tie yet
+type_point type_obscuring_object::get_location(__$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:190
+// DC_ONLY(0x1fb8c, cb 0x12) - no retail tie yet
+unsigned char boat::GetHflip()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:196
+// DC_ONLY(0x1fba0, cb 0x28) - no retail tie yet
+void boat::obscure_cell()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:334
+// DC_ONLY(0x1fbc8, cb 0x14) - no retail tie yet
+unsigned char hero::GetHflip()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:641
+// DC_ONLY(0x1fbdc, cb 0x98) - no retail tie yet
+unsigned char hero::IsFlying(unsigned char check_terrain)
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:650
+// DC_ONLY(0x1fc74, cb 0x98) - no retail tie yet
+unsigned char hero::CanWalkOnWater(unsigned char check_terrain)
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:682
+// DC_ONLY(0x1fd0c, cb 0x24) - no retail tie yet
+void hero::obscure_cell()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:986
+// DC_ONLY(0x1fd30, cb 0x60) - no retail tie yet
+type_point hero::get_target(__$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:1046
+// DC_ONLY(0x1fd90, cb 0x1A) - no retail tie yet
+unsigned char hero::SpellIsAvailable(int spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\Town.h:311
+// DC_ONLY(0x1fdac, cb 0x68) - no retail tie yet
+type_point town::get_location(__$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\Town.h:324
+// DC_ONLY(0x1fe14, cb 0x98) - no retail tie yet
+unsigned char town::HasBuilding(int buildingId, unsigned char check_included)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:419
+// DC_ONLY(0x1feac, cb 0xE) - no retail tie yet
+long generator::get_owner()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:785
+// DC_ONLY(0x1febc, cb 0x40) - no retail tie yet
+unsigned char game::OnSameTeam(int player1, int player2)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:933
+// DC_ONLY(0x1fefc, cb 0x44) - no retail tie yet
+unsigned char game::GetInfoFlag(GlobalInfoFlags flag, const int playerNum)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:1023
+// DC_ONLY(0x1ff40, cb 0x58) - no retail tie yet
+town* game::GetCurrTown()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:1024
+// DC_ONLY(0x1ff98, cb 0x14) - no retail tie yet
+int game::GetCurrTownId()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:1056
+// DC_ONLY(0x1ffac, cb 0x30) - no retail tie yet
+garrison* game::GetGarrison(int which)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:1070
+// DC_ONLY(0x1ffdc, cb 0x30) - no retail tie yet
+boat* game::GetBoat(int which)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:1375
+// DC_ONLY(0x2000c, cb 0x58) - no retail tie yet
+TTownType game::get_alignment(int player_id)
+{
+    // @stub
+}
+
+// E:\gamedcs\Findpath.h:202
+// DC_ONLY(0x20064, cb 0x84) - no retail tie yet
+pathCell* searchArray::get_cell(type_point point, unsigned char flying)
+{
+    // @stub
+}
+
+// E:\gamedcs\Findpath.h:211
+// DC_ONLY(0x200e8, cb 0x20) - no retail tie yet
+void searchArray::clear_path()
+{
+    // @stub
+}
+
+// E:\gamedcs\Findpath.h:216
+// DC_ONLY(0x20108, cb 0x24) - no retail tie yet
+long searchArray::get_path_steps()
+{
+    // @stub
+}
+
+// E:\gamedcs\Findpath.h:221
+// DC_ONLY(0x2012c, cb 0x38) - no retail tie yet
+unsigned char searchArray::get_step(long i)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap816.h:69
+// DC_ONLY(0x20164, cb 0xC) - no retail tie yet
+int Bitmap816::GetWidth()
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap816.h:70
+// DC_ONLY(0x20170, cb 0xC) - no retail tie yet
+int Bitmap816::GetHeight()
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap816.h:72
+// DC_ONLY(0x2017c, cb 0x10) - no retail tie yet
+TPalette16* Bitmap816::GetPalette()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:167
+// DC_ONLY(0x2018c, cb 0x2A) - no retail tie yet
+void CNetMsg::CNetMsg(eRS_Messages subType, unsigned long size)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:444
+// DC_ONLY(0x201b8, cb 0x30) - no retail tie yet
+void CTurnUpdateMsg::CTurnUpdateMsg(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:628
+// DC_ONLY(0x201e8, cb 0x10) - no retail tie yet
+unsigned char CNetMsgHandler::IsInPopup()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:629
+// DC_ONLY(0x201f8, cb 0xC) - no retail tie yet
+CNetMsg* CNetMsgHandler::GetAbortPopupMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:638
+// DC_ONLY(0x20204, cb 0x16) - no retail tie yet
+void CNetMsgHandler::SetInPopup(unsigned char b)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.h:117
+// DC_ONLY(0x2021c, cb 0x26) - no retail tie yet
+unsigned char TSeerHut::PlayerHasInfo(const unsigned char playerNum)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.h:121
+// DC_ONLY(0x20244, cb 0x1C) - no retail tie yet
+const char* TSeerHut::GetName()
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.h:123
+// DC_ONLY(0x20260, cb 0x20) - no retail tie yet
+const char* TSeerHut::GetQuestArtifactName()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.h:738
+// DC_ONLY(0x20280, cb 0x18) - no retail tie yet
+const char* townManager::GetTownTypeName(int type)
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:1084
+// DC_ONLY(0x20298, cb 0x50) - no retail tie yet
+void CAdvMgrNetMsgHandler::CAdvMgrNetMsgHandler()
+{
+    // @stub
+}
+
+// E:\gamedcs\advmgr.cpp:11525
+// DC_ONLY(0x202e8, cb 0x38) - no retail tie yet
+void* CAdvPopup::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:385
+// DC_ONLY(0x20320, cb 0x34) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::operator=(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __s)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:579
+// DC_ONLY(0x20354, cb 0x24) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::operator+=(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __s)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:580
+// DC_ONLY(0x20378, cb 0x24) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::operator+=(const char* __s)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:581
+// DC_ONLY(0x2039c, cb 0x24) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::operator+=(char __c)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:564
+// DC_ONLY(0x203c0, cb 0x28) - no retail tie yet
+std::bitset<48,unsigned std::bitset<48,unsigned long>::operator[](__$ReturnUdt, unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:376
+// DC_ONLY(0x203e8, cb 0x6) - no retail tie yet
+void std::bitset<48,unsigned long>::reference::~reference()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:402
+// DC_ONLY(0x203f0, cb 0x34) - no retail tie yet
+unsigned char std::bitset<48,unsigned long>::reference::operator bool()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x20424, cb 0x24) - no retail tie yet
+void std::vector<resource *,std::allocator<resource *> >::vector<resource *,std::allocator<resource *> >(const std::allocator<resource* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x20448, cb 0x8) - no retail tie yet
+void std::allocator<resource *>::allocator<resource *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x20450, cb 0x6) - no retail tie yet
+void std::allocator<resource *>::~allocator<resource *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x20458, cb 0x16) - no retail tie yet
+unsigned std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x20470, cb 0x28) - no retail tie yet
+NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x20498, cb 0x2C) - no retail tie yet
+CObjectType* std::vector<CObjectType,std::allocator<CObjectType> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x204c4, cb 0x2C) - no retail tie yet
+CObject* std::vector<CObject,std::allocator<CObject> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x204f0, cb 0x28) - no retail tie yet
+CSprite** std::vector<CSprite *,std::allocator<CSprite *> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x20518, cb 0x2C) - no retail tie yet
+mine* std::vector<mine,std::allocator<mine> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x20544, cb 0x2C) - no retail tie yet
+generator* std::vector<generator,std::allocator<generator> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x20570, cb 0x2C) - no retail tie yet
+garrison* std::vector<garrison,std::allocator<garrison> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x2059c, cb 0x2C) - no retail tie yet
+boat* std::vector<boat,std::allocator<boat> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x205c8, cb 0x2C) - no retail tie yet
+type_university* std::vector<type_university,std::allocator<type_university> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x205f4, cb 0x2C) - no retail tie yet
+type_creature_bank* std::vector<type_creature_bank,std::allocator<type_creature_bank> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x20620, cb 0x16) - no retail tie yet
+unsigned std::vector<pathCell *,std::allocator<pathCell *> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:204
+// DC_ONLY(0x20638, cb 0x28) - no retail tie yet
+pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0x20660, cb 0x3C) - no retail tie yet
+void std::vector<pathCell *,std::allocator<pathCell *> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x2069c, cb 0x24) - no retail tie yet
+void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::vector<type_dialog_resource,std::allocator<type_dialog_resource> >(const std::allocator<type_dialog_resource>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x206c0, cb 0x34) - no retail tie yet
+void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::~vector<type_dialog_resource,std::allocator<type_dialog_resource> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0x206f4, cb 0x54) - no retail tie yet
+void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::push_back(const type_dialog_resource* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0x20748, cb 0x3C) - no retail tie yet
+void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x20784, cb 0x8) - no retail tie yet
+void std::allocator<type_dialog_resource>::allocator<type_dialog_resource>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x2078c, cb 0x6) - no retail tie yet
+void std::allocator<type_dialog_resource>::~allocator<type_dialog_resource>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:584
+// DC_ONLY(0x20794, cb 0x30) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::append(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __s)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:598
+// DC_ONLY(0x207c4, cb 0x3C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::append(const char* __s)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:617
+// DC_ONLY(0x20800, cb 0xA4) - no retail tie yet
+void std::basic_string<char,std::char_traits<char>,std::allocator<char> >::push_back(char __c)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:370
+// DC_ONLY(0x208a4, cb 0x40) - no retail tie yet
+void std::bitset<48,unsigned long>::reference::reference(std::bitset<48,unsigned* __b, unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x208e4, cb 0x44) - no retail tie yet
+void std::_Vector_base<resource *,std::allocator<resource *> >::_Vector_base<resource *,std::allocator<resource *> >(const std::allocator<resource* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x20928, cb 0xC) - no retail tie yet
+NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x20934, cb 0xC) - no retail tie yet
+CObjectType* std::vector<CObjectType,std::allocator<CObjectType> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x20940, cb 0xC) - no retail tie yet
+CObject* std::vector<CObject,std::allocator<CObject> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x2094c, cb 0xC) - no retail tie yet
+CSprite** std::vector<CSprite *,std::allocator<CSprite *> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x20958, cb 0xC) - no retail tie yet
+mine* std::vector<mine,std::allocator<mine> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x20964, cb 0xC) - no retail tie yet
+generator* std::vector<generator,std::allocator<generator> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x20970, cb 0xC) - no retail tie yet
+garrison* std::vector<garrison,std::allocator<garrison> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x2097c, cb 0xC) - no retail tie yet
+boat* std::vector<boat,std::allocator<boat> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x20988, cb 0xC) - no retail tie yet
+type_university* std::vector<type_university,std::allocator<type_university> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x20994, cb 0xC) - no retail tie yet
+type_creature_bank* std::vector<type_creature_bank,std::allocator<type_creature_bank> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x209a0, cb 0xC) - no retail tie yet
+pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:180
+// DC_ONLY(0x209ac, cb 0xC) - no retail tie yet
+pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0x209b8, cb 0xC) - no retail tie yet
+pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0x209c4, cb 0x48) - no retail tie yet
+pathCell** std::vector<pathCell *,std::allocator<pathCell *> >::erase(pathCell** __first, pathCell** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x20a0c, cb 0xC) - no retail tie yet
+type_dialog_resource* std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0x20a18, cb 0xC) - no retail tie yet
+type_dialog_resource* std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0x20a24, cb 0x48) - no retail tie yet
+type_dialog_resource* std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::erase(type_dialog_resource* __first, type_dialog_resource* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x20a6c, cb 0x44) - no retail tie yet
+void std::_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >::_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >(const std::allocator<type_dialog_resource>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x20ab0, cb 0x44) - no retail tie yet
+void std::_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >::~_Vector_base<type_dialog_resource,std::allocator<type_dialog_resource> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:120
+// DC_ONLY(0x20af4, cb 0x24) - no retail tie yet
+unsigned long std::_Base_bitset<48,unsigned long>::_S_maskbit(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0x20b18, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::~_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:124
+// DC_ONLY(0x20b34, cb 0x28) - no retail tie yet
+unsigned long* std::_Base_bitset<2,unsigned long>::_M_getword(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x20b5c, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >::_STL_alloc_proxy<resource * *,resource *,std::allocator<resource *> >(const std::allocator<resource* __a, resource*** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x20b7c, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >(const std::allocator<type_dialog_resource>* __a, type_dialog_resource** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x20b9c, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::deallocate(type_dialog_resource* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:117
+// DC_ONLY(0x20bcc, cb 0xE) - no retail tie yet
+unsigned std::_Base_bitset<48,unsigned long>::_S_whichbit(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:111
+// DC_ONLY(0x20bdc, cb 0xE) - no retail tie yet
+unsigned std::_Base_bitset<2,unsigned long>::_S_whichword(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x20bec, cb 0x2C) - no retail tie yet
+void std::allocator<type_dialog_resource>::deallocate(type_dialog_resource* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.c:214
+// DC_ONLY(0x20c18, cb 0xEC) - no retail tie yet
+void std::basic_string<char,std::char_traits<char>,std::allocator<char> >::reserve(unsigned __res_arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\DC_precompiledheaders.h:33
+// DC_ONLY(0x20d04, cb 0x28) - no retail tie yet
+const int* _cpp_max(const int* _X, const int* _Y)
+{
+    // @stub
+}
+
+// E:\gamedcs\includes.h:124
+// DC_ONLY(0x20d2c, cb 0x38) - no retail tie yet
+const int* t_limit(const int* min, const int* value, const int* max)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0x20d64, cb 0x120) - no retail tie yet
+void std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::_M_insert_overflow(type_dialog_resource* __position, const type_dialog_resource* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:736
+// DC_ONLY(0x20e84, cb 0x2C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::assign(char* __first, char* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x20eb0, cb 0x30) - no retail tie yet
+void std::destroy(type_dialog_resource* __first, type_dialog_resource* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x20ee0, cb 0x4C) - no retail tie yet
+void std::construct(type_dialog_resource* __p, const type_dialog_resource* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:606
+// DC_ONLY(0x20f2c, cb 0x2C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::append(char* __first, char* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0x20f58, cb 0x58) - no retail tie yet
+pathCell** std::copy(pathCell** __first, pathCell** __last, pathCell** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x20fb0, cb 0x30) - no retail tie yet
+void std::destroy(pathCell** __first, pathCell** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0x20fe0, cb 0x58) - no retail tie yet
+type_dialog_resource* std::copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x21038, cb 0xA) - no retail tie yet
+std::allocator<type_dialog_resource>* std::__stl_alloc_rebind(std::allocator<type_dialog_resource>* __a, const type_dialog_resource* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x21044, cb 0x16) - no retail tie yet
+unsigned std::vector<type_dialog_resource,std::allocator<type_dialog_resource> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x2105c, cb 0x38) - no retail tie yet
+type_dialog_resource* std::_STL_alloc_proxy<type_dialog_resource *,type_dialog_resource,std::allocator<type_dialog_resource> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x21094, cb 0x3C) - no retail tie yet
+type_dialog_resource* std::allocator<type_dialog_resource>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x210d0, cb 0x3C) - no retail tie yet
+type_dialog_resource* std::uninitialized_copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0x2110c, cb 0x3C) - no retail tie yet
+type_dialog_resource* std::uninitialized_fill_n(type_dialog_resource* __first, unsigned __n, const type_dialog_resource* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:755
+// DC_ONLY(0x21148, cb 0x8C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_assign_dispatch(char* __f, char* __l, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x211d4, cb 0x8) - no retail tie yet
+type_dialog_resource* std::value_type(const type_dialog_resource* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x211dc, cb 0x24) - no retail tie yet
+void std::__destroy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:698
+// DC_ONLY(0x21200, cb 0x48) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_append_dispatch(char* __f, char* __l, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0x21248, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, pathCell** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0x2125c, cb 0x8) - no retail tie yet
+int* std::distance_type(pathCell** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0x21264, cb 0x40) - no retail tie yet
+pathCell** std::__copy(pathCell** __first, pathCell** __last, pathCell** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x212a4, cb 0x8) - no retail tie yet
+pathCell** std::value_type(pathCell** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x212ac, cb 0x24) - no retail tie yet
+void std::__destroy(pathCell** __first, pathCell** __last, pathCell** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0x212d0, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_dialog_resource* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0x212e4, cb 0x8) - no retail tie yet
+int* std::distance_type(const type_dialog_resource* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0x212ec, cb 0x58) - no retail tie yet
+type_dialog_resource* std::__copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x21344, cb 0x30) - no retail tie yet
+type_dialog_resource* std::__uninitialized_copy(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result, type_dialog_resource* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0x21374, cb 0x30) - no retail tie yet
+type_dialog_resource* std::__uninitialized_fill_n(type_dialog_resource* __first, unsigned __n, const type_dialog_resource* __x, type_dialog_resource* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x213a4, cb 0x34) - no retail tie yet
+void std::__destroy_aux(type_dialog_resource* __first, type_dialog_resource* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:645
+// DC_ONLY(0x213d8, cb 0x1B0) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::append(char* __first, char* __last, std::forward_iterator_tag __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x21588, cb 0x34) - no retail tie yet
+void std::__destroy_aux(pathCell** __first, pathCell** __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x215bc, cb 0x44) - no retail tie yet
+type_dialog_resource* std::__uninitialized_copy_aux(type_dialog_resource* __first, type_dialog_resource* __last, type_dialog_resource* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0x21600, cb 0x44) - no retail tie yet
+type_dialog_resource* std::__uninitialized_fill_n_aux(type_dialog_resource* __first, unsigned __n, const type_dialog_resource* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x21644, cb 0x20) - no retail tie yet
+void std::destroy(type_dialog_resource* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:336
+// DC_ONLY(0x21664, cb 0x3C) - no retail tie yet
+void std::distance(char* __first, char* __last, int* __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x216a0, cb 0x20) - no retail tie yet
+void std::destroy(pathCell** __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x216c0, cb 0x8) - no retail tie yet
+void std::__destroy_aux(type_dialog_resource* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:329
+// DC_ONLY(0x216c8, cb 0x1C) - no retail tie yet
+void std::__distance(char* __first, char* __last, int* __n, std::random_access_iterator_tag __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x216e4, cb 0x8) - no retail tie yet
+void std::__destroy_aux(pathCell** __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x00405e30 size  1611  calls_timeGetTime_5e30 [import-wrapper]
+//   0x00406480 size  1439  hero_hero [hd-crossbuild]
+//   0x00406a20 size   455  game_5e30_sub01_6a20 [caller]
+//   0x00406bf0 size   506  game_1c66b0_sub00_6bf0 [caller]
+//   0x00406fd0 size  2006  advManager_vslot00 [vtable-slot]
+//   0x004077b0 size    33  game_77b0 [band]
+//   0x004077e0 size   721  advManager_vslot01 [vtable-slot]
+//   0x00407b10 size   111  advManager_result [hd-crossbuild]
+//   0x00408770 size    49  NewfullMap_cell [hd-crossbuild]
+//   0x004087b0 size  1159  advManager_vslot02 [vtable-slot]
+//   0x00408c40 size  2973  calls_timeGetTime_8c40 [import-wrapper]
+//   0x004097e0 size   656  calls_timeGetTime_97e0 [import-wrapper]
+//   0x00409a70 size  1601  calls_timeGetTime_9a70 [import-wrapper]
+//   0x0040a0c0 size  1293  calls_timeGetTime_a0c0 [import-wrapper]
+//   0x0040a5d0 size  1542  game_97e0_sub01_a5d0 [caller]
+//   0x0040abe0 size   893  game_d3f0_sub00_abe0 [caller]
+//   0x0040af60 size    74  game_2275b0_sub00_af60 [caller]
+//   0x0040afb0 size   303  game_b150_sub00_afb0 [caller]
+//   0x0040d3f0 size   636  game_b150_sub01_d3f0 [caller]
+//   0x0040d670 size   595  game_b150_sub02_d670 [caller]
+//   0x0040d8d0 size   553  game_b150_sub03_d8d0 [caller]
+//   0x0040db00 size   445  game_b150_sub04_db00 [caller]
+//   0x0040dcc0 size   484  game_b150_sub05_dcc0 [caller]
+//   0x0040deb0 size   975  game_e360_sub00_deb0 [caller]
+//   0x0040e360 size  2328  game_6fd0_sub01_e360 [caller]
+//   0x0040ec80 size    10  game_2450_sub03_ec80 [caller]
+//   0x0040ec90 size  1453  game_digsound_82m_ec90 [string]
+//   0x0040f240 size    43  cinit0033_f240 [init-ctor]
+//   0x0040fe30 size  1156  game_10c00_sub02_fe30 [caller]
+//   0x004102c0 size  1172  game_11590_sub00_102c0 [caller]
+//   0x00410760 size   591  game_10c00_sub03_10760 [caller]
+//   0x004109b0 size   591  game_11590_sub01_109b0 [caller]
+//   0x00410c00 size  2446  game_f3f0_sub02_10c00 [caller]
+//   0x00411590 size  1508  game_f3f0_sub03_11590 [caller]
+//   0x00411b80 size   471  game_f3f0_sub04_11b80 [caller]
+//   0x00411d60 size   492  game_f3f0_sub05_11d60 [caller]
+//   0x00411f50 size   351  game_f3f0_sub06_11f50 [caller]
+//   0x004120b0 size   354  game_f3f0_sub07_120b0 [caller]
+//   0x00412220 size   584  game_f3f0_sub08_12220 [caller]
+//   0x00412470 size  1154  game_f3f0_sub09_12470 [caller]
+//   0x00412900 size   715  game_f3f0_sub10_12900 [caller]
+//   0x00412bd0 size   108  advManager_GetCell [hd-crossbuild]
+//   0x00412c40 size  2881  advManager_UpdateRadar [hd-crossbuild]
+//   0x00413790 size    39  advManager_UpdateRadar_13790 [hd-crossbuild]
+//   0x004137c0 size  9632  game_s_s_137c0 [string]
+//   0x004162f0 size   161  game_15de0_sub04_162f0 [caller]
+//   0x004163a0 size   166  game_15de0_sub05_163a0 [caller]
+//   0x00416450 size   154  game_15de0_sub06_16450 [caller]
+//   0x004164f0 size   154  game_15de0_sub07_164f0 [caller]
+//   0x00416590 size   528  game_2e70_sub01_16590 [caller]
+//   0x004167a0 size  2011  game_i_s_167a0 [string]
+//   0x00416f80 size   461  game_a5d0_sub01_16f80 [caller]
+//   0x00417150 size   713  game_a5d0_sub02_17150 [caller]
+//   0x004195c0 size   600  calls_timeGetTime_195c0 [import-wrapper]
+//   0x00419820 size   361  calls_timeGetTime_19820 [import-wrapper]
+//   0x00419990 size   739  game_6fd0_sub03_19990 [caller]
+//   0x00419c80 size   369  game_sysmsg_wav_19c80 [string]
+//   0x00419e00 size   768  calls_timeGetTime_19e00 [import-wrapper]
+//   0x0041a100 size   217  game_orig_dat_1a100 [string]
+//   0x0041a660 size   235  game_19e00_sub01_1a660 [caller]
+//   0x0041a750 size   151  game_1d930_sub02_1a750 [caller]
+//   0x0041a7f0 size   775  game_obelisk_wav_1a7f0 [string]
+//   0x0041ab00 size   248  game_9a70_sub03_1ab00 [caller]
+//   0x0041ac00 size   428  game_horse_02d_wav_1ac00 [string]
+//   0x0041adb0 size   607  game_646d0_sub00_1adb0 [caller]
+//   0x0041b010 size    39  game_805e0_sub00_1b010 [caller]
+

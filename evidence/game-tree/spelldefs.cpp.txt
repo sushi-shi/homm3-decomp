@@ -1,0 +1,74 @@
+// E:\gamedcs\spelldefs.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module spelldefs.obj, 10 procs, 0 retail-tied.
+
+// E:\gamedcs\spelldefs.cpp:215
+// DC_ONLY(0x14e278, cb 0x50) - no retail tie yet
+unsigned char SpellTargetsASingleArmy(int spell, int sslevel)
+{
+    // @stub
+}
+
+// E:\gamedcs\spelldefs.cpp:230
+// DC_ONLY(0x14e2c8, cb 0xD4) - no retail tie yet
+unsigned char InitializeSpellTraitsTable()
+{
+    // @stub
+}
+
+// E:\gamedcs\spelldefs.cpp:335
+// DC_ONLY(0x14e39c, cb 0x362) - no retail tie yet
+void InitializeSpellTraits(int id, const std::vector<char* resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\spelldefs.cpp:424
+// DC_ONLY(0x14e700, cb 0x18) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\spelldefs.cpp:424
+// DC_ONLY(0x14e718, cb 0x18) - no retail tie yet
+void $E437()
+{
+    // @stub
+}
+
+// E:\gamedcs\spelldefs.cpp:424
+// DC_ONLY(0x14e730, cb 0x5C) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\spelldefs.cpp:320
+// DC_ONLY(0x14e78c, cb 0x8) - no retail tie yet
+void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
+{
+    // @stub
+}
+
+// E:\gamedcs\spelldefs.cpp:321
+// DC_ONLY(0x14e794, cb 0x18) - no retail tie yet
+void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
+{
+    // @stub
+}
+
+// E:\gamedcs\spelldefs.cpp:323
+// DC_ONLY(0x14e7ac, cb 0x4) - no retail tie yet
+void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
+{
+    // @stub
+}
+
+// E:\gamedcs\spelldefs.cpp:325
+// DC_ONLY(0x14e7b0, cb 0x4) - no retail tie yet
+char* `anonymous namespace'::TAutoStrPtr::get()
+{
+    // @stub
+}
+

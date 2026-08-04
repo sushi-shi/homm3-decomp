@@ -1,0 +1,67 @@
+// E:\gamedcs\bitmap8.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module bitmap8.obj, 9 procs, 0 retail-tied.
+
+// E:\gamedcs\bitmap8.cpp:32
+// DC_ONLY(0x533f0, cb 0x58) - no retail tie yet
+void Bitmap8Bit::Bitmap8Bit()
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap8.cpp:40
+// DC_ONLY(0x53448, cb 0x84) - no retail tie yet
+void Bitmap8Bit::Bitmap8Bit(const char* name, int w, int h, unsigned char* data, const TPalette24* p24, int csize)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap8.cpp:55
+// DC_ONLY(0x534cc, cb 0x74) - no retail tie yet
+void Bitmap8Bit::Bitmap8Bit(const char* name, const char* path)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap8.cpp:68
+// DC_ONLY(0x53540, cb 0x46) - no retail tie yet
+void Bitmap8Bit::~Bitmap8Bit()
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap8.cpp:75
+// DC_ONLY(0x53588, cb 0x64) - no retail tie yet
+void Bitmap8Bit::import(int w, int h, unsigned char* data, const TPalette24* p24, int csize)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap8.cpp:102
+// DC_ONLY(0x535ec, cb 0x2A) - no retail tie yet
+void Bitmap8Bit::clear()
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap8.cpp:208
+// DC_ONLY(0x53618, cb 0xF0) - no retail tie yet
+int Bitmap8Bit::exportPCXFile(const char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap8.cpp:248
+// DC_ONLY(0x53708, cb 0x118) - no retail tie yet
+int Bitmap8Bit::importPCXFile(const char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap8.cpp:34
+// DC_ONLY(0x53820, cb 0x34) - no retail tie yet
+void* Bitmap8Bit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

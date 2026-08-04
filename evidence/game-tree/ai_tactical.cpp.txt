@@ -1,0 +1,1178 @@
+// E:\gamedcs\ai_tactical.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module ai_tactical.obj, 161 procs, 43 retail-tied.
+// retail extent 0x35850..0x3cb08 (VA 0x435850..0x43cb08)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x3c03c, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x3c064, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x3c074, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x3c09c, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x3c0ac, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x3c0d4, cb 0x10) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x3c0e4, cb 0x28) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x3c10c, cb 0x10) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x3c11c, cb 0x28) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x3c144, cb 0x10) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x3c154, cb 0x28) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x3c17c, cb 0x10) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x3c18c, cb 0x28) - no retail tie yet
+void $E479()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x3c1b4, cb 0x10) - no retail tie yet
+void $E480()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x3c1c4, cb 0x28) - no retail tie yet
+void $E482()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x3c1ec, cb 0x10) - no retail tie yet
+void $E483()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x3c1fc, cb 0x28) - no retail tie yet
+void $E485()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x3c224, cb 0x10) - no retail tie yet
+void $E486()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x3c234, cb 0x28) - no retail tie yet
+void $E488()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x3c25c, cb 0x40) - no retail tie yet
+void $E489()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:34
+VA(0x00435850, 0x102)  // anchor-global, dc 0x3c29c
+double value_of_luck_and_morale(long value, long change, double good_value_multiplier, double bad_value_multiplier)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:83
+// DC_ONLY(0x3c55c, cb 0x22) - no retail tie yet
+double AI_value_of_morale(long morale, long change)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:97
+VA(0x00435960, 0x1E)  // anchor-global, dc 0x3c580
+double AI_value_of_luck(long luck, long change)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:109
+// DC_ONLY(0x3c608, cb 0xFE) - no retail tie yet
+long get_multi_head_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:155
+// DC_ONLY(0x3c708, cb 0x108) - no retail tie yet
+long get_breath_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:200
+VA(0x00435980, 0x2A)  // anchor-global, dc 0x3c810
+long AI_get_attack_damage(const army* current_army, long our_hits, const army* enemy, unsigned char ranged, long distance)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:215
+// DC_ONLY(0x3c854, cb 0x88) - no retail tie yet
+void type_AI_combat_parameters::simulate_single_attack(const army* current_army, long* our_hits, const army* enemy, long* enemy_hits, unsigned char ranged, long distance)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:249
+VA(0x004359b0, 0x1D5)  // anchor-global, dc 0x3c8dc
+void type_AI_combat_parameters::simulate_attack(const army* current_army, long* our_hits, const army* enemy, long* enemy_hits, unsigned char ranged, long distance)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:290
+VA(0x00435b90, 0xD2)  // corroborates, dc 0x3c9ac
+long type_AI_combat_parameters::get_simple_attack_effect(const army* current_army, long our_total, const army* enemy, long enemy_total, unsigned char ranged, long distance)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:329
+VA(0x00435c70, 0x3D)  // corroborates, dc 0x3ca94
+long type_AI_combat_parameters::get_simple_attack_effect(const army* current_army, const army* enemy, unsigned char ranged, long distance)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:342
+VA(0x00435cb0, 0x10E)  // anchor-global, dc 0x3cae4
+long type_AI_combat_parameters::get_ranged_attack_value(const army* current_army, const army* enemy)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:367
+VA(0x00435dc0, 0xF3)  // anchor-global, dc 0x3cba0
+long type_AI_combat_parameters::get_exchange_effect(const army* current_army, const army* enemy, long distance)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:393
+VA(0x00435ec0, 0x1F7)  // anchor-global, dc 0x3cc8c
+void type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat, long side)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:482
+VA(0x004360c0, 0xBC)  // anchor-global, dc 0x3ceb8
+void type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attack_army, const army* enemy_army, const long* enemy_attack_array, searchArray* search_data, const type_AI_combat_parameters* data)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:511
+VA(0x00436180, 0x17A)  // anchor-global, dc 0x3cf50
+long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long* checked)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:575
+// DC_ONLY(0x3d154, cb 0x8E) - no retail tie yet
+long type_AI_attack_hex_chooser::get_attack_time(const pathCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:599
+VA(0x00436300, 0x31C)  // anchor-global, dc 0x3d1e4
+void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start_direction, long stop_direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:706
+VA(0x00436840, 0xEA)  // anchor-global, dc 0x3d440
+unsigned char type_AI_attack_hex_chooser::find_attack_hex()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:744
+// DC_ONLY(0x3d524, cb 0x48) - no retail tie yet
+void type_enchant_data::type_enchant_data(SpellID new_spell, TSkillMastery new_mastery, long new_power, long new_duration)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:753
+VA(0x00436930, 0x1A)  // anchor-global, dc 0x3d56c
+long type_enchant_data::get_mastery_value()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:758
+// DC_ONLY(0x3d584, cb 0x2A) - no retail tie yet
+void type_spell_choice::type_spell_choice()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:768
+// DC_ONLY(0x3d5b0, cb 0x2A) - no retail tie yet
+void type_spell_choice::type_spell_choice(SpellID new_spell, TSkillMastery new_mastery, long new_power, long new_duration)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:779
+// DC_ONLY(0x3d5dc, cb 0x28) - no retail tie yet
+void type_AI_spellcaster::initialize(combatManager* combat, long side)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:793
+// DC_ONLY(0x3d604, cb 0xEC) - no retail tie yet
+void type_AI_spellcaster::type_AI_spellcaster(combatManager* combat, long side, unsigned char creature_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:817
+// DC_ONLY(0x3d6f0, cb 0x72) - no retail tie yet
+void type_AI_spellcaster::type_AI_spellcaster(type_AI_spellcaster* parent, combatManager* combat, long side, unsigned char creature_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:828
+VA(0x00436c30, 0x21)  // anchor-global, dc 0x3d764
+void type_AI_spellcaster::~type_AI_spellcaster()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:837
+// DC_ONLY(0x3d7b0, cb 0x86) - no retail tie yet
+unsigned char type_AI_spellcaster::is_last_action()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:862
+VA(0x00436c60, 0x1C4)  // anchor-global, dc 0x3d838
+unsigned char type_AI_spellcaster::should_attack_now(const army* enemy)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:912
+VA(0x00436e30, 0x125)  // anchor-global, dc 0x3d96c
+long type_AI_spellcaster::get_damage_value(SpellID spell, long base_damage, const hero* target_hero, const army* target)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:953
+VA(0x00436f60, 0x45)  // anchor-global, dc 0x3da7c
+long type_AI_spellcaster::get_damage_spell_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:965
+// DC_ONLY(0x3dabc, cb 0x6E) - no retail tie yet
+long type_AI_spellcaster::get_group_damage_value(SpellID spell, long base_damage, long group, hero* target_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:986
+VA(0x00436fb0, 0x8A)  // anchor-global, dc 0x3db2c
+long type_AI_spellcaster::get_mass_damage_effect(long enemy_damage, long friendly_damage)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1008
+VA(0x00437040, 0x141)  // anchor-global, dc 0x3db84
+long type_AI_spellcaster::get_area_effect_value(SpellID spell, long base_damage, TSkillMastery mastery, long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1035
+// DC_ONLY(0x3dc50, cb 0x72) - no retail tie yet
+void type_AI_spellcaster::consider_area_effect(type_spell_choice* choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1059
+VA(0x00437190, 0x17D)  // anchor-global, dc 0x3dcc4
+long type_AI_spellcaster::get_chain_lightning_value(long power, TSkillMastery mastery, army* target)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1094
+// DC_ONLY(0x3dde8, cb 0xA8) - no retail tie yet
+void type_AI_spellcaster::consider_chain_lightning(type_spell_choice* choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1126
+// DC_ONLY(0x3de90, cb 0x98) - no retail tie yet
+void type_AI_spellcaster::consider_mass_damage(type_spell_choice* choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1142
+// DC_ONLY(0x3df28, cb 0x32) - no retail tie yet
+long type_AI_spellcaster::get_age_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1158
+// DC_ONLY(0x3df5c, cb 0x1C4) - no retail tie yet
+long type_AI_spellcaster::get_attack_boost_value(const army* our_army, const army* enemy, long old_damage, long duration, double increase)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1186
+// DC_ONLY(0x3e120, cb 0x5C) - no retail tie yet
+long type_AI_spellcaster::get_attack_boost_value(const army* our_army, const army* enemy, long duration, double increase)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1197
+// DC_ONLY(0x3e17c, cb 0x104) - no retail tie yet
+long type_AI_spellcaster::get_bless_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1218
+// DC_ONLY(0x3e280, cb 0x13A) - no retail tie yet
+long type_AI_spellcaster::get_frenzy_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1256
+VA(0x00437800, 0x1F5)  // anchor-global, dc 0x3e3bc
+long type_AI_spellcaster::get_attack_skill_value(const army* our_army, const army* enemy, long duration, long bonus)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1281
+// DC_ONLY(0x3e4a0, cb 0x6A) - no retail tie yet
+long type_AI_spellcaster::get_blood_lust_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1302
+// DC_ONLY(0x3e50c, cb 0x14C) - no retail tie yet
+long type_AI_spellcaster::get_mirth_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1327
+// DC_ONLY(0x3e658, cb 0x224) - no retail tie yet
+long type_AI_spellcaster::get_sorrow_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1370
+// DC_ONLY(0x3e87c, cb 0x15C) - no retail tie yet
+long type_AI_spellcaster::get_fortune_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1429
+VA(0x004387c0, 0x14A)  // anchor-global, dc 0x3e9d8
+long type_AI_spellcaster::get_defense_boost_value(const army* our_army, const army* enemy, long duration, double increase)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1472
+VA(0x00438910, 0xFB)  // anchor-global, dc 0x3ec10
+long type_AI_spellcaster::get_defense_skill_value(const army* our_army, long duration, long bonus)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1498
+// DC_ONLY(0x3ed34, cb 0x174) - no retail tie yet
+long type_AI_spellcaster::get_disease_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1523
+// DC_ONLY(0x3eea8, cb 0x7C) - no retail tie yet
+long type_AI_spellcaster::get_prayer_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1545
+// DC_ONLY(0x3ef24, cb 0x6A) - no retail tie yet
+long type_AI_spellcaster::get_precision_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1566
+// DC_ONLY(0x3ef90, cb 0xF0) - no retail tie yet
+long type_AI_spellcaster::get_air_shield_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1586
+// DC_ONLY(0x3f080, cb 0xD6) - no retail tie yet
+long type_AI_spellcaster::get_shield_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1606
+// DC_ONLY(0x3f158, cb 0xB0) - no retail tie yet
+long type_AI_spellcaster::get_slayer_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1626
+// DC_ONLY(0x3f208, cb 0x22) - no retail tie yet
+long type_AI_spellcaster::get_tough_skin_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1638
+// DC_ONLY(0x3f22c, cb 0x1DC) - no retail tie yet
+long type_AI_spellcaster::get_disruptive_ray_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1671
+// DC_ONLY(0x3f408, cb 0x1E8) - no retail tie yet
+long type_AI_spellcaster::get_weakness_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1697
+// DC_ONLY(0x3f5f0, cb 0x200) - no retail tie yet
+long type_AI_spellcaster::get_misfortune_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1732
+// DC_ONLY(0x3f7f0, cb 0x1E0) - no retail tie yet
+long type_AI_spellcaster::get_blind_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1767
+// DC_ONLY(0x3f9d0, cb 0x52) - no retail tie yet
+long type_AI_spellcaster::get_move_order_change_value(const army* our_army)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1788
+// DC_ONLY(0x3fa24, cb 0x1FA) - no retail tie yet
+long type_AI_spellcaster::get_muck_and_mire_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1884
+// DC_ONLY(0x3fc20, cb 0x5E) - no retail tie yet
+long type_AI_spellcaster::get_poison_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1902
+VA(0x00439550, 0x153)  // anchor-global, dc 0x3fc80
+long type_AI_spellcaster::get_speed_value(const army* our_army, long increase, long duration)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1965
+VA(0x004396b0, 0x2E)  // linkorder, dc 0x3fdb8
+long type_AI_spellcaster::get_haste_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:1975
+VA(0x004396e0, 0x2BC)  // anchor-global, dc 0x3fde4
+long type_AI_spellcaster::get_protection_value(const army* our_army, TSpellSchool school, long level, long duration, long amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2077
+// DC_ONLY(0x40060, cb 0x2A) - no retail tie yet
+long type_AI_spellcaster::get_air_protection_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2087
+// DC_ONLY(0x4008c, cb 0x2A) - no retail tie yet
+long type_AI_spellcaster::get_fire_protection_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2097
+// DC_ONLY(0x400b8, cb 0x3A) - no retail tie yet
+long type_AI_spellcaster::get_earth_protection_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2107
+// DC_ONLY(0x400f4, cb 0x3A) - no retail tie yet
+long type_AI_spellcaster::get_water_protection_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2116
+// DC_ONLY(0x40130, cb 0x118) - no retail tie yet
+double type_AI_spellcaster::get_duration(long turns, unsigned char moved_this_turn)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2136
+VA(0x00439a80, 0x135)  // anchor-global, dc 0x40248
+long type_AI_spellcaster::get_cancel_value(army* current_army, unsigned char bad_spells_only)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2180
+VA(0x00439bc0, 0x6E)  // linkorder, dc 0x40348
+long type_AI_spellcaster::get_dispel_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2191
+VA(0x00439c30, 0x10F)  // linkorder, dc 0x403c0
+long type_AI_spellcaster::get_cure_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2220
+VA(0x00439d40, 0x94)  // linkorder, dc 0x40570
+long type_AI_spellcaster::get_antimagic_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2235
+VA(0x00439de0, 0x94)  // linkorder, dc 0x405d4
+long type_AI_spellcaster::get_backlash_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2249
+VA(0x00439e80, 0x290)  // linkorder, dc 0x40628
+long type_AI_spellcaster::get_counterstroke_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2314
+VA(0x0043a110, 0x222)  // linkorder, dc 0x407e8
+long type_AI_spellcaster::get_fire_shield_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2360
+VA(0x0043a340, 0xBE)  // anchor-global, dc 0x40928
+long type_AI_spellcaster::get_traitor_value(const army* enemy, const army* target)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2393
+VA(0x0043a400, 0xF8)  // linkorder, dc 0x40a08
+long type_AI_spellcaster::get_berserk_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2416
+VA(0x0043a500, 0x16E)  // linkorder, dc 0x40ac0
+long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2455
+VA(0x0043a670, 0x291)  // anchor-global, dc 0x40bb8
+void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice, long group)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2513
+VA(0x0043a910, 0x150)  // anchor-global, dc 0x40dc8
+void type_AI_spellcaster::consider_enchantment(type_spell_choice* choice, long group)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2553
+// DC_ONLY(0x40ec0, cb 0x15C) - no retail tie yet
+void type_AI_spellcaster::consider_teleport(type_spell_choice* choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2608
+// DC_ONLY(0x4101c, cb 0x25C) - no retail tie yet
+void type_AI_spellcaster::consider_resurrect(type_spell_choice* choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2685
+// DC_ONLY(0x41278, cb 0x228) - no retail tie yet
+void type_AI_spellcaster::consider_sacrifice(type_spell_choice* choice, const army* healed_army, long target_hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2751
+// DC_ONLY(0x414a0, cb 0xB8) - no retail tie yet
+void type_AI_spellcaster::consider_sacrifice(type_spell_choice* choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2788
+// DC_ONLY(0x41558, cb 0xCC) - no retail tie yet
+long type_AI_spellcaster::get_clone_value(const army* our_army, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2813
+// DC_ONLY(0x41624, cb 0x26C) - no retail tie yet
+long type_AI_spellcaster::get_curse_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2847
+// DC_ONLY(0x41890, cb 0x1E2) - no retail tie yet
+long type_AI_spellcaster::get_forgetfulness_value(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2876
+// DC_ONLY(0x41a74, cb 0x8) - no retail tie yet
+long type_AI_spellcaster::unimplemented(const army* enemy, type_enchant_data caster)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2884
+// DC_ONLY(0x41a7c, cb 0x1B2) - no retail tie yet
+long (*)()* type_AI_spellcaster::get_enchantment_function(SpellID spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3016
+// DC_ONLY(0x41c30, cb 0x22C) - no retail tie yet
+void type_AI_spellcaster::consider_earthquake(type_spell_choice* choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3093
+// DC_ONLY(0x41e5c, cb 0x78) - no retail tie yet
+void type_AI_spellcaster::consider_summon(type_spell_choice* choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3114
+VA(0x0043bb20, 0x3FC)  // anchor-global, dc 0x41ed4
+void type_AI_spellcaster::consider_spell(type_spell_choice* choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3191
+VA(0x0043bf20, 0x119)  // anchor-global, dc 0x420ac
+void type_AI_spellcaster::set_melee_enemies()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3221
+// DC_ONLY(0x42170, cb 0xAE) - no retail tie yet
+void type_AI_spellcaster::set_worst_enemies()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3237
+// DC_ONLY(0x42220, cb 0x5A) - no retail tie yet
+void type_AI_spellcaster::add_enemy(type_AI_enemy_data* sum, const army* our_army, const army* enemy, unsigned char ranged)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3254
+VA(0x0043c040, 0x2E6)  // anchor-global, dc 0x4227c
+void type_AI_spellcaster::find_enemy_attacks()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3311
+// DC_ONLY(0x423f4, cb 0xD0) - no retail tie yet
+long type_AI_spellcaster::get_ogre_mage_value(const army* target)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3335
+// DC_ONLY(0x424c4, cb 0xE4) - no retail tie yet
+long type_AI_spellcaster::get_caliph_value(const army* target)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3377
+// DC_ONLY(0x425a8, cb 0x68) - no retail tie yet
+void type_AI_spellcaster::check_simulation()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3398
+// DC_ONLY(0x42610, cb 0xA0) - no retail tie yet
+unsigned char type_AI_spellcaster::spells_not_required()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:3420
+VA(0x0043c800, 0x308)  // anchor-global, dc 0x426b0
+unsigned char type_AI_spellcaster::cast_spell(unsigned char retreating)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:128
+// DC_ONLY(0x42994, cb 0x2C) - no retail tie yet
+unsigned std::__deque_buf_size(unsigned __n, unsigned size)
+{
+    // @stub
+}
+
+// E:\gamedcs\Army.h:724
+// DC_ONLY(0x429c0, cb 0x34) - no retail tie yet
+int army::GetMorale(unsigned char apply_limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\Army.h:730
+// DC_ONLY(0x429f4, cb 0x34) - no retail tie yet
+int army::GetLuck(unsigned char apply_limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\Army.h:825
+// DC_ONLY(0x42a28, cb 0x12) - no retail tie yet
+TSkillMastery army::get_spell_level(SpellID spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\cmbtmgr.h:1466
+// DC_ONLY(0x42a3c, cb 0x38) - no retail tie yet
+army* combatManager::find_resurrection_target(SpellID spell, long group, long hex, unsigned char creature_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:807
+// DC_ONLY(0x42a74, cb 0x34) - no retail tie yet
+void* type_AI_spellcaster::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:2183
+// DC_ONLY(0x42aa8, cb 0x306) - no retail tie yet
+void army::army(const army* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:622
+// DC_ONLY(0x42db0, cb 0xB8) - no retail tie yet
+void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::deque<enum SpellID,std::allocator<enum SpellID>,0>(const std::deque<enum* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:236
+// DC_ONLY(0x42e68, cb 0x60) - no retail tie yet
+void std::vector<army *,std::allocator<army *> >::vector<army *,std::allocator<army *> >(const std::vector<army* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:570
+// DC_ONLY(0x42ec8, cb 0x14) - no retail tie yet
+std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::begin(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:571
+// DC_ONLY(0x42edc, cb 0x14) - no retail tie yet
+std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::end(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:610
+// DC_ONLY(0x42ef0, cb 0x18) - no retail tie yet
+unsigned std::deque<enum SpellID,std::allocator<enum SpellID>,0>::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:452
+// DC_ONLY(0x42f08, cb 0x68) - no retail tie yet
+void std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>(const std::allocator<enum* __a, unsigned __num_elements)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:460
+// DC_ONLY(0x42f70, cb 0xA) - no retail tie yet
+std::allocator<enum std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::get_allocator(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:153
+// DC_ONLY(0x42f7c, cb 0x8) - no retail tie yet
+std::allocator<army std::vector<army *,std::allocator<army *> >::get_allocator(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:94
+// DC_ONLY(0x42f84, cb 0x48) - no retail tie yet
+void std::_Vector_base<army *,std::allocator<army *> >::_Vector_base<army *,std::allocator<army *> >(unsigned __n, const std::allocator<army* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:272
+// DC_ONLY(0x42fcc, cb 0x1C) - no retail tie yet
+void std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:283
+// DC_ONLY(0x42fe8, cb 0x18) - no retail tie yet
+int std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator-(const std::_Deque_iterator<enum* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x43000, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<enum SpellID * *,enum SpellID *,std::allocator<enum SpellID> >::_STL_alloc_proxy<enum SpellID * *,enum SpellID *,std::allocator<enum SpellID> >(const std::allocator<enum* __a, SpellID*** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x4300c, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<unsigned int,enum SpellID,std::allocator<enum SpellID> >::_STL_alloc_proxy<unsigned int,enum SpellID,std::allocator<enum SpellID> >(const std::allocator<enum* __a, const unsigned* __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:190
+// DC_ONLY(0x43018, cb 0xE) - no retail tie yet
+void std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:193
+// DC_ONLY(0x43028, cb 0x2A) - no retail tie yet
+int std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >::_M_subtract(const std::_Deque_iterator_base<enum* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:118
+// DC_ONLY(0x43054, cb 0xC4) - no retail tie yet
+void std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::_M_initialize_map(unsigned __num_elements)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x43118, cb 0x8C) - no retail tie yet
+std::_Deque_iterator<enum std::uninitialized_copy(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x431a4, cb 0x38) - no retail tie yet
+army** std::uninitialized_copy(army** __first, army** __last, army** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x431dc, cb 0x28) - no retail tie yet
+SpellID** std::_STL_alloc_proxy<enum SpellID * *,enum SpellID *,std::allocator<enum SpellID> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x43204, cb 0x24) - no retail tie yet
+SpellID** std::allocator<enum SpellID *>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:144
+// DC_ONLY(0x43228, cb 0x3C) - no retail tie yet
+void std::_Deque_base<enum SpellID,std::allocator<enum SpellID>,0>::_M_create_nodes(SpellID** __nstart, SpellID** __nfinish)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x43264, cb 0x7C) - no retail tie yet
+std::_Deque_iterator<enum std::__uninitialized_copy(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result, SpellID* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x432e0, cb 0x1C) - no retail tie yet
+army** std::__uninitialized_copy(army** __first, army** __last, army** __result, army** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x432fc, cb 0x28) - no retail tie yet
+SpellID* std::_STL_alloc_proxy<unsigned int,enum SpellID,std::allocator<enum SpellID> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x43324, cb 0x24) - no retail tie yet
+SpellID* std::allocator<enum SpellID>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x43348, cb 0x8C) - no retail tie yet
+std::_Deque_iterator<enum std::__uninitialized_copy_aux(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x433d4, cb 0x3C) - no retail tie yet
+army** std::__uninitialized_copy_aux(army** __first, army** __last, army** __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:276
+// DC_ONLY(0x43410, cb 0x4) - no retail tie yet
+const SpellID* std::_Deque_iterator<enum SpellID,std::_Const_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator*()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:285
+// DC_ONLY(0x43414, cb 0x1C) - no retail tie yet
+std::_Deque_iterator<enum* std::_Deque_iterator<enum SpellID,std::_Const_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator++()
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x43430, cb 0x28) - no retail tie yet
+void std::construct(SpellID* __p, const SpellID* __value)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x00436620 size   314  game_36300_sub01_36620 [caller]
+//   0x00436760 size   223  game_36300_sub02_36760 [caller]
+//   0x00436950 size    35  type_spell_choice_type_spell_choice [hd-crossbuild]
+//   0x00436980 size    53  type_spell_choice_type_spell_choice_36980 [hd-crossbuild]
+//   0x004369c0 size   555  type_AI_spellcaster_type_AI_spellcaster [hd-crossbuild]
+//   0x00436bf0 size    58  game_36bf0 [band]
+//   0x00437310 size   209  game_3bb20_sub02_37310 [caller]
+//   0x004373f0 size    52  game_3b690_sub01_373f0 [caller]
+//   0x00437430 size   408  game_3b690_sub02_37430 [caller]
+//   0x004375d0 size   548  game_3b690_sub03_375d0 [caller]
+//   0x00437a00 size  1786  army_army [hd-crossbuild]
+//   0x00438100 size   100  game_3b690_sub04_38100 [caller]
+//   0x00438170 size   322  game_3b690_sub05_38170 [caller]
+//   0x004382c0 size   454  game_3b690_sub06_382c0 [caller]
+//   0x00438490 size   811  game_3b690_sub07_38490 [caller]
+//   0x00438a10 size   173  game_3b690_sub08_38a10 [caller]
+//   0x00438ac0 size   133  game_3b690_sub09_38ac0 [caller]
+//   0x00438b50 size   100  game_3b690_sub10_38b50 [caller]
+//   0x00438bc0 size   153  game_3b690_sub11_38bc0 [caller]
+//   0x00438c60 size   153  game_3b690_sub12_38c60 [caller]
+//   0x00438d00 size   129  game_3b690_sub13_38d00 [caller]
+//   0x00438d90 size    37  game_3b690_sub14_38d90 [caller]
+//   0x00438dc0 size   265  game_3b690_sub15_38dc0 [caller]
+//   0x00438ed0 size   141  game_3b690_sub16_38ed0 [caller]
+//   0x00438f60 size   409  game_3b690_sub17_38f60 [caller]
+//   0x00439100 size   361  game_3b690_sub18_39100 [caller]
+//   0x00439270 size   651  game_3b690_sub19_39270 [caller]
+//   0x00439500 size    76  game_3b690_sub20_39500 [caller]
+//   0x004399a0 size    41  game_3b690_sub22_399a0 [caller]
+//   0x004399d0 size    41  game_3b690_sub23_399d0 [caller]
+//   0x00439a00 size    50  game_3b690_sub24_39a00 [caller]
+//   0x00439a40 size    50  game_3b690_sub25_39a40 [caller]
+//   0x0043aa60 size   565  game_3bb20_sub04_3aa60 [caller]
+//   0x0043aca0 size   686  game_3bb20_sub05_3aca0 [caller]
+//   0x0043af50 size   644  game_3b1e0_sub00_3af50 [caller]
+//   0x0043b1e0 size   242  game_3bb20_sub06_3b1e0 [caller]
+//   0x0043b2e0 size   133  game_3b690_sub34_3b2e0 [caller]
+//   0x0043b370 size   398  game_3b690_sub35_3b370 [caller]
+//   0x0043b500 size   381  game_3b690_sub36_3b500 [caller]
+//   0x0043b690 size   593  game_39a80_sub00_3b690 [caller]
+//   0x0043b8f0 size   548  game_3bb20_sub07_3b8f0 [caller]
+//   0x0043c330 size   364  game_20d20_sub02_3c330 [caller]
+//   0x0043c4a0 size   384  game_20d20_sub03_3c4a0 [caller]
+//   0x0043c620 size   477  game_20f00_sub00_3c620 [caller]
+

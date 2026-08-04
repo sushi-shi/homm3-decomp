@@ -1,0 +1,32 @@
+// E:\gamedcs\zlib113\zutil.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module zutil.obj, 4 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\zutil.cpp:40
+// DC_ONLY(0x19c600, cb 0x6) - no retail tie yet
+const char* zlibVersion@0()
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\zutil.cpp:64
+// DC_ONLY(0x19c608, cb 0xC) - no retail tie yet
+const char* zError@4(int err)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\zutil.cpp:217
+// DC_ONLY(0x19c614, cb 0x16) - no retail tie yet
+void* zcalloc(void* opaque, unsigned items, unsigned size)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\zutil.cpp:223
+// DC_ONLY(0x19c62c, cb 0x24) - no retail tie yet
+void zcfree(void* opaque, void* ptr)
+{
+    // @stub
+}
+

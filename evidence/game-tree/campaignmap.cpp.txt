@@ -1,0 +1,81 @@
+// E:\gamedcs\campaignmap.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module campaignmap.obj, 11 procs, 0 retail-tied.
+
+// E:\gamedcs\campaignmap.cpp:161
+// DC_ONLY(0x5af64, cb 0x22C) - no retail tie yet
+unsigned char InitializeCampaignMapTraitsTable()
+{
+    // @stub
+}
+
+// E:\gamedcs\campaignmap.cpp:256
+// DC_ONLY(0x5b190, cb 0x68) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\AutoArrayPtr.h:37
+// DC_ONLY(0x5b1f8, cb 0xE) - no retail tie yet
+void TAutoArrayPtr<char>::TAutoArrayPtr<char>(char* ptr)
+{
+    // @stub
+}
+
+// E:\gamedcs\AutoArrayPtr.h:47
+// DC_ONLY(0x5b208, cb 0x20) - no retail tie yet
+void TAutoArrayPtr<char>::~TAutoArrayPtr<char>()
+{
+    // @stub
+}
+
+// E:\gamedcs\AutoArrayPtr.h:54
+// DC_ONLY(0x5b228, cb 0x58) - no retail tie yet
+TAutoArrayPtr<char>* TAutoArrayPtr<char>::operator=(const TAutoArrayPtr<char>* rhs)
+{
+    // @stub
+}
+
+// E:\gamedcs\AutoArrayPtr.h:71
+// DC_ONLY(0x5b280, cb 0x4) - no retail tie yet
+char* TAutoArrayPtr<char>::get()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResourcePtr.h:36
+// DC_ONLY(0x5b284, cb 0xE) - no retail tie yet
+void TResourcePtr<TTextResource>::TResourcePtr<TTextResource>(TTextResource* ptr)
+{
+    // @stub
+}
+
+// E:\gamedcs\ResourcePtr.h:44
+// DC_ONLY(0x5b294, cb 0x24) - no retail tie yet
+void TResourcePtr<TTextResource>::~TResourcePtr<TTextResource>()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResourcePtr.h:68
+// DC_ONLY(0x5b2b8, cb 0x4) - no retail tie yet
+TTextResource* TResourcePtr<TTextResource>::get()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResourcePtr.h:71
+// DC_ONLY(0x5b2bc, cb 0x18) - no retail tie yet
+TTextResource* TResourcePtr<TTextResource>::operator->()
+{
+    // @stub
+}
+
+// E:\gamedcs\AutoArrayPtr.h:77
+// DC_ONLY(0x5b2d4, cb 0x8) - no retail tie yet
+char* TAutoArrayPtr<char>::release()
+{
+    // @stub
+}
+

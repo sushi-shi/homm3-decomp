@@ -1,0 +1,641 @@
+// E:\gamedcs\tradpost.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module tradpost.obj, 91 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x1817d4, cb 0x28) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x1817fc, cb 0x10) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x18180c, cb 0x28) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x181834, cb 0x10) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x181844, cb 0x28) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x18186c, cb 0x10) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x18187c, cb 0x28) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x1818a4, cb 0x10) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x1818b4, cb 0x28) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x1818dc, cb 0x10) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x1818ec, cb 0x28) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x181914, cb 0x10) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x181924, cb 0x28) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x18194c, cb 0x10) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x18195c, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x181984, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x181994, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x1819bc, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x1819cc, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x1819f4, cb 0x40) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:74
+// DC_ONLY(0x181a34, cb 0x1A) - no retail tie yet
+void TradeResourceSlider(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:80
+// DC_ONLY(0x181a50, cb 0x1A) - no retail tie yet
+void GiveResourceSlider(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:86
+// DC_ONLY(0x181a6c, cb 0x1A) - no retail tie yet
+void SellCreatureSlider(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:93
+// DC_ONLY(0x181a88, cb 0x1338) - no retail tie yet
+void TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:187
+// DC_ONLY(0x182dc0, cb 0x62) - no retail tie yet
+void TTradeResourceWindow::~TTradeResourceWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:196
+// DC_ONLY(0x182e24, cb 0x10A8) - no retail tie yet
+void TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:290
+// DC_ONLY(0x183ecc, cb 0x62) - no retail tie yet
+void TGiveResourceWindow::~TGiveResourceWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:299
+// DC_ONLY(0x183f30, cb 0x1274) - no retail tie yet
+void TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:384
+// DC_ONLY(0x1851a4, cb 0x62) - no retail tie yet
+void TBuyArtifactWindow::~TBuyArtifactWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:393
+// DC_ONLY(0x185208, cb 0x1A2C) - no retail tie yet
+void TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:513
+// DC_ONLY(0x186c34, cb 0x62) - no retail tie yet
+void TSellArtifactWindow::~TSellArtifactWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:522
+// DC_ONLY(0x186c98, cb 0x16F4) - no retail tie yet
+void TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:610
+// DC_ONLY(0x18838c, cb 0x64) - no retail tie yet
+void TSellCreatureWindow::~TSellCreatureWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:618
+// DC_ONLY(0x1883f0, cb 0x62) - no retail tie yet
+void CountMarkets()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:629
+// DC_ONLY(0x188454, cb 0xC4) - no retail tie yet
+void DoArtifactMerchants()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:648
+// DC_ONLY(0x188518, cb 0x126) - no retail tie yet
+void DoFreelancersGuild()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:667
+// DC_ONLY(0x188640, cb 0x5C) - no retail tie yet
+void DoMarketplace()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:683
+// DC_ONLY(0x18869c, cb 0x36) - no retail tie yet
+void DoTradingPost()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:693
+// DC_ONLY(0x1886d4, cb 0x32) - no retail tie yet
+void DoBlackMarket(hero* inHero, TArtifact* blackArtifacts)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:704
+// DC_ONLY(0x188708, cb 0x4CC) - no retail tie yet
+void DoMarket()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:860
+// DC_ONLY(0x188bd4, cb 0xF4) - no retail tie yet
+void TSellArtifactWindow::update_sell_artifact_widget(message* msg, long i)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:905
+// DC_ONLY(0x188cc8, cb 0x38) - no retail tie yet
+void TTradeResourceWindow::SetWidgetOn(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:911
+// DC_ONLY(0x188d00, cb 0x34) - no retail tie yet
+void TTradeResourceWindow::SetWidgetOff(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:918
+// DC_ONLY(0x188d34, cb 0x1C) - no retail tie yet
+void TTradeResourceWindow::SetWidgetDisabled(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:923
+// DC_ONLY(0x188d50, cb 0x38) - no retail tie yet
+void TGiveResourceWindow::SetWidgetOn(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:929
+// DC_ONLY(0x188d88, cb 0x34) - no retail tie yet
+void TGiveResourceWindow::SetWidgetOff(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:936
+// DC_ONLY(0x188dbc, cb 0x1C) - no retail tie yet
+void TGiveResourceWindow::SetWidgetDisabled(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:941
+// DC_ONLY(0x188dd8, cb 0x38) - no retail tie yet
+void TBuyArtifactWindow::SetWidgetOn(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:947
+// DC_ONLY(0x188e10, cb 0x68) - no retail tie yet
+void TBuyArtifactWindow::SetWidgetOff(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:954
+// DC_ONLY(0x188e78, cb 0x1C) - no retail tie yet
+void TBuyArtifactWindow::SetWidgetDisabled(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:959
+// DC_ONLY(0x188e94, cb 0x38) - no retail tie yet
+void TSellArtifactWindow::SetWidgetOn(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:965
+// DC_ONLY(0x188ecc, cb 0x34) - no retail tie yet
+void TSellArtifactWindow::SetWidgetOff(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:972
+// DC_ONLY(0x188f00, cb 0x1C) - no retail tie yet
+void TSellArtifactWindow::SetWidgetDisabled(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:977
+// DC_ONLY(0x188f1c, cb 0x38) - no retail tie yet
+void TSellCreatureWindow::SetWidgetOn(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:983
+// DC_ONLY(0x188f54, cb 0x34) - no retail tie yet
+void TSellCreatureWindow::SetWidgetOff(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:990
+// DC_ONLY(0x188f88, cb 0x1C) - no retail tie yet
+void TSellCreatureWindow::SetWidgetDisabled(short id)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:995
+// DC_ONLY(0x188fa4, cb 0x602) - no retail tie yet
+void TTradeResourceWindow::Update(unsigned char bUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:1240
+// DC_ONLY(0x1895a8, cb 0x504) - no retail tie yet
+void TGiveResourceWindow::Update(unsigned char bUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:1466
+// DC_ONLY(0x189aac, cb 0x580) - no retail tie yet
+void TBuyArtifactWindow::Update(unsigned char bUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:1716
+// DC_ONLY(0x18a02c, cb 0x522) - no retail tie yet
+void TSellArtifactWindow::Update(unsigned char bUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:1920
+// DC_ONLY(0x18a550, cb 0x63A) - no retail tie yet
+void TSellCreatureWindow::Update(unsigned char bUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2160
+// DC_ONLY(0x18ab8c, cb 0xE) - no retail tie yet
+long get_market_value(EGameResource resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2168
+// DC_ONLY(0x18ab9c, cb 0x1AC) - no retail tie yet
+double get_trade_ratio(EGameResource source, EGameResource dest, double efficiency)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2181
+// DC_ONLY(0x18ad48, cb 0x140) - no retail tie yet
+void TTradeResourceWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2202
+// DC_ONLY(0x18ae88, cb 0x6C) - no retail tie yet
+void TGiveResourceWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2209
+// DC_ONLY(0x18aef4, cb 0xE0) - no retail tie yet
+void TBuyArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2229
+// DC_ONLY(0x18afd4, cb 0x140) - no retail tie yet
+void TSellArtifactWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2250
+// DC_ONLY(0x18b114, cb 0x1D4) - no retail tie yet
+void TSellCreatureWindow::ComputeTradeRatios(int inLeftResource, int inRightResource, int* iInTradeRatio, int* bInLeftDenominated, int* iInMaxUnitsToTrade)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2286
+// DC_ONLY(0x18b2e8, cb 0x40) - no retail tie yet
+void TTradeResourceWindow::SetupNewTrade()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2294
+// DC_ONLY(0x18b328, cb 0x40) - no retail tie yet
+void TGiveResourceWindow::SetupNewTrade()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2302
+// DC_ONLY(0x18b368, cb 0x40) - no retail tie yet
+void TBuyArtifactWindow::SetupNewTrade()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2312
+// DC_ONLY(0x18b3a8, cb 0x2A) - no retail tie yet
+void TSellArtifactWindow::SetupNewTrade()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2319
+// DC_ONLY(0x18b3d4, cb 0x40) - no retail tie yet
+void TSellCreatureWindow::SetupNewTrade()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2327
+// DC_ONLY(0x18b414, cb 0x76) - no retail tie yet
+void TSellArtifactWindow::UpdateMarketBackpack()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2344
+// DC_ONLY(0x18b48c, cb 0x3A) - no retail tie yet
+void TSellArtifactWindow::increment_backpack_start()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2356
+// DC_ONLY(0x18b4c8, cb 0x78) - no retail tie yet
+void TSellArtifactWindow::decrement_backpack_start()
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2368
+// DC_ONLY(0x18b540, cb 0x284) - no retail tie yet
+int TTradeResourceWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2507
+// DC_ONLY(0x18b7c4, cb 0x110) - no retail tie yet
+void TTradeResourceWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2566
+// DC_ONLY(0x18b8d4, cb 0x26C) - no retail tie yet
+int TGiveResourceWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2688
+// DC_ONLY(0x18bb40, cb 0x124) - no retail tie yet
+void TGiveResourceWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2743
+// DC_ONLY(0x18bc64, cb 0x284) - no retail tie yet
+int TBuyArtifactWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2871
+// DC_ONLY(0x18bee8, cb 0x124) - no retail tie yet
+void TBuyArtifactWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:2932
+// DC_ONLY(0x18c00c, cb 0x36C) - no retail tie yet
+int TSellArtifactWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:3109
+// DC_ONLY(0x18c378, cb 0x144) - no retail tie yet
+void TSellArtifactWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:3189
+// DC_ONLY(0x18c4bc, cb 0x2F4) - no retail tie yet
+int TSellCreatureWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:3324
+// DC_ONLY(0x18c7b0, cb 0x134) - no retail tie yet
+void TSellCreatureWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:183
+// DC_ONLY(0x18c8e4, cb 0x34) - no retail tie yet
+void* TTradeResourceWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:286
+// DC_ONLY(0x18c918, cb 0x34) - no retail tie yet
+void* TGiveResourceWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:380
+// DC_ONLY(0x18c94c, cb 0x34) - no retail tie yet
+void* TBuyArtifactWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:509
+// DC_ONLY(0x18c980, cb 0x34) - no retail tie yet
+void* TSellArtifactWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\tradpost.cpp:606
+// DC_ONLY(0x18c9b4, cb 0x34) - no retail tie yet
+void* TSellCreatureWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

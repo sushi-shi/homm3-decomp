@@ -1,0 +1,1999 @@
+// E:\gamedcs\singleselectionwindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module singleselectionwindow.obj, 285 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x12f3d4, cb 0x38) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x12f40c, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x12f41c, cb 0x38) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x12f454, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x12f464, cb 0x38) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x12f49c, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x12f4ac, cb 0x38) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x12f4e4, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x12f4f4, cb 0x38) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x12f52c, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x12f53c, cb 0x38) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x12f574, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x12f584, cb 0x38) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x12f5bc, cb 0x10) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x12f5cc, cb 0x38) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x12f604, cb 0x10) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x12f614, cb 0x38) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x12f64c, cb 0x10) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x12f65c, cb 0x38) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x12f694, cb 0x40) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:164
+// DC_ONLY(0x12f6d4, cb 0xBC) - no retail tie yet
+const char* GetResourceBonusCaption(int townType)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:187
+// DC_ONLY(0x12f790, cb 0xBC) - no retail tie yet
+const char* GetResourceBonusDescription(int townType)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:209
+// DC_ONLY(0x12f84c, cb 0x20) - no retail tie yet
+unsigned char SavedGameExists(char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:230
+// DC_ONLY(0x12f86c, cb 0x15C) - no retail tie yet
+unsigned char SaveValid(const char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:268
+// DC_ONLY(0x12f9c8, cb 0x3A0) - no retail tie yet
+void BackupGameHeaders(gGat* dest, gGat* src)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:299
+// DC_ONLY(0x12fd68, cb 0x4E) - no retail tie yet
+unsigned long ProcessMouse(void* nothing)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:314
+// DC_ONLY(0x12fdb8, cb 0x1C) - no retail tie yet
+void StartMouseThread()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:344
+// DC_ONLY(0x12fdd4, cb 0x1C) - no retail tie yet
+void StopMouseThread()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:368
+// DC_ONLY(0x12fdf0, cb 0x92) - no retail tie yet
+void GetGameVersion(char* version)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:382
+// DC_ONLY(0x12fe84, cb 0x2C) - no retail tie yet
+unsigned char HasNonRandomHero(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:390
+// DC_ONLY(0x12feb0, cb 0x90) - no retail tie yet
+unsigned char HasRandomHero(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:821
+// DC_ONLY(0x12ff40, cb 0x62) - no retail tie yet
+unsigned char InitializeVCDescriptions()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:841
+// DC_ONLY(0x12ffa4, cb 0x62) - no retail tie yet
+unsigned char InitializeLCDescriptions()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:867
+// DC_ONLY(0x130008, cb 0x62) - no retail tie yet
+unsigned char InitializeTurnDurationText()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:890
+// DC_ONLY(0x13006c, cb 0x22) - no retail tie yet
+int numberComp(int num1, int num2)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:901
+// DC_ONLY(0x130090, cb 0x4C) - no retail tie yet
+int victoryCompare(const void* arg1, const void* arg2)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:912
+// DC_ONLY(0x1300dc, cb 0x50) - no retail tie yet
+int lossCompare(const void* arg1, const void* arg2)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:923
+// DC_ONLY(0x13012c, cb 0x50) - no retail tie yet
+int sizeCompare(const void* arg1, const void* arg2)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:934
+// DC_ONLY(0x13017c, cb 0xA6) - no retail tie yet
+int numberCompare(const void* arg1, const void* arg2)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:948
+// DC_ONLY(0x130224, cb 0x136) - no retail tie yet
+int alphaCompare(const void* arg1, const void* arg2)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:985
+// DC_ONLY(0x13035c, cb 0x1E) - no retail tie yet
+void SliderChatWindow(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:989
+// DC_ONLY(0x13037c, cb 0x60) - no retail tie yet
+void SliderDuration(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:994
+// DC_ONLY(0x1303dc, cb 0x1E) - no retail tie yet
+void SliderFileMenu(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1005
+// DC_ONLY(0x1303fc, cb 0xAC) - no retail tie yet
+void CNetPlayerHandler::CNetPlayerHandler()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1020
+// DC_ONLY(0x1304a8, cb 0x15C) - no retail tie yet
+unsigned char CNetPlayerHandler::SetNextPlayer(int pos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1078
+// DC_ONLY(0x130604, cb 0x4E) - no retail tie yet
+CNetPlayerHandlerPlayer* CNetPlayerHandler::GetPlayerInPos(int pos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1089
+// DC_ONLY(0x130654, cb 0x1A) - no retail tie yet
+CNetPlayerHandlerPlayer* CNetPlayerHandler::GetCompPlayerInPos(int pos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1095
+// DC_ONLY(0x130670, cb 0xC8) - no retail tie yet
+unsigned char CNetPlayerHandler::AddNewPlayer(CNetPlayerInfo* pNetPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1125
+// DC_ONLY(0x130738, cb 0x40) - no retail tie yet
+unsigned char CNetPlayerHandler::DeletePlayer(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1138
+// DC_ONLY(0x130778, cb 0x3C) - no retail tie yet
+int CNetPlayerHandler::GetGamePos(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1148
+// DC_ONLY(0x1307b4, cb 0x26) - no retail tie yet
+unsigned char CNetPlayerHandler::PlayerExists(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1156
+// DC_ONLY(0x1307dc, cb 0x4C) - no retail tie yet
+CNetPlayerHandlerPlayer* CNetPlayerHandler::GetPlayer(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1167
+// DC_ONLY(0x130828, cb 0x70) - no retail tie yet
+unsigned char CNetPlayerHandler::IsFaceTaken(int face, int exclude)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1193
+// DC_ONLY(0x130898, cb 0x40) - no retail tie yet
+int CNetPlayerHandler::GetNetPos(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1204
+// DC_ONLY(0x1308d8, cb 0x2C) - no retail tie yet
+unsigned char CNetPlayerHandler::SetComputer(int pos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1214
+// DC_ONLY(0x130904, cb 0x64) - no retail tie yet
+int CNetPlayerHandler::GetUnassignedPlayerPos()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1225
+// DC_ONLY(0x130968, cb 0x88) - no retail tie yet
+int CNetPlayerHandler::GetPlayerCount(unsigned char assignedOnly)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1953
+// DC_ONLY(0x1309f0, cb 0x4D6C) - no retail tie yet
+void TSingleSelectionWindow::TSingleSelectionWindow(int gameMode)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:2635
+// DC_ONLY(0x13575c, cb 0x348) - no retail tie yet
+void TSingleSelectionWindow::SetupLoadGameMode()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:2727
+// DC_ONLY(0x135aa4, cb 0x304) - no retail tie yet
+void TSingleSelectionWindow::SetupNewGameMode()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:2809
+// DC_ONLY(0x135da8, cb 0xD8) - no retail tie yet
+void TSingleSelectionWindow::ShowWidget(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:2821
+// DC_ONLY(0x135e80, cb 0x84) - no retail tie yet
+void TSingleSelectionWindow::UpdateMainWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:2838
+// DC_ONLY(0x135f04, cb 0x484) - no retail tie yet
+void TSingleSelectionWindow::SetupScenarioOptions()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:2933
+// DC_ONLY(0x136388, cb 0x86C) - no retail tie yet
+void TSingleSelectionWindow::SetupAdvancedOptions()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:3126
+// DC_ONLY(0x136bf4, cb 0x2A0) - no retail tie yet
+void TSingleSelectionWindow::TurnOffScenarioOptions()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:3166
+// DC_ONLY(0x136e94, cb 0x368) - no retail tie yet
+void TSingleSelectionWindow::TurnOffAdvancedOptions()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:3219
+// DC_ONLY(0x1371fc, cb 0xB2C) - no retail tie yet
+unsigned char TSingleSelectionWindow::ProcessRightSelect(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:3461
+// DC_ONLY(0x137d28, cb 0x80) - no retail tie yet
+int TSingleSelectionWindow::GetFileSpecNbr()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:3475
+// DC_ONLY(0x137da8, cb 0x916) - no retail tie yet
+void TSingleSelectionWindow::GetHeaders()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:3739
+// DC_ONLY(0x1386c0, cb 0x9D0) - no retail tie yet
+int TSingleSelectionWindow::GetHeader(char* cFilename, GameSelectionHeadersStruct* pHeader)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:3871
+// DC_ONLY(0x139090, cb 0x408) - no retail tie yet
+void TSingleSelectionWindow::UpdateGameVars()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:3927
+// DC_ONLY(0x139498, cb 0x23E) - no retail tie yet
+void TSingleSelectionWindow::MakeHeroFilter()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4012
+// DC_ONLY(0x1396d8, cb 0x348) - no retail tie yet
+void TSingleSelectionWindow::~TSingleSelectionWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4074
+// DC_ONLY(0x139a20, cb 0xE6) - no retail tie yet
+const char* TSingleSelectionWindow::GetFileName(int which)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4099
+// DC_ONLY(0x139b08, cb 0x10A) - no retail tie yet
+const char* TSingleSelectionWindow::GetMapName(int which)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4122
+// DC_ONLY(0x139c14, cb 0x90) - no retail tie yet
+void GetVCText(VictoryConditionStruct* vc, char* sText)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4136
+// DC_ONLY(0x139ca4, cb 0x28) - no retail tie yet
+void GetLCText(LossConditionStruct* lc, char* sText)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4141
+// DC_ONLY(0x139ccc, cb 0x62A) - no retail tie yet
+void TSingleSelectionWindow::DrawBasicMapInfo()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4219
+// DC_ONLY(0x13a2f8, cb 0x86) - no retail tie yet
+int TSingleSelectionWindow::MaxPlayers()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4239
+// DC_ONLY(0x13a380, cb 0xD84) - no retail tie yet
+int TSingleSelectionWindow::Update(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4420
+// DC_ONLY(0x13b104, cb 0x74) - no retail tie yet
+void TSingleSelectionWindow::DoModal(unsigned char fade)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4446
+// DC_ONLY(0x13b178, cb 0xB4) - no retail tie yet
+unsigned char TSingleSelectionWindow::SetNewPlayerSlot(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4470
+// DC_ONLY(0x13b22c, cb 0x4D8) - no retail tie yet
+void TSingleSelectionWindow::SetHumanSlot()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4621
+// DC_ONLY(0x13b704, cb 0x7C) - no retail tie yet
+void TSingleSelectionWindow::OnSortMaps(int how)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4646
+// DC_ONLY(0x13b780, cb 0x27A) - no retail tie yet
+void TSingleSelectionWindow::SortMaps(int how, unsigned char sendSortMsg, unsigned char bUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4704
+// DC_ONLY(0x13b9fc, cb 0x262) - no retail tie yet
+void TSingleSelectionWindow::UpdateAllyEnemyFlags(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4773
+// DC_ONLY(0x13bc60, cb 0x7D2) - no retail tie yet
+void TSingleSelectionWindow::SetCurrentMap(int map, unsigned char bUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:5000
+// DC_ONLY(0x13c434, cb 0x262) - no retail tie yet
+void TSingleSelectionWindow::SetFilter(int size)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:5064
+// DC_ONLY(0x13c698, cb 0x8C) - no retail tie yet
+void TSingleSelectionWindow::SetDifficultyHiLite()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:5085
+// DC_ONLY(0x13c724, cb 0x78) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnClickMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:5100
+// DC_ONLY(0x13c79c, cb 0x22D4) - no retail tie yet
+int TSingleSelectionWindow::OnWidgetDeselect(message* msg, unsigned char* bExitFlag, unsigned char remoteClick)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:5933
+// DC_ONLY(0x13ea70, cb 0x150) - no retail tie yet
+int TSingleSelectionWindow::ExitDialog(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:5976
+// DC_ONLY(0x13ebc0, cb 0xB86) - no retail tie yet
+int TSingleSelectionWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6296
+// DC_ONLY(0x13f748, cb 0x28) - no retail tie yet
+int TSingleSelectionWindow::GetThisPlayerGamePos()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6301
+// DC_ONLY(0x13f770, cb 0x602) - no retail tie yet
+void TSingleSelectionWindow::UpdatePlayerPositions(unsigned char updateCurPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6443
+// DC_ONLY(0x13fd74, cb 0x6A0) - no retail tie yet
+unsigned char TSingleSelectionWindow::HandleNetMsg(CNetMsg* pNetMsg, unsigned char* cancel)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6649
+// DC_ONLY(0x140414, cb 0x3C) - no retail tie yet
+void TSingleSelectionWindow::OnPingMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6655
+// DC_ONLY(0x140450, cb 0xB8) - no retail tie yet
+void TSingleSelectionWindow::OnPingResponseMsg(CNetMsg* pNetMsg, unsigned char inPopup)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6664
+// DC_ONLY(0x140508, cb 0x46) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnMapHeaderRequestMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6677
+// DC_ONLY(0x140550, cb 0x38) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnHeaderConfirmMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6689
+// DC_ONLY(0x140588, cb 0x82) - no retail tie yet
+unsigned char TSingleSelectionWindow::CheckMissingHeaders(unsigned long dpidHost)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6709
+// DC_ONLY(0x14060c, cb 0x56) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnReqHeaderConfirmMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6723
+// DC_ONLY(0x140664, cb 0xA) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnMapFileNameMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6773
+// DC_ONLY(0x140670, cb 0x7C) - no retail tie yet
+void UpdateTurnDuration()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6778
+// DC_ONLY(0x1406ec, cb 0x1AC) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnGameTransmitInitMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6837
+// DC_ONLY(0x140898, cb 0x13A) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnNewSetupInfoMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6861
+// DC_ONLY(0x1409d4, cb 0xA0) - no retail tie yet
+unsigned char TSingleSelectionWindow::IsVersionCompatible(const char* otherVersion)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6884
+// DC_ONLY(0x140a74, cb 0x214) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnNewPlayerMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6937
+// DC_ONLY(0x140c88, cb 0xC6) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnPlayerDroppedMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6968
+// DC_ONLY(0x140d50, cb 0x22) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnNewMapHeaderInfo(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6980
+// DC_ONLY(0x140d74, cb 0x48) - no retail tie yet
+unsigned char TSingleSelectionWindow::SendPlayerPositions(unsigned long dpidTo)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:6990
+// DC_ONLY(0x140dbc, cb 0x126) - no retail tie yet
+unsigned char TSingleSelectionWindow::SendGameHeaders(unsigned long dpidTo)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7009
+// DC_ONLY(0x140ee4, cb 0x40) - no retail tie yet
+unsigned char TSingleSelectionWindow::SendSetupInfo(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7017
+// DC_ONLY(0x140f24, cb 0x1F8) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnGameHeaderInfoInitMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7077
+// DC_ONLY(0x14111c, cb 0x1E0) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnGameHeaderInfoMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7094
+// DC_ONLY(0x1412fc, cb 0xC8) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnGameHeaderInfoEndMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7118
+// DC_ONLY(0x1413c4, cb 0x4A) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnScrollMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7131
+// DC_ONLY(0x141410, cb 0x38) - no retail tie yet
+unsigned char TSingleSelectionWindow::IsHost()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7139
+// DC_ONLY(0x141448, cb 0x8) - no retail tie yet
+void TSingleSelectionWindow::OnNameSlider(int newIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7143
+// DC_ONLY(0x141450, cb 0x68) - no retail tie yet
+void TSingleSelectionWindow::OnChatWindowSlider(int newIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7149
+// DC_ONLY(0x1414b8, cb 0x2A) - no retail tie yet
+void TSingleSelectionWindow::OnFileMenuSlider(int newIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7156
+// DC_ONLY(0x1414e4, cb 0xC4) - no retail tie yet
+void TSingleSelectionWindow::OnDurationSlider(int newIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7178
+// DC_ONLY(0x1415a8, cb 0xF4) - no retail tie yet
+void TSingleSelectionWindow::SendChat(unsigned long dpid, const char* cChat)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7212
+// DC_ONLY(0x14169c, cb 0x56) - no retail tie yet
+void TSingleSelectionWindow::ReceiveChat(unsigned long dpid, char* cChat, unsigned char inPopup)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7226
+// DC_ONLY(0x1416f4, cb 0x12E) - no retail tie yet
+void TSingleSelectionWindow::DisplayChat()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7245
+// DC_ONLY(0x141824, cb 0x146) - no retail tie yet
+void TSingleSelectionWindow::GetHeroFace(int which, CNetPlayerHandlerPlayer* pPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7298
+// DC_ONLY(0x14196c, cb 0xA8) - no retail tie yet
+void TSingleSelectionWindow::OnRequestHeroFaceMsg(CNetMsg* pNetMsg, unsigned char inPopup)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7323
+// DC_ONLY(0x141a14, cb 0x60) - no retail tie yet
+CNetPlayerHandlerPlayer* TSingleSelectionWindow::GetThisPlayer()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7337
+// DC_ONLY(0x141a74, cb 0x7C) - no retail tie yet
+void TSingleSelectionWindow::OnRequestHeroFaceReplyMsg(CNetMsg* pNetMsg, unsigned char inPopup)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7356
+// DC_ONLY(0x141af0, cb 0xA8) - no retail tie yet
+void TSingleSelectionWindow::OnSetAGRMsg(CNetMsg* pNetMsg, unsigned char inPopup)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7377
+// DC_ONLY(0x141b98, cb 0x1C4) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnSetAsHostMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7417
+// DC_ONLY(0x141d5c, cb 0x13E) - no retail tie yet
+void TSingleSelectionWindow::OnNewHostMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7455
+// DC_ONLY(0x141e9c, cb 0x18C) - no retail tie yet
+void TSingleSelectionWindow::OnNameClick(int pos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7512
+// DC_ONLY(0x142028, cb 0x180) - no retail tie yet
+void TSingleSelectionWindow::OnPlayerPosClick(int pos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7591
+// DC_ONLY(0x1421a8, cb 0x38C) - no retail tie yet
+void TSingleSelectionWindow::OnUpdatePlayerPosMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7665
+// DC_ONLY(0x142534, cb 0xBC) - no retail tie yet
+void TSingleSelectionWindow::CheckFaces()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7682
+// DC_ONLY(0x1425f0, cb 0x84) - no retail tie yet
+void TSingleSelectionWindow::SendPlayerFaces()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7698
+// DC_ONLY(0x142674, cb 0x1FC) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnBeginGame()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7756
+// DC_ONLY(0x142870, cb 0x176) - no retail tie yet
+unsigned char TSingleSelectionWindow::BeginSavedGame()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7822
+// DC_ONLY(0x1429e8, cb 0x2B4) - no retail tie yet
+unsigned char TSingleSelectionWindow::BeginNewGame()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7889
+// DC_ONLY(0x142c9c, cb 0x22) - no retail tie yet
+unsigned char TSingleSelectionWindow::IsMultiPlayer()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7900
+// DC_ONLY(0x142cc0, cb 0x17C) - no retail tie yet
+void TSingleSelectionWindow::UpdateNameLists()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7935
+// DC_ONLY(0x142e3c, cb 0x170) - no retail tie yet
+void TSingleSelectionWindow::TurnChatOn(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7964
+// DC_ONLY(0x142fac, cb 0x11E) - no retail tie yet
+void TSingleSelectionWindow::TurnChatOff(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7990
+// DC_ONLY(0x1430cc, cb 0x6C) - no retail tie yet
+void TSingleSelectionWindow::OnTownUpdateMsg(CNetMsg* pNetMsg, unsigned char inPopup)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7997
+// DC_ONLY(0x143138, cb 0x84) - no retail tie yet
+void TSingleSelectionWindow::UpdateTown(int pos, TTownType town, unsigned char inPopup)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8018
+// DC_ONLY(0x1431bc, cb 0x58) - no retail tie yet
+unsigned char TSingleSelectionWindow::HasMultipleTowns(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8034
+// DC_ONLY(0x143214, cb 0x116) - no retail tie yet
+unsigned char TSingleSelectionWindow::CanChooseTown(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8067
+// DC_ONLY(0x14332c, cb 0x116) - no retail tie yet
+unsigned char TSingleSelectionWindow::CanChooseHero(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8107
+// DC_ONLY(0x143444, cb 0x104) - no retail tie yet
+THeroID TSingleSelectionWindow::GetDisplayFace(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8143
+// DC_ONLY(0x143548, cb 0xB0) - no retail tie yet
+THeroID TSingleSelectionWindow::GetHeroInPos(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8166
+// DC_ONLY(0x1435f8, cb 0xBC) - no retail tie yet
+TTownType TSingleSelectionWindow::GetDisplayTown(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8201
+// DC_ONLY(0x1436b4, cb 0x15C) - no retail tie yet
+const char* TSingleSelectionWindow::GetHeroName(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8230
+// DC_ONLY(0x143810, cb 0xA8) - no retail tie yet
+void TSingleSelectionWindow::OnNameChange(int gamePos, const char* newName)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8256
+// DC_ONLY(0x1438b8, cb 0x9A) - no retail tie yet
+void TSingleSelectionWindow::UpdateNames()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8273
+// DC_ONLY(0x143954, cb 0x128) - no retail tie yet
+unsigned char TSingleSelectionWindow::HighlightFile(char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8297
+// DC_ONLY(0x143a7c, cb 0x158A) - no retail tie yet
+void TSingleSelectionWindow::DrawHeroAdvancedOption(int playerPos, unsigned char update, int position)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8643
+// DC_ONLY(0x145008, cb 0xA0) - no retail tie yet
+int TSingleSelectionWindow::CalcPosition(int playerPos)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8662
+// DC_ONLY(0x1450a8, cb 0x76) - no retail tie yet
+unsigned char TSingleSelectionWindow::OnBadVersionMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8675
+// DC_ONLY(0x145120, cb 0x6) - no retail tie yet
+void TSingleSelectionWindow::OnDeleteFile()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8749
+// DC_ONLY(0x145128, cb 0x22) - no retail tie yet
+int Update(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8758
+// DC_ONLY(0x14514c, cb 0x52) - no retail tie yet
+void CSingleSelectionNetMsgHandler::CSingleSelectionNetMsgHandler()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8764
+// DC_ONLY(0x1451a0, cb 0x48) - no retail tie yet
+CNetMsg* CSingleSelectionNetMsgHandler::CheckHandleNet(unsigned char inPopup, unsigned char* msgReceived)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8775
+// DC_ONLY(0x1451e8, cb 0x204) - no retail tie yet
+CNetMsg* CSingleSelectionNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8847
+// DC_ONLY(0x1453ec, cb 0xB0) - no retail tie yet
+int EnumMapleDevicesCallback(const MAPLEDEVICEINSTANCE* pmdi, void* pvContext)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:8878
+// DC_ONLY(0x14549c, cb 0x860) - no retail tie yet
+unsigned char VMSaveFile(char* FileName, unsigned char* buffer, unsigned long lenBuffer, unsigned long start)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:9086
+// DC_ONLY(0x145cfc, cb 0xEE) - no retail tie yet
+int myEnumFiles(IFlashDevice* pIFlashDevice, unsigned long fsfileid, const _FSFILEDESC* lpcfsfiledesc, void* pvContext)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:9103
+// DC_ONLY(0x145dec, cb 0x2A2) - no retail tie yet
+void TSingleSelectionWindow::SetVMIconStatus()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:9142
+// DC_ONLY(0x146090, cb 0x292) - no retail tie yet
+unsigned char TSingleSelectionWindow::FindCurrentVM()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:9268
+// DC_ONLY(0x146324, cb 0x240) - no retail tie yet
+unsigned char TSingleSelectionWindow::GetDeviceDesc(unsigned char save)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:9328
+// DC_ONLY(0x146564, cb 0x2AE) - no retail tie yet
+unsigned char VMLoadFile(char* FileName, Buffer* buf)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:9420
+// DC_ONLY(0x146814, cb 0x180) - no retail tie yet
+unsigned char VMDeleteFile(char* FileName)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:9465
+// DC_ONLY(0x146994, cb 0x268) - no retail tie yet
+unsigned char VMSaveHiscore(char* FileName, void* buffer, unsigned long lenBuffer, unsigned long start)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:9542
+// DC_ONLY(0x146bfc, cb 0x8A) - no retail tie yet
+unsigned char FindFileOnVMS(char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:9571
+// DC_ONLY(0x146c88, cb 0x5F4) - no retail tie yet
+unsigned char LoadCompleteVMFile(char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:9712
+// DC_ONLY(0x14727c, cb 0xD4) - no retail tie yet
+void GetDateTime()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:9726
+// DC_ONLY(0x147350, cb 0x7C) - no retail tie yet
+void EnumVMs()
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:346
+// DC_ONLY(0x1473cc, cb 0x2C) - no retail tie yet
+void CNetPlayerInfo::CNetPlayerInfo(char* _sName, unsigned long _dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\TextWdgt.h:64
+// DC_ONLY(0x1473f8, cb 0x24) - no retail tie yet
+void textWidget::SetText(const char* new_text)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:311
+// DC_ONLY(0x14741c, cb 0x50) - no retail tie yet
+void NewSMapHeader::AssignData(CMapHeaderData* pData, char* sName, char* sDesc)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:210
+// DC_ONLY(0x14746c, cb 0xA) - no retail tie yet
+char* CDPlayPlayer::GetName()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:207
+// DC_ONLY(0x147478, cb 0x28) - no retail tie yet
+char* CHotSeatMan::GetName(int player)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:320
+// DC_ONLY(0x1474a0, cb 0xC) - no retail tie yet
+int CChatManager::GetCount()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:321
+// DC_ONLY(0x1474ac, cb 0xC) - no retail tie yet
+int CChatManager::GetPosition()
+{
+    // @stub
+}
+
+// E:\gamedcs\SingleSelectionWindow.h:73
+// DC_ONLY(0x1474b8, cb 0xBC) - no retail tie yet
+void GameSelectionHeadersStruct::GameSelectionHeadersStruct()
+{
+    // @stub
+}
+
+// E:\gamedcs\SingleSelectionWindow.h:108
+// DC_ONLY(0x147574, cb 0x68) - no retail tie yet
+void CNetPlayerHandlerPlayer::CNetPlayerHandlerPlayer()
+{
+    // @stub
+}
+
+// E:\gamedcs\SingleSelectionWindow.h:122
+// DC_ONLY(0x1475dc, cb 0x12) - no retail tie yet
+unsigned char CNetPlayerHandlerPlayer::IsHuman()
+{
+    // @stub
+}
+
+// E:\gamedcs\SingleSelectionWindow.h:130
+// DC_ONLY(0x1475f0, cb 0x20) - no retail tie yet
+void CNetPlayerHandlerPlayer::Clear()
+{
+    // @stub
+}
+
+// E:\gamedcs\SingleSelectionWindow.h:138
+// DC_ONLY(0x147610, cb 0x1A) - no retail tie yet
+void CNetPlayerHandlerPlayer::ResetAdvancedOptions()
+{
+    // @stub
+}
+
+// E:\gamedcs\Button.h:136
+// DC_ONLY(0x14762c, cb 0x24) - no retail tie yet
+void textButton::SetText(const char* new_text)
+{
+    // @stub
+}
+
+// E:\gamedcs\u2dvers.h:149
+// DC_ONLY(0x147650, cb 0x2C) - no retail tie yet
+unsigned char TFileVersionInfo::GetProductVersion(std::basic_string<char,std::char_traits<char>,std::allocator<char>* product_version)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:429
+// DC_ONLY(0x14767c, cb 0x60) - no retail tie yet
+void CHostWaitDlg::CHostWaitDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:437
+// DC_ONLY(0x1476dc, cb 0xD4) - no retail tie yet
+void CHostWaitDlg::Wait(unsigned long forWho)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:454
+// DC_ONLY(0x1477b0, cb 0x78) - no retail tie yet
+int CHostWaitDlg::handle_message(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:465
+// DC_ONLY(0x147828, cb 0x38) - no retail tie yet
+void* CHostWaitDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:465
+// DC_ONLY(0x147860, cb 0x1C) - no retail tie yet
+void CHostWaitDlg::~CHostWaitDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:473
+// DC_ONLY(0x14787c, cb 0x28) - no retail tie yet
+void CLaunchingGameMsg::CLaunchingGameMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:487
+// DC_ONLY(0x1478a4, cb 0x40) - no retail tie yet
+void CGameHeaderInfoInitMsg::CGameHeaderInfoInitMsg(unsigned long numMaps, unsigned char loadGameMode, unsigned long msgSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:505
+// DC_ONLY(0x1478e4, cb 0x5C) - no retail tie yet
+void CGameHeaderInfoInitMsgEx::CGameHeaderInfoInitMsgEx(char* version, unsigned long numMaps, unsigned char loadGameMode)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:520
+// DC_ONLY(0x147940, cb 0x18C) - no retail tie yet
+void CGameHeaderInfoMsg::CGameHeaderInfoMsg(int headerNbr, GameSelectionHeadersStruct* pHeader)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:532
+// DC_ONLY(0x147acc, cb 0x28) - no retail tie yet
+void CGameHeaderInfoEndMsg::CGameHeaderInfoEndMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:544
+// DC_ONLY(0x147af4, cb 0xFC) - no retail tie yet
+void CNewSetupInfoMsg::CNewSetupInfoMsg(SGameSetupOptions* pGameSetupOptions)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:557
+// DC_ONLY(0x147bf0, cb 0x38) - no retail tie yet
+void CScrollMsg::CScrollMsg(int map, int index)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:571
+// DC_ONLY(0x147c28, cb 0x50) - no retail tie yet
+void CNewMapHeaderInfoMsg::CNewMapHeaderInfoMsg(NewSMapHeader* pMapHeader)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:587
+// DC_ONLY(0x147c78, cb 0x74) - no retail tie yet
+void CMapFileNameMsg::CMapFileNameMsg(int nbr, char* fileName, TTownType* townType, _FILETIME fileTime)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:605
+// DC_ONLY(0x147cec, cb 0x30) - no retail tie yet
+void CMapHeaderRequestMsg::CMapHeaderRequestMsg(int nbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:616
+// DC_ONLY(0x147d1c, cb 0x28) - no retail tie yet
+void CReqHeaderConfirmMsg::CReqHeaderConfirmMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:626
+// DC_ONLY(0x147d44, cb 0x28) - no retail tie yet
+void CHeaderConfirmMsg::CHeaderConfirmMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:638
+// DC_ONLY(0x147d6c, cb 0x38) - no retail tie yet
+void CSortMapsMsg::CSortMapsMsg(int how, int direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:651
+// DC_ONLY(0x147da4, cb 0x30) - no retail tie yet
+void CSetFilterMsg::CSetFilterMsg(int size)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:663
+// DC_ONLY(0x147dd4, cb 0x30) - no retail tie yet
+void CRequestHeroFaceMsg::CRequestHeroFaceMsg(int which)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:676
+// DC_ONLY(0x147e04, cb 0x38) - no retail tie yet
+void CRequestHeroFaceReplyMsg::CRequestHeroFaceReplyMsg(int pos, int face)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:690
+// DC_ONLY(0x147e3c, cb 0x38) - no retail tie yet
+void CSetAGRMsg::CSetAGRMsg(int gamePos, int agr)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:703
+// DC_ONLY(0x147e74, cb 0x30) - no retail tie yet
+void CNewHostMsg::CNewHostMsg(unsigned long dpidNewHost)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:717
+// DC_ONLY(0x147ea4, cb 0x84) - no retail tie yet
+void CUpdatePlayerPosMsg::CUpdatePlayerPosMsg(CNetPlayerHandlerPlayer* pNetPlayers, CNetPlayerHandlerPlayer* pCompPlayers)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:730
+// DC_ONLY(0x147f28, cb 0x30) - no retail tie yet
+void CClickMsg::CClickMsg(int widgetId)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:744
+// DC_ONLY(0x147f58, cb 0x38) - no retail tie yet
+void CTownUpdateMsg::CTownUpdateMsg(int gamePos, TTownType town)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:758
+// DC_ONLY(0x147f90, cb 0xA8) - no retail tie yet
+void CNewPlayerMsg::CNewPlayerMsg(CNetPlayerInfo* pPlayerInfo, char* version)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:773
+// DC_ONLY(0x148038, cb 0x54) - no retail tie yet
+void CBadVersionMsg::CBadVersionMsg(const char* version, const char* errText)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1262
+// DC_ONLY(0x14808c, cb 0x40) - no retail tie yet
+void CNewPlayerUpdateProc::CNewPlayerUpdateProc(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1272
+// DC_ONLY(0x1480cc, cb 0x64) - no retail tie yet
+void CNewPlayerUpdateProc::Go()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1282
+// DC_ONLY(0x148130, cb 0x208) - no retail tie yet
+void CNewPlayerUpdateProc::Tick()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1341
+// DC_ONLY(0x148338, cb 0x10) - no retail tie yet
+unsigned char CNewPlayerUpdateProc::IsFinished()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1346
+// DC_ONLY(0x148348, cb 0x3C) - no retail tie yet
+void CNewPlayerUpdateProc::HeaderRequested(int headerNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1355
+// DC_ONLY(0x148384, cb 0x24) - no retail tie yet
+void CNewPlayerUpdateProc::HeaderConfirmed()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1369
+// DC_ONLY(0x1483a8, cb 0x50) - no retail tie yet
+void CNewPlayerUpdateProc::RequestConfirmation()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1375
+// DC_ONLY(0x1483f8, cb 0xD0) - no retail tie yet
+void CNewPlayerUpdateProc::HandleRequests()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1393
+// DC_ONLY(0x1484c8, cb 0x1B0) - no retail tie yet
+void CNewPlayerUpdateProc::Finish()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1435
+// DC_ONLY(0x148678, cb 0x30) - no retail tie yet
+void CNewPlayerUpdateMan::CNewPlayerUpdateMan()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1443
+// DC_ONLY(0x1486a8, cb 0x64) - no retail tie yet
+void CNewPlayerUpdateMan::~CNewPlayerUpdateMan()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1452
+// DC_ONLY(0x14870c, cb 0x84) - no retail tie yet
+void CNewPlayerUpdateMan::NewPlayer(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1466
+// DC_ONLY(0x148790, cb 0xA8) - no retail tie yet
+void CNewPlayerUpdateMan::Tick()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1484
+// DC_ONLY(0x148838, cb 0x34) - no retail tie yet
+void CNewPlayerUpdateMan::HeaderConfirmed(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1492
+// DC_ONLY(0x14886c, cb 0x38) - no retail tie yet
+void CNewPlayerUpdateMan::HeaderRequested(unsigned long dpid, int number)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1500
+// DC_ONLY(0x1488a4, cb 0x84) - no retail tie yet
+void CNewPlayerUpdateMan::PlayerDropped(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1517
+// DC_ONLY(0x148928, cb 0x38) - no retail tie yet
+unsigned char CNewPlayerUpdateMan::IsSendingHeaders()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1533
+// DC_ONLY(0x148960, cb 0x38) - no retail tie yet
+int CNewPlayerUpdateMan::GetFirstAvailable()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1544
+// DC_ONLY(0x148998, cb 0x56) - no retail tie yet
+CNewPlayerUpdateProc* CNewPlayerUpdateMan::GetProc(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1553
+// DC_ONLY(0x1489f0, cb 0x38) - no retail tie yet
+void* CNewPlayerUpdateProc::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1553
+// DC_ONLY(0x148a28, cb 0x20) - no retail tie yet
+void CNewPlayerUpdateProc::~CNewPlayerUpdateProc()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1569
+// DC_ONLY(0x148a48, cb 0x90) - no retail tie yet
+void CChatSlider::CChatSlider(int x, int y, int w, int h, int id, int num, void (*)()* func, slider::EGraphics graf, int page)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1575
+// DC_ONLY(0x148ad8, cb 0x44) - no retail tie yet
+void CChatSlider::SetResolution(int num)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1589
+// DC_ONLY(0x148b1c, cb 0x7C) - no retail tie yet
+void CChatSlider::SetState(int state)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1600
+// DC_ONLY(0x148b98, cb 0x38) - no retail tie yet
+void* CChatSlider::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1600
+// DC_ONLY(0x148bd0, cb 0x1C) - no retail tie yet
+void CChatSlider::~CChatSlider()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1618
+// DC_ONLY(0x148bec, cb 0x64) - no retail tie yet
+void CChatWidget::CChatSave::CChatSave(int w, int h)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1625
+// DC_ONLY(0x148c50, cb 0x3C) - no retail tie yet
+void CChatWidget::CChatSave::Save(int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1631
+// DC_ONLY(0x148c8c, cb 0x12) - no retail tie yet
+unsigned char CChatWidget::CChatSave::IsSaved()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1664
+// DC_ONLY(0x148ca0, cb 0xD8) - no retail tie yet
+void CChatWidget::CChatWidget(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, const char* textString, const char* textFontName, font::TColor color, int textWidgetId, unsigned justify, int back_color, int textWidgetStyle)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1670
+// DC_ONLY(0x148d78, cb 0x7C) - no retail tie yet
+void CChatWidget::~CChatWidget()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1675
+// DC_ONLY(0x148df4, cb 0x54) - no retail tie yet
+void CChatWidget::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1685
+// DC_ONLY(0x148e48, cb 0x50) - no retail tie yet
+void CChatWidget::SaveBackground()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1693
+// DC_ONLY(0x148e98, cb 0x74) - no retail tie yet
+void CChatWidget::RestoreBackground()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1696
+// DC_ONLY(0x148f0c, cb 0x38) - no retail tie yet
+void* CChatWidget::CChatSave::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1696
+// DC_ONLY(0x148f44, cb 0x38) - no retail tie yet
+void* CChatWidget::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1696
+// DC_ONLY(0x148f7c, cb 0x1C) - no retail tie yet
+void CChatWidget::CChatSave::~CChatSave()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1741
+// DC_ONLY(0x148f98, cb 0xBC) - no retail tie yet
+void CSingleSelectionChatEdit::CSingleSelectionChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1746
+// DC_ONLY(0x149054, cb 0x2C) - no retail tie yet
+void CSingleSelectionChatEdit::SendChat(const char* sChat, int toWho)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1752
+// DC_ONLY(0x149080, cb 0x50) - no retail tie yet
+unsigned char CSingleSelectionChatEdit::IgnoreKey(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1764
+// DC_ONLY(0x1490d0, cb 0x38) - no retail tie yet
+void* CSingleSelectionChatEdit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1764
+// DC_ONLY(0x149108, cb 0x1C) - no retail tie yet
+void CSingleSelectionChatEdit::~CSingleSelectionChatEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1805
+// DC_ONLY(0x149124, cb 0xBC) - no retail tie yet
+void CEnterNameEdit::CEnterNameEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1810
+// DC_ONLY(0x1491e0, cb 0x58) - no retail tie yet
+int CEnterNameEdit::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1820
+// DC_ONLY(0x149238, cb 0x58) - no retail tie yet
+int CEnterNameEdit::OnEnter()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1830
+// DC_ONLY(0x149290, cb 0x28) - no retail tie yet
+void CEnterNameEdit::OnKillFocus()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1834
+// DC_ONLY(0x1492b8, cb 0x38) - no retail tie yet
+void* CEnterNameEdit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1834
+// DC_ONLY(0x1492f0, cb 0x1C) - no retail tie yet
+void CEnterNameEdit::~CEnterNameEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1887
+// DC_ONLY(0x14930c, cb 0xBC) - no retail tie yet
+void CSaveGameEdit::CSaveGameEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1892
+// DC_ONLY(0x1493c8, cb 0x14C) - no retail tie yet
+unsigned char CSaveGameEdit::IgnoreKey(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1931
+// DC_ONLY(0x149514, cb 0x7C) - no retail tie yet
+int CSaveGameEdit::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1941
+// DC_ONLY(0x149590, cb 0x38) - no retail tie yet
+void* CSaveGameEdit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:1941
+// DC_ONLY(0x1495c8, cb 0x1C) - no retail tie yet
+void CSaveGameEdit::~CSaveGameEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:2632
+// DC_ONLY(0x1495e4, cb 0x38) - no retail tie yet
+void* TSingleSelectionWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:4071
+// DC_ONLY(0x14961c, cb 0x38) - no retail tie yet
+void* CNewPlayerUpdateMan::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionwindow.cpp:7886
+// DC_ONLY(0x149654, cb 0x20) - no retail tie yet
+void CNewMapHeaderInfoMsg::~CNewMapHeaderInfoMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:37
+// DC_ONLY(0x149674, cb 0x54) - no retail tie yet
+void CAutoArray<int>::CAutoArray<int>()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:46
+// DC_ONLY(0x1496c8, cb 0x50) - no retail tie yet
+void CAutoArray<int>::~CAutoArray<int>()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:51
+// DC_ONLY(0x149718, cb 0x88) - no retail tie yet
+void CAutoArray<int>::Destroy(unsigned char deleteData)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:73
+// DC_ONLY(0x1497a0, cb 0xB0) - no retail tie yet
+unsigned char CAutoArray<int>::Add(int* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:95
+// DC_ONLY(0x149850, cb 0x26) - no retail tie yet
+int* CAutoArray<int>::Get(unsigned long elementNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:103
+// DC_ONLY(0x149878, cb 0x2A) - no retail tie yet
+unsigned char CAutoArray<int>::Put(unsigned long elementNbr, int* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:113
+// DC_ONLY(0x1498a4, cb 0x64) - no retail tie yet
+unsigned char CAutoArray<int>::Delete(unsigned long elementNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:127
+// DC_ONLY(0x149908, cb 0xA2) - no retail tie yet
+unsigned char CAutoArray<int>::Insert(unsigned long nextElementNbr, int* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:144
+// DC_ONLY(0x1499ac, cb 0xC) - no retail tie yet
+unsigned long CAutoArray<int>::GetCount()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:144
+// DC_ONLY(0x1499b8, cb 0x38) - no retail tie yet
+void* CAutoArray<int>::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

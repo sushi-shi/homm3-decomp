@@ -1,0 +1,11 @@
+// E:\gamedcs\zlib113\infutil.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module infutil.obj, 1 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\infutil.cpp:26
+// DC_ONLY(0xdc05c, cb 0xDC) - no retail tie yet
+int inflate_flush(inflate_blocks_state* s, z_stream_s* z, int r)
+{
+    // @stub
+}
+

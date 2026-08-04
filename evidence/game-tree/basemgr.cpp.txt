@@ -1,0 +1,12 @@
+// E:\gamedcs\basemgr.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module basemgr.obj, 1 procs, 1 retail-tied.
+// retail extent 0x4d530..0x4d575 (VA 0x44d530..0x44d575)
+
+// E:\gamedcs\basemgr.cpp:24
+VA(0x0044d530, 0x45)  // anchor-global, dc 0x50a28
+void baseManager::baseManager()
+{
+    // @stub
+}
+

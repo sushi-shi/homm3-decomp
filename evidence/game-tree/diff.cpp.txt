@@ -1,0 +1,200 @@
+// E:\gamedcs\diff.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module diff.obj, 28 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x82080, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x820a8, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x820b8, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x820e0, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x820f0, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x82118, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x82128, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x82150, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x82160, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x82188, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x82198, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x821c0, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x821d0, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x821f8, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x82208, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x82230, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x82240, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x82268, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x82278, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x822a0, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\diff.cpp:52
+// DC_ONLY(0x822e0, cb 0x4) - no retail tie yet
+void CDiffFile::CDiffFile()
+{
+    // @stub
+}
+
+// E:\gamedcs\diff.cpp:57
+// DC_ONLY(0x822e4, cb 0x6) - no retail tie yet
+unsigned char* CDiffFile::GetData()
+{
+    // @stub
+}
+
+// E:\gamedcs\diff.cpp:62
+// DC_ONLY(0x822ec, cb 0x8A) - no retail tie yet
+void* CDiffFile::Apply(unsigned char* oldSaveGame, int oldSaveGameSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\diff.cpp:107
+// DC_ONLY(0x82378, cb 0x14) - no retail tie yet
+void CDiffMaker::CDiffMaker(unsigned char* oldData, int oldSize, unsigned char* newData, int newSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\diff.cpp:115
+// DC_ONLY(0x8238c, cb 0x4C) - no retail tie yet
+int CDiffMaker::CountSameBytes(int oldOffset, int newOffset)
+{
+    // @stub
+}
+
+// E:\gamedcs\diff.cpp:133
+// DC_ONLY(0x823d8, cb 0xAE) - no retail tie yet
+unsigned char CDiffMaker::FindNextSame(int oldOffset, int newOffset, int* oldCount, int* newCount)
+{
+    // @stub
+}
+
+// E:\gamedcs\diff.cpp:174
+// DC_ONLY(0x82488, cb 0x130) - no retail tie yet
+CDiffFile* CDiffMaker::MakeDiff(unsigned long* diffSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\diff.cpp:43
+// DC_ONLY(0x825b8, cb 0xE) - no retail tie yet
+void CDiffHeader::CDiffHeader(int numBytes, unsigned char copy, int oldNumBytes)
+{
+    // @stub
+}
+

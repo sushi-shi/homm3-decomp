@@ -1,0 +1,256 @@
+// E:\gamedcs\puzzlewindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module puzzlewindow.obj, 36 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x114cb4, cb 0x28) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x114cdc, cb 0x10) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x114cec, cb 0x28) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x114d14, cb 0x10) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x114d24, cb 0x28) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x114d4c, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x114d5c, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x114d84, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x114d94, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x114dbc, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x114dcc, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x114df4, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x114e04, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x114e2c, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x114e3c, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x114e64, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x114e74, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x114e9c, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x114eac, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x114ed4, cb 0x40) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:103
+// DC_ONLY(0x114f14, cb 0x2A) - no retail tie yet
+Bitmap816* get_puzzle_bitmap(long puzzle, long piece)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:115
+// DC_ONLY(0x114f40, cb 0x328) - no retail tie yet
+void TPuzzleWindow::TPuzzleWindow(int puzzlenum)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:162
+// DC_ONLY(0x115268, cb 0xA2) - no retail tie yet
+void TPuzzleWindow::~TPuzzleWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:179
+// DC_ONLY(0x11530c, cb 0x1A) - no retail tie yet
+int TPuzzleWindow::convertID2HelpID(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:203
+// DC_ONLY(0x115328, cb 0x7E) - no retail tie yet
+int TPuzzleWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:255
+// DC_ONLY(0x1153a8, cb 0x11C) - no retail tie yet
+int TPuzzleWindow::UpdatePuzzle(int full)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:279
+// DC_ONLY(0x1154c4, cb 0x74) - no retail tie yet
+void type_AI_puzzle_tile::type_AI_puzzle_tile()
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:294
+// DC_ONLY(0x115538, cb 0x184) - no retail tie yet
+void type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:319
+// DC_ONLY(0x1156bc, cb 0xC0) - no retail tie yet
+unsigned char type_AI_puzzle_tile::operator==(const type_AI_puzzle_tile* arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:334
+// DC_ONLY(0x11577c, cb 0xBC) - no retail tie yet
+void Bitmap816::mark_puzzle(unsigned char* visible, long dest_x, long dest_y)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:403
+// DC_ONLY(0x115838, cb 0x10A) - no retail tie yet
+unsigned char mark_AI_puzzle(long player, unsigned char* visible)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:445
+// DC_ONLY(0x115944, cb 0x12C) - no retail tie yet
+void create_AI_puzzle_map(long player, unsigned char* visible, long puzzle_x, long puzzle_y, []* puzzle_map)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:472
+// DC_ONLY(0x115a70, cb 0x176) - no retail tie yet
+long check_match(long player, long first_x, long first_y, type_point origin, []* puzzle_map)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:520
+// DC_ONLY(0x115be8, cb 0x37C) - no retail tie yet
+type_point match_puzzle(__$ReturnUdt, long player, []* puzzle_map)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:614
+// DC_ONLY(0x115f64, cb 0x3E4) - no retail tie yet
+type_point AI_attempt_puzzle_guess(__$ReturnUdt, long player)
+{
+    // @stub
+}
+
+// E:\gamedcs\puzzlewindow.cpp:159
+// DC_ONLY(0x116348, cb 0x34) - no retail tie yet
+void* TPuzzleWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

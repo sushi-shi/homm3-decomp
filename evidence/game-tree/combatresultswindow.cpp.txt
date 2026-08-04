@@ -1,0 +1,193 @@
+// E:\gamedcs\combatresultswindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module combatresultswindow.obj, 27 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x68104, cb 0x28) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x6812c, cb 0x10) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x6813c, cb 0x28) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x68164, cb 0x10) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x68174, cb 0x28) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x6819c, cb 0x10) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x681ac, cb 0x28) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x681d4, cb 0x10) - no retail tie yet
+void $E475()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x681e4, cb 0x28) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x6820c, cb 0x10) - no retail tie yet
+void $E478()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x6821c, cb 0x28) - no retail tie yet
+void $E480()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x68244, cb 0x10) - no retail tie yet
+void $E481()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x68254, cb 0x28) - no retail tie yet
+void $E483()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x6827c, cb 0x10) - no retail tie yet
+void $E484()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x6828c, cb 0x28) - no retail tie yet
+void $E486()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x682b4, cb 0x10) - no retail tie yet
+void $E487()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x682c4, cb 0x28) - no retail tie yet
+void $E489()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x682ec, cb 0x10) - no retail tie yet
+void $E490()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x682fc, cb 0x28) - no retail tie yet
+void $E492()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x68324, cb 0x40) - no retail tie yet
+void $E493()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatresultswindow.cpp:72
+// DC_ONLY(0x68364, cb 0xE34) - no retail tie yet
+void TCombatResultsWindow::TCombatResultsWindow(const hero* attacker, const hero* defender, int my_side, int winning_side, unsigned char is_siege, int experience)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatresultswindow.cpp:347
+// DC_ONLY(0x69198, cb 0x68) - no retail tie yet
+void TCombatResultsWindow::~TCombatResultsWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatresultswindow.cpp:361
+// DC_ONLY(0x69200, cb 0x44) - no retail tie yet
+int TCombatResultsWindow::Open(int newPriority, unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatresultswindow.cpp:379
+// DC_ONLY(0x69244, cb 0x24) - no retail tie yet
+void TCombatResultsWindow::Close(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatresultswindow.cpp:392
+// DC_ONLY(0x69268, cb 0x64) - no retail tie yet
+void TCombatResultsWindow::DoModal()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatresultswindow.cpp:417
+// DC_ONLY(0x692cc, cb 0xD8) - no retail tie yet
+int CombatResultsWindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatresultswindow.cpp:334
+// DC_ONLY(0x693a4, cb 0x34) - no retail tie yet
+void* TCombatResultsWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

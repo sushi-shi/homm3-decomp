@@ -1,0 +1,186 @@
+// E:\gamedcs\DC_input.cxx - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module DC_input.obj, 26 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x7ea1c, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x7ea44, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x7ea54, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x7ea7c, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x7ea8c, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x7eab4, cb 0x10) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x7eac4, cb 0x28) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x7eaec, cb 0x10) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x7eafc, cb 0x28) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x7eb24, cb 0x10) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x7eb34, cb 0x28) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x7eb5c, cb 0x10) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x7eb6c, cb 0x28) - no retail tie yet
+void $E479()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x7eb94, cb 0x10) - no retail tie yet
+void $E480()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x7eba4, cb 0x28) - no retail tie yet
+void $E482()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x7ebcc, cb 0x10) - no retail tie yet
+void $E483()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x7ebdc, cb 0x28) - no retail tie yet
+void $E485()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x7ec04, cb 0x10) - no retail tie yet
+void $E486()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x7ec14, cb 0x28) - no retail tie yet
+void $E488()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x7ec3c, cb 0x10) - no retail tie yet
+void $E489()
+{
+    // @stub
+}
+
+// E:\gamedcs\DC_input.cxx:95
+// DC_ONLY(0x7ec4c, cb 0x3A) - no retail tie yet
+int DIEnumDeviceObjectsProc(const DIDEVICEOBJECTINSTANCEW* pDIDOI, void* context)
+{
+    // @stub
+}
+
+// E:\gamedcs\DC_input.cxx:143
+// DC_ONLY(0x7ec88, cb 0x22) - no retail tie yet
+void DIThread(unsigned uID, unsigned uMsg, unsigned long dwUser, unsigned long dw1, unsigned long dw2)
+{
+    // @stub
+}
+
+// E:\gamedcs\DC_input.cxx:169
+// DC_ONLY(0x7ecac, cb 0xC0) - no retail tie yet
+int DInputDeviceEnumCallback(const DIDEVICEINSTANCEW* pdidi, void* pv)
+{
+    // @stub
+}
+
+// E:\gamedcs\DC_input.cxx:231
+// DC_ONLY(0x7ed6c, cb 0xF8) - no retail tie yet
+int CreateDirectInput(void* hinstApp, void* hwndApp)
+{
+    // @stub
+}
+
+// E:\gamedcs\DC_input.cxx:339
+// DC_ONLY(0x7ee64, cb 0x88) - no retail tie yet
+void DestroyDirectInput()
+{
+    // @stub
+}
+
+// E:\gamedcs\DC_input.cxx:431
+// DC_ONLY(0x7eeec, cb 0xEC8) - no retail tie yet
+void ReadDirectInputDevices()
+{
+    // @stub
+}
+

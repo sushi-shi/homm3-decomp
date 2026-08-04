@@ -1,0 +1,19 @@
+// E:\gamedcs\sample.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module sample.obj, 2 procs, 1 retail-tied.
+// retail extent 0x166e60..0x166e89 (VA 0x566e60..0x566e89)
+
+// E:\gamedcs\sample.cpp:55
+// DC_ONLY(0x129b3c, cb 0xE) - no retail tie yet
+void sample::sample(long channel, long volume, long loop)
+{
+    // @stub
+}
+
+// E:\gamedcs\sample.cpp:84
+VA(0x00566e60, 0x29)  // anchor-bracket, dc 0x129b4c
+void sample::~sample()
+{
+    // @stub
+}
+

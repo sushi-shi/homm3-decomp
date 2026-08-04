@@ -1,0 +1,753 @@
+// E:\gamedcs\multiplayerwindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module multiplayerwindow.obj, 107 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xff84c, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xff874, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xff884, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xff8ac, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xff8bc, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xff8e4, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xff8f4, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xff91c, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xff92c, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xff954, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xff964, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xff98c, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xff99c, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xff9c4, cb 0x10) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xff9d4, cb 0x28) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xff9fc, cb 0x10) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xffa0c, cb 0x28) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xffa34, cb 0x10) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xffa44, cb 0x28) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xffa6c, cb 0x40) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:94
+// DC_ONLY(0xffaac, cb 0x12) - no retail tie yet
+void AddHelp(THelpText* pHelpText, const char* rollover, const char* RightClick)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:527
+// DC_ONLY(0xffac0, cb 0x2C) - no retail tie yet
+int CMPInputEdit::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:854
+// DC_ONLY(0xffaec, cb 0x20) - no retail tie yet
+void CHotSeatEdit::OnKillFocus()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:860
+// DC_ONLY(0xffb0c, cb 0x32) - no retail tie yet
+int CHotSeatEdit::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:872
+// DC_ONLY(0xffb40, cb 0x30) - no retail tie yet
+void DeleteTempSaveGame(const char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:889
+// DC_ONLY(0xffb70, cb 0x898) - no retail tie yet
+void TMultiPlayerWindow::TMultiPlayerWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1005
+// DC_ONLY(0x100408, cb 0x28) - no retail tie yet
+void SliderGames(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1012
+// DC_ONLY(0x100430, cb 0x68) - no retail tie yet
+void TMultiPlayerWindow::~TMultiPlayerWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1025
+// DC_ONLY(0x100498, cb 0x84) - no retail tie yet
+void TMultiPlayerWindow::GoSessionList()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1049
+// DC_ONLY(0x10051c, cb 0xE0) - no retail tie yet
+void TMultiPlayerWindow::GoMainMenu()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1083
+// DC_ONLY(0x1005fc, cb 0x3A6) - no retail tie yet
+void TMultiPlayerWindow::Update()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1192
+// DC_ONLY(0x1009a4, cb 0x276) - no retail tie yet
+int TMultiPlayerWindow::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1336
+// DC_ONLY(0x100c1c, cb 0x28) - no retail tie yet
+int TMultiPlayerWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1344
+// DC_ONLY(0x100c44, cb 0x5A) - no retail tie yet
+void TMultiPlayerWindow::RefreshSessions()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1359
+// DC_ONLY(0x100ca0, cb 0x6A) - no retail tie yet
+unsigned char TMultiPlayerWindow::JoinSession(CDPlaySession* pSession, const char* password)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1378
+// DC_ONLY(0x100d0c, cb 0x10A) - no retail tie yet
+unsigned char TMultiPlayerWindow::HostSession(const char* sessName, const char* password)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1420
+// DC_ONLY(0x100e18, cb 0x7A) - no retail tie yet
+unsigned char TMultiPlayerWindow::InitRemote(eNetGameType netGameType, const char* sExtra, _DPCOMPORTADDRESS* comportInfo)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1449
+// DC_ONLY(0x100e94, cb 0x3A) - no retail tie yet
+void TMultiPlayerWindow::CheckSessions()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1461
+// DC_ONLY(0x100ed0, cb 0xC2) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnModemHost()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1495
+// DC_ONLY(0x100f94, cb 0xC4) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnDirectHost()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1540
+// DC_ONLY(0x101058, cb 0x15E) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnHost()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1588
+// DC_ONLY(0x1011b8, cb 0x1BC) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnModemJoin()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1665
+// DC_ONLY(0x101374, cb 0x19C) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnDirectJoin()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1744
+// DC_ONLY(0x101510, cb 0x26E) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnJoin()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1822
+// DC_ONLY(0x101780, cb 0x4) - no retail tie yet
+unsigned char GetIPAddress(char* sIPAddress)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1884
+// DC_ONLY(0x101784, cb 0x166) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnTCP()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1924
+// DC_ONLY(0x1018ec, cb 0x7E) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnIPX()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1944
+// DC_ONLY(0x10196c, cb 0x294) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnSearch()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:2009
+// DC_ONLY(0x101c00, cb 0x4A) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnHotSeat()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:2025
+// DC_ONLY(0x101c4c, cb 0x56) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnModem()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:2043
+// DC_ONLY(0x101ca4, cb 0x56) - no retail tie yet
+unsigned char TMultiPlayerWindow::OnDirect()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:2061
+// DC_ONLY(0x101cfc, cb 0x5C) - no retail tie yet
+unsigned char TMultiPlayerWindow::IsNT()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:82
+// DC_ONLY(0x101d58, cb 0x2A) - no retail tie yet
+unsigned char CDPlaySession::IsJoinDisabled()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:96
+// DC_ONLY(0x101d84, cb 0x14) - no retail tie yet
+unsigned char CDPlaySession::IsPasswordProtected()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:375
+// DC_ONLY(0x101d98, cb 0x6) - no retail tie yet
+long CDPlay::GetLastError()
+{
+    // @stub
+}
+
+// E:\gamedcs\MultiPlayerWindow.h:91
+// DC_ONLY(0x101da0, cb 0x8) - no retail tie yet
+textWidget* TMultiPlayerWindow::GetRolloverWidget()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:186
+// DC_ONLY(0x101da8, cb 0x1C) - no retail tie yet
+void CHotSeatMan::CHotSeatMan()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:192
+// DC_ONLY(0x101dc4, cb 0x6) - no retail tie yet
+void CHotSeatMan::Clear()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:197
+// DC_ONLY(0x101dcc, cb 0x34) - no retail tie yet
+void CHotSeatMan::AddPlayer(const char* sName)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:141
+// DC_ONLY(0x101e00, cb 0x98) - no retail tie yet
+void CMultiPlayerWindowEdit::CMultiPlayerWindowEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:145
+// DC_ONLY(0x101e98, cb 0x50) - no retail tie yet
+int CMultiPlayerWindowEdit::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:156
+// DC_ONLY(0x101ee8, cb 0x34) - no retail tie yet
+void* CMultiPlayerWindowEdit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:156
+// DC_ONLY(0x101f1c, cb 0x18) - no retail tie yet
+void CMultiPlayerWindowEdit::~CMultiPlayerWindowEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:174
+// DC_ONLY(0x101f34, cb 0xE0) - no retail tie yet
+unsigned char CHeroSessions::GetSessionInfo(unsigned long index, char* sessName, char* userName, int* numPlayers, CHeroSessions::eSessionStatus* status)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:263
+// DC_ONLY(0x102014, cb 0xA0) - no retail tie yet
+void CMPEdit::CMPEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:269
+// DC_ONLY(0x1020b4, cb 0x6) - no retail tie yet
+void CMPEdit::SetNextEdit(CMPEdit* pNextEdit)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:274
+// DC_ONLY(0x1020bc, cb 0x6) - no retail tie yet
+void CMPEdit::SetPrevEdit(CMPEdit* pPrevEdit)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:279
+// DC_ONLY(0x1020c4, cb 0x98) - no retail tie yet
+int CMPEdit::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:309
+// DC_ONLY(0x10215c, cb 0x28) - no retail tie yet
+void CMPEdit::OnNextEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:322
+// DC_ONLY(0x102184, cb 0x28) - no retail tie yet
+void CMPEdit::OnPrevEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:335
+// DC_ONLY(0x1021ac, cb 0x18) - no retail tie yet
+void CMPEdit::SetFocus(unsigned char state)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:339
+// DC_ONLY(0x1021c4, cb 0x34) - no retail tie yet
+void* CMPEdit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:339
+// DC_ONLY(0x1021f8, cb 0x18) - no retail tie yet
+void CMPEdit::~CMPEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:383
+// DC_ONLY(0x102210, cb 0x98) - no retail tie yet
+void CMPInputEdit::CMPInputEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:384
+// DC_ONLY(0x1022a8, cb 0x34) - no retail tie yet
+void* CMPInputEdit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:384
+// DC_ONLY(0x1022dc, cb 0x18) - no retail tie yet
+void CMPInputEdit::~CMPInputEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:418
+// DC_ONLY(0x1022f4, cb 0x424) - no retail tie yet
+void CMPInputDlg::CMPInputDlg(int maxChars1, int maxChars2)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:465
+// DC_ONLY(0x102718, cb 0x44) - no retail tie yet
+void CMPInputDlg::~CMPInputDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:470
+// DC_ONLY(0x10275c, cb 0x58) - no retail tie yet
+int CMPInputDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:493
+// DC_ONLY(0x1027b4, cb 0x38) - no retail tie yet
+unsigned char CMPInputDlg::OnOK()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:505
+// DC_ONLY(0x1027ec, cb 0x6) - no retail tie yet
+textWidget* CMPInputDlg::GetRolloverWidget()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:508
+// DC_ONLY(0x1027f4, cb 0x78) - no retail tie yet
+void CMPInputDlg::UpdateOK()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:521
+// DC_ONLY(0x10286c, cb 0x24) - no retail tie yet
+void CMPInputDlg::DisableOK()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:523
+// DC_ONLY(0x102890, cb 0x34) - no retail tie yet
+void* CMPInputDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:629
+// DC_ONLY(0x1028c4, cb 0x364) - no retail tie yet
+void CHotSeatDlg::CHotSeatDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:700
+// DC_ONLY(0x102c28, cb 0x44) - no retail tie yet
+void CHotSeatDlg::~CHotSeatDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:707
+// DC_ONLY(0x102c6c, cb 0x5C) - no retail tie yet
+int CHotSeatDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:729
+// DC_ONLY(0x102cc8, cb 0x30) - no retail tie yet
+void CHotSeatDlg::OnKillFocus(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:737
+// DC_ONLY(0x102cf8, cb 0x54) - no retail tie yet
+int CHotSeatDlg::GetPlayerCount()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:750
+// DC_ONLY(0x102d4c, cb 0x3C) - no retail tie yet
+void CHotSeatDlg::UpdateOK()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:756
+// DC_ONLY(0x102d88, cb 0x94) - no retail tie yet
+unsigned char CHotSeatDlg::OnOK()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:780
+// DC_ONLY(0x102e1c, cb 0x6) - no retail tie yet
+textWidget* CHotSeatDlg::GetRolloverWidget()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:786
+// DC_ONLY(0x102e24, cb 0x140) - no retail tie yet
+int CHotSeatDlg::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:844
+// DC_ONLY(0x102f64, cb 0x34) - no retail tie yet
+void* CHotSeatDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1000
+// DC_ONLY(0x102f98, cb 0x34) - no retail tie yet
+void* TMultiPlayerWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1000
+// DC_ONLY(0x102fcc, cb 0x3C) - no retail tie yet
+void CHeroSessions::CHeroSessions()
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1000
+// DC_ONLY(0x103008, cb 0x34) - no retail tie yet
+void* CHeroSessions::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\multiplayerwindow.cpp:1000
+// DC_ONLY(0x10303c, cb 0x18) - no retail tie yet
+void CHeroSessions::~CHeroSessions()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:37
+// DC_ONLY(0x103054, cb 0x30) - no retail tie yet
+void CAutoArray<CDPlaySession>::CAutoArray<CDPlaySession>()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:46
+// DC_ONLY(0x103084, cb 0x38) - no retail tie yet
+void CAutoArray<CDPlaySession>::~CAutoArray<CDPlaySession>()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:73
+// DC_ONLY(0x1030bc, cb 0x68) - no retail tie yet
+unsigned char CAutoArray<CDPlaySession>::Add(CDPlaySession* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:95
+// DC_ONLY(0x103124, cb 0x14) - no retail tie yet
+CDPlaySession* CAutoArray<CDPlaySession>::Get(unsigned long elementNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:103
+// DC_ONLY(0x103138, cb 0x16) - no retail tie yet
+unsigned char CAutoArray<CDPlaySession>::Put(unsigned long elementNbr, CDPlaySession* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:113
+// DC_ONLY(0x103150, cb 0x3A) - no retail tie yet
+unsigned char CAutoArray<CDPlaySession>::Delete(unsigned long elementNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:127
+// DC_ONLY(0x10318c, cb 0x6E) - no retail tie yet
+unsigned char CAutoArray<CDPlaySession>::Insert(unsigned long nextElementNbr, CDPlaySession* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:144
+// DC_ONLY(0x1031fc, cb 0x4) - no retail tie yet
+unsigned long CAutoArray<CDPlaySession>::GetCount()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:144
+// DC_ONLY(0x103200, cb 0x34) - no retail tie yet
+void* CAutoArray<CDPlaySession>::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

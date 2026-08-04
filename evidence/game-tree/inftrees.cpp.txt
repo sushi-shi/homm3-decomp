@@ -1,0 +1,32 @@
+// E:\gamedcs\zlib113\inftrees.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module inftrees.obj, 4 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\inftrees.cpp:111
+// DC_ONLY(0xdbad8, cb 0x380) - no retail tie yet
+int huft_build(unsigned* b, unsigned n, unsigned s, const unsigned* d, const unsigned* e, inflate_huft_s** t, unsigned* m, inflate_huft_s* hp, unsigned* hn, unsigned* v)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\inftrees.cpp:302
+// DC_ONLY(0xdbe58, cb 0x8A) - no retail tie yet
+int inflate_trees_bits(unsigned* c, unsigned* bb, inflate_huft_s** tb, inflate_huft_s* hp, z_stream_s* z)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\inftrees.cpp:333
+// DC_ONLY(0xdbee4, cb 0x138) - no retail tie yet
+int inflate_trees_dynamic(unsigned nl, unsigned nd, unsigned* c, unsigned* bl, unsigned* bd, inflate_huft_s** tl, inflate_huft_s** td, inflate_huft_s* hp, z_stream_s* z)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\inftrees.cpp:407
+// DC_ONLY(0xdc01c, cb 0x40) - no retail tie yet
+int inflate_trees_fixed(unsigned* bl, unsigned* bd, inflate_huft_s** tl, inflate_huft_s** td, z_stream_s* z)
+{
+    // @stub
+}
+

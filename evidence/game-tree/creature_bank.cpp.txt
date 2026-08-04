@@ -1,0 +1,368 @@
+// E:\gamedcs\creature_bank.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module creature_bank.obj, 52 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x70d08, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x70d30, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x70d40, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x70d68, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x70d78, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x70da0, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x70db0, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x70dd8, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x70de8, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x70e10, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x70e20, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x70e48, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x70e58, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x70e80, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x70e90, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x70eb8, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x70ec8, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x70ef0, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x70f00, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x70f28, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\creature_bank.cpp:25
+// DC_ONLY(0x70f68, cb 0x18) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\creature_bank.cpp:25
+// DC_ONLY(0x70f80, cb 0x18) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\creature_bank.cpp:25
+// DC_ONLY(0x70f98, cb 0x14) - no retail tie yet
+void $E478()
+{
+    // @stub
+}
+
+// E:\gamedcs\creature_bank.cpp:25
+// DC_ONLY(0x70fac, cb 0x34) - no retail tie yet
+void $E479()
+{
+    // @stub
+}
+
+// E:\gamedcs\creature_bank.cpp:32
+// DC_ONLY(0x70fe0, cb 0x14A) - no retail tie yet
+void initialize_creature_bank_level(type_creature_bank_level* traits, const std::vector<char* resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\creature_bank.cpp:67
+// DC_ONLY(0x7112c, cb 0xEC) - no retail tie yet
+unsigned char initialize_creature_bank_traits()
+{
+    // @stub
+}
+
+// E:\gamedcs\creature_bank.cpp:146
+// DC_ONLY(0x71218, cb 0xB8) - no retail tie yet
+void split_slot(armyGroup* army_group, long slot, long groups)
+{
+    // @stub
+}
+
+// E:\gamedcs\creature_bank.cpp:166
+// DC_ONLY(0x712d0, cb 0x210) - no retail tie yet
+void initialize_creature_bank(type_creature_bank* bank, type_creature_bank_type type)
+{
+    // @stub
+}
+
+// E:\gamedcs\creature_bank.cpp:25
+// DC_ONLY(0x714e0, cb 0x34) - no retail tie yet
+void type_creature_bank_traits::type_creature_bank_traits()
+{
+    // @stub
+}
+
+// E:\gamedcs\creature_bank.cpp:25
+// DC_ONLY(0x71514, cb 0x18) - no retail tie yet
+void type_creature_bank_traits::~type_creature_bank_traits()
+{
+    // @stub
+}
+
+// E:\gamedcs\creature_bank.cpp:25
+// DC_ONLY(0x7152c, cb 0x1C) - no retail tie yet
+void type_creature_bank_level::type_creature_bank_level()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0x71548, cb 0x3C) - no retail tie yet
+void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::push_back(const TArtifact* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x71584, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >::deallocate(TArtifact* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x715b0, cb 0x1C) - no retail tie yet
+void std::allocator<enum TArtifact>::deallocate(TArtifact* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0x715cc, cb 0xCC) - no retail tie yet
+void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::_M_insert_overflow(TArtifact* __position, const TArtifact* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x71698, cb 0x30) - no retail tie yet
+void std::destroy(TArtifact* __first, TArtifact* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x716c8, cb 0x28) - no retail tie yet
+void std::construct(TArtifact* __p, const TArtifact* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x716f0, cb 0x4) - no retail tie yet
+std::allocator<enum* std::__stl_alloc_rebind(std::allocator<enum* __a, const TArtifact* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x716f4, cb 0xC) - no retail tie yet
+unsigned std::vector<enum TArtifact,std::allocator<enum TArtifact> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x71700, cb 0x28) - no retail tie yet
+TArtifact* std::_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x71728, cb 0x24) - no retail tie yet
+TArtifact* std::allocator<enum TArtifact>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x7174c, cb 0x38) - no retail tie yet
+TArtifact* std::uninitialized_copy(TArtifact* __first, TArtifact* __last, TArtifact* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0x71784, cb 0x38) - no retail tie yet
+TArtifact* std::uninitialized_fill_n(TArtifact* __first, unsigned __n, const TArtifact* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x717bc, cb 0x4) - no retail tie yet
+TArtifact* std::value_type(const TArtifact* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x717c0, cb 0x1C) - no retail tie yet
+void std::__destroy(TArtifact* __first, TArtifact* __last, TArtifact* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x717dc, cb 0x1C) - no retail tie yet
+TArtifact* std::__uninitialized_copy(TArtifact* __first, TArtifact* __last, TArtifact* __result, TArtifact* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0x717f8, cb 0x1C) - no retail tie yet
+TArtifact* std::__uninitialized_fill_n(TArtifact* __first, unsigned __n, const TArtifact* __x, TArtifact* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x71814, cb 0x30) - no retail tie yet
+void std::__destroy_aux(TArtifact* __first, TArtifact* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x71844, cb 0x3C) - no retail tie yet
+TArtifact* std::__uninitialized_copy_aux(TArtifact* __first, TArtifact* __last, TArtifact* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0x71880, cb 0x3C) - no retail tie yet
+TArtifact* std::__uninitialized_fill_n_aux(TArtifact* __first, unsigned __n, const TArtifact* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x718bc, cb 0x1C) - no retail tie yet
+void std::destroy(TArtifact* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x718d8, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+

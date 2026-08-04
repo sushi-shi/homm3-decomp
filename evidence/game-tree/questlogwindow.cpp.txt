@@ -1,0 +1,200 @@
+// E:\gamedcs\questlogwindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module questlogwindow.obj, 28 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x11637c, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x1163a4, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x1163b4, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x1163dc, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x1163ec, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x116414, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x116424, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x11644c, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x11645c, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x116484, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x116494, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x1164bc, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x1164cc, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x1164f4, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x116504, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x11652c, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x11653c, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x116564, cb 0x10) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x116574, cb 0x28) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x11659c, cb 0x40) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\questlogwindow.cpp:34
+// DC_ONLY(0x1165dc, cb 0x28) - no retail tie yet
+void QuestSliderCallback(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\questlogwindow.cpp:43
+// DC_ONLY(0x116604, cb 0x568) - no retail tie yet
+void TQuestLogWindow::TQuestLogWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\questlogwindow.cpp:81
+// DC_ONLY(0x116b6c, cb 0x6A) - no retail tie yet
+void TQuestLogWindow::~TQuestLogWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\questlogwindow.cpp:89
+// DC_ONLY(0x116bd8, cb 0xA0) - no retail tie yet
+void TQuestLogWindow::UpdateQuestLocator(int i)
+{
+    // @stub
+}
+
+// E:\gamedcs\questlogwindow.cpp:105
+// DC_ONLY(0x116c78, cb 0x2A) - no retail tie yet
+void TQuestLogWindow::UpdateQuestLocators()
+{
+    // @stub
+}
+
+// E:\gamedcs\questlogwindow.cpp:111
+// DC_ONLY(0x116ca4, cb 0x26) - no retail tie yet
+int TQuestLogWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\questlogwindow.cpp:142
+// DC_ONLY(0x116ccc, cb 0x15C) - no retail tie yet
+void DoQuestLog(int player)
+{
+    // @stub
+}
+
+// E:\gamedcs\questlogwindow.cpp:78
+// DC_ONLY(0x116e28, cb 0x34) - no retail tie yet
+void* TQuestLogWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

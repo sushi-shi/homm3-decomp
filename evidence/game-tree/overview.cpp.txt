@@ -1,0 +1,298 @@
+// E:\gamedcs\overview.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module overview.obj, 42 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x1041f8, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x104220, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x104230, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x104258, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x104268, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x104290, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x1042a0, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x1042c8, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x1042d8, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x104300, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x104310, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x104338, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x104348, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x104370, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x104380, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x1043a8, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x1043b8, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x1043e0, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x1043f0, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x104418, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:220
+// DC_ONLY(0x104458, cb 0x25A4) - no retail tie yet
+void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1170
+// DC_ONLY(0x1069fc, cb 0x31A) - no retail tie yet
+void game::SetupNewOverviewType(int iWhichType, unsigned char bUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1254
+// DC_ONLY(0x106d18, cb 0x7E) - no retail tie yet
+void UpdateFlaggableIcon(int i)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1279
+// DC_ONLY(0x106d98, cb 0x32) - no retail tie yet
+void UpdateFlaggableIcons()
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1287
+// DC_ONLY(0x106dcc, cb 0xC2) - no retail tie yet
+void DoFlaggableButtons(int which)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1314
+// DC_ONLY(0x106e90, cb 0x7D6) - no retail tie yet
+void game::Overview()
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1528
+// DC_ONLY(0x107668, cb 0x180) - no retail tie yet
+void UpdateBackpack(int iSlot)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1562
+// DC_ONLY(0x1077e8, cb 0x100) - no retail tie yet
+void UpdateArtifacts(int iSlot)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1597
+// DC_ONLY(0x1078e8, cb 0x8C) - no retail tie yet
+long get_last_backpack_index(long hero_number)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1612
+// DC_ONLY(0x107974, cb 0x42) - no retail tie yet
+void increment_backpack_start(long slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1629
+// DC_ONLY(0x1079b8, cb 0x42) - no retail tie yet
+void decrement_backpack_start(long slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1647
+// DC_ONLY(0x1079fc, cb 0x94) - no retail tie yet
+void show_artifact(hero* currHero, const type_artifact* artifact, unsigned char right_mouse)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:1663
+// DC_ONLY(0x107a90, cb 0xA10) - no retail tie yet
+int game::ProcessIconSelect(int codeY, unsigned char bRightMouse)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:2010
+// DC_ONLY(0x1084a0, cb 0x50) - no retail tie yet
+void OverviewSliderCallback(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:2017
+// DC_ONLY(0x1084f0, cb 0xA84) - no retail tie yet
+void TOverviewWindow::TOverviewWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:2086
+// DC_ONLY(0x108f74, cb 0x68) - no retail tie yet
+void TOverviewWindow::~TOverviewWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:2096
+// DC_ONLY(0x108fdc, cb 0x50) - no retail tie yet
+void TOverviewWindow::ClearButtons(int slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:2103
+// DC_ONLY(0x10902c, cb 0x40) - no retail tie yet
+void TOverviewWindow::UpdateRollover(char* cText)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:2115
+// DC_ONLY(0x10906c, cb 0x90E) - no retail tie yet
+void TOverviewWindow::DoRollover(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:2546
+// DC_ONLY(0x10997c, cb 0x87C) - no retail tie yet
+int TOverviewWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:664
+// DC_ONLY(0x10a1f8, cb 0x18) - no retail tie yet
+town* hero::GetOccupiedTown()
+{
+    // @stub
+}
+
+// E:\gamedcs\overview.cpp:2083
+// DC_ONLY(0x10a210, cb 0x34) - no retail tie yet
+void* TOverviewWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

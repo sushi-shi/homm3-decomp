@@ -1,0 +1,483 @@
+// E:\gamedcs\armygrp.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module armygrp.obj, 67 procs, 29 retail-tied.
+// retail extent 0x496a0..0x4c606 (VA 0x4496a0..0x44c606)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x4d884, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x4d8ac, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x4d8bc, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x4d8e4, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x4d8f4, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x4d91c, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x4d92c, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x4d954, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x4d964, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x4d98c, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x4d99c, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x4d9c4, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x4d9d4, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x4d9fc, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x4da0c, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x4da34, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x4da44, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x4da6c, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x4da7c, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x4daa4, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:54
+VA(0x004496a0, 0x16)  // anchor-global, dc 0x4dae4
+unsigned char armyGroup::HasCreatures()
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:62
+VA(0x004496c0, 0xC3)  // linkorder, dc 0x4db08
+void TSplitWindow::UpdateSplitArmy(unsigned char bUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:82
+VA(0x00449790, 0x65B)  // linkorder, dc 0x4db88
+void SplitSliderCallback(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:90
+VA(0x00449df0, 0x21)  // linkorder, dc 0x4dbb8
+void TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:135
+VA(0x00449e20, 0x6B)  // linkorder, dc 0x4e11c
+void TSplitWindow::~TSplitWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:143
+VA(0x00449e90, 0x2EF)  // linkorder, dc 0x4e180
+void armyGroup::SplitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned char inSrcRestricted, unsigned char inDestRestricted)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:208
+VA(0x0044a180, 0x2DF)  // linkorder, dc 0x4e388
+void TSplitWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:229
+VA(0x0044a460, 0x55)  // linkorder, dc 0x4e428
+int TSplitWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:341
+VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
+float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const hero* casting_hero, const hero* target_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:585
+VA(0x0044aa00, 0x3A)  // linkorder, dc 0x4ea38
+int armyGroup::save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:601
+VA(0x0044aa40, 0x3A)  // linkorder, dc 0x4ea78
+int armyGroup::load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:616
+VA(0x0044aa80, 0x1F)  // linkorder, dc 0x4eab8
+void armyGroup::armyGroup()
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:622
+VA(0x0044aaa0, 0x5A)  // corroborates, dc 0x4ead0
+void armyGroup::armyGroup(TCreatureType type, int amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:636
+VA(0x0044ab00, 0x1D)  // linkorder, dc 0x4eb2c
+void armyGroup::Initialize()
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:653
+VA(0x0044ab20, 0x3A)  // anchor-global, dc 0x4eb50
+unsigned char armyGroup::HasAllUndead()
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:668
+// DC_ONLY(0x4eb88, cb 0x36) - no retail tie yet
+unsigned char armyGroup::HasSomeUndead()
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:684
+// DC_ONLY(0x4ebc0, cb 0x10) - no retail tie yet
+void armyGroup::Dismiss(int whichIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:691
+VA(0x0044ab80, 0x21)  // anchor-global, dc 0x4ebd0
+unsigned char armyGroup::IsMember(TCreatureType monType)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:706
+// DC_ONLY(0x4ebf0, cb 0xA6) - no retail tie yet
+int armyGroup::GetAlignments(unsigned char* alignments)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:748
+// DC_ONLY(0x4ec98, cb 0x16) - no retail tie yet
+int armyGroup::GetHomogeneityMoraleAdjust()
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:768
+VA(0x0044ac50, 0x2E)  // anchor-global, dc 0x4ecb0
+int armyGroup::CanJoin(int monType)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:785
+VA(0x0044ac80, 0x39)  // anchor-global, dc 0x4ecdc
+long armyGroup::get_AI_value()
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:804
+VA(0x0044acc0, 0x14)  // anchor-global, dc 0x4ed28
+int armyGroup::GetNumArmies()
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:819
+VA(0x0044ace0, 0x76)  // anchor-global, dc 0x4ed4c
+int armyGroup::Add(int armyType, int newNumTroops, int newIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:865
+VA(0x0044ad60, 0x36)  // anchor-global, dc 0x4edcc
+void armyGroup::Swap(int srcIndex, armyGroup* destGroup, int destIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:885
+// DC_ONLY(0x4ee08, cb 0x180) - no retail tie yet
+void armyGroup::DamageGroup(float casualtyRate)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:921
+// DC_ONLY(0x4ef88, cb 0x2E) - no retail tie yet
+int armyGroup::get_creature_total()
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:935
+// DC_ONLY(0x4efb8, cb 0x32) - no retail tie yet
+int armyGroup::get_creature_total(TCreatureType monType)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:949
+VA(0x0044ade0, 0x79)  // anchor-global, dc 0x4efec
+const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:977
+// DC_ONLY(0x4f078, cb 0xE8) - no retail tie yet
+int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground, unsigned char apply_limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:1030
+VA(0x0044b100, 0x1C9)  // anchor-global, dc 0x4f160
+int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* ownerTown, unsigned char on_cursed_ground, unsigned char apply_limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:1072
+VA(0x0044b2d0, 0xEB)  // anchor-global, dc 0x4f20c
+int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground, unsigned char apply_limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:1113
+VA(0x0044b3c0, 0xED)  // anchor-global, dc 0x4f2e8
+int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTown, unsigned char on_cursed_ground, unsigned char apply_limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:1124
+VA(0x0044b4b0, 0x162)  // anchor-global, dc 0x4f328
+long modify_spell_damage(long damage, SpellID spell, TCreatureType creature)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:1182
+VA(0x0044b620, 0x1FE)  // anchor-global, dc 0x4f3cc
+unsigned char armyGroup::Merge(armyGroup* ag)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:1276
+VA(0x0044b820, 0x140)  // anchor-global, dc 0x4f5ec
+void armyGroup::merge_armies(armyGroup* source)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:1347
+// DC_ONLY(0x4f708, cb 0x3AA) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> armyGroup::get_morale_description(__$ReturnUdt, TCreatureType creature, int morale, const hero* ownerHero, const town* ownerTown, const hero* other_hero, const armyGroup* other_group, unsigned char on_cursed_ground)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:1464
+// DC_ONLY(0x4fab4, cb 0x1E2) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> armyGroup::get_luck_description(__$ReturnUdt, int luck, const hero* our_hero, const town* our_town, const hero* enemy_hero, const armyGroup* enemy_group, unsigned char on_cursed_ground)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:1516
+VA(0x0044c590, 0x76)  // anchor-global, dc 0x4fc98
+TTerrainType armyGroup::GetNativeTerrain()
+{
+    // @stub
+}
+
+// E:\gamedcs\SpellDefs.h:345
+// DC_ONLY(0x4fd34, cb 0x20) - no retail tie yet
+unsigned char IsMindSpell(int spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\armygrp.cpp:131
+// DC_ONLY(0x4fd54, cb 0x34) - no retail tie yet
+void* TSplitWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:296
+// DC_ONLY(0x4fd88, cb 0x4C) - no retail tie yet
+void std::basic_string<char,std::char_traits<char>,std::allocator<char> >::basic_string<char,std::char_traits<char>,std::allocator<char> >(const std::basic_string<char,std::char_traits<char>,std::allocator<char>* __s)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:272
+// DC_ONLY(0x4fdd4, cb 0x8) - no retail tie yet
+std::allocator<char> std::basic_string<char,std::char_traits<char>,std::allocator<char> >::get_allocator(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:79
+// DC_ONLY(0x4fddc, cb 0xA) - no retail tie yet
+void std::swap(TCreatureType* __a, TCreatureType* __b)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:79
+// DC_ONLY(0x4fde8, cb 0xA) - no retail tie yet
+void std::swap(int* __a, int* __b)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:464
+// DC_ONLY(0x4fdf4, cb 0x3C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_range_initialize(char* __f, char* __l)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:454
+// DC_ONLY(0x4fe30, cb 0x5C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_range_initialize(char* __f, char* __l, std::forward_iterator_tag __formal)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x0044ab60 size    25  game_24880_sub00_4ab60 [caller]
+//   0x0044abb0 size   151  game_2c060_sub02_4abb0 [caller]
+//   0x0044ada0 size    22  armyGroup_get_creature_total [hd-crossbuild]
+//   0x0044adc0 size    32  game_805e0_sub01_4adc0 [caller]
+//   0x0044ae60 size   666  armyGroup [hd-crossbuild]
+//   0x0044b960 size  2137  armyGroup_result [hd-crossbuild]
+//   0x0044c1c0 size   965  armyGroup_result_4c1c0 [hd-crossbuild]
+

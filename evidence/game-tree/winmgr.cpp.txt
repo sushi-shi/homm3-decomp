@@ -1,0 +1,401 @@
+// E:\gamedcs\winmgr.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module winmgr.obj, 54 procs, 3 retail-tied.
+// retail extent 0x202370..0x202cb3 (VA 0x602370..0x602cb3)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x19a52c, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x19a554, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x19a564, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x19a58c, cb 0x10) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x19a59c, cb 0x28) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x19a5c4, cb 0x10) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x19a5d4, cb 0x28) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x19a5fc, cb 0x10) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x19a60c, cb 0x28) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x19a634, cb 0x10) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x19a644, cb 0x28) - no retail tie yet
+void $E479()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x19a66c, cb 0x10) - no retail tie yet
+void $E480()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x19a67c, cb 0x28) - no retail tie yet
+void $E482()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x19a6a4, cb 0x10) - no retail tie yet
+void $E483()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x19a6b4, cb 0x28) - no retail tie yet
+void $E485()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x19a6dc, cb 0x10) - no retail tie yet
+void $E486()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x19a6ec, cb 0x28) - no retail tie yet
+void $E488()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x19a714, cb 0x10) - no retail tie yet
+void $E489()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x19a724, cb 0x28) - no retail tie yet
+void $E491()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x19a74c, cb 0x40) - no retail tie yet
+void $E492()
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:54
+// DC_ONLY(0x19a78c, cb 0x24) - no retail tie yet
+void $E506()
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:54
+// DC_ONLY(0x19a7b0, cb 0x10) - no retail tie yet
+void $E507()
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:56
+// DC_ONLY(0x19a7c0, cb 0x1A) - no retail tie yet
+void $E509()
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:56
+// DC_ONLY(0x19a7dc, cb 0x10) - no retail tie yet
+void $E510()
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:66
+// DC_ONLY(0x19a7ec, cb 0x54) - no retail tie yet
+void heroWindowManager::heroWindowManager()
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:101
+// DC_ONLY(0x19a840, cb 0x11A) - no retail tie yet
+int heroWindowManager::Open(int newPriority)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:142
+// DC_ONLY(0x19a95c, cb 0x62) - no retail tie yet
+void heroWindowManager::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:181
+// DC_ONLY(0x19a9c0, cb 0x46) - no retail tie yet
+int heroWindowManager::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:216
+// DC_ONLY(0x19aa08, cb 0x16) - no retail tie yet
+int heroWindowManager::ConvertToHover(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:234
+VA(0x00602370, 0x3B)  // anchor-global, dc 0x19aa20
+int heroWindowManager::BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:267
+// DC_ONLY(0x19aa64, cb 0x1B0) - no retail tie yet
+void heroWindowManager::AddWindow(heroWindow* newWindow, int newPriority, unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:387
+// DC_ONLY(0x19ac14, cb 0x104) - no retail tie yet
+void heroWindowManager::RemoveWindow(heroWindow* killWindow)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:461
+// DC_ONLY(0x19ad18, cb 0x1DC) - no retail tie yet
+int heroWindowManager::DoDialog(heroWindow* dialogWindow, int (*)()* dialogFunction, int bFadeIn)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:645
+// DC_ONLY(0x19aef4, cb 0x208) - no retail tie yet
+int heroWindowManager::DoDialogDraw(heroWindow* dialogWindow, int (*)()* dialogFunction, int (*)()* dialogDrawFunction, int bFadeIn)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:795
+VA(0x00602a40, 0x13A)  // anchor-global, dc 0x19b0fc
+void heroWindowManager::DoQuickView(heroWindow* window)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:844
+// DC_ONLY(0x19b1f0, cb 0x3E) - no retail tie yet
+void heroWindowManager::UpdateScreen()
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:856
+// DC_ONLY(0x19b230, cb 0xF8) - no retail tie yet
+void heroWindowManager::UpdateScreen(int x, int y, int width, int height)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:916
+// DC_ONLY(0x19b328, cb 0x9C) - no retail tie yet
+void heroWindowManager::UpdateScreen(int x, int y, int width, int height, int dx, int dy)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:964
+// DC_ONLY(0x19b3c4, cb 0x2A) - no retail tie yet
+void heroWindowManager::BlitToScreenWithPointer(int x, int y, int w, int h)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:986
+// DC_ONLY(0x19b3f0, cb 0x38) - no retail tie yet
+void heroWindowManager::BlitToScreenWithPointerX(int x, int y, int w, int h, int dx, int dy)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1007
+VA(0x00602c50, 0x63)  // anchor-global, dc 0x19b428
+void heroWindowManager::FadeScreen(int inOut, int speed, unsigned char expect_fadein)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1051
+// DC_ONLY(0x19b490, cb 0x2C) - no retail tie yet
+void heroWindowManager::ScreenShot()
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1085
+// DC_ONLY(0x19b4bc, cb 0x104) - no retail tie yet
+void heroWindowManager::SaveFizzleSource(int startX, int startY, int width, int height)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1125
+// DC_ONLY(0x19b5c0, cb 0xAA) - no retail tie yet
+void heroWindowManager::SaveFizzleSourceX(int startX, int startY, int width, int height)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1194
+// DC_ONLY(0x19b66c, cb 0x28E) - no retail tie yet
+void heroWindowManager::FizzleForward(int startX, int startY, int width, int height, int iFadeTime)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1314
+// DC_ONLY(0x19b8fc, cb 0x2AA) - no retail tie yet
+void heroWindowManager::FizzleForwardX(int startX, int startY, int width, int height, int iFadeTime)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1447
+// DC_ONLY(0x19bba8, cb 0x2C) - no retail tie yet
+void heroWindowManager::ReleaseFizzleSource()
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1455
+// DC_ONLY(0x19bbd4, cb 0x80) - no retail tie yet
+void heroWindowManager::NextFlashFrame(int startX, int startY, int width, int height, int iFadeTime)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1463
+// DC_ONLY(0x19bc54, cb 0x1D2) - no retail tie yet
+void heroWindowManager::Flash(int startX, int startY, int width, int height, int iFadeTime)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1545
+// DC_ONLY(0x19be28, cb 0x394) - no retail tie yet
+void heroWindowManager::FadeBlit(int sx, int sy, int sw, int sh, const Bitmap816* src_bmp, int dx, int dy, unsigned char tblit, int nframes, int period)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1707
+// DC_ONLY(0x19c1bc, cb 0x1FA) - no retail tie yet
+void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
+{
+    // @stub
+}
+
+// E:\gamedcs\winmgr.cpp:1866
+// DC_ONLY(0x19c3b8, cb 0x230) - no retail tie yet
+void heroWindowManager::FadeFromBlack(int speed)
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap816.h:73
+// DC_ONLY(0x19c5e8, cb 0x8) - no retail tie yet
+const TPalette16* Bitmap816::GetPalette()
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap816.h:104
+// DC_ONLY(0x19c5f0, cb 0xE) - no retail tie yet
+const unsigned char* Bitmap816::GetMap(int x, int y)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x006023b0 size   231  game_6fd0_sub19_2023b0 [caller]
+//   0x006024a0 size   120  game_77e0_sub03_2024a0 [caller]
+//   0x00602520 size   533  heroWindowManager_int32_t [hd-crossbuild]
+//   0x00602735 size    25  game_202735 [band]
+//   0x0060274e size    31  game_20274e [band]
+//   0x0060276d size    19  game_20276d [band]
+//   0x00602780 size    32  game_202780 [band]
+//   0x006027a0 size   559  game_184bf0_sub00_2027a0 [caller]
+//   0x006029cf size    25  game_2029cf [band]
+//   0x006029e8 size    31  game_2029e8 [band]
+//   0x00602a07 size    19  game_202a07 [band]
+//   0x00602a1a size    32  game_202a1a [band]
+//   0x00602b7a size    25  game_202b7a [band]
+//   0x00602b93 size    31  game_202b93 [band]
+//   0x00602bb2 size    22  game_202bb2 [band]
+//   0x00602bd0 size   124  heroWindowManager_UpdateScreen [hd-crossbuild]
+

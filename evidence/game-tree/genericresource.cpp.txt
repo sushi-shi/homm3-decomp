@@ -1,0 +1,25 @@
+// E:\gamedcs\genericresource.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module genericresource.obj, 3 procs, 0 retail-tied.
+
+// E:\gamedcs\genericresource.cpp:26
+// DC_ONLY(0xc9788, cb 0x68) - no retail tie yet
+void TGenericResource::TGenericResource(const char* name, int s, const void* d)
+{
+    // @stub
+}
+
+// E:\gamedcs\genericresource.cpp:34
+// DC_ONLY(0xc97f0, cb 0x4C) - no retail tie yet
+void TGenericResource::~TGenericResource()
+{
+    // @stub
+}
+
+// E:\gamedcs\genericresource.cpp:30
+// DC_ONLY(0xc983c, cb 0x34) - no retail tie yet
+void* TGenericResource::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

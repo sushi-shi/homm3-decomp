@@ -1,0 +1,305 @@
+// E:\gamedcs\advspells.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module advspells.obj, 43 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x216ec, cb 0x28) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x21714, cb 0x10) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x21724, cb 0x28) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x2174c, cb 0x10) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x2175c, cb 0x28) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x21784, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x21794, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x217bc, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x217cc, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x217f4, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x21804, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x2182c, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x2183c, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x21864, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x21874, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x2189c, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x218ac, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x218d4, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x218e4, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x2190c, cb 0x40) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\advspells.cpp:47
+// DC_ONLY(0x2194c, cb 0xE0) - no retail tie yet
+void advManager::CheckCastSpell()
+{
+    // @stub
+}
+
+// E:\gamedcs\advspells.cpp:93
+// DC_ONLY(0x21a2c, cb 0x158) - no retail tie yet
+void advManager::CastSpell(SpellID whichSpell)
+{
+    // @stub
+}
+
+// E:\gamedcs\advspells.cpp:171
+// DC_ONLY(0x21b84, cb 0x4D0) - no retail tie yet
+void advManager::SummonBoat(TSkillMastery level)
+{
+    // @stub
+}
+
+// E:\gamedcs\advspells.cpp:328
+// DC_ONLY(0x22054, cb 0x206) - no retail tie yet
+void advManager::SkuttleBoat(TSkillMastery level)
+{
+    // @stub
+}
+
+// E:\gamedcs\advspells.cpp:397
+// DC_ONLY(0x2225c, cb 0x2B4) - no retail tie yet
+void advManager::DimensionDoor(TSkillMastery level)
+{
+    // @stub
+}
+
+// E:\gamedcs\advspells.cpp:485
+// DC_ONLY(0x22510, cb 0x3D6) - no retail tie yet
+void advManager::TownGate(TSkillMastery level)
+{
+    // @stub
+}
+
+// E:\gamedcs\advspells.cpp:605
+// DC_ONLY(0x228e8, cb 0xDC) - no retail tie yet
+void advManager::Identify(TSkillMastery level)
+{
+    // @stub
+}
+
+// E:\gamedcs\advspells.cpp:629
+// DC_ONLY(0x229c4, cb 0x7A) - no retail tie yet
+void advManager::WaterWalk(TSkillMastery level)
+{
+    // @stub
+}
+
+// E:\gamedcs\advspells.cpp:654
+// DC_ONLY(0x22a40, cb 0x5A) - no retail tie yet
+void advManager::Disguise(TSkillMastery level)
+{
+    // @stub
+}
+
+// E:\gamedcs\advspells.cpp:674
+// DC_ONLY(0x22a9c, cb 0xEC) - no retail tie yet
+void advManager::Flight(TSkillMastery level)
+{
+    // @stub
+}
+
+// E:\gamedcs\advspells.cpp:703
+// DC_ONLY(0x22b88, cb 0x45C) - no retail tie yet
+void advManager::TeleportTo(hero* who, type_point destination, const char* sample_name, unsigned char bIsRemoteMove, unsigned char draw_changes, unsigned char is_replay)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:120
+// DC_ONLY(0x22fe4, cb 0x2E) - no retail tie yet
+int type_point::DistanceSquared(const type_point* p2)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:277
+// DC_ONLY(0x23014, cb 0xA) - no retail tie yet
+int SLimitData::Width()
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:280
+// DC_ONLY(0x23020, cb 0xA) - no retail tie yet
+int SLimitData::Height()
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:306
+// DC_ONLY(0x2302c, cb 0x2C) - no retail tie yet
+void SLimitData::Clip(const SLimitData* clip_limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:707
+// DC_ONLY(0x23058, cb 0x34) - no retail tie yet
+int hero::GetManaCost(int iWhichSpell)
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:718
+// DC_ONLY(0x2308c, cb 0x30) - no retail tie yet
+TSkillMastery hero::get_spell_level(SpellID spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\WinMgr.h:181
+// DC_ONLY(0x230bc, cb 0x48) - no retail tie yet
+void heroWindowManager::SaveFizzleSource(const SLimitData* limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\WinMgr.h:187
+// DC_ONLY(0x23104, cb 0x50) - no retail tie yet
+void heroWindowManager::FizzleForward(const SLimitData* limits, int fadeTime)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:532
+// DC_ONLY(0x23154, cb 0x1C) - no retail tie yet
+void CMapChange::CMapChange(eRS_Messages id, unsigned long size)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:563
+// DC_ONLY(0x23170, cb 0x54) - no retail tie yet
+void CMCTeleportHero::CMCTeleportHero(signed char heroId, type_point point)
+{
+    // @stub
+}
+
+// ..\stlport\stl_limits.h:140
+// DC_ONLY(0x231c4, cb 0xC) - no retail tie yet
+int std::_Integer_limits<int,-2147483648,2147483647,-1>::max()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x231d0, cb 0x20) - no retail tie yet
+unsigned std::vector<town,std::allocator<town> >::size()
+{
+    // @stub
+}
+

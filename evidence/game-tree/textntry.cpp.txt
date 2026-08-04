@@ -1,0 +1,152 @@
+// E:\gamedcs\textntry.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module textntry.obj, 21 procs, 3 retail-tied.
+// retail extent 0x1baae0..0x1bac44 (VA 0x5baae0..0x5bac44)
+
+// E:\gamedcs\textntry.cpp:60
+// DC_ONLY(0x16298c, cb 0x5C) - no retail tie yet
+void textEntryWidget::textEntryWidget()
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:92
+// DC_ONLY(0x1629e8, cb 0x10E) - no retail tie yet
+void textEntryWidget::textEntryWidget(int textEntryWidgetX, int textEntryWidgetY, int textEntryWidgetWidth, int textEntryWidgetHeight, int textStringSize, char* textString, char* textFontName, int color, unsigned justification, char* backgroundIconName, int textBackgroundFrame, int textEntryWidgetId, int textEntryWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:158
+VA(0x005baae0, 0x62)  // anchor-global, dc 0x162af8
+void textEntryWidget::~textEntryWidget()
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:170
+VA(0x005bab50, 0x49)  // linkorder, dc 0x162b50
+void textEntryWidget::SetFocus(unsigned char state)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:181
+VA(0x005baba0, 0xA4)  // anchor-global, dc 0x162bbc
+char textEntryWidget::GetCharPressed(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:213
+// DC_ONLY(0x162c2c, cb 0x2FE) - no retail tie yet
+int textEntryWidget::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:335
+// DC_ONLY(0x162f2c, cb 0x222) - no retail tie yet
+int textEntryWidget::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:477
+// DC_ONLY(0x163150, cb 0x288) - no retail tie yet
+void textEntryWidget::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:568
+// DC_ONLY(0x1633d8, cb 0x202) - no retail tie yet
+void textEntryWidget::SetupDisplayString(char* cCore, unsigned short inCursorIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:628
+// DC_ONLY(0x1635dc, cb 0x24) - no retail tie yet
+void textEntryWidget::SetText(const char* new_text)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:635
+// DC_ONLY(0x163600, cb 0x1E) - no retail tie yet
+unsigned char textEntryWidget::IgnoreKey(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:648
+// DC_ONLY(0x163620, cb 0x16) - no retail tie yet
+void textEntryWidget::OnSetFocus()
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:653
+// DC_ONLY(0x163638, cb 0x16) - no retail tie yet
+void textEntryWidget::OnKillFocus()
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:658
+// DC_ONLY(0x163650, cb 0x2A) - no retail tie yet
+void textEntryWidget::SaveBackground()
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:666
+// DC_ONLY(0x16367c, cb 0x90) - no retail tie yet
+void textEntryWidget::SetAutoDraw(unsigned char b)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:38
+// DC_ONLY(0x16370c, cb 0x44) - no retail tie yet
+void CTextEntrySave::CTextEntrySave(int w, int h)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:44
+// DC_ONLY(0x163750, cb 0x2C) - no retail tie yet
+void CTextEntrySave::Save(int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:50
+// DC_ONLY(0x16377c, cb 0xA) - no retail tie yet
+unsigned char CTextEntrySave::IsSaved()
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:51
+// DC_ONLY(0x163788, cb 0x34) - no retail tie yet
+void* CTextEntrySave::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:51
+// DC_ONLY(0x1637bc, cb 0x18) - no retail tie yet
+void CTextEntrySave::~CTextEntrySave()
+{
+    // @stub
+}
+
+// E:\gamedcs\textntry.cpp:71
+// DC_ONLY(0x1637d4, cb 0x34) - no retail tie yet
+void* textEntryWidget::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

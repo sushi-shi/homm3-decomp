@@ -1,0 +1,410 @@
+// E:\gamedcs\singleselectionpopups.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module singleselectionpopups.obj, 58 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x12dbc8, cb 0x28) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x12dbf0, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x12dc00, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x12dc28, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x12dc38, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x12dc60, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x12dc70, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x12dc98, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x12dca8, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x12dcd0, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x12dce0, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x12dd08, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x12dd18, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x12dd40, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x12dd50, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x12dd78, cb 0x10) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x12dd88, cb 0x28) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x12ddb0, cb 0x10) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x12ddc0, cb 0x28) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x12dde8, cb 0x40) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:114
+// DC_ONLY(0x12de28, cb 0x80) - no retail tie yet
+void CHotspotWidget::CHotspotWidget(int xPos, int yPos, int w, int h, int widgetId, unsigned char focus)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:124
+// DC_ONLY(0x12dea8, cb 0x100) - no retail tie yet
+int CHotspotWidget::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:214
+// DC_ONLY(0x12dfa8, cb 0x48) - no retail tie yet
+void CBonusDlg::CBonusDlg(unsigned char newGameMode)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:218
+// DC_ONLY(0x12dff0, cb 0x1DC) - no retail tie yet
+unsigned char CBonusDlg::CreateWin(const char* title, CSprite* sprite, int frame, const char* botTitle, const char* description)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:234
+// DC_ONLY(0x12e1cc, cb 0x1D4) - no retail tie yet
+unsigned char CBonusDlg::CreateWin(const char* title, Bitmap816* pImage, const char* botTitle, const char* description)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:255
+// DC_ONLY(0x12e3a0, cb 0x50) - no retail tie yet
+void CHeroDlg::CHeroDlg(unsigned char newGameMode)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:260
+// DC_ONLY(0x12e3f0, cb 0x29E) - no retail tie yet
+unsigned char CHeroDlg::CreateWin(Bitmap816* heroPick, const char* heroName, CSprite* specialtyIcon, int frame, const char* specialtyName, const char* desc)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:298
+// DC_ONLY(0x12e690, cb 0x78) - no retail tie yet
+void CTownDlg::CTownDlg(unsigned char newGameMode)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:302
+// DC_ONLY(0x12e708, cb 0x3BE) - no retail tie yet
+unsigned char CTownDlg::CreateWin(CSprite* town, int frame, TTownType townType)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:359
+// DC_ONLY(0x12eac8, cb 0x5C) - no retail tie yet
+void CTeamAlignmentDlg::CTeamAlignmentDlg(unsigned char newGameMode)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:365
+// DC_ONLY(0x12eb24, cb 0x256) - no retail tie yet
+unsigned char CTeamAlignmentDlg::CreateWin()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:411
+// DC_ONLY(0x12ed7c, cb 0x58) - no retail tie yet
+int CTeamAlignmentDlg::CountNumPlayers(int teamNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:424
+// DC_ONLY(0x12edd4, cb 0xD8) - no retail tie yet
+void CTeamAlignmentDlg::GetTeams()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.h:34
+// DC_ONLY(0x12eeac, cb 0x48) - no retail tie yet
+void CSingleSelPopup::CSingleSelPopup(int type, unsigned char newGameMode)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.h:39
+// DC_ONLY(0x12eef4, cb 0x34) - no retail tie yet
+void CSingleSelPopup::Add(widget* w)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.h:45
+// DC_ONLY(0x12ef28, cb 0x98) - no retail tie yet
+int CSingleSelPopup::handle_message(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.h:75
+// DC_ONLY(0x12efc0, cb 0x1C) - no retail tie yet
+int CSingleSelPopup::ExitDialog(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.h:79
+// DC_ONLY(0x12efdc, cb 0x34) - no retail tie yet
+void* CSingleSelPopup::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.h:120
+// DC_ONLY(0x12f010, cb 0x4) - no retail tie yet
+void CHotspotWidget::zBufferDraw()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.h:121
+// DC_ONLY(0x12f014, cb 0x4) - no retail tie yet
+void CHotspotWidget::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:47
+// DC_ONLY(0x12f018, cb 0x94) - no retail tie yet
+void CSpriteWidget::CSpriteWidget(int xPos, int yPos, CSprite* pSprite, int frame)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:61
+// DC_ONLY(0x12f0ac, cb 0x18) - no retail tie yet
+int CSpriteWidget::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:67
+// DC_ONLY(0x12f0c4, cb 0x4) - no retail tie yet
+void CSpriteWidget::zBufferDraw()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:71
+// DC_ONLY(0x12f0c8, cb 0x54) - no retail tie yet
+void CSpriteWidget::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:73
+// DC_ONLY(0x12f11c, cb 0x34) - no retail tie yet
+void* CSpriteWidget::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:73
+// DC_ONLY(0x12f150, cb 0x18) - no retail tie yet
+void CSpriteWidget::~CSpriteWidget()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:82
+// DC_ONLY(0x12f168, cb 0x78) - no retail tie yet
+void CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:93
+// DC_ONLY(0x12f1e0, cb 0x18) - no retail tie yet
+int CBitmapWidget::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:99
+// DC_ONLY(0x12f1f8, cb 0x4) - no retail tie yet
+void CBitmapWidget::zBufferDraw()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:103
+// DC_ONLY(0x12f1fc, cb 0x70) - no retail tie yet
+void CBitmapWidget::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:106
+// DC_ONLY(0x12f26c, cb 0x34) - no retail tie yet
+void* CBitmapWidget::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:106
+// DC_ONLY(0x12f2a0, cb 0x18) - no retail tie yet
+void CBitmapWidget::~CBitmapWidget()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:121
+// DC_ONLY(0x12f2b8, cb 0x34) - no retail tie yet
+void* CHotspotWidget::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:121
+// DC_ONLY(0x12f2ec, cb 0x18) - no retail tie yet
+void CHotspotWidget::~CHotspotWidget()
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:215
+// DC_ONLY(0x12f304, cb 0x34) - no retail tie yet
+void* CBonusDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:256
+// DC_ONLY(0x12f338, cb 0x34) - no retail tie yet
+void* CHeroDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:299
+// DC_ONLY(0x12f36c, cb 0x34) - no retail tie yet
+void* CTownDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\singleselectionpopups.cpp:361
+// DC_ONLY(0x12f3a0, cb 0x34) - no retail tie yet
+void* CTeamAlignmentDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

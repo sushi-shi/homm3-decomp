@@ -1,0 +1,151 @@
+// E:\gamedcs\zlib113\trees.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module trees.obj, 21 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\trees.cpp:242
+// DC_ONLY(0x18c9e8, cb 0x4) - no retail tie yet
+void tr_static_init()
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:386
+// DC_ONLY(0x18c9ec, cb 0x5E) - no retail tie yet
+void _tr_init(internal_state* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:414
+// DC_ONLY(0x18ca4c, cb 0x70) - no retail tie yet
+void init_block(internal_state* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:457
+// DC_ONLY(0x18cabc, cb 0x106) - no retail tie yet
+void pqdownheap(internal_state* s, ct_data_s* tree, int k)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:489
+// DC_ONLY(0x18cbc4, cb 0x1CC) - no retail tie yet
+void gen_bitlen(internal_state* s, tree_desc_s* desc)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:574
+// DC_ONLY(0x18cd90, cb 0x88) - no retail tie yet
+void gen_codes(ct_data_s* tree, int max_code, unsigned short* bl_count)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:613
+// DC_ONLY(0x18ce18, cb 0x1FE) - no retail tie yet
+void build_tree(internal_state* s, tree_desc_s* desc)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:698
+// DC_ONLY(0x18d018, cb 0x10A) - no retail tie yet
+void scan_tree(internal_state* s, ct_data_s* tree, int max_code)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:740
+// DC_ONLY(0x18d124, cb 0x4D2) - no retail tie yet
+void send_tree(internal_state* s, ct_data_s* tree, int max_code)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:788
+// DC_ONLY(0x18d5f8, cb 0x6C) - no retail tie yet
+int build_bl_tree(internal_state* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:822
+// DC_ONLY(0x18d664, cb 0x24C) - no retail tie yet
+void send_all_trees(internal_state* s, int lcodes, int dcodes, int blcodes)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:849
+// DC_ONLY(0x18d8b0, cb 0x9E) - no retail tie yet
+void _tr_stored_block(internal_state* s, char* buf, unsigned long stored_len, int eof)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:870
+// DC_ONLY(0x18d950, cb 0x218) - no retail tie yet
+void _tr_align(internal_state* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:898
+// DC_ONLY(0x18db68, cb 0x1CA) - no retail tie yet
+void _tr_flush_block(internal_state* s, char* buf, unsigned long stored_len, int eof)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:994
+// DC_ONLY(0x18dd34, cb 0xCC) - no retail tie yet
+int _tr_tally(internal_state* s, unsigned dist, unsigned lc)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:1041
+// DC_ONLY(0x18de00, cb 0x3C2) - no retail tie yet
+void compress_block(internal_state* s, ct_data_s* ltree, ct_data_s* dtree)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:1091
+// DC_ONLY(0x18e1c4, cb 0x64) - no retail tie yet
+void set_data_type(internal_state* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:1107
+// DC_ONLY(0x18e228, cb 0x1A) - no retail tie yet
+unsigned bi_reverse(unsigned code, int len)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:1120
+// DC_ONLY(0x18e244, cb 0x78) - no retail tie yet
+void bi_flush(internal_state* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:1136
+// DC_ONLY(0x18e2bc, cb 0x64) - no retail tie yet
+void bi_windup(internal_state* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\trees.cpp:1154
+// DC_ONLY(0x18e320, cb 0x90) - no retail tie yet
+void copy_block(internal_state* s, char* buf, unsigned len, int header)
+{
+    // @stub
+}
+

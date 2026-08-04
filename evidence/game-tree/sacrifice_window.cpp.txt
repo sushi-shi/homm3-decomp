@@ -1,0 +1,1621 @@
+// E:\gamedcs\sacrifice_window.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module sacrifice_window.obj, 231 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x123c2c, cb 0x28) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x123c54, cb 0x10) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x123c64, cb 0x28) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x123c8c, cb 0x10) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x123c9c, cb 0x28) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x123cc4, cb 0x10) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x123cd4, cb 0x28) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x123cfc, cb 0x10) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x123d0c, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x123d34, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x123d44, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x123d6c, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x123d7c, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x123da4, cb 0x10) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x123db4, cb 0x28) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x123ddc, cb 0x10) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x123dec, cb 0x28) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x123e14, cb 0x10) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x123e24, cb 0x28) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x123e4c, cb 0x40) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:125
+// DC_ONLY(0x123e8c, cb 0x7C) - no retail tie yet
+void type_artifact_offering::set(const type_artifact* arg, TArtifactSlot slot, const hero* this_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:170
+// DC_ONLY(0x123f08, cb 0x80) - no retail tie yet
+void type_doll_slot_widget::type_doll_slot_widget(const type_doll_slot_definition* def, long _id)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:178
+// DC_ONLY(0x123f88, cb 0x28) - no retail tie yet
+unsigned char type_doll_slot_widget::handle_click(unsigned char down_click, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:204
+// DC_ONLY(0x123fb0, cb 0x78) - no retail tie yet
+void type_backpack_slot_widget::type_backpack_slot_widget(const type_icon_definition* def, long _slot, long _id)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:213
+// DC_ONLY(0x124028, cb 0x28) - no retail tie yet
+unsigned char type_backpack_slot_widget::handle_click(unsigned char down_click, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:235
+// DC_ONLY(0x124050, cb 0x74) - no retail tie yet
+void type_artifact_offering_widget::type_artifact_offering_widget(long new_x, long new_y, long new_width, long new_height, long new_item_number, long new_id, const char* image)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:243
+// DC_ONLY(0x1240c4, cb 0x28) - no retail tie yet
+unsigned char type_artifact_offering_widget::handle_click(unsigned char down_click, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:263
+// DC_ONLY(0x1240ec, cb 0x80) - no retail tie yet
+void type_army_slot_widget::type_army_slot_widget(long new_x, long new_y, long new_w, long new_h, long new_slot, long new_id, const char* image, unsigned char _left_pane)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:272
+// DC_ONLY(0x12416c, cb 0x30) - no retail tie yet
+unsigned char type_army_slot_widget::handle_click(unsigned char down_click, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:287
+// DC_ONLY(0x12419c, cb 0x51C) - no retail tie yet
+void type_sacrifice_window::type_sacrifice_window(hero* new_hero, int cur_player)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:360
+// DC_ONLY(0x1246b8, cb 0x7A8) - no retail tie yet
+void type_sacrifice_window::create_artifact_widgets(long* widget_id, int cur_player)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:536
+// DC_ONLY(0x124e60, cb 0x76A) - no retail tie yet
+void type_sacrifice_window::create_creature_widgets(long* widget_id, int cur_player)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:699
+// DC_ONLY(0x1255cc, cb 0x258) - no retail tie yet
+long type_sacrifice_window::create_creature_icons(long icon_x, long icon_y, long columns, long rows, long item_number, long* widget_id, iconWidget** icon_widgets, iconWidget** selection_widgets, textWidget** text_widgets, unsigned char left_pane)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:752
+// DC_ONLY(0x125824, cb 0x88) - no retail tie yet
+void type_sacrifice_window::~type_sacrifice_window()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:760
+// DC_ONLY(0x1258ac, cb 0xEC) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> convert_with_commas(__$ReturnUdt, long value)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:784
+// DC_ONLY(0x125998, cb 0xB2) - no retail tie yet
+void type_sacrifice_window::update_experience()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:800
+// DC_ONLY(0x125a4c, cb 0x5E) - no retail tie yet
+void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:821
+// DC_ONLY(0x125aac, cb 0x90) - no retail tie yet
+void update_offering(iconWidget* artifact_widget, textWidget* value_widget, const type_artifact_offering* offering)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:841
+// DC_ONLY(0x125b3c, cb 0xF6) - no retail tie yet
+void type_sacrifice_window::update_slot(TArtifactSlot slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:865
+// DC_ONLY(0x125c34, cb 0x2A) - no retail tie yet
+void type_sacrifice_window::update_all_slots()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:880
+// DC_ONLY(0x125c60, cb 0x17E) - no retail tie yet
+void type_sacrifice_window::set_artifact_mode()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:914
+// DC_ONLY(0x125de0, cb 0x28) - no retail tie yet
+long sacrifice_value(TCreatureType creature)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:924
+// DC_ONLY(0x125e08, cb 0x25A) - no retail tie yet
+void type_sacrifice_window::update_creature_offering(type_creature_offering* creature)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:990
+// DC_ONLY(0x126064, cb 0x180) - no retail tie yet
+void type_sacrifice_window::set_creature_mode()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1036
+// DC_ONLY(0x1261e4, cb 0x70) - no retail tie yet
+void type_sacrifice_window::pick_up_artifact(type_artifact artifact, TArtifactSlot slot, unsigned char new_artifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1053
+// DC_ONLY(0x126254, cb 0x90) - no retail tie yet
+void type_sacrifice_window::put_down_artifact(unsigned char change_experience)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1071
+// DC_ONLY(0x1262e4, cb 0x13A) - no retail tie yet
+void type_sacrifice_window::artifact_click(TArtifactSlot slot, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1127
+// DC_ONLY(0x126420, cb 0xBA) - no retail tie yet
+void type_sacrifice_window::update_backpack()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1150
+// DC_ONLY(0x1264dc, cb 0xDC) - no retail tie yet
+void type_sacrifice_window::backpack_click(long slot, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1189
+// DC_ONLY(0x1265b8, cb 0x88) - no retail tie yet
+void type_sacrifice_window::update_artifact_offering(long slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1200
+// DC_ONLY(0x126640, cb 0xDC) - no retail tie yet
+void type_sacrifice_window::offering_click(long slot, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1236
+// DC_ONLY(0x12671c, cb 0x90) - no retail tie yet
+int type_sacrifice_window::scroll_backpack_left(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1262
+// DC_ONLY(0x1267ac, cb 0x6E) - no retail tie yet
+int type_sacrifice_window::scroll_backpack_right(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1289
+// DC_ONLY(0x12681c, cb 0x88) - no retail tie yet
+unsigned char type_sacrifice_window::add_artifact(type_artifact artifact, TArtifactSlot source)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1310
+// DC_ONLY(0x1268a4, cb 0xA0) - no retail tie yet
+void type_sacrifice_window::empty_backpack()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1338
+// DC_ONLY(0x126944, cb 0x68) - no retail tie yet
+int type_sacrifice_window::empty_backpack(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1365
+// DC_ONLY(0x1269ac, cb 0xC4) - no retail tie yet
+int type_sacrifice_window::all_artifacts(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1407
+// DC_ONLY(0x126a70, cb 0x1EC) - no retail tie yet
+int type_sacrifice_window::sacrifice(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1472
+// DC_ONLY(0x126c5c, cb 0x66) - no retail tie yet
+int type_sacrifice_window::sacrifice_creatures(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1499
+// DC_ONLY(0x126cc4, cb 0x5A) - no retail tie yet
+void type_sacrifice_window::return_artifact(const type_artifact_offering* artifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1521
+// DC_ONLY(0x126d20, cb 0x78) - no retail tie yet
+void type_sacrifice_window::clear()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1544
+// DC_ONLY(0x126d98, cb 0x8A) - no retail tie yet
+int type_sacrifice_window::exit_click(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1572
+// DC_ONLY(0x126e24, cb 0xB2) - no retail tie yet
+void type_sacrifice_window::set_creature_sacrifice(long slot, long new_amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1599
+// DC_ONLY(0x126ed8, cb 0x54) - no retail tie yet
+long type_sacrifice_window::get_max_amount(long slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1626
+// DC_ONLY(0x126f2c, cb 0xBE) - no retail tie yet
+int type_sacrifice_window::all_creatures(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1663
+// DC_ONLY(0x126fec, cb 0x78) - no retail tie yet
+int type_sacrifice_window::max_creatures(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1692
+// DC_ONLY(0x127064, cb 0x8C) - no retail tie yet
+int type_sacrifice_window::sacrifice_artifacts(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1721
+// DC_ONLY(0x1270f0, cb 0x29E) - no retail tie yet
+void type_sacrifice_window::creature_click(long slot, unsigned char right_click, unsigned char left_pane)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1796
+// DC_ONLY(0x127390, cb 0x74) - no retail tie yet
+void type_sacrifice_window::creature_slider_change(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1815
+// DC_ONLY(0x127404, cb 0x38) - no retail tie yet
+void type_sacrifice_window::DoModal(unsigned char fadeIn)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1830
+// DC_ONLY(0x12743c, cb 0x48) - no retail tie yet
+void type_sacrifice_window::handle_widget_hover(widget* current_widget)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1846
+// DC_ONLY(0x127484, cb 0x36) - no retail tie yet
+int type_sacrifice_window::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1859
+// DC_ONLY(0x1274bc, cb 0x38) - no retail tie yet
+int type_sacrifice_window::ExitDialog(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1891
+// DC_ONLY(0x1274f4, cb 0xA4) - no retail tie yet
+void type_transformer_slot::type_transformer_slot(long new_x, long new_y, long new_w, long new_h, long new_group, long new_slot, long new_id, const char* image)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1900
+// DC_ONLY(0x127598, cb 0x26) - no retail tie yet
+unsigned char type_transformer_slot::handle_click(unsigned char down_click, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2056
+// DC_ONLY(0x1275c0, cb 0x448) - no retail tie yet
+void type_skeleton_window::type_skeleton_window(armyGroup* new_army)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2129
+// DC_ONLY(0x127a08, cb 0x84) - no retail tie yet
+void type_skeleton_window::~type_skeleton_window()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2144
+// DC_ONLY(0x127a8c, cb 0x3E) - no retail tie yet
+void type_skeleton_window::unselect()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2157
+// DC_ONLY(0x127acc, cb 0x9C) - no retail tie yet
+void type_skeleton_window::update_buttons()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2172
+// DC_ONLY(0x127b68, cb 0x2E8) - no retail tie yet
+void type_skeleton_window::update(long group, long index)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2216
+// DC_ONLY(0x127e50, cb 0x1F6) - no retail tie yet
+void type_skeleton_window::creature_click(long side, long slot, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2281
+// DC_ONLY(0x128048, cb 0x36) - no retail tie yet
+int type_skeleton_window::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2293
+// DC_ONLY(0x128080, cb 0x16) - no retail tie yet
+int type_skeleton_window::ExitDialog(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2306
+// DC_ONLY(0x128098, cb 0x48) - no retail tie yet
+void type_skeleton_window::handle_widget_hover(widget* current_widget)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2326
+// DC_ONLY(0x1280e0, cb 0x1CE) - no retail tie yet
+void type_skeleton_window::create_creature_icons(long icon_x, long icon_y, long columns, long rows, long group_number, long item_number, long* widget_id, iconWidget** icon_widgets, iconWidget** selection_widgets, textWidget** text_widgets)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2385
+// DC_ONLY(0x1282b0, cb 0x5E) - no retail tie yet
+void move_all_armies(armyGroup* source, armyGroup* dest)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2407
+// DC_ONLY(0x128310, cb 0x9A) - no retail tie yet
+int type_skeleton_window::all_creatures(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2441
+// DC_ONLY(0x1283ac, cb 0xBC) - no retail tie yet
+int type_skeleton_window::exit_click(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2471
+// DC_ONLY(0x128468, cb 0x134) - no retail tie yet
+int type_skeleton_window::sacrifice(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\Widget.h:225
+// DC_ONLY(0x12859c, cb 0xC) - no retail tie yet
+void widget::clear_hover_widget()
+{
+    // @stub
+}
+
+// E:\gamedcs\slider.h:104
+// DC_ONLY(0x1285a8, cb 0x8) - no retail tie yet
+int slider::get_maximum()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:172
+// DC_ONLY(0x1285b0, cb 0x34) - no retail tie yet
+void* type_doll_slot_widget::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:172
+// DC_ONLY(0x1285e4, cb 0x18) - no retail tie yet
+void type_doll_slot_widget::~type_doll_slot_widget()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:206
+// DC_ONLY(0x1285fc, cb 0x34) - no retail tie yet
+void* type_backpack_slot_widget::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:206
+// DC_ONLY(0x128630, cb 0x18) - no retail tie yet
+void type_backpack_slot_widget::~type_backpack_slot_widget()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:237
+// DC_ONLY(0x128648, cb 0x34) - no retail tie yet
+void* type_artifact_offering_widget::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:237
+// DC_ONLY(0x12867c, cb 0x18) - no retail tie yet
+void type_artifact_offering_widget::~type_artifact_offering_widget()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:266
+// DC_ONLY(0x128694, cb 0x34) - no retail tie yet
+void* type_army_slot_widget::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:266
+// DC_ONLY(0x1286c8, cb 0x18) - no retail tie yet
+void type_army_slot_widget::~type_army_slot_widget()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:352
+// DC_ONLY(0x1286e0, cb 0x34) - no retail tie yet
+void* type_sacrifice_window::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:352
+// DC_ONLY(0x128714, cb 0x1C) - no retail tie yet
+void type_artifact_offering::type_artifact_offering()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1894
+// DC_ONLY(0x128730, cb 0x34) - no retail tie yet
+void* type_transformer_slot::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1894
+// DC_ONLY(0x128764, cb 0x18) - no retail tie yet
+void type_transformer_slot::~type_transformer_slot()
+{
+    // @stub
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2123
+// DC_ONLY(0x12877c, cb 0x34) - no retail tie yet
+void* type_skeleton_window::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:826
+// DC_ONLY(0x1287b0, cb 0x4C) - no retail tie yet
+char* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::insert(char* __p, char __c)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x1287fc, cb 0xC) - no retail tie yet
+unsigned std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x128808, cb 0x20) - no retail tie yet
+type_artifact_offering* std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x128828, cb 0x1C) - no retail tie yet
+void std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::vector<type_artifact_offering,std::allocator<type_artifact_offering> >(const std::allocator<type_artifact_offering>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x128844, cb 0x28) - no retail tie yet
+void std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::~vector<type_artifact_offering,std::allocator<type_artifact_offering> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0x12886c, cb 0x3C) - no retail tie yet
+void std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::push_back(const type_artifact_offering* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x1288a8, cb 0x4) - no retail tie yet
+void std::allocator<type_artifact_offering>::allocator<type_artifact_offering>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x1288ac, cb 0x4) - no retail tie yet
+void std::allocator<type_artifact_offering>::~allocator<type_artifact_offering>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x1288b0, cb 0x20) - no retail tie yet
+textWidget** std::vector<textWidget *,std::allocator<textWidget *> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x1288d0, cb 0x1C) - no retail tie yet
+void std::vector<textWidget *,std::allocator<textWidget *> >::vector<textWidget *,std::allocator<textWidget *> >(const std::allocator<textWidget* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x1288ec, cb 0x28) - no retail tie yet
+void std::vector<textWidget *,std::allocator<textWidget *> >::~vector<textWidget *,std::allocator<textWidget *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0x128914, cb 0x3C) - no retail tie yet
+void std::vector<textWidget *,std::allocator<textWidget *> >::push_back(textWidget** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x128950, cb 0x4) - no retail tie yet
+void std::allocator<textWidget *>::allocator<textWidget *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x128954, cb 0x4) - no retail tie yet
+void std::allocator<textWidget *>::~allocator<textWidget *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x128958, cb 0xC) - no retail tie yet
+unsigned std::vector<iconWidget *,std::allocator<iconWidget *> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x128964, cb 0x20) - no retail tie yet
+iconWidget** std::vector<iconWidget *,std::allocator<iconWidget *> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x128984, cb 0x1C) - no retail tie yet
+void std::vector<iconWidget *,std::allocator<iconWidget *> >::vector<iconWidget *,std::allocator<iconWidget *> >(const std::allocator<iconWidget* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x1289a0, cb 0x28) - no retail tie yet
+void std::vector<iconWidget *,std::allocator<iconWidget *> >::~vector<iconWidget *,std::allocator<iconWidget *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0x1289c8, cb 0x3C) - no retail tie yet
+void std::vector<iconWidget *,std::allocator<iconWidget *> >::push_back(iconWidget** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x128a04, cb 0x4) - no retail tie yet
+void std::allocator<iconWidget *>::allocator<iconWidget *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x128a08, cb 0x4) - no retail tie yet
+void std::allocator<iconWidget *>::~allocator<iconWidget *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x128a0c, cb 0xC) - no retail tie yet
+unsigned std::vector<sample *,std::allocator<sample *> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x128a18, cb 0x20) - no retail tie yet
+sample** std::vector<sample *,std::allocator<sample *> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x128a38, cb 0x1C) - no retail tie yet
+void std::vector<sample *,std::allocator<sample *> >::vector<sample *,std::allocator<sample *> >(const std::allocator<sample* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x128a54, cb 0x28) - no retail tie yet
+void std::vector<sample *,std::allocator<sample *> >::~vector<sample *,std::allocator<sample *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0x128a7c, cb 0x3C) - no retail tie yet
+void std::vector<sample *,std::allocator<sample *> >::push_back(sample** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x128ab8, cb 0x4) - no retail tie yet
+void std::allocator<sample *>::allocator<sample *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x128abc, cb 0x4) - no retail tie yet
+void std::allocator<sample *>::~allocator<sample *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x128ac0, cb 0x4) - no retail tie yet
+type_artifact_offering* std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x128ac4, cb 0x2C) - no retail tie yet
+void std::_Vector_base<type_artifact_offering,std::allocator<type_artifact_offering> >::_Vector_base<type_artifact_offering,std::allocator<type_artifact_offering> >(const std::allocator<type_artifact_offering>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x128af0, cb 0x30) - no retail tie yet
+void std::_Vector_base<type_artifact_offering,std::allocator<type_artifact_offering> >::~_Vector_base<type_artifact_offering,std::allocator<type_artifact_offering> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x128b20, cb 0x4) - no retail tie yet
+textWidget** std::vector<textWidget *,std::allocator<textWidget *> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x128b24, cb 0x2C) - no retail tie yet
+void std::_Vector_base<textWidget *,std::allocator<textWidget *> >::_Vector_base<textWidget *,std::allocator<textWidget *> >(const std::allocator<textWidget* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x128b50, cb 0x30) - no retail tie yet
+void std::_Vector_base<textWidget *,std::allocator<textWidget *> >::~_Vector_base<textWidget *,std::allocator<textWidget *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x128b80, cb 0x4) - no retail tie yet
+iconWidget** std::vector<iconWidget *,std::allocator<iconWidget *> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x128b84, cb 0x2C) - no retail tie yet
+void std::_Vector_base<iconWidget *,std::allocator<iconWidget *> >::_Vector_base<iconWidget *,std::allocator<iconWidget *> >(const std::allocator<iconWidget* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x128bb0, cb 0x30) - no retail tie yet
+void std::_Vector_base<iconWidget *,std::allocator<iconWidget *> >::~_Vector_base<iconWidget *,std::allocator<iconWidget *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x128be0, cb 0x4) - no retail tie yet
+sample** std::vector<sample *,std::allocator<sample *> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x128be4, cb 0x2C) - no retail tie yet
+void std::_Vector_base<sample *,std::allocator<sample *> >::_Vector_base<sample *,std::allocator<sample *> >(const std::allocator<sample* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x128c10, cb 0x30) - no retail tie yet
+void std::_Vector_base<sample *,std::allocator<sample *> >::~_Vector_base<sample *,std::allocator<sample *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:469
+// DC_ONLY(0x128c40, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >::~_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:469
+// DC_ONLY(0x128c58, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >::~_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:469
+// DC_ONLY(0x128c70, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >::~_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:469
+// DC_ONLY(0x128c88, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >::~_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x128ca0, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >::_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >(const std::allocator<type_artifact_offering>* __a, type_artifact_offering** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x128cac, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >::deallocate(type_artifact_offering* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x128cd8, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >::_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >(const std::allocator<textWidget* __a, textWidget*** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x128ce4, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >::deallocate(textWidget** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x128d10, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >::_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >(const std::allocator<iconWidget* __a, iconWidget*** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x128d1c, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >::deallocate(iconWidget** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x128d48, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >::_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >(const std::allocator<sample* __a, sample*** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x128d54, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >::deallocate(sample** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x128d80, cb 0x1C) - no retail tie yet
+void std::allocator<type_artifact_offering>::deallocate(type_artifact_offering* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x128d9c, cb 0x1C) - no retail tie yet
+void std::allocator<textWidget *>::deallocate(textWidget** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x128db8, cb 0x1C) - no retail tie yet
+void std::allocator<iconWidget *>::deallocate(iconWidget** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x128dd4, cb 0x1C) - no retail tie yet
+void std::allocator<sample *>::deallocate(sample** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.c:338
+// DC_ONLY(0x128df0, cb 0xF4) - no retail tie yet
+char* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::_M_insert_aux(char* __p, char __c)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0x128ee4, cb 0xD0) - no retail tie yet
+void std::vector<type_artifact_offering,std::allocator<type_artifact_offering> >::_M_insert_overflow(type_artifact_offering* __position, const type_artifact_offering* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0x128fb4, cb 0xCC) - no retail tie yet
+void std::vector<textWidget *,std::allocator<textWidget *> >::_M_insert_overflow(textWidget** __position, textWidget** __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0x129080, cb 0xCC) - no retail tie yet
+void std::vector<iconWidget *,std::allocator<iconWidget *> >::_M_insert_overflow(iconWidget** __position, iconWidget** __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0x12914c, cb 0xCC) - no retail tie yet
+void std::vector<sample *,std::allocator<sample *> >::_M_insert_overflow(sample** __position, sample** __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x129218, cb 0x30) - no retail tie yet
+void std::destroy(type_artifact_offering* __first, type_artifact_offering* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x129248, cb 0x34) - no retail tie yet
+void std::construct(type_artifact_offering* __p, const type_artifact_offering* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x12927c, cb 0x30) - no retail tie yet
+void std::destroy(textWidget** __first, textWidget** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x1292ac, cb 0x28) - no retail tie yet
+void std::construct(textWidget** __p, textWidget** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x1292d4, cb 0x30) - no retail tie yet
+void std::destroy(iconWidget** __first, iconWidget** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x129304, cb 0x28) - no retail tie yet
+void std::construct(iconWidget** __p, iconWidget** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x12932c, cb 0x30) - no retail tie yet
+void std::destroy(sample** __first, sample** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x12935c, cb 0x28) - no retail tie yet
+void std::construct(sample** __p, sample** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x129384, cb 0x4) - no retail tie yet
+std::allocator<type_artifact_offering>* std::__stl_alloc_rebind(std::allocator<type_artifact_offering>* __a, const type_artifact_offering* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x129388, cb 0x4) - no retail tie yet
+std::allocator<textWidget* std::__stl_alloc_rebind(std::allocator<textWidget* __a, textWidget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x12938c, cb 0x4) - no retail tie yet
+std::allocator<iconWidget* std::__stl_alloc_rebind(std::allocator<iconWidget* __a, iconWidget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x129390, cb 0x4) - no retail tie yet
+std::allocator<sample* std::__stl_alloc_rebind(std::allocator<sample* __a, sample** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x129394, cb 0x28) - no retail tie yet
+type_artifact_offering* std::_STL_alloc_proxy<type_artifact_offering *,type_artifact_offering,std::allocator<type_artifact_offering> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x1293bc, cb 0xC) - no retail tie yet
+unsigned std::vector<textWidget *,std::allocator<textWidget *> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x1293c8, cb 0x28) - no retail tie yet
+textWidget** std::_STL_alloc_proxy<textWidget * *,textWidget *,std::allocator<textWidget *> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x1293f0, cb 0x28) - no retail tie yet
+iconWidget** std::_STL_alloc_proxy<iconWidget * *,iconWidget *,std::allocator<iconWidget *> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x129418, cb 0x28) - no retail tie yet
+sample** std::_STL_alloc_proxy<sample * *,sample *,std::allocator<sample *> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x129440, cb 0x28) - no retail tie yet
+type_artifact_offering* std::allocator<type_artifact_offering>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x129468, cb 0x24) - no retail tie yet
+textWidget** std::allocator<textWidget *>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x12948c, cb 0x24) - no retail tie yet
+iconWidget** std::allocator<iconWidget *>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x1294b0, cb 0x24) - no retail tie yet
+sample** std::allocator<sample *>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x1294d4, cb 0x28) - no retail tie yet
+void std::construct(char* __p, const char* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x1294fc, cb 0x38) - no retail tie yet
+type_artifact_offering* std::uninitialized_copy(type_artifact_offering* __first, type_artifact_offering* __last, type_artifact_offering* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0x129534, cb 0x38) - no retail tie yet
+type_artifact_offering* std::uninitialized_fill_n(type_artifact_offering* __first, unsigned __n, const type_artifact_offering* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x12956c, cb 0x38) - no retail tie yet
+textWidget** std::uninitialized_copy(textWidget** __first, textWidget** __last, textWidget** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0x1295a4, cb 0x38) - no retail tie yet
+textWidget** std::uninitialized_fill_n(textWidget** __first, unsigned __n, textWidget** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x1295dc, cb 0x38) - no retail tie yet
+iconWidget** std::uninitialized_copy(iconWidget** __first, iconWidget** __last, iconWidget** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0x129614, cb 0x38) - no retail tie yet
+iconWidget** std::uninitialized_fill_n(iconWidget** __first, unsigned __n, iconWidget** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x12964c, cb 0x38) - no retail tie yet
+sample** std::uninitialized_copy(sample** __first, sample** __last, sample** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0x129684, cb 0x38) - no retail tie yet
+sample** std::uninitialized_fill_n(sample** __first, unsigned __n, sample** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x1296bc, cb 0x4) - no retail tie yet
+type_artifact_offering* std::value_type(const type_artifact_offering* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x1296c0, cb 0x1C) - no retail tie yet
+void std::__destroy(type_artifact_offering* __first, type_artifact_offering* __last, type_artifact_offering* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x1296dc, cb 0x4) - no retail tie yet
+textWidget** std::value_type(textWidget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x1296e0, cb 0x1C) - no retail tie yet
+void std::__destroy(textWidget** __first, textWidget** __last, textWidget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x1296fc, cb 0x4) - no retail tie yet
+iconWidget** std::value_type(iconWidget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x129700, cb 0x1C) - no retail tie yet
+void std::__destroy(iconWidget** __first, iconWidget** __last, iconWidget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x12971c, cb 0x4) - no retail tie yet
+sample** std::value_type(sample** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x129720, cb 0x1C) - no retail tie yet
+void std::__destroy(sample** __first, sample** __last, sample** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x12973c, cb 0x1C) - no retail tie yet
+type_artifact_offering* std::__uninitialized_copy(type_artifact_offering* __first, type_artifact_offering* __last, type_artifact_offering* __result, type_artifact_offering* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0x129758, cb 0x1C) - no retail tie yet
+type_artifact_offering* std::__uninitialized_fill_n(type_artifact_offering* __first, unsigned __n, const type_artifact_offering* __x, type_artifact_offering* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x129774, cb 0x1C) - no retail tie yet
+textWidget** std::__uninitialized_copy(textWidget** __first, textWidget** __last, textWidget** __result, textWidget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0x129790, cb 0x1C) - no retail tie yet
+textWidget** std::__uninitialized_fill_n(textWidget** __first, unsigned __n, textWidget** __x, textWidget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x1297ac, cb 0x1C) - no retail tie yet
+iconWidget** std::__uninitialized_copy(iconWidget** __first, iconWidget** __last, iconWidget** __result, iconWidget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0x1297c8, cb 0x1C) - no retail tie yet
+iconWidget** std::__uninitialized_fill_n(iconWidget** __first, unsigned __n, iconWidget** __x, iconWidget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x1297e4, cb 0x1C) - no retail tie yet
+sample** std::__uninitialized_copy(sample** __first, sample** __last, sample** __result, sample** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0x129800, cb 0x1C) - no retail tie yet
+sample** std::__uninitialized_fill_n(sample** __first, unsigned __n, sample** __x, sample** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x12981c, cb 0x30) - no retail tie yet
+void std::__destroy_aux(type_artifact_offering* __first, type_artifact_offering* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x12984c, cb 0x30) - no retail tie yet
+void std::__destroy_aux(textWidget** __first, textWidget** __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x12987c, cb 0x30) - no retail tie yet
+void std::__destroy_aux(iconWidget** __first, iconWidget** __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x1298ac, cb 0x30) - no retail tie yet
+void std::__destroy_aux(sample** __first, sample** __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x1298dc, cb 0x3C) - no retail tie yet
+type_artifact_offering* std::__uninitialized_copy_aux(type_artifact_offering* __first, type_artifact_offering* __last, type_artifact_offering* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0x129918, cb 0x3C) - no retail tie yet
+type_artifact_offering* std::__uninitialized_fill_n_aux(type_artifact_offering* __first, unsigned __n, const type_artifact_offering* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x129954, cb 0x3C) - no retail tie yet
+textWidget** std::__uninitialized_copy_aux(textWidget** __first, textWidget** __last, textWidget** __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0x129990, cb 0x3C) - no retail tie yet
+textWidget** std::__uninitialized_fill_n_aux(textWidget** __first, unsigned __n, textWidget** __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x1299cc, cb 0x3C) - no retail tie yet
+iconWidget** std::__uninitialized_copy_aux(iconWidget** __first, iconWidget** __last, iconWidget** __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0x129a08, cb 0x3C) - no retail tie yet
+iconWidget** std::__uninitialized_fill_n_aux(iconWidget** __first, unsigned __n, iconWidget** __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x129a44, cb 0x3C) - no retail tie yet
+sample** std::__uninitialized_copy_aux(sample** __first, sample** __last, sample** __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0x129a80, cb 0x3C) - no retail tie yet
+sample** std::__uninitialized_fill_n_aux(sample** __first, unsigned __n, sample** __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x129abc, cb 0x1C) - no retail tie yet
+void std::destroy(type_artifact_offering* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x129ad8, cb 0x1C) - no retail tie yet
+void std::destroy(textWidget** __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x129af4, cb 0x1C) - no retail tie yet
+void std::destroy(iconWidget** __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x129b10, cb 0x1C) - no retail tie yet
+void std::destroy(sample** __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x129b2c, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x129b30, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x129b34, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x129b38, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+

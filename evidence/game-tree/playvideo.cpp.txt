@@ -1,0 +1,11 @@
+// E:\gamedcs\playvideo.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module playvideo.obj, 1 procs, 0 retail-tied.
+
+// E:\gamedcs\playvideo.cpp:26
+// DC_ONLY(0x114c20, cb 0x94) - no retail tie yet
+void playVideoDll(IDirectDraw4* Vddraw, IDirectDrawSurface4* dds_prim, IDirectDrawSurface4* dds_back, IDirectSound* dsobj, unsigned short* fname)
+{
+    // @stub
+}
+

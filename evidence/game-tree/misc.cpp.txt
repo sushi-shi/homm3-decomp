@@ -1,0 +1,445 @@
+// E:\gamedcs\misc.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module misc.obj, 61 procs, 4 retail-tied.
+// retail extent 0x10b1d0..0x10c792 (VA 0x50b1d0..0x50c792)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xfd5bc, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xfd5e4, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xfd5f4, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xfd61c, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xfd62c, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xfd654, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xfd664, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xfd68c, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xfd69c, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xfd6c4, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xfd6d4, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xfd6fc, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xfd70c, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xfd734, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xfd744, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xfd76c, cb 0x10) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xfd77c, cb 0x28) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xfd7a4, cb 0x10) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xfd7b4, cb 0x28) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xfd7dc, cb 0x40) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:41
+VA(0x0050b1d0, 0x54)  // anchor-global, dc 0xfd81c
+int SafeRandom(int min, int max)
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:58
+VA(0x0050b230, 0x28)  // anchor-global, dc 0xfd868
+int Random(int min, int max)
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:151
+// DC_ONLY(0xfd8a4, cb 0xB4) - no retail tie yet
+void GenerateUniqueSystemID()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:170
+// DC_ONLY(0xfd958, cb 0x134) - no retail tie yet
+void CheckConfigFile()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:300
+// DC_ONLY(0xfda8c, cb 0xEC) - no retail tie yet
+void SetGameDefaults()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:352
+// DC_ONLY(0xfdb78, cb 0x20) - no retail tie yet
+void SetDefaultSystemOptions()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:371
+// DC_ONLY(0xfdb98, cb 0x28) - no retail tie yet
+void SetDefaultCombatOptions()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:403
+// DC_ONLY(0xfdbc0, cb 0x10) - no retail tie yet
+void ReadPrefsFromRegistry()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:525
+// DC_ONLY(0xfdbd0, cb 0x7C) - no retail tie yet
+void ReadPrefs()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:538
+// DC_ONLY(0xfdc4c, cb 0x404) - no retail tie yet
+void WritePrefsToRegistry()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:598
+// DC_ONLY(0xfe050, cb 0x10) - no retail tie yet
+void WritePrefs()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:603
+// DC_ONLY(0xfe060, cb 0x4) - no retail tie yet
+int IsCDDrive(int drive)
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:634
+// DC_ONLY(0xfe064, cb 0x4) - no retail tie yet
+int SetupCDDrive()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:764
+// DC_ONLY(0xfe068, cb 0x50) - no retail tie yet
+long FileSize(char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:784
+// DC_ONLY(0xfe0b8, cb 0x18) - no retail tie yet
+void SRand(int iSeed)
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:796
+// DC_ONLY(0xfe0d0, cb 0x3C) - no retail tie yet
+int SRandom(int iLower, int iUpper)
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:820
+// DC_ONLY(0xfe10c, cb 0x42) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> format_string(__$ReturnUdt, const char* format)
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:838
+VA(0x0050c6e0, 0x55)  // anchor-global, dc 0xfe150
+void TPickANumber::TPickANumber(int low, int high)
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:849
+VA(0x0050c740, 0x52)  // anchor-global, dc 0xfe190
+int TPickANumber::Pick()
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:884
+// DC_ONLY(0xfe208, cb 0x40) - no retail tie yet
+void TPickANumber::MarkOut(int number)
+{
+    // @stub
+}
+
+// E:\gamedcs\misc.cpp:893
+// DC_ONLY(0xfe248, cb 0x70) - no retail tie yet
+unsigned long get_available_disk_space()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:54
+// DC_ONLY(0xfe2b8, cb 0x10) - no retail tie yet
+unsigned char std::_Bit_reference::operator bool()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:158
+// DC_ONLY(0xfe2c8, cb 0xA) - no retail tie yet
+void std::_Bit_iterator_base::_Bit_iterator_base()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:159
+// DC_ONLY(0xfe2d4, cb 0x8) - no retail tie yet
+void std::_Bit_iterator_base::_Bit_iterator_base(unsigned* __x, unsigned __y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:469
+// DC_ONLY(0xfe2dc, cb 0x60) - no retail tie yet
+void std::vector<bool,std::allocator<bool> >::_M_initialize(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:601
+// DC_ONLY(0xfe33c, cb 0x38) - no retail tie yet
+unsigned char std::vector<bool,std::allocator<bool> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// E:\gamedcs\includes.h:166
+// DC_ONLY(0xfe374, cb 0x24) - no retail tie yet
+unsigned char TPickANumber::IsAvailable(int number)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:245
+// DC_ONLY(0xfe398, cb 0x1C) - no retail tie yet
+void std::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>(unsigned* __x, unsigned __y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:330
+// DC_ONLY(0xfe3b4, cb 0x44) - no retail tie yet
+void std::_Bvector_base<std::allocator<bool> >::_Bvector_base<std::allocator<bool> >(const std::allocator<bool>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:342
+// DC_ONLY(0xfe3f8, cb 0x1C) - no retail tie yet
+unsigned* std::_Bvector_base<std::allocator<bool> >::_M_bit_alloc(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xfe414, cb 0x4) - no retail tie yet
+void std::allocator<bool>::allocator<bool>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:250
+// DC_ONLY(0xfe418, cb 0x30) - no retail tie yet
+unsigned char std::_Bit_iter<bool,bool const *>::operator*()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:280
+// DC_ONLY(0xfe448, cb 0x30) - no retail tie yet
+std::_Bit_iter<bool,bool std::_Bit_iter<bool,bool const *>::operator+(__$ReturnUdt, int __i)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:247
+// DC_ONLY(0xfe478, cb 0x1C) - no retail tie yet
+void std::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xfe494, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<unsigned int *,unsigned int,std::allocator<bool> >::_STL_alloc_proxy<unsigned int *,unsigned int,std::allocator<bool> >(const std::allocator<bool>* __a, unsigned** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xfe4a0, cb 0x28) - no retail tie yet
+unsigned* std::_STL_alloc_proxy<unsigned int *,unsigned int,std::allocator<bool> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:272
+// DC_ONLY(0xfe4c8, cb 0x1C) - no retail tie yet
+std::_Bit_iter<bool,bool* std::_Bit_iter<bool,bool const *>::operator+=(int __i)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xfe4e4, cb 0x24) - no retail tie yet
+unsigned* std::allocator<unsigned int>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfe508, cb 0x16) - no retail tie yet
+void std::fill(unsigned* __first, unsigned* __last, const int* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:647
+// DC_ONLY(0xfe520, cb 0x3C) - no retail tie yet
+std::vector<bool,std::allocator<bool> >::vector<bool,std::allocator<bool> >(int __first, int __last, const std::allocator<bool>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:653
+// DC_ONLY(0xfe55c, cb 0x3C) - no retail tie yet
+std::vector<bool,std::allocator<bool> >::_M_initialize_dispatch(int __n, int __x, __true_type __formal)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x0050b260 size   620  calls_timeGetTime_10b260 [import-wrapper]
+//   0x0050b4d0 size   546  game_player_10b4d0 [string]
+//   0x0050b700 size    68  game_6f7b0_sub00_10b700 [caller]
+//   0x0050b750 size    89  game_rmt_src_bin_10b750 [string]
+//   0x0050b7b0 size  1623  game_software_new_world_compu_10b7b0 [string]
+//   0x0050be10 size   921  game_software_new_world_compu_10be10 [string]
+//   0x0050c1b0 size     5  game_6f780_sub01_10c1b0 [caller]
+//   0x0050c1c0 size     6  game_ed650_sub23_10c1c0 [caller]
+//   0x0050c5a0 size    73  game_cb206_sub01_10c5a0 [caller]
+//   0x0050c5f0 size    14  game_639f0_sub02_10c5f0 [caller]
+//   0x0050c600 size   221  game_6a20_sub01_10c600 [caller]
+

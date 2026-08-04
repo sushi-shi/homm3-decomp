@@ -1,0 +1,201 @@
+// E:\gamedcs\bitmap16.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module bitmap16.obj, 28 procs, 4 retail-tied.
+// retail extent 0x4e2b0..0x4e5e3 (VA 0x44e2b0..0x44e5e3)
+
+// E:\gamedcs\bitmap16.cpp:59
+// DC_ONLY(0x50a9c, cb 0x62) - no retail tie yet
+long ftol(double d)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:71
+// DC_ONLY(0x50b00, cb 0x104) - no retail tie yet
+void Bitmap16Bit::Bitmap16Bit(int w, int h)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:117
+// DC_ONLY(0x50c04, cb 0x104) - no retail tie yet
+void Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:152
+// DC_ONLY(0x50d08, cb 0xFA) - no retail tie yet
+void Bitmap16Bit::Bitmap16Bit(const char* name, int w, int h, const unsigned short* data, int size)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:187
+// DC_ONLY(0x50e04, cb 0xB8) - no retail tie yet
+void Bitmap16Bit::Bitmap16Bit(const char* name, const char* path)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:208
+// DC_ONLY(0x50ebc, cb 0x76) - no retail tie yet
+void Bitmap16Bit::~Bitmap16Bit()
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:224
+// DC_ONLY(0x50f34, cb 0x2C) - no retail tie yet
+unsigned long color1555to8888(unsigned short color)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:234
+// DC_ONLY(0x50f60, cb 0x20) - no retail tie yet
+unsigned long color0565to8888(unsigned short color)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:243
+// DC_ONLY(0x50f80, cb 0x2E) - no retail tie yet
+unsigned short color8888to1555(unsigned long color)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:253
+// DC_ONLY(0x50fb0, cb 0x22) - no retail tie yet
+unsigned short color8888to0565(unsigned long color)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:262
+// DC_ONLY(0x50fd4, cb 0xA4) - no retail tie yet
+void Bitmap16Bit::Remap(int old_green_bits)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:294
+// DC_ONLY(0x51078, cb 0xDA) - no retail tie yet
+void Bitmap16Bit::import(int w, int h, const unsigned short* data, int size)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:335
+// DC_ONLY(0x51154, cb 0x44) - no retail tie yet
+void Bitmap16Bit::reference(int w, int h, int pitch, unsigned short* data)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:358
+// DC_ONLY(0x51198, cb 0x90) - no retail tie yet
+void Bitmap16Bit::clear()
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:472
+// DC_ONLY(0x51228, cb 0x150) - no retail tie yet
+int Bitmap16Bit::importPCXFile(const char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:541
+VA(0x0044e2b0, 0x139)  // anchor-bracket, dc 0x51378
+void Bitmap16Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char alpha)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:625
+VA(0x0044e3f0, 0xC9)  // anchor-bracket, dc 0x51468
+void Bitmap16Bit::Grab(const unsigned short* src, int sx, int sy, int sw, int sh, int spitch)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:679
+VA(0x0044e4c0, 0x7D)  // anchor-global, dc 0x5150c
+void Bitmap16Bit::FillRect(int x, int y, int w, int h, unsigned short color)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:705
+VA(0x0044e540, 0xA3)  // anchor-global, dc 0x5157c
+void Bitmap16Bit::FrameRect(int x, int y, int w, int h, unsigned short color)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:742
+// DC_ONLY(0x51614, cb 0x94) - no retail tie yet
+void Bitmap16Bit::Darken(int x, int y, int w, int h)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:778
+// DC_ONLY(0x516a8, cb 0xD4) - no retail tie yet
+void Bitmap16Bit::Darken(int x, int y, int w, int h, Bitmap816* mask, int sx, int sy)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:815
+// DC_ONLY(0x5177c, cb 0x246) - no retail tie yet
+void Bitmap16Bit::Colorize(int x, int y, int width, int height, unsigned short color)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:873
+// DC_ONLY(0x519c4, cb 0x47C) - no retail tie yet
+void Bitmap16Bit::Colorize(int x, int y, int w, int h, float hue, float saturation)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:934
+// DC_ONLY(0x51e40, cb 0x148) - no retail tie yet
+void Bitmap16Bit::Gray(int x, int y, int w, int h)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:979
+// DC_ONLY(0x51f88, cb 0x5E4) - no retail tie yet
+void Bitmap16Bit::GrabAndBlur(const Bitmap16Bit* src, int sx, int sy)
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap816.h:71
+// DC_ONLY(0x5256c, cb 0x4) - no retail tie yet
+int Bitmap816::GetPitch()
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap816.h:98
+// DC_ONLY(0x52570, cb 0xE) - no retail tie yet
+unsigned char* Bitmap816::GetMap(int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap16.cpp:107
+// DC_ONLY(0x52580, cb 0x34) - no retail tie yet
+void* Bitmap16Bit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

@@ -1,0 +1,662 @@
+// E:\gamedcs\textresource.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module textresource.obj, 93 procs, 2 retail-tied.
+// retail extent 0x1bbdd0..0x1bc1ef (VA 0x5bbdd0..0x5bc1ef)
+
+// E:\gamedcs\textresource.cpp:33
+// DC_ONLY(0x163808, cb 0x50) - no retail tie yet
+void TTextResource::TTextResource()
+{
+    // @stub
+}
+
+// E:\gamedcs\textresource.cpp:38
+// DC_ONLY(0x163858, cb 0x14C) - no retail tie yet
+void TTextResource::TTextResource(const char* name, int size, const char* data)
+{
+    // @stub
+}
+
+// E:\gamedcs\textresource.cpp:143
+VA(0x005bbdd0, 0x4D)  // anchor-global, dc 0x1639a4
+void TTextResource::~TTextResource()
+{
+    // @stub
+}
+
+// E:\gamedcs\textresource.cpp:177
+// DC_ONLY(0x1639ec, cb 0x84) - no retail tie yet
+void TSpreadsheetResource::TSpreadsheetResource()
+{
+    // @stub
+}
+
+// E:\gamedcs\textresource.cpp:182
+// DC_ONLY(0x163a70, cb 0x1C0) - no retail tie yet
+void TSpreadsheetResource::TSpreadsheetResource(const char* name, int size, const char* data)
+{
+    // @stub
+}
+
+// E:\gamedcs\textresource.cpp:292
+VA(0x005bc170, 0x7F)  // anchor-global, dc 0x163c30
+void TSpreadsheetResource::~TSpreadsheetResource()
+{
+    // @stub
+}
+
+// E:\gamedcs\textresource.cpp:34
+// DC_ONLY(0x163cf8, cb 0x34) - no retail tie yet
+void* TTextResource::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\textresource.cpp:178
+// DC_ONLY(0x163d2c, cb 0x34) - no retail tie yet
+void* TSpreadsheetResource::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\textresource.cpp:298
+// DC_ONLY(0x163d60, cb 0x34) - no retail tie yet
+void* std::vector<char *,std::allocator<char *> >::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0x163d94, cb 0x4) - no retail tie yet
+char** std::vector<char *,std::allocator<char *> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x163d98, cb 0x1C) - no retail tie yet
+void std::vector<char *,std::allocator<char *> >::vector<char *,std::allocator<char *> >(const std::allocator<char* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:230
+// DC_ONLY(0x163db4, cb 0x54) - no retail tie yet
+void std::vector<char *,std::allocator<char *> >::vector<char *,std::allocator<char *> >(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x163e08, cb 0x28) - no retail tie yet
+void std::vector<char *,std::allocator<char *> >::~vector<char *,std::allocator<char *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0x163e30, cb 0x1C) - no retail tie yet
+void std::vector<char *,std::allocator<char *> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x163e4c, cb 0x4) - no retail tie yet
+void std::allocator<char *>::allocator<char *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x163e50, cb 0x4) - no retail tie yet
+void std::allocator<char *>::~allocator<char *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x163e54, cb 0x4) - no retail tie yet
+std::vector<char** std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0x163e58, cb 0x4) - no retail tie yet
+std::vector<char** std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x163e5c, cb 0x1C) - no retail tie yet
+void std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >(const std::allocator<std::vector<char* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:230
+// DC_ONLY(0x163e78, cb 0x54) - no retail tie yet
+void std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x163ecc, cb 0x28) - no retail tie yet
+void std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::~vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0x163ef4, cb 0x1C) - no retail tie yet
+void std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x163f10, cb 0x4) - no retail tie yet
+void std::allocator<std::vector<char *,std::allocator<char *> > *>::allocator<std::vector<char *,std::allocator<char *> > *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x163f14, cb 0x4) - no retail tie yet
+void std::allocator<std::vector<char *,std::allocator<char *> > *>::~allocator<std::vector<char *,std::allocator<char *> > *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0x163f18, cb 0x7C) - no retail tie yet
+void std::vector<char *,std::allocator<char *> >::resize(unsigned __new_size, char** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x163f94, cb 0x2C) - no retail tie yet
+void std::_Vector_base<char *,std::allocator<char *> >::_Vector_base<char *,std::allocator<char *> >(const std::allocator<char* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:94
+// DC_ONLY(0x163fc0, cb 0x48) - no retail tie yet
+void std::_Vector_base<char *,std::allocator<char *> >::_Vector_base<char *,std::allocator<char *> >(unsigned __n, const std::allocator<char* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x164008, cb 0x30) - no retail tie yet
+void std::_Vector_base<char *,std::allocator<char *> >::~_Vector_base<char *,std::allocator<char *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0x164038, cb 0x7C) - no retail tie yet
+void std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::resize(unsigned __new_size, std::vector<char** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x1640b4, cb 0x2C) - no retail tie yet
+void std::_Vector_base<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::_Vector_base<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >(const std::allocator<std::vector<char* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:94
+// DC_ONLY(0x1640e0, cb 0x48) - no retail tie yet
+void std::_Vector_base<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::_Vector_base<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >(unsigned __n, const std::allocator<std::vector<char* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x164128, cb 0x30) - no retail tie yet
+void std::_Vector_base<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::~_Vector_base<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:101
+// DC_ONLY(0x164158, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<char * *,char *,std::allocator<char *> >::~_STL_alloc_proxy<char * *,char *,std::allocator<char *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:101
+// DC_ONLY(0x164170, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<std::vector<char *,std::allocator<char *> > * *,std::vector<char *,std::alloca()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0x164188, cb 0x18) - no retail tie yet
+void std::vector<char *,std::allocator<char *> >::insert(char** __pos, unsigned __n, char** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0x1641a0, cb 0x3C) - no retail tie yet
+char** std::vector<char *,std::allocator<char *> >::erase(char** __first, char** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x1641dc, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<char * *,char *,std::allocator<char *> >::_STL_alloc_proxy<char * *,char *,std::allocator<char *> >(const std::allocator<char* __a, char*** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x1641e8, cb 0x28) - no retail tie yet
+char** std::_STL_alloc_proxy<char * *,char *,std::allocator<char *> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x164210, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<char * *,char *,std::allocator<char *> >::deallocate(char** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0x16423c, cb 0x18) - no retail tie yet
+void std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::insert(std::vector<char** __pos, unsigned __n, std::vector<char** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0x164254, cb 0x3C) - no retail tie yet
+std::vector<char** std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::erase(std::vector<char** __first, std::vector<char** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x164290, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<std::vector<char *,std::allocator<char *> > * *,std::vector<char *,std::alloc(const std::allocator<std::vector<char* __a, std::vector<char*** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x16429c, cb 0x28) - no retail tie yet
+std::vector<char** std::_STL_alloc_proxy<std::vector<char *,std::allocator<char *> > * *,std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x1642c4, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<std::vector<char *,std::allocator<char *> > * *,std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::deallocate(std::vector<char** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x1642f0, cb 0x24) - no retail tie yet
+char** std::allocator<char *>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x164314, cb 0x1C) - no retail tie yet
+void std::allocator<char *>::deallocate(char** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x164330, cb 0x24) - no retail tie yet
+std::vector<char** std::allocator<std::vector<char *,std::allocator<char *> > *>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x164354, cb 0x1C) - no retail tie yet
+void std::allocator<std::vector<char *,std::allocator<char *> > *>::deallocate(std::vector<char** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0x164370, cb 0xCC) - no retail tie yet
+void std::vector<char *,std::allocator<char *> >::_M_fill_insert(char** __position, unsigned __n, char** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0x16443c, cb 0xCC) - no retail tie yet
+void std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::_M_fill_insert(std::vector<char** __position, unsigned __n, std::vector<char** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0x164508, cb 0x38) - no retail tie yet
+char** std::uninitialized_fill_n(char** __first, unsigned __n, char** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x164540, cb 0x30) - no retail tie yet
+void std::destroy(char** __first, char** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0x164570, cb 0x38) - no retail tie yet
+std::vector<char** std::uninitialized_fill_n(std::vector<char** __first, unsigned __n, std::vector<char** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x1645a8, cb 0x30) - no retail tie yet
+void std::destroy(std::vector<char** __first, std::vector<char** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0x1645d8, cb 0x50) - no retail tie yet
+char** std::copy(char** __first, char** __last, char** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x164628, cb 0x4) - no retail tie yet
+std::allocator<char* std::__stl_alloc_rebind(std::allocator<char* __a, char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0x16462c, cb 0x50) - no retail tie yet
+std::vector<char** std::copy(std::vector<char** __first, std::vector<char** __last, std::vector<char** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x16467c, cb 0x4) - no retail tie yet
+std::allocator<std::vector<char* std::__stl_alloc_rebind(std::allocator<std::vector<char* __a, std::vector<char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0x164680, cb 0xCC) - no retail tie yet
+void std::vector<char *,std::allocator<char *> >::_M_insert_overflow(char** __position, char** __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x16474c, cb 0x38) - no retail tie yet
+char** std::uninitialized_copy(char** __first, char** __last, char** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0x164784, cb 0x50) - no retail tie yet
+char** std::copy_backward(char** __first, char** __last, char** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0x1647d4, cb 0x16) - no retail tie yet
+void std::fill(char** __first, char** __last, char** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0x1647ec, cb 0xCC) - no retail tie yet
+void std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::_M_insert_overflow(std::vector<char** __position, std::vector<char** __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x1648b8, cb 0x38) - no retail tie yet
+std::vector<char** std::uninitialized_copy(std::vector<char** __first, std::vector<char** __last, std::vector<char** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0x1648f0, cb 0x50) - no retail tie yet
+std::vector<char** std::copy_backward(std::vector<char** __first, std::vector<char** __last, std::vector<char** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0x164940, cb 0x16) - no retail tie yet
+void std::fill(std::vector<char** __first, std::vector<char** __last, std::vector<char** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x164958, cb 0x4) - no retail tie yet
+char** std::value_type(char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0x16495c, cb 0x1C) - no retail tie yet
+char** std::__uninitialized_fill_n(char** __first, unsigned __n, char** __x, char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x164978, cb 0x1C) - no retail tie yet
+void std::__destroy(char** __first, char** __last, char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x164994, cb 0x4) - no retail tie yet
+std::vector<char** std::value_type(std::vector<char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0x164998, cb 0x1C) - no retail tie yet
+std::vector<char** std::__uninitialized_fill_n(std::vector<char** __first, unsigned __n, std::vector<char** __x, std::vector<char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x1649b4, cb 0x1C) - no retail tie yet
+void std::__destroy(std::vector<char** __first, std::vector<char** __last, std::vector<char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0x1649d0, cb 0xC) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0x1649dc, cb 0x4) - no retail tie yet
+int* std::distance_type(char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0x1649e0, cb 0x1E) - no retail tie yet
+char** std::__copy(char** __first, char** __last, char** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0x164a00, cb 0xC) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, std::vector<char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0x164a0c, cb 0x4) - no retail tie yet
+int* std::distance_type(std::vector<char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0x164a10, cb 0x1E) - no retail tie yet
+std::vector<char** std::__copy(std::vector<char** __first, std::vector<char** __last, std::vector<char** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x164a30, cb 0x28) - no retail tie yet
+void std::construct(char** __p, char** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x164a58, cb 0x1C) - no retail tie yet
+char** std::__uninitialized_copy(char** __first, char** __last, char** __result, char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0x164a74, cb 0x22) - no retail tie yet
+char** std::__copy_backward(char** __first, char** __last, char** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x164a98, cb 0x28) - no retail tie yet
+void std::construct(std::vector<char** __p, std::vector<char** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x164ac0, cb 0x1C) - no retail tie yet
+std::vector<char** std::__uninitialized_copy(std::vector<char** __first, std::vector<char** __last, std::vector<char** __result, std::vector<char** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0x164adc, cb 0x22) - no retail tie yet
+std::vector<char** std::__copy_backward(std::vector<char** __first, std::vector<char** __last, std::vector<char** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:231
+// DC_ONLY(0x164b00, cb 0x18) - no retail tie yet
+char** std::__uninitialized_fill_n_aux(char** __first, unsigned __n, char** __x, __true_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:116
+// DC_ONLY(0x164b18, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0x164b1c, cb 0x3C) - no retail tie yet
+std::vector<char** std::__uninitialized_fill_n_aux(std::vector<char** __first, unsigned __n, std::vector<char** __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x164b58, cb 0x30) - no retail tie yet
+void std::__destroy_aux(std::vector<char** __first, std::vector<char** __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:60
+// DC_ONLY(0x164b88, cb 0x18) - no retail tie yet
+char** std::__uninitialized_copy_aux(char** __first, char** __last, char** __result, __true_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x164ba0, cb 0x3C) - no retail tie yet
+std::vector<char** std::__uninitialized_copy_aux(std::vector<char** __first, std::vector<char** __last, std::vector<char** __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:502
+// DC_ONLY(0x164bdc, cb 0x18) - no retail tie yet
+char** std::fill_n(char** __first, unsigned __n, char** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x164bf4, cb 0x1C) - no retail tie yet
+void std::destroy(std::vector<char** __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x164c10, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x005bbe20 size    27  CTextEntrySave_vslot02 [vtable-slot]
+//   0x005bbe40 size    33  TTextResource_vslot00 [vtable-slot]
+//   0x005bbe70 size   742  TSpreadsheetResource_TSpreadsheetResource [hd-crossbuild]
+//   0x005bc160 size     7  TTextResource_vslot02 [vtable-slot]
+

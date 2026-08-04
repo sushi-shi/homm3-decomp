@@ -1,0 +1,214 @@
+// E:\gamedcs\newgame.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module newgame.obj, 30 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x103234, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x10325c, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x10326c, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x103294, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x1032a4, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x1032cc, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x1032dc, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x103304, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x103314, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x10333c, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x10334c, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x103374, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x103384, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x1033ac, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x1033bc, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x1033e4, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x1033f4, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x10341c, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x10342c, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x103454, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\newgame.cpp:191
+// DC_ONLY(0x103494, cb 0x20) - no retail tie yet
+long get_alignment_count(unsigned char legal_alignments)
+{
+    // @stub
+}
+
+// E:\gamedcs\newgame.cpp:204
+// DC_ONLY(0x1034b4, cb 0x48) - no retail tie yet
+TTownType pick_alignment(unsigned char legal_alignments, unsigned char getFirstAvail)
+{
+    // @stub
+}
+
+// E:\gamedcs\newgame.cpp:224
+// DC_ONLY(0x1034fc, cb 0x2F8) - no retail tie yet
+void game::InitNewGame(NewSMapHeader* psMapHeaderDefault)
+{
+    // @stub
+}
+
+// E:\gamedcs\newgame.cpp:337
+// DC_ONLY(0x1037f4, cb 0x4) - no retail tie yet
+void game::SetupNetPlayerNames()
+{
+    // @stub
+}
+
+// E:\gamedcs\newgame.cpp:355
+// DC_ONLY(0x1037f8, cb 0x14) - no retail tie yet
+TTownType pick_prev_alignment(unsigned char legal_alignments, TTownType type)
+{
+    // @stub
+}
+
+// E:\gamedcs\newgame.cpp:368
+// DC_ONLY(0x10380c, cb 0x16) - no retail tie yet
+TTownType pick_next_alignment(unsigned char legal_alignments, TTownType type)
+{
+    // @stub
+}
+
+// E:\gamedcs\newgame.cpp:610
+// DC_ONLY(0x103824, cb 0x64) - no retail tie yet
+void game::ShowScenInfo()
+{
+    // @stub
+}
+
+// E:\gamedcs\newgame.cpp:628
+// DC_ONLY(0x103888, cb 0x17E) - no retail tie yet
+void game::GetLossConditionText(char* rText)
+{
+    // @stub
+}
+
+// E:\gamedcs\newgame.cpp:668
+// DC_ONLY(0x103a08, cb 0x5AC) - no retail tie yet
+void game::GetVictoryConditionText(char* rText)
+{
+    // @stub
+}
+
+// E:\gamedcs\newgame.cpp:826
+// DC_ONLY(0x103fb4, cb 0x244) - no retail tie yet
+int game::GetSideDesc(char* rText, int iStartPos, int iEndPos)
+{
+    // @stub
+}
+

@@ -1,0 +1,200 @@
+// E:\gamedcs\strip.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module strip.obj, 28 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x158620, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x158648, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x158658, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x158680, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x158690, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x1586b8, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x1586c8, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x1586f0, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x158700, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x158728, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x158738, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x158760, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x158770, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x158798, cb 0x10) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x1587a8, cb 0x28) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x1587d0, cb 0x10) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x1587e0, cb 0x28) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x158808, cb 0x10) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x158818, cb 0x28) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x158840, cb 0x40) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\strip.cpp:53
+// DC_ONLY(0x158880, cb 0x62) - no retail tie yet
+void strip::strip(int inX, int inY, int inPos, int newIcons, int newIconFrame, long new_owner, hero* new_hero, armyGroup* groupToDraw, int firstId, unsigned char update, heroWindow* inWin)
+{
+    // @stub
+}
+
+// E:\gamedcs\strip.cpp:70
+// DC_ONLY(0x1588e4, cb 0x4) - no retail tie yet
+void strip::~strip()
+{
+    // @stub
+}
+
+// E:\gamedcs\strip.cpp:75
+// DC_ONLY(0x1588e8, cb 0x28) - no retail tie yet
+void strip::Draw(TCreatureType divide_creature)
+{
+    // @stub
+}
+
+// E:\gamedcs\strip.cpp:81
+// DC_ONLY(0x158910, cb 0xF0) - no retail tie yet
+void strip::DrawIcons(unsigned char update, TCreatureType divide_creature)
+{
+    // @stub
+}
+
+// E:\gamedcs\strip.cpp:124
+// DC_ONLY(0x158a00, cb 0x80) - no retail tie yet
+void strip::DrawNumber(int i)
+{
+    // @stub
+}
+
+// E:\gamedcs\strip.cpp:139
+// DC_ONLY(0x158a80, cb 0x180) - no retail tie yet
+void strip::DrawOwner(int frame)
+{
+    // @stub
+}
+
+// E:\gamedcs\strip.cpp:221
+// DC_ONLY(0x158c00, cb 0xBA) - no retail tie yet
+void strip::DrawMonster(int i, int frame)
+{
+    // @stub
+}
+
+// E:\gamedcs\strip.cpp:253
+// DC_ONLY(0x158cbc, cb 0x78) - no retail tie yet
+void strip::DrawSelector(int i)
+{
+    // @stub
+}
+

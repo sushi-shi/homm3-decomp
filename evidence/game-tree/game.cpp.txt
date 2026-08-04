@@ -1,0 +1,6908 @@
+// E:\gamedcs\game.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module game.obj, 970 procs, 65 retail-tied.
+// retail extent 0xb8550..0xceca8 (VA 0x4b8550..0x4ceca8)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xa27f8, cb 0x38) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xa2830, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xa2840, cb 0x38) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xa2878, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xa2888, cb 0x38) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xa28c0, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xa28d0, cb 0x38) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xa2908, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xa2918, cb 0x38) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xa2950, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xa2960, cb 0x38) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xa2998, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xa29a8, cb 0x38) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xa29e0, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xa29f0, cb 0x38) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xa2a28, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xa2a38, cb 0x38) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xa2a70, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xa2a80, cb 0x38) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xa2ab8, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:208
+// DC_ONLY(0xa2af8, cb 0x62) - no retail tie yet
+unsigned char InitializeRandomTavernText()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:348
+// DC_ONLY(0xa2b5c, cb 0x3A) - no retail tie yet
+void Buffer::Buffer()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:356
+// DC_ONLY(0xa2b98, cb 0x1C) - no retail tie yet
+void Buffer::~Buffer()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:365
+// DC_ONLY(0xa2bb4, cb 0x1A6) - no retail tie yet
+int bufwrite(const void* buf, int size)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:396
+// DC_ONLY(0xa2d5c, cb 0x42) - no retail tie yet
+int bufread(void* buf, int size)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:408
+VA(0x004b8550, 0x48)  // anchor-global, dc 0xa2da0
+void generator::generator()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:431
+VA(0x004b85a0, 0x13B)  // anchor-global, dc 0xa2e48
+unsigned char generator::load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:476
+VA(0x004b86e0, 0xB1)  // anchor-global, dc 0xa2fdc
+unsigned char generator::save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:503
+// DC_ONLY(0xa30c4, cb 0xB2) - no retail tie yet
+void generator::remove_bonus()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:530
+VA(0x004b87a0, 0xB8)  // anchor-global, dc 0xa3178
+void generator::update_bonus()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:557
+// DC_ONLY(0xa3250, cb 0x38) - no retail tie yet
+void generator::set_owner(long owner)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:570
+VA(0x004b8860, 0x1F7)  // anchor-global, dc 0xa3288
+void generator::Initialize(long new_owner)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:601
+VA(0x004b8a60, 0x88)  // anchor-global, dc 0xa3320
+void generator::Grow()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:627
+// DC_ONLY(0xa341c, cb 0x58) - no retail tie yet
+long get_day_bonus(EGameResource resource, long week_bonus, long day)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:643
+// DC_ONLY(0xa3474, cb 0x7F2) - no retail tie yet
+void game::calculate_production()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:838
+// DC_ONLY(0xa3c68, cb 0xE8) - no retail tie yet
+int game::LoadSignPool(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:868
+// DC_ONLY(0xa3d50, cb 0x10C) - no retail tie yet
+int game::SaveSignPool(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:896
+// DC_ONLY(0xa3e5c, cb 0x2B0) - no retail tie yet
+int game::LoadMinePool(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:964
+// DC_ONLY(0xa410c, cb 0x280) - no retail tie yet
+int game::SaveMinePool(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1024
+// DC_ONLY(0xa438c, cb 0x1BC) - no retail tie yet
+int game::LoadGarrisonPool(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1072
+// DC_ONLY(0xa4548, cb 0x1A0) - no retail tie yet
+int game::SaveGarrisonPool(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1114
+// DC_ONLY(0xa46e8, cb 0x296) - no retail tie yet
+int game::LoadBoatPool(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1178
+// DC_ONLY(0xa4980, cb 0x288) - no retail tie yet
+int game::SaveBoatPool(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1235
+// DC_ONLY(0xa4c08, cb 0x5E) - no retail tie yet
+int game::LoadObeliskPool(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1256
+// DC_ONLY(0xa4c68, cb 0x5E) - no retail tie yet
+int game::SaveObeliskPool(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1278
+VA(0x004b9df0, 0x2D)  // anchor-bracket, dc 0xa4cc8
+void playerData::playerData()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1283
+VA(0x004b9e20, 0x115)  // linkorder, dc 0xa4d58
+void playerData::Init()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1323
+VA(0x004b9f40, 0x71)  // anchor-global, dc 0xa4e80
+unsigned char playerData::HasCapitol()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1336
+VA(0x004b9fc0, 0x167)  // anchor-global, dc 0xa4ee8
+unsigned char playerData::add_garrison_hero(town* our_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1383
+VA(0x004ba130, 0x34)  // anchor-global, dc 0xa50ac
+void playerData::SetName(char* cNewName)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1388
+// DC_ONLY(0xa5108, cb 0x2E) - no retail tie yet
+void playerData::AssignNetInfo(CNetPlayerInfo* pNetPlayerInfo)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1395
+// DC_ONLY(0xa5138, cb 0x2E) - no retail tie yet
+void playerData::GetNetInfo(CNetPlayerInfo* pNetPlayerInfo)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1401
+VA(0x004ba170, 0x4E)  // anchor-global, dc 0xa5168
+void playerData::ClearNetInfo()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1409
+VA(0x004ba260, 0x401)  // anchor-global, dc 0xa51b0
+int playerData::load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1548
+VA(0x004ba670, 0x36A)  // anchor-global, dc 0xa55a8
+int playerData::save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1668
+// DC_ONLY(0xa5998, cb 0x54) - no retail tie yet
+int game::LoadPlayerData(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1683
+// DC_ONLY(0xa59ec, cb 0x54) - no retail tie yet
+int game::SavePlayerData(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1698
+// DC_ONLY(0xa5a40, cb 0xB6) - no retail tie yet
+int game::LoadTownPool(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1722
+// DC_ONLY(0xa5af8, cb 0xA4) - no retail tie yet
+int game::SaveTownPool(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1745
+// DC_ONLY(0xa5b9c, cb 0x56) - no retail tie yet
+int game::SaveHeroPool(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1760
+// DC_ONLY(0xa5bf4, cb 0x56) - no retail tie yet
+int game::LoadHeroPool(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1774
+VA(0x004ba9e0, 0x2D)  // anchor-global, dc 0xa5c4c
+int playerData::FindHero(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1788
+VA(0x004baa10, 0x2E)  // anchor-global, dc 0xa5c98
+int playerData::FindTown(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1802
+VA(0x004baa40, 0xFA)  // anchor-global, dc 0xa5d10
+int playerData::NextHero()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1830
+VA(0x004bab40, 0x43)  // anchor-global, dc 0xa5e0c
+int playerData::NextTown()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1852
+VA(0x004bab90, 0x10)  // anchor-global, dc 0xa5eb0
+unsigned char playerData::HasMobileHero()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1859
+VA(0x004baba0, 0x29)  // anchor-global, dc 0xa5ee8
+int GetNumObelisks(int whichPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1873
+// DC_ONLY(0xa5f30, cb 0xBE) - no retail tie yet
+int playerData::BuildingsOwned(int townType, int buildingId, int mageLevel)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1900
+VA(0x004babd0, 0xDC)  // anchor-global, dc 0xa5ff0
+int playerData::NumOfGivenArtifact(int iWhichArtifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1938
+VA(0x004bad80, 0x1A)  // anchor-global, dc 0xa6114
+unsigned char playerData::IsLocalHuman()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1946
+VA(0x004bada0, 0xC)  // anchor-global, dc 0xa6144
+unsigned char playerData::IsHuman()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1955
+VA(0x004badb0, 0x9C)  // anchor-global, dc 0xa6180
+char* playerData::GetName()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1972
+VA(0x004bae50, 0x1B)  // linkorder, dc 0xa6230
+void playerData::guess_grail_location(long player_id)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1978
+VA(0x004bae70, 0x55)  // linkorder, dc 0xa6274
+int game::MineTypesOwned(int iWhichPlayer, int iMineType)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1994
+VA(0x004baed0, 0x2C)  // linkorder, dc 0xa6328
+void ComputeUALoc(int whichPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:1999
+VA(0x004baf00, 0x25A)  // linkorder, dc 0xa6350
+int game::SetupPuzzlePieces(int whichPlayer, int countOnly)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2081
+VA(0x004bb160, 0x7)  // linkorder, dc 0xa65c4
+NewfullMap* game::GetWorldMapData()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2089
+VA(0x004bb170, 0xD6)  // anchor-global, dc 0xa65d4
+int game::get_new_boat_id()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2112
+VA(0x004bb250, 0x1AA)  // anchor-global, dc 0xa6690
+int game::CreateBoat(int x, int y, int z, int owner, unsigned char bIsRemoteMove, signed char type)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2158
+// DC_ONLY(0xa67bc, cb 0x94) - no retail tie yet
+int game::Scan(signed char* whichList, int start, int length)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2173
+// DC_ONLY(0xa6850, cb 0x86) - no retail tie yet
+int game::RandomScan(signed char* whichList, int start, int length, signed char scanValue)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2190
+VA(0x004bb400, 0x1DC)  // anchor-global, dc 0xa68d8
+THeroID game::GetStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2275
+VA(0x004bb5e0, 0x282)  // anchor-global, dc 0xa6cd4
+THeroID game::GetNewHeroId(TTownType alignment, THeroClass excluded, unsigned char prefer_alignment)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2373
+VA(0x004bb870, 0x89)  // anchor-global, dc 0xa6fd4
+int game::GetTownId(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2390
+// DC_ONLY(0xa707c, cb 0x90) - no retail tie yet
+int game::GetHeroId(type_point hero_location)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2405
+// DC_ONLY(0xa710c, cb 0xA6) - no retail tie yet
+int game::GetMineId(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2419
+VA(0x004bb900, 0x87)  // anchor-global, dc 0xa71b4
+int game::GetGeneratorId(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2433
+// DC_ONLY(0xa7278, cb 0xA6) - no retail tie yet
+int game::GetGarrisonId(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2448
+// DC_ONLY(0xa7320, cb 0xF2) - no retail tie yet
+void GenerateStandardFileName(char* cLongName, char* cRetName)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2492
+// DC_ONLY(0xa7414, cb 0xF8) - no retail tie yet
+int game::loadString(void* infile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2531
+// DC_ONLY(0xa750c, cb 0xC2) - no retail tie yet
+int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2564
+// DC_ONLY(0xa75d0, cb 0x1F8) - no retail tie yet
+int game::SaveRumours(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2607
+// DC_ONLY(0xa77c8, cb 0x192) - no retail tie yet
+int game::LoadRumours(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2654
+// DC_ONLY(0xa795c, cb 0xC6) - no retail tie yet
+int game::SaveBlackMarkets(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2672
+// DC_ONLY(0xa7a24, cb 0x98) - no retail tie yet
+int game::LoadBlackMarkets(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2774
+// DC_ONLY(0xa7abc, cb 0xA4) - no retail tie yet
+unsigned char type_creature_bank::load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2790
+// DC_ONLY(0xa7b60, cb 0x64) - no retail tie yet
+unsigned char type_creature_bank::save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2799
+// DC_ONLY(0xa7bc4, cb 0x16) - no retail tie yet
+void $E516()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2799
+// DC_ONLY(0xa7bdc, cb 0x10) - no retail tie yet
+void $E517()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2806
+// DC_ONLY(0xa7bec, cb 0x558) - no retail tie yet
+int game::GetSaveGameHeaders(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2975
+// DC_ONLY(0xa8144, cb 0x28A) - no retail tie yet
+void game::setup_shipyards()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:3026
+// DC_ONLY(0xa83d0, cb 0x778) - no retail tie yet
+int game::Load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:3257
+// DC_ONLY(0xa8b48, cb 0x2A) - no retail tie yet
+int SGameSetupOptions::save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:3266
+// DC_ONLY(0xa8b74, cb 0x2A) - no retail tie yet
+int SGameSetupOptions::load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:3275
+// DC_ONLY(0xa8ba0, cb 0xCC) - no retail tie yet
+int hero_power(hero* this_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:3288
+// DC_ONLY(0xa8c6c, cb 0x62) - no retail tie yet
+int compare_heroes(const void* arg1, const void* arg2)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:3311
+// DC_ONLY(0xa8cd0, cb 0xCFE) - no retail tie yet
+int game::Save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:3667
+// DC_ONLY(0xa99d0, cb 0x4B8) - no retail tie yet
+unsigned char game::SaveGame(const char* filename, unsigned char bDetermineSuffix, unsigned char bCampaignWinMode, unsigned char compressIt, unsigned char xferFile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:3790
+// DC_ONLY(0xa9e88, cb 0x246) - no retail tie yet
+void game::SetupOrigData()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:3842
+// DC_ONLY(0xaa0d0, cb 0x31E) - no retail tie yet
+int game::LoadGame(const char* filename, int bIsOrigData, int bIsQuickLoad)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:3953
+// DC_ONLY(0xaa3f0, cb 0x308) - no retail tie yet
+void game::GiveTroopsToNeutralTown(int iTownId)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4029
+// DC_ONLY(0xaa6f8, cb 0xE8) - no retail tie yet
+void game::GiveTroopsToNeutralTowns()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4050
+// DC_ONLY(0xaa7e0, cb 0x5C4) - no retail tie yet
+void game::ValidateVictoryLossConditions(unsigned char check_map_locations)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4236
+// DC_ONLY(0xaada4, cb 0xB2A) - no retail tie yet
+void game::NewMap(char* MapName, THeroID* playerHeroFaces)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4474
+// DC_ONLY(0xab8d0, cb 0x9A) - no retail tie yet
+void SetupFirstPlayer()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4509
+// DC_ONLY(0xab96c, cb 0x66) - no retail tie yet
+void RandomizeScholar(NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4524
+// DC_ONLY(0xab9d4, cb 0x2C8) - no retail tie yet
+void RandomizeArtifact(NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4613
+// DC_ONLY(0xabc9c, cb 0xB0) - no retail tie yet
+void RandomizeSeaChest(NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4639
+// DC_ONLY(0xabd4c, cb 0x5C) - no retail tie yet
+void RandomizeShrine(NewmapCell* cell, const int level)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4654
+// DC_ONLY(0xabda8, cb 0x86) - no retail tie yet
+void randomize_wagon(NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4681
+// DC_ONLY(0xabe30, cb 0x5E) - no retail tie yet
+void RandomizeWiseTree(short id, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4691
+// DC_ONLY(0xabe90, cb 0xE6) - no retail tie yet
+void RandomizeTreasure(NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4724
+// DC_ONLY(0xabf78, cb 0x6E) - no retail tie yet
+void randomize_tomb(NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4753
+// DC_ONLY(0xabfe8, cb 0x60) - no retail tie yet
+void randomize_pyramid(NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4770
+// DC_ONLY(0xac048, cb 0x11E) - no retail tie yet
+void game::randomize_university(NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4804
+// DC_ONLY(0xac168, cb 0x3A) - no retail tie yet
+void randomize_witch_hut(NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4816
+// DC_ONLY(0xac1a4, cb 0x2EE) - no retail tie yet
+void game::RandomizeHolyGrail()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4907
+// DC_ONLY(0xac494, cb 0x1A6) - no retail tie yet
+void game::InitRandomArtifacts()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:4950
+// DC_ONLY(0xac63c, cb 0x2D4) - no retail tie yet
+void game::match_underground_gates()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:5003
+// DC_ONLY(0xac910, cb 0x1278) - no retail tie yet
+void game::RandomizeEvents()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:5600
+// DC_ONLY(0xadb88, cb 0x3B0) - no retail tie yet
+int game::LoadMap(char* mapName)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:5687
+// DC_ONLY(0xadf38, cb 0x67A) - no retail tie yet
+int NewSMapHeader::readVictoryCondition(char type, void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:5921
+// DC_ONLY(0xae5b4, cb 0x5AE) - no retail tie yet
+int NewSMapHeader::saveVictoryCondition(char type, void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:6110
+// DC_ONLY(0xaeb64, cb 0x5B4) - no retail tie yet
+int NewSMapHeader::loadVictoryCondition(char type, void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:6324
+// DC_ONLY(0xaf118, cb 0x19C) - no retail tie yet
+int NewSMapHeader::readLossCondition(char type, void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:6390
+// DC_ONLY(0xaf2b4, cb 0x1D4) - no retail tie yet
+int NewSMapHeader::saveLossCondition(char type, void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:6448
+// DC_ONLY(0xaf488, cb 0x1C4) - no retail tie yet
+int NewSMapHeader::loadLossCondition(char type, void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:6513
+// DC_ONLY(0xaf64c, cb 0xB3A) - no retail tie yet
+int NewSMapHeader::Read(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:6792
+// DC_ONLY(0xb0188, cb 0x5CC) - no retail tie yet
+int NewSMapHeader::Save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:6974
+// DC_ONLY(0xb0754, cb 0x752) - no retail tie yet
+int NewSMapHeader::Load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7185
+// DC_ONLY(0xb0ea8, cb 0x266) - no retail tie yet
+int NewSMapHeader::Get(const char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7232
+// DC_ONLY(0xb1110, cb 0x11E) - no retail tie yet
+int NewSMapHeader::readString(void* infile, std::basic_string<char,std::char_traits<char>,std::allocator<char>* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7289
+VA(0x004c61e0, 0x4A8)  // anchor-global, dc 0xb1230
+void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove, unsigned char check_end_game)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7379
+VA(0x004c66e0, 0xCB)  // anchor-global, dc 0xb1748
+void game::ClaimMine(int mineId, int newPlayerOwner, type_action_type action_type)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7407
+VA(0x004c67b0, 0x1A4)  // anchor-global, dc 0xb1828
+void game::ClaimGenerator(int generatorId, int newPlayerOwner)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7441
+VA(0x004c6960, 0xC9)  // anchor-global, dc 0xb1988
+void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7461
+VA(0x004c6a30, 0x21F)  // anchor-global, dc 0xb1a50
+void game::ClaimShipyard(type_point location, int newPlayerOwner)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7507
+// DC_ONLY(0xb1c8c, cb 0x28E) - no retail tie yet
+void game::ViewArmy(armyGroup* group, int iarmy, const hero* this_hero, const town* this_town, int x, int y, unsigned char show_dismiss, unsigned char isQuickView)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7572
+// DC_ONLY(0xb1f1c, cb 0x42) - no retail tie yet
+int game::GetRandomNumTroops(int whichMon)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7577
+// DC_ONLY(0xb1f60, cb 0x44) - no retail tie yet
+void StartAITheme()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7589
+// DC_ONLY(0xb1fa4, cb 0x1C) - no retail tie yet
+void game::TurnOnAIMusic()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7598
+// DC_ONLY(0xb1fc0, cb 0x10) - no retail tie yet
+void game::TurnOffAIMusic()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7603
+// DC_ONLY(0xb1fd0, cb 0xB04) - no retail tie yet
+void game::NextPlayer()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7898
+// DC_ONLY(0xb2ad4, cb 0x55C) - no retail tie yet
+int game::ComputeDailyGold(int iWhichPlayer, unsigned char include_silo)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7958
+// DC_ONLY(0xb3030, cb 0x14C) - no retail tie yet
+unsigned char game::GrowCoverOfDarkness()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:7978
+// DC_ONLY(0xb317c, cb 0x6DA) - no retail tie yet
+void game::ResetAllPlayerVisibility()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8094
+// DC_ONLY(0xb3858, cb 0x532) - no retail tie yet
+void game::PerDay()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8266
+// DC_ONLY(0xb3d8c, cb 0x74) - no retail tie yet
+void game::clear_recruits(THeroID* recruits)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8290
+// DC_ONLY(0xb3e00, cb 0x5E) - no retail tie yet
+THeroID get_new_hero(THeroClass hero_class)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8308
+// DC_ONLY(0xb3e60, cb 0x1EE) - no retail tie yet
+void game::set_weekly_recruits(THeroID* recruits, TTownType alignment)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8358
+// DC_ONLY(0xb4050, cb 0xA4) - no retail tie yet
+void game::replace_recruit(THeroID* recruits, long recruit_slot, TTownType alignment)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8373
+// DC_ONLY(0xb40f4, cb 0xEA) - no retail tie yet
+void game::set_recruits()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8398
+// DC_ONLY(0xb41e0, cb 0x5D8) - no retail tie yet
+void game::PerWeek()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8593
+// DC_ONLY(0xb47b8, cb 0x39E) - no retail tie yet
+void game::PerMonth()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8707
+VA(0x004c92c0, 0x202)  // anchor-global, dc 0xb4b58
+TCreatureType game::GetRandomMonster(int minLevel, int maxLevel)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8749
+VA(0x004c94d0, 0xCD)  // anchor-global, dc 0xb4c84
+TArtifact game::GetRandomArtifactId(int ArtifactClass)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8828
+VA(0x004c95a0, 0x18E)  // anchor-global, dc 0xb4e04
+SpellID game::GetRandomSpell(const int spell_level)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8896
+// DC_ONLY(0xb4fa0, cb 0xF4) - no retail tie yet
+void game::RandomizeHeroPool()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:8924
+// DC_ONLY(0xb5094, cb 0x268) - no retail tie yet
+void game::SetRandomHeroArmies(int iHero, int bCheat, unsigned char minimal)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9146
+VA(0x004c9890, 0xFD)  // anchor-global, dc 0xb52fc
+void game::InsertObject(int x, int y, int z, int objType, int objectIndex, int extraInfo)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9195
+VA(0x004c9990, 0x43A)  // anchor-global, dc 0xb54f8
+void game::ConvertObject(NewmapCell* tempCell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9320
+VA(0x004c9dd0, 0x270)  // linkorder, dc 0xb5910
+void game::ProcessRandomObjects()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9455
+VA(0x004ca040, 0x1F1)  // linkorder, dc 0xb5cdc
+void game::CreateTownHeroes()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9516
+VA(0x004ca240, 0xF6)  // anchor-global, dc 0xb5f80
+void game::MakeTerrainVisible(int whichPlayer, unsigned short visMask)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9539
+// DC_ONLY(0xb6054, cb 0xBE) - no retail tie yet
+void game::GiveArmy(armyGroup* thisMonInfo, int iMonType, int iMonNum, int slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9576
+// DC_ONLY(0xb6114, cb 0xBC) - no retail tie yet
+int game::ExperienceValueOfStack(const armyGroup* whichGroup, const hero* whichHero)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9596
+// DC_ONLY(0xb61d0, cb 0x128) - no retail tie yet
+void game::SetupAdjacentMons()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9636
+// DC_ONLY(0xb62f8, cb 0x64) - no retail tie yet
+void game::CancelComputerScreen()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9660
+// DC_ONLY(0xb635c, cb 0x1DC) - no retail tie yet
+void game::ShowComputerScreen()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9720
+// DC_ONLY(0xb6538, cb 0x108) - no retail tie yet
+void game::ShowHeroesLogo()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9748
+// DC_ONLY(0xb6640, cb 0x236) - no retail tie yet
+void game::WaitForPlayer(char* cText, int iPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9798
+// DC_ONLY(0xb6878, cb 0x6) - no retail tie yet
+void game::SetupTowns()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9801
+// DC_ONLY(0xb6880, cb 0x1A) - no retail tie yet
+void $E519()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9801
+// DC_ONLY(0xb689c, cb 0x78) - no retail tie yet
+void $E520()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9801
+// DC_ONLY(0xb6914, cb 0x14) - no retail tie yet
+void $E521()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9801
+// DC_ONLY(0xb6928, cb 0x1C) - no retail tie yet
+void $E522()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9803
+// DC_ONLY(0xb6944, cb 0x72) - no retail tie yet
+const char* GetRandomTownName(int townType)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9821
+// DC_ONLY(0xb69b8, cb 0x3A) - no retail tie yet
+void ResetRandomTownNames()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9833
+// DC_ONLY(0xb69f4, cb 0x290) - no retail tie yet
+void game::ProcessOnMapTowns()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9912
+// DC_ONLY(0xb6c84, cb 0x57E) - no retail tie yet
+void initialize_hero(hero* current_hero, const HeroExtra* setup)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:10060
+// DC_ONLY(0xb7204, cb 0x350) - no retail tie yet
+void game::ProcessOnMapHeroes()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:10132
+// DC_ONLY(0xb7554, cb 0xC) - no retail tie yet
+void game::CheckHeroConsistency()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:10142
+// DC_ONLY(0xb7560, cb 0x1064) - no retail tie yet
+int game::TransmitSaveGame(int iToWho, int thisPlayerDead, unsigned char inGame, unsigned char makeOrig)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:10587
+// DC_ONLY(0xb85c4, cb 0xE44) - no retail tie yet
+int game::ReceiveSaveGame(int iFileSize, int iFullGameCRC, int iFromWho, unsigned char inGame, unsigned char isDiff)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11028
+// DC_ONLY(0xb9408, cb 0x5C6) - no retail tie yet
+void game::DoNewTurn()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11170
+// DC_ONLY(0xb99d0, cb 0x62) - no retail tie yet
+int game::GetBoatsBuilt()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11188
+// DC_ONLY(0xb9a34, cb 0xF0) - no retail tie yet
+int game::GetNumThievesGuilds(int iWhichPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11205
+// DC_ONLY(0xb9b24, cb 0x30) - no retail tie yet
+void game::SetMapSize(int width, int height)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11221
+// DC_ONLY(0xb9b54, cb 0x44) - no retail tie yet
+int game::HeroIDToHeroPos(playerData* pPlayer, int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11231
+// DC_ONLY(0xb9b98, cb 0x6C) - no retail tie yet
+int game::TownIDToTownPos(playerData* pPlayer, int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11241
+// DC_ONLY(0xb9c04, cb 0xA6) - no retail tie yet
+void game::SetMarketArtifacts()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11252
+// DC_ONLY(0xb9cac, cb 0xAA) - no retail tie yet
+void game::SetSummoningGenerators()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11273
+// DC_ONLY(0xb9d58, cb 0x122) - no retail tie yet
+void game::SetCannedRumour()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11311
+// DC_ONLY(0xb9e7c, cb 0x1C2) - no retail tie yet
+void game::SetMapRumour()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11358
+// DC_ONLY(0xba040, cb 0xBC4) - no retail tie yet
+void game::SetSpecialRumour()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11445
+// DC_ONLY(0xbac04, cb 0xA0) - no retail tie yet
+void game::SetupNewRumour()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11459
+// DC_ONLY(0xbaca4, cb 0x20C) - no retail tie yet
+void game::GiveTimeEventReward(const TTimedEvent* thisEvent)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11499
+// DC_ONLY(0xbaeb0, cb 0x44) - no retail tie yet
+void game::GiveTownEventReward(const TTownEvent* thisEvent)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11512
+// DC_ONLY(0xbaef4, cb 0xF8) - no retail tie yet
+void game::CheckForTimeEvent()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11540
+// DC_ONLY(0xbafec, cb 0xF8) - no retail tie yet
+void game::CheckForTownEvent()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11571
+VA(0x004cdb80, 0x231)  // anchor-bracket, dc 0xbb0e4
+unsigned char game::get_random_lith(const std::vector<type_point,std::allocator<type_point>* points, type_point* result, long cell_type, long excluded)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11635
+VA(0x004cddc0, 0x22)  // anchor-global, dc 0xbb3e0
+unsigned char game::get_random_lith_exit(long color, type_point* result)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11644
+VA(0x004cddf0, 0x24)  // anchor-bracket, dc 0xbb41c
+unsigned char game::get_random_lith(long color, long excluded, type_point* result)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11653
+VA(0x004cde20, 0x1D)  // anchor-global, dc 0xbb45c
+unsigned char game::get_random_whirlpool(long excluded, type_point* result)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11662
+VA(0x004cde40, 0xE0)  // anchor-global, dc 0xbb490
+type_point game::get_underground_gate_exit(type_point* __$ReturnUdt, const NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11684
+VA(0x004cdf20, 0x585)  // anchor-global, dc 0xbb62c
+void game::game()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11749
+VA(0x004ce5b0, 0x346)  // anchor-global, dc 0xbbd28
+void game::~game()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11754
+VA(0x004ce900, 0x3B)  // anchor-global, dc 0xbbe68
+boat* game::GetHeroBoat(int id, unsigned char occupied)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11766
+VA(0x004ce940, 0x27)  // anchor-global, dc 0xbbee4
+unsigned char game::IsHuman(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11780
+VA(0x004ce970, 0x3C)  // anchor-global, dc 0xbbfcc
+unsigned char game::IsLocalHuman(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11791
+VA(0x004ce9b0, 0x6A)  // anchor-global, dc 0xbc010
+playerData* game::GetLocalPlayer()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11796
+VA(0x004cea20, 0x4E)  // anchor-global, dc 0xbc038
+int game::GetLocalPlayerGamePos()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11812
+VA(0x004cea70, 0xE7)  // linkorder, dc 0xbc0c0
+type_point game::get_puzzle_origin(type_point* __$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11828
+VA(0x004ceb60, 0xBD)  // anchor-global, dc 0xbc1fc
+char* game::GetPlayerName(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11839
+VA(0x004cec20, 0x25)  // linkorder, dc 0xbc23c
+int game::GetGamePosFromDPID(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11850
+VA(0x004cec50, 0x3E)  // linkorder, dc 0xbc2b8
+unsigned char game::IsLastHuman(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11861
+VA(0x004cec90, 0x18)  // anchor-global, dc 0xbc300
+unsigned char game::IsMultiplayer()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11869
+// DC_ONLY(0xbc320, cb 0x64) - no retail tie yet
+int game::GetLastHuman()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11884
+// DC_ONLY(0xbc384, cb 0x94) - no retail tie yet
+void game::mark_campaign_map_won()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11895
+// DC_ONLY(0xbc418, cb 0xE8) - no retail tie yet
+void game::ResetGame()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11918
+// DC_ONLY(0xbc500, cb 0x9C) - no retail tie yet
+unsigned char DCFileConv(char* name)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:49
+// DC_ONLY(0xbc59c, cb 0x18) - no retail tie yet
+void std::_Bit_reference::_Bit_reference(unsigned* __x, unsigned __y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:56
+// DC_ONLY(0xbc5b4, cb 0x3C) - no retail tie yet
+std::_Bit_reference* std::_Bit_reference::operator=(unsigned char __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:162
+// DC_ONLY(0xbc5f0, cb 0x78) - no retail tie yet
+void std::_Bit_iterator_base::_M_advance(int __i)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:174
+// DC_ONLY(0xbc668, cb 0x2A) - no retail tie yet
+int std::_Bit_iterator_base::_M_subtract(const std::_Bit_iterator_base* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:578
+// DC_ONLY(0xbc694, cb 0x24) - no retail tie yet
+std::_Bit_iter<std::_Bit_reference,std::_Bit_reference std::vector<bool,std::allocator<bool> >::begin(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:579
+// DC_ONLY(0xbc6b8, cb 0x26) - no retail tie yet
+std::_Bit_iter<bool,bool std::vector<bool,std::allocator<bool> >::begin(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:581
+// DC_ONLY(0xbc6e0, cb 0x26) - no retail tie yet
+std::_Bit_iter<bool,bool std::vector<bool,std::allocator<bool> >::end(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:592
+// DC_ONLY(0xbc708, cb 0x4C) - no retail tie yet
+unsigned std::vector<bool,std::allocator<bool> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:599
+// DC_ONLY(0xbc754, cb 0x74) - no retail tie yet
+std::_Bit_reference std::vector<bool,std::allocator<bool> >::operator[](std::_Bit_reference* __$ReturnUdt, unsigned __n)
+{
+    // @stub
+}
+
+// E:\gamedcs\includes.h:175
+// DC_ONLY(0xbc7c8, cb 0x24) - no retail tie yet
+void TPickRandomTownName::TPickRandomTownName()
+{
+    // @stub
+}
+
+// E:\gamedcs\includes.h:178
+// DC_ONLY(0xbc7ec, cb 0x7C) - no retail tie yet
+void TPickRandomTownName::Reset()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:595
+// DC_ONLY(0xbc868, cb 0x74) - no retail tie yet
+void CObject::CObject(unsigned char _x, unsigned char _y, unsigned char _z, unsigned short _type, unsigned long _extraInfo)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:847
+// DC_ONLY(0xbc8dc, cb 0x52) - no retail tie yet
+const NewmapCell* NewfullMap::zCell(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:889
+// DC_ONLY(0xbc930, cb 0x2C) - no retail tie yet
+const NewmapCell* NewfullMap::cell(int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:969
+// DC_ONLY(0xbc95c, cb 0x16) - no retail tie yet
+void ExtraInfoUnion::clear_visited_bits()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1012
+// DC_ONLY(0xbc974, cb 0x3A) - no retail tie yet
+void ExtraInfoUnion::FillGarden(EGameResource resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1028
+// DC_ONLY(0xbc9b0, cb 0x54) - no retail tie yet
+void ExtraInfoUnion::SetGarden(short id, EGameResource resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1040
+// DC_ONLY(0xbca04, cb 0x48) - no retail tie yet
+void ExtraInfoUnion::SetMagicSpring(short id, unsigned char full)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1084
+// DC_ONLY(0xbca4c, cb 0x7C) - no retail tie yet
+void ExtraInfoUnion::SetScholar(ScholarAwards award, TPrimarySkill primary, TSecondarySkill secondary, SpellID spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1176
+// DC_ONLY(0xbcac8, cb 0x74) - no retail tie yet
+void ExtraInfoUnion::SetWagon(EGameResource resource, short amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1185
+// DC_ONLY(0xbcb3c, cb 0x58) - no retail tie yet
+void ExtraInfoUnion::SetWagon(TArtifact artifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1208
+// DC_ONLY(0xbcb94, cb 0x48) - no retail tie yet
+void ExtraInfoUnion::set_tomb(TArtifact artifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1251
+// DC_ONLY(0xbcbdc, cb 0x3C) - no retail tie yet
+void ExtraInfoUnion::set_witch_skill(TSecondarySkill skill)
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:188
+// DC_ONLY(0xbcc18, cb 0x28) - no retail tie yet
+void boat::boat()
+{
+    // @stub
+}
+
+// E:\gamedcs\Town.h:337
+// DC_ONLY(0xbcc40, cb 0x74) - no retail tie yet
+unsigned char town::IsCastle()
+{
+    // @stub
+}
+
+// E:\gamedcs\Town.h:342
+// DC_ONLY(0xbccb4, cb 0x28) - no retail tie yet
+unsigned char town::IsCapitol()
+{
+    // @stub
+}
+
+// E:\gamedcs\VictoryLossConditions.h:77
+// DC_ONLY(0xbccdc, cb 0x1E) - no retail tie yet
+void VictoryConditionStruct::VictoryConditionStruct()
+{
+    // @stub
+}
+
+// E:\gamedcs\VictoryLossConditions.h:141
+// DC_ONLY(0xbccfc, cb 0x22) - no retail tie yet
+void LossConditionStruct::LossConditionStruct()
+{
+    // @stub
+}
+
+// E:\gamedcs\CustomCampaign.h:95
+// DC_ONLY(0xbcd20, cb 0x20) - no retail tie yet
+void TArtifactRequirement::TArtifactRequirement()
+{
+    // @stub
+}
+
+// E:\gamedcs\CustomCampaign.h:102
+// DC_ONLY(0xbcd40, cb 0x16) - no retail tie yet
+void TArtifactRequirement::init()
+{
+    // @stub
+}
+
+// E:\gamedcs\CustomCampaign.h:135
+// DC_ONLY(0xbcd58, cb 0x38) - no retail tie yet
+void TCustomCampaignTraits::TCustomCampaignTraits()
+{
+    // @stub
+}
+
+// E:\gamedcs\CustomCampaign.h:199
+// DC_ONLY(0xbcd90, cb 0x70) - no retail tie yet
+void SCampaign::SCampaign()
+{
+    // @stub
+}
+
+// E:\gamedcs\Game.h:458
+// DC_ONLY(0xbce00, cb 0x52) - no retail tie yet
+void mine::mine()
+{
+    // @stub
+}
+
+// E:\gamedcs\Game.h:578
+// DC_ONLY(0xbce54, cb 0x28) - no retail tie yet
+void Sign::Sign()
+{
+    // @stub
+}
+
+// E:\gamedcs\Game.h:856
+// DC_ONLY(0xbce7c, cb 0x38) - no retail tie yet
+unsigned char game::IsComputerTeam(int teamNum)
+{
+    // @stub
+}
+
+// E:\gamedcs\Game.h:1301
+// DC_ONLY(0xbceb4, cb 0x4C) - no retail tie yet
+void SavedGameHeader::SavedGameHeader()
+{
+    // @stub
+}
+
+// E:\gamedcs\Game.h:1312
+// DC_ONLY(0xbcf00, cb 0x6C) - no retail tie yet
+void SavedGameHeader::Reset()
+{
+    // @stub
+}
+
+// E:\gamedcs\Game.h:1325
+// DC_ONLY(0xbcf6c, cb 0x78) - no retail tie yet
+int SavedGameHeader::Save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\Game.h:1344
+// DC_ONLY(0xbcfe4, cb 0x78) - no retail tie yet
+int SavedGameHeader::Load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\Game.h:1390
+// DC_ONLY(0xbd05c, cb 0x44) - no retail tie yet
+short game::get_current_turn()
+{
+    // @stub
+}
+
+// E:\gamedcs\AdventureMapWindow.h:238
+// DC_ONLY(0xbd0a0, cb 0x14) - no retail tie yet
+void TAdventureMapWindow::set_background_animation(unsigned char enable)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:295
+// DC_ONLY(0xbd0b4, cb 0x58) - no retail tie yet
+void CGameTransmitInitMsg::CGameTransmitInitMsg(unsigned long fileSize, unsigned long fullGameCRC, unsigned long thisPlayerDead, unsigned char isDiff, unsigned char makeOrig)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:312
+// DC_ONLY(0xbd10c, cb 0x30) - no retail tie yet
+void CGameTransmitReqMsg::CGameTransmitReqMsg(int blockNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:324
+// DC_ONLY(0xbd13c, cb 0x48) - no retail tie yet
+CGameTransmitMainMsg* CGameTransmitMainMsg::CreateMsg(unsigned long maxSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:337
+// DC_ONLY(0xbd184, cb 0x44) - no retail tie yet
+void CGameTransmitMainMsg::Update(unsigned char* pData, unsigned long blockSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:351
+// DC_ONLY(0xbd1c8, cb 0xE) - no retail tie yet
+unsigned long CGameTransmitMainMsg::GetSize()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:357
+// DC_ONLY(0xbd1d8, cb 0xC) - no retail tie yet
+unsigned char* CGameTransmitMainMsg::GetData()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:374
+// DC_ONLY(0xbd1e4, cb 0x28) - no retail tie yet
+void CGameTransmitConfirmEndMsg::CGameTransmitConfirmEndMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:389
+// DC_ONLY(0xbd20c, cb 0x4C) - no retail tie yet
+void CGameTransmitEndMsg::CGameTransmitEndMsg(int iMonthType, int iMonthTypeExtra, int iWeekType, int iWeekTypeExtra, unsigned long diffSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:605
+// DC_ONLY(0xbd258, cb 0x38) - no retail tie yet
+void CMCClaimGenerator::CMCClaimGenerator(int generatorId, int playerPos)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:619
+// DC_ONLY(0xbd290, cb 0x38) - no retail tie yet
+void CMCClaimGarrison::CMCClaimGarrison(int garrisonId, int playerPos)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:633
+// DC_ONLY(0xbd2c8, cb 0x6C) - no retail tie yet
+void CMCClaimShipYard::CMCClaimShipYard(type_point point, int playerPos)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:649
+// DC_ONLY(0xbd334, cb 0x6C) - no retail tie yet
+void CMCBuildBoat::CMCBuildBoat(type_point point, int playerPos)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:717
+// DC_ONLY(0xbd3a0, cb 0x30) - no retail tie yet
+void CMCHideHero::CMCHideHero(int heroId)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:873
+// DC_ONLY(0xbd3d0, cb 0x30) - no retail tie yet
+void CDestroyPlayerMsg::CDestroyPlayerMsg(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:882
+// DC_ONLY(0xbd400, cb 0x28) - no retail tie yet
+void CGameXferAckMsg::CGameXferAckMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\timer.h:39
+// DC_ONLY(0xbd428, cb 0x34) - no retail tie yet
+void CTimer::CTimer(unsigned char _enabled)
+{
+    // @stub
+}
+
+// E:\gamedcs\timer.h:49
+// DC_ONLY(0xbd45c, cb 0x38) - no retail tie yet
+void CTimer::start()
+{
+    // @stub
+}
+
+// E:\gamedcs\timer.h:60
+// DC_ONLY(0xbd494, cb 0x68) - no retail tie yet
+void CTimer::stop()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2969
+// DC_ONLY(0xbd4fc, cb 0x38) - no retail tie yet
+void* Buffer::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:5595
+// DC_ONLY(0xbd534, cb 0x58) - no retail tie yet
+void type_creature_bank::type_creature_bank()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:5595
+// DC_ONLY(0xbd58c, cb 0x20) - no retail tie yet
+void type_creature_bank::~type_creature_bank()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:9801
+// DC_ONLY(0xbd5ac, cb 0x1C) - no retail tie yet
+void TPickRandomTownName::~TPickRandomTownName()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:10583
+// DC_ONLY(0xbd5c8, cb 0x2C) - no retail tie yet
+void CGameTransferDlg::~CGameTransferDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11746
+// DC_ONLY(0xbd5f4, cb 0x3C) - no retail tie yet
+void HeroExtra::HeroExtra()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11746
+// DC_ONLY(0xbd630, cb 0x24) - no retail tie yet
+void playerData::~playerData()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11746
+// DC_ONLY(0xbd654, cb 0x44) - no retail tie yet
+void std::vector<type_point,std::allocator<type_point> >::`default constructor closure'()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:727
+// DC_ONLY(0xbd698, cb 0x3C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::assign(const char* __s)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:972
+// DC_ONLY(0xbd6d4, cb 0x9C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::erase(unsigned __pos, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:249
+// DC_ONLY(0xbd770, cb 0x24) - no retail tie yet
+void std::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>(const std::_Bit_iter<std::_Bit_reference,std::_Bit_reference* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:250
+// DC_ONLY(0xbd794, cb 0x4C) - no retail tie yet
+std::_Bit_reference std::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>::operator*(std::_Bit_reference* __$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:272
+// DC_ONLY(0xbd7e0, cb 0x24) - no retail tie yet
+std::_Bit_iter<std::_Bit_reference,std::_Bit_reference* std::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>::operator+=(int __i)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:280
+// DC_ONLY(0xbd804, cb 0x48) - no retail tie yet
+std::_Bit_iter<std::_Bit_reference,std::_Bit_reference std::_Bit_iter<std::_Bit_reference,std::_Bit_reference *>::operator+(__$ReturnUdt, int __i)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:288
+// DC_ONLY(0xbd84c, cb 0x28) - no retail tie yet
+int std::_Bit_iter<bool,bool const *>::operator-(const std::_Bit_iter<bool,bool* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:513
+// DC_ONLY(0xbd874, cb 0x2C) - no retail tie yet
+std::bitset<48,unsigned* std::bitset<48,unsigned long>::set()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:519
+// DC_ONLY(0xbd8a0, cb 0x2C) - no retail tie yet
+std::bitset<48,unsigned* std::bitset<48,unsigned long>::set(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:533
+// DC_ONLY(0xbd8cc, cb 0x20) - no retail tie yet
+std::bitset<48,unsigned* std::bitset<48,unsigned long>::reset()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbd8ec, cb 0x24) - no retail tie yet
+void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::vector<enum TArtifact,std::allocator<enum TArtifact> >(const std::allocator<enum* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbd910, cb 0x34) - no retail tie yet
+void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::~vector<enum TArtifact,std::allocator<enum TArtifact> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbd944, cb 0x8) - no retail tie yet
+void std::allocator<enum TArtifact>::allocator<enum TArtifact>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbd94c, cb 0x6) - no retail tie yet
+void std::allocator<enum TArtifact>::~allocator<enum TArtifact>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbd954, cb 0x2C) - no retail tie yet
+unsigned std::vector<CObjectType,std::allocator<CObjectType> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:365
+// DC_ONLY(0xbd980, cb 0x24) - no retail tie yet
+CObjectType* std::vector<CObjectType,std::allocator<CObjectType> >::back()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xbd9a4, cb 0x54) - no retail tie yet
+void std::vector<CObjectType,std::allocator<CObjectType> >::push_back(const CObjectType* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xbd9f8, cb 0x54) - no retail tie yet
+void std::vector<CObject,std::allocator<CObject> >::push_back(const CObject* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xbda4c, cb 0x54) - no retail tie yet
+void std::vector<CSprite *,std::allocator<CSprite *> >::push_back(CSprite** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbdaa0, cb 0x2C) - no retail tie yet
+unsigned std::vector<TTimedEvent,std::allocator<TTimedEvent> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0xbdacc, cb 0x2C) - no retail tie yet
+TTimedEvent* std::vector<TTimedEvent,std::allocator<TTimedEvent> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbdaf8, cb 0x2C) - no retail tie yet
+unsigned std::vector<TTownEvent,std::allocator<TTownEvent> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0xbdb24, cb 0x2C) - no retail tie yet
+TTownEvent* std::vector<TTownEvent,std::allocator<TTownEvent> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0xbdb50, cb 0xC) - no retail tie yet
+type_point* std::vector<type_point,std::allocator<type_point> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0xbdb5c, cb 0x28) - no retail tie yet
+type_point* std::vector<type_point,std::allocator<type_point> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbdb84, cb 0x24) - no retail tie yet
+void std::vector<type_point,std::allocator<type_point> >::vector<type_point,std::allocator<type_point> >(const std::allocator<type_point>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbdba8, cb 0x34) - no retail tie yet
+void std::vector<type_point,std::allocator<type_point> >::~vector<type_point,std::allocator<type_point> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xbdbdc, cb 0x54) - no retail tie yet
+void std::vector<type_point,std::allocator<type_point> >::push_back(const type_point* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:480
+// DC_ONLY(0xbdc30, cb 0x60) - no retail tie yet
+type_point* std::vector<type_point,std::allocator<type_point> >::erase(type_point* __position)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xbdc90, cb 0x3C) - no retail tie yet
+void std::vector<type_point,std::allocator<type_point> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbdccc, cb 0x8) - no retail tie yet
+void std::allocator<type_point>::allocator<type_point>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbdcd4, cb 0x6) - no retail tie yet
+void std::allocator<type_point>::~allocator<type_point>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbdcdc, cb 0x2C) - no retail tie yet
+unsigned std::vector<TownExtra,std::allocator<TownExtra> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0xbdd08, cb 0x2C) - no retail tie yet
+TownExtra* std::vector<TownExtra,std::allocator<TownExtra> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbdd34, cb 0x24) - no retail tie yet
+void std::vector<TownExtra,std::allocator<TownExtra> >::vector<TownExtra,std::allocator<TownExtra> >(const std::allocator<TownExtra>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbdd58, cb 0x34) - no retail tie yet
+void std::vector<TownExtra,std::allocator<TownExtra> >::~vector<TownExtra,std::allocator<TownExtra> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbdd8c, cb 0x8) - no retail tie yet
+void std::allocator<TownExtra>::allocator<TownExtra>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbdd94, cb 0x6) - no retail tie yet
+void std::allocator<TownExtra>::~allocator<TownExtra>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbdd9c, cb 0x2C) - no retail tie yet
+unsigned std::vector<TBlackMarket,std::allocator<TBlackMarket> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbddc8, cb 0x24) - no retail tie yet
+void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::vector<TBlackMarket,std::allocator<TBlackMarket> >(const std::allocator<TBlackMarket>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbddec, cb 0x34) - no retail tie yet
+void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::~vector<TBlackMarket,std::allocator<TBlackMarket> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xbde20, cb 0x54) - no retail tie yet
+void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::push_back(const TBlackMarket* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xbde74, cb 0x24) - no retail tie yet
+void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xbde98, cb 0x3C) - no retail tie yet
+void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbded4, cb 0x8) - no retail tie yet
+void std::allocator<TBlackMarket>::allocator<TBlackMarket>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbdedc, cb 0x6) - no retail tie yet
+void std::allocator<TBlackMarket>::~allocator<TBlackMarket>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbdee4, cb 0x24) - no retail tie yet
+void std::vector<town,std::allocator<town> >::vector<town,std::allocator<town> >(const std::allocator<town>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbdf08, cb 0x34) - no retail tie yet
+void std::vector<town,std::allocator<town> >::~vector<town,std::allocator<town> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xbdf3c, cb 0x44) - no retail tie yet
+void std::vector<town,std::allocator<town> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbdf80, cb 0x8) - no retail tie yet
+void std::allocator<town>::allocator<town>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbdf88, cb 0x6) - no retail tie yet
+void std::allocator<town>::~allocator<town>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbdf90, cb 0x16) - no retail tie yet
+unsigned std::vector<Sign,std::allocator<Sign> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbdfa8, cb 0x24) - no retail tie yet
+void std::vector<Sign,std::allocator<Sign> >::vector<Sign,std::allocator<Sign> >(const std::allocator<Sign>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbdfcc, cb 0x34) - no retail tie yet
+void std::vector<Sign,std::allocator<Sign> >::~vector<Sign,std::allocator<Sign> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xbe000, cb 0x44) - no retail tie yet
+void std::vector<Sign,std::allocator<Sign> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbe044, cb 0x8) - no retail tie yet
+void std::allocator<Sign>::allocator<Sign>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbe04c, cb 0x6) - no retail tie yet
+void std::allocator<Sign>::~allocator<Sign>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbe054, cb 0x2C) - no retail tie yet
+unsigned std::vector<mine,std::allocator<mine> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbe080, cb 0x24) - no retail tie yet
+void std::vector<mine,std::allocator<mine> >::vector<mine,std::allocator<mine> >(const std::allocator<mine>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbe0a4, cb 0x34) - no retail tie yet
+void std::vector<mine,std::allocator<mine> >::~vector<mine,std::allocator<mine> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xbe0d8, cb 0x34) - no retail tie yet
+void std::vector<mine,std::allocator<mine> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbe10c, cb 0x8) - no retail tie yet
+void std::allocator<mine>::allocator<mine>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbe114, cb 0x6) - no retail tie yet
+void std::allocator<mine>::~allocator<mine>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbe11c, cb 0x2C) - no retail tie yet
+unsigned std::vector<generator,std::allocator<generator> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbe148, cb 0x24) - no retail tie yet
+void std::vector<generator,std::allocator<generator> >::vector<generator,std::allocator<generator> >(const std::allocator<generator>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbe16c, cb 0x34) - no retail tie yet
+void std::vector<generator,std::allocator<generator> >::~vector<generator,std::allocator<generator> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbe1a0, cb 0x8) - no retail tie yet
+void std::allocator<generator>::allocator<generator>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbe1a8, cb 0x6) - no retail tie yet
+void std::allocator<generator>::~allocator<generator>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbe1b0, cb 0x16) - no retail tie yet
+unsigned std::vector<garrison,std::allocator<garrison> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbe1c8, cb 0x24) - no retail tie yet
+void std::vector<garrison,std::allocator<garrison> >::vector<garrison,std::allocator<garrison> >(const std::allocator<garrison>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbe1ec, cb 0x34) - no retail tie yet
+void std::vector<garrison,std::allocator<garrison> >::~vector<garrison,std::allocator<garrison> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xbe220, cb 0x38) - no retail tie yet
+void std::vector<garrison,std::allocator<garrison> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbe258, cb 0x8) - no retail tie yet
+void std::allocator<garrison>::allocator<garrison>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbe260, cb 0x6) - no retail tie yet
+void std::allocator<garrison>::~allocator<garrison>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xbe268, cb 0xC) - no retail tie yet
+boat* std::vector<boat,std::allocator<boat> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbe274, cb 0x2C) - no retail tie yet
+unsigned std::vector<boat,std::allocator<boat> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbe2a0, cb 0x24) - no retail tie yet
+void std::vector<boat,std::allocator<boat> >::vector<boat,std::allocator<boat> >(const std::allocator<boat>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbe2c4, cb 0x34) - no retail tie yet
+void std::vector<boat,std::allocator<boat> >::~vector<boat,std::allocator<boat> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xbe2f8, cb 0x54) - no retail tie yet
+void std::vector<boat,std::allocator<boat> >::push_back(const boat* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xbe34c, cb 0x38) - no retail tie yet
+void std::vector<boat,std::allocator<boat> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbe384, cb 0x8) - no retail tie yet
+void std::allocator<boat>::allocator<boat>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbe38c, cb 0x6) - no retail tie yet
+void std::allocator<boat>::~allocator<boat>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbe394, cb 0x16) - no retail tie yet
+unsigned std::vector<type_university,std::allocator<type_university> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbe3ac, cb 0x24) - no retail tie yet
+void std::vector<type_university,std::allocator<type_university> >::vector<type_university,std::allocator<type_university> >(const std::allocator<type_university>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbe3d0, cb 0x34) - no retail tie yet
+void std::vector<type_university,std::allocator<type_university> >::~vector<type_university,std::allocator<type_university> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xbe404, cb 0x54) - no retail tie yet
+void std::vector<type_university,std::allocator<type_university> >::push_back(const type_university* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbe458, cb 0x8) - no retail tie yet
+void std::allocator<type_university>::allocator<type_university>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbe460, cb 0x6) - no retail tie yet
+void std::allocator<type_university>::~allocator<type_university>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbe468, cb 0x2C) - no retail tie yet
+unsigned std::vector<type_creature_bank,std::allocator<type_creature_bank> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbe494, cb 0x24) - no retail tie yet
+void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::vector<type_creature_bank,std::allocator<type_creature_bank> >(const std::allocator<type_creature_bank>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbe4b8, cb 0x34) - no retail tie yet
+void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::~vector<type_creature_bank,std::allocator<type_creature_bank> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xbe4ec, cb 0x54) - no retail tie yet
+void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::push_back(const type_creature_bank* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbe540, cb 0x8) - no retail tie yet
+void std::allocator<type_creature_bank>::allocator<type_creature_bank>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbe548, cb 0x6) - no retail tie yet
+void std::allocator<type_creature_bank>::~allocator<type_creature_bank>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0xbe550, cb 0xC) - no retail tie yet
+game::TRumour* std::vector<game::TRumour,std::allocator<game::TRumour> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xbe55c, cb 0xC) - no retail tie yet
+game::TRumour* std::vector<game::TRumour,std::allocator<game::TRumour> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbe568, cb 0x16) - no retail tie yet
+unsigned std::vector<game::TRumour,std::allocator<game::TRumour> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0xbe580, cb 0x2C) - no retail tie yet
+game::TRumour* std::vector<game::TRumour,std::allocator<game::TRumour> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbe5ac, cb 0x24) - no retail tie yet
+void std::vector<game::TRumour,std::allocator<game::TRumour> >::vector<game::TRumour,std::allocator<game::TRumour> >(const std::allocator<game::TRumour>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbe5d0, cb 0x34) - no retail tie yet
+void std::vector<game::TRumour,std::allocator<game::TRumour> >::~vector<game::TRumour,std::allocator<game::TRumour> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xbe604, cb 0x44) - no retail tie yet
+void std::vector<game::TRumour,std::allocator<game::TRumour> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbe648, cb 0x8) - no retail tie yet
+void std::allocator<game::TRumour>::allocator<game::TRumour>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbe650, cb 0x6) - no retail tie yet
+void std::allocator<game::TRumour>::~allocator<game::TRumour>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:204
+// DC_ONLY(0xbe658, cb 0x28) - no retail tie yet
+const long* std::vector<long,std::allocator<long> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbe680, cb 0x24) - no retail tie yet
+void std::vector<type_event_record *,std::allocator<type_event_record *> >::vector<type_event_record *,std::allocator<type_event_record *> >(const std::allocator<type_event_record* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbe6a4, cb 0x34) - no retail tie yet
+void std::vector<type_event_record *,std::allocator<type_event_record *> >::~vector<type_event_record *,std::allocator<type_event_record *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbe6d8, cb 0x8) - no retail tie yet
+void std::allocator<type_event_record *>::allocator<type_event_record *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbe6e0, cb 0x6) - no retail tie yet
+void std::allocator<type_event_record *>::~allocator<type_event_record *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xbe6e8, cb 0x30) - no retail tie yet
+unsigned std::vector<hero,std::allocator<hero> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0xbe718, cb 0x30) - no retail tie yet
+hero* std::vector<hero,std::allocator<hero> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xbe748, cb 0x24) - no retail tie yet
+void std::vector<hero,std::allocator<hero> >::vector<hero,std::allocator<hero> >(const std::allocator<hero>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xbe76c, cb 0x34) - no retail tie yet
+void std::vector<hero,std::allocator<hero> >::~vector<hero,std::allocator<hero> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xbe7a0, cb 0x58) - no retail tie yet
+void std::vector<hero,std::allocator<hero> >::push_back(const hero* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xbe7f8, cb 0x8) - no retail tie yet
+void std::allocator<hero>::allocator<hero>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xbe800, cb 0x6) - no retail tie yet
+void std::allocator<hero>::~allocator<hero>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:537
+// DC_ONLY(0xbe808, cb 0x20) - no retail tie yet
+void Sign::~Sign()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:537
+// DC_ONLY(0xbe828, cb 0x24) - no retail tie yet
+void garrison::garrison()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:537
+// DC_ONLY(0xbe84c, cb 0x20) - no retail tie yet
+void game::TRumour::TRumour()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:537
+// DC_ONLY(0xbe86c, cb 0x1C) - no retail tie yet
+void game::TRumour::~TRumour()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:353
+// DC_ONLY(0xbe888, cb 0x2C) - no retail tie yet
+void std::bitset<48,unsigned long>::_M_do_sanitize()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:483
+// DC_ONLY(0xbe8b4, cb 0x3C) - no retail tie yet
+std::bitset<48,unsigned* std::bitset<48,unsigned long>::_Unchecked_set(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:158
+// DC_ONLY(0xbe8f0, cb 0x2E) - no retail tie yet
+void std::_Base_bitset<2,unsigned long>::_M_do_set()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:164
+// DC_ONLY(0xbe920, cb 0x2E) - no retail tie yet
+void std::_Base_bitset<2,unsigned long>::_M_do_reset()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbe950, cb 0x44) - no retail tie yet
+void std::_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >::_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >(const std::allocator<enum* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbe994, cb 0x44) - no retail tie yet
+void std::_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >::~_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xbe9d8, cb 0xC) - no retail tie yet
+CObjectType* std::vector<CObjectType,std::allocator<CObjectType> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0xbe9e4, cb 0xC) - no retail tie yet
+TTimedEvent* std::vector<TTimedEvent,std::allocator<TTimedEvent> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0xbe9f0, cb 0xC) - no retail tie yet
+TTownEvent* std::vector<TTownEvent,std::allocator<TTownEvent> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xbe9fc, cb 0xC) - no retail tie yet
+type_point* std::vector<type_point,std::allocator<type_point> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xbea08, cb 0x48) - no retail tie yet
+type_point* std::vector<type_point,std::allocator<type_point> >::erase(type_point* __first, type_point* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbea50, cb 0x44) - no retail tie yet
+void std::_Vector_base<type_point,std::allocator<type_point> >::_Vector_base<type_point,std::allocator<type_point> >(const std::allocator<type_point>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbea94, cb 0x44) - no retail tie yet
+void std::_Vector_base<type_point,std::allocator<type_point> >::~_Vector_base<type_point,std::allocator<type_point> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0xbead8, cb 0xC) - no retail tie yet
+TownExtra* std::vector<TownExtra,std::allocator<TownExtra> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbeae4, cb 0x44) - no retail tie yet
+void std::_Vector_base<TownExtra,std::allocator<TownExtra> >::_Vector_base<TownExtra,std::allocator<TownExtra> >(const std::allocator<TownExtra>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbeb28, cb 0x54) - no retail tie yet
+void std::_Vector_base<TownExtra,std::allocator<TownExtra> >::~_Vector_base<TownExtra,std::allocator<TownExtra> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xbeb7c, cb 0xC) - no retail tie yet
+TBlackMarket* std::vector<TBlackMarket,std::allocator<TBlackMarket> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xbeb88, cb 0x48) - no retail tie yet
+TBlackMarket* std::vector<TBlackMarket,std::allocator<TBlackMarket> >::erase(TBlackMarket* __first, TBlackMarket* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xbebd0, cb 0x94) - no retail tie yet
+void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::resize(unsigned __new_size, const TBlackMarket* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbec64, cb 0x44) - no retail tie yet
+void std::_Vector_base<TBlackMarket,std::allocator<TBlackMarket> >::_Vector_base<TBlackMarket,std::allocator<TBlackMarket> >(const std::allocator<TBlackMarket>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbeca8, cb 0x54) - no retail tie yet
+void std::_Vector_base<TBlackMarket,std::allocator<TBlackMarket> >::~_Vector_base<TBlackMarket,std::allocator<TBlackMarket> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xbecfc, cb 0x94) - no retail tie yet
+void std::vector<town,std::allocator<town> >::resize(unsigned __new_size, const town* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbed90, cb 0x44) - no retail tie yet
+void std::_Vector_base<town,std::allocator<town> >::_Vector_base<town,std::allocator<town> >(const std::allocator<town>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbedd4, cb 0x54) - no retail tie yet
+void std::_Vector_base<town,std::allocator<town> >::~_Vector_base<town,std::allocator<town> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xbee28, cb 0x90) - no retail tie yet
+void std::vector<Sign,std::allocator<Sign> >::resize(unsigned __new_size, const Sign* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbeeb8, cb 0x44) - no retail tie yet
+void std::_Vector_base<Sign,std::allocator<Sign> >::_Vector_base<Sign,std::allocator<Sign> >(const std::allocator<Sign>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbeefc, cb 0x44) - no retail tie yet
+void std::_Vector_base<Sign,std::allocator<Sign> >::~_Vector_base<Sign,std::allocator<Sign> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xbef40, cb 0x94) - no retail tie yet
+void std::vector<mine,std::allocator<mine> >::resize(unsigned __new_size, const mine* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbefd4, cb 0x44) - no retail tie yet
+void std::_Vector_base<mine,std::allocator<mine> >::_Vector_base<mine,std::allocator<mine> >(const std::allocator<mine>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbf018, cb 0x54) - no retail tie yet
+void std::_Vector_base<mine,std::allocator<mine> >::~_Vector_base<mine,std::allocator<mine> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbf06c, cb 0x44) - no retail tie yet
+void std::_Vector_base<generator,std::allocator<generator> >::_Vector_base<generator,std::allocator<generator> >(const std::allocator<generator>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbf0b0, cb 0x54) - no retail tie yet
+void std::_Vector_base<generator,std::allocator<generator> >::~_Vector_base<generator,std::allocator<generator> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xbf104, cb 0x90) - no retail tie yet
+void std::vector<garrison,std::allocator<garrison> >::resize(unsigned __new_size, const garrison* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbf194, cb 0x44) - no retail tie yet
+void std::_Vector_base<garrison,std::allocator<garrison> >::_Vector_base<garrison,std::allocator<garrison> >(const std::allocator<garrison>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbf1d8, cb 0x44) - no retail tie yet
+void std::_Vector_base<garrison,std::allocator<garrison> >::~_Vector_base<garrison,std::allocator<garrison> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xbf21c, cb 0x94) - no retail tie yet
+void std::vector<boat,std::allocator<boat> >::resize(unsigned __new_size, const boat* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbf2b0, cb 0x44) - no retail tie yet
+void std::_Vector_base<boat,std::allocator<boat> >::_Vector_base<boat,std::allocator<boat> >(const std::allocator<boat>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbf2f4, cb 0x54) - no retail tie yet
+void std::_Vector_base<boat,std::allocator<boat> >::~_Vector_base<boat,std::allocator<boat> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbf348, cb 0x44) - no retail tie yet
+void std::_Vector_base<type_university,std::allocator<type_university> >::_Vector_base<type_university,std::allocator<type_university> >(const std::allocator<type_university>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbf38c, cb 0x44) - no retail tie yet
+void std::_Vector_base<type_university,std::allocator<type_university> >::~_Vector_base<type_university,std::allocator<type_university> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbf3d0, cb 0x44) - no retail tie yet
+void std::_Vector_base<type_creature_bank,std::allocator<type_creature_bank> >::_Vector_base<type_creature_bank,std::allocator<type_creature_bank> >(const std::allocator<type_creature_bank>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbf414, cb 0x54) - no retail tie yet
+void std::_Vector_base<type_creature_bank,std::allocator<type_creature_bank> >::~_Vector_base<type_creature_bank,std::allocator<type_creature_bank> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xbf468, cb 0x90) - no retail tie yet
+void std::vector<game::TRumour,std::allocator<game::TRumour> >::resize(unsigned __new_size, const game::TRumour* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbf4f8, cb 0x44) - no retail tie yet
+void std::_Vector_base<game::TRumour,std::allocator<game::TRumour> >::_Vector_base<game::TRumour,std::allocator<game::TRumour> >(const std::allocator<game::TRumour>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbf53c, cb 0x44) - no retail tie yet
+void std::_Vector_base<game::TRumour,std::allocator<game::TRumour> >::~_Vector_base<game::TRumour,std::allocator<game::TRumour> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:180
+// DC_ONLY(0xbf580, cb 0xC) - no retail tie yet
+const long* std::vector<long,std::allocator<long> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbf58c, cb 0x44) - no retail tie yet
+void std::_Vector_base<type_event_record *,std::allocator<type_event_record *> >::_Vector_base<type_event_record *,std::allocator<type_event_record *> >(const std::allocator<type_event_record* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbf5d0, cb 0x44) - no retail tie yet
+void std::_Vector_base<type_event_record *,std::allocator<type_event_record *> >::~_Vector_base<type_event_record *,std::allocator<type_event_record *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0xbf614, cb 0xC) - no retail tie yet
+hero* std::vector<hero,std::allocator<hero> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xbf620, cb 0x44) - no retail tie yet
+void std::_Vector_base<hero,std::allocator<hero> >::_Vector_base<hero,std::allocator<hero> >(const std::allocator<hero>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xbf664, cb 0x54) - no retail tie yet
+void std::_Vector_base<hero,std::allocator<hero> >::~_Vector_base<hero,std::allocator<hero> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf6b8, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >::~_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf6d4, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::~_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf6f0, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<TownExtra *,TownExtra,std::allocator<TownExtra> >::~_STL_alloc_proxy<TownExtra *,TownExtra,std::allocator<TownExtra> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf70c, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >::~_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf728, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<town *,town,std::allocator<town> >::~_STL_alloc_proxy<town *,town,std::allocator<town> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf744, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<Sign *,Sign,std::allocator<Sign> >::~_STL_alloc_proxy<Sign *,Sign,std::allocator<Sign> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf760, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<mine *,mine,std::allocator<mine> >::~_STL_alloc_proxy<mine *,mine,std::allocator<mine> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf77c, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<generator *,generator,std::allocator<generator> >::~_STL_alloc_proxy<generator *,generator,std::allocator<generator> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf798, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >::~_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf7b4, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<boat *,boat,std::allocator<boat> >::~_STL_alloc_proxy<boat *,boat,std::allocator<boat> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf7d0, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >::~_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf7ec, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >::~_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf808, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >::~_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf824, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<type_event_record * *,type_event_record *,std::allocator<type_event_record *> >::~_STL_alloc_proxy<type_event_record * *,type_event_record *,std::allocator<type_event_record *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xbf840, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<hero *,hero,std::allocator<hero> >::~_STL_alloc_proxy<hero *,hero,std::allocator<hero> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:120
+// DC_ONLY(0xbf85c, cb 0x24) - no retail tie yet
+unsigned long std::_Base_bitset<2,unsigned long>::_S_maskbit(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:127
+// DC_ONLY(0xbf880, cb 0xC) - no retail tie yet
+unsigned long* std::_Base_bitset<2,unsigned long>::_M_hiword()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbf88c, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >::_STL_alloc_proxy<enum TArtifact *,enum TArtifact,std::allocator<enum TArtifact> >(const std::allocator<enum* __a, TArtifact** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbf8ac, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >(const std::allocator<type_point>* __a, type_point** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbf8cc, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::deallocate(type_point* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbf8fc, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<TownExtra *,TownExtra,std::allocator<TownExtra> >::_STL_alloc_proxy<TownExtra *,TownExtra,std::allocator<TownExtra> >(const std::allocator<TownExtra>* __a, TownExtra** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbf91c, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<TownExtra *,TownExtra,std::allocator<TownExtra> >::deallocate(TownExtra* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xbf94c, cb 0x28) - no retail tie yet
+void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::insert(TBlackMarket* __pos, unsigned __n, const TBlackMarket* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbf974, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >::_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >(const std::allocator<TBlackMarket>* __a, TBlackMarket** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbf994, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >::deallocate(TBlackMarket* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xbf9c4, cb 0xC) - no retail tie yet
+town* std::vector<town,std::allocator<town> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xbf9d0, cb 0x28) - no retail tie yet
+void std::vector<town,std::allocator<town> >::insert(town* __pos, unsigned __n, const town* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xbf9f8, cb 0x48) - no retail tie yet
+town* std::vector<town,std::allocator<town> >::erase(town* __first, town* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbfa40, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<town *,town,std::allocator<town> >::_STL_alloc_proxy<town *,town,std::allocator<town> >(const std::allocator<town>* __a, town** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbfa60, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<town *,town,std::allocator<town> >::deallocate(town* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xbfa90, cb 0xC) - no retail tie yet
+Sign* std::vector<Sign,std::allocator<Sign> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xbfa9c, cb 0x28) - no retail tie yet
+void std::vector<Sign,std::allocator<Sign> >::insert(Sign* __pos, unsigned __n, const Sign* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xbfac4, cb 0x48) - no retail tie yet
+Sign* std::vector<Sign,std::allocator<Sign> >::erase(Sign* __first, Sign* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbfb0c, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<Sign *,Sign,std::allocator<Sign> >::_STL_alloc_proxy<Sign *,Sign,std::allocator<Sign> >(const std::allocator<Sign>* __a, Sign** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbfb2c, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<Sign *,Sign,std::allocator<Sign> >::deallocate(Sign* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xbfb5c, cb 0xC) - no retail tie yet
+mine* std::vector<mine,std::allocator<mine> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xbfb68, cb 0x28) - no retail tie yet
+void std::vector<mine,std::allocator<mine> >::insert(mine* __pos, unsigned __n, const mine* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xbfb90, cb 0x48) - no retail tie yet
+mine* std::vector<mine,std::allocator<mine> >::erase(mine* __first, mine* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbfbd8, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<mine *,mine,std::allocator<mine> >::_STL_alloc_proxy<mine *,mine,std::allocator<mine> >(const std::allocator<mine>* __a, mine** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbfbf8, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<mine *,mine,std::allocator<mine> >::deallocate(mine* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbfc28, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<generator *,generator,std::allocator<generator> >::_STL_alloc_proxy<generator *,generator,std::allocator<generator> >(const std::allocator<generator>* __a, generator** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbfc48, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<generator *,generator,std::allocator<generator> >::deallocate(generator* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xbfc78, cb 0xC) - no retail tie yet
+garrison* std::vector<garrison,std::allocator<garrison> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xbfc84, cb 0x28) - no retail tie yet
+void std::vector<garrison,std::allocator<garrison> >::insert(garrison* __pos, unsigned __n, const garrison* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xbfcac, cb 0x48) - no retail tie yet
+garrison* std::vector<garrison,std::allocator<garrison> >::erase(garrison* __first, garrison* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbfcf4, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >::_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >(const std::allocator<garrison>* __a, garrison** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbfd14, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >::deallocate(garrison* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xbfd44, cb 0x28) - no retail tie yet
+void std::vector<boat,std::allocator<boat> >::insert(boat* __pos, unsigned __n, const boat* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xbfd6c, cb 0x48) - no retail tie yet
+boat* std::vector<boat,std::allocator<boat> >::erase(boat* __first, boat* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbfdb4, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<boat *,boat,std::allocator<boat> >::_STL_alloc_proxy<boat *,boat,std::allocator<boat> >(const std::allocator<boat>* __a, boat** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbfdd4, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<boat *,boat,std::allocator<boat> >::deallocate(boat* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbfe04, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >::_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >(const std::allocator<type_university>* __a, type_university** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbfe24, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >::deallocate(type_university* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbfe54, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >::_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >(const std::allocator<type_creature_bank>* __a, type_creature_bank** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbfe74, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >::deallocate(type_creature_bank* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xbfea4, cb 0x28) - no retail tie yet
+void std::vector<game::TRumour,std::allocator<game::TRumour> >::insert(game::TRumour* __pos, unsigned __n, const game::TRumour* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xbfecc, cb 0x48) - no retail tie yet
+game::TRumour* std::vector<game::TRumour,std::allocator<game::TRumour> >::erase(game::TRumour* __first, game::TRumour* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbff14, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >::_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >(const std::allocator<game::TRumour>* __a, game::TRumour** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbff34, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >::deallocate(game::TRumour* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbff64, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<type_event_record * *,type_event_record *,std::allocator<type_event_record *> >::_STL_alloc_proxy<type_event_record * *,type_event_record *,std::allocator<type_event_record *> >(const std::allocator<type_event_record* __a, type_event_record*** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xbff84, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<hero *,hero,std::allocator<hero> >::_STL_alloc_proxy<hero *,hero,std::allocator<hero> >(const std::allocator<hero>* __a, hero** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xbffa4, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<hero *,hero,std::allocator<hero> >::deallocate(hero* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:327
+// DC_ONLY(0xbffd4, cb 0x14) - no retail tie yet
+void std::_Sanitize<unsigned long,16>::_M_do_sanitize(unsigned long* __val)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:117
+// DC_ONLY(0xbffe8, cb 0xE) - no retail tie yet
+unsigned std::_Base_bitset<2,unsigned long>::_S_whichbit(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xbfff8, cb 0x28) - no retail tie yet
+void std::allocator<type_point>::deallocate(type_point* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc0020, cb 0x2C) - no retail tie yet
+void std::allocator<TownExtra>::deallocate(TownExtra* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc004c, cb 0x2C) - no retail tie yet
+void std::allocator<TBlackMarket>::deallocate(TBlackMarket* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc0078, cb 0x30) - no retail tie yet
+void std::allocator<town>::deallocate(town* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc00a8, cb 0x2C) - no retail tie yet
+void std::allocator<Sign>::deallocate(Sign* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc00d4, cb 0x2C) - no retail tie yet
+void std::allocator<mine>::deallocate(mine* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc0100, cb 0x2C) - no retail tie yet
+void std::allocator<generator>::deallocate(generator* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc012c, cb 0x2C) - no retail tie yet
+void std::allocator<garrison>::deallocate(garrison* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc0158, cb 0x2C) - no retail tie yet
+void std::allocator<boat>::deallocate(boat* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc0184, cb 0x2C) - no retail tie yet
+void std::allocator<type_university>::deallocate(type_university* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc01b0, cb 0x2C) - no retail tie yet
+void std::allocator<type_creature_bank>::deallocate(type_creature_bank* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc01dc, cb 0x2C) - no retail tie yet
+void std::allocator<game::TRumour>::deallocate(game::TRumour* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc0208, cb 0x30) - no retail tie yet
+void std::allocator<hero>::deallocate(hero* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc0238, cb 0x130) - no retail tie yet
+void std::vector<CObjectType,std::allocator<CObjectType> >::_M_insert_overflow(CObjectType* __position, const CObjectType* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc0368, cb 0x130) - no retail tie yet
+void std::vector<CObject,std::allocator<CObject> >::_M_insert_overflow(CObject* __position, const CObject* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc0498, cb 0x11C) - no retail tie yet
+void std::vector<CSprite *,std::allocator<CSprite *> >::_M_insert_overflow(CSprite** __position, CSprite** __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc05b4, cb 0x11C) - no retail tie yet
+void std::vector<type_point,std::allocator<type_point> >::_M_insert_overflow(type_point* __position, const type_point* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc06d0, cb 0x130) - no retail tie yet
+void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::_M_insert_overflow(TBlackMarket* __position, const TBlackMarket* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc0800, cb 0x224) - no retail tie yet
+void std::vector<TBlackMarket,std::allocator<TBlackMarket> >::_M_fill_insert(TBlackMarket* __position, unsigned __n, const TBlackMarket* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc0a24, cb 0x28C) - no retail tie yet
+void std::vector<town,std::allocator<town> >::_M_fill_insert(town* __position, unsigned __n, const town* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc0cb0, cb 0x170) - no retail tie yet
+void std::vector<Sign,std::allocator<Sign> >::_M_fill_insert(Sign* __position, unsigned __n, const Sign* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc0e20, cb 0x184) - no retail tie yet
+void std::vector<mine,std::allocator<mine> >::_M_fill_insert(mine* __position, unsigned __n, const mine* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc0fa4, cb 0x1E8) - no retail tie yet
+void std::vector<garrison,std::allocator<garrison> >::_M_fill_insert(garrison* __position, unsigned __n, const garrison* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc118c, cb 0x130) - no retail tie yet
+void std::vector<boat,std::allocator<boat> >::_M_insert_overflow(boat* __position, const boat* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc12bc, cb 0x1D0) - no retail tie yet
+void std::vector<boat,std::allocator<boat> >::_M_fill_insert(boat* __position, unsigned __n, const boat* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc148c, cb 0x120) - no retail tie yet
+void std::vector<type_university,std::allocator<type_university> >::_M_insert_overflow(type_university* __position, const type_university* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc15ac, cb 0x130) - no retail tie yet
+void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::_M_insert_overflow(type_creature_bank* __position, const type_creature_bank* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc16dc, cb 0x170) - no retail tie yet
+void std::vector<game::TRumour,std::allocator<game::TRumour> >::_M_fill_insert(game::TRumour* __position, unsigned __n, const game::TRumour* __x)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2698
+// DC_ONLY(0xc184c, cb 0x80) - no retail tie yet
+unsigned char load_vector(void* infile, std::vector<enum* dest_vector)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2716
+// DC_ONLY(0xc18cc, cb 0x84) - no retail tie yet
+unsigned char save_vector(void* outfile, std::vector<enum* src_vector)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2733
+// DC_ONLY(0xc1950, cb 0x98) - no retail tie yet
+unsigned char load_object_vector(void* infile, std::vector<generator,std::allocator<generator>* dest_vector)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2698
+// DC_ONLY(0xc19e8, cb 0x80) - no retail tie yet
+unsigned char load_vector(void* infile, std::vector<type_point,std::allocator<type_point>* dest_vector)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2698
+// DC_ONLY(0xc1a68, cb 0x80) - no retail tie yet
+unsigned char load_vector(void* infile, std::vector<long,std::allocator<long>* dest_vector)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2698
+// DC_ONLY(0xc1ae8, cb 0x84) - no retail tie yet
+unsigned char load_vector(void* infile, std::vector<type_university,std::allocator<type_university>* dest_vector)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2733
+// DC_ONLY(0xc1b6c, cb 0x98) - no retail tie yet
+unsigned char load_object_vector(void* infile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* dest_vector)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc1c04, cb 0x134) - no retail tie yet
+void std::vector<hero,std::allocator<hero> >::_M_insert_overflow(hero* __position, const hero* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2754
+// DC_ONLY(0xc1d38, cb 0x9C) - no retail tie yet
+unsigned char save_object_vector(void* outfile, std::vector<generator,std::allocator<generator>* src_vector)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2716
+// DC_ONLY(0xc1dd4, cb 0x84) - no retail tie yet
+unsigned char save_vector(void* outfile, std::vector<type_point,std::allocator<type_point>* src_vector)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2716
+// DC_ONLY(0xc1e58, cb 0x84) - no retail tie yet
+unsigned char save_vector(void* outfile, std::vector<long,std::allocator<long>* src_vector)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2716
+// DC_ONLY(0xc1edc, cb 0x88) - no retail tie yet
+unsigned char save_vector(void* outfile, std::vector<type_university,std::allocator<type_university>* src_vector)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:2754
+// DC_ONLY(0xc1f64, cb 0x9C) - no retail tie yet
+unsigned char save_object_vector(void* outfile, std::vector<type_creature_bank,std::allocator<type_creature_bank>* src_vector)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc2000, cb 0x44) - no retail tie yet
+void std::construct(CObjectType* __p, const CObjectType* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc2044, cb 0x58) - no retail tie yet
+void std::construct(CObject* __p, const CObject* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc209c, cb 0x3C) - no retail tie yet
+void std::construct(CSprite** __p, CSprite** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc20d8, cb 0x30) - no retail tie yet
+void std::destroy(type_point* __first, type_point* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc2108, cb 0x58) - no retail tie yet
+void std::construct(type_point* __p, const type_point* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc2160, cb 0x58) - no retail tie yet
+type_point* std::copy(type_point* __first, type_point* __last, type_point* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc21b8, cb 0x20) - no retail tie yet
+void std::destroy(type_point* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc21d8, cb 0x30) - no retail tie yet
+void std::destroy(TownExtra* __first, TownExtra* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc2208, cb 0x30) - no retail tie yet
+void std::destroy(TBlackMarket* __first, TBlackMarket* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc2238, cb 0xF4) - no retail tie yet
+void std::construct(TBlackMarket* __p, const TBlackMarket* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc232c, cb 0x30) - no retail tie yet
+void std::destroy(town* __first, town* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc235c, cb 0x30) - no retail tie yet
+void std::destroy(Sign* __first, Sign* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc238c, cb 0x30) - no retail tie yet
+void std::destroy(mine* __first, mine* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc23bc, cb 0x30) - no retail tie yet
+void std::destroy(generator* __first, generator* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc23ec, cb 0x30) - no retail tie yet
+void std::destroy(garrison* __first, garrison* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc241c, cb 0x30) - no retail tie yet
+void std::destroy(boat* __first, boat* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc244c, cb 0x9C) - no retail tie yet
+void std::construct(boat* __p, const boat* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc24e8, cb 0x30) - no retail tie yet
+void std::destroy(type_university* __first, type_university* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc2518, cb 0x64) - no retail tie yet
+void std::construct(type_university* __p, const type_university* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc257c, cb 0x30) - no retail tie yet
+void std::destroy(type_creature_bank* __first, type_creature_bank* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc25ac, cb 0x44) - no retail tie yet
+void std::construct(type_creature_bank* __p, const type_creature_bank* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc25f0, cb 0x30) - no retail tie yet
+void std::destroy(game::TRumour* __first, game::TRumour* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc2620, cb 0x30) - no retail tie yet
+void std::destroy(hero* __first, hero* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc2650, cb 0x168) - no retail tie yet
+void std::construct(hero* __p, const hero* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc27b8, cb 0x58) - no retail tie yet
+TBlackMarket* std::copy(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc2810, cb 0xA) - no retail tie yet
+std::allocator<type_point>* std::__stl_alloc_rebind(std::allocator<type_point>* __a, const type_point* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc281c, cb 0xA) - no retail tie yet
+std::allocator<TownExtra>* std::__stl_alloc_rebind(std::allocator<TownExtra>* __a, const TownExtra* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc2828, cb 0xA) - no retail tie yet
+std::allocator<TBlackMarket>* std::__stl_alloc_rebind(std::allocator<TBlackMarket>* __a, const TBlackMarket* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc2834, cb 0x58) - no retail tie yet
+town* std::copy(town* __first, town* __last, town* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc288c, cb 0xA) - no retail tie yet
+std::allocator<town>* std::__stl_alloc_rebind(std::allocator<town>* __a, const town* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc2898, cb 0x58) - no retail tie yet
+Sign* std::copy(Sign* __first, Sign* __last, Sign* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc28f0, cb 0xA) - no retail tie yet
+std::allocator<Sign>* std::__stl_alloc_rebind(std::allocator<Sign>* __a, const Sign* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc28fc, cb 0x58) - no retail tie yet
+mine* std::copy(mine* __first, mine* __last, mine* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc2954, cb 0xA) - no retail tie yet
+std::allocator<mine>* std::__stl_alloc_rebind(std::allocator<mine>* __a, const mine* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc2960, cb 0xA) - no retail tie yet
+std::allocator<generator>* std::__stl_alloc_rebind(std::allocator<generator>* __a, const generator* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc296c, cb 0x58) - no retail tie yet
+garrison* std::copy(garrison* __first, garrison* __last, garrison* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc29c4, cb 0xA) - no retail tie yet
+std::allocator<garrison>* std::__stl_alloc_rebind(std::allocator<garrison>* __a, const garrison* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc29d0, cb 0x58) - no retail tie yet
+boat* std::copy(boat* __first, boat* __last, boat* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc2a28, cb 0xA) - no retail tie yet
+std::allocator<boat>* std::__stl_alloc_rebind(std::allocator<boat>* __a, const boat* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc2a34, cb 0xA) - no retail tie yet
+std::allocator<type_university>* std::__stl_alloc_rebind(std::allocator<type_university>* __a, const type_university* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc2a40, cb 0xA) - no retail tie yet
+std::allocator<type_creature_bank>* std::__stl_alloc_rebind(std::allocator<type_creature_bank>* __a, const type_creature_bank* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc2a4c, cb 0x58) - no retail tie yet
+game::TRumour* std::copy(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc2aa4, cb 0xA) - no retail tie yet
+std::allocator<game::TRumour>* std::__stl_alloc_rebind(std::allocator<game::TRumour>* __a, const game::TRumour* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc2ab0, cb 0xA) - no retail tie yet
+std::allocator<hero>* std::__stl_alloc_rebind(std::allocator<hero>* __a, const hero* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xc2abc, cb 0x38) - no retail tie yet
+void Sign::Sign(const Sign* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xc2af4, cb 0x38) - no retail tie yet
+void game::TRumour::TRumour(const game::TRumour* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xc2b2c, cb 0xB8) - no retail tie yet
+void CObjectType::CObjectType(const CObjectType* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xc2be4, cb 0xEC) - no retail tie yet
+void type_creature_bank::type_creature_bank(const type_creature_bank* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:236
+// DC_ONLY(0xc2cd0, cb 0x80) - no retail tie yet
+void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::vector<enum TArtifact,std::allocator<enum TArtifact> >(const std::vector<enum* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xc2d50, cb 0x28) - no retail tie yet
+void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc2d78, cb 0x38) - no retail tie yet
+CObjectType* std::_STL_alloc_proxy<CObjectType *,CObjectType,std::allocator<CObjectType> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xc2db0, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<CObjectType *,CObjectType,std::allocator<CObjectType> >::deallocate(CObjectType* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc2de0, cb 0x38) - no retail tie yet
+CObject* std::_STL_alloc_proxy<CObject *,CObject,std::allocator<CObject> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xc2e18, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<CObject *,CObject,std::allocator<CObject> >::deallocate(CObject* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xc2e48, cb 0x16) - no retail tie yet
+unsigned std::vector<CSprite *,std::allocator<CSprite *> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc2e60, cb 0x38) - no retail tie yet
+CSprite** std::_STL_alloc_proxy<CSprite * *,CSprite *,std::allocator<CSprite *> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xc2e98, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<CSprite * *,CSprite *,std::allocator<CSprite *> >::deallocate(CSprite** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xc2ec8, cb 0x34) - no retail tie yet
+void std::vector<type_point,std::allocator<type_point> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc2efc, cb 0x38) - no retail tie yet
+type_point* std::_STL_alloc_proxy<type_point *,type_point,std::allocator<type_point> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc2f34, cb 0x38) - no retail tie yet
+TBlackMarket* std::_STL_alloc_proxy<TBlackMarket *,TBlackMarket,std::allocator<TBlackMarket> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xc2f6c, cb 0x38) - no retail tie yet
+void std::vector<generator,std::allocator<generator> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc2fa4, cb 0x38) - no retail tie yet
+boat* std::_STL_alloc_proxy<boat *,boat,std::allocator<boat> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xc2fdc, cb 0x24) - no retail tie yet
+void std::vector<type_university,std::allocator<type_university> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc3000, cb 0x38) - no retail tie yet
+type_university* std::_STL_alloc_proxy<type_university *,type_university,std::allocator<type_university> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xc3038, cb 0x4C) - no retail tie yet
+void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc3084, cb 0x38) - no retail tie yet
+type_creature_bank* std::_STL_alloc_proxy<type_creature_bank *,type_creature_bank,std::allocator<type_creature_bank> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xc30bc, cb 0x28) - no retail tie yet
+void std::vector<long,std::allocator<long> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc30e4, cb 0x38) - no retail tie yet
+hero* std::_STL_alloc_proxy<hero *,hero,std::allocator<hero> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:153
+// DC_ONLY(0xc311c, cb 0x14) - no retail tie yet
+std::allocator<enum std::vector<enum TArtifact,std::allocator<enum TArtifact> >::get_allocator(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xc3130, cb 0x90) - no retail tie yet
+void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::resize(unsigned __new_size, const TArtifact* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:94
+// DC_ONLY(0xc31c0, cb 0x74) - no retail tie yet
+void std::_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >::_Vector_base<enum TArtifact,std::allocator<enum TArtifact> >(unsigned __n, const std::allocator<enum* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc3234, cb 0x3C) - no retail tie yet
+CObjectType* std::allocator<CObjectType>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc3270, cb 0x2C) - no retail tie yet
+void std::allocator<CObjectType>::deallocate(CObjectType* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc329c, cb 0x3C) - no retail tie yet
+CObject* std::allocator<CObject>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc32d8, cb 0x2C) - no retail tie yet
+void std::allocator<CObject>::deallocate(CObject* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc3304, cb 0x38) - no retail tie yet
+CSprite** std::allocator<CSprite *>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xc333c, cb 0x28) - no retail tie yet
+void std::allocator<CSprite *>::deallocate(CSprite** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xc3364, cb 0x90) - no retail tie yet
+void std::vector<type_point,std::allocator<type_point> >::resize(unsigned __new_size, const type_point* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc33f4, cb 0x38) - no retail tie yet
+type_point* std::allocator<type_point>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc342c, cb 0x3C) - no retail tie yet
+TBlackMarket* std::allocator<TBlackMarket>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xc3468, cb 0x94) - no retail tie yet
+void std::vector<generator,std::allocator<generator> >::resize(unsigned __new_size, const generator* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc34fc, cb 0x3C) - no retail tie yet
+boat* std::allocator<boat>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xc3538, cb 0x90) - no retail tie yet
+void std::vector<type_university,std::allocator<type_university> >::resize(unsigned __new_size, const type_university* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc35c8, cb 0x3C) - no retail tie yet
+type_university* std::allocator<type_university>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xc3604, cb 0x94) - no retail tie yet
+void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::resize(unsigned __new_size, const type_creature_bank* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc3698, cb 0x3C) - no retail tie yet
+type_creature_bank* std::allocator<type_creature_bank>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xc36d4, cb 0x90) - no retail tie yet
+void std::vector<long,std::allocator<long> >::resize(unsigned __new_size, const long* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc3764, cb 0x40) - no retail tie yet
+hero* std::allocator<hero>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xc37a4, cb 0xC) - no retail tie yet
+TArtifact* std::vector<enum TArtifact,std::allocator<enum TArtifact> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xc37b0, cb 0x28) - no retail tie yet
+void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::insert(TArtifact* __pos, unsigned __n, const TArtifact* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xc37d8, cb 0x48) - no retail tie yet
+TArtifact* std::vector<enum TArtifact,std::allocator<enum TArtifact> >::erase(TArtifact* __first, TArtifact* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xc3820, cb 0x28) - no retail tie yet
+void std::vector<type_point,std::allocator<type_point> >::insert(type_point* __pos, unsigned __n, const type_point* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xc3848, cb 0xC) - no retail tie yet
+generator* std::vector<generator,std::allocator<generator> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xc3854, cb 0x28) - no retail tie yet
+void std::vector<generator,std::allocator<generator> >::insert(generator* __pos, unsigned __n, const generator* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xc387c, cb 0x48) - no retail tie yet
+generator* std::vector<generator,std::allocator<generator> >::erase(generator* __first, generator* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xc38c4, cb 0xC) - no retail tie yet
+type_university* std::vector<type_university,std::allocator<type_university> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xc38d0, cb 0x28) - no retail tie yet
+void std::vector<type_university,std::allocator<type_university> >::insert(type_university* __pos, unsigned __n, const type_university* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xc38f8, cb 0x48) - no retail tie yet
+type_university* std::vector<type_university,std::allocator<type_university> >::erase(type_university* __first, type_university* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xc3940, cb 0xC) - no retail tie yet
+type_creature_bank* std::vector<type_creature_bank,std::allocator<type_creature_bank> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xc394c, cb 0x28) - no retail tie yet
+void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::insert(type_creature_bank* __pos, unsigned __n, const type_creature_bank* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xc3974, cb 0x48) - no retail tie yet
+type_creature_bank* std::vector<type_creature_bank,std::allocator<type_creature_bank> >::erase(type_creature_bank* __first, type_creature_bank* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc39bc, cb 0x3C) - no retail tie yet
+CObjectType* std::uninitialized_copy(CObjectType* __first, CObjectType* __last, CObjectType* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc39f8, cb 0x3C) - no retail tie yet
+CObjectType* std::uninitialized_fill_n(CObjectType* __first, unsigned __n, const CObjectType* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc3a34, cb 0x30) - no retail tie yet
+void std::destroy(CObjectType* __first, CObjectType* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc3a64, cb 0x3C) - no retail tie yet
+CObject* std::uninitialized_copy(CObject* __first, CObject* __last, CObject* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc3aa0, cb 0x3C) - no retail tie yet
+CObject* std::uninitialized_fill_n(CObject* __first, unsigned __n, const CObject* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc3adc, cb 0x30) - no retail tie yet
+void std::destroy(CObject* __first, CObject* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc3b0c, cb 0x3C) - no retail tie yet
+CSprite** std::uninitialized_copy(CSprite** __first, CSprite** __last, CSprite** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc3b48, cb 0x3C) - no retail tie yet
+CSprite** std::uninitialized_fill_n(CSprite** __first, unsigned __n, CSprite** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xc3b84, cb 0x30) - no retail tie yet
+void std::destroy(CSprite** __first, CSprite** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc3bb4, cb 0x154) - no retail tie yet
+void std::vector<type_point,std::allocator<type_point> >::_M_fill_insert(type_point* __position, unsigned __n, const type_point* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc3d08, cb 0x3C) - no retail tie yet
+type_point* std::uninitialized_copy(type_point* __first, type_point* __last, type_point* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc3d44, cb 0x3C) - no retail tie yet
+type_point* std::uninitialized_fill_n(type_point* __first, unsigned __n, const type_point* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc3d80, cb 0x3C) - no retail tie yet
+TBlackMarket* std::uninitialized_copy(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc3dbc, cb 0x3C) - no retail tie yet
+TBlackMarket* std::uninitialized_fill_n(TBlackMarket* __first, unsigned __n, const TBlackMarket* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc3df8, cb 0x58) - no retail tie yet
+TBlackMarket* std::copy_backward(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc3e50, cb 0xE0) - no retail tie yet
+void std::fill(TBlackMarket* __first, TBlackMarket* __last, const TBlackMarket* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc3f30, cb 0x134) - no retail tie yet
+void std::vector<town,std::allocator<town> >::_M_insert_overflow(town* __position, const town* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc4064, cb 0x3C) - no retail tie yet
+town* std::uninitialized_copy(town* __first, town* __last, town* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc40a0, cb 0x58) - no retail tie yet
+town* std::copy_backward(town* __first, town* __last, town* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc40f8, cb 0x11E) - no retail tie yet
+void std::fill(town* __first, town* __last, const town* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc4218, cb 0x3C) - no retail tie yet
+town* std::uninitialized_fill_n(town* __first, unsigned __n, const town* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc4254, cb 0x120) - no retail tie yet
+void std::vector<Sign,std::allocator<Sign> >::_M_insert_overflow(Sign* __position, const Sign* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc4374, cb 0x3C) - no retail tie yet
+Sign* std::uninitialized_copy(Sign* __first, Sign* __last, Sign* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc43b0, cb 0x58) - no retail tie yet
+Sign* std::copy_backward(Sign* __first, Sign* __last, Sign* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc4408, cb 0x38) - no retail tie yet
+void std::fill(Sign* __first, Sign* __last, const Sign* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc4440, cb 0x3C) - no retail tie yet
+Sign* std::uninitialized_fill_n(Sign* __first, unsigned __n, const Sign* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc447c, cb 0x130) - no retail tie yet
+void std::vector<mine,std::allocator<mine> >::_M_insert_overflow(mine* __position, const mine* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc45ac, cb 0x3C) - no retail tie yet
+mine* std::uninitialized_copy(mine* __first, mine* __last, mine* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc45e8, cb 0x58) - no retail tie yet
+mine* std::copy_backward(mine* __first, mine* __last, mine* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc4640, cb 0x46) - no retail tie yet
+void std::fill(mine* __first, mine* __last, const mine* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc4688, cb 0x3C) - no retail tie yet
+mine* std::uninitialized_fill_n(mine* __first, unsigned __n, const mine* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc46c4, cb 0x120) - no retail tie yet
+void std::vector<garrison,std::allocator<garrison> >::_M_insert_overflow(garrison* __position, const garrison* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc47e4, cb 0x3C) - no retail tie yet
+garrison* std::uninitialized_copy(garrison* __first, garrison* __last, garrison* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc4820, cb 0x58) - no retail tie yet
+garrison* std::copy_backward(garrison* __first, garrison* __last, garrison* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc4878, cb 0xBE) - no retail tie yet
+void std::fill(garrison* __first, garrison* __last, const garrison* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc4938, cb 0x3C) - no retail tie yet
+garrison* std::uninitialized_fill_n(garrison* __first, unsigned __n, const garrison* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc4974, cb 0x3C) - no retail tie yet
+boat* std::uninitialized_copy(boat* __first, boat* __last, boat* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc49b0, cb 0x3C) - no retail tie yet
+boat* std::uninitialized_fill_n(boat* __first, unsigned __n, const boat* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc49ec, cb 0x58) - no retail tie yet
+boat* std::copy_backward(boat* __first, boat* __last, boat* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc4a44, cb 0x82) - no retail tie yet
+void std::fill(boat* __first, boat* __last, const boat* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc4ac8, cb 0x16C) - no retail tie yet
+void std::vector<type_university,std::allocator<type_university> >::_M_fill_insert(type_university* __position, unsigned __n, const type_university* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc4c34, cb 0x3C) - no retail tie yet
+type_university* std::uninitialized_copy(type_university* __first, type_university* __last, type_university* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc4c70, cb 0x3C) - no retail tie yet
+type_university* std::uninitialized_fill_n(type_university* __first, unsigned __n, const type_university* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc4cac, cb 0x194) - no retail tie yet
+void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::_M_fill_insert(type_creature_bank* __position, unsigned __n, const type_creature_bank* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc4e40, cb 0x3C) - no retail tie yet
+type_creature_bank* std::uninitialized_copy(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc4e7c, cb 0x3C) - no retail tie yet
+type_creature_bank* std::uninitialized_fill_n(type_creature_bank* __first, unsigned __n, const type_creature_bank* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc4eb8, cb 0x120) - no retail tie yet
+void std::vector<game::TRumour,std::allocator<game::TRumour> >::_M_insert_overflow(game::TRumour* __position, const game::TRumour* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc4fd8, cb 0x3C) - no retail tie yet
+game::TRumour* std::uninitialized_copy(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc5014, cb 0x58) - no retail tie yet
+game::TRumour* std::copy_backward(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc506c, cb 0x38) - no retail tie yet
+void std::fill(game::TRumour* __first, game::TRumour* __last, const game::TRumour* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc50a4, cb 0x3C) - no retail tie yet
+game::TRumour* std::uninitialized_fill_n(game::TRumour* __first, unsigned __n, const game::TRumour* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc50e0, cb 0x138) - no retail tie yet
+void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::_M_fill_insert(TArtifact* __position, unsigned __n, const TArtifact* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xc5218, cb 0x25C) - no retail tie yet
+void std::vector<generator,std::allocator<generator> >::_M_fill_insert(generator* __position, unsigned __n, const generator* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc5474, cb 0x3C) - no retail tie yet
+hero* std::uninitialized_copy(hero* __first, hero* __last, hero* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc54b0, cb 0x3C) - no retail tie yet
+hero* std::uninitialized_fill_n(hero* __first, unsigned __n, const hero* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc54ec, cb 0x8) - no retail tie yet
+type_point* std::value_type(const type_point* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc54f4, cb 0x24) - no retail tie yet
+void std::__destroy(type_point* __first, type_point* __last, type_point* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc5518, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_point* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc552c, cb 0x8) - no retail tie yet
+int* std::distance_type(const type_point* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc5534, cb 0x60) - no retail tie yet
+type_point* std::__copy(type_point* __first, type_point* __last, type_point* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc5594, cb 0x8) - no retail tie yet
+void std::__destroy_aux(type_point* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc559c, cb 0x8) - no retail tie yet
+TownExtra* std::value_type(const TownExtra* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc55a4, cb 0x24) - no retail tie yet
+void std::__destroy(TownExtra* __first, TownExtra* __last, TownExtra* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc55c8, cb 0x8) - no retail tie yet
+TBlackMarket* std::value_type(const TBlackMarket* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc55d0, cb 0x24) - no retail tie yet
+void std::__destroy(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc55f4, cb 0x8) - no retail tie yet
+town* std::value_type(const town* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc55fc, cb 0x24) - no retail tie yet
+void std::__destroy(town* __first, town* __last, town* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc5620, cb 0x8) - no retail tie yet
+Sign* std::value_type(const Sign* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc5628, cb 0x24) - no retail tie yet
+void std::__destroy(Sign* __first, Sign* __last, Sign* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc564c, cb 0x8) - no retail tie yet
+mine* std::value_type(const mine* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc5654, cb 0x24) - no retail tie yet
+void std::__destroy(mine* __first, mine* __last, mine* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc5678, cb 0x8) - no retail tie yet
+generator* std::value_type(const generator* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc5680, cb 0x24) - no retail tie yet
+void std::__destroy(generator* __first, generator* __last, generator* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc56a4, cb 0x8) - no retail tie yet
+garrison* std::value_type(const garrison* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc56ac, cb 0x24) - no retail tie yet
+void std::__destroy(garrison* __first, garrison* __last, garrison* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc56d0, cb 0x8) - no retail tie yet
+boat* std::value_type(const boat* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc56d8, cb 0x24) - no retail tie yet
+void std::__destroy(boat* __first, boat* __last, boat* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc56fc, cb 0x8) - no retail tie yet
+type_university* std::value_type(const type_university* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc5704, cb 0x24) - no retail tie yet
+void std::__destroy(type_university* __first, type_university* __last, type_university* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc5728, cb 0x8) - no retail tie yet
+type_creature_bank* std::value_type(const type_creature_bank* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc5730, cb 0x24) - no retail tie yet
+void std::__destroy(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc5754, cb 0x8) - no retail tie yet
+game::TRumour* std::value_type(const game::TRumour* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc575c, cb 0x24) - no retail tie yet
+void std::__destroy(game::TRumour* __first, game::TRumour* __last, game::TRumour* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc5780, cb 0x8) - no retail tie yet
+hero* std::value_type(const hero* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc5788, cb 0x24) - no retail tie yet
+void std::__destroy(hero* __first, hero* __last, hero* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc57ac, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TBlackMarket* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc57c0, cb 0x8) - no retail tie yet
+int* std::distance_type(const TBlackMarket* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc57c8, cb 0x110) - no retail tie yet
+TBlackMarket* std::__copy(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc58d8, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const town* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc58ec, cb 0x8) - no retail tie yet
+int* std::distance_type(const town* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc58f4, cb 0x15C) - no retail tie yet
+town* std::__copy(town* __first, town* __last, town* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc5a50, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const Sign* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc5a64, cb 0x8) - no retail tie yet
+int* std::distance_type(const Sign* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc5a6c, cb 0x54) - no retail tie yet
+Sign* std::__copy(Sign* __first, Sign* __last, Sign* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc5ac0, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const mine* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc5ad4, cb 0x8) - no retail tie yet
+int* std::distance_type(const mine* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc5adc, cb 0x74) - no retail tie yet
+mine* std::__copy(mine* __first, mine* __last, mine* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc5b50, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const garrison* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc5b64, cb 0x8) - no retail tie yet
+int* std::distance_type(const garrison* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc5b6c, cb 0xE0) - no retail tie yet
+garrison* std::__copy(garrison* __first, garrison* __last, garrison* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc5c4c, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const boat* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc5c60, cb 0x8) - no retail tie yet
+int* std::distance_type(const boat* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc5c68, cb 0xBC) - no retail tie yet
+boat* std::__copy(boat* __first, boat* __last, boat* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc5d24, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const game::TRumour* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc5d38, cb 0x8) - no retail tie yet
+int* std::distance_type(const game::TRumour* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc5d40, cb 0x54) - no retail tie yet
+game::TRumour* std::__copy(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc5d94, cb 0x3C) - no retail tie yet
+TArtifact* std::uninitialized_copy(const TArtifact* __first, const TArtifact* __last, TArtifact* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc5dd0, cb 0xA) - no retail tie yet
+std::allocator<CObjectType>* std::__stl_alloc_rebind(std::allocator<CObjectType>* __a, const CObjectType* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc5ddc, cb 0xA) - no retail tie yet
+std::allocator<CObject>* std::__stl_alloc_rebind(std::allocator<CObject>* __a, const CObject* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xc5de8, cb 0xA) - no retail tie yet
+std::allocator<CSprite* std::__stl_alloc_rebind(std::allocator<CSprite* __a, CSprite** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc5df4, cb 0x58) - no retail tie yet
+TArtifact* std::copy(TArtifact* __first, TArtifact* __last, TArtifact* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc5e4c, cb 0x58) - no retail tie yet
+generator* std::copy(generator* __first, generator* __last, generator* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc5ea4, cb 0x58) - no retail tie yet
+type_university* std::copy(type_university* __first, type_university* __last, type_university* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc5efc, cb 0x58) - no retail tie yet
+type_creature_bank* std::copy(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:326
+// DC_ONLY(0xc5f54, cb 0x38) - no retail tie yet
+Sign* Sign::operator=(const Sign* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:326
+// DC_ONLY(0xc5f8c, cb 0x38) - no retail tie yet
+game::TRumour* game::TRumour::operator=(const game::TRumour* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc5fc4, cb 0x38) - no retail tie yet
+town* std::_STL_alloc_proxy<town *,town,std::allocator<town> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc5ffc, cb 0x38) - no retail tie yet
+Sign* std::_STL_alloc_proxy<Sign *,Sign,std::allocator<Sign> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc6034, cb 0x38) - no retail tie yet
+mine* std::_STL_alloc_proxy<mine *,mine,std::allocator<mine> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc606c, cb 0x38) - no retail tie yet
+garrison* std::_STL_alloc_proxy<garrison *,garrison,std::allocator<garrison> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc60a4, cb 0x38) - no retail tie yet
+game::TRumour* std::_STL_alloc_proxy<game::TRumour *,game::TRumour,std::allocator<game::TRumour> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc60dc, cb 0x40) - no retail tie yet
+town* std::allocator<town>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc611c, cb 0x3C) - no retail tie yet
+Sign* std::allocator<Sign>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc6158, cb 0x3C) - no retail tie yet
+mine* std::allocator<mine>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc6194, cb 0x3C) - no retail tie yet
+garrison* std::allocator<garrison>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc61d0, cb 0x3C) - no retail tie yet
+game::TRumour* std::allocator<game::TRumour>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc620c, cb 0x8) - no retail tie yet
+CObjectType* std::value_type(const CObjectType* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc6214, cb 0x30) - no retail tie yet
+CObjectType* std::__uninitialized_copy(CObjectType* __first, CObjectType* __last, CObjectType* __result, CObjectType* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc6244, cb 0x30) - no retail tie yet
+CObjectType* std::__uninitialized_fill_n(CObjectType* __first, unsigned __n, const CObjectType* __x, CObjectType* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc6274, cb 0x24) - no retail tie yet
+void std::__destroy(CObjectType* __first, CObjectType* __last, CObjectType* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc6298, cb 0x8) - no retail tie yet
+CObject* std::value_type(const CObject* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc62a0, cb 0x30) - no retail tie yet
+CObject* std::__uninitialized_copy(CObject* __first, CObject* __last, CObject* __result, CObject* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc62d0, cb 0x30) - no retail tie yet
+CObject* std::__uninitialized_fill_n(CObject* __first, unsigned __n, const CObject* __x, CObject* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc6300, cb 0x24) - no retail tie yet
+void std::__destroy(CObject* __first, CObject* __last, CObject* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xc6324, cb 0x8) - no retail tie yet
+CSprite** std::value_type(CSprite** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc632c, cb 0x30) - no retail tie yet
+CSprite** std::__uninitialized_copy(CSprite** __first, CSprite** __last, CSprite** __result, CSprite** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc635c, cb 0x30) - no retail tie yet
+CSprite** std::__uninitialized_fill_n(CSprite** __first, unsigned __n, CSprite** __x, CSprite** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xc638c, cb 0x24) - no retail tie yet
+void std::__destroy(CSprite** __first, CSprite** __last, CSprite** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc63b0, cb 0x58) - no retail tie yet
+type_point* std::copy_backward(type_point* __first, type_point* __last, type_point* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc6408, cb 0x44) - no retail tie yet
+void std::fill(type_point* __first, type_point* __last, const type_point* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc644c, cb 0x30) - no retail tie yet
+type_point* std::__uninitialized_copy(type_point* __first, type_point* __last, type_point* __result, type_point* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc647c, cb 0x30) - no retail tie yet
+type_point* std::__uninitialized_fill_n(type_point* __first, unsigned __n, const type_point* __x, type_point* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc64ac, cb 0x30) - no retail tie yet
+TBlackMarket* std::__uninitialized_copy(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result, TBlackMarket* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc64dc, cb 0x30) - no retail tie yet
+TBlackMarket* std::__uninitialized_fill_n(TBlackMarket* __first, unsigned __n, const TBlackMarket* __x, TBlackMarket* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc650c, cb 0x10C) - no retail tie yet
+TBlackMarket* std::__copy_backward(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc6618, cb 0x134) - no retail tie yet
+void std::construct(town* __p, const town* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc674c, cb 0x30) - no retail tie yet
+town* std::__uninitialized_copy(town* __first, town* __last, town* __result, town* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc677c, cb 0x158) - no retail tie yet
+town* std::__copy_backward(town* __first, town* __last, town* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc68d4, cb 0x30) - no retail tie yet
+town* std::__uninitialized_fill_n(town* __first, unsigned __n, const town* __x, town* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc6904, cb 0x44) - no retail tie yet
+void std::construct(Sign* __p, const Sign* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc6948, cb 0x30) - no retail tie yet
+Sign* std::__uninitialized_copy(Sign* __first, Sign* __last, Sign* __result, Sign* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc6978, cb 0x54) - no retail tie yet
+Sign* std::__copy_backward(Sign* __first, Sign* __last, Sign* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc69cc, cb 0x30) - no retail tie yet
+Sign* std::__uninitialized_fill_n(Sign* __first, unsigned __n, const Sign* __x, Sign* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc69fc, cb 0x58) - no retail tie yet
+void std::construct(mine* __p, const mine* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc6a54, cb 0x30) - no retail tie yet
+mine* std::__uninitialized_copy(mine* __first, mine* __last, mine* __result, mine* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc6a84, cb 0x70) - no retail tie yet
+mine* std::__copy_backward(mine* __first, mine* __last, mine* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc6af4, cb 0x30) - no retail tie yet
+mine* std::__uninitialized_fill_n(mine* __first, unsigned __n, const mine* __x, mine* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc6b24, cb 0xD4) - no retail tie yet
+void std::construct(garrison* __p, const garrison* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc6bf8, cb 0x30) - no retail tie yet
+garrison* std::__uninitialized_copy(garrison* __first, garrison* __last, garrison* __result, garrison* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc6c28, cb 0xD4) - no retail tie yet
+garrison* std::__copy_backward(garrison* __first, garrison* __last, garrison* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc6cfc, cb 0x30) - no retail tie yet
+garrison* std::__uninitialized_fill_n(garrison* __first, unsigned __n, const garrison* __x, garrison* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc6d2c, cb 0x30) - no retail tie yet
+boat* std::__uninitialized_copy(boat* __first, boat* __last, boat* __result, boat* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc6d5c, cb 0x30) - no retail tie yet
+boat* std::__uninitialized_fill_n(boat* __first, unsigned __n, const boat* __x, boat* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc6d8c, cb 0xB0) - no retail tie yet
+boat* std::__copy_backward(boat* __first, boat* __last, boat* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc6e3c, cb 0x58) - no retail tie yet
+type_university* std::copy_backward(type_university* __first, type_university* __last, type_university* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc6e94, cb 0x52) - no retail tie yet
+void std::fill(type_university* __first, type_university* __last, const type_university* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc6ee8, cb 0x30) - no retail tie yet
+type_university* std::__uninitialized_copy(type_university* __first, type_university* __last, type_university* __result, type_university* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc6f18, cb 0x30) - no retail tie yet
+type_university* std::__uninitialized_fill_n(type_university* __first, unsigned __n, const type_university* __x, type_university* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc6f48, cb 0x58) - no retail tie yet
+type_creature_bank* std::copy_backward(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc6fa0, cb 0x38) - no retail tie yet
+void std::fill(type_creature_bank* __first, type_creature_bank* __last, const type_creature_bank* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc6fd8, cb 0x30) - no retail tie yet
+type_creature_bank* std::__uninitialized_copy(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result, type_creature_bank* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc7008, cb 0x30) - no retail tie yet
+type_creature_bank* std::__uninitialized_fill_n(type_creature_bank* __first, unsigned __n, const type_creature_bank* __x, type_creature_bank* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc7038, cb 0x44) - no retail tie yet
+void std::construct(game::TRumour* __p, const game::TRumour* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc707c, cb 0x30) - no retail tie yet
+game::TRumour* std::__uninitialized_copy(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result, game::TRumour* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc70ac, cb 0x54) - no retail tie yet
+game::TRumour* std::__copy_backward(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc7100, cb 0x30) - no retail tie yet
+game::TRumour* std::__uninitialized_fill_n(game::TRumour* __first, unsigned __n, const game::TRumour* __x, game::TRumour* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc7130, cb 0x58) - no retail tie yet
+TArtifact* std::copy_backward(TArtifact* __first, TArtifact* __last, TArtifact* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc7188, cb 0x28) - no retail tie yet
+void std::fill(TArtifact* __first, TArtifact* __last, const TArtifact* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xc71b0, cb 0x130) - no retail tie yet
+void std::vector<generator,std::allocator<generator> >::_M_insert_overflow(generator* __position, const generator* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xc72e0, cb 0x3C) - no retail tie yet
+generator* std::uninitialized_copy(generator* __first, generator* __last, generator* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xc731c, cb 0x58) - no retail tie yet
+generator* std::copy_backward(generator* __first, generator* __last, generator* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xc7374, cb 0xF8) - no retail tie yet
+void std::fill(generator* __first, generator* __last, const generator* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xc746c, cb 0x3C) - no retail tie yet
+generator* std::uninitialized_fill_n(generator* __first, unsigned __n, const generator* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc74a8, cb 0x30) - no retail tie yet
+hero* std::__uninitialized_copy(hero* __first, hero* __last, hero* __result, hero* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc74d8, cb 0x30) - no retail tie yet
+hero* std::__uninitialized_fill_n(hero* __first, unsigned __n, const hero* __x, hero* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc7508, cb 0x34) - no retail tie yet
+void std::__destroy_aux(type_point* __first, type_point* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc753c, cb 0x34) - no retail tie yet
+void std::__destroy_aux(TownExtra* __first, TownExtra* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc7570, cb 0x34) - no retail tie yet
+void std::__destroy_aux(TBlackMarket* __first, TBlackMarket* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc75a4, cb 0x38) - no retail tie yet
+void std::__destroy_aux(town* __first, town* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc75dc, cb 0x34) - no retail tie yet
+void std::__destroy_aux(Sign* __first, Sign* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc7610, cb 0x34) - no retail tie yet
+void std::__destroy_aux(mine* __first, mine* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc7644, cb 0x34) - no retail tie yet
+void std::__destroy_aux(generator* __first, generator* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc7678, cb 0x34) - no retail tie yet
+void std::__destroy_aux(garrison* __first, garrison* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc76ac, cb 0x34) - no retail tie yet
+void std::__destroy_aux(boat* __first, boat* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc76e0, cb 0x34) - no retail tie yet
+void std::__destroy_aux(type_university* __first, type_university* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc7714, cb 0x34) - no retail tie yet
+void std::__destroy_aux(type_creature_bank* __first, type_creature_bank* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc7748, cb 0x34) - no retail tie yet
+void std::__destroy_aux(game::TRumour* __first, game::TRumour* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc777c, cb 0x38) - no retail tie yet
+void std::__destroy_aux(hero* __first, hero* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc77b4, cb 0x30) - no retail tie yet
+TArtifact* std::__uninitialized_copy(const TArtifact* __first, const TArtifact* __last, TArtifact* __result, TArtifact* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc77e4, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TArtifact* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc77f8, cb 0x8) - no retail tie yet
+int* std::distance_type(const TArtifact* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc7800, cb 0x40) - no retail tie yet
+TArtifact* std::__copy(TArtifact* __first, TArtifact* __last, TArtifact* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc7840, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const generator* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc7854, cb 0x8) - no retail tie yet
+int* std::distance_type(const generator* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc785c, cb 0x138) - no retail tie yet
+generator* std::__copy(generator* __first, generator* __last, generator* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc7994, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_university* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc79a8, cb 0x8) - no retail tie yet
+int* std::distance_type(const type_university* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc79b0, cb 0x6C) - no retail tie yet
+type_university* std::__copy(type_university* __first, type_university* __last, type_university* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xc7a1c, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const type_creature_bank* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xc7a30, cb 0x8) - no retail tie yet
+int* std::distance_type(const type_creature_bank* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc7a38, cb 0x60) - no retail tie yet
+type_creature_bank* std::__copy(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:739
+// DC_ONLY(0xc7a98, cb 0x100) - no retail tie yet
+type_creature_bank* type_creature_bank::operator=(const type_creature_bank* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xc7b98, cb 0x38) - no retail tie yet
+generator* std::_STL_alloc_proxy<generator *,generator,std::allocator<generator> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xc7bd0, cb 0x3C) - no retail tie yet
+generator* std::allocator<generator>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc7c0c, cb 0x44) - no retail tie yet
+CObjectType* std::__uninitialized_copy_aux(CObjectType* __first, CObjectType* __last, CObjectType* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc7c50, cb 0x44) - no retail tie yet
+CObjectType* std::__uninitialized_fill_n_aux(CObjectType* __first, unsigned __n, const CObjectType* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc7c94, cb 0x34) - no retail tie yet
+void std::__destroy_aux(CObjectType* __first, CObjectType* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc7cc8, cb 0x44) - no retail tie yet
+CObject* std::__uninitialized_copy_aux(CObject* __first, CObject* __last, CObject* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc7d0c, cb 0x44) - no retail tie yet
+CObject* std::__uninitialized_fill_n_aux(CObject* __first, unsigned __n, const CObject* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc7d50, cb 0x34) - no retail tie yet
+void std::__destroy_aux(CObject* __first, CObject* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc7d84, cb 0x44) - no retail tie yet
+CSprite** std::__uninitialized_copy_aux(CSprite** __first, CSprite** __last, CSprite** __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc7dc8, cb 0x44) - no retail tie yet
+CSprite** std::__uninitialized_fill_n_aux(CSprite** __first, unsigned __n, CSprite** __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xc7e0c, cb 0x34) - no retail tie yet
+void std::__destroy_aux(CSprite** __first, CSprite** __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc7e40, cb 0x5E) - no retail tie yet
+type_point* std::__copy_backward(type_point* __first, type_point* __last, type_point* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc7ea0, cb 0x44) - no retail tie yet
+type_point* std::__uninitialized_copy_aux(type_point* __first, type_point* __last, type_point* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc7ee4, cb 0x44) - no retail tie yet
+type_point* std::__uninitialized_fill_n_aux(type_point* __first, unsigned __n, const type_point* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc7f28, cb 0x44) - no retail tie yet
+TBlackMarket* std::__uninitialized_copy_aux(TBlackMarket* __first, TBlackMarket* __last, TBlackMarket* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc7f6c, cb 0x44) - no retail tie yet
+TBlackMarket* std::__uninitialized_fill_n_aux(TBlackMarket* __first, unsigned __n, const TBlackMarket* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc7fb0, cb 0x4C) - no retail tie yet
+town* std::__uninitialized_copy_aux(town* __first, town* __last, town* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc7ffc, cb 0x48) - no retail tie yet
+town* std::__uninitialized_fill_n_aux(town* __first, unsigned __n, const town* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc8044, cb 0x44) - no retail tie yet
+Sign* std::__uninitialized_copy_aux(Sign* __first, Sign* __last, Sign* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc8088, cb 0x44) - no retail tie yet
+Sign* std::__uninitialized_fill_n_aux(Sign* __first, unsigned __n, const Sign* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc80cc, cb 0x44) - no retail tie yet
+mine* std::__uninitialized_copy_aux(mine* __first, mine* __last, mine* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc8110, cb 0x44) - no retail tie yet
+mine* std::__uninitialized_fill_n_aux(mine* __first, unsigned __n, const mine* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc8154, cb 0x44) - no retail tie yet
+garrison* std::__uninitialized_copy_aux(garrison* __first, garrison* __last, garrison* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc8198, cb 0x44) - no retail tie yet
+garrison* std::__uninitialized_fill_n_aux(garrison* __first, unsigned __n, const garrison* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc81dc, cb 0x44) - no retail tie yet
+boat* std::__uninitialized_copy_aux(boat* __first, boat* __last, boat* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc8220, cb 0x44) - no retail tie yet
+boat* std::__uninitialized_fill_n_aux(boat* __first, unsigned __n, const boat* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc8264, cb 0x66) - no retail tie yet
+type_university* std::__copy_backward(type_university* __first, type_university* __last, type_university* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc82cc, cb 0x44) - no retail tie yet
+type_university* std::__uninitialized_copy_aux(type_university* __first, type_university* __last, type_university* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc8310, cb 0x44) - no retail tie yet
+type_university* std::__uninitialized_fill_n_aux(type_university* __first, unsigned __n, const type_university* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc8354, cb 0x60) - no retail tie yet
+type_creature_bank* std::__copy_backward(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc83b4, cb 0x44) - no retail tie yet
+type_creature_bank* std::__uninitialized_copy_aux(type_creature_bank* __first, type_creature_bank* __last, type_creature_bank* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc83f8, cb 0x44) - no retail tie yet
+type_creature_bank* std::__uninitialized_fill_n_aux(type_creature_bank* __first, unsigned __n, const type_creature_bank* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc843c, cb 0x44) - no retail tie yet
+game::TRumour* std::__uninitialized_copy_aux(game::TRumour* __first, game::TRumour* __last, game::TRumour* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc8480, cb 0x44) - no retail tie yet
+game::TRumour* std::__uninitialized_fill_n_aux(game::TRumour* __first, unsigned __n, const game::TRumour* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:207
+// DC_ONLY(0xc84c4, cb 0x164) - no retail tie yet
+std::vector<enum* std::vector<enum TArtifact,std::allocator<enum TArtifact> >::operator=(const std::vector<enum* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc8628, cb 0x40) - no retail tie yet
+TArtifact* std::__copy_backward(TArtifact* __first, TArtifact* __last, TArtifact* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xc8668, cb 0x110) - no retail tie yet
+void std::construct(generator* __p, const generator* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xc8778, cb 0x30) - no retail tie yet
+generator* std::__uninitialized_copy(generator* __first, generator* __last, generator* __result, generator* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xc87a8, cb 0x128) - no retail tie yet
+generator* std::__copy_backward(generator* __first, generator* __last, generator* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xc88d0, cb 0x30) - no retail tie yet
+generator* std::__uninitialized_fill_n(generator* __first, unsigned __n, const generator* __x, generator* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc8900, cb 0x4C) - no retail tie yet
+hero* std::__uninitialized_copy_aux(hero* __first, hero* __last, hero* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc894c, cb 0x48) - no retail tie yet
+hero* std::__uninitialized_fill_n_aux(hero* __first, unsigned __n, const hero* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8994, cb 0x20) - no retail tie yet
+void std::destroy(TownExtra* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc89b4, cb 0x20) - no retail tie yet
+void std::destroy(TBlackMarket* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc89d4, cb 0x20) - no retail tie yet
+void std::destroy(town* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc89f4, cb 0x20) - no retail tie yet
+void std::destroy(Sign* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8a14, cb 0x20) - no retail tie yet
+void std::destroy(mine* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8a34, cb 0x20) - no retail tie yet
+void std::destroy(generator* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8a54, cb 0x20) - no retail tie yet
+void std::destroy(garrison* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8a74, cb 0x20) - no retail tie yet
+void std::destroy(boat* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8a94, cb 0x20) - no retail tie yet
+void std::destroy(type_university* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8ab4, cb 0x20) - no retail tie yet
+void std::destroy(type_creature_bank* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8ad4, cb 0x20) - no retail tie yet
+void std::destroy(game::TRumour* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8af4, cb 0x20) - no retail tie yet
+void std::destroy(hero* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc8b14, cb 0x44) - no retail tie yet
+TArtifact* std::__uninitialized_copy_aux(const TArtifact* __first, const TArtifact* __last, TArtifact* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:199
+// DC_ONLY(0xc8b58, cb 0x16) - no retail tie yet
+unsigned std::vector<enum TArtifact,std::allocator<enum TArtifact> >::capacity()
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8b70, cb 0x20) - no retail tie yet
+void std::destroy(CObjectType* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8b90, cb 0x20) - no retail tie yet
+void std::destroy(CObject* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xc8bb0, cb 0x20) - no retail tie yet
+void std::destroy(CSprite** __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:514
+// DC_ONLY(0xc8bd0, cb 0x40) - no retail tie yet
+std::vector<enum TArtifact,std::allocator<enum TArtifact> >::_M_allocate_and_copy(unsigned __n, const TArtifact* __first, const TArtifact* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xc8c10, cb 0x58) - no retail tie yet
+TArtifact* std::copy(const TArtifact* __first, const TArtifact* __last, TArtifact* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xc8c68, cb 0x44) - no retail tie yet
+generator* std::__uninitialized_copy_aux(generator* __first, generator* __last, generator* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xc8cac, cb 0x44) - no retail tie yet
+generator* std::__uninitialized_fill_n_aux(generator* __first, unsigned __n, const generator* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8cf0, cb 0x8) - no retail tie yet
+void std::__destroy_aux(TownExtra* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8cf8, cb 0x8) - no retail tie yet
+void std::__destroy_aux(TBlackMarket* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8d00, cb 0x8) - no retail tie yet
+void std::__destroy_aux(town* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8d08, cb 0x20) - no retail tie yet
+void std::__destroy_aux(Sign* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8d28, cb 0x8) - no retail tie yet
+void std::__destroy_aux(mine* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8d30, cb 0x8) - no retail tie yet
+void std::__destroy_aux(generator* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8d38, cb 0x8) - no retail tie yet
+void std::__destroy_aux(garrison* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8d40, cb 0x8) - no retail tie yet
+void std::__destroy_aux(boat* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8d48, cb 0x8) - no retail tie yet
+void std::__destroy_aux(type_university* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8d50, cb 0x20) - no retail tie yet
+void std::__destroy_aux(type_creature_bank* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8d70, cb 0x20) - no retail tie yet
+void std::__destroy_aux(game::TRumour* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8d90, cb 0x8) - no retail tie yet
+void std::__destroy_aux(hero* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:609
+// DC_ONLY(0xc8d98, cb 0x38) - no retail tie yet
+void* Sign::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:609
+// DC_ONLY(0xc8dd0, cb 0x38) - no retail tie yet
+void* type_creature_bank::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:609
+// DC_ONLY(0xc8e08, cb 0x38) - no retail tie yet
+void* game::TRumour::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8e40, cb 0x20) - no retail tie yet
+void std::__destroy_aux(CObjectType* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8e60, cb 0x8) - no retail tie yet
+void std::__destroy_aux(CObject* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xc8e68, cb 0x8) - no retail tie yet
+void std::__destroy_aux(CSprite** __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xc8e70, cb 0x40) - no retail tie yet
+TArtifact* std::__copy(const TArtifact* __first, const TArtifact* __last, TArtifact* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:706
+// DC_ONLY(0xc8eb0, cb 0x38) - no retail tie yet
+void* CObjectType::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:706
+// DC_ONLY(0xc8ee8, cb 0x1C) - no retail tie yet
+void CObjectType::~CObjectType()
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x004b8af0 size  1395  game_167a0_sub02_b8af0 [caller]
+//   0x004b9070 size   435  game_bcda0_sub07_b9070 [caller]
+//   0x004b9230 size    62  game_5bcd0_sub03_b9230 [caller]
+//   0x004b9270 size   207  game_be3f0_sub02_b9270 [caller]
+//   0x004b9340 size   576  game_bcda0_sub08_b9340 [caller]
+//   0x004b9580 size   357  game_be3f0_sub03_b9580 [caller]
+//   0x004b96f0 size   459  game_bcda0_sub09_b96f0 [caller]
+//   0x004b98c0 size   313  game_be3f0_sub04_b98c0 [caller]
+//   0x004b9a00 size   569  game_bcda0_sub10_b9a00 [caller]
+//   0x004b9c40 size   429  game_be3f0_sub05_b9c40 [caller]
+//   0x004ba1c0 size    80  game_1021c0_sub00_ba1c0 [caller]
+//   0x004ba210 size    80  game_1bcd60_sub00_ba210 [caller]
+//   0x004bacb0 size   202  playerData_hasGivenArtifact [hd-crossbuild]
+//   0x004bb990 size   463  game_b9070_sub00_bb990 [caller]
+//   0x004bbb60 size   187  game_b9270_sub00_bbb60 [caller]
+//   0x004bbc20 size   542  game_be3f0_sub07_bbc20 [caller]
+//   0x004bbe40 size   660  game_bcda0_sub12_bbe40 [caller]
+//   0x004bc0e0 size   593  SavedGameHeader_SavedGameHeader [hd-crossbuild]
+//   0x004bc340 size    14  VictoryConditionStruct_VictoryConditionStruct [hd-crossbuild]
+//   0x004bc350 size   625  game_h3svc_bc350 [string]
+//   0x004bc5d0 size   378  game_be3f0_sub09_bc5d0 [caller]
+//   0x004bc750 size   981  game_games_bc750 [string]
+//   0x004bcb30 size   620  game_bcda0_sub14_bcb30 [caller]
+//   0x004bcda0 size  3778  game_h3svg_bcda0 [string]
+//   0x004bdc70 size   777  game_bcda0_sub15_bdc70 [caller]
+//   0x004bdf80 size   433  SavedGameHeader_SavedGameHeader_bdf80 [hd-crossbuild]
+//   0x004be140 size   286  game_bc5d0_sub01_be140 [caller]
+//   0x004be260 size   392  game_maps_be260 [string]
+//   0x004be3f0 size  2725  game_h3svg_be3f0 [string]
+//   0x004beea0 size   615  calls_timeGetTime_beea0 [import-wrapper]
+//   0x004bf107 size   122  game_bf107 [band]
+//   0x004bf1a0 size   387  game_590c0_sub21_bf1a0 [caller]
+//   0x004bf330 size   571  game_data_bf330 [string]
+//   0x004bf570 size   515  game_c8780_sub00_bf570 [caller]
+//   0x004bf780 size  1762  game_bfe70_sub03_bf780 [caller]
+//   0x004bfe70 size  1704  game_884c0_sub00_bfe70 [caller]
+//   0x004c0520 size   235  game_ee3e0_sub08_c0520 [caller]
+//   0x004c060b size     6  game_c060b [band]
+//   0x004c0630 size   177  game_884c0_sub01_c0630 [caller]
+//   0x004c06f0 size   377  game_c0cc0_sub01_c06f0 [caller]
+//   0x004c0870 size   554  game_bfe70_sub04_c0870 [caller]
+//   0x004c0aa0 size   190  game_bfe70_sub05_c0aa0 [caller]
+//   0x004c0b60 size   352  game_bfe70_sub06_c0b60 [caller]
+//   0x004c0cc0 size  5736  calls_MessageBoxA_c0cc0 [import-wrapper]
+//   0x004c2330 size    39  game_c0cc0_sub02_c2330 [caller]
+//   0x004c2360 size    39  game_c0cc0_sub03_c2360 [caller]
+//   0x004c2390 size    33  game_c0cc0_sub04_c2390 [caller]
+//   0x004c23c0 size    28  game_c0cc0_sub05_c23c0 [caller]
+//   0x004c23e0 size    49  game_c0cc0_sub06_c23e0 [caller]
+//   0x004c2420 size    38  game_cf780_sub00_c2420 [caller]
+//   0x004c2450 size  2190  game_bfe70_sub08_c2450 [caller]
+//   0x004c2ce0 size   936  game_invalid_bitset_n_positio_c2ce0 [string]
+//   0x004c3090 size   354  game_c2ce0_sub00_c3090 [caller]
+//   0x004c3200 size   920  game_c4390_sub00_c3200 [caller]
+//   0x004c35a0 size   744  game_c4f10_sub00_c35a0 [caller]
+//   0x004c3890 size   996  game_c5630_sub00_c3890 [caller]
+//   0x004c3c80 size   267  game_c4390_sub01_c3c80 [caller]
+//   0x004c3d90 size   350  game_c5630_sub01_c3d90 [caller]
+//   0x004c3ef0 size  1176  game_c4390_sub02_c3ef0 [caller]
+//   0x004c4390 size  2350  game_87d30_sub00_c4390 [caller]
+//   0x004c4cc0 size   304  game_c4390_sub03_c4cc0 [caller]
+//   0x004c4df0 size    62  game_22c13b_sub00_c4df0 [caller]
+//   0x004c4e30 size   211  game_c2450_sub01_c4e30 [caller]
+//   0x004c4f10 size  1821  game_invalid_bitset_n_positio_c4f10 [string]
+//   0x004c5630 size  1997  game_bc750_sub02_c5630 [caller]
+//   0x004c5e00 size   528  game_creature_generator_3_fou_c5e00 [string]
+//   0x004c6010 size   462  game_c2450_sub02_c6010 [caller]
+//   0x004c6690 size    67  game_c61e0_sub02_c6690 [caller]
+//   0x004c6c50 size   747  game_dd2d0_sub02_c6c50 [caller]
+//   0x004c6f40 size    63  game_aitheme_d_c6f40 [string]
+//   0x004c6f80 size    79  game_aitheme_d_c6f80 [string]
+//   0x004c6fd0 size    16  game_ad470_sub05_c6fd0 [caller]
+//   0x004c6fe0 size  2375  game_aitheme_d_c6fe0 [string]
+//   0x004c7930 size   614  game_b8af0_sub01_c7930 [caller]
+//   0x004c7ba0 size   172  game_c7fe0_sub00_c7ba0 [caller]
+//   0x004c7c50 size   905  game_2450_sub10_c7c50 [caller]
+//   0x004c7fe0 size  1122  game_c6fe0_sub02_c7fe0 [caller]
+//   0x004c8450 size   584  game_bfe70_sub09_c8450 [caller]
+//   0x004c86a0 size   213  game_d7890_sub00_c86a0 [caller]
+//   0x004c8780 size  1975  game_c7fe0_sub01_c8780 [caller]
+//   0x004c8f40 size   888  game_c7fe0_sub02_c8f40 [caller]
+//   0x004c9730 size   345  game_86590_sub02_c9730 [caller]
+//   0x004ca340 size   111  game_f4350_sub01_ca340 [caller]
+//   0x004ca3b0 size    88  game_26ee0_sub03_ca3b0 [caller]
+//   0x004ca410 size   278  game_aabb0_sub01_ca410 [caller]
+//   0x004ca530 size   128  game_19e00_sub03_ca530 [caller]
+//   0x004ca5b0 size   457  game_6fd0_sub06_ca5b0 [caller]
+//   0x004ca780 size   180  game_aishield_pcx_ca780 [string]
+//   0x004ca840 size   412  game_newweek_wav_ca840 [string]
+//   0x004ca9e0 size    36  cinit0403_ca9e0 [init-ctor]
+//   0x004caa40 size    38  game_ca9e0_sub00_caa40 [caller]
+//   0x004caa70 size   924  game_bfe70_sub12_caa70 [caller]
+//   0x004cae10 size   433  game_bfe70_sub13_cae10 [caller]
+//   0x004cafd0 size   540  game_data_cafd0 [string]
+//   0x004cb1ec size    23  game_data_diff_dat_cb1ec [string]
+//   0x004cb206 size  2782  calls_timeGetTime_cb206 [import-wrapper]
+//   0x004cbcf0 size    75  game_157760_sub00_cbcf0 [caller]
+//   0x004cbd40 size  2691  calls_timeGetTime_cbd40 [import-wrapper]
+//   0x004cc7d0 size  1534  game_player_cc7d0 [string]
+//   0x004ccdd0 size    86  game_9e2e0_sub00_ccdd0 [caller]
+//   0x004cce30 size   184  game_167a0_sub03_cce30 [caller]
+//   0x004ccef0 size    35  game_113320_sub00_ccef0 [caller]
+//   0x004ccf20 size   142  game_bfe70_sub14_ccf20 [caller]
+//   0x004ccfb0 size   445  game_bfe70_sub15_ccfb0 [caller]
+//   0x004cd170 size  1435  game_player_cd170 [string]
+//   0x004cd710 size   512  game_cd910_sub00_cd710 [caller]
+//   0x004cd910 size   245  game_cc7d0_sub00_cd910 [caller]
+//   0x004cda10 size   356  game_cc7d0_sub01_cda10 [caller]
+//   0x004ce4b0 size   104  game_cdf20_sub01_ce4b0 [caller]
+//   0x004ce520 size    74  game_cdf20_sub02_ce520 [caller]
+//   0x004ce570 size    50  playerData_playerData_ce570 [hd-crossbuild]
+

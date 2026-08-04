@@ -1,0 +1,193 @@
+// E:\gamedcs\quicktownwindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module quicktownwindow.obj, 27 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x117be8, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x117c10, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x117c20, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x117c48, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x117c58, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x117c80, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x117c90, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x117cb8, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x117cc8, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x117cf0, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x117d00, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x117d28, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x117d38, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x117d60, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x117d70, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x117d98, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x117da8, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x117dd0, cb 0x10) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x117de0, cb 0x28) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x117e08, cb 0x40) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\quicktownwindow.cpp:39
+// DC_ONLY(0x117e48, cb 0x570) - no retail tie yet
+void TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TViewLevel view_level)
+{
+    // @stub
+}
+
+// E:\gamedcs\quicktownwindow.cpp:149
+// DC_ONLY(0x1183b8, cb 0x10C) - no retail tie yet
+void TQuickTownWindow::TQuickTownWindow(const garrison* this_garrison, TQuickTownWindow::TViewLevel view_level)
+{
+    // @stub
+}
+
+// E:\gamedcs\quicktownwindow.cpp:170
+// DC_ONLY(0x1184c4, cb 0xA0) - no retail tie yet
+void TQuickTownWindow::~TQuickTownWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\quicktownwindow.cpp:177
+// DC_ONLY(0x118564, cb 0x22E) - no retail tie yet
+void TQuickTownWindow::initialize_army_display(const armyGroup* army_group, TQuickTownWindow::TViewLevel view_level)
+{
+    // @stub
+}
+
+// E:\gamedcs\quicktownwindow.cpp:254
+// DC_ONLY(0x118794, cb 0x64) - no retail tie yet
+void TQuickTownWindow::center(long new_x, long new_y)
+{
+    // @stub
+}
+
+// E:\gamedcs\quicktownwindow.cpp:260
+// DC_ONLY(0x1187f8, cb 0x50) - no retail tie yet
+void TQuickTownWindow::QuickWindowWait()
+{
+    // @stub
+}
+
+// E:\gamedcs\quicktownwindow.cpp:139
+// DC_ONLY(0x118848, cb 0x34) - no retail tie yet
+void* TQuickTownWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

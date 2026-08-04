@@ -1,0 +1,74 @@
+// E:\gamedcs\ResSw.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module ResSw.obj, 10 procs, 0 retail-tied.
+
+// E:\gamedcs\ResSw.cpp:22
+// DC_ONLY(0x123ac0, cb 0x12) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResSw.cpp:22
+// DC_ONLY(0x123ad4, cb 0x12) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResSw.cpp:22
+// DC_ONLY(0x123ae8, cb 0x14) - no retail tie yet
+void $E437()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResSw.cpp:22
+// DC_ONLY(0x123afc, cb 0x14) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResSw.cpp:30
+// DC_ONLY(0x123b10, cb 0x44) - no retail tie yet
+void ResolutionSwitch::ResolutionSwitch()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResSw.cpp:36
+// DC_ONLY(0x123b54, cb 0x20) - no retail tie yet
+void ResolutionSwitch::~ResolutionSwitch()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResSw.cpp:42
+// DC_ONLY(0x123b74, cb 0x1E) - no retail tie yet
+void ResolutionSwitch::S_to_800()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResSw.cpp:53
+// DC_ONLY(0x123b94, cb 0x1E) - no retail tie yet
+void ResolutionSwitch::S_to_600()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResSw.cpp:65
+// DC_ONLY(0x123bb4, cb 0x44) - no retail tie yet
+void ResolutionSwitch::Switch()
+{
+    // @stub
+}
+
+// E:\gamedcs\ResSw.cpp:32
+// DC_ONLY(0x123bf8, cb 0x34) - no retail tie yet
+void* ResolutionSwitch::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

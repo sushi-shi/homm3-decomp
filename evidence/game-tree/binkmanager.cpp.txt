@@ -1,0 +1,60 @@
+// E:\gamedcs\binkmanager.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module binkmanager.obj, 8 procs, 0 retail-tied.
+
+// E:\gamedcs\binkmanager.cpp:79
+// DC_ONLY(0x50a7c, cb 0x4) - no retail tie yet
+BINK* BinkManager::GetBinkFilePtr(char* filename, int binkOptions)
+{
+    // @stub
+}
+
+// E:\gamedcs\binkmanager.cpp:123
+// DC_ONLY(0x50a80, cb 0x4) - no retail tie yet
+void BinkManager::SetPixelFormat()
+{
+    // @stub
+}
+
+// E:\gamedcs\binkmanager.cpp:132
+// DC_ONLY(0x50a84, cb 0x4) - no retail tie yet
+void BinkManager::OpenBink()
+{
+    // @stub
+}
+
+// E:\gamedcs\binkmanager.cpp:204
+// DC_ONLY(0x50a88, cb 0x4) - no retail tie yet
+void BinkManager::DrawCurrentBinkFrame()
+{
+    // @stub
+}
+
+// E:\gamedcs\binkmanager.cpp:232
+// DC_ONLY(0x50a8c, cb 0x4) - no retail tie yet
+void BinkManager::RestartBink()
+{
+    // @stub
+}
+
+// E:\gamedcs\binkmanager.cpp:252
+// DC_ONLY(0x50a90, cb 0x4) - no retail tie yet
+void BinkManager::NextBinkFrame()
+{
+    // @stub
+}
+
+// E:\gamedcs\binkmanager.cpp:345
+// DC_ONLY(0x50a94, cb 0x4) - no retail tie yet
+void BinkManager::CloseBink()
+{
+    // @stub
+}
+
+// E:\gamedcs\binkmanager.cpp:376
+// DC_ONLY(0x50a98, cb 0x4) - no retail tie yet
+int BinkManager::PlayBink(int id, int x, int y, int w, int h)
+{
+    // @stub
+}
+

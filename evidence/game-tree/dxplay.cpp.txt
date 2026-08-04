@@ -1,0 +1,872 @@
+// E:\gamedcs\dxplay.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module dxplay.obj, 124 procs, 0 retail-tied.
+
+// E:\gamedcs\dxplay.cpp:66
+// DC_ONLY(0x8a074, cb 0x70) - no retail tie yet
+void CDPlay::CDPlay()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:92
+// DC_ONLY(0x8a0e4, cb 0x36) - no retail tie yet
+void CDPlay::~CDPlay()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:100
+// DC_ONLY(0x8a11c, cb 0x4) - no retail tie yet
+unsigned char CDPlay::Init()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:121
+// DC_ONLY(0x8a120, cb 0x34) - no retail tie yet
+unsigned char CDPlay::InitConnection(CDPlayConnection* pConnection)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:134
+// DC_ONLY(0x8a154, cb 0x4) - no retail tie yet
+unsigned char CDPlay::HostSession(char* sessionName, unsigned long dwFlags, unsigned long maxPlayers, char* password)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:175
+// DC_ONLY(0x8a158, cb 0x4) - no retail tie yet
+unsigned char CDPlay::JoinSession(_GUID* lpSessionGuid, char* pPassword)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:212
+// DC_ONLY(0x8a15c, cb 0x72) - no retail tie yet
+DPSESSIONDESC2* CDPlay::GetCurrSession()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:239
+// DC_ONLY(0x8a1d0, cb 0x28) - no retail tie yet
+unsigned char CDPlay::UpdateSessionDesc(DPSESSIONDESC2* lpSessionDesc)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:251
+// DC_ONLY(0x8a1f8, cb 0x94) - no retail tie yet
+unsigned long CDPlay::CreatePlayer(char* sPlayerName, void* lpData, unsigned long dwSize, void* hEvent)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:276
+// DC_ONLY(0x8a28c, cb 0x2E) - no retail tie yet
+unsigned char CDPlay::DestroyPlayer(unsigned long playerId)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:289
+// DC_ONLY(0x8a2bc, cb 0x5E) - no retail tie yet
+unsigned long CDPlay::CreateGroup(char* sGroupName, void* pGroupData, unsigned long dwGroupDataSize, unsigned char stagingArea)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:314
+// DC_ONLY(0x8a31c, cb 0x5C) - no retail tie yet
+unsigned long CDPlay::CreateGroupInGroup(unsigned long dpidParent, char* sGroupName, void* pGroupData, unsigned long dataSize, unsigned char stagingArea)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:336
+// DC_ONLY(0x8a378, cb 0x2A) - no retail tie yet
+unsigned char CDPlay::DestroyGroup(unsigned long groupId)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:346
+// DC_ONLY(0x8a3a4, cb 0x28) - no retail tie yet
+unsigned char CDPlay::DeleteGroupFromGroup(unsigned long dpidParent, unsigned long dpidGroup)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:359
+// DC_ONLY(0x8a3cc, cb 0x46) - no retail tie yet
+unsigned char CDPlay::EnumConnections(CAutoArray<CDPlayConnection>* pConnectionArray)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:377
+// DC_ONLY(0x8a414, cb 0x42) - no retail tie yet
+unsigned char CDPlay::StartSession(unsigned long groupId)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:387
+// DC_ONLY(0x8a458, cb 0x2A) - no retail tie yet
+unsigned char CDPlay::CloseSession()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:397
+// DC_ONLY(0x8a484, cb 0x44) - no retail tie yet
+unsigned char CDPlay::EnumGroups(CAutoArray<CDPlayGroup>* pGroupArray, _GUID* lpGuidInstance, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:413
+// DC_ONLY(0x8a4c8, cb 0x44) - no retail tie yet
+unsigned char CDPlay::EnumPlayers(CAutoArray<CDPlayPlayer>* pPlayerArray, _GUID* lpGuidInstance, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:429
+// DC_ONLY(0x8a50c, cb 0x4C) - no retail tie yet
+unsigned char CDPlay::EnumGroupPlayers(CAutoArray<CDPlayPlayer>* pPlayerArray, unsigned long dpidGroup, _GUID* lpGuidInstance, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:446
+// DC_ONLY(0x8a558, cb 0x84) - no retail tie yet
+unsigned char CDPlay::EnumSessions(CAutoArray<CDPlaySession>* pSessionArray, unsigned long timeOut, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:490
+// DC_ONLY(0x8a5dc, cb 0x46) - no retail tie yet
+unsigned char CDPlay::SendChat(char* sMsg, unsigned long idFrom, unsigned long idTo)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:515
+// DC_ONLY(0x8a624, cb 0x54) - no retail tie yet
+unsigned char CDPlay::Send(void* lpData, unsigned long dwSize, unsigned long idFrom, unsigned long idTo, unsigned char guaranteed)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:544
+// DC_ONLY(0x8a678, cb 0xCC) - no retail tie yet
+unsigned char CDPlay::Receive(unsigned long* pFromID, unsigned long* pToID, CDPlayMsg* pMsg, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:574
+// DC_ONLY(0x8a744, cb 0x9C) - no retail tie yet
+unsigned char CDPlay::FlushReceiveQueue()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:605
+// DC_ONLY(0x8a7e0, cb 0x48) - no retail tie yet
+unsigned char CDPlay::AddSessionEnum(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:617
+// DC_ONLY(0x8a828, cb 0x1A2) - no retail tie yet
+unsigned char CDPlay::ReceiveSystemMsg(unsigned long toID, CDPlayMsg* pMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:654
+// DC_ONLY(0x8a9cc, cb 0x46) - no retail tie yet
+unsigned char CDPlay::AddGroupEnum(unsigned long dpid, const DPNAME* lpName, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:663
+// DC_ONLY(0x8aa14, cb 0x46) - no retail tie yet
+unsigned char CDPlay::AddPlayerEnum(unsigned long dpid, const DPNAME* lpName, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:678
+// DC_ONLY(0x8aa5c, cb 0x78) - no retail tie yet
+unsigned char CDPlay::AddConnectionEnum(const _GUID* lpguidSP, void* lpConnection, unsigned long dwConnectionSize, const DPNAME* lpName, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:687
+// DC_ONLY(0x8aad4, cb 0x468) - no retail tie yet
+void CDPlay::GetErrorDesc(long error, char* sDesc)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:878
+// DC_ONLY(0x8af3c, cb 0xA) - no retail tie yet
+unsigned char CDPlay::SysMsgHost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:885
+// DC_ONLY(0x8af48, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgCreatePlayerOrGroup(DPMSG_CREATEPLAYERORGROUP* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:890
+// DC_ONLY(0x8af4c, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:896
+// DC_ONLY(0x8af50, cb 0x26) - no retail tie yet
+unsigned char CDPlay::AddPlayerToGroup(unsigned long groupId, unsigned long playerId)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:908
+// DC_ONLY(0x8af78, cb 0x120) - no retail tie yet
+unsigned char CDPlay::DeletePlayerFromGroup(unsigned long groupId, unsigned long playerId)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:920
+// DC_ONLY(0x8b098, cb 0x40) - no retail tie yet
+unsigned char CDPlay::SetPlayerName(unsigned long playerId, char* sShort, char* sLong, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:939
+// DC_ONLY(0x8b0d8, cb 0xD8) - no retail tie yet
+unsigned char CDPlay::GetPlayerName(unsigned long playerId, char* sShort, int maxShort, char* sLong, int maxLong)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:977
+// DC_ONLY(0x8b1b0, cb 0x30) - no retail tie yet
+unsigned char CDPlay::SetGroupData(unsigned long groupId, void* pData, unsigned long dwDataSize, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:987
+// DC_ONLY(0x8b1e0, cb 0xA4) - no retail tie yet
+void* CDPlay::GetGroupData(unsigned long groupId, unsigned long* pdwSize, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1024
+// DC_ONLY(0x8b284, cb 0x40) - no retail tie yet
+unsigned char CDPlay::SetGroupName(unsigned long groupId, char* sShort, char* sLong, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1043
+// DC_ONLY(0x8b2c4, cb 0xF6) - no retail tie yet
+unsigned char CDPlay::GetGroupName(unsigned long groupId, char* sShort, int maxShort, char* sLong, int maxLong)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1081
+// DC_ONLY(0x8b3bc, cb 0x30) - no retail tie yet
+unsigned char CDPlay::SetPlayerData(unsigned long playerId, void* pData, unsigned long dwDataSize, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1091
+// DC_ONLY(0x8b3ec, cb 0xA8) - no retail tie yet
+void* CDPlay::GetPlayerData(unsigned long playerId, unsigned long* pdwSize, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1129
+// DC_ONLY(0x8b494, cb 0x88) - no retail tie yet
+unsigned char* CDPlay::GetPlayerAddress(unsigned long dpid, unsigned long* pSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1158
+// DC_ONLY(0x8b51c, cb 0x48) - no retail tie yet
+unsigned char CDPlay::GetCaps(DPCAPS* dpCaps, unsigned char guaranteed)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1176
+// DC_ONLY(0x8b564, cb 0x4) - no retail tie yet
+unsigned char CDPlay::GetSendQueueSize(unsigned long from, unsigned long to, unsigned long* numMsgs, unsigned long* numBytes)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1189
+// DC_ONLY(0x8b568, cb 0x4) - no retail tie yet
+unsigned char CDPlay::GetReceiveQueueSize(unsigned long from, unsigned long to, unsigned long* numMsgs, unsigned long* numBytes)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1211
+// DC_ONLY(0x8b56c, cb 0x5C) - no retail tie yet
+void CDPlayLobby::CDPlayLobby()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1218
+// DC_ONLY(0x8b5c8, cb 0x42) - no retail tie yet
+void CDPlayLobby::~CDPlayLobby()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1224
+// DC_ONLY(0x8b60c, cb 0x4) - no retail tie yet
+unsigned char CDPlayLobby::RegisterApp(char* szAppName, char* szFile, char* szCmd, _GUID appGuid)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1268
+// DC_ONLY(0x8b610, cb 0x4) - no retail tie yet
+unsigned char CDPlayLobby::Init()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1318
+// DC_ONLY(0x8b614, cb 0x88) - no retail tie yet
+DPLCONNECTION* CDPlayLobby::GetConnectionSettings(unsigned long dwAppId, unsigned long* pSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1351
+// DC_ONLY(0x8b69c, cb 0x4) - no retail tie yet
+unsigned char CDPlayLobby::TestLobbied()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1385
+// DC_ONLY(0x8b6a0, cb 0x3A) - no retail tie yet
+unsigned char CDPlayLobby::SetConnectionSettings(unsigned long dwAppId, DPLCONNECTION* pConnection)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1399
+// DC_ONLY(0x8b6dc, cb 0x2C) - no retail tie yet
+unsigned char CDPlayLobby::SetGroupConnectionSettings(unsigned long dpidGroup, DPLCONNECTION* pConnection)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1412
+// DC_ONLY(0x8b708, cb 0x76) - no retail tie yet
+DPLCONNECTION* CDPlayLobby::GetGroupConnectionSettings(unsigned long dpidGroup)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1441
+// DC_ONLY(0x8b780, cb 0x88) - no retail tie yet
+unsigned char CDPlayLobby::Connect()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1476
+// DC_ONLY(0x8b808, cb 0x5C) - no retail tie yet
+unsigned char CDPlayLobby::SendStandardLobbyMsg(unsigned long dwAppId, void* pData, unsigned long dwSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1490
+// DC_ONLY(0x8b864, cb 0x42) - no retail tie yet
+unsigned char CDPlayLobby::SendLobbyMsg(unsigned long dwAppId, void* pData, unsigned long dwSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1503
+// DC_ONLY(0x8b8a8, cb 0xA6) - no retail tie yet
+unsigned char CDPlayLobby::ReceiveLobbyMsg(unsigned long dwAppId, CDPlayMsg* pMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1540
+// DC_ONLY(0x8b950, cb 0x4) - no retail tie yet
+CDPlayConnection* CDPlayLobby::CreateTCPIPConnection(char* sIPAddress, char* sName, CDPlayConnection* pConnAppend)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1617
+// DC_ONLY(0x8b954, cb 0x4) - no retail tie yet
+CDPlayConnection* CDPlayLobby::CreateIPXConnection(char* sName, CDPlayConnection* pConnAppend)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1686
+// DC_ONLY(0x8b958, cb 0x4) - no retail tie yet
+CDPlayConnection* CDPlayLobby::CreateModemConnection(char* sName, char* sPhoneNbr, char* sModemString)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1751
+// DC_ONLY(0x8b95c, cb 0x4) - no retail tie yet
+CDPlayConnection* CDPlayLobby::CreateSerialConnection(char* sName, _DPCOMPORTADDRESS* comPortInfo)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1802
+// DC_ONLY(0x8b960, cb 0x4) - no retail tie yet
+unsigned char CDPlayLobby::HandleSystemLobbyMsg(unsigned long dwAppId, CDPlayMsg* pMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1807
+// DC_ONLY(0x8b964, cb 0x4) - no retail tie yet
+unsigned char CDPlayLobby::EnumLobbyConnections(CAutoArray<CDPlayConnection>* pConnectionArray)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1831
+// DC_ONLY(0x8b968, cb 0x48) - no retail tie yet
+unsigned char CDPlayLobby::EnumGroupsInGroup(CAutoArray<CDPlayGroup>* pGroupArray, unsigned long dpidParent, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1847
+// DC_ONLY(0x8b9b0, cb 0x46) - no retail tie yet
+unsigned char CDPlayLobby::EnumGroupPlayers(CAutoArray<CDPlayPlayer>* pPlayerArray, unsigned long dpidGroup, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1863
+// DC_ONLY(0x8b9f8, cb 0x70) - no retail tie yet
+unsigned char CDPlayLobby::EnumGroupPlayersRemote(CAutoArray<CDPlayPlayer>* pPlayerArray, unsigned long dpidGroup, _GUID* lpGuidInstance, unsigned long dwFlags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1881
+// DC_ONLY(0x8ba68, cb 0x46) - no retail tie yet
+unsigned char CDPlayLobby::EnumAddress(void* pConn, unsigned long size, CAutoArray<CDPlayAddressElement>* pArray)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1894
+// DC_ONLY(0x8bab0, cb 0x4C) - no retail tie yet
+unsigned char CDPlayLobby::AddAddressEnum(const _GUID* guid, unsigned long dataSize, const void* pData)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1901
+// DC_ONLY(0x8bafc, cb 0xA6) - no retail tie yet
+unsigned char CDPlayLobby::GetIPAddress(unsigned long dpid, char* sIPAddress)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1941
+// DC_ONLY(0x8bba4, cb 0x20) - no retail tie yet
+int EnumAddressCallback(const _GUID* guidDataType, unsigned long dwDataSize, const void* lpData, void* lpContext)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1948
+// DC_ONLY(0x8bbc4, cb 0x18) - no retail tie yet
+int EnumSession(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long* lpdwTimeOut, unsigned long dwFlags, void* lpContext)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1963
+// DC_ONLY(0x8bbdc, cb 0x30) - no retail tie yet
+int EnumConnectionsCallback(const _GUID* lpguidSP, void* lpConnection, unsigned long dwConnectionSize, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1976
+// DC_ONLY(0x8bc0c, cb 0x1C) - no retail tie yet
+int EnumGroupsCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1991
+// DC_ONLY(0x8bc28, cb 0x5C) - no retail tie yet
+int EnumPlayersCallback(unsigned long dpid, unsigned long dwPlayerType, const DPNAME* lpName, unsigned long dwFlags, void* lpContext)
+{
+    // @stub
+}
+
+// C:\WCEDreamcast\inc\objbase.h:519
+// DC_ONLY(0x8bc84, cb 0x1C) - no retail tie yet
+int operator==(const _GUID* guidOne, const _GUID* guidOther)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:57
+// DC_ONLY(0x8bca0, cb 0x8C) - no retail tie yet
+void CDPlaySession::CDPlaySession(const DPSESSIONDESC2* lpSession)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:113
+// DC_ONLY(0x8bd2c, cb 0x64) - no retail tie yet
+void CDPlayConnection::CDPlayConnection(const _GUID* lpGuid, unsigned long connSize, void* lpConn, char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:125
+// DC_ONLY(0x8bd90, cb 0x18) - no retail tie yet
+void CDPlayConnection::~CDPlayConnection()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:137
+// DC_ONLY(0x8bda8, cb 0xA) - no retail tie yet
+void CDPlayMsg::CDPlayMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:145
+// DC_ONLY(0x8bdb4, cb 0x18) - no retail tie yet
+void CDPlayMsg::~CDPlayMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:150
+// DC_ONLY(0x8bdcc, cb 0x40) - no retail tie yet
+unsigned char CDPlayMsg::AllocSize(unsigned long dSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:164
+// DC_ONLY(0x8be0c, cb 0x2C) - no retail tie yet
+unsigned char CDPlayMsg::Destroy()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:177
+// DC_ONLY(0x8be38, cb 0x10) - no retail tie yet
+unsigned long CDPlayMsg::GetId()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:203
+// DC_ONLY(0x8be48, cb 0x28) - no retail tie yet
+void CDPlayPlayer::CDPlayPlayer(char* sName, unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:231
+// DC_ONLY(0x8be70, cb 0x1C) - no retail tie yet
+void CDPlayGroup::CDPlayGroup(char* sName, unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:244
+// DC_ONLY(0x8be8c, cb 0x44) - no retail tie yet
+void CDPlayAddressElement::CDPlayAddressElement(const _GUID* lpGuid, const void* pData, unsigned long dataSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:257
+// DC_ONLY(0x8bed0, cb 0x18) - no retail tie yet
+void CDPlayAddressElement::~CDPlayAddressElement()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:371
+// DC_ONLY(0x8bee8, cb 0x1C) - no retail tie yet
+void CDPlay::SetGuid(_GUID guid)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:372
+// DC_ONLY(0x8bf04, cb 0x6) - no retail tie yet
+_GUID* CDPlay::GetGuid()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:403
+// DC_ONLY(0x8bf0c, cb 0x8) - no retail tie yet
+unsigned char CDPlay::IsHost()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:434
+// DC_ONLY(0x8bf14, cb 0x4) - no retail tie yet
+unsigned char CDPlay::ReceiveMsg(unsigned long from, unsigned long to, CDPlayMsg* pMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:440
+// DC_ONLY(0x8bf18, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgAddGroupToGroup(DPMSG_ADDGROUPTOGROUP* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:441
+// DC_ONLY(0x8bf1c, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgAddPlayerToGroup(DPMSG_ADDPLAYERTOGROUP* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:442
+// DC_ONLY(0x8bf20, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgChat(DPMSG_CHAT* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:443
+// DC_ONLY(0x8bf24, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgDeleteGroupFromGroup(DPMSG_ADDGROUPTOGROUP* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:444
+// DC_ONLY(0x8bf28, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgDeletePlayerFromGroup(DPMSG_ADDPLAYERTOGROUP* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:445
+// DC_ONLY(0x8bf2c, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgSecureMessage(DPMSG_SECUREMESSAGE* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:446
+// DC_ONLY(0x8bf30, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgSessionLost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:447
+// DC_ONLY(0x8bf34, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgSetPlayerOrGroupData(DPMSG_SETPLAYERORGROUPDATA* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:448
+// DC_ONLY(0x8bf38, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgSetPlayerOrGroupName(DPMSG_SETPLAYERORGROUPNAME* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:449
+// DC_ONLY(0x8bf3c, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgSetSessionDesc(DPMSG_SETSESSIONDESC* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:450
+// DC_ONLY(0x8bf40, cb 0x4) - no retail tie yet
+unsigned char CDPlay::SysMsgStartSession(DPMSG_STARTSESSION* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:89
+// DC_ONLY(0x8bf44, cb 0x34) - no retail tie yet
+void* CDPlay::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.cpp:1215
+// DC_ONLY(0x8bf78, cb 0x34) - no retail tie yet
+void* CDPlayLobby::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:51
+// DC_ONLY(0x8bfac, cb 0x64) - no retail tie yet
+void CAutoArray<CDPlayConnection>::Destroy(unsigned char deleteData)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:51
+// DC_ONLY(0x8c010, cb 0x58) - no retail tie yet
+void CAutoArray<CDPlayGroup>::Destroy(unsigned char deleteData)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:51
+// DC_ONLY(0x8c068, cb 0x58) - no retail tie yet
+void CAutoArray<CDPlayPlayer>::Destroy(unsigned char deleteData)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:51
+// DC_ONLY(0x8c0c0, cb 0x58) - no retail tie yet
+void CAutoArray<CDPlaySession>::Destroy(unsigned char deleteData)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:37
+// DC_ONLY(0x8c118, cb 0x30) - no retail tie yet
+void CAutoArray<CDPlayAddressElement>::CAutoArray<CDPlayAddressElement>()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:46
+// DC_ONLY(0x8c148, cb 0x38) - no retail tie yet
+void CAutoArray<CDPlayAddressElement>::~CAutoArray<CDPlayAddressElement>()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:51
+// DC_ONLY(0x8c180, cb 0x64) - no retail tie yet
+void CAutoArray<CDPlayAddressElement>::Destroy(unsigned char deleteData)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:73
+// DC_ONLY(0x8c1e4, cb 0x68) - no retail tie yet
+unsigned char CAutoArray<CDPlayAddressElement>::Add(CDPlayAddressElement* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:95
+// DC_ONLY(0x8c24c, cb 0x14) - no retail tie yet
+CDPlayAddressElement* CAutoArray<CDPlayAddressElement>::Get(unsigned long elementNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:103
+// DC_ONLY(0x8c260, cb 0x16) - no retail tie yet
+unsigned char CAutoArray<CDPlayAddressElement>::Put(unsigned long elementNbr, CDPlayAddressElement* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:113
+// DC_ONLY(0x8c278, cb 0x3A) - no retail tie yet
+unsigned char CAutoArray<CDPlayAddressElement>::Delete(unsigned long elementNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:127
+// DC_ONLY(0x8c2b4, cb 0x6E) - no retail tie yet
+unsigned char CAutoArray<CDPlayAddressElement>::Insert(unsigned long nextElementNbr, CDPlayAddressElement* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:144
+// DC_ONLY(0x8c324, cb 0x4) - no retail tie yet
+unsigned long CAutoArray<CDPlayAddressElement>::GetCount()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:144
+// DC_ONLY(0x8c328, cb 0x34) - no retail tie yet
+void* CDPlayConnection::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:144
+// DC_ONLY(0x8c35c, cb 0x34) - no retail tie yet
+void* CAutoArray<CDPlayAddressElement>::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:144
+// DC_ONLY(0x8c390, cb 0x34) - no retail tie yet
+void* CDPlayAddressElement::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

@@ -1,0 +1,1454 @@
+// E:\gamedcs\army.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module army.obj, 202 procs, 60 retail-tied.
+// retail extent 0x3d540..0x48d1b (VA 0x43d540..0x448d1b)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x43458, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x43480, cb 0x10) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x43490, cb 0x28) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x434b8, cb 0x10) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x434c8, cb 0x28) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x434f0, cb 0x10) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x43500, cb 0x28) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x43528, cb 0x10) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x43538, cb 0x28) - no retail tie yet
+void $E479()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x43560, cb 0x10) - no retail tie yet
+void $E480()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x43570, cb 0x28) - no retail tie yet
+void $E482()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x43598, cb 0x10) - no retail tie yet
+void $E483()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x435a8, cb 0x28) - no retail tie yet
+void $E485()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x435d0, cb 0x10) - no retail tie yet
+void $E486()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x435e0, cb 0x28) - no retail tie yet
+void $E488()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x43608, cb 0x10) - no retail tie yet
+void $E489()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x43618, cb 0x28) - no retail tie yet
+void $E491()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x43640, cb 0x10) - no retail tie yet
+void $E492()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x43650, cb 0x28) - no retail tie yet
+void $E494()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x43678, cb 0x40) - no retail tie yet
+void $E495()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:52
+// DC_ONLY(0x436b8, cb 0xF4) - no retail tie yet
+void army::army()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:77
+// DC_ONLY(0x437ac, cb 0x84) - no retail tie yet
+void army::set_retaliation_count()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:93
+VA(0x0043d540, 0x34)  // anchor-global, dc 0x43830
+void army::play_sample(army::TSampleID id)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:101
+VA(0x0043d580, 0x37)  // anchor-global, dc 0x4386c
+void army::stop_sample(army::TSampleID id)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:109
+// DC_ONLY(0x438a8, cb 0x3E) - no retail tie yet
+void army::WaitSample(army::TSampleID which)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:117
+// DC_ONLY(0x438e8, cb 0xC8) - no retail tie yet
+void army::InitClean()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:150
+// DC_ONLY(0x439b0, cb 0x3EA) - no retail tie yet
+void army::initialize(TCreatureType type, long number, const hero* owner, long new_group, long new_index, long new_grid_index)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:261
+// DC_ONLY(0x43d9c, cb 0xE4) - no retail tie yet
+void army::Init(int armyId, int newNumTroops, const hero* owner, int side, int inIndex, int iGridIndex, int iOrigPos)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:288
+// DC_ONLY(0x43e80, cb 0x3CA) - no retail tie yet
+void army::LoadResources()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:477
+// DC_ONLY(0x4424c, cb 0xCC) - no retail tie yet
+void army::FreeResources()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:507
+VA(0x0043df20, 0xDD)  // anchor-global, dc 0x44318
+void army::SetLuck(const hero* ownerHero, const armyGroup* ownerGroup, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:540
+// DC_ONLY(0x443b4, cb 0xF4) - no retail tie yet
+void army::SetMorale(const hero* ownerHero, const armyGroup* ownerGroup, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:596
+VA(0x0043e140, 0x8C0)  // anchor-global, dc 0x444a8
+void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:891
+// DC_ONLY(0x44d50, cb 0xC2) - no retail tie yet
+double army::ComputeKarma()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:917
+// DC_ONLY(0x44e14, cb 0xAC) - no retail tie yet
+unsigned char add_item(std::vector<army* array, army* arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:930
+// DC_ONLY(0x44ec0, cb 0x4A) - no retail tie yet
+void erase_item(std::vector<army* array, const army* arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:948
+VA(0x0043ea70, 0x1DD)  // anchor-global, dc 0x44f0c
+void army::add_aura()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:988
+VA(0x0043ec50, 0x1B4)  // anchor-global, dc 0x45000
+void army::remove_aura()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1010
+VA(0x0043ee10, 0x1C2)  // anchor-global, dc 0x450bc
+void army::remove_binding()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1034
+// DC_ONLY(0x45164, cb 0xA0) - no retail tie yet
+unsigned char army::set_inside_area_effect(unsigned char arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1062
+// DC_ONLY(0x45204, cb 0x50) - no retail tie yet
+void army::EndWalk()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1087
+VA(0x0043f0b0, 0x206)  // anchor-global, dc 0x45254
+void army::Walk(int direction, unsigned char end_walk, unsigned char initial_walk)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1171
+VA(0x0043f2c0, 0x63B)  // anchor-bracket, dc 0x453c8
+void army::animate_missile(army* armyToAttack)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1356
+// DC_ONLY(0x458a0, cb 0x5D0) - no retail tie yet
+void army::range_attack(army* armyToAttack)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1541
+// DC_ONLY(0x45e70, cb 0x150) - no retail tie yet
+void army::range_attack()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1629
+// DC_ONLY(0x45fc0, cb 0x46) - no retail tie yet
+long army::get_clockwise(long direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1643
+// DC_ONLY(0x46008, cb 0x46) - no retail tie yet
+long army::get_counter_clockwise(long direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1665
+VA(0x00440310, 0x1EB)  // anchor-global, dc 0x46050
+void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed, long* fire_damage)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1717
+VA(0x00440500, 0x4B4)  // anchor-global, dc 0x461a0
+unsigned char army::check_special_attack(army* target)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1846
+VA(0x004409c0, 0x1F9)  // anchor-global, dc 0x464e0
+void army::do_fire_shield(long damage)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:1896
+VA(0x00440bc0, 0xA41)  // anchor-global, dc 0x46658
+void army::do_post_attack(army* target, int iDamage, int iKilled, int total_life)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2044
+VA(0x00441610, 0x6A0)  // corroborates, dc 0x46bec
+unsigned char army::do_attack(army* armyToAttack, int direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2217
+VA(0x00441cb0, 0x2BE)  // corroborates, dc 0x46fb0
+void army::do_attack(int direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2358
+VA(0x00441f70, 0x26)  // linkorder, dc 0x47270
+unsigned char army::check_obstacle_attacks(unsigned char is_walking)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2386
+VA(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4
+unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2528
+// DC_ONLY(0x475ec, cb 0xA4) - no retail tie yet
+void army::CheckLuck()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2575
+VA(0x00442410, 0x13B)  // anchor-global, dc 0x47690
+long army::get_adjusted_attack(const army* enemy, unsigned char ranged_attack)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2623
+VA(0x00442550, 0x35)  // linkorder, dc 0x477b8
+long army::get_attack_modifier(const army* enemy, unsigned char ranged_attack)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2633
+VA(0x00442590, 0xC2)  // anchor-global, dc 0x477e8
+long army::get_adjusted_defense(const army* enemy, unsigned char frenzy_included)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2670
+// DC_ONLY(0x478c8, cb 0x32) - no retail tie yet
+long army::get_defense_modifier()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2680
+// DC_ONLY(0x478fc, cb 0x8) - no retail tie yet
+double army::get_defense_damage_modifier(unsigned char ranged_attack)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2691
+// DC_ONLY(0x47904, cb 0x1E) - no retail tie yet
+hero* army::get_controller()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2698
+// DC_ONLY(0x47924, cb 0x1E) - no retail tie yet
+hero* army::get_owner()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2708
+// DC_ONLY(0x47944, cb 0xD0) - no retail tie yet
+unsigned char is_natural_enemy(TCreatureType attacker, TCreatureType defender)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2740
+// DC_ONLY(0x47a14, cb 0xE4) - no retail tie yet
+double army::get_average_damage()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2756
+// DC_ONLY(0x47af8, cb 0xD2) - no retail tie yet
+long army::get_average_damage(const army* enemy, unsigned char ranged_attack, long amount, unsigned char limit_damage, long distance)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2776
+// DC_ONLY(0x47bcc, cb 0x38) - no retail tie yet
+unsigned char army::is_enemy(const army* arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2790
+VA(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
+unsigned char army::can_shoot(const army* excluded)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2804
+VA(0x004429f0, 0x5C)  // anchor-global, dc 0x47c74
+unsigned char army::enemy_is_adjacent(const army* excluded)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2820
+VA(0x00442a50, 0x410)  // anchor-global, dc 0x47cf4
+double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, const army* excluded)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2910
+VA(0x00442e60, 0x169)  // anchor-global, dc 0x48168
+long army::get_total_combat_value(long lowest_attack, long lowest_defense)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2928
+VA(0x00442fd0, 0xA9)  // anchor-global, dc 0x482f0
+long army::get_loss_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, long damage, unsigned char kills_only)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2960
+VA(0x00443080, 0x50)  // anchor-global, dc 0x48454
+long army::get_total_hit_points(unsigned char simulated)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2982
+VA(0x004430d0, 0x56)  // anchor-global, dc 0x484a0
+void army::set_AI_expected_damage(long arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:2988
+VA(0x00443130, 0x25)  // anchor-global, dc 0x484d0
+float army::get_fire_shield_strength()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3002
+VA(0x00443160, 0x1BF)  // anchor-global, dc 0x48524
+int army::ComputeBaseDamage(unsigned char simulate_only)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3076
+VA(0x00443840, 0x344)  // anchor-global, dc 0x4868c
+int army::ComputeAttackerDamageBonuses(int base_damage, unsigned char is_shooting, army* defender, unsigned char simulate_only, long distance)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3230
+// DC_ONLY(0x48c10, cb 0x50) - no retail tie yet
+int army::ComputeDefenderDamageBonuses(int base_damage)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3243
+VA(0x00443b90, 0x1FE)  // anchor-global, dc 0x48c60
+double army::ComputeAttackerDamageReduction(const army* defender, unsigned char is_shooting)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3319
+VA(0x00443d90, 0x9C)  // anchor-global, dc 0x48fc4
+double army::ComputeDefenderDamageReduction(unsigned char is_shooting)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3356
+VA(0x00443f40, 0x14F)  // anchor-global, dc 0x490f4
+long army::adjust_damage(army* enemy, long base_damage, unsigned char bIsShot, unsigned char simulated, long distance, long* fire_damage)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3406
+// DC_ONLY(0x49260, cb 0x68) - no retail tie yet
+long army::DamageEnemy(army* enemy, int* iDamage, int* iKilled, unsigned char bIsShot)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3441
+VA(0x00444090, 0x8F)  // anchor-global, dc 0x492c8
+int army::Damage(int damage)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3481
+// DC_ONLY(0x4935c, cb 0x44) - no retail tie yet
+unsigned long army::Strength()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3492
+// DC_ONLY(0x493a0, cb 0x2F4) - no retail tie yet
+void army::ProcessDeath(int bFadeElementals)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3631
+VA(0x004444d0, 0x3B)  // anchor-global, dc 0x49694
+void army::CancelSpellType(int iSpellType)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3660
+// DC_ONLY(0x496dc, cb 0x6A) - no retail tie yet
+void army::adjust_hitpoints()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3675
+VA(0x00444510, 0x3DB)  // anchor-global, dc 0x49748
+void army::CancelIndividualSpell(int spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3802
+// DC_ONLY(0x499ac, cb 0x3A) - no retail tie yet
+void army::CancelAllSpells()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:3816
+VA(0x004448f0, 0xB99)  // anchor-global, dc 0x499e8
+void army::SetSpellInfluence(int spell, int power, TSkillMastery mastery, const hero* casting_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4129
+// DC_ONLY(0x4a2e8, cb 0x5E) - no retail tie yet
+void army::DecrementSpellRounds()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4158
+VA(0x00445490, 0x23B)  // anchor-global, dc 0x4a348
+void army::get_berserk_targets(std::vector<army* armies)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4208
+VA(0x004456d0, 0x164)  // anchor-global, dc 0x4a480
+void army::GoBerserk()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4249
+VA(0x00445840, 0x66)  // corroborates, dc 0x4a598
+long army::get_attack_direction(long our_hex, const army* enemy, long enemy_hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4273
+VA(0x004458b0, 0x9D)  // corroborates, dc 0x4a610
+long army::get_attack_direction(long our_hex, const army* enemy)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4303
+VA(0x00445950, 0x107)  // anchor-global, dc 0x4a6a4
+unsigned char army::simple_move(int hex, unsigned char restore_facing)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4356
+VA(0x00445a60, 0x26D)  // anchor-global, dc 0x4a7ac
+unsigned char army::attack_hex(int hex, unsigned char restore_facing)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4427
+VA(0x00445cd0, 0x38)  // linkorder, dc 0x4a8b8
+unsigned char army::move_to(int hex, unsigned char restore_facing)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4436
+VA(0x00445d10, 0x14)  // linkorder, dc 0x4a8c8
+TWallTargetId choose_wall_target(TWallTargetId wall, const TWallTargetId* targets, long count)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4471
+VA(0x00445d30, 0x189)  // anchor-global, dc 0x4a97c
+void army::AttackWall(int iTargetGridIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4526
+// DC_ONLY(0x4aa3c, cb 0x90) - no retail tie yet
+void army::attack_wall(TWallTargetId wall, const type_ballistics_traits* ballistics)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4577
+// DC_ONLY(0x4aacc, cb 0x5A4) - no retail tie yet
+void army::attack_wall(TWallTargetId wall, long levelsDestroyed)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4739
+// DC_ONLY(0x4b070, cb 0xDA) - no retail tie yet
+void army::Cure(int level, int iSpellPower, const hero* casting_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4773
+// DC_ONLY(0x4b14c, cb 0x24) - no retail tie yet
+int army::MidY()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4779
+// DC_ONLY(0x4b170, cb 0x20) - no retail tie yet
+int army::TopY()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4784
+// DC_ONLY(0x4b190, cb 0x16) - no retail tie yet
+int army::BottomY()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4790
+// DC_ONLY(0x4b1a8, cb 0x64) - no retail tie yet
+int army::MidX()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4800
+// DC_ONLY(0x4b20c, cb 0x6C) - no retail tie yet
+int army::RightX()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4812
+// DC_ONLY(0x4b278, cb 0x6C) - no retail tie yet
+int army::LeftX()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4825
+// DC_ONLY(0x4b2e4, cb 0x6E) - no retail tie yet
+int army::FrontX()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4839
+// DC_ONLY(0x4b354, cb 0x44) - no retail tie yet
+int army::get_second_grid_index()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4850
+// DC_ONLY(0x4b398, cb 0x4E) - no retail tie yet
+unsigned char army::is_adjacent(int arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4864
+// DC_ONLY(0x4b3e8, cb 0x3E) - no retail tie yet
+unsigned char army::is_adjacent(const army* other_army)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4881
+// DC_ONLY(0x4b428, cb 0x2A) - no retail tie yet
+int army::OtherArmyAdjacent(int OAgroup, int OAindex)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4891
+VA(0x00446720, 0x107)  // anchor-global, dc 0x4b454
+void army::Turn(unsigned char play_animation)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4956
+VA(0x00446830, 0x103)  // anchor-global, dc 0x4b558
+void army::SetupAnimation()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:4995
+VA(0x00446940, 0x2FE)  // anchor-bracket, dc 0x4b624
+void army::PlayAnimation(int sequence, int nframes, int start_frame)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5096
+VA(0x00446c40, 0x1E1)  // anchor-global, dc 0x4b8c4
+int army::CanFit(int destIndex, int bAllowShifting, int* iNewDestIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5177
+VA(0x00446e30, 0x2E1)  // linkorder, dc 0x4ba88
+void army::new_turn()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5238
+VA(0x00447120, 0x20A)  // linkorder, dc 0x4bc84
+void army::ResetRound()
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5300
+VA(0x00447330, 0x9C)  // anchor-global, dc 0x4bd80
+long army::get_resurrection_size(const army* target)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5324
+VA(0x004473d0, 0x13D)  // anchor-bracket, dc 0x4be64
+unsigned char army::can_cast_resurrect(long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5359
+VA(0x004476c0, 0x3BA)  // anchor-global, dc 0x4beec
+unsigned char army::can_cast_spell(long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5396
+// DC_ONLY(0x4c004, cb 0x80) - no retail tie yet
+void army::cast_resurrect(long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5419
+// DC_ONLY(0x4c084, cb 0x6C) - no retail tie yet
+void army::cast_demonic_resurrect(long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5433
+// DC_ONLY(0x4c0f0, cb 0x64) - no retail tie yet
+unsigned char group_has_melee(long group)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5451
+// DC_ONLY(0x4c154, cb 0x64) - no retail tie yet
+unsigned char group_has_shooters(long group)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5469
+// DC_ONLY(0x4c1b8, cb 0x56) - no retail tie yet
+unsigned char group_has_dragons(long group)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5488
+// DC_ONLY(0x4c210, cb 0x164) - no retail tie yet
+unsigned char is_valid_caliph_spell(SpellID spell, const army* target)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5546
+VA(0x00447eb0, 0x21)  // anchor-global, dc 0x4c374
+long army::get_valid_caliph_spells(const army* target)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5564
+// DC_ONLY(0x4c3ac, cb 0xBA) - no retail tie yet
+void army::cast_caliph_spell(long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5601
+VA(0x00448260, 0x582)  // anchor-global, dc 0x4c468
+void army::cast_spell(long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5717
+// DC_ONLY(0x4c778, cb 0xB4) - no retail tie yet
+void army::consider_attack(const army* enemy, long value, long attack_distance)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5757
+VA(0x00448ab0, 0x114)  // anchor-global, dc 0x4c82c
+long army::get_multi_head_directions(long our_hex, const army* enemy, long enemy_hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5779
+VA(0x00448bd0, 0xF6)  // anchor-bracket, dc 0x4c898
+long army::get_AI_target_time(long speed)
+{
+    // @stub
+}
+
+// E:\gamedcs\army.cpp:5790
+VA(0x00448cd0, 0x4B)  // anchor-global, dc 0x4c918
+int army::GetSpeed()
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:315
+// DC_ONLY(0x4c968, cb 0x2C) - no retail tie yet
+void SLimitData::Include(const SLimitData* include_limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:438
+// DC_ONLY(0x4c994, cb 0x2C) - no retail tie yet
+unsigned long GameTime::NextFrameTime(unsigned long this_frame, long interval)
+{
+    // @stub
+}
+
+// E:\gamedcs\includes.h:117
+// DC_ONLY(0x4c9c0, cb 0x2C) - no retail tie yet
+double min(double a, double b)
+{
+    // @stub
+}
+
+// E:\gamedcs\Army.h:760
+// DC_ONLY(0x4c9ec, cb 0x20) - no retail tie yet
+unsigned char army::NeedToTurn(int direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\Army.h:810
+// DC_ONLY(0x4ca0c, cb 0x20) - no retail tie yet
+const char* army::GetName()
+{
+    // @stub
+}
+
+// E:\gamedcs\Army.h:815
+// DC_ONLY(0x4ca2c, cb 0x18) - no retail tie yet
+const char* army::GetName(int count)
+{
+    // @stub
+}
+
+// E:\gamedcs\Army.h:869
+// DC_ONLY(0x4ca44, cb 0x1C) - no retail tie yet
+long army::get_attack_direction(const army* enemy)
+{
+    // @stub
+}
+
+// E:\gamedcs\Army.h:875
+// DC_ONLY(0x4ca60, cb 0x1C) - no retail tie yet
+unsigned char army::LeavesNoBody()
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap16.h:156
+// DC_ONLY(0x4ca7c, cb 0x10) - no retail tie yet
+const unsigned short* Bitmap16Bit::GetMap(int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap16.h:162
+// DC_ONLY(0x4ca8c, cb 0x90) - no retail tie yet
+void Bitmap16Bit::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char alpha)
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap16.h:168
+// DC_ONLY(0x4cb1c, cb 0x74) - no retail tie yet
+void Bitmap16Bit::Grab(const Bitmap16Bit* src, int sx, int sy)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSpriteFrame.h:87
+// DC_ONLY(0x4cb90, cb 0x4) - no retail tie yet
+int CSpriteFrame::GetCroppedWidth()
+{
+    // @stub
+}
+
+// E:\gamedcs\CSpriteFrame.h:89
+// DC_ONLY(0x4cb94, cb 0x4) - no retail tie yet
+int CSpriteFrame::GetCroppedX()
+{
+    // @stub
+}
+
+// E:\gamedcs\CSpriteFrame.h:90
+// DC_ONLY(0x4cb98, cb 0x4) - no retail tie yet
+int CSpriteFrame::GetCroppedY()
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:148
+// DC_ONLY(0x4cb9c, cb 0x44) - no retail tie yet
+int CSprite::GetCroppedX(int seq, int frame)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:149
+// DC_ONLY(0x4cbe0, cb 0x44) - no retail tie yet
+int CSprite::GetCroppedY(int seq, int frame)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:150
+// DC_ONLY(0x4cc24, cb 0x44) - no retail tie yet
+int CSprite::GetCroppedWidth(int seq, int frame)
+{
+    // @stub
+}
+
+// E:\gamedcs\HexCell.h:90
+// DC_ONLY(0x4cc68, cb 0xA) - no retail tie yet
+unsigned char hexcell::HasArmy()
+{
+    // @stub
+}
+
+// E:\gamedcs\CmbtMgr.h:1555
+// DC_ONLY(0x4cc74, cb 0x18) - no retail tie yet
+void combatManager::MarkCreatureEffect(int group, int index)
+{
+    // @stub
+}
+
+// E:\gamedcs\TownMgr.h:745
+// DC_ONLY(0x4cc8c, cb 0x10) - no retail tie yet
+TTerrainType townManager::GetNativeTerrain(int type)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:568
+// DC_ONLY(0x4cc9c, cb 0x20) - no retail tie yet
+std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::begin(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:569
+// DC_ONLY(0x4ccbc, cb 0x20) - no retail tie yet
+std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::end(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:615
+// DC_ONLY(0x4ccdc, cb 0x1C) - no retail tie yet
+void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::deque<enum SpellID,std::allocator<enum SpellID>,0>(const std::allocator<enum* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:765
+// DC_ONLY(0x4ccf8, cb 0x3C) - no retail tie yet
+void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::push_back(const SpellID* __t)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:896
+// DC_ONLY(0x4cd34, cb 0x104) - no retail tie yet
+std::_Deque_iterator<enum std::deque<enum SpellID,std::allocator<enum SpellID>,0>::erase(__$ReturnUdt, std::_Deque_iterator<enum __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x4ce38, cb 0x4) - no retail tie yet
+void std::allocator<enum SpellID>::allocator<enum SpellID>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:480
+// DC_ONLY(0x4ce3c, cb 0x4C) - no retail tie yet
+army** std::vector<army *,std::allocator<army *> >::erase(army** __position)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0x4ce88, cb 0x38) - no retail tie yet
+void std::vector<army *,std::allocator<army *> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:806
+// DC_ONLY(0x4cec0, cb 0x34) - no retail tie yet
+void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::pop_back()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:816
+// DC_ONLY(0x4cef4, cb 0x38) - no retail tie yet
+void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::pop_front()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:301
+// DC_ONLY(0x4cf2c, cb 0x3C) - no retail tie yet
+std::_Deque_iterator<enum std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator+(__$ReturnUdt, int __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0x4cf68, cb 0x3C) - no retail tie yet
+army** std::vector<army *,std::allocator<army *> >::erase(army** __first, army** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:299
+// DC_ONLY(0x4cfa4, cb 0x1C) - no retail tie yet
+std::_Deque_iterator<enum* std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator+=(int __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:218
+// DC_ONLY(0x4cfc0, cb 0x84) - no retail tie yet
+void std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >::_M_advance(int __n)
+{
+    // @stub
+}
+
+// E:\gamedcs\DC_precompiledheaders.h:41
+// DC_ONLY(0x4d044, cb 0x38) - no retail tie yet
+const double* _cpp_min(const double* _X, const double* _Y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:318
+// DC_ONLY(0x4d07c, cb 0x84) - no retail tie yet
+void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:364
+// DC_ONLY(0x4d100, cb 0x54) - no retail tie yet
+void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::_M_push_back_aux(const SpellID* __t)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:430
+// DC_ONLY(0x4d154, cb 0x40) - no retail tie yet
+void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::_M_pop_back_aux()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:444
+// DC_ONLY(0x4d194, cb 0x40) - no retail tie yet
+void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::_M_pop_front_aux()
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.h:102
+// DC_ONLY(0x4d1d4, cb 0x1C) - no retail tie yet
+army** std::find(army** __first, army** __last, army** __val)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.h:102
+// DC_ONLY(0x4d1f0, cb 0x6C) - no retail tie yet
+std::_Deque_iterator<enum std::find(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, const SpellID* __val)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:137
+// DC_ONLY(0x4d25c, cb 0xE) - no retail tie yet
+const float* std::max(const float* __a, const float* __b)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0x4d26c, cb 0x98) - no retail tie yet
+std::_Deque_iterator<enum std::copy_backward(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0x4d304, cb 0x98) - no retail tie yet
+std::_Deque_iterator<enum std::copy(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0x4d39c, cb 0x50) - no retail tie yet
+army** std::copy(army** __first, army** __last, army** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x4d3ec, cb 0x30) - no retail tie yet
+void std::destroy(SpellID* __first, SpellID* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:1145
+// DC_ONLY(0x4d41c, cb 0x30) - no retail tie yet
+void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::_M_reserve_map_at_back(unsigned __nodes_to_add)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:731
+// DC_ONLY(0x4d44c, cb 0x110) - no retail tie yet
+void std::deque<enum SpellID,std::allocator<enum SpellID>,0>::_M_reallocate_map(unsigned __nodes_to_add, unsigned char __add_at_front)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.h:66
+// DC_ONLY(0x4d55c, cb 0x16) - no retail tie yet
+army** std::find(army** __first, army** __last, army** __val, std::input_iterator_tag __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.h:66
+// DC_ONLY(0x4d574, cb 0x60) - no retail tie yet
+std::_Deque_iterator<enum std::find(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, const SpellID* __val, std::input_iterator_tag __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:419
+// DC_ONLY(0x4d5d4, cb 0xC) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const std::_Deque_iterator<enum* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:425
+// DC_ONLY(0x4d5e0, cb 0x4) - no retail tie yet
+int* std::distance_type(const std::_Deque_iterator<enum* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0x4d5e4, cb 0x78) - no retail tie yet
+std::_Deque_iterator<enum std::__copy_backward(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0x4d65c, cb 0x78) - no retail tie yet
+std::_Deque_iterator<enum std::__copy(__$ReturnUdt, std::_Deque_iterator<enum __first, std::_Deque_iterator<enum __last, std::_Deque_iterator<enum __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0x4d6d4, cb 0x1E) - no retail tie yet
+army** std::__copy(army** __first, army** __last, army** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x4d6f4, cb 0x4) - no retail tie yet
+SpellID* std::value_type(const SpellID* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x4d6f8, cb 0x1C) - no retail tie yet
+void std::__destroy(SpellID* __first, SpellID* __last, SpellID* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:292
+// DC_ONLY(0x4d714, cb 0x1C) - no retail tie yet
+std::_Deque_iterator<enum* std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator--()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:208
+// DC_ONLY(0x4d730, cb 0x30) - no retail tie yet
+void std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0> >::_M_decrement()
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0x4d760, cb 0x50) - no retail tie yet
+SpellID** std::copy(SpellID** __first, SpellID** __last, SpellID** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0x4d7b0, cb 0x50) - no retail tie yet
+SpellID** std::copy_backward(SpellID** __first, SpellID** __last, SpellID** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x4d800, cb 0x30) - no retail tie yet
+void std::__destroy_aux(SpellID* __first, SpellID* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0x4d830, cb 0xC) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, SpellID** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0x4d83c, cb 0x4) - no retail tie yet
+int* std::distance_type(SpellID** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0x4d840, cb 0x1E) - no retail tie yet
+SpellID** std::__copy(SpellID** __first, SpellID** __last, SpellID** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0x4d860, cb 0x22) - no retail tie yet
+SpellID** std::__copy_backward(SpellID** __first, SpellID** __last, SpellID** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x0043d5c0 size   358  calls_timeGetTime_3d5c0 [import-wrapper]
+//   0x0043d730 size   381  game_21000_sub02_3d730 [caller]
+//   0x0043d8b0 size   309  game_63600_sub00_3d8b0 [caller]
+//   0x0043d9f0 size  1317  game_smove_82m_3d9f0 [string]
+//   0x0043e000 size   313  army [hd-crossbuild]
+//   0x0043ea00 size   103  game_41fa0_sub00_3ea00 [caller]
+//   0x0043efe0 size   207  army_animate_missile [nh3api]
+//   0x0043f900 size  2041  army_range_attack [hd-crossbuild]
+//   0x00440100 size    62  army_GetName [hd-crossbuild]
+//   0x00440140 size    31  game_3f900_sub02_40140 [caller]
+//   0x00440160 size   422  army_range_attack_40160 [hd-crossbuild]
+//   0x00442660 size    41  game_35ec0_sub02_42660 [caller]
+//   0x00442690 size    57  game_22440_sub00_42690 [caller]
+//   0x004426d0 size    20  game_74d80_sub00_426d0 [caller]
+//   0x004426f0 size   139  army_get_average_damage [hd-crossbuild]
+//   0x00442780 size   256  army_get_average_damage_42780 [hd-crossbuild]
+//   0x00442880 size   104  game_69600_sub00_42880 [caller]
+//   0x00443320 size  1300  game_43840_sub00_43320 [caller]
+//   0x00443e30 size   257  game_37800_sub01_43e30 [caller]
+//   0x00444120 size   934  game_47120_sub00_44120 [caller]
+//   0x00445ec0 size   268  game_45d30_sub00_45ec0 [caller]
+//   0x00445fd0 size  1318  game_wallmiss_82m_45fd0 [string]
+//   0x00446500 size   294  game_n33s_46500 [string]
+//   0x00446630 size    46  game_65ad0_sub01_46630 [caller]
+//   0x00446660 size    53  army_PlayAnimation [nh3api]
+//   0x004466a0 size    30  game_1eb80_sub02_466a0 [caller]
+//   0x004466c0 size    90  army_is_adjacent [hd-crossbuild]
+//   0x00447510 size   424  army_FaerieDragonSpell [hd-crossbuild]
+//   0x00447a80 size  1065  game_476c0_sub00_47a80 [caller]
+//   0x00447ee0 size   248  game_48260_sub00_47ee0 [caller]
+//   0x00447fe0 size   638  game_65330_sub01_47fe0 [caller]
+//   0x004487f0 size    67  army_get_mirror_effect [hd-crossbuild]
+//   0x00448840 size   623  game_22b20_sub00_48840 [caller]
+
