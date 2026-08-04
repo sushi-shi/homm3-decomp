@@ -236,8 +236,20 @@ def write_readme(report: dict) -> None:
         rows.append(["`(unmatched)`", "—",
                      f"0 / {unmatched:,} (0.0%)", "0.0%", "0.0%"])
 
+    # the one-number scale: fuzzy-weighted matched bytes over ALL
+    # unfiltered bytes (target + zlib retail extents; excluded categories
+    # are not in either side of the fraction)
+    unfiltered_bytes = (tally.get("target", (0, 0))[1]
+                        + tally.get("zlib", (0, 0))[1])
+    matched_bytes = sum(a["wsum"] for a in per_module.values()) / 100.0
+    exe_pct = (100.0 * matched_bytes / unfiltered_bytes
+               if unfiltered_bytes else 0.0)
+
     pct = 100.0 * matched / denominator if denominator else 0.0
     block = [RM_START, "",
+             f"**Executable matched: {exe_pct:.2f}%** — fuzzy-weighted "
+             f"bytes over all {unfiltered_bytes:,} unfiltered bytes.",
+             "",
              f"**Match score** — {matched:,} / {denominator:,} functions "
              f"exact ({pct:.1f}%) across the full engine "
              f"({covered} in linked units).", ""]
@@ -272,6 +284,8 @@ def write_readme(report: dict) -> None:
     if new != text:
         README_PATH.write_text(new)
         print("[status] README match-score block refreshed")
+    print(f"[status] executable matched: {exe_pct:.2f}% "
+          f"(fuzzy bytes / {unfiltered_bytes:,} unfiltered B)")
 
 
 def main(argv=None) -> int:
