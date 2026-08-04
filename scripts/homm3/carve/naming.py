@@ -13,15 +13,25 @@ Tiers, highest evidence first (first match wins):
                    symbol; MSVC mangling is decoded to a readable form and
                    the raw symbol is preserved.       [retail-proven]
   fid              stock Ghidra Function ID verdict.  [retail-proven]
-  nh3api           NH3API wrapper name for this ENTRY (interior addresses are
-                   excluded upstream - they describe another pressing).
+  hd-crossbuild    NH3API's name, transferred from HD Mod's sibling build by
+                   UNIQUE masked byte identity onto a carved entry of ours
+                   (homm3.carve.hdmap). The name is external; the
+                   identification is our own bytes.  [crossbuild-verified]
+  nh3api           NH3API wrapper name whose raw address happens to hit one of
+                   our entries directly. Kept below hd-crossbuild because the
+                   address itself carries no evidence for our image.
                                                       [external-candidate]
   vtable-slot      the function is a slot of a class-labeled vtable, named
                    <Class>__vslot<NN>.                [external-candidate]
-  eh-funclet       a FuncInfo unwind-action target (retail EH metadata).
-                                                      [structural]
-  init-ctor        a `.CRT$XCU` initializer slot, numbered in link order.
-                                                      [structural]
+  eh-funclet       a FuncInfo unwind-action target, named after the PARENT
+                   function that owns the FuncInfo: retail EH metadata gives
+                   funcinfo -> unwind actions, and the parent is the function
+                   whose code loads that FuncInfo address as an imm32 (the
+                   __CxxFrameHandler setup). So a funclet reads
+                   `<parent>_unwind03`, not an address.  [structural]
+  init-ctor        a `.CRT$XCU` initializer, named after the class whose
+                   vtable it installs where the ctor body references a
+                   class-labeled vtable.               [structural]
   import-wrapper   a thunk to, or lone caller of, one imported API.
                                                       [structural]
   string           an owned literal names the routine's subject.
@@ -42,7 +52,7 @@ import re
 import sys
 from collections import defaultdict
 
-from homm3.carve import common
+from homm3.carve import audit, common
 
 OUT = common.HOMM3_DIR / "config/retail-symbols.csv"
 XREFS = common.HOMM3_DIR / "build/dna/function_xrefs.tsv"
@@ -50,6 +60,7 @@ BANDS = common.HOMM3_DIR / "config/retail-library-bands.tsv"
 LIBRARIES = common.HOMM3_DIR / "config/retail-function-libraries.tsv"
 NAMES = common.HOMM3_DIR / "config/retail-function-names.csv"
 VTABLE_SYMBOLS = common.HOMM3_DIR / "config/retail-vtable-symbols.csv"
+HD_MAP = common.HOMM3_DIR / "config/retail-hd-name-map.csv"
 
 BAND_PREFIX = {"crt-libcmt": "crt", "cxx-libcpmt": "cxx",
                "iostream-libcimt": "ios", "zlib": "zlib", "game": "game",
@@ -58,7 +69,7 @@ IDENT = re.compile(r"[^0-9A-Za-z_]+")
 STOP = {"the", "and", "for", "s", "d", "x", "02x", "1", "2", "n", "r"}
 
 
-def ident(text: str, limit: int = 40) -> str:
+def ident(text: str, limit: int = 64) -> str:
     out = IDENT.sub("_", text).strip("_")
     out = re.sub(r"_{2,}", "_", out)
     if out and out[0].isdigit():
@@ -89,6 +100,102 @@ def demangle(symbol: str) -> str:
         prefix = "_".join(reversed(scopes))
         return ident(f"{prefix}__{name}" if prefix else name)
     return ident(symbol.lstrip("_@").split("@")[0])
+
+
+def eh_parentage(image, entries, owner_of):
+    """funclet_rva -> (parent_rva, state). Retail EH metadata only.
+
+    Walk .rdata FuncInfo records for their UnwindMapEntry action pointers
+    (the funclets), then attribute each FuncInfo to the function whose body
+    loads its address as an imm32 - that is the __CxxFrameHandler setup, so
+    the loader IS the guarded function."""
+    import struct as _struct
+    rdata = next(s for s in image.sections if s.name == ".rdata")
+    blob = image.blob(rdata)
+    text = next(s for s in image.sections if s.name == ".text")
+    lo, hi = text.rva, text.rva + text.size
+    base = image.image_base
+
+    info_actions = {}
+    for offset in range(0, len(blob) - 28 + 1, 4):
+        magic, max_state, unwind_va, ntry, _t, nip, _i = \
+            _struct.unpack_from("<7I", blob, offset)
+        if magic not in audit.EH_MAGICS or max_state == 0:
+            continue
+        if max_state > 0x1000 or ntry > 0x1000 or nip > 0x10000:
+            continue
+        start = unwind_va - base - rdata.rva
+        if not 0 <= start <= len(blob) - max_state * 8:
+            continue
+        actions, valid = [], True
+        for state in range(max_state):
+            to_state, action_va = _struct.unpack_from(
+                "<iI", blob, start + state * 8)
+            if not -1 <= to_state < max_state:
+                valid = False
+                break
+            if action_va:
+                action_rva = action_va - base
+                if not lo <= action_rva < hi:
+                    valid = False
+                    break
+                actions.append((state, action_rva))
+        if valid and actions:
+            info_actions[rdata.rva + offset] = actions
+
+    # VC6 loads the FuncInfo inside a tiny `__ehhandler$` stub
+    #     mov eax, <FuncInfo>;  jmp __CxxFrameHandler
+    # which the linker parks in the .text$x tail, OUTSIDE every carved
+    # function. So resolution is two hops: FuncInfo <- stub <- the guarded
+    # function, which pushes the stub address as its SEH handler.
+    imm_sites = []
+    for row in common.read_tsv(common.CARVE_DIR / "reloc_sites.tsv"):
+        if row["channel"] == "code" and row.get("ctx") == "imm":
+            imm_sites.append((int(row["site_rva"], 16),
+                              int(row["value"], 16) - base))
+    by_target = defaultdict(list)
+    for site, target in imm_sites:
+        by_target[target].append(site)
+
+    parent_of_info = {}
+    for info_rva in info_actions:
+        for site in by_target.get(info_rva, ()):
+            owner = owner_of(site)
+            if owner is not None:            # rare: loaded inline
+                parent_of_info.setdefault(info_rva, owner)
+                break
+            stub = site - 1                  # the `B8 imm32` opcode byte
+            for push_site in by_target.get(stub, ()):
+                handler_owner = owner_of(push_site)
+                if handler_owner is not None:
+                    parent_of_info.setdefault(info_rva, handler_owner)
+                    break
+            if info_rva in parent_of_info:
+                break
+
+    out = {}
+    for info_rva, actions in info_actions.items():
+        parent = parent_of_info.get(info_rva)
+        for state, action_rva in actions:
+            if parent is not None and action_rva not in out:
+                out[action_rva] = (parent, state)
+    return out
+
+
+def ctor_subjects(functions, size_of, owner_of, vtable_class):
+    """init-array ctor -> class whose vtable it installs (if any)."""
+    subjects = {}
+    for row in common.read_tsv(common.CARVE_DIR / "reloc_sites.tsv"):
+        if row["channel"] != "code" or row.get("ctx") != "imm":
+            continue
+        target = int(row["value"], 16) - common.IMAGE_BASE
+        cls = vtable_class.get(target)
+        if not cls:
+            continue
+        owner = owner_of(int(row["site_rva"], 16))
+        if owner is not None:
+            subjects.setdefault(owner, cls)
+    return subjects
 
 
 def load_rows(path, tsv=False):
@@ -125,18 +232,33 @@ def main(argv=None) -> int:
         if r["carve_state"] == "entry":
             names_rows.setdefault(int(r["rva"], 16), r)
     xrefs = {int(r["entry_rva"], 16): r for r in load_rows(XREFS, tsv=True)}
+    hd_names = {}
+    for r in load_rows(HD_MAP):
+        if r["our_state"] == "entry":
+            hd_names.setdefault(int(r["rva"], 16), r)
 
     vtable_slot = {}
+    vtable_class = {}
     for r in load_rows(VTABLE_SYMBOLS):
         target = int(r["target_rva"], 16)
-        if r["class"] and target not in vtable_slot:
-            vtable_slot[target] = (r["class"], int(r["slot"]),
-                                   r["vtable_rva"])
+        if r["class"]:
+            vtable_class.setdefault(int(r["vtable_rva"], 16), r["class"])
+            if target not in vtable_slot:
+                vtable_slot[target] = (r["class"], int(r["slot"]),
+                                       r["vtable_rva"])
 
     # structural sets
     image, _info = common.load_image()
-    from homm3.carve import audit
     _fi, funclets, _missing = audit.gate_eh_funclets(image, set(entries))
+
+    def owner_of(rva):
+        i = bisect.bisect_right(entries, rva) - 1
+        if i >= 0 and entries[i] <= rva < entries[i] + size_of[entries[i]]:
+            return entries[i]
+        return None
+
+    eh_parent = eh_parentage(image, entries, owner_of)
+    ctor_class = ctor_subjects(functions, size_of, owner_of, vtable_class)
     ctor_index = {}
     seed_log = common.CARVE_DIR / "seed_log.tsv"
     if seed_log.is_file():
@@ -161,6 +283,7 @@ def main(argv=None) -> int:
             ordinal[callee] = (caller, n)
 
     rows = []
+    by_rva = {}
     used = defaultdict(int)
     tiers = defaultdict(int)
 
@@ -170,12 +293,18 @@ def main(argv=None) -> int:
             base = f"{base}_{rva:x}"
         used[base] += 1
         tiers[tier] += 1
-        rows.append({"rva": f"0x{rva:x}", "size": size_of[rva], "name": base,
-                     "tier": tier, "confidence": confidence,
-                     "library": band_of(rva), "symbol": symbol,
-                     "evidence": evidence})
+        row = {"rva": f"0x{rva:x}", "size": size_of[rva], "name": base,
+               "tier": tier, "confidence": confidence,
+               "library": band_of(rva), "symbol": symbol,
+               "evidence": evidence}
+        rows.append(row)
+        by_rva[rva] = row
 
+    # pass 1 skips EH funclets: they are named after their parent, which must
+    # have its own name first (parents live in code bands, funclets in $x)
     for rva, _size in functions:
+        if rva in eh_parent:
+            continue
         band = band_of(rva)
         prefix = BAND_PREFIX.get(band, "sub")
         lib = libraries.get(rva)
@@ -202,6 +331,13 @@ def main(argv=None) -> int:
                 emit(rva, demangle(fid_name), "fid", "retail-proven",
                      "ghidra-function-id", fid_name)
                 continue
+        hd = hd_names.get(rva)
+        if hd:
+            emit(rva, hd["name"].replace("::", "__"), "hd-crossbuild",
+                 "crossbuild-verified",
+                 f"HD {hd['hd_va']} masked-identity {hd['match_bytes']}B/"
+                 f"{hd['fixed_bytes']} fixed; {hd['evidence']}")
+            continue
         row = names_rows.get(rva)
         if row and row["name"]:
             emit(rva, row["name"].replace("::", "__"), "nh3api",
@@ -212,13 +348,13 @@ def main(argv=None) -> int:
             emit(rva, f"{cls}__vslot{slot:02d}", "vtable-slot",
                  "external-candidate", f"vtable {vt} slot {slot}")
             continue
-        if rva in funclets:
-            emit(rva, f"eh_funclet_{rva:x}", "eh-funclet", "structural",
-                 "FuncInfo unwind action target")
-            continue
         if rva in ctor_index:
-            emit(rva, f"cinit{ctor_index[rva]:04d}_{rva:x}", "init-ctor",
-                 "structural", f".CRT$XCU slot {ctor_index[rva]}")
+            cls = ctor_class.get(rva)
+            label = (f"cinit_{cls}_{rva:x}" if cls
+                     else f"cinit{ctor_index[rva]:04d}_{rva:x}")
+            emit(rva, label, "init-ctor", "structural",
+                 f".CRT$XCU slot {ctor_index[rva]}"
+                 + (f"; installs {cls} vtable" if cls else ""))
             continue
         if xref and xref["externals"] != "-":
             # Ghidra's own placeholders (FUN_/thunk_FUN_) are not API names
@@ -245,6 +381,30 @@ def main(argv=None) -> int:
         emit(rva, f"{prefix}_{rva:x}", "band", "structural",
              f"band {band}")
 
+    # pass 2: EH funclets inherit their guarded parent's identity
+    orphan = 0
+    for rva, _size in functions:
+        if rva not in eh_parent:
+            continue
+        parent, state = eh_parent[rva]
+        parent_row = by_rva.get(parent)
+        if parent_row is None:
+            orphan += 1
+            emit(rva, f"eh_funclet_{rva:x}", "eh-funclet", "structural",
+                 "FuncInfo unwind action target (parent unresolved)")
+            continue
+        # keep the discriminating suffix: truncate the parent stem, not it
+        emit(rva, f"{ident(parent_row['name'], 46)}_unwind{state:02d}",
+             "eh-funclet", "structural",
+             f"unwind action of 0x{parent:x} ({parent_row['name']}), "
+             f"state {state}")
+    for rva in sorted(funclets - set(eh_parent)):
+        if rva in by_rva:
+            continue
+        emit(rva, f"eh_funclet_{rva:x}", "eh-funclet", "structural",
+             "FuncInfo unwind action target (no FuncInfo owner found)")
+
+    rows.sort(key=lambda r: int(r["rva"], 16))
     names_seen = {r["name"] for r in rows}
     if len(names_seen) != len(rows):
         common.die(f"name collision: {len(rows)} rows, {len(names_seen)} names")

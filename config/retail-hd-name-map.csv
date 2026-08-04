@@ -1,0 +1,826 @@
+# GENERATED: python3 -m homm3.carve hdmap - NH3API names transferred from HD Mod's Heroes3.exe by masked byte identity.
+# generator: homm3.carve.hdmap
+# exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
+# date: 2026-08-04
+# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
+# HD build: Heroes3.exe; match = unique masked hit of the HD function body in OUR .text
+# (absolute operands + rel32 displacements masked). The NAME is NH3API's (external);
+# the IDENTIFICATION is our own bytes. our_state=entry means it also lands on a carved entry.
+rva,hd_va,name,signature,convention,match_bytes,fixed_bytes,our_state,evidence
+0x2b10,0x402b10,TAdventureMapWindow::~TAdventureMapWindow,void TAdventureMapWindow::~TAdventureMapWindow(),thiscall,128,112,entry,core/interface/dialogs.hpp:129
+0x2b90,0x402b90,TAdventureMapWindow::animate_bottom_view,void TAdventureMapWindow::animate_bottom_view(bool in_background),thiscall,48,44,entry,core/interface/dialogs.hpp:138
+0x2bc0,0x402bc0,TAdventureMapWindow::draw_bottom_view,void TAdventureMapWindow::draw_bottom_view(bool update),thiscall,80,64,entry,core/interface/dialogs.hpp:141
+0x2c10,0x402c10,TAdventureMapWindow::set_bottom_view,void TAdventureMapWindow::set_bottom_view(type_bottom_view_window* new_view),thiscall,64,64,entry,core/interface/dialogs.hpp:144
+0x2c50,0x402c50,TAdventureMapWindow::convertID2HelpID,int32_t TAdventureMapWindow::convertID2HelpID(int32_t id),thiscall,256,228,entry,core/interface/dialogs.hpp:147
+0x2e70,0x402e70,TAdventureMapWindow::ProcessRightSelect,bool TAdventureMapWindow::ProcessRightSelect(const message& msg),thiscall,256,205,entry,core/interface/dialogs.hpp:150
+0x3010,0x403010,TAdventureMapWindow::ProcessHover,"bool TAdventureMapWindow::ProcessHover(int32_t hx, int32_t hy)",thiscall,256,156,entry,core/interface/dialogs.hpp:153
+0x3220,0x403220,TAdventureMapWindow::DoHeroKnob,void TAdventureMapWindow::DoHeroKnob(bool update),thiscall,96,74,entry,core/interface/dialogs.hpp:156
+0x3280,0x403280,TAdventureMapWindow::DoTownKnob,void TAdventureMapWindow::DoTownKnob(bool update),thiscall,96,76,entry,core/interface/dialogs.hpp:159
+0x3420,0x403420,TAdventureMapWindow::UpdateTownLocators,"void TAdventureMapWindow::UpdateTownLocators(int32_t top, bool drawWin, bool updateFlag)",thiscall,256,194,entry,core/interface/dialogs.hpp:165
+0x3560,0x403560,TAdventureMapWindow::UpdateHeroLocator,"void TAdventureMapWindow::UpdateHeroLocator(int32_t iWhich, bool drawWinSect, bool updateFlag)",thiscall,256,183,entry,core/interface/dialogs.hpp:168
+0x37a0,0x4037a0,TAdventureMapWindow::UpdateTownLocator,"void TAdventureMapWindow::UpdateTownLocator(int32_t iWhich, bool drawWinSect, bool updateFlag)",thiscall,256,184,entry,core/interface/dialogs.hpp:171
+0x38c0,0x4038c0,TAdventureMapWindow::HighlightLocators,void TAdventureMapWindow::HighlightLocators(bool update),thiscall,240,200,entry,core/interface/dialogs.hpp:174
+0x39b0,0x4039b0,TAdventureMapWindow::UpdateQuestLogButton,void TAdventureMapWindow::UpdateQuestLogButton(bool update),thiscall,256,196,entry,core/interface/dialogs.hpp:177
+0x3ba0,0x403ba0,TAdventureMapWindow::UpdateSleepButton,void TAdventureMapWindow::UpdateSleepButton(const hero* this_hero),thiscall,80,60,entry,core/interface/dialogs.hpp:180
+0x3bf0,0x403bf0,TAdventureMapWindow::UpdateSpellButton,void TAdventureMapWindow::UpdateSpellButton(const hero* this_hero),thiscall,80,60,entry,core/interface/dialogs.hpp:183
+0x3c40,0x403c40,TAdventureMapWindow::SetElevationToggleImage,bool TAdventureMapWindow::SetElevationToggleImage(int32_t level),thiscall,128,74,entry,core/interface/dialogs.hpp:186
+0x3cc0,0x403cc0,TAdventureMapWindow::SetSleepImage,void TAdventureMapWindow::SetSleepImage(int32_t image),thiscall,256,182,entry,core/interface/dialogs.hpp:189
+0x3ee0,0x403ee0,TAdventureMapWindow::ClearBottomView,void TAdventureMapWindow::ClearBottomView(),thiscall,32,32,entry,core/interface/dialogs.hpp:192
+0x3f00,0x403f00,TAdventureMapWindow::UpdateResourceDisplay,"void TAdventureMapWindow::UpdateResourceDisplay(bool draw, bool update)",thiscall,32,28,entry,core/interface/dialogs.hpp:195
+0x3f20,0x403f20,TAdventureMapWindow::DrawChatText,void TAdventureMapWindow::DrawChatText(bool update),thiscall,64,52,entry,core/interface/dialogs.hpp:198
+0x5df0,0x405d80,ExtraInfoUnion::get_creature_bank,type_creature_bank* ExtraInfoUnion::get_creature_bank(),thiscall,32,24,entry,core/objects.hpp:1186
+0x6480,0x406410,hero::hero,void hero::hero(const hero& other),thiscall,256,256,entry,core/hero.hpp:391
+0x6df0,0x406d80,advManager::advManager,void advManager::advManager(),thiscall,256,244,entry,core/adventure.hpp:85
+0x7ac0,0x407a20,advManager::InMapArea,"int32_t advManager::InMapArea(int32_t x, int32_t y)",thiscall,80,80,entry,core/adventure.hpp:111
+0x7b10,0x407a70,advManager::result,type_point advManager::result(nh3api::dummy_tag),thiscall,112,112,entry,core/adventure.hpp:118
+0x7b80,0x407ae0,advManager::DoAdvCommand,NewmapCell* advManager::DoAdvCommand(type_point& trigger_point),thiscall,256,216,entry,core/adventure.hpp:123
+0x8770,0x4086d0,NewfullMap::cell,"NewmapCell* NewfullMap::cell(int32_t x, int32_t y, int32_t z)",thiscall,256,192,entry,core/map.hpp:188
+0xb0e0,0x40b040,advManager::DrawRolloverText,void advManager::DrawRolloverText(const char* text),thiscall,112,92,entry,core/adventure.hpp:126
+0xe280,0x40e1e0,advManager::get_normal_cursor,type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell),thiscall,224,212,entry,core/adventure.hpp:137
+0xf8c0,0x40f820,advManager::GetCloudLookup,"int32_t advManager::GetCloudLookup(int32_t srcX, int32_t scrY, int32_t Z)",thiscall,256,200,entry,core/adventure.hpp:154
+0xfca0,0x40fc00,hasFlag,bool hasFlag(TAdventureObjectType objType),fastcall,128,108,entry,core/objects.hpp:1903
+0xfd20,0x40fc80,GetFlaggedObjectOwner,int32_t GetFlaggedObjectOwner(NewmapCell* thisCell),fastcall,256,216,entry,core/objects.hpp:1906
+0x12bd0,0x412b30,advManager::GetCell,NewmapCell* advManager::GetCell(type_point point),thiscall,112,108,entry,core/adventure.hpp:159
+0x13790,0x4136f0,advManager::UpdateRadar,"void advManager::UpdateRadar(bool updateFlag = true,)",thiscall,48,44,entry,core/adventure.hpp:189
+0x15d60,0x415cc0,advManager::OverrideBottomView,"void advManager::OverrideBottomView(EBottomViewType view, int32_t time)",thiscall,128,88,entry,core/adventure.hpp:200
+0x15de0,0x415d40,advManager::UpdBottomView,"void advManager::UpdBottomView(bool force_update, bool bDrawWindow, bool bUpdate)",thiscall,256,170,entry,core/adventure.hpp:203
+0x16060,0x415fc0,advManager::BVResMsg,"void advManager::BVResMsg(const char* cMsg, EGameResource iResType, int32_t iResQty)",thiscall,256,216,entry,core/adventure.hpp:208
+0x16210,0x416170,advManager::BVMessage,void advManager::BVMessage(const char* cMsg),thiscall,224,188,entry,core/adventure.hpp:214
+0x17420,0x417380,advManager::RedrawAdvScreen,void advManager::RedrawAdvScreen(bool bUpdate),thiscall,256,142,entry,core/adventure.hpp:148
+0x17570,0x4174d0,advManager::DeactivateCurrTown,void advManager::DeactivateCurrTown(bool waitingPlayer),thiscall,48,36,entry,core/adventure.hpp:218
+0x175a0,0x417500,advManager::DeactivateCurrHero,void advManager::DeactivateCurrHero(bool waitingPlayer),thiscall,64,44,entry,core/adventure.hpp:221
+0x175e0,0x417540,advManager::MobilizeCurrHero,"void advManager::MobilizeCurrHero(bool bInMove, bool waitingPlayer, bool draw_changes)",thiscall,160,127,entry,core/adventure.hpp:224
+0x17680,0x4175e0,advManager::DemobilizeCurrHero,void advManager::DemobilizeCurrHero(),thiscall,256,196,entry,core/adventure.hpp:227
+0x17830,0x417790,advManager::SetTownContext,"void advManager::SetTownContext(int32_t townId, bool waitingPlayer, bool update)",thiscall,256,204,entry,core/adventure.hpp:230
+0x17b20,0x417a80,advManager::SetHeroContext,"void advManager::SetHeroContext(int32_t heroId, bool bInMove, bool waitingPlayer, bool draw_changes)",thiscall,256,168,entry,core/adventure.hpp:233
+0x183d0,0x418330,advManager::SetEnvironmentOrigin,"void advManager::SetEnvironmentOrigin(type_point point, int32_t reset)",thiscall,256,216,entry,core/adventure.hpp:236
+0x18620,0x418580,advManager::GetSoundId,"e_looping_sound_id advManager::GetSoundId(int32_t x, int32_t y, int32_t z)",thiscall,256,216,entry,core/adventure.hpp:239
+0x18c10,0x418b70,advManager::InsertSound,"void advManager::InsertSound(int32_t x, int32_t y, int32_t z, int32_t soundPriority, int32_t soundsType)",thiscall,256,196,entry,core/adventure.hpp:242
+0x194a0,0x419400,advManager::SeedTo,void advManager::SeedTo(type_point target),thiscall,208,164,entry,core/adventure.hpp:245
+0x19570,0x4194d0,advManager::ForceNewHover,void advManager::ForceNewHover(),thiscall,80,60,entry,core/adventure.hpp:248
+0x1a1e0,0x41a140,advManager::TrimLoopingSounds,void advManager::TrimLoopingSounds(int32_t iMaxSoundsAllowed),thiscall,256,232,entry,core/adventure.hpp:251
+0x1a460,0x41a3c0,advManager::FindAdjacentMonster,"bool advManager::FindAdjacentMonster(type_point point,)",thiscall,256,232,entry,core/adventure.hpp:286
+0x1b040,0x41afa0,CAdvPopup::CAdvPopup,"void CAdvPopup::CAdvPopup(int32_t winX,)",thiscall,208,164,entry,core/interface/windows.hpp:749
+0x1b120,0x41b080,CAdvPopup::~CAdvPopup,void CAdvPopup::~CAdvPopup(),thiscall,160,132,entry,core/interface/windows.hpp:756
+0x1eac0,0x41ec40,combatManager::get_total_combat_value,"int32_t combatManager::get_total_combat_value(int32_t side, int32_t lowest_attack, int32_t lowest_defense, bool include_cripples)",thiscall,192,172,entry,core/combat.hpp:472
+0x1f140,0x41f2c0,combatManager::find_move_order,void combatManager::find_move_order(exe_vector<army*>* order),thiscall,256,196,entry,core/combat.hpp:480
+0x1f890,0x41fa10,combatManager::can_cast_spells,"bool combatManager::can_cast_spells(int32_t side, bool hero_spell)",thiscall,144,108,entry,core/combat.hpp:483
+0x22440,0x4225c0,combatManager::compute_fire_shield_damage,"int32_t combatManager::compute_fire_shield_damage(int32_t damage, const army* attacker, const army* target, int32_t target_hits)",thiscall,103,95,entry,core/combat.hpp:475
+0x23c80,0x423c80,type_monster_data::get_enchantment_value,"int32_t type_monster_data::get_enchantment_value(type_spell_choice& choice, const hero* casting_hero, const hero* target_hero)",thiscall,128,112,entry,core/combat_AI.hpp:357
+0x23d00,0x423d00,type_monster_data::get_resurrection_value,"int32_t type_monster_data::get_resurrection_value(type_spell_choice& choice, const hero* casting_hero)",thiscall,224,196,entry,core/combat_AI.hpp:360
+0x23de0,0x423de0,type_monster_data::get_spell_damage,"int32_t type_monster_data::get_spell_damage(SpellID spell, const hero* casting_hero, const hero* target_hero, int32_t damage)",thiscall,192,168,entry,core/combat_AI.hpp:370
+0x23ea0,0x423ea0,type_monster_data::take_damage,int32_t type_monster_data::take_damage(int32_t damage),thiscall,64,64,entry,core/combat_AI.hpp:373
+0x23ee0,0x423ee0,type_AI_combat_data::type_AI_combat_data,"void type_AI_combat_data::type_AI_combat_data(const hero* new_hero, const armyGroup* new_army, double base_modifier, const hero* _enemy_hero, const town* enemy_town, NewmapCell* map_cell)",thiscall,256,224,entry,core/combat_AI.hpp:445
+0x24880,0x424880,type_AI_combat_data::adjust_army,void type_AI_combat_data::adjust_army(bool dismiss_hero),thiscall,224,186,entry,core/combat_AI.hpp:465
+0x24960,0x424960,type_AI_combat_data::get_fastest_speed,int32_t type_AI_combat_data::get_fastest_speed(),thiscall,112,100,entry,core/combat_AI.hpp:468
+0x249d0,0x4249d0,type_AI_combat_data::get_next_chain_lightning_target,"int32_t type_AI_combat_data::get_next_chain_lightning_target(int32_t excluded, const type_AI_combat_data& defender, int32_t start, int32_t damage)",thiscall,256,200,entry,core/combat_AI.hpp:486
+0x24bf0,0x424bf0,type_AI_combat_data::get_area_value,"void type_AI_combat_data::get_area_value(type_spell_choice& choice, const type_AI_combat_data& defender, int32_t damage, int32_t extra_targets)",thiscall,256,204,entry,core/combat_AI.hpp:489
+0x24d20,0x424d20,type_AI_combat_data::get_damage_spell_value,"void type_AI_combat_data::get_damage_spell_value(type_spell_choice& choice, const type_AI_combat_data& defender)",thiscall,256,194,entry,core/combat_AI.hpp:492
+0x24fb0,0x424fb0,type_AI_combat_data::cast_chain_lightning,"void type_AI_combat_data::cast_chain_lightning(type_spell_choice& choice, type_AI_combat_data& defender, int32_t damage)",thiscall,256,202,entry,core/combat_AI.hpp:495
+0x25100,0x425100,type_AI_combat_data::cast_area_effect,"void type_AI_combat_data::cast_area_effect(type_spell_choice& choice, type_AI_combat_data& defender, int32_t damage, int32_t extra_targets)",thiscall,256,196,entry,core/combat_AI.hpp:498
+0x25260,0x425260,type_AI_combat_data::cast_damage_spell,"void type_AI_combat_data::cast_damage_spell(type_spell_choice& choice, type_AI_combat_data& defender)",thiscall,256,224,entry,core/combat_AI.hpp:501
+0x253e0,0x4253e0,type_AI_combat_data::get_mass_damage_value,"int32_t type_AI_combat_data::get_mass_damage_value(type_spell_choice& choice, const hero* casting_hero)",thiscall,256,208,entry,core/combat_AI.hpp:504
+0x25510,0x425510,type_AI_combat_data::get_enchantment_value,void type_AI_combat_data::get_enchantment_value(type_spell_choice& choice),thiscall,256,200,entry,core/combat_AI.hpp:507
+0x258a0,0x4258a0,type_AI_combat_data::cast_enchantment,"void type_AI_combat_data::cast_enchantment(type_spell_choice& choice, const hero* casting_hero, bool increase)",thiscall,256,216,entry,core/combat_AI.hpp:510
+0x25b10,0x425b10,type_AI_combat_data::cast_enchantment,"void type_AI_combat_data::cast_enchantment(type_spell_choice& choice, type_AI_combat_data& defender)",thiscall,192,148,entry,core/combat_AI.hpp:513
+0x25bd0,0x425bd0,type_AI_combat_data::cast_spell,"void type_AI_combat_data::cast_spell(type_AI_combat_data& defender, type_speed_category round)",thiscall,256,200,entry,core/combat_AI.hpp:516
+0x26170,0x426170,type_AI_combat_data::inflict_melee_damage,"int32_t type_AI_combat_data::inflict_melee_damage(int32_t damage, int32_t start, int32_t speed_limit)",thiscall,256,228,entry,core/combat_AI.hpp:533
+0x262b0,0x4262b0,type_AI_combat_data::kill,void type_AI_combat_data::kill(),thiscall,80,72,entry,core/combat_AI.hpp:536
+0x26300,0x426300,type_AI_combat_data::inflict_damage,"void type_AI_combat_data::inflict_damage(int32_t damage, int32_t blocker_speed)",thiscall,144,124,entry,core/combat_AI.hpp:539
+0x26390,0x426390,type_AI_combat_data::get_attack,"int32_t type_AI_combat_data::get_attack(type_speed_category speed_limit, bool shooters_blocked)",thiscall,192,180,entry,core/combat_AI.hpp:542
+0x26450,0x426450,type_AI_combat_data::get_final_melee_value,int32_t type_AI_combat_data::get_final_melee_value(),thiscall,128,116,entry,core/combat_AI.hpp:545
+0x264d0,0x4264d0,type_AI_combat_data::do_general_melee,void type_AI_combat_data::do_general_melee(type_AI_combat_data& defender),thiscall,256,220,entry,core/combat_AI.hpp:566
+0x267c0,0x4267c0,type_AI_combat_data::choose_melee,"bool type_AI_combat_data::choose_melee(const type_AI_combat_data& enemy, type_speed_category current_round)",thiscall,256,232,entry,core/combat_AI.hpp:569
+0x26bc0,0x426bc0,type_AI_combat_data::simulate_combat,void type_AI_combat_data::simulate_combat(type_AI_combat_data& defender),thiscall,256,196,entry,core/combat_AI.hpp:572
+0x26ee0,0x426ee0,type_AI_combat_data::do_aftermath,"void type_AI_combat_data::do_aftermath(type_AI_combat_data& defender, town* enemy_town)",thiscall,256,190,entry,core/combat_AI.hpp:575
+0x270c0,0x4270c0,AI_quick_combat,"bool AI_quick_combat(hero* attacking_hero, hero* defending_hero, armyGroup& defending_army, town* defending_town, NewmapCell* map_cell)",fastcall,256,200,entry,core/combat_AI.hpp:431
+0x27210,0x427210,AI_auto_combat,"void AI_auto_combat(hero* attacking_hero, hero* defending_hero, armyGroup& attacking_army, armyGroup& defending_army, const town* defending_town, NewmapCell* cell)",fastcall,256,196,entry,core/combat_AI.hpp:434
+0x27330,0x427330,AI_value_of_combat,"int32_t AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero, const armyGroup& defending_army, const town* defending_town, const NewmapCell* cell)",fastcall,256,211,entry,core/adventure_AI.hpp:643
+0x27650,0x427650,AI_approximate_strength,int32_t AI_approximate_strength(const hero* current_hero),fastcall,64,52,entry,core/adventure_AI.hpp:647
+0x27690,0x427690,AI_approximate_strength,"int32_t AI_approximate_strength(const hero* current_hero, const armyGroup& current_army)",fastcall,48,36,entry,core/adventure_AI.hpp:650
+0x276c0,0x4276c0,type_AI_combat_data::type_AI_combat_data,void type_AI_combat_data::type_AI_combat_data(const type_AI_combat_data& that),thiscall,144,132,entry,core/combat_AI.hpp:449
+0x28410,0x428410,can_take_town,"bool can_take_town(const hero* attacking_hero, const town* defending_town)",fastcall,256,212,entry,core/adventure_AI.hpp:656
+0x28710,0x428710,type_AI_player::get_attack_bonus,float type_AI_player::get_attack_bonus(int16_t player),fastcall,48,28,entry,core/adventure_AI.hpp:55
+0x29ab0,0x429ab0,type_AI_player::reset_magus_hut_value,void type_AI_player::reset_magus_hut_value(),thiscall,32,28,entry,core/adventure_AI.hpp:37
+0x2a150,0x42a150,type_AI_player::get_total_value,"int32_t type_AI_player::get_total_value(int32_t basic_value, const std::array<int32_t, 7>& cost)",thiscall,256,220,entry,core/adventure_AI.hpp:52
+0x2b9e0,0x42b9e0,game::is_human_ally,bool game::is_human_ally(int32_t player_number),thiscall,80,72,entry,core/global.hpp:162
+0x2ba30,0x42ba30,game::GetTown,town* game::GetTown(int32_t whichTown),thiscall,48,48,entry,core/global.hpp:165
+0x2ecc0,0x42ecc0,searchArray::get_cell,"pathCell* searchArray::get_cell(type_point point, bool flying)",thiscall,112,104,entry,core/pathfinding.hpp:133
+0x2ed30,0x42ed30,searchArray::get_danger_value,int32_t searchArray::get_danger_value(type_point point),thiscall,80,72,entry,core/pathfinding.hpp:136
+0x2ed80,0x42ed80,game::get_cell,NewmapCell* game::get_cell(type_point point),thiscall,80,80,entry,core/global.hpp:177
+0x305a0,0x4305a0,town::HasBuilding,"bool town::HasBuilding(type_building_id buildingId, bool check_included = true)",thiscall,112,100,entry,core/town.hpp:248
+0x317d0,0x4317d0,game::GetHero,hero* game::GetHero(int32_t which),thiscall,48,48,entry,core/global.hpp:213
+0x32500,0x432500,type_artifact_effect::~type_artifact_effect,void type_artifact_effect::~type_artifact_effect(),thiscall,64,56,entry,core/adventure_AI.hpp:160
+0x336c0,0x4336c0,AI_get_value_of_artifact,"int32_t AI_get_value_of_artifact(type_artifact artifact, const hero* owner, bool equipped, bool exact)",fastcall,256,220,entry,core/adventure_AI.hpp:660
+0x339e0,0x4339e0,total_artifact_value,"int32_t total_artifact_value(hero* candidate, int32_t player_id)",fastcall,192,176,entry,core/adventure_AI.hpp:666
+0x33aa0,0x433aa0,AI_get_value_of_artifact,"int32_t AI_get_value_of_artifact(const type_artifact& artifact, int32_t player_id)",fastcall,160,148,entry,core/adventure_AI.hpp:673
+0x35850,0x4354a0,value_of_luck_and_morale,"double value_of_luck_and_morale(int32_t value, int32_t change, double good_value_multiplier, double bad_value_multiplier)",fastcall,256,244,entry,core/adventure_AI.hpp:680
+0x35960,0x4355b0,AI_value_of_luck,"double AI_value_of_luck(int32_t luck, int32_t change)",fastcall,32,20,entry,core/adventure_AI.hpp:683
+0x35980,0x4355d0,AI_get_attack_damage,"int32_t AI_get_attack_damage(const army& current_army, int32_t our_hits, const army& enemy, bool ranged, int32_t distance)",fastcall,48,44,entry,core/combat_AI.hpp:15
+0x359b0,0x435600,type_AI_combat_parameters::simulate_attack,"void type_AI_combat_parameters::simulate_attack(const army& current_army, int32_t& our_hits, const army& enemy, int32_t& enemy_hits, bool ranged, int32_t distance)",thiscall,256,196,entry,core/combat_AI.hpp:60
+0x35b90,0x4357e0,type_AI_combat_parameters::get_simple_attack_effect,"int32_t type_AI_combat_parameters::get_simple_attack_effect(const army& current_army, int32_t our_total, const army& enemy, int32_t enemy_total, bool ranged, int32_t distance)",thiscall,224,200,entry,core/combat_AI.hpp:63
+0x35c70,0x4358c0,type_AI_combat_parameters::get_simple_attack_effect,"int32_t type_AI_combat_parameters::get_simple_attack_effect(const army& current_army, const army& enemy, bool ranged, int32_t distance)",thiscall,64,44,entry,core/combat_AI.hpp:66
+0x35cb0,0x435900,type_AI_combat_parameters::get_ranged_attack_value,"int32_t type_AI_combat_parameters::get_ranged_attack_value(const army& current_army, const army& enemy)",thiscall,256,202,entry,core/combat_AI.hpp:69
+0x35dc0,0x435a10,type_AI_combat_parameters::get_exchange_effect,"int32_t type_AI_combat_parameters::get_exchange_effect(const army& current_army, const army& enemy, int32_t distance)",thiscall,256,220,entry,core/combat_AI.hpp:72
+0x360c0,0x435d10,type_AI_attack_hex_chooser::type_AI_attack_hex_chooser,"void type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attack_army, const army* enemy_army, const int32_t* enemy_attack_array, searchArray* search_data, const type_AI_combat_parameters& data)",thiscall,192,168,entry,core/combat_AI.hpp:628
+0x36180,0x435dd0,type_AI_attack_hex_chooser::get_hex_attack_value,"int32_t type_AI_attack_hex_chooser::get_hex_attack_value(int32_t hex, int32_t& checked)",thiscall,256,200,entry,core/combat_AI.hpp:651
+0x36840,0x436490,type_AI_attack_hex_chooser::find_attack_hex,bool type_AI_attack_hex_chooser::find_attack_hex(),thiscall,240,188,entry,core/combat_AI.hpp:657
+0x36950,0x4365a0,type_spell_choice::type_spell_choice,void type_spell_choice::type_spell_choice(),thiscall,48,48,entry,core/combat_AI.hpp:164
+0x36980,0x4365d0,type_spell_choice::type_spell_choice,"void type_spell_choice::type_spell_choice(SpellID new_spell, TSkillMastery new_mastery, int32_t new_power, int32_t new_duration)",thiscall,64,64,entry,core/combat_AI.hpp:168
+0x369c0,0x436610,type_AI_spellcaster::type_AI_spellcaster,"void type_AI_spellcaster::type_AI_spellcaster(combatManager* combatMgr, int32_t side, bool creature_spell)",thiscall,256,182,entry,core/combat_AI.hpp:207
+0x36c30,0x436880,type_AI_spellcaster::~type_AI_spellcaster,void type_AI_spellcaster::~type_AI_spellcaster(),thiscall,48,44,entry,core/combat_AI.hpp:214
+0x36e30,0x436a80,type_AI_spellcaster::get_damage_value,"int32_t type_AI_spellcaster::get_damage_value(SpellID spell, int32_t base_damage, const hero* target_hero, const army* target)",thiscall,256,194,entry,core/combat_AI.hpp:227
+0x36f60,0x436bb0,type_AI_spellcaster::get_damage_spell_value,"int32_t type_AI_spellcaster::get_damage_spell_value(const army* our_army, type_enchant_data caster)",thiscall,80,72,entry,core/combat_AI.hpp:230
+0x36fb0,0x436c00,type_AI_spellcaster::get_mass_damage_effect,"int32_t type_AI_spellcaster::get_mass_damage_effect(int32_t enemy_damage, int32_t friendly_damage)",thiscall,144,144,entry,core/combat_AI.hpp:233
+0x37040,0x436c90,type_AI_spellcaster::get_area_effect_value,"int32_t type_AI_spellcaster::get_area_effect_value(SpellID spell, int32_t base_damage, TSkillMastery mastery, int32_t hex)",thiscall,256,232,entry,core/combat_AI.hpp:236
+0x37190,0x436de0,type_AI_spellcaster::get_chain_lightning_value,"int32_t type_AI_spellcaster::get_chain_lightning_value(int32_t power, TSkillMastery mastery, army* target)",thiscall,256,196,entry,core/combat_AI.hpp:239
+0x37800,0x437450,type_AI_spellcaster::get_attack_skill_value,"int32_t type_AI_spellcaster::get_attack_skill_value(const army* our_army, const army* enemy, int32_t duration, int32_t bonus)",thiscall,256,198,entry,core/combat_AI.hpp:242
+0x37a00,0x437650,army::army,void army::army(const army& other),thiscall,256,248,entry,core/army.hpp:114
+0x387c0,0x438410,type_AI_spellcaster::get_defense_boost_value,"int32_t type_AI_spellcaster::get_defense_boost_value(const army* our_army, const army* enemy, int32_t duration, double increase)",thiscall,256,227,entry,core/combat_AI.hpp:245
+0x38910,0x438560,type_AI_spellcaster::get_defense_skill_value,"int32_t type_AI_spellcaster::get_defense_skill_value(const army* our_army, int32_t duration, int32_t bonus)",thiscall,256,211,entry,core/combat_AI.hpp:248
+0x39550,0x4391a0,type_AI_spellcaster::get_speed_value,"int32_t type_AI_spellcaster::get_speed_value(const army* our_army, int32_t increase, int32_t duration)",thiscall,256,212,entry,core/combat_AI.hpp:251
+0x396e0,0x439330,type_AI_spellcaster::get_protection_value,"int32_t type_AI_spellcaster::get_protection_value(const army* our_army, TSpellSchool school, int32_t level, int32_t duration, int32_t amount)",fastcall,256,180,entry,core/combat_AI.hpp:254
+0x39a80,0x4396d0,type_AI_spellcaster::get_cancel_value,"int32_t type_AI_spellcaster::get_cancel_value(army& current_army, bool bad_spells_only)",thiscall,256,220,entry,core/combat_AI.hpp:257
+0x3a670,0x43a2c0,type_AI_spellcaster::consider_single_enchantment,"void type_AI_spellcaster::consider_single_enchantment(type_spell_choice& choice, int32_t group)",thiscall,256,192,entry,core/combat_AI.hpp:263
+0x3a910,0x43a560,type_AI_spellcaster::consider_enchantment,"void type_AI_spellcaster::consider_enchantment(type_spell_choice& choice, int32_t group)",thiscall,256,208,entry,core/combat_AI.hpp:266
+0x3bb20,0x43b770,type_AI_spellcaster::consider_spell,void type_AI_spellcaster::consider_spell(type_spell_choice& choice),thiscall,256,212,entry,core/combat_AI.hpp:269
+0x3bf20,0x43bb70,type_AI_spellcaster::set_melee_enemies,void type_AI_spellcaster::set_melee_enemies(),thiscall,256,185,entry,core/combat_AI.hpp:272
+0x3c040,0x43bc90,type_AI_spellcaster::find_enemy_attacks,void type_AI_spellcaster::find_enemy_attacks(),thiscall,256,192,entry,core/combat_AI.hpp:275
+0x3c800,0x43c450,type_AI_spellcaster::cast_spell,bool type_AI_spellcaster::cast_spell(bool retreating),thiscall,256,216,entry,core/combat_AI.hpp:278
+0x3d250,0x43cf70,army::army,void army::army(),thiscall,256,236,entry,core/army.hpp:110
+0x3d400,0x43d120,army::~army,void army::~army(),thiscall,256,224,entry,core/army.hpp:155
+0x3d540,0x43d260,army::play_sample,void army::play_sample(TSampleID smpl),thiscall,64,48,entry,core/army.hpp:298
+0x3d580,0x43d2a0,army::stop_sample,void army::stop_sample(TSampleID smpl),thiscall,64,44,entry,core/army.hpp:303
+0x3df20,0x43dc40,army::SetLuck,"void army::SetLuck(const hero* owner_hero,)",thiscall,224,182,entry,core/army.hpp:322
+0x3e000,0x43dd20,army::?,void army::?(),thiscall,256,212,entry,core/army.hpp:333
+0x3e140,0x43de60,army::DrawToBuffer,"void army::DrawToBuffer(int32_t x, int32_t y, bool32_t bNumBoxOnly)",thiscall,256,216,entry,core/army.hpp:338
+0x3ea70,0x43e790,army::add_aura,void army::add_aura(),thiscall,256,212,entry,core/army.hpp:343
+0x3ec50,0x43e970,army::remove_aura,void army::remove_aura(),thiscall,256,240,entry,core/army.hpp:348
+0x3ee10,0x43eb30,army::remove_binding,void army::remove_binding(),thiscall,256,239,entry,core/army.hpp:353
+0x3f900,0x43f620,army::range_attack,void army::range_attack(army* target),thiscall,256,164,entry,core/army.hpp:369
+0x40100,0x43fe20,army::GetName,const char* army::GetName(int32_t count),fastcall,64,52,entry,core/army.hpp:919
+0x40160,0x43fe80,army::range_attack,void army::range_attack(),thiscall,256,212,entry,core/army.hpp:372
+0x40310,0x440030,army::do_multi_head_attack,"void army::do_multi_head_attack(uint32_t attackMask, int32_t* damage, int32_t* killed, int32_t* fire_damage)",thiscall,256,196,entry,core/army.hpp:406
+0x40500,0x440220,army::check_special_attack,bool army::check_special_attack(army* target),thiscall,256,200,entry,core/army.hpp:412
+0x409c0,0x4406e0,army::do_fire_shield,void army::do_fire_shield(int32_t damage),thiscall,256,200,entry,core/army.hpp:418
+0x40bc0,0x4408e0,army::do_post_attack,"void army::do_post_attack(army* target, int32_t iDamage, int32_t iKilled, int32_t total_life)",thiscall,256,220,entry,core/army.hpp:427
+0x41610,0x441330,army::do_attack,"bool army::do_attack(army* target, int32_t direction)",thiscall,256,220,entry,core/army.hpp:433
+0x41cb0,0x4419d0,army::do_attack,void army::do_attack(int32_t direction),thiscall,256,202,entry,core/army.hpp:436
+0x41fa0,0x441cc0,army::WalkTo,"bool army::WalkTo(int32_t destIndex, bool restore_facing)",thiscall,256,218,entry,core/army.hpp:450
+0x42410,0x442130,army::get_adjusted_attack,"int32_t army::get_adjusted_attack(const army* enemy, bool ranged_attack)",thiscall,256,224,entry,core/army.hpp:457
+0x42590,0x4422b0,army::get_adjusted_defense,"int32_t army::get_adjusted_defense(const army* enemy, bool frenzy_included)",thiscall,208,170,entry,core/army.hpp:471
+0x426f0,0x442410,army::get_average_damage,double army::get_average_damage(),thiscall,144,140,entry,core/army.hpp:517
+0x42780,0x4424a0,army::get_average_damage,"int32_t army::get_average_damage(const army& enemy,)",thiscall,256,232,entry,core/army.hpp:531
+0x428f0,0x442610,army::can_shoot,bool army::can_shoot(const army* other = nullptr),thiscall,256,208,entry,core/army.hpp:549
+0x429f0,0x442710,army::enemy_is_adjacent,bool army::enemy_is_adjacent(const army* other),thiscall,96,80,entry,core/army.hpp:554
+0x42a50,0x442770,army::get_unit_combat_value,"double army::get_unit_combat_value(int32_t lowest_attack,)",thiscall,256,208,entry,core/army.hpp:562
+0x42e60,0x442b80,army::get_total_combat_value,"int32_t army::get_total_combat_value(int32_t lowest_attack, int32_t lowest_defense)",thiscall,256,194,entry,core/army.hpp:567
+0x42fd0,0x442cf0,army::get_loss_combat_value,"int32_t army::get_loss_combat_value(int32_t lowest_attack,)",thiscall,176,152,entry,core/army.hpp:576
+0x43080,0x442da0,army::get_total_hit_points,int32_t army::get_total_hit_points(bool simulated = false),thiscall,80,72,entry,core/army.hpp:581
+0x430d0,0x442df0,army::set_AI_expected_damage,void army::set_AI_expected_damage(int32_t arg),thiscall,96,88,entry,core/army.hpp:586
+0x43130,0x442e50,army::get_fire_shield_strength,float army::get_fire_shield_strength(),thiscall,48,40,entry,core/army.hpp:591
+0x43160,0x442e80,army::ComputeBaseDamage,int32_t army::ComputeBaseDamage(bool simulate_only = false),thiscall,256,228,entry,core/army.hpp:596
+0x43840,0x443560,army::ComputeAttackerDamageBonuses,"int32_t army::ComputeAttackerDamageBonuses(int32_t base_damage,)",thiscall,256,181,entry,core/army.hpp:603
+0x43b90,0x4438b0,army::ComputeAttackerDamageReduction,"double army::ComputeAttackerDamageReduction(const army* enemy, bool ranged_attack)",thiscall,256,212,entry,core/army.hpp:610
+0x43d90,0x443ab0,army::ComputeDefenderDamageReduction,double army::ComputeDefenderDamageReduction(bool ranged_attack),thiscall,160,140,entry,core/army.hpp:615
+0x43f40,0x443c60,army::adjust_damage,"int32_t army::adjust_damage(army* enemy,)",thiscall,256,220,entry,core/army.hpp:632
+0x44090,0x443db0,army::Damage,int32_t army::Damage(int32_t damage),thiscall,144,120,entry,core/army.hpp:662
+0x444d0,0x4441f0,army::CancelSpellType,void army::CancelSpellType(SpellID iSpellType),thiscall,64,48,entry,core/army.hpp:667
+0x44510,0x444230,army::CancelIndividualSpell,void army::CancelIndividualSpell(SpellID spell),thiscall,256,216,entry,core/army.hpp:680
+0x448f0,0x444610,army::SetSpellInfluence,"void army::SetSpellInfluence(SpellID spell,)",thiscall,256,220,entry,core/army.hpp:703
+0x45490,0x4451b0,army::get_berserk_targets,void army::get_berserk_targets(exe_vector<army*>& armies),thiscall,256,178,entry,core/army.hpp:729
+0x456d0,0x4453f0,army::GoBerserk,void army::GoBerserk(),thiscall,256,192,entry,core/army.hpp:734
+0x45840,0x445560,army::get_attack_direction,"int32_t army::get_attack_direction(int32_t our_hex, const army* enemy, int32_t enemy_hex)",thiscall,112,108,entry,core/army.hpp:742
+0x458b0,0x4455d0,army::get_attack_direction,"int32_t army::get_attack_direction(int32_t hex, const army* enemy)",thiscall,160,148,entry,core/army.hpp:749
+0x45950,0x445670,army::simple_move,"bool army::simple_move(int32_t hex, bool restore_facing)",thiscall,256,183,entry,core/army.hpp:756
+0x45a60,0x445780,army::attack_hex,"bool army::attack_hex(int32_t hex, bool restore_facing)",thiscall,256,188,entry,core/army.hpp:764
+0x45d30,0x445a50,army::AttackWall,void army::AttackWall(int32_t iTargetGridIndex),thiscall,256,192,entry,core/army.hpp:774
+0x466c0,0x4463e0,army::is_adjacent,bool army::is_adjacent(int32_t arg),thiscall,96,80,entry,core/army.hpp:820
+0x46720,0x446440,army::Turn,void army::Turn(bool play_animation),thiscall,256,204,entry,core/army.hpp:826
+0x46830,0x446550,army::SetupAnimation,void army::SetupAnimation(),thiscall,256,172,entry,core/army.hpp:831
+0x46940,0x446660,army::PlayAnimation,"void army::PlayAnimation(int32_t sequence, int32_t nframes, int32_t start_frame)",thiscall,256,208,entry,core/army.hpp:839
+0x46c40,0x446960,army::CanFit,"bool32_t army::CanFit(int32_t destIndex, int32_t bAllowShifting, int32_t* iNewDestIndex)",thiscall,256,196,entry,core/army.hpp:847
+0x47330,0x447050,army::get_resurrection_size,int32_t army::get_resurrection_size(const army* target),thiscall,160,156,entry,core/army.hpp:852
+0x473d0,0x4470f0,army::can_cast_resurrect,bool army::can_cast_resurrect(int32_t hex),thiscall,256,226,entry,core/army.hpp:857
+0x47510,0x447230,army::FaerieDragonSpell,void army::FaerieDragonSpell(),thiscall,256,188,entry,core/army.hpp:862
+0x476c0,0x4473e0,army::can_cast_spell,bool army::can_cast_spell(int32_t hex),thiscall,256,175,entry,core/army.hpp:867
+0x47eb0,0x447bd0,army::get_valid_caliph_spells,bool army::get_valid_caliph_spells(const army* target),fastcall,48,40,entry,core/army.hpp:875
+0x48260,0x447f80,army::cast_spell,void army::cast_spell(int32_t targetIndex),thiscall,256,220,entry,core/army.hpp:884
+0x487f0,0x448510,army::get_mirror_effect,int32_t army::get_mirror_effect(),thiscall,80,76,entry,core/army.hpp:889
+0x48ab0,0x4487d0,army::get_multi_head_directions,"int32_t army::get_multi_head_directions(int32_t our_hex,)",thiscall,256,228,entry,core/army.hpp:894
+0x48bd0,0x4488f0,army::get_AI_target_time,int32_t army::get_AI_target_time(int32_t speed),thiscall,256,202,entry,core/army.hpp:899
+0x48cd0,0x4489f0,army::GetSpeed,int32_t army::GetSpeed(),thiscall,80,72,entry,core/army.hpp:904
+0x496a0,0x449370,armyGroup::HasCreatures,bool armyGroup::HasCreatures(),thiscall,147,117,entry,core/creatures.hpp:718
+0x4aaa0,0x44a770,armyGroup::armyGroup,"void armyGroup::armyGroup(TCreatureType type_, int32_t amount_)",thiscall,96,96,entry,core/creatures.hpp:691
+0x4ab20,0x44a7f0,armyGroup::HasAllUndead,bool armyGroup::HasAllUndead(),thiscall,64,60,entry,core/creatures.hpp:723
+0x4ab80,0x44a850,armyGroup::IsMember,bool armyGroup::IsMember(TCreatureType monType),thiscall,48,48,entry,core/creatures.hpp:739
+0x4ac50,0x44a920,armyGroup::CanJoin,bool32_t armyGroup::CanJoin(TCreatureType monType),thiscall,48,48,entry,core/creatures.hpp:744
+0x4ac80,0x44a950,armyGroup::get_AI_value,int32_t armyGroup::get_AI_value(),thiscall,64,60,entry,core/creatures.hpp:749
+0x4acc0,0x44a990,armyGroup::GetNumArmies,int32_t armyGroup::GetNumArmies(),thiscall,32,32,entry,core/creatures.hpp:754
+0x4ace0,0x44a9b0,armyGroup::Add,"bool32_t armyGroup::Add(TCreatureType armyType, int32_t newNumTroops, int32_t newIndex)",thiscall,128,128,entry,core/creatures.hpp:762
+0x4ad60,0x44aa30,armyGroup::Swap,"void armyGroup::Swap(int32_t srcIndex, armyGroup* destGroup, int32_t destIndex)",thiscall,64,64,entry,core/creatures.hpp:770
+0x4ada0,0x44aa70,armyGroup::get_creature_total,int32_t armyGroup::get_creature_total(),thiscall,32,32,entry,core/creatures.hpp:775
+0x4ade0,0x44aab0,armyGroup::GetArmySizeName,"const char* armyGroup::GetArmySizeName(int32_t howMany, int32_t iNameSet)",fastcall,128,88,entry,core/creatures.hpp:794
+0x4ae60,0x44ab30,armyGroup::?,int32_t armyGroup::?(),thiscall,256,156,entry,core/creatures.hpp:812
+0x4b100,0x44add0,armyGroup::GetArmyMorale,"int32_t armyGroup::GetArmyMorale(int32_t index,)",thiscall,256,197,entry,core/creatures.hpp:836
+0x4b2d0,0x44afa0,armyGroup::GetLuck,"int32_t armyGroup::GetLuck(const hero* ownerHero,)",thiscall,109,97,entry,core/creatures.hpp:853
+0x4b3c0,0x44b090,armyGroup::GetArmyLuck,"int32_t armyGroup::GetArmyLuck(int32_t index,)",thiscall,240,198,entry,core/creatures.hpp:868
+0x4b4b0,0x44b180,modify_spell_damage,"int32_t modify_spell_damage(int32_t damage, SpellID spell, TCreatureType creature)",fastcall,256,188,entry,core/spells.hpp:457
+0x4b620,0x44b2f0,armyGroup::Merge,bool armyGroup::Merge(armyGroup* ag),thiscall,256,252,entry,core/creatures.hpp:871
+0x4b820,0x44b4f0,armyGroup::merge_armies,void armyGroup::merge_armies(armyGroup& source),thiscall,256,236,entry,core/creatures.hpp:874
+0x4b960,0x44b630,armyGroup::result,exe_string* armyGroup::result(nh3api::dummy_tag),thiscall,256,186,entry,core/creatures.hpp:886
+0x4c1c0,0x44be90,armyGroup::result,exe_string* armyGroup::result(nh3api::dummy_tag),thiscall,256,176,entry,core/creatures.hpp:900
+0x4c590,0x44c260,armyGroup::GetNativeTerrain,TTerrainType armyGroup::GetNativeTerrain(),thiscall,128,108,entry,core/creatures.hpp:907
+0x4d530,0x44d200,baseManager::baseManager,void baseManager::baseManager(),thiscall,112,84,entry,core/base_manager.hpp:36
+0x4df70,0x44dc40,Bitmap16Bit::Bitmap16Bit,"void Bitmap16Bit::Bitmap16Bit(int32_t w, int32_t h)",thiscall,224,193,entry,core/resources/resources.hpp:1090
+0x4e050,0x44dd20,Bitmap16Bit::Bitmap16Bit,"void Bitmap16Bit::Bitmap16Bit(const char* name, int32_t w, int32_t h)",thiscall,176,160,entry,core/resources/resources.hpp:1094
+0x4e2b0,0x44df80,Bitmap16Bit::Draw,"void Bitmap16Bit::Draw(int32_t sx, int32_t sy, int32_t sw, int32_t sh, void* dst, int32_t dx, int32_t dy, int32_t dw, int32_t dh, int32_t dpitch, bool alpha)",thiscall,256,244,entry,core/resources/resources.hpp:1126
+0x4e3f0,0x44e0c0,Bitmap16Bit::Grab,"void Bitmap16Bit::Grab(uint16_t* src, int32_t sx, int32_t sy, int32_t sw, int32_t sh, int32_t spitch)",thiscall,208,204,entry,core/resources/resources.hpp:1120
+0x4e4c0,0x44e190,Bitmap16Bit::FillRect,"void Bitmap16Bit::FillRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color)",thiscall,128,124,entry,core/resources/resources.hpp:1132
+0x4e540,0x44e210,Bitmap16Bit::FrameRect,"void Bitmap16Bit::FrameRect(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color)",thiscall,176,172,entry,core/resources/resources.hpp:1135
+0x4e5f0,0x44e2c0,Bitmap16Bit::Darken,"void Bitmap16Bit::Darken(int32_t x, int32_t y, int32_t w, int32_t h)",thiscall,176,160,entry,core/resources/resources.hpp:1138
+0x4e6a0,0x44e370,Bitmap16Bit::Darken,"void Bitmap16Bit::Darken(int32_t x, int32_t y, int32_t w, int32_t h, Bitmap816* mask, int32_t sx, int32_t sy)",thiscall,146,126,entry,core/resources/resources.hpp:1141
+0x4e780,0x44e450,Bitmap16Bit::Colorize,"void Bitmap16Bit::Colorize(int32_t x, int32_t y, int32_t w, int32_t h, uint16_t color)",thiscall,256,204,entry,core/resources/resources.hpp:1144
+0x4ed50,0x44ea20,Bitmap24Bit::Bitmap24Bit,"void Bitmap24Bit::Bitmap24Bit(const char* __restrict name, int32_t w, int32_t h, const uint8_t* __restrict src, size_t size)",thiscall,176,156,entry,core/resources/resources.hpp:1302
+0x4ee00,0x44ead0,Bitmap24Bit::Bitmap24Bit,"void Bitmap24Bit::Bitmap24Bit(const char* __restrict name, const char* __restrict path)",thiscall,192,154,entry,core/resources/resources.hpp:1306
+0x4efd0,0x44eca0,Bitmap24Bit::Draw,"void Bitmap24Bit::Draw(int32_t sx, int32_t sy, int32_t sw, int32_t sh, Bitmap16Bit* dst, int32_t dx, int32_t dy)",thiscall,64,60,entry,core/resources/resources.hpp:1318
+0x4f010,0x44ece0,Bitmap24Bit::Draw,"void Bitmap24Bit::Draw(int32_t sx, int32_t sy, int32_t sw, int32_t sh, void* dst, int32_t dx, int32_t dy, int32_t dw, int32_t dh, int32_t dpitch)",thiscall,256,228,entry,core/resources/resources.hpp:1321
+0x4f800,0x44f4d0,Bitmap816::?,void Bitmap816::?(),thiscall,208,180,entry,core/resources/resources.hpp:1195
+0x4f8d0,0x44f5a0,Bitmap816::?,void Bitmap816::?(),thiscall,256,212,entry,core/resources/resources.hpp:1206
+0x4f9d0,0x44f6a0,Bitmap816::~Bitmap816,void Bitmap816::~Bitmap816(),thiscall,112,88,entry,core/resources/resources.hpp:1213
+0x4fdb0,0x44fa80,Bitmap816::?,void Bitmap816::?(),thiscall,144,136,entry,core/resources/resources.hpp:1224
+0x4fe40,0x44fb10,Bitmap816::SetPalette,void Bitmap816::SetPalette(const void* pal),thiscall,32,32,entry,core/resources/resources.hpp:1227
+0x4fe60,0x44fb30,Bitmap816::SetPalette,void Bitmap816::SetPalette(TPalette24* p24),thiscall,32,28,entry,core/resources/resources.hpp:1230
+0x4fe80,0x44fb50,Bitmap816::ResetPalette,void Bitmap816::ResetPalette(),thiscall,144,110,entry,core/resources/resources.hpp:1233
+0x4ff10,0x44fbe0,border::?,void border::?(),thiscall,64,56,entry,core/interface/widgets.hpp:370
+0x50130,0x44fe00,coloredBorderFrame::?,void coloredBorderFrame::?(),thiscall,160,135,entry,core/interface/widgets.hpp:493
+0x501d0,0x44fea0,coloredBorderFrame::~coloredBorderFrame,void coloredBorderFrame::~coloredBorderFrame(),thiscall,256,228,entry,core/interface/widgets.hpp:500
+0x50390,0x450060,bitmapBorder::~bitmapBorder,void bitmapBorder::~bitmapBorder(),thiscall,256,220,entry,core/interface/widgets.hpp:419
+0x504c0,0x450170,bitmapBorder::SetImage,void bitmapBorder::SetImage(const char* bitmap_name),thiscall,96,92,entry,core/interface/widgets.hpp:431
+0x50520,0x4501d0,bitmapBorder::SetPlayerPaletteColors,void bitmapBorder::SetPlayerPaletteColors(int32_t whichPlayer),thiscall,256,220,entry,core/interface/widgets.hpp:434
+0x50750,0x450400,bitmapBorder16::~bitmapBorder16,void bitmapBorder16::~bitmapBorder16(),thiscall,192,158,entry,core/interface/widgets.hpp:461
+0x51600,0x4512d0,exe_strstreambuf::exe_strstreambuf,void exe_strstreambuf::exe_strstreambuf(int32_t _N = 0),thiscall,256,208,entry,core/nh3api_std/exe_streambuf.hpp:809
+0x521f0,0x451ec0,type_bottom_view_window::type_bottom_view_window,void type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window),thiscall,256,204,entry,core/interface/dialogs.hpp:87
+0x55ef0,0x455bd0,button::?,void button::?(),thiscall,256,224,entry,core/interface/widgets.hpp:582
+0x569e0,0x4566c0,button::SetPlayerPaletteColors,void button::SetPlayerPaletteColors(int32_t whichPlayer),thiscall,112,88,entry,core/interface/widgets.hpp:602
+0x56a50,0x456730,textButton::?,void textButton::?(),thiscall,256,224,entry,core/interface/widgets.hpp:680
+0x56bf0,0x4568d0,textButton::~textButton,void textButton::~textButton(),thiscall,256,228,entry,core/interface/widgets.hpp:687
+0x56d30,0x456a10,type_func_button::int32_t,void type_func_button::int32_t(__fastcall * callback),thiscall,128,106,entry,core/interface/widgets.hpp:729
+0x56db0,0x456a90,type_func_button::~type_func_button,void type_func_button::~type_func_button(),thiscall,256,228,entry,core/interface/widgets.hpp:736
+0x590c0,0x458da0,TCampaignBrief::noexcept,void TCampaignBrief::noexcept(false),thiscall,256,196,entry,core/campaign.hpp:104
+0x5a950,0x45a630,TPlayerSlotAttributes::TPlayerSlotAttributes,void TPlayerSlotAttributes::TPlayerSlotAttributes(),thiscall,64,64,entry,core/map_header.hpp:69
+0x5a990,0x45a670,NewSMapHeader::NewSMapHeader,void NewSMapHeader::NewSMapHeader(),thiscall,256,200,entry,core/map_header.hpp:309
+0x5ab80,0x45a860,TPlayerSlotAttributes::~TPlayerSlotAttributes,void TPlayerSlotAttributes::~TPlayerSlotAttributes(),thiscall,160,140,entry,core/map_header.hpp:76
+0x5afb0,0x45ac90,TCampaignBrief::~TCampaignBrief,void TCampaignBrief::~TCampaignBrief(),thiscall,256,174,entry,core/campaign.hpp:117
+0x5bad0,0x572ff0,type_quest::result,exe_string* type_quest::result(nh3api::dummy_tag),thiscall,256,208,entry,core/quests.hpp:208
+0x5fc90,0x45f870,hero::~hero,void hero::~hero(),thiscall,80,76,entry,core/hero.hpp:398
+0x610e0,0x460cc0,GetBuildingName,"const char* GetBuildingName(TTownType townType, type_building_id buildingId)",fastcall,80,64,entry,core/town.hpp:160
+0x62760,0x462340,combatManager::combatManager,void combatManager::combatManager(),thiscall,256,194,entry,core/combat.hpp:436
+0x647a0,0x464380,combatManager::GetGridIndex,"int32_t combatManager::GetGridIndex(int32_t x, int32_t y)",thiscall,256,180,entry,core/combat.hpp:488
+0x65830,0x465410,combatManager::CombatIsOver,bool combatManager::CombatIsOver(),thiscall,128,114,entry,core/combat.hpp:496
+0x658b0,0x465490,combatManager::IsWinner,bool combatManager::IsWinner(int32_t this_side),thiscall,192,180,entry,core/combat.hpp:501
+0x65970,0x465550,combatManager::GetTargetWallIndex,TWallTargetId combatManager::GetTargetWallIndex(int32_t grid_index),fastcall,32,20,entry,core/combat.hpp:504
+0x65fe0,0x465bc0,combatManager::ResetHitByCreature,void combatManager::ResetHitByCreature(),thiscall,48,38,entry,core/combat.hpp:507
+0x669b0,0x466590,combatManager::PlaceObstacle,"void combatManager::PlaceObstacle(const TObstacle& obstacle, int32_t obstacle_index, int32_t hex, hexcell::TAttributes attributes)",thiscall,192,184,entry,core/combat.hpp:510
+0x66b30,0x466710,combatManager::RemoveObstacle,void combatManager::RemoveObstacle(int32_t index),thiscall,256,232,entry,core/combat.hpp:513
+0x66e00,0x4669e0,combatManager::MakeCreaturesVanish,void combatManager::MakeCreaturesVanish(),thiscall,256,200,entry,core/combat.hpp:516
+0x671c0,0x466da0,combatManager::LowerDoor,void combatManager::LowerDoor(),thiscall,256,164,entry,core/combat.hpp:519
+0x672e0,0x466ec0,combatManager::RaiseDoor,void combatManager::RaiseDoor(),thiscall,256,168,entry,core/combat.hpp:522
+0x67460,0x467040,combatManager::InCastle,bool combatManager::InCastle(int32_t index),fastcall,48,36,entry,core/combat.hpp:525
+0x67490,0x467070,combatManager::LeftOfMoat,bool combatManager::LeftOfMoat(int32_t index),fastcall,48,35,entry,core/combat.hpp:531
+0x674c0,0x4670a0,combatManager::is_adjacent,"bool combatManager::is_adjacent(int32_t first, int32_t second)",thiscall,80,80,entry,core/combat.hpp:534
+0x67510,0x4670f0,combatManager::ShotIsThroughWall,"bool combatManager::ShotIsThroughWall(army* shooter, int32_t sourceIndex, int32_t destIndex)",thiscall,240,180,entry,core/combat.hpp:537
+0x67600,0x4671e0,combatManager::ShotIsNotOptimal,"bool combatManager::ShotIsNotOptimal(army* attacker, army* defender)",thiscall,256,204,entry,core/combat.hpp:540
+0x67840,0x467420,combatManager::InLineOfSight,"bool combatManager::InLineOfSight(int32_t sourceIndex, int32_t destIndex)",thiscall,256,240,entry,core/combat.hpp:543
+0x67a00,0x4675e0,combatManager::ShootBallisticMissile,"void combatManager::ShootBallisticMissile(int32_t startX,)",thiscall,256,200,entry,core/combat.hpp:550
+0x67db0,0x467990,combatManager::?,void combatManager::?(),thiscall,256,196,entry,core/combat.hpp:559
+0x68220,0x467e00,combatManager::ShootMissile,"void combatManager::ShootMissile(int32_t startX,)",thiscall,256,199,entry,core/combat.hpp:567
+0x68730,0x468310,combatManager::RemoveArmyFromGrid,void combatManager::RemoveArmyFromGrid(const army* arg),thiscall,144,144,entry,core/combat.hpp:570
+0x687c0,0x4683a0,combatManager::PlaceArmyInGrid,"void combatManager::PlaceArmyInGrid(const army* arg, int32_t hex)",thiscall,48,48,entry,core/combat.hpp:573
+0x68990,0x468570,combatManager::PowEffect,"void combatManager::PowEffect(TSpellEffectID spellEffect, bool bResetLimitCreature)",thiscall,160,112,entry,core/combat.hpp:576
+0x69600,0x4691e0,combatManager::enemy_is_adjacent,"bool combatManager::enemy_is_adjacent(const army* current_army, int32_t grid_index, const army* excluded)",thiscall,112,104,entry,core/combat.hpp:579
+0x69670,0x469250,combatManager::get_distance,"int32_t combatManager::get_distance(int32_t start, int32_t stop)",fastcall,224,212,entry,core/combat.hpp:582
+0x69a10,0x4695f0,combatManager::HexIsBlocked,bool combatManager::HexIsBlocked(int32_t adjacent_cell),thiscall,128,124,entry,core/combat.hpp:585
+0x69a90,0x469670,combatManager::damage_message,"void combatManager::damage_message(const char* attacker, int32_t attacker_qty, int32_t damage, const army* defender, int32_t deaths)",thiscall,256,188,entry,core/combat.hpp:588
+0x69dc0,0x4699a0,combatManager::IsInMoat,"bool combatManager::IsInMoat(int32_t hex, int32_t* index)",thiscall,144,119,entry,core/combat.hpp:591
+0x6a350,0x469f30,combatManager::CalculateGainedExperience,"void combatManager::CalculateGainedExperience(int32_t side, int32_t* experience_gained)",thiscall,256,212,entry,core/combat.hpp:594
+0x6a4a0,0x46a080,army::WaitSample,bool army::WaitSample(TSampleID smpl),thiscall,128,100,entry,core/army.hpp:310
+0x6a570,0x46a150,army::check_obstacle_attacks,bool army::check_obstacle_attacks(bool is_walking),thiscall,224,196,entry,core/army.hpp:442
+0x74bf0,0x474520,combatManager::is_computer_action,bool combatManager::is_computer_action(),thiscall,256,208,entry,core/combat.hpp:469
+0x763f0,0x475d20,combatManager::is_outside_placement_boundry,"bool combatManager::is_outside_placement_boundry(int32_t group, int32_t index)",thiscall,80,76,entry,core/combat.hpp:597
+0x76440,0x475d70,combatManager::valid_wall_target,bool32_t combatManager::valid_wall_target(TWallTargetId wall_target),thiscall,80,68,entry,core/combat.hpp:600
+0x76490,0x475dc0,combatManager::GetCommand,type_combat_cursor combatManager::GetCommand(int32_t newIndex),thiscall,256,228,entry,core/combat.hpp:603
+0x77a00,0x477330,combatManager::get_surrender_cost,int32_t combatManager::get_surrender_cost(),thiscall,192,168,entry,core/combat.hpp:608
+0x7a100,0x479a30,combatManager::AddArmy,"army* combatManager::AddArmy(int32_t iSide,)",thiscall,256,228,entry,core/combat.hpp:616
+0x7b840,0x47b160,CSequence::CSequence,void CSequence::CSequence(int32_t num),thiscall,80,76,entry,core/resources/resources.hpp:679
+0x7b8a0,0x47b1c0,CSequence::AddFrame,int32_t CSequence::AddFrame(CSpriteFrame* frame),thiscall,128,104,entry,core/resources/resources.hpp:686
+0x7b920,0x47b240,CSprite::CSprite,"void CSprite::CSprite(const char* name, EResourceType sprtype, int32_t w, int32_t h)",thiscall,256,188,entry,core/resources/resources.hpp:712
+0x7baf0,0x47b410,CSprite::AllocateSeq,"void CSprite::AllocateSeq(size_t seqnum, size_t numFrames)",thiscall,112,100,entry,core/resources/resources.hpp:723
+0x7bb60,0x47b480,CSprite::AddFrame,"int32_t CSprite::AddFrame(size_t seqnum, CSpriteFrame* frame)",thiscall,32,28,entry,core/resources/resources.hpp:720
+0x7bb80,0x47b4a0,CSprite::SetPalette,void CSprite::SetPalette(const TPalette16& pal),thiscall,128,116,entry,core/resources/resources.hpp:732
+0x7bc00,0x47b520,CSprite::ResetPalette,void CSprite::ResetPalette(),thiscall,192,164,entry,core/resources/resources.hpp:741
+0x7bcf0,0x47b610,CSprite::?,void CSprite::?(),thiscall,112,108,entry,core/resources/resources.hpp:762
+0x7bd60,0x47b680,CSprite::?,void CSprite::?(),thiscall,96,88,entry,core/resources/resources.hpp:780
+0x7be10,0x47b730,CSprite::?,void CSprite::?(),thiscall,80,76,entry,core/resources/resources.hpp:813
+0x7be60,0x47b780,CSprite::?,void CSprite::?(),thiscall,80,76,entry,core/resources/resources.hpp:829
+0x7beb0,0x47b7d0,CSprite::?,void CSprite::?(),thiscall,80,70,entry,core/resources/resources.hpp:841
+0x7bf00,0x47b820,CSprite::?,void CSprite::?(),thiscall,80,76,entry,core/resources/resources.hpp:857
+0x7bff0,0x47b910,CSprite::?,void CSprite::?(),thiscall,144,136,entry,core/resources/resources.hpp:908
+0x7c080,0x47b9a0,CSprite::?,void CSprite::?(),thiscall,80,72,entry,core/resources/resources.hpp:925
+0x7c0d0,0x47b9f0,CSprite::?,void CSprite::?(),thiscall,80,76,entry,core/resources/resources.hpp:942
+0x7c120,0x47ba40,CSprite::?,void CSprite::?(),thiscall,80,72,entry,core/resources/resources.hpp:957
+0x7c1d0,0x47baf0,CSprite::GetNumSeqs,int32_t CSprite::GetNumSeqs(EResourceType type),fastcall,224,124,entry,core/resources/resources.hpp:980
+0x7c2b0,0x47bbd0,CSpriteFrame::?,void CSpriteFrame::?(),thiscall,176,156,entry,core/resources/resources.hpp:386
+0x7c360,0x47bc80,CSpriteFrame::?,void CSpriteFrame::?(),thiscall,208,188,entry,core/resources/resources.hpp:399
+0x7c430,0x47bd50,CSpriteFrame::~CSpriteFrame,void CSpriteFrame::~CSpriteFrame(),thiscall,48,36,entry,core/resources/resources.hpp:406
+0x7c460,0x47bd80,CSpriteFrame::SetPixelFormat,"void CSpriteFrame::SetPixelFormat(uint16_t red_mask, uint16_t green_mask, uint16_t blue_mask)",fastcall,256,248,entry,core/resources/resources.hpp:504
+0x7c9e0,0x47c300,CSpriteFrame::?,void CSpriteFrame::?(),thiscall,256,216,entry,core/resources/resources.hpp:521
+0x7d0a0,0x47c9c0,CSpriteFrame::?,void CSpriteFrame::?(),thiscall,256,240,entry,core/resources/resources.hpp:538
+0x7d4f0,0x47ce10,CSpriteFrame::?,void CSpriteFrame::?(),thiscall,256,256,entry,core/resources/resources.hpp:552
+0x7d930,0x47d250,CSpriteFrame::?,void CSpriteFrame::?(),thiscall,256,256,entry,core/resources/resources.hpp:566
+0x7dd40,0x47d660,CSpriteFrame::?,void CSpriteFrame::?(),thiscall,256,240,entry,core/resources/resources.hpp:583
+0x7e820,0x47e140,CSpriteFrame::?,void CSpriteFrame::?(),thiscall,256,252,entry,core/resources/resources.hpp:598
+0x7ef60,0x47e880,CSpriteFrame::?,void CSpriteFrame::?(),thiscall,256,220,entry,core/resources/resources.hpp:613
+0x886a0,0x4881e0,CampaignHeaderStruct::~CampaignHeaderStruct,void CampaignHeaderStruct::~CampaignHeaderStruct(),thiscall,256,224,entry,core/campaign.hpp:324
+0x89500,0x489040,SCampaign::SCampaign,void SCampaign::SCampaign(),thiscall,144,144,entry,core/campaign.hpp:471
+0x897d0,0x489310,SCampaign::CampaignComplete,bool SCampaign::CampaignComplete(),thiscall,80,76,entry,core/campaign.hpp:492
+0x8d4b0,0x48d170,exe_filebuf::open,"void exe_filebuf::open(const char* _S, exe_ios::openmode _M)",thiscall,240,220,entry,core/nh3api_std/exe_streambuf.hpp:754
+0x8d5a0,0x48d260,exe_filebuf::open,"void exe_filebuf::open(const char* _S, exe_ios::openmode _M)",thiscall,256,172,entry,core/nh3api_std/exe_streambuf.hpp:755
+0x8fdc0,0x48f940,TDialogBox::TDialogBox,"void TDialogBox::TDialogBox(int32_t winX,)",thiscall,160,134,entry,core/interface/windows.hpp:819
+0x8fe60,0x48f9e0,TDialogBox::TDialogBox,void TDialogBox::TDialogBox(heroWindow::TAttribute winType),thiscall,48,32,entry,core/interface/windows.hpp:811
+0x907e0,0x490360,CTextDialog::CTextDialog,void CTextDialog::CTextDialog(heroWindow::TAttribute winType),thiscall,64,44,entry,core/interface/windows.hpp:871
+0x90b20,0x4906a0,CTextDialog::ExitDialog,int32_t CTextDialog::ExitDialog(message& msg),thiscall,256,220,entry,core/interface/windows.hpp:903
+0x93710,0x493290,combatManager::ResetLimitCreature,int32_t combatManager::ResetLimitCreature(),thiscall,112,96,entry,core/combat.hpp:619
+0x93780,0x493300,combatManager::UpdateCombatArea,void combatManager::UpdateCombatArea(),thiscall,80,52,entry,core/combat.hpp:622
+0x93930,0x4934b0,combatManager::UpdateGrid,"int32_t combatManager::UpdateGrid(bool bPostGridIsClean, bool bSetupGrid)",thiscall,256,220,entry,core/combat.hpp:625
+0x94390,0x493f10,combatManager::UpdateMouseGrid,"void combatManager::UpdateMouseGrid(int32_t iNewMouseGridIndex, int32_t bAllowDuringAction)",thiscall,176,152,entry,core/combat.hpp:628
+0x94440,0x493fc0,combatManager::DrawFrame,"void combatManager::DrawFrame(bool update,)",thiscall,256,182,entry,core/combat.hpp:636
+0x95bf0,0x495770,combatManager::ComputeMaxExtent,void combatManager::ComputeMaxExtent(),thiscall,256,224,entry,core/combat.hpp:656
+0x95f50,0x495ad0,combatManager::?,void combatManager::?(),thiscall,256,248,entry,core/combat.hpp:653
+0x960d0,0x495c50,combatManager::CycleCombatScreen,void combatManager::CycleCombatScreen(),thiscall,256,236,entry,core/combat.hpp:659
+0x9d160,0x49cdd0,game::SetVisibility,"void game::SetVisibility(int32_t startX, int32_t startY, int32_t z, int32_t whichPlayer, int32_t range, int32_t remote_move)",thiscall,256,216,entry,core/global.hpp:246
+0x9d3d0,0x49d040,game::ResetVisibility,"void game::ResetVisibility(int32_t start_x, int32_t start_y, int32_t z, int32_t whichPlayer, int32_t range)",thiscall,256,224,entry,core/global.hpp:249
+0x9d630,0x49d2a0,game::clear_event_records,void game::clear_event_records(),thiscall,144,144,entry,core/global.hpp:252
+0x9d6c0,0x49d330,game::clear_event_records,void game::clear_event_records(int8_t player_id),thiscall,224,220,entry,core/global.hpp:255
+0x9e170,0x49dde0,advManager::EraseAndFizzle,"void advManager::EraseAndFizzle(NewmapCell* eventCell, type_point point, bool32_t fizzleSound)",thiscall,256,151,entry,core/adventure.hpp:343
+0x9f040,0x49ecb0,advManager::get_treasure_data,TreasureData* advManager::get_treasure_data(NewmapCell* this_cell),thiscall,48,44,entry,core/adventure.hpp:346
+0xa0c20,0x4a0890,advManager::get_black_box,BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* infounion),thiscall,48,48,entry,core/adventure.hpp:352
+0xa5960,0x4a55d0,game::GetTeam,int32_t game::GetTeam(int32_t player_id),thiscall,32,32,entry,core/global.hpp:210
+0xa75c0,0x4a7230,advManager::get_like_modifier,"int32_t advManager::get_like_modifier(hero* current_hero, TCreatureType creature)",fastcall,256,236,entry,core/adventure.hpp:360
+0xa76c0,0x4a7330,advManager::get_force_modifier,int32_t advManager::get_force_modifier(float strength_ratio),fastcall,128,104,entry,core/adventure.hpp:363
+0xaabb0,0x4aa820,advManager::EraseObj,"void advManager::EraseObj(NewmapCell* thisCell, type_point point, bool record)",thiscall,256,196,entry,core/adventure.hpp:329
+0xab410,0x4ab100,advManager::EventSound,"void advManager::EventSound(int32_t eventID, int32_t extraInfo)",thiscall,256,156,entry,core/adventure.hpp:332
+0xacbb0,0x4ac8a0,advManager::FizzleCenter,void advManager::FizzleCenter(int32_t whichSound),thiscall,240,148,entry,core/adventure.hpp:335
+0xad0e0,0x4acdd0,town::~town,void town::~town(),thiscall,80,76,entry,core/town.hpp:232
+0xb0a10,0x4b0770,executive::DoDialog,int32_t executive::DoDialog(baseManager* newDialog),thiscall,256,190,entry,core/base_manager.hpp:115
+0xb0b20,0x4b0880,executive::AddManager,"int32_t executive::AddManager(baseManager* newManager, int32_t newPriority)",thiscall,208,200,entry,core/base_manager.hpp:118
+0xb0bf0,0x4b0950,executive::RemoveManager,void executive::RemoveManager(baseManager* mgr),thiscall,128,124,entry,core/base_manager.hpp:121
+0xb0c70,0x4b09d0,executive::CallManager,void executive::CallManager(baseManager* mgr),thiscall,256,160,entry,core/base_manager.hpp:124
+0xb1330,0x4b1090,type_point::is_valid,bool type_point::is_valid(),thiscall,64,56,entry,core/terrain.hpp:550
+0xb1370,0x4b10d0,searchArray::searchArray,void searchArray::searchArray(),thiscall,112,112,entry,core/pathfinding.hpp:122
+0xb13e0,0x4b1140,searchArray::~searchArray,void searchArray::~searchArray(),thiscall,128,108,entry,core/pathfinding.hpp:129
+0xb2da0,0x4b2b00,searchArray::SeedCombatPosition,"void searchArray::SeedCombatPosition(const army* thisArmy,)",thiscall,256,204,entry,core/pathfinding.hpp:143
+0xb3b90,0x4b38f0,searchArray::getCellData,pathCell* searchArray::getCellData(size_t pos),thiscall,32,32,entry,core/pathfinding.hpp:154
+0xb3f20,0x4b3c80,searchArray::get_travel_time,"int32_t searchArray::get_travel_time(const army* current_army, int32_t hex)",thiscall,80,76,entry,core/pathfinding.hpp:160
+0xb46c0,0x4b4420,army::ValidFlight,bool army::ValidFlight(int32_t destIndex),thiscall,256,210,entry,core/army.hpp:941
+0xb5070,0x4b4dd0,font::font,"void font::font(const char* __restrict name, const TFontSpec& __restrict fontspec, size_t dsize, const bool* __restrict d)",thiscall,160,136,entry,core/resources/resources.hpp:1451
+0xb5110,0x4b4e70,font::~font,void font::~font(),thiscall,112,92,entry,core/resources/resources.hpp:1458
+0xb5180,0x4b4ee0,font::SetPalette,void font::SetPalette(const TPalette16& other),thiscall,32,28,entry,core/resources/resources.hpp:1462
+0xb51a0,0x4b4f00,font::DrawCharacter,"void font::DrawCharacter(char c, Bitmap16Bit* bmp, int32_t x, int32_t y, int32_t color)",thiscall,192,184,entry,core/resources/resources.hpp:1467
+0xb5490,0x4b51f0,font::DrawBoundedString,"void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int32_t x, int32_t y, int32_t boxWidth, int32_t boxHeight, TColor color_scheme, EJustify justification = LEFT_JUSTIFIED, int32_t cursorPos = -1)",thiscall,256,232,entry,core/resources/resources.hpp:1487
+0xb5820,0x4b5580,font::LineLength,"int32_t font::LineLength(const char* str, int32_t boxWidth)",thiscall,256,244,entry,core/resources/resources.hpp:1511
+0xb5920,0x4b5680,font::LineWidth,int32_t font::LineWidth(const char* text),thiscall,112,112,entry,core/resources/resources.hpp:1514
+0xb5990,0x4b56f0,font::LongestLineWidth,int32_t font::LongestLineWidth(const char* str),thiscall,128,124,entry,core/resources/resources.hpp:1517
+0xb5a10,0x4b5770,font::longest_word_length,int32_t font::longest_word_length(const char* str),thiscall,112,112,entry,core/resources/resources.hpp:1522
+0xb5a80,0x4b57e0,font::LongestWrappedLineWidth,"int32_t font::LongestWrappedLineWidth(const char* str, int32_t boxWidth)",thiscall,256,248,entry,core/resources/resources.hpp:1525
+0xb5b90,0x4b58f0,font::FillLinesVector,"void font::FillLinesVector(const char* __restrict str, int32_t boxWidth, exe_vector<exe_string>& __restrict result)",thiscall,256,196,entry,core/resources/resources.hpp:1528
+0xb8550,0x4b8250,generator::generator,void generator::generator(),thiscall,80,76,entry,core/objects.hpp:485
+0xb85a0,0x4b82a0,generator::load,bool generator::load(TAbstractFile* infile),thiscall,256,256,entry,core/objects.hpp:498
+0xb86e0,0x4b83e0,generator::save,bool generator::save(TAbstractFile* outfile),thiscall,192,188,entry,core/objects.hpp:503
+0xb87a0,0x4b84a0,generator::update_bonus,char generator::update_bonus(),thiscall,192,168,entry,core/objects.hpp:506
+0xb8860,0x4b8560,generator::Initialize,void generator::Initialize(int32_t new_owner),thiscall,256,220,entry,core/objects.hpp:509
+0xb8a60,0x4b8760,generator::Grow,void generator::Grow(),thiscall,144,125,entry,core/objects.hpp:514
+0xb9df0,0x4b9ab0,playerData::playerData,void playerData::playerData(),thiscall,48,44,entry,core/player.hpp:70
+0xb9f40,0x4b9c00,playerData::HasCapitol,bool playerData::HasCapitol(),thiscall,128,112,entry,core/player.hpp:90
+0xb9fc0,0x4b9c80,playerData::add_garrison_hero,bool playerData::add_garrison_hero(town* our_town),thiscall,158,130,entry,core/player.hpp:97
+0xba130,0x4b9df0,playerData::SetName,void playerData::SetName(char * cNewName),thiscall,64,60,entry,core/player.hpp:103
+0xba170,0x4b9e30,playerData::ClearNetInfo,void playerData::ClearNetInfo(),thiscall,80,72,entry,core/player.hpp:106
+0xba260,0x4b9f20,playerData::load,"int32_t playerData::load(TAbstractFile* infile, int32_t version)",thiscall,256,252,entry,core/player.hpp:109
+0xba670,0x4ba330,playerData::save,int32_t playerData::save(TAbstractFile* outfile),thiscall,256,252,entry,core/player.hpp:112
+0xba9e0,0x4ba6a0,playerData::FindHero,int32_t playerData::FindHero(int32_t id),thiscall,48,44,entry,core/player.hpp:115
+0xbaa10,0x4ba6d0,playerData::FindTown,int32_t playerData::FindTown(int32_t id),thiscall,48,48,entry,core/player.hpp:118
+0xbaa40,0x4ba700,playerData::NextHero,THeroID playerData::NextHero(),thiscall,256,236,entry,core/player.hpp:121
+0xbab40,0x4ba800,playerData::NextTown,int32_t playerData::NextTown(),thiscall,80,76,entry,core/player.hpp:124
+0xbaba0,0x4ba860,GetNumObelisks,int32_t GetNumObelisks(int32_t whichPlayer),fastcall,48,40,entry,core/player.hpp:313
+0xbabd0,0x4ba890,playerData::NumOfGivenArtifact,int32_t playerData::NumOfGivenArtifact(TArtifact iWhichArtifact),thiscall,224,212,entry,core/player.hpp:130
+0xbacb0,0x4ba970,playerData::hasGivenArtifact,bool playerData::hasGivenArtifact(TArtifact artifact),thiscall,208,180,entry,core/player.hpp:133
+0xbad80,0x4baa40,playerData::IsLocalHuman,bool playerData::IsLocalHuman(),thiscall,32,32,entry,core/player.hpp:136
+0xbadb0,0x4baa70,playerData::GetName,char* playerData::GetName(),thiscall,160,132,entry,core/player.hpp:142
+0xbb170,0x4bae30,game::get_new_boat_id,int32_t game::get_new_boat_id(),thiscall,224,200,entry,core/global.hpp:219
+0xbb250,0x4baf10,game::CreateBoat,"int32_t game::CreateBoat(int32_t x, int32_t y, int32_t z, int32_t owner, bool bIsRemoteMove, int8_t type)",thiscall,256,228,entry,core/global.hpp:222
+0xbb400,0x4bb0c0,game::GetStartingHeroId,"THeroID game::GetStartingHeroId(TTownType alignment, int32_t playerPos, type_point mapPosition)",thiscall,256,240,entry,core/global.hpp:234
+0xbb5e0,0x4bb2a0,game::GetNewHeroId,"THeroID game::GetNewHeroId(TTownType alignment, THeroClass excluded, bool prefer_alignment, THeroClass target)",thiscall,256,236,entry,core/global.hpp:237
+0xbb870,0x4bb530,game::GetTownId,"int32_t game::GetTownId(int32_t x, int32_t y, int32_t z)",thiscall,144,140,entry,core/global.hpp:240
+0xbb900,0x4bb5c0,game::GetGeneratorId,"int32_t game::GetGeneratorId(int32_t x, int32_t y, int32_t z)",thiscall,144,140,entry,core/global.hpp:243
+0xbc0e0,0x4bbda0,SavedGameHeader::SavedGameHeader,void SavedGameHeader::SavedGameHeader(),thiscall,256,180,entry,core/saved_game.hpp:22
+0xbdf80,0x4bdc40,SavedGameHeader::~SavedGameHeader,void SavedGameHeader::~SavedGameHeader(),thiscall,256,216,entry,core/saved_game.hpp:29
+0xc61e0,0x4c5ea0,game::ClaimTown,"void game::ClaimTown(int32_t townId, int32_t newPlayerOwner, bool bIsRemoteMove, bool check_end_game)",thiscall,256,208,entry,core/global.hpp:276
+0xc66e0,0x4c63a0,game::ClaimMine,"void game::ClaimMine(int32_t mineId, int32_t newPlayerOwner, type_action_type action_type)",thiscall,208,184,entry,core/global.hpp:279
+0xc67b0,0x4c6470,game::ClaimGenerator,"void game::ClaimGenerator(int32_t generatorId, int32_t newPlayerOwner)",thiscall,83,75,entry,core/global.hpp:282
+0xc6960,0x4c6620,game::ClaimGarrison,"void game::ClaimGarrison(int32_t garrisonId, int32_t newPlayerOwner)",thiscall,82,78,entry,core/global.hpp:285
+0xc6a30,0x4c66f0,game::ClaimShipyard,"void game::ClaimShipyard(type_point point, int32_t newPlayerOwner)",thiscall,256,240,entry,core/global.hpp:288
+0xc92c0,0x4c8f80,game::GetRandomMonster,"TCreatureType game::GetRandomMonster(int32_t minLevel, int32_t maxLevel)",thiscall,256,156,entry,core/global.hpp:258
+0xc94d0,0x4c9190,game::GetRandomArtifactId,TArtifact game::GetRandomArtifactId(int32_t ArtifactClass),thiscall,208,188,entry,core/global.hpp:261
+0xc95a0,0x4c9260,game::GetRandomSpell,SpellID game::GetRandomSpell(const exe_bitset<5>& spell_level),thiscall,256,224,entry,core/global.hpp:264
+0xc9890,0x4c9550,game::InsertObject,"void game::InsertObject(int32_t x, int32_t y, int32_t z, TAdventureObjectType objType, int32_t objectIndex, int32_t extraInfo)",thiscall,256,228,entry,core/global.hpp:267
+0xc9990,0x4c9650,game::ConvertObject,void game::ConvertObject(NewmapCell* tempCell),thiscall,256,200,entry,core/global.hpp:273
+0xca240,0x4c9f00,game::MakeTerrainVisible,"void game::MakeTerrainVisible(int32_t whichPlayer, uint16_t visMask)",thiscall,256,228,entry,core/global.hpp:270
+0xcdb80,0x4cd840,game::get_random_lith,"bool game::get_random_lith(const exe_vector<type_point>& points, type_point& result, int32_t cell_type, int32_t excluded)",thiscall,256,244,entry,core/global.hpp:291
+0xcddc0,0x4cda80,game::get_random_lith_exit,"bool game::get_random_lith_exit(int32_t color, type_point* result)",thiscall,48,44,entry,core/global.hpp:294
+0xcddf0,0x4cdab0,game::get_random_lith,"bool game::get_random_lith(int32_t color, int32_t excluded, type_point& result)",thiscall,48,44,entry,core/global.hpp:297
+0xcde20,0x4cdae0,game::get_random_whirlpool,"bool game::get_random_whirlpool(int32_t excluded, type_point& result)",thiscall,32,28,entry,core/global.hpp:300
+0xcde40,0x4cdb00,game::get_underground_gate_exit,type_point game::get_underground_gate_exit(const NewmapCell* cell),thiscall,224,224,entry,core/global.hpp:303
+0xcdf20,0x4cdbe0,game::game,void game::game(),thiscall,256,228,entry,core/global.hpp:127
+0xce570,0x4ce230,playerData::~playerData,void playerData::~playerData(),thiscall,64,60,entry,core/player.hpp:84
+0xce5b0,0x4ce270,game::~game,void game::~game(),thiscall,256,220,entry,core/global.hpp:158
+0xce900,0x4ce5c0,game::GetHeroBoat,"boat* game::GetHeroBoat(int32_t id, bool occupied)",thiscall,64,60,entry,core/global.hpp:225
+0xce940,0x4ce600,game::IsHuman,bool game::IsHuman(int32_t gamePos),thiscall,48,48,entry,core/global.hpp:192
+0xce970,0x4ce630,game::IsLocalHuman,bool game::IsLocalHuman(int32_t cur_player),thiscall,64,64,entry,core/global.hpp:195
+0xce9b0,0x4ce670,game::GetLocalPlayer,playerData* game::GetLocalPlayer(),thiscall,112,100,entry,core/global.hpp:198
+0xcea20,0x4ce6e0,game::GetLocalPlayerGamePos,int32_t game::GetLocalPlayerGamePos(),thiscall,80,64,entry,core/global.hpp:204
+0xceb60,0x4ce820,game::GetPlayerName,char* game::GetPlayerName(int32_t player_id),thiscall,192,164,entry,core/global.hpp:207
+0xcec90,0x4ce950,game::IsMultiplayer,bool game::IsMultiplayer(),thiscall,32,24,entry,core/global.hpp:189
+0xd6050,0x4d6260,TGzInflateBuf::noexcept,void TGzInflateBuf::noexcept(false),thiscall,256,190,entry,core/resources/files.hpp:157
+0xd6c50,0x4d6eb0,TGzFile::TGzFile,"void TGzFile::TGzFile(const char* __restrict const path, const char* __restrict const mode = ""rb"")",thiscall,176,136,entry,core/resources/files.hpp:90
+0xd6d60,0x4d6fc0,TGzFile::~TGzFile,void TGzFile::~TGzFile(),thiscall,32,20,entry,core/resources/files.hpp:97
+0xd7470,0x4d76e0,type_obscuring_object::type_obscuring_object,void type_obscuring_object::type_obscuring_object(),thiscall,32,32,entry,core/objects.hpp:1606
+0xd7490,0x4d7700,type_obscuring_object::get_obscured_town,town* type_obscuring_object::get_obscured_town(),thiscall,64,60,entry,core/objects.hpp:1640
+0xd74d0,0x4d7740,type_obscuring_object::initialize,void type_obscuring_object::initialize(),thiscall,32,32,entry,core/objects.hpp:1620
+0xd75d0,0x4d7840,type_obscuring_object::obscure_cell,"void type_obscuring_object::obscure_cell(TAdventureObjectType new_type, int32_t id)",thiscall,256,244,entry,core/objects.hpp:1643
+0xd76e0,0x4d7950,type_obscuring_object::restore_cell,void type_obscuring_object::restore_cell(),thiscall,208,196,entry,core/objects.hpp:1646
+0xd85f0,0x4d8860,hero::hero,void hero::hero(),thiscall,256,232,entry,core/hero.hpp:387
+0xd9070,0x4d92e0,hero::get_equipped_artifacts,int32_t hero::get_equipped_artifacts(bool countWarMachines),thiscall,80,80,entry,core/hero.hpp:432
+0xd90c0,0x4d9330,hero::get_number_in_backpack,int32_t hero::get_number_in_backpack(bool countWarMachines),thiscall,80,76,entry,core/hero.hpp:437
+0xd9110,0x4d9380,hero::GetStandSequence,hero_seqid hero::GetStandSequence(),thiscall,80,44,entry,core/hero.hpp:477
+0xd91b0,0x4d9420,hero::HasArtifact,bool hero::HasArtifact(TArtifact artifact),thiscall,64,64,entry,core/hero.hpp:442
+0xd91f0,0x4d9460,hero::IsWieldingArtifact,bool hero::IsWieldingArtifact(TArtifact artifact),thiscall,112,100,entry,core/hero.hpp:447
+0xda3a0,0x4da610,hero::GetExperience,int32_t hero::GetExperience(int32_t iLevel),fastcall,128,100,entry,core/hero.hpp:466
+0xda420,0x4da690,hero::GetExperienceIncrement,int32_t hero::GetExperienceIncrement(int32_t level),fastcall,240,184,entry,core/hero.hpp:471
+0xdb350,0x4db5c0,type_artifact::get_rollover_text,void type_artifact::get_rollover_text(char* buffer),thiscall,144,116,entry,core/artifact.hpp:276
+0xdb3e0,0x4db650,type_artifact::result,exe_string* type_artifact::result(nh3api::dummy_tag),thiscall,256,212,entry,core/artifact.hpp:281
+0xdc320,0x4dc590,hero::result,exe_string* hero::result(nh3api::dummy_tag),thiscall,256,208,entry,core/hero.hpp:502
+0xe2210,0x4e2480,hero::in_enum_range,void hero::in_enum_range(iLevelToSet),thiscall,64,52,entry,core/hero.hpp:519
+0xe2250,0x4e24c0,hero::in_enum_range,int32_t hero::in_enum_range(iNumLevelsToTake),thiscall,128,128,entry,core/hero.hpp:528
+0xe22d0,0x4e2540,hero::in_enum_range,int32_t hero::in_enum_range(iNumLevelsToGive),thiscall,112,112,entry,core/hero.hpp:538
+0xe2340,0x4e25b0,hero::CreatureTypeCount,int32_t hero::CreatureTypeCount(TCreatureType creatureType),thiscall,48,48,entry,core/hero.hpp:543
+0xe2370,0x4e25e0,hero::in_enum_range,void hero::in_enum_range(destCreatureType),thiscall,48,48,entry,core/hero.hpp:548
+0xe23a0,0x4e2610,hero::GetNthSS,TSecondarySkill hero::GetNthSS(uint32_t nSS),thiscall,48,48,entry,core/hero.hpp:554
+0xe23d0,0x4e2640,hero::TransferArtifacts,void hero::TransferArtifacts(hero* src),thiscall,256,204,entry,core/hero.hpp:562
+0xe2550,0x4e27c0,hero::in_enum_range,bool hero::in_enum_range(slot),thiscall,256,190,entry,core/hero.hpp:567
+0xe2840,0x4e2ab0,hero::in_enum_range,bool hero::in_enum_range(slot),thiscall,256,191,entry,core/hero.hpp:574
+0xe2a00,0x4e2c70,hero::in_enum_range,bool hero::in_enum_range(slot),thiscall,256,218,entry,core/hero.hpp:581
+0xe2bd0,0x4e2e40,hero::remove_artifact,void hero::remove_artifact(TArtifactSlot slot),thiscall,256,218,entry,core/hero.hpp:586
+0xe2d50,0x4e2fc0,hero::remove_backpack_artifact,void hero::remove_backpack_artifact(TArtifactSlot slot),thiscall,128,128,entry,core/hero.hpp:589
+0xe2dd0,0x4e3040,hero::remove_artifact,bool hero::remove_artifact(TArtifact art),thiscall,256,240,entry,core/hero.hpp:592
+0xe2ed0,0x4e3140,hero::result,exe_string* hero::result(nh3api::dummy_tag),thiscall,181,157,entry,core/hero.hpp:597
+0xe2f90,0x4e3200,hero::add_to_backpack,"bool hero::add_to_backpack(const type_artifact& artifact, TArtifactSlot slot)",thiscall,224,204,entry,core/hero.hpp:602
+0xe3070,0x4e32e0,hero::GiveArtifact,"bool hero::GiveArtifact(const type_artifact& artifact, bool assemble_combo, bool equip_it)",thiscall,256,184,entry,core/hero.hpp:682
+0xe33b0,0x4e3620,hero::GiveExperience,"int32_t hero::GiveExperience(int32_t howMuch, bool bCheckLevel, bool show_cap_window)",thiscall,256,188,entry,core/hero.hpp:685
+0xe3600,0x4e3870,hero::GiveResource,"void hero::GiveResource(EGameResource whichRes, int32_t howMuch)",thiscall,192,160,entry,core/hero.hpp:688
+0xe36c0,0x4e3930,hero::GetLuck,"int32_t hero::GetLuck(const hero* otherHero, int32_t on_cursed_ground, int32_t apply_limits)",thiscall,256,210,entry,core/hero.hpp:697
+0xe39b0,0x4e3c20,hero::GetMorale,"int32_t hero::GetMorale(const hero* other_hero, bool on_cursed_ground, int32_t apply_limits)",thiscall,256,210,entry,core/hero.hpp:700
+0xe3c60,0x4e3ed0,hero::GetNecromancyCreature,TCreatureType hero::GetNecromancyCreature(),thiscall,112,96,entry,core/hero.hpp:703
+0xe3cd0,0x4e3f40,hero::GetNecromancyFactor,double hero::GetNecromancyFactor(bool apply_limit),thiscall,256,202,entry,core/hero.hpp:706
+0xe3f40,0x4e41b0,hero::GetMysticismBonus,int32_t hero::GetMysticismBonus(),thiscall,256,210,entry,core/hero.hpp:709
+0xe4070,0x4e42e0,hero::GetVisibility,int32_t hero::GetVisibility(),thiscall,240,194,entry,core/hero.hpp:712
+0xe4160,0x4e43d0,hero::GetArcheryFactor,double hero::GetArcheryFactor(),thiscall,256,203,entry,core/hero.hpp:715
+0xe42b0,0x4e4520,hero::GetOffenseFactor,double hero::GetOffenseFactor(),thiscall,96,78,entry,core/hero.hpp:718
+0xe4310,0x4e4580,hero::GetDefenseFactor,double hero::GetDefenseFactor(),thiscall,128,104,entry,core/hero.hpp:721
+0xe4390,0x4e4600,hero::GetEstatesBonus,int32_t hero::GetEstatesBonus(),thiscall,144,124,entry,core/hero.hpp:724
+0xe4420,0x4e4690,hero::GetEagleEyeChance,double hero::GetEagleEyeChance(),thiscall,256,204,entry,core/hero.hpp:727
+0xe4580,0x4e47f0,hero::GetSurrenderCostFactor,double hero::GetSurrenderCostFactor(),thiscall,256,208,entry,core/hero.hpp:730
+0xe46e0,0x4e4950,hero::GetMagicResistanceFactor,double hero::GetMagicResistanceFactor(),thiscall,256,208,entry,core/hero.hpp:733
+0xe4840,0x4e4ab0,hero::GetExperienceBonusFactor,double hero::GetExperienceBonusFactor(),thiscall,112,92,entry,core/hero.hpp:736
+0xe48b0,0x4e4b20,hero::GetIntelligenceFactor,double hero::GetIntelligenceFactor(),thiscall,112,92,entry,core/hero.hpp:739
+0xe4920,0x4e4b90,hero::GetFirstAidFactor,double hero::GetFirstAidFactor(),thiscall,112,92,entry,core/hero.hpp:742
+0xe4990,0x4e4c00,hero::GetMobility,int32_t hero::GetMobility(bool sea_movement),thiscall,256,200,entry,core/hero.hpp:745
+0xe4d90,0x4e5000,hero::GetMobility,int32_t hero::GetMobility(),thiscall,32,24,entry,core/hero.hpp:748
+0xe4db0,0x4e5020,hero::GetSpellDurationBonus,int32_t hero::GetSpellDurationBonus(),thiscall,256,208,entry,core/hero.hpp:751
+0xe4ec0,0x4e5130,hero::GetGroundModifier,TAdventureObjectType hero::GetGroundModifier(),thiscall,224,216,entry,core/hero.hpp:754
+0xe4fa0,0x4e5210,hero::get_special_terrain,int32_t hero::get_special_terrain(),thiscall,224,216,entry,core/hero.hpp:757
+0xe5080,0x4e52f0,hero::get_spell_level,"TSkillMastery hero::get_spell_level(SpellID spell, int32_t magic_terrain_type)",thiscall,128,108,entry,core/hero.hpp:760
+0xe5100,0x4e5370,hero::GetSpellSchoolLevel,"TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask, bool is_on_magic_plains)",thiscall,192,152,entry,core/hero.hpp:763
+0xe51c0,0x4e5430,hero::GetHighestSchool,TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask),thiscall,128,128,entry,core/hero.hpp:766
+0xe5240,0x4e54b0,hero::GetManaCost,"int32_t hero::GetManaCost(SpellID iWhichSpell, const armyGroup* enemy, int8_t magic_terrain)",thiscall,240,200,entry,core/hero.hpp:769
+0xe54a0,0x4e5710,hero::find_summonable_boat,boat* hero::find_summonable_boat(),thiscall,176,156,entry,core/hero.hpp:772
+0xe5550,0x4e57c0,hero::can_summon_boat,bool hero::can_summon_boat(),thiscall,256,228,entry,core/hero.hpp:778
+0xe56e0,0x4e5950,hero::is_in_patrol_radius,bool hero::is_in_patrol_radius(type_point point),thiscall,128,128,entry,core/hero.hpp:798
+0xe5760,0x4e59d0,hero::modify_spell_damage,"int32_t hero::modify_spell_damage(SpellID spell, int32_t damage, army* target_army)",thiscall,256,200,entry,core/hero.hpp:801
+0xe5aa0,0x4e5d10,hero::get_combat_speed_bonus,int32_t hero::get_combat_speed_bonus(),thiscall,224,184,entry,core/hero.hpp:804
+0xe5b80,0x4e5df0,hero::get_hit_point_bonus,int32_t hero::get_hit_point_bonus(TCreatureType creature),thiscall,256,216,entry,core/hero.hpp:807
+0xe5de0,0x4e6050,hero::GetRoguePower,int32_t hero::GetRoguePower(),thiscall,48,44,entry,core/hero.hpp:810
+0xe5e10,0x4e6080,hero::IsInIdentifyRange,bool hero::IsInIdentifyRange(const type_point& point),thiscall,256,236,entry,core/hero.hpp:813
+0xe5f30,0x4e61a0,hero::IsMobile,bool hero::IsMobile(),thiscall,192,168,entry,core/hero.hpp:816
+0xe5ff0,0x4e6260,hero::GetHeroSpellBonus,"int32_t hero::GetHeroSpellBonus(SpellID spell_id, int32_t target_level, int32_t value)",thiscall,256,188,entry,core/hero.hpp:819
+0xe7150,0x4e7210,hexcell::hexcell,void hexcell::hexcell(),thiscall,32,32,entry,core/hexcell.hpp:47
+0xe7170,0x4e7230,hexcell::get_army,army* hexcell::get_army(),thiscall,64,56,entry,core/hexcell.hpp:57
+0xe71b0,0x4e7270,hexcell::get_dead_army,army* hexcell::get_dead_army(uint32_t i),thiscall,256,216,entry,core/hexcell.hpp:63
+0xea7b0,0x4ea890,iconWidget::~iconWidget,void iconWidget::~iconWidget(),thiscall,256,228,entry,core/interface/widgets.hpp:48
+0xeaff0,0x4eb0d0,iconWidget::SetIconFrame,void iconWidget::SetIconFrame(int32_t newFrame),thiscall,64,64,entry,core/interface/widgets.hpp:68
+0xeb030,0x4eb110,iconWidget::SetSprite,void iconWidget::SetSprite(const char* new_sprite),thiscall,48,44,entry,core/interface/widgets.hpp:81
+0xeb060,0x4eb140,iconWidget::NextRandomFrame,void iconWidget::NextRandomFrame(),thiscall,256,248,entry,core/interface/widgets.hpp:84
+0xeb250,0x4eb330,iconWidget::NextRandomSiegeEngineFrame,void iconWidget::NextRandomSiegeEngineFrame(),thiscall,256,236,entry,core/interface/widgets.hpp:87
+0xec460,0x4ec540,inputManager::inputManager,void inputManager::inputManager(),thiscall,256,232,entry,input_manager.hpp:30
+0xec570,0x4ec640,inputManager::Flush,void inputManager::Flush(),thiscall,32,28,entry,input_manager.hpp:38
+0xec590,0x4ec660,inputManager::result,void inputManager::result(nh3api::dummy_tag),thiscall,176,160,entry,input_manager.hpp:43
+0xec640,0x4ec710,inputManager::result,void inputManager::result(nh3api::dummy_tag),thiscall,176,160,entry,input_manager.hpp:50
+0xec6f0,0x4ec7c0,inputManager::AsciiConvert,void inputManager::AsciiConvert(message& msg),thiscall,256,228,entry,input_manager.hpp:55
+0xecc00,0x4eccd0,inputManager::ForceMouseMove,void inputManager::ForceMouseMove(),thiscall,240,200,entry,input_manager.hpp:58
+0xf3940,0x4f3fd0,combatManager::~combatManager,void combatManager::~combatManager(),thiscall,176,136,entry,core/combat.hpp:457
+0xf39f0,0x4f4080,advManager::~advManager,void advManager::~advManager(),thiscall,112,104,entry,core/adventure.hpp:95
+0xf6570,0x4f6c00,?,void ?(),fastcall,256,228,entry,core/interface/windows.hpp:1150
+0xf79b0,0x4f8040,GetMapExtra,"uint16_t GetMapExtra(uint32_t x, uint32_t y, uint32_t z)",fastcall,48,36,entry,core/map.hpp:420
+0xf79e0,0x4f8070,GetMapExtraPtr,"uint16_t* GetMapExtraPtr(uint32_t x, uint32_t y, uint32_t z)",fastcall,80,52,entry,core/map.hpp:423
+0xf7fb0,0x4f8640,Process1WindowsMessage,void Process1WindowsMessage(),cdecl,176,104,entry,core/events.hpp:169
+0xf8180,0x4f8810,KBChangeMenu,void KBChangeMenu(HMENU menu),fastcall,96,46,entry,core/events.hpp:172
+0xf81e0,0x4f8870,SetNoDialogMenus,void SetNoDialogMenus(int32_t arg),fastcall,64,48,entry,core/events.hpp:175
+0xf83c0,0x4f8a50,Delay,void Delay(uint32_t time),fastcall,256,168,entry,core/events.hpp:187
+0xfa610,0x4faca0,LODFile::getItemIndex,LODEntry* LODFile::getItemIndex(const char* const item_name),thiscall,80,72,entry,core/resources/files.hpp:328
+0xfa660,0x4facf0,LODFile::Find,"void LODFile::Find(uint32_t begin, uint32_t end, const char* const item_name)",thiscall,256,244,entry,core/resources/files.hpp:343
+0xfa800,0x4fae90,LODFile::~LODFile,void LODFile::~LODFile(),thiscall,160,144,entry,core/resources/files.hpp:324
+0xfa8a0,0x4faf30,LODFile::open,"int32_t LODFile::open(const char* const filename, openmode flags = openmode::read)",thiscall,256,224,entry,core/resources/files.hpp:346
+0xfaa70,0x4fb100,LODFile::pointAt,bool LODFile::pointAt(const char* const itemName),thiscall,176,156,entry,core/resources/files.hpp:349
+0xfab20,0x4fb1b0,LODFile::read,"int32_t LODFile::read(void* dest, size_t numBytes)",thiscall,256,228,entry,core/resources/files.hpp:352
+0xfbf90,0x4fc620,ExtraInfoUnion::SetCellVisited,void ExtraInfoUnion::SetCellVisited(int16_t player),thiscall,112,104,entry,core/objects.hpp:1392
+0xfcaa0,0x4fd0f0,NewmapCell::get_trigger_cell,NewmapCell* NewmapCell::get_trigger_cell(),thiscall,256,208,entry,core/objects.hpp:1719
+0xfcbd0,0x4fd220,NewmapCell::get_map_object,TAdventureObjectType NewmapCell::get_map_object(),thiscall,96,88,entry,core/objects.hpp:1729
+0xfcc30,0x4fd280,NewmapCell::get_map_extraInfo,ExtraInfoUnion NewmapCell::get_map_extraInfo(),thiscall,80,72,entry,core/objects.hpp:1734
+0xfcc80,0x4fd2d0,NewmapCell::cell_is_trigger,bool NewmapCell::cell_is_trigger(),thiscall,112,100,entry,core/objects.hpp:1742
+0xfccf0,0x4fd340,NewmapCell::is_diggable,bool NewmapCell::is_diggable(),thiscall,208,200,entry,core/objects.hpp:1747
+0xfcdc0,0x4fd410,NewmapCell::HasTriggerableEvent,bool NewmapCell::HasTriggerableEvent(),thiscall,96,64,entry,core/objects.hpp:1752
+0xfce20,0x4fd470,NewmapCell::get_special_terrain,TAdventureObjectType NewmapCell::get_special_terrain(),thiscall,256,252,entry,core/objects.hpp:1757
+0xfcf40,0x4fd590,NewmapCell::get_magic_terrain_type,EMagicTerrain NewmapCell::get_magic_terrain_type(),thiscall,256,219,entry,core/objects.hpp:1762
+0xfd060,0x4fd6b0,NewfullMap::NewfullMap,void NewfullMap::NewfullMap(),thiscall,256,252,entry,core/map.hpp:141
+0xfd1e0,0x4fd830,NewfullMap::~NewfullMap,void NewfullMap::~NewfullMap(),thiscall,256,224,entry,core/map.hpp:179
+0xfd4c0,0x4fdb10,NewmapCell::~NewmapCell,void NewmapCell::~NewmapCell(),thiscall,48,44,entry,core/objects.hpp:1713
+0xfd650,0x4fdca0,NewmapCell::NewmapCell,void NewmapCell::NewmapCell(),thiscall,64,64,entry,core/objects.hpp:1706
+0xfec10,0x4ff260,CObject::get_object_type_ptr,CObjectType* CObject::get_object_type_ptr(),thiscall,32,28,entry,core/objects.hpp:1562
+0xfec30,0x4ff280,CObject::FindTrigger,"void CObject::FindTrigger(int32_t& result_x, int32_t& result_y)",thiscall,256,232,entry,core/objects.hpp:1559
+0x105b20,0x506170,NewfullMap::PlaceObject,"int32_t NewfullMap::PlaceObject(int32_t ObjectIndex, bool setExtraInfo)",thiscall,256,204,entry,core/map.hpp:194
+0x10b1d0,0x50b3c0,SafeRandom,"int32_t SafeRandom(int32_t iMin, int32_t iMax)",fastcall,96,84,entry,core/random.hpp:53
+0x10b230,0x50c7c0,Random,"int32_t Random(int32_t iMin, int32_t iMax)",fastcall,48,44,entry,core/random.hpp:32
+0x10c6e0,0x50c8d0,TPickANumber::TPickANumber,"void TPickANumber::TPickANumber(int32_t low, int32_t high)",thiscall,96,92,entry,core/random.hpp:68
+0x10c740,0x50c930,TPickANumber::Pick,int32_t TPickANumber::Pick(),thiscall,96,92,entry,core/random.hpp:81
+0x10cb50,0x50cd40,mouseManager::mouseManager,void mouseManager::mouseManager(),thiscall,256,216,entry,mouse.hpp:54
+0x10cca0,0x50cea0,mouseManager::SetPointer,"void mouseManager::SetPointer(int32_t new_frame, mouseManager::EPointerSet new_set)",thiscall,240,186,entry,mouse.hpp:66
+0x10cd90,0x50cf90,mouseManager::Update,void mouseManager::Update(bool bForceIt = true),thiscall,256,202,entry,mouse.hpp:69
+0x10d500,0x50d700,mouseManager::MouseCoords,"void mouseManager::MouseCoords(int32_t& x, int32_t& y)",thiscall,64,52,entry,mouse.hpp:72
+0x10d540,0x50d740,mouseManager::HidePointer,void mouseManager::HidePointer(),thiscall,112,86,entry,mouse.hpp:78
+0x10d5b0,0x50d7b0,mouseManager::ShowPointer,void mouseManager::ShowPointer(bool force),thiscall,208,151,entry,mouse.hpp:81
+0x10d680,0x50d880,mouseManager::CheckUpdate,void mouseManager::CheckUpdate(),thiscall,256,148,entry,mouse.hpp:84
+0x10d8b0,0x50dab0,mouseManager::LoadFrame,void mouseManager::LoadFrame(int32_t new_frame),thiscall,256,189,entry,mouse.hpp:87
+0x10da20,0x50dc20,mouseManager::ShowSystemCursor,void mouseManager::ShowSystemCursor(bool show_it),thiscall,256,198,entry,mouse.hpp:90
+0x1165f0,0x5167c0,exe_strstreambuf::exe_strstreambuf,"void exe_strstreambuf::exe_strstreambuf(const char* const _String, int32_t _N)",thiscall,240,200,entry,core/nh3api_std/exe_streambuf.hpp:813
+0x1226a0,0x522b90,TPalette16::TPalette16,void TPalette16::TPalette16(const void* data),thiscall,48,32,entry,core/resources/resources.hpp:284
+0x1226d0,0x522bc0,TPalette16::?,void TPalette16::?(),thiscall,160,138,entry,core/resources/resources.hpp:294
+0x122770,0x522c60,TPalette16::?,void TPalette16::?(),thiscall,160,152,entry,core/resources/resources.hpp:305
+0x122810,0x522d00,TPalette16::TPalette16,void TPalette16::TPalette16(const TPalette24& p24),thiscall,208,170,entry,core/resources/resources.hpp:276
+0x1228e0,0x522dd0,TPalette16::TPalette16,void TPalette16::TPalette16(const TPalette16& other),thiscall,48,32,entry,core/resources/resources.hpp:280
+0x122910,0x522e00,TPalette16::TPalette16,void TPalette16::TPalette16(const nh3api::dummy_tag_t& tag),thiscall,48,48,entry,core/resources/resources.hpp:312
+0x122950,0x522e40,TPalette16::Cycle,"void TPalette16::Cycle(uint32_t begin, uint32_t end, uint32_t step)",thiscall,192,184,entry,core/resources/resources.hpp:331
+0x122a10,0x522f00,TPalette16::AdjustSaturation,void TPalette16::AdjustSaturation(float amount),thiscall,256,200,entry,core/resources/resources.hpp:334
+0x122b50,0x523040,TPalette16::AdjustHSV,"void TPalette16::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)",thiscall,256,198,entry,core/resources/resources.hpp:337
+0x122d50,0x523240,TPalette16::Gray,void TPalette16::Gray(),thiscall,224,188,entry,core/resources/resources.hpp:340
+0x122e80,0x523370,TPalette24::TPalette24,void TPalette24::TPalette24(const TRGB* data),thiscall,48,32,entry,core/resources/resources.hpp:185
+0x122eb0,0x5233a0,TPalette24::TPalette24,void TPalette24::TPalette24(const TRGBA* rgba),thiscall,80,64,entry,core/resources/resources.hpp:189
+0x122f00,0x5233f0,TPalette24::TPalette24,void TPalette24::TPalette24(const TPalette24& other),thiscall,48,32,entry,core/resources/resources.hpp:193
+0x122f30,0x523420,TPalette24::?,void TPalette24::?(),thiscall,48,48,entry,core/resources/resources.hpp:202
+0x122f60,0x523450,TPalette24::~TPalette24,void TPalette24::~TPalette24(),thiscall,32,24,entry,core/resources/resources.hpp:208
+0x122f80,0x523470,TPalette24::AdjustHSV,"void TPalette24::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)",thiscall,256,220,entry,core/resources/resources.hpp:218
+0x123190,0x523680,RGBToHSV,"void RGBToHSV(uint32_t r,)",fastcall,256,240,entry,core/resources/resources.hpp:242
+0x1232f0,0x5237e0,HSVToRGB,"void HSVToRGB(float h,)",fastcall,256,202,entry,core/resources/resources.hpp:260
+0x1239d0,0x523ec0,army::FindPath,"bool32_t army::FindPath(int32_t fpTargetCellIndex, int32_t maxMoves, bool bMoveUnlimited, bool bLiteralTarget)",thiscall,160,132,entry,core/army.hpp:965
+0x123a70,0x523f60,army::ValidPath,bool32_t army::ValidPath(int32_t destIndex),thiscall,176,144,entry,core/army.hpp:971
+0x123b20,0x524010,army::GetAttackMask,"uint32_t army::GetAttackMask(int32_t currIndex, int32_t criteria, int32_t iLiteralTargetIndex)",thiscall,144,140,entry,core/army.hpp:976
+0x123bb0,0x5240a0,army::ValidAttack,"bool32_t army::ValidAttack(int32_t currIndex, int32_t direction, int32_t criteria, int32_t iLiteralIndex, int32_t* testCellIndex)",thiscall,256,220,entry,core/army.hpp:979
+0x123d90,0x524280,army::GetAdjacentCellIndex,"int32_t army::GetAdjacentCellIndex(int32_t hex, int32_t direction)",thiscall,96,88,entry,core/army.hpp:984
+0x123df0,0x5242e0,army::get_adjacent_hex,"int32_t army::get_adjacent_hex(int32_t hex, int32_t direction)",thiscall,144,136,entry,core/army.hpp:989
+0x124550,0x524a30,get_artifact_purchase_price,"int32_t get_artifact_purchase_price(TArtifact artifact, int32_t market_count, EGameResource* best_resource)",fastcall,224,184,entry,core/adventure_AI.hpp:630
+0x126c70,0x527150,AI_resource_cost,"int32_t AI_resource_cost(const playerData* player, const std::array<int32_t, 7>& resources)",fastcall,80,76,entry,core/adventure_AI.hpp:687
+0x126cc0,0x5271a0,AI_resource_cost,"int32_t AI_resource_cost(int32_t player_id, const std::array<int32_t, 7>& resources)",fastcall,96,88,entry,core/adventure_AI.hpp:693
+0x126d40,0x527220,type_spellvalue::type_spellvalue,void type_spellvalue::type_spellvalue(const hero* new_hero),thiscall,256,212,entry,core/adventure_AI.hpp:531
+0x1270e0,0x5275c0,type_spellvalue::get_damage_spell_value,"int32_t type_spellvalue::get_damage_spell_value(SpellID spell, TSkillMastery mastery, int32_t times_castable, int32_t combat_value)",thiscall,224,172,entry,core/adventure_AI.hpp:571
+0x1271c0,0x5276a0,type_spellvalue::get_mass_damage_spell_value,"int32_t type_spellvalue::get_mass_damage_spell_value(SpellID spell, TSkillMastery mastery, int32_t times_castable)",thiscall,208,178,entry,core/adventure_AI.hpp:574
+0x127290,0x527770,type_spellvalue::get_enchantment_value,"int32_t type_spellvalue::get_enchantment_value(SpellID spell, TSkillMastery mastery, int32_t times_castable)",thiscall,256,216,entry,core/adventure_AI.hpp:577
+0x1273d0,0x5278b0,type_spellvalue::get_raw_spell_value,int32_t type_spellvalue::get_raw_spell_value(SpellID spell),thiscall,256,216,entry,core/adventure_AI.hpp:580
+0x1275b0,0x527a90,type_spellvalue::get_best_spell_value,int32_t type_spellvalue::get_best_spell_value(int32_t bits),thiscall,144,132,entry,core/adventure_AI.hpp:583
+0x127aa0,0x527f80,ValueOfSpell,"int32_t ValueOfSpell(const hero* current_hero, SpellID spell)",thiscall,96,80,entry,core/spells.hpp:462
+0x129690,0x529b70,ExtraInfoUnion::PlayerKnowsCell,bool ExtraInfoUnion::PlayerKnowsCell(int16_t player),thiscall,64,60,entry,core/objects.hpp:1459
+0x1296d0,0x529bb0,game::OnSameTeam,"bool game::OnSameTeam(int32_t player1, int32_t player2)",thiscall,64,64,entry,core/global.hpp:174
+0x129710,0x529bf0,game::UpgradedCreatureType,TCreatureType game::UpgradedCreatureType(TCreatureType creature),thiscall,64,56,entry,core/global.hpp:306
+0x129750,0x529c30,get_artifact_purchase_value,"int32_t get_artifact_purchase_value(TArtifact artifact, int32_t market_count, int32_t* funds)",fastcall,128,108,entry,core/adventure_AI.hpp:633
+0x12bbd0,0x52c0b0,AI_choose_secondary_skill,"TSecondarySkill AI_choose_secondary_skill(const hero* our_hero, TSecondarySkill first, TSecondarySkill second, bool complex_choice)",fastcall,144,132,entry,core/adventure_AI.hpp:697
+0x14e750,0x54eb50,get_upgrade_cost,"void get_upgrade_cost(TCreatureType creature, int32_t amount, std::array<int32_t, 7>& cost)",fastcall,112,108,entry,core/creatures.hpp:931
+0x14e7c0,0x54ebc0,GetMonsterCost,"void GetMonsterCost(int32_t monId, std::array<int32_t, 7>& resCost)",fastcall,144,116,entry,core/creatures.hpp:934
+0x1503a0,0x5507a0,recruitUnit::Update,"void recruitUnit::Update(bool new_monster, int32_t slot)",thiscall,256,224,entry,core/interface/recruit_unit.hpp:61
+0x151350,0x551750,recruitUnit::?,void recruitUnit::?(),thiscall,256,231,entry,core/interface/recruit_unit.hpp:28
+0x151460,0x551860,recruitUnit::?,void recruitUnit::?(),thiscall,256,231,entry,core/interface/recruit_unit.hpp:40
+0x151560,0x551960,recruitUnit::recruitUnit,"void recruitUnit::recruitUnit(town * newTown,)",thiscall,256,215,entry,core/interface/recruit_unit.hpp:46
+0x153d00,0x554100,CChatManager::UpdateWidget,"void CChatManager::UpdateWidget(textWidget* Widget, bool killOld, int32_t numLines)",thiscall,176,160,entry,chat_manager.hpp:82
+0x153db0,0x5541b0,CChatManager::HasOldChat,bool CChatManager::HasOldChat(),thiscall,64,56,entry,chat_manager.hpp:88
+0x153df0,0x5541f0,CChatManager::KillOldChat,void CChatManager::KillOldChat(),thiscall,240,212,entry,chat_manager.hpp:91
+0x153ee0,0x5542e0,CChatManager::UpdateWidgetText,"void CChatManager::UpdateWidgetText(int32_t numLines, textWidget* Widget)",thiscall,256,240,entry,chat_manager.hpp:85
+0x154060,0x554460,CChatManager::ResumeTimeOuts,void CChatManager::ResumeTimeOuts(),thiscall,80,76,entry,chat_manager.hpp:97
+0x1540b0,0x5544b0,CChatManager::ClearChat,void CChatManager::ClearChat(),thiscall,32,32,entry,chat_manager.hpp:100
+0x1540d0,0x5544d0,CChatManager::SetMaxLines,void CChatManager::SetMaxLines(int32_t maxChatLines),thiscall,160,144,entry,chat_manager.hpp:103
+0x154170,0x554570,CChatManager::SetPosition,void CChatManager::SetPosition(int32_t newPos),thiscall,48,48,entry,chat_manager.hpp:106
+0x1541a0,0x5545a0,CChatEdit::?,void CChatEdit::?(),thiscall,160,140,entry,core/interface/widgets.hpp:1016
+0x157a80,0x557e20,CTurnDuration::IsOn,bool CTurnDuration::IsOn(),thiscall,32,28,entry,turn.hpp:31
+0x157aa0,0x557e40,CTurnDuration::IsExpired,bool CTurnDuration::IsExpired(),thiscall,80,64,entry,turn.hpp:34
+0x157d00,0x5580a0,CTurnDuration::IsClose,bool CTurnDuration::IsClose(uint32_t howClose),thiscall,96,88,entry,turn.hpp:40
+0x157d70,0x558110,CTurnDuration::SetDuration,void CTurnDuration::SetDuration(uint32_t ms),thiscall,32,32,entry,turn.hpp:46
+0x157d90,0x558130,CTurnDuration::Start,void CTurnDuration::Start(),thiscall,64,48,entry,turn.hpp:49
+0x157dd0,0x558170,CTurnDuration::Pause,void CTurnDuration::Pause(),thiscall,32,28,entry,turn.hpp:52
+0x157df0,0x558190,CTurnDuration::Resume,void CTurnDuration::Resume(),thiscall,64,60,entry,turn.hpp:55
+0x158720,0x558970,resource::resource,"void resource::resource(const char* const newName, EResourceType newType)",thiscall,128,112,entry,core/resources/resources.hpp:67
+0x158ba0,0x558df0,TResourceDisplay::TResourceDisplay,"void TResourceDisplay::TResourceDisplay(heroWindow* parent, bool is_small)",thiscall,256,172,entry,core/interface/dialogs.hpp:33
+0x158e80,0x5590d0,TResourceDisplay::~TResourceDisplay,void TResourceDisplay::~TResourceDisplay(),thiscall,160,148,entry,core/interface/dialogs.hpp:40
+0x158f20,0x559170,TResourceDisplay::Update,"void TResourceDisplay::Update(bool draw, bool update)",thiscall,256,188,entry,core/interface/dialogs.hpp:47
+0x159020,0x559270,TResourceDisplay::Clear,void TResourceDisplay::Clear(),thiscall,256,196,entry,core/interface/dialogs.hpp:50
+0x1594b0,0x5596f0,AddToCache,void AddToCache(resource* r),fastcall,64,51,entry,core/resources/resources.hpp:2006
+0x15a800,0x55aa10,GetBitmap816,Bitmap816* GetBitmap816(const char* name),fastcall,256,156,entry,core/resources/resources.hpp:1846
+0x15ac40,0x55ae50,GetBitmap16,Bitmap16Bit* GetBitmap16(const char* name),fastcall,256,175,entry,core/resources/resources.hpp:1849
+0x15b470,0x55b680,GetPalette24,TPalette24* GetPalette24(const char* name),fastcall,256,180,entry,core/resources/resources.hpp:1855
+0x15b8d0,0x55bae0,GetFont,font* GetFont(const char* name),fastcall,256,163,entry,core/resources/resources.hpp:1858
+0x15cf00,0x55d110,GetBackdrop,"void GetBackdrop(const char* resName, Bitmap16Bit* destBmap)",fastcall,80,50,entry,core/resources/resources.hpp:1963
+0x15d070,0x55d280,GetBitmapResourceSize,size_t GetBitmapResourceSize(const char* name),thiscall,96,68,entry,core/resources/resources.hpp:1972
+0x1629b0,0x562c40,widget::set_visible,int32_t widget::set_visible(bool arg),thiscall,48,40,entry,core/interface/windows.hpp:211
+0x166da0,0x567050,sample::?,void sample::?(),thiscall,192,164,entry,core/resources/sounds.hpp:214
+0x166e60,0x567110,sample::~sample,void sample::~sample(),thiscall,256,208,entry,core/resources/sounds.hpp:221
+0x16a0d0,0x56a3a0,searchArray::BuildPath,"int32_t searchArray::BuildPath(const hero* current_hero, int32_t limit)",thiscall,256,224,entry,core/pathfinding.hpp:163
+0x172d60,0x573130,TQuestGuard::result,exe_string* TQuestGuard::result(nh3api::dummy_tag),thiscall,224,196,entry,core/quests.hpp:559
+0x173240,0x573610,create_quest,"type_quest* create_quest(EQuestType quest_type, bool hut)",fastcall,256,180,entry,core/quests.hpp:815
+0x173480,0x573850,TQuestGuard::load,"void TQuestGuard::load(TAbstractFile* infile, int32_t version)",thiscall,96,92,entry,core/quests.hpp:578
+0x1734e0,0x5738b0,TQuestGuard::read,void TQuestGuard::read(TAbstractFile* infile),thiscall,64,60,entry,core/quests.hpp:581
+0x173520,0x5738f0,TQuestGuard::save,int32_t TQuestGuard::save(TAbstractFile* outfile),thiscall,96,92,entry,core/quests.hpp:584
+0x173580,0x573950,TQuestGuard::TQuestGuard,void TQuestGuard::TQuestGuard(),thiscall,32,32,entry,core/quests.hpp:550
+0x173a70,0x573e40,TSeerReward::getValue,int32_t TSeerReward::getValue(const hero* current_hero),thiscall,256,212,entry,core/quests.hpp:689
+0x173c80,0x574050,TSeerReward::giveReward,"void TSeerReward::giveReward(hero* current_hero, bool human_player)",thiscall,256,232,entry,core/quests.hpp:695
+0x173f10,0x5742e0,TSeerReward::getRewardExtra,int32_t TSeerReward::getRewardExtra(const hero* current_hero),thiscall,192,140,entry,core/quests.hpp:692
+0x18f750,0x58fa40,playerData::playerData,void playerData::playerData(const nh3api::dummy_tag_t& tag),thiscall,256,252,entry,core/player.hpp:78
+0x1960d0,0x5963c0,slider::?,void slider::?(),thiscall,176,144,entry,core/interface/widgets.hpp:788
+0x196180,0x596470,slider::~slider,void slider::~slider(),thiscall,114,102,entry,core/interface/widgets.hpp:795
+0x1971b0,0x5974b0,VideoSoundOnOff,void VideoSoundOnOff(),fastcall,64,32,entry,video.hpp:15
+0x1971f0,0x5974f0,VideoRealignBuffers,void VideoRealignBuffers(),fastcall,224,136,entry,video.hpp:18
+0x1972d0,0x5975d0,VideoPlay,"int32_t VideoPlay(int32_t id, int32_t x, int32_t y, int32_t h, int32_t w)",fastcall,256,170,entry,video.hpp:21
+0x197570,0x597870,VideoOpen,"void VideoOpen(int32_t id, int32_t x, int32_t y, int32_t w, int32_t h, bool loop, bool drawRects, bool play)",fastcall,128,108,entry,video.hpp:24
+0x1975f0,0x5978f0,VideoClose,void VideoClose(),fastcall,240,124,entry,video.hpp:27
+0x1976e0,0x5979e0,VideoNextFrame,void VideoNextFrame(),fastcall,96,52,entry,video.hpp:30
+0x197740,0x597a40,VideoDrawCurrentFrame,void VideoDrawCurrentFrame(),fastcall,96,60,entry,video.hpp:33
+0x1977a0,0x597aa0,VideoPause,void VideoPause(),fastcall,176,100,entry,video.hpp:36
+0x197850,0x597b50,VideoResume,void VideoResume(),fastcall,176,88,entry,video.hpp:39
+0x197900,0x597c00,VideoRestart,void VideoRestart(),fastcall,48,28,entry,video.hpp:42
+0x197930,0x597c30,VideoNeedsUpdate,bool VideoNeedsUpdate(),fastcall,96,64,entry,video.hpp:45
+0x197990,0x597c90,VideoPlaying,bool VideoPlaying(),fastcall,64,40,entry,video.hpp:48
+0x1979d0,0x597cd0,VideoDrawRects,void VideoDrawRects(),fastcall,256,196,entry,video.hpp:51
+0x197c70,0x597f70,VideoShutDown,void VideoShutDown(),fastcall,144,80,entry,video.hpp:54
+0x198af0,0x598df0,ShowVideo,"void ShowVideo(int32_t id, int32_t x, int32_t y, int32_t w, int32_t h, int32_t loop, bool drawRects, bool play)",fastcall,256,140,entry,video.hpp:57
+0x199760,0x599a60,soundManager::soundManager,void soundManager::soundManager(),thiscall,256,190,entry,sound_manager.hpp:37
+0x199d90,0x59a090,soundManager::StopAllSamples,void soundManager::StopAllSamples(bool bStopMusicToo = true),thiscall,240,162,entry,sound_manager.hpp:48
+0x199e80,0x59a180,soundManager::StopSample,void soundManager::StopSample(HSAMPLE smpl),thiscall,64,48,entry,sound_manager.hpp:54
+0x199ec0,0x59a1c0,army::WaitSample,void army::WaitSample(TSampleID smpl),thiscall,128,92,entry,core/army.hpp:311
+0x199f40,0x59a240,soundManager::ModifySample,"void soundManager::ModifySample(HSAMPLE inSample, int16_t sFunction, int32_t value)",thiscall,240,184,entry,sound_manager.hpp:69
+0x19a0c0,0x59a3c0,soundManager::AdjustSoundVolumes,void soundManager::AdjustSoundVolumes(),thiscall,240,180,entry,sound_manager.hpp:78
+0x19a1b0,0x59a4b0,soundManager::AdjustMusicVolumes,void soundManager::AdjustMusicVolumes(),thiscall,48,36,entry,sound_manager.hpp:81
+0x19a1e0,0x59a4e0,soundManager::SwitchAmbientMusic,int32_t soundManager::SwitchAmbientMusic(TTerrainType terrain),thiscall,48,36,entry,sound_manager.hpp:84
+0x19a210,0x59a510,soundManager::MemorySample,HSAMPLE soundManager::MemorySample(sample* sPtr),thiscall,256,212,entry,sound_manager.hpp:90
+0x19a3f0,0x59a6f0,soundManager::MusicPlaying,bool soundManager::MusicPlaying(),thiscall,32,28,entry,sound_manager.hpp:95
+0x19a410,0x59a710,ClearMemSample,void ClearMemSample(SAMPLE2 smpl),stdcall,96,72,entry,core/resources/sounds.hpp:246
+0x19a470,0x59a770,LoadPlaySample,SAMPLE2 LoadPlaySample(const char* const cSampleName),fastcall,80,52,entry,core/resources/sounds.hpp:249
+0x19a4c0,0x59a7c0,WaitEndSample,"void WaitEndSample(SAMPLE2 smpl, int32_t iMilliWait)",fastcall,208,148,entry,core/resources/sounds.hpp:252
+0x19a590,0x59a890,launch_sample,"void launch_sample(const char* const sample_name, int32_t max_time = -1, int32_t channel = 3)",fastcall,256,156,entry,core/resources/sounds.hpp:255
+0x19a7d0,0x59aad0,soundManager::service_sounds,void soundManager::service_sounds(),thiscall,256,160,entry,sound_manager.hpp:98
+0x19ac00,0x59af00,soundManager::ResumeStream,void soundManager::ResumeStream(),thiscall,176,110,entry,sound_manager.hpp:101
+0x19acb0,0x59afb0,soundManager::StartMP3,"void soundManager::StartMP3(const char* filename, int32_t loopCount, bool bStopSamples)",thiscall,256,188,entry,sound_manager.hpp:104
+0x19b010,0x59b310,soundManager::StopMP3,void soundManager::StopMP3(),thiscall,112,70,entry,sound_manager.hpp:107
+0x1a9360,0x5a9670,get_elemental_type,TCreatureType get_elemental_type(SpellID spell),fastcall,64,44,entry,core/spells.hpp:454
+0x1aa340,0x5aa650,TSubWindow::TSubWindow,void TSubWindow::TSubWindow(),thiscall,128,116,entry,core/interface/windows.hpp:928
+0x1aa3c0,0x5aa6d0,TSubWindow::TSubWindow,"void TSubWindow::TSubWindow(int32_t x, int32_t y, int32_t w, int32_t h, heroWindow* parent_window)",thiscall,80,76,entry,core/interface/windows.hpp:931
+0x1aa410,0x5aa720,TSubWindow::~TSubWindow,void TSubWindow::~TSubWindow(),thiscall,96,84,entry,core/interface/windows.hpp:938
+0x1aa470,0x5aa780,TSubWindow::initialize,"void TSubWindow::initialize(int32_t x, int32_t y, int32_t w, int32_t h, heroWindow* parent_window)",thiscall,48,48,entry,core/interface/windows.hpp:947
+0x1aa4a0,0x5aa7b0,TSubWindow::AddWidget,"void TSubWindow::AddWidget(widget* newWidget, int32_t newPriority)",thiscall,80,76,entry,core/interface/windows.hpp:950
+0x1aa4f0,0x5aa800,TSubWindow::Draw,"void TSubWindow::Draw(bool update, int32_t iLowID, int32_t iHighID)",thiscall,112,100,entry,core/interface/windows.hpp:959
+0x1aa560,0x5aa870,TSubWindow::SaveBackground,void TSubWindow::SaveBackground(),thiscall,176,148,entry,core/interface/windows.hpp:962
+0x1aa610,0x5aa920,TSubWindow::RestoreBackground,void TSubWindow::RestoreBackground(),thiscall,256,204,entry,core/interface/windows.hpp:965
+0x1b9fb0,0x5ba360,type_text_scroller::?,void type_text_scroller::?(),thiscall,256,220,entry,core/interface/widgets.hpp:907
+0x1ba3b0,0x5ba760,type_text_scroller::~type_text_scroller,void type_text_scroller::~type_text_scroller(),thiscall,256,232,entry,core/interface/widgets.hpp:914
+0x1baae0,0x5bae90,textEntryWidget::~textEntryWidget,void textEntryWidget::~textEntryWidget(),thiscall,112,100,entry,core/interface/widgets.hpp:248
+0x1baba0,0x5baf50,textEntryWidget::GetCharPressed,char textEntryWidget::GetCharPressed(const message& msg),thiscall,176,124,entry,core/interface/widgets.hpp:282
+0x1bbba0,0x5bbf90,TTextResource::TTextResource,"void TTextResource::TTextResource(const char* name, size_t size, const char* data)",thiscall,256,224,entry,core/resources/resources.hpp:1603
+0x1bbdd0,0x5bc1c0,TTextResource::~TTextResource,void TTextResource::~TTextResource(),thiscall,160,136,entry,core/resources/resources.hpp:1628
+0x1bbe70,0x5bc260,TSpreadsheetResource::TSpreadsheetResource,"void TSpreadsheetResource::TSpreadsheetResource(const char* name, size_t size, const char* data)",thiscall,256,220,entry,core/resources/resources.hpp:1684
+0x1bc170,0x5bc560,TSpreadsheetResource::~TSpreadsheetResource,void TSpreadsheetResource::~TSpreadsheetResource(),thiscall,128,104,entry,core/resources/resources.hpp:1711
+0x1bc280,0x5bc6a0,textWidget::?,void textWidget::?(),thiscall,256,212,entry,core/interface/widgets.hpp:153
+0x1bc3b0,0x5bc7d0,textWidget::~textWidget,void textWidget::~textWidget(),thiscall,256,228,entry,core/interface/widgets.hpp:160
+0x1bde80,0x5be280,town::town,void town::town(),thiscall,256,231,entry,core/town.hpp:180
+0x1bdfe0,0x5be3e0,town::HasGarrison,bool32_t town::HasGarrison(),thiscall,80,72,entry,core/town.hpp:243
+0x1be390,0x5be790,town::remove_garrison_hero,void town::remove_garrison_hero(),thiscall,192,168,entry,core/town.hpp:253
+0x1be450,0x5be850,town::SwapHeroes,void town::SwapHeroes(),thiscall,256,204,entry,core/town.hpp:258
+0x1bede0,0x5bf1e0,town::BuildBuilding,"type_building_id town::BuildBuilding(type_building_id building, bool SetBuiltFlag = true, bool apply_special_effect = true)",thiscall,256,208,entry,core/town.hpp:263
+0x1bf3c0,0x5bf7c0,town::buy_building,bool town::buy_building(type_building_id building),thiscall,256,228,entry,core/town.hpp:268
+0x1bf570,0x5bf970,town::get_castle_growth_bonus,int32_t town::get_castle_growth_bonus(TCreatureType creature),thiscall,144,120,entry,core/town.hpp:273
+0x1bf600,0x5bfa00,town::get_gold_income,int16_t town::get_gold_income(bool include_silo = true),thiscall,208,160,entry,core/town.hpp:278
+0x1c0d20,0x5c1120,town::can_build,bool town::can_build(type_building_id building),thiscall,256,207,entry,core/town.hpp:283
+0x1c0e60,0x5c1260,town::can_ever_build,bool town::can_ever_build(type_building_id building_id),thiscall,192,163,entry,core/town.hpp:288
+0x1c0f20,0x5c1320,town::get_buildable_mask,uint64_t town::get_buildable_mask(),thiscall,256,211,entry,core/town.hpp:293
+0x1c1080,0x5c1480,town::get_build_cost_array,const build_cost_array_t* town::get_build_cost_array(type_building_id building),thiscall,112,100,entry,core/town.hpp:305
+0x1c10f0,0x5c14f0,town::get_build_cost,"void town::get_build_cost(type_building_id building, std::array<int32_t, 7>& resources)",thiscall,144,132,entry,core/town.hpp:298
+0x1c12a0,0x5c16a0,town::is_legal_building,bool32_t town::is_legal_building(type_building_id building),thiscall,64,56,entry,core/town.hpp:311
+0x1c1460,0x5c1860,town::get_army,armyGroup* town::get_army(),thiscall,64,60,entry,core/town.hpp:326
+0x1c14a0,0x5c18a0,town::UpgradedDwellingID,type_building_id town::UpgradedDwellingID(type_building_id id),fastcall,32,32,entry,core/town.hpp:334
+0x1d11d0,0x5d15d0,do_monster_join_dialog,"void do_monster_join_dialog(hero* inHero, TCreatureType type, int32_t amount)",fastcall,224,164,entry,core/hero.hpp:1425
+0x1d12b0,0x5d16b0,do_monster_join_dialog,"void do_monster_join_dialog(hero* inHero, armyGroup& monsters, bool leave_guards)",fastcall,176,132,entry,core/hero.hpp:1428
+0x1d2a40,0x5d2e40,GetBuildingInfo,"const char* GetBuildingInfo(const town* this_town, int32_t buildingId, bool bIncludeTitle, bool extended)",fastcall,256,208,entry,core/town.hpp:602
+0x1f15a0,0x5f1940,VictoryConditionStruct::applies_to_player,bool VictoryConditionStruct::applies_to_player(int32_t player),thiscall,112,100,entry,core/lossvictory.hpp:82
+0x1f1610,0x5f19b0,VictoryConditionStruct::CheckForArtifactWin,bool VictoryConditionStruct::CheckForArtifactWin(),thiscall,256,200,entry,core/lossvictory.hpp:85
+0x1f1b10,0x5f1eb0,VictoryConditionStruct::CheckForTotalCreatures,bool VictoryConditionStruct::CheckForTotalCreatures(),thiscall,256,204,entry,core/lossvictory.hpp:88
+0x1f1c80,0x5f2020,VictoryConditionStruct::CheckForTotalResources,bool VictoryConditionStruct::CheckForTotalResources(),thiscall,192,148,entry,core/lossvictory.hpp:91
+0x1f1d40,0x5f20e0,VictoryConditionStruct::CheckForUpgradedTown,bool VictoryConditionStruct::CheckForUpgradedTown(),thiscall,256,192,entry,core/lossvictory.hpp:94
+0x1f1ef0,0x5f2290,VictoryConditionStruct::CheckForGrailBuildingWin,bool VictoryConditionStruct::CheckForGrailBuildingWin(),thiscall,256,196,entry,core/lossvictory.hpp:97
+0x1f2100,0x5f24a0,VictoryConditionStruct::CheckForHeroDefeatWin,"bool VictoryConditionStruct::CheckForHeroDefeatWin(int32_t winning_player, const hero* loser)",thiscall,96,80,entry,core/lossvictory.hpp:100
+0x1f2160,0x5f2500,VictoryConditionStruct::IsGrailTarget,bool VictoryConditionStruct::IsGrailTarget(town* thisTown),thiscall,256,248,entry,core/lossvictory.hpp:103
+0x1f2260,0x5f2600,VictoryConditionStruct::IsTownCaptureTarget,bool VictoryConditionStruct::IsTownCaptureTarget(town* thisTown),thiscall,64,56,entry,core/lossvictory.hpp:106
+0x1f22a0,0x5f2640,VictoryConditionStruct::CheckForTownCaptureWin,bool VictoryConditionStruct::CheckForTownCaptureWin(),thiscall,240,200,entry,core/lossvictory.hpp:109
+0x1f2390,0x5f2730,VictoryConditionStruct::CheckForDefeatedMonsterWin,"bool VictoryConditionStruct::CheckForDefeatedMonsterWin(const hero* thisHero, type_point monster_loc)",thiscall,256,212,entry,core/lossvictory.hpp:112
+0x1f2600,0x5f29a0,VictoryConditionStruct::CheckForFlaggedGeneratorWin,bool VictoryConditionStruct::CheckForFlaggedGeneratorWin(),thiscall,256,204,entry,core/lossvictory.hpp:115
+0x1f2720,0x5f2ac0,VictoryConditionStruct::CheckForFlaggedMineWin,bool VictoryConditionStruct::CheckForFlaggedMineWin(),thiscall,240,204,entry,core/lossvictory.hpp:118
+0x1f2810,0x5f2bb0,VictoryConditionStruct::CheckForTimeSurvival,bool VictoryConditionStruct::CheckForTimeSurvival(),thiscall,80,72,entry,core/lossvictory.hpp:121
+0x1f2860,0x5f2c00,VictoryConditionStruct::CheckForArtifactTransportWin,"bool VictoryConditionStruct::CheckForArtifactTransportWin(const hero* thisHero, type_point town_loc)",thiscall,256,208,entry,core/lossvictory.hpp:124
+0x1f2a40,0x5f2de0,LossConditionStruct::CheckForDefeatedHeroLoss,bool LossConditionStruct::CheckForDefeatedHeroLoss(const hero* loser),thiscall,256,208,entry,core/lossvictory.hpp:221
+0x1f2e10,0x5f31b0,LossConditionStruct::HeroKilled,bool LossConditionStruct::HeroKilled(const hero* loser),thiscall,48,44,entry,core/lossvictory.hpp:224
+0x1f2e40,0x5f31e0,LossConditionStruct::CheckForDefeatedTownLoss,"bool LossConditionStruct::CheckForDefeatedTownLoss(int32_t old_owner, const town* lost_town)",thiscall,224,216,entry,core/lossvictory.hpp:227
+0x1f2f20,0x5f32c0,LossConditionStruct::CheckForTimeLimitExpired,bool LossConditionStruct::CheckForTimeLimitExpired(),thiscall,256,215,entry,core/lossvictory.hpp:230
+0x1fe340,0x5fe900,widget::widget,"void widget::widget(int16_t x_,)",thiscall,208,180,entry,core/interface/windows.hpp:137
+0x1fe410,0x5fe9d0,border::border,void border::border(),thiscall,32,28,entry,core/interface/widgets.hpp:360
+0x1fe7c0,0x5fed80,widget::send_message,"int32_t widget::send_message(ECommands command, int32_t extra)",thiscall,128,116,entry,core/interface/windows.hpp:217
+0x1fe840,0x5fee00,widget::set_help_text,"void widget::set_help_text(const char* text, const char* rclick, bool copyText)",thiscall,256,228,entry,core/interface/windows.hpp:220
+0x1fe9f0,0x5fefb0,heroWindow::heroWindow,"void heroWindow::heroWindow(int32_t winX,)",thiscall,144,132,entry,core/interface/windows.hpp:420
+0x1fea80,0x5ff040,heroWindow::~heroWindow,void heroWindow::~heroWindow(),thiscall,96,84,entry,core/interface/windows.hpp:427
+0x1fecb0,0x5ff270,heroWindow::AddWidget,"void heroWindow::AddWidget(widget* newWidget, int32_t newPriority)",thiscall,176,176,entry,core/interface/windows.hpp:549
+0x1fed60,0x5ff320,heroWindow::RemoveWidget,void heroWindow::RemoveWidget(widget* w),thiscall,128,120,entry,core/interface/windows.hpp:552
+0x1fede0,0x5ff3a0,heroWindow::BroadcastMessage,int32_t heroWindow::BroadcastMessage(message& msg),thiscall,96,92,entry,core/interface/windows.hpp:482
+0x1fee40,0x5ff400,heroWindow::BroadcastMessage,"int32_t heroWindow::BroadcastMessage(message::ECommandType command,)",thiscall,144,140,entry,core/interface/windows.hpp:479
+0x1feed0,0x5ff490,heroWindow::WidgetSetStatus,"int32_t heroWindow::WidgetSetStatus(int32_t id, widget::EStatusFlags new_status)",thiscall,144,140,entry,core/interface/windows.hpp:491
+0x1fef60,0x5ff520,heroWindow::WidgetClearStatus,"int32_t heroWindow::WidgetClearStatus(int32_t id, widget::EStatusFlags old_status)",thiscall,144,140,entry,core/interface/windows.hpp:494
+0x1feff0,0x5ff5b0,heroWindow::GetWidget,widget* heroWindow::GetWidget(int32_t widget_id),thiscall,48,48,entry,core/interface/windows.hpp:485
+0x1ff100,0x5ff6c0,heroWindow::SaveBackground,int32_t heroWindow::SaveBackground(),thiscall,192,164,entry,core/interface/windows.hpp:558
+0x1ff1c0,0x5ff780,heroWindow::RestoreBackground,void heroWindow::RestoreBackground(bool update),thiscall,128,100,entry,core/interface/windows.hpp:555
+0x1ff240,0x5ff800,heroWindow::CenterWindow,"void heroWindow::CenterWindow(int32_t centerX = -1, int32_t centerY = -1)",thiscall,256,228,entry,core/interface/windows.hpp:521
+0x1ff3b0,0x5ff970,heroWindow::findWidget,"int32_t heroWindow::findWidget(int32_t mx, int32_t my)",thiscall,48,44,entry,core/interface/windows.hpp:526
+0x1ff3e0,0x5ff9a0,heroWindow::findWidgetPtr,"widget* heroWindow::findWidgetPtr(int32_t mx, int32_t my)",thiscall,128,128,entry,core/interface/windows.hpp:531
+0x1ff490,0x5ffa50,heroWindow::SetFocus,void heroWindow::SetFocus(int32_t id),thiscall,112,112,entry,core/interface/windows.hpp:539
+0x1ff510,0x5ffad0,heroWindow::delete_widgets,void heroWindow::delete_widgets(),thiscall,96,92,entry,core/interface/windows.hpp:544
+0x1ff5b0,0x5ffb70,heroWindow::SleepAllWidgets,void heroWindow::SleepAllWidgets(bool put_to_sleep = true),thiscall,64,60,entry,core/interface/windows.hpp:569
+0x1ff8e0,0x5ffea0,CHeroWindowEx::SetHelpText,"void CHeroWindowEx::SetHelpText(THelpText* pHelpText, int32_t start, int32_t stop, bool copyText)",thiscall,128,124,entry,core/interface/windows.hpp:710
+0x1ffe20,0x6003e0,SetPlayerPaletteColors,"void SetPlayerPaletteColors(void* pPalette, int32_t whichPlayer)",fastcall,32,28,entry,core/interface/widgets.hpp:1062
+0x1ffe40,0x600400,SetPlayerPaletteColors,"void SetPlayerPaletteColors(TPalette24& pPalette, int32_t whichPlayer)",fastcall,48,44,entry,core/interface/widgets.hpp:1068
+0x202370,0x602930,heroWindowManager::BroadcastMessage,"int32_t heroWindowManager::BroadcastMessage(int32_t command, int32_t subType, int32_t itemId, int32_t msgExtra)",thiscall,64,60,entry,core/interface/window_manager.hpp:40
+0x202520,0x602ae0,heroWindowManager::int32_t,int32_t heroWindowManager::int32_t(__thiscall* dialogFunction),thiscall,81,61,entry,core/interface/window_manager.hpp:44
+0x202a40,0x603000,heroWindowManager::DoQuickView,void heroWindowManager::DoQuickView(heroWindow* newWindow),thiscall,256,200,entry,core/interface/window_manager.hpp:51
+0x202bd0,0x603190,heroWindowManager::UpdateScreen,"void heroWindowManager::UpdateScreen(int32_t x, int32_t y, int32_t h, int32_t w)",thiscall,128,116,entry,core/interface/window_manager.hpp:54
+0x202c50,0x603210,heroWindowManager::FadeScreen,"void heroWindowManager::FadeScreen(int32_t inOut, int32_t speed, bool expect_fadein)",thiscall,112,82,entry,core/interface/window_manager.hpp:57
+0x206b40,0x607100,exe_compress,"int32_t exe_compress(void* dest, uint32_t destLen, const void* source, uint32_t sourceLen)",fastcall,160,140,entry,core/resources/files.hpp:75
+0x206be0,0x6071a0,exe_uncompress,"int32_t exe_uncompress(void* dest, uint32_t destLen, const void* source, uint32_t sourceLen)",fastcall,192,164,entry,core/resources/files.hpp:80
+0x20b598,0x60bb58,exe_scoped_lock::exe_scoped_lock,void* exe_scoped_lock::exe_scoped_lock(),thiscall,156,78,entry,core/nh3api_std/memory.hpp:665
+0x20c4ce,0x60ca8e,exe_filebuf::open,"exe_FILE* exe_filebuf::open(const char* _S, exe_ios::openmode _M)",cdecl,163,107,entry,core/nh3api_std/exe_streambuf.hpp:751
+0x217547,0x617b07,_CxxThrowException,"void _CxxThrowException(&exception_object, &__TI2?AVruntime_error@std@@)",stdcall,73,65,entry,core/nh3api_std/nh3api_exceptions.hpp:96
+0x217943,0x617f03,exe_atexit,int32_t exe_atexit(exe_atexit_func_t func),cdecl,89,43,entry,core/nh3api_std/exe_crt.hpp:33
+0x217c3a,0x6181fa,void,void void(__thiscall* init),stdcall,106,94,entry,core/nh3api_std/memory.hpp:294
+0x217cbc,0x61827c,void,void void(__thiscall* destr),stdcall,104,92,entry,core/nh3api_std/memory.hpp:308
+0x217e5c,0x61842c,exe_rand,int32_t exe_rand(),cdecl,34,25,entry,core/random.hpp:26
+0x218583,0x618b53,exe_fputc,"int32_t exe_fputc(int32_t character, exe_FILE* file)",cdecl,59,42,entry,core/nh3api_std/exe_streambuf.hpp:81
+0x2185be,0x618b8e,exe_fgetc,int32_t exe_fgetc(exe_FILE* file),cdecl,49,37,entry,core/nh3api_std/exe_streambuf.hpp:87
+0x2185ef,0x618bbf,exe_ungetc,"int32_t exe_ungetc(int32_t character, exe_FILE* file)",cdecl,41,29,entry,core/nh3api_std/exe_streambuf.hpp:93
+0x218686,0x618c56,exe_fgetpos,"int32_t exe_fgetpos(exe_FILE* __restrict in_file, fpos_t* __restrict out_pos)",cdecl,34,30,entry,core/nh3api_std/exe_streambuf.hpp:99
+0x2186a8,0x618c78,exe_fseek,"int32_t exe_fseek(exe_FILE* file, ptrdiff_t offset, ptrdiff_t origin)",cdecl,44,32,entry,core/nh3api_std/exe_streambuf.hpp:105
+0x218761,0x618d31,exe_fsetpos,"int32_t exe_fsetpos(exe_FILE* __restrict in_file, fpos_t* __restrict in_pos)",cdecl,24,16,entry,core/nh3api_std/exe_streambuf.hpp:111
+0x218779,0x618d49,exe_setvbuf,"int32_t exe_setvbuf(exe_FILE* __restrict file, char* __restrict buffer, int32_t mode, size_t size)",cdecl,175,151,entry,core/nh3api_std/exe_streambuf.hpp:117
+0x218828,0x618df8,exe_fflush,int32_t exe_fflush(exe_FILE* file),cdecl,47,31,entry,core/nh3api_std/exe_streambuf.hpp:123
+0x21898e,0x618f5e,exe_fclose,int32_t exe_fclose(exe_FILE* file),cdecl,49,37,entry,core/nh3api_std/exe_streambuf.hpp:129
+0x218f0d,0x6194dd,exe_ftell,int32_t exe_ftell(exe_FILE* file),cdecl,34,22,entry,core/nh3api_std/exe_streambuf.hpp:141
+0x2192c0,0x619890,exe_realloc,"void* exe_realloc(void* ptr, size_t size)",cdecl,256,171,entry,core/nh3api_std/memory.hpp:99
+0x2195e0,0x619bb0,exe_free,void exe_free(void* ptr),cdecl,72,40,entry,core/nh3api_std/memory.hpp:62
+0x219a9d,0x61a06d,exe_close,int32_t exe_close(int32_t fd),cdecl,93,65,entry,core/nh3api_std/exe_streambuf.hpp:135
+0x219e63,0x61a433,exe_beginthreadex,"uintptr_t exe_beginthreadex(SECURITY_ATTRIBUTES* security,)",cdecl,256,188,entry,core/nh3api_std/exe_crt.hpp:59
+0x219f6a,0x61a53a,exe_endthreadex,void exe_endthreadex(uint32_t exit_code),cdecl,50,30,entry,core/nh3api_std/exe_crt.hpp:64
+0x219f9c,0x61a56c,exe_beginthread,"uintptr_t exe_beginthread(exe_beginthread_func_t start_address, size_t stack_size, void* args)",cdecl,256,188,entry,core/nh3api_std/exe_crt.hpp:70
+0x21a0a6,0x61a676,exe_endthread,void exe_endthread(),cdecl,74,47,entry,core/nh3api_std/exe_crt.hpp:75
+0x21ab8c,0x61b15c,exe_setlocale,"char* exe_setlocale(int category, const char* locale)",cdecl,256,168,entry,core/nh3api_std/exe_crt.hpp:251
+0x21d303,0x61d8c3,exe_getptd,exe_tiddata* exe_getptd(),cdecl,103,63,entry,core/nh3api_std/exe_crt.hpp:232
+0x21d40a,0x61d9ca,exe_terminate,void exe_terminate(),cdecl,92,64,entry,core/nh3api_std/exe_crt.hpp:38
+0x21d4c1,0x61da81,exe_flsbuf,"int32_t exe_flsbuf(int32_t c, exe_FILE* file)",cdecl,256,202,entry,core/nh3api_std/exe_streambuf.hpp:177
+0x21df44,0x61e504,exe_msize,size_t exe_msize(const void* ptr),cdecl,69,41,entry,core/nh3api_std/memory.hpp:126
+0x21fe69,0x620429,exe_set_errno,int32_t exe_set_errno(int32_t error_value),cdecl,40,32,entry,core/nh3api_std/exe_crt.hpp:261
+0x22036f,0x62092f,exe_filbuf,int32_t exe_filbuf(exe_FILE* file),cdecl,220,191,entry,core/nh3api_std/exe_streambuf.hpp:171
+0x221cf3,0x6222b3,exe_filebuf::native_handle,HANDLE exe_filebuf::native_handle(),cdecl,66,50,entry,core/nh3api_std/exe_streambuf.hpp:771
+0x225caa,0x626267,exe_crtMessageBoxA,"int32_t exe_crtMessageBoxA(const char* lpText, const char* lpCaption, uint32_t uType)",cdecl,137,85,entry,core/nh3api_std/exe_crt.hpp:266

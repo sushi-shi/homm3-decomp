@@ -49,6 +49,9 @@ def main(argv: list[str]) -> int:
     if stage == "relate":
         from homm3.carve import relate
         return relate.main(rest)
+    if stage == "hdmap":
+        from homm3.carve import hdmap
+        return hdmap.main(rest)
     if stage == "naming":
         from homm3.carve import naming
         return naming.main(rest)
