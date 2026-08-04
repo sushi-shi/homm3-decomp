@@ -177,17 +177,17 @@ say what kind of evidence produced it.
 |---|---:|---|---|
 | `library-symbol` | 433 | masked-archive/zlib byte identity → the real linker symbol, VC6 mangling decoded (`?clear@ios_base@std@@…` → `std_ios_base_clear`) | retail-proven |
 | `fid` | 11 | stock Ghidra Function ID (`local_unwind2`, `NLG_Notify1`) | retail-proven |
-| `hd-crossbuild` | 782 | **original class/method name** transferred from HD Mod's sibling build by unique masked byte identity (`TAdventureMapWindow_ProcessRightSelect`) | crossbuild-verified |
-| `nh3api` | 36 | NH3API address that happens to hit one of our entries directly | external-candidate |
-| `vtable-slot` | 311 | slot of a class-labeled vtable → `border__vslot05` | external-candidate |
+| `hd-crossbuild` | 846 | **original class/method name** transferred from HD Mod's sibling build by unique masked byte identity (`TAdventureMapWindow_ProcessRightSelect`) | crossbuild-verified |
+| `nh3api` | 31 | NH3API address that happens to hit one of our entries directly | external-candidate |
+| `vtable-slot` | 310 | slot of a class-labeled vtable → `border__vslot05` | external-candidate |
 | `eh-funclet` | 5,125 | unwind funclet named after the **parent function it guards** (`TAdventureMapWindow_TAdventureMapWindow_unwind03`) | structural |
-| `caller` | 2,811 | named by dominant caller + callee ordinal | structural |
+| `caller` | 2,762 | named by dominant caller + callee ordinal | structural |
 | `init-ctor` | 1,132 | `.CRT$XCU` slot, numbered in link order | structural |
 | `band` | 697 | band prefix + address (fallback that cannot fail) | structural |
-| `string` | 443 | an owned literal names the subject (`game_advopts_pcx_51d0`) | structural |
-| `import-wrapper` | 162 | thunk to / lone caller of one imported API | structural |
+| `string` | 440 | an owned literal names the subject (`game_advopts_pcx_51d0`) | structural |
+| `import-wrapper` | 156 | thunk to / lone caller of one imported API | structural |
 
-**8,435 of 11,943 (71%)** carry a semantic name — an original symbol, a class
+**8,484 of 11,943 (71%)** carry a semantic name — an original symbol, a class
 method, or a parent-anchored EH funclet — rather than an address label. By
 confidence: **443 retail-proven** (85,669 B), **782 crossbuild-verified**
 (246,534 B), **348 external-candidate** (67,697 B), **10,370 structural**
@@ -245,20 +245,35 @@ That sibling relationship is exactly what makes the names recoverable.
 `python3 -m homm3.carve hdmap` takes each NH3API-addressed function in the HD
 build, masks what layout changes between builds (in-image absolute operands
 and `E8`/`E9`/`0F 8x` rel32 displacements), and searches the remaining
-instruction skeleton in **our** `.text`:
+instruction skeleton in **our** `.text`, in two passes:
 
-- 915 NH3API addresses inside HD's `.text`;
-- **817 matched uniquely**, and **817 of 817 landed on a function entry our
-  carve had already found independently** — zero interior, zero outside;
-- rejected honestly: 38 no-match, 29 ambiguous (>1 site), 31 too small.
+- **Pass 1 — global unique identity.** A shrinking match window (down to the
+  first diverging neighbour) accepted only a globally unique masked hit:
+  **846 of 915**.
+- **Order gate.** The builds preserve link order — the pass-1 map is 845/846
+  monotonic in (HD rva → our rva), median neighbour-gap difference 0 bytes —
+  so the one pair that broke monotonicity was a byte-twin false match and was
+  demoted.
+- **Pass 2 — bracketed.** Each still-unresolved address was retried only
+  *between its resolved neighbours*, where a handful of fixed bytes uniquely
+  place it: **+41**, each required unique-in-bracket and monotonicity-
+  preserving (asserted).
+
+**886 transferred, 884 onto function entries our carve had already found
+independently** (29 unresolved: no unique in-bracket match). The two that did
+*not* land on a carved entry are findings, not errors: `0x1ff500`
+(`heroWindow::HeroWindowHandler`) is a 12-byte function our carve missed but
+attempt-1 also has — an independent carve-gap rediscovery; `0x1bbaaf`
+(`Bitmap16Bit::~Bitmap16Bit`) is an adjustor-destructor tail folded into our
+0x1bba70. Both keep `our_state` so the namer excludes them.
 
 So the name is NH3API's (external, unverified), but the **identification is
 our own bytes** — hence the distinct `crossbuild-verified` confidence class,
 above external-candidate and below retail-proven. That the transfer and the
-carve agree on all 817 entries is mutual corroboration of both.
+carve agree on 884 entries is mutual corroboration of both.
 
 Output: `config/retail-hd-name-map.csv` (`rva, hd_va, name, signature,
-match_bytes, fixed_bytes, our_state, evidence`). The HD executable is the
+match_bytes, fixed_bytes, pass, our_state, evidence`). The HD executable is the
 user's own download, referenced via `$HOMM3_HD_EXE` and never copied into the
 repository.
 
