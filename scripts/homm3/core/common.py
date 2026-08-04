@@ -7,8 +7,10 @@ and the provenance header. The carve-era machinery that once surrounded
 these primitives is retired under scripts/archive/carve/.
 
 The gate is HARD: any byte deviation from the recorded sha256/size aborts.
-Game bytes are never copied into the repo - the exe is referenced in place
-($HOMM3_EXE, then ../orig/, then ../decomp-attempt-1/build/orig/).
+The retail exe is provided via $HOMM3_EXE (fallback: ../orig/) and COPIED
+into gitignored build/orig/ after the hash gate passes; every later use
+re-verifies the copy, so a wrong or tampered file can never be mistaken
+for the pinned pressing. Game bytes never enter the repository.
 """
 from __future__ import annotations
 
@@ -29,6 +31,7 @@ TARGET_SHA256 = "057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd624727
 TARGET_SIZE = 2732032
 IMAGE_BASE = 0x400000
 
+BUILD_EXE = HOMM3_DIR / "build/orig/HEROES3.EXE"
 EXE_CANDIDATES = [
     HOMM3_DIR / "../orig/HEROES3.EXE",
     HOMM3_DIR / "../decomp-attempt-1/build/orig/HEROES3.EXE",
@@ -49,12 +52,31 @@ def sha256_of(path: Path) -> str:
 
 
 def resolve_exe() -> Path:
+    """The gated working copy at build/orig/HEROES3.EXE.
+
+    Verified on EVERY resolve: a wrong file at the copy path (or at the
+    $HOMM3_EXE source) dies naming the offender and the pinned hash rather
+    than confusing anyone downstream. When the copy is absent it is made
+    from $HOMM3_EXE (fallback: the ../orig candidates), gated first."""
+    if BUILD_EXE.is_file():
+        sha = sha256_of(BUILD_EXE)
+        if sha != TARGET_SHA256:
+            die(f"{BUILD_EXE} is NOT the pinned pressing (sha256 {sha}, "
+                f"pinned {TARGET_SHA256}) - delete it and point $HOMM3_EXE "
+                "at English GOG Complete 4.0 HEROES3.EXE")
+        return BUILD_EXE
     env = os.environ.get("HOMM3_EXE")
     candidates = ([Path(env)] if env else []) + EXE_CANDIDATES
-    for cand in candidates:
-        if cand.is_file():
-            return cand.resolve()
-    die("HEROES3.EXE not found; set $HOMM3_EXE or place it at ../orig/")
+    source = next((c for c in candidates if c.is_file()), None)
+    if source is None:
+        die("HEROES3.EXE not found; set $HOMM3_EXE (English GOG Complete "
+            f"4.0, sha256 {TARGET_SHA256[:12]}...)")
+    gate_exe(source)  # gate the SOURCE before any copy exists
+    BUILD_EXE.parent.mkdir(parents=True, exist_ok=True)
+    BUILD_EXE.write_bytes(source.read_bytes())
+    print(f"[homm3] retail exe verified and copied: {source} -> "
+          f"{BUILD_EXE.relative_to(HOMM3_DIR)}")
+    return BUILD_EXE
 
 
 def gate_exe(path: Path) -> dict:

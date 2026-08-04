@@ -49,6 +49,10 @@ timestamp   8 September 2000, built by MSVC 6.0
 
 ## Quickstart
 
+Provide the retail exe via `HOMM3_EXE=/path/to/HEROES3.EXE` — it is
+sha256-verified against the pinned pressing and copied into `build/orig/`
+(a wrong file is refused, never silently used).
+
 ```sh
 nix develop .#build   # VC6 SP3 under wine + the tools
 homm3 init            # ONE-TIME: toolchain tarball (pinned release, SHA-256-verified),
