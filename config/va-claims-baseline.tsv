@@ -1,0 +1,14 @@
+# KNOWN VA-claim backlog - standing debt reported by
+# homm3.match.verify_va_claims, drained in supervised
+# claim-review sessions; NEW violations are fatal.
+CLASS	0x004b0660	src/exec.cpp:8 claims 0x004b0660 which is init-thunk code, not a game-target function
+CLASS	0x004b1090	src/findpath.cpp:8 claims 0x004b1090 which is init-thunk code, not a game-target function
+CLASS	0x004b4420	src/fly.cpp:22 claims 0x004b4420 which is init-thunk code, not a game-target function
+CLASS	0x004e6780	src/hero.cpp:995 claims 0x004e6780 which is init-thunk code, not a game-target function
+CLASS	0x004e6d60	src/herodefs.cpp:29 claims 0x004e6d60 which is init-thunk code, not a game-target function
+CLASS	0x004e6de0	src/herodefs.cpp:36 claims 0x004e6de0 which is init-thunk code, not a game-target function
+CLASS	0x004e6eb0	src/herodefs.cpp:43 claims 0x004e6eb0 which is init-thunk code, not a game-target function
+CLASS	0x004e6fd0	src/herodefs.cpp:50 claims 0x004e6fd0 which is init-thunk code, not a game-target function
+CLASS	0x004e7030	src/herodefs.cpp:57 claims 0x004e7030 which is init-thunk code, not a game-target function
+CLASS	0x004e7090	src/herodefs.cpp:64 claims 0x004e7090 which is init-thunk code, not a game-target function
+CLASS	0x004e70f0	src/herodefs.cpp:71 claims 0x004e70f0 which is init-thunk code, not a game-target function
