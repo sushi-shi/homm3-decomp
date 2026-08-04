@@ -20,10 +20,16 @@ decisions are recorded in the port plan's decision log (§5) in the same change.
   - **Dreamcast CodeView dump** (`../homm3-symbols/HoMM3-Dreamcast-Dump`): proves names,
     types, and layouts for the *Dreamcast* build. Cross-architecture — an x86 identity
     still requires retail-byte proof.
-  - **NH3API** (`../homm3-symbols/NH3API`): external and unverified. Its 874 embedded
-    wrapper addresses fit the pinned image (873 land on x86 entry patterns; measured
-    2026-08-04, both pressings identical), but its names never seed the official map
-    without independent retail evidence.
+  - **NH3API** (`../homm3-symbols/NH3API`): external and **contradicted on addresses**.
+    Of its 874 embedded wrapper addresses, only **120 land on a carved function entry**;
+    **751 fall inside a function body** — many mid-instruction (e.g. `0x5d70` is the last
+    byte of the `cmp ecx,8` at `0x5d6e`) — and 3 are unowned (measured 2026-08-04 against
+    `config/retail-functions.tsv`). They describe a different address space (HD Mod), so
+    an NH3API address is NOT evidence for a boundary on this image. Its *names* and
+    signatures remain useful once an address is independently proven.
+    Correction: an earlier note here claimed "873 land on x86 entry patterns". That
+    misread attempt-1's scorer — its `exec` column (873) only means the address lies in
+    an executable section; its prologue-like column was 100. Do not resurrect the claim.
   - **decomp-attempt-1** (`../decomp-attempt-1`): the abandoned first attempt. Its
     reviewed inventories (12,012 function boundaries, `text-map.tsv`, vtable tables,
     synth-PDB/VC6 knowledge) are evidence pending re-admission — port plan P4.2 decides

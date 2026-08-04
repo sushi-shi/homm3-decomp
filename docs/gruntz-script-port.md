@@ -292,6 +292,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   tarball and unrecognized build/ entries (hand-built vostok PR fixtures),
   and lists what it kept.
 
+- **2026-08-04 — bootstrap analysis landed (`scripts/homm3/carve/`).** Function and
+  vtable inventories carved from the retail image and admitted to `config/`
+  (`retail-functions.tsv` 11,943 rows, sizes INCLUDING jump tables per the /Gy COMDAT
+  extent; `retail-vtables.tsv` 363 tables), plus `retail-relocs.tsv` (56,937 recovered
+  DIR32 sites, directly consumable as vostok `--reloc-manifest`) and its evidence
+  sidecar, the DNA band map, per-function library attribution, and a names export.
+  `docs/exe-dna.md` documents the library findings. Established: **no MFC** in the
+  image (static or dynamic); **static CRT** (LIBCMT SP3) + LIBCPMT + zlib 1.1.3; all
+  other middleware DLL-bound and therefore contributing zero `.text` bytes; the build
+  is **non-incremental** (99.82% of direct calls land on entries, no ILT band) and
+  `/Gi-`. **NH3API addresses were disproven for this image** — see CLAUDE.md.
+  Carve tooling is bootstrap-scoped and retires to `scripts/archive/`.
+
 - **2026-08-04 — vostok pinned at the stack head** (resolves open decision
   point 3): flake re-pinned from the stale `81d34b2` snapshot to `1393e24`
   (`feature/pdb-linker-trampolines`), the open-PR queue head as rebased
