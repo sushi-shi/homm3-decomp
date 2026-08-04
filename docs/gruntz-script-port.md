@@ -268,14 +268,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   in check_header - retail's jl at va 0x6064b5; no official zlib
   1.0.4-1.2.1 ever spelled it signed, and the retail bytes bound NWC's
   edit to exactly this one of the tree's 226 uInt sites, since every
-  other zlib function matches pristine source at 100%). The source
-  snapshot stays byte-identical to official 1.1.3; `units.toml` gained
-  a per-unit `patch` key; configure emits a `patchsrc` ninja edge;
-  `homm3.build.patch_src` applies the diff FAIL-CLOSED (exact context
-  + removed-line verification, no-op patches fatal) into
-  build/gen/patched/ with the snapshot's headers staged alongside for
-  MSVC's file-relative quoted includes. Drilled: corrupted patch
-  context dies naming the mismatched line; restore compiles. One
+  other zlib function matches pristine source at 100%). Mechanism
+  SIMPLIFIED on user direction to match the bink/smacker/ifc
+  convention exactly: the deviation is applied IN PLACE - the vendored
+  tree holds the RETAIL source state - and `gzio.c.patch` sits beside
+  it as the documented delta from the official release (whose tarball
+  sha stays recorded in vendor/README.md). The interim staging
+  machinery (patch_src actor, configure patchsrc edge, units.toml
+  patch key) was removed the same session as over-piping for a
+  one-token fact; the build compiles vendor/ directly and the ratchet
+  holding 69/69 across the switch proves the objects identical. One
   ratchet artifact hand-edited per doctrine: the renamed
   tr_static_init's old synthetic baseline row removed. Full build
   green: ratchet clean, all gates hold, README refreshed.

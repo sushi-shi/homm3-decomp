@@ -57,8 +57,6 @@ def load_manifest() -> tuple[dict, dict[str, list[str]], list[dict]]:
         source = ROOT / unit["source"]
         if not source.is_file():
             raise SystemExit("[configure] missing source: " + unit["source"])
-        if "patch" in unit and not (ROOT / unit["patch"]).is_file():
-            raise SystemExit("[configure] missing patch: " + unit["patch"])
 
     return build, profiles, units
 
@@ -104,13 +102,6 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
                      "python3 -m homm3.build.link --out $out"),
             description="LINK $out",
         )
-        writer.rule(
-            "patchsrc",
-            command=("PYTHONDONTWRITEBYTECODE=1 PYTHONPATH=scripts "
-                     "python3 -m homm3.build.patch_src "
-                     "--src $in --patch $patch --out $out"),
-            description="PATCH $out",
-        )
         writer.build(
             "build.ninja",
             "configure",
@@ -121,30 +112,11 @@ def write_ninja(profiles: dict[str, list[str]], units: list[dict]) -> None:
 
         objects = []
         for unit in units:
-            source = unit["source"]
-            if "patch" in unit:
-                # Retail provably built this TU from locally modified vendor
-                # source; compile the STAGED patched copy (patch_src fails
-                # closed on any vendor/patch drift). The snapshot's sibling
-                # headers restage with it so quoted includes resolve.
-                staged = "build/gen/patched/%s" % Path(source).name
-                headers = sorted(
-                    str(p.relative_to(ROOT))
-                    for p in (ROOT / source).parent.glob("*.h"))
-                writer.build(
-                    staged,
-                    "patchsrc",
-                    inputs=source,
-                    implicit=[unit["patch"],
-                              "scripts/homm3/build/patch_src.py"] + headers,
-                    variables={"patch": unit["patch"]},
-                )
-                source = staged
             obj = "build/objdiff/base/%s.obj" % unit["unit"]
             writer.build(
                 obj,
                 "cl",
-                inputs=source,
+                inputs=unit["source"],
                 implicit="scripts/homm3/core/cc_wrap.py",
                 variables={
                     "flags": " ".join(profiles[unit["flags"]]),
