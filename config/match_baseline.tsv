@@ -1,0 +1,74 @@
+# Per-function best-observed fuzzy match (the RATCHET).
+# unit<TAB>fn<TAB>max_fuzzy - raised by `homm3 build` / `homm3 status
+# update` (monotone); a drop below a recorded max FAILS the build
+# (status check --gate). Lowering a max is an explicit hand edit here.
+# No src_hash epoch column yet: it arrives with the clang fingerprint
+# path when game TUs compile.
+adler32	@adler32@12	100.0000
+compress	@compress2@20	100.0000
+crc32	@crc32@12	100.0000
+deflate	@deflate@8	100.0000
+deflate	@deflateEnd@4	100.0000
+deflate	@deflateInit2_@32	100.0000
+deflate	@deflateInit_@16	100.0000
+deflate	@deflateReset@4	100.0000
+deflate	@deflate_fast@8	0.0000
+deflate	@deflate_slow@8	100.0000
+deflate	@deflate_stored@8	100.0000
+deflate	@fill_window@4	100.0000
+deflate	@flush_pending@4	100.0000
+deflate	@lm_init@4	100.0000
+deflate	@longest_match@8	100.0000
+deflate	@putShortMSB@8	100.0000
+deflate	@read_buf@12	100.0000
+gzio	@check_header@4	99.5041
+gzio	@destroy@4	100.0000
+gzio	@do_flush@8	100.0000
+gzio	@getLong@4	100.0000
+gzio	@get_byte@4	100.0000
+gzio	@gz_open@12	100.0000
+gzio	@gzclose@4	100.0000
+gzio	@gzopen@8	100.0000
+gzio	@gzread@12	100.0000
+gzio	@gzwrite@12	100.0000
+gzio	@putLong@8	100.0000
+infblock	@inflate_blocks@12	100.0000
+infblock	@inflate_blocks_free@8	100.0000
+infblock	@inflate_blocks_new@12	100.0000
+infblock	@inflate_blocks_reset@12	100.0000
+infcodes	@inflate_codes@12	100.0000
+infcodes	@inflate_codes_free@8	100.0000
+infcodes	@inflate_codes_new@20	100.0000
+inffast	@inflate_fast@24	100.0000
+inflate	@inflate@8	99.7442
+inflate	@inflateEnd@4	100.0000
+inflate	@inflateInit2_@16	100.0000
+inflate	@inflateInit_@12	100.0000
+inflate	@inflateReset@4	100.0000
+inftrees	@huft_build@40	100.0000
+inftrees	@inflate_trees_bits@20	100.0000
+inftrees	@inflate_trees_dynamic@36	100.0000
+inftrees	@inflate_trees_fixed@20	100.0000
+infutil	@inflate_flush@12	100.0000
+trees	@_tr_align@4	100.0000
+trees	@_tr_flush_block@16	100.0000
+trees	@_tr_init@4	100.0000
+trees	@_tr_stored_block@16	100.0000
+trees	@bi_flush@4	100.0000
+trees	@bi_reverse@8	100.0000
+trees	@bi_windup@4	100.0000
+trees	@build_bl_tree@4	100.0000
+trees	@build_tree@8	100.0000
+trees	@compress_block@12	100.0000
+trees	@copy_block@16	100.0000
+trees	@gen_bitlen@8	100.0000
+trees	@gen_codes@12	100.0000
+trees	@init_block@4	100.0000
+trees	@pqdownheap@12	100.0000
+trees	@scan_tree@12	100.0000
+trees	@send_all_trees@16	100.0000
+trees	@send_tree@12	100.0000
+trees	@set_data_type@4	100.0000
+trees	zlib_206dd0_sub00_206e40	0.0000
+uncompr	@uncompress@16	100.0000
+zutil	@zcalloc@12	100.0000

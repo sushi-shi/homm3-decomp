@@ -18,14 +18,23 @@ Subcommands
         config/units.toml (homm3.build.configure; ninja also re-runs it as a
         generator rule).
 
-  build [-- <ninja args>]
-        Configure, then ninja. The graph compiles every manifest unit with the
-        pinned `wine cl` (homm3.core.cc_wrap):
+  build [--fast] [-- <ninja args>]
+        The loop tail (homm3.build.build): configure -> ninja (base objs via
+        the pinned `wine cl`) -> normalize comparison copies -> objdiff
+        report -> overall %% line -> baseline raise + RATCHET check (a
+        function below its recorded best FAILS the build) + README score
+        block + a warning when the synth-PDB inputs are newer than the PDB.
+        --fast stops after the %% line (the inner matching loop).
 
-            vendor/zlib-1.1.3/<unit>.c --cl(wine)--> build/objdiff/base/<unit>.obj
+  delink
+        The delink half (homm3.build.delink, explicit - build never delinks):
+        labels -> synth PDB -> data manifests -> vostok -> per-unit target
+        objs -> normalize -> objdiff.json.
 
-        objdiff pairs each base obj against its delinked target obj; until the
-        delink half is ported the targets fall back to dummy.obj.
+  status [update|check [--gate]] [--write-readme]
+        Scoreboard (homm3.match.status): per-unit table; `update` raises the
+        per-function maxima (config/match_baseline.tsv); `check` reports
+        functions below their recorded best.
 
   link [<homm3.build.link args>] [-- <extra link flags>]
         OPT-IN candidate link (also `ninja candidate`): genuine VC6 link.exe
@@ -88,12 +97,19 @@ def cmd_configure(args) -> int:
 
 
 def cmd_build(args) -> int:
-    if run_module("homm3.build.configure"):
-        return 1
     ninja_args = args.ninja_args
     if ninja_args and ninja_args[0] == "--":
         ninja_args = ninja_args[1:]
-    return run("ninja", *(ninja_args or ["all"]))
+    extra = ["--fast"] if args.fast else []
+    return run_module("homm3.build.build", *extra, *(ninja_args or []))
+
+
+def cmd_delink(args) -> int:
+    return run_module("homm3.build.delink")
+
+
+def cmd_status(args) -> int:
+    return run_module("homm3.match.status", *args.status_args)
 
 
 def cmd_link(args) -> int:
@@ -147,9 +163,21 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("configure", help="regenerate build.ninja + objdiff.json")
     p.set_defaults(fn=cmd_configure)
 
-    p = sub.add_parser("build", help="configure + ninja")
+    p = sub.add_parser(
+        "build", help="configure + ninja + report + ratchet (homm3.build.build)")
+    p.add_argument("--fast", action="store_true",
+                   help="inner loop: stop after the objdiff %% line")
     p.add_argument("ninja_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_build)
+
+    p = sub.add_parser("delink", help="the delink loop: labels -> synth PDB "
+                       "-> vostok -> normalized targets (homm3.build.delink)")
+    p.set_defaults(fn=cmd_delink)
+
+    p = sub.add_parser("status", help="objdiff scoreboard + ratchet "
+                       "(homm3.match.status: [update|check] [--write-readme])")
+    p.add_argument("status_args", nargs=argparse.REMAINDER)
+    p.set_defaults(fn=cmd_status)
 
     p = sub.add_parser("link", help="candidate link (layout study)")
     p.add_argument("link_args", nargs=argparse.REMAINDER)

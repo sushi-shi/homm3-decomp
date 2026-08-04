@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-04 — the build loop integrated (P3.1 partial): `homm3 build`,
+  `--fast`, the ratchet, `delink`, `status`, README score block.** One
+  module per command, cli.py is pure dispatch (`homm3.build.build`,
+  `homm3.build.delink`, `homm3.match.status`). `homm3 build` = configure →
+  ninja → normalize → objdiff report → overall line → baseline raise
+  (monotone, 4-decimal quantized) → **ratchet check, FATAL on a drop**
+  (deliberate divergence: both siblings keep the per-function baseline
+  observational; here a regression fails the build, drilled poisoned-row →
+  exit 1) → README `<!-- match-score -->` block (gruntz table shape;
+  excluded-category tables await the universe classifier) → warning-only
+  stale-delink probe (homm2's drift-census idea; build NEVER delinks).
+  `--fast` stops after the %% line and says so. Baseline
+  `config/match_baseline.tsv` (`unit fn max_fuzzy`; the src_hash epoch
+  column arrives with the clang fingerprint path). No report caching yet
+  (sub-second at 14 units). Ghidra init deliberately untouched.
+
 - **2026-08-04 — zlib map completed from base-obj identity; evidence/
   declared scaffolding.** Three user decisions, one measurement: (1) the
   zlib map carries its own `unit` column (rva, size, name, unit) — file
