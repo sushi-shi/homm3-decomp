@@ -94,6 +94,7 @@ public:
     int Add(int armyType, int newNumTroops, int newIndex);
     static const char* GetArmySizeName(int howMany, int iNameSet);
     void Swap(int srcIndex, armyGroup* destGroup, int destIndex);
+    void Dismiss(int whichIndex);
     int save(TAbstractFile* outfile);
     int load(TAbstractFile* infile);
 };

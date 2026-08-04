@@ -177,18 +177,28 @@ unsigned char armyGroup::HasAllUndead()
 #if 0  // @carcass
 
 // E:\gamedcs\armygrp.cpp:668
+// LINKER-ELIMINATED in retail (/OPT:REF - no caller; the 0x4ab20..
+// 0x4ab80 gap holds exactly one function and its bytes are Dismiss).
 DC_ONLY(0x4eb88, 0x36)
 unsigned char armyGroup::HasSomeUndead()
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\armygrp.cpp:684
-DC_ONLY(0x4ebc0, 0x10)
+// Claimed 2026-08-04 from byte identity: the gap function's body IS
+// armies[i]=-1 / numTroops[i]=0 (HasSomeUndead's elimination had left
+// the link-order bracket ambiguous, hence the original DC_ONLY).
+VA(0x0044ab60, 0x19)  // byte-identity, dc 0x4ebc0
 void armyGroup::Dismiss(int whichIndex)
 {
-    // @stub
+    armies[whichIndex] = CREATURE_NONE;
+    numTroops[whichIndex] = 0;
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 
