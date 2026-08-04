@@ -190,8 +190,8 @@ def main(argv=None) -> int:
         writer.writerows(vt_rows)
 
     print(f"[carve relate] {len(sym_rows)} functions -> {OUT_SYMBOLS.name}: "
-          f"{named} named, {with_lib} library-proven, {in_vtable} are vtable "
-          "slot targets")
+          f"{named} named, {with_lib} band-attributed (library or game), "
+          f"{in_vtable} are vtable slot targets")
     print(f"[carve relate] {len(vt_count)} vtables, {slot_total} slots -> "
           f"{OUT_VTABLES.name}: {labeled} vtables class-labeled, "
           f"{slot_named} slots carry a method name")
