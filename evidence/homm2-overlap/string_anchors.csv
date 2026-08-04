@@ -1,0 +1,64 @@
+# generator: homm3.analysis.homm2_overlap
+# exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
+# date: 2026-08-04
+# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
+# homm2: HEROES2W.EXE sha256=bc8f362dd49216c9fbcee1eb2e0429b467082a93330dd84ff95757c0182fc8a3 (read-only sibling)
+# homm2 repo: /home/sheep/Projects/homm2/homm2-decomp
+literal,h3_rva,h3_label,h3_provenance,h2_rva,h2_name,h2_unit,h2_fuzzy
+%sattk.82M,0x3d9f0,game_smove_82m_3d9f0,working-label,0x4aec8,army::loadresources,SOURCE/ARMY,100.0
+%sext1.82M,0x3d9f0,game_smove_82m_3d9f0,working-label,0x4aec8,army::loadresources,SOURCE/ARMY,100.0
+%sext2.82M,0x3d9f0,game_smove_82m_3d9f0,working-label,0x4aec8,army::loadresources,SOURCE/ARMY,100.0
+%skill.82M,0x3d9f0,game_smove_82m_3d9f0,working-label,0x4aec8,army::loadresources,SOURCE/ARMY,100.0
+%skill.82M,0x166c20,game_skill_82m_166c20,working-label,0x4aec8,army::loadresources,SOURCE/ARMY,100.0
+%smove.82M,0x3d9f0,game_smove_82m_3d9f0,working-label,0x4aec8,army::loadresources,SOURCE/ARMY,100.0
+%sshot.82M,0x3d9f0,game_smove_82m_3d9f0,working-label,0x4aec8,army::loadresources,SOURCE/ARMY,100.0
+%swnce.82M,0x3d9f0,game_smove_82m_3d9f0,working-label,0x4aec8,army::loadresources,SOURCE/ARMY,100.0
+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,0x10b260,calls_timeGetTime_10b260,working-label,0xc49a0,setgamedefaults,BASE/Misc,96.7807
+ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789,0x10b4d0,game_player_10b4d0,working-label,0xc49a0,setgamedefaults,BASE/Misc,96.7807
+DDERR_INCOMPATIBLEPRIMARY,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DDERR_INVALIDCLIPLIST,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DDERR_INVALIDPARAMS,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DDERR_INVALIDRECT,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DDERR_NOBLTHW,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DDERR_NODDROPSHW,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DDERR_NOEXCLUSIVEMODE,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DDERR_NOPALETTEHW,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DDERR_NORASTEROPHW,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DDERR_NOSTRETCHHW,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DDERR_OUTOFMEMORY,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DDERR_UNSUPPORTED,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+DIGSOUND.82M,0xec90,game_digsound_82m_ec90,working-label,0x5a07c,advmanager::processsearch,SOURCE/ADVMGR,100.0
+DirectPlay Error:,0x1556e0,calls_MessageBeep_1556e0,working-label,0x1fecd,dpsd,SOURCE/dpnetwin,100.0
+Error type unknown,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x1fecd,dpsd,SOURCE/dpnetwin,100.0
+Error type unknown,0x2006e0,game_dderr_outofmemory_2006e0,working-label,0x35e4f,ddsd,SOURCE/wingraph,100.0
+Initialization failed!,0xed650,calls_LoadMenuA_ed650,working-label,0x96e98,oldmain,SOURCE/KB,98.03895
+Initialization failed!,0xee3e0,calls_MessageBoxA_ee3e0,working-label,0x96e98,oldmain,SOURCE/KB,98.03895
+Initialization failed!,0x1556e0,calls_MessageBeep_1556e0,working-label,0x96e98,oldmain,SOURCE/KB,98.03895
+RMT%sRC.BIN,0x10b750,game_rmt_src_bin_10b750,working-label,0xc5450,readprefs,BASE/Misc,100.0
+RMT%sRD.BIN,0x10b750,game_rmt_src_bin_10b750,working-label,0xc5450,readprefs,BASE/Misc,100.0
+RMT%sSC.BIN,0x10b750,game_rmt_src_bin_10b750,working-label,0xc5450,readprefs,BASE/Misc,100.0
+Unable to initialize resources - possible disk problem.,0xed650,calls_LoadMenuA_ed650,working-label,0xd1620,executive::initsystem,BASE/EXEC,100.0
+Unexpected Program Termination,0xf3690,game_unexpected_program_termi_f3690,working-label,0x9e0f2,shutdown,SOURCE/KB,100.0
+advManager,0x6fd0,advManager_vslot00,working-label,0x5665f,advmanager::open,SOURCE/ADVMGR,100.0
+buildtwn.82M,0x1d6a80,game_buildtwn_82m_1d6a80,working-label,0x1595d,townmanager::main,SOURCE/TOWNMGR,99.44677
+buildtwn.82M,0x1d6a80,game_buildtwn_82m_1d6a80,working-label,0x18bd2,townmanager::buildobj,SOURCE/TOWNMGR,100.0
+buildtwn.82M,0x1d82b0,game_buildtwn_82m_1d82b0,working-label,0x1595d,townmanager::main,SOURCE/TOWNMGR,99.44677
+buildtwn.82M,0x1d82b0,game_buildtwn_82m_1d82b0,working-label,0x18bd2,townmanager::buildobj,SOURCE/TOWNMGR,100.0
+combatManager,0x62a20,combatManager_vslot00,working-label,0x90aa0,combatmanager::open,SOURCE/CMBTMGR,100.0
+creature,0x1599e0,game_sprite_1599e0,working-label,0x4dcba,army::dohydraattack,SOURCE/ARMY,96.03481
+drawbrg.82m,0x671c0,combatManager_LowerDoor,src-VA,0x9525a,combatmanager::lowerdoor,SOURCE/CMBTMGR,100.0
+drawbrg.82m,0x671c0,combatManager_LowerDoor,src-VA,0x95317,combatmanager::raisedoor,SOURCE/CMBTMGR,100.0
+drawbrg.82m,0x672e0,combatManager_RaiseDoor,src-VA,0x9525a,combatmanager::lowerdoor,SOURCE/CMBTMGR,100.0
+drawbrg.82m,0x672e0,combatManager_RaiseDoor,src-VA,0x95317,combatmanager::raisedoor,SOURCE/CMBTMGR,100.0
+goodluck.82m,0x3f900,army_range_attack,working-label,0x4f93e,army::checkluck,SOURCE/ARMY,100.0
+goodluck.82m,0x3f900,army_range_attack,working-label,0xafa56,advmanager::eventsound,SOURCE/EVENTS,100.0
+goodluck.82m,0x41610,army_do_attack,src-VA,0x4f93e,army::checkluck,SOURCE/ARMY,100.0
+goodluck.82m,0x41610,army_do_attack,src-VA,0xafa56,advmanager::eventsound,SOURCE/EVENTS,100.0
+heroWindowManager,0x2021b0,game_herowindowmanager_2021b0,working-label,0xcaad0,herowindowmanager::open,BASE/WINMGR,100.0
+inputManager,0xec4d0,inputManager_vslot00,working-label,0xce230,inputmanager::open,BASE/INPUTMGR,100.0
+mouseManager,0x10cb50,mouseManager_mouseManager,src-VA,0xc9270,mousemanager::mousemanager,BASE/MOUSEMGR,100.0
+nwherolv.82m,0xda720,game_dxp_da720,working-label,0x6d83f,hero::checklevel,SOURCE/HERO,99.8382
+recruitManager,0x14fea0,game_s_s_14fea0,working-label,0x8b49c,recruitunit::open,SOURCE/RECRUIT,99.98788
+soundManager,0x1997d0,game_device_1997d0,working-label,0xcc560,soundmanager::open,BASE/soundmgr,100.0
+swapManager,0x1ae750,game_tradesel_pcx_1ae750,working-label,0x54502,swapmanager::open,SOURCE/SWAPMGR,100.0
+townManager,0x1c63c0,calls_timeGetTime_1c63c0,working-label,0x14109,townmanager::open,SOURCE/TOWNMGR,100.0

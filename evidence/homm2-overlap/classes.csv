@@ -1,0 +1,50 @@
+# generator: homm3.analysis.homm2_overlap
+# exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
+# date: 2026-08-04
+# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
+# homm2: HEROES2W.EXE sha256=bc8f362dd49216c9fbcee1eb2e0429b467082a93330dd84ff95757c0182fc8a3 (read-only sibling)
+# homm2 repo: /home/sheep/Projects/homm2/homm2-decomp
+h2_class,h3_class
+IDirectDraw,IDirectDraw
+IDirectDrawPalette,IDirectDrawPalette
+IDirectDrawSurface,IDirectDrawSurface
+SAMPLE2,SAMPLE2
+SLimitData,SLimitData
+SMapChange,SMapChange
+SMonFrameInfo,SMonFrameInfo
+_GUID,_GUID
+advManager,advManager
+army,army
+armyGroup,armyGroup
+baseManager,baseManager
+border,border
+button,button
+combatManager,combatManager
+configStruct,configStruct
+executive,executive
+font,font
+game,game
+hero,hero
+heroWindow,heroWindow
+heroWindowManager,heroWindowManager
+hexcell,hexcell
+highScoreManager,highScoreManager
+iconWidget,iconWidget
+inputManager,inputManager
+mouseManager,mouseManager
+philAI,philAI
+playerData,playerData
+recruitUnit,recruitUnit
+resource,resource
+resourceManager,ResourceManager
+sample,sample
+searchArray,searchArray
+soundManager,soundManager
+strip,strip
+swapManager,swapManager
+textEntryWidget,textEntryWidget
+textWidget,textWidget
+town,town
+townManager,townManager
+townObject,townObject
+widget,widget
