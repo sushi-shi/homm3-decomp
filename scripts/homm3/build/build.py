@@ -7,8 +7,10 @@
     (FATAL on regression) + README score block + stale-delink probe.
 
 `--fast` stops after the overall line and says what it skipped (the gruntz
-inner-loop tier). The build NEVER delinks (homm2 rule): the probe only
-warns when the synth-PDB inputs are newer than the PDB - run
+inner-loop tier). The build never RE-delinks (homm2 rule - an existing
+comparison target must not move silently under a matcher); a fresh tree
+with no targets at all bootstraps the first delink, and afterwards the
+probe only warns when the synth-PDB inputs are newer than the PDB - run
 `homm3 delink` explicitly.
 """
 from __future__ import annotations
@@ -56,6 +58,18 @@ def main(argv=None) -> int:
         return 1
     normalize_objs.main([])
     configure.main()
+
+    # a fresh tree has no delinked targets: every unit would pair against
+    # dummy.obj and the ratchet would report 68 bogus MISSING regressions.
+    # Bootstrap the FIRST delink instead - the never-delink rule protects an
+    # EXISTING comparison target from moving silently; from nothing there is
+    # nothing to protect. Later builds only warn (the probe below).
+    if not any((ROOT / "build/objdiff/target").glob("*.c.obj")):
+        print("[build] no delinked targets yet - bootstrapping the first "
+              "delink")
+        from homm3.build import delink
+        if delink.main([]):
+            return 1
 
     report = status.load_report()
     print(f"[build] {status.overall_line(report)}")
