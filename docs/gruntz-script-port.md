@@ -260,6 +260,30 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-04 — synth PDB delivered (P2.2); the delink lessons implemented
+  in full.** Annotation contract v3: homm2-decomp's `va.h` vocabulary
+  adopted verbatim (`VA`/`VA_COMPGEN`/`DATA`/`DATA_COMPGEN(_GUARD)`/`VTBL`/
+  `VTBL2`/`OVERRIDE`/`SIZE`, absolute VAs in source, plus our `DC_ONLY`) —
+  superseding the same-day gruntz `RVA()` choice; `src/` regenerated under
+  it (750 `VA`, 7,179 `DC_ONLY`), `src/rva.h` retired for `include/va.h`.
+  New build actors: `homm3.build.labels` (symbol inventory: 25,923 rows —
+  11,943 functions total-covered + 13,980 data symbols incl. dense
+  const/data/bss naming of every absolute-reloc target, vtables, IAT
+  slots), `homm3.build.synth_pdb` (yaml2pdb + DBI stream-0x14 patch →
+  `build/pdb/HEROES3.pdb`, 100 modules), `homm3.build.data_manifest`
+  (vostok tsvs at the PINNED 1393e24 schemas — 8-column data manifest, no
+  `--contribution-manifest` at this pin — plus the canonicalizer's
+  DATA_COMPGEN bindings table and hand-owned
+  `config/delink-reloc-aliases.tsv`), and the transform-before-compare
+  machinery ported from homm2 (`canonicalize_data_symbols` with `__h3cg$`
+  semantic prefix + `normalize_objs`), landed ahead of its first objdiff
+  user by design. **First smoke delink of HEROES3.EXE succeeded**:
+  `--reloc-manifest config/retail-relocs.tsv` + the synth PDB → 101
+  per-TU COFF objects (`advmgr.c.obj`, …, `_msvc_internal/*`) in 0.1 s,
+  exact-PDB-operand code-reloc recovery active, no `.rdata`
+  all-constants-must-be-named panic. The delink LOOP (ninja wiring,
+  objdiff pairing, P2.3) remains deliberately unstarted.
+
 - **2026-08-04 — mapping architecture fixed; P0.2 fully resolved.** The
   synth PDB's function map has four sources of truth: (1) game code — the
   `RVA()` macros in `src/` ARE the map ("acts as a .csv"), re-derived every
