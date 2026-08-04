@@ -177,19 +177,32 @@ say what kind of evidence produced it.
 |---|---:|---|---|
 | `library-symbol` | 433 | masked-archive/zlib byte identity → the real linker symbol, VC6 mangling decoded (`?clear@ios_base@std@@…` → `std_ios_base_clear`) | retail-proven |
 | `fid` | 11 | stock Ghidra Function ID (`local_unwind2`, `NLG_Notify1`) | retail-proven |
-| `nh3api` | 121 | NH3API wrapper name for that **entry** | external-candidate |
+| `hd-crossbuild` | 782 | **original class/method name** transferred from HD Mod's sibling build by unique masked byte identity (`TAdventureMapWindow_ProcessRightSelect`) | crossbuild-verified |
+| `nh3api` | 36 | NH3API address that happens to hit one of our entries directly | external-candidate |
 | `vtable-slot` | 311 | slot of a class-labeled vtable → `border__vslot05` | external-candidate |
-| `eh-funclet` | 5,125 | FuncInfo unwind-action target (retail EH metadata) | structural |
-| `caller` | 3,436 | named by dominant caller + callee ordinal (keeps related code lexically adjacent) | structural |
+| `eh-funclet` | 5,125 | unwind funclet named after the **parent function it guards** (`TAdventureMapWindow_TAdventureMapWindow_unwind03`) | structural |
+| `caller` | 2,811 | named by dominant caller + callee ordinal | structural |
 | `init-ctor` | 1,132 | `.CRT$XCU` slot, numbered in link order | structural |
-| `band` | 698 | band prefix + address (fallback that cannot fail) | structural |
-| `string` | 483 | an owned literal names the subject (`game_advopts_pcx_51d0`) | structural |
-| `import-wrapper` | 193 | thunk to / lone caller of one imported API (`calls_timeGetTime_5e30`) | structural |
+| `band` | 697 | band prefix + address (fallback that cannot fail) | structural |
+| `string` | 443 | an owned literal names the subject (`game_advopts_pcx_51d0`) | structural |
+| `import-wrapper` | 162 | thunk to / lone caller of one imported API | structural |
 
-Totals by confidence: **443 retail-proven** (85,693 B), **433
-external-candidate** (90,180 B), **11,067 structural** (2,077,640 B). Only the
-first class asserts an original identity; structural names are stable labels
-that carry their rva, so they are unique and unchanged across reruns.
+**8,435 of 11,943 (71%)** carry a semantic name — an original symbol, a class
+method, or a parent-anchored EH funclet — rather than an address label. By
+confidence: **443 retail-proven** (85,669 B), **782 crossbuild-verified**
+(246,534 B), **348 external-candidate** (67,697 B), **10,370 structural**
+(1,853,613 B).
+
+The two channels that turned addresses into meaning:
+
+- **EH funclets (5,125 — 43% of all functions).** VC6 loads a FuncInfo inside
+  a tiny `__ehhandler$` stub (`mov eax, <FuncInfo>; jmp __CxxFrameHandler`)
+  that the linker parks in the `.text$x` tail, outside every carved function.
+  So parentage resolves in two hops — FuncInfo ← stub ← the function that
+  pushes the stub as its SEH handler — and **every one of the 5,125 funclets
+  resolved to a parent, zero orphans**. A funclet now reads
+  `<parent>_unwind03`.
+- **HD Mod cross-build transfer (782).** See below.
 
 Evidence channels feeding this, beyond the earlier passes: a Ghidra export
 (`ghidra/export_xrefs.py` → `build/dna/function_xrefs.tsv`) supplying the call
@@ -204,6 +217,50 @@ Two traps worth recording, both caught and fixed here: Ghidra's placeholder
 instantiated in a game TU, e.g. `std_locale_dtor` at 0x53d70 — proves the
 *bytes* but not the library *attribution*, so it is demoted to
 external-candidate rather than claimed as a LIBCPMT contribution.
+
+## Which executable NH3API describes (and how we used it anyway)
+
+NH3API's embedded addresses **do not fit our pinned image**, and the record in
+`CLAUDE.md` ("873 of 874 land on x86 entry patterns") overstates it. Measured
+here against the carve:
+
+| test | our exe | HD Mod's `Heroes3.exe` |
+|---|---:|---:|
+| NH3API call-macro addresses that are `E8` call targets | **102 / 920 (11.1%)** | **904 / 920 (98.3%)** |
+| land exactly on a carved function entry | 121 / 920 | — |
+
+11.1% is chance level for 16-aligned addresses in this image, and probes land
+mid-instruction — e.g. NH3API's `get_black_box` at `0x405D70` is the **last
+byte of `cmp ecx, 8`** in our bytes. The offsets to the nearest entry spread
+smoothly (±16/32/48…), so there is no constant shift either.
+
+NH3API's README says why: it targets "the Complete edition **with HD Mod by
+baratorch**", built on an IDA database of *that* executable. HD Mod's
+installer ships its own `app/_HD3_Data/Heroes3.exe` — 2,826,240 B,
+`sha256 60f0df04…` — a **sibling build**: identical `.text` virtual size
+(0x239000) but bytes diverging from `.text+0x25`, so a different compilation
+of the same sources, not our image patched.
+
+That sibling relationship is exactly what makes the names recoverable.
+`python3 -m homm3.carve hdmap` takes each NH3API-addressed function in the HD
+build, masks what layout changes between builds (in-image absolute operands
+and `E8`/`E9`/`0F 8x` rel32 displacements), and searches the remaining
+instruction skeleton in **our** `.text`:
+
+- 915 NH3API addresses inside HD's `.text`;
+- **817 matched uniquely**, and **817 of 817 landed on a function entry our
+  carve had already found independently** — zero interior, zero outside;
+- rejected honestly: 38 no-match, 29 ambiguous (>1 site), 31 too small.
+
+So the name is NH3API's (external, unverified), but the **identification is
+our own bytes** — hence the distinct `crossbuild-verified` confidence class,
+above external-candidate and below retail-proven. That the transfer and the
+carve agree on all 817 entries is mutual corroboration of both.
+
+Output: `config/retail-hd-name-map.csv` (`rva, hd_va, name, signature,
+match_bytes, fixed_bytes, our_state, evidence`). The HD executable is the
+user's own download, referenced via `$HOMM3_HD_EXE` and never copied into the
+repository.
 
 ## Caveats
 
