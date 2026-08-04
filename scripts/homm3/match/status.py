@@ -212,6 +212,17 @@ def write_readme(report: dict) -> None:
             agg["wmax"] += best * size
             agg["code"] += size
 
+    # the full-engine denominator + excluded categories (single authority:
+    # homm3.match.universe - every consumer uses it so filters cannot drift)
+    from homm3.match import universe
+    _category, _sizes, tally = universe.summary()
+    target_fns = tally.get("target", (0, 0))[0]
+    zlib_fns = tally.get("zlib", (0, 0))[0]
+    covered = sum(a["fns"] for a in per_module.values())
+    matched = sum(a["exact"] for a in per_module.values())
+    denominator = target_fns + zlib_fns
+    unmatched = denominator - covered
+
     rows = [["Module", "Units", "Functions exact", "Fuzzy", "Fuzzy Max"]]
     for module in sorted(per_module, key=lambda m: -per_module[m]["fns"]):
         a = per_module[module]
@@ -221,11 +232,31 @@ def write_readme(report: dict) -> None:
         rows.append([f"`{module}`", str(a["units"]),
                      f"{a['exact']} / {a['fns']} ({pct:.1f}%)",
                      f"{fuzzy:.2f}%", f"{fmax:.2f}%"])
-    block = [RM_START, "", f"**Match score** — {overall_line(report)}.", ""]
+    if unmatched:
+        rows.append(["`(unmatched)`", "—",
+                     f"0 / {unmatched:,} (0.0%)", "0.0%", "0.0%"])
+
+    pct = 100.0 * matched / denominator if denominator else 0.0
+    block = [RM_START, "",
+             f"**Match score** — {matched:,} / {denominator:,} functions "
+             f"exact ({pct:.1f}%) across the full engine "
+             f"({covered} in linked units).", ""]
     block += _md_table(rows, "lrrrr")
-    block += ["", "_Function universe: the linked units only; the "
-              "full-engine denominator and excluded-category tables arrive "
-              "with the universe classifier._", "", RM_END]
+
+    excluded = [["Category", "Functions", "Code (B)", "Why excluded"]]
+    labels = {"eh-funclet": "`EH unwind funclets`",
+              "runtime": "`CRT/C++ runtime`",
+              "init-thunk": "`init/cleanup thunks`",
+              "import-thunk": "`import thunks`"}
+    for cat, label in labels.items():
+        fns, code = tally.get(cat, (0, 0))
+        if fns:
+            excluded.append([label, f"{fns:,}", f"{code:,}",
+                             universe.EXCLUDED_NOTES[cat]])
+    block += ["", "_Excluded from the % above — generated/library code, "
+              "not independent reconstruction targets:_", ""]
+    block += _md_table(excluded, "lrrl")
+    block += ["", RM_END]
 
     text = README_PATH.read_text()
     if RM_START in text and RM_END in text:
