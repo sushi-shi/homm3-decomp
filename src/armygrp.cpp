@@ -215,12 +215,47 @@ unsigned char armyGroup::IsMember(TCreatureType monType)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\armygrp.cpp:706
-DC_ONLY(0x4ebf0, 0xA6)
+// Claimed 2026-08-04 from byte identity: the 0x4ab80..0x4ac50 gap holds
+// one function whose body is the alignment census (NULL-arg local
+// fallback, traits townType, elementals-to-neutral gate); its DC
+// neighbor GetHomogeneityMoraleAdjust has no retail slot (eliminated
+// or inline-only), which had left the bracket ambiguous.
+VA(0x0044abb0, 0x97)  // byte-identity, dc 0x4ebf0
 int armyGroup::GetAlignments(unsigned char* alignments)
 {
-    // @stub
+    unsigned char local[10];
+    if (!alignments)
+        alignments = local;
+    memset(alignments, 0, sizeof(local));
+    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (armies[i] == CREATURE_NONE)
+            continue;
+        const TCreatureTypeTraits& traits = akCreatureTypeTraits[armies[i]];
+        if (traits.attributes & CTA_SIEGE_WEAPON)
+            continue;
+        int alignment;
+        if (gpGame->f_1f698 == 0
+            && (armies[i] == CREATURE_AIR_ELEMENTAL
+                || armies[i] == CREATURE_EARTH_ELEMENTAL
+                || armies[i] == CREATURE_FIRE_ELEMENTAL
+                || armies[i] == CREATURE_WATER_ELEMENTAL))
+            alignment = -1;
+        else
+            alignment = traits.townType;
+        alignments[alignment + 1]++;
+    }
+    int count = 0;
+    for (int j = 0; j < 10; ++j) {
+        if (alignments[j] > 0)
+            ++count;
+    }
+    return count;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\armygrp.cpp:748
 DC_ONLY(0x4ec98, 0x16)

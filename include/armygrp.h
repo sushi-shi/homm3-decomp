@@ -12,7 +12,13 @@
 // (Dreamcast CodeView types armies[] and IsMember's parameter as
 // TCreatureType; retail compares slots against -1.)
 enum TCreatureType {
-    CREATURE_NONE = -1
+    CREATURE_NONE = -1,
+    // The four base elementals (NH3API enum spellings; IDs proven by
+    // GetAlignments' compare chain at 0x44ac08).
+    CREATURE_AIR_ELEMENTAL = 0x70,
+    CREATURE_EARTH_ELEMENTAL = 0x71,
+    CREATURE_FIRE_ELEMENTAL = 0x72,
+    CREATURE_WATER_ELEMENTAL = 0x73
 };
 
 // PROVEN layout (2026-08-04): Dreamcast CodeView class size 56 with
@@ -50,8 +56,11 @@ struct TCreatureTypeTraits {
 };
 SIZE(TCreatureTypeTraits, 116);
 
-// attributes bit proven by HasAllUndead's test (retail 0x44ab20).
+// attributes bits proven by retail tests: 0x40000 by HasAllUndead
+// (0x44ab20); 0x40 by GetAlignments (0x44abb0), which skips such
+// creatures in the alignment census - the war-machine bit.
 const unsigned int CTA_UNDEAD = 0x40000;
+const unsigned int CTA_SIEGE_WEAPON = 0x40;
 
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
@@ -69,8 +78,23 @@ public:
 
 // Army-size name tables (BSS at 0x6a5bb8, runtime-filled from game
 // text): nine threshold bands x three name sets, 12-byte row stride
-// proven by GetArmySizeName's nine reloc targets.
+// proven by GetArmySizeName's nine reloc targets. The NAME is a
+// bootstrap invention (no Dreamcast/NH3API name survives for these) -
+// spelled in NWC's Hungarian style, replace if evidence surfaces.
 DATA(0x006a5bb8) extern const char* apszArmySizeNames[9][3];
+
+// The game singleton: 2,264 dir32 references image-wide (the central
+// object), pointee larger than 0x1f6a0 bytes; the Dreamcast dump names
+// the game-object pointer gpGame. Bootstrap VIEW - only the one field
+// GetAlignments reads is modeled, offset-named until its meaning is
+// proven (nonzero -> elementals keep their town alignment; zero ->
+// they census as neutral; likely the expansion/map-version gate).
+class game {
+public:
+    char pad_0[0x1f698];
+    int f_1f698;
+};
+DATA(0x006994e8) extern game* gpGame;
 
 class armyGroup {
 public:
@@ -89,6 +113,7 @@ public:
     unsigned char HasAllUndead();
     unsigned char IsMember(TCreatureType monType);
     int CanJoin(int monType);
+    int GetAlignments(unsigned char* alignments);
     long get_AI_value();
     int GetNumArmies();
     int Add(int armyType, int newNumTroops, int newIndex);
