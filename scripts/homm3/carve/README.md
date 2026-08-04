@@ -66,6 +66,8 @@ relate       join names <-> functions <-> vtables for the pinned image
              -> config/retail-function-symbols.csv, retail-vtable-symbols.csv
 hdmap        transfer NH3API names from HD Mod's sibling Heroes3.exe by unique
              masked byte identity ($HOMM3_HD_EXE) -> config/retail-hd-name-map.csv
+dcmap        transfer Dreamcast CodeView names by link order (anchor + LIS +
+             equal-count brackets) -> config/retail-dc-name-map.csv
 naming       give EVERY carved function a name (total coverage, unique,
              evidence-tiered) -> config/retail-symbols.csv; needs the Ghidra
              xref export (ghidra/export_xrefs.py -> build/dna/

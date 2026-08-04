@@ -52,6 +52,9 @@ def main(argv: list[str]) -> int:
     if stage == "hdmap":
         from homm3.carve import hdmap
         return hdmap.main(rest)
+    if stage == "dcmap":
+        from homm3.carve import dcmap
+        return dcmap.main(rest)
     if stage == "naming":
         from homm3.carve import naming
         return naming.main(rest)

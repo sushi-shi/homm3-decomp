@@ -1,0 +1,764 @@
+# GENERATED: python3 -m homm3.carve dcmap - Dreamcast CodeView names transferred by link order.
+# generator: homm3.carve.dcmap
+# exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
+# date: 2026-08-04
+# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
+# The Dreamcast build is ANOTHER PRESSING (RoE sources, SH4 code): no address or byte
+# evidence crosses over - only link order does. role=linkorder rows are NEW names,
+# confidence linkorder-candidate (order evidence only); anchor/corroborates rows are the
+# correlation skeleton over already-named entries.
+rva,size,role,name,signature,dc_module,dc_offset,dc_cb,source
+0x1510,3253,anchor-global,TAdventureMapWindow::TAdventureMapWindow,void TAdventureMapWindow::TAdventureMapWindow(),adventuremapwindow.obj,0x89c,768,E:\gamedcs\adventuremapwindow.cpp:318
+0x2b10,119,anchor-global,TAdventureMapWindow::~TAdventureMapWindow,void TAdventureMapWindow::~TAdventureMapWindow(),adventuremapwindow.obj,0xb9c,84,E:\gamedcs\adventuremapwindow.cpp:489
+0x2b90,36,anchor-global,TAdventureMapWindow::animate_bottom_view,void TAdventureMapWindow::animate_bottom_view(unsigned char in_background),adventuremapwindow.obj,0xbf0,42,E:\gamedcs\adventuremapwindow.cpp:505
+0x2bc0,78,anchor-global,TAdventureMapWindow::draw_bottom_view,void TAdventureMapWindow::draw_bottom_view(unsigned char update),adventuremapwindow.obj,0xc1c,64,E:\gamedcs\adventuremapwindow.cpp:514
+0x2c10,60,anchor-global,TAdventureMapWindow::set_bottom_view,void TAdventureMapWindow::set_bottom_view(type_bottom_view_window* new_view),adventuremapwindow.obj,0xc5c,30,E:\gamedcs\adventuremapwindow.cpp:526
+0x2c50,536,anchor-global,TAdventureMapWindow::convertID2HelpID,int TAdventureMapWindow::convertID2HelpID(int id),adventuremapwindow.obj,0xc7c,268,E:\gamedcs\adventuremapwindow.cpp:532
+0x2e70,405,anchor-global,TAdventureMapWindow::ProcessRightSelect,unsigned char TAdventureMapWindow::ProcessRightSelect(const message* msg),adventuremapwindow.obj,0xd88,334,E:\gamedcs\adventuremapwindow.cpp:609
+0x3010,522,anchor-global,TAdventureMapWindow::ProcessHover,"unsigned char TAdventureMapWindow::ProcessHover(int hx, int hy)",adventuremapwindow.obj,0xed8,516,E:\gamedcs\adventuremapwindow.cpp:678
+0x3220,89,anchor-global,TAdventureMapWindow::DoHeroKnob,void TAdventureMapWindow::DoHeroKnob(),adventuremapwindow.obj,0x10dc,4,E:\gamedcs\adventuremapwindow.cpp:805
+0x3280,89,anchor-global,TAdventureMapWindow::DoTownKnob,void TAdventureMapWindow::DoTownKnob(),adventuremapwindow.obj,0x10e0,4,E:\gamedcs\adventuremapwindow.cpp:827
+0x32e0,308,anchor-global,TAdventureMapWindow::UpdateHeroLocators,void TAdventureMapWindow::UpdateHeroLocators(),adventuremapwindow.obj,0x10e4,4,E:\gamedcs\adventuremapwindow.cpp:853
+0x3420,305,anchor-global,TAdventureMapWindow::UpdateTownLocators,void TAdventureMapWindow::UpdateTownLocators(),adventuremapwindow.obj,0x10e8,4,E:\gamedcs\adventuremapwindow.cpp:914
+0x3560,574,anchor-global,TAdventureMapWindow::UpdateHeroLocator,void TAdventureMapWindow::UpdateHeroLocator(),adventuremapwindow.obj,0x10ec,4,E:\gamedcs\adventuremapwindow.cpp:972
+0x37a0,279,anchor-global,TAdventureMapWindow::UpdateTownLocator,void TAdventureMapWindow::UpdateTownLocator(),adventuremapwindow.obj,0x10f0,4,E:\gamedcs\adventuremapwindow.cpp:1043
+0x38c0,236,anchor-global,TAdventureMapWindow::HighlightLocators,void TAdventureMapWindow::HighlightLocators(),adventuremapwindow.obj,0x10f4,64,E:\gamedcs\adventuremapwindow.cpp:1080
+0x39b0,490,anchor-global,TAdventureMapWindow::UpdateQuestLogButton,void TAdventureMapWindow::UpdateQuestLogButton(),adventuremapwindow.obj,0x1134,4,E:\gamedcs\adventuremapwindow.cpp:1119
+0x3ba0,71,anchor-global,TAdventureMapWindow::UpdateSleepButton,void TAdventureMapWindow::UpdateSleepButton(),adventuremapwindow.obj,0x1138,4,E:\gamedcs\adventuremapwindow.cpp:1153
+0x3bf0,76,anchor-global,TAdventureMapWindow::UpdateSpellButton,void TAdventureMapWindow::UpdateSpellButton(const hero* this_hero),adventuremapwindow.obj,0x113c,76,E:\gamedcs\adventuremapwindow.cpp:1171
+0x3c40,120,anchor-global,TAdventureMapWindow::SetElevationToggleImage,unsigned char TAdventureMapWindow::SetElevationToggleImage(int level),adventuremapwindow.obj,0x1188,4,E:\gamedcs\adventuremapwindow.cpp:1190
+0x3cc0,533,anchor-global,TAdventureMapWindow::SetSleepImage,void TAdventureMapWindow::SetSleepImage(),adventuremapwindow.obj,0x118c,4,E:\gamedcs\adventuremapwindow.cpp:1216
+0x3ee0,31,anchor-global,TAdventureMapWindow::ClearBottomView,void TAdventureMapWindow::ClearBottomView(),adventuremapwindow.obj,0x1190,44,E:\gamedcs\adventuremapwindow.cpp:1244
+0x3f00,30,anchor-global,TAdventureMapWindow::UpdateResourceDisplay,"void TAdventureMapWindow::UpdateResourceDisplay(unsigned char draw, unsigned char update)",adventuremapwindow.obj,0x11bc,56,E:\gamedcs\adventuremapwindow.cpp:1253
+0x3f20,63,anchor-global,TAdventureMapWindow::DrawChatText,void TAdventureMapWindow::DrawChatText(unsigned char update),adventuremapwindow.obj,0x11f4,68,E:\gamedcs\adventuremapwindow.cpp:1265
+0x3f60,324,anchor-global,TAdventureMapWindow::UpdateButtons,void TAdventureMapWindow::UpdateButtons(),adventuremapwindow.obj,0x125c,40,E:\gamedcs\adventuremapwindow.cpp:1284
+0x4200,521,anchor-global,button::set_hotkey,void button::set_hotkey(int code),adventuremapwindow.obj,0x2e10,32,E:\gamedcs\button.h:104
+0x5de0,13,anchor-global,ExtraInfoUnion::get_black_box,BlackBoxData* ExtraInfoUnion::get_black_box(),advmgr.obj,0x5864,34,E:\gamedcs\advmgr.cpp:392
+0x5df0,32,anchor-bracket,ExtraInfoUnion::get_creature_bank,type_creature_bank* ExtraInfoUnion::get_creature_bank(),advmgr.obj,0x5888,52,E:\gamedcs\advmgr.cpp:400
+0x5e10,28,anchor-global,ExtraInfoUnion::get_university,type_university* ExtraInfoUnion::get_university(),advmgr.obj,0x58bc,52,E:\gamedcs\advmgr.cpp:408
+0x6df0,479,anchor-global,advManager::advManager,void advManager::advManager(),advmgr.obj,0x66f4,1072,E:\gamedcs\advmgr.cpp:734
+0x7ac0,68,anchor-global,advManager::InMapArea,"int advManager::InMapArea(int x, int y)",advmgr.obj,0x793c,116,E:\gamedcs\advmgr.cpp:1217
+0x7b80,3056,anchor-global,advManager::DoAdvCommand,NewmapCell* advManager::DoAdvCommand(type_point* trigger_point),advmgr.obj,0x7a8c,3000,E:\gamedcs\advmgr.cpp:1253
+0xb0e0,100,anchor-global,advManager::DrawRolloverText,void advManager::DrawRolloverText(char* text),advmgr.obj,0xc094,166,E:\gamedcs\advmgr.cpp:3130
+0xb150,8860,anchor-global,advManager::SetRolloverText,"void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)",advmgr.obj,0xc13c,11328,E:\gamedcs\advmgr.cpp:3146
+0xe280,211,anchor-global,advManager::get_normal_cursor,type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell),advmgr.obj,0xf2c0,232,E:\gamedcs\advmgr.cpp:4530
+0xf270,125,anchor-global,advManager::UpdateScreen,"void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)",advmgr.obj,0x10520,288,E:\gamedcs\advmgr.cpp:4983
+0xf2f0,248,linkorder,advManager::DrawAdventureMapGems,void advManager::DrawAdventureMapGems(),advmgr.obj,0x10640,328,E:\gamedcs\advmgr.cpp:5002
+0xf3f0,1149,linkorder,advManager::CompleteDraw,"void advManager::CompleteDraw(int start_x, int start_y, int z, unsigned char bForceDraw, unsigned char bUpdateBottomView)",advmgr.obj,0x10788,1300,E:\gamedcs\advmgr.cpp:5026
+0xf870,67,linkorder,advManager::CompleteDraw,void advManager::CompleteDraw(unsigned char bForceDraw),advmgr.obj,0x10c9c,86,E:\gamedcs\advmgr.cpp:5223
+0xf8c0,613,anchor-global,advManager::GetCloudLookup,"int advManager::GetCloudLookup(int srcX, int srcY, int z)",advmgr.obj,0x10cf4,972,E:\gamedcs\advmgr.cpp:5505
+0xfb30,359,linkorder,advManager::ScanForHeroOrBoat,"unsigned char advManager::ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type, []* parts)",advmgr.obj,0x110c0,374,E:\gamedcs\advmgr.cpp:5573
+0xfca0,122,anchor-global,hasFlag,unsigned char hasFlag(int objType),advmgr.obj,0x11238,100,E:\gamedcs\advmgr.cpp:5614
+0xfd20,270,anchor-global,GetFlaggedObjectOwner,int GetFlaggedObjectOwner(NewmapCell* thisCell),advmgr.obj,0x1129c,392,E:\gamedcs\advmgr.cpp:5634
+0x15d60,120,anchor-global,advManager::OverrideBottomView,"void advManager::OverrideBottomView(advManager::EBottomViewType view, int time)",advmgr.obj,0x18c84,180,E:\gamedcs\advmgr.cpp:8822
+0x15de0,320,anchor-global,advManager::UpdBottomView,"void advManager::UpdBottomView(unsigned char force_update, unsigned char bDrawWindow, unsigned char bUpdate)",advmgr.obj,0x18d38,528,E:\gamedcs\advmgr.cpp:8864
+0x15f20,135,linkorder,advManager::UpdBottomViewEnemyTurn,unsigned char advManager::UpdBottomViewEnemyTurn(unsigned char force_update),advmgr.obj,0x18f48,124,E:\gamedcs\advmgr.cpp:8935
+0x15fb0,176,linkorder,advManager::UpdBottomViewNewTurn,unsigned char advManager::UpdBottomViewNewTurn(unsigned char force_update),advmgr.obj,0x18fc4,212,E:\gamedcs\advmgr.cpp:8950
+0x16060,247,anchor-global,advManager::BVResMsg,"void advManager::BVResMsg(const char* cMsg, int iResType, int iResQty)",advmgr.obj,0x19098,98,E:\gamedcs\advmgr.cpp:8968
+0x16160,175,linkorder,advManager::UpdBottomViewResMsg,unsigned char advManager::UpdBottomViewResMsg(unsigned char force_update),advmgr.obj,0x190fc,150,E:\gamedcs\advmgr.cpp:8979
+0x16210,215,anchor-global,advManager::BVMessage,void advManager::BVMessage(const char* cMsg),advmgr.obj,0x19194,60,E:\gamedcs\advmgr.cpp:8994
+0x17420,326,anchor-global,advManager::RedrawAdvScreen,"void advManager::RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder)",advmgr.obj,0x1a230,384,E:\gamedcs\advmgr.cpp:9349
+0x17570,42,anchor-global,advManager::DeactivateCurrTown,void advManager::DeactivateCurrTown(unsigned char waitingPlayer),advmgr.obj,0x1a3b0,62,E:\gamedcs\advmgr.cpp:9388
+0x175a0,58,anchor-global,advManager::DeactivateCurrHero,void advManager::DeactivateCurrHero(unsigned char waitingPlayer),advmgr.obj,0x1a3f0,80,E:\gamedcs\advmgr.cpp:9396
+0x175e0,157,anchor-global,advManager::MobilizeCurrHero,"void advManager::MobilizeCurrHero(int bInMove, unsigned char waitingPlayer, unsigned char draw_changes)",advmgr.obj,0x1a440,222,E:\gamedcs\advmgr.cpp:9406
+0x17680,431,anchor-global,advManager::DemobilizeCurrHero,"void advManager::DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char draw_changes)",advmgr.obj,0x1a520,316,E:\gamedcs\advmgr.cpp:9434
+0x17830,747,anchor-global,advManager::SetTownContext,"void advManager::SetTownContext(int townId, unsigned char waitingPlayer, unsigned char update)",advmgr.obj,0x1a65c,538,E:\gamedcs\advmgr.cpp:9476
+0x17b20,1598,anchor-global,advManager::SetHeroContext,"void advManager::SetHeroContext(int heroId, int bInMove, unsigned char waitingPlayer, unsigned char draw_changes)",advmgr.obj,0x1a878,1472,E:\gamedcs\advmgr.cpp:9544
+0x18160,624,linkorder,SaveGame,unsigned char SaveGame(unsigned char bCampaignWinMode),advmgr.obj,0x1ae38,810,E:\gamedcs\advmgr.cpp:9693
+0x183d0,581,anchor-global,advManager::SetEnvironmentOrigin,"void advManager::SetEnvironmentOrigin(type_point point, int reset)",advmgr.obj,0x1b164,954,E:\gamedcs\advmgr.cpp:9785
+0x18620,1508,anchor-global,advManager::GetSoundId,"e_looping_sound_id advManager::GetSoundId(int x, int y, int z)",advmgr.obj,0x1b5a8,2150,E:\gamedcs\advmgr.cpp:9945
+0x18c10,433,anchor-global,advManager::InsertSound,"void advManager::InsertSound(int x, int y, int z, int soundPriority, int soundsType)",advmgr.obj,0x1be10,586,E:\gamedcs\advmgr.cpp:10372
+0x18dd0,1247,linkorder,advManager::ShowRoute,"void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)",advmgr.obj,0x1c05c,1062,E:\gamedcs\advmgr.cpp:10436
+0x192b0,68,linkorder,advManager::HideRoute,"void advManager::HideRoute(int bUpdateScreen, int bRemoveTarget, int bChangeButton)",advmgr.obj,0x1c484,252,E:\gamedcs\advmgr.cpp:10526
+0x19300,332,linkorder,advManager::CheckDimHero,void advManager::CheckDimHero(),advmgr.obj,0x1c580,108,E:\gamedcs\advmgr.cpp:10558
+0x19450,67,linkorder,advManager::CheckDimNextHeroBut,void advManager::CheckDimNextHeroBut(),advmgr.obj,0x1c5ec,94,E:\gamedcs\advmgr.cpp:10571
+0x194a0,199,anchor-global,advManager::SeedTo,void advManager::SeedTo(type_point target),advmgr.obj,0x1c64c,260,E:\gamedcs\advmgr.cpp:10579
+0x19570,73,anchor-global,advManager::ForceNewHover,void advManager::ForceNewHover(),advmgr.obj,0x1c750,146,E:\gamedcs\advmgr.cpp:10609
+0x1a1e0,241,anchor-global,advManager::TrimLoopingSounds,void advManager::TrimLoopingSounds(int iMaxSoundsAllowed),advmgr.obj,0x1d804,476,E:\gamedcs\advmgr.cpp:11021
+0x1a2e0,188,linkorder,advManager::DisableButtons,void advManager::DisableButtons(),advmgr.obj,0x1d9e0,282,E:\gamedcs\advmgr.cpp:11080
+0x1a3a0,188,linkorder,advManager::EnableButtons,void advManager::EnableButtons(),advmgr.obj,0x1dafc,296,E:\gamedcs\advmgr.cpp:11102
+0x1a460,507,anchor-global,advManager::FindAdjacentMonster,"unsigned char advManager::FindAdjacentMonster(type_point point, type_point* result, type_point excluded)",advmgr.obj,0x1dc24,446,E:\gamedcs\advmgr.cpp:11125
+0x1b040,154,anchor-global,CAdvPopup::CAdvPopup,"void CAdvPopup::CAdvPopup(int winX, int winY, int winWidth, int winHeight, unsigned winType)",advmgr.obj,0x1ebf4,140,E:\gamedcs\advmgr.cpp:11521
+0x1eac0,184,anchor-global,combatManager::get_total_combat_value,"long combatManager::get_total_combat_value(long side, long lowest_attack, long lowest_defense, unsigned char include_cripples)",ai.obj,0x23f2c,224,E:\gamedcs\ai.cpp:339
+0x1f140,575,anchor-global,combatManager::find_move_order,void combatManager::find_move_order(std::vector<army* result),ai.obj,0x24694,542,E:\gamedcs\ai.cpp:633
+0x1f380,39,linkorder,get_attack_value,"long get_attack_value(const army* current_army, const army* enemy, long enemy_hit_points, type_AI_combat_parameters* data)",ai.obj,0x248b4,384,E:\gamedcs\ai.cpp:696
+0x1f3b0,450,linkorder,combatManager::get_attack_change,"long combatManager::get_attack_change(const army* current_army, const army* enemy, type_AI_combat_parameters* data)",ai.obj,0x24a34,302,E:\gamedcs\ai.cpp:731
+0x1f580,772,linkorder,combatManager::move_toward,"unsigned char combatManager::move_toward(const army* current_army, long target_hex, const long* enemy_attacks, unsigned char consider_waiting)",ai.obj,0x24b64,760,E:\gamedcs\ai.cpp:779
+0x1f890,143,anchor-global,combatManager::can_cast_spells,"unsigned char combatManager::can_cast_spells(long side, unsigned char hero_spell)",ai.obj,0x24e5c,152,E:\gamedcs\ai.cpp:897
+0x22440,153,anchor-global,combatManager::compute_fire_shield_damage,"long combatManager::compute_fire_shield_damage(long damage, const army* attacker, const army* target, long target_hits)",ai.obj,0x27318,192,E:\gamedcs\ai.cpp:2372
+0x23c80,121,anchor-global,type_monster_data::get_enchantment_value,"long type_monster_data::get_enchantment_value(type_spell_choice* choice, const hero* casting_hero, const hero* target_hero)",ai_combat.obj,0x29978,184,E:\gamedcs\ai_combat.cpp:36
+0x23d00,218,anchor-global,type_monster_data::get_resurrection_value,"long type_monster_data::get_resurrection_value(type_spell_choice* choice, const hero* casting_hero)",ai_combat.obj,0x29b94,278,E:\gamedcs\ai_combat.cpp:84
+0x23de0,177,anchor-global,type_monster_data::get_spell_damage,"long type_monster_data::get_spell_damage(SpellID spell, const hero* casting_hero, const hero* target_hero, long damage)",ai_combat.obj,0x29ce0,266,E:\gamedcs\ai_combat.cpp:123
+0x23ea0,54,anchor-global,type_monster_data::take_damage,long type_monster_data::take_damage(long damage),ai_combat.obj,0x29dec,64,E:\gamedcs\ai_combat.cpp:148
+0x23ee0,563,anchor-bracket,type_AI_combat_data::type_AI_combat_data,"void type_AI_combat_data::type_AI_combat_data(const hero* new_hero, const armyGroup* new_army, double base_modifier, const hero* _enemy_hero, const town* enemy_town, NewmapCell* map_cell)",ai_combat.obj,0x29e2c,300,E:\gamedcs\ai_combat.cpp:172
+0x24880,219,anchor-global,type_AI_combat_data::adjust_army,void type_AI_combat_data::adjust_army(unsigned char dismiss_hero),ai_combat.obj,0x2a588,186,E:\gamedcs\ai_combat.cpp:404
+0x24960,101,anchor-global,type_AI_combat_data::get_fastest_speed,long type_AI_combat_data::get_fastest_speed(),ai_combat.obj,0x2a644,78,E:\gamedcs\ai_combat.cpp:437
+0x249d0,536,anchor-global,type_AI_combat_data::get_next_chain_lightning_target,"long type_AI_combat_data::get_next_chain_lightning_target(long excluded, const type_AI_combat_data* defender, long start, long damage)",ai_combat.obj,0x2a694,206,E:\gamedcs\ai_combat.cpp:456
+0x24bf0,291,anchor-global,type_AI_combat_data::get_area_value,"void type_AI_combat_data::get_area_value(type_spell_choice* choice, const type_AI_combat_data* defender, long damage, long extra_targets)",ai_combat.obj,0x2a7e4,130,E:\gamedcs\ai_combat.cpp:525
+0x24d20,656,anchor-global,type_AI_combat_data::get_damage_spell_value,"void type_AI_combat_data::get_damage_spell_value(type_spell_choice* choice, const type_AI_combat_data* defender)",ai_combat.obj,0x2a868,206,E:\gamedcs\ai_combat.cpp:553
+0x24fb0,325,anchor-global,type_AI_combat_data::cast_chain_lightning,"void type_AI_combat_data::cast_chain_lightning(type_spell_choice* choice, type_AI_combat_data* defender, long damage)",ai_combat.obj,0x2a938,176,E:\gamedcs\ai_combat.cpp:599
+0x25100,346,anchor-global,type_AI_combat_data::cast_area_effect,"void type_AI_combat_data::cast_area_effect(type_spell_choice* choice, type_AI_combat_data* defender, long damage, long extra_targets)",ai_combat.obj,0x2a9e8,148,E:\gamedcs\ai_combat.cpp:629
+0x25260,384,anchor-global,type_AI_combat_data::cast_damage_spell,"void type_AI_combat_data::cast_damage_spell(type_spell_choice* choice, type_AI_combat_data* defender)",ai_combat.obj,0x2aa7c,190,E:\gamedcs\ai_combat.cpp:658
+0x25bd0,1427,anchor-global,type_AI_combat_data::cast_spell,"void type_AI_combat_data::cast_spell(type_AI_combat_data* defender, type_speed_catagory round)",ai_combat.obj,0x2b094,662,E:\gamedcs\ai_combat.cpp:965
+0x26170,305,anchor-global,type_AI_combat_data::inflict_melee_damage,"long type_AI_combat_data::inflict_melee_damage(long damage, long start, long speed_limit)",ai_combat.obj,0x2b408,410,E:\gamedcs\ai_combat.cpp:1122
+0x262b0,79,anchor-global,type_AI_combat_data::kill,void type_AI_combat_data::kill(),ai_combat.obj,0x2b5a4,70,E:\gamedcs\ai_combat.cpp:1150
+0x26300,141,anchor-global,type_AI_combat_data::inflict_damage,"void type_AI_combat_data::inflict_damage(long damage, long blocker_speed)",ai_combat.obj,0x2b5ec,56,E:\gamedcs\ai_combat.cpp:1166
+0x26390,187,anchor-global,type_AI_combat_data::get_attack,"long type_AI_combat_data::get_attack(type_speed_catagory speed_limit, unsigned char shooters_blocked)",ai_combat.obj,0x2b624,406,E:\gamedcs\ai_combat.cpp:1184
+0x26450,113,anchor-global,type_AI_combat_data::get_final_melee_value,long type_AI_combat_data::get_final_melee_value(),ai_combat.obj,0x2b7bc,210,E:\gamedcs\ai_combat.cpp:1209
+0x264d0,749,anchor-global,type_AI_combat_data::do_general_melee,void type_AI_combat_data::do_general_melee(type_AI_combat_data* defender),ai_combat.obj,0x2b948,400,E:\gamedcs\ai_combat.cpp:1270
+0x267c0,1021,anchor-global,type_AI_combat_data::choose_melee,"unsigned char type_AI_combat_data::choose_melee(const type_AI_combat_data* enemy, type_speed_catagory current_round)",ai_combat.obj,0x2bad8,360,E:\gamedcs\ai_combat.cpp:1301
+0x26bc0,548,anchor-global,type_AI_combat_data::simulate_combat,void type_AI_combat_data::simulate_combat(type_AI_combat_data* defender),ai_combat.obj,0x2bc40,150,E:\gamedcs\ai_combat.cpp:1363
+0x26ee0,472,anchor-global,type_AI_combat_data::do_aftermath,"void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, town* enemy_town)",ai_combat.obj,0x2be54,432,E:\gamedcs\ai_combat.cpp:1440
+0x270c0,329,anchor-global,AI_quick_combat,"unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero, armyGroup* defending_army, town* defending_town, NewmapCell* cell)",ai_combat.obj,0x2c004,316,E:\gamedcs\ai_combat.cpp:1511
+0x27210,275,anchor-global,AI_auto_combat,"void AI_auto_combat(hero* attacking_hero, hero* defending_hero, armyGroup* attacking_army, armyGroup* defending_army, const town* defending_town, NewmapCell* cell)",ai_combat.obj,0x2c140,316,E:\gamedcs\ai_combat.cpp:1539
+0x27750,33,anchor-global,type_AI_combat_data::get_total,long type_AI_combat_data::get_total(),ai_combat.obj,0x2c6ac,4,E:\gamedcs\ai_combat.h:255
+0x28410,352,anchor-global,can_take_town,"unsigned char can_take_town(const hero* attacking_hero, const town* defending_town)",ai_player.obj,0x2dc00,320,E:\gamedcs\ai_player.cpp:69
+0x28710,45,anchor-global,type_AI_player::get_attack_bonus,float type_AI_player::get_attack_bonus(short player),ai_player.obj,0x2e15c,44,E:\gamedcs\ai_player.cpp:245
+0x28740,1678,linkorder,type_AI_player::calculate_demand,void type_AI_player::calculate_demand(),ai_player.obj,0x2e188,1614,E:\gamedcs\ai_player.cpp:258
+0x28dd0,830,linkorder,type_AI_player::end_turn,void type_AI_player::end_turn(),ai_player.obj,0x2e7d8,584,E:\gamedcs\ai_player.cpp:414
+0x29110,1708,linkorder,type_AI_player::make_gift,void type_AI_player::make_gift(long player_id),ai_player.obj,0x2ea20,1446,E:\gamedcs\ai_player.cpp:504
+0x297c0,329,linkorder,find_magus_hut_value,"long find_magus_hut_value(long player_id, unsigned char explore_mode)",ai_player.obj,0x2efc8,382,E:\gamedcs\ai_player.cpp:664
+0x29910,405,linkorder,type_AI_player::start_turn,void type_AI_player::start_turn(),ai_player.obj,0x2f148,286,E:\gamedcs\ai_player.cpp:695
+0x29ab0,18,anchor-global,type_AI_player::reset_magus_hut_value,void type_AI_player::reset_magus_hut_value(),ai_player.obj,0x2f268,24,E:\gamedcs\ai_player.cpp:744
+0x2a150,343,anchor-global,type_AI_player::get_total_value,"long type_AI_player::get_total_value(long basic_value, int* cost)",ai_player.obj,0x301c4,284,E:\gamedcs\ai_player.cpp:1337
+0x2ed30,78,anchor-global,searchArray::get_danger_value,long searchArray::get_danger_value(type_point point),ai_player.obj,0x37eec,100,E:\gamedcs\findpath.h:270
+0x2ed80,77,anchor-global,game::get_cell,NewmapCell* game::get_cell(type_point point),ai_player.obj,0x38000,60,E:\gamedcs\game.h:1380
+0x35850,258,anchor-global,value_of_luck_and_morale,"double value_of_luck_and_morale(long value, long change, double good_value_multiplier, double bad_value_multiplier)",ai_tactical.obj,0x3c29c,702,E:\gamedcs\ai_tactical.cpp:34
+0x35960,30,anchor-global,AI_value_of_luck,"double AI_value_of_luck(long luck, long change)",ai_tactical.obj,0x3c580,136,E:\gamedcs\ai_tactical.cpp:97
+0x35980,42,anchor-global,AI_get_attack_damage,"long AI_get_attack_damage(const army* current_army, long our_hits, const army* enemy, unsigned char ranged, long distance)",ai_tactical.obj,0x3c810,68,E:\gamedcs\ai_tactical.cpp:200
+0x359b0,469,anchor-global,type_AI_combat_parameters::simulate_attack,"void type_AI_combat_parameters::simulate_attack(const army* current_army, long* our_hits, const army* enemy, long* enemy_hits, unsigned char ranged, long distance)",ai_tactical.obj,0x3c8dc,208,E:\gamedcs\ai_tactical.cpp:249
+0x35b90,210,corroborates,type_AI_combat_parameters::get_simple_attack_effect,"long type_AI_combat_parameters::get_simple_attack_effect(const army* current_army, long our_total, const army* enemy, long enemy_total, unsigned char ranged, long distance)",ai_tactical.obj,0x3c9ac,232,E:\gamedcs\ai_tactical.cpp:290
+0x35c70,61,corroborates,type_AI_combat_parameters::get_simple_attack_effect,"long type_AI_combat_parameters::get_simple_attack_effect(const army* current_army, const army* enemy, unsigned char ranged, long distance)",ai_tactical.obj,0x3ca94,78,E:\gamedcs\ai_tactical.cpp:329
+0x35cb0,270,anchor-global,type_AI_combat_parameters::get_ranged_attack_value,"long type_AI_combat_parameters::get_ranged_attack_value(const army* current_army, const army* enemy)",ai_tactical.obj,0x3cae4,188,E:\gamedcs\ai_tactical.cpp:342
+0x35dc0,243,anchor-global,type_AI_combat_parameters::get_exchange_effect,"long type_AI_combat_parameters::get_exchange_effect(const army* current_army, const army* enemy, long distance)",ai_tactical.obj,0x3cba0,234,E:\gamedcs\ai_tactical.cpp:367
+0x35ec0,503,anchor-global,type_AI_combat_parameters::type_AI_combat_parameters,"void type_AI_combat_parameters::type_AI_combat_parameters(const combatManager* combat, long side)",ai_tactical.obj,0x3cc8c,556,E:\gamedcs\ai_tactical.cpp:393
+0x360c0,188,anchor-global,type_AI_attack_hex_chooser::type_AI_attack_hex_chooser,"void type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attack_army, const army* enemy_army, const long* enemy_attack_array, searchArray* search_data, const type_AI_combat_parameters* data)",ai_tactical.obj,0x3ceb8,152,E:\gamedcs\ai_tactical.cpp:482
+0x36180,378,anchor-global,type_AI_attack_hex_chooser::get_hex_attack_value,"long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long* checked)",ai_tactical.obj,0x3cf50,516,E:\gamedcs\ai_tactical.cpp:511
+0x36300,796,anchor-global,type_AI_attack_hex_chooser::check_adjacent_hexes,"void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start_direction, long stop_direction)",ai_tactical.obj,0x3d1e4,604,E:\gamedcs\ai_tactical.cpp:599
+0x36840,234,anchor-global,type_AI_attack_hex_chooser::find_attack_hex,unsigned char type_AI_attack_hex_chooser::find_attack_hex(),ai_tactical.obj,0x3d440,226,E:\gamedcs\ai_tactical.cpp:706
+0x36930,26,anchor-global,type_enchant_data::get_mastery_value,long type_enchant_data::get_mastery_value(),ai_tactical.obj,0x3d56c,24,E:\gamedcs\ai_tactical.cpp:753
+0x36c30,33,anchor-global,type_AI_spellcaster::~type_AI_spellcaster,void type_AI_spellcaster::~type_AI_spellcaster(),ai_tactical.obj,0x3d764,74,E:\gamedcs\ai_tactical.cpp:828
+0x36c60,452,anchor-global,type_AI_spellcaster::should_attack_now,unsigned char type_AI_spellcaster::should_attack_now(const army* enemy),ai_tactical.obj,0x3d838,306,E:\gamedcs\ai_tactical.cpp:862
+0x36e30,293,anchor-global,type_AI_spellcaster::get_damage_value,"long type_AI_spellcaster::get_damage_value(SpellID spell, long base_damage, const hero* target_hero, const army* target)",ai_tactical.obj,0x3d96c,272,E:\gamedcs\ai_tactical.cpp:912
+0x36f60,69,anchor-global,type_AI_spellcaster::get_damage_spell_value,"long type_AI_spellcaster::get_damage_spell_value(const army* enemy, type_enchant_data caster)",ai_tactical.obj,0x3da7c,64,E:\gamedcs\ai_tactical.cpp:953
+0x36fb0,138,anchor-global,type_AI_spellcaster::get_mass_damage_effect,"long type_AI_spellcaster::get_mass_damage_effect(long enemy_damage, long friendly_damage)",ai_tactical.obj,0x3db2c,88,E:\gamedcs\ai_tactical.cpp:986
+0x37040,321,anchor-global,type_AI_spellcaster::get_area_effect_value,"long type_AI_spellcaster::get_area_effect_value(SpellID spell, long base_damage, TSkillMastery mastery, long hex)",ai_tactical.obj,0x3db84,202,E:\gamedcs\ai_tactical.cpp:1008
+0x37190,381,anchor-global,type_AI_spellcaster::get_chain_lightning_value,"long type_AI_spellcaster::get_chain_lightning_value(long power, TSkillMastery mastery, army* target)",ai_tactical.obj,0x3dcc4,292,E:\gamedcs\ai_tactical.cpp:1059
+0x37800,501,anchor-global,type_AI_spellcaster::get_attack_skill_value,"long type_AI_spellcaster::get_attack_skill_value(const army* our_army, const army* enemy, long duration, long bonus)",ai_tactical.obj,0x3e3bc,228,E:\gamedcs\ai_tactical.cpp:1256
+0x387c0,330,anchor-global,type_AI_spellcaster::get_defense_boost_value,"long type_AI_spellcaster::get_defense_boost_value(const army* our_army, const army* enemy, long duration, double increase)",ai_tactical.obj,0x3e9d8,566,E:\gamedcs\ai_tactical.cpp:1429
+0x38910,251,anchor-global,type_AI_spellcaster::get_defense_skill_value,"long type_AI_spellcaster::get_defense_skill_value(const army* our_army, long duration, long bonus)",ai_tactical.obj,0x3ec10,292,E:\gamedcs\ai_tactical.cpp:1472
+0x39550,339,anchor-global,type_AI_spellcaster::get_speed_value,"long type_AI_spellcaster::get_speed_value(const army* our_army, long increase, long duration)",ai_tactical.obj,0x3fc80,312,E:\gamedcs\ai_tactical.cpp:1902
+0x396b0,46,linkorder,type_AI_spellcaster::get_haste_value,"long type_AI_spellcaster::get_haste_value(const army* our_army, type_enchant_data caster)",ai_tactical.obj,0x3fdb8,44,E:\gamedcs\ai_tactical.cpp:1965
+0x396e0,700,anchor-global,type_AI_spellcaster::get_protection_value,"long type_AI_spellcaster::get_protection_value(const army* our_army, TSpellSchool school, long level, long duration, long amount)",ai_tactical.obj,0x3fde4,636,E:\gamedcs\ai_tactical.cpp:1975
+0x39a80,309,anchor-global,type_AI_spellcaster::get_cancel_value,"long type_AI_spellcaster::get_cancel_value(army* current_army, unsigned char bad_spells_only)",ai_tactical.obj,0x40248,254,E:\gamedcs\ai_tactical.cpp:2136
+0x39bc0,110,linkorder,type_AI_spellcaster::get_dispel_value,"long type_AI_spellcaster::get_dispel_value(const army* our_army, type_enchant_data caster)",ai_tactical.obj,0x40348,120,E:\gamedcs\ai_tactical.cpp:2180
+0x39c30,271,linkorder,type_AI_spellcaster::get_cure_value,"long type_AI_spellcaster::get_cure_value(const army* our_army, type_enchant_data caster)",ai_tactical.obj,0x403c0,432,E:\gamedcs\ai_tactical.cpp:2191
+0x39d40,148,linkorder,type_AI_spellcaster::get_antimagic_value,"long type_AI_spellcaster::get_antimagic_value(const army* our_army, type_enchant_data caster)",ai_tactical.obj,0x40570,100,E:\gamedcs\ai_tactical.cpp:2220
+0x39de0,148,linkorder,type_AI_spellcaster::get_backlash_value,"long type_AI_spellcaster::get_backlash_value(const army* our_army, type_enchant_data caster)",ai_tactical.obj,0x405d4,84,E:\gamedcs\ai_tactical.cpp:2235
+0x39e80,656,linkorder,type_AI_spellcaster::get_counterstroke_value,"long type_AI_spellcaster::get_counterstroke_value(const army* our_army, type_enchant_data caster)",ai_tactical.obj,0x40628,446,E:\gamedcs\ai_tactical.cpp:2249
+0x3a110,546,linkorder,type_AI_spellcaster::get_fire_shield_value,"long type_AI_spellcaster::get_fire_shield_value(const army* our_army, type_enchant_data caster)",ai_tactical.obj,0x407e8,320,E:\gamedcs\ai_tactical.cpp:2314
+0x3a340,190,anchor-global,type_AI_spellcaster::get_traitor_value,"long type_AI_spellcaster::get_traitor_value(const army* enemy, const army* target)",ai_tactical.obj,0x40928,222,E:\gamedcs\ai_tactical.cpp:2360
+0x3a400,248,linkorder,type_AI_spellcaster::get_berserk_value,"long type_AI_spellcaster::get_berserk_value(const army* enemy, type_enchant_data caster)",ai_tactical.obj,0x40a08,182,E:\gamedcs\ai_tactical.cpp:2393
+0x3a500,366,linkorder,type_AI_spellcaster::get_hypnotize_value,"long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_data caster)",ai_tactical.obj,0x40ac0,246,E:\gamedcs\ai_tactical.cpp:2416
+0x3a670,657,anchor-global,type_AI_spellcaster::consider_single_enchantment,"void type_AI_spellcaster::consider_single_enchantment(type_spell_choice* choice, long group)",ai_tactical.obj,0x40bb8,528,E:\gamedcs\ai_tactical.cpp:2455
+0x3a910,336,anchor-global,type_AI_spellcaster::consider_enchantment,"void type_AI_spellcaster::consider_enchantment(type_spell_choice* choice, long group)",ai_tactical.obj,0x40dc8,246,E:\gamedcs\ai_tactical.cpp:2513
+0x3bb20,1020,anchor-global,type_AI_spellcaster::consider_spell,void type_AI_spellcaster::consider_spell(type_spell_choice* choice),ai_tactical.obj,0x41ed4,472,E:\gamedcs\ai_tactical.cpp:3114
+0x3bf20,281,anchor-global,type_AI_spellcaster::set_melee_enemies,void type_AI_spellcaster::set_melee_enemies(),ai_tactical.obj,0x420ac,196,E:\gamedcs\ai_tactical.cpp:3191
+0x3c040,742,anchor-global,type_AI_spellcaster::find_enemy_attacks,void type_AI_spellcaster::find_enemy_attacks(),ai_tactical.obj,0x4227c,376,E:\gamedcs\ai_tactical.cpp:3254
+0x3c800,776,anchor-global,type_AI_spellcaster::cast_spell,unsigned char type_AI_spellcaster::cast_spell(unsigned char retreating),ai_tactical.obj,0x426b0,740,E:\gamedcs\ai_tactical.cpp:3420
+0x3d540,52,anchor-global,army::play_sample,void army::play_sample(army::TSampleID id),army.obj,0x43830,58,E:\gamedcs\army.cpp:93
+0x3d580,55,anchor-global,army::stop_sample,void army::stop_sample(army::TSampleID id),army.obj,0x4386c,60,E:\gamedcs\army.cpp:101
+0x3df20,221,anchor-global,army::SetLuck,"void army::SetLuck(const hero* ownerHero, const armyGroup* ownerGroup, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground)",army.obj,0x44318,156,E:\gamedcs\army.cpp:507
+0x3e140,2240,anchor-global,army::DrawToBuffer,"void army::DrawToBuffer(int x, int y, int bNumBoxOnly)",army.obj,0x444a8,2214,E:\gamedcs\army.cpp:596
+0x3ea70,477,anchor-global,army::add_aura,void army::add_aura(),army.obj,0x44f0c,242,E:\gamedcs\army.cpp:948
+0x3ec50,436,anchor-global,army::remove_aura,void army::remove_aura(),army.obj,0x45000,188,E:\gamedcs\army.cpp:988
+0x3ee10,450,anchor-global,army::remove_binding,void army::remove_binding(),army.obj,0x450bc,166,E:\gamedcs\army.cpp:1010
+0x3f0b0,518,anchor-global,army::Walk,"void army::Walk(int direction, unsigned char end_walk, unsigned char initial_walk)",army.obj,0x45254,370,E:\gamedcs\army.cpp:1087
+0x3f2c0,1595,anchor-bracket,army::animate_missile,void army::animate_missile(army* armyToAttack),army.obj,0x453c8,1240,E:\gamedcs\army.cpp:1171
+0x40310,491,anchor-global,army::do_multi_head_attack,"void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed, long* fire_damage)",army.obj,0x46050,336,E:\gamedcs\army.cpp:1665
+0x40500,1204,anchor-global,army::check_special_attack,unsigned char army::check_special_attack(army* target),army.obj,0x461a0,830,E:\gamedcs\army.cpp:1717
+0x409c0,505,anchor-global,army::do_fire_shield,void army::do_fire_shield(long damage),army.obj,0x464e0,376,E:\gamedcs\army.cpp:1846
+0x40bc0,2625,anchor-global,army::do_post_attack,"void army::do_post_attack(army* target, int iDamage, int iKilled, int total_life)",army.obj,0x46658,1426,E:\gamedcs\army.cpp:1896
+0x41610,1696,corroborates,army::do_attack,"unsigned char army::do_attack(army* armyToAttack, int direction)",army.obj,0x46bec,962,E:\gamedcs\army.cpp:2044
+0x41cb0,702,corroborates,army::do_attack,void army::do_attack(int direction),army.obj,0x46fb0,704,E:\gamedcs\army.cpp:2217
+0x41f70,38,linkorder,army::check_obstacle_attacks,unsigned char army::check_obstacle_attacks(unsigned char is_walking),army.obj,0x47270,132,E:\gamedcs\army.cpp:2358
+0x41fa0,1121,anchor-global,army::WalkTo,"unsigned char army::WalkTo(int destIndex, unsigned char restore_facing)",army.obj,0x472f4,760,E:\gamedcs\army.cpp:2386
+0x42410,315,anchor-global,army::get_adjusted_attack,"long army::get_adjusted_attack(const army* enemy, unsigned char ranged_attack)",army.obj,0x47690,296,E:\gamedcs\army.cpp:2575
+0x42550,53,linkorder,army::get_attack_modifier,"long army::get_attack_modifier(const army* enemy, unsigned char ranged_attack)",army.obj,0x477b8,48,E:\gamedcs\army.cpp:2623
+0x42590,194,anchor-global,army::get_adjusted_defense,"long army::get_adjusted_defense(const army* enemy, unsigned char frenzy_included)",army.obj,0x477e8,222,E:\gamedcs\army.cpp:2633
+0x428f0,246,anchor-global,army::can_shoot,unsigned char army::can_shoot(const army* excluded),army.obj,0x47c04,110,E:\gamedcs\army.cpp:2790
+0x429f0,92,anchor-global,army::enemy_is_adjacent,unsigned char army::enemy_is_adjacent(const army* excluded),army.obj,0x47c74,128,E:\gamedcs\army.cpp:2804
+0x42a50,1040,anchor-global,army::get_unit_combat_value,"double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, const army* excluded)",army.obj,0x47cf4,1138,E:\gamedcs\army.cpp:2820
+0x42e60,361,anchor-global,army::get_total_combat_value,"long army::get_total_combat_value(long lowest_attack, long lowest_defense)",army.obj,0x48168,390,E:\gamedcs\army.cpp:2910
+0x42fd0,169,anchor-global,army::get_loss_combat_value,"long army::get_loss_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, long damage, unsigned char kills_only)",army.obj,0x482f0,356,E:\gamedcs\army.cpp:2928
+0x43080,80,anchor-global,army::get_total_hit_points,long army::get_total_hit_points(unsigned char simulated),army.obj,0x48454,76,E:\gamedcs\army.cpp:2960
+0x430d0,86,anchor-global,army::set_AI_expected_damage,void army::set_AI_expected_damage(long arg),army.obj,0x484a0,46,E:\gamedcs\army.cpp:2982
+0x43130,37,anchor-global,army::get_fire_shield_strength,float army::get_fire_shield_strength(),army.obj,0x484d0,84,E:\gamedcs\army.cpp:2988
+0x43160,447,anchor-global,army::ComputeBaseDamage,int army::ComputeBaseDamage(unsigned char simulate_only),army.obj,0x48524,360,E:\gamedcs\army.cpp:3002
+0x43840,836,anchor-global,army::ComputeAttackerDamageBonuses,"int army::ComputeAttackerDamageBonuses(int base_damage, unsigned char is_shooting, army* defender, unsigned char simulate_only, long distance)",army.obj,0x4868c,1410,E:\gamedcs\army.cpp:3076
+0x43b90,510,anchor-global,army::ComputeAttackerDamageReduction,"double army::ComputeAttackerDamageReduction(const army* defender, unsigned char is_shooting)",army.obj,0x48c60,868,E:\gamedcs\army.cpp:3243
+0x43d90,156,anchor-global,army::ComputeDefenderDamageReduction,double army::ComputeDefenderDamageReduction(unsigned char is_shooting),army.obj,0x48fc4,302,E:\gamedcs\army.cpp:3319
+0x43f40,335,anchor-global,army::adjust_damage,"long army::adjust_damage(army* enemy, long base_damage, unsigned char bIsShot, unsigned char simulated, long distance, long* fire_damage)",army.obj,0x490f4,364,E:\gamedcs\army.cpp:3356
+0x44090,143,anchor-global,army::Damage,int army::Damage(int damage),army.obj,0x492c8,146,E:\gamedcs\army.cpp:3441
+0x444d0,59,anchor-global,army::CancelSpellType,void army::CancelSpellType(int iSpellType),army.obj,0x49694,72,E:\gamedcs\army.cpp:3631
+0x44510,987,anchor-global,army::CancelIndividualSpell,void army::CancelIndividualSpell(int spell),army.obj,0x49748,610,E:\gamedcs\army.cpp:3675
+0x448f0,2969,anchor-global,army::SetSpellInfluence,"void army::SetSpellInfluence(int spell, int power, TSkillMastery mastery, const hero* casting_hero)",army.obj,0x499e8,2304,E:\gamedcs\army.cpp:3816
+0x45490,571,anchor-global,army::get_berserk_targets,void army::get_berserk_targets(std::vector<army* armies),army.obj,0x4a348,312,E:\gamedcs\army.cpp:4158
+0x456d0,356,anchor-global,army::GoBerserk,void army::GoBerserk(),army.obj,0x4a480,280,E:\gamedcs\army.cpp:4208
+0x45840,102,corroborates,army::get_attack_direction,"long army::get_attack_direction(long our_hex, const army* enemy, long enemy_hex)",army.obj,0x4a598,120,E:\gamedcs\army.cpp:4249
+0x458b0,157,corroborates,army::get_attack_direction,"long army::get_attack_direction(long our_hex, const army* enemy)",army.obj,0x4a610,148,E:\gamedcs\army.cpp:4273
+0x45950,263,anchor-global,army::simple_move,"unsigned char army::simple_move(int hex, unsigned char restore_facing)",army.obj,0x4a6a4,264,E:\gamedcs\army.cpp:4303
+0x45a60,621,anchor-global,army::attack_hex,"unsigned char army::attack_hex(int hex, unsigned char restore_facing)",army.obj,0x4a7ac,266,E:\gamedcs\army.cpp:4356
+0x45cd0,56,linkorder,army::move_to,"unsigned char army::move_to(int hex, unsigned char restore_facing)",army.obj,0x4a8b8,16,E:\gamedcs\army.cpp:4427
+0x45d10,20,linkorder,choose_wall_target,"TWallTargetId choose_wall_target(TWallTargetId wall, const TWallTargetId* targets, long count)",army.obj,0x4a8c8,178,E:\gamedcs\army.cpp:4436
+0x45d30,393,anchor-global,army::AttackWall,void army::AttackWall(int iTargetGridIndex),army.obj,0x4a97c,192,E:\gamedcs\army.cpp:4471
+0x46720,263,anchor-global,army::Turn,void army::Turn(unsigned char play_animation),army.obj,0x4b454,260,E:\gamedcs\army.cpp:4891
+0x46830,259,anchor-global,army::SetupAnimation,void army::SetupAnimation(),army.obj,0x4b558,202,E:\gamedcs\army.cpp:4956
+0x46940,766,anchor-bracket,army::PlayAnimation,"void army::PlayAnimation(int sequence, int nframes, int start_frame)",army.obj,0x4b624,672,E:\gamedcs\army.cpp:4995
+0x46c40,481,anchor-global,army::CanFit,"int army::CanFit(int destIndex, int bAllowShifting, int* iNewDestIndex)",army.obj,0x4b8c4,452,E:\gamedcs\army.cpp:5096
+0x46e30,737,linkorder,army::new_turn,void army::new_turn(),army.obj,0x4ba88,508,E:\gamedcs\army.cpp:5177
+0x47120,522,linkorder,army::ResetRound,void army::ResetRound(),army.obj,0x4bc84,250,E:\gamedcs\army.cpp:5238
+0x47330,156,anchor-global,army::get_resurrection_size,long army::get_resurrection_size(const army* target),army.obj,0x4bd80,228,E:\gamedcs\army.cpp:5300
+0x473d0,317,anchor-bracket,army::can_cast_resurrect,unsigned char army::can_cast_resurrect(long hex),army.obj,0x4be64,136,E:\gamedcs\army.cpp:5324
+0x476c0,954,anchor-global,army::can_cast_spell,unsigned char army::can_cast_spell(long hex),army.obj,0x4beec,278,E:\gamedcs\army.cpp:5359
+0x47eb0,33,anchor-global,army::get_valid_caliph_spells,long army::get_valid_caliph_spells(const army* target),army.obj,0x4c374,56,E:\gamedcs\army.cpp:5546
+0x48260,1410,anchor-global,army::cast_spell,void army::cast_spell(long hex),army.obj,0x4c468,782,E:\gamedcs\army.cpp:5601
+0x48ab0,276,anchor-global,army::get_multi_head_directions,"long army::get_multi_head_directions(long our_hex, const army* enemy, long enemy_hex)",army.obj,0x4c82c,106,E:\gamedcs\army.cpp:5757
+0x48bd0,246,anchor-bracket,army::get_AI_target_time,long army::get_AI_target_time(long speed),army.obj,0x4c898,128,E:\gamedcs\army.cpp:5779
+0x48cd0,75,anchor-global,army::GetSpeed,int army::GetSpeed(),army.obj,0x4c918,80,E:\gamedcs\army.cpp:5790
+0x496a0,22,anchor-global,armyGroup::HasCreatures,unsigned char armyGroup::HasCreatures(),armygrp.obj,0x4dae4,34,E:\gamedcs\armygrp.cpp:54
+0x496c0,195,linkorder,TSplitWindow::UpdateSplitArmy,void TSplitWindow::UpdateSplitArmy(unsigned char bUpdate),armygrp.obj,0x4db08,128,E:\gamedcs\armygrp.cpp:62
+0x49790,1627,linkorder,SplitSliderCallback,"void SplitSliderCallback(int state, heroWindow* parent_window)",armygrp.obj,0x4db88,46,E:\gamedcs\armygrp.cpp:82
+0x49df0,33,linkorder,TSplitWindow::TSplitWindow,"void TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)",armygrp.obj,0x4dbb8,1380,E:\gamedcs\armygrp.cpp:90
+0x49e20,107,linkorder,TSplitWindow::~TSplitWindow,void TSplitWindow::~TSplitWindow(),armygrp.obj,0x4e11c,98,E:\gamedcs\armygrp.cpp:135
+0x49e90,751,linkorder,armyGroup::SplitArmy,"void armyGroup::SplitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned char inSrcRestricted, unsigned char inDestRestricted)",armygrp.obj,0x4e180,518,E:\gamedcs\armygrp.cpp:143
+0x4a180,735,linkorder,TSplitWindow::SetRolloverText,void TSplitWindow::SetRolloverText(int codeY),armygrp.obj,0x4e388,160,E:\gamedcs\armygrp.cpp:208
+0x4a460,85,linkorder,TSplitWindow::WindowHandler,int TSplitWindow::WindowHandler(message* msg),armygrp.obj,0x4e428,538,E:\gamedcs\armygrp.cpp:229
+0x4a4d0,1326,linkorder,get_spell_work_chance,"float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const hero* casting_hero, const hero* target_hero)",armygrp.obj,0x4e644,1010,E:\gamedcs\armygrp.cpp:341
+0x4aa00,58,linkorder,armyGroup::save,int armyGroup::save(void* outfile),armygrp.obj,0x4ea38,64,E:\gamedcs\armygrp.cpp:585
+0x4aa40,58,linkorder,armyGroup::load,int armyGroup::load(void* infile),armygrp.obj,0x4ea78,64,E:\gamedcs\armygrp.cpp:601
+0x4aa80,31,linkorder,armyGroup::armyGroup,void armyGroup::armyGroup(),armygrp.obj,0x4eab8,22,E:\gamedcs\armygrp.cpp:616
+0x4aaa0,90,corroborates,armyGroup::armyGroup,"void armyGroup::armyGroup(TCreatureType type, int amount)",armygrp.obj,0x4ead0,90,E:\gamedcs\armygrp.cpp:622
+0x4ab00,29,linkorder,armyGroup::Initialize,void armyGroup::Initialize(),armygrp.obj,0x4eb2c,36,E:\gamedcs\armygrp.cpp:636
+0x4ab20,58,anchor-global,armyGroup::HasAllUndead,unsigned char armyGroup::HasAllUndead(),armygrp.obj,0x4eb50,54,E:\gamedcs\armygrp.cpp:653
+0x4ab80,33,anchor-global,armyGroup::IsMember,unsigned char armyGroup::IsMember(TCreatureType monType),armygrp.obj,0x4ebd0,32,E:\gamedcs\armygrp.cpp:691
+0x4ac50,46,anchor-global,armyGroup::CanJoin,int armyGroup::CanJoin(int monType),armygrp.obj,0x4ecb0,42,E:\gamedcs\armygrp.cpp:768
+0x4ac80,57,anchor-global,armyGroup::get_AI_value,long armyGroup::get_AI_value(),armygrp.obj,0x4ecdc,74,E:\gamedcs\armygrp.cpp:785
+0x4acc0,20,anchor-global,armyGroup::GetNumArmies,int armyGroup::GetNumArmies(),armygrp.obj,0x4ed28,36,E:\gamedcs\armygrp.cpp:804
+0x4ace0,118,anchor-global,armyGroup::Add,"int armyGroup::Add(int armyType, int newNumTroops, int newIndex)",armygrp.obj,0x4ed4c,128,E:\gamedcs\armygrp.cpp:819
+0x4ad60,54,anchor-global,armyGroup::Swap,"void armyGroup::Swap(int srcIndex, armyGroup* destGroup, int destIndex)",armygrp.obj,0x4edcc,58,E:\gamedcs\armygrp.cpp:865
+0x4ade0,121,anchor-global,armyGroup::GetArmySizeName,"const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)",armygrp.obj,0x4efec,138,E:\gamedcs\armygrp.cpp:949
+0x4b100,457,anchor-global,armyGroup::GetArmyMorale,"int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* ownerTown, unsigned char on_cursed_ground, unsigned char apply_limits)",armygrp.obj,0x4f160,172,E:\gamedcs\armygrp.cpp:1030
+0x4b2d0,235,anchor-global,armyGroup::GetLuck,"int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground, unsigned char apply_limits)",armygrp.obj,0x4f20c,220,E:\gamedcs\armygrp.cpp:1072
+0x4b3c0,237,anchor-global,armyGroup::GetArmyLuck,"int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTown, unsigned char on_cursed_ground, unsigned char apply_limits)",armygrp.obj,0x4f2e8,62,E:\gamedcs\armygrp.cpp:1113
+0x4b4b0,354,anchor-global,modify_spell_damage,"long modify_spell_damage(long damage, SpellID spell, TCreatureType creature)",armygrp.obj,0x4f328,164,E:\gamedcs\armygrp.cpp:1124
+0x4b620,510,anchor-global,armyGroup::Merge,unsigned char armyGroup::Merge(armyGroup* ag),armygrp.obj,0x4f3cc,542,E:\gamedcs\armygrp.cpp:1182
+0x4b820,320,anchor-global,armyGroup::merge_armies,void armyGroup::merge_armies(armyGroup* source),armygrp.obj,0x4f5ec,282,E:\gamedcs\armygrp.cpp:1276
+0x4c590,118,anchor-global,armyGroup::GetNativeTerrain,TTerrainType armyGroup::GetNativeTerrain(),armygrp.obj,0x4fc98,156,E:\gamedcs\armygrp.cpp:1516
+0x4d530,69,anchor-global,baseManager::baseManager,void baseManager::baseManager(),basemgr.obj,0x50a28,84,E:\gamedcs\basemgr.cpp:24
+0x4e2b0,313,anchor-bracket,Bitmap16Bit::Draw,"void Bitmap16Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char alpha)",bitmap16.obj,0x51378,240,E:\gamedcs\bitmap16.cpp:541
+0x4e3f0,201,anchor-bracket,Bitmap16Bit::Grab,"void Bitmap16Bit::Grab(const unsigned short* src, int sx, int sy, int sw, int sh, int spitch)",bitmap16.obj,0x51468,164,E:\gamedcs\bitmap16.cpp:625
+0x4e4c0,125,anchor-global,Bitmap16Bit::FillRect,"void Bitmap16Bit::FillRect(int x, int y, int w, int h, unsigned short color)",bitmap16.obj,0x5150c,112,E:\gamedcs\bitmap16.cpp:679
+0x4e540,163,anchor-global,Bitmap16Bit::FrameRect,"void Bitmap16Bit::FrameRect(int x, int y, int w, int h, unsigned short color)",bitmap16.obj,0x5157c,152,E:\gamedcs\bitmap16.cpp:705
+0x4f9d0,112,anchor-global,Bitmap816::~Bitmap816,void Bitmap816::~Bitmap816(),bitmap816.obj,0x53ba4,184,E:\gamedcs\bitmap816.cpp:145
+0x4fe80,64,anchor-global,Bitmap816::ResetPalette,void Bitmap816::ResetPalette(),bitmap816.obj,0x5429c,100,E:\gamedcs\bitmap816.cpp:516
+0x4ff50,11,anchor-global,border::~border,void border::~border(),border.obj,0x543d8,46,E:\gamedcs\border.cpp:62
+0x50390,91,anchor-global,bitmapBorder::~bitmapBorder,void bitmapBorder::~bitmapBorder(),border.obj,0x54860,60,E:\gamedcs\border.cpp:294
+0x504c0,91,anchor-global,bitmapBorder::SetImage,void bitmapBorder::SetImage(const char* bitmap_name),border.obj,0x549c0,42,E:\gamedcs\border.cpp:338
+0x50520,45,anchor-global,bitmapBorder::SetPlayerPaletteColors,void bitmapBorder::SetPlayerPaletteColors(int whichPlayer),border.obj,0x549ec,52,E:\gamedcs\border.cpp:347
+0x50750,91,anchor-global,bitmapBorder16::~bitmapBorder16,void bitmapBorder16::~bitmapBorder16(),border.obj,0x54b68,60,E:\gamedcs\border.cpp:408
+0x50810,68,anchor-global,bitmapBorder16::Draw2,void bitmapBorder16::Draw2(),border.obj,0x54bf0,58,E:\gamedcs\border.cpp:425
+0x521f0,2260,anchor-global,type_bottom_view_window::type_bottom_view_window,void type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window),bottomviewsubwindow.obj,0x550b8,92,E:\gamedcs\bottomviewsubwindow.cpp:39
+0x560f0,154,anchor-global,button::~button,void button::~button(),button.obj,0x571ec,72,E:\gamedcs\button.cpp:82
+0x569e0,46,anchor-global,button::SetPlayerPaletteColors,void button::SetPlayerPaletteColors(int whichPlayer),button.obj,0x57a28,50,E:\gamedcs\button.cpp:477
+0x56bf0,171,anchor-global,textButton::~textButton,void textButton::~textButton(),button.obj,0x57b5c,58,E:\gamedcs\button.cpp:519
+0x56db0,154,anchor-global,type_func_button::~type_func_button,void type_func_button::~type_func_button(),button.obj,0x57e7c,24,E:\gamedcs\button.cpp:559
+0x5afb0,399,anchor-global,TCampaignBrief::~TCampaignBrief,void TCampaignBrief::~TCampaignBrief(),campaignbrief.obj,0x5a11c,408,E:\gamedcs\campaignbrief.cpp:1011
+0x610e0,73,anchor-global,GetBuildingName,"const char* GetBuildingName(int townType, int buildingId)",castle.obj,0x5c1d8,78,E:\gamedcs\castle.cpp:285
+0x62760,295,anchor-global,combatManager::combatManager,void combatManager::combatManager(),cmbtmgr.obj,0x5d3e0,344,E:\gamedcs\cmbtmgr.cpp:510
+0x647a0,378,anchor-global,combatManager::GetGridIndex,"int combatManager::GetGridIndex(int x, int y)",cmbtmgr.obj,0x5f058,374,E:\gamedcs\cmbtmgr.cpp:1891
+0x65830,118,anchor-global,combatManager::CombatIsOver,unsigned char combatManager::CombatIsOver(),cmbtmgr.obj,0x5fb14,236,E:\gamedcs\cmbtmgr.cpp:2425
+0x658b0,188,anchor-global,combatManager::IsWinner,unsigned char combatManager::IsWinner(int this_side),cmbtmgr.obj,0x5fc00,234,E:\gamedcs\cmbtmgr.cpp:2465
+0x65970,32,anchor-global,combatManager::GetTargetWallIndex,TWallTargetId combatManager::GetTargetWallIndex(int grid_index),cmbtmgr.obj,0x5fcec,36,E:\gamedcs\cmbtmgr.cpp:2521
+0x65fe0,41,anchor-global,combatManager::ResetHitByCreature,void combatManager::ResetHitByCreature(),cmbtmgr.obj,0x60318,60,E:\gamedcs\cmbtmgr.cpp:2756
+0x669b0,191,anchor-global,combatManager::PlaceObstacle,"void combatManager::PlaceObstacle(const combatManager::TObstacle* obstacle, int id, int hex, unsigned attributes)",cmbtmgr.obj,0x609d0,160,E:\gamedcs\cmbtmgr.cpp:3105
+0x66a70,189,linkorder,combatManager::PlaceAllObstacles,void combatManager::PlaceAllObstacles(),cmbtmgr.obj,0x60a70,176,E:\gamedcs\cmbtmgr.cpp:3142
+0x66b30,287,anchor-global,combatManager::RemoveObstacle,void combatManager::RemoveObstacle(int index),cmbtmgr.obj,0x60b20,236,E:\gamedcs\cmbtmgr.cpp:3194
+0x66c50,417,linkorder,combatManager::InitializeArchers,void combatManager::InitializeArchers(),cmbtmgr.obj,0x60c0c,212,E:\gamedcs\cmbtmgr.cpp:3240
+0x66e00,803,anchor-global,combatManager::MakeCreaturesVanish,void combatManager::MakeCreaturesVanish(),cmbtmgr.obj,0x60ce0,510,E:\gamedcs\cmbtmgr.cpp:3299
+0x67130,130,linkorder,combatManager::should_lower_door,"unsigned char combatManager::should_lower_door(army* this_army, long hex)",cmbtmgr.obj,0x60ee0,200,E:\gamedcs\cmbtmgr.cpp:3351
+0x671c0,275,anchor-global,combatManager::LowerDoor,void combatManager::LowerDoor(),cmbtmgr.obj,0x60fa8,138,E:\gamedcs\cmbtmgr.cpp:3378
+0x672e0,375,anchor-global,combatManager::RaiseDoor,void combatManager::RaiseDoor(),cmbtmgr.obj,0x61034,172,E:\gamedcs\cmbtmgr.cpp:3400
+0x67460,34,anchor-global,combatManager::InCastle,unsigned char combatManager::InCastle(int index),cmbtmgr.obj,0x61160,32,E:\gamedcs\cmbtmgr.cpp:3459
+0x67490,34,anchor-global,combatManager::LeftOfMoat,unsigned char combatManager::LeftOfMoat(int index),cmbtmgr.obj,0x61180,32,E:\gamedcs\cmbtmgr.cpp:3475
+0x674c0,76,anchor-global,combatManager::is_adjacent,"unsigned char combatManager::is_adjacent(int first, int second)",cmbtmgr.obj,0x611a0,132,E:\gamedcs\cmbtmgr.cpp:3489
+0x67510,234,anchor-global,combatManager::ShotIsThroughWall,"int combatManager::ShotIsThroughWall(int group, int sourceIndex, int destIndex)",cmbtmgr.obj,0x61224,94,E:\gamedcs\cmbtmgr.cpp:3509
+0x67600,570,anchor-global,combatManager::ShotIsNotOptimal,"unsigned char combatManager::ShotIsNotOptimal(const army* attacker, const army* defender)",cmbtmgr.obj,0x61284,146,E:\gamedcs\cmbtmgr.cpp:3531
+0x67840,438,anchor-global,combatManager::InLineOfSight,"unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex)",cmbtmgr.obj,0x61318,472,E:\gamedcs\cmbtmgr.cpp:3566
+0x67a00,943,anchor-global,combatManager::ShootBallisticMissile,"void combatManager::ShootBallisticMissile(int startX, int startY, int destX, int destY, const CSprite* missile)",cmbtmgr.obj,0x614f0,1208,E:\gamedcs\cmbtmgr.cpp:3640
+0x68220,1167,anchor-global,combatManager::ShootMissile,"void combatManager::ShootMissile(int startX, int startY, int destX, int destY, const float* angles, const CSprite* missile)",cmbtmgr.obj,0x61e60,1116,E:\gamedcs\cmbtmgr.cpp:3902
+0x686b0,123,linkorder,combatManager::CombatSystemOptions,void combatManager::CombatSystemOptions(),cmbtmgr.obj,0x622bc,156,E:\gamedcs\cmbtmgr.cpp:4041
+0x68730,142,anchor-global,combatManager::RemoveArmyFromGrid,void combatManager::RemoveArmyFromGrid(const army* a),cmbtmgr.obj,0x62358,116,E:\gamedcs\cmbtmgr.cpp:4055
+0x687c0,153,anchor-global,combatManager::PlaceArmyInGrid,"void combatManager::PlaceArmyInGrid(const army* a, int hex)",cmbtmgr.obj,0x623cc,172,E:\gamedcs\cmbtmgr.cpp:4071
+0x68860,292,linkorder,combatManager::ViewArmy,"void combatManager::ViewArmy(army* thisArmy, int isQuickView)",cmbtmgr.obj,0x62478,232,E:\gamedcs\cmbtmgr.cpp:4090
+0x68990,2568,anchor-global,combatManager::PowEffect,"void combatManager::PowEffect(TSpellEffectID spellEffect, int bResetLimitCreature)",cmbtmgr.obj,0x62560,2134,E:\gamedcs\cmbtmgr.cpp:4158
+0x69600,110,anchor-global,combatManager::enemy_is_adjacent,"unsigned char combatManager::enemy_is_adjacent(const army* current_army, int grid_index, const army* excluded)",cmbtmgr.obj,0x62db8,148,E:\gamedcs\cmbtmgr.cpp:4497
+0x69670,210,anchor-bracket,combatManager::get_distance,"long combatManager::get_distance(long start, long stop)",cmbtmgr.obj,0x62e4c,180,E:\gamedcs\cmbtmgr.cpp:4519
+0x69a10,128,anchor-global,combatManager::HexIsBlocked,unsigned char combatManager::HexIsBlocked(int index),cmbtmgr.obj,0x632c4,152,E:\gamedcs\cmbtmgr.cpp:4701
+0x69a90,804,anchor-global,combatManager::damage_message,"void combatManager::damage_message(const char* attacker, long attacker_qty, long damage, const army* defender, long deaths)",cmbtmgr.obj,0x6335c,448,E:\gamedcs\cmbtmgr.cpp:4731
+0x69dc0,141,anchor-global,combatManager::IsInMoat,"unsigned char combatManager::IsInMoat(int hex, int* index)",cmbtmgr.obj,0x6351c,126,E:\gamedcs\cmbtmgr.cpp:4776
+0x6a350,268,anchor-global,combatManager::CalculateGainedExperience,"void combatManager::CalculateGainedExperience(int side, int* experience_gained)",cmbtmgr.obj,0x6388c,116,E:\gamedcs\cmbtmgr.cpp:4948
+0x74bf0,392,anchor-global,combatManager::is_computer_action,unsigned char combatManager::is_computer_action(),command.obj,0x6bebc,436,E:\gamedcs\command.cpp:928
+0x763f0,77,anchor-global,combatManager::is_outside_placement_boundry,"unsigned char combatManager::is_outside_placement_boundry(int group, int index)",command.obj,0x6d508,62,E:\gamedcs\command.cpp:1923
+0x76440,80,anchor-global,combatManager::valid_wall_target,unsigned char combatManager::valid_wall_target(TWallTargetId wall),command.obj,0x6d548,66,E:\gamedcs\command.cpp:1940
+0x76490,1322,anchor-global,combatManager::GetCommand,int combatManager::GetCommand(int newIndex),command.obj,0x6d58c,1018,E:\gamedcs\command.cpp:1964
+0x769c0,519,linkorder,combatManager::RightClick,int combatManager::RightClick(int newIndex),command.obj,0x6d988,496,E:\gamedcs\command.cpp:2210
+0x76bd0,1026,linkorder,combatManager::DoCommand,void combatManager::DoCommand(int command),command.obj,0x6db78,682,E:\gamedcs\command.cpp:2279
+0x76fe0,708,linkorder,combatManager::show_eagle_eye,"void combatManager::show_eagle_eye(int winning_group, int dialog_timeout)",command.obj,0x6de24,692,E:\gamedcs\command.cpp:2423
+0x772b0,447,linkorder,combatManager::show_looted_artifacts,"void combatManager::show_looted_artifacts(std::vector<type_artifact,std::allocator<type_artifact>* looted_artifacts, int dialog_timeout)",command.obj,0x6e0d8,240,E:\gamedcs\command.cpp:2475
+0x77470,1420,linkorder,combatManager::DoVictory,void combatManager::DoVictory(int winningGroup),command.obj,0x6e1c8,1744,E:\gamedcs\command.cpp:2504
+0x77a00,178,anchor-global,combatManager::get_surrender_cost,long combatManager::get_surrender_cost(),command.obj,0x6e898,248,E:\gamedcs\command.cpp:2770
+0x7a100,461,anchor-global,combatManager::AddArmy,"army* combatManager::AddArmy(int iSide, int iMonType, int iMonQty, int iGridIndex, int iSetAttributes, int bFizzleItIn)",command.obj,0x70474,476,E:\gamedcs\command.cpp:3867
+0x7baf0,103,anchor-global,CSprite::AllocateSeq,"void CSprite::AllocateSeq(int seqnum, int numFrames)",csprite.obj,0x723d8,64,E:\gamedcs\csprite.cpp:180
+0x7bb80,121,anchor-bracket,CSprite::SetPalette,void CSprite::SetPalette(const unsigned short* pal),csprite.obj,0x724e0,86,E:\gamedcs\csprite.cpp:212
+0x7bc00,184,anchor-global,CSprite::ResetPalette,void CSprite::ResetPalette(),csprite.obj,0x72538,82,E:\gamedcs\csprite.cpp:220
+0x7c1d0,108,anchor-global,CSprite::GetNumSeqs,int CSprite::GetNumSeqs(int type),csprite.obj,0x7342c,58,E:\gamedcs\csprite.cpp:574
+0x7c430,34,anchor-bracket,CSpriteFrame::~CSpriteFrame,void CSpriteFrame::~CSpriteFrame(),cspriteframe.obj,0x7483c,110,E:\gamedcs\cspriteframe.cpp:202
+0x7c460,247,anchor-global,CSpriteFrame::SetPixelFormat,"void CSpriteFrame::SetPixelFormat(unsigned rmask, unsigned gmask, unsigned bmask)",cspriteframe.obj,0x74918,254,E:\gamedcs\cspriteframe.cpp:245
+0x90b20,44,anchor-global,CTextDialog::ExitDialog,int CTextDialog::ExitDialog(message* msg),dialogbox.obj,0x81f98,22,E:\gamedcs\dialogbox.cpp:200
+0x93710,99,anchor-global,combatManager::ResetLimitCreature,void combatManager::ResetLimitCreature(),drawing.obj,0x83db0,168,E:\gamedcs\drawing.cpp:467
+0x93930,960,anchor-global,combatManager::UpdateGrid,"int combatManager::UpdateGrid(int bPostGridIsClean, int bSetupGrid)",drawing.obj,0x84420,956,E:\gamedcs\drawing.cpp:755
+0x94440,2005,anchor-global,combatManager::DrawFrame,"void combatManager::DrawFrame(unsigned char update, unsigned char bLimitCreatureEffect, unsigned char bLimitDraw, int iDelay, unsigned char bRefreshBackground, unsigned char bDoDelayTil)",drawing.obj,0x84e2c,1480,E:\gamedcs\drawing.cpp:1141
+0x95bf0,862,anchor-global,combatManager::ComputeMaxExtent,void combatManager::ComputeMaxExtent(),drawing.obj,0x86380,812,E:\gamedcs\drawing.cpp:2093
+0x960d0,1898,anchor-global,combatManager::CycleCombatScreen,void combatManager::CycleCombatScreen(),drawing.obj,0x867bc,1762,E:\gamedcs\drawing.cpp:2257
+0x9d160,616,anchor-global,game::SetVisibility,"void game::SetVisibility(const int startX, const int startY, const int z, const int whichPlayer, int range, unsigned char remote_move)",event_record.obj,0x8e33c,528,E:\gamedcs\event_record.cpp:1136
+0x9d3d0,608,anchor-global,game::ResetVisibility,"void game::ResetVisibility(int start_x, int start_y, int z, int whichPlayer, int range)",event_record.obj,0x8e54c,484,E:\gamedcs\event_record.cpp:1189
+0x9e170,366,anchor-global,advManager::EraseAndFizzle,"void advManager::EraseAndFizzle(NewmapCell* eventCell, type_point point, int fizzleSound)",events.obj,0x90348,106,E:\gamedcs\events.cpp:300
+0x9f040,35,anchor-global,advManager::get_treasure_data,TreasureData* advManager::get_treasure_data(NewmapCell* cell),events.obj,0x90d10,36,E:\gamedcs\events.cpp:647
+0xa0c20,35,anchor-global,advManager::get_black_box,BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell),events.obj,0x91bfc,28,E:\gamedcs\events.cpp:1114
+0xa75c0,253,anchor-global,advManager::get_like_modifier,"int advManager::get_like_modifier(hero* current_hero, TCreatureType creature)",events.obj,0x97144,228,E:\gamedcs\events.cpp:3805
+0xa76c0,117,anchor-global,advManager::get_force_modifier,int advManager::get_force_modifier(float strength_ratio),events.obj,0x97228,316,E:\gamedcs\events.cpp:3847
+0xa7740,638,linkorder,advManager::DoWanderingMonsterResult,"void advManager::DoWanderingMonsterResult(NewmapCell* cell, hero* current_hero, type_point point, unsigned char human_player)",events.obj,0x97364,572,E:\gamedcs\events.cpp:3868
+0xa79c0,121,linkorder,advManager::DoEventWanderingMonster,"void advManager::DoEventWanderingMonster(NewmapCell* cell, hero* current_hero, type_point point, unsigned char human_player)",events.obj,0x975a0,136,E:\gamedcs\events.cpp:3948
+0xa7a40,490,linkorder,advManager::DoEventWarSchool,"void advManager::DoEventWarSchool(hero* current_hero, NewmapCell* cell, unsigned char human_player)",events.obj,0x97628,548,E:\gamedcs\events.cpp:3970
+0xa7c30,417,linkorder,advManager::do_event_warrior_tomb,"void advManager::do_event_warrior_tomb(hero* current_hero, NewmapCell* cell, unsigned char human_player)",events.obj,0x9784c,592,E:\gamedcs\events.cpp:4039
+0xa7de0,177,linkorder,advManager::do_event_water_wheel,"void advManager::do_event_water_wheel(hero* current_hero, NewmapCell* cell, unsigned char human_player)",events.obj,0x97a9c,222,E:\gamedcs\events.cpp:4090
+0xa7ea0,273,linkorder,advManager::do_event_watering_hole,"void advManager::do_event_watering_hole(hero* current_hero, NewmapCell* cell, unsigned char human_player)",events.obj,0x97b7c,304,E:\gamedcs\events.cpp:4116
+0xa7fc0,189,linkorder,advManager::do_event_windmill,"void advManager::do_event_windmill(hero* current_hero, NewmapCell* cell, unsigned char human_player)",events.obj,0x97cac,282,E:\gamedcs\events.cpp:4144
+0xa8080,421,linkorder,advManager::do_event_witch_hut,"void advManager::do_event_witch_hut(hero* current_hero, NewmapCell* cell, unsigned char human_player)",events.obj,0x97dc8,474,E:\gamedcs\events.cpp:4170
+0xa8230,340,linkorder,advManager::do_event_lith_one_way,"void advManager::do_event_lith_one_way(hero* current_hero, NewmapCell* cell, unsigned char human_player)",events.obj,0x97fa4,322,E:\gamedcs\events.cpp:4207
+0xa8390,341,linkorder,advManager::do_event_lith_two_way,"void advManager::do_event_lith_two_way(hero* current_hero, NewmapCell* cell, unsigned char human_player)",events.obj,0x980e8,258,E:\gamedcs\events.cpp:4244
+0xa84f0,9538,linkorder,advManager::do_event_whirlpool,"void advManager::do_event_whirlpool(hero* current_hero, NewmapCell* cell, unsigned char human_player)",events.obj,0x981ec,96,E:\gamedcs\events.cpp:4282
+0xaaa40,92,linkorder,advManager::DispatchEvent,"void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)",events.obj,0x9824c,6256,E:\gamedcs\events.cpp:4302
+0xaaaa0,272,linkorder,advManager::DoEvent,"void advManager::DoEvent(NewmapCell* eventCell, type_point point)",events.obj,0x99abc,240,E:\gamedcs\events.cpp:5146
+0xaabb0,569,anchor-global,advManager::EraseObj,"void advManager::EraseObj(NewmapCell* thisCell, type_point point, unsigned char record)",events.obj,0x99bac,490,E:\gamedcs\events.cpp:5179
+0xaadf0,476,linkorder,advManager::HeroSwap,"void advManager::HeroSwap(hero* leftHero, hero* rightHero)",events.obj,0x99d98,280,E:\gamedcs\events.cpp:5240
+0xaafd0,1073,linkorder,advManager::TownEvent,"void advManager::TownEvent(NewmapCell* cell, type_point point, unsigned char human_player)",events.obj,0x99eb0,984,E:\gamedcs\events.cpp:5264
+0xab410,1586,anchor-bracket,advManager::EventSound,"void advManager::EventSound(int eventID, int extraInfo)",events.obj,0x9a288,672,E:\gamedcs\events.cpp:5390
+0xacbb0,228,anchor-global,advManager::FizzleCenter,void advManager::FizzleCenter(int whichSound),events.obj,0x9b564,268,E:\gamedcs\events.cpp:6076
+0xb0660,95,anchor-bracket,executive::executive,void executive::executive(),exec.obj,0x9e510,14,E:\gamedcs\exec.cpp:37
+0xb0a10,267,anchor-global,executive::DoDialog,int executive::DoDialog(baseManager* newDialog),exec.obj,0x9e66c,266,E:\gamedcs\exec.cpp:103
+0xb0b20,203,anchor-global,executive::AddManager,"int executive::AddManager(baseManager* newManager, int newPriority)",exec.obj,0x9e778,192,E:\gamedcs\exec.cpp:147
+0xb0bf0,121,anchor-global,executive::RemoveManager,void executive::RemoveManager(baseManager* killManager),exec.obj,0x9e838,96,E:\gamedcs\exec.cpp:219
+0xb0c70,338,anchor-global,executive::CallManager,void executive::CallManager(baseManager* newManager),exec.obj,0x9e898,280,E:\gamedcs\exec.cpp:268
+0xb1090,95,anchor-bracket,type_point::is_valid,unsigned char type_point::is_valid(),findpath.obj,0x9ed40,72,E:\gamedcs\findpath.cpp:36
+0xb1370,98,anchor-global,searchArray::searchArray,void searchArray::searchArray(),findpath.obj,0x9ed88,128,E:\gamedcs\findpath.cpp:45
+0xb13e0,120,anchor-global,searchArray::~searchArray,void searchArray::~searchArray(),findpath.obj,0x9ee08,44,E:\gamedcs\findpath.cpp:65
+0xb2da0,587,anchor-global,searchArray::SeedCombatPosition,"void searchArray::SeedCombatPosition(const army* thisArmy, long current_group, long limit, unsigned char in_placement_phase, long base_speed)",findpath.obj,0xa03fc,562,E:\gamedcs\findpath.cpp:921
+0xb3400,1927,anchor-global,searchArray::FindCombatPath,"unsigned char searchArray::FindCombatPath(const army* current_army, long current_group, long destination, unsigned char in_placement_phase, long limit, long base_speed)",findpath.obj,0xa0b18,1082,E:\gamedcs\findpath.cpp:1218
+0xb3f20,65,anchor-global,searchArray::get_travel_time,"long searchArray::get_travel_time(const army* current_army, long hex)",findpath.obj,0xa10c4,120,E:\gamedcs\findpath.cpp:1434
+0xb4420,95,anchor-bracket,army::ValidFlight,"unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest)",fly.obj,0xa1430,228,E:\gamedcs\fly.cpp:76
+0xb5110,103,anchor-global,font::~font,void font::~font(),font.obj,0xa1c94,78,E:\gamedcs\font.cpp:50
+0xb5180,22,anchor-global,font::SetPalette,void font::SetPalette(const TPalette16* new_palette),font.obj,0xa1d14,68,E:\gamedcs\font.cpp:81
+0xb51a0,169,anchor-global,font::DrawCharacter,"void font::DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)",font.obj,0xa1d58,214,E:\gamedcs\font.cpp:86
+0xb5490,776,anchor-global,font::DrawBoundedString,"void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor color_scheme, unsigned justification, int cursorPos)",font.obj,0xa2108,790,E:\gamedcs\font.cpp:254
+0xb57a0,37,linkorder,font::GetCharacterWidth,int font::GetCharacterWidth(unsigned char currChar),font.obj,0xa2420,24,E:\gamedcs\font.cpp:413
+0xb57d0,68,linkorder,font::get_string_width,long font::get_string_width(const char* arg),font.obj,0xa2438,52,E:\gamedcs\font.cpp:420
+0xb5820,242,anchor-global,font::LineLength,"int font::LineLength(const char* str, int boxWidth)",font.obj,0xa246c,230,E:\gamedcs\font.cpp:435
+0xb5920,100,anchor-global,font::LineWidth,int font::LineWidth(const char* text),font.obj,0xa2554,116,E:\gamedcs\font.cpp:496
+0xb5990,118,anchor-global,font::LongestLineWidth,int font::LongestLineWidth(const char* str),font.obj,0xa25c8,134,E:\gamedcs\font.cpp:535
+0xb5a10,111,anchor-global,font::longest_word_length,int font::longest_word_length(const char* str),font.obj,0xa2650,132,E:\gamedcs\font.cpp:572
+0xb5a80,272,anchor-global,font::LongestWrappedLineWidth,"int font::LongestWrappedLineWidth(const char* str, int boxWidth)",font.obj,0xa26d4,240,E:\gamedcs\font.cpp:602
+0xb8550,72,anchor-global,generator::generator,void generator::generator(),game.obj,0xa2da0,166,E:\gamedcs\game.cpp:408
+0xb85a0,315,anchor-global,generator::load,unsigned char generator::load(void* infile),game.obj,0xa2e48,404,E:\gamedcs\game.cpp:431
+0xb86e0,177,anchor-global,generator::save,unsigned char generator::save(void* outfile),game.obj,0xa2fdc,230,E:\gamedcs\game.cpp:476
+0xb87a0,184,anchor-global,generator::update_bonus,void generator::update_bonus(),game.obj,0xa3178,216,E:\gamedcs\game.cpp:530
+0xb8860,503,anchor-global,generator::Initialize,void generator::Initialize(long new_owner),game.obj,0xa3288,150,E:\gamedcs\game.cpp:570
+0xb8a60,136,anchor-global,generator::Grow,void generator::Grow(),game.obj,0xa3320,252,E:\gamedcs\game.cpp:601
+0xb9df0,45,anchor-bracket,playerData::playerData,void playerData::playerData(),game.obj,0xa4cc8,144,E:\gamedcs\game.cpp:1278
+0xb9e20,277,linkorder,playerData::Init,void playerData::Init(),game.obj,0xa4d58,296,E:\gamedcs\game.cpp:1283
+0xb9f40,113,anchor-global,playerData::HasCapitol,unsigned char playerData::HasCapitol(),game.obj,0xa4e80,102,E:\gamedcs\game.cpp:1323
+0xb9fc0,359,anchor-global,playerData::add_garrison_hero,unsigned char playerData::add_garrison_hero(town* our_town),game.obj,0xa4ee8,450,E:\gamedcs\game.cpp:1336
+0xba130,52,anchor-global,playerData::SetName,void playerData::SetName(char* cNewName),game.obj,0xa50ac,92,E:\gamedcs\game.cpp:1383
+0xba170,78,anchor-global,playerData::ClearNetInfo,void playerData::ClearNetInfo(),game.obj,0xa5168,72,E:\gamedcs\game.cpp:1401
+0xba260,1025,anchor-global,playerData::load,int playerData::load(void* infile),game.obj,0xa51b0,1014,E:\gamedcs\game.cpp:1409
+0xba670,874,anchor-global,playerData::save,int playerData::save(void* outfile),game.obj,0xa55a8,1008,E:\gamedcs\game.cpp:1548
+0xba9e0,45,anchor-global,playerData::FindHero,int playerData::FindHero(int id),game.obj,0xa5c4c,74,E:\gamedcs\game.cpp:1774
+0xbaa10,46,anchor-global,playerData::FindTown,int playerData::FindTown(int id),game.obj,0xa5c98,118,E:\gamedcs\game.cpp:1788
+0xbaa40,250,anchor-global,playerData::NextHero,int playerData::NextHero(),game.obj,0xa5d10,252,E:\gamedcs\game.cpp:1802
+0xbab40,67,anchor-global,playerData::NextTown,int playerData::NextTown(),game.obj,0xa5e0c,164,E:\gamedcs\game.cpp:1830
+0xbab90,16,anchor-global,playerData::HasMobileHero,unsigned char playerData::HasMobileHero(),game.obj,0xa5eb0,56,E:\gamedcs\game.cpp:1852
+0xbaba0,41,anchor-global,GetNumObelisks,int GetNumObelisks(int whichPlayer),game.obj,0xa5ee8,72,E:\gamedcs\game.cpp:1859
+0xbabd0,220,anchor-global,playerData::NumOfGivenArtifact,int playerData::NumOfGivenArtifact(int iWhichArtifact),game.obj,0xa5ff0,290,E:\gamedcs\game.cpp:1900
+0xbad80,26,anchor-global,playerData::IsLocalHuman,unsigned char playerData::IsLocalHuman(),game.obj,0xa6114,46,E:\gamedcs\game.cpp:1938
+0xbada0,12,anchor-global,playerData::IsHuman,unsigned char playerData::IsHuman(),game.obj,0xa6144,60,E:\gamedcs\game.cpp:1946
+0xbadb0,156,anchor-global,playerData::GetName,char* playerData::GetName(),game.obj,0xa6180,176,E:\gamedcs\game.cpp:1955
+0xbae50,27,linkorder,playerData::guess_grail_location,void playerData::guess_grail_location(long player_id),game.obj,0xa6230,68,E:\gamedcs\game.cpp:1972
+0xbae70,85,linkorder,game::MineTypesOwned,"int game::MineTypesOwned(int iWhichPlayer, int iMineType)",game.obj,0xa6274,180,E:\gamedcs\game.cpp:1978
+0xbaed0,44,linkorder,ComputeUALoc,void ComputeUALoc(int whichPlayer),game.obj,0xa6328,40,E:\gamedcs\game.cpp:1994
+0xbaf00,602,linkorder,game::SetupPuzzlePieces,"int game::SetupPuzzlePieces(int whichPlayer, int countOnly)",game.obj,0xa6350,626,E:\gamedcs\game.cpp:1999
+0xbb160,7,linkorder,game::GetWorldMapData,NewfullMap* game::GetWorldMapData(),game.obj,0xa65c4,14,E:\gamedcs\game.cpp:2081
+0xbb170,214,anchor-global,game::get_new_boat_id,int game::get_new_boat_id(),game.obj,0xa65d4,186,E:\gamedcs\game.cpp:2089
+0xbb250,426,anchor-global,game::CreateBoat,"int game::CreateBoat(int x, int y, int z, int owner, unsigned char bIsRemoteMove, signed char type)",game.obj,0xa6690,300,E:\gamedcs\game.cpp:2112
+0xbb400,476,anchor-global,game::GetStartingHeroId,"THeroID game::GetStartingHeroId(TTownType alignment, int playerPos, int mapPosition)",game.obj,0xa68d8,1020,E:\gamedcs\game.cpp:2190
+0xbb5e0,642,anchor-global,game::GetNewHeroId,"THeroID game::GetNewHeroId(TTownType alignment, THeroClass excluded, unsigned char prefer_alignment)",game.obj,0xa6cd4,766,E:\gamedcs\game.cpp:2275
+0xbb870,137,anchor-global,game::GetTownId,"int game::GetTownId(int x, int y, int z)",game.obj,0xa6fd4,166,E:\gamedcs\game.cpp:2373
+0xbb900,135,anchor-global,game::GetGeneratorId,"int game::GetGeneratorId(int x, int y, int z)",game.obj,0xa71b4,194,E:\gamedcs\game.cpp:2419
+0xc61e0,1192,anchor-global,game::ClaimTown,"void game::ClaimTown(int townId, int newPlayerOwner, unsigned char bIsRemoteMove, unsigned char check_end_game)",game.obj,0xb1230,1304,E:\gamedcs\game.cpp:7289
+0xc66e0,203,anchor-global,game::ClaimMine,"void game::ClaimMine(int mineId, int newPlayerOwner, type_action_type action_type)",game.obj,0xb1748,222,E:\gamedcs\game.cpp:7379
+0xc67b0,420,anchor-global,game::ClaimGenerator,"void game::ClaimGenerator(int generatorId, int newPlayerOwner)",game.obj,0xb1828,350,E:\gamedcs\game.cpp:7407
+0xc6960,201,anchor-global,game::ClaimGarrison,"void game::ClaimGarrison(int garrisonId, int newPlayerOwner)",game.obj,0xb1988,200,E:\gamedcs\game.cpp:7441
+0xc6a30,543,anchor-global,game::ClaimShipyard,"void game::ClaimShipyard(type_point location, int newPlayerOwner)",game.obj,0xb1a50,572,E:\gamedcs\game.cpp:7461
+0xc92c0,514,anchor-global,game::GetRandomMonster,"TCreatureType game::GetRandomMonster(int minLevel, int maxLevel)",game.obj,0xb4b58,298,E:\gamedcs\game.cpp:8707
+0xc94d0,205,anchor-global,game::GetRandomArtifactId,TArtifact game::GetRandomArtifactId(int ArtifactClass),game.obj,0xb4c84,384,E:\gamedcs\game.cpp:8749
+0xc95a0,398,anchor-global,game::GetRandomSpell,SpellID game::GetRandomSpell(const int spell_level),game.obj,0xb4e04,412,E:\gamedcs\game.cpp:8828
+0xc9890,253,anchor-global,game::InsertObject,"void game::InsertObject(int x, int y, int z, int objType, int objectIndex, int extraInfo)",game.obj,0xb52fc,508,E:\gamedcs\game.cpp:9146
+0xc9990,1082,anchor-global,game::ConvertObject,void game::ConvertObject(NewmapCell* tempCell),game.obj,0xb54f8,1046,E:\gamedcs\game.cpp:9195
+0xc9dd0,624,linkorder,game::ProcessRandomObjects,void game::ProcessRandomObjects(),game.obj,0xb5910,970,E:\gamedcs\game.cpp:9320
+0xca040,497,linkorder,game::CreateTownHeroes,void game::CreateTownHeroes(),game.obj,0xb5cdc,674,E:\gamedcs\game.cpp:9455
+0xca240,246,anchor-global,game::MakeTerrainVisible,"void game::MakeTerrainVisible(int whichPlayer, unsigned short visMask)",game.obj,0xb5f80,210,E:\gamedcs\game.cpp:9516
+0xcdb80,561,anchor-bracket,game::get_random_lith,"unsigned char game::get_random_lith(const std::vector<type_point,std::allocator<type_point>* points, type_point* result, long cell_type, long excluded)",game.obj,0xbb0e4,764,E:\gamedcs\game.cpp:11571
+0xcddc0,34,anchor-global,game::get_random_lith_exit,"unsigned char game::get_random_lith_exit(long color, type_point* result)",game.obj,0xbb3e0,60,E:\gamedcs\game.cpp:11635
+0xcddf0,36,anchor-bracket,game::get_random_lith,"unsigned char game::get_random_lith(long color, long excluded, type_point* result)",game.obj,0xbb41c,62,E:\gamedcs\game.cpp:11644
+0xcde20,29,anchor-global,game::get_random_whirlpool,"unsigned char game::get_random_whirlpool(long excluded, type_point* result)",game.obj,0xbb45c,50,E:\gamedcs\game.cpp:11653
+0xcde40,224,anchor-global,game::get_underground_gate_exit,"type_point game::get_underground_gate_exit(type_point* __$ReturnUdt, const NewmapCell* cell)",game.obj,0xbb490,412,E:\gamedcs\game.cpp:11662
+0xcdf20,1413,anchor-global,game::game,void game::game(),game.obj,0xbb62c,1788,E:\gamedcs\game.cpp:11684
+0xce5b0,838,anchor-global,game::~game,void game::~game(),game.obj,0xbbd28,320,E:\gamedcs\game.cpp:11749
+0xce900,59,anchor-global,game::GetHeroBoat,"boat* game::GetHeroBoat(int id, unsigned char occupied)",game.obj,0xbbe68,124,E:\gamedcs\game.cpp:11754
+0xce940,39,anchor-global,game::IsHuman,unsigned char game::IsHuman(int gamePos),game.obj,0xbbee4,232,E:\gamedcs\game.cpp:11766
+0xce970,60,anchor-global,game::IsLocalHuman,unsigned char game::IsLocalHuman(int gamePos),game.obj,0xbbfcc,68,E:\gamedcs\game.cpp:11780
+0xce9b0,106,anchor-global,game::GetLocalPlayer,playerData* game::GetLocalPlayer(),game.obj,0xbc010,40,E:\gamedcs\game.cpp:11791
+0xcea20,78,anchor-global,game::GetLocalPlayerGamePos,int game::GetLocalPlayerGamePos(),game.obj,0xbc038,136,E:\gamedcs\game.cpp:11796
+0xcea70,231,linkorder,game::get_puzzle_origin,type_point game::get_puzzle_origin(type_point* __$ReturnUdt),game.obj,0xbc0c0,314,E:\gamedcs\game.cpp:11812
+0xceb60,189,anchor-global,game::GetPlayerName,char* game::GetPlayerName(int gamePos),game.obj,0xbc1fc,64,E:\gamedcs\game.cpp:11828
+0xcec20,37,linkorder,game::GetGamePosFromDPID,int game::GetGamePosFromDPID(unsigned long dpid),game.obj,0xbc23c,124,E:\gamedcs\game.cpp:11839
+0xcec50,62,linkorder,game::IsLastHuman,unsigned char game::IsLastHuman(int gamePos),game.obj,0xbc2b8,70,E:\gamedcs\game.cpp:11850
+0xcec90,24,anchor-global,game::IsMultiplayer,unsigned char game::IsMultiplayer(),game.obj,0xbc300,32,E:\gamedcs\game.cpp:11861
+0xd7470,31,anchor-global,type_obscuring_object::type_obscuring_object,void type_obscuring_object::type_obscuring_object(),hero.obj,0xcaaa0,40,E:\gamedcs\hero.cpp:375
+0xd7490,53,anchor-global,type_obscuring_object::get_obscured_town,town* type_obscuring_object::get_obscured_town(),hero.obj,0xcab04,54,E:\gamedcs\hero.cpp:390
+0xd74d0,29,anchor-global,type_obscuring_object::initialize,void type_obscuring_object::initialize(),hero.obj,0xcab3c,24,E:\gamedcs\hero.cpp:403
+0xd74f0,214,linkorder,type_obscuring_object::load,unsigned char type_obscuring_object::load(void* infile),hero.obj,0xcab54,258,E:\gamedcs\hero.cpp:418
+0xd75d0,266,anchor-global,type_obscuring_object::obscure_cell,"void type_obscuring_object::obscure_cell(TAdventureObjectType new_type, long id)",hero.obj,0xcac58,164,E:\gamedcs\hero.cpp:443
+0xd76e0,208,anchor-global,type_obscuring_object::restore_cell,void type_obscuring_object::restore_cell(),hero.obj,0xcacfc,130,E:\gamedcs\hero.cpp:473
+0xd77b0,214,linkorder,type_obscuring_object::save,unsigned char type_obscuring_object::save(void* outfile),hero.obj,0xcad80,224,E:\gamedcs\hero.cpp:498
+0xd7890,100,linkorder,hero::hire,"void hero::hire(int iPlayer, type_point point)",hero.obj,0xcae60,122,E:\gamedcs\hero.cpp:523
+0xd7900,283,linkorder,hero::PlaceInMap,"void hero::PlaceInMap(int iPlayer, type_point point, unsigned char reset_flags)",hero.obj,0xcaedc,188,E:\gamedcs\hero.cpp:549
+0xd7a20,1695,linkorder,hero::load,int hero::load(void* infile),hero.obj,0xcaf98,1792,E:\gamedcs\hero.cpp:577
+0xd80c0,1318,linkorder,hero::save,int hero::save(void* outfile),hero.obj,0xcb698,1824,E:\gamedcs\hero.cpp:914
+0xd85f0,302,anchor-bracket,hero::hero,void hero::hero(),hero.obj,0xcbdb8,200,E:\gamedcs\hero.cpp:1208
+0xd9070,69,anchor-global,hero::get_equipped_artifacts,long hero::get_equipped_artifacts(unsigned char countWarMachines),hero.obj,0xcc0e4,82,E:\gamedcs\hero.cpp:1314
+0xd90c0,74,anchor-bracket,hero::get_number_in_backpack,long hero::get_number_in_backpack(unsigned char countWarMachines),hero.obj,0xcc138,120,E:\gamedcs\hero.cpp:1338
+0xd9110,76,anchor-global,hero::GetStandSequence,hero_seqid hero::GetStandSequence(),hero.obj,0xcc1b0,56,E:\gamedcs\hero.cpp:1362
+0xd9160,76,linkorder,boat::GetStandSequence,hero_seqid boat::GetStandSequence(),hero.obj,0xcc1e8,56,E:\gamedcs\hero.cpp:1389
+0xd91b0,63,anchor-global,hero::HasArtifact,int hero::HasArtifact(int whichArtifact),hero.obj,0xcc220,74,E:\gamedcs\hero.cpp:1422
+0xd91f0,112,anchor-global,hero::IsWieldingArtifact,int hero::IsWieldingArtifact(int whichArtifact),hero.obj,0xcc26c,60,E:\gamedcs\hero.cpp:1446
+0xd9ec0,1235,anchor-global,hero::Deallocate,"void hero::Deallocate(unsigned char bGameLoaded, unsigned char remote_move)",hero.obj,0xcc800,896,E:\gamedcs\hero.cpp:1732
+0xda3a0,118,anchor-global,hero::GetExperience,int hero::GetExperience(int iLevel),hero.obj,0xccb80,232,E:\gamedcs\hero.cpp:1836
+0xda420,228,anchor-bracket,hero::GetExperienceIncrement,int hero::GetExperienceIncrement(int level),hero.obj,0xccc68,34,E:\gamedcs\hero.cpp:1857
+0xdb350,134,anchor-global,type_artifact::get_rollover_text,void type_artifact::get_rollover_text(char* buffer),hero.obj,0xcd86c,76,E:\gamedcs\hero.cpp:2432
+0xe2340,42,anchor-global,hero::CreatureTypeCount,int hero::CreatureTypeCount(int creatureType),hero.obj,0xd3830,68,E:\gamedcs\hero.cpp:4653
+0xe23a0,39,anchor-global,hero::GetNthSS,int hero::GetNthSS(int iWhich),hero.obj,0xd38b0,40,E:\gamedcs\hero.cpp:4677
+0xe23d0,374,anchor-global,hero::TransferArtifacts,void hero::TransferArtifacts(hero* src),hero.obj,0xd38ec,234,E:\gamedcs\hero.cpp:4828
+0xe2bd0,372,anchor-bracket,hero::remove_artifact,void hero::remove_artifact(TArtifactSlot slot),hero.obj,0xd3ad0,162,E:\gamedcs\hero.cpp:4919
+0xe2d50,126,anchor-global,hero::remove_backpack_artifact,void hero::remove_backpack_artifact(short slot),hero.obj,0xd3b74,118,E:\gamedcs\hero.cpp:4943
+0xe2dd0,252,anchor-bracket,hero::remove_artifact,unsigned char hero::remove_artifact(TArtifact artifact),hero.obj,0xd3bec,120,E:\gamedcs\hero.cpp:4960
+0xe2f90,209,anchor-global,hero::add_to_backpack,"unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)",hero.obj,0xd3cfc,232,E:\gamedcs\hero.cpp:5005
+0xe3070,825,anchor-global,hero::GiveArtifact,"void hero::GiveArtifact(const type_artifact* artifact, int bCheckEnd, unsigned char equip_it)",hero.obj,0xd3de4,92,E:\gamedcs\hero.cpp:5044
+0xe33b0,586,anchor-global,hero::GiveExperience,"int hero::GiveExperience(int howMuch, int bCheckLevel, unsigned char show_cap_window)",hero.obj,0xd3e88,304,E:\gamedcs\hero.cpp:5085
+0xe3600,178,anchor-global,hero::GiveResource,"void hero::GiveResource(int whichRes, int howMuch)",hero.obj,0xd3fb8,184,E:\gamedcs\hero.cpp:5136
+0xe36c0,744,anchor-global,hero::GetLuck,"int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground, unsigned char apply_limits)",hero.obj,0xd4070,396,E:\gamedcs\hero.cpp:5165
+0xe39b0,681,anchor-global,hero::GetMorale,"int hero::GetMorale(const hero* otherHero, unsigned char on_cursed_ground, unsigned char apply_limits)",hero.obj,0xd41fc,404,E:\gamedcs\hero.cpp:5254
+0xe3cd0,616,anchor-global,hero::GetNecromancyFactor,float hero::GetNecromancyFactor(unsigned char apply_limit),hero.obj,0xd4390,274,E:\gamedcs\hero.cpp:5332
+0xe3f40,303,anchor-global,hero::GetMysticismBonus,int hero::GetMysticismBonus(),hero.obj,0xd44a4,188,E:\gamedcs\hero.cpp:5387
+0xe4070,239,anchor-global,hero::GetVisibility,int hero::GetVisibility(),hero.obj,0xd4560,120,E:\gamedcs\hero.cpp:5424
+0xe4160,323,anchor-global,hero::GetArcheryFactor,float hero::GetArcheryFactor(),hero.obj,0xd45d8,140,E:\gamedcs\hero.cpp:5455
+0xe42b0,96,anchor-global,hero::GetOffenseFactor,float hero::GetOffenseFactor(),hero.obj,0xd4664,68,E:\gamedcs\hero.cpp:5489
+0xe4310,125,anchor-global,hero::GetDefenseFactor,float hero::GetDefenseFactor(),hero.obj,0xd46a8,78,E:\gamedcs\hero.cpp:5514
+0xe4390,137,anchor-global,hero::GetEstatesBonus,int hero::GetEstatesBonus(),hero.obj,0xd46f8,110,E:\gamedcs\hero.cpp:5542
+0xe4420,346,anchor-global,hero::GetEagleEyeChance,float hero::GetEagleEyeChance(),hero.obj,0xd4768,196,E:\gamedcs\hero.cpp:5570
+0xe4580,348,anchor-global,hero::GetSurrenderCostFactor,float hero::GetSurrenderCostFactor(),hero.obj,0xd482c,154,E:\gamedcs\hero.cpp:5607
+0xe46e0,348,anchor-global,hero::GetMagicResistanceFactor,float hero::GetMagicResistanceFactor(),hero.obj,0xd48c8,150,E:\gamedcs\hero.cpp:5647
+0xe4840,102,anchor-global,hero::GetExperienceBonusFactor,float hero::GetExperienceBonusFactor(),hero.obj,0xd4960,72,E:\gamedcs\hero.cpp:5684
+0xe48b0,102,anchor-global,hero::GetIntelligenceFactor,float hero::GetIntelligenceFactor(),hero.obj,0xd4a88,128,E:\gamedcs\hero.cpp:5783
+0xe4920,102,anchor-global,hero::GetFirstAidFactor,float hero::GetFirstAidFactor(),hero.obj,0xd4b08,72,E:\gamedcs\hero.cpp:5808
+0xe4990,1014,corroborates,hero::GetMobility,int hero::GetMobility(unsigned char sea_movement),hero.obj,0xd4b50,528,E:\gamedcs\hero.cpp:5833
+0xe4d90,18,corroborates,hero::GetMobility,int hero::GetMobility(),hero.obj,0xd4d60,80,E:\gamedcs\hero.cpp:5932
+0xe4db0,269,anchor-global,hero::GetSpellDurationBonus,int hero::GetSpellDurationBonus(),hero.obj,0xd4db0,64,E:\gamedcs\hero.cpp:5943
+0xe4fa0,215,anchor-global,hero::get_special_terrain,TAdventureObjectType hero::get_special_terrain(),hero.obj,0xd4df0,90,E:\gamedcs\hero.cpp:5962
+0xe5080,125,anchor-bracket,hero::get_spell_level,"TSkillMastery hero::get_spell_level(SpellID spell, unsigned char is_on_magic_plains)",hero.obj,0xd4e4c,28,E:\gamedcs\hero.cpp:5977
+0xe5100,188,anchor-bracket,hero::GetSpellSchoolLevel,"TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask, unsigned char is_on_magic_plains)",hero.obj,0xd4e68,104,E:\gamedcs\hero.cpp:5987
+0xe51c0,115,anchor-global,hero::GetHighestSchool,TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask),hero.obj,0xd4ed0,148,E:\gamedcs\hero.cpp:6025
+0xe5240,239,anchor-bracket,hero::GetManaCost,"int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy, unsigned char is_on_magic_plains)",hero.obj,0xd4f64,122,E:\gamedcs\hero.cpp:6071
+0xe5330,67,linkorder,hero::GetMobilityFrame,int hero::GetMobilityFrame(),hero.obj,0xd4fe0,68,E:\gamedcs\hero.cpp:6103
+0xe5380,62,linkorder,hero::GetManaFrame,int hero::GetManaFrame(),hero.obj,0xd5024,60,E:\gamedcs\hero.cpp:6129
+0xe53c0,30,linkorder,hero::VisitedArena,unsigned char hero::VisitedArena(const NewmapCell* cell),hero.obj,0xd5060,18,E:\gamedcs\hero.cpp:6155
+0xe53e0,24,linkorder,hero::SetVisitedArena,void hero::SetVisitedArena(const NewmapCell* cell),hero.obj,0xd5074,44,E:\gamedcs\hero.cpp:6163
+0xe5400,147,linkorder,hero::get_combat_value_modifier,float hero::get_combat_value_modifier(),hero.obj,0xd50a0,250,E:\gamedcs\hero.cpp:6171
+0xe54a0,170,anchor-global,hero::find_summonable_boat,boat* hero::find_summonable_boat(),hero.obj,0xd519c,176,E:\gamedcs\hero.cpp:6180
+0xe5550,350,anchor-global,hero::can_summon_boat,unsigned char hero::can_summon_boat(),hero.obj,0xd524c,100,E:\gamedcs\hero.cpp:6219
+0xe56b0,33,linkorder,hero::get_player,playerData* hero::get_player(),hero.obj,0xd52b0,32,E:\gamedcs\hero.cpp:6241
+0xe56e0,124,anchor-global,hero::is_in_patrol_radius,unsigned char hero::is_in_patrol_radius(type_point point),hero.obj,0xd52d0,208,E:\gamedcs\hero.cpp:6251
+0xe5760,498,anchor-global,hero::modify_spell_damage,"long hero::modify_spell_damage(SpellID spell, int damage, const army* target_army)",hero.obj,0xd53a0,172,E:\gamedcs\hero.cpp:6267
+0xe5960,56,linkorder,hero::get_primary_skill_total,short hero::get_primary_skill_total(),hero.obj,0xd544c,60,E:\gamedcs\hero.cpp:6296
+0xe59a0,248,linkorder,hero::Fly,void hero::Fly(int level),hero.obj,0xd5488,34,E:\gamedcs\hero.cpp:6310
+0xe5aa0,224,anchor-global,hero::get_combat_speed_bonus,long hero::get_combat_speed_bonus(),hero.obj,0xd54ac,92,E:\gamedcs\hero.cpp:6319
+0xe5b80,348,anchor-global,hero::get_hit_point_bonus,long hero::get_hit_point_bonus(),hero.obj,0xd5508,64,E:\gamedcs\hero.cpp:6336
+0xe5e10,284,anchor-global,hero::IsInIdentifyRange,unsigned char hero::IsInIdentifyRange(const type_point* location),hero.obj,0xd55c0,130,E:\gamedcs\hero.cpp:6385
+0xe5f30,191,anchor-global,hero::IsMobile,unsigned char hero::IsMobile(),hero.obj,0xd5644,202,E:\gamedcs\hero.cpp:6406
+0xe5ff0,291,anchor-global,hero::GetHeroSpellBonus,"int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value)",hero.obj,0xd5710,240,E:\gamedcs\hero.cpp:6428
+0xe6120,926,linkorder,hero::reset_artifacts,void hero::reset_artifacts(),hero.obj,0xd5800,204,E:\gamedcs\hero.cpp:6493
+0xe64c0,27,linkorder,type_obscuring_object::obscures_town,unsigned char type_obscuring_object::obscures_town(),hero.obj,0xd58cc,42,E:\gamedcs\Hero.h:162
+0xe64e0,4,linkorder,hero::HasArmy,unsigned char hero::HasArmy(TCreatureType type),hero.obj,0xd58f8,28,E:\gamedcs\Hero.h:702
+0xe64f0,4,linkorder,hero::GetSpellSchoolLevel,TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask),hero.obj,0xd5914,48,E:\gamedcs\Hero.h:712
+0xe6500,434,linkorder,SCampaign::GetExpCap,int SCampaign::GetExpCap(),hero.obj,0xd5944,32,E:\gamedcs\CustomCampaign.h:225
+0xe66c0,40,linkorder,CMCDeadHero::CMCDeadHero,"void CMCDeadHero::CMCDeadHero(signed char heroId, type_point point)",hero.obj,0xd5964,84,E:\gamedcs\netmsg.h:675
+0xe66f0,96,linkorder,type_artifact::`default constructor closure',void type_artifact::`default constructor closure'(),hero.obj,0xd59b8,24,E:\gamedcs\hero.cpp:1226
+0xe6750,33,linkorder,THeroScreenWindow::`scalar deleting destructor',void* THeroScreenWindow::`scalar deleting destructor'(unsigned __flags),hero.obj,0xd59d0,52,E:\gamedcs\hero.cpp:4186
+0xe6780,32,linkorder,"std::bitset<48,unsigned long>::reference::operator=","std::bitset<48,unsigned* std::bitset<48,unsigned long>::reference::operator=(unsigned char __x)",hero.obj,0xd5a04,60,..\stlport\stl_bitset.h:379
+0xe67a0,374,linkorder,InitializeHeroTraitsTable,unsigned char InitializeHeroTraitsTable(),herodefs.obj,0xd5a40,114,E:\gamedcs\herodefs.cpp:204
+0xe6920,482,linkorder,InitializeHeroClassTraitsTable,unsigned char InitializeHeroClassTraitsTable(),herodefs.obj,0xd5ab4,114,E:\gamedcs\herodefs.cpp:238
+0xe6b10,456,linkorder,InitializeSSkillTraitsTable,unsigned char InitializeSSkillTraitsTable(),herodefs.obj,0xd5b28,152,E:\gamedcs\herodefs.cpp:351
+0xe6d60,32,linkorder,InitializeHeroTraits,"void InitializeHeroTraits(int id, const std::vector<char* resource)",herodefs.obj,0xd5bc0,268,E:\gamedcs\herodefs.cpp:409
+0xe6d80,89,linkorder,$E436,void $E436(),herodefs.obj,0xd5ccc,92,E:\gamedcs\herodefs.cpp:437
+0xe6de0,96,linkorder,InitializeHeroClassTraits,"void InitializeHeroClassTraits(int id, const std::vector<char* resource)",herodefs.obj,0xd5d28,422,E:\gamedcs\herodefs.cpp:441
+0xe6e40,97,linkorder,$E438,void $E438(),herodefs.obj,0xd5ed0,24,E:\gamedcs\herodefs.cpp:484
+0xe6eb0,95,linkorder,InitializeSSkillTraits,"void InitializeSSkillTraits(int id, const std::vector<char* resource)",herodefs.obj,0xd5ee8,404,E:\gamedcs\herodefs.cpp:489
+0xe6f10,95,linkorder,$E441,void $E441(),herodefs.obj,0xd607c,24,E:\gamedcs\herodefs.cpp:513
+0xe6f70,95,linkorder,$E440,void $E440(),herodefs.obj,0xd6094,64,E:\gamedcs\herodefs.cpp:513
+0xe6fd0,95,linkorder,`anonymous namespace'::TAutoStrPtr::TAutoStrPtr,void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr(),herodefs.obj,0xd60d4,8,E:\gamedcs\herodefs.cpp:391
+0xe7030,95,linkorder,`anonymous namespace'::TAutoStrPtr::~TAutoStrPtr,void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr(),herodefs.obj,0xd60dc,24,E:\gamedcs\herodefs.cpp:394
+0xe7090,95,linkorder,`anonymous namespace'::TAutoStrPtr::set,void `anonymous namespace'::TAutoStrPtr::set(char* pStr),herodefs.obj,0xd60f4,4,E:\gamedcs\herodefs.cpp:396
+0xe70f0,95,linkorder,`anonymous namespace'::TAutoStrPtr::get,char* `anonymous namespace'::TAutoStrPtr::get(),herodefs.obj,0xd60f8,4,E:\gamedcs\herodefs.cpp:398
+0xe7150,32,anchor-global,hexcell::hexcell,void hexcell::hexcell(),hexcell.obj,0xd60fc,58,E:\gamedcs\hexcell.cpp:26
+0xe7170,60,anchor-global,hexcell::get_army,army* hexcell::get_army(),hexcell.obj,0xd6138,62,E:\gamedcs\hexcell.cpp:38
+0xe71b0,77,anchor-global,hexcell::get_dead_army,army* hexcell::get_dead_army(int i),hexcell.obj,0xd6178,68,E:\gamedcs\hexcell.cpp:43
+0xea7b0,85,anchor-global,iconWidget::~iconWidget,void iconWidget::~iconWidget(),iconwdgt.obj,0xd9464,62,E:\gamedcs\iconwdgt.cpp:88
+0xeaff0,62,anchor-global,iconWidget::SetIconFrame,void iconWidget::SetIconFrame(int newFrame),iconwdgt.obj,0xd9c7c,40,E:\gamedcs\iconwdgt.cpp:437
+0xeb030,34,anchor-global,iconWidget::SetSprite,void iconWidget::SetSprite(const char* new_sprite),iconwdgt.obj,0xd9d64,42,E:\gamedcs\iconwdgt.cpp:470
+0xeb060,491,anchor-global,iconWidget::NextRandomFrame,void iconWidget::NextRandomFrame(),iconwdgt.obj,0xd9d90,344,E:\gamedcs\iconwdgt.cpp:478
+0xeb250,237,anchor-global,iconWidget::NextRandomSiegeEngineFrame,void iconWidget::NextRandomSiegeEngineFrame(),iconwdgt.obj,0xd9ee8,172,E:\gamedcs\iconwdgt.cpp:572
+0xec460,111,anchor-bracket,inputManager::inputManager,void inputManager::inputManager(),inputmgr.obj,0xdd97c,104,E:\gamedcs\inputmgr.cpp:779
+0xec570,24,anchor-global,inputManager::Flush,void inputManager::Flush(),inputmgr.obj,0xdda54,32,E:\gamedcs\inputmgr.cpp:855
+0xec6f0,454,anchor-global,inputManager::AsciiConvert,void inputManager::AsciiConvert(message* msg),inputmgr.obj,0xddd60,276,E:\gamedcs\inputmgr.cpp:991
+0xec8c0,832,linkorder,inputManager::MakeScanCodeTable,void inputManager::MakeScanCodeTable(),inputmgr.obj,0xdde74,464,E:\gamedcs\inputmgr.cpp:1040
+0xecc00,202,anchor-bracket,inputManager::ForceMouseMove,void inputManager::ForceMouseMove(),inputmgr.obj,0xde044,164,E:\gamedcs\inputmgr.cpp:1139
+0xed490,437,anchor-global,PollSound,void PollSound(),kb.obj,0xdf330,436,E:\gamedcs\kb.cpp:318
+0xf7690,786,anchor-global,extended_dialog,"void extended_dialog(const char* text, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* resources, long x, long y, long timeout)",kb.obj,0xe6cf0,314,E:\gamedcs\kb.cpp:5909
+0xf79b0,37,anchor-bracket,GetMapExtra,"unsigned short GetMapExtra(int x, int y, int z)",kb.obj,0xe6e2c,36,E:\gamedcs\kb.cpp:5954
+0xf79e0,36,anchor-global,GetMapExtraPtr,"unsigned short* GetMapExtraPtr(int x, int y, int z)",kb.obj,0xe6e50,100,E:\gamedcs\kb.cpp:5960
+0xf7fb0,170,anchor-bracket,Process1WindowsMessage,void Process1WindowsMessage(),kbwin.obj,0xe7fd0,66,E:\gamedcs\kbwin.cpp:585
+0xf8060,212,linkorder,AppCommand,"long AppCommand(void* hwnd, unsigned msg, unsigned wParam, long lParam)",kbwin.obj,0xe8014,4,E:\gamedcs\kbwin.cpp:648
+0xf8140,55,linkorder,UpdateDfltMenu,void UpdateDfltMenu(),kbwin.obj,0xe8018,4,E:\gamedcs\kbwin.cpp:680
+0xf8180,92,anchor-global,KBChangeMenu,void KBChangeMenu(),kbwin.obj,0xe801c,4,E:\gamedcs\kbwin.cpp:721
+0xf81e0,49,anchor-global,SetNoDialogMenus,void SetNoDialogMenus(int bEnabled),kbwin.obj,0xe8020,52,E:\gamedcs\kbwin.cpp:752
+0xfa610,69,anchor-global,LODFile::getItemIndex,LODEntry* LODFile::getItemIndex(const char* item_name),lodfile.obj,0xe9154,66,E:\gamedcs\lodfile.cpp:93
+0xfa660,275,anchor-global,LODFile::Find,"void LODFile::Find(unsigned begin, unsigned end, const char* item_name)",lodfile.obj,0xe91c0,242,E:\gamedcs\lodfile.cpp:125
+0xfa800,151,anchor-global,LODFile::~LODFile,void LODFile::~LODFile(),lodfile.obj,0xe9374,72,E:\gamedcs\lodfile.cpp:252
+0xfa8a0,452,anchor-bracket,LODFile::open,"int LODFile::open(const char* filename, int flags)",lodfile.obj,0xe941c,320,E:\gamedcs\lodfile.cpp:277
+0xfaa70,171,anchor-global,LODFile::pointAt,unsigned char LODFile::pointAt(const char* itemName),lodfile.obj,0xe9690,78,E:\gamedcs\lodfile.cpp:430
+0xfab20,276,anchor-global,LODFile::read,"int LODFile::read(void* dest, int numBytes)",lodfile.obj,0xe96e0,392,E:\gamedcs\lodfile.cpp:452
+0xfbf90,97,anchor-global,ExtraInfoUnion::SetCellVisited,void ExtraInfoUnion::SetCellVisited(short player),mapcell.obj,0xeb6a4,152,E:\gamedcs\mapcell.cpp:46
+0xfcaa0,303,anchor-global,NewmapCell::get_trigger_cell,NewmapCell* NewmapCell::get_trigger_cell(),mapcell.obj,0xebf98,254,E:\gamedcs\mapcell.cpp:361
+0xfcbd0,92,anchor-global,NewmapCell::get_map_object,TAdventureObjectType NewmapCell::get_map_object(),mapcell.obj,0xec098,124,E:\gamedcs\mapcell.cpp:387
+0xfcc30,77,anchor-global,NewmapCell::get_map_extraInfo,unsigned long NewmapCell::get_map_extraInfo(),mapcell.obj,0xec114,180,E:\gamedcs\mapcell.cpp:404
+0xfcc80,101,anchor-global,NewmapCell::cell_is_trigger,unsigned char NewmapCell::cell_is_trigger(),mapcell.obj,0xec1c8,140,E:\gamedcs\mapcell.cpp:420
+0xfccf0,208,anchor-global,NewmapCell::is_diggable,unsigned char NewmapCell::is_diggable(),mapcell.obj,0xec254,208,E:\gamedcs\mapcell.cpp:436
+0xfcdc0,88,anchor-global,NewmapCell::HasTriggerableEvent,const unsigned char NewmapCell::HasTriggerableEvent(),mapcell.obj,0xec324,142,E:\gamedcs\mapcell.cpp:464
+0xfce20,278,anchor-global,NewmapCell::get_special_terrain,TAdventureObjectType NewmapCell::get_special_terrain(),mapcell.obj,0xec3b4,326,E:\gamedcs\mapcell.cpp:490
+0xfd060,348,anchor-global,NewfullMap::NewfullMap,void NewfullMap::NewfullMap(),mapcell.obj,0xec4fc,424,E:\gamedcs\mapcell.cpp:524
+0xfd1e0,625,anchor-global,NewfullMap::~NewfullMap,void NewfullMap::~NewfullMap(),mapcell.obj,0xec6a4,128,E:\gamedcs\mapcell.cpp:530
+0xfec10,29,anchor-global,CObject::get_object_type_ptr,CObjectType* CObject::get_object_type_ptr(),mapcell.obj,0xeda1c,46,E:\gamedcs\mapcell.cpp:1110
+0xfec30,262,anchor-global,CObject::FindTrigger,"void CObject::FindTrigger(int* result_x, int* result_y)",mapcell.obj,0xedab8,320,E:\gamedcs\mapcell.cpp:1131
+0x105b20,498,anchor-global,NewfullMap::PlaceObject,"int NewfullMap::PlaceObject(int ObjectIndex, unsigned char setExtraInfo)",mapcell.obj,0xf43e8,854,E:\gamedcs\mapcell.cpp:4346
+0x10b1d0,84,anchor-global,SafeRandom,"int SafeRandom(int min, int max)",misc.obj,0xfd81c,76,E:\gamedcs\misc.cpp:41
+0x10b230,40,anchor-global,Random,"int Random(int min, int max)",misc.obj,0xfd868,60,E:\gamedcs\misc.cpp:58
+0x10c6e0,85,anchor-global,TPickANumber::TPickANumber,"void TPickANumber::TPickANumber(int low, int high)",misc.obj,0xfe150,62,E:\gamedcs\misc.cpp:838
+0x10c740,82,anchor-global,TPickANumber::Pick,int TPickANumber::Pick(),misc.obj,0xfe190,120,E:\gamedcs\misc.cpp:849
+0x10cb50,111,anchor-global,mouseManager::mouseManager,void mouseManager::mouseManager(),mousemgr.obj,0xfe9d4,124,E:\gamedcs\mousemgr.cpp:315
+0x10cca0,224,anchor-global,mouseManager::SetPointer,"void mouseManager::SetPointer(int new_frame, mouseManager::EPointerSet new_set)",mousemgr.obj,0xfeb1c,310,E:\gamedcs\mousemgr.cpp:445
+0x10cd90,1904,anchor-global,mouseManager::Update,void mouseManager::Update(unsigned char bForceIt),mousemgr.obj,0xfec54,1496,E:\gamedcs\mousemgr.cpp:526
+0x10d500,63,anchor-global,mouseManager::MouseCoords,"void mouseManager::MouseCoords(int* x, int* y)",mousemgr.obj,0xff22c,58,E:\gamedcs\mousemgr.cpp:774
+0x10d540,111,anchor-global,mouseManager::HidePointer,void mouseManager::HidePointer(),mousemgr.obj,0xff3a8,56,E:\gamedcs\mousemgr.cpp:865
+0x10d5b0,208,anchor-global,mouseManager::ShowPointer,void mouseManager::ShowPointer(unsigned char force),mousemgr.obj,0xff3e0,104,E:\gamedcs\mousemgr.cpp:889
+0x10d680,528,anchor-global,mouseManager::CheckUpdate,void mouseManager::CheckUpdate(),mousemgr.obj,0xff484,396,E:\gamedcs\mousemgr.cpp:955
+0x10d8b0,363,anchor-global,mouseManager::LoadFrame,void mouseManager::LoadFrame(int new_frame),mousemgr.obj,0xff610,246,E:\gamedcs\mousemgr.cpp:1026
+0x10da20,55,anchor-global,mouseManager::ShowSystemCursor,void mouseManager::ShowSystemCursor(unsigned char show_it),mousemgr.obj,0xff708,100,E:\gamedcs\mousemgr.cpp:1120
+0x122940,11,anchor-global,TPalette16::~TPalette16,void TPalette16::~TPalette16(),palette.obj,0x10a8e0,46,E:\gamedcs\palette.cpp:204
+0x122950,190,anchor-global,TPalette16::Cycle,"void TPalette16::Cycle(int begin, int end, int step)",palette.obj,0x10aa98,172,E:\gamedcs\palette.cpp:288
+0x122a10,290,anchor-global,TPalette16::AdjustSaturation,void TPalette16::AdjustSaturation(float amount),palette.obj,0x10b1ec,308,E:\gamedcs\palette.cpp:412
+0x122b50,501,anchor-global,TPalette16::AdjustHSV,"void TPalette16::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)",palette.obj,0x10b484,808,E:\gamedcs\palette.cpp:496
+0x122d50,214,anchor-global,TPalette16::Gray,void TPalette16::Gray(),palette.obj,0x10b7ac,234,E:\gamedcs\palette.cpp:571
+0x122f60,11,anchor-global,TPalette24::~TPalette24,void TPalette24::~TPalette24(),palette.obj,0x10baac,68,E:\gamedcs\palette.cpp:650
+0x122f80,526,anchor-global,TPalette24::AdjustHSV,"void TPalette24::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)",palette.obj,0x10bfd4,924,E:\gamedcs\palette.cpp:740
+0x123190,352,anchor-bracket,RGBToHSV,"void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)",palette.obj,0x10c370,498,E:\gamedcs\palette.cpp:827
+0x1232f0,748,anchor-bracket,HSVToRGB,"void HSVToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)",palette.obj,0x10c564,844,E:\gamedcs\palette.cpp:862
+0x1239d0,150,anchor-bracket,army::FindPath,"int army::FindPath(int fpTargetCellIndex, int maxMoves, unsigned char bMoveUnlimited, unsigned char bLiteralTarget)",path.obj,0x10c918,138,E:\gamedcs\path.cpp:30
+0x123a70,168,anchor-bracket,army::ValidPath,"unsigned char army::ValidPath(int destIndex, unsigned char bLiteralTest)",path.obj,0x10c9a4,72,E:\gamedcs\path.cpp:51
+0x123b20,137,anchor-global,army::GetAttackMask,"unsigned army::GetAttackMask(int currIndex, int criteria, int iLiteralTargetIndex)",path.obj,0x10c9ec,126,E:\gamedcs\path.cpp:97
+0x123bb0,479,anchor-global,army::ValidAttack,"int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIndex, int* testCellIndex)",path.obj,0x10ca6c,394,E:\gamedcs\path.cpp:159
+0x123d90,87,anchor-global,army::GetAdjacentCellIndex,"int army::GetAdjacentCellIndex(int currIndex, int direction)",path.obj,0x10cbf8,136,E:\gamedcs\path.cpp:238
+0x123df0,134,anchor-bracket,army::get_adjacent_hex,"long army::get_adjacent_hex(long hex, long direction)",path.obj,0x10cc80,90,E:\gamedcs\path.cpp:259
+0x124550,210,anchor-global,get_artifact_purchase_price,"long get_artifact_purchase_price(TArtifact artifact, long market_count, EGameResource* best_resource)",philai.obj,0x10d7b8,356,E:\gamedcs\philai.cpp:263
+0x126d40,915,anchor-global,type_spellvalue::type_spellvalue,void type_spellvalue::type_spellvalue(const hero* new_hero),philai.obj,0x10f37c,134,E:\gamedcs\philai.cpp:1339
+0x1270e0,223,anchor-global,type_spellvalue::get_damage_spell_value,"long type_spellvalue::get_damage_spell_value(SpellID spell, TSkillMastery mastery, long times_castable, long combat_value)",philai.obj,0x10f404,580,E:\gamedcs\philai.cpp:1393
+0x1271c0,193,anchor-global,type_spellvalue::get_mass_damage_spell_value,"long type_spellvalue::get_mass_damage_spell_value(SpellID spell, TSkillMastery mastery, long times_castable)",philai.obj,0x10f648,456,E:\gamedcs\philai.cpp:1439
+0x127290,308,anchor-global,type_spellvalue::get_enchantment_value,"long type_spellvalue::get_enchantment_value(SpellID spell, TSkillMastery mastery, long times_castable)",philai.obj,0x10f810,316,E:\gamedcs\philai.cpp:1472
+0x1273d0,477,anchor-global,type_spellvalue::get_raw_spell_value,long type_spellvalue::get_raw_spell_value(SpellID spell),philai.obj,0x10fa84,486,E:\gamedcs\philai.cpp:1561
+0x1275b0,138,anchor-global,type_spellvalue::get_best_spell_value,long type_spellvalue::get_best_spell_value(long bits),philai.obj,0x10fcf0,136,E:\gamedcs\philai.cpp:1632
+0x127640,203,anchor-global,AI_get_spell_value,"long AI_get_spell_value(const hero* our_hero, SpellID spell)",philai.obj,0x10fd78,236,E:\gamedcs\philai.cpp:1667
+0x127aa0,86,anchor-global,ValueOfSpell,"int ValueOfSpell(const hero* current_hero, SpellID spell)",philai.obj,0x110574,54,E:\gamedcs\philai.cpp:1945
+0x12bbd0,135,anchor-global,AI_choose_secondary_skill,"TSecondarySkill AI_choose_secondary_skill(const hero* our_hero, TSecondarySkill first, TSecondarySkill second, unsigned char complex_choice)",philai.obj,0x114a5c,126,E:\gamedcs\philai.cpp:4180
+0x14e750,100,anchor-global,get_upgrade_cost,"void get_upgrade_cost(TCreatureType creature, long amount, []* cost)",recruit.obj,0x118adc,90,E:\gamedcs\recruit.cpp:157
+0x14e7c0,49,anchor-global,GetMonsterCost,"void GetMonsterCost(int monId, []* resCost)",recruit.obj,0x118b38,48,E:\gamedcs\recruit.cpp:172
+0x1503a0,1428,anchor-global,recruitUnit::Update,"void recruitUnit::Update(unsigned char new_monster, long slot)",recruit.obj,0x119dcc,1204,E:\gamedcs\recruit.cpp:511
+0x153d00,161,anchor-global,CChatManager::UpdateWidget,"void CChatManager::UpdateWidget(textWidget* widget, unsigned char killOld, int numLines)",remote.obj,0x11c6bc,94,E:\gamedcs\remote.cpp:1033
+0x153db0,51,anchor-global,CChatManager::HasOldChat,unsigned char CChatManager::HasOldChat(),remote.obj,0x11c754,92,E:\gamedcs\remote.cpp:1070
+0x153df0,228,anchor-global,CChatManager::KillOldChat,void CChatManager::KillOldChat(),remote.obj,0x11c7b0,204,E:\gamedcs\remote.cpp:1080
+0x153ee0,355,anchor-global,CChatManager::UpdateWidgetText,"void CChatManager::UpdateWidgetText(int numLines, textWidget* widget)",remote.obj,0x11c8d0,298,E:\gamedcs\remote.cpp:1128
+0x154050,13,anchor-global,CChatManager::PauseTimeOuts,void CChatManager::PauseTimeOuts(),remote.obj,0x11c9fc,24,E:\gamedcs\remote.cpp:1195
+0x154060,75,anchor-global,CChatManager::ResumeTimeOuts,void CChatManager::ResumeTimeOuts(),remote.obj,0x11ca14,76,E:\gamedcs\remote.cpp:1200
+0x1540b0,32,anchor-bracket,CChatManager::ClearChat,void CChatManager::ClearChat(),remote.obj,0x11ca70,76,E:\gamedcs\remote.cpp:1221
+0x1540d0,156,anchor-global,CChatManager::SetMaxLines,void CChatManager::SetMaxLines(int maxChatLines),remote.obj,0x11cabc,104,E:\gamedcs\remote.cpp:1231
+0x154170,35,anchor-global,CChatManager::SetPosition,void CChatManager::SetPosition(int newPos),remote.obj,0x11cb24,34,E:\gamedcs\remote.cpp:1245
+0x157a80,21,anchor-global,CTurnDuration::IsOn,unsigned char CTurnDuration::IsOn(),remote.obj,0x11f070,30,E:\gamedcs\remote.cpp:2920
+0x157aa0,77,anchor-global,CTurnDuration::IsExpired,unsigned char CTurnDuration::IsExpired(),remote.obj,0x11f090,120,E:\gamedcs\remote.cpp:2931
+0x157af0,520,anchor-global,CTurnDuration::CheckForWarning,void CTurnDuration::CheckForWarning(),remote.obj,0x11f108,500,E:\gamedcs\remote.cpp:2950
+0x157d00,85,anchor-global,CTurnDuration::IsClose,unsigned char CTurnDuration::IsClose(unsigned long howClose),remote.obj,0x11f2fc,160,E:\gamedcs\remote.cpp:3020
+0x157d60,11,anchor-global,CTurnDuration::Clear,void CTurnDuration::Clear(),remote.obj,0x11f39c,10,E:\gamedcs\remote.cpp:3037
+0x157d70,20,anchor-global,CTurnDuration::SetDuration,void CTurnDuration::SetDuration(unsigned long ms),remote.obj,0x11f3a8,8,E:\gamedcs\remote.cpp:3044
+0x157d90,61,anchor-global,CTurnDuration::Start,void CTurnDuration::Start(),remote.obj,0x11f3b0,58,E:\gamedcs\remote.cpp:3050
+0x157dd0,20,anchor-global,CTurnDuration::Pause,void CTurnDuration::Pause(),remote.obj,0x11f3fc,30,E:\gamedcs\remote.cpp:3076
+0x157df0,49,anchor-global,CTurnDuration::Resume,void CTurnDuration::Resume(),remote.obj,0x11f41c,44,E:\gamedcs\remote.cpp:3084
+0x158720,78,anchor-global,resource::resource,"void resource::resource(const char* newName, EResourceType newType)",resource.obj,0x120934,104,E:\gamedcs\resource.cpp:25
+0x1587a0,7,anchor-global,resource::~resource,void resource::~resource(),resource.obj,0x12099c,36,E:\gamedcs\resource.cpp:47
+0x158ba0,673,anchor-global,TResourceDisplay::TResourceDisplay,"void TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)",resourcedisplay.obj,0x120c54,660,E:\gamedcs\resourcedisplay.cpp:40
+0x158e80,149,anchor-bracket,TResourceDisplay::~TResourceDisplay,void TResourceDisplay::~TResourceDisplay(),resourcedisplay.obj,0x120ee8,184,E:\gamedcs\resourcedisplay.cpp:112
+0x158f20,243,anchor-global,TResourceDisplay::Update,"void TResourceDisplay::Update(unsigned char draw, unsigned char update, unsigned char inMap)",resourcedisplay.obj,0x120fa0,274,E:\gamedcs\resourcedisplay.cpp:150
+0x159020,164,anchor-global,TResourceDisplay::Clear,void TResourceDisplay::Clear(),resourcedisplay.obj,0x1210b4,312,E:\gamedcs\resourcedisplay.cpp:183
+0x166e60,41,anchor-bracket,sample::~sample,void sample::~sample(),sample.obj,0x129b4c,6,E:\gamedcs\sample.cpp:84
+0x16a0d0,642,anchor-global,searchArray::BuildPath,"int searchArray::BuildPath(const hero* current_hero, long limit)",search.obj,0x12b2e0,272,E:\gamedcs\search.cpp:32
+0x196180,89,anchor-global,slider::~slider,void slider::~slider(),slider.obj,0x149ba4,70,E:\gamedcs\slider.cpp:124
+0x1971b0,59,anchor-global,VideoSoundOnOff,void VideoSoundOnOff(),smackmgr.obj,0x14ac30,4,E:\gamedcs\smackmgr.cpp:75
+0x1971f0,217,anchor-global,VideoRealignBuffers,void VideoRealignBuffers(),smackmgr.obj,0x14ac34,4,E:\gamedcs\smackmgr.cpp:105
+0x1972d0,669,anchor-global,VideoPlay,"int VideoPlay(int id, int x, int y, int w, int h)",smackmgr.obj,0x14ac38,4,E:\gamedcs\smackmgr.cpp:130
+0x197570,117,anchor-global,VideoOpen,void VideoOpen(),smackmgr.obj,0x14ac3c,4,E:\gamedcs\smackmgr.cpp:143
+0x1975f0,225,anchor-global,VideoClose,void VideoClose(),smackmgr.obj,0x14ac40,4,E:\gamedcs\smackmgr.cpp:156
+0x1976e0,94,anchor-global,VideoNextFrame,void VideoNextFrame(),smackmgr.obj,0x14ac44,4,E:\gamedcs\smackmgr.cpp:176
+0x197740,83,anchor-global,VideoDrawCurrentFrame,void VideoDrawCurrentFrame(),smackmgr.obj,0x14ac48,4,E:\gamedcs\smackmgr.cpp:196
+0x1977a0,166,anchor-global,VideoPause,void VideoPause(),smackmgr.obj,0x14ac4c,4,E:\gamedcs\smackmgr.cpp:209
+0x197850,171,anchor-global,VideoResume,void VideoResume(),smackmgr.obj,0x14ac50,4,E:\gamedcs\smackmgr.cpp:238
+0x197900,35,anchor-global,VideoRestart,void VideoRestart(),smackmgr.obj,0x14ac54,4,E:\gamedcs\smackmgr.cpp:265
+0x197930,90,anchor-global,VideoNeedsUpdate,unsigned char VideoNeedsUpdate(),smackmgr.obj,0x14ac58,4,E:\gamedcs\smackmgr.cpp:274
+0x197990,63,anchor-global,VideoPlaying,unsigned char VideoPlaying(),smackmgr.obj,0x14ac5c,4,E:\gamedcs\smackmgr.cpp:288
+0x1979d0,660,anchor-global,VideoDrawRects,void VideoDrawRects(),smackmgr.obj,0x14ac60,4,E:\gamedcs\smackmgr.cpp:328
+0x197c70,132,anchor-global,VideoShutDown,void VideoShutDown(),smackmgr.obj,0x14ac64,4,E:\gamedcs\smackmgr.cpp:485
+0x199760,103,anchor-global,soundManager::soundManager,void soundManager::soundManager(),soundmgr.obj,0x14b1ec,82,E:\gamedcs\soundmgr.cpp:165
+0x199d90,234,anchor-global,soundManager::StopAllSamples,void soundManager::StopAllSamples(int bStopMusicToo),soundmgr.obj,0x14b2a8,24,E:\gamedcs\soundmgr.cpp:526
+0x199e80,61,anchor-global,soundManager::StopSample,void soundManager::StopSample(ds_memsample* inSample),soundmgr.obj,0x14b2c0,24,E:\gamedcs\soundmgr.cpp:556
+0x199f40,225,anchor-global,soundManager::ModifySample,"void soundManager::ModifySample(ds_memsample* inSample, short sFunction, long value)",soundmgr.obj,0x14b37c,176,E:\gamedcs\soundmgr.cpp:597
+0x19a0c0,235,anchor-global,soundManager::AdjustSoundVolumes,void soundManager::AdjustSoundVolumes(),soundmgr.obj,0x14b42c,168,E:\gamedcs\soundmgr.cpp:691
+0x19a1b0,34,anchor-global,soundManager::AdjustMusicVolumes,void soundManager::AdjustMusicVolumes(),soundmgr.obj,0x14b4d4,42,E:\gamedcs\soundmgr.cpp:733
+0x19a1e0,37,anchor-global,soundManager::SwitchAmbientMusic,void soundManager::SwitchAmbientMusic(int newMusicFileId),soundmgr.obj,0x14b500,38,E:\gamedcs\soundmgr.cpp:751
+0x19a210,475,anchor-global,soundManager::MemorySample,ds_memsample* soundManager::MemorySample(sample* sPtr),soundmgr.obj,0x14b528,284,E:\gamedcs\soundmgr.cpp:759
+0x19a3f0,21,anchor-global,soundManager::MusicPlaying,int soundManager::MusicPlaying(),soundmgr.obj,0x14b644,22,E:\gamedcs\soundmgr.cpp:869
+0x19a410,92,anchor-global,ClearMemSample,void ClearMemSample(SAMPLE2 sample2),soundmgr.obj,0x14b65c,58,E:\gamedcs\soundmgr.cpp:877
+0x19a470,67,anchor-global,LoadPlaySample,SAMPLE2 LoadPlaySample(const char* cSampleName),soundmgr.obj,0x14b698,84,E:\gamedcs\soundmgr.cpp:894
+0x19a4c0,206,anchor-global,WaitEndSample,"void WaitEndSample(SAMPLE2 sample2, int iMilliWait)",soundmgr.obj,0x14b6ec,148,E:\gamedcs\soundmgr.cpp:911
+0x19a590,274,anchor-global,launch_sample,"void launch_sample(const char* sample_name, int max_time, int channel)",soundmgr.obj,0x14b780,94,E:\gamedcs\soundmgr.cpp:976
+0x19ac00,169,anchor-global,soundManager::ResumeStream,void soundManager::ResumeStream(),soundmgr.obj,0x14b8e8,60,E:\gamedcs\soundmgr.cpp:1288
+0x19acb0,853,anchor-global,soundManager::StartMP3,"void soundManager::StartMP3(const char* filename, int loopCount, unsigned char bStopSamples)",soundmgr.obj,0x14b924,80,E:\gamedcs\soundmgr.cpp:1343
+0x19b010,106,anchor-global,soundManager::StopMP3,void soundManager::StopMP3(),soundmgr.obj,0x14b974,16,E:\gamedcs\soundmgr.cpp:1413
+0x1a9360,60,anchor-global,get_elemental_type,TCreatureType get_elemental_type(SpellID spell),spells.obj,0x158090,50,E:\gamedcs\spells.cpp:5890
+0x1aa410,96,anchor-global,TSubWindow::~TSubWindow,void TSubWindow::~TSubWindow(),subwindow.obj,0x158e14,74,E:\gamedcs\subwindow.cpp:56
+0x1aa470,37,anchor-global,TSubWindow::initialize,"void TSubWindow::initialize(int x, int y, int w, int h, heroWindow* parent_window)",subwindow.obj,0x158e60,28,E:\gamedcs\subwindow.cpp:63
+0x1aa4a0,69,anchor-global,TSubWindow::AddWidget,"void TSubWindow::AddWidget(widget* newWidget, int newPriority)",subwindow.obj,0x158e7c,62,E:\gamedcs\subwindow.cpp:82
+0x1aa4f0,99,anchor-global,TSubWindow::Draw,"void TSubWindow::Draw(unsigned char update, int iLowID, int iHighID)",subwindow.obj,0x158ed0,124,E:\gamedcs\subwindow.cpp:125
+0x1aa560,161,anchor-global,TSubWindow::SaveBackground,void TSubWindow::SaveBackground(),subwindow.obj,0x158f4c,88,E:\gamedcs\subwindow.cpp:161
+0x1aa610,122,anchor-global,TSubWindow::RestoreBackground,void TSubWindow::RestoreBackground(),subwindow.obj,0x158fa4,240,E:\gamedcs\subwindow.cpp:181
+0x1baae0,98,anchor-global,textEntryWidget::~textEntryWidget,void textEntryWidget::~textEntryWidget(),textntry.obj,0x162af8,88,E:\gamedcs\textntry.cpp:158
+0x1bab50,73,linkorder,textEntryWidget::SetFocus,void textEntryWidget::SetFocus(unsigned char state),textntry.obj,0x162b50,108,E:\gamedcs\textntry.cpp:170
+0x1baba0,164,anchor-global,textEntryWidget::GetCharPressed,char textEntryWidget::GetCharPressed(message* msg),textntry.obj,0x162bbc,110,E:\gamedcs\textntry.cpp:181
+0x1bbdd0,77,anchor-global,TTextResource::~TTextResource,void TTextResource::~TTextResource(),textresource.obj,0x1639a4,70,E:\gamedcs\textresource.cpp:143
+0x1bc170,127,anchor-global,TSpreadsheetResource::~TSpreadsheetResource,void TSpreadsheetResource::~TSpreadsheetResource(),textresource.obj,0x163c30,200,E:\gamedcs\textresource.cpp:292
+0x1bc3b0,138,anchor-global,textWidget::~textWidget,void textWidget::~textWidget(),textwdgt.obj,0x164d24,68,E:\gamedcs\textwdgt.cpp:95
+0x1bc6d0,138,anchor-global,bitmapBackedTextWidget::~bitmapBackedTextWidget,void bitmapBackedTextWidget::~bitmapBackedTextWidget(),textwdgt.obj,0x1653b0,24,E:\gamedcs\textwdgt.cpp:320
+0x1bde80,212,anchor-global,town::town,void town::town(),town.obj,0x166408,168,E:\gamedcs\town.cpp:895
+0x1bdf60,118,linkorder,town::initialize_hordes,void town::initialize_hordes(),town.obj,0x1664b0,156,E:\gamedcs\town.cpp:930
+0x1bdfe0,78,anchor-global,town::HasGarrison,int town::HasGarrison(),town.obj,0x16654c,84,E:\gamedcs\town.cpp:967
+0x1be030,467,linkorder,town::GiveSpells,void town::GiveSpells(hero* forceHero),town.obj,0x1665a0,232,E:\gamedcs\town.cpp:976
+0x1be210,192,linkorder,town::View,void town::View(int bAlreadyFaded),town.obj,0x166688,152,E:\gamedcs\town.cpp:1020
+0x1be2d0,179,linkorder,town::Deallocate,void town::Deallocate(),town.obj,0x166720,268,E:\gamedcs\town.cpp:1058
+0x1be390,183,anchor-global,town::remove_garrison_hero,void town::remove_garrison_hero(),town.obj,0x16682c,56,E:\gamedcs\town.cpp:1094
+0x1be450,428,anchor-global,town::SwapHeroes,void town::SwapHeroes(),town.obj,0x166864,234,E:\gamedcs\town.cpp:1111
+0x1bede0,1063,anchor-global,town::BuildBuilding,"type_building_id town::BuildBuilding(int buildingId, unsigned char SetBuiltFlag, unsigned char apply_special_effect)",town.obj,0x166fc8,514,E:\gamedcs\town.cpp:1340
+0x1bf210,421,linkorder,town::update_shipyard,void town::update_shipyard(),town.obj,0x1671cc,166,E:\gamedcs\town.cpp:1417
+0x1bf3c0,286,anchor-global,town::buy_building,unsigned char town::buy_building(type_building_id building),town.obj,0x167274,258,E:\gamedcs\town.cpp:1442
+0x1bf4e0,12,linkorder,town::CanBuildDock,unsigned char town::CanBuildDock(),town.obj,0x167378,14,E:\gamedcs\town.cpp:1466
+0x1bf4f0,122,linkorder,town::CalcNumLevelArchers,"void town::CalcNumLevelArchers(int* numArchers, int* archerLevel)",town.obj,0x167388,82,E:\gamedcs\town.cpp:1473
+0x1bf570,134,anchor-global,town::get_castle_growth_bonus,long town::get_castle_growth_bonus(TCreatureType creature),town.obj,0x1673dc,124,E:\gamedcs\town.cpp:1502
+0x1bf600,198,anchor-global,town::get_gold_income,short town::get_gold_income(unsigned char include_silo),town.obj,0x167458,124,E:\gamedcs\town.cpp:1514
+0x1c0d20,317,anchor-global,town::can_build,unsigned char town::can_build(short building_id),town.obj,0x168504,344,E:\gamedcs\town.cpp:2097
+0x1c0e60,192,anchor-global,town::can_ever_build,unsigned char town::can_ever_build(short building_id),town.obj,0x16865c,182,E:\gamedcs\town.cpp:2139
+0x1c0f20,342,anchor-global,town::get_buildable_mask,__int64 town::get_buildable_mask(),town.obj,0x168714,394,E:\gamedcs\town.cpp:2168
+0x1c1080,100,anchor-global,town::get_build_cost_array,int* town::get_build_cost_array(type_building_id building),town.obj,0x1688a0,78,E:\gamedcs\town.cpp:2199
+0x1c10f0,138,corroborates,town::get_build_cost,"void town::get_build_cost(type_building_id building, int* resources)",town.obj,0x1688f0,30,E:\gamedcs\town.cpp:2212
+0x1c1180,169,linkorder,town::get_build_cost,"short town::get_build_cost(type_building_id building, EGameResource* types, int* amounts)",town.obj,0x168910,94,E:\gamedcs\town.cpp:2224
+0x1c1230,70,linkorder,town::get_horde_effect,type_horde_effect* town::get_horde_effect(type_building_id building),town.obj,0x168970,106,E:\gamedcs\town.cpp:2247
+0x1c1280,21,linkorder,town::get_silo_income,int* town::get_silo_income(),town.obj,0x1689dc,16,E:\gamedcs\town.cpp:2274
+0x1c12a0,57,anchor-global,town::is_legal_building,unsigned char town::is_legal_building(type_building_id building),town.obj,0x1689ec,34,E:\gamedcs\town.cpp:2283
+0x1c14a0,25,anchor-global,town::UpgradedDwellingID,type_building_id town::UpgradedDwellingID(type_building_id id),town.obj,0x168c20,28,E:\gamedcs\town.cpp:2397
+0x1d2a40,821,anchor-global,GetBuildingInfo,"char* GetBuildingInfo(const town* this_town, int buildingId, unsigned char bIncludeTitle, unsigned char extended)",townmgr.obj,0x174f78,488,E:\gamedcs\townmgr.cpp:5789
+0x1f15a0,99,anchor-global,VictoryConditionStruct::applies_to_player,unsigned char VictoryConditionStruct::applies_to_player(long player_id),victorylossconditions.obj,0x18fdc4,52,E:\gamedcs\victorylossconditions.cpp:25
+0x1f1610,1278,anchor-global,VictoryConditionStruct::CheckForArtifactWin,unsigned char VictoryConditionStruct::CheckForArtifactWin(),victorylossconditions.obj,0x18fdf8,158,E:\gamedcs\victorylossconditions.cpp:31
+0x1f1b10,361,anchor-global,VictoryConditionStruct::CheckForTotalCreatures,unsigned char VictoryConditionStruct::CheckForTotalCreatures(),victorylossconditions.obj,0x18fe98,234,E:\gamedcs\victorylossconditions.cpp:61
+0x1f1c80,185,anchor-global,VictoryConditionStruct::CheckForTotalResources,unsigned char VictoryConditionStruct::CheckForTotalResources(),victorylossconditions.obj,0x18ff84,180,E:\gamedcs\victorylossconditions.cpp:100
+0x1f1d40,420,anchor-global,VictoryConditionStruct::CheckForUpgradedTown,unsigned char VictoryConditionStruct::CheckForUpgradedTown(),victorylossconditions.obj,0x190038,236,E:\gamedcs\victorylossconditions.cpp:125
+0x1f1ef0,515,anchor-global,VictoryConditionStruct::CheckForGrailBuildingWin,unsigned char VictoryConditionStruct::CheckForGrailBuildingWin(),victorylossconditions.obj,0x190124,288,E:\gamedcs\victorylossconditions.cpp:184
+0x1f2100,83,anchor-global,VictoryConditionStruct::CheckForHeroDefeatWin,"unsigned char VictoryConditionStruct::CheckForHeroDefeatWin(const int winning_player, const hero* loser)",victorylossconditions.obj,0x190244,128,E:\gamedcs\victorylossconditions.cpp:233
+0x1f2160,253,anchor-global,VictoryConditionStruct::IsGrailTarget,unsigned char VictoryConditionStruct::IsGrailTarget(town* thisTown),victorylossconditions.obj,0x1902c4,122,E:\gamedcs\victorylossconditions.cpp:264
+0x1f2260,52,anchor-global,VictoryConditionStruct::IsTownCaptureTarget,unsigned char VictoryConditionStruct::IsTownCaptureTarget(town* thisTown),victorylossconditions.obj,0x190340,58,E:\gamedcs\victorylossconditions.cpp:302
+0x1f22a0,230,anchor-global,VictoryConditionStruct::CheckForTownCaptureWin,unsigned char VictoryConditionStruct::CheckForTownCaptureWin(),victorylossconditions.obj,0x19037c,142,E:\gamedcs\victorylossconditions.cpp:319
+0x1f2390,615,anchor-global,VictoryConditionStruct::CheckForDefeatedMonsterWin,"unsigned char VictoryConditionStruct::CheckForDefeatedMonsterWin(const hero* thisHero, type_point monster_loc)",victorylossconditions.obj,0x19040c,122,E:\gamedcs\victorylossconditions.cpp:352
+0x1f2600,279,anchor-global,VictoryConditionStruct::CheckForFlaggedGeneratorWin,unsigned char VictoryConditionStruct::CheckForFlaggedGeneratorWin(),victorylossconditions.obj,0x190488,176,E:\gamedcs\victorylossconditions.cpp:376
+0x1f2720,235,anchor-global,VictoryConditionStruct::CheckForFlaggedMineWin,unsigned char VictoryConditionStruct::CheckForFlaggedMineWin(),victorylossconditions.obj,0x190538,230,E:\gamedcs\victorylossconditions.cpp:405
+0x1f2860,478,anchor-global,VictoryConditionStruct::CheckForArtifactTransportWin,"unsigned char VictoryConditionStruct::CheckForArtifactTransportWin(const hero* thisHero, type_point town_loc)",victorylossconditions.obj,0x190620,178,E:\gamedcs\victorylossconditions.cpp:434
+0x1f2a40,968,anchor-global,LossConditionStruct::CheckForDefeatedHeroLoss,unsigned char LossConditionStruct::CheckForDefeatedHeroLoss(const hero* loser),victorylossconditions.obj,0x1906d4,120,E:\gamedcs\victorylossconditions.cpp:463
+0x1f2e40,217,anchor-bracket,LossConditionStruct::CheckForDefeatedTownLoss,"unsigned char LossConditionStruct::CheckForDefeatedTownLoss(const int old_owner, const town* lost_town)",victorylossconditions.obj,0x19074c,112,E:\gamedcs\victorylossconditions.cpp:498
+0x1f2f20,80,anchor-global,LossConditionStruct::CheckForTimeLimitExpired,unsigned char LossConditionStruct::CheckForTimeLimitExpired(),victorylossconditions.obj,0x1907bc,160,E:\gamedcs\victorylossconditions.cpp:518
+0x1fe7c0,64,anchor-global,widget::send_message,"int widget::send_message(widget::ECommands command, int extra)",widget.obj,0x196f88,64,E:\gamedcs\widget.cpp:477
+0x1fe800,50,linkorder,widget::Dim,void widget::Dim(),widget.obj,0x196fc8,52,E:\gamedcs\widget.cpp:494
+0x1fe840,233,anchor-global,widget::set_help_text,"void widget::set_help_text(const char* text, const char* rclick, unsigned char copyText)",widget.obj,0x196ffc,170,E:\gamedcs\widget.cpp:511
+0x1fe9f0,94,anchor-global,heroWindow::heroWindow,"void heroWindow::heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType)",window.obj,0x197138,152,E:\gamedcs\window.cpp:48
+0x1fea80,96,anchor-global,heroWindow::~heroWindow,void heroWindow::~heroWindow(),window.obj,0x1971d0,76,E:\gamedcs\window.cpp:80
+0x1fecb0,165,anchor-global,heroWindow::AddWidget,"void heroWindow::AddWidget(widget* newWidget, int newPriority)",window.obj,0x197324,142,E:\gamedcs\window.cpp:214
+0x1fed60,122,anchor-global,heroWindow::RemoveWidget,void heroWindow::RemoveWidget(widget* killWidget),window.obj,0x1973b4,118,E:\gamedcs\window.cpp:284
+0x1feed0,142,anchor-global,heroWindow::WidgetSetStatus,"int heroWindow::WidgetSetStatus(int id, int status)",window.obj,0x197570,26,E:\gamedcs\window.cpp:466
+0x1fef60,142,anchor-global,heroWindow::WidgetClearStatus,"int heroWindow::WidgetClearStatus(int id, int status)",window.obj,0x19758c,26,E:\gamedcs\window.cpp:477
+0x1feff0,34,anchor-global,heroWindow::GetWidget,widget* heroWindow::GetWidget(int id),window.obj,0x1975a8,48,E:\gamedcs\window.cpp:489
+0x1ff100,189,anchor-global,heroWindow::SaveBackground,int heroWindow::SaveBackground(),window.obj,0x19776c,112,E:\gamedcs\window.cpp:635
+0x1ff1c0,126,anchor-global,heroWindow::RestoreBackground,void heroWindow::RestoreBackground(unsigned char update),window.obj,0x1977dc,152,E:\gamedcs\window.cpp:664
+0x1ff240,354,anchor-global,heroWindow::CenterWindow,"void heroWindow::CenterWindow(int centerX, int centerY)",window.obj,0x19797c,338,E:\gamedcs\window.cpp:778
+0x1ff3b0,35,anchor-global,heroWindow::findWidget,"int heroWindow::findWidget(int mx, int my)",window.obj,0x197ad0,28,E:\gamedcs\window.cpp:855
+0x1ff3e0,125,anchor-global,heroWindow::findWidgetPtr,"widget* heroWindow::findWidgetPtr(int mx, int my)",window.obj,0x197aec,240,E:\gamedcs\window.cpp:865
+0x1ff490,108,anchor-global,heroWindow::SetFocus,void heroWindow::SetFocus(int id),window.obj,0x197c24,80,E:\gamedcs\window.cpp:909
+0x1ff510,96,anchor-global,heroWindow::delete_widgets,void heroWindow::delete_widgets(),window.obj,0x197c8c,72,E:\gamedcs\window.cpp:942
+0x1ff640,97,anchor-global,CHeroWindowEx::CHeroWindowEx,"void CHeroWindowEx::CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType)",window.obj,0x197d48,84,E:\gamedcs\window.cpp:966
+0x1ff6b0,33,linkorder,CHeroWindowEx::ProcessHover,"unsigned char CHeroWindowEx::ProcessHover(int mouseX, int mouseY)",window.obj,0x197d9c,186,E:\gamedcs\window.cpp:972
+0x1ff6e0,174,linkorder,CHeroWindowEx::ProcessRightSelect,unsigned char CHeroWindowEx::ProcessRightSelect(int id),window.obj,0x197e58,90,E:\gamedcs\window.cpp:1016
+0x1ff790,130,linkorder,CHeroWindowEx::WindowHandler,int CHeroWindowEx::WindowHandler(message* msg),window.obj,0x197eb4,146,E:\gamedcs\window.cpp:1036
+0x1ff820,165,linkorder,CHeroWindowEx::OnWidgetDeselect,"int CHeroWindowEx::OnWidgetDeselect(int id, unsigned char* bExitFlag)",window.obj,0x197f48,4,E:\gamedcs\window.cpp:1122
+0x1ff8d0,3,linkorder,CHeroWindowEx::GetRolloverWidget,textWidget* CHeroWindowEx::GetRolloverWidget(),window.obj,0x197f4c,4,E:\gamedcs\window.cpp:1128
+0x1ff8e0,117,anchor-global,CHeroWindowEx::SetHelpText,"void CHeroWindowEx::SetHelpText(THelpText* pHelpText, int start, int stop, unsigned char copyText)",window.obj,0x197f50,136,E:\gamedcs\window.cpp:1133
+0x202370,59,anchor-global,heroWindowManager::BroadcastMessage,"int heroWindowManager::BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra)",winmgr.obj,0x19aa20,68,E:\gamedcs\winmgr.cpp:234
+0x202a40,314,anchor-global,heroWindowManager::DoQuickView,void heroWindowManager::DoQuickView(heroWindow* window),winmgr.obj,0x19b0fc,242,E:\gamedcs\winmgr.cpp:795
+0x202c50,99,anchor-global,heroWindowManager::FadeScreen,"void heroWindowManager::FadeScreen(int inOut, int speed, unsigned char expect_fadein)",winmgr.obj,0x19b428,102,E:\gamedcs\winmgr.cpp:1007

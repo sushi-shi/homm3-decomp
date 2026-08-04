@@ -21,6 +21,12 @@ Tiers, highest evidence first (first match wins):
                    our entries directly. Kept below hd-crossbuild because the
                    address itself carries no evidence for our image.
                                                       [external-candidate]
+  dc-linkorder     Dreamcast CodeView name transferred by link order alone
+                   (homm3.carve.dcmap `linkorder` rows): equal-count bracket
+                   between two order-verified anchors, agreement-gated. The
+                   weakest identity tier - order evidence from another
+                   pressing - but it carries the ORIGINAL name plus
+                   source FILE:LINE.                  [linkorder-candidate]
   vtable-slot      the function is a slot of a class-labeled vtable, named
                    <Class>__vslot<NN>.                [external-candidate]
   eh-funclet       a FuncInfo unwind-action target, named after the PARENT
@@ -61,6 +67,7 @@ LIBRARIES = common.HOMM3_DIR / "config/retail-function-libraries.tsv"
 NAMES = common.HOMM3_DIR / "config/retail-function-names.csv"
 VTABLE_SYMBOLS = common.HOMM3_DIR / "config/retail-vtable-symbols.csv"
 HD_MAP = common.HOMM3_DIR / "config/retail-hd-name-map.csv"
+DC_MAP = common.HOMM3_DIR / "config/retail-dc-name-map.csv"
 
 BAND_PREFIX = {"crt-libcmt": "crt", "cxx-libcpmt": "cxx",
                "iostream-libcimt": "ios", "zlib": "zlib", "game": "game",
@@ -236,6 +243,10 @@ def main(argv=None) -> int:
     for r in load_rows(HD_MAP):
         if r["our_state"] == "entry":
             hd_names.setdefault(int(r["rva"], 16), r)
+    dc_names = {}
+    for r in load_rows(DC_MAP):
+        if r["role"] == "linkorder":
+            dc_names.setdefault(int(r["rva"], 16), r)
 
     vtable_slot = {}
     vtable_class = {}
@@ -343,6 +354,13 @@ def main(argv=None) -> int:
             emit(rva, row["name"].replace("::", "__"), "nh3api",
                  "external-candidate", row["evidence"] or row["sources"])
             continue
+        dc = dc_names.get(rva)
+        if dc:
+            emit(rva, dc["name"].replace("::", "__"), "dc-linkorder",
+                 "linkorder-candidate",
+                 f"DC {dc['dc_module']} {dc['dc_offset']} by link order; "
+                 f"{dc['source']}")
+            continue
         if rva in vtable_slot:
             cls, slot, vt = vtable_slot[rva]
             emit(rva, f"{cls}__vslot{slot:02d}", "vtable-slot",
@@ -421,8 +439,9 @@ def main(argv=None) -> int:
             fh.write(prov + "\n")
         fh.write("# tier/confidence say what the name IS: retail-proven "
                  "asserts the original symbol;\n# external-candidate is "
-                 "NH3API-derived (unverified); structural names are working "
-                 "labels.\n")
+                 "NH3API-derived (unverified); linkorder-candidate is a "
+                 "Dreamcast name\n# carried by link order alone; structural "
+                 "names are working labels.\n")
         writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
         writer.writeheader()
         writer.writerows(rows)

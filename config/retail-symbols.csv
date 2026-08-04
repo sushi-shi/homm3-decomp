@@ -4,7 +4,8 @@
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 # tier/confidence say what the name IS: retail-proven asserts the original symbol;
-# external-candidate is NH3API-derived (unverified); structural names are working labels.
+# external-candidate is NH3API-derived (unverified); linkorder-candidate is a Dreamcast name
+# carried by link order alone; structural names are working labels.
 rva,size,name,tier,confidence,library,symbol,evidence
 0x1000,89,cinit0000_1000,init-ctor,structural,game,,.CRT$XCU slot 0
 0x1060,96,cinit0001_1060,init-ctor,structural,game,,.CRT$XCU slot 1
@@ -145,11 +146,11 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xec90,1453,game_digsound_82m_ec90,string,structural,game,,literal: DIGSOUND.82M
 0xf240,43,cinit0033_f240,init-ctor,structural,game,,.CRT$XCU slot 33
 0xf270,125,advManager_UpdateScreen,hd-crossbuild,crossbuild-verified,game,,HD 0x40f1d0 masked-identity 56B/35 fixed; core/adventure.hpp:151
-0xf2f0,248,game_f3f0_sub01_f2f0,caller,structural,game,,called from 0xf3f0
-0xf3f0,1149,calls_timeGetTime_f3f0,import-wrapper,structural,game,,imports: timeGetTime
-0xf870,67,game_7b80_sub03_f870,caller,structural,game,,called from 0x7b80
+0xf2f0,248,advManager_DrawAdventureMapGems,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x10640 by link order; E:\gamedcs\advmgr.cpp:5002
+0xf3f0,1149,advManager_CompleteDraw,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x10788 by link order; E:\gamedcs\advmgr.cpp:5026
+0xf870,67,advManager_CompleteDraw_f870,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x10c9c by link order; E:\gamedcs\advmgr.cpp:5223
 0xf8c0,613,advManager_GetCloudLookup,hd-crossbuild,crossbuild-verified,game,,HD 0x40f820 masked-identity 256B/200 fixed; core/adventure.hpp:154
-0xfb30,359,game_10c00_sub00_fb30,caller,structural,game,,called from 0x10c00
+0xfb30,359,advManager_ScanForHeroOrBoat,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x110c0 by link order; E:\gamedcs\advmgr.cpp:5573
 0xfca0,122,hasFlag,hd-crossbuild,crossbuild-verified,game,,HD 0x40fc00 masked-identity 128B/108 fixed; core/objects.hpp:1903
 0xfd20,270,GetFlaggedObjectOwner,hd-crossbuild,crossbuild-verified,game,,HD 0x40fc80 masked-identity 256B/216 fixed; core/objects.hpp:1906
 0xfe30,1156,game_10c00_sub02_fe30,caller,structural,game,,called from 0x10c00
@@ -171,10 +172,10 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x137c0,9632,game_s_s_137c0,string,structural,game,,literal: %s %s
 0x15d60,120,advManager_OverrideBottomView,hd-crossbuild,crossbuild-verified,game,,HD 0x415cc0 masked-identity 128B/88 fixed; core/adventure.hpp:200
 0x15de0,320,advManager_UpdBottomView,hd-crossbuild,crossbuild-verified,game,,HD 0x415d40 masked-identity 256B/170 fixed; core/adventure.hpp:203
-0x15f20,135,game_15de0_sub01_15f20,caller,structural,game,,called from 0x15de0
-0x15fb0,176,game_15de0_sub02_15fb0,caller,structural,game,,called from 0x15de0
+0x15f20,135,advManager_UpdBottomViewEnemyTurn,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x18f48 by link order; E:\gamedcs\advmgr.cpp:8935
+0x15fb0,176,advManager_UpdBottomViewNewTurn,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x18fc4 by link order; E:\gamedcs\advmgr.cpp:8950
 0x16060,247,advManager_BVResMsg,hd-crossbuild,crossbuild-verified,game,,HD 0x415fc0 masked-identity 256B/216 fixed; core/adventure.hpp:208
-0x16160,175,game_15de0_sub03_16160,caller,structural,game,,called from 0x15de0
+0x16160,175,advManager_UpdBottomViewResMsg,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x190fc by link order; E:\gamedcs\advmgr.cpp:8979
 0x16210,215,advManager_BVMessage,hd-crossbuild,crossbuild-verified,game,,HD 0x416170 masked-identity 224B/188 fixed; core/adventure.hpp:214
 0x162f0,161,game_15de0_sub04_162f0,caller,structural,game,,called from 0x15de0
 0x163a0,166,game_15de0_sub05_163a0,caller,structural,game,,called from 0x15de0
@@ -191,14 +192,14 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x17680,431,advManager_DemobilizeCurrHero,hd-crossbuild,crossbuild-verified,game,,HD 0x4175e0 masked-identity 256B/196 fixed; core/adventure.hpp:227
 0x17830,747,advManager_SetTownContext,hd-crossbuild,crossbuild-verified,game,,HD 0x417790 masked-identity 256B/204 fixed; core/adventure.hpp:230
 0x17b20,1598,advManager_SetHeroContext,hd-crossbuild,crossbuild-verified,game,,HD 0x417a80 masked-identity 256B/168 fixed; core/adventure.hpp:233
-0x18160,624,game_cgm_18160,string,structural,game,,literal: .CGM
+0x18160,624,SaveGame,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x1ae38 by link order; E:\gamedcs\advmgr.cpp:9693
 0x183d0,581,advManager_SetEnvironmentOrigin,hd-crossbuild,crossbuild-verified,game,,HD 0x418330 masked-identity 256B/216 fixed; core/adventure.hpp:236
 0x18620,1508,advManager_GetSoundId,hd-crossbuild,crossbuild-verified,game,,HD 0x418580 masked-identity 256B/216 fixed; core/adventure.hpp:239
 0x18c10,433,advManager_InsertSound,hd-crossbuild,crossbuild-verified,game,,HD 0x418b70 masked-identity 256B/196 fixed; core/adventure.hpp:242
-0x18dd0,1247,game_7b80_sub08_18dd0,caller,structural,game,,called from 0x7b80
-0x192b0,68,game_18dd0_sub00_192b0,caller,structural,game,,called from 0x18dd0
-0x19300,332,calls_timeGetTime_19300,import-wrapper,structural,game,,imports: timeGetTime
-0x19450,67,game_7b80_sub09_19450,caller,structural,game,,called from 0x7b80
+0x18dd0,1247,advManager_ShowRoute,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x1c05c by link order; E:\gamedcs\advmgr.cpp:10436
+0x192b0,68,advManager_HideRoute,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x1c484 by link order; E:\gamedcs\advmgr.cpp:10526
+0x19300,332,advManager_CheckDimHero,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x1c580 by link order; E:\gamedcs\advmgr.cpp:10558
+0x19450,67,advManager_CheckDimNextHeroBut,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x1c5ec by link order; E:\gamedcs\advmgr.cpp:10571
 0x194a0,199,advManager_SeedTo,hd-crossbuild,crossbuild-verified,game,,HD 0x419400 masked-identity 208B/164 fixed; core/adventure.hpp:245
 0x19570,73,advManager_ForceNewHover,hd-crossbuild,crossbuild-verified,game,,HD 0x4194d0 masked-identity 80B/60 fixed; core/adventure.hpp:248
 0x195c0,600,calls_timeGetTime_195c0,import-wrapper,structural,game,,imports: timeGetTime
@@ -208,8 +209,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x19e00,768,calls_timeGetTime_19e00,import-wrapper,structural,game,,imports: timeGetTime
 0x1a100,217,game_orig_dat_1a100,string,structural,game,,literal: orig.dat
 0x1a1e0,241,advManager_TrimLoopingSounds,hd-crossbuild,crossbuild-verified,game,,HD 0x41a140 masked-identity 256B/232 fixed; core/adventure.hpp:251
-0x1a2e0,188,game_18160_sub00_1a2e0,caller,structural,game,,called from 0x18160
-0x1a3a0,188,game_18160_sub01_1a3a0,caller,structural,game,,called from 0x18160
+0x1a2e0,188,advManager_DisableButtons,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x1d9e0 by link order; E:\gamedcs\advmgr.cpp:11080
+0x1a3a0,188,advManager_EnableButtons,dc-linkorder,linkorder-candidate,game,,DC advmgr.obj 0x1dafc by link order; E:\gamedcs\advmgr.cpp:11102
 0x1a460,507,advManager_FindAdjacentMonster,hd-crossbuild,crossbuild-verified,game,,HD 0x41a3c0 masked-identity 256B/232 fixed; core/adventure.hpp:286
 0x1a660,235,game_19e00_sub01_1a660,caller,structural,game,,called from 0x19e00
 0x1a750,151,game_1d930_sub02_1a750,caller,structural,game,,called from 0x1d930
@@ -276,9 +277,9 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x1eea0,441,game_1f060_sub01_1eea0,caller,structural,game,,called from 0x1f060
 0x1f060,209,game_221f0_sub00_1f060,caller,structural,game,,called from 0x221f0
 0x1f140,575,combatManager_find_move_order,hd-crossbuild,crossbuild-verified,game,,HD 0x41f2c0 masked-identity 256B/196 fixed; core/combat.hpp:480
-0x1f380,39,game_1f140_sub00_1f380,caller,structural,game,,called from 0x1f140
-0x1f3b0,450,game_21680_sub00_1f3b0,caller,structural,game,,called from 0x21680
-0x1f580,772,game_20760_sub00_1f580,caller,structural,game,,called from 0x20760
+0x1f380,39,get_attack_value,dc-linkorder,linkorder-candidate,game,,DC ai.obj 0x248b4 by link order; E:\gamedcs\ai.cpp:696
+0x1f3b0,450,combatManager_get_attack_change,dc-linkorder,linkorder-candidate,game,,DC ai.obj 0x24a34 by link order; E:\gamedcs\ai.cpp:731
+0x1f580,772,combatManager_move_toward,dc-linkorder,linkorder-candidate,game,,DC ai.obj 0x24b64 by link order; E:\gamedcs\ai.cpp:779
 0x1f890,143,combatManager_can_cast_spells,hd-crossbuild,crossbuild-verified,game,,HD 0x41fa10 masked-identity 144B/108 fixed; core/combat.hpp:483
 0x1f920,564,game_1fb60_sub00_1f920,caller,structural,game,,called from 0x1fb60
 0x1fb60,502,game_21680_sub01_1fb60,caller,structural,game,,called from 0x21680
@@ -389,11 +390,11 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x286b0,33,game_28580_sub00_286b0,caller,structural,game,,called from 0x28580
 0x286e0,38,game_227bc8_sub00_286e0,caller,structural,game,,called from 0x227bc8
 0x28710,45,type_AI_player_get_attack_bonus,hd-crossbuild,crossbuild-verified,game,,HD 0x428710 masked-identity 48B/28 fixed; core/adventure_AI.hpp:55
-0x28740,1678,game_28dd0_sub01_28740,caller,structural,game,,called from 0x28dd0
-0x28dd0,830,game_125e80_sub00_28dd0,caller,structural,game,,called from 0x125e80
-0x29110,1708,game_28dd0_sub02_29110,caller,structural,game,,called from 0x28dd0
-0x297c0,329,game_125e80_sub01_297c0,caller,structural,game,,called from 0x125e80
-0x29910,405,game_297c0_sub00_29910,caller,structural,game,,called from 0x297c0
+0x28740,1678,type_AI_player_calculate_demand,dc-linkorder,linkorder-candidate,game,,DC ai_player.obj 0x2e188 by link order; E:\gamedcs\ai_player.cpp:258
+0x28dd0,830,type_AI_player_end_turn,dc-linkorder,linkorder-candidate,game,,DC ai_player.obj 0x2e7d8 by link order; E:\gamedcs\ai_player.cpp:414
+0x29110,1708,type_AI_player_make_gift,dc-linkorder,linkorder-candidate,game,,DC ai_player.obj 0x2ea20 by link order; E:\gamedcs\ai_player.cpp:504
+0x297c0,329,find_magus_hut_value,dc-linkorder,linkorder-candidate,game,,DC ai_player.obj 0x2efc8 by link order; E:\gamedcs\ai_player.cpp:664
+0x29910,405,type_AI_player_start_turn,dc-linkorder,linkorder-candidate,game,,DC ai_player.obj 0x2f148 by link order; E:\gamedcs\ai_player.cpp:695
 0x29ab0,18,type_AI_player_reset_magus_hut_value,hd-crossbuild,crossbuild-verified,game,,HD 0x429ab0 masked-identity 32B/28 fixed; core/adventure_AI.hpp:37
 0x29ad0,640,game_297c0_sub01_29ad0,caller,structural,game,,called from 0x297c0
 0x29d50,1017,game_28dd0_sub03_29d50,caller,structural,game,,called from 0x28dd0
@@ -583,22 +584,22 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x39270,651,game_3b690_sub19_39270,caller,structural,game,,called from 0x3b690
 0x39500,76,game_3b690_sub20_39500,caller,structural,game,,called from 0x3b690
 0x39550,339,type_AI_spellcaster_get_speed_value,hd-crossbuild,crossbuild-verified,game,,HD 0x4391a0 masked-identity 256B/212 fixed; core/combat_AI.hpp:251
-0x396b0,46,game_3b690_sub21_396b0,caller,structural,game,,called from 0x3b690
+0x396b0,46,type_AI_spellcaster_get_haste_value,dc-linkorder,linkorder-candidate,game,,DC ai_tactical.obj 0x3fdb8 by link order; E:\gamedcs\ai_tactical.cpp:1965
 0x396e0,700,type_AI_spellcaster_get_protection_value,hd-crossbuild,crossbuild-verified,game,,HD 0x439330 masked-identity 256B/180 fixed; core/combat_AI.hpp:254
 0x399a0,41,game_3b690_sub22_399a0,caller,structural,game,,called from 0x3b690
 0x399d0,41,game_3b690_sub23_399d0,caller,structural,game,,called from 0x3b690
 0x39a00,50,game_3b690_sub24_39a00,caller,structural,game,,called from 0x3b690
 0x39a40,50,game_3b690_sub25_39a40,caller,structural,game,,called from 0x3b690
 0x39a80,309,type_AI_spellcaster_get_cancel_value,hd-crossbuild,crossbuild-verified,game,,HD 0x4396d0 masked-identity 256B/220 fixed; core/combat_AI.hpp:257
-0x39bc0,110,game_3b690_sub26_39bc0,caller,structural,game,,called from 0x3b690
-0x39c30,271,game_3b690_sub27_39c30,caller,structural,game,,called from 0x3b690
-0x39d40,148,game_3b690_sub28_39d40,caller,structural,game,,called from 0x3b690
-0x39de0,148,game_3b690_sub29_39de0,caller,structural,game,,called from 0x3b690
-0x39e80,656,game_3b690_sub30_39e80,caller,structural,game,,called from 0x3b690
-0x3a110,546,game_3b690_sub31_3a110,caller,structural,game,,called from 0x3b690
+0x39bc0,110,type_AI_spellcaster_get_dispel_value,dc-linkorder,linkorder-candidate,game,,DC ai_tactical.obj 0x40348 by link order; E:\gamedcs\ai_tactical.cpp:2180
+0x39c30,271,type_AI_spellcaster_get_cure_value,dc-linkorder,linkorder-candidate,game,,DC ai_tactical.obj 0x403c0 by link order; E:\gamedcs\ai_tactical.cpp:2191
+0x39d40,148,type_AI_spellcaster_get_antimagic_value,dc-linkorder,linkorder-candidate,game,,DC ai_tactical.obj 0x40570 by link order; E:\gamedcs\ai_tactical.cpp:2220
+0x39de0,148,type_AI_spellcaster_get_backlash_value,dc-linkorder,linkorder-candidate,game,,DC ai_tactical.obj 0x405d4 by link order; E:\gamedcs\ai_tactical.cpp:2235
+0x39e80,656,type_AI_spellcaster_get_counterstroke_value,dc-linkorder,linkorder-candidate,game,,DC ai_tactical.obj 0x40628 by link order; E:\gamedcs\ai_tactical.cpp:2249
+0x3a110,546,type_AI_spellcaster_get_fire_shield_value,dc-linkorder,linkorder-candidate,game,,DC ai_tactical.obj 0x407e8 by link order; E:\gamedcs\ai_tactical.cpp:2314
 0x3a340,190,type_AI_spellcaster_get_traitor_value,hd-crossbuild,crossbuild-verified,game,,HD 0x439f90 masked-identity 170B/136 fixed; core/combat_AI.hpp:260
-0x3a400,248,game_3b690_sub32_3a400,caller,structural,game,,called from 0x3b690
-0x3a500,366,game_3b690_sub33_3a500,caller,structural,game,,called from 0x3b690
+0x3a400,248,type_AI_spellcaster_get_berserk_value,dc-linkorder,linkorder-candidate,game,,DC ai_tactical.obj 0x40a08 by link order; E:\gamedcs\ai_tactical.cpp:2393
+0x3a500,366,type_AI_spellcaster_get_hypnotize_value,dc-linkorder,linkorder-candidate,game,,DC ai_tactical.obj 0x40ac0 by link order; E:\gamedcs\ai_tactical.cpp:2416
 0x3a670,657,type_AI_spellcaster_consider_single_enchantment,hd-crossbuild,crossbuild-verified,game,,HD 0x43a2c0 masked-identity 256B/192 fixed; core/combat_AI.hpp:263
 0x3a910,336,type_AI_spellcaster_consider_enchantment,hd-crossbuild,crossbuild-verified,game,,HD 0x43a560 masked-identity 256B/208 fixed; core/combat_AI.hpp:266
 0x3aa60,565,game_3bb20_sub04_3aa60,caller,structural,game,,called from 0x3bb20
@@ -659,10 +660,10 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x40bc0,2625,army_do_post_attack,hd-crossbuild,crossbuild-verified,game,,HD 0x4408e0 masked-identity 256B/220 fixed; core/army.hpp:427
 0x41610,1696,army_do_attack,hd-crossbuild,crossbuild-verified,game,,HD 0x441330 masked-identity 256B/220 fixed; core/army.hpp:433
 0x41cb0,702,army_do_attack_41cb0,hd-crossbuild,crossbuild-verified,game,,HD 0x4419d0 masked-identity 256B/202 fixed; core/army.hpp:436
-0x41f70,38,game_78900_sub00_41f70,caller,structural,game,,called from 0x78900
+0x41f70,38,army_check_obstacle_attacks,dc-linkorder,linkorder-candidate,game,,DC army.obj 0x47270 by link order; E:\gamedcs\army.cpp:2358
 0x41fa0,1121,army_WalkTo,hd-crossbuild,crossbuild-verified,game,,HD 0x441cc0 masked-identity 256B/218 fixed; core/army.hpp:450
 0x42410,315,army_get_adjusted_attack,hd-crossbuild,crossbuild-verified,game,,HD 0x442130 masked-identity 256B/224 fixed; core/army.hpp:457
-0x42550,53,game_35ec0_sub01_42550,caller,structural,game,,called from 0x35ec0
+0x42550,53,army_get_attack_modifier,dc-linkorder,linkorder-candidate,game,,DC army.obj 0x477b8 by link order; E:\gamedcs\army.cpp:2623
 0x42590,194,army_get_adjusted_defense,hd-crossbuild,crossbuild-verified,game,,HD 0x4422b0 masked-identity 208B/170 fixed; core/army.hpp:471
 0x42660,41,game_35ec0_sub02_42660,caller,structural,game,,called from 0x35ec0
 0x42690,57,game_22440_sub00_42690,caller,structural,game,,called from 0x22440
@@ -696,8 +697,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x458b0,157,army_get_attack_direction_458b0,hd-crossbuild,crossbuild-verified,game,,HD 0x4455d0 masked-identity 160B/148 fixed; core/army.hpp:749
 0x45950,263,army_simple_move,hd-crossbuild,crossbuild-verified,game,,HD 0x445670 masked-identity 256B/183 fixed; core/army.hpp:756
 0x45a60,621,army_attack_hex,hd-crossbuild,crossbuild-verified,game,,HD 0x445780 masked-identity 256B/188 fixed; core/army.hpp:764
-0x45cd0,56,game_45a60_sub02_45cd0,caller,structural,game,,called from 0x45a60
-0x45d10,20,game_78900_sub02_45d10,caller,structural,game,,called from 0x78900
+0x45cd0,56,army_move_to,dc-linkorder,linkorder-candidate,game,,DC army.obj 0x4a8b8 by link order; E:\gamedcs\army.cpp:4427
+0x45d10,20,choose_wall_target,dc-linkorder,linkorder-candidate,game,,DC army.obj 0x4a8c8 by link order; E:\gamedcs\army.cpp:4436
 0x45d30,393,army_AttackWall,hd-crossbuild,crossbuild-verified,game,,HD 0x445a50 masked-identity 256B/192 fixed; core/army.hpp:774
 0x45ec0,268,game_45d30_sub00_45ec0,caller,structural,game,,called from 0x45d30
 0x45fd0,1318,game_wallmiss_82m_45fd0,string,structural,game,,literal: WallMiss.82m
@@ -710,8 +711,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x46830,259,army_SetupAnimation,hd-crossbuild,crossbuild-verified,game,,HD 0x446550 masked-identity 256B/172 fixed; core/army.hpp:831
 0x46940,766,army_PlayAnimation_46940,hd-crossbuild,crossbuild-verified,game,,HD 0x446660 masked-identity 256B/208 fixed; core/army.hpp:839
 0x46c40,481,army_CanFit,hd-crossbuild,crossbuild-verified,game,,HD 0x446960 masked-identity 256B/196 fixed; core/army.hpp:847
-0x46e30,737,game_regener_wav_46e30,string,structural,game,,literal: Regener.wav
-0x47120,522,game_n33s_47120,string,structural,game,,literal: 33s?
+0x46e30,737,army_new_turn,dc-linkorder,linkorder-candidate,game,,DC army.obj 0x4ba88 by link order; E:\gamedcs\army.cpp:5177
+0x47120,522,army_ResetRound,dc-linkorder,linkorder-candidate,game,,DC army.obj 0x4bc84 by link order; E:\gamedcs\army.cpp:5238
 0x47330,156,army_get_resurrection_size,hd-crossbuild,crossbuild-verified,game,,HD 0x447050 masked-identity 160B/156 fixed; core/army.hpp:852
 0x473d0,317,army_can_cast_resurrect,hd-crossbuild,crossbuild-verified,game,,HD 0x4470f0 masked-identity 256B/226 fixed; core/army.hpp:857
 0x47510,424,army_FaerieDragonSpell,hd-crossbuild,crossbuild-verified,game,,HD 0x447230 masked-identity 256B/188 fixed; core/army.hpp:862
@@ -746,19 +747,19 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x495e0,95,cinit0112_495e0,init-ctor,structural,game,,.CRT$XCU slot 112
 0x49640,95,cinit0113_49640,init-ctor,structural,game,,.CRT$XCU slot 113
 0x496a0,22,armyGroup_HasCreatures,hd-crossbuild,crossbuild-verified,game,,HD 0x449370 masked-identity 147B/117 fixed; core/creatures.hpp:718
-0x496c0,195,game_49790_sub00_496c0,caller,structural,game,,called from 0x49790
-0x49790,1627,game_gpucrdiv_pcx_49790,string,structural,game,,literal: GPuCrDiv.pcx
-0x49df0,33,game_49df0,band,structural,game,,band game
-0x49e20,107,game_49df0_sub00_49e20,caller,structural,game,,called from 0x49df0
-0x49e90,751,game_dd2d0_sub00_49e90,caller,structural,game,,called from 0xdd2d0
-0x4a180,735,game_4a180,band,structural,game,,band game
-0x4a460,85,game_2c060_sub01_4a460,caller,structural,game,,called from 0x2c060
-0x4a4d0,1326,game_23c80_sub00_4a4d0,caller,structural,game,,called from 0x23c80
-0x4aa00,58,game_ad340_sub00_4aa00,caller,structural,game,,called from 0xad340
-0x4aa40,58,game_ad1f0_sub00_4aa40,caller,structural,game,,called from 0xad1f0
-0x4aa80,31,game_abe0_sub01_4aa80,caller,structural,game,,called from 0xabe0
-0x4aaa0,90,armyGroup_armyGroup,hd-crossbuild,crossbuild-verified,game,,HD 0x44a770 masked-identity 96B/96 fixed; core/creatures.hpp:691
-0x4ab00,29,game_abe0_sub02_4ab00,caller,structural,game,,called from 0xabe0
+0x496c0,195,TSplitWindow_UpdateSplitArmy,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4db08 by link order; E:\gamedcs\armygrp.cpp:62
+0x49790,1627,SplitSliderCallback,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4db88 by link order; E:\gamedcs\armygrp.cpp:82
+0x49df0,33,TSplitWindow_TSplitWindow,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4dbb8 by link order; E:\gamedcs\armygrp.cpp:90
+0x49e20,107,TSplitWindow_TSplitWindow_49e20,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4e11c by link order; E:\gamedcs\armygrp.cpp:135
+0x49e90,751,armyGroup_SplitArmy,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4e180 by link order; E:\gamedcs\armygrp.cpp:143
+0x4a180,735,TSplitWindow_SetRolloverText,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4e388 by link order; E:\gamedcs\armygrp.cpp:208
+0x4a460,85,TSplitWindow_WindowHandler,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4e428 by link order; E:\gamedcs\armygrp.cpp:229
+0x4a4d0,1326,get_spell_work_chance,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4e644 by link order; E:\gamedcs\armygrp.cpp:341
+0x4aa00,58,armyGroup_save,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4ea38 by link order; E:\gamedcs\armygrp.cpp:585
+0x4aa40,58,armyGroup_load,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4ea78 by link order; E:\gamedcs\armygrp.cpp:601
+0x4aa80,31,armyGroup_armyGroup,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4eab8 by link order; E:\gamedcs\armygrp.cpp:616
+0x4aaa0,90,armyGroup_armyGroup_4aaa0,hd-crossbuild,crossbuild-verified,game,,HD 0x44a770 masked-identity 96B/96 fixed; core/creatures.hpp:691
+0x4ab00,29,armyGroup_Initialize,dc-linkorder,linkorder-candidate,game,,DC armygrp.obj 0x4eb2c by link order; E:\gamedcs\armygrp.cpp:636
 0x4ab20,58,armyGroup_HasAllUndead,hd-crossbuild,crossbuild-verified,game,,HD 0x44a7f0 masked-identity 64B/60 fixed; core/creatures.hpp:723
 0x4ab60,25,game_24880_sub00_4ab60,caller,structural,game,,called from 0x24880
 0x4ab80,33,armyGroup_IsMember,hd-crossbuild,crossbuild-verified,game,,HD 0x44a850 masked-identity 48B/48 fixed; core/creatures.hpp:739
@@ -1177,11 +1178,11 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x66290,1543,game_62a20_sub03_66290,caller,structural,game,,called from 0x62a20
 0x668a0,264,game_66290_sub01_668a0,caller,structural,game,,called from 0x66290
 0x669b0,191,combatManager_PlaceObstacle,hd-crossbuild,crossbuild-verified,game,,HD 0x466590 masked-identity 192B/184 fixed; core/combat.hpp:510
-0x66a70,189,game_f4350_sub00_66a70,caller,structural,game,,called from 0xf4350
+0x66a70,189,combatManager_PlaceAllObstacles,dc-linkorder,linkorder-candidate,game,,DC cmbtmgr.obj 0x60a70 by link order; E:\gamedcs\cmbtmgr.cpp:3142
 0x66b30,287,combatManager_RemoveObstacle,hd-crossbuild,crossbuild-verified,game,,HD 0x466710 masked-identity 256B/232 fixed; core/combat.hpp:513
-0x66c50,417,game_62a20_sub04_66c50,caller,structural,game,,called from 0x62a20
+0x66c50,417,combatManager_InitializeArchers,dc-linkorder,linkorder-candidate,game,,DC cmbtmgr.obj 0x60c0c by link order; E:\gamedcs\cmbtmgr.cpp:3240
 0x66e00,803,combatManager_MakeCreaturesVanish,hd-crossbuild,crossbuild-verified,game,,HD 0x4669e0 masked-identity 256B/200 fixed; core/combat.hpp:516
-0x67130,130,game_41fa0_sub04_67130,caller,structural,game,,called from 0x41fa0
+0x67130,130,combatManager_should_lower_door,dc-linkorder,linkorder-candidate,game,,DC cmbtmgr.obj 0x60ee0 by link order; E:\gamedcs\cmbtmgr.cpp:3351
 0x671c0,275,combatManager_LowerDoor,hd-crossbuild,crossbuild-verified,game,,HD 0x466da0 masked-identity 256B/164 fixed; core/combat.hpp:519
 0x672e0,375,combatManager_RaiseDoor,hd-crossbuild,crossbuild-verified,game,,HD 0x466ec0 masked-identity 256B/168 fixed; core/combat.hpp:522
 0x67460,34,combatManager_InCastle,hd-crossbuild,crossbuild-verified,game,,HD 0x467040 masked-identity 48B/36 fixed; core/combat.hpp:525
@@ -1193,10 +1194,10 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x67a00,943,combatManager_ShootBallisticMissile,hd-crossbuild,crossbuild-verified,game,,HD 0x4675e0 masked-identity 256B/200 fixed; core/combat.hpp:550
 0x67db0,1130,combatManager,hd-crossbuild,crossbuild-verified,game,,HD 0x467990 masked-identity 256B/196 fixed; core/combat.hpp:559
 0x68220,1167,combatManager_ShootMissile,hd-crossbuild,crossbuild-verified,game,,HD 0x467e00 masked-identity 256B/199 fixed; core/combat.hpp:567
-0x686b0,123,game_74d80_sub02_686b0,caller,structural,game,,called from 0x74d80
+0x686b0,123,combatManager_CombatSystemOptions,dc-linkorder,linkorder-candidate,game,,DC cmbtmgr.obj 0x622bc by link order; E:\gamedcs\cmbtmgr.cpp:4041
 0x68730,142,combatManager_RemoveArmyFromGrid,hd-crossbuild,crossbuild-verified,game,,HD 0x468310 masked-identity 144B/144 fixed; core/combat.hpp:570
 0x687c0,153,combatManager_PlaceArmyInGrid,hd-crossbuild,crossbuild-verified,game,,HD 0x4683a0 masked-identity 48B/48 fixed; core/combat.hpp:573
-0x68860,292,game_74d80_sub03_68860,caller,structural,game,,called from 0x74d80
+0x68860,292,combatManager_ViewArmy,dc-linkorder,linkorder-candidate,game,,DC cmbtmgr.obj 0x62478 by link order; E:\gamedcs\cmbtmgr.cpp:4090
 0x68990,2568,combatManager_PowEffect,hd-crossbuild,crossbuild-verified,game,,HD 0x468570 masked-identity 160B/112 fixed; core/combat.hpp:576
 0x693a0,159,game_72010_sub00_693a0,caller,structural,game,,called from 0x72010
 0x69440,434,game_45a60_sub03_69440,caller,structural,game,,called from 0x45a60
@@ -1215,7 +1216,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x6a460,57,game_3efe0_sub00_6a460,caller,structural,game,,called from 0x3efe0
 0x6a4a0,113,army_WaitSample,hd-crossbuild,crossbuild-verified,game,,HD 0x46a080 masked-identity 128B/100 fixed; core/army.hpp:310
 0x6a520,68,game_45950_sub02_6a520,caller,structural,game,,called from 0x45950
-0x6a570,224,army_check_obstacle_attacks,hd-crossbuild,crossbuild-verified,game,,HD 0x46a150 masked-identity 224B/196 fixed; core/army.hpp:442
+0x6a570,224,army_check_obstacle_attacks_6a570,hd-crossbuild,crossbuild-verified,game,,HD 0x46a150 masked-identity 224B/196 fixed; core/army.hpp:442
 0x6a650,38,game_267c0_sub07_6a650,caller,structural,game,,called from 0x267c0
 0x6a680,190,game_62890_sub00_6a680,caller,structural,game,,called from 0x62890
 0x6a740,289,game_628b0_sub00_6a740,caller,structural,game,,called from 0x628b0
@@ -1355,11 +1356,11 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x763f0,77,combatManager_is_outside_placement_boundry,hd-crossbuild,crossbuild-verified,game,,HD 0x475d20 masked-identity 80B/76 fixed; core/combat.hpp:597
 0x76440,80,combatManager_valid_wall_target,hd-crossbuild,crossbuild-verified,game,,HD 0x475d70 masked-identity 80B/68 fixed; core/combat.hpp:600
 0x76490,1322,combatManager_GetCommand,hd-crossbuild,crossbuild-verified,game,,HD 0x475dc0 masked-identity 256B/228 fixed; core/combat.hpp:603
-0x769c0,519,game_74d80_sub16_769c0,caller,structural,game,,called from 0x74d80
-0x76bd0,1026,game_74d80_sub17_76bd0,caller,structural,game,,called from 0x74d80
-0x76fe0,708,game_pickup_02d_82m_76fe0,string,structural,game,,literal: pickup%02d.82M
-0x772b0,447,game_pickup_02d_82m_772b0,string,structural,game,,literal: pickup%02d.82M
-0x77470,1420,calls_timeGetTime_77470,import-wrapper,structural,game,,imports: timeGetTime;thunk_FUN_004da510
+0x769c0,519,combatManager_RightClick,dc-linkorder,linkorder-candidate,game,,DC command.obj 0x6d988 by link order; E:\gamedcs\command.cpp:2210
+0x76bd0,1026,combatManager_DoCommand,dc-linkorder,linkorder-candidate,game,,DC command.obj 0x6db78 by link order; E:\gamedcs\command.cpp:2279
+0x76fe0,708,combatManager_show_eagle_eye,dc-linkorder,linkorder-candidate,game,,DC command.obj 0x6de24 by link order; E:\gamedcs\command.cpp:2423
+0x772b0,447,combatManager_show_looted_artifacts,dc-linkorder,linkorder-candidate,game,,DC command.obj 0x6e0d8 by link order; E:\gamedcs\command.cpp:2475
+0x77470,1420,combatManager_DoVictory,dc-linkorder,linkorder-candidate,game,,DC command.obj 0x6e1c8 by link order; E:\gamedcs\command.cpp:2504
 0x77a00,178,combatManager_get_surrender_cost,hd-crossbuild,crossbuild-verified,game,,HD 0x477330 masked-identity 192B/168 fixed; core/combat.hpp:608
 0x77ac0,149,game_19fe30_sub02_77ac0,caller,structural,game,,called from 0x19fe30
 0x77b60,182,game_19fe30_sub03_77b60,caller,structural,game,,called from 0x19fe30
@@ -2061,22 +2062,22 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xa7250,879,game_killfade_82m_a7250,string,structural,game,,literal: killfade.82M
 0xa75c0,253,advManager_get_like_modifier,hd-crossbuild,crossbuild-verified,game,,HD 0x4a7230 masked-identity 256B/236 fixed; core/adventure.hpp:360
 0xa76c0,117,advManager_get_force_modifier,hd-crossbuild,crossbuild-verified,game,,HD 0x4a7330 masked-identity 128B/104 fixed; core/adventure.hpp:363
-0xa7740,638,game_a79c0_sub00_a7740,caller,structural,game,,called from 0xa79c0
-0xa79c0,121,game_81900_sub00_a79c0,caller,structural,game,,called from 0x81900
-0xa7a40,490,game_a84f0_sub44_a7a40,caller,structural,game,,called from 0xa84f0
-0xa7c30,417,game_a84f0_sub45_a7c30,caller,structural,game,,called from 0xa84f0
-0xa7de0,177,game_a84f0_sub46_a7de0,caller,structural,game,,called from 0xa84f0
-0xa7ea0,273,game_a84f0_sub47_a7ea0,caller,structural,game,,called from 0xa84f0
-0xa7fc0,189,game_a84f0_sub48_a7fc0,caller,structural,game,,called from 0xa84f0
-0xa8080,421,game_a84f0_sub49_a8080,caller,structural,game,,called from 0xa84f0
-0xa8230,340,game_telptout_wav_a8230,string,structural,game,,literal: telptout.wav
-0xa8390,341,game_telptout_wav_a8390,string,structural,game,,literal: telptout.wav
-0xa84f0,9538,calls_timeGetTime_a84f0,import-wrapper,structural,game,,imports: timeGetTime
-0xaaa40,92,game_1f0760_sub00_aaa40,caller,structural,game,,called from 0x1f0760
-0xaaaa0,272,game_7b80_sub15_aaaa0,caller,structural,game,,called from 0x7b80
+0xa7740,638,advManager_DoWanderingMonsterResult,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x97364 by link order; E:\gamedcs\events.cpp:3868
+0xa79c0,121,advManager_DoEventWanderingMonster,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x975a0 by link order; E:\gamedcs\events.cpp:3948
+0xa7a40,490,advManager_DoEventWarSchool,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x97628 by link order; E:\gamedcs\events.cpp:3970
+0xa7c30,417,advManager_do_event_warrior_tomb,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x9784c by link order; E:\gamedcs\events.cpp:4039
+0xa7de0,177,advManager_do_event_water_wheel,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x97a9c by link order; E:\gamedcs\events.cpp:4090
+0xa7ea0,273,advManager_do_event_watering_hole,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x97b7c by link order; E:\gamedcs\events.cpp:4116
+0xa7fc0,189,advManager_do_event_windmill,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x97cac by link order; E:\gamedcs\events.cpp:4144
+0xa8080,421,advManager_do_event_witch_hut,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x97dc8 by link order; E:\gamedcs\events.cpp:4170
+0xa8230,340,advManager_do_event_lith_one_way,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x97fa4 by link order; E:\gamedcs\events.cpp:4207
+0xa8390,341,advManager_do_event_lith_two_way,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x980e8 by link order; E:\gamedcs\events.cpp:4244
+0xa84f0,9538,advManager_do_event_whirlpool,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x981ec by link order; E:\gamedcs\events.cpp:4282
+0xaaa40,92,advManager_DispatchEvent,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x9824c by link order; E:\gamedcs\events.cpp:4302
+0xaaaa0,272,advManager_DoEvent,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x99abc by link order; E:\gamedcs\events.cpp:5146
 0xaabb0,569,advManager_EraseObj,hd-crossbuild,crossbuild-verified,game,,HD 0x4aa820 masked-identity 256B/196 fixed; core/adventure.hpp:329
-0xaadf0,476,game_5e30_sub06_aadf0,caller,structural,game,,called from 0x5e30
-0xaafd0,1073,game_a2800_sub01_aafd0,caller,structural,game,,called from 0xa2800
+0xaadf0,476,advManager_HeroSwap,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x99d98 by link order; E:\gamedcs\events.cpp:5240
+0xaafd0,1073,advManager_TownEvent,dc-linkorder,linkorder-candidate,game,,DC events.obj 0x99eb0 by link order; E:\gamedcs\events.cpp:5264
 0xab410,1586,advManager_EventSound,hd-crossbuild,crossbuild-verified,game,,HD 0x4ab100 masked-identity 256B/156 fixed; core/adventure.hpp:332
 0xaba50,865,game_a18b0_sub00_aba50,caller,structural,game,,called from 0xa18b0
 0xabdc0,1744,game_d_s_abdc0,string,structural,game,,literal: %d %s
@@ -2193,8 +2194,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xb5250,12,game_b5250,band,structural,game,,band game
 0xb5260,558,game_b5490_sub00_b5260,caller,structural,game,,called from 0xb5490
 0xb5490,776,font_DrawBoundedString,hd-crossbuild,crossbuild-verified,game,,HD 0x4b51f0 masked-identity 256B/232 fixed; core/resources/resources.hpp:1487
-0xb57a0,37,game_f4eb0_sub00_b57a0,caller,structural,game,,called from 0xf4eb0
-0xb57d0,68,game_176f00_sub00_b57d0,caller,structural,game,,called from 0x176f00
+0xb57a0,37,font_GetCharacterWidth,dc-linkorder,linkorder-candidate,game,,DC font.obj 0xa2420 by link order; E:\gamedcs\font.cpp:413
+0xb57d0,68,font_get_string_width,dc-linkorder,linkorder-candidate,game,,DC font.obj 0xa2438 by link order; E:\gamedcs\font.cpp:420
 0xb5820,242,font_LineLength,hd-crossbuild,crossbuild-verified,game,,HD 0x4b5580 masked-identity 256B/244 fixed; core/resources/resources.hpp:1511
 0xb5920,100,font_LineWidth,hd-crossbuild,crossbuild-verified,game,,HD 0x4b5680 masked-identity 112B/112 fixed; core/resources/resources.hpp:1514
 0xb5990,118,font_LongestLineWidth,hd-crossbuild,crossbuild-verified,game,,HD 0x4b56f0 masked-identity 128B/124 fixed; core/resources/resources.hpp:1517
@@ -2274,7 +2275,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xb9a00,569,game_bcda0_sub10_b9a00,caller,structural,game,,called from 0xbcda0
 0xb9c40,429,game_be3f0_sub05_b9c40,caller,structural,game,,called from 0xbe3f0
 0xb9df0,45,playerData_playerData,hd-crossbuild,crossbuild-verified,game,,HD 0x4b9ab0 masked-identity 48B/44 fixed; core/player.hpp:70
-0xb9e20,277,game_590c0_sub20_b9e20,caller,structural,game,,called from 0x590c0
+0xb9e20,277,playerData_Init,dc-linkorder,linkorder-candidate,game,,DC game.obj 0xa4d58 by link order; E:\gamedcs\game.cpp:1283
 0xb9f40,113,playerData_HasCapitol,hd-crossbuild,crossbuild-verified,game,,HD 0x4b9c00 masked-identity 128B/112 fixed; core/player.hpp:90
 0xb9fc0,359,playerData_add_garrison_hero,hd-crossbuild,crossbuild-verified,game,,HD 0x4b9c80 masked-identity 158B/130 fixed; core/player.hpp:97
 0xba130,52,playerData_SetName,hd-crossbuild,crossbuild-verified,game,,HD 0x4b9df0 masked-identity 64B/60 fixed; core/player.hpp:103
@@ -2294,11 +2295,11 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xbad80,26,playerData_IsLocalHuman,hd-crossbuild,crossbuild-verified,game,,HD 0x4baa40 masked-identity 32B/32 fixed; core/player.hpp:136
 0xbada0,12,playerData_IsHuman,hd-crossbuild,crossbuild-verified,game,,HD 0x4baa60 masked-identity 16B/16 fixed; core/player.hpp:139
 0xbadb0,156,playerData_GetName,hd-crossbuild,crossbuild-verified,game,,HD 0x4baa70 masked-identity 160B/132 fixed; core/player.hpp:142
-0xbae50,27,game_297c0_sub02_bae50,caller,structural,game,,called from 0x297c0
-0xbae70,85,game_e4990_sub00_bae70,caller,structural,game,,called from 0xe4990
-0xbaed0,44,game_ec90_sub00_baed0,caller,structural,game,,called from 0xec90
-0xbaf00,602,game_1a7f0_sub01_baf00,caller,structural,game,,called from 0x1a7f0
-0xbb160,7,game_6df0_sub01_bb160,caller,structural,game,,called from 0x6df0
+0xbae50,27,playerData_guess_grail_location,dc-linkorder,linkorder-candidate,game,,DC game.obj 0xa6230 by link order; E:\gamedcs\game.cpp:1972
+0xbae70,85,game_MineTypesOwned,dc-linkorder,linkorder-candidate,game,,DC game.obj 0xa6274 by link order; E:\gamedcs\game.cpp:1978
+0xbaed0,44,ComputeUALoc,dc-linkorder,linkorder-candidate,game,,DC game.obj 0xa6328 by link order; E:\gamedcs\game.cpp:1994
+0xbaf00,602,game_SetupPuzzlePieces,dc-linkorder,linkorder-candidate,game,,DC game.obj 0xa6350 by link order; E:\gamedcs\game.cpp:1999
+0xbb160,7,game_GetWorldMapData,dc-linkorder,linkorder-candidate,game,,DC game.obj 0xa65c4 by link order; E:\gamedcs\game.cpp:2081
 0xbb170,214,game_get_new_boat_id,hd-crossbuild,crossbuild-verified,game,,HD 0x4bae30 masked-identity 224B/200 fixed; core/global.hpp:219
 0xbb250,426,game_CreateBoat,hd-crossbuild,crossbuild-verified,game,,HD 0x4baf10 masked-identity 256B/228 fixed; core/global.hpp:222
 0xbb400,476,game_GetStartingHeroId,hd-crossbuild,crossbuild-verified,game,,HD 0x4bb0c0 masked-identity 256B/240 fixed; core/global.hpp:234
@@ -2384,8 +2385,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xc9730,345,game_86590_sub02_c9730,caller,structural,game,,called from 0x86590
 0xc9890,253,game_InsertObject,hd-crossbuild,crossbuild-verified,game,,HD 0x4c9550 masked-identity 256B/228 fixed; core/global.hpp:267
 0xc9990,1082,game_ConvertObject,hd-crossbuild,crossbuild-verified,game,,HD 0x4c9650 masked-identity 256B/200 fixed; core/global.hpp:273
-0xc9dd0,624,game_bfe70_sub10_c9dd0,caller,structural,game,,called from 0xbfe70
-0xca040,497,game_bfe70_sub11_ca040,caller,structural,game,,called from 0xbfe70
+0xc9dd0,624,game_ProcessRandomObjects,dc-linkorder,linkorder-candidate,game,,DC game.obj 0xb5910 by link order; E:\gamedcs\game.cpp:9320
+0xca040,497,game_CreateTownHeroes,dc-linkorder,linkorder-candidate,game,,DC game.obj 0xb5cdc by link order; E:\gamedcs\game.cpp:9455
 0xca240,246,game_MakeTerrainVisible,hd-crossbuild,crossbuild-verified,game,,HD 0x4c9f00 masked-identity 256B/228 fixed; core/global.hpp:270
 0xca340,111,game_f4350_sub01_ca340,caller,structural,game,,called from 0xf4350
 0xca3b0,88,game_26ee0_sub03_ca3b0,caller,structural,game,,called from 0x26ee0
@@ -2428,10 +2429,10 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xce970,60,game_IsLocalHuman,hd-crossbuild,crossbuild-verified,game,,HD 0x4ce630 masked-identity 64B/64 fixed; core/global.hpp:195
 0xce9b0,106,game_GetLocalPlayer,hd-crossbuild,crossbuild-verified,game,,HD 0x4ce670 masked-identity 112B/100 fixed; core/global.hpp:198
 0xcea20,78,game_GetLocalPlayerGamePos,hd-crossbuild,crossbuild-verified,game,,HD 0x4ce6e0 masked-identity 80B/64 fixed; core/global.hpp:204
-0xcea70,231,game_1a7f0_sub02_cea70,caller,structural,game,,called from 0x1a7f0
+0xcea70,231,game_get_puzzle_origin,dc-linkorder,linkorder-candidate,game,,DC game.obj 0xbc0c0 by link order; E:\gamedcs\game.cpp:11812
 0xceb60,189,game_GetPlayerName,hd-crossbuild,crossbuild-verified,game,,HD 0x4ce820 masked-identity 192B/164 fixed; core/global.hpp:207
-0xcec20,37,game_5e30_sub10_cec20,caller,structural,game,,called from 0x5e30
-0xcec50,62,game_87b0_sub06_cec50,caller,structural,game,,called from 0x87b0
+0xcec20,37,game_GetGamePosFromDPID,dc-linkorder,linkorder-candidate,game,,DC game.obj 0xbc23c by link order; E:\gamedcs\game.cpp:11839
+0xcec50,62,game_IsLastHuman,dc-linkorder,linkorder-candidate,game,,DC game.obj 0xbc2b8 by link order; E:\gamedcs\game.cpp:11850
 0xcec90,24,game_IsMultiplayer,hd-crossbuild,crossbuild-verified,game,,HD 0x4ce950 masked-identity 32B/24 fixed; core/global.hpp:189
 0xcecb0,129,game_5b1e0_sub05_cecb0,caller,structural,game,,called from 0x5b1e0
 0xced40,464,game_1013b0_sub00_ced40,caller,structural,game,,called from 0x1013b0
@@ -2603,14 +2604,14 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xd7470,31,type_obscuring_object_type_obscuring_object,hd-crossbuild,crossbuild-verified,game,,HD 0x4d76e0 masked-identity 32B/32 fixed; core/objects.hpp:1606
 0xd7490,53,type_obscuring_object_get_obscured_town,hd-crossbuild,crossbuild-verified,game,,HD 0x4d7700 masked-identity 64B/60 fixed; core/objects.hpp:1640
 0xd74d0,29,type_obscuring_object_initialize,hd-crossbuild,crossbuild-verified,game,,HD 0x4d7740 masked-identity 32B/32 fixed; core/objects.hpp:1620
-0xd74f0,214,game_b9a00_sub03_d74f0,caller,structural,game,,called from 0xb9a00
+0xd74f0,214,type_obscuring_object_load,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xcab54 by link order; E:\gamedcs\hero.cpp:418
 0xd75d0,266,type_obscuring_object_obscure_cell,hd-crossbuild,crossbuild-verified,game,,HD 0x4d7840 masked-identity 256B/244 fixed; core/objects.hpp:1643
 0xd76e0,208,type_obscuring_object_restore_cell,hd-crossbuild,crossbuild-verified,game,,HD 0x4d7950 masked-identity 208B/196 fixed; core/objects.hpp:1646
-0xd77b0,214,game_b9c40_sub00_d77b0,caller,structural,game,,called from 0xb9c40
-0xd7890,100,game_1d7e90_sub00_d7890,caller,structural,game,,called from 0x1d7e90
-0xd7900,283,game_d7890_sub01_d7900,caller,structural,game,,called from 0xd7890
-0xd7a20,1695,game_invalid_bitset_n_positio_d7a20,string,structural,game,,literal: invalid bitset<N> position
-0xd80c0,1318,game_8ae90_sub00_d80c0,caller,structural,game,,called from 0x8ae90
+0xd77b0,214,type_obscuring_object_save,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xcad80 by link order; E:\gamedcs\hero.cpp:498
+0xd7890,100,hero_hire,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xcae60 by link order; E:\gamedcs\hero.cpp:523
+0xd7900,283,hero_PlaceInMap,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xcaedc by link order; E:\gamedcs\hero.cpp:549
+0xd7a20,1695,hero_load,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xcaf98 by link order; E:\gamedcs\hero.cpp:577
+0xd80c0,1318,hero_save,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xcb698 by link order; E:\gamedcs\hero.cpp:914
 0xd85f0,302,hero_hero_d85f0,hd-crossbuild,crossbuild-verified,game,,HD 0x4d8860 masked-identity 256B/232 fixed; core/hero.hpp:387
 0xd8720,1040,game_87020_sub01_d8720,caller,structural,game,,called from 0x87020
 0xd8b30,1076,game_dxp_d8b30,string,structural,game,,literal: \DxP
@@ -2620,7 +2621,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xd9070,69,hero_get_equipped_artifacts,hd-crossbuild,crossbuild-verified,game,,HD 0x4d92e0 masked-identity 80B/80 fixed; core/hero.hpp:432
 0xd90c0,74,hero_get_number_in_backpack,hd-crossbuild,crossbuild-verified,game,,HD 0x4d9330 masked-identity 80B/76 fixed; core/hero.hpp:437
 0xd9110,76,hero_GetStandSequence,hd-crossbuild,crossbuild-verified,game,,HD 0x4d9380 masked-identity 80B/44 fixed; core/hero.hpp:477
-0xd9160,76,game_10760_sub00_d9160,caller,structural,game,,called from 0x10760
+0xd9160,76,boat_GetStandSequence,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xcc1e8 by link order; E:\gamedcs\hero.cpp:1389
 0xd91b0,63,hero_HasArtifact,hd-crossbuild,crossbuild-verified,game,,HD 0x4d9420 masked-identity 64B/64 fixed; core/hero.hpp:442
 0xd91f0,112,hero_IsWieldingArtifact,hd-crossbuild,crossbuild-verified,game,,HD 0x4d9460 masked-identity 112B/100 fixed; core/hero.hpp:447
 0xd9260,104,game_68990_sub03_d9260,caller,structural,game,,called from 0x68990
@@ -2709,18 +2710,18 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xe5100,188,hero_GetSpellSchoolLevel,hd-crossbuild,crossbuild-verified,game,,HD 0x4e5370 masked-identity 192B/152 fixed; core/hero.hpp:763
 0xe51c0,115,hero_GetHighestSchool,hd-crossbuild,crossbuild-verified,game,,HD 0x4e5430 masked-identity 128B/128 fixed; core/hero.hpp:766
 0xe5240,239,hero_GetManaCost,hd-crossbuild,crossbuild-verified,game,,HD 0x4e54b0 masked-identity 240B/200 fixed; core/hero.hpp:769
-0xe5330,67,game_3560_sub00_e5330,caller,structural,game,,called from 0x3560
-0xe5380,62,game_3560_sub01_e5380,caller,structural,game,,called from 0x3560
-0xe53c0,30,game_9e7d0_sub01_e53c0,caller,structural,game,,called from 0x9e7d0
-0xe53e0,24,game_9e7d0_sub02_e53e0,caller,structural,game,,called from 0x9e7d0
-0xe5400,147,game_27650_sub00_e5400,caller,structural,game,,called from 0x27650
+0xe5330,67,hero_GetMobilityFrame,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd4fe0 by link order; E:\gamedcs\hero.cpp:6103
+0xe5380,62,hero_GetManaFrame,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd5024 by link order; E:\gamedcs\hero.cpp:6129
+0xe53c0,30,hero_VisitedArena,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd5060 by link order; E:\gamedcs\hero.cpp:6155
+0xe53e0,24,hero_SetVisitedArena,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd5074 by link order; E:\gamedcs\hero.cpp:6163
+0xe5400,147,hero_get_combat_value_modifier,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd50a0 by link order; E:\gamedcs\hero.cpp:6171
 0xe54a0,170,hero_find_summonable_boat,hd-crossbuild,crossbuild-verified,game,,HD 0x4e5710 masked-identity 176B/156 fixed; core/hero.hpp:772
 0xe5550,350,hero_can_summon_boat,hd-crossbuild,crossbuild-verified,game,,HD 0x4e57c0 masked-identity 256B/228 fixed; core/hero.hpp:778
-0xe56b0,33,game_127f60_sub01_e56b0,caller,structural,game,,called from 0x127f60
+0xe56b0,33,hero_get_player,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd52b0 by link order; E:\gamedcs\hero.cpp:6241
 0xe56e0,124,hero_is_in_patrol_radius,hd-crossbuild,crossbuild-verified,game,,HD 0x4e5950 masked-identity 128B/128 fixed; core/hero.hpp:798
 0xe5760,498,hero_modify_spell_damage,hd-crossbuild,crossbuild-verified,game,,HD 0x4e59d0 masked-identity 256B/200 fixed; core/hero.hpp:801
-0xe5960,56,game_2ba60_sub08_e5960,caller,structural,game,,called from 0x2ba60
-0xe59a0,248,game_1c490_sub07_e59a0,caller,structural,game,,called from 0x1c490
+0xe5960,56,hero_get_primary_skill_total,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd544c by link order; E:\gamedcs\hero.cpp:6296
+0xe59a0,248,hero_Fly,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd5488 by link order; E:\gamedcs\hero.cpp:6310
 0xe5aa0,224,hero_get_combat_speed_bonus,hd-crossbuild,crossbuild-verified,game,,HD 0x4e5d10 masked-identity 224B/184 fixed; core/hero.hpp:804
 0xe5b80,348,hero_get_hit_point_bonus,hd-crossbuild,crossbuild-verified,game,,HD 0x4e5df0 masked-identity 256B/216 fixed; core/hero.hpp:807
 0xe5ce0,231,game_7b80_sub19_e5ce0,caller,structural,game,,called from 0x7b80
@@ -2729,29 +2730,29 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xe5e10,284,hero_IsInIdentifyRange,hd-crossbuild,crossbuild-verified,game,,HD 0x4e6080 masked-identity 256B/236 fixed; core/hero.hpp:813
 0xe5f30,191,hero_IsMobile,hd-crossbuild,crossbuild-verified,game,,HD 0x4e61a0 masked-identity 192B/168 fixed; core/hero.hpp:816
 0xe5ff0,291,hero_GetHeroSpellBonus,hd-crossbuild,crossbuild-verified,game,,HD 0x4e6260 masked-identity 256B/188 fixed; core/hero.hpp:819
-0xe6120,926,game_3d730_sub01_e6120,caller,structural,game,,called from 0x3d730
-0xe64c0,27,game_dc100_sub01_e64c0,caller,structural,game,,called from 0xdc100
-0xe64e0,4,game_de710_sub01_e64e0,caller,structural,game,,called from 0xde710
-0xe64f0,4,game_de710_sub02_e64f0,caller,structural,game,,called from 0xde710
-0xe6500,434,game_de710_sub03_e6500,caller,structural,game,,called from 0xde710
-0xe66c0,40,game_104470_sub00_e66c0,caller,structural,game,,called from 0x104470
-0xe66f0,96,game_d9350_sub00_e66f0,caller,structural,game,,called from 0xd9350
-0xe6750,33,game_e36c0_sub00_e6750,caller,structural,game,,called from 0xe36c0
-0xe6780,32,cinit0442_e6780,init-ctor,structural,game,,.CRT$XCU slot 442
-0xe67a0,374,game_hotraits_txt_e67a0,string,structural,game,,literal: hotraits.txt
-0xe6920,482,game_hctraits_txt_e6920,string,structural,game,,literal: hctraits.txt
-0xe6b10,456,game_sstraits_txt_e6b10,string,structural,game,,literal: sstraits.txt
-0xe6d60,32,cinit0443_e6d60,init-ctor,structural,game,,.CRT$XCU slot 443
-0xe6d80,89,cinit0444_e6d80,init-ctor,structural,game,,.CRT$XCU slot 444
-0xe6de0,96,cinit0445_e6de0,init-ctor,structural,game,,.CRT$XCU slot 445
-0xe6e40,97,cinit0446_e6e40,init-ctor,structural,game,,.CRT$XCU slot 446
-0xe6eb0,95,cinit0447_e6eb0,init-ctor,structural,game,,.CRT$XCU slot 447
-0xe6f10,95,cinit0448_e6f10,init-ctor,structural,game,,.CRT$XCU slot 448
-0xe6f70,95,cinit0449_e6f70,init-ctor,structural,game,,.CRT$XCU slot 449
-0xe6fd0,95,cinit0450_e6fd0,init-ctor,structural,game,,.CRT$XCU slot 450
-0xe7030,95,cinit0451_e7030,init-ctor,structural,game,,.CRT$XCU slot 451
-0xe7090,95,cinit0452_e7090,init-ctor,structural,game,,.CRT$XCU slot 452
-0xe70f0,95,cinit0453_e70f0,init-ctor,structural,game,,.CRT$XCU slot 453
+0xe6120,926,hero_reset_artifacts,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd5800 by link order; E:\gamedcs\hero.cpp:6493
+0xe64c0,27,type_obscuring_object_obscures_town,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd58cc by link order; E:\gamedcs\Hero.h:162
+0xe64e0,4,hero_HasArmy,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd58f8 by link order; E:\gamedcs\Hero.h:702
+0xe64f0,4,hero_GetSpellSchoolLevel_e64f0,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd5914 by link order; E:\gamedcs\Hero.h:712
+0xe6500,434,SCampaign_GetExpCap,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd5944 by link order; E:\gamedcs\CustomCampaign.h:225
+0xe66c0,40,CMCDeadHero_CMCDeadHero,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd5964 by link order; E:\gamedcs\netmsg.h:675
+0xe66f0,96,type_artifact_default_constructor_closure,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd59b8 by link order; E:\gamedcs\hero.cpp:1226
+0xe6750,33,THeroScreenWindow_scalar_deleting_destructor,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd59d0 by link order; E:\gamedcs\hero.cpp:4186
+0xe6780,32,std_bitset_48_unsigned_long_reference_operator,dc-linkorder,linkorder-candidate,game,,DC hero.obj 0xd5a04 by link order; ..\stlport\stl_bitset.h:379
+0xe67a0,374,InitializeHeroTraitsTable,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd5a40 by link order; E:\gamedcs\herodefs.cpp:204
+0xe6920,482,InitializeHeroClassTraitsTable,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd5ab4 by link order; E:\gamedcs\herodefs.cpp:238
+0xe6b10,456,InitializeSSkillTraitsTable,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd5b28 by link order; E:\gamedcs\herodefs.cpp:351
+0xe6d60,32,InitializeHeroTraits,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd5bc0 by link order; E:\gamedcs\herodefs.cpp:409
+0xe6d80,89,E436,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd5ccc by link order; E:\gamedcs\herodefs.cpp:437
+0xe6de0,96,InitializeHeroClassTraits,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd5d28 by link order; E:\gamedcs\herodefs.cpp:441
+0xe6e40,97,E438,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd5ed0 by link order; E:\gamedcs\herodefs.cpp:484
+0xe6eb0,95,InitializeSSkillTraits,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd5ee8 by link order; E:\gamedcs\herodefs.cpp:489
+0xe6f10,95,E441,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd607c by link order; E:\gamedcs\herodefs.cpp:513
+0xe6f70,95,E440,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd6094 by link order; E:\gamedcs\herodefs.cpp:513
+0xe6fd0,95,anonymous_namespace_TAutoStrPtr_TAutoStrPtr,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd60d4 by link order; E:\gamedcs\herodefs.cpp:391
+0xe7030,95,anonymous_namespace_TAutoStrPtr_TAutoStrPtr_e7030,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd60dc by link order; E:\gamedcs\herodefs.cpp:394
+0xe7090,95,anonymous_namespace_TAutoStrPtr_set,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd60f4 by link order; E:\gamedcs\herodefs.cpp:396
+0xe70f0,95,anonymous_namespace_TAutoStrPtr_get,dc-linkorder,linkorder-candidate,game,,DC herodefs.obj 0xd60f8 by link order; E:\gamedcs\herodefs.cpp:398
 0xe7150,32,hexcell_hexcell,hd-crossbuild,crossbuild-verified,game,,HD 0x4e7210 masked-identity 32B/32 fixed; core/hexcell.hpp:47
 0xe7170,60,hexcell_get_army,hd-crossbuild,crossbuild-verified,game,,HD 0x4e7230 masked-identity 64B/56 fixed; core/hexcell.hpp:57
 0xe71b0,77,hexcell_get_dead_army,hd-crossbuild,crossbuild-verified,game,,HD 0x4e7270 masked-identity 256B/216 fixed; core/hexcell.hpp:63
@@ -2853,7 +2854,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xec590,174,inputManager_result,hd-crossbuild,crossbuild-verified,game,,HD 0x4ec660 masked-identity 176B/160 fixed; input_manager.hpp:43
 0xec640,173,inputManager_result_ec640,hd-crossbuild,crossbuild-verified,game,,HD 0x4ec710 masked-identity 176B/160 fixed; input_manager.hpp:50
 0xec6f0,454,inputManager_AsciiConvert,hd-crossbuild,crossbuild-verified,game,,HD 0x4ec7c0 masked-identity 256B/228 fixed; input_manager.hpp:55
-0xec8c0,832,game_ec4d0_sub00_ec8c0,caller,structural,game,,called from 0xec4d0
+0xec8c0,832,inputManager_MakeScanCodeTable,dc-linkorder,linkorder-candidate,game,,DC inputmgr.obj 0xdde74 by link order; E:\gamedcs\inputmgr.cpp:1040
 0xecc00,202,inputManager_ForceMouseMove,hd-crossbuild,crossbuild-verified,game,,HD 0x4eccd0 masked-identity 240B/200 fixed; input_manager.hpp:58
 0xeccd0,32,inputManager_ForceMouseMove_eccd0,nh3api,external-candidate,game,,input_manager.hpp:58
 0xeccf0,11,cinit0500_eccf0,init-ctor,structural,game,,.CRT$XCU slot 500
@@ -2937,8 +2938,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xf7c00,916,game_f7a30_sub03_f7c00,caller,structural,game,,called from 0xf7a30
 0xf7fa0,10,game_f3690_sub05_f7fa0,caller,structural,game,,called from 0xf3690
 0xf7fb0,170,Process1WindowsMessage,hd-crossbuild,crossbuild-verified,game,,HD 0x4f8640 masked-identity 176B/104 fixed; core/events.hpp:169
-0xf8060,212,game_heroes3_hlp_f8060,string,structural,game,,literal: .\HEROES3.HLP
-0xf8140,55,calls_EndDialog_f8140,import-wrapper,structural,game,,imports: EndDialog
+0xf8060,212,AppCommand,dc-linkorder,linkorder-candidate,game,,DC kbwin.obj 0xe8014 by link order; E:\gamedcs\kbwin.cpp:648
+0xf8140,55,UpdateDfltMenu,dc-linkorder,linkorder-candidate,game,,DC kbwin.obj 0xe8018 by link order; E:\gamedcs\kbwin.cpp:680
 0xf8180,92,KBChangeMenu,hd-crossbuild,crossbuild-verified,game,,HD 0x4f8810 masked-identity 96B/46 fixed; core/events.hpp:172
 0xf81e0,49,SetNoDialogMenus,hd-crossbuild,crossbuild-verified,game,,HD 0x4f8870 masked-identity 64B/48 fixed; core/events.hpp:175
 0xf8220,178,game_heroes_of_might_and_magi_f8220,string,structural,game,,literal: Heroes of Might and Magic III is
@@ -5234,7 +5235,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x1ba8f0,33,textEntryWidget_vslot00,vtable-slot,external-candidate,game,,vtable 0x242d40 slot 0
 0x1ba920,437,textEntryWidget,hd-crossbuild,crossbuild-verified,game,,HD 0x5bacd0 masked-identity 170B/138 fixed; core/interface/widgets.hpp:241
 0x1baae0,98,textEntryWidget_textEntryWidget,hd-crossbuild,crossbuild-verified,game,,HD 0x5bae90 masked-identity 112B/100 fixed; core/interface/widgets.hpp:248
-0x1bab50,73,CChatEdit_vslot14,vtable-slot,external-candidate,game,,vtable 0x240e30 slot 14
+0x1bab50,73,textEntryWidget_SetFocus,dc-linkorder,linkorder-candidate,game,,DC textntry.obj 0x162b50 by link order; E:\gamedcs\textntry.cpp:170
 0x1baba0,164,textEntryWidget_GetCharPressed,hd-crossbuild,crossbuild-verified,game,,HD 0x5baf50 masked-identity 176B/124 fixed; core/interface/widgets.hpp:282
 0x1bac50,1277,textEntryWidget_vslot15,vtable-slot,external-candidate,game,,vtable 0x242d40 slot 15
 0x1bb150,678,CChatEdit_vslot02,vtable-slot,external-candidate,game,,vtable 0x240e30 slot 2
@@ -5288,21 +5289,21 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x1bd8e0,1361,game_1253d0_sub07_1bd8e0,caller,structural,game,,called from 0x1253d0
 0x1bde40,49,game_1bd8e0_sub00_1bde40,caller,structural,game,,called from 0x1bd8e0
 0x1bde80,212,town_town_1bde80,hd-crossbuild,crossbuild-verified,game,,HD 0x5be280 masked-identity 256B/231 fixed; core/town.hpp:180
-0x1bdf60,118,game_eb730_sub03_1bdf60,caller,structural,game,,called from 0xeb730
+0x1bdf60,118,town_initialize_hordes,dc-linkorder,linkorder-candidate,game,,DC town.obj 0x1664b0 by link order; E:\gamedcs\town.cpp:930
 0x1bdfe0,78,town_HasGarrison,hd-crossbuild,crossbuild-verified,game,,HD 0x5be3e0 masked-identity 80B/72 fixed; core/town.hpp:243
-0x1be030,467,game_1d360_sub00_1be030,caller,structural,game,,called from 0x1d360
-0x1be210,192,game_7b80_sub28_1be210,caller,structural,game,,called from 0x7b80
-0x1be2d0,179,game_c61e0_sub03_1be2d0,caller,structural,game,,called from 0xc61e0
+0x1be030,467,town_GiveSpells,dc-linkorder,linkorder-candidate,game,,DC town.obj 0x1665a0 by link order; E:\gamedcs\town.cpp:976
+0x1be210,192,town_View,dc-linkorder,linkorder-candidate,game,,DC town.obj 0x166688 by link order; E:\gamedcs\town.cpp:1020
+0x1be2d0,179,town_Deallocate,dc-linkorder,linkorder-candidate,game,,DC town.obj 0x166720 by link order; E:\gamedcs\town.cpp:1058
 0x1be390,183,town_remove_garrison_hero,hd-crossbuild,crossbuild-verified,game,,HD 0x5be790 masked-identity 192B/168 fixed; core/town.hpp:253
 0x1be450,428,town_SwapHeroes,hd-crossbuild,crossbuild-verified,game,,HD 0x5be850 masked-identity 256B/204 fixed; core/town.hpp:258
 0x1be600,810,game_1c0670_sub00_1be600,caller,structural,game,,called from 0x1c0670
 0x1be930,816,game_1bede0_sub00_1be930,caller,structural,game,,called from 0x1bede0
 0x1bec60,371,game_aafd0_sub02_1bec60,caller,structural,game,,called from 0xaafd0
 0x1bede0,1063,town_BuildBuilding,hd-crossbuild,crossbuild-verified,game,,HD 0x5bf1e0 masked-identity 256B/208 fixed; core/town.hpp:263
-0x1bf210,421,game_1c6870_sub00_1bf210,caller,structural,game,,called from 0x1c6870
+0x1bf210,421,town_update_shipyard,dc-linkorder,linkorder-candidate,game,,DC town.obj 0x1671cc by link order; E:\gamedcs\town.cpp:1417
 0x1bf3c0,286,town_buy_building,hd-crossbuild,crossbuild-verified,game,,HD 0x5bf7c0 masked-identity 256B/228 fixed; core/town.hpp:268
-0x1bf4e0,12,game_61ab0_sub01_1bf4e0,caller,structural,game,,called from 0x61ab0
-0x1bf4f0,122,game_20a80_sub02_1bf4f0,caller,structural,game,,called from 0x20a80
+0x1bf4e0,12,town_CanBuildDock,dc-linkorder,linkorder-candidate,game,,DC town.obj 0x167378 by link order; E:\gamedcs\town.cpp:1466
+0x1bf4f0,122,town_CalcNumLevelArchers,dc-linkorder,linkorder-candidate,game,,DC town.obj 0x167388 by link order; E:\gamedcs\town.cpp:1473
 0x1bf570,134,town_get_castle_growth_bonus,hd-crossbuild,crossbuild-verified,game,,HD 0x5bf970 masked-identity 144B/120 fixed; core/town.hpp:273
 0x1bf600,198,town_get_gold_income,hd-crossbuild,crossbuild-verified,game,,HD 0x5bfa00 masked-identity 208B/160 fixed; core/town.hpp:278
 0x1bf6d0,151,game_1c5b40_sub00_1bf6d0,caller,structural,game,,called from 0x1c5b40
@@ -5323,9 +5324,9 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x1c0f20,342,town_get_buildable_mask,hd-crossbuild,crossbuild-verified,game,,HD 0x5c1320 masked-identity 256B/211 fixed; core/town.hpp:293
 0x1c1080,100,town_get_build_cost_array,hd-crossbuild,crossbuild-verified,game,,HD 0x5c1480 masked-identity 112B/100 fixed; core/town.hpp:305
 0x1c10f0,138,town_get_build_cost,hd-crossbuild,crossbuild-verified,game,,HD 0x5c14f0 masked-identity 144B/132 fixed; core/town.hpp:298
-0x1c1180,169,game_1d5f30_sub00_1c1180,caller,structural,game,,called from 0x1d5f30
-0x1c1230,70,game_2b790_sub00_1c1230,caller,structural,game,,called from 0x2b790
-0x1c1280,21,game_2ae00_sub10_1c1280,caller,structural,game,,called from 0x2ae00
+0x1c1180,169,town_get_build_cost_1c1180,dc-linkorder,linkorder-candidate,game,,DC town.obj 0x168910 by link order; E:\gamedcs\town.cpp:2224
+0x1c1230,70,town_get_horde_effect,dc-linkorder,linkorder-candidate,game,,DC town.obj 0x168970 by link order; E:\gamedcs\town.cpp:2247
+0x1c1280,21,town_get_silo_income,dc-linkorder,linkorder-candidate,game,,DC town.obj 0x1689dc by link order; E:\gamedcs\town.cpp:2274
 0x1c12a0,57,town_is_legal_building,hd-crossbuild,crossbuild-verified,game,,HD 0x5c16a0 masked-identity 64B/56 fixed; core/town.hpp:311
 0x1c12e0,201,game_31800_sub01_1c12e0,caller,structural,game,,called from 0x31800
 0x1c13b0,131,game_ca040_sub01_1c13b0,caller,structural,game,,called from 0xca040
@@ -5684,7 +5685,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x1fe4d0,23,border_vslot01,vtable-slot,external-candidate,game,,vtable 0x23ba24 slot 1
 0x1fe4f0,712,game_4ff60_sub00_1fe4f0,caller,structural,game,,called from 0x4ff60
 0x1fe7c0,64,widget_send_message,hd-crossbuild,crossbuild-verified,game,,HD 0x5fed80 masked-identity 128B/116 fixed; core/interface/windows.hpp:217
-0x1fe800,50,border_vslot08,vtable-slot,external-candidate,game,,vtable 0x23ba24 slot 8
+0x1fe800,50,widget_Dim,dc-linkorder,linkorder-candidate,game,,DC widget.obj 0x196fc8 by link order; E:\gamedcs\widget.cpp:494
 0x1fe840,233,widget_set_help_text,hd-crossbuild,crossbuild-verified,game,,HD 0x5fee00 masked-identity 256B/228 fixed; core/interface/windows.hpp:220
 0x1fe930,12,border_vslot07,vtable-slot,external-candidate,game,,vtable 0x23ba24 slot 7
 0x1fe940,131,border_vslot09,vtable-slot,external-candidate,game,,vtable 0x23ba24 slot 9
@@ -5714,11 +5715,11 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x1ff5b0,51,heroWindow_SleepAllWidgets,hd-crossbuild,crossbuild-verified,game,,HD 0x5ffb70 masked-identity 64B/60 fixed; core/interface/windows.hpp:569
 0x1ff5f0,79,CAdvPopup_vslot08,vtable-slot,external-candidate,game,,vtable 0x23a6a8 slot 8
 0x1ff640,97,CHeroWindowEx_CHeroWindowEx_1ff640,hd-crossbuild,crossbuild-verified,game,,HD 0x5ffc00 masked-identity 170B/158 fixed; core/interface/windows.hpp:669
-0x1ff6b0,33,CHeroWindowEx_vslot00,vtable-slot,external-candidate,game,,vtable 0x243ce8 slot 0
-0x1ff6e0,174,CAdvPopup_vslot10,vtable-slot,external-candidate,game,,vtable 0x23a6a8 slot 10
-0x1ff790,130,CAdvPopup_vslot11,vtable-slot,external-candidate,game,,vtable 0x23a6a8 slot 11
-0x1ff820,165,CHeroWindowEx_vslot09,vtable-slot,external-candidate,game,,vtable 0x243ce8 slot 9
-0x1ff8d0,3,CAdvPopup_vslot13,vtable-slot,external-candidate,game,,vtable 0x23a6a8 slot 13
+0x1ff6b0,33,CHeroWindowEx_ProcessHover,dc-linkorder,linkorder-candidate,game,,DC window.obj 0x197d9c by link order; E:\gamedcs\window.cpp:972
+0x1ff6e0,174,CHeroWindowEx_ProcessRightSelect,dc-linkorder,linkorder-candidate,game,,DC window.obj 0x197e58 by link order; E:\gamedcs\window.cpp:1016
+0x1ff790,130,CHeroWindowEx_WindowHandler,dc-linkorder,linkorder-candidate,game,,DC window.obj 0x197eb4 by link order; E:\gamedcs\window.cpp:1036
+0x1ff820,165,CHeroWindowEx_OnWidgetDeselect,dc-linkorder,linkorder-candidate,game,,DC window.obj 0x197f48 by link order; E:\gamedcs\window.cpp:1122
+0x1ff8d0,3,CHeroWindowEx_GetRolloverWidget,dc-linkorder,linkorder-candidate,game,,DC window.obj 0x197f4c by link order; E:\gamedcs\window.cpp:1128
 0x1ff8e0,117,CHeroWindowEx_SetHelpText,hd-crossbuild,crossbuild-verified,game,,HD 0x5ffea0 masked-identity 128B/124 fixed; core/interface/windows.hpp:710
 0x1ff960,195,game_jktext_txt_1ff960,string,structural,game,,literal: jktext.txt
 0x1ffa30,193,game_text_txt_1ffa30,string,structural,game,,literal: text.txt
@@ -6886,9 +6887,9 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x2275d0,8,game_digsound_82m_ec90_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xec90 (game_digsound_82m_ec90), state 0"
 0x2275f0,8,game_s_s_137c0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x137c0 (game_s_s_137c0), state 0"
 0x2275f8,8,game_s_s_137c0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x137c0 (game_s_s_137c0), state 1"
-0x227610,11,game_15de0_sub01_15f20_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x15f20 (game_15de0_sub01_15f20), state 0"
-0x227630,11,game_15de0_sub02_15fb0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x15fb0 (game_15de0_sub02_15fb0), state 0"
-0x227650,11,game_15de0_sub03_16160_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x16160 (game_15de0_sub03_16160), state 0"
+0x227610,11,advManager_UpdBottomViewEnemyTurn_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x15f20 (advManager_UpdBottomViewEnemyTurn), state 0"
+0x227630,11,advManager_UpdBottomViewNewTurn_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x15fb0 (advManager_UpdBottomViewNewTurn), state 0"
+0x227650,11,advManager_UpdBottomViewResMsg_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x16160 (advManager_UpdBottomViewResMsg), state 0"
 0x227670,11,game_15de0_sub04_162f0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x162f0 (game_15de0_sub04_162f0), state 0"
 0x227690,11,game_15de0_sub05_163a0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x163a0 (game_15de0_sub05_163a0), state 0"
 0x2276b0,11,game_15de0_sub06_16450_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x16450 (game_15de0_sub06_16450), state 0"
@@ -6902,8 +6903,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x227750,8,game_a5d0_sub01_16f80_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x16f80 (game_a5d0_sub01_16f80), state 0"
 0x227770,11,game_a5d0_sub02_17150_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x17150 (game_a5d0_sub02_17150), state 0"
 0x22777b,11,game_a5d0_sub02_17150_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x17150 (game_a5d0_sub02_17150), state 1"
-0x227790,11,game_cgm_18160_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x18160 (game_cgm_18160), state 0"
-0x22779b,8,game_cgm_18160_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x18160 (game_cgm_18160), state 1"
+0x227790,11,SaveGame_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x18160 (SaveGame), state 0"
+0x22779b,8,SaveGame_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x18160 (SaveGame), state 1"
 0x2277b0,8,game_orig_dat_1a100_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1a100 (game_orig_dat_1a100), state 0"
 0x2277d0,11,game_obelisk_wav_1a7f0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1a7f0 (game_obelisk_wav_1a7f0), state 0"
 0x2277f0,8,game_9a70_sub03_1ab00_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1ab00 (game_9a70_sub03_1ab00), state 0"
@@ -6946,14 +6947,14 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x227ba8,8,can_take_town_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x28410 (can_take_town), state 1"
 0x227bc0,8,game_28580_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x28580 (game_28580), state 0"
 0x227bc8,8,game_28580_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x28580 (game_28580), state 1"
-0x227be0,8,game_28dd0_sub01_28740_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x28740 (game_28dd0_sub01_28740), state 0"
-0x227c00,8,game_125e80_sub00_28dd0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x28dd0 (game_125e80_sub00_28dd0), state 0"
-0x227c08,8,game_125e80_sub00_28dd0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x28dd0 (game_125e80_sub00_28dd0), state 1"
-0x227c20,8,game_28dd0_sub02_29110_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x29110 (game_28dd0_sub02_29110), state 0"
-0x227c28,8,game_28dd0_sub02_29110_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x29110 (game_28dd0_sub02_29110), state 1"
-0x227c30,8,game_28dd0_sub02_29110_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x29110 (game_28dd0_sub02_29110), state 2"
-0x227c38,8,game_28dd0_sub02_29110_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x29110 (game_28dd0_sub02_29110), state 3"
-0x227c40,8,game_28dd0_sub02_29110_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0x29110 (game_28dd0_sub02_29110), state 4"
+0x227be0,8,type_AI_player_calculate_demand_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x28740 (type_AI_player_calculate_demand), state 0"
+0x227c00,8,type_AI_player_end_turn_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x28dd0 (type_AI_player_end_turn), state 0"
+0x227c08,8,type_AI_player_end_turn_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x28dd0 (type_AI_player_end_turn), state 1"
+0x227c20,8,type_AI_player_make_gift_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x29110 (type_AI_player_make_gift), state 0"
+0x227c28,8,type_AI_player_make_gift_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x29110 (type_AI_player_make_gift), state 1"
+0x227c30,8,type_AI_player_make_gift_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x29110 (type_AI_player_make_gift), state 2"
+0x227c38,8,type_AI_player_make_gift_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x29110 (type_AI_player_make_gift), state 3"
+0x227c40,8,type_AI_player_make_gift_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0x29110 (type_AI_player_make_gift), state 4"
 0x227c60,8,game_297c0_sub01_29ad0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x29ad0 (game_297c0_sub01_29ad0), state 0"
 0x227c80,8,type_AI_player_get_total_value_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x2a150 (type_AI_player_get_total_value), state 0"
 0x227ca0,8,game_2ae00_sub01_2a470_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x2a470 (game_2ae00_sub01_2a470), state 0"
@@ -6993,11 +6994,11 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x227f90,14,army_army_unwind05,eh-funclet,structural,unattributed,,"unwind action of 0x37a00 (army_army), state 5"
 0x227f9e,14,army_army_unwind06,eh-funclet,structural,unattributed,,"unwind action of 0x37a00 (army_army), state 6"
 0x227fc0,11,type_AI_spellcaster_get_defense_skill_value_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x38910 (type_AI_spellcaster_get_defense_skill_value), state 0"
-0x227fe0,11,game_3b690_sub26_39bc0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x39bc0 (game_3b690_sub26_39bc0), state 0"
-0x228000,11,game_3b690_sub27_39c30_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x39c30 (game_3b690_sub27_39c30), state 0"
-0x228020,11,game_3b690_sub28_39d40_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x39d40 (game_3b690_sub28_39d40), state 0"
-0x228040,11,game_3b690_sub29_39de0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x39de0 (game_3b690_sub29_39de0), state 0"
-0x228060,8,game_3b690_sub32_3a400_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x3a400 (game_3b690_sub32_3a400), state 0"
+0x227fe0,11,type_AI_spellcaster_get_dispel_value_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x39bc0 (type_AI_spellcaster_get_dispel_value), state 0"
+0x228000,11,type_AI_spellcaster_get_cure_value_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x39c30 (type_AI_spellcaster_get_cure_value), state 0"
+0x228020,11,type_AI_spellcaster_get_antimagic_value_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x39d40 (type_AI_spellcaster_get_antimagic_value), state 0"
+0x228040,11,type_AI_spellcaster_get_backlash_value_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x39de0 (type_AI_spellcaster_get_backlash_value), state 0"
+0x228060,8,type_AI_spellcaster_get_berserk_value_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x3a400 (type_AI_spellcaster_get_berserk_value), state 0"
 0x228080,14,army_army_3d250_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x3d250 (army_army_3d250), state 0"
 0x22808e,14,army_army_3d250_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x3d250 (army_army_3d250), state 1"
 0x22809c,24,army_army_3d250_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x3d250 (army_army_3d250), state 2"
@@ -7034,26 +7035,26 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x228268,8,army_ComputeAttackerDamageBonuses_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x43840 (army_ComputeAttackerDamageBonuses), state 3"
 0x228270,8,army_ComputeAttackerDamageBonuses_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0x43840 (army_ComputeAttackerDamageBonuses), state 4"
 0x228290,8,army_GoBerserk_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x456d0 (army_GoBerserk), state 0"
-0x2282b0,8,game_regener_wav_46e30_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x46e30 (game_regener_wav_46e30), state 0"
-0x2282b8,8,game_regener_wav_46e30_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x46e30 (game_regener_wav_46e30), state 1"
-0x2282c0,8,game_regener_wav_46e30_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x46e30 (game_regener_wav_46e30), state 2"
+0x2282b0,8,army_new_turn_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x46e30 (army_new_turn), state 0"
+0x2282b8,8,army_new_turn_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x46e30 (army_new_turn), state 1"
+0x2282c0,8,army_new_turn_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x46e30 (army_new_turn), state 2"
 0x2282e0,8,army_FaerieDragonSpell_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x47510 (army_FaerieDragonSpell), state 0"
-0x228300,8,game_gpucrdiv_pcx_49790_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 0"
-0x228308,11,game_gpucrdiv_pcx_49790_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 1"
-0x228313,11,game_gpucrdiv_pcx_49790_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 2"
-0x22831e,11,game_gpucrdiv_pcx_49790_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 3"
-0x228329,11,game_gpucrdiv_pcx_49790_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 4"
-0x228334,11,game_gpucrdiv_pcx_49790_unwind05,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 5"
-0x22833f,11,game_gpucrdiv_pcx_49790_unwind06,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 6"
-0x22834a,11,game_gpucrdiv_pcx_49790_unwind07,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 7"
-0x228355,11,game_gpucrdiv_pcx_49790_unwind08,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 8"
-0x228360,11,game_gpucrdiv_pcx_49790_unwind09,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 9"
-0x22836b,11,game_gpucrdiv_pcx_49790_unwind10,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 10"
-0x228376,11,game_gpucrdiv_pcx_49790_unwind11,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 11"
-0x228381,11,game_gpucrdiv_pcx_49790_unwind12,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 12"
-0x22838c,11,game_gpucrdiv_pcx_49790_unwind13,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (game_gpucrdiv_pcx_49790), state 13"
-0x2283b0,8,game_49df0_sub00_49e20_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x49e20 (game_49df0_sub00_49e20), state 0"
-0x2283d0,11,game_dd2d0_sub00_49e90_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x49e90 (game_dd2d0_sub00_49e90), state 0"
+0x228300,8,SplitSliderCallback_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 0"
+0x228308,11,SplitSliderCallback_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 1"
+0x228313,11,SplitSliderCallback_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 2"
+0x22831e,11,SplitSliderCallback_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 3"
+0x228329,11,SplitSliderCallback_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 4"
+0x228334,11,SplitSliderCallback_unwind05,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 5"
+0x22833f,11,SplitSliderCallback_unwind06,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 6"
+0x22834a,11,SplitSliderCallback_unwind07,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 7"
+0x228355,11,SplitSliderCallback_unwind08,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 8"
+0x228360,11,SplitSliderCallback_unwind09,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 9"
+0x22836b,11,SplitSliderCallback_unwind10,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 10"
+0x228376,11,SplitSliderCallback_unwind11,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 11"
+0x228381,11,SplitSliderCallback_unwind12,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 12"
+0x22838c,11,SplitSliderCallback_unwind13,eh-funclet,structural,unattributed,,"unwind action of 0x49790 (SplitSliderCallback), state 13"
+0x2283b0,8,TSplitWindow_TSplitWindow_49e20_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x49e20 (TSplitWindow_TSplitWindow_49e20), state 0"
+0x2283d0,11,armyGroup_SplitArmy_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x49e90 (armyGroup_SplitArmy), state 0"
 0x2283f0,8,armyGroup_result_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x4b960 (armyGroup_result), state 0"
 0x2283f8,8,armyGroup_result_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x4b960 (armyGroup_result), state 1"
 0x228400,8,armyGroup_result_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x4b960 (armyGroup_result), state 2"
@@ -7382,12 +7383,12 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x229860,8,game_66290_sub00_66010_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x66010 (game_66290_sub00_66010), state 0"
 0x229880,8,game_62a20_sub03_66290_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x66290 (game_62a20_sub03_66290), state 0"
 0x2298a0,8,game_66290_sub01_668a0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x668a0 (game_66290_sub01_668a0), state 0"
-0x2298c0,8,game_f4350_sub00_66a70_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x66a70 (game_f4350_sub00_66a70), state 0"
+0x2298c0,8,combatManager_PlaceAllObstacles_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x66a70 (combatManager_PlaceAllObstacles), state 0"
 0x2298e0,11,combatManager_ShootBallisticMissile_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x67a00 (combatManager_ShootBallisticMissile), state 0"
 0x229900,8,combatManager_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x67db0 (combatManager), state 0"
 0x229920,8,combatManager_ShootMissile_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x68220 (combatManager_ShootMissile), state 0"
-0x229940,8,game_74d80_sub02_686b0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x686b0 (game_74d80_sub02_686b0), state 0"
-0x229960,11,game_74d80_sub03_68860_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x68860 (game_74d80_sub03_68860), state 0"
+0x229940,8,combatManager_CombatSystemOptions_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x686b0 (combatManager_CombatSystemOptions), state 0"
+0x229960,11,combatManager_ViewArmy_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x68860 (combatManager_ViewArmy), state 0"
 0x229980,8,combatManager_damage_message_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x69a90 (combatManager_damage_message), state 0"
 0x229988,8,combatManager_damage_message_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x69a90 (combatManager_damage_message), state 1"
 0x229990,8,combatManager_damage_message_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x69a90 (combatManager_damage_message), state 2"
@@ -7547,16 +7548,16 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x22a1b9,11,calls_timeGetTime_72e90_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0x72e90 (calls_timeGetTime_72e90), state 4"
 0x22a1d0,11,game_740d0_sub02_731f0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x731f0 (game_740d0_sub02_731f0), state 0"
 0x22a1f0,8,combatManager_vslot02_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x740d0 (combatManager_vslot02), state 0"
-0x22a210,8,game_pickup_02d_82m_76fe0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x76fe0 (game_pickup_02d_82m_76fe0), state 0"
-0x22a218,8,game_pickup_02d_82m_76fe0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x76fe0 (game_pickup_02d_82m_76fe0), state 1"
-0x22a220,8,game_pickup_02d_82m_76fe0_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x76fe0 (game_pickup_02d_82m_76fe0), state 2"
-0x22a228,8,game_pickup_02d_82m_76fe0_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x76fe0 (game_pickup_02d_82m_76fe0), state 3"
-0x22a240,8,game_pickup_02d_82m_772b0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x772b0 (game_pickup_02d_82m_772b0), state 0"
-0x22a248,8,game_pickup_02d_82m_772b0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x772b0 (game_pickup_02d_82m_772b0), state 1"
-0x22a250,8,game_pickup_02d_82m_772b0_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x772b0 (game_pickup_02d_82m_772b0), state 2"
-0x22a270,8,calls_timeGetTime_77470_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x77470 (calls_timeGetTime_77470), state 0"
-0x22a278,11,calls_timeGetTime_77470_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x77470 (calls_timeGetTime_77470), state 1"
-0x22a283,11,calls_timeGetTime_77470_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x77470 (calls_timeGetTime_77470), state 2"
+0x22a210,8,combatManager_show_eagle_eye_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x76fe0 (combatManager_show_eagle_eye), state 0"
+0x22a218,8,combatManager_show_eagle_eye_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x76fe0 (combatManager_show_eagle_eye), state 1"
+0x22a220,8,combatManager_show_eagle_eye_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x76fe0 (combatManager_show_eagle_eye), state 2"
+0x22a228,8,combatManager_show_eagle_eye_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x76fe0 (combatManager_show_eagle_eye), state 3"
+0x22a240,8,combatManager_show_looted_artifacts_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x772b0 (combatManager_show_looted_artifacts), state 0"
+0x22a248,8,combatManager_show_looted_artifacts_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x772b0 (combatManager_show_looted_artifacts), state 1"
+0x22a250,8,combatManager_show_looted_artifacts_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x772b0 (combatManager_show_looted_artifacts), state 2"
+0x22a270,8,combatManager_DoVictory_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x77470 (combatManager_DoVictory), state 0"
+0x22a278,11,combatManager_DoVictory_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x77470 (combatManager_DoVictory), state 1"
+0x22a283,11,combatManager_DoVictory_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x77470 (combatManager_DoVictory), state 2"
 0x22a2a0,8,game_740d0_sub08_77ee0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x77ee0 (game_740d0_sub08_77ee0), state 0"
 0x22a2a8,8,game_740d0_sub08_77ee0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x77ee0 (game_740d0_sub08_77ee0), state 1"
 0x22a2b0,8,game_740d0_sub08_77ee0_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x77ee0 (game_740d0_sub08_77ee0), state 2"
@@ -7807,15 +7808,15 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x22b1d8,8,game_s_s_a5610_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xa5610 (game_s_s_a5610), state 1"
 0x22b1f0,8,game_pickup_02d_82m_a5a80_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xa5a80 (game_pickup_02d_82m_a5a80), state 0"
 0x22b1f8,8,game_pickup_02d_82m_a5a80_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xa5a80 (game_pickup_02d_82m_a5a80), state 1"
-0x22b210,11,calls_timeGetTime_a84f0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xa84f0 (calls_timeGetTime_a84f0), state 0"
-0x22b21b,11,calls_timeGetTime_a84f0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xa84f0 (calls_timeGetTime_a84f0), state 1"
-0x22b226,11,calls_timeGetTime_a84f0_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xa84f0 (calls_timeGetTime_a84f0), state 2"
-0x22b231,11,calls_timeGetTime_a84f0_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0xa84f0 (calls_timeGetTime_a84f0), state 3"
-0x22b23c,11,calls_timeGetTime_a84f0_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0xa84f0 (calls_timeGetTime_a84f0), state 4"
-0x22b260,11,game_5e30_sub06_aadf0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xaadf0 (game_5e30_sub06_aadf0), state 0"
-0x22b26b,11,game_5e30_sub06_aadf0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xaadf0 (game_5e30_sub06_aadf0), state 1"
-0x22b276,11,game_5e30_sub06_aadf0_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xaadf0 (game_5e30_sub06_aadf0), state 2"
-0x22b281,11,game_5e30_sub06_aadf0_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0xaadf0 (game_5e30_sub06_aadf0), state 3"
+0x22b210,11,advManager_do_event_whirlpool_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xa84f0 (advManager_do_event_whirlpool), state 0"
+0x22b21b,11,advManager_do_event_whirlpool_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xa84f0 (advManager_do_event_whirlpool), state 1"
+0x22b226,11,advManager_do_event_whirlpool_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xa84f0 (advManager_do_event_whirlpool), state 2"
+0x22b231,11,advManager_do_event_whirlpool_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0xa84f0 (advManager_do_event_whirlpool), state 3"
+0x22b23c,11,advManager_do_event_whirlpool_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0xa84f0 (advManager_do_event_whirlpool), state 4"
+0x22b260,11,advManager_HeroSwap_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xaadf0 (advManager_HeroSwap), state 0"
+0x22b26b,11,advManager_HeroSwap_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xaadf0 (advManager_HeroSwap), state 1"
+0x22b276,11,advManager_HeroSwap_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xaadf0 (advManager_HeroSwap), state 2"
+0x22b281,11,advManager_HeroSwap_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0xaadf0 (advManager_HeroSwap), state 3"
 0x22b2a0,8,advManager_EventSound_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xab410 (advManager_EventSound), state 0"
 0x22b2c0,8,game_a18b0_sub00_aba50_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xaba50 (game_a18b0_sub00_aba50), state 0"
 0x22b2c8,8,game_a18b0_sub00_aba50_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xaba50 (game_a18b0_sub00_aba50), state 1"
@@ -8217,9 +8218,9 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x22c980,8,game_d6690_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xd6690 (game_d6690), state 0"
 0x22c9a0,8,game_87d30_sub02_d6820_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xd6820 (game_87d30_sub02_d6820), state 0"
 0x22c9c0,8,TGzFile_TGzFile_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xd6c50 (TGzFile_TGzFile), state 0"
-0x22c9e0,8,game_invalid_bitset_n_positio_d7a20_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xd7a20 (game_invalid_bitset_n_positio_d7a20), state 0"
-0x22c9e8,8,game_invalid_bitset_n_positio_d7a20_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xd7a20 (game_invalid_bitset_n_positio_d7a20), state 1"
-0x22c9f0,8,game_invalid_bitset_n_positio_d7a20_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xd7a20 (game_invalid_bitset_n_positio_d7a20), state 2"
+0x22c9e0,8,hero_load_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xd7a20 (hero_load), state 0"
+0x22c9e8,8,hero_load_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xd7a20 (hero_load), state 1"
+0x22c9f0,8,hero_load_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xd7a20 (hero_load), state 2"
 0x22ca10,8,game_dd2d0_sub04_d9a00_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xd9a00 (game_dd2d0_sub04_d9a00), state 0"
 0x22ca18,8,game_dd2d0_sub04_d9a00_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xd9a00 (game_dd2d0_sub04_d9a00), state 1"
 0x22ca30,8,game_1af590_sub00_d9b30_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xd9b30 (game_1af590_sub00_d9b30), state 0"
