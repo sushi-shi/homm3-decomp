@@ -147,12 +147,19 @@ def write_objdiff(build: dict, units: list[dict]) -> None:
     write_dummy(directory / "dummy.obj")
     entries = []
     for unit in units:
-        target = ROOT / "build/delink" / (unit["unit"] + ".c.obj")
+        name = unit["unit"]
+        norm_base = directory / "normalized/base" / (name + ".obj")
+        norm_target = directory / "normalized/target" / (name + ".c.obj")
         entries.append({
-            "name": unit["unit"],
-            "base_path": "./base/%s.obj" % unit["unit"],
-            "target_path": ("../delink/%s.c.obj" % unit["unit"]
-                            if target.is_file() else "./dummy.obj"),
+            "name": name,
+            # objdiff reads the NORMALIZED comparison copies when the
+            # delink half has produced them (canonicalize_data_symbols);
+            # the raw objs stay authoritative for everything else
+            "base_path": ("./normalized/base/%s.obj" % name
+                          if norm_base.is_file()
+                          else "./base/%s.obj" % name),
+            "target_path": ("./normalized/target/%s.c.obj" % name
+                            if norm_target.is_file() else "./dummy.obj"),
             "scratch": {
                 "platform": build.get("platform", "win32"),
                 "compiler": build.get("compiler", "msvc6.0"),

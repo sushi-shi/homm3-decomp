@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-04 — the delink loop wired (P2.3); first REAL objdiff numbers.**
+  Correction to the entry below: the smoke delink proved vostok consumes
+  the synth PDB, but objdiff still compared every unit against dummy.obj.
+  Now: zlib functions carry per-MEMBER units (DNA attribution,
+  link-order fill), `homm3.build.delink` runs
+  labels → synth_pdb → data_manifest → vostok → copies the units.toml
+  scope into build/objdiff/target/ → canonicalizes both sides →
+  re-emits objdiff.json against the NORMALIZED copies. Measured on the
+  spot: **34/68 zlib functions match retail exactly; overall fuzzy 55.8%**
+  (9 units at 100% — adler32, compress, crc32, infblock, infcodes,
+  inffast, infutil, uncompr, zutil; inflate 99.8%). The gap is
+  concentrated where the zlib map still holds working labels (33
+  functions) that cannot name-pair against base symbols — completing
+  that map (P2.1 authority path) is the direct next lever. Also per user
+  decision: content-derived canonical names truncate their digests to
+  6 hex chars (deterministic lengthening only on in-object collision).
+
 - **2026-08-04 — synth PDB delivered (P2.2); the delink lessons implemented
   in full.** Annotation contract v3: homm2-decomp's `va.h` vocabulary
   adopted verbatim (`VA`/`VA_COMPGEN`/`DATA`/`DATA_COMPGEN(_GUARD)`/`VTBL`/
