@@ -376,10 +376,15 @@ def in_allowed(rva, allowed):
     return i >= 0 and allowed[i][0] <= rva < allowed[i][1]
 
 
-def game_channel(functions, per_function, allowed):
+def game_channel(functions, per_function, allowed, funclet_entries,
+                 head_limit, funclet_parent):
     """The game's own code is a library too - label it by POSITIVE evidence,
     never by absence of library hits:
 
+      hd-crossbuild-name  entry rows of config/retail-hd-name-map.csv: an
+                      NH3API name carried onto OUR bytes by unique masked
+                      identity against HD Mod's sibling build (carve hdmap).
+                                                        [crossbuild-verified]
       nh3api-name     entry functions the names export attributes to game
                       classes (external-unverified candidates, entry rows
                       only - interior addresses are another pressing);
@@ -387,27 +392,58 @@ def game_channel(functions, per_function, allowed):
                       the game's own objects come before every library ctor
                       (linkage order), so the prefix up to the first
                       library-attributed target is game code, retail-derived.
+      xref-to-game    call-graph closure from every function the channels
+                      above named: relative `E8` calls are retail bytes, so
+                      "calls or is called by known game code" is positive
+                      retail evidence for game-ness even though the seed
+                      names are external. `-direct` = shares an edge with a
+                      NAMED game function, `-transitive` = reached through
+                      other closure members only.
+      game-vtable-link a retail vtable ties functions together: the function
+                      that stores the vtable pointer (its ctor/dtor) and the
+                      slot targets belong to one class, so game-ness flows
+                      across the vtable in both directions.
 
     Library attributions always win; this channel only labels virgin rvas.
     Restricted to `allowed` (the spans no library band claims): NH3API also
     models the game's std-like wrappers (exe_string, exe_vector), whose retail
     bodies ARE LIBCPMT code - letting those names vote inside a library band
-    would shred it. Library evidence always wins.
+    would shred it. The closure additionally never enters an EH funclet
+    (`.text$x` is every object's funclets sorted together - band structure,
+    not game evidence; calls FROM a funclet are folded into the function it
+    guards via `funclet_parent` instead) and never propagates THROUGH a
+    library-attributed function (game code calling memcpy must not paint
+    memcpy's other callers). Every channel is also cut at `head_limit`, the start of the
+    first library band: linkage order makes game contributions a contiguous
+    PREFIX of .text, so an address past the first library band cannot be
+    game code no matter what calls it (the generic `operator delete` sliver
+    between zlib and LIBCPMT is the case that forced this guard).
     """
+    import csv as _csv
+
+    def load_csv(path):
+        if not path.is_file():
+            return []
+        with path.open() as fh:
+            return list(_csv.DictReader(
+                line for line in fh if not line.startswith("#")))
+
     hits = {}
-    names_csv = common.HOMM3_DIR / "config/retail-function-names.csv"
-    if names_csv.is_file():
-        import csv as _csv
-        with names_csv.open() as fh:
-            for row in _csv.DictReader(
-                    line for line in fh if not line.startswith("#")):
-                if row["carve_state"] != "entry" or \
-                        "nh3api" not in row["sources"]:
-                    continue
-                rva = int(row["rva"], 16)
-                if rva in functions and rva not in per_function \
-                        and in_allowed(rva, allowed):
-                    hits[rva] = "nh3api-name"
+    for row in load_csv(common.HOMM3_DIR / "config/retail-hd-name-map.csv"):
+        if row["our_state"] != "entry":
+            continue
+        rva = int(row["rva"], 16)
+        if rva in functions and rva not in per_function \
+                and rva < head_limit and in_allowed(rva, allowed):
+            hits[rva] = "hd-crossbuild-name"
+    for row in load_csv(common.HOMM3_DIR / "config/retail-function-names.csv"):
+        if row["carve_state"] != "entry" or "nh3api" not in row["sources"]:
+            continue
+        rva = int(row["rva"], 16)
+        if rva in functions and rva not in per_function \
+                and rva < head_limit and in_allowed(rva, allowed):
+            hits.setdefault(rva, "nh3api-name")
+    named = set(hits)
     seed_log = common.CARVE_DIR / "seed_log.tsv"
     if seed_log.is_file():
         for row in common.read_tsv(seed_log):
@@ -419,12 +455,89 @@ def game_channel(functions, per_function, allowed):
                 break  # first library ctor: the game prefix ends here
             if target in functions:
                 hits.setdefault(target, "init-array-ctor")
+
+    # call-graph closure. Edges: Ghidra's call graph (rel32 calls carry no
+    # relocation, so only the export sees them) + vtable links (vptr-store
+    # site <-> slot targets, both retail-derived).
+    calls = defaultdict(set)
+    xrefs_tsv = DNA_DIR / "function_xrefs.tsv"
+    if xrefs_tsv.is_file():
+        for row in common.read_tsv(xrefs_tsv):
+            if row["callers"] == "-":
+                continue
+            # a call FROM an unwind funclet is a call from the function the
+            # funclet guards (retail EH parentage) - that is how a dtor
+            # reached only on exception paths still ties to its owner
+            callee = funclet_parent.get(int(row["entry_rva"], 16),
+                                        int(row["entry_rva"], 16))
+            for caller in row["callers"].split(";"):
+                caller = int(caller, 16)
+                caller = funclet_parent.get(caller, caller)
+                if caller == callee:
+                    continue
+                calls[caller].add(callee)
+                calls[callee].add(caller)
+    else:
+        print("[carve dna] function_xrefs.tsv missing - game closure runs "
+              "on vtable links only")
+    slots = defaultdict(list)
+    for row in load_csv(common.HOMM3_DIR / "config/retail-vtable-symbols.csv"):
+        if row["target_state"] == "entry":
+            slots[int(row["vtable_rva"], 16)].append(
+                int(row["target_rva"], 16))
+    entries = sorted(functions)
+
+    def owner_of(rva):
+        i = bisect.bisect_right(entries, rva) - 1
+        if i >= 0 and entries[i] <= rva < entries[i] + functions[entries[i]]:
+            return entries[i]
+        return None
+
+    vlinks = defaultdict(set)
+    reloc_sites = common.CARVE_DIR / "reloc_sites.tsv"
+    if slots and reloc_sites.is_file():
+        for row in common.read_tsv(reloc_sites):
+            if row["channel"] != "code" or row.get("ctx") != "imm":
+                continue
+            targets = slots.get(int(row["value"], 16) - common.IMAGE_BASE)
+            if not targets:
+                continue
+            owner = owner_of(int(row["site_rva"], 16))
+            if owner is None:
+                continue
+            for target in targets:
+                vlinks[owner].add(target)
+                vlinks[target].add(owner)
+
+    def eligible(rva):
+        return rva in functions and rva not in per_function \
+            and rva not in hits and rva not in funclet_entries \
+            and rva < head_limit and in_allowed(rva, allowed)
+
+    frontier = set(hits)
+    while frontier:
+        reached = set()
+        for rva in frontier:
+            for other in calls[rva] | vlinks[rva]:
+                if eligible(other):
+                    reached.add(other)
+        for rva in reached:
+            if calls[rva] & named:
+                hits[rva] = "xref-to-game-direct"
+            elif calls[rva] & hits.keys():
+                hits[rva] = "xref-to-game-transitive"
+            else:
+                hits[rva] = "game-vtable-link"
+        frontier = reached
+
     for rva, evidence in hits.items():
         if rva not in per_function:
             per_function[rva] = {
                 "library": "game", "variant": "-", "member": "-",
                 "symbol": "-", "evidence": evidence,
-                "confidence": "external-candidate"}
+                "confidence": "crossbuild-verified"
+                if evidence == "hd-crossbuild-name" else
+                "external-candidate"}
     return hits
 
 
@@ -498,7 +611,7 @@ def build_bands(functions, per_function, funclet_entries):
                            if entries[k] in funclet_entries)
             evidence = {"unattributed": "no-evidence",
                         "zlib": "masked-zlib-obj-run",
-                        "game": "nh3api-names+init-array-order",
+                        "game": "hd+nh3api-names+init-order+xref-closure",
                         }.get(library, "masked-archive-run")
             bands.append({"lo": lo, "hi": hi, "library": library,
                           "functions": i - start, "attributed": attributed,
@@ -584,12 +697,18 @@ def main(argv=None) -> int:
     library_bands = build_bands(functions, per_function, funclet_entries)
     allowed = sorted((b["lo"], b["hi"]) for b in library_bands
                      if b["library"] == "unattributed")
-    game_hits = game_channel(functions, per_function, allowed)
-    print(f"[carve dna] game channel: {len(game_hits)} positive hits "
-          f"({sum(1 for e in game_hits.values() if e == 'nh3api-name')} "
-          "nh3api-named, "
-          f"{sum(1 for e in game_hits.values() if e == 'init-array-ctor')} "
-          "init-array ctors)")
+    head_limit = min((b["lo"] for b in library_bands
+                      if b["library"] not in ("unattributed", "game")),
+                     default=text.rva + text.size)
+    from homm3.carve.naming import eh_parentage
+    funclet_parent = {funclet: parent for funclet, (parent, _state) in
+                      eh_parentage(image, entries, owner_of).items()}
+    game_hits = game_channel(functions, per_function, allowed,
+                             funclet_entries, head_limit, funclet_parent)
+    game_kinds = Counter(game_hits.values())
+    print(f"[carve dna] game channel: {len(game_hits)} positive hits")
+    for kind, count in game_kinds.most_common():
+        print(f"    {kind}: {count}")
     bands = build_bands(functions, per_function, funclet_entries)
 
     banner = ("# GENERATED by `python3 -m homm3.carve dna` - regenerate "

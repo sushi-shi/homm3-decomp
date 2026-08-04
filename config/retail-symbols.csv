@@ -5800,49 +5800,49 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x2030e0,505,calls_timeGetTime_2030e0,import-wrapper,structural,game,,imports: timeGetTime
 0x2032e0,485,calls_timeGetTime_2032e0,import-wrapper,structural,game,,imports: timeGetTime
 0x2034d0,32,cinit1118_2034d0,init-ctor,structural,game,,.CRT$XCU slot 1118
-0x2034f0,6,sub_1eeda0_sub00_2034f0,caller,structural,unattributed,,called from 0x1eeda0
-0x2034f6,6,sub_1eeda0_sub01_2034f6,caller,structural,unattributed,,called from 0x1eeda0
-0x2034fc,6,sub_1eee00_sub00_2034fc,caller,structural,unattributed,,called from 0x1eee00
-0x203502,6,sub_2014f0_sub02_203502,caller,structural,unattributed,,called from 0x2014f0
-0x203508,6,sub_1112e0_sub00_203508,caller,structural,unattributed,,called from 0x1112e0
-0x20350e,6,sub_1112e0_sub01_20350e,caller,structural,unattributed,,called from 0x1112e0
-0x203514,6,sub_1112e0_sub02_203514,caller,structural,unattributed,,called from 0x1112e0
-0x20351a,6,sub_1112e0_sub03_20351a,caller,structural,unattributed,,called from 0x1112e0
-0x203520,6,sub_1112e0_sub04_203520,caller,structural,unattributed,,called from 0x1112e0
-0x203526,6,sub_1112e0_sub05_203526,caller,structural,unattributed,,called from 0x1112e0
-0x20352c,6,sub_1112e0_sub06_20352c,caller,structural,unattributed,,called from 0x1112e0
-0x203532,6,sub_1112e0_sub07_203532,caller,structural,unattributed,,called from 0x1112e0
-0x203538,6,sub_1112e0_sub08_203538,caller,structural,unattributed,,called from 0x1112e0
-0x20353e,6,sub_1112e0_sub09_20353e,caller,structural,unattributed,,called from 0x1112e0
-0x203544,6,sub_203544,band,structural,unattributed,,band unattributed
-0x20354a,6,sub_20354a,band,structural,unattributed,,band unattributed
-0x203550,6,sub_203550,band,structural,unattributed,,band unattributed
-0x203556,6,sub_203556,band,structural,unattributed,,band unattributed
-0x20355c,6,sub_20355c,band,structural,unattributed,,band unattributed
-0x203562,6,sub_203562,band,structural,unattributed,,band unattributed
-0x203568,6,sub_203568,band,structural,unattributed,,band unattributed
-0x20356e,6,sub_20356e,band,structural,unattributed,,band unattributed
-0x203574,6,sub_203574,band,structural,unattributed,,band unattributed
-0x20357a,6,sub_20357a,band,structural,unattributed,,band unattributed
-0x203580,6,sub_203580,band,structural,unattributed,,band unattributed
-0x203586,6,sub_203586,band,structural,unattributed,,band unattributed
-0x203590,37,sub_4eef0_sub00_203590,caller,structural,unattributed,,called from 0x4eef0
-0x2035c0,470,sub_203590_sub00_2035c0,caller,structural,unattributed,,called from 0x203590
-0x2037a0,110,sub_4eef0_sub01_2037a0,caller,structural,unattributed,,called from 0x4eef0
-0x203810,154,sub_203e00_sub00_203810,caller,structural,unattributed,,called from 0x203e00
-0x2038b0,234,calls_IsBadReadPtr_2038b0,import-wrapper,structural,unattributed,,imports: IsBadReadPtr
-0x2039a0,32,sub_203b20_sub00_2039a0,caller,structural,unattributed,,called from 0x203b20
-0x2039c0,252,sub_2035c0_sub00_2039c0,caller,structural,unattributed,,called from 0x2035c0
-0x203ac0,77,sub_203b20_sub01_203ac0,caller,structural,unattributed,,called from 0x203b20
-0x203b20,722,sub_4eef0_sub02_203b20,caller,structural,unattributed,,called from 0x4eef0
-0x203e00,1172,sub_4eef0_sub03_203e00,caller,structural,unattributed,,called from 0x4eef0
-0x2042a0,295,sub_4eef0_sub04_2042a0,caller,structural,unattributed,,called from 0x4eef0
-0x2043d0,316,sub_203e00_sub01_2043d0,caller,structural,unattributed,,called from 0x203e00
-0x204510,83,sub_203e00_sub02_204510,caller,structural,unattributed,,called from 0x203e00
-0x204570,99,sub_203e00_sub03_204570,caller,structural,unattributed,,called from 0x203e00
-0x2045e0,52,sub_203e00_sub04_2045e0,caller,structural,unattributed,,called from 0x203e00
-0x204720,132,sub_203b20_sub02_204720,caller,structural,unattributed,,called from 0x203b20
-0x2047b0,115,sub_203b20_sub03_2047b0,caller,structural,unattributed,,called from 0x203b20
+0x2034f0,6,game_1eeda0_sub00_2034f0,caller,structural,game,,called from 0x1eeda0
+0x2034f6,6,game_1eeda0_sub01_2034f6,caller,structural,game,,called from 0x1eeda0
+0x2034fc,6,game_1eee00_sub00_2034fc,caller,structural,game,,called from 0x1eee00
+0x203502,6,game_2014f0_sub02_203502,caller,structural,game,,called from 0x2014f0
+0x203508,6,game_1112e0_sub00_203508,caller,structural,game,,called from 0x1112e0
+0x20350e,6,game_1112e0_sub01_20350e,caller,structural,game,,called from 0x1112e0
+0x203514,6,game_1112e0_sub02_203514,caller,structural,game,,called from 0x1112e0
+0x20351a,6,game_1112e0_sub03_20351a,caller,structural,game,,called from 0x1112e0
+0x203520,6,game_1112e0_sub04_203520,caller,structural,game,,called from 0x1112e0
+0x203526,6,game_1112e0_sub05_203526,caller,structural,game,,called from 0x1112e0
+0x20352c,6,game_1112e0_sub06_20352c,caller,structural,game,,called from 0x1112e0
+0x203532,6,game_1112e0_sub07_203532,caller,structural,game,,called from 0x1112e0
+0x203538,6,game_1112e0_sub08_203538,caller,structural,game,,called from 0x1112e0
+0x20353e,6,game_1112e0_sub09_20353e,caller,structural,game,,called from 0x1112e0
+0x203544,6,game_203544,band,structural,game,,band game
+0x20354a,6,game_20354a,band,structural,game,,band game
+0x203550,6,game_203550,band,structural,game,,band game
+0x203556,6,game_203556,band,structural,game,,band game
+0x20355c,6,game_20355c,band,structural,game,,band game
+0x203562,6,game_203562,band,structural,game,,band game
+0x203568,6,game_203568,band,structural,game,,band game
+0x20356e,6,game_20356e,band,structural,game,,band game
+0x203574,6,game_203574,band,structural,game,,band game
+0x20357a,6,game_20357a,band,structural,game,,band game
+0x203580,6,game_203580,band,structural,game,,band game
+0x203586,6,game_203586,band,structural,game,,band game
+0x203590,37,game_4eef0_sub00_203590,caller,structural,game,,called from 0x4eef0
+0x2035c0,470,game_203590_sub00_2035c0,caller,structural,game,,called from 0x203590
+0x2037a0,110,game_4eef0_sub01_2037a0,caller,structural,game,,called from 0x4eef0
+0x203810,154,game_203e00_sub00_203810,caller,structural,game,,called from 0x203e00
+0x2038b0,234,calls_IsBadReadPtr_2038b0,import-wrapper,structural,game,,imports: IsBadReadPtr
+0x2039a0,32,game_203b20_sub00_2039a0,caller,structural,game,,called from 0x203b20
+0x2039c0,252,game_2035c0_sub00_2039c0,caller,structural,game,,called from 0x2035c0
+0x203ac0,77,game_203b20_sub01_203ac0,caller,structural,game,,called from 0x203b20
+0x203b20,722,game_4eef0_sub02_203b20,caller,structural,game,,called from 0x4eef0
+0x203e00,1172,game_4eef0_sub03_203e00,caller,structural,game,,called from 0x4eef0
+0x2042a0,295,game_4eef0_sub04_2042a0,caller,structural,game,,called from 0x4eef0
+0x2043d0,316,game_203e00_sub01_2043d0,caller,structural,game,,called from 0x203e00
+0x204510,83,game_203e00_sub02_204510,caller,structural,game,,called from 0x203e00
+0x204570,99,game_203e00_sub03_204570,caller,structural,game,,called from 0x203e00
+0x2045e0,52,game_203e00_sub04_2045e0,caller,structural,game,,called from 0x203e00
+0x204720,132,game_203b20_sub02_204720,caller,structural,game,,called from 0x203b20
+0x2047b0,115,game_203b20_sub03_2047b0,caller,structural,game,,called from 0x203b20
 0x204830,26,deflateInit,library-symbol,retail-proven,zlib,@deflateInit_@16,zlib/deflate.obj
 0x204850,505,deflateInit2,library-symbol,retail-proven,zlib,@deflateInit2_@32,zlib/deflate.obj
 0x204a50,110,deflateReset,library-symbol,retail-proven,zlib,@deflateReset@4,zlib/deflate.obj

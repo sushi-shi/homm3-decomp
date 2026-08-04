@@ -4,8 +4,7 @@
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 band_lo	band_hi	library	functions	attributed	bytes	eh_funclet_share	evidence
-0x1000	0x2034f0	game	5794	1218	2061366	0.00	nh3api-names+init-array-order
-0x2034f0	0x204823	unattributed	43	0	4508	0.00	no-evidence
+0x1000	0x204823	game	5837	5790	2065874	0.00	hd+nh3api-names+init-order+xref-closure
 0x204830	0x20ab22	zlib	68	66	24027	0.00	masked-zlib-obj-run
 0x20ab30	0x20ab3b	unattributed	1	0	11	0.00	no-evidence
 0x20ab3b	0x216e8d	cxx-libcpmt	444	258	49783	0.00	masked-archive-run

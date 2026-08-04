@@ -23,7 +23,7 @@ regenerable via `python3 -m homm3.carve dna`; raw channel outputs under
 ## The band map
 
 ```
-0x001000..0x204823  unattributed  5,837 fns  2,065,874 B   (presumably game code - see caveats)
+0x001000..0x204823  game          5,837 fns  2,065,874 B   5,790 positively evidenced - see below
 0x204830..0x20ab22  zlib             68 fns     24,027 B
 0x20ab30..0x20ab3b  unattributed      1 fn          11 B   (operator delete - generic bytes, ambiguous)
 0x20ab3b..0x216e8d  cxx-libcpmt     444 fns     49,783 B
@@ -99,15 +99,49 @@ under `public:`. Retail-byte proof that the vendored IFC headers are the
 right SDK generation — and the same technique validates any mangled import
 surface.
 
+## The game band by positive evidence
+
+The head band is no longer "presumably game": **5,790 of its 5,837 functions
+(2,061,859 B, 99.2%) carry a positive game attribution**, from five channels
+layered strongest-first (library evidence always wins; every channel is cut
+at the first library band, since linkage order makes game contributions a
+contiguous prefix of `.text`):
+
+| evidence | fns | bytes | what it is |
+|---|---:|---:|---|
+| `hd-crossbuild-name` | 837 | 282,757 | NH3API name carried onto our bytes by unique masked identity vs HD Mod's sibling build (crossbuild-verified) |
+| `nh3api-name` | 31 | 4,243 | NH3API address that directly hits one of our entries |
+| `init-array-ctor` | 1,106 | 93,448 | the `.CRT$XCU` game-ctor prefix, in link order (retail-derived) |
+| `xref-to-game-direct` | 1,186 | 816,341 | shares a call edge with a NAMED game function (`E8` rel32 calls are retail bytes; Ghidra call-graph export) |
+| `xref-to-game-transitive` | 2,001 | 745,620 | reached from game code through other closure members only |
+| `game-vtable-link` | 629 | 119,450 | tied to game code across a retail vtable: the vptr-store site (ctor/dtor) and the slot targets belong to one class |
+
+Closure rules, all enforced in `homm3.carve.dna:game_channel`: it never
+enters an EH funclet (calls FROM a funclet fold into the function the
+funclet guards, via retail EH parentage — that is how a dtor reached only on
+exception paths still ties to its owner, +29 functions); it never propagates
+*through* a library-attributed function (game code calling `memcpy` must not
+paint memcpy's other callers); and nothing past the first library band can
+become game no matter what calls it (the generic `operator delete` sliver at
+0x20ab30 is the case that forced the guard — game code calls it, linkage
+order vetoes it).
+
+**What remains: 45 functions, 3,962 B** (plus 2 generic 8-byte island
+stubs) with *no* positive evidence — 37 of them have zero Ghidra callers,
+median size ~35 B: unreferenced helpers, dead code, or carve noise. They are
+the entire unknown of the head band.
+
 ## Coverage arithmetic
 
-734 of 11,943 functions carry a direct per-function attribution (6.1% of
-spanned bytes; library bands total 136,751 B). The remaining 2,116,762 B in
-10,731 functions is **unattributed**: no channel places it in any known
-archive. The head band plus the bulk of the funclet zone is *presumably* the
-game's own code (NWC engine), but that is a residual inference, not evidence
-— nothing here proves the head band contains no further unidentified static
-library, and the band map deliberately says `unattributed`, never `game`.
+6,524 of 11,943 functions carry a per-function attribution: 5,790 game
+(2,061,859 B) + 734 library (library bands total 136,751 B). Outside those,
+the EH-funclet zone (5,125 tiny funclets, 53,151 B) is structurally owned by
+its parents (each funclet is named after the function it guards — see
+`retail-symbols.csv`), leaving the 45-function residue above and the two
+slivers as the only genuinely unattributed code. The `game` label is still
+positive-evidence-per-function, not proof of the band as a whole — but the
+residual-inference caveat that used to live here has been retired by
+measurement.
 
 ## Candidates and known noise (not claims)
 
@@ -140,11 +174,12 @@ pressings) into two generated CSVs:
   `retail-functions.tsv` (11,943), carrying: its entry name/signature where we
   have one (`retail-function-names.csv`, **entry rows only**), the library +
   retail-proven symbol where the DNA pass placed it, and its vtable-slot
-  memberships (`vtable_rva#slot`, repeatable). **1,843 functions carry at
-  least one relation**: 565 named, 734 library-proven, 1,080 are vtable-slot
-  targets. The 988 vtable-slot targets that are still unnamed and non-library
-  are the naming frontier (game virtuals NH3API addresses only mid-function,
-  i.e. for a different pressing, or not at all).
+  memberships (`vtable_rva#slot`, repeatable). After the game channel:
+  **6,601 functions carry at least one relation** — 565 named, 6,524
+  band-attributed (734 library + 5,790 game), 1,080 are vtable-slot targets.
+  The vtable-slot targets that are still unnamed are the naming frontier
+  (game virtuals NH3API addresses only mid-function, i.e. for a different
+  pressing, or not at all).
 
 - **`config/retail-vtable-symbols.csv`** — one row per vtable slot (363
   vtables, 3,040 slots): the slot's target function, that function's method
@@ -288,3 +323,8 @@ repository.
   counts below function counts.
 - The funclet zone's per-parent ownership (which funclet belongs to which
   band's FuncInfo) is measured only in aggregate here.
+- The game closure's *seeds* are external names (NH3API/HD); the *edges* are
+  retail bytes (rel32 calls, vtable slots, EH parentage) as read by Ghidra's
+  analysis. A misdecoded call site could add a false edge — which is why the
+  closure stays inside the head band and why the confidence class remains
+  `external-candidate`, never retail-proven.
