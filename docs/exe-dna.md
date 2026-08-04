@@ -214,19 +214,20 @@ say what kind of evidence produced it.
 | `fid` | 11 | stock Ghidra Function ID (`local_unwind2`, `NLG_Notify1`) | retail-proven |
 | `hd-crossbuild` | 846 | **original class/method name** transferred from HD Mod's sibling build by unique masked byte identity (`TAdventureMapWindow_ProcessRightSelect`) | crossbuild-verified |
 | `nh3api` | 31 | NH3API address that happens to hit one of our entries directly | external-candidate |
-| `vtable-slot` | 310 | slot of a class-labeled vtable → `border__vslot05` | external-candidate |
+| `dc-linkorder` | 145 | **original name + source FILE:LINE** from the Dreamcast CodeView dump, transferred by link order alone (see below) | linkorder-candidate |
+| `vtable-slot` | 303 | slot of a class-labeled vtable → `border__vslot05` | external-candidate |
 | `eh-funclet` | 5,125 | unwind funclet named after the **parent function it guards** (`TAdventureMapWindow_TAdventureMapWindow_unwind03`) | structural |
-| `caller` | 2,762 | named by dominant caller + callee ordinal | structural |
-| `init-ctor` | 1,132 | `.CRT$XCU` slot, numbered in link order | structural |
-| `band` | 697 | band prefix + address (fallback that cannot fail) | structural |
-| `string` | 440 | an owned literal names the subject (`game_advopts_pcx_51d0`) | structural |
-| `import-wrapper` | 156 | thunk to / lone caller of one imported API | structural |
+| `caller` | 2,656 | named by dominant caller + callee ordinal | structural |
+| `init-ctor` | 1,120 | `.CRT$XCU` slot, numbered in link order | structural |
+| `band` | 695 | band prefix + address (fallback that cannot fail) | structural |
+| `string` | 427 | an owned literal names the subject (`game_advopts_pcx_51d0`) | structural |
+| `import-wrapper` | 151 | thunk to / lone caller of one imported API | structural |
 
-**8,484 of 11,943 (71%)** carry a semantic name — an original symbol, a class
+**8,592 of 11,943 (72%)** carry a semantic name — an original symbol, a class
 method, or a parent-anchored EH funclet — rather than an address label. By
-confidence: **443 retail-proven** (85,669 B), **782 crossbuild-verified**
-(246,534 B), **348 external-candidate** (67,697 B), **10,370 structural**
-(1,853,613 B).
+confidence: **443 retail-proven** (85,669 B), **846 crossbuild-verified**
+(283,051 B), **335 external-candidate** (63,120 B), **145 linkorder-candidate**
+(54,913 B), **10,174 structural** (1,766,760 B).
 
 The two channels that turned addresses into meaning:
 
@@ -311,6 +312,44 @@ Output: `config/retail-hd-name-map.csv` (`rva, hd_va, name, signature,
 match_bytes, fixed_bytes, pass, our_state, evidence`). The HD executable is the
 user's own download, referenced via `$HOMM3_HD_EXE` and never copied into the
 repository.
+
+## The Dreamcast dump by link order (`carve dcmap`)
+
+The Dreamcast port's CodeView dump proves names, signatures, and source
+FILE:LINE for 9,684 procs — of **another pressing** (RoE sources, SH4 code),
+so no byte or address evidence can cross. What crosses is **link order**:
+of 588 name pairs unique on both sides (our hd-crossbuild/nh3api-named
+entries vs Dreamcast procs), **95.1% are monotone** in (our rva → DC
+offset). Both projects evidently emitted their objects in the same order —
+the third build to replay it, after the retail/HD pair. The 29 off-backbone
+pairs are tiny COMDAT-style dtors (`CAdvPopup::~CAdvPopup`) that genuinely
+migrate between builds; LIS demotes them.
+
+`python3 -m homm3.carve dcmap` turns that into a transfer channel
+(`config/retail-dc-name-map.csv`):
+
+- **Pass 1**: 588 unique-name anchors, LIS-gated → 559.
+- **Pass 2**: globally ambiguous names (overloads, repeated dtor names)
+  re-anchored where unique *inside* their bracket, monotonicity re-asserted
+  (the hdmap idea, keyed on names instead of bytes): **+40** → 599 anchors.
+- **Pass 3 — incremental rva**: between two adjacent anchors, if our carve
+  holds exactly as many entries as the dump holds procs, the bracket aligns
+  1:1 in address order. An **agreement gate** rejects any bracket where an
+  already-named entry would align against a different name — 16 brackets
+  died there, 243 failed the count outright (Complete's insertions land
+  here by design, failing loudly instead of shifting names silently), and
+  **51 brackets survived**: **145 NEW names** (`advManager::CompleteDraw`,
+  `type_AI_player::calculate_demand`, `SaveGame`, …, each with
+  `E:\gamedcs\*.cpp:line` provenance) plus 10 alignments that corroborate
+  existing HD names.
+
+The internal consistency is visible in the output: consecutive rvas map to
+consecutive line numbers of the same source file. Still, the names ride on
+order alone, from a build of older sources — hence the dedicated
+`linkorder-candidate` confidence class, below `external-candidate`, and the
+`dc-linkorder` naming tier. The mismatched brackets are the channel's
+remaining headroom: every new rva-anchored name (NH3API or future retail
+proof) splits brackets and can only grow the monotone backbone.
 
 ## Caveats
 
