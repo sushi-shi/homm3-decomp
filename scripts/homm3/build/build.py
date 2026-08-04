@@ -4,7 +4,9 @@
     configure -> ninja (base objs) -> normalize comparison copies ->
     configure (objdiff.json sees new normalized paths) -> objdiff report
     -> overall line -> [normal tier] baseline raise + ratchet check
-    (FATAL on regression) + README score block + stale-delink probe.
+    (FATAL on regression) + cleanliness board (FATAL when a ratcheted
+    source metric rises above its committed floor - C-style casts are
+    banned at 0) + README score block + stale-delink probe.
 
 `--fast` stops after the overall line and says what it skipped (the gruntz
 inner-loop tier). The build never RE-delinks (homm2 rule - an existing
@@ -82,6 +84,21 @@ def main(argv=None) -> int:
 
     status.cmd_update(report)
     if status.cmd_check(report, gate=True):
+        return 1
+
+    from homm3.match import single_view, verify_va_claims
+    for gate in (verify_va_claims, single_view):
+        fatal = gate.run_gate()
+        if fatal:
+            for line in fatal:
+                print(f"[build] {line}", file=sys.stderr)
+            return 1
+
+    from homm3.cleanliness import board
+    violations = board.check_and_roll(write=True)
+    if violations:
+        for line in violations:
+            print(f"[build] {line}", file=sys.stderr)
         return 1
     try:
         status.write_readme(report)
