@@ -11,9 +11,14 @@ truth by who owns the names:
                      table exists for game code, by design.
   2. zlib:           statically linked but never reconstructed from src/
                      (vendored sources stay pristine) ->
-                     config/retail-zlib-map.tsv, emitted here. The only
-                     such library in the image - the DNA verdict rules out
-                     MFC and any other static middleware.
+                     config/retail-zlib-map.tsv (rva, size, name, unit),
+                     emitted here. `unit` is the owning TU - the archive
+                     member stem (deflate, inflate, ...), i.e. the file
+                     location the delinker mirrors - from the DNA member
+                     attribution, link-order-filled for stragglers
+                     (member contributions are contiguous). The only such
+                     library in the image - the DNA verdict rules out MFC
+                     and any other static middleware.
   3. CRT/C++ runtime: functions we NAME but do not match ->
                      config/retail-runtime-map.tsv, emitted here. Raw
                      linker symbol where the masked-archive channel proved
@@ -65,6 +70,15 @@ def main(argv=None) -> int:
         rows = list(csv.DictReader(
             line for line in fh if not line.startswith("#")))
 
+    member_of = {}
+    libraries = common.EVIDENCE_DIR / "retail-function-libraries.tsv"
+    for line in libraries.open():
+        if not line.startswith("0x"):
+            continue
+        cells = line.rstrip("\n").split("\t")
+        if cells[1] == "zlib" and cells[3].endswith(".obj"):
+            member_of[int(cells[0], 16)] = cells[3][:-4]
+
     zlib, runtime = [], []
     for r in rows:
         rva, band = int(r["rva"], 16), r["library"]
@@ -75,11 +89,23 @@ def main(argv=None) -> int:
 
     zlib.sort()
     runtime.sort()
-    if sum(s for _r, s, _n in zlib) != ZLIB_BYTES:
-        common.die(f"zlib map: {sum(s for _r, s, _n in zlib)} B, expected "
-                   f"{ZLIB_BYTES} - band map moved, review before admitting")
-    for label, table in (("zlib", zlib), ("runtime", runtime)):
-        names = [t[-1] for t in table]
+    # unit column: DNA member attribution; the few unattributed stragglers
+    # inherit a neighbour (member contributions are contiguous in link
+    # order - forward fill, then backward fill a bare head)
+    units = [member_of.get(rva) for rva, _s, _n in zlib]
+    for i in range(1, len(units)):
+        units[i] = units[i] or units[i - 1]
+    for i in range(len(units) - 2, -1, -1):
+        units[i] = units[i] or units[i + 1]
+    if not all(units):
+        common.die("zlib map: no member attribution at all")
+    zlib = [row + (unit,) for row, unit in zip(zlib, units)]
+    zlib_bytes = sum(s for _r, s, _n, _u in zlib)
+    if zlib_bytes != ZLIB_BYTES:
+        common.die(f"zlib map: {zlib_bytes} B, expected {ZLIB_BYTES} - "
+                   "band map moved, review before admitting")
+    for label, table, name_col in (("zlib", zlib, 2), ("runtime", runtime, 1)):
+        names = [t[name_col] for t in table]
         if not table or len(set(names)) != len(names):
             common.die(f"{label} map: empty or duplicate names")
 
@@ -93,12 +119,13 @@ def main(argv=None) -> int:
                                   (f"0x{row[0]:x}",) + row[1:])
                         for row in table) + "\n")
 
-    write(ZLIB_OUT, ["rva", "size", "name"], zlib,
+    write(ZLIB_OUT, ["rva", "size", "name", "unit"], zlib,
           "# zlib 1.1.3, statically linked, never reconstructed from src/\n"
           "# (vendored sources stay pristine): the reviewed rva->symbol map\n"
           "# promised by CLAUDE.md/P0.2. Raw symbol where the recompiled-\n"
           "# object channel proved it; working label for zlib's static\n"
-          "# internals until matching completes them.\n")
+          "# internals until matching completes them. `unit` = owning TU\n"
+          "# (archive member stem), the file location the delinker mirrors.\n")
     write(RUNTIME_OUT, ["rva", "name"], runtime,
           "# CRT (LIBCMT) + C++ runtime (LIBCPMT) bands: functions we NAME\n"
           "# but do not match from source. Raw linker symbol where the\n"
@@ -107,7 +134,8 @@ def main(argv=None) -> int:
           "# proceeds. MFC is absent from the image (docs/exe-dna.md).\n")
 
     proven = sum(1 for _r, n in runtime if n.startswith(("?", "_", "@")))
-    zproven = sum(1 for _r, _s, n in zlib if n.startswith(("?", "_", "@")))
+    zproven = sum(1 for _r, _s, n, _u in zlib
+                  if n.startswith(("?", "_", "@")))
     print(f"[carve funcmap] zlib: {len(zlib)} functions "
           f"({zproven} proven symbols) -> {ZLIB_OUT.name}")
     print(f"[carve funcmap] crt+cxx runtime: {len(runtime)} functions "

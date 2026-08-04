@@ -23,6 +23,9 @@ normalize_objs
              thin driver: build/objdiff/{base,target} ->
              build/objdiff/normalized/ + .symbols.tsv sidecars
 
+zlib_names   recover real names for zlib-map working labels by masked
+             per-function identity against our compiled base objs; updates
+             config/retail-zlib-map.tsv in place (bracket pass + gates)
 delink       THE LOOP (explicit invocation only, never in `homm3 build`):
              labels -> synth_pdb -> data_manifest -> vostok
              -> build/delink/<unit>.c.obj -> copy units.toml scope to
