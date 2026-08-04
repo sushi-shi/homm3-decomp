@@ -5,6 +5,11 @@
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
+# CRT (LIBCMT) + C++ runtime (LIBCPMT) bands: functions we NAME
+# but do not match from source. Raw linker symbol where the
+# masked-archive channel proved it against retail bytes; working
+# label otherwise. Rows get properly mapped as matching
+# proceeds. MFC is absent from the image (docs/exe-dna.md).
 rva	name
 0x20ab3b	cxx_string_too_long_20ab3b
 0x20ab95	cxx_20abef_sub00_20ab95
