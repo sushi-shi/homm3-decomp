@@ -50,7 +50,7 @@ import struct
 import sys
 from pathlib import Path
 
-from homm3.carve import common
+from homm3.core import common
 
 OUT = common.HOMM3_DIR / "build/gen/symbol_names.csv"
 SRC_DIR = common.HOMM3_DIR / "src"

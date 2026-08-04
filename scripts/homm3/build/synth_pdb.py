@@ -35,7 +35,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-from homm3.carve import common
+from homm3.core import common
 
 INVENTORY = common.HOMM3_DIR / "build/gen/symbol_names.csv"
 OUT = common.HOMM3_DIR / "build/pdb/HEROES3.pdb"
