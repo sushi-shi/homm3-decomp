@@ -39,6 +39,7 @@ Scratch/regenerable evidence lands under build/dna/.
 """
 from __future__ import annotations
 
+import bisect
 import struct
 import sys
 from collections import Counter, defaultdict
@@ -370,11 +371,69 @@ MIN_CLUSTER = 3     # a band needs at least this many attributed functions
 MAX_CLUSTER_GAP = 32  # consecutive same-family hits within this many entries
 
 
+def in_allowed(rva, allowed):
+    i = bisect.bisect_right([lo for lo, _hi in allowed], rva) - 1
+    return i >= 0 and allowed[i][0] <= rva < allowed[i][1]
+
+
+def game_channel(functions, per_function, allowed):
+    """The game's own code is a library too - label it by POSITIVE evidence,
+    never by absence of library hits:
+
+      nh3api-name     entry functions the names export attributes to game
+                      classes (external-unverified candidates, entry rows
+                      only - interior addresses are another pressing);
+      init-array-ctor the `.CRT$XCU` prefix in slot order: static ctors of
+                      the game's own objects come before every library ctor
+                      (linkage order), so the prefix up to the first
+                      library-attributed target is game code, retail-derived.
+
+    Library attributions always win; this channel only labels virgin rvas.
+    Restricted to `allowed` (the spans no library band claims): NH3API also
+    models the game's std-like wrappers (exe_string, exe_vector), whose retail
+    bodies ARE LIBCPMT code - letting those names vote inside a library band
+    would shred it. Library evidence always wins.
+    """
+    hits = {}
+    names_csv = common.HOMM3_DIR / "config/retail-function-names.csv"
+    if names_csv.is_file():
+        import csv as _csv
+        with names_csv.open() as fh:
+            for row in _csv.DictReader(
+                    line for line in fh if not line.startswith("#")):
+                if row["carve_state"] != "entry" or \
+                        "nh3api" not in row["sources"]:
+                    continue
+                rva = int(row["rva"], 16)
+                if rva in functions and rva not in per_function \
+                        and in_allowed(rva, allowed):
+                    hits[rva] = "nh3api-name"
+    seed_log = common.CARVE_DIR / "seed_log.tsv"
+    if seed_log.is_file():
+        for row in common.read_tsv(seed_log):
+            if row["run"] != "1" or row["iter"] != "1" or \
+                    row["source"] != "init-array":
+                continue
+            target = int(row["target_rva"], 16)
+            if target in per_function or not in_allowed(target, allowed):
+                break  # first library ctor: the game prefix ends here
+            if target in functions:
+                hits.setdefault(target, "init-array-ctor")
+    for rva, evidence in hits.items():
+        if rva not in per_function:
+            per_function[rva] = {
+                "library": "game", "variant": "-", "member": "-",
+                "symbol": "-", "evidence": evidence,
+                "confidence": "external-candidate"}
+    return hits
+
+
 def build_bands(functions, per_function, funclet_entries):
     """Contiguous same-library bands; unattributed runs between two bands of
     the same library are inferred into it (linkage-order argument); the rest
-    stays `unattributed` - absence of a library hit is NOT evidence of game
-    ownership, so no band claims "game".
+    stays `unattributed`. `game` is a first-class family here, labeled by the
+    game_channel's positive evidence - regions with no evidence at all keep
+    the `unattributed` label (the funclet zone, edge slivers).
 
     Library membership is a property of contiguous bands, so a hit only
     participates in banding as part of a CLUSTER (>=MIN_CLUSTER same-family
@@ -437,15 +496,16 @@ def build_bands(functions, per_function, funclet_entries):
             library = filled[start] or "unattributed"
             funclets = sum(1 for k in range(start, i)
                            if entries[k] in funclet_entries)
+            evidence = {"unattributed": "no-evidence",
+                        "zlib": "masked-zlib-obj-run",
+                        "game": "nh3api-names+init-array-order",
+                        }.get(library, "masked-archive-run")
             bands.append({"lo": lo, "hi": hi, "library": library,
                           "functions": i - start, "attributed": attributed,
                           "bytes": sum(functions[entries[k]]
                                        for k in range(start, i)),
                           "funclet_share": f"{funclets / (i - start):.2f}",
-                          "evidence": "no-library-hit" if library ==
-                                      "unattributed" else
-                                      "masked-zlib-obj-run" if library == "zlib"
-                                      else "masked-archive-run"})
+                          "evidence": evidence})
             start = i
     return bands
 
@@ -519,6 +579,17 @@ def main(argv=None) -> int:
     from homm3.carve import audit
     _fi, funclet_entries, _missing = audit.gate_eh_funclets(
         image, set(functions))
+    # two-pass: band on LIBRARY evidence alone, then let the game channel
+    # speak only where no library band claims the address, then re-band
+    library_bands = build_bands(functions, per_function, funclet_entries)
+    allowed = sorted((b["lo"], b["hi"]) for b in library_bands
+                     if b["library"] == "unattributed")
+    game_hits = game_channel(functions, per_function, allowed)
+    print(f"[carve dna] game channel: {len(game_hits)} positive hits "
+          f"({sum(1 for e in game_hits.values() if e == 'nh3api-name')} "
+          "nh3api-named, "
+          f"{sum(1 for e in game_hits.values() if e == 'init-array-ctor')} "
+          "init-array ctors)")
     bands = build_bands(functions, per_function, funclet_entries)
 
     banner = ("# GENERATED by `python3 -m homm3.carve dna` - regenerate "

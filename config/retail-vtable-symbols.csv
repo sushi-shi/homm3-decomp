@@ -254,7 +254,7 @@ vtable_rva,class,class_addr_offset,slot,target_rva,target_state,method,signature
 0x23bb54,button,0,9,0x1fe940,entry,,,
 0x23bb54,button,0,10,0x4df0,entry,,,
 0x23bb54,button,0,11,0x4df0,entry,,,
-0x23bb54,button,0,12,0x56a10,entry,type_func_button::int32_t,void type_func_button::int32_t(__fastcall * callback),
+0x23bb54,button,0,12,0x56a10,entry,type_func_button::int32_t,void type_func_button::int32_t(__fastcall * callback),game
 0x23bb88,textButton,0,0,0x56a20,entry,,,
 0x23bb88,textButton,0,1,0x1fe4d0,entry,,,
 0x23bb88,textButton,0,2,0x56190,entry,,,
@@ -267,7 +267,7 @@ vtable_rva,class,class_addr_offset,slot,target_rva,target_state,method,signature
 0x23bb88,textButton,0,9,0x1fe940,entry,,,
 0x23bb88,textButton,0,10,0x4df0,entry,,,
 0x23bb88,textButton,0,11,0x4df0,entry,,,
-0x23bb88,textButton,0,12,0x56a10,entry,type_func_button::int32_t,void type_func_button::int32_t(__fastcall * callback),
+0x23bb88,textButton,0,12,0x56a10,entry,type_func_button::int32_t,void type_func_button::int32_t(__fastcall * callback),game
 0x23bbbc,type_func_button,0,0,0x56d80,entry,,,
 0x23bbbc,type_func_button,0,1,0x1fe4d0,entry,,,
 0x23bbbc,type_func_button,0,2,0x56e50,entry,,,
@@ -280,7 +280,7 @@ vtable_rva,class,class_addr_offset,slot,target_rva,target_state,method,signature
 0x23bbbc,type_func_button,0,9,0x1fe940,entry,,,
 0x23bbbc,type_func_button,0,10,0x4df0,entry,,,
 0x23bbbc,type_func_button,0,11,0x4df0,entry,,,
-0x23bbbc,type_func_button,0,12,0x56a10,entry,type_func_button::int32_t,void type_func_button::int32_t(__fastcall * callback),
+0x23bbbc,type_func_button,0,12,0x56a10,entry,type_func_button::int32_t,void type_func_button::int32_t(__fastcall * callback),game
 0x23bc08,,,0,0x57200,entry,,,
 0x23bc08,,,1,0x1feae0,entry,,,
 0x23bc08,,,2,0x1fec60,entry,,,
@@ -379,7 +379,7 @@ vtable_rva,class,class_addr_offset,slot,target_rva,target_state,method,signature
 0x23d528,,,8,0x1ff5f0,entry,,,
 0x23d6b0,CSprite,0,0,0x7b8f0,entry,,,
 0x23d6b0,CSprite,0,1,0x15d1a0,entry,,,
-0x23d6b0,CSprite,0,2,0x7bd50,entry,CSpriteFrame::~CSpriteFrame,void CSpriteFrame::~CSpriteFrame(),
+0x23d6b0,CSprite,0,2,0x7bd50,entry,CSpriteFrame::~CSpriteFrame,void CSpriteFrame::~CSpriteFrame(),game
 0x23d6bc,CSpriteFrame,0,0,0x7c280,entry,,,
 0x23d6bc,CSpriteFrame,0,1,0x15d0f0,entry,,,
 0x23d6bc,CSpriteFrame,0,2,0x7c560,entry,,,
@@ -934,7 +934,7 @@ vtable_rva,class,class_addr_offset,slot,target_rva,target_state,method,signature
 0x23ec48,iconWidget,0,12,0x85d80,entry,,,
 0x23ec48,iconWidget,0,13,0xeab10,entry,,,
 0x23fe10,inputManager,0,0,0xec4d0,entry,,,
-0x23fe10,inputManager,0,1,0xec540,entry,inputManager::inputManager,void inputManager::inputManager(),
+0x23fe10,inputManager,0,1,0xec540,entry,inputManager::inputManager,void inputManager::inputManager(),game
 0x23fe10,inputManager,0,2,0xec560,entry,,,
 0x23fe1c,,,0,0xf0ae0,entry,,,
 0x23fe1c,,,1,0x1fe4d0,entry,,,
@@ -1152,7 +1152,7 @@ vtable_rva,class,class_addr_offset,slot,target_rva,target_state,method,signature
 0x240320,,,13,0x1ff8d0,entry,,,
 0x240320,,,14,0x1b190,entry,,,
 0x24036c,,,0,0x15d0f0,entry,,,
-0x24036c,,,1,0x122b40,entry,TPalette16::TPalette16,void TPalette16::TPalette16(),
+0x24036c,,,1,0x122b40,entry,TPalette16::TPalette16,void TPalette16::TPalette16(),game
 0x240374,TPalette16,4,0,0x122e50,entry,,,
 0x240374,TPalette16,4,1,0x15d0f0,entry,,,
 0x240374,TPalette16,4,2,0x122f70,entry,,,
@@ -2343,7 +2343,7 @@ vtable_rva,class,class_addr_offset,slot,target_rva,target_state,method,signature
 0x242db0,TSpreadsheetResource,4,11,0x4df0,entry,,,
 0x242db0,TSpreadsheetResource,4,12,0x85d80,entry,,,
 0x242db0,TSpreadsheetResource,4,13,0x17c6d0,entry,,,
-0x242de8,bitmapBackedTextWidget,16,0,0x1bc6a0,entry,textWidget::?,void textWidget::?(),
+0x242de8,bitmapBackedTextWidget,16,0,0x1bc6a0,entry,textWidget::?,void textWidget::?(),game
 0x242de8,bitmapBackedTextWidget,16,1,0x1fe4d0,entry,,,
 0x242de8,bitmapBackedTextWidget,16,2,0x1bc440,entry,,,
 0x242de8,bitmapBackedTextWidget,16,3,0x1bc7e0,entry,,,
@@ -2724,7 +2724,7 @@ vtable_rva,class,class_addr_offset,slot,target_rva,target_state,method,signature
 0x243ce8,CHeroWindowEx,16,11,0x1ff790,entry,,,
 0x243ce8,CHeroWindowEx,16,12,0x159140,entry,,,
 0x243ce8,CHeroWindowEx,16,13,0x1ff8d0,entry,,,
-0x243d20,,,0,0x1ffb70,entry,heroWindow::SleepAllWidgets,void heroWindow::SleepAllWidgets(bool put_to_sleep = true),
+0x243d20,,,0,0x1ffb70,entry,heroWindow::SleepAllWidgets,void heroWindow::SleepAllWidgets(bool put_to_sleep = true),game
 0x243d20,,,1,0x1ffbc0,entry,,,
 0x243d20,,,2,0x1ffb60,entry,,,
 0x243d20,,,3,0x1ffc80,entry,,,

@@ -49,6 +49,9 @@ def main(argv: list[str]) -> int:
     if stage == "relate":
         from homm3.carve import relate
         return relate.main(rest)
+    if stage == "naming":
+        from homm3.carve import naming
+        return naming.main(rest)
     if stage == "ghidra":
         from homm3.carve import driver
         return driver.main(rest)

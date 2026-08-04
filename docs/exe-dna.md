@@ -165,6 +165,46 @@ Both CSVs are GENERATED (regenerate, don't hand-edit) and stay candidates
 until a supervised admission; the source carcass that consumes them is a
 later stage.
 
+## Naming every function
+
+`python3 -m homm3.carve naming` → **`config/retail-symbols.csv`**: one row per
+carved function, **11,943 of 11,943 named, all unique, all valid C
+identifiers** (asserted, not hoped — the stage fails on any collision, gap, or
+malformed name). A name is a working label; the `tier`/`confidence` columns
+say what kind of evidence produced it.
+
+| tier | count | what it is | confidence |
+|---|---:|---|---|
+| `library-symbol` | 433 | masked-archive/zlib byte identity → the real linker symbol, VC6 mangling decoded (`?clear@ios_base@std@@…` → `std_ios_base_clear`) | retail-proven |
+| `fid` | 11 | stock Ghidra Function ID (`local_unwind2`, `NLG_Notify1`) | retail-proven |
+| `nh3api` | 121 | NH3API wrapper name for that **entry** | external-candidate |
+| `vtable-slot` | 311 | slot of a class-labeled vtable → `border__vslot05` | external-candidate |
+| `eh-funclet` | 5,125 | FuncInfo unwind-action target (retail EH metadata) | structural |
+| `caller` | 3,436 | named by dominant caller + callee ordinal (keeps related code lexically adjacent) | structural |
+| `init-ctor` | 1,132 | `.CRT$XCU` slot, numbered in link order | structural |
+| `band` | 698 | band prefix + address (fallback that cannot fail) | structural |
+| `string` | 483 | an owned literal names the subject (`game_advopts_pcx_51d0`) | structural |
+| `import-wrapper` | 193 | thunk to / lone caller of one imported API (`calls_timeGetTime_5e30`) | structural |
+
+Totals by confidence: **443 retail-proven** (85,693 B), **433
+external-candidate** (90,180 B), **11,067 structural** (2,077,640 B). Only the
+first class asserts an original identity; structural names are stable labels
+that carry their rva, so they are unique and unchanged across reruns.
+
+Evidence channels feeding this, beyond the earlier passes: a Ghidra export
+(`ghidra/export_xrefs.py` → `build/dna/function_xrefs.tsv`) supplying the call
+graph — relative `E8` calls carry no relocation, so the reloc sweep cannot see
+them — plus thunk identity, reached imports, and literals sniffed from memory
+rather than trusted to be defined data (4,574 functions have known callers,
+584 own literals, 469 reach an import, 46 are thunks).
+
+Two traps worth recording, both caught and fixed here: Ghidra's placeholder
+`thunk_FUN_…` names are not API names (they were leaking into
+`import-wrapper`), and an `-island` byte-identity — a header-template COMDAT
+instantiated in a game TU, e.g. `std_locale_dtor` at 0x53d70 — proves the
+*bytes* but not the library *attribution*, so it is demoted to
+external-candidate rather than claimed as a LIBCPMT contribution.
+
 ## Caveats
 
 - The masked matcher proves presence, not absence: a library built into the
