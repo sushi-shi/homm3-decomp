@@ -79,8 +79,10 @@ public:
 // Army-size name tables (BSS at 0x6a5bb8, runtime-filled from game
 // text): nine threshold bands x three name sets, 12-byte row stride
 // proven by GetArmySizeName's nine reloc targets. The NAME is a
-// bootstrap invention (no Dreamcast/NH3API name survives for these) -
-// spelled in NWC's Hungarian style, replace if evidence surfaces.
+// bootstrap invention (no Dreamcast/NH3API name survives for these).
+// NWC's Hungarian-lite is attested by the DC name corpus (b/i/p/gp/
+// gb/psz all in real use: gpGame, pszFormat, iNameSet), but the
+// `apsz` composition specifically is NOT - replace on evidence.
 DATA(0x006a5bb8) extern const char* apszArmySizeNames[9][3];
 
 // The game singleton: 2,264 dir32 references image-wide (the central
