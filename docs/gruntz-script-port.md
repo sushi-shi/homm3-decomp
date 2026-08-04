@@ -275,7 +275,10 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   FF 25 scan for 27 import thunks; total reconciles to the carve's
   11,943 fns / 2,253,513 B exactly; `(unmatched)` row + excluded-category
   table included) → warning-only
-  stale-delink probe (homm2's drift-census idea; build NEVER delinks).
+  stale-delink probe (homm2's drift-census idea; build never RE-delinks —
+  a fresh tree with no targets bootstraps the first delink, since the rule
+  protects an existing comparison target, and from nothing there is
+  nothing to protect).
   `--fast` stops after the %% line and says so. Baseline
   `config/match_baseline.tsv` (`unit fn max_fuzzy`; the src_hash epoch
   column arrives with the clang fingerprint path). No report caching yet

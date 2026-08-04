@@ -27,7 +27,8 @@ Subcommands
         --fast stops after the %% line (the inner matching loop).
 
   delink
-        The delink half (homm3.build.delink, explicit - build never delinks):
+        The delink half (homm3.build.delink, explicit - build never
+        RE-delinks; a fresh tree bootstraps the first one):
         labels -> synth PDB -> data manifests -> vostok -> per-unit target
         objs -> normalize -> objdiff.json.
 
