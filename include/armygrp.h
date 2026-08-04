@@ -5,6 +5,32 @@
 #ifndef HOMM3_ARMYGRP_H
 #define HOMM3_ARMYGRP_H
 
+#include <va.h>
+
+// Bootstrap domain: only the sentinel is modeled; the full creature
+// roster gets its own header when a consumer needs the values.
+// (Dreamcast CodeView types armies[] and IsMember's parameter as
+// TCreatureType; retail compares slots against -1.)
+enum TCreatureType {
+    CREATURE_NONE = -1
+};
+
+// PROVEN layout (2026-08-04): Dreamcast CodeView class size 56 with
+// armies @0 and numTroops @28, corroborated by retail codegen - the
+// 7-slot loops and the CREATURE_NONE sentinel in
+// GetNumArmies (0x44acc0) / IsMember (0x44ab80).
+class armyGroup {
+public:
+    enum { ARMY_GROUP_SLOT_COUNT = 7 };
+
+    TCreatureType armies[ARMY_GROUP_SLOT_COUNT];
+    int numTroops[ARMY_GROUP_SLOT_COUNT];
+
+    int GetNumArmies();
+    unsigned char IsMember(TCreatureType monType);
+};
+SIZE(armyGroup, 56);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\armygrp.cpp:82, dc 0x4db88) void SplitSliderCallback(int state, heroWindow* parent_window);
 // CODEVIEW(E:\gamedcs\armygrp.cpp:341, dc 0x4e644) float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const hero* casting_hero, const hero* target_hero);
