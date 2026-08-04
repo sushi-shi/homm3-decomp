@@ -37,6 +37,13 @@ Subcommands
         per-function maxima (config/match_baseline.tsv); `check` reports
         functions below their recorded best.
 
+  sema <xref|diff|disasm|rva|strings> ...
+        Read-only navigation over the retail image (homm3.sema): caller
+        trees + exact data refs, base-vs-target block diffs (skeleton by
+        default; rc=1 when the requested view differs), per-function
+        disassembly of ANY retail function, address dossiers, literal
+        evidence. Every invocation logs one line to build/homm3_sema.log.
+
   link [<homm3.build.link args>] [-- <extra link flags>]
         OPT-IN candidate link (also `ninja candidate`): genuine VC6 link.exe
         over the base objs with /FORCE /NODEFAULTLIB /MAP into
@@ -113,6 +120,10 @@ def cmd_status(args) -> int:
     return run_module("homm3.match.status", *args.status_args)
 
 
+def cmd_sema(args) -> int:
+    return run_module("homm3.sema", *args.sema_args)
+
+
 def cmd_link(args) -> int:
     if run_module("homm3.build.configure"):
         return 1
@@ -179,6 +190,11 @@ def main(argv: list[str] | None = None) -> int:
                        "(homm3.match.status: [update|check] [--write-readme])")
     p.add_argument("status_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_status)
+
+    p = sub.add_parser("sema", help="read-only navigation: xref / diff / "
+                       "disasm / rva / strings (homm3.sema, logged)")
+    p.add_argument("sema_args", nargs=argparse.REMAINDER)
+    p.set_defaults(fn=cmd_sema)
 
     p = sub.add_parser("link", help="candidate link (layout study)")
     p.add_argument("link_args", nargs=argparse.REMAINDER)

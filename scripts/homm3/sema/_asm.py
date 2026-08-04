@@ -1,0 +1,492 @@
+"""homm3.sema._asm - shared disassembly-text machinery for diff/disasm.
+
+Ported from the homm2 sibling's analysis/disasm.py engine. Two text
+producers, one text shape:
+
+  objdump(...)     llvm-objdump -dr over a COFF object the pipeline made
+                   (base = compiled, target = delinked) - both diff sides
+                   share ONE disassembler so only real byte diffs survive.
+  image_text(...)  capstone over the retail image bytes, for the
+                   functions no delinked unit covers yet (most of the
+                   game). Same "off: bytes<TAB>mn<TAB>ops" row shape, so
+                   the CFG/lite renderers below work on either producer.
+
+The CFG comparison unit (`cfg`) names terminators by BLOCK INDEX, not
+address, which is what makes a compiled object and retail bytes
+comparable. Instruction masking has two grades: `mask_insn` (blocks
+views - keeps stack slots and small constants) and `norm` (the flat asm
+diff - masks every absolute address).
+"""
+from __future__ import annotations
+
+import bisect
+import re
+import struct
+import subprocess
+
+from homm3.core import common
+from homm3.sema._common import die
+
+BASE = common.HOMM3_DIR / "build/objdiff/base"
+TARGET = common.HOMM3_DIR / "build/objdiff/target"
+NORMAL_BASE = common.HOMM3_DIR / "build/objdiff/normalized/base"
+NORMAL_TARGET = common.HOMM3_DIR / "build/objdiff/normalized/target"
+
+
+# --- producer 1: llvm-objdump over pipeline COFF objects ---------------------------
+
+def _public_text_symbols(obj) -> set:
+    """External text symbols of *obj*. COMDAT sections start at address
+    zero per function, so numeric ranges cannot select one function -
+    public-name boundaries can."""
+    res = subprocess.run(["llvm-nm", "-P", str(obj)],
+                         capture_output=True, text=True)
+    if res.returncode != 0:
+        die(f"llvm-nm failed on {obj.name}:\n{res.stderr.strip()}")
+    names = set()
+    for line in res.stdout.splitlines():
+        fields = line.split()
+        if len(fields) >= 3 and fields[1] == "T":
+            names.add(fields[0])
+    return names
+
+
+_SYMBOL_TITLE = re.compile(r"^\s*[0-9a-fA-F]+ <(.+)>:$")
+
+
+def _slice_public_symbol(text, name, ordinal, public_names):
+    """One complete public function from a full object disassembly. Unlike
+    --disassemble-symbols this keeps compiler-generated private $L labels
+    inside the body; a new PUBLIC label or section ends the span."""
+    selected = False
+    occurrence = 0
+    body = []
+    for line in text.splitlines():
+        title = _SYMBOL_TITLE.match(line)
+        if not selected:
+            if title and title.group(1) == name:
+                if occurrence == ordinal:
+                    selected = True
+                    body.append(line)
+                occurrence += 1
+            continue
+        if line.startswith("Disassembly of section "):
+            break
+        if title and title.group(1) in public_names:
+            break
+        body.append(line)
+    if not selected:
+        return None
+    return "\n".join(body).rstrip() + "\n"
+
+
+def objdump(obj, name: str, ordinal: int) -> str:
+    """The named function's rows from *obj*, freshness-guarded when the
+    object is a disposable normalized comparison copy."""
+    if not obj.is_file():
+        if NORMAL_BASE in obj.parents or NORMAL_TARGET in obj.parents:
+            hint = "run `homm3 build` first (its normalize step writes it)"
+        elif BASE in obj.parents:
+            hint = "run `homm3 build` first"
+        else:
+            hint = "run `homm3 delink` first"
+        die(f"{obj.relative_to(common.HOMM3_DIR)} missing - {hint}")
+    if NORMAL_BASE in obj.parents or NORMAL_TARGET in obj.parents:
+        from homm3.build.normalized_freshness import freshness_problems
+        problems = freshness_problems(obj)
+        if problems:
+            die("stale normalized comparison object:\n  "
+                + "\n  ".join(problems[:5]))
+    res = subprocess.run(
+        ["llvm-objdump", "-dr", "--x86-asm-syntax=intel", str(obj)],
+        capture_output=True, text=True)
+    if res.returncode != 0:
+        die(f"llvm-objdump failed on {obj.name}:\n{res.stderr.strip()}")
+    body = _slice_public_symbol(
+        res.stdout, name, ordinal, _public_text_symbols(obj))
+    if body is None:
+        die(f"symbol {name} not found in {obj.relative_to(common.HOMM3_DIR)}")
+    return body
+
+
+# --- producer 2: capstone over the retail image ------------------------------------
+
+def image_text(ctx, rva: int, size: int, name: str) -> str:
+    """Disassemble [rva, rva+size) straight from the gated image, in the
+    same row shape objdump() yields. Addresses are VAs (the image is
+    fixed-base). Direct call/jmp targets and dir32 reloc operands are
+    annotated `<symbol>` from the symbol db - annotations the maskers
+    strip, so the CFG/diff machinery sees only real content."""
+    try:
+        import capstone
+    except ImportError:
+        die("capstone is not importable - run inside `nix develop .#build`")
+    image = ctx.image
+    section = image.section_of(rva)
+    if section is None or not section.executable:
+        die(f"0x{rva:x} is not in an executable section")
+    offset = section.raw_offset + (rva - section.rva)
+    # Clamp to the section's raw-backed extent: a span reaching past it
+    # would silently decode the NEXT section's file bytes as code.
+    size = min(size, section.size - (rva - section.rva))
+    code = image.data[offset:offset + size]
+    va = image.image_base + rva
+
+    sites = ctx.relocs  # [(site_rva, operand_va)] sorted by site
+    lo = bisect.bisect_left(sites, (rva, 0))
+    hi = bisect.bisect_left(sites, (rva + size, 0))
+    span_sites = sites[lo:hi]
+
+    def symbolize(value_va: int) -> str | None:
+        if not image.in_image(value_va):
+            return None
+        target = image.rva_of(value_va)
+        row = ctx.symbols.funcs.get(target) or ctx.symbols.datas.get(target)
+        return row[0] if row else None
+
+    md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
+    lines = [f"{va:08x} <{name}>:"]
+    consumed = 0
+    si = 0
+    for ins in md.disasm(code, va):
+        consumed = ins.address + ins.size - va
+        notes = []
+        mn = ins.mnemonic
+        direct_flow = (mn in ("call", "jmp") or mn.startswith("loop")
+                       or re.fullmatch(r"j[a-z]{1,4}", mn) is not None)
+        if direct_flow and ins.op_str.startswith("0x"):
+            sym = symbolize(int(ins.op_str, 16))
+            if sym:
+                notes.append(sym)
+        ins_rva = ins.address - image.image_base
+        while si < len(span_sites) and span_sites[si][0] < ins_rva:
+            si += 1
+        j = si
+        while j < len(span_sites) and span_sites[j][0] < ins_rva + ins.size:
+            sym = symbolize(span_sites[j][1])
+            if sym and sym not in notes:
+                notes.append(sym)
+            j += 1
+        annot = "".join(f" <{n}>" for n in notes)
+        byte_column = " ".join(f"{b:02x}" for b in ins.bytes)
+        lines.append(f"{ins.address:8x}: {byte_column}\t{ins.mnemonic}"
+                     f"\t{ins.op_str}{annot}")
+    if consumed < size:
+        lines.append(f"[decode stopped at +0x{consumed:x} - {size - consumed} "
+                     "byte(s) undecoded (jump-table data in the span?)]")
+    return "\n".join(lines) + "\n"
+
+
+# --- row parsing + renderers (ported) ----------------------------------------------
+
+_HEAD = re.compile(r"^\s*([0-9a-f]+):\s*(?:[0-9a-f]{2} ?)*\s*$")
+
+
+def parse_ins(ln: str):
+    """(code_offset, 'mnemonic operands') for an instruction row, else None."""
+    if "\t" not in ln:
+        return None
+    parts = ln.split("\t")
+    if not _HEAD.match(parts[0]):
+        return None
+    off = int(parts[0].split(":", 1)[0].strip(), 16)
+    body = [part.strip() for part in parts[1:] if part.strip()]
+    if body and re.fullmatch(r"(?:[0-9a-fA-F]{2}\s*)+", body[0]):
+        body.pop(0)
+    return (off, " ".join(body)) if body else None
+
+
+def lite(text: str) -> str:
+    """Only the asm: drop offsets, byte columns, reloc blocks; keep titles."""
+    keep = []
+    for ln in text.splitlines():
+        p = parse_ins(ln)
+        if p:
+            keep.append("    " + p[1])
+        elif ln.rstrip().endswith(">:") or ln.startswith("[decode stopped"):
+            keep.append(ln)
+    return "\n".join(keep) + "\n"
+
+
+def norm(text: str) -> list:
+    """Instruction stream for the flat asm diff: mnemonic+operands only,
+    every absolute address masked. Both sides come from the same
+    llvm-objdump so only real byte-level diffs survive."""
+    out = []
+    for ln in text.splitlines():
+        p = parse_ins(ln)
+        if p:
+            ins = p[1].lower()
+            ins = re.sub(r"\s*<[^>]*>", "", ins)          # drop <sym> notes
+            ins = re.sub(r"0x[0-9a-f]+", "<addr>", ins)   # mask addrs/disps
+            out.append(ins)
+        elif "IMAGE_REL_I386_" in ln:
+            # Keep the reloc target symbol: a retargeted reloc is a real
+            # diff. CAVEAT (differs from the homm2 original, where both
+            # sides carried CodeView names): here the base names data by
+            # source symbol and the delinked target by synthetic label
+            # (data_<rva>, sometimes owner+addend), so --asm shows
+            # reloc-name diffs objdiff proves equivalent - see diff.py.
+            out.append("reloc " + ln.split("IMAGE_REL_I386_")[1].strip())
+    while out and out[-1] == "nop":
+        out.pop()  # trailing COMDAT alignment padding (base only)
+    return out
+
+
+_JCC = {
+    "jmp", "je", "jne", "jz", "jnz", "ja", "jae", "jb", "jbe", "jc", "jnc",
+    "jg", "jge", "jl", "jle", "js", "jns", "jo", "jno", "jp", "jnp",
+    "jcxz", "jecxz",
+}
+
+
+def _branch_target(text: str, addresses: set) -> int | None:
+    fields = text.lower().split(None, 1)
+    if len(fields) != 2:
+        return None
+    op, operand = fields
+    if op not in _JCC and not op.startswith("loop"):
+        return None
+    match = re.match(r"0x([0-9a-f]+)\b", operand)
+    if not match:
+        return None
+    target = int(match.group(1), 16)
+    return target if target in addresses else None
+
+
+def mask_insn(text: str) -> str:
+    """Normalize one instruction without hiding stack slots or constants."""
+    text = re.sub(r"\s+", " ", text.strip().lower())
+    text = re.sub(r"\s*<[^>]*>", "", text)
+    text = re.sub(r"\[\s*0x[0-9a-f]+\s*\]", "[<addr>]", text)
+    text = re.sub(r"^((?:j[a-z]{1,4}|call|loop\w*)\s+)0x[0-9a-f]+\b.*$",
+                  r"\1<tgt>", text)
+    return text
+
+
+def cfg(text: str):
+    """Ordered basic blocks as (address, [masked insns], terminator).
+
+    Terminators use block indices rather than code addresses, making
+    normalized candidate and retail objects comparable. The block count
+    is diagnostic, not authoritative: MSVC TU state can split or merge
+    blocks without any source change."""
+    insns = [parsed for line in text.splitlines()
+             if (parsed := parse_ins(line)) is not None]
+    while insns and insns[-1][1].lower() == "nop":
+        insns.pop()
+    if not insns:
+        return []
+
+    addresses = {address for address, _ in insns}
+    leaders = {insns[0][0]}
+    for i, (address, instruction) in enumerate(insns):
+        op = instruction.lower().split(None, 1)[0]
+        target = _branch_target(instruction, addresses)
+        following = insns[i + 1][0] if i + 1 < len(insns) else None
+        if target is not None:
+            leaders.add(target)
+            # The byte after every branch starts a new block even when an
+            # unconditional jump makes it unreachable; otherwise alignment
+            # bytes get folded into the jump block and eat its terminator.
+            if following is not None:
+                leaders.add(following)
+        elif (op == "jmp" or op.startswith("ret") or op in _JCC
+              or op.startswith("loop")) and following is not None:
+            leaders.add(following)
+
+    order = sorted(leaders)
+    index = {address: i for i, address in enumerate(order)}
+
+    def block_of(address: int) -> int:
+        return bisect.bisect_right(order, address) - 1
+
+    result = [[address, [], None] for address in order]
+    for i, (address, instruction) in enumerate(insns):
+        block = result[block_of(address)]
+        op = instruction.lower().split(None, 1)[0]
+        target = _branch_target(instruction, addresses)
+        following = insns[i + 1][0] if i + 1 < len(insns) else None
+        block[1].append(mask_insn(instruction))
+        if following is not None and following not in index:
+            continue
+        if target is not None:
+            destination = f"B{block_of(target)}" + ("^" if target <= address else "")
+            if op == "jmp":
+                block[2] = f"jmp {destination}"
+            elif following is not None:
+                block[2] = f"jcc {destination} | fall B{block_of(following)}"
+            else:
+                block[2] = f"jcc {destination}"
+        elif op.startswith("ret"):
+            block[2] = "ret"
+        elif op == "jmp":
+            block[2] = "jmp <ext>"
+        elif following is not None:
+            block[2] = f"fall B{block_of(following)}"
+        else:
+            block[2] = "end"
+    return [(address, body, term) for address, body, term in result]
+
+
+def predecessor_counts(graph) -> dict:
+    counts = {}
+    for _, _, term in graph:
+        for match in re.finditer(r"B(\d+)", term or ""):
+            target = int(match.group(1))
+            counts[target] = counts.get(target, 0) + 1
+    return counts
+
+
+def blocks(text: str, skeleton: bool = True) -> str:
+    """Render one side's CFG: one line per block (skeleton, the default)
+    or with masked instruction bodies."""
+    graph = cfg(text)
+    if not graph:
+        return "(no instruction rows found)\n"
+    predecessors = predecessor_counts(graph)
+    out = []
+    for i, (address, body, term) in enumerate(graph):
+        tail = "  <== shared tail" if term == "ret" and predecessors.get(i, 0) > 2 else ""
+        loop = "  LOOP" if "^" in (term or "") else ""
+        if skeleton:
+            first = body[0].split(None, 1)[0] if body else "?"
+            out.append(f"  B{i:<3} @{address:<8x} {len(body):>3}i  "
+                       f"[{term}]{loop}{tail}  ({first}..)")
+            continue
+        out.append("")
+        out.append(f"block B{i} @{address:x}: {len(body)} instruction(s)  "
+                   f"[{term}]{loop}{tail}")
+        out.extend(f"    {instruction}" for instruction in body)
+    return "\n".join(out).lstrip("\n") + "\n"
+
+
+def branch_kind(term: str | None, at: int) -> str:
+    parts = []
+    for match in re.finditer(r"(jcc|jmp|ret|fall|end)(?: B(\d+)(\^?))?", term or ""):
+        op, target, back = match.groups()
+        if target is None:
+            parts.append(op)
+        else:
+            direction = "^" if back else ">" if int(target) > at else "<"
+            parts.append(op + direction)
+    return " ".join(parts)
+
+
+def skeleton_diff(base_cfg, target_cfg) -> tuple:
+    """Side-by-side block sizes/terminators with separate flow/size marks."""
+    out = [f"       {'BASE':48} FLOW SIZE TARGET"]
+    same = len(base_cfg) == len(target_cfg)
+    counts = {"exact": 0, "size": 0, "shift": 0, "flow": 0, "missing": 0}
+    first_flow = None
+
+    def summary(graph, i):
+        if i >= len(graph):
+            return "-"
+        _, body, term = graph[i]
+        first = body[0].split(None, 1)[0] if body else "?"
+        last = body[-1].split(None, 1)[0] if body else "?"
+        return f"{len(body):>3}i {first}..{last} [{term}]"
+
+    for i in range(max(len(base_cfg), len(target_cfg))):
+        base, target = summary(base_cfg, i), summary(target_cfg, i)
+        if i >= len(base_cfg) or i >= len(target_cfg):
+            flow_mark, size_mark = "--", "--"
+            counts["missing"] += 1
+            same = False
+        else:
+            base_term, target_term = base_cfg[i][2], target_cfg[i][2]
+            base_kind = branch_kind(base_term, i)
+            target_kind = branch_kind(target_term, i)
+            if base_term == target_term:
+                flow_mark = "=="
+            elif base_kind == target_kind:
+                flow_mark = "~="
+                counts["shift"] += 1
+            else:
+                flow_mark = "!!"
+                counts["flow"] += 1
+                if first_flow is None:
+                    first_flow = (i, base_kind, target_kind)
+            size_mark = "==" if len(base_cfg[i][1]) == len(target_cfg[i][1]) else "##"
+            if flow_mark == "==" and size_mark == "==":
+                counts["exact"] += 1
+            elif flow_mark == "==" and size_mark == "##":
+                counts["size"] += 1
+            same &= flow_mark == "==" and size_mark == "=="
+        out.append(f"  B{i:<3} {base:48}  {flow_mark:^4} {size_mark:^4} {target}")
+
+    out.insert(0, f"[skeleton diff: base {len(base_cfg)} vs target "
+                  f"{len(target_cfg)} blocks; {counts['exact']} exact, "
+                  f"{counts['size']} size-only, {counts['shift']} target-shift, "
+                  f"{counts['flow']} flow-kind, {counts['missing']} missing]")
+    out.append("[legend: FLOW == exact, ~= same branch kind/direction with "
+               "shifted block target, !! branch-kind mismatch; SIZE ## differs]")
+    if first_flow is not None:
+        i, base_kind, target_kind = first_flow
+        out.append(f"[first branch-kind divergence B{i}: base [{base_kind}] vs "
+                   f"target [{target_kind}]]")
+    return "\n".join(out) + "\n", bool(same)
+
+
+def blocks_diff(base_text: str, target_text: str) -> tuple:
+    """Block-aligned body diff; exact only when all normalized blocks align."""
+    import difflib
+    base_cfg, target_cfg = cfg(base_text), cfg(target_text)
+    base_rows = ["\n".join(body + [term or ""]) for _, body, term in base_cfg]
+    target_rows = ["\n".join(body + [term or ""]) for _, body, term in target_cfg]
+    base_flow = [term or "" for _, _, term in base_cfg]
+    target_flow = [term or "" for _, _, term in target_cfg]
+    out = [f"[block diff: base {len(base_cfg)} blocks vs target "
+           f"{len(target_cfg)} blocks; flow "
+           f"{'SAME' if base_flow == target_flow else 'DIFFERS'}]"]
+
+    if base_flow != target_flow:
+        base_kinds = [branch_kind(term, i) for i, term in enumerate(base_flow)]
+        target_kinds = [branch_kind(term, i) for i, term in enumerate(target_flow)]
+        first = next((i for i, pair in enumerate(zip(base_kinds, target_kinds))
+                      if pair[0] != pair[1]), None)
+        if first is not None:
+            out.append(f"[skeleton diverges at B{first}: base "
+                       f"[{base_flow[first]}] vs target [{target_flow[first]}]]")
+        elif len(base_kinds) != len(target_kinds):
+            out.append(f"[same branch-kind skeleton for "
+                       f"{min(len(base_kinds), len(target_kinds))} shared "
+                       f"blocks; {abs(len(base_kinds) - len(target_kinds))} "
+                       "extra block(s)]")
+        else:
+            out.append("[same branch-kind skeleton; block-index targets differ]")
+
+    matcher = difflib.SequenceMatcher(a=base_rows, b=target_rows, autojunk=False)
+    differences = 0
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == "equal":
+            for offset in range(i2 - i1):
+                bi, ti = i1 + offset, j1 + offset
+                out.append(f"  B{ti} @{base_cfg[bi][0]:x}/@{target_cfg[ti][0]:x}"
+                           f"  == ({len(target_cfg[ti][1])} insns)  "
+                           f"[{target_cfg[ti][2]}]")
+            continue
+        for offset in range(max(i2 - i1, j2 - j1)):
+            bi = i1 + offset if i1 + offset < i2 else None
+            ti = j1 + offset if j1 + offset < j2 else None
+            differences += 1
+            if bi is not None and ti is not None:
+                out.append(f"  B{ti} @{base_cfg[bi][0]:x}/"
+                           f"@{target_cfg[ti][0]:x}  DIFFERS:")
+                diff = difflib.unified_diff(
+                    base_cfg[bi][1] + [base_cfg[bi][2] or ""],
+                    target_cfg[ti][1] + [target_cfg[ti][2] or ""],
+                    lineterm="", n=2)
+                out.extend("      " + line for line in diff
+                           if not line.startswith(("---", "+++", "@@")))
+            elif bi is not None:
+                out.append(f"  -- @{base_cfg[bi][0]:x}  BASE-ONLY "
+                           f"({len(base_cfg[bi][1])} insns) [{base_cfg[bi][2]}]")
+            else:
+                out.append(f"  B{ti} @{target_cfg[ti][0]:x}  TARGET-ONLY "
+                           f"({len(target_cfg[ti][1])} insns) "
+                           f"[{target_cfg[ti][2]}]")
+    out.append(f"[{differences} block(s) differ]" if differences
+               else "[all aligned blocks identical]")
+    return "\n".join(out) + "\n", differences == 0 and base_flow == target_flow
