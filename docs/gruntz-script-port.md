@@ -268,8 +268,13 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   (monotone, 4-decimal quantized) → **ratchet check, FATAL on a drop**
   (deliberate divergence: both siblings keep the per-function baseline
   observational; here a regression fails the build, drilled poisoned-row →
-  exit 1) → README `<!-- match-score -->` block (gruntz table shape;
-  excluded-category tables await the universe classifier) → warning-only
+  exit 1) → README `<!-- match-score -->` block (gruntz shape, full-engine
+  denominator via `homm3.match.universe` — the single authoritative
+  classifier, evidence-free: retail EH walk for the 5,125 funclets, the
+  runtime/zlib config maps, the carve init-array for 1,119 init thunks,
+  FF 25 scan for 27 import thunks; total reconciles to the carve's
+  11,943 fns / 2,253,513 B exactly; `(unmatched)` row + excluded-category
+  table included) → warning-only
   stale-delink probe (homm2's drift-census idea; build NEVER delinks).
   `--fast` stops after the %% line and says so. Baseline
   `config/match_baseline.tsv` (`unit fn max_fuzzy`; the src_hash epoch

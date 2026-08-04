@@ -12,13 +12,21 @@ legally obtained `HEROES3.EXE` locally to initialize the matching workspace.
 
 <!-- match-score:start -->
 
-**Match score** — 64/68 functions exact (94.1%), 99.96% fuzzy across 14 unit(s).
+**Match score** — 64 / 4,760 functions exact (1.3%) across the full engine (68 in linked units).
 
-| Module       | Units | Functions exact |  Fuzzy | Fuzzy Max |
-| :----------- | ----: | --------------: | -----: | --------: |
-| `zlib-1.1.3` |    14 | 64 / 68 (94.1%) | 99.96% |    99.96% |
+| Module        | Units |  Functions exact |  Fuzzy | Fuzzy Max |
+| :------------ | ----: | ---------------: | -----: | --------: |
+| `zlib-1.1.3`  |    14 |  64 / 68 (94.1%) | 99.96% |    99.96% |
+| `(unmatched)` |     — | 0 / 4,692 (0.0%) |   0.0% |      0.0% |
 
-_Function universe: the linked units only; the full-engine denominator and excluded-category tables arrive with the universe classifier._
+_Excluded from the % above — generated/library code, not independent reconstruction targets:_
+
+| Category              | Functions | Code (B) | Why excluded                                                       |
+| :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
+| `EH unwind funclets`  |     5,125 |   53,151 | compiler EH unwind funclets; match with their parent function      |
+| `CRT/C++ runtime`     |       912 |  110,450 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
+| `init/cleanup thunks` |     1,119 |   94,433 | .CRT$XCU dynamic-initializer bodies (compiler-generated)           |
+| `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 
 <!-- match-score:end -->
 
