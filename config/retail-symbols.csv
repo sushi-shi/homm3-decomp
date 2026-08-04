@@ -21,7 +21,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x14a7,6,game_14a7,band,structural,game,,band game
 0x14b0,21,game_1400_sub00_14b0,caller,structural,game,,called from 0x1400
 0x14d0,60,TAdventureMapWindow_vslot02,vtable-slot,external-candidate,game,,vtable 0x23a5e4 slot 2
-0x1510,3253,TAdventureMapWindow_TAdventureMapWindow,nh3api,external-candidate,game,,core/interface/dialogs.hpp:122
+0x1510,3253,TAdventureMapWindow_TAdventureMapWindow,hd-crossbuild,crossbuild-verified,game,,HD 0x401510 masked-identity 75B/67 fixed; core/interface/dialogs.hpp:122
 0x21d0,5,border_vslot05,vtable-slot,external-candidate,game,,vtable 0x23ba24 slot 5
 0x21e0,5,border_vslot06,vtable-slot,external-candidate,game,,vtable 0x23ba24 slot 6
 0x21f0,66,TSubWindow_vslot15,vtable-slot,external-candidate,game,,vtable 0x242350 slot 15
@@ -41,7 +41,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x3010,522,TAdventureMapWindow_ProcessHover,hd-crossbuild,crossbuild-verified,game,,HD 0x403010 masked-identity 256B/156 fixed; core/interface/dialogs.hpp:153
 0x3220,89,TAdventureMapWindow_DoHeroKnob,hd-crossbuild,crossbuild-verified,game,,HD 0x403220 masked-identity 96B/74 fixed; core/interface/dialogs.hpp:156
 0x3280,89,TAdventureMapWindow_DoTownKnob,hd-crossbuild,crossbuild-verified,game,,HD 0x403280 masked-identity 96B/76 fixed; core/interface/dialogs.hpp:159
-0x32e0,308,TAdventureMapWindow_UpdateHeroLocators,nh3api,external-candidate,game,,core/interface/dialogs.hpp:162
+0x32e0,308,TAdventureMapWindow_UpdateHeroLocators,hd-crossbuild,crossbuild-verified,game,,HD 0x4032e0 masked-identity 170B/128 fixed; core/interface/dialogs.hpp:162
 0x3420,305,TAdventureMapWindow_UpdateTownLocators,hd-crossbuild,crossbuild-verified,game,,HD 0x403420 masked-identity 256B/194 fixed; core/interface/dialogs.hpp:165
 0x3560,574,TAdventureMapWindow_UpdateHeroLocator,hd-crossbuild,crossbuild-verified,game,,HD 0x403560 masked-identity 256B/183 fixed; core/interface/dialogs.hpp:168
 0x37a0,279,TAdventureMapWindow_UpdateTownLocator,hd-crossbuild,crossbuild-verified,game,,HD 0x4037a0 masked-identity 256B/184 fixed; core/interface/dialogs.hpp:171
@@ -54,12 +54,12 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x3ee0,31,TAdventureMapWindow_ClearBottomView,hd-crossbuild,crossbuild-verified,game,,HD 0x403ee0 masked-identity 32B/32 fixed; core/interface/dialogs.hpp:192
 0x3f00,30,TAdventureMapWindow_UpdateResourceDisplay,hd-crossbuild,crossbuild-verified,game,,HD 0x403f00 masked-identity 32B/28 fixed; core/interface/dialogs.hpp:195
 0x3f20,63,TAdventureMapWindow_DrawChatText,hd-crossbuild,crossbuild-verified,game,,HD 0x403f20 masked-identity 64B/52 fixed; core/interface/dialogs.hpp:198
-0x3f60,324,TAdventureMapWindow_UpdateButtons,nh3api,external-candidate,game,,core/interface/dialogs.hpp:201
+0x3f60,324,TAdventureMapWindow_UpdateButtons,hd-crossbuild,crossbuild-verified,game,,HD 0x403f60 masked-identity 170B/98 fixed; core/interface/dialogs.hpp:201
 0x40b0,56,TAdventureMapWindow_vslot08,vtable-slot,external-candidate,game,,vtable 0x23a5e4 slot 8
 0x40f0,75,game_2450_sub01_40f0,caller,structural,game,,called from 0x2450
 0x4140,3,sample_vslot03,vtable-slot,external-candidate,game,,vtable 0x2416dc slot 3
 0x4150,161,game_22e0_sub01_4150,caller,structural,game,,called from 0x22e0
-0x4200,521,game_1510_sub01_4200,caller,structural,game,,called from 0x1510
+0x4200,521,button_set_hotkey,hd-crossbuild,crossbuild-verified,game,,HD 0x404230 masked-identity 256B/244 fixed; core/interface/widgets.hpp:605
 0x4410,200,game_invalid_bitset_n_positio_4410,string,structural,game,,literal: invalid bitset<N> position
 0x44e0,345,game_4640_sub00_44e0,caller,structural,game,,called from 0x4640
 0x4640,29,game_4640,band,structural,game,,band game
@@ -107,9 +107,9 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x5d20,96,game_crgen1_txt_5d20,string,structural,game,,literal: crgen1.txt
 0x5d80,48,ExtraInfoUnion_get_creature_bank,nh3api,external-candidate,game,,core/objects.hpp:1186
 0x5db0,36,cinit0032_5db0,init-ctor,structural,game,,.CRT$XCU slot 32
-0x5de0,13,game_a0c50_sub00_5de0,caller,structural,game,,called from 0xa0c50
+0x5de0,13,ExtraInfoUnion_get_black_box,hd-crossbuild,crossbuild-verified,game,,HD 0x405d70 masked-identity 16B/8 fixed; core/objects.hpp:1180
 0x5df0,32,ExtraInfoUnion_get_creature_bank_5df0,hd-crossbuild,crossbuild-verified,game,,HD 0x405d80 masked-identity 32B/24 fixed; core/objects.hpp:1186
-0x5e10,28,game_a84f0_sub00_5e10,caller,structural,game,,called from 0xa84f0
+0x5e10,28,ExtraInfoUnion_get_university,hd-crossbuild,crossbuild-verified,game,,HD 0x405da0 masked-identity 170B/130 fixed; core/objects.hpp:1192
 0x5e30,1611,calls_timeGetTime_5e30,import-wrapper,structural,game,,imports: timeGetTime
 0x6480,1439,hero_hero,hd-crossbuild,crossbuild-verified,game,,HD 0x406410 masked-identity 256B/256 fixed; core/hero.hpp:391
 0x6a20,455,game_5e30_sub01_6a20,caller,structural,game,,called from 0x5e30
@@ -132,7 +132,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xaf60,74,game_2275b0_sub00_af60,caller,structural,game,,called from 0x2275b0
 0xafb0,303,game_b150_sub00_afb0,caller,structural,game,,called from 0xb150
 0xb0e0,100,advManager_DrawRolloverText,hd-crossbuild,crossbuild-verified,game,,HD 0x40b040 masked-identity 112B/92 fixed; core/adventure.hpp:126
-0xb150,8860,game_s_s_b150,string,structural,game,,literal: %s %s
+0xb150,8860,advManager_SetRolloverText,hd-crossbuild,crossbuild-verified,game,,HD 0x40b0b0 masked-identity 170B/138 fixed; core/adventure.hpp:131
 0xd3f0,636,game_b150_sub01_d3f0,caller,structural,game,,called from 0xb150
 0xd670,595,game_b150_sub02_d670,caller,structural,game,,called from 0xb150
 0xd8d0,553,game_b150_sub03_d8d0,caller,structural,game,,called from 0xb150
@@ -144,7 +144,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xec80,10,game_2450_sub03_ec80,caller,structural,game,,called from 0x2450
 0xec90,1453,game_digsound_82m_ec90,string,structural,game,,literal: DIGSOUND.82M
 0xf240,43,cinit0033_f240,init-ctor,structural,game,,.CRT$XCU slot 33
-0xf270,125,calls_timeGetTime_f270,import-wrapper,structural,game,,imports: timeGetTime
+0xf270,125,advManager_UpdateScreen,hd-crossbuild,crossbuild-verified,game,,HD 0x40f1d0 masked-identity 56B/35 fixed; core/adventure.hpp:151
 0xf2f0,248,game_f3f0_sub01_f2f0,caller,structural,game,,called from 0xf3f0
 0xf3f0,1149,calls_timeGetTime_f3f0,import-wrapper,structural,game,,imports: timeGetTime
 0xf870,67,game_7b80_sub03_f870,caller,structural,game,,called from 0x7b80
@@ -166,8 +166,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x12470,1154,game_f3f0_sub09_12470,caller,structural,game,,called from 0xf3f0
 0x12900,715,game_f3f0_sub10_12900,caller,structural,game,,called from 0xf3f0
 0x12bd0,108,advManager_GetCell,hd-crossbuild,crossbuild-verified,game,,HD 0x412b30 masked-identity 112B/108 fixed; core/adventure.hpp:159
-0x12c40,2881,game_5e30_sub03_12c40,caller,structural,game,,called from 0x5e30
-0x13790,39,advManager_UpdateRadar,hd-crossbuild,crossbuild-verified,game,,HD 0x4136f0 masked-identity 48B/44 fixed; core/adventure.hpp:189
+0x12c40,2881,advManager_UpdateRadar,hd-crossbuild,crossbuild-verified,game,,HD 0x412ba0 masked-identity 170B/114 fixed; core/adventure.hpp:182
+0x13790,39,advManager_UpdateRadar_13790,hd-crossbuild,crossbuild-verified,game,,HD 0x4136f0 masked-identity 48B/44 fixed; core/adventure.hpp:189
 0x137c0,9632,game_s_s_137c0,string,structural,game,,literal: %s %s
 0x15d60,120,advManager_OverrideBottomView,hd-crossbuild,crossbuild-verified,game,,HD 0x415cc0 masked-identity 128B/88 fixed; core/adventure.hpp:200
 0x15de0,320,advManager_UpdBottomView,hd-crossbuild,crossbuild-verified,game,,HD 0x415d40 masked-identity 256B/170 fixed; core/adventure.hpp:203
@@ -220,7 +220,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x1b010,39,game_805e0_sub00_1b010,caller,structural,game,,called from 0x805e0
 0x1b040,154,CAdvPopup_CAdvPopup,hd-crossbuild,crossbuild-verified,game,,HD 0x41afa0 masked-identity 208B/164 fixed; core/interface/windows.hpp:749
 0x1b0e0,33,CAdvPopup_vslot00,vtable-slot,external-candidate,game,,vtable 0x23a6a8 slot 0
-0x1b110,5,game_1ff6b0_sub00_1b110,caller,structural,game,,called from 0x1ff6b0
+0x1b110,5,CHeroWindowEx_CHeroWindowEx,hd-crossbuild,crossbuild-verified,game,,HD 0x41b070 masked-identity 16B/12 fixed; core/interface/windows.hpp:676
 0x1b120,103,CAdvPopup_CAdvPopup_1b120,hd-crossbuild,crossbuild-verified,game,,HD 0x41b080 masked-identity 160B/132 fixed; core/interface/windows.hpp:756
 0x1b190,45,CAdvPopup_vslot14,vtable-slot,external-candidate,game,,vtable 0x23a6a8 slot 14
 0x1b1c0,135,CAdvPopup_vslot09,vtable-slot,external-candidate,game,,vtable 0x23a6a8 slot 9
@@ -364,7 +364,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x27650,51,AI_approximate_strength,hd-crossbuild,crossbuild-verified,game,,HD 0x427650 masked-identity 64B/52 fixed; core/adventure_AI.hpp:647
 0x27690,47,AI_approximate_strength_27690,hd-crossbuild,crossbuild-verified,game,,HD 0x427690 masked-identity 48B/36 fixed; core/adventure_AI.hpp:650
 0x276c0,135,type_AI_combat_data_type_AI_combat_data_276c0,hd-crossbuild,crossbuild-verified,game,,HD 0x4276c0 masked-identity 144B/132 fixed; core/combat_AI.hpp:449
-0x27750,33,type_AI_combat_data_get_total,nh3api,external-candidate,game,,core/combat_AI.hpp:578
+0x27750,33,type_AI_combat_data_get_total,hd-crossbuild,crossbuild-verified,game,,HD 0x427750 masked-identity 48B/40 fixed; core/combat_AI.hpp:578
 0x27780,740,game_24120_sub00_27780,caller,structural,game,,called from 0x24120
 0x27a70,32,cinit0068_27a70,init-ctor,structural,game,,.CRT$XCU slot 68
 0x27a90,411,game_24120_sub01_27a90,caller,structural,game,,called from 0x24120
@@ -529,7 +529,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x35710,95,cinit0089_35710,init-ctor,structural,game,,.CRT$XCU slot 89
 0x35770,95,cinit0090_35770,init-ctor,structural,game,,.CRT$XCU slot 90
 0x357d0,95,cinit0091_357d0,init-ctor,structural,game,,.CRT$XCU slot 91
-0x35830,30,game_32780_sub00_35830,caller,structural,game,,called from 0x32780
+0x35830,30,AI_value_of_morale,hd-crossbuild,crossbuild-verified,game,,HD 0x435480 masked-identity 32B/12 fixed; core/adventure_AI.hpp:677
 0x35850,258,value_of_luck_and_morale,hd-crossbuild,crossbuild-verified,game,,HD 0x4354a0 masked-identity 256B/244 fixed; core/adventure_AI.hpp:680
 0x35960,30,AI_value_of_luck,hd-crossbuild,crossbuild-verified,game,,HD 0x4355b0 masked-identity 32B/20 fixed; core/adventure_AI.hpp:683
 0x35980,42,AI_get_attack_damage,hd-crossbuild,crossbuild-verified,game,,HD 0x4355d0 masked-identity 48B/44 fixed; core/combat_AI.hpp:15
@@ -538,20 +538,20 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x35c70,61,type_AI_combat_parameters_get_simple_attack_effect_35c70,hd-crossbuild,crossbuild-verified,game,,HD 0x4358c0 masked-identity 64B/44 fixed; core/combat_AI.hpp:66
 0x35cb0,270,type_AI_combat_parameters_get_ranged_attack_value,hd-crossbuild,crossbuild-verified,game,,HD 0x435900 masked-identity 256B/202 fixed; core/combat_AI.hpp:69
 0x35dc0,243,type_AI_combat_parameters_get_exchange_effect,hd-crossbuild,crossbuild-verified,game,,HD 0x435a10 masked-identity 256B/220 fixed; core/combat_AI.hpp:72
-0x35ec0,503,game_1e190_sub01_35ec0,caller,structural,game,,called from 0x1e190
+0x35ec0,503,type_AI_combat_parameters_type_AI_combat_parameters,hd-crossbuild,crossbuild-verified,game,,HD 0x435b10 masked-identity 113B/101 fixed; core/combat_AI.hpp:24
 0x360c0,188,type_AI_attack_hex_chooser_type_AI_attack_hex_chooser,hd-crossbuild,crossbuild-verified,game,,HD 0x435d10 masked-identity 192B/168 fixed; core/combat_AI.hpp:628
 0x36180,378,type_AI_attack_hex_chooser_get_hex_attack_value,hd-crossbuild,crossbuild-verified,game,,HD 0x435dd0 masked-identity 256B/200 fixed; core/combat_AI.hpp:651
-0x36300,796,game_36840_sub00_36300,caller,structural,game,,called from 0x36840
+0x36300,796,type_AI_attack_hex_chooser_check_adjacent_hexes,hd-crossbuild,crossbuild-verified,game,,HD 0x435f50 masked-identity 170B/146 fixed; core/combat_AI.hpp:654
 0x36620,314,game_36300_sub01_36620,caller,structural,game,,called from 0x36300
 0x36760,223,game_36300_sub02_36760,caller,structural,game,,called from 0x36300
 0x36840,234,type_AI_attack_hex_chooser_find_attack_hex,hd-crossbuild,crossbuild-verified,game,,HD 0x436490 masked-identity 240B/188 fixed; core/combat_AI.hpp:657
-0x36930,26,game_23d00_sub00_36930,caller,structural,game,,called from 0x23d00
+0x36930,26,type_enchant_data_get_mastery_value,hd-crossbuild,crossbuild-verified,game,,HD 0x436580 masked-identity 16B/16 fixed; core/combat_AI.hpp:134
 0x36950,35,type_spell_choice_type_spell_choice,hd-crossbuild,crossbuild-verified,game,,HD 0x4365a0 masked-identity 48B/48 fixed; core/combat_AI.hpp:164
 0x36980,53,type_spell_choice_type_spell_choice_36980,hd-crossbuild,crossbuild-verified,game,,HD 0x4365d0 masked-identity 64B/64 fixed; core/combat_AI.hpp:168
 0x369c0,555,type_AI_spellcaster_type_AI_spellcaster,hd-crossbuild,crossbuild-verified,game,,HD 0x436610 masked-identity 256B/182 fixed; core/combat_AI.hpp:207
 0x36bf0,58,game_36bf0,band,structural,game,,band game
 0x36c30,33,type_AI_spellcaster_type_AI_spellcaster_36c30,hd-crossbuild,crossbuild-verified,game,,HD 0x436880 masked-identity 48B/44 fixed; core/combat_AI.hpp:214
-0x36c60,452,game_3a670_sub00_36c60,caller,structural,game,,called from 0x3a670
+0x36c60,452,type_AI_spellcaster_should_attack_now,hd-crossbuild,crossbuild-verified,game,,HD 0x4368b0 masked-identity 170B/138 fixed; core/combat_AI.hpp:224
 0x36e30,293,type_AI_spellcaster_get_damage_value,hd-crossbuild,crossbuild-verified,game,,HD 0x436a80 masked-identity 256B/194 fixed; core/combat_AI.hpp:227
 0x36f60,69,type_AI_spellcaster_get_damage_spell_value,hd-crossbuild,crossbuild-verified,game,,HD 0x436bb0 masked-identity 80B/72 fixed; core/combat_AI.hpp:230
 0x36fb0,138,type_AI_spellcaster_get_mass_damage_effect,hd-crossbuild,crossbuild-verified,game,,HD 0x436c00 masked-identity 144B/144 fixed; core/combat_AI.hpp:233
@@ -596,7 +596,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x39de0,148,game_3b690_sub29_39de0,caller,structural,game,,called from 0x3b690
 0x39e80,656,game_3b690_sub30_39e80,caller,structural,game,,called from 0x3b690
 0x3a110,546,game_3b690_sub31_3a110,caller,structural,game,,called from 0x3b690
-0x3a340,190,game_3a400_sub00_3a340,caller,structural,game,,called from 0x3a400
+0x3a340,190,type_AI_spellcaster_get_traitor_value,hd-crossbuild,crossbuild-verified,game,,HD 0x439f90 masked-identity 170B/136 fixed; core/combat_AI.hpp:260
 0x3a400,248,game_3b690_sub32_3a400,caller,structural,game,,called from 0x3b690
 0x3a500,366,game_3b690_sub33_3a500,caller,structural,game,,called from 0x3b690
 0x3a670,657,type_AI_spellcaster_consider_single_enchantment,hd-crossbuild,crossbuild-verified,game,,HD 0x43a2c0 masked-identity 256B/192 fixed; core/combat_AI.hpp:263
@@ -647,8 +647,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x3ec50,436,army_remove_aura,hd-crossbuild,crossbuild-verified,game,,HD 0x43e970 masked-identity 256B/240 fixed; core/army.hpp:348
 0x3ee10,450,army_remove_binding,hd-crossbuild,crossbuild-verified,game,,HD 0x43eb30 masked-identity 256B/239 fixed; core/army.hpp:353
 0x3efe0,207,army_animate_missile,nh3api,external-candidate,game,,core/army.hpp:366
-0x3f0b0,518,game_41fa0_sub02_3f0b0,caller,structural,game,,called from 0x41fa0
-0x3f2c0,1595,calls_timeGetTime_3f2c0,import-wrapper,structural,game,,imports: timeGetTime
+0x3f0b0,518,army_Walk,hd-crossbuild,crossbuild-verified,game,,HD 0x43edd0 masked-identity 170B/130 fixed; core/army.hpp:361
+0x3f2c0,1595,army_animate_missile_3f2c0,hd-crossbuild,crossbuild-verified,game,,HD 0x43efe0 masked-identity 170B/142 fixed; core/army.hpp:366
 0x3f900,2041,army_range_attack,hd-crossbuild,crossbuild-verified,game,,HD 0x43f620 masked-identity 256B/164 fixed; core/army.hpp:369
 0x40100,62,army_GetName,hd-crossbuild,crossbuild-verified,game,,HD 0x43fe20 masked-identity 64B/52 fixed; core/army.hpp:919
 0x40140,31,game_3f900_sub02_40140,caller,structural,game,,called from 0x3f900
@@ -821,7 +821,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x4e5f0,164,Bitmap16Bit_Darken,hd-crossbuild,crossbuild-verified,game,,HD 0x44e2c0 masked-identity 176B/160 fixed; core/resources/resources.hpp:1138
 0x4e6a0,224,Bitmap16Bit_Darken_4e6a0,hd-crossbuild,crossbuild-verified,game,,HD 0x44e370 masked-identity 146B/126 fixed; core/resources/resources.hpp:1141
 0x4e780,447,Bitmap16Bit_Colorize,hd-crossbuild,crossbuild-verified,game,,HD 0x44e450 masked-identity 256B/204 fixed; core/resources/resources.hpp:1144
-0x4e940,952,game_1a7f0_sub00_4e940,caller,structural,game,,called from 0x1a7f0
+0x4e940,952,Bitmap16Bit_Colorize_4e940,hd-crossbuild,crossbuild-verified,game,,HD 0x44e610 masked-identity 16B/16 fixed; core/resources/resources.hpp:1147
 0x4ed00,32,cinit0120_4ed00,init-ctor,structural,game,,.CRT$XCU slot 120
 0x4ed20,33,Bitmap24Bit_vslot00,vtable-slot,external-candidate,game,,vtable 0x23b9f4 slot 0
 0x4ed50,170,Bitmap24Bit_Bitmap24Bit,hd-crossbuild,crossbuild-verified,game,,HD 0x44ea20 masked-identity 176B/156 fixed; core/resources/resources.hpp:1302
@@ -850,14 +850,14 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x4fec0,32,cinit0123_4fec0,init-ctor,structural,game,,.CRT$XCU slot 123
 0x4fee0,33,border_vslot00,vtable-slot,external-candidate,game,,vtable 0x23ba24 slot 0
 0x4ff10,50,border,hd-crossbuild,crossbuild-verified,game,,HD 0x44fbe0 masked-identity 64B/56 fixed; core/interface/widgets.hpp:370
-0x4ff50,11,game_4fee0_sub00_4ff50,caller,structural,game,,called from 0x4fee0
+0x4ff50,11,border_border,hd-crossbuild,crossbuild-verified,game,,HD 0x44fc20 masked-identity 16B/8 fixed; core/interface/widgets.hpp:377
 0x4ff60,461,border_vslot02,vtable-slot,external-candidate,game,,vtable 0x23ba24 slot 2
 0x50130,109,coloredBorderFrame,hd-crossbuild,crossbuild-verified,game,,HD 0x44fe00 masked-identity 160B/135 fixed; core/interface/widgets.hpp:493
 0x501a0,33,coloredBorderFrame_vslot00,vtable-slot,external-candidate,game,,vtable 0x23ba5c slot 0
 0x501d0,11,coloredBorderFrame_coloredBorderFrame,hd-crossbuild,crossbuild-verified,game,,HD 0x44fea0 masked-identity 256B/228 fixed; core/interface/widgets.hpp:500
 0x501e0,91,coloredBorderFrame_vslot04,vtable-slot,external-candidate,game,,vtable 0x23ba5c slot 4
 0x50240,130,coloredBorderFrame_vslot02,vtable-slot,external-candidate,game,,vtable 0x23ba5c slot 2
-0x502d0,140,game_1510_sub05_502d0,caller,structural,game,,called from 0x1510
+0x502d0,140,bitmapBorder,hd-crossbuild,crossbuild-verified,game,,HD 0x44ffa0 masked-identity 192B/164 fixed; core/interface/widgets.hpp:412
 0x50360,33,bitmapBorder_vslot00,vtable-slot,external-candidate,game,,vtable 0x23ba94 slot 0
 0x50390,91,bitmapBorder_bitmapBorder,hd-crossbuild,crossbuild-verified,game,,HD 0x450060 masked-identity 256B/220 fixed; core/interface/widgets.hpp:419
 0x503f0,85,bitmapBorder_vslot03,vtable-slot,external-candidate,game,,vtable 0x23ba94 slot 3
@@ -867,11 +867,11 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x504c0,91,bitmapBorder_SetImage,hd-crossbuild,crossbuild-verified,game,,HD 0x450170 masked-identity 96B/92 fixed; core/interface/widgets.hpp:431
 0x50520,45,bitmapBorder_SetPlayerPaletteColors,hd-crossbuild,crossbuild-verified,game,,HD 0x4501d0 masked-identity 256B/220 fixed; core/interface/widgets.hpp:434
 0x50550,306,bitmapBorder_vslot02,vtable-slot,external-candidate,game,,vtable 0x23ba94 slot 2
-0x50690,140,game_590c0_sub00_50690,caller,structural,game,,called from 0x590c0
+0x50690,140,bitmapBorder16,hd-crossbuild,crossbuild-verified,game,,HD 0x450340 masked-identity 192B/164 fixed; core/interface/widgets.hpp:454
 0x50720,33,game_50720,band,structural,game,,band game
 0x50750,91,bitmapBorder16_bitmapBorder16,hd-crossbuild,crossbuild-verified,game,,HD 0x450400 masked-identity 192B/158 fixed; core/interface/widgets.hpp:461
 0x507b0,85,game_507b0,band,structural,game,,band game
-0x50810,68,game_1d3240_sub00_50810,caller,structural,game,,called from 0x1d3240
+0x50810,68,bitmapBorder16_Draw2,hd-crossbuild,crossbuild-verified,game,,HD 0x4504c0 masked-identity 75B/58 fixed; core/interface/widgets.hpp:473
 0x50860,198,game_50860,band,structural,game,,band game
 0x50930,32,cinit0124_50930,init-ctor,structural,game,,.CRT$XCU slot 124
 0x50950,89,cinit0125_50950,init-ctor,structural,game,,.CRT$XCU slot 125
@@ -983,7 +983,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x55e60,92,cinit0135_55e60,init-ctor,structural,game,,.CRT$XCU slot 135
 0x55ec0,33,button_vslot00,vtable-slot,external-candidate,game,,vtable 0x23bb54 slot 0
 0x55ef0,503,button,hd-crossbuild,crossbuild-verified,game,,HD 0x455bd0 masked-identity 256B/224 fixed; core/interface/widgets.hpp:582
-0x560f0,154,game_55ec0_sub00_560f0,caller,structural,game,,called from 0x55ec0
+0x560f0,154,button_button,hd-crossbuild,crossbuild-verified,game,,HD 0x455dd0 masked-identity 160B/140 fixed; core/interface/widgets.hpp:589
 0x56190,1743,button_vslot02,vtable-slot,external-candidate,game,,vtable 0x23bb54 slot 2
 0x56860,218,calls_timeGetTime_56860,import-wrapper,structural,game,,imports: timeGetTime
 0x56940,153,button_vslot04,vtable-slot,external-candidate,game,,vtable 0x23bb54 slot 4
@@ -1015,7 +1015,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x578d0,95,cinit0146_578d0,init-ctor,structural,game,,.CRT$XCU slot 146
 0x57930,95,cinit0147_57930,init-ctor,structural,game,,.CRT$XCU slot 147
 0x57990,793,NewSMapHeader_NewSMapHeader,nh3api,external-candidate,game,,core/map_header.hpp:324
-0x57cb0,696,game_57990_sub00_57cb0,caller,structural,game,,called from 0x57990
+0x57cb0,696,NewSMapHeader_NewSMapHeader_57cb0,hd-crossbuild,crossbuild-verified,game,,HD 0x457990 masked-identity 170B/166 fixed; core/map_header.hpp:324
 0x58010,271,game_57990_sub01_58010,caller,structural,game,,called from 0x57990
 0x58120,3100,game_medfont_fnt_58120,string,structural,game,,literal: medfont.fnt
 0x58d40,663,game_57990_sub02_58d40,caller,structural,game,,called from 0x57990
@@ -1038,8 +1038,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x5b140,110,game_590c0_sub11_5b140,caller,structural,game,,called from 0x590c0
 0x5b1b0,40,game_ee3e0_sub01_5b1b0,caller,structural,game,,called from 0xee3e0
 0x5b1e0,2267,calls_timeGetTime_5b1e0,import-wrapper,structural,game,,imports: timeGetTime
-0x5bac0,14,game_5b1e0_sub00_5bac0,caller,structural,game,,called from 0x5b1e0
-0x5bad0,308,type_quest_result,hd-crossbuild,crossbuild-verified,game,,HD 0x572ff0 masked-identity 256B/208 fixed; core/quests.hpp:208
+0x5bac0,14,LossConditionStruct_LossConditionStruct,hd-crossbuild,crossbuild-verified,game,,HD 0x45b7a0 masked-identity 16B/16 fixed; core/lossvictory.hpp:214
+0x5bad0,308,game_5b1e0_sub01_5bad0,caller,structural,game,,called from 0x5b1e0
 0x5bc10,192,game_f3f60_sub00_5bc10,caller,structural,game,,called from 0xf3f60
 0x5bcd0,661,game_57cb0_sub00_5bcd0,caller,structural,game,,called from 0x57cb0
 0x5bf70,190,game_5a7a0_sub01_5bf70,caller,structural,game,,called from 0x5a7a0
@@ -1418,7 +1418,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x7bcf0,82,CSprite_7bcf0,hd-crossbuild,crossbuild-verified,game,,HD 0x47b610 masked-identity 112B/108 fixed; core/resources/resources.hpp:762
 0x7bd50,6,CSpriteFrame_CSpriteFrame,nh3api,external-candidate,game,,core/resources/resources.hpp:406
 0x7bd60,84,CSprite_7bd60,hd-crossbuild,crossbuild-verified,game,,HD 0x47b680 masked-identity 96B/88 fixed; core/resources/resources.hpp:780
-0x7bdc0,76,game_10c00_sub05_7bdc0,caller,structural,game,,called from 0x10c00
+0x7bdc0,76,CSprite_7bdc0,hd-crossbuild,crossbuild-verified,game,,HD 0x47b6e0 masked-identity 80B/72 fixed; core/resources/resources.hpp:796
 0x7be10,78,CSprite_7be10,hd-crossbuild,crossbuild-verified,game,,HD 0x47b730 masked-identity 80B/76 fixed; core/resources/resources.hpp:813
 0x7be60,74,CSprite_7be60,hd-crossbuild,crossbuild-verified,game,,HD 0x47b780 masked-identity 80B/76 fixed; core/resources/resources.hpp:829
 0x7beb0,74,CSprite_7beb0,hd-crossbuild,crossbuild-verified,game,,HD 0x47b7d0 masked-identity 80B/70 fixed; core/resources/resources.hpp:841
@@ -1429,7 +1429,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x7c080,80,CSprite_7c080,hd-crossbuild,crossbuild-verified,game,,HD 0x47b9a0 masked-identity 80B/72 fixed; core/resources/resources.hpp:925
 0x7c0d0,78,CSprite_7c0d0,hd-crossbuild,crossbuild-verified,game,,HD 0x47b9f0 masked-identity 80B/76 fixed; core/resources/resources.hpp:942
 0x7c120,80,CSprite_7c120,hd-crossbuild,crossbuild-verified,game,,HD 0x47ba40 masked-identity 80B/72 fixed; core/resources/resources.hpp:957
-0x7c170,82,game_953b0_sub00_7c170,caller,structural,game,,called from 0x953b0
+0x7c170,82,CSprite_7c170,hd-crossbuild,crossbuild-verified,game,,HD 0x47ba90 masked-identity 96B/92 fixed; core/resources/resources.hpp:975
 0x7c1d0,108,CSprite_GetNumSeqs,hd-crossbuild,crossbuild-verified,game,,HD 0x47baf0 masked-identity 224B/124 fixed; core/resources/resources.hpp:980
 0x7c240,32,cinit0261_7c240,init-ctor,structural,game,,.CRT$XCU slot 261
 0x7c260,8,cinit0262_7c260,init-ctor,structural,game,,.CRT$XCU slot 262
@@ -1613,7 +1613,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x887e0,48,game_82fd0_sub04_887e0,caller,structural,game,,called from 0x82fd0
 0x88810,50,game_590c0_sub16_88810,caller,structural,game,,called from 0x590c0
 0x88850,47,game_82fd0_sub05_88850,caller,structural,game,,called from 0x82fd0
-0x88880,1494,game_maps_88880,string,structural,game,,literal: maps
+0x88880,1494,CampaignHeaderStruct_noexcept,hd-crossbuild,crossbuild-verified,game,,HD 0x4883c0 masked-identity 170B/121 fixed; core/campaign.hpp:260
 0x88e60,75,game_88880_sub03_88e60,caller,structural,game,,called from 0x88880
 0x88eb0,33,game_88880_sub04_88eb0,caller,structural,game,,called from 0x88880
 0x88ee0,29,game_590c0_sub18_88ee0,caller,structural,game,,called from 0x590c0
@@ -2124,7 +2124,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xb07e0,95,cinit0364_b07e0,init-ctor,structural,game,,.CRT$XCU slot 364
 0xb0840,95,cinit0365_b0840,init-ctor,structural,game,,.CRT$XCU slot 365
 0xb08a0,95,cinit0366_b08a0,init-ctor,structural,game,,.CRT$XCU slot 366
-0xb0900,16,game_edb40_sub02_b0900,caller,structural,game,,called from 0xedb40
+0xb0900,16,executive_executive_b0900,hd-crossbuild,crossbuild-verified,game,,HD 0x4b0660 masked-identity 16B/16 fixed; core/base_manager.hpp:102
 0xb0910,121,game_ee3e0_sub07_b0910,caller,structural,game,,called from 0xee3e0
 0xb0990,120,game_f3690_sub01_b0990,caller,structural,game,,called from 0xf3690
 0xb0a10,267,executive_DoDialog,hd-crossbuild,crossbuild-verified,game,,HD 0x4b0770 masked-identity 256B/190 fixed; core/base_manager.hpp:115
@@ -2160,7 +2160,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xb2da0,587,searchArray_SeedCombatPosition,hd-crossbuild,crossbuild-verified,game,,HD 0x4b2b00 masked-identity 256B/204 fixed; core/pathfinding.hpp:143
 0xb2ff0,664,game_21680_sub12_b2ff0,caller,structural,game,,called from 0x21680
 0xb3290,367,game_b3400_sub00_b3290,caller,structural,game,,called from 0xb3400
-0xb3400,1927,game_1f580_sub01_b3400,caller,structural,game,,called from 0x1f580
+0xb3400,1927,searchArray_FindCombatPath,hd-crossbuild,crossbuild-verified,game,,HD 0x4b3160 masked-identity 170B/106 fixed; core/pathfinding.hpp:151
 0xb3b90,32,searchArray_getCellData,hd-crossbuild,crossbuild-verified,game,,HD 0x4b38f0 masked-identity 32B/32 fixed; core/pathfinding.hpp:154
 0xb3bb0,860,game_b3400_sub02_b3bb0,caller,structural,game,,called from 0xb3400
 0xb3f10,15,game_671c0_sub00_b3f10,caller,structural,game,,called from 0x671c0
@@ -2287,12 +2287,12 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xbaa10,46,playerData_FindTown,hd-crossbuild,crossbuild-verified,game,,HD 0x4ba6d0 masked-identity 48B/48 fixed; core/player.hpp:118
 0xbaa40,250,playerData_NextHero,hd-crossbuild,crossbuild-verified,game,,HD 0x4ba700 masked-identity 256B/236 fixed; core/player.hpp:121
 0xbab40,67,playerData_NextTown,hd-crossbuild,crossbuild-verified,game,,HD 0x4ba800 masked-identity 80B/76 fixed; core/player.hpp:124
-0xbab90,16,game_8c40_sub06_bab90,caller,structural,game,,called from 0x8c40
+0xbab90,16,playerData_HasMobileHero,hd-crossbuild,crossbuild-verified,game,,HD 0x4ba850 masked-identity 16B/12 fixed; core/player.hpp:127
 0xbaba0,41,GetNumObelisks,hd-crossbuild,crossbuild-verified,game,,HD 0x4ba860 masked-identity 48B/40 fixed; core/player.hpp:313
 0xbabd0,220,playerData_NumOfGivenArtifact,hd-crossbuild,crossbuild-verified,game,,HD 0x4ba890 masked-identity 224B/212 fixed; core/player.hpp:130
 0xbacb0,202,playerData_hasGivenArtifact,hd-crossbuild,crossbuild-verified,game,,HD 0x4ba970 masked-identity 208B/180 fixed; core/player.hpp:133
 0xbad80,26,playerData_IsLocalHuman,hd-crossbuild,crossbuild-verified,game,,HD 0x4baa40 masked-identity 32B/32 fixed; core/player.hpp:136
-0xbada0,12,game_32e0_sub02_bada0,caller,structural,game,,called from 0x32e0
+0xbada0,12,playerData_IsHuman,hd-crossbuild,crossbuild-verified,game,,HD 0x4baa60 masked-identity 16B/16 fixed; core/player.hpp:139
 0xbadb0,156,playerData_GetName,hd-crossbuild,crossbuild-verified,game,,HD 0x4baa70 masked-identity 160B/132 fixed; core/player.hpp:142
 0xbae50,27,game_297c0_sub02_bae50,caller,structural,game,,called from 0x297c0
 0xbae70,85,game_e4990_sub00_bae70,caller,structural,game,,called from 0xe4990
@@ -2310,7 +2310,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xbbc20,542,game_be3f0_sub07_bbc20,caller,structural,game,,called from 0xbe3f0
 0xbbe40,660,game_bcda0_sub12_bbe40,caller,structural,game,,called from 0xbcda0
 0xbc0e0,593,SavedGameHeader_SavedGameHeader,hd-crossbuild,crossbuild-verified,game,,HD 0x4bbda0 masked-identity 256B/180 fixed; core/saved_game.hpp:22
-0xbc340,14,game_bc0e0_sub00_bc340,caller,structural,game,,called from 0xbc0e0
+0xbc340,14,VictoryConditionStruct_VictoryConditionStruct,hd-crossbuild,crossbuild-verified,game,,HD 0x4bc000 masked-identity 16B/12 fixed; core/lossvictory.hpp:75
 0xbc350,625,game_h3svc_bc350,string,structural,game,,literal: H3SVC
 0xbc5d0,378,game_be3f0_sub09_bc5d0,caller,structural,game,,called from 0xbe3f0
 0xbc750,981,game_games_bc750,string,structural,game,,literal: games
@@ -2633,7 +2633,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xd9a00,296,game_dd2d0_sub04_d9a00,caller,structural,game,,called from 0xdd2d0
 0xd9b30,397,game_1af590_sub00_d9b30,caller,structural,game,,called from 0x1af590
 0xd9cc0,512,game_dd2d0_sub05_d9cc0,caller,structural,game,,called from 0xdd2d0
-0xd9ec0,1235,game_82010_sub08_d9ec0,caller,structural,game,,called from 0x82010
+0xd9ec0,1235,hero_Deallocate,hd-crossbuild,crossbuild-verified,game,,HD 0x4da130 masked-identity 170B/154 fixed; core/hero.hpp:461
 0xda3a0,118,hero_GetExperience,hd-crossbuild,crossbuild-verified,game,,HD 0x4da610 masked-identity 128B/100 fixed; core/hero.hpp:466
 0xda420,228,hero_GetExperienceIncrement,hd-crossbuild,crossbuild-verified,game,,HD 0x4da690 masked-identity 240B/184 fixed; core/hero.hpp:471
 0xda510,497,game_26ee0_sub04_da510,caller,structural,game,,called from 0x26ee0
@@ -2654,7 +2654,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xdc070,135,game_1af590_sub02_dc070,caller,structural,game,,called from 0x1af590
 0xdc100,535,game_dd2d0_sub09_dc100,caller,structural,game,,called from 0xdd2d0
 0xdc320,1939,hero_result,hd-crossbuild,crossbuild-verified,game,,HD 0x4dc590 masked-identity 256B/208 fixed; core/hero.hpp:502
-0xdcac0,2016,game_4c1c0_sub00_dcac0,caller,structural,game,,called from 0x4c1c0
+0xdcac0,2016,hero_result_dcac0,hd-crossbuild,crossbuild-verified,game,,HD 0x4dcd30 masked-identity 256B/203 fixed; core/hero.hpp:509
 0xdd2a0,44,game_dd2a0,band,structural,game,,band game
 0xdd2d0,5182,game_dxp_dd2d0,string,structural,game,,literal: \DxP
 0xde710,11346,game_heroscr4_pcx_de710,string,structural,game,,literal: heroscr4.pcx
@@ -2874,7 +2874,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xed2a0,167,game_6fd0_sub08_ed2a0,caller,structural,game,,called from 0x6fd0
 0xed350,243,game_loadbar_pcx_ed350,string,structural,game,,literal: loadbar.pcx
 0xed450,61,game_189b20_sub00_ed450,caller,structural,game,,called from 0x189b20
-0xed490,437,calls_timeGetTime_ed490,import-wrapper,structural,game,,imports: timeGetTime
+0xed490,437,PollSound,hd-crossbuild,crossbuild-verified,game,,HD 0x4edb20 masked-identity 170B/98 fixed; core/events.hpp:160
 0xed650,1256,calls_LoadMenuA_ed650,import-wrapper,structural,game,,imports: LoadMenuA;thunk_FUN_0050be10
 0xedb40,598,game_ed650_sub19_edb40,caller,structural,game,,called from 0xed650
 0xedda0,1031,game_credits_fnt_edda0,string,structural,game,,literal: Credits.fnt
@@ -2929,7 +2929,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xf6810,377,game_f6570_sub00_f6810,caller,structural,game,,called from 0xf6570
 0xf6990,3212,calls_timeGetTime_f6990,import-wrapper,structural,game,,imports: timeGetTime
 0xf7620,102,game_f6990_sub02_f7620,caller,structural,game,,called from 0xf6990
-0xf7690,786,game_6a20_sub00_f7690,caller,structural,game,,called from 0x6a20
+0xf7690,786,extended_dialog,hd-crossbuild,crossbuild-verified,game,,HD 0x4f7d20 masked-identity 78B/66 fixed; core/interface/windows.hpp:1238
 0xf79b0,37,GetMapExtra,hd-crossbuild,crossbuild-verified,game,,HD 0x4f8040 masked-identity 48B/36 fixed; core/map.hpp:420
 0xf79e0,36,GetMapExtraPtr,hd-crossbuild,crossbuild-verified,game,,HD 0x4f8070 masked-identity 80B/52 fixed; core/map.hpp:423
 0xf7a10,32,cinit0513_f7a10,init-ctor,structural,game,,.CRT$XCU slot 513
@@ -2942,7 +2942,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0xf8180,92,KBChangeMenu,hd-crossbuild,crossbuild-verified,game,,HD 0x4f8810 masked-identity 96B/46 fixed; core/events.hpp:172
 0xf81e0,49,SetNoDialogMenus,hd-crossbuild,crossbuild-verified,game,,HD 0x4f8870 masked-identity 64B/48 fixed; core/events.hpp:175
 0xf8220,178,game_heroes_of_might_and_magi_f8220,string,structural,game,,literal: Heroes of Might and Magic III is
-0xf82e0,6,game_5e30_sub13_f82e0,caller,structural,game,,called from 0x5e30
+0xf82e0,6,Get,hd-crossbuild,crossbuild-verified,game,,HD 0x4f8970 masked-identity 16B/12 fixed; core/events.hpp:181
 0xf82f0,205,game_3f2c0_sub08_f82f0,caller,structural,game,,called from 0x3f2c0
 0xf83c0,208,Delay,hd-crossbuild,crossbuild-verified,game,,HD 0x4f8a50 masked-identity 256B/168 fixed; core/events.hpp:187
 0xf8490,32,cinit0514_f8490,init-ctor,structural,game,,.CRT$XCU slot 514
@@ -3463,23 +3463,23 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x122470,350,game_121960_sub04_122470,caller,structural,game,,called from 0x121960
 0x1225d0,85,game_121960_sub05_1225d0,caller,structural,game,,called from 0x121960
 0x122630,32,cinit0635_122630,init-ctor,structural,game,,.CRT$XCU slot 635
-0x122650,22,game_3e140_sub05_122650,caller,structural,game,,called from 0x3e140
+0x122650,22,TPalette16_TPalette16,hd-crossbuild,crossbuild-verified,game,,HD 0x522b40 masked-identity 80B/60 fixed; core/resources/resources.hpp:272
 0x122670,33,game_122670,band,structural,game,,band game
-0x1226a0,45,TPalette16_TPalette16,hd-crossbuild,crossbuild-verified,game,,HD 0x522b90 masked-identity 48B/32 fixed; core/resources/resources.hpp:284
+0x1226a0,45,TPalette16_TPalette16_1226a0,hd-crossbuild,crossbuild-verified,game,,HD 0x522b90 masked-identity 48B/32 fixed; core/resources/resources.hpp:284
 0x1226d0,157,TPalette16,hd-crossbuild,crossbuild-verified,game,,HD 0x522bc0 masked-identity 160B/138 fixed; core/resources/resources.hpp:294
 0x122770,159,TPalette16_122770,hd-crossbuild,crossbuild-verified,game,,HD 0x522c60 masked-identity 160B/152 fixed; core/resources/resources.hpp:305
 0x122810,198,TPalette16_TPalette16_122810,hd-crossbuild,crossbuild-verified,game,,HD 0x522d00 masked-identity 208B/170 fixed; core/resources/resources.hpp:276
 0x1228e0,48,TPalette16_TPalette16_1228e0,hd-crossbuild,crossbuild-verified,game,,HD 0x522dd0 masked-identity 48B/32 fixed; core/resources/resources.hpp:280
 0x122910,33,TPalette16_TPalette16_122910,hd-crossbuild,crossbuild-verified,game,,HD 0x522e00 masked-identity 48B/48 fixed; core/resources/resources.hpp:312
-0x122940,11,game_3e140_sub07_122940,caller,structural,game,,called from 0x3e140
+0x122940,11,TPalette16_TPalette16_122940,hd-crossbuild,crossbuild-verified,game,,HD 0x522e30 masked-identity 16B/8 fixed; core/resources/resources.hpp:315
 0x122950,190,TPalette16_Cycle,hd-crossbuild,crossbuild-verified,game,,HD 0x522e40 masked-identity 192B/184 fixed; core/resources/resources.hpp:331
 0x122a10,290,TPalette16_AdjustSaturation,hd-crossbuild,crossbuild-verified,game,,HD 0x522f00 masked-identity 256B/200 fixed; core/resources/resources.hpp:334
 0x122b40,6,TPalette16_TPalette16_122b40,nh3api,external-candidate,game,,core/resources/resources.hpp:272
 0x122b50,501,TPalette16_AdjustHSV,hd-crossbuild,crossbuild-verified,game,,HD 0x523040 masked-identity 256B/198 fixed; core/resources/resources.hpp:337
 0x122d50,214,TPalette16_Gray,hd-crossbuild,crossbuild-verified,game,,HD 0x523240 masked-identity 224B/188 fixed; core/resources/resources.hpp:340
-0x122e30,22,TPalette16_TPalette16_122e30,nh3api,external-candidate,game,,core/resources/resources.hpp:315
+0x122e30,22,TPalette24_TPalette24,hd-crossbuild,crossbuild-verified,game,,HD 0x523320 masked-identity 80B/60 fixed; core/resources/resources.hpp:181
 0x122e50,33,TPalette16_vslot00,vtable-slot,external-candidate,game,,vtable 0x240374 slot 0
-0x122e80,45,TPalette24_TPalette24,hd-crossbuild,crossbuild-verified,game,,HD 0x523370 masked-identity 48B/32 fixed; core/resources/resources.hpp:185
+0x122e80,45,TPalette24_TPalette24_122e80,hd-crossbuild,crossbuild-verified,game,,HD 0x523370 masked-identity 48B/32 fixed; core/resources/resources.hpp:185
 0x122eb0,66,TPalette24_TPalette24_122eb0,hd-crossbuild,crossbuild-verified,game,,HD 0x5233a0 masked-identity 80B/64 fixed; core/resources/resources.hpp:189
 0x122f00,48,TPalette24_TPalette24_122f00,hd-crossbuild,crossbuild-verified,game,,HD 0x5233f0 masked-identity 48B/32 fixed; core/resources/resources.hpp:193
 0x122f30,33,TPalette24,hd-crossbuild,crossbuild-verified,game,,HD 0x523420 masked-identity 48B/48 fixed; core/resources/resources.hpp:202
@@ -3550,7 +3550,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x127290,308,type_spellvalue_get_enchantment_value,hd-crossbuild,crossbuild-verified,game,,HD 0x527770 masked-identity 256B/216 fixed; core/adventure_AI.hpp:577
 0x1273d0,477,type_spellvalue_get_raw_spell_value,hd-crossbuild,crossbuild-verified,game,,HD 0x5278b0 masked-identity 256B/216 fixed; core/adventure_AI.hpp:580
 0x1275b0,138,type_spellvalue_get_best_spell_value,hd-crossbuild,crossbuild-verified,game,,HD 0x527a90 masked-identity 144B/132 fixed; core/adventure_AI.hpp:583
-0x127640,203,game_336c0_sub02_127640,caller,structural,game,,called from 0x336c0
+0x127640,203,AI_get_spell_value,hd-crossbuild,crossbuild-verified,game,,HD 0x527b20 masked-identity 138B/110 fixed; core/adventure_AI.hpp:636
 0x127710,76,game_27330_sub03_127710,caller,structural,game,,called from 0x27330
 0x127760,498,game_2fc50_sub04_127760,caller,structural,game,,called from 0x2fc50
 0x127960,320,game_125e80_sub04_127960,caller,structural,game,,called from 0x125e80
@@ -4057,7 +4057,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x153db0,51,CChatManager_HasOldChat,hd-crossbuild,crossbuild-verified,game,,HD 0x5541b0 masked-identity 64B/56 fixed; chat_manager.hpp:88
 0x153df0,228,CChatManager_KillOldChat,hd-crossbuild,crossbuild-verified,game,,HD 0x5541f0 masked-identity 240B/212 fixed; chat_manager.hpp:91
 0x153ee0,355,CChatManager_UpdateWidgetText,hd-crossbuild,crossbuild-verified,game,,HD 0x5542e0 masked-identity 256B/240 fixed; chat_manager.hpp:85
-0x154050,13,calls_timeGetTime_154050,import-wrapper,structural,game,,imports: timeGetTime
+0x154050,13,CChatManager_PauseTimeOuts,hd-crossbuild,crossbuild-verified,game,,HD 0x554450 masked-identity 16B/12 fixed; chat_manager.hpp:94
 0x154060,75,CChatManager_ResumeTimeOuts,hd-crossbuild,crossbuild-verified,game,,HD 0x554460 masked-identity 80B/76 fixed; chat_manager.hpp:97
 0x1540b0,32,CChatManager_ClearChat,hd-crossbuild,crossbuild-verified,game,,HD 0x5544b0 masked-identity 32B/32 fixed; chat_manager.hpp:100
 0x1540d0,156,CChatManager_SetMaxLines,hd-crossbuild,crossbuild-verified,game,,HD 0x5544d0 masked-identity 160B/144 fixed; chat_manager.hpp:103
@@ -4142,9 +4142,9 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x157920,343,game_handlenewhost_157920,string,structural,game,,literal: HandleNewHost
 0x157a80,21,CTurnDuration_IsOn,hd-crossbuild,crossbuild-verified,game,,HD 0x557e20 masked-identity 32B/28 fixed; turn.hpp:31
 0x157aa0,77,CTurnDuration_IsExpired,hd-crossbuild,crossbuild-verified,game,,HD 0x557e40 masked-identity 80B/64 fixed; turn.hpp:34
-0x157af0,520,calls_timeGetTime_157af0,import-wrapper,structural,game,,imports: timeGetTime
+0x157af0,520,CTurnDuration_CheckForWarning,hd-crossbuild,crossbuild-verified,game,,HD 0x557e90 masked-identity 170B/114 fixed; turn.hpp:37
 0x157d00,85,CTurnDuration_IsClose,hd-crossbuild,crossbuild-verified,game,,HD 0x5580a0 masked-identity 96B/88 fixed; turn.hpp:40
-0x157d60,11,game_87b0_sub10_157d60,caller,structural,game,,called from 0x87b0
+0x157d60,11,CTurnDuration_Clear,hd-crossbuild,crossbuild-verified,game,,HD 0x558100 masked-identity 16B/16 fixed; turn.hpp:43
 0x157d70,20,CTurnDuration_SetDuration,hd-crossbuild,crossbuild-verified,game,,HD 0x558110 masked-identity 32B/32 fixed; turn.hpp:46
 0x157d90,61,CTurnDuration_Start,hd-crossbuild,crossbuild-verified,game,,HD 0x558130 masked-identity 64B/48 fixed; turn.hpp:49
 0x157dd0,20,CTurnDuration_Pause,hd-crossbuild,crossbuild-verified,game,,HD 0x558170 masked-identity 32B/28 fixed; turn.hpp:52
@@ -4167,7 +4167,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x158700,32,cinit0765_158700,init-ctor,structural,game,,.CRT$XCU slot 765
 0x158720,78,resource_resource,hd-crossbuild,crossbuild-verified,game,,HD 0x558970 masked-identity 128B/112 fixed; core/resources/resources.hpp:67
 0x158770,35,game_158770,band,structural,game,,band game
-0x1587a0,7,game_4e100_sub00_1587a0,caller,structural,game,,called from 0x4e100
+0x1587a0,7,resource_resource_1587a0,hd-crossbuild,crossbuild-verified,game,,HD 0x5589f0 masked-identity 256B/212 fixed; core/resources/resources.hpp:74
 0x1587b0,32,cinit0766_1587b0,init-ctor,structural,game,,.CRT$XCU slot 766
 0x1587d0,89,cinit0767_1587d0,init-ctor,structural,game,,.CRT$XCU slot 767
 0x158830,96,cinit0768_158830,init-ctor,structural,game,,.CRT$XCU slot 768
@@ -4225,12 +4225,12 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x15c130,655,game_15c3c0_sub01_15c130,caller,structural,game,,called from 0x15c3c0
 0x15c3c0,854,game_resource_15c3c0,string,structural,game,,"literal: "" resource """
 0x15c720,138,game_6fd0_sub16_15c720,caller,structural,game,,called from 0x6fd0
-0x15c7b0,1859,game_getsprite_15c7b0,string,structural,game,,literal: GetSprite
+0x15c7b0,1859,GetSprite,hd-crossbuild,crossbuild-verified,game,,HD 0x55c9c0 masked-identity 170B/114 fixed; core/resources/resources.hpp:1870
 0x15cf00,75,GetBackdrop,hd-crossbuild,crossbuild-verified,game,,HD 0x55d110 masked-identity 80B/50 fixed; core/resources/resources.hpp:1963
 0x15cf50,131,game_103780_sub00_15cf50,caller,structural,game,,called from 0x103780
 0x15cfe0,131,game_88880_sub09_15cfe0,caller,structural,game,,called from 0x88880
 0x15d070,92,GetBitmapResourceSize,hd-crossbuild,crossbuild-verified,game,,HD 0x55d280 masked-identity 96B/68 fixed; core/resources/resources.hpp:1972
-0x15d0d0,17,game_88880_sub11_15d0d0,caller,structural,game,,called from 0x88880
+0x15d0d0,17,ReadFromBitmapResource,hd-crossbuild,crossbuild-verified,game,,HD 0x55d2e0 masked-identity 75B/67 fixed; core/resources/resources.hpp:1975
 0x15d0f0,161,Bitmap16Bit_vslot01,vtable-slot,external-candidate,game,,vtable 0x23b9c8 slot 1
 0x15d1a0,280,CSprite_vslot01,vtable-slot,external-candidate,game,,vtable 0x23d6b0 slot 1
 0x15d2c0,190,game_159400_sub00_15d2c0,caller,structural,game,,called from 0x159400
@@ -4408,7 +4408,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x16aad0,104,game_b2300_sub03_16aad0,caller,structural,game,,called from 0xb2300
 0x16ab40,1292,game_16b440_sub02_16ab40,caller,structural,game,,called from 0x16b440
 0x16b050,999,game_16b440_sub03_16b050,caller,structural,game,,called from 0x16b440
-0x16b440,2284,game_194a0_sub00_16b440,caller,structural,game,,called from 0x194a0
+0x16b440,2284,searchArray,hd-crossbuild,crossbuild-verified,game,,HD 0x56b710 masked-identity 33B/33 fixed; core/pathfinding.hpp:173
 0x16bd30,51,game_16a0d0_sub00_16bd30,caller,structural,game,,called from 0x16a0d0
 0x16bd70,32,cinit0841_16bd70,init-ctor,structural,game,,.CRT$XCU slot 841
 0x16bd90,39,cinit0842_16bd90,init-ctor,structural,game,,.CRT$XCU slot 842
@@ -4647,7 +4647,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x179870,234,game_1795a0_sub02_179870,caller,structural,game,,called from 0x1795a0
 0x179960,11619,game_tsingleselectionwindow_i_179960,string,structural,game,,literal: TSingleSelectionWindow::IsHost()
 0x17c6d0,172,TSpreadsheetResource_vslot13,vtable-slot,external-candidate,game,,vtable 0x242db0 slot 13
-0x17c780,14,game_179960_sub02_17c780,caller,structural,game,,called from 0x179960
+0x17c780,14,SCampaign_GetCurrentScenario,hd-crossbuild,crossbuild-verified,game,,HD 0x57cb00 masked-identity 16B/16 fixed; core/campaign.hpp:495
 0x17c790,64,game_179960_sub03_17c790,caller,structural,game,,called from 0x179960
 0x17c7f0,404,game_179960_sub04_17c7f0,caller,structural,game,,called from 0x179960
 0x17c9b0,18,game_179960_sub05_17c9b0,caller,structural,game,,called from 0x179960
@@ -5232,7 +5232,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x1ba6e0,495,game_57990_sub04_1ba6e0,caller,structural,game,,called from 0x57990
 0x1ba8d0,32,cinit0994_1ba8d0,init-ctor,structural,game,,.CRT$XCU slot 994
 0x1ba8f0,33,textEntryWidget_vslot00,vtable-slot,external-candidate,game,,vtable 0x242d40 slot 0
-0x1ba920,437,game_49790_sub02_1ba920,caller,structural,game,,called from 0x49790
+0x1ba920,437,textEntryWidget,hd-crossbuild,crossbuild-verified,game,,HD 0x5bacd0 masked-identity 170B/138 fixed; core/interface/widgets.hpp:241
 0x1baae0,98,textEntryWidget_textEntryWidget,hd-crossbuild,crossbuild-verified,game,,HD 0x5bae90 masked-identity 112B/100 fixed; core/interface/widgets.hpp:248
 0x1bab50,73,CChatEdit_vslot14,vtable-slot,external-candidate,game,,vtable 0x240e30 slot 14
 0x1baba0,164,textEntryWidget_GetCharPressed,hd-crossbuild,crossbuild-verified,game,,HD 0x5baf50 masked-identity 176B/124 fixed; core/interface/widgets.hpp:282
@@ -5264,8 +5264,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x1bc5f0,146,TSpreadsheetResource_vslot04,vtable-slot,external-candidate,game,,vtable 0x242db0 slot 4
 0x1bc690,1,border_vslot04,vtable-slot,external-candidate,game,,vtable 0x23ba24 slot 4
 0x1bc6a0,33,textWidget_1bc6a0,nh3api,external-candidate,game,,core/interface/widgets.hpp:153
-0x1bc6d0,138,game_1bc6a0_sub00_1bc6d0,caller,structural,game,,called from 0x1bc6a0
-0x1bc760,123,game_1510_sub15_1bc760,caller,structural,game,,called from 0x1510
+0x1bc6d0,138,bitmapBackedTextWidget_bitmapBackedTextWidget,hd-crossbuild,crossbuild-verified,game,,HD 0x5bcae0 masked-identity 144B/128 fixed; core/interface/widgets.hpp:538
+0x1bc760,123,bitmapBackedTextWidget,hd-crossbuild,crossbuild-verified,game,,HD 0x5bcb70 masked-identity 113B/93 fixed; core/interface/widgets.hpp:531
 0x1bc7e0,3,border_vslot03,vtable-slot,external-candidate,game,,vtable 0x23ba24 slot 3
 0x1bc7f0,124,bitmapBackedTextWidget_vslot04,vtable-slot,external-candidate,game,,vtable 0x242de8 slot 4
 0x1bc870,32,cinit0997_1bc870,init-ctor,structural,game,,.CRT$XCU slot 997
@@ -5678,7 +5678,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x1fe320,32,cinit1100_1fe320,init-ctor,structural,game,,.CRT$XCU slot 1100
 0x1fe340,98,widget_widget,hd-crossbuild,crossbuild-verified,game,,HD 0x5fe900 masked-identity 208B/180 fixed; core/interface/windows.hpp:137
 0x1fe3b0,92,widget_vslot00,vtable-slot,external-candidate,game,,vtable 0x243c90 slot 0
-0x1fe410,29,border_border,hd-crossbuild,crossbuild-verified,game,,HD 0x5fe9d0 masked-identity 32B/28 fixed; core/interface/widgets.hpp:360
+0x1fe410,29,border_border_1fe410,hd-crossbuild,crossbuild-verified,game,,HD 0x5fe9d0 masked-identity 32B/28 fixed; core/interface/widgets.hpp:360
 0x1fe430,69,game_4ff50_sub00_1fe430,caller,structural,game,,called from 0x4ff50
 0x1fe480,78,game_50130_sub01_1fe480,caller,structural,game,,called from 0x50130
 0x1fe4d0,23,border_vslot01,vtable-slot,external-candidate,game,,vtable 0x23ba24 slot 1
@@ -5713,7 +5713,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x1ff570,50,TAdventureMapWindow_vslot07,vtable-slot,external-candidate,game,,vtable 0x23a5e4 slot 7
 0x1ff5b0,51,heroWindow_SleepAllWidgets,hd-crossbuild,crossbuild-verified,game,,HD 0x5ffb70 masked-identity 64B/60 fixed; core/interface/windows.hpp:569
 0x1ff5f0,79,CAdvPopup_vslot08,vtable-slot,external-candidate,game,,vtable 0x23a6a8 slot 8
-0x1ff640,97,game_1b040_sub00_1ff640,caller,structural,game,,called from 0x1b040
+0x1ff640,97,CHeroWindowEx_CHeroWindowEx_1ff640,hd-crossbuild,crossbuild-verified,game,,HD 0x5ffc00 masked-identity 170B/158 fixed; core/interface/windows.hpp:669
 0x1ff6b0,33,CHeroWindowEx_vslot00,vtable-slot,external-candidate,game,,vtable 0x243ce8 slot 0
 0x1ff6e0,174,CAdvPopup_vslot10,vtable-slot,external-candidate,game,,vtable 0x23a6a8 slot 10
 0x1ff790,130,CAdvPopup_vslot11,vtable-slot,external-candidate,game,,vtable 0x23a6a8 slot 11
@@ -5949,7 +5949,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x20b580,12,cxx_20b556_sub00_20b580,caller,structural,cxx-libcpmt,,called from 0x20b556
 0x20b58c,12,cxx_20b556_sub01_20b58c,caller,structural,cxx-libcpmt,,called from 0x20b556
 0x20b598,126,std_Lockit_ctor,library-symbol,retail-proven,cxx-libcpmt,??0_Lockit@std@@QAE@XZ,cxx-libcpmt/build\intel\mt_obj\xlock.obj
-0x20b634,21,calls_LeaveCriticalSection_20b634,import-wrapper,structural,cxx-libcpmt,,imports: LeaveCriticalSection
+0x20b634,21,exe_scoped_lock_exe_scoped_lock,hd-crossbuild,crossbuild-verified,cxx-libcpmt,,HD 0x60bbf4 masked-identity 31B/8 fixed; core/nh3api_std/memory.hpp:677
 0x20b649,10,cinit1121_20b649,init-ctor,structural,cxx-libcpmt,,.CRT$XCU slot 1121
 0x20b653,1,cxx_20b649_sub00_20b653,caller,structural,cxx-libcpmt,,called from 0x20b649
 0x20b654,12,cxx_20b649_sub01_20b654,caller,structural,cxx-libcpmt,,called from 0x20b649
@@ -6358,7 +6358,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x216e39,84,cxx_20dedb_sub18_216e39,caller,structural,cxx-libcpmt,,called from 0x20dedb
 0x216e8d,41,type_info_dtor,library-symbol,retail-proven,crt-libcmt,??1type_info@@UAE@XZ,crt-libcmt/build\intel\mt_obj\typinfo.obj
 0x216eb6,28,crt_216eb6,band,structural,crt-libcmt,,band crt-libcmt
-0x216ed2,14,crt_1400_sub04_216ed2,caller,structural,crt-libcmt,,called from 0x1400
+0x216ed2,14,exe_new,hd-crossbuild,crossbuild-verified,crt-libcmt,,HD 0x617492 masked-identity 14B/10 fixed; core/nh3api_std/memory.hpp:50
 0x216ee0,45,JumpToContinuation,library-symbol,retail-proven,crt-libcmt,?_JumpToContinuation@@YGXPAXPAUEHRegistrationNode@@@Z,crt-libcmt/build\intel\mt_obj\trnsctrl.obj
 0x216f14,7,crt_21cffd_sub00_216f14,caller,structural,crt-libcmt,,called from 0x21cffd
 0x216f1b,7,crt_21cffd_sub01_216f1b,caller,structural,crt-libcmt,,called from 0x21cffd
@@ -6405,11 +6405,11 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x217d3c,60,ArrayUnwind,library-symbol,retail-proven,crt-libcmt,?__ArrayUnwind@@YGXPAXIHP6EX0@Z@Z,crt-libcmt/build\intel\mt_obj\ehvecdtr.obj
 0x217d78,10,crt_217d78,band,structural,crt-libcmt,,band crt-libcmt
 0x217d82,1,crt_217d82,band,structural,crt-libcmt,,band crt-libcmt
-0x217d9a,9,type_artifact_effect_vslot01,vtable-slot,external-candidate,crt-libcmt,,vtable 0x23b6b0 slot 1
+0x217d9a,9,exe_purecall,hd-crossbuild,crossbuild-verified,crt-libcmt,,HD 0x618370 masked-identity 16B/12 fixed; core/nh3api_std/exe_crt.hpp:48
 0x217db0,20,CIatan,library-symbol,retail-proven,crt-libcmt,__CIatan,crt-libcmt/..\build\intel\mt_obj\atan.obj
 0x217dc4,9,crt_45fd0_sub02_217dc4,caller,structural,crt-libcmt,,called from 0x45fd0
 0x217dcd,130,crt_atan_217dcd,string,structural,crt-libcmt,,literal: atan
-0x217e4f,13,crt_f7c00_sub10_217e4f,caller,structural,crt-libcmt,,called from 0xf7c00
+0x217e4f,13,exe_srand,hd-crossbuild,crossbuild-verified,crt-libcmt,,HD 0x61841f masked-identity 13B/8 fixed; core/random.hpp:21
 0x217e5c,34,rand,library-symbol,retail-proven,crt-libcmt,_rand,crt-libcmt/build\intel\mt_obj\rand.obj
 0x217e7e,139,atol,library-symbol,retail-proven,crt-libcmt,_atol,crt-libcmt/build\intel\mt_obj\atox.obj
 0x217f09,11,crt_4a180_sub01_217f09,caller,structural,crt-libcmt,,called from 0x4a180
@@ -6425,7 +6425,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x218317,39,crt_82fd0_sub09_218317,caller,structural,crt-libcmt,,called from 0x82fd0
 0x21833e,213,getdcwd_lk,library-symbol,retail-proven,crt-libcmt,__getdcwd_lk,crt-libcmt/build\intel\mt_obj\getcwd.obj
 0x218413,55,validdrive,library-symbol,retail-proven,crt-libcmt,__validdrive,crt-libcmt/build\intel\mt_obj\getcwd.obj
-0x21844a,47,crt_8b4e0_sub00_21844a,caller,structural,crt-libcmt,,called from 0x8b4e0
+0x21844a,47,exe_fwrite,hd-crossbuild,crossbuild-verified,crt-libcmt,,HD 0x618a1a masked-identity 47B/35 fixed; core/nh3api_std/exe_streambuf.hpp:75
 0x218479,266,fwrite_lk,library-symbol,retail-proven,crt-libcmt,__fwrite_lk,crt-libcmt/build\intel\mt_obj\fwrite.obj
 0x218583,59,fputc,library-symbol,retail-proven,crt-libcmt,_fputc,crt-libcmt/build\intel\mt_obj\fputc.obj
 0x2185be,49,fgetc,library-symbol,retail-proven,crt-libcmt,_fgetc,crt-libcmt/build\intel\mt_obj\fgetc.obj
@@ -6459,8 +6459,8 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x218f0d,34,ftell,library-symbol,retail-proven,crt-libcmt,_ftell,crt-libcmt/build\intel\mt_obj\ftell.obj
 0x218f2f,353,ftell_lk,library-symbol,retail-proven,crt-libcmt,__ftell_lk,crt-libcmt/build\intel\mt_obj\ftell.obj
 0x219090,49,crt_2190c1_sub00_219090,caller,structural,crt-libcmt,,called from 0x2190c1
-0x2190c1,19,crt_fa8a0_sub01_2190c1,caller,structural,crt-libcmt,,called from 0xfa8a0
-0x2190d4,47,crt_fa8a0_sub02_2190d4,caller,structural,crt-libcmt,,called from 0xfa8a0
+0x2190c1,19,exe_fopen,hd-crossbuild,crossbuild-verified,crt-libcmt,,HD 0x619691 masked-identity 19B/15 fixed; core/nh3api_std/exe_streambuf.hpp:147
+0x2190d4,47,exe_fread,hd-crossbuild,crossbuild-verified,crt-libcmt,,HD 0x6196a4 masked-identity 47B/35 fixed; core/nh3api_std/exe_streambuf.hpp:159
 0x219103,232,fread_lk,library-symbol,retail-proven,crt-libcmt,__fread_lk,crt-libcmt/build\intel\mt_obj\fread.obj
 0x2191f0,208,strcmpi,library-symbol,retail-proven,crt-libcmt,__strcmpi,crt-libcmt/build\intel\mt_obj\stricmp.obj
 0x2192c0,312,realloc,library-symbol,retail-proven,crt-libcmt,_realloc,crt-libcmt/build\intel\mt_obj\realloc.obj
@@ -6480,7 +6480,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x219a61,60,crt_206230_sub02_219a61,caller,structural,crt-libcmt,,called from 0x206230
 0x219a9d,93,close,library-symbol,retail-proven,crt-libcmt,__close,crt-libcmt/build\intel\mt_obj\close.obj
 0x219afa,131,close_lk,library-symbol,retail-proven,crt-libcmt,__close_lk,crt-libcmt/build\intel\mt_obj\close.obj
-0x219b7d,23,crt_cb206_sub15_219b7d,caller,structural,crt-libcmt,,called from 0xcb206
+0x219b7d,23,exe_open,hd-crossbuild,crossbuild-verified,crt-libcmt,,HD 0x61a14d masked-identity 23B/19 fixed; core/nh3api_std/exe_streambuf.hpp:153
 0x219b94,719,sopen,library-symbol,retail-proven,crt-libcmt,__sopen,crt-libcmt/build\intel\mt_obj\open.obj
 0x219e63,107,beginthreadex,library-symbol,retail-proven,crt-libcmt,__beginthreadex,crt-libcmt/build\intel\mt_obj\threadex.obj
 0x219ece,125,crt_219e63_sub00_219ece,caller,structural,crt-libcmt,,called from 0x219e63
@@ -6673,7 +6673,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x220b82,200,getstream,library-symbol,retail-proven,crt-libcmt,__getstream,crt-libcmt/build\intel\mt_obj\stream.obj
 0x220c4a,141,stbuf,library-symbol,retail-proven,crt-libcmt,__stbuf,crt-libcmt/build\intel\mt_obj\_sftbuf.obj
 0x220cd7,42,ftbuf,library-symbol,retail-proven,crt-libcmt,__ftbuf,crt-libcmt/build\intel\mt_obj\_sftbuf.obj
-0x220d01,101,crt_cb206_sub16_220d01,caller,structural,crt-libcmt,,called from 0xcb206
+0x220d01,101,exe_read,hd-crossbuild,crossbuild-verified,crt-libcmt,,HD 0x6212c1 masked-identity 101B/73 fixed; core/nh3api_std/exe_streambuf.hpp:165
 0x220d66,473,read_lk,library-symbol,retail-proven,crt-libcmt,__read_lk,crt-libcmt/build\intel\mt_obj\read.obj
 0x220f3f,27,callnewh,library-symbol,retail-proven,crt-libcmt,__callnewh,crt-libcmt/build\intel\mt_obj\handler.obj
 0x220f5a,60,heap_init,library-symbol,retail-proven,crt-libcmt,__heap_init,crt-libcmt/build\intel\mt_obj\heapinit.obj
@@ -6882,7 +6882,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x227570,11,advManager_vslot00_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x6fd0 (advManager_vslot00), state 0"
 0x22757b,11,advManager_vslot00_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x6fd0 (advManager_vslot00), state 1"
 0x227590,8,game_d3f0_sub00_abe0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xabe0 (game_d3f0_sub00_abe0), state 0"
-0x2275b0,8,game_s_s_b150_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xb150 (game_s_s_b150), state 0"
+0x2275b0,8,advManager_SetRolloverText_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xb150 (advManager_SetRolloverText), state 0"
 0x2275d0,8,game_digsound_82m_ec90_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xec90 (game_digsound_82m_ec90), state 0"
 0x2275f0,8,game_s_s_137c0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x137c0 (game_s_s_137c0), state 0"
 0x2275f8,8,game_s_s_137c0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x137c0 (game_s_s_137c0), state 1"
@@ -7014,7 +7014,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x228166,11,army_DrawToBuffer_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x3e140 (army_DrawToBuffer), state 2"
 0x228171,11,army_DrawToBuffer_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x3e140 (army_DrawToBuffer), state 3"
 0x22817c,11,army_DrawToBuffer_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0x3e140 (army_DrawToBuffer), state 4"
-0x2281a0,11,calls_timeGetTime_3f2c0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x3f2c0 (calls_timeGetTime_3f2c0), state 0"
+0x2281a0,11,army_animate_missile_3f2c0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x3f2c0 (army_animate_missile_3f2c0), state 0"
 0x2281c0,8,army_do_post_attack_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x40bc0 (army_do_post_attack), state 0"
 0x2281c8,8,army_do_post_attack_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x40bc0 (army_do_post_attack), state 1"
 0x2281d0,8,army_do_post_attack_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x40bc0 (army_do_post_attack), state 2"
@@ -7093,9 +7093,9 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x228600,8,Bitmap816_Bitmap816_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x4f9d0 (Bitmap816_Bitmap816), state 0"
 0x228608,11,Bitmap816_Bitmap816_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x4f9d0 (Bitmap816_Bitmap816), state 1"
 0x228620,8,coloredBorderFrame_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x50130 (coloredBorderFrame), state 0"
-0x228640,8,game_1510_sub05_502d0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x502d0 (game_1510_sub05_502d0), state 0"
+0x228640,8,bitmapBorder_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x502d0 (bitmapBorder), state 0"
 0x228660,8,bitmapBorder_bitmapBorder_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x50390 (bitmapBorder_bitmapBorder), state 0"
-0x228680,8,game_590c0_sub00_50690_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x50690 (game_590c0_sub00_50690), state 0"
+0x228680,8,bitmapBorder16_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x50690 (bitmapBorder16), state 0"
 0x2286a0,8,bitmapBorder16_bitmapBorder16_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x50750 (bitmapBorder16_bitmapBorder16), state 0"
 0x2286c0,8,game_50d20_sub00_50d50_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x50d50 (game_50d20_sub00_50d50), state 0"
 0x2286e0,8,calls_timeGetTime_50dd0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x50dd0 (calls_timeGetTime_50dd0), state 0"
@@ -7211,9 +7211,9 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x228d70,8,button_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x55ef0 (button), state 0"
 0x228d78,11,button_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x55ef0 (button), state 1"
 0x228d83,11,button_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x55ef0 (button), state 2"
-0x228da0,8,game_55ec0_sub00_560f0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x560f0 (game_55ec0_sub00_560f0), state 0"
-0x228da8,11,game_55ec0_sub00_560f0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x560f0 (game_55ec0_sub00_560f0), state 1"
-0x228db3,11,game_55ec0_sub00_560f0_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x560f0 (game_55ec0_sub00_560f0), state 2"
+0x228da0,8,button_button_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x560f0 (button_button), state 0"
+0x228da8,11,button_button_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x560f0 (button_button), state 1"
+0x228db3,11,button_button_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x560f0 (button_button), state 2"
 0x228dd0,8,textButton_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x56a50 (textButton), state 0"
 0x228df0,8,textButton_textButton_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x56bf0 (textButton_textButton), state 0"
 0x228df8,8,textButton_textButton_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x56bf0 (textButton_textButton), state 1"
@@ -7649,25 +7649,25 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x22a84b,11,CampaignHeaderStruct_CampaignHeaderStruct_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x886a0 (CampaignHeaderStruct_CampaignHeaderStruct), state 1"
 0x22a856,11,CampaignHeaderStruct_CampaignHeaderStruct_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x886a0 (CampaignHeaderStruct_CampaignHeaderStruct), state 2"
 0x22a861,11,CampaignHeaderStruct_CampaignHeaderStruct_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x886a0 (CampaignHeaderStruct_CampaignHeaderStruct), state 3"
-0x22a880,11,game_maps_88880_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 0"
-0x22a88b,8,game_maps_88880_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 1"
-0x22a893,11,game_maps_88880_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 2"
-0x22a89e,11,game_maps_88880_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 3"
-0x22a8a9,8,game_maps_88880_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 4"
-0x22a8b1,11,game_maps_88880_unwind05,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 5"
-0x22a8bc,8,game_maps_88880_unwind06,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 6"
-0x22a8c4,8,game_maps_88880_unwind07,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 7"
-0x22a8cc,8,game_maps_88880_unwind08,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 8"
-0x22a8d4,11,game_maps_88880_unwind09,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 9"
-0x22a8df,11,game_maps_88880_unwind10,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 10"
-0x22a8ea,11,game_maps_88880_unwind11,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 11"
-0x22a8f5,11,game_maps_88880_unwind12,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 12"
-0x22a900,11,game_maps_88880_unwind13,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 13"
-0x22a90b,8,game_maps_88880_unwind14,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 14"
-0x22a913,11,game_maps_88880_unwind15,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 15"
-0x22a91e,11,game_maps_88880_unwind16,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 16"
-0x22a929,11,game_maps_88880_unwind17,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 17"
-0x22a934,22,game_maps_88880_unwind18,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (game_maps_88880), state 18"
+0x22a880,11,CampaignHeaderStruct_noexcept_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 0"
+0x22a88b,8,CampaignHeaderStruct_noexcept_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 1"
+0x22a893,11,CampaignHeaderStruct_noexcept_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 2"
+0x22a89e,11,CampaignHeaderStruct_noexcept_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 3"
+0x22a8a9,8,CampaignHeaderStruct_noexcept_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 4"
+0x22a8b1,11,CampaignHeaderStruct_noexcept_unwind05,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 5"
+0x22a8bc,8,CampaignHeaderStruct_noexcept_unwind06,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 6"
+0x22a8c4,8,CampaignHeaderStruct_noexcept_unwind07,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 7"
+0x22a8cc,8,CampaignHeaderStruct_noexcept_unwind08,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 8"
+0x22a8d4,11,CampaignHeaderStruct_noexcept_unwind09,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 9"
+0x22a8df,11,CampaignHeaderStruct_noexcept_unwind10,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 10"
+0x22a8ea,11,CampaignHeaderStruct_noexcept_unwind11,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 11"
+0x22a8f5,11,CampaignHeaderStruct_noexcept_unwind12,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 12"
+0x22a900,11,CampaignHeaderStruct_noexcept_unwind13,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 13"
+0x22a90b,8,CampaignHeaderStruct_noexcept_unwind14,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 14"
+0x22a913,11,CampaignHeaderStruct_noexcept_unwind15,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 15"
+0x22a91e,11,CampaignHeaderStruct_noexcept_unwind16,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 16"
+0x22a929,11,CampaignHeaderStruct_noexcept_unwind17,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 17"
+0x22a934,22,CampaignHeaderStruct_noexcept_unwind18,eh-funclet,structural,unattributed,,"unwind action of 0x88880 (CampaignHeaderStruct_noexcept), state 18"
 0x22a960,11,game_8a270_sub00_88fb0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x88fb0 (game_8a270_sub00_88fb0), state 0"
 0x22a980,11,game_5f2f0_sub01_89590_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x89590 (game_5f2f0_sub01_89590), state 0"
 0x22a98b,8,game_5f2f0_sub01_89590_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x89590 (game_5f2f0_sub01_89590), state 1"
@@ -8234,14 +8234,14 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x22cae8,8,hero_result_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xdc320 (hero_result), state 1"
 0x22caf0,8,hero_result_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xdc320 (hero_result), state 2"
 0x22caf8,8,hero_result_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0xdc320 (hero_result), state 3"
-0x22cb10,8,game_4c1c0_sub00_dcac0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (game_4c1c0_sub00_dcac0), state 0"
-0x22cb18,8,game_4c1c0_sub00_dcac0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (game_4c1c0_sub00_dcac0), state 1"
-0x22cb20,8,game_4c1c0_sub00_dcac0_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (game_4c1c0_sub00_dcac0), state 2"
-0x22cb28,8,game_4c1c0_sub00_dcac0_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (game_4c1c0_sub00_dcac0), state 3"
-0x22cb30,8,game_4c1c0_sub00_dcac0_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (game_4c1c0_sub00_dcac0), state 4"
-0x22cb38,8,game_4c1c0_sub00_dcac0_unwind05,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (game_4c1c0_sub00_dcac0), state 5"
-0x22cb40,8,game_4c1c0_sub00_dcac0_unwind06,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (game_4c1c0_sub00_dcac0), state 6"
-0x22cb48,8,game_4c1c0_sub00_dcac0_unwind07,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (game_4c1c0_sub00_dcac0), state 7"
+0x22cb10,8,hero_result_dcac0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (hero_result_dcac0), state 0"
+0x22cb18,8,hero_result_dcac0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (hero_result_dcac0), state 1"
+0x22cb20,8,hero_result_dcac0_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (hero_result_dcac0), state 2"
+0x22cb28,8,hero_result_dcac0_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (hero_result_dcac0), state 3"
+0x22cb30,8,hero_result_dcac0_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (hero_result_dcac0), state 4"
+0x22cb38,8,hero_result_dcac0_unwind05,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (hero_result_dcac0), state 5"
+0x22cb40,8,hero_result_dcac0_unwind06,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (hero_result_dcac0), state 6"
+0x22cb48,8,hero_result_dcac0_unwind07,eh-funclet,structural,unattributed,,"unwind action of 0xdcac0 (hero_result_dcac0), state 7"
 0x22cb60,8,game_dxp_dd2d0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xdd2d0 (game_dxp_dd2d0), state 0"
 0x22cb68,11,game_dxp_dd2d0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xdd2d0 (game_dxp_dd2d0), state 1"
 0x22cb73,8,game_dxp_dd2d0_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xdd2d0 (game_dxp_dd2d0), state 2"
@@ -8534,10 +8534,10 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x22da11,11,calls_timeGetTime_f6990_unwind21,eh-funclet,structural,unattributed,,"unwind action of 0xf6990 (calls_timeGetTime_f6990), state 21"
 0x22da1c,11,calls_timeGetTime_f6990_unwind22,eh-funclet,structural,unattributed,,"unwind action of 0xf6990 (calls_timeGetTime_f6990), state 22"
 0x22da27,8,calls_timeGetTime_f6990_unwind23,eh-funclet,structural,unattributed,,"unwind action of 0xf6990 (calls_timeGetTime_f6990), state 23"
-0x22da40,11,game_6a20_sub00_f7690_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xf7690 (game_6a20_sub00_f7690), state 0"
-0x22da4b,11,game_6a20_sub00_f7690_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xf7690 (game_6a20_sub00_f7690), state 1"
-0x22da56,8,game_6a20_sub00_f7690_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xf7690 (game_6a20_sub00_f7690), state 2"
-0x22da5e,11,game_6a20_sub00_f7690_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0xf7690 (game_6a20_sub00_f7690), state 3"
+0x22da40,11,extended_dialog_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xf7690 (extended_dialog), state 0"
+0x22da4b,11,extended_dialog_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xf7690 (extended_dialog), state 1"
+0x22da56,8,extended_dialog_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xf7690 (extended_dialog), state 2"
+0x22da5e,11,extended_dialog_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0xf7690 (extended_dialog), state 3"
 0x22da80,8,calls_timeGetTime_f8880_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0xf8880 (calls_timeGetTime_f8880), state 0"
 0x22da88,11,calls_timeGetTime_f8880_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0xf8880 (calls_timeGetTime_f8880), state 1"
 0x22da93,11,calls_timeGetTime_f8880_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0xf8880 (calls_timeGetTime_f8880), state 2"
@@ -8924,7 +8924,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x22f1b3,11,game_120d60_sub00_120d90_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x120d90 (game_120d60_sub00_120d90), state 2"
 0x22f1d0,8,game_124690_sub00_124d20_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x124d20 (game_124690_sub00_124d20), state 0"
 0x22f1f0,11,type_spellvalue_type_spellvalue_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x126d40 (type_spellvalue_type_spellvalue), state 0"
-0x22f210,8,game_336c0_sub02_127640_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x127640 (game_336c0_sub02_127640), state 0"
+0x22f210,8,AI_get_spell_value_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x127640 (AI_get_spell_value), state 0"
 0x22f230,8,game_2fc50_sub04_127760_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x127760 (game_2fc50_sub04_127760), state 0"
 0x22f250,8,game_a18b0_sub02_127b00_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x127b00 (game_a18b0_sub02_127b00), state 0"
 0x22f270,8,game_a4600_sub01_127e10_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x127e10 (game_a4600_sub01_127e10), state 0"
@@ -9325,13 +9325,13 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x230b3b,11,game_resource_15c3c0_unwind05,eh-funclet,structural,unattributed,,"unwind action of 0x15c3c0 (game_resource_15c3c0), state 5"
 0x230b46,11,game_resource_15c3c0_unwind06,eh-funclet,structural,unattributed,,"unwind action of 0x15c3c0 (game_resource_15c3c0), state 6"
 0x230b51,11,game_resource_15c3c0_unwind07,eh-funclet,structural,unattributed,,"unwind action of 0x15c3c0 (game_resource_15c3c0), state 7"
-0x230b70,11,game_getsprite_15c7b0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (game_getsprite_15c7b0), state 0"
-0x230b7b,11,game_getsprite_15c7b0_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (game_getsprite_15c7b0), state 2"
-0x230b86,11,game_getsprite_15c7b0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (game_getsprite_15c7b0), state 1"
-0x230b91,11,game_getsprite_15c7b0_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (game_getsprite_15c7b0), state 3"
-0x230b9c,11,game_getsprite_15c7b0_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (game_getsprite_15c7b0), state 4"
-0x230ba7,11,game_getsprite_15c7b0_unwind05,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (game_getsprite_15c7b0), state 5"
-0x230bb2,11,game_getsprite_15c7b0_unwind06,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (game_getsprite_15c7b0), state 6"
+0x230b70,11,GetSprite_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (GetSprite), state 0"
+0x230b7b,11,GetSprite_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (GetSprite), state 2"
+0x230b86,11,GetSprite_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (GetSprite), state 1"
+0x230b91,11,GetSprite_unwind03,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (GetSprite), state 3"
+0x230b9c,11,GetSprite_unwind04,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (GetSprite), state 4"
+0x230ba7,11,GetSprite_unwind05,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (GetSprite), state 5"
+0x230bb2,11,GetSprite_unwind06,eh-funclet,structural,unattributed,,"unwind action of 0x15c7b0 (GetSprite), state 6"
 0x230bd0,8,game_159400_sub00_15d2c0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x15d2c0 (game_159400_sub00_15d2c0), state 0"
 0x230bf0,26,game_159510_sub00_15d410_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x15d410 (game_159510_sub00_15d410), state 0"
 0x230c0a,11,game_159510_sub00_15d410_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x15d410 (game_159510_sub00_15d410), state 2"
@@ -10512,7 +10512,7 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x234bb3,11,type_text_scroller_type_text_scroller_unwind02,eh-funclet,structural,unattributed,,"unwind action of 0x1ba3b0 (type_text_scroller_type_text_scroller), state 2"
 0x234bd0,11,type_text_scroller_vslot02_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1ba4c0 (type_text_scroller_vslot02), state 0"
 0x234bf0,8,game_57990_sub04_1ba6e0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1ba6e0 (game_57990_sub04_1ba6e0), state 0"
-0x234c10,8,game_49790_sub02_1ba920_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1ba920 (game_49790_sub02_1ba920), state 0"
+0x234c10,8,textEntryWidget_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1ba920 (textEntryWidget), state 0"
 0x234c30,8,textEntryWidget_textEntryWidget_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1baae0 (textEntryWidget_textEntryWidget), state 0"
 0x234c50,8,calls_timeGetTime_1bb660_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1bb660 (calls_timeGetTime_1bb660), state 0"
 0x234c58,8,calls_timeGetTime_1bb660_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x1bb660 (calls_timeGetTime_1bb660), state 1"
@@ -10525,9 +10525,9 @@ rva,size,name,tier,confidence,library,symbol,evidence
 0x234cd8,11,textWidget_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x1bc280 (textWidget), state 1"
 0x234cf0,8,textWidget_textWidget_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1bc3b0 (textWidget_textWidget), state 0"
 0x234cf8,11,textWidget_textWidget_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x1bc3b0 (textWidget_textWidget), state 1"
-0x234d10,8,game_1bc6a0_sub00_1bc6d0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1bc6d0 (game_1bc6a0_sub00_1bc6d0), state 0"
-0x234d18,11,game_1bc6a0_sub00_1bc6d0_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x1bc6d0 (game_1bc6a0_sub00_1bc6d0), state 1"
-0x234d30,8,game_1510_sub15_1bc760_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1bc760 (game_1510_sub15_1bc760), state 0"
+0x234d10,8,bitmapBackedTextWidget_bitmapBackedTextWidget_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1bc6d0 (bitmapBackedTextWidget_bitmapBackedTextWidget), state 0"
+0x234d18,11,bitmapBackedTextWidget_bitmapBackedTextWidget_unwind01,eh-funclet,structural,unattributed,,"unwind action of 0x1bc6d0 (bitmapBackedTextWidget_bitmapBackedTextWidget), state 1"
+0x234d30,8,bitmapBackedTextWidget_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1bc760 (bitmapBackedTextWidget), state 0"
 0x234d50,8,game_c8780_sub01_1bd750_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1bd750 (game_c8780_sub01_1bd750), state 0"
 0x234d70,14,town_town_1bde80_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1bde80 (town_town_1bde80), state 0"
 0x234d90,8,game_cda10_sub00_1bfeb0_unwind00,eh-funclet,structural,unattributed,,"unwind action of 0x1bfeb0 (game_cda10_sub00_1bfeb0), state 0"

@@ -17,9 +17,16 @@ but the IDENTIFICATION is our own bytes matching theirs, uniquely.
 
     HD function @ NH3API address --(masked byte identity, unique)--> our rva
 
-Matches are accepted only when the search finds exactly ONE site in our .text
-and that site is a carved function ENTRY; everything else is reported, not
-silently used. Output: config/retail-hd-name-map.csv.
+Two passes. Pass 1 accepts only a globally unique masked hit. The resulting
+map is then order-checked: the builds preserve link order (measured: 816/817
+pass-1 pairs monotonic, median neighbor-gap difference 0 bytes), so any pair
+breaking monotonicity is a false match to a byte-twin and is demoted. Pass 2
+retries every unresolved address INSIDE the bracket between its resolved
+neighbors, with shrinking match windows - within a bracket a few fixed bytes
+suffice, which recovers small bodies and bodies whose pass-1 window overshot
+into a diverging neighbor. Bracketed matches must be unique in-bracket and
+keep the whole map monotonic. Output: config/retail-hd-name-map.csv with a
+`pass` column (global-unique | bracketed).
 
 The HD executable is the user's own HD Mod download, referenced in place via
 $HOMM3_HD_EXE (never copied into the repo).
@@ -104,6 +111,38 @@ def body_mask(blob: bytes) -> bytes:
     return bytes(mask)
 
 
+def longest_increasing(pairs):
+    """Maximal monotonic subset of (hd_rva, our_rva) pairs (patience LIS)."""
+    pairs = sorted(pairs)
+    tails, links, index = [], [None] * len(pairs), []
+    for i, (_hd, our) in enumerate(pairs):
+        j = bisect.bisect_left([pairs[k][1] for k in index], our)
+        links[i] = index[j - 1] if j else None
+        if j == len(index):
+            index.append(i)
+        else:
+            index[j] = i
+    keep = set()
+    node = index[-1] if index else None
+    while node is not None:
+        keep.add(pairs[node])
+        node = links[node]
+    return keep
+
+
+def bracket_find(ours, blob, mask, lo_off, hi_off):
+    """All offsets in [lo_off, hi_off) matching blob under mask (brute)."""
+    fixed = [i for i in range(len(blob)) if not mask[i]]
+    hits = []
+    for start in range(max(lo_off, 0),
+                       min(hi_off, len(ours) - len(blob) + 1)):
+        if all(ours[start + i] == blob[i] for i in fixed):
+            hits.append(start)
+            if len(hits) > 2:
+                break
+    return hits
+
+
 def main(argv=None) -> int:
     from homm3.carve.names import parse_nh3api
 
@@ -128,47 +167,97 @@ def main(argv=None) -> int:
     hd_calls = call_targets(hd, hd_lo)
     starts = sorted(hd_calls | {va - IMAGE_LO for va in wrappers})
 
-    rows = []
-    stats = {"candidates": 0, "too-small": 0, "too-masked": 0, "no-match": 0,
-             "ambiguous": 0, "matched": 0, "non-entry": 0}
-    for va in sorted(wrappers):
-        rva = va - IMAGE_LO
-        if not hd_lo <= rva < hd_lo + len(hd):
-            continue
-        stats["candidates"] += 1
+    def windows(rva):
         i = bisect.bisect_right(starts, rva)
         end = starts[i] if i < len(starts) else rva + MAX_BODY
         size = min(end - rva, MAX_BODY)
-        if size < MIN_BODY:
-            stats["too-small"] += 1
-            continue
-        blob = hd[rva - hd_lo:rva - hd_lo + size]
-        mask = body_mask(blob)
-        if size - sum(mask) < MIN_FIXED:
-            stats["too-masked"] += 1
-            continue
-        hits = masked_find(ours, blob, mask)
-        if not hits:
-            stats["no-match"] += 1
-            continue
-        if len(hits) > 1:
-            stats["ambiguous"] += 1
-            continue
-        our_rva = our_lo + hits[0]
-        entry = wrappers[va][0]
+        sizes = []
+        while size >= 12:
+            sizes.append(size)
+            size = size * 2 // 3
+        return sizes
+
+    candidates = [va - IMAGE_LO for va in sorted(wrappers)
+                  if hd_lo <= va - IMAGE_LO < hd_lo + len(hd)]
+    stats = {"candidates": len(candidates), "pass1": 0, "lis-demoted": 0,
+             "bracketed": 0, "unresolved": 0, "non-entry": 0}
+
+    # pass 1: globally unique masked identity
+    resolved = {}
+    for rva in candidates:
+        for size in windows(rva):
+            if size < MIN_BODY:
+                break
+            blob = hd[rva - hd_lo:rva - hd_lo + size]
+            mask = body_mask(blob)
+            if size - sum(mask) < MIN_FIXED:
+                continue
+            hits = masked_find(ours, blob, mask)
+            if hits and len(hits) == 1:
+                resolved[rva] = (our_lo + hits[0], size,
+                                 size - sum(mask), "global-unique")
+                break
+            if hits is not None and len(hits) > 1:
+                break  # shrinking only makes it more ambiguous
+    stats["pass1"] = len(resolved)
+
+    # order gate: demote pairs that break link-order monotonicity
+    keep = longest_increasing([(rva, resolved[rva][0]) for rva in resolved])
+    for rva in [r for r in resolved if (r, resolved[r][0]) not in keep]:
+        del resolved[rva]
+        stats["lis-demoted"] += 1
+
+    # pass 2: bracket search between resolved neighbors, shrinking windows
+    changed = True
+    while changed:
+        changed = False
+        anchor_hd = sorted(resolved)
+        for rva in candidates:
+            if rva in resolved:
+                continue
+            i = bisect.bisect_left(anchor_hd, rva)
+            prev_hd = anchor_hd[i - 1] if i else None
+            next_hd = anchor_hd[i] if i < len(anchor_hd) else None
+            lo_off = (resolved[prev_hd][0] - our_lo + 1) if prev_hd else 0
+            hi_off = (resolved[next_hd][0] - our_lo) if next_hd else len(ours)
+            if hi_off <= lo_off:
+                continue
+            for size in windows(rva):
+                blob = hd[rva - hd_lo:rva - hd_lo + size]
+                mask = body_mask(blob)
+                if size - sum(mask) < 6:
+                    continue
+                hits = bracket_find(ours, blob, mask, lo_off, hi_off)
+                if len(hits) == 1:
+                    resolved[rva] = (our_lo + hits[0], size,
+                                     size - sum(mask), "bracketed")
+                    stats["bracketed"] += 1
+                    changed = True
+                    break
+                if len(hits) > 1:
+                    break
+            anchor_hd = sorted(resolved)
+
+    stats["unresolved"] = len(candidates) - len(resolved)
+    keep = longest_increasing([(rva, resolved[rva][0]) for rva in resolved])
+    if len(keep) != len(resolved):
+        common.die("bracketed pass broke monotonicity - matcher defect")
+
+    rows = []
+    for rva in sorted(resolved):
+        our_rva, size, fixed, how = resolved[rva]
+        entry = wrappers[IMAGE_LO + rva][0]
         qualified = (f"{entry['class']}::{entry['name']}"
                      if entry["class"] else entry["name"])
         st = state(our_rva)
         if st != "entry":
             stats["non-entry"] += 1
-        else:
-            stats["matched"] += 1
         rows.append({
-            "rva": f"0x{our_rva:x}", "hd_va": f"0x{va:x}",
+            "rva": f"0x{our_rva:x}", "hd_va": f"0x{IMAGE_LO + rva:x}",
             "name": qualified, "signature":
                 f"{entry['ret']} {qualified}({entry['args']})".strip(),
             "convention": entry["cc"], "match_bytes": size,
-            "fixed_bytes": size - sum(mask), "our_state": st,
+            "fixed_bytes": fixed, "pass": how, "our_state": st,
             "evidence": entry["where"]})
 
     rows.sort(key=lambda r: int(r["rva"], 16))
@@ -188,10 +277,11 @@ def main(argv=None) -> int:
         writer.writeheader()
         writer.writerows(rows)
 
+    on_entry = len(rows) - stats["non-entry"]
     print(f"[carve hdmap] {stats['candidates']} NH3API addresses in HD .text; "
-          f"{len(rows)} transferred ({stats['matched']} onto carved entries, "
+          f"{len(rows)} transferred ({on_entry} onto carved entries, "
           f"{stats['non-entry']} interior/outside)")
-    for key in ("too-small", "too-masked", "no-match", "ambiguous"):
+    for key in ("pass1", "lis-demoted", "bracketed", "unresolved"):
         print(f"  {key}: {stats[key]}")
     print(f"  -> {OUT}")
     return 0
