@@ -27,7 +27,6 @@ from __future__ import annotations
 
 import struct
 import sys
-from pathlib import Path
 
 from homm3.core import common
 
@@ -53,12 +52,17 @@ def _rows(path):
             if line[0] not in "#" and not line.startswith("rva\t")]
 
 
-def classify():
-    """{rva: category}, sizes {rva: size} - see the module docstring."""
+def classify(image=None):
+    """{rva: category}, sizes {rva: size} - see the module docstring.
+
+    `image` accepts an already-loaded gated Image so an in-process caller
+    (homm3.sema Context) does not re-load and re-hash the exe; when
+    omitted the image is loaded (and gated) here as before."""
     functions = {int(r[0], 16): int(r[1]) for r in _rows(FUNCTIONS)}
     category = {}
 
-    image, info = common.load_image()
+    if image is None:
+        image, _info = common.load_image()
     for r in _rows(FUNCLETS):
         category[int(r[0], 16)] = "eh-funclet"
     for r in _rows(RUNTIME_MAP):
@@ -72,7 +76,7 @@ def classify():
 
     text = next(s for s in image.sections if s.name == ".text")
     blob = image.blob(text)
-    data = Path(info["path"]).read_bytes()
+    data = image.data  # the image already holds the whole file's bytes
     pe_off = struct.unpack_from("<I", data, 0x3C)[0]
     iat_rva, iat_size = struct.unpack_from(
         "<II", data, pe_off + 24 + 96 + 12 * 8)
