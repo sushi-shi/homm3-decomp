@@ -114,3 +114,8 @@ flags = "game_o2_ml_gr_windows"
 unit = "armygrp"
 source = "src/armygrp.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "basemgr"
+source = "src/basemgr.cpp"
+flags = "game_o2_ml_gr_windows"
