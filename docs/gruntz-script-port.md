@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-04 — zlib map completed from base-obj identity; evidence/
+  declared scaffolding.** Three user decisions, one measurement: (1) the
+  zlib map carries its own `unit` column (rva, size, name, unit) — file
+  locations live in the map, not joined from evidence at run time; (2)
+  `evidence/` WILL BE REMOVED — the runtime pipeline may not depend on it.
+  `labels.py` now derives VA-row names from the source declarator itself
+  and treats evidence as optional enrichment (drilled: labels runs with
+  evidence/ absent); (3) `homm3.build.zlib_names` recovers real names for
+  the map's working labels by masked per-function identity against OUR OWN
+  compiled base objects (pass 1 unique-in-extent, pass 2 hdmap-style
+  brackets, monotonicity gate): **32 of 33 labels became real symbols
+  (`@longest_match@8`, `@build_tree@8`, …), all 35 previously proven names
+  independently corroborated**, one 1-byte sliver unmatched. Result:
+  **objdiff overall fuzzy 55.8% → 99.96%, 64/68 functions byte-exact, 10
+  of 14 zlib units at 100%**. Also: canonical content digests shortened to
+  6 hex chars (readability; deterministic lengthening on collision).
+
 - **2026-08-04 — the delink loop wired (P2.3); first REAL objdiff numbers.**
   Correction to the entry below: the smoke delink proved vostok consumes
   the synth PDB, but objdiff still compared every unit against dummy.obj.

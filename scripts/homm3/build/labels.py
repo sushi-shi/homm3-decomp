@@ -7,10 +7,10 @@ function in the executable plus the data rows the delinker needs. Sources,
 in authority order:
 
   src-VA           `VA(0x<va>, 0x<size>)` macros scanned lexically from
-                   src/ (include/va.h contract v2). The clang-IR path that
-                   binds mangled names arrives with the first compiling
-                   game TU; until then the working label at that rva
-                   (evidence/retail-symbols.csv) names the function.
+                   src/ (include/va.h contract v2). The function name is
+                   derived from the DECLARATOR that follows the annotation
+                   (source-as-authority); the clang-IR path that binds real
+                   mangled names arrives with the first compiling game TU.
                    The full macro family - VA_COMPGEN, DATA,
                    DATA_COMPGEN(_GUARD), VTBL, VTBL2 - is scanned NOW
                    (lesson 1) even though src/ carries only VA today.
@@ -19,8 +19,13 @@ in authority order:
                    buckets these into _msvc_internal objects, which is
                    correct: runtime code is never a reconstruction target.
   working-label    every remaining function of the universe
-                   (config/retail-functions.tsv), named by the naming
-                   layer, bucketed `seg_%04x` gruntz-style.
+                   (config/retail-functions.tsv), bucketed `seg_%04x`
+                   gruntz-style. Named by the naming layer where
+                   evidence/retail-symbols.csv is still present -
+                   evidence/ is SCAFFOLDING slated for removal (user
+                   decision 2026-08-04), so this is enrichment only:
+                   without it the name falls back to `fn_<rva>`, and
+                   nothing else in the pipeline reads evidence/.
   data rows        vtable starts (config/retail-vtables.tsv; `??_7X@@6B@`
                    where class-labeled at offset 0), IAT slots (parsed from
                    the import directory; `__imp_` spellings are PLACEHOLDER
@@ -75,6 +80,11 @@ VTBL_RE = re.compile(r"^\s*VTBL\s*\(\s*(\w+)\s*,\s*(0x[0-9a-fA-F]+)\s*\)")
 VTBL2_RE = re.compile(r"^\s*VTBL2\s*\(\s*(\w+)\s*,\s*(\w+)\s*,"
                       r"\s*(0x[0-9a-fA-F]+)\s*\)")
 ANNOTATION_RE = re.compile(r"^\s*(?:VA|VA_COMPGEN|DATA|DC_ONLY)\s*\(")
+DECLARATOR_RE = re.compile(r"([~\w:]+(?:<[^<>()]*>)?)\s*\(")
+# MSVC special members render with backticks: Cls::`scalar deleting
+# destructor'(...), `default constructor closure'(...)
+SPECIAL_RE = re.compile(r"([\w:]+)::`([^'`]+)'\s*\(")
+IDENT_RE = re.compile(r"[^0-9A-Za-z_]+")
 VOLATILE_E_RE = re.compile(r"^_?\$E[0-9]+$")
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
                  "STATIC_CTOR"}
@@ -187,8 +197,23 @@ def scan_sources(functions):
                 if follower is None:
                     common.die(f"{where}: orphan VA annotation - no "
                                "declaration follows")
+                sm = SPECIAL_RE.search(follower)
+                if sm:
+                    raw = f"{sm.group(1)}__{sm.group(2)}"
+                else:
+                    # full C++ declarator parsing is a tar pit (templates,
+                    # operator=, MSVC spellings); everything before the
+                    # first paren is a stable working label until the
+                    # clang-IR path binds real mangled names
+                    raw = follower.split("(", 1)[0]
+                    last = DECLARATOR_RE.findall(raw + "(")
+                    raw = last[-1] if last else raw
+                name = IDENT_RE.sub("_", raw).strip("_")[:64]
+                if not name:
+                    name = f"fn_{rva:x}"
                 rows.append({"rva": rva, "unit": unit, "size": declared,
-                             "kind": "func", "provenance": "src-VA"})
+                             "kind": "func", "name": name,
+                             "provenance": "src-VA"})
                 continue
             m = VA_COMPGEN_RE.match(line)
             if m:
@@ -288,7 +313,9 @@ def iat_slots(exe_path: Path):
 def main(argv=None) -> int:
     _header, fn_rows = read_tsv_body(FUNCTIONS)
     functions = {int(r[0], 16): int(r[1]) for r in fn_rows}
-    labels = {int(r["rva"], 16): r["name"] for r in load_csv(SYMBOLS)}
+    # evidence/ is enrichment only (scaffolding, slated for removal)
+    labels = ({int(r["rva"], 16): r["name"] for r in load_csv(SYMBOLS)}
+              if SYMBOLS.is_file() else {})
 
     rows = {}       # rva -> row dict (first writer wins per authority order)
     problems = []
@@ -304,41 +331,23 @@ def main(argv=None) -> int:
         rows[rva] = {"rva": rva, "name": name, "unit": unit,
                      "size": size, "kind": kind, "provenance": provenance}
 
-    # 1. src annotations
+    # 1. src annotations (declarator-derived names; disambiguate overloads
+    # by rva suffix, matching the naming layer's convention)
     src_rows = scan_sources(functions)
+    seen_names = set()
     for r in src_rows:
-        if r["kind"] == "func" and "name" not in r:
-            if r["rva"] not in labels:
-                common.die(f"VA 0x{r['rva']:x}: no working label - naming "
-                           "layer out of date")
-            r["name"] = labels[r["rva"]]
+        if r["name"] in seen_names:
+            r["name"] = f"{r['name']}_{r['rva']:x}"
+        seen_names.add(r["name"])
         put(r["rva"], r["name"], r["unit"], r["size"], r["kind"],
             r["provenance"])
 
-    # 2. zlib map - per-MEMBER units so the delinked objects pair 1:1
-    # against our compiled base objs (inflate.c.obj vs base/inflate.obj).
-    # Member attribution from the DNA pass; the few unattributed stragglers
-    # inherit the nearest preceding member (contributions are contiguous
-    # in link order).
-    member_of = {}
-    for line in (common.EVIDENCE_DIR /
-                 "retail-function-libraries.tsv").open():
-        if not line.startswith("0x"):
-            continue
-        cells = line.rstrip("\n").split("\t")
-        if cells[1] == "zlib" and cells[3].endswith(".obj"):
-            member_of[int(cells[0], 16)] = cells[3][:-4]
+    # 2. zlib map - the admitted table carries the owning TU (unit column),
+    # so the delinked objects pair 1:1 against our compiled base objs
+    # (inflate.c.obj vs base/inflate.obj)
     _h, zlib_rows = read_tsv_body(ZLIB_MAP)
-    ordered = sorted(zlib_rows, key=lambda r: int(r[0], 16))
-    members = [member_of.get(int(r[0], 16)) for r in ordered]
-    for i in range(1, len(members)):          # forward fill
-        members[i] = members[i] or members[i - 1]
-    for i in range(len(members) - 2, -1, -1):  # backward fill the head
-        members[i] = members[i] or members[i + 1]
-    if not any(members):
-        common.die("zlib map: no member attribution at all")
-    for (rva_text, size, name), member in zip(ordered, members):
-        put(int(rva_text, 16), name, member, int(size), "func", "zlib-map")
+    for rva_text, size, name, unit in zlib_rows:
+        put(int(rva_text, 16), name, unit, int(size), "func", "zlib-map")
 
     # 3. runtime map (sizes from the universe)
     _h, runtime_rows = read_tsv_body(RUNTIME_MAP)
@@ -350,8 +359,9 @@ def main(argv=None) -> int:
     for rva, size in sorted(functions.items()):
         if rva in rows:
             continue
-        put(rva, labels[rva], f"seg_{rva >> BUCKET_SHIFT:04x}", size,
-            "func", "working-label")
+        put(rva, labels.get(rva, f"fn_{rva:x}"),
+            f"seg_{rva >> BUCKET_SHIFT:04x}", size, "func",
+            "working-label")
 
     # 5. data rows -------------------------------------------------------
     image, info = common.load_image()
@@ -359,9 +369,10 @@ def main(argv=None) -> int:
     rdata, dat = secmap[".rdata"], secmap[".data"]
 
     vt_class = {}
-    for r in load_csv(VTABLE_SYMBOLS):
-        if r["class"] and r["class_addr_offset"] == "0":
-            vt_class.setdefault(int(r["vtable_rva"], 16), r["class"])
+    if VTABLE_SYMBOLS.is_file():  # enrichment; VTBL macros take over
+        for r in load_csv(VTABLE_SYMBOLS):
+            if r["class"] and r["class_addr_offset"] == "0":
+                vt_class.setdefault(int(r["vtable_rva"], 16), r["class"])
     _h, vt_rows = read_tsv_body(VTABLES)
     for rva_text, count in vt_rows:
         rva = int(rva_text, 16)
@@ -397,11 +408,22 @@ def main(argv=None) -> int:
         for p in problems[:10]:
             print(f"[build labels] {p}", file=sys.stderr)
         common.die(f"{len(problems)} duplicate-rva claims")
+    # global name uniqueness: label-grade names (declarator/working) take
+    # an rva suffix on collision; a colliding PROVEN symbol is a defect
+    from collections import Counter
+    counts = Counter(r["name"] for r in rows.values())
+    seen = set()
+    for rva in sorted(rows):
+        r = rows[rva]
+        if counts[r["name"]] > 1 and r["name"] in seen:
+            if r["provenance"] not in ("src-VA", "working-label"):
+                common.die(f"duplicate proven name {r['name']!r} at "
+                           f"0x{rva:x}")
+            r["name"] = f"{r['name']}_{rva:x}"
+        seen.add(r["name"])
     names = [r["name"] for r in rows.values()]
     if len(set(names)) != len(names):
-        from collections import Counter
-        dup = [n for n, c in Counter(names).items() if c > 1][:5]
-        common.die(f"duplicate names, first {dup}")
+        common.die("name dedup failed to converge")
     missing = set(functions) - set(rows)
     if missing:
         common.die(f"{len(missing)} functions uncovered - first "

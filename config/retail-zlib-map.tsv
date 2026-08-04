@@ -9,73 +9,74 @@
 # (vendored sources stay pristine): the reviewed rva->symbol map
 # promised by CLAUDE.md/P0.2. Raw symbol where the recompiled-
 # object channel proved it; working label for zlib's static
-# internals until matching completes them.
-rva	size	name
-0x204830	26	@deflateInit_@16
-0x204850	505	@deflateInit2_@32
-0x204a50	110	@deflateReset@4
-0x204ac0	679	@deflate@8
-0x204d70	41	zlib_204ac0_sub00_204d70
-0x204da0	112	zlib_204ac0_sub01_204da0
-0x204e10	137	@deflateEnd@4
-0x204ea0	145	zlib_204a50_sub00_204ea0
-0x204f40	326	zlib_204f40
-0x205090	284	zlib_204f40_sub00_205090
-0x2051b0	105	zlib_205090_sub00_2051b0
-0x205220	1	zlib_205220
-0x205550	365	zlib_2056c0_sub00_205550
-0x2056c0	1061	zlib_2056c0
-0x205af0	307	@crc32@12
-0x205c30	59	@inflateReset@4
-0x205c70	62	@inflateEnd@4
-0x205cb0	276	@inflateInit2_@16
-0x205dd0	19	@inflateInit_@12
-0x205df0	1068	@inflate@8
-0x206220	8	@gzopen@8
-0x206230	600	zlib_n1_1_3_206230
-0x206490	310	zlib_c_c_c_c_c_c_c_c_c_c_206490
-0x2065d0	111	zlib_206490_sub00_2065d0
-0x206640	173	zlib_206230_sub01_206640
-0x2066f0	566	@gzread@12
-0x206930	142	@gzwrite@12
-0x2069c0	185	zlib_206ac0_sub00_2069c0
-0x206a80	62	zlib_2066f0_sub00_206a80
-0x206ac0	67	@gzclose@4
-0x206b10	39	zlib_206ac0_sub01_206b10
-0x206b40	153	@compress2@20
-0x206be0	141	@uncompress@16
-0x206c70	17	@zcalloc@12
-0x206ca0	300	@adler32@12
-0x206dd0	107	@_tr_init@4
-0x206e40	1	zlib_206dd0_sub00_206e40
-0x206e50	98	zlib_206dd0_sub01_206e50
-0x206ec0	176	@_tr_stored_block@16
-0x206f70	591	@_tr_align@4
-0x2071c0	484	@_tr_flush_block@16
-0x2073b0	559	zlib_2071c0_sub00_2073b0
-0x2075e0	213	zlib_2073b0_sub00_2075e0
-0x2076c0	539	zlib_2073b0_sub01_2076c0
-0x2078e0	111	zlib_2073b0_sub02_2078e0
-0x207950	104	zlib_2071c0_sub01_207950
-0x2079c0	224	zlib_207950_sub00_2079c0
-0x207aa0	610	zlib_2071c0_sub02_207aa0
-0x207d10	1399	zlib_207aa0_sub00_207d10
-0x208290	1075	zlib_2071c0_sub03_208290
-0x2086d0	112	zlib_2071c0_sub04_2086d0
-0x208740	23	zlib_2078e0_sub00_208740
-0x208760	135	zlib_206f70_sub00_208760
-0x2087f0	120	zlib_2071c0_sub05_2087f0
-0x208870	147	zlib_206ec0_sub00_208870
-0x208910	110	@inflate_blocks_reset@12
-0x208980	157	@inflate_blocks_new@12
-0x208a20	3260	@inflate_blocks@12
-0x2096e0	44	@inflate_blocks_free@8
-0x209710	64	@inflate_codes_new@20
-0x209750	1956	@inflate_codes@12
-0x209f00	10	@inflate_codes_free@8
-0x209f10	161	@inflate_trees_bits@20
-0x209fc0	1218	zlib_209f10_sub00_209fc0
-0x20a490	349	@inflate_trees_dynamic@36
-0x20a5f0	40	@inflate_trees_fixed@20
-0x20a620	322	@inflate_flush@12
-0x20a770	946	@inflate_fast@24
+# internals until matching completes them. `unit` = owning TU
+# (archive member stem), the file location the delinker mirrors.
+rva	size	name	unit
+0x204830	26	@deflateInit_@16	deflate
+0x204850	505	@deflateInit2_@32	deflate
+0x204a50	110	@deflateReset@4	deflate
+0x204ac0	679	@deflate@8	deflate
+0x204d70	41	@putShortMSB@8	deflate
+0x204da0	112	@flush_pending@4	deflate
+0x204e10	137	@deflateEnd@4	deflate
+0x204ea0	145	@lm_init@4	deflate
+0x204f40	326	@deflate_stored@8	deflate
+0x205090	284	@fill_window@4	deflate
+0x2051b0	105	@read_buf@12	deflate
+0x205220	1	@deflate_fast@8	deflate
+0x205550	365	@longest_match@8	deflate
+0x2056c0	1061	@deflate_slow@8	deflate
+0x205af0	307	@crc32@12	crc32
+0x205c30	59	@inflateReset@4	inflate
+0x205c70	62	@inflateEnd@4	inflate
+0x205cb0	276	@inflateInit2_@16	inflate
+0x205dd0	19	@inflateInit_@12	inflate
+0x205df0	1068	@inflate@8	inflate
+0x206220	8	@gzopen@8	gzio
+0x206230	600	@gz_open@12	gzio
+0x206490	310	@check_header@4	gzio
+0x2065d0	111	@get_byte@4	gzio
+0x206640	173	@destroy@4	gzio
+0x2066f0	566	@gzread@12	gzio
+0x206930	142	@gzwrite@12	gzio
+0x2069c0	185	@do_flush@8	gzio
+0x206a80	62	@getLong@4	gzio
+0x206ac0	67	@gzclose@4	gzio
+0x206b10	39	@putLong@8	gzio
+0x206b40	153	@compress2@20	compress
+0x206be0	141	@uncompress@16	uncompr
+0x206c70	17	@zcalloc@12	zutil
+0x206ca0	300	@adler32@12	adler32
+0x206dd0	107	@_tr_init@4	trees
+0x206e40	1	zlib_206dd0_sub00_206e40	trees
+0x206e50	98	@init_block@4	trees
+0x206ec0	176	@_tr_stored_block@16	trees
+0x206f70	591	@_tr_align@4	trees
+0x2071c0	484	@_tr_flush_block@16	trees
+0x2073b0	559	@build_tree@8	trees
+0x2075e0	213	@pqdownheap@12	trees
+0x2076c0	539	@gen_bitlen@8	trees
+0x2078e0	111	@gen_codes@12	trees
+0x207950	104	@build_bl_tree@4	trees
+0x2079c0	224	@scan_tree@12	trees
+0x207aa0	610	@send_all_trees@16	trees
+0x207d10	1399	@send_tree@12	trees
+0x208290	1075	@compress_block@12	trees
+0x2086d0	112	@set_data_type@4	trees
+0x208740	23	@bi_reverse@8	trees
+0x208760	135	@bi_flush@4	trees
+0x2087f0	120	@bi_windup@4	trees
+0x208870	147	@copy_block@16	trees
+0x208910	110	@inflate_blocks_reset@12	infblock
+0x208980	157	@inflate_blocks_new@12	infblock
+0x208a20	3260	@inflate_blocks@12	infblock
+0x2096e0	44	@inflate_blocks_free@8	infblock
+0x209710	64	@inflate_codes_new@20	infcodes
+0x209750	1956	@inflate_codes@12	infcodes
+0x209f00	10	@inflate_codes_free@8	infcodes
+0x209f10	161	@inflate_trees_bits@20	inftrees
+0x209fc0	1218	@huft_build@40	inftrees
+0x20a490	349	@inflate_trees_dynamic@36	inftrees
+0x20a5f0	40	@inflate_trees_fixed@20	inftrees
+0x20a620	322	@inflate_flush@12	infutil
+0x20a770	946	@inflate_fast@24	inffast
