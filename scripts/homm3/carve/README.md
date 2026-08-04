@@ -68,6 +68,9 @@ hdmap        transfer NH3API names from HD Mod's sibling Heroes3.exe by unique
              masked byte identity ($HOMM3_HD_EXE) -> evidence/retail-hd-name-map.csv
 dcmap        transfer Dreamcast CodeView names by link order (anchor + LIS +
              equal-count brackets) -> evidence/retail-dc-name-map.csv
+dcxref       the Dreamcast build's own xref graph (SH4 literal pools + BSR,
+             $HOMM3_DC_EXE) -> evidence/dc-xref-graph.tsv, plus the
+             cross-pressing caller-set check -> evidence/retail-dc-xref-check.csv
 naming       give EVERY carved function a name (total coverage, unique,
              evidence-tiered) -> evidence/retail-symbols.csv; needs the Ghidra
              xref export (ghidra/export_xrefs.py -> build/dna/
