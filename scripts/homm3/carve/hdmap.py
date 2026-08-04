@@ -25,7 +25,7 @@ retries every unresolved address INSIDE the bracket between its resolved
 neighbors, with shrinking match windows - within a bracket a few fixed bytes
 suffice, which recovers small bodies and bodies whose pass-1 window overshot
 into a diverging neighbor. Bracketed matches must be unique in-bracket and
-keep the whole map monotonic. Output: config/retail-hd-name-map.csv with a
+keep the whole map monotonic. Output: evidence/retail-hd-name-map.csv with a
 `pass` column (global-unique | bracketed).
 
 The HD executable is the user's own HD Mod download, referenced in place via
@@ -43,7 +43,7 @@ from pathlib import Path
 from homm3.carve import common
 from homm3.carve.dna import masked_find
 
-OUT = common.HOMM3_DIR / "config/retail-hd-name-map.csv"
+OUT = common.EVIDENCE_DIR / "retail-hd-name-map.csv"
 MIN_BODY = 24
 MIN_FIXED = 8
 MAX_BODY = 256

@@ -14,7 +14,7 @@ rva -> name/signature/file/line, drawn from the two external symbol sources:
               and the SH4 body size (Cb). No x86 addresses - joined to rvas
               by qualified-name agreement with an rva-anchored source.
   vc6-archive rva->symbol rows the DNA masked matcher already proved against
-              retail bytes (config/retail-function-libraries.tsv) - the only
+              retail bytes (evidence/retail-function-libraries.tsv) - the only
               rows here that are retail-proven; also joined to Dreamcast for
               file/line (the Dreamcast build linked the same zlib).
 
@@ -34,7 +34,7 @@ from homm3.carve import common
 SYMBOLS_DIR = common.HOMM3_DIR.parent / "homm3-symbols"
 DUMP = SYMBOLS_DIR / "HoMM3-Dreamcast-Dump/dump.txt"
 NH3API_ROOT = SYMBOLS_DIR / "NH3API/nh3api"
-OUT = common.HOMM3_DIR / "config/retail-function-names.csv"
+OUT = common.EVIDENCE_DIR / "retail-function-names.csv"
 
 PRIMITIVES = {
     "T_VOID": "void", "T_NOTYPE": "", "T_INT1": "signed char",
@@ -369,7 +369,7 @@ def main(argv=None) -> int:
         })
 
     # retail-proven archive symbols, enriched with Dreamcast file/line
-    lib_path = common.HOMM3_DIR / "config/retail-function-libraries.tsv"
+    lib_path = common.EVIDENCE_DIR / "retail-function-libraries.tsv"
     if lib_path.is_file():
         for r in common.read_tsv(lib_path):
             symbol = r["symbol"]

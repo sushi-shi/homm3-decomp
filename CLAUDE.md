@@ -78,6 +78,10 @@ role package, not to a new top-level file.
 - **Source is the authority for names** once game TUs land: annotation macros in source,
   a generated label map re-derived every build, authority-checked against symbol tables.
   No hand-maintained symbol ledger. (Annotation contract = open decision P0.2.)
+- **`config/` vs `evidence/`**: `config/` holds only hand-admitted retail inventories
+  (functions, relocs, vtables — MANUALLY MANAGED after admission) and build manifests;
+  `evidence/` holds GENERATED analysis deliverables (DNA bands, name maps, joins —
+  regenerate, never hand-edit).
 - **Vendored sources stay pristine**: no macros in `vendor/`; zlib's rva→symbol map will
   be one reviewed CSV.
 - **Gates must be able to fail**: every future fatal gate ships with a negative control

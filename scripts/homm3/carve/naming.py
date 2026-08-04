@@ -60,14 +60,14 @@ from collections import defaultdict
 
 from homm3.carve import audit, common
 
-OUT = common.HOMM3_DIR / "config/retail-symbols.csv"
+OUT = common.EVIDENCE_DIR / "retail-symbols.csv"
 XREFS = common.HOMM3_DIR / "build/dna/function_xrefs.tsv"
-BANDS = common.HOMM3_DIR / "config/retail-library-bands.tsv"
-LIBRARIES = common.HOMM3_DIR / "config/retail-function-libraries.tsv"
-NAMES = common.HOMM3_DIR / "config/retail-function-names.csv"
-VTABLE_SYMBOLS = common.HOMM3_DIR / "config/retail-vtable-symbols.csv"
-HD_MAP = common.HOMM3_DIR / "config/retail-hd-name-map.csv"
-DC_MAP = common.HOMM3_DIR / "config/retail-dc-name-map.csv"
+BANDS = common.EVIDENCE_DIR / "retail-library-bands.tsv"
+LIBRARIES = common.EVIDENCE_DIR / "retail-function-libraries.tsv"
+NAMES = common.EVIDENCE_DIR / "retail-function-names.csv"
+VTABLE_SYMBOLS = common.EVIDENCE_DIR / "retail-vtable-symbols.csv"
+HD_MAP = common.EVIDENCE_DIR / "retail-hd-name-map.csv"
+DC_MAP = common.EVIDENCE_DIR / "retail-dc-name-map.csv"
 
 BAND_PREFIX = {"crt-libcmt": "crt", "cxx-libcpmt": "cxx",
                "iostream-libcimt": "ios", "zlib": "zlib", "game": "game",
