@@ -260,6 +260,28 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-04 — retail LINK ORDER carved from the src/ claims; it is
+  exactly ALPHABETICAL, and 977 unclaimed functions gained module
+  ownership.** User-directed. `homm3.analysis.link_order` brackets each
+  TU's retail span from its `VA()` claims and sorts them.
+  Header-origin claims are EXCLUDED per the user's rule: an inline
+  defined in a header is a COMDAT every using TU emits, the linker
+  folds/drops copies, and the Dreamcast build shows one landing *inside*
+  button.obj's run (`Button.h:78 button::SetText` between two
+  button.cpp functions) - placement is a property of that link, not of
+  source order, so counting it would stretch a span across its
+  neighbour (10 such residents today, reported separately). Results:
+  63 units spanned from 742 own-cpp anchors covering 739,953 B (32.8%
+  of carved function bytes); **zero span overlaps** (a self-check -
+  a misattributed claim would swallow a neighbour's anchor); **link
+  order alphabetical with zero inversions** across all 63 (vendor
+  groups differ - zlib is in library order). Because the order is
+  alphabetical, every gap's owner set is exactly the unspanned
+  compilands sorting between its neighbours (e.g. the 42,900 B between
+  cmbtmgr and command belongs to the combat*window family), which
+  `gaps.tsv` now states per gap. Evidence in evidence/link-order/
+  (units/order/gaps/attribution + README); regenerate as src/ grows.
+
 - **2026-08-04 — armygrp wave 1: the module's whole small/medium
   surface matched - 14 functions implemented, 13 EXACT (user scoped
   out the big UI/morale family).** New exact matches: HasCreatures,
