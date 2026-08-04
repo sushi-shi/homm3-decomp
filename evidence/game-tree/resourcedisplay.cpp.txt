@@ -1,0 +1,183 @@
+// E:\gamedcs\resourcedisplay.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module resourcedisplay.obj, 25 procs, 4 retail-tied.
+// retail extent 0x158ba0..0x1590c4 (VA 0x558ba0..0x5590c4)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x1209f4, cb 0x28) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x120a1c, cb 0x10) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x120a2c, cb 0x28) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x120a54, cb 0x10) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x120a64, cb 0x28) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x120a8c, cb 0x10) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x120a9c, cb 0x28) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x120ac4, cb 0x10) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x120ad4, cb 0x28) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x120afc, cb 0x10) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x120b0c, cb 0x28) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x120b34, cb 0x10) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x120b44, cb 0x28) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x120b6c, cb 0x10) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x120b7c, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x120ba4, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x120bb4, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x120bdc, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x120bec, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x120c14, cb 0x40) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcedisplay.cpp:40
+VA(0x00558ba0, 0x2A1)  // anchor-global, dc 0x120c54
+void TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcedisplay.cpp:112
+VA(0x00558e80, 0x95)  // anchor-bracket, dc 0x120ee8
+void TResourceDisplay::~TResourceDisplay()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcedisplay.cpp:150
+VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
+void TResourceDisplay::Update(unsigned char draw, unsigned char update, unsigned char inMap)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcedisplay.cpp:183
+VA(0x00559020, 0xA4)  // anchor-global, dc 0x1210b4
+void TResourceDisplay::Clear()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcedisplay.cpp:101
+// DC_ONLY(0x1211ec, cb 0x34) - no retail tie yet
+void* TResourceDisplay::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x00558e50 size    33  game_158e50 [band]
+

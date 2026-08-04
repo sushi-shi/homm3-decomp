@@ -1,0 +1,409 @@
+// E:\gamedcs\window.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module window.obj, 56 procs, 21 retail-tied.
+// retail extent 0x1fe9f0..0x1ff955 (VA 0x5fe9f0..0x5ff955)
+
+// E:\gamedcs\window.cpp:48
+VA(0x005fe9f0, 0x5E)  // anchor-global, dc 0x197138
+void heroWindow::heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:80
+VA(0x005fea80, 0x60)  // anchor-global, dc 0x1971d0
+void heroWindow::~heroWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:94
+// DC_ONLY(0x19721c, cb 0xC4) - no retail tie yet
+int heroWindow::Open(int newPriority, unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:165
+// DC_ONLY(0x1972e0, cb 0x3C) - no retail tie yet
+void heroWindow::Close(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:194
+// DC_ONLY(0x19731c, cb 0x4) - no retail tie yet
+int heroWindow::handle_message(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:202
+// DC_ONLY(0x197320, cb 0x4) - no retail tie yet
+void heroWindow::handle_widget_hover()
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:214
+VA(0x005fecb0, 0xA5)  // anchor-global, dc 0x197324
+void heroWindow::AddWidget(widget* newWidget, int newPriority)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:284
+VA(0x005fed60, 0x7A)  // anchor-global, dc 0x1973b4
+void heroWindow::RemoveWidget(widget* killWidget)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:346
+// DC_ONLY(0x19742c, cb 0x54) - no retail tie yet
+void heroWindow::RemoveAndDeleteWidget(int inID)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:381
+// DC_ONLY(0x197480, cb 0xB0) - no retail tie yet
+int heroWindow::BroadcastMessage(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:448
+// DC_ONLY(0x197530, cb 0x40) - no retail tie yet
+int heroWindow::BroadcastMessage(int id, int codeX, int codeY, int extra)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:466
+VA(0x005feed0, 0x8E)  // anchor-global, dc 0x197570
+int heroWindow::WidgetSetStatus(int id, int status)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:477
+VA(0x005fef60, 0x8E)  // anchor-global, dc 0x19758c
+int heroWindow::WidgetClearStatus(int id, int status)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:489
+VA(0x005feff0, 0x22)  // anchor-global, dc 0x1975a8
+widget* heroWindow::GetWidget(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:516
+// DC_ONLY(0x1975d8, cb 0xB8) - no retail tie yet
+void heroWindow::DrawWindow(unsigned char update, int iLowID, int iHighID)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:571
+// DC_ONLY(0x197690, cb 0xDC) - no retail tie yet
+void heroWindow::DrawWindowX(unsigned char update, int iLowID, int iHighID)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:635
+VA(0x005ff100, 0xBD)  // anchor-global, dc 0x19776c
+int heroWindow::SaveBackground()
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:664
+VA(0x005ff1c0, 0x7E)  // anchor-global, dc 0x1977dc
+void heroWindow::RestoreBackground(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:707
+// DC_ONLY(0x197874, cb 0x106) - no retail tie yet
+void heroWindow::MoveWindow(int deltaX, int deltaY)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:778
+VA(0x005ff240, 0x162)  // anchor-global, dc 0x19797c
+void heroWindow::CenterWindow(int centerX, int centerY)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:855
+VA(0x005ff3b0, 0x23)  // anchor-global, dc 0x197ad0
+int heroWindow::findWidget(int mx, int my)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:865
+VA(0x005ff3e0, 0x7D)  // anchor-global, dc 0x197aec
+widget* heroWindow::findWidgetPtr(int mx, int my)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:893
+// DC_ONLY(0x197bdc, cb 0x2A) - no retail tie yet
+void heroWindow::EnableAllWidgets(unsigned char enable)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:904
+// DC_ONLY(0x197c08, cb 0x1A) - no retail tie yet
+void heroWindow::DoModal(unsigned char fadeIn)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:909
+VA(0x005ff490, 0x6C)  // anchor-global, dc 0x197c24
+void heroWindow::SetFocus(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:934
+// DC_ONLY(0x197c74, cb 0x18) - no retail tie yet
+int heroWindow::HeroWindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:942
+VA(0x005ff510, 0x60)  // anchor-global, dc 0x197c8c
+void heroWindow::delete_widgets()
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:949
+// DC_ONLY(0x197cd4, cb 0x72) - no retail tie yet
+void heroWindow::AddWidgetsToMessageStream()
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:966
+VA(0x005ff640, 0x61)  // anchor-global, dc 0x197d48
+void CHeroWindowEx::CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:972
+VA(0x005ff6b0, 0x21)  // linkorder, dc 0x197d9c
+unsigned char CHeroWindowEx::ProcessHover(int mouseX, int mouseY)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:1016
+VA(0x005ff6e0, 0xAE)  // linkorder, dc 0x197e58
+unsigned char CHeroWindowEx::ProcessRightSelect(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:1036
+VA(0x005ff790, 0x82)  // linkorder, dc 0x197eb4
+int CHeroWindowEx::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:1122
+VA(0x005ff820, 0xA5)  // linkorder, dc 0x197f48
+int CHeroWindowEx::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:1128
+VA(0x005ff8d0, 0x3)  // linkorder, dc 0x197f4c
+textWidget* CHeroWindowEx::GetRolloverWidget()
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:1133
+VA(0x005ff8e0, 0x75)  // anchor-global, dc 0x197f50
+void CHeroWindowEx::SetHelpText(THelpText* pHelpText, int start, int stop, unsigned char copyText)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:1201
+// DC_ONLY(0x197fd8, cb 0x158) - no retail tie yet
+unsigned char InitializeWinSetupText()
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:1283
+// DC_ONLY(0x198130, cb 0x7C) - no retail tie yet
+void SetWinText(heroWindow* win, int winId)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:68
+// DC_ONLY(0x1981ac, cb 0x34) - no retail tie yet
+void* heroWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\window.cpp:969
+// DC_ONLY(0x1981e0, cb 0x34) - no retail tie yet
+void* CHeroWindowEx::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:188
+// DC_ONLY(0x198214, cb 0x38) - no retail tie yet
+std::reverse_iterator<widget std::vector<widget *,std::allocator<widget *> >::rbegin(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:192
+// DC_ONLY(0x19824c, cb 0x38) - no retail tie yet
+std::reverse_iterator<widget std::vector<widget *,std::allocator<widget *> >::rend(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0x198284, cb 0x38) - no retail tie yet
+void std::vector<widget *,std::allocator<widget *> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:325
+// DC_ONLY(0x1982bc, cb 0x20) - no retail tie yet
+void std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>(const std::reverse_iterator<widget* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:330
+// DC_ONLY(0x1982dc, cb 0x6) - no retail tie yet
+widget** std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::operator*()
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:340
+// DC_ONLY(0x1982e4, cb 0x38) - no retail tie yet
+std::reverse_iterator<widget std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::operator++(__$ReturnUdt, int __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:180
+// DC_ONLY(0x19831c, cb 0x4) - no retail tie yet
+widget** std::vector<widget *,std::allocator<widget *> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:182
+// DC_ONLY(0x198320, cb 0x4) - no retail tie yet
+widget** std::vector<widget *,std::allocator<widget *> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0x198324, cb 0x3C) - no retail tie yet
+widget** std::vector<widget *,std::allocator<widget *> >::erase(widget** __first, widget** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:326
+// DC_ONLY(0x198360, cb 0x6) - no retail tie yet
+void std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>(widget** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:329
+// DC_ONLY(0x198368, cb 0x4) - no retail tie yet
+widget** std::reverse_iterator<widget * const *,widget *,widget * const &,widget * const *,int>::base()
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:428
+// DC_ONLY(0x19836c, cb 0x1C) - no retail tie yet
+unsigned char std::operator!=(const std::reverse_iterator<widget* __x, const std::reverse_iterator<widget* __y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0x198388, cb 0x50) - no retail tie yet
+widget** std::copy(widget** __first, widget** __last, widget** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:405
+// DC_ONLY(0x1983d8, cb 0x2C) - no retail tie yet
+unsigned char std::operator==(const std::reverse_iterator<widget* __x, const std::reverse_iterator<widget* __y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0x198404, cb 0xC) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, widget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0x198410, cb 0x4) - no retail tie yet
+int* std::distance_type(widget** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0x198414, cb 0x1E) - no retail tie yet
+widget** std::__copy(widget** __first, widget** __last, widget** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x005fea50 size    33  heroWindow_vslot00 [vtable-slot]
+//   0x005feae0 size   378  CAdvPopup_vslot01 [vtable-slot]
+//   0x005fec60 size    73  CAdvPopup_vslot02 [vtable-slot]
+//   0x005fede0 size    94  heroWindow_BroadcastMessage [hd-crossbuild]
+//   0x005fee40 size   140  heroWindow_BroadcastMessage_1fee40 [hd-crossbuild]
+//   0x005ff020 size   222  TAdventureMapWindow_vslot05 [vtable-slot]
+//   0x005ff460 size    33  TAdventureMapWindow_vslot06 [vtable-slot]
+//   0x005ff570 size    50  TAdventureMapWindow_vslot07 [vtable-slot]
+//   0x005ff5b0 size    51  heroWindow_SleepAllWidgets [hd-crossbuild]
+//   0x005ff5f0 size    79  CAdvPopup_vslot08 [vtable-slot]
+

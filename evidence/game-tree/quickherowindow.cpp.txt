@@ -1,0 +1,172 @@
+// E:\gamedcs\quickherowindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module quickherowindow.obj, 24 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x116e5c, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x116e84, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x116e94, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x116ebc, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x116ecc, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x116ef4, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x116f04, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x116f2c, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x116f3c, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x116f64, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x116f74, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x116f9c, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x116fac, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x116fd4, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x116fe4, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x11700c, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x11701c, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x117044, cb 0x10) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x117054, cb 0x28) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x11707c, cb 0x40) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\quickherowindow.cpp:37
+// DC_ONLY(0x1170bc, cb 0x6F8) - no retail tie yet
+void TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TQuickHeroWindow::TViewLevel view_level)
+{
+    // @stub
+}
+
+// E:\gamedcs\quickherowindow.cpp:214
+// DC_ONLY(0x1177b4, cb 0x62) - no retail tie yet
+void TQuickHeroWindow::~TQuickHeroWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\quickherowindow.cpp:221
+// DC_ONLY(0x117818, cb 0x30) - no retail tie yet
+void TQuickHeroWindow::QuickWindowWait()
+{
+    // @stub
+}
+
+// E:\gamedcs\quickherowindow.cpp:209
+// DC_ONLY(0x117848, cb 0x34) - no retail tie yet
+void* TQuickHeroWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

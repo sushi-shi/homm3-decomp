@@ -1,0 +1,550 @@
+// E:\gamedcs\drawing.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module drawing.obj, 75 procs, 5 retail-tied.
+// retail extent 0x93710..0x9683a (VA 0x493710..0x49683a)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x82f54, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x82f7c, cb 0x10) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x82f8c, cb 0x28) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x82fb4, cb 0x10) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x82fc4, cb 0x28) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x82fec, cb 0x10) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x82ffc, cb 0x28) - no retail tie yet
+void $E475()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x83024, cb 0x10) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x83034, cb 0x28) - no retail tie yet
+void $E478()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x8305c, cb 0x10) - no retail tie yet
+void $E479()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x8306c, cb 0x28) - no retail tie yet
+void $E481()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x83094, cb 0x10) - no retail tie yet
+void $E482()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x830a4, cb 0x28) - no retail tie yet
+void $E484()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x830cc, cb 0x10) - no retail tie yet
+void $E485()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x830dc, cb 0x28) - no retail tie yet
+void $E487()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x83104, cb 0x10) - no retail tie yet
+void $E488()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x83114, cb 0x28) - no retail tie yet
+void $E490()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x8313c, cb 0x10) - no retail tie yet
+void $E491()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x8314c, cb 0x28) - no retail tie yet
+void $E493()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x83174, cb 0x40) - no retail tie yet
+void $E494()
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:47
+// DC_ONLY(0x831b4, cb 0x124) - no retail tie yet
+void get_creature_spell_message(char* buffer, const army* current_army, long current_hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:122
+// DC_ONLY(0x832d8, cb 0xDA) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> format_rounded(__$ReturnUdt, long amount, long high)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:145
+// DC_ONLY(0x833b4, cb 0x196) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> get_estimated_damage(__$ReturnUdt, const army* currArmy, army* target, unsigned char ranged, long distance)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:178
+// DC_ONLY(0x8354c, cb 0x3A2) - no retail tie yet
+unsigned char combatManager::show_creature_spell_error(char* buffer, const army* current_army)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:326
+// DC_ONLY(0x838f0, cb 0x4C0) - no retail tie yet
+void combatManager::CombatMessage(int command)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:467
+VA(0x00493710, 0x63)  // anchor-global, dc 0x83db0
+void combatManager::ResetLimitCreature()
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:492
+// DC_ONLY(0x83e58, cb 0x34) - no retail tie yet
+void combatManager::UpdateCombatArea()
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:506
+// DC_ONLY(0x83e8c, cb 0x34) - no retail tie yet
+void combatManager::FullUpdate()
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:513
+// DC_ONLY(0x83ec0, cb 0x26) - no retail tie yet
+void combatManager::UpdateCombatArea(SLimitData area)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:520
+// DC_ONLY(0x83ee8, cb 0x9C) - no retail tie yet
+void combatManager::UpdateCombatArea(int x, int y, int width, int height)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:554
+// DC_ONLY(0x83f84, cb 0xD6) - no retail tie yet
+unsigned char combatManager::ScrollCombatArea(int dx, int dy, unsigned char abs, unsigned char draw)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:598
+// DC_ONLY(0x8405c, cb 0x178) - no retail tie yet
+unsigned char combatManager::ScrollTo(SLimitData extent, unsigned char draw, unsigned char doscroll_x, unsigned char doscroll_y)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:666
+// DC_ONLY(0x841d4, cb 0x52) - no retail tie yet
+unsigned char combatManager::ScrollTo(int x, int y, unsigned char draw, unsigned char doscroll_x, unsigned char doscroll_y)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:672
+// DC_ONLY(0x84228, cb 0x1E) - no retail tie yet
+unsigned char combatManager::ScrollToPixel(int x, int y, unsigned char draw)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:679
+// DC_ONLY(0x84248, cb 0x60) - no retail tie yet
+unsigned char combatManager::ScrollTo(int x, int y, int width, int height, unsigned char draw, unsigned char doscroll_x, unsigned char doscroll_y)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:689
+// DC_ONLY(0x842a8, cb 0x176) - no retail tie yet
+void combatManager::SetupGridForArmy(const army* thisArmy)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:755
+VA(0x00493930, 0x3C0)  // anchor-global, dc 0x84420
+int combatManager::UpdateGrid(int bPostGridIsClean, int bSetupGrid)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:919
+// DC_ONLY(0x847dc, cb 0x1E8) - no retail tie yet
+void combatManager::DrawBackground()
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:982
+// DC_ONLY(0x849c4, cb 0x3D4) - no retail tie yet
+void combatManager::UpdateMouseGrid(int iNewMouseGridIndex, std::vector<long,std::allocator<long>* hexes)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1103
+// DC_ONLY(0x84d98, cb 0x14) - no retail tie yet
+void $E507()
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1113
+// DC_ONLY(0x84dac, cb 0x80) - no retail tie yet
+void combatManager::UpdateMouseGrid(int iNewMouseGridIndex, int bAllowDuringAction)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1141
+VA(0x00494440, 0x7D5)  // anchor-global, dc 0x84e2c
+void combatManager::DrawFrame(unsigned char update, unsigned char bLimitCreatureEffect, unsigned char bLimitDraw, int iDelay, unsigned char bRefreshBackground, unsigned char bDoDelayTil)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1399
+// DC_ONLY(0x853f4, cb 0x84) - no retail tie yet
+void combatManager::DrawObstacleAt(int hex_index)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1426
+// DC_ONLY(0x85478, cb 0x35A) - no retail tie yet
+void combatManager::DrawWallAt(int hex_index, int dx)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1581
+// DC_ONLY(0x857d4, cb 0x70) - no retail tie yet
+void combatManager::DrawDeadOccupants(int index)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1602
+// DC_ONLY(0x85844, cb 0x134) - no retail tie yet
+void combatManager::DrawOccupant(int index, int iDrawPriority, int bNumBoxOnly)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1661
+// DC_ONLY(0x85978, cb 0xCE) - no retail tie yet
+int combatManager::DrawArcher(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1699
+// DC_ONLY(0x85a48, cb 0x108) - no retail tie yet
+int combatManager::DrawCreature(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int id, unsigned char isFlipped, int iColor)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1738
+// DC_ONLY(0x85b50, cb 0xDA) - no retail tie yet
+int combatManager::DrawCreatureAlpha(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped, int iColor)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1772
+// DC_ONLY(0x85c2c, cb 0xD2) - no retail tie yet
+int combatManager::DrawCombatHero(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1804
+// DC_ONLY(0x85d00, cb 0x13C) - no retail tie yet
+int combatManager::DrawSpellEffect(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped, unsigned char isAlpha)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1836
+// DC_ONLY(0x85e3c, cb 0xDE) - no retail tie yet
+int combatManager::DrawSpriteObject(const CSprite* sprite, int frame, int x, int y, unsigned char isFlipped)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1865
+// DC_ONLY(0x85f1c, cb 0x54) - no retail tie yet
+int combatManager::DrawCreatureAndHeroSubwindows()
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1948
+// DC_ONLY(0x85f70, cb 0x64) - no retail tie yet
+int combatManager::DrawObstacle(const hexcell* c)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1963
+// DC_ONLY(0x85fd4, cb 0xC2) - no retail tie yet
+int combatManager::DrawWall(const Bitmap816* image, int x, int y, int w, int h, int dx, int dy)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:1991
+// DC_ONLY(0x86098, cb 0x134) - no retail tie yet
+int combatManager::DrawObject(const Bitmap816* image, int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:2019
+// DC_ONLY(0x861cc, cb 0x1B2) - no retail tie yet
+int combatManager::DrawMoatOverlay(int index)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:2093
+VA(0x00495bf0, 0x35E)  // anchor-global, dc 0x86380
+void combatManager::ComputeMaxExtent()
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:2214
+// DC_ONLY(0x866ac, cb 0x10E) - no retail tie yet
+void combatManager::ComputeExtent(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int isFlipped, unsigned char SaveBiggestExtent)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:2257
+VA(0x004960d0, 0x76A)  // anchor-global, dc 0x867bc
+void combatManager::CycleCombatScreen()
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:2524
+// DC_ONLY(0x86ea0, cb 0x19C) - no retail tie yet
+void combatManager::SpellEffect(int effect, army* target_army, int iDelay, unsigned char bDoWince)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:2593
+// DC_ONLY(0x8703c, cb 0x23A) - no retail tie yet
+void combatManager::SpellEffect(int effect, int hex, int iDelay, unsigned char leave_last_frame)
+{
+    // @stub
+}
+
+// E:\gamedcs\drawing.cpp:2662
+// DC_ONLY(0x87278, cb 0x30) - no retail tie yet
+void Rescale(int* x, int* y, unsigned char offset)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:284
+// DC_ONLY(0x872a8, cb 0x32) - no retail tie yet
+unsigned char SLimitData::Intersects(const SLimitData* check_limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:300
+// DC_ONLY(0x872dc, cb 0x16) - no retail tie yet
+unsigned char SLimitData::IsEmpty()
+{
+    // @stub
+}
+
+// E:\gamedcs\Army.h:881
+// DC_ONLY(0x872f4, cb 0xA) - no retail tie yet
+unsigned char army::is_in_area_highlight()
+{
+    // @stub
+}
+
+// E:\gamedcs\HexCell.h:85
+// DC_ONLY(0x87300, cb 0x44) - no retail tie yet
+SLimitData hexcell::limits(__$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\CombatControlSubWindow.h:148
+// DC_ONLY(0x87344, cb 0x8) - no retail tie yet
+unsigned char TCombatHeroSubWindow::IsShown()
+{
+    // @stub
+}
+
+// E:\gamedcs\CSpriteFrame.h:88
+// DC_ONLY(0x8734c, cb 0x4) - no retail tie yet
+int CSpriteFrame::GetCroppedHeight()
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:151
+// DC_ONLY(0x87350, cb 0x44) - no retail tie yet
+int CSprite::GetCroppedHeight(int seq, int frame)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:342
+// DC_ONLY(0x87394, cb 0xA4) - no retail tie yet
+void CSprite::DrawCreature(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned short outcolor)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:348
+// DC_ONLY(0x87438, cb 0xA4) - no retail tie yet
+void CSprite::DrawCreatureAlpha(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned short outcolor)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:444
+// DC_ONLY(0x874dc, cb 0xA0) - no retail tie yet
+void CSprite::DrawCombatHero(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:450
+// DC_ONLY(0x8757c, cb 0xA4) - no retail tie yet
+void CSprite::DrawSpellEffect(int seqnum, int framenum, int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip, unsigned char alpha)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:326
+// DC_ONLY(0x87620, cb 0x20) - no retail tie yet
+unsigned char CChatManager::ChatChanged()
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x00493780 size    68  combatManager_UpdateCombatArea [hd-crossbuild]
+//   0x004937d0 size   341  game_74d80_sub20_937d0 [caller]
+//   0x00493cf0 size   427  game_94440_sub01_93cf0 [caller]
+//   0x00493ea0 size  1226  game_94390_sub00_93ea0 [caller]
+//   0x00494390 size   167  combatManager_UpdateMouseGrid [hd-crossbuild]
+//   0x00494c20 size   796  game_94440_sub02_94c20 [caller]
+//   0x00494f40 size   327  game_94440_sub03_94f40 [caller]
+//   0x00495090 size   276  game_94c20_sub00_95090 [caller]
+//   0x004951b0 size   253  game_3e140_sub01_951b0 [caller]
+//   0x004952b0 size   251  game_94440_sub04_952b0 [caller]
+//   0x004953b0 size   324  game_3e140_sub02_953b0 [caller]
+//   0x00495500 size   322  game_94440_sub05_95500 [caller]
+//   0x00495650 size   217  game_94440_sub06_95650 [caller]
+//   0x00495730 size   115  game_19fe30_sub04_95730 [caller]
+//   0x004957b0 size   293  game_94c20_sub01_957b0 [caller]
+//   0x004958e0 size   297  game_3e140_sub03_958e0 [caller]
+//   0x00495a10 size   471  game_94f40_sub00_95a10 [caller]
+//   0x00495f50 size   380  combatManager_95f50 [hd-crossbuild]
+

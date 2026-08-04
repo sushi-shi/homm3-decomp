@@ -1,0 +1,11 @@
+// E:\gamedcs\zlib113\uncompr.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module uncompr.obj, 1 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\uncompr.cpp:28
+// DC_ONLY(0x18e3bc, cb 0x90) - no retail tie yet
+int uncompress@16(unsigned char* dest, unsigned long* destLen, const unsigned char* source, unsigned long sourceLen)
+{
+    // @stub
+}
+

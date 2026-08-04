@@ -1,0 +1,326 @@
+// E:\gamedcs\viewwrld.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module viewwrld.obj, 46 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x192c88, cb 0x28) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x192cb0, cb 0x10) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x192cc0, cb 0x28) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x192ce8, cb 0x10) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x192cf8, cb 0x28) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x192d20, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x192d30, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x192d58, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x192d68, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x192d90, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x192da0, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x192dc8, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x192dd8, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x192e00, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x192e10, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x192e38, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x192e48, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x192e70, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x192e80, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x192ea8, cb 0x40) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:100
+// DC_ONLY(0x192ee8, cb 0x62) - no retail tie yet
+long ftol(double d)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:110
+// DC_ONLY(0x192f4c, cb 0x140) - no retail tie yet
+void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:265
+// DC_ONLY(0x19308c, cb 0x34C) - no retail tie yet
+void advManager::VWDrawHeroPart(int part, TDrawParts* heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:346
+// DC_ONLY(0x1933d8, cb 0x34C) - no retail tie yet
+void advManager::VWDrawHeroPartShadow(int part, TDrawParts* heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:427
+// DC_ONLY(0x193724, cb 0x1A8) - no retail tie yet
+void advManager::VWDrawBoatPart(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:464
+// DC_ONLY(0x1938cc, cb 0x1A8) - no retail tie yet
+void advManager::VWDrawBoatPartShadow(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:510
+// DC_ONLY(0x193a74, cb 0x200) - no retail tie yet
+void advManager::VWDrawSymbols(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:578
+// DC_ONLY(0x193c74, cb 0x778) - no retail tie yet
+void advManager::VWDrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:822
+// DC_ONLY(0x1943ec, cb 0x462) - no retail tie yet
+void advManager::VWDrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:946
+// DC_ONLY(0x194850, cb 0x17C) - no retail tie yet
+void advManager::VWDrawRiver(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:985
+// DC_ONLY(0x1949cc, cb 0x17C) - no retail tie yet
+void advManager::VWDrawRoad(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1026
+// DC_ONLY(0x194b48, cb 0x284) - no retail tie yet
+void advManager::VWDrawShroud(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1114
+// DC_ONLY(0x194dcc, cb 0x1E2) - no retail tie yet
+void advManager::VWDrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1174
+// DC_ONLY(0x194fb0, cb 0x308) - no retail tie yet
+void advManager::VWDrawGround(int srcX, int srcY, int z, int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1307
+// DC_ONLY(0x1952b8, cb 0x80C) - no retail tie yet
+void TViewWorldWindow::TViewWorldWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1396
+// DC_ONLY(0x195ac4, cb 0x84) - no retail tie yet
+void TViewWorldWindow::~TViewWorldWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1409
+// DC_ONLY(0x195b48, cb 0x1E6) - no retail tie yet
+void advManager::ViewWorld(int iWhatToDraw, TSkillMastery level)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1496
+// DC_ONLY(0x195d30, cb 0x2CA) - no retail tie yet
+void TViewWorldWindow::init(type_point new_center, unsigned char updateFlag)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1549
+// DC_ONLY(0x195ffc, cb 0x42) - no retail tie yet
+void TViewWorldWindow::draw_window()
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1558
+// DC_ONLY(0x196040, cb 0x1E8) - no retail tie yet
+void advManager::VWCompleteDraw(int startX, int startY, int z, int drawwidth, int drawheight)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1646
+// DC_ONLY(0x196228, cb 0xD4) - no retail tie yet
+void TViewWorldWindow::update_view_world(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1675
+// DC_ONLY(0x1962fc, cb 0x1E0) - no retail tie yet
+void TViewWorldWindow::update_radar(int mrx, int mry, float fRadarDivisor)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1710
+// DC_ONLY(0x1964dc, cb 0x3F4) - no retail tie yet
+int TViewWorldWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:166
+// DC_ONLY(0x1968d0, cb 0x148) - no retail tie yet
+void VWClipScaleToScreenBuffer(int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:226
+// DC_ONLY(0x196a18, cb 0x100) - no retail tie yet
+void VWScaleToScreenBuffer(int destX, int destY)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewwrld.cpp:1392
+// DC_ONLY(0x196b18, cb 0x34) - no retail tie yet
+void* TViewWorldWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

@@ -1,0 +1,11 @@
+// E:\gamedcs\zlib113\inffast.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module inffast.obj, 1 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\inffast.cpp:36
+// DC_ONLY(0xdb190, cb 0x2FC) - no retail tie yet
+int inflate_fast(unsigned bl, unsigned bd, inflate_huft_s* tl, inflate_huft_s* td, inflate_blocks_state* s, z_stream_s* z)
+{
+    // @stub
+}
+

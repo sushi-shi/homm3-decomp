@@ -1,0 +1,319 @@
+// E:\gamedcs\seerhut.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module seerhut.obj, 45 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x12cac8, cb 0x28) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x12caf0, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x12cb00, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x12cb28, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x12cb38, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x12cb60, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x12cb70, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x12cb98, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x12cba8, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x12cbd0, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x12cbe0, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x12cc08, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x12cc18, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x12cc40, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x12cc50, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x12cc78, cb 0x10) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x12cc88, cb 0x28) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x12ccb0, cb 0x10) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x12ccc0, cb 0x28) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x12cce8, cb 0x40) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:50
+// DC_ONLY(0x12cd28, cb 0x35C) - no retail tie yet
+unsigned char InitializeSeerHutText()
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:139
+// DC_ONLY(0x12d084, cb 0x4C) - no retail tie yet
+void TSeerHut::SetRandomName(TSeerHut* thisHut)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:143
+// DC_ONLY(0x12d0d0, cb 0x14) - no retail tie yet
+void $E480()
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:148
+// DC_ONLY(0x12d0e4, cb 0x74) - no retail tie yet
+void TSeerHut::DoSeerEvent(hero* current_hero, unsigned char human_player)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:179
+// DC_ONLY(0x12d158, cb 0x4E) - no retail tie yet
+void TSeerHut::DoEmptyDialog()
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:185
+// DC_ONLY(0x12d1a8, cb 0x8E) - no retail tie yet
+void TSeerHut::DoCompletionDialog(hero* current_hero, unsigned char human_player)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:204
+// DC_ONLY(0x12d238, cb 0xB0) - no retail tie yet
+void TSeerHut::DoProgressDialog()
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:210
+// DC_ONLY(0x12d2e8, cb 0xAA) - no retail tie yet
+void TSeerHut::DoAlreadyHaveProposalDialog(hero* current_hero, unsigned char human_player)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:229
+// DC_ONLY(0x12d394, cb 0x32) - no retail tie yet
+void TSeerHut::DoAcceptanceDialog()
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:234
+// DC_ONLY(0x12d3c8, cb 0x32) - no retail tie yet
+void TSeerHut::DoRefusalDialog()
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:239
+// DC_ONLY(0x12d3fc, cb 0xE0) - no retail tie yet
+void TSeerHut::DoProposalDialog(hero* current_hero, unsigned char human_player)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:266
+// DC_ONLY(0x12d4dc, cb 0x1FA) - no retail tie yet
+void TSeerHut::GiveReward(hero* current_hero, unsigned char human_player)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:373
+// DC_ONLY(0x12d6d8, cb 0x7E) - no retail tie yet
+int TSeerHut::GetRewardExtra(const hero* this_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:414
+// DC_ONLY(0x12d758, cb 0x90) - no retail tie yet
+int TSeerHut::GetRewardType()
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:481
+// DC_ONLY(0x12d7e8, cb 0x6C) - no retail tie yet
+int TSeerHut::SaveSeerList(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:503
+// DC_ONLY(0x12d854, cb 0x6C) - no retail tie yet
+int TSeerHut::LoadSeerList(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:526
+// DC_ONLY(0x12d8c0, cb 0x22) - no retail tie yet
+int TSeerHut::save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.cpp:535
+// DC_ONLY(0x12d8e4, cb 0x40) - no retail tie yet
+int TSeerHut::load(void* infile)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0x12d924, cb 0x30) - no retail tie yet
+void std::vector<TSeerHut,std::allocator<TSeerHut> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0x12d954, cb 0x80) - no retail tie yet
+void std::vector<TSeerHut,std::allocator<TSeerHut> >::resize(unsigned __new_size, const TSeerHut* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0x12d9d4, cb 0x18) - no retail tie yet
+void std::vector<TSeerHut,std::allocator<TSeerHut> >::insert(TSeerHut* __pos, unsigned __n, const TSeerHut* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0x12d9ec, cb 0xFC) - no retail tie yet
+void std::vector<TSeerHut,std::allocator<TSeerHut> >::_M_fill_insert(TSeerHut* __position, unsigned __n, const TSeerHut* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0x12dae8, cb 0x50) - no retail tie yet
+TSeerHut* std::copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0x12db38, cb 0x36) - no retail tie yet
+void std::fill(TSeerHut* __first, TSeerHut* __last, const TSeerHut* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0x12db70, cb 0x58) - no retail tie yet
+TSeerHut* std::__copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+

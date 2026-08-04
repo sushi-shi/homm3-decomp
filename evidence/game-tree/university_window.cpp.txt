@@ -1,0 +1,263 @@
+// E:\gamedcs\university_window.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module university_window.obj, 37 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x18e44c, cb 0x28) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x18e474, cb 0x10) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x18e484, cb 0x28) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x18e4ac, cb 0x10) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x18e4bc, cb 0x28) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x18e4e4, cb 0x10) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x18e4f4, cb 0x28) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x18e51c, cb 0x10) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x18e52c, cb 0x28) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x18e554, cb 0x10) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x18e564, cb 0x28) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x18e58c, cb 0x10) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x18e59c, cb 0x28) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x18e5c4, cb 0x10) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x18e5d4, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x18e5fc, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x18e60c, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x18e634, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x18e644, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x18e66c, cb 0x40) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:65
+// DC_ONLY(0x18e6ac, cb 0x7C) - no retail tie yet
+void type_university_skill_button::type_university_skill_button(long _x, long _y, long _width, long _height, long new_id, const char* _image, TSecondarySkill new_skill)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:75
+// DC_ONLY(0x18e728, cb 0x66) - no retail tie yet
+unsigned char type_university_skill_button::handle_click(unsigned char down_click, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:102
+// DC_ONLY(0x18e790, cb 0xB68) - no retail tie yet
+void type_university_window::type_university_window(hero* new_hero, const type_university* university)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:285
+// DC_ONLY(0x18f2f8, cb 0x130) - no retail tie yet
+void type_university_window::update_skill_button(type_university_skill* skill)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:327
+// DC_ONLY(0x18f428, cb 0xE0) - no retail tie yet
+void type_university_window::set_selection_mode()
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:344
+// DC_ONLY(0x18f508, cb 0x22) - no retail tie yet
+void type_university_window::DoModal(unsigned char bFade)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:354
+// DC_ONLY(0x18f52c, cb 0x2B6) - no retail tie yet
+void type_university_window::skill_click(TSecondarySkill skill)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:404
+// DC_ONLY(0x18f7e4, cb 0x84) - no retail tie yet
+int type_university_window::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:419
+// DC_ONLY(0x18f868, cb 0x48) - no retail tie yet
+void type_university_window::handle_widget_hover(widget* current_widget)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:433
+// DC_ONLY(0x18f8b0, cb 0x6C) - no retail tie yet
+int type_university_window::cancel_click(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:457
+// DC_ONLY(0x18f91c, cb 0x5E) - no retail tie yet
+int type_university_window::exit_click(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:479
+// DC_ONLY(0x18f97c, cb 0x128) - no retail tie yet
+int type_university_window::purchase_click(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:515
+// DC_ONLY(0x18faa4, cb 0x34) - no retail tie yet
+int type_university_window::ExitDialog(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:50
+// DC_ONLY(0x18fad8, cb 0xA) - no retail tie yet
+void type_university_skill_button::set_skill(TSecondarySkill new_skill, unsigned char new_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:68
+// DC_ONLY(0x18fae4, cb 0x34) - no retail tie yet
+void* type_university_skill_button::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:68
+// DC_ONLY(0x18fb18, cb 0x18) - no retail tie yet
+void type_university_skill_button::~type_university_skill_button()
+{
+    // @stub
+}
+
+// E:\gamedcs\university_window.cpp:277
+// DC_ONLY(0x18fb30, cb 0x34) - no retail tie yet
+void* type_university_window::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

@@ -1,0 +1,123 @@
+// E:\gamedcs\zlib113\deflate.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module deflate.obj, 17 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\deflate.cpp:194
+// DC_ONLY(0x801e8, cb 0x26) - no retail tie yet
+int deflateInit_@16(z_stream_s* strm, int level, const char* version, int stream_size)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:203
+// DC_ONLY(0x80210, cb 0x1AC) - no retail tie yet
+int deflateInit2_@32(z_stream_s* strm, int level, int method, int windowBits, int memLevel, int strategy, const char* version, int stream_size)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:283
+// DC_ONLY(0x803bc, cb 0x10A) - no retail tie yet
+int deflateSetDictionary@12(z_stream_s* strm, const unsigned char* dictionary, unsigned dictLength)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:321
+// DC_ONLY(0x804c8, cb 0x64) - no retail tie yet
+int deflateReset@4(z_stream_s* strm)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:350
+// DC_ONLY(0x8052c, cb 0xB8) - no retail tie yet
+int deflateParams@12(z_stream_s* strm, int level, int strategy)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:387
+// DC_ONLY(0x805e4, cb 0x20) - no retail tie yet
+void putShortMSB(internal_state* s, unsigned b)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:399
+// DC_ONLY(0x80604, cb 0x60) - no retail tie yet
+void flush_pending(z_stream_s* strm)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:418
+// DC_ONLY(0x80664, cb 0x25C) - no retail tie yet
+int deflate@8(z_stream_s* strm, int flush)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:550
+// DC_ONLY(0x808c0, cb 0x98) - no retail tie yet
+int deflateEnd@4(z_stream_s* strm)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:579
+// DC_ONLY(0x80958, cb 0x16A) - no retail tie yet
+int deflateCopy@8(z_stream_s* dest, z_stream_s* source)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:639
+// DC_ONLY(0x80ac4, cb 0x74) - no retail tie yet
+int read_buf(z_stream_s* strm, unsigned char* buf, unsigned size)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:661
+// DC_ONLY(0x80b38, cb 0x94) - no retail tie yet
+void lm_init(internal_state* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:699
+// DC_ONLY(0x80bcc, cb 0x1B0) - no retail tie yet
+unsigned longest_match(internal_state* s, unsigned cur_match)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:928
+// DC_ONLY(0x80d7c, cb 0x130) - no retail tie yet
+void fill_window(internal_state* s)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:1047
+// DC_ONLY(0x80eac, cb 0x150) - no retail tie yet
+block_state deflate_stored(internal_state* s, int flush)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:1103
+// DC_ONLY(0x80ffc, cb 0x33C) - no retail tie yet
+block_state deflate_fast(internal_state* s, int flush)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\deflate.cpp:1197
+// DC_ONLY(0x81338, cb 0x410) - no retail tie yet
+block_state deflate_slow(internal_state* s, int flush)
+{
+    // @stub
+}
+

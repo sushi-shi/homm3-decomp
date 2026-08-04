@@ -1,0 +1,382 @@
+// E:\gamedcs\text.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module text.obj, 54 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x160dc4, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x160dec, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x160dfc, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x160e24, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x160e34, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x160e5c, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x160e6c, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x160e94, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x160ea4, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x160ecc, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x160edc, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x160f04, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x160f14, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x160f3c, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x160f4c, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x160f74, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x160f84, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x160fac, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x160fbc, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x160fe4, cb 0x10) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:49
+// DC_ONLY(0x160ff4, cb 0x4) - no retail tie yet
+void CheckTextResource()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:86
+// DC_ONLY(0x160ff8, cb 0x4) - no retail tie yet
+void CheckSpreadsheetResource()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:116
+// DC_ONLY(0x160ffc, cb 0x20) - no retail tie yet
+unsigned char InitializeGeneralText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:125
+// DC_ONLY(0x16101c, cb 0x4C) - no retail tie yet
+unsigned char InitializeCustomCampaignText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:143
+// DC_ONLY(0x161068, cb 0xA4) - no retail tie yet
+unsigned char InitializeMineEventText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:160
+// DC_ONLY(0x16110c, cb 0x4E) - no retail tie yet
+unsigned char InitializeCampaignRegionNames()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:179
+// DC_ONLY(0x16115c, cb 0xD4) - no retail tie yet
+unsigned char InitializeHighScoreDefaults()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:213
+// DC_ONLY(0x161230, cb 0x4A) - no retail tie yet
+unsigned char InitializeTerrainNames()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:231
+// DC_ONLY(0x16127c, cb 0x4A) - no retail tie yet
+unsigned char InitializeAdvObjNames()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:249
+// DC_ONLY(0x1612c8, cb 0x4A) - no retail tie yet
+unsigned char InitializeResourceNames()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:267
+// DC_ONLY(0x161314, cb 0x4A) - no retail tie yet
+unsigned char InitializeMineNames()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:285
+// DC_ONLY(0x161360, cb 0xC6) - no retail tie yet
+unsigned char InitializePlayerColors()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:308
+// DC_ONLY(0x161428, cb 0x4A) - no retail tie yet
+unsigned char InitializePrimaryStatNames()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:328
+// DC_ONLY(0x161474, cb 0x6E) - no retail tie yet
+unsigned char InitializeSecondarySkillLevelNames()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:353
+// DC_ONLY(0x1614e4, cb 0xA8) - no retail tie yet
+unsigned char InitializeNeutralBuildingText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:380
+// DC_ONLY(0x16158c, cb 0x10C) - no retail tie yet
+unsigned char InitializeSpecialBuildingText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:411
+// DC_ONLY(0x161698, cb 0xAE) - no retail tie yet
+unsigned char InitializeDwellingText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:441
+// DC_ONLY(0x161748, cb 0x8E) - no retail tie yet
+unsigned char InitializeTownNameText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:465
+// DC_ONLY(0x1617d8, cb 0x4A) - no retail tie yet
+unsigned char InitializeHeroBioText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:481
+// DC_ONLY(0x161824, cb 0x4A) - no retail tie yet
+unsigned char InitializeCastleText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:496
+// DC_ONLY(0x161870, cb 0x4A) - no retail tie yet
+unsigned char InitializeTavernText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:511
+// DC_ONLY(0x1618bc, cb 0xAE) - no retail tie yet
+unsigned char InitializeHallText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:526
+// DC_ONLY(0x16196c, cb 0x4A) - no retail tie yet
+unsigned char InitializeTownText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:541
+// DC_ONLY(0x1619b8, cb 0x4A) - no retail tie yet
+unsigned char InitializeOverviewText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:556
+// DC_ONLY(0x161a04, cb 0x4A) - no retail tie yet
+unsigned char InitializeHeroText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:571
+// DC_ONLY(0x161a50, cb 0x54) - no retail tie yet
+unsigned char InitializeCampaignDialogText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:590
+// DC_ONLY(0x161aa4, cb 0x40) - no retail tie yet
+unsigned char InitializeCreditsText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:641
+// DC_ONLY(0x161ae4, cb 0x822) - no retail tie yet
+unsigned char InitializeHelpText()
+{
+    // @stub
+}
+
+// E:\gamedcs\text.cpp:1010
+// DC_ONLY(0x162308, cb 0x608) - no retail tie yet
+unsigned char InitializeArrayText()
+{
+    // @stub
+}
+
+// E:\gamedcs\TextResource.h:113
+// DC_ONLY(0x162910, cb 0x24) - no retail tie yet
+int TSpreadsheetResource::GetNumberOfColumns(int r)
+{
+    // @stub
+}
+
+// E:\gamedcs\TextResource.h:120
+// DC_ONLY(0x162934, cb 0x28) - no retail tie yet
+const char* TSpreadsheetResource::GetSpreadsheet(int r, int c)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x16295c, cb 0xC) - no retail tie yet
+unsigned std::vector<char *,std::allocator<char *> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x162968, cb 0x20) - no retail tie yet
+char** std::vector<char *,std::allocator<char *> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x162988, cb 0x4) - no retail tie yet
+char** std::vector<char *,std::allocator<char *> >::begin()
+{
+    // @stub
+}
+

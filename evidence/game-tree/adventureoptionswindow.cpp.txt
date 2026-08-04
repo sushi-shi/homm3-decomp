@@ -1,0 +1,179 @@
+// E:\gamedcs\adventureoptionswindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module adventureoptionswindow.obj, 25 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x4a94, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x4abc, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x4acc, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x4af4, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x4b04, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x4b2c, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x4b3c, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x4b64, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x4b74, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x4b9c, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x4bac, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x4bd4, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x4be4, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x4c0c, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x4c1c, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x4c44, cb 0x10) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x4c54, cb 0x28) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x4c7c, cb 0x10) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x4c8c, cb 0x28) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x4cb4, cb 0x40) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\adventureoptionswindow.cpp:40
+// DC_ONLY(0x4cf4, cb 0x458) - no retail tie yet
+void TAdventureOptionsWindow::TAdventureOptionsWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\adventureoptionswindow.cpp:105
+// DC_ONLY(0x514c, cb 0x62) - no retail tie yet
+void TAdventureOptionsWindow::~TAdventureOptionsWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\adventureoptionswindow.cpp:112
+// DC_ONLY(0x51b0, cb 0x54) - no retail tie yet
+int TAdventureOptionsWindow::convertID2HelpID(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\adventureoptionswindow.cpp:143
+// DC_ONLY(0x5204, cb 0x1DC) - no retail tie yet
+int TAdventureOptionsWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\adventureoptionswindow.cpp:101
+// DC_ONLY(0x53e0, cb 0x34) - no retail tie yet
+void* TAdventureOptionsWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

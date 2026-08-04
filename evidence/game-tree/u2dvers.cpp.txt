@@ -1,0 +1,25 @@
+// E:\gamedcs\u2dvers.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module u2dvers.obj, 3 procs, 0 retail-tied.
+
+// E:\gamedcs\u2dvers.cpp:33
+// DC_ONLY(0x18e3b0, cb 0x4) - no retail tie yet
+void TFileVersionInfo::TFileVersionInfo(const char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\u2dvers.cpp:56
+// DC_ONLY(0x18e3b4, cb 0x4) - no retail tie yet
+void TFileVersionInfo::~TFileVersionInfo()
+{
+    // @stub
+}
+
+// E:\gamedcs\u2dvers.cpp:63
+// DC_ONLY(0x18e3b8, cb 0x4) - no retail tie yet
+unsigned char TFileVersionInfo::GetVersionInfo(const char* name, std::basic_string<char,std::char_traits<char>,std::allocator<char>* buffer)
+{
+    // @stub
+}
+

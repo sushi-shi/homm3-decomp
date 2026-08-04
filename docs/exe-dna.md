@@ -391,6 +391,26 @@ migrating into `DoAdvCommand`). Per-tier corroboration for the link-order
 names: 34 of the 145 `dc-linkorder` rows are corroborated by shared
 callers, 16 flagged disjoint — review candidates, not yet demotions.
 
+## The game tree (`carve gametree`)
+
+With the Dreamcast side fully named and the dcmap ties in place, the source
+tree materializes: **141 compilands, one carcass file each**
+(`evidence/game-tree/`), functions in link order with original signatures
+and FILE:LINE from the dump. Every address in a `VA()` claim is the
+**pinned retail image's** (754 tied so far: 599 anchors, 155 bracket
+assignments); a proc with no tie keeps its Dreamcast coordinates in a
+`DC_ONLY` comment and never fakes a VA — the exact inversion of attempt-1's
+tree, which annotated foreign-pressing and cross-architecture values.
+
+Link order does one more job here: a module's first..last tied rva is its
+**retail extent**, and the 1,020 carved retail functions inside extents
+that tie to no DC proc are listed per-TU as *unmatched residents* — the
+Complete-era additions and still-ambiguous overloads (e.g. `hero::hero`
+sits hd-named but untied inside `advmgr.cpp`'s extent). Each carcass file
+is therefore also that TU's decomp work list: what RoE had, what Complete
+added, and which addresses are still unclaimed. `INDEX.md` tabulates
+per-module coverage; `evidence/retail-game-tree.csv` is the flat join.
+
 ## Caveats
 
 - The masked matcher proves presence, not absence: a library built into the

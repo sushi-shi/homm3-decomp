@@ -71,6 +71,9 @@ dcmap        transfer Dreamcast CodeView names by link order (anchor + LIS +
 dcxref       the Dreamcast build's own xref graph (SH4 literal pools + BSR,
              $HOMM3_DC_EXE) -> evidence/dc-xref-graph.tsv, plus the
              cross-pressing caller-set check -> evidence/retail-dc-xref-check.csv
+gametree     materialize the game source tree (one carcass per Dreamcast
+             compiland, retail VAs via the dcmap ties, per-TU unmatched
+             residents) -> evidence/game-tree/ + evidence/retail-game-tree.csv
 naming       give EVERY carved function a name (total coverage, unique,
              evidence-tiered) -> evidence/retail-symbols.csv; needs the Ghidra
              xref export (ghidra/export_xrefs.py -> build/dna/

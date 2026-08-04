@@ -1,0 +1,18 @@
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\onexit.c - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module onexit.obj, 2 procs, 0 retail-tied.
+
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\onexit.c:8
+// DC_ONLY(0x19cc74, cb 0x9C) - no retail tie yet
+int (*)()* _onexit(int (*)()* func)
+{
+    // @stub
+}
+
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\onexit.c:27
+// DC_ONLY(0x19cd10, cb 0x20) - no retail tie yet
+int atexit(void (*)()* func)
+{
+    // @stub
+}
+

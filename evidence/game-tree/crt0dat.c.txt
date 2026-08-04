@@ -1,0 +1,53 @@
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module crt0dat.obj, 7 procs, 0 retail-tied.
+
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:14
+// DC_ONLY(0x19cd30, cb 0x34) - no retail tie yet
+void _cinit()
+{
+    // @stub
+}
+
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:22
+// DC_ONLY(0x19cd64, cb 0x18) - no retail tie yet
+void exit(int code)
+{
+    // @stub
+}
+
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:26
+// DC_ONLY(0x19cd7c, cb 0x18) - no retail tie yet
+void _exit(int code)
+{
+    // @stub
+}
+
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:30
+// DC_ONLY(0x19cd94, cb 0x1C) - no retail tie yet
+void _cexit()
+{
+    // @stub
+}
+
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:34
+// DC_ONLY(0x19cdb0, cb 0x1C) - no retail tie yet
+void _c_exit()
+{
+    // @stub
+}
+
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:40
+// DC_ONLY(0x19cdcc, cb 0x86) - no retail tie yet
+void doexit(int code, int quick, int retcaller)
+{
+    // @stub
+}
+
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\crt0dat.c:57
+// DC_ONLY(0x19ce54, cb 0x2A) - no retail tie yet
+void _initterm(void (*)()** pfbegin, void (*)()** pfend)
+{
+    // @stub
+}
+

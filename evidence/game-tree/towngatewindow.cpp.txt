@@ -1,0 +1,249 @@
+// E:\gamedcs\towngatewindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module towngatewindow.obj, 35 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x168e50, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x168e78, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x168e88, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x168eb0, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x168ec0, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x168ee8, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x168ef8, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x168f20, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x168f30, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x168f58, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x168f68, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x168f90, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x168fa0, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x168fc8, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x168fd8, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x169000, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x169010, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x169038, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x169048, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x169070, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\towngatewindow.cpp:40
+// DC_ONLY(0x1690b0, cb 0x774) - no retail tie yet
+void TTownGateWindow::TTownGateWindow(unsigned char _adventure_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\towngatewindow.cpp:101
+// DC_ONLY(0x169824, cb 0x6A) - no retail tie yet
+void TTownGateWindow::~TTownGateWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\towngatewindow.cpp:110
+// DC_ONLY(0x169890, cb 0x1C) - no retail tie yet
+void TTownGateWindow::AddTown(int new_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\towngatewindow.cpp:115
+// DC_ONLY(0x1698ac, cb 0x13C) - no retail tie yet
+void TTownGateWindow::UpdateTownLocator(int i)
+{
+    // @stub
+}
+
+// E:\gamedcs\towngatewindow.cpp:168
+// DC_ONLY(0x1699e8, cb 0x9E) - no retail tie yet
+void TTownGateWindow::UpdateTownLocators()
+{
+    // @stub
+}
+
+// E:\gamedcs\towngatewindow.cpp:184
+// DC_ONLY(0x169a88, cb 0x58) - no retail tie yet
+void TTownGateWindow::DoModal()
+{
+    // @stub
+}
+
+// E:\gamedcs\towngatewindow.cpp:208
+// DC_ONLY(0x169ae0, cb 0xC6) - no retail tie yet
+int TTownGateWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\towngatewindow.cpp:259
+// DC_ONLY(0x169ba8, cb 0x64) - no retail tie yet
+void TownGateSliderCallback(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:897
+// DC_ONLY(0x169c0c, cb 0x54) - no retail tie yet
+unsigned char game::GetNumAllies(int playerNum)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:1022
+// DC_ONLY(0x169c60, cb 0x1C) - no retail tie yet
+const town* game::GetTown(int which)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:1027
+// DC_ONLY(0x169c7c, cb 0x1C) - no retail tie yet
+const char* game::GetTownName(int iTownId)
+{
+    // @stub
+}
+
+// E:\gamedcs\towngatewindow.cpp:98
+// DC_ONLY(0x169c98, cb 0x34) - no retail tie yet
+void* TTownGateWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:68
+// DC_ONLY(0x169ccc, cb 0x94) - no retail tie yet
+void std::vector<int,std::allocator<int> >::reserve(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:199
+// DC_ONLY(0x169d60, cb 0xC) - no retail tie yet
+unsigned std::vector<int,std::allocator<int> >::capacity()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:514
+// DC_ONLY(0x169d6c, cb 0x38) - no retail tie yet
+std::vector<int,std::allocator<int> >::_M_allocate_and_copy(unsigned __n, int* __first, int* __last)
+{
+    // @stub
+}
+

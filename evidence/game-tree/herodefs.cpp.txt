@@ -1,0 +1,103 @@
+// E:\gamedcs\herodefs.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module herodefs.obj, 14 procs, 14 retail-tied.
+// retail extent 0xe67a0..0xe714f (VA 0x4e67a0..0x4e714f)
+
+// E:\gamedcs\herodefs.cpp:204
+VA(0x004e67a0, 0x176)  // linkorder, dc 0xd5a40
+unsigned char InitializeHeroTraitsTable()
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:238
+VA(0x004e6920, 0x1E2)  // linkorder, dc 0xd5ab4
+unsigned char InitializeHeroClassTraitsTable()
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:351
+VA(0x004e6b10, 0x1C8)  // linkorder, dc 0xd5b28
+unsigned char InitializeSSkillTraitsTable()
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:409
+VA(0x004e6d60, 0x20)  // linkorder, dc 0xd5bc0
+void InitializeHeroTraits(int id, const std::vector<char* resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:437
+VA(0x004e6d80, 0x59)  // linkorder, dc 0xd5ccc
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:441
+VA(0x004e6de0, 0x60)  // linkorder, dc 0xd5d28
+void InitializeHeroClassTraits(int id, const std::vector<char* resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:484
+VA(0x004e6e40, 0x61)  // linkorder, dc 0xd5ed0
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:489
+VA(0x004e6eb0, 0x5F)  // linkorder, dc 0xd5ee8
+void InitializeSSkillTraits(int id, const std::vector<char* resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:513
+VA(0x004e6f10, 0x5F)  // linkorder, dc 0xd607c
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:513
+VA(0x004e6f70, 0x5F)  // linkorder, dc 0xd6094
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:391
+VA(0x004e6fd0, 0x5F)  // linkorder, dc 0xd60d4
+void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:394
+VA(0x004e7030, 0x5F)  // linkorder, dc 0xd60dc
+void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:396
+VA(0x004e7090, 0x5F)  // linkorder, dc 0xd60f4
+void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
+{
+    // @stub
+}
+
+// E:\gamedcs\herodefs.cpp:398
+VA(0x004e70f0, 0x5F)  // linkorder, dc 0xd60f8
+char* `anonymous namespace'::TAutoStrPtr::get()
+{
+    // @stub
+}
+

@@ -1,0 +1,648 @@
+// E:\gamedcs\combatwindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module combatwindow.obj, 92 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x693d8, cb 0x28) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x69400, cb 0x10) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x69410, cb 0x28) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x69438, cb 0x10) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x69448, cb 0x28) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x69470, cb 0x10) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x69480, cb 0x28) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x694a8, cb 0x10) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x694b8, cb 0x28) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x694e0, cb 0x10) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x694f0, cb 0x28) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x69518, cb 0x10) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x69528, cb 0x28) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x69550, cb 0x10) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x69560, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x69588, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x69598, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x695c0, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x695d0, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x695f8, cb 0x40) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:42
+// DC_ONLY(0x69638, cb 0x218) - no retail tie yet
+void CheckCombatCheatCode(std::basic_string<char,std::char_traits<char>,std::allocator<char>* chatString)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:221
+// DC_ONLY(0x69850, cb 0x2DC) - no retail tie yet
+void TCombatWindow::TCombatWindow(unsigned char do_placement)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:281
+// DC_ONLY(0x69b2c, cb 0x40) - no retail tie yet
+void TCombatWindow::Close(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:293
+// DC_ONLY(0x69b6c, cb 0x104) - no retail tie yet
+void TCombatWindow::~TCombatWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:322
+// DC_ONLY(0x69c70, cb 0x6A) - no retail tie yet
+int TCombatWindow::convertID2HelpID(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:356
+// DC_ONLY(0x69cdc, cb 0x7E) - no retail tie yet
+unsigned char TCombatWindow::ProcessRightSelect(const message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:382
+// DC_ONLY(0x69d5c, cb 0x4C) - no retail tie yet
+void TCombatWindow::set_rollover(const char* new_text)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:393
+// DC_ONLY(0x69da8, cb 0x56) - no retail tie yet
+void TCombatWindow::handle_widget_hover(widget* current_widget)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:417
+// DC_ONLY(0x69e00, cb 0x3A) - no retail tie yet
+void TCombatWindow::ClearCombatMessages()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:431
+// DC_ONLY(0x69e3c, cb 0xE8) - no retail tie yet
+void TCombatWindow::show_messages(long start)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:456
+// DC_ONLY(0x69f24, cb 0x46) - no retail tie yet
+void TCombatWindow::scroll_rollover(long delta)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:475
+// DC_ONLY(0x69f6c, cb 0x26) - no retail tie yet
+int TCombatWindow::scroll_up(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:491
+// DC_ONLY(0x69f94, cb 0x26) - no retail tie yet
+int TCombatWindow::scroll_down(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:508
+// DC_ONLY(0x69fbc, cb 0x242) - no retail tie yet
+void TCombatWindow::combat_message(const char* new_text, unsigned char keep, unsigned char priority)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:583
+// DC_ONLY(0x6a200, cb 0x62) - no retail tie yet
+void TCombatWindow::EndPlacementPhase()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:603
+// DC_ONLY(0x6a264, cb 0x5C) - no retail tie yet
+void TCombatWindow::DrawChatText(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:615
+// DC_ONLY(0x6a2c0, cb 0x50) - no retail tie yet
+void TCombatWindow::DrawChatEdit(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:633
+// DC_ONLY(0x6a310, cb 0xB0) - no retail tie yet
+void TCombatWindow::OnChatActivate(unsigned char active)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:652
+// DC_ONLY(0x6a3c0, cb 0x28) - no retail tie yet
+void TCombatWindow::DrawWindow(unsigned char update, int low, int high)
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.h:231
+// DC_ONLY(0x6a3e8, cb 0x4) - no retail tie yet
+const char* widget::get_help_text()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:139
+// DC_ONLY(0x6a3ec, cb 0x98) - no retail tie yet
+void CCombatChatEdit::CCombatChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:143
+// DC_ONLY(0x6a484, cb 0x4) - no retail tie yet
+int CCombatChatEdit::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:171
+// DC_ONLY(0x6a488, cb 0xB8) - no retail tie yet
+void CCombatChatEdit::SendChat(const char* sChat, int toWho)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:193
+// DC_ONLY(0x6a540, cb 0x50) - no retail tie yet
+int CCombatChatEdit::OnEscape(message msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:207
+// DC_ONLY(0x6a590, cb 0x4C) - no retail tie yet
+void CCombatChatEdit::UpdateScreen()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:213
+// DC_ONLY(0x6a5dc, cb 0x34) - no retail tie yet
+void* CCombatChatEdit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:213
+// DC_ONLY(0x6a610, cb 0x18) - no retail tie yet
+void CCombatChatEdit::~CCombatChatEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:278
+// DC_ONLY(0x6a628, cb 0x34) - no retail tie yet
+void* TCombatWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatwindow.cpp:313
+// DC_ONLY(0x6a65c, cb 0x34) - no retail tie yet
+void* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:563
+// DC_ONLY(0x6a690, cb 0x6) - no retail tie yet
+char* std::basic_string<char,std::char_traits<char>,std::allocator<char> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:1259
+// DC_ONLY(0x6a698, cb 0x8C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> std::basic_string<char,std::char_traits<char>,std::allocator<char> >::substr(__$ReturnUdt, unsigned __pos, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x6a724, cb 0xC) - no retail tie yet
+unsigned std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x6a730, cb 0x20) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>** std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x6a750, cb 0x1C) - no retail tie yet
+void std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,(const std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x6a76c, cb 0x28) - no retail tie yet
+void std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,s()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0x6a794, cb 0x3C) - no retail tie yet
+void std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *> >::push_back(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x6a7d0, cb 0x4) - no retail tie yet
+void std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *>::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x6a7d4, cb 0x4) - no retail tie yet
+void std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *>::~allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:364
+// DC_ONLY(0x6a7d8, cb 0x38) - no retail tie yet
+void std::basic_string<char,std::char_traits<char>,std::allocator<char> >::basic_string<char,std::char_traits<char>,std::allocator<char> >(const char* __f, const char* __l, const std::allocator<char>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x6a810, cb 0x4) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>** std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x6a814, cb 0x2C) - no retail tie yet
+void std::_Vector_base<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::a(const std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x6a840, cb 0x30) - no retail tie yet
+void std::_Vector_base<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::al()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:469
+// DC_ONLY(0x6a870, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<std::basic_string<char,std::char_traits<char>,std::allocator<char> > * *,std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x6a888, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<std::basic_string<char,std::char_traits<char>,std::allocator<char> > * *,std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> >(const std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>* __a, std::basic_string<char,std::char_traits<char>,std::allocator<char>*** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x6a894, cb 0x2C) - no retail tie yet
+void std::_STL_(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x6a8c0, cb 0x1C) - no retail tie yet
+void std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *>::deallocate(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.c:205
+// DC_ONLY(0x6a8dc, cb 0x4) - no retail tie yet
+void std::_String_base<char,std::allocator<char> >::_M_throw_out_of_range()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.c:551
+// DC_ONLY(0x6a8e0, cb 0x78) - no retail tie yet
+unsigned std::basic_string<char,std::char_traits<char>,std::allocator<char> >::find(char __c, unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0x6a958, cb 0xCC) - no retail tie yet
+void std::vector<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *,std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *> >::_M_insert_overflow(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __position, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x6aa24, cb 0x30) - no retail tie yet
+void std::destroy(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x6aa54, cb 0x28) - no retail tie yet
+void std::construct(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __p, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x6aa7c, cb 0x4) - no retail tie yet
+std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>* std::__stl_alloc_rebind(std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char>* __a, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x6aa80, cb 0x28) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>** std::_ST(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x6aaa8, cb 0x24) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>** std::allocator<std::basic_string<char,std::char_traits<char>,std::allocator<char> > *>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_function.h:269
+// DC_ONLY(0x6aacc, cb 0x38) - no retail tie yet
+std::binder2nd<std::_Eq_traits<std::char_traits<char> std::bind2nd(__$ReturnUdt, const std::_Eq_traits<std::char_traits<char>* __fn, const char* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.h:112
+// DC_ONLY(0x6ab04, cb 0x20) - no retail tie yet
+const char* std::find_if(const char* __first, const char* __last, std::binder2nd<std::_Eq_traits<std::char_traits<char> __pred)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x6ab24, cb 0x38) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>** std::uninitialized_copy(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __last, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0x6ab5c, cb 0x38) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>** std::uninitialized_fill_n(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __first, unsigned __n, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x6ab94, cb 0x4) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>** std::value_type(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x6ab98, cb 0x1C) - no retail tie yet
+void std::__destroy(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __last, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_function.h:257
+// DC_ONLY(0x6abb4, cb 0x10) - no retail tie yet
+void std::binder2nd<std::_Eq_traits<std::char_traits<char> > >::binder2nd<std::_Eq_traits<std::char_traits<char> > >(const std::_Eq_traits<std::char_traits<char>* __x, const char* __y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.h:77
+// DC_ONLY(0x6abc4, cb 0x38) - no retail tie yet
+const char* std::find_if(const char* __first, const char* __last, std::binder2nd<std::_Eq_traits<std::char_traits<char> __pred, std::input_iterator_tag __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x6abfc, cb 0x1C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>** std::__uninitialized_copy(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __last, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __result, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0x6ac18, cb 0x1C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>** std::__uninitialized_fill_n(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __first, unsigned __n, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __x, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x6ac34, cb 0x30) - no retail tie yet
+void std::__destroy_aux(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_function.h:261
+// DC_ONLY(0x6ac64, cb 0x18) - no retail tie yet
+unsigned char std::binder2nd<std::_Eq_traits<std::char_traits<char> > >::operator()(const char* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_ctraits_fns.h:34
+// DC_ONLY(0x6ac7c, cb 0x18) - no retail tie yet
+unsigned char std::_Eq_traits<std::char_traits<char> >::operator()(const char* __x, const char* __y)
+{
+    // @stub
+}
+
+// ..\stlport\char_traits.h:74
+// DC_ONLY(0x6ac94, cb 0xA) - no retail tie yet
+unsigned char std::__char_traits_base<char,int>::eq(const char* __c1, const char* __c2)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x6aca0, cb 0x3C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>** std::__uninitialized_copy_aux(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __first, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __last, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0x6acdc, cb 0x3C) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char>** std::__uninitialized_fill_n_aux(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __first, unsigned __n, std::basic_string<char,std::char_traits<char>,std::allocator<char>** __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x6ad18, cb 0x1C) - no retail tie yet
+void std::destroy(std::basic_string<char,std::char_traits<char>,std::allocator<char>** __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x6ad34, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+

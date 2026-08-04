@@ -1,0 +1,60 @@
+// E:\gamedcs\zlib113\inflate.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module inflate.obj, 8 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\inflate.cpp:57
+// DC_ONLY(0xdb48c, cb 0x3E) - no retail tie yet
+int inflateReset@4(z_stream_s* z)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\inflate.cpp:71
+// DC_ONLY(0xdb4cc, cb 0x3E) - no retail tie yet
+int inflateEnd@4(z_stream_s* z)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\inflate.cpp:84
+// DC_ONLY(0xdb50c, cb 0xC4) - no retail tie yet
+int inflateInit2_@16(z_stream_s* z, int w, const char* version, int stream_size)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\inflate.cpp:137
+// DC_ONLY(0xdb5d0, cb 0x14) - no retail tie yet
+int inflateInit_@12(z_stream_s* z, const char* version, int stream_size)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\inflate.cpp:146
+// DC_ONLY(0xdb5e4, cb 0x380) - no retail tie yet
+int inflate@8(z_stream_s* z, int f)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\inflate.cpp:272
+// DC_ONLY(0xdb964, cb 0x90) - no retail tie yet
+int inflateSetDictionary@12(z_stream_s* z, const unsigned char* dictionary, unsigned dictLength)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\inflate.cpp:293
+// DC_ONLY(0xdb9f4, cb 0xB0) - no retail tie yet
+int inflateSync@4(z_stream_s* z)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\inflate.cpp:350
+// DC_ONLY(0xdbaa4, cb 0x34) - no retail tie yet
+int inflateSyncPoint@4(z_stream_s* z)
+{
+    // @stub
+}
+

@@ -1,0 +1,1905 @@
+// E:\gamedcs\remote.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module remote.obj, 260 procs, 18 retail-tied.
+// retail extent 0x153d00..0x157e21 (VA 0x553d00..0x557e21)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x11b5a4, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x11b5cc, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x11b5dc, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x11b604, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x11b614, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x11b63c, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x11b64c, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x11b674, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x11b684, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x11b6ac, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x11b6bc, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x11b6e4, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x11b6f4, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x11b71c, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x11b72c, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x11b754, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x11b764, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x11b78c, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x11b79c, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x11b7c4, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:65
+// DC_ONLY(0x11b804, cb 0x12) - no retail tie yet
+void $E487()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:65
+// DC_ONLY(0x11b818, cb 0x12) - no retail tie yet
+void $E488()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:65
+// DC_ONLY(0x11b82c, cb 0x14) - no retail tie yet
+void $E489()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:65
+// DC_ONLY(0x11b840, cb 0x14) - no retail tie yet
+void $E490()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:66
+// DC_ONLY(0x11b854, cb 0x16) - no retail tie yet
+void $E492()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:66
+// DC_ONLY(0x11b86c, cb 0x10) - no retail tie yet
+void $E493()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:69
+// DC_ONLY(0x11b87c, cb 0x14) - no retail tie yet
+void $E495()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:69
+// DC_ONLY(0x11b890, cb 0x10) - no retail tie yet
+void $E496()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:79
+// DC_ONLY(0x11b8a0, cb 0x14) - no retail tie yet
+void $E498()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:79
+// DC_ONLY(0x11b8b4, cb 0x10) - no retail tie yet
+void $E499()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:102
+// DC_ONLY(0x11b8c4, cb 0x7A) - no retail tie yet
+void DPSD(int iDPErr, char* cFile, int iLine)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:129
+// DC_ONLY(0x11b940, cb 0x2A) - no retail tie yet
+int calc_crc_long(unsigned char* buffer, int len)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:146
+// DC_ONLY(0x11b96c, cb 0xCC) - no retail tie yet
+void CDPlayHeroes::CDPlayHeroes()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:155
+// DC_ONLY(0x11ba38, cb 0x46) - no retail tie yet
+void CDPlayHeroes::~CDPlayHeroes()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:160
+// DC_ONLY(0x11ba80, cb 0x58) - no retail tie yet
+void CDPlayHeroes::DestroyMsgQueue()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:179
+// DC_ONLY(0x11bad8, cb 0x48) - no retail tie yet
+unsigned char CDPlayHeroes::SysMsgHost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:192
+// DC_ONLY(0x11bb20, cb 0x20) - no retail tie yet
+unsigned char CDPlayHeroes::SysMsgSessionLost(DPMSG_GENERIC* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:204
+// DC_ONLY(0x11bb40, cb 0x20) - no retail tie yet
+unsigned char CDPlayHeroes::SysMsgDestroyPlayerOrGroup(DPMSG_DESTROYPLAYERORGROUP* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:214
+// DC_ONLY(0x11bb60, cb 0x3A) - no retail tie yet
+unsigned char CDPlayHeroes::SysMsgCreatePlayerOrGroup(DPMSG_CREATEPLAYERORGROUP* pSysMsg, unsigned long toID)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:222
+// DC_ONLY(0x11bb9c, cb 0xEC) - no retail tie yet
+unsigned char CDPlayHeroes::PollRemote()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:304
+// DC_ONLY(0x11bc88, cb 0xD2) - no retail tie yet
+unsigned char CDPlayHeroes::HandleLowLevelMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:350
+// DC_ONLY(0x11bd5c, cb 0xF4) - no retail tie yet
+CNetMsg* CDPlayHeroes::GetRemoteData(unsigned char removeFromQueue, unsigned char* wasCompressed)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:407
+// DC_ONLY(0x11be50, cb 0x44) - no retail tie yet
+unsigned char CDPlayHeroes::TransmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:425
+// DC_ONLY(0x11be94, cb 0xAA) - no retail tie yet
+CNetMsg* CDPlayHeroes::CompressMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:463
+// DC_ONLY(0x11bf40, cb 0xAC) - no retail tie yet
+CNetMsg* CDPlayHeroes::UncompressMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:496
+// DC_ONLY(0x11bfec, cb 0x60) - no retail tie yet
+unsigned char CDPlayHeroes::TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:578
+// DC_ONLY(0x11c04c, cb 0x18A) - no retail tie yet
+unsigned char CDPlayHeroes::SendIt(CNetMsg* pMsg, unsigned long dpidTo, unsigned char guaranteed)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:685
+// DC_ONLY(0x11c1d8, cb 0x1E) - no retail tie yet
+void CDPlayHeroes::HandleHostXFer()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:690
+// DC_ONLY(0x11c1f8, cb 0x30) - no retail tie yet
+void CDPlayHeroes::HandlePlayerDrop(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:697
+// DC_ONLY(0x11c228, cb 0x4) - no retail tie yet
+void CDPlayHeroes::HandleNewPlayer()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:702
+// DC_ONLY(0x11c22c, cb 0x3A) - no retail tie yet
+void CDPlayHeroes::QueueMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:783
+// DC_ONLY(0x11c268, cb 0x28) - no retail tie yet
+void CDPlayHeroes::SetNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:793
+// DC_ONLY(0x11c290, cb 0x6) - no retail tie yet
+CNetMsgHandler* CDPlayHeroes::GetNetMsgHandler()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:804
+// DC_ONLY(0x11c298, cb 0x7C) - no retail tie yet
+void CChatManager::CChatManager(int maxChatLines)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:829
+// DC_ONLY(0x11c314, cb 0x1C) - no retail tie yet
+void CChatManager::~CChatManager()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:835
+// DC_ONLY(0x11c330, cb 0x42) - no retail tie yet
+void CChatManager::Init()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:844
+// DC_ONLY(0x11c374, cb 0x34) - no retail tie yet
+void CChatManager::ShutDown()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:857
+// DC_ONLY(0x11c3a8, cb 0x104) - no retail tie yet
+void CChatManager::AddChat(const char* cChatMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:904
+// DC_ONLY(0x11c4ac, cb 0xAA) - no retail tie yet
+void CChatManager::TurnDurationMsg(const char* cChatMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:947
+// DC_ONLY(0x11c558, cb 0x64) - no retail tie yet
+void CChatManager::SystemMsg(const char* cChatMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:968
+// DC_ONLY(0x11c5bc, cb 0x9C) - no retail tie yet
+void CChatManager::PlayerDropMsg(const char* cChatMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:990
+// DC_ONLY(0x11c658, cb 0x64) - no retail tie yet
+void CChatManager::PlayerEnterMsg(const char* cChatMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1033
+VA(0x00553d00, 0xA1)  // anchor-global, dc 0x11c6bc
+void CChatManager::UpdateWidget(textWidget* widget, unsigned char killOld, int numLines)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1060
+// DC_ONLY(0x11c71c, cb 0x1A) - no retail tie yet
+int CChatManager::GetNextFreeMsgNbr()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1065
+// DC_ONLY(0x11c738, cb 0x1A) - no retail tie yet
+int CChatManager::GetNextMsgNbr(int msgNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1070
+VA(0x00553db0, 0x33)  // anchor-global, dc 0x11c754
+unsigned char CChatManager::HasOldChat()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1080
+VA(0x00553df0, 0xE4)  // anchor-global, dc 0x11c7b0
+void CChatManager::KillOldChat()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1115
+// DC_ONLY(0x11c87c, cb 0x52) - no retail tie yet
+void CChatManager::UpdateNewChat()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1128
+VA(0x00553ee0, 0x163)  // anchor-global, dc 0x11c8d0
+void CChatManager::UpdateWidgetText(int numLines, textWidget* widget)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1195
+VA(0x00554050, 0xD)  // anchor-global, dc 0x11c9fc
+void CChatManager::PauseTimeOuts()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1200
+VA(0x00554060, 0x4B)  // anchor-global, dc 0x11ca14
+void CChatManager::ResumeTimeOuts()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1213
+// DC_ONLY(0x11ca60, cb 0x10) - no retail tie yet
+unsigned char CChatManager::HasChat()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1221
+VA(0x005540b0, 0x20)  // anchor-bracket, dc 0x11ca70
+void CChatManager::ClearChat()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1231
+VA(0x005540d0, 0x9C)  // anchor-global, dc 0x11cabc
+void CChatManager::SetMaxLines(int maxChatLines)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1245
+VA(0x00554170, 0x23)  // anchor-global, dc 0x11cb24
+void CChatManager::SetPosition(int newPos)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1293
+// DC_ONLY(0x11cb48, cb 0xAC) - no retail tie yet
+void CChatEdit::CChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1297
+// DC_ONLY(0x11cbf4, cb 0x38) - no retail tie yet
+void CChatEdit::UpdateScreen()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1303
+// DC_ONLY(0x11cc2c, cb 0xE6) - no retail tie yet
+int CChatEdit::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1331
+// DC_ONLY(0x11cd14, cb 0x50) - no retail tie yet
+int CChatEdit::OnFunctionKey(message msg, int toWho)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1345
+// DC_ONLY(0x11cd64, cb 0x4A) - no retail tie yet
+int CChatEdit::OnEnter(message msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1359
+// DC_ONLY(0x11cdb0, cb 0x2A) - no retail tie yet
+int CChatEdit::OnEscape(message msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1367
+// DC_ONLY(0x11cddc, cb 0x1A) - no retail tie yet
+unsigned char CChatEdit::IsOpen()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1375
+// DC_ONLY(0x11cdf8, cb 0x4) - no retail tie yet
+unsigned char CChatEdit::IgnoreKey(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1384
+// DC_ONLY(0x11cdfc, cb 0x18) - no retail tie yet
+CNetMsg* GetRemoteData(unsigned char bRemoveFromBuffer, unsigned char* wasCompressed)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1390
+// DC_ONLY(0x11ce14, cb 0x54) - no retail tie yet
+unsigned char InitRemote(eNetGameType iMPType, const char* sUserName)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1411
+// DC_ONLY(0x11ce68, cb 0xCC) - no retail tie yet
+void RemoteCleanup()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1438
+// DC_ONLY(0x11cf34, cb 0x30) - no retail tie yet
+int TransmitRemoteDataDPID(CNetMsg* pMsg, unsigned long dpidTo, unsigned char compressMsg, unsigned char guaranteed)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1446
+// DC_ONLY(0x11cf64, cb 0x30) - no retail tie yet
+int TransmitRemoteData(CNetMsg* pMsg, int toWho, unsigned char compressMsg, unsigned char guaranteed)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1454
+// DC_ONLY(0x11cf94, cb 0x8A) - no retail tie yet
+void PollRemote()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1490
+// DC_ONLY(0x11d020, cb 0x1A6) - no retail tie yet
+void SendChat(const char* cChat, int toWho)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1529
+// DC_ONLY(0x11d1c8, cb 0x22) - no retail tie yet
+void ReceiveChat(char* cChat, int fromWho)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1539
+// DC_ONLY(0x11d1ec, cb 0x64) - no retail tie yet
+void CAnimatedDlg::CAnimatedDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1547
+// DC_ONLY(0x11d250, cb 0x40) - no retail tie yet
+void CAnimatedDlg::~CAnimatedDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1553
+// DC_ONLY(0x11d290, cb 0x20) - no retail tie yet
+unsigned char CAnimatedDlg::Setup(const char* cText, font* pFont, const char* sSprite, int seq)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1563
+// DC_ONLY(0x11d2b0, cb 0xE2) - no retail tie yet
+void CAnimatedDlg::CalcSpriteDimensions(CSprite* pSprite, int* maxWidth, int* maxHeight, int* minY)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1606
+// DC_ONLY(0x11d394, cb 0xFC) - no retail tie yet
+void CAnimatedDlg::CalcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1634
+// DC_ONLY(0x11d490, cb 0xC8) - no retail tie yet
+void CAnimatedDlg::DrawSprite()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1651
+// DC_ONLY(0x11d558, cb 0x12) - no retail tie yet
+int CAnimatedDlg::handle_message(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1658
+// DC_ONLY(0x11d56c, cb 0x70) - no retail tie yet
+void CAnimatedDlg::TickAnimation()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1673
+// DC_ONLY(0x11d5dc, cb 0xEC) - no retail tie yet
+void CAnimatedDlg::DrawWindow(unsigned char update, int iLowID, int iHighIDtrue)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1829
+// DC_ONLY(0x11d6c8, cb 0x40) - no retail tie yet
+void WaitForReadyToPlayMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1841
+// DC_ONLY(0x11d708, cb 0x68) - no retail tie yet
+unsigned char CreateDPlayObject()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1858
+// DC_ONLY(0x11d770, cb 0x17C) - no retail tie yet
+unsigned char InitConnection(char* IpAddressOrPhoneNbr, _DPCOMPORTADDRESS* comportInfo)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1908
+// DC_ONLY(0x11d8ec, cb 0x12) - no retail tie yet
+void DestroyMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1916
+// DC_ONLY(0x11d900, cb 0xAC) - no retail tie yet
+unsigned char TestIfLobbyLaunched()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1960
+// DC_ONLY(0x11d9ac, cb 0x210) - no retail tie yet
+unsigned char HandleMPlayerLaunch()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2045
+// DC_ONLY(0x11dbbc, cb 0x22C) - no retail tie yet
+unsigned char LobbyLaunchConnect()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2150
+// DC_ONLY(0x11dde8, cb 0xB4) - no retail tie yet
+int GetPlayerPos(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2161
+// DC_ONLY(0x11de9c, cb 0x2C) - no retail tie yet
+int GetPriorPlayer(int gamePos)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2174
+// DC_ONLY(0x11dec8, cb 0x48) - no retail tie yet
+unsigned char IsValidHuman(CAutoArray<CDPlayPlayer>* playerArray, unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2187
+// DC_ONLY(0x11df10, cb 0x10C) - no retail tie yet
+void UpdateCurrentPlayers()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2227
+// DC_ONLY(0x11e01c, cb 0xD6) - no retail tie yet
+void HandlePlayerDrop(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2289
+// DC_ONLY(0x11e0f4, cb 0xD8) - no retail tie yet
+void HandleNewHost()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2317
+// DC_ONLY(0x11e1cc, cb 0x1D0) - no retail tie yet
+void OnPlayerDropUpdateMsg(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2375
+// DC_ONLY(0x11e39c, cb 0xF6) - no retail tie yet
+void HandlePlayerDead(int deadGuy, unsigned char showMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2419
+// DC_ONLY(0x11e494, cb 0x6A) - no retail tie yet
+void HandlePlayerWon(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2441
+// DC_ONLY(0x11e500, cb 0x98) - no retail tie yet
+void HandlePlayerLost(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2458
+// DC_ONLY(0x11e598, cb 0x96) - no retail tie yet
+void HandleNormalWinMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2479
+// DC_ONLY(0x11e630, cb 0x74) - no retail tie yet
+void CLevelPickWaitDlg::CLevelPickWaitDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2485
+// DC_ONLY(0x11e6a4, cb 0x74) - no retail tie yet
+void CLevelPickWaitDlg::WaitForLevels(int fromWho)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2503
+// DC_ONLY(0x11e718, cb 0x130) - no retail tie yet
+int CLevelPickWaitDlg::handle_message(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2546
+// DC_ONLY(0x11e848, cb 0x4C) - no retail tie yet
+int CLevelPickWaitDlg::OnPlayerDrop(CNetMsg* pNetMsg, message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2567
+// DC_ONLY(0x11e894, cb 0x4A) - no retail tie yet
+void CLevelPickWaitDlg::OnHeroLevelUpdate(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2592
+// DC_ONLY(0x11e8e0, cb 0x68) - no retail tie yet
+void CWaitForRemoteBattleDlg::CWaitForRemoteBattleDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2600
+// DC_ONLY(0x11e948, cb 0x56) - no retail tie yet
+void CWaitForRemoteBattleDlg::Wait(int playerPos)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2613
+// DC_ONLY(0x11e9a0, cb 0x158) - no retail tie yet
+int CWaitForRemoteBattleDlg::handle_message(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2660
+// DC_ONLY(0x11eaf8, cb 0x46) - no retail tie yet
+int CWaitForRemoteBattleDlg::OnPlayerDrop(CNetMsg* pNetMsg, message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2673
+// DC_ONLY(0x11eb40, cb 0x5C) - no retail tie yet
+void CSaveScreen::CSaveScreen(int w, int h)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2680
+// DC_ONLY(0x11eb9c, cb 0x2C) - no retail tie yet
+void CSaveScreen::Save(int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2689
+// DC_ONLY(0x11ebc8, cb 0x92) - no retail tie yet
+void CSaveScreen::Restore(unsigned char updateScreen)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2701
+// DC_ONLY(0x11ec5c, cb 0x8) - no retail tie yet
+unsigned char CSaveScreen::IsSaved()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2713
+// DC_ONLY(0x11ec64, cb 0x22) - no retail tie yet
+void CGameTransferSmack::CGameTransferSmack()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2724
+// DC_ONLY(0x11ec88, cb 0x32) - no retail tie yet
+void CGameTransferSmack::~CGameTransferSmack()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2733
+// DC_ONLY(0x11ecbc, cb 0x1C) - no retail tie yet
+void CGameTransferSmack::Setup(int x, int y, unsigned char sending, unsigned char drawText)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2741
+// DC_ONLY(0x11ecd8, cb 0xC) - no retail tie yet
+void CGameTransferSmack::Start()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2747
+// DC_ONLY(0x11ece4, cb 0x102) - no retail tie yet
+void CGameTransferSmack::SetPercentage(float pct)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2784
+// DC_ONLY(0x11ede8, cb 0x4) - no retail tie yet
+void CGameTransferSmack::DrawCurrentFrame()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2789
+// DC_ONLY(0x11edec, cb 0x18) - no retail tie yet
+void CGameTransferSmack::Stop()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2799
+// DC_ONLY(0x11ee04, cb 0x38) - no retail tie yet
+void CGameTransferSmack::SaveScreen()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2807
+// DC_ONLY(0x11ee3c, cb 0x16) - no retail tie yet
+void CGameTransferSmack::RestoreScreen()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2816
+// DC_ONLY(0x11ee54, cb 0x84) - no retail tie yet
+void CGameTransferDlg::CGameTransferDlg(unsigned char sending)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2821
+// DC_ONLY(0x11eed8, cb 0x5C) - no retail tie yet
+void CGameTransferDlg::CalcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2834
+// DC_ONLY(0x11ef34, cb 0x2A) - no retail tie yet
+void CNetMsgHandler::CNetMsgHandler()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2840
+// DC_ONLY(0x11ef60, cb 0x6C) - no retail tie yet
+CNetMsg* CNetMsgHandler::CheckHandleNet(unsigned char inPopup, unsigned char* msgReceived)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2875
+// DC_ONLY(0x11efcc, cb 0x4) - no retail tie yet
+void CNetMsgHandler::SetAbortPopupMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2882
+// DC_ONLY(0x11efd0, cb 0x8E) - no retail tie yet
+CNetMsg* CNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2912
+// DC_ONLY(0x11f060, cb 0xE) - no retail tie yet
+void CTurnDuration::CTurnDuration()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2920
+VA(0x00557a80, 0x15)  // anchor-global, dc 0x11f070
+unsigned char CTurnDuration::IsOn()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2931
+VA(0x00557aa0, 0x4D)  // anchor-global, dc 0x11f090
+unsigned char CTurnDuration::IsExpired()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2950
+VA(0x00557af0, 0x208)  // anchor-global, dc 0x11f108
+void CTurnDuration::CheckForWarning()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3020
+VA(0x00557d00, 0x55)  // anchor-global, dc 0x11f2fc
+unsigned char CTurnDuration::IsClose(unsigned long howClose)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3037
+VA(0x00557d60, 0xB)  // anchor-global, dc 0x11f39c
+void CTurnDuration::Clear()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3044
+VA(0x00557d70, 0x14)  // anchor-global, dc 0x11f3a8
+void CTurnDuration::SetDuration(unsigned long ms)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3050
+VA(0x00557d90, 0x3D)  // anchor-global, dc 0x11f3b0
+void CTurnDuration::Start()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3070
+// DC_ONLY(0x11f3ec, cb 0xE) - no retail tie yet
+void CTurnDuration::AddTime(unsigned long howMuch)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3076
+VA(0x00557dd0, 0x14)  // anchor-global, dc 0x11f3fc
+void CTurnDuration::Pause()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3084
+VA(0x00557df0, 0x31)  // anchor-global, dc 0x11f41c
+void CTurnDuration::Resume()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3095
+// DC_ONLY(0x11f448, cb 0x50) - no retail tie yet
+void CNetMsgHandlerPause::CNetMsgHandlerPause()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3105
+// DC_ONLY(0x11f498, cb 0x38) - no retail tie yet
+void CNetMsgHandlerPause::~CNetMsgHandlerPause()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3114
+// DC_ONLY(0x11f4d0, cb 0x16) - no retail tie yet
+void CHourGlass::CHourGlass(unsigned char thread)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3120
+// DC_ONLY(0x11f4e8, cb 0x10) - no retail tie yet
+void CHourGlass::~CHourGlass()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3125
+// DC_ONLY(0x11f4f8, cb 0x2A) - no retail tie yet
+void CHourGlass::Stop()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3134
+// DC_ONLY(0x11f524, cb 0x2A) - no retail tie yet
+void CHourGlass::Start()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:3142
+// DC_ONLY(0x11f550, cb 0x94) - no retail tie yet
+unsigned char GetQueueSize(int toWho, unsigned long* numMsgs, unsigned long* queueSize)
+{
+    // @stub
+}
+
+// E:\gamedcs\struct.h:340
+// DC_ONLY(0x11f5e4, cb 0xE) - no retail tie yet
+void CNetPlayerInfo::CNetPlayerInfo()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:179
+// DC_ONLY(0x11f5f4, cb 0x16) - no retail tie yet
+unsigned char CNetMsg::IsCompressed()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:191
+// DC_ONLY(0x11f60c, cb 0x20) - no retail tie yet
+void CReadyToPlayMsg::CReadyToPlayMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:199
+// DC_ONLY(0x11f62c, cb 0x20) - no retail tie yet
+void CAllReadyToPlayMsg::CAllReadyToPlayMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:405
+// DC_ONLY(0x11f64c, cb 0x44) - no retail tie yet
+void CChatMsg::CChatMsg(const char* sMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:411
+// DC_ONLY(0x11f690, cb 0x18) - no retail tie yet
+unsigned long CChatMsg::GetSize()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:423
+// DC_ONLY(0x11f6a8, cb 0x2C) - no retail tie yet
+void CPlayerDropMsg::CPlayerDropMsg(unsigned long dpid)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:433
+// DC_ONLY(0x11f6d4, cb 0x20) - no retail tie yet
+void CSetAsHostMsg::CSetAsHostMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:461
+// DC_ONLY(0x11f6f4, cb 0x28) - no retail tie yet
+void CPlayerDropUpdateMsg::CPlayerDropUpdateMsg(unsigned long dpidDropped)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:793
+// DC_ONLY(0x11f71c, cb 0x20) - no retail tie yet
+void CPlayerActiveMsg::CPlayerActiveMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:804
+// DC_ONLY(0x11f73c, cb 0x28) - no retail tie yet
+void CPingMsg::CPingMsg(unsigned long pingTime, eRS_Messages id)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:815
+// DC_ONLY(0x11f764, cb 0x28) - no retail tie yet
+void CPingResponseMsg::CPingResponseMsg(unsigned long pingTime, eRS_Messages id)
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:852
+// DC_ONLY(0x11f78c, cb 0x20) - no retail tie yet
+void CSessionLostMsg::CSessionLostMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\dxplay.h:211
+// DC_ONLY(0x11f7ac, cb 0x8) - no retail tie yet
+unsigned long CDPlayPlayer::GetId()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:224
+// DC_ONLY(0x11f7b4, cb 0x1C) - no retail tie yet
+void CLogFile::CLogFile(char* sLogFileName)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:291
+// DC_ONLY(0x11f7d0, cb 0xE) - no retail tie yet
+void CChatManager::CChatStr::CChatStr()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:632
+// DC_ONLY(0x11f7e0, cb 0x2C) - no retail tie yet
+void CNetMsgHandler::Copy(CNetMsgHandler* pOtherNetMsgHandler)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:658
+// DC_ONLY(0x11f80c, cb 0x4) - no retail tie yet
+CNetMsg* CNetMsgHandlerPause::CheckHandleNet(unsigned char inPopup, unsigned char* msgReceived)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.h:659
+// DC_ONLY(0x11f810, cb 0x4) - no retail tie yet
+CNetMsg* CNetMsgHandlerPause::HandleNetMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:152
+// DC_ONLY(0x11f814, cb 0x34) - no retail tie yet
+void* CDPlayHeroes::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1294
+// DC_ONLY(0x11f848, cb 0x34) - no retail tie yet
+void* CChatEdit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1544
+// DC_ONLY(0x11f87c, cb 0x34) - no retail tie yet
+void* CAnimatedDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1708
+// DC_ONLY(0x11f8b0, cb 0x78) - no retail tie yet
+void CWaitForReadyPlayersDlg::CWaitForReadyPlayersDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1718
+// DC_ONLY(0x11f928, cb 0xC8) - no retail tie yet
+void CWaitForReadyPlayersDlg::Wait()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1738
+// DC_ONLY(0x11f9f0, cb 0x200) - no retail tie yet
+int CWaitForReadyPlayersDlg::handle_message(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1798
+// DC_ONLY(0x11fbf0, cb 0x4C) - no retail tie yet
+unsigned char CWaitForReadyPlayersDlg::AllPlayersReady()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1813
+// DC_ONLY(0x11fc3c, cb 0x70) - no retail tie yet
+int CWaitForReadyPlayersDlg::OnPlayerDrop(CNetMsg* pNetMsg, message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1820
+// DC_ONLY(0x11fcac, cb 0x34) - no retail tie yet
+void* CWaitForReadyPlayersDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:1820
+// DC_ONLY(0x11fce0, cb 0x28) - no retail tie yet
+void CWaitForReadyPlayersDlg::~CWaitForReadyPlayersDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2482
+// DC_ONLY(0x11fd08, cb 0x34) - no retail tie yet
+void* CLevelPickWaitDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2595
+// DC_ONLY(0x11fd3c, cb 0x34) - no retail tie yet
+void* CWaitForRemoteBattleDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2677
+// DC_ONLY(0x11fd70, cb 0x34) - no retail tie yet
+void* CSaveScreen::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2677
+// DC_ONLY(0x11fda4, cb 0x18) - no retail tie yet
+void CSaveScreen::~CSaveScreen()
+{
+    // @stub
+}
+
+// E:\gamedcs\remote.cpp:2818
+// DC_ONLY(0x11fdbc, cb 0x34) - no retail tie yet
+void* CGameTransferDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:568
+// DC_ONLY(0x11fdf0, cb 0x20) - no retail tie yet
+std::_Deque_iterator<CNetMsg std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::begin(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:612
+// DC_ONLY(0x11fe10, cb 0x18) - no retail tie yet
+unsigned char std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::empty()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:615
+// DC_ONLY(0x11fe28, cb 0x1C) - no retail tie yet
+void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::deque<CNetMsg *,std::allocator<CNetMsg *>,0>(const std::allocator<CNetMsg* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:680
+// DC_ONLY(0x11fe44, cb 0x54) - no retail tie yet
+void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::~deque<CNetMsg *,std::allocator<CNetMsg *>,0>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:765
+// DC_ONLY(0x11fe98, cb 0x3C) - no retail tie yet
+void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::push_back(CNetMsg** __t)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:816
+// DC_ONLY(0x11fed4, cb 0x38) - no retail tie yet
+void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::pop_front()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:272
+// DC_ONLY(0x11ff0c, cb 0x1C) - no retail tie yet
+void std::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:276
+// DC_ONLY(0x11ff28, cb 0x4) - no retail tie yet
+CNetMsg** std::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >::operator*()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x11ff2c, cb 0x4) - no retail tie yet
+void std::allocator<CNetMsg *>::allocator<CNetMsg *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x11ff30, cb 0x4) - no retail tie yet
+void std::allocator<CNetMsg *>::~allocator<CNetMsg *>()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:37
+// DC_ONLY(0x11ff34, cb 0x30) - no retail tie yet
+void CAutoArray<CDPlayPlayer>::CAutoArray<CDPlayPlayer>()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:46
+// DC_ONLY(0x11ff64, cb 0x38) - no retail tie yet
+void CAutoArray<CDPlayPlayer>::~CAutoArray<CDPlayPlayer>()
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:73
+// DC_ONLY(0x11ff9c, cb 0x68) - no retail tie yet
+unsigned char CAutoArray<CDPlayPlayer>::Add(CDPlayPlayer* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:95
+// DC_ONLY(0x120004, cb 0x14) - no retail tie yet
+CDPlayPlayer* CAutoArray<CDPlayPlayer>::Get(unsigned long elementNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:103
+// DC_ONLY(0x120018, cb 0x16) - no retail tie yet
+unsigned char CAutoArray<CDPlayPlayer>::Put(unsigned long elementNbr, CDPlayPlayer* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:113
+// DC_ONLY(0x120030, cb 0x3A) - no retail tie yet
+unsigned char CAutoArray<CDPlayPlayer>::Delete(unsigned long elementNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:127
+// DC_ONLY(0x12006c, cb 0x6E) - no retail tie yet
+unsigned char CAutoArray<CDPlayPlayer>::Insert(unsigned long nextElementNbr, CDPlayPlayer* element)
+{
+    // @stub
+}
+
+// E:\gamedcs\array.h:144
+// DC_ONLY(0x1200dc, cb 0x4) - no retail tie yet
+unsigned long CAutoArray<CDPlayPlayer>::GetCount()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:144
+// DC_ONLY(0x1200e0, cb 0x34) - no retail tie yet
+void* CAutoArray<CDPlayPlayer>::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:452
+// DC_ONLY(0x120114, cb 0x68) - no retail tie yet
+void std::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>(const std::allocator<CNetMsg* __a, unsigned __num_elements)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:274
+// DC_ONLY(0x12017c, cb 0x14) - no retail tie yet
+void std::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >(const std::_Deque_iterator<CNetMsg* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:190
+// DC_ONLY(0x120190, cb 0xE) - no retail tie yet
+void std::_Deque_iterator_base<CNetMsg *,std::_Buf_size_traits<CNetMsg *,0> >::_Deque_iterator_base<CNetMsg *,std::_Buf_size_traits<CNetMsg *,0> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:190
+// DC_ONLY(0x1201a0, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >::~_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:190
+// DC_ONLY(0x1201b8, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >::~_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x1201d0, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >::_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >(const std::allocator<CNetMsg* __a, CNetMsg**** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x1201dc, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >::_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >(const std::allocator<CNetMsg* __a, const unsigned* __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:104
+// DC_ONLY(0x1201e8, cb 0x50) - no retail tie yet
+void std::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>::~_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:118
+// DC_ONLY(0x120238, cb 0xC4) - no retail tie yet
+void std::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_initialize_map(unsigned __num_elements)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:364
+// DC_ONLY(0x1202fc, cb 0x54) - no retail tie yet
+void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_push_back_aux(CNetMsg** __t)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:444
+// DC_ONLY(0x120350, cb 0x40) - no retail tie yet
+void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_pop_front_aux()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:328
+// DC_ONLY(0x120390, cb 0xA) - no retail tie yet
+unsigned char std::operator==(const std::_Deque_iterator_base<CNetMsg* __x, const std::_Deque_iterator_base<CNetMsg* __y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x12039c, cb 0x60) - no retail tie yet
+void std::destroy(std::_Deque_iterator<CNetMsg __first, std::_Deque_iterator<CNetMsg __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x1203fc, cb 0x28) - no retail tie yet
+void std::construct(CNetMsg** __p, CNetMsg** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x120424, cb 0x1C) - no retail tie yet
+void std::destroy(CNetMsg** __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:1145
+// DC_ONLY(0x120440, cb 0x30) - no retail tie yet
+void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_reserve_map_at_back(unsigned __nodes_to_add)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:233
+// DC_ONLY(0x120470, cb 0x10) - no retail tie yet
+void std::_Deque_iterator_base<CNetMsg *,std::_Buf_size_traits<CNetMsg *,0> >::_M_set_node(CNetMsg*** __new_node)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x120480, cb 0x28) - no retail tie yet
+CNetMsg*** std::_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x1204a8, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<CNetMsg * * *,CNetMsg * *,std::allocator<CNetMsg *> >::deallocate(CNetMsg*** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x1204d4, cb 0x28) - no retail tie yet
+CNetMsg** std::_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x1204fc, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<unsigned int,CNetMsg *,std::allocator<CNetMsg *> >::deallocate(CNetMsg** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x120528, cb 0x24) - no retail tie yet
+CNetMsg** std::allocator<CNetMsg *>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x12054c, cb 0x1C) - no retail tie yet
+void std::allocator<CNetMsg *>::deallocate(CNetMsg** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x120568, cb 0x24) - no retail tie yet
+CNetMsg*** std::allocator<CNetMsg * *>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x12058c, cb 0x1C) - no retail tie yet
+void std::allocator<CNetMsg * *>::deallocate(CNetMsg*** __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:144
+// DC_ONLY(0x1205a8, cb 0x3C) - no retail tie yet
+void std::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_create_nodes(CNetMsg*** __nstart, CNetMsg*** __nfinish)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:157
+// DC_ONLY(0x1205e4, cb 0x3C) - no retail tie yet
+void std::_Deque_base<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_destroy_nodes(CNetMsg*** __nstart, CNetMsg*** __nfinish)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.c:731
+// DC_ONLY(0x120620, cb 0x110) - no retail tie yet
+void std::deque<CNetMsg *,std::allocator<CNetMsg *>,0>::_M_reallocate_map(unsigned __nodes_to_add, unsigned char __add_at_front)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:413
+// DC_ONLY(0x120730, cb 0x4) - no retail tie yet
+CNetMsg** std::value_type(const std::_Deque_iterator<CNetMsg* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x120734, cb 0x54) - no retail tie yet
+void std::__destroy(std::_Deque_iterator<CNetMsg __first, std::_Deque_iterator<CNetMsg __last, CNetMsg** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x120788, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x12078c, cb 0x4) - no retail tie yet
+std::allocator<CNetMsg* std::__stl_alloc_rebind(std::allocator<CNetMsg* __a, CNetMsg*** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x120790, cb 0x4) - no retail tie yet
+std::allocator<CNetMsg* std::__stl_alloc_rebind(std::allocator<CNetMsg* __a, CNetMsg** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0x120794, cb 0x50) - no retail tie yet
+CNetMsg*** std::copy(CNetMsg*** __first, CNetMsg*** __last, CNetMsg*** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0x1207e4, cb 0x50) - no retail tie yet
+CNetMsg*** std::copy_backward(CNetMsg*** __first, CNetMsg*** __last, CNetMsg*** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x120834, cb 0x54) - no retail tie yet
+void std::__destroy_aux(std::_Deque_iterator<CNetMsg __first, std::_Deque_iterator<CNetMsg __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:285
+// DC_ONLY(0x120888, cb 0x1C) - no retail tie yet
+std::_Deque_iterator<CNetMsg* std::_Deque_iterator<CNetMsg *,std::_Nonconst_traits<CNetMsg *>,std::_Buf_size_traits<CNetMsg *,0> >::operator++()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:199
+// DC_ONLY(0x1208a4, cb 0x30) - no retail tie yet
+void std::_Deque_iterator_base<CNetMsg *,std::_Buf_size_traits<CNetMsg *,0> >::_M_increment()
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0x1208d4, cb 0xC) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, CNetMsg*** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0x1208e0, cb 0x4) - no retail tie yet
+int* std::distance_type(CNetMsg*** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0x1208e4, cb 0x1E) - no retail tie yet
+CNetMsg*** std::__copy(CNetMsg*** __first, CNetMsg*** __last, CNetMsg*** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0x120904, cb 0x22) - no retail tie yet
+CNetMsg*** std::__copy_backward(CNetMsg*** __first, CNetMsg*** __last, CNetMsg*** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:345
+// DC_ONLY(0x120928, cb 0xC) - no retail tie yet
+unsigned char std::operator!=(const std::_Deque_iterator_base<CNetMsg* __x, const std::_Deque_iterator_base<CNetMsg* __y)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x005541a0 size    90  CChatEdit [hd-crossbuild]
+//   0x00554200 size    54  CChatEdit_vslot19 [vtable-slot]
+//   0x00554240 size   234  CChatEdit_vslot15 [vtable-slot]
+//   0x00554330 size    68  CChatEdit_vslot22 [vtable-slot]
+//   0x00554380 size    62  CChatEdit_vslot20 [vtable-slot]
+//   0x005543c0 size    31  CChatEdit_vslot21 [vtable-slot]
+//   0x005543e0 size     9  CChatEdit_vslot23 [vtable-slot]
+//   0x005543f0 size     5  CChatEdit_vslot16 [vtable-slot]
+//   0x00554400 size    15  game_740d0_sub11_154400 [caller]
+//   0x00554410 size   147  game_10f4e0_sub06_154410 [caller]
+//   0x005544b0 size   170  CChatManager_ClearChat_1544b0 [nh3api]
+//   0x00554560 size   130  game_cb206_sub03_154560 [caller]
+//   0x005545f0 size   186  game_19e00_sub05_1545f0 [caller]
+//   0x005546b0 size   259  calls_timeGetTime_1546b0 [import-wrapper]
+//   0x005547c0 size   602  calls_timeGetTime_1547c0 [import-wrapper]
+//   0x00554a20 size    33  game_s_s_154a20 [string]
+//   0x00554a50 size    34  game_1887a0_sub01_154a50 [caller]
+//   0x00554a80 size    33  game_154a80 [band]
+//   0x00554ab0 size    85  game_ad470_sub07_154ab0 [caller]
+//   0x00554b10 size    32  game_154f10_sub01_154b10 [caller]
+//   0x00554b30 size   245  game_154c30_sub01_154b30 [caller]
+//   0x00554c30 size   184  game_154c30 [band]
+//   0x00554cf0 size   148  game_154e90_sub00_154cf0 [caller]
+//   0x00554d90 size   128  calls_timeGetTime_154d90 [import-wrapper]
+//   0x00554e10 size   124  calls_timeGetTime_154e10 [import-wrapper]
+//   0x00554e90 size   125  game_154e90 [band]
+//   0x00554f10 size   570  calls_timeGetTime_154f10 [import-wrapper]
+//   0x00555150 size    28  game_154f10_sub02_155150 [caller]
+//   0x00555170 size     5  game_155170 [band]
+//   0x00555180 size     5  game_155180 [band]
+//   0x00555190 size   793  calls_timeGetTime_155190 [import-wrapper]
+//   0x005554b0 size    33  game_1554b0 [band]
+//   0x005554e0 size   201  game_1554b0_sub00_1554e0 [caller]
+//   0x005555b0 size   294  game_dplay_initialized_1555b0 [string]
+//   0x005556e0 size   548  calls_MessageBeep_1556e0 [import-wrapper]
+//   0x00555910 size     8  game_5e30_sub16_155910 [caller]
+//   0x00555920 size   369  game_software_microsoft_direc_155920 [string]
+//   0x00555aa0 size  1091  calls_Sleep_155aa0 [import-wrapper]
+//   0x00555ef0 size   996  game_getting_connection_setti_155ef0 [string]
+//   0x005562e0 size   334  game_156430_sub01_1562e0 [caller]
+//   0x00556430 size   417  game_handling_player_drop_d_156430 [string]
+//   0x005565e0 size   414  game_onplayerdropupdatemsg_d_1565e0 [string]
+//   0x00556780 size   448  game_5e30_sub19_156780 [caller]
+//   0x00556940 size    94  game_5e30_sub20_156940 [caller]
+//   0x005569a0 size    75  game_5e30_sub21_1569a0 [caller]
+//   0x005569f0 size   180  game_5e30_sub22_1569f0 [caller]
+//   0x00556ab0 size   182  game_ad470_sub08_156ab0 [caller]
+//   0x00556b70 size    33  game_156b70 [band]
+//   0x00556ba0 size   114  calls_timeGetTime_156ba0 [import-wrapper]
+//   0x00556c20 size   757  game_handlenewhost_156c20 [string]
+//   0x00556f20 size   316  game_ad470_sub10_156f20 [caller]
+//   0x00557060 size    33  game_157060 [band]
+//   0x00557090 size    92  game_ad470_sub11_157090 [caller]
+//   0x005570f0 size   489  game_s_s_1570f0 [string]
+//   0x005572e0 size    45  game_179960_sub01_1572e0 [caller]
+//   0x00557310 size    33  game_157310 [band]
+//   0x00557340 size     5  game_157310_sub00_157340 [caller]
+//   0x00557350 size    58  game_185300_sub00_157350 [caller]
+//   0x00557390 size   105  game_185300_sub01_157390 [caller]
+//   0x00557400 size     4  game_185300_sub02_157400 [caller]
+//   0x00557410 size    30  game_cb206_sub04_157410 [caller]
+//   0x00557430 size    34  game_cb206_sub05_157430 [caller]
+//   0x00557460 size    30  game_cb206_sub06_157460 [caller]
+//   0x00557480 size    37  game_cb206_sub07_157480 [caller]
+//   0x005574b0 size   301  game_cb206_sub08_1574b0 [caller]
+//   0x005575e0 size    21  game_cb206_sub09_1575e0 [caller]
+//   0x00557600 size   171  game_cb206_sub10_157600 [caller]
+//   0x005576b0 size    97  game_cb206_sub11_1576b0 [caller]
+//   0x00557720 size    60  game_cb206_sub12_157720 [caller]
+//   0x00557760 size    33  game_157760 [band]
+//   0x00557790 size    81  game_157790 [band]
+//   0x005577f0 size    17  game_6fd0_sub14_1577f0 [caller]
+//   0x00557810 size    69  game_157810 [band]
+//   0x00557860 size   112  game_157860 [band]
+//   0x005578d0 size    48  game_154f10_sub03_1578d0 [caller]
+//   0x00557900 size     4  game_157900 [band]
+//   0x00557910 size    13  game_740d0_sub12_157910 [caller]
+//   0x00557920 size   343  game_handlenewhost_157920 [string]
+

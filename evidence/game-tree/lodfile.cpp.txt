@@ -1,0 +1,435 @@
+// E:\gamedcs\lodfile.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module lodfile.obj, 61 procs, 6 retail-tied.
+// retail extent 0xfa610..0xfac34 (VA 0x4fa610..0x4fac34)
+
+// E:\gamedcs\lodfile.cpp:38
+// DC_ONLY(0xe908c, cb 0x34) - no retail tie yet
+void LODFile::clear()
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:53
+// DC_ONLY(0xe90c0, cb 0x3E) - no retail tie yet
+int LODFile::GetFileSize()
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:72
+// DC_ONLY(0xe9100, cb 0x54) - no retail tie yet
+void* LODFile::getDataPtr(const char* item_name)
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:93
+VA(0x004fa610, 0x45)  // anchor-global, dc 0xe9154
+LODEntry* LODFile::getItemIndex(const char* item_name)
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:112
+// DC_ONLY(0xe9198, cb 0x26) - no retail tie yet
+unsigned char LODFile::exist(const char* item_name)
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:125
+VA(0x004fa660, 0x113)  // anchor-global, dc 0xe91c0
+void LODFile::Find(unsigned begin, unsigned end, const char* item_name)
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:189
+// DC_ONLY(0xe92b4, cb 0x44) - no retail tie yet
+char* LODFile::getErrorString(int LODErr)
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:226
+// DC_ONLY(0xe92f8, cb 0x38) - no retail tie yet
+void LODEntry::LODEntry()
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:240
+// DC_ONLY(0xe9330, cb 0x42) - no retail tie yet
+void LODFile::LODFile()
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:252
+VA(0x004fa800, 0x97)  // anchor-global, dc 0xe9374
+void LODFile::~LODFile()
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:266
+// DC_ONLY(0xe93bc, cb 0x60) - no retail tie yet
+void LODHeader::LODHeader()
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:277
+VA(0x004fa8a0, 0x1C4)  // anchor-bracket, dc 0xe941c
+int LODFile::open(const char* filename, int flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:341
+// DC_ONLY(0xe955c, cb 0xF6) - no retail tie yet
+void LODFile::set_filemap(unsigned char on)
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:393
+// DC_ONLY(0xe9654, cb 0x12) - no retail tie yet
+int compare(const void* arg1, const void* arg2)
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:402
+// DC_ONLY(0xe9668, cb 0x28) - no retail tie yet
+void LODFile::sort()
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:430
+VA(0x004faa70, 0xAB)  // anchor-global, dc 0xe9690
+unsigned char LODFile::pointAt(const char* itemName)
+{
+    // @stub
+}
+
+// E:\gamedcs\lodfile.cpp:452
+VA(0x004fab20, 0x114)  // anchor-global, dc 0xe96e0
+int LODFile::read(void* dest, int numBytes)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0xe9868, cb 0x20) - no retail tie yet
+LODEntry* std::vector<LODEntry,std::allocator<LODEntry> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xe9888, cb 0x1C) - no retail tie yet
+void std::vector<LODEntry,std::allocator<LODEntry> >::vector<LODEntry,std::allocator<LODEntry> >(const std::allocator<LODEntry>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xe98a4, cb 0x28) - no retail tie yet
+void std::vector<LODEntry,std::allocator<LODEntry> >::~vector<LODEntry,std::allocator<LODEntry> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xe98cc, cb 0x30) - no retail tie yet
+void std::vector<LODEntry,std::allocator<LODEntry> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xe98fc, cb 0x38) - no retail tie yet
+void std::vector<LODEntry,std::allocator<LODEntry> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xe9934, cb 0x4) - no retail tie yet
+void std::allocator<LODEntry>::allocator<LODEntry>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xe9938, cb 0x4) - no retail tie yet
+void std::allocator<LODEntry>::~allocator<LODEntry>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0xe993c, cb 0x4) - no retail tie yet
+LODEntry* std::vector<LODEntry,std::allocator<LODEntry> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xe9940, cb 0x4) - no retail tie yet
+LODEntry* std::vector<LODEntry,std::allocator<LODEntry> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xe9944, cb 0x3C) - no retail tie yet
+LODEntry* std::vector<LODEntry,std::allocator<LODEntry> >::erase(LODEntry* __first, LODEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xe9980, cb 0x7C) - no retail tie yet
+void std::vector<LODEntry,std::allocator<LODEntry> >::resize(unsigned __new_size, const LODEntry* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xe99fc, cb 0x2C) - no retail tie yet
+void std::_Vector_base<LODEntry,std::allocator<LODEntry> >::_Vector_base<LODEntry,std::allocator<LODEntry> >(const std::allocator<LODEntry>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xe9a28, cb 0x30) - no retail tie yet
+void std::_Vector_base<LODEntry,std::allocator<LODEntry> >::~_Vector_base<LODEntry,std::allocator<LODEntry> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bvector.h:101
+// DC_ONLY(0xe9a58, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<LODEntry *,LODEntry,std::allocator<LODEntry> >::~_STL_alloc_proxy<LODEntry *,LODEntry,std::allocator<LODEntry> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xe9a70, cb 0xC) - no retail tie yet
+unsigned std::vector<LODEntry,std::allocator<LODEntry> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xe9a7c, cb 0x18) - no retail tie yet
+void std::vector<LODEntry,std::allocator<LODEntry> >::insert(LODEntry* __pos, unsigned __n, const LODEntry* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xe9a94, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<LODEntry *,LODEntry,std::allocator<LODEntry> >::_STL_alloc_proxy<LODEntry *,LODEntry,std::allocator<LODEntry> >(const std::allocator<LODEntry>* __a, LODEntry** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xe9aa0, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<LODEntry *,LODEntry,std::allocator<LODEntry> >::deallocate(LODEntry* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xe9acc, cb 0x1C) - no retail tie yet
+void std::allocator<LODEntry>::deallocate(LODEntry* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xe9ae8, cb 0xF0) - no retail tie yet
+void std::vector<LODEntry,std::allocator<LODEntry> >::_M_fill_insert(LODEntry* __position, unsigned __n, const LODEntry* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xe9bd8, cb 0x30) - no retail tie yet
+void std::destroy(LODEntry* __first, LODEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xe9c08, cb 0x50) - no retail tie yet
+LODEntry* std::copy(LODEntry* __first, LODEntry* __last, LODEntry* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xe9c58, cb 0x4) - no retail tie yet
+std::allocator<LODEntry>* std::__stl_alloc_rebind(std::allocator<LODEntry>* __a, const LODEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xe9c5c, cb 0xD0) - no retail tie yet
+void std::vector<LODEntry,std::allocator<LODEntry> >::_M_insert_overflow(LODEntry* __position, const LODEntry* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xe9d2c, cb 0x38) - no retail tie yet
+LODEntry* std::uninitialized_copy(LODEntry* __first, LODEntry* __last, LODEntry* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xe9d64, cb 0x50) - no retail tie yet
+LODEntry* std::copy_backward(LODEntry* __first, LODEntry* __last, LODEntry* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xe9db4, cb 0x3E) - no retail tie yet
+void std::fill(LODEntry* __first, LODEntry* __last, const LODEntry* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xe9df4, cb 0x38) - no retail tie yet
+LODEntry* std::uninitialized_fill_n(LODEntry* __first, unsigned __n, const LODEntry* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xe9e2c, cb 0x4) - no retail tie yet
+LODEntry* std::value_type(const LODEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xe9e30, cb 0x1C) - no retail tie yet
+void std::__destroy(LODEntry* __first, LODEntry* __last, LODEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xe9e4c, cb 0xC) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const LODEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xe9e58, cb 0x4) - no retail tie yet
+int* std::distance_type(const LODEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xe9e5c, cb 0x4C) - no retail tie yet
+LODEntry* std::__copy(LODEntry* __first, LODEntry* __last, LODEntry* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xe9ea8, cb 0x28) - no retail tie yet
+LODEntry* std::_STL_alloc_proxy<LODEntry *,LODEntry,std::allocator<LODEntry> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xe9ed0, cb 0x28) - no retail tie yet
+LODEntry* std::allocator<LODEntry>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xe9ef8, cb 0x44) - no retail tie yet
+void std::construct(LODEntry* __p, const LODEntry* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xe9f3c, cb 0x1C) - no retail tie yet
+LODEntry* std::__uninitialized_copy(LODEntry* __first, LODEntry* __last, LODEntry* __result, LODEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xe9f58, cb 0x4E) - no retail tie yet
+LODEntry* std::__copy_backward(LODEntry* __first, LODEntry* __last, LODEntry* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xe9fa8, cb 0x1C) - no retail tie yet
+LODEntry* std::__uninitialized_fill_n(LODEntry* __first, unsigned __n, const LODEntry* __x, LODEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xe9fc4, cb 0x30) - no retail tie yet
+void std::__destroy_aux(LODEntry* __first, LODEntry* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xe9ff4, cb 0x3C) - no retail tie yet
+LODEntry* std::__uninitialized_copy_aux(LODEntry* __first, LODEntry* __last, LODEntry* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xea030, cb 0x3C) - no retail tie yet
+LODEntry* std::__uninitialized_fill_n_aux(LODEntry* __first, unsigned __n, const LODEntry* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xea06c, cb 0x1C) - no retail tie yet
+void std::destroy(LODEntry* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xea088, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x004fa780 size   123  game_1591e0_sub00_fa780 [caller]
+

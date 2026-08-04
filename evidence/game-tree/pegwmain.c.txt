@@ -1,0 +1,11 @@
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\pegwmain.c - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module pegwmain.obj, 1 procs, 0 retail-tied.
+
+// d:\wince\private\winceos\coreos\core\corelibc\crtw32\startup\.\pegwmain.c:5
+// DC_ONLY(0x19cc2c, cb 0x48) - no retail tie yet
+void WinMainCRTStartup(HINSTANCE__* hInstance, HINSTANCE__* hInstancePrev, unsigned short* lpszCmdLine, int nCmdShow)
+{
+    // @stub
+}
+

@@ -1,0 +1,747 @@
+// E:\gamedcs\spells.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module spells.obj, 106 procs, 1 retail-tied.
+// retail extent 0x1a9360..0x1a939c (VA 0x5a9360..0x5a939c)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x14e7b4, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x14e7dc, cb 0x10) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x14e7ec, cb 0x28) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x14e814, cb 0x10) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x14e824, cb 0x28) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x14e84c, cb 0x10) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x14e85c, cb 0x28) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x14e884, cb 0x10) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x14e894, cb 0x28) - no retail tie yet
+void $E479()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x14e8bc, cb 0x10) - no retail tie yet
+void $E480()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x14e8cc, cb 0x28) - no retail tie yet
+void $E482()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x14e8f4, cb 0x10) - no retail tie yet
+void $E483()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x14e904, cb 0x28) - no retail tie yet
+void $E485()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x14e92c, cb 0x10) - no retail tie yet
+void $E486()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x14e93c, cb 0x28) - no retail tie yet
+void $E488()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x14e964, cb 0x10) - no retail tie yet
+void $E489()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x14e974, cb 0x28) - no retail tie yet
+void $E491()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x14e99c, cb 0x10) - no retail tie yet
+void $E492()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x14e9ac, cb 0x28) - no retail tie yet
+void $E494()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x14e9d4, cb 0x40) - no retail tie yet
+void $E495()
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:97
+// DC_ONLY(0x14ea14, cb 0x2A8) - no retail tie yet
+SpellID combatManager::ViewSpells()
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:176
+// DC_ONLY(0x14ecbc, cb 0x85E) - no retail tie yet
+void combatManager::InitiateSpell(SpellID spellToCast)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:517
+// DC_ONLY(0x14f51c, cb 0x18E) - no retail tie yet
+unsigned char combatManager::check_landmine(long hex, army* current_army, unsigned char is_walking)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:570
+// DC_ONLY(0x14f6ac, cb 0x12E) - no retail tie yet
+unsigned char combatManager::check_fire_wall(long hex, army* current_army, unsigned char is_walking)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:616
+// DC_ONLY(0x14f7dc, cb 0x2366) - no retail tie yet
+void combatManager::CastSpell(SpellID spellId, int targetIndex, unsigned char bIsMonsterSpell, int secondaryIndex, TSkillMastery monster_skill, long monster_power)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:1807
+// DC_ONLY(0x151b44, cb 0x310) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> combatManager::get_failure_reason(__$ReturnUdt, SpellID spell, const char* msg, long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:1852
+// DC_ONLY(0x151e54, cb 0x40) - no retail tie yet
+void combatManager::display_failure_reason(SpellID spell, const char* msg, long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:1862
+// DC_ONLY(0x151e94, cb 0x1C6) - no retail tie yet
+int handle_sacrifice_beneficiary(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:1961
+// DC_ONLY(0x15205c, cb 0x1E2) - no retail tie yet
+int HandleCastSacrifice(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2061
+// DC_ONLY(0x152240, cb 0x242) - no retail tie yet
+void mark_area_highlights(SpellID spell, TSkillMastery mastery, long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2133
+// DC_ONLY(0x152484, cb 0xD4) - no retail tie yet
+void clear_area_highlights()
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2159
+// DC_ONLY(0x152558, cb 0x262) - no retail tie yet
+int HandleCastSpell(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2266
+// DC_ONLY(0x1527bc, cb 0x258) - no retail tie yet
+int HandleCastWallSpell(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2367
+// DC_ONLY(0x152a14, cb 0x166) - no retail tie yet
+int HandleCastTeleport(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2463
+// DC_ONLY(0x152b7c, cb 0x102) - no retail tie yet
+unsigned char combatManager::is_valid_teleport(const army* this_army, long new_hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2497
+// DC_ONLY(0x152c80, cb 0x16C) - no retail tie yet
+int HandleGetTeleportDestination(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2604
+// DC_ONLY(0x152dec, cb 0xEE) - no retail tie yet
+army* combatManager::find_spell_target(SpellID spell, long side, long hex, unsigned char first_target, unsigned char creature_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2645
+// DC_ONLY(0x152edc, cb 0x228) - no retail tie yet
+unsigned char combatManager::ValidSpellTarget(SpellID spellId, TSkillMastery mastery, int targetIndex, int casting_side, unsigned char first_target, unsigned char creature_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2768
+// DC_ONLY(0x153104, cb 0x54) - no retail tie yet
+unsigned char combatManager::ValidSpellTargetArmy(int spellId, int casting_side, const army* targetArmy, unsigned char first_target, unsigned char creature_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2781
+// DC_ONLY(0x153158, cb 0x1A0) - no retail tie yet
+army* combatManager::find_resurrection_target(int iArmyGroup, int targetIndex, unsigned char creature_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2866
+// DC_ONLY(0x1532f8, cb 0x108) - no retail tie yet
+army* combatManager::find_demonic_resurrection_target(int iArmyGroup, int targetIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:2926
+// DC_ONLY(0x153400, cb 0x180) - no retail tie yet
+army* combatManager::find_animate_dead_target(int iArmyGroup, int targetIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3078
+// DC_ONLY(0x153580, cb 0xB8) - no retail tie yet
+unsigned char combatManager::HasValidSpellTarget(SpellID spellId, TSkillMastery mastery, int casting_side, unsigned char first_target, unsigned char creature_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3103
+// DC_ONLY(0x153638, cb 0x54) - no retail tie yet
+tagPOINT combatManager::hex_to_point(long hex)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3121
+// DC_ONLY(0x15368c, cb 0x48) - no retail tie yet
+long combatManager::point_to_hex(tagPOINT point)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3138
+// DC_ONLY(0x1536d4, cb 0x60) - no retail tie yet
+long combatManager::get_distance(tagPOINT start, tagPOINT stop)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3159
+// DC_ONLY(0x153734, cb 0xA4) - no retail tie yet
+void combatManager::mark_area_effect(long target_hex, long radius, unsigned char include_center, std::vector<long,std::allocator<long>* result)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3185
+// DC_ONLY(0x1537d8, cb 0xAC) - no retail tie yet
+void combatManager::mark_berserk_area_effect(long target_hex, TSkillMastery mastery, std::vector<long,std::allocator<long>* result)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3214
+// DC_ONLY(0x153884, cb 0x80) - no retail tie yet
+void combatManager::mark_wall_area_effect(long target_hex, TSkillMastery mastery, std::vector<long,std::allocator<long>* result)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3227
+// DC_ONLY(0x153904, cb 0xF8) - no retail tie yet
+void combatManager::mark_area_effect(long target_hex, long radius, unsigned char include_center, std::vector<army* result)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3265
+// DC_ONLY(0x1539fc, cb 0xEE) - no retail tie yet
+void combatManager::mark_berserk_area_effect(long target_hex, TSkillMastery mastery, std::vector<army* result)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3303
+// DC_ONLY(0x153aec, cb 0x72) - no retail tie yet
+void combatManager::mark_area_effect(SpellID spell, long target_hex, TSkillMastery mastery, std::vector<army* result)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3324
+// DC_ONLY(0x153b60, cb 0x1CC) - no retail tie yet
+void combatManager::AreaEffect(int targetCell, int iSpellType, TSkillMastery mastery, int power)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3389
+// DC_ONLY(0x153d2c, cb 0x588) - no retail tie yet
+void combatManager::Armageddon(int level, int power)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3572
+// DC_ONLY(0x1542b4, cb 0x3CA) - no retail tie yet
+void combatManager::ResetBoltAngle(SBolt* psBolt)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3702
+// DC_ONLY(0x154680, cb 0x440) - no retail tie yet
+void combatManager::DrawBolt(SBolt* psBolt, int iDrawLength)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3864
+// DC_ONLY(0x154ac0, cb 0x190) - no retail tie yet
+void combatManager::AddBolt(SBolt* psBolt, int iSourceX, int iSourceY, int iDestX, int iDestY, int iSplitFrequency, int iStartThickness, int iEndThickness, int iColor, int iAngleDistortMin, int iAngleDistortMax, int iSegmentLength, int bDistortAlways)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:3940
+// DC_ONLY(0x154c50, cb 0x82C) - no retail tie yet
+void combatManager::DoBolt(int bHandleResets, int iSourceX, int iSourceY, int iDestX, int iDestY, int iSplitFrequency, int iMaxSplitLength, int iStartThickness, int iEndThickness, int iColor, int iAngleDistortMin, int iAngleDistortMax, int iSegmentLength, int iDrawsPerSegment, int bDistortAlways, int iDelay, int bFlashLighten)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4202
+// DC_ONLY(0x15547c, cb 0x1E8) - no retail tie yet
+int combatManager::GetNextChainLightningTarget(army* lastTargetArmy, int bUseSRandom)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4255
+// DC_ONLY(0x155664, cb 0x3A4) - no retail tie yet
+void combatManager::ChainLightning(int index, int level, int power)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4387
+// DC_ONLY(0x155a08, cb 0x18) - no retail tie yet
+void combatManager::ClearEffects()
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4399
+// DC_ONLY(0x155a20, cb 0x108) - no retail tie yet
+void combatManager::SetMassSpellInfluence(const hero* casting_hero, int spell, TSkillMastery level, int power, int casting_side, unsigned char creature_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4424
+// DC_ONLY(0x155b28, cb 0x3E2) - no retail tie yet
+void combatManager::ShowMassSpell([]* bEffected, int spellEffect, unsigned char bShowWince)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4576
+// DC_ONLY(0x155f0c, cb 0x370) - no retail tie yet
+void combatManager::MirrorImage(int targetIndex, int level)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4705
+// DC_ONLY(0x15627c, cb 0x248) - no retail tie yet
+void combatManager::SummonElemental(SpellID spell, TCreatureType iMonType, int iSpellPower, int level)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4765
+// DC_ONLY(0x1564c4, cb 0x11E) - no retail tie yet
+void combatManager::DoLuck(int iTargetGroup, int iTargetIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4815
+// DC_ONLY(0x1565e4, cb 0xA8) - no retail tie yet
+void combatManager::remove_corpse(hexcell* hex, long group, long index)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4838
+// DC_ONLY(0x15668c, cb 0x6A) - no retail tie yet
+void combatManager::remove_corpse(army* corpse)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4850
+// DC_ONLY(0x1566f8, cb 0x148) - no retail tie yet
+void combatManager::demonic_resurrection(const army* caster, army* target)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4888
+// DC_ONLY(0x156840, cb 0x228) - no retail tie yet
+void combatManager::Resurrect(army* target_army, long hit_points_resurrected, unsigned char temporary)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:4984
+// DC_ONLY(0x156a68, cb 0x84) - no retail tie yet
+void combatManager::Resurrect(SpellID spell, int target_hex, int power, TSkillMastery mastery, const hero* casting_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5041
+// DC_ONLY(0x156aec, cb 0xA8) - no retail tie yet
+void combatManager::ShowSpellCastFailure(army* targetArmy, int spellId)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5065
+// DC_ONLY(0x156b94, cb 0x9C) - no retail tie yet
+int combatManager::ComputeSpellDamage(SpellID id, int power, int spell_level, const hero* casting_hero, const hero* affected_hero, const army* target_army, unsigned char print_result)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5086
+// DC_ONLY(0x156c30, cb 0x192) - no retail tie yet
+int combatManager::ModifySpellDamage(int base_damage, int iSpellType, const hero* castingHero, const hero* affectedHero, const army* targetArmy, unsigned char print_result)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5134
+// DC_ONLY(0x156dc4, cb 0xFE) - no retail tie yet
+int combatManager::ModifySpellDamageForSpells(int damage, int iSpellType, const army* targetArmy)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5164
+// DC_ONLY(0x156ec4, cb 0x490) - no retail tie yet
+void combatManager::Earthquake(int level)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5419
+// DC_ONLY(0x157354, cb 0x4D2) - no retail tie yet
+float combatManager::SpellCastWorkChance(int spellId, int casting_side, const army* target_army, unsigned char redirected, unsigned char first_target, unsigned char creature_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5660
+// DC_ONLY(0x157828, cb 0x8C) - no retail tie yet
+unsigned char combatManager::SpellCastWorks(int spellId, int casting_side, const army* target_army, unsigned char redirected, unsigned char creature_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5674
+// DC_ONLY(0x1578b4, cb 0x22E) - no retail tie yet
+void combatManager::SpellTargetMessage(int spellId, int targetIndex, unsigned char first_target)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5749
+// DC_ONLY(0x157ae4, cb 0x548) - no retail tie yet
+void combatManager::ShowSpellMessage(int bIsMonsterSpell, int spellId, army* targetArmy)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5858
+// DC_ONLY(0x15802c, cb 0x64) - no retail tie yet
+CSprite* combatManager::LoadSpellEffect(int effect)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5890
+VA(0x005a9360, 0x3C)  // anchor-global, dc 0x158090
+TCreatureType get_elemental_type(SpellID spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5912
+// DC_ONLY(0x1580c4, cb 0x42) - no retail tie yet
+unsigned char combatManager::AbleToSummonElemental(SpellID spell, long side)
+{
+    // @stub
+}
+
+// E:\gamedcs\spells.cpp:5928
+// DC_ONLY(0x158108, cb 0x78) - no retail tie yet
+int combatManager::GetSpellWallHex(int base_index, int row_offset, int side)
+{
+    // @stub
+}
+
+// E:\gamedcs\Army.h:835
+// DC_ONLY(0x158180, cb 0x20) - no retail tie yet
+unsigned char army::is_in_aura()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:724
+// DC_ONLY(0x1581a0, cb 0x18) - no retail tie yet
+unsigned char hero::IsMale()
+{
+    // @stub
+}
+
+// E:\gamedcs\CmbtMgr.h:1483
+// DC_ONLY(0x1581b8, cb 0x2C) - no retail tie yet
+const army* combatManager::get_current_army()
+{
+    // @stub
+}
+
+// ..\stlport\stl_set.h:129
+// DC_ONLY(0x1581e4, cb 0x4C) - no retail tie yet
+std::pair<std::_Rb_tree_iterator<enum std::set<enum SpellID,std::less<enum SpellID>,std::allocator<enum SpellID> >::insert(__$ReturnUdt, const SpellID* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_pair.h:60
+// DC_ONLY(0x158230, cb 0x4) - no retail tie yet
+void std::pair<std::_Rb_tree_iterator<enum SpellID,std::_Const_traits<enum SpellID> >,bool>::~pair<std::_Rb_tree_iterator<enum SpellID,std::_Const_traits<enum SpellID> >,bool>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:203
+// DC_ONLY(0x158234, cb 0x8) - no retail tie yet
+void std::_Rb_tree_iterator<enum SpellID,std::_Const_traits<enum SpellID> >::_Rb_tree_iterator<enum SpellID,std::_Const_traits<enum SpellID> >(const std::_Rb_tree_iterator<enum* __it)
+{
+    // @stub
+}
+
+// ..\stlport\stl_pair.h:49
+// DC_ONLY(0x15823c, cb 0x12) - no retail tie yet
+void std::pair<std::_Rb_tree_iterator<enum SpellID,std::_Const_traits<enum SpellID> >,bool>::pair<std::_Rb_tree_iterator<enum SpellID,std::_Const_traits<enum SpellID> >,bool>(const std::_Rb_tree_iterator<enum* __a, const unsigned char* __b)
+{
+    // @stub
+}
+
+// ..\stlport\stl_pair.h:60
+// DC_ONLY(0x158250, cb 0x4) - no retail tie yet
+void std::pair<std::_Rb_tree_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID> >,bool>::~pair<std::_Rb_tree_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID> >,bool>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.c:416
+// DC_ONLY(0x158254, cb 0x174) - no retail tie yet
+std::pair<std::_Rb_tree_iterator<enum std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::less<enum SpellID>,std::allocator<enum SpellID> >::insert_unique(__$ReturnUdt, const SpellID* __v)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:358
+// DC_ONLY(0x1583c8, cb 0x24) - no retail tie yet
+const SpellID* std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::less<enum SpellID>,std::allocator<enum SpellID> >::_S_key(std::_Rb_tree_node<enum* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:371
+// DC_ONLY(0x1583ec, cb 0x24) - no retail tie yet
+const SpellID* std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::less<enum SpellID>,std::allocator<enum SpellID> >::_S_key(std::_Rb_tree_node_base* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:466
+// DC_ONLY(0x158410, cb 0x2C) - no retail tie yet
+std::_Rb_tree_iterator<enum std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::less<enum SpellID>,std::allocator<enum SpellID> >::begin(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_function.h:110
+// DC_ONLY(0x15843c, cb 0xA) - no retail tie yet
+unsigned char std::less<enum SpellID>::operator()(const SpellID* __x, const SpellID* __y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:202
+// DC_ONLY(0x158448, cb 0x6) - no retail tie yet
+void std::_Rb_tree_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID> >::_Rb_tree_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID> >(std::_Rb_tree_node<enum* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:203
+// DC_ONLY(0x158450, cb 0x8) - no retail tie yet
+void std::_Rb_tree_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID> >::_Rb_tree_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID> >(const std::_Rb_tree_iterator<enum* __it)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:220
+// DC_ONLY(0x158458, cb 0x1C) - no retail tie yet
+std::_Rb_tree_iterator<enum* std::_Rb_tree_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID> >::operator--()
+{
+    // @stub
+}
+
+// ..\stlport\stl_pair.h:49
+// DC_ONLY(0x158474, cb 0x30) - no retail tie yet
+void std::pair<std::_Rb_tree_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID> >,bool>::pair<std::_Rb_tree_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID> >,bool>(const std::_Rb_tree_iterator<enum* __a, const unsigned char* __b)
+{
+    // @stub
+}
+
+// ..\stlport\stl_function.h:365
+// DC_ONLY(0x1584a4, cb 0x4) - no retail tie yet
+const SpellID* std::_Identity<enum SpellID>::operator()(const SpellID* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:356
+// DC_ONLY(0x1584a8, cb 0x6) - no retail tie yet
+SpellID* std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::less<enum SpellID>,std::allocator<enum SpellID> >::_S_value(std::_Rb_tree_node<enum* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.c:363
+// DC_ONLY(0x1584b0, cb 0x138) - no retail tie yet
+std::_Rb_tree_iterator<enum std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::less<enum SpellID>,std::allocator<enum SpellID> >::_M_insert(__$ReturnUdt, std::_Rb_tree_node_base* __x_, std::_Rb_tree_node_base* __y_, const SpellID* __v)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:314
+// DC_ONLY(0x1585e8, cb 0x30) - no retail tie yet
+std::_Rb_tree_node<enum* std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::less<enum SpellID>,std::allocator<enum SpellID> >::_M_create_node(const SpellID* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:354
+// DC_ONLY(0x158618, cb 0x6) - no retail tie yet
+std::_Rb_tree_node<enum** std::_Rb_tree<enum SpellID,enum SpellID,std::_Identity<enum SpellID>,std::less<enum SpellID>,std::allocator<enum SpellID> >::_S_parent(std::_Rb_tree_node<enum* __x)
+{
+    // @stub
+}
+

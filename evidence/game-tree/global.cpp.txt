@@ -1,0 +1,186 @@
+// E:\gamedcs\global.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module global.obj, 26 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xc9870, cb 0x28) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xc9898, cb 0x10) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xc98a8, cb 0x28) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xc98d0, cb 0x10) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xc98e0, cb 0x28) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xc9908, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xc9918, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xc9940, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xc9950, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xc9978, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xc9988, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xc99b0, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xc99c0, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xc99e8, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xc99f8, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xc9a20, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xc9a30, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xc9a58, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xc9a68, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xc9a90, cb 0x40) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\global.cpp:36
+// DC_ONLY(0xc9ad0, cb 0x14) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\global.cpp:36
+// DC_ONLY(0xc9ae4, cb 0x10) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\global.cpp:971
+// DC_ONLY(0xc9af4, cb 0x14) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\global.cpp:971
+// DC_ONLY(0xc9b08, cb 0x20) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:414
+// DC_ONLY(0xc9b28, cb 0x1C) - no retail tie yet
+void std::bitset<48,unsigned long>::bitset<48,unsigned long>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:107
+// DC_ONLY(0xc9b44, cb 0x1C) - no retail tie yet
+void std::_Base_bitset<2,unsigned long>::_Base_bitset<2,unsigned long>()
+{
+    // @stub
+}
+

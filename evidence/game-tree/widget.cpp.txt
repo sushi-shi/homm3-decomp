@@ -1,0 +1,96 @@
+// E:\gamedcs\widget.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module widget.obj, 13 procs, 3 retail-tied.
+// retail extent 0x1fe7c0..0x1fe929 (VA 0x5fe7c0..0x5fe929)
+
+// E:\gamedcs\widget.cpp:43
+// DC_ONLY(0x196b4c, cb 0x88) - no retail tie yet
+void widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle)
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:106
+// DC_ONLY(0x196bd4, cb 0x3A) - no retail tie yet
+void widget::widget()
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:127
+// DC_ONLY(0x196c10, cb 0x5A) - no retail tie yet
+void widget::~widget()
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:152
+// DC_ONLY(0x196c6c, cb 0x50) - no retail tie yet
+void widget::initialize(int _x, int _y, int _w, int _h, int _id, int _style)
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:214
+// DC_ONLY(0x196cbc, cb 0xE) - no retail tie yet
+int widget::Open(int newPriority, heroWindow* parent)
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:235
+// DC_ONLY(0x196ccc, cb 0x4) - no retail tie yet
+void widget::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:249
+// DC_ONLY(0x196cd0, cb 0x2B8) - no retail tie yet
+int widget::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:477
+VA(0x005fe7c0, 0x40)  // anchor-global, dc 0x196f88
+int widget::send_message(widget::ECommands command, int extra)
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:494
+VA(0x005fe800, 0x32)  // linkorder, dc 0x196fc8
+void widget::Dim()
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:511
+VA(0x005fe840, 0xE9)  // anchor-global, dc 0x196ffc
+void widget::set_help_text(const char* text, const char* rclick, unsigned char copyText)
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:555
+// DC_ONLY(0x1970a8, cb 0x18) - no retail tie yet
+void widget::process_hover()
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:560
+// DC_ONLY(0x1970c0, cb 0x44) - no retail tie yet
+void widget::enable(unsigned char arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\widget.cpp:94
+// DC_ONLY(0x197104, cb 0x34) - no retail tie yet
+void* widget::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

@@ -1,0 +1,368 @@
+// E:\gamedcs\hiscore.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module hiscore.obj, 52 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xd77a8, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xd77d0, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xd77e0, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xd7808, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xd7818, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xd7840, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xd7850, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xd7878, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xd7888, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xd78b0, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xd78c0, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xd78e8, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xd78f8, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xd7920, cb 0x10) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xd7930, cb 0x28) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xd7958, cb 0x10) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xd7968, cb 0x28) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xd7990, cb 0x10) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xd79a0, cb 0x28) - no retail tie yet
+void $E475()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xd79c8, cb 0x40) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:615
+// DC_ONLY(0xd7a08, cb 0xC4) - no retail tie yet
+void highScoreManager::ResetHighScores()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:637
+// DC_ONLY(0xd7acc, cb 0x3A) - no retail tie yet
+void highScoreManager::highScoreManager()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:648
+// DC_ONLY(0xd7b08, cb 0x20) - no retail tie yet
+void highScoreManager::~highScoreManager()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:658
+// DC_ONLY(0xd7b28, cb 0x5E) - no retail tie yet
+int highScoreManager::Open(int newPriority)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:711
+// DC_ONLY(0xd7b88, cb 0x44) - no retail tie yet
+void highScoreManager::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:721
+// DC_ONLY(0xd7bcc, cb 0x4) - no retail tie yet
+int highScoreManager::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:732
+// DC_ONLY(0xd7bd0, cb 0x22) - no retail tie yet
+void highScoreManager::ViewHiScore()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:738
+// DC_ONLY(0xd7bf4, cb 0x46) - no retail tie yet
+void WriteHighScores()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:772
+// DC_ONLY(0xd7c3c, cb 0x1D0) - no retail tie yet
+int highScoreManager::AddScoreToHighScore(int iScore, int iDays, int iDiffRating, int iHighScoreType, const char* cLand)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:837
+// DC_ONLY(0xd7e0c, cb 0x2E) - no retail tie yet
+int highScoreManager::GetMonType(int iScore, int iScoreType)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:858
+// DC_ONLY(0xd7e3c, cb 0x5C4) - no retail tie yet
+void THighScoreWindow::THighScoreWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:940
+// DC_ONLY(0xd8400, cb 0x22) - no retail tie yet
+void THighScoreWindow::DoModal()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:953
+// DC_ONLY(0xd8424, cb 0x76) - no retail tie yet
+void THighScoreWindow::~THighScoreWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:969
+// DC_ONLY(0xd849c, cb 0x3AC) - no retail tie yet
+void THighScoreWindow::Update()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:1014
+// DC_ONLY(0xd8848, cb 0x126) - no retail tie yet
+void UpdateCreatures()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:1034
+// DC_ONLY(0xd8970, cb 0x3A4) - no retail tie yet
+int HighScoreWindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\TextWdgt.h:67
+// DC_ONLY(0xd8d14, cb 0x18) - no retail tie yet
+const char* textWidget::GetText()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:179
+// DC_ONLY(0xd8d2c, cb 0xA0) - no retail tie yet
+void CHighScoreEdit::CHighScoreEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:195
+// DC_ONLY(0xd8dcc, cb 0x3C) - no retail tie yet
+int CHighScoreEdit::OnKeyPress(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:225
+// DC_ONLY(0xd8e08, cb 0x28) - no retail tie yet
+void CHighScoreEdit::OnNextEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:239
+// DC_ONLY(0xd8e30, cb 0x28) - no retail tie yet
+void CHighScoreEdit::OnPrevEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:252
+// DC_ONLY(0xd8e58, cb 0x18) - no retail tie yet
+void CHighScoreEdit::SetFocus(unsigned char state)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:256
+// DC_ONLY(0xd8e70, cb 0x34) - no retail tie yet
+void* CHighScoreEdit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:256
+// DC_ONLY(0xd8ea4, cb 0x18) - no retail tie yet
+void CHighScoreEdit::~CHighScoreEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:293
+// DC_ONLY(0xd8ebc, cb 0x290) - no retail tie yet
+void CHSInputDlg::CHSInputDlg(int maxChars1)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:329
+// DC_ONLY(0xd914c, cb 0x44) - no retail tie yet
+void CHSInputDlg::~CHSInputDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:334
+// DC_ONLY(0xd9190, cb 0x3C) - no retail tie yet
+int CHSInputDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:357
+// DC_ONLY(0xd91cc, cb 0x38) - no retail tie yet
+unsigned char CHSInputDlg::OnOK()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:369
+// DC_ONLY(0xd9204, cb 0x6) - no retail tie yet
+textWidget* CHSInputDlg::GetRolloverWidget()
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:371
+// DC_ONLY(0xd920c, cb 0x88) - no retail tie yet
+int CHSInputDlg::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:382
+// DC_ONLY(0xd9294, cb 0x34) - no retail tie yet
+void* CHSInputDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\hiscore.cpp:929
+// DC_ONLY(0xd92c8, cb 0x34) - no retail tie yet
+void* THighScoreWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

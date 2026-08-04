@@ -1,0 +1,214 @@
+// E:\gamedcs\dimensiondoorwindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module dimensiondoorwindow.obj, 30 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x825c8, cb 0x28) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x825f0, cb 0x10) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x82600, cb 0x28) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x82628, cb 0x10) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x82638, cb 0x28) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x82660, cb 0x10) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x82670, cb 0x28) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x82698, cb 0x10) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x826a8, cb 0x28) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x826d0, cb 0x10) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x826e0, cb 0x28) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x82708, cb 0x10) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x82718, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x82740, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x82750, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x82778, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x82788, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x827b0, cb 0x10) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x827c0, cb 0x28) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x827e8, cb 0x10) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:53
+// DC_ONLY(0x827f8, cb 0x140) - no retail tie yet
+void TDimensionDoorWindow::TDimensionDoorWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:74
+// DC_ONLY(0x82938, cb 0x68) - no retail tie yet
+void TDimensionDoorWindow::~TDimensionDoorWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:100
+// DC_ONLY(0x829a0, cb 0x1E2) - no retail tie yet
+int TDimensionDoorWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:208
+// DC_ONLY(0x82b84, cb 0x16) - no retail tie yet
+int TDimensionDoorWindow::ExitDialog(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:235
+// DC_ONLY(0x82b9c, cb 0x114) - no retail tie yet
+void TSkuttleBoatWindow::TSkuttleBoatWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:254
+// DC_ONLY(0x82cb0, cb 0x62) - no retail tie yet
+void TSkuttleBoatWindow::~TSkuttleBoatWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:280
+// DC_ONLY(0x82d14, cb 0x1BC) - no retail tie yet
+int TSkuttleBoatWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:395
+// DC_ONLY(0x82ed0, cb 0x1C) - no retail tie yet
+int TSkuttleBoatWindow::ExitDialog(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:71
+// DC_ONLY(0x82eec, cb 0x34) - no retail tie yet
+void* TDimensionDoorWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:250
+// DC_ONLY(0x82f20, cb 0x34) - no retail tie yet
+void* TSkuttleBoatWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

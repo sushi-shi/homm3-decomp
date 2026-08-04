@@ -1,0 +1,288 @@
+// E:\gamedcs\palette.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module palette.obj, 39 procs, 9 retail-tied.
+// retail extent 0x122940..0x1235dc (VA 0x522940..0x5235dc)
+
+// E:\gamedcs\palette.cpp:45
+// DC_ONLY(0x10a244, cb 0x62) - no retail tie yet
+long ftol(double d)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:56
+// DC_ONLY(0x10a2a8, cb 0x48) - no retail tie yet
+void TPalette16::TPalette16()
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:61
+// DC_ONLY(0x10a2f0, cb 0x48) - no retail tie yet
+void TPalette16::TPalette16(const unsigned short* data)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:67
+// DC_ONLY(0x10a338, cb 0x72) - no retail tie yet
+void TPalette16::TPalette16(const TPalette24* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:73
+// DC_ONLY(0x10a3ac, cb 0x6E) - no retail tie yet
+void TPalette16::TPalette16(const TRGBA* rgba, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:79
+// DC_ONLY(0x10a41c, cb 0x7C) - no retail tie yet
+void TPalette16::TPalette16(const tagRGBQUAD* quad, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:86
+// DC_ONLY(0x10a498, cb 0x70) - no retail tie yet
+void TPalette16::TPalette16(const char* name, const TPalette24* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:92
+// DC_ONLY(0x10a508, cb 0xD8) - no retail tie yet
+void TPalette16::TPalette16(const TPalette24* p24)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:116
+// DC_ONLY(0x10a5e0, cb 0xC2) - no retail tie yet
+void TPalette16::TPalette16(const TRGBA* rgba)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:140
+// DC_ONLY(0x10a6a4, cb 0xD8) - no retail tie yet
+void TPalette16::TPalette16(const tagRGBQUAD* quad)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:165
+// DC_ONLY(0x10a77c, cb 0xD6) - no retail tie yet
+void TPalette16::TPalette16(const char* name, const TPalette24* p24)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:189
+// DC_ONLY(0x10a854, cb 0x4A) - no retail tie yet
+void TPalette16::TPalette16(const TPalette16* copy)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:194
+// DC_ONLY(0x10a8a0, cb 0x40) - no retail tie yet
+TPalette16* TPalette16::operator=(const TPalette16* from)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:204
+VA(0x00522940, 0xB)  // anchor-global, dc 0x10a8e0
+void TPalette16::~TPalette16()
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:210
+// DC_ONLY(0x10a910, cb 0x88) - no retail tie yet
+void TPalette16::Convert24to16(const unsigned char* p24, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:236
+// DC_ONLY(0x10a998, cb 0x7E) - no retail tie yet
+void TPalette16::ConvertRGBAto16(const TRGBA* rgba, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:262
+// DC_ONLY(0x10aa18, cb 0x7E) - no retail tie yet
+void TPalette16::ConvertRGBQUADto16(const tagRGBQUAD* quad, int rbits, int rshift, int gbits, int gshift, int bbits, int bshift)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:288
+VA(0x00522950, 0xBE)  // anchor-global, dc 0x10aa98
+void TPalette16::Cycle(int begin, int end, int step)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:315
+// DC_ONLY(0x10ab44, cb 0x416) - no retail tie yet
+void TPalette16::Colorize(float hue, float saturation)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:360
+// DC_ONLY(0x10af5c, cb 0x28E) - no retail tie yet
+void TPalette16::AdjustHue(float hue, float amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:412
+VA(0x00522a10, 0x122)  // anchor-global, dc 0x10b1ec
+void TPalette16::AdjustSaturation(float amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:454
+// DC_ONLY(0x10b320, cb 0x164) - no retail tie yet
+void TPalette16::AdjustValue(float amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:496
+VA(0x00522b50, 0x1F5)  // anchor-global, dc 0x10b484
+void TPalette16::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:571
+VA(0x00522d50, 0xD6)  // anchor-global, dc 0x10b7ac
+void TPalette16::Gray()
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:598
+// DC_ONLY(0x10b898, cb 0x6C) - no retail tie yet
+void TPalette24::TPalette24()
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:603
+// DC_ONLY(0x10b904, cb 0x48) - no retail tie yet
+void TPalette24::TPalette24(const unsigned char* data)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:609
+// DC_ONLY(0x10b94c, cb 0x78) - no retail tie yet
+void TPalette24::TPalette24(const TRGBA* rgba)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:622
+// DC_ONLY(0x10b9c4, cb 0x78) - no retail tie yet
+void TPalette24::TPalette24(const tagRGBQUAD* quad)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:635
+// DC_ONLY(0x10ba3c, cb 0x4A) - no retail tie yet
+void TPalette24::TPalette24(const TPalette24* copy)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:640
+// DC_ONLY(0x10ba88, cb 0x22) - no retail tie yet
+TPalette24* TPalette24::operator=(const TPalette24* from)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:650
+VA(0x00522f60, 0xB)  // anchor-global, dc 0x10baac
+void TPalette24::~TPalette24()
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:655
+// DC_ONLY(0x10baf0, cb 0x102) - no retail tie yet
+void TPalette24::Cycle(int begin, int end, int step)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:685
+// DC_ONLY(0x10bbf4, cb 0x364) - no retail tie yet
+void TPalette24::Colorize(float hue, float saturation)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:723
+// DC_ONLY(0x10bf58, cb 0x7A) - no retail tie yet
+void TPalette24::Gray()
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:740
+VA(0x00522f80, 0x20E)  // anchor-global, dc 0x10bfd4
+void TPalette24::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:827
+VA(0x00523190, 0x160)  // anchor-bracket, dc 0x10c370
+void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:862
+VA(0x005232f0, 0x2EC)  // anchor-bracket, dc 0x10c564
+void HSVToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:57
+// DC_ONLY(0x10c8b0, cb 0x34) - no retail tie yet
+void* TPalette16::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\palette.cpp:599
+// DC_ONLY(0x10c8e4, cb 0x34) - no retail tie yet
+void* TPalette24::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x00522b40 size     6  TPalette16_TPalette16_122b40 [nh3api]
+//   0x00522e30 size    22  TPalette24_TPalette24 [hd-crossbuild]
+//   0x00522e50 size    33  TPalette16_vslot00 [vtable-slot]
+//   0x00522e80 size    45  TPalette24_TPalette24_122e80 [hd-crossbuild]
+//   0x00522eb0 size    66  TPalette24_TPalette24_122eb0 [hd-crossbuild]
+//   0x00522f00 size    48  TPalette24_TPalette24_122f00 [hd-crossbuild]
+//   0x00522f30 size    33  TPalette24 [hd-crossbuild]
+//   0x00522f70 size     6  TPalette16_vslot02 [vtable-slot]
+

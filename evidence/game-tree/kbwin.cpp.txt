@@ -1,0 +1,243 @@
+// E:\gamedcs\kbwin.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module kbwin.obj, 34 procs, 5 retail-tied.
+// retail extent 0xf7fb0..0xf8211 (VA 0x4f7fb0..0x4f8211)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xe7a30, cb 0x28) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xe7a58, cb 0x10) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xe7a68, cb 0x28) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xe7a90, cb 0x10) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xe7aa0, cb 0x28) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xe7ac8, cb 0x10) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xe7ad8, cb 0x28) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xe7b00, cb 0x10) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xe7b10, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xe7b38, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xe7b48, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xe7b70, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xe7b80, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xe7ba8, cb 0x10) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xe7bb8, cb 0x28) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xe7be0, cb 0x10) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xe7bf0, cb 0x28) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xe7c18, cb 0x10) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xe7c28, cb 0x28) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xe7c50, cb 0x40) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:102
+// DC_ONLY(0xe7c90, cb 0x8E) - no retail tie yet
+int WinMain(void* hInst, void* hPrev, unsigned short* szCmdLine, int sw)
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:166
+// DC_ONLY(0xe7d20, cb 0x118) - no retail tie yet
+int AppInit(void* hInst, void* hPrev, int sw)
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:335
+// DC_ONLY(0xe7e38, cb 0x180) - no retail tie yet
+long AppWndProc(void* hwnd, unsigned msg, unsigned wParam, long lParam)
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:567
+// DC_ONLY(0xe7fb8, cb 0x18) - no retail tie yet
+void AppExit()
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:585
+VA(0x004f7fb0, 0xAA)  // anchor-bracket, dc 0xe7fd0
+void Process1WindowsMessage()
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:648
+VA(0x004f8060, 0xD4)  // linkorder, dc 0xe8014
+long AppCommand(void* hwnd, unsigned msg, unsigned wParam, long lParam)
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:680
+VA(0x004f8140, 0x37)  // linkorder, dc 0xe8018
+void UpdateDfltMenu()
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:721
+VA(0x004f8180, 0x5C)  // anchor-global, dc 0xe801c
+void KBChangeMenu()
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:752
+VA(0x004f81e0, 0x31)  // anchor-global, dc 0xe8020
+void SetNoDialogMenus(int bEnabled)
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:779
+// DC_ONLY(0xe8054, cb 0x4) - no retail tie yet
+void SetMenus()
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:823
+// DC_ONLY(0xe8058, cb 0x12) - no retail tie yet
+unsigned long GameTime::Get()
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:830
+// DC_ONLY(0xe806c, cb 0x2C) - no retail tie yet
+void GameTime::DelayTil(unsigned long time)
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:839
+// DC_ONLY(0xe8098, cb 0x1A) - no retail tie yet
+void GameTime::Delay(int interval)
+{
+    // @stub
+}
+
+// E:\gamedcs\kbwin.cpp:851
+// DC_ONLY(0xe80b4, cb 0x30) - no retail tie yet
+void InitVideo()
+{
+    // @stub
+}
+

@@ -1,0 +1,54 @@
+// E:\gamedcs\fly.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module fly.obj, 7 procs, 1 retail-tied.
+// retail extent 0xb4420..0xb447f (VA 0x4b4420..0x4b447f)
+
+// E:\gamedcs\fly.cpp:35
+// DC_ONLY(0xa1360, cb 0x88) - no retail tie yet
+unsigned char army::find_flyer_attack_cell(int start, int target)
+{
+    // @stub
+}
+
+// E:\gamedcs\fly.cpp:58
+// DC_ONLY(0xa13e8, cb 0x46) - no retail tie yet
+unsigned char army::find_flyer_attack_cell(int target)
+{
+    // @stub
+}
+
+// E:\gamedcs\fly.cpp:76
+VA(0x004b4420, 0x5F)  // anchor-bracket, dc 0xa1430
+unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest)
+{
+    // @stub
+}
+
+// E:\gamedcs\fly.cpp:114
+// DC_ONLY(0xa1514, cb 0x7C) - no retail tie yet
+int army::FlyTo(int destIndex, unsigned char restore_facing)
+{
+    // @stub
+}
+
+// E:\gamedcs\fly.cpp:147
+// DC_ONLY(0xa1590, cb 0x40E) - no retail tie yet
+int army::Fly(int destIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\fly.cpp:300
+// DC_ONLY(0xa19a0, cb 0xDC) - no retail tie yet
+int army::TeleportTo(int destIndex, unsigned char restore_facing)
+{
+    // @stub
+}
+
+// E:\gamedcs\fly.cpp:328
+// DC_ONLY(0xa1a7c, cb 0x12C) - no retail tie yet
+int army::Teleport(int destIndex)
+{
+    // @stub
+}
+

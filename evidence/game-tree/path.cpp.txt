@@ -1,0 +1,68 @@
+// E:\gamedcs\path.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module path.obj, 9 procs, 6 retail-tied.
+// retail extent 0x1239d0..0x123e76 (VA 0x5239d0..0x523e76)
+
+// E:\gamedcs\path.cpp:30
+VA(0x005239d0, 0x96)  // anchor-bracket, dc 0x10c918
+int army::FindPath(int fpTargetCellIndex, int maxMoves, unsigned char bMoveUnlimited, unsigned char bLiteralTarget)
+{
+    // @stub
+}
+
+// E:\gamedcs\path.cpp:51
+VA(0x00523a70, 0xA8)  // anchor-bracket, dc 0x10c9a4
+unsigned char army::ValidPath(int destIndex, unsigned char bLiteralTest)
+{
+    // @stub
+}
+
+// E:\gamedcs\path.cpp:97
+VA(0x00523b20, 0x89)  // anchor-global, dc 0x10c9ec
+unsigned army::GetAttackMask(int currIndex, int criteria, int iLiteralTargetIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\path.cpp:159
+VA(0x00523bb0, 0x1DF)  // anchor-global, dc 0x10ca6c
+int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIndex, int* testCellIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\path.cpp:238
+VA(0x00523d90, 0x57)  // anchor-global, dc 0x10cbf8
+int army::GetAdjacentCellIndex(int currIndex, int direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\path.cpp:259
+VA(0x00523df0, 0x86)  // anchor-bracket, dc 0x10cc80
+long army::get_adjacent_hex(long hex, long direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\path.cpp:278
+// DC_ONLY(0x10ccdc, cb 0x4C) - no retail tie yet
+int GetAdjacentCellIndexNoArmy(int currIndex, int direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\path.cpp:469
+// DC_ONLY(0x10cd28, cb 0x28) - no retail tie yet
+int OppositeDirection(int direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\path.cpp:480
+// DC_ONLY(0x10cd50, cb 0x4A8) - no retail tie yet
+int army::GetBestDirection(int currIndex, int destIndex, int currMask)
+{
+    // @stub
+}
+

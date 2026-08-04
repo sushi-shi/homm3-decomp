@@ -1,0 +1,249 @@
+// E:\gamedcs\winfile.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module winfile.obj, 35 procs, 0 retail-tied.
+
+// E:\gamedcs\winfile.cpp:33
+// DC_ONLY(0x198434, cb 0x34) - no retail tie yet
+void File::File()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:39
+// DC_ONLY(0x198468, cb 0x34) - no retail tie yet
+void File::~File()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:45
+// DC_ONLY(0x19849c, cb 0xA) - no retail tie yet
+unsigned char File::IsOpen()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:50
+// DC_ONLY(0x1984a8, cb 0x26) - no retail tie yet
+unsigned char File::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:60
+// DC_ONLY(0x1984d0, cb 0x6) - no retail tie yet
+char* File::GetLastError()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:65
+// DC_ONLY(0x1984d8, cb 0x12) - no retail tie yet
+void File::UpdateError(char* sError)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:70
+// DC_ONLY(0x1984ec, cb 0x4) - no retail tie yet
+unsigned char File::Exists(const char* sFilename)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:77
+// DC_ONLY(0x1984f0, cb 0x18) - no retail tie yet
+unsigned char File::Delete(const char* sFilename)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:88
+// DC_ONLY(0x198508, cb 0x3C) - no retail tie yet
+unsigned char File::Rename(char* sOldName, char* sNewName)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:114
+// DC_ONLY(0x198544, cb 0x4) - no retail tie yet
+unsigned char File::SetAttribute(char* sFilename, FileAttribute fileAttribute)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:123
+// DC_ONLY(0x198548, cb 0x1E) - no retail tie yet
+FileAttribute File::GetAttribute(char* sFilename)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:139
+// DC_ONLY(0x198568, cb 0x4E) - no retail tie yet
+unsigned char File::Open(const char* sFilename, FileMode mode)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:184
+// DC_ONLY(0x1985b8, cb 0x2C) - no retail tie yet
+unsigned long File::Write(void* pData, unsigned long dBytes)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:199
+// DC_ONLY(0x1985e4, cb 0x2C) - no retail tie yet
+unsigned long File::Read(void* pData, unsigned long dBytes)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:212
+// DC_ONLY(0x198610, cb 0x20) - no retail tie yet
+unsigned long File::SeekEnd()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:220
+// DC_ONLY(0x198630, cb 0x20) - no retail tie yet
+unsigned long File::SeekBegin()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:230
+// DC_ONLY(0x198650, cb 0x1E) - no retail tie yet
+unsigned long File::SeekCur(int seekAmt)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:240
+// DC_ONLY(0x198670, cb 0x74) - no retail tie yet
+unsigned long File::Seek(unsigned long dBytesToSeek, unsigned long dStart)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:255
+// DC_ONLY(0x1986e4, cb 0x20) - no retail tie yet
+unsigned long File::GetPosition()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:265
+// DC_ONLY(0x198704, cb 0x44) - no retail tie yet
+unsigned long File::GetLength()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:370
+// DC_ONLY(0x198748, cb 0x20) - no retail tie yet
+void CFindFile::CFindFile()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:378
+// DC_ONLY(0x198768, cb 0x10) - no retail tie yet
+void CFindFile::~CFindFile()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:383
+// DC_ONLY(0x198778, cb 0x4) - no retail tie yet
+unsigned char CFindFile::FindFile(const char* sFile)
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:397
+// DC_ONLY(0x19877c, cb 0x1C) - no retail tie yet
+unsigned char CFindFile::FindNext()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:405
+// DC_ONLY(0x198798, cb 0x22) - no retail tie yet
+void CFindFile::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:413
+// DC_ONLY(0x1987bc, cb 0x18) - no retail tie yet
+unsigned long CFindFile::GetLength()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:421
+// DC_ONLY(0x1987d4, cb 0x6) - no retail tie yet
+char* CFindFile::GetFilename()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:433
+// DC_ONLY(0x1987dc, cb 0x10) - no retail tie yet
+unsigned char CFindFile::IsReadOnly()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:441
+// DC_ONLY(0x1987ec, cb 0x10) - no retail tie yet
+unsigned char CFindFile::IsSystem()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:449
+// DC_ONLY(0x1987fc, cb 0x12) - no retail tie yet
+unsigned char CFindFile::IsNormal()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:457
+// DC_ONLY(0x198810, cb 0x4) - no retail tie yet
+unsigned char CFindFile::IsDots()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:466
+// DC_ONLY(0x198814, cb 0x1A) - no retail tie yet
+unsigned char CFindFile::IsDirectory()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:474
+// DC_ONLY(0x198830, cb 0x10) - no retail tie yet
+unsigned char CFindFile::IsHidden()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.cpp:482
+// DC_ONLY(0x198840, cb 0x24) - no retail tie yet
+unsigned char CFindFile::IsArchived()
+{
+    // @stub
+}
+
+// E:\gamedcs\winfile.h:90
+// DC_ONLY(0x198864, cb 0xC) - no retail tie yet
+void File::Init()
+{
+    // @stub
+}
+

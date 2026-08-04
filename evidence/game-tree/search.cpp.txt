@@ -1,0 +1,243 @@
+// E:\gamedcs\search.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module search.obj, 34 procs, 1 retail-tied.
+// retail extent 0x16a0d0..0x16a352 (VA 0x56a0d0..0x56a352)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x12b080, cb 0x28) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x12b0a8, cb 0x10) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x12b0b8, cb 0x28) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x12b0e0, cb 0x10) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x12b0f0, cb 0x28) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x12b118, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x12b128, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x12b150, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x12b160, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x12b188, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x12b198, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x12b1c0, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x12b1d0, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x12b1f8, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x12b208, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x12b230, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x12b240, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x12b268, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x12b278, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x12b2a0, cb 0x40) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\search.cpp:32
+VA(0x0056a0d0, 0x282)  // anchor-global, dc 0x12b2e0
+int searchArray::BuildPath(const hero* current_hero, long limit)
+{
+    // @stub
+}
+
+// E:\gamedcs\search.cpp:113
+// DC_ONLY(0x12b3f0, cb 0xB6) - no retail tie yet
+unsigned char check_adjacent_monster(const hero* current_hero, pathCell* entry_point, type_search_type search_type)
+{
+    // @stub
+}
+
+// E:\gamedcs\search.cpp:155
+// DC_ONLY(0x12b4a8, cb 0x34C) - no retail tie yet
+void searchArray::enter_lith(const hero* current_hero, const std::vector<type_point,std::allocator<type_point>* list, long cell_type, long excluded, pathCell* entry_point, long limit, type_search_type search_type)
+{
+    // @stub
+}
+
+// E:\gamedcs\search.cpp:244
+// DC_ONLY(0x12b7f4, cb 0x10C) - no retail tie yet
+void searchArray::enter_gate(const pathCell* cell, const NewmapCell* map_cell, long limit)
+{
+    // @stub
+}
+
+// E:\gamedcs\search.cpp:264
+// DC_ONLY(0x12b900, cb 0x88) - no retail tie yet
+void searchArray::board_boat(const hero* current_hero, pathCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\search.cpp:283
+// DC_ONLY(0x12b988, cb 0x240) - no retail tie yet
+void searchArray::enter_town(const hero* current_hero, long start_town, const pathCell* path_cell, long limit, type_search_type search_type)
+{
+    // @stub
+}
+
+// E:\gamedcs\search.cpp:367
+// DC_ONLY(0x12bbc8, cb 0x74) - no retail tie yet
+unsigned char searchArray::enter_hostile_trigger(const hero* current_hero, pathCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\search.cpp:393
+// DC_ONLY(0x12bc3c, cb 0x29E) - no retail tie yet
+unsigned char searchArray::enter_trigger(const hero* current_hero, pathCell* cell, long limit, type_search_type search_type)
+{
+    // @stub
+}
+
+// E:\gamedcs\search.cpp:494
+// DC_ONLY(0x12bedc, cb 0x104) - no retail tie yet
+unsigned char check_summon_boat(const hero* current_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\search.cpp:535
+// DC_ONLY(0x12bfe0, cb 0x38C) - no retail tie yet
+void searchArray::check_town_portal(const hero* current_hero, const pathCell* start_cell, long maxMobility)
+{
+    // @stub
+}
+
+// E:\gamedcs\search.cpp:621
+// DC_ONLY(0x12c36c, cb 0x728) - no retail tie yet
+void searchArray::SeedPosition(hero* current_hero, type_point start, type_point target, int maxMobility, unsigned char is_boat, type_search_type search_type, int iCurTempMobility, unsigned char bSeedContinuation)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:1395
+// DC_ONLY(0x12ca94, cb 0x14) - no retail tie yet
+const std::vector<type_point,std::allocator<type_point>* game::get_liths(long color)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:1400
+// DC_ONLY(0x12caa8, cb 0x14) - no retail tie yet
+const std::vector<type_point,std::allocator<type_point>* game::get_lith_exits(long color)
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:1405
+// DC_ONLY(0x12cabc, cb 0xC) - no retail tie yet
+const std::vector<type_point,std::allocator<type_point>* game::get_whirlpools()
+{
+    // @stub
+}
+

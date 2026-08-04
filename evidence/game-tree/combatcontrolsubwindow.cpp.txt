@@ -1,0 +1,424 @@
+// E:\gamedcs\combatcontrolsubwindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module combatcontrolsubwindow.obj, 60 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x64824, cb 0x28) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x6484c, cb 0x10) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x6485c, cb 0x28) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x64884, cb 0x10) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x64894, cb 0x28) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x648bc, cb 0x10) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x648cc, cb 0x28) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x648f4, cb 0x10) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x64904, cb 0x28) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x6492c, cb 0x10) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x6493c, cb 0x28) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x64964, cb 0x10) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x64974, cb 0x28) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x6499c, cb 0x10) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x649ac, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x649d4, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x649e4, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x64a0c, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x64a1c, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x64a44, cb 0x40) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:44
+// DC_ONLY(0x64a84, cb 0x468) - no retail tie yet
+void type_combat_sub_window::type_combat_sub_window(heroWindow* parent, const char* background_sprite_name)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:122
+// DC_ONLY(0x64eec, cb 0x74) - no retail tie yet
+void type_combat_sub_window::~type_combat_sub_window()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:136
+// DC_ONLY(0x64f60, cb 0x4) - no retail tie yet
+void type_combat_sub_window::set_rollover()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:140
+// DC_ONLY(0x64f64, cb 0x4) - no retail tie yet
+void type_combat_sub_window::set_rollover_buttons()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:148
+// DC_ONLY(0x64f68, cb 0x64) - no retail tie yet
+void type_combat_sub_window::DisableAllButtons()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:177
+// DC_ONLY(0x64fcc, cb 0x278) - no retail tie yet
+void TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:222
+// DC_ONLY(0x65244, cb 0x2C) - no retail tie yet
+void TCombatControlSubWindow::~TCombatControlSubWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:227
+// DC_ONLY(0x65270, cb 0x4) - no retail tie yet
+void TCombatControlSubWindow::set_rollover_buttons()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:249
+// DC_ONLY(0x65274, cb 0x24) - no retail tie yet
+void TCombatControlSubWindow::set_rollover(const char* new_text)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:261
+// DC_ONLY(0x65298, cb 0x10) - no retail tie yet
+void TCombatControlSubWindow::DisableAllButtons()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:282
+// DC_ONLY(0x652a8, cb 0x1A4) - no retail tie yet
+void TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:317
+// DC_ONLY(0x6544c, cb 0x2C) - no retail tie yet
+void TCombatPlacementSubWindow::~TCombatPlacementSubWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:327
+// DC_ONLY(0x65478, cb 0x28) - no retail tie yet
+void TCombatPlacementSubWindow::DisableAllButtons()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:343
+// DC_ONLY(0x654a0, cb 0x638) - no retail tie yet
+void TCombatHeroSubWindow::TCombatHeroSubWindow(int x, int y, int w, int h, heroWindow* parent)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:407
+// DC_ONLY(0x65ad8, cb 0x68) - no retail tie yet
+void TCombatHeroSubWindow::~TCombatHeroSubWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:428
+// DC_ONLY(0x65b40, cb 0x144) - no retail tie yet
+void TCombatHeroSubWindow::Update(const hero* info, const hero* otherHero, unsigned char on_cursed_ground)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:472
+// DC_ONLY(0x65c84, cb 0x74) - no retail tie yet
+void TCombatHeroSubWindow::Show()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:523
+// DC_ONLY(0x65cf8, cb 0xC4) - no retail tie yet
+void TCombatHeroSubWindow::UnShow()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:562
+// DC_ONLY(0x65dbc, cb 0x824) - no retail tie yet
+void TCombatCreatureSubWindow::TCombatCreatureSubWindow(int x, int y, int w, int h, heroWindow* parent, int view_level)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:666
+// DC_ONLY(0x665e0, cb 0x68) - no retail tie yet
+void TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:688
+// DC_ONLY(0x66648, cb 0x2A0) - no retail tie yet
+void TCombatCreatureSubWindow::Update(const army* info, const hero* owner)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:773
+// DC_ONLY(0x668e8, cb 0x88) - no retail tie yet
+void TCombatCreatureSubWindow::Show()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:820
+// DC_ONLY(0x66970, cb 0x84) - no retail tie yet
+void TCombatCreatureSubWindow::UnShow()
+{
+    // @stub
+}
+
+// E:\gamedcs\button.h:99
+// DC_ONLY(0x669f4, cb 0x6) - no retail tie yet
+void button::set_disabled_frame(long frame)
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:634
+// DC_ONLY(0x669fc, cb 0x3C) - no retail tie yet
+int hero::GetMaxMana()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:116
+// DC_ONLY(0x66a38, cb 0x34) - no retail tie yet
+void* type_combat_sub_window::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:214
+// DC_ONLY(0x66a6c, cb 0x34) - no retail tie yet
+void* TCombatControlSubWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:308
+// DC_ONLY(0x66aa0, cb 0x34) - no retail tie yet
+void* TCombatPlacementSubWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:396
+// DC_ONLY(0x66ad4, cb 0x34) - no retail tie yet
+void* TCombatHeroSubWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:655
+// DC_ONLY(0x66b08, cb 0x34) - no retail tie yet
+void* TCombatCreatureSubWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x66b3c, cb 0x1C) - no retail tie yet
+void std::vector<widget *,std::allocator<widget *> >::vector<widget *,std::allocator<widget *> >(const std::allocator<widget* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x66b58, cb 0x28) - no retail tie yet
+void std::vector<widget *,std::allocator<widget *> >::~vector<widget *,std::allocator<widget *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x66b80, cb 0x4) - no retail tie yet
+void std::allocator<widget *>::allocator<widget *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x66b84, cb 0x4) - no retail tie yet
+void std::allocator<widget *>::~allocator<widget *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:583
+// DC_ONLY(0x66b88, cb 0x18) - no retail tie yet
+const SpellID* std::deque<enum SpellID,std::allocator<enum SpellID>,0>::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x66ba0, cb 0x2C) - no retail tie yet
+void std::_Vector_base<widget *,std::allocator<widget *> >::_Vector_base<widget *,std::allocator<widget *> >(const std::allocator<widget* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x66bcc, cb 0x30) - no retail tie yet
+void std::_Vector_base<widget *,std::allocator<widget *> >::~_Vector_base<widget *,std::allocator<widget *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_deque.h:312
+// DC_ONLY(0x66bfc, cb 0x28) - no retail tie yet
+SpellID* std::_Deque_iterator<enum SpellID,std::_Nonconst_traits<enum SpellID>,std::_Buf_size_traits<enum SpellID,0> >::operator[](int __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:469
+// DC_ONLY(0x66c24, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::~_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x66c3c, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >::_STL_alloc_proxy<widget * *,widget *,std::allocator<widget *> >(const std::allocator<widget* __a, widget*** __p)
+{
+    // @stub
+}
+

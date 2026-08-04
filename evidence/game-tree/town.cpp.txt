@@ -1,0 +1,595 @@
+// E:\gamedcs\town.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module town.obj, 81 procs, 25 retail-tied.
+// retail extent 0x1bde80..0x1c14b9 (VA 0x5bde80..0x5c14b9)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x1653c8, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x1653f0, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x165400, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x165428, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x165438, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x165460, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x165470, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x165498, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x1654a8, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x1654d0, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x1654e0, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x165508, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x165518, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x165540, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x165550, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x165578, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x165588, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x1655b0, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x1655c0, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x1655e8, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:458
+// DC_ONLY(0x165628, cb 0x360) - no retail tie yet
+int town::load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:616
+// DC_ONLY(0x165988, cb 0x3D4) - no retail tie yet
+int town::save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:761
+// DC_ONLY(0x165d5c, cb 0x46) - no retail tie yet
+int town::GetPortraitFrame(unsigned char is_small)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:779
+// DC_ONLY(0x165da4, cb 0xFC) - no retail tie yet
+void town::SetSummoningGenerator()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:798
+// DC_ONLY(0x165ea0, cb 0x568) - no retail tie yet
+void town::ApplySpecialBuildingEffect(hero* townHero)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:895
+VA(0x005bde80, 0xD4)  // anchor-global, dc 0x166408
+void town::town()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:930
+VA(0x005bdf60, 0x76)  // linkorder, dc 0x1664b0
+void town::initialize_hordes()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:967
+VA(0x005bdfe0, 0x4E)  // anchor-global, dc 0x16654c
+int town::HasGarrison()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:976
+VA(0x005be030, 0x1D3)  // linkorder, dc 0x1665a0
+void town::GiveSpells(hero* forceHero)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1020
+VA(0x005be210, 0xC0)  // linkorder, dc 0x166688
+void town::View(int bAlreadyFaded)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1058
+VA(0x005be2d0, 0xB3)  // linkorder, dc 0x166720
+void town::Deallocate()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1094
+VA(0x005be390, 0xB7)  // anchor-global, dc 0x16682c
+void town::remove_garrison_hero()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1111
+VA(0x005be450, 0x1AC)  // anchor-global, dc 0x166864
+void town::SwapHeroes()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1150
+// DC_ONLY(0x166950, cb 0x214) - no retail tie yet
+void town::initialize_spells()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1206
+// DC_ONLY(0x166b64, cb 0xA4) - no retail tie yet
+void town::set_spells_available()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1226
+// DC_ONLY(0x166c08, cb 0x2CE) - no retail tie yet
+type_building_id town::create_building(type_building_id building)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1313
+// DC_ONLY(0x166ed8, cb 0xF0) - no retail tie yet
+void town::destroy_extra_capitol()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1340
+VA(0x005bede0, 0x427)  // anchor-global, dc 0x166fc8
+type_building_id town::BuildBuilding(int buildingId, unsigned char SetBuiltFlag, unsigned char apply_special_effect)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1417
+VA(0x005bf210, 0x1A5)  // linkorder, dc 0x1671cc
+void town::update_shipyard()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1442
+VA(0x005bf3c0, 0x11E)  // anchor-global, dc 0x167274
+unsigned char town::buy_building(type_building_id building)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1466
+VA(0x005bf4e0, 0xC)  // linkorder, dc 0x167378
+unsigned char town::CanBuildDock()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1473
+VA(0x005bf4f0, 0x7A)  // linkorder, dc 0x167388
+void town::CalcNumLevelArchers(int* numArchers, int* archerLevel)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1502
+VA(0x005bf570, 0x86)  // anchor-global, dc 0x1673dc
+long town::get_castle_growth_bonus(TCreatureType creature)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1514
+VA(0x005bf600, 0xC6)  // anchor-global, dc 0x167458
+short town::get_gold_income(unsigned char include_silo)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1538
+// DC_ONLY(0x1674d4, cb 0x70) - no retail tie yet
+type_building_id town::get_horde(long dwelling)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1559
+// DC_ONLY(0x167544, cb 0x8E) - no retail tie yet
+long town::get_horde_bonus(long dwelling)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1581
+// DC_ONLY(0x1675d4, cb 0x172) - no retail tie yet
+long town::get_legion_bonus(long dwelling)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1639
+// DC_ONLY(0x167748, cb 0xFE) - no retail tie yet
+short town::get_growth_rate(short dwelling)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1682
+// DC_ONLY(0x167848, cb 0xB6) - no retail tie yet
+void town::increase_population(TCreatureType bonus_creature, TCreatureType alternate_bonus, long bonus_amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1711
+// DC_ONLY(0x167900, cb 0x56) - no retail tie yet
+void town::change_generator_bonus(TCreatureType creature, long change)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1732
+// DC_ONLY(0x167958, cb 0x132) - no retail tie yet
+void show_building_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1760
+// DC_ONLY(0x167a8c, cb 0x1B0) - no retail tie yet
+void show_creature_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1793
+// DC_ONLY(0x167c3c, cb 0x32C) - no retail tie yet
+void town::give_event_reward(const TTownEvent* thisEvent)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1889
+// DC_ONLY(0x167f68, cb 0x8A) - no retail tie yet
+unsigned char check_shipyard_square(town* current_town, long x, long y)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1914
+// DC_ONLY(0x167ff4, cb 0x33C) - no retail tie yet
+void initialize_buildings(town* current_town, const TownExtra* town_setup)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2017
+// DC_ONLY(0x168330, cb 0xFC) - no retail tie yet
+void initialize_army(town* current_town, const TownExtra* town_setup)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2063
+// DC_ONLY(0x16842c, cb 0x66) - no retail tie yet
+void town::initialize(const TownExtra* town_setup)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2084
+// DC_ONLY(0x168494, cb 0x6E) - no retail tie yet
+void town::update_full_building_mask()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2097
+VA(0x005c0d20, 0x13D)  // anchor-global, dc 0x168504
+unsigned char town::can_build(short building_id)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2139
+VA(0x005c0e60, 0xC0)  // anchor-global, dc 0x16865c
+unsigned char town::can_ever_build(short building_id)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2168
+VA(0x005c0f20, 0x156)  // anchor-global, dc 0x168714
+__int64 town::get_buildable_mask()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2199
+VA(0x005c1080, 0x64)  // anchor-global, dc 0x1688a0
+int* town::get_build_cost_array(type_building_id building)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2212
+VA(0x005c10f0, 0x8A)  // corroborates, dc 0x1688f0
+void town::get_build_cost(type_building_id building, int* resources)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2224
+VA(0x005c1180, 0xA9)  // linkorder, dc 0x168910
+short town::get_build_cost(type_building_id building, EGameResource* types, int* amounts)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2247
+VA(0x005c1230, 0x46)  // linkorder, dc 0x168970
+type_horde_effect* town::get_horde_effect(type_building_id building)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2274
+VA(0x005c1280, 0x15)  // linkorder, dc 0x1689dc
+int* town::get_silo_income()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2283
+VA(0x005c12a0, 0x39)  // anchor-global, dc 0x1689ec
+unsigned char town::is_legal_building(type_building_id building)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2291
+// DC_ONLY(0x168a10, cb 0x3E) - no retail tie yet
+void town::set_legal_buildings(__int64 disabled_buildings)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2300
+// DC_ONLY(0x168a50, cb 0x48) - no retail tie yet
+unsigned char town::is_disabled(type_building_id building)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2312
+// DC_ONLY(0x168a98, cb 0xBC) - no retail tie yet
+void town::hire(hero* new_hero, long player_id)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2343
+// DC_ONLY(0x168b54, cb 0x4C) - no retail tie yet
+void town::PlaceInMap(THeroID hero_id, long player_id, unsigned char reset_flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2356
+// DC_ONLY(0x168ba0, cb 0x16) - no retail tie yet
+TTerrainType town::GetNativeTerrain()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2367
+// DC_ONLY(0x168bb8, cb 0x16) - no retail tie yet
+const char* town::GetTypeName()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2375
+// DC_ONLY(0x168bd0, cb 0x28) - no retail tie yet
+armyGroup* town::get_army()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2385
+// DC_ONLY(0x168bf8, cb 0x28) - no retail tie yet
+const armyGroup* town::get_army()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2397
+VA(0x005c14a0, 0x19)  // anchor-global, dc 0x168c20
+type_building_id town::UpgradedDwellingID(type_building_id id)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2419
+// DC_ONLY(0x168c3c, cb 0x112) - no retail tie yet
+unsigned char town::InitializeBuildingCostsTables()
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:2476
+// DC_ONLY(0x168d50, cb 0xAC) - no retail tie yet
+void InitializeBuildingCosts(int* costs, const std::vector<char* resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\Town.h:331
+// DC_ONLY(0x168dfc, cb 0x28) - no retail tie yet
+void town::set_mask(__int64 new_mask)
+{
+    // @stub
+}
+
+// E:\gamedcs\TownMgr.h:686
+// DC_ONLY(0x168e24, cb 0x6) - no retail tie yet
+void townManager::SetTown(town* townToView)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:402
+// DC_ONLY(0x168e2c, cb 0x24) - no retail tie yet
+unsigned char std::bitset<70,unsigned long>::reference::operator bool()
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x005be600 size   810  game_1c0670_sub00_1be600 [caller]
+//   0x005be930 size   816  game_1bede0_sub00_1be930 [caller]
+//   0x005bec60 size   371  game_aafd0_sub02_1bec60 [caller]
+//   0x005bf6d0 size   151  game_1c5b40_sub00_1bf6d0 [caller]
+//   0x005bf770 size   158  game_1c5b40_sub01_1bf770 [caller]
+//   0x005bf810 size   226  game_1c5b40_sub02_1bf810 [caller]
+//   0x005bf900 size   600  game_1bfb60_sub00_1bf900 [caller]
+//   0x005bfb60 size   614  game_28740_sub04_1bfb60 [caller]
+//   0x005bfdd0 size   116  game_c8780_sub02_1bfdd0 [caller]
+//   0x005bfe50 size    85  game_b87a0_sub00_1bfe50 [caller]
+//   0x005bfeb0 size   873  game_cda10_sub00_1bfeb0 [caller]
+//   0x005c0220 size   474  game_1bfeb0_sub00_1c0220 [caller]
+//   0x005c0400 size   623  game_1bfeb0_sub01_1c0400 [caller]
+//   0x005c0670 size   590  game_caa70_sub02_1c0670 [caller]
+//   0x005c08c0 size   974  game_1c0670_sub01_1c08c0 [caller]
+//   0x005c0c90 size   137  game_1c08c0_sub00_1c0c90 [caller]
+//   0x005c12e0 size   201  game_31800_sub01_1c12e0 [caller]
+//   0x005c13b0 size   131  game_ca040_sub01_1c13b0 [caller]
+//   0x005c1440 size    12  game_643b0_sub00_1c1440 [caller]
+//   0x005c1450 size    12  game_3010_sub02_1c1450 [caller]
+//   0x005c1460 size    56  town_get_army [hd-crossbuild]
+

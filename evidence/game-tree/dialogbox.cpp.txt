@@ -1,0 +1,96 @@
+// E:\gamedcs\dialogbox.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module dialogbox.obj, 13 procs, 1 retail-tied.
+// retail extent 0x90b20..0x90b4c (VA 0x490b20..0x490b4c)
+
+// E:\gamedcs\dialogbox.cpp:36
+// DC_ONLY(0x81748, cb 0x68) - no retail tie yet
+void TDialogBox::TDialogBox(int winX, int winY, int winWidth, int winHeight, unsigned winType)
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:41
+// DC_ONLY(0x817b0, cb 0x48) - no retail tie yet
+void TDialogBox::TDialogBox(unsigned winType)
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:46
+// DC_ONLY(0x817f8, cb 0x62) - no retail tie yet
+void TDialogBox::~TDialogBox()
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:52
+// DC_ONLY(0x8185c, cb 0x52E) - no retail tie yet
+unsigned char TDialogBox::Setup(int winX, int winY, int winWidth, int winHeight)
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:139
+// DC_ONLY(0x81d8c, cb 0x74) - no retail tie yet
+void CTextDialog::CTextDialog(const char* cText, font* pFont, unsigned winType)
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:146
+// DC_ONLY(0x81e00, cb 0x38) - no retail tie yet
+void CTextDialog::CTextDialog(unsigned winType)
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:151
+// DC_ONLY(0x81e38, cb 0xC8) - no retail tie yet
+unsigned char CTextDialog::Setup(const char* cText, font* pFont)
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:175
+// DC_ONLY(0x81f00, cb 0x98) - no retail tie yet
+void CTextDialog::CalcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight)
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:200
+VA(0x00490b20, 0x2C)  // anchor-global, dc 0x81f98
+int CTextDialog::ExitDialog(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:211
+// DC_ONLY(0x81fb0, cb 0x50) - no retail tie yet
+void CTextDialog::UpdateText(const char* cNewText)
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:38
+// DC_ONLY(0x82000, cb 0x34) - no retail tie yet
+void* TDialogBox::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:143
+// DC_ONLY(0x82034, cb 0x34) - no retail tie yet
+void* CTextDialog::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\dialogbox.cpp:143
+// DC_ONLY(0x82068, cb 0x18) - no retail tie yet
+void CTextDialog::~CTextDialog()
+{
+    // @stub
+}
+

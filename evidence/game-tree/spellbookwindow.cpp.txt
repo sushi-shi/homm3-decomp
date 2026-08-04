@@ -1,0 +1,732 @@
+// E:\gamedcs\spellbookwindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module spellbookwindow.obj, 104 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x14b9f8, cb 0x28) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x14ba20, cb 0x10) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x14ba30, cb 0x28) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x14ba58, cb 0x10) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x14ba68, cb 0x28) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x14ba90, cb 0x10) - no retail tie yet
+void $E475()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x14baa0, cb 0x28) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x14bac8, cb 0x10) - no retail tie yet
+void $E478()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x14bad8, cb 0x28) - no retail tie yet
+void $E480()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x14bb00, cb 0x10) - no retail tie yet
+void $E481()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x14bb10, cb 0x28) - no retail tie yet
+void $E483()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x14bb38, cb 0x10) - no retail tie yet
+void $E484()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x14bb48, cb 0x28) - no retail tie yet
+void $E486()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x14bb70, cb 0x10) - no retail tie yet
+void $E487()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x14bb80, cb 0x28) - no retail tie yet
+void $E489()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x14bba8, cb 0x10) - no retail tie yet
+void $E490()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x14bbb8, cb 0x28) - no retail tie yet
+void $E492()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x14bbe0, cb 0x10) - no retail tie yet
+void $E493()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x14bbf0, cb 0x28) - no retail tie yet
+void $E495()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x14bc18, cb 0x40) - no retail tie yet
+void $E496()
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:69
+// DC_ONLY(0x14bc58, cb 0x28) - no retail tie yet
+void TSpellbookWindow::Reset()
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:115
+// DC_ONLY(0x14bc80, cb 0x74) - no retail tie yet
+const char* get_level_string(SpellID spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:128
+// DC_ONLY(0x14bcf4, cb 0x194) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> TSpellbookWindow::get_spell_description(__$ReturnUdt, SpellID spell, const hero* current_hero, unsigned char rollover)
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:180
+// DC_ONLY(0x14be88, cb 0x9DC) - no retail tie yet
+void TSpellbookWindow::TSpellbookWindow(const hero* h, const armyGroup* g, TSpellbookWindow::TSpellContext context, unsigned char on_magic_plains)
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:474
+// DC_ONLY(0x14c864, cb 0x6E) - no retail tie yet
+void TSpellbookWindow::~TSpellbookWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:490
+// DC_ONLY(0x14c8d4, cb 0x1A) - no retail tie yet
+int TSpellbookWindow::Open(int newPriority, unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:510
+// DC_ONLY(0x14c8f0, cb 0x12) - no retail tie yet
+void TSpellbookWindow::Close(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:526
+// DC_ONLY(0x14c904, cb 0x50C) - no retail tie yet
+void TSpellbookWindow::GotoPage(int page)
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:680
+// DC_ONLY(0x14ce10, cb 0x58) - no retail tie yet
+void TSpellbookWindow::DisplayNewSchool(int position)
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:702
+// DC_ONLY(0x14ce68, cb 0x64) - no retail tie yet
+int TSpellbookWindow::convertID2HelpID(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:755
+// DC_ONLY(0x14cecc, cb 0x3C2) - no retail tie yet
+int TSpellbookWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:1049
+// DC_ONLY(0x14d290, cb 0x90) - no retail tie yet
+unsigned char TSpellbookWindow::TSpellbookEntry::operator<(const TSpellbookWindow::TSpellbookEntry* y)
+{
+    // @stub
+}
+
+// E:\gamedcs\SpellbookWindow.h:209
+// DC_ONLY(0x14d320, cb 0xA) - no retail tie yet
+void TSpellbookWindow::TSpellbookEntry::TSpellbookEntry(SpellID id_, TSpellSchool school_, TSkillMastery mastery_)
+{
+    // @stub
+}
+
+// E:\gamedcs\SpellbookWindow.h:222
+// DC_ONLY(0x14d32c, cb 0x10) - no retail tie yet
+void TSpellbookWindow::SetSchool(TSpellSchool school)
+{
+    // @stub
+}
+
+// E:\gamedcs\SpellbookWindow.h:230
+// DC_ONLY(0x14d33c, cb 0x6) - no retail tie yet
+unsigned TSpellbookWindow::GetSchool()
+{
+    // @stub
+}
+
+// E:\gamedcs\SpellbookWindow.h:236
+// DC_ONLY(0x14d344, cb 0x20) - no retail tie yet
+void TSpellbookWindow::SetContext(TSpellbookWindow::TSpellContext context)
+{
+    // @stub
+}
+
+// E:\gamedcs\SpellbookWindow.h:248
+// DC_ONLY(0x14d364, cb 0x6) - no retail tie yet
+unsigned TSpellbookWindow::GetContextMask()
+{
+    // @stub
+}
+
+// E:\gamedcs\SpellbookWindow.h:258
+// DC_ONLY(0x14d36c, cb 0x1C) - no retail tie yet
+void TSpellbookWindow::PreviousPage()
+{
+    // @stub
+}
+
+// E:\gamedcs\SpellbookWindow.h:264
+// DC_ONLY(0x14d388, cb 0x1C) - no retail tie yet
+void TSpellbookWindow::NextPage()
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:82
+// DC_ONLY(0x14d3a4, cb 0x28) - no retail tie yet
+int TSpellbookWindow::GetPositionFromSchool(unsigned school_mask)
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:103
+// DC_ONLY(0x14d3cc, cb 0x12) - no retail tie yet
+TSpellSchool TSpellbookWindow::GetSchoolFromPosition(int j)
+{
+    // @stub
+}
+
+// E:\gamedcs\spellbookwindow.cpp:465
+// DC_ONLY(0x14d3e0, cb 0x34) - no retail tie yet
+void* TSpellbookWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:179
+// DC_ONLY(0x14d414, cb 0x4) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0x14d418, cb 0x4) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x14d41c, cb 0x20) - no retail tie yet
+unsigned std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x14d43c, cb 0x24) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0x14d460, cb 0x1C) - no retail tie yet
+void std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >(const std::allocator<TSpellbookWindow::TSpellbookEntry>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0x14d47c, cb 0x28) - no retail tie yet
+void std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::~vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0x14d4a4, cb 0x3C) - no retail tie yet
+void std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::push_back(const TSpellbookWindow::TSpellbookEntry* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x14d4e0, cb 0x4) - no retail tie yet
+void std::allocator<TSpellbookWindow::TSpellbookEntry>::allocator<TSpellbookWindow::TSpellbookEntry>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x14d4e4, cb 0x4) - no retail tie yet
+void std::allocator<TSpellbookWindow::TSpellbookEntry>::~allocator<TSpellbookWindow::TSpellbookEntry>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0x14d4e8, cb 0x2C) - no retail tie yet
+void std::_Vector_base<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::_Vector_base<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >(const std::allocator<TSpellbookWindow::TSpellbookEntry>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0x14d514, cb 0x40) - no retail tie yet
+void std::_Vector_base<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::~_Vector_base<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:101
+// DC_ONLY(0x14d554, cb 0x18) - no retail tie yet
+void std::_STL_alloc_proxy<TSpell()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x14d56c, cb 0xC) - no retail tie yet
+void std::_STL_alloc_proxy<TSpel(const std::allocator<TSpellbookWindow::TSpellbookEntry>* __a, TSpellbookWindow::TSpellbookEntry** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x14d578, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_proxy<TSpellbookWindow::TSpellbookEntry *,TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::deallocate(TSpellbookWindow::TSpellbookEntry* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x14d5a4, cb 0x20) - no retail tie yet
+void std::allocator<TSpellbookWindow::TSpellbookEntry>::deallocate(TSpellbookWindow::TSpellbookEntry* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0x14d5c4, cb 0xDC) - no retail tie yet
+void std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::_M_insert_overflow(TSpellbookWindow::TSpellbookEntry* __position, const TSpellbookWindow::TSpellbookEntry* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:68
+// DC_ONLY(0x14d6a0, cb 0xA8) - no retail tie yet
+void std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::reserve(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.h:624
+// DC_ONLY(0x14d748, cb 0x64) - no retail tie yet
+void std::sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0x14d7ac, cb 0x30) - no retail tie yet
+void std::destroy(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x14d7dc, cb 0x30) - no retail tie yet
+void std::construct(TSpellbookWindow::TSpellbookEntry* __p, const TSpellbookWindow::TSpellbookEntry* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x14d80c, cb 0x4) - no retail tie yet
+std::allocator<TSpellbookWindow::TSpellbookEntry>* std::__stl_alloc_rebind(std::allocator<TSpellbookWindow::TSpellbookEntry>* __a, const TSpellbookWindow::TSpellbookEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:199
+// DC_ONLY(0x14d810, cb 0x20) - no retail tie yet
+unsigned std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::capacity()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x14d830, cb 0x28) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::_STL_alloc_proxy<TSpellbookWindow::TSpellbookEntry *,TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x14d858, cb 0x28) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::allocator<TSpellbookWindow::TSpellbookEntry>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0x14d880, cb 0x38) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::uninitialized_copy(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0x14d8b8, cb 0x38) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::uninitialized_fill_n(TSpellbookWindow::TSpellbookEntry* __first, unsigned __n, const TSpellbookWindow::TSpellbookEntry* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:514
+// DC_ONLY(0x14d8f0, cb 0x38) - no retail tie yet
+std::vector<TSpellbookWindow::TSpellbookEntry,std::allocator<TSpellbookWindow::TSpellbookEntry> >::_M_allocate_and_copy(unsigned __n, TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0x14d928, cb 0x4) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::value_type(const TSpellbookWindow::TSpellbookEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1081
+// DC_ONLY(0x14d92c, cb 0xA4) - no retail tie yet
+void std::__introsort_loop(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal, int __depth_limit)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1057
+// DC_ONLY(0x14d9d0, cb 0x5C) - no retail tie yet
+void std::__final_insertion_sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0x14da2c, cb 0x1C) - no retail tie yet
+void std::__destroy(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0x14da48, cb 0x1C) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::__uninitialized_copy(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result, TSpellbookWindow::TSpellbookEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0x14da64, cb 0x1C) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::__uninitialized_fill_n(TSpellbookWindow::TSpellbookEntry* __first, unsigned __n, const TSpellbookWindow::TSpellbookEntry* __x, TSpellbookWindow::TSpellbookEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.h:664
+// DC_ONLY(0x14da80, cb 0x38) - no retail tie yet
+void std::partial_sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __middle, TSpellbookWindow::TSpellbookEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:44
+// DC_ONLY(0x14dab8, cb 0x6C) - no retail tie yet
+const TSpellbookWindow::TSpellbookEntry* std::__median(const TSpellbookWindow::TSpellbookEntry* __a, const TSpellbookWindow::TSpellbookEntry* __b, const TSpellbookWindow::TSpellbookEntry* __c)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:923
+// DC_ONLY(0x14db24, cb 0x6C) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::__unguarded_partition(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry __pivot)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1012
+// DC_ONLY(0x14db90, cb 0x40) - no retail tie yet
+void std::__insertion_sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1035
+// DC_ONLY(0x14dbd0, cb 0x30) - no retail tie yet
+void std::__unguarded_insertion_sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0x14dc00, cb 0x30) - no retail tie yet
+void std::__destroy_aux(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0x14dc30, cb 0x3C) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::__uninitialized_copy_aux(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0x14dc6c, cb 0x3C) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::__uninitialized_fill_n_aux(TSpellbookWindow::TSpellbookEntry* __first, unsigned __n, const TSpellbookWindow::TSpellbookEntry* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1432
+// DC_ONLY(0x14dca8, cb 0x90) - no retail tie yet
+void std::__partial_sort(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __middle, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:107
+// DC_ONLY(0x14dd38, cb 0x30) - no retail tie yet
+void std::iter_swap(TSpellbookWindow::TSpellbookEntry* __a, TSpellbookWindow::TSpellbookEntry* __b)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:987
+// DC_ONLY(0x14dd68, cb 0x58) - no retail tie yet
+void std::__linear_insert(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry __val)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:1028
+// DC_ONLY(0x14ddc0, cb 0x3C) - no retail tie yet
+void std::__unguarded_insertion_sort_aux(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x14ddfc, cb 0x1C) - no retail tie yet
+void std::destroy(TSpellbookWindow::TSpellbookEntry* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:207
+// DC_ONLY(0x14de18, cb 0x40) - no retail tie yet
+void std::make_heap(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0x14de58, cb 0x4) - no retail tie yet
+int* std::distance_type(const TSpellbookWindow::TSpellbookEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.h:64
+// DC_ONLY(0x14de5c, cb 0x44) - no retail tie yet
+void std::__pop_heap(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result, TSpellbookWindow::TSpellbookEntry __value, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.h:108
+// DC_ONLY(0x14dea0, cb 0x3C) - no retail tie yet
+void std::sort_heap(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:96
+// DC_ONLY(0x14dedc, cb 0x18) - no retail tie yet
+void std::__iter_swap(TSpellbookWindow::TSpellbookEntry* __a, TSpellbookWindow::TSpellbookEntry* __b, TSpellbookWindow::TSpellbookEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0x14def4, cb 0x50) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::copy_backward(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algo.c:960
+// DC_ONLY(0x14df44, cb 0x50) - no retail tie yet
+void std::__unguarded_linear_insert(TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry __val)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x14df94, cb 0x4) - no retail tie yet
+void std::__destroy_aux()
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:192
+// DC_ONLY(0x14df98, cb 0x84) - no retail tie yet
+void std::__make_heap(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:112
+// DC_ONLY(0x14e01c, cb 0xC8) - no retail tie yet
+void std::__adjust_heap(TSpellbookWindow::TSpellbookEntry* __first, int __holeIndex, int __len, TSpellbookWindow::TSpellbookEntry __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:142
+// DC_ONLY(0x14e0e4, cb 0x30) - no retail tie yet
+void std::pop_heap(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:79
+// DC_ONLY(0x14e114, cb 0x2A) - no retail tie yet
+void std::swap(TSpellbookWindow::TSpellbookEntry* __a, TSpellbookWindow::TSpellbookEntry* __b)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0x14e140, cb 0xC) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TSpellbookWindow::TSpellbookEntry* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0x14e14c, cb 0x4C) - no retail tie yet
+TSpellbookWindow::TSpellbookEntry* std::__copy_backward(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:44
+// DC_ONLY(0x14e198, cb 0x90) - no retail tie yet
+void std::__push_heap(TSpellbookWindow::TSpellbookEntry* __first, int __holeIndex, int __topIndex, TSpellbookWindow::TSpellbookEntry __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_heap.c:134
+// DC_ONLY(0x14e228, cb 0x50) - no retail tie yet
+void std::__pop_heap_aux(TSpellbookWindow::TSpellbookEntry* __first, TSpellbookWindow::TSpellbookEntry* __last, TSpellbookWindow::TSpellbookEntry* __formal)
+{
+    // @stub
+}
+

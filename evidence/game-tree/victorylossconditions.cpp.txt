@@ -1,0 +1,268 @@
+// E:\gamedcs\victorylossconditions.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module victorylossconditions.obj, 37 procs, 17 retail-tied.
+// retail extent 0x1f15a0..0x1f2f70 (VA 0x5f15a0..0x5f2f70)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x18fb64, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x18fb8c, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x18fb9c, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x18fbc4, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x18fbd4, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x18fbfc, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x18fc0c, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x18fc34, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x18fc44, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x18fc6c, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x18fc7c, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x18fca4, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x18fcb4, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x18fcdc, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x18fcec, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x18fd14, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x18fd24, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x18fd4c, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x18fd5c, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x18fd84, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:25
+VA(0x005f15a0, 0x63)  // anchor-global, dc 0x18fdc4
+unsigned char VictoryConditionStruct::applies_to_player(long player_id)
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:31
+VA(0x005f1610, 0x4FE)  // anchor-global, dc 0x18fdf8
+unsigned char VictoryConditionStruct::CheckForArtifactWin()
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:61
+VA(0x005f1b10, 0x169)  // anchor-global, dc 0x18fe98
+unsigned char VictoryConditionStruct::CheckForTotalCreatures()
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:100
+VA(0x005f1c80, 0xB9)  // anchor-global, dc 0x18ff84
+unsigned char VictoryConditionStruct::CheckForTotalResources()
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:125
+VA(0x005f1d40, 0x1A4)  // anchor-global, dc 0x190038
+unsigned char VictoryConditionStruct::CheckForUpgradedTown()
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:184
+VA(0x005f1ef0, 0x203)  // anchor-global, dc 0x190124
+unsigned char VictoryConditionStruct::CheckForGrailBuildingWin()
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:233
+VA(0x005f2100, 0x53)  // anchor-global, dc 0x190244
+unsigned char VictoryConditionStruct::CheckForHeroDefeatWin(const int winning_player, const hero* loser)
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:264
+VA(0x005f2160, 0xFD)  // anchor-global, dc 0x1902c4
+unsigned char VictoryConditionStruct::IsGrailTarget(town* thisTown)
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:302
+VA(0x005f2260, 0x34)  // anchor-global, dc 0x190340
+unsigned char VictoryConditionStruct::IsTownCaptureTarget(town* thisTown)
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:319
+VA(0x005f22a0, 0xE6)  // anchor-global, dc 0x19037c
+unsigned char VictoryConditionStruct::CheckForTownCaptureWin()
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:352
+VA(0x005f2390, 0x267)  // anchor-global, dc 0x19040c
+unsigned char VictoryConditionStruct::CheckForDefeatedMonsterWin(const hero* thisHero, type_point monster_loc)
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:376
+VA(0x005f2600, 0x117)  // anchor-global, dc 0x190488
+unsigned char VictoryConditionStruct::CheckForFlaggedGeneratorWin()
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:405
+VA(0x005f2720, 0xEB)  // anchor-global, dc 0x190538
+unsigned char VictoryConditionStruct::CheckForFlaggedMineWin()
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:434
+VA(0x005f2860, 0x1DE)  // anchor-global, dc 0x190620
+unsigned char VictoryConditionStruct::CheckForArtifactTransportWin(const hero* thisHero, type_point town_loc)
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:463
+VA(0x005f2a40, 0x3C8)  // anchor-global, dc 0x1906d4
+unsigned char LossConditionStruct::CheckForDefeatedHeroLoss(const hero* loser)
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:498
+VA(0x005f2e40, 0xD9)  // anchor-bracket, dc 0x19074c
+unsigned char LossConditionStruct::CheckForDefeatedTownLoss(const int old_owner, const town* lost_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\victorylossconditions.cpp:518
+VA(0x005f2f20, 0x50)  // anchor-global, dc 0x1907bc
+unsigned char LossConditionStruct::CheckForTimeLimitExpired()
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x005f2810 size    69  VictoryConditionStruct_CheckForTimeSurvival [hd-crossbuild]
+//   0x005f2e10 size    47  LossConditionStruct_HeroKilled [hd-crossbuild]
+

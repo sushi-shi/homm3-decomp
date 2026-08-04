@@ -58,6 +58,9 @@ def main(argv: list[str]) -> int:
     if stage == "dcxref":
         from homm3.carve import dcxref
         return dcxref.main(rest)
+    if stage == "gametree":
+        from homm3.carve import gametree
+        return gametree.main(rest)
     if stage == "naming":
         from homm3.carve import naming
         return naming.main(rest)

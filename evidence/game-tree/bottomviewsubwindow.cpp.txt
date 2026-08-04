@@ -1,0 +1,362 @@
+// E:\gamedcs\bottomviewsubwindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module bottomviewsubwindow.obj, 51 procs, 1 retail-tied.
+// retail extent 0x521f0..0x52ac4 (VA 0x4521f0..0x452ac4)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x54e58, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x54e80, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x54e90, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x54eb8, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x54ec8, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x54ef0, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x54f00, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x54f28, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x54f38, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x54f60, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x54f70, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x54f98, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x54fa8, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x54fd0, cb 0x10) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x54fe0, cb 0x28) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x55008, cb 0x10) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x55018, cb 0x28) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x55040, cb 0x10) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x55050, cb 0x28) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x55078, cb 0x40) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:39
+VA(0x004521f0, 0x8D4)  // anchor-global, dc 0x550b8
+void type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:47
+// DC_ONLY(0x55114, cb 0x74) - no retail tie yet
+void type_bottom_view_window::~type_bottom_view_window()
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:64
+// DC_ONLY(0x55188, cb 0x4) - no retail tie yet
+void type_bottom_view_window::animate()
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:77
+// DC_ONLY(0x5518c, cb 0x2BC) - no retail tie yet
+void TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:121
+// DC_ONLY(0x55448, cb 0x64) - no retail tie yet
+void TBottomViewNewTurn::animate()
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:146
+// DC_ONLY(0x554ac, cb 0x2BC) - no retail tie yet
+void TBottomViewResourceMessage::TBottomViewResourceMessage(heroWindow* parent, int res, int quantity, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:197
+// DC_ONLY(0x55768, cb 0x140) - no retail tie yet
+void TBottomViewMessage::TBottomViewMessage(heroWindow* parent, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:222
+// DC_ONLY(0x558a8, cb 0x54C) - no retail tie yet
+void TBottomViewHero::TBottomViewHero(heroWindow* parent)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:352
+// DC_ONLY(0x55df4, cb 0x5C4) - no retail tie yet
+void TBottomViewTown::TBottomViewTown(heroWindow* parent)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:515
+// DC_ONLY(0x563b8, cb 0x4C8) - no retail tie yet
+void TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:599
+// DC_ONLY(0x56880, cb 0x33C) - no retail tie yet
+void TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:646
+// DC_ONLY(0x56bbc, cb 0x58) - no retail tie yet
+long TBottomViewEnemyTurn::sum_mobility(long player_id)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:661
+// DC_ONLY(0x56c14, cb 0x1E4) - no retail tie yet
+void TBottomViewEnemyTurn::animate()
+{
+    // @stub
+}
+
+// E:\gamedcs\Widget.h:263
+// DC_ONLY(0x56df8, cb 0x28) - no retail tie yet
+void widget::set_visible(unsigned char arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\Widget.h:271
+// DC_ONLY(0x56e20, cb 0x1C) - no retail tie yet
+void widget::force_update()
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:41
+// DC_ONLY(0x56e3c, cb 0x34) - no retail tie yet
+void* type_bottom_view_window::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:118
+// DC_ONLY(0x56e70, cb 0x34) - no retail tie yet
+void* TBottomViewNewTurn::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:118
+// DC_ONLY(0x56ea4, cb 0x18) - no retail tie yet
+void TBottomViewNewTurn::~TBottomViewNewTurn()
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:183
+// DC_ONLY(0x56ebc, cb 0x34) - no retail tie yet
+void* TBottomViewResourceMessage::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:183
+// DC_ONLY(0x56ef0, cb 0x18) - no retail tie yet
+void TBottomViewResourceMessage::~TBottomViewResourceMessage()
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:209
+// DC_ONLY(0x56f08, cb 0x34) - no retail tie yet
+void* TBottomViewMessage::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:209
+// DC_ONLY(0x56f3c, cb 0x18) - no retail tie yet
+void TBottomViewMessage::~TBottomViewMessage()
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:339
+// DC_ONLY(0x56f54, cb 0x34) - no retail tie yet
+void* TBottomViewHero::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:339
+// DC_ONLY(0x56f88, cb 0x18) - no retail tie yet
+void TBottomViewHero::~TBottomViewHero()
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:503
+// DC_ONLY(0x56fa0, cb 0x34) - no retail tie yet
+void* TBottomViewTown::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:503
+// DC_ONLY(0x56fd4, cb 0x18) - no retail tie yet
+void TBottomViewTown::~TBottomViewTown()
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:586
+// DC_ONLY(0x56fec, cb 0x34) - no retail tie yet
+void* TBottomViewKingdom::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:586
+// DC_ONLY(0x57020, cb 0x18) - no retail tie yet
+void TBottomViewKingdom::~TBottomViewKingdom()
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:643
+// DC_ONLY(0x57038, cb 0x34) - no retail tie yet
+void* TBottomViewEnemyTurn::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:643
+// DC_ONLY(0x5706c, cb 0x18) - no retail tie yet
+void TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:203
+// DC_ONLY(0x57084, cb 0x20) - no retail tie yet
+widget** std::vector<widget *,std::allocator<widget *> >::operator[](unsigned __n)
+{
+    // @stub
+}
+

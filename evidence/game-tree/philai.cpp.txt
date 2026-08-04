@@ -1,0 +1,1156 @@
+// E:\gamedcs\philai.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module philai.obj, 154 procs, 10 retail-tied.
+// retail extent 0x124550..0x12bc57 (VA 0x524550..0x52bc57)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x10d1f8, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x10d220, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x10d230, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x10d258, cb 0x10) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x10d268, cb 0x28) - no retail tie yet
+void $E469()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x10d290, cb 0x10) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x10d2a0, cb 0x28) - no retail tie yet
+void $E472()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x10d2c8, cb 0x10) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x10d2d8, cb 0x28) - no retail tie yet
+void $E475()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x10d300, cb 0x10) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x10d310, cb 0x28) - no retail tie yet
+void $E478()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x10d338, cb 0x10) - no retail tie yet
+void $E479()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x10d348, cb 0x28) - no retail tie yet
+void $E481()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x10d370, cb 0x10) - no retail tie yet
+void $E482()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x10d380, cb 0x28) - no retail tie yet
+void $E484()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x10d3a8, cb 0x10) - no retail tie yet
+void $E485()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x10d3b8, cb 0x28) - no retail tie yet
+void $E487()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x10d3e0, cb 0x10) - no retail tie yet
+void $E488()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x10d3f0, cb 0x28) - no retail tie yet
+void $E490()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x10d418, cb 0x40) - no retail tie yet
+void $E491()
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:58
+// DC_ONLY(0x10d458, cb 0x22) - no retail tie yet
+int OnMySide(int iWhichPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:67
+// DC_ONLY(0x10d47c, cb 0x92) - no retail tie yet
+void CheckDoMain(int bForceMouseCheck, int bMouseOnly)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:102
+// DC_ONLY(0x10d510, cb 0x4) - no retail tie yet
+void ShowStatus()
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:115
+// DC_ONLY(0x10d514, cb 0x4) - no retail tie yet
+void philAI::philAI()
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:123
+// DC_ONLY(0x10d518, cb 0x62) - no retail tie yet
+void IncrementHourGlass()
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:150
+// DC_ONLY(0x10d57c, cb 0x38) - no retail tie yet
+void RestoreMouse(unsigned char mouse_was_visible)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:165
+// DC_ONLY(0x10d5b4, cb 0x8C) - no retail tie yet
+void check_for_town(hero* current_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:182
+// DC_ONLY(0x10d640, cb 0x42) - no retail tie yet
+void AI_enter_garrison(hero* current_hero, garrison* our_garrison)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:207
+// DC_ONLY(0x10d684, cb 0x132) - no retail tie yet
+void upgrade_creatures(hero* current_hero, const town* current_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:263
+VA(0x00524550, 0xD2)  // anchor-global, dc 0x10d7b8
+long get_artifact_purchase_price(TArtifact artifact, long market_count, EGameResource* best_resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:298
+// DC_ONLY(0x10d91c, cb 0x114) - no retail tie yet
+long get_artifact_purchase_value(TArtifact artifact, long market_count, long* funds)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:326
+// DC_ONLY(0x10da30, cb 0xB8) - no retail tie yet
+void buy_artifacts(hero* current_hero, TArtifact* artifact_list, long market_count)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:370
+// DC_ONLY(0x10dae8, cb 0x7C) - no retail tie yet
+long value_of_black_market(const hero* current_hero, const NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:389
+// DC_ONLY(0x10db64, cb 0x10) - no retail tie yet
+void AI_visit_black_market(hero* current_hero, TBlackMarket* black_market)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:397
+// DC_ONLY(0x10db74, cb 0x150) - no retail tie yet
+void buy_artifacts(hero* current_hero, town* current_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:445
+// DC_ONLY(0x10dcc4, cb 0x1E2) - no retail tie yet
+void buy_special_building(const hero* current_hero, town* current_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:519
+// DC_ONLY(0x10dea8, cb 0x17E) - no retail tie yet
+long value_of_war_factory(const hero* current_hero, TArtifact engine, long move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:551
+// DC_ONLY(0x10e028, cb 0x3C) - no retail tie yet
+long value_of_war_factory(const hero* current_hero, long move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:561
+// DC_ONLY(0x10e064, cb 0x94) - no retail tie yet
+void visit_war_factory(hero* current_hero, TArtifact engine)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:583
+// DC_ONLY(0x10e0f8, cb 0x20) - no retail tie yet
+void AI_visit_war_factory(hero* current_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:594
+// DC_ONLY(0x10e118, cb 0x114) - no retail tie yet
+void buy_siege_engine(hero* current_hero, town* current_town, type_building_id building, TArtifact engine)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:636
+// DC_ONLY(0x10e22c, cb 0x6A) - no retail tie yet
+const hero* get_best_hero(long player_id)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:662
+// DC_ONLY(0x10e298, cb 0x9A) - no retail tie yet
+unsigned char should_garrison_town(const hero* current_hero, const town* current_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:687
+// DC_ONLY(0x10e334, cb 0xC2) - no retail tie yet
+void consider_garrisoning(hero* current_hero, town* current_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:732
+// DC_ONLY(0x10e3f8, cb 0x280) - no retail tie yet
+void AI_enter_town(hero* current_hero, town* current_town)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:811
+// DC_ONLY(0x10e678, cb 0x70) - no retail tie yet
+void AI_friendly_hero_meeting(hero* current_hero, hero* second_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:833
+// DC_ONLY(0x10e6e8, cb 0x1AA) - no retail tie yet
+void mark_shipyards(playerData* player)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:896
+// DC_ONLY(0x10e894, cb 0x114) - no retail tie yet
+void clear_shipyards(playerData* player)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:934
+// DC_ONLY(0x10e9a8, cb 0x2B0) - no retail tie yet
+void move_hero(hero* current_hero, unsigned char is_last_hero, unsigned char* explore_mode)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1056
+// DC_ONLY(0x10ec58, cb 0x258) - no retail tie yet
+void MoveHero(hero* current_hero, long* danger_zones, unsigned char is_last_hero, unsigned char* explore_mode)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1156
+// DC_ONLY(0x10eeb0, cb 0x220) - no retail tie yet
+hero* DetermineHeroToMove(int player_id, unsigned char* is_last_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1239
+// DC_ONLY(0x10f0d0, cb 0x9C) - no retail tie yet
+void move_all_heroes(long player_id, long* danger_zones)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1261
+// DC_ONLY(0x10f16c, cb 0xC0) - no retail tie yet
+void philAI::DoAI(int whichPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1319
+// DC_ONLY(0x10f22c, cb 0xCA) - no retail tie yet
+int AI_resource_cost(const playerData* player, const int* resources)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1330
+// DC_ONLY(0x10f2f8, cb 0x84) - no retail tie yet
+int AI_resource_cost(long player_id, const int* resources)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1339
+VA(0x00526d40, 0x393)  // anchor-global, dc 0x10f37c
+void type_spellvalue::type_spellvalue(const hero* new_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1393
+VA(0x005270e0, 0xDF)  // anchor-global, dc 0x10f404
+long type_spellvalue::get_damage_spell_value(SpellID spell, TSkillMastery mastery, long times_castable, long combat_value)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1439
+VA(0x005271c0, 0xC1)  // anchor-global, dc 0x10f648
+long type_spellvalue::get_mass_damage_spell_value(SpellID spell, TSkillMastery mastery, long times_castable)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1472
+VA(0x00527290, 0x134)  // anchor-global, dc 0x10f810
+long type_spellvalue::get_enchantment_value(SpellID spell, TSkillMastery mastery, long times_castable)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1529
+// DC_ONLY(0x10f94c, cb 0x136) - no retail tie yet
+long type_spellvalue::get_summoning_value(long damage, long times_castable)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1561
+VA(0x005273d0, 0x1DD)  // anchor-global, dc 0x10fa84
+long type_spellvalue::get_raw_spell_value(SpellID spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1610
+// DC_ONLY(0x10fc6c, cb 0x84) - no retail tie yet
+void type_spellvalue::fill_creature_value_list()
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1632
+VA(0x005275b0, 0x8A)  // anchor-global, dc 0x10fcf0
+long type_spellvalue::get_best_spell_value(long bits)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1667
+VA(0x00527640, 0xCB)  // anchor-global, dc 0x10fd78
+long AI_get_spell_value(const hero* our_hero, SpellID spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1699
+// DC_ONLY(0x10fe64, cb 0x52) - no retail tie yet
+long type_spellvalue::get_value_of_increase(long base_value, long power_change, long duration_change, long mana_change)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1717
+// DC_ONLY(0x10feb8, cb 0x3C) - no retail tie yet
+float value_of_experience(const hero* current_hero, const armyGroup* current_army)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1725
+// DC_ONLY(0x10fef4, cb 0x124) - no retail tie yet
+void AI_set_hero_bonuses(hero* our_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1770
+// DC_ONLY(0x110018, cb 0x15A) - no retail tie yet
+void philAI::GetTurnAIVars(int whichPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1815
+// DC_ONLY(0x110174, cb 0x170) - no retail tie yet
+int NetValueOfArtifact(const hero* current_hero, int artifact_value, int gold_cost, int resource_cost, EGameResource resource_type)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1833
+// DC_ONLY(0x1102e4, cb 0xAC) - no retail tie yet
+int ComputeUpgradeValue(hero* current_hero, int iSourceType, int iDestType)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1854
+// DC_ONLY(0x110390, cb 0x34) - no retail tie yet
+int ValueOfArena(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1867
+// DC_ONLY(0x1103c4, cb 0x42) - no retail tie yet
+long value_of_custom_item(const hero* current_hero, NewmapCell* cell, long item_value)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1883
+// DC_ONLY(0x110408, cb 0x16A) - no retail tie yet
+int ValueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1945
+VA(0x00527aa0, 0x56)  // anchor-global, dc 0x110574
+int ValueOfSpell(const hero* current_hero, SpellID spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1959
+// DC_ONLY(0x1105ac, cb 0x2C) - no retail tie yet
+long value_of_learning(const hero* current_hero, SpellID spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:1972
+// DC_ONLY(0x1105d8, cb 0x230) - no retail tie yet
+int ValueOfBlackBox(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2054
+// DC_ONLY(0x110808, cb 0xD8) - no retail tie yet
+long value_of_bank(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2115
+// DC_ONLY(0x1108e0, cb 0xD6) - no retail tie yet
+int ValueOfCampfire(playerData* player, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2128
+// DC_ONLY(0x1109b8, cb 0x24C) - no retail tie yet
+int ValueOfGenerator(const hero* current_hero, int x, int y, int z, NewmapCell* cell, int move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2183
+// DC_ONLY(0x110c04, cb 0x52) - no retail tie yet
+void AI_PurchaseCreatures(hero* current_hero, generator* current_generator)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2194
+// DC_ONLY(0x110c58, cb 0x36) - no retail tie yet
+int ValueOfDefenseTower(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2208
+// DC_ONLY(0x110c90, cb 0x66) - no retail tie yet
+long value_of_recruiting(const hero* current_hero, TCreatureType creature, short amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2220
+// DC_ONLY(0x110cf8, cb 0xBC) - no retail tie yet
+long value_of_garrison(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2250
+// DC_ONLY(0x110db4, cb 0x1D4) - no retail tie yet
+long value_of_idol(const hero* current_hero, long move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2274
+// DC_ONLY(0x110f88, cb 0x7C) - no retail tie yet
+int ValueOfFlotsam(playerData* player)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2283
+// DC_ONLY(0x111004, cb 0x24) - no retail tie yet
+int ValueOfGarden(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2294
+// DC_ONLY(0x111028, cb 0x32) - no retail tie yet
+int ValueOfLeanTo(NewmapCell* cell, playerData* player)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2306
+// DC_ONLY(0x11105c, cb 0x2CC) - no retail tie yet
+long value_of_enemy_town(const hero* current_hero, const town* enemy_town, short move_cost, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2392
+// DC_ONLY(0x111328, cb 0x1CC) - no retail tie yet
+long value_of_hero_event(const hero* current_hero, NewmapCell* cell, short x, short y, short z, short move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2465
+// DC_ONLY(0x1114f4, cb 0x13A) - no retail tie yet
+long value_of_hill_fort(const hero* current_hero, long move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2513
+// DC_ONLY(0x111630, cb 0x10A) - no retail tie yet
+void AI_visit_hill_fort(hero* current_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2550
+// DC_ONLY(0x11173c, cb 0x94) - no retail tie yet
+int ValueOfLibrary(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2567
+// DC_ONLY(0x1117d0, cb 0x36) - no retail tie yet
+int ValueOfLighthouse(NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2579
+// DC_ONLY(0x111808, cb 0x2A) - no retail tie yet
+TPrimarySkill AI_ChooseMagicSkill(hero* current_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2593
+// DC_ONLY(0x111834, cb 0xC4) - no retail tie yet
+int ValueOfMagicSchool(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2615
+// DC_ONLY(0x1118f8, cb 0x78) - no retail tie yet
+int ValueOfMercenaryCamp(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2626
+// DC_ONLY(0x111970, cb 0x12C) - no retail tie yet
+int ValueOfMine(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2668
+// DC_ONLY(0x111a9c, cb 0xE0) - no retail tie yet
+long value_of_monsters(const hero* current_hero, NewmapCell* cell, type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2692
+// DC_ONLY(0x111b7c, cb 0xC6) - no retail tie yet
+int MoraleIncreaseValue(const hero* current_hero, int value)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2711
+// DC_ONLY(0x111c44, cb 0x34) - no retail tie yet
+int value_of_move_source(const hero* current_hero, long flag, short increase, long* move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2728
+// DC_ONLY(0x111c78, cb 0xF0) - no retail tie yet
+int LuckIncreaseValue(const hero* current_hero, int value)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2752
+// DC_ONLY(0x111d68, cb 0xAE) - no retail tie yet
+int value_of_obelisk(NewmapCell* cell, long player_id)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2775
+// DC_ONLY(0x111e18, cb 0x1C) - no retail tie yet
+long value_of_magus_hut(long player_id)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2784
+// DC_ONLY(0x111e34, cb 0x6E) - no retail tie yet
+int ValueOfPowerSchool(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2794
+// DC_ONLY(0x111ea4, cb 0xAE) - no retail tie yet
+int ValueOfPrison(NewmapCell* cell, playerData* player)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2811
+// DC_ONLY(0x111f54, cb 0x118) - no retail tie yet
+long value_of_pyramid(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2845
+// DC_ONLY(0x11206c, cb 0x7C) - no retail tie yet
+long get_value_of_well(const hero* current_hero, unsigned short move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2865
+// DC_ONLY(0x1120e8, cb 0xD0) - no retail tie yet
+int ValueOfRallyFlag(const hero* current_hero, long* move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2879
+// DC_ONLY(0x1121b8, cb 0x50) - no retail tie yet
+int ValueOfRefugeeCamp(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2891
+// DC_ONLY(0x112208, cb 0x58) - no retail tie yet
+void AI_RecruitRefugees(hero* current_hero, TCreatureType type, short* number)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2903
+// DC_ONLY(0x112260, cb 0x14C) - no retail tie yet
+long ValueOfResource(const hero* current_hero, NewmapCell* cell, playerData* player)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2931
+// DC_ONLY(0x1123ac, cb 0xDC) - no retail tie yet
+int ValueOfSeaChest(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2948
+// DC_ONLY(0x112488, cb 0x88) - no retail tie yet
+int ValueOfSkeleton(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2964
+// DC_ONLY(0x112510, cb 0xDC) - no retail tie yet
+int ValueOfScroll(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:2997
+// DC_ONLY(0x1125ec, cb 0x1E) - no retail tie yet
+int ValueOfShrine(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3007
+// DC_ONLY(0x11260c, cb 0xC4) - no retail tie yet
+int AI_VisitSirens(const hero* current_hero, armyGroup* army)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3044
+// DC_ONLY(0x1126d0, cb 0x9C) - no retail tie yet
+int ValueOfSirens(const hero* current_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3069
+// DC_ONLY(0x11276c, cb 0xC4) - no retail tie yet
+int ValueOfStables(const hero* current_hero, long* move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3096
+// DC_ONLY(0x112830, cb 0xE4) - no retail tie yet
+long value_of_reinforcing(const hero* current_hero, town* current_town, short move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3131
+// DC_ONLY(0x112914, cb 0x4BE) - no retail tie yet
+long value_of_town(const hero* current_hero, int x, int y, int z, short move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3277
+// DC_ONLY(0x112dd4, cb 0x10C) - no retail tie yet
+unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell, TCreatureType type, short amount, long gold_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3297
+// DC_ONLY(0x112ee0, cb 0x8A) - no retail tie yet
+unsigned char AI_choose_resource_or_experience(const hero* current_hero, EGameResource resource, int amount, int experience)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3307
+// DC_ONLY(0x112f6c, cb 0x160) - no retail tie yet
+int ValueOfTreasure(const hero* current_hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3339
+// DC_ONLY(0x1130cc, cb 0x258) - no retail tie yet
+int ValueOfTree(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3383
+// DC_ONLY(0x113324, cb 0x5C) - no retail tie yet
+int value_of_wagon(NewmapCell* cell, long player_id)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3402
+// DC_ONLY(0x113380, cb 0x10A) - no retail tie yet
+int value_of_war_school(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3424
+// DC_ONLY(0x11348c, cb 0x7E) - no retail tie yet
+long get_value_of_spring(const hero* current_hero, const NewmapCell* cell, unsigned short move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3444
+// DC_ONLY(0x11350c, cb 0xA0) - no retail tie yet
+long get_school_value(const hero* our_hero, TSecondarySkill skill)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3469
+// DC_ONLY(0x1135ac, cb 0x536) - no retail tie yet
+long get_skill_value(const hero* our_hero, TSecondarySkill skill, unsigned char complex_choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3645
+// DC_ONLY(0x113ae4, cb 0x138) - no retail tie yet
+unsigned char wants_skill(const hero* our_hero, TSecondarySkill first, unsigned char complex_choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3708
+// DC_ONLY(0x113c1c, cb 0xA0) - no retail tie yet
+long value_of_university(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3744
+// DC_ONLY(0x113cbc, cb 0xE4) - no retail tie yet
+void AI_visit_university(hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3796
+// DC_ONLY(0x113da0, cb 0x84) - no retail tie yet
+int value_of_witch_hut(const hero* current_hero, NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:3834
+// DC_ONLY(0x113e24, cb 0x986) - no retail tie yet
+long AI_value_of_event(const hero* current_hero, type_point point, long* move_cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:4126
+// DC_ONLY(0x1147ac, cb 0x2AE) - no retail tie yet
+void AI_examine_map()
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:4180
+VA(0x0052bbd0, 0x87)  // anchor-global, dc 0x114a5c
+TSecondarySkill AI_choose_secondary_skill(const hero* our_hero, TSecondarySkill first, TSecondarySkill second, unsigned char complex_choice)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:4204
+// DC_ONLY(0x114adc, cb 0x68) - no retail tie yet
+void AI_join_decision(hero* current_hero, TCreatureType creature, short amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\philai.cpp:4217
+// DC_ONLY(0x114b44, cb 0x44) - no retail tie yet
+long AI_value_of_event(const hero* current_hero, type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:1006
+// DC_ONLY(0x114b88, cb 0x8) - no retail tie yet
+long hero::get_value_of_spring()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:1011
+// DC_ONLY(0x114b90, cb 0x8) - no retail tie yet
+long hero::get_value_of_well()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:1021
+// DC_ONLY(0x114b98, cb 0x8) - no retail tie yet
+void hero::set_value_of_duration(long arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:1026
+// DC_ONLY(0x114ba0, cb 0x8) - no retail tie yet
+void hero::set_value_of_knowledge(long arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:1031
+// DC_ONLY(0x114ba8, cb 0x8) - no retail tie yet
+void hero::set_value_of_power(long arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:1036
+// DC_ONLY(0x114bb0, cb 0x8) - no retail tie yet
+void hero::set_value_of_spring(long arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:1041
+// DC_ONLY(0x114bb8, cb 0x8) - no retail tie yet
+void hero::set_value_of_well(long arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.h:268
+// DC_ONLY(0x114bc0, cb 0x4) - no retail tie yet
+long type_AI_player::get_magus_hut_value()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.h:284
+// DC_ONLY(0x114bc4, cb 0x14) - no retail tie yet
+void type_AI_player::set_attack_bonuses(float computer_bonus, float human_bonus)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_player.h:307
+// DC_ONLY(0x114bd8, cb 0x4) - no retail tie yet
+long type_AI_creature_swapper::get_army_increase()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_spellvalue.h:99
+// DC_ONLY(0x114bdc, cb 0x4) - no retail tie yet
+long type_spellvalue::get_mana()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_spellvalue.h:119
+// DC_ONLY(0x114be0, cb 0x4) - no retail tie yet
+void type_spellvalue::set_mana(long arg)
+{
+    // @stub
+}
+
+// E:\gamedcs\FindPath.h:252
+// DC_ONLY(0x114be4, cb 0x6) - no retail tie yet
+void searchArray::set_danger_zones(long* danger_zone_map)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:204
+// DC_ONLY(0x114bec, cb 0x24) - no retail tie yet
+const type_creature_value* std::vector<type_creature_value,std::allocator<type_creature_value> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:180
+// DC_ONLY(0x114c10, cb 0x4) - no retail tie yet
+const type_creature_value* std::vector<type_creature_value,std::allocator<type_creature_value> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:79
+// DC_ONLY(0x114c14, cb 0xA) - no retail tie yet
+void std::swap(TSecondarySkill* __a, TSecondarySkill* __b)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x00524630 size    96  game_173a70_sub00_124630 [caller]
+//   0x00524690 size  1668  game_124630_sub00_124690 [caller]
+//   0x00524d20 size   163  game_124690_sub00_124d20 [caller]
+//   0x00524dd0 size   243  game_124630_sub01_124dd0 [caller]
+//   0x00524ed0 size   237  game_a84f0_sub62_124ed0 [caller]
+//   0x00524fc0 size   342  game_a84f0_sub63_124fc0 [caller]
+//   0x00525120 size   224  game_124fc0_sub00_125120 [caller]
+//   0x00525200 size   464  game_1253d0_sub03_125200 [caller]
+//   0x005253d0 size  1548  game_aafd0_sub01_1253d0 [caller]
+//   0x005259e0 size   517  game_1253d0_sub04_1259e0 [caller]
+//   0x00525bf0 size   172  game_1253d0_sub05_125bf0 [caller]
+//   0x00525ca0 size   286  game_1253d0_sub06_125ca0 [caller]
+//   0x00525dc0 size   177  game_a2800_sub02_125dc0 [caller]
+//   0x00525e80 size   866  game_87b0_sub08_125e80 [caller]
+//   0x005261f0 size  1466  game_125e80_sub02_1261f0 [caller]
+//   0x005267b0 size   730  game_1261f0_sub02_1267b0 [caller]
+//   0x00526a90 size   468  game_125e80_sub03_126a90 [caller]
+//   0x00526c70 size    72  AI_resource_cost [hd-crossbuild]
+//   0x00526cc0 size    85  AI_resource_cost_126cc0 [hd-crossbuild]
+//   0x00526d20 size    30  game_1bf3c0_sub00_126d20 [caller]
+//   0x00527710 size    76  game_27330_sub03_127710 [caller]
+//   0x00527760 size   498  game_2fc50_sub04_127760 [caller]
+//   0x00527960 size   320  game_125e80_sub04_127960 [caller]
+//   0x00527b00 size   164  game_a18b0_sub02_127b00 [caller]
+//   0x00527bb0 size   285  game_a84f0_sub64_127bb0 [caller]
+//   0x00527cd0 size    27  game_a33e0_sub00_127cd0 [caller]
+//   0x00527cf0 size   137  game_128040_sub01_127cf0 [caller]
+//   0x00527d80 size   144  game_128040_sub02_127d80 [caller]
+//   0x00527e10 size   171  game_a4600_sub01_127e10 [caller]
+//   0x00527ec0 size   147  game_a5980_sub00_127ec0 [caller]
+//   0x00527f60 size   115  game_a7250_sub00_127f60 [caller]
+//   0x00527fe0 size    81  game_a6440_sub00_127fe0 [caller]
+//   0x00528040 size  5704  game_2edd0_sub07_128040 [caller]
+//   0x00529690 size    51  ExtraInfoUnion_PlayerKnowsCell [hd-crossbuild]
+//   0x005296d0 size    55  game_OnSameTeam [hd-crossbuild]
+//   0x00529710 size    52  game_UpgradedCreatureType [hd-crossbuild]
+//   0x00529750 size   120  get_artifact_purchase_value [hd-crossbuild]
+//   0x005297d0 size    54  game_128040_sub07_1297d0 [caller]
+//   0x00529810 size   124  game_128040_sub08_129810 [caller]
+//   0x00529890 size    64  game_128040_sub09_129890 [caller]
+//   0x005298d0 size    75  game_128040_sub10_1298d0 [caller]
+//   0x00529920 size   269  game_128040_sub11_129920 [caller]
+//   0x00529a30 size   639  game_128040_sub12_129a30 [caller]
+//   0x00529cb0 size   729  game_128040_sub13_129cb0 [caller]
+//   0x00529f90 size   114  game_128040_sub14_129f90 [caller]
+//   0x0052a010 size   298  game_128040_sub15_12a010 [caller]
+//   0x0052a140 size   150  game_128040_sub16_12a140 [caller]
+//   0x0052a1e0 size   195  game_128040_sub17_12a1e0 [caller]
+//   0x0052a2b0 size   197  game_128040_sub18_12a2b0 [caller]
+//   0x0052a380 size    28  game_128040_sub19_12a380 [caller]
+//   0x0052a3a0 size    97  game_128040_sub20_12a3a0 [caller]
+//   0x0052a410 size   245  game_128040_sub21_12a410 [caller]
+//   0x0052a510 size   223  game_128040_sub22_12a510 [caller]
+//   0x0052a5f0 size   264  game_128040_sub23_12a5f0 [caller]
+//   0x0052a700 size    16  game_128040_sub24_12a700 [caller]
+//   0x0052a710 size   173  game_12a700_sub00_12a710 [caller]
+//   0x0052a7c0 size   168  game_128040_sub25_12a7c0 [caller]
+//   0x0052a870 size    79  game_128040_sub26_12a870 [caller]
+//   0x0052a8c0 size   154  game_128040_sub27_12a8c0 [caller]
+//   0x0052a960 size   344  game_128040_sub28_12a960 [caller]
+//   0x0052aac0 size   185  game_128040_sub29_12aac0 [caller]
+//   0x0052ab80 size  1285  game_128040_sub30_12ab80 [caller]
+//   0x0052b090 size   334  game_12ab80_sub00_12b090 [caller]
+//   0x0052b1e0 size   756  game_12ab80_sub01_12b1e0 [caller]
+//   0x0052b4e0 size   191  game_128040_sub31_12b4e0 [caller]
+//   0x0052b5a0 size   353  game_128040_sub32_12b5a0 [caller]
+//   0x0052b710 size   126  game_128040_sub33_12b710 [caller]
+//   0x0052b790 size   113  game_128040_sub34_12b790 [caller]
+//   0x0052b810 size   225  game_128040_sub35_12b810 [caller]
+//   0x0052b900 size   182  game_128040_sub36_12b900 [caller]
+//   0x0052b9c0 size   524  game_bcda0_sub26_12b9c0 [caller]
+

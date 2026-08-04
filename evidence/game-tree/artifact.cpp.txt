@@ -1,0 +1,179 @@
+// E:\gamedcs\artifact.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module artifact.obj, 25 procs, 0 retail-tied.
+
+// E:\gamedcs\artifact.cpp:49
+// DC_ONLY(0x4fe8c, cb 0x18) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\artifact.cpp:49
+// DC_ONLY(0x4fea4, cb 0x1C) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\artifact.cpp:56
+// DC_ONLY(0x4fec0, cb 0x126) - no retail tie yet
+unsigned char InitializeArtifactTraitsTable()
+{
+    // @stub
+}
+
+// E:\gamedcs\artifact.cpp:108
+// DC_ONLY(0x4ffe8, cb 0x70) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\artifact.cpp:112
+// DC_ONLY(0x50058, cb 0x7BA) - no retail tie yet
+void InitializeArtifactTraits(int id, const std::vector<char* resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\artifact.cpp:174
+// DC_ONLY(0x50814, cb 0x18) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\artifact.cpp:174
+// DC_ONLY(0x5082c, cb 0x60) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\TextResource.h:108
+// DC_ONLY(0x5088c, cb 0x18) - no retail tie yet
+int TSpreadsheetResource::GetNumberOfRows()
+{
+    // @stub
+}
+
+// E:\gamedcs\TextResource.h:128
+// DC_ONLY(0x508a4, cb 0x18) - no retail tie yet
+const std::vector<char* TSpreadsheetResource::GetRow(int r)
+{
+    // @stub
+}
+
+// E:\gamedcs\artifact.cpp:33
+// DC_ONLY(0x508bc, cb 0x8) - no retail tie yet
+void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
+{
+    // @stub
+}
+
+// E:\gamedcs\artifact.cpp:34
+// DC_ONLY(0x508c4, cb 0x18) - no retail tie yet
+void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
+{
+    // @stub
+}
+
+// E:\gamedcs\artifact.cpp:36
+// DC_ONLY(0x508dc, cb 0x4) - no retail tie yet
+void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
+{
+    // @stub
+}
+
+// E:\gamedcs\artifact.cpp:38
+// DC_ONLY(0x508e0, cb 0x4) - no retail tie yet
+char* `anonymous namespace'::TAutoStrPtr::get()
+{
+    // @stub
+}
+
+// E:\gamedcs\artifact.cpp:49
+// DC_ONLY(0x508e4, cb 0x20) - no retail tie yet
+void TArtifactTraits::TArtifactTraits()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:414
+// DC_ONLY(0x50904, cb 0x20) - no retail tie yet
+void std::bitset<18,unsigned long>::bitset<18,unsigned long>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:564
+// DC_ONLY(0x50924, cb 0x20) - no retail tie yet
+std::bitset<18,unsigned std::bitset<18,unsigned long>::operator[](__$ReturnUdt, unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:376
+// DC_ONLY(0x50944, cb 0x4) - no retail tie yet
+void std::bitset<18,unsigned long>::reference::~reference()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:379
+// DC_ONLY(0x50948, cb 0x3C) - no retail tie yet
+std::bitset<18,unsigned* std::bitset<18,unsigned long>::reference::operator=(unsigned char __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0x50984, cb 0xC) - no retail tie yet
+unsigned std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:204
+// DC_ONLY(0x50990, cb 0x20) - no retail tie yet
+std::vector<char** std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:107
+// DC_ONLY(0x509b0, cb 0x1C) - no retail tie yet
+void std::_Base_bitset<1,unsigned long>::_Base_bitset<1,unsigned long>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:370
+// DC_ONLY(0x509cc, cb 0x34) - no retail tie yet
+void std::bitset<18,unsigned long>::reference::reference(std::bitset<18,unsigned* __b, unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:180
+// DC_ONLY(0x50a00, cb 0x4) - no retail tie yet
+std::vector<char** std::vector<std::vector<char *,std::allocator<char *> > *,std::allocator<std::vector<char *,std::allocator<char *> > *> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:120
+// DC_ONLY(0x50a04, cb 0x1C) - no retail tie yet
+unsigned long std::_Base_bitset<18,unsigned long>::_S_maskbit(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:117
+// DC_ONLY(0x50a20, cb 0x8) - no retail tie yet
+unsigned std::_Base_bitset<18,unsigned long>::_S_whichbit(unsigned __pos)
+{
+    // @stub
+}
+

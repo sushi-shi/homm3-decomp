@@ -1,0 +1,29 @@
+// E:\gamedcs\resource.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module resource.obj, 3 procs, 2 retail-tied.
+// retail extent 0x158720..0x1587a7 (VA 0x558720..0x5587a7)
+
+// E:\gamedcs\resource.cpp:25
+VA(0x00558720, 0x4E)  // anchor-global, dc 0x120934
+void resource::resource(const char* newName, EResourceType newType)
+{
+    // @stub
+}
+
+// E:\gamedcs\resource.cpp:47
+VA(0x005587a0, 0x7)  // anchor-global, dc 0x12099c
+void resource::~resource()
+{
+    // @stub
+}
+
+// E:\gamedcs\resource.cpp:44
+// DC_ONLY(0x1209c0, cb 0x34) - no retail tie yet
+void* resource::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x00558770 size    35  game_158770 [band]
+

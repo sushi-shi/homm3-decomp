@@ -1,0 +1,4398 @@
+// E:\gamedcs\mapcell.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module mapcell.obj, 618 procs, 13 retail-tied.
+// retail extent 0xfbf90..0x105d12 (VA 0x4fbf90..0x505d12)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xeb3a4, cb 0x38) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xeb3dc, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xeb3ec, cb 0x38) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xeb424, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xeb434, cb 0x38) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xeb46c, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xeb47c, cb 0x38) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xeb4b4, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xeb4c4, cb 0x38) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xeb4fc, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xeb50c, cb 0x38) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xeb544, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xeb554, cb 0x38) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xeb58c, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xeb59c, cb 0x38) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xeb5d4, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xeb5e4, cb 0x38) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xeb61c, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xeb62c, cb 0x38) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xeb664, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:46
+VA(0x004fbf90, 0x61)  // anchor-global, dc 0xeb6a4
+void ExtraInfoUnion::SetCellVisited(short player)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:62
+// DC_ONLY(0xeb73c, cb 0x94) - no retail tie yet
+int NewfullMap::readTimedEventList(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:85
+// DC_ONLY(0xeb7d0, cb 0x1CE) - no retail tie yet
+int TTimedEvent::Read(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:126
+// DC_ONLY(0xeb9a0, cb 0x98) - no retail tie yet
+int NewfullMap::saveTimedEventList(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:148
+// DC_ONLY(0xeba38, cb 0xD4) - no retail tie yet
+int TTimedEvent::Save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:179
+// DC_ONLY(0xebb0c, cb 0xB0) - no retail tie yet
+int NewfullMap::loadTimedEventList(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:201
+// DC_ONLY(0xebbbc, cb 0xD4) - no retail tie yet
+int TTimedEvent::Load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:232
+// DC_ONLY(0xebc90, cb 0x92) - no retail tie yet
+int TTownEvent::Read(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:261
+// DC_ONLY(0xebd24, cb 0x98) - no retail tie yet
+int NewfullMap::saveTownEventList(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:283
+// DC_ONLY(0xebdbc, cb 0x7E) - no retail tie yet
+int TTownEvent::Save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:307
+// DC_ONLY(0xebe3c, cb 0xB0) - no retail tie yet
+int NewfullMap::loadTownEventList(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:329
+// DC_ONLY(0xebeec, cb 0x7E) - no retail tie yet
+int TTownEvent::Load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:354
+// DC_ONLY(0xebf6c, cb 0x2C) - no retail tie yet
+CObject* NewmapCell::TObjectCell::get_object()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:361
+VA(0x004fcaa0, 0x12F)  // anchor-global, dc 0xebf98
+NewmapCell* NewmapCell::get_trigger_cell()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:387
+VA(0x004fcbd0, 0x5C)  // anchor-global, dc 0xec098
+TAdventureObjectType NewmapCell::get_map_object()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:404
+VA(0x004fcc30, 0x4D)  // anchor-global, dc 0xec114
+unsigned long NewmapCell::get_map_extraInfo()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:420
+VA(0x004fcc80, 0x65)  // anchor-global, dc 0xec1c8
+unsigned char NewmapCell::cell_is_trigger()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:436
+VA(0x004fccf0, 0xD0)  // anchor-global, dc 0xec254
+unsigned char NewmapCell::is_diggable()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:464
+VA(0x004fcdc0, 0x58)  // anchor-global, dc 0xec324
+const unsigned char NewmapCell::HasTriggerableEvent()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:490
+VA(0x004fce20, 0x116)  // anchor-global, dc 0xec3b4
+TAdventureObjectType NewmapCell::get_special_terrain()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:524
+VA(0x004fd060, 0x15C)  // anchor-global, dc 0xec4fc
+void NewfullMap::NewfullMap()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:530
+VA(0x004fd1e0, 0x271)  // anchor-global, dc 0xec6a4
+void NewfullMap::~NewfullMap()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:537
+// DC_ONLY(0xec724, cb 0xE8) - no retail tie yet
+void NewfullMap::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:550
+// DC_ONLY(0xec80c, cb 0xE6) - no retail tie yet
+void NewfullMap::Init(int size, unsigned char two_layers)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:614
+// DC_ONLY(0xec8f4, cb 0x2A0) - no retail tie yet
+int NewfullMap::Read(void* infile, int size, unsigned char two_layers)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:679
+// DC_ONLY(0xecb94, cb 0x264) - no retail tie yet
+int NewfullMap::Load(void* infile, int size, unsigned char two_layers)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:759
+// DC_ONLY(0xecdf8, cb 0x19E) - no retail tie yet
+int NewfullMap::Save(void* outfile, int size, unsigned char two_layers)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:809
+// DC_ONLY(0xecf98, cb 0x3EA) - no retail tie yet
+int NewfullMap::readMapLayer(void* infile, int size, int layer)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:908
+// DC_ONLY(0xed384, cb 0x302) - no retail tie yet
+int NewfullMap::saveMapLayer(void* outfile, int size, int layer)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:995
+// DC_ONLY(0xed688, cb 0x2FC) - no retail tie yet
+int NewfullMap::loadMapLayer(void* infile, int size, int layer)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1095
+// DC_ONLY(0xed984, cb 0x98) - no retail tie yet
+int NewfullMap::readBoatData(void* infile, CObject* boatObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1110
+VA(0x004fec10, 0x1D)  // anchor-global, dc 0xeda1c
+CObjectType* CObject::get_object_type_ptr()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1119
+// DC_ONLY(0xeda4c, cb 0x6C) - no retail tie yet
+type_point CObject::get_trigger(__$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1131
+VA(0x004fec30, 0x106)  // anchor-global, dc 0xedab8
+void CObject::FindTrigger(int* result_x, int* result_y)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1162
+// DC_ONLY(0xedbf8, cb 0x11A) - no retail tie yet
+int NewfullMap::readGeneratorData(void* infile, CObject* generatorObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1199
+// DC_ONLY(0xedd14, cb 0xD2) - no retail tie yet
+int NewfullMap::readHolyGrailData(void* infile, CObject* grailObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1224
+// DC_ONLY(0xedde8, cb 0x70) - no retail tie yet
+int NewfullMap::readShrineData(void* infile, CObject* shrineObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1246
+// DC_ONLY(0xede58, cb 0x128) - no retail tie yet
+int NewfullMap::readTreasureData(void* infile, TreasureData* treasure)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1293
+// DC_ONLY(0xedf80, cb 0xA0) - no retail tie yet
+int NewfullMap::saveTreasureList(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1316
+// DC_ONLY(0xee020, cb 0x70) - no retail tie yet
+int NewfullMap::saveTreasureData(void* outfile, TreasureData* thisTreasure)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1338
+// DC_ONLY(0xee090, cb 0x9C) - no retail tie yet
+int NewfullMap::loadTreasureList(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1362
+// DC_ONLY(0xee12c, cb 0x76) - no retail tie yet
+int NewfullMap::loadTreasureData(void* infile, TreasureData* thisTreasure)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1385
+// DC_ONLY(0xee1a4, cb 0x13A) - no retail tie yet
+int NewfullMap::readArtifactData(void* infile, CObject* artifactObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1421
+// DC_ONLY(0xee2e0, cb 0x130) - no retail tie yet
+int NewfullMap::readSpellScrollData(void* infile, CObject* scrollObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1470
+// DC_ONLY(0xee410, cb 0x15A) - no retail tie yet
+int NewfullMap::readResourceData(void* infile, CObject* resourceObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1524
+// DC_ONLY(0xee56c, cb 0x4F2) - no retail tie yet
+int NewfullMap::readBlackBox(void* infile, BlackBoxData* thisBox)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1708
+// DC_ONLY(0xeea60, cb 0xDC) - no retail tie yet
+int NewfullMap::readBlackBoxData(void* infile, CObject* blackboxObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1729
+// DC_ONLY(0xeeb3c, cb 0xA0) - no retail tie yet
+int NewfullMap::saveBlackBoxList(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1751
+// DC_ONLY(0xeebdc, cb 0x4C2) - no retail tie yet
+int NewfullMap::saveBlackBox(void* outfile, BlackBoxData* thisBox)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1891
+// DC_ONLY(0xef0a0, cb 0xB8) - no retail tie yet
+int NewfullMap::loadBlackBoxList(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1914
+// DC_ONLY(0xef158, cb 0x484) - no retail tie yet
+int NewfullMap::loadBlackBox(void* infile, BlackBoxData* thisBox)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2073
+// DC_ONLY(0xef5dc, cb 0x1EA) - no retail tie yet
+int NewfullMap::readEventData(void* infile, CObject* eventObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2124
+// DC_ONLY(0xef7c8, cb 0x3F0) - no retail tie yet
+int NewfullMap::readSeerData(void* infile, CObject* seerObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2300
+// DC_ONLY(0xefbb8, cb 0x26E) - no retail tie yet
+int NewfullMap::readScholarData(void* infile, CObject* scholarObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2383
+// DC_ONLY(0xefe28, cb 0x1C2) - no retail tie yet
+int NewfullMap::readShipyardData(void* infile, CObject* shipyardObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2445
+// DC_ONLY(0xeffec, cb 0x150) - no retail tie yet
+int NewfullMap::readMineData(void* infile, CObject* mineObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2489
+// DC_ONLY(0xf013c, cb 0x168) - no retail tie yet
+int NewfullMap::readAbandonedMineData(void* infile, CObject* mineObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2552
+// DC_ONLY(0xf02a4, cb 0xEC) - no retail tie yet
+int NewfullMap::readSignData(void* infile, CObject* signObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2579
+// DC_ONLY(0xf0390, cb 0x358) - no retail tie yet
+int NewfullMap::readMonsterData(void* infile, CObject* monsterObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2695
+// DC_ONLY(0xf06e8, cb 0xA0) - no retail tie yet
+int NewfullMap::saveMonsterList(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2717
+// DC_ONLY(0xf0788, cb 0x9C) - no retail tie yet
+int NewfullMap::loadMonsterList(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2740
+// DC_ONLY(0xf0824, cb 0x92) - no retail tie yet
+int NewfullMap::saveMonsterData(void* outfile, MonsterData* thisMonster)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2768
+// DC_ONLY(0xf08b8, cb 0x94) - no retail tie yet
+int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2798
+// DC_ONLY(0xf094c, cb 0x4A8) - no retail tie yet
+int NewfullMap::readTownData(void* infile, CObject* townObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2951
+// DC_ONLY(0xf0df4, cb 0x726) - no retail tie yet
+int NewfullMap::readHeroData(void* infile, CObject* heroObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3229
+// DC_ONLY(0xf151c, cb 0x1AC) - no retail tie yet
+int NewfullMap::readGarrisonData(void* infile, CObject* garrisonObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3290
+// DC_ONLY(0xf16c8, cb 0x454) - no retail tie yet
+int NewfullMap::readObject(void* infile, CObject* tempObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3443
+// DC_ONLY(0xf1b1c, cb 0xDA) - no retail tie yet
+int NewfullMap::saveObject(void* outfile, CObject* tempObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3476
+// DC_ONLY(0xf1bf8, cb 0xDE) - no retail tie yet
+int NewfullMap::loadObject(void* infile, CObject* tempObject)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3514
+// DC_ONLY(0xf1cd8, cb 0x5F2) - no retail tie yet
+int NewfullMap::readObjectType(void* infile, CObjectType* tempObjectType)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3658
+// DC_ONLY(0xf22cc, cb 0x4B6) - no retail tie yet
+int NewfullMap::saveObjectType(void* outfile, CObjectType* tempObjectType)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3752
+// DC_ONLY(0xf2784, cb 0x3FA) - no retail tie yet
+int NewfullMap::loadObjectType(void* infile, CObjectType* tempObjectType)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3835
+// DC_ONLY(0xf2b80, cb 0x34) - no retail tie yet
+void $E482()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3835
+// DC_ONLY(0xf2bb4, cb 0x16) - no retail tie yet
+void $E483()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3835
+// DC_ONLY(0xf2bcc, cb 0x14) - no retail tie yet
+void $E484()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3835
+// DC_ONLY(0xf2be0, cb 0x40) - no retail tie yet
+void $E485()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3838
+// DC_ONLY(0xf2c20, cb 0x3F6) - no retail tie yet
+int NewfullMap::readMapObjects(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3924
+// DC_ONLY(0xf3018, cb 0x174) - no retail tie yet
+int NewfullMap::saveMapObjects(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:3962
+// DC_ONLY(0xf318c, cb 0x270) - no retail tie yet
+int NewfullMap::loadMapObjects(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:4018
+// DC_ONLY(0xf33fc, cb 0x2B4) - no retail tie yet
+void NewfullMap::GenerateHeightMap(const CObject* obj, []* map)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:4053
+// DC_ONLY(0xf36b0, cb 0x372) - no retail tie yet
+void NewfullMap::StampObject(NewmapCell* thisCell, NewmapCell::TObjectCell* objCell)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:4167
+// DC_ONLY(0xf3a24, cb 0x8CA) - no retail tie yet
+void NewfullMap::calc_cell_extra(NewmapCell* thisCell, unsigned char bSetExtraInfo)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:4310
+// DC_ONLY(0xf42f0, cb 0xF6) - no retail tie yet
+void NewfullMap::CalculateCellExtra(NewmapCell* thisCell, unsigned char bSetExtraInfo)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:4346
+VA(0x00505b20, 0x1F2)  // anchor-global, dc 0xf43e8
+int NewfullMap::PlaceObject(int ObjectIndex, unsigned char setExtraInfo)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:4404
+// DC_ONLY(0xf4740, cb 0x50) - no retail tie yet
+int NewfullMap::placeObjects()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:333
+// DC_ONLY(0xf4790, cb 0x3C) - no retail tie yet
+void TreasureData::TreasureData()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:364
+// DC_ONLY(0xf47cc, cb 0xF0) - no retail tie yet
+void BlackBoxData::BlackBoxData()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:364
+// DC_ONLY(0xf48bc, cb 0x1C) - no retail tie yet
+void TreasureData::~TreasureData()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:400
+// DC_ONLY(0xf48d8, cb 0x30) - no retail tie yet
+void TTownEvent::TTownEvent()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:400
+// DC_ONLY(0xf4908, cb 0x20) - no retail tie yet
+void TTimedEvent::TTimedEvent()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:400
+// DC_ONLY(0xf4928, cb 0x1C) - no retail tie yet
+void TTimedEvent::~TTimedEvent()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:587
+// DC_ONLY(0xf4944, cb 0x60) - no retail tie yet
+void CObject::CObject()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:685
+// DC_ONLY(0xf49a4, cb 0xAC) - no retail tie yet
+void NewmapCell::NewmapCell()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:735
+// DC_ONLY(0xf4a50, cb 0x28) - no retail tie yet
+void MonsterData::MonsterData()
+{
+    // @stub
+}
+
+// E:\gamedcs\MapCell.h:1269
+// DC_ONLY(0xf4a78, cb 0x24) - no retail tie yet
+TAdventureObjectType CObject::get_type()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:150
+// DC_ONLY(0xf4a9c, cb 0x1E) - no retail tie yet
+TAdventureObjectType type_obscuring_object::get_obscured_object()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:167
+// DC_ONLY(0xf4abc, cb 0x32) - no retail tie yet
+unsigned char type_obscuring_object::get_obscured_trigger()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.h:377
+// DC_ONLY(0xf4af0, cb 0x48) - no retail tie yet
+void TownExtra::TownExtra()
+{
+    // @stub
+}
+
+// E:\gamedcs\seerhut.h:108
+// DC_ONLY(0xf4b38, cb 0x2A) - no retail tie yet
+void TSeerHut::TSeerHut()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:544
+// DC_ONLY(0xf4b64, cb 0x78) - no retail tie yet
+void* NewmapCell::`vector deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:544
+// DC_ONLY(0xf4bdc, cb 0x20) - no retail tie yet
+void NewmapCell::~NewmapCell()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:1725
+// DC_ONLY(0xf4bfc, cb 0x54) - no retail tie yet
+void BlackBoxData::~BlackBoxData()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2692
+// DC_ONLY(0xf4c50, cb 0x1C) - no retail tie yet
+void MonsterData::~MonsterData()
+{
+    // @stub
+}
+
+// E:\gamedcs\mapcell.cpp:2947
+// DC_ONLY(0xf4c6c, cb 0x1C) - no retail tie yet
+void TTownEvent::~TTownEvent()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:565
+// DC_ONLY(0xf4c88, cb 0x28) - no retail tie yet
+unsigned char std::bitset<48,unsigned long>::operator[](unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xf4cb0, cb 0x24) - no retail tie yet
+void std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::vector<SecondarySkillData,std::allocator<SecondarySkillData> >(const std::allocator<SecondarySkillData>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xf4cd4, cb 0x34) - no retail tie yet
+void std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::~vector<SecondarySkillData,std::allocator<SecondarySkillData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xf4d08, cb 0x24) - no retail tie yet
+void std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf4d2c, cb 0x3C) - no retail tie yet
+void std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xf4d68, cb 0x8) - no retail tie yet
+void std::allocator<SecondarySkillData>::allocator<SecondarySkillData>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xf4d70, cb 0x6) - no retail tie yet
+void std::allocator<SecondarySkillData>::~allocator<SecondarySkillData>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf4d78, cb 0x3C) - no retail tie yet
+void std::vector<enum TArtifact,std::allocator<enum TArtifact> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xf4db4, cb 0x28) - no retail tie yet
+void std::vector<enum SpellID,std::allocator<enum SpellID> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf4ddc, cb 0x3C) - no retail tie yet
+void std::vector<enum SpellID,std::allocator<enum SpellID> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:186
+// DC_ONLY(0xf4e18, cb 0x50) - no retail tie yet
+std::reverse_iterator<NewmapCell::TObjectCell std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::rbegin(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:190
+// DC_ONLY(0xf4e68, cb 0x50) - no retail tie yet
+std::reverse_iterator<NewmapCell::TObjectCell std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::rend(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:204
+// DC_ONLY(0xf4eb8, cb 0x28) - no retail tie yet
+const NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::operator[](unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xf4ee0, cb 0x24) - no retail tie yet
+void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >(const std::allocator<NewmapCell::TObjectCell>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xf4f04, cb 0x34) - no retail tie yet
+void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::~vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:393
+// DC_ONLY(0xf4f38, cb 0x108) - no retail tie yet
+NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::insert(NewmapCell::TObjectCell* __position, const NewmapCell::TObjectCell* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xf5040, cb 0x24) - no retail tie yet
+void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xf5064, cb 0x8) - no retail tie yet
+void std::allocator<NewmapCell::TObjectCell>::allocator<NewmapCell::TObjectCell>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xf506c, cb 0x6) - no retail tie yet
+void std::allocator<NewmapCell::TObjectCell>::~allocator<NewmapCell::TObjectCell>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xf5074, cb 0x24) - no retail tie yet
+void std::vector<CObjectType,std::allocator<CObjectType> >::vector<CObjectType,std::allocator<CObjectType> >(const std::allocator<CObjectType>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xf5098, cb 0x34) - no retail tie yet
+void std::vector<CObjectType,std::allocator<CObjectType> >::~vector<CObjectType,std::allocator<CObjectType> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xf50cc, cb 0x48) - no retail tie yet
+void std::vector<CObjectType,std::allocator<CObjectType> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5114, cb 0x3C) - no retail tie yet
+void std::vector<CObjectType,std::allocator<CObjectType> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xf5150, cb 0x8) - no retail tie yet
+void std::allocator<CObjectType>::allocator<CObjectType>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xf5158, cb 0x6) - no retail tie yet
+void std::allocator<CObjectType>::~allocator<CObjectType>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xf5160, cb 0x24) - no retail tie yet
+void std::vector<CObject,std::allocator<CObject> >::vector<CObject,std::allocator<CObject> >(const std::allocator<CObject>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xf5184, cb 0x34) - no retail tie yet
+void std::vector<CObject,std::allocator<CObject> >::~vector<CObject,std::allocator<CObject> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xf51b8, cb 0x34) - no retail tie yet
+void std::vector<CObject,std::allocator<CObject> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf51ec, cb 0x3C) - no retail tie yet
+void std::vector<CObject,std::allocator<CObject> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xf5228, cb 0x8) - no retail tie yet
+void std::allocator<CObject>::allocator<CObject>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xf5230, cb 0x6) - no retail tie yet
+void std::allocator<CObject>::~allocator<CObject>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xf5238, cb 0x24) - no retail tie yet
+void std::vector<CSprite *,std::allocator<CSprite *> >::vector<CSprite *,std::allocator<CSprite *> >(const std::allocator<CSprite* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xf525c, cb 0x34) - no retail tie yet
+void std::vector<CSprite *,std::allocator<CSprite *> >::~vector<CSprite *,std::allocator<CSprite *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xf5290, cb 0x28) - no retail tie yet
+void std::vector<CSprite *,std::allocator<CSprite *> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf52b8, cb 0x3C) - no retail tie yet
+void std::vector<CSprite *,std::allocator<CSprite *> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xf52f4, cb 0x8) - no retail tie yet
+void std::allocator<CSprite *>::allocator<CSprite *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xf52fc, cb 0x6) - no retail tie yet
+void std::allocator<CSprite *>::~allocator<CSprite *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xf5304, cb 0x2C) - no retail tie yet
+unsigned std::vector<TreasureData,std::allocator<TreasureData> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xf5330, cb 0x24) - no retail tie yet
+void std::vector<TreasureData,std::allocator<TreasureData> >::vector<TreasureData,std::allocator<TreasureData> >(const std::allocator<TreasureData>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xf5354, cb 0x34) - no retail tie yet
+void std::vector<TreasureData,std::allocator<TreasureData> >::~vector<TreasureData,std::allocator<TreasureData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xf5388, cb 0x54) - no retail tie yet
+void std::vector<TreasureData,std::allocator<TreasureData> >::push_back(const TreasureData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xf53dc, cb 0x48) - no retail tie yet
+void std::vector<TreasureData,std::allocator<TreasureData> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5424, cb 0x3C) - no retail tie yet
+void std::vector<TreasureData,std::allocator<TreasureData> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xf5460, cb 0x8) - no retail tie yet
+void std::allocator<TreasureData>::allocator<TreasureData>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xf5468, cb 0x6) - no retail tie yet
+void std::allocator<TreasureData>::~allocator<TreasureData>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xf5470, cb 0x2C) - no retail tie yet
+unsigned std::vector<MonsterData,std::allocator<MonsterData> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xf549c, cb 0x24) - no retail tie yet
+void std::vector<MonsterData,std::allocator<MonsterData> >::vector<MonsterData,std::allocator<MonsterData> >(const std::allocator<MonsterData>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xf54c0, cb 0x34) - no retail tie yet
+void std::vector<MonsterData,std::allocator<MonsterData> >::~vector<MonsterData,std::allocator<MonsterData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xf54f4, cb 0x54) - no retail tie yet
+void std::vector<MonsterData,std::allocator<MonsterData> >::push_back(const MonsterData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xf5548, cb 0x48) - no retail tie yet
+void std::vector<MonsterData,std::allocator<MonsterData> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5590, cb 0x3C) - no retail tie yet
+void std::vector<MonsterData,std::allocator<MonsterData> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xf55cc, cb 0x8) - no retail tie yet
+void std::allocator<MonsterData>::allocator<MonsterData>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xf55d4, cb 0x6) - no retail tie yet
+void std::allocator<MonsterData>::~allocator<MonsterData>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:195
+// DC_ONLY(0xf55dc, cb 0x30) - no retail tie yet
+unsigned std::vector<BlackBoxData,std::allocator<BlackBoxData> >::size()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xf560c, cb 0x24) - no retail tie yet
+void std::vector<BlackBoxData,std::allocator<BlackBoxData> >::vector<BlackBoxData,std::allocator<BlackBoxData> >(const std::allocator<BlackBoxData>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xf5630, cb 0x34) - no retail tie yet
+void std::vector<BlackBoxData,std::allocator<BlackBoxData> >::~vector<BlackBoxData,std::allocator<BlackBoxData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xf5664, cb 0x58) - no retail tie yet
+void std::vector<BlackBoxData,std::allocator<BlackBoxData> >::push_back(const BlackBoxData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xf56bc, cb 0x54) - no retail tie yet
+void std::vector<BlackBoxData,std::allocator<BlackBoxData> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5710, cb 0x3C) - no retail tie yet
+void std::vector<BlackBoxData,std::allocator<BlackBoxData> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xf574c, cb 0x8) - no retail tie yet
+void std::allocator<BlackBoxData>::allocator<BlackBoxData>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xf5754, cb 0x6) - no retail tie yet
+void std::allocator<BlackBoxData>::~allocator<BlackBoxData>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xf575c, cb 0x24) - no retail tie yet
+void std::vector<TSeerHut,std::allocator<TSeerHut> >::vector<TSeerHut,std::allocator<TSeerHut> >(const std::allocator<TSeerHut>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xf5780, cb 0x34) - no retail tie yet
+void std::vector<TSeerHut,std::allocator<TSeerHut> >::~vector<TSeerHut,std::allocator<TSeerHut> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xf57b4, cb 0x54) - no retail tie yet
+void std::vector<TSeerHut,std::allocator<TSeerHut> >::push_back(const TSeerHut* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5808, cb 0x3C) - no retail tie yet
+void std::vector<TSeerHut,std::allocator<TSeerHut> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xf5844, cb 0x8) - no retail tie yet
+void std::allocator<TSeerHut>::allocator<TSeerHut>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xf584c, cb 0x6) - no retail tie yet
+void std::allocator<TSeerHut>::~allocator<TSeerHut>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xf5854, cb 0x24) - no retail tie yet
+void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::vector<TTimedEvent,std::allocator<TTimedEvent> >(const std::allocator<TTimedEvent>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xf5878, cb 0x34) - no retail tie yet
+void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::~vector<TTimedEvent,std::allocator<TTimedEvent> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xf58ac, cb 0x48) - no retail tie yet
+void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf58f4, cb 0x3C) - no retail tie yet
+void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xf5930, cb 0x8) - no retail tie yet
+void std::allocator<TTimedEvent>::allocator<TTimedEvent>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xf5938, cb 0x6) - no retail tie yet
+void std::allocator<TTimedEvent>::~allocator<TTimedEvent>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:218
+// DC_ONLY(0xf5940, cb 0x24) - no retail tie yet
+void std::vector<TTownEvent,std::allocator<TTownEvent> >::vector<TTownEvent,std::allocator<TTownEvent> >(const std::allocator<TTownEvent>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:288
+// DC_ONLY(0xf5964, cb 0x34) - no retail tie yet
+void std::vector<TTownEvent,std::allocator<TTownEvent> >::~vector<TTownEvent,std::allocator<TTownEvent> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xf5998, cb 0x54) - no retail tie yet
+void std::vector<TTownEvent,std::allocator<TTownEvent> >::push_back(const TTownEvent* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:505
+// DC_ONLY(0xf59ec, cb 0x48) - no retail tie yet
+void std::vector<TTownEvent,std::allocator<TTownEvent> >::resize(unsigned __new_size)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5a34, cb 0x3C) - no retail tie yet
+void std::vector<TTownEvent,std::allocator<TTownEvent> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0xf5a70, cb 0x8) - no retail tie yet
+void std::allocator<TTownEvent>::allocator<TTownEvent>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0xf5a78, cb 0x6) - no retail tie yet
+void std::allocator<TTownEvent>::~allocator<TTownEvent>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:414
+// DC_ONLY(0xf5a80, cb 0x20) - no retail tie yet
+void std::bitset<70,unsigned long>::bitset<70,unsigned long>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:564
+// DC_ONLY(0xf5aa0, cb 0x28) - no retail tie yet
+std::bitset<70,unsigned std::bitset<70,unsigned long>::operator[](__$ReturnUdt, unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:376
+// DC_ONLY(0xf5ac8, cb 0x6) - no retail tie yet
+void std::bitset<70,unsigned long>::reference::~reference()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:379
+// DC_ONLY(0xf5ad0, cb 0x60) - no retail tie yet
+std::bitset<70,unsigned* std::bitset<70,unsigned long>::reference::operator=(unsigned char __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xf5b30, cb 0x54) - no retail tie yet
+void std::vector<TownExtra,std::allocator<TownExtra> >::push_back(const TownExtra* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5b84, cb 0x3C) - no retail tie yet
+void std::vector<TownExtra,std::allocator<TownExtra> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5bc0, cb 0x3C) - no retail tie yet
+void std::vector<town,std::allocator<town> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xf5bfc, cb 0x54) - no retail tie yet
+void std::vector<Sign,std::allocator<Sign> >::push_back(const Sign* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5c50, cb 0x3C) - no retail tie yet
+void std::vector<Sign,std::allocator<Sign> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xf5c8c, cb 0x54) - no retail tie yet
+void std::vector<mine,std::allocator<mine> >::push_back(const mine* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5ce0, cb 0x3C) - no retail tie yet
+void std::vector<mine,std::allocator<mine> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xf5d1c, cb 0x54) - no retail tie yet
+void std::vector<generator,std::allocator<generator> >::push_back(const generator* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5d70, cb 0x3C) - no retail tie yet
+void std::vector<generator,std::allocator<generator> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:368
+// DC_ONLY(0xf5dac, cb 0x54) - no retail tie yet
+void std::vector<garrison,std::allocator<garrison> >::push_back(const garrison* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5e00, cb 0x3C) - no retail tie yet
+void std::vector<garrison,std::allocator<garrison> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5e3c, cb 0x3C) - no retail tie yet
+void std::vector<boat,std::allocator<boat> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5e78, cb 0x3C) - no retail tie yet
+void std::vector<type_university,std::allocator<type_university> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:506
+// DC_ONLY(0xf5eb4, cb 0x3C) - no retail tie yet
+void std::vector<type_creature_bank,std::allocator<type_creature_bank> >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:324
+// DC_ONLY(0xf5ef0, cb 0x8) - no retail tie yet
+void std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:327
+// DC_ONLY(0xf5ef8, cb 0x28) - no retail tie yet
+std::reverse_iterator<NewmapCell::TObjectCell* std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::operator=(const std::reverse_iterator<NewmapCell::TObjectCell* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:333
+// DC_ONLY(0xf5f20, cb 0x20) - no retail tie yet
+NewmapCell::TObjectCell* std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::operator->()
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:340
+// DC_ONLY(0xf5f40, cb 0x48) - no retail tie yet
+std::reverse_iterator<NewmapCell::TObjectCell std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::operator++(__$ReturnUdt, int __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:344
+// DC_ONLY(0xf5f88, cb 0x5C) - no retail tie yet
+void CObjectType::CObjectType()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:507
+// DC_ONLY(0xf5fe4, cb 0x40) - no retail tie yet
+unsigned char std::bitset<48,unsigned long>::_Unchecked_test(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xf6024, cb 0xC) - no retail tie yet
+SecondarySkillData* std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf6030, cb 0x48) - no retail tie yet
+SecondarySkillData* std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::erase(SecondarySkillData* __first, SecondarySkillData* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xf6078, cb 0x90) - no retail tie yet
+void std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::resize(unsigned __new_size, const SecondarySkillData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xf6108, cb 0x44) - no retail tie yet
+void std::_Vector_base<SecondarySkillData,std::allocator<SecondarySkillData> >::_Vector_base<SecondarySkillData,std::allocator<SecondarySkillData> >(const std::allocator<SecondarySkillData>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xf614c, cb 0x44) - no retail tie yet
+void std::_Vector_base<SecondarySkillData,std::allocator<SecondarySkillData> >::~_Vector_base<SecondarySkillData,std::allocator<SecondarySkillData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf6190, cb 0x48) - no retail tie yet
+SpellID* std::vector<enum SpellID,std::allocator<enum SpellID> >::erase(SpellID* __first, SpellID* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xf61d8, cb 0x90) - no retail tie yet
+void std::vector<enum SpellID,std::allocator<enum SpellID> >::resize(unsigned __new_size, const SpellID* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:180
+// DC_ONLY(0xf6268, cb 0xC) - no retail tie yet
+const NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::begin()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xf6274, cb 0x90) - no retail tie yet
+void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::resize(unsigned __new_size, const NewmapCell::TObjectCell* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xf6304, cb 0x44) - no retail tie yet
+void std::_Vector_base<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::_Vector_base<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >(const std::allocator<NewmapCell::TObjectCell>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xf6348, cb 0x44) - no retail tie yet
+void std::_Vector_base<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::~_Vector_base<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf638c, cb 0x48) - no retail tie yet
+CObjectType* std::vector<CObjectType,std::allocator<CObjectType> >::erase(CObjectType* __first, CObjectType* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xf63d4, cb 0x94) - no retail tie yet
+void std::vector<CObjectType,std::allocator<CObjectType> >::resize(unsigned __new_size, const CObjectType* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xf6468, cb 0x44) - no retail tie yet
+void std::_Vector_base<CObjectType,std::allocator<CObjectType> >::_Vector_base<CObjectType,std::allocator<CObjectType> >(const std::allocator<CObjectType>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xf64ac, cb 0x54) - no retail tie yet
+void std::_Vector_base<CObjectType,std::allocator<CObjectType> >::~_Vector_base<CObjectType,std::allocator<CObjectType> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xf6500, cb 0xC) - no retail tie yet
+CObject* std::vector<CObject,std::allocator<CObject> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf650c, cb 0x48) - no retail tie yet
+CObject* std::vector<CObject,std::allocator<CObject> >::erase(CObject* __first, CObject* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xf6554, cb 0x94) - no retail tie yet
+void std::vector<CObject,std::allocator<CObject> >::resize(unsigned __new_size, const CObject* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xf65e8, cb 0x44) - no retail tie yet
+void std::_Vector_base<CObject,std::allocator<CObject> >::_Vector_base<CObject,std::allocator<CObject> >(const std::allocator<CObject>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xf662c, cb 0x54) - no retail tie yet
+void std::_Vector_base<CObject,std::allocator<CObject> >::~_Vector_base<CObject,std::allocator<CObject> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xf6680, cb 0xC) - no retail tie yet
+CSprite** std::vector<CSprite *,std::allocator<CSprite *> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf668c, cb 0x48) - no retail tie yet
+CSprite** std::vector<CSprite *,std::allocator<CSprite *> >::erase(CSprite** __first, CSprite** __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xf66d4, cb 0x90) - no retail tie yet
+void std::vector<CSprite *,std::allocator<CSprite *> >::resize(unsigned __new_size, CSprite** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xf6764, cb 0x44) - no retail tie yet
+void std::_Vector_base<CSprite *,std::allocator<CSprite *> >::_Vector_base<CSprite *,std::allocator<CSprite *> >(const std::allocator<CSprite* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xf67a8, cb 0x44) - no retail tie yet
+void std::_Vector_base<CSprite *,std::allocator<CSprite *> >::~_Vector_base<CSprite *,std::allocator<CSprite *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xf67ec, cb 0xC) - no retail tie yet
+TreasureData* std::vector<TreasureData,std::allocator<TreasureData> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf67f8, cb 0x48) - no retail tie yet
+TreasureData* std::vector<TreasureData,std::allocator<TreasureData> >::erase(TreasureData* __first, TreasureData* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xf6840, cb 0x94) - no retail tie yet
+void std::vector<TreasureData,std::allocator<TreasureData> >::resize(unsigned __new_size, const TreasureData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xf68d4, cb 0x44) - no retail tie yet
+void std::_Vector_base<TreasureData,std::allocator<TreasureData> >::_Vector_base<TreasureData,std::allocator<TreasureData> >(const std::allocator<TreasureData>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xf6918, cb 0x54) - no retail tie yet
+void std::_Vector_base<TreasureData,std::allocator<TreasureData> >::~_Vector_base<TreasureData,std::allocator<TreasureData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xf696c, cb 0xC) - no retail tie yet
+MonsterData* std::vector<MonsterData,std::allocator<MonsterData> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf6978, cb 0x48) - no retail tie yet
+MonsterData* std::vector<MonsterData,std::allocator<MonsterData> >::erase(MonsterData* __first, MonsterData* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xf69c0, cb 0x94) - no retail tie yet
+void std::vector<MonsterData,std::allocator<MonsterData> >::resize(unsigned __new_size, const MonsterData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xf6a54, cb 0x44) - no retail tie yet
+void std::_Vector_base<MonsterData,std::allocator<MonsterData> >::_Vector_base<MonsterData,std::allocator<MonsterData> >(const std::allocator<MonsterData>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xf6a98, cb 0x54) - no retail tie yet
+void std::_Vector_base<MonsterData,std::allocator<MonsterData> >::~_Vector_base<MonsterData,std::allocator<MonsterData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xf6aec, cb 0xC) - no retail tie yet
+BlackBoxData* std::vector<BlackBoxData,std::allocator<BlackBoxData> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf6af8, cb 0x48) - no retail tie yet
+BlackBoxData* std::vector<BlackBoxData,std::allocator<BlackBoxData> >::erase(BlackBoxData* __first, BlackBoxData* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xf6b40, cb 0x94) - no retail tie yet
+void std::vector<BlackBoxData,std::allocator<BlackBoxData> >::resize(unsigned __new_size, const BlackBoxData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xf6bd4, cb 0x44) - no retail tie yet
+void std::_Vector_base<BlackBoxData,std::allocator<BlackBoxData> >::_Vector_base<BlackBoxData,std::allocator<BlackBoxData> >(const std::allocator<BlackBoxData>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xf6c18, cb 0x54) - no retail tie yet
+void std::_Vector_base<BlackBoxData,std::allocator<BlackBoxData> >::~_Vector_base<BlackBoxData,std::allocator<BlackBoxData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xf6c6c, cb 0xC) - no retail tie yet
+TSeerHut* std::vector<TSeerHut,std::allocator<TSeerHut> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf6c78, cb 0x48) - no retail tie yet
+TSeerHut* std::vector<TSeerHut,std::allocator<TSeerHut> >::erase(TSeerHut* __first, TSeerHut* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xf6cc0, cb 0x44) - no retail tie yet
+void std::_Vector_base<TSeerHut,std::allocator<TSeerHut> >::_Vector_base<TSeerHut,std::allocator<TSeerHut> >(const std::allocator<TSeerHut>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xf6d04, cb 0x54) - no retail tie yet
+void std::_Vector_base<TSeerHut,std::allocator<TSeerHut> >::~_Vector_base<TSeerHut,std::allocator<TSeerHut> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xf6d58, cb 0xC) - no retail tie yet
+TTimedEvent* std::vector<TTimedEvent,std::allocator<TTimedEvent> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf6d64, cb 0x48) - no retail tie yet
+TTimedEvent* std::vector<TTimedEvent,std::allocator<TTimedEvent> >::erase(TTimedEvent* __first, TTimedEvent* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xf6dac, cb 0x94) - no retail tie yet
+void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::resize(unsigned __new_size, const TTimedEvent* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xf6e40, cb 0x44) - no retail tie yet
+void std::_Vector_base<TTimedEvent,std::allocator<TTimedEvent> >::_Vector_base<TTimedEvent,std::allocator<TTimedEvent> >(const std::allocator<TTimedEvent>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xf6e84, cb 0x54) - no retail tie yet
+void std::_Vector_base<TTimedEvent,std::allocator<TTimedEvent> >::~_Vector_base<TTimedEvent,std::allocator<TTimedEvent> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xf6ed8, cb 0xC) - no retail tie yet
+TTownEvent* std::vector<TTownEvent,std::allocator<TTownEvent> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf6ee4, cb 0x48) - no retail tie yet
+TTownEvent* std::vector<TTownEvent,std::allocator<TTownEvent> >::erase(TTownEvent* __first, TTownEvent* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:499
+// DC_ONLY(0xf6f2c, cb 0x94) - no retail tie yet
+void std::vector<TTownEvent,std::allocator<TTownEvent> >::resize(unsigned __new_size, const TTownEvent* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:89
+// DC_ONLY(0xf6fc0, cb 0x44) - no retail tie yet
+void std::_Vector_base<TTownEvent,std::allocator<TTownEvent> >::_Vector_base<TTownEvent,std::allocator<TTownEvent> >(const std::allocator<TTownEvent>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:101
+// DC_ONLY(0xf7004, cb 0x54) - no retail tie yet
+void std::_Vector_base<TTownEvent,std::allocator<TTownEvent> >::~_Vector_base<TTownEvent,std::allocator<TTownEvent> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:107
+// DC_ONLY(0xf7058, cb 0x20) - no retail tie yet
+void std::_Base_bitset<3,unsigned long>::_Base_bitset<3,unsigned long>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:370
+// DC_ONLY(0xf7078, cb 0x40) - no retail tie yet
+void std::bitset<70,unsigned long>::reference::reference(std::bitset<70,unsigned* __b, unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:181
+// DC_ONLY(0xf70b8, cb 0xC) - no retail tie yet
+TownExtra* std::vector<TownExtra,std::allocator<TownExtra> >::end()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf70c4, cb 0x48) - no retail tie yet
+TownExtra* std::vector<TownExtra,std::allocator<TownExtra> >::erase(TownExtra* __first, TownExtra* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:325
+// DC_ONLY(0xf710c, cb 0x28) - no retail tie yet
+void std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>(const std::reverse_iterator<NewmapCell::TObjectCell* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:326
+// DC_ONLY(0xf7134, cb 0x10) - no retail tie yet
+void std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>(NewmapCell::TObjectCell* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:329
+// DC_ONLY(0xf7144, cb 0xC) - no retail tie yet
+NewmapCell::TObjectCell* std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::base()
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:330
+// DC_ONLY(0xf7150, cb 0xE) - no retail tie yet
+NewmapCell::TObjectCell* std::reverse_iterator<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,NewmapCell::TObjectCell &,NewmapCell::TObjectCell *,int>::operator*()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:120
+// DC_ONLY(0xf7160, cb 0x24) - no retail tie yet
+unsigned long std::_Base_bitset<70,unsigned long>::_S_maskbit(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xf7184, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<SecondarySkillData *,SecondarySkillData,std::allocator<SecondarySkillData> >::~_STL_alloc_proxy<SecondarySkillData *,SecondarySkillData,std::allocator<SecondarySkillData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xf71a0, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::~_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xf71bc, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<CObjectType *,CObjectType,std::allocator<CObjectType> >::~_STL_alloc_proxy<CObjectType *,CObjectType,std::allocator<CObjectType> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xf71d8, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<CObject *,CObject,std::allocator<CObject> >::~_STL_alloc_proxy<CObject *,CObject,std::allocator<CObject> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xf71f4, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<CSprite * *,CSprite *,std::allocator<CSprite *> >::~_STL_alloc_proxy<CSprite * *,CSprite *,std::allocator<CSprite *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xf7210, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<TreasureData *,TreasureData,std::allocator<TreasureData> >::~_STL_alloc_proxy<TreasureData *,TreasureData,std::allocator<TreasureData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xf722c, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<MonsterData *,MonsterData,std::allocator<MonsterData> >::~_STL_alloc_proxy<MonsterData *,MonsterData,std::allocator<MonsterData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xf7248, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<BlackBoxData *,BlackBoxData,std::allocator<BlackBoxData> >::~_STL_alloc_proxy<BlackBoxData *,BlackBoxData,std::allocator<BlackBoxData> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xf7264, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >::~_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xf7280, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >::~_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:122
+// DC_ONLY(0xf729c, cb 0x1C) - no retail tie yet
+void std::_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >::~_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:125
+// DC_ONLY(0xf72b8, cb 0x2C) - no retail tie yet
+unsigned long std::_Base_bitset<2,unsigned long>::_M_getword(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xf72e4, cb 0x28) - no retail tie yet
+void std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::insert(SecondarySkillData* __pos, unsigned __n, const SecondarySkillData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xf730c, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<SecondarySkillData *,SecondarySkillData,std::allocator<SecondarySkillData> >::_STL_alloc_proxy<SecondarySkillData *,SecondarySkillData,std::allocator<SecondarySkillData> >(const std::allocator<SecondarySkillData>* __a, SecondarySkillData** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xf732c, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<SecondarySkillData *,SecondarySkillData,std::allocator<SecondarySkillData> >::deallocate(SecondarySkillData* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xf735c, cb 0x28) - no retail tie yet
+void std::vector<enum SpellID,std::allocator<enum SpellID> >::insert(SpellID* __pos, unsigned __n, const SpellID* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xf7384, cb 0x28) - no retail tie yet
+void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::insert(NewmapCell::TObjectCell* __pos, unsigned __n, const NewmapCell::TObjectCell* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:490
+// DC_ONLY(0xf73ac, cb 0x48) - no retail tie yet
+NewmapCell::TObjectCell* std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::erase(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xf73f4, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >(const std::allocator<NewmapCell::TObjectCell>* __a, NewmapCell::TObjectCell** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xf7414, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::deallocate(NewmapCell::TObjectCell* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xf7444, cb 0x28) - no retail tie yet
+void std::vector<CObjectType,std::allocator<CObjectType> >::insert(CObjectType* __pos, unsigned __n, const CObjectType* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xf746c, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<CObjectType *,CObjectType,std::allocator<CObjectType> >::_STL_alloc_proxy<CObjectType *,CObjectType,std::allocator<CObjectType> >(const std::allocator<CObjectType>* __a, CObjectType** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xf748c, cb 0x28) - no retail tie yet
+void std::vector<CObject,std::allocator<CObject> >::insert(CObject* __pos, unsigned __n, const CObject* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xf74b4, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<CObject *,CObject,std::allocator<CObject> >::_STL_alloc_proxy<CObject *,CObject,std::allocator<CObject> >(const std::allocator<CObject>* __a, CObject** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xf74d4, cb 0x28) - no retail tie yet
+void std::vector<CSprite *,std::allocator<CSprite *> >::insert(CSprite** __pos, unsigned __n, CSprite** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xf74fc, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<CSprite * *,CSprite *,std::allocator<CSprite *> >::_STL_alloc_proxy<CSprite * *,CSprite *,std::allocator<CSprite *> >(const std::allocator<CSprite* __a, CSprite*** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xf751c, cb 0x28) - no retail tie yet
+void std::vector<TreasureData,std::allocator<TreasureData> >::insert(TreasureData* __pos, unsigned __n, const TreasureData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xf7544, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<TreasureData *,TreasureData,std::allocator<TreasureData> >::_STL_alloc_proxy<TreasureData *,TreasureData,std::allocator<TreasureData> >(const std::allocator<TreasureData>* __a, TreasureData** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xf7564, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<TreasureData *,TreasureData,std::allocator<TreasureData> >::deallocate(TreasureData* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xf7594, cb 0x28) - no retail tie yet
+void std::vector<MonsterData,std::allocator<MonsterData> >::insert(MonsterData* __pos, unsigned __n, const MonsterData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xf75bc, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<MonsterData *,MonsterData,std::allocator<MonsterData> >::_STL_alloc_proxy<MonsterData *,MonsterData,std::allocator<MonsterData> >(const std::allocator<MonsterData>* __a, MonsterData** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xf75dc, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<MonsterData *,MonsterData,std::allocator<MonsterData> >::deallocate(MonsterData* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xf760c, cb 0x28) - no retail tie yet
+void std::vector<BlackBoxData,std::allocator<BlackBoxData> >::insert(BlackBoxData* __pos, unsigned __n, const BlackBoxData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xf7634, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<BlackBoxData *,BlackBoxData,std::allocator<BlackBoxData> >::_STL_alloc_proxy<BlackBoxData *,BlackBoxData,std::allocator<BlackBoxData> >(const std::allocator<BlackBoxData>* __a, BlackBoxData** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xf7654, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<BlackBoxData *,BlackBoxData,std::allocator<BlackBoxData> >::deallocate(BlackBoxData* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xf7684, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >::_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >(const std::allocator<TSeerHut>* __a, TSeerHut** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xf76a4, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >::deallocate(TSeerHut* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xf76d4, cb 0x28) - no retail tie yet
+void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::insert(TTimedEvent* __pos, unsigned __n, const TTimedEvent* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xf76fc, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >::_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >(const std::allocator<TTimedEvent>* __a, TTimedEvent** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xf771c, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >::deallocate(TTimedEvent* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:472
+// DC_ONLY(0xf774c, cb 0x28) - no retail tie yet
+void std::vector<TTownEvent,std::allocator<TTownEvent> >::insert(TTownEvent* __pos, unsigned __n, const TTownEvent* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0xf7774, cb 0x1E) - no retail tie yet
+void std::_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >::_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >(const std::allocator<TTownEvent>* __a, TTownEvent** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0xf7794, cb 0x30) - no retail tie yet
+void std::_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >::deallocate(TTownEvent* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:124
+// DC_ONLY(0xf77c4, cb 0x28) - no retail tie yet
+unsigned long* std::_Base_bitset<3,unsigned long>::_M_getword(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:164
+// DC_ONLY(0xf77ec, cb 0x2E) - no retail tie yet
+void std::_Base_bitset<3,unsigned long>::_M_do_reset()
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:117
+// DC_ONLY(0xf781c, cb 0xE) - no retail tie yet
+unsigned std::_Base_bitset<70,unsigned long>::_S_whichbit(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xf782c, cb 0x2C) - no retail tie yet
+void std::allocator<SecondarySkillData>::deallocate(SecondarySkillData* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xf7858, cb 0x28) - no retail tie yet
+void std::allocator<NewmapCell::TObjectCell>::deallocate(NewmapCell::TObjectCell* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xf7880, cb 0x2C) - no retail tie yet
+void std::allocator<TreasureData>::deallocate(TreasureData* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xf78ac, cb 0x2C) - no retail tie yet
+void std::allocator<MonsterData>::deallocate(MonsterData* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xf78d8, cb 0x30) - no retail tie yet
+void std::allocator<BlackBoxData>::deallocate(BlackBoxData* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xf7908, cb 0x2C) - no retail tie yet
+void std::allocator<TSeerHut>::deallocate(TSeerHut* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xf7934, cb 0x2C) - no retail tie yet
+void std::allocator<TTimedEvent>::deallocate(TTimedEvent* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0xf7960, cb 0x2C) - no retail tie yet
+void std::allocator<TTownEvent>::deallocate(TTownEvent* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:111
+// DC_ONLY(0xf798c, cb 0xE) - no retail tie yet
+unsigned std::_Base_bitset<3,unsigned long>::_S_whichword(unsigned __pos)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xf799c, cb 0x150) - no retail tie yet
+void std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::_M_fill_insert(SecondarySkillData* __position, unsigned __n, const SecondarySkillData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xf7aec, cb 0x138) - no retail tie yet
+void std::vector<enum SpellID,std::allocator<enum SpellID> >::_M_fill_insert(SpellID* __position, unsigned __n, const SpellID* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xf7c24, cb 0x11C) - no retail tie yet
+void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::_M_insert_overflow(NewmapCell::TObjectCell* __position, const NewmapCell::TObjectCell* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xf7d40, cb 0x154) - no retail tie yet
+void std::vector<NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::_M_fill_insert(NewmapCell::TObjectCell* __position, unsigned __n, const NewmapCell::TObjectCell* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xf7e94, cb 0x18C) - no retail tie yet
+void std::vector<CObjectType,std::allocator<CObjectType> >::_M_fill_insert(CObjectType* __position, unsigned __n, const CObjectType* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xf8020, cb 0x184) - no retail tie yet
+void std::vector<CObject,std::allocator<CObject> >::_M_fill_insert(CObject* __position, unsigned __n, const CObject* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xf81a4, cb 0x138) - no retail tie yet
+void std::vector<CSprite *,std::allocator<CSprite *> >::_M_fill_insert(CSprite** __position, unsigned __n, CSprite** __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xf82dc, cb 0x130) - no retail tie yet
+void std::vector<TreasureData,std::allocator<TreasureData> >::_M_insert_overflow(TreasureData* __position, const TreasureData* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xf840c, cb 0x18C) - no retail tie yet
+void std::vector<TreasureData,std::allocator<TreasureData> >::_M_fill_insert(TreasureData* __position, unsigned __n, const TreasureData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xf8598, cb 0x130) - no retail tie yet
+void std::vector<MonsterData,std::allocator<MonsterData> >::_M_insert_overflow(MonsterData* __position, const MonsterData* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xf86c8, cb 0x18C) - no retail tie yet
+void std::vector<MonsterData,std::allocator<MonsterData> >::_M_fill_insert(MonsterData* __position, unsigned __n, const MonsterData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xf8854, cb 0x134) - no retail tie yet
+void std::vector<BlackBoxData,std::allocator<BlackBoxData> >::_M_insert_overflow(BlackBoxData* __position, const BlackBoxData* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xf8988, cb 0x194) - no retail tie yet
+void std::vector<BlackBoxData,std::allocator<BlackBoxData> >::_M_fill_insert(BlackBoxData* __position, unsigned __n, const BlackBoxData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xf8b1c, cb 0x130) - no retail tie yet
+void std::vector<TSeerHut,std::allocator<TSeerHut> >::_M_insert_overflow(TSeerHut* __position, const TSeerHut* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xf8c4c, cb 0x18C) - no retail tie yet
+void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::_M_fill_insert(TTimedEvent* __position, unsigned __n, const TTimedEvent* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xf8dd8, cb 0x130) - no retail tie yet
+void std::vector<TTownEvent,std::allocator<TTownEvent> >::_M_insert_overflow(TTownEvent* __position, const TTownEvent* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:283
+// DC_ONLY(0xf8f08, cb 0x18C) - no retail tie yet
+void std::vector<TTownEvent,std::allocator<TTownEvent> >::_M_fill_insert(TTownEvent* __position, unsigned __n, const TTownEvent* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xf9094, cb 0x130) - no retail tie yet
+void std::vector<TownExtra,std::allocator<TownExtra> >::_M_insert_overflow(TownExtra* __position, const TownExtra* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:428
+// DC_ONLY(0xf91c4, cb 0x2C) - no retail tie yet
+unsigned char std::operator!=(const std::reverse_iterator<NewmapCell::TObjectCell* __x, const std::reverse_iterator<NewmapCell::TObjectCell* __y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xf91f0, cb 0x30) - no retail tie yet
+void std::destroy(SecondarySkillData* __first, SecondarySkillData* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xf9220, cb 0x30) - no retail tie yet
+void std::destroy(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xf9250, cb 0x58) - no retail tie yet
+void std::construct(NewmapCell::TObjectCell* __p, const NewmapCell::TObjectCell* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xf92a8, cb 0x58) - no retail tie yet
+NewmapCell::TObjectCell* std::copy_backward(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xf9300, cb 0x30) - no retail tie yet
+void std::destroy(TreasureData* __first, TreasureData* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xf9330, cb 0x44) - no retail tie yet
+void std::construct(TreasureData* __p, const TreasureData* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xf9374, cb 0x30) - no retail tie yet
+void std::destroy(MonsterData* __first, MonsterData* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xf93a4, cb 0x44) - no retail tie yet
+void std::construct(MonsterData* __p, const MonsterData* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xf93e8, cb 0x30) - no retail tie yet
+void std::destroy(BlackBoxData* __first, BlackBoxData* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xf9418, cb 0x48) - no retail tie yet
+void std::construct(BlackBoxData* __p, const BlackBoxData* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xf9460, cb 0x30) - no retail tie yet
+void std::destroy(TSeerHut* __first, TSeerHut* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xf9490, cb 0x78) - no retail tie yet
+void std::construct(TSeerHut* __p, const TSeerHut* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xf9508, cb 0x30) - no retail tie yet
+void std::destroy(TTimedEvent* __first, TTimedEvent* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:128
+// DC_ONLY(0xf9538, cb 0x30) - no retail tie yet
+void std::destroy(TTownEvent* __first, TTownEvent* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xf9568, cb 0x44) - no retail tie yet
+void std::construct(TTownEvent* __p, const TTownEvent* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xf95ac, cb 0x144) - no retail tie yet
+void std::construct(TownExtra* __p, const TownExtra* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf96f0, cb 0x58) - no retail tie yet
+SecondarySkillData* std::copy(SecondarySkillData* __first, SecondarySkillData* __last, SecondarySkillData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf9748, cb 0x58) - no retail tie yet
+SpellID* std::copy(SpellID* __first, SpellID* __last, SpellID* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf97a0, cb 0x58) - no retail tie yet
+CObjectType* std::copy(CObjectType* __first, CObjectType* __last, CObjectType* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf97f8, cb 0x58) - no retail tie yet
+CObject* std::copy(CObject* __first, CObject* __last, CObject* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf9850, cb 0x58) - no retail tie yet
+CSprite** std::copy(CSprite** __first, CSprite** __last, CSprite** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf98a8, cb 0x58) - no retail tie yet
+TreasureData* std::copy(TreasureData* __first, TreasureData* __last, TreasureData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf9900, cb 0x58) - no retail tie yet
+MonsterData* std::copy(MonsterData* __first, MonsterData* __last, MonsterData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf9958, cb 0x58) - no retail tie yet
+BlackBoxData* std::copy(BlackBoxData* __first, BlackBoxData* __last, BlackBoxData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf99b0, cb 0x58) - no retail tie yet
+TSeerHut* std::copy(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf9a08, cb 0x58) - no retail tie yet
+TTimedEvent* std::copy(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf9a60, cb 0x58) - no retail tie yet
+TTownEvent* std::copy(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xf9ab8, cb 0x58) - no retail tie yet
+TownExtra* std::copy(TownExtra* __first, TownExtra* __last, TownExtra* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xf9b10, cb 0xA) - no retail tie yet
+std::allocator<SecondarySkillData>* std::__stl_alloc_rebind(std::allocator<SecondarySkillData>* __a, const SecondarySkillData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xf9b1c, cb 0xA) - no retail tie yet
+std::allocator<NewmapCell::TObjectCell>* std::__stl_alloc_rebind(std::allocator<NewmapCell::TObjectCell>* __a, const NewmapCell::TObjectCell* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xf9b28, cb 0xA) - no retail tie yet
+std::allocator<TreasureData>* std::__stl_alloc_rebind(std::allocator<TreasureData>* __a, const TreasureData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xf9b34, cb 0xA) - no retail tie yet
+std::allocator<MonsterData>* std::__stl_alloc_rebind(std::allocator<MonsterData>* __a, const MonsterData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xf9b40, cb 0xA) - no retail tie yet
+std::allocator<BlackBoxData>* std::__stl_alloc_rebind(std::allocator<BlackBoxData>* __a, const BlackBoxData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xf9b4c, cb 0xA) - no retail tie yet
+std::allocator<TSeerHut>* std::__stl_alloc_rebind(std::allocator<TSeerHut>* __a, const TSeerHut* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xf9b58, cb 0xA) - no retail tie yet
+std::allocator<TTimedEvent>* std::__stl_alloc_rebind(std::allocator<TTimedEvent>* __a, const TTimedEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0xf9b64, cb 0xA) - no retail tie yet
+std::allocator<TTownEvent>* std::__stl_alloc_rebind(std::allocator<TTownEvent>* __a, const TTownEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xf9b70, cb 0xC4) - no retail tie yet
+void TreasureData::TreasureData(const TreasureData* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xf9c34, cb 0x48) - no retail tie yet
+void MonsterData::MonsterData(const MonsterData* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xf9c7c, cb 0x1A0) - no retail tie yet
+void BlackBoxData::BlackBoxData(const BlackBoxData* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xf9e1c, cb 0x78) - no retail tie yet
+void TTimedEvent::TTimedEvent(const TTimedEvent* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xf9e94, cb 0x108) - no retail tie yet
+void TTownEvent::TTownEvent(const TTownEvent* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:236
+// DC_ONLY(0xf9f9c, cb 0x80) - no retail tie yet
+void std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::vector<SecondarySkillData,std::allocator<SecondarySkillData> >(const std::vector<SecondarySkillData,std::allocator<SecondarySkillData>* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:236
+// DC_ONLY(0xfa01c, cb 0x80) - no retail tie yet
+void std::vector<enum SpellID,std::allocator<enum SpellID> >::vector<enum SpellID,std::allocator<enum SpellID> >(const std::vector<enum* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xfa09c, cb 0x38) - no retail tie yet
+NewmapCell::TObjectCell* std::_STL_alloc_proxy<NewmapCell::TObjectCell *,NewmapCell::TObjectCell,std::allocator<NewmapCell::TObjectCell> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xfa0d4, cb 0x38) - no retail tie yet
+TreasureData* std::_STL_alloc_proxy<TreasureData *,TreasureData,std::allocator<TreasureData> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xfa10c, cb 0x38) - no retail tie yet
+MonsterData* std::_STL_alloc_proxy<MonsterData *,MonsterData,std::allocator<MonsterData> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xfa144, cb 0x38) - no retail tie yet
+BlackBoxData* std::_STL_alloc_proxy<BlackBoxData *,BlackBoxData,std::allocator<BlackBoxData> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xfa17c, cb 0x38) - no retail tie yet
+TSeerHut* std::_STL_alloc_proxy<TSeerHut *,TSeerHut,std::allocator<TSeerHut> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xfa1b4, cb 0x38) - no retail tie yet
+TTownEvent* std::_STL_alloc_proxy<TTownEvent *,TTownEvent,std::allocator<TTownEvent> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xfa1ec, cb 0x38) - no retail tie yet
+TownExtra* std::_STL_alloc_proxy<TownExtra *,TownExtra,std::allocator<TownExtra> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:153
+// DC_ONLY(0xfa224, cb 0x14) - no retail tie yet
+std::allocator<SecondarySkillData> std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::get_allocator(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:94
+// DC_ONLY(0xfa238, cb 0x78) - no retail tie yet
+void std::_Vector_base<SecondarySkillData,std::allocator<SecondarySkillData> >::_Vector_base<SecondarySkillData,std::allocator<SecondarySkillData> >(unsigned __n, const std::allocator<SecondarySkillData>* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:153
+// DC_ONLY(0xfa2b0, cb 0x14) - no retail tie yet
+std::allocator<enum std::vector<enum SpellID,std::allocator<enum SpellID> >::get_allocator(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:94
+// DC_ONLY(0xfa2c4, cb 0x74) - no retail tie yet
+void std::_Vector_base<enum SpellID,std::allocator<enum SpellID> >::_Vector_base<enum SpellID,std::allocator<enum SpellID> >(unsigned __n, const std::allocator<enum* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xfa338, cb 0x38) - no retail tie yet
+NewmapCell::TObjectCell* std::allocator<NewmapCell::TObjectCell>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xfa370, cb 0x3C) - no retail tie yet
+TreasureData* std::allocator<TreasureData>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xfa3ac, cb 0x3C) - no retail tie yet
+MonsterData* std::allocator<MonsterData>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xfa3e8, cb 0x40) - no retail tie yet
+BlackBoxData* std::allocator<BlackBoxData>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xfa428, cb 0x3C) - no retail tie yet
+TSeerHut* std::allocator<TSeerHut>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xfa464, cb 0x3C) - no retail tie yet
+TTownEvent* std::allocator<TTownEvent>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xfa4a0, cb 0x3C) - no retail tie yet
+TownExtra* std::allocator<TownExtra>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xfa4dc, cb 0x38) - no retail tie yet
+SecondarySkillData* std::_STL_alloc_proxy<SecondarySkillData *,SecondarySkillData,std::allocator<SecondarySkillData> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xfa514, cb 0x3C) - no retail tie yet
+SecondarySkillData* std::allocator<SecondarySkillData>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xfa550, cb 0x120) - no retail tie yet
+void std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::_M_insert_overflow(SecondarySkillData* __position, const SecondarySkillData* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xfa670, cb 0x3C) - no retail tie yet
+SecondarySkillData* std::uninitialized_copy(SecondarySkillData* __first, SecondarySkillData* __last, SecondarySkillData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xfa6ac, cb 0x58) - no retail tie yet
+SecondarySkillData* std::copy_backward(SecondarySkillData* __first, SecondarySkillData* __last, SecondarySkillData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfa704, cb 0x3A) - no retail tie yet
+void std::fill(SecondarySkillData* __first, SecondarySkillData* __last, const SecondarySkillData* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xfa740, cb 0x3C) - no retail tie yet
+SecondarySkillData* std::uninitialized_fill_n(SecondarySkillData* __first, unsigned __n, const SecondarySkillData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfa77c, cb 0x28) - no retail tie yet
+void std::fill(SpellID* __first, SpellID* __last, const SpellID* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xfa7a4, cb 0x3C) - no retail tie yet
+NewmapCell::TObjectCell* std::uninitialized_copy(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xfa7e0, cb 0x3C) - no retail tie yet
+NewmapCell::TObjectCell* std::uninitialized_fill_n(NewmapCell::TObjectCell* __first, unsigned __n, const NewmapCell::TObjectCell* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfa81c, cb 0x44) - no retail tie yet
+void std::fill(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, const NewmapCell::TObjectCell* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xfa860, cb 0x58) - no retail tie yet
+CObjectType* std::copy_backward(CObjectType* __first, CObjectType* __last, CObjectType* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfa8b8, cb 0x38) - no retail tie yet
+void std::fill(CObjectType* __first, CObjectType* __last, const CObjectType* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xfa8f0, cb 0x58) - no retail tie yet
+CObject* std::copy_backward(CObject* __first, CObject* __last, CObject* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfa948, cb 0x46) - no retail tie yet
+void std::fill(CObject* __first, CObject* __last, const CObject* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xfa990, cb 0x58) - no retail tie yet
+CSprite** std::copy_backward(CSprite** __first, CSprite** __last, CSprite** __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfa9e8, cb 0x28) - no retail tie yet
+void std::fill(CSprite** __first, CSprite** __last, CSprite** __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xfaa10, cb 0x3C) - no retail tie yet
+TreasureData* std::uninitialized_copy(TreasureData* __first, TreasureData* __last, TreasureData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xfaa4c, cb 0x3C) - no retail tie yet
+TreasureData* std::uninitialized_fill_n(TreasureData* __first, unsigned __n, const TreasureData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xfaa88, cb 0x58) - no retail tie yet
+TreasureData* std::copy_backward(TreasureData* __first, TreasureData* __last, TreasureData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfaae0, cb 0x38) - no retail tie yet
+void std::fill(TreasureData* __first, TreasureData* __last, const TreasureData* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xfab18, cb 0x3C) - no retail tie yet
+MonsterData* std::uninitialized_copy(MonsterData* __first, MonsterData* __last, MonsterData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xfab54, cb 0x3C) - no retail tie yet
+MonsterData* std::uninitialized_fill_n(MonsterData* __first, unsigned __n, const MonsterData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xfab90, cb 0x58) - no retail tie yet
+MonsterData* std::copy_backward(MonsterData* __first, MonsterData* __last, MonsterData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfabe8, cb 0x38) - no retail tie yet
+void std::fill(MonsterData* __first, MonsterData* __last, const MonsterData* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xfac20, cb 0x3C) - no retail tie yet
+BlackBoxData* std::uninitialized_copy(BlackBoxData* __first, BlackBoxData* __last, BlackBoxData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xfac5c, cb 0x3C) - no retail tie yet
+BlackBoxData* std::uninitialized_fill_n(BlackBoxData* __first, unsigned __n, const BlackBoxData* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xfac98, cb 0x58) - no retail tie yet
+BlackBoxData* std::copy_backward(BlackBoxData* __first, BlackBoxData* __last, BlackBoxData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfacf0, cb 0x3C) - no retail tie yet
+void std::fill(BlackBoxData* __first, BlackBoxData* __last, const BlackBoxData* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xfad2c, cb 0x3C) - no retail tie yet
+TSeerHut* std::uninitialized_copy(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xfad68, cb 0x3C) - no retail tie yet
+TSeerHut* std::uninitialized_fill_n(TSeerHut* __first, unsigned __n, const TSeerHut* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:248
+// DC_ONLY(0xfada4, cb 0x130) - no retail tie yet
+void std::vector<TTimedEvent,std::allocator<TTimedEvent> >::_M_insert_overflow(TTimedEvent* __position, const TTimedEvent* __x, unsigned __fill_len)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xfaed4, cb 0x3C) - no retail tie yet
+TTimedEvent* std::uninitialized_copy(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xfaf10, cb 0x58) - no retail tie yet
+TTimedEvent* std::copy_backward(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfaf68, cb 0x38) - no retail tie yet
+void std::fill(TTimedEvent* __first, TTimedEvent* __last, const TTimedEvent* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xfafa0, cb 0x3C) - no retail tie yet
+TTimedEvent* std::uninitialized_fill_n(TTimedEvent* __first, unsigned __n, const TTimedEvent* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xfafdc, cb 0x3C) - no retail tie yet
+TTownEvent* std::uninitialized_copy(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xfb018, cb 0x3C) - no retail tie yet
+TTownEvent* std::uninitialized_fill_n(TTownEvent* __first, unsigned __n, const TTownEvent* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:442
+// DC_ONLY(0xfb054, cb 0x58) - no retail tie yet
+TTownEvent* std::copy_backward(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:495
+// DC_ONLY(0xfb0ac, cb 0x38) - no retail tie yet
+void std::fill(TTownEvent* __first, TTownEvent* __last, const TTownEvent* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xfb0e4, cb 0x3C) - no retail tie yet
+TownExtra* std::uninitialized_copy(TownExtra* __first, TownExtra* __last, TownExtra* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:263
+// DC_ONLY(0xfb120, cb 0x3C) - no retail tie yet
+TownExtra* std::uninitialized_fill_n(TownExtra* __first, unsigned __n, const TownExtra* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator.h:405
+// DC_ONLY(0xfb15c, cb 0x30) - no retail tie yet
+unsigned char std::operator==(const std::reverse_iterator<NewmapCell::TObjectCell* __x, const std::reverse_iterator<NewmapCell::TObjectCell* __y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xfb18c, cb 0x8) - no retail tie yet
+SecondarySkillData* std::value_type(const SecondarySkillData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xfb194, cb 0x24) - no retail tie yet
+void std::__destroy(SecondarySkillData* __first, SecondarySkillData* __last, SecondarySkillData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xfb1b8, cb 0x8) - no retail tie yet
+NewmapCell::TObjectCell* std::value_type(const NewmapCell::TObjectCell* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xfb1c0, cb 0x24) - no retail tie yet
+void std::__destroy(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xfb1e4, cb 0x5E) - no retail tie yet
+NewmapCell::TObjectCell* std::__copy_backward(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xfb244, cb 0x8) - no retail tie yet
+TreasureData* std::value_type(const TreasureData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xfb24c, cb 0x24) - no retail tie yet
+void std::__destroy(TreasureData* __first, TreasureData* __last, TreasureData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xfb270, cb 0x8) - no retail tie yet
+MonsterData* std::value_type(const MonsterData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xfb278, cb 0x24) - no retail tie yet
+void std::__destroy(MonsterData* __first, MonsterData* __last, MonsterData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xfb29c, cb 0x8) - no retail tie yet
+BlackBoxData* std::value_type(const BlackBoxData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xfb2a4, cb 0x24) - no retail tie yet
+void std::__destroy(BlackBoxData* __first, BlackBoxData* __last, BlackBoxData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xfb2c8, cb 0x8) - no retail tie yet
+TSeerHut* std::value_type(const TSeerHut* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xfb2d0, cb 0x24) - no retail tie yet
+void std::__destroy(TSeerHut* __first, TSeerHut* __last, TSeerHut* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xfb2f4, cb 0x8) - no retail tie yet
+TTimedEvent* std::value_type(const TTimedEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xfb2fc, cb 0x24) - no retail tie yet
+void std::__destroy(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:262
+// DC_ONLY(0xfb320, cb 0x8) - no retail tie yet
+TTownEvent* std::value_type(const TTownEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:121
+// DC_ONLY(0xfb328, cb 0x24) - no retail tie yet
+void std::__destroy(TTownEvent* __first, TTownEvent* __last, TTownEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xfb34c, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const SecondarySkillData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xfb360, cb 0x8) - no retail tie yet
+int* std::distance_type(const SecondarySkillData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb368, cb 0x58) - no retail tie yet
+SecondarySkillData* std::__copy(SecondarySkillData* __first, SecondarySkillData* __last, SecondarySkillData* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb3c0, cb 0x40) - no retail tie yet
+SpellID* std::__copy(SpellID* __first, SpellID* __last, SpellID* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xfb400, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const CObjectType* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xfb414, cb 0x8) - no retail tie yet
+int* std::distance_type(const CObjectType* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb41c, cb 0x60) - no retail tie yet
+CObjectType* std::__copy(CObjectType* __first, CObjectType* __last, CObjectType* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xfb47c, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const CObject* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xfb490, cb 0x8) - no retail tie yet
+int* std::distance_type(const CObject* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb498, cb 0x74) - no retail tie yet
+CObject* std::__copy(CObject* __first, CObject* __last, CObject* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xfb50c, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, CSprite** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xfb520, cb 0x8) - no retail tie yet
+int* std::distance_type(CSprite** __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb528, cb 0x40) - no retail tie yet
+CSprite** std::__copy(CSprite** __first, CSprite** __last, CSprite** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xfb568, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TreasureData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xfb57c, cb 0x8) - no retail tie yet
+int* std::distance_type(const TreasureData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb584, cb 0x60) - no retail tie yet
+TreasureData* std::__copy(TreasureData* __first, TreasureData* __last, TreasureData* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xfb5e4, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const MonsterData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xfb5f8, cb 0x8) - no retail tie yet
+int* std::distance_type(const MonsterData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb600, cb 0x60) - no retail tie yet
+MonsterData* std::__copy(MonsterData* __first, MonsterData* __last, MonsterData* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xfb660, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const BlackBoxData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xfb674, cb 0x8) - no retail tie yet
+int* std::distance_type(const BlackBoxData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb67c, cb 0x68) - no retail tie yet
+BlackBoxData* std::__copy(BlackBoxData* __first, BlackBoxData* __last, BlackBoxData* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xfb6e4, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TSeerHut* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xfb6f8, cb 0x8) - no retail tie yet
+int* std::distance_type(const TSeerHut* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb700, cb 0x9C) - no retail tie yet
+TSeerHut* std::__copy(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xfb79c, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TTimedEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xfb7b0, cb 0x8) - no retail tie yet
+int* std::distance_type(const TTimedEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb7b8, cb 0x60) - no retail tie yet
+TTimedEvent* std::__copy(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xfb818, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TTownEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xfb82c, cb 0x8) - no retail tie yet
+int* std::distance_type(const TTownEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb834, cb 0x60) - no retail tie yet
+TTownEvent* std::__copy(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:243
+// DC_ONLY(0xfb894, cb 0x14) - no retail tie yet
+std::random_access_iterator_tag std::iterator_category(__$ReturnUdt, const TownExtra* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_iterator_base.h:291
+// DC_ONLY(0xfb8a8, cb 0x8) - no retail tie yet
+int* std::distance_type(const TownExtra* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfb8b0, cb 0x16C) - no retail tie yet
+TownExtra* std::__copy(TownExtra* __first, TownExtra* __last, TownExtra* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xfba1c, cb 0x3C) - no retail tie yet
+SecondarySkillData* std::uninitialized_copy(const SecondarySkillData* __first, const SecondarySkillData* __last, SecondarySkillData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:97
+// DC_ONLY(0xfba58, cb 0x3C) - no retail tie yet
+SpellID* std::uninitialized_copy(const SpellID* __first, const SpellID* __last, SpellID* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xfba94, cb 0xB8) - no retail tie yet
+CObjectType* CObjectType::operator=(const CObjectType* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xfbb4c, cb 0xCC) - no retail tie yet
+TreasureData* TreasureData::operator=(const TreasureData* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xfbc18, cb 0x64) - no retail tie yet
+MonsterData* MonsterData::operator=(const MonsterData* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xfbc7c, cb 0x1B0) - no retail tie yet
+BlackBoxData* BlackBoxData::operator=(const BlackBoxData* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xfbe2c, cb 0x94) - no retail tie yet
+TTimedEvent* TTimedEvent::operator=(const TTimedEvent* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:970
+// DC_ONLY(0xfbec0, cb 0x7C) - no retail tie yet
+TTownEvent* TTownEvent::operator=(const TTownEvent* __that)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0xfbf3c, cb 0x38) - no retail tie yet
+TTimedEvent* std::_STL_alloc_proxy<TTimedEvent *,TTimedEvent,std::allocator<TTimedEvent> >::allocate(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0xfbf74, cb 0x3C) - no retail tie yet
+TTimedEvent* std::allocator<TTimedEvent>::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:207
+// DC_ONLY(0xfbfb0, cb 0x16C) - no retail tie yet
+std::vector<SecondarySkillData,std::allocator<SecondarySkillData>* std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::operator=(const std::vector<SecondarySkillData,std::allocator<SecondarySkillData>* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xfc11c, cb 0x4C) - no retail tie yet
+void std::construct(SecondarySkillData* __p, const SecondarySkillData* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xfc168, cb 0x30) - no retail tie yet
+SecondarySkillData* std::__uninitialized_copy(SecondarySkillData* __first, SecondarySkillData* __last, SecondarySkillData* __result, SecondarySkillData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xfc198, cb 0x52) - no retail tie yet
+SecondarySkillData* std::__copy_backward(SecondarySkillData* __first, SecondarySkillData* __last, SecondarySkillData* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xfc1ec, cb 0x30) - no retail tie yet
+SecondarySkillData* std::__uninitialized_fill_n(SecondarySkillData* __first, unsigned __n, const SecondarySkillData* __x, SecondarySkillData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.c:207
+// DC_ONLY(0xfc21c, cb 0x164) - no retail tie yet
+std::vector<enum* std::vector<enum SpellID,std::allocator<enum SpellID> >::operator=(const std::vector<enum* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xfc380, cb 0x30) - no retail tie yet
+NewmapCell::TObjectCell* std::__uninitialized_copy(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result, NewmapCell::TObjectCell* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xfc3b0, cb 0x30) - no retail tie yet
+NewmapCell::TObjectCell* std::__uninitialized_fill_n(NewmapCell::TObjectCell* __first, unsigned __n, const NewmapCell::TObjectCell* __x, NewmapCell::TObjectCell* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xfc3e0, cb 0x60) - no retail tie yet
+CObjectType* std::__copy_backward(CObjectType* __first, CObjectType* __last, CObjectType* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xfc440, cb 0x70) - no retail tie yet
+CObject* std::__copy_backward(CObject* __first, CObject* __last, CObject* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xfc4b0, cb 0x40) - no retail tie yet
+CSprite** std::__copy_backward(CSprite** __first, CSprite** __last, CSprite** __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xfc4f0, cb 0x30) - no retail tie yet
+TreasureData* std::__uninitialized_copy(TreasureData* __first, TreasureData* __last, TreasureData* __result, TreasureData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xfc520, cb 0x30) - no retail tie yet
+TreasureData* std::__uninitialized_fill_n(TreasureData* __first, unsigned __n, const TreasureData* __x, TreasureData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xfc550, cb 0x60) - no retail tie yet
+TreasureData* std::__copy_backward(TreasureData* __first, TreasureData* __last, TreasureData* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xfc5b0, cb 0x30) - no retail tie yet
+MonsterData* std::__uninitialized_copy(MonsterData* __first, MonsterData* __last, MonsterData* __result, MonsterData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xfc5e0, cb 0x30) - no retail tie yet
+MonsterData* std::__uninitialized_fill_n(MonsterData* __first, unsigned __n, const MonsterData* __x, MonsterData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xfc610, cb 0x60) - no retail tie yet
+MonsterData* std::__copy_backward(MonsterData* __first, MonsterData* __last, MonsterData* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xfc670, cb 0x30) - no retail tie yet
+BlackBoxData* std::__uninitialized_copy(BlackBoxData* __first, BlackBoxData* __last, BlackBoxData* __result, BlackBoxData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xfc6a0, cb 0x30) - no retail tie yet
+BlackBoxData* std::__uninitialized_fill_n(BlackBoxData* __first, unsigned __n, const BlackBoxData* __x, BlackBoxData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xfc6d0, cb 0x68) - no retail tie yet
+BlackBoxData* std::__copy_backward(BlackBoxData* __first, BlackBoxData* __last, BlackBoxData* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xfc738, cb 0x30) - no retail tie yet
+TSeerHut* std::__uninitialized_copy(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result, TSeerHut* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xfc768, cb 0x30) - no retail tie yet
+TSeerHut* std::__uninitialized_fill_n(TSeerHut* __first, unsigned __n, const TSeerHut* __x, TSeerHut* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0xfc798, cb 0x44) - no retail tie yet
+void std::construct(TTimedEvent* __p, const TTimedEvent* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xfc7dc, cb 0x30) - no retail tie yet
+TTimedEvent* std::__uninitialized_copy(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result, TTimedEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xfc80c, cb 0x60) - no retail tie yet
+TTimedEvent* std::__copy_backward(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xfc86c, cb 0x30) - no retail tie yet
+TTimedEvent* std::__uninitialized_fill_n(TTimedEvent* __first, unsigned __n, const TTimedEvent* __x, TTimedEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xfc89c, cb 0x30) - no retail tie yet
+TTownEvent* std::__uninitialized_copy(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result, TTownEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xfc8cc, cb 0x30) - no retail tie yet
+TTownEvent* std::__uninitialized_fill_n(TTownEvent* __first, unsigned __n, const TTownEvent* __x, TTownEvent* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:382
+// DC_ONLY(0xfc8fc, cb 0x60) - no retail tie yet
+TTownEvent* std::__copy_backward(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xfc95c, cb 0x30) - no retail tie yet
+TownExtra* std::__uninitialized_copy(TownExtra* __first, TownExtra* __last, TownExtra* __result, TownExtra* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:255
+// DC_ONLY(0xfc98c, cb 0x30) - no retail tie yet
+TownExtra* std::__uninitialized_fill_n(TownExtra* __first, unsigned __n, const TownExtra* __x, TownExtra* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xfc9bc, cb 0x34) - no retail tie yet
+void std::__destroy_aux(SecondarySkillData* __first, SecondarySkillData* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xfc9f0, cb 0x34) - no retail tie yet
+void std::__destroy_aux(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xfca24, cb 0x34) - no retail tie yet
+void std::__destroy_aux(TreasureData* __first, TreasureData* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xfca58, cb 0x34) - no retail tie yet
+void std::__destroy_aux(MonsterData* __first, MonsterData* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xfca8c, cb 0x38) - no retail tie yet
+void std::__destroy_aux(BlackBoxData* __first, BlackBoxData* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xfcac4, cb 0x34) - no retail tie yet
+void std::__destroy_aux(TSeerHut* __first, TSeerHut* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xfcaf8, cb 0x34) - no retail tie yet
+void std::__destroy_aux(TTimedEvent* __first, TTimedEvent* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:110
+// DC_ONLY(0xfcb2c, cb 0x34) - no retail tie yet
+void std::__destroy_aux(TTownEvent* __first, TTownEvent* __last, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xfcb60, cb 0x30) - no retail tie yet
+SecondarySkillData* std::__uninitialized_copy(const SecondarySkillData* __first, const SecondarySkillData* __last, SecondarySkillData* __result, SecondarySkillData* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:88
+// DC_ONLY(0xfcb90, cb 0x30) - no retail tie yet
+SpellID* std::__uninitialized_copy(const SpellID* __first, const SpellID* __last, SpellID* __result, SpellID* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:199
+// DC_ONLY(0xfcbc0, cb 0x16) - no retail tie yet
+unsigned std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::capacity()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:199
+// DC_ONLY(0xfcbd8, cb 0x16) - no retail tie yet
+unsigned std::vector<enum SpellID,std::allocator<enum SpellID> >::capacity()
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:514
+// DC_ONLY(0xfcbf0, cb 0x40) - no retail tie yet
+std::vector<SecondarySkillData,std::allocator<SecondarySkillData> >::_M_allocate_and_copy(unsigned __n, const SecondarySkillData* __first, const SecondarySkillData* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xfcc30, cb 0x58) - no retail tie yet
+SecondarySkillData* std::copy(const SecondarySkillData* __first, const SecondarySkillData* __last, SecondarySkillData* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xfcc88, cb 0x44) - no retail tie yet
+SecondarySkillData* std::__uninitialized_copy_aux(SecondarySkillData* __first, SecondarySkillData* __last, SecondarySkillData* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xfcccc, cb 0x44) - no retail tie yet
+SecondarySkillData* std::__uninitialized_fill_n_aux(SecondarySkillData* __first, unsigned __n, const SecondarySkillData* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_vector.h:514
+// DC_ONLY(0xfcd10, cb 0x40) - no retail tie yet
+std::vector<enum SpellID,std::allocator<enum SpellID> >::_M_allocate_and_copy(unsigned __n, const SpellID* __first, const SpellID* __last)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:322
+// DC_ONLY(0xfcd50, cb 0x58) - no retail tie yet
+SpellID* std::copy(const SpellID* __first, const SpellID* __last, SpellID* __result)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xfcda8, cb 0x44) - no retail tie yet
+NewmapCell::TObjectCell* std::__uninitialized_copy_aux(NewmapCell::TObjectCell* __first, NewmapCell::TObjectCell* __last, NewmapCell::TObjectCell* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xfcdec, cb 0x44) - no retail tie yet
+NewmapCell::TObjectCell* std::__uninitialized_fill_n_aux(NewmapCell::TObjectCell* __first, unsigned __n, const NewmapCell::TObjectCell* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xfce30, cb 0x44) - no retail tie yet
+TreasureData* std::__uninitialized_copy_aux(TreasureData* __first, TreasureData* __last, TreasureData* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xfce74, cb 0x44) - no retail tie yet
+TreasureData* std::__uninitialized_fill_n_aux(TreasureData* __first, unsigned __n, const TreasureData* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xfceb8, cb 0x44) - no retail tie yet
+MonsterData* std::__uninitialized_copy_aux(MonsterData* __first, MonsterData* __last, MonsterData* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xfcefc, cb 0x44) - no retail tie yet
+MonsterData* std::__uninitialized_fill_n_aux(MonsterData* __first, unsigned __n, const MonsterData* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xfcf40, cb 0x4C) - no retail tie yet
+BlackBoxData* std::__uninitialized_copy_aux(BlackBoxData* __first, BlackBoxData* __last, BlackBoxData* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xfcf8c, cb 0x48) - no retail tie yet
+BlackBoxData* std::__uninitialized_fill_n_aux(BlackBoxData* __first, unsigned __n, const BlackBoxData* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xfcfd4, cb 0x44) - no retail tie yet
+TSeerHut* std::__uninitialized_copy_aux(TSeerHut* __first, TSeerHut* __last, TSeerHut* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xfd018, cb 0x44) - no retail tie yet
+TSeerHut* std::__uninitialized_fill_n_aux(TSeerHut* __first, unsigned __n, const TSeerHut* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xfd05c, cb 0x44) - no retail tie yet
+TTimedEvent* std::__uninitialized_copy_aux(TTimedEvent* __first, TTimedEvent* __last, TTimedEvent* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xfd0a0, cb 0x44) - no retail tie yet
+TTimedEvent* std::__uninitialized_fill_n_aux(TTimedEvent* __first, unsigned __n, const TTimedEvent* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xfd0e4, cb 0x44) - no retail tie yet
+TTownEvent* std::__uninitialized_copy_aux(TTownEvent* __first, TTownEvent* __last, TTownEvent* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xfd128, cb 0x44) - no retail tie yet
+TTownEvent* std::__uninitialized_fill_n_aux(TTownEvent* __first, unsigned __n, const TTownEvent* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xfd16c, cb 0x44) - no retail tie yet
+TownExtra* std::__uninitialized_copy_aux(TownExtra* __first, TownExtra* __last, TownExtra* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:239
+// DC_ONLY(0xfd1b0, cb 0x44) - no retail tie yet
+TownExtra* std::__uninitialized_fill_n_aux(TownExtra* __first, unsigned __n, const TownExtra* __x, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xfd1f4, cb 0x20) - no retail tie yet
+void std::destroy(SecondarySkillData* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xfd214, cb 0x20) - no retail tie yet
+void std::destroy(TreasureData* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xfd234, cb 0x20) - no retail tie yet
+void std::destroy(MonsterData* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xfd254, cb 0x20) - no retail tie yet
+void std::destroy(BlackBoxData* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xfd274, cb 0x20) - no retail tie yet
+void std::destroy(TSeerHut* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xfd294, cb 0x20) - no retail tie yet
+void std::destroy(TTimedEvent* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0xfd2b4, cb 0x20) - no retail tie yet
+void std::destroy(TTownEvent* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xfd2d4, cb 0x44) - no retail tie yet
+SecondarySkillData* std::__uninitialized_copy_aux(const SecondarySkillData* __first, const SecondarySkillData* __last, SecondarySkillData* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_uninitialized.h:70
+// DC_ONLY(0xfd318, cb 0x44) - no retail tie yet
+SpellID* std::__uninitialized_copy_aux(const SpellID* __first, const SpellID* __last, SpellID* __result, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfd35c, cb 0x58) - no retail tie yet
+SecondarySkillData* std::__copy(const SecondarySkillData* __first, const SecondarySkillData* __last, SecondarySkillData* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_algobase.h:209
+// DC_ONLY(0xfd3b4, cb 0x40) - no retail tie yet
+SpellID* std::__copy(const SpellID* __first, const SpellID* __last, SpellID* __result, std::random_access_iterator_tag __formal, int* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xfd3f4, cb 0x8) - no retail tie yet
+void std::__destroy_aux(SecondarySkillData* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xfd3fc, cb 0x20) - no retail tie yet
+void std::__destroy_aux(TreasureData* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xfd41c, cb 0x20) - no retail tie yet
+void std::__destroy_aux(MonsterData* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xfd43c, cb 0x20) - no retail tie yet
+void std::__destroy_aux(BlackBoxData* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xfd45c, cb 0x8) - no retail tie yet
+void std::__destroy_aux(TSeerHut* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xfd464, cb 0x20) - no retail tie yet
+void std::__destroy_aux(TTimedEvent* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0xfd484, cb 0x20) - no retail tie yet
+void std::__destroy_aux(TTownEvent* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:609
+// DC_ONLY(0xfd4a4, cb 0x38) - no retail tie yet
+void* TreasureData::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:609
+// DC_ONLY(0xfd4dc, cb 0x38) - no retail tie yet
+void* MonsterData::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:609
+// DC_ONLY(0xfd514, cb 0x38) - no retail tie yet
+void* BlackBoxData::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:609
+// DC_ONLY(0xfd54c, cb 0x38) - no retail tie yet
+void* TTimedEvent::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:609
+// DC_ONLY(0xfd584, cb 0x38) - no retail tie yet
+void* TTownEvent::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x004fc000 size   410  game_fd690_sub00_fc000 [caller]
+//   0x004fc1a0 size   494  game_fc000_sub00_fc1a0 [caller]
+//   0x004fc390 size   165  game_fdf40_sub00_fc390 [caller]
+//   0x004fc440 size   183  game_fc390_sub00_fc440 [caller]
+//   0x004fc500 size   410  game_fdbc0_sub00_fc500 [caller]
+//   0x004fc6a0 size   200  game_fc500_sub00_fc6a0 [caller]
+//   0x004fc770 size   250  game_fdf40_sub01_fc770 [caller]
+//   0x004fc870 size   484  game_fdbc0_sub01_fc870 [caller]
+//   0x004fca60 size    62  game_7aa80_sub01_fca60 [caller]
+//   0x004fcf40 size   274  NewmapCell_get_magic_terrain_type [hd-crossbuild]
+//   0x004fd1c0 size    24  game_fd060_sub00_fd1c0 [caller]
+//   0x004fd460 size    88  game_fd1e0_sub00_fd460 [caller]
+//   0x004fd4c0 size    38  NewmapCell_NewmapCell [hd-crossbuild]
+//   0x004fd4f0 size   352  game_fd690_sub01_fd4f0 [caller]
+//   0x004fd650 size    62  NewmapCell_NewmapCell_fd650 [hd-crossbuild]
+//   0x004fd690 size   691  game_c2450_sub08_fd690 [caller]
+//   0x004fd950 size   616  game_fdbc0_sub02_fd950 [caller]
+//   0x004fdbc0 size   881  game_bcda0_sub25_fdbc0 [caller]
+//   0x004fdf40 size   721  game_be3f0_sub15_fdf40 [caller]
+//   0x004fe220 size   619  game_fd690_sub02_fe220 [caller]
+//   0x004fe490 size   554  game_fdf40_sub02_fe490 [caller]
+//   0x004fe6c0 size   596  game_fe920_sub00_fe6c0 [caller]
+//   0x004fe920 size   741  game_fdbc0_sub03_fe920 [caller]
+//   0x004fed40 size   258  game_102e00_sub00_fed40 [caller]
+//   0x004fee50 size   188  game_ff120_sub00_fee50 [caller]
+//   0x004fef10 size    77  game_fdf40_sub03_fef10 [caller]
+//   0x004fef60 size   445  game_fdbc0_sub04_fef60 [caller]
+//   0x004ff120 size   457  game_102e00_sub01_ff120 [caller]
+//   0x004ff2f0 size   472  game_102e00_sub02_ff2f0 [caller]
+//   0x004ff4d0 size   474  game_102e00_sub03_ff4d0 [caller]
+//   0x004ff6b0 size  1333  game_ffbf0_sub00_ff6b0 [caller]
+//   0x004ffbf0 size   501  game_102e00_sub04_ffbf0 [caller]
+//   0x004ffdf0 size   176  game_106350_sub00_ffdf0 [caller]
+//   0x004ffea0 size   858  game_fdf40_sub04_ffea0 [caller]
+//   0x00500200 size   546  game_fdbc0_sub05_100200 [caller]
+//   0x00500430 size  1144  game_100200_sub00_100430 [caller]
+//   0x005008b0 size   634  game_102e00_sub05_1008b0 [caller]
+//   0x00500b30 size   686  game_102e00_sub06_100b30 [caller]
+//   0x00500de0 size   569  game_fd690_sub03_100de0 [caller]
+//   0x00501020 size   272  game_102e00_sub07_101020 [caller]
+//   0x00501130 size   306  game_102e00_sub08_101130 [caller]
+//   0x00501270 size   312  game_102e00_sub09_101270 [caller]
+//   0x005013b0 size   988  game_102e00_sub10_1013b0 [caller]
+//   0x00501790 size   483  game_fdbc0_sub06_101790 [caller]
+//   0x00501980 size   107  game_fdf40_sub05_101980 [caller]
+//   0x005019f0 size  1996  game_invalid_bitset_n_positio_1019f0 [string]
+//   0x005021c0 size  2101  game_invalid_bitset_n_positio_1021c0 [string]
+//   0x00502a00 size   337  game_102e00_sub13_102a00 [caller]
+//   0x00502b60 size   667  game_fd690_sub04_102b60 [caller]
+//   0x00502e00 size  2098  game_104470_sub01_102e00 [caller]
+//   0x00503640 size   141  game_104a40_sub00_103640 [caller]
+//   0x005036d0 size   164  game_104b70_sub00_1036d0 [caller]
+//   0x00503780 size  1216  calls_MessageBoxA_103780 [import-wrapper]
+//   0x00503c40 size   697  game_104a40_sub01_103c40 [caller]
+//   0x00503f00 size   861  game_104b70_sub01_103f00 [caller]
+//   0x00504260 size    46  cinit0549_104260 [init-ctor]
+//   0x00504290 size    42  game_104260_sub00_104290 [caller]
+//   0x005042c0 size   421  game_104470_sub03_1042c0 [caller]
+//   0x00504470 size  1481  calls_MessageBoxA_104470 [import-wrapper]
+//   0x00504a40 size   295  game_fdf40_sub06_104a40 [caller]
+//   0x00504b70 size  1257  game_fdbc0_sub07_104b70 [caller]
+//   0x00505060 size   461  game_105230_sub00_105060 [caller]
+//   0x00505230 size   985  calls_IntersectRect_105230 [import-wrapper]
+//   0x00505610 size  1016  game_105a10_sub00_105610 [caller]
+//   0x00505a10 size   264  game_aabb0_sub02_105a10 [caller]
+

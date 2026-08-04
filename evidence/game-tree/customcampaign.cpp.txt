@@ -1,0 +1,221 @@
+// E:\gamedcs\customcampaign.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module customcampaign.obj, 31 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x7ca2c, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x7ca54, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x7ca64, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x7ca8c, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x7ca9c, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x7cac4, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x7cad4, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x7cafc, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x7cb0c, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x7cb34, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x7cb44, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x7cb6c, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x7cb7c, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x7cba4, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x7cbb4, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x7cbdc, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x7cbec, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x7cc14, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x7cc24, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x7cc4c, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\customcampaign.cpp:29
+// DC_ONLY(0x7cc8c, cb 0x3E) - no retail tie yet
+void TCustomCampaignTraits::init()
+{
+    // @stub
+}
+
+// E:\gamedcs\customcampaign.cpp:55
+// DC_ONLY(0x7cccc, cb 0x80) - no retail tie yet
+void TCustomCampaignTraits::set(int _exp_cap, char _num_incoming_heroes, char _num_outgoing_heroes, TCarryOverPoolNumber _incoming_hero_pool, TCarryOverPoolNumber _outgoing_hero_pool, TArtifact _art_req_1, char _guard_bit_1, TArtifact _art_req_2, char _guard_bit_2, char _pos1, char _pos2, char _difficulty)
+{
+    // @stub
+}
+
+// E:\gamedcs\customcampaign.cpp:70
+// DC_ONLY(0x7cd4c, cb 0x400) - no retail tie yet
+void InitCampaignMapTraits([]* map_traits)
+{
+    // @stub
+}
+
+// E:\gamedcs\customcampaign.cpp:112
+// DC_ONLY(0x7d14c, cb 0x9E) - no retail tie yet
+void SCampaign::clear()
+{
+    // @stub
+}
+
+// E:\gamedcs\customcampaign.cpp:140
+// DC_ONLY(0x7d1ec, cb 0x40) - no retail tie yet
+void SCampaign::clear_carryover_pool(TCarryOverPoolNumber pool_num)
+{
+    // @stub
+}
+
+// E:\gamedcs\customcampaign.cpp:147
+// DC_ONLY(0x7d22c, cb 0x148) - no retail tie yet
+void SCampaign::DoPreLoadCustomization()
+{
+    // @stub
+}
+
+// E:\gamedcs\customcampaign.cpp:198
+// DC_ONLY(0x7d374, cb 0x4A) - no retail tie yet
+int SCampaign::get_score()
+{
+    // @stub
+}
+
+// E:\gamedcs\customcampaign.cpp:209
+// DC_ONLY(0x7d3c0, cb 0x60) - no retail tie yet
+int SCampaign::get_total_time()
+{
+    // @stub
+}
+
+// E:\gamedcs\customcampaign.cpp:222
+// DC_ONLY(0x7d420, cb 0x15E4) - no retail tie yet
+void SCampaign::give_custom_items()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.h:214
+// DC_ONLY(0x7ea04, cb 0xA) - no retail tie yet
+void type_artifact::type_artifact(SpellID new_spell)
+{
+    // @stub
+}
+
+// E:\gamedcs\CustomCampaign.h:108
+// DC_ONLY(0x7ea10, cb 0xC) - no retail tie yet
+void TArtifactRequirement::set(TArtifact _artifact, char _guard_bit)
+{
+    // @stub
+}
+

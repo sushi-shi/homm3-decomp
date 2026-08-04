@@ -1,0 +1,271 @@
+// E:\gamedcs\cspriteframe.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module cspriteframe.obj, 38 procs, 2 retail-tied.
+// retail extent 0x7c430..0x7c557 (VA 0x47c430..0x47c557)
+
+// E:\gamedcs\cspriteframe.cpp:46
+// DC_ONLY(0x745b0, cb 0x16) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:46
+// DC_ONLY(0x745c8, cb 0x10) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:47
+// DC_ONLY(0x745d8, cb 0x18) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:47
+// DC_ONLY(0x745f0, cb 0x10) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:67
+// DC_ONLY(0x74600, cb 0x64) - no retail tie yet
+void CSpriteFrame::CSpriteFrame()
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:76
+// DC_ONLY(0x74664, cb 0xAA) - no retail tie yet
+void CSpriteFrame::CSpriteFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:130
+// DC_ONLY(0x74710, cb 0xBA) - no retail tie yet
+void CSpriteFrame::CSpriteFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding, int cw, int ch, int cx, int cy)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:188
+// DC_ONLY(0x747cc, cb 0x6E) - no retail tie yet
+void CSpriteFrame::CSpriteFrame(const char* name, unsigned char cropped)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:202
+VA(0x0047c430, 0x22)  // anchor-bracket, dc 0x7483c
+void CSpriteFrame::~CSpriteFrame()
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:217
+// DC_ONLY(0x748ac, cb 0x6A) - no retail tie yet
+void CSpriteFrame::clear()
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:245
+VA(0x0047c460, 0xF7)  // anchor-global, dc 0x74918
+void CSpriteFrame::SetPixelFormat(unsigned rmask, unsigned gmask, unsigned bmask)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:283
+// DC_ONLY(0x74a18, cb 0xDC) - no retail tie yet
+int CSpriteFrame::importPCXFile(const char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:368
+// DC_ONLY(0x74af4, cb 0x26A) - no retail tie yet
+int CSpriteFrame::importCroppedPCXFile(const char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:542
+// DC_ONLY(0x74d60, cb 0x16A) - no retail tie yet
+unsigned char CSpriteFrame::GetPixel(int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:645
+// DC_ONLY(0x74ecc, cb 0x1C6) - no retail tie yet
+int CSpriteFrame::Crop()
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:768
+// DC_ONLY(0x75094, cb 0x44) - no retail tie yet
+void CSpriteFrame::Encode(TEncodingMethod method)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:791
+// DC_ONLY(0x750d8, cb 0x1B2) - no retail tie yet
+void CSpriteFrame::EncodeGeneral()
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:894
+// DC_ONLY(0x7528c, cb 0x1B2) - no retail tie yet
+void CSpriteFrame::EncodeTileset()
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:1012
+// DC_ONLY(0x75440, cb 0x3D0) - no retail tie yet
+void CSpriteFrame::EncodeAdvObj()
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:1357
+// DC_ONLY(0x75810, cb 0x310) - no retail tie yet
+void CSpriteFrame::Draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned char tblit)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:1878
+// DC_ONLY(0x75b20, cb 0x540) - no retail tie yet
+void CSpriteFrame::DrawCreatureImpl(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short outcolor, unsigned char bAlpha)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:2234
+// DC_ONLY(0x76060, cb 0x324) - no retail tie yet
+void CSpriteFrame::DrawAdvObjImpl(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned short flagcolor)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:2444
+// DC_ONLY(0x76384, cb 0x302) - no retail tie yet
+void CSpriteFrame::DrawAdvObjWithFlagAlpha(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor, unsigned char hflip)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:2645
+// DC_ONLY(0x76688, cb 0x2FE) - no retail tie yet
+void CSpriteFrame::DrawAdvObjShadowImpl(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:2856
+// DC_ONLY(0x76988, cb 0x762) - no retail tie yet
+void CSpriteFrame::DrawTile(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:3365
+// DC_ONLY(0x770ec, cb 0x576) - no retail tie yet
+void CSpriteFrame::DrawTileShadow(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:3776
+// DC_ONLY(0x77664, cb 0x338) - no retail tie yet
+void CSpriteFrame::DrawSpellEffect(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hflip, unsigned char alpha)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:3949
+// DC_ONLY(0x7799c, cb 0x1D0) - no retail tie yet
+void CSpriteFrame::ClipScaled50(int* sx, int* sy, int* sw, int* sh, int* dx, int* dy, int dw, int dh, unsigned char bHFlip, unsigned char bVFlip)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:4054
+// DC_ONLY(0x77b6c, cb 0x1EA) - no retail tie yet
+void CSpriteFrame::DrawAdvObjWithFlagScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:4187
+// DC_ONLY(0x77d58, cb 0x240) - no retail tie yet
+void CSpriteFrame::DrawAdvObjShadowScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:4330
+// DC_ONLY(0x77f98, cb 0x606) - no retail tie yet
+void CSpriteFrame::DrawTileScaled50(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:4802
+// DC_ONLY(0x785a0, cb 0x1D4) - no retail tie yet
+void CSpriteFrame::ClipScaled25(int* sx, int* sy, int* sw, int* sh, int* dx, int* dy, int dw, int dh, unsigned char bHFlip, unsigned char bVFlip)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:4907
+// DC_ONLY(0x78774, cb 0x208) - no retail tie yet
+void CSpriteFrame::DrawAdvObjWithFlagScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned short flagcolor)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:5054
+// DC_ONLY(0x7897c, cb 0x262) - no retail tie yet
+void CSpriteFrame::DrawAdvObjShadowScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:5201
+// DC_ONLY(0x78be0, cb 0x67E) - no retail tie yet
+void CSpriteFrame::DrawTileScaled25(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, TPalette16* pal, unsigned char hFlipped, unsigned char vFlipped)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:69
+// DC_ONLY(0x79260, cb 0x34) - no retail tie yet
+void* CSpriteFrame::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\cspriteframe.cpp:1265
+// DC_ONLY(0x79294, cb 0x184) - no retail tie yet
+void CSpriteFrame::Clip(int* sx, int* sy, int* sw, int* sh, int* dx, int* dy, int dw, int dh, unsigned char bHFlip, unsigned char bVFlip)
+{
+    // @stub
+}
+
+// ..\stlport\stl_limits.h:140
+// DC_ONLY(0x79418, cb 0x8) - no retail tie yet
+unsigned char std::_Integer_limits<unsigned char,0,255,-1>::max()
+{
+    // @stub
+}
+

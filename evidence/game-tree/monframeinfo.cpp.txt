@@ -1,0 +1,18 @@
+// E:\gamedcs\monframeinfo.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module monframeinfo.obj, 2 procs, 0 retail-tied.
+
+// E:\gamedcs\monframeinfo.cpp:36
+// DC_ONLY(0xfe598, cb 0x1CC) - no retail tie yet
+unsigned char InitializeCreatureAnimationTraitsTable()
+{
+    // @stub
+}
+
+// E:\gamedcs\monframeinfo.cpp:170
+// DC_ONLY(0xfe764, cb 0x270) - no retail tie yet
+void InitializeCreatureAnimationTraits(int id, const std::vector<char* row)
+{
+    // @stub
+}
+

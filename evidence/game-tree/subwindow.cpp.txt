@@ -1,0 +1,75 @@
+// E:\gamedcs\subwindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module subwindow.obj, 10 procs, 6 retail-tied.
+// retail extent 0x1aa410..0x1aa68a (VA 0x5aa410..0x5aa68a)
+
+// E:\gamedcs\subwindow.cpp:43
+// DC_ONLY(0x158d34, cb 0x78) - no retail tie yet
+void TSubWindow::TSubWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\subwindow.cpp:51
+// DC_ONLY(0x158dac, cb 0x66) - no retail tie yet
+void TSubWindow::TSubWindow(int x, int y, int w, int h, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\subwindow.cpp:56
+VA(0x005aa410, 0x60)  // anchor-global, dc 0x158e14
+void TSubWindow::~TSubWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\subwindow.cpp:63
+VA(0x005aa470, 0x25)  // anchor-global, dc 0x158e60
+void TSubWindow::initialize(int x, int y, int w, int h, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\subwindow.cpp:82
+VA(0x005aa4a0, 0x45)  // anchor-global, dc 0x158e7c
+void TSubWindow::AddWidget(widget* newWidget, int newPriority)
+{
+    // @stub
+}
+
+// E:\gamedcs\subwindow.cpp:111
+// DC_ONLY(0x158ebc, cb 0x12) - no retail tie yet
+void TSubWindow::RemoveWidget(widget* killWidget)
+{
+    // @stub
+}
+
+// E:\gamedcs\subwindow.cpp:125
+VA(0x005aa4f0, 0x63)  // anchor-global, dc 0x158ed0
+void TSubWindow::Draw(unsigned char update, int iLowID, int iHighID)
+{
+    // @stub
+}
+
+// E:\gamedcs\subwindow.cpp:161
+VA(0x005aa560, 0xA1)  // anchor-global, dc 0x158f4c
+void TSubWindow::SaveBackground()
+{
+    // @stub
+}
+
+// E:\gamedcs\subwindow.cpp:181
+VA(0x005aa610, 0x7A)  // anchor-global, dc 0x158fa4
+void TSubWindow::RestoreBackground()
+{
+    // @stub
+}
+
+// E:\gamedcs\subwindow.cpp:44
+// DC_ONLY(0x159094, cb 0x34) - no retail tie yet
+void* TSubWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

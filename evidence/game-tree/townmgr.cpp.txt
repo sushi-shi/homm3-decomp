@@ -1,0 +1,1132 @@
+// E:\gamedcs\townmgr.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module townmgr.obj, 161 procs, 1 retail-tied.
+// retail extent 0x1d2a40..0x1d2d75 (VA 0x5d2a40..0x5d2d75)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x169da4, cb 0x28) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x169dcc, cb 0x10) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x169ddc, cb 0x28) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x169e04, cb 0x10) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x169e14, cb 0x28) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x169e3c, cb 0x10) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x169e4c, cb 0x28) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x169e74, cb 0x10) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x169e84, cb 0x28) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x169eac, cb 0x10) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x169ebc, cb 0x28) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x169ee4, cb 0x10) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x169ef4, cb 0x28) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x169f1c, cb 0x10) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x169f2c, cb 0x28) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x169f54, cb 0x10) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x169f64, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x169f8c, cb 0x10) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x169f9c, cb 0x28) - no retail tie yet
+void $E466()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x169fc4, cb 0x40) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:78
+// DC_ONLY(0x16a004, cb 0x18) - no retail tie yet
+void $E490()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:78
+// DC_ONLY(0x16a01c, cb 0x10) - no retail tie yet
+void $E491()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:166
+// DC_ONLY(0x16a02c, cb 0x5E) - no retail tie yet
+void $E493()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:175
+// DC_ONLY(0x16a08c, cb 0x24) - no retail tie yet
+void $E494()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:1855
+// DC_ONLY(0x16a0b0, cb 0xF4) - no retail tie yet
+void townObject::townObject(int iTownType, int iObjPos, const char* basename)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:1900
+// DC_ONLY(0x16a1a4, cb 0x80) - no retail tie yet
+void townObject::~townObject()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:1913
+// DC_ONLY(0x16a224, cb 0x42) - no retail tie yet
+void townObject::DrawOutline()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:1919
+// DC_ONLY(0x16a268, cb 0x48) - no retail tie yet
+void townObject::DrawHotspot()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:1925
+// DC_ONLY(0x16a2b0, cb 0x2EA) - no retail tie yet
+void townObject::Draw(int incFrame, unsigned char drawHotspots)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:1999
+// DC_ONLY(0x16a59c, cb 0xA8) - no retail tie yet
+void townManager::townManager()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2047
+// DC_ONLY(0x16a644, cb 0xE8) - no retail tie yet
+void townManager::SetupExtraStuff()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2261
+// DC_ONLY(0x16a72c, cb 0x6C4) - no retail tie yet
+void TTownScreenWindow::TTownScreenWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2444
+// DC_ONLY(0x16adf0, cb 0x76) - no retail tie yet
+void TTownScreenWindow::~TTownScreenWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2460
+// DC_ONLY(0x16ae68, cb 0xF0) - no retail tie yet
+void TTownScreenWindow::UpdateTownLocator(int i)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2506
+// DC_ONLY(0x16af58, cb 0xD8) - no retail tie yet
+void TTownScreenWindow::UpdateTownLocators()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2526
+// DC_ONLY(0x16b030, cb 0x52) - no retail tie yet
+void TTownScreenWindow::DoTownKnob(unsigned char up)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2547
+// DC_ONLY(0x16b084, cb 0x62) - no retail tie yet
+void TTownScreenWindow::bonus_right_click(long id)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2562
+// DC_ONLY(0x16b0e8, cb 0x630) - no retail tie yet
+void TTownScreenWindow::set_bonus_display(town* currTown)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2716
+// DC_ONLY(0x16b718, cb 0x2CA) - no retail tie yet
+int townManager::Open(int newPriority)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2833
+// DC_ONLY(0x16b9e4, cb 0xAC) - no retail tie yet
+void townManager::ChangeTown(unsigned char fade)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2855
+// DC_ONLY(0x16ba90, cb 0x114) - no retail tie yet
+void townManager::UpdateTownInfo()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2897
+// DC_ONLY(0x16bba4, cb 0x540) - no retail tie yet
+void townManager::SetupTown(unsigned char fade)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3062
+// DC_ONLY(0x16c0e4, cb 0x1F4) - no retail tie yet
+void townManager::NewStrips()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3143
+// DC_ONLY(0x16c2d8, cb 0x110) - no retail tie yet
+void townManager::UnloadTown()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3175
+// DC_ONLY(0x16c3e8, cb 0x130) - no retail tie yet
+void townManager::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3213
+// DC_ONLY(0x16c518, cb 0x18E) - no retail tie yet
+void townManager::SetHeroCommand()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3274
+// DC_ONLY(0x16c6a8, cb 0x296) - no retail tie yet
+void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3383
+// DC_ONLY(0x16c940, cb 0x572) - no retail tie yet
+void townManager::SetCommandAndText(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3681
+// DC_ONLY(0x16ceb4, cb 0x226) - no retail tie yet
+void townManager::SetCommandAndText2(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3787
+// DC_ONLY(0x16d0dc, cb 0x104) - no retail tie yet
+void townManager::select_army(strip* whichStrip, long i, unsigned char join_dialog)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3825
+// DC_ONLY(0x16d1e0, cb 0x5A) - no retail tie yet
+void townManager::ArmyCommand(strip* whichStrip, int i, int shift, unsigned char join_dialog)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3841
+// DC_ONLY(0x16d23c, cb 0x5A) - no retail tie yet
+void townManager::ShowText()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3859
+// DC_ONLY(0x16d298, cb 0xBF8) - no retail tie yet
+void TThievesGuildWindow::TThievesGuildWindow(int num_guilds)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3939
+// DC_ONLY(0x16de90, cb 0x7C) - no retail tie yet
+void TThievesGuildWindow::~TThievesGuildWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3951
+// DC_ONLY(0x16df0c, cb 0x3E8) - no retail tie yet
+void TThievesGuildWindow::show_side()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4070
+// DC_ONLY(0x16e2f4, cb 0x148) - no retail tie yet
+void TThievesGuildWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4154
+// DC_ONLY(0x16e43c, cb 0x28E) - no retail tie yet
+int TThievesGuildWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4302
+// DC_ONLY(0x16e6cc, cb 0x19F4) - no retail tie yet
+void THallWindow::THallWindow(int which)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4465
+// DC_ONLY(0x1700c0, cb 0x68) - no retail tie yet
+void THallWindow::~THallWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4476
+// DC_ONLY(0x170128, cb 0xE90) - no retail tie yet
+void TMageGuildWindow::TMageGuildWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4607
+// DC_ONLY(0x170fb8, cb 0x68) - no retail tie yet
+void TMageGuildWindow::~TMageGuildWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4617
+// DC_ONLY(0x171020, cb 0xF8) - no retail tie yet
+void TMageGuildWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4652
+// DC_ONLY(0x171118, cb 0x1AC) - no retail tie yet
+int TMageGuildWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4728
+// DC_ONLY(0x1712c4, cb 0x5A) - no retail tie yet
+void townManager::create_popup_bank(heroWindow* parent)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4740
+// DC_ONLY(0x171320, cb 0x234) - no retail tie yet
+void townManager::handle_mage_guild_click()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4806
+// DC_ONLY(0x171554, cb 0x1530) - no retail tie yet
+void type_garrison_base_window::type_garrison_base_window(hero* inHero, int garrison_owner, armyGroup* garrison_army)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4932
+// DC_ONLY(0x172a84, cb 0x6A) - no retail tie yet
+void type_garrison_base_window::~type_garrison_base_window()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4940
+// DC_ONLY(0x172af0, cb 0x178) - no retail tie yet
+void type_garrison_base_window::SetCommandAndText(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4998
+// DC_ONLY(0x172c68, cb 0x38) - no retail tie yet
+void type_garrison_base_window::ShowText()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5012
+// DC_ONLY(0x172ca0, cb 0x52) - no retail tie yet
+void type_garrison_base_window::ViewArmy()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5027
+// DC_ONLY(0x172cf4, cb 0x240) - no retail tie yet
+int type_garrison_base_window::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5136
+// DC_ONLY(0x172f34, cb 0x184) - no retail tie yet
+void type_monster_join_window::type_monster_join_window(hero* inHero, armyGroup* monsters)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5164
+// DC_ONLY(0x1730b8, cb 0x154) - no retail tie yet
+void TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrison_owner, armyGroup* garrison_army)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5180
+// DC_ONLY(0x17320c, cb 0x2C) - no retail tie yet
+void DoEventGarrison(hero* inHero, garrison* thisGarrison)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5187
+// DC_ONLY(0x173238, cb 0x70) - no retail tie yet
+void do_monster_join_dialog(hero* inHero, TCreatureType type, int amount)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5201
+// DC_ONLY(0x1732a8, cb 0x3E) - no retail tie yet
+void do_monster_join_dialog(hero* inHero, armyGroup* monsters)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5214
+// DC_ONLY(0x1732e8, cb 0x734) - no retail tie yet
+void TBlacksmithWindow::TBlacksmithWindow(int heroID, int townType)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5287
+// DC_ONLY(0x173a1c, cb 0x6A) - no retail tie yet
+void TBlacksmithWindow::~TBlacksmithWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5296
+// DC_ONLY(0x173a88, cb 0x78) - no retail tie yet
+void TBlacksmithWindow::SetRightClickText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5302
+// DC_ONLY(0x173b00, cb 0xC8) - no retail tie yet
+void TBlacksmithWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5323
+// DC_ONLY(0x173bc8, cb 0x116) - no retail tie yet
+int TBlacksmithWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5361
+// DC_ONLY(0x173ce0, cb 0x202) - no retail tie yet
+void DoBlacksmith(int heroID, int type)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5394
+// DC_ONLY(0x173ee4, cb 0x704) - no retail tie yet
+void TShipWindow::TShipWindow(int townType)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5452
+// DC_ONLY(0x1745e8, cb 0x6A) - no retail tie yet
+void TShipWindow::~TShipWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5461
+// DC_ONLY(0x174654, cb 0x4) - no retail tie yet
+void TShipWindow::SetRightClickText()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5465
+// DC_ONLY(0x174658, cb 0x84) - no retail tie yet
+void TShipWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5486
+// DC_ONLY(0x1746dc, cb 0x11E) - no retail tie yet
+int TShipWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5530
+// DC_ONLY(0x1747fc, cb 0x4E) - no retail tie yet
+void DoShipyard(int type)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5540
+// DC_ONLY(0x17484c, cb 0x144) - no retail tie yet
+void townManager::DoHall()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5583
+// DC_ONLY(0x174990, cb 0x26A) - no retail tie yet
+void townManager::show_hall_side()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5685
+// DC_ONLY(0x174bfc, cb 0x120) - no retail tie yet
+void townManager::DoPortalOfSummoning()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5705
+// DC_ONLY(0x174d1c, cb 0x84) - no retail tie yet
+void townManager::DoSkeletonTransformer()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5733
+// DC_ONLY(0x174da0, cb 0x1BE) - no retail tie yet
+void townManager::handle_hall_click()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5778
+// DC_ONLY(0x174f60, cb 0x18) - no retail tie yet
+int ExitTownManager(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5789
+VA(0x005d2a40, 0x335)  // anchor-global, dc 0x174f78
+char* GetBuildingInfo(const town* this_town, int buildingId, unsigned char bIncludeTitle, unsigned char extended)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5854
+// DC_ONLY(0x175160, cb 0x14D2) - no retail tie yet
+int townManager::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:6598
+// DC_ONLY(0x176634, cb 0x552) - no retail tie yet
+void townManager::DoCommand(int inCommand, unsigned char isGarrison, type_garrison_base_window* garrisonWindow)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:6778
+// DC_ONLY(0x176b88, cb 0x66) - no retail tie yet
+void townManager::SwapHeroes()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:6792
+// DC_ONLY(0x176bf0, cb 0x108) - no retail tie yet
+void townManager::MoveHeroToGarrison()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:6813
+// DC_ONLY(0x176cf8, cb 0x1B8) - no retail tie yet
+void townManager::MoveHeroFromGarrison()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:6843
+// DC_ONLY(0x176eb0, cb 0x72) - no retail tie yet
+void townManager::RedrawTownScreen()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:6866
+// DC_ONLY(0x176f24, cb 0x120) - no retail tie yet
+void townManager::ResetStrips()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:6931
+// DC_ONLY(0x177044, cb 0x76) - no retail tie yet
+void townManager::DrawTown(int update, int incFrame, unsigned char drawHotspots)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:6966
+// DC_ONLY(0x1770bc, cb 0x150C) - no retail tie yet
+void TTownMenu::TTownMenu()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7040
+// DC_ONLY(0x1785c8, cb 0x70) - no retail tie yet
+void TTownMenu::~TTownMenu()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7048
+// DC_ONLY(0x178638, cb 0x128) - no retail tie yet
+int TTownMenu::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7110
+// DC_ONLY(0x178760, cb 0x7E) - no retail tie yet
+void TTownMenu::SetupStrips()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7133
+// DC_ONLY(0x1787e0, cb 0x2D8) - no retail tie yet
+void TTownMenu::NewStrips()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7210
+// DC_ONLY(0x178ab8, cb 0x56C) - no retail tie yet
+void TBuyBuildWindow::TBuyBuildWindow(int x2, int y2, int Id)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7262
+// DC_ONLY(0x179024, cb 0x6A) - no retail tie yet
+void TBuyBuildWindow::~TBuyBuildWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7272
+// DC_ONLY(0x179090, cb 0x324) - no retail tie yet
+void TBuyBuildWindow::set_prerequisite_text(const town* current_town, type_building_id buildingId)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7354
+// DC_ONLY(0x1793b4, cb 0x54A) - no retail tie yet
+int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7489
+// DC_ONLY(0x179900, cb 0xB6) - no retail tie yet
+void TBuyBuildWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7509
+// DC_ONLY(0x1799b8, cb 0x4) - no retail tie yet
+void TBuyBuildWindow::SetRightClickText()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7513
+// DC_ONLY(0x1799bc, cb 0xA8) - no retail tie yet
+int TBuyBuildWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7539
+// DC_ONLY(0x179a64, cb 0xC4) - no retail tie yet
+void townManager::CycleOutline(const int objectIndex, const int x, const int y, const int w, const int h)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7564
+// DC_ONLY(0x179b28, cb 0x34A) - no retail tie yet
+void townManager::BuildObj(int buildingId)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7693
+// DC_ONLY(0x179e74, cb 0x1A8) - no retail tie yet
+void townManager::SetupMage(heroWindow* mageWin)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7803
+// DC_ONLY(0x17a01c, cb 0x718) - no retail tie yet
+void TTavernWindow::TTavernWindow(int x2, int y2)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7839
+// DC_ONLY(0x17a734, cb 0x6A) - no retail tie yet
+void TTavernWindow::~TTavernWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7847
+// DC_ONLY(0x17a7a0, cb 0x288) - no retail tie yet
+void TTavernWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7903
+// DC_ONLY(0x17aa28, cb 0x314) - no retail tie yet
+int TTavernWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8037
+// DC_ONLY(0x17ad3c, cb 0x3A) - no retail tie yet
+int TTavernWindow::Open(int newPriority, unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8048
+// DC_ONLY(0x17ad78, cb 0x12) - no retail tie yet
+void TTavernWindow::Close(unsigned char update)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8055
+// DC_ONLY(0x17ad8c, cb 0x35A) - no retail tie yet
+unsigned char DoTavern()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8157
+// DC_ONLY(0x17b0e8, cb 0x6C) - no retail tie yet
+void DoMapTavern(type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8164
+// DC_ONLY(0x17b154, cb 0x1C4) - no retail tie yet
+void townManager::DoTownTavern()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8203
+// DC_ONLY(0x17b318, cb 0x10E) - no retail tie yet
+void townManager::DoTownGate()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8243
+// DC_ONLY(0x17b428, cb 0x62) - no retail tie yet
+void townManager::MoveHero(town* fromTown, town* toTown)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8254
+// DC_ONLY(0x17b48c, cb 0x3C68) - no retail tie yet
+void TCastleWindow::TCastleWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8633
+// DC_ONLY(0x17f0f4, cb 0x6A) - no retail tie yet
+void TCastleWindow::~TCastleWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8642
+// DC_ONLY(0x17f160, cb 0x398) - no retail tie yet
+void TCastleWindow::show_scroller()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8762
+// DC_ONLY(0x17f4f8, cb 0x54) - no retail tie yet
+void TCastleWindow::ShowText()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8776
+// DC_ONLY(0x17f54c, cb 0x19C) - no retail tie yet
+void TCastleWindow::SetRolloverText(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8833
+// DC_ONLY(0x17f6e8, cb 0x130) - no retail tie yet
+void TCastleWindow::Recruit(int i)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8851
+// DC_ONLY(0x17f818, cb 0x4F0) - no retail tie yet
+int TCastleWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:9067
+// DC_ONLY(0x17fd08, cb 0x4FA) - no retail tie yet
+void townManager::SetupWell(TCastleWindow* wellWin)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:9206
+// DC_ONLY(0x180204, cb 0xEAA) - no retail tie yet
+void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:9597
+// DC_ONLY(0x1810b0, cb 0x29E) - no retail tie yet
+void GetCategoryStats(int whichCat, long* value, signed char* index)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:9698
+// DC_ONLY(0x181350, cb 0xB4) - no retail tie yet
+void SortStats(long* value, signed char* index)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.h:305
+// DC_ONLY(0x181404, cb 0x12) - no retail tie yet
+long town::get_generator_bonus(long dwelling)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:1830
+// DC_ONLY(0x181418, cb 0x50) - no retail tie yet
+void CTownNetMsgHandler::CTownNetMsgHandler(TResourceDisplay* pResourceDisplay)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:1836
+// DC_ONLY(0x181468, cb 0x4) - no retail tie yet
+void CTownNetMsgHandler::SetResourceDisplay(TResourceDisplay* pResourceDisplay)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:1844
+// DC_ONLY(0x18146c, cb 0x2C) - no retail tie yet
+void CTownNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:2438
+// DC_ONLY(0x181498, cb 0x34) - no retail tie yet
+void* TTownScreenWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3059
+// DC_ONLY(0x1814cc, cb 0x34) - no retail tie yet
+void* strip::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3171
+// DC_ONLY(0x181500, cb 0x34) - no retail tie yet
+void* townObject::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:3936
+// DC_ONLY(0x181534, cb 0x34) - no retail tie yet
+void* TThievesGuildWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4461
+// DC_ONLY(0x181568, cb 0x34) - no retail tie yet
+void* THallWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4603
+// DC_ONLY(0x18159c, cb 0x34) - no retail tie yet
+void* TMageGuildWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:4929
+// DC_ONLY(0x1815d0, cb 0x34) - no retail tie yet
+void* type_garrison_base_window::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5156
+// DC_ONLY(0x181604, cb 0x34) - no retail tie yet
+void* type_monster_join_window::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5156
+// DC_ONLY(0x181638, cb 0x18) - no retail tie yet
+void type_monster_join_window::~type_monster_join_window()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5177
+// DC_ONLY(0x181650, cb 0x34) - no retail tie yet
+void* TGarrisonWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5177
+// DC_ONLY(0x181684, cb 0x18) - no retail tie yet
+void TGarrisonWindow::~TGarrisonWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5284
+// DC_ONLY(0x18169c, cb 0x34) - no retail tie yet
+void* TBlacksmithWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:5449
+// DC_ONLY(0x1816d0, cb 0x34) - no retail tie yet
+void* TShipWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7037
+// DC_ONLY(0x181704, cb 0x34) - no retail tie yet
+void* TTownMenu::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7259
+// DC_ONLY(0x181738, cb 0x34) - no retail tie yet
+void* TBuyBuildWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:7835
+// DC_ONLY(0x18176c, cb 0x34) - no retail tie yet
+void* TTavernWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\townmgr.cpp:8628
+// DC_ONLY(0x1817a0, cb 0x34) - no retail tie yet
+void* TCastleWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

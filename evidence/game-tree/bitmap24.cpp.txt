@@ -1,0 +1,109 @@
+// E:\gamedcs\bitmap24.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module bitmap24.obj, 15 procs, 0 retail-tied.
+
+// E:\gamedcs\bitmap24.cpp:39
+// DC_ONLY(0x525b4, cb 0x62) - no retail tie yet
+long ftol(double d)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:55
+// DC_ONLY(0x52618, cb 0x54) - no retail tie yet
+void Bitmap24Bit::Bitmap24Bit()
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:64
+// DC_ONLY(0x5266c, cb 0x7A) - no retail tie yet
+void Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h, const unsigned char* data, int size)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:80
+// DC_ONLY(0x526e8, cb 0x6C) - no retail tie yet
+void Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:94
+// DC_ONLY(0x52754, cb 0x3E) - no retail tie yet
+void Bitmap24Bit::~Bitmap24Bit()
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:101
+// DC_ONLY(0x52794, cb 0x5A) - no retail tie yet
+void Bitmap24Bit::import(int w, int h, const unsigned char* data, int size)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:123
+// DC_ONLY(0x527f0, cb 0x2A) - no retail tie yet
+void Bitmap24Bit::clear()
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:225
+// DC_ONLY(0x5281c, cb 0xDC) - no retail tie yet
+int Bitmap24Bit::importPCXFile(const char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:274
+// DC_ONLY(0x528f8, cb 0x70) - no retail tie yet
+void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx, int dy)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:280
+// DC_ONLY(0x52968, cb 0x13E) - no retail tie yet
+void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:349
+// DC_ONLY(0x52aa8, cb 0x424) - no retail tie yet
+void Bitmap24Bit::AdjustHSV(int x, int y, int w, int h, float hue, float hue_adjust, float saturation_adjust, float value_adjust)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:446
+// DC_ONLY(0x52ecc, cb 0x1B6) - no retail tie yet
+void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:481
+// DC_ONLY(0x53084, cb 0x32C) - no retail tie yet
+void HSVToRGB(float h, float s, float v, unsigned* r, unsigned* g, unsigned* b)
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.h:72
+// DC_ONLY(0x533b0, cb 0xA) - no retail tie yet
+int Bitmap24Bit::GetPitch()
+{
+    // @stub
+}
+
+// E:\gamedcs\bitmap24.cpp:58
+// DC_ONLY(0x533bc, cb 0x34) - no retail tie yet
+void* Bitmap24Bit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

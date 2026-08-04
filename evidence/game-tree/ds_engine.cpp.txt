@@ -1,0 +1,788 @@
+// E:\gamedcs\h3\ds_engine.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module ds_engine.obj, 112 procs, 0 retail-tied.
+
+// E:\gamedcs\h3\ds_engine.cpp:26
+// DC_ONLY(0x87640, cb 0x14) - no retail tie yet
+void $E437()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:26
+// DC_ONLY(0x87654, cb 0x14) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:26
+// DC_ONLY(0x87668, cb 0x14) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:26
+// DC_ONLY(0x8767c, cb 0x14) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:34
+// DC_ONLY(0x87690, cb 0x218) - no retail tie yet
+unsigned long PlaySample(void* ds_sample)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:138
+// DC_ONLY(0x878a8, cb 0x328) - no retail tie yet
+unsigned long PlayStream(void* ds_sample)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:283
+// DC_ONLY(0x87bd0, cb 0x1C) - no retail tie yet
+void dsound::InitDS()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:292
+// DC_ONLY(0x87bec, cb 0x2C) - no retail tie yet
+void dsound::InitWin(void* hwnd)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:304
+// DC_ONLY(0x87c18, cb 0x30) - no retail tie yet
+void dsound::ReleaseDS()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:316
+// DC_ONLY(0x87c48, cb 0x16) - no retail tie yet
+void wavfile::wavfile()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:321
+// DC_ONLY(0x87c60, cb 0x10) - no retail tie yet
+void wavfile::~wavfile()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:326
+// DC_ONLY(0x87c70, cb 0x24) - no retail tie yet
+void wavfile::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:335
+// DC_ONLY(0x87c94, cb 0x18) - no retail tie yet
+void wavfile::wavfile(char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:341
+// DC_ONLY(0x87cac, cb 0x3A) - no retail tie yet
+void wavfile::Reset()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:352
+// DC_ONLY(0x87ce8, cb 0x28) - no retail tie yet
+const char* wavfile::GetName()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:357
+// DC_ONLY(0x87d10, cb 0x2A) - no retail tie yet
+unsigned char wavfile::Open(char* filename, unsigned long file_offset)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:366
+// DC_ONLY(0x87d3c, cb 0x60) - no retail tie yet
+unsigned char wavfile::OpenFile(char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:384
+// DC_ONLY(0x87d9c, cb 0x180) - no retail tie yet
+unsigned char wavfile::OpenOffset(unsigned long file_offset)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:469
+// DC_ONLY(0x87f1c, cb 0x6) - no retail tie yet
+unsigned long wavfile::FileOffset()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:474
+// DC_ONLY(0x87f24, cb 0x8C) - no retail tie yet
+unsigned char wavfile::CopyData(void* dest, unsigned long source_offset, unsigned long length)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:507
+// DC_ONLY(0x87fb0, cb 0x42) - no retail tie yet
+tWAVEFORMATEX wavfile::Format(__$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:512
+// DC_ONLY(0x87ff4, cb 0x6) - no retail tie yet
+unsigned long wavfile::Length()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:517
+// DC_ONLY(0x87ffc, cb 0x1C) - no retail tie yet
+unsigned char wavfile::Valid()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:523
+// DC_ONLY(0x88018, cb 0x130) - no retail tie yet
+IDirectSoundBuffer* ds_genericsample::CreateSoundBuffer(tWAVEFORMATEX* buffer_format, unsigned long dwBufferSize, unsigned long fit_wavsize)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:564
+// DC_ONLY(0x88148, cb 0x6C) - no retail tie yet
+void ds_genericsample::ds_genericsample(tWAVEFORMATEX* buffer_format, unsigned long size, unsigned long fit_wavsize)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:573
+// DC_ONLY(0x881b4, cb 0x8) - no retail tie yet
+const char* ds_genericsample::GetName()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:578
+// DC_ONLY(0x881bc, cb 0x34) - no retail tie yet
+void ds_genericsample::SetName(const char* new_name)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:584
+// DC_ONLY(0x881f0, cb 0xC6) - no retail tie yet
+void ds_genericsample::ds_genericsample(wavfile* wav, unsigned char autoremove, unsigned char readdata)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:613
+// DC_ONLY(0x882b8, cb 0x90) - no retail tie yet
+void ds_genericsample::ds_genericsample(ds_genericsample* other_sample)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:633
+// DC_ONLY(0x88348, cb 0x8A) - no retail tie yet
+void ds_genericsample::~ds_genericsample()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:652
+// DC_ONLY(0x883d4, cb 0x8) - no retail tie yet
+unsigned char ds_genericsample::IsClone()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:657
+// DC_ONLY(0x883dc, cb 0xB0) - no retail tie yet
+unsigned char ds_genericsample::Silence(unsigned long from, unsigned long to)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:685
+// DC_ONLY(0x8848c, cb 0xEE) - no retail tie yet
+unsigned char ds_genericsample::SetData(wavfile* wav, unsigned long sourcepos, unsigned long destpos, unsigned long length, unsigned char fillup)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:724
+// DC_ONLY(0x8857c, cb 0xA8) - no retail tie yet
+unsigned char ds_genericsample::SetData(void* mem_ptr, unsigned long destpos, unsigned long length)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:752
+// DC_ONLY(0x88624, cb 0x108) - no retail tie yet
+void ds_genericsample::Init(unsigned char full)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:785
+// DC_ONLY(0x8872c, cb 0xBA) - no retail tie yet
+unsigned char ds_genericsample::SetupSoundBuffer()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:813
+// DC_ONLY(0x887e8, cb 0x34) - no retail tie yet
+unsigned char ds_genericsample::RemoveSoundBuffer()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:824
+// DC_ONLY(0x8881c, cb 0x54) - no retail tie yet
+void ds_genericsample::ThreadStart()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:833
+// DC_ONLY(0x88870, cb 0x4C) - no retail tie yet
+void ds_genericsample::ThreadEnd()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:850
+// DC_ONLY(0x888bc, cb 0x40) - no retail tie yet
+unsigned char ds_genericsample::SetVolume(unsigned char percent)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:864
+// DC_ONLY(0x888fc, cb 0x8) - no retail tie yet
+unsigned char ds_genericsample::GetVolume()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:869
+// DC_ONLY(0x88904, cb 0x4A) - no retail tie yet
+unsigned char ds_genericsample::PlayWait(int loops, unsigned long timeout)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:885
+// DC_ONLY(0x88950, cb 0x1C) - no retail tie yet
+void ds_genericsample::Wait(unsigned long timeout)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:893
+// DC_ONLY(0x8896c, cb 0x190) - no retail tie yet
+unsigned char ds_memsample::Play(int loops)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:961
+// DC_ONLY(0x88afc, cb 0x58) - no retail tie yet
+unsigned char ds_genericsample::Pause()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:977
+// DC_ONLY(0x88b54, cb 0x82) - no retail tie yet
+unsigned char ds_genericsample::Stop()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1003
+// DC_ONLY(0x88bd8, cb 0xA) - no retail tie yet
+unsigned char ds_genericsample::Playing()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1008
+// DC_ONLY(0x88be4, cb 0xA) - no retail tie yet
+unsigned char ds_genericsample::Paused()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1013
+// DC_ONLY(0x88bf0, cb 0x48) - no retail tie yet
+void ds_memsample::ds_memsample(wavfile* wav, unsigned char autoremove, unsigned char readdata)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1018
+// DC_ONLY(0x88c38, cb 0x68) - no retail tie yet
+void ds_memsample::ds_memsample(ds_memsample* other_sample)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1023
+// DC_ONLY(0x88ca0, cb 0x74) - no retail tie yet
+void ds_streamsample::ds_streamsample(wavfile* wav, unsigned long buffer_size)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1031
+// DC_ONLY(0x88d14, cb 0xCA) - no retail tie yet
+unsigned char ds_streamsample::Play(int loops)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1077
+// DC_ONLY(0x88de0, cb 0x8C) - no retail tie yet
+unsigned char ds_streamsample::SetupNotifications(void** start_event, void** mid_event)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1100
+// DC_ONLY(0x88e6c, cb 0x56) - no retail tie yet
+unsigned char ds_streamsample::SetupPlayback()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1116
+// DC_ONLY(0x88ec4, cb 0x5C) - no retail tie yet
+void ds_engine::ds_engine()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1125
+// DC_ONLY(0x88f20, cb 0xD0) - no retail tie yet
+void ds_engine::~ds_engine()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1138
+// DC_ONLY(0x88ff0, cb 0x14) - no retail tie yet
+unsigned char ds_engine::Init(void* hWnd)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1144
+// DC_ONLY(0x89004, cb 0x11C) - no retail tie yet
+unsigned char ds_engine::LoadIndex(char* filename)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1195
+// DC_ONLY(0x89120, cb 0xEC) - no retail tie yet
+unsigned char ds_engine::LoadPlaySample(const char* name, int loops, unsigned char wait)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1224
+// DC_ONLY(0x8920c, cb 0x2A) - no retail tie yet
+unsigned char ds_engine::PlaySample(const char* name, int loops, unsigned char wait)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1230
+// DC_ONLY(0x89238, cb 0x14) - no retail tie yet
+unsigned long ds_engine::CountChannels()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1235
+// DC_ONLY(0x8924c, cb 0x50) - no retail tie yet
+unsigned char ds_engine::ClearChannel(unsigned long index)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1255
+// DC_ONLY(0x8929c, cb 0x3A) - no retail tie yet
+unsigned char ds_engine::ClearChannels()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1263
+// DC_ONLY(0x892d8, cb 0x4E) - no retail tie yet
+unsigned char ds_engine::ChannelFree(unsigned long index)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1283
+// DC_ONLY(0x89328, cb 0xBA) - no retail tie yet
+unsigned char ds_engine::PlaySample(ds_memsample* sample, int loops, unsigned char wait)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1311
+// DC_ONLY(0x893e4, cb 0x1C) - no retail tie yet
+void ds_engine::ClearCache()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1317
+// DC_ONLY(0x89400, cb 0x52) - no retail tie yet
+void ds_engine::ClearTrash()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1338
+// DC_ONLY(0x89454, cb 0x88) - no retail tie yet
+ds_memsample* ds_engine::GetSample(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1356
+// DC_ONLY(0x894dc, cb 0x84) - no retail tie yet
+ds_memsample* ds_engine::CacheSample(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1387
+// DC_ONLY(0x89560, cb 0x5C) - no retail tie yet
+unsigned char ds_engine::CacheRemove(ds_memsample** sample)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1401
+// DC_ONLY(0x895bc, cb 0x16) - no retail tie yet
+unsigned char ds_engine::SetSampleVolume(unsigned char percent)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1408
+// DC_ONLY(0x895d4, cb 0x6C) - no retail tie yet
+unsigned char ds_engine::SetStreamVolume(unsigned char percent)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1417
+// DC_ONLY(0x89640, cb 0x1C0) - no retail tie yet
+ds_streamsample* ds_engine::PlayStream(char* filename, int loops, unsigned char wait)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1498
+// DC_ONLY(0x89800, cb 0x4E) - no retail tie yet
+unsigned char ds_engine::StopStream()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1517
+// DC_ONLY(0x89850, cb 0x22) - no retail tie yet
+unsigned char ds_engine::PauseStream()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1526
+// DC_ONLY(0x89874, cb 0x22) - no retail tie yet
+unsigned char ds_engine::StreamIsPlaying()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1535
+// DC_ONLY(0x89898, cb 0x40) - no retail tie yet
+unsigned char ds_engine::SetupChannels(unsigned long count)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1544
+// DC_ONLY(0x898d8, cb 0x30) - no retail tie yet
+ds_memsample* ds_engine::Channel(unsigned long index)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1551
+// DC_ONLY(0x89908, cb 0x2C) - no retail tie yet
+unsigned char ds_engine::SetChannelIndex(long index)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1563
+// DC_ONLY(0x89934, cb 0x6) - no retail tie yet
+long ds_engine::GetChannelIndex()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1568
+// DC_ONLY(0x8993c, cb 0xA2) - no retail tie yet
+unsigned char ds_engine::StopAll(unsigned char stop_stream)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1607
+// DC_ONLY(0x899e0, cb 0x6) - no retail tie yet
+IDirectSound* ds_engine::GetDS()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1612
+// DC_ONLY(0x899e8, cb 0x44) - no retail tie yet
+void ds_memsample::~ds_memsample()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1621
+// DC_ONLY(0x89a2c, cb 0x74) - no retail tie yet
+void ds_streamsample::~ds_streamsample()
+{
+    // @stub
+}
+
+// C:\WCEDreamcast\inc\kfuncs.h:137
+// DC_ONLY(0x89aa0, cb 0x18) - no retail tie yet
+int ResetEvent(void* h)
+{
+    // @stub
+}
+
+// C:\WCEDreamcast\inc\kfuncs.h:149
+// DC_ONLY(0x89ab8, cb 0x18) - no retail tie yet
+int SetEvent(void* h)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1135
+// DC_ONLY(0x89ad0, cb 0x34) - no retail tie yet
+void* ds_streamsample::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1220
+// DC_ONLY(0x89b04, cb 0x34) - no retail tie yet
+void* ds_memsample::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1670
+// DC_ONLY(0x89b38, cb 0xC) - no retail tie yet
+void tree<ds_genericsample>::tree<ds_genericsample>()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1677
+// DC_ONLY(0x89b44, cb 0x18) - no retail tie yet
+void tree<ds_genericsample>::~tree<ds_genericsample>()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1901
+// DC_ONLY(0x89b5c, cb 0x5C) - no retail tie yet
+void tree<ds_genericsample>::Clear(unsigned char delete_data)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1670
+// DC_ONLY(0x89bb8, cb 0xC) - no retail tie yet
+void tree<unsigned long>::tree<unsigned long>()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1677
+// DC_ONLY(0x89bc4, cb 0x18) - no retail tie yet
+void tree<unsigned long>::~tree<unsigned long>()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1654
+// DC_ONLY(0x89bdc, cb 0x38) - no retail tie yet
+unsigned long* tree<unsigned long>::GetItem(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1886
+// DC_ONLY(0x89c14, cb 0x58) - no retail tie yet
+void tree<unsigned long>::AddItem(const char* name, unsigned long* data)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1901
+// DC_ONLY(0x89c6c, cb 0x50) - no retail tie yet
+void tree<unsigned long>::Clear(unsigned char delete_data)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1670
+// DC_ONLY(0x89cbc, cb 0xC) - no retail tie yet
+void tree<ds_memsample>::tree<ds_memsample>()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1677
+// DC_ONLY(0x89cc8, cb 0x18) - no retail tie yet
+void tree<ds_memsample>::~tree<ds_memsample>()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1654
+// DC_ONLY(0x89ce0, cb 0x38) - no retail tie yet
+ds_memsample* tree<ds_memsample>::GetItem(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1701
+// DC_ONLY(0x89d18, cb 0x24) - no retail tie yet
+ds_memsample* tree<ds_memsample>::GetIndex(unsigned long index)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1805
+// DC_ONLY(0x89d3c, cb 0x50) - no retail tie yet
+unsigned char tree<ds_memsample>::SetIndexData(unsigned long index, ds_memsample* data, unsigned char delete_data)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1886
+// DC_ONLY(0x89d8c, cb 0x58) - no retail tie yet
+void tree<ds_memsample>::AddItem(const char* name, ds_memsample* data)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1735
+// DC_ONLY(0x89de4, cb 0xBC) - no retail tie yet
+unsigned char tree<ds_memsample>::RemoveIndex(unsigned long index, unsigned char delete_data)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1778
+// DC_ONLY(0x89ea0, cb 0x50) - no retail tie yet
+unsigned char tree<ds_memsample>::RemoveData(ds_memsample* data, unsigned char delete_data)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1901
+// DC_ONLY(0x89ef0, cb 0x5C) - no retail tie yet
+void tree<ds_memsample>::Clear(unsigned char delete_data)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1847
+// DC_ONLY(0x89f4c, cb 0x2E) - no retail tie yet
+unsigned char tree<ds_memsample>::SetDataNULL(ds_memsample* data)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1827
+// DC_ONLY(0x89f7c, cb 0x28) - no retail tie yet
+unsigned char tree<ds_memsample>::Find_Data(ds_memsample* data)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1919
+// DC_ONLY(0x89fa4, cb 0x4) - no retail tie yet
+int tree<ds_memsample>::Count()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1920
+// DC_ONLY(0x89fa8, cb 0x34) - no retail tie yet
+void* ds_genericsample::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1634
+// DC_ONLY(0x89fdc, cb 0x34) - no retail tie yet
+void node<unsigned long>::node<unsigned long>(const char* name, unsigned long* data, node<unsigned* next)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1683
+// DC_ONLY(0x8a010, cb 0x2E) - no retail tie yet
+node<ds_memsample>* tree<ds_memsample>::GetNode(unsigned long index)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\ds_engine.cpp:1634
+// DC_ONLY(0x8a040, cb 0x34) - no retail tie yet
+void node<ds_memsample>::node<ds_memsample>(const char* name, ds_memsample* data, node<ds_memsample>* next)
+{
+    // @stub
+}
+

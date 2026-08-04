@@ -1,0 +1,95 @@
+// E:\gamedcs\creaturetype.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module creaturetype.obj, 13 procs, 0 retail-tied.
+
+// E:\gamedcs\creaturetype.cpp:202
+// DC_ONLY(0x718dc, cb 0x20) - no retail tie yet
+TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr)
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:213
+// DC_ONLY(0x718fc, cb 0x36) - no retail tie yet
+unsigned char IsBaseCreature(TCreatureType monType)
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:228
+// DC_ONLY(0x71934, cb 0x12) - no retail tie yet
+unsigned char IsSiegeWeapon(TCreatureType creature)
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:246
+// DC_ONLY(0x71948, cb 0x20) - no retail tie yet
+TCreatureType UpgradedCreatureType(TCreatureType type)
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:259
+// DC_ONLY(0x71968, cb 0x1D8) - no retail tie yet
+unsigned char InitializeCreatureTypeTraitsTable()
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:416
+// DC_ONLY(0x71b40, cb 0x350) - no retail tie yet
+void InitializeCreatureTypeTraits(int id, const std::vector<char* resource)
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:469
+// DC_ONLY(0x71e90, cb 0x18) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:469
+// DC_ONLY(0x71ea8, cb 0x18) - no retail tie yet
+void $E437()
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:469
+// DC_ONLY(0x71ec0, cb 0x2C) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:399
+// DC_ONLY(0x71eec, cb 0x8) - no retail tie yet
+void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:402
+// DC_ONLY(0x71ef4, cb 0x18) - no retail tie yet
+void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:404
+// DC_ONLY(0x71f0c, cb 0x4) - no retail tie yet
+void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
+{
+    // @stub
+}
+
+// E:\gamedcs\creaturetype.cpp:406
+// DC_ONLY(0x71f10, cb 0x4) - no retail tie yet
+char* `anonymous namespace'::TAutoStrPtr::get()
+{
+    // @stub
+}
+

@@ -1,0 +1,1212 @@
+// E:\gamedcs\hero.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module hero.obj, 164 procs, 81 retail-tied.
+// retail extent 0xd7470..0xe67a0 (VA 0x4d7470..0x4e67a0)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xca4a4, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0xca4cc, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xca4dc, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0xca504, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xca514, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0xca53c, cb 0x10) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xca54c, cb 0x28) - no retail tie yet
+void $E470()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0xca574, cb 0x10) - no retail tie yet
+void $E471()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xca584, cb 0x28) - no retail tie yet
+void $E473()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0xca5ac, cb 0x10) - no retail tie yet
+void $E474()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xca5bc, cb 0x28) - no retail tie yet
+void $E476()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0xca5e4, cb 0x10) - no retail tie yet
+void $E477()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xca5f4, cb 0x28) - no retail tie yet
+void $E479()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0xca61c, cb 0x10) - no retail tie yet
+void $E480()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xca62c, cb 0x28) - no retail tie yet
+void $E482()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0xca654, cb 0x10) - no retail tie yet
+void $E483()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xca664, cb 0x28) - no retail tie yet
+void $E485()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0xca68c, cb 0x10) - no retail tie yet
+void $E486()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xca69c, cb 0x28) - no retail tie yet
+void $E488()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0xca6c4, cb 0x40) - no retail tie yet
+void $E489()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:57
+// DC_ONLY(0xca704, cb 0x14) - no retail tie yet
+void $E515()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:57
+// DC_ONLY(0xca718, cb 0x10) - no retail tie yet
+void $E516()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:219
+// DC_ONLY(0xca728, cb 0x96) - no retail tie yet
+unsigned char InitializeHeroSpecificAbilitiesTable()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:254
+// DC_ONLY(0xca7c0, cb 0x12) - no retail tie yet
+const char* hero::GetSpecificAbilityText()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:259
+// DC_ONLY(0xca7d4, cb 0x12) - no retail tie yet
+const char* hero::GetSpecificAbilityTextShort()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:267
+// DC_ONLY(0xca7e8, cb 0x19C) - no retail tie yet
+unsigned char initialize_move_constants()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:329
+// DC_ONLY(0xca984, cb 0x11C) - no retail tie yet
+unsigned char initialize_ballistics_table()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:375
+VA(0x004d7470, 0x1F)  // anchor-global, dc 0xcaaa0
+void type_obscuring_object::type_obscuring_object()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:380
+// DC_ONLY(0xcaac8, cb 0x3A) - no retail tie yet
+mine* type_obscuring_object::get_obscured_mine()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:390
+VA(0x004d7490, 0x35)  // anchor-global, dc 0xcab04
+town* type_obscuring_object::get_obscured_town()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:403
+VA(0x004d74d0, 0x1D)  // anchor-global, dc 0xcab3c
+void type_obscuring_object::initialize()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:418
+VA(0x004d74f0, 0xD6)  // linkorder, dc 0xcab54
+unsigned char type_obscuring_object::load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:443
+VA(0x004d75d0, 0x10A)  // anchor-global, dc 0xcac58
+void type_obscuring_object::obscure_cell(TAdventureObjectType new_type, long id)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:473
+VA(0x004d76e0, 0xD0)  // anchor-global, dc 0xcacfc
+void type_obscuring_object::restore_cell()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:498
+VA(0x004d77b0, 0xD6)  // linkorder, dc 0xcad80
+unsigned char type_obscuring_object::save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:523
+VA(0x004d7890, 0x64)  // linkorder, dc 0xcae60
+void hero::hire(int iPlayer, type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:549
+VA(0x004d7900, 0x11B)  // linkorder, dc 0xcaedc
+void hero::PlaceInMap(int iPlayer, type_point point, unsigned char reset_flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:577
+VA(0x004d7a20, 0x69F)  // linkorder, dc 0xcaf98
+int hero::load(void* infile)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:914
+VA(0x004d80c0, 0x526)  // linkorder, dc 0xcb698
+int hero::save(void* outfile)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1208
+VA(0x004d85f0, 0x12E)  // anchor-bracket, dc 0xcbdb8
+void hero::hero()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1233
+// DC_ONLY(0xcbe80, cb 0x23A) - no retail tie yet
+void hero::initialize(short index)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1303
+// DC_ONLY(0xcc0bc, cb 0x26) - no retail tie yet
+unsigned char hero::belongs_to_human()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1314
+VA(0x004d9070, 0x45)  // anchor-global, dc 0xcc0e4
+long hero::get_equipped_artifacts(unsigned char countWarMachines)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1338
+VA(0x004d90c0, 0x4A)  // anchor-bracket, dc 0xcc138
+long hero::get_number_in_backpack(unsigned char countWarMachines)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1362
+VA(0x004d9110, 0x4C)  // anchor-global, dc 0xcc1b0
+hero_seqid hero::GetStandSequence()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1389
+VA(0x004d9160, 0x4C)  // linkorder, dc 0xcc1e8
+hero_seqid boat::GetStandSequence()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1422
+VA(0x004d91b0, 0x3F)  // anchor-global, dc 0xcc220
+int hero::HasArtifact(int whichArtifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1446
+VA(0x004d91f0, 0x70)  // anchor-global, dc 0xcc26c
+int hero::IsWieldingArtifact(int whichArtifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1466
+// DC_ONLY(0xcc2a8, cb 0x56) - no retail tie yet
+void hero::DestroySiegeWeaponArtifact(int creature_type)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1504
+// DC_ONLY(0xcc300, cb 0x48) - no retail tie yet
+void hero::UseSpell(int cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1515
+// DC_ONLY(0xcc348, cb 0x18) - no retail tie yet
+void hero::AddSpell(int whichSpell)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1527
+// DC_ONLY(0xcc360, cb 0x2C) - no retail tie yet
+void mark_spells(unsigned char* spell_list, TSpellSchool school)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1542
+// DC_ONLY(0xcc38c, cb 0x10E) - no retail tie yet
+void hero::update_spell_list()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1594
+// DC_ONLY(0xcc49c, cb 0x44) - no retail tie yet
+void THeroScreenWindow::HeroMessageUpdate(char* cText)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1606
+// DC_ONLY(0xcc4e0, cb 0x60) - no retail tie yet
+void hero::HeroScreenUpdate()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1632
+// DC_ONLY(0xcc540, cb 0x1C8) - no retail tie yet
+void hero::UpdateArmies()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1709
+// DC_ONLY(0xcc708, cb 0x54) - no retail tie yet
+void hero::ViewStat(int whichStat, int isQuickView)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1717
+// DC_ONLY(0xcc75c, cb 0xA2) - no retail tie yet
+void hero::ViewArtifact(const type_artifact* artifact, int isQuickView)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1732
+VA(0x004d9ec0, 0x4D3)  // anchor-global, dc 0xcc800
+void hero::Deallocate(unsigned char bGameLoaded, unsigned char remote_move)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1836
+VA(0x004da3a0, 0x76)  // anchor-global, dc 0xccb80
+int hero::GetExperience(int iLevel)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1857
+VA(0x004da420, 0xE4)  // anchor-bracket, dc 0xccc68
+int hero::GetExperienceIncrement(int level)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1862
+// DC_ONLY(0xccc8c, cb 0x110) - no retail tie yet
+int hero::GetLevel(int iExperience)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1886
+// DC_ONLY(0xccd9c, cb 0x1CA) - no retail tie yet
+void hero::ApplyBattleWinTemps()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2001
+// DC_ONLY(0xccf68, cb 0x10) - no retail tie yet
+void hero::ApplyBattleLossTemps()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2014
+// DC_ONLY(0xccf78, cb 0x204) - no retail tie yet
+TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_level, TSkillMastery max_level, TSecondarySkill excluded)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2147
+// DC_ONLY(0xcd17c, cb 0x510) - no retail tie yet
+void hero::CheckLevel()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2340
+// DC_ONLY(0xcd68c, cb 0x5C) - no retail tie yet
+void update_artifact_slot(long id, TArtifact artifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2365
+// DC_ONLY(0xcd6e8, cb 0x58) - no retail tie yet
+void THeroScreenWindow::update_slot(TArtifactSlot slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2383
+// DC_ONLY(0xcd740, cb 0x2A) - no retail tie yet
+void THeroScreenWindow::update_all_slots()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2393
+// DC_ONLY(0xcd76c, cb 0x22) - no retail tie yet
+void UpdateBackpackItem(int i)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2399
+// DC_ONLY(0xcd790, cb 0xDC) - no retail tie yet
+void UpdateBackpack()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2432
+VA(0x004db350, 0x86)  // anchor-global, dc 0xcd86c
+void type_artifact::get_rollover_text(char* buffer)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2450
+// DC_ONLY(0xcd8b8, cb 0x10A) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> type_artifact::get_description(__$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2477
+// DC_ONLY(0xcd9c4, cb 0x56C) - no retail tie yet
+void THeroScreenWindow::UpdateHeroScreenStatusBar(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2726
+// DC_ONLY(0xcdf30, cb 0x20E) - no retail tie yet
+void handle_artifact_click(long code, unsigned char right_mouse)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2796
+// DC_ONLY(0xce140, cb 0x28) - no retail tie yet
+long hero::get_last_backpack_index()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2809
+// DC_ONLY(0xce168, cb 0x62) - no retail tie yet
+void hero::rotate_backpack_left()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2830
+// DC_ONLY(0xce1cc, cb 0x94) - no retail tie yet
+void hero::rotate_backpack_right()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:2849
+// DC_ONLY(0xce260, cb 0x3E8) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_morale_description(__$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:3021
+// DC_ONLY(0xce648, cb 0x3F2) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_luck_description(__$ReturnUdt)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:3181
+// DC_ONLY(0xcea3c, cb 0x1A4) - no retail tie yet
+void handle_backpack_click(long code, unsigned char right_mouse)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:3229
+// DC_ONLY(0xcebe0, cb 0x3C) - no retail tie yet
+int THeroScreenWindow::ExitDialog(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:3239
+// DC_ONLY(0xcec1c, cb 0x78E) - no retail tie yet
+void THeroScreenWindow::ShowWidgets()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:3421
+// DC_ONLY(0xcf3ac, cb 0x1A0) - no retail tie yet
+void THeroScreenWindow::show_skills()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:3486
+// DC_ONLY(0xcf54c, cb 0xC38) - no retail tie yet
+int THeroScreenWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:3964
+// DC_ONLY(0xd0184, cb 0x2A64) - no retail tie yet
+void THeroScreenWindow::THeroScreenWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4191
+// DC_ONLY(0xd2be8, cb 0x98) - no retail tie yet
+void THeroScreenWindow::~THeroScreenWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4208
+// DC_ONLY(0xd2c80, cb 0xA2) - no retail tie yet
+void THeroScreenWindow::UpdateHeroLocator(int iWhich)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4231
+// DC_ONLY(0xd2d24, cb 0x32) - no retail tie yet
+void THeroScreenWindow::UpdateHeroLocators()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4240
+// DC_ONLY(0xd2d58, cb 0x128) - no retail tie yet
+void hero::UpdateStats()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4273
+// DC_ONLY(0xd2e80, cb 0x230) - no retail tie yet
+int HeroView(int iHeroID, int bNoDismiss, int bAlreadyFaded, unsigned char bQuickView)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4349
+// DC_ONLY(0xd30b0, cb 0x630) - no retail tie yet
+void THeroScreenWindow::SetupHeroView()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4589
+// DC_ONLY(0xd36e0, cb 0x50) - no retail tie yet
+void hero::SetSS(int iWhichSS, int iLevelToSet)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4600
+// DC_ONLY(0xd3730, cb 0x8E) - no retail tie yet
+int hero::TakeSS(int iWhichSS, int iNumLevelsToTake)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4627
+// DC_ONLY(0xd37c0, cb 0x70) - no retail tie yet
+int hero::GiveSS(int iWhichSS, int iNumLevelsToGive)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4653
+VA(0x004e2340, 0x2A)  // anchor-global, dc 0xd3830
+int hero::CreatureTypeCount(int creatureType)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4667
+// DC_ONLY(0xd3874, cb 0x3A) - no retail tie yet
+void hero::UpgradeCreatures(int sourceCreatureType, int destCreatureType)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4677
+VA(0x004e23a0, 0x27)  // anchor-global, dc 0xd38b0
+int hero::GetNthSS(int iWhich)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4689
+// DC_ONLY(0xd38d8, cb 0x12) - no retail tie yet
+unsigned char hero::HasSecondarySkill(int iWhich)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4828
+VA(0x004e23d0, 0x176)  // anchor-global, dc 0xd38ec
+void hero::TransferArtifacts(hero* src)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4883
+// DC_ONLY(0xd39d8, cb 0xF6) - no retail tie yet
+unsigned char hero::equip_artifact(const type_artifact* artifact, long slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4919
+VA(0x004e2bd0, 0x174)  // anchor-bracket, dc 0xd3ad0
+void hero::remove_artifact(TArtifactSlot slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4943
+VA(0x004e2d50, 0x7E)  // anchor-global, dc 0xd3b74
+void hero::remove_backpack_artifact(short slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4960
+VA(0x004e2dd0, 0xFC)  // anchor-bracket, dc 0xd3bec
+unsigned char hero::remove_artifact(TArtifact artifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4994
+// DC_ONLY(0xd3c64, cb 0x98) - no retail tie yet
+std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_backpack_error(__$ReturnUdt, TArtifact artifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5005
+VA(0x004e2f90, 0xD1)  // anchor-global, dc 0xd3cfc
+unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5044
+VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
+void hero::GiveArtifact(const type_artifact* artifact, int bCheckEnd, unsigned char equip_it)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5064
+// DC_ONLY(0xd3e40, cb 0x46) - no retail tie yet
+int hero::GiveRandomArtifact()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5085
+VA(0x004e33b0, 0x24A)  // anchor-global, dc 0xd3e88
+int hero::GiveExperience(int howMuch, int bCheckLevel, unsigned char show_cap_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5136
+VA(0x004e3600, 0xB2)  // anchor-global, dc 0xd3fb8
+void hero::GiveResource(int whichRes, int howMuch)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5165
+VA(0x004e36c0, 0x2E8)  // anchor-global, dc 0xd4070
+int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground, unsigned char apply_limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5254
+VA(0x004e39b0, 0x2A9)  // anchor-global, dc 0xd41fc
+int hero::GetMorale(const hero* otherHero, unsigned char on_cursed_ground, unsigned char apply_limits)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5332
+VA(0x004e3cd0, 0x268)  // anchor-global, dc 0xd4390
+float hero::GetNecromancyFactor(unsigned char apply_limit)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5387
+VA(0x004e3f40, 0x12F)  // anchor-global, dc 0xd44a4
+int hero::GetMysticismBonus()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5424
+VA(0x004e4070, 0xEF)  // anchor-global, dc 0xd4560
+int hero::GetVisibility()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5455
+VA(0x004e4160, 0x143)  // anchor-global, dc 0xd45d8
+float hero::GetArcheryFactor()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5489
+VA(0x004e42b0, 0x60)  // anchor-global, dc 0xd4664
+float hero::GetOffenseFactor()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5514
+VA(0x004e4310, 0x7D)  // anchor-global, dc 0xd46a8
+float hero::GetDefenseFactor()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5542
+VA(0x004e4390, 0x89)  // anchor-global, dc 0xd46f8
+int hero::GetEstatesBonus()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5570
+VA(0x004e4420, 0x15A)  // anchor-global, dc 0xd4768
+float hero::GetEagleEyeChance()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5607
+VA(0x004e4580, 0x15C)  // anchor-global, dc 0xd482c
+float hero::GetSurrenderCostFactor()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5647
+VA(0x004e46e0, 0x15C)  // anchor-global, dc 0xd48c8
+float hero::GetMagicResistanceFactor()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5684
+VA(0x004e4840, 0x66)  // anchor-global, dc 0xd4960
+float hero::GetExperienceBonusFactor()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5709
+// DC_ONLY(0xd49a8, cb 0x48) - no retail tie yet
+float hero::GetLogisticsFactor()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5734
+// DC_ONLY(0xd49f0, cb 0x4E) - no retail tie yet
+long hero::GetNavigationFactor()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5758
+// DC_ONLY(0xd4a40, cb 0x48) - no retail tie yet
+float hero::GetSorceryFactor()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5783
+VA(0x004e48b0, 0x66)  // anchor-global, dc 0xd4a88
+float hero::GetIntelligenceFactor()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5808
+VA(0x004e4920, 0x66)  // anchor-global, dc 0xd4b08
+float hero::GetFirstAidFactor()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5833
+VA(0x004e4990, 0x3F6)  // corroborates, dc 0xd4b50
+int hero::GetMobility(unsigned char sea_movement)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5932
+VA(0x004e4d90, 0x12)  // corroborates, dc 0xd4d60
+int hero::GetMobility()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5943
+VA(0x004e4db0, 0x10D)  // anchor-global, dc 0xd4db0
+int hero::GetSpellDurationBonus()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5962
+VA(0x004e4fa0, 0xD7)  // anchor-global, dc 0xd4df0
+TAdventureObjectType hero::get_special_terrain()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5977
+VA(0x004e5080, 0x7D)  // anchor-bracket, dc 0xd4e4c
+TSkillMastery hero::get_spell_level(SpellID spell, unsigned char is_on_magic_plains)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:5987
+VA(0x004e5100, 0xBC)  // anchor-bracket, dc 0xd4e68
+TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask, unsigned char is_on_magic_plains)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6025
+VA(0x004e51c0, 0x73)  // anchor-global, dc 0xd4ed0
+TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6071
+VA(0x004e5240, 0xEF)  // anchor-bracket, dc 0xd4f64
+int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy, unsigned char is_on_magic_plains)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6103
+VA(0x004e5330, 0x43)  // linkorder, dc 0xd4fe0
+int hero::GetMobilityFrame()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6129
+VA(0x004e5380, 0x3E)  // linkorder, dc 0xd5024
+int hero::GetManaFrame()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6155
+VA(0x004e53c0, 0x1E)  // linkorder, dc 0xd5060
+unsigned char hero::VisitedArena(const NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6163
+VA(0x004e53e0, 0x18)  // linkorder, dc 0xd5074
+void hero::SetVisitedArena(const NewmapCell* cell)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6171
+VA(0x004e5400, 0x93)  // linkorder, dc 0xd50a0
+float hero::get_combat_value_modifier()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6180
+VA(0x004e54a0, 0xAA)  // anchor-global, dc 0xd519c
+boat* hero::find_summonable_boat()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6219
+VA(0x004e5550, 0x15E)  // anchor-global, dc 0xd524c
+unsigned char hero::can_summon_boat()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6241
+VA(0x004e56b0, 0x21)  // linkorder, dc 0xd52b0
+playerData* hero::get_player()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6251
+VA(0x004e56e0, 0x7C)  // anchor-global, dc 0xd52d0
+unsigned char hero::is_in_patrol_radius(type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6267
+VA(0x004e5760, 0x1F2)  // anchor-global, dc 0xd53a0
+long hero::modify_spell_damage(SpellID spell, int damage, const army* target_army)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6296
+VA(0x004e5960, 0x38)  // linkorder, dc 0xd544c
+short hero::get_primary_skill_total()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6310
+VA(0x004e59a0, 0xF8)  // linkorder, dc 0xd5488
+void hero::Fly(int level)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6319
+VA(0x004e5aa0, 0xE0)  // anchor-global, dc 0xd54ac
+long hero::get_combat_speed_bonus()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6336
+VA(0x004e5b80, 0x15C)  // anchor-global, dc 0xd5508
+long hero::get_hit_point_bonus()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6355
+// DC_ONLY(0xd5548, cb 0x70) - no retail tie yet
+unsigned char hero::can_land()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6376
+// DC_ONLY(0xd55b8, cb 0x6) - no retail tie yet
+void hero::WalkOnWater(int level)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6385
+VA(0x004e5e10, 0x11C)  // anchor-global, dc 0xd55c0
+unsigned char hero::IsInIdentifyRange(const type_point* location)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6406
+VA(0x004e5f30, 0xBF)  // anchor-global, dc 0xd5644
+unsigned char hero::IsMobile()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6428
+VA(0x004e5ff0, 0x123)  // anchor-global, dc 0xd5710
+int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:6493
+VA(0x004e6120, 0x39E)  // linkorder, dc 0xd5800
+void hero::reset_artifacts()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:162
+VA(0x004e64c0, 0x1B)  // linkorder, dc 0xd58cc
+unsigned char type_obscuring_object::obscures_town()
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:702
+VA(0x004e64e0, 0x4)  // linkorder, dc 0xd58f8
+unsigned char hero::HasArmy(TCreatureType type)
+{
+    // @stub
+}
+
+// E:\gamedcs\Hero.h:712
+VA(0x004e64f0, 0x4)  // linkorder, dc 0xd5914
+TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask)
+{
+    // @stub
+}
+
+// E:\gamedcs\CustomCampaign.h:225
+VA(0x004e6500, 0x1B2)  // linkorder, dc 0xd5944
+int SCampaign::GetExpCap()
+{
+    // @stub
+}
+
+// E:\gamedcs\netmsg.h:675
+VA(0x004e66c0, 0x28)  // linkorder, dc 0xd5964
+void CMCDeadHero::CMCDeadHero(signed char heroId, type_point point)
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:1226
+VA(0x004e66f0, 0x60)  // linkorder, dc 0xd59b8
+void type_artifact::`default constructor closure'()
+{
+    // @stub
+}
+
+// E:\gamedcs\hero.cpp:4186
+VA(0x004e6750, 0x21)  // linkorder, dc 0xd59d0
+void* THeroScreenWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_bitset.h:379
+VA(0x004e6780, 0x20)  // linkorder, dc 0xd5a04
+std::bitset<48,unsigned* std::bitset<48,unsigned long>::reference::operator=(unsigned char __x)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x004d8720 size  1040  game_87020_sub01_d8720 [caller]
+//   0x004d8b30 size  1076  game_dxp_d8b30 [string]
+//   0x004d8f70 size    62  game_3010_sub00_d8f70 [caller]
+//   0x004d8fb0 size   160  game_86590_sub03_d8fb0 [caller]
+//   0x004d9050 size    32  game_27330_sub02_d9050 [caller]
+//   0x004d9260 size   104  game_68990_sub03_d9260 [caller]
+//   0x004d92d0 size    89  game_1c490_sub04_d92d0 [caller]
+//   0x004d9330 size    26  hero_get_number_in_backpack_d9330 [nh3api]
+//   0x004d9350 size   626  game_c2450_sub07_d9350 [caller]
+//   0x004d95d0 size   530  game_e2a00_sub00_d95d0 [caller]
+//   0x004d97f0 size   416  game_dd2d0_sub03_d97f0 [caller]
+//   0x004d9990 size   101  game_1afdf0_sub00_d9990 [caller]
+//   0x004d9a00 size   296  game_dd2d0_sub04_d9a00 [caller]
+//   0x004d9b30 size   397  game_1af590_sub00_d9b30 [caller]
+//   0x004d9cc0 size   512  game_dd2d0_sub05_d9cc0 [caller]
+//   0x004da510 size   497  game_26ee0_sub04_da510 [caller]
+//   0x004da710 size     5  game_26ee0_sub05_da710 [caller]
+//   0x004da720 size  1501  game_dxp_da720 [string]
+//   0x004dad00 size   643  game_herospec_txt_dad00 [string]
+//   0x004daf90 size   570  game_db1d0_sub00_daf90 [caller]
+//   0x004db1d0 size    23  game_dd2d0_sub06_db1d0 [caller]
+//   0x004db1f0 size   352  game_dd2d0_sub07_db1f0 [caller]
+//   0x004db3e0 size   631  type_artifact_result [hd-crossbuild]
+//   0x004db660 size  1832  game_dd2d0_sub08_db660 [caller]
+//   0x004dbd90 size    30  game_33b40_sub02_dbd90 [caller]
+//   0x004dbdb0 size    87  game_163da0_sub00_dbdb0 [caller]
+//   0x004dbe10 size   104  game_163f00_sub00_dbe10 [caller]
+//   0x004dbe80 size   164  game_1af590_sub01_dbe80 [caller]
+//   0x004dbf30 size   307  game_dc100_sub00_dbf30 [caller]
+//   0x004dc070 size   135  game_1af590_sub02_dc070 [caller]
+//   0x004dc100 size   535  game_dd2d0_sub09_dc100 [caller]
+//   0x004dc320 size  1939  hero_result [hd-crossbuild]
+//   0x004dcac0 size  2016  hero_result_dcac0 [hd-crossbuild]
+//   0x004dd2a0 size    44  game_dd2a0 [band]
+//   0x004dd2d0 size  5182  game_dxp_dd2d0 [string]
+//   0x004de710 size 11346  game_heroscr4_pcx_de710 [string]
+//   0x004e1370 size   431  game_de710_sub00_e1370 [caller]
+//   0x004e1520 size    33  game_e1520 [band]
+//   0x004e1550 size   162  game_e1520_sub00_e1550 [caller]
+//   0x004e1600 size   203  game_e1a50_sub00_e1600 [caller]
+//   0x004e16d0 size   304  game_dd2d0_sub10_e16d0 [caller]
+//   0x004e1800 size   591  game_7b80_sub18_e1800 [caller]
+//   0x004e1a50 size  1979  game_d_d_e1a50 [string]
+//   0x004e2210 size    63  hero_in_enum_range [hd-crossbuild]
+//   0x004e2250 size   118  hero_in_enum_range_e2250 [hd-crossbuild]
+//   0x004e22d0 size    97  hero_in_enum_range_e22d0 [hd-crossbuild]
+//   0x004e2370 size    38  hero_in_enum_range_e2370 [hd-crossbuild]
+//   0x004e2550 size   748  hero_in_enum_range_e2550 [hd-crossbuild]
+//   0x004e2840 size   412  hero_in_enum_range_e2840 [hd-crossbuild]
+//   0x004e29dc size    25  game_e29dc [band]
+//   0x004e2a00 size   455  hero_in_enum_range_e2a00 [hd-crossbuild]
+//   0x004e2ed0 size   178  hero_result_e2ed0 [hd-crossbuild]
+//   0x004e3c60 size   112  hero_GetNecromancyCreature [hd-crossbuild]
+//   0x004e4ec0 size   214  hero_GetGroundModifier [hd-crossbuild]
+//   0x004e5ce0 size   231  game_7b80_sub19_e5ce0 [caller]
+//   0x004e5dd0 size    16  game_1c490_sub08_e5dd0 [caller]
+//   0x004e5de0 size    45  hero_GetRoguePower [hd-crossbuild]
+

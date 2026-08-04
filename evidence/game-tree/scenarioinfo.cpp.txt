@@ -1,0 +1,214 @@
+// E:\gamedcs\scenarioinfo.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module scenarioinfo.obj, 30 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x129b54, cb 0x28) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x129b7c, cb 0x10) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x129b8c, cb 0x28) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x129bb4, cb 0x10) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x129bc4, cb 0x28) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x129bec, cb 0x10) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x129bfc, cb 0x28) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x129c24, cb 0x10) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x129c34, cb 0x28) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x129c5c, cb 0x10) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x129c6c, cb 0x28) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x129c94, cb 0x10) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x129ca4, cb 0x28) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x129ccc, cb 0x10) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x129cdc, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x129d04, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x129d14, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x129d3c, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x129d4c, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x129d74, cb 0x40) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\scenarioinfo.cpp:258
+// DC_ONLY(0x129db4, cb 0xCBC) - no retail tie yet
+void CScenarioInfoDlg::CScenarioInfoDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\scenarioinfo.cpp:477
+// DC_ONLY(0x12aa70, cb 0x8E) - no retail tie yet
+void CScenarioInfoDlg::~CScenarioInfoDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\scenarioinfo.cpp:493
+// DC_ONLY(0x12ab00, cb 0x20) - no retail tie yet
+int CScenarioInfoDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
+{
+    // @stub
+}
+
+// E:\gamedcs\scenarioinfo.cpp:508
+// DC_ONLY(0x12ab20, cb 0x108) - no retail tie yet
+void CScenarioInfoDlg::UpdateAllyEnemyFlags()
+{
+    // @stub
+}
+
+// E:\gamedcs\scenarioinfo.cpp:538
+// DC_ONLY(0x12ac28, cb 0x368) - no retail tie yet
+unsigned char CScenarioInfoDlg::ProcessRightSelect(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\scenarioinfo.cpp:661
+// DC_ONLY(0x12af90, cb 0x74) - no retail tie yet
+void CScenarioInfoDlg::SetDifficultyHiLite()
+{
+    // @stub
+}
+
+// E:\gamedcs\scenarioinfo.cpp:473
+// DC_ONLY(0x12b004, cb 0x34) - no retail tie yet
+void* CScenarioInfoDlg::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\scenarioinfo.cpp:657
+// DC_ONLY(0x12b038, cb 0x18) - no retail tie yet
+void CTeamAlignmentDlg::~CTeamAlignmentDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\scenarioinfo.cpp:657
+// DC_ONLY(0x12b050, cb 0x18) - no retail tie yet
+void CTownDlg::~CTownDlg()
+{
+    // @stub
+}
+
+// E:\gamedcs\scenarioinfo.cpp:657
+// DC_ONLY(0x12b068, cb 0x18) - no retail tie yet
+void CBonusDlg::~CBonusDlg()
+{
+    // @stub
+}
+

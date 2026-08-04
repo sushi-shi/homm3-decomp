@@ -1,0 +1,174 @@
+// E:\gamedcs\mousemgr.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module mousemgr.obj, 23 procs, 9 retail-tied.
+// retail extent 0x10cb50..0x10da57 (VA 0x50cb50..0x50da57)
+
+// E:\gamedcs\mousemgr.cpp:315
+VA(0x0050cb50, 0x6F)  // anchor-global, dc 0xfe9d4
+void mouseManager::mouseManager()
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:344
+// DC_ONLY(0xfea50, cb 0x2E) - no retail tie yet
+void mouseManager::~mouseManager()
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:357
+// DC_ONLY(0xfea80, cb 0x34) - no retail tie yet
+int mouseManager::Open(int newPriority)
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:386
+// DC_ONLY(0xfeab4, cb 0x46) - no retail tie yet
+void mouseManager::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:412
+// DC_ONLY(0xfeafc, cb 0x1A) - no retail tie yet
+void mouseManager::Reset()
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:431
+// DC_ONLY(0xfeb18, cb 0x4) - no retail tie yet
+int mouseManager::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:445
+VA(0x0050cca0, 0xE0)  // anchor-global, dc 0xfeb1c
+void mouseManager::SetPointer(int new_frame, mouseManager::EPointerSet new_set)
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:526
+VA(0x0050cd90, 0x770)  // anchor-global, dc 0xfec54
+void mouseManager::Update(unsigned char bForceIt)
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:774
+VA(0x0050d500, 0x3F)  // anchor-global, dc 0xff22c
+void mouseManager::MouseCoords(int* x, int* y)
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:798
+// DC_ONLY(0xff268, cb 0xBE) - no retail tie yet
+void mouseManager::SaveAndDraw(IDirectDrawSurface4* dst_surface, IDirectDrawSurface4* save_surface, const tagRECT* dst_rect, int x, int y)
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:844
+// DC_ONLY(0xff328, cb 0x80) - no retail tie yet
+void mouseManager::RestoreUnderlying(IDirectDrawSurface4* surface, const tagRECT* dst_rect)
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:865
+VA(0x0050d540, 0x6F)  // anchor-global, dc 0xff3a8
+void mouseManager::HidePointer()
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:889
+VA(0x0050d5b0, 0xD0)  // anchor-global, dc 0xff3e0
+void mouseManager::ShowPointer(unsigned char force)
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:934
+// DC_ONLY(0xff448, cb 0x3A) - no retail tie yet
+void mouseManager::GetPointerPosition()
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:955
+VA(0x0050d680, 0x210)  // anchor-global, dc 0xff484
+void mouseManager::CheckUpdate()
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:1026
+VA(0x0050d8b0, 0x16B)  // anchor-global, dc 0xff610
+void mouseManager::LoadFrame(int new_frame)
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:1120
+VA(0x0050da20, 0x37)  // anchor-global, dc 0xff708
+void mouseManager::ShowSystemCursor(unsigned char show_it)
+{
+    // @stub
+}
+
+// C:\WCEDreamcast\inc\kfuncs.h:266
+// DC_ONLY(0xff76c, cb 0x8) - no retail tie yet
+unsigned long GetCurrentThreadId()
+{
+    // @stub
+}
+
+// E:\gamedcs\MouseMgr.h:204
+// DC_ONLY(0xff774, cb 0xC) - no retail tie yet
+unsigned char mouseManager::isBusy()
+{
+    // @stub
+}
+
+// E:\gamedcs\WinGraph.h:55
+// DC_ONLY(0xff780, cb 0x60) - no retail tie yet
+unsigned RGBto16(int r, int g, int b)
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:291
+// DC_ONLY(0xff7e0, cb 0x20) - no retail tie yet
+void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:298
+// DC_ONLY(0xff800, cb 0x18) - no retail tie yet
+void TCSLock::~TCSLock()
+{
+    // @stub
+}
+
+// E:\gamedcs\mousemgr.cpp:332
+// DC_ONLY(0xff818, cb 0x34) - no retail tie yet
+void* mouseManager::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x0050cbc0 size    44  calls_DeleteCriticalSection_10cbc0 [import-wrapper]
+//   0x0050cbf0 size    74  calls_ShowCursor_10cbf0 [import-wrapper]
+//   0x0050cc40 size    56  calls_ShowCursor_10cc40 [import-wrapper]
+//   0x0050cc80 size    27  game_f7c00_sub04_10cc80 [caller]
+//   0x0050cd80 size    10  calls_LeaveCriticalSection_10cd80 [import-wrapper]
+//   0x0050d890 size    25  calls_EnterCriticalSection_10d890 [import-wrapper]
+

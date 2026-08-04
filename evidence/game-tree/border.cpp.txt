@@ -1,0 +1,324 @@
+// E:\gamedcs\border.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module border.obj, 43 procs, 6 retail-tied.
+// retail extent 0x4ff50..0x50854 (VA 0x44ff50..0x450854)
+
+// E:\gamedcs\border.cpp:34
+// DC_ONLY(0x5433c, cb 0x3C) - no retail tie yet
+void border::border()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:47
+// DC_ONLY(0x54378, cb 0x60) - no retail tie yet
+void border::border(int x, int y, int w, int h, int id, int style, unsigned char focusable)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:62
+VA(0x0044ff50, 0xB)  // anchor-global, dc 0x543d8
+void border::~border()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:67
+// DC_ONLY(0x54408, cb 0x36) - no retail tie yet
+void border::initialize(int x, int y, int w, int h, int id, int style, unsigned char focusable)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:74
+// DC_ONLY(0x54440, cb 0x150) - no retail tie yet
+int border::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:153
+// DC_ONLY(0x54590, cb 0x4) - no retail tie yet
+unsigned char border::handle_click(unsigned char down_click, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:158
+// DC_ONLY(0x54594, cb 0x4) - no retail tie yet
+void border::zBufferDraw()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:161
+// DC_ONLY(0x54598, cb 0x4) - no retail tie yet
+void border::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:174
+// DC_ONLY(0x5459c, cb 0x78) - no retail tie yet
+void coloredBorder::coloredBorder(int x, int y, int w, int h, int id, int color_, int style)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:182
+// DC_ONLY(0x54614, cb 0x4) - no retail tie yet
+void coloredBorder::zBufferDraw()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:185
+// DC_ONLY(0x54618, cb 0x38) - no retail tie yet
+void coloredBorder::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:201
+// DC_ONLY(0x54650, cb 0x80) - no retail tie yet
+void coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id, int color_, int style)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:210
+// DC_ONLY(0x546d0, cb 0x4) - no retail tie yet
+void coloredBorderFrame::zBufferDraw()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:213
+// DC_ONLY(0x546d4, cb 0x6E) - no retail tie yet
+void coloredBorderFrame::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:221
+// DC_ONLY(0x54744, cb 0x7C) - no retail tie yet
+int coloredBorderFrame::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:280
+// DC_ONLY(0x547c0, cb 0xA0) - no retail tie yet
+void bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id, const char* image, int style, unsigned char focusable)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:294
+VA(0x00450390, 0x5B)  // anchor-global, dc 0x54860
+void bitmapBorder::~bitmapBorder()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:301
+// DC_ONLY(0x5489c, cb 0x60) - no retail tie yet
+void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:307
+// DC_ONLY(0x548fc, cb 0x4A) - no retail tie yet
+void bitmapBorder::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:313
+// DC_ONLY(0x54948, cb 0x20) - no retail tie yet
+int bitmapBorder::GetRealWidth()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:318
+// DC_ONLY(0x54968, cb 0x20) - no retail tie yet
+int bitmapBorder::GetRealHeight()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:323
+// DC_ONLY(0x54988, cb 0x38) - no retail tie yet
+void bitmapBorder::SetPalette(const char* palette_name)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:338
+VA(0x004504c0, 0x5B)  // anchor-global, dc 0x549c0
+void bitmapBorder::SetImage(const char* bitmap_name)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:347
+VA(0x00450520, 0x2D)  // anchor-global, dc 0x549ec
+void bitmapBorder::SetPlayerPaletteColors(int whichPlayer)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:355
+// DC_ONLY(0x54a20, cb 0x76) - no retail tie yet
+int bitmapBorder::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:398
+// DC_ONLY(0x54a98, cb 0xD0) - no retail tie yet
+void bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id, const char* image, int style, unsigned char focusable)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:408
+VA(0x00450750, 0x5B)  // anchor-global, dc 0x54b68
+void bitmapBorder16::~bitmapBorder16()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:415
+// DC_ONLY(0x54ba4, cb 0x4) - no retail tie yet
+void bitmapBorder16::zBufferDraw()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:419
+// DC_ONLY(0x54ba8, cb 0x48) - no retail tie yet
+void bitmapBorder16::Draw()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:425
+VA(0x00450810, 0x44)  // anchor-global, dc 0x54bf0
+void bitmapBorder16::Draw2()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:431
+// DC_ONLY(0x54c2c, cb 0x20) - no retail tie yet
+int bitmapBorder16::GetRealWidth()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:436
+// DC_ONLY(0x54c4c, cb 0x20) - no retail tie yet
+int bitmapBorder16::GetRealHeight()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:441
+// DC_ONLY(0x54c6c, cb 0x2C) - no retail tie yet
+void bitmapBorder16::SetImage(const char* bitmap_name)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:449
+// DC_ONLY(0x54c98, cb 0x84) - no retail tie yet
+int bitmapBorder16::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\Widget.h:186
+// DC_ONLY(0x54d1c, cb 0x4) - no retail tie yet
+void widget::OnSetFocus()
+{
+    // @stub
+}
+
+// E:\gamedcs\Widget.h:187
+// DC_ONLY(0x54d20, cb 0x4) - no retail tie yet
+void widget::OnKillFocus()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:35
+// DC_ONLY(0x54d24, cb 0x34) - no retail tie yet
+void* border::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:178
+// DC_ONLY(0x54d58, cb 0x34) - no retail tie yet
+void* coloredBorder::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:178
+// DC_ONLY(0x54d8c, cb 0x18) - no retail tie yet
+void coloredBorder::~coloredBorder()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:206
+// DC_ONLY(0x54da4, cb 0x34) - no retail tie yet
+void* coloredBorderFrame::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:206
+// DC_ONLY(0x54dd8, cb 0x18) - no retail tie yet
+void coloredBorderFrame::~coloredBorderFrame()
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:290
+// DC_ONLY(0x54df0, cb 0x34) - no retail tie yet
+void* bitmapBorder::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\border.cpp:404
+// DC_ONLY(0x54e24, cb 0x34) - no retail tie yet
+void* bitmapBorder16::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x0044ff60 size   461  border_vslot02 [vtable-slot]
+//   0x00450130 size   109  coloredBorderFrame [hd-crossbuild]
+//   0x004501a0 size    33  coloredBorderFrame_vslot00 [vtable-slot]
+//   0x004501d0 size    11  coloredBorderFrame_coloredBorderFrame [hd-crossbuild]
+//   0x004501e0 size    91  coloredBorderFrame_vslot04 [vtable-slot]
+//   0x00450240 size   130  coloredBorderFrame_vslot02 [vtable-slot]
+//   0x004502d0 size   140  bitmapBorder [hd-crossbuild]
+//   0x00450360 size    33  bitmapBorder_vslot00 [vtable-slot]
+//   0x004503f0 size    85  bitmapBorder_vslot03 [vtable-slot]
+//   0x00450450 size    68  bitmapBorder_vslot04 [vtable-slot]
+//   0x004504a0 size    14  bitmapBorder_vslot06 [vtable-slot]
+//   0x004504b0 size    14  bitmapBorder_vslot05 [vtable-slot]
+//   0x00450550 size   306  bitmapBorder_vslot02 [vtable-slot]
+//   0x00450690 size   140  bitmapBorder16 [hd-crossbuild]
+//   0x00450720 size    33  game_50720 [band]
+//   0x004507b0 size    85  game_507b0 [band]
+

@@ -1,0 +1,81 @@
+// E:\gamedcs\combatoptionswindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module combatoptionswindow.obj, 11 procs, 0 retail-tied.
+
+// E:\gamedcs\combatoptionswindow.cpp:60
+// DC_ONLY(0x66c48, cb 0xD64) - no retail tie yet
+void TCombatOptionsWindow::TCombatOptionsWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:180
+// DC_ONLY(0x679ac, cb 0x68) - no retail tie yet
+void TCombatOptionsWindow::~TCombatOptionsWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:194
+// DC_ONLY(0x67a14, cb 0x2C) - no retail tie yet
+int TCombatOptionsWindow::convertID2HelpID(int id)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:214
+// DC_ONLY(0x67a40, cb 0x38) - no retail tie yet
+void TCombatOptionsWindow::DoModal()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:230
+// DC_ONLY(0x67a78, cb 0x52) - no retail tie yet
+void TCombatOptionsWindow::HighlightCombatSpeed()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:243
+// DC_ONLY(0x67acc, cb 0x22) - no retail tie yet
+void TCombatOptionsWindow::HighlightGrid()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:254
+// DC_ONLY(0x67af0, cb 0x22) - no retail tie yet
+void TCombatOptionsWindow::HighlightMovementShadow()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:265
+// DC_ONLY(0x67b14, cb 0x68) - no retail tie yet
+void TCombatOptionsWindow::HighlightMouseShadow()
+{
+    // @stub
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:278
+// DC_ONLY(0x67b7c, cb 0x51C) - no retail tie yet
+int CombatOptionsWindowHandler(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:651
+// DC_ONLY(0x68098, cb 0x38) - no retail tie yet
+void UpdateCombatOptions(int bFirstUpdate)
+{
+    // @stub
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:171
+// DC_ONLY(0x680d0, cb 0x34) - no retail tie yet
+void* TCombatOptionsWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

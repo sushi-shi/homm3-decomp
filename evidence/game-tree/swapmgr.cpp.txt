@@ -1,0 +1,466 @@
+// E:\gamedcs\swapmgr.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module swapmgr.obj, 66 procs, 0 retail-tied.
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x1590c8, cb 0x28) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x1590f0, cb 0x10) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x159100, cb 0x28) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x159128, cb 0x10) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x159138, cb 0x28) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x159160, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x159170, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x159198, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x1591a8, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x1591d0, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x1591e0, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x159208, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x159218, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x159240, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x159250, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x159278, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x159288, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x1592b0, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x1592c0, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x1592e8, cb 0x40) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:210
+// DC_ONLY(0x159328, cb 0x2FF8) - no retail tie yet
+void TSwapWindow::TSwapWindow(hero** heroes)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:457
+// DC_ONLY(0x15c320, cb 0x62) - no retail tie yet
+void TSwapWindow::~TSwapWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:465
+// DC_ONLY(0x15c384, cb 0xEC) - no retail tie yet
+void TSwapWindow::UpdateArrows()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:583
+// DC_ONLY(0x15c470, cb 0xC4) - no retail tie yet
+void swapManager::swapManager(hero* leftHero, hero* rightHero)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:617
+// DC_ONLY(0x15c534, cb 0x114) - no retail tie yet
+void swapManager::Reset()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:655
+// DC_ONLY(0x15c648, cb 0x24) - no retail tie yet
+int swapManager::DrawSwapWin()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:665
+// DC_ONLY(0x15c66c, cb 0x3D8) - no retail tie yet
+int swapManager::Open(int newPriority)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:789
+// DC_ONLY(0x15ca44, cb 0x98) - no retail tie yet
+void swapManager::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:816
+// DC_ONLY(0x15cadc, cb 0x1EE) - no retail tie yet
+void swapManager::DrawSelector()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:914
+// DC_ONLY(0x15cccc, cb 0x5E) - no retail tie yet
+void swapManager::update_artifact_widget(long id, TArtifact artifact)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:940
+// DC_ONLY(0x15cd2c, cb 0x8E) - no retail tie yet
+void swapManager::UpdateSlot(int iHero, TArtifactSlot slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:962
+// DC_ONLY(0x15cdbc, cb 0x64) - no retail tie yet
+void swapManager::update_all_slots()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:977
+// DC_ONLY(0x15ce20, cb 0x84) - no retail tie yet
+void swapManager::UpdateBackpackItem(int iHero, int i)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:1004
+// DC_ONLY(0x15cea4, cb 0xB0) - no retail tie yet
+void swapManager::UpdateBackpack(int iHero)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:1031
+// DC_ONLY(0x15cf54, cb 0x1FC) - no retail tie yet
+void swapManager::HandleMonster(int iHero, int iMonster, int bRightMouse, unsigned char bShift)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:1106
+// DC_ONLY(0x15d150, cb 0x190) - no retail tie yet
+void swapManager::handle_artifact_click(long side, long id, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:1168
+// DC_ONLY(0x15d2e0, cb 0x160) - no retail tie yet
+void swapManager::handle_backpack_click(long side, long id, unsigned char right_click)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:1208
+// DC_ONLY(0x15d440, cb 0x6A) - no retail tie yet
+void swapManager::SendHeroUpdate()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:1222
+// DC_ONLY(0x15d4ac, cb 0x986) - no retail tie yet
+int swapManager::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:1660
+// DC_ONLY(0x15de34, cb 0xC) - no retail tie yet
+int swapManager::ExitSwapManager(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:1667
+// DC_ONLY(0x15de40, cb 0x4C8) - no retail tie yet
+void swapManager::swap_side()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:1793
+// DC_ONLY(0x15e308, cb 0x552) - no retail tie yet
+void swapManager::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2024
+// DC_ONLY(0x15e85c, cb 0x5E) - no retail tie yet
+void swapManager::ViewMon()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2030
+// DC_ONLY(0x15e8bc, cb 0x142) - no retail tie yet
+void swapManager::SwapMons()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2072
+// DC_ONLY(0x15ea00, cb 0x190) - no retail tie yet
+void swapManager::Update()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2140
+// DC_ONLY(0x15eb90, cb 0x1A) - no retail tie yet
+void swapManager::OnChatUpdate()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2147
+// DC_ONLY(0x15ebac, cb 0xAA) - no retail tie yet
+void swapManager::HandleHeroUpdateMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2165
+// DC_ONLY(0x15ec58, cb 0x1A0) - no retail tie yet
+void swapManager::OnWidgetDeselect(message* msg, int* exitFlag)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2231
+// DC_ONLY(0x15edf8, cb 0x2A) - no retail tie yet
+unsigned char swapManager::IsLeftHero()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2241
+// DC_ONLY(0x15ee24, cb 0x2A) - no retail tie yet
+unsigned char swapManager::IsRightHero()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2251
+// DC_ONLY(0x15ee50, cb 0x22) - no retail tie yet
+hero* swapManager::GetOtherHero()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2259
+// DC_ONLY(0x15ee74, cb 0x22) - no retail tie yet
+hero* swapManager::GetOurHero()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2267
+// DC_ONLY(0x15ee98, cb 0x82) - no retail tie yet
+unsigned char swapManager::CanModHero(int hero)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2287
+// DC_ONLY(0x15ef1c, cb 0x44) - no retail tie yet
+void swapManager::OnReceiveFromAlly()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:2298
+// DC_ONLY(0x15ef60, cb 0x70) - no retail tie yet
+void swapManager::OnGiveMeStuffMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\basemgr.h:41
+// DC_ONLY(0x15efd0, cb 0x4) - no retail tie yet
+void baseManager::SetStatus(short newStatus)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:120
+// DC_ONLY(0x15efd4, cb 0x90) - no retail tie yet
+void CHeroUpdateMsg::CHeroUpdateMsg(hero* left, hero* right)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:130
+// DC_ONLY(0x15f064, cb 0x20) - no retail tie yet
+void CTradeRequestDoneMsg::CTradeRequestDoneMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:151
+// DC_ONLY(0x15f084, cb 0x20) - no retail tie yet
+void CGiveMeStuffMsg::CGiveMeStuffMsg()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:192
+// DC_ONLY(0x15f0a4, cb 0x98) - no retail tie yet
+void CSwapManagerChatEdit::CSwapManagerChatEdit(int textWidgetX, int textWidgetY, int textWidgetWidth, int textWidgetHeight, int textStringSize, char* textString, char* textFontName, int colorIndex, font::EJustify justification, char* backgroundIconName, int backgroundFrame, int textWidgetId, int textWidgetStyle, int iReadType, int textInsetX, int textInsetY)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:196
+// DC_ONLY(0x15f13c, cb 0x28) - no retail tie yet
+void CSwapManagerChatEdit::SendChat(const char* sChat, int toWho)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:201
+// DC_ONLY(0x15f164, cb 0x34) - no retail tie yet
+void* CSwapManagerChatEdit::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:201
+// DC_ONLY(0x15f198, cb 0x18) - no retail tie yet
+void CSwapManagerChatEdit::~CSwapManagerChatEdit()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:454
+// DC_ONLY(0x15f1b0, cb 0x34) - no retail tie yet
+void* TSwapWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:512
+// DC_ONLY(0x15f1e4, cb 0x44) - no retail tie yet
+void CSwapMgrNetMsgHandler::CSwapMgrNetMsgHandler()
+{
+    // @stub
+}
+
+// E:\gamedcs\swapmgr.cpp:518
+// DC_ONLY(0x15f228, cb 0x100) - no retail tie yet
+CNetMsg* CSwapMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
+{
+    // @stub
+}
+

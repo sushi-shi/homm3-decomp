@@ -1,0 +1,886 @@
+// E:\gamedcs\resourcemanager.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module resourcemanager.obj, 126 procs, 0 retail-tied.
+
+// E:\gamedcs\resourcemanager.cpp:70
+// DC_ONLY(0x121220, cb 0x14) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:70
+// DC_ONLY(0x121234, cb 0x14) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:70
+// DC_ONLY(0x121248, cb 0x14) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:70
+// DC_ONLY(0x12125c, cb 0x14) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:71
+// DC_ONLY(0x121270, cb 0x14) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:71
+// DC_ONLY(0x121284, cb 0x14) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:71
+// DC_ONLY(0x121298, cb 0x14) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:71
+// DC_ONLY(0x1212ac, cb 0x14) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:106
+// DC_ONLY(0x1212c0, cb 0x14) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:106
+// DC_ONLY(0x1212d4, cb 0x14) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:106
+// DC_ONLY(0x1212e8, cb 0x14) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:106
+// DC_ONLY(0x1212fc, cb 0x40) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:136
+// DC_ONLY(0x12133c, cb 0x14) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:136
+// DC_ONLY(0x121350, cb 0x14) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:136
+// DC_ONLY(0x121364, cb 0x14) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:136
+// DC_ONLY(0x121378, cb 0x28) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:158
+// DC_ONLY(0x1213a0, cb 0x182) - no retail tie yet
+void ResourceManager::RemapGraphics()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:222
+// DC_ONLY(0x121524, cb 0x216) - no retail tie yet
+void ResourceManager::SaturateGraphics()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:298
+// DC_ONLY(0x12173c, cb 0x144) - no retail tie yet
+unsigned char ResourceManager::Open(unsigned char open_sprites, unsigned char open_bitmaps)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:338
+// DC_ONLY(0x121880, cb 0x1C) - no retail tie yet
+void ResourceManager::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:357
+// DC_ONLY(0x12189c, cb 0x26) - no retail tie yet
+void ResourceManager::SetPath(const char* path)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:374
+// DC_ONLY(0x1218c4, cb 0x168) - no retail tie yet
+void ResourceManager::SetPixelFormat(unsigned long red_mask, unsigned long green_mask, unsigned long blue_mask)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:438
+// DC_ONLY(0x121a2c, cb 0x9C) - no retail tie yet
+TGenericResource* ResourceManager::GetResource(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:729
+// DC_ONLY(0x121ac8, cb 0x194) - no retail tie yet
+Bitmap816* ResourceManager::GetBitmap816(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:906
+// DC_ONLY(0x121c5c, cb 0x134) - no retail tie yet
+Bitmap16Bit* ResourceManager::GetBitmap16(const char* name, unsigned char ignore_cache)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:1027
+// DC_ONLY(0x121d90, cb 0x138) - no retail tie yet
+TPalette16* ResourceManager::GetPalette(const char* name, unsigned char ignore_cache)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:1133
+// DC_ONLY(0x121ec8, cb 0xE4) - no retail tie yet
+TPalette24* ResourceManager::GetPalette24(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:1221
+// DC_ONLY(0x121fac, cb 0xE0) - no retail tie yet
+font* ResourceManager::GetFont(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:1356
+// DC_ONLY(0x12208c, cb 0xD8) - no retail tie yet
+TTextResource* ResourceManager::GetText(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:1461
+// DC_ONLY(0x122164, cb 0x98) - no retail tie yet
+TSpreadsheetResource* ResourceManager::GetSpreadsheet(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:1566
+// DC_ONLY(0x1221fc, cb 0xE4) - no retail tie yet
+unsigned char ResourceManager::GetSoundFile(char* localName, void** data, SoundHeaderStruct** snd, int* size)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:1606
+// DC_ONLY(0x1222e0, cb 0x40) - no retail tie yet
+sample* ResourceManager::GetSample(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:1888
+// DC_ONLY(0x122320, cb 0x112) - no retail tie yet
+CSprite* ResourceManager::GetSprite(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2080
+// DC_ONLY(0x122434, cb 0x4E) - no retail tie yet
+void ResourceManager::GetBackdrop(const char* resName, Bitmap16Bit* destBmap)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2110
+// DC_ONLY(0x122484, cb 0x16) - no retail tie yet
+unsigned char ResourceManager::PointToSpriteResource(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2115
+// DC_ONLY(0x12249c, cb 0x18) - no retail tie yet
+int ResourceManager::ReadFromSpriteResource(void* data, int numBytes)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2120
+// DC_ONLY(0x1224b4, cb 0x16) - no retail tie yet
+unsigned char ResourceManager::PointToBitmapResource(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2125
+// DC_ONLY(0x1224cc, cb 0x18) - no retail tie yet
+int ResourceManager::ReadFromBitmapResource(void* data, int numBytes)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2130
+// DC_ONLY(0x1224e4, cb 0x4C) - no retail tie yet
+int ResourceManager::GetBitmapResourceSize(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2141
+// DC_ONLY(0x122530, cb 0x90) - no retail tie yet
+void ResourceManager::Dispose(resource* kill)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2196
+// DC_ONLY(0x1225c0, cb 0x1C) - no retail tie yet
+void ResourceManager::Dispose(sample* sam)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2204
+// DC_ONLY(0x1225dc, cb 0xF6) - no retail tie yet
+void ResourceManager::Dispose(CSprite* kill)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2280
+// DC_ONLY(0x1226d4, cb 0x1D6) - no retail tie yet
+void ResourceManager::del_Spr_from_Cache()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2359
+// DC_ONLY(0x1228ac, cb 0x7C) - no retail tie yet
+void ResourceManager::Expunge()
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2377
+// DC_ONLY(0x122928, cb 0x5C) - no retail tie yet
+resource* ResourceManager::GetFromCache(const char* name)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2397
+// DC_ONLY(0x122984, cb 0x72) - no retail tie yet
+void ResourceManager::AddToCache(resource* r)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:2404
+// DC_ONLY(0x1229f8, cb 0x68) - no retail tie yet
+unsigned char ResourceManager::Report(const char* filename)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:111
+// DC_ONLY(0x122a60, cb 0xE) - no retail tie yet
+std::_Rb_tree_node_base* std::_Rb_tree_node_base::_S_minimum(std::_Rb_tree_node_base* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:117
+// DC_ONLY(0x122a70, cb 0xE) - no retail tie yet
+std::_Rb_tree_node_base* std::_Rb_tree_node_base::_S_maximum(std::_Rb_tree_node_base* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.c:65
+// DC_ONLY(0x122a80, cb 0x36) - no retail tie yet
+void std::_Rb_tree_rotate_left(std::_Rb_tree_node_base* __x, std::_Rb_tree_node_base** __root)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.c:84
+// DC_ONLY(0x122ab8, cb 0x36) - no retail tie yet
+void std::_Rb_tree_rotate_right(std::_Rb_tree_node_base* __x, std::_Rb_tree_node_base** __root)
+{
+    // @stub
+}
+
+// E:\gamedcs\resrce.h:36
+// DC_ONLY(0x122af0, cb 0x8) - no retail tie yet
+int resource::AddRef()
+{
+    // @stub
+}
+
+// E:\gamedcs\resrce.h:37
+// DC_ONLY(0x122af8, cb 0x10) - no retail tie yet
+int resource::Release()
+{
+    // @stub
+}
+
+// E:\gamedcs\Palette.h:137
+// DC_ONLY(0x122b08, cb 0x1C) - no retail tie yet
+void TPalette16::SetPixelFormat(unsigned red, unsigned green, unsigned blue)
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap24.h:70
+// DC_ONLY(0x122b24, cb 0x4) - no retail tie yet
+int Bitmap24Bit::GetWidth()
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap24.h:71
+// DC_ONLY(0x122b28, cb 0x4) - no retail tie yet
+int Bitmap24Bit::GetHeight()
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap24.h:98
+// DC_ONLY(0x122b2c, cb 0x60) - no retail tie yet
+void Bitmap24Bit::AdjustHSV(float hue, float hue_adjust, float saturation_adjust, float value_adjust)
+{
+    // @stub
+}
+
+// E:\gamedcs\Bitmap16.h:142
+// DC_ONLY(0x122b8c, cb 0x1C) - no retail tie yet
+void Bitmap16Bit::SetPixelFormat(unsigned red, unsigned green, unsigned blue)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:154
+// DC_ONLY(0x122ba8, cb 0xE) - no retail tie yet
+CSpriteFrame* CSprite::GetFrame(int seqnum, int framenum)
+{
+    // @stub
+}
+
+// E:\gamedcs\CSprite.h:157
+// DC_ONLY(0x122bb8, cb 0x18) - no retail tie yet
+void CSprite::SetPixelFormat(unsigned rmask, unsigned gmask, unsigned bmask)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:121
+// DC_ONLY(0x122bd0, cb 0x28) - no retail tie yet
+void ResourceManager::TCacheMapKey::TCacheMapKey(const char* n)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:126
+// DC_ONLY(0x122bf8, cb 0x1C) - no retail tie yet
+unsigned char ResourceManager::TCacheMapKey::operator<(const ResourceManager::TCacheMapKey* y)
+{
+    // @stub
+}
+
+// E:\gamedcs\resourcemanager.cpp:136
+// DC_ONLY(0x122c14, cb 0x18) - no retail tie yet
+void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::T()
+{
+    // @stub
+}
+
+// ..\stlport\stl_map.h:91
+// DC_ONLY(0x122c2c, cb 0x3C) - no retail tie yet
+void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::()
+{
+    // @stub
+}
+
+// ..\stlport\stl_map.h:140
+// DC_ONLY(0x122c68, cb 0x2C) - no retail tie yet
+std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::begin(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_map.h:142
+// DC_ONLY(0x122c94, cb 0x2C) - no retail tie yet
+std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::end(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_map.h:163
+// DC_ONLY(0x122cc0, cb 0x1C) - no retail tie yet
+std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::insert(__$ReturnUdt, const std::pair<ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_map.h:180
+// DC_ONLY(0x122cdc, cb 0x44) - no retail tie yet
+void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::erase(std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey __position)
+{
+    // @stub
+}
+
+// ..\stlport\stl_map.h:184
+// DC_ONLY(0x122d20, cb 0x18) - no retail tie yet
+void std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::clear()
+{
+    // @stub
+}
+
+// ..\stlport\stl_map.h:188
+// DC_ONLY(0x122d38, cb 0x2C) - no retail tie yet
+std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::map<ResourceManager::TCacheMapKey,resource *,std::less<ResourceManager::TCacheMapKey>,std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::find(__$ReturnUdt, const ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:440
+// DC_ONLY(0x122d64, cb 0x24) - no retail tie yet
+void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<ResourceManager::TCacheMapKe()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:203
+// DC_ONLY(0x122d88, cb 0x8) - no retail tie yet
+void std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,res(const std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey* __it)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:211
+// DC_ONLY(0x122d90, cb 0x18) - no retail tie yet
+std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator->()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:214
+// DC_ONLY(0x122da8, cb 0x3C) - no retail tie yet
+std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator++(__$ReturnUdt, int __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_pair.h:60
+// DC_ONLY(0x122de4, cb 0x4) - no retail tie yet
+void std::pair<ResourceManager::TCacheMapKey const ,resource *>::~pair<ResourceManager::TCacheMapKey const ,resource *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_pair.h:49
+// DC_ONLY(0x122de8, cb 0x3C) - no retail tie yet
+void std::pair<ResourceManager::TCacheMapKey,resource *>::pair<ResourceManager::TCacheMapKey,resource *>(const ResourceManager::TCacheMapKey* __a, resource** __b)
+{
+    // @stub
+}
+
+// ..\stlport\stl_pair.h:60
+// DC_ONLY(0x122e24, cb 0x4) - no retail tie yet
+void std::pair<ResourceManager::TCacheMapKey,resource *>::~pair<ResourceManager::TCacheMapKey,resource *>()
+{
+    // @stub
+}
+
+// ..\stlport\stl_pair.h:60
+// DC_ONLY(0x122e28, cb 0x4) - no retail tie yet
+void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:424
+// DC_ONLY(0x122e2c, cb 0x34) - no retail tie yet
+void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<ResourceManager::TCacheMapK(const std::less<ResourceManager::TCacheMapKey>* __comp, const std::allocator<std::pair<ResourceManager::TCacheMapKey* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:466
+// DC_ONLY(0x122e60, cb 0x2C) - no retail tie yet
+std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std::(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:468
+// DC_ONLY(0x122e8c, cb 0x24) - no retail tie yet
+std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std(__$ReturnUdt)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:529
+// DC_ONLY(0x122eb0, cb 0x3C) - no retail tie yet
+void std::_Rb_tree<ResourceManager::TCacheMapKey,std::(std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey __position)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:545
+// DC_ONLY(0x122eec, cb 0x58) - no retail tie yet
+void std::_Rb_tree<ResourceManager::TCacheMapKey,std::()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:263
+// DC_ONLY(0x122f44, cb 0x28) - no retail tie yet
+void std::_Rb_tree_base<std::pair<ResourceManager::TCache()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:527
+// DC_ONLY(0x122f6c, cb 0x4) - no retail tie yet
+void std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:537
+// DC_ONLY(0x122f70, cb 0x4) - no retail tie yet
+void std::allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >::~allocator<std::pair<ResourceManager::TCacheMapKey const ,resource *> >()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:206
+// DC_ONLY(0x122f74, cb 0x6) - no retail tie yet
+std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator*()
+{
+    // @stub
+}
+
+// ..\stlport\stl_string.h:208
+// DC_ONLY(0x122f7c, cb 0x18) - no retail tie yet
+void std::_ST()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:333
+// DC_ONLY(0x122f94, cb 0x30) - no retail tie yet
+void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Re(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:343
+// DC_ONLY(0x122fc4, cb 0x6) - no retail tie yet
+std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pa()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:345
+// DC_ONLY(0x122fcc, cb 0x6) - no retail tie yet
+std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<R()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:347
+// DC_ONLY(0x122fd4, cb 0x6) - no retail tie yet
+std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Re()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:445
+// DC_ONLY(0x122fdc, cb 0x48) - no retail tie yet
+void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<ResourceM()
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:259
+// DC_ONLY(0x123024, cb 0x30) - no retail tie yet
+void std::_Rb_tree_base<std::pair<ResourceManager::TCach(const std::allocator<std::pair<ResourceManager::TCacheMapKey* __a)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1025
+// DC_ONLY(0x123054, cb 0x2C) - no retail tie yet
+void std::_STL_alloc_p(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:202
+// DC_ONLY(0x123080, cb 0x6) - no retail tie yet
+void std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,res(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:360
+// DC_ONLY(0x123088, cb 0x4) - no retail tie yet
+unsigned char* std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1004
+// DC_ONLY(0x12308c, cb 0xC) - no retail tie yet
+void std::_S(const std::allocator<std::pair<ResourceManager::TCacheMapKey* __a, std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:1022
+// DC_ONLY(0x123098, cb 0x28) - no retail tie yet
+std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::_STL_alloc(unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:552
+// DC_ONLY(0x1230c0, cb 0x20) - no retail tie yet
+void std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::deallocate(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __p, unsigned __n)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:547
+// DC_ONLY(0x1230e0, cb 0x28) - no retail tie yet
+std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::allocate(unsigned __n, const void* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.c:552
+// DC_ONLY(0x123108, cb 0x54) - no retail tie yet
+void std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.c:416
+// DC_ONLY(0x12315c, cb 0x174) - no retail tie yet
+std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Res(__$ReturnUdt, const std::pair<ResourceManager::TCacheMapKey* __v)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.c:585
+// DC_ONLY(0x1232d0, cb 0xF4) - no retail tie yet
+std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std:(__$ReturnUdt, const ResourceManager::TCacheMapKey* __k)
+{
+    // @stub
+}
+
+// ..\stlport\stl_pair.h:52
+// DC_ONLY(0x1233c4, cb 0x3C) - no retail tie yet
+void std::pair<ResourceManager::TCacheMapKey const ,resource *>::pair<ResourceManager::TCacheMapKey const ,resource *>(const std::pair<ResourceManager::TCacheMapKey,resource* __p)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.c:154
+// DC_ONLY(0x123400, cb 0x28C) - no retail tie yet
+std::_Rb_tree_node_base* std::_Rb_global<bool>::_Rebalance_for_erase(std::_Rb_tree_node_base* __z, std::_Rb_tree_node_base** __root, std::_Rb_tree_node_base** __leftmost, std::_Rb_tree_node_base** __rightmost)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:59
+// DC_ONLY(0x12368c, cb 0x1C) - no retail tie yet
+void std::destroy(std::pair<ResourceManager::TCacheMapKey* __pointer)
+{
+    // @stub
+}
+
+// ..\stlport\stl_alloc.h:968
+// DC_ONLY(0x1236a8, cb 0x4) - no retail tie yet
+std::allocator<std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::__stl_alloc_rebind(std::allocator<std::pair<ResourceManager::TCacheMapKey* __a, const std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __formal)
+{
+    // @stub
+}
+
+// ..\stlport\stl_function.h:110
+// DC_ONLY(0x1236ac, cb 0x18) - no retail tie yet
+unsigned char std::less<ResourceManager::TCacheMapKey>::operator()(const ResourceManager::TCacheMapKey* __x, const ResourceManager::TCacheMapKey* __y)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:350
+// DC_ONLY(0x1236c4, cb 0x6) - no retail tie yet
+std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pa(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:352
+// DC_ONLY(0x1236cc, cb 0x6) - no retail tie yet
+std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:358
+// DC_ONLY(0x1236d4, cb 0x24) - no retail tie yet
+const ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::p(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:371
+// DC_ONLY(0x1236f8, cb 0x24) - no retail tie yet
+const ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::p(std::_Rb_tree_node_base* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:220
+// DC_ONLY(0x12371c, cb 0x1C) - no retail tie yet
+std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Nonconst_traits<std::pair<ResourceManager::TCacheMapKey const ,resource *> > >::operator--()
+{
+    // @stub
+}
+
+// ..\stlport\stl_pair.h:49
+// DC_ONLY(0x123738, cb 0x30) - no retail tie yet
+void std::pair<std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey const ,resource *>,std::_Noncons(const std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey* __a, const unsigned char* __b)
+{
+    // @stub
+}
+
+// ..\stlport\stl_function.h:378
+// DC_ONLY(0x123768, cb 0x4) - no retail tie yet
+const ResourceManager::TCacheMapKey* std::_Select1st<std::pair<ResourceManager::TCacheMapKey const ,resource *> >::operator()(const std::pair<ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:356
+// DC_ONLY(0x12376c, cb 0x6) - no retail tie yet
+std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::pai(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.c:363
+// DC_ONLY(0x123774, cb 0x138) - no retail tie yet
+std::_Rb_tree_iterator<std::pair<ResourceManager::TCacheMapKey std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair(__$ReturnUdt, std::_Rb_tree_node_base* __x_, std::_Rb_tree_node_base* __y_, const std::pair<ResourceManager::TCacheMapKey* __v)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.c:284
+// DC_ONLY(0x1238ac, cb 0x44) - no retail tie yet
+void std::_Rb_global<bool>::_M_decrement(std::_Rb_tree_base_iterator* __it)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:53
+// DC_ONLY(0x1238f0, cb 0x18) - no retail tie yet
+void std::__destroy_aux(std::pair<ResourceManager::TCacheMapKey* __pointer, __false_type __formal)
+{
+    // @stub
+}
+
+// ..\stlport\char_traits.h:201
+// DC_ONLY(0x123908, cb 0x34) - no retail tie yet
+void* std::pair<ResourceManager::TCacheMapKey const ,resource *>::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:314
+// DC_ONLY(0x12393c, cb 0x30) - no retail tie yet
+std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair<Reso(const std::pair<ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.h:354
+// DC_ONLY(0x12396c, cb 0x6) - no retail tie yet
+std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey** std::_Rb_tree<ResourceManager::TCacheMapKey,std::pair(std::_Rb_tree_node<std::pair<ResourceManager::TCacheMapKey* __x)
+{
+    // @stub
+}
+
+// ..\stlport\stl_tree.c:105
+// DC_ONLY(0x123974, cb 0xE4) - no retail tie yet
+void std::_Rb_global<bool>::_Rebalance(std::_Rb_tree_node_base* __x, std::_Rb_tree_node_base** __root)
+{
+    // @stub
+}
+
+// ..\stlport\stl_construct.h:85
+// DC_ONLY(0x123a58, cb 0x2C) - no retail tie yet
+void std::construct(std::pair<ResourceManager::TCacheMapKey* __p, const std::pair<ResourceManager::TCacheMapKey* __value)
+{
+    // @stub
+}
+
+// ..\stlport\stl_pair.h:58
+// DC_ONLY(0x123a84, cb 0x3C) - no retail tie yet
+void std::pair<ResourceManager::TCacheMapKey const ,resource *>::pair<ResourceManager::TCacheMapKey const ,resource *>(const std::pair<ResourceManager::TCacheMapKey* __o)
+{
+    // @stub
+}
+

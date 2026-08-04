@@ -1,0 +1,32 @@
+// E:\gamedcs\quickinfowindow.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module quickinfowindow.obj, 4 procs, 0 retail-tied.
+
+// E:\gamedcs\quickinfowindow.cpp:31
+// DC_ONLY(0x11787c, cb 0x2E0) - no retail tie yet
+void TQuickCreatureWindow::TQuickCreatureWindow(TQuickCreatureWindow::TViewLevel view_level, TCreatureType id, int count, TQuickCreatureWindow::TDisposition disposition, int cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\quickinfowindow.cpp:81
+// DC_ONLY(0x117b5c, cb 0x2E) - no retail tie yet
+void TQuickCreatureWindow::~TQuickCreatureWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\quickinfowindow.cpp:88
+// DC_ONLY(0x117b8c, cb 0x28) - no retail tie yet
+void TQuickCreatureWindow::QuickWindowWait()
+{
+    // @stub
+}
+
+// E:\gamedcs\quickinfowindow.cpp:77
+// DC_ONLY(0x117bb4, cb 0x34) - no retail tie yet
+void* TQuickCreatureWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+

@@ -1,0 +1,18 @@
+// E:\gamedcs\zlib113\compress.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module compress.obj, 2 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\compress.cpp:24
+// DC_ONLY(0x70c68, cb 0x7A) - no retail tie yet
+int compress2@20(unsigned char* dest, unsigned long* destLen, const unsigned char* source, unsigned long sourceLen, int level)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\compress.cpp:59
+// DC_ONLY(0x70ce4, cb 0x24) - no retail tie yet
+int compress@16(unsigned char* dest, unsigned long* destLen, const unsigned char* source, unsigned long sourceLen)
+{
+    // @stub
+}
+

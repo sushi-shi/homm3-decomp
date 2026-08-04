@@ -1,0 +1,26 @@
+// E:\gamedcs\hexcell.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module hexcell.obj, 3 procs, 3 retail-tied.
+// retail extent 0xe7150..0xe71fd (VA 0x4e7150..0x4e71fd)
+
+// E:\gamedcs\hexcell.cpp:26
+VA(0x004e7150, 0x20)  // anchor-global, dc 0xd60fc
+void hexcell::hexcell()
+{
+    // @stub
+}
+
+// E:\gamedcs\hexcell.cpp:38
+VA(0x004e7170, 0x3C)  // anchor-global, dc 0xd6138
+army* hexcell::get_army()
+{
+    // @stub
+}
+
+// E:\gamedcs\hexcell.cpp:43
+VA(0x004e71b0, 0x4D)  // anchor-global, dc 0xd6178
+army* hexcell::get_dead_army(int i)
+{
+    // @stub
+}
+

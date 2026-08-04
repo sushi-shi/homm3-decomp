@@ -1,0 +1,212 @@
+// E:\gamedcs\exec.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module exec.obj, 28 procs, 5 retail-tied.
+// retail extent 0xb0660..0xb0dc2 (VA 0x4b0660..0x4b0dc2)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x9e2e0, cb 0x28) - no retail tie yet
+void $E435()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x9e308, cb 0x10) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x9e318, cb 0x28) - no retail tie yet
+void $E438()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x9e340, cb 0x10) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x9e350, cb 0x28) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x9e378, cb 0x10) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x9e388, cb 0x28) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x9e3b0, cb 0x10) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x9e3c0, cb 0x28) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x9e3e8, cb 0x10) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x9e3f8, cb 0x28) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x9e420, cb 0x10) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x9e430, cb 0x28) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x9e458, cb 0x10) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x9e468, cb 0x28) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x9e490, cb 0x10) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x9e4a0, cb 0x28) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x9e4c8, cb 0x10) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x9e4d8, cb 0x28) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x9e500, cb 0x10) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\exec.cpp:37
+VA(0x004b0660, 0x5F)  // anchor-bracket, dc 0x9e510
+void executive::executive()
+{
+    // @stub
+}
+
+// E:\gamedcs\exec.cpp:43
+// DC_ONLY(0x9e520, cb 0x74) - no retail tie yet
+int executive::InitSystem()
+{
+    // @stub
+}
+
+// E:\gamedcs\exec.cpp:63
+// DC_ONLY(0x9e594, cb 0xD8) - no retail tie yet
+void executive::ShutDownSystem()
+{
+    // @stub
+}
+
+// E:\gamedcs\exec.cpp:103
+VA(0x004b0a10, 0x10B)  // anchor-global, dc 0x9e66c
+int executive::DoDialog(baseManager* newDialog)
+{
+    // @stub
+}
+
+// E:\gamedcs\exec.cpp:147
+VA(0x004b0b20, 0xCB)  // anchor-global, dc 0x9e778
+int executive::AddManager(baseManager* newManager, int newPriority)
+{
+    // @stub
+}
+
+// E:\gamedcs\exec.cpp:219
+VA(0x004b0bf0, 0x79)  // anchor-global, dc 0x9e838
+void executive::RemoveManager(baseManager* killManager)
+{
+    // @stub
+}
+
+// E:\gamedcs\exec.cpp:268
+VA(0x004b0c70, 0x152)  // anchor-global, dc 0x9e898
+void executive::CallManager(baseManager* newManager)
+{
+    // @stub
+}
+
+// E:\gamedcs\exec.cpp:340
+// DC_ONLY(0x9e9b0, cb 0x130) - no retail tie yet
+void executive::MainLoop()
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x004b06c0 size    95  cinit0361_b06c0 [init-ctor]
+//   0x004b0720 size    95  cinit0362_b0720 [init-ctor]
+//   0x004b0780 size    95  cinit0363_b0780 [init-ctor]
+//   0x004b07e0 size    95  cinit0364_b07e0 [init-ctor]
+//   0x004b0840 size    95  cinit0365_b0840 [init-ctor]
+//   0x004b08a0 size    95  cinit0366_b08a0 [init-ctor]
+//   0x004b0900 size    16  executive_executive_b0900 [hd-crossbuild]
+//   0x004b0910 size   121  game_ee3e0_sub07_b0910 [caller]
+//   0x004b0990 size   120  game_f3690_sub01_b0990 [caller]
+

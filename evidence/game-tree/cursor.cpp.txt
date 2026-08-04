@@ -1,0 +1,277 @@
+// E:\gamedcs\cursor.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module cursor.obj, 39 procs, 0 retail-tied.
+
+// E:\gamedcs\struct.h:115
+// DC_ONLY(0x79420, cb 0x96) - no retail tie yet
+void $E436()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x794b8, cb 0x96) - no retail tie yet
+void $E439()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x79550, cb 0xA8) - no retail tie yet
+void $E442()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x795f8, cb 0x96) - no retail tie yet
+void $E445()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x79690, cb 0x96) - no retail tie yet
+void $E448()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x79728, cb 0xA8) - no retail tie yet
+void $E451()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x797d0, cb 0x96) - no retail tie yet
+void $E454()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x79868, cb 0x96) - no retail tie yet
+void $E457()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x79900, cb 0xA8) - no retail tie yet
+void $E460()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x799a8, cb 0xA0) - no retail tie yet
+void $E463()
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:52
+// DC_ONLY(0x79a48, cb 0x3C) - no retail tie yet
+void advManager::StartCursor(int direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:85
+// DC_ONLY(0x79a84, cb 0x86) - no retail tie yet
+void advManager::StopCursor(unsigned char standEnd)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:110
+// DC_ONLY(0x79b0c, cb 0x39C) - no retail tie yet
+void advManager::DrawCursor(int CellX, int CellY)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:199
+// DC_ONLY(0x79ea8, cb 0x17C) - no retail tie yet
+void advManager::DrawCursorShadow(int CellX, int CellY)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:247
+// DC_ONLY(0x7a024, cb 0x402) - no retail tie yet
+void advManager::DrawCursorAlpha()
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:386
+// DC_ONLY(0x7a428, cb 0x34) - no retail tie yet
+void advManager::TurnTo(int newDirection)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:393
+// DC_ONLY(0x7a45c, cb 0x74) - no retail tie yet
+int advManager::GetMoveShowIt(hero* currHero, int direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:420
+// DC_ONLY(0x7a4d0, cb 0x1F4) - no retail tie yet
+NewmapCell* advManager::end_move_hero(hero* curr, NewmapCell* returnCell, unsigned char bIsRemoteMove, long iOrigX, long iOrigY, unsigned char standEnd, int* bFoughtBattle)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:458
+// DC_ONLY(0x7a6c4, cb 0x130) - no retail tie yet
+NewmapCell* advManager::handle_stop_on_trigger(hero* curr, NewmapCell* destCell, unsigned char bIsRemoteMove, unsigned char standEnd, int* bFoughtBattle, long curMoveCost, long nextMoveMinCost)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:490
+// DC_ONLY(0x7a7f4, cb 0x25E) - no retail tie yet
+void advManager::animate_move(hero* curr, int direction, int xInc, int yInc)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:570
+// DC_ONLY(0x7aa54, cb 0x1166) - no retail tie yet
+NewmapCell* advManager::MoveHero(int direction, unsigned char standEnd, type_point* trigger_point, int* bNoMove, unsigned char bComputerMove, int* bFoughtBattle, unsigned char bIsRemoteMove)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:961
+// DC_ONLY(0x7bbbc, cb 0x210) - no retail tie yet
+void advManager::CheckAdjacentMon(int* bFoughtBattle)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:989
+// DC_ONLY(0x7bdcc, cb 0x116) - no retail tie yet
+int advManager::ValidMoveWithEvent(hero* thisHero, int direction)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1027
+// DC_ONLY(0x7bee4, cb 0x2F4) - no retail tie yet
+int advManager::ValidMove(const hero* currHero, int direction, int bWithEvent, unsigned char normal_move_only)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1124
+// DC_ONLY(0x7c1d8, cb 0x108) - no retail tie yet
+void advManager::OnMoveHero(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1158
+// DC_ONLY(0x7c2e0, cb 0x48) - no retail tie yet
+void advManager::OnTeleportHero(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1167
+// DC_ONLY(0x7c328, cb 0x68) - no retail tie yet
+void advManager::OnClaimMine(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1177
+// DC_ONLY(0x7c390, cb 0x36) - no retail tie yet
+void advManager::OnClaimTown(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1186
+// DC_ONLY(0x7c3c8, cb 0x58) - no retail tie yet
+void advManager::OnBuildBoat(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1196
+// DC_ONLY(0x7c420, cb 0x4E) - no retail tie yet
+void advManager::OnEraseObject(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1208
+// DC_ONLY(0x7c470, cb 0xAC) - no retail tie yet
+void advManager::OnDeadHero(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1224
+// DC_ONLY(0x7c51c, cb 0x66) - no retail tie yet
+void advManager::OnRecruitHero(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1245
+// DC_ONLY(0x7c584, cb 0x5C) - no retail tie yet
+void advManager::OnDeadPlayer(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1253
+// DC_ONLY(0x7c5e0, cb 0x68) - no retail tie yet
+void advManager::OnClaimGenerator(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1260
+// DC_ONLY(0x7c648, cb 0x1A) - no retail tie yet
+void advManager::OnClaimGarrison(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1267
+// DC_ONLY(0x7c664, cb 0x24) - no retail tie yet
+void advManager::OnClaimShipYard(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1274
+// DC_ONLY(0x7c688, cb 0x32) - no retail tie yet
+void advManager::OnHideHero(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1286
+// DC_ONLY(0x7c6bc, cb 0x33C) - no retail tie yet
+void advManager::ProcessMapChangeNew(CMapChange* pMapChange)
+{
+    // @stub
+}
+
+// E:\gamedcs\cursor.cpp:1343
+// DC_ONLY(0x7c9f8, cb 0x34) - no retail tie yet
+void SendMapChange(CMapChange* pMapChange)
+{
+    // @stub
+}
+

@@ -1,0 +1,322 @@
+// E:\gamedcs\recruit.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module recruit.obj, 44 procs, 3 retail-tied.
+// retail extent 0x14e750..0x150934 (VA 0x54e750..0x550934)
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x11887c, cb 0x28) - no retail tie yet
+void $E440()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:70
+// DC_ONLY(0x1188a4, cb 0x10) - no retail tie yet
+void $E441()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x1188b4, cb 0x28) - no retail tie yet
+void $E443()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:71
+// DC_ONLY(0x1188dc, cb 0x10) - no retail tie yet
+void $E444()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x1188ec, cb 0x28) - no retail tie yet
+void $E446()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:72
+// DC_ONLY(0x118914, cb 0x10) - no retail tie yet
+void $E447()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x118924, cb 0x28) - no retail tie yet
+void $E449()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:73
+// DC_ONLY(0x11894c, cb 0x10) - no retail tie yet
+void $E450()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x11895c, cb 0x28) - no retail tie yet
+void $E452()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:74
+// DC_ONLY(0x118984, cb 0x10) - no retail tie yet
+void $E453()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x118994, cb 0x28) - no retail tie yet
+void $E455()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:75
+// DC_ONLY(0x1189bc, cb 0x10) - no retail tie yet
+void $E456()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x1189cc, cb 0x28) - no retail tie yet
+void $E458()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:76
+// DC_ONLY(0x1189f4, cb 0x10) - no retail tie yet
+void $E459()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x118a04, cb 0x28) - no retail tie yet
+void $E461()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:77
+// DC_ONLY(0x118a2c, cb 0x10) - no retail tie yet
+void $E462()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x118a3c, cb 0x28) - no retail tie yet
+void $E464()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:78
+// DC_ONLY(0x118a64, cb 0x10) - no retail tie yet
+void $E465()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x118a74, cb 0x28) - no retail tie yet
+void $E467()
+{
+    // @stub
+}
+
+// E:\gamedcs\terrain.h:79
+// DC_ONLY(0x118a9c, cb 0x40) - no retail tie yet
+void $E468()
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:157
+VA(0x0054e750, 0x64)  // anchor-global, dc 0x118adc
+void get_upgrade_cost(TCreatureType creature, long amount, []* cost)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:172
+VA(0x0054e7c0, 0x31)  // anchor-global, dc 0x118b38
+void GetMonsterCost(int monId, []* resCost)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:183
+// DC_ONLY(0x118b68, cb 0x4A) - no retail tie yet
+void RecruitSliderCallback(int state, heroWindow* parent_window)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:192
+// DC_ONLY(0x118bb4, cb 0xC08) - no retail tie yet
+void TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource, recruitUnit* recruit_info)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:292
+// DC_ONLY(0x1197bc, cb 0x62) - no retail tie yet
+void TRecruitWindow::~TRecruitWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:302
+// DC_ONLY(0x119820, cb 0x12C) - no retail tie yet
+void TRecruitWindow::add_creature_widgets(long start_x, long start_y, long name_y, TCreatureType creature, long slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:319
+// DC_ONLY(0x11994c, cb 0x398) - no retail tie yet
+int recruitUnit::Open(int newPriority)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:453
+// DC_ONLY(0x119ce4, cb 0x80) - no retail tie yet
+void recruitUnit::Close()
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:473
+// DC_ONLY(0x119d64, cb 0x32) - no retail tie yet
+TArtifact SiegeMonsterToSiegeArtifact(TCreatureType siegeMon)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:492
+// DC_ONLY(0x119d98, cb 0x32) - no retail tie yet
+TCreatureType siege_artifact_to_creature(TArtifact engine)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:511
+VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
+void recruitUnit::Update(unsigned char new_monster, long slot)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:666
+// DC_ONLY(0x11a280, cb 0x74) - no retail tie yet
+void recruitUnit::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:693
+// DC_ONLY(0x11a2f4, cb 0x18) - no retail tie yet
+int ExitRecruitUnit(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:704
+// DC_ONLY(0x11a30c, cb 0x970) - no retail tie yet
+int recruitUnit::Main(message* msg)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:1082
+// DC_ONLY(0x11ac7c, cb 0x88) - no retail tie yet
+void recruitUnit::UpdateCost()
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:1120
+// DC_ONLY(0x11ad04, cb 0xAE) - no retail tie yet
+void recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char bGroupIsTownGarrison, TCreatureType _MonType1, short* _numMon1, TCreatureType _MonType2, short* _numMon2, TCreatureType _MonType3, short* _numMon3, TCreatureType _MonType4, short* _numMon4)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:1158
+// DC_ONLY(0x11adb4, cb 0xA4) - no retail tie yet
+void recruitUnit::recruitUnit(hero* _thisHero, TCreatureType _MonType1, short* _numMon1, TCreatureType _MonType2, short* _numMon2, TCreatureType _MonType3, short* _numMon3, TCreatureType _MonType4, short* _numMon4)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:1188
+// DC_ONLY(0x11ae58, cb 0xCA) - no retail tie yet
+void recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int bInInTownMainScreen)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:1219
+// DC_ONLY(0x11af24, cb 0x74) - no retail tie yet
+void TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:1224
+// DC_ONLY(0x11af98, cb 0x62) - no retail tie yet
+void TRecruitQuickWindow::~TRecruitQuickWindow()
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:1232
+// DC_ONLY(0x11affc, cb 0x2C) - no retail tie yet
+void QuickViewRecruit(town* newTown, int newDwellingIndex)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:1239
+// DC_ONLY(0x11b028, cb 0x514) - no retail tie yet
+void QuickViewRecruit(char MonType, short* numMon)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:288
+// DC_ONLY(0x11b53c, cb 0x34) - no retail tie yet
+void* TRecruitWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// E:\gamedcs\recruit.cpp:1221
+// DC_ONLY(0x11b570, cb 0x34) - no retail tie yet
+void* TRecruitQuickWindow::`scalar deleting destructor'(unsigned __flags)
+{
+    // @stub
+}
+
+// --- unmatched retail residents in this extent (Complete-era or untied) ---
+//   0x0054e850 size  4757  game_tprcrt_pcx_14e850 [string]
+//   0x0054faf0 size    33  game_14faf0 [band]
+//   0x0054fb20 size   107  game_14faf0_sub00_14fb20 [caller]
+//   0x0054fb90 size   781  game_14e850_sub00_14fb90 [caller]
+//   0x0054fea0 size  1070  game_s_s_14fea0 [string]
+//   0x005502d0 size   140  game_1502d0 [band]
+//   0x00550360 size    60  game_124fc0_sub01_150360 [caller]
+

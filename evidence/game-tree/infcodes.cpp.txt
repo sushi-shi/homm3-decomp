@@ -1,0 +1,25 @@
+// E:\gamedcs\zlib113\infcodes.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module infcodes.obj, 3 procs, 0 retail-tied.
+
+// E:\gamedcs\zlib113\infcodes.cpp:62
+// DC_ONLY(0xdab1c, cb 0x46) - no retail tie yet
+inflate_codes_state* inflate_codes_new(unsigned bl, unsigned bd, inflate_huft_s* tl, inflate_huft_s* td, z_stream_s* z)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\infcodes.cpp:80
+// DC_ONLY(0xdab64, cb 0x60E) - no retail tie yet
+int inflate_codes(inflate_blocks_state* s, z_stream_s* z, int r)
+{
+    // @stub
+}
+
+// E:\gamedcs\zlib113\infcodes.cpp:249
+// DC_ONLY(0xdb174, cb 0x1C) - no retail tie yet
+void inflate_codes_free(inflate_codes_state* c, z_stream_s* z)
+{
+    // @stub
+}
+

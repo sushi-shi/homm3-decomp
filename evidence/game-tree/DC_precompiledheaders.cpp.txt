@@ -1,0 +1,396 @@
+// E:\gamedcs\h3\DC_precompiledheaders.cpp - materialized from the Dreamcast CodeView dump;
+// RVA()/VA() claims are for the PINNED RETAIL IMAGE (sha 057c9d88..., base 0x400000)
+// via evidence/retail-dc-name-map.csv. module DC_precompiledheaders.obj, 56 procs, 0 retail-tied.
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:11
+// DC_ONLY(0x7fdb4, cb 0x4) - no retail tie yet
+int ShowCursor(int bShow)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:21
+// DC_ONLY(0x7fdb8, cb 0x4) - no retail tie yet
+int ClientToScreen(void* hWnd, tagPOINT* lpPoint)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:30
+// DC_ONLY(0x7fdbc, cb 0x22) - no retail tie yet
+int DSetCursorPos(int X, int Y)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:43
+// DC_ONLY(0x7fde0, cb 0x46) - no retail tie yet
+int GetCursorPos(tagPOINT* lpPoint)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:62
+// DC_ONLY(0x7fe28, cb 0x4) - no retail tie yet
+int ScreenToClient(void* hWnd, tagPOINT* lpPoint)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:71
+// DC_ONLY(0x7fe2c, cb 0x4) - no retail tie yet
+int IsIconic(void* hWnd)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:78
+// DC_ONLY(0x7fe30, cb 0x70) - no retail tie yet
+int stricmp(const char* string1, const char* string2)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:101
+// DC_ONLY(0x7fea0, cb 0x4) - no retail tie yet
+int isalpha(int c)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:108
+// DC_ONLY(0x7fea4, cb 0x4) - no retail tie yet
+char* strupr(char* string)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:115
+// DC_ONLY(0x7fea8, cb 0x4) - no retail tie yet
+void endthread()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:121
+// DC_ONLY(0x7feac, cb 0x4) - no retail tie yet
+unsigned long beginthread(void (*)()* start_address, unsigned stack_size, void* arglist)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:134
+// DC_ONLY(0x7feb0, cb 0x4) - no retail tie yet
+int chdir(const char* dirname)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:141
+// DC_ONLY(0x7feb4, cb 0x4) - no retail tie yet
+int _open(const char* filename, int oflag, int pmode)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:146
+// DC_ONLY(0x7feb8, cb 0xC) - no retail tie yet
+int open(const char* filename, int oflag)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:152
+// DC_ONLY(0x7fec4, cb 0x4) - no retail tie yet
+int _close(int handle)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:158
+// DC_ONLY(0x7fec8, cb 0x12) - no retail tie yet
+void _endthreadex(unsigned retval)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:164
+// DC_ONLY(0x7fedc, cb 0x1E) - no retail tie yet
+void* _beginthreadex(void* security, unsigned stack_size, unsigned long (*)()* start_address, void* arglist, unsigned initflag, unsigned long* thrdaddr)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:171
+// DC_ONLY(0x7fefc, cb 0x8C) - no retail tie yet
+int strnicmp(const char* s1, const char* s2, unsigned len)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:194
+// DC_ONLY(0x7ff88, cb 0x58) - no retail tie yet
+char* strrev(char* string)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:210
+// DC_ONLY(0x7ffe0, cb 0x4) - no retail tie yet
+char* _fullpath(char* absPath, const char* relPath, unsigned maxLength)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:225
+// DC_ONLY(0x7ffe4, cb 0x4) - no retail tie yet
+char* strrchr(const char* string, int c)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:230
+// DC_ONLY(0x7ffe8, cb 0x4) - no retail tie yet
+int read(int handle, void* buffer, unsigned count)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:235
+// DC_ONLY(0x7ffec, cb 0x4) - no retail tie yet
+int _write(int handle, const void* buffer, unsigned count)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:240
+// DC_ONLY(0x7fff0, cb 0x4) - no retail tie yet
+char* getcwd(char* buffer, int maxlen)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:359
+// DC_ONLY(0x7fff4, cb 0x70) - no retail tie yet
+void* DCfopen(const char* m1)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:395
+// DC_ONLY(0x80064, cb 0x30) - no retail tie yet
+int DCfclose(void* m1)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:407
+// DC_ONLY(0x80094, cb 0x14) - no retail tie yet
+int DCfseek(void* fiha, long off, int pos)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:412
+// DC_ONLY(0x800a8, cb 0x16) - no retail tie yet
+long DCftell(void* fiha)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:417
+// DC_ONLY(0x800c0, cb 0x2A) - no retail tie yet
+long DCfread(void* a, long b, long c, void* d)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:451
+// DC_ONLY(0x800ec, cb 0x12) - no retail tie yet
+char* itoa(int a, char* b, int c)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:456
+// DC_ONLY(0x80100, cb 0x2A) - no retail tie yet
+void dreamprintf(unsigned short* pszFormat)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:472
+// DC_ONLY(0x8012c, cb 0x4) - no retail tie yet
+int gzrewind@4(void* file)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:499
+// DC_ONLY(0x80130, cb 0x14) - no retail tie yet
+int gzwrite@12(void* file, void* buf, unsigned len)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:531
+// DC_ONLY(0x80144, cb 0x4) - no retail tie yet
+unsigned long crc32@12(unsigned long crc, const unsigned char* buf, unsigned len)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:539
+// DC_ONLY(0x80148, cb 0x4) - no retail tie yet
+int pcxinfo(const char* fname, PcxData* pdata)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:544
+// DC_ONLY(0x8014c, cb 0x4) - no retail tie yet
+int allocimage(imgdes* image, int iwidth, int ilength, int bppixel)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:550
+// DC_ONLY(0x80150, cb 0x4) - no retail tie yet
+int loadpcx(const char* fname, imgdes* desimg)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:556
+// DC_ONLY(0x80154, cb 0x4) - no retail tie yet
+void freeimage()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:560
+// DC_ONLY(0x80158, cb 0x4) - no retail tie yet
+int flipimage(imgdes* srcimg, imgdes* desimg)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:565
+// DC_ONLY(0x8015c, cb 0x4) - no retail tie yet
+int savepcx(const char* fname, imgdes* srcimg)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:571
+// DC_ONLY(0x80160, cb 0x4) - no retail tie yet
+long BinkDDSurfaceType(void* lpDDS)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:576
+// DC_ONLY(0x80164, cb 0x4) - no retail tie yet
+void SmackToBuffer()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:581
+// DC_ONLY(0x80168, cb 0x4) - no retail tie yet
+unsigned long SmackToBufferRect(SmackTag* smk, unsigned long SmackSurface)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:586
+// DC_ONLY(0x8016c, cb 0x4) - no retail tie yet
+long BinkGetRects(BINK* bnk, unsigned long surfacetype)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:591
+// DC_ONLY(0x80170, cb 0x4) - no retail tie yet
+SmackTag* SmackOpen(const char* name, unsigned long flags, unsigned long extrabuf)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:596
+// DC_ONLY(0x80174, cb 0x4) - no retail tie yet
+unsigned long SmackUseMMX(unsigned long flag)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:601
+// DC_ONLY(0x80178, cb 0x4) - no retail tie yet
+void SmackVolumePan()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:605
+// DC_ONLY(0x8017c, cb 0x4) - no retail tie yet
+unsigned long SmackDoFrame(SmackTag* smk)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:610
+// DC_ONLY(0x80180, cb 0x4) - no retail tie yet
+void SmackGoto()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:614
+// DC_ONLY(0x80184, cb 0x4) - no retail tie yet
+void SmackNextFrame()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:618
+// DC_ONLY(0x80188, cb 0x4) - no retail tie yet
+unsigned long SmackWait(SmackTag* smk)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:623
+// DC_ONLY(0x8018c, cb 0x4) - no retail tie yet
+void SmackClose()
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:627
+// DC_ONLY(0x80190, cb 0x4) - no retail tie yet
+long BinkPause(BINK* bnk, long pause)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:708
+// DC_ONLY(0x80194, cb 0x4) - no retail tie yet
+long BinkSetSoundSystem(long (*)()* (*)()* open, unsigned long param)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:713
+// DC_ONLY(0x80198, cb 0x4) - no retail tie yet
+long (*)()* BinkOpenMiles(unsigned long param)
+{
+    // @stub
+}
+
+// E:\gamedcs\h3\DC_precompiledheaders.cpp:719
+// DC_ONLY(0x8019c, cb 0x4C) - no retail tie yet
+unsigned char SmackSoundUseMSS(void* DigDriver)
+{
+    // @stub
+}
+
