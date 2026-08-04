@@ -1,0 +1,3 @@
+# MANUALLY MANAGED - vostok --reloc-alias-manifest (schema: src/reloc_alias_manifest.rs @ 1393e24).
+# Reviewed rows only; site_rva may be `*`; exact rows must declare occurrences=1.
+function_rva	target_rva	site_rva	owner	addend	occurrences
