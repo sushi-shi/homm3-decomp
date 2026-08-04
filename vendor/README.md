@@ -3,11 +3,18 @@
 This directory contains the third-party source and SDK material needed by the
 target executable.
 
-`zlib-1.1.3/` is a verbatim copy of the official zlib 1.1.3 release. Nothing in
-that directory may be reformatted, patched, annotated, or otherwise changed.
-Build-specific flags and matching metadata belong outside the source snapshot.
-The official `zlib-1.1.3.tar.gz` SHA-256 is
+`zlib-1.1.3/` is a verbatim copy of the official zlib 1.1.3 release. No source
+file in that directory may be reformatted, patched, annotated, or otherwise
+changed. Build-specific flags and matching metadata belong outside the source
+snapshot. The official `zlib-1.1.3.tar.gz` SHA-256 is
 `cae5847bc0e1cf113d3f70d037400da3e47c2e2b7b1c96b0b08447a5fbb906f4`.
+
+`zlib-1.1.3/gzio.c.patch` carries the single proven NWC deviation from that
+snapshot: retail's `check_header` compares signed (`jl` at va 0x6064b5) where
+every official zlib 1.0.4-1.2.1 declares `uInt len` (unsigned `jb`), proven by
+a VC6 compile experiment. The build applies it into a staged copy under
+`build/gen/patched/` (homm3.build.patch_src, fail-closed on context drift);
+the snapshot itself stays byte-identical to the official release.
 
 The remaining dependencies were shipped as DLLs. Each directory keeps:
 
