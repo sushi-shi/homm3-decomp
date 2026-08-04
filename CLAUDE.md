@@ -72,9 +72,11 @@ delinker (that step is not yet ported).
 ## Tooling layout
 
 One importable package (`scripts/homm3/`), one CLI (`homm3`), grouped by role:
-`core/` (shared primitives — `cc_wrap`), `build/` (ninja-graph actors — `configure`,
-`link`, `ninja_syntax`), `init/` (toolchain/prefix setup). Later phases add `ghidra/`,
-`match/`, `sema/`, `audit/`, and `scripts/archive/` per the port plan. Add a tool to its
+`core/` (shared primitives — `cc_wrap`, `common`, `image`), `build/` (ninja-graph
+actors and the delink loop), `match/` (status/ratchet + the function-universe
+classifier), `init/` (toolchain/prefix setup). Retired tools live in
+`scripts/archive/` (the carve bootstrap pipeline is there — do not resurrect).
+Later phases add `ghidra/`, `sema/`, `audit/` per the port plan. Add a tool to its
 role package, not to a new top-level file.
 
 ## Repository model (contracts; enforcement lands with each phase)

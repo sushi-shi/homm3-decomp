@@ -1,5 +1,9 @@
 # The executable's DNA — static-library attribution
 
+> Historical analysis record. The carve pipeline that produced it is
+> retired under `scripts/archive/carve/` (2026-08-04); the `python3 -m
+> homm3.carve …` regeneration commands below no longer run from the tree.
+
 What `HEROES3.EXE` was linked against and where each library lives in `.text`.
 Generated evidence: `evidence/retail-library-bands.tsv` (band map) and
 `evidence/retail-function-libraries.tsv` (per-function attribution) — both
