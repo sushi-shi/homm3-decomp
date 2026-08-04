@@ -19,6 +19,13 @@ NOT fabricated from them - headers keep prototypes as comments until a
 layout is independently recovered for the retail image (attempt-1's vetted
 layouts remain a quarry, port plan P4.2).
 
+Compiler-synthesized `scalar/vector deleting destructor' symbols are KEPT
+in src/ deliberately (user decision 2026-08-04): CodeView attributes them
+to the exact line of the destructor definition they were synthesized from
+(measured: ~T and its deleting dtor share the same file:line), so they are
+one source definition emitting two symbols - dropping the row would lose a
+real definition-site anchor. Only the nameless `$`-thunks are omitted.
+
 The stage is an ADMISSION: src/ and include/ are hand-owned after this
 generation. It refuses to overwrite an existing src/ or include/ unless
 --force is given.
