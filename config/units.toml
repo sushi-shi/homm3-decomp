@@ -217,3 +217,8 @@ flags = "game_o2_ml_gr_windows"
 unit = "soundmgr"
 source = "src/soundmgr.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "mousemgr"
+source = "src/mousemgr.cpp"
+flags = "game_o2_ml_gr_windows"
