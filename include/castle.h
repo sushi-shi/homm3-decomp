@@ -5,6 +5,17 @@
 #ifndef HOMM3_CASTLE_H
 #define HOMM3_CASTLE_H
 
+// Building-name tables, byte-proven by the retail lookup 0x4610e0:
+// four .bss string arrays keyed by (townType, buildingId) with the
+// dwelling ids (15, 17..29) taking stride-10 and stride-15 town rows.
+// Names are provisional.
+extern const char* gBuildingNamesCommon[];   // 0x6a64e4, id < 15
+extern const char* gBuildingNamesDwelling[]; // 0x6a53fc, id == 15
+extern const char* gBuildingNamesTown[];     // 0x6a5390, 17 <= id < 30
+extern const char* gBuildingNamesUpgrade[];  // 0x6a6230, id >= 30
+
+const char* GetBuildingName(int townType, int buildingId);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\castle.cpp:285, dc 0x5c1d8) const char* GetBuildingName(int townType, int buildingId);
 // CODEVIEW(E:\gamedcs\castle.cpp:307, dc 0x5c228) int CanBuy(const town* currTown, int buildingId);

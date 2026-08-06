@@ -222,3 +222,15 @@ flags = "game_o2_ml_gr_windows"
 unit = "mousemgr"
 source = "src/mousemgr.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "castle"
+source = "src/castle.cpp"
+flags = "game_o2_ml_gr_windows"
+
+
+[[unit]]
+unit = "recruit"
+source = "src/recruit.cpp"
+flags = "game_o2_ml_gr_windows"
+
