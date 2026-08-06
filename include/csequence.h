@@ -5,6 +5,12 @@
 #ifndef HOMM3_CSEQUENCE_H
 #define HOMM3_CSEQUENCE_H
 
+// Bootstrap VIEW: button::Draw reads numFrames through CSprite::s[0].
+class CSequence {
+public:
+    int numFrames;
+};
+
 // --- CSequence ---
 // CODEVIEW(E:\gamedcs\csequence.cpp:32, dc 0x71f14) void CSequence::CSequence();
 // CODEVIEW(E:\gamedcs\csequence.cpp:39, dc 0x71f20) void CSequence::CSequence(const int num);
