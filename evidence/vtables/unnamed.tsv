@@ -1,0 +1,276 @@
+# generator: homm3.analysis.vtable_names
+# exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
+# date: 2026-08-04
+# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
+vtable_rva	slots	class	grade	resolved_slots	named_slots	detail
+0x23aba8	3			3	0	no named slots
+0x23abb4	3			3	0	no named slots
+0x23bb0c	2			2	0	no named slots
+0x23bb1c	2			2	0	no named slots
+0x23bb24	2			2	0	no named slots
+0x23bb2c	2			2	0	no named slots
+0x23bb34	2			2	0	no named slots
+0x23bb3c	2			2	0	no named slots
+0x23bb44	2			2	0	no named slots
+0x23d410	4			4	0	no named slots
+0x23d420	4			4	0	no named slots
+0x23d430	4			4	0	no named slots
+0x23d448	9			9	0	no named slots
+0x23d528	9			9	0	no named slots
+0x23d6fc	14		at-or-below	14	4	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x23d938	8			8	6	no named slots
+0x23d958	13			13	9	no named slots
+0x23d98c	13			13	0	no named slots
+0x23d9c0	8			8	0	no named slots
+0x23d9e0	8			8	0	no named slots
+0x23da00	8			8	0	no named slots
+0x23da20	8			8	0	no named slots
+0x23da40	8			8	0	no named slots
+0x23da60	8		at-or-below	8	1	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x23da80	8			8	0	no named slots
+0x23daa0	8			8	0	no named slots
+0x23dac0	3			3	2	no named slots
+0x23dacc	3			3	0	no named slots
+0x23dad8	13			13	0	no named slots
+0x23db0c	13			13	0	no named slots
+0x23db9c	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x23e508	2			2	0	no named slots
+0x23e5f8	2			2	0	no named slots
+0x23e60c	3			3	0	no named slots
+0x23e618	7			7	0	no named slots
+0x23e634	3			3	0	no named slots
+0x23e640	7			7	0	no named slots
+0x23e6d8	9			9	0	no named slots
+0x23e704	3			3	0	no named slots
+0x23e710	13			13	0	no named slots
+0x23e744	2			2	0	no named slots
+0x23e74c	3			3	0	no named slots
+0x23eb68	9			9	0	no named slots
+0x23ebbc	14		at-or-below	14	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x23fe1c	14		at-or-below	14	1	slots name only widget - this table is widget or a subclass
+0x23fe54	3			3	0	no named slots
+0x23fe60	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x23ff50	9			9	0	no named slots
+0x240028	4			4	0	no named slots
+0x240054	19		at-or-below	19	1	slots name only textEntryWidget - this table is textEntryWidget or a subclass
+0x2400a0	14		at-or-below	14	2	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x2400d8	7			7	0	no named slots
+0x2400f4	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x240130	21			21	0	no named slots
+0x240184	21			21	0	no named slots
+0x2401d8	14		at-or-below	14	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x240210	21			21	0	no named slots
+0x240264	3			3	0	no named slots
+0x240270	2			2	2	no named slots
+0x2402c4	2			2	0	no named slots
+0x2402cc	2			2	1	no named slots
+0x2402d4	2			2	0	no named slots
+0x2402dc	2			2	0	no named slots
+0x2402f4	3			3	0	no named slots
+0x240320	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x24036c	2			2	0	no named slots
+0x240374	3			3	0	no named slots
+0x240600	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x240648	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x2406a8	9			9	0	no named slots
+0x2406cc	10			10	0	no named slots
+0x2406f4	9			9	0	no named slots
+0x2409c0	3			3	1	no named slots
+0x2409cc	7			7	0	no named slots
+0x2409e8	7			7	6	no named slots
+0x240a04	7			7	0	no named slots
+0x240a20	7			7	6	no named slots
+0x240a3c	7			7	0	no named slots
+0x240a58	7			7	6	no named slots
+0x240a74	4			4	0	no named slots
+0x240aa4	4			4	0	no named slots
+0x240ab4	4			4	0	no named slots
+0x240ac4	4			4	0	no named slots
+0x240ad4	4			4	0	no named slots
+0x240ae4	4			4	0	no named slots
+0x240af4	4			4	0	no named slots
+0x240b04	4			4	0	no named slots
+0x240b14	4			4	0	no named slots
+0x240b24	4			4	0	no named slots
+0x240b34	4			4	0	no named slots
+0x240b44	4			4	0	no named slots
+0x240b54	4			4	0	no named slots
+0x240b64	3			3	0	no named slots
+0x240b70	3			3	0	no named slots
+0x240b7c	3			3	0	no named slots
+0x240b88	3			3	0	no named slots
+0x240b94	3			3	0	no named slots
+0x240ba0	3			3	0	no named slots
+0x240bac	3			3	0	no named slots
+0x240bb8	3			3	0	no named slots
+0x240bc4	3			3	0	no named slots
+0x240bd0	3			3	0	no named slots
+0x240bdc	3			3	0	no named slots
+0x240be8	3			3	0	no named slots
+0x240bf4	3			3	0	no named slots
+0x240c00	3			3	0	no named slots
+0x240c0c	3			3	0	no named slots
+0x240c18	3			3	0	no named slots
+0x240c24	3			3	0	no named slots
+0x240c30	3			3	0	no named slots
+0x240c3c	2			2	0	no named slots
+0x240c44	2			2	0	no named slots
+0x240c70	3			3	0	no named slots
+0x240c7c	9			9	0	no named slots
+0x240d04	73			73	0	no named slots
+0x240e30	25		at-or-below	25	2	slots name only textEntryWidget - this table is textEntryWidget or a subclass
+0x240e94	14			14	0	no named slots
+0x240ecc	14			14	0	no named slots
+0x240f04	4			4	0	no named slots
+0x240f40	14			14	0	no named slots
+0x240f78	14			14	0	no named slots
+0x240fb0	3			3	0	no named slots
+0x240fbc	13			13	0	no named slots
+0x240ffc	3			3	1	no named slots
+0x2410ec	13			13	0	no named slots
+0x241128	3			3	0	no named slots
+0x241134	3			3	0	no named slots
+0x241174	7			7	1	no named slots
+0x241190	7			7	0	no named slots
+0x2411f0	7			7	1	no named slots
+0x24120c	7			7	0	no named slots
+0x241540	14		at-or-below	14	1	slots name only widget - this table is widget or a subclass
+0x241578	14		at-or-below	14	1	slots name only widget - this table is widget or a subclass
+0x2415b0	14		at-or-below	14	1	slots name only widget - this table is widget or a subclass
+0x2415e8	14		at-or-below	14	1	slots name only widget - this table is widget or a subclass
+0x241620	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x24165c	14		at-or-below	14	1	slots name only widget - this table is widget or a subclass
+0x241694	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x2416d0	3			3	0	no named slots
+0x2416dc	13		at-or-below	13	1	slots name only widget - this table is widget or a subclass
+0x241710	15		at-or-below	15	2	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x24174c	15			15	7	no named slots
+0x241788	15			15	0	no named slots
+0x2417c4	15			15	0	no named slots
+0x241800	15			15	0	no named slots
+0x24183c	15			15	0	no named slots
+0x241878	15			15	0	no named slots
+0x2418b4	15			15	0	no named slots
+0x2418f0	15			15	0	no named slots
+0x24192c	15			15	0	no named slots
+0x241968	15			15	0	no named slots
+0x2419a4	13		at-or-below	13	1	slots name only widget - this table is widget or a subclass
+0x2419d8	10			10	0	no named slots
+0x241a00	13		at-or-below	13	1	slots name only widget - this table is widget or a subclass
+0x241a34	13		at-or-below	13	1	slots name only widget - this table is widget or a subclass
+0x241a68	10			10	0	no named slots
+0x241a90	10			10	0	no named slots
+0x241ab8	10			10	0	no named slots
+0x241b14	3			3	0	no named slots
+0x241b20	2			2	0	no named slots
+0x241b28	25		at-or-below	25	1	slots name only textEntryWidget - this table is textEntryWidget or a subclass
+0x241b8c	17		at-or-below	17	1	slots name only widget - this table is widget or a subclass
+0x241bd0	3			3	0	no named slots
+0x241bdc	14			14	0	no named slots
+0x241c14	19		at-or-below	19	1	slots name only textEntryWidget - this table is textEntryWidget or a subclass
+0x241c60	19		at-or-below	19	1	slots name only textEntryWidget - this table is textEntryWidget or a subclass
+0x241cac	15		at-or-below	15	2	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x241ce8	4			4	0	no named slots
+0x241cf8	14			14	0	no named slots
+0x241d30	2			2	0	no named slots
+0x241d38	3			3	0	no named slots
+0x241d44	3			3	0	no named slots
+0x241d50	17		at-or-below	17	1	slots name only widget - this table is widget or a subclass
+0x241dcc	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x242350	27		at-or-below	27	1	slots name only textEntryWidget - this table is textEntryWidget or a subclass
+0x2423bc	27		at-or-below	27	2	slots name only textEntryWidget - this table is textEntryWidget or a subclass
+0x242428	9			9	0	no named slots
+0x24244c	3			3	0	no named slots
+0x242458	4			4	0	no named slots
+0x242468	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x242c80	6			6	6	no named slots
+0x242c98	6			6	0	no named slots
+0x242cb0	6			6	0	no named slots
+0x242cc8	17		at-or-below	17	1	slots name only widget - this table is widget or a subclass
+0x242d0c	13		at-or-below	13	1	slots name only widget - this table is widget or a subclass
+0x242d40	19		at-or-below	19	1	slots name only textEntryWidget - this table is textEntryWidget or a subclass
+0x242d8c	3			3	0	no named slots
+0x242d98	3			3	0	no named slots
+0x242da4	3			3	0	no named slots
+0x242db0	14			14	0	no named slots
+0x242de8	14			14	0	no named slots
+0x242e30	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243720	3			3	0	no named slots
+0x24372c	9			9	0	no named slots
+0x243750	5			5	0	no named slots
+0x243764	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x2437a0	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x2437dc	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243818	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243854	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243890	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x2438cc	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243908	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243944	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243980	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x2439bc	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x2439f8	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243a34	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243a70	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243aac	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243ae8	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243ba0	14		at-or-below	14	1	slots name only widget - this table is widget or a subclass
+0x243bd8	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243c14	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243c54	15		at-or-below	15	3	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243c90	13		at-or-below	13	4	slots name only widget - this table is widget or a subclass
+0x243cc4	9			9	0	no named slots
+0x243ce8	14		at-or-below	14	5	slots name only CHeroWindowEx - this table is CHeroWindowEx or a subclass
+0x243d20	11			11	0	no named slots
+0x243d4c	3			3	0	no named slots
+0x24559c	3			3	0	no named slots
+0x2455bc	3			3	0	no named slots
+0x2455fc	3			3	0	no named slots
+0x245640	3			3	0	no named slots
+0x2456a8	13			13	0	no named slots
+0x245728	6			6	0	no named slots
+0x245744	7			7	0	no named slots
+0x245764	10			10	0	no named slots
+0x245790	5			5	0	no named slots
+0x2457a8	3			3	0	no named slots
+0x245810	13			13	0	no named slots
+0x245870	13			13	0	no named slots
+0x2458a8	13			13	0	no named slots
+0x2458f4	3			3	0	no named slots
+0x245924	2			2	0	no named slots
+0x245930	7			7	0	no named slots
+0x245950	10			10	0	no named slots
+0x24597c	10			10	0	no named slots
+0x2459a8	3			3	0	no named slots
+0x2459dc	4			4	0	no named slots
+0x2459f0	6			6	0	no named slots
+0x245a0c	7			7	0	no named slots
+0x245a2c	10			10	0	no named slots
+0x245a58	13			13	0	no named slots
+0x245abc	10			10	0	no named slots
+0x245c30	2			2	0	no named slots
+0x245c3c	7			7	0	no named slots
+0x245c5c	10			10	0	no named slots
+0x245c88	10			10	0	no named slots
+0x245cb4	3			3	0	no named slots
+0x245ce8	4			4	0	no named slots
+0x245cfc	10			10	0	no named slots
+0x245d30	2			2	0	no named slots
+0x245d94	2			2	0	no named slots
+0x245da4	2			2	0	no named slots
+0x245db4	2			2	0	no named slots
+0x245e2c	2			2	0	no named slots
+0x245e38	2			2	0	no named slots
+0x245f74	2			2	0	no named slots
+0x245f80	2			2	0	no named slots
+0x245f8c	2			2	0	no named slots
+0x245fa8	2			2	0	no named slots
+0x245fb4	2			2	0	no named slots
+0x245fc4	2			2	0	no named slots
+0x245fe0	2			2	0	no named slots
+0x245ff8	2			2	0	no named slots
+0x246b6c	2			2	0	no named slots
+0x246bfc	2			2	0	no named slots
+0x246c08	2			2	0	no named slots
+0x246c34	2			2	0	no named slots
+0x246c44	2			2	0	no named slots

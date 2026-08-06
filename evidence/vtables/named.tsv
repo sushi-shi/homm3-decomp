@@ -1,0 +1,97 @@
+# generator: homm3.analysis.vtable_names
+# exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
+# date: 2026-08-04
+# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
+vtable_rva	slots	class	grade	resolved_slots	named_slots	detail
+0x23a578	27	CAdventurMapChatEdit	ida+slots	27	1	1 named slots all at-or-above CAdventurMapChatEdit
+0x23a5e4	9	TAdventureMapWindow	ida-address	9	0	no slot evidence to corroborate
+0x23a610	15	TAdventureOptionsWindow	ida+slots	15	3	3 named slots all at-or-above TAdventureOptionsWindow
+0x23a678	3	advManager	ida-address	3	0	no slot evidence to corroborate
+0x23a684	5	CAdvMgrNetMsgHandler	ida-address	5	0	no slot evidence to corroborate
+0x23a6a8	15	CAdvPopup	ida+slots	15	3	3 named slots all at-or-above CAdvPopup
+0x23b670	3	type_town_threat_checker	ida-address	3	0	no slot evidence to corroborate
+0x23b67c	3	type_garrison_purchaser	ida-address	3	0	no slot evidence to corroborate
+0x23b6b0	2	type_artifact_effect	ida-address	2	1	no slot evidence to corroborate
+0x23b6b8	2	type_scouting_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b6c0	2	type_combat_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b6c8	2	type_might_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b6d0	2	type_power_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b6d8	2	type_knowledge_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b6e4	2	type_necromancy_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b6ec	2	type_movement_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b6f4	2	type_spellcaster_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b6fc	2	type_morale_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b704	2	type_luck_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b70c	2	type_duration_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b714	2	type_school_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b71c	2	type_antimagic_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b724	2	type_antimorale_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b72c	2	type_antiluck_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b734	2	type_tome_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b73c	2	type_income_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b744	2	type_creature_growth_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b74c	2	type_spell_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b754	2	type_shooter_bonus_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b75c	2	type_angelic_alliance_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b764	2	type_undead_king_cloak_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b770	2	type_statue_of_legion_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b778	2	type_elixir_of_life_artifact	ida-address	2	0	no slot evidence to corroborate
+0x23b8f8	15	TSplitWindow	ida-unverified	15	5	TSplitWindow absent from the DC hierarchy; slots vote CHeroWindowEx,TSplitWindow
+0x23b9bc	3	baseManager	ida-address	3	3	no slot evidence to corroborate
+0x23b9c8	3	Bitmap16Bit	ida-address	3	0	no slot evidence to corroborate
+0x23b9f4	3	Bitmap24Bit	ida-address	3	0	no slot evidence to corroborate
+0x23ba14	4	Bitmap816	ida-address	4	0	no slot evidence to corroborate
+0x23ba24	14	border	ida+slots	14	1	1 named slots all at-or-above border
+0x23ba5c	14	coloredBorderFrame	ida+slots	14	1	1 named slots all at-or-above coloredBorderFrame
+0x23ba94	14	bitmapBorder	ida+slots	14	1	1 named slots all at-or-above bitmapBorder
+0x23bacc	14	bitmapBorder16	ida+slots	14	1	1 named slots all at-or-above bitmapBorder16
+0x23bb04	2	type_bottom_view_window	ida-address	2	0	no slot evidence to corroborate
+0x23bb54	13	button	ida-address	13	0	no slot evidence to corroborate
+0x23bb88	13	textButton	ida-address	13	0	no slot evidence to corroborate
+0x23bbbc	13	type_func_button	ida-address	13	0	no slot evidence to corroborate
+0x23bc08	9	TCampaignMenu	ida-address	9	0	no slot evidence to corroborate
+0x23bc2c	9	TCampaignBrief	ida-address	9	0	no slot evidence to corroborate
+0x23bca4	9	TCampaignWindow	ida-address	9	0	no slot evidence to corroborate
+0x23d3e8	3	combatManager	ida-address	3	0	no slot evidence to corroborate
+0x23d46c	9	TCombatResultsWindow	ida-address	9	0	no slot evidence to corroborate
+0x23d4bc	27	CCombatChatEdit	ida-unverified	27	1	CCombatChatEdit absent from the DC hierarchy; slots vote textEntryWidget
+0x23d6b0	3	CSprite	ida-address	3	0	no slot evidence to corroborate
+0x23d6bc	3	CSpriteFrame	ida-address	3	0	no slot evidence to corroborate
+0x23db40	10	TDialogBox	ida-address	10	0	no slot evidence to corroborate
+0x23db68	13	CTextDialog	ida-address	13	0	no slot evidence to corroborate
+0x23dbd8	15	TSkuttleBoatWindow	ida+slots	15	3	3 named slots all at-or-above TSkuttleBoatWindow
+0x23dc28	62	CDPlay	ida-address	62	0	no slot evidence to corroborate
+0x23dd20	73	CDPlayLobby	ida-address	73	0	no slot evidence to corroborate
+0x23de44	7	?$CAutoArray@VCDPlayAddressElement	ida-address	7	0	no slot evidence to corroborate
+0x23de74	6	type_event_record	ida-address	6	1	no slot evidence to corroborate
+0x23de8c	6	type_record_move_hero	ida-address	6	0	no slot evidence to corroborate
+0x23dea4	6	type_record_teleport	ida-address	6	0	no slot evidence to corroborate
+0x23debc	6	type_record_claim_mine	ida-address	6	0	no slot evidence to corroborate
+0x23ded4	6	type_record_claim_town	ida-address	6	0	no slot evidence to corroborate
+0x23deec	6	type_record_hide_boat	ida-address	6	0	no slot evidence to corroborate
+0x23df04	6	type_record_show_boat	ida-address	6	0	no slot evidence to corroborate
+0x23df1c	6	type_record_erase	ida-address	6	0	no slot evidence to corroborate
+0x23df34	6	type_record_hide_hero	ida-address	6	0	no slot evidence to corroborate
+0x23df4c	6	type_record_show_hero	ida-address	6	0	no slot evidence to corroborate
+0x23df64	6	type_record_player_death	ida-address	6	0	no slot evidence to corroborate
+0x23df7c	6	type_record_shroud	ida-address	6	0	no slot evidence to corroborate
+0x23eae8	15	THeroScreenWindow	ida-unverified	15	3	THeroScreenWindow absent from the DC hierarchy; slots vote CHeroWindowEx
+0x23eb8c	3	highScoreManager	ida-address	3	0	no slot evidence to corroborate
+0x23eb98	9	THighScoreWindow	ida-address	9	0	no slot evidence to corroborate
+0x23ebf4	21	CHighScoreEdit	ida-address	21	0	no slot evidence to corroborate
+0x23ec48	14	iconWidget	ida+slots	14	1	1 named slots all at-or-above iconWidget
+0x23fe10	3	inputManager	ida-address	3	0	no slot evidence to corroborate
+0x240038	7	mouseManager	ida-address	7	0	no slot evidence to corroborate
+0x240a84	4	type_object	ida-address	4	0	no slot evidence to corroborate
+0x240a94	4	type_monster	ida-address	4	0	no slot evidence to corroborate
+0x240c4c	9	t_abstract_random_generator	ida-address	9	0	no slot evidence to corroborate
+0x240f14	4	CNetMsgHandlerPause	ida-address	4	1	no slot evidence to corroborate
+0x240f24	7	CNetMsgHandler	ida-address	7	0	no slot evidence to corroborate
+0x2455cc	3	logic_error@std	ida-address	3	0	no slot evidence to corroborate
+0x245670	13	istrstream@std	ida-address	13	0	no slot evidence to corroborate
+0x245708	7	_Locimp@locale@std	ida-address	7	0	no slot evidence to corroborate
+0x245904	7	bad_alloc@std	ida-address	7	0	no slot evidence to corroborate
+0x2459b8	3	?$money_put@GV?$ostreambuf_iterator@GU?$char_traits@G@std	ida-address	3	0	no slot evidence to corroborate
+0x2459c8	4	?$money_get@GV?$istreambuf_iterator@GU?$char_traits@G@std	ida-address	4	0	no slot evidence to corroborate
+0x245cc4	3	?$money_put@DV?$ostreambuf_iterator@DU?$char_traits@D@std	ida-address	3	0	no slot evidence to corroborate
+0x245cd4	4	?$money_get@DV?$istreambuf_iterator@DU?$char_traits@D@std	ida-address	4	0	no slot evidence to corroborate
