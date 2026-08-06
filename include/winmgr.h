@@ -8,6 +8,7 @@
 #include "basemgr.h"
 
 class Bitmap16Bit;
+class heroWindow;
 
 // Bootstrap VIEW of heroWindowManager (Dreamcast size 104): only the
 // screen bitmap is consumed so far. DC puts dialogReturn@56,
@@ -21,11 +22,20 @@ public:
     Bitmap16Bit* screenBitmap;
     int colorCyclingOn;
     unsigned char isWaitingForFadeIn;
+    char pad_49[7];
+    // The window list, byte-proven by RemoveWindow (located
+    // 2026-08-06 by homm3.analysis.dc_callgraph): headWindow@0x50,
+    // tailWindow@0x54, lastActive@0x58, activeWindow@0x5c.
+    heroWindow* headWindow;
+    heroWindow* tailWindow;
+    heroWindow* lastActive;
+    heroWindow* activeWindow;
 
     // DC overload set also has () and (int,int,int,int,int,int); only
     // the consumed 4-int form (retail 0x602bd0, called by widget::Main)
     // is declared.
     void UpdateScreen(int x, int y, int w, int h);
+    void RemoveWindow(heroWindow* killWindow);
     void FadeScreen(int inOut, int speed, unsigned char expect_fadein);
     void FadeToBlack(int speed, unsigned char expect_fadein);
     void FadeFromBlack(int speed);

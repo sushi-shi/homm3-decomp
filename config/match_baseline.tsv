@@ -49,8 +49,12 @@ advmgr	advManager_ShowRoute	0.0000
 advmgr	advManager_TrimLoopingSounds	0.0000
 advmgr	advManager_UpdBottomView	0.0000
 advmgr	advManager_UpdBottomViewEnemyTurn	0.0000
+advmgr	advManager_UpdBottomViewHero	0.0000
+advmgr	advManager_UpdBottomViewKingdom	0.0000
+advmgr	advManager_UpdBottomViewMessage	0.0000
 advmgr	advManager_UpdBottomViewNewTurn	0.0000
 advmgr	advManager_UpdBottomViewResMsg	0.0000
+advmgr	advManager_UpdBottomViewTown	0.0000
 advmgr	advManager_UpdateScreen	0.0000
 advmgr	advManager_advManager	0.0000
 advmgr	advManager_get_normal_cursor	0.0000
@@ -142,6 +146,7 @@ cmbtmgr	combatManager_damage_message	0.0000
 cmbtmgr	combatManager_enemy_is_adjacent	0.0000
 cmbtmgr	combatManager_get_distance	0.0000
 cmbtmgr	combatManager_is_adjacent	0.0000
+cmbtmgr	combatManager_place_obstacle	0.0000
 cmbtmgr	combatManager_should_lower_door	0.0000
 compress	@compress2@20	100.0000
 crc32	@crc32@12	100.0000
@@ -316,6 +321,7 @@ hero	hero_ViewStat	0.0000
 hero	hero_VisitedArena	0.0000
 hero	hero_add_to_backpack	0.0000
 hero	hero_can_summon_boat	0.0000
+hero	hero_equip_artifact	0.0000
 hero	hero_find_summonable_boat	0.0000
 hero	hero_get_backpack_error	0.0000
 hero	hero_get_combat_speed_bonus	0.0000
@@ -513,6 +519,7 @@ window	CHeroWindowEx_ProcessRightSelect	0.0000
 window	CHeroWindowEx_SetHelpText	0.0000
 window	CHeroWindowEx_WindowHandler	0.0000
 winmgr	?FadeScreen@heroWindowManager@@QAEXHHE@Z	99.8718
+winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	96.8868
 winmgr	heroWindowManager_BroadcastMessage	0.0000
 winmgr	heroWindowManager_DoQuickView	0.0000
 zutil	@zcalloc@12	100.0000

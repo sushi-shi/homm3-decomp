@@ -226,7 +226,7 @@ void combatManager::ResetHitByCreature()
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2768
-DC_ONLY(0x60354, 0x1E2)
+VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::place_obstacle(int obstacle_id)
 {
     // @stub

@@ -577,28 +577,28 @@ void advManager::BVMessage(const char* cMsg)
 }
 
 // E:\gamedcs\advmgr.cpp:9002
-DC_ONLY(0x191d0, 0xAA)
+VA(0x004162f0, 0xA1)  // dc-callgraph unique, dc 0x191d0
 unsigned char advManager::UpdBottomViewMessage(unsigned char force_update)
 {
     // @stub
 }
 
 // E:\gamedcs\advmgr.cpp:9016
-DC_ONLY(0x1927c, 0x8E)
+VA(0x004163a0, 0xA6)  // dc-callgraph unique, dc 0x1927c
 unsigned char advManager::UpdBottomViewKingdom(unsigned char force_update)
 {
     // @stub
 }
 
 // E:\gamedcs\advmgr.cpp:9032
-DC_ONLY(0x1930c, 0x7C)
+VA(0x00416450, 0x9A)  // dc-callgraph unique, dc 0x1930c
 unsigned char advManager::UpdBottomViewHero(unsigned char force_update)
 {
     // @stub
 }
 
 // E:\gamedcs\advmgr.cpp:9046
-DC_ONLY(0x19388, 0x98)
+VA(0x004164f0, 0x9A)  // dc-callgraph unique, dc 0x19388
 unsigned char advManager::UpdBottomViewTown(unsigned char force_update)
 {
     // @stub
