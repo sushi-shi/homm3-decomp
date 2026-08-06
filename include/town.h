@@ -5,6 +5,17 @@
 #ifndef HOMM3_TOWN_H
 #define HOMM3_TOWN_H
 
+// Head model: CanBuildDock tests byte 8 against 0xff (the "no dock
+// site" sentinel); HasGarrison reads field_c/field_10. Names
+// provisional - the ctor claim will grow this roster.
+class town {
+public:
+    char pad_00[8];
+    unsigned char dockSite;
+
+    unsigned char CanBuildDock();
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\town.cpp:1732, dc 0x167958) void show_building_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards);
 // CODEVIEW(E:\gamedcs\town.cpp:1760, dc 0x167a8c) void show_creature_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards);

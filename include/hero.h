@@ -5,6 +5,30 @@
 #ifndef HOMM3_HERO_H
 #define HOMM3_HERO_H
 
+// Byte-proven by HasArtifact 0x4d91b0: 19 equipped slots of 8 bytes
+// starting at 0x12d, then 64 backpack slots of 8 bytes at 0x1d4; each
+// slot's first dword is the artifact id. The 0x12d start is NOT
+// 4-aligned, so hero is a packed record (retail reads the ids with
+// unaligned dword loads). Names provisional.
+#pragma pack(push, 1)
+
+struct TArtifactSlot {
+    int artifactId;
+    int extra;
+};
+
+class hero {
+public:
+    char pad_000[0x12d];
+    TArtifactSlot equipped[19];
+    char pad_1c5[0xf];
+    TArtifactSlot backpack[64];
+
+    unsigned char HasArtifact(int whichArtifact);
+};
+
+#pragma pack(pop)
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\hero.cpp:219, dc 0xca728) unsigned char InitializeHeroSpecificAbilitiesTable();
 // CODEVIEW(E:\gamedcs\hero.cpp:267, dc 0xca7e8) unsigned char initialize_move_constants();
