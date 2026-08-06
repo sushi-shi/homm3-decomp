@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-06 — comparison scope narrowed to FUNCTIONS ONLY.**
+  User-directed: data comparison returns later as its own phase. The
+  normalize step now truncates every non-code section in the
+  disposable comparison copies (both sides) and re-homes their symbols
+  as undefined externs; the raw compiler/delinker objects keep their
+  data sections untouched, so re-admitting data is flipping one call
+  in `normalize_objs`. STAMP_SCHEMA 3.
+
+- **2026-08-06 — homm2 Gold 2.1/Buka joins the template shelf.**
+  User-directed: the sibling's `decomp-gold-2.1-buka` branch (VC6 SP5,
+  1727/1727 exact) is chronologically and compiler-wise closer to
+  retail HoMM3 than `decomp-pol-2.0` (MSVC 4.2); prefer its statement
+  shapes when both branches carry a template, and consult both.
+
 - **2026-08-06 — text-pad trim added to the reviewed target
   normalization.** The compiled base carries each function in a /Gy
   COMDAT padded to its section alignment with 0x90 fill, while the
