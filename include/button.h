@@ -5,8 +5,11 @@
 #define HOMM3_BUTTON_H
 
 #include <va.h>
+#include <string>
+#include <vector>
 
 class heroWindow;
+class message;
 
 // Player-color palette targets. Both overloads of the free
 // SetPlayerPaletteColors (0x5ffe20 / 0x5ffe40) copy a per-player run
@@ -20,17 +23,39 @@ class paletteHiColor;
 void SetPlayerPaletteColors(palette* pal, int whichPlayer);
 void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
 
-// Bootstrap VIEW of the icon resource: only the two fields button
-// touches are modeled, offset-named. GetPalette (retail 0x47bcc0)
-// returns field_20 ? field_20 + 0x1c : 0 - i.e. the palette embedded
-// in the icon's loaded resource.
-class icon {
+// Bootstrap VIEW of the sprite resource. The type is CSprite (Dreamcast:
+// button::buttonIcon is CSprite*, CSprite : resource). Only what button
+// touches is modeled. Retail vtable 0x63d6b0 has 3 slots:
+//   slot 0  0x47b8f0  scalar deleting destructor
+//   slot 1  0x55d1a0  Dispose - proven by all three button-family dtors
+//                     calling [vptr+4] on their owned resource; homm2's
+//                     template body is gpResourceManager->Dispose(icon),
+//                     so retail moved Dispose onto the resource itself
+//                     (DC still has namespace-level ResourceManager::
+//                     Dispose(CSprite*))
+//   slot 2  0x47bd50  unidentified
+// GetPalette (retail 0x47bcc0) returns field_20 ? field_20 + 0x1c : 0 -
+// i.e. the palette embedded in the sprite's loaded resource.
+class CSprite {
 public:
-    char pad_0[0x20];
+    char pad_04[0x1c];
     void* field_20;
     paletteHiColor* field_24;
 
+    virtual ~CSprite();      // slot 0
+    virtual void Dispose();  // slot 1, retail body 0x55d1a0
+    virtual void _vslot2();  // slot 2, retail body 0x47bd50, unidentified
+
     palette* GetPalette();
+};
+
+// Bootstrap VIEW of the text font (resource lineage - same two leading
+// vtable slots as CSprite; textButton's dtor Disposes its Font through
+// slot 1). Layout unmodeled (DC size 5212).
+class font {
+public:
+    virtual ~font();
+    virtual void Dispose();
 };
 
 // PROVEN size 48 (retail): button::buttonIcon sits at 0x30, which
@@ -39,6 +64,23 @@ public:
 // dropped it or declared it beside `on` in the 37..39 padding; the
 // byte evidence only fixes the total, so it is left out until a
 // consumer proves its home.
+//
+// Virtual roster: 12 slots, proven by the retail button-family vtables
+// (0x63bb54/0x63bb88/0x63bbbc, 13 slots each = these 12 + one that
+// button introduces). Order is the Dreamcast roster with ONE retail
+// insertion: Open, non-virtual on DC, is virtualized at slot 1 (its
+// retail body 0x5fe4d0 stores priority@0x12/parentWindow@4 and returns
+// 0 - exactly DC Open's semantics). Slot bodies shared across the
+// family vtables sit outside the owning bands because VC6 /Gy COMDATs
+// of header-inline virtuals land in the first referencing obj and the
+// retail link folded identical ones (/OPT:ICF); _vslotN names stay
+// until each identity is byte-proven. DC-order candidates:
+//   3 zBufferDraw (pure on DC; button vtable holds 0x5bc7e0)
+//   5 GetRealHeight (0x4eab30)   6 GetRealWidth (0x4eab20)
+//   7 process_hover (0x5fe930)   8 Dim (button holds 0x5bc690, NOT
+//     widget::Dim 0x5fe800 - button overrides here)
+//   9 enable (0x5fe940)  10 OnSetFocus / 11 OnKillFocus (both
+//     0x404df0 - the ICF-folded empty)
 class widget {
 public:
     heroWindow* parentWindow;
@@ -57,23 +99,65 @@ public:
     char* RollOver;
     char* RightClick;
 
-    virtual ~widget();
+    virtual ~widget();                                    // slot 0, retail 0x5fe430
+    virtual int Open(int newPriority, heroWindow* parent);  // slot 1, retail 0x5fe4d0
+    virtual int Main(message* msg) = 0;                   // slot 2
+    virtual void _vslot3() = 0;                           // slot 3
+    virtual void Draw() = 0;                              // slot 4
+    virtual void _vslot5() = 0;                           // slot 5
+    virtual void _vslot6() = 0;                           // slot 6
+    virtual void _vslot7() = 0;                           // slot 7
+    virtual void _vslot8() = 0;                           // slot 8
+    virtual void _vslot9() = 0;                           // slot 9
+    virtual void _vslot10() = 0;                          // slot 10
+    virtual void _vslot11() = 0;                          // slot 11
 };
 SIZE(widget, 48);
 
-// Dreamcast: class size 96, buttonIcon@52 (retail 48 - see widget),
-// then normalFrame/selectedFrame/disabled_frame/endDialog, the
-// hotKeyCodes vector and the Text string. Only the head is modeled;
-// the STL tail arrives with the destructors.
+// Layout PROVEN by the retail ctor 0x455ef0 (member stores) and dtor
+// 0x4560f0 (member teardown): buttonIcon@0x30, normalFrame@0x34,
+// selectedFrame@0x38, disabled_frame@0x3c (ctor seeds 2), field_40@0x40
+// (ctor seeds 3 - retail-only, absent from the DC roster), endDialog@
+// 0x44, hotKeyCodes@0x48 (VC6 std::vector<int>, 16 B), Text@0x58 (VC6
+// std::string, 16 B; the dtor shows the native refcounted-string
+// teardown, so retail uses VC6's own STL, not DC's STLport). Total 104.
+// No SIZE assert: the clang arm's host STL sizes differ.
 class button : public widget {
 public:
-    icon* buttonIcon;
+    CSprite* buttonIcon;
     int normalFrame;
     int selectedFrame;
     int disabled_frame;
+    int field_40;
     unsigned char endDialog;
+    std::vector<int> hotKeyCodes;
+    std::string Text;
+
+    virtual ~button();  // retail 0x4560f0; slot 12 (0x456a10) is the
+                        // button-introduced 13th virtual, unidentified
 
     void SetPlayerPaletteColors(int whichPlayer);
+};
+
+// Dreamcast roster: Font@96, textColor@100 (font::TColor) - retail
+// button is 104, so Font@0x68, textColor@0x6c (the dtor Disposes
+// [this+0x68]). Total 112.
+class textButton : public button {
+public:
+    font* Font;
+    int textColor;
+
+    virtual ~textButton();  // retail 0x456bf0
+};
+
+// DC gives only a forward ref; the ctors take an int (*)() handler
+// chain. The dtor (retail 0x456db0) tears down exactly button's
+// members, so the tail is POD - handler modeled at 0x68.
+class type_func_button : public button {
+public:
+    int (**handler)();
+
+    virtual ~type_func_button();  // retail 0x456db0
 };
 
 #endif  /* HOMM3_BUTTON_H */
