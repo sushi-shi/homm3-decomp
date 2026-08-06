@@ -5,6 +5,7 @@
 #ifndef HOMM3_MOUSEMGR_H
 #define HOMM3_MOUSEMGR_H
 
+#include <windows.h>
 #include "basemgr.h"
 
 // Bootstrap VIEW: button::Main pumps messages through the inherited
@@ -32,7 +33,7 @@ public:
     int field_6c;
     int field_70;
     int field_74;
-    char section_mouse[24];
+    CRITICAL_SECTION section_mouse;
 
     mouseManager();
     void MouseCoords(int* x, int* y);

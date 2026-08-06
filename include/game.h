@@ -5,7 +5,8 @@
 #ifndef HOMM3_GAME_H
 #define HOMM3_GAME_H
 
-class NewfullMap;
+// Opaque in this TU - only its address leaves GetWorldMapData.
+class NewfullMap { char opaque[4]; };
 class playerData;
 
 // Head model: GetWorldMapData hands out the embedded map record at
@@ -13,7 +14,7 @@ class playerData;
 class game {
 public:
     char pad_00000[0x1fb70];
-    char worldMap[4];
+    NewfullMap worldMap;
 
     NewfullMap* GetWorldMapData();
     playerData* GetLocalPlayer();

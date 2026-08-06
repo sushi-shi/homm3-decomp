@@ -408,7 +408,7 @@ int game::SetupPuzzlePieces(int whichPlayer, int countOnly)
 VA(0x004bb160, 0x7)  // linkorder, dc 0xa65c4
 NewfullMap* game::GetWorldMapData()
 {
-    return reinterpret_cast<NewfullMap*>(worldMap);
+    return &worldMap;
 }
 
 #if 0  // @carcass

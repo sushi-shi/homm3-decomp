@@ -52,13 +52,13 @@ void Process1WindowsMessage()
             TranslateMessage(&message);
             DispatchMessageA(&message);
         }
-        if (!IsIconic(reinterpret_cast<HWND>(hwndApp)) || bVideoPaused)
+        if (!IsIconic(hwndApp) || bVideoPaused)
             break;
         if (GetMessageA(&message, 0, 0, 0)) {
             TranslateMessage(&message);
             DispatchMessageA(&message);
         }
-        if (!IsIconic(reinterpret_cast<HWND>(hwndApp)))
+        if (!IsIconic(hwndApp))
             continue;
         if (!bVideoPaused)
             break;
@@ -88,7 +88,7 @@ void UpdateDfltMenu()
 // E:\gamedcs\kbwin.cpp:721
 // Residual (84.8%): a branch-layout difference in the windowed arm.
 VA(0x004f8180, 0x5C)  // anchor-global, dc 0xe801c
-void KBChangeMenu(void* newMenu)
+void KBChangeMenu(HMENU newMenu)
 {
     if (!newMenu)
         newMenu = currMenu;
@@ -96,11 +96,11 @@ void KBChangeMenu(void* newMenu)
         currMenu = newMenu;
     activeMenu = newMenu;
     if (bWindowedMode) {
-        SetMenu(reinterpret_cast<HWND>(hwndApp), 0);
-        DrawMenuBar(reinterpret_cast<HWND>(hwndApp));
+        SetMenu(hwndApp, 0);
+        DrawMenuBar(hwndApp);
     } else if (newMenu) {
-        SetMenu(reinterpret_cast<HWND>(hwndApp), reinterpret_cast<HMENU>(newMenu));
-        DrawMenuBar(reinterpret_cast<HWND>(hwndApp));
+        SetMenu(hwndApp, newMenu);
+        DrawMenuBar(hwndApp);
     }
 }
 
@@ -160,19 +160,19 @@ void InitVideo()
 #endif  // @carcass
 
 DATA(0x00699600)
-void* hwndApp;
+HWND hwndApp;
 
 DATA(0x006995b4)
-void* ghInstance;
+HINSTANCE ghInstance;
 
 DATA(0x006995b8)
 unsigned char bInMessageLoop;
 
 DATA(0x006995bc)
-void* currMenu;
+HMENU currMenu;
 
 DATA(0x00699604)
-void* activeMenu;
+HMENU activeMenu;
 
 DATA(0x00699618)
 int bMenusSuppressed;

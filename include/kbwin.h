@@ -5,18 +5,20 @@
 #ifndef HOMM3_KBWIN_H
 #define HOMM3_KBWIN_H
 
+#include <windows.h>
+
 // Live prototypes (homm2 kbwin lineage; retail bodies noted).
 void Process1WindowsMessage();          // 0x4f7fb0
-void KBChangeMenu(void* newMenu);       // 0x4f8180, fastcall under /Gr
+void KBChangeMenu(HMENU newMenu);       // 0x4f8180, fastcall under /Gr
 void SetNoDialogMenus(int noMenus);     // 0x4f81e0, fastcall under /Gr
 
 // kbwin globals (DC attests hwndApp; the rest are retail-only .bss
 // slots named for their role - provisional).
-extern void* hwndApp;                   // 0x699600
-extern void* ghInstance;                // 0x6995b4
+extern HWND hwndApp;                    // 0x699600
+extern HINSTANCE ghInstance;            // 0x6995b4
 extern unsigned char bInMessageLoop;    // 0x6995b8
-extern void* currMenu;                  // 0x6995bc
-extern void* activeMenu;                // 0x699604
+extern HMENU currMenu;                  // 0x6995bc
+extern HMENU activeMenu;                // 0x699604
 extern int bMenusSuppressed;            // 0x699618
 extern int bWindowedMode;               // 0x6987b8
 extern int bVideoPaused;                // 0x69954c

@@ -8,12 +8,12 @@
 VA(0x004610e0, 0x49)  // anchor-global, dc 0x5c1d8
 const char* GetBuildingName(int townType, int buildingId)
 {
-    if (buildingId < 17) {
-        if (buildingId == 15)
+    if (buildingId < BUILDING_ID_TOWN_FIRST) {
+        if (buildingId == BUILDING_ID_DWELLING)
             return gBuildingNamesDwelling[townType * 11];
         return gBuildingNamesCommon[buildingId];
     }
-    if (buildingId < 30)
+    if (buildingId < BUILDING_ID_UPGRADE_FIRST)
         return gBuildingNamesTown[townType * 11 + buildingId];
     return gBuildingNamesUpgrade[buildingId + townType * 14];
 }

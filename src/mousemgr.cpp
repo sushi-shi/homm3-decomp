@@ -19,7 +19,7 @@ mouseManager::mouseManager()
     field_54 = 0;
     field_60 = 0;
     field_68 = 1;
-    InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(section_mouse));
+    InitializeCriticalSection(&section_mouse);
 }
 
 #if 0  // @carcass
@@ -82,7 +82,7 @@ void mouseManager::MouseCoords(int* x, int* y)
     POINT cursor;
     GetCursorPos(&cursor);
     cursor.x &= ~1;
-    ScreenToClient(reinterpret_cast<HWND>(hwndApp), &cursor);
+    ScreenToClient(hwndApp, &cursor);
     *x = cursor.x;
     *y = cursor.y;
 }

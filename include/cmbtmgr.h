@@ -10,9 +10,7 @@
 // are 0x6ee8 apart (ResetHitByCreature clears a flag at +0x55bc in
 // every one; IsWinner walks the same stride from +0x5550). Names
 // provisional - the ctor claim will grow this roster.
-class combatManager {
-public:
-    char pad_0000[0x5500];
+struct TCombatSide {
     struct TStack {
         int creatureId;         // +0x00 (IsWinner tests -1)
         char pad_04[0x4c];
@@ -20,7 +18,15 @@ public:
         char pad_54[0x18];
         unsigned char hitByCreature;  // +0x6c
         char pad_6d[0x4db];
-    } stacks[2][20];
+    } stacks[20];
+    char pad_side[0x6ee8 - 20 * 0x548];
+
+};
+
+class combatManager {
+public:
+    char pad_0000[0x5500];
+    TCombatSide sides[2];
 
     void ResetHitByCreature();
 };

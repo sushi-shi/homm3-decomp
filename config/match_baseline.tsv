@@ -361,7 +361,7 @@ inputmgr	?Flush@inputManager@@QAEXXZ	100.0000
 inputmgr	inputManager_AsciiConvert	0.0000
 inputmgr	inputManager_ForceMouseMove	0.0000
 inputmgr	inputManager_MakeScanCodeTable	0.0000
-kbwin	?KBChangeMenu@@YIXPAX@Z	84.7778
+kbwin	?KBChangeMenu@@YIXPAUHMENU__@@@Z	84.7778
 kbwin	?Process1WindowsMessage@@YIXXZ	81.3846
 kbwin	?SetNoDialogMenus@@YIXH@Z	0.0000
 kbwin	AppCommand	0.0000
@@ -379,15 +379,15 @@ mousemgr	mouseManager_SetPointer	0.0000
 mousemgr	mouseManager_ShowPointer	0.0000
 mousemgr	mouseManager_ShowSystemCursor	0.0000
 mousemgr	mouseManager_Update	0.0000
-recruit	?GetMonsterCost@@YIXHPAH@Z	99.3333
+recruit	?GetMonsterCost@@YIXHPAH@Z	82.6667
 recruit	get_upgrade_cost	0.0000
 recruit	recruitUnit_Update	0.0000
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000
 resource	??1resource@@UAE@XZ	100.0000
 sample	??1sample@@UAE@XZ	100.0000
-soundmgr	??0soundManager@@QAE@XZ	92.6250
+soundmgr	??0soundManager@@QAE@XZ	92.7188
 soundmgr	?MusicPlaying@soundManager@@QAEHXZ	100.0000
-soundmgr	?StopSample@soundManager@@QAEXPAVds_memsample@@@Z	97.4167
+soundmgr	?StopSample@soundManager@@QAEXPAVds_memsample@@@Z	97.4583
 soundmgr	ClearMemSample	0.0000
 soundmgr	LoadPlaySample	0.0000
 soundmgr	WaitEndSample	0.0000

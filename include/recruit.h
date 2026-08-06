@@ -8,7 +8,14 @@
 // Creature-record table POINTER at 0x6747b0 (retail loads the slot,
 // then indexes). Records are 0x74 bytes; the seven resource costs
 // start at +0x20. Names provisional.
-extern char* gCreatureRecords;
+// Modeled as the flat dword table retail indexes: record stride is
+// 0x74 bytes = 29 dwords, with the seven costs at dword 8.
+enum ECreatureRecord {
+    CREATURE_RECORD_DWORDS = 29,
+    CREATURE_RECORD_COST_DWORD = 8
+};
+
+extern int* gCreatureRecords;
 
 void GetMonsterCost(int monId, int* resCost);
 

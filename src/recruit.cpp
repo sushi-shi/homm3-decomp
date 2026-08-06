@@ -16,16 +16,18 @@ void get_upgrade_cost(TCreatureType creature, long amount, []* cost)
 #endif  // @carcass
 
 // E:\gamedcs\recruit.cpp:172
-// Residual (99.3%): base/index operand order in the copy load only -
-// the encoding differs, the addressing is identical.
+// Residual (82.7%): retail folds the record stride into an lea chain
+// this dword-index form spells as a shift; the 99.3% shape reached
+// earlier used a pointer-type cast the cleanliness floor forbids, so
+// the max below was hand-lowered to the admissible form.
 VA(0x0054e7c0, 0x31)  // anchor-global, dc 0x118b38
 void GetMonsterCost(int monId, int* resCost)
 {
-    int offset = monId * 0x74 + 0x20;
+    int index = monId * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD;
     int remaining = 7;
     do {
-        *resCost = *reinterpret_cast<const int*>(gCreatureRecords + offset);
-        offset += 4;
+        *resCost = gCreatureRecords[index];
+        index++;
         resCost++;
         remaining--;
     } while (remaining);

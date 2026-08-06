@@ -547,6 +547,37 @@ unsigned char hero::HasSecondarySkill(int iWhich)
     // @stub
 }
 
+#endif  // @carcass
+
+// E:\gamedcs\hero.cpp:4653
+VA(0x004e2340, 0x2A)  // anchor-global, dc 0xd3830
+int hero::CreatureTypeCount(int creatureType)
+{
+    int count = 0;
+    for (int slot = 0; slot < 7; slot++) {
+        if (armyTypes[slot] == creatureType && armyCounts[slot] > 0)
+            count++;
+    }
+    return count;
+}
+
+#if 0  // @carcass
+
+#endif  // @carcass
+
+// E:\gamedcs\hero.cpp:4677
+VA(0x004e23a0, 0x27)  // anchor-global, dc 0xd38b0
+int hero::GetNthSS(int iWhich)
+{
+    for (int skill = 0; skill < 28; skill++) {
+        if (skillLevels[skill] == iWhich + 1)
+            return skill;
+    }
+    return -1;
+}
+
+#if 0  // @carcass
+
 // E:\gamedcs\hero.cpp:4828
 VA(0x004e23d0, 0x176)  // anchor-global, dc 0xd38ec
 void hero::TransferArtifacts(hero* src)
@@ -1004,27 +1035,8 @@ std::bitset<48,unsigned* std::bitset<48,unsigned long>::reference::operator=(uns
 
 #endif  // @carcass
 
-// E:\gamedcs\hero.cpp:4653
-VA(0x004e2340, 0x2A)  // anchor-global, dc 0xd3830
-int hero::CreatureTypeCount(int creatureType)
-{
-    int count = 0;
-    for (int slot = 0; slot < 7; slot++) {
-        if (armyTypes[slot] == creatureType && armyCounts[slot] > 0)
-            count++;
-    }
-    return count;
-}
 
-// E:\gamedcs\hero.cpp:4677
-VA(0x004e23a0, 0x27)  // anchor-global, dc 0xd38b0
-int hero::GetNthSS(int iWhich)
-{
-    for (int skill = 0; skill < 28; skill++) {
-        if (skillLevels[skill] == iWhich + 1)
-            return skill;
-    }
-    return -1;
-}
+
+
 
 
