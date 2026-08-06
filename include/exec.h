@@ -5,6 +5,23 @@
 #ifndef HOMM3_EXEC_H
 #define HOMM3_EXEC_H
 
+#include "basemgr.h"
+
+// Dreamcast roster verbatim: headManager@0, tailManager@4,
+// currentManager@8, dialogReturn@12 - byte-corroborated by the retail
+// Add/RemoveManager list walks (tail-first, like heroWindow's widget
+// list).
+class executive {
+public:
+    baseManager* headManager;
+    baseManager* tailManager;
+    baseManager* currentManager;
+    long dialogReturn;
+
+    int AddManager(baseManager* newManager, int newPriority);
+    void RemoveManager(baseManager* killManager);
+};
+
 // --- executive ---
 // CODEVIEW(E:\gamedcs\exec.cpp:37, dc 0x9e510) void executive::executive();
 // CODEVIEW(E:\gamedcs\exec.cpp:43, dc 0x9e520) int executive::InitSystem();
