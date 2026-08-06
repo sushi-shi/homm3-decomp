@@ -75,24 +75,28 @@ build build/objdiff/base/zutil.obj: cl vendor/zlib-1.1.3/zutil.c | $
   unit = zutil
 build build/objdiff/base/misc.obj: cl src/misc.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = misc
 build build/objdiff/base/armygrp.obj: cl src/armygrp.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = armygrp
 build build/objdiff/base/basemgr.obj: cl src/basemgr.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = basemgr
 build build/objdiff/base/button.obj: cl src/button.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = button
 build build/objdiff/base/widget.obj: cl src/widget.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = widget
+build build/objdiff/base/window.obj: cl src/window.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = window
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -102,7 +106,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/trees.obj build/objdiff/base/uncompr.obj $
     build/objdiff/base/zutil.obj build/objdiff/base/misc.obj $
     build/objdiff/base/armygrp.obj build/objdiff/base/basemgr.obj $
-    build/objdiff/base/button.obj build/objdiff/base/widget.obj
+    build/objdiff/base/button.obj build/objdiff/base/widget.obj $
+    build/objdiff/base/window.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -112,7 +117,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/trees.obj build/objdiff/base/uncompr.obj $
     build/objdiff/base/zutil.obj build/objdiff/base/misc.obj $
     build/objdiff/base/armygrp.obj build/objdiff/base/basemgr.obj $
-    build/objdiff/base/button.obj build/objdiff/base/widget.obj
+    build/objdiff/base/button.obj build/objdiff/base/widget.obj $
+    build/objdiff/base/window.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -123,6 +129,6 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/trees.obj build/objdiff/base/uncompr.obj $
     build/objdiff/base/zutil.obj build/objdiff/base/misc.obj $
     build/objdiff/base/armygrp.obj build/objdiff/base/basemgr.obj $
-    build/objdiff/base/button.obj build/objdiff/base/widget.obj | $
-    scripts/homm3/build/link.py
+    build/objdiff/base/button.obj build/objdiff/base/widget.obj $
+    build/objdiff/base/window.obj | scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE
