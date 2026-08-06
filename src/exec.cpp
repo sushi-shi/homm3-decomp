@@ -37,10 +37,10 @@ int executive::DoDialog(baseManager* newDialog)
 #endif  // @carcass
 
 // E:\gamedcs\exec.cpp:147
-VA(0x004b0b20, 0xCB)  // anchor-global, dc 0x9e778
 // Residual (90.1%): whole-body ebx/edi role swap from the entry
 // block - island-track class. homm2's shape with the heroWindow-style
 // tail-first walk; 3 is the homm2 OPEN_FAILURE lineage code.
+VA(0x004b0b20, 0xCB)  // anchor-global, dc 0x9e778
 int executive::AddManager(baseManager* newManager, int newPriority)
 {
     if (!newManager)
@@ -81,8 +81,8 @@ int executive::AddManager(baseManager* newManager, int newPriority)
 }
 
 // E:\gamedcs\exec.cpp:219
-VA(0x004b0bf0, 0x79)  // anchor-global, dc 0x9e838
 // Residual (86.9%): same entry-block register-role swap as AddManager.
+VA(0x004b0bf0, 0x79)  // anchor-global, dc 0x9e838
 void executive::RemoveManager(baseManager* killManager)
 {
     if (!killManager)

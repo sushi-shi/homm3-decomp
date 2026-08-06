@@ -129,6 +129,18 @@ build build/objdiff/base/exec.obj: cl src/exec.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = exec
+build build/objdiff/base/inputmgr.obj: cl src/inputmgr.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = inputmgr
+build build/objdiff/base/findpath.obj: cl src/findpath.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = findpath
+build build/objdiff/base/winmgr.obj: cl src/winmgr.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = winmgr
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -143,7 +155,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
     build/objdiff/base/sample.obj build/objdiff/base/font.obj $
-    build/objdiff/base/exec.obj
+    build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/winmgr.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -158,7 +171,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
     build/objdiff/base/sample.obj build/objdiff/base/font.obj $
-    build/objdiff/base/exec.obj
+    build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/winmgr.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -174,5 +188,7 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
     build/objdiff/base/sample.obj build/objdiff/base/font.obj $
-    build/objdiff/base/exec.obj | scripts/homm3/build/link.py
+    build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/winmgr.obj | $
+    scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE

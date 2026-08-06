@@ -5,6 +5,39 @@
 #ifndef HOMM3_FINDPATH_H
 #define HOMM3_FINDPATH_H
 
+#include <vector>
+
+// Dreamcast roster with the STLport->VC6 vector shift; the retail ctor
+// 0x4b1370 stores every named field and the dtor 0x4b13e0 frees
+// cellData and bIsMoatSlowed (a heap map, not a flag) before the
+// implicit vector teardowns. valid_rectangle (0x28..0x37) stays
+// uninitialized. Vector element types are unproven - int placeholders.
+class searchArray {
+public:
+    int maxQueueCount;
+    unsigned char pay_transition_costs;
+    int this_turns_movement;
+    int land_movement;
+    int sea_movement;
+    unsigned char can_summon_boat;
+    unsigned char can_cast_teleport;
+    unsigned char can_cast_flight;
+    unsigned char can_cast_water_walk;
+    int water_walk_level;
+    int flight_level;
+    unsigned char limit_reached;
+    void* cellData;
+    char valid_rectangle[16];
+    std::vector<int> queue;
+    std::vector<int> result;
+    std::vector<int> visited_points;
+    void* bIsMoatSlowed;
+    void* danger_zones;
+
+    searchArray();
+    ~searchArray();
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\findpath.cpp:131, dc 0x9f034) int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left, TSkillMastery iPathfinding, TRoadType end_road, TSkillMastery flying, TSkillMastery water_walking, TTerrainType native_terrain);
 // CODEVIEW(E:\gamedcs\findpath.cpp:223, dc 0x9f154) int MinimumTerrainCost(const NewmapCell* cell, int points_left, TSkillMastery iPathfinding, TSkillMastery flying, TSkillMastery water_walking);

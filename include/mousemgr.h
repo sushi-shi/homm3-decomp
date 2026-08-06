@@ -10,6 +10,9 @@
 // Bootstrap VIEW: button::Main pumps messages through the inherited
 // baseManager::Main slot.
 class mouseManager : public baseManager {
+public:
+    void HidePointer();
+    void ShowPointer(bool restore);
 };
 
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).

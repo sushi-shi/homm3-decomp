@@ -8,11 +8,30 @@
 #include "basemgr.h"
 #include "message.h"
 
-// Bootstrap VIEW: GetEvent returns the 32-byte message BY VALUE
-// (DC ?GetEvent@inputManager@@QAA?AUmessage@@XZ; retail body 0x4ec590).
+// Dreamcast roster with the 40->32-byte message shift: iBuffer@0x38
+// (64 messages), iHead@0x838, iTail@0x83c, bufferBusy@0x840,
+// mouseInstalled@0x844, scanCodeTable@0x848, keyboardInstalled@0x948,
+// keyboardFilter@0x94c, keyCodeType@0x950, extendFlag@0x954,
+// currWidgetID@0x958, prevDialog@0x95c (tail past that unmodeled).
+// GetEvent returns the message BY VALUE (retail body 0x4ec590).
 class inputManager : public baseManager {
 public:
+    message iBuffer[64];
+    int iHead;
+    int iTail;
+    int bufferBusy;
+    int mouseInstalled;
+    unsigned char scanCodeTable[256];
+    int keyboardInstalled;
+    int keyboardFilter;
+    int keyCodeType;
+    int extendFlag;
+    int currWidgetID;
+    int prevDialog;
+
+    inputManager();
     message GetEvent();
+    void Flush();
 };
 
 // Retail .bss 0x6994e0 (DC ?gpInputManager@@3PAVinputManager@@A).
