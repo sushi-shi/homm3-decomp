@@ -122,8 +122,8 @@ void heroWindowManager::BlitToScreenWithPointerX(int x, int y, int w, int h, int
 #endif  // @carcass
 
 // E:\gamedcs\winmgr.cpp:1007
-VA(0x00602c50, 0x63)  // anchor-global, dc 0x19b428
 // Residual (99.9%): a single branch-layout byte in the else arm.
+VA(0x00602c50, 0x63)  // anchor-global, dc 0x19b428
 void heroWindowManager::FadeScreen(int inOut, int speed, unsigned char expect_fadein)
 {
     if (inOut == 1) {

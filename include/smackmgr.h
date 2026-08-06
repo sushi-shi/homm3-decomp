@@ -8,6 +8,7 @@
 // Live prototypes (retail bodies 0x597740 / 0x597990, called by
 // heroWindow::Open).
 void VideoDrawCurrentFrame();
+void VideoNextFrame();      // 0x5976e0
 unsigned char VideoPlaying();
 
 // --- globals ---
@@ -18,6 +19,7 @@ unsigned char VideoPlaying();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:156, dc 0x14ac40) void VideoClose();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:176, dc 0x14ac44) void VideoNextFrame();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:196, dc 0x14ac48) void VideoDrawCurrentFrame();
+void VideoNextFrame();      // 0x5976e0
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:209, dc 0x14ac4c) void VideoPause();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:238, dc 0x14ac50) void VideoResume();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:265, dc 0x14ac54) void VideoRestart();
