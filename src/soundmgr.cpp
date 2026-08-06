@@ -95,7 +95,7 @@ void soundManager::StopSample(ds_memsample* inSample)
 #if 0  // @carcass
 
 // E:\gamedcs\soundmgr.cpp:572
-DC_ONLY(0x14b2d8, 0xA4)
+VA(0x00599ec0, 0x7F)  // dc-bracket forced, dc 0x14b2d8
 void soundManager::WaitSample(ds_memsample* sample, int time)
 {
     // @stub
