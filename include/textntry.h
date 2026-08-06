@@ -5,6 +5,21 @@
 #ifndef HOMM3_TEXTNTRY_H
 #define HOMM3_TEXTNTRY_H
 
+#include "textwdgt.h"
+#include "bitmap16.h"
+
+// textEntryWidget derives from textWidget in retail (the dtor calls
+// ~textWidget as its base) - Dreamcast agrees. Only the dtor-consumed
+// head is modeled: textBack@0x50 (Disposed), saveBack@0x54 (deleted
+// polymorphically). Vtable 0x642d40.
+class textEntryWidget : public textWidget {
+public:
+    Bitmap16Bit* textBack;
+    Bitmap16Bit* saveBack;
+
+    virtual ~textEntryWidget();  // retail 0x5baae0
+};
+
 // --- CTextEntrySave ---
 // CODEVIEW(E:\gamedcs\textntry.cpp:38, dc 0x16370c) void CTextEntrySave::CTextEntrySave(int w, int h);
 // CODEVIEW(E:\gamedcs\textntry.cpp:44, dc 0x163750) void CTextEntrySave::Save(int x, int y);

@@ -11,6 +11,7 @@
 #include "widget.h"
 #include "csprite.h"
 #include "resource.h"
+#include "font.h"
 
 // Player-color palette targets. Both overloads of the free
 // SetPlayerPaletteColors (0x5ffe20 / 0x5ffe40) copy a per-player run
@@ -25,15 +26,6 @@ class sample;
 void SetPlayerPaletteColors(palette* pal, int whichPlayer);
 void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
 
-class Bitmap16Bit;
-
-// Bootstrap VIEW of the text font (resource base; layout unmodeled
-// past it, DC size 5212). DrawBoundedString is the DC signature with
-// TColor viewed as int.
-class font : public resource {
-public:
-    void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int color_scheme, unsigned justification, int cursorPos);
-};
 
 // The widget base lives in widget.h (owner: widget.obj). Button's own
 // vtables (0x63bb54/0x63bb88/0x63bbbc, 13 slots) extend widget's 12
