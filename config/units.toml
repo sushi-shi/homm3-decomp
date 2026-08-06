@@ -256,3 +256,8 @@ unit = "game"
 source = "src/game.cpp"
 flags = "game_o2_ml_gr_windows"
 
+[[unit]]
+unit = "cmbtmgr"
+source = "src/cmbtmgr.cpp"
+flags = "game_o2_ml_gr_windows"
+

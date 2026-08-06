@@ -177,6 +177,10 @@ build build/objdiff/base/game.obj: cl src/game.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = game
+build build/objdiff/base/cmbtmgr.obj: cl src/cmbtmgr.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = cmbtmgr
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -197,7 +201,7 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $
     build/objdiff/base/town.obj build/objdiff/base/hero.obj $
-    build/objdiff/base/game.obj
+    build/objdiff/base/game.obj build/objdiff/base/cmbtmgr.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -218,7 +222,7 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $
     build/objdiff/base/town.obj build/objdiff/base/hero.obj $
-    build/objdiff/base/game.obj
+    build/objdiff/base/game.obj build/objdiff/base/cmbtmgr.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -240,5 +244,6 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $
     build/objdiff/base/town.obj build/objdiff/base/hero.obj $
-    build/objdiff/base/game.obj | scripts/homm3/build/link.py
+    build/objdiff/base/game.obj build/objdiff/base/cmbtmgr.obj | $
+    scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE

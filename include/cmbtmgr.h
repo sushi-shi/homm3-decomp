@@ -5,6 +5,35 @@
 #ifndef HOMM3_CMBTMGR_H
 #define HOMM3_CMBTMGR_H
 
+// Head model from the byte-proven leaves. The battlefield holds two
+// sides of 20 stacks; each stack record is 0x548 bytes and the sides
+// are 0x6ee8 apart (ResetHitByCreature clears a flag at +0x55bc in
+// every one; IsWinner walks the same stride from +0x5550). Names
+// provisional - the ctor claim will grow this roster.
+class combatManager {
+public:
+    char pad_0000[0x5500];
+    struct TStack {
+        int creatureId;         // +0x00 (IsWinner tests -1)
+        char pad_04[0x4c];
+        unsigned int flags;     // +0x50
+        char pad_54[0x18];
+        unsigned char hitByCreature;  // +0x6c
+        char pad_6d[0x4db];
+    } stacks[2][20];
+
+    void ResetHitByCreature();
+};
+
+// Per-castle hex-index table at 0x63bd00: InCastle divides the hex by
+// 0x11 (the row stride) and compares against the row's wall column.
+// The retail body takes its argument in ECX with no stack frame - a
+// FREE fastcall function, not a method (the DC name is scoped to
+// combatManager, so retail moved it out of the class).
+extern const unsigned char gCastleWallColumns[];
+
+unsigned char InCastle(int index);
+
 // --- CNetMsgHandlerPause ---
 // CODEVIEW(E:\gamedcs\cmbtmgr.cpp:893, dc 0x63a88) void* CNetMsgHandlerPause::`scalar deleting destructor'(unsigned __flags);
 
