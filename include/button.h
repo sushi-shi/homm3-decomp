@@ -82,6 +82,8 @@ public:
     std::vector<int> hotKeyCodes;
     std::string Text;
 
+    button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
+
     virtual ~button();  // retail 0x4560f0; slot 12 (0x456a10) is the
                         // button-introduced 13th virtual, unidentified
 
