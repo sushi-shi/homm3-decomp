@@ -5,6 +5,19 @@
 #ifndef HOMM3_KB_H
 #define HOMM3_KB_H
 
+// homm2's KB timer array survives (DC glTimers: unsigned long[10];
+// retail base 0x698998 - button::Select stores slot 2 at 0x6989a0).
+// Slot name is the homm2 2.1 KB.h value.
+enum EKbTimerSlots {
+    GLOBAL_BUTTON_REPEAT_TIMER_SLOT = 2
+};
+
+extern unsigned long glTimers[10];
+
+// Declared without dllimport, matching retail's direct call into the
+// winmm import thunk (an E8 rel32, not an IAT indirect).
+extern "C" unsigned long __stdcall timeGetTime();
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\kb.cpp:240, dc 0xdf160) void DrawProgressCount();
 // CODEVIEW(E:\gamedcs\kb.cpp:252, dc 0xdf1dc) void IncProgressBar(unsigned char bUpdate);

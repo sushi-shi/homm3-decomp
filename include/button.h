@@ -18,6 +18,7 @@
 // cross this TU. Type NAMES are provisional (no DC/NH3API evidence).
 class palette;
 class paletteHiColor;
+class sample;
 
 void SetPlayerPaletteColors(palette* pal, int whichPlayer);
 void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
@@ -57,7 +58,17 @@ public:
     std::vector<int> hotKeyCodes;
     std::string Text;
 
+    // homm2 BUTTON.cpp's REPEAT_DELAY_TICKS, verbatim value.
+    enum EButtonConstants {
+        BUTTON_REPEAT_DELAY_TICKS = 60
+    };
+
+    // Dreamcast ?click_sample@button@@2PAVsample@@A; retail .bss
+    // 0x694da4 (defined in button.cpp).
+    static sample* click_sample;
+
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
+    int Select(message* msg);
 
     virtual void Draw();  // slot 4, retail 0x456940
 

@@ -8,6 +8,26 @@
 // Live prototype (retail body 0x4ed490, called by heroWindow::DrawWindow).
 void PollSound();
 
+#include "basemgr.h"
+
+class sample;
+class ds_memsample;
+
+// Bootstrap VIEW of soundManager (baseManager base = 0x38): only what
+// button::Select consumes. MemorySample is DC-attested
+// (?MemorySample@soundManager@@QAAPAVds_memsample@@PAVsample@@@Z,
+// retail body 0x59a210); field_84 is a save/restore toggle around it.
+class soundManager : public baseManager {
+public:
+    char pad_38[0x4c];
+    int field_84;
+
+    ds_memsample* MemorySample(sample* memSample);
+};
+
+// Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
+extern soundManager* gpSoundManager;
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\soundmgr.cpp:877, dc 0x14b65c) void ClearMemSample(SAMPLE2 sample2);
 // CODEVIEW(E:\gamedcs\soundmgr.cpp:894, dc 0x14b698) SAMPLE2 LoadPlaySample(const char* cSampleName);
