@@ -9,8 +9,33 @@
 
 // Bootstrap VIEW: button::Main pumps messages through the inherited
 // baseManager::Main slot.
+// Byte-proven by the retail ctor 0x50cb50: the baseManager base ends
+// at 0x38 but the ctor strcpy's "mouseManager" into cMgrName at 0x14
+// (baseManager's own field) and then fills its own tail - field_34@0x34,
+// field_4c/0x50 = -1, field_54/0x60 = 0, field_68 = 1, field_74 = 0,
+// and a CRITICAL_SECTION at 0x78.
 class mouseManager : public baseManager {
 public:
+    int field_38;
+    int field_3c;
+    int field_40;
+    int field_44;
+    int field_48;
+    int field_4c;
+    int field_50;
+    int field_54;
+    int field_58;
+    int field_5c;
+    int field_60;
+    int field_64;
+    int field_68;
+    int field_6c;
+    int field_70;
+    int field_74;
+    char section_mouse[24];
+
+    mouseManager();
+    void MouseCoords(int* x, int* y);
     void HidePointer();
     void ShowPointer(bool restore);
 };

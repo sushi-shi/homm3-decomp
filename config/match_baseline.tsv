@@ -141,6 +141,15 @@ misc	?Random@@YIHHH@Z	100.0000
 misc	SafeRandom	0.0000
 misc	TPickANumber_Pick	0.0000
 misc	TPickANumber_TPickANumber	0.0000
+mousemgr	??0mouseManager@@QAE@XZ	99.9767
+mousemgr	?MouseCoords@mouseManager@@QAEXPAH0@Z	100.0000
+mousemgr	mouseManager_CheckUpdate	0.0000
+mousemgr	mouseManager_HidePointer	0.0000
+mousemgr	mouseManager_LoadFrame	0.0000
+mousemgr	mouseManager_SetPointer	0.0000
+mousemgr	mouseManager_ShowPointer	0.0000
+mousemgr	mouseManager_ShowSystemCursor	0.0000
+mousemgr	mouseManager_Update	0.0000
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000
 resource	??1resource@@UAE@XZ	100.0000
 sample	??1sample@@UAE@XZ	100.0000
