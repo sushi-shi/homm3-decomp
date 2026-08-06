@@ -5,6 +5,16 @@
 #ifndef HOMM3_BORDER_H
 #define HOMM3_BORDER_H
 
+#include "widget.h"
+
+// Head model only: the retail dtor 0x44ff50 is an empty body (vtable
+// store + tail-jump to ~widget), so no border members are proven yet.
+// Vtable 0x63ba24.
+class border : public widget {
+public:
+    virtual ~border();  // retail 0x44ff50
+};
+
 // --- bitmapBorder ---
 // CODEVIEW(E:\gamedcs\border.cpp:280, dc 0x547c0) void bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id, const char* image, int style, unsigned char focusable);
 // CODEVIEW(E:\gamedcs\border.cpp:294, dc 0x54860) void bitmapBorder::~bitmapBorder();

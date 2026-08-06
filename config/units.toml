@@ -35,6 +35,19 @@ game_o2_ml_gr_windows = [
   "/D_WINDOWS",
 ]
 
+# Same as the game profile minus /GX: sample.obj's retail dtor is
+# frameless (no EH registration around the buffer delete before
+# ~resource), which /GX cannot produce - the first no-EH TU (2026-08-06).
+game_o2_ml_gr_windows_noeh = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/Oy-",
+  "/ML",
+  "/Gr",
+  "/D_WINDOWS",
+]
+
 # Verbatim zlib 1.1.3 release sources. This is the only component in the build
 # until another translation unit and its compiler profile are reviewed.
 [[unit]]
@@ -143,4 +156,34 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "resource"
 source = "src/resource.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "border"
+source = "src/border.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "iconwdgt"
+source = "src/iconwdgt.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "textwdgt"
+source = "src/textwdgt.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "textntry"
+source = "src/textntry.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "sample"
+source = "src/sample.cpp"
+flags = "game_o2_ml_gr_windows_noeh"
+
+[[unit]]
+unit = "font"
+source = "src/font.cpp"
 flags = "game_o2_ml_gr_windows"

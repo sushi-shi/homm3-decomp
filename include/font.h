@@ -5,6 +5,38 @@
 #ifndef HOMM3_FONT_H
 #define HOMM3_FONT_H
 
+#include "resource.h"
+#include "palette.h"
+
+class Bitmap16Bit;
+
+// resource base + the dtor-proven tail: an embedded TPalette16 at
+// 0x103c (destroyed by the implicit member dtor) and the glyph data
+// pointer at 0x1258 (deleted when set). The 0x1020 span before the
+// palette is the unmodeled font spec table (DC size 5212).
+// Vtable 0x63e5f4.
+class font : public resource {
+public:
+    // 12-byte glyph records at 0x3c: GetCharacterWidth sums the three
+    // fields (names unattested; DC's nested TFontSpec is unprinted).
+    struct TFontSpec {
+        int field_0;
+        int field_4;
+        int field_8;
+    };
+
+    char pad_1c[0x20];
+    TFontSpec spec[256];
+    char pad_c3c[0x400];
+    TPalette16 palette;
+    void* data;
+
+    virtual ~font();  // retail 0x4b5110
+
+    void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int color_scheme, unsigned justification, int cursorPos);
+    int GetCharacterWidth(unsigned char currChar);
+};
+
 // --- font ---
 // CODEVIEW(E:\gamedcs\font.cpp:33, dc 0xa1ba8) void font::font();
 // CODEVIEW(E:\gamedcs\font.cpp:41, dc 0xa1c04) void font::font(const char* name, const font::TFontSpec* fontspec, int dsize, unsigned char* d);

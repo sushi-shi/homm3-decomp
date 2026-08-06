@@ -12,10 +12,14 @@
 // soundManager::MemorySample; names unattested.
 class sample : public resource {
 public:
-    char pad_1c[0xc];
+    int field_1c;
+    void* data;
+    int field_24;
     int field_28;
     int field_2c;
     int field_30;
+
+    virtual ~sample();  // retail 0x566e60; vtable 0x6416d0
 };
 
 // --- sample ---

@@ -5,6 +5,25 @@
 #ifndef HOMM3_TEXTWDGT_H
 #define HOMM3_TEXTWDGT_H
 
+#include <string>
+#include "widget.h"
+#include "font.h"
+
+// Dreamcast roster with the STLport->VC6 string shift: Text@0x30
+// (16 B), Font@0x40, Color@0x44, BackColor@0x48, Justify@0x4c - total
+// 0x50. Vtable 0x642db0; the dtor Disposes the font, the string
+// teardown is implicit.
+class textWidget : public widget {
+public:
+    std::string Text;
+    font* Font;
+    int Color;
+    int BackColor;
+    unsigned int Justify;
+
+    virtual ~textWidget();  // retail 0x5bc3b0
+};
+
 // --- bitmapBackedTextWidget ---
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:319, dc 0x165184) void bitmapBackedTextWidget::bitmapBackedTextWidget();
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:325, dc 0x1651d8) void bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style);

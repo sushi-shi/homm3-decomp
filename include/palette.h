@@ -13,6 +13,10 @@
 class TPalette16 : public resource {
 public:
     unsigned short data[256];
+
+    // Concrete in retail (constructed by the loaders); the slot-2
+    // override body is unlocated.
+    virtual void _vslot2();
 };
 
 // Dreamcast ?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD_N@Z

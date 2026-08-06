@@ -5,6 +5,24 @@
 #ifndef HOMM3_ICONWDGT_H
 #define HOMM3_ICONWDGT_H
 
+#include "widget.h"
+#include "csprite.h"
+
+// Dreamcast roster shifted by the retail widget base (48): Sprite@0x30,
+// Frame@0x34, seqId@0x38, IsFlipped@0x3c, PostPostWalkSequence@0x40,
+// BackColor@0x44. Vtable 0x63ec48; the dtor Disposes the sprite.
+class iconWidget : public widget {
+public:
+    CSprite* Sprite;
+    int Frame;
+    int seqId;
+    unsigned char IsFlipped;
+    int PostPostWalkSequence;
+    unsigned short BackColor;
+
+    virtual ~iconWidget();  // retail 0x4ea7b0
+};
+
 // --- CSprite ---
 // CODEVIEW(E:\gamedcs\csprite.h:378, dc 0xd9f98) void CSprite::DrawPointer(int framenum, Bitmap16Bit* dst, int dx, int dy, unsigned char hflip);
 
