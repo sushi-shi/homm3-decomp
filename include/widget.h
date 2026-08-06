@@ -109,6 +109,11 @@ public:
     widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle);
     int send_message(widget::ECommands command, int extra);
     void set_help_text(const char* text, const char* rclick, unsigned char copyText);
+    // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls
+    // it DIRECTLY (0x5bc690 - a /Gy header-COMDAT the link kept from an
+    // earlier obj, ICF-folded with other empty bodies). Declared only;
+    // no local definition, so calls stay extern.
+    void Close();
 
     virtual ~widget();                                      // slot 0
     virtual int Open(int newPriority, heroWindow* parent);  // slot 1

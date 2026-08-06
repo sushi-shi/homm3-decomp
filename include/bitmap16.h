@@ -11,6 +11,10 @@
 // (called by widget::Dim).
 class Bitmap16Bit {
 public:
+    // Slot 0 is the scalar deleting destructor: heroWindow's dtor
+    // deletes its background through [vptr]+flag 1.
+    virtual ~Bitmap16Bit();
+
     void Darken(int x, int y, int w, int h);
 };
 

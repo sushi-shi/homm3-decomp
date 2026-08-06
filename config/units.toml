@@ -18,11 +18,16 @@ zlib_o2_ml_gr_c_windows = [
 # /Gr from retail's fastcall free functions (Random takes ecx/edx);
 # /Oy- from IsMember - retail keeps EBP frames wherever stack access
 # exists (frameless GetNumArmies proves the frame is conditional, so
-# this is /O2 /Oy-, not /O1 or /Od). Refined as game TUs accumulate.
+# this is /O2 /Oy-, not /O1 or /Od). /Ob2 proven 2026-08-06 by the
+# heroWindow::BroadcastMessage pair: both out-of-line bodies exist in
+# retail AND their loops are inlined into WidgetSet/ClearStatus in the
+# same TU - auto-inlining with unconditional emission, which /Ob1
+# cannot produce. Refined as game TUs accumulate.
 game_o2_ml_gr_windows = [
   "/nologo",
   "/c",
   "/O2",
+  "/Ob2",
   "/Oy-",
   "/ML",
   "/Gr",
@@ -128,4 +133,9 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "widget"
 source = "src/widget.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "window"
+source = "src/window.cpp"
 flags = "game_o2_ml_gr_windows"

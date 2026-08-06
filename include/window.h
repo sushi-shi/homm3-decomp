@@ -5,16 +5,26 @@
 #ifndef HOMM3_WINDOW_H
 #define HOMM3_WINDOW_H
 
+#include <vector>
+#include "va.h"
+
 class widget;
 class message;
+class Bitmap16Bit;
 
-// Bootstrap VIEW of heroWindow (Dreamcast size 68; retail size
-// unproven). The virtual roster and the head through y are the DC
-// fieldlist, byte-corroborated where widget.obj consumes them:
-// widget::process_hover calls slot 4 ([vptr+0x10] =
-// handle_widget_hover(widget*)), widget::Dim reads x@0x18/y@0x1c.
-// Unconsumed slots keep their DC names but stay pure until each
-// retail body is proven.
+// PROVEN layout (retail ctor 0x5fe9f0 stores every member; the DC
+// fieldlist names them, offsets shifted only by the STLport->VC6
+// vector width): priority@4, nextWindow@8, prevWindow@0xc, type@0x10,
+// status@0x14, x@0x18, y@0x1c, width@0x20, height@0x24,
+// headWidget@0x28, tailWidget@0x2c, Widgets@0x30 (VC6 vector, 16 B),
+// focusId@0x40, background@0x44, field_48@0x48 - a retail-only sleep
+// nesting counter (SleepAllWidgets increments/decrements it around
+// virtual slot 8). Total 0x4c.
+//
+// Virtual roster: the DC eight plus one retail addition at slot 8
+// (body 0x5ff5f0, unsigned char arg, reached from SleepAllWidgets).
+// Only dtor and handle_widget_hover have byte-proven retail
+// signatures; the rest keep their DC names and stay pure.
 class heroWindow {
 public:
     int priority;
@@ -24,15 +34,37 @@ public:
     int status;
     int x;
     int y;
+    int width;
+    int height;
+    widget* headWidget;
+    widget* tailWidget;
+    std::vector<widget*> Widgets;
+    int focusId;
+    Bitmap16Bit* background;
+    int field_48;
 
-    virtual ~heroWindow();                            // slot 0
-    virtual int Open(int) = 0;                        // slot 1, sig unproven
+    heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType);
+    void AddWidget(widget* newWidget, int newPriority);
+    void RemoveWidget(widget* killWidget);
+    int BroadcastMessage(message* msg);
+    int BroadcastMessage(int id, int codeX, int codeY, int extra);
+    int WidgetSetStatus(int id, int status);
+    int WidgetClearStatus(int id, int status);
+    widget* GetWidget(int id);
+    int findWidget(int mx, int my);
+    widget* findWidgetPtr(int mx, int my);
+    void SetFocus(int id);
+    void delete_widgets();
+
+    virtual ~heroWindow();                            // slot 0, retail 0x5fea80
+    virtual int Open(int zOrder, unsigned char update) = 0;  // slot 1, sig unproven
     virtual void Close() = 0;                         // slot 2, sig unproven
     virtual int handle_message(message& msg) = 0;     // slot 3, sig unproven
     virtual void handle_widget_hover(widget* w) = 0;  // slot 4
     virtual void DrawWindow() = 0;                    // slot 5, sig unproven
     virtual void DrawWindowX() = 0;                   // slot 6, sig unproven
     virtual int DoModal() = 0;                        // slot 7, sig unproven
+    virtual void _vslot8(unsigned char arg) = 0;      // slot 8, retail 0x5ff5f0, unidentified
 };
 
 // --- globals ---
