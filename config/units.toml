@@ -139,3 +139,8 @@ flags = "game_o2_ml_gr_windows"
 unit = "window"
 source = "src/window.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "resource"
+source = "src/resource.cpp"
+flags = "game_o2_ml_gr_windows"

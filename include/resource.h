@@ -5,6 +5,35 @@
 #ifndef HOMM3_RESOURCE_H
 #define HOMM3_RESOURCE_H
 
+#include <va.h>
+
+// Dreamcast-attested resource-type domain; values unattested - grow as
+// consumers prove them.
+enum EResourceType {
+    RESOURCE_TYPE_NONE = 0
+};
+
+// PROVEN layout (retail ctor 0x558720): vptr, Name char[13]@4 (12-char
+// strncpy + forced NUL at +0x10), resType@0x14, ReferenceCount@0x18 -
+// the Dreamcast roster verbatim, size 0x1c. Retail vtable 0x640ffc:
+//   slot 0  0x558770  scalar deleting destructor (uncarved entry)
+//   slot 1  0x55d0f0  Dispose - the base body (ICF-shared with
+//                     baseManager slot 4)
+//   slot 2  _purecall - introduced pure here (CSprite overrides it
+//                     with 0x47bd50)
+class resource {
+public:
+    char Name[13];
+    EResourceType resType;
+    int ReferenceCount;
+
+    resource(const char* newName, EResourceType newType);
+    virtual ~resource();         // slot 0
+    virtual void Dispose();      // slot 1, base body 0x55d0f0
+    virtual void _vslot2() = 0;  // slot 2, pure at the base
+};
+SIZE(resource, 28);
+
 // --- resource ---
 // CODEVIEW(E:\gamedcs\resource.cpp:25, dc 0x120934) void resource::resource(const char* newName, EResourceType newType);
 // CODEVIEW(E:\gamedcs\resource.cpp:47, dc 0x12099c) void resource::~resource();

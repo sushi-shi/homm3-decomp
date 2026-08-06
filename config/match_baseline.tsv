@@ -98,6 +98,8 @@ misc	?Random@@YIHHH@Z	100.0000
 misc	SafeRandom	0.0000
 misc	TPickANumber_Pick	0.0000
 misc	TPickANumber_TPickANumber	0.0000
+resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000
+resource	??1resource@@UAE@XZ	100.0000
 trees	@_tr_align@4	100.0000
 trees	@_tr_flush_block@16	100.0000
 trees	@_tr_init@4	100.0000

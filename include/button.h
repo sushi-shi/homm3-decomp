@@ -10,6 +10,7 @@
 #include <vector>
 #include "widget.h"
 #include "csprite.h"
+#include "resource.h"
 
 // Player-color palette targets. Both overloads of the free
 // SetPlayerPaletteColors (0x5ffe20 / 0x5ffe40) copy a per-player run
@@ -26,15 +27,11 @@ void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
 
 class Bitmap16Bit;
 
-// Bootstrap VIEW of the text font (resource lineage - same two leading
-// vtable slots as CSprite; textButton's dtor Disposes its Font through
-// slot 1). Layout unmodeled (DC size 5212). DrawBoundedString is the
-// DC signature with TColor viewed as int.
-class font {
+// Bootstrap VIEW of the text font (resource base; layout unmodeled
+// past it, DC size 5212). DrawBoundedString is the DC signature with
+// TColor viewed as int.
+class font : public resource {
 public:
-    virtual ~font();
-    virtual void Dispose();
-
     void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int color_scheme, unsigned justification, int cursorPos);
 };
 

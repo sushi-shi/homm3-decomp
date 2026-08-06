@@ -6,6 +6,7 @@
 #define HOMM3_CSPRITE_H
 
 #include "csequence.h"
+#include "resource.h"
 
 class palette;
 class paletteHiColor;
@@ -18,9 +19,8 @@ class paletteHiColor;
 // dropped SpecialCacheFlag/Sp_loaded and hoisted s ahead of p).
 // Retail vtable 0x63d6b0: slot 0 = scalar deleting dtor (0x47b8f0),
 // slot 1 = Dispose (0x55d1a0), slot 2 = 0x47bd50 unidentified.
-class CSprite {
+class CSprite : public resource {
 public:
-    char pad_04[0x18];
     CSequence** s;
     void* p;
     paletteHiColor* p24;
