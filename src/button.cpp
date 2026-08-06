@@ -23,12 +23,21 @@ void button::button(int x, int y, int w, int h, int id, const char* image, int n
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\button.cpp:82
+// The homm2 template (BASE/BUTTON.cpp) is `inline button::~button()
+// { gpResourceManager->Dispose(m_icon); }` - retail moved Dispose onto
+// the resource. The `inline` idiom carries over: retail inlines this
+// body into both derived dtors (0x456bf0/0x456db0) while the vtables
+// keep this out-of-line copy.
 VA(0x004560f0, 0x9A)  // anchor-global, dc 0x571ec
-void button::~button()
+inline button::~button()
 {
-    // @stub
+    buttonIcon->Dispose();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\button.cpp:104
 DC_ONLY(0x57234, 0x32)
@@ -126,12 +135,16 @@ void textButton::textButton(int x, int y, int w, int h, int id, const char* imag
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\button.cpp:519
 VA(0x00456bf0, 0xAB)  // anchor-global, dc 0x57b5c
-void textButton::~textButton()
+textButton::~textButton()
 {
-    // @stub
+    Font->Dispose();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\button.cpp:525
 DC_ONLY(0x57b98, 0xB4)
@@ -196,12 +209,18 @@ void* type_func_button::`scalar deleting destructor'(unsigned __flags)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\button.cpp:559
+// Byte-identical in shape to ~button: the derived vtable store followed
+// immediately by inlined ~button's store collapses to one (dead-store
+// elimination; ~textButton keeps both because Font->Dispose intervenes).
 VA(0x00456db0, 0x9A)  // anchor-global, dc 0x57e7c
-void type_func_button::~type_func_button()
+type_func_button::~type_func_button()
 {
-    // @stub
 }
+
+#if 0  // @carcass
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0x57e94, 0x20)
