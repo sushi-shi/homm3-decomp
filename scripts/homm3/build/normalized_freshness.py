@@ -19,7 +19,7 @@ import os
 from pathlib import Path
 
 STAMP_SUFFIX = ".stamp.json"
-STAMP_SCHEMA = 1
+STAMP_SCHEMA = 2  # 2: text-pad trim added to the canonical transform
 
 _HASH_CACHE: dict[str, tuple[tuple[int, int], str]] = {}
 

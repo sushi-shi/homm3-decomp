@@ -49,6 +49,11 @@ COMPGEN_PREFIX = "__h3cg$"
 
 INITIALIZED_DATA = 0x00000040
 UNINITIALIZED_DATA = 0x00000080
+CNT_CODE = 0x00000020
+# VC6 /Gy pads a .text COMDAT to its section alignment with 0x90 fill
+# (a function carrying a jump table pads to 16); one alignment's worth
+# is the most that can ever be fill.
+TEXT_PAD_TRIM_LIMIT = 15
 MEM_EXECUTE = 0x20000000
 MEM_WRITE = 0x80000000
 LNK_NRELOC_OVFL = 0x01000000
@@ -154,6 +159,12 @@ class CompgenDataClaim:
     size: int
     storage: str
     scope: str
+
+
+@dataclass(frozen=True)
+class TextPadTrim:
+    section: int
+    trimmed: int
 
 
 @dataclass(frozen=True)
@@ -701,10 +712,55 @@ def _rewrite_names(coff: CoffObject, renames: dict[int, str]) -> bytes:
     return bytes(data)
 
 
+def _trim_text_alignment_padding(
+        coff: CoffObject, payload: bytes,
+        ) -> tuple[bytes, tuple[TextPadTrim, ...]]:
+    """Shrink executable sections past their trailing 0x90 alignment fill.
+
+    The compiled base carries each function in a /Gy COMDAT padded to its
+    section alignment, while the delinked target packs functions at their
+    claimed retail sizes - the same matched function then compares at two
+    lengths and the fill bytes score as a difference (widget::Main lost
+    1.4% to eight trailing nops). The fill belongs to no function, so the
+    disposable comparison copies drop it on BOTH sides. A relocation span
+    is never trimmed (jump-table dwords carry DIR32 relocs) and at most
+    TEXT_PAD_TRIM_LIMIT bytes go - one alignment's worth, never code."""
+    data = bytearray(payload)
+    trims = []
+    for section in coff.sections:
+        if not section.characteristics & CNT_CODE:
+            continue
+        if not section.raw_size or not section.raw_offset:
+            continue
+        raw = coff.section_bytes(section)
+        run = 0
+        while (run < len(raw) and run < TEXT_PAD_TRIM_LIMIT
+               and raw[len(raw) - 1 - run] == 0x90):
+            run += 1
+        floor = 0
+        for relocation in coff.relocations:
+            if relocation.section != section.index:
+                continue
+            end = relocation.site + _relocation_width(relocation.typ)
+            if end > floor:
+                floor = end
+        run = min(run, len(raw) - floor)
+        if run <= 0:
+            continue
+        struct.pack_into("<I", data, section.header_offset + 16,
+                         section.raw_size - run)
+        trims.append(TextPadTrim(section.index, run))
+    return bytes(data), tuple(trims)
+
+
 def _assert_only_canonical_changes(
         original: CoffObject, payload: bytes, renames: dict[int, str],
-        jump_table_rewrites: tuple[JumpTableRewrite, ...]) -> None:
+        jump_table_rewrites: tuple[JumpTableRewrite, ...],
+        text_pad_trims: tuple[TextPadTrim, ...] = ()) -> None:
     normalized = CoffObject(payload)
+    trims_by_section = {trim.section: trim.trimmed for trim in text_pad_trims}
+    if len(trims_by_section) != len(text_pad_trims):
+        raise RuntimeError("duplicate text-pad trim record")
     rewrites_by_offset = {
         rewrite.relocation_offset: rewrite for rewrite in jump_table_rewrites
     }
@@ -719,13 +775,18 @@ def _assert_only_canonical_changes(
     for before, after in zip(original.sections, normalized.sections):
         if before.name != after.name:
             raise RuntimeError("canonical COFF changed a decoded section name")
-        if (before.raw_size, before.raw_offset, before.reloc_offset,
+        trimmed = trims_by_section.get(before.index, 0)
+        if (before.raw_size - trimmed, before.raw_offset, before.reloc_offset,
                 before.reloc_count, before.characteristics) != (
                 after.raw_size, after.raw_offset, after.reloc_offset,
                 after.reloc_count, after.characteristics):
             raise RuntimeError("canonical COFF changed section metadata")
         before_payload = bytearray(original.section_bytes(before))
         after_payload = bytearray(normalized.section_bytes(after))
+        if trimmed:
+            if before_payload[-trimmed:] != b"\x90" * trimmed:
+                raise RuntimeError("text-pad trim removed non-fill bytes")
+            del before_payload[-trimmed:]
         for rewrite in jump_table_rewrites:
             if rewrite.section != before.index:
                 continue
@@ -788,6 +849,16 @@ def _assert_only_canonical_changes(
                       rewrite.relocation_offset + 8] = bytes(4)
         after_prefix[rewrite.relocation_offset + 4:
                      rewrite.relocation_offset + 8] = bytes(4)
+    for trim in text_pad_trims:
+        section = original.sections[trim.section - 1]
+        size_field = section.header_offset + 16
+        before_prefix[size_field:size_field + 4] = bytes(4)
+        after_prefix[size_field:size_field + 4] = bytes(4)
+        # the trimmed fill itself still sits in the file; it is simply
+        # outside the shrunk section - mask it so the raw bytes compare
+        fill = section.raw_offset + section.raw_size - trim.trimmed
+        before_prefix[fill:fill + trim.trimmed] = bytes(trim.trimmed)
+        after_prefix[fill:fill + trim.trimmed] = bytes(trim.trimmed)
     if before_prefix != after_prefix:
         raise RuntimeError(
             "canonical COFF changed bytes outside symbol names/jump-table relocations")
@@ -1038,8 +1109,9 @@ def canonicalize_coff(payload: bytes,
     normalized = _rewrite_names(coff, renames)
     normalized, jump_table_rewrites = _rewrite_jump_table_relocations(
         coff, normalized)
+    normalized, text_pad_trims = _trim_text_alignment_padding(coff, normalized)
     _assert_only_canonical_changes(
-        coff, normalized, renames, jump_table_rewrites)
+        coff, normalized, renames, jump_table_rewrites, text_pad_trims)
     return CanonicalizedObject(normalized, tuple(rows))
 
 
