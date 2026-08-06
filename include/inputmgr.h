@@ -32,6 +32,18 @@ public:
     inputManager();
     message GetEvent();
     void Flush();
+
+    // Located 2026-08-06 by homm3.analysis.dc_bracket (link-order
+    // bracket, gap of 3 between the ctor and Flush) and verified by
+    // body: Open clears the 0x200-dword buffer and latches its
+    // argument into keyboardFilter; Close undoes it under status==1;
+    // Main is the trivial `return 0`.
+    virtual int Open(int kFilter);        // 0x4ec4d0
+    virtual void Close();                 // 0x4ec540
+    virtual int Main(message* msg);       // 0x4ec560
+    virtual void _vslot3() = 0;
+    virtual void _vslot4() = 0;
+    virtual void _vslot5() = 0;
 };
 
 // Retail .bss 0x6994e0 (DC ?gpInputManager@@3PAVinputManager@@A).

@@ -357,7 +357,10 @@ inftrees	@inflate_trees_dynamic@36	100.0000
 inftrees	@inflate_trees_fixed@20	100.0000
 infutil	@inflate_flush@12	100.0000
 inputmgr	??0inputManager@@QAE@XZ	82.3333
+inputmgr	?Close@inputManager@@UAEXXZ	100.0000
 inputmgr	?Flush@inputManager@@QAEXXZ	100.0000
+inputmgr	?Main@inputManager@@UAEHPAVmessage@@@Z	100.0000
+inputmgr	?Open@inputManager@@UAEHH@Z	42.3684
 inputmgr	inputManager_AsciiConvert	0.0000
 inputmgr	inputManager_ForceMouseMove	0.0000
 inputmgr	inputManager_MakeScanCodeTable	0.0000

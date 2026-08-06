@@ -260,6 +260,29 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-06 — DC-only functions are located by LINK-ORDER BRACKETING
+  (`homm3.analysis.dc_bracket`).** The 322 homm2-traveled functions
+  attested only in the Dreamcast build had no retail address, which
+  blocked every one of them. Within a compiland the linker emits
+  functions in source order and the DC CodeView proc offsets are in
+  that same order, so proven retail addresses cut a TU into gaps; when
+  a gap holds equally many DC-only functions and unclaimed retail
+  functions, the order-preserving map is the ONLY one - a proof, not a
+  guess. Yield: **37 forced locations across 10 TUs** (advmgr, army,
+  armygrp, cmbtmgr, drawing, hero, inputmgr, palette, soundmgr) out of
+  1,387 examined; the other 1,350 are honestly reported `ambiguous`
+  because retail inlined or OPT:REF-dropped DC functions inside the
+  gap (button is the negative control: 10 DC vs 3 retail, correctly
+  refused). Proven end to end: the inputmgr trio (Open/Close/Main) was
+  located by the tool, verified by body (Open clears the 0x200-dword
+  buffer and latches keyboardFilter), promoted to `VA()` claims, and
+  **Close and Main now match exact**. Lesson recorded in the tool: the
+  claim size must come from `config/retail-functions.tsv`, never from
+  the DC size - the DC build is SH4, and a DC-sized claim truncates the
+  body mid-instruction (Main first scored 70% that way).
+  Output is `evidence/dc-bracket-map.tsv`, ANALYSIS OUTPUT: a `forced`
+  row becomes evidence only when a supervised review promotes it.
+
 - **2026-08-06 — VC6 shows NO nonlocal register-allocation islands;
   the homm2 4.2 permute port is cancelled.** User-directed probe. The
   sibling's `docs/msvc42-optimized-nonlocal-islands.md` records that
