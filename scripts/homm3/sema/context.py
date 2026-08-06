@@ -186,8 +186,8 @@ class Context:
             for line in VTABLES.open():
                 if line.startswith("#") or line.startswith("rva"):
                     continue
-                rva, count = line.split("\t")
-                rows.append((int(rva, 16), int(count)))
+                cols = line.split("\t")
+                rows.append((int(cols[0], 16), int(cols[1])))
             self._vtables = sorted(rows)
         return self._vtables
 

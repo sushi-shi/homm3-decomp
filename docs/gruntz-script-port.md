@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-06 — vtable NAME census moved from source `VTBL()` macros to
+  `config/retail-vtables.tsv`.** User-directed. The macros (annotation
+  contract v2) are retired from `include/va.h` and the two claim sites
+  (basemgr.cpp, button.cpp); the tsv gains a hand-admitted `class`
+  column (empty until an identity is byte-proven in supervised review)
+  and is MANUAL from here on - never regenerated. `homm3.build.labels`
+  now derives `??_7<class>@@6B@` label-map rows from that column
+  (provenance `vtable-name`), keeping the analysis-grade
+  `evidence/retail-vtable-symbols.csv` enrichment only for unnamed
+  rows. First admitted names: baseManager (0x23b9bc, store inside the
+  matched ctor 0x4d530), button/textButton/type_func_button
+  (0x23bb54/0x23bb88/0x23bbbc, stores inside their claimed ctor/dtor
+  bodies), CSprite (0x23d6b0, both stores inside the csprite.obj ctor
+  region, slot 0 = the adjacent scalar deleting destructor).
+
 - **2026-08-04 — retail LINK ORDER carved from the src/ claims; it is
   exactly ALPHABETICAL, and 977 unclaimed functions gained module
   ownership.** User-directed. `homm3.analysis.link_order` brackets each
