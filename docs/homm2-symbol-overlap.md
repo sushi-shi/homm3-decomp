@@ -25,7 +25,7 @@ authoritative names, 1,154/1,514 functions exact).
 | :-- | :-- |
 | TU stems | **53 of homm2's 95 units** recur as HoMM3 DC compilands (advmgr, army, armygrp, findpath, fly, game, hero, recruit, soundmgr, strip, swapmgr, townmgr, window, …) |
 | Classes | **43 exact class-name matches**: `advManager`, `army`, `armyGroup`, `baseManager`, `border`, `button`, `combatManager`, `executive`, `font`, `game`, `hero`, `heroWindow`, `heroWindowManager`, `hexcell`, `mouseManager`, `resourceManager`, `soundManager`, `town`, `widget`, … (the whole basewin family + the game core) |
-| Function names | **611 normalized-name pairs**; **461 with homm2 fuzzy = 100.0** (exact source exists); **178 with a known HoMM3 retail RVA** (via the DC name map) |
+| Function names | **611 normalized-name pairs**; **466 with homm2 fuzzy = 100.0** (exact source exists); **144 with a known HoMM3 retail RVA** (via the DC name map) |
 | String anchors | **57 rare-literal anchors** (literal referenced by ≤3 fns on each side); 50 land on `working-label` (unnamed) HoMM3 functions |
 | Boost list | **198 rows** in `boost.csv`: 50 `string-anchor` + 148 `h2-source-template` |
 
@@ -68,6 +68,16 @@ which pair with our **zlib** `compress.obj`/`uncompr.obj` — different
 libraries, same generic C names. Units/anchors lanes are clean on all
 negative controls (Bzip, Modem, Netbios). Treat short generic free-names
 as untrusted without a second signal.
+
+## Campaign status (regenerated 2026-08-06)
+
+Of the 466 exact-template pairs, **144 are located** (retail RVA proven,
+`VA()` claim in the carcass) and **322 are DC-attested but unlocated** -
+every one has a Dreamcast offset, none has a retail address yet, so
+locating them is per-function link-order bracket work, not a bulk join
+(verified: joining through `evidence/retail-game-tree.csv` adds zero).
+The unlocated backlog concentrates in game (29), kb (21), advmgr (19),
+townmgr (17), army (15), cmbtmgr/command (14 each), hero (13).
 
 ## Admission path (nothing admitted by this report)
 
