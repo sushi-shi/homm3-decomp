@@ -5,6 +5,9 @@
 #ifndef HOMM3_SOUNDMGR_H
 #define HOMM3_SOUNDMGR_H
 
+// Live prototype (retail body 0x4ed490, called by heroWindow::DrawWindow).
+void PollSound();
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\soundmgr.cpp:877, dc 0x14b65c) void ClearMemSample(SAMPLE2 sample2);
 // CODEVIEW(E:\gamedcs\soundmgr.cpp:894, dc 0x14b698) SAMPLE2 LoadPlaySample(const char* cSampleName);
