@@ -5,6 +5,7 @@
 # No src_hash epoch column yet: it arrives with the clang fingerprint
 # path when game TUs compile.
 adler32	@adler32@12	100.0000
+advmgr	?CheckDimNextHeroBut@advManager@@QAEXXZ	100.0000
 advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000
 advmgr	CAdvPopup_CAdvPopup	0.0000
@@ -16,7 +17,6 @@ advmgr	SaveGame	0.0000
 advmgr	advManager_BVMessage	0.0000
 advmgr	advManager_BVResMsg	0.0000
 advmgr	advManager_CheckDimHero	0.0000
-advmgr	advManager_CheckDimNextHeroBut	0.0000
 advmgr	advManager_CompleteDraw	0.0000
 advmgr	advManager_CompleteDraw_f870	0.0000
 advmgr	advManager_DemobilizeCurrHero	0.0000

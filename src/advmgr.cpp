@@ -4,6 +4,8 @@
 #include <va.h>
 #include "advmgr.h"
 #include "game.h"
+#include "window.h"
+#include "widget.h"
 
 #if 0  // @carcass
 
@@ -753,12 +755,7 @@ void advManager::CheckDimHero()
     // @stub
 }
 
-// E:\gamedcs\advmgr.cpp:10571
-VA(0x00419450, 0x43)  // linkorder, dc 0x1c5ec
-void advManager::CheckDimNextHeroBut()
-{
-    // @stub
-}
+
 
 // E:\gamedcs\advmgr.cpp:10579
 VA(0x004194a0, 0xC7)  // anchor-global, dc 0x1c64c
@@ -2280,4 +2277,15 @@ void std::__destroy_aux(pathCell** __pointer, __false_type __formal)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\advmgr.cpp:10571
+VA(0x00419450, 0x43)  // linkorder, dc 0x1c5ec
+void advManager::CheckDimNextHeroBut()
+{
+    if (gpCurrentPlayer->IsLocalHuman() && gpCurrentPlayer->HasMobileHero())
+        advWindow->WidgetClearStatus(11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+    else
+        advWindow->WidgetSetStatus(11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+}
+
 
