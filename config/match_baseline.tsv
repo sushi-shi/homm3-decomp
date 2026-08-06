@@ -126,7 +126,9 @@ window	?AddWidget@heroWindow@@QAEXPAVwidget@@H@Z	99.1351
 window	?BroadcastMessage@heroWindow@@QAEHHHHH@Z	100.0000
 window	?BroadcastMessage@heroWindow@@QAEHPAVmessage@@@Z	100.0000
 window	?CenterWindow@heroWindow@@QAEXHH@Z	92.8767
+window	?Close@heroWindow@@UAEXE@Z	100.0000
 window	?GetWidget@heroWindow@@QAEPAVwidget@@H@Z	100.0000
+window	?Open@heroWindow@@UAEHHE@Z	100.0000
 window	?RemoveWidget@heroWindow@@QAEXPAVwidget@@@Z	99.9630
 window	?RestoreBackground@heroWindow@@QAEXE@Z	100.0000
 window	?SaveBackground@heroWindow@@QAEHXZ	100.0000

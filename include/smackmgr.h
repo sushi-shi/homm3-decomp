@@ -5,6 +5,11 @@
 #ifndef HOMM3_SMACKMGR_H
 #define HOMM3_SMACKMGR_H
 
+// Live prototypes (retail bodies 0x597740 / 0x597990, called by
+// heroWindow::Open).
+void VideoDrawCurrentFrame();
+unsigned char VideoPlaying();
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:75, dc 0x14ac30) void VideoSoundOnOff();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:105, dc 0x14ac34) void VideoRealignBuffers();

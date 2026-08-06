@@ -8,6 +8,7 @@
 #include "message.h"
 #include "bitmap16.h"
 #include "winmgr.h"
+#include "smackmgr.h"
 
 // E:\gamedcs\window.cpp:48
 VA(0x005fe9f0, 0x5E)  // anchor-global, dc 0x197138
@@ -35,21 +36,59 @@ heroWindow::~heroWindow()
         delete background;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\window.cpp:94
-DC_ONLY(0x19721c, 0xC4)
+// The shadow is drawn as two overlapped Darken strips per edge (the
+// overlap double-darkens into the inner band); during video playback
+// the update flag passes to DrawWindow and the current frame is not
+// re-blitted.
+VA(0x005feae0, 0x17A)  // vtable-slot 1 of heroWindow (0x243cc4), dc 0x19721c
 int heroWindow::Open(int newPriority, unsigned char update)
 {
-    // @stub
+    if (status & WINDOW_STATE_OPEN)
+        return 3;
+    if (type & WINDOW_FLAG_SAVE_BACKGROUND) {
+        if (SaveBackground())
+            return 3;
+    }
+    priority = newPriority;
+    if (type & WINDOW_FLAG_SHADOWED) {
+        gpWindowManager->screenBitmap->Darken(x + width, y + 9, 7, height - 9);
+        gpWindowManager->screenBitmap->Darken(x + width, y + 8, 8, height - 8);
+        gpWindowManager->screenBitmap->Darken(x + 9, y + height, width - 2, 7);
+        gpWindowManager->screenBitmap->Darken(x + 8, y + height, width, 8);
+    }
+    if (VideoPlaying()) {
+        DrawWindow(0, -0xffff, 0xffff);
+        VideoDrawCurrentFrame();
+        if (update && !(type & WINDOW_FLAG_FIXED_LAYER)) {
+            if (type & WINDOW_FLAG_SHADOWED)
+                gpWindowManager->UpdateScreen(x, y, width + 8, height + 8);
+            else
+                gpWindowManager->UpdateScreen(x, y, width, height);
+        }
+    } else {
+        DrawWindow(update, -0xffff, 0xffff);
+    }
+    status = WINDOW_STATE_OPEN;
+    return 0;
 }
 
 // E:\gamedcs\window.cpp:165
-DC_ONLY(0x1972e0, 0x3C)
+VA(0x005fec60, 0x49)  // vtable-slot 2 of heroWindow (0x243cc4), dc 0x1972e0
 void heroWindow::Close(unsigned char update)
 {
-    // @stub
+    if ((type & WINDOW_FLAG_SAVE_BACKGROUND) && (status & WINDOW_STATE_OPEN))
+        RestoreBackground(update);
+    widget* current = tailWidget;
+    while (current) {
+        widget* prev = current->prevWidget;
+        RemoveWidget(current);
+        current = prev;
+    }
+    status = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\window.cpp:194
 DC_ONLY(0x19731c, 0x4)
