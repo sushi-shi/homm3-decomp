@@ -24,9 +24,9 @@ void font::font(const char* name, const font::TFontSpec* fontspec, int dsize, un
 
 #endif  // @carcass
 
-VA(0x004b5110, 0x67)  // anchor-global, dc 0xa1c94
 // Residual (96.6%): one extra EH-state transition and the handler
 // addend spelling; every store and callee agrees.
+VA(0x004b5110, 0x67)  // anchor-global, dc 0xa1c94
 font::~font()
 {
     if (data)

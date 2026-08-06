@@ -16,9 +16,9 @@ unsigned char type_point::is_valid()
 #endif  // @carcass
 
 // E:\gamedcs\findpath.cpp:45
-VA(0x004b1370, 0x62)  // anchor-global, dc 0x9ed88
 // Residual (96.3%): the three pointer zeros ride one scheduler slot
 // away from the byte stores - island-track class.
+VA(0x004b1370, 0x62)  // anchor-global, dc 0x9ed88
 searchArray::searchArray()
 {
     maxQueueCount = 0;

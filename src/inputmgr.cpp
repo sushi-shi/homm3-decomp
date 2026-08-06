@@ -60,10 +60,10 @@ int inputManager::CheckDown(int x, int y, int width, int height, int id, unsigne
 #endif  // @carcass
 
 // E:\gamedcs\inputmgr.cpp:779
-VA(0x004ec460, 0x6F)  // anchor-bracket, dc 0xdd97c
 // Residual (82.3%): retail schedules the vtable store below the
 // buffer-clear loop and biases the loop pointer differently -
 // island-track class.
+VA(0x004ec460, 0x6F)  // anchor-bracket, dc 0xdd97c
 inputManager::inputManager()
 {
     for (int index = 0; index < 64; index++) {

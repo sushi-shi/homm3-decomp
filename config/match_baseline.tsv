@@ -132,6 +132,11 @@ inputmgr	?Flush@inputManager@@QAEXXZ	100.0000
 inputmgr	inputManager_AsciiConvert	0.0000
 inputmgr	inputManager_ForceMouseMove	0.0000
 inputmgr	inputManager_MakeScanCodeTable	0.0000
+kbwin	?KBChangeMenu@@YIXPAX@Z	84.7778
+kbwin	?Process1WindowsMessage@@YIXXZ	81.3846
+kbwin	?SetNoDialogMenus@@YIXH@Z	0.0000
+kbwin	AppCommand	0.0000
+kbwin	UpdateDfltMenu	0.0000
 misc	?Random@@YIHHH@Z	100.0000
 misc	SafeRandom	0.0000
 misc	TPickANumber_Pick	0.0000
