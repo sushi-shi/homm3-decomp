@@ -83,9 +83,14 @@ The bulk-join shortcut does NOT exist: joining through
 **link-order bracketing** (`homm3.analysis.dc_bracket`, decision log
 2026-08-06): inside a TU the DC and retail sequences are the same
 sequence, so proven addresses cut it into gaps, and an equal-count gap
-forces the mapping. That yielded 37 locations, 21 of them promoted to
-claims here; the remaining gaps are honestly `ambiguous` because retail
-inlined or dropped DC functions inside them.
+forces the mapping. That yielded 37 locations, 21 promoted to claims
+here. The gaps bracketing cannot decide go to the **call-graph lane**
+(`homm3.analysis.dc_callgraph`): R(F) must be among the retail callees
+of R(F's proven DC callers), which yields 24 more unique locations
+under an injective-monotone soundness check. Both lanes proved
+themselves end to end - `inputManager::Close`/`::Main` and
+`heroWindowManager::RemoveWindow` were located by them and then
+matched.
 
 ## Admission path (nothing admitted by this report)
 
