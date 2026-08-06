@@ -38,12 +38,14 @@ armygrp	get_spell_work_chance	0.0000
 armygrp	modify_spell_damage	0.0000
 basemgr	??0baseManager@@QAE@XZ	100.0000
 button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000
+button	??0type_func_button@@QAE@JJJJJPBDP6IHPAVmessage@@@ZHH@Z	100.0000
 button	??1button@@UAE@XZ	100.0000
 button	??1textButton@@UAE@XZ	100.0000
 button	??1type_func_button@@UAE@XZ	100.0000
 button	?Draw@button@@UAEXXZ	100.0000
 button	?Draw@textButton@@UAEXXZ	93.9216
 button	?Main@button@@UAEHPAVmessage@@@Z	67.3823
+button	?Main@type_func_button@@UAEHPAVmessage@@@Z	100.0000
 button	?Select@button@@QAEHPAVmessage@@@Z	100.0000
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000
 compress	@compress2@20	100.0000

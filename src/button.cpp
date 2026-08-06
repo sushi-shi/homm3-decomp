@@ -431,12 +431,17 @@ void textButton::Draw()
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\button.cpp:557
-DC_ONLY(0x57c4c, 0x90)
-void type_func_button::type_func_button(long _x, long _y, long _width, long _height, long _id, const char* _image, int (*)()* _handler, int _normal, int _selected)
+VA(0x00456d30, 0x46)  // linkorder bracket; button-ctor delegate byte-proven, dc 0x57c4c
+type_func_button::type_func_button(long x, long y, long w, long h, long id, const char* image, int (*newHandler)(message* msg), int normal, int selected)
+    : button(x, y, w, h, id, image, normal, selected, 0, 0, 2)
 {
-    // @stub
+    handler = newHandler;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\button.cpp:565
 DC_ONLY(0x57cdc, 0x6A)
@@ -445,12 +450,22 @@ void type_func_button::type_func_button(const type_icon_definition* def, int _id
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\button.cpp:574
-DC_ONLY(0x57d48, 0x5C)
+VA(0x00456e50, 0x44)  // vtable-slot 2 of type_func_button (0x63bbbc), dc 0x57d48
 int type_func_button::Main(message* msg)
 {
-    // @stub
+    int result = button::Main(msg);
+    if (result != 1 && (status & WIDGET_ACTIVE) && focusable <= 0
+        && msg->id == MESSAGE_WIDGET && msg->codeY == id) {
+        msg->window = parentWindow;
+        return handler(msg);
+    }
+    return result;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\Button.h:78
 DC_ONLY(0x57da4, 0x18)
