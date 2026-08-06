@@ -5,12 +5,14 @@
 #ifndef HOMM3_SAMPLE_H
 #define HOMM3_SAMPLE_H
 
+#include "resource.h"
+
 // Bootstrap VIEW (resource lineage unmodeled): button::Select seeds
 // the three fields before handing the click sample to
 // soundManager::MemorySample; names unattested.
-class sample {
+class sample : public resource {
 public:
-    char pad_00[0x28];
+    char pad_1c[0xc];
     int field_28;
     int field_2c;
     int field_30;

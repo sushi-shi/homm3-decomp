@@ -5,16 +5,14 @@
 #ifndef HOMM3_PALETTE_H
 #define HOMM3_PALETTE_H
 
+#include "resource.h"
+
 // Bootstrap VIEW of the 16-bit palette resource: the RGB555 table
 // lives at +0x1c past the resource head (same shape CSprite::GetPalette
 // exposes); Dispose is the shared resource slot 1.
-class TPalette16 {
+class TPalette16 : public resource {
 public:
-    char pad_04[0x18];
     unsigned short data[256];
-
-    virtual ~TPalette16();
-    virtual void Dispose();
 };
 
 // Dreamcast ?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD_N@Z

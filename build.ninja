@@ -97,6 +97,10 @@ build build/objdiff/base/window.obj: cl src/window.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = window
+build build/objdiff/base/resource.obj: cl src/resource.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = resource
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -107,7 +111,7 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/zutil.obj build/objdiff/base/misc.obj $
     build/objdiff/base/armygrp.obj build/objdiff/base/basemgr.obj $
     build/objdiff/base/button.obj build/objdiff/base/widget.obj $
-    build/objdiff/base/window.obj
+    build/objdiff/base/window.obj build/objdiff/base/resource.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -118,7 +122,7 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/zutil.obj build/objdiff/base/misc.obj $
     build/objdiff/base/armygrp.obj build/objdiff/base/basemgr.obj $
     build/objdiff/base/button.obj build/objdiff/base/widget.obj $
-    build/objdiff/base/window.obj
+    build/objdiff/base/window.obj build/objdiff/base/resource.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -130,5 +134,6 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/zutil.obj build/objdiff/base/misc.obj $
     build/objdiff/base/armygrp.obj build/objdiff/base/basemgr.obj $
     build/objdiff/base/button.obj build/objdiff/base/widget.obj $
-    build/objdiff/base/window.obj | scripts/homm3/build/link.py
+    build/objdiff/base/window.obj build/objdiff/base/resource.obj | $
+    scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE

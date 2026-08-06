@@ -5,6 +5,8 @@
 #ifndef HOMM3_BITMAP16_H
 #define HOMM3_BITMAP16_H
 
+#include "resource.h"
+
 // Bootstrap VIEW of Bitmap16Bit (resource lineage). Layout PROVEN at
 // retail size 0x38: heroWindow::SaveBackground news it with
 // `push 0x38`, and the DC roster (DataSize@0x1c, ImageSize@0x20,
@@ -14,9 +16,8 @@
 // unmodeled resource base fields. Method signatures are DC-attested
 // (?Grab@Bitmap16Bit@@QAAXPBGHHHHH@Z, ?Draw@...PAGHHHHH_N@Z const);
 // Darken's retail body is 0x44e5f0 (called by widget::Dim).
-class Bitmap16Bit {
+class Bitmap16Bit : public resource {
 public:
-    char pad_04[0x18];
     int DataSize;
     int ImageSize;
     int Width;
@@ -26,8 +27,10 @@ public:
     unsigned char referenced;
 
     // Slot 0 is the scalar deleting destructor: heroWindow deletes its
-    // background through [vptr]+flag 1.
+    // background through [vptr]+flag 1; retail news it, so slot 2 has
+    // a concrete override somewhere.
     virtual ~Bitmap16Bit();
+    virtual void _vslot2();
 
     Bitmap16Bit(int w, int h);
     void Darken(int x, int y, int w, int h);
