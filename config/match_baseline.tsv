@@ -127,6 +127,8 @@ window	?BroadcastMessage@heroWindow@@QAEHHHHH@Z	100.0000
 window	?BroadcastMessage@heroWindow@@QAEHPAVmessage@@@Z	100.0000
 window	?GetWidget@heroWindow@@QAEPAVwidget@@H@Z	100.0000
 window	?RemoveWidget@heroWindow@@QAEXPAVwidget@@@Z	99.9630
+window	?RestoreBackground@heroWindow@@QAEXE@Z	100.0000
+window	?SaveBackground@heroWindow@@QAEHXZ	100.0000
 window	?SetFocus@heroWindow@@QAEXH@Z	100.0000
 window	?WidgetClearStatus@heroWindow@@QAEHHH@Z	95.9667
 window	?WidgetSetStatus@heroWindow@@QAEHHH@Z	95.9667

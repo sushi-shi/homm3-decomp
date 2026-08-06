@@ -6,6 +6,7 @@
 #include "widget.h"
 #include "message.h"
 #include "bitmap16.h"
+#include "winmgr.h"
 
 // E:\gamedcs\window.cpp:48
 VA(0x005fe9f0, 0x5E)  // anchor-global, dc 0x197138
@@ -239,21 +240,41 @@ void heroWindow::DrawWindowX(unsigned char update, int iLowID, int iHighID)
 
 #endif  // @carcass
 
-#if 0  // @carcass
-
 // E:\gamedcs\window.cpp:635
+// Retail runs the grab UNCHECKED after VC6's non-throwing new (a null
+// background would fault inside Grab) - reproduced faithfully.
 VA(0x005ff100, 0xBD)  // anchor-global, dc 0x19776c
 int heroWindow::SaveBackground()
 {
-    // @stub
+    if (type & WINDOW_FLAG_SHADOWED)
+        background = new Bitmap16Bit(width + 8, height + 8);
+    else
+        background = new Bitmap16Bit(width, height);
+    background->Grab(gpWindowManager->screenBitmap->map, x, y,
+                     gpWindowManager->screenBitmap->Width,
+                     gpWindowManager->screenBitmap->Height,
+                     gpWindowManager->screenBitmap->Pitch);
+    return 0;
 }
 
 // E:\gamedcs\window.cpp:664
 VA(0x005ff1c0, 0x7E)  // anchor-global, dc 0x1977dc
 void heroWindow::RestoreBackground(unsigned char update)
 {
-    // @stub
+    if (!background)
+        return;
+    background->Draw(0, 0, background->Width, background->Height,
+                     gpWindowManager->screenBitmap->map, x, y,
+                     gpWindowManager->screenBitmap->Width,
+                     gpWindowManager->screenBitmap->Height,
+                     gpWindowManager->screenBitmap->Pitch, 0);
+    if (update)
+        gpWindowManager->UpdateScreen(x, y, background->Width, background->Height);
+    delete background;
+    background = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\window.cpp:707
 DC_ONLY(0x197874, 0x106)

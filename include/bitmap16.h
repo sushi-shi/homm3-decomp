@@ -5,17 +5,34 @@
 #ifndef HOMM3_BITMAP16_H
 #define HOMM3_BITMAP16_H
 
-// Bootstrap VIEW of Bitmap16Bit: layout unmodeled; only the methods
-// other admitted TUs call. Darken is DC-attested
-// (?Darken@Bitmap16Bit@@QAAXHHHH@Z); the retail body is 0x44e5f0
-// (called by widget::Dim).
+// Bootstrap VIEW of Bitmap16Bit (resource lineage). Layout PROVEN at
+// retail size 0x38: heroWindow::SaveBackground news it with
+// `push 0x38`, and the DC roster (DataSize@0x1c, ImageSize@0x20,
+// Width@0x24, Height@0x28, Pitch@0x2c, map@0x30, referenced@0x34)
+// lands on the exact offsets heroWindow/CenterWindow read - retail
+// dropped DC's per-bitmap DDSURFACEDESC/surface tail. pad_04 spans the
+// unmodeled resource base fields. Method signatures are DC-attested
+// (?Grab@Bitmap16Bit@@QAAXPBGHHHHH@Z, ?Draw@...PAGHHHHH_N@Z const);
+// Darken's retail body is 0x44e5f0 (called by widget::Dim).
 class Bitmap16Bit {
 public:
-    // Slot 0 is the scalar deleting destructor: heroWindow's dtor
-    // deletes its background through [vptr]+flag 1.
+    char pad_04[0x18];
+    int DataSize;
+    int ImageSize;
+    int Width;
+    int Height;
+    int Pitch;
+    unsigned short* map;
+    unsigned char referenced;
+
+    // Slot 0 is the scalar deleting destructor: heroWindow deletes its
+    // background through [vptr]+flag 1.
     virtual ~Bitmap16Bit();
 
+    Bitmap16Bit(int w, int h);
     void Darken(int x, int y, int w, int h);
+    void Grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
+    void Draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
 };
 
 // --- globals ---
