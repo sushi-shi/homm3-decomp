@@ -5,6 +5,26 @@
 #ifndef HOMM3_GAME_H
 #define HOMM3_GAME_H
 
+class NewfullMap;
+
+// Head model: GetWorldMapData hands out the embedded map record at
+// 0x1fb70. Names provisional.
+class game {
+public:
+    char pad_00000[0x1fb70];
+    char worldMap[4];
+
+    NewfullMap* GetWorldMapData();
+};
+
+// playerData head: NextHero returns -1 when the player has no mobile
+// hero (HasMobileHero is its bool wrapper).
+class playerData {
+public:
+    int NextHero();
+    unsigned char HasMobileHero();
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\game.cpp:208, dc 0xa2af8) unsigned char InitializeRandomTavernText();
 // CODEVIEW(E:\gamedcs\game.cpp:365, dc 0xa2bb4) int bufwrite(const void* buf, int size);

@@ -251,3 +251,8 @@ unit = "hero"
 source = "src/hero.cpp"
 flags = "game_o2_ml_gr_windows"
 
+[[unit]]
+unit = "game"
+source = "src/game.cpp"
+flags = "game_o2_ml_gr_windows"
+

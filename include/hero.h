@@ -19,12 +19,24 @@ struct TArtifactSlot {
 
 class hero {
 public:
-    char pad_000[0x12d];
+    char pad_000[0x91];
+    // Seven army slots: creature type at 0x91+i*4, count at 0xad+i*4
+    // (CreatureTypeCount reads [ecx-0x1c] against [ecx] with ecx
+    // walking from 0xad).
+    int armyTypes[7];
+    int armyCounts[7];
+    char pad_0c9[0x1c];
+    // 28 secondary-skill level bytes; GetNthSS scans for level
+    // iWhich+1 and returns the slot index.
+    unsigned char skillLevels[28];
+    char pad_101[0x2c];
     TArtifactSlot equipped[19];
     char pad_1c5[0xf];
     TArtifactSlot backpack[64];
 
     unsigned char HasArtifact(int whichArtifact);
+    int CreatureTypeCount(int creatureType);
+    int GetNthSS(int iWhich);
 };
 
 #pragma pack(pop)
