@@ -41,6 +41,7 @@ button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000
 button	??1button@@UAE@XZ	100.0000
 button	??1textButton@@UAE@XZ	100.0000
 button	??1type_func_button@@UAE@XZ	100.0000
+button	?Draw@button@@UAEXXZ	100.0000
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000
 compress	@compress2@20	100.0000
 crc32	@crc32@12	100.0000

@@ -8,6 +8,7 @@
 #include <string>
 #include <vector>
 #include "widget.h"
+#include "csprite.h"
 
 // Player-color palette targets. Both overloads of the free
 // SetPlayerPaletteColors (0x5ffe20 / 0x5ffe40) copy a per-player run
@@ -20,32 +21,6 @@ class paletteHiColor;
 
 void SetPlayerPaletteColors(palette* pal, int whichPlayer);
 void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
-
-// Bootstrap VIEW of the sprite resource. The type is CSprite (Dreamcast:
-// button::buttonIcon is CSprite*, CSprite : resource). Only what button
-// touches is modeled. Retail vtable 0x63d6b0 has 3 slots:
-//   slot 0  0x47b8f0  scalar deleting destructor
-//   slot 1  0x55d1a0  Dispose - proven by all three button-family dtors
-//                     calling [vptr+4] on their owned resource; homm2's
-//                     template body is gpResourceManager->Dispose(icon),
-//                     so retail moved Dispose onto the resource itself
-//                     (DC still has namespace-level ResourceManager::
-//                     Dispose(CSprite*))
-//   slot 2  0x47bd50  unidentified
-// GetPalette (retail 0x47bcc0) returns field_20 ? field_20 + 0x1c : 0 -
-// i.e. the palette embedded in the sprite's loaded resource.
-class CSprite {
-public:
-    char pad_04[0x1c];
-    void* field_20;
-    paletteHiColor* field_24;
-
-    virtual ~CSprite();      // slot 0
-    virtual void Dispose();  // slot 1, retail body 0x55d1a0
-    virtual void _vslot2();  // slot 2, retail body 0x47bd50, unidentified
-
-    palette* GetPalette();
-};
 
 // Bootstrap VIEW of the text font (resource lineage - same two leading
 // vtable slots as CSprite; textButton's dtor Disposes its Font through
@@ -83,6 +58,8 @@ public:
     std::string Text;
 
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
+
+    virtual void Draw();  // slot 4, retail 0x456940
 
     virtual ~button();  // retail 0x4560f0; slot 12 (0x456a10) is the
                         // button-introduced 13th virtual, unidentified

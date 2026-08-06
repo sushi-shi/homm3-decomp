@@ -5,6 +5,38 @@
 #ifndef HOMM3_CSPRITE_H
 #define HOMM3_CSPRITE_H
 
+#include "csequence.h"
+
+class palette;
+class paletteHiColor;
+
+// Live VIEW (grown from the button.h bootstrap). Retail layout proven
+// by consumers: GetPalette (0x47bcc0) returns p ? p + 0x1c : 0;
+// button::Draw reads s@0x1c (CSequence**), numSequences@0x28,
+// validSeqMask@0x2c, Width@0x30, Height@0x34; the button-family dtors
+// call Dispose through slot 1. The DC roster names the fields (retail
+// dropped SpecialCacheFlag/Sp_loaded and hoisted s ahead of p).
+// Retail vtable 0x63d6b0: slot 0 = scalar deleting dtor (0x47b8f0),
+// slot 1 = Dispose (0x55d1a0), slot 2 = 0x47bd50 unidentified.
+class CSprite {
+public:
+    char pad_04[0x18];
+    CSequence** s;
+    void* p;
+    paletteHiColor* p24;
+    int numSequences;
+    int* validSeqMask;
+    int Width;
+    int Height;
+
+    virtual ~CSprite();      // slot 0
+    virtual void Dispose();  // slot 1, retail body 0x55d1a0
+    virtual void _vslot2();  // slot 2, retail body 0x47bd50, unidentified
+
+    palette* GetPalette();
+    void DrawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\csprite.cpp:38, dc 0x72100) void mmdbf(const unsigned short* ptstrFormat);
 // CODEVIEW(E:\gamedcs\csprite.cpp:978, dc 0x73b64) void addPal16(CSprite* sprite, const TPalette16* pal);

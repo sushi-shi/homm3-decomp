@@ -4,6 +4,9 @@
 #include <va.h>
 #include "button.h"
 #include "resourcemanager.h"
+#include "window.h"
+#include "winmgr.h"
+#include "bitmap16.h"
 
 // Unimplemented carcass stubs stay lexically present (labels and
 // the va-claims gate scan text) but outside compilation.
@@ -109,12 +112,42 @@ void button::zBufferDraw()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\button.cpp:446
-DC_ONLY(0x5793c, 0xE6)
+// Frame choice: highlighted (field_40) unless selected; dimmed or
+// disabled fall to disabled_frame; selected to selectedFrame; any
+// frame past the sequence-0 count clamps to 0.
+VA(0x00456940, 0x99)  // vtable-slot 4 of button (0x63bb54), dc 0x5793c
 void button::Draw()
 {
-    // @stub
+    if (!(status & WIDGET_DRAWN))
+        return;
+    int frame = normalFrame;
+    int frameCount;
+    if (buttonIcon->numSequences > 0 && buttonIcon->validSeqMask[0])
+        frameCount = buttonIcon->s[0]->numFrames;
+    else
+        frameCount = 0;
+    if ((status & WIDGET_HIGHLIGHTED) && !(status & WIDGET_SELECTED)) {
+        frame = field_40;
+    } else if (!(status & (WIDGET_DIMMED | WIDGET_DISABLED))) {
+        if (status & WIDGET_SELECTED)
+            frame = selectedFrame;
+    } else {
+        frame = disabled_frame;
+    }
+    if (frame >= frameCount)
+        frame = 0;
+    buttonIcon->DrawInterface(frame, 0, 0, buttonIcon->Width, buttonIcon->Height,
+                              gpWindowManager->screenBitmap->map,
+                              x + parentWindow->x, y + parentWindow->y,
+                              gpWindowManager->screenBitmap->Width,
+                              gpWindowManager->screenBitmap->Height,
+                              gpWindowManager->screenBitmap->Pitch, 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\button.cpp:471
 DC_ONLY(0x57a24, 0x4)
@@ -130,7 +163,7 @@ VA(0x004569e0, 0x2E)  // anchor-global, dc 0x57a28
 void button::SetPlayerPaletteColors(int whichPlayer)
 {
     ::SetPlayerPaletteColors(buttonIcon->GetPalette(), whichPlayer);
-    ::SetPlayerPaletteColors(buttonIcon->field_24, whichPlayer);
+    ::SetPlayerPaletteColors(buttonIcon->p24, whichPlayer);
 }
 
 #if 0  // @carcass
