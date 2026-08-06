@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-06 — text-pad trim added to the reviewed target
+  normalization.** The compiled base carries each function in a /Gy
+  COMDAT padded to its section alignment with 0x90 fill, while the
+  delinked target packs functions at their claimed retail sizes - the
+  same matched function compared at two lengths and the fill scored as
+  a difference (widget::Main, byte-identical through its jump tables,
+  capped at 98.58% over eight trailing nops). The canonicalizer now
+  shrinks executable sections past their trailing 0x90 run on BOTH
+  comparison copies, guarded: never into a relocation span, at most 15
+  bytes (one alignment), and `_assert_only_canonical_changes` verifies
+  the removed bytes were pure fill. STAMP_SCHEMA bumped to 2.
+
 - **2026-08-06 — vtable NAME census moved from source `VTBL()` macros to
   `config/retail-vtables.tsv`.** User-directed. The macros (annotation
   contract v2) are retired from `include/va.h` and the two claim sites
