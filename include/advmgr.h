@@ -7,11 +7,16 @@
 
 // Head model from the byte-proven leaves. Names provisional; the ctor
 // claim (0x406df0, 783 B in homm2) will grow this roster.
+class heroWindow;
+
 class advManager {
 public:
-    char pad_000[0x20c];
+    char pad_000[0x44];
+    heroWindow* advWindow;    // +0x44 (the button-status target)
+    char pad_048[0x1c4];
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
 
+    void CheckDimNextHeroBut();
     void DeactivateCurrTown(unsigned char waitingPlayer);
     void DeactivateCurrHero(unsigned char waitingPlayer);
     void DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
