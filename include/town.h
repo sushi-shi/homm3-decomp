@@ -12,9 +12,26 @@ class town {
 public:
     char pad_00[8];
     unsigned char dockSite;
+    char pad_09[0x147];
+    // Two 64-bit building bitfields: built@0x150 and available@0x160
+    // (CalcNumLevelArchers ands each against a dwelling mask table).
+    unsigned int built[2];
+    char pad_158[8];
+    unsigned int available[2];
 
     unsigned char CanBuildDock();
+    void CalcNumLevelArchers(int* numArchers, int* archerLevel);
 };
+
+// Per-town dwelling masks the archer scan walks (8 bytes per level).
+// The retail bounds are relocation-carried (a table start and end the
+// delinked target renders as zeros), so the count is a named constant
+// here; its value is unproven pending the owning table's admission.
+enum ETownConstants {
+    TOWN_DWELLING_MASK_COUNT = 7
+};
+
+extern unsigned int gDwellingMasks[TOWN_DWELLING_MASK_COUNT][2];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\town.cpp:1732, dc 0x167958) void show_building_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards);

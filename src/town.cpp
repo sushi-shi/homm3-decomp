@@ -157,12 +157,7 @@ unsigned char town::CanBuildDock()
 
 #if 0  // @carcass
 
-// E:\gamedcs\town.cpp:1473
-VA(0x005bf4f0, 0x7A)  // linkorder, dc 0x167388
-void town::CalcNumLevelArchers(int* numArchers, int* archerLevel)
-{
-    // @stub
-}
+
 
 // E:\gamedcs\town.cpp:1502
 VA(0x005bf570, 0x86)  // anchor-global, dc 0x1673dc
@@ -438,4 +433,27 @@ unsigned char std::bitset<70,unsigned long>::reference::operator bool()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\town.cpp:1473
+// Residual (30.0%): the mask-pair walk is structurally aligned but the
+// loop's four live values land in different registers, and the table
+// bound is a placeholder until the dwelling-mask table is admitted -
+// island-track class.
+VA(0x005bf4f0, 0x7A)  // linkorder, dc 0x167388
+void town::CalcNumLevelArchers(int* numArchers, int* archerLevel)
+{
+    *archerLevel = 10;
+    int level = 4;
+    for (int index = 0; index < TOWN_DWELLING_MASK_COUNT; index++) {
+        if (!((gDwellingMasks[index][0] & available[0])
+              | (gDwellingMasks[index][1] & available[1])))
+            break;
+        if (!((built[0] & gDwellingMasks[index][0])
+              | (built[1] & gDwellingMasks[index][1])))
+            break;
+        level++;
+    }
+    *numArchers = level;
+}
+
 

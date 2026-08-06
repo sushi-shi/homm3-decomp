@@ -327,9 +327,9 @@ textntry	textEntryWidget_GetCharPressed	0.0000
 textntry	textEntryWidget_SetFocus	0.0000
 textwdgt	??1textWidget@@UAE@XZ	100.0000
 textwdgt	bitmapBackedTextWidget_bitmapBackedTextWidget	0.0000
+town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	30.0233
 town	?CanBuildDock@town@@QAEEXZ	100.0000
 town	town_BuildBuilding	0.0000
-town	town_CalcNumLevelArchers	0.0000
 town	town_Deallocate	0.0000
 town	town_GiveSpells	0.0000
 town	town_HasGarrison	0.0000
