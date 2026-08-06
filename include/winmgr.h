@@ -19,6 +19,11 @@ class heroWindowManager : public baseManager {
 public:
     char pad_38[8];
     Bitmap16Bit* screenBitmap;
+
+    // DC overload set also has () and (int,int,int,int,int,int); only
+    // the consumed 4-int form (retail 0x602bd0, called by widget::Main)
+    // is declared.
+    void UpdateScreen(int x, int y, int w, int h);
 };
 
 // Retail .bss 0x699280 (DC ?gpWindowManager@@3PAVheroWindowManager@@A);
