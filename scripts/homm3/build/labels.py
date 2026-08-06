@@ -12,8 +12,8 @@ in authority order:
                    (source-as-authority); the clang-IR path that binds real
                    mangled names arrives with the first compiling game TU.
                    The full macro family - VA_COMPGEN, DATA,
-                   DATA_COMPGEN(_GUARD), VTBL, VTBL2 - is scanned NOW
-                   (lesson 1) even though src/ carries only VA today.
+                   DATA_COMPGEN(_GUARD) - is scanned NOW (lesson 1)
+                   even though src/ carries only VA today.
   zlib-map         config/retail-zlib-map.tsv, unit `zlib`.
   runtime-map      config/retail-runtime-map.tsv, empty unit - vostok
                    buckets these into _msvc_internal objects, which is
@@ -27,7 +27,10 @@ in authority order:
                    without it the name falls back to `fn_<rva>`, and
                    nothing else in the pipeline reads evidence/.
   data rows        vtable starts (config/retail-vtables.tsv; `??_7X@@6B@`
-                   where class-labeled at offset 0), IAT slots (parsed from
+                   where the hand-admitted class column names the vtable -
+                   the census is MANUAL, source VTBL() macros are retired
+                   [user decision 2026-08-06]; evidence enrichment fills
+                   the rest), IAT slots (parsed from
                    the import directory; `__imp_` spellings are PLACEHOLDER
                    undecorated names until import-lib proof), and every
                    absolute-relocation target in .rdata/.data
@@ -76,9 +79,6 @@ DATA_COMPGEN_RE = re.compile(
 DATA_COMPGEN_GUARD_RE = re.compile(
     r"\bDATA_COMPGEN_GUARD\s*\(\s*(0x[0-9a-fA-F]+)\s*,\s*(\w+)\s*,"
     r"\s*(\w+)\s*\)")
-VTBL_RE = re.compile(r"^\s*VTBL\s*\(\s*(\w+)\s*,\s*(0x[0-9a-fA-F]+)\s*\)")
-VTBL2_RE = re.compile(r"^\s*VTBL2\s*\(\s*(\w+)\s*,\s*(\w+)\s*,"
-                      r"\s*(0x[0-9a-fA-F]+)\s*\)")
 ANNOTATION_RE = re.compile(r"^\s*(?:VA|VA_COMPGEN|DATA|DC_ONLY)\s*\(")
 DECLARATOR_RE = re.compile(r"([~\w:]+(?:<[^<>()]*>)?)\s*\(")
 # MSVC special members render with backticks: Cls::`scalar deleting
@@ -226,18 +226,6 @@ def scan_sources(functions):
                              "size": int(m.group(2), 0), "kind": "func",
                              "name": name,
                              "provenance": "src-VA_COMPGEN"})
-                continue
-            m = VTBL_RE.match(line) or VTBL2_RE.match(line)
-            if m:
-                if len(m.groups()) == 2:
-                    cls, addr = m.groups()
-                    name = f"??_7{cls}@@6B@"
-                else:
-                    derived, base, addr = m.groups()
-                    name = f"??_7{derived}@@6B{base}@@@"
-                rows.append({"rva": rva_of(addr, where), "unit": unit,
-                             "size": "", "kind": "data", "name": name,
-                             "provenance": "src-VTBL"})
                 continue
             for m in DATA_COMPGEN_GUARD_RE.finditer(line):
                 name = f"__h3cg${unit}$static_init_guard${m.group(2)}"
@@ -453,19 +441,21 @@ def main(argv=None) -> int:
     rdata, dat = secmap[".rdata"], secmap[".data"]
 
     vt_class = {}
-    if VTABLE_SYMBOLS.is_file():  # enrichment; VTBL macros take over
+    if VTABLE_SYMBOLS.is_file():  # analysis enrichment for unnamed rows
         for r in load_csv(VTABLE_SYMBOLS):
             if r["class"] and r["class_addr_offset"] == "0":
                 vt_class.setdefault(int(r["vtable_rva"], 16), r["class"])
     _h, vt_rows = read_tsv_body(VTABLES)
-    for rva_text, count in vt_rows:
-        rva = int(rva_text, 16)
+    for row in vt_rows:
+        rva, count = int(row[0], 16), int(row[1])
         if rva in rows:
-            continue  # a src VTBL() claim owns it - source is the authority
-        cls = vt_class.get(rva)
+            continue  # a src claim owns the address
+        admitted = row[2] if len(row) > 2 and row[2] else None
+        cls = admitted or vt_class.get(rva)
         name = f"??_7{cls}@@6B@" if cls else f"vtbl_{rva:x}"
-        put(rva, name, "", int(count) * 4, "data",
-            "vtable-class" if cls else "vtable")
+        put(rva, name, "", count * 4, "data",
+            "vtable-name" if admitted else
+            ("vtable-class" if cls else "vtable"))
 
     for slot, (name, provenance) in sorted(iat_slots(
             Path(info["path"])).items()):

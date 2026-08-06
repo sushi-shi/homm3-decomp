@@ -16,14 +16,13 @@ from homm3.core import common
 from homm3.match import universe
 from homm3.sema.context import get_context
 
-_MACROS = r"(?:VA|VA_COMPGEN|DATA|DATA_COMPGEN|DATA_COMPGEN_GUARD|VTBL2?)"
+_MACROS = r"(?:VA|VA_COMPGEN|DATA|DATA_COMPGEN|DATA_COMPGEN_GUARD)"
 
 
 def _src_locs(va: int, limit: int = 3):
     """file:line of every annotation macro claiming this VA in the
     hand-owned tree (padding-agnostic: 0x5de0 == 0x00005de0). The
-    address may sit at any argument position - VTBL/VTBL2 carry it
-    LAST (include/va.h), not first."""
+    address may sit at any argument position."""
     pattern = re.compile(
         rf"\b{_MACROS}\s*\([^)]*\b0x0*{va:x}\b", re.IGNORECASE)
     hits = []

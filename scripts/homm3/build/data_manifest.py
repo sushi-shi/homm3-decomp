@@ -62,7 +62,7 @@ def main(argv=None) -> int:
     for line in VTABLES.open():
         if line.startswith("#") or line.startswith("rva"):
             continue
-        rva_text, count = line.split()
+        rva_text, count = line.split("\t")[:2]
         rva, size = int(rva_text, 16), int(count) * 4
         if rdata.rva <= rva < rdata.rva + rdata.mapped:
             storage = "rdata"

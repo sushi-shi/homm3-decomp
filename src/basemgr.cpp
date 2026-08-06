@@ -18,5 +18,4 @@ baseManager::baseManager()
     strcpy(cMgrName, "Unknown");
 }
 
-VTBL(baseManager, 0x0063b9bc);
 
