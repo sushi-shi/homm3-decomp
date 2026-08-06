@@ -192,3 +192,18 @@ flags = "game_o2_ml_gr_windows"
 unit = "exec"
 source = "src/exec.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "inputmgr"
+source = "src/inputmgr.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "findpath"
+source = "src/findpath.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "winmgr"
+source = "src/winmgr.cpp"
+flags = "game_o2_ml_gr_windows"

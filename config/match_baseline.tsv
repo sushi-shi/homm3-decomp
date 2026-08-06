@@ -76,6 +76,12 @@ exec	?RemoveManager@executive@@QAEXPAVbaseManager@@@Z	86.9492
 exec	executive_CallManager	0.0000
 exec	executive_DoDialog	0.0000
 exec	executive_executive	0.0000
+findpath	??0searchArray@@QAE@XZ	96.3243
+findpath	??1searchArray@@QAE@XZ	100.0000
+findpath	searchArray_FindCombatPath	0.0000
+findpath	searchArray_SeedCombatPosition	0.0000
+findpath	searchArray_get_travel_time	0.0000
+findpath	type_point_is_valid	0.0000
 font	??1font@@UAE@XZ	96.6333
 font	?GetCharacterWidth@font@@QAEHE@Z	100.0000
 font	font_DrawBoundedString	0.0000
@@ -121,6 +127,11 @@ inftrees	@inflate_trees_bits@20	100.0000
 inftrees	@inflate_trees_dynamic@36	100.0000
 inftrees	@inflate_trees_fixed@20	100.0000
 infutil	@inflate_flush@12	100.0000
+inputmgr	??0inputManager@@QAE@XZ	82.3333
+inputmgr	?Flush@inputManager@@QAEXXZ	100.0000
+inputmgr	inputManager_AsciiConvert	0.0000
+inputmgr	inputManager_ForceMouseMove	0.0000
+inputmgr	inputManager_MakeScanCodeTable	0.0000
 misc	?Random@@YIHHH@Z	100.0000
 misc	SafeRandom	0.0000
 misc	TPickANumber_Pick	0.0000
@@ -190,5 +201,8 @@ window	CHeroWindowEx_ProcessHover	0.0000
 window	CHeroWindowEx_ProcessRightSelect	0.0000
 window	CHeroWindowEx_SetHelpText	0.0000
 window	CHeroWindowEx_WindowHandler	0.0000
+winmgr	?FadeScreen@heroWindowManager@@QAEXHHE@Z	99.8718
+winmgr	heroWindowManager_BroadcastMessage	0.0000
+winmgr	heroWindowManager_DoQuickView	0.0000
 zutil	@zcalloc@12	100.0000
 zutil	@zcfree@8	100.0000
