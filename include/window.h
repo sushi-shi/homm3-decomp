@@ -20,6 +20,13 @@ enum EWindowFlags {
     WINDOW_FLAG_SHADOWED = 0x10
 };
 
+// The 800x600 desktop (homm2's WindowConstant idiom at 640x480);
+// names provisional.
+enum EWindowMetrics {
+    WINDOW_SCREEN_WIDTH = 800,
+    WINDOW_SCREEN_HEIGHT = 600
+};
+
 // PROVEN layout (retail ctor 0x5fe9f0 stores every member; the DC
 // fieldlist names them, offsets shifted only by the STLport->VC6
 // vector width): priority@4, nextWindow@8, prevWindow@0xc, type@0x10,
