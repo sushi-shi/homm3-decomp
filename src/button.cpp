@@ -7,6 +7,14 @@
 #include "window.h"
 #include "winmgr.h"
 #include "bitmap16.h"
+#include "soundmgr.h"
+#include "sample.h"
+#include "message.h"
+#include "kb.h"
+
+// homm2 BUTTON.cpp's file-static modifier latch, same name and role.
+DATA(0x00694da8)
+static int iLeftRightSave;
 
 // Unimplemented carcass stubs stay lexically present (labels and
 // the va-claims gate scan text) but outside compilation.
@@ -77,12 +85,37 @@ int button::Main(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\button.cpp:366
-DC_ONLY(0x57730, 0x122)
+// The click sample plays through MemorySample with soundManager
+// field_84 toggled around the call, then the widget-select message is
+// stamped and the repeat timer armed - homm2's KBTickCount idiom with
+// the same sixty-tick delay.
+VA(0x00456860, 0xDA)  // linkorder bracket; MemorySample/UpdateScreen callees byte-proven, dc 0x57730
 int button::Select(message* msg)
 {
-    // @stub
+    status |= WIDGET_SELECTED;
+    if (click_sample) {
+        int saved = gpSoundManager->field_84;
+        gpSoundManager->field_84 = 1;
+        click_sample->field_2c = 0x40;
+        click_sample->field_30 = 1;
+        click_sample->field_28 = 3;
+        gpSoundManager->MemorySample(click_sample);
+        gpSoundManager->field_84 = saved;
+    }
+    Draw();
+    gpWindowManager->UpdateScreen(x + parentWindow->x, y + parentWindow->y, width, height);
+    msg->id = MESSAGE_WIDGET;
+    msg->codeX = widget::WIDGET_SELECT;
+    msg->codeY = id;
+    glTimers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT] = timeGetTime() + BUTTON_REPEAT_DELAY_TICKS;
+    iLeftRightSave = msg->qualifier & 0x300;
+    return 2;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\button.cpp:401
 DC_ONLY(0x57854, 0xBC)
@@ -334,3 +367,6 @@ void std::_STL_alloc_proxy<int *,int,std::allocator<int> >::_STL_alloc_proxy<int
 
 
 #endif  // @carcass
+
+DATA(0x00694da4)
+sample* button::click_sample;

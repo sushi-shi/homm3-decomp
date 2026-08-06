@@ -68,6 +68,14 @@ public:
         WIDGET_UPDATE = 16384
     };
 
+    // Dreamcast widget::EReturnCodes, verbatim.
+    enum EReturnCodes {
+        WIDGET_END_DIALOG = 10,
+        WIDGET_SELECT = 12,
+        WIDGET_DESELECT = 13,
+        WIDGET_RIGHT_SELECT = 14
+    };
+
     // Dreamcast widget::ECommands, verbatim.
     enum ECommands {
         WIDGET_ACTIVATE = 1,
