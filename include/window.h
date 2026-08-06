@@ -12,6 +12,14 @@ class widget;
 class message;
 class Bitmap16Bit;
 
+// heroWindow::type flag bits. Only the byte-proven bit is named:
+// SaveBackground pads the grab by 8 pixels each way under 0x10 (the
+// drop-shadow border); the NAME is provisional - homm2's WindowFlag
+// roster has no 0x10.
+enum EWindowFlags {
+    WINDOW_FLAG_SHADOWED = 0x10
+};
+
 // PROVEN layout (retail ctor 0x5fe9f0 stores every member; the DC
 // fieldlist names them, offsets shifted only by the STLport->VC6
 // vector width): priority@4, nextWindow@8, prevWindow@0xc, type@0x10,
@@ -51,6 +59,9 @@ public:
     int WidgetSetStatus(int id, int status);
     int WidgetClearStatus(int id, int status);
     widget* GetWidget(int id);
+    int SaveBackground();
+    void RestoreBackground(unsigned char update);
+    void CenterWindow(int centerX, int centerY);
     int findWidget(int mx, int my);
     widget* findWidgetPtr(int mx, int my);
     void SetFocus(int id);
@@ -61,8 +72,8 @@ public:
     virtual void Close() = 0;                         // slot 2, sig unproven
     virtual int handle_message(message& msg) = 0;     // slot 3, sig unproven
     virtual void handle_widget_hover(widget* w) = 0;  // slot 4
-    virtual void DrawWindow() = 0;                    // slot 5, sig unproven
-    virtual void DrawWindowX() = 0;                   // slot 6, sig unproven
+    virtual void DrawWindow(unsigned char update, int iLowID, int iHighID) = 0;   // slot 5
+    virtual void DrawWindowX(unsigned char update, int iLowID, int iHighID) = 0;  // slot 6
     virtual int DoModal() = 0;                        // slot 7, sig unproven
     virtual void _vslot8(unsigned char arg) = 0;      // slot 8, retail 0x5ff5f0, unidentified
 };
