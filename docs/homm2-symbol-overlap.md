@@ -69,15 +69,23 @@ libraries, same generic C names. Units/anchors lanes are clean on all
 negative controls (Bzip, Modem, Netbios). Treat short generic free-names
 as untrusted without a second signal.
 
-## Campaign status (regenerated 2026-08-06)
+## Campaign status (2026-08-06)
 
-Of the 466 exact-template pairs, **144 are located** (retail RVA proven,
-`VA()` claim in the carcass) and **322 are DC-attested but unlocated** -
-every one has a Dreamcast offset, none has a retail address yet, so
-locating them is per-function link-order bracket work, not a bulk join
-(verified: joining through `evidence/retail-game-tree.csv` adds zero).
-The unlocated backlog concentrates in game (29), kb (21), advmgr (19),
-townmgr (17), army (15), cmbtmgr/command (14 each), hero (13).
+Of the 466 exact-template pairs, **167 are located** and **299 remain
+DC-attested but unlocated**. "Located" means the retail address is
+proven either by `evidence/retail-dc-name-map.csv` (144) or by a live
+`VA()` claim in `src/` (the rest) - the generator only knows the first
+source, so its own `h3_retail_rva` column undercounts; measure against
+both.
+
+The bulk-join shortcut does NOT exist: joining through
+`evidence/retail-game-tree.csv` adds exactly zero. What does work is
+**link-order bracketing** (`homm3.analysis.dc_bracket`, decision log
+2026-08-06): inside a TU the DC and retail sequences are the same
+sequence, so proven addresses cut it into gaps, and an equal-count gap
+forces the mapping. That yielded 37 locations, 21 of them promoted to
+claims here; the remaining gaps are honestly `ambiguous` because retail
+inlined or dropped DC functions inside them.
 
 ## Admission path (nothing admitted by this report)
 
