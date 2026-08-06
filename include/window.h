@@ -12,12 +12,19 @@ class widget;
 class message;
 class Bitmap16Bit;
 
-// heroWindow::type flag bits. Only the byte-proven bit is named:
-// SaveBackground pads the grab by 8 pixels each way under 0x10 (the
-// drop-shadow border); the NAME is provisional - homm2's WindowFlag
-// roster has no 0x10.
+// heroWindow::type flag bits. FIXED_LAYER and SAVE_BACKGROUND carry
+// homm2's WindowFlag names and values (byte-proven in Open/Close);
+// 0x10 is retail-only - SaveBackground pads the grab by 8 pixels and
+// Open draws the two-pass edge shadow under it - name provisional.
 enum EWindowFlags {
+    WINDOW_FLAG_FIXED_LAYER = 1,
+    WINDOW_FLAG_SAVE_BACKGROUND = 2,
     WINDOW_FLAG_SHADOWED = 0x10
+};
+
+// homm2's WindowState lineage; Open/Close test and assign bit 1.
+enum EWindowStates {
+    WINDOW_STATE_OPEN = 1
 };
 
 // The 800x600 desktop (homm2's WindowConstant idiom at 640x480);
@@ -75,8 +82,8 @@ public:
     void delete_widgets();
 
     virtual ~heroWindow();                            // slot 0, retail 0x5fea80
-    virtual int Open(int zOrder, unsigned char update) = 0;  // slot 1, sig unproven
-    virtual void Close() = 0;                         // slot 2, sig unproven
+    virtual int Open(int zOrder, unsigned char update);      // slot 1, retail 0x5feae0
+    virtual void Close(unsigned char update);         // slot 2, retail 0x5fec60
     virtual int handle_message(message& msg) = 0;     // slot 3, sig unproven
     virtual void handle_widget_hover(widget* w) = 0;  // slot 4
     virtual void DrawWindow(unsigned char update, int iLowID, int iHighID) = 0;   // slot 5
