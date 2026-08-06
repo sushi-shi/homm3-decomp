@@ -28,7 +28,9 @@ public:
 // delinked target renders as zeros), so the count is a named constant
 // here; its value is unproven pending the owning table's admission.
 enum ETownConstants {
-    TOWN_DWELLING_MASK_COUNT = 7
+    TOWN_DWELLING_MASK_COUNT = 7,
+    // The "no dock site" sentinel CanBuildDock tests for.
+    TOWN_DOCK_SITE_NONE = 0xff
 };
 
 extern unsigned int gDwellingMasks[TOWN_DWELLING_MASK_COUNT][2];

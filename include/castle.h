@@ -14,6 +14,15 @@ extern const char* gBuildingNamesDwelling[]; // 0x6a53fc, id == 15
 extern const char* gBuildingNamesTown[];     // 0x6a5390, 17 <= id < 30
 extern const char* gBuildingNamesUpgrade[];  // 0x6a6230, id >= 30
 
+// Building-id domain landmarks the name lookup switches on (the
+// dwelling row, the town-row band start, the upgrade band start).
+// Names provisional.
+enum EBuildingId {
+    BUILDING_ID_DWELLING = 15,
+    BUILDING_ID_TOWN_FIRST = 17,
+    BUILDING_ID_UPGRADE_FIRST = 30
+};
+
 const char* GetBuildingName(int townType, int buildingId);
 
 // --- globals ---

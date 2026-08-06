@@ -217,15 +217,9 @@ int combatManager::ExperienceValueOfStack(int whichGroup)
 VA(0x00465fe0, 0x29)  // anchor-global, dc 0x60318
 void combatManager::ResetHitByCreature()
 {
-    TStack* stack = &stacks[0][0];
     for (int side = 0; side < 2; side++) {
-        TStack* entry = stack;
-        for (int slot = 0; slot < 20; slot++) {
-            entry->hitByCreature = 0;
-            entry++;
-        }
-        stack = reinterpret_cast<TStack*>(
-            reinterpret_cast<char*>(stack) + 0x6ee8);
+        for (int slot = 0; slot < 20; slot++)
+            sides[side].stacks[slot].hitByCreature = 0;
     }
 }
 

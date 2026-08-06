@@ -472,6 +472,15 @@ void type_func_button::type_func_button(const type_icon_definition* def, int _id
 
 #endif  // @carcass
 
+// E:\gamedcs\button.cpp:559
+// Byte-identical in shape to ~button: the derived vtable store followed
+// immediately by inlined ~button's store collapses to one (dead-store
+// elimination; ~textButton keeps both because Font->Dispose intervenes).
+VA(0x00456db0, 0x9A)  // anchor-global, dc 0x57e7c
+type_func_button::~type_func_button()
+{
+}
+
 // E:\gamedcs\button.cpp:574
 VA(0x00456e50, 0x44)  // vtable-slot 2 of type_func_button (0x63bbbc), dc 0x57d48
 int type_func_button::Main(message* msg)
@@ -524,14 +533,7 @@ void* type_func_button::`scalar deleting destructor'(unsigned __flags)
 
 #endif  // @carcass
 
-// E:\gamedcs\button.cpp:559
-// Byte-identical in shape to ~button: the derived vtable store followed
-// immediately by inlined ~button's store collapses to one (dead-store
-// elimination; ~textButton keeps both because Font->Dispose intervenes).
-VA(0x00456db0, 0x9A)  // anchor-global, dc 0x57e7c
-type_func_button::~type_func_button()
-{
-}
+
 
 #if 0  // @carcass
 

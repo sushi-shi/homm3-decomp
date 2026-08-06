@@ -39,9 +39,9 @@ soundManager::soundManager()
     field_84 = 0;
     ds = 0;
     field_88 = 0;
-    InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(section_sound_call));
-    InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(section_MP3_change));
-    InitializeCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(section_MP3_name_change));
+    InitializeCriticalSection(&section_sound_call);
+    InitializeCriticalSection(&section_MP3_change);
+    InitializeCriticalSection(&section_MP3_name_change);
 }
 
 #if 0  // @carcass
@@ -87,9 +87,9 @@ void soundManager::StopSample(ds_memsample* inSample)
         return;
     if (!inSample)
         return;
-    EnterCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(section_sound_call));
+    EnterCriticalSection(&section_sound_call);
     AIL_end_sample(inSample);
-    LeaveCriticalSection(reinterpret_cast<CRITICAL_SECTION*>(section_sound_call));
+    LeaveCriticalSection(&section_sound_call);
 }
 
 #if 0  // @carcass

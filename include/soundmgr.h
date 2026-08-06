@@ -8,6 +8,7 @@
 // Live prototype (retail body 0x4ed490, called by heroWindow::DrawWindow).
 void PollSound();
 
+#include <windows.h>
 #include "basemgr.h"
 
 class sample;
@@ -31,9 +32,9 @@ public:
     int field_84;
     int field_88;
     unsigned char MP3Playing;
-    char section_sound_call[24];
-    char section_MP3_change[24];
-    char section_MP3_name_change[24];
+    CRITICAL_SECTION section_sound_call;
+    CRITICAL_SECTION section_MP3_change;
+    CRITICAL_SECTION section_MP3_name_change;
 
     soundManager();
     ds_memsample* MemorySample(sample* memSample);
