@@ -6,6 +6,7 @@
 #define HOMM3_GAME_H
 
 class NewfullMap;
+class playerData;
 
 // Head model: GetWorldMapData hands out the embedded map record at
 // 0x1fb70. Names provisional.
@@ -15,13 +16,26 @@ public:
     char worldMap[4];
 
     NewfullMap* GetWorldMapData();
+    playerData* GetLocalPlayer();
 };
+
+// Retail .bss 0x6994e8 (the game record) and 0x69ccb0 (the acting
+// player's record). Names provisional.
+extern game* gpGame;
+extern playerData* gpCurrentPlayer;
 
 // playerData head: NextHero returns -1 when the player has no mobile
 // hero (HasMobileHero is its bool wrapper).
 class playerData {
 public:
+    char pad_00[4];
+    int currHeroId;       // +0x04 (Deactivate stores -1)
+    char pad_08[0x37];
+    unsigned char currTownId;  // +0x3f (Deactivate stores 0xff)
+
     int NextHero();
+    int NextTown();
+    unsigned char IsLocalHuman();
     unsigned char HasMobileHero();
 };
 
