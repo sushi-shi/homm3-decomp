@@ -3,6 +3,7 @@
 // 36 functions in link order.
 #include <va.h>
 #include "button.h"
+#include "resourcemanager.h"
 
 // Unimplemented carcass stubs stay lexically present (labels and
 // the va-claims gate scan text) but outside compilation.
@@ -16,12 +17,25 @@ void button::button()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\button.cpp:69
-DC_ONLY(0x57130, 0xBC)
-void button::button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style, unsigned char focus)
+// Retail dropped DC's trailing focus parameter outright (ret 0x2c,
+// eleven args).
+VA(0x00455ef0, 0x1F7)  // linkorder bracket; GetSprite/widget-ctor callees byte-proven, dc 0x57130
+button::button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style)
+    : widget(x, y, w, h, id, style)
 {
-    // @stub
+    disabled_frame = 2;
+    normalFrame = normal;
+    selectedFrame = selected;
+    field_40 = 3;
+    endDialog = end;
+    hotKeyCodes.push_back(hotkey);
+    buttonIcon = ResourceManager::GetSprite(image);
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 

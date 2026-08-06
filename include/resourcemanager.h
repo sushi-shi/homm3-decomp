@@ -5,6 +5,15 @@
 #ifndef HOMM3_RESOURCEMANAGER_H
 #define HOMM3_RESOURCEMANAGER_H
 
+class CSprite;
+
+// Dreamcast: ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z - the
+// namespace-level sprite acquisition (retail body 0x55c7b0, fastcall
+// under /Gr; called by the button ctor).
+namespace ResourceManager {
+CSprite* GetSprite(const char* name);
+}
+
 // --- Bitmap16Bit ---
 // CODEVIEW(E:\gamedcs\Bitmap16.h:142, dc 0x122b8c) void Bitmap16Bit::SetPixelFormat(unsigned red, unsigned green, unsigned blue);
 
