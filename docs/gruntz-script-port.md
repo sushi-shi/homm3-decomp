@@ -260,6 +260,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-06 — VC6 shows NO nonlocal register-allocation islands;
+  the homm2 4.2 permute port is cancelled.** User-directed probe. The
+  sibling's `docs/msvc42-optimized-nonlocal-islands.md` records that
+  under MSVC 4.2 a distant source change moves allocation and
+  scheduling elsewhere in the function, which is why homm2 built
+  `homm2.permute.tu_state_noise` island censuses. Measured here on
+  `widget::send_message` / `enable` / `set_help_text` / `Main`: adding
+  an unrelated static helper to the TU, and reordering two unrelated
+  functions, changed **nothing** - all four scores byte-identical
+  across both probes (79.4348 / 87.1220 / 100 / 100 each time). VC6
+  allocation is a LOCAL function of the function's own statement
+  shape. Consequence: no `scripts/homm3/permute/` TU-state actor is
+  needed; residual recovery stays local-source-shape work, and the
+  skeleton/branch/reloc views are the instruments. Also fixed in this
+  change: `homm3.sema._asm.summary` crashed (IndexError) on a blank
+  line inside a block, which had hidden that `button::Main` differs
+  STRUCTURALLY (110 vs 95 blocks), not by allocation.
+
 - **2026-08-06 — comparison scope narrowed to FUNCTIONS ONLY.**
   User-directed: data comparison returns later as its own phase. The
   normalize step now truncates every non-code section in the
