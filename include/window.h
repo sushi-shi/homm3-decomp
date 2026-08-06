@@ -22,6 +22,12 @@ enum EWindowFlags {
     WINDOW_FLAG_SHADOWED = 0x10
 };
 
+// homm2's WindowDrawId lineage, verbatim values.
+enum EWindowDrawIds {
+    WINDOW_ALL_WIDGETS_LOW = -0xffff,
+    WINDOW_ALL_WIDGETS_HIGH = 0xffff
+};
+
 // homm2's WindowState lineage; Open/Close test and assign bit 1.
 enum EWindowStates {
     WINDOW_STATE_OPEN = 1
@@ -86,8 +92,12 @@ public:
     virtual void Close(unsigned char update);         // slot 2, retail 0x5fec60
     virtual int handle_message(message& msg) = 0;     // slot 3, sig unproven
     virtual void handle_widget_hover(widget* w) = 0;  // slot 4
-    virtual void DrawWindow(unsigned char update, int iLowID, int iHighID) = 0;   // slot 5
-    virtual void DrawWindowX(unsigned char update, int iLowID, int iHighID) = 0;  // slot 6
+    virtual void DrawWindow(unsigned char update, int iLowID, int iHighID);   // slot 5, retail 0x5ff020
+    // Slot 6 diverges from DC's DrawWindowX(update, iLow, iHigh): the
+    // retail body (0x5ff460, 33 B) masks ONE uchar arg and defers to a
+    // heroWindowManager callback dispatcher (0x602520) with the thunk
+    // 0x5ff500 - implement once the manager side is modeled.
+    virtual void DrawWindowX(unsigned char update) = 0;                       // slot 6
     virtual int DoModal() = 0;                        // slot 7, sig unproven
     virtual void _vslot8(unsigned char arg) = 0;      // slot 8, retail 0x5ff5f0, unidentified
 };

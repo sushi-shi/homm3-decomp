@@ -9,6 +9,7 @@
 #include "bitmap16.h"
 #include "winmgr.h"
 #include "smackmgr.h"
+#include "soundmgr.h"
 
 // E:\gamedcs\window.cpp:48
 VA(0x005fe9f0, 0x5E)  // anchor-global, dc 0x197138
@@ -58,7 +59,7 @@ int heroWindow::Open(int newPriority, unsigned char update)
         gpWindowManager->screenBitmap->Darken(x + 8, y + height, width, 8);
     }
     if (VideoPlaying()) {
-        DrawWindow(0, -0xffff, 0xffff);
+        DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
         VideoDrawCurrentFrame();
         if (update && !(type & WINDOW_FLAG_FIXED_LAYER)) {
             if (type & WINDOW_FLAG_SHADOWED)
@@ -67,7 +68,7 @@ int heroWindow::Open(int newPriority, unsigned char update)
                 gpWindowManager->UpdateScreen(x, y, width, height);
         }
     } else {
-        DrawWindow(update, -0xffff, 0xffff);
+        DrawWindow(update, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
     status = WINDOW_STATE_OPEN;
     return 0;
@@ -262,14 +263,38 @@ widget* heroWindow::GetWidget(int id)
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\window.cpp:516
-DC_ONLY(0x1975d8, 0xB8)
+VA(0x005ff020, 0xDE)  // vtable-slot 5 of heroWindow (0x243cc4), dc 0x1975d8
 void heroWindow::DrawWindow(unsigned char update, int iLowID, int iHighID)
 {
-    // @stub
+    message msg;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_DRAW;
+    widget* current = headWidget;
+    while (current) {
+        PollSound();
+        if (iLowID == WINDOW_ALL_WIDGETS_LOW && iHighID == WINDOW_ALL_WIDGETS_HIGH)
+            current->Main(&msg);
+        else if (iLowID <= current->id && current->id <= iHighID)
+            current->Main(&msg);
+        current = current->nextWidget;
+    }
+    if (update && !(type & WINDOW_FLAG_FIXED_LAYER)) {
+        VideoDrawCurrentFrame();
+        if (type & WINDOW_FLAG_SHADOWED)
+            gpWindowManager->UpdateScreen(x, y, width + 8, height + 8);
+        else
+            gpWindowManager->UpdateScreen(x, y, width, height);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\window.cpp:571
 DC_ONLY(0x197690, 0xDC)
@@ -365,7 +390,7 @@ void heroWindow::CenterWindow(int centerX, int centerY)
                      gpWindowManager->screenBitmap->Width,
                      gpWindowManager->screenBitmap->Height,
                      gpWindowManager->screenBitmap->Pitch);
-    DrawWindow(0, -0xffff, 0xffff);
+    DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     oldWidth += abs(x - oldX);
     oldHeight += abs(y - oldY);
     if (x < oldX)
