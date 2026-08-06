@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-06 — the CALL-GRAPH lane resolves gaps link-order
+  bracketing cannot (`homm3.analysis.dc_callgraph`).** Bracketing only
+  decides a gap whose DC and retail runs are the same length; most gaps
+  fail that because retail inlined or dropped DC functions. The second,
+  independent argument: if DC function F is called by DC function G and
+  R(G) is proven, then R(F) is among R(G)'s retail callees. Intersect
+  that set with the gap's slots and with F's order window, and the
+  choice usually collapses. **The lane refuses to emit an unsound
+  proposal**: a location map is a strictly increasing INJECTION, so any
+  candidate claimed by two DC functions, or landing out of order, is
+  demoted (12 of the first 36 were - three advmgr rows had all proposed
+  the same address, which is what surfaced the check). Final yield: 24
+  `callgraph-unique`, 22 `callgraph-narrowed`. Verified independently
+  before promotion - the proposed `heroWindowManager::RemoveWindow`
+  (0x6024a0) takes a heroWindow*, calls its slot-2 Close(1), and
+  unlinks it from head/tail at +0x50/+0x54, which is the function; once
+  claimed it **matched 96.9% on the first compile** and proved the
+  manager's window-list layout. 7 rows promoted to claims in admitted
+  TUs. Output `evidence/dc-callgraph-map.tsv`, ANALYSIS OUTPUT.
+
 - **2026-08-06 — DC-only functions are located by LINK-ORDER BRACKETING
   (`homm3.analysis.dc_bracket`).** The 322 homm2-traveled functions
   attested only in the Dreamcast build had no retail address, which
