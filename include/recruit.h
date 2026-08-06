@@ -5,6 +5,13 @@
 #ifndef HOMM3_RECRUIT_H
 #define HOMM3_RECRUIT_H
 
+// Creature-record table POINTER at 0x6747b0 (retail loads the slot,
+// then indexes). Records are 0x74 bytes; the seven resource costs
+// start at +0x20. Names provisional.
+extern char* gCreatureRecords;
+
+void GetMonsterCost(int monId, int* resCost);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\recruit.cpp:157, dc 0x118adc) void get_upgrade_cost(TCreatureType creature, long amount, []* cost);
 // CODEVIEW(E:\gamedcs\recruit.cpp:172, dc 0x118b38) void GetMonsterCost(int monId, []* resCost);

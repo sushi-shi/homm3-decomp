@@ -153,6 +153,14 @@ build build/objdiff/base/mousemgr.obj: cl src/mousemgr.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = mousemgr
+build build/objdiff/base/castle.obj: cl src/castle.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = castle
+build build/objdiff/base/recruit.obj: cl src/recruit.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = recruit
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -170,7 +178,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
     build/objdiff/base/findpath.obj build/objdiff/base/winmgr.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $
-    build/objdiff/base/mousemgr.obj
+    build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
+    build/objdiff/base/recruit.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -188,7 +197,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
     build/objdiff/base/findpath.obj build/objdiff/base/winmgr.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $
-    build/objdiff/base/mousemgr.obj
+    build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
+    build/objdiff/base/recruit.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -207,5 +217,6 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
     build/objdiff/base/findpath.obj build/objdiff/base/winmgr.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $
-    build/objdiff/base/mousemgr.obj | scripts/homm3/build/link.py
+    build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
+    build/objdiff/base/recruit.obj | scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE

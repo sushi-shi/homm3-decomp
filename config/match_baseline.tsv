@@ -55,6 +55,7 @@ button	?Main@button@@UAEHPAVmessage@@@Z	67.3823
 button	?Main@type_func_button@@UAEHPAVmessage@@@Z	100.0000
 button	?Select@button@@QAEHPAVmessage@@@Z	100.0000
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000
+castle	?GetBuildingName@@YIPBDHH@Z	100.0000
 compress	@compress2@20	100.0000
 crc32	@crc32@12	100.0000
 deflate	@deflate@8	100.0000
@@ -150,6 +151,9 @@ mousemgr	mouseManager_SetPointer	0.0000
 mousemgr	mouseManager_ShowPointer	0.0000
 mousemgr	mouseManager_ShowSystemCursor	0.0000
 mousemgr	mouseManager_Update	0.0000
+recruit	?GetMonsterCost@@YIXHPAH@Z	99.3333
+recruit	get_upgrade_cost	0.0000
+recruit	recruitUnit_Update	0.0000
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000
 resource	??1resource@@UAE@XZ	100.0000
 sample	??1sample@@UAE@XZ	100.0000
