@@ -4,6 +4,7 @@
 #include <va.h>
 #include "winmgr.h"
 #include "mousemgr.h"
+#include "window.h"
 
 #if 0  // @carcass
 
@@ -56,12 +57,44 @@ void heroWindowManager::AddWindow(heroWindow* newWindow, int newPriority, unsign
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\winmgr.cpp:387
-DC_ONLY(0x19ac14, 0x104)
+// Residual (96.9%): the middle-arm unlink evaluates its two pointers
+// in the opposite order - local-shape work.
+VA(0x006024a0, 0x78)  // dc-callgraph unique, dc 0x19ac14
 void heroWindowManager::RemoveWindow(heroWindow* killWindow)
 {
-    // @stub
+    if (!killWindow)
+        return;
+    killWindow->Close(1);
+    if (killWindow == headWindow) {
+        heroWindow* next = killWindow->nextWindow;
+        headWindow = next;
+        if (!next)
+            tailWindow = 0;
+        else
+            next->prevWindow = 0;
+    } else if (killWindow == tailWindow) {
+        heroWindow* prev = killWindow->prevWindow;
+        tailWindow = prev;
+        prev->nextWindow = 0;
+    } else {
+        heroWindow* prev = killWindow->prevWindow;
+        if (prev)
+            prev->nextWindow = killWindow->nextWindow;
+        heroWindow* next = killWindow->nextWindow;
+        if (next)
+            next->prevWindow = killWindow->prevWindow;
+    }
+    if (activeWindow == killWindow)
+        activeWindow = 0;
+    if (!activeWindow)
+        lastActive = tailWindow;
 }
+
+#if 0  // @carcass
+
 
 // E:\gamedcs\winmgr.cpp:461
 DC_ONLY(0x19ad18, 0x1DC)

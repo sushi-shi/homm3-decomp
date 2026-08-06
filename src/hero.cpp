@@ -591,7 +591,7 @@ void hero::TransferArtifacts(hero* src)
 }
 
 // E:\gamedcs\hero.cpp:4883
-DC_ONLY(0xd39d8, 0xF6)
+VA(0x004e2a00, 0x1C7)  // dc-callgraph unique, dc 0xd39d8
 unsigned char hero::equip_artifact(const type_artifact* artifact, long slot)
 {
     // @stub
