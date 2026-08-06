@@ -380,12 +380,18 @@ def skeleton_diff(base_cfg, target_cfg) -> tuple:
     counts = {"exact": 0, "size": 0, "shift": 0, "flow": 0, "missing": 0}
     first_flow = None
 
+    def mnemonic(line):
+        """A blank line inside a block (jump-table padding renders as
+        one) has no mnemonic - render it rather than crashing."""
+        parts = line.split(None, 1)
+        return parts[0] if parts else "?"
+
     def summary(graph, i):
         if i >= len(graph):
             return "-"
         _, body, term = graph[i]
-        first = body[0].split(None, 1)[0] if body else "?"
-        last = body[-1].split(None, 1)[0] if body else "?"
+        first = mnemonic(body[0]) if body else "?"
+        last = mnemonic(body[-1]) if body else "?"
         return f"{len(body):>3}i {first}..{last} [{term}]"
 
     for i in range(max(len(base_cfg), len(target_cfg))):
