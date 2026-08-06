@@ -132,6 +132,7 @@ window	?WidgetClearStatus@heroWindow@@QAEHHH@Z	95.9667
 window	?WidgetSetStatus@heroWindow@@QAEHHH@Z	95.9667
 window	?delete_widgets@heroWindow@@QAEXXZ	100.0000
 window	?findWidget@heroWindow@@QAEHHH@Z	100.0000
+window	?findWidgetPtr@heroWindow@@QAEPAVwidget@@HH@Z	100.0000
 window	CHeroWindowEx_CHeroWindowEx_1ff640	0.0000
 window	CHeroWindowEx_GetRolloverWidget	0.0000
 window	CHeroWindowEx_OnWidgetDeselect	0.0000
@@ -142,6 +143,5 @@ window	CHeroWindowEx_WindowHandler	0.0000
 window	heroWindow_CenterWindow	0.0000
 window	heroWindow_RestoreBackground	0.0000
 window	heroWindow_SaveBackground	0.0000
-window	heroWindow_findWidgetPtr	0.0000
 zutil	@zcalloc@12	100.0000
 zutil	@zcfree@8	100.0000
