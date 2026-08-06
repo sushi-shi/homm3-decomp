@@ -14,6 +14,7 @@ class heroWindow;
 // Enum NAME is homm2 lineage, unattested on DC - grow the roster as
 // consumers prove values.
 enum EMessageId {
+    MESSAGE_MOUSE_MOVE = 4,
     MESSAGE_WIDGET = 0x200
 };
 

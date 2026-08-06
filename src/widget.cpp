@@ -85,14 +85,99 @@ void widget::Close()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\widget.cpp:249
-DC_ONLY(0x196cd0, 0x2B8)
+// homm2 widget::Main is the template; retail adds the focusable
+// early-out, the DIMMED_NODRAW fast paths, and the hover tracking via
+// last_hover_widget. Returns: 0 continue, 1 consumed, 2 hover-forward
+// (names unattested).
+VA(0x005fe4f0, 0x2C8)  // linkorder bracket; Draw/Dim/process_hover slots and UpdateScreen callee byte-proven, dc 0x196cd0
 int widget::Main(message* msg)
 {
-    // @stub
+    if (focusable > 0)
+        return 0;
+    switch (msg->id) {
+    case MESSAGE_MOUSE_MOVE: {
+        if (!(status & WIDGET_ACTIVE))
+            break;
+        short mouseX = msg->codeX - parentWindow->x;
+        short mouseY = msg->codeY - parentWindow->y;
+        if (mouseX < x || mouseY < y || mouseX >= x + width
+            || mouseY >= y + height)
+            break;
+        msg->codeY = id;
+        if (last_hover_widget != this) {
+            last_hover_widget = this;
+            process_hover();
+        }
+        return 2;
+    }
+    case MESSAGE_WIDGET:
+        switch (msg->codeX) {
+        case WIDGET_DRAW:
+            if (status & WIDGET_DRAWN)
+                Draw();
+            if ((status & (WIDGET_DRAWN | WIDGET_DIMMED))
+                == (WIDGET_DRAWN | WIDGET_DIMMED))
+                Dim();
+            break;
+        case WIDGET_SET_STATUS:
+            if (msg->codeY != id)
+                break;
+            if (msg->extra == WIDGET_DIMMED_NODRAW) {
+                status |= WIDGET_DIMMED;
+                return 1;
+            }
+            status |= msg->extra;
+            if (msg->extra == WIDGET_DISABLED)
+                return 1;
+            if (status & WIDGET_DIMMED) {
+                Draw();
+                Dim();
+            }
+            if (status & WIDGET_UPDATE) {
+                gpWindowManager->UpdateScreen(
+                    x + parentWindow->x, y + parentWindow->y, width, height);
+                status &= ~WIDGET_UPDATE;
+            }
+            return 1;
+        case WIDGET_CLEAR_STATUS: {
+            if (msg->codeY != id)
+                break;
+            short flags = msg->extra;
+            if (msg->extra == WIDGET_DIMMED_NODRAW) {
+                status &= ~WIDGET_DIMMED;
+                return 1;
+            }
+            status &= ~flags;
+            if (flags & WIDGET_DIMMED)
+                Draw();
+            if (flags & WIDGET_UPDATE)
+                gpWindowManager->UpdateScreen(
+                    x + parentWindow->x, y + parentWindow->y, width, height);
+            return 1;
+        }
+        case WIDGET_SET_X:
+            if (msg->codeY != id)
+                break;
+            x = msg->extra;
+            return 1;
+        case WIDGET_SET_Y:
+            if (msg->codeY != id)
+                break;
+            y = msg->extra;
+            return 1;
+        case WIDGET_SET_WIDTH:
+            if (msg->codeY != id)
+                break;
+            width = msg->extra;
+            return 1;
+        }
+        break;
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\widget.cpp:477
 VA(0x005fe7c0, 0x40)  // anchor-global, dc 0x196f88
