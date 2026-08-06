@@ -11,6 +11,10 @@
 #include "sample.h"
 #include "message.h"
 #include "kb.h"
+#include "mousemgr.h"
+#include "inputmgr.h"
+#include "kbwin.h"
+#include "palette.h"
 
 // homm2 BUTTON.cpp's file-static modifier latch, same name and role.
 DATA(0x00694da8)
@@ -78,12 +82,179 @@ void button::initialize(int x, int y, int w, int h, int id, const char* image, i
     // @stub
 }
 
+#endif  // @carcass
+
+// homm2's inline DeselectSelected survives with the endDialog variant;
+// /Ob2 expands it at all four Main sites and emits no standalone copy
+// (the `inline` keyword keeps it out of the object, matching retail).
+inline int button::DeselectSelected(message* msg)
+{
+    if (!(status & WIDGET_SELECTED))
+        return 0;
+    status &= ~WIDGET_SELECTED;
+    Draw();
+    gpWindowManager->UpdateScreen(x + parentWindow->x, y + parentWindow->y, width, height);
+    msg->id = MESSAGE_WIDGET;
+    msg->codeY = id;
+    if (endDialog == 1)
+        msg->codeX = widget::WIDGET_END_DIALOG;
+    else
+        msg->codeX = widget::WIDGET_DESELECT;
+    msg->qualifier = iLeftRightSave;
+    iLeftRightSave = 0;
+    return 2;
+}
+
 // E:\gamedcs\button.cpp:131
-DC_ONLY(0x572d0, 0x460)
+// Residual (67.4%): every block, callee, and store is in place; the
+// difference is a whole-body esi/edi role swap (retail pins msg in
+// ESI) that source order does not steer - same allocation-cascade
+// class as the send_message residual.
+// The left-click capture loop pumps the mouse manager and input queue
+// until a button-up, toggling selection as the pointer crosses the
+// widget - homm2's shape with h3's GetEvent-by-value copy. The WIDGET
+// sub-switch inlines SetText and the palette swap; a failed palette
+// load falls back to reloading the icon sprite by the same name.
+VA(0x00456190, 0x6CF)  // linkorder bracket; Select/widget-Main/manager callees byte-proven, dc 0x572d0
 int button::Main(message* msg)
 {
-    // @stub
+    if (style == WIDGET_STYLE_AUTO_REPEAT && (status & WIDGET_SELECTED)) {
+        unsigned long repeatTime = glTimers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
+        if (static_cast<int>(timeGetTime() - repeatTime) > 0)
+            return DeselectSelected(msg);
+    }
+    if (focusable > 0)
+        return 0;
+    if (!(status & WIDGET_ACTIVE)) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 0;
+        return widget::Main(msg);
+    }
+    unsigned char isDisabled = 0;
+    if (status & WIDGET_DISABLED)
+        isDisabled = 1;
+    switch (msg->id) {
+    case MESSAGE_KEY_DOWN: {
+        if (isDisabled)
+            return 0;
+        if (!(status & WIDGET_DRAWN))
+            break;
+        if (status & WIDGET_DIMMED)
+            break;
+        for (unsigned int key = 0; key < hotKeyCodes.size(); key++) {
+            if (hotKeyCodes[key] == msg->codeX)
+                return Select(msg);
+        }
+        return 0;
+    }
+    case MESSAGE_KEY_UP: {
+        if (isDisabled)
+            return 0;
+        if (!(status & WIDGET_DRAWN))
+            break;
+        if (status & WIDGET_DIMMED)
+            break;
+        for (unsigned int key = 0; key < hotKeyCodes.size(); key++) {
+            if (hotKeyCodes[key] == msg->codeX)
+                return DeselectSelected(msg);
+        }
+        return 0;
+    }
+    case MESSAGE_LEFT_BUTTON_DOWN: {
+        if (isDisabled)
+            return 0;
+        if (!(status & WIDGET_DRAWN))
+            break;
+        short mouseX = msg->codeX - parentWindow->x;
+        short mouseY = msg->codeY - parentWindow->y;
+        if (status & WIDGET_DIMMED)
+            return 0;
+        if (mouseX < x || mouseY < y || mouseX >= x + width
+            || mouseY >= y + height)
+            return 0;
+        Select(msg);
+        for (;;) {
+            if (msg->id == MESSAGE_LEFT_BUTTON_UP
+                || msg->id == MESSAGE_RIGHT_BUTTON_UP)
+                return DeselectSelected(msg);
+            gpMouseManager->Main(*msg);
+            if (msg->id == MESSAGE_MOUSE_MOVE) {
+                short moveX = msg->codeX - parentWindow->x;
+                short moveY = msg->codeY - parentWindow->y;
+                if (moveX >= x && moveY >= y && moveX < x + width
+                    && moveY < y + height) {
+                    if (!(status & WIDGET_SELECTED))
+                        Select(msg);
+                } else {
+                    DeselectSelected(msg);
+                }
+            }
+            Process1WindowsMessage();
+            PollSound();
+            *msg = gpInputManager->GetEvent();
+            if (msg->id == MESSAGE_LEFT_BUTTON_UP)
+                return DeselectSelected(msg);
+        }
+    }
+    case MESSAGE_LEFT_BUTTON_UP: {
+        if (isDisabled)
+            return 0;
+        if (!(status & WIDGET_DRAWN))
+            break;
+        if (!(status & WIDGET_SELECTED))
+            break;
+        return DeselectSelected(msg);
+    }
+    case MESSAGE_RIGHT_BUTTON_DOWN:
+        break;
+    case MESSAGE_WIDGET: {
+        if (msg->codeY != id)
+            break;
+        switch (msg->codeX) {
+        case widget::WIDGET_SET_TEXT:
+            SetText(msg->extraText);
+            return 1;
+        case widget::WIDGET_SET_ICON_NAME:
+            buttonIcon = ResourceManager::GetSprite(msg->extraText);
+            return 1;
+        case widget::WIDGET_SET_PALETTE: {
+            TPalette16* newPalette = ResourceManager::GetPalette(msg->extraText);
+            if (!newPalette) {
+                if (buttonIcon)
+                    buttonIcon->Dispose();
+                buttonIcon = ResourceManager::GetSprite(msg->extraText);
+                return 1;
+            }
+            buttonIcon->SetPalette(newPalette->data);
+            newPalette->Dispose();
+            return 1;
+        }
+        case widget::WIDGET_SET_PLAYER_PALETTE_COLORS:
+            SetPlayerPaletteColors(msg->extra);
+            return 1;
+        }
+        break;
+    }
+    default:
+        if (isDisabled)
+            return 0;
+        break;
+    }
+    if (!(status & WIDGET_DRAWN))
+        return widget::Main(msg);
+    short rightX = msg->codeX - parentWindow->x;
+    short rightY = msg->codeY - parentWindow->y;
+    if (rightX < x || rightY < y || rightX >= x + width
+        || rightY >= y + height)
+        return 0;
+    msg->id = MESSAGE_WIDGET;
+    msg->codeX = widget::WIDGET_RIGHT_SELECT;
+    msg->codeY = id;
+    msg->qualifier = MESSAGE_MODIFIER_RIGHT;
+    return 2;
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 

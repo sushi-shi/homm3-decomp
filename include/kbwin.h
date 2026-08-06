@@ -5,6 +5,9 @@
 #ifndef HOMM3_KBWIN_H
 #define HOMM3_KBWIN_H
 
+// Live prototype (retail body 0x4f7fb0; homm2 kbwin lineage).
+void Process1WindowsMessage();
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\kbwin.cpp:102, dc 0xe7c90) int WinMain(void* hInst, void* hPrev, unsigned short* szCmdLine, int sw);
 // CODEVIEW(E:\gamedcs\kbwin.cpp:166, dc 0xe7d20) int AppInit(void* hInst, void* hPrev, int sw);
