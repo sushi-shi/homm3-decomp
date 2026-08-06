@@ -397,12 +397,39 @@ textButton::~textButton()
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\button.cpp:525
-DC_ONLY(0x57b98, 0xB4)
+// Residual (93.9%): the status load lands in AX where retail picks CX
+// - a two-instruction register-choice tail of the same allocation
+// class as button::Main's.
+// The pressed state nudges the caption right and down by one; dimmed
+// or disabled shifts the color scheme by two; VC6's inlined c_str()
+// supplies the empty-string literal when Text is unallocated.
+VA(0x00456ca0, 0x82)  // vtable-slot 4 of textButton (0x63bb88), dc 0x57b98
 void textButton::Draw()
 {
-    // @stub
+    if (!(status & WIDGET_DRAWN))
+        return;
+    button::Draw();
+    int color = textColor;
+    if (status & (WIDGET_DIMMED | WIDGET_DISABLED))
+        color += 2;
+    int drawY;
+    if (status & WIDGET_SELECTED)
+        drawY = y + parentWindow->y;
+    else
+        drawY = y + parentWindow->y - 1;
+    int drawX;
+    if (status & WIDGET_SELECTED)
+        drawX = x + parentWindow->x + 1;
+    else
+        drawX = x + parentWindow->x;
+    Font->DrawBoundedString(Text.c_str(), gpWindowManager->screenBitmap,
+                            drawX, drawY, width, height, color, 5, -1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\button.cpp:557
 DC_ONLY(0x57c4c, 0x90)
