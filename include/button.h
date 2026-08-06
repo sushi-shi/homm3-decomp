@@ -104,12 +104,15 @@ public:
     virtual ~textButton();  // retail 0x456bf0
 };
 
-// DC gives only a forward ref; the ctors take an int (*)() handler
-// chain. The dtor (retail 0x456db0) tears down exactly button's
-// members, so the tail is POD - handler modeled at 0x68.
+// DC gives only a forward ref. The dtor (retail 0x456db0) tears down
+// exactly button's members, so the tail is POD; Main proves handler is
+// a fastcall message handler at 0x68 (call [this+0x68] with ecx=msg).
 class type_func_button : public button {
 public:
-    int (**handler)();
+    int (*handler)(message* msg);
+
+    type_func_button(long x, long y, long w, long h, long id, const char* image, int (*newHandler)(message* msg), int normal, int selected);
+    virtual int Main(message* msg);  // slot 2, retail 0x456e50
 
     virtual ~type_func_button();  // retail 0x456db0
 };
