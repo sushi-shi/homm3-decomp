@@ -5,6 +5,27 @@
 #ifndef HOMM3_HEXCELL_H
 #define HOMM3_HEXCELL_H
 
+// Head model from the retail ctor 0x4e7150: field_10@0x10 = 0,
+// field_14 = -1, three -1 bytes at 0x18..0x1a, field_1c = 0, then a
+// zero byte at 0x4c and a -1 byte at 0x4d. Names provisional; the
+// gaps stay padded until consumers prove them.
+class hexcell {
+public:
+    char pad_00[0x10];
+    int field_10;
+    int field_14;
+    unsigned char field_18;
+    unsigned char field_19;
+    unsigned char field_1a;
+    unsigned char pad_1b;
+    int field_1c;
+    char pad_20[0x2c];
+    unsigned char field_4c;
+    unsigned char field_4d;
+
+    hexcell();
+};
+
 // --- hexcell ---
 // CODEVIEW(E:\gamedcs\hexcell.cpp:26, dc 0xd60fc) void hexcell::hexcell();
 // CODEVIEW(E:\gamedcs\hexcell.cpp:38, dc 0xd6138) army* hexcell::get_army();

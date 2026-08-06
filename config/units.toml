@@ -234,3 +234,20 @@ unit = "recruit"
 source = "src/recruit.cpp"
 flags = "game_o2_ml_gr_windows"
 
+[[unit]]
+unit = "hexcell"
+source = "src/hexcell.cpp"
+flags = "game_o2_ml_gr_windows"
+
+
+[[unit]]
+unit = "town"
+source = "src/town.cpp"
+flags = "game_o2_ml_gr_windows"
+
+
+[[unit]]
+unit = "hero"
+source = "src/hero.cpp"
+flags = "game_o2_ml_gr_windows"
+
