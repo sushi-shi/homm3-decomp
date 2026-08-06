@@ -363,7 +363,7 @@ void combatManager::ShootBallisticMissile(int startX, int startY, int destX, int
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3749
-DC_ONLY(0x619a8, 0x4B8)
+VA(0x00467db0, 0x46A)  // dc-bracket forced, dc 0x619a8
 void combatManager::ShootAnimatedMissile(int startX, int startY, int destX, int destY, int nsprites, const float* angles, const char** file_names)
 {
     // @stub

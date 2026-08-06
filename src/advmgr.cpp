@@ -45,28 +45,28 @@ type_university* ExtraInfoUnion::get_university()
 }
 
 // E:\gamedcs\advmgr.cpp:420
-DC_ONLY(0x58f0, 0x6D8)
+VA(0x00405e30, 0x64B)  // dc-bracket forced, dc 0x58f0
 CNetMsg* CAdvMgrNetMsgHandler::HandleNetMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\advmgr.cpp:651
-DC_ONLY(0x5fc8, 0x204)
+VA(0x00406480, 0x59F)  // dc-bracket forced, dc 0x5fc8
 void CAdvMgrNetMsgHandler::HandleGiftRequestMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\advmgr.cpp:677
-DC_ONLY(0x61cc, 0x25C)
+VA(0x00406a20, 0x1C7)  // dc-bracket forced, dc 0x61cc
 void CAdvMgrNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
 {
     // @stub
 }
 
 // E:\gamedcs\advmgr.cpp:713
-DC_ONLY(0x6428, 0x2CC)
+VA(0x00406bf0, 0x1FA)  // dc-bracket forced, dc 0x6428
 void CAdvMgrNetMsgHandler::HandleTradeRequestMsg(CNetMsg* pNetMsg)
 {
     // @stub

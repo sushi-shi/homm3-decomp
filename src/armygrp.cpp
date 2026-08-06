@@ -409,7 +409,7 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
 #if 0  // @carcass
 
 // E:\gamedcs\armygrp.cpp:977
-DC_ONLY(0x4f078, 0xE8)
+VA(0x0044ae60, 0x29A)  // dc-bracket forced, dc 0x4f078
 int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground, unsigned char apply_limits)
 {
     // @stub
@@ -458,14 +458,14 @@ void armyGroup::merge_armies(armyGroup* source)
 }
 
 // E:\gamedcs\armygrp.cpp:1347
-DC_ONLY(0x4f708, 0x3AA)
+VA(0x0044b960, 0x859)  // dc-bracket forced, dc 0x4f708
 std::basic_string<char,std::char_traits<char>,std::allocator<char> armyGroup::get_morale_description(__$ReturnUdt, TCreatureType creature, int morale, const hero* ownerHero, const town* ownerTown, const hero* other_hero, const armyGroup* other_group, unsigned char on_cursed_ground)
 {
     // @stub
 }
 
 // E:\gamedcs\armygrp.cpp:1464
-DC_ONLY(0x4fab4, 0x1E2)
+VA(0x0044c1c0, 0x3C5)  // dc-bracket forced, dc 0x4fab4
 std::basic_string<char,std::char_traits<char>,std::allocator<char> armyGroup::get_luck_description(__$ReturnUdt, int luck, const hero* our_hero, const town* our_town, const hero* enemy_hero, const armyGroup* enemy_group, unsigned char on_cursed_ground)
 {
     // @stub

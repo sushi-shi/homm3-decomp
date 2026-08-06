@@ -201,70 +201,70 @@ int hero::IsWieldingArtifact(int whichArtifact)
 }
 
 // E:\gamedcs\hero.cpp:1466
-DC_ONLY(0xcc2a8, 0x56)
+VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
 void hero::DestroySiegeWeaponArtifact(int creature_type)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:1504
-DC_ONLY(0xcc300, 0x48)
+VA(0x004d92d0, 0x59)  // dc-bracket forced, dc 0xcc300
 void hero::UseSpell(int cost)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:1515
-DC_ONLY(0xcc348, 0x18)
+VA(0x004d9330, 0x1A)  // dc-bracket forced, dc 0xcc348
 void hero::AddSpell(int whichSpell)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:1527
-DC_ONLY(0xcc360, 0x2C)
+VA(0x004d9350, 0x272)  // dc-bracket forced, dc 0xcc360
 void mark_spells(unsigned char* spell_list, TSpellSchool school)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:1542
-DC_ONLY(0xcc38c, 0x10E)
+VA(0x004d95d0, 0x212)  // dc-bracket forced, dc 0xcc38c
 void hero::update_spell_list()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:1594
-DC_ONLY(0xcc49c, 0x44)
+VA(0x004d97f0, 0x1A0)  // dc-bracket forced, dc 0xcc49c
 void THeroScreenWindow::HeroMessageUpdate(char* cText)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:1606
-DC_ONLY(0xcc4e0, 0x60)
+VA(0x004d9990, 0x65)  // dc-bracket forced, dc 0xcc4e0
 void hero::HeroScreenUpdate()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:1632
-DC_ONLY(0xcc540, 0x1C8)
+VA(0x004d9a00, 0x128)  // dc-bracket forced, dc 0xcc540
 void hero::UpdateArmies()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:1709
-DC_ONLY(0xcc708, 0x54)
+VA(0x004d9b30, 0x18D)  // dc-bracket forced, dc 0xcc708
 void hero::ViewStat(int whichStat, int isQuickView)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:1717
-DC_ONLY(0xcc75c, 0xA2)
+VA(0x004d9cc0, 0x200)  // dc-bracket forced, dc 0xcc75c
 void hero::ViewArtifact(const type_artifact* artifact, int isQuickView)
 {
     // @stub
@@ -531,12 +531,7 @@ int hero::GiveSS(int iWhichSS, int iNumLevelsToGive)
 
 
 
-// E:\gamedcs\hero.cpp:4667
-DC_ONLY(0xd3874, 0x3A)
-void hero::UpgradeCreatures(int sourceCreatureType, int destCreatureType)
-{
-    // @stub
-}
+
 
 
 
@@ -563,6 +558,16 @@ int hero::CreatureTypeCount(int creatureType)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+#if 0  // @carcass
+
+// E:\gamedcs\hero.cpp:4667
+VA(0x004e2370, 0x26)  // dc-bracket forced, dc 0xd3874
+void hero::UpgradeCreatures(int sourceCreatureType, int destCreatureType)
+{
+    // @stub
+}
 #endif  // @carcass
 
 // E:\gamedcs\hero.cpp:4677
@@ -614,7 +619,7 @@ unsigned char hero::remove_artifact(TArtifact artifact)
 }
 
 // E:\gamedcs\hero.cpp:4994
-DC_ONLY(0xd3c64, 0x98)
+VA(0x004e2ed0, 0xB2)  // dc-bracket forced, dc 0xd3c64
 std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_backpack_error(__$ReturnUdt, TArtifact artifact)
 {
     // @stub
