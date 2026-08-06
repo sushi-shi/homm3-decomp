@@ -5,6 +5,18 @@
 #ifndef HOMM3_ADVMGR_H
 #define HOMM3_ADVMGR_H
 
+// Head model from the byte-proven leaves. Names provisional; the ctor
+// claim (0x406df0, 783 B in homm2) will grow this roster.
+class advManager {
+public:
+    char pad_000[0x20c];
+    unsigned char inDialog;   // +0x20c (Mobilize bails when set)
+
+    void DeactivateCurrTown(unsigned char waitingPlayer);
+    void DeactivateCurrHero(unsigned char waitingPlayer);
+    void DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\advmgr.cpp:336, dc 0x5714) unsigned char InitializeCreatureGeneratorNames();
 // CODEVIEW(E:\gamedcs\advmgr.cpp:368, dc 0x57cc) unsigned char InitializeExtraInfoText();
