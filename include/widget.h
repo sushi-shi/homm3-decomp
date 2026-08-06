@@ -122,6 +122,7 @@ public:
     static widget* last_hover_widget;
 
     widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle);
+    void initialize(int _x, int _y, int _w, int _h, int _id, int _style);
     int send_message(widget::ECommands command, int extra);
     void set_help_text(const char* text, const char* rclick, unsigned char copyText);
     // Non-virtual on DC and in retail: heroWindow::RemoveWidget calls

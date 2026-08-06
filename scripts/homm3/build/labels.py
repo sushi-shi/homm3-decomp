@@ -213,7 +213,11 @@ def scan_sources(functions):
                     name = f"fn_{rva:x}"
                 rows.append({"rva": rva, "unit": unit, "size": declared,
                              "kind": "func", "name": name,
-                             "provenance": "src-VA"})
+                             "provenance": "src-VA",
+                             # ctors and dtors collapse to the same
+                             # class_class label; the tilde in the
+                             # declarator is the only discriminator left
+                             "dtor": "~" in raw})
                 continue
             m = VA_COMPGEN_RE.match(line)
             if m:
@@ -301,12 +305,14 @@ def iat_slots(exe_path: Path):
 def _demangle_key(mangled: str):
     """Normalized join key for one MSVC public name: ?Method@Class@@... ->
     class_method, matching scan_sources' declarator spelling (:: -> _).
-    Ctors/dtors (??0/??1) key as class_class - the same collapse the
-    declarator scan produces for `armyGroup::armyGroup` and
-    `armyGroup::~armyGroup`; other specials (operators) return None."""
+    Ctors (??0) key as class_class - the same collapse the declarator
+    scan produces for `armyGroup::armyGroup`; dtors (??1) key as
+    class_class@dtor so an overloaded-ctor group never absorbs its
+    dtor; other specials (operators) return None."""
     if mangled.startswith("??0") or mangled.startswith("??1"):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
-        return f"{cls}_{cls}".lower()
+        key = f"{cls}_{cls}".lower()
+        return f"{key}@dtor" if mangled.startswith("??1") else key
     if not mangled.startswith("?") or mangled.startswith("??"):
         return None
     components = mangled[1:].split("@@", 1)[0].split("@")
@@ -315,14 +321,31 @@ def _demangle_key(mangled: str):
 
 
 def _base_authority_names(unit: str) -> dict:
-    """key -> [mangled...] PUBLIC text symbols of the unit's compiled
-    base obj, each key's list in DEFINITION order (COFF section order -
-    VC6 emits one COMDAT per function in source order, so an overload
-    group's order matches the claims' rva order)."""
+    """key -> [(mangled, content_size)...] PUBLIC text symbols of the
+    unit's compiled base obj, each key's list in DEFINITION order (COFF
+    section order - VC6 emits one COMDAT per function in source order,
+    so an overload group's order matches the claims' rva order).
+    content_size is the symbol's section raw size minus the trailing
+    0x90 COMDAT-alignment fill (same rule the comparison normalization
+    applies) - the discriminator for overload groups that carry
+    unclaimed members retail dropped."""
     obj = common.HOMM3_DIR / f"build/objdiff/base/{unit}.obj"
     if not obj.is_file():
         return {}
     data = obj.read_bytes()
+    nsec, = struct.unpack_from("<H", data, 2)
+    section_sizes = {}
+    for index in range(nsec):
+        header = 20 + index * 40
+        raw_size, raw_offset = struct.unpack_from("<II", data, header + 16)
+        content = raw_size
+        if raw_offset:
+            raw = data[raw_offset:raw_offset + raw_size]
+            run = 0
+            while run < len(raw) and run < 15 and raw[len(raw) - 1 - run] == 0x90:
+                run += 1
+            content = raw_size - run
+        section_sizes[index + 1] = content
     symoff, nsyms = struct.unpack_from("<II", data, 8)
     strtab = symoff + nsyms * 18
     def symname(o):
@@ -340,13 +363,14 @@ def _base_authority_names(unit: str) -> dict:
             name = symname(o)
             key = _demangle_key(name)
             if key:
-                ordered.append((section, key, name))
+                ordered.append((section, key, name,
+                                section_sizes.get(section, 0)))
         aux = data[o + 17]
         o += 18 * (1 + aux)
         i += 1 + aux
     groups = {}
-    for _section, key, name in sorted(ordered):
-        groups.setdefault(key, []).append(name)
+    for _section, key, name, content in sorted(ordered):
+        groups.setdefault(key, []).append((name, content))
     return groups
 
 
@@ -374,6 +398,7 @@ def main(argv=None) -> int:
     # 1. src annotations (declarator-derived names; disambiguate overloads
     # by rva suffix, matching the naming layer's convention)
     src_rows = scan_sources(functions)
+    dtor_rvas = {r["rva"] for r in src_rows if r.get("dtor")}
     seen_names = set()
     for r in src_rows:
         if r["name"] in seen_names:
@@ -400,17 +425,39 @@ def main(argv=None) -> int:
             suffix = f"_{row['rva']:x}"
             if key.endswith(suffix):
                 key = key[:-len(suffix)]  # step-1 overload dedup suffix
+            if row["rva"] in dtor_rvas:
+                key = f"{key}@dtor"
             claim_keys.setdefault(key, []).append(row)
         for key, mangled_group in authority.items():
             candidates = claim_keys.get(key)
-            if not candidates or len(candidates) != len(mangled_group):
-                continue  # unimplemented or ambiguous group: leave labeled
-            # overload groups zip in order: claims by rva (link order),
-            # mangled names by COFF section (definition order) - the same
-            # order for a VC6 TU
-            for row, mangled in zip(sorted(candidates,
-                                           key=lambda r: r["rva"]),
-                                    mangled_group):
+            if not candidates:
+                continue  # unimplemented group: leave labeled
+            if len(candidates) == len(mangled_group):
+                # overload groups zip in order: claims by rva (link
+                # order), mangled names by COFF section (definition
+                # order) - the same order for a VC6 TU
+                for row, (mangled, _content) in zip(
+                        sorted(candidates, key=lambda r: r["rva"]),
+                        mangled_group):
+                    row["name"] = mangled
+                    row["provenance"] = "src-VA+base"
+                continue
+            # count mismatch: the base emits overloads retail dropped
+            # (/Ob2 keeps every definition, OPT:REF discarded the
+            # unreferenced ones). Pair by EXACT content size, and only
+            # when the assignment is unambiguous both ways.
+            for row in candidates:
+                fits = [name for name, content in mangled_group
+                        if content == row["size"]]
+                if len(fits) != 1:
+                    continue
+                mangled = fits[0]
+                claim_fits = [r for r in candidates
+                              if any(c == r["size"]
+                                     for n, c in mangled_group
+                                     if n == mangled)]
+                if len(claim_fits) != 1:
+                    continue
                 row["name"] = mangled
                 row["provenance"] = "src-VA+base"
 

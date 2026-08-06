@@ -38,6 +38,7 @@ armygrp	get_spell_work_chance	0.0000
 armygrp	modify_spell_damage	0.0000
 basemgr	??0baseManager@@QAE@XZ	100.0000
 button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000
+button	??0textButton@@QAE@HHHHHPBD00HHEHHH@Z	88.4400
 button	??0type_func_button@@QAE@JJJJJPBDP6IHPAVmessage@@@ZHH@Z	100.0000
 button	??1button@@UAE@XZ	100.0000
 button	??1textButton@@UAE@XZ	100.0000
@@ -124,6 +125,7 @@ widget	?Dim@widget@@UAEXXZ	100.0000
 widget	?Main@widget@@UAEHPAVmessage@@@Z	100.0000
 widget	?Open@widget@@UAEHHPAVheroWindow@@@Z	100.0000
 widget	?enable@widget@@UAEXE@Z	87.1219
+widget	?initialize@widget@@QAEXHHHHHH@Z	100.0000
 widget	?process_hover@widget@@UAEXXZ	100.0000
 widget	?send_message@widget@@QAEHW4ECommands@1@H@Z	79.4348
 widget	?set_help_text@widget@@QAEXPBD0E@Z	100.0000

@@ -6,12 +6,15 @@
 #define HOMM3_RESOURCEMANAGER_H
 
 class CSprite;
+class font;
 
-// Dreamcast: ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z - the
-// namespace-level sprite acquisition (retail body 0x55c7b0, fastcall
-// under /Gr; called by the button ctor).
+// Dreamcast: ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z and
+// ?GetFont@ResourceManager@@YAPAVfont@@PBD@Z - the namespace-level
+// resource acquisition (retail bodies 0x55c7b0 / 0x55bb00, fastcall
+// under /Gr; called by the button ctors).
 namespace ResourceManager {
 CSprite* GetSprite(const char* name);
+font* GetFont(const char* name);
 }
 
 // --- Bitmap16Bit ---
