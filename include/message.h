@@ -14,8 +14,22 @@ class heroWindow;
 // Enum NAME is homm2 lineage, unattested on DC - grow the roster as
 // consumers prove values.
 enum EMessageId {
+    MESSAGE_KEY_DOWN = 1,
+    MESSAGE_KEY_UP = 2,
     MESSAGE_MOUSE_MOVE = 4,
+    MESSAGE_LEFT_BUTTON_DOWN = 8,
+    MESSAGE_LEFT_BUTTON_UP = 0x10,
+    MESSAGE_RIGHT_BUTTON_DOWN = 0x20,
+    MESSAGE_RIGHT_BUTTON_UP = 0x40,
     MESSAGE_WIDGET = 0x200
+};
+
+// Modifier bits carried in message::qualifier (homm2 lineage names):
+// button::Select latches qualifier & MASK into iLeftRightSave and the
+// right-select stamp writes RIGHT.
+enum EMessageModifiers {
+    MESSAGE_MODIFIER_RIGHT = 0x200,
+    MESSAGE_MODIFIER_MASK = 0x300
 };
 
 // Dreamcast roster: id, codeX, codeY, qualifier, mouseX, mouseY,
@@ -32,7 +46,10 @@ public:
     int qualifier;
     int mouseX;
     int mouseY;
-    int extra;
+    union {
+        int extra;
+        char* extraText;
+    };
     heroWindow* window;
 };
 SIZE(message, 32);

@@ -68,6 +68,13 @@ public:
         WIDGET_UPDATE = 16384
     };
 
+    // widget::style values; 0x1000 is homm2's WIDGET_KIND_AUTO_REPEAT
+    // role (button::Main's repeat-timer head keys on it) - name
+    // provisional.
+    enum EStyles {
+        WIDGET_STYLE_AUTO_REPEAT = 0x1000
+    };
+
     // Dreamcast widget::EReturnCodes, verbatim.
     enum EReturnCodes {
         WIDGET_END_DIALOG = 10,

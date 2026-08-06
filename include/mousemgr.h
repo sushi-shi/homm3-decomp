@@ -5,6 +5,16 @@
 #ifndef HOMM3_MOUSEMGR_H
 #define HOMM3_MOUSEMGR_H
 
+#include "basemgr.h"
+
+// Bootstrap VIEW: button::Main pumps messages through the inherited
+// baseManager::Main slot.
+class mouseManager : public baseManager {
+};
+
+// Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).
+extern mouseManager* gpMouseManager;
+
 // --- globals ---
 // CODEVIEW(C:\WCEDreamcast\inc\kfuncs.h:266, dc 0xff76c) unsigned long GetCurrentThreadId();
 // CODEVIEW(E:\gamedcs\WinGraph.h:55, dc 0xff780) unsigned RGBto16(int r, int g, int b);

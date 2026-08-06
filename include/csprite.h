@@ -34,6 +34,7 @@ public:
     virtual void _vslot2();  // slot 2, retail body 0x47bd50, unidentified
 
     palette* GetPalette();
+    void SetPalette(const unsigned short* pal);
     void DrawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
 };
 

@@ -6,7 +6,7 @@
 
 #include <va.h>
 
-struct tag_message;
+class message;
 
 // PROVEN layout (2026-08-04): Dreamcast size 56 (vptr@0, nextManager@4,
 // prevManager@8, id@12, priority@16, cMgrName@20 char[32], status@52),
@@ -27,7 +27,7 @@ public:
     baseManager();
     virtual int Open(int) = 0;
     virtual void Close() = 0;
-    virtual int Main(tag_message& msg) = 0;
+    virtual int Main(message& msg) = 0;
     virtual void _vslot3() = 0;  // retail body 0x44e020, unidentified
     virtual void _vslot4() = 0;  // retail body 0x55d0f0, unidentified
     virtual void _vslot5() = 0;  // retail body 0x44e240, unidentified

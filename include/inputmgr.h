@@ -5,6 +5,19 @@
 #ifndef HOMM3_INPUTMGR_H
 #define HOMM3_INPUTMGR_H
 
+#include "basemgr.h"
+#include "message.h"
+
+// Bootstrap VIEW: GetEvent returns the 32-byte message BY VALUE
+// (DC ?GetEvent@inputManager@@QAA?AUmessage@@XZ; retail body 0x4ec590).
+class inputManager : public baseManager {
+public:
+    message GetEvent();
+};
+
+// Retail .bss 0x6994e0 (DC ?gpInputManager@@3PAVinputManager@@A).
+extern inputManager* gpInputManager;
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\inputmgr.cpp:48, dc 0xdc894) int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam);
 // CODEVIEW(E:\gamedcs\inputmgr.cpp:190, dc 0xdcaa0) int MouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam);

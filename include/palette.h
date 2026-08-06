@@ -5,6 +5,24 @@
 #ifndef HOMM3_PALETTE_H
 #define HOMM3_PALETTE_H
 
+// Bootstrap VIEW of the 16-bit palette resource: the RGB555 table
+// lives at +0x1c past the resource head (same shape CSprite::GetPalette
+// exposes); Dispose is the shared resource slot 1.
+class TPalette16 {
+public:
+    char pad_04[0x18];
+    unsigned short data[256];
+
+    virtual ~TPalette16();
+    virtual void Dispose();
+};
+
+// Dreamcast ?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD_N@Z
+// (retail body 0x55b3e0 takes just the name; called by button::Main).
+namespace ResourceManager {
+TPalette16* GetPalette(const char* name);
+}
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\palette.cpp:45, dc 0x10a244) long ftol(double d);
 // CODEVIEW(E:\gamedcs\palette.cpp:827, dc 0x10c370) void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v);

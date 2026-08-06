@@ -6,6 +6,7 @@
 
 #include <va.h>
 #include <string>
+#include <string.h>
 #include <vector>
 #include "widget.h"
 #include "csprite.h"
@@ -69,6 +70,13 @@ public:
 
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     int Select(message* msg);
+    int DeselectSelected(message* msg);
+
+    // Dreamcast homes SetText in Button.h itself; retail emits no
+    // standalone copy (every use inlines under /Ob2).
+    void SetText(const char* new_text) { Text.assign(new_text, strlen(new_text)); }
+
+    virtual int Main(message* msg);  // slot 2, retail 0x456190
 
     virtual void Draw();  // slot 4, retail 0x456940
 
