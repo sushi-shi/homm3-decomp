@@ -7,9 +7,7 @@
 #include <va.h>
 #include <string>
 #include <vector>
-
-class heroWindow;
-class message;
+#include "widget.h"
 
 // Player-color palette targets. Both overloads of the free
 // SetPlayerPaletteColors (0x5ffe20 / 0x5ffe40) copy a per-player run
@@ -58,62 +56,13 @@ public:
     virtual void Dispose();
 };
 
-// PROVEN size 48 (retail): button::buttonIcon sits at 0x30, which
-// bounds the base. Fields are the Dreamcast roster in order - EXCEPT
-// freeText, which DC places at 48 (its widget is 52). Retail either
-// dropped it or declared it beside `on` in the 37..39 padding; the
-// byte evidence only fixes the total, so it is left out until a
-// consumer proves its home.
+// The widget base lives in widget.h (owner: widget.obj). Button's own
+// vtables (0x63bb54/0x63bb88/0x63bbbc, 13 slots) extend widget's 12
+// with one button-introduced virtual (slot 12, body 0x456a10,
+// unidentified). Overrides with retail bodies outside the button band:
+// zBufferDraw (slot 3, 0x5bc7e0) and Dim (slot 8, 0x5bc690) - homes
+// unproven.
 //
-// Virtual roster: 12 slots, proven by the retail button-family vtables
-// (0x63bb54/0x63bb88/0x63bbbc, 13 slots each = these 12 + one that
-// button introduces). Order is the Dreamcast roster with ONE retail
-// insertion: Open, non-virtual on DC, is virtualized at slot 1 (its
-// retail body 0x5fe4d0 stores priority@0x12/parentWindow@4 and returns
-// 0 - exactly DC Open's semantics). Slot bodies shared across the
-// family vtables sit outside the owning bands because VC6 /Gy COMDATs
-// of header-inline virtuals land in the first referencing obj and the
-// retail link folded identical ones (/OPT:ICF); _vslotN names stay
-// until each identity is byte-proven. DC-order candidates:
-//   3 zBufferDraw (pure on DC; button vtable holds 0x5bc7e0)
-//   5 GetRealHeight (0x4eab30)   6 GetRealWidth (0x4eab20)
-//   7 process_hover (0x5fe930)   8 Dim (button holds 0x5bc690, NOT
-//     widget::Dim 0x5fe800 - button overrides here)
-//   9 enable (0x5fe940)  10 OnSetFocus / 11 OnKillFocus (both
-//     0x404df0 - the ICF-folded empty)
-class widget {
-public:
-    heroWindow* parentWindow;
-    widget* prevWidget;
-    widget* nextWidget;
-    short id;
-    short priority;
-    short style;
-    short status;
-    short x;
-    short y;
-    short width;
-    short height;
-    int focusable;
-    unsigned char on;
-    char* RollOver;
-    char* RightClick;
-
-    virtual ~widget();                                    // slot 0, retail 0x5fe430
-    virtual int Open(int newPriority, heroWindow* parent);  // slot 1, retail 0x5fe4d0
-    virtual int Main(message* msg) = 0;                   // slot 2
-    virtual void _vslot3() = 0;                           // slot 3
-    virtual void Draw() = 0;                              // slot 4
-    virtual void _vslot5() = 0;                           // slot 5
-    virtual void _vslot6() = 0;                           // slot 6
-    virtual void _vslot7() = 0;                           // slot 7
-    virtual void _vslot8() = 0;                           // slot 8
-    virtual void _vslot9() = 0;                           // slot 9
-    virtual void _vslot10() = 0;                          // slot 10
-    virtual void _vslot11() = 0;                          // slot 11
-};
-SIZE(widget, 48);
-
 // Layout PROVEN by the retail ctor 0x455ef0 (member stores) and dtor
 // 0x4560f0 (member teardown): buttonIcon@0x30, normalFrame@0x34,
 // selectedFrame@0x38, disabled_frame@0x3c (ctor seeds 2), field_40@0x40
