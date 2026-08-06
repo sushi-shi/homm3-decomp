@@ -73,13 +73,16 @@ public:
     // 0x694da4 (defined in button.cpp).
     static sample* click_sample;
 
+    button();
     button(int x, int y, int w, int h, int id, const char* image, int normal, int selected, unsigned char end, int hotkey, int style);
     int Select(message* msg);
     int DeselectSelected(message* msg);
 
-    // Dreamcast homes SetText in Button.h itself; retail emits no
-    // standalone copy (every use inlines under /Ob2).
+    // Dreamcast homes SetText and set_hotkey in Button.h itself; the
+    // kept COMDAT copies land in earlier objs' bands (set_hotkey at
+    // 0x404200), so no claims live here.
     void SetText(const char* new_text) { Text.assign(new_text, strlen(new_text)); }
+    void set_hotkey(int code) { hotKeyCodes.insert(hotKeyCodes.end(), 1, code); }
 
     virtual int Main(message* msg);  // slot 2, retail 0x456190
 
@@ -98,6 +101,8 @@ class textButton : public button {
 public:
     font* Font;
     int textColor;
+
+    textButton(int x, int y, int w, int h, int id, const char* image, const char* text_, const char* font_name, int normal, int selected, unsigned char end, int hotkey, int style, int new_color);
 
     virtual void Draw();    // slot 4, retail 0x456ca0
 

@@ -56,16 +56,22 @@ widget::~widget()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\widget.cpp:152
-DC_ONLY(0x196c6c, 0x50)
+VA(0x005fe480, 0x4E)  // call-proven (textButton ctor 0x456a50 calls it), dc 0x196c6c
 void widget::initialize(int _x, int _y, int _w, int _h, int _id, int _style)
 {
-    // @stub
+    parentWindow = 0;
+    prevWidget = 0;
+    nextWidget = 0;
+    x = _x;
+    y = _y;
+    width = _w;
+    height = _h;
+    id = _id;
+    status = WIDGET_ACTIVE | WIDGET_DRAWN;
+    priority = -1;
+    style = _style;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\widget.cpp:214
 VA(0x005fe4d0, 0x17)  // vtable-slot 1 of the widget family, dc 0x196cbc

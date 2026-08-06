@@ -22,17 +22,19 @@ static int iLeftRightSave;
 
 // Unimplemented carcass stubs stay lexically present (labels and
 // the va-claims gate scan text) but outside compilation.
-#if 0  // @carcass
-// #include "button.h"
-
 // E:\gamedcs\button.cpp:43
-DC_ONLY(0x570a4, 0x8C)
-void button::button()
+// No claim: retail dropped the standalone copy (OPT:REF), but the body
+// survives inlined at the head of the textButton ctor 0x456a50.
+button::button()
+    : widget(0, 0, 0, 0, 0, 0)
 {
-    // @stub
+    buttonIcon = 0;
+    normalFrame = 0;
+    selectedFrame = 0;
+    disabled_frame = 2;
+    field_40 = 3;
+    endDialog = 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\button.cpp:69
 // Retail dropped DC's trailing focus parameter outright (ret 0x2c,
@@ -379,14 +381,32 @@ void textButton::textButton()
     // @stub
 }
 
-// E:\gamedcs\button.cpp:508
-DC_ONLY(0x57ab4, 0xA8)
-void textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text_, const char* font_name, int normal, int selected, unsigned char end, int hotkey, int style, font::TColor new_color)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\button.cpp:508
+// Residual (88.4%): retail latches the hotkey argument back into its
+// own stack slot before the initialize call (the by-ref insert copy
+// scheduled early) and the EH-handler reloc addend spells differently
+// across the sides; every callee and store agrees.
+// Builds on the inlined button() default, then initializes through
+// widget::initialize - the DC shape, not a delegation to the eleven-arg
+// button ctor.
+VA(0x00456a50, 0x193)  // linkorder bracket; initialize/GetSprite/GetFont callees byte-proven, dc 0x57ab4
+textButton::textButton(int x, int y, int w, int h, int id, const char* image, const char* text_, const char* font_name, int normal, int selected, unsigned char end, int hotkey, int style, int new_color)
+    : button()
+{
+    initialize(x, y, w, h, id, style);
+    normalFrame = normal;
+    selectedFrame = selected;
+    disabled_frame = 2;
+    field_40 = 3;
+    endDialog = end;
+    set_hotkey(hotkey);
+    buttonIcon = ResourceManager::GetSprite(image);
+    SetText(text_);
+    Font = ResourceManager::GetFont(font_name);
+    textColor = new_color;
+}
 
 // E:\gamedcs\button.cpp:519
 VA(0x00456bf0, 0xAB)  // anchor-global, dc 0x57b5c
