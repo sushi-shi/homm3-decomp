@@ -5,6 +5,15 @@
 #ifndef HOMM3_BITMAP16_H
 #define HOMM3_BITMAP16_H
 
+// Bootstrap VIEW of Bitmap16Bit: layout unmodeled; only the methods
+// other admitted TUs call. Darken is DC-attested
+// (?Darken@Bitmap16Bit@@QAAXHHHH@Z); the retail body is 0x44e5f0
+// (called by widget::Dim).
+class Bitmap16Bit {
+public:
+    void Darken(int x, int y, int w, int h);
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\bitmap16.cpp:59, dc 0x50a9c) long ftol(double d);
 // CODEVIEW(E:\gamedcs\bitmap16.cpp:224, dc 0x50f34) unsigned long color1555to8888(unsigned short color);

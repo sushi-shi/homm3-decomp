@@ -124,3 +124,8 @@ flags = "game_o2_ml_gr_windows"
 unit = "button"
 source = "src/button.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "widget"
+source = "src/widget.cpp"
+flags = "game_o2_ml_gr_windows"

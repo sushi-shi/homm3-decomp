@@ -5,6 +5,36 @@
 #ifndef HOMM3_WINDOW_H
 #define HOMM3_WINDOW_H
 
+class widget;
+class message;
+
+// Bootstrap VIEW of heroWindow (Dreamcast size 68; retail size
+// unproven). The virtual roster and the head through y are the DC
+// fieldlist, byte-corroborated where widget.obj consumes them:
+// widget::process_hover calls slot 4 ([vptr+0x10] =
+// handle_widget_hover(widget*)), widget::Dim reads x@0x18/y@0x1c.
+// Unconsumed slots keep their DC names but stay pure until each
+// retail body is proven.
+class heroWindow {
+public:
+    int priority;
+    heroWindow* nextWindow;
+    heroWindow* prevWindow;
+    unsigned int type;
+    int status;
+    int x;
+    int y;
+
+    virtual ~heroWindow();                            // slot 0
+    virtual int Open(int) = 0;                        // slot 1, sig unproven
+    virtual void Close() = 0;                         // slot 2, sig unproven
+    virtual int handle_message(message& msg) = 0;     // slot 3, sig unproven
+    virtual void handle_widget_hover(widget* w) = 0;  // slot 4
+    virtual void DrawWindow() = 0;                    // slot 5, sig unproven
+    virtual void DrawWindowX() = 0;                   // slot 6, sig unproven
+    virtual int DoModal() = 0;                        // slot 7, sig unproven
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\window.cpp:1201, dc 0x197fd8) unsigned char InitializeWinSetupText();
 // CODEVIEW(E:\gamedcs\window.cpp:1283, dc 0x198130) void SetWinText(heroWindow* win, int winId);

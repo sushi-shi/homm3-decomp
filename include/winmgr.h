@@ -5,6 +5,26 @@
 #ifndef HOMM3_WINMGR_H
 #define HOMM3_WINMGR_H
 
+#include "basemgr.h"
+
+class Bitmap16Bit;
+
+// Bootstrap VIEW of heroWindowManager (Dreamcast size 104): only the
+// screen bitmap is consumed so far. DC puts dialogReturn@56,
+// lastHover@60, lastHoverAK@64, screenBitmap@68; retail
+// widget::Dim reads the screen at [gpWindowManager+0x40], so retail
+// dropped one of the two hover ints - the pad below spans 0x38..0x3f
+// until those members earn byte-proven names.
+class heroWindowManager : public baseManager {
+public:
+    char pad_38[8];
+    Bitmap16Bit* screenBitmap;
+};
+
+// Retail .bss 0x699280 (DC ?gpWindowManager@@3PAVheroWindowManager@@A);
+// the DATA claim lands with winmgr.cpp.
+extern heroWindowManager* gpWindowManager;
+
 // --- Bitmap816 ---
 // CODEVIEW(E:\gamedcs\Bitmap816.h:73, dc 0x19c5e8) const TPalette16* Bitmap816::GetPalette();
 // CODEVIEW(E:\gamedcs\Bitmap816.h:104, dc 0x19c5f0) const unsigned char* Bitmap816::GetMap(int x, int y);
