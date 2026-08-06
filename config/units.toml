@@ -212,3 +212,8 @@ flags = "game_o2_ml_gr_windows"
 unit = "kbwin"
 source = "src/kbwin.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "soundmgr"
+source = "src/soundmgr.cpp"
+flags = "game_o2_ml_gr_windows"

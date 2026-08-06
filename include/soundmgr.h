@@ -13,17 +13,47 @@ void PollSound();
 class sample;
 class ds_memsample;
 
-// Bootstrap VIEW of soundManager (baseManager base = 0x38): only what
-// button::Select consumes. MemorySample is DC-attested
-// (?MemorySample@soundManager@@QAAPAVds_memsample@@PAVsample@@@Z,
-// retail body 0x59a210); field_84 is a save/restore toggle around it.
+class ds_engine;
+
+// soundManager (baseManager base = 0x38). Byte-proven by the retail
+// ctor 0x599760 and the sample calls: field_38..0x3c cleared, ds@0x3c
+// (the DC name; the DirectSound engine whose non-null gates every AIL
+// call), a 16-dword table at 0x40, field_84/88 cleared, MP3Playing@0x8c
+// (MusicPlaying returns it), then THREE CRITICAL_SECTIONs at 0x90/0xa8/
+// 0xc0 - DC's section_sound_call / section_MP3_change /
+// section_MP3_name_change, initialized in that order.
 class soundManager : public baseManager {
 public:
-    char pad_38[0x4c];
+    int field_34;
+    int field_38;
+    ds_engine* ds;
+    int sampleHandles[16];
     int field_84;
+    int field_88;
+    unsigned char MP3Playing;
+    char section_sound_call[24];
+    char section_MP3_change[24];
+    char section_MP3_name_change[24];
 
+    soundManager();
     ds_memsample* MemorySample(sample* memSample);
+    void StopSample(ds_memsample* inSample);
+    int MusicPlaying();
 };
+
+// Retail .bss 0x699290: non-zero suppresses every sound path (a
+// no-sound / silent-mode latch; name provisional).
+extern int gbNoSound;
+
+// Retail .bss 0x69fea0: the seven-dword AIL driver state the ctor
+// clears (name provisional).
+extern int gAilDriverState[7];
+
+// Miles Sound System imports (undecorated __stdcall spellings).
+extern "C" {
+void __stdcall AIL_end_sample(ds_memsample* sample);
+int __stdcall AIL_sample_status(ds_memsample* sample);
+}
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* gpSoundManager;
