@@ -24,13 +24,18 @@ class sample;
 void SetPlayerPaletteColors(palette* pal, int whichPlayer);
 void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
 
+class Bitmap16Bit;
+
 // Bootstrap VIEW of the text font (resource lineage - same two leading
 // vtable slots as CSprite; textButton's dtor Disposes its Font through
-// slot 1). Layout unmodeled (DC size 5212).
+// slot 1). Layout unmodeled (DC size 5212). DrawBoundedString is the
+// DC signature with TColor viewed as int.
 class font {
 public:
     virtual ~font();
     virtual void Dispose();
+
+    void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int color_scheme, unsigned justification, int cursorPos);
 };
 
 // The widget base lives in widget.h (owner: widget.obj). Button's own
@@ -93,6 +98,8 @@ class textButton : public button {
 public:
     font* Font;
     int textColor;
+
+    virtual void Draw();    // slot 4, retail 0x456ca0
 
     virtual ~textButton();  // retail 0x456bf0
 };
