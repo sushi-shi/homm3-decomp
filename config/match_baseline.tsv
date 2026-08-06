@@ -71,6 +71,11 @@ deflate	@lm_init@4	100.0000
 deflate	@longest_match@8	100.0000
 deflate	@putShortMSB@8	100.0000
 deflate	@read_buf@12	100.0000
+exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	90.0833
+exec	?RemoveManager@executive@@QAEXPAVbaseManager@@@Z	86.9492
+exec	executive_CallManager	0.0000
+exec	executive_DoDialog	0.0000
+exec	executive_executive	0.0000
 font	??1font@@UAE@XZ	96.6333
 font	?GetCharacterWidth@font@@QAEHE@Z	100.0000
 font	font_DrawBoundedString	0.0000

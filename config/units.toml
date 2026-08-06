@@ -187,3 +187,8 @@ flags = "game_o2_ml_gr_windows_noeh"
 unit = "font"
 source = "src/font.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "exec"
+source = "src/exec.cpp"
+flags = "game_o2_ml_gr_windows"

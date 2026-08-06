@@ -125,6 +125,10 @@ build build/objdiff/base/font.obj: cl src/font.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = font
+build build/objdiff/base/exec.obj: cl src/exec.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = exec
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -138,7 +142,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/window.obj build/objdiff/base/resource.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
-    build/objdiff/base/sample.obj build/objdiff/base/font.obj
+    build/objdiff/base/sample.obj build/objdiff/base/font.obj $
+    build/objdiff/base/exec.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -152,7 +157,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/window.obj build/objdiff/base/resource.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
-    build/objdiff/base/sample.obj build/objdiff/base/font.obj
+    build/objdiff/base/sample.obj build/objdiff/base/font.obj $
+    build/objdiff/base/exec.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -167,6 +173,6 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/window.obj build/objdiff/base/resource.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
-    build/objdiff/base/sample.obj build/objdiff/base/font.obj | $
-    scripts/homm3/build/link.py
+    build/objdiff/base/sample.obj build/objdiff/base/font.obj $
+    build/objdiff/base/exec.obj | scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE
