@@ -66,7 +66,12 @@ public:
     unsigned char noWallPenalty;    // +0x43e
 
     unsigned char HasArtifact(int whichArtifact);
-    int IsWieldingArtifact(int whichArtifact);
+    // BYTE-width return, not int (corrected 2026-08-07): 212 of the 224
+    // retail call sites of 0x4d91f0 follow the call with `test al, al`,
+    // which an int-returning declaration can never produce. The
+    // definition's own `xor eax,eax` / `sete al` does NOT contradict it -
+    // that is just how VC6 lowers an `==` result, at either width.
+    unsigned char IsWieldingArtifact(int whichArtifact);
     int GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
                 unsigned char apply_limits);
     float GetMagicResistanceFactor();

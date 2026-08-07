@@ -10,6 +10,19 @@
 #include "hexcell.h"
 
 class hero;
+struct type_AI_combat_parameters;
+
+// The combat's spell-restriction code, held in combatManager+0x53c0.
+// The per-combat initializer at 0x4643b0 writes it exactly once, as -1
+// or one of 0..9 from ten straight-line branches, and clears the two
+// bytes above it in the same breath. The only value any decoded reader
+// tests is 2: can_cast_spells (0x41f890) refuses a CREATURE cast under
+// it while still allowing a hero cast. BOOTSTRAP INVENTION - no roster
+// attests the domain or the spelling, and the other nine codes stay
+// unnamed until one of the 0x4643b0 branches is decoded.
+enum ECombatSpellRestriction {
+    COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS = 0x2
+};
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -26,7 +39,19 @@ public:
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
     hexcell cells[187];               // +0x1c4, ends 0x5394
-    char pad_5394[0x110];
+    char pad_5394[0x2c];
+    // can_cast_spells (0x41f890) refuses a CREATURE cast (hero_spell
+    // clear) while this word reads 2, and refuses every cast at all
+    // while the byte below is set. Both names await a writer.
+    int field_53c0;                   // +0x53c0
+    unsigned char field_53c4;         // +0x53c4
+    char pad_53c5[0x7];
+    // The two combat heroes, indexed by side: can_cast_spells indexes
+    // heroes[side] for the spellbook test and then walks both slots for
+    // the Orb of Inhibition, and army::get_owner (0x442690) does the
+    // same lookup off gpCombatManager.
+    hero* heroes[2];                  // +0x53cc
+    char pad_53d4[0xd0];
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
@@ -69,6 +94,11 @@ public:
     long compute_fire_shield_damage(long damage, const army* attacker,
                                     const army* target,
                                     long target_hits);        // 0x422440
+    unsigned char can_cast_spells(long side,
+                                  unsigned char hero_spell);  // 0x41f890
+    long get_attack_change(const army* current_army, const army* enemy,
+                           const type_AI_combat_parameters* data);
+                                                              // 0x41f3b0
     // spells.obj leaves, both `ret 0x18` (six stack args). Names are
     // the DC roster's (spells.cpp:5086 / 5419); the retail addresses
     // come from ai_tactical's get_damage_value (0x436e30), which calls

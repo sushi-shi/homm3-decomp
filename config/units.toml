@@ -303,6 +303,11 @@ source = "src/advmgr.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
+unit = "ai"
+source = "src/ai.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
 unit = "ai_combat"
 source = "src/ai_combat.cpp"
 flags = "game_o2_ml_gr_windows"
