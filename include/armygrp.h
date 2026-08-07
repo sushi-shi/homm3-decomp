@@ -7,6 +7,8 @@
 
 #include <va.h>
 
+#include "game.h"
+
 // Bootstrap domain: only the sentinel is modeled; the full creature
 // roster gets its own header when a consumer needs the values.
 // (Dreamcast CodeView types armies[] and IsMember's parameter as
@@ -296,24 +298,10 @@ DATA(0x006a5bb8) extern const char* apszArmySizeNames[9][3];
 // name survives for this table) - replace on evidence.
 DATA(0x00643698) extern const TTerrainType akNativeTerrains[9];
 
-// The game singleton: 2,264 dir32 references image-wide (the central
-// object), pointee larger than 0x1f6a0 bytes; the Dreamcast dump names
-// the game-object pointer gpGame. Bootstrap VIEW - only the one field
-// GetAlignments reads is modeled, offset-named until its meaning is
-// proven (nonzero -> elementals keep their town alignment; zero ->
-// they census as neutral; likely the expansion/map-version gate).
-class game {
-public:
-    char pad_0[0x1f698];
-    int f_1f698;
-    char pad_1f69c[0x3c];
-    // "The active side is computer-played": ai_tactical crosses it with
-    // combatManager::sideIsAI (get_ranged_attack_value 0x435cb0 tests it
-    // for non-zero; the type_AI_combat_parameters ctor 0x435ec0 tests it
-    // SIGNED-positive, which is what pins the signed char). Provisional.
-    char AI_in_control;   // +0x1f6d8
-};
-DATA(0x006994e8) extern game* gpGame;
+// The game singleton and gpGame now live in their owner's header
+// (game.h); f_1f698 is the one field GetAlignments reads (nonzero ->
+// elementals keep their town alignment; zero -> they census as
+// neutral; likely the expansion/map-version gate).
 
 class armyGroup {
 public:

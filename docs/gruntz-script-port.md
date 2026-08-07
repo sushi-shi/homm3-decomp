@@ -260,6 +260,77 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — ai_player.obj ADMITTED (user: "approve"); a swapped
+  claim pair corrected; a duplicate `class game` merged.** The AI phase
+  closes: `src/ai_player.cpp` (503 functions in link order, 26
+  `$`-thunks omitted) joins `config/units.toml` under
+  `game_o2_ml_gr_windows`, 492 un-reconstructed functions fenced in
+  `#if 0 // @carcass`. Engine-wide 263 → 268 exact, 48,667 → 49,290
+  matched bytes, 3.36% → 3.41% executable matched; new `ai_player` unit
+  5/11 exact, 16.55% fuzzy. Denominator 682 → 693, **+11 exactly the
+  claim count — the cheap-admission rule from the ai.obj entry held.**
+  (The engine-wide *fuzzy* figure dips 32.69% → 32.24% purely from the
+  larger denominator; matched bytes only rose, and a re-run of
+  `homm3 status` against the pre-change snapshot shows every other unit
+  byte-identical, so the shared-header surgery below is codegen-neutral
+  everywhere else.) **Claim correction:** 0x004297c0 and 0x00429910 were
+  SWAPPED — the order-map had placed them in DC source order
+  (find_magus_hut_value :664 before start_turn :695) but retail emits
+  them reversed. Proofs: 0x4297c0 takes a `this` whose +0 is a short,
+  walks the player record at `gpGame+0x20ad0`, and CALLS 0x429910;
+  0x429910 touches no `this`, takes `ecx`=long / `dl`=bool, sweeps map
+  cells for object type 0x1b; and the unambiguous
+  `reset_magus_hut_value` also calls 0x429910. Size ratios corroborate
+  (1.06 / 1.15 corrected vs 0.86 / 1.42 swapped), and
+  find_magus_hut_value then came out byte-exact in the 405-byte slot.
+  **Tree defect fixed:** `include/armygrp.h` carried a SECOND,
+  conflicting `class game` (pad to 0x1f698 + `AI_in_control`) alongside
+  `include/game.h`'s (pad to 0x1fb70 + `worldMap`); they had never met
+  until this TU needed both. Merged into game.h at proven offsets, with
+  the `DATA(0x006994e8) extern game* gpGame;` claim. **Gate gap worth
+  acting on: the single-view gate scans only `.cpp` files, so a
+  header-vs-header duplicate class slipped past it for weeks.**
+  **New byte-proven lever:** widening a byte through a `short` temporary
+  before assigning into a `short:N` bitfield — assigning the
+  `unsigned char` directly lets VC6 narrow the insert to 8-bit ops
+  (`mov dl`/`and dl,0xf`/`and ch,0xc0`) and split the two field stores,
+  while the short temporary reproduces retail's `movzx ax, byte` loads
+  and the single `and edx,0xffffc000` clearing both fields at once
+  (worth 12 points on can_take_town, which stalls at 98.75% on one
+  scheduling slot; an aggregate initialiser reached 89.3% but is
+  STRUCTURALLY WRONG — retail read-modify-writes both storage units —
+  and was deliberately not recorded, since ratcheting it would have
+  poisoned the baseline against the correct spelling).
+  **New surface, PENDING USER RATIFICATION:** `include/struct.h` is a
+  new file holding only `type_point` (`short x:10; short y:10;
+  short z:4;`), DC-attributed and layout-proven by three independent
+  readers — no existing compiland header owned it. And
+  `TAdventureObjectType` is **163 enumerators transcribed wholesale
+  from the DC enum** into `mapcell.h` with only ONE value retail-proven
+  (0x1b = EYE_OF_MAGI, what a Hut of Magi reveals); names are
+  unprefixed as the DC spells them (`HERO`, `EVENT`, `RESOURCE`,
+  `MONSTER`…) and now reach every TU including game.h via armygrp.h.
+  Zero collisions in the tree today, but a future TU pulling in
+  `windows.h` is a live risk — **prefixing is offered and unresolved.**
+  `NewmapCell` moved to mapcell.h, `#pragma pack(1)` size 38 (a 38-byte
+  record cannot be 4-aligned, and only packing puts the 4-byte type
+  field at the odd-dword 0x1e retail reads); `is_trigger` bit 12 is
+  provisional. findpath.h `danger_zones` void* → long*; town.h
+  `pad_05[3]` → DC-named mapX/mapY/mapZ. **Blocked, decoded, not
+  invented:** get_total_value is STLport-blocked (P2.3, local
+  `std::vector<long>`); start_turn/end_turn/make_gift/calculate_demand
+  need a real `playerData` model (retail's differs from the DC's:
+  numHeroes@+1, currHeroId@+4 int, int heroes[]@+8, numTowns@+0x3e,
+  currTownId@+0x3f, char towns[]@+0x40), the hero array embedded at
+  `gpGame+0x21620` stride 1170 and the town array POINTER at
+  `gpGame+0x21614` stride 360 (360 matches our current `town` model
+  exactly — independent confirmation of it), and **two net-message
+  classes whose names would have to be fabricated** — 8-byte
+  `{vptr; long team}` objects with vtables 0x63b670/0x63b67c referenced
+  ONLY by start_turn and end_turn, no corroborating call site, no DC
+  public. The matcher stopped rather than invent; that is the correct
+  call and the precedent stands.
+
 - **2026-08-07 — ai.obj ADMITTED to the build (user: "approve"); a
   misattributed claim corrected; the ratchet writer's comment-eating
   bug fixed.** `src/ai.cpp` (219 functions in link order, 20 `$`-thunks

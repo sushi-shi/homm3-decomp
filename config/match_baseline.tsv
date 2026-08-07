@@ -103,6 +103,17 @@ ai_combat	type_AI_combat_data_do_aftermath	0.0000
 ai_combat	type_AI_combat_data_initialize_creatures	0.0000
 ai_combat	type_AI_combat_data_type_AI_combat_data	0.0000
 ai_combat	type_AI_combat_data_type_AI_combat_data_276c0	0.0000
+ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	98.7523
+ai_player	?find_magus_hut_value@@YIJJE@Z	100.0000
+ai_player	?get_attack_bonus@type_AI_player@@SIMF@Z	100.0000
+ai_player	?get_cell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000
+ai_player	?get_danger_value@searchArray@@QBEJUtype_point@@@Z	100.0000
+ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000
+ai_player	type_AI_player_calculate_demand	0.0000
+ai_player	type_AI_player_end_turn	0.0000
+ai_player	type_AI_player_get_total_value	0.0000
+ai_player	type_AI_player_make_gift	0.0000
+ai_player	type_AI_player_start_turn	0.0000
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000
 ai_tactical	??0type_spell_choice@@QAE@HHJJ@Z	100.0000
 ai_tactical	??0type_spell_choice@@QAE@XZ	100.0000

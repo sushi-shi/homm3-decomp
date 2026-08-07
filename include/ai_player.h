@@ -5,6 +5,56 @@
 #ifndef HOMM3_AI_PLAYER_H
 #define HOMM3_AI_PLAYER_H
 
+class hero;
+class town;
+
+// Full DC layout (classes.csv: 152 B, 6 members, 2 statics) and every
+// offset is corroborated by a retail reader: reset_magus_hut_value
+// (0x429ab0) reads the short at +0 and writes the long at +4, and
+// get_total_value (0x42a150) walks the seven doubles from +0x60 with
+// `add esi, 8` after biasing `this` by 0x60.
+//
+// The two statics carry their DC public names verbatim
+// (?attack_computer_bonus@type_AI_player@@1MA at DC seg3 0x26c0,
+// ?attack_human_bonus@ at 0x26c4); retail holds the same adjacent pair
+// at 0x6604f8 / 0x6604fc, both initialised to 0.5f, and philai.obj's
+// set_attack_bonuses(float computer_bonus, float human_bonus) names the
+// order. They are DEFINED by philai.cpp, not here.
+class type_AI_player {
+public:
+    short team;
+    long magus_hut_value;
+    long reserved_funds[7];
+    long resource_supply[7];
+    long resource_demand[7];
+    double resource_value[7];
+
+    static float get_attack_bonus(short player);  // 0x428710
+    void calculate_demand();                      // 0x428740
+    void start_turn();                            // 0x4297c0
+    void reset_magus_hut_value();                 // 0x429ab0
+    void calculate_reserve();                     // 0x429ad0
+
+private:
+    static float attack_computer_bonus;
+    static float attack_human_bonus;
+};
+
+// Both are `static` in the DC roster (functions.csv kind column) and
+// have no DC public. They are spelled with external linkage here
+// because VC6 DELETES an unreferenced local function outright and /Ob2
+// inlines away a local one with a single call site - either would erase
+// the retail slot we are matching. The linkage difference is invisible
+// to the code bytes.
+unsigned char can_take_town(const hero* attacking_hero, const town* defending_town);
+long find_magus_hut_value(long player_id, unsigned char explore_mode);
+
+// 0x432220 - find_magus_hut_value's only callee, reached with
+// (point, player_id, 10). /Gr leaves the 4-byte struct on the stack and
+// puts the two longs in ECX/EDX, which is exactly the register split
+// retail emits, so the DC's argument ORDER survives the bytes.
+long AI_value_of_observatory(struct type_point origin, long player_id, long range);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\ai_player.cpp:69, dc 0x2dc00) unsigned char can_take_town(const hero* attacking_hero, const town* defending_town);
 // CODEVIEW(E:\gamedcs\ai_player.cpp:664, dc 0x2efc8) long find_magus_hut_value(long player_id, unsigned char explore_mode);

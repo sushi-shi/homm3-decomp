@@ -5,24 +5,54 @@
 #ifndef HOMM3_GAME_H
 #define HOMM3_GAME_H
 
-// Opaque in this TU - only its address leaves GetWorldMapData.
-class NewfullMap { char opaque[4]; };
+#include "mapcell.h"
+#include "struct.h"
+
+// The map record GetWorldMapData hands out. Its first 0xd0 bytes are the
+// scenario's object/event vectors (13 of them at VC6's 16-byte
+// std::vector; the DC build has 9 at STLport's 12) - unmodelled until a
+// retail reader touches one. cellData/Size/HasTwoLevels are the DC's own
+// tail names, and the offsets are byte-proven: game::get_cell reads the
+// pointer at +0xd0 and the square extent at +0xd4, find_magus_hut_value
+// the level count at +0xd8.
+class NewfullMap {
+public:
+    char pad_000[0xd0];
+    NewmapCell* cellData;
+    int Size;
+    unsigned char HasTwoLevels;
+};
+
 class playerData;
 
 // Head model: GetWorldMapData hands out the embedded map record at
-// 0x1fb70. Names provisional.
+// 0x1fb70. Names provisional. (Merged 2026-08-07 with the second `game`
+// view that lived in armygrp.h - ai_player.cpp is the first TU to need
+// armyGroup and the map record at once, and two headers cannot each
+// define the class.)
 class game {
 public:
-    char pad_00000[0x1fb70];
-    NewfullMap worldMap;
+    char pad_00000[0x1f698];
+    int f_1f698;
+    char pad_1f69c[0x3c];
+    // "The active side is computer-played": ai_tactical crosses it with
+    // combatManager::sideIsAI (get_ranged_attack_value 0x435cb0 tests it
+    // for non-zero; the type_AI_combat_parameters ctor 0x435ec0 tests it
+    // SIGNED-positive, which is what pins the signed char). Provisional.
+    char AI_in_control;   // +0x1f6d8
+    char pad_1f6d9[0x497];
+    NewfullMap worldMap;  // +0x1fb70
 
     NewfullMap* GetWorldMapData();
     playerData* GetLocalPlayer();
+    unsigned char IsHuman(int gamePos);          // 0x4ce940
+    NewmapCell* get_cell(type_point point);      // 0x42ed80 (ai_player.obj)
 };
 
 // Retail .bss 0x6994e8 (the game record) and 0x69ccb0 (the acting
-// player's record). Names provisional.
-extern game* gpGame;
+// player's record). Names provisional. 2,264 dir32 references
+// image-wide make gpGame the central object.
+DATA(0x006994e8) extern game* gpGame;
 extern playerData* gpCurrentPlayer;
 
 // Located game.cpp bodies kbwin calls (the Imm/tablet mouse hooks;

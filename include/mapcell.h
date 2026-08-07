@@ -5,6 +5,204 @@
 #ifndef HOMM3_MAPCELL_H
 #define HOMM3_MAPCELL_H
 
+// The adventure-map object domain, the type of NewmapCell::type.
+// Transcribed COMPLETE from the Dreamcast CodeView enum (163
+// enumerators, every value written out explicitly so the four values
+// the DC build leaves unnamed - 1, 18, 19 and 40 - stay visibly
+// unnamed rather than being invented). Retail proof so far is one
+// value: find_magus_hut_value (0x429910) compares the dword at
+// NewmapCell+0x1e against 0x1b, and 0x1b is EYE_OF_MAGI - the object
+// a Hut of Magi reveals, which is exactly what that function sums.
+enum TAdventureObjectType {
+    NOTHING                    = 0,
+    ALTAR_OF_SACRIFICE         = 2,
+    ANCHOR_POINT               = 3,
+    ARENA                      = 4,
+    ARTIFACT                   = 5,
+    BLACK_BOX                  = 6,
+    BLACK_MARKET               = 7,
+    BOAT                       = 8,
+    BORDER_GUARD               = 9,
+    BORDER_TENT                = 10,
+    BUOY                       = 11,
+    CAMPFIRE                   = 12,
+    CARTOGRAPHER               = 13,
+    CLOVER_FIELD               = 14,
+    COVER_OF_DARKNESS          = 15,
+    CREATURE_BANK              = 16,
+    CREATURE_GENERATOR_1       = 17,
+    CREATURE_GENERATOR_4       = 20,
+    CURSED_GROUND              = 21,
+    DEAD_GUY                   = 22,
+    DEFENSE_TOWER              = 23,
+    DERELICT_SHIP              = 24,
+    DRAGON_CITY                = 25,
+    EVENT                      = 26,
+    EYE_OF_MAGI                = 27,
+    FAERIE_RING                = 28,
+    FLOTSAM                    = 29,
+    FOUNTAIN_OF_FORTUNE        = 30,
+    FOUNTAIN_OF_YOUTH          = 31,
+    GARDEN_OF_REVELATION       = 32,
+    GARRISON                   = 33,
+    HERO                       = 34,
+    HILL_FORT                  = 35,
+    HOLY_GRAIL                 = 36,
+    HUT_OF_MAGI                = 37,
+    IDOL_OF_FORTUNE            = 38,
+    LEAN_TO                    = 39,
+    LIBRARY                    = 41,
+    LIGHTHOUSE                 = 42,
+    LITH_ONEWAY_ENTRANCE       = 43,
+    LITH_ONEWAY_EXIT           = 44,
+    LITH_TWOWAY                = 45,
+    MAGIC_PLAINS               = 46,
+    MAGIC_SCHOOL               = 47,
+    MAGIC_SPRING               = 48,
+    MAGIC_WELL                 = 49,
+    MARKET_OF_TIME             = 50,
+    MERC_CAMP                  = 51,
+    MERMAID                    = 52,
+    MINE                       = 53,
+    MONSTER                    = 54,
+    MYSTICAL_GARDEN            = 55,
+    OASIS                      = 56,
+    OBELISK                    = 57,
+    OBSERVATORY                = 58,
+    OCEAN_BOTTLE               = 59,
+    PILLAR_OF_FIRE             = 60,
+    POWER_SCHOOL               = 61,
+    PRISON                     = 62,
+    PYRAMID                    = 63,
+    RALLY_FLAG                 = 64,
+    RANDOM_ARTIFACT            = 65,
+    RANDOM_ARTIFACT_1          = 66,
+    RANDOM_ARTIFACT_2          = 67,
+    RANDOM_ARTIFACT_3          = 68,
+    RANDOM_ARTIFACT_4          = 69,
+    RANDOM_HERO                = 70,
+    RANDOM_MONSTER             = 71,
+    RANDOM_MONSTER_1           = 72,
+    RANDOM_MONSTER_2           = 73,
+    RANDOM_MONSTER_3           = 74,
+    RANDOM_MONSTER_4           = 75,
+    RANDOM_RESOURCE            = 76,
+    RANDOM_TOWN                = 77,
+    REFUGEE_CAMP               = 78,
+    RESOURCE                   = 79,
+    SANCTUARY                  = 80,
+    SCHOLAR                    = 81,
+    SEA_CHEST                  = 82,
+    SEER                       = 83,
+    SEPULCHER                  = 84,
+    SHIPWRECK                  = 85,
+    SHIPWRECK_SURVIVOR         = 86,
+    SHIPYARD                   = 87,
+    SHRINE1                    = 88,
+    SHRINE2                    = 89,
+    SHRINE3                    = 90,
+    SIGN                       = 91,
+    SIREN                      = 92,
+    SPELL_SCROLL               = 93,
+    STABLES                    = 94,
+    TAVERN                     = 95,
+    TEMPLE                     = 96,
+    THIEVES_DEN                = 97,
+    TOWN                       = 98,
+    TRADING_POST               = 99,
+    TRAINING_GROUNDS           = 100,
+    TREASURE_CHEST             = 101,
+    TREE_OF_KNOWLEDGE          = 102,
+    UNDERGROUND_GATE           = 103,
+    UNIVERSITY                 = 104,
+    WAGON                      = 105,
+    WAR_MACHINE_FACTORY        = 106,
+    WAR_SCHOOL                 = 107,
+    WARRIOR_TOMB               = 108,
+    WATER_WHEEL                = 109,
+    WATERING_HOLE              = 110,
+    WHIRLPOOL                  = 111,
+    WINDMILL                   = 112,
+    WITCH_HUT                  = 113,
+    TERRAIN_BRUSH              = 114,
+    const_first_terrain_object = 114,
+    TERRAIN_BUSH               = 115,
+    TERRAIN_CACTUS             = 116,
+    TERRAIN_CANYON             = 117,
+    TERRAIN_CRATER             = 118,
+    TERRAIN_DEAD_VEGETATION    = 119,
+    TERRAIN_FLOWER             = 120,
+    TERRAIN_FROZEN_LAKE        = 121,
+    TERRAIN_HEDGE              = 122,
+    TERRAIN_HILL               = 123,
+    TERRAIN_HOLE               = 124,
+    TERRAIN_KELP               = 125,
+    TERRAIN_LAKE               = 126,
+    TERRAIN_LAVA_FLOW          = 127,
+    TERRAIN_LAVA_LAKE          = 128,
+    TERRAIN_MUSHROOM           = 129,
+    TERRAIN_LOG                = 130,
+    TERRAIN_MANDRAKE           = 131,
+    TERRAIN_MOSS               = 132,
+    TERRAIN_MOUND              = 133,
+    TERRAIN_MOUNTAIN           = 134,
+    TERRAIN_OAK_TREE           = 135,
+    TERRAIN_OUTCROPPING        = 136,
+    TERRAIN_PINE_TREE          = 137,
+    TERRAIN_PLANT              = 138,
+    TERRAIN_RIVER_1            = 139,
+    TERRAIN_RIVER_2            = 140,
+    TERRAIN_RIVER_3            = 141,
+    TERRAIN_RIVER_4            = 142,
+    TERRAIN_RIVER_DELTA        = 143,
+    TERRAIN_ROAD_1             = 144,
+    TERRAIN_ROAD_2             = 145,
+    TERRAIN_ROAD_3             = 146,
+    TERRAIN_ROCK               = 147,
+    TERRAIN_SAND_DUNE          = 148,
+    TERRAIN_SAND_PIT           = 149,
+    TERRAIN_SHRUB              = 150,
+    TERRAIN_SKULL              = 151,
+    TERRAIN_STALAGMITE         = 152,
+    TERRAIN_STUMP              = 153,
+    TERRAIN_TAR_PIT            = 154,
+    TERRAIN_TREE               = 155,
+    TERRAIN_VINE               = 156,
+    TERRAIN_VOLCANIC_VENT      = 157,
+    TERRAIN_VOLCANO            = 158,
+    TERRAIN_WILLOW_TREE        = 159,
+    TERRAIN_YUCCA_TREE         = 160,
+    TERRAIN_REEF               = 161,
+    RANDOM_MONSTER_5           = 162,
+    RANDOM_MONSTER_6           = 163,
+    RANDOM_MONSTER_7           = 164,
+    MAX_EVENT_TYPE             = 165
+};
+
+// Stride 38 (0x26), byte-proven by game::get_cell's `*19` then `*2`
+// address math. A 38-byte record cannot be 4-aligned, which is also how
+// the 4-byte object-type field lands at the odd-dword offset 0x1e that
+// find_magus_hut_value reads - hence the pack. The DC layout (36 B, an
+// STLport vector at +16) does not transfer; only the fields a retail
+// reader touches are named.
+#pragma pack(push, 1)
+class NewmapCell {
+public:
+    char pad_00[0x0c];
+    // +0x0c is the DC's cellFlags word. find_magus_hut_value tests bit
+    // 12 of it (`test byte ptr [cell + 0xd], 0x10`); the DC's flag list
+    // for this word has is_trigger thirteenth, so that is the name used
+    // here - provisional, the bit ORDER is inferred from listing order.
+    unsigned short flags_00_11 : 12;
+    unsigned short is_trigger : 1;
+    unsigned short flags_13_15 : 3;
+    char pad_0e[0x10];
+    TAdventureObjectType type;  // +0x1e
+    short objectIndex;          // +0x22
+    short object_type_index;    // +0x24
+};
+#pragma pack(pop)
+
 // --- BlackBoxData ---
 // CODEVIEW(E:\gamedcs\MapCell.h:364, dc 0xf47cc) void BlackBoxData::BlackBoxData();
 // CODEVIEW(E:\gamedcs\mapcell.cpp:1725, dc 0xf4bfc) void BlackBoxData::~BlackBoxData();
