@@ -5,6 +5,9 @@
 #ifndef HOMM3_TOWN_H
 #define HOMM3_TOWN_H
 
+#include <va.h>
+#include "armygrp.h"
+
 // Town/faction ids - the domain of town::type and of the creature
 // traits' townType column (armygrp's alignment switches case on it:
 // good 0-2 / evil 3-5 / neutral 6-8). NH3API terrain.hpp TTownType
@@ -23,15 +26,132 @@ enum TTownType {
     TOWN_CONFLUX = 0x8
 };
 
-// Head model: CanBuildDock tests byte 8 against 0xff (the "no dock
-// site" sentinel); HasGarrison reads field_c/field_10. Names
-// provisional - the ctor claim will grow this roster.
+// Building ids. DC LF_ENUM `type_building_id` (T_INT4, 245 enumerators:
+// these 45 canonical slots plus 200 per-town alias spellings such as
+// const_griffin_horde = 18). Transcribed from the Dreamcast CodeView
+// dump; four values are retail-proven on this image and the rest ride
+// on the DC roster (same ratification status as mapcell.h's
+// TAdventureObjectType):
+//   HORDE_ID / HORDE_UPG_ID / HORDE_2_ID / HORDE_2_UPG_ID - the
+//     .rdata quad {18,19,24,25} at 0x642e20 that get_horde_effect
+//     scans, and UpgradedDwellingID's two special cases;
+//   SPECIAL_BUILDING_ID / DWELLING_0_ID - get_build_cost_array's two
+//     band boundaries (cmp 0x11 / cmp 0x1e);
+//   MARKETPLACE_SILO_ID / HALL_TOWN_ID / HALL_CITY_ID /
+//     HALL_CAPITOL_ID / HOLY_GRAIL_ID - the bitNumber slots
+//     get_gold_income tests (0x66ce10 / cdf0 / cdf8 / ce00 / ce68);
+//   CASTLE_FORT_ID / CASTLE_CITADEL_ID / CASTLE_CASTLE_ID - the
+//     0x66cdd0/cdd8/cde0 bits check_wall_archery_penalty and
+//     get_castle_growth_bonus read;
+//   MAX_BUILDING_TYPE = 44 - the row width of every per-town building
+//     table (included_buildings, gHierarchyMask) and the bound of
+//     CalcNumLevelArchers' bitNumber walk (end symbol 0x66cef8 =
+//     bitNumber + 44).
+enum type_building_id {
+    MAGE_GUILD_ID = 0,
+    MAGE_GUILD2_ID = 1,
+    MAGE_GUILD3_ID = 2,
+    MAGE_GUILD4_ID = 3,
+    MAGE_GUILD5_ID = 4,
+    TAVERN_ID = 5,
+    DOCK_ID = 6,
+    CASTLE_FORT_ID = 7,
+    CASTLE_CITADEL_ID = 8,
+    CASTLE_CASTLE_ID = 9,
+    HALL_VILLAGE_ID = 10,
+    HALL_TOWN_ID = 11,
+    HALL_CITY_ID = 12,
+    HALL_CAPITOL_ID = 13,
+    MARKETPLACE_ID = 14,
+    MARKETPLACE_SILO_ID = 15,
+    BLACKSMITH_ID = 16,
+    SPECIAL_BUILDING_ID = 17,
+    HORDE_ID = 18,
+    HORDE_UPG_ID = 19,
+    DOCK_WITH_BOAT_ID = 20,
+    EXTRA_0_ID = 21,
+    EXTRA_1_ID = 22,
+    EXTRA_2_ID = 23,
+    HORDE_2_ID = 24,
+    HORDE_2_UPG_ID = 25,
+    HOLY_GRAIL_ID = 26,
+    EXTRA_3_ID = 27,
+    EXTRA_4_ID = 28,
+    EXTRA_5_ID = 29,
+    DWELLING_0_ID = 30,
+    DWELLING_1_ID = 31,
+    DWELLING_2_ID = 32,
+    DWELLING_3_ID = 33,
+    DWELLING_4_ID = 34,
+    DWELLING_5_ID = 35,
+    DWELLING_6_ID = 36,
+    DWELLING_0_UPG_ID = 37,
+    DWELLING_1_UPG_ID = 38,
+    DWELLING_2_UPG_ID = 39,
+    DWELLING_3_UPG_ID = 40,
+    DWELLING_4_UPG_ID = 41,
+    DWELLING_5_UPG_ID = 42,
+    DWELLING_6_UPG_ID = 43,
+    MAX_BUILDING_TYPE = 44
+};
+
+// DC LF_ENUM `EGameResource` (T_INT4, 37 enumerators; the tail past
+// GOLD is the reward/dialog domain, not a resource column). The seven
+// primary resources are the width of every cost row - GOLD = 6 is the
+// column get_gold_income reads out of the silo table (0x688ecc =
+// 0x688eb4 + 6*4).
+enum EGameResource {
+    WOOD = 0,
+    MERCURY = 1,
+    ORE = 2,
+    SULFUR = 3,
+    CRYSTAL = 4,
+    GEMS = 5,
+    GOLD = 6,
+    NUM_RESOURCES = 7
+};
+
+// DC LF_INTERFACE `type_horde_effect`, size 8, three members at the
+// offsets initialize_hordes writes: creature @0, bonus @4 (16-bit
+// store), dwelling @6 (16-bit store).
+struct type_horde_effect {
+    TCreatureType creature;
+    short bonus;
+    short dwelling;
+};
+SIZE(type_horde_effect, 8);
+
+// Head model. sizeof(town) == 360 is now closed from BOTH ends: the
+// ai_player town-array stride measured 360 last lane, and `available`
+// (the last member the TU touches) sits at 0x160..0x167 - exactly
+// 0x168. Field evidence:
+//   +0x00 id     - can_build and Deallocate sign-extend it and index
+//                  gpGame->towns with it (stride 360, i.e. the town
+//                  array's own element size);
+//   +0x01 owner  - sign-extended into the gpGame->players index
+//                  (stride 360) by can_build/can_ever_build/
+//                  get_buildable_mask/Deallocate; Deallocate stores -1;
+//   +0x02        - a byte can_build reads out of gpGame->towns[id] and
+//                  refuses to build when nonzero; role unattested;
+//   +0x04 type   - SIGNED char: every town-table index in this TU
+//                  (get_silo_income, get_horde_effect,
+//                  get_build_cost_array, get_gold_income,
+//                  get_buildable_mask) widens it with movsx;
+//   +0x08 dockSite, +0x0c/+0x10 the two hero slots, +0xe0 garrison,
+//   +0x150/+0x158/+0x160 the three building masks.
 class town {
 public:
-    char pad_00[4];
+    // Index of this town in gpGame->towns (byte, sign-extended).
+    char id;
+    // Owning player, -1 when unowned (Deallocate stores -1 here).
+    char owner;
+    // can_build's first gate: nonzero in gpGame->towns[id] refuses
+    // every build. Name unattested - ordinal placeholder.
+    unsigned char field_02;
+    char pad_03[1];
     // Faction id (armyGroup::GetLuck gates the Fountain of Fortune on
     // type == 1, Rampart).
-    unsigned char type;
+    char type;
     // +5..+7, the town's map cell. can_take_town (0x428410) widens all
     // three with movzx from these bytes and packs them into a
     // type_point (x &0x3ff, y &0x3ff, z &0xf) before asking
@@ -41,17 +161,57 @@ public:
     unsigned char mapY;
     unsigned char mapZ;
     unsigned char dockSite;
-    char pad_09[0x147];
-    // Three 64-bit building bitfields: built@0x150 and available@0x160
-    // (CalcNumLevelArchers ands each against a dwelling mask table);
-    // the 0x158 pair is the mask armyGroup::GetLuck checks the
-    // Fountain bit in (name provisional).
-    unsigned int built[2];
-    unsigned int active[2];
-    unsigned int available[2];
+    char pad_09[0x3];
+    // The hero standing inside the town, -1 for none.
+    // remove_garrison_hero moves this id into visitingHeroId and hands
+    // the hero to hero::PlaceInMap; SwapHeroes exchanges the pair.
+    int garrisonHeroId;
+    // The hero on the town's map tile, -1 for none. HasGarrison
+    // short-circuits to "defended" on this one alone.
+    int visitingHeroId;
+    char pad_14[0xcc];
+    // The town's own troops (ctor constructs an armyGroup at +0xe0 and
+    // then fills the seven type slots with -1).
+    armyGroup garrison;
+    char pad_118[0x38];
+    // Three 64-bit building bitfields, all read as pairs of dwords by
+    // retail's __int64 lowering (the DC's own set_mask/
+    // get_buildable_mask signatures are __int64 too; the DC build
+    // spells them std::bitset<70,unsigned long>, which retail did not):
+    //   built     - get_castle_growth_bonus' fort/citadel/castle tests
+    //               and get_gold_income's hall tests; ctor seeds it
+    //               with bitNumber[HALL_VILLAGE_ID];
+    //   active    - what can_build/can_ever_build/get_buildable_mask
+    //               test requirement masks against, and where
+    //               get_gold_income finds the Grail; ctor copies built
+    //               into it;
+    //   available - the legal-building mask is_legal_building tests
+    //               (can_build and can_ever_build inline that test as
+    //               their first gate).
+    // Names provisional.
+    __int64 built;
+    __int64 active;
+    __int64 available;
 
     unsigned char CanBuildDock();
     void CalcNumLevelArchers(int* numArchers, int* archerLevel);
+    long get_castle_growth_bonus(TCreatureType creature) const;
+    short get_gold_income(unsigned char include_silo) const;
+    unsigned char can_build(short building_id) const;
+    unsigned char can_ever_build(int building_id) const;
+    __int64 get_buildable_mask() const;
+    int* get_build_cost_array(type_building_id building) const;
+    void get_build_cost(type_building_id building, int* resources) const;
+    // DC: ?get_build_cost@town@@QBAFW4type_building_id@@QAW4EGameResource@@QAH@Z
+    // - `types` is an EGameResource* there; spelled int* here so the
+    // loop counter stores into it cast-free (retail's store is a full
+    // dword, so the two spellings are byte-identical).
+    short get_build_cost(type_building_id building, int* types,
+                         int* amounts) const;
+    type_horde_effect* get_horde_effect(type_building_id building) const;
+    int* get_silo_income() const;
+    unsigned char is_legal_building(type_building_id building) const;
+    int HasGarrison();
     // 0x5c1460. The DC carries the pair
     // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
     // only the const half has a proven retail reader so far
@@ -62,62 +222,114 @@ public:
     // (dc 0x1664b0); retail 0x5bdf60 is entered by a bare tail jmp
     // from initialize_game_data (no this), confirming static.
     static void initialize_hordes();
+    // DC public ?UpgradedDwellingID@town@@SA?AW4type_building_id@@W42@@Z
+    // - SA is a public STATIC, which retail confirms: 0x5c14a0 takes
+    // its only argument in ecx (/Gr fastcall, no this) and returns with
+    // a bare `ret`. Spelled int rather than type_building_id because
+    // the fallthrough arm is `id + 7` arithmetic (the armyGroup
+    // slot-int precedent) - an enum return would need a cast.
+    static int UpgradedDwellingID(int id);
 
     // DC public ?included_buildings@town@@2PAY0CM@_JA (44-slot __int64
     // rows). Retail .bss 0x6a8bb8, nine 0x160-stride rows to 0x6a9818
     // (the DC build carries eight); filled by initialize.cpp's
     // create_included_masks. Definition + DATA claim in src/town.cpp.
     static __int64 included_buildings[9][44];
+
+    // The three build-cost tables get_build_cost_array switches
+    // between, all DC-attested town statics whose retail .bss extents
+    // CHAIN EXACTLY, which is what fixes both their bounds and their
+    // ownership:
+    //   NeutralBuildingCosts 0x6a80f8, int[?][7]   (building < 17)
+    //   SpecialBuildingCosts 0x6a82dc, int[9][9][7]  -> +0x8dc =
+    //   included_buildings   0x6a8bb8, __int64[9][44] -> +0xc60 =
+    //   DwellingCosts        0x6a9818, int[9][14][7]
+    // and the DC's own mangled types agree member for member
+    // (?SpecialBuildingCosts@town@@1PAY186HA = int(*)[9][7],
+    // ?DwellingCosts@town@@1PAY1O@6HA = int(*)[14][7]).
+    // The index arithmetic retail emits is the proof of the strides:
+    // 9*type + (building-17) for the special row, 14*type +
+    // (building-30) for the dwelling row. Definitions live in the TU
+    // that fills them (town::InitializeBuildingCostsTables, not yet
+    // located in retail) - declared, not claimed, here.
+    // NeutralBuildingCosts' leading bound is the only soft number: the
+    // 17 rows the band uses end 8 bytes short of SpecialBuildingCosts.
+    static int NeutralBuildingCosts[SPECIAL_BUILDING_ID][NUM_RESOURCES];
+    static int SpecialBuildingCosts[9][9][NUM_RESOURCES];
+    static int DwellingCosts[9][14][NUM_RESOURCES];
+
+    // DC public ?const_horde_effects@town@@1PAY03Utype_horde_effect@@A
+    // - a protected static type_horde_effect[?][4]. Retail .data
+    // 0x6887a0, nine 4-entry rows of 8 bytes (0x6887a0..0x6888c0);
+    // initialize_hordes walks it with a 0x10 (two-entry) inner step
+    // nine times, which is what pins the row count at 9.
+    static type_horde_effect const_horde_effects[9][4];
 };
+SIZE(town, 360);
 
-// Building bit 21 as a two-dword .data pair - the Fountain of Fortune
-// mask armyGroup::GetLuck (0x44b365) ands against town->active. Name
-// is a bootstrap invention.
-DATA(0x0066ce40) extern unsigned int gFountainOfFortuneMask[2];
+// The 1i64 << n building-bit table every mask builder indexes (DC
+// public ?bitNumber@@3PA_JA; retail .data 0x66cd98). VERIFIED against
+// the pinned image 2026-08-07: bitNumber[i] == 1i64 << i holds for
+// every i < 48, so the four "mask" globals this header used to carry
+// (gFortMask 0x66cdd0, gCitadelMask 0x66cdd8, gCastleMask 0x66cde0,
+// gFountainOfFortuneMask 0x66ce40) were never separate objects - they
+// are bitNumber[7], [8], [9] and [21]. Defined by a TU not yet located
+// - extern only, no DATA claim (the gpWindowManager pattern).
+extern __int64 bitNumber[];
 
-// The three fortification bits as consecutive two-dword .data pairs,
-// byte-read from the pinned image: 0x66cdd0 = bit 7, 0x66cdd8 = bit 8,
-// 0x66cde0 = bit 9. type_AI_combat_data::check_wall_archery_penalty
-// (0x4247a8..0x424818) ands each against town->built and assigns the
-// wall-distance penalty 4/5/6 in that order, which is what fixes the
-// fort/citadel/castle reading. Owning TU unknown - extern only, no
-// DATA claim.
-extern unsigned int gFortMask[2];
-extern unsigned int gCitadelMask[2];
-extern unsigned int gCastleMask[2];
+// Per-town-type legal-building rollup create_requirement_masks
+// accumulates (DC public ?gTownEligibleBuildMask@@3PA_JA; retail .bss
+// 0x6976f0, nine qwords). Owner TU unlocated - extern only.
+extern __int64 gTownEligibleBuildMask[9];
 
-// Per-town dwelling masks the archer scan walks (8 bytes per level).
-// The retail bounds are relocation-carried (a table start and end the
-// delinked target renders as zeros), so the count is a named constant
-// here; its value is unproven pending the owning table's admission.
+// Transitive building-requirement masks, one 44-slot row per town type
+// (DC public ?gHierarchyMask@@3PAY0CM@_JA; retail .bss 0x697798,
+// 0x160-stride rows to 0x6983f8). Owner TU unlocated - extern only.
+extern __int64 gHierarchyMask[9][44];
+
 enum ETownConstants {
-    TOWN_DWELLING_MASK_COUNT = 7,
     // The "no dock site" sentinel CanBuildDock tests for.
     TOWN_DOCK_SITE_NONE = 0xff,
     // Nine town types x 44 building-id slots, byte-derived from
     // initialize_game_data's mask walks (0x160 row stride, rows 0..8,
     // building ids to 43 in the requirement tables).
     TOWN_TYPE_COUNT = 9,
-    TOWN_BUILDING_SLOTS = 44
+    TOWN_BUILDING_SLOTS = 44,
+    // The four horde columns of a const_horde_effects row - also the
+    // length of gHordeBuildings, which get_horde_effect scans.
+    TOWN_HORDE_SLOTS = 4,
+    // Base and upgraded dwelling slots per town - the width of a
+    // DwellingCosts row and of a gTownDwellingCreatures row, and the
+    // +7 UpgradedDwellingID adds.
+    TOWN_DWELLING_COUNT = 7
 };
 
-extern unsigned int gDwellingMasks[TOWN_DWELLING_MASK_COUNT][2];
+// Retail .data 0x688eb4: nine 7-int rows (one per town type) that
+// get_silo_income hands out whole and get_gold_income reads the GOLD
+// column of. The bytes are the Resource Silo's weekly yield -
+// wood+ore for Castle/Necropolis/Stronghold/Fortress, mercury for
+// Inferno/Conflux, crystal for Rampart, gems for Tower, sulfur for
+// Dungeon - and the gold column is zero in every row. Name INVENTED
+// (no DC symbol covers this table); owner TU unlocated.
+extern int gSiloIncome[9][NUM_RESOURCES];
 
-// The 1i64 << n building-bit table every mask builder indexes (DC
-// public ?bitNumber@@3PA_JA; retail .data 0x66cd98). Defined by a TU
-// not yet located - extern only, no DATA claim (the gpWindowManager
-// pattern), so the delinker keeps its auto data_26cd98 identity.
-extern __int64 bitNumber[];
+// Retail .data 0x6747b4 - immediately after the akCreatureTypeTraits
+// reference cell - nine 14-long rows giving each town's creature per
+// dwelling slot: the first seven are the base dwellings, the last
+// seven their upgrades (row 0 reads 0,2,4,6,8,10,12 / 1,3,5,7,9,11,13,
+// exactly Castle's ladder). Declared FLAT, not [9][14], because
+// initialize_hordes' index arithmetic adds the row base to the slot
+// BEFORE scaling (`[4*(esi+slot) + table]`, one reloc, no second base
+// register) - a two-dimensional subscript compiles to the three-term
+// form instead. Name INVENTED (no DC symbol); owner TU unlocated.
+extern TCreatureType gTownDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
 
-// Per-town-type legal-building rollup create_requirement_masks
-// accumulates (DC public ?gTownEligibleBuildMask@@3PA_JA; retail .bss
-// 0x6976f0, nine qwords). Owner TU unlocated - extern only.
-extern __int64 gTownEligibleBuildMask[TOWN_TYPE_COUNT];
-
-// Transitive building-requirement masks, one 44-slot row per town type
-// (DC public ?gHierarchyMask@@3PAY0CM@_JA; retail .bss 0x697798,
-// 0x160-stride rows to 0x6983f8). Owner TU unlocated - extern only.
-extern __int64 gHierarchyMask[TOWN_TYPE_COUNT][TOWN_BUILDING_SLOTS];
+// Retail .rdata 0x642e20, the four horde building ids in slot order
+// {HORDE_ID, HORDE_UPG_ID, HORDE_2_ID, HORDE_2_UPG_ID} -
+// get_horde_effect's scan turns a building id into the
+// const_horde_effects column. Name INVENTED (no DC symbol); the four
+// values are read from the pinned image.
+extern const int gHordeBuildings[4];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\town.cpp:1732, dc 0x167958) void show_building_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards);
