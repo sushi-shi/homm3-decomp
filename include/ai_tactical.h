@@ -28,6 +28,18 @@ struct type_AI_enemy_data {
 // use as a 0..3 index into the spell-traits tables is byte-proven here
 // (get_mastery_value 0x436930 indexes m_mastery_bonus[mastery]).
 typedef int TSkillMastery;
+// The 0..3 rungs of that index. Byte-proven as a domain by
+// ai_combat's get_enchantment_value (0x425510), which gates the
+// two-sided Dispel pass on `mastery >= 2` and its fallback-slot
+// rewrite on `mastery == 2`, and by cast_enchantment (0x425b35),
+// which splits at `mastery >= 3`. The NONE/BASIC/ADVANCED/EXPERT
+// spellings are the secondary-skill roster's.
+enum ESkillMastery {
+    SKILL_MASTERY_NONE = 0,
+    SKILL_MASTERY_BASIC = 1,
+    SKILL_MASTERY_ADVANCED = 2,
+    SKILL_MASTERY_EXPERT = 3
+};
 // Magic school selector; get_protection_value (0x4396e0) takes it.
 typedef int TSpellSchool;
 

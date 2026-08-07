@@ -22,21 +22,37 @@ struct TArtifactSlot {
 
 class hero {
 public:
-    char pad_000[0x91];
+    char pad_000[0x18];
+    // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
+    // (0x423f3d) widens it into the combat record's long mana, and
+    // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back
+    // with 16-bit stores.
+    short mana;                     // +0x18
+    char pad_01a[0x77];
     // Seven army slots: creature type at 0x91+i*4, count at 0xad+i*4
     // (CreatureTypeCount reads [ecx-0x1c] against [ecx] with ecx
     // walking from 0xad) - exactly armyGroup's 56-byte layout, and
     // AI_approximate_strength (0x427657) hands `hero + 0x91` straight
     // to armyGroup::get_AI_value as a this pointer.
     armyGroup army;
-    char pad_0c9[0xa];
-    // Secondary-skill mastery byte read as a SIGNED char by
-    // type_AI_combat_data::check_wall_archery_penalty (0x424848), which
-    // subtracts it from the wall-distance penalty: slot 10 of a
-    // 28-entry band starting at 0xc9 (Ballistics in the standard skill
-    // order). Only this one slot is byte-proven, so only it is named.
+    // Secondary-skill mastery bytes, a 28-entry band starting at 0xc9,
+    // all read as SIGNED chars. THREE slots are byte-proven, and each
+    // lands exactly where the standard secondary-skill order puts it -
+    // which is what promotes the band from a guess to a model:
+    //   +0xd0 slot 7  Wisdom     - do_aftermath's inlined do_eagle_eye
+    //                              (0x426f44) caps the learnable spell
+    //                              level at wisdom + 2
+    //   +0xd3 slot 10 Ballistics - check_wall_archery_penalty (0x424848)
+    //                              subtracts it from the wall distance
+    //   +0xd4 slot 11 Eagle Eye  - do_aftermath (0x426eee) gates the
+    //                              spell-learning pass on it and adds 1
+    //                              to it as the level bound (0x426f20)
+    char pad_0c9[0x7];
+    signed char wisdomLevel;        // +0xd0
+    char pad_0d1[0x2];
     signed char ballisticsLevel;    // +0xd3
-    char pad_0d4[0x11];
+    signed char eagleEyeLevel;      // +0xd4
+    char pad_0d5[0x10];
     // 28 secondary-skill level bytes; GetNthSS scans for level
     // iWhich+1 and returns the slot index.
     unsigned char skillLevels[28];
@@ -62,6 +78,13 @@ public:
     long modify_spell_damage(int spell, int damage, const class army* target_army);
     int GetHeroSpellBonus(int spell_id, int target_level, int value);
     float get_combat_value_modifier();
+    // ai_combat's create_skeletons (0x426df0) calls both back to back:
+    // the factor with a pushed 1, then the creature type with no
+    // argument. GetNecromancyFactor is claimed in src/hero.cpp
+    // (0x4e3cd0, dc 0xd4390); GetNecromancyCreature has NO Dreamcast
+    // row - its name is HD-crossbuild + IDA lineage only, PROVISIONAL.
+    float GetNecromancyFactor(unsigned char apply_limit);
+    TCreatureType GetNecromancyCreature();
 };
 
 #pragma pack(pop)

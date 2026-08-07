@@ -13,6 +13,16 @@ class hero;
 class town;
 class NewmapCell;
 
+// VC6's <new> declares `operator delete` WITHOUT an exception
+// specification, so under /GX the scope-exit destructor sequence has
+// to keep the EH state variable live across each call
+// (`mov [ebp-4], 0` / `mov [ebp-4], -1`). Retail emits neither store
+// in AI_quick_combat (0x4274a2..0x4274bd) or AI_auto_combat - its
+// operator delete was visible as nothrow. Declaring it so here is what
+// makes those two byte-exact; the retail target is the 11-byte free
+// thunk at 0x60ab30, which indeed cannot throw.
+__declspec(nothrow) void __cdecl operator delete(void* _P);
+
 // The AI's quick-combat speed bands. Retail compares the band against
 // type_monster_data::catagory as a plain signed int (get_attack
 // 0x4263d5 / inflict_melee_damage 0x426207); band 0 is the shooter
@@ -72,6 +82,10 @@ struct type_monster_data {
     long get_spell_damage(SpellID spell, const hero* casting_hero,
                           const hero* target_hero, long damage) const;
     long take_damage(long damage);
+    // No retail row of its own - /Ob2 inlined every call site and
+    // OPT:REF dropped the out-of-line COMDAT, so ai_combat.cpp defines
+    // it `inline` (see the note there).
+    void cast_enchantment(long spell_value, unsigned char increase);
 };
 SIZE(type_monster_data, 0x48);
 
@@ -85,6 +99,20 @@ struct type_monster_vector {
     type_monster_data* _M_start;
     type_monster_data* _M_finish;
     type_monster_data* _M_end_of_storage;
+
+    // The only STLport machinery any retail body actually emits: the
+    // destructor, inlined at both ends of AI_quick_combat (0x427462 /
+    // 0x427478) and AI_auto_combat as `operator delete(_M_start)`
+    // followed by three zero stores. `operator delete` here is the
+    // 11-byte free-thunk at 0x60ab30. Modeling the head only keeps
+    // P2.3 (the STLport vendoring decision) open.
+    ~type_monster_vector()
+    {
+        ::operator delete(_M_start);
+        _M_start = 0;
+        _M_finish = 0;
+        _M_end_of_storage = 0;
+    }
 
     type_monster_data* begin() const { return _M_start; }
     type_monster_data* end() const { return _M_finish; }
@@ -131,15 +159,23 @@ public:
     char pad_31[1];
     short penalty_distance;          // +0x32
 
+    type_AI_combat_data(const hero* new_hero, const armyGroup* new_army,
+                        double base_modifier, const hero* _enemy_hero,
+                        const town* enemy_town, NewmapCell* map_cell);
     void check_wall_archery_penalty(const town* enemy_town);
     void adjust_army(unsigned char dismiss_hero);
     long get_fastest_speed() const;
     long get_next_chain_lightning_target(long excluded,
                                          const type_AI_combat_data& defender,
                                          long start, long damage) const;
+    void get_chain_lightning_value(type_spell_choice& choice,
+                                   const type_AI_combat_data& defender,
+                                   long damage) const;
     void get_area_value(type_spell_choice& choice,
                         const type_AI_combat_data& defender,
                         long damage, long extra_targets) const;
+    void get_damage_spell_value(type_spell_choice& choice,
+                                const type_AI_combat_data& defender) const;
     long get_mass_damage_value(type_spell_choice& choice,
                                const hero* casting_hero) const;
     long inflict_melee_damage(long damage, long start, long speed_limit);
@@ -155,6 +191,10 @@ public:
                           long damage, long extra_targets) const;
     void cast_damage_spell(type_spell_choice& choice,
                            type_AI_combat_data& defender) const;
+    void get_enchantment_value(type_spell_choice& choice,
+                               const hero* casting_hero);
+    void get_enchantment_value(type_spell_choice& choice,
+                               type_AI_combat_data& defender);
     void cast_enchantment(type_spell_choice& choice, const hero* casting_hero,
                           unsigned char increase);
     void cast_enchantment(type_spell_choice& choice, type_AI_combat_data& defender);
@@ -163,7 +203,15 @@ public:
                                type_speed_catagory current_round) const;
     void do_general_melee(type_AI_combat_data& defender);
     void simulate_combat(type_AI_combat_data& defender);
+    void do_aftermath(type_AI_combat_data& defender, const town* enemy_town);
 };
+
+unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero,
+                              armyGroup* defending_army, town* defending_town,
+                              NewmapCell* cell);
+void AI_auto_combat(hero* attacking_hero, hero* defending_hero,
+                    armyGroup* attacking_army, armyGroup* defending_army,
+                    const town* defending_town, NewmapCell* cell);
 
 long AI_approximate_strength(const hero* current_hero);
 long AI_approximate_strength(const hero* current_hero, const armyGroup* current_army);

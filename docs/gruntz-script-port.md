@@ -260,6 +260,43 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — ai_combat stub campaign; the nothrow `operator delete`
+  lever.** Orchestrated single-matcher lane (user: "become an
+  orchestrator and manage one matcher", AI TUs first then smallest-TUs
+  upward; "approve"). Scope was chosen by splitting the TU's 24
+  non-exact functions into 14 claimed-but-`@stub` bodies at 0.00% and
+  10 already-documented residuals — the matcher was pointed at the
+  stubs smallest-first and explicitly told NOT to grind the residual
+  family (skill rule: stop after 3–4 real hypotheses). Six promoted to
+  byte-exact (create_skeletons, both cast_enchantment overloads,
+  get_damage_spell_value, AI_quick_combat, AI_auto_combat);
+  get_enchantment_value 0 → 89.46%, homing residual documented
+  in-source. TU 13/37 → 19/37 exact, 32.45% → 53.37% fuzzy;
+  engine-wide 249 → 255 exact, 3.05% → 3.21% executable matched.
+  **New proven lever, expected to generalize to every EH-bearing TU:**
+  under `/GX` VC6 keeps the EH state variable live across every call a
+  scope-exit dtor makes; retail emits none because its `operator
+  delete` was visible as nothrow and VC6's `<new>` declares it WITHOUT
+  an exception specification — a single `__declspec(nothrow) void
+  __cdecl operator delete(void*);` in the TU took two entry points from
+  96.5% / 97.8% to exact. Reconstruction facts: create_skeletons' edx
+  arg is an armyGroup walked slot-by-slot (DC's `short amount` is
+  wrong); cast_enchantment's per-creature local is `__int64`, proven by
+  retail spilling the `__alldiv` HIGH dword to a dead slot; the 180B
+  cast_enchantment overload sat at 0.00% only because the labels
+  overload-group dedup needs both claims compiled. Process note: the
+  matcher's baseline diff had dropped the dated hand-lowering comment
+  on get_spell_work_chance — restored, and a build confirmed inline
+  comments DO survive the tool's rewrite, so the skill's dated-comment
+  convention is sound. **OPEN, escalated not guessed:** (a) hero layout
+  contradiction — inlined do_eagle_eye walks `hero[0x430 + spell]` for
+  spells 0..0x45, overlapping the byte-proven `noWallPenalty` at
+  +0x43e; blocks do_aftermath. (b) choose_melee's copy shape implies
+  `type_AI_combat_data` has a BASE CLASS holding +0x10..+0x33
+  (adjacent to the STLport P2.3 call). (c) the 6-arg ctor at 0x423ee0
+  stores byte 3 of the `new_hero` pointer into field_00 — read is real
+  against three call sites, no honest C++ spelling found.
+
 - **2026-08-07 — cleanliness debt cleared to zero (user: "Fix everything
   now"); two masked fatal gates fixed.** Discovery: `homm3 build` had
   been exiting 1 since the kbwin session on two FATAL verify_va_claims
