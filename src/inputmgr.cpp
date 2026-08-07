@@ -13,17 +13,30 @@
 // E:\gamedcs\inputmgr.cpp:48
 // Located as AppWndProc's WM_KEYDOWN/WM_KEYUP callee (homm2 kbwin
 // dispatches the same pair by name); iconwdgt..inputmgr bracket.
+// NOT RECONSTRUCTED 2026-08-07 - decoded but BLOCKED on unmodeled
+// structure, deliberately left a stub rather than guessed. The shape is
+// MouseMessageHandler's twin: same gpInputManager guard chain (minus the
+// bufferBusy latch), same six zeroing stores, a TWO-CASE switch on
+// WM_KEYDOWN/WM_KEYUP setting id 1/2 and `codeX = (lParam >> 16) & 0xff`
+// (retail sinks the KEYDOWN arm behind the forward `je` - the documented
+// two-case-switch lever), then the identical GetKeyState qualifier
+// block, iTail/iHead `% 64` advance, and `return e->id == 0`.
+// What blocks it is the tail:
+//     gpInputManager->extendFlag = 0;                       // +0x954
+//     if (<global 0x699280>->status == 1) {                 // +0x34
+//         if (<global 0x699268> == 0 || <..>->+0x44 == 0
+//             || <..+0x44>->+0x58->byte +0x6d == 0) {
+//             if (e->id == 1 && e->codeX == 0x3b)           // F1
+//                 AppCommand(hwndApp, WM_COMMAND, 0x9c74, 0);
+//             if (e->id == 1 && e->codeX == 0x3e)           // F4
+//                 AppCommand(hwndApp, WM_COMMAND, 0x9c49, 0);
+//         }
+//     }
+// Neither 0x699280 nor 0x699268 is modeled, and the +0x44 -> +0x58 ->
+// +0x6d chain needs two layouts this tree does not yet have. Writing it
+// would mean inventing structure, which scores but is not truth.
 VA(0x004ec0e0, 0x1AB)  // anchor-callee, dc 0xdc894
 int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam)
-{
-    // @stub
-}
-
-// E:\gamedcs\inputmgr.cpp:190
-// Located as AppWndProc's 0x200..0x206 mouse-message callee (homm2
-// lineage as above).
-VA(0x004ec290, 0x1CC)  // anchor-callee, dc 0xdcaa0
-int MouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam)
 {
     // @stub
 }
@@ -64,6 +77,92 @@ int inputManager::CheckDown(int x, int y, int width, int height, int id, unsigne
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\inputmgr.cpp:190
+// Located as AppWndProc's 0x200..0x206 mouse-message callee (homm2
+// lineage as above). Synthesises one ring-buffer entry per Windows
+// mouse message. The `default: goto` is load-bearing: retail's switch
+// default jumps PAST the coordinate block (the `ja` lands after it), so
+// the coordinates are inside the handled arms, not after the switch.
+// gpInputManager is reloaded after `bufferBusy = 1` because that store
+// kills VC6's CSE of the global - the guard chain above it shares one
+// load, exactly as retail does.
+VA(0x004ec290, 0x1CC)  // anchor-callee, dc 0xdcaa0
+int MouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam)
+{
+    message* e;
+    int x;
+    int y;
+
+    if (gpInputManager == 0)
+        return 1;
+    if (gpInputManager->status != 1)
+        return 1;
+    if (gpInputManager->bufferBusy != 0)
+        return 1;
+    gpInputManager->bufferBusy = 1;
+    e = &gpInputManager->iBuffer[gpInputManager->iTail];
+    e->codeX = 0;
+    e->codeY = 0;
+    e->qualifier = 0;
+    e->mouseX = 0;
+    e->mouseY = 0;
+    e->id = 0;
+    switch (winMsg) {
+    case WM_MOUSEMOVE:
+        e->id = MESSAGE_MOUSE_MOVE;
+        break;
+    case WM_LBUTTONDBLCLK:
+        e->id = MESSAGE_LEFT_BUTTON_DOWN;
+        break;
+    case WM_LBUTTONDOWN:
+        e->id = MESSAGE_LEFT_BUTTON_DOWN;
+        SetCapture(hwndApp);
+        break;
+    case WM_RBUTTONDOWN:
+        e->id = MESSAGE_RIGHT_BUTTON_DOWN;
+        SetCapture(hwndApp);
+        break;
+    case WM_RBUTTONDBLCLK:
+        e->id = MESSAGE_RIGHT_BUTTON_DOWN;
+        break;
+    case WM_LBUTTONUP:
+        e->id = MESSAGE_LEFT_BUTTON_UP;
+        ReleaseCapture();
+        break;
+    case WM_RBUTTONUP:
+        e->id = MESSAGE_RIGHT_BUTTON_UP;
+        ReleaseCapture();
+        break;
+    default:
+        goto no_position;
+    }
+    x = static_cast<short>(lParam);
+    y = static_cast<short>(static_cast<unsigned long>(lParam) >> 16);
+    e->codeX = x;
+    e->codeY = y;
+    e->mouseX = x;
+    e->mouseY = y;
+no_position:
+    if (e->id != 0) {
+        int quals = 0;
+        if (GetKeyState(VK_CONTROL) & 0x8000)
+            quals = MESSAGE_MODIFIER_CONTROL;
+        if (GetKeyState(VK_MENU) & 0x8000)
+            quals |= MESSAGE_MODIFIER_ALT;
+        if (GetKeyState(VK_SHIFT) & 0x8000)
+            quals |= MESSAGE_MODIFIER_SHIFT;
+        e->qualifier = quals;
+        gpInputManager->iTail++;
+        gpInputManager->iTail %= 64;
+        if (gpInputManager->iHead == gpInputManager->iTail) {
+            gpInputManager->iHead++;
+            gpInputManager->iHead %= 64;
+        }
+    }
+    gpInputManager->bufferBusy = 0;
+    return e->id == 0;
+}
 
 // E:\gamedcs\inputmgr.cpp:779
 // Residual (82.3%): retail schedules the vtable store below the
@@ -235,17 +334,111 @@ void inputManager::AsciiConvert(message* msg)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\inputmgr.cpp:1040
+// Pre-fills all 128 slots with `scanCode << 8` (the "extended key, no
+// ASCII" encoding AsciiConvert's function-key arm keeps whole), then
+// re-states every entry 0..88 explicitly - including the 21 that the
+// pre-fill already produced (0x1d00, 0x2900, 0x2a00, 0x3600, 0x3800,
+// 0x3a00 and the 0x3b00..0x5800 F-key/keypad run all equal index << 8).
+// Those redundant stores are retail's, not ours: they are what proves
+// the source spells out the whole table after the loop.
 VA(0x004ec8c0, 0x340)  // linkorder, dc 0xdde74
 void inputManager::MakeScanCodeTable()
 {
-    // @stub
+    for (unsigned index = 0; index < 128; index++)
+        scanCodeTable[index] = static_cast<short>(index << 8);
+    scanCodeTable[0] = 0x00;
+    scanCodeTable[1] = 0x1b;
+    scanCodeTable[2] = '1';
+    scanCodeTable[3] = '2';
+    scanCodeTable[4] = '3';
+    scanCodeTable[5] = '4';
+    scanCodeTable[6] = '5';
+    scanCodeTable[7] = '6';
+    scanCodeTable[8] = '7';
+    scanCodeTable[9] = '8';
+    scanCodeTable[10] = '9';
+    scanCodeTable[11] = '0';
+    scanCodeTable[12] = '-';
+    scanCodeTable[13] = '=';
+    scanCodeTable[14] = 0x7f;
+    scanCodeTable[15] = 0x09;
+    scanCodeTable[16] = 'Q';
+    scanCodeTable[17] = 'W';
+    scanCodeTable[18] = 'E';
+    scanCodeTable[19] = 'R';
+    scanCodeTable[20] = 'T';
+    scanCodeTable[21] = 'Y';
+    scanCodeTable[22] = 'U';
+    scanCodeTable[23] = 'I';
+    scanCodeTable[24] = 'O';
+    scanCodeTable[25] = 'P';
+    scanCodeTable[26] = '[';
+    scanCodeTable[27] = ']';
+    scanCodeTable[28] = 0x0a;
+    scanCodeTable[29] = 0x1d00;
+    scanCodeTable[30] = 'A';
+    scanCodeTable[31] = 'S';
+    scanCodeTable[32] = 'D';
+    scanCodeTable[33] = 'F';
+    scanCodeTable[34] = 'G';
+    scanCodeTable[35] = 'H';
+    scanCodeTable[36] = 'J';
+    scanCodeTable[37] = 'K';
+    scanCodeTable[38] = 'L';
+    scanCodeTable[39] = ';';
+    scanCodeTable[40] = '\'';
+    scanCodeTable[41] = 0x2900;
+    scanCodeTable[42] = 0x2a00;
+    scanCodeTable[43] = '\\';
+    scanCodeTable[44] = 'Z';
+    scanCodeTable[45] = 'X';
+    scanCodeTable[46] = 'C';
+    scanCodeTable[47] = 'V';
+    scanCodeTable[48] = 'B';
+    scanCodeTable[49] = 'N';
+    scanCodeTable[50] = 'M';
+    scanCodeTable[51] = ',';
+    scanCodeTable[52] = '.';
+    scanCodeTable[53] = '/';
+    scanCodeTable[54] = 0x3600;
+    scanCodeTable[55] = '*';
+    scanCodeTable[56] = 0x3800;
+    scanCodeTable[57] = ' ';
+    scanCodeTable[58] = 0x3a00;
+    scanCodeTable[59] = 0x3b00;
+    scanCodeTable[60] = 0x3c00;
+    scanCodeTable[61] = 0x3d00;
+    scanCodeTable[62] = 0x3e00;
+    scanCodeTable[63] = 0x3f00;
+    scanCodeTable[64] = 0x4000;
+    scanCodeTable[65] = 0x4100;
+    scanCodeTable[66] = 0x4200;
+    scanCodeTable[67] = 0x4300;
+    scanCodeTable[68] = 0x4400;
+    scanCodeTable[69] = 0x4500;
+    scanCodeTable[70] = 0x4600;
+    scanCodeTable[71] = 0x4700;
+    scanCodeTable[72] = 0x4800;
+    scanCodeTable[73] = 0x4900;
+    scanCodeTable[74] = '-';
+    scanCodeTable[75] = 0x4b00;
+    scanCodeTable[76] = 0x4c00;
+    scanCodeTable[77] = 0x4d00;
+    scanCodeTable[78] = '+';
+    scanCodeTable[79] = 0x4f00;
+    scanCodeTable[80] = 0x5000;
+    scanCodeTable[81] = 0x5100;
+    scanCodeTable[82] = 0x5200;
+    scanCodeTable[83] = 0x5300;
+    scanCodeTable[84] = 0x5400;
+    scanCodeTable[85] = 0x5500;
+    scanCodeTable[86] = 0x5600;
+    scanCodeTable[87] = 0x5700;
+    scanCodeTable[88] = 0x5800;
 }
 
 // E:\gamedcs\inputmgr.cpp:1139
-#endif  // @carcass
 
 // Synthesises one MESSAGE_MOUSE_MOVE straight into the ring buffer.
 // `% 64` is the SIGNED remainder retail emits verbatim

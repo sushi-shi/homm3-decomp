@@ -6,8 +6,8 @@ after_unit	before_unit	gap_start	gap_end	bytes	fns	candidate_owners
 adventuremapwindow	advmgr	0x40a4	0x5de0	7484	52	adventureoptionswindow
 advmgr	ai	0x1b0da	0x1eac0	14822	51	advspells
 ai	ai_combat	0x224d9	0x23c80	6055	25	
-ai_combat	ai_player	0x27323	0x28410	4333	23	
-ai_player	ai_tactical	0x2a2a7	0x35850	46505	132	
+ai_combat	ai_player	0x27747	0x28410	3273	19	
+ai_player	ai_tactical	0x2a2a7	0x35830	46473	131	
 ai_tactical	army	0x3cb08	0x3d540	2616	16	
 army	armygrp	0x48d1b	0x496a0	2437	19	
 armygrp	basemgr	0x4c606	0x4d530	3882	16	artifact
@@ -26,14 +26,13 @@ cspriteframe	dialogbox	0x7c557	0x90b20	83401	291	cursor,customcampaign,dc_input,
 dialogbox	drawing	0x90b4c	0x93710	11204	53	diff,dimensiondoorwindow
 drawing	event_record	0x9683a	0x9d160	26918	164	ds_engine,dxplay
 event_record	events	0x9d630	0x9e170	2880	20	
-events	exec	0xacc94	0xb0660	14796	32	
-exec	findpath	0xb0f35	0xb1090	347	4	
-findpath	fly	0xb3f61	0xb4420	1215	7	
-fly	font	0xb447f	0xb5110	3217	14	
+events	exec	0xacc94	0xb0a10	15740	42	
+exec	findpath	0xb0f35	0xb1370	1083	12	
+findpath	font	0xb3f61	0xb5110	4527	22	fly
 font	game	0xb5b90	0xb8550	10688	57	
 game	hero	0xceca8	0xd7470	34760	167	gametypewindow,genericresource,global
-hero	herodefs	0xe6771	0xe67a0	47	1	
-herodefs	hexcell	0xe714f	0xe7150	1	0	
+hero	herodefs	0xe64be	0xe67a0	738	8	
+herodefs	hexcell	0xe6cd8	0xe7150	1144	11	
 hexcell	iconwdgt	0xe71fd	0xea7b0	13747	52	hillfortwindow,hiscore
 iconwdgt	initialize	0xeb33d	0xebb10	2003	12	
 initialize	inputmgr	0xebce9	0xec0e0	1015	11	

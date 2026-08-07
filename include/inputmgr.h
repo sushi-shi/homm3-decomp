@@ -64,6 +64,7 @@ public:
     void Flush();
     void ForceMouseMove();
     void AsciiConvert(message* msg);
+    void MakeScanCodeTable();
 
     // Located 2026-08-06 by homm3.analysis.dc_bracket (link-order
     // bracket, gap of 3 between the ctor and Flush) and verified by

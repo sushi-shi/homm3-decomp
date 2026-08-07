@@ -260,6 +260,95 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — hero.obj tail audit: 7 claims WITHDRAWN as STL COMDATs;
+  P2.3 ANSWERED (retail is Dinkumware, NOT STLport); the hero
+  `0x430+spell` contradiction RESOLVED.** Engine-wide 277 → 278 exact,
+  3.59% → 3.65% executable matched; inputmgr 31.5% → 80.15%, 2/10 →
+  5/10.
+  **P2.3 — THE STLPORT VENDORING QUESTION IS ANSWERED, and the answer
+  unblocks rather than blocks.** The DC dump's hero.obj tail is STLport
+  (`..\stlport\stl_bitset.h`); **retail's is Dinkumware — VC6's own
+  shipped headers.** Retail carries `"invalid bitset<N> position"`
+  (0x0065f450) and `"invalid string position"` and **no STLport string
+  anywhere**. Verified independently by the orchestrator against the
+  hash-checked image: `invalid bitset` ×2, `invalid string position`
+  ×1, and ZERO hits for `stlport`/`STLport`/`_STL`/`__stl`. Consequence:
+  every body parked on "STLport-blocked" is reproducible with the
+  toolchain already in the tree, and the seven COMDATs below are real
+  unclaimed surface (the `0x4e6500` `vector::insert` body alone serves
+  **276 call sites**).
+  **The inherited tail map had walked seven DC header/compgen rows onto
+  seven retail COMDATs that are a different set entirely.** All
+  WITHDRAWN, each identified by body: 0x4e64c0 `bitset<144>::any()`
+  (`mov eax,4` = `_Nw`, Dinkumware's descending loop over `_A[5]`; N
+  pinned by `bitset<144>::set` at 0x4cf9a0's `cmp edi,0x90`); 0x4e64e0
+  `vector::begin()` and 0x4e64f0 `vector::end()` (bare `ret` vs the DC
+  rows' `ret 4`); 0x4e6500 `vector::insert` (growth
+  `_N = size() + (size()<_M ? _M : size())`, `_Allocate` verbatim,
+  per-element callee 0x404dc0 = `_Construct`'s placement-new null
+  check) — claimed as `SCampaign::GetExpCap`, a 32 B `ret 0` getter;
+  0x4e66c0 `bitset<48>::_Tidy` (`_Trim` masks `_A[1] &= 0xFFFF` ⇒
+  `_N%32==16`); 0x4e66f0 `bitset<70>::set(size_t,bool)`
+  (`cmp edi,0x46`, returns `this`, `ret 8`; 70 = the spell count);
+  0x4e6750 a 3-arg `/Gr` clamp helper `(*b<*a) ? a : ((*c<*b) ? c : b)`
+  with no delete, no vcall, no vtable load — left deliberately UNNAMED.
+  Also: 0x4e6120 CORRECTED (slot right, arity wrong — DC 1-param `ret 0`
+  vs retail `ret 8`; a 2-arg member adding artifact attack/defense/HP to
+  a stat block, caller 0x43d7b2 in army.obj) → ordinal placeholder
+  `hero::HeroFn_004E6120`; 0x4e5b80 CONFIRMED with signature corrected
+  to `ret 4`; 0x4e5ce0 and 0x4e5dd0 PROMOTED from `DC_ONLY` to
+  `hero::can_land()` and `hero::WalkOnWater(int)` (the latter proven by
+  `Fly(int)` storing to +0x112 and `IsMobile` loading +0x116 and +0x112
+  together as the movement-override pair); one NEW retail-only claim at
+  0x4e5de0. **18 further tail claims body-verified CONFIRMED.**
+  Coverage: every claim from 0x4e4990 to end-of-TU is body-audited, and
+  all 89 claims in the file were screened by a new `ret N` vs
+  DC-param-count validator (recursive-descent, so jump tables do not
+  desync it) plus a size-ratio sweep. Unaudited: 0x4d7470..0x4db350
+  screened but not body-verified; the 42 unclaimed functions in
+  0x4db3d6..0x4e2340 untouched.
+  **THE `hero[0x430 + spell]` CONTRADICTION IS RESOLVED — and the tree's
+  current model is the wrong side of it.** `hero::AddSpell(int)` at
+  0x4d9330 is 26 bytes and writes TWO per-spell byte arrays, stride 1,
+  bases exactly **0x46 = 70 apart**: `[eax+ecx+0x3ea] = 1` and
+  `[eax+ecx+0x430] = 1`. Corroboration: `can_summon_boat` guards on
+  `byte [this+0x430]` then handles spell 0 (Summon Boat); a whole-image
+  scan of byte displacements in 0x3ea..0x47f finds scattered 1–2-ref
+  named-spell reads (+0x3ea, +0x3f4, +0x404, +0x420, +0x430,
+  +0x436..+0x439, +0x43e, +0x453, +0x455, +0x461) and then **jumps to
+  20–28 references at +0x476..+0x479**, the four primary skills
+  (byte-proven by `get_primary_skill_total` and 0x4e6120) — and
+  `0x430 + 70 = 0x476` exactly. +0x436..+0x439 = spells 6,7,8,9 =
+  Fly / Water Walk / Dimension Door / Town Portal, all read from one
+  adventure-map TU. **So `noWallPenalty` at +0x43e is the WRONG reading:
+  it is element 14 of the second spell array, and
+  `check_wall_archery_penalty` (0x42482b) really reads
+  `hero->spellFlags2[14]`.** Per the orchestrator's standing
+  instruction the matcher did NOT re-model unilaterally — `include/hero.h:66`
+  and `src/ai_combat.cpp:915` still carry the old reading. **The
+  re-model is queued as its own change.**
+  **inputmgr:** `MakeScanCodeTable` exact (the last 0.57% was `jl` vs
+  `jb` — the loop counter is **unsigned**; retail also re-states all 89
+  entries after the `index << 8` pre-fill, including 21 redundant with
+  it); `MouseMessageHandler` 99.9645% with only reloc-NAME-only rows
+  left (the labels layer names DATA rows `data_<rva>` project-wide).
+  **New lever:** declaring `int quals = 0;` INSIDE the `if` block rather
+  than at function scope took it 86.5% → 99.96% — at function scope VC6
+  homes it to `[ebp-4]` and that one spill cascades through the whole
+  tail. Case ORDER is also load-bearing: MOUSEMOVE, LBUTTONDBLCLK,
+  LBUTTONDOWN, RBUTTONDOWN, RBUTTONDBLCLK, LBUTTONUP, RBUTTONUP puts
+  the two `ReleaseCapture()` arms adjacent so VC6 tail-merges them as
+  retail does. `KeyboardMessageHandler` is fully decoded and the decode
+  written into its carcass, but finishing it would mean inventing
+  structure for two unmodeled globals — deliberately left a stub.
+  **OPEN:** adopting `hero::GetRoguePower` for 0x4e5de0 (address now
+  independently proven, but the NAME is HD-crossbuild/NH3API lineage and
+  needs supervised admission; currently the placeholder
+  `hero::HeroFn_004E5DE0`); and six head-region arity divergences in
+  hero.cpp (`HeroMessageUpdate`, `HeroScreenUpdate`, `UpdateArmies`,
+  `ViewStat`, `ViewArtifact` — the hero-SCREEN block the Dreamcast
+  redesigned — plus `hero::load`), flagged in-file, not acted on.
+
 - **2026-08-07 — the va-claims backlog DRAINED (9/9 were bugs, not
   debt); winmgr CLOSED; the try/catch lever proven twice more.**
   Engine-wide 273 → 277 exact, 3.45% → 3.59% executable matched.
