@@ -104,9 +104,9 @@ int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIn
         return 0;
     int cell = currIndex;
     if (creatureId & 1) {
-        if (direction == 6) {
+        if (direction == COMBAT_DIRECTION_WIDE_UPPER) {
             cell = GetAdjacentCellIndex(currIndex, facing ? 0 : 5);
-        } else if (direction == 7) {
+        } else if (direction == COMBAT_DIRECTION_WIDE_LOWER) {
             cell = GetAdjacentCellIndex(currIndex, facing ? 2 : 3);
         } else {
             int other = currIndex;
@@ -133,19 +133,19 @@ int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIn
         return 0;
     hexcell* hc = &gpCombatManager->cells[cell];
     switch (criteria) {
-        case 0:
+        case ATTACK_CRITERIA_SELF:
             if (hc->armySide != side)
                 return 0;
             if (hc->armySlot != slot)
                 return 0;
             return 1;
-        case 1:
+        case ATTACK_CRITERIA_ENEMY:
             if (hc->armySide < 0)
                 return 0;
             if (!is_enemy(hc->get_army()))
                 return 0;
             return 1;
-        case 2:
+        case ATTACK_CRITERIA_OCCUPIED:
             if (hc->armySide < 0)
                 return 0;
             return 1;
@@ -161,9 +161,9 @@ int army::GetAdjacentCellIndex(int currIndex, int direction)
         return -1;
     if (currIndex >= 187)
         return -1;
-    if (direction == 6)
+    if (direction == COMBAT_DIRECTION_WIDE_UPPER)
         direction = (facing == 1) ? 5 : 0;
-    else if (direction == 7)
+    else if (direction == COMBAT_DIRECTION_WIDE_LOWER)
         direction = (facing == 1) ? 3 : 2;
     return gpCombatManager->adjacentCells[currIndex][direction];
 }
@@ -194,9 +194,9 @@ int GetAdjacentCellIndexNoArmy(int currIndex, int direction)
         return -1;
     if (currIndex >= 187)
         return -1;
-    if (direction == 6)
+    if (direction == COMBAT_DIRECTION_WIDE_UPPER)
         direction = 5;
-    else if (direction == 7)
+    else if (direction == COMBAT_DIRECTION_WIDE_LOWER)
         direction = 3;
     return gpCombatManager->adjacentCells[currIndex][direction];
 }
@@ -207,7 +207,8 @@ int OppositeDirection(int direction)
 {
     if (direction < 6)
         return (direction + 3) % 6;
-    return direction == 6 ? 7 : 6;
+    return direction == COMBAT_DIRECTION_WIDE_UPPER
+               ? COMBAT_DIRECTION_WIDE_LOWER : COMBAT_DIRECTION_WIDE_UPPER;
 }
 
 #if 0  // @carcass

@@ -7,6 +7,28 @@
 
 #include <va.h>
 
+// Combat-grid directions as path.cpp's walkers consume them: 0..5 are
+// the six hex neighbours (combatManager::adjacentCells columns); 6/7
+// are the two WIDE-CREATURE extra attack slots appended after them,
+// remapped to a real neighbour of the far hex by `facing` before the
+// table lookup (GetAdjacentCellIndex 0x523d90; GetAttackMask pre-sets
+// their mask bits for one-hex creatures; OppositeDirection pairs them
+// 6<->7). Names are bootstrap inventions - no DC/NH3API roster
+// survives for the direction ids.
+enum ECombatDirection {
+    COMBAT_DIRECTION_WIDE_UPPER = 0x6,
+    COMBAT_DIRECTION_WIDE_LOWER = 0x7
+};
+
+// ValidAttack's target-filter modes (byte-derived from the criteria
+// switch at 0x523bb0; names are bootstrap inventions): SELF accepts
+// only this army's own cell, ENEMY a hostile army, OCCUPIED any army.
+enum EAttackCriteria {
+    ATTACK_CRITERIA_SELF = 0x0,
+    ATTACK_CRITERIA_ENEMY = 0x1,
+    ATTACK_CRITERIA_OCCUPIED = 0x2
+};
+
 // Opaque head model. The 0x548 stride and the 0x54cc array base in
 // combatManager are byte-proven by hexcell::get_army/get_dead_army
 // (0x4e7170/0x4e71b0: index = side*21 + slot, scaled by 0x548 from

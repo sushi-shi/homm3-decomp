@@ -260,6 +260,32 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — cleanliness debt cleared to zero (user: "Fix everything
+  now"); two masked fatal gates fixed.** Discovery: `homm3 build` had
+  been exiting 1 since the kbwin session on two FATAL verify_va_claims
+  violations, masked by exit-code checks that piped through `tail`
+  (reading the pipe's exit) while stderr buffering displaced the gate
+  lines — process rule adopted: read build verdicts UNPIPED
+  (`homm3 build; echo $?`), now in the match skill. Fixes: kbwin's
+  `GameTime::Get` (0x4f82e0, a real kbwin.cpp function whose whole body
+  is `jmp [__imp__timeGetTime]`) recorded as CLASS backlog in
+  `config/va-claims-baseline.tsv`; window.cpp claim order corrected
+  (delete_widgets before SleepAllWidgets). Cleanliness campaign (offered
+  "bless as debt" vs "fix now"; user chose fix now, floors stay 0): all
+  ~230 sites cleared — C-style casts 77→0, magic case labels 74→0,
+  unnamed domain compares 46→0, cpp extern decls 26→0, .cpp-local views
+  9→0 — codegen-neutral (ratchet: 0 added, 0 raised; kbwin bit-identical
+  11/12, winfile 14/14). New surface: domain enums across armygrp
+  (TCreatureType growth, ESpellId, EMagicTerrain, EArtifactId), town,
+  message, inputmgr, winmgr, csprite, mousemgr (DC-verbatim EPointerSet),
+  army/smackmgr/font/strip (provisional, so marked);
+  `include/winmm_thunks.h` holds the one plain `timeGetTime` decl with
+  the per-TU import-form doctrine (included only by button/misc/mousemgr,
+  after their windows.h includes; kbwin keeps the dllimport IAT form).
+  First fully-green gated build since the debt accrued: README
+  match-score block refreshed (1.80% → 3.05% executable matched,
+  249/4,760 exact, game 36 units 180/606).
+
 - **2026-08-07 — ai_tactical + ai_combat lanes merged; /Op proven and
   sweep-tested.** Two parallel Opus matcher lanes (worktree pool,
   serial integration). ai_combat: 13 exact of 22 reconstructed;

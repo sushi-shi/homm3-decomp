@@ -22,6 +22,22 @@ void CleanUpMenus();                                     // 0x4f4b50
 void NormalDialog(const char* cText, int iMBType, int x, int y,
     int iResType1, int iResExtra1, int iResType2, int iResExtra2,
     int iSpecial, int iTimeout, int iResType3, int iResExtra3);  // 0x4f6570
+// Located kb.cpp bodies kbwin's WinMain / AppWndProc call (bodies not
+// yet reconstructed; the declarators match the kbwin call sites).
+int InitMainClasses();                                   // 0x4ed650
+int oldmain();                                           // 0x4ee3e0
+int GameUnsaved();                                       // 0x4f4310
+
+// kb.cpp's shared text scratch buffer (.bss 0x6973d8 in kb's band;
+// kbwin's WinMain sprintf's the already-running message into it,
+// strip's DrawIcons the troop counts).
+extern char gText[];
+
+// homm2 gbForegroundApp (KB.cpp) lineage: AppWndProc's WM_ACTIVATEAPP
+// arm stores the activation byte here. Retail address 0x6783d0 sits in
+// a .data band no claimed TU owns yet - PROVISIONAL owner kb.h until
+// the owning TU lands (kbwin is the only known writer).
+extern unsigned char bForegroundApp;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\kb.cpp:240, dc 0xdf160) void DrawProgressCount();

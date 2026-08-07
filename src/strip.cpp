@@ -25,12 +25,11 @@
 #include <stdio.h>
 #include "strip.h"
 #include "hero.h"
+#include "kb.h"
 #include "message.h"
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"
-
-extern char gText[];  // kb-owned 0x6973d8
 
 // E:\gamedcs\strip.cpp:53
 // The DC mangle ??0strip@@QAA@HHHHHJPAVhero@@PAVarmyGroup@@H_NPAVheroWindow@@@Z
@@ -150,7 +149,7 @@ void strip::DrawOwner(int frame)
             win->BroadcastMessage(&msg);
             msg.codeY = 122;
             win->BroadcastMessage(&msg);
-        } else if (icons == 161) {
+        } else if (icons == STRIP_PORTRAIT_FRAME_SET) {
             msg.codeY = 100;
             msg.codeX = widget::WIDGET_SET_ICON_FRAME;
             msg.extra = frame;
@@ -165,7 +164,7 @@ void strip::DrawOwner(int frame)
         } else {
             msg.codeY = 122;
             msg.codeX = widget::WIDGET_SET_IMAGE;
-            msg.extraText = (char*)akHeroTraits[frame].largePortraitName;
+            msg.extraText = const_cast<char*>(akHeroTraits[frame].largePortraitName);
             win->BroadcastMessage(&msg);
             msg.codeX = widget::WIDGET_SET_STATUS;
             msg.extra = widget::WIDGET_DRAWN;
@@ -186,7 +185,7 @@ void strip::DrawOwner(int frame)
         msg.codeX = widget::WIDGET_CLEAR_STATUS;
     } else {
         msg.codeX = widget::WIDGET_SET_IMAGE;
-        msg.extraText = (char*)akHeroTraits[frame].largePortraitName;
+        msg.extraText = const_cast<char*>(akHeroTraits[frame].largePortraitName);
         win->BroadcastMessage(&msg);
         msg.codeX = widget::WIDGET_SET_STATUS;
     }

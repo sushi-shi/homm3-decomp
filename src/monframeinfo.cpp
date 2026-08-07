@@ -132,20 +132,20 @@ static void InitializeCreatureAnimationTraits(int id,
 {
     SMonFrameInfo& traits = sMonFrameInfoTable[id];
 
-    traits.iFidgetFrequency = (int)(atof(row[0])
+    traits.iFidgetFrequency = static_cast<int>(atof(row[0])
         * DATA_COMPGEN(0x00640020, fidgetFrequencyScale, 9000.0));
-    traits.iWalkCycleTime = (int)(atof(row[1]) * 500.0);
-    traits.iAttackStartCycleTime = (int)(atof(row[2]) * 500.0);
-    traits.iFlightPixelSpan = (int)(atof(row[3])
+    traits.iWalkCycleTime = static_cast<int>(atof(row[1]) * 500.0);
+    traits.iAttackStartCycleTime = static_cast<int>(atof(row[2]) * 500.0);
+    traits.iFlightPixelSpan = static_cast<int>(atof(row[3])
         * DATA_COMPGEN(0x00640018, flightPixelScale, 115.0));
-    traits.iMissileOffset[0] = (short)atoi(row[4]);
-    traits.iMissileOffset[1] = (short)atoi(row[5]);
-    traits.iMissileOffset[2] = (short)atoi(row[6]);
-    traits.iMissileOffset[3] = (short)atoi(row[7]);
-    traits.iMissileOffset[4] = (short)atoi(row[8]);
-    traits.iMissileOffset[5] = (short)atoi(row[9]);
+    traits.iMissileOffset[0] = static_cast<short>(atoi(row[4]));
+    traits.iMissileOffset[1] = static_cast<short>(atoi(row[5]));
+    traits.iMissileOffset[2] = static_cast<short>(atoi(row[6]));
+    traits.iMissileOffset[3] = static_cast<short>(atoi(row[7]));
+    traits.iMissileOffset[4] = static_cast<short>(atoi(row[8]));
+    traits.iMissileOffset[5] = static_cast<short>(atoi(row[9]));
     { for (int i = 10; i < 22; ++i)
-        traits.fArrowAngle[i - 10] = (float)atof(row[i]); }
+        traits.fArrowAngle[i - 10] = static_cast<float>(atof(row[i])); }
     traits.iExtraNumTroopsXOffset = atoi(row[22]);
     traits.iAttackFrames = atoi(row[23]);
 }

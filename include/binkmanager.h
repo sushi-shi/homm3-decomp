@@ -5,6 +5,60 @@
 #ifndef HOMM3_BINKMANAGER_H
 #define HOMM3_BINKMANAGER_H
 
+// ddraw's interface is only ever passed through here; the forward
+// declaration keeps <ddraw.h> out of every includer that does not
+// itself touch DirectDraw (smackmgr.cpp includes the real header
+// first).
+struct IDirectDrawSurface;
+
+// Partial byte-proven view of the Bink handle: dirty rects at +0x30
+// (stride 0x10), count at +0xb0.
+struct BinkRect {
+    long Left;
+    long Top;
+    long Width;
+    long Height;
+};
+struct Bink {
+    unsigned long Width;      // +0x00
+    unsigned long Height;     // +0x04
+    char pad_8[0x28];         // +0x08..0x2f
+    BinkRect FrameRects[8];   // +0x30
+    long NumRects;            // +0xb0
+};
+
+// The binkw32 import surface (leading underscore, the RAD convention -
+// see smackmgr.h; smackmgr.cpp aliases the names back).
+extern "C" {
+__declspec(dllimport) int __stdcall _BinkPause(Bink* bnk, int pause);
+__declspec(dllimport) int __stdcall _BinkDDSurfaceType(IDirectDrawSurface* lpDDS);
+__declspec(dllimport) int __stdcall _BinkGetRects(Bink* bnk, unsigned long flags);
+}
+
+// The bink TU helpers at 0x44dxxx (names provisional, mirrors of the
+// smack set in smackmgr.cpp): the VideoPlay/VideoOpen bink arms and
+// the per-frame advance/draw/close/restart quartet.
+int PlayBinkVideo(int id, int x, int y, int w, int h);                  // 0x44dd20
+void OpenBinkVideo(int id, int x, int y, int w, int h, int a6, int a7); // 0x44d830
+void NextBinkFrame();           // 0x44daa0
+void DrawCurrentBinkFrame();    // 0x44d9e0
+void CloseBinkVideo();          // 0x44dcc0
+void RestartBinkVideo();        // 0x44da50
+
+// Bink TU globals (.bss 0x694ca0..0x694ce0, owned by the 0x44dxxx TU;
+// names provisional, mirrored from smackmgr.cpp's smack set).
+extern int gBinkSurfaceType;         // 0x694ca0 (BinkDDSurfaceType result)
+extern Bink* gBinkVideo;             // 0x694cb0
+extern Bink* gBinkVideo2;            // 0x694cb4
+extern unsigned char* gBinkBuffer;   // 0x694cb8 (screen pixels at the bink origin)
+extern int gBinkPitch;               // 0x694cbc
+extern int gBinkHeight;              // 0x694cc0
+extern int gBinkX;                   // 0x694cc4
+extern int gBinkY;                   // 0x694cc8
+extern int gBinkVideoId;             // 0x694cd4 (VIDEO_ID_OVERLAY_BLIT plays via the overlay Blt)
+extern int gBinkPaused;              // 0x694cdc
+extern unsigned char gBinkDirty;     // 0x694ce0
+
 // --- BinkManager ---
 // CODEVIEW(E:\gamedcs\binkmanager.cpp:79, dc 0x50a7c) BINK* BinkManager::GetBinkFilePtr(char* filename, int binkOptions);
 // CODEVIEW(E:\gamedcs\binkmanager.cpp:123, dc 0x50a80) void BinkManager::SetPixelFormat();

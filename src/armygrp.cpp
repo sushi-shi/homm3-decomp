@@ -152,177 +152,178 @@ float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const
     const SSpellTraits* spellRec = &akSpellTraits[spell];
     unsigned int attrs = akCreatureTypeTraits[target_army_type].attributes;
     if (target_hero && spellRec->level <= 4
-        && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x86))
-        return 0.0f;  // Orb of Inhibition
-    if (spell == 0x23) {
+        && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_POWER_OF_THE_DRAGON_FATHER))
+        return 0.0f;  // Power of the Dragon Father
+    if (spell == SPELL_DISPEL) {
         if (target_hero
-            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x5c))
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_SPHERE_OF_PERMANENCE))
             return 0.0f;
         goto certain;
     }
     if (attrs & CTA_SIEGE_WEAPON) {
         if (spellRec->field_c & 0x1000)
             return 0.0f;
-        if (target_army_type == 0x95)
+        if (target_army_type == CREATURE_ARROW_TOWER)
             return 0.0f;
     }
     switch (spell) {
-    case 0x11:
-    case 0x13:
+    case SPELL_LIGHTNING_BOLT:
+    case SPELL_CHAIN_LIGHTNING:
         if (target_hero
-            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x6a))
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_PENDANT_OF_NEGATIVITY))
             return 0.0f;
         break;
-    case 0x18:
+    case SPELL_DEATH_RIPPLE:
         if (attrs & CTA_UNDEAD)
             return 0.0f;
         if (target_hero
-            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x67))
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_PENDANT_OF_LIFE))
             return 0.0f;
         break;
-    case 0x19:
+    case SPELL_DESTROY_UNDEAD:
         if (!(attrs & CTA_UNDEAD))
             return 0.0f;
         if (target_hero
-            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x68))
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_PENDANT_OF_DEATH))
             return 0.0f;
         break;
-    case 0x26:
+    case SPELL_RESURRECTION:
         if (attrs & CTA_UNDEAD)
             return 0.0f;
         if (akCreatureTypeTraits[target_army_type].damageHighBound == 0)
             return 0.0f;
         break;
-    case 0x27:
+    case SPELL_ANIMATE_DEAD:
         if (!(attrs & CTA_UNDEAD))
             return 0.0f;
         if (akCreatureTypeTraits[target_army_type].damageHighBound == 0)
             return 0.0f;
         break;
-    case 0x29:
-    case 0x33:
-    case 0x34:
-    case 0x37:
+    case SPELL_BLESS:
+    case SPELL_FORTUNE:
+    case SPELL_MISFORTUNE:
+    case SPELL_SLAYER:
         if (attrs & CTA_UNDEAD)
             return 0.0f;
         if (akCreatureTypeTraits[target_army_type].damageHighBound == 0)
             return 0.0f;
         break;
-    case 0x2a:
+    case SPELL_CURSE:
         if (attrs & CTA_UNDEAD)
             return 0.0f;
         if (akCreatureTypeTraits[target_army_type].damageHighBound == 0)
             return 0.0f;
         if (target_hero
-            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x66))
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_PENDANT_OF_HOLINESS))
             return 0.0f;
         break;
-    case 0x2c:
+    case SPELL_PRECISION:
         if (attrs & CTA_UNDEAD)
             return 0.0f;
         if (akCreatureTypeTraits[target_army_type].damageHighBound == 0)
             return 0.0f;
         break;
-    case 0x31:
-    case 0x32:
+    case SPELL_MIRTH:
+    case SPELL_SORROW:
         if (attrs & CTA_NO_MORALE)
             return 0.0f;
         break;
-    case 0x3b:
+    case SPELL_BERSERK:
         if (target_hero
-            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x64))
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_PENDANT_OF_DISPASSION))
             return 0.0f;
         break;
-    case 0x3c:
+    case SPELL_HYPNOTIZE:
         if (target_hero
-            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x69))
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_PENDANT_OF_FREE_WILL))
             return 0.0f;
         break;
-    case 0x3d:
+    case SPELL_FORGETFULNESS:
         if (target_hero
-            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x6b))
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_PENDANT_OF_TOTAL_RECALL))
             return 0.0f;
         if (!(attrs & 0x4))
             return 0.0f;
         break;
-    case 0x3e:
+    case SPELL_BLIND:
         if (target_hero
-            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x65))
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_PENDANT_OF_SECOND_SIGHT))
             return 0.0f;
-        if (target_army_type == 0x46 || target_army_type == 0x47)
+        if (target_army_type == CREATURE_TROGLODYTE || target_army_type == CREATURE_INFERNAL_TROGLODYTE)
             return 0.0f;
         if (attrs & CTA_UNDEAD)
             return 0.0f;
         break;
-    case 0x46:
+    case SPELL_STONE:
         if (!(attrs & 0x10))
             return 0.0f;
-        if (target_army_type == 0x1e || target_army_type == 0x1f)
+        if (target_army_type == CREATURE_STONE_GARGOYLE || target_army_type == CREATURE_OBSIDIAN_GARGOYLE)
             return 0.0f;
         break;
-    case 0x47:
-        if (target_army_type == 0x1e || target_army_type == 0x1f)
+    case SPELL_POISON:
+        if (target_army_type == CREATURE_STONE_GARGOYLE || target_army_type == CREATURE_OBSIDIAN_GARGOYLE)
             return 0.0f;
         break;
     }
     {
         float chance = 1.0f;
         if (casting_hero
-            && const_cast<hero*>(casting_hero)->IsWieldingArtifact(0x5d))
+            && const_cast<hero*>(casting_hero)->IsWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))
             goto certain;  // Orb of Vulnerability
         if (target_hero
-            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x5d))
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_ORB_OF_VULNERABILITY))
             goto certain;
         if ((spellRec->field_c >> 10) & 1) {
             if (!(spellRec->flags_10 & 0x400)
                 && target_hero
-                && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x31))
+                && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE))
                 return 0.0f;
         }
         if ((attrs & 0x4000) && (spellRec->byte_1c & 0x2))
             return 0.0f;
         switch (target_army_type) {
-        case 0x10:
-        case 0x85:
+        case CREATURE_DWARF:
+        case CREATURE_CRYSTAL_DRAGON:
             chance = 0.8f;
             if (target_hero)
                 chance -= 1.0f - const_cast<hero*>(target_hero)
                                      ->GetMagicResistanceFactor();
             break;
-        case 0x11:
+        case CREATURE_BATTLE_DWARF:
             chance = 0.6f;
             if (target_hero)
                 chance -= 1.0f - const_cast<hero*>(target_hero)
                                      ->GetMagicResistanceFactor();
             break;
-        case 0x84:
+        case CREATURE_AZURE_DRAGON:
             if (spellRec->level <= 3)
                 return 0.0f;
             break;
-        case 0x1a:
-        case 0x1b:
-        case 0x52:
-        case 0x53:
+        case CREATURE_GREEN_DRAGON:
+        case CREATURE_GOLD_DRAGON:
+        case CREATURE_RED_DRAGON:
+        case CREATURE_BLACK_DRAGON:
             if (spellRec->level <= 4)
                 return 0.0f;
             break;
-        case 0x75:
-        case 0x79:
+        case CREATURE_DIAMOND_GOLEM:
+        case CREATURE_MAGIC_ELEMENTAL:
             return 0.0f;
-        case 0x70:
-        case 0x7f:
-            if (spell == 0x17 || spell == 0x3e)
+        case CREATURE_AIR_ELEMENTAL:
+        case CREATURE_STORM_ELEMENTAL:
+            if (spell == SPELL_METEOR_SHOWER || spell == SPELL_BLIND)
                 return 0.0f;
             break;
-        case 0x71:
-        case 0x7d:
-            if (spell == 0x1a || spell == 0x11 || spell == 0x13
-                || spell == 0x39)
+        case CREATURE_EARTH_ELEMENTAL:
+        case CREATURE_MAGMA_ELEMENTAL:
+            if (spell == SPELL_ARMAGEDDON || spell == SPELL_LIGHTNING_BOLT
+                || spell == SPELL_CHAIN_LIGHTNING
+                || spell == SPELL_TITANS_LIGHTNING_BOLT)
                 return 0.0f;
             break;
-        case 0x73:
-        case 0x7b:
-            if (spell == 0x10 || spell == 0x14)
+        case CREATURE_WATER_ELEMENTAL:
+        case CREATURE_ICE_ELEMENTAL:
+            if (spell == SPELL_ICE_BOLT || spell == SPELL_FROST_RING)
                 return 0.0f;
             break;
         }
@@ -718,12 +719,12 @@ int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown, const her
 VA(0x0044b100, 0x1C9)  // anchor-global, dc 0x4f160
 int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char apply_limits)
 {
-    if (mode == 2)
+    if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
     if (akCreatureTypeTraits[armies[index]].attributes & CTA_NO_MORALE)
         return 0;
     int morale = GetMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
-    if (mode == 3) {
+    if (mode == MAGIC_TERRAIN_HOLY_GROUND) {
         int type = armies[index];
         if (gpGame->f_1f698 != 0
             || (type != CREATURE_AIR_ELEMENTAL
@@ -731,20 +732,20 @@ int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* owner
                 && type != CREATURE_FIRE_ELEMENTAL
                 && type != CREATURE_WATER_ELEMENTAL)) {
             switch (akCreatureTypeTraits[type].townType) {
-            case 0:
-            case 1:
-            case 2:
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
                 morale++;
                 break;
-            case 3:
-            case 4:
-            case 5:
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
                 morale--;
                 break;
             }
         }
     }
-    if (mode == 4) {
+    if (mode == MAGIC_TERRAIN_EVIL_FOG) {
         int type = armies[index];
         if (gpGame->f_1f698 != 0
             || (type != CREATURE_AIR_ELEMENTAL
@@ -752,14 +753,14 @@ int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* owner
                 && type != CREATURE_FIRE_ELEMENTAL
                 && type != CREATURE_WATER_ELEMENTAL)) {
             switch (akCreatureTypeTraits[type].townType) {
-            case 0:
-            case 1:
-            case 2:
+            case TOWN_CASTLE:
+            case TOWN_RAMPART:
+            case TOWN_TOWER:
                 morale--;
                 break;
-            case 3:
-            case 4:
-            case 5:
+            case TOWN_INFERNO:
+            case TOWN_NECROPOLIS:
+            case TOWN_DUNGEON:
                 morale++;
                 break;
             }
@@ -816,7 +817,7 @@ int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero*
         && (const_cast<armyGroup*>(otherGroup)->IsMember(CREATURE_DEVIL)
             || const_cast<armyGroup*>(otherGroup)->IsMember(CREATURE_ARCH_DEVIL)))
         luck--;
-    if (ownerTown && ownerTown->type == 1
+    if (ownerTown && ownerTown->type == TOWN_RAMPART
         && ((ownerTown->active[0] & gFountainOfFortuneMask[0])
             | (ownerTown->active[1] & gFountainOfFortuneMask[1])))
         luck += 2;
@@ -841,10 +842,10 @@ int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero*
 VA(0x0044b3c0, 0xED)  // anchor-global, dc 0x4f2e8
 int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char apply_limits)
 {
-    if (mode == 2)
+    if (mode == MAGIC_TERRAIN_CURSED_GROUND)
         return 0;
     int luck = GetLuck(ownerHero, ownerTown, 0, 0, 0, 0);
-    if (mode == 5) {
+    if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
         int type = armies[index];
         if (gpGame->f_1f698 != 0
             || (type != CREATURE_AIR_ELEMENTAL
@@ -852,9 +853,9 @@ int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTo
                 && type != CREATURE_FIRE_ELEMENTAL
                 && type != CREATURE_WATER_ELEMENTAL)) {
             switch (akCreatureTypeTraits[type].townType) {
-            case 6:
-            case 7:
-            case 8:
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
                 luck += 2;
                 break;
             }
@@ -889,23 +890,25 @@ long modify_spell_damage(long damage, SpellID spell, TCreatureType creature)
         return damage / 20;
     case CREATURE_AIR_ELEMENTAL:
     case CREATURE_STORM_ELEMENTAL:
-        if (spell == 0x1a || spell == 0x11 || spell == 0x13
-            || spell == 0x39)
+        if (spell == SPELL_ARMAGEDDON || spell == SPELL_LIGHTNING_BOLT
+            || spell == SPELL_CHAIN_LIGHTNING
+            || spell == SPELL_TITANS_LIGHTNING_BOLT)
             return damage * 2;
         break;
     case CREATURE_FIRE_ELEMENTAL:
     case CREATURE_ENERGY_ELEMENTAL:
-        if (spell == 0x10 || spell == 0x14)
+        if (spell == SPELL_ICE_BOLT || spell == SPELL_FROST_RING)
             return damage * 2;
         break;
     case CREATURE_WATER_ELEMENTAL:
     case CREATURE_ICE_ELEMENTAL:
-        if (spell == 0x17)
+        if (spell == SPELL_METEOR_SHOWER)
             return damage * 2;
         break;
     case CREATURE_EARTH_ELEMENTAL:
     case CREATURE_MAGMA_ELEMENTAL:
-        if (spell == 0x15 || spell == 0x16 || spell == 0x1a)
+        if (spell == SPELL_FIREBALL || spell == SPELL_INFERNO
+            || spell == SPELL_ARMAGEDDON)
             return damage * 2;
         break;
     }

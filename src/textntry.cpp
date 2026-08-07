@@ -3,6 +3,7 @@
 // 21 functions in link order.
 #include <va.h>
 #include "textntry.h"
+#include "inputmgr.h"
 #include "message.h"
 #include "window.h"
 #include "winmgr.h"
@@ -74,31 +75,31 @@ char textEntryWidget::GetCharPressed(message* msg)
         // HIBYTE word-shift idiom, byte-pointer view - compiles to
         // `sar ecx,8; and ecx,0xff` or a memory byte re-read instead.
         // One block, cosmetic; rest of the function is byte-identical.
-        scanCode = (unsigned char)(msg->codeX >> 8);
+        scanCode = static_cast<unsigned char>(msg->codeX >> 8);
         switch (scanCode) {
-            case 0x52:  // numpad Ins
+            case KEYCODE_KP_0:  // numpad Ins
                 return '0';
-            case 0x4f:  // numpad End
+            case KEYCODE_KP_1:  // numpad End
                 return '1';
-            case 0x50:  // numpad Down
+            case KEYCODE_KP_2:  // numpad Down
                 return '2';
-            case 0x51:  // numpad PgDn
+            case KEYCODE_KP_3:  // numpad PgDn
                 return '3';
-            case 0x4b:  // numpad Left
+            case KEYCODE_KP_4:  // numpad Left
                 return '4';
-            case 0x4c:  // numpad center
+            case KEYCODE_KP_5:  // numpad center
                 return '5';
-            case 0x4d:  // numpad Right
+            case KEYCODE_KP_6:  // numpad Right
                 return '6';
-            case 0x47:  // numpad Home
+            case KEYCODE_KP_7:  // numpad Home
                 return '7';
-            case 0x48:  // numpad Up
+            case KEYCODE_KP_8:  // numpad Up
                 return '8';
-            case 0x49:  // numpad PgUp
+            case KEYCODE_KP_9:  // numpad PgUp
                 return '9';
         }
     } else {
-        pressed = (char)msg->codeX;
+        pressed = static_cast<char>(msg->codeX);
         if (pressed == '{' || pressed == '}')
             pressed = 0;
     }

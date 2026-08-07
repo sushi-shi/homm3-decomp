@@ -8,6 +8,8 @@
 #include <string.h>
 #include "kbwin.h"
 #include "kb.h"
+#include "exec.h"
+#include "game.h"
 #include "mousemgr.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
@@ -16,37 +18,13 @@
 #include "misc.h"
 #include "winmgr.h"
 
-// Cross-TU callees whose owning headers stay comment-only (declared
-// file-locally like timeGetTime in mousemgr.cpp/misc.cpp; the
-// declarators match the owning .cpp claims verbatim).
-int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam);  // inputmgr 0x4ec0e0
-int MouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam);     // inputmgr 0x4ec290
-unsigned char InitImmMouse(void* hInst, void* hwnd);  // game.cpp 0x4b6890
-void ImmMouseWindowMoved();                           // game.cpp 0x4b6950
-void WritePrefs();                                    // misc.cpp 0x50c1b0
-int InitMainClasses();                                // kb.cpp 0x4ed650
-int oldmain();                                        // kb.cpp 0x4ee3e0
-int GameUnsaved();                                    // kb.cpp 0x4f4310
-int AppPaint(void* hwnd, void* hdc);                  // wingraph 0x601820
-void InitGraphics();                                  // wingraph 0x6014e0
-extern char gText[];                                  // kb-owned 0x6973d8
-
-// Local view of the unnamed central object at 0x6a5d5c (exec.cpp
-// carries the sibling view; +0x20 -> +0x118 is the quit-confirm
-// text AppWndProc's WM_CLOSE dialog shows).
-struct SUnnamedQuitView6a5d5c {
-    char pad_00[0x118];
-    const char* quitText;             // +0x118
-};
-struct SUnnamedView6a5d5c {
-    char pad_00[0x20];
-    SUnnamedQuitView6a5d5c* entry;    // +0x20
-};
-extern SUnnamedView6a5d5c* gUnnamedCentral6a5d5c;  // .data 0x6a5d5c
-
-// homm2 gbForegroundApp (KB.cpp) lineage; retail stores a byte in
-// another TU's .data band - claim lands with its owner.
-extern unsigned char bForegroundApp;  // 0x6783d0
+// Every cross-TU callee and global now comes from its owner's header
+// (inputmgr.h message bridges, game.h Imm hooks, misc.h WritePrefs,
+// kb.h InitMainClasses/oldmain/GameUnsaved/gText/bForegroundApp,
+// wingraph.h AppPaint/InitGraphics, exec.h's 0x6a5d5c central-object
+// view). NOTE the timeGetTime import-form split: this TU takes the
+// IAT form from mmsystem.h via <windows.h> and must never see
+// winmm_thunks.h's plain declaration (see that header).
 
 // E:\gamedcs\kbwin.cpp:102
 // homm2 WinMain + AppInit merged: retail declares AppInit static and
@@ -177,10 +155,10 @@ LRESULT CALLBACK AppWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
         case WM_CLOSE:
             if (window == hwndApp && GameUnsaved()) {
                 VideoPause();
-                NormalDialog(gUnnamedCentral6a5d5c->entry->quitText, 2,
+                NormalDialog(gUnnamed6a5d5c->entry->quitText, 2,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 VideoResume();
-                if (gpWindowManager->dialogReturn == 0x7805)
+                if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT)
                     DestroyWindow(window);
                 return 0;
             }
@@ -452,7 +430,7 @@ unsigned long GameTime::Get()
 VA(0x004f82f0, 0xCD)  // linkorder, dc 0xe806c
 void GameTime::DelayTil(unsigned long time)
 {
-    while ((int)(Get() - time) < 0) {
+    while (static_cast<int>(Get() - time) < 0) {
         Process1WindowsMessage();
         PollSound();
     }

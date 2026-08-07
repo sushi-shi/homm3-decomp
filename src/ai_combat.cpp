@@ -25,13 +25,6 @@
 #include "hero.h"
 #include "town.h"
 
-// Cross-TU callees whose owning headers stay comment-only (declared
-// file-locally like timeGetTime in mousemgr.cpp/misc.cpp; the
-// declarators match the owning .cpp claims verbatim).
-float get_spell_work_chance(SpellID spell, TCreatureType target_army_type,
-                            const hero* casting_hero, const hero* target_hero);  // armygrp 0x44a4d0
-long modify_spell_damage(long damage, SpellID spell, TCreatureType creature);    // armygrp 0x44b4b0
-
 // VC6's own <xutility> reference-returning min/max (`_cpp_min` /
 // `_cpp_max`, which the <algorithm> min/max macros expand to). Retail
 // materialises BOTH operands into stack temps and then selects between
@@ -51,10 +44,6 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _Y : _X);
 }
 
-// Chain Lightning is the only spell id the claimed bodies hard-code
-// (0x13 at get_next_chain_lightning_target 0x424a2f).
-const SpellID SPELL_CHAIN_LIGHTNING = 0x13;
-
 // E:\gamedcs\ai_combat.cpp:36
 VA(0x00423c80, 0x79)  // anchor-global, dc 0x29978
 long type_monster_data::get_enchantment_value(type_spell_choice& choice, const hero* casting_hero, const hero* target_hero) const
@@ -66,7 +55,7 @@ long type_monster_data::get_enchantment_value(type_spell_choice& choice, const h
         turns = 5;
     long value = akSpellTraits[choice.spell].mastery_values[choice.mastery];
     float chance = get_spell_work_chance(choice.spell, creature, casting_hero, target_hero);
-    return (long)(value * turns * total_hit_points * chance / 500.0);
+    return static_cast<long>(value * turns * total_hit_points * chance / 500.0);
 }
 
 #if 0  // @carcass
@@ -93,7 +82,7 @@ long type_monster_data::get_resurrection_value(type_spell_choice& choice, const 
     if (casting_hero)
         value += const_cast<hero*>(casting_hero)->GetHeroSpellBonus(
             choice.spell, akCreatureTypeTraits[creature].level, value);
-    return _cpp_min((long)(value * damage_modifier) / hit_points,
+    return _cpp_min(static_cast<long>(value * damage_modifier) / hit_points,
                     original_count - count) * hit_points;
 }
 
@@ -114,7 +103,7 @@ long type_monster_data::get_spell_damage(SpellID spell, const hero* casting_hero
 {
     if (total_hit_points == 0)
         return 0;
-    damage = (long)(get_spell_work_chance(spell, creature, casting_hero, target_hero) * damage);
+    damage = static_cast<long>(get_spell_work_chance(spell, creature, casting_hero, target_hero) * damage);
     if (damage == 0)
         return 0;
     damage = modify_spell_damage(damage, spell, creature);
@@ -123,7 +112,7 @@ long type_monster_data::get_spell_damage(SpellID spell, const hero* casting_hero
     damage = const_cast<hero*>(casting_hero)->modify_spell_damage(spell, damage, 0);
     if (damage == 0)
         return 0;
-    return _cpp_min((long)(damage * damage_modifier), total_hit_points);
+    return _cpp_min(static_cast<long>(damage * damage_modifier), total_hit_points);
 }
 
 // E:\gamedcs\ai_combat.cpp:148
@@ -196,7 +185,7 @@ void type_AI_combat_data::check_wall_archery_penalty(const town* enemy_town)
             penalty_distance = 0;
         }
         if (penalty_distance > 0) {
-            penalty_distance = (short)(penalty_distance - my_hero->ballisticsLevel);
+            penalty_distance = static_cast<short>(penalty_distance - my_hero->ballisticsLevel);
             if (penalty_distance < 2)
                 penalty_distance = 2;
         }
@@ -232,7 +221,7 @@ void type_AI_combat_data::adjust_army(unsigned char dismiss_hero)
             gpAdvManager->HeroLoses(my_hero, 0);
         return;
     }
-    for (short i = (short)get_total(); i-- > 0; ) {
+    for (short i = static_cast<short>(get_total()); i-- > 0; ) {
         type_monster_data monster = monsters[i];
         if (monster.slot < 0)
             continue;
@@ -383,15 +372,15 @@ void type_AI_combat_data::cast_damage_spell(type_spell_choice& choice, type_AI_c
     // The five-arm jump table at 0x4253cc: 0x13 chains, 0x14/0x15/0x17
     // hit one extra target, 0x16 hits two.
     switch (choice.spell) {
-    case 0x13:
+    case SPELL_CHAIN_LIGHTNING:
         cast_chain_lightning(choice, defender, damage);
         break;
-    case 0x14:
-    case 0x15:
-    case 0x17:
+    case SPELL_FROST_RING:
+    case SPELL_FIREBALL:
+    case SPELL_METEOR_SHOWER:
         cast_area_effect(choice, defender, damage, 1);
         break;
-    case 0x16:
+    case SPELL_INFERNO:
         cast_area_effect(choice, defender, damage, 2);
         break;
     }
@@ -478,7 +467,7 @@ void type_AI_combat_data::cast_enchantment(type_spell_choice* choice, const hero
 VA(0x00425b10, 0xB4)  // anchor-callee, dc 0x2af04
 void type_AI_combat_data::cast_enchantment(type_spell_choice& choice, type_AI_combat_data& defender)
 {
-    if (choice.spell == 0x23) {
+    if (choice.spell == SPELL_DISPEL) {
         if (choice.mastery >= 3) {
             cast_enchantment(choice, my_hero, 1);
             defender.cast_enchantment(choice, my_hero, 0);
@@ -560,7 +549,7 @@ long type_AI_combat_data::inflict_melee_damage(long damage, long start, long spe
         long hits = monsters[i].total_hit_points;
         if (hits <= 0)
             continue;
-        long share = (long)((double)hits * damage / total);
+        long share = static_cast<long>(static_cast<double>(hits) * damage / total);
         total -= hits;
         damage -= monsters[i].take_damage(share);
         if (damage <= 0)
@@ -606,11 +595,11 @@ long type_AI_combat_data::get_attack(type_speed_catagory speed_limit, unsigned c
         if (monsters[i].catagory > speed_limit)
             continue;
         if (!shooters_blocked && monsters[i].catagory == SPEED_CATAGORY_SHOOTER)
-            value = (long)(monsters[i].count * monsters[i].hit_points
-                           * monsters[i].ranged_value + value);
+            value = static_cast<long>(monsters[i].count * monsters[i].hit_points
+                                      * monsters[i].ranged_value + value);
         else
-            value = (long)(monsters[i].count * monsters[i].hit_points
-                           * monsters[i].melee_value + value);
+            value = static_cast<long>(monsters[i].count * monsters[i].hit_points
+                                      * monsters[i].melee_value + value);
     }
     return value;
 }
@@ -621,7 +610,7 @@ long type_AI_combat_data::get_final_melee_value() const
 {
     long value = 0;
     for (long i = get_total(); i-- > 0; )
-        value = (long)(monsters[i].total_hit_points * monsters[i].final_melee_value + value);
+        value = static_cast<long>(monsters[i].total_hit_points * monsters[i].final_melee_value + value);
     return value;
 }
 
@@ -658,8 +647,8 @@ void type_AI_combat_data::do_melee_combat(type_AI_combat_data* defender)
 VA(0x004264d0, 0x2ED)  // anchor-global, dc 0x2b948
 void type_AI_combat_data::do_general_melee(type_AI_combat_data& defender)
 {
-    float attacker = (float)get_final_melee_value();
-    float target = (float)defender.get_final_melee_value();
+    float attacker = static_cast<float>(get_final_melee_value());
+    float target = static_cast<float>(defender.get_final_melee_value());
     if (attacker == 0.0)
         return;
     if (target == 0.0)
@@ -667,11 +656,11 @@ void type_AI_combat_data::do_general_melee(type_AI_combat_data& defender)
     if (attacker > target) {
         defender.kill();
         float ratio = target / attacker + 0.05;
-        inflict_damage((long)(ratio * target), 0);
+        inflict_damage(static_cast<long>(ratio * target), 0);
     } else {
         kill();
         float ratio = attacker / target + 0.05;
-        defender.inflict_damage((long)(ratio * attacker), 0);
+        defender.inflict_damage(static_cast<long>(ratio * attacker), 0);
     }
 }
 
@@ -815,7 +804,7 @@ long AI_approximate_strength(const hero* current_hero, const armyGroup* current_
     long value = const_cast<armyGroup*>(current_army)->get_AI_value();
     if (current_hero == 0)
         return value;
-    return (long)(const_cast<hero*>(current_hero)->get_combat_value_modifier() * value);
+    return static_cast<long>(const_cast<hero*>(current_hero)->get_combat_value_modifier() * value);
 }
 
 #if 0  // @carcass

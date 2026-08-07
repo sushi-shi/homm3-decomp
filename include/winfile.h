@@ -45,7 +45,16 @@ enum FileMode {
 // surviving body touches +8..+0x107 (see winfile.cpp's absence notes).
 class File {
 public:
-    void* m_hFile;
+    // DC types the handle void* (HANDLE). The anonymous union adds the
+    // cast-free INTEGER view of the same 4 bytes for the null-handle
+    // return idiom (`if (!m_hFile) return m_hFileValue;`): retail
+    // reuses the register already holding the null handle as the
+    // unsigned long result, and VC6 refuses static_cast between
+    // pointer and integer while the reinterpret_cast floor stands at 0.
+    union {
+        void* m_hFile;
+        unsigned long m_hFileValue;
+    };
 
     File();
     ~File();

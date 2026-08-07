@@ -7,9 +7,12 @@
 #include "mousemgr.h"
 #include "kbwin.h"
 
-// Declared without dllimport on purpose: retail reaches timeGetTime
-// through the 6-byte rel32 thunk at 0x4f82e0, not the IAT.
-extern "C" unsigned long __stdcall timeGetTime();
+// Thunk-form timeGetTime (retail reaches it through the 6-byte rel32
+// thunk at 0x4f82e0, not the IAT); the plain declaration and the
+// per-TU import-form doctrine live in winmm_thunks.h. Kept AFTER the
+// windows.h include so the plain declaration downgrades mmsystem.h's
+// dllimport for this TU.
+#include "winmm_thunks.h"
 
 // CheckUpdate's one-time timer latches (BSS; names provisional).
 DATA(0x0069ca20) unsigned char gMouseTimerInit;
@@ -240,7 +243,7 @@ void mouseManager::CheckUpdate()
     if (IsIconic(hwndApp))
         return;
     unsigned long deadline = gMouseUpdateDeadline;
-    if ((int)(timeGetTime() - deadline) >= 0 && field_74 == 0) {
+    if (static_cast<int>(timeGetTime() - deadline) >= 0 && field_74 == 0) {
         deadline = gMouseUpdateDeadline;
         unsigned long elapsed = timeGetTime() - deadline;
         gMouseUpdateDeadline = deadline + (elapsed >= 33 ? elapsed : 33);
@@ -265,11 +268,11 @@ void mouseManager::CheckUpdate()
         }
     }
     deadline = gMouseFrameDeadline;
-    if ((int)(timeGetTime() - deadline) >= 0 && field_74 == 0) {
+    if (static_cast<int>(timeGetTime() - deadline) >= 0 && field_74 == 0) {
         deadline = gMouseFrameDeadline;
         unsigned long elapsed = timeGetTime() - deadline;
         gMouseFrameDeadline = deadline + (elapsed >= 100 ? elapsed : 100);
-        if (field_4c == 3) {
+        if (field_4c == SPELL_SET) {
             int frames;
             if (field_54->f_28 > 0 && *field_54->f_2c != 0)
                 frames = **field_54->f_1c;

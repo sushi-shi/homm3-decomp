@@ -8,6 +8,25 @@
 #include "basemgr.h"
 #include "message.h"
 
+// Keyboard scan codes as message::codeX carries them (low byte for
+// plain keys, the second byte for extended keys - textntry's numpad
+// row and smackmgr's video-abort filter read them). NH3API
+// interface/key_codes.hpp EKeyCodes spellings; only the byte-proven
+// consumers' values are listed - grow the roster as consumers land.
+enum EKeyCodes {
+    KEYCODE_F4 = 0x3e,
+    KEYCODE_KP_7 = 0x47,
+    KEYCODE_KP_8 = 0x48,
+    KEYCODE_KP_9 = 0x49,
+    KEYCODE_KP_4 = 0x4b,
+    KEYCODE_KP_5 = 0x4c,
+    KEYCODE_KP_6 = 0x4d,
+    KEYCODE_KP_1 = 0x4f,
+    KEYCODE_KP_2 = 0x50,
+    KEYCODE_KP_3 = 0x51,
+    KEYCODE_KP_0 = 0x52
+};
+
 // Dreamcast roster with the 40->32-byte message shift: iBuffer@0x38
 // (64 messages), iHead@0x838, iTail@0x83c, bufferBusy@0x840,
 // mouseInstalled@0x844, scanCodeTable@0x848, keyboardInstalled@0x948,
@@ -48,6 +67,11 @@ public:
 
 // Retail .bss 0x6994e0 (DC ?gpInputManager@@3PAVinputManager@@A).
 extern inputManager* gpInputManager;
+
+// The Windows-message bridges (inputmgr.cpp bodies; kbwin's
+// AppWndProc forwards the keyboard/mouse arms through them).
+int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam);  // 0x4ec0e0
+int MouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam);     // 0x4ec290
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\inputmgr.cpp:48, dc 0xdc894) int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam);

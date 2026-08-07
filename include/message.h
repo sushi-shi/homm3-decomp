@@ -21,7 +21,30 @@ enum EMessageId {
     MESSAGE_LEFT_BUTTON_UP = 0x10,
     MESSAGE_RIGHT_BUTTON_DOWN = 0x20,
     MESSAGE_RIGHT_BUTTON_UP = 0x40,
-    MESSAGE_WIDGET = 0x200
+    MESSAGE_WIDGET = 0x200,
+    // The executive-arm flag bit (homm2 MESSAGE_EXECUTIVE):
+    // executive::MainLoop only honours the command in codeX when a
+    // forwarded message carries it.
+    MESSAGE_EXECUTIVE = 0x4000
+};
+
+// baseManager::Main's dispatch verdicts as executive::MainLoop
+// switches on them (homm2 BASE/message.h MessageDispatchResult
+// names/values carried over verbatim; CONTINUE = 0 is the untaken
+// default arm).
+enum EMessageDispatchResult {
+    MESSAGE_DISPATCH_CONSUME = 0x1,
+    MESSAGE_DISPATCH_FORWARD = 0x2
+};
+
+// Executive commands carried in codeX of a MESSAGE_EXECUTIVE-flagged
+// message (homm2 BASE/message.h ExecutiveCommand names/values
+// verbatim; retail's MainLoop merges the TERMINATE_LOOP and
+// RETURN_RESULT arms into one dialogReturn store).
+enum EExecutiveCommand {
+    EXECUTIVE_COMMAND_TERMINATE_LOOP = 0x1,
+    EXECUTIVE_COMMAND_REMOVE_MANAGER = 0x2,
+    EXECUTIVE_COMMAND_RETURN_RESULT = 0x4
 };
 
 // Modifier bits carried in message::qualifier (homm2 lineage names):

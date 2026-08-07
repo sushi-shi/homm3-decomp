@@ -41,13 +41,71 @@ enum TCreatureType {
     CREATURE_ICE_ELEMENTAL = 0x7b,
     CREATURE_MAGMA_ELEMENTAL = 0x7d,
     CREATURE_STORM_ELEMENTAL = 0x7f,
-    CREATURE_ENERGY_ELEMENTAL = 0x81
+    CREATURE_ENERGY_ELEMENTAL = 0x81,
+    // NH3API-lineage names for the Complete-numbering ids the AI and
+    // spell-work code compare (the DC enum carries the older AB
+    // numbering - Catapult=118 there vs 145 here).
+    CREATURE_STONE_GARGOYLE = 0x1e,
+    CREATURE_OBSIDIAN_GARGOYLE = 0x1f,
+    CREATURE_TROGLODYTE = 0x46,
+    CREATURE_INFERNAL_TROGLODYTE = 0x47,
+    CREATURE_FIRST_AID_TENT = 0x93,
+    CREATURE_AMMO_CART = 0x94,
+    CREATURE_ARROW_TOWER = 0x95,
+    // get_spell_work_chance's per-creature immunity switch (0x44a9xx):
+    // the magic-resistant dwarves/Crystal Dragon, the level-gated
+    // dragons, and the spell-immune Magic Elemental (NH3API spellings;
+    // Complete numbering).
+    CREATURE_DWARF = 0x10,
+    CREATURE_BATTLE_DWARF = 0x11,
+    CREATURE_GREEN_DRAGON = 0x1a,
+    CREATURE_GOLD_DRAGON = 0x1b,
+    CREATURE_RED_DRAGON = 0x52,
+    CREATURE_BLACK_DRAGON = 0x53,
+    CREATURE_MAGIC_ELEMENTAL = 0x79,
+    CREATURE_AZURE_DRAGON = 0x84,
+    CREATURE_CRYSTAL_DRAGON = 0x85
 };
 
-// Spell ids appear here only as modify_spell_damage's raw compare
-// operands; the spell roster gets its own header when a consumer
-// needs names.
+// The spell-id domain (the full roster gets its own header when spell
+// work begins in earnest); DC CodeView types the parameters SpellID.
 typedef int SpellID;
+
+// Named spell ids as retail compares and case labels surface them,
+// grown per consumer (armygrp's work-chance/damage switches,
+// ai_combat's damage-spell dispatch). NH3API spells.hpp spellings;
+// the DC SpellID enum corroborates every value (eSpellStoneGaze for
+// SPELL_STONE).
+enum ESpellId {
+    SPELL_ICE_BOLT = 0x10,
+    SPELL_LIGHTNING_BOLT = 0x11,
+    SPELL_CHAIN_LIGHTNING = 0x13,
+    SPELL_FROST_RING = 0x14,
+    SPELL_FIREBALL = 0x15,
+    SPELL_INFERNO = 0x16,
+    SPELL_METEOR_SHOWER = 0x17,
+    SPELL_DEATH_RIPPLE = 0x18,
+    SPELL_DESTROY_UNDEAD = 0x19,
+    SPELL_ARMAGEDDON = 0x1a,
+    SPELL_DISPEL = 0x23,
+    SPELL_RESURRECTION = 0x26,
+    SPELL_ANIMATE_DEAD = 0x27,
+    SPELL_BLESS = 0x29,
+    SPELL_CURSE = 0x2a,
+    SPELL_PRECISION = 0x2c,
+    SPELL_MIRTH = 0x31,
+    SPELL_SORROW = 0x32,
+    SPELL_FORTUNE = 0x33,
+    SPELL_MISFORTUNE = 0x34,
+    SPELL_SLAYER = 0x37,
+    SPELL_TITANS_LIGHTNING_BOLT = 0x39,
+    SPELL_BERSERK = 0x3b,
+    SPELL_HYPNOTIZE = 0x3c,
+    SPELL_FORGETFULNESS = 0x3d,
+    SPELL_BLIND = 0x3e,
+    SPELL_STONE = 0x46,
+    SPELL_POISON = 0x47
+};
 
 // Bootstrap VIEW of the spell-traits record (136-byte stride proven
 // by get_spell_work_chance's spell*17*8 indexing at 0x44a4e2): only
@@ -95,6 +153,18 @@ enum TTerrainType {
     TERRAIN_NONE = -1
 };
 
+// The special-ground MODE GetArmyMorale/GetArmyLuck dispatch on (the
+// dword param with sentinels 2..5): cursed ground zeroes the stat,
+// holy ground/evil fog swing morale by town alignment, the clover
+// field lifts neutral-town luck. NH3API terrain.hpp EMagicTerrain
+// spellings; only the byte-proven sentinels are listed.
+enum EMagicTerrain {
+    MAGIC_TERRAIN_CURSED_GROUND = 0x2,
+    MAGIC_TERRAIN_HOLY_GROUND = 0x3,
+    MAGIC_TERRAIN_EVIL_FOG = 0x4,
+    MAGIC_TERRAIN_CLOVER_FIELD = 0x5
+};
+
 // PROVEN layout (2026-08-04): Dreamcast CodeView class size 56 with
 // armies @0 and numTroops @28, corroborated by retail codegen - the
 // 7-slot loops and the CREATURE_NONE sentinel in
@@ -139,12 +209,33 @@ const unsigned int CTA_SIEGE_WEAPON = 0x40;
 // the no-morale trait (undead/elemental/war-machine family).
 const unsigned int CTA_NO_MORALE = 0x20000;
 
-// Artifact 0x54 zeroes POSITIVE morale (GetArmyMorale 0x44b23a);
-// NH3API names it Spirit of Oppression. 0x55 zeroes luck for BOTH
-// sides when either hero wields it (GetLuck 0x44b2e4) - the Hourglass
-// of the Evil Hour.
-const int ARTIFACT_SPIRIT_OF_OPPRESSION = 0x54;
-const int ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR = 0x55;
+// Artifact ids as the IsWieldingArtifact gates surface them (NH3API
+// artifact.hpp spellings; every name is corroborated by the byte-
+// proven behavior at its call site). 0x54 zeroes POSITIVE morale
+// (GetArmyMorale 0x44b23a); 0x55 zeroes luck for BOTH sides when
+// either hero wields it (GetLuck 0x44b2e4). The rest are
+// get_spell_work_chance's immunity gates: the eight pendants block
+// exactly their lore spells, the Badge blocks the mind family, the
+// Sphere of Permanence blocks Dispel, the Orb of Vulnerability makes
+// work certain, and 0x86 - Power of the Dragon Father - blocks
+// level<=4 spells (the decode note's "Orb of Inhibition" inference
+// does not survive the NH3API roster: inhibition is 0x7e).
+enum EArtifactId {
+    ARTIFACT_BADGE_OF_COURAGE = 0x31,
+    ARTIFACT_SPIRIT_OF_OPPRESSION = 0x54,
+    ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR = 0x55,
+    ARTIFACT_SPHERE_OF_PERMANENCE = 0x5c,
+    ARTIFACT_ORB_OF_VULNERABILITY = 0x5d,
+    ARTIFACT_PENDANT_OF_DISPASSION = 0x64,
+    ARTIFACT_PENDANT_OF_SECOND_SIGHT = 0x65,
+    ARTIFACT_PENDANT_OF_HOLINESS = 0x66,
+    ARTIFACT_PENDANT_OF_LIFE = 0x67,
+    ARTIFACT_PENDANT_OF_DEATH = 0x68,
+    ARTIFACT_PENDANT_OF_FREE_WILL = 0x69,
+    ARTIFACT_PENDANT_OF_NEGATIVITY = 0x6a,
+    ARTIFACT_PENDANT_OF_TOTAL_RECALL = 0x6b,
+    ARTIFACT_POWER_OF_THE_DRAGON_FATHER = 0x86
+};
 
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
@@ -249,6 +340,13 @@ public:
     int load(TAbstractFile* infile);
 };
 SIZE(armyGroup, 56);
+
+// Live prototypes (claimed armygrp.cpp bodies; ai_combat's spell-work
+// chain calls both).
+float get_spell_work_chance(SpellID spell, TCreatureType target_army_type,
+                            const class hero* casting_hero,
+                            const class hero* target_hero);            // 0x44a4d0
+long modify_spell_damage(long damage, SpellID spell, TCreatureType creature);  // 0x44b4b0
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\armygrp.cpp:82, dc 0x4db88) void SplitSliderCallback(int state, heroWindow* parent_window);

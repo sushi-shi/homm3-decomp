@@ -6,9 +6,21 @@
 #define HOMM3_WINGRAPH_H
 
 // Live prototypes (claimed wingraph.cpp bodies; called from kbwin's
-// AppCommand fullscreen arm and AppExit).
+// AppCommand fullscreen arm, AppExit, WM_PAINT and WinMain).
 unsigned char SetFullScreenStatus(int bFullScreenOn);    // 0x6019a0
 void CleanUpWinGraphics();                               // 0x601890
+int AppPaint(void* hwnd, void* hdc);                     // 0x601820
+void InitGraphics();                                     // 0x6014e0
+
+// The DirectDraw surface pair (Blt target and game draw surface).
+// Owner attribution: the DD lifecycle (DDCreatePrimary/DDCreateSurface
+// per the roster above) lives in this TU, so the pair is declared
+// here; the .bss addresses stay extern-only until the owning TU's
+// claims land. The forward declaration keeps <ddraw.h> out of
+// includers that never touch DirectDraw.
+struct IDirectDrawSurface;
+extern IDirectDrawSurface* gpDDSPrimary;  // .bss 0x6aacbc
+extern IDirectDrawSurface* gpDDSBack;     // .bss 0x6aacc0
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\wingraph.cpp:72, dc 0x198af4) void SetPlayerPaletteColors(unsigned short* pPalette, int whichPlayer);

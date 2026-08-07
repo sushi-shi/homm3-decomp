@@ -43,6 +43,22 @@ struct SPointerSprite {
 
 class mouseManager : public baseManager {
 public:
+    // DC CodeView enum mouseManager::EPointerSet, verbatim (the kb.cpp
+    // roster attests GetSet() returning it). field_4c holds the
+    // current set - the ctor's -1 store is INVALID_SET/SAME_SET, and
+    // CheckUpdate's frame-cycling gate fires on SPELL_SET, the one
+    // animated pointer family.
+    enum EPointerSet {
+        SAME_SET = -1,
+        INVALID_SET = -1,
+        DEFAULT_SET = 0x0,
+        ADVENTURE_SET = 0x1,
+        COMBAT_SET = 0x2,
+        SPELL_SET = 0x3,
+        ARTIFACT_SET = 0x4,
+        MAX_POINTER_SETS = 0x5
+    };
+
     int field_38;
     int field_3c;
     int field_40;

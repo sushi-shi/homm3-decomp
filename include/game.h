@@ -25,6 +25,12 @@ public:
 extern game* gpGame;
 extern playerData* gpCurrentPlayer;
 
+// Located game.cpp bodies kbwin calls (the Imm/tablet mouse hooks;
+// bodies not yet reconstructed - declarators match the kbwin call
+// sites).
+unsigned char InitImmMouse(void* hInst, void* hwnd);  // 0x4b6890
+void ImmMouseWindowMoved();                           // 0x4b6950
+
 // playerData head: NextHero returns -1 when the player has no mobile
 // hero (HasMobileHero is its bool wrapper).
 class playerData {

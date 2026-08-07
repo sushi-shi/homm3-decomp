@@ -10,6 +10,14 @@
 class Bitmap16Bit;
 class heroWindow;
 
+// heroWindowManager::dialogReturn's domain: only the byte-proven
+// value is listed (AppWndProc's WM_CLOSE confirm test at 0x4f7cb9);
+// NH3API window_manager.hpp DialogReturnType spelling - the roster
+// grows as consumers prove values.
+enum EDialogReturnType {
+    DIALOG_RETURN_ACCEPT = 0x7805
+};
+
 // Bootstrap VIEW of heroWindowManager (Dreamcast size 104): only the
 // screen bitmap is consumed so far. DC puts dialogReturn@56,
 // lastHover@60, lastHoverAK@64, screenBitmap@68; retail

@@ -145,8 +145,8 @@ void iconWidget::SetSprite(const char* new_sprite)
 // The idle-animation state machine: weighted odds (0:65%, 2:15%,
 // 4:5%, 1:5%, 3:4%, fidgets 11-16 1% each; the table re-initializes
 // per re-roll, matching the retail loop-back into its stores);
-// sequences 0x14/0x15 are the leave/enter transitions with the
-// fidget target parked in PostPostWalkSequence.
+// cs_prewalk/cs_postwalk (0x14/0x15) are the leave/enter transitions
+// with the fidget target parked in PostPostWalkSequence.
 VA(0x004eb060, 0x1EB)  // anchor-global, dc 0xd9d90
 void iconWidget::NextRandomFrame()
 {
@@ -164,12 +164,12 @@ void iconWidget::NextRandomFrame()
             Frame = next % frames;
         return;
     }
-    if (seqId == 0x14) {
+    if (seqId == cs_prewalk) {
         seqId = 0;
         Frame = 0;
         return;
     }
-    if (seqId == 0x15) {
+    if (seqId == cs_postwalk) {
         Frame = 0;
         seqId = PostPostWalkSequence;
         return;
@@ -196,19 +196,19 @@ void iconWidget::NextRandomFrame()
     }
     if (chosen == 0) {
         if (seqId != 0
-            && sprite->numSequences > 0x14
-            && sprite->validSeqMask[0x14] != 0
-            && sprite->s[0x14]->numFrames > 0) {
-            seqId = 0x14;
+            && sprite->numSequences > cs_prewalk
+            && sprite->validSeqMask[cs_prewalk] != 0
+            && sprite->s[cs_prewalk]->numFrames > 0) {
+            seqId = cs_prewalk;
             Frame = 0;
             return;
         }
     } else if (seqId == 0
-               && sprite->numSequences > 0x15
-               && sprite->validSeqMask[0x15] != 0
-               && sprite->s[0x15]->numFrames > 0) {
+               && sprite->numSequences > cs_postwalk
+               && sprite->validSeqMask[cs_postwalk] != 0
+               && sprite->s[cs_postwalk]->numFrames > 0) {
         PostPostWalkSequence = chosen;
-        seqId = 0x15;
+        seqId = cs_postwalk;
         Frame = 0;
         return;
     }

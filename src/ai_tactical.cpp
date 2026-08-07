@@ -39,22 +39,22 @@ double value_of_luck_and_morale(long value, long change, double good_value_multi
         if (value + change > 3)
             change = 3 - value;
         if (value >= 0)
-            return (double)change * good_value_multiplier;
+            return static_cast<double>(change) * good_value_multiplier;
         if (change <= value)
-            return -((double)change * bad_value_multiplier);
-        return (double)(value + change) * good_value_multiplier
-               + (double)value * bad_value_multiplier;
+            return -(static_cast<double>(change) * bad_value_multiplier);
+        return static_cast<double>(value + change) * good_value_multiplier
+               + static_cast<double>(value) * bad_value_multiplier;
     }
     if (value <= -3)
         return 0.0;
     if (value + change < -3)
         change = -3 - value;
     if (value <= 0)
-        return -((double)change * bad_value_multiplier);
+        return -(static_cast<double>(change) * bad_value_multiplier);
     if (-change <= value)
-        return (double)change * good_value_multiplier;
-    return -((double)value * good_value_multiplier)
-           - (double)(value + change) * bad_value_multiplier;
+        return static_cast<double>(change) * good_value_multiplier;
+    return -(static_cast<double>(value) * good_value_multiplier)
+           - static_cast<double>(value + change) * bad_value_multiplier;
 }
 
 // E:\gamedcs\ai_tactical.cpp:97
@@ -124,7 +124,7 @@ void type_AI_combat_parameters::simulate_attack(const army* current_army, long* 
     simulate_single_attack(current_army, our_hits, enemy, enemy_hits, ranged, distance);
     if (*our_hits == 0 || *enemy_hits <= 0 || ranged)
         return;
-    unsigned char no_retaliation = (unsigned char)((unsigned)current_army->creatureId >> 16);
+    unsigned char no_retaliation = static_cast<unsigned char>(static_cast<unsigned>(current_army->creatureId) >> 16);
     if ((no_retaliation & 1) == 0 && enemy->disabled_2b0 == 0
             && enemy->retaliationCount > 0
             && (gpGame->AI_in_control > 0 || gpCombatManager->sideIsAI[side])) {
@@ -132,7 +132,7 @@ void type_AI_combat_parameters::simulate_attack(const army* current_army, long* 
         if (*our_hits == 0 || *enemy_hits == 0)
             return;
     }
-    unsigned char double_attack = (unsigned char)((unsigned)current_army->creatureId >> 15);
+    unsigned char double_attack = static_cast<unsigned char>(static_cast<unsigned>(current_army->creatureId) >> 15);
     if (double_attack & 1)
         simulate_single_attack(current_army, our_hits, enemy, enemy_hits, 0, 0);
 }
@@ -199,9 +199,9 @@ long type_AI_combat_parameters::get_ranged_attack_value(const army* current_army
         return value;
     if (enemy->disabled_290 || enemy->disabled_2b0 || enemy->disabled_2c0)
         return value / 10;
-    unsigned char enemy_flags = (unsigned char)((unsigned)enemy->creatureId >> 21);
-    if ((enemy_flags & 1) == 0 && enemy->creatureType != 0x93
-            && enemy->creatureType != 0x94 && enemy->AI_target != 0
+    unsigned char enemy_flags = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 21);
+    if ((enemy_flags & 1) == 0 && enemy->creatureType != CREATURE_FIRST_AID_TENT
+            && enemy->creatureType != CREATURE_AMMO_CART && enemy->AI_target != 0
             && enemy->get_AI_target_time(enemy->GetSpeed()) <= 5)
         return value / enemy->get_AI_target_time(enemy->GetSpeed());
     return value / 5;
@@ -221,11 +221,11 @@ long type_AI_combat_parameters::get_exchange_effect(const army* current_army, co
         simulate_attack(enemy, &enemy_left, current_army, &our_left, ranged, 0);
     long value = enemy->get_loss_combat_value(lowest_attack, lowest_defense, ranged,
                                               enemy_hits - enemy_left,
-                                              (unsigned char)(kills_only && !simulated));
+                                              static_cast<unsigned char>(kills_only && !simulated));
     if (our_hits > our_left)
         value -= current_army->get_loss_combat_value(lowest_attack, lowest_defense, ranged,
                                                      our_hits - our_left,
-                                                     (unsigned char)(kills_only && !simulated));
+                                                     static_cast<unsigned char>(kills_only && !simulated));
     return value;
 }
 
@@ -307,7 +307,8 @@ long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long* checked)
                                                    data->lowest_defense, 1, attack_army)
                       - enemy->get_unit_combat_value(data->lowest_attack,
                                                      data->lowest_defense, 0, 0);
-        long share = (long)((double)hits * gain / (double)enemy->hitPoints);
+        long share = static_cast<long>(static_cast<double>(hits) * gain
+                                       / static_cast<double>(enemy->hitPoints));
         if (share < 1)
             share = 1;
         value += share;
@@ -514,8 +515,8 @@ long type_AI_spellcaster::get_mass_damage_effect(long enemy_damage, long friendl
     if (enemy_damage <= friendly_damage)
         return 0;
     long our_total = params.our_value;
-    if ((float)enemy_damage / (float)params.enemy_value
-            <= (float)friendly_damage / (float)our_total)
+    if (static_cast<float>(enemy_damage) / static_cast<float>(params.enemy_value)
+            <= static_cast<float>(friendly_damage) / static_cast<float>(our_total))
         return 0;
     if (friendly_damage >= our_total)
         return 0;
@@ -646,10 +647,10 @@ long type_AI_spellcaster::get_defense_boost_value(const army* our_army, const ar
 {
     long damage = enemy->get_average_damage(our_army, enemy->can_shoot(0),
                                             enemy->numTroops, 0, 0);
-    long reduced = (long)((double)damage / increase);
+    long reduced = static_cast<long>(static_cast<double>(damage) / increase);
     long hits = our_army->get_total_hit_points(0);
     if (damage > hits) {
-        increase = (double)hits / (double)reduced;
+        increase = static_cast<double>(hits) / static_cast<double>(reduced);
         damage = hits;
     }
     if (reduced >= damage)
@@ -668,10 +669,10 @@ long type_AI_spellcaster::get_defense_boost_value(const army* our_army, const ar
     if (duration >= odds)
         scale = 1.0;
     else
-        scale = (double)duration / (double)odds;
-    double total = (double)our_army->get_total_combat_value(params.lowest_attack,
-                                                            params.lowest_defense);
-    return (long)((sqrt(increase) - 1.0) * total * scale);
+        scale = static_cast<double>(duration) / static_cast<double>(odds);
+    double total = static_cast<double>(our_army->get_total_combat_value(params.lowest_attack,
+                                                                        params.lowest_defense));
+    return static_cast<long>((sqrt(increase) - 1.0) * total * scale);
 }
 
 #if 0  // @carcass
@@ -798,7 +799,7 @@ long type_AI_spellcaster::get_speed_value(const army* our_army, long increase, l
         return 0;
     if (field_1c)
         return 0;
-    unsigned char slow_flag = (unsigned char)((unsigned)our_army->creatureId >> 26);
+    unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
     long turns = duration;
     if (slow_flag & 1)
         turns = duration - 1;
@@ -1121,10 +1122,10 @@ void type_AI_spellcaster::set_melee_enemies()
     for (long i = 0; i < gpCombatManager->numArmies[side]; i++) {
         if (our_army->disabled_290 || our_army->disabled_2b0 || our_army->disabled_2c0)
             continue;
-        unsigned char flags = (unsigned char)((unsigned)our_army->creatureId >> 21);
+        unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 21);
         if (flags & 1)
             continue;
-        if (our_army->creatureType == 0x93 || our_army->creatureType == 0x94)
+        if (our_army->creatureType == CREATURE_FIRST_AID_TENT || our_army->creatureType == CREATURE_AMMO_CART)
             continue;
         if (our_army->hypnotizeFlag)
             continue;
