@@ -103,7 +103,10 @@ def traveled_dc_offsets():
         return wanted
     with OVERLAP.open() as fh:
         for row in csv.DictReader(l for l in fh if not l.startswith("#")):
-            if row.get("h2_fuzzy") != "100.0":
+            try:
+                if float(row.get("h2_fuzzy") or 0.0) < 100.0:
+                    continue
+            except ValueError:
                 continue
             if row.get("h3_retail_rva"):
                 continue

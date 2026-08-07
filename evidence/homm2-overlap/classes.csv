@@ -2,8 +2,8 @@
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
 # date: 2026-08-06
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
-# homm2: HEROES2W.EXE sha256=bc8f362dd49216c9fbcee1eb2e0429b467082a93330dd84ff95757c0182fc8a3 (read-only sibling)
-# homm2 repo: /home/sheep/Projects/homm2/homm2-decomp
+# homm2 pol: HEROES2W.EXE sha256=bc8f362dd49216c9fbcee1eb2e0429b467082a93330dd84ff95757c0182fc8a3 @ /home/sheep/Projects/homm2/homm2-decomp
+# homm2 buka: HMM2PL.exe sha256=bc7e9c9320aa3e5c1ffca6d2bfa530ecedb5a3bca1b91c959501c15ad72c329a @ /home/sheep/Projects/homm2/homm2-buka
 h2_class,h3_class
 IDirectDraw,IDirectDraw
 IDirectDrawPalette,IDirectDrawPalette

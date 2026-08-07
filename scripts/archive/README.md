@@ -5,12 +5,11 @@ tables under `config/`, generated corpora under `evidence/`, and the
 hand-owned `src/` + `include/` carcass. The metrics these tools drove
 stay live as gates in the running pipeline.
 
-`homm2_overlap.py` - the one-shot HoMM2↔HoMM3 symbol comparison
-(2026-08: TU/class/name/string-anchor lanes over the sibling
-homm2-decomp, read-only). Its durable results are
-`docs/homm2-symbol-overlap.md` + `evidence/homm2-overlap/`; it ran as
-`python3 -m homm3.analysis.homm2_overlap` before retirement and needs
-`$HOMM2_DECOMP` (or `~/Projects/homm2/homm2-decomp`) to re-run.
+`homm2_overlap.py` - REVIVED 2026-08-06 to
+`scripts/homm3/analysis/homm2_overlap.py` for the dual-branch functions
+campaign (decision log §5): the retired one-shot gained recurring users
+(`dc_bracket` consumes its functions lane, the twins lane extends it),
+so it is a live analysis module again. Nothing of it remains here.
 
 `carve/` - the bootstrap carving pipeline (2026-08: intake, reloc sweep,
 Ghidra carve, DNA attribution, the naming layers, the HD/Dreamcast
