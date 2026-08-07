@@ -260,6 +260,72 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — cmbtmgr 2/35 → 15/35; the combatManager model built
+  entirely from retail bytes, with Ghidra deliberately unused.**
+  Engine-wide 316 → 329 exact, 4.07% → **4.17%** executable matched;
+  `cmbtmgr` 0.54% → 14.27% fuzzy, unwritten stubs 33 → 19.
+  Thirteen exact: GetTargetWallIndex, LeftOfMoat, is_adjacent,
+  enemy_is_adjacent, CombatIsOver, HexIsBlocked, should_lower_door,
+  IsInMoat, RemoveArmyFromGrid, PlaceArmyInGrid, IsWinner,
+  PlaceObstacle, get_distance. RemoveObstacle plateaus at 87.29% on a
+  register-allocation decision (retail keeps `obstacles_begin` in EAX
+  across three guards and touches neither EBX nor EDI until after the
+  bound check).
+  **The lane never opened `evidence/ghidra-structs/` — correctly.** The
+  0x1000 cutoff leaves that table silent about a 0x140ec object, so
+  every field below is its own byte proof: `drawbridgeState` @0x53a4
+  (LowerDoor steps 3→2→1 one DrawFrame apart, RaiseDoor gates on ==1),
+  `field_53a8`, `field_53c8` (RaiseDoor null-checks it then
+  `cmp byte [eax+4], 7` = TOWN_FORTRESS), `field_132b0[2]`/
+  `field_132b2[2]` indexed by SIDE as bytes with 0x132b2 tested first in
+  both consumers, `field_132f4`, `obstacles_begin`/`_end` @0x13d5c/
+  0x13d60 (`end-begin` divided by 24), nested `TObstacle` 0x18 whose
+  `sprite` is virtual-called at **vtable slot 1** with no args and then
+  nulled (= `CSprite::Dispose`), `type_obstacle_shape`,
+  `type_wall_target` + `gWallTargets[8]`, `gMoatColumns`,
+  `gOuterMoatColumns`, and enums `EDrawbridgeState`/`ECombatGateHex`.
+  **A masked diff would have hidden a modelling error here:**
+  `type_obstacle_shape`'s `offsets` member was first placed at +7 and
+  sat at 99.99% until the UNMASKED disasm exposed it; `pad_07` fixed it
+  to exact. Same lesson as the initialize_game_data misread.
+  **New lever — `std::max`'s shape needs a const-reference-in,
+  const-reference-out helper** to reproduce retail's home-both / `lea` /
+  `lea` / deref select; every inline-ternary and by-value spelling
+  plateaus at 93.3%. VC6's `<algorithm>` does NOT export `max` into
+  `std`, so the template is written out locally. Also: **`goto` vs
+  `break` cuts both ways** — in CombatIsOver a `goto` out of the inner
+  loop killed VC6's induction-variable elimination (96.15 → 46.62) and a
+  single-call-site file static gave retail's CFG and the pointer IV
+  together, while in IsWinner the same `goto` was harmless and removed a
+  duplicate bound test.
+  **Inherited claims corrected (twelfth consecutive lane).**
+  `include/army.h`'s note that the IsWinner walk tests `army+0x84`
+  against −1 is **FALSE**: both consumers, now byte-exact, test
+  **+0x34 `creatureType`** and read +0x84 only as a BITFIELD (one dword
+  load feeding `shr 6/21/22`) — so +0x84 is a flags word, not an id.
+  `army+0xf8` is also the grid slot (PlaceArmyInGrid narrows it to a
+  byte and stores it as the cell's `armySlot`, exactly as it stores
+  +0xf4 as `armySide`); left renamed-pending since the ai_tactical call
+  sites belong to another lane. **Four DC-roster *methods* are free
+  `__fastcall` in retail** (GetTargetWallIndex, LeftOfMoat,
+  get_distance), joining the existing InCastle precedent — all three are
+  exact under that signature. `enemy_is_adjacent`'s DC `const army*`
+  first parameter must drop const, because retail calls the non-const
+  `army::is_enemy` on it.
+  **OPEN — `ShotIsThroughWall` (0x00467510, 234 B) is fully decoded and
+  blocked only on six enumerators** in `armygrp.h`, which a concurrent
+  lane owned at the time: `CREATURE_MAGE` 0x22, `CREATURE_ARCH_MAGE`
+  0x23, `CREATURE_ENCHANTER` 0x88, `CREATURE_SHARPSHOOTER` 0x89,
+  `ARTIFACT_GOLDEN_BOW` 0x5b, `ARTIFACT_BOW_OF_THE_SHARPSHOOTER` 0x89.
+  Values are retail-proven; the names are NH3API lineage and the
+  semantics corroborate exactly (these are HoMM3's no-wall-penalty
+  shooters and the two obstacle-penalty artifacts). Its first parameter
+  is an `army*`, NOT the DC roster's `int group` — the body reads
+  +0x288/+0xf4/+0x34. Needs `#include "hero.h"` in cmbtmgr.cpp.
+  **Process:** the lane's first pre-delink build invented 28 flat
+  0.0000 baseline rows, which it reverted before proceeding — a second
+  independent demonstration of why the order is build → delink → build.
+
 - **2026-08-08 — recruit reconstructed across two lanes; the JUMP-TABLE
   LABEL CAP identified as a pipeline-level residual class.** Engine-wide
   312 → 316 exact, 3.97% → **4.07%** executable matched (crossing 4%);
