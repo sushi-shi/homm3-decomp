@@ -5,6 +5,10 @@
 #ifndef HOMM3_HEXCELL_H
 #define HOMM3_HEXCELL_H
 
+#include <va.h>
+
+class army;
+
 // Head model from the retail ctor 0x4e7150: field_10@0x10 = 0,
 // field_14 = -1, three -1 bytes at 0x18..0x1a, field_1c = 0, then a
 // zero byte at 0x4c and a -1 byte at 0x4d. Names provisional; the
@@ -14,17 +18,32 @@ public:
     char pad_00[0x10];
     int field_10;
     int field_14;
-    unsigned char field_18;
-    unsigned char field_19;
-    unsigned char field_1a;
+    // Signed: get_army (0x4e7170) movsx-loads the pair and treats a
+    // negative side as empty; the dead arrays hold 14 slots each and
+    // get_dead_army (0x4e71b0) indexes both by the same i.
+    signed char armySide;         // +0x18
+    signed char armySlot;         // +0x19
+    // Signed like the pair above: the ctor feeds all four -1 byte
+    // fields from the SAME register as the int -1 (cl); an unsigned
+    // declaration splits (uchar)-1 = 0xff into a separately
+    // materialized constant, which retail's bytes rule out.
+    signed char field_1a;
     unsigned char pad_1b;
     int field_1c;
-    char pad_20[0x2c];
+    signed char deadArmySide[14]; // +0x20
+    signed char deadArmySlot[14]; // +0x2e
+    char pad_3c[0x10];
     unsigned char field_4c;
-    unsigned char field_4d;
+    signed char field_4d;
+    // Object stride is 0x70, byte-proven by ValidAttack's cell access
+    // (0x523bb0: index*112 + 0x1c4 into combatManager).
+    char pad_4e[0x22];
 
     hexcell();
+    army* get_army();
+    army* get_dead_army(int i);
 };
+SIZE(hexcell, 0x70);
 
 // --- hexcell ---
 // CODEVIEW(E:\gamedcs\hexcell.cpp:26, dc 0xd60fc) void hexcell::hexcell();

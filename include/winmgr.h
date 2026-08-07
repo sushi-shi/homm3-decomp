@@ -18,7 +18,10 @@ class heroWindow;
 // until those members earn byte-proven names.
 class heroWindowManager : public baseManager {
 public:
-    char pad_38[8];
+    // +0x38: NormalDialog's result slot (AppWndProc's WM_CLOSE tests
+    // it against 0x7805, the confirm-OK command).
+    int dialogReturn;
+    char pad_3c[4];
     Bitmap16Bit* screenBitmap;
     int colorCyclingOn;
     unsigned char isWaitingForFadeIn;
@@ -35,6 +38,7 @@ public:
     // the consumed 4-int form (retail 0x602bd0, called by widget::Main)
     // is declared.
     void UpdateScreen(int x, int y, int w, int h);
+    int BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
     void RemoveWindow(heroWindow* killWindow);
     void FadeScreen(int inOut, int speed, unsigned char expect_fadein);
     void FadeToBlack(int speed, unsigned char expect_fadein);

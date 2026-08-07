@@ -166,28 +166,40 @@ int GetDesktopHeight()
 }
 
 // E:\gamedcs\wingraph.cpp:1876
-DC_ONLY(0x19a42c, 0x14)
+// Located as WinMain's post-CreateWindow callee; the retail body is a
+// 5-byte tail jmp into the DirectDraw-creating 0x6014f0.
+VA(0x006014e0, 0x5)  // anchor-callee, dc 0x19a42c
 void InitGraphics()
 {
     // @stub
 }
 
 // E:\gamedcs\wingraph.cpp:1882
-DC_ONLY(0x19a440, 0x4)
+// Located as AppWndProc's WM_PAINT callee, called (hwnd, NULL) - the
+// homm2 shape; a 4-byte WinCE stub on DC, a real 112-byte paint here.
+VA(0x00601820, 0x70)  // anchor-callee, dc 0x19a440
 int AppPaint(void* hwnd, void* hdc)
 {
     // @stub
 }
 
 // E:\gamedcs\wingraph.cpp:1916
-DC_ONLY(0x19a444, 0x10)
+// Located as AppExit's first callee (kbwin 0x4f7fa0; homm2 AppExit
+// order). Retail body is a 5-byte tail jmp into 0x6018a0 - the WING
+// arm of homm2's wrapper is gone, only the DD path survives.
+VA(0x00601890, 0x5)  // anchor-callee, dc 0x19a444
 void CleanUpWinGraphics()
 {
     // @stub
 }
 
 // E:\gamedcs\wingraph.cpp:1922
-DC_ONLY(0x19a454, 0xD8)
+// Located by shape: fastcall bool(int) that early-outs on the
+// 0x6989d4 flag, compares the argument against bWindowedMode
+// (0x6987b8), calls the adjacent static DDSetFullScreenStatus
+// (0x601a00) and gpWindowManager->UpdateScreen(0,0,800,600); sole
+// caller is AppCommand's KBWIN_MENU_FULLSCREEN arm (homm2 lineage).
+VA(0x006019a0, 0x5A)  // anchor-callee, dc 0x19a454
 unsigned char SetFullScreenStatus(int bFullScreenOn)
 {
     // @stub

@@ -14,9 +14,14 @@ enum EKbTimerSlots {
 
 extern unsigned long glTimers[10];
 
-// Declared without dllimport, matching retail's direct call into the
-// winmm import thunk (an E8 rel32, not an IAT indirect).
-extern "C" unsigned long __stdcall timeGetTime();
+// Live prototypes (claimed kb.cpp bodies; called from kbwin's
+// AppCommand and exec's DoDialog).
+void ShutDown(const char* cInExitMessage);               // 0x4f3690
+int HandleAppSpecificMenuCommands(int idItem);           // 0x4f4350
+void CleanUpMenus();                                     // 0x4f4b50
+void NormalDialog(const char* cText, int iMBType, int x, int y,
+    int iResType1, int iResExtra1, int iResType2, int iResExtra2,
+    int iSpecial, int iTimeout, int iResType3, int iResExtra3);  // 0x4f6570
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\kb.cpp:240, dc 0xdf160) void DrawProgressCount();

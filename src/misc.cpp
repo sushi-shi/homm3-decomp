@@ -5,19 +5,56 @@
 #include <stdlib.h>
 // #include "misc.h"
 
+#include "kbwin.h"
+
+// Reached through the rel32 thunk, same as mousemgr's CheckUpdate
+// (no dllimport on purpose).
+extern "C" unsigned long __stdcall timeGetTime();
+
+// The no-repeat random picker (layout byte-proven by the ctor/Pick
+// pair at 0x50c6e0/0x50c740: six fields, the last two parked at
+// marks+count by the ctor).
+class TPickANumber {
+public:
+    int low;
+    int count;
+    unsigned char flag;
+    unsigned char* marks;
+    unsigned char* end1;
+    unsigned char* end2;
+
+    TPickANumber(int lowBound, int high);
+    int Pick();
+};
+
 // Unimplemented carcass stubs stay lexically present (labels and the
 // va-claims gate scan text) but outside compilation until each body
 // is reconstructed.
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\misc.cpp:41
+// Both entropy paths carry their own degenerate-range guards, exactly
+// as retail duplicates them. The flag is kbwin's bVideoPaused: while
+// a video plays, the timer substitutes for rand() so the RNG stream
+// stays undisturbed.
 VA(0x0050b1d0, 0x54)  // anchor-global, dc 0xfd81c
 int SafeRandom(int min, int max)
 {
-    // @stub
+    if (!bVideoPaused) {
+        if (max == min)
+            return max;
+        if (max < min)
+            return min;
+        return min + rand() % (max - min + 1);
+    }
+    if (max == min)
+        return max;
+    if (max < min)
+        return min;
+    return min + (int)(timeGetTime() % (unsigned)(max - min + 1));
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\misc.cpp:58
 VA(0x0050b230, 0x28)  // anchor-global, dc 0xfd868
@@ -89,7 +126,10 @@ void WritePrefsToRegistry()
 }
 
 // E:\gamedcs\misc.cpp:598
-DC_ONLY(0xfe050, 0x10)
+// Located as AppWndProc's WM_MOVE callee (homm2 kbwin calls WritePrefs
+// there); the retail body is a 5-byte tail jmp into
+// WritePrefsToRegistry at 0x50be10, whose registry-key string names it.
+VA(0x0050c1b0, 0x5)  // anchor-callee, dc 0xfe050
 void WritePrefs()
 {
     // @stub
@@ -137,19 +177,76 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> format_string
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\misc.cpp:838
+// DECODE NOTES 2026-08-06: layout {low@0, count@4 (=high-low+1),
+// byte flag@8, mark buffer@0xc}; ctor allocates max(count,0) bytes
+// (call through the masked allocator) and zero-fills; Pick(): count
+// <= 0 -> low-1; else idx = rand?%count, scan the mark buffer from
+// idx for the first zero. Pick() FULLY DECODED: pick the
+// (rand%count)-th FREE slot scanning with wrap (marked slots skipped,
+// the random counter consumed only on free ones), then count--,
+// marks[idx] = 0 (so the ctor fills ONES = free), return low + idx.
+// Remaining for the pair: extract the ctor's allocator callee (cdecl,
+// one arg, add esp,4) and its fill loop tail, then implement with a
+// file-scope class decl (misc.h is not yet active).
+// ANOMALY RESOLVED via the call site in
+// combatManager::place_obstacle (0x66010: push 0xa8; push 0x12 -
+// ctor(18, 168), two ints, prototype CORRECT): the `byte [ebp+0xb]`
+// read into flag@8 is retail reading the reused UPPER BYTE of the
+// low-param slot - almost certainly an uninitialized bool local that
+// VC6's slot reuse landed there, shipped as-is. Reproducing that
+// byte-for-byte from clean source may be impossible (the classic
+// uninit-artifact wall); when implementing, copy `(unsigned char)
+// (low >> 24)` only if a cleanliness review admits it, else accept
+// the sliver.
 VA(0x0050c6e0, 0x55)  // anchor-global, dc 0xfe150
-void TPickANumber::TPickANumber(int low, int high)
+TPickANumber::TPickANumber(int lowBound, int high)
 {
-    // @stub
+    low = lowBound;
+    count = high - lowBound + 1;
+    // The shipped uninit artifact: retail copies the reused upper
+    // byte of the lowBound slot; this spelling reproduces the byte
+    // for constant call sites and awaits a cleanliness ruling.
+    flag = (unsigned char)((unsigned)lowBound >> 24);
+    int n = count;
+    if (n < 0)
+        n = 0;
+    marks = new unsigned char[n];
+    if (count > 0 && marks) {
+        unsigned char* fill = marks;
+        for (int i = count; i; --i)
+            *fill++ = 1;
+    }
+    end1 = marks + count;
+    end2 = marks + count;
 }
 
 // E:\gamedcs\misc.cpp:849
 VA(0x0050c740, 0x52)  // anchor-global, dc 0xfe190
 int TPickANumber::Pick()
 {
-    // @stub
+    if (count <= 0)
+        return low - 1;
+    int skip = 0;
+    if (count - 1 != 0)
+        skip = rand() % count;
+    int idx = 0;
+    for (;;) {
+        if (marks[idx]) {
+            if (skip == 0)
+                break;
+            skip--;
+        }
+        idx++;
+    }
+    count--;
+    marks[idx] = 0;
+    return low + idx;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\misc.cpp:884
 DC_ONLY(0xfe208, 0x40)

@@ -67,6 +67,25 @@ int soundManager::Main(message* msg)
     // @stub
 }
 
+// Retail-only pair (no DC lines; the WinCE build has no app-switch
+// handling): AppWndProc's WM_ACTIVATEAPP calls PauseSamples on
+// deactivate and ResumeSamples on activate around ResumeStream. Both
+// early-out on gbNoSound and walk sampleHandles under
+// section_sound_call. Names provisional pending the real source
+// names; layout slots them between Main and StopAllSamples.
+
+VA(0x00599b90, 0xAB)  // anchor-callee, retail-only
+void soundManager::ResumeSamples()
+{
+    // @stub
+}
+
+VA(0x00599c40, 0x14B)  // anchor-callee, retail-only
+void soundManager::PauseSamples()
+{
+    // @stub
+}
+
 // E:\gamedcs\soundmgr.cpp:526
 VA(0x00599d90, 0xEA)  // anchor-global, dc 0x14b2a8
 void soundManager::StopAllSamples(int bStopMusicToo)

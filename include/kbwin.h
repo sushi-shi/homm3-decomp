@@ -7,10 +7,52 @@
 
 #include <windows.h>
 
+// Static timer utility (DC attests the class and all three members;
+// kbwin.cpp lines 823-839).
+class GameTime {
+public:
+    static unsigned long Get();             // 0x4f82e0
+    static void DelayTil(unsigned long time);  // 0x4f82f0
+    static void Delay(int interval);        // 0x4f83c0
+};
+
 // Live prototypes (homm2 kbwin lineage; retail bodies noted).
+void AppExit();                         // 0x4f7fa0
 void Process1WindowsMessage();          // 0x4f7fb0
 void KBChangeMenu(HMENU newMenu);       // 0x4f8180, fastcall under /Gr
 void SetNoDialogMenus(int noMenus);     // 0x4f81e0, fastcall under /Gr
+void SetMenus(HMENU menu, int enabled); // 0x4f8220, fastcall under /Gr;
+                                        // homm2 signature - the DC row is a
+                                        // 4-byte WinCE stub
+BOOL CALLBACK AppAbout(HWND dialog, UINT message, WPARAM messageParam,
+    LPARAM messageData);                // 0x4f8140
+LRESULT AppCommand(HWND window, UINT message, WPARAM messageParam,
+    LPARAM messageData);                // 0x4f8060, fastcall under /Gr
+LRESULT CALLBACK AppWndProc(HWND window, UINT message,
+    WPARAM messageParam, LPARAM messageData);  // 0x4f7c00
+
+// The three surviving menu commands (homm2 kbwin.h values; homm3
+// dropped the four window-size entries but kept the IDs, byte-proven
+// by AppCommand's case values).
+enum KbWinMenuCommand {
+    KBWIN_MENU_FULLSCREEN = 0x9c49,
+    KBWIN_MENU_HELP = 0x9c74,
+    KBWIN_MENU_ABOUT = 0x9c75
+};
+
+// homm2 SMenuEnableStatus (KB_TYPES.h) minus its pack(1) reserved
+// byte: retail's SetMenus scales the table index by 8 and reads the
+// enable bytes at +4/+5, so the homm3 struct is naturally aligned.
+struct SMenuEnableStatus {
+    unsigned int command;
+    unsigned char normalEnabled;
+    unsigned char setupEnabled;
+};
+
+// Retail table 0x67f930..0x67f958 = 5 entries (homm2's
+// MENU_ENABLE_STATUS_COUNT lineage; the four window-size rows are
+// gone, a zero sentinel row leads).
+enum { KBWIN_MENU_ENTRY_COUNT = 5 };
 
 // kbwin globals (DC attests hwndApp; the rest are retail-only .bss
 // slots named for their role - provisional).
@@ -22,6 +64,30 @@ extern HMENU activeMenu;                // 0x699604
 extern int bMenusSuppressed;            // 0x699618
 extern int bWindowedMode;               // 0x6987b8
 extern int bVideoPaused;                // 0x69954c
+extern HMENU dfltMenu;                  // 0x6989e4 (CallManager's resume
+                                        // arm restores it; name provisional)
+extern int gbInSetupDialog;             // 0x6989d0 (homm2 name; selects the
+                                        // setupEnabled column in SetMenus)
+extern char szAppName[];                // 0x67f820 "Heroes III" (homm2 name)
+extern char szTitle[];                  // 0x67f82c (homm2 name)
+extern HANDLE ghGameEvent;              // 0x69960c (single-instance event)
+extern char gcCommandLine[61];          // 0x6995c0 (homm2 gcCommandLine)
+extern int iWindowX;                    // 0x6987b0 (windowed x, saved on move)
+extern int iWindowY;                    // 0x6987b4
+extern LONG lAppWindowStyle;            // 0x6995a8 (WM_MOVE style snapshot)
+extern RECT rcAppWindow;                // 0x699598
+extern int bClosingApp;                 // 0x6989fc (homm2 gbClosingApp)
+extern unsigned char bShutDownDone;     // 0x699608 (WM_QUIT ShutDown guard;
+                                        // name provisional)
+extern unsigned char bAppDeactivated;   // 0x699609 (system cursor shown while
+                                        // switched away; name provisional)
+extern unsigned char bMusicWasPlaying;  // 0x699614 (deactivate latch; name
+                                        // provisional)
+extern SMenuEnableStatus gsMenuEnableStatus[KBWIN_MENU_ENTRY_COUNT];
+                                        // 0x67f930 (.data; homm2 kept the
+                                        // table in KB.cpp - homm3 owner TU
+                                        // unproven, defined in kbwin.cpp as
+                                        // its only known consumer)
 
 
 // --- globals ---

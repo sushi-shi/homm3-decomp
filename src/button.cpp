@@ -16,6 +16,11 @@
 #include "kbwin.h"
 #include "palette.h"
 
+// Declared without dllimport (mousemgr.cpp/misc.cpp precedent):
+// retail's button TU calls straight into the winmm import thunk (an
+// E8 rel32, not an IAT indirect) - Select's match proves the form.
+extern "C" unsigned long __stdcall timeGetTime();
+
 // homm2 BUTTON.cpp's file-static modifier latch, same name and role.
 DATA(0x00694da8)
 static int iLeftRightSave;

@@ -10,14 +10,18 @@
 #if 0  // @carcass
 
 // E:\gamedcs\inputmgr.cpp:48
-DC_ONLY(0xdc894, 0x20C)
+// Located as AppWndProc's WM_KEYDOWN/WM_KEYUP callee (homm2 kbwin
+// dispatches the same pair by name); iconwdgt..inputmgr bracket.
+VA(0x004ec0e0, 0x1AB)  // anchor-callee, dc 0xdc894
 int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam)
 {
     // @stub
 }
 
 // E:\gamedcs\inputmgr.cpp:190
-DC_ONLY(0xdcaa0, 0x1AC)
+// Located as AppWndProc's 0x200..0x206 mouse-message callee (homm2
+// lineage as above).
+VA(0x004ec290, 0x1CC)  // anchor-callee, dc 0xdcaa0
 int MouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam)
 {
     // @stub
@@ -67,15 +71,22 @@ int inputManager::CheckDown(int x, int y, int width, int height, int id, unsigne
 VA(0x004ec460, 0x6F)  // anchor-bracket, dc 0xdd97c
 inputManager::inputManager()
 {
+    // Residual (86.6%): retail hoists `mov eax,1` above the vptr store
+    // where this compile hoists the status=0 store instead - the same
+    // scheduler-window class as the enable/send_message plateau. The
+    // POINTER-WALK loop form below is load-bearing: the indexed form
+    // biases the lea one slot low and scores 82.3.
+    message* entry = iBuffer;
     for (int index = 0; index < 64; index++) {
-        iBuffer[index].id = 0;
-        iBuffer[index].codeX = 0;
-        iBuffer[index].codeY = 0;
-        iBuffer[index].qualifier = 0;
-        iBuffer[index].mouseX = 0;
-        iBuffer[index].mouseY = 0;
-        iBuffer[index].extra = 0;
-        iBuffer[index].window = 0;
+        entry->id = 0;
+        entry->codeX = 0;
+        entry->codeY = 0;
+        entry->qualifier = 0;
+        entry->mouseX = 0;
+        entry->mouseY = 0;
+        entry->extra = 0;
+        entry->window = 0;
+        entry++;
     }
     keyboardFilter = 1;
     keyCodeType = 1;

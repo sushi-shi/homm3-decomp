@@ -8,6 +8,20 @@
 #include <windows.h>
 #include "basemgr.h"
 
+// mousemgr.cpp's critical-section RAII guard (DC CodeView TCSLock; the
+// Dreamcast build keeps ctor/dtor out of line, retail inlines both -
+// the fs:[0] frame in every user is the unwind scaffolding).
+class TCSLock {
+public:
+    TCSLock(CRITICAL_SECTION* lpCriticalSection)
+        : section(lpCriticalSection) {
+        EnterCriticalSection(section);
+    }
+    ~TCSLock() { LeaveCriticalSection(section); }
+
+    CRITICAL_SECTION* section;
+};
+
 // Bootstrap VIEW: button::Main pumps messages through the inherited
 // baseManager::Main slot.
 // Byte-proven by the retail ctor 0x50cb50: the baseManager base ends
@@ -15,6 +29,18 @@
 // (baseManager's own field) and then fills its own tail - field_34@0x34,
 // field_4c/0x50 = -1, field_54/0x60 = 0, field_68 = 1, field_74 = 0,
 // and a CRITICAL_SECTION at 0x78.
+// Bootstrap VIEW of the animated-pointer sprite CheckUpdate walks:
+// only the three fields it reads (frame count gate at +0x28, first
+// pointer at +0x2c, count through a double deref at +0x1c). The real
+// class arrives with csprite modeling.
+struct SPointerSprite {
+    char pad_0[0x1c];
+    int** f_1c;
+    char pad_20[0x8];
+    int f_28;
+    int* f_2c;
+};
+
 class mouseManager : public baseManager {
 public:
     int field_38;
@@ -24,7 +50,7 @@ public:
     int field_48;
     int field_4c;
     int field_50;
-    int field_54;
+    SPointerSprite* field_54;
     int field_58;
     int field_5c;
     int field_60;
@@ -37,8 +63,13 @@ public:
 
     mouseManager();
     void MouseCoords(int* x, int* y);
+    void Update(unsigned char bForceIt);
     void HidePointer();
     void ShowPointer(bool restore);
+    void CheckUpdate();
+    void LoadFrame(int new_frame);
+    void Reset();                 // 0x50cc80
+    void ShowSystemCursor(unsigned char show_it);
 };
 
 // Retail .bss 0x699260 (DC ?gpMouseManager@@3PAVmouseManager@@A).
