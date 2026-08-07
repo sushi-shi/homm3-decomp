@@ -607,7 +607,7 @@ void type_AI_spellcaster::consider_sacrifice(type_spell_choice* choice, const ar
 }
 
 // E:\gamedcs\ai_tactical.cpp:2751
-DC_ONLY(0x414a0, 0xB8)
+VA(0x0043b1e0, 0xF2)  // dc-callgraph unique, dc 0x414a0
 void type_AI_spellcaster::consider_sacrifice(type_spell_choice* choice)
 {
     // @stub
@@ -642,7 +642,7 @@ long type_AI_spellcaster::unimplemented(const army* enemy, type_enchant_data cas
 }
 
 // E:\gamedcs\ai_tactical.cpp:2884
-DC_ONLY(0x41a7c, 0x1B2)
+VA(0x0043b690, 0x251)  // dc-callgraph unique, dc 0x41a7c
 long (*)()* type_AI_spellcaster::get_enchantment_function(SpellID spell)
 {
     // @stub

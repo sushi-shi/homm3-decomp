@@ -54,14 +54,14 @@ void type_AI_combat_data::type_AI_combat_data(const hero* new_hero, const armyGr
 }
 
 // E:\gamedcs\ai_combat.cpp:221
-DC_ONLY(0x29f58, 0x518)
+VA(0x00424120, 0x66E)  // dc-callgraph unique, dc 0x29f58
 void type_AI_combat_data::initialize_creatures(double base_modifier, const hero* enemy_hero)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_combat.cpp:332
-DC_ONLY(0x2a470, 0xBA)
+VA(0x00424790, 0xE5)  // dc-callgraph unique, dc 0x2a470
 void type_AI_combat_data::check_wall_archery_penalty(const town* enemy_town)
 {
     // @stub
@@ -138,7 +138,7 @@ void type_AI_combat_data::cast_damage_spell(type_spell_choice* choice, type_AI_c
 }
 
 // E:\gamedcs\ai_combat.cpp:694
-DC_ONLY(0x2ab3c, 0x4C)
+VA(0x004253e0, 0x12F)  // dc-callgraph unique, dc 0x2ab3c
 unsigned char type_AI_combat_data::has_creature(TCreatureType creature)
 {
     // @stub
@@ -159,7 +159,7 @@ void type_AI_combat_data::get_mass_damage_value(type_spell_choice* choice, type_
 }
 
 // E:\gamedcs\ai_combat.cpp:747
-DC_ONLY(0x2ac58, 0x8A)
+VA(0x00425b10, 0xB4)  // dc-callgraph unique, dc 0x2ac58
 void type_AI_combat_data::cast_mass_damage_spell(type_spell_choice* choice, const hero* casting_hero)
 {
     // @stub

@@ -158,12 +158,15 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\textwdgt.cpp:320
 VA(0x005bc6d0, 0x8A)  // anchor-global, dc 0x1653b0
-void bitmapBackedTextWidget::~bitmapBackedTextWidget()
+bitmapBackedTextWidget::~bitmapBackedTextWidget()
 {
-    // @stub
 }
+
+#if 0  // @carcass
 
 
 #endif  // @carcass

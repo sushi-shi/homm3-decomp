@@ -126,14 +126,14 @@ void heroWindow::AddWidget(widget* newWidget, int newPriority)
     while (current && current->priority > newPriority)
         current = current->prevWidget;
     if (!current) {
-        newWidget->prevWidget = 0;
         newWidget->nextWidget = headWidget;
+        newWidget->prevWidget = 0;
         headWidget = newWidget;
         if (!tailWidget)
             tailWidget = newWidget;
     } else if (!current->nextWidget) {
-        newWidget->nextWidget = 0;
         newWidget->prevWidget = tailWidget;
+        newWidget->nextWidget = 0;
         tailWidget->nextWidget = newWidget;
         tailWidget = newWidget;
     } else {
@@ -240,14 +240,32 @@ int heroWindow::BroadcastMessage(int id, int codeX, int codeY, int extra)
 VA(0x005feed0, 0x8E)  // anchor-global, dc 0x197570
 int heroWindow::WidgetSetStatus(int id, int status)
 {
-    return BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, id, status);
+    message msg;
+    msg.codeY = id;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = status;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_STATUS;
+    return BroadcastMessage(&msg);
 }
 
 // E:\gamedcs\window.cpp:477
 VA(0x005fef60, 0x8E)  // anchor-global, dc 0x19758c
 int heroWindow::WidgetClearStatus(int id, int status)
 {
-    return BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, id, status);
+    message msg;
+    msg.codeY = id;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = status;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_CLEAR_STATUS;
+    return BroadcastMessage(&msg);
 }
 
 // E:\gamedcs\window.cpp:489
@@ -466,6 +484,21 @@ void heroWindow::SetFocus(int id)
         widget* current = GetWidget(id);
         if (current)
             current->OnSetFocus();
+    }
+}
+
+// Retail-only (no DC roster entry): the sleep-nest counter around
+// virtual slot 8, called by executive::CallManager on the adventure
+// window. First sleep and last wake dispatch the vslot.
+VA(0x005ff5b0, 0x33)  // anchor-callee, callers byte-proven
+void heroWindow::SleepAllWidgets(unsigned char sleep)
+{
+    if (sleep) {
+        if (field_48++ == 0)
+            _vslot8(1);
+    } else {
+        if (--field_48 == 0)
+            _vslot8(0);
     }
 }
 

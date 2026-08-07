@@ -4,6 +4,8 @@
 #include <va.h>
 #include <string.h>
 #include "armygrp.h"
+#include "hero.h"
+#include "town.h"
 
 // Unimplemented carcass stubs stay lexically present (labels and the
 // va-claims gate scan text) but outside compilation until each body
@@ -74,14 +76,265 @@ int TSplitWindow::WindowHandler(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\armygrp.cpp:341
+// DECODE START 2026-08-06 (head to +0x95): 1326 bytes. STRUCTURAL
+// FINDS: the spell table is reached via a stored-pointer global with
+// a 136-BYTE RECORD STRIDE (spell*17*8 - the akSpellTraits analog of
+// akCreatureTypeTraits; record fields read: +0x10 into a local,
+// +0x18 compared > 4, likely school-mask and level); the creature
+// traits row (29 dwords) is indexed alongside. Artifact gates:
+// target_hero->IsWielding?(0x86 = Orb of Vulnerability) -> jump to a
+// certain-work path (+0x201); spell 0x23 special-cases with another
+// artifact check (0x5c). CHUNK 2 (+0x95..+0x201): float results are
+// .rdata literals via fld (0.0/1.0); spell-record flag bit 0x40
+// (+0x10) crossed with creature traits byte +0xd bit 0x10 = the
+// MIND-IMMUNITY check (creature 0x95 special-cased alongside); then
+// a SPELL switch over 0x11..0x47 (byte table ~+0x45c, jump table
+// ~+0x418 - extract both) with per-spell cases: protection-artifact
+// checks on target_hero (0x64, 0x65, 0x6a seen - the pendant
+// family), spells 0x46/0x47 plus CTA_UNDEAD -> fld 0.0
+// (bless-family dead on undead). CHUNK 3: more pendants (0x66, 0x69,
+// 0x6b), spell-record flag bit 4 gating one family, and the
+// resurrect/animate distinctions reading traits +0x60 crossed with
+// CTA_UNDEAD (living-only vs undead-only; several fld-0.0 returns).
+// CHUNK 4: pendants 0x67/0x68; trait bit 0x20000 ALSO blocks a spell
+// family (so the CTA_NO_MORALE name undersells it - non-living/
+// mindless semantics; consider renaming when this lands); creature
+// pairs 0x46/0x47 and 0x1e/0x1f special-cased; trait flag 0x10
+// gates one family. CHUNK 5 (+0x276..+0x33x): artifact 0x5d on
+// either hero -> +0x3de shared path; spell-record field +0xc bit 10
+// crossed with flag 0x400 and target-hero artifact 0x31; trait bit
+// 0x4000 with spell-record byte +0x1c bit 2 -> 0.0. Then the SECOND
+// spell switch (0x10..0x85, tables ~0x4b8/0x494) sets the BASE
+// CHANCE as float literals - 1.0 / 0.8f (0x3f4ccccd) / 0.6f
+// (0x3f19999a) seen - each reduced by a hero-method result via
+// fsubr chains (the Resistance-skill math). CHUNK 6: the second
+// switch is PER-CREATURE immunity keyed on creature-0x10 - cases
+// re-check the SPELL: fire family {0x17,0x3e}, lightning family
+// {0x1a,0x11,0x13,0x39}, ice {0x10,0x14} (elemental immunities from
+// the creature side), and the DRAGON magic immunity as spell-record
+// LEVEL gates (+0x18 <= 3 and <= 4 cases) - each with its own fld
+// literal return. TABLES EXTRACTED: switch1 (spell-0x11, jt 0x4a8e8,
+// bt 0x4a92c, 55 entries, cases 0..15 + default 16): case0={0x11,
+// 0x13}, 1=0x18, 2=0x19, 3=0x26, 4=0x27, 5=0x29, 6=0x2a, 7=0x2c,
+// 8={0x31,0x32}, 9={0x33,0x34,0x37}, 10..13=0x3b..0x3e, 14=0x46,
+// 15=0x47. switch2 (creature-0x10, jt 0x4a964, bt 0x4a988, 118
+// entries, cases 0..7 + default 8): 0={0x10,0x85}, 1=0x11,
+// 2={0x1a,0x52,0x84,0x84?,0x1a..}, 3=0x1b, 4={0x53,0x75,0x79?},
+// 5={0x70,0x7f?}, 6={0x71,0x7d?}, 7={0x73,0x7b?} - write the exact
+// case lists from the raw arrays at implementation time (the byte
+// tables are recorded in the decision log's decode notes if needed:
+// creature upgrades share their base's case, mirroring
+// modify_spell_damage). CLOSING MATH (+0x3de..+0x40c): spell-record
+// field 0 <= 0 -> certain (fld literal); final `if (chance < 0)
+// chance = 0` floor via fcomp; code ends ~+0x40c, the rest of the
+// claim is the four dispatch tables as data-in-text. TRANSCRIPTION
+// COMPLETE; every prerequisite landed (SSpellTraits view in
+// armygrp.h; hero::GetMagicResistanceFactor is the fsubr callee; all
+// fld literals resolved - every immunity returns 0.0, certain-work
+// 1.0, so 0x86 = Orb of Inhibition and 0x5d = Orb of Vulnerability).
+// FINAL CASE MAP (spell -> pendant/action): 0x3e -> 0x65 + creatures
+// 0x46/0x47 + undead; 0x26/0x3b -> undead/[traits +0x60] gates (0x3b
+// also pendant 0x64); {0x11,0x13} -> pendant 0x6a; 0x3c -> 0x69;
+// 0x3d -> 0x6b; 0x2a -> 0x66; 0x29 falls into the {0x33,0x34,0x37}
+// bless-family body; 0x18 -> 0x67 (Death Ripple); 0x19 -> 0x68 +
+// 0x20000 (Destroy Undead needs undead); {0x31,0x32} -> trait
+// 0x20000 (mind on mindless); {0x46,0x47} -> trait-flag 0x10 /
+// creatures 0x1e,0x1f. Chance math: Orb of Vulnerability on either
+// hero -> certain; artifact 0x31 in the field_c bit-10 family; base
+// chances 1.0/0.8/0.6 minus GetMagicResistanceFactor; floor at 0.
+// Write the double-switch body from this map.
 VA(0x0044a4d0, 0x52E)  // linkorder, dc 0x4e644
 float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const hero* casting_hero, const hero* target_hero)
 {
-    // @stub
+    const SSpellTraits* spellRec = &akSpellTraits[spell];
+    unsigned int attrs = akCreatureTypeTraits[target_army_type].attributes;
+    if (target_hero && spellRec->level <= 4
+        && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x86))
+        return 0.0f;  // Orb of Inhibition
+    if (spell == 0x23) {
+        if (target_hero
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x5c))
+            return 0.0f;
+        goto certain;
+    }
+    if (attrs & CTA_SIEGE_WEAPON) {
+        if (spellRec->field_c & 0x1000)
+            return 0.0f;
+        if (target_army_type == 0x95)
+            return 0.0f;
+    }
+    switch (spell) {
+    case 0x11:
+    case 0x13:
+        if (target_hero
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x6a))
+            return 0.0f;
+        break;
+    case 0x18:
+        if (attrs & CTA_UNDEAD)
+            return 0.0f;
+        if (target_hero
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x67))
+            return 0.0f;
+        break;
+    case 0x19:
+        if (!(attrs & CTA_UNDEAD))
+            return 0.0f;
+        if (target_hero
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x68))
+            return 0.0f;
+        break;
+    case 0x26:
+        if (attrs & CTA_UNDEAD)
+            return 0.0f;
+        if (akCreatureTypeTraits[target_army_type].damageHighBound == 0)
+            return 0.0f;
+        break;
+    case 0x27:
+        if (!(attrs & CTA_UNDEAD))
+            return 0.0f;
+        if (akCreatureTypeTraits[target_army_type].damageHighBound == 0)
+            return 0.0f;
+        break;
+    case 0x29:
+    case 0x33:
+    case 0x34:
+    case 0x37:
+        if (attrs & CTA_UNDEAD)
+            return 0.0f;
+        if (akCreatureTypeTraits[target_army_type].damageHighBound == 0)
+            return 0.0f;
+        break;
+    case 0x2a:
+        if (attrs & CTA_UNDEAD)
+            return 0.0f;
+        if (akCreatureTypeTraits[target_army_type].damageHighBound == 0)
+            return 0.0f;
+        if (target_hero
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x66))
+            return 0.0f;
+        break;
+    case 0x2c:
+        if (attrs & CTA_UNDEAD)
+            return 0.0f;
+        if (akCreatureTypeTraits[target_army_type].damageHighBound == 0)
+            return 0.0f;
+        break;
+    case 0x31:
+    case 0x32:
+        if (attrs & CTA_NO_MORALE)
+            return 0.0f;
+        break;
+    case 0x3b:
+        if (target_hero
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x64))
+            return 0.0f;
+        break;
+    case 0x3c:
+        if (target_hero
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x69))
+            return 0.0f;
+        break;
+    case 0x3d:
+        if (target_hero
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x6b))
+            return 0.0f;
+        if (!(attrs & 0x4))
+            return 0.0f;
+        break;
+    case 0x3e:
+        if (target_hero
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x65))
+            return 0.0f;
+        if (target_army_type == 0x46 || target_army_type == 0x47)
+            return 0.0f;
+        if (attrs & CTA_UNDEAD)
+            return 0.0f;
+        break;
+    case 0x46:
+        if (!(attrs & 0x10))
+            return 0.0f;
+        if (target_army_type == 0x1e || target_army_type == 0x1f)
+            return 0.0f;
+        break;
+    case 0x47:
+        if (target_army_type == 0x1e || target_army_type == 0x1f)
+            return 0.0f;
+        break;
+    }
+    {
+        float chance = 1.0f;
+        if (casting_hero
+            && const_cast<hero*>(casting_hero)->IsWieldingArtifact(0x5d))
+            goto certain;  // Orb of Vulnerability
+        if (target_hero
+            && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x5d))
+            goto certain;
+        if ((spellRec->field_c >> 10) & 1) {
+            if (!(spellRec->flags_10 & 0x400)
+                && target_hero
+                && const_cast<hero*>(target_hero)->IsWieldingArtifact(0x31))
+                return 0.0f;
+        }
+        if ((attrs & 0x4000) && (spellRec->byte_1c & 0x2))
+            return 0.0f;
+        switch (target_army_type) {
+        case 0x10:
+        case 0x85:
+            chance = 0.8f;
+            if (target_hero)
+                chance -= 1.0f - const_cast<hero*>(target_hero)
+                                     ->GetMagicResistanceFactor();
+            break;
+        case 0x11:
+            chance = 0.6f;
+            if (target_hero)
+                chance -= 1.0f - const_cast<hero*>(target_hero)
+                                     ->GetMagicResistanceFactor();
+            break;
+        case 0x84:
+            if (spellRec->level <= 3)
+                return 0.0f;
+            break;
+        case 0x1a:
+        case 0x1b:
+        case 0x52:
+        case 0x53:
+            if (spellRec->level <= 4)
+                return 0.0f;
+            break;
+        case 0x75:
+        case 0x79:
+            return 0.0f;
+        case 0x70:
+        case 0x7f:
+            if (spell == 0x17 || spell == 0x3e)
+                return 0.0f;
+            break;
+        case 0x71:
+        case 0x7d:
+            if (spell == 0x1a || spell == 0x11 || spell == 0x13
+                || spell == 0x39)
+                return 0.0f;
+            break;
+        case 0x73:
+        case 0x7b:
+            if (spell == 0x10 || spell == 0x14)
+                return 0.0f;
+            break;
+        }
+        if (chance < 0.0f)
+            chance = 0.0f;
+        return chance;
+    }
+certain:
+    if (spellRec->field_0 > 0)
+        return 1.0f;
+    return 1.0f;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\armygrp.cpp:585
 VA(0x0044aa00, 0x3A)  // linkorder, dc 0x4ea38
@@ -409,53 +662,439 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
 #if 0  // @carcass
 
 // E:\gamedcs\armygrp.cpp:977
+// DECODE START 2026-08-06 (head to +0x95). SEVEN params confirmed
+// (ret 0x1c; GetArmyMorale pushes seven): p1 hero, p2 town, p3
+// (forwarded to hero::GetMorale), p4 ?, p5 on_cursed (test -> 0),
+// p6 = GetArmyMorale's arg5 (gates the alignment-census block), p7 ?.
+// Head: heroMorale = p1 ? p1->GetMorale(p3, 0, 0) : 0; count =
+// GetAlignments(local unsigned char[0x31-ish] at ebp-0x30); if (p6)
+// walk the census bytes with ANOTHER one-time-init flag block inside
+// (byte global bit 1 + two calls, one pushing 0x60) - likely a
+// cached lookup build. MIDDLE (+0x95..+0x141): the one-time block
+// constructs a static SET/bitset via four insert-shaped call pairs on
+// a global object with first args 1, 2, 7, 2? no - 1,2,7,6 (each:
+// push 1; lea local; push <value>; push local; call; mov ecx,eax;
+// call - an STLport insert(iterator, value) + deref idiom); then
+// per census alignment esi: bounds `cmp esi,9`, bitset test
+// (`test [4*(esi>>5)+base], 1<<(esi&0x1f)`), matches counted in ebx
+// - the troop-mix morale rule counting present alignments inside the
+// static set {1,2,7,6}. CALLEES RESOLVED: hero::GetMorale (0xe39b0),
+// our GetAlignments (0x4abb0), and a static STLPORT std::bitset<9> -
+// storage 0x293884, init flag 0x29385c, four armygrp-owned helper
+// instantiations (0x4c610/0x4c680/0x4c6e0/0xcef80) and the
+// invalid_bitset_position thrower (0x34ad0) guarding test(). Tail
+// reads TWO more 64-bit building-mask pairs (0x26cdc0/c4 and
+// 0x26ce48/4c - the latter ADJACENT to GetLuck's fountain mask
+// 0x26ce40: a building-mask TABLE in .data, future data modeling).
+// BLOCKED on the STLport vendoring question (same wall as the
+// searchArray ctor): matching the static-bitset codegen needs the
+// era-correct STLport headers in-tree. Everything else is
+// transcribed and ready.
 VA(0x0044ae60, 0x29A)  // dc-bracket forced, dc 0x4f078
 int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground, unsigned char apply_limits)
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\armygrp.cpp:1030
+// FULLY TRANSCRIBED 2026-08-06. SIX params (ret 0x18; the DC
+// prototype's five are wrong): (index, ownerHero, ownerTown, MODE
+// int, arg5 uchar - forwarded to GetMorale - and apply_limits uchar).
+// Body: mode==2 -> 0; traits attributes bit 0x20000 (the NO-MORALE
+// trait, new CTA constant) -> 0; morale = GetMorale(hero, town, 0,0,
+// 0, arg5, 0) - SEVEN pushes, so GetMorale's DC six-param prototype
+// is also wrong; mode==3 -> (elementals/f_1f698 gate) townType
+// switch: 0-2 +1 / 3-5 -1 / 6-8 none (byte table 0x4b2a8 =
+// [0,0,0,1,1,1,2,2,2], jt 0x4b29c); mode==4 -> inverted (0-2 -1 /
+// 3-5 +1, jt 0x4b2b4; VC6 cross-jumps the shared inc/dec bodies);
+// Minotaur/Minotaur King (0x4e/0x4f) clamp morale to min 1; if
+// (ownerHero && ownerHero->HasArtifact(0x54 Spirit of Oppression) &&
+// morale > 0) morale = 0; apply_limits -> the same [-3,3]
+// select-by-address clamp as GetArmyLuck. Needs: CTA_NO_MORALE in
+// armygrp.h, the two Minotaur creature IDs, a HasArtifact-bearing
+// hero view, and the corrected GetMorale/GetArmyMorale decls.
 VA(0x0044b100, 0x1C9)  // anchor-global, dc 0x4f160
-int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* ownerTown, unsigned char on_cursed_ground, unsigned char apply_limits)
+int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char apply_limits)
 {
-    // @stub
+    if (mode == 2)
+        return 0;
+    if (akCreatureTypeTraits[armies[index]].attributes & CTA_NO_MORALE)
+        return 0;
+    int morale = GetMorale(ownerHero, ownerTown, 0, 0, 0, arg5, 0);
+    if (mode == 3) {
+        int type = armies[index];
+        if (gpGame->f_1f698 != 0
+            || (type != CREATURE_AIR_ELEMENTAL
+                && type != CREATURE_EARTH_ELEMENTAL
+                && type != CREATURE_FIRE_ELEMENTAL
+                && type != CREATURE_WATER_ELEMENTAL)) {
+            switch (akCreatureTypeTraits[type].townType) {
+            case 0:
+            case 1:
+            case 2:
+                morale++;
+                break;
+            case 3:
+            case 4:
+            case 5:
+                morale--;
+                break;
+            }
+        }
+    }
+    if (mode == 4) {
+        int type = armies[index];
+        if (gpGame->f_1f698 != 0
+            || (type != CREATURE_AIR_ELEMENTAL
+                && type != CREATURE_EARTH_ELEMENTAL
+                && type != CREATURE_FIRE_ELEMENTAL
+                && type != CREATURE_WATER_ELEMENTAL)) {
+            switch (akCreatureTypeTraits[type].townType) {
+            case 0:
+            case 1:
+            case 2:
+                morale--;
+                break;
+            case 3:
+            case 4:
+            case 5:
+                morale++;
+                break;
+            }
+        }
+    }
+    int type = armies[index];
+    if ((type == CREATURE_MINOTAUR || type == CREATURE_MINOTAUR_KING)
+        && morale < 1)
+        morale = 1;
+    if (ownerHero
+        && const_cast<hero*>(ownerHero)->IsWieldingArtifact(ARTIFACT_SPIRIT_OF_OPPRESSION)
+        && morale > 0)
+        morale = 0;
+    if (apply_limits)
+        return morale < -3 ? -3 : (morale > 3 ? 3 : morale);
+    return morale;
 }
 
 // E:\gamedcs\armygrp.cpp:1072
+// FULLY TRANSCRIBED 2026-08-06 (six params confirmed, ret 0x18):
+//   if (on_cursed_ground) return 0;                    // luck dies on
+//   if (ownerHero && ownerHero->HasArtifact(0x55)) return 0;  // cursed
+//   if (otherHero && otherHero->HasArtifact(0x55)) return 0;  // ground;
+//     // 0x55 = Hourglass of the Evil Hour, either side zeroes luck
+//   luck = ownerHero ? ownerHero-><luck method>(otherHero, 0, 0) : 0;
+//     // 3-arg thiscall on the hero - extract the REL32 callee to
+//     // identify (hero-level luck: skills + artifacts)
+//   if (otherGroup && (IsMember(0x36) || IsMember(0x37))) luck--;
+//     // Devil / Arch Devil enemy-luck special; retail shape is the
+//     // two IsMember scans INLINED back to back
+//   if (ownerTown && ownerTown-><byte +4> == 1
+//       && (ownerTown-><__int64 buildings @0x158> & <global 64-bit
+//       fountain mask - extract the two dwords>)) luck += 2;
+//     // Fountain of Fortune (+4==1 is the Rampart town type)
+//   apply_limits -> the [-3,3] select-by-address clamp.
+// Needs: a town view (type byte @+4, __int64 buildings @0x158), the
+// fountain mask global pair, the hero luck-method identity, and
+// ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR/CREATURE_DEVIL constants.
 VA(0x0044b2d0, 0xEB)  // anchor-global, dc 0x4f20c
 int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground, unsigned char apply_limits)
 {
-    // @stub
+    if (on_cursed_ground)
+        return 0;
+    if (ownerHero && const_cast<hero*>(ownerHero)
+                         ->IsWieldingArtifact(ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
+        return 0;
+    if (otherHero && const_cast<hero*>(otherHero)
+                         ->IsWieldingArtifact(ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
+        return 0;
+    int luck = 0;
+    if (ownerHero)
+        luck = const_cast<hero*>(ownerHero)->GetLuck(otherHero, 0, 0);
+    if (otherGroup
+        && (const_cast<armyGroup*>(otherGroup)->IsMember(CREATURE_DEVIL)
+            || const_cast<armyGroup*>(otherGroup)->IsMember(CREATURE_ARCH_DEVIL)))
+        luck--;
+    if (ownerTown && ownerTown->type == 1
+        && ((ownerTown->active[0] & gFountainOfFortuneMask[0])
+            | (ownerTown->active[1] & gFountainOfFortuneMask[1])))
+        luck += 2;
+    if (apply_limits)
+        return luck < -3 ? -3 : (luck > 3 ? 3 : luck);
+    return luck;
 }
 
 // E:\gamedcs\armygrp.cpp:1113
+// Param 4 is a MODE int (sentinels: 2 -> zero luck, 5 -> the creature
+// specials), not the DC prototype's on_cursed_ground uchar - retail
+// loads it as a dword. Byte/jump tables (townType cases 6/7/8 -> +2)
+// trail the body; the claim size includes them.
+// Residual (30.4%): flow matches through the mode gate; retail caches
+// INDEX in edi after the mode-5 test, wraps the f_1f698 load in
+// push/pop ebx, and lowers the switch as byte-table + jump-table
+// where this compile range-optimizes to jl/jg - spelling all nine
+// case labels compiles IDENTICALLY (empty cases collapse), so the
+// table form needs a different source trigger (unknown; possibly
+// non-empty per-faction cases folded post-hoc, or a different switch
+// operand). Semantics are byte-derived and complete.
 VA(0x0044b3c0, 0xED)  // anchor-global, dc 0x4f2e8
-int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTown, unsigned char on_cursed_ground, unsigned char apply_limits)
+int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char apply_limits)
 {
-    // @stub
+    if (mode == 2)
+        return 0;
+    int luck = GetLuck(ownerHero, ownerTown, 0, 0, 0, 0);
+    if (mode == 5) {
+        int type = armies[index];
+        if (gpGame->f_1f698 != 0
+            || (type != CREATURE_AIR_ELEMENTAL
+                && type != CREATURE_EARTH_ELEMENTAL
+                && type != CREATURE_FIRE_ELEMENTAL
+                && type != CREATURE_WATER_ELEMENTAL)) {
+            switch (akCreatureTypeTraits[type].townType) {
+            case 6:
+            case 7:
+            case 8:
+                luck += 2;
+                break;
+            }
+        }
+        if (armies[index] == CREATURE_HALFLING && luck < 1)
+            luck = 1;
+    }
+    if (apply_limits)
+        return luck < -3 ? -3 : (luck > 3 ? 3 : luck);
+    return luck;
 }
 
 // E:\gamedcs\armygrp.cpp:1124
+// Dispatch: byte table over creature-0x20 (0x20..0x81; outside ->
+// unchanged), the golem spell-damage ladder (/2, /4, *15/100 via
+// magic 0x51eb851f, /20 via 0x66666667) and the elemental
+// base/upgrade pairs doubling from their counter-element spell lists.
+// The per-golem case-body mapping (which arithmetic belongs to 33 vs
+// 116) is lore-consistent but should be re-verified against the
+// first-compile diff if the score stalls.
 VA(0x0044b4b0, 0x162)  // anchor-global, dc 0x4f328
 long modify_spell_damage(long damage, SpellID spell, TCreatureType creature)
 {
-    // @stub
+    switch (creature) {
+    case CREATURE_STONE_GOLEM:
+        return damage / 2;
+    case CREATURE_IRON_GOLEM:
+        return damage / 4;
+    case CREATURE_GOLD_GOLEM:
+        return damage * 15 / 100;
+    case CREATURE_DIAMOND_GOLEM:
+        return damage / 20;
+    case CREATURE_AIR_ELEMENTAL:
+    case CREATURE_STORM_ELEMENTAL:
+        if (spell == 0x1a || spell == 0x11 || spell == 0x13
+            || spell == 0x39)
+            return damage * 2;
+        break;
+    case CREATURE_FIRE_ELEMENTAL:
+    case CREATURE_ENERGY_ELEMENTAL:
+        if (spell == 0x10 || spell == 0x14)
+            return damage * 2;
+        break;
+    case CREATURE_WATER_ELEMENTAL:
+    case CREATURE_ICE_ELEMENTAL:
+        if (spell == 0x17)
+            return damage * 2;
+        break;
+    case CREATURE_EARTH_ELEMENTAL:
+    case CREATURE_MAGMA_ELEMENTAL:
+        if (spell == 0x15 || spell == 0x16 || spell == 0x1a)
+            return damage * 2;
+        break;
+    }
+    return damage;
 }
 
 // E:\gamedcs\armygrp.cpp:1182
+// DECODE START 2026-08-06: TRANSACTIONAL - builds two local armyGroup
+// copies on the stack (this-copy at ebp-0x54/-0x38, source-copy at
+// ebp-0x8c/-0x70, both init to -1 types / 0 troops via rep stosd),
+// then copies both groups in via pointer-difference indexed loops
+// (base-minus-base addressing, the VC6 parallel-array copy idiom).
+// Merge loop (+0xb9): per source-copy slot (skip type -1 / troops<=0):
+// same-type slot in this-copy -> troops += ; else empty (troops==0)
+// -> place type+troops; else -> bail to +0x12e; on success clear the
+// source slot (troops=0, type=-1), ++mergedCount (reuses [ebp+8]).
+// +0x12e: DEDUP fixed point over this-copy - for i in 1..6 scan j for
+// equal types, merge duplicates (troops add, retry flag bl), loop
+// until no merge; then `if (mergedCount < 7) goto merge loop` retry.
+// FULLY TRANSCRIBED: dedup-no-progress -> return 0 (+0x15a xor al);
+// after dedup progress the merge scan RESUMES mid-slot (walker regs
+// restored from ebp-0x8/-0x4, gated on mergedCount < 7); when all 7
+// source slots clear -> commit BOTH working copies back (same fused
+// pointer-difference loop, this AND ag) -> return 1. Implementation
+// notes: the four locals are raw int[7]s (constant-fill loops become
+// the rep stosd pairs; armyGroup locals would call the ctor instead);
+// the copy-in/commit loops fuse 4 arrays per iteration; empty-slot
+// test is troops==0, not type==-1. Only the dedup pass's exact index
+// walk ([ecx-0x1c] vs [edx] over types with the bl progress flag)
+// needs one careful re-read when writing the body. No homm2 template
+// (buka ARMYGRP carries no Merge; renamed or absorbed).
+// Residual (54.4%): the four separate constant-fill loops reproduce
+// retail's rep stosd pairs (50.2 -> 54.4); the remaining gap is the
+// copy-in loop - retail fuses all four arrays with pointer-difference
+// addressing where this compile idiom-collapses part of it into rep
+// movsd. Interleaving the copy statements (this/src alternating)
+// scores WORSE (52.5, reverted); the walker-pointer copy form
+// compiles IDENTICALLY (54.4 - VC6 folds the pointer locals back).
+// The fused-copy shape needs a structurally different source idea.
+// Semantics match the transcription statement for statement.
 VA(0x0044b620, 0x1FE)  // anchor-global, dc 0x4f3cc
 unsigned char armyGroup::Merge(armyGroup* ag)
 {
-    // @stub
+    int types[ARMY_GROUP_SLOT_COUNT];
+    int troops[ARMY_GROUP_SLOT_COUNT];
+    int srcTypes[ARMY_GROUP_SLOT_COUNT];
+    int srcTroops[ARMY_GROUP_SLOT_COUNT];
+    int i;
+    for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i)
+        types[i] = -1;
+    for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i)
+        troops[i] = 0;
+    for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i)
+        srcTypes[i] = -1;
+    for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i)
+        srcTroops[i] = 0;
+    for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+        types[i] = armies[i];
+        troops[i] = numTroops[i];
+        srcTypes[i] = ag->armies[i];
+        srcTroops[i] = ag->numTroops[i];
+    }
+    int processed = 0;
+    int* wTypes = srcTypes;
+    int* wTroops = srcTroops;
+    while (processed < ARMY_GROUP_SLOT_COUNT) {
+        int type = *wTypes;
+        if (type != -1) {
+            int count = *wTroops;
+            if (count > 0) {
+                for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+                    if (types[i] == type)
+                        break;
+                }
+                if (i < ARMY_GROUP_SLOT_COUNT)
+                    troops[i] += count;
+                else {
+                    for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+                        if (troops[i] == 0)
+                            break;
+                    }
+                    if (i < ARMY_GROUP_SLOT_COUNT) {
+                        troops[i] = count;
+                        types[i] = type;
+                    } else {
+                        unsigned char progress = 0;
+                        for (int a = 1; !progress
+                                        && a < ARMY_GROUP_SLOT_COUNT; ++a) {
+                            for (int b = a; b < ARMY_GROUP_SLOT_COUNT; ++b) {
+                                if (types[a - 1] == types[b]) {
+                                    troops[a - 1] += troops[b];
+                                    troops[b] = 0;
+                                    types[b] = -1;
+                                    progress = 1;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!progress)
+                            return 0;
+                        continue;
+                    }
+                }
+                *wTroops = 0;
+                *wTypes = -1;
+            }
+        }
+        processed++;
+        wTroops++;
+        wTypes++;
+    }
+    for (i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+        armies[i] = types[i];
+        ag->armies[i] = srcTypes[i];
+        numTroops[i] = troops[i];
+        ag->numTroops[i] = srcTroops[i];
+    }
+    return 1;
 }
 
 // E:\gamedcs\armygrp.cpp:1276
+// A source army that fits without displacement competes with its FULL
+// AI value; one that must displace competes with value minus our
+// weakest slot's value (the two je's at +0x8f/+0x94 skip only the
+// subtraction). Every action restarts the whole selection.
+// Residual (84.8%): frame-slot assignment differs (retail interleaves
+// the locals with the this-spill at -0x10) and the action if/else
+// emits one extra jmp - the frame-layout/scheduler class; semantics
+// match store for store.
 VA(0x0044b820, 0x140)  // anchor-global, dc 0x4f5ec
 void armyGroup::merge_armies(armyGroup* source)
 {
-    // @stub
+    for (;;) {
+        int bestIndex = -1;
+        int weakestIndex = -1;
+        long bestGain = 0;
+        int weakestValue = 0;
+        for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+            if (armies[i] == CREATURE_NONE)
+                continue;
+            long value = akCreatureTypeTraits[armies[i]].AI_value
+                         * numTroops[i];
+            if (weakestIndex < 0 || weakestValue >= value) {
+                weakestValue = value;
+                weakestIndex = i;
+            }
+        }
+        for (int j = 0; j < ARMY_GROUP_SLOT_COUNT; ++j) {
+            if (source->armies[j] == CREATURE_NONE)
+                continue;
+            long gain = akCreatureTypeTraits[source->armies[j]].AI_value
+                        * source->numTroops[j];
+            int slot;
+            for (slot = 0; slot < ARMY_GROUP_SLOT_COUNT; ++slot) {
+                if (armies[slot] == source->armies[j]
+                    || armies[slot] == CREATURE_NONE)
+                    break;
+            }
+            if (slot >= ARMY_GROUP_SLOT_COUNT)
+                gain -= weakestValue;
+            if (gain > bestGain) {
+                bestGain = gain;
+                bestIndex = j;
+            }
+        }
+        if (bestIndex < 0)
+            return;
+        int slot;
+        for (slot = 0; slot < ARMY_GROUP_SLOT_COUNT; ++slot) {
+            if (armies[slot] == source->armies[bestIndex]
+                || armies[slot] == CREATURE_NONE)
+                break;
+        }
+        if (slot >= ARMY_GROUP_SLOT_COUNT) {
+            int swapped = armies[weakestIndex];
+            armies[weakestIndex] = source->armies[bestIndex];
+            source->armies[bestIndex] = swapped;
+            swapped = numTroops[weakestIndex];
+            numTroops[weakestIndex] = source->numTroops[bestIndex];
+            source->numTroops[bestIndex] = swapped;
+        } else {
+            Add(source->armies[bestIndex], source->numTroops[bestIndex], -1);
+            source->armies[bestIndex] = CREATURE_NONE;
+            source->numTroops[bestIndex] = 0;
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\armygrp.cpp:1347
 VA(0x0044b960, 0x859)  // dc-bracket forced, dc 0x4f708
@@ -471,12 +1110,36 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> armyGroup::ge
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\armygrp.cpp:1516
 VA(0x0044c590, 0x76)  // anchor-global, dc 0x4fc98
 TTerrainType armyGroup::GetNativeTerrain()
 {
-    // @stub
+    TTerrainType native = TERRAIN_NONE;
+    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (armies[i] == CREATURE_NONE)
+            continue;
+        int alignment;
+        if (gpGame->f_1f698 == 0
+            && (armies[i] == CREATURE_AIR_ELEMENTAL
+                || armies[i] == CREATURE_EARTH_ELEMENTAL
+                || armies[i] == CREATURE_FIRE_ELEMENTAL
+                || armies[i] == CREATURE_WATER_ELEMENTAL))
+            alignment = -1;
+        else
+            alignment = akCreatureTypeTraits[armies[i]].townType;
+        TTerrainType terrain = akNativeTerrains[alignment];
+        if (native != TERRAIN_NONE) {
+            if (terrain != native)
+                return TERRAIN_NONE;
+        } else
+            native = terrain;
+    }
+    return native;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\SpellDefs.h:345
 DC_ONLY(0x4fd34, 0x20)

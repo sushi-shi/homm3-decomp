@@ -5,22 +5,40 @@
 #ifndef HOMM3_ADVMGR_H
 #define HOMM3_ADVMGR_H
 
+#include "basemgr.h"
+
 // Head model from the byte-proven leaves. Names provisional; the ctor
 // claim (0x406df0, 783 B in homm2) will grow this roster.
 class heroWindow;
 
-class advManager {
+// Derives baseManager (0x38 bytes): executive::CallManager (0x4b0c70)
+// compares it against executive::currentManager and writes
+// baseManager::status (+0x34) as its suspend/resume mode.
+class advManager : public baseManager {
 public:
-    char pad_000[0x44];
+    char pad_038[0xc];
     heroWindow* advWindow;    // +0x44 (the button-status target)
     char pad_048[0x1c4];
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
+    char pad_20d[0x17f];
+    int field_38c;            // +0x38c, zeroed by CallManager's suspend arm
 
     void CheckDimNextHeroBut();
     void DeactivateCurrTown(unsigned char waitingPlayer);
     void DeactivateCurrHero(unsigned char waitingPlayer);
     void DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
+    // Provisional enum: only the CallManager-passed 0 is attested.
+    enum EBottomViewType {
+        BOTTOM_VIEW_DEFAULT = 0
+    };
+
+    void OverrideBottomView(EBottomViewType view, int time);
+    void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
+    void ForceNewHover();
 };
+
+// Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
+extern advManager* gpAdvManager;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\advmgr.cpp:336, dc 0x5714) unsigned char InitializeCreatureGeneratorNames();

@@ -21,6 +21,11 @@ public:
     unsigned short BackColor;
 
     virtual ~iconWidget();  // retail 0x4ea7b0
+
+    void SetIconFrame(int newFrame);
+    void SetSprite(const char* new_sprite);
+    void NextRandomFrame();
+    void NextRandomSiegeEngineFrame();
 };
 
 // --- CSprite ---

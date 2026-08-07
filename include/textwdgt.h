@@ -24,6 +24,14 @@ public:
     virtual ~textWidget();  // retail 0x5bc3b0
 };
 
+// Retail dtor 0x5bc6d0 is the empty derived dtor: the inlined
+// ~textWidget body under this class's vtable store, then ~widget.
+// No members beyond textWidget are touched, so none are modeled.
+class bitmapBackedTextWidget : public textWidget {
+public:
+    virtual ~bitmapBackedTextWidget();
+};
+
 // --- bitmapBackedTextWidget ---
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:319, dc 0x165184) void bitmapBackedTextWidget::bitmapBackedTextWidget();
 // CODEVIEW(E:\gamedcs\textwdgt.cpp:325, dc 0x1651d8) void bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h, const char* text, const char* font, const char* back, font::TColor color, int id, unsigned justify, int style);

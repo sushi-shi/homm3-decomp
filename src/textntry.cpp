@@ -3,6 +3,9 @@
 // 21 functions in link order.
 #include <va.h>
 #include "textntry.h"
+#include "message.h"
+#include "window.h"
+#include "winmgr.h"
 
 #if 0  // @carcass
 
@@ -35,19 +38,74 @@ textEntryWidget::~textEntryWidget()
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\textntry.cpp:170
 VA(0x005bab50, 0x49)  // linkorder, dc 0x162b50
 void textEntryWidget::SetFocus(unsigned char state)
 {
-    // @stub
+    bHasFocus = state;
+    if (bAutoDraw) {
+        Draw();
+        gpWindowManager->UpdateScreen(x + parentWindow->x, y + parentWindow->y,
+            width, height);
+    }
 }
 
+#if 0  // @carcass
+
+#endif  // @carcass
+
 // E:\gamedcs\textntry.cpp:181
+// Extended keys carry the scan code in codeX's second byte; the
+// numpad row maps to digits (source cases written in numeral order -
+// the retail bodies emit '0'..'9' ascending). Plain keys pass
+// through except the braces, which the text renderer reserves.
 VA(0x005baba0, 0xA4)  // anchor-global, dc 0x162bbc
 char textEntryWidget::GetCharPressed(message* msg)
 {
-    // @stub
+    char pressed = 0;
+    unsigned char scanCode;
+
+    if (msg->codeX >= 0x100) {
+        // 95.6 residual (2026-08-06): retail extracts the scan byte as
+        // `xor edx,edx; mov dl,ch` (byte-register move off the cached
+        // codeX); every source spelling tried - int shift, uchar local,
+        // HIBYTE word-shift idiom, byte-pointer view - compiles to
+        // `sar ecx,8; and ecx,0xff` or a memory byte re-read instead.
+        // One block, cosmetic; rest of the function is byte-identical.
+        scanCode = (unsigned char)(msg->codeX >> 8);
+        switch (scanCode) {
+            case 0x52:  // numpad Ins
+                return '0';
+            case 0x4f:  // numpad End
+                return '1';
+            case 0x50:  // numpad Down
+                return '2';
+            case 0x51:  // numpad PgDn
+                return '3';
+            case 0x4b:  // numpad Left
+                return '4';
+            case 0x4c:  // numpad center
+                return '5';
+            case 0x4d:  // numpad Right
+                return '6';
+            case 0x47:  // numpad Home
+                return '7';
+            case 0x48:  // numpad Up
+                return '8';
+            case 0x49:  // numpad PgUp
+                return '9';
+        }
+    } else {
+        pressed = (char)msg->codeX;
+        if (pressed == '{' || pressed == '}')
+            pressed = 0;
+    }
+    return pressed;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\textntry.cpp:213
 DC_ONLY(0x162c2c, 0x2FE)

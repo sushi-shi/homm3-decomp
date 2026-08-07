@@ -256,15 +256,31 @@ void widget::process_hover()
 VA(0x005fe940, 0x83)  // vtable-slot 9 of the widget family, dc 0x1970c0
 void widget::enable(unsigned char arg)
 {
-    // Residual (87.1%): retail evaluates window before codeY in each
-    // arm (register roles swapped); the per-arm aggregate keeps retail's
-    // full arm duplication - statement forms let VC6 tail-merge the arms,
-    // which retail did not.
+    // Residual (89.6%): the two member loads (parentWindow dword, id
+    // movsx) stay swapped against retail whichever statement order
+    // feeds them - the same scheduler-window plateau send_message
+    // documents below. Statement SEMANTICS match store for store.
     if (arg) {
-        message msg = { MESSAGE_WIDGET, WIDGET_CLEAR_STATUS, id, 0, 0, 0, WIDGET_DISABLED, parentWindow };
+        message msg;
+        msg.codeY = id;
+        msg.qualifier = 0;
+        msg.mouseX = 0;
+        msg.mouseY = 0;
+        msg.window = parentWindow;
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = WIDGET_CLEAR_STATUS;
+        msg.extra = WIDGET_DISABLED;
         Main(&msg);
     } else {
-        message msg = { MESSAGE_WIDGET, WIDGET_SET_STATUS, id, 0, 0, 0, WIDGET_DISABLED, parentWindow };
+        message msg;
+        msg.codeY = id;
+        msg.qualifier = 0;
+        msg.mouseX = 0;
+        msg.mouseY = 0;
+        msg.window = parentWindow;
+        msg.id = MESSAGE_WIDGET;
+        msg.codeX = WIDGET_SET_STATUS;
+        msg.extra = WIDGET_DISABLED;
         Main(&msg);
     }
 }
