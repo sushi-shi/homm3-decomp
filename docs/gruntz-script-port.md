@@ -260,6 +260,54 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — ai.obj ADMITTED to the build (user: "approve"); a
+  misattributed claim corrected; the ratchet writer's comment-eating
+  bug fixed.** `src/ai.cpp` (219 functions in link order, 20 `$`-thunks
+  omitted) joins `config/units.toml` under `game_o2_ml_gr_windows`; its
+  212 un-reconstructed functions sit inside 7 `#if 0 // @carcass`
+  fences, lexically intact with `DC_ONLY`/`VA` annotations and
+  `E:\gamedcs\` provenance. Engine-wide 259 → 263 exact, 3.32% → 3.36%
+  executable matched; new `ai` unit 4/7 exact, 41.13% fuzzy.
+  **Scoreboard doctrine learned — the orchestrator's prediction was
+  WRONG:** admitting a carcass TU was expected to add ~219 functions to
+  the "linked units" denominator and depress the headline %. It added
+  **7**. The delinker only materialises *claimed* addresses into a
+  unit's target object, so a carcass TU costs the scoreboard nothing
+  for its unclaimed rows — 675 → 682, and the percentage ROSE.
+  Admitting the remaining carcass TUs is therefore cheap, not costly.
+  **Claim correction (the substantive find):** `0x0041f380` was claimed
+  as `get_attack_value`, a four-argument `/Gr` free function — which
+  must emit `ret 8`, but the slot is a 39-byte body reading only ECX
+  and ending in a bare `ret`, at a 0.10 DC size ratio. It is
+  `army::IsIncapacitated` (DC `Army.h:840`): its one caller is
+  `find_move_order` at 0x41f1ee in a can-this-stack-act gate chain; the
+  identical `disabled_290 || disabled_2b0 || disabled_2c0` test appears
+  inlined at 23 further sites across ai/ai_tactical/army (a header
+  inline whose duplicate COMDATs `/OPT:ICF` folded); and the caller
+  tests AL while the callee materialises full EAX — an `unsigned char`
+  return over an int `||` chain. Claim moved, `get_attack_value`
+  returned to `DC_ONLY(0x248b4, 0x180)`. Also: `hero::IsWieldingArtifact`
+  returns a BYTE, not `int` — 212 of its 224 retail call sites follow
+  the call with `test al, al`; correcting it took `can_cast_spells` to
+  exact and *raised* three armygrp rows (GetArmyMorale, GetLuck,
+  get_spell_work_chance). **Tooling:** the ratchet writer destroyed
+  every inline `#` comment on each add/raise rewrite (invisible on
+  "0 added, 0 raised" runs, which is why it hid) — fixed with a
+  negative control; see the separate commit. **OPEN:** ai.obj's min
+  helper compares its FIRST parameter against its second, the opposite
+  orientation to `_cpp_min`/`std::min` (`_Y < _X`); shipped file-local
+  as `min_ref` rather than a second differently-bodied `_cpp_min`,
+  since the DC roster attests a hand-written `double min(double,
+  double)` in NWC's own `includes.h:117`. **Whether to unify these is a
+  user decision.** Left carcassed with decoded notes: `find_move_order`
+  (blocked on P2.2 *and* P2.3 at once — an fs:[0] frame around a
+  `std::vector<army*>` fed to `std::sort`), `move_toward` (needs a
+  `pathCell` model — 30-byte stride, direction in bits 12..15, six-bit
+  blocked mask in bits 26..31 — and proves `searchArray::result`'s
+  element type is `pathCell*`, not the admitted `std::vector<int>`
+  placeholder; pinning that is a findpath.h contract change touching
+  every consumer, deferred while P2.3 is open).
+
 - **2026-08-07 — ai_tactical stub campaign; the spellcaster family shape,
   and a WRONG "EH-blocked" carcass note corrected.** Same orchestrated
   single-matcher lane. TU 17/50 → 21/50 exact, 23.72% → 37.17% fuzzy;

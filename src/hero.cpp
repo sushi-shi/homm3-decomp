@@ -195,7 +195,7 @@ unsigned char hero::HasArtifact(int whichArtifact)
 
 // E:\gamedcs\hero.cpp:1446
 VA(0x004d91f0, 0x70)  // anchor-global, dc 0xcc26c
-int hero::IsWieldingArtifact(int whichArtifact)
+unsigned char hero::IsWieldingArtifact(int whichArtifact)
 {
     // @stub
 }

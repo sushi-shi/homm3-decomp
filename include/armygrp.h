@@ -49,6 +49,12 @@ enum TCreatureType {
     CREATURE_OBSIDIAN_GARGOYLE = 0x1f,
     CREATURE_TROGLODYTE = 0x46,
     CREATURE_INFERNAL_TROGLODYTE = 0x47,
+    // The one creature with an innate Fire Shield: army::
+    // get_fire_shield_strength (0x443130) and combatManager::
+    // compute_fire_shield_damage (0x422440) both accept it in place of
+    // a live fireShieldRounds counter. NH3API spelling, Complete
+    // numbering (0x34 is the plain Efreeti).
+    CREATURE_EFREET_SULTAN = 0x35,
     CREATURE_FIRST_AID_TENT = 0x93,
     CREATURE_AMMO_CART = 0x94,
     CREATURE_ARROW_TOWER = 0x95,
@@ -87,6 +93,10 @@ enum ESpellId {
     SPELL_DEATH_RIPPLE = 0x18,
     SPELL_DESTROY_UNDEAD = 0x19,
     SPELL_ARMAGEDDON = 0x1a,
+    // compute_fire_shield_damage (0x422440) prices the shield's
+    // retaliation through ModifySpellDamage under THIS id, which fixes
+    // it against the surrounding roster (0x1e is the first protection).
+    SPELL_FIRE_SHIELD = 0x1d,
     // The anti-magic family ai_combat's get_enchantment_value
     // (0x425510) writes off against a side that cannot cast. Their
     // values are fixed by the surrounding roster, which is already
@@ -232,6 +242,11 @@ const unsigned int CTA_NO_MORALE = 0x20000;
 // level<=4 spells (the decode note's "Orb of Inhibition" inference
 // does not survive the NH3API roster: inhibition is 0x7e).
 enum EArtifactId {
+    // combatManager::can_cast_spells (0x41f890) gates a hero cast on
+    // slot 0 and then refuses every cast when either combat hero
+    // wields 0x7e - the pair the decode note above already calls out
+    // (spellbook first, inhibition 0x7e).
+    ARTIFACT_SPELLBOOK = 0x0,
     ARTIFACT_BADGE_OF_COURAGE = 0x31,
     ARTIFACT_SPIRIT_OF_OPPRESSION = 0x54,
     ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR = 0x55,
@@ -245,6 +260,7 @@ enum EArtifactId {
     ARTIFACT_PENDANT_OF_FREE_WILL = 0x69,
     ARTIFACT_PENDANT_OF_NEGATIVITY = 0x6a,
     ARTIFACT_PENDANT_OF_TOTAL_RECALL = 0x6b,
+    ARTIFACT_ORB_OF_INHIBITION = 0x7e,
     ARTIFACT_POWER_OF_THE_DRAGON_FATHER = 0x86
 };
 

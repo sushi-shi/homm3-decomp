@@ -59,6 +59,13 @@ advmgr	advManager_UpdateScreen	0.0000
 advmgr	advManager_advManager	0.0000
 advmgr	advManager_get_normal_cursor	0.0000
 advmgr	hasFlag	0.0000
+ai	?IsIncapacitated@army@@QAEEXZ	100.0000
+ai	?can_cast_spells@combatManager@@QAEEJE@Z	100.0000
+ai	?compute_fire_shield_damage@combatManager@@QAEJJPBVarmy@@0J@Z	100.0000
+ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	96.3533
+ai	?get_total_combat_value@combatManager@@QBEJJJJE@Z	100.0000
+ai	combatManager_find_move_order	0.0000
+ai	combatManager_move_toward	0.0000
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@PBVarmyGroup@@@Z	100.0000
 ai_combat	?AI_auto_combat@@YIXPAVhero@@0PAVarmyGroup@@1PBVtown@@PAVNewmapCell@@@Z	100.0000
@@ -153,9 +160,9 @@ armygrp	?CanJoin@armyGroup@@QAEHH@Z	100.0000
 armygrp	?Dismiss@armyGroup@@QAEXH@Z	100.0000
 armygrp	?GetAlignments@armyGroup@@QAEHPAE@Z	100.0000
 armygrp	?GetArmyLuck@armyGroup@@QAEHHPBVhero@@PBVtown@@HE@Z	30.3579
-armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	72.8352
+armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	72.8920
 armygrp	?GetArmySizeName@armyGroup@@SIPBDHH@Z	100.0000
-armygrp	?GetLuck@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EE@Z	84.6225
+armygrp	?GetLuck@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EE@Z	84.8265
 armygrp	?GetNativeTerrain@armyGroup@@QAE?AW4TTerrainType@@XZ	100.0000
 armygrp	?GetNumArmies@armyGroup@@QAEHXZ	100.0000
 armygrp	?HasAllUndead@armyGroup@@QAEEXZ	100.0000
@@ -168,7 +175,7 @@ armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000
 # get_spell_work_chance hand-lowered 53.2143 -> 53.0900 (2026-08-07):
 # the old max was tuned under non-/Op; /Op is now the engine-wide
 # base profile and this unmatched float function re-tunes under it.
-armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	53.0900
+armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	53.1589
 armygrp	?load@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000
 armygrp	?merge_armies@armyGroup@@QAEXPAV1@@Z	84.7652
 armygrp	?modify_spell_damage@@YIJJHW4TCreatureType@@@Z	55.6350

@@ -7,6 +7,8 @@
 
 #include <va.h>
 
+class hero;
+
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
 // the six hex neighbours (combatManager::adjacentCells columns); 6/7
 // are the two WIDE-CREATURE extra attack slots appended after them,
@@ -112,7 +114,14 @@ public:
     // on our side outranks the target's own value here. Name pending a
     // writer.
     int field_190;                // +0x190
-    char pad_194[0xf0];
+    char pad_194[0x78];
+    // Rounds of Fire Shield left on this stack: get_fire_shield_strength
+    // (0x443130) answers the stack's own 0x4a0 strength while it is
+    // non-zero, and compute_fire_shield_damage (0x422440) uses the same
+    // word (or the Efreet Sultan's innate shield) as the whole gate on
+    // whether a retaliating shield fires at all.
+    int fireShieldRounds;         // +0x20c
+    char pad_210[0x74];
     int berserkFlag;              // +0x284 (is_enemy: true vs everyone)
     int hypnotizeFlag;            // +0x288 (flips the effective side)
     char pad_28c[0x4];
@@ -141,7 +150,15 @@ public:
     // The stack this one is heading for; set_melee_enemies (0x43bf20)
     // dereferences it as an army and calls get_average_damage on it.
     army* AI_target;              // +0x538
-    char pad_53c[0xc];
+    // Value of the attack this stack has already committed to:
+    // get_attack_change (0x41f3b0) subtracts it from a rival's freshly
+    // priced attack before letting that rival claim the same victim.
+    long AI_target_value;         // +0x53c
+    char pad_540[0x4];
+    // Bitmask of the stacks this one can reach: get_attack_change tests
+    // 1 << enemy->bitIndex in it to decide whether a friendly stack is
+    // even a candidate for the same target.
+    unsigned AI_possible_targets; // +0x544
 
     // BYTE-PROVEN (2026-08-07) by the ai_tactical spell-value family
     // (get_dispel_value 0x439bc0, get_antimagic_value 0x439d40,
@@ -197,6 +214,24 @@ public:
     double get_unit_combat_value(long lowest_attack, long lowest_defense,
                                  unsigned char ranged,
                                  const army* excluded) const;   // 0x442a50
+    // Returns float in st(0): the stack's own 0x4a0 while
+    // fireShieldRounds is set, else the Efreet Sultan's innate
+    // constant, else the zero constant (0x443130).
+    float get_fire_shield_strength() const;                     // 0x443130
+    // 0x442690 (57 B, ecx only): gpCombatManager->heroes[owning side] -
+    // it UNDOES the hypnotize flip stored in combatSide before the
+    // lookup, so it answers the stack's OWNER's hero, not its current
+    // controller's. Name is the DC roster's army.cpp:2698 `get_owner`
+    // (30 SH4 bytes, ratio 1.9) - PROVISIONAL, the dump does not print
+    // the return type and `get_controller` at army.cpp:2691 is the same
+    // size.
+    hero* get_owner() const;                                    // 0x442690
+    // Header inline of the DC Army.h (line 840); its single retail
+    // out-of-line copy is the COMDAT the linker parked in the ai.obj
+    // band at 0x41f380 - the same `disabled_290 || disabled_2b0 ||
+    // disabled_2c0` test appears inlined at 23 other sites across
+    // ai/ai_tactical/army/spells.
+    unsigned char IsIncapacitated();                            // 0x41f380
 };
 SIZE(army, 0x548);
 
