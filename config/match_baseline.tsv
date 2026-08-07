@@ -165,7 +165,10 @@ armygrp	?IsMember@armyGroup@@QAEEW4TCreatureType@@@Z	100.0000
 armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	54.4022
 armygrp	?Swap@armyGroup@@QAEXHPAV1@H@Z	100.0000
 armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000
-armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	53.2143
+# get_spell_work_chance hand-lowered 53.2143 -> 53.0900 (2026-08-07):
+# the old max was tuned under non-/Op; /Op is now the engine-wide
+# base profile and this unmatched float function re-tunes under it.
+armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	53.0900
 armygrp	?load@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000
 armygrp	?merge_armies@armyGroup@@QAEXPAV1@@Z	84.7652
 armygrp	?modify_spell_damage@@YIJJHW4TCreatureType@@@Z	55.6350

@@ -6,7 +6,7 @@ description: Byte-match HoMM3 functions/TUs against retail HEROES3.EXE - the who
 # match — reconstruct byte-matching HoMM3 TUs (VC6 SP3 /O2)
 
 You write C++ that, compiled with VC6 SP3 `CL.EXE` under wine (per-TU flags in
-`config/units.toml`; default game profile `/O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS`),
+`config/units.toml`; default game profile `/O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS` - /Op is engine-wide, byte-proven by the AI TUs),
 produces code byte-identical to retail `HEROES3.EXE`, verified by objdiff through
 `homm3 build`. Nothing lands without the supervised-review rule (CLAUDE.md);
 approved outcomes are recorded in the port plan's §5 decision log in the same
