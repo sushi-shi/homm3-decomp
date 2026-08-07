@@ -311,19 +311,15 @@ DATA(0x006a5bb8) extern const char* apszArmySizeNames[9][3];
 // name survives for this table) - replace on evidence.
 DATA(0x00643698) extern const TTerrainType akNativeTerrains[9];
 
-// Two more town building masks, in the same .data family as town.h's
-// gFountainOfFortuneMask: every one of them is an entry of the
-// `1i64 << n` bitNumber table at 0x66cd98, so the byte value fixes the
-// building id exactly (0x66cdc0 = 1<<5, 0x66ce48 = 1<<22; town.h
-// already reads 7/8/9 as fort/citadel/castle off the same table).
-// GetMorale ands bit 5 against town->built for +1 morale and bit 22
-// against town->active for +2 more, the latter only for a Castle -
-// the Tavern and Castle's Brotherhood of the Sword. DECLARED HERE, not
-// in town.h, only because the town lane owns that header right now;
-// they belong beside gFountainOfFortuneMask. No DATA claim: the owning
-// TU is unlocated, exactly as for gFortMask/gCitadelMask/gCastleMask.
-extern unsigned int gTavernMask[2];
-extern unsigned int gBrotherhoodOfTheSwordMask[2];
+// GetMorale's two town-building tests were bootstrapped here as
+// separate `unsigned int[2]` mask objects (gTavernMask /
+// gBrotherhoodOfTheSwordMask) while another lane owned town.h. They
+// were never separate objects: the town lane byte-proved
+// `bitNumber[i] == 1i64 << i` for every i < 48 in the pinned image, so
+// 0x66cdc0 and 0x66ce48 are simply bitNumber[5] and bitNumber[22].
+// GetMorale now spells them `built & bitNumber[TAVERN_ID]` and
+// `active & bitNumber[EXTRA_1_ID]` off town.h's own table - the Tavern
+// and, for a Castle, the Brotherhood of the Sword. Merged 2026-08-07.
 
 // The game singleton and gpGame now live in their owner's header
 // (game.h); f_1f698 is the one field GetAlignments reads (nonzero ->
