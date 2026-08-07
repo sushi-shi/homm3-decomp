@@ -16,12 +16,23 @@
 //  0x4258a0 cast_enchantment(choice,hero,increase),
 //  0x425b10 cast_enchantment(choice,defender)). has_creature itself has
 // no retail row - /Ob2 inlined it away.
+//
+// NEW LEVER (2026-08-07, byte-proven here by AI_quick_combat and
+// AI_auto_combat): under /GX the scope-exit destructor sequence keeps
+// the EH state variable live across every call a destructor makes,
+// emitting `mov [ebp-4], <state>` before each one. Retail emits none -
+// its `operator delete` was visible as NOTHROW. VC6's <new> declares
+// operator delete WITHOUT an exception specification, so a TU that
+// wants retail's shape has to say so itself; see the
+// __declspec(nothrow) redeclaration in include/ai_combat.h. That one
+// declaration is what takes both entry points from 96-98% to exact.
 #include <va.h>
 #include <stdlib.h>
 #include "ai_combat.h"
 #include "ai_tactical.h"
 #include "advmgr.h"
 #include "armygrp.h"
+#include "misc.h"
 #include "hero.h"
 #include "town.h"
 
@@ -44,6 +55,15 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _Y : _X);
 }
 
+// 0x59e060 (48 B, fastcall spell in ecx / mastery in edx): reads
+// akSpellTraits[spell].field_c and answers "does this cast hit ONE
+// stack?" - bit 0x10 forces single, 0x40 goes mass at mastery 3, 0x20
+// at mastery 2. cast_enchantment (0x4258a0) branches on it. The
+// function belongs to another TU and carries no DC or NH3API name, so
+// the spelling here is PROVISIONAL (behaviour-derived); declared
+// file-locally for the same reason _cpp_min/_cpp_max are.
+unsigned char spell_is_single_target(SpellID spell, TSkillMastery mastery);
+
 // E:\gamedcs\ai_combat.cpp:36
 VA(0x00423c80, 0x79)  // anchor-global, dc 0x29978
 long type_monster_data::get_enchantment_value(type_spell_choice& choice, const hero* casting_hero, const hero* target_hero) const
@@ -58,16 +78,32 @@ long type_monster_data::get_enchantment_value(type_spell_choice& choice, const h
     return static_cast<long>(value * turns * total_hit_points * chance / 500.0);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_combat.cpp:56
-DC_ONLY(0x29a30, 0x162)
-void type_monster_data::cast_enchantment(long spell_value, unsigned char increase)
+// RECONSTRUCTED FROM ITS INLINED COPIES (dc 0x29a30) - retail has no
+// out-of-line row: /Ob2 inlined every call site (0x425c65 and 0x425d8d
+// inside cast_enchantment) and OPT:REF dropped the COMDAT. Spelled
+// `inline` here so our obj does not carry a base-only function retail
+// never shipped. Bytes prove the shape: the pre-image
+// total_hit_points*damage_modifier is taken BEFORE the update, the
+// per-creature delta is a 64-bit imul/__alldiv, and damage_modifier is
+// rewritten as the new total over that pre-image.
+inline void type_monster_data::cast_enchantment(long spell_value, unsigned char increase)
 {
-    // @stub
+    double previous = total_hit_points * damage_modifier;
+    // 64-bit local, not a long: retail spills the __alldiv result's
+    // HIGH dword to a slot nothing ever reads (0x4258fa / 0x425a2c)
+    // while consuming the low half straight out of eax.
+    __int64 per_creature =
+        static_cast<__int64>(hit_points) * spell_value / total_hit_points;
+    if (increase) {
+        total_hit_points += spell_value;
+        hit_points += static_cast<long>(per_creature);
+    } else {
+        total_hit_points -= spell_value;
+        hit_points -= static_cast<long>(per_creature);
+    }
+    damage_modifier = total_hit_points / previous;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:84
 VA(0x00423d00, 0xDA)  // anchor-global, dc 0x29b94
@@ -271,16 +307,26 @@ long type_AI_combat_data::get_next_chain_lightning_target(long excluded, const t
     return -1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_combat.cpp:498
-DC_ONLY(0x2a764, 0x80)
-void type_AI_combat_data::get_chain_lightning_value(type_spell_choice* choice, const type_AI_combat_data* defender, long damage)
+// RECONSTRUCTED FROM ITS ONE INLINED COPY (dc 0x2a764) - no retail row:
+// /Ob2 inlined the single call site (get_damage_spell_value 0x424e69)
+// and OPT:REF dropped the COMDAT. Spelled `inline` so our obj does not
+// carry a base-only function retail never shipped. It is the exact
+// value-side mirror of cast_chain_lightning.
+inline void type_AI_combat_data::get_chain_lightning_value(type_spell_choice& choice, const type_AI_combat_data& defender, long damage) const
 {
-    // @stub
+    long excluded = 1 << choice.target;
+    long target = choice.target;
+    for (long i = 0; i < 3; i++) {
+        damage /= 2;
+        target = get_next_chain_lightning_target(excluded, defender, target, damage);
+        if (target < 0)
+            break;
+        choice.value += defender.monsters[target].get_spell_damage(
+            choice.spell, my_hero, defender.my_hero, damage);
+        excluded |= 1 << target;
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:525
 // Residual (86.6%, MAX 99.0): retail keeps `defender` in ecx - a
@@ -307,16 +353,38 @@ void type_AI_combat_data::get_area_value(type_spell_choice& choice, const type_A
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_combat.cpp:553
+// The value-side mirror of cast_damage_spell, down to the same
+// five-arm jump table (0x42519c) over spells 0x13..0x17.
 VA(0x00424d20, 0x290)  // anchor-global, dc 0x2a868
-void type_AI_combat_data::get_damage_spell_value(type_spell_choice* choice, const type_AI_combat_data* defender)
+void type_AI_combat_data::get_damage_spell_value(type_spell_choice& choice, const type_AI_combat_data& defender) const
 {
-    // @stub
+    long damage = choice.get_mastery_value()
+                  + akSpellTraits[choice.spell].power_factor * choice.power;
+    for (long i = defender.get_total(); i-- > 0; ) {
+        long value = defender.monsters[i].get_spell_damage(choice.spell, my_hero,
+                                                           defender.my_hero, damage);
+        if (value > choice.value) {
+            choice.value = value;
+            choice.target = i;
+        }
+    }
+    if (choice.value <= 0)
+        return;
+    switch (choice.spell) {
+    case SPELL_CHAIN_LIGHTNING:
+        get_chain_lightning_value(choice, defender, damage);
+        break;
+    case SPELL_FROST_RING:
+    case SPELL_FIREBALL:
+    case SPELL_METEOR_SHOWER:
+        get_area_value(choice, defender, damage, 1);
+        break;
+    case SPELL_INFERNO:
+        get_area_value(choice, defender, damage, 2);
+        break;
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:599
 // Residual (71.9%): pure esi<->edi swap - retail pushes edi at entry
@@ -424,32 +492,94 @@ void type_AI_combat_data::cast_mass_damage_spell(type_spell_choice* choice, cons
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_combat.cpp:768
-DC_ONLY(0x2ace4, 0x72)
-void type_AI_combat_data::get_enchantment_value(type_spell_choice* choice, const hero* casting_hero)
+// RECONSTRUCTED FROM ITS FOUR INLINED COPIES (dc 0x2ace4) - no retail
+// row: /Ob2 inlined all four call sites in the two-side overload below
+// and OPT:REF dropped the COMDAT. Spelled `inline` so our obj does not
+// carry a base-only function retail never shipped.
+inline void type_AI_combat_data::get_enchantment_value(type_spell_choice& choice, const hero* casting_hero)
 {
-    // @stub
+    unsigned char mass = !spell_is_single_target(choice.spell, choice.mastery);
+    for (long i = get_total(); i-- > 0; ) {
+        long value = monsters[i].get_enchantment_value(choice, casting_hero, my_hero);
+        if (mass) {
+            choice.value += value;
+        } else if (choice.value < value) {
+            choice.target = i;
+            choice.value = value;
+        }
+    }
 }
 
 // E:\gamedcs\ai_combat.cpp:792
-// LOCATED (hd-crossbuild + ida) - the carve row the carcass left
-// unclaimed; reconstruction not attempted yet.
+// The eight-spell early-out is an `&&`-joined `||` chain, not a jump
+// table: retail emits eight cmp/je in the source order below
+// (0x42554f..0x425893). All eight are the anti-magic family - worth
+// nothing against a side that cannot cast at all.
+// Residual (89.5%): the FIRST inlined get_enchantment_value pass (the
+// one whose type_monster_data leaf /Ob2 also inlines) is byte-exact;
+// the other three - where the leaf stays a call - differ only in which
+// of the two loop values gets a register. Retail spills the index `i`
+// to the parameter slot and keeps the 72-byte offset in edi/esi; our
+// CL does the opposite and pays a loop-entry `jmp`/reload rotation for
+// it. Register-homing family. Tried and rejected: storing
+// choice.value before choice.target in the else-if (89.4%, and it
+// costs the first pass its exactness), and hoisting get_total().
 VA(0x00425510, 0x382)  // corroborates (hd-crossbuild + ida), dc 0x2ad58
-void type_AI_combat_data::get_enchantment_value(type_spell_choice* choice, type_AI_combat_data* defender)
+void type_AI_combat_data::get_enchantment_value(type_spell_choice& choice, type_AI_combat_data& defender)
 {
-    // @stub
+    if (!defender.can_cast
+        && (choice.spell == SPELL_DISPEL
+            || choice.spell == SPELL_ANTI_MAGIC
+            || choice.spell == SPELL_PROTECTION_FROM_AIR
+            || choice.spell == SPELL_PROTECTION_FROM_FIRE
+            || choice.spell == SPELL_PROTECTION_FROM_WATER
+            || choice.spell == SPELL_PROTECTION_FROM_EARTH
+            || choice.spell == SPELL_MAGIC_MIRROR
+            || choice.spell == SPELL_CURE))
+        return;
+    if (choice.spell == SPELL_DISPEL) {
+        get_enchantment_value(choice, my_hero);
+        if (choice.mastery < SKILL_MASTERY_ADVANCED)
+            return;
+        // retail copies the whole 0x24-byte record with one rep movsd
+        // (0x4256b7) and compares the saved value after the second pass
+        type_spell_choice saved = choice;
+        defender.get_enchantment_value(choice, my_hero);
+        if (choice.mastery != SKILL_MASTERY_ADVANCED)
+            return;
+        if (saved.value >= choice.value)
+            return;
+        choice.field_18 = choice.target;
+        choice.target = -1;
+        return;
+    }
+    if (akSpellTraits[choice.spell].field_0 > 0)
+        get_enchantment_value(choice, my_hero);
+    else
+        defender.get_enchantment_value(choice, my_hero);
 }
 
 // E:\gamedcs\ai_combat.cpp:844
-// LOCATED (hd-crossbuild + ida); retail inlines both
-// type_monster_data::cast_enchantment and the one-hero overload here.
+// Retail inlines type_monster_data::get_enchantment_value AND
+// type_monster_data::cast_enchantment into both arms.
 VA(0x004258a0, 0x269)  // corroborates (hd-crossbuild + ida), dc 0x2ae60
-void type_AI_combat_data::cast_enchantment(type_spell_choice* choice, const hero* casting_hero, unsigned char increase)
+void type_AI_combat_data::cast_enchantment(type_spell_choice& choice, const hero* casting_hero, unsigned char increase)
 {
-    // @stub
+    long value;
+    if (spell_is_single_target(choice.spell, choice.mastery)) {
+        value = monsters[choice.target].get_enchantment_value(choice, casting_hero, my_hero);
+        monsters[choice.target].cast_enchantment(value, increase);
+        return;
+    }
+    for (long i = get_total(); i-- > 0; ) {
+        value = monsters[i].get_enchantment_value(choice, casting_hero, my_hero);
+        if (value > 0)
+            monsters[i].cast_enchantment(value, increase);
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:871
 // LOCATED: the body dispatches on choice->spell == 0x23 and calls
@@ -468,25 +598,24 @@ VA(0x00425b10, 0xB4)  // anchor-callee, dc 0x2af04
 void type_AI_combat_data::cast_enchantment(type_spell_choice& choice, type_AI_combat_data& defender)
 {
     if (choice.spell == SPELL_DISPEL) {
-        if (choice.mastery >= 3) {
+        if (choice.mastery < SKILL_MASTERY_EXPERT) {
+            if (choice.target < 0) {
+                if (choice.field_18 >= 0) {
+                    choice.target = choice.field_18;
+                    defender.cast_enchantment(choice, my_hero, 0);
+                }
+            } else {
+                cast_enchantment(choice, my_hero, 1);
+            }
+        } else {
             cast_enchantment(choice, my_hero, 1);
             defender.cast_enchantment(choice, my_hero, 0);
-            return;
         }
-        if (choice.target >= 0) {
-            cast_enchantment(choice, my_hero, 1);
-            return;
-        }
-        if (choice.field_18 < 0)
-            return;
-        choice.target = choice.field_18;
-        defender.cast_enchantment(choice, my_hero, 0);
-        return;
-    }
-    if (akSpellTraits[choice.spell].field_0 > 0)
+    } else if (akSpellTraits[choice.spell].field_0 > 0) {
         cast_enchantment(choice, my_hero, 1);
-    else
+    } else {
         defender.cast_enchantment(choice, my_hero, 0);
+    }
 }
 
 #if 0  // @carcass
@@ -737,37 +866,112 @@ void do_eagle_eye(hero* winner, hero* loser)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_combat.cpp:1424
-// LOCATED (hd-crossbuild + ida): the carve row between simulate_combat
-// and do_aftermath; reconstruction not attempted yet.
+// SIGNATURE CORRECTION: the DC prototype's `short amount` does not
+// survive the bytes. The second (edx) argument is an armyGroup the
+// body walks slot by slot - armies[i] at [esi], numTroops[i] at
+// [esi+0x1c], esi stepping by 4 over seven iterations (0x426e36
+// .. 0x426e89) - i.e. the losing side's stacks.
 VA(0x00426df0, 0xED)  // corroborates (hd-crossbuild + ida), dc 0x2bd6c
-void create_skeletons(const hero* current_hero, short amount, armyGroup* destination)
+void create_skeletons(const hero* current_hero, const armyGroup* dead_army, armyGroup* destination)
 {
-    // @stub
+    float factor = const_cast<hero*>(current_hero)->GetNecromancyFactor(1);
+    if (factor <= 0.0f)
+        return;
+    factor += 0.02f;
+    TCreatureType skeleton = const_cast<hero*>(current_hero)->GetNecromancyCreature();
+    long total = 0;
+    long skeleton_hit_points = akCreatureTypeTraits[skeleton].hitPoints;
+    float skeleton_hit_points_f = static_cast<float>(skeleton_hit_points);
+    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        long creature = dead_army->armies[i];
+        long count = dead_army->numTroops[i];
+        long hit_points = akCreatureTypeTraits[creature].hitPoints;
+        if (hit_points > skeleton_hit_points)
+            hit_points = skeleton_hit_points;
+        long raised = static_cast<long>(static_cast<float>(hit_points * count)
+                                        * factor / skeleton_hit_points_f);
+        if (raised > count)
+            raised = count;
+        total += raised;
+    }
+    if (total < 1)
+        total = 1;
+    destination->Add(skeleton, total, -1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:1440
+// DECODED, NOT LANDED - it needs a hero-layout decision first. The
+// body is: swap the simulated mana back into both heroes, then on a
+// win give experience (gpGame->?(army, hero) scaled by
+// hero::GetExperienceBonusFactor), strip artifact slot 2, transfer the
+// loser's artifacts unless a 60%-Random surrender fired, claim the
+// town, adjust both armies, create_skeletons, and finally the INLINED
+// do_eagle_eye (dc 0x2bcd8).
+// BLOCKER: do_eagle_eye walks `hero[0x430 + spell]` for spell 0..0x45,
+// i.e. a 70-byte known-spell table spanning 0x430..0x475 - which
+// OVERLAPS the noWallPenalty byte this file already models at +0x43e
+// (byte-proven by check_wall_archery_penalty 0x42482b). One of the two
+// readings is wrong and the resolution is a supervised hero.h call.
+// The three secondary-skill slots it needs ARE consistent, and are now
+// named in hero.h: wisdom +0xd0, ballistics +0xd3, eagle eye +0xd4 -
+// exactly slots 7/10/11 of the 28-byte band at 0xc9.
 VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
-void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, town* enemy_town)
+void type_AI_combat_data::do_aftermath(type_AI_combat_data& defender, const town* enemy_town)
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_combat.cpp:1511
-// EH-bearing (P2.2): push -1 / push 0x627b68 / mov eax,fs:[0].
+// EH-bearing: the two stack-local type_AI_combat_data objects give the
+// function a /GX frame (push -1 / push <ehfuncinfo> / mov eax,fs:[0])
+// and the two `mov [ebp-4], state` writes between the constructors.
 VA(0x004270c0, 0x149)  // anchor-global, dc 0x2c004
 unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero, armyGroup* defending_army, town* defending_town, NewmapCell* cell)
 {
-    // @stub
+    float attacker_modifier = Random(75, 125) / 100.0f;
+    float defender_modifier = Random(75, 125) / 100.0f;
+    type_AI_combat_data attacker(attacking_hero, &attacking_hero->army,
+                                 attacker_modifier, defending_hero,
+                                 defending_town, cell);
+    type_AI_combat_data defender(defending_hero, defending_army,
+                                 defender_modifier, attacking_hero, 0, cell);
+    attacker.simulate_combat(defender);
+    if (attacker.total_hit_points > 0) {
+        attacker.do_aftermath(defender, defending_town);
+        return 1;
+    }
+    defender.do_aftermath(attacker, 0);
+    return 0;
 }
 
 // E:\gamedcs\ai_combat.cpp:1539
-// EH-bearing (P2.2): push -1 / push 0x627b88 / mov eax,fs:[0].
+// EH-bearing, same shape as AI_quick_combat.
 VA(0x00427210, 0x113)  // anchor-global, dc 0x2c140
 void AI_auto_combat(hero* attacking_hero, hero* defending_hero, armyGroup* attacking_army, armyGroup* defending_army, const town* defending_town, NewmapCell* cell)
 {
-    // @stub
+    float attacker_modifier = Random(75, 125) / 100.0f;
+    float defender_modifier = Random(75, 125) / 100.0f;
+    type_AI_combat_data attacker(attacking_hero, attacking_army,
+                                 attacker_modifier, defending_hero,
+                                 defending_town, cell);
+    type_AI_combat_data defender(defending_hero, defending_army,
+                                 defender_modifier, attacking_hero, 0, cell);
+    attacker.simulate_combat(defender);
+    attacker.adjust_army(0);
+    defender.adjust_army(0);
+    attacking_hero->mana = static_cast<short>(attacker.mana);
+    if (defending_hero)
+        defending_hero->mana = static_cast<short>(defender.mana);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:1565
 // LOCATED (hd-crossbuild + ida).

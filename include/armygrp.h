@@ -87,7 +87,18 @@ enum ESpellId {
     SPELL_DEATH_RIPPLE = 0x18,
     SPELL_DESTROY_UNDEAD = 0x19,
     SPELL_ARMAGEDDON = 0x1a,
+    // The anti-magic family ai_combat's get_enchantment_value
+    // (0x425510) writes off against a side that cannot cast. Their
+    // values are fixed by the surrounding roster, which is already
+    // byte-proven at both ends (DISPEL 0x23, RESURRECTION 0x26).
+    SPELL_PROTECTION_FROM_AIR = 0x1e,
+    SPELL_PROTECTION_FROM_FIRE = 0x1f,
+    SPELL_PROTECTION_FROM_WATER = 0x20,
+    SPELL_PROTECTION_FROM_EARTH = 0x21,
+    SPELL_ANTI_MAGIC = 0x22,
     SPELL_DISPEL = 0x23,
+    SPELL_MAGIC_MIRROR = 0x24,
+    SPELL_CURE = 0x25,
     SPELL_RESURRECTION = 0x26,
     SPELL_ANIMATE_DEAD = 0x27,
     SPELL_BLESS = 0x29,
