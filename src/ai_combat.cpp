@@ -89,7 +89,7 @@ long type_monster_data::get_resurrection_value(type_spell_choice& choice, const 
     if (get_spell_work_chance(choice.spell, creature, casting_hero, casting_hero) == 0.0)
         return 0;
     long value = choice.get_mastery_value()
-                 + akSpellTraits[choice.spell].power_value * choice.power;
+                 + akSpellTraits[choice.spell].power_factor * choice.power;
     if (casting_hero)
         value += const_cast<hero*>(casting_hero)->GetHeroSpellBonus(
             choice.spell, akCreatureTypeTraits[creature].level, value);
@@ -376,7 +376,7 @@ VA(0x00425260, 0x180)  // anchor-global, dc 0x2aa7c
 void type_AI_combat_data::cast_damage_spell(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
     long damage = choice.get_mastery_value()
-                  + akSpellTraits[choice.spell].power_value * choice.power;
+                  + akSpellTraits[choice.spell].power_factor * choice.power;
     long value = defender.monsters[choice.target].get_spell_damage(
         choice.spell, my_hero, defender.my_hero, damage);
     defender.total_hit_points -= defender.monsters[choice.target].take_damage(value);
@@ -406,7 +406,7 @@ long type_AI_combat_data::get_mass_damage_value(type_spell_choice& choice, const
 {
     long value = 0;
     long damage = choice.get_mastery_value()
-                  + akSpellTraits[choice.spell].power_value * choice.power;
+                  + akSpellTraits[choice.spell].power_factor * choice.power;
     for (long i = get_total(); i-- > 0; )
         value += monsters[i].get_spell_damage(choice.spell, casting_hero, my_hero, damage);
     return value;

@@ -213,6 +213,10 @@ build build/objdiff/base/ai_combat.obj: cl src/ai_combat.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = ai_combat
+build build/objdiff/base/ai_tactical.obj: cl src/ai_tactical.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = ai_tactical
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -237,7 +241,8 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $
     build/objdiff/base/town.obj build/objdiff/base/hero.obj $
     build/objdiff/base/game.obj build/objdiff/base/cmbtmgr.obj $
-    build/objdiff/base/advmgr.obj build/objdiff/base/ai_combat.obj
+    build/objdiff/base/advmgr.obj build/objdiff/base/ai_combat.obj $
+    build/objdiff/base/ai_tactical.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -262,7 +267,8 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $
     build/objdiff/base/town.obj build/objdiff/base/hero.obj $
     build/objdiff/base/game.obj build/objdiff/base/cmbtmgr.obj $
-    build/objdiff/base/advmgr.obj build/objdiff/base/ai_combat.obj
+    build/objdiff/base/advmgr.obj build/objdiff/base/ai_combat.obj $
+    build/objdiff/base/ai_tactical.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -288,6 +294,6 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $
     build/objdiff/base/town.obj build/objdiff/base/hero.obj $
     build/objdiff/base/game.obj build/objdiff/base/cmbtmgr.obj $
-    build/objdiff/base/advmgr.obj build/objdiff/base/ai_combat.obj | $
-    scripts/homm3/build/link.py
+    build/objdiff/base/advmgr.obj build/objdiff/base/ai_combat.obj $
+    build/objdiff/base/ai_tactical.obj | scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE

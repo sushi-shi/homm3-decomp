@@ -23,9 +23,24 @@ public:
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
     hexcell cells[187];               // +0x1c4, ends 0x5394
-    char pad_5394[0x138];
+    char pad_5394[0x110];
+    // Per-side "this side is played by the computer" latch: ai_tactical
+    // crosses it with gpGame's own AI flag before scaling a shooter's
+    // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
+    // parameters ctor 0x435ec0). Name provisional.
+    unsigned char sideIsAI[2];        // +0x54a4
+    char pad_54a6[0x16];
+    // Live stack count per side; every ai_tactical walk of armies[side]
+    // bounds itself with it (type_AI_spellcaster ctor 0x4369c0,
+    // set_melee_enemies 0x43bf20).
+    int numArmies[2];                 // +0x54bc
+    char pad_54c4[0x8];
     army armies[2][21];               // +0x54cc
-    char pad_1329c[0x1cc];
+    char pad_1329c[0x24];
+    // The side whose stack is acting: get_hex_attack_value (0x436180)
+    // rejects a neighbour whose combatSide equals it. Name provisional.
+    int currentSide;                  // +0x132c0
+    char pad_132c4[0x1a4];
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
@@ -38,6 +53,13 @@ public:
 
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();
+    // Both live in ai.cpp (DC ai.obj) and are claimed there.
+    long get_total_combat_value(long side, long lowest_attack,
+                                long lowest_defense,
+                                unsigned char include_cripples) const; // 0x41eac0
+    long compute_fire_shield_damage(long damage, const army* attacker,
+                                    const army* target,
+                                    long target_hits);        // 0x422440
 };
 
 // Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).

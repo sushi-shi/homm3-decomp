@@ -320,8 +320,13 @@ double army::get_average_damage()
 }
 
 // E:\gamedcs\army.cpp:2756
-DC_ONLY(0x47af8, 0xD2)
-long army::get_average_damage(const army* enemy, unsigned char ranged_attack, long amount, unsigned char limit_damage, long distance)
+// The carve slot immediately before is_enemy (0x442880), matching the
+// DC roster's immediately-preceding row; ai_tactical's
+// AI_get_attack_damage (0x435980) and the attack-hex chooser ctor
+// (0x4360c0) both call it with EXACTLY this five-argument shape
+// (enemy, ranged, count, limit_damage=1, distance) on a this in ecx.
+VA(0x00442780, 0x100)  // anchor-callee, dc 0x47af8
+long army::get_average_damage(const army* enemy, unsigned char ranged_attack, long amount, unsigned char limit_damage, long distance) const
 {
     // @stub
 }
@@ -340,7 +345,7 @@ unsigned char army::is_enemy(const army* arg)
 
 // E:\gamedcs\army.cpp:2790
 VA(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
-unsigned char army::can_shoot(const army* excluded)
+unsigned char army::can_shoot(const army* excluded) const
 {
     // @stub
 }
@@ -354,28 +359,28 @@ unsigned char army::enemy_is_adjacent(const army* excluded)
 
 // E:\gamedcs\army.cpp:2820
 VA(0x00442a50, 0x410)  // anchor-global, dc 0x47cf4
-double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, const army* excluded)
+double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, const army* excluded) const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:2910
 VA(0x00442e60, 0x169)  // anchor-global, dc 0x48168
-long army::get_total_combat_value(long lowest_attack, long lowest_defense)
+long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:2928
 VA(0x00442fd0, 0xA9)  // anchor-global, dc 0x482f0
-long army::get_loss_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, long damage, unsigned char kills_only)
+long army::get_loss_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, long damage, unsigned char kills_only) const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:2960
 VA(0x00443080, 0x50)  // anchor-global, dc 0x48454
-long army::get_total_hit_points(unsigned char simulated)
+long army::get_total_hit_points(unsigned char simulated) const
 {
     // @stub
 }
@@ -640,8 +645,13 @@ int army::FrontX()
 }
 
 // E:\gamedcs\army.cpp:4839
-DC_ONLY(0x4b354, 0x44)
-int army::get_second_grid_index()
+// The 30-byte slot immediately before is_adjacent (0x4466c0), the same
+// neighbour the DC roster has, and the body is the two-hex second cell
+// verbatim: bit 0 of creatureId gates it, then gridIndex plus
+// (facing ? 1 : -1). ai_tactical's find_attack_hex (0x436840) calls it
+// as a no-argument thiscall on the enemy stack.
+VA(0x004466a0, 0x1E)  // anchor-callee, dc 0x4b354
+int army::get_second_grid_index() const
 {
     // @stub
 }
@@ -809,14 +819,14 @@ long army::get_multi_head_directions(long our_hex, const army* enemy, long enemy
 
 // E:\gamedcs\army.cpp:5779
 VA(0x00448bd0, 0xF6)  // anchor-bracket, dc 0x4c898
-long army::get_AI_target_time(long speed)
+long army::get_AI_target_time(long speed) const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:5790
 VA(0x00448cd0, 0x4B)  // anchor-global, dc 0x4c918
-int army::GetSpeed()
+int army::GetSpeed() const
 {
     // @stub
 }
