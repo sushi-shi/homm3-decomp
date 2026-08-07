@@ -84,6 +84,18 @@ DECLARATOR_RE = re.compile(r"([~\w:]+(?:<[^<>()]*>)?)\s*\(")
 # MSVC special members render with backticks: Cls::`scalar deleting
 # destructor'(...), `default constructor closure'(...)
 SPECIAL_RE = re.compile(r"([\w:]+)::`([^'`]+)'\s*\(")
+# Template argument list in a source declarator: `vector<int>::begin` ->
+# `vector::begin`. Applied to a fixed point so nested lists collapse.
+# Template arguments never take part in the join key (the mangled side
+# cannot be parsed back to them without a full demangler), so both sides
+# normalize them away - see TEMPLATE_MEMBER_RE.
+TEMPLATE_ARGS_RE = re.compile(r"<[^<>]*>")
+# One MSVC-mangled member of a class template: `?begin@?$vector@HV?$allo
+# cator@H@std@@@std@@QAEPAHXZ` -> member `begin`, template `vector`,
+# enclosing namespace `std`. The lazy middle skips the argument list
+# without parsing it; a shape this does not match simply fails to join
+# (a missed rename, never a wrong one).
+TEMPLATE_MEMBER_RE = re.compile(r"^\?(\w+)@\?\$(\w+)@.*?@(\w+)@@")
 IDENT_RE = re.compile(r"[^0-9A-Za-z_]+")
 VOLATILE_E_RE = re.compile(r"^_?\$E[0-9]+$")
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
@@ -206,6 +218,12 @@ def scan_sources(functions):
                     # first paren is a stable working label until the
                     # clang-IR path binds real mangled names
                     raw = follower.split("(", 1)[0]
+                    # `std::vector<int>::begin` -> `std::vector::begin`:
+                    # without this the `<int>` breaks the qualified-name
+                    # run and only `::begin` survives, which no mangled
+                    # key can join.
+                    while TEMPLATE_ARGS_RE.search(raw):
+                        raw = TEMPLATE_ARGS_RE.sub("", raw)
                     last = DECLARATOR_RE.findall(raw + "(")
                     raw = last[-1] if last else raw
                 name = IDENT_RE.sub("_", raw).strip("_")[:64]
@@ -359,6 +377,12 @@ def _demangle_key(mangled: str):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
         key = f"{cls}_{cls}".lower()
         return f"{key}@dtor" if mangled.startswith("??1") else key
+    m = TEMPLATE_MEMBER_RE.match(mangled)
+    if m:
+        # member of a class template: namespace_template_member, the same
+        # spelling scan_sources derives from `std::vector<int>::begin`
+        # once TEMPLATE_ARGS_RE has dropped the argument list
+        return f"{m.group(3)}_{m.group(2)}_{m.group(1)}".lower()
     if not mangled.startswith("?") or mangled.startswith("??"):
         # C-mangled stdcall/fastcall publics: _name@N / @name@N -> name
         # (extern "C" __stdcall in a game TU; first hit _WinMain@16).

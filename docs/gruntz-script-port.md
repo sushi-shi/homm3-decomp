@@ -260,6 +260,95 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — hero +0x430 RE-MODELLED; the Dinkumware surface proven
+  BY BYTES and 5 STL COMDATs matched; P2.3 closed in practice.**
+  Engine-wide 278 → 283 exact, 3.65% → 3.68% executable matched; `hero`
+  3/89 (0.58%) → 8/94 (2.79%).
+  **The hero re-model landed, and the names are DC-ATTESTED, not
+  invented.** `evidence/dreamcast/members.csv` carries
+  `hero,969,in_spellbook`, `hero,1039,available_spells`,
+  `hero,1109,stats` — the same 70/70 spacing as retail's
+  0x3ea / 0x430 / 0x476, and the DC `SpellID` enum ends `kNumSpells,70`.
+  So `include/hero.h` now models `in_spellbook[70]` at +0x3ea and
+  `available_spells[70]` at +0x430 (`NUM_SPELLS = 70`); `stats[4]` at
+  +0x476 is documented but not modelled (no compiled consumer yet).
+  **The +0x43e byte is `available_spells[14]` = `eSpellEarthquake`, and
+  that is a SEMANTIC confirmation, not merely an index**: a hero who can
+  bring the wall down is modelled as taking no wall archery penalty.
+  `SPELL_EARTHQUAKE = 0xe` added to `ESpellId`; `ai_combat.cpp` reads
+  `my_hero->available_spells[SPELL_EARTHQUAKE]`.
+  **`check_wall_archery_penalty` scored 70.65% before AND after** —
+  same displacement, same byte width, identical codegen. The correct
+  model cost nothing, which is the ideal outcome for a semantic fix.
+  **P2.3 is now proven by BYTES, not just by strings.** Five COMDATs
+  matched at 100.0000: `bitset<144>::any()` (27 B), `vector<int>::begin`
+  and `::end` (4 B each), `vector<int>::push_back(const int&)` (434 B),
+  `bitset<70>::set(size_t,bool)` (96 B). **Inherited-identity
+  correction: 0x4e6500 is `push_back`, NOT `insert`** — `insert(iterator,
+  const T&)` is a 2-param member (`ret 8`); retail is `ret 4` with `_P`
+  loaded from `[this+8]` (`_Last` = `end()`) at entry, i.e.
+  `push_back(_X) { insert(end(), _X); }` with the 2-arg insert inlined.
+  **Arity was the tell for the seventh consecutive lane.** Four further
+  vector helpers reproduce with ZERO differing bytes but are NOT claimed
+  — link order brackets them ambiguously: `_Destroy` 0x404140,
+  `_Ucopy` 0x574ce0, `_Ufill` 0x48d940, `_Construct` 0x404dc0, plus
+  `bitset<70>::_Xran` 0x4d1c80.
+  **INSTANTIATION CONTRACT (ratify):** no vendoring — `#include <bitset>`
+  / `<vector>` straight from the pinned VC6 toolchain (precedent already
+  in tree: `src/monframeinfo.cpp` includes `<vector>`). A claim alone
+  emits nothing, because an inline member only gets an out-of-line
+  COMDAT when a call site declines to inline it and `/Ob2` inlines
+  everything; **`#pragma inline_depth(0)` around one scaffold function
+  `h3_stl_comdat_anchor`** is the smallest construct reproducing
+  retail's emission decision, and it deletes itself when hero.cpp's real
+  bodies land. Rejected and documented in-file: member-pointer
+  address-taking (adds `.CRT$XCU` dynamic initializers),
+  `template class std::vector<int>;` (~70 unrelated COMDATs),
+  `#define private public` (wrong mangling). **Measured**: extra
+  base-side symbols are INERT — objdiff enumerates the TARGET object's
+  functions, so the anchor and the ~25 COMDATs it drags in add no report
+  rows and no ratchet rows.
+  **PIPELINE CHANGE (ratify):** `scripts/homm3/build/labels.py` +24
+  lines — `_demangle_key` could not join a class-template member
+  (`?push_back@?$vector@…` keyed to garbage) and the declarator scan
+  dropped everything before `<int>`; both sides now normalize template
+  argument lists away, symmetrically. **Verified zero impact**:
+  `build/gen/symbol_names.csv` byte-identical before/after on the
+  pre-change tree.
+  **`type_AI_combat_data`'s vector head now has BYTE PROOF** (recorded,
+  not acted on — it moves the head of a class several exact bodies
+  depend on): the copy ctor 0x4276c0 opens `mov al,[esi] / mov [edi],al`
+  — a ONE-BYTE copy at +0 before any pointer — then `size()` from
+  `[esi+4]/[esi+8]`, `if (_N<0) _N=0`, `operator new(_N*72)`. That byte
+  is Dinkumware's empty `allocator` subobject, which STLport's vector
+  does not have. So the vector starts at +0x00 (16 bytes), NOT 12 bytes
+  at +0x04, and the current `field_00` IS the subobject.
+  **ORCHESTRATOR'S "STLport-blocked" LIST WAS MOSTLY WRONG — corrected
+  in-file so no future lane re-parks on it.** Genuinely unblocked:
+  `armyGroup::GetMorale` 0x44ae60 (needs a file-scope `std::bitset<9>`
+  holding {1,2,7,6} — exactly the proven surface; the rest of the body
+  is already transcribed) and the `_cpp_min`/`_cpp_max` file-local
+  copies in ai_combat/ai_tactical (real `<xutility>` takes both params
+  as `const _Ty&`, the local copies take them by value). NEVER actually
+  STL-blocked: `armyGroup::Merge` (retail's fused four-array
+  pointer-difference copy loop), `ai_combat::choose_melee`,
+  `ai_tactical::get_berserk_value`/`get_area_effect_value` (all
+  EH-bearing, P2.2), `ai_player::get_total_value` (a bare stub).
+  `ai_combat.cpp:1102`'s DC rows are the DREAMCAST's STLport
+  instantiations and are DC_ONLY by construction — retail links
+  Dinkumware, so those symbols have no retail counterpart at all.
+  **OPEN:** `bitset<48>::_Tidy` 0x4e66c0 is reproduced byte-exact (all
+  40 B) but `_Tidy` is private — the only emitting constructs are
+  `#define private public` (yields `QAE` where retail is `AAE`, a
+  structurally wrong spelling) or `template class std::bitset<48>;`
+  (drags ~70 COMDATs AND emits a second `bitset<48>::set` colliding with
+  the bitset<70> claim's join key). Left unclaimed. And 0x4e6750, the
+  3-arg `/Gr` clamp `(*b<*a) ? a : ((*c<*b) ? c : b)` whose only caller
+  is `hero::GetLuck` (luck clamps to [-3,3]), stays unclaimed: it is NOT
+  `_Median` (both Dinkumware's and STLport's take three VALUES and spend
+  three comparisons; this takes three pointers and spends two) and no
+  evidence names it.
+
 - **2026-08-07 — hero.obj tail audit: 7 claims WITHDRAWN as STL COMDATs;
   P2.3 ANSWERED (retail is Dinkumware, NOT STLport); the hero
   `0x430+spell` contradiction RESOLVED.** Engine-wide 277 → 278 exact,
