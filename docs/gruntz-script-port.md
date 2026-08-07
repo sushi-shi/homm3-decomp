@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — mapcell/mainmenu/lodfile mapped (user-directed).**
+  Order-mapping of the DC rosters onto the carve, every pairing
+  body-corroborated, claims promoted as located @stubs:
+  - **mapcell**: 54 new claims (14 -> 68) covering the whole map
+    read/save/load family; the mapcell/misc boundary moved to 0x10ade0
+    (misc's terrain-$E head), mapcell's own $E head at 0xfbba0; 10
+    retail-only span rows recorded unclaimable from the DC spine
+    (get_magic_terrain_type etc.); the seer path proven rewritten onto
+    the quest-guard machinery; the inlining-vanished DC rows listed in
+    the TU header.
+  - **mainmenu**: the whole TMainMenu class promoted (ctor/dtors/
+    DoModal/MainMenuHandler - the handler by DoModal's address-take,
+    hard proof); VideomodeChoice proven a DC-port-only class (no
+    retail slot exists); the second scalar-deleting-dtor claim.
+  - **lodfile**: clear + the ctor promoted (8 of 17 DC rows located);
+    TU head corrected to 0xfa590; nine externs proven /OPT:REF-
+    stripped or inlined (sort/compare/exist/...); retail uses
+    fopen-family I/O, not CreateFile.
+  All three gap regions are now fully attributed (levelupwindow tail,
+  $E runs classified per owner, STL COMDAT tails excluded).
+
 - **2026-08-07 — small-TU campaign: ten TUs processed one by one
   (user-directed goal).** Four more CLOSED (functions-only, zlib/hexcell
   precedent), four reconstructed wall-to-wall with documented residual

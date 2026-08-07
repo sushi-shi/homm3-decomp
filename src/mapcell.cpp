@@ -12,42 +12,42 @@ void ExtraInfoUnion::SetCellVisited(short player)
 }
 
 // E:\gamedcs\mapcell.cpp:62
-DC_ONLY(0xeb73c, 0x94)
+VA(0x004fc000, 0x19A)  // order-map: Read-only caller, loop stride 0x34 calling TTimedEvent::Read 0xfc1a0; EH-bearing, dc 0xeb73c
 int NewfullMap::readTimedEventList(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:85
-DC_ONLY(0xeb7d0, 0x1CE)
+VA(0x004fc1a0, 0x1EE)  // order-map: callers readTimedEventList + readTownData (inlined TTownEvent::Read), calls readString 0x4c6010; EH-bearing, dc 0xeb7d0
 int TTimedEvent::Read(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:126
-DC_ONLY(0xeb9a0, 0x98)
+VA(0x004fc390, 0xA5)  // order-map: Save-only caller, loop calling TTimedEvent::Save 0xfc440, dc 0xeb9a0
 int NewfullMap::saveTimedEventList(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:148
-DC_ONLY(0xeba38, 0xD4)
+VA(0x004fc440, 0xB7)  // order-map: callers saveTimedEventList + saveTownEventList (inlined TTownEvent::Save), calls saveString 0x4bbb60, dc 0xeba38
 int TTimedEvent::Save(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:179
-DC_ONLY(0xebb0c, 0xB0)
+VA(0x004fc500, 0x19A)  // order-map: Load-only caller, twin of 0xfc000, loop calling TTimedEvent::Load 0xfc6a0; EH-bearing, dc 0xebb0c
 int NewfullMap::loadTimedEventList(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:201
-DC_ONLY(0xebbbc, 0xD4)
+VA(0x004fc6a0, 0xC8)  // order-map: callers loadTimedEventList + loadTownEventList (inlined TTownEvent::Load), calls loadString 0x4bb990, dc 0xebbbc
 int TTimedEvent::Load(void* infile)
 {
     // @stub
@@ -61,7 +61,7 @@ int TTownEvent::Read(void* infile)
 }
 
 // E:\gamedcs\mapcell.cpp:261
-DC_ONLY(0xebd24, 0x98)
+VA(0x004fc770, 0xFA)  // order-map: Save-only caller, calls TTimedEvent::Save 0xfc440 (TTownEvent::Save inlined), dc 0xebd24
 int NewfullMap::saveTownEventList(void* outfile)
 {
     // @stub
@@ -75,7 +75,7 @@ int TTownEvent::Save(void* outfile)
 }
 
 // E:\gamedcs\mapcell.cpp:307
-DC_ONLY(0xebe3c, 0xB0)
+VA(0x004fc870, 0x1E4)  // order-map: Load-only caller, calls TTimedEvent::Load 0xfc6a0 (TTownEvent::Load inlined); EH-bearing, dc 0xebe3c
 int NewfullMap::loadTownEventList(void* infile)
 {
     // @stub
@@ -165,50 +165,68 @@ void NewfullMap::Close()
     // @stub
 }
 
+// E:\gamedcs\mapcell.cpp:544 - moved here from DC tail position (dc 0xf4bdc):
+// retail places this COMDAT right after Close, which calls it and takes its
+// address for the `vector destructor iterator' (also address-taken in Init).
+VA(0x004fd4c0, 0x26)  // order-map: called + address-taken by Close 0xfd460, address-taken by Init 0xfd4f0; frees vector<TObjectCell> at +0x12, dc 0xf4bdc
+void NewmapCell::~NewmapCell()
+{
+    // @stub
+}
+
 // E:\gamedcs\mapcell.cpp:550
-DC_ONLY(0xec80c, 0xE6)
+VA(0x004fd4f0, 0x160)  // order-map: `vector ctor/dtor iterator' + operator new; address-takes NewmapCell ctor 0xfd650 / dtor 0xfd4c0 (Close inlined), dc 0xec80c
 void NewfullMap::Init(int size, unsigned char two_layers)
 {
     // @stub
 }
 
+// E:\gamedcs\MapCell.h:685 - moved here from DC tail position (dc 0xf49a4):
+// retail places this COMDAT right after Init, which passes it to the
+// `vector constructor iterator'.
+VA(0x004fd650, 0x3E)  // order-map: address-taken by Init 0xfd4f0 for `vector ctor iterator'; inits packed NewmapCell incl. vector<TObjectCell> at +0xe, dc 0xf49a4
+void NewmapCell::NewmapCell()
+{
+    // @stub
+}
+
 // E:\gamedcs\mapcell.cpp:614
-DC_ONLY(0xec8f4, 0x2A0)
+VA(0x004fd690, 0x2B3)  // order-map: calls readTimedEventList 0xfc000, Init 0xfd4f0, readMapLayer 0xfe220 x2, readMapObjects 0x104470, PlaceObject 0x505b20 (placeObjects inlined), dc 0xec8f4
 int NewfullMap::Read(void* infile, int size, unsigned char two_layers)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:679
-DC_ONLY(0xecb94, 0x264)
+VA(0x004fdbc0, 0x371)  // order-map: calls loadTimedEventList 0xfc500, loadTownEventList 0xfc870, Init 0xfd4f0, loadMapLayer 0xfe920 x2, loadBlackBoxList/loadMonsterList/loadMapObjects, dc 0xecb94
 int NewfullMap::Load(void* infile, int size, unsigned char two_layers)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:759
-DC_ONLY(0xecdf8, 0x19E)
+VA(0x004fdf40, 0x2D1)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save, dc 0xecdf8
 int NewfullMap::Save(void* outfile, int size, unsigned char two_layers)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:809
-DC_ONLY(0xecf98, 0x3EA)
+VA(0x004fe220, 0x26B)  // order-map: leaf (file I/O devirtualized-inline); called x2 by Read 0xfd690 in the layer slot, dc 0xecf98
 int NewfullMap::readMapLayer(void* infile, int size, int layer)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:908
-DC_ONLY(0xed384, 0x302)
+VA(0x004fe490, 0x22A)  // order-map: leaf; called x2 by Save 0xfdf40 in the layer slot, dc 0xed384
 int NewfullMap::saveMapLayer(void* outfile, int size, int layer)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:995
-DC_ONLY(0xed688, 0x2FC)
+VA(0x004fe920, 0x2E5)  // order-map: called x2 by Load 0xfdbc0 in the layer slot; retail body delegates to helper 0xfe6c0 (retail-only, unclaimed), dc 0xed688
 int NewfullMap::loadMapLayer(void* infile, int size, int layer)
 {
     // @stub
@@ -243,7 +261,7 @@ void CObject::FindTrigger(int* result_x, int* result_y)
 }
 
 // E:\gamedcs\mapcell.cpp:1162
-DC_ONLY(0xedbf8, 0x11A)
+VA(0x004fed40, 0x102)  // order-map: first row after FindTrigger; calls generator ctor 0x4b8550 + Initialize 0x4b8860 + FindTrigger 0x4fec30; called by readObject 0x102e00, dc 0xedbf8
 int NewfullMap::readGeneratorData(void* infile, CObject* generatorObject)
 {
     // @stub
@@ -264,7 +282,7 @@ int NewfullMap::readShrineData(void* infile, CObject* shrineObject)
 }
 
 // E:\gamedcs\mapcell.cpp:1246
-DC_ONLY(0xede58, 0x128)
+VA(0x004fee50, 0xBC)  // order-map: calls readString 0x4c6010; callers exactly readArtifact/readSpellScroll/readResource/readBlackBox (DC-isomorphic), dc 0xede58
 int NewfullMap::readTreasureData(void* infile, TreasureData* treasure)
 {
     // @stub
@@ -278,14 +296,14 @@ int NewfullMap::saveTreasureList(void* outfile)
 }
 
 // E:\gamedcs\mapcell.cpp:1316
-DC_ONLY(0xee020, 0x70)
+VA(0x004fef10, 0x4D)  // order-map: calls armyGroup::save + saveString 0x4bbb60; called by Save (saveTreasureList inlined), dc 0xee020
 int NewfullMap::saveTreasureData(void* outfile, TreasureData* thisTreasure)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:1338
-DC_ONLY(0xee090, 0x9C)
+VA(0x004fef60, 0x1BD)  // order-map: calls armyGroup ctor/load + loadString 0x4bb990 (loadTreasureData inlined); called by Load; EH-bearing, dc 0xee090
 int NewfullMap::loadTreasureList(void* infile)
 {
     // @stub
@@ -299,35 +317,35 @@ int NewfullMap::loadTreasureData(void* infile, TreasureData* thisTreasure)
 }
 
 // E:\gamedcs\mapcell.cpp:1385
-DC_ONLY(0xee1a4, 0x13A)
+VA(0x004ff120, 0x1C9)  // order-map: calls readTreasureData 0x4fee50 + armyGroup ctor (TreasureData ctor inlined); called by readObject; EH-bearing, dc 0xee1a4
 int NewfullMap::readArtifactData(void* infile, CObject* artifactObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:1421
-DC_ONLY(0xee2e0, 0x130)
+VA(0x004ff2f0, 0x1D8)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee2e0
 int NewfullMap::readSpellScrollData(void* infile, CObject* scrollObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:1470
-DC_ONLY(0xee410, 0x15A)
+VA(0x004ff4d0, 0x1DA)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee410
 int NewfullMap::readResourceData(void* infile, CObject* resourceObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:1524
-DC_ONLY(0xee56c, 0x4F2)
+VA(0x004ff6b0, 0x535)  // order-map: calls armyGroup::Initialize + readTreasureData 0x4fee50; callers readBlackBoxData + readEventData (DC-isomorphic), dc 0xee56c
 int NewfullMap::readBlackBox(void* infile, BlackBoxData* thisBox)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:1708
-DC_ONLY(0xeea60, 0xDC)
+VA(0x004ffbf0, 0x1F5)  // order-map: calls readBlackBox 0x4ff6b0 + armyGroup ctor (BlackBoxData ctor inlined); called by readObject; EH-bearing, dc 0xeea60
 int NewfullMap::readBlackBoxData(void* infile, CObject* blackboxObject)
 {
     // @stub
@@ -340,29 +358,39 @@ int NewfullMap::saveBlackBoxList(void* outfile)
     // @stub
 }
 
+// E:\gamedcs\mapcell.cpp:1725 - moved here from DC tail position (dc 0xf4bfc):
+// retail places this COMDAT between readBlackBoxData and saveBlackBox; it is
+// called from the vector<BlackBoxData> destroy/erase machinery (0x106350
+// destroy loop stride 0xe4, 0x107150 grow, 0x107480 erase).
+VA(0x004ffdf0, 0xB0)  // order-map: four operator-delete calls = string + 3 vector buffers, matching BlackBoxData members, dc 0xf4bfc
+void BlackBoxData::~BlackBoxData()
+{
+    // @stub
+}
+
 // E:\gamedcs\mapcell.cpp:1751
-DC_ONLY(0xeebdc, 0x4C2)
+VA(0x004ffea0, 0x35A)  // order-map: calls armyGroup::GetNumArmies + armyGroup::save + saveString 0x4bbb60 (saveTreasureData inlined); called by Save (saveBlackBoxList inlined), dc 0xeebdc
 int NewfullMap::saveBlackBox(void* outfile, BlackBoxData* thisBox)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:1891
-DC_ONLY(0xef0a0, 0xB8)
+VA(0x00500200, 0x222)  // order-map: calls loadBlackBox 0x500430; called by Load; EH-bearing, dc 0xef0a0
 int NewfullMap::loadBlackBoxList(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:1914
-DC_ONLY(0xef158, 0x484)
+VA(0x00500430, 0x478)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
 int NewfullMap::loadBlackBox(void* infile, BlackBoxData* thisBox)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:2073
-DC_ONLY(0xef5dc, 0x1EA)
+VA(0x005008b0, 0x27A)  // order-map: calls readBlackBox 0x4ff6b0 + armyGroup ctor; called by readObject; EH-bearing, dc 0xef5dc
 int NewfullMap::readEventData(void* infile, CObject* eventObject)
 {
     // @stub
@@ -376,7 +404,7 @@ int NewfullMap::readSeerData(void* infile, CObject* seerObject)
 }
 
 // E:\gamedcs\mapcell.cpp:2300
-DC_ONLY(0xefbb8, 0x26E)
+VA(0x00500b30, 0x2AE)  // order-map: calls Random 0x50b230 (DC parallel), only read-slot row between readEventData and readMineData; readSeerData has no retail row (quest-guard rewrite); EH-bearing, dc 0xefbb8
 int NewfullMap::readScholarData(void* infile, CObject* scholarObject)
 {
     // @stub
@@ -390,28 +418,28 @@ int NewfullMap::readShipyardData(void* infile, CObject* shipyardObject)
 }
 
 // E:\gamedcs\mapcell.cpp:2445
-DC_ONLY(0xeffec, 0x150)
+VA(0x00501020, 0x110)  // order-map: calls armyGroup ctor/Initialize (mine ctor inlined) + FindTrigger 0x4fec30; called by readObject, dc 0xeffec
 int NewfullMap::readMineData(void* infile, CObject* mineObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:2489
-DC_ONLY(0xf013c, 0x168)
+VA(0x00501130, 0x132)  // order-map: twin of readMineData 0x501020 plus Random 0x50b230 call (DC discriminator); called by readObject, dc 0xf013c
 int NewfullMap::readAbandonedMineData(void* infile, CObject* mineObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:2552
-DC_ONLY(0xf02a4, 0xEC)
+VA(0x00501270, 0x138)  // order-map: calls string ctor 0x4040f0 + readString 0x4c6010 + vector<Sign> grow 0x4d07f0; called by readObject; EH-bearing, dc 0xf02a4
 int NewfullMap::readSignData(void* infile, CObject* signObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:2579
-DC_ONLY(0xf0390, 0x358)
+VA(0x005013b0, 0x3DC)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing, dc 0xf0390
 int NewfullMap::readMonsterData(void* infile, CObject* monsterObject)
 {
     // @stub
@@ -425,14 +453,14 @@ int NewfullMap::saveMonsterList(void* outfile)
 }
 
 // E:\gamedcs\mapcell.cpp:2717
-DC_ONLY(0xf0788, 0x9C)
+VA(0x00501790, 0x1E3)  // order-map: calls vector<MonsterData> grow 0x506d70 + loadString 0x4bb990 (loadMonsterData inlined); called by Load; EH-bearing, dc 0xf0788
 int NewfullMap::loadMonsterList(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:2740
-DC_ONLY(0xf0824, 0x92)
+VA(0x00501980, 0x6B)  // order-map: calls saveString 0x4bbb60; called by Save (saveMonsterList inlined), dc 0xf0824
 int NewfullMap::saveMonsterData(void* outfile, MonsterData* thisMonster)
 {
     // @stub
@@ -446,112 +474,112 @@ int NewfullMap::loadMonsterData(void* infile, MonsterData* thisMonster)
 }
 
 // E:\gamedcs\mapcell.cpp:2798
-DC_ONLY(0xf094c, 0x4A8)
+VA(0x005019f0, 0x7CC)  // order-map: calls TTimedEvent::Read 0x4fc1a0 (TTownEvent::Read inlined) + bitset<70> throw helper + vector<TTownEvent> grow 0x508250 + vector<TownExtra> grow 0x508cf0; called by readObject; EH-bearing, dc 0xf094c
 int NewfullMap::readTownData(void* infile, CObject* townObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:2951
-DC_ONLY(0xf0df4, 0x726)
+VA(0x005021c0, 0x835)  // order-map: calls GetStartingHeroId 0x4bb400 (DC-unique callee) + FindTrigger 0x4fec30 (get_trigger inlined); called by readObject, dc 0xf0df4
 int NewfullMap::readHeroData(void* infile, CObject* heroObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:3229
-DC_ONLY(0xf151c, 0x1AC)
+VA(0x00502a00, 0x151)  // order-map: calls armyGroup ctor (garrison ctor inlined) + FindTrigger 0x4fec30; called by readObject, dc 0xf151c
 int NewfullMap::readGarrisonData(void* infile, CObject* garrisonObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:3290
-DC_ONLY(0xf16c8, 0x454)
+VA(0x00502e00, 0x832)  // order-map: dispatches to all read*Data rows (DC-isomorphic callee set) + CreateBoat 0x4bb250 (readBoatData inlined) + TQuestGuard::read (retail quest path); readHolyGrail/readShrine/readShipyard inlined, dc 0xf16c8
 int NewfullMap::readObject(void* infile, CObject* tempObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:3443
-DC_ONLY(0xf1b1c, 0xDA)
+VA(0x00503640, 0x8D)  // order-map: leaf twin of loadObject 0x5036d0; sole caller saveMapObjects 0x504a40 (DC-isomorphic), dc 0xf1b1c
 int NewfullMap::saveObject(void* outfile, CObject* tempObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:3476
-DC_ONLY(0xf1bf8, 0xDE)
+VA(0x005036d0, 0xA4)  // order-map: leaf twin of saveObject 0x503640; sole caller loadMapObjects 0x504b70 (DC-isomorphic), dc 0xf1bf8
 int NewfullMap::loadObject(void* infile, CObject* tempObject)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:3514
-DC_ONLY(0xf1cd8, 0x5F2)
+VA(0x00503780, 0x4C0)  // order-map: calls strrev + sprintf + ReadFromBitmapResource 0x55d0d0 (DC: strrev + sprite-resource reads); called by readMapObjects, dc 0xf1cd8
 int NewfullMap::readObjectType(void* infile, CObjectType* tempObjectType)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:3658
-DC_ONLY(0xf22cc, 0x4B6)
+VA(0x00503c40, 0x2B9)  // order-map: calls saveString 0x4bbb60 + bitset<48> helper (DC parallel); sole caller saveMapObjects 0x504a40, dc 0xf22cc
 int NewfullMap::saveObjectType(void* outfile, CObjectType* tempObjectType)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:3752
-DC_ONLY(0xf2784, 0x3FA)
+VA(0x00503f00, 0x35D)  // order-map: calls loadString 0x4bb990 + bitset<48> helper (DC parallel); sole caller loadMapObjects 0x504b70, dc 0xf2784
 int NewfullMap::loadObjectType(void* infile, CObjectType* tempObjectType)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:3838
-DC_ONLY(0xf2c20, 0x3F6)
+VA(0x00504470, 0x5C9)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20
 int NewfullMap::readMapObjects(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:3924
-DC_ONLY(0xf3018, 0x174)
+VA(0x00504a40, 0x127)  // order-map: calls saveObject 0x503640 + saveObjectType 0x503c40 (exact DC callee pair); called by Save, dc 0xf3018
 int NewfullMap::saveMapObjects(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:3962
-DC_ONLY(0xf318c, 0x270)
+VA(0x00504b70, 0x4E9)  // order-map: calls loadObject 0x5036d0 + loadObjectType 0x503f00 + GetSprite 0x55c7b0; called by Load; EH-bearing, dc 0xf318c
 int NewfullMap::loadMapObjects(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:4018
-DC_ONLY(0xf33fc, 0x2B4)
+VA(0x00505060, 0x1CD)  // order-map: callers exactly StampObject 0x505230 + PlaceObject 0x505b20 (DC-isomorphic); bitset<48> ops, dc 0xf33fc
 void NewfullMap::GenerateHeightMap(const CObject* obj, []* map)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:4053
-DC_ONLY(0xf36b0, 0x372)
+VA(0x00505230, 0x3D9)  // order-map: calls GenerateHeightMap 0x505060 + vector<TObjectCell>::insert machinery 0x50a400; sole caller PlaceObject 0x505b20 (DC-isomorphic), dc 0xf36b0
 void NewfullMap::StampObject(NewmapCell* thisCell, NewmapCell::TObjectCell* objCell)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:4167
-DC_ONLY(0xf3a24, 0x8CA)
+VA(0x00505610, 0x3F8)  // order-map: calls hasFlag 0x40fca0 (DC-unique callee); sole caller CalculateCellExtra 0x505a10 (DC-isomorphic); reverse_iterator templates inlined, dc 0xf3a24
 void NewfullMap::calc_cell_extra(NewmapCell* thisCell, unsigned char bSetExtraInfo)
 {
     // @stub
 }
 
 // E:\gamedcs\mapcell.cpp:4310
-DC_ONLY(0xf42f0, 0xF6)
+VA(0x00505a10, 0x108)  // order-map: calls obscure_cell 0x4d75d0 + restore_cell 0x4d76e0 + calc_cell_extra 0x505610 (DC-isomorphic); callers incl. PlaceObject/EraseObj/ConvertObject, dc 0xf42f0
 void NewfullMap::CalculateCellExtra(NewmapCell* thisCell, unsigned char bSetExtraInfo)
 {
     // @stub
@@ -620,12 +648,7 @@ void CObject::CObject()
     // @stub
 }
 
-// E:\gamedcs\MapCell.h:685
-DC_ONLY(0xf49a4, 0xAC)
-void NewmapCell::NewmapCell()
-{
-    // @stub
-}
+// NewmapCell::NewmapCell (dc 0xf49a4) moved up: claimed at VA 0x004fd650.
 
 // E:\gamedcs\MapCell.h:735
 DC_ONLY(0xf4a50, 0x28)
@@ -676,19 +699,8 @@ void* NewmapCell::`vector deleting destructor'(unsigned __flags)
     // @stub
 }
 
-// E:\gamedcs\mapcell.cpp:544
-DC_ONLY(0xf4bdc, 0x20)
-void NewmapCell::~NewmapCell()
-{
-    // @stub
-}
-
-// E:\gamedcs\mapcell.cpp:1725
-DC_ONLY(0xf4bfc, 0x54)
-void BlackBoxData::~BlackBoxData()
-{
-    // @stub
-}
+// NewmapCell::~NewmapCell (dc 0xf4bdc) moved up: claimed at VA 0x004fd4c0.
+// BlackBoxData::~BlackBoxData (dc 0xf4bfc) moved up: claimed at VA 0x004ffdf0.
 
 // E:\gamedcs\mapcell.cpp:2692
 DC_ONLY(0xf4c50, 0x1C)

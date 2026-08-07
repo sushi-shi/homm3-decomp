@@ -39,8 +39,9 @@ iconwdgt	initialize	0xeb33d	0xebb10	2003	12
 initialize	inputmgr	0xebce9	0xec0e0	1015	11	
 inputmgr	kb	0xeccca	0xed490	1990	19	
 kb	kbwin	0xf7a04	0xf7a30	44	1	
-kbwin	lodfile	0xf8490	0xfa610	8576	29	levelupwindow
-lodfile	mapcell	0xfac34	0xfbf90	4956	28	mainmenu
+kbwin	lodfile	0xf8490	0xfa590	8448	28	levelupwindow
+lodfile	mainmenu	0xfac34	0xfb2a0	1644	12	
+mainmenu	mapcell	0xfbb94	0xfbf90	1020	11	
 mapcell	misc	0x105d12	0x10b1d0	21694	80	
 misc	monframeinfo	0x10c792	0x10c810	126	2	
 monframeinfo	mousemgr	0x10cb26	0x10cb50	42	1	
