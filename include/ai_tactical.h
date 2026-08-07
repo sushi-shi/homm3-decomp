@@ -5,13 +5,185 @@
 #ifndef HOMM3_AI_TACTICAL_H
 #define HOMM3_AI_TACTICAL_H
 
+#include <va.h>
+#include "army.h"
+#include "armygrp.h"
+#include "cmbtmgr.h"
+#include "hexcell.h"
+
+class hero;
+class searchArray;
+
+// PROVEN (2026-08-07) by set_melee_enemies (0x43bf20): a 16-byte record
+// written as {army*, damage, 1, damage} at this+0x50 + i*0x10, with the
+// whole 0x140-byte block cleared by one rep stosd of 0x50 dwords.
+struct type_AI_enemy_data {
+    const army* enemy;          // +0x00
+    long damage;                // +0x04
+    long count;                 // +0x08
+    long total_damage;          // +0x0c
+};
+
+// Secondary-skill mastery level (NONE/BASIC/ADVANCED/EXPERT); only its
+// use as a 0..3 index into the spell-traits tables is byte-proven here
+// (get_mastery_value 0x436930 indexes m_mastery_bonus[mastery]).
+typedef int TSkillMastery;
+// Magic school selector; get_protection_value (0x4396e0) takes it.
+typedef int TSpellSchool;
+
+// PROVEN layout (2026-08-07): get_mastery_value (0x436930) reads spell
+// at +0, mastery at +4; get_damage_spell_value (0x436f60) reads power
+// at +8; get_haste_value (0x4396b0) reads duration at +0xc. The
+// by-value stack footprint is 20 bytes (ret 0x18 with one pointer
+// argument), and type_spell_choice's ctors (0x436950/0x436980) store
+// the same four words plus a 1-byte 1 at +0x10 before their own
+// members - so the record ends at +0x14 and derives.
+struct type_enchant_data {
+    SpellID spell;              // +0x00
+    TSkillMastery mastery;      // +0x04
+    long power;                 // +0x08
+    long duration;              // +0x0c
+    // Both ctors seed it to 1; no located consumer reads it yet.
+    unsigned char field_10;     // +0x10
+
+    type_enchant_data(SpellID new_spell, TSkillMastery new_mastery,
+                      long new_power, long new_duration);
+    long get_mastery_value();
+};
+SIZE(type_enchant_data, 0x14);
+
+// PROVEN layout (2026-08-07): both ctors (0x436950 default,
+// 0x436980 four-argument) write -1/-1/0 into +0x14/+0x18/+0x1c and a
+// zero byte at +0x20 after the type_enchant_data prefix.
+struct type_spell_choice : public type_enchant_data {
+    long field_14;              // +0x14 (-1)
+    long field_18;              // +0x18 (-1)
+    long field_1c;              // +0x1c (0)
+    unsigned char field_20;     // +0x20 (0)
+
+    type_spell_choice();
+    type_spell_choice(SpellID new_spell, TSkillMastery new_mastery,
+                      long new_power, long new_duration);
+};
+SIZE(type_spell_choice, 0x24);
+
+// PROVEN layout (2026-08-07): the ctor (0x435ec0) writes every field
+// below in order; get_simple_attack_effect (0x435b90) forwards +0/+4/+8
+// into army::get_loss_combat_value as (lowest_attack, lowest_defense,
+// kills_only) and branches on the byte at +9. The record ends at 0x28
+// because type_AI_spellcaster embeds it at +0x20 and owns +0x48.
+struct type_AI_combat_parameters {
+    long lowest_attack;         // +0x00
+    long lowest_defense;        // +0x04
+    unsigned char kills_only;   // +0x08
+    unsigned char simulated;    // +0x09
+    char pad_0a[0x2];
+    long our_value;             // +0x0c  get_total_combat_value(side, .., 1)
+    long enemy_value;           // +0x10  ... (enemy_side, .., 1)
+    long our_live_value;        // +0x14  ... (side, .., 0)
+    long enemy_live_value;      // +0x18  ... (enemy_side, .., 0)
+    long odds;                  // +0x1c  1..7, from the 0x63b798 ladder
+    long side;                  // +0x20
+    long enemy_side;            // +0x24
+
+    type_AI_combat_parameters(const combatManager* combat, long side);
+    void simulate_single_attack(const army* current_army, long* our_hits,
+                                const army* enemy, long* enemy_hits,
+                                unsigned char ranged, long distance);
+    void simulate_attack(const army* current_army, long* our_hits,
+                         const army* enemy, long* enemy_hits,
+                         unsigned char ranged, long distance);
+    long get_simple_attack_effect(const army* current_army, long our_total,
+                                  const army* enemy, long enemy_total,
+                                  unsigned char ranged, long distance);
+    long get_simple_attack_effect(const army* current_army, const army* enemy,
+                                  unsigned char ranged, long distance);
+    long get_ranged_attack_value(const army* current_army, const army* enemy);
+    long get_exchange_effect(const army* current_army, const army* enemy,
+                             long distance);
+};
+SIZE(type_AI_combat_parameters, 0x28);
+
+// PROVEN layout (2026-08-07): the ctor (0x4360c0) writes +0/4/8/c/10/
+// 14/18/1c/20/24/28 and find_attack_hex (0x436840) reads +8 (enemy),
+// +0 (attacker) and +0x20 (the chosen hex).
+struct type_AI_attack_hex_chooser {
+    const army* attack_army;    // +0x00
+    long speed;                 // +0x04
+    const army* enemy_army;     // +0x08
+    searchArray* search_data;   // +0x0c
+    const long* enemy_attack_array; // +0x10
+    long enemy_troops_left;     // +0x14
+    long our_troops;            // +0x18
+    long best_value;            // +0x1c
+    long best_hex;              // +0x20
+    long field_24;              // +0x24
+    const type_AI_combat_parameters* data;  // +0x28
+
+    type_AI_attack_hex_chooser(const army* attacker, const army* defender,
+                               const long* attack_array, searchArray* search,
+                               const type_AI_combat_parameters* combat_data);
+    long get_hex_attack_value(long hex, long* checked);
+    void check_adjacent_hexes(long enemy_hex, long start_direction,
+                              long stop_direction);
+    unsigned char find_attack_hex();
+};
+
+// PROVEN offsets (2026-08-07) from the ctor 0x4369c0 (vptr, +4/+8 the
+// two sides' heroes, +0xc side, +0x10 enemy side, +0x1c/+0x1d flags,
+// the embedded parameters at +0x20, the deputy caster at +0x48 with
+// its owning flag at +0x4c) and the 0x410 operator-new size in the
+// same body. Interior fields past +0x4c stay padded.
+struct type_AI_spellcaster {
+    // +0x00 is the compiler's own vptr (vftable 0x63b7d8, one slot:
+    // the scalar deleting destructor at 0x436bf0).
+    hero* our_hero;             // +0x04 combat->[0x53cc + side*4]
+    hero* enemy_hero;           // +0x08 combat->[0x53cc + enemy_side*4]
+    long side;                  // +0x0c
+    long enemy_side;            // +0x10
+    char pad_14[0x8];
+    unsigned char field_1c;     // +0x1c
+    unsigned char creature_spell; // +0x1d
+    char pad_1e[0x2];
+    type_AI_combat_parameters params; // +0x20
+    type_AI_spellcaster* deputy;      // +0x48
+    unsigned char owns_deputy;        // +0x4c
+    char pad_4d[0x3];
+    // Two parallel 20-record censuses, both indexed by army::bitIndex:
+    // set_melee_enemies (0x43bf20) fills the first, and
+    // get_defense_boost_value (0x4387c0) sums total_damage from BOTH
+    // (this + i*16 + 0x5c and this + i*16 + 0x19c).
+    type_AI_enemy_data enemies[20];   // +0x50
+    type_AI_enemy_data attacks[20];   // +0x190
+    char pad_2d0[0x140];
+
+    virtual ~type_AI_spellcaster();
+
+    long get_damage_value(SpellID spell, long base_damage,
+                          const hero* target_hero, const army* target);
+    long get_damage_spell_value(const army* enemy, type_enchant_data caster);
+    long get_mass_damage_effect(long enemy_damage, long friendly_damage);
+    long get_speed_value(const army* our_army, long increase, long duration);
+    unsigned char should_attack_now(const army* enemy);
+    long get_defense_boost_value(const army* our_army, const army* enemy,
+                                 long duration, double increase);
+    long get_haste_value(const army* our_army, type_enchant_data caster);
+    long get_traitor_value(const army* enemy, const army* target);
+    void set_melee_enemies();
+};
+SIZE(type_AI_spellcaster, 0x410);
+
 // --- globals ---
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:34, dc 0x3c29c) double value_of_luck_and_morale(long value, long change, double good_value_multiplier, double bad_value_multiplier);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:83, dc 0x3c55c) double AI_value_of_morale(long morale, long change);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:97, dc 0x3c580) double AI_value_of_luck(long luck, long change);
+double value_of_luck_and_morale(long value, long change,
+                                double good_value_multiplier,
+                                double bad_value_multiplier);
+double AI_value_of_morale(long morale, long change);
+double AI_value_of_luck(long luck, long change);
+long AI_get_attack_damage(const army* current_army, long our_hits,
+                          const army* enemy, unsigned char ranged,
+                          long distance);
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:109, dc 0x3c608) long get_multi_head_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate);
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:155, dc 0x3c708) long get_breath_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate);
-// CODEVIEW(E:\gamedcs\ai_tactical.cpp:200, dc 0x3c810) long AI_get_attack_damage(const army* current_army, long our_hits, const army* enemy, unsigned char ranged, long distance);
 
 // --- army ---
 // CODEVIEW(E:\gamedcs\Army.h:724, dc 0x429c0) int army::GetMorale(unsigned char apply_limits);

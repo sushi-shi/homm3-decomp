@@ -23,27 +23,84 @@ public:
     char pad_18[0x4];
     // ValidPath stores the validated destination here on success.
     int pathTarget;               // +0x1c
-    char pad_20[0x24];
+    char pad_20[0x14];
+    // Creature roster id: ai_tactical compares it against the war
+    // machines 0x93/0x94 (get_ranged_attack_value 0x435cb0,
+    // set_melee_enemies 0x43bf20) and 0x95 (get_damage_value 0x436e30).
+    int creatureType;             // +0x34
+    // Occupied combat cell. ai_tactical's find_attack_hex (0x436840)
+    // feeds it straight into check_adjacent_hexes as the enemy hex,
+    // and the type_AI_spellcaster ctor walks armies by it.
+    int gridIndex;                // +0x38
+    char pad_3c[0x8];
     // 0 = attacker-facing, 1 = defender-facing: selects the 6/7
     // special-direction remaps in GetAdjacentCellIndex.
     int facing;                   // +0x44
-    char pad_48[0x3c];
+    char pad_48[0x4];
+    // Stack size: set_melee_enemies (0x43bf20) feeds it to
+    // get_average_damage as the attacking creature count.
+    int numTroops;                // +0x4c
+    char pad_50[0x8];
+    // Damage already carried by the stack's top creature: the AI adds
+    // its expected extra damage to it and compares against hitPoints to
+    // decide whether a boost saves a creature (get_defense_boost_value
+    // 0x4387c0). Name provisional.
+    int topCreatureDamage;        // +0x58
+    char pad_5c[0x8];
+    // Unmodified speed: get_speed_value (0x439550) adds the spell's
+    // increase to it and re-times the stack against the result, while
+    // GetSpeed() returns the modified value.
+    int baseSpeed;                // +0x64
+    char pad_68[0x1c];
     // Bit 0 doubles as the two-hex marker in get_adjacent_hex and
     // GetAttackMask; the IsWinner walk tests the full int against -1.
     int creatureId;               // +0x84
-    char pad_88[0x68];
+    char pad_88[0x38];
+    // Hit points per creature: AI_get_attack_damage (0x435980) and the
+    // attack-hex chooser ctor (0x4360c0) both divide a stack's total
+    // hit points by it with the (hp + total - 1)/hp ceiling idiom.
+    int hitPoints;                // +0xc0
+    char pad_c4[0x2c];
     unsigned char hitByCreature;  // +0xf0
     char pad_f1[0x3];
     // Effective combat side: is_enemy (0x442880) compares it between
     // armies after the hypnotize flip; FindPath forwards it (flipped
     // when hypnotized) into FindCombatPath.
     int combatSide;               // +0xf4
-    char pad_f8[0x18c];
+    // Bit position of this stack in the AI's "already counted" masks:
+    // get_hex_attack_value (0x436180) builds 1 << it and folds the bit
+    // into the caller's checked word.
+    int bitIndex;                 // +0xf8
+    char pad_fc[0x188];
     int berserkFlag;              // +0x284 (is_enemy: true vs everyone)
     int hypnotizeFlag;            // +0x288 (flips the effective side)
-    char pad_28c[0x2c];
+    char pad_28c[0x4];
+    // Three round counters the combat AI treats as "this stack cannot
+    // act": any of them non-zero disqualifies a stack from the melee
+    // threat census (set_melee_enemies 0x43bf20) and caps a ranged
+    // stack's value (get_ranged_attack_value 0x435cb0). Names pending
+    // a spell-side consumer.
+    int disabled_290;             // +0x290
+    char pad_294[0x1c];
+    int disabled_2b0;             // +0x2b0
+    char pad_2b4[0x4];
     int boundFlag;                // +0x2b8 (FindPath: moves forced to 0)
-    char pad_2bc[0x28c];
+    char pad_2bc[0x4];
+    int disabled_2c0;             // +0x2c0
+    char pad_2c4[0x190];
+    // Retaliations left this round: simulate_attack (0x4359b0) only
+    // lets the defender strike back while it is positive, and the DC
+    // roster has army::set_retaliation_count feeding it.
+    int retaliationCount;         // +0x454
+    char pad_458[0xdc];
+    // Damage this stack is already committed to take this turn: the
+    // AI subtracts it from the stack's total hit points before every
+    // simulation (get_simple_attack_effect 0x435b90).
+    int AI_expected_damage;       // +0x534
+    // The stack this one is heading for; set_melee_enemies (0x43bf20)
+    // dereferences it as an army and calls get_average_damage on it.
+    army* AI_target;              // +0x538
+    char pad_53c[0xc];
 
     int FindPath(int fpTargetCellIndex, int maxMoves,
                  unsigned char bMoveUnlimited, unsigned char bLiteralTarget);
@@ -53,8 +110,26 @@ public:
                     int iLiteralIndex, int* testCellIndex);
     int GetAdjacentCellIndex(int currIndex, int direction);
     long get_adjacent_hex(long hex, long direction);
-    int GetSpeed();                          // 0x448cd0, claimed in army.cpp
+    int GetSpeed() const;                    // 0x448cd0, claimed in army.cpp
     unsigned char is_enemy(const army* arg); // 0x442880
+    // Combat-AI leaves, all claimed in army.cpp; declared here so
+    // ai_tactical can call them (the retail callsites are the
+    // location evidence for get_average_damage's own claim).
+    unsigned char can_shoot(const army* excluded) const;        // 0x4428f0
+    long get_loss_combat_value(long lowest_attack, long lowest_defense,
+                               unsigned char ranged, long damage,
+                               unsigned char kills_only) const; // 0x442fd0
+    long get_total_hit_points(unsigned char simulated) const;   // 0x443080
+    long get_average_damage(const army* enemy, unsigned char ranged_attack,
+                            long amount, unsigned char limit_damage,
+                            long distance) const;               // 0x442780
+    int get_second_grid_index() const;                          // 0x4466a0
+    long get_AI_target_time(long speed) const;                  // 0x448bd0
+    long get_total_combat_value(long lowest_attack,
+                                long lowest_defense) const;     // 0x442e60
+    double get_unit_combat_value(long lowest_attack, long lowest_defense,
+                                 unsigned char ranged,
+                                 const army* excluded) const;   // 0x442a50
 };
 SIZE(army, 0x548);
 
