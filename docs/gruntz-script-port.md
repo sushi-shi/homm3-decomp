@@ -260,6 +260,32 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — ai_tactical + ai_combat lanes merged; /Op proven and
+  sweep-tested.** Two parallel Opus matcher lanes (worktree pool,
+  serial integration). ai_combat: 13 exact of 22 reconstructed;
+  ai_tactical: 17 exact of 24 live. BOTH lanes independently byte-
+  proved **/Op** for their TU (fdiv kept against the pool constant vs
+  reciprocal fmul; int->double rounded through memory; /Op also
+  disables FP intrinsics - get_defense_boost_value calls CRT sqrt,
+  not fsqrt) -> new `game_o2_ml_gr_windows_op` profile. **Engine-wide
+  /Op sweep result**: flipping all 35 game TUs to /Op leaves every
+  one of the 249 exact functions exact (sole movement: unmatched
+  get_spell_work_chance 53.21 -> 53.09, tuned under non-/Op). /Op is
+  compatible with everything matched so far; adopting it engine-wide
+  is RECOMMENDED but deferred to a supervised flip.
+  Merge unions worth noting: SSpellTraits carries TWO per-mastery
+  rows (mastery_bonus@0x34 flat add, mastery_values@0x68 value row -
+  each byte-proven by its own lane's consumers); type_enchant_data is
+  0x14 (ctor-proven) with ai_combat's consumer names grafted onto
+  type_spell_choice (target/+0x14, value/+0x1c). New army combat-AI
+  field slices and the AI leaf declarations landed in army.h;
+  advManager::HeroLoses, army::get_average_damage,
+  army::get_second_grid_index claimed by callee evidence. Residuals:
+  the register-homing family dominates; simulate_combat adds an
+  inliner-depth divergence (retail /Ob2 stops at nesting depth 2) to
+  the open compiler-generation question. Identity correction:
+  0x4253e0 = get_mass_damage_value (has_creature has no retail body).
+
 - **2026-08-07 — mapcell/mainmenu/lodfile mapped (user-directed).**
   Order-mapping of the DC rosters onto the carve, every pairing
   body-corroborated, claims promoted as located @stubs:

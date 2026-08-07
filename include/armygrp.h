@@ -64,16 +64,19 @@ struct SSpellTraits {
     int level;                // the dragons' magic-immunity gate
     unsigned char byte_1c;    // bit 2 crossed with trait 0x4000
     char pad_1d[0x13];
-    // The AI's per-point spell strength: type_monster_data::
-    // get_resurrection_value (0x423d60) and
-    // type_AI_combat_data::get_mass_damage_value (0x42540a) both
-    // multiply it by the choice's power.
-    int power_value;          // +0x30
-    char pad_34[0x34];
-    // Per-mastery dword row: get_enchantment_value indexes it as
-    // spell*34 + mastery dwords from the table base (0x423cab), i.e.
-    // record +0x68 + mastery*4. Only the 4-byte stride is proven;
-    // the four-entry extent follows the mastery ladder.
+    // Spell-power multiplier (NH3API m_power_factor): multiplied by the
+    // caster's power in get_resurrection_value (0x423d60),
+    // get_mass_damage_value (0x42540a) and ai_tactical's
+    // get_damage_spell_value (0x436f60: traits[spell*136 + 0x30]).
+    int power_factor;         // +0x30
+    // Per-mastery flat bonus row (NH3API m_mastery_bonus):
+    // get_damage_spell_value adds [spell*136 + mastery*4 + 0x34].
+    int mastery_bonus[4];     // +0x34
+    char pad_44[0x24];
+    // A SECOND per-mastery dword row: get_enchantment_value indexes it
+    // as spell*34 + mastery dwords from the table base (0x423cab) =
+    // record +0x68 + mastery*4. Distinct from mastery_bonus - both
+    // rows are byte-proven by their own consumers. Name provisional.
     int mastery_values[4];    // +0x68
     char pad_78[0x10];
 };
@@ -185,6 +188,12 @@ class game {
 public:
     char pad_0[0x1f698];
     int f_1f698;
+    char pad_1f69c[0x3c];
+    // "The active side is computer-played": ai_tactical crosses it with
+    // combatManager::sideIsAI (get_ranged_attack_value 0x435cb0 tests it
+    // for non-zero; the type_AI_combat_parameters ctor 0x435ec0 tests it
+    // SIGNED-positive, which is what pins the signed char). Provisional.
+    char AI_in_control;   // +0x1f6d8
 };
 DATA(0x006994e8) extern game* gpGame;
 
