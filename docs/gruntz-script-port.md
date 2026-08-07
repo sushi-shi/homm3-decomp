@@ -260,6 +260,64 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — ai_tactical stub campaign; the spellcaster family shape,
+  and a WRONG "EH-blocked" carcass note corrected.** Same orchestrated
+  single-matcher lane. TU 17/50 → 21/50 exact, 23.72% → 37.17% fuzzy;
+  engine-wide 255 → 259 exact, 3.21% → 3.32% executable matched. Four
+  driven to exact (get_dispel_value, get_backlash_value,
+  get_antimagic_value, get_defense_skill_value), five more landed as
+  scoring reconstructions (get_attack_skill_value 99.85,
+  get_cure_value 95.49, get_damage_value 93.21, should_attack_now
+  85.58, get_hypnotize_value 18.23 — semantics complete, codegen not).
+  **The family shape:** every `type_AI_spellcaster::get_<spell>_value`
+  answers "what would this stack be worth if the spell had landed" by
+  making a REAL `army` copy on the stack (`sub esp,0x548`), mutating
+  the copy, and re-pricing it through the ordinary combat-value leaves.
+  **The `~army()` in that pair is what forces the `/GX` frame** — so
+  the nine carcass notes reading `// EH-bearing (P2.2): blocked until
+  the synth-PDB EH scope lands` were WRONG; nothing was blocked.
+  Declaring `army(const army&)` / `~army()` in `include/army.h`
+  (declared, never defined — both stay unresolved externals) is the
+  entire unlock. Corollaries for the next matcher: `value += f(...)`
+  vs `return value + f(...)` decides whether retail's accumulate
+  register survives (66.7 → 88.7 → exact on get_antimagic_value); a
+  dead copy is real (get_backlash_value builds `test_army`, never
+  reads it, destroys it — retail keeps it); `_cpp_min`/`_cpp_max`
+  homes `_Y` FIRST (right-to-left arg evaluation), which fixes
+  argument order; `unsigned char f = (unsigned)x >> N;` then
+  `if (f & 1)` is required for retail's `shr`/`test cl` (the direct
+  `((unsigned)x >> N) & 1` folds to `test dword, imm`); a byte local
+  passed as an `unsigned char` parameter is pushed as a full dword
+  with GARBAGE upper bytes, legal because the callee reads only the
+  low byte. **Negative result worth keeping:** the nothrow `operator
+  delete` lever from ai_combat does NOT apply here — ai_tactical has
+  no scope-exit `delete`, its frames come from `~army()`, and retail
+  DOES emit the `mov [ebp-4], 0/-1` updates around those.
+  **Resolves open question (c) of the ai_combat entry:** the
+  `mov al, byte [ebp+0xb]` → `[esi]` in the 6-arg type_AI_combat_data
+  ctor is VC6 copy-constructing an EMPTY `std::allocator` (one byte
+  read from uninitialised stack), immediately followed by
+  `[esi+4]/[esi+8]/[esi+0xc] = 0` — the STLport vector head layout
+  (`_M_start`/`_M_finish`/`_M_end_of_storage`). The identical shape
+  appears in ai_tactical's get_area_effect_value (0x437040) where the
+  local is provably a `std::vector<army*>`. So type_AI_combat_data's
+  first member is a vector and there was never dishonest C++ to find —
+  it is the P2.3 STLport decision, which now also gates
+  get_berserk_value, get_area_effect_value and the two consider_*
+  functions. **STILL OPEN:** (a) the hero layout contradiction now
+  also blocks get_protection_value (700 B, the largest tractable
+  stub), a direct consumer of `hero[0x430 + spell]`; and
+  `akHypnotizeTurns[4] = {1,1,2,3}` at 0x660858 is declared extern
+  only — the owning TU is unproven, so no DATA claim was made.
+  New surface (byte-derived, provisional names flagged in-source):
+  army copy-ctor/dtor decls, attackSkill +0xc8, defenseSkill +0xcc,
+  field_c4, field_190, get_estimated_damage (0x443e30, unnamed in
+  DC/HD/IDA); combatManager actingSide +0x132b8, actingSlot +0x132bc,
+  ModifySpellDamage / SpellCastWorkChance (DC names, addresses from
+  the ai_tactical call sites); hexcell field_4a; searchArray
+  SeedCombatPosition; type_AI_spellcaster field_14 and
+  worst_enemies[20] at +0x2d0.
+
 - **2026-08-07 — ai_combat stub campaign; the nothrow `operator delete`
   lever.** Orchestrated single-matcher lane (user: "become an
   orchestrator and manage one matcher", AI TUs first then smallest-TUs
@@ -296,6 +354,9 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   (adjacent to the STLport P2.3 call). (c) the 6-arg ctor at 0x423ee0
   stores byte 3 of the `new_hero` pointer into field_00 — read is real
   against three call sites, no honest C++ spelling found.
+  **[(c) SUPERSEDED the same day — see the ai_tactical entry below:
+  it is not a pointer byte at all but an empty `std::allocator`
+  copy-construct, i.e. the STLport vector head. (a) remains open.]**
 
 - **2026-08-07 — cleanliness debt cleared to zero (user: "Fix everything
   now"); two masked fatal gates fixed.** Discovery: `homm3 build` had

@@ -6,7 +6,10 @@
 #define HOMM3_CMBTMGR_H
 
 #include "army.h"
+#include "armygrp.h"   // SpellID, for the two spells.obj leaves below
 #include "hexcell.h"
+
+class hero;
 
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
@@ -36,7 +39,13 @@ public:
     int numArmies[2];                 // +0x54bc
     char pad_54c4[0x8];
     army armies[2][21];               // +0x54cc
-    char pad_1329c[0x24];
+    char pad_1329c[0x1c];
+    // The stack whose turn it is, as a (side, slot) pair into armies:
+    // should_attack_now (0x436c60) forms armies[actingSide][actingSlot]
+    // with the flattened index actingSide*21 + actingSlot and then
+    // excludes that stack from both of its censuses. Names provisional.
+    int actingSide;                   // +0x132b8
+    int actingSlot;                   // +0x132bc
     // The side whose stack is acting: get_hex_attack_value (0x436180)
     // rejects a neighbour whose combatSide equals it. Name provisional.
     int currentSide;                  // +0x132c0
@@ -60,6 +69,21 @@ public:
     long compute_fire_shield_damage(long damage, const army* attacker,
                                     const army* target,
                                     long target_hits);        // 0x422440
+    // spells.obj leaves, both `ret 0x18` (six stack args). Names are
+    // the DC roster's (spells.cpp:5086 / 5419); the retail addresses
+    // come from ai_tactical's get_damage_value (0x436e30), which calls
+    // them back to back with gpCombatManager in ecx. Their own claims
+    // wait for src/spells.cpp.
+    long ModifySpellDamage(long base_damage, SpellID spell,
+                           const hero* casting_hero, const hero* target_hero,
+                           const army* target,
+                           unsigned char simulated);          // 0x5a78e0
+    // The last parameter is NOT a char: get_damage_value materialises
+    // `creature_spell != 0` with xor/setne into a full dword before
+    // pushing it, which a char-typed parameter would never need.
+    float SpellCastWorkChance(SpellID spell, long side, const army* target,
+                              long hex, unsigned char check_immunity,
+                              long creature_spell);            // 0x5a8090
 };
 
 // Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).

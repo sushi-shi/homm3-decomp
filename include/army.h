@@ -82,7 +82,20 @@ public:
     // attack-hex chooser ctor (0x4360c0) both divide a stack's total
     // hit points by it with the (hp + total - 1)/hp ceiling idiom.
     int hitPoints;                // +0xc0
-    char pad_c4[0x2c];
+    // Per-creature threat weight the hypnotize pricer multiplies by the
+    // spell's turn count before seeding the combat search
+    // (get_hypnotize_value 0x43a500). Name pending a writer.
+    int field_c4;                 // +0xc4
+    // The stack's attack rating: get_attack_skill_value (0x437800)
+    // copies the army and adds the spell's bonus to THIS word on the
+    // copy before re-pricing its damage. Name provisional.
+    int attackSkill;              // +0xc8
+    // The stack's defense rating: get_defense_skill_value (0x438910)
+    // copies the army, adds the spell's bonus to THIS word on the copy
+    // and re-prices the enemy's damage against it (0x443e30 twice).
+    // Name provisional - no roster attests it.
+    int defenseSkill;             // +0xcc
+    char pad_d0[0x20];
     unsigned char hitByCreature;  // +0xf0
     char pad_f1[0x3];
     // Effective combat side: is_enemy (0x442880) compares it between
@@ -93,7 +106,13 @@ public:
     // get_hex_attack_value (0x436180) builds 1 << it and folds the bit
     // into the caller's checked word.
     int bitIndex;                 // +0xf8
-    char pad_fc[0x188];
+    char pad_fc[0x94];
+    // Ordering key the AI compares BETWEEN stacks: should_attack_now
+    // (0x436c60) refuses to cast now when any other still-able stack
+    // on our side outranks the target's own value here. Name pending a
+    // writer.
+    int field_190;                // +0x190
+    char pad_194[0xf0];
     int berserkFlag;              // +0x284 (is_enemy: true vs everyone)
     int hypnotizeFlag;            // +0x288 (flips the effective side)
     char pad_28c[0x4];
@@ -124,6 +143,22 @@ public:
     army* AI_target;              // +0x538
     char pad_53c[0xc];
 
+    // BYTE-PROVEN (2026-08-07) by the ai_tactical spell-value family
+    // (get_dispel_value 0x439bc0, get_antimagic_value 0x439d40,
+    // get_backlash_value 0x439de0, get_cure_value 0x439c30,
+    // get_defense_skill_value 0x438910): each opens a /GX frame,
+    // reserves 0x548 bytes of stack and CALLS a copy constructor with
+    // the source army in the single stack argument, then calls a
+    // destructor at scope exit with `mov [ebp-4], -1` in front of it.
+    // A class whose copy is memberwise-trivial gets an inline `rep
+    // movsd` and no EH frame, so `army` owns non-trivial members
+    // (the DC roster's std::vector<army*> / std::deque<SpellID>) -
+    // declaring the pair here is what reproduces the retail calls.
+    // DECLARED, NOT DEFINED: army.obj is not an admitted unit, so both
+    // stay unresolved externals in the candidate link's punch list.
+    army(const army& other);
+    ~army();
+
     int FindPath(int fpTargetCellIndex, int maxMoves,
                  unsigned char bMoveUnlimited, unsigned char bLiteralTarget);
     unsigned char ValidPath(int destIndex, unsigned char bLiteralTest);
@@ -145,6 +180,16 @@ public:
     long get_average_damage(const army* enemy, unsigned char ranged_attack,
                             long amount, unsigned char limit_damage,
                             long distance) const;               // 0x442780
+    // 0x443e30 (257 B, ret 0x10 - four stack args, `this` the
+    // attacker): null target answers 0, then it runs the same
+    // base-damage / attacker-reduction / hero-defense-factor chain
+    // get_average_damage does. UNNAMED in every roster (the DC dump,
+    // the HD name map and IDA all leave it blank); ai_tactical's
+    // get_attack_skill_value and get_defense_skill_value are its only
+    // callers, both asking "what would a 100-creature stack of mine do
+    // to this target?" - so the name below is a bootstrap invention.
+    long get_estimated_damage(const army* target, long amount,
+                              unsigned char ranged, long distance) const;
     int get_second_grid_index() const;                          // 0x4466a0
     long get_AI_target_time(long speed) const;                  // 0x448bd0
     long get_total_combat_value(long lowest_attack,

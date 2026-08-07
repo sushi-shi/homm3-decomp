@@ -5,6 +5,25 @@
 #include <math.h>
 #include <string.h>
 #include "ai_tactical.h"
+#include "findpath.h"
+
+// VC6's own <xutility> reference-returning min (`_cpp_min`, what the
+// <algorithm> min macro expands to). get_cure_value 0x439c30 homes
+// BOTH operands in stack slots, compares them and then selects between
+// their ADDRESSES - the template's shape, not a by-value helper.
+// Declared file-locally so the TU does not pull the STL surface in
+// (P2.3 stays open); ai_combat.cpp carries the same pair.
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
 
 // The AI's luck/morale weights. Retail LOADS all four from .rdata
 // instead of folding them into immediates, which is what pins them as
@@ -458,31 +477,126 @@ unsigned char type_AI_spellcaster::is_last_action()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:862
-// Blocked on combatManager modelling: the body walks armies through
-// two biased bases (manager + 0x577c and + 0x575c) and compares
-// against the manager words at 0x132b8/0x132bc/0x132c0, none of which
-// a consumer has proven yet.
+// Residual (85.6%): retail MEMORY-HOMES the first loop's counter
+// (mov [ebp-4],0 / reload-inc-store each turn) and therefore has ECX
+// free to hold creatureId across the whole body, which lets it load
+// disabled_290 / disabled_2c0 into EBX instead of comparing them in
+// place; our CL enregisters the counter in ECX and every scratch pair
+// in both loops swaps with it. Tried and rejected: declaring `count`
+// before `current` (80.1%), spelling the three creatureId bit tests
+// without the unsigned char step (81.3%, and it folds shr/test cl into
+// a single test dword), and `break` + `if (i >= count) return 1` after
+// the loop instead of the goto (83.9%, one redundant compare).
+// Register-homing family.
+// The two "biased bases" the carcass flagged (manager + 0x577c and
+// + 0x575c) are just armies[side][i].disabled_2b0 / .disabled_290 with
+// the field offset folded into the induction variable, and the manager
+// words at 0x132b8/0x132bc are the acting stack's (side, slot) pair -
+// the flattened index side*21 + slot is the same one hexcell::get_army
+// uses. Nothing here needed a new leaf.
 VA(0x00436c60, 0x1C4)  // anchor-global, dc 0x3d838
 unsigned char type_AI_spellcaster::should_attack_now(const army* enemy)
 {
-    // @stub
+    if (params.kills_only)
+        return 1;
+    const army* current = &gpCombatManager->armies[gpCombatManager->actingSide]
+                                                  [gpCombatManager->actingSlot];
+    long count = gpCombatManager->numArmies[side];
+    for (long i = 0; i < count; i++) {
+        const army* our_army = &gpCombatManager->armies[side][i];
+        if (our_army->creatureId & 0x200040)
+            continue;
+        if (our_army->disabled_290)
+            continue;
+        if (our_army->disabled_2b0)
+            continue;
+        if (our_army->disabled_2c0)
+            continue;
+        unsigned char no_target = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
+        if (no_target & 1)
+            continue;
+        if (our_army != current)
+            goto found;
+    }
+    return 1;
+found:
+    if (current->combatSide == side && current->AI_target == enemy) {
+        unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(current->creatureId) >> 16);
+        if (current->get_AI_target_time(current->GetSpeed()) == 1
+                && !current->can_shoot(0)
+                && (flags & 1) == 0)
+            return 1;
+    }
+    if ((field_14 & (1 << enemy->bitIndex)) == 0)
+        return 0;
+    long total = gpCombatManager->numArmies[side];
+    for (long j = 0; j < total; j++) {
+        const army* our_army = &gpCombatManager->armies[side][j];
+        unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 21);
+        if (flags & 1)
+            continue;
+        if (our_army->disabled_290)
+            continue;
+        if (our_army->disabled_2b0)
+            continue;
+        if (our_army->disabled_2c0)
+            continue;
+        if (our_army->creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        if (our_army == current)
+            continue;
+        if (our_army->field_190 > enemy->field_190)
+            return 0;
+    }
+    return 1;
 }
 
 // E:\gamedcs\ai_tactical.cpp:912
-// Blocked on two unclaimed spells.obj leaves: 0x5a78e0 takes
-// (base_damage, spell, our_hero, target_hero, target, 0) and 0x5a8090
-// returns a float work-chance for (spell, side, target, 0, 1,
-// creature_spell) - the DC prototypes are combatManager::
-// ModifySpellDamage and combatManager::SpellCastWorkChance, but
-// neither address is located in src/spells.cpp yet.
+// Residual (93.2%): register colouring downstream of one pick - retail
+// loads creature_spell into DL (leaving EAX free to normalise
+// `!= 0` with xor/setne al), our CL loads it into AL after homing
+// `damage` and normalises through ECX, and every later scratch pair
+// swaps with it. Tried and rejected: folding both spells.obj calls
+// into one multiply expression so `damage` becomes an unnamed temp
+// (69.4%). Register-homing family.
+// The work chance is a FLOAT and the damage stays float all the way to
+// __ftol (fild dword / fstp DWORD / fmul dword) - the /Op float
+// round-trip, not the double one the rest of the TU uses. The two
+// spells.obj leaves it calls (0x5a78e0 ModifySpellDamage, 0x5a8090
+// SpellCastWorkChance) are declared on combatManager but claimed
+// nowhere yet; their reloc names stay working labels.
 VA(0x00436e30, 0x125)  // anchor-global, dc 0x3d96c
 long type_AI_spellcaster::get_damage_value(SpellID spell, long base_damage, const hero* target_hero, const army* target)
 {
-    // @stub
+    unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(target->creatureId) >> 21);
+    if ((immune & 1) || target->creatureType == CREATURE_ARROW_TOWER)
+        return 0;
+    long damage = gpCombatManager->ModifySpellDamage(base_damage, spell, our_hero,
+                                                     target_hero, target, 0);
+    long value = static_cast<long>(
+        gpCombatManager->SpellCastWorkChance(spell, side, target, 0, 1,
+                                             creature_spell != 0) * damage);
+    if (value <= 0)
+        return 0;
+    value = target->get_loss_combat_value(params.lowest_attack, params.lowest_defense,
+                                          target->can_shoot(0),
+                                          _cpp_min(target->get_total_hit_points(0), value),
+                                          params.kills_only);
+    unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(target->creatureId) >> 21);
+    if (target->disabled_290 || target->disabled_2b0 || target->disabled_2c0
+            || (flags & 1)
+            || target->creatureType == CREATURE_FIRST_AID_TENT
+            || target->creatureType == CREATURE_AMMO_CART) {
+        long total = target->get_total_combat_value(params.lowest_attack,
+                                                    params.lowest_defense);
+        if (total > value)
+            value = value * 2 - total;
+    }
+    return value;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:953
 VA(0x00436f60, 0x45)  // anchor-global, dc 0x3da7c
@@ -597,14 +711,74 @@ long type_AI_spellcaster::get_frenzy_value(const army* our_army, type_enchant_da
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:1256
-// EH-bearing (P2.2): retail opens with push -1 / push <handler> /
-// mov eax,fs:[0] - blocked until the synth-PDB EH scope lands.
+// Residual (99.9%): FRAME-SLOT COLOURING ONLY - every instruction and
+// every reloc matches; the four 8-byte double slots are permuted.
+// Retail colours old_damage/increase/weight into the topmost slot
+// (ebp-0x14) and scale into ebp-0x24 (so the spilled `this` shares
+// scale's high half at ebp-0x20); our CL colours old_damage together
+// with factor at the bottom (ebp-0x2c) and scale at ebp-0x1c. Tried
+// and rejected: hoisting the factor/scale declarations to the top of
+// the body (identical output - VC6 orders these slots by live range,
+// not by declaration), and dropping the two named damage locals for
+// one inlined division (99.1%). Register-homing family.
+// The attack twin of get_defense_skill_value: same copy-and-re-price
+// opening, then get_defense_boost_value's own tail inlined by hand -
+// the odds-scaled `(sqrt(factor) - 1) * total * weight` ladder. The
+// only new step is the creatureId bit-26 stack (the same flag
+// get_speed_value reads), which docks one turn's worth of the odds
+// window off the scale and floors it at zero.
 VA(0x00437800, 0x1F5)  // anchor-global, dc 0x3e3bc
 long type_AI_spellcaster::get_attack_skill_value(const army* our_army, const army* enemy, long duration, long bonus)
 {
-    // @stub
+    if (field_1c)
+        return 0;
+    army test_army = *our_army;
+    test_army.attackSkill += bonus;
+    unsigned char ranged = our_army->can_shoot(0);
+    double old_damage = our_army->get_estimated_damage(enemy, 100, ranged, 0);
+    double new_damage = test_army.get_estimated_damage(enemy, 100, ranged, 0);
+    double increase = new_damage / old_damage;
+    long damage = our_army->get_average_damage(enemy, our_army->can_shoot(0),
+                                               our_army->numTroops, 1, 0);
+    double factor = increase;
+    long boosted = static_cast<long>(damage * increase);
+    long enemy_hits = enemy->get_total_hit_points(0);
+    if (boosted > enemy_hits) {
+        factor = static_cast<double>(enemy_hits) / static_cast<double>(damage);
+        boosted = enemy_hits;
+    }
+    long value;
+    if (boosted <= damage) {
+        value = 0;
+    } else {
+        long odds = params.odds;
+        double scale;
+        if (duration >= odds)
+            scale = 1.0;
+        else
+            scale = static_cast<double>(duration) / static_cast<double>(odds);
+        double weight;
+        unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
+        if (slow_flag & 1) {
+            scale -= 1.0 / static_cast<double>(odds);
+            if (scale < 0.0)
+                weight = 0.0;
+            else
+                weight = scale;
+        } else {
+            weight = scale;
+        }
+        double total = static_cast<double>(our_army->get_total_combat_value(params.lowest_attack,
+                                                                            params.lowest_defense));
+        value = static_cast<long>((sqrt(factor) - 1.0) * total * weight);
+    }
+    return value;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1281
 DC_ONLY(0x3e4a0, 0x6A)
@@ -675,16 +849,30 @@ long type_AI_spellcaster::get_defense_boost_value(const army* our_army, const ar
     return static_cast<long>((sqrt(increase) - 1.0) * total * scale);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1472
-// EH-bearing (P2.2): retail opens with push -1 / push <handler> /
-// mov eax,fs:[0] - blocked until the synth-PDB EH scope lands.
+// The spell-value family's canonical shape: copy the army, mutate the
+// copy's own stat, and ask the SAME leaf twice - once about the real
+// stack, once about the copy - for the before/after ratio the boost
+// pricer wants. `ranged` is homed as a byte in the dead our_army
+// parameter slot and then PUSHED AS A FULL DWORD (garbage upper bytes
+// and all): legal because 0x443e30 declares that parameter
+// `unsigned char`, so only the low byte is ever read.
 VA(0x00438910, 0xFB)  // anchor-global, dc 0x3ec10
 long type_AI_spellcaster::get_defense_skill_value(const army* our_army, long duration, long bonus)
 {
-    // @stub
+    const army* enemy = worst_enemies[our_army->bitIndex].enemy;
+    if (!enemy)
+        return 0;
+    army test_army = *our_army;
+    test_army.defenseSkill += bonus;
+    unsigned char ranged = enemy->can_shoot(0);
+    double old_damage = enemy->get_estimated_damage(our_army, 100, ranged, 0);
+    double new_damage = enemy->get_estimated_damage(&test_army, 100, ranged, 0);
+    double increase = old_damage / new_damage;
+    return get_defense_boost_value(our_army, enemy, duration, increase);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1498
 DC_ONLY(0x3ed34, 0x174)
@@ -900,41 +1088,86 @@ long type_AI_spellcaster::get_cancel_value(army* current_army, unsigned char bad
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:2180
-// EH-bearing (P2.2): retail opens with push -1 / push <handler> /
-// mov eax,fs:[0] - blocked until the synth-PDB EH scope lands.
+// THE SPELL-VALUE FAMILY'S SHAPE (2026-08-07): "what would this stack
+// be worth if the spell had already landed?" is answered by making a
+// REAL COPY of the army on the stack, mutating the copy, and asking
+// the ordinary combat-value leaves about it. That is the 0x548-byte
+// `sub esp` plus copy-ctor/dtor pair every member of the family opens
+// with, and the destructor is what forces the /GX frame - so these are
+// NOT blocked on the synth-PDB EH scope after all. Dispel is the
+// degenerate case: cancel every spell on the copy and price the
+// difference; `caster` is dead.
 VA(0x00439bc0, 0x6E)  // linkorder, dc 0x40348
 long type_AI_spellcaster::get_dispel_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    army test_army = *our_army;
+    return get_cancel_value(&test_army, 0);
 }
 
 // E:\gamedcs\ai_tactical.cpp:2191
-// EH-bearing (P2.2): retail opens with push -1 / push <handler> /
-// mov eax,fs:[0] - blocked until the synth-PDB EH scope lands.
+// Residual (95.5%): register colouring - retail parks the spell's
+// mastery bonus in EDX (so ECX is free to pre-load topCreatureDamage
+// before the add) and keeps the _cpp_min result in EDX while testing
+// field_1c in AL; ours holds them in ECX and EAX respectively, which
+// renames the whole tail. Tried and rejected: evaluating the mastery
+// bonus before the power product, and the `&&` form of the field_1c
+// guard instead of nested ifs (both 95.5%). Register-homing family.
+// Cure prices two things at once: dispelling the bad spells off the
+// copy (get_cancel_value with bad_spells_only = 1) and the hit points
+// it puts back, capped at what the top creature has actually lost -
+// the `lea &a / jl / lea &b / mov [eax]` pair is _cpp_min's
+// reference-returning selection, not a cmov-style ternary.
 VA(0x00439c30, 0x10F)  // linkorder, dc 0x403c0
 long type_AI_spellcaster::get_cure_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    army test_army = *our_army;
+    long value = get_cancel_value(&test_army, 1);
+    int healing = caster.get_mastery_value()
+                  + akSpellTraits[SPELL_CURE].power_factor * caster.power;
+    int healed = _cpp_min(healing, our_army->topCreatureDamage);
+    if (field_1c) {
+        if (our_army->topCreatureDamage + our_army->AI_expected_damage
+                < our_army->hitPoints)
+            return value;
+    }
+    if (healed > 0)
+        value = static_cast<long>(
+            our_army->get_unit_combat_value(params.lowest_attack,
+                                            params.lowest_defense,
+                                            our_army->can_shoot(0), 0)
+            * healed / our_army->hitPoints + value);
+    return value;
 }
 
 // E:\gamedcs\ai_tactical.cpp:2220
-// EH-bearing (P2.2): retail opens with push -1 / push <handler> /
-// mov eax,fs:[0] - blocked until the synth-PDB EH scope lands.
 VA(0x00439d40, 0x94)  // linkorder, dc 0x40570
 long type_AI_spellcaster::get_antimagic_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    army test_army = *our_army;
+    long value = get_cancel_value(&test_army, 0);
+    value += get_protection_value(our_army, 15,
+                                  akSpellTraits[SPELL_ANTI_MAGIC].mastery_bonus[caster.mastery],
+                                  caster.duration, 0);
+    return value;
 }
 
 // E:\gamedcs\ai_tactical.cpp:2235
-// EH-bearing (P2.2): retail opens with push -1 / push <handler> /
-// mov eax,fs:[0] - blocked until the synth-PDB EH scope lands.
+// The army copy is DEAD here - built, never read, destroyed. Retail
+// keeps it (a non-trivial ctor/dtor pair is a side effect), which is
+// itself the proof that the family's copy is written unconditionally
+// at the top of each body rather than inside the branch that uses it.
 VA(0x00439de0, 0x94)  // linkorder, dc 0x405d4
 long type_AI_spellcaster::get_backlash_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    army test_army = *our_army;
+    return get_protection_value(our_army, 15, 5, caster.duration,
+                                (50 - caster.get_mastery_value()) * 2);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2249
 VA(0x00439e80, 0x290)  // linkorder, dc 0x40628
@@ -987,12 +1220,65 @@ long type_AI_spellcaster::get_berserk_value(const army* enemy, type_enchant_data
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:2416
+// Residual (18.2%) - SEMANTICS COMPLETE, CODEGEN NOT. Every leaf, every
+// branch and every constant below is read off the retail bytes, but our
+// CL materialises a zero register at the top of the body and folds the
+// three disabled-counter guards into `cmp mem, ebx`, where retail loads
+// each counter and tests it; that one peephole re-colours the whole
+// function and moves the loop-base hoist behind the turns computation.
+// Tried and rejected: separate ifs for the three guards instead of the
+// || chain (no change), and sinking `best`'s initialisation past
+// SeedCombatPosition (16.2%). Left as a reconstruction for the next
+// pass rather than a stub.
+// Hypnotising a stack is priced as "whatever it would do to its own
+// side": the search is seeded with the victim's reach for as many
+// turns as the spell lasts, and every OTHER stack on the enemy side
+// that the seed marked reachable is run through get_traitor_value,
+// keeping the best.
 VA(0x0043a500, 0x16E)  // linkorder, dc 0x40ac0
 long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    if (field_1c)
+        return 0;
+    if (enemy->disabled_290)
+        return 0;
+    if (enemy->disabled_2b0)
+        return 0;
+    if (enemy->disabled_2c0)
+        return 0;
+    unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 21);
+    if (flags & 1)
+        return 0;
+    if (enemy->creatureType == CREATURE_FIRST_AID_TENT
+            || enemy->creatureType == CREATURE_AMMO_CART)
+        return 0;
+    long best = 0;
+    long turns = _cpp_min(akHypnotizeTurns[caster.mastery], params.odds);
+    unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 26);
+    if (slow_flag & 1)
+        turns--;
+    if (turns == 0)
+        return 0;
+    gpSearchArray->SeedCombatPosition(enemy, side, enemy->field_c4 * turns, 0, -1);
+    long count = gpCombatManager->numArmies[enemy_side];
+    for (long i = 0; i < count; i++) {
+        const army* enemy_army = &gpCombatManager->armies[enemy_side][i];
+        if (enemy_army == enemy)
+            continue;
+        unsigned char other_flags = static_cast<unsigned char>(static_cast<unsigned>(enemy_army->creatureId) >> 21);
+        if (other_flags & 1)
+            continue;
+        if (!gpCombatManager->cells[enemy_army->gridIndex].field_4a)
+            continue;
+        best = _cpp_max(get_traitor_value(enemy, enemy_army), best);
+    }
+    return best;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2455
 VA(0x0043a670, 0x291)  // anchor-global, dc 0x40bb8

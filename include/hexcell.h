@@ -32,7 +32,13 @@ public:
     int field_1c;
     signed char deadArmySide[14]; // +0x20
     signed char deadArmySlot[14]; // +0x2e
-    char pad_3c[0x10];
+    char pad_3c[0xe];
+    // "This cell is reachable / interesting for the combat search":
+    // ai_tactical's get_hypnotize_value (0x43a500) skips any stack
+    // whose gridIndex cell has it clear, right after seeding the
+    // search. Name pending a writer.
+    unsigned char field_4a;       // +0x4a
+    unsigned char pad_4b;
     unsigned char field_4c;
     signed char field_4d;
     // Object stride is 0x70, byte-proven by ValidAttack's cell access
