@@ -16,21 +16,124 @@ class ds_memsample;
 
 class ds_engine;
 
-// soundManager (baseManager base = 0x38). Byte-proven by the retail
-// ctor 0x599760 and the sample calls: field_38..0x3c cleared, ds@0x3c
-// (the DC name; the DirectSound engine whose non-null gates every AIL
-// call), a 16-dword table at 0x40, field_84/88 cleared, MP3Playing@0x8c
-// (MusicPlaying returns it), then THREE CRITICAL_SECTIONs at 0x90/0xa8/
-// 0xc0 - DC's section_sound_call / section_MP3_change /
-// section_MP3_name_change, initialized in that order.
+// DC-attested verbatim (LF_FIELDLIST 0x1c9c, Size = 8): the pair a
+// loaded-and-playing sample travels as. `playSample` is `void*` in the
+// Dreamcast record; retail hands it straight to AIL_sample_status /
+// AIL_end_sample, so it is typed as the handle here.
+struct SAMPLE2 {
+    sample* resSample;
+    ds_memsample* playSample;
+};
+
+// The 12-byte packet launch_sample heap-allocates (`new`, push 0xc) and
+// hands to its wait thread: a SAMPLE2 followed by the wait time, laid
+// out at +0/+4/+8 exactly as retail stores them. Name unattested.
+struct LaunchedSample {
+    SAMPLE2 sample2;
+    int max_time;
+};
+
+// The thread entry launch_sample hands to _beginthread, retail
+// 0x59a6b0 - a file-static in retail (the delinker bands it under
+// launch_sample), reached only by address-take. Declared non-static
+// here because its body is not claimed; name provisional.
+void __cdecl WaitEndSampleThread(void* arglist);
+
+// Retail .bss 0x699258, DC-attested name (?NULL_SAMPLE2@@3USAMPLE2@@A):
+// the empty pair LoadPlaySample returns on either failure path.
+extern SAMPLE2 NULL_SAMPLE2;
+
+// Retail 0x55c720, reached fastcall with the name in ecx and returning
+// the loaded `sample*` (LoadPlaySample and launch_sample are its only
+// callers here). It lives OUTSIDE the soundmgr span, so this header is
+// only a temporary home until the owning TU is attributed; the name is
+// provisional.
+sample* LoadSampleResource(const char* cSampleName);
+
+// The AIL_sample_status return domain. Only the three members this TU
+// compares against are modelled, and each one's ROLE is byte-proven -
+// but the NAMES are unattested (the Miles headers' own spellings are
+// not in evidence in this tree), so they are role placeholders.
+enum EAilSampleStatus {
+    AIL_SAMPLE_SLOT_FREE = 2,  // MemorySample takes the slot on this
+    AIL_SAMPLE_PLAYING = 4,    // every "is it still running" test
+    AIL_SAMPLE_RESUMABLE = 8   // ResumeSamples only resumes on this
+};
+
+// The AIL_stream_status twin; a separate function, so a separate
+// domain. Name unattested, role byte-proven (StopMP3 only serves and
+// re-spawns when the stream reads this).
+enum EAilStreamStatus {
+    AIL_STREAM_PLAYING = 4
+};
+
+// The sample channel domain. PROVEN extent: the range table at
+// 0x684ab8 holds exactly four rows, and MemorySample's "no free slot"
+// path compares sample::field_28 against 4 - one past the last channel.
+enum ESoundChannel {
+    SOUND_CHANNEL_COUNT = 4
+};
+
+// The soundManager::ConvertVolume iVolumeType domain. Byte-proven:
+// 101 selects gUnk698760 and every other value selects gUnk698764;
+// SetMusicVolume passes 101, MemorySample and ModifySample pass 100.
+// NAMES are unattested ordinal placeholders.
+enum EVolumeType {
+    VOLUME_TYPE_100 = 100,
+    VOLUME_TYPE_101 = 101
+};
+
+// The soundManager::ModifySample sFunction domain. Byte-proven arms:
+// 1 and 100 share a body (set the sample volume; 100 additionally
+// writes the value back into gAilDriverState), 5 starts the sample.
+// NAMES are unattested ordinal placeholders.
+enum ESampleModifyFunction {
+    SAMPLE_MODIFY_1 = 1,
+    SAMPLE_MODIFY_5 = 5,
+    SAMPLE_MODIFY_100 = 100
+};
+
+// soundManager (baseManager base = 0x38, basemgr.h SIZE-asserted).
+//
+// PROVEN layout (2026-08-07), re-derived from the retail ctor 0x599760
+// jointly with MemorySample 0x59a210, ResumeSamples 0x599b90,
+// StopAllSamples 0x599d90 and PauseSamples 0x599c40. It CORRECTS an
+// earlier reading that shifted the whole middle group down by 4: the
+// ctor's `mov [esi+0x34], edx` lands on baseManager::status (offset 52),
+// not on a soundManager member, and every later member sits 4 bytes
+// lower than previously modelled.
+//   0x34  baseManager::status - re-zeroed by this ctor
+//   0x38  field_38  (untouched by the ctor; role unattested)
+//   0x3c  ds        - the DC name; the engine handle whose non-null
+//                     value gates every AIL call (`[ecx+0x3c]` test in
+//                     MemorySample/StopAllSamples/PauseSamples)
+//   0x40  field_40  (second non-null gate in MemorySample; unattested)
+//   0x44  sampleHandles[14] - `lea edx,[ecx+4*esi+0x44]` in
+//                     MemorySample; the 14 extent is PROVEN by the
+//                     channel table at 0x684ab8, four {first,last,next}
+//                     rows covering [0,1) [1,2) [2,6) [6,14)
+//   0x7c  field_7c  - the live handle count; every walker loops
+//                     `for (i = 0; i < field_7c; i++)` (unattested name)
+//   0x80  field_80  (untouched by the ctor; role unattested)
+//   0x84  field_84  - with gbUnk691209 forms the "sound is on" guard
+//   0x88  bChangeSounds - DC-attested (the DC field list has
+//                     bChangeSounds immediately before MP3Playing and
+//                     the three sections, and that tail maps onto
+//                     retail 0x88/0x8c/0x90/0xa8/0xc0 store for store)
+//   0x8c  MP3Playing (unsigned char; MusicPlaying returns it)
+//   0x90/0xa8/0xc0  the three CRITICAL_SECTIONs, initialized in order
+// The ctor's single 16-dword `rep stosd` at 0x40 spans field_40 +
+// sampleHandles + field_7c exactly (1 + 14 + 1 = 16 dwords).
 class soundManager : public baseManager {
 public:
-    int field_34;
     int field_38;
     ds_engine* ds;
-    int sampleHandles[16];
+    int field_40;
+    ds_memsample* sampleHandles[14];
+    int field_7c;
+    int field_80;
     int field_84;
-    int field_88;
+    int bChangeSounds;
     unsigned char MP3Playing;
     CRITICAL_SECTION section_sound_call;
     CRITICAL_SECTION section_MP3_change;
@@ -39,21 +142,114 @@ public:
     soundManager();
     ds_memsample* MemorySample(sample* memSample);
     void StopSample(ds_memsample* inSample);
+    void WaitSample(ds_memsample* sample, int time);
+    void ModifySample(ds_memsample* inSample, short sFunction, long value);
+    void AdjustSoundVolumes();
+    void StopAllSamples(int bStopMusicToo);
+    void SwitchAmbientMusic(int newMusicFileId);
+    void AdjustMusicVolumes();
     int MusicPlaying();
+    void StartMP3(const char* filename, int loopCount, unsigned char bStopSamples);
+    void StopMP3();
     void ResumeStream();          // 0x59ac00
     void ResumeSamples();         // 0x599b90, name provisional
     void PauseSamples();          // 0x599c40, name provisional
     void service_sounds();        // 0x59a7d0; DC SoundMgr.h:140 (header
                                   // inline there, emitted in kb.obj)
+
+    // Retail bodies located this lane and NOT yet claimed - the carcass
+    // still carries both as DC_ONLY (i.e. "no retail body"), which this
+    // lane's evidence contradicts. See the note in soundmgr.cpp; the
+    // promotion is a user decision, so only the declarations land here.
+    void SetMusicVolume();                              // 0x5994b0
+    int ConvertVolume(int iVolumeValue, int iVolumeType);  // 0x5996c0
 };
 
 // Retail .bss 0x699290: non-zero suppresses every sound path (a
 // no-sound / silent-mode latch; name provisional).
 extern int gbNoSound;
 
-// Retail .bss 0x69fea0: the seven-dword AIL driver state the ctor
-// clears (name provisional).
-extern int gAilDriverState[7];
+// Retail .bss 0x69fea0. RETYPED this lane: MemorySample stores
+// `mov word ptr [2*esi + 0x69fea0], ax` from sample::field_2c with the
+// slot index esi, so this is a 14-entry SHORT table (one per sample
+// handle), not the seven dwords an earlier reading assumed. 14 shorts =
+// 28 bytes = exactly the ctor's seven-dword `rep stosd`. Name kept
+// (provisional) so the one view stays one view.
+extern short gAilDriverState[14];
+
+// Retail .data 0x691209, a byte that is zero in the image. Read only as
+// the second half of the sound-is-on guard `field_84 || gbUnk691209`
+// (AdjustMusicVolumes, ResumeSamples, StopAllSamples, PauseSamples,
+// MemorySample). Ordinal placeholder - the role is proven, the NAME is
+// unattested by any source.
+extern unsigned char gbUnk691209;
+
+// Retail .bss 0x698760 / 0x698764: the two volume settings
+// ConvertVolume selects between - 0x698760 for VOLUME_TYPE_101 (music,
+// what SetMusicVolume asks for), 0x698764 otherwise (samples, what
+// MemorySample and ModifySample ask for). Each is a 1..10 step that
+// ConvertVolume scales by (setting + 1) / 10; outside that range it
+// yields 0, which is also why MemorySample and launch_sample can use
+// 0x698764 as a plain "sound is configured on" gate. Ordinal
+// placeholders - names unattested.
+extern int gUnk698760;
+extern int gUnk698764;
+
+// Retail .bss 0x69fe78: the Miles stream handle. Named from the import
+// contract - it is the sole argument to AIL_stream_status and
+// AIL_service_stream everywhere it appears.
+extern void* gMP3Stream;
+
+// Retail .bss 0x6a3258: a 14-entry side table parallel to
+// soundManager::sampleHandles. PauseSamples writes
+// `AIL_sample_status(h) == 4` into it before stopping each sample,
+// ResumeSamples resumes the flagged slots, and both StopAllSamples and
+// ResumeSamples clear all 14 entries with one `rep stosd`.
+extern int gSampleWasPlaying[14];
+
+// The per-channel slot ranges MemorySample allocates out of. PROVEN
+// (2026-08-07): MemorySample indexes this table with sample::field_28
+// through `lea eax,[ch+2*ch]; lea edi,[4*eax + 0x684ab8]`, i.e. a
+// 12-byte stride, and reads three ints from it. The retail image holds
+// exactly four rows - {0,1,0} {1,2,1} {2,6,2} {6,14,6} - after which
+// 0x684ae8 starts the terrain-music name table, so the channel domain
+// is 0..3 and the slot domain is [0,14). Member and type names are
+// unattested; the roles are byte-proven.
+struct SoundChannelRange {
+    int first;
+    int last;
+    int next;
+};
+extern SoundChannelRange gSoundChannels[4];  // 0x684ab8
+
+// Retail .bss 0x6a3290 and 0x6a3394, 0x104 bytes apart: the pending MP3
+// name and the copy ResumeStream promotes it to under
+// section_MP3_name_change. Names provisional.
+extern char gMP3Name[260];
+extern char gMP3NamePlaying[260];
+
+// Retail .bss 0x69fe90 / 0x69fe9c: a dword ResumeStream copies from the
+// first to the second alongside the name promotion. Ordinal
+// placeholders - names unattested.
+extern int gUnk69fe90;
+extern int gUnk69fe9c;
+
+// The thread entry ResumeStream and SetMusicVolume hand to
+// _beginthread: retail 0x59a840. The name is BORROWED, not evidence:
+// the DC roster's ProcessStopAndPlayMP3 (dc 0x14b7f4, 244 B) is the
+// only row whose role fits, but the carve gives 0x59a840 a size of
+// 955 B - a 3.9x ratio, well outside the 0.3-2.5x SH4->x86 band - so
+// either the pairing is wrong or that carve row spans more than one
+// function. Deliberately NOT claimed.
+void __cdecl ProcessStopAndPlayMP3(void* arglist);
+
+// Retail .rdata/.data 0x684ae8: the nine terrain music base names
+// SwitchAmbientMusic hands to StartMP3, indexed [id - 2] for ids 2..10
+// ("Water", "Grass", "Snow", "Swamp", "Lava", "Sand", "Dirt", "Rough",
+// "Underground"). The folded base retail encodes is 0x684ae0 = the
+// array minus the two-dword bias, which is why the delinker invented a
+// data symbol there.
+extern const char* const gTerrainMusic[9];
 
 // Miles Sound System imports. The DLL exports carry their own leading
 // underscore (retail IAT: __imp___AIL_end_sample@4), which is Miles'
@@ -61,9 +257,49 @@ extern int gAilDriverState[7];
 extern "C" {
 __declspec(dllimport) void __stdcall _AIL_end_sample(ds_memsample* sample);
 __declspec(dllimport) int __stdcall _AIL_sample_status(ds_memsample* sample);
+__declspec(dllimport) void __stdcall _AIL_stop_sample(ds_memsample* sample);
+__declspec(dllimport) void __stdcall _AIL_resume_sample(ds_memsample* sample);
+__declspec(dllimport) void __stdcall _AIL_init_sample(ds_memsample* sample);
+__declspec(dllimport) void __stdcall _AIL_start_sample(ds_memsample* sample);
+__declspec(dllimport) int __stdcall _AIL_set_sample_file(ds_memsample* sample,
+                                                         const void* start,
+                                                         int block);
+__declspec(dllimport) void __stdcall _AIL_set_sample_loop_count(ds_memsample* sample,
+                                                                int loops);
+__declspec(dllimport) void __stdcall _AIL_set_sample_volume(ds_memsample* sample,
+                                                            int volume);
+__declspec(dllimport) int __stdcall _AIL_stream_status(void* stream);
+__declspec(dllimport) void __stdcall _AIL_service_stream(void* stream, int fillup);
+__declspec(dllimport) void __stdcall _AIL_serve();
 }
 #define AIL_end_sample _AIL_end_sample
 #define AIL_sample_status _AIL_sample_status
+#define AIL_stop_sample _AIL_stop_sample
+#define AIL_resume_sample _AIL_resume_sample
+#define AIL_init_sample _AIL_init_sample
+#define AIL_start_sample _AIL_start_sample
+#define AIL_set_sample_file _AIL_set_sample_file
+#define AIL_set_sample_loop_count _AIL_set_sample_loop_count
+#define AIL_set_sample_volume _AIL_set_sample_volume
+#define AIL_stream_status _AIL_stream_status
+#define AIL_service_stream _AIL_service_stream
+#define AIL_serve _AIL_serve
+
+// The CRT thread spawner retail reaches with a plain `call __beginthread`
+// (msvcrt, __cdecl). Declared here rather than via <process.h> so the
+// TU's import-call forms stay under this header's control.
+extern "C" unsigned long __cdecl _beginthread(void(__cdecl* start_address)(void*),
+                                              unsigned stack_size,
+                                              void* arglist);
+
+// The thread entry retail hands to _beginthread in StopMP3,
+// StopAllSamples and PauseSamples. Its retail body is 0x59a7d0 - the
+// same address kb.h names as the soundManager::service_sounds member.
+// _beginthread's parameter type cannot accept a pointer-to-member, so
+// retail's soundmgr.cpp must have had a free-function declaration of
+// that body in scope; this is that view. TWO VIEWS OF ONE ADDRESS -
+// flagged for supervised adjudication, not claimed by either side.
+void __cdecl service_sounds(void* arglist);
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* gpSoundManager;

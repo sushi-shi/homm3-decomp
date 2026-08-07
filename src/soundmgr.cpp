@@ -3,68 +3,180 @@
 // 25 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <windows.h>
+#include <string.h>
 #include "soundmgr.h"
 #include "sample.h"
+#include "kbwin.h"
+
+// Provisional file-static, /Ob2-inlined at both of its call sites (no
+// out-of-line body sits anywhere in the soundmgr span). The manager
+// travels as a parameter because the two callers disagree about which
+// one they mean: PauseSamples passes `this`, WaitSample passes the
+// global. Name unattested.
+static int SamplePlaying(soundManager* mgr, ds_memsample* inSample)
+{
+    if (gbNoSound)
+        return 0;
+    if (!mgr->ds)
+        return 0;
+    if (!inSample)
+        return 0;
+    EnterCriticalSection(&mgr->section_sound_call);
+    int playing = AIL_sample_status(inSample) == AIL_SAMPLE_PLAYING;
+    LeaveCriticalSection(&mgr->section_sound_call);
+    return playing;
+}
+
+// The stream-service tail MemorySample and launch_sample both run
+// after starting a sample. Provisional file-static: /Ob2 inlines it at
+// both sites, so no out-of-line body exists to claim. Name unattested.
+static void ServeSampleStream()
+{
+    // The section is named, the manager is not: retail keeps
+    // `&gpSoundManager->section_sound_call` in one register across the
+    // block but reloads gpSoundManager for the MP3Playing read.
+    CRITICAL_SECTION* section = &gpSoundManager->section_sound_call;
+    EnterCriticalSection(section);
+    AIL_serve();
+    if (gMP3Stream && gpSoundManager->MP3Playing && !bShutDownDone)
+        AIL_service_stream(gMP3Stream, 1);
+    Sleep(1);
+    LeaveCriticalSection(section);
+}
 
 #if 0  // @carcass
 
 // E:\gamedcs\soundmgr.cpp:69
-DC_ONLY(0x14b07c, 0xF4)
+// LOCATED 2026-08-07 and claimed; body still to reconstruct. Evidence:
+//   * order-map: the DC roster runs SetMusicVolume < ConvertVolume <
+//     soundManager::soundManager, and 0x5994b0 < 0x5996c0 < 0x599760
+//     with 0x599760 already claimed as the ctor - the two carve rows
+//     immediately below it are the only slots that fit.
+//   * anchor-callee: AdjustMusicVolumes (0x59a1b0) ends in a tail
+//     `jmp 0x5994b0` with `this` still in ecx and nothing pushed -
+//     exactly a `void SetMusicVolume()` thiscall.
+//   * body: it opens with `push 0x65; push 0x7f; call 0x5996c0`, i.e.
+//     ConvertVolume(127, 101), and spends the result on
+//     AIL_set_stream_volume - which is what SetMusicVolume does.
+//   * size plausibility: 528/244 = 2.16x, inside the 0.3-2.5x band.
+// FULL DECODE (528 B), left unwritten because five cross-TU views are
+// still missing:
+//   if (gbNoSound) return;
+//   int vol = ConvertVolume(127, VOLUME_TYPE_101);
+//   EnterCriticalSection(&gpSoundManager->section_MP3_change);
+//   EnterCriticalSection(&gpSoundManager->section_sound_call);
+//     // NOTE both Enters go through gpSoundManager, both Leaves
+//     // through `this` - transcribe that asymmetry faithfully
+//   if (vol != 0) {
+//     if (gMP3Stream) {
+//       if (MP3Playing) AIL_set_stream_volume(gMP3Stream, vol);
+//       else            ResumeStream();      // /Ob2-inlined verbatim
+//     } else if (gUnk6993d0->field_34) {
+//       char buf[0x50];
+//       sprintf(buf, <0x66fedc>, Random(1, 4));   // ?Random@@YIHHH@Z
+//       gpSoundManager->StartMP3(buf, 0, 1);      //   at 0x50b230
+//     } else {
+//       int terrain = *(unsigned char*)(gUnk699268->field_58
+//                                       + 0x678330);
+//       if (terrain >= 2 && terrain <= 10)
+//         StartMP3(gTerrainMusic[terrain - 2], 0, 0);
+//     }
+//   } else {
+//     // the StopMP3 shape, but re-spawning the thread at 0x59a830,
+//     // NOT service_sounds (0x59a7d0) - a different entry
+//   }
+//   LeaveCriticalSection(&section_sound_call);
+//   LeaveCriticalSection(&section_MP3_change);
+// Missing views: the two manager globals 0x6993d0 (field_34) and
+// 0x699268 (field_58), the terrain byte table at 0x678330, the
+// sprintf format literal at 0x66fedc, and the thread entry 0x59a830 -
+// which has NO carve row (0x59a7d0 + 81 ends at 0x59a821 and the next
+// row starts at 0x59a840), so the carve is missing a boundary there.
+VA(0x005994b0, 0x210)  // anchor-callee + order-map, dc 0x14b07c
 void soundManager::SetMusicVolume()
-{
-    // @stub
-}
-
-// E:\gamedcs\soundmgr.cpp:121
-DC_ONLY(0x14b170, 0x7C)
-int soundManager::ConvertVolume(int iVolumeValue, int iVolumeType)
 {
     // @stub
 }
 
 #endif  // @carcass
 
+// E:\gamedcs\soundmgr.cpp:121
+// LOCATED 2026-08-07 by the same order-map, and pinned independently
+// twice over: MemorySample calls it `push 0x64; push [sample+0x2c]`
+// with ecx = this and feeds the result to AIL_set_sample_volume, and
+// SetMusicVolume calls it `push 0x65; push 0x7f` and feeds the result
+// to AIL_set_stream_volume. `this` is never read - the body only
+// selects between the two volume-setting globals.
+// The two arms are written LONGHAND on purpose. Factoring them into a
+// shared helper is the obvious spelling and it is wrong twice over:
+// retail duplicates the range check, the divide and all three clamps
+// per arm, and - decisively - the small version drops under VC6's
+// /Ob2 budget, so ConvertVolume gets inlined into MemorySample and
+// ModifySample and knocks both off exact. Retail calls it at all
+// three sites.
+// Residual (67.5%): register-carrier choice, the same family as
+// MemorySample. Control flow, both arms, the /10 magic-multiply and
+// all three clamps line up instruction for instruction; retail carries
+// `result` in edx (and so ends every exit with `mov eax,edx`) while
+// ours carries it in eax and writes the clamps straight into the
+// return register - which also turns retail's `lea ecx,[eax+1]` into
+// our `inc ecx`. Tried and rejected: a shared ScaleVolume helper
+// (folds the duplication AND drops under the /Ob2 budget, regressing
+// two exact callers); naming the global in a `setting` local (VC6
+// already CSE'd it - byte-identical).
+VA(0x005996c0, 0x97)  // anchor-callee, dc 0x14b170
+int soundManager::ConvertVolume(int iVolumeValue, int iVolumeType)
+{
+    int result = 0;
+    if (iVolumeType == VOLUME_TYPE_101) {
+        int setting = gUnk698760;
+        if (setting >= 1 && setting <= 10) {
+            result = (setting + 1) * iVolumeValue / 10;
+            if (result < 1)
+                result = 1;
+            if (result < 0)
+                result = 0;
+            if (result > 127)
+                result = 127;
+        }
+    } else {
+        int setting = gUnk698764;
+        if (setting >= 1 && setting <= 10) {
+            result = (setting + 1) * iVolumeValue / 10;
+            if (result < 1)
+                result = 1;
+            if (result < 0)
+                result = 0;
+            if (result > 127)
+                result = 127;
+        }
+    }
+    return result;
+}
+
 // E:\gamedcs\soundmgr.cpp:165
-// Residual (92.6%): the two rep-stosd clears choose different base
-// registers than retail - island-track class.
+// Residual (99.0%): ONE scheduling delta - retail emits
+// `mov byte ptr [esi+0x8c], dl` (MP3Playing = 0) BEFORE the compiler's
+// vptr store, ours after; every offset, both rep stosd counts and all
+// six scalar stores are otherwise byte-identical. Tried and rejected:
+// `status = 0` ahead of `MP3Playing = 0` (moves the [0x34] store up
+// instead, strictly worse); the memsets ahead of the scalar stores
+// (pushes the byte store past both rep stosd). The vptr store's
+// position is picked by VC6's post-optimizer scheduler, not by
+// statement order - no source spelling reached it.
 VA(0x00599760, 0x67)  // anchor-global, dc 0x14b1ec
 soundManager::soundManager()
 {
     MP3Playing = 0;
-    field_38 = 0;
-    for (int index = 0; index < 7; index++)
-        gAilDriverState[index] = 0;
-    for (int slot = 0; slot < 16; slot++)
-        sampleHandles[slot] = 0;
+    status = 0;
+    memset(gAilDriverState, 0, sizeof(gAilDriverState));
+    memset(&field_40, 0, sizeof(field_40) + sizeof(sampleHandles) + sizeof(field_7c));
     field_84 = 0;
     ds = 0;
-    field_88 = 0;
+    bChangeSounds = 0;
     InitializeCriticalSection(&section_sound_call);
     InitializeCriticalSection(&section_MP3_change);
     InitializeCriticalSection(&section_MP3_name_change);
-}
-
-#if 0  // @carcass
-
-// E:\gamedcs\soundmgr.cpp:322
-DC_ONLY(0x14b240, 0x30)
-int soundManager::Open(int newPriority)
-{
-    // @stub
-}
-
-// E:\gamedcs\soundmgr.cpp:410
-DC_ONLY(0x14b270, 0x34)
-void soundManager::Close()
-{
-    // @stub
-}
-
-// E:\gamedcs\soundmgr.cpp:464
-DC_ONLY(0x14b2a4, 0x4)
-int soundManager::Main(message* msg)
-{
-    // @stub
 }
 
 // Retail-only pair (no DC lines; the WinCE build has no app-switch
@@ -77,26 +189,61 @@ int soundManager::Main(message* msg)
 VA(0x00599b90, 0xAB)  // anchor-callee, retail-only
 void soundManager::ResumeSamples()
 {
-    // @stub
+    if (gbNoSound)
+        return;
+    if (!ds)
+        return;
+    if (field_84 == 0 && !gbUnk691209)
+        return;
+    EnterCriticalSection(&section_sound_call);
+    for (int i = 0; i < field_7c; i++)
+        if (gSampleWasPlaying[i] && AIL_sample_status(sampleHandles[i]) == AIL_SAMPLE_RESUMABLE)
+            AIL_resume_sample(sampleHandles[i]);
+    LeaveCriticalSection(&section_sound_call);
+    memset(gSampleWasPlaying, 0, sizeof(gSampleWasPlaying));
 }
 
 VA(0x00599c40, 0x14B)  // anchor-callee, retail-only
 void soundManager::PauseSamples()
 {
-    // @stub
+    if (gbNoSound)
+        return;
+    if (!ds)
+        return;
+    if (field_84 == 0 && !gbUnk691209)
+        return;
+    EnterCriticalSection(&section_sound_call);
+    for (int i = 0; i < field_7c; i++) {
+        gSampleWasPlaying[i] = SamplePlaying(this, sampleHandles[i]);
+        AIL_stop_sample(sampleHandles[i]);
+    }
+    LeaveCriticalSection(&section_sound_call);
+    StopMP3();
 }
 
 // E:\gamedcs\soundmgr.cpp:526
 VA(0x00599d90, 0xEA)  // anchor-global, dc 0x14b2a8
 void soundManager::StopAllSamples(int bStopMusicToo)
 {
-    // @stub
+    if (gbNoSound)
+        return;
+    if (!ds)
+        return;
+    if (field_84 == 0 && !gbUnk691209)
+        return;
+    memset(gSampleWasPlaying, 0, sizeof(gSampleWasPlaying));
+    EnterCriticalSection(&section_sound_call);
+    for (int i = 0; i < field_7c; i++)
+        AIL_end_sample(sampleHandles[i]);
+    LeaveCriticalSection(&section_sound_call);
+    if (bStopMusicToo)
+        StopMP3();
 }
 
-#endif  // @carcass
-
 // E:\gamedcs\soundmgr.cpp:556
-// Residual (97.4%): one register choice around the section pointer.
+// EXACT since the 2026-08-07 layout correction: the old 97.4%/99.96%
+// residual was the `ds` member sitting at 0x40 instead of 0x3c, not a
+// register choice.
 VA(0x00599e80, 0x3D)  // anchor-global, dc 0x14b2c0
 void soundManager::StopSample(ds_memsample* inSample)
 {
@@ -111,51 +258,162 @@ void soundManager::StopSample(ds_memsample* inSample)
     LeaveCriticalSection(&section_sound_call);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\soundmgr.cpp:572
 VA(0x00599ec0, 0x7F)  // dc-bracket forced, dc 0x14b2d8
 void soundManager::WaitSample(ds_memsample* sample, int time)
 {
-    // @stub
+    if (time < 0)
+        time = 4000;
+    unsigned long deadline = GameTime::Get() + time;
+    while (SamplePlaying(gpSoundManager, sample)) {
+        if (static_cast<long>(GameTime::Get() - deadline) >= 0)
+            return;
+        Process1WindowsMessage();
+        PollSound();
+    }
 }
 
 // E:\gamedcs\soundmgr.cpp:597
 VA(0x00599f40, 0xE1)  // anchor-global, dc 0x14b37c
 void soundManager::ModifySample(ds_memsample* inSample, short sFunction, long value)
 {
-    // @stub
+    if (gbNoSound)
+        return;
+    if (!ds)
+        return;
+    if (field_84 == 0 && !gbUnk691209)
+        return;
+    if (!field_40)
+        return;
+    int found = -1;
+    EnterCriticalSection(&section_sound_call);
+    for (int i = 0; i < field_7c; i++) {
+        if (inSample == sampleHandles[i])
+            found = i;
+        switch (sFunction) {
+        case SAMPLE_MODIFY_1:
+        case SAMPLE_MODIFY_100:
+            AIL_set_sample_volume(inSample, ConvertVolume(value, 100));
+            if (found >= 0)
+                gAilDriverState[found] = static_cast<short>(value);
+            break;
+        case SAMPLE_MODIFY_5:
+            AIL_start_sample(inSample);
+            break;
+        }
+    }
+    LeaveCriticalSection(&section_sound_call);
 }
 
 // E:\gamedcs\soundmgr.cpp:691
 VA(0x0059a0c0, 0xEB)  // anchor-global, dc 0x14b42c
 void soundManager::AdjustSoundVolumes()
 {
-    // @stub
+    if (gbNoSound)
+        return;
+    if (!ds)
+        return;
+    if (field_84 == 0 && !gbUnk691209)
+        return;
+    // Slot 0 is skipped: retail starts the walk at &sampleHandles[1]
+    // and &gAilDriverState[1] (`lea eax,[esi+0x48]`, bss_29fea2).
+    for (int i = 1; i < field_7c; i++) {
+        // Named once ahead of the branch: retail hoists the slot load
+        // above the gUnk698764 test into a callee-saved register.
+        ds_memsample* handle = sampleHandles[i];
+        // Positive arm first: retail falls through into the
+        // SamplePlaying test and sinks the `push 0; push 1` arm below
+        // it, which is the layout the if/else-if spelling inverts.
+        if (gUnk698764) {
+            if (SamplePlaying(this, handle))
+                ModifySample(handle, SAMPLE_MODIFY_100, gAilDriverState[i]);
+        } else {
+            ModifySample(handle, SAMPLE_MODIFY_1, 0);
+        }
+    }
 }
 
 // E:\gamedcs\soundmgr.cpp:733
 VA(0x0059a1b0, 0x22)  // anchor-global, dc 0x14b4d4
 void soundManager::AdjustMusicVolumes()
 {
-    // @stub
+    if (gbNoSound)
+        return;
+    if (field_84 == 0 && !gbUnk691209)
+        return;
+    SetMusicVolume();
 }
 
 // E:\gamedcs\soundmgr.cpp:751
 VA(0x0059a1e0, 0x25)  // anchor-global, dc 0x14b500
 void soundManager::SwitchAmbientMusic(int newMusicFileId)
 {
-    // @stub
+    if (newMusicFileId >= 2 && newMusicFileId <= 10)
+        StartMP3(gTerrainMusic[newMusicFileId - 2], 0, 0);
 }
 
 // E:\gamedcs\soundmgr.cpp:759
+// Residual (92.0%): register-homing family. The control flow, the
+// guard sinking, every call and every immediate match; what differs is
+// which of {this, sPtr} loses the tie-break for a callee-saved
+// register. Retail homes `this` at [ebp-4] and gives ebx to sPtr, edi
+// to the channel range; ours keeps `this` in edi and re-reads sPtr
+// from [ebp+8], which also costs the `push 0` peephole in the volume
+// ternary (ours materialises `xor eax,eax; push eax`) and one extra
+// `jmp` in the round-robin arm's layout. Tried and rejected: one
+// `handle` local spanning both blocks (spills it to the frame); two
+// block-scoped locals (no change - VC6 already scoped them);
+// re-indexing sampleHandles[slot] at each use (48.8%, far worse).
 VA(0x0059a210, 0x1DB)  // anchor-global, dc 0x14b528
 ds_memsample* soundManager::MemorySample(sample* sPtr)
 {
-    // @stub
-}
+    // Retail sinks all seven admission guards into ONE shared
+    // `xor eax,eax` exit, so they have to be one condition here: the
+    // split-if spelling duplicates the epilogue seven times (the
+    // adjacent-early-out lever, running the other way round for once).
+    if (!gbNoSound && ds && (field_84 || gbUnk691209) && gUnk698764 && sPtr
+        && field_40 && sPtr->field_2c) {
+        SoundChannelRange* range = &gSoundChannels[sPtr->field_28];
+        EnterCriticalSection(&section_sound_call);
+        int slot = range->first;
+        for (; slot < range->last; slot++)
+            if (AIL_sample_status(sampleHandles[slot]) == AIL_SAMPLE_SLOT_FREE)
+                break;
+        if (slot == range->last) {
+            if (sPtr->field_28 == SOUND_CHANNEL_COUNT) {
+                LeaveCriticalSection(&section_sound_call);
+                return 0;
+            }
+            slot = range->next++;
+            if (range->next >= range->last) {
+                slot = range->first;
+                range->next = range->first;
+            }
+            // Named, not re-indexed: retail loads the slot once into a
+            // callee-saved register and tests/ends that value. The two
+            // names are deliberately separate locals - one variable
+            // spanning both blocks stretches the live range far enough
+            // that VC6 spills it to the frame.
+            ds_memsample* prevHandle = sampleHandles[slot];
+            StopSample(prevHandle);
+        }
 
-#endif  // @carcass
+        gAilDriverState[slot] = static_cast<short>(sPtr->field_2c);
+        ds_memsample* handle = sampleHandles[slot];
+        AIL_init_sample(handle);
+        AIL_set_sample_file(handle, sPtr->data, 0);
+        AIL_set_sample_loop_count(handle, sPtr->field_30);
+        AIL_set_sample_volume(handle,
+                              gUnk698764 ? ConvertVolume(sPtr->field_2c, 100) : 0);
+        AIL_start_sample(handle);
+        sPtr->field_1c = handle;
+        LeaveCriticalSection(&section_sound_call);
+
+        ServeSampleStream();
+        return handle;
+    }
+    return 0;
+}
 
 // E:\gamedcs\soundmgr.cpp:869
 VA(0x0059a3f0, 0x15)  // anchor-global, dc 0x14b644
@@ -166,35 +424,87 @@ int soundManager::MusicPlaying()
     return MP3Playing;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\soundmgr.cpp:877
 VA(0x0059a410, 0x5C)  // anchor-global, dc 0x14b65c
 void ClearMemSample(SAMPLE2 sample2)
 {
-    // @stub
+    if (!sample2.resSample)
+        return;
+    if (bShutDownDone)
+        return;
+    // This is soundManager::StopSample on the global, inlined by /Ob2 -
+    // guard trio, section, AIL_end_sample, section, store for store.
+    gpSoundManager->StopSample(sample2.playSample);
+    sample2.resSample->Dispose();
 }
 
 // E:\gamedcs\soundmgr.cpp:894
 VA(0x0059a470, 0x43)  // anchor-global, dc 0x14b698
 SAMPLE2 LoadPlaySample(const char* cSampleName)
 {
-    // @stub
+    if (!cSampleName)
+        return NULL_SAMPLE2;
+    sample* loaded = LoadSampleResource(cSampleName);
+    if (!loaded)
+        return NULL_SAMPLE2;
+    loaded->field_28 = 2;
+    SAMPLE2 played;
+    played.resSample = loaded;
+    played.playSample = gpSoundManager->MemorySample(loaded);
+    return played;
 }
 
 // E:\gamedcs\soundmgr.cpp:911
 VA(0x0059a4c0, 0xCE)  // anchor-global, dc 0x14b6ec
 void WaitEndSample(SAMPLE2 sample2, int iMilliWait)
 {
-    // @stub
+    if (iMilliWait < 0)
+        iMilliWait = 4000;
+    unsigned long deadline = GameTime::Get() + iMilliWait;
+    // The handle test is loop-invariant and retail hoists it: one test
+    // ahead of the loop, none inside.
+    while (sample2.playSample && SamplePlaying(gpSoundManager, sample2.playSample)) {
+        if (static_cast<long>(GameTime::Get() - deadline) >= 0)
+            break;
+        Process1WindowsMessage();
+        PollSound();
+    }
+    ClearMemSample(sample2);
 }
+
 
 // E:\gamedcs\soundmgr.cpp:976
 VA(0x0059a590, 0x112)  // anchor-global, dc 0x14b780
 void launch_sample(const char* sample_name, int max_time, int channel)
 {
-    // @stub
+    if (gbNoSound)
+        return;
+    if (!gpSoundManager->ds)
+        return;
+    if (gpSoundManager->field_84 == 0 && !gbUnk691209)
+        return;
+    if (!gUnk698764)
+        return;
+    if (!sample_name)
+        return;
+    if (max_time < 0)
+        max_time = 10000;
+    LaunchedSample* launched = new LaunchedSample;
+    launched->sample2.resSample = LoadSampleResource(sample_name);
+    launched->max_time = max_time;
+    if (!launched->sample2.resSample) {
+        delete launched;
+        return;
+    }
+    launched->sample2.resSample->field_28 = channel;
+    launched->sample2.playSample =
+        gpSoundManager->MemorySample(launched->sample2.resSample);
+    ServeSampleStream();
+    if (!bShutDownDone)
+        _beginthread(WaitEndSampleThread, 0, launched);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\soundmgr.cpp:1068
 DC_ONLY(0x14b7e0, 0x12)
@@ -210,26 +520,83 @@ void ProcessStopAndPlayMP3()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\soundmgr.cpp:1288
 VA(0x0059ac00, 0xA9)  // anchor-global, dc 0x14b8e8
 void soundManager::ResumeStream()
 {
-    // @stub
+    EnterCriticalSection(&section_MP3_name_change);
+    if (gMP3Name[0] == 0 || bShutDownDone) {
+        LeaveCriticalSection(&section_MP3_name_change);
+        return;
+    }
+    strcpy(gMP3NamePlaying, gMP3Name);
+    gUnk69fe9c = gUnk69fe90;
+    LeaveCriticalSection(&section_MP3_name_change);
+    EnterCriticalSection(&section_sound_call);
+    AIL_serve();
+    LeaveCriticalSection(&section_sound_call);
+    if (bShutDownDone)
+        return;
+    _beginthread(ProcessStopAndPlayMP3, 0, 0);
 }
 
+#if 0  // @carcass
+
 // E:\gamedcs\soundmgr.cpp:1343
+// DECODE STARTED 2026-08-07 (head verified to +0x178, 853 B total):
+//   if (gbNoSound) return;
+//   if (!ds) return;
+//   if (field_84 == 0 && !gbUnk691209) return;
+//   if (!gUnk698760) return;        // NOTE: 0x698760, a DIFFERENT
+//                                   // global from MemorySample's
+//                                   // gUnk698764 - do not merge them
+//   EnterCriticalSection(&section_MP3_name_change);
+//   if (strcmp(filename, gMP3NamePlaying) == 0) { Leave; return; }
+//     // both compares are VC6's INLINE strcmp intrinsic: the
+//     // two-bytes-per-iteration loop closing with
+//     // `sbb eax,eax; sbb eax,-1`
+//   if (strcmp(filename, gMP3Name) != 0) { ... +0x26f branch ... }
+//   Leave(section_MP3_name_change);
+//   EnterCriticalSection(&section_sound_call);
+//   int st = AIL_stream_status(gMP3Stream);
+//   Leave(section_sound_call);
+//   if (st == AIL_STREAM_PLAYING) return;
+//   if (bStopSamples && !gbNoSound && ds && (field_84 || gbUnk691209)) {
+//       memset(gSampleWasPlaying, 0, sizeof(gSampleWasPlaying));
+//       EnterCriticalSection(&section_sound_call);
+//       for (i = 0; i < field_7c; i++) ...   // the StopAllSamples
+//                                            // body, /Ob2-inlined
+//   }
+//   ... tail from +0x178 untranscribed ...
+// Needs one new global (gUnk698760 @ 0x698760) and the +0x26f arm
+// before a body is honest.
 VA(0x0059acb0, 0x355)  // anchor-global, dc 0x14b924
 void soundManager::StartMP3(const char* filename, int loopCount, unsigned char bStopSamples)
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\soundmgr.cpp:1413
 VA(0x0059b010, 0x6A)  // anchor-global, dc 0x14b974
 void soundManager::StopMP3()
 {
-    // @stub
+    EnterCriticalSection(&section_MP3_change);
+    EnterCriticalSection(&section_sound_call);
+    if (gMP3Stream && AIL_stream_status(gMP3Stream) == AIL_STREAM_PLAYING) {
+        AIL_serve();
+        Sleep(5);
+        if (!bShutDownDone)
+            _beginthread(::service_sounds, 0, 0);
+    }
+    LeaveCriticalSection(&section_sound_call);
+    LeaveCriticalSection(&section_MP3_change);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\soundmgr.cpp:1434
 DC_ONLY(0x14b984, 0x74)
@@ -239,4 +606,3 @@ void soundManager::ThreadStopMP3()
 }
 
 #endif  // @carcass
-
