@@ -369,16 +369,41 @@ void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
 }
 
 // E:\gamedcs\mousemgr.cpp:1026
-// DECODE START 2026-08-06: TCSLock guard (same 0x8 EH shape as
-// CheckUpdate); zeroes a 0x64-byte DDSURFACEDESC on the stack
-// (rep stosd x0x19, then dwSize=0x64); computes a 16-bit colorkey
-// from two byte globals via the divide-by-255 reciprocal idiom
-// (0x80808081 mul, shr edx,7 - i.e. (g*255)/255-style scaling then
-// AND/OR packing); then a vtable call on a surface object
-// ([eax] -> push 0/0x400/&desc/0 ... likely IDirectDrawSurface4::
-// Lock or SetColorKey path). Needs: the two color globals, the
-// surface global, and a DDSURFACEDESC view before the body is
-// honest. Tail untranscribed past +0x60.
+// FULLY TRANSCRIBED 2026-08-07. The 2026-08-06 note above was wrong on
+// one point: the first 0x64-byte stack struct is a DDBLTFX, not a
+// DDSURFACEDESC (0x64 == sizeof(DDBLTFX), and the colorkey lands at
+// +0x50 == DDBLTFX::dwFillColor). Structure:
+//   TCSLock lock(&section_mouse);
+//   DDBLTFX fx; memset(&fx,0,0x64); fx.dwSize = 0x64;
+//   fx.dwFillColor = <colorkey>;      // see below
+//   gSurface->Blt(0, 0, 0, DDBLT_COLORFILL /*0x400*/, &fx);
+//                                     // vtbl +0x14 == Blt
+//   DDSURFACEDESC2 sd; memset(&sd,0,0x6c); sd.dwSize = 0x6c;
+//   if (gSurface->Lock(0, &sd, 1, 0) == DD_OK) {   // vtbl +0x64
+//       Bitmap16Bit bmp(0, 0);        // ctor 0x44df70, `push 0;push 0`
+//       bmp.reference(sd.dwWidth, sd.dwHeight, sd.lPitch,
+//                     static_cast<unsigned short*>(sd.lpSurface));
+//                                     // 0x44e250; the four stack
+//                                     // slots are DDSURFACEDESC2
+//                                     // +12/+8/+16/+36 exactly
+//       field_54->Draw8(new_frame, bmp.map, 0, 0, bmp.Width,
+//                       bmp.Height, bmp.Pitch, 0);   // CSprite 0x47beb0
+//       gSurface->Unlock(0);          // vtbl +0x80
+//       field_50 = new_frame;
+//   }                                 // ~Bitmap16Bit 0x44e100
+// The colorkey is `((G1*255)/255 & G1) | ((G2*255)/255 & G2)` with
+// G1 = [0x68c868], G2 = [0x68c864] read as DWORDS - the 0x80808081
+// multiply/shr-7 pair is the unsigned /255 reciprocal. That is the
+// RGBto16 inline mousemgr.h already attests (DC WinGraph.h:55) with
+// two of its three channel terms surviving; the two globals are the
+// live 16-bit channel masks.
+// BLOCKED on cross-TU modelling, all of it unclaimed today: the
+// DirectDraw surface global 0x6aacc4 and which interface its vtable
+// is, the two mask globals 0x68c864/0x68c868, Bitmap16Bit::reference
+// (0x44e250, declared in bitmap16.h but unclaimed) and the 8-argument
+// CSprite draw at 0x47beb0 (csprite.h has no such member yet). Landing
+// those views is a supervised decision, not a matcher one - modelling
+// them wrong would ratchet in a structurally-wrong spelling.
 VA(0x0050d8b0, 0x16B)  // anchor-global, dc 0xff610
 void mouseManager::LoadFrame(int new_frame)
 {
