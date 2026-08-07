@@ -6,6 +6,7 @@
 #include "inputmgr.h"
 #include "message.h"
 #include "kbwin.h"
+#include "mousemgr.h"
 
 #if 0  // @carcass
 
@@ -177,11 +178,64 @@ void inputManager::SetKeyCodeType(int newType)
 }
 
 // E:\gamedcs\inputmgr.cpp:991
+#endif  // @carcass
+
+// Scan code -> ASCII. The function-key band keeps the full signed
+// short (F-keys carry negative/extended codes); everything else takes
+// the low byte only. With no shift held the A..Z run is lowercased;
+// with either shift bit set the number/punctuation row maps to its
+// shifted symbol - a dense jump table whose case bodies retail emits
+// in KEYBOARD ROW order (1..0, then -=\, then ;',./), which is the
+// source order VC6 preserves.
+// Residual (95.1%): the scan-table arm only. Retail reaches ONE byte
+// block from both `codeX < F1` and the fall-through of the F11/F12
+// chain; the three-arm spelling below is the closest our CL gets - it
+// DUPLICATES that block instead of sharing it (the adjacent-early-out
+// residual class, this time with retail merging and us splitting).
+// Everything from `qualifier & 3` onward, jump table included, is
+// byte-identical. Tried and rejected: the two-arm if/else in both
+// polarities (93.6%, and it emits the word arm first either way);
+// `goto function_key` and `goto plain` (93.6% - VC6 always lays the
+// branch target first); a ternary (92.3%).
 VA(0x004ec6f0, 0x1C6)  // anchor-global, dc 0xddd60
 void inputManager::AsciiConvert(message* msg)
 {
-    // @stub
+    if (msg->codeX < KEYCODE_F1)
+        msg->codeX = scanCodeTable[msg->codeX] & 0xff;
+    else if (msg->codeX <= KEYCODE_F10 || msg->codeX == KEYCODE_F11
+             || msg->codeX == KEYCODE_F12)
+        msg->codeX = scanCodeTable[msg->codeX];
+    else
+        msg->codeX = scanCodeTable[msg->codeX] & 0xff;
+    if ((msg->qualifier & MESSAGE_MODIFIER_SHIFT_KEYS) == 0) {
+        if (msg->codeX > '@' && msg->codeX < '[')
+            msg->codeX += 'a' - 'A';
+    }
+    if ((msg->qualifier & MESSAGE_MODIFIER_SHIFT_KEYS) == 0)
+        return;
+    switch (msg->codeX) {
+    case '1': msg->codeX = '!'; break;
+    case '2': msg->codeX = '@'; break;
+    case '3': msg->codeX = '#'; break;
+    case '4': msg->codeX = '$'; break;
+    case '5': msg->codeX = '%'; break;
+    case '6': msg->codeX = '^'; break;
+    case '7': msg->codeX = '&'; break;
+    case '8': msg->codeX = '*'; break;
+    case '9': msg->codeX = '('; break;
+    case '0': msg->codeX = ')'; break;
+    case '-': msg->codeX = '_'; break;
+    case '=': msg->codeX = '+'; break;
+    case '\\': msg->codeX = '|'; break;
+    case ';': msg->codeX = ':'; break;
+    case '\'': msg->codeX = '"'; break;
+    case ',': msg->codeX = '<'; break;
+    case '.': msg->codeX = '>'; break;
+    case '/': msg->codeX = '?'; break;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\inputmgr.cpp:1040
 VA(0x004ec8c0, 0x340)  // linkorder, dc 0xdde74
@@ -191,11 +245,41 @@ void inputManager::MakeScanCodeTable()
 }
 
 // E:\gamedcs\inputmgr.cpp:1139
+#endif  // @carcass
+
+// Synthesises one MESSAGE_MOUSE_MOVE straight into the ring buffer.
+// `% 64` is the SIGNED remainder retail emits verbatim
+// (and 0x8000003f / jns / dec / or -0x40 / inc), so the indices are
+// plain ints, not unsigned.
 VA(0x004ecc00, 0xCA)  // anchor-bracket, dc 0xde044
 void inputManager::ForceMouseMove()
 {
-    // @stub
+    message* e;
+    int quals;
+
+    if (bufferBusy)
+        return;
+    bufferBusy = 1;
+    e = &iBuffer[iTail];
+    e->id = MESSAGE_MOUSE_MOVE;
+    gpMouseManager->MouseCoords(&e->codeX, &e->codeY);
+    e->mouseX = e->codeX;
+    e->mouseY = e->codeY;
+    quals = 0;
+    if (GetKeyState(VK_CONTROL) & 0x8000)
+        quals |= MESSAGE_MODIFIER_CONTROL;
+    if (GetKeyState(VK_MENU) & 0x8000)
+        quals |= MESSAGE_MODIFIER_ALT;
+    if (GetKeyState(VK_SHIFT) & 0x8000)
+        quals |= MESSAGE_MODIFIER_SHIFT;
+    e->qualifier = quals;
+    iTail = (iTail + 1) % 64;
+    if (iHead == iTail)
+        iHead = (iHead + 1) % 64;
+    bufferBusy = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\inputmgr.cpp:1169
 DC_ONLY(0xde0e8, 0xC48)

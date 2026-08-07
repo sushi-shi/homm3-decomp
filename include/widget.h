@@ -75,12 +75,21 @@ public:
         WIDGET_STYLE_AUTO_REPEAT = 0x1000
     };
 
-    // Dreamcast widget::EReturnCodes, verbatim.
+    // Dreamcast widget::EReturnCodes, verbatim - plus one retail-only
+    // member. DoDialogDraw's pump switches the SAME codeX domain on a
+    // fifth value 0x20 (WIDGET_END_DIALOG re-draws nothing and ends the
+    // loop; 0x20 re-runs dialogDrawFunction and keeps pumping), so the
+    // VALUE is byte-proven and its role is "ask the dialog to redraw" -
+    // but DC's roster stops at 14 and no dump names it, so the spelling
+    // below is an ORDINAL PLACEHOLDER (the field_NN / _vslotN house
+    // convention), NOT an attested name. Rename it the moment a
+    // producer's TU proves one.
     enum EReturnCodes {
         WIDGET_END_DIALOG = 10,
         WIDGET_SELECT = 12,
         WIDGET_DESELECT = 13,
-        WIDGET_RIGHT_SELECT = 14
+        WIDGET_RIGHT_SELECT = 14,
+        WIDGET_RETURN_32 = 0x20
     };
 
     // Dreamcast widget::ECommands, verbatim.

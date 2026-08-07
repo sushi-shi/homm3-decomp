@@ -6,9 +6,16 @@
 #define HOMM3_WINMGR_H
 
 #include "basemgr.h"
+#include "message.h"
 
 class Bitmap16Bit;
 class heroWindow;
+
+// The dialog pump's per-message handler: retail calls it through
+// `lea ecx,[msg]; call [ebp+0xc]` - one argument, no stack, i.e. the
+// /Gr default fastcall applied to a function pointer. Returns an
+// EMessageDispatchResult.
+typedef int (*TDialogHandler)(message& msg);
 
 // heroWindowManager::dialogReturn's domain: only the byte-proven
 // value is listed (AppWndProc's WM_CLOSE confirm test at 0x4f7cb9);
@@ -29,7 +36,12 @@ public:
     // +0x38: NormalDialog's result slot (AppWndProc's WM_CLOSE tests
     // it against 0x7805, the confirm-OK command).
     int dialogReturn;
-    char pad_3c[4];
+    // +0x3c: DC's lastHover (members.csv heroWindowManager@60), the
+    // first of DC's lastHover/lastHoverAK pair - retail dropped the
+    // second, which is why screenBitmap lands at 0x40 here and 68
+    // there. Byte-proven: DoDialog stores -1 into it right before
+    // AddWindow, exactly where the buka twin writes m_lastHoverId.
+    int lastHover;
     Bitmap16Bit* screenBitmap;
     int colorCyclingOn;
     unsigned char isWaitingForFadeIn;
@@ -50,6 +62,10 @@ public:
     void AddWindow(heroWindow* newWindow, int newPriority,
                    unsigned char update);
     void RemoveWindow(heroWindow* killWindow);
+    int DoDialog(heroWindow* dialogWindow, TDialogHandler dialogFunction,
+                 int bFadeIn);
+    int DoDialogDraw(heroWindow* dialogWindow, TDialogHandler dialogFunction,
+                     TDialogHandler dialogDrawFunction, int bFadeIn);
     void DoQuickView(heroWindow* window);
     void FadeScreen(int inOut, int speed, unsigned char expect_fadein);
     void FadeToBlack(int speed, unsigned char expect_fadein);
@@ -59,6 +75,20 @@ public:
 // Retail .bss 0x699280 (DC ?gpWindowManager@@3PAVheroWindowManager@@A);
 // the DATA claim lands with winmgr.cpp.
 extern heroWindowManager* gpWindowManager;
+
+// Three cross-TU dialog globals DoDialog drives. None of them is
+// winmgr-owned - they are declared here (the gUnnamed69d808 precedent)
+// until their own TU lands and takes the DATA claims.
+//   0x6989cc  DC public ?gbInDialog@@3HA (int) - set 1 on entry, 0 on
+//             the level-1 cleanup, both normal and unwind paths.
+//   0x698a1c  DC public ?gbSendMouseMoveMessages@@3HA (int) - gates
+//             whether MESSAGE_MOUSE_MOVE reaches the dialog window.
+//   0x6aad20  the dialog nest counter: 0->1 arms SetNoDialogMenus(0),
+//             1->0 fires SetNoDialogMenus(1). No DC public; the name is
+//             homm2(buka) BASE lineage (iDialogNestCount), PROVISIONAL.
+extern int gbInDialog;
+extern int gbSendMouseMoveMessages;
+extern int iDialogNestCount;
 
 // Provisional VIEW of the unnamed central object at .bss 0x69d808 (232
 // code references image-wide, written from six sites inside the

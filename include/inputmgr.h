@@ -14,7 +14,12 @@
 // interface/key_codes.hpp EKeyCodes spellings; only the byte-proven
 // consumers' values are listed - grow the roster as consumers land.
 enum EKeyCodes {
+    // The function-key band AsciiConvert singles out: F1..F10 are the
+    // contiguous 0x3b..0x44 run, F11/F12 sit apart at 0x57/0x58 - all
+    // four bounds byte-proven by its scan-table branch.
+    KEYCODE_F1 = 0x3b,
     KEYCODE_F4 = 0x3e,
+    KEYCODE_F10 = 0x44,
     KEYCODE_KP_7 = 0x47,
     KEYCODE_KP_8 = 0x48,
     KEYCODE_KP_9 = 0x49,
@@ -24,7 +29,9 @@ enum EKeyCodes {
     KEYCODE_KP_1 = 0x4f,
     KEYCODE_KP_2 = 0x50,
     KEYCODE_KP_3 = 0x51,
-    KEYCODE_KP_0 = 0x52
+    KEYCODE_KP_0 = 0x52,
+    KEYCODE_F11 = 0x57,
+    KEYCODE_F12 = 0x58
 };
 
 // Dreamcast roster with the 40->32-byte message shift: iBuffer@0x38
@@ -40,7 +47,11 @@ public:
     int iTail;
     int bufferBusy;
     int mouseInstalled;
-    unsigned char scanCodeTable[256];
+    // 128 SHORTS, not 256 bytes: AsciiConvert indexes it
+    // `[ecx + 2*codeX + 0x848]` and reads the function-key band with
+    // `movsx ...word ptr`, everything else with the low byte only.
+    // The 0x848..0x947 span is unchanged.
+    short scanCodeTable[128];
     int keyboardInstalled;
     int keyboardFilter;
     int keyCodeType;
@@ -51,6 +62,8 @@ public:
     inputManager();
     message GetEvent();
     void Flush();
+    void ForceMouseMove();
+    void AsciiConvert(message* msg);
 
     // Located 2026-08-06 by homm3.analysis.dc_bracket (link-order
     // bracket, gap of 3 between the ctor and Flush) and verified by

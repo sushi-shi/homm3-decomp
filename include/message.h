@@ -51,6 +51,17 @@ enum EExecutiveCommand {
 // button::Select latches qualifier & MASK into iLeftRightSave and the
 // right-select stamp writes RIGHT.
 enum EMessageModifiers {
+    // Byte-proven by inputManager::ForceMouseMove, which builds the
+    // qualifier from three GetKeyState probes: VK_SHIFT -> 1,
+    // VK_CONTROL -> 4, VK_MENU -> 0x20. homm2 splits bit 0/1 into
+    // right/left shift; retail sets only bit 0 for VK_SHIFT, so the
+    // spelling here stays SHIFT until a producer proves the split.
+    MESSAGE_MODIFIER_SHIFT = 1,
+    // AsciiConvert gates the shifted-symbol map on `qualifier & 3`;
+    // homm2 splits those two bits into right/left shift.
+    MESSAGE_MODIFIER_SHIFT_KEYS = 3,
+    MESSAGE_MODIFIER_CONTROL = 4,
+    MESSAGE_MODIFIER_ALT = 0x20,
     MESSAGE_MODIFIER_RIGHT = 0x200,
     MESSAGE_MODIFIER_MASK = 0x300
 };
