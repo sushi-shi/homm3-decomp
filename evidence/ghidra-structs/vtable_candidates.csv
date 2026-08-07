@@ -1,0 +1,74 @@
+# GENERATED (ONE-SHOT): python3 scripts/archive/ghidra_recover_structs/recover_structs.py (ONE-SHOT, not a pipeline stage)
+# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE - Ghidra decompiler inference.
+# Standing: lead-generator only. Same grade as the Dreamcast dump - a
+# recovered offset still needs retail-byte proof before it is a claim.
+# exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
+# contents: candidate vtable -> class bindings recovered from the vptr a class's own code installs at `this+0`. LEADS FOR REVIEW, NOT ADMISSIONS: nothing here has been written to config/retail-vtables.tsv. Read from_ctor first - a binding seen in a CONSTRUCTOR is the vptr store itself; one seen only in some other method may be a reference to a single-inheritance BASE class's vtable. `shared_with` is that same tell: two classes on one vtable means one of them is the base
+vtable_rva,slots,candidate_class,from_ctor,evidence_method,census_state,census_class,agreement,shared_with
+0x23de44,7,?$CAutoArray@VCDPlayAddressElement,no,0x9a020,named,?$CAutoArray@VCDPlayAddressElement,agree,CDPlayLobby
+0x23b9c8,3,Bitmap16Bit,yes,0x4df70,named,Bitmap16Bit,agree,
+0x23b9f4,3,Bitmap24Bit,yes,0x4ed50,named,Bitmap24Bit,agree,
+0x23ba14,4,Bitmap816,no,0x4f800,named,Bitmap816,agree,
+0x23a6a8,15,CAdvPopup,yes,0x1b040,named,CAdvPopup,agree,
+0x242d8c,3,CAdventurMapChatEdit,no,0x1bbac0,unnamed,,new,
+0x2400d8,7,CAutoArray<CDPlaySession>,no,0x112670,unnamed,,new,
+0x240e30,25,CChatEdit,no,0x1541a0,unnamed,,new,
+0x23dc28,62,CDPlay,no,0x96ce0,named,CDPlay,agree,
+0x23de44,7,CDPlayLobby,no,0x99c60,named,?$CAutoArray@VCDPlayAddressElement,disagree,?$CAutoArray@VCDPlayAddressElement
+0x243ce8,14,CHeroWindowEx,yes,0x1ff640,unnamed,,new,
+0x240f24,7,CNetMsgHandler,no,0x158490,named,CNetMsgHandler,agree,
+0x240f14,4,CNetMsgHandlerPause,no,0x157810,named,CNetMsgHandlerPause,agree,
+0x23d6b0,3,CSprite,yes,0x7b920,named,CSprite,agree,
+0x23d6bc,3,CSpriteFrame,no,0x7c2b0,named,CSpriteFrame,agree,
+0x23db68,13,CTextDialog,yes,0x907e0,named,CTextDialog,agree,
+0x245810,13,CampaignHeaderStruct,no,0x88880,unnamed,,new,
+0x243d20,11,File,yes,0x1ffb20,unnamed,,new,
+0x23dac0,3,TAbstractFile,no,0x87dd0,unnamed,,new,TGzFile
+0x23a5e4,9,TAdventureMapWindow,yes,0x1510,named,TAdventureMapWindow,agree,
+0x23bc2c,9,TCampaignBrief,no,0x590c0,named,TCampaignBrief,agree,
+0x23db40,10,TDialogBox,yes,0x8fdc0,named,TDialogBox,agree,
+0x23dac0,3,TGzFile,yes,0xd6c50,unnamed,,new,TAbstractFile
+0x2456a8,13,TGzInflateBuf,no,0xd6050,unnamed,,new,
+0x240374,3,TPalette16,no,0x122e30,unnamed,,new,TPalette24
+0x240374,3,TPalette24,yes,0x122e80,unnamed,,new,TPalette16
+0x23b8f8,15,TSplitWindow,no,0x49e20,named,TSplitWindow,agree,
+0x242da4,3,TSpreadsheetResource,yes,0x1bbe70,unnamed,,new,
+0x242d98,3,TTextResource,yes,0x1bbba0,unnamed,,new,
+0x2455cc,3,VictoryConditionStruct,no,0x1f1610,named,logic_error@std,disagree,hero
+0x241134,3,_ResourceManager,no,0x15b8d0,unnamed,,new,
+0x23a678,3,advManager,yes,0x6df0,named,advManager,agree,
+0x23b9bc,3,baseManager,yes,0x4d530,named,baseManager,agree,
+0x242db0,14,bitmapBackedTextWidget,no,0x1bc6d0,unnamed,,new,textWidget
+0x23ba24,14,bitmapBorder,no,0x501d0,named,border,disagree,
+0x23bacc,14,bitmapBorder16,no,0x50690,named,bitmapBorder16,agree,
+0x243c90,13,border,yes,0x1fe410,unnamed,,new,widget
+0x23bb54,13,button,yes,0x55ef0,named,button,agree,
+0x23ba5c,14,coloredBorderFrame,no,0x50130,named,coloredBorderFrame,agree,
+0x23d3e8,3,combatManager,yes,0x62760,named,combatManager,agree,
+0x245d30,2,exception,yes,0x217470,unnamed,,new,
+0x245670,13,exe_strstreambuf,yes,0x51600,named,istrstream@std,disagree,std::strstreambuf
+0x23de74,6,game,no,0x9d160,named,type_event_record,disagree,type_event_record
+0x2455cc,3,hero,no,0xd7a20,named,logic_error@std,disagree,VictoryConditionStruct
+0x243cc4,9,heroWindow,yes,0x1fe9f0,unnamed,,new,
+0x23ec48,14,iconWidget,no,0xea7b0,named,iconWidget,agree,
+0x23fe10,3,inputManager,yes,0xec460,named,inputManager,agree,
+0x240028,4,mouseManager,yes,0x10cb50,unnamed,,new,
+0x240c70,3,recruitUnit,yes,0x151560,unnamed,,new,
+0x240ffc,3,resource,yes,0x158720,unnamed,,new,
+0x2416d0,3,sample,yes,0x166da0,unnamed,,new,
+0x241d50,17,slider,no,0x1960d0,unnamed,,new,
+0x23fe54,3,soundManager,yes,0x199760,unnamed,,new,
+0x245a58,13,std::G::?$ctype,yes,0x2133e7,unnamed,,new,
+0x2455fc,3,std::ios_base,no,0x20acc0,unnamed,,new,
+0x245670,13,std::strstreambuf,no,0x20afb0,named,istrstream@std,disagree,exe_strstreambuf
+0x23bb88,13,textButton,yes,0x56a50,named,textButton,agree,
+0x242d40,19,textEntryWidget,no,0x1ba920,unnamed,,new,
+0x242db0,14,textWidget,no,0x1bc280,unnamed,,new,bitmapBackedTextWidget
+0x23b67c,3,type_AI_player,no,0x28dd0,named,type_garrison_purchaser,disagree,
+0x23b7d8,1,type_AI_spellcaster,yes,0x369c0,unnamed,,new,
+0x23b6b0,2,type_artifact_effect,no,0x324d0,named,type_artifact_effect,agree,
+0x23bb04,2,type_bottom_view_window,yes,0x521f0,named,type_bottom_view_window,agree,
+0x23de74,6,type_event_record,no,0x9a5b0,named,type_event_record,agree,game
+0x23bbbc,13,type_func_button,yes,0x56d30,named,type_func_button,agree,
+0x242d0c,13,type_text_scroller,no,0x1b9fb0,unnamed,,new,
+0x243c90,13,widget,yes,0x1fe340,unnamed,,new,border
