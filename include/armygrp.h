@@ -63,7 +63,19 @@ struct SSpellTraits {
     char pad_14[4];
     int level;                // the dragons' magic-immunity gate
     unsigned char byte_1c;    // bit 2 crossed with trait 0x4000
-    char pad_1d[0x6b];
+    char pad_1d[0x13];
+    // The AI's per-point spell strength: type_monster_data::
+    // get_resurrection_value (0x423d60) and
+    // type_AI_combat_data::get_mass_damage_value (0x42540a) both
+    // multiply it by the choice's power.
+    int power_value;          // +0x30
+    char pad_34[0x34];
+    // Per-mastery dword row: get_enchantment_value indexes it as
+    // spell*34 + mastery dwords from the table base (0x423cab), i.e.
+    // record +0x68 + mastery*4. Only the 4-byte stride is proven;
+    // the four-entry extent follows the mastery ladder.
+    int mastery_values[4];    // +0x68
+    char pad_78[0x10];
 };
 SIZE(SSpellTraits, 136);
 

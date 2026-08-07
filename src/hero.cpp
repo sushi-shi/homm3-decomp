@@ -550,7 +550,7 @@ int hero::CreatureTypeCount(int creatureType)
 {
     int count = 0;
     for (int slot = 0; slot < 7; slot++) {
-        if (armyTypes[slot] == creatureType && armyCounts[slot] > 0)
+        if (army.armies[slot] == creatureType && army.numTroops[slot] > 0)
             count++;
     }
     return count;

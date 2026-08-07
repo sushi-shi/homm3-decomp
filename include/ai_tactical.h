@@ -5,6 +5,50 @@
 #ifndef HOMM3_AI_TACTICAL_H
 #define HOMM3_AI_TACTICAL_H
 
+#include <va.h>
+#include "armygrp.h"
+
+// type_enchant_data / type_spell_choice - byte-proven head model from
+// ai_combat.obj's consumers (the only retail bodies that touch these
+// records so far).
+//   +0x00 spell     - passed as get_spell_work_chance's int argument
+//                     AND as the akSpellTraits index (spell*17*8) in
+//                     type_monster_data::get_enchantment_value
+//                     (0x423c9d) and get_resurrection_value (0x423d59).
+//   +0x04 mastery   - the second index into the akSpellTraits +0x68
+//                     per-mastery dword row (0x423cab: spell*34+mastery).
+//   +0x08 power     - multiplies akSpellTraits[spell].+0x30 in
+//                     get_resurrection_value (0x423d67) and in
+//                     get_mass_damage_value (0x425411).
+//   +0x0c duration  - clamped to 5 in get_enchantment_value (0x423c9c).
+// get_mastery_value (ai_tactical 0x436930) is called with ecx = the
+// choice, i.e. type_spell_choice derives from type_enchant_data.
+struct type_enchant_data {
+    SpellID spell;    // +0x00
+    int mastery;      // +0x04 (TSkillMastery)
+    long power;       // +0x08
+    long duration;    // +0x0c
+
+    long get_mastery_value();
+};
+SIZE(type_enchant_data, 0x10);
+
+// The AI's per-spell candidate record. Only the fields retail bodies
+// touch are named; the rest stay pads.
+//   +0x14 target - indexes the defender's monster vector in
+//                  get_area_value (0x424c00).
+//   +0x18        - a second target/value slot cast_enchantment
+//                  (0x425b2e) falls back to.
+//   +0x1c value  - the accumulator get_area_value adds into (0x424ce7).
+// The record's full extent is NOT proven - every retail body that
+// touches it takes it by reference, so only the head is modeled.
+struct type_spell_choice : public type_enchant_data {
+    char pad_10[4];   // +0x10
+    long target;      // +0x14
+    long field_18;    // +0x18
+    long value;       // +0x1c
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:34, dc 0x3c29c) double value_of_luck_and_morale(long value, long change, double good_value_multiplier, double bad_value_multiplier);
 // CODEVIEW(E:\gamedcs\ai_tactical.cpp:83, dc 0x3c55c) double AI_value_of_morale(long morale, long change);

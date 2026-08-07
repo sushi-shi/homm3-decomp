@@ -6,6 +6,7 @@
 #define HOMM3_HERO_H
 
 #include <va.h>
+#include "armygrp.h"
 
 // Byte-proven by HasArtifact 0x4d91b0: 19 equipped slots of 8 bytes
 // starting at 0x12d, then 64 backpack slots of 8 bytes at 0x1d4; each
@@ -24,10 +25,18 @@ public:
     char pad_000[0x91];
     // Seven army slots: creature type at 0x91+i*4, count at 0xad+i*4
     // (CreatureTypeCount reads [ecx-0x1c] against [ecx] with ecx
-    // walking from 0xad).
-    int armyTypes[7];
-    int armyCounts[7];
-    char pad_0c9[0x1c];
+    // walking from 0xad) - exactly armyGroup's 56-byte layout, and
+    // AI_approximate_strength (0x427657) hands `hero + 0x91` straight
+    // to armyGroup::get_AI_value as a this pointer.
+    armyGroup army;
+    char pad_0c9[0xa];
+    // Secondary-skill mastery byte read as a SIGNED char by
+    // type_AI_combat_data::check_wall_archery_penalty (0x424848), which
+    // subtracts it from the wall-distance penalty: slot 10 of a
+    // 28-entry band starting at 0xc9 (Ballistics in the standard skill
+    // order). Only this one slot is byte-proven, so only it is named.
+    signed char ballisticsLevel;    // +0xd3
+    char pad_0d4[0x11];
     // 28 secondary-skill level bytes; GetNthSS scans for level
     // iWhich+1 and returns the slot index.
     unsigned char skillLevels[28];
@@ -35,6 +44,10 @@ public:
     TArtifactSlot equipped[19];
     char pad_1c5[0xf];
     TArtifactSlot backpack[64];
+    char pad_3d4[0x6a];
+    // Set -> the hero takes no wall archery penalty at all
+    // (check_wall_archery_penalty 0x42482b clears both outputs).
+    unsigned char noWallPenalty;    // +0x43e
 
     unsigned char HasArtifact(int whichArtifact);
     int IsWieldingArtifact(int whichArtifact);
@@ -43,6 +56,12 @@ public:
     float GetMagicResistanceFactor();
     int CreatureTypeCount(int creatureType);
     int GetNthSS(int iWhich);
+    // Claimed in src/hero.cpp (0x4e5760 / 0x4e5ff0); declared here so
+    // ai_combat's inlined get_spell_damage / get_resurrection_value can
+    // call them.
+    long modify_spell_damage(int spell, int damage, const class army* target_army);
+    int GetHeroSpellBonus(int spell_id, int target_level, int value);
+    float get_combat_value_modifier();
 };
 
 #pragma pack(pop)

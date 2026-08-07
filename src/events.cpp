@@ -726,7 +726,14 @@ int advManager::CombatMonsterEvent(hero* who, TCreatureType monType, int* numMon
 }
 
 // E:\gamedcs\events.cpp:6007
-DC_ONLY(0x9b3b4, 0x94)
+// LOCATED 2026-08-07 from ai_combat: adjust_army's dc callgraph lists
+// exactly one non-STL callee besides armyGroup::Dismiss - HeroLoses -
+// and retail's adjust_army (0x4248c5) calls 0x4ac930 with ecx =
+// gpAdvManager (0x699268) and (hero, 0). The body deallocates the hero
+// and switches on the second argument's 0/1 to pick the
+// "pickup%02d.82M" vanish sample, which is what `int vanish_sound`
+// names. Sits inside events.obj's link bracket [0x4ab410..0x4acbb0].
+VA(0x004ac930, 0x163)  // anchor-callee, dc 0x9b3b4
 void advManager::HeroLoses(hero* who, int vanish_sound)
 {
     // @stub

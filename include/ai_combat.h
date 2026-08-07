@@ -5,6 +5,169 @@
 #ifndef HOMM3_AI_COMBAT_H
 #define HOMM3_AI_COMBAT_H
 
+#include <va.h>
+#include "armygrp.h"
+#include "ai_tactical.h"
+
+class hero;
+class town;
+class NewmapCell;
+
+// The AI's quick-combat speed bands. Retail compares the band against
+// type_monster_data::catagory as a plain signed int (get_attack
+// 0x4263d5 / inflict_melee_damage 0x426207); band 0 is the shooter
+// band (get_attack 0x4263e0 routes catagory==0 with unblocked
+// shooters through the ranged value). The roster beyond that is not
+// byte-proven - only the ordering is.
+enum type_speed_catagory {
+    SPEED_CATAGORY_SHOOTER = 0
+};
+
+// type_monster_data - PROVEN 72-byte record (0x48 stride: every
+// consumer divides the vector's pointer difference by 72 through the
+// 0x38e38e39 magic, e.g. get_total 0x42775d, and steps the element
+// pointer by 0x48). Field offsets are byte-proven:
+//   +0x00 slot        - armyGroup index: adjust_army (0x42492c) feeds
+//                       it to Dismiss and indexes numTroops with it;
+//                       get_area_value (0x424c45) takes |a-b|==1 over
+//                       it for slot adjacency.
+//   +0x04 creature    - get_spell_work_chance's TCreatureType argument
+//                       (0x423e06) and modify_spell_damage's third.
+//   +0x08 count       - take_damage zeroes it with total_hit_points
+//                       (0x423eb4) and recomputes it as
+//                       ceil(total/hit_points) (0x423ecc).
+//   +0x0c original    - get_resurrection_value returns 0 unless it
+//                       exceeds count (0x423d10).
+//   +0x10 speed       - get_fastest_speed's max operand (0x4249a1).
+//   +0x18/+0x20/+0x28/+0x30 doubles - get_attack multiplies
+//                       count*hit_points by +0x28 for unblocked
+//                       shooters and by +0x18 otherwise (0x4263f7 /
+//                       0x426418); get_final_melee_value uses +0x20
+//                       (0x426498); get_spell_damage caps raw damage
+//                       through +0x30 (0x423e71).
+//   +0x38 catagory    - get_attack's speed-band gate (0x4263d0).
+//   +0x3c hit_points  - take_damage's per-creature divisor (0x423ec9).
+//   +0x40 total_hit_points - the stack's remaining life.
+struct type_monster_data {
+    long slot;                     // +0x00
+    TCreatureType creature;        // +0x04
+    long count;                    // +0x08
+    long original_count;           // +0x0c
+    long speed;                    // +0x10
+    long field_14;                 // +0x14
+    double melee_value;            // +0x18
+    double final_melee_value;      // +0x20
+    double ranged_value;           // +0x28
+    double damage_modifier;        // +0x30
+    type_speed_catagory catagory;  // +0x38
+    long hit_points;               // +0x3c
+    long total_hit_points;         // +0x40
+    long field_44;                 // +0x44
+
+    long get_enchantment_value(type_spell_choice& choice,
+                               const hero* casting_hero,
+                               const hero* target_hero) const;
+    long get_resurrection_value(type_spell_choice& choice,
+                                const hero* casting_hero) const;
+    long get_spell_damage(SpellID spell, const hero* casting_hero,
+                          const hero* target_hero, long damage) const;
+    long take_damage(long damage);
+};
+SIZE(type_monster_data, 0x48);
+
+// The monster roster is a std::vector<type_monster_data> living at
+// +0x04: three pointers, retail reading _M_start at +0x04 and
+// _M_finish at +0x08 and the ctor (0x423f08) zeroing all three. The
+// STLport machinery itself is the OPEN vendoring decision (P2.3), so
+// only the head is modeled here - enough for the inlined size /
+// operator[] retail actually emits.
+struct type_monster_vector {
+    type_monster_data* _M_start;
+    type_monster_data* _M_finish;
+    type_monster_data* _M_end_of_storage;
+
+    type_monster_data* begin() const { return _M_start; }
+    type_monster_data* end() const { return _M_finish; }
+    unsigned size() const { return (unsigned)(end() - begin()); }
+    type_monster_data& operator[](unsigned n) const { return _M_start[n]; }
+};
+
+// type_AI_combat_data - the quick-combat simulation side. Offsets are
+// byte-proven from the ctor's store sequence (0x423ee0) plus each
+// accessor:
+//   +0x00 byte      - the ctor's first store (0x423f06).
+//   +0x04 monsters  - the vector, zeroed at 0x423f08.
+//   +0x10 terrain   - -1 default, overwritten by the special-terrain
+//                     jump table (0x423f74/0x423f9d).
+//   +0x14 mana      - (short)hero[+0x18] widened (0x423f3d).
+//   +0x18 can_cast  - set 1 then cleared by artifact tests (0x423f47).
+//   +0x1c total_hit_points - kill() zeroes it (0x4262b8), adjust_army
+//                     dismisses the whole group when it is 0
+//                     (0x42488b), inflict_damage subtracts into it
+//                     (0x42630a).
+//   +0x24 my_hero   - get_spell_work_chance's hero arguments
+//                     (0x424a19/0x424c66), check_wall_archery_penalty's
+//                     skill source (0x424824).
+//   +0x28 my_army   - armyGroup::Dismiss's this (0x424899) and the
+//                     numTroops write target (0x42493d).
+//   +0x2c enemy_hero - the ctor's fourth parameter (0x423f30).
+//   +0x30 wall_penalty / +0x32 penalty_distance -
+//                     check_wall_archery_penalty's only outputs.
+class type_AI_combat_data {
+public:
+    unsigned char field_00;          // +0x00
+    char pad_01[3];
+    type_monster_vector monsters;    // +0x04
+    long terrain;                    // +0x10
+    long mana;                       // +0x14
+    unsigned char can_cast;          // +0x18
+    char pad_19[3];
+    long total_hit_points;           // +0x1c
+    char pad_20[4];
+    hero* my_hero;                   // +0x24
+    armyGroup* my_army;              // +0x28
+    hero* enemy_hero;                // +0x2c
+    unsigned char wall_penalty;      // +0x30
+    char pad_31[1];
+    short penalty_distance;          // +0x32
+
+    void check_wall_archery_penalty(const town* enemy_town);
+    void adjust_army(unsigned char dismiss_hero);
+    long get_fastest_speed() const;
+    long get_next_chain_lightning_target(long excluded,
+                                         const type_AI_combat_data& defender,
+                                         long start, long damage) const;
+    void get_area_value(type_spell_choice& choice,
+                        const type_AI_combat_data& defender,
+                        long damage, long extra_targets) const;
+    long get_mass_damage_value(type_spell_choice& choice,
+                               const hero* casting_hero) const;
+    long inflict_melee_damage(long damage, long start, long speed_limit);
+    void kill();
+    void inflict_damage(long damage, long blocker_speed);
+    long get_attack(type_speed_catagory speed_limit,
+                    unsigned char shooters_blocked) const;
+    long get_final_melee_value() const;
+    long get_total() const;
+    void cast_chain_lightning(type_spell_choice& choice,
+                              type_AI_combat_data& defender, long damage) const;
+    void cast_area_effect(type_spell_choice& choice, type_AI_combat_data& defender,
+                          long damage, long extra_targets) const;
+    void cast_damage_spell(type_spell_choice& choice,
+                           type_AI_combat_data& defender) const;
+    void cast_enchantment(type_spell_choice& choice, const hero* casting_hero,
+                          unsigned char increase);
+    void cast_enchantment(type_spell_choice& choice, type_AI_combat_data& defender);
+    void cast_spell(type_AI_combat_data& defender, type_speed_catagory round);
+    unsigned char choose_melee(const type_AI_combat_data& enemy,
+                               type_speed_catagory current_round) const;
+    void do_general_melee(type_AI_combat_data& defender);
+    void simulate_combat(type_AI_combat_data& defender);
+};
+
+long AI_approximate_strength(const hero* current_hero);
+long AI_approximate_strength(const hero* current_hero, const armyGroup* current_army);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\ai_combat.cpp:1398, dc 0x2bcd8) void do_eagle_eye(hero* winner, hero* loser);
 // CODEVIEW(E:\gamedcs\ai_combat.cpp:1424, dc 0x2bd6c) void create_skeletons(const hero* current_hero, short amount, armyGroup* destination);
