@@ -3,6 +3,7 @@
 // 61 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <string.h>
+#include "game.h"
 #include "town.h"
 
 // DC public ?included_buildings@town@@2PAY0CM@_JA; retail .bss
@@ -101,16 +102,45 @@ void town::initialize_hordes()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\town.cpp:967
+// The defence test: a hero standing on the town tile defends it on its
+// own, otherwise whatever garrison force exists has to have creatures
+// in it. The garrison force is the GARRISONED HERO's army when one is
+// present and the town's own armyGroup at +0xe0 when it is not - which
+// is why `&x->army` is applied to the phi'd hero pointer inside the
+// else arm only (retail's `add ecx,0xe0` jumps straight past the
+// `lea ecx,[eax+0x91]`).
 VA(0x005bdfe0, 0x4E)  // anchor-global, dc 0x16654c
 int town::HasGarrison()
 {
-    // @stub
+    if (visitingHeroId < 0) {
+        armyGroup* group;
+        if (garrisonHeroId < 0)
+            group = &garrison;
+        else
+            group = &gpGame->GetHero(garrisonHeroId)->army;
+        if (!group->HasCreatures())
+            return 0;
+    }
+    return 1;
 }
 
+#if 0  // @carcass
+
 // E:\gamedcs\town.cpp:976
+// BLOCKED on the mage-guild surface, not on the hero model (decoded
+// 2026-08-07 while the hero array landed). The body walks the visiting
+// then the garrisoned hero (two passes, cut to one when forceHero is
+// non-null), gates on hero::IsWieldingArtifact(0), on
+// `active & bitNumber[MAGE_GUILD_ID]`, and - for type 8 (Conflux) -
+// on `active & bitNumber[HOLY_GRAIL_ID]`. What it needs that the tree
+// does not model yet: the town's own spell bitset at +0xd4 (three
+// dwords, 70 bits, and the `invalid_bitset<N>_position` guard call
+// proves it is a real std::bitset - it ends exactly at the garrison at
+// +0xe0), the mage-guild tables at town +0x14 (guild level), +0x44
+// (6-int rows, 0x18 stride) and +0xbc (per-level counts), and the
+// global spell-traits table at 0x687f58 whose 0x88 stride and 0x2530
+// bound give 70 spells with the required level at +0x18.
 VA(0x005be030, 0x1D3)  // linkorder, dc 0x1665a0
 void town::GiveSpells(hero* forceHero)
 {
@@ -118,6 +148,16 @@ void town::GiveSpells(hero* forceHero)
 }
 
 // E:\gamedcs\town.cpp:1020
+// BLOCKED on the manager surface. Decoded: bAlreadyFaded is a DEAD
+// parameter (`ret 4`, never loaded); the body sets two int flags, hands
+// the town to the town manager (gpTownManager->townToView at +0x38) via
+// executive::CallManager, and on return re-reads that slot and, when
+// the town's visiting hero belongs to the acting player, calls
+// advManager::SetHeroContext(hero->id, 0, 0, 1) before clearing the two
+// flags. Needs: `class townManager` (+0x38) and gpTownManager 0x6994fc,
+// gpExecutive 0x699500, an advManager::SetHeroContext declaration, and
+// FOUR unnamed globals (0x67f570, 0x6aa5f0, 0x699548, 0x69778c) that
+// would have to carry ordinal placeholders.
 VA(0x005be210, 0xC0)  // linkorder, dc 0x166688
 void town::View(int bAlreadyFaded)
 {
@@ -131,14 +171,43 @@ void town::Deallocate()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\town.cpp:1094
+// The garrisoned hero walks out onto the town tile: its id moves into
+// the visiting slot, the garrison slot empties, and the hero is put
+// back on the map at the town's own cell. The second GetHero (of the
+// hero's OWN id at +0x1a) is retail's, not an artifact - the record is
+// re-fetched from the array before PlaceInMap is called on it.
 VA(0x005be390, 0xB7)  // anchor-global, dc 0x16682c
 void town::remove_garrison_hero()
 {
-    // @stub
+    if (garrisonHeroId < 0)
+        return;
+    hero* garrisonHero = gpGame->GetHero(garrisonHeroId);
+    int player = owner;
+    visitingHeroId = garrisonHeroId;
+    garrisonHeroId = -1;
+    hero* placedHero = gpGame->GetHero(garrisonHero->id);
+    type_point point;
+    point.x = mapX;
+    point.y = mapY;
+    point.z = mapZ;
+    placedHero->PlaceInMap(player, point, 0);
 }
 
+#if 0  // @carcass
+
 // E:\gamedcs\town.cpp:1111
+// BLOCKED on playerData and three unlocated callees. Decoded: it takes
+// GetHero on both slots, swaps garrisonHeroId/visitingHeroId, then
+// removes the (former) visiting hero from the acting player's own hero
+// list - gpCurrentPlayer at 0x69ccb0, whose COUNT is a signed byte at
+// +0x01 and whose id array starts at +0x08 (the compaction loop is
+// `[eax + 4*i + 8] = [eax + 4*i + 0xc]` down to count-1, then the byte
+// is decremented and the freed tail slot set to -1). Needs
+// playerData::FindHero, type_obscuring_object::restore_cell and two
+// still-unnamed game.obj bodies, plus playerData's hero-list fields.
 VA(0x005be450, 0x1AC)  // anchor-global, dc 0x166864
 void town::SwapHeroes()
 {

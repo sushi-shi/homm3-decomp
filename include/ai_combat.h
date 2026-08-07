@@ -161,7 +161,18 @@ public:
     unsigned char can_cast;          // +0x18
     char pad_19[3];
     long total_hit_points;           // +0x1c
-    char pad_20[4];
+    // The attacker's Tactics edge over the defender. A REAL FIELD, not
+    // padding: initialize_creatures (0x424120) seeds it with 0, then
+    // `movsx edx, byte [my_hero+0xdc]` (secondary-skill slot 19 =
+    // Tactics) stores into it, subtracts the enemy hero's own slot 19
+    // and clamps the result back to 0 on `jns` - which is what makes
+    // the SIGNED long width byte-proven; 0x4267c0 reads it back.
+    // The name is the DC's own (members.csv type_AI_combat_data,28 -
+    // DC offset 28 == retail 0x20, the constant +4 shift this class
+    // carries after `monsters` because VC6's std::vector is 16 B where
+    // the DC's STLport is 12), and the semantics above corroborate it
+    // independently.
+    long tactics_advantage;          // +0x20
     hero* my_hero;                   // +0x24
     armyGroup* my_army;              // +0x28
     hero* enemy_hero;                // +0x2c

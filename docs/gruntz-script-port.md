@@ -260,6 +260,75 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — the hero/game include CYCLE BROKEN; `sizeof(hero)` landed
+  with a third proof; INCLUDE-SET SENSITIVITY identified as a new residual
+  class.** Engine-wide 309 → 312 exact, 3.95% → 3.97% executable matched;
+  `town` 11/25 → 13/25.
+  **The `initialize_game_data` mystery is SOLVED, and the orchestrator's
+  reading of it was WRONG.** The unmasked comparison shows the bytes
+  genuinely DIFFER — it was never a symbolization artifact. Inline copy 0 of
+  `create_requirement_masks` is byte-identical; copies 1 and 2 are not:
+  retail addresses the row directly (`mov [8*eax + gHierarchyMask+0x160],
+  ebx`, 7 bytes, twice) where our CL hoists the base into a register first.
+  Copy 0 survives only because its row offset is 0. **The trigger is the
+  COUNT OF USER-DEFINED TYPE DEFINITIONS visible in the TU** — one unused
+  `struct probe_t { int a; };` drops it to 96.0880; a 0..8-struct sweep gives
+  100.0 / 96.09 / 96.09 / 26.18 / 97.04 / 94.07 / 100.0 / 100.0 / 96.09,
+  **non-monotonic**, i.e. VC6 optimizer state, not a modelling error. Blank
+  lines, comments, typedefs, `extern int` and bare forward declarations move
+  nothing — **which is exactly why the orchestrator's 200-extern probe
+  cleared the wrong hypothesis** and why the "reloc-name-only, therefore
+  cosmetic" reading of the masked diff was mistaken. The masked view hid
+  this, precisely as the skill warns. **It then recovered to 100.0000 with
+  no change to initialize.cpp at all**: breaking the include edge below
+  removed game.h/mapcell.h's types from town.h's transitive closure and put
+  the TU back on the lucky point. The baseline row is therefore a RAISE, not
+  a lowering; the full analysis is retained in `config/match_baseline.tsv`
+  because the same sensitivity will move this function again. Recorded as a
+  named residual class in the match skill.
+  **CYCLE BROKEN** (`include/armygrp.h`): `#include "game.h"` →
+  `#include "mapcell.h"` + `#include "struct.h"`. armygrp.h never needed
+  game.h itself — `game`/`gpGame` moved to their owner's header the previous
+  day, and all that remained was forwarding two small value-type headers.
+  `include/game.h` now includes `hero.h`, so `game` can hold the complete
+  hero type. Three TUs that had been relying on the transitive include now
+  say so themselves (armygrp.cpp, town.cpp, ai_tactical.cpp).
+  **`sizeof(hero) == 1170 (0x492)` landed with a THIRD independent proof**
+  found while bounding the array: the hero sweep at 0x4be841 is
+  `lea edi,[gpGame+0x21620]` … `add edi,0x492 / inc eax / cmp eax,0x9c /
+  jb`, so ONE loop pins both the element size and the bound — `hero
+  heroes[156]` at `game+0x21620`, byte-proven at both ends
+  (`0x21620 + 156*1170 == 0x4ded8`, clearing the 156-dword band at +0x4dfb4
+  that 0x4bf2a2 fills with `mov ecx,0x9c` / `rep stosd`, a second witness
+  for 156). hero's tail is modelled as `stats[4]` at +0x476 plus a 0x18 pad
+  to 0x492 — the Ghidra tail fields are cited as LEADS only, since the
+  extent is what is proven, not the split. `game::GetHero` landed as an
+  INLINE member of game.h, which is what the DC row says (`E:\gamedcs\
+  Game.h:972`) and what retail behaves like: `town::HasGarrison` reaches it
+  after its own `garrisonHeroId < 0` gate and STILL emits the redundant
+  `cmp edx,-1`, proving the test lives inside the accessor.
+  Exact: `town::HasGarrison` (the whole body nests inside
+  `if (visitingHeroId < 0) {…}` with a single trailing `return 1`; the flat
+  two-statement form makes VC6 normalise with `neg/sbb/neg` AND clone the
+  HasCreatures call into both arms — 33.8%) and `town::remove_garrison_hero`
+  (an explicit `int player = owner;` right after the first GetHero is what
+  makes retail save both esi and edi). `GiveSpells`, `View`, `SwapHeroes`
+  are decoded but blocked on surface this lane declined to invent — the
+  mage-guild tables and the `std::bitset<70>` at `town+0xd4` (which ends
+  exactly at the garrison at +0xe0), `townManager`/`gpTownManager`/
+  `gpExecutive` plus four unnamed globals, and `playerData`'s hero list.
+  **`type_AI_combat_data +0x20` is `long tactics_advantage`**, verified not
+  assumed: `initialize_creatures` seeds it 0, stores `movsx` of `my_hero
+  +0xdc` (secondary-skill slot 19 = Tactics), subtracts the enemy hero's
+  slot 19, and clamps back to 0 on `jns` — that `jns` is what makes the
+  signed `long` byte-proven. DC offset 28 maps to retail 0x20 via this
+  class's constant +4 shift after `monsters` (VC6's 16-byte vector vs the
+  DC's 12-byte STLport one).
+  **OPEN:** `game+0x21610` is NOT padding — the town walk at 0x4be80a does
+  `lea ecx,[gpGame+0x21610]` and calls a count-returning method with the
+  `towns` pointer at +0x21614 as its data member, so that slot is a small
+  container head, not `char pad_21610[4]`.
+
 - **2026-08-07 — armygrp: GetMorale unblocked by the Dinkumware answer;
   the whole TSplitWindow bracket found MISATTRIBUTED.** `armygrp`
   16/34 → 17/34 exact, 26.13% → 31.79% fuzzy; engine-wide 283 → 284

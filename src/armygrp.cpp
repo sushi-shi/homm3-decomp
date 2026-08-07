@@ -9,6 +9,7 @@
 // instruction).
 #include <bitset>
 #include "armygrp.h"
+#include "game.h"
 #include "hero.h"
 #include "town.h"
 
