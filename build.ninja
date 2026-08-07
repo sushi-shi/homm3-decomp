@@ -75,139 +75,139 @@ build build/objdiff/base/zutil.obj: cl vendor/zlib-1.1.3/zutil.c | $
   unit = zutil
 build build/objdiff/base/misc.obj: cl src/misc.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = misc
 build build/objdiff/base/armygrp.obj: cl src/armygrp.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = armygrp
 build build/objdiff/base/basemgr.obj: cl src/basemgr.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = basemgr
 build build/objdiff/base/button.obj: cl src/button.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = button
 build build/objdiff/base/widget.obj: cl src/widget.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = widget
 build build/objdiff/base/window.obj: cl src/window.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = window
 build build/objdiff/base/resource.obj: cl src/resource.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = resource
 build build/objdiff/base/border.obj: cl src/border.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = border
 build build/objdiff/base/iconwdgt.obj: cl src/iconwdgt.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = iconwdgt
 build build/objdiff/base/textwdgt.obj: cl src/textwdgt.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = textwdgt
 build build/objdiff/base/textntry.obj: cl src/textntry.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = textntry
 build build/objdiff/base/sample.obj: cl src/sample.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Oy- /ML /Gr /D_WINDOWS
+  flags = /nologo /c /O2 /Oy- /Op /ML /Gr /D_WINDOWS
   unit = sample
 build build/objdiff/base/font.obj: cl src/font.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = font
 build build/objdiff/base/exec.obj: cl src/exec.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = exec
 build build/objdiff/base/inputmgr.obj: cl src/inputmgr.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = inputmgr
 build build/objdiff/base/findpath.obj: cl src/findpath.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = findpath
 build build/objdiff/base/smackmgr.obj: cl src/smackmgr.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = smackmgr
 build build/objdiff/base/path.obj: cl src/path.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = path
 build build/objdiff/base/monframeinfo.obj: cl src/monframeinfo.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = monframeinfo
 build build/objdiff/base/initialize.obj: cl src/initialize.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = initialize
 build build/objdiff/base/winfile.obj: cl src/winfile.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = winfile
 build build/objdiff/base/strip.obj: cl src/strip.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = strip
 build build/objdiff/base/winmgr.obj: cl src/winmgr.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = winmgr
 build build/objdiff/base/kbwin.obj: cl src/kbwin.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = kbwin
 build build/objdiff/base/soundmgr.obj: cl src/soundmgr.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = soundmgr
 build build/objdiff/base/mousemgr.obj: cl src/mousemgr.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = mousemgr
 build build/objdiff/base/castle.obj: cl src/castle.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = castle
 build build/objdiff/base/recruit.obj: cl src/recruit.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = recruit
 build build/objdiff/base/hexcell.obj: cl src/hexcell.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = hexcell
 build build/objdiff/base/town.obj: cl src/town.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = town
 build build/objdiff/base/hero.obj: cl src/hero.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = hero
 build build/objdiff/base/game.obj: cl src/game.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = game
 build build/objdiff/base/cmbtmgr.obj: cl src/cmbtmgr.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = cmbtmgr
 build build/objdiff/base/advmgr.obj: cl src/advmgr.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = advmgr
 build build/objdiff/base/ai_combat.obj: cl src/ai_combat.cpp | $
     scripts/homm3/core/cc_wrap.py

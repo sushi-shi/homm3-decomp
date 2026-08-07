@@ -271,8 +271,10 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   /Op sweep result**: flipping all 35 game TUs to /Op leaves every
   one of the 249 exact functions exact (sole movement: unmatched
   get_spell_work_chance 53.21 -> 53.09, tuned under non-/Op). /Op is
-  compatible with everything matched so far; adopting it engine-wide
-  is RECOMMENDED but deferred to a supervised flip.
+  compatible with everything matched so far; APPROVED engine-wide the
+  same day - folded into game_o2_ml_gr_windows(_noeh), the _op
+  profile removed (no config proliferation), get_spell_work_chance's
+  non-/Op-tuned max hand-lowered 53.21 -> 53.09.
   Merge unions worth noting: SSpellTraits carries TWO per-mastery
   rows (mastery_bonus@0x34 flat add, mastery_values@0x68 value row -
   each byte-proven by its own lane's consumers); type_enchant_data is

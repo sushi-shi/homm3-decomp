@@ -22,31 +22,13 @@ zlib_o2_ml_gr_c_windows = [
 # heroWindow::BroadcastMessage pair: both out-of-line bodies exist in
 # retail AND their loops are inlined into WidgetSet/ClearStatus in the
 # same TU - auto-inlining with unconditional emission, which /Ob1
-# cannot produce. Refined as game TUs accumulate.
+# cannot produce. /Op (improve float consistency) proven ENGINE-WIDE
+# 2026-08-07: ai_combat and ai_tactical independently byte-require it
+# (fdiv kept against the pool constant vs reciprocal fmul; int->double
+# rounded through memory; CRT sqrt instead of fsqrt - /Op disables FP
+# intrinsics), and the all-TU sweep left every exact function exact.
+# Refined as game TUs accumulate.
 game_o2_ml_gr_windows = [
-  "/nologo",
-  "/c",
-  "/O2",
-  "/Ob2",
-  "/Oy-",
-  "/ML",
-  "/Gr",
-  "/GX",
-  "/D_WINDOWS",
-]
-# Game C++ profile + /Op (2026-08-07, first FP-heavy game TU).
-# /Op is BYTE-PROVEN by ai_tactical: without it value_of_luck_and_morale
-# (0x435850) plateaus at 84.0% because our CL folds every int->double
-# conversion straight into fild/fmul, while retail rounds each one
-# through a memory temp; with /Op the same source is EXACT, and
-# get_mass_damage_effect (0x436fb0) goes 80.7% -> exact for the same
-# reason on its float divides. /Op also disables the floating-point
-# INTRINSICS, which is what makes get_defense_boost_value (0x4387c0)
-# call the CRT sqrt stub at 0x617b94 instead of emitting fsqrt - a
-# second, independent confirmation. Kept as its own profile: whether
-# retail built EVERY game TU this way is a question for a supervised
-# sweep of the already-matched units, not for this lane.
-game_o2_ml_gr_windows_op = [
   "/nologo",
   "/c",
   "/O2",
@@ -58,7 +40,6 @@ game_o2_ml_gr_windows_op = [
   "/GX",
   "/D_WINDOWS",
 ]
-
 # Same as the game profile minus /GX: sample.obj's retail dtor is
 # frameless (no EH registration around the buffer delete before
 # ~resource), which /GX cannot produce - the first no-EH TU (2026-08-06).
@@ -67,6 +48,7 @@ game_o2_ml_gr_windows_noeh = [
   "/c",
   "/O2",
   "/Oy-",
+  "/Op",
   "/ML",
   "/Gr",
   "/D_WINDOWS",
@@ -323,9 +305,9 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "ai_combat"
 source = "src/ai_combat.cpp"
-flags = "game_o2_ml_gr_windows_op"
+flags = "game_o2_ml_gr_windows"
 
 [[unit]]
 unit = "ai_tactical"
 source = "src/ai_tactical.cpp"
-flags = "game_o2_ml_gr_windows_op"
+flags = "game_o2_ml_gr_windows"
