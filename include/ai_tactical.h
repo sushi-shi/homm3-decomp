@@ -158,7 +158,11 @@ struct type_AI_spellcaster {
     hero* enemy_hero;           // +0x08 combat->[0x53cc + enemy_side*4]
     long side;                  // +0x0c
     long enemy_side;            // +0x10
-    char pad_14[0x8];
+    // Bitmask over army::bitIndex of the stacks this caster is allowed
+    // to act against: should_attack_now (0x436c60) answers 0 outright
+    // when the enemy's bit is clear. Name pending a writer.
+    long field_14;              // +0x14
+    char pad_18[0x4];
     unsigned char field_1c;     // +0x1c
     unsigned char creature_spell; // +0x1d
     char pad_1e[0x2];
@@ -172,7 +176,13 @@ struct type_AI_spellcaster {
     // (this + i*16 + 0x5c and this + i*16 + 0x19c).
     type_AI_enemy_data enemies[20];   // +0x50
     type_AI_enemy_data attacks[20];   // +0x190
-    char pad_2d0[0x140];
+    // A THIRD census on the same 16-byte stride, byte-proven by
+    // get_defense_skill_value (0x438910): it reads the record's `enemy`
+    // pointer as `(bitIndex + 0x2d) * 16 + this`, i.e. this + 0x2d0 +
+    // bitIndex*16, and bails when it is null. The DC roster's
+    // set_worst_enemies (dc 0x42170) is the only unlocated writer left
+    // that fits, so the name is provisional.
+    type_AI_enemy_data worst_enemies[20];  // +0x2d0
 
     virtual ~type_AI_spellcaster();
 
@@ -184,13 +194,32 @@ struct type_AI_spellcaster {
     unsigned char should_attack_now(const army* enemy);
     long get_defense_boost_value(const army* our_army, const army* enemy,
                                  long duration, double increase);
+    long get_defense_skill_value(const army* our_army, long duration,
+                                 long bonus);
+    long get_attack_skill_value(const army* our_army, const army* enemy,
+                                long duration, long bonus);
     long get_haste_value(const army* our_army, type_enchant_data caster);
+    long get_protection_value(const army* our_army, TSpellSchool school,
+                              long level, long duration, long amount);
+    long get_cancel_value(army* current_army, unsigned char bad_spells_only);
+    long get_dispel_value(const army* our_army, type_enchant_data caster);
+    long get_cure_value(const army* our_army, type_enchant_data caster);
+    long get_antimagic_value(const army* our_army, type_enchant_data caster);
+    long get_backlash_value(const army* our_army, type_enchant_data caster);
+    long get_hypnotize_value(const army* enemy, type_enchant_data caster);
     long get_traitor_value(const army* enemy, const army* target);
     void set_melee_enemies();
 };
 SIZE(type_AI_spellcaster, 0x410);
 
 // --- globals ---
+// Retail 0x660858, four dwords {1, 1, 2, 3} read as [mastery]: how many
+// turns a hypnotize at that mastery is worth. get_hypnotize_value
+// (0x43a500) is its only located consumer, and the slot sits in the
+// literal pool right behind a string, so the owning TU is unproven -
+// no DATA claim until it is.
+extern const long akHypnotizeTurns[4];
+
 double value_of_luck_and_morale(long value, long change,
                                 double good_value_multiplier,
                                 double bad_value_multiplier);

@@ -41,6 +41,12 @@ public:
     unsigned char FindCombatPath(const army* current_army, long current_group,
                                  long destination, unsigned char in_placement_phase,
                                  long limit, long base_speed);  // 0x4b3400
+    // Five stack args; ai_tactical's get_hypnotize_value (0x43a500)
+    // is the located caller and passes (enemy, our side, the stack's
+    // threat weight times the spell's turns, 0, -1). Retail address
+    // pending findpath.cpp's own carve - the name is the DC roster's.
+    void SeedCombatPosition(const army* target, long side, long budget,
+                            long start, long limit);
 };
 
 // Retail .bss 0x699284; the DATA claim lands with findpath.cpp's
