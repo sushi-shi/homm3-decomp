@@ -20,6 +20,9 @@ public:
 
     int AddManager(baseManager* newManager, int newPriority);
     void RemoveManager(baseManager* killManager);
+    int DoDialog(baseManager* newDialog);
+    void CallManager(baseManager* newManager);
+    void MainLoop();
 };
 
 // --- executive ---

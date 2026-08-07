@@ -152,7 +152,7 @@ void TPalette16::AdjustSaturation(float amount)
 }
 
 // E:\gamedcs\palette.cpp:454
-DC_ONLY(0x10b320, 0x164)
+VA(0x00522b40, 0x6)  // dc-bracket forced, dc 0x10b320
 void TPalette16::AdjustValue(float amount)
 {
     // @stub
@@ -173,42 +173,42 @@ void TPalette16::Gray()
 }
 
 // E:\gamedcs\palette.cpp:598
-DC_ONLY(0x10b898, 0x6C)
+VA(0x00522e30, 0x16)  // dc-bracket forced, dc 0x10b898
 void TPalette24::TPalette24()
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:603
-DC_ONLY(0x10b904, 0x48)
+VA(0x00522e50, 0x21)  // dc-bracket forced, dc 0x10b904
 void TPalette24::TPalette24(const unsigned char* data)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:609
-DC_ONLY(0x10b94c, 0x78)
+VA(0x00522e80, 0x2D)  // dc-bracket forced, dc 0x10b94c
 void TPalette24::TPalette24(const TRGBA* rgba)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:622
-DC_ONLY(0x10b9c4, 0x78)
+VA(0x00522eb0, 0x42)  // dc-bracket forced, dc 0x10b9c4
 void TPalette24::TPalette24(const tagRGBQUAD* quad)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:635
-DC_ONLY(0x10ba3c, 0x4A)
+VA(0x00522f00, 0x30)  // dc-bracket forced, dc 0x10ba3c
 void TPalette24::TPalette24(const TPalette24* copy)
 {
     // @stub
 }
 
 // E:\gamedcs\palette.cpp:640
-DC_ONLY(0x10ba88, 0x22)
+VA(0x00522f30, 0x21)  // dc-bracket forced, dc 0x10ba88
 TPalette24* TPalette24::operator=(const TPalette24* from)
 {
     // @stub

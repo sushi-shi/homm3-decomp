@@ -159,7 +159,7 @@ void NewfullMap::~NewfullMap()
 }
 
 // E:\gamedcs\mapcell.cpp:537
-DC_ONLY(0xec724, 0xE8)
+VA(0x004fd460, 0x58)  // dc-callgraph unique, dc 0xec724
 void NewfullMap::Close()
 {
     // @stub

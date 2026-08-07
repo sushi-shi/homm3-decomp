@@ -10,6 +10,21 @@
 // Bootstrap VIEW of the 16-bit palette resource: the RGB555 table
 // lives at +0x1c past the resource head (same shape CSprite::GetPalette
 // exposes); Dispose is the shared resource slot 1.
+// Raw palette records (distinct from the resource-derived TPalette*
+// classes): the 16-bit record's 0x200-byte extent is byte-proven by
+// Bitmap816's embedded pair at +0x50/+0x250
+// (bitmapBorder::SetPlayerPaletteColors 0x450520). Storage only;
+// names provisional.
+class palette {
+public:
+    unsigned short data[256];
+};
+
+class paletteHiColor {
+public:
+    unsigned char data[256][3];
+};
+
 class TPalette16 : public resource {
 public:
     unsigned short data[256];
@@ -17,6 +32,11 @@ public:
     // Concrete in retail (constructed by the loaders); the slot-2
     // override body is unlocated.
     virtual void _vslot2();
+
+    // The NWC pointer-taking assignment DC CodeView attests
+    // (palette.cpp:194, dc 0x10a8a0); font::SetPalette calls the
+    // retail body at 0x522910.
+    TPalette16* operator=(const TPalette16* from);
 };
 
 // Dreamcast ?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD_N@Z

@@ -25,9 +25,15 @@ public:
         int field_8;
     };
 
-    char pad_1c[0x20];
+    char pad_1c[5];
+    // Glyph row count (DrawCharacter's outer loop bound, byte at
+    // +0x21 inside the header region).
+    unsigned char height;
+    char pad_22[0x1a];
     TFontSpec spec[256];
-    char pad_c3c[0x400];
+    // Per-character offsets into `data` (DrawCharacter indexes this
+    // int[256] at +0xc3c; formerly an opaque pad).
+    int glyphOffsets[256];
     TPalette16 palette;
     void* data;
 
@@ -35,6 +41,14 @@ public:
 
     void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int color_scheme, unsigned justification, int cursorPos);
     int GetCharacterWidth(unsigned char currChar);
+    void SetPalette(const TPalette16* new_palette);
+    void DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color);
+    long get_string_width(const char* arg);
+    int LineLength(const char* str, int boxWidth);
+    int LongestWrappedLineWidth(const char* str, int boxWidth);
+    int LineWidth(const char* text);
+    int LongestLineWidth(const char* str);
+    int longest_word_length(const char* str);
 };
 
 // --- font ---

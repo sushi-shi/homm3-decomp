@@ -3,6 +3,12 @@
 // 20 functions in link order.
 #include <va.h>
 #include "iconwdgt.h"
+#include "csprite.h"
+#include "csequence.h"
+#include "resourcemanager.h"
+
+// misc's Random (dc 0xfd868, retail 0x50b230).
+int Random(int min, int max);
 
 #if 0  // @carcass
 
@@ -82,12 +88,26 @@ void iconWidget::Draw()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\iconwdgt.cpp:437
+// Both arms carry their own modulo; the else divides by the zeroed
+// local - a shipped divide-by-zero for an invalid sequence, same
+// retail quirk class as CheckUpdate's empty-sprite path.
 VA(0x004eaff0, 0x3E)  // anchor-global, dc 0xd9c7c
 void iconWidget::SetIconFrame(int newFrame)
 {
-    // @stub
+    CSprite* sprite = Sprite;
+    int frames = 0;
+    if (seqId < sprite->numSequences && sprite->validSeqMask[seqId] != 0) {
+        frames = sprite->s[seqId]->numFrames;
+        Frame = newFrame % frames;
+    } else {
+        Frame = newFrame % frames;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\iconwdgt.cpp:444
 DC_ONLY(0xd9ca4, 0x8)
@@ -110,26 +130,140 @@ void iconWidget::SetPlayerPaletteColors(int whichPlayer)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\iconwdgt.cpp:470
 VA(0x004eb030, 0x22)  // anchor-global, dc 0xd9d64
 void iconWidget::SetSprite(const char* new_sprite)
 {
-    // @stub
+    if (Sprite)
+        Sprite->Dispose();
+    Sprite = ResourceManager::GetSprite(new_sprite);
 }
 
 // E:\gamedcs\iconwdgt.cpp:478
+// The idle-animation state machine: weighted odds (0:65%, 2:15%,
+// 4:5%, 1:5%, 3:4%, fidgets 11-16 1% each; the table re-initializes
+// per re-roll, matching the retail loop-back into its stores);
+// sequences 0x14/0x15 are the leave/enter transitions with the
+// fidget target parked in PostPostWalkSequence.
 VA(0x004eb060, 0x1EB)  // anchor-global, dc 0xd9d90
 void iconWidget::NextRandomFrame()
 {
-    // @stub
+    CSprite* sprite = Sprite;
+    int frames;
+    if (seqId < sprite->numSequences && sprite->validSeqMask[seqId] != 0)
+        frames = sprite->s[seqId]->numFrames;
+    else
+        frames = 0;
+    int next = Frame + 1;
+    if (next < frames) {
+        if (seqId < sprite->numSequences && sprite->validSeqMask[seqId] != 0)
+            Frame = next % sprite->s[seqId]->numFrames;
+        else
+            Frame = next % frames;
+        return;
+    }
+    if (seqId == 0x14) {
+        seqId = 0;
+        Frame = 0;
+        return;
+    }
+    if (seqId == 0x15) {
+        Frame = 0;
+        seqId = PostPostWalkSequence;
+        return;
+    }
+    int chosen;
+    for (;;) {
+        int table[11][2] = {
+            {0, 65}, {2, 15}, {4, 5}, {1, 5}, {3, 4},
+            {11, 1}, {12, 1}, {13, 1}, {14, 1}, {15, 1}, {16, 1},
+        };
+        int roll = Random(1, 100);
+        int cumulative = 0;
+        unsigned int pick = 0;
+        for (; pick < 11; ++pick) {
+            cumulative += table[pick][1];
+            if (roll <= cumulative)
+                break;
+        }
+        chosen = table[pick][0];
+        if (chosen < sprite->numSequences
+            && sprite->validSeqMask[chosen] != 0
+            && sprite->s[chosen]->numFrames > 0)
+            break;
+    }
+    if (chosen == 0) {
+        if (seqId != 0
+            && sprite->numSequences > 0x14
+            && sprite->validSeqMask[0x14] != 0
+            && sprite->s[0x14]->numFrames > 0) {
+            seqId = 0x14;
+            Frame = 0;
+            return;
+        }
+    } else if (seqId == 0
+               && sprite->numSequences > 0x15
+               && sprite->validSeqMask[0x15] != 0
+               && sprite->s[0x15]->numFrames > 0) {
+        PostPostWalkSequence = chosen;
+        seqId = 0x15;
+        Frame = 0;
+        return;
+    }
+    seqId = chosen;
+    Frame = 0;
 }
 
+#if 0  // @carcass
+
+#endif  // @carcass
+
 // E:\gamedcs\iconwdgt.cpp:572
+// The siege-engine variant of NextRandomFrame: four-pair odds table
+// (2:94%, fidgets 14-16 2% each), no transition sequences.
 VA(0x004eb250, 0xED)  // anchor-global, dc 0xd9ee8
 void iconWidget::NextRandomSiegeEngineFrame()
 {
-    // @stub
+    CSprite* sprite = Sprite;
+    int frames;
+    if (seqId < sprite->numSequences && sprite->validSeqMask[seqId] != 0)
+        frames = sprite->s[seqId]->numFrames;
+    else
+        frames = 0;
+    int next = Frame + 1;
+    if (next < frames) {
+        if (seqId < sprite->numSequences && sprite->validSeqMask[seqId] != 0)
+            Frame = next % sprite->s[seqId]->numFrames;
+        else
+            Frame = next % frames;
+        return;
+    }
+    int chosen;
+    for (;;) {
+        int table[4][2] = {
+            {2, 94}, {14, 2}, {15, 2}, {16, 2},
+        };
+        int roll = Random(1, 100);
+        int cumulative = 0;
+        unsigned int pick = 0;
+        for (; pick < 4; ++pick) {
+            cumulative += table[pick][1];
+            if (roll <= cumulative)
+                break;
+        }
+        chosen = table[pick][0];
+        if (chosen < sprite->numSequences
+            && sprite->validSeqMask[chosen] != 0
+            && sprite->s[chosen]->numFrames > 0)
+            break;
+    }
+    seqId = chosen;
+    Frame = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\resrce.h:33
 DC_ONLY(0xd9f94, 0x4)

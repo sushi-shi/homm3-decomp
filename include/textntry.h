@@ -16,8 +16,14 @@ class textEntryWidget : public textWidget {
 public:
     Bitmap16Bit* textBack;
     Bitmap16Bit* saveBack;
+    char pad_58[0x15];         // 0x58..0x6c: cursor/inset state, unmodeled
+    unsigned char bHasFocus;   // 0x6d, stored by SetFocus 0x5bab50
+    unsigned char bAutoDraw;   // 0x6e, gates SetFocus's redraw
+                               // (SetAutoDraw's slot, name provisional)
 
     virtual ~textEntryWidget();  // retail 0x5baae0
+    void SetFocus(unsigned char state);
+    char GetCharPressed(message* msg);
 };
 
 // --- CTextEntrySave ---

@@ -110,7 +110,7 @@ unsigned char combatManager::ScrollTo(int x, int y, int width, int height, unsig
 }
 
 // E:\gamedcs\drawing.cpp:689
-DC_ONLY(0x842a8, 0x176)
+VA(0x004937d0, 0x155)  // dc-callgraph unique, dc 0x842a8
 void combatManager::SetupGridForArmy(const army* thisArmy)
 {
     // @stub
@@ -124,7 +124,7 @@ int combatManager::UpdateGrid(int bPostGridIsClean, int bSetupGrid)
 }
 
 // E:\gamedcs\drawing.cpp:919
-DC_ONLY(0x847dc, 0x1E8)
+VA(0x00493cf0, 0x1AB)  // dc-callgraph unique, dc 0x847dc
 void combatManager::DrawBackground()
 {
     // @stub
@@ -152,14 +152,14 @@ void combatManager::DrawFrame(unsigned char update, unsigned char bLimitCreature
 }
 
 // E:\gamedcs\drawing.cpp:1399
-DC_ONLY(0x853f4, 0x84)
+VA(0x00494c20, 0x31C)  // dc-callgraph unique, dc 0x853f4
 void combatManager::DrawObstacleAt(int hex_index)
 {
     // @stub
 }
 
 // E:\gamedcs\drawing.cpp:1426
-DC_ONLY(0x85478, 0x35A)
+VA(0x00494f40, 0x147)  // dc-callgraph unique, dc 0x85478
 void combatManager::DrawWallAt(int hex_index, int dx)
 {
     // @stub
@@ -180,7 +180,7 @@ void combatManager::DrawOccupant(int index, int iDrawPriority, int bNumBoxOnly)
 }
 
 // E:\gamedcs\drawing.cpp:1661
-DC_ONLY(0x85978, 0xCE)
+VA(0x00495090, 0x114)  // dc-callgraph unique, dc 0x85978
 int combatManager::DrawArcher(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
 {
     // @stub
@@ -201,7 +201,7 @@ int combatManager::DrawCreatureAlpha(const CSprite* sprite, int sequence, int fr
 }
 
 // E:\gamedcs\drawing.cpp:1772
-DC_ONLY(0x85c2c, 0xD2)
+VA(0x00495650, 0xD9)  // dc-callgraph unique, dc 0x85c2c
 int combatManager::DrawCombatHero(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, unsigned char isFlipped)
 {
     // @stub
@@ -222,7 +222,7 @@ int combatManager::DrawSpriteObject(const CSprite* sprite, int frame, int x, int
 }
 
 // E:\gamedcs\drawing.cpp:1865
-DC_ONLY(0x85f1c, 0x54)
+VA(0x004958e0, 0x129)  // dc-callgraph unique, dc 0x85f1c
 int combatManager::DrawCreatureAndHeroSubwindows()
 {
     // @stub
@@ -264,7 +264,7 @@ void combatManager::ComputeMaxExtent()
 }
 
 // E:\gamedcs\drawing.cpp:2214
-DC_ONLY(0x866ac, 0x10E)
+VA(0x00495f50, 0x17C)  // dc-bracket forced, dc 0x866ac
 void combatManager::ComputeExtent(const CSprite* sprite, int sequence, int frame, int x, int y, SLimitData* psLimitData, int isFlipped, unsigned char SaveBiggestExtent)
 {
     // @stub

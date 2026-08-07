@@ -18,7 +18,66 @@ enum TCreatureType {
     CREATURE_AIR_ELEMENTAL = 0x70,
     CREATURE_EARTH_ELEMENTAL = 0x71,
     CREATURE_FIRE_ELEMENTAL = 0x72,
-    CREATURE_WATER_ELEMENTAL = 0x73
+    CREATURE_WATER_ELEMENTAL = 0x73,
+    // Proven by GetArmyLuck's min-luck clamp at 0x44b415 (NH3API
+    // spelling; the +1-luck special).
+    CREATURE_HALFLING = 0x8a,
+    // Proven by GetArmyMorale's min-morale clamp at 0x44b221 (the
+    // always-positive-morale pair).
+    CREATURE_MINOTAUR = 0x4e,
+    CREATURE_MINOTAUR_KING = 0x4f,
+    // Proven by GetLuck's enemy-group scans at 0x44b32b (the -1
+    // enemy-luck special).
+    CREATURE_DEVIL = 0x36,
+    CREATURE_ARCH_DEVIL = 0x37,
+    // Proven by modify_spell_damage's dispatch table at 0x44b58c:
+    // the golem spell-damage ladder (1/2, 1/4, 15/100, 1/20) and the
+    // upgraded elementals pairing with their base forms' counter-
+    // spell lists.
+    CREATURE_STONE_GOLEM = 0x20,
+    CREATURE_IRON_GOLEM = 0x21,
+    CREATURE_GOLD_GOLEM = 0x74,
+    CREATURE_DIAMOND_GOLEM = 0x75,
+    CREATURE_ICE_ELEMENTAL = 0x7b,
+    CREATURE_MAGMA_ELEMENTAL = 0x7d,
+    CREATURE_STORM_ELEMENTAL = 0x7f,
+    CREATURE_ENERGY_ELEMENTAL = 0x81
+};
+
+// Spell ids appear here only as modify_spell_damage's raw compare
+// operands; the spell roster gets its own header when a consumer
+// needs names.
+typedef int SpellID;
+
+// Bootstrap VIEW of the spell-traits record (136-byte stride proven
+// by get_spell_work_chance's spell*17*8 indexing at 0x44a4e2): only
+// the fields that function reads are modeled; the full roster gets
+// its own header when spell work begins in earnest.
+struct SSpellTraits {
+    int field_0;              // <= 0 short-circuits to certain-work
+    char pad_04[8];
+    unsigned int field_c;     // bit 10 gates one immunity family;
+                              // bit 12 (byte +0xd & 0x10) blocks the
+                              // spell against siege weapons
+    unsigned int flags_10;    // bits 4 / 0x40 / 0x400 = spell families
+    char pad_14[4];
+    int level;                // the dragons' magic-immunity gate
+    unsigned char byte_1c;    // bit 2 crossed with trait 0x4000
+    char pad_1d[0x6b];
+};
+SIZE(SSpellTraits, 136);
+
+// The spell table is reached through a stored pointer, exactly like
+// akCreatureTypeTraits: retail loads [0x687f58] before indexing.
+// NAME is a bootstrap invention modeled on the creature analog; the
+// 81-entry count is NH3API-informed (pending retail extent proof).
+DATA(0x00687f58) extern const SSpellTraits (&akSpellTraits)[81];
+
+// Bootstrap domain: only the sentinel is modeled (GetNativeTerrain
+// merges slots against -1); the terrain roster gets its own header
+// when a consumer needs named values.
+enum TTerrainType {
+    TERRAIN_NONE = -1
 };
 
 // PROVEN layout (2026-08-04): Dreamcast CodeView class size 56 with
@@ -61,6 +120,16 @@ SIZE(TCreatureTypeTraits, 116);
 // creatures in the alignment census - the war-machine bit.
 const unsigned int CTA_UNDEAD = 0x40000;
 const unsigned int CTA_SIEGE_WEAPON = 0x40;
+// 0x20000 zeroes a stack's morale outright (GetArmyMorale 0x44b11e) -
+// the no-morale trait (undead/elemental/war-machine family).
+const unsigned int CTA_NO_MORALE = 0x20000;
+
+// Artifact 0x54 zeroes POSITIVE morale (GetArmyMorale 0x44b23a);
+// NH3API names it Spirit of Oppression. 0x55 zeroes luck for BOTH
+// sides when either hero wields it (GetLuck 0x44b2e4) - the Hourglass
+// of the Evil Hour.
+const int ARTIFACT_SPIRIT_OF_OPPRESSION = 0x54;
+const int ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR = 0x55;
 
 // The traits table is reached through a stored pointer (reference
 // global): retail loads [0x6747b0] before indexing. NH3API names it
@@ -84,6 +153,15 @@ public:
 // gb/psz all in real use: gpGame, pszFormat, iNameSet), but the
 // `apsz` composition specifically is NOT - replace on evidence.
 DATA(0x006a5bb8) extern const char* apszArmySizeNames[9][3];
+
+// Native terrain by ALIGNMENT (townType order; -1 = none), .rdata:
+// the full table starts one entry earlier at 0x643694 with the -1 row,
+// and retail indexes through this biased base exactly as GetAlignments
+// biases its census by +1 - so alignment -1 (gated elementals) is a
+// legal index. grass, grass, snow, lava, dirt, subterranean, rough,
+// swamp, grass. The NAME is a bootstrap invention (no Dreamcast/NH3API
+// name survives for this table) - replace on evidence.
+DATA(0x00643698) extern const TTerrainType akNativeTerrains[9];
 
 // The game singleton: 2,264 dir32 references image-wide (the central
 // object), pointee larger than 0x1f6a0 bytes; the Dreamcast dump names
@@ -117,6 +195,30 @@ public:
     int CanJoin(int monType);
     int GetAlignments(unsigned char* alignments);
     long get_AI_value();
+    TTerrainType GetNativeTerrain();
+    unsigned char Merge(armyGroup* ag);
+    void merge_armies(armyGroup* source);
+    // Param 4 is a full int MODE in retail (dword load, sentinel
+    // values 2 and 5) - the DC prototype's on_cursed_ground uchar
+    // name does not survive the bytes; class forward-decls suffice
+    // for the const pointers.
+    int GetLuck(const class hero* ownerHero, const class town* ownerTown,
+                const class hero* otherHero, const armyGroup* otherGroup,
+                unsigned char on_cursed_ground, unsigned char apply_limits);
+    // SEVEN params in retail (GetArmyMorale's call site pushes seven;
+    // the DC six-param prototype is wrong) - roles of 5..7 pending
+    // GetMorale's own decode.
+    int GetMorale(const class hero* ownerHero, const class town* ownerTown,
+                  const class hero* otherHero, const armyGroup* otherGroup,
+                  int arg5, unsigned char arg6, unsigned char arg7);
+    // SIX params in retail (ret 0x18; the DC five-param prototype is
+    // wrong): mode int with sentinels, arg5 forwarded to GetMorale.
+    int GetArmyMorale(int index, const class hero* ownerHero,
+                      const class town* ownerTown, int mode,
+                      unsigned char arg5, unsigned char apply_limits);
+    int GetArmyLuck(int index, const class hero* ownerHero,
+                    const class town* ownerTown, int mode,
+                    unsigned char apply_limits);
     int GetNumArmies();
     int Add(int armyType, int newNumTroops, int newIndex);
     static const char* GetArmySizeName(int howMany, int iNameSet);

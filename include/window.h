@@ -85,6 +85,7 @@ public:
     int findWidget(int mx, int my);
     widget* findWidgetPtr(int mx, int my);
     void SetFocus(int id);
+    void SleepAllWidgets(unsigned char sleep);
     void delete_widgets();
 
     virtual ~heroWindow();                            // slot 0, retail 0x5fea80

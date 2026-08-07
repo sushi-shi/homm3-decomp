@@ -3,10 +3,23 @@
 // 8 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "exec.h"
+#include "advmgr.h"
+#include "basemgr.h"
+#include "inputmgr.h"
+#include "mousemgr.h"
+#include "window.h"
+#include "winmgr.h"
+#include "kbwin.h"
+#include "kb.h"
 
 #if 0  // @carcass
 
 // E:\gamedcs\exec.cpp:37
+// BLOCKED on STLport (decision log): the body is a std::bitset<10>
+// constructed bit by bit on the stack (bounds check + shl/or + the
+// invalid-position throw call) - the fourth function on the STLport
+// wall, alongside GetMorale, the searchArray ctor, and (parked)
+// their kin.
 VA(0x004b0660, 0x5F)  // anchor-bracket, dc 0x9e510
 void executive::executive()
 {
@@ -27,12 +40,58 @@ void executive::ShutDownSystem()
     // @stub
 }
 
+#endif  // @carcass
+
+// Provisional view of the unnamed central object at 0x6a5d5c (1046
+// refs image-wide; its own TU will name it). DoDialog reads the one
+// shutdown message through +0x20 -> +4 for all four failure arms
+// (homm2 had four distinct gExecutiveText strings).
+struct SUnnamedEntry6a5d5c {
+    char pad_00[4];
+    const char* text;               // +0x4
+};
+struct SUnnamed6a5d5c {
+    char pad_00[0x20];
+    SUnnamedEntry6a5d5c* errorEntry;  // +0x20
+};
+extern SUnnamed6a5d5c* gUnnamed6a5d5c;  // .data 0x6a5d5c; DATA claim lands with its TU
+
 // E:\gamedcs\exec.cpp:103
 VA(0x004b0a10, 0x10B)  // anchor-global, dc 0x9e66c
 int executive::DoDialog(baseManager* newDialog)
 {
-    // @stub
+    executive dialogExec = { 0, 0, 0, 0 };
+    baseManager* savedMgr[20];
+    baseManager* savedPrev[20];
+    baseManager* savedNext[20];
+    baseManager* m;
+    int count = 0;
+    int i;
+
+    for (m = headManager; m; count++) {
+        savedMgr[count] = m;
+        savedPrev[count] = m->prevManager;
+        savedNext[count] = m->nextManager;
+        m = m->nextManager;
+    }
+    if (AddManager(newDialog, -1))
+        ShutDown(gUnnamed6a5d5c->errorEntry->text);
+    if (dialogExec.AddManager(gpMouseManager, -1))
+        ShutDown(gUnnamed6a5d5c->errorEntry->text);
+    if (dialogExec.AddManager(gpWindowManager, -1))
+        ShutDown(gUnnamed6a5d5c->errorEntry->text);
+    if (dialogExec.AddManager(newDialog, -1))
+        ShutDown(gUnnamed6a5d5c->errorEntry->text);
+    dialogExec.MainLoop();
+    RemoveManager(newDialog);
+    for (i = 0; i < count; i++) {
+        savedMgr[i]->prevManager = savedPrev[i];
+        savedMgr[i]->nextManager = savedNext[i];
+    }
+    return dialogExec.dialogReturn;
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 
@@ -51,23 +110,21 @@ int executive::AddManager(baseManager* newManager, int newPriority)
         else
             newPriority = tailManager->priority + 1;
     }
-    if (!newManager->status) {
-        if (newManager->Open(newPriority))
-            return 3;
-    }
+    if (!newManager->status && newManager->Open(newPriority))
+        return 3;
     baseManager* current = tailManager;
     while (current && current->priority > newPriority)
         current = current->prevManager;
     if (!current) {
-        newManager->prevManager = 0;
         newManager->nextManager = headManager;
+        newManager->prevManager = 0;
         if (headManager)
             headManager->prevManager = newManager;
         headManager = newManager;
         if (!tailManager)
             tailManager = newManager;
     } else if (!current->nextManager) {
-        newManager->prevManager = current;
+        newManager->prevManager = tailManager;
         newManager->nextManager = 0;
         tailManager->nextManager = newManager;
         tailManager = newManager;
@@ -81,56 +138,139 @@ int executive::AddManager(baseManager* newManager, int newPriority)
 }
 
 // E:\gamedcs\exec.cpp:219
-// Residual (86.9%): same entry-block register-role swap as AddManager.
 VA(0x004b0bf0, 0x79)  // anchor-global, dc 0x9e838
 void executive::RemoveManager(baseManager* killManager)
 {
     if (!killManager)
         return;
     killManager->Close();
-    if (!killManager->prevManager) {
+    baseManager* prev = killManager->prevManager;
+    if (!prev) {
         if (headManager == tailManager) {
             tailManager = 0;
             headManager = 0;
-            killManager->prevManager = 0;
-            killManager->nextManager = 0;
         } else {
             headManager = killManager->nextManager;
             headManager->prevManager = 0;
-            killManager->prevManager = 0;
-            killManager->nextManager = 0;
         }
+        killManager->prevManager = 0;
+        killManager->nextManager = 0;
+        return;
+    }
+    prev->nextManager = killManager->nextManager;
+    if (!prev->nextManager)
+        tailManager = prev;
+    else
+        prev->nextManager->prevManager = prev;
+    killManager->prevManager = 0;
+    killManager->nextManager = 0;
+}
+
+
+// E:\gamedcs\exec.cpp:268
+// Decode staged 2026-08-06 (full callee resolution done): saved =
+// currentManager; if saved == gpAdvManager (0x699268) { advMgr+0x34=2;
+// (heroWindow* at advMgr+0x44)->SleepAllWidgets(1); advMgr+0x38c=0; }
+// else RemoveManager(saved); if (AddManager(newManager,-1))
+// ShutDown(<0x6a5d5c +0x20 +0x4 text>); MainLoop();
+// RemoveManager(newManager); then the mirror resume arm: if saved ==
+// gpAdvManager { advMgr+0x34=1; SleepAllWidgets(0);
+// RedrawAdvScreen(1,0); KBChangeMenu([0x6989e4]); ForceNewHover();
+// OverrideBottomView(0,-1); if (gpWindowManager->isWaitingForFadeIn)
+// FadeScreen(0,4,0); } else if (AddManager(saved,-1)) ShutDown(...);
+// currentManager = saved (stored in the epilogue). Residual risk: the
+// retail body carries an EH frame with states 0/1/2 bracketing
+// AddManager/MainLoop/RemoveManager - homm2's version is EH-free and
+// no local object is visible; the construct generating those states
+// is unidentified, so this transcription misses the frame.
+VA(0x004b0c70, 0x152)  // anchor-global, dc 0x9e898
+void executive::CallManager(baseManager* newManager)
+{
+    baseManager* saved = currentManager;
+
+    if (saved == gpAdvManager) {
+        gpAdvManager->status = 2;
+        gpAdvManager->advWindow->SleepAllWidgets(1);
+        gpAdvManager->field_38c = 0;
     } else {
-        baseManager* prev = killManager->prevManager;
-        baseManager* next = killManager->nextManager;
-        prev->nextManager = next;
-        if (!next) {
-            tailManager = prev;
-            killManager->prevManager = 0;
-            killManager->nextManager = 0;
-        } else {
-            next->prevManager = prev;
-            killManager->prevManager = 0;
-            killManager->nextManager = 0;
+        RemoveManager(saved);
+    }
+    if (AddManager(newManager, -1))
+        ShutDown(gUnnamed6a5d5c->errorEntry->text);
+    MainLoop();
+    RemoveManager(newManager);
+    if (saved == gpAdvManager) {
+        gpAdvManager->status = 1;
+        gpAdvManager->advWindow->SleepAllWidgets(0);
+        gpAdvManager->RedrawAdvScreen(1, 0);
+        KBChangeMenu(dfltMenu);
+        gpAdvManager->ForceNewHover();
+        gpAdvManager->OverrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, -1);
+        if (gpWindowManager->isWaitingForFadeIn)
+            gpWindowManager->FadeScreen(0, 4, 0);
+    } else {
+        if (AddManager(saved, -1))
+            ShutDown(gUnnamed6a5d5c->errorEntry->text);
+    }
+    currentManager = saved;
+}
+
+// E:\gamedcs\exec.cpp:340
+// Located by the call-graph lane: DoDialog (0x4b0a10) calls this VA
+// on its local executive between the fourth AddManager and
+// RemoveManager - exactly the roster position. Retail adds one guard
+// to the homm2 shape: key messages (id 4) skip the window manager.
+// 88.1 residual (2026-08-06): retail's frame places msg one slot
+// lower (msg@-0x28, GetEvent temp@-0x48) than this compile
+// (-0x24/-0x44) - the frame-layout residual class; the dispatch
+// protocol itself is block-identical (switch-on-Main via dec-chain).
+VA(0x004b0e40, 0xF5)  // anchor-callee, dc 0x9e9b0
+void executive::MainLoop()
+{
+    message msg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    int done = 0;
+    int dispatch;
+
+    if (!headManager)
+        return;
+    gpInputManager->Flush();
+    while (!done) {
+        Process1WindowsMessage();
+        msg = gpInputManager->GetEvent();
+        dispatch = 1;
+        currentManager = headManager;
+        if (!currentManager)
+            return;
+        while (currentManager && dispatch && !done) {
+            if (currentManager->status == 1
+                    && (msg.id != 4 || currentManager != gpWindowManager)) {
+                switch (currentManager->Main(msg)) {
+                    case 1:
+                        dispatch = 0;
+                        break;
+                    case 2:
+                        if (msg.id & 0x4000) {
+                            switch (msg.codeX) {
+                                case 1:
+                                case 4:
+                                    dialogReturn = msg.extra;
+                                    done = 1;
+                                    break;
+                                case 2:
+                                    RemoveManager(currentManager);
+                                    currentManager = 0;
+                                    break;
+                            }
+                        }
+                        break;
+                }
+            }
+            if (currentManager)
+                currentManager = currentManager->nextManager;
         }
     }
 }
 
-
 #if 0  // @carcass
-
-// E:\gamedcs\exec.cpp:268
-VA(0x004b0c70, 0x152)  // anchor-global, dc 0x9e898
-void executive::CallManager(baseManager* newManager)
-{
-    // @stub
-}
-
-// E:\gamedcs\exec.cpp:340
-DC_ONLY(0x9e9b0, 0x130)
-void executive::MainLoop()
-{
-    // @stub
-}
 
 #endif  // @carcass

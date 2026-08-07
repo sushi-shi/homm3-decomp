@@ -5,6 +5,21 @@
 #ifndef HOMM3_BITMAP816_H
 #define HOMM3_BITMAP816_H
 
+#include "resource.h"
+#include "palette.h"
+
+// Partial model: the resource base is byte-proven by
+// bitmapBorder::SetImage (name strcmp at +4, Dispose vcall); the
+// embedded palette pair at +0x50/+0x250 by SetPlayerPaletteColors.
+class Bitmap816 : public resource {
+public:
+    char pad_1c[0x34];
+    palette p16;
+    paletteHiColor p24;
+
+    virtual void _vslot2();
+};
+
 // --- Bitmap816 ---
 // CODEVIEW(E:\gamedcs\bitmap816.cpp:36, dc 0x53854) void Bitmap816::Bitmap816(int w, int h);
 // CODEVIEW(E:\gamedcs\bitmap816.cpp:79, dc 0x53960) void Bitmap816::Bitmap816(const char* name, int w, int h, unsigned char* data, TPalette16* p16, int csize);

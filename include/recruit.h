@@ -5,11 +5,13 @@
 #ifndef HOMM3_RECRUIT_H
 #define HOMM3_RECRUIT_H
 
-// Creature-record table POINTER at 0x6747b0 (retail loads the slot,
-// then indexes). Records are 0x74 bytes; the seven resource costs
-// start at +0x20. Names provisional.
-// Modeled as the flat dword table retail indexes: record stride is
-// 0x74 bytes = 29 dwords, with the seven costs at dword 8.
+// Creature-record table POINTER at 0x6747b0 - armygrp.h's
+// akCreatureTypeTraits seen as the flat dword table retail's index
+// register walks (stride 0x74 = 29 dwords, the seven costs at dword
+// 8). The struct-field spelling was tried 2026-08-06 and scores WORSE
+// (69.0 vs 82.7): retail keeps base and byte-offset in separate
+// registers through the loop, a shape only the forbidden pointer cast
+// reproduces exactly - this dword-index view is the admissible max.
 enum ECreatureRecord {
     CREATURE_RECORD_DWORDS = 29,
     CREATURE_RECORD_COST_DWORD = 8
@@ -18,6 +20,11 @@ enum ECreatureRecord {
 extern int* gCreatureRecords;
 
 void GetMonsterCost(int monId, int* resCost);
+// Retail is four-arg (both creature rows in ecx/edx); the DC
+// three-arg CODEVIEW below is the older shape. TCreatureType comes
+// from armygrp.h, which recruit.cpp includes first.
+void get_upgrade_cost(enum TCreatureType creature, enum TCreatureType upgrade,
+    long amount, int* cost);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\recruit.cpp:157, dc 0x118adc) void get_upgrade_cost(TCreatureType creature, long amount, []* cost);

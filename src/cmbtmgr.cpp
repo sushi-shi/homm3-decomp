@@ -212,14 +212,12 @@ int combatManager::ExperienceValueOfStack(int whichGroup)
 #endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2756
-// Residual (99.9%): retail biases the outer pointer to the field
-// address up front where this compile keeps the record base.
 VA(0x00465fe0, 0x29)  // anchor-global, dc 0x60318
 void combatManager::ResetHitByCreature()
 {
     for (int side = 0; side < 2; side++) {
         for (int slot = 0; slot < 20; slot++)
-            sides[side].stacks[slot].hitByCreature = 0;
+            armies[side][slot].hitByCreature = 0;
     }
 }
 

@@ -15,6 +15,39 @@ public:
     virtual ~border();  // retail 0x44ff50
 };
 
+class Bitmap816;
+
+// The image member sits at +0x30 (first past widget), byte-proven by
+// SetImage 0x4504c0 (name strcmp at image+4, Dispose vcall, reload
+// through ResourceManager::GetBitmap816).
+class bitmapBorder : public border {
+public:
+    Bitmap816* image;
+
+    virtual ~bitmapBorder();
+    void SetImage(const char* bitmap_name);
+    void SetPlayerPaletteColors(int whichPlayer);
+};
+
+class Bitmap16Bit;
+
+// The 16-bit variant; image at +0x30 byte-proven by the dtor's
+// Dispose vcall (0x450750).
+class bitmapBorder16 : public border {
+public:
+    Bitmap16Bit* image;
+
+    virtual ~bitmapBorder16();
+    void Draw2();
+};
+
+// The free palette painters (declared for button.cpp in button.h;
+// re-declared here for the border family).
+class palette;
+class paletteHiColor;
+void SetPlayerPaletteColors(palette* pal, int whichPlayer);
+void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
+
 // --- bitmapBorder ---
 // CODEVIEW(E:\gamedcs\border.cpp:280, dc 0x547c0) void bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id, const char* image, int style, unsigned char focusable);
 // CODEVIEW(E:\gamedcs\border.cpp:294, dc 0x54860) void bitmapBorder::~bitmapBorder();
