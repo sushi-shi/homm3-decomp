@@ -512,7 +512,41 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 # Lowered rather than reverting the town model, which is byte-proven
 # and bought 10 exact functions plus check_wall_archery_penalty.
 # NEEDS a dedicated investigation - unmasked disasm --base vs disasm.
-initialize	?initialize_game_data@@YIXXZ	94.0741
+# ANSWERED 2026-08-07 by that unmasked comparison: the bytes DIFFER, so
+# this is NOT a symbolization artifact. Inline copy 0 of
+# create_requirement_masks is byte-identical; copies 1 and 2 are not.
+# Retail addresses the row directly - `mov [8*eax + gHierarchyMask+0x160],
+# ebx` (89 1c c5 ..) twice - where our CL hoists the row base into a
+# register first (`lea eax,[8*eax + gHierarchyMask+0x160]` then
+# `mov [eax],ebx` / `mov [eax+4],ebx`), and schedules two instructions
+# around it differently. Copy 0's base offset is 0, which is why it
+# survives.
+# MECHANISM (bisected the same day, probe reverted): the trigger is not
+# any array/type spelling in town.h - it is the COUNT OF USER-DEFINED
+# TYPE DEFINITIONS visible in the TU. With initialize.cpp on the
+# pre-town-lane town.h the function is 100.0000; injecting a single
+# unused `struct probe_t { int a; };` at the top of that header drops it
+# to 96.0880, and an unused `enum` does the same. Injecting 0..8 such
+# structs gives 100.0 / 96.09 / 96.09 / 26.18 / 97.04 / 94.07 / 100.0 /
+# 100.0 / 96.09 - NON-MONOTONIC, so this is VC6 optimizer state
+# (type/symbol-table population perturbing its CSE and addressing-mode
+# choices), not a semantic error in our model. Things that do NOT move
+# it: blank lines, comments, typedefs, `extern int` (which is why the
+# earlier 200-extern probe cleared the wrong hypothesis), and a bare
+# `struct probe_t;` forward declaration. town.h's new type_building_id /
+# EGameResource / type_horde_effect plus the armygrp.h->game.h chain
+# simply push this TU off the lucky point.
+# CONSEQUENCE: no local spelling change can fix this - the exact match
+# returns when the TU's include set matches retail's. Leave the row
+# lowered; re-measure whenever initialize.cpp's header closure changes.
+# RECOVERED to 100.0000 the same day, exactly as that prediction says:
+# breaking the armygrp.h -> game.h include edge (needed so game.h could
+# see the complete hero type) removed game.h/mapcell.h's types from
+# town.h's transitive closure, and this TU landed back on the lucky
+# point with no change to initialize.cpp at all. The row is a ratchet
+# raise, not a lowering; the analysis above is kept because the same
+# sensitivity will move this function again on the next header change.
+initialize	?initialize_game_data@@YIXXZ	100.0000
 inputmgr	??0inputManager@@QAE@XZ	86.5667
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	95.1257
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000
@@ -617,6 +651,7 @@ textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000
 textwdgt	??1textWidget@@UAE@XZ	100.0000
 town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000
 town	?CanBuildDock@town@@QAEEXZ	100.0000
+town	?HasGarrison@town@@QAEHXZ	100.0000
 town	?UpgradedDwellingID@town@@SIHH@Z	100.0000
 town	?can_build@town@@QBEEF@Z	81.1852
 town	?can_ever_build@town@@QBEEH@Z	100.0000
@@ -630,14 +665,13 @@ town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100
 town	?get_silo_income@town@@QBEPAHXZ	100.0000
 town	?initialize_hordes@town@@SIXXZ	99.7778
 town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000
+town	?remove_garrison_hero@town@@QAEXXZ	100.0000
 town	town_BuildBuilding	0.0000
 town	town_Deallocate	0.0000
 town	town_GiveSpells	0.0000
-town	town_HasGarrison	0.0000
 town	town_SwapHeroes	0.0000
 town	town_View	0.0000
 town	town_buy_building	0.0000
-town	town_remove_garrison_hero	0.0000
 town	town_town_1bde80	0.0000
 town	town_update_shipyard	0.0000
 trees	@_tr_align@4	100.0000

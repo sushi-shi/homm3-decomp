@@ -6,6 +6,7 @@
 #include <string.h>
 #include "ai_tactical.h"
 #include "findpath.h"
+#include "game.h"
 
 // VC6's own <xutility> reference-returning min (`_cpp_min`, what the
 // <algorithm> min macro expands to). get_cure_value 0x439c30 homes

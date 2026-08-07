@@ -212,6 +212,8 @@ public:
     int* get_silo_income() const;
     unsigned char is_legal_building(type_building_id building) const;
     int HasGarrison();
+    // The garrisoned hero steps out onto the town tile (0x5be390).
+    void remove_garrison_hero();
     // 0x5c1460. The DC carries the pair
     // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
     // only the const half has a proven retail reader so far

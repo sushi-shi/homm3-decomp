@@ -138,9 +138,26 @@ MISSING forever.
   versa). Order sweeps plateau; document.
 - **EH-bearing functions** (P2.2): fs:[0] frames can't close until the
   synth-PDB EH scope lands. Claim + `// EH-bearing`, body only if cheap.
-- **STLport surface** (armygrp/exec/u2dvers/herodefs): OPEN vendoring
-  decision; std::string/vector-shaped bodies and anonymous-namespace TU-hash
-  manglings wait.
+- **Include-set sensitivity** (initialize_game_data precedent, byte-proven
+  2026-08-08): a function's exactness can depend on the COUNT OF
+  USER-DEFINED TYPE DEFINITIONS visible in its TU, with no semantic change
+  anywhere. One unused `struct probe_t { int a; };` in a header took
+  initialize_game_data 100.0 -> 96.09; a 0..8-struct sweep gave
+  100.0/96.09/96.09/26.18/97.04/94.07/100.0/100.0/96.09 - NON-MONOTONIC, so
+  it is VC6 optimizer state (type/symbol-table population perturbing CSE and
+  addressing-mode choice), not a modelling error. The delta is real codegen:
+  retail addressed a row directly (`mov [8*eax + tbl+0x160], ebx`) where our
+  CL hoisted the base into a register. Blank lines, comments, typedefs,
+  `extern int` and bare `struct X;` forward declarations do NOT move it -
+  which is why a 200-extern probe cleared the wrong hypothesis. NO local
+  spelling change can fix this; the match returns when the TU's include
+  closure matches retail's (breaking one include edge restored it). When a
+  header change moves an unrelated TU's exact function, suspect this before
+  hunting a spelling, and re-measure after any include-graph edit.
+- **STLport surface** — CLOSED 2026-08-07: retail links Dinkumware (VC6's
+  shipped STL), NOT STLport. `#include <bitset>`/`<vector>` from the pinned
+  toolchain is all that is needed where real call sites exist. Bodies parked
+  on the old premise are reachable; re-read any "STLport-blocked" note.
 
 ## TU closure (functions-only, per the standing data-scope decision)
 

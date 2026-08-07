@@ -7,6 +7,11 @@
 
 #include "mapcell.h"
 #include "struct.h"
+// `class game` embeds the hero array by value, so the COMPLETE hero
+// type has to be visible here. hero.h pulls armygrp.h; armygrp.h no
+// longer pulls this header back (see the note at its top) - that is the
+// edge that was cut to make this include legal.
+#include "hero.h"
 
 // The map record GetWorldMapData hands out. Its first 0xd0 bytes are the
 // scenario's object/event vectors (13 of them at VC6's 16-byte
@@ -83,11 +88,40 @@ public:
     // gpGame->towns[this->id].owner, both with a 360-byte stride - the
     // same 360 that closes sizeof(town).
     town* towns;             // +0x21614
+    char pad_21618[0x8];
+    // The scenario's 156 hero records. BOTH the base and the extent are
+    // byte-proven by one loop, the hero sweep at 0x4be841:
+    //     lea edi, [gpGame + 0x21620]      ; &heroes[0]
+    //   L: push esi / mov ecx,edi / call ...
+    //     add edi, 0x492                   ; += sizeof(hero) == 1170
+    //     inc eax / cmp eax, 0x9c / jb L   ; 156 iterations, unsigned
+    // and 0x21620 + 156*1170 == 0x4ded8 clears the next known member
+    // (the 156-dword band at +0x4dfb4 that 0x4bf2a2 fills with -1 via
+    // `mov ecx,0x9c` / `rep stosd`, itself a second witness for 156).
+    // Every retail reader indexes it with the same 65*9*2 chain
+    // (`shl r,6` / `add r,id` / `lea r,[r+8*r]` / `lea r,[gpGame+2*r+
+    // 0x21620]`), which is how town.obj's five hero-touching bodies
+    // reach it.
+    enum { HERO_COUNT = 156 };
+    hero heroes[HERO_COUNT];
 
     NewfullMap* GetWorldMapData();
     playerData* GetLocalPlayer();
     unsigned char IsHuman(int gamePos);          // 0x4ce940
     NewmapCell* get_cell(type_point point);      // 0x42ed80 (ai_player.obj)
+    // DC `game::GetHero`, dc 0x2eb0, 36 B, declared in E:\gamedcs\Game.h
+    // line 972 - i.e. an INLINE MEMBER of this header, which is exactly
+    // how retail behaves: no out-of-line body exists and every reader
+    // expands it in place. The -1 test is part of the accessor, not of
+    // its callers: town::HasGarrison reaches it after its own
+    // `garrisonHeroId < 0` gate and STILL emits the redundant
+    // `cmp edx,-1`, which is what proves the test lives inside here.
+    hero* GetHero(int heroId)
+    {
+        if (heroId == -1)
+            return 0;
+        return &heroes[heroId];
+    }
 };
 
 // Retail .bss 0x6994e8 (the game record) and 0x69ccb0 (the acting

@@ -28,7 +28,18 @@ public:
     // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back
     // with 16-bit stores.
     short mana;                     // +0x18
-    char pad_01a[0x77];
+    // The hero's own id - the index of this record in gpGame->heroes.
+    // Byte-proven a full DWORD by town.obj: town::remove_garrison_hero
+    // (0x5be407) and town::SwapHeroes both read `mov edx,[hero+0x1a]`
+    // and feed it straight back into the 1170-stride heroes index, and
+    // town::View (0x5be3fa) pushes it to advManager::SetHeroContext.
+    int id;                         // +0x1a
+    char pad_01e[0x4];
+    // Owning player. SIGNED char: town::View widens it with
+    // `movsx edx, byte [gpGame + 1170*id + 0x21642]` before comparing
+    // it against the acting-player id. Name provisional.
+    signed char owner;              // +0x22
+    char pad_023[0x6e];
     // Seven army slots: creature type at 0x91+i*4, count at 0xad+i*4
     // (CreatureTypeCount reads [ecx-0x1c] against [ecx] with ecx
     // walking from 0xad) - exactly armyGroup's 56-byte layout, and
@@ -90,9 +101,20 @@ public:
     enum { NUM_SPELLS = 70 };       // DC SpellID::kNumSpells
     unsigned char in_spellbook[NUM_SPELLS];     // +0x3ea
     unsigned char available_spells[NUM_SPELLS]; // +0x430
-    // +0x476 stats[4] (the four primary skills, DC name `stats`) is
-    // byte-proven by get_primary_skill_total but has no consumer in a
-    // compiled TU yet; it is documented here rather than modeled.
+    // The four primary skills (DC name `stats`), byte-proven by
+    // hero::get_primary_skill_total 0x4e5960 - a four-iteration
+    // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
+    // and by 0x4e6120, which adds artifact bonuses into the same band.
+    signed char stats[4];                       // +0x476
+    // +0x47a..0x491, the record's tail. Ghidra's decompiler recovery
+    // (evidence/ghidra-structs, LEAD-GENERATOR grade) puts six 4-byte
+    // fields here at 0x47a/0x47e/0x482/0x486/0x48a/0x48e, DC-named
+    // aggression / value_of_power / value_of_duration /
+    // value_of_knowledge / value_of_spring / value_of_well - which end
+    // exactly at 0x492. No retail body in a compiled TU reads them yet,
+    // so they stay a pad; the EXTENT, not the field split, is what is
+    // proven (see SIZE below).
+    char pad_47a[0x18];
 
     unsigned char HasArtifact(int whichArtifact);
     // BYTE-width return, not int (corrected 2026-08-07): 212 of the 224
@@ -125,7 +147,22 @@ public:
     // row - its name is HD-crossbuild + IDA lineage only, PROVISIONAL.
     float GetNecromancyFactor(unsigned char apply_limit);
     TCreatureType GetNecromancyCreature();
+    // Claimed in src/hero.cpp (0x4d7900, dc 0xcaedc); declared here
+    // because town::remove_garrison_hero calls it with the town's
+    // owner, a type_point built from the town's map cell, and 0.
+    void PlaceInMap(int iPlayer, type_point point, unsigned char reset_flags);
 };
+// sizeof(hero) == 1170 (0x492), byte-proven THREE independent ways:
+//   - the save walk at 0x4be841 runs `lea edi,[gpGame+0x21620]` and
+//     then `add edi,0x492` / `inc eax` / `cmp eax,0x9c` / `jb` - a
+//     156-iteration stride-0x492 sweep of the hero array, which pins
+//     the element size and the array bound in one loop;
+//   - five town.obj bodies index `gpGame + 0x21620 + 1170*id` with the
+//     shl 6 / add / lea x8 / lea x2 chain (65*9*2 == 1170);
+//   - two `push 0x492` / `call operator new` sites at 0x4af225 and
+//     0x4af26c, each immediately followed by `call hero::hero`.
+// 0x548 is army, not hero: it has ZERO `operator new` sites image-wide.
+SIZE(hero, 0x492);
 
 #pragma pack(pop)
 

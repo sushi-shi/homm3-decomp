@@ -7,7 +7,18 @@
 
 #include <va.h>
 
-#include "game.h"
+// This header used to pull in "game.h" for its consumers' convenience.
+// It cannot any more: game.h owns `class game`, whose hero array needs
+// the COMPLETE hero type, and hero.h needs armyGroup for the record at
+// hero+0x91 - so game.h -> hero.h -> armygrp.h -> game.h was a cycle.
+// The edge broken is this one, because armygrp.h itself never needed
+// game.h: `game` and gpGame moved to their owner's header on
+// 2026-08-07, and what is left of the dependency is the two small
+// value-type headers game.h used to forward here. A TU that wants
+// `game`/gpGame/playerData now says `#include "game.h"` itself
+// (armygrp.cpp, hero.cpp, town.cpp, ai_tactical.cpp all do).
+#include "mapcell.h"   // TTerrainType, for akNativeTerrains below
+#include "struct.h"    // type_point, used through this header's consumers
 
 // Bootstrap domain: only the sentinel is modeled; the full creature
 // roster gets its own header when a consumer needs the values.
