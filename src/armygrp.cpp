@@ -818,8 +818,7 @@ int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero*
             || const_cast<armyGroup*>(otherGroup)->IsMember(CREATURE_ARCH_DEVIL)))
         luck--;
     if (ownerTown && ownerTown->type == TOWN_RAMPART
-        && ((ownerTown->active[0] & gFountainOfFortuneMask[0])
-            | (ownerTown->active[1] & gFountainOfFortuneMask[1])))
+        && (ownerTown->active & bitNumber[EXTRA_0_ID]))
         luck += 2;
     if (apply_limits)
         return luck < -3 ? -3 : (luck > 3 ? 3 : luck);

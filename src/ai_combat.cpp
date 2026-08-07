@@ -194,8 +194,9 @@ void type_AI_combat_data::initialize_creatures(double base_modifier, const hero*
 // registers (esi+edi, costing a push edi) where retail keeps one in a
 // register and ands the other straight from memory. Register-homing
 // family - tried and rejected: `!enemy_town` vs `== 0`, reordering the
-// two zero stores, and the town.cpp-proven `built[0]&m[0]|built[1]&m[1]`
-// pair spelling is already what retail's and/and/or shape wants.
+// two zero stores, and the dword-pair `built[0]&m[0]|built[1]&m[1]`
+// spelling the three masks used to need (the masks are bitNumber slots,
+// so the __int64 form now spells the same and/and/or shape directly).
 VA(0x00424790, 0xE5)  // dc-callgraph unique, dc 0x2a470
 void type_AI_combat_data::check_wall_archery_penalty(const town* enemy_town)
 {
@@ -203,15 +204,15 @@ void type_AI_combat_data::check_wall_archery_penalty(const town* enemy_town)
     penalty_distance = 0;
     if (enemy_town == 0)
         return;
-    if (enemy_town->built[0] & gFortMask[0] | enemy_town->built[1] & gFortMask[1]) {
+    if (enemy_town->built & bitNumber[CASTLE_FORT_ID]) {
         wall_penalty = 1;
         penalty_distance = 4;
     }
-    if (enemy_town->built[0] & gCitadelMask[0] | enemy_town->built[1] & gCitadelMask[1]) {
+    if (enemy_town->built & bitNumber[CASTLE_CITADEL_ID]) {
         wall_penalty = 1;
         penalty_distance = 5;
     }
-    if (enemy_town->built[0] & gCastleMask[0] | enemy_town->built[1] & gCastleMask[1]) {
+    if (enemy_town->built & bitNumber[CASTLE_CASTLE_ID]) {
         wall_penalty = 1;
         penalty_distance = 6;
     }

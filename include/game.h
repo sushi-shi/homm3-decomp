@@ -23,7 +23,32 @@ public:
     unsigned char HasTwoLevels;
 };
 
-class playerData;
+class town;
+
+// playerData head: NextHero returns -1 when the player has no mobile
+// hero (HasMobileHero is its bool wrapper). sizeof is 360, byte-proven
+// by the gpGame->players index arithmetic every town.obj gate emits
+// (`45*owner` then `[ecx + 8*eax + 0x20ad0]`), and corroborated from
+// the other side: eight such records starting at 0x20ad0 end at
+// 0x21610, sixteen bytes short of the hero array at 0x21620.
+class playerData {
+public:
+    char pad_00[4];
+    int currHeroId;       // +0x04 (Deactivate stores -1)
+    char pad_08[0x37];
+    unsigned char currTownId;  // +0x3f (Deactivate stores 0xff)
+    char pad_40[0x128];
+
+    int NextHero();
+    int NextTown();
+    unsigned char IsLocalHuman();
+    unsigned char HasMobileHero();
+    // 0x4b9f40 (claimed in src/game.cpp). town::can_build,
+    // can_ever_build and get_buildable_mask all call it on
+    // gpGame->players[town->owner] to veto a second Capitol.
+    unsigned char HasCapitol();
+};
+SIZE(playerData, 360);
 
 // Head model: GetWorldMapData hands out the embedded map record at
 // 0x1fb70. Names provisional. (Merged 2026-08-07 with the second `game`
@@ -34,7 +59,13 @@ class game {
 public:
     char pad_00000[0x1f698];
     int f_1f698;
-    char pad_1f69c[0x3c];
+    char pad_1f69c[0x1];
+    // Byte gate town::can_build and get_buildable_mask test before the
+    // Castle-Griffin-Tower special case that drops the Blacksmith
+    // requirement; it sits four bytes past f_1f698 in the same band.
+    // Role unattested - ordinal placeholder.
+    char field_1f69d;
+    char pad_1f69e[0x3a];
     // "The active side is computer-played": ai_tactical crosses it with
     // combatManager::sideIsAI (get_ranged_attack_value 0x435cb0 tests it
     // for non-zero; the type_AI_combat_parameters ctor 0x435ec0 tests it
@@ -42,6 +73,16 @@ public:
     char AI_in_control;   // +0x1f6d8
     char pad_1f6d9[0x497];
     NewfullMap worldMap;  // +0x1fb70
+    char pad_1fc4c[0xe84];
+    // Eight 360-byte player records at +0x20ad0 (town.obj indexes them
+    // with 45*owner scaled by 8).
+    playerData players[8];
+    char pad_21610[0x4];
+    // The scenario's town array. town::can_build reads
+    // gpGame->towns[this->id].field_02 and town::Deallocate writes
+    // gpGame->towns[this->id].owner, both with a 360-byte stride - the
+    // same 360 that closes sizeof(town).
+    town* towns;             // +0x21614
 
     NewfullMap* GetWorldMapData();
     playerData* GetLocalPlayer();
@@ -60,21 +101,6 @@ extern playerData* gpCurrentPlayer;
 // sites).
 unsigned char InitImmMouse(void* hInst, void* hwnd);  // 0x4b6890
 void ImmMouseWindowMoved();                           // 0x4b6950
-
-// playerData head: NextHero returns -1 when the player has no mobile
-// hero (HasMobileHero is its bool wrapper).
-class playerData {
-public:
-    char pad_00[4];
-    int currHeroId;       // +0x04 (Deactivate stores -1)
-    char pad_08[0x37];
-    unsigned char currTownId;  // +0x3f (Deactivate stores 0xff)
-
-    int NextHero();
-    int NextTown();
-    unsigned char IsLocalHuman();
-    unsigned char HasMobileHero();
-};
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\game.cpp:208, dc 0xa2af8) unsigned char InitializeRandomTavernText();
