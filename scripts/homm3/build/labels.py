@@ -87,7 +87,7 @@ SPECIAL_RE = re.compile(r"([\w:]+)::`([^'`]+)'\s*\(")
 IDENT_RE = re.compile(r"[^0-9A-Za-z_]+")
 VOLATILE_E_RE = re.compile(r"^_?\$E[0-9]+$")
 COMPGEN_KINDS = {"STATIC_INIT_DISPATCH", "STATIC_ATEXIT", "STATIC_DTOR",
-                 "STATIC_CTOR"}
+                 "STATIC_CTOR", "SCALAR_DELETING_DTOR"}
 
 
 def mask_lexical_noise(blob: str) -> str:
@@ -253,6 +253,42 @@ def scan_sources(functions):
     return rows
 
 
+_IMPLIB_DECORATIONS = None
+
+
+def implib_decorations() -> dict:
+    """Import-lib PROOF for stdcall decoration: import-directory name ->
+    full __imp_ symbol, read from the VC6 toolchain import libraries'
+    archive symbol tables (the linker generation that built retail).
+    A name whose libraries disagree on decoration stays unproven."""
+    global _IMPLIB_DECORATIONS
+    if _IMPLIB_DECORATIONS is not None:
+        return _IMPLIB_DECORATIONS
+    out, ambiguous = {}, set()
+    libdir = common.HOMM3_DIR / "build/homm3-toolchain-vc6-sp3/msvc/lib"
+    for lib in sorted(libdir.glob("*.LIB")) if libdir.is_dir() else []:
+        data = lib.read_bytes()
+        if not data.startswith(b"!<arch>\n"):
+            continue
+        try:
+            size = int(data[8 + 48:8 + 58].split()[0])
+            count = int.from_bytes(data[68:72], "big")
+        except (ValueError, IndexError):
+            continue
+        blob = data[72 + 4 * count:8 + 60 + size]
+        for raw_sym in blob.split(b"\0")[:count]:
+            sym = raw_sym.decode("latin-1")
+            if not sym.startswith("__imp__") or "@" not in sym:
+                continue
+            key = sym[7:].rsplit("@", 1)[0]
+            if out.setdefault(key, sym) != sym:
+                ambiguous.add(key)
+    for key in ambiguous:
+        out.pop(key, None)
+    _IMPLIB_DECORATIONS = out
+    return out
+
+
 def iat_slots(exe_path: Path):
     """slot rva -> __imp_ spelling, from the import directory."""
     data = exe_path.read_bytes()
@@ -295,8 +331,13 @@ def iat_slots(exe_path: Path):
             else:
                 name = data[raw(thunk) + 2:raw(thunk) + 2 + 256] \
                     .split(b"\0")[0].decode("latin-1")
-                prefix = "__imp_" if name.startswith("?") else "__imp__"
-                slots[slot] = (prefix + name, "iat-undecorated")
+                proven = (None if name.startswith("?")
+                          else implib_decorations().get(name))
+                if proven:
+                    slots[slot] = (proven, "iat-implib")
+                else:
+                    prefix = "__imp_" if name.startswith("?") else "__imp__"
+                    slots[slot] = (prefix + name, "iat-undecorated")
             index += 1
         off += 20
     return slots
@@ -309,11 +350,22 @@ def _demangle_key(mangled: str):
     scan produces for `armyGroup::armyGroup`; dtors (??1) key as
     class_class@dtor so an overloaded-ctor group never absorbs its
     dtor; other specials (operators) return None."""
+    if mangled.startswith("??_G"):
+        # scalar deleting destructor - joined by the VA_COMPGEN
+        # SCALAR_DELETING_DTOR claims (owner = the class)
+        cls = mangled[4:].split("@@", 1)[0].split("@")[0]
+        return f"{cls}_{cls}".lower() + "@gdtor"
     if mangled.startswith("??0") or mangled.startswith("??1"):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
         key = f"{cls}_{cls}".lower()
         return f"{key}@dtor" if mangled.startswith("??1") else key
     if not mangled.startswith("?") or mangled.startswith("??"):
+        # C-mangled stdcall/fastcall publics: _name@N / @name@N -> name
+        # (extern "C" __stdcall in a game TU; first hit _WinMain@16).
+        # Plain cdecl _name is left alone - no claim needs it yet.
+        m = re.match(r"^[_@]([A-Za-z_$][\w$]*)@\d+$", mangled)
+        if m:
+            return m.group(1).lower()
         return None
     components = mangled[1:].split("@@", 1)[0].split("@")
     qualified = list(reversed(components[1:])) + [components[0]]
@@ -321,7 +373,8 @@ def _demangle_key(mangled: str):
 
 
 def _base_authority_names(unit: str) -> dict:
-    """key -> [(mangled, content_size)...] PUBLIC text symbols of the
+    """key -> [(mangled, content_size)...] defined text symbols (external
+    or file-static function) of the
     unit's compiled base obj, each key's list in DEFINITION order (COFF
     section order - VC6 emits one COMDAT per function in source order,
     so an overload group's order matches the claims' rva order).
@@ -359,7 +412,12 @@ def _base_authority_names(unit: str) -> dict:
     while i < nsyms:
         section = struct.unpack_from("<h", data, o + 12)[0]
         storage = data[o + 16]
-        if storage == 2 and section > 0:  # external, defined
+        # Defined externals, plus file-static FUNCTIONS (storage 3 with
+        # a C++-mangled name; first: monframeinfo's static
+        # InitializeCreatureAnimationTraits, which retail keeps static -
+        # the mangled spelling is still the true pairing name). Static
+        # DATA never mangles (`_name`), so _demangle_key drops it.
+        if storage in (2, 3) and section > 0:
             name = symname(o)
             key = _demangle_key(name)
             if key:
@@ -415,12 +473,21 @@ def main(argv=None) -> int:
     for row in rows.values():
         if row["provenance"] == "src-VA":
             src_by_unit.setdefault(row["unit"], []).append(row)
+        elif (row["provenance"] == "src-VA_COMPGEN"
+              and "$scalar_deleting_dtor$" in row["name"]):
+            # ??_G claims join the base publics like source functions do
+            src_by_unit.setdefault(row["unit"], []).append(row)
     for unit, unit_rows in src_by_unit.items():
         authority = _base_authority_names(unit)
         if not authority:
             continue
         claim_keys = {}
         for row in unit_rows:
+            if "$scalar_deleting_dtor$" in row["name"]:
+                owner = row["name"].rsplit("$", 1)[1].lower()
+                claim_keys.setdefault(f"{owner}_{owner}@gdtor",
+                                      []).append(row)
+                continue
             key = row["name"].lower()
             suffix = f"_{row['rva']:x}"
             if key.endswith(suffix):
@@ -493,6 +560,14 @@ def main(argv=None) -> int:
             if r["class"] and r["class_addr_offset"] == "0":
                 vt_class.setdefault(int(r["vtable_rva"], 16), r["class"])
     _h, vt_rows = read_tsv_body(VTABLES)
+    # An ADMITTED census name outranks the candidate enrichment: when the
+    # hand census places a class, a conflicting enrichment attribution of
+    # the SAME class to another rva is dropped (first case: NH3API-derived
+    # rows put mouseManager on 0x240038 while the retail ctor at 0x10cb50
+    # stores 0x240028 - retail bytes win).
+    admitted_names = {row[2] for row in vt_rows if len(row) > 2 and row[2]}
+    vt_class = {rva: cls for rva, cls in vt_class.items()
+                if cls not in admitted_names}
     for row in vt_rows:
         rva, count = int(row[0], 16), int(row[1])
         if rva in rows:

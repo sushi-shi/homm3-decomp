@@ -137,6 +137,30 @@ build build/objdiff/base/findpath.obj: cl src/findpath.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
   unit = findpath
+build build/objdiff/base/smackmgr.obj: cl src/smackmgr.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = smackmgr
+build build/objdiff/base/path.obj: cl src/path.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = path
+build build/objdiff/base/monframeinfo.obj: cl src/monframeinfo.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = monframeinfo
+build build/objdiff/base/initialize.obj: cl src/initialize.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = initialize
+build build/objdiff/base/winfile.obj: cl src/winfile.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = winfile
+build build/objdiff/base/strip.obj: cl src/strip.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
+  unit = strip
 build build/objdiff/base/winmgr.obj: cl src/winmgr.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /ML /Gr /GX /D_WINDOWS
@@ -200,7 +224,10 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
     build/objdiff/base/sample.obj build/objdiff/base/font.obj $
     build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
-    build/objdiff/base/findpath.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
+    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
+    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
+    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $
     build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $
@@ -222,7 +249,10 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
     build/objdiff/base/sample.obj build/objdiff/base/font.obj $
     build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
-    build/objdiff/base/findpath.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
+    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
+    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
+    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $
     build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $
@@ -245,7 +275,10 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
     build/objdiff/base/sample.obj build/objdiff/base/font.obj $
     build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
-    build/objdiff/base/findpath.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
+    build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
+    build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
+    build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $
     build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $

@@ -5,31 +5,43 @@
 #ifndef HOMM3_CMBTMGR_H
 #define HOMM3_CMBTMGR_H
 
+#include "army.h"
+#include "hexcell.h"
+
 // Head model from the byte-proven leaves. The battlefield holds two
-// sides of 20 stacks; each stack record is 0x548 bytes and the sides
-// are 0x6ee8 apart (ResetHitByCreature clears a flag at +0x55bc in
-// every one; IsWinner walks the same stride from +0x5550). Names
-// provisional - the ctor claim will grow this roster.
-struct TCombatSide {
-    struct TStack {
-        int creatureId;         // +0x00 (IsWinner tests -1)
-        char pad_04[0x4c];
-        unsigned int flags;     // +0x50
-        char pad_54[0x18];
-        unsigned char hitByCreature;  // +0x6c
-        char pad_6d[0x4db];
-    } stacks[20];
-    char pad_side[0x6ee8 - 20 * 0x548];
-
-};
-
+// sides of 21 army slots (20 used - ResetHitByCreature clears exactly
+// 20 per side - plus one spare making the 0x6ee8 side stride); the
+// army array base 0x54cc and the 0x548 record stride are byte-proven
+// by hexcell::get_army/get_dead_army, which index side*21 + slot.
+// (Rebased 2026-08-06: the earlier TCombatSide/TStack view sat 0x34
+// past the real army boundary and its field offsets were 0x50 short -
+// objdiff's immediate masking hid the error as the old 99.9 residual
+// on ResetHitByCreature.)
 class combatManager {
 public:
-    char pad_0000[0x5500];
-    TCombatSide sides[2];
+    char pad_0000[0x1c4];
+    // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
+    // (0x523bb0: index*112 + 0x1c4).
+    hexcell cells[187];               // +0x1c4, ends 0x5394
+    char pad_5394[0x138];
+    army armies[2][21];               // +0x54cc
+    char pad_1329c[0x1cc];
+    // Adjacency table [cell][direction] of int16 cell indexes (-1 =
+    // off-grid); path.cpp's whole direction system reads it. Slots
+    // 6/7 are resolved to real directions by facing first.
+    short adjacentCells[187][6];      // +0x13468
+    char pad_13d2c[0x3c];
+    // Placement-phase latch: FindPath/ValidPath forward it into
+    // FindCombatPath's in_placement_phase and lift the speed limit
+    // to 99 while it is set. Name provisional.
+    unsigned char bCreaturePlacement; // +0x13d68
 
+    unsigned char IsWinner(int this_side);
     void ResetHitByCreature();
 };
+
+// Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).
+extern combatManager* gpCombatManager;
 
 // Per-castle hex-index table at 0x63bd00: InCastle divides the hex by
 // 0x11 (the row stride) and compares against the row's wall column.

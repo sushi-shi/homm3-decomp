@@ -204,6 +204,36 @@ source = "src/findpath.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
+unit = "smackmgr"
+source = "src/smackmgr.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "path"
+source = "src/path.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "monframeinfo"
+source = "src/monframeinfo.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "initialize"
+source = "src/initialize.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "winfile"
+source = "src/winfile.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "strip"
+source = "src/strip.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
 unit = "winmgr"
 source = "src/winmgr.cpp"
 flags = "game_o2_ml_gr_windows"

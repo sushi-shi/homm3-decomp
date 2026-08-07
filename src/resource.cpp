@@ -23,19 +23,15 @@ resource::resource(const char* newName, EResourceType newType)
     }
 }
 
+// E:\gamedcs\resource.cpp:44 - resource::`scalar deleting destructor'
+// (dc 0x1209c0). Compiler-generated from the virtual dtor; our base
+// obj already emits ??_Gresource@@UAEPAXI@Z, this claim names the
+// retail body so the pair scores. Retail places it BETWEEN ctor and
+// dtor (the DC build appends it after).
+VA_COMPGEN(0x00558770, 0x23, SCALAR_DELETING_DTOR, resource)
+
 // E:\gamedcs\resource.cpp:47
 VA(0x005587a0, 0x7)  // anchor-global, dc 0x12099c
 resource::~resource()
 {
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\resource.cpp:44
-DC_ONLY(0x1209c0, 0x34)
-void* resource::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass

@@ -96,7 +96,12 @@ TTextResource* ResourceManager::GetText(const char* name)
 }
 
 // E:\gamedcs\resourcemanager.cpp:1461
-DC_ONLY(0x122164, 0x98)
+// Located as monframeinfo's InitializeCreatureAnimationTraitsTable
+// callee (0x50c810 loads the "cranim.txt" literal into ecx before the
+// call); the body strncpy's the 12-byte cache key like the neighboring
+// getters and falls back on a miss to the loader at 0x55be60 (the
+// "getspreadsheet"-string function), mirroring the dc roster order.
+VA(0x0055c0a0, 0x8A)  // anchor-callee, dc 0x122164
 TSpreadsheetResource* ResourceManager::GetSpreadsheet(const char* name)
 {
     // @stub

@@ -5,6 +5,32 @@
 #ifndef HOMM3_MONFRAMEINFO_H
 #define HOMM3_MONFRAMEINFO_H
 
+#include <va.h>
+
+// PROVEN layout (retail parser 0x50ca00): 0x54 stride byte-derived from
+// the &table[id] scaling (id*7*3*4), every field offset from the parse
+// stores - shorts at +0..+0xa, the float fill at +0xc..+0x38, ints at
+// +0x3c..+0x50. Member names are the Dreamcast field list verbatim
+// (type 0x1fe4/0x3d94, size 84 on both builds).
+struct SMonFrameInfo {
+    short iMissileOffset[6];     // +0x00
+    float fArrowAngle[12];       // +0x0c
+    int iExtraNumTroopsXOffset;  // +0x3c
+    int iAttackFrames;           // +0x40
+    int iFidgetFrequency;        // +0x44
+    int iWalkCycleTime;          // +0x48
+    int iAttackStartCycleTime;   // +0x4c
+    int iFlightPixelSpan;        // +0x50
+};
+SIZE(SMonFrameInfo, 84);
+
+// Dreamcast public ?gMonFrameInfo@@3AAY0HK@$$CBUSMonFrameInfo@@A - the
+// exported const-reference view of monframeinfo.cpp's file-static table.
+// The DC bound is 122 (its RoE-era roster); retail's bss extent
+// 0x6998e0..0x69ca18 (mousemgr's latches) is exactly 150 * 0x54 -
+// Complete's creature capacity - so the retail bound is 150.
+extern const SMonFrameInfo (&gMonFrameInfo)[150];
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\monframeinfo.cpp:36, dc 0xfe598) unsigned char InitializeCreatureAnimationTraitsTable();
 // CODEVIEW(E:\gamedcs\monframeinfo.cpp:170, dc 0xfe764) void InitializeCreatureAnimationTraits(int id, const std::vector<char* row);

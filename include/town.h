@@ -10,18 +10,40 @@
 // provisional - the ctor claim will grow this roster.
 class town {
 public:
-    char pad_00[8];
+    char pad_00[4];
+    // Faction id (armyGroup::GetLuck gates the Fountain of Fortune on
+    // type == 1, Rampart).
+    unsigned char type;
+    char pad_05[3];
     unsigned char dockSite;
     char pad_09[0x147];
-    // Two 64-bit building bitfields: built@0x150 and available@0x160
-    // (CalcNumLevelArchers ands each against a dwelling mask table).
+    // Three 64-bit building bitfields: built@0x150 and available@0x160
+    // (CalcNumLevelArchers ands each against a dwelling mask table);
+    // the 0x158 pair is the mask armyGroup::GetLuck checks the
+    // Fountain bit in (name provisional).
     unsigned int built[2];
-    char pad_158[8];
+    unsigned int active[2];
     unsigned int available[2];
 
     unsigned char CanBuildDock();
     void CalcNumLevelArchers(int* numArchers, int* archerLevel);
+
+    // DC LF_ONEMETHOD STATIC + public ?initialize_hordes@town@@SAXXZ
+    // (dc 0x1664b0); retail 0x5bdf60 is entered by a bare tail jmp
+    // from initialize_game_data (no this), confirming static.
+    static void initialize_hordes();
+
+    // DC public ?included_buildings@town@@2PAY0CM@_JA (44-slot __int64
+    // rows). Retail .bss 0x6a8bb8, nine 0x160-stride rows to 0x6a9818
+    // (the DC build carries eight); filled by initialize.cpp's
+    // create_included_masks. Definition + DATA claim in src/town.cpp.
+    static __int64 included_buildings[9][44];
 };
+
+// Building bit 21 as a two-dword .data pair - the Fountain of Fortune
+// mask armyGroup::GetLuck (0x44b365) ands against town->active. Name
+// is a bootstrap invention.
+DATA(0x0066ce40) extern unsigned int gFountainOfFortuneMask[2];
 
 // Per-town dwelling masks the archer scan walks (8 bytes per level).
 // The retail bounds are relocation-carried (a table start and end the
@@ -30,10 +52,31 @@ public:
 enum ETownConstants {
     TOWN_DWELLING_MASK_COUNT = 7,
     // The "no dock site" sentinel CanBuildDock tests for.
-    TOWN_DOCK_SITE_NONE = 0xff
+    TOWN_DOCK_SITE_NONE = 0xff,
+    // Nine town types x 44 building-id slots, byte-derived from
+    // initialize_game_data's mask walks (0x160 row stride, rows 0..8,
+    // building ids to 43 in the requirement tables).
+    TOWN_TYPE_COUNT = 9,
+    TOWN_BUILDING_SLOTS = 44
 };
 
 extern unsigned int gDwellingMasks[TOWN_DWELLING_MASK_COUNT][2];
+
+// The 1i64 << n building-bit table every mask builder indexes (DC
+// public ?bitNumber@@3PA_JA; retail .data 0x66cd98). Defined by a TU
+// not yet located - extern only, no DATA claim (the gpWindowManager
+// pattern), so the delinker keeps its auto data_26cd98 identity.
+extern __int64 bitNumber[];
+
+// Per-town-type legal-building rollup create_requirement_masks
+// accumulates (DC public ?gTownEligibleBuildMask@@3PA_JA; retail .bss
+// 0x6976f0, nine qwords). Owner TU unlocated - extern only.
+extern __int64 gTownEligibleBuildMask[TOWN_TYPE_COUNT];
+
+// Transitive building-requirement masks, one 44-slot row per town type
+// (DC public ?gHierarchyMask@@3PAY0CM@_JA; retail .bss 0x697798,
+// 0x160-stride rows to 0x6983f8). Owner TU unlocated - extern only.
+extern __int64 gHierarchyMask[TOWN_TYPE_COUNT][TOWN_BUILDING_SLOTS];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\town.cpp:1732, dc 0x167958) void show_building_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards);

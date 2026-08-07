@@ -82,7 +82,7 @@ void army::SetLuck(const hero* ownerHero, const armyGroup* ownerGroup, const tow
 }
 
 // E:\gamedcs\army.cpp:540
-DC_ONLY(0x443b4, 0xF4)
+VA(0x0043e000, 0x139)  // dc-bracket forced, dc 0x443b4
 void army::SetMorale(const hero* ownerHero, const armyGroup* ownerGroup, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground)
 {
     // @stub
@@ -166,28 +166,28 @@ void army::animate_missile(army* armyToAttack)
 }
 
 // E:\gamedcs\army.cpp:1356
-DC_ONLY(0x458a0, 0x5D0)
+VA(0x0043f900, 0x7F9)  // dc-bracket forced, dc 0x458a0
 void army::range_attack(army* armyToAttack)
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:1541
-DC_ONLY(0x45e70, 0x150)
+VA(0x00440100, 0x3E)  // dc-bracket forced, dc 0x45e70
 void army::range_attack()
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:1629
-DC_ONLY(0x45fc0, 0x46)
+VA(0x00440140, 0x1F)  // dc-bracket forced, dc 0x45fc0
 long army::get_clockwise(long direction)
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:1643
-DC_ONLY(0x46008, 0x46)
+VA(0x00440160, 0x1A6)  // dc-bracket forced, dc 0x46008
 long army::get_counter_clockwise(long direction)
 {
     // @stub
@@ -327,7 +327,12 @@ long army::get_average_damage(const army* enemy, unsigned char ranged_attack, lo
 }
 
 // E:\gamedcs\army.cpp:2776
-DC_ONLY(0x47bcc, 0x38)
+// Located by the DC-order slot directly before can_shoot (claimed
+// 0x4428f0) and the body: null/self reject, berserk (+0x284) returns
+// true for everyone, hypnotize (+0x288) flips the effective side, then
+// an effective-side inequality on +0xf4. path.cpp's ValidAttack
+// criteria-1 arm calls it on the target cell's army.
+VA(0x00442880, 0x68)  // anchor-callee, dc 0x47bcc
 unsigned char army::is_enemy(const army* arg)
 {
     // @stub
@@ -565,7 +570,7 @@ void army::AttackWall(int iTargetGridIndex)
 }
 
 // E:\gamedcs\army.cpp:4526
-DC_ONLY(0x4aa3c, 0x90)
+VA(0x00445ec0, 0x10C)  // dc-callgraph unique, dc 0x4aa3c
 void army::attack_wall(TWallTargetId wall, const type_ballistics_traits* ballistics)
 {
     // @stub
@@ -761,7 +766,7 @@ unsigned char group_has_dragons(long group)
 }
 
 // E:\gamedcs\army.cpp:5488
-DC_ONLY(0x4c210, 0x164)
+VA(0x00447a80, 0x429)  // dc-callgraph unique, dc 0x4c210
 unsigned char is_valid_caliph_spell(SpellID spell, const army* target)
 {
     // @stub
@@ -775,7 +780,7 @@ long army::get_valid_caliph_spells(const army* target)
 }
 
 // E:\gamedcs\army.cpp:5564
-DC_ONLY(0x4c3ac, 0xBA)
+VA(0x00447ee0, 0xF8)  // dc-callgraph unique, dc 0x4c3ac
 void army::cast_caliph_spell(long hex)
 {
     // @stub

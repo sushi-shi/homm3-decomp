@@ -5,6 +5,59 @@
 #ifndef HOMM3_ARMY_H
 #define HOMM3_ARMY_H
 
+#include <va.h>
+
+// Opaque head model. The 0x548 stride and the 0x54cc array base in
+// combatManager are byte-proven by hexcell::get_army/get_dead_army
+// (0x4e7170/0x4e71b0: index = side*21 + slot, scaled by 0x548 from
+// gpCombatManager + 0x54cc). ResetHitByCreature (0x465fe0) clears the
+// byte at army+0xf0 (manager+0x55bc); the dc-attested IsWinner walk
+// tests the int at army+0x84 against -1. Field names provisional.
+class army {
+public:
+    char pad_00[0x10];
+    // Grid identity, byte-proven by ValidAttack (0x523bb0): the target
+    // hexcell's armySide/armySlot pair compares against these.
+    int side;                     // +0x10
+    int slot;                     // +0x14
+    char pad_18[0x4];
+    // ValidPath stores the validated destination here on success.
+    int pathTarget;               // +0x1c
+    char pad_20[0x24];
+    // 0 = attacker-facing, 1 = defender-facing: selects the 6/7
+    // special-direction remaps in GetAdjacentCellIndex.
+    int facing;                   // +0x44
+    char pad_48[0x3c];
+    // Bit 0 doubles as the two-hex marker in get_adjacent_hex and
+    // GetAttackMask; the IsWinner walk tests the full int against -1.
+    int creatureId;               // +0x84
+    char pad_88[0x68];
+    unsigned char hitByCreature;  // +0xf0
+    char pad_f1[0x3];
+    // Effective combat side: is_enemy (0x442880) compares it between
+    // armies after the hypnotize flip; FindPath forwards it (flipped
+    // when hypnotized) into FindCombatPath.
+    int combatSide;               // +0xf4
+    char pad_f8[0x18c];
+    int berserkFlag;              // +0x284 (is_enemy: true vs everyone)
+    int hypnotizeFlag;            // +0x288 (flips the effective side)
+    char pad_28c[0x2c];
+    int boundFlag;                // +0x2b8 (FindPath: moves forced to 0)
+    char pad_2bc[0x28c];
+
+    int FindPath(int fpTargetCellIndex, int maxMoves,
+                 unsigned char bMoveUnlimited, unsigned char bLiteralTarget);
+    unsigned char ValidPath(int destIndex, unsigned char bLiteralTest);
+    unsigned GetAttackMask(int currIndex, int criteria, int iLiteralTargetIndex);
+    int ValidAttack(int currIndex, int direction, int criteria,
+                    int iLiteralIndex, int* testCellIndex);
+    int GetAdjacentCellIndex(int currIndex, int direction);
+    long get_adjacent_hex(long hex, long direction);
+    int GetSpeed();                          // 0x448cd0, claimed in army.cpp
+    unsigned char is_enemy(const army* arg); // 0x442880
+};
+SIZE(army, 0x548);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\army.cpp:917, dc 0x44e14) unsigned char add_item(std::vector<army* array, army* arg);
 // CODEVIEW(E:\gamedcs\army.cpp:930, dc 0x44ec0) void erase_item(std::vector<army* array, const army* arg);

@@ -511,7 +511,7 @@ rva	name
 0x217e4f	exe_srand
 0x217e5c	_rand
 0x217e7e	_atol
-0x217f09	crt_4a180_sub01_217f09
+0x217f09	_atoi
 0x217f20	_fmod
 0x217f52	_fabs
 0x218010	_memchr

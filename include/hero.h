@@ -5,6 +5,8 @@
 #ifndef HOMM3_HERO_H
 #define HOMM3_HERO_H
 
+#include <va.h>
+
 // Byte-proven by HasArtifact 0x4d91b0: 19 equipped slots of 8 bytes
 // starting at 0x12d, then 64 backpack slots of 8 bytes at 0x1d4; each
 // slot's first dword is the artifact id. The 0x12d start is NOT
@@ -35,11 +37,37 @@ public:
     TArtifactSlot backpack[64];
 
     unsigned char HasArtifact(int whichArtifact);
+    int IsWieldingArtifact(int whichArtifact);
+    int GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
+                unsigned char apply_limits);
+    float GetMagicResistanceFactor();
     int CreatureTypeCount(int creatureType);
     int GetNthSS(int iWhich);
 };
 
 #pragma pack(pop)
+
+// THeroTraits - the per-hero static-traits record, 92 B stride
+// byte-proven by strip::DrawOwner 0x5aa060/0x5aa230-adjacent bodies:
+// akHeroTraits[frame] is addressed as frame*23 dwords, and the +0x34
+// dword rides a WIDGET_SET_IMAGE message, i.e. an image-name string
+// (NH3API hero.hpp names it m_large_portrait_name - name lineage,
+// FLAGGED for review). Every other field stays an unmodeled pad until
+// a retail body touches it.
+struct THeroTraits {
+    char pad_00[0x34];              // +0x00 unmodeled
+    const char* largePortraitName;  // +0x34 image name for WIDGET_SET_IMAGE
+    char pad_38[0x24];              // +0x38 unmodeled
+};
+SIZE(THeroTraits, 0x5c);
+
+// Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner
+// as pointer+index). The IDA-lineage mangling
+// ?akHeroTraits@@3AAY0KD@$$CBUTHeroTraits@@A types it a reference to
+// const THeroTraits[163] - a reference global loads its storage cell
+// exactly as retail does (`mov edx,[0x67dce8]`). Extern only; the DATA
+// claim lands with the owning TU.
+extern const THeroTraits (&akHeroTraits)[163];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\hero.cpp:219, dc 0xca728) unsigned char InitializeHeroSpecificAbilitiesTable();

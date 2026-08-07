@@ -260,6 +260,389 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — small-TU campaign: ten TUs processed one by one
+  (user-directed goal).** Four more CLOSED (functions-only, zlib/hexcell
+  precedent), four reconstructed wall-to-wall with documented residual
+  classes, two located-and-blocked. Repo 186 -> 217/~585 exact across
+  the run. Per TU:
+  - **basemgr CLOSED 1/1**: the ctor was already exact; closure evidence
+    is the 1-function DC roster + cinit-thunk flanks.
+  - **resource CLOSED 3/3**: the missing resident was the compiler-
+    generated `??_Gresource` scalar deleting dtor. CONTRACT EXTENSION
+    approved with this entry: `VA_COMPGEN` gains kind
+    `SCALAR_DELETING_DTOR` (owner = class), `labels._demangle_key`
+    joins `??_G<Cls>` publics, and the adoption loop includes such
+    claims - the base obj already emits the body, so the claim alone
+    paired it at 100 (sample's ??_G likewise).
+  - **monframeinfo CLOSED 2/2, both exact on first compile**: the
+    CRANIM.TXT parsers, located by the string anchor in the
+    misc->mousemgr bracket. SMonFrameInfo stride 0x54 byte-derived;
+    the 150-element table + const-reference alias DATA-claimed;
+    ResourceManager::GetSpreadsheet promoted (DC public at dc
+    0x122164); `_atoi` named in the runtime map. Second labels
+    extension: the base-authority join now also reads DEFINED STATIC
+    function symbols (first file-static claim).
+  - **winfile CLOSED 14/14 exact**: File's surviving methods; the File
+    vtable 0x643d20 slot-order corroborates (retail-vtables.tsv row
+    named `File`). CFindFile proven ABSENT (the only FindFirstFile
+    call sites are the CRT _find trio); five File methods absent, two
+    survive only inlined - reconstructed as inline definitions, obj
+    emits exactly retail's five... [see the TU header for the closed-
+    file eax-passthrough idiom].
+  - **path reconstructed 8/8 located (1 exact)**: the whole combat
+    direction system (FindPath/ValidPath/GetAttackMask/ValidAttack/
+    GetAdjacentCellIndex(NoArmy)/get_adjacent_hex/OppositeDirection);
+    GetBestDirection proven dropped from retail. Byte-derived combat
+    layout landed in cmbtmgr.h/army.h/hexcell.h: cells[187] stride
+    0x70 at +0x1c4, adjacentCells[187][6] at +0x13468, the placement
+    latch +0x13d68; army side/slot/facing/combatSide/berserk/
+    hypnotize/bound fields; army::is_enemy located (0x442880).
+    RESIDUAL CLASS (documented in the TU header): retail merges
+    adjacent bounds-return blocks into one inline block; our SP3 CL
+    either duplicates or sinks them across every structured and goto
+    spelling - with kbwin's AppWndProc inline divergence this points
+    at stale objects from an earlier CL generation in the retail link;
+    needs a compiler-generation probe (OPEN).
+  - **smackmgr reconstructed 14/14 (10 exact)**: the Smacker/Bink
+    wrapper layer, .bss video cluster DATA-claimed, DirectDraw surface
+    v1 vtable offsets byte-verified; four residuals in one register-
+    homing family (documented per function).
+  - **initialize reconstructed (3 exact + 1 at 93.9)**: the building-
+    mask builders. /Ob2 LORE CORRECTION recorded: unconditional
+    out-of-line emission holds for EXTERN linkage only - single-call
+    inlined STATICS are eliminated (create_included_masks /
+    create_building_masks have no retail bodies; initialize_game_data
+    rides a forward declaration to keep DC source order under the
+    ORDER gate). town::included_buildings[9][44] + the mask tables
+    DATA-claimed; bitNumber/gTownEligibleBuildMask/gHierarchyMask
+    named by DC publics (NH3API's giMonthTypeExtra=0x697798
+    contradicted by bytes).
+  - **strip reconstructed 5/5 surviving (4 exact)**: ~strip absent,
+    DrawNumber/DrawSelector survive only inlined (same emission rule);
+    DrawOwner 84.6 residual (cross-jump merge family). THeroTraits
+    stride 92 byte-proven; akHeroTraits extern is NH3API/IDA name
+    lineage - flagged.
+  - **u2dvers located 3/3, BLOCKED**: the version.dll import thunks
+    anchor the whole TU (ctor/dtor/GetVersionInfo at 0x5eeda0/df0/e00);
+    GetVersionInfo carries an EH frame + inlined std::string (P2.2 +
+    STLport OPEN).
+  - **sample located 3/3, BLOCKED**: ctor found at 0x566da0 storing
+    ??_7sample - WITH an EH frame, contradicting the noeh-profile
+    inference (a frameless dtor does NOT exclude /GX); profile
+    re-decision deferred to P2.2. ??_G claimed and exact; dtor exact.
+  - Swap-outs recorded: herodefs (std::vector params + anonymous-
+    namespace TU-hash manglings - poor ROI until STLport),
+    quickinfowindow/global/genericresource (location inside large
+    shared brackets not yet cheap).
+
+- **2026-08-06 — hexcell CLOSED 3/3 exact (functions-only): the first
+  complete game TU.** Every carved target function in hexcell.obj's
+  proven link-order span (0x4e7150..0x4e71fd) is claimed and
+  byte-exact: the ctor, get_army, get_dead_army. Extent evidence:
+  fresh `homm3.analysis.link_order` run - 0 unclaimed in span, the
+  herodefs flank is a 1-byte gap with 0 functions, the right gap's 52
+  functions are hillfortwindow/hiscore candidates outside hexcell's
+  alphabetical slot, and the DC compiland roster (3 functions) is
+  exhausted. The ctor closed via a signedness discovery: retail feeds
+  all four -1 byte stores from the SAME register as the dword -1
+  (`or ecx,-1` / cl), which an `unsigned char` field declaration
+  splits into a separately materialized 0xff constant - the codegen
+  itself byte-proves field_1a/field_4d are signed (plain) char.
+  "Complete" here is the functions-only claim of the standing
+  data-scope decision; hexcell.obj's data/vtable surface is empty.
+
+- **2026-08-06 — kbwin reconstructed wall-to-wall: 12/12 span
+  residents claimed, 11 exact; AppWndProc residual documented.** The
+  session that set out to close two near-misses instead recovered the
+  whole Windows shell:
+  - `SetNoDialogMenus` 85.9 -> 100: the "unexplained" register moves
+    were fastcall argument setup for a TAIL CALL into 0x4f8220 -
+    which the DC line-779 slot, the WinCE 4-byte stub, and the homm2
+    template identify as **SetMenus**; reconstructed at 100 (recursive
+    menu walker, homm2 buka kbwin.cpp:498 statement order, minus the
+    trailing UpdateDfltMenu call retail dropped). Its data landed
+    with it: `gsMenuEnableStatus` (0x67f930, stride 8 - homm2's
+    pack(1) struct naturally aligned, values read from the image) and
+    `gbInSetupDialog` (0x6989d0).
+  - `Process1WindowsMessage` 81.4 -> 100: the peek loop is a GOTO
+    loop (top-tested, no rotation, PeekMessageA called through
+    memory - a recognized loop would rotate AND win the import an
+    LICM hoist); the iconic pump is a bottom-tested do-while whose
+    exits re-enter the peek loop.
+  - New bodies at 100: `AppExit` (homm2 shape; tail jmp into
+    CleanUpMenus), `GameTime::Get`/`DelayTil`/`Delay` (the wait loops
+    inline Process1WindowsMessage whole - /Ob2 nesting - and Delay is
+    just `DelayTil(Get() + interval)`), and **WinMain** (0x1CF at
+    0x4f7a30, identified by the CRT entry's call; static AppInit
+    inlined by /Ob2's single-call-site expansion, single-instance
+    event guard, IDC_ARROW, szAppName/szTitle arrays at
+    0x67f820/0x67f82c). The timeGetTime import forms split by TU:
+    kbwin is IAT-indirect (dllimport via mmsystem.h), so kb.h's plain
+    thunk-form declaration moved to button.cpp (mousemgr/misc
+    precedent); button::Select still exact proves the thunk form.
+  - `AppWndProc` (0x394) reconstructed at 74.8 with every case body
+    instruction-exact and 15/15 rets; the one residual is our /Ob2
+    single-call-site INLINE of AppCommand into the WM_COMMAND arm
+    (which then tail-merges the per-case return epilogues). Retail
+    keeps the call; the suppressing lever is unidentified - the
+    in-source note lists the rejected hypotheses (explicit default
+    arm, pointer-cast call, /Ob2-less profiles which break the
+    byte-proven GameTime inlines). kbwin is NOT declared closed until
+    this lands.
+  - Evidence-backed callee/data claims recorded with their owners:
+    kb.cpp `InitMainClasses` 0x4ed650 / `oldmain` 0x4ee3e0 (exhaustive
+    order-map of the six carve rows after PollSound onto the DC
+    roster) / `GameUnsaved` 0x4f4310 / `CleanUpMenus` 0x4f4b50;
+    wingraph.cpp `CleanUpWinGraphics` 0x601890 / `InitGraphics`
+    0x6014e0 / `AppPaint` 0x601820; misc.cpp `WritePrefs` 0x50c1b0
+    (5-byte jmp into the registry writer); mousemgr.cpp
+    `mouseManager::Reset` 0x50cc80; inputmgr.cpp
+    `KeyboardMessageHandler` 0x4ec0e0 / `MouseMessageHandler`
+    0x4ec290 (homm2-named AppWndProc callees). Provisional
+    (retail-only, no DC lines, names pending): game.cpp's Immersion
+    force-feedback pair `InitImmMouse` 0x4b6890 /
+    `ImmMouseWindowMoved` 0x4b6950 (identities from the
+    __imp_??0CImmMouse / CIFCErrors imports in the singleton ctor at
+    0x4b6260) and soundmgr.cpp `ResumeSamples` 0x599b90 /
+    `PauseSamples` 0x599c40 (WM_ACTIVATEAPP suspend pair).
+  - Tooling: `labels._demangle_key` now joins C-mangled
+    stdcall/fastcall publics (`_name@N`) so `_WinMain@16` adopts its
+    true spelling; `heroWindowManager::dialogReturn` surfaced at
+    +0x38 (WM_CLOSE tests 0x7805). Classifier note: GameTime::Get's
+    entire body is `jmp [__imp__timeGetTime]`, so the universe
+    classifier flags the claim as import-thunk-shaped; it is a real
+    kbwin.cpp line-823 function (DC roster) and the gate accepts it.
+  - Naming caveat recorded: 0x6987b8 "bWindowedMode" is semantically
+    a fullscreen flag (nonzero selects WS_POPUP|WS_EX_TOPMOST and
+    suppresses the windowed x/y save); rename deferred.
+
+- **2026-08-06 — ratchet hygiene: stale-row deletion is part of
+  carcass promotion.** 44 flat-name 0.0000 rows whose functions had
+  been renamed by carcass->real promotion were hand-deleted from
+  `config/match_baseline.tsv` (they can never re-appear in the report
+  and each held no score information); the promotion workflow now
+  implies deleting the superseded row. One hand-lower recorded:
+  GetArmyMorale 72.8920 -> 72.8352, the cost of the corrected
+  six-param re-transcription (recover with the STLport work).
+
+- **2026-08-06 — recovery pass, batch 2 (goal-directed session,
+  continued).** Eleven byte-exact recoveries: the full border unit
+  (bitmapBorder16 dtor + Draw2 + bitmapBorder dtor - unit now 6/6),
+  heroWindowManager::BroadcastMessage, kbwin's AppAbout and
+  AppCommand, textEntryWidget::SetFocus, the bitmapBackedTextWidget
+  dtor (empty derived dtor over inlined ~textWidget), and hexcell's
+  get_army/get_dead_army plus combatManager::ResetHitByCreature.
+  Ratcheted raises: SetNoDialogMenus 85.9 (retail drops the homm2
+  KBChangeMenu tail; a three-delta register/jmp residual is noted
+  in-source), textEntryWidget::GetCharPressed 95.6 (scan-byte
+  extraction residual). Identity correction: the linkorder claim
+  0x4f8140 "UpdateDfltMenu" is byte-proven to be **AppAbout** (4-arg
+  stdcall dialog proc; DC kept only a 4-byte stub). Callee-claim
+  promotions for label truth in unadmitted skeletons (same class as
+  the earlier bracket promotions): kb.cpp
+  HandleAppSpecificMenuCommands = 0x4f4350 and NormalDialog =
+  0x4f6570 (shape + call-graph + homm2 lineage), wingraph.cpp
+  SetFullScreenStatus = 0x6019a0; these made AppCommand's three
+  REL32s name-exact. **Model correction:** the cmbtmgr
+  TCombatSide/TStack view sat 0x34 past the real army record and its
+  field offsets were 0x50 short - objdiff's immediate masking had
+  hidden this as ResetHitByCreature's "99.9 residual". Rebased to
+  `army armies[2][21]` at 0x54cc (stride 0x548, army head model in
+  army.h, gpCombatManager at 0x6993d0); ResetHitByCreature went
+  exact under the corrected offsets, byte-proving the fix. New
+  codegen lore: VC6 pair-swaps adjacent load/store assignment pairs
+  in site-built message stores (BroadcastMessage: zeros first, then
+  natural field order compiles to retail's swapped-pair schedule).
+  Late additions: get_upgrade_cost exact (retail is FOUR-arg - both
+  creature rows in ecx/edx - against the DC three-arg prototype; the
+  toCost-first declaration order produces retail's delta-walk loop)
+  and executive::DoDialog exact first-try (aggregate-zeroed local
+  executive, save/restore of the manager chain, ShutDown = 0x4f3690
+  and executive::MainLoop = 0x4b0e40 promoted as callee claims; the
+  unnamed 1046-ref central global 0x6a5d5c modeled provisionally in
+  exec.cpp). CallManager was then fully implemented at 68.4 (the
+  advManager suspend/resume dance; advmgr.h now derives baseManager -
+  its +0x34 mode writes are baseManager::status - with advWindow,
+  field_38c, gpAdvManager at 0x699268), and the retail-only
+  heroWindow::SleepAllWidgets nest counter went byte-exact at
+  0x5ff5b0. CallManager's sole residual is retail's EH frame with
+  states 0/1/2 - homm2's version is EH-free and no local object is
+  visible; the generating construct is an open research item.
+  Scoreboard 160->174/523 exact (33.3%), fuzzy 25.39%->26.45%,
+  baseline 565 rows.
+
+- **2026-08-06 — OPEN (user decision needed): vendor era-correct
+  STLport?** Now FOUR functions are blocked on it (the executive ctor
+  - a stack std::bitset<10> - and GetArmyMorale's callee GetMorale
+  joined during the recovery pass). Two transcribed functions were
+  the original blockers: the
+  `searchArray` ctor (its three inline std::vector member-inits) and
+  `armyGroup::GetMorale` (a static `std::bitset<9>` with four
+  armygrp-owned helper instantiations plus the invalid-position
+  thrower at 0x34ad0). The Dreamcast build compiled against
+  `..\stlport\` and the retail codegen matches STLport shapes, not
+  VC6's native Dinkumware. Matching these functions requires the
+  STLport headers of that era under `vendor/` (pristine, per the
+  vendored-sources contract). Until approved, both functions stay at
+  their transcribed-and-documented state; no further armygrp
+  morale-family work is gated (GetMorale is the last member).
+
+- **2026-08-06 — recovery pass over both workstreams: 30 locations
+  promoted, two vtables named (one against NH3API), first
+  workstream-driven EXACT.** User-directed ("go through both
+  workstreams and recover functions"). (a) Every remaining `forced` /
+  `callgraph-unique` row landed as a `VA()` claim: 13 bracket + 17
+  callgraph across army, drawing, palette, ai_combat, ai_tactical,
+  mapcell; all 833 claims verify unique / size-agreed with
+  `config/retail-functions.tsv` / in link order. The two lanes'
+  location queues are now fully consumed - what remains of them is
+  `ambiguous`/`narrowed` rows needing new signals. (b) Vtable NAME
+  census: `mouseManager = 0x240028` and `heroWindow = 0x243cc4`,
+  byte-proven by their matched ctors' `mov [this], <vtable VA>` stores
+  (0x50cb50 at 99.98, 0x5fe9f0 at 99.62). The mouseManager admission
+  CONTRADICTS the carve enrichment, which had attributed 0x240038 to
+  mouseManager from NH3API classes - its slots point outside the
+  mousemgr body range while 0x240028's point inside it; one more entry
+  for the NH3API-is-wrong-on-addresses file. `labels.py` now drops a
+  candidate-enrichment class attribution wherever the hand census
+  admits the same class (admitted outranks candidate; the duplicate-
+  name gate is what surfaced the conflict). (c) First recovery:
+  `armyGroup::GetNativeTerrain` (0x44c590) reconstructed and **EXACT
+  (100.0)** - armygrp 16/34; then two template-guided near-miss closes:
+  `heroWindow::AddWidget` (99.14 -> 100.0; the buka template's
+  statement order - neighbor-link assignment before the NULL
+  assignment - is what VC6's store pairing wants) and
+  `heroWindowManager::RemoveWindow` (96.89 -> 100.0; the tail is
+  `lastActive = activeWindow ? activeWindow : tailWindow;`, a shared
+  store both branches feed - the old two-branch form also LEFT
+  lastActive STALE when a window stayed active, so the match fixed a
+  real semantic miss) - then `executive::AddManager` (90.08 -> 100.0)
+  and `executive::RemoveManager` (86.95 -> 100.0), both by adopting the
+  buka template's exact statement structure (combined `!status && Open`
+  condition, neighbor-link-first stores, member-not-local in the tail
+  arm, hoisted `prev` local with shared null-stores and early return).
+  Overall 146/520, baseline ratcheted. Negative lesson recorded: the
+  `searchArray` ctor (96.3) is NOT a statement-shuffle case - retail
+  initializes its three STLport vectors inline (member-init codegen
+  with a shared uninitialized char temp), so it needs init-list
+  modeling; a store-reorder attempt scored WORSE and was reverted.
+  Follow-up in the same pass: `soundManager::StopSample` 97.46 ->
+  99.96 by declaring the Miles imports as dllimports with their real
+  leading-underscore export spellings (`_AIL_*` behind `AIL_*` alias
+  macros - retail calls through `__imp___AIL_end_sample@4`, so the
+  direct-call form was a source-shape error); and the IAT label
+  placeholders gained their import-lib PROOF - `labels.py` now reads
+  the VC6 toolchain import libraries' archive symbol tables and names
+  182 of the 274 slots with their decorated `__imp__X@N` spellings
+  (provenance `iat-implib`; ambiguous or lib-absent names stay
+  `iat-undecorated`). Measured: reloc-name agreement does not move
+  objdiff scores, so the decoration is modeling hygiene, not ratchet
+  fuel - the remaining sub-100 slivers on StopSample (99.96) and the
+  mousemgr ctor (99.98) are byte-level residue still to be identified.
+  A third residual class identified while probing the button family:
+  EH-heavy functions (textButton::Draw and kin) differ in the
+  EXCEPTION RECORD shape - our objects emit `__except_list` relocs
+  and `$L…` state labels where the delinked side carries synthesized
+  `…_unwind…` records - plus template-COMDAT callee naming
+  (`std::vector<int>::size` vs the carve label at its retail address).
+  Both are SYSTEMIC (synth-PDB EH records, P2.2's data/EH companion
+  scope; template COMDAT claims) - source edits cannot close them, so
+  the queue should deprioritize EH-bearing near-misses until that
+  machinery lands.
+  Then `heroWindow::WidgetSetStatus` and `WidgetClearStatus` (95.97
+  each -> 100.0, overall 148/520): retail builds the message AT THE
+  SITE with the zero fields assigned before the MESSAGE_WIDGET/command
+  constants, not through the BroadcastMessage(int,int,int,int) forward
+  - the block flow was already identical, only the two constant stores
+  sat early. Site-built message with constants last is now a known
+  house pattern alongside neighbor-link-first stores. The mousemgr
+  stub campaign then landed three first-compile EXACTs (151/520):
+  `HidePointer` (TCSLock RAII around `++field_68 == 1 &&
+  !IsIconic(hwndApp) -> Update(1)` - the fs:[0] frame is the guard
+  dtor's unwind scaffolding, TCSLock now defined inline in mousemgr.h),
+  `ShowPointer` (symmetric: force resets the count, `--field_68 == 0`
+  refreshes field_6c/70 through the GetCursorPos/ScreenToClient
+  sequence inside an explicit nested critical section, then the same
+  IsIconic gate; VC6 CSEs the EnterCriticalSection import pointer into
+  ebx across the guard and the explicit call), and `ShowSystemCursor`
+  (`show_it ? ShowCursor(1),HidePointer() : ShowPointer(0),
+  ShowCursor(0)`). Negative result recorded: the heroWindow ctor's
+  last 0.38 is a single `[this+4] = -1` store-slot slide, but moving
+  `priority = -1` after the link zeros rewired the whole allocation
+  (99.62 -> 40.2, reverted) - the `or edx,-1` CSE materialization
+  point is order-load-bearing, so that residue needs a hypothesis
+  about the -1 SHARING (priority and focusId both store edx), not
+  statement shuffles. CheckUpdate's decode notes: TCSLock guard +
+  one-time-init bit flags gating two timer deadlines (+0x21/+0x64 ms)
+  before the IsIconic gate - needs the flag/deadline globals named
+  before the body is honest. Later in the pass: `KBChangeMenu` 84.78
+  -> 100.0 (152/520) - retail's fall-through arm is the windowed-off
+  SetMenu(newMenu) path, the windowed block sits last (condition
+  inverted, `if (!bWindowedMode) { if (newMenu) ... } else ...`).
+  Third vtable admitted: soundManager = 0x23fe54, byte-proven by its
+  92.7-matched ctor's `mov [this], 0x63fe54`. Three more negative
+  results recorded at their sites: GetMonsterCost's struct-field
+  spelling (69.0 vs the hand-lowered 82.7 admissible max - retail
+  splits base and byte-offset across registers, only the forbidden
+  cast reproduces it; note now in recruit.h), Process1WindowsMessage's
+  two-loop split (66.8 vs 81.4 - the island-track for(;;) form stays),
+  and the soundManager ctor's first-two-statement swap (92.56 vs
+  92.72 - scheduler-window class, byte store vs vptr store pairing).
+  Two facts the bytes taught: the faction->terrain table at 0x643698
+  has a hidden `-1` row at 0x643694 (gated elementals index it at -1,
+  the same bias pattern as GetAlignments' +1 census), admitted as
+  `akNativeTerrains` in armygrp.h; and the merge loop's source shape
+  is `if (native != NONE) { mismatch -> return NONE } else adopt`
+  (the flipped form scores 90 with identical flow). Also learned and
+  worth writing down: objdiff does NOT penalize data-reloc NAME
+  mismatches (GetAlignments is 100.0 while its `akCreatureTypeTraits`
+  reloc reads `data_2747b0` on the target side), so near-miss scores
+  are real codegen deltas, not labeling debt; and the iteration loop
+  is `ninja` -> `homm3 delink` (labels + normalize refresh) ->
+  `homm3 status` whenever a claim or label input changes.
+
+- **2026-08-06 — `homm2_overlap` revived as the live dual-branch
+  generator; the RENAMED-TWINS lane (`homm3.analysis.h2_twins`) opens
+  the unpaired residue.** User-approved plan (functions only; data and
+  enum/constant comparison stay deferred per the FUNCTIONS-ONLY
+  decision below). (a) The one-shot retired to `scripts/archive/` had
+  gained recurring users, so it moved back to
+  `scripts/homm3/analysis/homm2_overlap.py`; `$HOMM2_BUKA` (default
+  `~/Projects/homm2/homm2-buka`) joins `$HOMM2_DECOMP`, and the
+  functions lane joins BOTH branches buka-preferred per the
+  template-shelf decision — schema keeps the first nine columns and
+  appends `h2_branch,h2_arity,h2_fuzzy_pol`. Result: 593 distinct-name
+  pairs (the old 611 counted overload duplicates), every one now an
+  exact VC6 template (was 466); `boost.csv` template tier 148 → 171;
+  the `dc_bracket` traveled set 322 → 420; both downstream maps
+  regenerated byte-identical (counts 37/1350 and 24/22/1222 unchanged).
+  `dc_bracket`'s traveled filter hardened from a string compare against
+  `"100.0"` to a float compare in the same change. (b) The twins lane
+  scores the 918 unpaired homm2 functions against SAME-CLASS DC
+  candidates only: `S = 0.6·name-token-Jaccard (case-preserved
+  CamelCase) + 0.2·arity (params delta, this-inclusive, soft - HoMM3
+  extends signatures) + 0.2·callee-set Jaccard (homm2 E8 scan vs
+  dc-xref-graph, restricted to the shared vocabulary)`. Refusal over
+  cleverness: free functions refused by construction (kills the
+  bzip/zlib collision), one row per unpaired function (the residue the
+  old join silently dropped), and an injectivity demotion when two
+  methods claim one DC row (same law as dc_callgraph). Calibrated on
+  the exact-name pairs: leave-one-out top-1 487/499 (97.6%), median
+  margin 0.40 vs the 0.15 bar; rename-stress (single-token deletions,
+  worst rank) leaves only 5/401 (1.2%) wrong winners at `twin-strong`.
+  Four positive/negative control families are asserted on every run
+  and the module refuses to write evidence when one fails. Yield: 12
+  `twin-strong` + 19 `twin-candidate` (flagships: `army::DoAttack →
+  army::do_attack`, `SystemOptions → DoSystemOptions`, `GetNextArmy →
+  NextArmy`, `ProcessMapChange → ProcessMapChangeNew`). Output
+  `evidence/homm2-overlap/twins.csv`, ANALYSIS OUTPUT,
+  external-candidate — promotion only in supervised review. One
+  planned control was corrected during implementation: armyGroup::
+  GetMorale → GetArmyMorale is NOT a rename (the DC corpus carries
+  BOTH names; the exact join owns GetMorale), which is itself the
+  lesson that a twin proposal must never outrank an exact pair — the
+  consumed-row exclusion enforces exactly that.
+
 - **2026-08-06 — the CALL-GRAPH lane resolves gaps link-order
   bracketing cannot (`homm3.analysis.dc_callgraph`).** Bracketing only
   decides a gap whose DC and retail runs are the same length; most gaps
