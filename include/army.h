@@ -76,8 +76,14 @@ public:
     // GetSpeed() returns the modified value.
     int baseSpeed;                // +0x64
     char pad_68[0x1c];
-    // Bit 0 doubles as the two-hex marker in get_adjacent_hex and
-    // GetAttackMask; the IsWinner walk tests the full int against -1.
+    // A BITFIELD word, not an id: bit 0 is the two-hex marker in
+    // get_adjacent_hex, GetAttackMask, PlaceArmyInGrid (0x4687c0) and
+    // RemoveArmyFromGrid (0x468730), and CombatIsOver / IsWinner read
+    // bits 6, 21 and 22 out of ONE dword load with shr/test.
+    // (Corrected 2026-08-08: the note here used to say "the IsWinner
+    // walk tests the full int against -1". It does not - the -1
+    // empty-slot test in both 0x465830 and 0x4658b0 is on +0x34,
+    // creatureType. Both functions are byte-exact on that reading.)
     int creatureId;               // +0x84
     char pad_88[0x38];
     // Hit points per creature: AI_get_attack_damage (0x435980) and the
@@ -106,7 +112,11 @@ public:
     int combatSide;               // +0xf4
     // Bit position of this stack in the AI's "already counted" masks:
     // get_hex_attack_value (0x436180) builds 1 << it and folds the bit
-    // into the caller's checked word.
+    // into the caller's checked word. It is also the stack's SLOT:
+    // PlaceArmyInGrid (0x4687c0) narrows this word to a byte and stores
+    // it as the occupied hexcell's armySlot, exactly as it stores
+    // combatSide (+0xf4) as armySide. Renaming waits on a lane that
+    // owns the ai_tactical call sites.
     int bitIndex;                 // +0xf8
     char pad_fc[0x94];
     // Ordering key the AI compares BETWEEN stacks: should_attack_now
