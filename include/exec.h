@@ -35,7 +35,13 @@ public:
 struct SUnnamedEntry6a5d5c {
     char pad_00[4];
     const char* text;                 // +0x4
-    char pad_08[0x110];
+    char pad_08[0x3c];
+    // recruitUnit::Update (0x550362) sprintf's this as the first "%s"
+    // of the recruit dialog's title, ahead of the creature's plural
+    // name. Ordinal placeholder: the object is still unnamed, so its
+    // members are too.
+    const char* field_44;             // +0x44
+    char pad_48[0xd0];
     const char* quitText;             // +0x118
 };
 struct SUnnamed6a5d5c {

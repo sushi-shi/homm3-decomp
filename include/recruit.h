@@ -8,6 +8,7 @@
 #include <string.h>
 #include <va.h>
 #include "basemgr.h"
+#include "slider.h"
 #include "window.h"
 
 class armyGroup;
@@ -46,10 +47,46 @@ void get_upgrade_cost(enum TCreatureType creature, enum TCreatureType upgrade,
 // of the global at 0x69d5e8, so TRecruitWindow's own fields start at
 // 0x4c - but that function is not reconstructed yet, so the fields
 // stay unmodeled rather than fabricated. No SIZE assert.)
+//
+// Three widget handles ARE now byte-proven, by recruitUnit::Update's
+// enable pass (0x550306..0x5503b7): +0x50 is enabled only when
+// numberToBuy != 0 && maxAvail > 0 && !view_only (the confirm
+// control), +0x54 on maxAvail > 0 && !view_only, and +0x58 is the
+// dialog's slider - the same pass drives its SetResolution/SetState
+// slots. Their NAMES are unattested, so they keep ordinal
+// placeholders; +0x4c stays padding.
 class TRecruitWindow : public heroWindow {
 public:
+    char pad_4c[4];
+    widget* field_50;
+    widget* field_54;
+    slider* field_58;
+
     virtual ~TRecruitWindow();
 };
+
+// The recruit dialog's window, .bss 0x69d5e8. Name provisional (the
+// gp<Type> house convention); recruitUnit::Open builds it,
+// recruitUnit::Close RemoveWindow()s and deletes it, and Update
+// broadcasts every widget refresh through it.
+extern TRecruitWindow* gpRecruitWindow;
+
+// Provisional view of the unnamed drawing-side object at .bss
+// 0x6aacb0 (34 refs image-wide, from advManager::UpdateRadar,
+// combatManager::DrawFrame/CycleCombatScreen, army::DrawToBuffer and
+// the TRecruitWindow constructor as well as Update) - a colour table
+// of some kind. Update reads exactly two unsigned shorts out of it
+// and hands them to WIDGET_SET_COLOR: +0x5a for the four creature
+// name widgets and +0x64 for the selected one. Same standing as
+// exec.h's SUnnamed6a5d5c: consumer-side model, ordinal names, moves
+// to its own header when that TU lands.
+struct SUnnamed6aacb0 {
+    char pad_00[0x5a];
+    unsigned short field_5a;
+    char pad_5c[8];
+    unsigned short field_64;
+};
+extern SUnnamed6aacb0* gUnnamed6aacb0;
 
 class TRecruitQuickWindow : public heroWindow {
 public:
@@ -125,6 +162,8 @@ public:
         TCreatureType _MonType2, short* _numMon2,
         TCreatureType _MonType3, short* _numMon3,
         TCreatureType _MonType4, short* _numMon4);
+
+    void Update(unsigned char new_monster, long slot);
 
     // Defined here, not in recruit.cpp, because retail HAS NO
     // out-of-line body for it: the recruit band's carve rows are all

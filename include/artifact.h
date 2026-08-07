@@ -5,6 +5,23 @@
 #ifndef HOMM3_ARTIFACT_H
 #define HOMM3_ARTIFACT_H
 
+// The artifact-id domain. Added 2026-08-08 with its first consumer,
+// recruit.obj's siege_artifact_to_creature (0x550360) - only the four
+// war machines its jump table covers are listed; grow the roster per
+// consumer, as TCreatureType and ESpellId are grown. Values are
+// byte-proven by that switch (`lea eax,[ecx-3]` over four dense
+// cases); the names are the Dreamcast TArtifact enumerators
+// (eArtifactCatapult 3, eArtifactBallista 4, eArtifactAmmoCart 5,
+// eArtifactFirstAidTent 6 in evidence/dreamcast/enums.csv) respelled
+// to this tree's convention.
+enum TArtifact {
+    ARTIFACT_NONE = -1,
+    ARTIFACT_CATAPULT = 3,
+    ARTIFACT_BALLISTA = 4,
+    ARTIFACT_AMMO_CART = 5,
+    ARTIFACT_FIRST_AID_TENT = 6
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\artifact.cpp:56, dc 0x4fec0) unsigned char InitializeArtifactTraitsTable();
 // CODEVIEW(E:\gamedcs\artifact.cpp:112, dc 0x50058) void InitializeArtifactTraits(int id, const std::vector<char* resource);

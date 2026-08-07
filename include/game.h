@@ -42,7 +42,16 @@ public:
     int currHeroId;       // +0x04 (Deactivate stores -1)
     char pad_08[0x37];
     unsigned char currTownId;  // +0x3f (Deactivate stores 0xff)
-    char pad_40[0x128];
+    char pad_40[0x5c];
+    // The seven-resource row, sliced 2026-08-08 for recruit.obj.
+    // Byte-proven twice over, from two unrelated TUs:
+    // recruitUnit::Update (0x550274) divides `[player+0xb4]` by the
+    // gold price and `[player + 4*altResource + 0x9c]` by the alt
+    // price, and TResourceDisplay::Update (0x558f45) prints
+    // `[player + 4*id + 0x9c]` for the seven ids in the table at
+    // 0x641008..0x641024. Gold is index 6 (0x9c + 4*6 == 0xb4).
+    int resources[7];
+    char pad_b8[0xb0];
 
     int NextHero();
     int NextTown();

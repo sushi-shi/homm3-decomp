@@ -5,6 +5,26 @@
 #ifndef HOMM3_SLIDER_H
 #define HOMM3_SLIDER_H
 
+#include "widget.h"
+
+// Only the virtual TAIL is modeled, and only as far as recruit.obj
+// proves it. recruitUnit::Update (0x5503d3 / 0x5503e8) dispatches on
+// the recruit dialog's slider through vtable offsets 0x34 and 0x38 -
+// slots 13 and 14, i.e. the SECOND and THIRD virtuals slider
+// introduces past widget's twelve. The arguments fix which is which:
+// slot 13 receives maxAvail+1 (a count of positions) and slot 14
+// receives numberToBuy (a position), and the Dreamcast roster's
+// slider::SetResolution(int num) / slider::SetState(int state) are
+// the only pair that fits. Slot 12 is slider-introduced but nothing
+// here reaches it, so it keeps an ordinal placeholder. No data
+// members are modeled: recruit only ever holds a slider*.
+class slider : public widget {
+public:
+    virtual void _vslot12() = 0;          // slot 12, unidentified
+    virtual void SetResolution(int num);  // slot 13
+    virtual void SetState(int state);     // slot 14
+};
+
 // --- slider ---
 // CODEVIEW(E:\gamedcs\slider.cpp:35, dc 0x1499f0) void slider::slider();
 // CODEVIEW(E:\gamedcs\slider.cpp:50, dc 0x149a48) void slider::initialize(const char* resource_name);
