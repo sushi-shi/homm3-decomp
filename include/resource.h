@@ -10,7 +10,11 @@
 // Dreamcast-attested resource-type domain; values unattested - grow as
 // consumers prove them.
 enum EResourceType {
-    RESOURCE_TYPE_NONE = 0
+    RESOURCE_TYPE_NONE = 0,
+    // Byte-proven by sample::sample (0x566da0 pushes 0x20 into the base
+    // ctor); the value's DC name is RType_sfx (evidence/dreamcast/
+    // enums.csv), respelled to this file's convention.
+    RESOURCE_TYPE_SFX = 32
 };
 
 // PROVEN layout (retail ctor 0x558720): vptr, Name char[13]@4 (12-char

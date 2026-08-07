@@ -3,11 +3,23 @@
 // 31 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "findpath.h"
+#include "army.h"
 
 #if 0  // @carcass
 
 // E:\gamedcs\findpath.cpp:36
-VA(0x004b1090, 0x5F)  // anchor-bracket, dc 0x9ed40
+// CLAIM WITHDRAWN 2026-08-07 - MISATTRIBUTION, the same defect as
+// exec.cpp's withdrawn executive::executive claim. 0x4b1090 is the
+// FOURTH member of the ten-block run at 0x4b0f60..0x4b12d0, and its
+// 95-byte body is byte-identical to 0x4b0660's apart from the .bss
+// slot it stores (0x696d14 vs 0x696cec): the ten-iteration
+// std::bitset<10> initializer that occurs 900 times image-wide, ten
+// per TU. The Dreamcast roster names findpath.obj's run as the same
+// ten `$E4xx` statics from E:\gamedcs\terrain.h:70..79 - the cinit
+// excluded class. type_point::is_valid itself (DC 0x9ed40, 72 B) has
+// no retail slot in this bracket; being a header-inline predicate it
+// is the /Ob2 inline-away case.
+DC_ONLY(0x9ed40, 0x48)
 unsigned char type_point::is_valid()
 {
     // @stub
@@ -183,12 +195,22 @@ void searchArray::lower_door()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\findpath.cpp:1434
 VA(0x004b3f20, 0x41)  // anchor-global, dc 0xa10c4
 long searchArray::get_travel_time(const army* current_army, long hex)
 {
-    // @stub
+    pathCell* cell = cellData == 0 ? 0 : &cellData[hex];
+    long speed = current_army->GetSpeed();
+    long turns = (cell->cost + speed - 1) / speed;
+
+    if (turns < 1)
+        turns = 1;
+    return turns;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.h:117
 DC_ONLY(0xa113c, 0x8)

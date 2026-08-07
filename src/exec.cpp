@@ -15,12 +15,24 @@
 #if 0  // @carcass
 
 // E:\gamedcs\exec.cpp:37
-// BLOCKED on STLport (decision log): the body is a std::bitset<10>
-// constructed bit by bit on the stack (bounds check + shl/or + the
-// invalid-position throw call) - the fourth function on the STLport
-// wall, alongside GetMorale, the searchArray ctor, and (parked)
-// their kin.
-VA(0x004b0660, 0x5F)  // anchor-bracket, dc 0x9e510
+// CLAIM WITHDRAWN 2026-08-07 - MISATTRIBUTION. 0x4b0660 is not this
+// ctor: it is the FOURTH member of a ten-block run at
+// 0x4b0530..0x4b08a0, and the identical 95-byte body (a ten-iteration
+// std::bitset<10> set loop ending in `[bss] = (bits & 0x7f) * 8`)
+// occurs 900 times image-wide, exactly ten per translation unit. The
+// Dreamcast roster names that run: ten `$E4xx` STATIC rows attributed
+// to E:\gamedcs\terrain.h lines 70..79, one 40-byte + one 16-byte
+// block per line, i.e. the per-TU file-scope dynamic initializers.
+// That is the cinit excluded class (and the labels gate already
+// forbids naming a volatile $E ordinal), so no claim belongs here -
+// and with it goes the "exec is on the STLport wall" note: the wall
+// was this block, never executive::executive.
+// The real ctor is DC 0x9e510, FOURTEEN bytes (four stores) - 6.8x
+// smaller than what was claimed, outside the SH4->x86 plausibility
+// band. Retail has no out-of-line body for it: DoDialog builds its
+// local `executive dialogExec = { 0, 0, 0, 0 }` inline, which is the
+// /Ob2 single-call-site rule applied to a trivial ctor.
+DC_ONLY(0x9e510, 0xE)
 void executive::executive()
 {
     // @stub

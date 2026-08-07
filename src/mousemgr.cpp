@@ -6,6 +6,7 @@
 #include <string.h>
 #include "mousemgr.h"
 #include "kbwin.h"
+#include "resourcemanager.h"
 
 // Thunk-form timeGetTime (retail reaches it through the 6-byte rel32
 // thunk at 0x4f82e0, not the IAT); the plain declaration and the
@@ -16,8 +17,22 @@
 
 // CheckUpdate's one-time timer latches (BSS; names provisional).
 DATA(0x0069ca20) unsigned char gMouseTimerInit;
+// SetPointer's re-entrancy latch - the byte immediately after the
+// timer latches, tested and set around the whole swap (name
+// provisional, no DC row for it).
+DATA(0x0069ca21) unsigned char gMouseSetPointerBusy;
 DATA(0x0069ca18) unsigned long gMouseUpdateDeadline;
 DATA(0x0069ca1c) unsigned long gMouseFrameDeadline;
+
+// The pointer-set sprite table SetPointer indexes with field_4c: five
+// .DEF names in EPointerSet order (.data 0x67ff38).
+DATA(0x0067ff38) const char* gPointerSetSprites[mouseManager::MAX_POINTER_SETS] = {
+    DATA_COMPGEN(0x0068160c, pointerSpriteDefault, "crdeflt.DEF"),
+    DATA_COMPGEN(0x006815fc, pointerSpriteAdventure, "cradvntr.DEF"),
+    DATA_COMPGEN(0x006815ec, pointerSpriteCombat, "crcombat.DEF"),
+    DATA_COMPGEN(0x006815e0, pointerSpriteSpell, "crspell.DEF"),
+    DATA_COMPGEN(0x006815d0, pointerSpriteArtifact, "artifact.DEF")
+};
 
 // E:\gamedcs\mousemgr.cpp:315
 VA(0x0050cb50, 0x6F)  // anchor-global, dc 0xfe9d4
@@ -57,14 +72,25 @@ void mouseManager::Close()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mousemgr.cpp:412
 // Located as AppWndProc's WM_ACTIVATE callee (26 B on DC vs 27 here;
 // zeroes the drag/saved-pointer state block +0x3c..+0x70).
 VA(0x0050cc80, 0x1B)  // anchor-callee, dc 0xfeafc
 void mouseManager::Reset()
 {
-    // @stub
+    field_3c = 0;
+    field_40 = 0;
+    field_44 = 0;
+    field_48 = 0;
+    field_58 = 0;
+    field_5c = 0;
+    field_6c = 0;
+    field_70 = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\mousemgr.cpp:431
 DC_ONLY(0xfeb18, 0x4)
@@ -73,12 +99,45 @@ int mouseManager::Main(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mousemgr.cpp:445
+// Residual (82.9%): retail hoists the constant 0 into EBX for the
+// whole body (`push ebx; xor ebx,ebx`, then `cmp [esi+0x38],ebx`,
+// `cmp byte [0x69ca21],bl`, `cmp ecx,ebx`, `cmp eax,ebx`, the EH-state
+// store and the final latch clear all read it); this compile
+// materializes each zero at its use (`test eax,eax` after a load, an
+// immediate EH-state store). Constant-CSE / register-homing residual
+// family - every instruction outside it agrees, including the
+// `sub/neg/sbb/and` mask, which is what pinned the LoadFrame ternary
+// polarity: retail forces frame 0 for the ANIMATED set (field_4c ==
+// SPELL_SET) and passes new_frame for every other set, not the
+// reverse (`field_4c == SPELL_SET ? new_frame : 0` compiles to the
+// setne/dec mask instead and scored 77.1).
 VA(0x0050cca0, 0xE0)  // anchor-global, dc 0xfeb1c
 void mouseManager::SetPointer(int new_frame, mouseManager::EPointerSet new_set)
 {
-    // @stub
+    TCSLock lock(&section_mouse);
+    if (status == 1 && field_38 == 0 && !gMouseSetPointerBusy) {
+        gMouseSetPointerBusy = 1;
+        field_74++;
+        if (new_set != SAME_SET && new_set != field_4c) {
+            field_4c = new_set;
+            if (field_54)
+                field_54->Dispose();
+            field_54 = ResourceManager::GetSprite(gPointerSetSprites[field_4c]);
+            field_50 = -1;
+        }
+        if (new_frame >= 0 && new_frame != field_50) {
+            LoadFrame(field_4c == SPELL_SET ? 0 : new_frame);
+            Update(1);
+        }
+        field_74--;
+        gMouseSetPointerBusy = 0;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\mousemgr.cpp:526
 VA(0x0050cd90, 0x770)  // anchor-global, dc 0xfec54
@@ -245,7 +304,7 @@ void mouseManager::CheckUpdate()
     unsigned long deadline = gMouseUpdateDeadline;
     if (static_cast<int>(timeGetTime() - deadline) >= 0 && field_74 == 0) {
         deadline = gMouseUpdateDeadline;
-        unsigned long elapsed = timeGetTime() - deadline;
+        long elapsed = timeGetTime() - deadline;
         gMouseUpdateDeadline = deadline + (elapsed >= 33 ? elapsed : 33);
         Update(0);
         if (GetWindowThreadProcessId(hwndApp, 0) == GetCurrentThreadId()) {
@@ -270,12 +329,12 @@ void mouseManager::CheckUpdate()
     deadline = gMouseFrameDeadline;
     if (static_cast<int>(timeGetTime() - deadline) >= 0 && field_74 == 0) {
         deadline = gMouseFrameDeadline;
-        unsigned long elapsed = timeGetTime() - deadline;
+        long elapsed = timeGetTime() - deadline;
         gMouseFrameDeadline = deadline + (elapsed >= 100 ? elapsed : 100);
         if (field_4c == SPELL_SET) {
             int frames;
-            if (field_54->f_28 > 0 && *field_54->f_2c != 0)
-                frames = **field_54->f_1c;
+            if (field_54->numSequences > 0 && *field_54->validSeqMask != 0)
+                frames = field_54->s[0]->numFrames;
             else
                 frames = 0;
             LoadFrame((field_50 + 1) % frames);
@@ -293,6 +352,16 @@ void mouseManager::CheckUpdate()
 // CheckUpdate (+0x141) calls for its inner lock instead of inlining.
 // Retail emits it here, between CheckUpdate and LoadFrame, not at the
 // DC tail position (0xff7e0).
+// BLOCKED 2026-08-07 on the /Ob2 OVER-INLINE residual, and it is the
+// same delta as CheckUpdate's remaining 3%: retail inlines the OUTER
+// TCSLock of CheckUpdate (byte-identical to ours) but CALLS the ctor
+// for the INNER one, while inlining that inner object's DTOR. With
+// the class-inline definition our CL inlines both, so no out-of-line
+// COMDAT body is emitted for the claim to pair with. Moving the
+// definition into the .cpp cannot help: any position before
+// CheckUpdate leaves the asymmetry unexplained, any position after it
+// turns the OUTER lock into a call too. Only the ctor differs - the
+// dtor COMDAT (??1TCSLock) is already emitted.
 VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0
 void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
 {

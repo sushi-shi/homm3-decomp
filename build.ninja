@@ -119,7 +119,7 @@ build build/objdiff/base/textntry.obj: cl src/textntry.cpp | $
   unit = textntry
 build build/objdiff/base/sample.obj: cl src/sample.cpp | $
     scripts/homm3/core/cc_wrap.py
-  flags = /nologo /c /O2 /Oy- /Op /ML /Gr /D_WINDOWS
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = sample
 build build/objdiff/base/font.obj: cl src/font.cpp | $
     scripts/homm3/core/cc_wrap.py

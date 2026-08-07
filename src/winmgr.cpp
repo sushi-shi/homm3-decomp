@@ -6,6 +6,9 @@
 #include "message.h"
 #include "mousemgr.h"
 #include "window.h"
+#include "inputmgr.h"
+#include "kbwin.h"
+#include "soundmgr.h"
 
 #if 0  // @carcass
 
@@ -120,12 +123,76 @@ int heroWindowManager::DoDialogDraw(heroWindow* dialogWindow, int (*)()* dialogF
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\winmgr.cpp:795
-VA(0x00602a40, 0x13A)  // anchor-global, dc 0x19b0fc
+// EH STRUCTURE DECODED 2026-08-07 from the unwind funclets the carve
+// puts after DoDialog (0x602735/74e/76d/780) and DoDialogDraw
+// (0x6029cf/9e8/a07/a1a): each funclet re-runs one cleanup and then
+// tail-calls _CxxThrowException(0, 0) - a RETHROW, which no destructor
+// funclet ever does. So retail's dialog entry points are written as
+// nested `try { ... } catch (...) { <cleanup>; throw; }` levels with
+// the same cleanup spelled again on the normal path; the [ebp-4] state
+// walk 0 -> 1 -> 2 -> 1 -> 0 -> -1 is the try-level counter, and every
+// level's boundary lands exactly where a cleanup pair opens/closes.
+// DoQuickView is the three-level member of the family. Its size is
+// 0x188, not the carve's 0x13a: the three funclets at 0x602b7a/b93/bb2
+// are local labels inside this one symbol (carve row corrected).
+VA(0x00602a40, 0x188)  // anchor-global, dc 0x19b0fc
 void heroWindowManager::DoQuickView(heroWindow* window)
 {
-    // @stub
+    heroWindow* w;
+
+    gpMouseManager->HidePointer();
+    try {
+        for (w = tailWindow; w; w = w->prevWindow)
+            w->SleepAllWidgets(1);
+        try {
+            if (window)
+                AddWindow(window, -1, 1);
+            try {
+                for (;;) {
+                    PollSound();
+                    Process1WindowsMessage();
+                    message msg = gpInputManager->GetEvent();
+                    unsigned char done =
+                        msg.id == MESSAGE_RIGHT_BUTTON_UP
+                        || msg.id == MESSAGE_LEFT_BUTTON_DOWN
+                        || msg.id == MESSAGE_LEFT_BUTTON_UP;
+                    if (bVideoPaused && gUnnamed69d808) {
+                        CUnnamed69d808_f0* pump =
+                            gUnnamed69d808->get_field_f0();
+                        if (pump) {
+                            pump->_vslot1(1, 0);
+                            if (pump->_vslot2())
+                                break;
+                        }
+                    }
+                    if (done)
+                        break;
+                }
+            } catch (...) {
+                if (window)
+                    RemoveWindow(window);
+                throw;
+            }
+            if (window)
+                RemoveWindow(window);
+        } catch (...) {
+            for (w = headWindow; w; w = w->nextWindow)
+                w->SleepAllWidgets(0);
+            throw;
+        }
+        for (w = headWindow; w; w = w->nextWindow)
+            w->SleepAllWidgets(0);
+    } catch (...) {
+        gpMouseManager->ShowPointer(false);
+        throw;
+    }
+    gpMouseManager->ShowPointer(false);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\winmgr.cpp:844
 DC_ONLY(0x19b1f0, 0x3E)

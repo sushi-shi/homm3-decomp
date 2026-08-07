@@ -260,6 +260,81 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — small-TU sweep: sample CLOSED, the `_noeh` profile
+  RETIRED, and the va-claims backlog found to be MASKING real
+  misattributions.** Engine-wide 268 → 273 exact, 3.41% → 3.45%
+  executable matched. Exact this lane: `misc::WritePrefs` (a real tail
+  `jmp`, not an excluded class), `sample::sample`, `winmgr::DoQuickView`
+  (unit 46.9% → 99.98%), `findpath::get_travel_time`,
+  `mousemgr::Reset`. **sample is CLOSED 3/3, 100.00% fuzzy.**
+  **Governance finding — the known-backlog was hiding bugs, not
+  recording debt.** `exec` 0x4b0660 and `findpath` 0x4b1090 were
+  claimed as `executive::executive` and `type_point::is_valid`. They are
+  **byte-identical 95-byte bodies** differing only in the `.bss` slot
+  stored; that body occurs **900 times image-wide, exactly ten per TU**,
+  and the DC roster names the run: ten `$E4xx` *static* rows from
+  `E:\gamedcs\terrain.h:70..79` — per-TU file-scope dynamic
+  initialisers, i.e. the skill's cinit excluded class. Both claims are
+  WITHDRAWN. Critically, `verify_va_claims` had been flagging both
+  correctly as "init-thunk code" and both had been parked in
+  `config/va-claims-baseline.tsv` as accepted standing debt. They were
+  not debt. **Parking a gate violation in a baseline masked a genuine
+  misattribution for weeks — and eight more entries of the same class
+  remain** (fly.cpp 0x4b4420, hero.cpp 0x4e6780, herodefs.cpp ×6), all
+  sitting inside enumerated cinit runs. Draining them is queued.
+  **Consequence: the "exec is on the STLport wall" note was WRONG** —
+  the `std::bitset<10>` body was this cinit block, never
+  `executive::executive`, whose real DC size is 14 bytes (6.8× smaller
+  than claimed, outside the SH4→x86 band) and which `DoDialog` inlines.
+  exec has NO unwritten claimed surface; its residual is CallManager
+  68.4% / MainLoop 88.1%.
+  **PROFILE DECISION — `game_o2_ml_gr_windows_noeh` is RETIRED, closing
+  the P2.2 profile re-decision.** The "first no-EH TU" inference was
+  wrong: sample.obj's frameless `~sample` does not exclude `/GX`, it
+  only proves `operator delete` was visible as **nothrow** — the
+  ai_combat lever, applied to a base-subobject unwind instead of a
+  scope-exit one. `sample::sample` (0x566da0) carries a full `fs:[0]`
+  frame no non-`/GX` compile can emit. With `/GX` + the nothrow
+  redeclaration all three sample functions are byte-exact. **The engine
+  now has ONE C++ profile.**
+  **New lever:** `try { … } catch (...) { <cleanup>; throw; }` is
+  retail's RAII idiom. The carve leaves 25/31/19/22-byte blocks after
+  DoDialog/DoDialogDraw/DoQuickView, every one ending in
+  `_CxxThrowException(0,0)` — a *rethrow*, which no destructor funclet
+  emits. Three nested try/catch levels made DoQuickView exact on the
+  second compile. **78 carve rows image-wide end in that rethrow tail**;
+  this unlocks DoDialog (4 levels) and DoDialogDraw (4 levels).
+  Corollary: **EH-bearing ≠ blocked** — two `/GX` functions with `fs:[0]`
+  frames went exact here; the unwind data lives in dropped sections, so
+  only the `[ebp-4]` state stores must be reproduced.
+  **CARVE BOUNDARY CORRECTION admitted to `config/retail-functions.tsv`**
+  (hand-admitted inventory, so recorded explicitly): 0x202a40 is **392 B**
+  (0x602a40..0x602bc8), not 314 — the three EH funclets the carve split
+  off are local labels inside one symbol. Proof is self-validating: the
+  VC6 compile of the reconstructed body emits the same three blocks
+  inside one symbol byte-for-byte, and the function is exact at the
+  merged size. 11,943 → 11,940 rows. The same correction is pending for
+  the DoDialog/DoDialogDraw funclets (left alone — minimal diff).
+  **Other surface:** `pathCell` modelled, stride byte-proven at 30 with
+  `#pragma pack(1)` (default packing rounds `sizeof` to 32); `cellData`
+  void* → pathCell*; `searchArray::result` deliberately NOT touched.
+  `SPointerSprite` retired as a duplicate bootstrap view of `CSprite`
+  (s@0x1c, numSequences@0x28, validSeqMask@0x2c match, and SetPointer
+  calls vslot 1 = CSprite::Dispose then refills via
+  ResourceManager::GetSprite). Provisional offset-anchored names added
+  per the `gUnnamed6a5d5c` precedent: `SUnnamed69d808` /
+  `CUnnamed69d808_f0` / `get_field_f0` (winmgr), `gMouseSetPointerBusy`
+  (0x69ca21), `gPointerSetSprites` (0x67ff38, DATA + DATA_COMPGEN),
+  `RESOURCE_TYPE_SFX = 32`. Residuals documented in-source:
+  mousemgr::SetPointer 82.9% (constant-CSE family; the `sub/neg/sbb/and`
+  mask proved the polarity is INVERTED — retail forces frame 0 for the
+  animated SPELL set), mousemgr TCSLock 0% / CheckUpdate 96.85% (/Ob2
+  over-inline asymmetry, unfixable by definition placement).
+  **Not attempted, with reasons:** recruit::Update (recruitUnit has no
+  class layout at all), findpath SeedCombatPosition/FindCombatPath (need
+  the full pathCell grid plus ~12 unclaimed callees),
+  font::DrawBoundedString and inputmgr ×5 (real targets, out of budget).
+
 - **2026-08-07 — ai_player.obj ADMITTED (user: "approve"); a swapped
   claim pair corrected; a duplicate `class game` merged.** The AI phase
   closes: `src/ai_player.cpp` (503 functions in link order, 26
