@@ -1,0 +1,18 @@
+# GENERATED (ONE-SHOT): python3 scripts/archive/ghidra_recover_structs/recover_structs.py (ONE-SHOT, not a pipeline stage)
+# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE - Ghidra decompiler inference.
+# Standing: lead-generator only. Same grade as the Dreamcast dump - a
+# recovered offset still needs retail-byte proof before it is a claim.
+# exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
+# contents: recovered layout vs this project's retail-byte-proven anchors - the only honest measure of how far these tables can be trusted. `out-of-reach` = past FillOutStructure's 0x1000 offset cut-off, so the engine never had a chance at it (not a disagreement)
+kind,class,anchor,anchor_detail,recovered,verdict
+field,hero,0x476,primarySkill[0] attack,0x476 w1,exact
+field,hero,0x477,primarySkill[1] defense,0x477 w1,exact
+field,hero,0x478,primarySkill[2] spellPower,0x478 w1,exact
+field,hero,0x479,primarySkill[3] knowledge,,not-observed
+field,army,0xc8,attackSkill,0xc8 w4,exact
+field,army,0xcc,defenseSkill,0xcc w4,exact
+field,combatManager,0x132b8,actingSide,,out-of-reach
+field,combatManager,0x132bc,actingSlot,,out-of-reach
+size,town,360,byte-proven; corroborated by ai_player's town-array stride,ctor=360 accessed=360,exact
+size,type_point,4,byte-proven bitfield word: short x:10; short y:10; short z:4,ctor=- accessed=4,lower-bound-consistent
+size,pathCell,30,"byte-proven stride, #pragma pack(1) - NO instance methods exist, so the class-method engine cannot reach it at all",ctor=- accessed=-,absent
