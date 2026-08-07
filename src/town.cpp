@@ -4,6 +4,17 @@
 #include <va.h>
 #include "town.h"
 
+// DC public ?included_buildings@town@@2PAY0CM@_JA; retail .bss
+// 0x6a8bb8, nine 0x160-stride rows to 0x6a9818. Ownership: the DC
+// data segment brackets it with town's other statics
+// (NeutralBuildingCosts 0003:35990 / DwellingCosts 0003:36e54), and
+// the retail .bss walk places it between smackmgr's tail (0x69fe5c)
+// and widget's 0x6aac68 - the band this TU's text (0x5bde80) links in.
+// Filled by initialize.cpp's create_included_masks; read by the
+// can_build/can_ever_build family (0x5c0d20..0x5c0f20).
+DATA(0x006a8bb8)
+__int64 town::included_buildings[TOWN_TYPE_COUNT][TOWN_BUILDING_SLOTS];
+
 #if 0  // @carcass
 
 // E:\gamedcs\town.cpp:458

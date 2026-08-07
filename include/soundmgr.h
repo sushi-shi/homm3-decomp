@@ -40,6 +40,11 @@ public:
     ds_memsample* MemorySample(sample* memSample);
     void StopSample(ds_memsample* inSample);
     int MusicPlaying();
+    void ResumeStream();          // 0x59ac00
+    void ResumeSamples();         // 0x599b90, name provisional
+    void PauseSamples();          // 0x599c40, name provisional
+    void service_sounds();        // 0x59a7d0; DC SoundMgr.h:140 (header
+                                  // inline there, emitted in kb.obj)
 };
 
 // Retail .bss 0x699290: non-zero suppresses every sound path (a
@@ -50,11 +55,15 @@ extern int gbNoSound;
 // clears (name provisional).
 extern int gAilDriverState[7];
 
-// Miles Sound System imports (undecorated __stdcall spellings).
+// Miles Sound System imports. The DLL exports carry their own leading
+// underscore (retail IAT: __imp___AIL_end_sample@4), which is Miles'
+// own header convention: `_AIL_*` dllimports behind `AIL_*` aliases.
 extern "C" {
-void __stdcall AIL_end_sample(ds_memsample* sample);
-int __stdcall AIL_sample_status(ds_memsample* sample);
+__declspec(dllimport) void __stdcall _AIL_end_sample(ds_memsample* sample);
+__declspec(dllimport) int __stdcall _AIL_sample_status(ds_memsample* sample);
 }
+#define AIL_end_sample _AIL_end_sample
+#define AIL_sample_status _AIL_sample_status
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).
 extern soundManager* gpSoundManager;

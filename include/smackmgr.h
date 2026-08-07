@@ -5,11 +5,23 @@
 #ifndef HOMM3_SMACKMGR_H
 #define HOMM3_SMACKMGR_H
 
-// Live prototypes (retail bodies 0x597740 / 0x597990, called by
-// heroWindow::Open).
-void VideoDrawCurrentFrame();
-void VideoNextFrame();      // 0x5976e0
-unsigned char VideoPlaying();
+// Live prototypes (all 14 retail bodies reconstructed 2026-08-07).
+// VideoOpen's DC stub is a plain void(); the retail body takes eight
+// args and forwards them to ShowVideo / the bink opener.
+void VideoSoundOnOff();        // 0x5971b0
+void VideoRealignBuffers();    // 0x5971f0
+int VideoPlay(int id, int x, int y, int w, int h);   // 0x5972d0
+void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8);  // 0x597570
+void VideoClose();             // 0x5975f0
+void VideoNextFrame();         // 0x5976e0
+void VideoDrawCurrentFrame();  // 0x597740
+void VideoPause();             // 0x5977a0
+void VideoResume();            // 0x597850
+void VideoRestart();           // 0x597900
+unsigned char VideoNeedsUpdate();  // 0x597930
+unsigned char VideoPlaying();      // 0x597990
+void VideoDrawRects();         // 0x5979d0
+void VideoShutDown();          // 0x597c70
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:75, dc 0x14ac30) void VideoSoundOnOff();
@@ -19,7 +31,6 @@ unsigned char VideoPlaying();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:156, dc 0x14ac40) void VideoClose();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:176, dc 0x14ac44) void VideoNextFrame();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:196, dc 0x14ac48) void VideoDrawCurrentFrame();
-void VideoNextFrame();      // 0x5976e0
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:209, dc 0x14ac4c) void VideoPause();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:238, dc 0x14ac50) void VideoResume();
 // CODEVIEW(E:\gamedcs\smackmgr.cpp:265, dc 0x14ac54) void VideoRestart();

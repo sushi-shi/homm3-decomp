@@ -7,6 +7,8 @@
 
 #include <vector>
 
+class army;
+
 // Dreamcast roster with the STLport->VC6 vector shift; the retail ctor
 // 0x4b1370 stores every named field and the dtor 0x4b13e0 frees
 // cellData and bIsMoatSlowed (a heap map, not a flag) before the
@@ -36,7 +38,14 @@ public:
 
     searchArray();
     ~searchArray();
+    unsigned char FindCombatPath(const army* current_army, long current_group,
+                                 long destination, unsigned char in_placement_phase,
+                                 long limit, long base_speed);  // 0x4b3400
 };
+
+// Retail .bss 0x699284; the DATA claim lands with findpath.cpp's
+// globals when that TU's data is modeled.
+extern searchArray* gpSearchArray;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\findpath.cpp:131, dc 0x9f034) int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left, TSkillMastery iPathfinding, TRoadType end_road, TSkillMastery flying, TSkillMastery water_walking, TTerrainType native_terrain);

@@ -4,22 +4,34 @@
 #include <va.h>
 // #include "u2dvers.h"
 
+// The whole TU located 2026-08-06 by its version.dll anchor: the three
+// import thunks at 0x6034f0/f6/fc (GetFileVersionInfoA/SizeA/
+// VerQueryValueA) are called ONLY from this run of three functions,
+// whose order matches the DC roster (ctor 33 < dtor 56 <
+// GetVersionInfo 63). All DC bodies are 4-byte WinCE stubs.
+// TU BLOCKED for matching: GetVersionInfo carries an EH frame
+// (handler 0x637af8) and inlined std::string machinery
+// (cxx_string_too_long_20ab3b, npos const 0x63a60c) - the P2.2
+// synth-PDB EH scope and the OPEN STLport vendoring decision.
+
 // E:\gamedcs\u2dvers.cpp:33
-DC_ONLY(0x18e3b0, 0x4)
+// GetFileVersionInfoSizeA(filename, (DWORD*)&filename) - the arg slot
+// reused as the out-handle - then new[size] + GetFileVersionInfoA.
+VA(0x005eeda0, 0x4C)  // anchor-import (version.dll), dc 0x18e3b0
 void TFileVersionInfo::TFileVersionInfo(const char* filename)
 {
     // @stub
 }
 
 // E:\gamedcs\u2dvers.cpp:56
-DC_ONLY(0x18e3b4, 0x4)
+VA(0x005eedf0, 0xE)  // anchor-import (version.dll), dc 0x18e3b4
 void TFileVersionInfo::~TFileVersionInfo()
 {
     // @stub
 }
 
 // E:\gamedcs\u2dvers.cpp:63
-DC_ONLY(0x18e3b8, 0x4)
+VA(0x005eee00, 0x265)  // anchor-import (version.dll), dc 0x18e3b8
 unsigned char TFileVersionInfo::GetVersionInfo(const char* name, std::basic_string<char,std::char_traits<char>,std::allocator<char>* buffer)
 {
     // @stub

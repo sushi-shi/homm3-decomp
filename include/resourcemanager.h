@@ -12,9 +12,16 @@ class font;
 // ?GetFont@ResourceManager@@YAPAVfont@@PBD@Z - the namespace-level
 // resource acquisition (retail bodies 0x55c7b0 / 0x55bb00, fastcall
 // under /Gr; called by the button ctors).
+class Bitmap816;
+class TSpreadsheetResource;
+
 namespace ResourceManager {
 CSprite* GetSprite(const char* name);
 font* GetFont(const char* name);
+// Retail body 0x55a800 (bitmapBorder::SetImage's loader).
+Bitmap816* GetBitmap816(const char* name);
+// Retail body 0x55c0a0 (monframeinfo's cranim.txt parser calls it).
+TSpreadsheetResource* GetSpreadsheet(const char* name);
 }
 
 // --- Bitmap16Bit ---

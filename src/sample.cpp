@@ -7,16 +7,27 @@
 #if 0  // @carcass
 
 // E:\gamedcs\sample.cpp:55
-DC_ONLY(0x129b3c, 0xE)
+// Located 2026-08-06: stores ??_7sample@@6B@ and calls the resource
+// base ctor with type 0x20, then news + copies the data buffer. The
+// body carries an EH FRAME (handler 0x631328, state around the new) -
+// so the retail TU compiled /GX, contradicting this unit's noeh
+// profile note (a frameless dtor does NOT rule /GX out when the dtor
+// has no state to protect). Matching stays BLOCKED on P2.2 EH scope;
+// profile re-decision deferred until then.
+VA(0x00566da0, 0x8E)  // anchor-vtable (??_7sample store), dc 0x129b3c
 void sample::sample(long channel, long volume, long loop)
 {
     // @stub
 }
 
-// E:\gamedcs\sample.cpp:84
-
 #endif  // @carcass
 
+// sample::`scalar deleting destructor' - no DC row (the WinCE build
+// kept it out-of-roster); retail places it before the dtor. Base obj
+// already emits ??_Gsample@@UAEPAXI@Z.
+VA_COMPGEN(0x00566e30, 0x21, SCALAR_DELETING_DTOR, sample)
+
+// E:\gamedcs\sample.cpp:84
 VA(0x00566e60, 0x29)  // anchor-bracket, dc 0x129b4c
 sample::~sample()
 {

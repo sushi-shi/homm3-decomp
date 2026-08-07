@@ -5,6 +5,34 @@
 #ifndef HOMM3_TEXTRESOURCE_H
 #define HOMM3_TEXTRESOURCE_H
 
+#include <vector>
+
+#include <va.h>
+#include "resource.h"
+
+// PROVEN layout (retail monframeinfo parser 0x50c810/0x50ca00): the
+// Spreadsheet row vector sits at +0x1c on the resource base - VC6
+// Dinkumware vector, so _First lands at +0x20 and _Last at +0x24
+// (size()'s null-check ternary appears verbatim at 0x50c82c; the
+// Dreamcast build's 12-byte STLport vector has no such check) - and
+// rows index *4, so the elements are heap TStringVector pointers.
+// Dreamcast type 0x1a41 names the members (Spreadsheet@28, Data@40
+// with the STLport layout; Dinkumware puts them at 0x1c/0x2c, sizeof
+// 0x30 vs the DC 44). GetNumberOfRows/GetRow are the TextResource.h
+// header inlines (dc 0x5088c/0x508a4), inlined into callers by /Ob2.
+class TSpreadsheetResource : public resource {
+public:
+    typedef std::vector<char*> TStringVector;
+    typedef std::vector<TStringVector*> TArray;
+
+    int GetNumberOfRows() const { return Spreadsheet.size(); }
+    const TStringVector& GetRow(int r) const { return *Spreadsheet[r]; }
+
+private:
+    TArray Spreadsheet;  // +0x1c (_First +0x20, _Last +0x24)
+    char* Data;          // +0x2c
+};
+
 // --- TSpreadsheetResource ---
 // CODEVIEW(E:\gamedcs\textresource.cpp:177, dc 0x1639ec) void TSpreadsheetResource::TSpreadsheetResource();
 // CODEVIEW(E:\gamedcs\textresource.cpp:182, dc 0x163a70) void TSpreadsheetResource::TSpreadsheetResource(const char* name, int size, const char* data);
