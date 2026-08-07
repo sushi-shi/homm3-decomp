@@ -3,21 +3,24 @@
 **Verdict: HoMM3 is a direct source-level descendant of HoMM2's engine.**
 More than half of homm2's compilands recur by name in HoMM3, the NWC
 `basewin.lib` UI framework and the game-core class roster carry over
-nearly wholesale, and 611 functions share their exact (normalized) name
-across the two games — 461 of them backed by homm2-decomp's
-**exact-matched reconstructed source**. The reuse is source-level with
-heavy evolution, NOT byte-level: cross-compiler/cross-era code identity
-is infeasible (measured below), but homm2's matched C++ is a ready
+nearly wholesale, and 593 distinct function names are shared across the
+two games — since the 2026-08-06 buka repoint, **every one backed by an
+exact-matched VC6 template**. The reuse is source-level with heavy
+evolution, NOT byte-level: cross-compiler/cross-era code identity is
+infeasible (measured below), but homm2's matched C++ is a ready
 translation-template library for homm3 matching, and rare-string anchors
 name 50 of our still-unnamed functions.
 
-Measured 2026-08-04 by `homm3.analysis.homm2_overlap` (one-shot; retired
-to `scripts/archive/` — the generated tables live in
-`evidence/homm2-overlap/`, regenerate from the archived script if ever
-needed). Inputs: our pinned HEROES3.EXE (sha256 `057c9d88…`) + symbol
-db + Dreamcast/NH3API corpora; the sibling homm2-decomp read-only
-(HEROES2W.EXE sha256 `bc8f362d…`, MSVC 4.2 `/Gr`, CodeView-NB09
-authoritative names, 1,154/1,514 functions exact).
+Measured 2026-08-04 by `homm3.analysis.homm2_overlap`; revived
+2026-08-06 from `scripts/archive/` as the live dual-branch generator
+(decision log §5). Inputs: our pinned HEROES3.EXE (sha256 `057c9d88…`)
++ symbol db + Dreamcast/NH3API corpora; BOTH homm2 trees read-only —
+PoL 2.0 (`$HOMM2_DECOMP`, HEROES2W.EXE sha256 `bc8f362d…`, MSVC 4.2
+`/Gr`, CodeView-NB09 authoritative names) and Gold 2.1/Buka
+(`$HOMM2_BUKA`, HMM2PL.exe sha256 `bc7e9c93…`, VC6 SP5, 1,727/1,727
+exact). The functions lane is buka-preferred: when both branches carry
+a name the row is buka's (`h2_branch=both`, pol's score kept in
+`h2_fuzzy_pol`); the other lanes stay pol-driven as first measured.
 
 ## Lane results
 
@@ -25,9 +28,10 @@ authoritative names, 1,154/1,514 functions exact).
 | :-- | :-- |
 | TU stems | **53 of homm2's 95 units** recur as HoMM3 DC compilands (advmgr, army, armygrp, findpath, fly, game, hero, recruit, soundmgr, strip, swapmgr, townmgr, window, …) |
 | Classes | **43 exact class-name matches**: `advManager`, `army`, `armyGroup`, `baseManager`, `border`, `button`, `combatManager`, `executive`, `font`, `game`, `hero`, `heroWindow`, `heroWindowManager`, `hexcell`, `mouseManager`, `resourceManager`, `soundManager`, `town`, `widget`, … (the whole basewin family + the game core) |
-| Function names | **611 normalized-name pairs**; **466 with homm2 fuzzy = 100.0** (exact source exists); **144 with a known HoMM3 retail RVA** (via the DC name map) |
+| Function names | **593 distinct normalized-name pairs** (dual-branch: 591 `both` + 2 `buka`-only; the earlier 611 counted overload duplicates); **all 593 at homm2 fuzzy = 100.0** via buka; **173 with a known HoMM3 retail RVA** (via the DC name map); `h2_arity` carried from buka's signature table |
 | String anchors | **57 rare-literal anchors** (literal referenced by ≤3 fns on each side); 50 land on `working-label` (unnamed) HoMM3 functions |
-| Boost list | **198 rows** in `boost.csv`: 50 `string-anchor` + 148 `h2-source-template` |
+| Boost list | **220 rows** in `boost.csv`: 49 `string-anchor` + 171 `h2-source-template` (buka's 100.0 scores widen the template tier) |
+| Renamed twins | **12 `twin-strong` + 19 `twin-candidate`** proposals from `homm3.analysis.h2_twins` over the 918-function unpaired residue (section below) |
 
 ## The two boosts
 
@@ -71,12 +75,13 @@ as untrusted without a second signal.
 
 ## Campaign status (2026-08-06)
 
-Of the 466 exact-template pairs, **167 are located** and **299 remain
-DC-attested but unlocated**. "Located" means the retail address is
-proven either by `evidence/retail-dc-name-map.csv` (144) or by a live
-`VA()` claim in `src/` (the rest) - the generator only knows the first
-source, so its own `h3_retail_rva` column undercounts; measure against
-both.
+After the buka repoint the exact-template universe is **593 pairs**
+(was 466: buka's 1,727/1,727 exact turns every joined name into a
+template). **173 are located** via `evidence/retail-dc-name-map.csv`;
+live `VA()` claims in `src/` locate more - the generator only knows the
+first source, so its own `h3_retail_rva` column undercounts; measure
+against both. The `dc_bracket` homm2-traveled set (exact templates,
+name-map-unlocated) grew 322 → 420.
 
 The bulk-join shortcut does NOT exist: joining through
 `evidence/retail-game-tree.csv` adds exactly zero. What does work is
@@ -91,6 +96,45 @@ under an injective-monotone soundness check. Both lanes proved
 themselves end to end - `inputManager::Close`/`::Main` and
 `heroWindowManager::RemoveWindow` were located by them and then
 matched.
+
+## Renamed-twins lane (2026-08-06, `homm3.analysis.h2_twins`)
+
+The exact-name join is blind to every function HoMM3 renamed. The twins
+lane scores the **918-function unpaired residue** (354 with their class
+present in the DC corpus) against same-class DC candidates only, with
+three auditable terms — `S = 0.6·name + 0.2·arity + 0.2·callee`:
+CamelCase token-set Jaccard over the case-preserved method names, the
+this-inclusive DC `params` delta (a soft term, never a veto — HoMM3
+extends signatures), and shared-callee Jaccard restricted to the
+593-name cross-game vocabulary (homm2 callees from an E8 scan of the
+sibling images, DC callees from `evidence/dc-xref-graph.tsv`).
+
+Yield: **12 `twin-strong`, 19 `twin-candidate`**, 887 `refused` with a
+machine-readable reason (451 free-function by construction — that rule
+alone kills the bzip/zlib collision — 113 no-shared-class, 227
+weak-name, 73 no-candidates, 20 collision, 3 tie). Flagship strong
+rows: `army::DoAttack → army::do_attack` (HoMM3's snake_case renames
+surface as a family), `advManager::SystemOptions → DoSystemOptions`,
+`combatManager::GetNextArmy → NextArmy`, `advManager::ProcessMapChange
+→ ProcessMapChangeNew`, `townManager::DoTavern → DoTownTavern`.
+
+Calibration (leave-one-out over the exact-name pairs, pools ≥2):
+**top-1 487/499 (97.6%)**, median winning margin 0.40 against the 0.15
+`twin-strong` bar. The honest false-positive estimate comes from a
+rename-stress pass (delete each single token in turn, take the worst
+rank): top-1 survives in 274/401, and only **5/401 (1.2%)** of the
+stress winners would still grade `twin-strong` — `twin-candidate` is
+noisier by design. Controls asserted on every run (the module refuses
+to write on failure): the three flagship twins must grade `twin-*`,
+bzip `compress`/`uncompress` must stay `refused free-function`,
+`army::DispelGood` must never propose `army::Is` (the
+substring-nonsense case), and `combatManager::SpellMessage` must not
+steal `ShowSpellMessage` from its exact-name pair (homm2 carries both;
+the consumed-row exclusion holds).
+
+Output `evidence/homm2-overlap/twins.csv` — one row per unpaired homm2
+function, so the file IS the residue the old generator silently
+dropped. ANALYSIS OUTPUT, external-candidate grade.
 
 ## Admission path (nothing admitted by this report)
 
@@ -108,3 +152,7 @@ the supervised-review rule:
    phase (a third oracle beside Dreamcast layouts and NH3API types —
    homm2's layouts are VC 4.2-proven and will differ, but member
    *rosters* and method sets transfer).
+4. `twin-strong` / `twin-candidate` rows → a rename proposal is BOTH a
+   naming candidate and a template pointer; each needs a supervised
+   look at the homm2 body against the DC/retail evidence before its
+   template is used, exactly like a `h2-source-template` row.

@@ -1,0 +1,926 @@
+# generator: homm3.analysis.h2_twins
+# exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
+# date: 2026-08-06
+# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
+# homm2 pol: HEROES2W.EXE sha256=bc8f362dd49216c9fbcee1eb2e0429b467082a93330dd84ff95757c0182fc8a3 @ /home/sheep/Projects/homm2/homm2-decomp
+# homm2 buka: HMM2PL.exe sha256=bc7e9c9320aa3e5c1ffca6d2bfa530ecedb5a3bca1b91c959501c15ad72c329a @ /home/sheep/Projects/homm2/homm2-buka
+# calibration: loo_top1=487/499 stress_top1=274/401 strong_fp=5 margin_med=0.40
+h2_name,h2_method,h2_branch,h2_rva,h2_unit,h2_arity,dc_class,proposed_dc_name,proposed_dc_offset,proposed_dc_module,dc_params,score,name_score,arity_delta,callee_shared,callee_h2_count,callee_dc_count,margin,grade,detail
+advmanager::processmapchange,ProcessMapChange,both,0x35ad8,SOURCE/CURSOR,1,advmanager,advManager::ProcessMapChangeNew,0x7c6bc,cursor.obj,2,0.650,0.750,0,0,15,0,0.330,twin-strong,"margin 0.33, no-callee-signal"
+advmanager::systemoptions,SystemOptions,both,0x149c0,SOURCE/ADVMGR,0,advmanager,advManager::DoSystemOptions,0x1e5e8,advmgr.obj,1,0.618,0.667,0,1,11,1,0.252,twin-strong,margin 0.25
+army::doattack,DoAttack,both,0x1bddb,SOURCE/ARMY,1,army,army::do_attack,0x46fb0,army.obj,2,0.800,1.000,0,0,10,0,0.400,twin-strong,"margin 0.40, no-callee-signal, overloads=2"
+army::leavenobody,LeaveNoBody,both,0x1f149,SOURCE/ARMY,0,army,army::LeavesNoBody,0x4ca60,army.obj,1,0.500,0.500,0,0,0,0,0.300,twin-strong,"margin 0.30, no-callee-signal"
+combatmanager::getnextarmy,GetNextArmy,both,0x287bf,SOURCE/CMBTMGR,1,combatmanager,combatManager::NextArmy,0x5f518,cmbtmgr.obj,2,0.667,0.667,0,1,3,1,0.267,twin-strong,margin 0.27
+combatmanager::setcombatviewarmysmalllevel,SetCombatViewArmySmallLevel,both,0x31f2a,SOURCE/COMMAND,1,combatmanager,combatManager::SetCombatViewArmy,0x70398,command.obj,2,0.600,0.667,0,0,2,0,0.314,twin-strong,"margin 0.31, no-callee-signal"
+combatmanager::viewballista,ViewBallista,both,0x32475,SOURCE/COMMAND,1,combatmanager,combatManager::ViewCastleBallista,0x70714,command.obj,2,0.600,0.667,0,0,2,0,0.280,twin-strong,"margin 0.28, no-callee-signal"
+mousemanager::checkupdatemousepos,CheckUpdateMousePos,both,0xba3e0,BASE/MOUSEMGR,0,mousemanager,mouseManager::CheckUpdate,0xff484,mousemgr.obj,1,0.500,0.500,0,0,0,0,0.180,twin-strong,"margin 0.18, no-callee-signal"
+mousemanager::newupdate,NewUpdate,both,0xb9b40,BASE/MOUSEMGR,1,mousemanager,mouseManager::Update,0xfec54,mousemgr.obj,2,0.500,0.500,0,0,0,2,0.200,twin-strong,"margin 0.20, no-callee-signal"
+soundmanager::midisetvolume,MIDISetVolume,pol,0xd3fd0,BASE/Midi,0,soundmanager,soundManager::SetMusicVolume,0x14b07c,soundmgr.obj,1,0.600,0.500,0,1,1,2,0.400,twin-strong,margin 0.40
+textwidget::setcolorindex,SetColorIndex,both,0xc3500,BASE/TEXTWDGT,1,textwidget,textWidget::SetColor,0x1652f4,textwdgt.obj,2,0.600,0.667,0,0,0,0,0.500,twin-strong,"margin 0.50, no-callee-signal"
+townmanager::dotavern,DoTavern,both,0xaa903,SOURCE/TOWNMGR,0,townmanager,townManager::DoTownTavern,0x17b154,townmgr.obj,1,0.600,0.667,0,0,5,0,0.200,twin-strong,"margin 0.20, no-callee-signal"
+advmanager::drawadventureborder,DrawAdventureBorder,both,0x135a6,SOURCE/ADVMGR,0,advmanager,advManager::DrawAdventureMapGems,0x10640,advmgr.obj,1,0.440,0.400,0,0,0,0,0.120,twin-candidate,"margin 0.12, no-callee-signal"
+advmanager::giverandomartifact,GiveRandomArtifact,both,0x4347b,SOURCE/EVENTS,1,advmanager,advManager::GiveArtifact,0x90814,events.obj,4,0.400,0.667,2,0,1,0,0.200,twin-candidate,"margin 0.20, no-callee-signal"
+advmanager::skeletonevent,SkeletonEvent,both,0x4368d,SOURCE/EVENTS,5,advmanager,advManager::DoEventSkeleton,0x95650,events.obj,4,0.400,0.667,-2,0,2,0,0.050,twin-candidate,"margin 0.05, no-callee-signal"
+army::specialattack,SpecialAttack,both,0x1a1d9,SOURCE/ARMY,0,army,army::check_special_attack,0x461a0,army.obj,2,0.500,0.667,1,0,15,0,0.100,twin-candidate,"margin 0.10, no-callee-signal"
+combatmanager::effectspellcreatecreature,EffectSpellCreateCreature,both,0x96f02,SOURCE/SPELLAI,2,combatmanager,combatManager::MarkCreatureEffect,0x4cc74,army.obj,3,0.440,0.400,0,0,1,0,0.040,twin-candidate,"margin 0.04, no-callee-signal"
+combatmanager::getclosestarmy,GetClosestArmy,both,0x17d6e,SOURCE/AI,,combatmanager,combatManager::get_current_army,0x27efc,ai.obj,1,0.300,0.500,,0,0,0,0.150,twin-candidate,"margin 0.15, no-arity, no-callee-signal, overloads=2"
+combatmanager::getstrength,GetStrength,both,0x17e9c,SOURCE/AI,2,combatmanager,combatManager::get_wall_strength,0x27edc,ai.obj,2,0.500,0.667,-1,0,1,0,0.100,twin-candidate,"margin 0.10, no-callee-signal"
+combatmanager::modifydamageforartifacts,ModifyDamageForArtifacts,both,0xa0aec,SOURCE/SPELLS,,combatmanager,combatManager::ModifySpellDamageForSpells,0x156dc4,spells.obj,4,0.300,0.500,,0,1,0,0.060,twin-candidate,"margin 0.06, no-arity, no-callee-signal"
+combatmanager::raweffectspellinfluence,RawEffectSpellInfluence,both,0x9716f,SOURCE/SPELLAI,2,combatmanager,combatManager::LoadSpellEffect,0x15802c,spells.obj,2,0.340,0.400,-1,0,2,0,0.020,twin-candidate,"margin 0.02, no-callee-signal"
+combatmanager::showeagleeyespell,ShowEagleEyeSpell,both,0x2e93a,SOURCE/COMMAND,1,combatmanager,combatManager::show_eagle_eye,0x6de24,command.obj,3,0.550,0.750,1,0,9,0,0.050,twin-candidate,"margin 0.05, no-callee-signal"
+combatmanager::spellmessage,SpellMessage,both,0x994a8,SOURCE/SPELLS,2,combatmanager,combatManager::SpellTargetMessage,0x1578b4,spells.obj,4,0.500,0.667,1,0,1,0,0.180,twin-candidate,"margin 0.18, no-callee-signal"
+game::getmap,GetMap,both,0x754b0,SOURCE/Newgame,0,game,game::get_map_score,0xe4300,kb.obj,1,0.600,0.667,0,0,3,0,0.100,twin-candidate,"margin 0.10, no-callee-signal"
+game::initcampaignmap,InitCampaignMap,both,0x2387e,SOURCE/Campaign,0,game,game::mark_campaign_map_won,0xbc384,game.obj,1,0.440,0.400,0,0,7,0,0.120,twin-candidate,"margin 0.12, no-callee-signal"
+game::makeallwatervisible,MakeAllWaterVisible,both,0x5b944,SOURCE/GAME,1,game,game::MakeTerrainVisible,0xb5f80,game.obj,3,0.340,0.400,1,0,0,0,0.140,twin-candidate,"margin 0.14, no-callee-signal"
+hero::getnthspell,GetNthSpell,both,0x6125e,SOURCE/HERO,2,hero,hero::get_spell_level,0xd4e4c,hero.obj,3,0.500,0.500,0,0,0,0,0.060,twin-candidate,"margin 0.06, no-callee-signal, overloads=2"
+hero::getsslevel,GetSSLevel,both,0x64a03,SOURCE/HERO,1,hero,hero::get_spell_level,0x2308c,advspells.obj,2,0.500,0.500,0,0,1,0,0.060,twin-candidate,"margin 0.06, no-callee-signal, overloads=2"
+hero::stats,Stats,both,0x649d4,SOURCE/HERO,1,hero,hero::UpdateStats,0xd2d58,hero.obj,1,0.400,0.500,-1,0,0,0,0.200,twin-candidate,"margin 0.20, no-callee-signal"
+resourcemanager::getbitmap,GetBitmap,both,0xb81c0,BASE/RESMGR,1,resourcemanager,ResourceManager::GetBitmap16,0x121c5c,resourcemanager.obj,2,0.600,0.667,0,0,0,0,0.100,twin-candidate,"margin 0.10, no-callee-signal"
+resourcemanager::getfilesize,GetFileSize,both,0xb8bf0,BASE/RESMGR,1,resourcemanager,ResourceManager::GetBitmapResourceSize,0x1224e4,resourcemanager.obj,1,0.340,0.400,-1,0,1,0,0.020,twin-candidate,"margin 0.02, no-callee-signal"
+$e14,$E14,buka,0xb531f,SOURCE/X_GLOBAL,,,,,,,,,,0,0,0,,refused,free-function
+$e15,$E15,buka,0xb5340,SOURCE/X_GLOBAL,,,,,,,,,,0,0,0,,refused,free-function
+$e16,$E16,buka,0xb532e,SOURCE/X_GLOBAL,,,,,,,,,,0,0,0,,refused,free-function
+$e17,$E17,buka,0xb5310,SOURCE/X_GLOBAL,,,,,,,,,,0,0,0,,refused,free-function
+$e18,$E18,buka,0x15a3a,SOURCE/ADVMGR,,,,,,,,,,0,0,0,,refused,free-function
+$e19,$E19,buka,0x15a13,SOURCE/ADVMGR,,,,,,,,,,0,0,0,,refused,free-function
+$e20,$E20,buka,0xb6b60,BASE/soundmgr,,,,,,,,,,0,0,0,,refused,free-function
+$e21,$E21,buka,0xb6b30,BASE/soundmgr,,,,,,,,,,0,0,0,,refused,free-function
+$e22,$E22,buka,0xcd170,BASE/AudiereMusic,,,,,,,,,,0,0,0,,refused,free-function
+$e23,$E23,buka,0x7e191,SOURCE/PATH,,,,,,,,,,0,0,0,,refused,free-function
+$e24,$E24,buka,0x7e16a,SOURCE/PATH,,,,,,,,,,0,0,0,,refused,free-function
+$e29,$E29,buka,0xcdae0,BASE/AudiereMusic,,,,,,,,,,0,0,0,,refused,free-function
+$e3,$E3,buka,0x8c318,SOURCE/PHILAI,,,,,,,,,,0,0,0,,refused,free-function
+$e31,$E31,buka,0xcdb10,BASE/AudiereMusic,,,,,,,,,,0,0,0,,refused,free-function
+?$refptr::?$refptr,?$RefPtr,buka,0xb6a90,BASE/soundmgr,,,,,,,,,,0,0,0,,refused,no-shared-class
+?$refptr::~?$refptr,?$RefPtr,buka,0xb6b00,BASE/soundmgr,,,,,,,,,,0,0,0,,refused,no-shared-class
+absaiprint,AbsAiPrint,both,0xbfd10,BASE/Misc,1,,,,,,,,,0,0,0,,refused,free-function
+add_node,add_node,both,0x32760,SOURCE/comwin,2,,,,,,,,,0,0,0,,refused,free-function
+addnetboxline,AddNetBoxLine,both,0x6cbcb,SOURCE/KB,2,,,,,,,,,0,0,0,,refused,free-function
+addscoretohighscore,AddScoreToHighScore,both,0x6bb0e,SOURCE/KB,,,,,,,,,,0,0,0,,refused,free-function
+adjustmilessamplevolumes,AdjustMilesSampleVolumes,buka,0xcdfd0,BASE/MilesSound,0,,,,,,,,,0,0,0,,refused,free-function
+advmanager::advpanel,AdvPanel,both,0x14173,SOURCE/ADVMGR,0,advmanager,,,,,0.400,0.333,0,0,15,0,0.037,refused,weak-name (best advManager::~advManager S=0.40 name=0.33)
+advmanager::autoresolvecombat,AutoResolveCombat,both,0x49960,SOURCE/EVENTS,,advmanager,,,,,0.000,0.000,,0,10,0,0.000,refused,weak-name (best advManager::InMapArea S=0.00 name=0.00)
+advmanager::barrieraievent,BarrierAIEvent,both,0x478df,SOURCE/EVENTS,2,advmanager,,,,,0.320,0.200,0,0,0,0,0.000,refused,weak-name (best advManager::DoEventAnchor S=0.32 name=0.20)
+advmanager::barrierevent,BarrierEvent,both,0x41fbc,SOURCE/EVENTS,2,advmanager,,,,,0.350,0.250,0,0,2,0,0.000,refused,weak-name (best advManager::DoEventAnchor S=0.35 name=0.25)
+advmanager::checkhandlenet,CheckHandleNet,both,0x12e8c,SOURCE/ADVMGR,0,advmanager,,,,,0.200,0.000,0,0,5,0,0.000,refused,weak-name (best advManager::DrawAdventureMapGems S=0.20 name=0.00)
+advmanager::checkhandlenetplayerwait,CheckHandleNetPlayerWait,both,0x13081,SOURCE/ADVMGR,,advmanager,,,,,0.100,0.000,,1,2,1,0.000,refused,weak-name (best advManager::BVResMsg S=0.10 name=0.00)
+advmanager::checksetevilinterface,CheckSetEvilInterface,both,0x2674,SOURCE/ADVMGR,2,advmanager,,,,,0.200,0.000,0,0,2,0,0.000,refused,weak-name (best advManager::InMapArea S=0.20 name=0.00)
+advmanager::combodraw,ComboDraw,both,0xf30a,SOURCE/ADVMGR,1/3,advmanager,,,,,0.350,0.250,0,0,5,0,0.100,refused,weak-name (best advManager::DrawRolloverText S=0.35 name=0.25)
+advmanager::computermonsterinteract,ComputerMonsterInteract,both,0x48730,SOURCE/EVENTS,3,advmanager,,,,,0.320,0.200,0,0,4,0,0.120,refused,weak-name (best advManager::MonsterQuickView S=0.32 name=0.20)
+advmanager::controlpanel,ControlPanel,both,0x14562,SOURCE/ADVMGR,0,advmanager,,,,,0.222,0.000,0,1,9,1,0.000,refused,weak-name (best advManager::DoAdvMenu S=0.22 name=0.00)
+advmanager::doheroknob,DoHeroKnob,both,0xe6be,SOURCE/ADVMGR,0,advmanager,,,,,0.320,0.200,0,0,5,2,0.000,refused,weak-name (best advManager::DoAdventureOptions S=0.32 name=0.20)
+advmanager::dotownknob,DoTownKnob,both,0xe8a5,SOURCE/ADVMGR,0,advmanager,,,,,0.320,0.200,0,0,5,2,0.000,refused,weak-name (best advManager::DoAdventureOptions S=0.32 name=0.20)
+advmanager::dovisions,DoVisions,both,0x154ac,SOURCE/ADVMGR,1,advmanager,,,,,0.250,0.250,-1,0,4,2,0.000,refused,weak-name (best advManager::DoAdventureOptions S=0.25 name=0.25)
+advmanager::drawcell,DrawCell,both,0x5fc9,SOURCE/ADVMGR,,advmanager,,,,,0.250,0.333,,1,4,1,0.000,refused,weak-name (best advManager::DrawArrow S=0.25 name=0.33)
+advmanager::eventwindow,EventWindow,both,0x43340,SOURCE/EVENTS,,advmanager,,,,,0.200,0.333,,0,1,1,0.000,refused,weak-name (best advManager::DispatchEvent S=0.20 name=0.33)
+advmanager::expansionrecruitevent,ExpansionRecruitEvent,both,0x42ac2,SOURCE/EVENTS,,advmanager,,,,,0.150,0.250,,0,3,1,0.000,refused,weak-name (best advManager::DispatchEvent S=0.15 name=0.25)
+advmanager::genericsiteaievent,GenericSiteAIEvent,both,0x47989,SOURCE/EVENTS,2,advmanager,,,,,0.300,0.167,0,0,2,0,0.000,refused,weak-name (best advManager::DoEventAnchor S=0.30 name=0.17)
+advmanager::genericsiteevent,GenericSiteEvent,both,0x42256,SOURCE/EVENTS,2,advmanager,,,,,0.320,0.200,0,0,7,0,0.000,refused,weak-name (best advManager::DoEventAnchor S=0.32 name=0.20)
+advmanager::getarmysizename,GetArmySizeName,both,0xd11d,SOURCE/ADVMGR,,advmanager,,,,,0.100,0.167,,0,0,0,0.000,refused,weak-name (best advManager::get_garrison_cursor S=0.10 name=0.17)
+advmanager::getcursorbaseframe,GetCursorBaseFrame,both,0x33dde,SOURCE/CURSOR,1,advmanager,,,,,0.440,0.400,0,0,0,0,0.000,refused,tie (best advManager::get_garrison_cursor vs advManager::get_normal_cursor S=0.44)
+advmanager::ghostevent,GhostEvent,both,0x43b2a,SOURCE/EVENTS,5,advmanager,,,,,0.350,0.250,0,0,2,0,0.000,refused,weak-name (best advManager::DoEventShrine S=0.35 name=0.25)
+advmanager::giveexperience,GiveExperience,both,0x434c9,SOURCE/EVENTS,3,advmanager,,,,,0.400,0.333,0,0,2,0,0.050,refused,weak-name (best advManager::GiveArtifact S=0.40 name=0.33)
+advmanager::giveresource,GiveResource,both,0x4352a,SOURCE/EVENTS,3,advmanager,,,,,0.400,0.333,0,0,1,0,0.050,refused,weak-name (best advManager::GiveArtifact S=0.40 name=0.33)
+advmanager::houseevent,HouseEvent,both,0x43df6,SOURCE/EVENTS,2,advmanager,,,,,0.350,0.250,0,0,2,0,0.000,refused,weak-name (best advManager::DoEventAnchor S=0.35 name=0.25)
+advmanager::iscrystalballineffect,IsCrystalBallInEffect,both,0x158e9,SOURCE/ADVMGR,3,advmanager,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best advManager::ProcessMapSelect S=0.20 name=0.00)
+advmanager::jailaievent,JailAIEvent,both,0x47e63,SOURCE/EVENTS,4,advmanager,,,,,0.350,0.250,0,0,2,1,0.030,refused,weak-name (best advManager::DispatchEvent S=0.35 name=0.25)
+advmanager::jailevent,JailEvent,both,0x42b6c,SOURCE/EVENTS,4,advmanager,,,,,0.400,0.333,0,0,4,1,0.050,refused,weak-name (best advManager::DispatchEvent S=0.40 name=0.33)
+advmanager::moveorigin,MoveOrigin,both,0x35888,SOURCE/CURSOR,2,advmanager,,,,,0.250,0.250,-1,0,0,0,0.050,refused,weak-name (best advManager::OnMoveHero S=0.25 name=0.25)
+advmanager::passwordaievent,PasswordAIEvent,both,0x47935,SOURCE/EVENTS,2,advmanager,,,,,0.320,0.200,0,0,0,0,0.000,refused,weak-name (best advManager::DoEventAnchor S=0.32 name=0.20)
+advmanager::passwordevent,PasswordEvent,both,0x42176,SOURCE/EVENTS,2,advmanager,,,,,0.350,0.250,0,0,2,0,0.000,refused,weak-name (best advManager::DoEventAnchor S=0.35 name=0.25)
+advmanager::playermonsterinteract,PlayerMonsterInteract,both,0x47fff,SOURCE/EVENTS,,advmanager,,,,,0.120,0.200,,0,5,0,0.000,refused,weak-name (best advManager::MonsterQuickView S=0.12 name=0.20)
+advmanager::processincominggroupmapchange,ProcessIncomingGroupMapChange,both,0x36366,SOURCE/CURSOR,1,advmanager,,,,,0.500,0.500,0,0,0,0,0.214,refused,"collision (3 claimants for advManager::ProcessMapChangeNew, lead 0.15); margin 0.21, no-callee-signal"
+advmanager::processincomingsinglemapchange,ProcessIncomingSingleMapChange,both,0x361dd,SOURCE/CURSOR,1,advmanager,,,,,0.500,0.500,0,0,0,0,0.214,refused,"collision (3 claimants for advManager::ProcessMapChangeNew, lead 0.15); margin 0.21, no-callee-signal"
+advmanager::purgemapchangequeue,PurgeMapChangeQueue,both,0x3640d,SOURCE/CURSOR,0,advmanager,,,,,0.300,0.333,1,0,0,0,0.014,refused,weak-name (best advManager::ProcessMapChangeNew S=0.30 name=0.33)
+advmanager::recruitsiteaievent,RecruitSiteAIEvent,both,0x47cda,SOURCE/EVENTS,2,advmanager,,,,,0.300,0.167,0,0,2,0,0.000,refused,weak-name (best advManager::DoEventAnchor S=0.30 name=0.17)
+advmanager::recruitsiteevent,RecruitSiteEvent,both,0x42952,SOURCE/EVENTS,2,advmanager,,,,,0.320,0.200,0,0,1,0,0.000,refused,weak-name (best advManager::DoEventAnchor S=0.32 name=0.20)
+advmanager::saveadventureborder,SaveAdventureBorder,both,0x13464,SOURCE/ADVMGR,0,advmanager,,,,,0.320,0.200,0,0,0,2,0.020,refused,weak-name (best advManager::DoAdventureOptions S=0.32 name=0.20)
+advmanager::transferartifacts,TransferArtifacts,both,0x44949,SOURCE/EVENTS,2,advmanager,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best advManager::InMapArea S=0.20 name=0.00)
+advmanager::unwindmapchangequeue,UnwindMapChangeQueue,both,0x3646b,SOURCE/CURSOR,2,advmanager,,,,,0.300,0.167,0,0,0,0,0.000,refused,weak-name (best advManager::InMapArea S=0.30 name=0.17)
+advmanager::updateherolocator,UpdateHeroLocator,both,0xa491,SOURCE/ADVMGR,3,advmanager,,,,,0.220,0.200,1,0,2,0,0.020,refused,weak-name (best advManager::do_event_hero S=0.22 name=0.20)
+advmanager::updateherolocators,UpdateHeroLocators,both,0xa78f,SOURCE/ADVMGR,2,advmanager,,,,,0.220,0.200,-1,0,1,0,0.000,refused,weak-name (best advManager::OnMoveHero S=0.22 name=0.20)
+advmanager::updatetownlocators,UpdateTownLocators,both,0xa85c,SOURCE/ADVMGR,2,advmanager,,,,,0.220,0.200,-1,0,2,0,0.020,refused,weak-name (best advManager::OnClaimTown S=0.22 name=0.20)
+advmanager::vwcleanup,VWCleanup,both,0xae26a,SOURCE/Viewwrld,0,advmanager,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best advManager::DrawAdventureMapGems S=0.20 name=0.00)
+advmanager::vwinit,VWInit,both,0xae2bb,SOURCE/Viewwrld,2,advmanager,,,,,0.200,0.000,0,0,2,0,0.000,refused,weak-name (best advManager::InMapArea S=0.20 name=0.00)
+advmanager::zombieevent,ZombieEvent,both,0x438bf,SOURCE/EVENTS,5,advmanager,,,,,0.350,0.250,0,0,2,0,0.000,refused,weak-name (best advManager::DoEventShrine S=0.35 name=0.25)
+aiprint,AiPrint,both,0xbfc90,BASE/Misc,1,,,,,,,,,0,0,0,,refused,free-function
+allocatecompressstructures,allocateCompressStructures,both,0xc7f80,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+allocatemilessamplehandles,AllocateMilesSampleHandles,buka,0xcdc00,BASE/MilesSound,1,,,,,,,,,0,0,0,,refused,free-function
+apanelhandler,APanelHandler,both,0x14417,SOURCE/ADVMGR,1,,,,,,,,,0,0,0,,refused,free-function
+appabout,AppAbout,both,0x71883,SOURCE/kbwin,4,,,,,,,,,0,0,0,,refused,free-function
+appidle,AppIdle,both,0x7122e,SOURCE/kbwin,0,,,,,,,,,0,0,0,,refused,free-function
+arenawindowhandler,ArenaWindowHandler,both,0xb2f5b,SOURCE/x_arena,1,,,,,,,,,0,0,0,,refused,free-function
+arithcodebitplusfollow,arithCodeBitPlusFollow,both,0xc7270,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+arithcodedonedecoding,arithCodeDoneDecoding,both,0xc7390,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+arithcodedoneencoding,arithCodeDoneEncoding,both,0xc72f0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+arithcoderenormalise_encode,arithCodeRenormalise_Encode,both,0xc73a0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+arithcodestartdecoding,arithCodeStartDecoding,both,0xc7330,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+arithcodestartencoding,arithCodeStartEncoding,both,0xc72c0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+arithcodesymbol,arithCodeSymbol,both,0xc7450,BASE/Bzip,3,,,,,,,,,0,0,0,,refused,free-function
+arithdecodesymbol,arithDecodeSymbol,both,0xc7520,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+army::attackto,AttackTo,both,0x1d4ef,SOURCE/ARMY,0/1,army,,,,,0.400,0.333,0,0,0,0,0.000,refused,weak-name (best army::cannot_attack S=0.40 name=0.33)
+army::dirdoattack,DirDoAttack,both,0x1b838,SOURCE/ARMY,1,army,,,,,0.600,0.667,0,0,0,0,0.250,refused,"collision (3 claimants for army::do_attack, lead 0.20); margin 0.25, no-callee-signal, overloads=2"
+army::dispelgood,DispelGood,both,0x210ae,SOURCE/ARMY,0,army,,,,,0.400,0.000,0,1,1,1,0.200,refused,weak-name (best army::CancelAllSpells S=0.40 name=0.00)
+army::dohydraattack,DoHydraAttack,both,0x1b858,SOURCE/ARMY,1,army,,,,,0.600,0.667,0,0,9,0,0.250,refused,"collision (3 claimants for army::do_attack, lead 0.20); margin 0.25, no-callee-signal, overloads=2"
+army::getmovemask,GetMoveMask,both,0x7d01d,SOURCE/PATH,1,army,,,,,0.350,0.250,0,0,0,0,0.000,refused,weak-name (best army::GetMorale S=0.35 name=0.25)
+army::getpowbasey,GetPowBaseY,both,0x2163d,SOURCE/ARMY,0,army,,,,,0.320,0.200,0,0,2,0,0.000,refused,weak-name (best army::get_controller S=0.32 name=0.20)
+army::moveattack,MoveAttack,both,0x20238,SOURCE/ARMY,2,army,,,,,0.400,0.333,0,0,5,1,0.000,refused,weak-name (best army::do_attack S=0.40 name=0.33)
+army::poweffect,PowEffect,both,0x1df4e,SOURCE/ARMY,,army,,,,,0.120,0.200,,0,8,0,0.120,refused,weak-name (best army::set_inside_area_effect S=0.12 name=0.20)
+army::resetpath,ResetPath,both,0x1d220,SOURCE/ARMY,0,army,,,,,0.400,0.333,0,0,0,0,0.200,refused,weak-name (best army::ResetRound S=0.40 name=0.33)
+army::spellcastworkchance,SpellCastWorkChance,both,0x20595,SOURCE/ARMY,1,army,,,,,0.500,0.500,0,0,1,0,0.060,refused,"collision (2 claimants for army::cast_spell, lead 0.10); margin 0.06, no-callee-signal"
+army::spellcastworks,SpellCastWorks,both,0x20cf1,SOURCE/ARMY,1,army,,,,,0.600,0.667,0,0,1,0,0.100,refused,"collision (2 claimants for army::cast_spell, lead 0.10); margin 0.10, no-callee-signal"
+army::spelleffect,SpellEffect,both,0x1f4ff,SOURCE/ARMY,,army,,,,,0.200,0.333,,0,2,0,0.050,refused,weak-name (best army::cast_spell S=0.20 name=0.33)
+army::validmove,ValidMove,both,0x7d11b,SOURCE/PATH,1/2,army,,,,,0.400,0.333,0,0,0,0,0.000,refused,weak-name (best army::simple_move S=0.40 name=0.33)
+army::validrange,ValidRange,both,0x7d5f6,SOURCE/PATH,1,army,,,,,0.400,0.333,0,0,2,0,0.080,refused,weak-name (best army::range_attack S=0.40 name=0.33)
+army::wince,Wince,both,0x19790,SOURCE/ARMY,0,army,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best army::can_cast_resurrect S=0.20 name=0.00)
+armygroup::ishomogeneous,IsHomogeneous,both,0x21a96,SOURCE/ARMYGRP,1,armygroup,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best armyGroup::save S=0.20 name=0.00)
+armygroup::view,View,both,0x21741,SOURCE/ARMYGRP,1,armygroup,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best armyGroup::save S=0.20 name=0.00)
+audieremusicavailable,AudiereMusicAvailable,buka,0xcd3a0,BASE/AudiereMusic,0,,,,,,,,,0,0,0,,refused,free-function
+audieremusicplaying,AudiereMusicPlaying,buka,0xcd3b0,BASE/AudiereMusic,0,,,,,,,,,0,0,0,,refused,free-function
+audieresampleiterationactive,AudiereSampleIterationActive,buka,0xccf50,BASE/AudiereEffects,0,,,,,,,,,0,0,0,,refused,free-function
+audieresamplenode::~audieresamplenode,AudiereSampleNode,buka,0xcd050,BASE/AudiereEffects,,,,,,,,,,0,0,0,,refused,no-shared-class
+audieresampleplaying,AudiereSamplePlaying,buka,0xccc90,BASE/AudiereEffects,1,,,,,,,,,0,0,0,,refused,free-function
+autoinitsvga,AutoInitSVGA,both,0xd4800,BASE/miscwin,0,,,,,,,,,0,0,0,,refused,free-function
+bankbox::bankbox,bankBox,both,0xa2055,SOURCE/STRIP,3,,,,,,,,,0,0,0,,refused,no-shared-class
+bankbox::update,Update,both,0xa215f,SOURCE/STRIP,1,,,,,,,,,0,0,0,,refused,no-shared-class
+bankbox::~bankbox,bankBox,both,0xa212b,SOURCE/STRIP,0,,,,,,,,,0,0,0,,refused,no-shared-class
+basealloc,BaseAlloc,both,0xbd530,BASE/Misc,3,,,,,,,,,0,0,0,,refused,free-function
+basefree,BaseFree,both,0xbd650,BASE/Misc,3,,,,,,,,,0,0,0,,refused,free-function
+basesetuphandler,BaseSetupHandler,both,0x94446,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+beginaudieresampleiteration,BeginAudiereSampleIteration,buka,0xccf10,BASE/AudiereEffects,0,,,,,,,,,0,0,0,,refused,free-function
+bitclear,BitClear,both,0xc2f22,BASE/BITS,2,,,,,,,,,0,0,0,,refused,free-function
+bitmap::bitmap,bitmap,both,0xc5cd0,BASE/BITMAP,,,,,,,,,,0,0,0,,refused,no-shared-class
+bitmap::copyto,CopyTo,both,0xc62c0,BASE/BITMAP,,,,,,,,,,0,0,0,,refused,no-shared-class
+bitmap::copytocareful,CopyToCareful,both,0xc6380,BASE/BITMAP,,,,,,,,,,0,0,0,,refused,no-shared-class
+bitmap::drawtobuffer,DrawToBuffer,both,0xc6090,BASE/BITMAP,2,,,,,,,,,0,0,0,,refused,no-shared-class
+bitmap::drawtobuffercareful,DrawToBufferCareful,both,0xc5f30,BASE/BITMAP,2,,,,,,,,,0,0,0,,refused,no-shared-class
+bitmap::drawtoscreen,DrawToScreen,both,0xc60e0,BASE/BITMAP,2,,,,,,,,,0,0,0,,refused,no-shared-class
+bitmap::grabbitmap,GrabBitmap,both,0xc6150,BASE/BITMAP,3,,,,,,,,,0,0,0,,refused,no-shared-class
+bitmap::grabbitmapcareful,GrabBitmapCareful,both,0xc6190,BASE/BITMAP,3,,,,,,,,,0,0,0,,refused,no-shared-class
+bitmap::grabscreen,GrabScreen,both,0xc6120,BASE/BITMAP,2,,,,,,,,,0,0,0,,refused,no-shared-class
+bitmap::~bitmap,bitmap,both,0xc5ee0,BASE/BITMAP,,,,,,,,,,0,0,0,,refused,no-shared-class
+bitmaptoscreen,BitmapToScreen,both,0xbf6d0,BASE/Misc,1,,,,,,,,,0,0,0,,refused,free-function
+bitset,BitSet,both,0xc2f02,BASE/BITS,2,,,,,,,,,0,0,0,,refused,free-function
+bitstreameof,bitStreamEOF,both,0xca610,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+bittest,BitTest,both,0xc2ed4,BASE/BITS,2,,,,,,,,,0,0,0,,refused,free-function
+blitbitmap,BlitBitmap,both,0xc65d0,BASE/bmap2,,,,,,,,,,0,0,0,,refused,free-function
+blitbitmaptoscreen,BlitBitmapToScreen,both,0xbf7a0,BASE/Misc,,,,,,,,,,0,0,0,,refused,free-function
+blitbitmaptoscreennomousecheck,BlitBitmapToScreenNoMouseCheck,both,0xbf760,BASE/Misc,,,,,,,,,,0,0,0,,refused,free-function
+blitbitmaptoscreenvesa,BlitBitmapToScreenVesa,buka,0xd4610,BASE/miscwin,,,,,,,,,,0,0,0,,refused,free-function
+blockoverrun,blockOverrun,both,0xca590,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+border::read,Read,both,0xcb250,BASE/BORDER,0,border,,,,,0.100,0.000,-1,0,0,0,0.100,refused,weak-name (best border::zBufferDraw S=0.10 name=0.00)
+bsclose,bsClose,both,0xc7170,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+bsgetbit,bsGetBit,both,0xc7040,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+bsgetuchar,bsGetUChar,both,0xc70d0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+bsopenreadstream,bsOpenReadStream,both,0xc6ef0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+bsopenwritestream,bsOpenWriteStream,both,0xc6f50,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+bsputbit,bsPutBit,both,0xc6fb0,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+bsputuchar,bsPutUChar,both,0xc7120,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+buildtempwalkseq,BuildTempWalkSeq,both,0x20d33,SOURCE/ARMY,3,,,,,,,,,0,0,0,,refused,free-function
+button::read,Read,both,0xd3710,BASE/BUTTON,0,button,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best button::clear_hotkeys S=0.20 name=0.00)
+bvresmsg,BVResMsg,both,0x6bf13,SOURCE/KB,3,,,,,,,,,0,0,0,,refused,free-function
+calc_crc,calc_crc,both,0x8d89c,SOURCE/REMOTE,3,,,,,,,,,0,0,0,,refused,free-function
+calcbasescore,CalcBaseScore,both,0x5efc5,SOURCE/GAME,1,,,,,,,,,0,0,0,,refused,free-function
+calcfilecrc,CalcFileCRC,both,0x60908,SOURCE/GAME,1,,,,,,,,,0,0,0,,refused,free-function
+campaignhandler,CampaignHandler,both,0x233b8,SOURCE/Campaign,1,,,,,,,,,0,0,0,,refused,free-function
+canbuild,CanBuild,both,0x68e12,SOURCE/KB,2,,,,,,,,,0,0,0,,refused,free-function
+castlehandler,CastleHandler,both,0x25230,SOURCE/Castle,1,,,,,,,,,0,0,0,,refused,free-function
+cdtest_cleanup,CDTest_Cleanup,pol,0x49fbb,SOURCE/x_cdtest,,,,,,,,,,0,0,0,,refused,free-function
+cdtest_generatetable,CDTest_GenerateTable,pol,0x4a0f0,SOURCE/x_cdtest,,,,,,,,,,0,0,0,,refused,free-function
+cdtest_init,CDTest_Init,pol,0x49f80,SOURCE/x_cdtest,,,,,,,,,,0,0,0,,refused,free-function
+cdtest_verifycdquick,CDTest_VerifyCDQuick,pol,0x49fee,SOURCE/x_cdtest,,,,,,,,,,0,0,0,,refused,free-function
+cdtest_verifycdthorough,CDTest_VerifyCDThorough,pol,0x4a014,SOURCE/x_cdtest,,,,,,,,,,0,0,0,,refused,free-function
+cdtest_verifytrack,CDTest_VerifyTrack,pol,0x4a061,SOURCE/x_cdtest,,,,,,,,,,0,0,0,,refused,free-function
+checkchangecursor,CheckChangeCursor,both,0xbd200,BASE/INPUTMGR,3,,,,,,,,,0,0,0,,refused,free-function
+checkshingleupdate,CheckShingleUpdate,both,0x6f552,SOURCE/KB,0,,,,,,,,,0,0,0,,refused,free-function
+checksumisdemook,CheckSumIsDemoOK,both,0x8e7a0,SOURCE/REQUEST,1,,,,,,,,,0,0,0,,refused,free-function
+checkvalidavailableheroes,CheckValidAvailableHeroes,both,0x607ea,SOURCE/GAME,0,,,,,,,,,0,0,0,,refused,free-function
+cleanupandfail,cleanUpAndFail,both,0xca4a0,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+cleanupdpvars,CleanupDPVars,both,0x36b25,SOURCE/dpnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+clearmapextra,ClearMapExtra,both,0x6b9e9,SOURCE/KB,0,,,,,,,,,0,0,0,,refused,free-function
+closeaimapvars,CloseAIMapVars,both,0x8afa6,SOURCE/PHILAI,0,,,,,,,,,0,0,0,,refused,free-function
+com_init,com_init,both,0x32ba2,SOURCE/comwin,3,,,,,,,,,0,0,0,,refused,free-function
+com_rcv,com_rcv,both,0x32f87,SOURCE/comwin,3,,,,,,,,,0,0,0,,refused,free-function
+com_sess,com_sess,both,0x33164,SOURCE/comwin,3,,,,,,,,,0,0,0,,refused,free-function
+com_snd,com_snd,both,0x33048,SOURCE/comwin,5,,,,,,,,,0,0,0,,refused,free-function
+com_stat,com_stat,both,0x3316c,SOURCE/comwin,2,,,,,,,,,0,0,0,,refused,free-function
+com_term,com_term,both,0x32e9e,SOURCE/comwin,1,,,,,,,,,0,0,0,,refused,free-function
+combatmanager::attemptadjacentattack,AttemptAdjacentAttack,both,0x180ba,SOURCE/AI,1,combatmanager,,,,,0.320,0.200,0,0,2,0,0.000,refused,weak-name (best combatManager::SelectAttackDir S=0.32 name=0.20)
+combatmanager::attemptattack,AttemptAttack,both,0x17f42,SOURCE/AI,,combatmanager,,,,,0.200,0.333,,0,1,0,0.050,refused,weak-name (best combatManager::berserk_attack S=0.20 name=0.33)
+combatmanager::bloodlusteffect,BloodLustEffect,both,0x9c97d,SOURCE/SPELLS,,combatmanager,,,,,0.150,0.250,,0,4,0,0.000,refused,weak-name (best combatManager::PowEffect S=0.15 name=0.25)
+combatmanager::blur,Blur,both,0x9cbc8,SOURCE/SPELLS,3,combatmanager,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best combatManager::ChooseBallistaTarget S=0.20 name=0.00)
+combatmanager::castmassspell,CastMassSpell,both,0x9f02b,SOURCE/SPELLS,2,combatmanager,,,,,0.320,0.200,0,0,8,0,0.020,refused,weak-name (best combatManager::can_cast_spells S=0.32 name=0.20)
+combatmanager::catattack,CatAttack,both,0x28bb8,SOURCE/CMBTMGR,1,combatmanager,,,,,0.350,0.250,0,0,7,0,0.000,refused,weak-name (best combatManager::SelectAttackDir S=0.35 name=0.25)
+combatmanager::checksetmousedirection,CheckSetMouseDirection,both,0x2c389,SOURCE/COMMAND,3,combatmanager,,,,,0.320,0.200,0,0,2,0,0.020,refused,weak-name (best combatManager::check_landmine S=0.32 name=0.20)
+combatmanager::checkupdatecombatmessages,CheckUpdateCombatMessages,both,0x37e02,SOURCE/DRAWING,0,combatmanager,,,,,0.320,0.200,0,0,1,1,0.000,refused,weak-name (best combatManager::FullUpdate S=0.32 name=0.20)
+combatmanager::clearcombatmessages,ClearCombatMessages,both,0x37d48,SOURCE/DRAWING,1,combatmanager,,,,,0.320,0.200,0,0,1,0,0.020,refused,weak-name (best combatManager::InCombatArea S=0.32 name=0.20)
+combatmanager::clearwinlosebottom,ClearWinLoseBottom,both,0x2e370,SOURCE/COMMAND,1,combatmanager,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best combatManager::find_move_order S=0.20 name=0.00)
+combatmanager::defaultspell,DefaultSpell,both,0x9b22d,SOURCE/SPELLS,1,combatmanager,,,,,0.400,0.333,0,0,0,0,0.050,refused,weak-name (best combatManager::InitiateSpell S=0.40 name=0.33)
+combatmanager::determineeffectofspell,DetermineEffectOfSpell,both,0x95fb4,SOURCE/SPELLAI,3,combatmanager,,,,,0.400,0.500,1,0,1,0,0.100,refused,"collision (4 claimants for combatManager::SpellEffect, lead 0.10); margin 0.10, no-callee-signal, overloads=2"
+combatmanager::doblast,DoBlast,both,0xa0178,SOURCE/SPELLS,2,combatmanager,,,,,0.250,0.250,-1,0,5,0,0.050,refused,weak-name (best combatManager::DoKeyboardNavigation S=0.25 name=0.25)
+combatmanager::dolichshot,DoLichShot,both,0x172d6,SOURCE/AI,1,combatmanager,,,,,0.320,0.200,0,0,1,0,0.070,refused,weak-name (best combatManager::DoKeyboardNavigation S=0.32 name=0.20)
+combatmanager::dolosewindow,DoLoseWindow,both,0x30118,SOURCE/COMMAND,0,combatmanager,,,,,0.350,0.250,0,0,4,0,0.130,refused,weak-name (best combatManager::do_animations S=0.35 name=0.25)
+combatmanager::drawcombatborder,DrawCombatBorder,both,0x2a1b9,SOURCE/CMBTMGR,0,combatmanager,,,,,0.350,0.250,0,0,0,0,0.030,refused,weak-name (best combatManager::~combatManager S=0.35 name=0.25)
+combatmanager::drawsmallview,DrawSmallView,both,0x3aad6,SOURCE/DRAWING,2,combatmanager,,,,,0.320,0.200,0,0,2,0,0.070,refused,weak-name (best combatManager::DrawWallAt S=0.32 name=0.20)
+combatmanager::effectspellcure,EffectSpellCure,both,0x97879,SOURCE/SPELLAI,4,combatmanager,,,,,0.600,0.667,0,0,0,0,0.250,refused,"collision (4 claimants for combatManager::SpellEffect, lead 0.10); margin 0.25, no-callee-signal, overloads=2"
+combatmanager::effectspelldamage,EffectSpellDamage,both,0x97d23,SOURCE/SPELLAI,3,combatmanager,,,,,0.500,0.667,1,0,3,0,0.100,refused,"collision (4 claimants for combatManager::SpellEffect, lead 0.10); margin 0.10, no-callee-signal, overloads=2"
+combatmanager::effectspellresurrect,EffectSpellResurrect,both,0x97be4,SOURCE/SPELLAI,3,combatmanager,,,,,0.500,0.667,1,0,1,0,0.180,refused,"collision (4 claimants for combatManager::SpellEffect, lead 0.10); margin 0.18, no-callee-signal, overloads=2"
+combatmanager::elementalstorm,ElementalStorm,both,0x9bb35,SOURCE/SPELLS,0,combatmanager,,,,,0.233,0.000,0,1,6,1,0.033,refused,weak-name (best combatManager::FullUpdate S=0.23 name=0.00)
+combatmanager::findresurrectarmyindex,FindResurrectArmyIndex,both,0x98f2b,SOURCE/SPELLS,,combatmanager,,,,,0.120,0.200,,0,0,1,0.020,refused,weak-name (best combatManager::NextArmy S=0.12 name=0.20)
+combatmanager::fireball,Fireball,both,0x9b2bd,SOURCE/SPELLS,2,combatmanager,,,,,0.200,0.000,0,0,8,0,0.000,refused,weak-name (best combatManager::can_cast_spells S=0.20 name=0.00)
+combatmanager::firstarmy,FirstArmy,both,0x977b3,SOURCE/SPELLAI,3,combatmanager,,,,,0.250,0.250,-1,0,0,0,0.030,refused,weak-name (best combatManager::SetNextArmy S=0.25 name=0.25)
+combatmanager::firstresurrectable,FirstResurrectable,both,0x9781f,SOURCE/SPELLAI,,combatmanager,,,,,0.150,0.250,,0,0,0,0.030,refused,weak-name (best combatManager::process_first_aid S=0.15 name=0.25)
+combatmanager::getallmask,GetAllMask,both,0x17811,SOURCE/AI,1,combatmanager,,,,,0.350,0.250,0,0,0,0,0.000,refused,weak-name (best combatManager::GetObstacle S=0.35 name=0.25)
+combatmanager::getbestarmy,GetBestArmy,both,0x17b4a,SOURCE/AI,2,combatmanager,,,,,0.350,0.250,0,0,1,0,0.030,refused,weak-name (best combatManager::GetCell S=0.35 name=0.25)
+combatmanager::getflyermask,GetFlyerMask,both,0x1771a,SOURCE/AI,1,combatmanager,,,,,0.350,0.250,0,0,0,0,0.000,refused,weak-name (best combatManager::GetObstacle S=0.35 name=0.25)
+combatmanager::getmirrorimagemask,GetMirrorImageMask,both,0x17672,SOURCE/AI,1,combatmanager,,,,,0.320,0.200,0,0,0,0,0.000,refused,weak-name (best combatManager::GetObstacle S=0.32 name=0.20)
+combatmanager::getmodlichdamage,GetModLichDamage,both,0x1722b,SOURCE/AI,2,combatmanager,,,,,0.320,0.200,0,0,0,0,0.000,refused,weak-name (best combatManager::DamageWall S=0.32 name=0.20)
+combatmanager::getoutofitmask,GetOutOfItMask,both,0x179cf,SOURCE/AI,1,combatmanager,,,,,0.300,0.167,0,0,0,0,0.000,refused,weak-name (best combatManager::GetObstacle S=0.30 name=0.17)
+combatmanager::getshootermask,GetShooterMask,both,0x17569,SOURCE/AI,1,combatmanager,,,,,0.350,0.250,0,0,0,0,0.000,refused,weak-name (best combatManager::place_shooter S=0.35 name=0.25)
+combatmanager::gettraitormask,GetTraitorMask,both,0x17a94,SOURCE/AI,1,combatmanager,,,,,0.350,0.250,0,0,0,0,0.000,refused,weak-name (best combatManager::GetObstacle S=0.35 name=0.25)
+combatmanager::getwalkermask,GetWalkerMask,both,0x178b2,SOURCE/AI,1,combatmanager,,,,,0.350,0.250,0,0,0,0,0.000,refused,weak-name (best combatManager::GetObstacle S=0.35 name=0.25)
+combatmanager::getworstarmy,GetWorstArmy,both,0x17cce,SOURCE/AI,2,combatmanager,,,,,0.350,0.250,0,0,1,0,0.030,refused,weak-name (best combatManager::GetCell S=0.35 name=0.25)
+combatmanager::isnegationsphereineffect,IsNegationSphereInEffect,both,0x2d14d,SOURCE/COMMAND,0,combatmanager,,,,,0.371,0.286,0,0,1,0,0.086,refused,weak-name (best combatManager::is_in_second_phase S=0.37 name=0.29)
+combatmanager::meteorshower,MeteorShower,both,0x9b805,SOURCE/SPELLS,1,combatmanager,,,,,0.200,0.000,0,0,7,0,0.000,refused,weak-name (best combatManager::find_move_order S=0.20 name=0.00)
+combatmanager::moretreesnear,MoreTreesNear,both,0x278a0,SOURCE/CMBTMGR,0,combatmanager,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best combatManager::failed_siege S=0.20 name=0.00)
+combatmanager::nextpos,NextPos,both,0x97776,SOURCE/SPELLAI,1,combatmanager,,,,,0.400,0.333,0,0,0,1,0.150,refused,weak-name (best combatManager::NextArmy S=0.40 name=0.33)
+combatmanager::noshowcombatlog,NoShowCombatLog,both,0x37d10,SOURCE/DRAWING,1,combatmanager,,,,,0.300,0.167,0,0,0,0,0.014,refused,weak-name (best combatManager::InCombatArea S=0.30 name=0.17)
+combatmanager::ripple,Ripple,both,0x9cb50,SOURCE/SPELLS,1,combatmanager,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best combatManager::find_move_order S=0.20 name=0.00)
+combatmanager::ripplecreature,RippleCreature,both,0x9e51a,SOURCE/SPELLS,,combatmanager,,,,,0.200,0.333,,0,2,0,0.050,refused,weak-name (best combatManager::DrawCreature S=0.20 name=0.33)
+combatmanager::savecombatborder,SaveCombatBorder,both,0x2a1ae,SOURCE/CMBTMGR,0,combatmanager,,,,,0.350,0.250,0,0,0,0,0.030,refused,weak-name (best combatManager::~combatManager S=0.35 name=0.25)
+combatmanager::setupsmallview,SetupSmallView,both,0x32338,SOURCE/COMMAND,0,combatmanager,,,,,0.220,0.200,1,0,0,0,0.020,refused,weak-name (best combatManager::ViewCastleBallista S=0.22 name=0.20)
+combatmanager::showdeadarmies,ShowDeadArmies,both,0x2ec2c,SOURCE/COMMAND,1,combatmanager,,,,,0.320,0.200,0,0,5,0,0.100,refused,weak-name (best combatManager::DrawDeadOccupants S=0.32 name=0.20)
+combatmanager::showskeletons,ShowSkeletons,both,0x2e715,SOURCE/COMMAND,1,combatmanager,,,,,0.400,0.333,0,0,9,0,0.150,refused,weak-name (best combatManager::RaiseSkeletons S=0.40 name=0.33)
+combatmanager::showwinloseartifact,ShowWinLoseArtifact,both,0x2e478,SOURCE/COMMAND,,combatmanager,,,,,0.100,0.167,,0,9,0,0.000,refused,weak-name (best combatManager::show_eagle_eye S=0.10 name=0.17)
+combatmanager::spaceforelementalexists,SpaceForElementalExists,both,0xa09c5,SOURCE/SPELLS,0,combatmanager,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best combatManager::failed_siege S=0.20 name=0.00)
+combatmanager::turntostone,TurnToStone,both,0x9c856,SOURCE/SPELLS,1,combatmanager,,,,,0.320,0.200,0,0,5,0,0.000,refused,weak-name (best combatManager::TurnOffSelector S=0.32 name=0.20)
+combatmanager::validhextostandon,ValidHexToStandOn,both,0x2bb0e,SOURCE/COMMAND,1,combatmanager,,,,,0.400,0.500,1,0,0,0,0.000,refused,tie (best combatManager::MoveToValidHex vs combatManager::ValidAttackHex S=0.40)
+combatmanager::vaporizecreature,VaporizeCreature,both,0x9e2b3,SOURCE/SPELLS,,combatmanager,,,,,0.200,0.333,,0,2,0,0.050,refused,weak-name (best combatManager::DrawCreature S=0.20 name=0.33)
+combatmanager::viewgeneral,ViewGeneral,both,0xad4b0,SOURCE/VIEW,,combatmanager,,,,,0.150,0.250,,0,10,0,0.030,refused,weak-name (best combatManager::ViewCastleBallista S=0.15 name=0.25)
+combatmanager::walktowardarmy,WalkTowardArmy,both,0x18405,SOURCE/AI,,combatmanager,,,,,0.150,0.250,,0,3,0,0.000,refused,weak-name (best combatManager::move_toward S=0.15 name=0.25)
+combatmanager::walktowardarmyfront,WalkTowardArmyFront,both,0x181fe,SOURCE/AI,,combatmanager,,,,,0.120,0.200,,0,2,0,0.000,refused,weak-name (best combatManager::move_toward S=0.12 name=0.20)
+combatspecialhandler,CombatSpecialHandler,both,0x98bc1,SOURCE/SPELLS,1,,,,,,,,,0,0,0,,refused,free-function
+combatsystemoptionshandler,CombatSystemOptionsHandler,both,0x2b527,SOURCE/CMBTMGR,1,,,,,,,,,0,0,0,,refused,free-function
+comm_wrt_task,comm_wrt_task,both,0x331c7,SOURCE/comwin,0,,,,,,,,,0,0,0,,refused,free-function
+compressedstreameof,compressedStreamEOF,both,0xca510,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+compressoutofmemory,compressOutOfMemory,both,0xca740,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+compressstream,compressStream,both,0xc9ff0,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+compresstest,CompressTest,both,0x60aba,SOURCE/GAME,0,,,,,,,,,0,0,0,,refused,free-function
+compresstest2,CompressTest2,both,0x6099a,SOURCE/GAME,0,,,,,,,,,0,0,0,,refused,free-function
+compresstest3,CompressTest3,both,0x60c46,SOURCE/GAME,0,,,,,,,,,0,0,0,,refused,free-function
+computetraderatios,ComputeTradeRatios,both,0xaceac,SOURCE/tradpost,,,,,,,,,,0,0,0,,refused,free-function
+connect,Connect,both,0x7326c,SOURCE/Modem,0,,,,,,,,,0,0,0,,refused,free-function
+connecttodlls,ConnectToDLLs,both,0xb17fa,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+convertsmackerpalette,ConvertSmackerPalette,both,0x94540,SOURCE/SMACKMGR,1,,,,,,,,,0,0,0,,refused,free-function
+copyoffsetwords,copyOffsetWords,both,0xc8a90,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+cpanelhandler,CPanelHandler,both,0x14747,SOURCE/ADVMGR,1,,,,,,,,,0,0,0,,refused,free-function
+crcerror,crcError,both,0xca4c0,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+createcolorlookuptables,CreateColorLookupTables,both,0xb7e80,BASE/WINMGR,0,,,,,,,,,0,0,0,,refused,free-function
+createcolortables,CreateColorTables,both,0xb7e70,BASE/WINMGR,0,,,,,,,,,0,0,0,,refused,free-function
+createdifffile,CreateDiffFile,both,0x5f47a,SOURCE/GAME,,,,,,,,,,0,0,0,,refused,free-function
+createfizzletables,CreateFizzleTables,both,0xb79a0,BASE/WINMGR,0,,,,,,,,,0,0,0,,refused,free-function
+createjoinfile,CreateJoinFile,both,0x5f9cd,SOURCE/GAME,3,,,,,,,,,0,0,0,,refused,free-function
+createpcxfile,CreatePCXFile,both,0xc00a0,BASE/Misc,5,,,,,,,,,0,0,0,,refused,free-function
+createprimary,CreatePrimary,both,0xafc47,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+cyclecolors,CycleColors,both,0xb6b80,BASE/WINMGR,1,,,,,,,,,0,0,0,,refused,free-function
+dataentrywindowhandler,DataEntryWindowHandler,both,0xc0a50,BASE/Misc,1,,,,,,,,,0,0,0,,refused,free-function
+ddapppaint,DDAppPaint,both,0xafe8f,SOURCE/wingraph,2,,,,,,,,,0,0,0,,refused,free-function
+ddinitializepalette,DDInitializePalette,both,0xb0369,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+ddquerynewpalette,DDQueryNewPalette,both,0xafc1a,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+ddrestoredisplaymode,DDRestoreDisplayMode,both,0xafbe0,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+ddsetpalette,DDSetPalette,both,0xb047a,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+ddupdatepalette,DDUpdatePalette,both,0xb0c15,SOURCE/wingraph,1,,,,,,,,,0,0,0,,refused,free-function
+decodedata,DecodeData,both,0xcabe0,BASE/Bzip,3,,,,,,,,,0,0,0,,refused,free-function
+decodepacket,DecodePacket,both,0x8d93c,SOURCE/REMOTE,2,,,,,,,,,0,0,0,,refused,free-function
+delaymilli,DelayMilli,both,0x79b23,SOURCE/NOOPT,1,,,,,,,,,0,0,0,,refused,free-function
+delaytil,DelayTil,both,0x79b00,SOURCE/NOOPT,1,,,,,,,,,0,0,0,,refused,free-function
+delaytilmilli,DelayTilMilli,both,0x79b3d,SOURCE/NOOPT,1,,,,,,,,,0,0,0,,refused,free-function
+dial,Dial,both,0x72e98,SOURCE/Modem,0,,,,,,,,,0,0,0,,refused,free-function
+dimbitmaparea,DimBitmapArea,both,0xc6690,BASE/bmap2,6,,,,,,,,,0,0,0,,refused,free-function
+dimensiondoorhandler,DimensionDoorHandler,both,0xf085,SOURCE/ADVMGR,1,,,,,,,,,0,0,0,,refused,free-function
+dimicontobitmap,DimIconToBitmap,both,0xc6af0,BASE/Icond2b,,,,,,,,,,0,0,0,,refused,free-function
+dimmerwidget::dimmerwidget,dimmerWidget,both,0xd3310,BASE/DIMMER,6,,,,,,,,,0,0,0,,refused,no-shared-class
+dimmerwidget::draw,Draw,both,0xd3420,BASE/DIMMER,0,,,,,,,,,0,0,0,,refused,no-shared-class
+dimmerwidget::main,Main,both,0xd3400,BASE/DIMMER,1,,,,,,,,,0,0,0,,refused,no-shared-class
+dimmerwidget::read,Read,both,0xd3380,BASE/DIMMER,0,,,,,,,,,0,0,0,,refused,no-shared-class
+dimmerwidget::~dimmerwidget,dimmerWidget,buka,0xd3470,BASE/DIMMER,,,,,,,,,,0,0,0,,refused,no-shared-class
+disconnectdlls,DisconnectDLLs,both,0xb1860,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+doadvance,DoAdvance,both,0x9457f,SOURCE/SMACKMGR,5,,,,,,,,,0,0,0,,refused,free-function
+doarenadialog,DoArenaDialog,both,0xb2ba0,SOURCE/x_arena,0,,,,,,,,,0,0,0,,refused,free-function
+doblur,DoBlur,both,0xcba60,BASE/Blur,,,,,,,,,,0,0,0,,refused,free-function
+doherosplit,DoHeroSplit,both,0x64415,SOURCE/HERO,2,,,,,,,,,0,0,0,,refused,free-function
+doreversibletransformation,doReversibleTransformation,both,0xc9750,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+doripple,DoRipple,both,0xcb6b0,BASE/Ripple,4,,,,,,,,,0,0,0,,refused,free-function
+dotradeknob,DoTradeKnob,both,0xacf72,SOURCE/tradpost,1,,,,,,,,,0,0,0,,refused,free-function
+dpenumserviceprovider,dpEnumServiceProvider,both,0x36770,SOURCE/dpnetwin,5,,,,,,,,,0,0,0,,refused,free-function
+dpenumsession,dpEnumSession,both,0x367f1,SOURCE/dpnetwin,4,,,,,,,,,0,0,0,,refused,free-function
+dpevaluatemessage,dpEvaluateMessage,both,0x36f33,SOURCE/dpnetwin,2,,,,,,,,,0,0,0,,refused,free-function
+dpnet_init,dpnet_init,both,0x36866,SOURCE/dpnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+dpnet_rcv,dpnet_rcv,both,0x36dec,SOURCE/dpnetwin,3,,,,,,,,,0,0,0,,refused,free-function
+dpnet_sess,dpnet_sess,both,0x36e93,SOURCE/dpnetwin,3,,,,,,,,,0,0,0,,refused,free-function
+dpnet_snd,dpnet_snd,both,0x36da4,SOURCE/dpnetwin,3,,,,,,,,,0,0,0,,refused,free-function
+dpnet_stat,dpnet_stat,both,0x36e7f,SOURCE/dpnetwin,2,,,,,,,,,0,0,0,,refused,free-function
+dpnet_term,dpnet_term,both,0x36be8,SOURCE/dpnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+dpprocessmessages,dpProcessMessages,both,0x36e9b,SOURCE/dpnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+dpsendmessage,dpSendMessage,both,0x36cd5,SOURCE/dpnetwin,,,,,,,,,,0,0,0,,refused,free-function
+dpwaitforextraguests,dpWaitForExtraGuests,both,0x372e1,SOURCE/dpnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+dpwaitforfirstguest,dpWaitForFirstGuest,both,0x37177,SOURCE/dpnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+dpwaitforhost,dpWaitForHost,both,0x3735d,SOURCE/dpnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+drivesupportsfreespacequery,DriveSupportsFreeSpaceQuery,buka,0xbf2f0,BASE/Misc,1,,,,,,,,,0,0,0,,refused,free-function
+dropdowntooneplayer,DropDownToOnePlayer,both,0x6ed70,SOURCE/KB,0,,,,,,,,,0,0,0,,refused,free-function
+droplistwidget::deleteitem,DeleteItem,both,0xd0240,BASE/droplist,1,,,,,,,,,0,0,0,,refused,no-shared-class
+droplistwidget::draw,Draw,both,0xd07b0,BASE/droplist,0,,,,,,,,,0,0,0,,refused,no-shared-class
+droplistwidget::drawdropstuff,DrawDropStuff,both,0xd08d0,BASE/droplist,0,,,,,,,,,0,0,0,,refused,no-shared-class
+droplistwidget::droplistwidget,dropListWidget,both,0xcfdb0,BASE/droplist,6,,,,,,,,,0,0,0,,refused,no-shared-class
+droplistwidget::main,Main,both,0xd0380,BASE/droplist,1,,,,,,,,,0,0,0,,refused,no-shared-class
+droplistwidget::processselectdialog,ProcessSelectDialog,both,0xd0fb0,BASE/droplist,0,,,,,,,,,0,0,0,,refused,no-shared-class
+droplistwidget::read,Read,both,0xcff40,BASE/droplist,0,,,,,,,,,0,0,0,,refused,no-shared-class
+droplistwidget::restoredropbackground,RestoreDropBackground,both,0xd0f10,BASE/droplist,0,,,,,,,,,0,0,0,,refused,no-shared-class
+droplistwidget::savedropbackground,SaveDropBackground,both,0xd0e60,BASE/droplist,0,,,,,,,,,0,0,0,,refused,no-shared-class
+droplistwidget::~droplistwidget,dropListWidget,both,0xcfe40,BASE/droplist,0,,,,,,,,,0,0,0,,refused,no-shared-class
+dumpallmodelstats,dumpAllModelStats,both,0xc7b40,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+dumpmodelstats,dumpModelStats,both,0xc76f0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+earlyresizewindow,EarlyResizeWindow,both,0x6e30b,SOURCE/KB,4,,,,,,,,,0,0,0,,refused,free-function
+encodedata,EncodeData,both,0xca980,BASE/Bzip,3,,,,,,,,,0,0,0,,refused,free-function
+encodepacket,EncodePacket,both,0x8d8bf,SOURCE/REMOTE,4,,,,,,,,,0,0,0,,refused,free-function
+endaudieresampleiteration,EndAudiereSampleIteration,buka,0xccf30,BASE/AudiereEffects,0,,,,,,,,,0,0,0,,refused,free-function
+endsinbz,endsInBz,both,0xca790,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+executive::printmanagerlist,PrintManagerList,both,0xc5240,BASE/EXEC,0,executive,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+executive::terminate,Terminate,both,0xc5700,BASE/EXEC,0,executive,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+expansioncampaignrect,ExpansionCampaignRect,both,0x95a65,SOURCE/SMACKMGR,2,,,,,,,,,0,0,0,,refused,free-function
+expcampaign::autosave,Autosave,both,0xb5102,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::campaignid,CampaignID,both,0xb51d3,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::choose,Choose,both,0xb5161,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::days,Days,both,0xb517b,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::expcampaign,ExpCampaign,both,0xb32e0,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::grantaward,GrantAward,both,0xb337b,SOURCE/X_CAMPGN,1,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::handlevictory,HandleVictory,both,0xb4642,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::handlevictory1,HandleVictory1,both,0xb4773,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::handlevictory2,HandleVictory2,both,0xb48b8,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::handlevictory3,HandleVictory3,both,0xb49de,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::handlevictory4,HandleVictory4,both,0xb4a86,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::hasaward,HasAward,both,0xb33a9,SOURCE/X_CAMPGN,1,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::initmap,InitMap,both,0xb3427,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::initnewcampaign,InitNewCampaign,both,0xb33d8,SOURCE/X_CAMPGN,1,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::iscompleted,IsCompleted,both,0xb4df4,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::isspecialgoldenbow,IsSpecialGoldenBow,both,0xb5233,SOURCE/X_CAMPGN,2,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::isspeciallosscondition,IsSpecialLossCondition,both,0xb5285,SOURCE/X_CAMPGN,1,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::isspecialua,IsSpecialUA,both,0xb5263,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::isthismapcompleted,IsThisMapCompleted,both,0xb4e30,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::ivanname,IvanName,both,0xb520b,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::josephname,JosephName,both,0xb51e3,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::messagehandler,MessageHandler,both,0xb4e54,SOURCE/X_CAMPGN,1,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::removeaward,RemoveAward,both,0xb3392,SOURCE/X_CAMPGN,1,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::replaysmacker,ReplaySmacker,both,0xb4b19,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::replaysmacker1,ReplaySmacker1,both,0xb4b80,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::replaysmacker2,ReplaySmacker2,both,0xb4c4c,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::replaysmacker3,ReplaySmacker3,both,0xb4cfc,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::replaysmacker4,ReplaySmacker4,both,0xb4d84,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::resetawards,ResetAwards,both,0xb333f,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::resetbonuschoices,ResetBonusChoices,both,0xb335d,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::resetmapchoices,ResetMapChoices,both,0xb3303,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::resetmapsplayed,ResetMapsPlayed,both,0xb3321,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::setmapwasplayed,SetMapWasPlayed,both,0xb33bf,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::showinfo,ShowInfo,both,0xb3aba,SOURCE/X_CAMPGN,2,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::updateinfo,UpdateInfo,both,0xb3e05,SOURCE/X_CAMPGN,1,,,,,,,,,0,0,0,,refused,no-shared-class
+expcampaign::~expcampaign,ExpCampaign,both,0xb32f8,SOURCE/X_CAMPGN,0,,,,,,,,,0,0,0,,refused,no-shared-class
+exploadcampaignhandler,ExpLoadCampaignHandler,both,0x94304,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+expnewcampaignhandler,ExpNewCampaignHandler,both,0x94263,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+expstdgamehandler,ExpStdGameHandler,both,0x943a5,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+fadein,FadeIn,both,0xbdae0,BASE/Misc,1,,,,,,,,,0,0,0,,refused,free-function
+fadeout,FadeOut,both,0xbdc90,BASE/Misc,1,,,,,,,,,0,0,0,,refused,free-function
+fadeto,FadeTo,both,0xbfd40,BASE/Misc,3,,,,,,,,,0,0,0,,refused,free-function
+fadetocolortable,FadeToColorTable,both,0xbfee0,BASE/Misc,2,,,,,,,,,0,0,0,,refused,free-function
+filerequester::cleanupdata,CleanUpData,both,0x8f160,SOURCE/REQUEST,0,,,,,,,,,0,0,0,,refused,no-shared-class
+filerequester::close,Close,both,0x8f200,SOURCE/REQUEST,0,,,,,,,,,0,0,0,,refused,no-shared-class
+filerequester::doknob,DoKnob,both,0x9085b,SOURCE/REQUEST,0,,,,,,,,,0,0,0,,refused,no-shared-class
+filerequester::filerequester,fileRequester,both,0x8ef59,SOURCE/REQUEST,,,,,,,,,,0,0,0,,refused,no-shared-class
+filerequester::getfilename,GetFilename,both,0x91554,SOURCE/REQUEST,0,,,,,,,,,0,0,0,,refused,no-shared-class
+filerequester::initializefiles,InitializeFiles,both,0x8e836,SOURCE/REQUEST,3,,,,,,,,,0,0,0,,refused,no-shared-class
+filerequester::main,Main,both,0x8f737,SOURCE/REQUEST,1,,,,,,,,,0,0,0,,refused,no-shared-class
+filerequester::mapexistsforfilter,MapExistsForFilter,both,0x8f0af,SOURCE/REQUEST,1,,,,,,,,,0,0,0,,refused,no-shared-class
+filerequester::open,Open,both,0x8f275,SOURCE/REQUEST,1,,,,,,,,,0,0,0,,refused,no-shared-class
+filerequester::setok,SetOK,both,0x8f6c0,SOURCE/REQUEST,1,,,,,,,,,0,0,0,,refused,no-shared-class
+filerequester::setupfiles,SetupFiles,both,0x8f0fe,SOURCE/REQUEST,0,,,,,,,,,0,0,0,,refused,no-shared-class
+filerequester::update,Update,both,0x90ab6,SOURCE/REQUEST,1,,,,,,,,,0,0,0,,refused,no-shared-class
+fillbitmaparea,FillBitmapArea,both,0xc6450,BASE/bmap2,6,,,,,,,,,0,0,0,,refused,free-function
+fillbitmapareaclip,FillBitmapAreaClip,both,0xc64e0,BASE/bmap2,,,,,,,,,,0,0,0,,refused,free-function
+findaudieresample,FindAudiereSample,buka,0xcc8b0,BASE/AudiereEffects,1,,,,,,,,,0,0,0,,refused,free-function
+findindex,FindIndex,both,0xbd9f0,BASE/Misc,4,,,,,,,,,0,0,0,,refused,free-function
+findlasttoken,FindLastToken,both,0xbdff0,BASE/Misc,2,,,,,,,,,0,0,0,,refused,free-function
+findstringinstring,FindStringInString,both,0xbdf10,BASE/Misc,2,,,,,,,,,0,0,0,,refused,free-function
+findtoken,FindToken,both,0xbdf90,BASE/Misc,2,,,,,,,,,0,0,0,,refused,free-function
+flipdimicontobitmap,FlipDimIconToBitmap,both,0xd64b0,BASE/Icondf2b,,,,,,,,,,0,0,0,,refused,free-function
+flipicontobitmap,FlipIconToBitmap,both,0xc1c60,BASE/Iconf2b,,,,,,,,,,0,0,0,,refused,free-function
+flipicontobitmapcolortable,FlipIconToBitmapColorTable,both,0xd4960,BASE/iconf2bc,,,,,,,,,,0,0,0,,refused,free-function
+flipicontobitmapymodify,FlipIconToBitmapYModify,both,0xd5270,BASE/iconf2by,,,,,,,,,,0,0,0,,refused,free-function
+flipmonoicontobitmap,FlipMonoIconToBitmap,both,0xd6130,BASE/Iconmf2b,,,,,,,,,,0,0,0,,refused,free-function
+font::extractline,ExtractLine,buka,0xc3b20,BASE/FONT,,font,,,,,0.350,0.250,,1,1,1,0.030,refused,weak-name (best font::LongestLineWidth S=0.35 name=0.25)
+forcepollsound,ForcePollSound,both,0x65d05,SOURCE/KB,0,,,,,,,,,0,0,0,,refused,free-function
+freecompressstructures,FreeCompressStructures,both,0xc7ef0,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+freedecompressstructures,FreeDecompressStructures,both,0xc8030,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+fullgt,fullGt,both,0xc8ae0,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+fullmap::changetilesetindex,ChangeTilesetIndex,both,0x72951,EDITOR/mapcell,,,,,,,,,,0,0,0,,refused,no-shared-class
+fullmap::clearcellextra,ClearCellExtra,both,0x7213f,EDITOR/mapcell,1,,,,,,,,,0,0,0,,refused,no-shared-class
+fullmap::close,Close,both,0x7208e,EDITOR/mapcell,0,,,,,,,,,0,0,0,,refused,no-shared-class
+fullmap::fullmap,fullMap,both,0x72050,EDITOR/mapcell,0,,,,,,,,,0,0,0,,refused,no-shared-class
+fullmap::getnewcellextraindex,GetNewCellExtraIndex,both,0x72290,EDITOR/mapcell,0,,,,,,,,,0,0,0,,refused,no-shared-class
+fullmap::getnewcellextraobject,GetNewCellExtraObject,both,0x72508,EDITOR/mapcell,2,,,,,,,,,0,0,0,,refused,no-shared-class
+fullmap::getnewcellextraoverlay,GetNewCellExtraOverlay,both,0x723a3,EDITOR/mapcell,2,,,,,,,,,0,0,0,,refused,no-shared-class
+fullmap::init,Init,both,0x720f2,EDITOR/mapcell,2,,,,,,,,,0,0,0,,refused,no-shared-class
+fullmap::read,Read,both,0x726f9,EDITOR/mapcell,2,,,,,,,,,0,0,0,,refused,no-shared-class
+fullmap::write,Write,both,0x7266d,EDITOR/mapcell,1,,,,,,,,,0,0,0,,refused,no-shared-class
+fullmap::~fullmap,fullMap,both,0x7207b,EDITOR/mapcell,0,,,,,,,,,0,0,0,,refused,no-shared-class
+game::calcdifficultyrating,CalcDifficultyRating,both,0x5eec6,SOURCE/GAME,0,game,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best game::GetCurrHero S=0.20 name=0.00)
+game::campaigninfoupdate,CampaignInfoUpdate,both,0x22adc,SOURCE/Campaign,1,game,,,,,0.220,0.200,1,0,2,0,0.000,refused,weak-name (best game::GetInfoFlag S=0.22 name=0.20)
+game::cleanupnewgamewindow,CleanUpNewGameWindow,both,0x765bc,SOURCE/Newgame,0,game,,,,,0.320,0.200,0,0,1,0,0.020,refused,weak-name (best game::game S=0.32 name=0.20)
+game::convertalltolateoverlay,ConvertAllToLateOverlay,both,0x5c2f8,SOURCE/GAME,2,game,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best game::OnSameTeam S=0.20 name=0.00)
+game::convertflagtolateoverlay,ConvertFlagToLateOverlay,both,0x5c118,SOURCE/GAME,2,game,,,,,0.286,0.143,0,0,0,0,0.000,refused,weak-name (best game::GetInfoFlag S=0.29 name=0.14)
+game::countshrines,CountShrines,both,0x60c8c,SOURCE/GAME,1,game,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best game::GetHero S=0.20 name=0.00)
+game::doknob,DoKnob,both,0x7c253,SOURCE/Overview,0,game,,,,,0.200,0.000,0,0,7,0,0.000,refused,weak-name (best game::GetCurrHero S=0.20 name=0.00)
+game::drawngkpdisplaystring,DrawNGKPDisplayString,both,0x78612,SOURCE/Newgame,1,game,,,,,0.320,0.200,0,0,1,0,0.000,refused,weak-name (best game::loadString S=0.32 name=0.20)
+game::getluck,GetLuck,both,0x5bb52,SOURCE/GAME,3,game,,,,,0.350,0.250,0,0,1,0,0.000,refused,weak-name (best game::GetGeneratorId S=0.35 name=0.25)
+game::handlecampaignwin,HandleCampaignWin,both,0x21f00,SOURCE/Campaign,0,game,,,,,0.300,0.167,0,0,0,0,0.100,refused,weak-name (best game::mark_campaign_map_won S=0.30 name=0.17)
+game::haslateoverlay,HasLateOverlay,both,0x5c03e,SOURCE/GAME,2,game,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best game::OnSameTeam S=0.20 name=0.00)
+game::hasobjecttilesetindex,HasObjectTilesetIndex,both,0x5c201,SOURCE/GAME,,game,,,,,0.120,0.200,,0,0,0,0.020,refused,weak-name (best game::InsertObject S=0.12 name=0.20)
+game::initentirecampaign,InitEntireCampaign,both,0x23842,SOURCE/Campaign,1,game,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best game::GetHero S=0.20 name=0.00)
+game::initializepasswords,InitializePasswords,both,0x53a95,SOURCE/GAME,0,game,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best game::GetCurrHero S=0.20 name=0.00)
+game::initnewgamewindow,InitNewGameWindow,both,0x766a7,SOURCE/Newgame,0,game,,,,,0.350,0.250,0,0,4,0,0.030,refused,weak-name (best game::game S=0.35 name=0.25)
+game::ismobile,IsMobile,both,0x4cd3b,SOURCE/GAME,1,game,,,,,0.400,0.333,0,0,2,0,0.050,refused,weak-name (best game::IsHuman S=0.40 name=0.33)
+game::newgame,NewGame,both,0x75b4b,SOURCE/Newgame,0,game,,,,,0.500,0.500,0,0,13,0,0.100,refused,"collision (2 claimants for game::game, lead 0.00); margin 0.10, no-callee-signal"
+game::ngkpsetupdisplaystring,NGKPSetupDisplayString,both,0x7850e,SOURCE/Newgame,2,game,,,,,0.220,0.200,-1,0,0,0,0.000,refused,weak-name (best game::loadString S=0.22 name=0.20)
+game::pickloadgame,PickLoadGame,both,0x938d5,SOURCE/SETUP,0,game,,,,,0.400,0.333,0,0,6,0,0.050,refused,weak-name (best game::game S=0.40 name=0.33)
+game::playprescenariosmacker,PlayPreScenarioSmacker,both,0x223f0,SOURCE/Campaign,2,game,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best game::OnSameTeam S=0.20 name=0.00)
+game::processmapextra,ProcessMapExtra,both,0x5c3d4,SOURCE/GAME,0,game,,,,,0.440,0.400,0,0,1,0,0.120,refused,"collision (2 claimants for game::ProcessOnMapTowns, lead 0.10); margin 0.12, no-callee-signal"
+game::processnewmap,ProcessNewMap,both,0x75682,SOURCE/Newgame,1,game,,,,,0.340,0.400,-1,0,2,0,0.120,refused,"collision (2 claimants for game::ProcessOnMapTowns, lead 0.10); margin 0.12, no-callee-signal"
+game::processngkeypress,ProcessNGKeyPress,both,0x7811b,SOURCE/Newgame,1,game,,,,,0.200,0.000,0,0,2,0,0.000,refused,weak-name (best game::GetHero S=0.20 name=0.00)
+game::randomizebarrier,RandomizeBarrier,both,0x53b1a,SOURCE/GAME,1,game,,,,,0.400,0.333,0,0,0,0,0.150,refused,weak-name (best game::randomize_university S=0.40 name=0.33)
+game::randomizemine,RandomizeMine,both,0x5a40e,SOURCE/GAME,2,game,,,,,0.350,0.250,0,0,2,0,0.050,refused,weak-name (best game::record_claim_mine S=0.35 name=0.25)
+game::randomizepassword,RandomizePassword,both,0x53b85,SOURCE/GAME,1,game,,,,,0.400,0.333,0,0,0,0,0.150,refused,weak-name (best game::randomize_university S=0.40 name=0.33)
+game::randomizetown,RandomizeTown,both,0x5a25e,SOURCE/GAME,3,game,,,,,0.250,0.250,-1,0,3,0,0.050,refused,weak-name (best game::record_claim_town S=0.25 name=0.25)
+game::restorecell,RestoreCell,both,0x5f13c,SOURCE/GAME,,game,,,,,0.200,0.333,,0,1,0,0.200,refused,weak-name (best game::get_cell S=0.20 name=0.33)
+game::setupbaud,SetupBaud,both,0x92504,SOURCE/SETUP,0,game,,,,,0.400,0.333,0,0,3,0,0.200,refused,weak-name (best game::setup_shipyards S=0.40 name=0.33)
+game::setupcampaigngame,SetupCampaignGame,both,0x924e0,SOURCE/SETUP,0,game,,,,,0.400,0.333,0,0,0,0,0.050,refused,weak-name (best game::game S=0.40 name=0.33)
+game::setupcomport,SetupComPort,both,0x9263b,SOURCE/SETUP,0,game,,,,,0.350,0.250,0,0,4,0,0.150,refused,weak-name (best game::setup_shipyards S=0.35 name=0.25)
+game::setupgame,SetupGame,both,0x9333c,SOURCE/SETUP,0,game,,,,,0.500,0.500,0,0,4,0,0.100,refused,"collision (2 claimants for game::game, lead 0.00); margin 0.10, no-callee-signal"
+game::setuphotseatgame,SetupHotSeatGame,both,0x92817,SOURCE/SETUP,0,game,,,,,0.350,0.250,0,0,4,0,0.030,refused,weak-name (best game::game S=0.35 name=0.25)
+game::setupmodemgame,SetupModemGame,both,0x92de5,SOURCE/SETUP,0,game,,,,,0.400,0.333,0,0,4,0,0.050,refused,weak-name (best game::game S=0.40 name=0.33)
+game::setupmultiplayergame,SetupMultiPlayerGame,both,0x93115,SOURCE/SETUP,0,game,,,,,0.371,0.286,0,0,4,0,0.021,refused,weak-name (best game::GetLocalPlayerGamePos S=0.37 name=0.29)
+game::setupnetworkgame,SetupNetworkGame,both,0x92a44,SOURCE/SETUP,0,game,,,,,0.400,0.333,0,0,4,0,0.050,refused,weak-name (best game::game S=0.40 name=0.33)
+game::setupnetworkgame2,SetupNetworkGame2,both,0x92b64,SOURCE/SETUP,0,game,,,,,0.350,0.250,0,0,4,0,0.030,refused,weak-name (best game::game S=0.35 name=0.25)
+game::setupresources,SetupResources,both,0x7bd2a,SOURCE/Overview,0,game,,,,,0.400,0.333,0,0,1,0,0.200,refused,weak-name (best game::setup_shipyards S=0.40 name=0.33)
+game::showcampaigninfo,ShowCampaignInfo,both,0x226d2,SOURCE/Campaign,2,game,,,,,0.320,0.200,0,0,12,0,0.000,refused,weak-name (best game::GetInfoFlag S=0.32 name=0.20)
+game::updatenewgamewindow,UpdateNewGameWindow,both,0x76e3b,SOURCE/Newgame,0,game,,,,,0.350,0.250,0,0,1,0,0.030,refused,weak-name (best game::game S=0.35 name=0.25)
+game::updatespellwidgets,UpdateSpellWidgets,both,0x548cf,SOURCE/GAME,0,game,,,,,0.220,0.200,1,0,2,0,0.020,refused,weak-name (best game::GetRandomSpell S=0.22 name=0.20)
+game::viewspells,ViewSpells,both,0x546ee,SOURCE/GAME,,game,,,,,0.000,0.000,,0,5,0,0.000,refused,weak-name (best game::GetHero S=0.00 name=0.00)
+game::weeklygenericsite,WeeklyGenericSite,both,0x59ab8,SOURCE/GAME,1,game,,,,,0.220,0.200,1,0,0,0,0.020,refused,weak-name (best game::set_weekly_recruits S=0.22 name=0.20)
+game::weeklyrecruitsite,WeeklyRecruitSite,both,0x5997e,SOURCE/GAME,1,game,,,,,0.220,0.200,1,0,1,0,0.020,refused,weak-name (best game::set_weekly_recruits S=0.22 name=0.20)
+getall,GETALL,both,0xc8190,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+getandmovetofrontdecode,getAndMoveToFrontDecode,both,0xc86c0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+getbuildingbaseresourcevalue,GetBuildingBaseResourceValue,both,0x69105,SOURCE/KB,3,,,,,,,,,0,0,0,,refused,free-function
+getbuildingcost,GetBuildingCost,both,0x68beb,SOURCE/KB,4,,,,,,,,,0,0,0,,refused,free-function
+getdataentry,GetDataEntry,both,0xc05e0,BASE/Misc,,,,,,,,,,0,0,0,,refused,free-function
+getfinalcrc,getFinalCRC,both,0xc6eb0,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+getglobalcrc,getGlobalCRC,both,0xc6ec0,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+getgraphicsinfo,GetGraphicsInfo,both,0xb18a6,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+geticonentry,GetIconEntry,both,0xc03d0,BASE/Misc,2,,,,,,,,,0,0,0,,refused,free-function
+getint32,getInt32,both,0xc7970,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+getmanacost,GetManaCost,both,0x6f3fc,SOURCE/KB,2,,,,,,,,,0,0,0,,refused,free-function
+getmanaframe,GetManaFrame,both,0x15450,SOURCE/ADVMGR,1,,,,,,,,,0,0,0,,refused,free-function
+getmapevent,GetMapEvent,both,0x60424,SOURCE/GAME,2,,,,,,,,,0,0,0,,refused,free-function
+getmapheader,GetMapHeader,both,0x8e730,SOURCE/REQUEST,2,,,,,,,,,0,0,0,,refused,free-function
+getmobilityframe,GetMobilityFrame,both,0x153f7,SOURCE/ADVMGR,1,,,,,,,,,0,0,0,,refused,free-function
+getmonstername,GetMonsterName,both,0x68cdb,SOURCE/KB,1,,,,,,,,,0,0,0,,refused,free-function
+getmonsterpluralname,GetMonsterPluralName,buka,0x68cf0,SOURCE/KB,1,,,,,,,,,0,0,0,,refused,free-function
+getmontype,GetMonType,both,0x6ba95,SOURCE/KB,2,,,,,,,,,0,0,0,,refused,free-function
+getmtfval,getMTFVal,both,0xc7ba0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+getmusicflaga,GetMusicFlagA,buka,0xc5770,BASE/MusicFlags,,,,,,,,,,0,0,0,,refused,free-function
+getmusicflagb,GetMusicFlagB,buka,0xc57c0,BASE/MusicFlags,,,,,,,,,,0,0,0,,refused,free-function
+getrlepair,getRLEpair,both,0xc9b20,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+getskipcopylen,GetSkipCopyLen,both,0x5f3a3,SOURCE/GAME,2,,,,,,,,,0,0,0,,refused,free-function
+getsymbol,getSymbol,both,0xc7810,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+gettownname,GetTownName,both,0x6d644,SOURCE/KB,1,,,,,,,,,0,0,0,,refused,free-function
+getuchar,getUChar,both,0xc7950,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+getuint32,getUInt32,both,0xc79f0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+giveartifact,GiveArtifact,both,0x433e9,SOURCE/EVENTS,4,,,,,,,,,0,0,0,,refused,free-function
+givetakeartifactstat,GiveTakeArtifactStat,both,0x44571,SOURCE/EVENTS,3,,,,,,,,,0,0,0,,refused,free-function
+gout,GOut,both,0x6bf71,SOURCE/KB,1,,,,,,,,,0,0,0,,refused,free-function
+guimodemcommand,GUIModemCommand,both,0x72f68,SOURCE/Modem,2,,,,,,,,,0,0,0,,refused,free-function
+guimodemcommandexec,GUIModemCommandExec,both,0x72fd4,SOURCE/Modem,0,,,,,,,,,0,0,0,,refused,free-function
+guimodemresponse,GUIModemResponse,both,0x730b3,SOURCE/Modem,2,,,,,,,,,0,0,0,,refused,free-function
+guimodemresponseexec,GUIModemResponseExec,both,0x73128,SOURCE/Modem,0,,,,,,,,,0,0,0,,refused,free-function
+handlemcierror,HandleMCIError,pol,0xcb630,BASE/soundmgr,,,,,,,,,,0,0,0,,refused,free-function
+handleremotesuddenexit,HandleRemoteSuddenExit,both,0x6ece2,SOURCE/KB,0,,,,,,,,,0,0,0,,refused,free-function
+handleviewgeneral,HandleViewGeneral,both,0xadba9,SOURCE/VIEW,1,,,,,,,,,0,0,0,,refused,free-function
+hero::calcmobility,CalcMobility,both,0x60f87,SOURCE/HERO,0,hero,,,,,0.400,0.333,0,0,2,0,0.050,refused,weak-name (best hero::GetMobility S=0.40 name=0.33)
+hero::checkanduranpieces,CheckAnduranPieces,both,0x64b7b,SOURCE/HERO,1,hero,,,,,0.200,0.000,0,0,3,0,0.000,refused,weak-name (best hero::IsFlying S=0.20 name=0.00)
+hero::dismiss,Dismiss,both,0x617a7,SOURCE/HERO,0,hero,,,,,0.200,0.000,0,0,2,0,0.000,refused,weak-name (best hero::GetExperienceIncrement S=0.20 name=0.00)
+hero::dossleveldialog,DoSSLevelDialog,both,0x64a9e,SOURCE/HERO,,hero,,,,,0.100,0.167,,0,1,0,0.014,refused,weak-name (best hero::get_spell_level S=0.10 name=0.17)
+hero::getarmystrengths,GetArmyStrengths,both,0x60f36,SOURCE/HERO,1,hero,,,,,0.350,0.250,0,0,0,0,0.000,refused,weak-name (best hero::get_target S=0.35 name=0.25)
+hero::getnumspells,GetNumSpells,both,0x612f3,SOURCE/HERO,1,hero,,,,,0.350,0.250,0,0,0,0,0.000,refused,weak-name (best hero::get_target S=0.35 name=0.25)
+hero::hasspell,HasSpell,both,0x611c3,SOURCE/HERO,1,hero,,,,,0.400,0.333,0,0,1,0,0.050,refused,weak-name (best hero::HasArmy S=0.40 name=0.33)
+hero::numartifacts,NumArtifacts,both,0x6276b,SOURCE/HERO,0,hero,,,,,0.400,0.333,0,0,0,0,0.100,refused,weak-name (best hero::reset_artifacts S=0.40 name=0.33)
+hero::read,Read,both,0x60eb4,SOURCE/HERO,2,hero,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best hero::AdjustPrimarySkill S=0.20 name=0.00)
+hero::write,Write,both,0x60ef5,SOURCE/HERO,2,hero,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best hero::AdjustPrimarySkill S=0.20 name=0.00)
+herohandler,HeroHandler,both,0x62ef8,SOURCE/HERO,1,,,,,,,,,0,0,0,,refused,free-function
+heromessageupdate,HeroMessageUpdate,both,0x6141a,SOURCE/HERO,1,,,,,,,,,0,0,0,,refused,free-function
+herowindowmanager::redrawscreen,RedrawScreen,both,0xb7710,BASE/WINMGR,0,herowindowmanager,,,,,0.100,0.000,1,0,1,0,0.000,refused,weak-name (best heroWindowManager::SaveFizzleSourceX S=0.10 name=0.00)
+herowindowmanager::updatescreenregion,UpdateScreenRegion,both,0xb76b0,BASE/WINMGR,4,herowindowmanager,,,,,0.286,0.143,0,0,0,0,0.086,refused,weak-name (best heroWindowManager::BlitToScreenWithPointer S=0.29 name=0.14)
+hexcell::drawclouds,DrawClouds,both,0x6507e,SOURCE/HEXCELL,0,hexcell,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best hexcell::HasArmy S=0.20 name=0.00)
+hexcell::drawground,DrawGround,both,0x64cfb,SOURCE/HEXCELL,0,hexcell,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best hexcell::HasArmy S=0.20 name=0.00)
+hexcell::drawlowerdeadoccupants,DrawLowerDeadOccupants,both,0x64d06,SOURCE/HEXCELL,0,hexcell,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best hexcell::HasArmy S=0.20 name=0.00)
+hexcell::drawobstacle,DrawObstacle,both,0x65089,SOURCE/HEXCELL,0,hexcell,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best hexcell::HasArmy S=0.20 name=0.00)
+hexcell::drawoccupant,DrawOccupant,both,0x64e4b,SOURCE/HEXCELL,2,hexcell,,,,,0.100,0.000,-1,0,1,0,0.000,refused,weak-name (best hexcell::limits S=0.10 name=0.00)
+hexcell::drawtower,DrawTower,both,0x64f58,SOURCE/HEXCELL,1,hexcell,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best hexcell::limits S=0.20 name=0.00)
+hexcell::drawupperdeadoccupant,DrawUpperDeadOccupant,both,0x64da7,SOURCE/HEXCELL,0,hexcell,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best hexcell::HasArmy S=0.20 name=0.00)
+highscoremanager::update,Update,both,0x654ef,SOURCE/HISCORE,0,highscoremanager,,,,,0.200,0.000,0,0,2,0,0.000,refused,weak-name (best highScoreManager::ResetHighScores S=0.20 name=0.00)
+icon::clipfilltobuffer,ClipFillToBuffer,both,0xc2ca0,BASE/ICON,,,,,,,,,,0,0,0,,refused,no-shared-class
+icon::combatclipdrawtobuffer,CombatClipDrawToBuffer,both,0xc28a0,BASE/ICON,,,,,,,,,,0,0,0,,refused,no-shared-class
+icon::dimtobuffer,DimToBuffer,both,0xc2e20,BASE/ICON,,,,,,,,,,0,0,0,,refused,no-shared-class
+icon::drawtobuffer,DrawToBuffer,both,0xc2820,BASE/ICON,,,,,,,,,,0,0,0,,refused,no-shared-class
+icon::filltobuffer,FillToBuffer,both,0xc2ce0,BASE/ICON,,,,,,,,,,0,0,0,,refused,no-shared-class
+icon::icon,icon,both,0xc26f0,BASE/ICON,4,,,,,,,,,0,0,0,,refused,no-shared-class
+icon::~icon,icon,both,0xc27e0,BASE/ICON,0,,,,,,,,,0,0,0,,refused,no-shared-class
+icontobitmap,IconToBitmap,both,0xc14c0,BASE/Icon2b,,,,,,,,,,0,0,0,,refused,free-function
+icontobitmapcolortable,IconToBitmapColorTable,both,0xc0ca0,BASE/icon2bc,,,,,,,,,,0,0,0,,refused,free-function
+icontobitmapscale,IconToBitmapScale,both,0xcc4e0,BASE/icon2bs,,,,,,,,,,0,0,0,,refused,free-function
+icontobitmapymodify,IconToBitmapYModify,both,0xd5a50,BASE/icon2by,,,,,,,,,,0,0,0,,refused,free-function
+iconwidget::read,Read,both,0xbb890,BASE/ICONWDGT,0,iconwidget,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best iconWidget::GetRealWidth S=0.20 name=0.00)
+incombatarea,InCombatArea,both,0x315b9,SOURCE/COMMAND,2,,,,,,,,,0,0,0,,refused,free-function
+init_anchor,init_anchor,both,0x327fa,SOURCE/comwin,3,,,,,,,,,0,0,0,,refused,free-function
+initaimapvars,InitAIMapVars,both,0x8aee1,SOURCE/PHILAI,0,,,,,,,,,0,0,0,,refused,free-function
+initbogusmodel,initBogusModel,both,0xc7840,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+initialisecrc,initialiseCRC,both,0xc6ea0,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+initializepalette,InitializePalette,both,0xb19c4,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+initmementry,InitMemEntry,both,0xbd4b0,BASE/Misc,0,,,,,,,,,0,0,0,,refused,free-function
+initmenuhandler,InitMenuHandler,both,0x6829b,SOURCE/KB,1,,,,,,,,,0,0,0,,refused,free-function
+initmodel,initModel,both,0xc7620,BASE/Bzip,,,,,,,,,,0,0,0,,refused,free-function
+initmodels,initModels,both,0xc7a70,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+initnetguest,InitNetGuest,both,0x7394c,SOURCE/Netbios,0,,,,,,,,,0,0,0,,refused,free-function
+initnethost,InitNetHost,both,0x73830,SOURCE/Netbios,0,,,,,,,,,0,0,0,,refused,free-function
+inmaparea,InMapArea,both,0x6e31d,SOURCE/KB,2,,,,,,,,,0,0,0,,refused,free-function
+inputmanager::setmousecoords,SetMouseCoords,both,0xbca90,BASE/INPUTMGR,2,inputmanager,,,,,0.100,0.000,-1,0,0,0,0.100,refused,weak-name (best inputManager::FocusTheWidget S=0.10 name=0.00)
+ioerror,ioError,both,0xca550,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+is_netbios_avail,is_netbios_avail,both,0x73da0,SOURCE/netwin,0,,,,,,,,,0,0,0,,refused,free-function
+iscurseditem,IsCursedItem,both,0x5ab1a,SOURCE/GAME,1,,,,,,,,,0,0,0,,refused,free-function
+iscyclecolor,IsCycleColor,both,0xc0050,BASE/Misc,1,,,,,,,,,0,0,0,,refused,free-function
+kbtickcount,KBTickCount,both,0x71ff8,SOURCE/kbwin,0,,,,,,,,,0,0,0,,refused,free-function
+listboxwidget::deleteitem,DeleteItem,both,0xcec60,BASE/listbox,1,,,,,,,,,0,0,0,,refused,no-shared-class
+listboxwidget::draw,Draw,both,0xcf2f0,BASE/listbox,0,,,,,,,,,0,0,0,,refused,no-shared-class
+listboxwidget::drawlbstuff,DrawLBStuff,both,0xcf310,BASE/listbox,1,,,,,,,,,0,0,0,,refused,no-shared-class
+listboxwidget::listboxwidget,listBoxWidget,both,0xce6a0,BASE/listbox,6,,,,,,,,,0,0,0,,refused,no-shared-class
+listboxwidget::main,Main,both,0xcee60,BASE/listbox,1,,,,,,,,,0,0,0,,refused,no-shared-class
+listboxwidget::processmousemessage,ProcessMouseMessage,both,0xcf860,BASE/listbox,1,,,,,,,,,0,0,0,,refused,no-shared-class
+listboxwidget::read,Read,both,0xce840,BASE/listbox,0,,,,,,,,,0,0,0,,refused,no-shared-class
+listboxwidget::~listboxwidget,listBoxWidget,both,0xce730,BASE/listbox,0,,,,,,,,,0,0,0,,refused,no-shared-class
+loadandrlesource,loadAndRLEsource,both,0xc9c60,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+loadsystemwideicons,LoadSystemwideIcons,both,0x6d66d,SOURCE/KB,0,,,,,,,,,0,0,0,,refused,free-function
+logint,LogInt,both,0xbfad0,BASE/Misc,,,,,,,,,,0,0,0,,refused,free-function
+logstr,LogStr,both,0xbfa30,BASE/Misc,1,,,,,,,,,0,0,0,,refused,free-function
+logtruncate,LogTruncate,both,0xbf990,BASE/Misc,0,,,,,,,,,0,0,0,,refused,free-function
+mageguildhandler,MageGuildHandler,both,0xa9f84,SOURCE/TOWNMGR,1,,,,,,,,,0,0,0,,refused,free-function
+makefileid,MAKEFILEID,both,0xbd8e0,BASE/Misc,1,,,,,,,,,0,0,0,,refused,free-function
+memsize,MemSize,both,0xc05d0,BASE/Misc,1,,,,,,,,,0,0,0,,refused,free-function
+midiisplaying,MIDIIsPlaying,buka,0xc5b90,BASE/Midi,,,,,,,,,,0,0,0,,refused,free-function
+midiplay,MIDIPlay,buka,0xc5920,BASE/Midi,,,,,,,,,,0,0,0,,refused,free-function
+midisetvolume,MIDISetVolume,buka,0xc5bf0,BASE/Midi,,,,,,,,,,0,0,0,,refused,free-function
+midishutdown,MIDIShutdown,buka,0xc5830,BASE/Midi,,,,,,,,,,0,0,0,,refused,free-function
+midistartup,MIDIStartup,buka,0xc57d0,BASE/Midi,,,,,,,,,,0,0,0,,refused,free-function
+midistop,MIDIStop,buka,0xc5aa0,BASE/Midi,,,,,,,,,,0,0,0,,refused,free-function
+midiwrap::midiwrap,MIDIWrap,both,0xce520,BASE/SAMPLE,1,,,,,,,,,0,0,0,,refused,no-shared-class
+midiwrap::~midiwrap,MIDIWrap,both,0xce610,BASE/SAMPLE,0,,,,,,,,,0,0,0,,refused,no-shared-class
+milessampleplaying,MilesSamplePlaying,buka,0xcddc0,BASE/MilesSound,1,,,,,,,,,0,0,0,,refused,free-function
+minuint32,minUInt32,both,0xc7250,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+modemcommand,ModemCommand,both,0x73052,SOURCE/Modem,1,,,,,,,,,0,0,0,,refused,free-function
+modemsetup,ModemSetup,both,0x72ca0,SOURCE/Modem,1,,,,,,,,,0,0,0,,refused,free-function
+modifyframeinfo,ModifyFrameInfo,both,0x214f2,SOURCE/ARMY,2,,,,,,,,,0,0,0,,refused,free-function
+monoicontobitmap,MonoIconToBitmap,both,0xc67b0,BASE/Iconm2b,,,,,,,,,,0,0,0,,refused,free-function
+mousemanager::hidecolorpointer,HideColorPointer,both,0xba310,BASE/MOUSEMGR,0,mousemanager,,,,,0.600,0.667,0,0,0,0,0.280,refused,"collision (2 claimants for mouseManager::HidePointer, lead 0.00); margin 0.28, no-callee-signal"
+mousemanager::reallyhidepointer,ReallyHidePointer,both,0xba2b0,BASE/MOUSEMGR,0,mousemanager,,,,,0.600,0.667,0,0,0,0,0.280,refused,"collision (2 claimants for mouseManager::HidePointer, lead 0.00); margin 0.28, no-callee-signal"
+mousemanager::reallyshowpointer,ReallyShowPointer,both,0xba2e0,BASE/MOUSEMGR,0,mousemanager,,,,,0.500,0.667,1,0,0,0,0.150,refused,"collision (2 claimants for mouseManager::ShowPointer, lead 0.00); margin 0.15, no-callee-signal"
+mousemanager::setcolormice,SetColorMice,both,0xba460,BASE/MOUSEMGR,1,mousemanager,,,,,0.250,0.250,-1,0,1,0,0.050,refused,weak-name (best mouseManager::GetSet S=0.25 name=0.25)
+mousemanager::showcolorpointer,ShowColorPointer,both,0xba350,BASE/MOUSEMGR,0,mousemanager,,,,,0.500,0.667,1,0,0,0,0.150,refused,"collision (2 claimants for mouseManager::ShowPointer, lead 0.00); margin 0.15, no-callee-signal"
+movetofrontcodeandsend,moveToFrontCodeAndSend,both,0xc8500,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+musicflagsactive,MusicFlagsActive,buka,0xc5780,BASE/MusicFlags,,,,,,,,,,0,0,0,,refused,free-function
+mysignalcatcher,mySignalCatcher,both,0xca650,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+mysigsegvorsigbuscatcher,mySIGSEGVorSIGBUScatcher,both,0xca680,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+nb_add_name,nb_add_name,both,0x74a5d,SOURCE/netwin,0,,,,,,,,,0,0,0,,refused,free-function
+nb_add_name_done,nb_add_name_done,both,0x74b12,SOURCE/netwin,1,,,,,,,,,0,0,0,,refused,free-function
+nb_arm_recv,nb_arm_recv,both,0x750ee,SOURCE/netwin,1,,,,,,,,,0,0,0,,refused,free-function
+nb_call,nb_call,both,0x74e76,SOURCE/netwin,,,,,,,,,,0,0,0,,refused,free-function
+nb_call_done,nb_call_done,both,0x74ffa,SOURCE/netwin,1,,,,,,,,,0,0,0,,refused,free-function
+nb_close_session,nb_close_session,both,0x75212,SOURCE/netwin,1,,,,,,,,,0,0,0,,refused,free-function
+nb_format_name,nb_format_name,both,0x753fa,SOURCE/netwin,2,,,,,,,,,0,0,0,,refused,free-function
+nb_init,nb_init,buka,0x73e34,SOURCE/netwin,2,,,,,,,,,0,0,0,,refused,free-function
+nb_listen,nb_listen,both,0x74f38,SOURCE/netwin,,,,,,,,,,0,0,0,,refused,free-function
+nb_rcv,nb_rcv,buka,0x7421c,SOURCE/netwin,2,,,,,,,,,0,0,0,,refused,free-function
+nb_recv_any,nb_recv_any,both,0x74ca5,SOURCE/netwin,,,,,,,,,,0,0,0,,refused,free-function
+nb_recv_any_done,nb_recv_any_done,both,0x74d59,SOURCE/netwin,1,,,,,,,,,0,0,0,,refused,free-function
+nb_recv_complete,nb_recv_complete,both,0x752c3,SOURCE/netwin,1,,,,,,,,,0,0,0,,refused,free-function
+nb_sess,nb_sess,both,0x74372,SOURCE/netwin,,,,,,,,,,0,0,0,,refused,free-function
+nb_snd,nb_snd,buka,0x742b2,SOURCE/netwin,3,,,,,,,,,0,0,0,,refused,free-function
+nb_stat,nb_stat,buka,0x74839,SOURCE/netwin,1,,,,,,,,,0,0,0,,refused,free-function
+nb_thr_ctl,nb_thr_ctl,both,0x74848,SOURCE/netwin,0,,,,,,,,,0,0,0,,refused,free-function
+nbnet_init,nbnet_init,both,0x73bd6,SOURCE/Netbios,0,,,,,,,,,0,0,0,,refused,free-function
+netpostogamepos,NetPosToGamePos,both,0x6bf8f,SOURCE/KB,1,,,,,,,,,0,0,0,,refused,free-function
+newgamehandler,NewGameHandler,both,0x7734a,SOURCE/Newgame,1,,,,,,,,,0,0,0,,refused,free-function
+normalise,NORMALISE,both,0xc8370,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+normalisehi,NORMALISEHI,both,0xc83c0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+normaliselo,NORMALISELO,both,0xc83f0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+overviewhandler,OverviewHandler,both,0x7c501,SOURCE/Overview,1,,,,,,,,,0,0,0,,refused,free-function
+palette::data,Data,both,0xcb030,BASE/PALETTE,0,,,,,,,,,0,0,0,,refused,no-shared-class
+palette::palette,palette,both,0xcaea0,BASE/PALETTE,1/4,,,,,,,,,0,0,0,,refused,no-shared-class
+palette::~palette,palette,both,0xcafe0,BASE/PALETTE,0,,,,,,,,,0,0,0,,refused,no-shared-class
+panic,panic,both,0xca4b0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+philai::buildbuilding,BuildBuilding,both,0x87c24,SOURCE/PHILAI,2,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::buildcreature,BuildCreature,both,0x87fff,SOURCE/PHILAI,3,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::buildhero,BuildHero,both,0x87cf6,SOURCE/PHILAI,2,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::canbuybhc,CanBuyBHC,both,0x88284,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::checkberserk,CheckBerserk,both,0x7f41f,SOURCE/PHILAI,0,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::checkbuystuff,CheckBuyStuff,both,0x7e8cf,SOURCE/PHILAI,0,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::checkforcreatureupgrades,CheckForCreatureUpgrades,both,0x7e5ac,SOURCE/PHILAI,0,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::checkreload,CheckReload,both,0x7f04d,SOURCE/PHILAI,0,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::chooseevaluatebattle,ChooseEvaluateBattle,both,0x87a7b,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::choosegoldorexperience,ChooseGoldOrExperience,both,0x87a58,SOURCE/PHILAI,2,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::choosetofightforartifact,ChooseToFightForArtifact,both,0x87b1f,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::choosetopayransomonhero,ChooseToPayRansomOnHero,both,0x87c12,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::combatmonsterevent,CombatMonsterEvent,both,0x8839b,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::computeupgradevalue,ComputeUpgradeValue,both,0x88e2b,SOURCE/PHILAI,2,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::computevalueoffreess,ComputeValueOfFreeSS,both,0x89070,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::computevalueofss,ComputeValueOfSS,both,0x88eb5,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::creaturestobuy,CreaturesToBuy,both,0x83dfb,SOURCE/PHILAI,2,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::damagegroup,DamageGroup,both,0x88b14,SOURCE/PHILAI,4,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::determineherotomove,DetermineHeroToMove,both,0x81b1f,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::determinetargetposition,DetermineTargetPosition,both,0x81c03,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::dimensiondoorto,DimensionDoorTo,both,0x7f6be,SOURCE/PHILAI,2,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::doallherointeractions,DoAllHeroInteractions,both,0x7e524,SOURCE/PHILAI,0,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::doanywhereddoortowngate,DoAnywhereDDoorTownGate,both,0x7f72a,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::dodimensiondoor,DoDimensionDoor,both,0x7fadd,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::evaluateartifactevent,EvaluateArtifactEvent,both,0x8b270,SOURCE/PHILAI,2,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::evaluatebarrier,EvaluateBarrier,both,0x8ad43,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::evaluategenericsite,EvaluateGenericSite,both,0x8aacf,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::evaluateheroevent,EvaluateHeroEvent,both,0x8ba5e,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::evaluatejail,EvaluateJail,both,0x8aecf,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::evaluatemineevent,EvaluateMineEvent,both,0x8b4c3,SOURCE/PHILAI,4,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::evaluatemonsterevent,EvaluateMonsterEvent,both,0x8b77b,SOURCE/PHILAI,3,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::evaluateonetimecreaturepurchase,EvaluateOneTimeCreaturePurchase,both,0x86369,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::evaluatepassword,EvaluatePassword,both,0x8ad99,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::evaluaterecruitsite,EvaluateRecruitSite,both,0x8adef,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::evaluatetownevent,EvaluateTownEvent,both,0x8bf2a,SOURCE/PHILAI,5,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::fightevent,FightEvent,both,0x884f1,SOURCE/PHILAI,3,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::fightvalueofstack,FightValueOfStack,both,0x859c8,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::futuredeflator,FutureDeflator,both,0x85981,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::getbestbhc,GetBestBHC,both,0x81580,SOURCE/PHILAI,2,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::getbestbuilding,GetBestBuilding,both,0x8372c,SOURCE/PHILAI,3,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::getbestcreature,GetBestCreature,both,0x83b03,SOURCE/PHILAI,3,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::getbesthero,GetBestHero,both,0x8410d,SOURCE/PHILAI,3,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::getgameaivars,GetGameAIVars,both,0x80862,SOURCE/PHILAI,0,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::getgameattentionvalue,GetGameAttentionValue,both,0x842f1,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::getoddsofwinning,GetOddsOfWinning,both,0x83006,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::getturnattentionvalue,GetTurnAttentionValue,both,0x8443e,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::goodadjacent,GoodAdjacent,both,0x7ed84,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::herointeractionathero,HeroInteractionAtHero,both,0x86b43,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::herointeractionattown,HeroInteractionAtTown,both,0x86ed0,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::incrementhourglass,IncrementHourGlass,both,0x88b69,SOURCE/PHILAI,0,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::likelihoodofenemyattacking,LikelihoodOfEnemyAttacking,both,0x8428e,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::manarefreshvalue,ManaRefreshValue,both,0x890ad,SOURCE/PHILAI,2,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::maxbuyablecreatures,MaxBuyableCreatures,both,0x83e81,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::meanrvofunexploredterritory,MeanRVOfUnexploredTerritory,both,0x842e2,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::netvalueofartifact,NetValueOfArtifact,both,0x87bdc,SOURCE/PHILAI,4,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::probableoutcomeofbattle,ProbableOutcomeOfBattle,both,0x82969,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::quickcombat,QuickCombat,both,0x864fe,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::redistributetroops,RedistributeTroops,both,0x87687,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::rvconversion,RVConversion,both,0x84504,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::rvofposition,RVOfPosition,both,0x84642,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::setuprelativeherostrengths,SetupRelativeHeroStrengths,both,0x7fc24,SOURCE/PHILAI,0,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::strategicvalueofposition,StrategicValueOfPosition,both,0x84b78,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::townevent,TownEvent,both,0x88c35,SOURCE/PHILAI,4,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::turncostresource,TurnCostResource,both,0x85740,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::turnstobuy,TurnsToBuy,both,0x84575,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::turnvalueofobelisk,TurnValueOfObelisk,both,0x8584e,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::valueofbuyingbuilding,ValueOfBuyingBuilding,both,0x83019,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::valueofbuyingcreature,ValueOfBuyingCreature,both,0x8389d,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::valueofbuyinghero,ValueOfBuyingHero,both,0x83f03,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::valueofeventatposition,ValueOfEventAtPosition,both,0x8911d,SOURCE/PHILAI,,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+philai::valueoftown,ValueOfTown,both,0x85601,SOURCE/PHILAI,1,philai,,,,,,,,0,0,0,,refused,no-candidates (all consumed by exact pairs)
+playaudieremusic,PlayAudiereMusic,buka,0xcd680,BASE/AudiereMusic,,,,,,,,,,0,0,0,,refused,free-function
+playaudieresample,PlayAudiereSample,buka,0xcc8f0,BASE/AudiereEffects,2,,,,,,,,,0,0,0,,refused,free-function
+playerdata::read,Read,both,0x4c22b,SOURCE/GAME,1,playerdata,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best playerData::add_garrison_hero S=0.20 name=0.00)
+playerdata::write,Write,both,0x4bff0,SOURCE/GAME,1,playerdata,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best playerData::add_garrison_hero S=0.20 name=0.00)
+playmilessample,PlayMilesSample,buka,0xcddf0,BASE/MilesSound,1,,,,,,,,,0,0,0,,refused,free-function
+playsmacker,PlaySmacker,both,0x9592a,SOURCE/SMACKMGR,1,,,,,,,,,0,0,0,,refused,free-function
+pointinrect,PointInRect,both,0x95ab4,SOURCE/SMACKMGR,3,,,,,,,,,0,0,0,,refused,free-function
+pop_node,pop_node,both,0x327bf,SOURCE/comwin,1,,,,,,,,,0,0,0,,refused,free-function
+popnetbox,PopNetBox,both,0x6c0a6,SOURCE/KB,2,,,,,,,,,0,0,0,,refused,free-function
+printmemoryleaks,PrintMemoryLeaks,both,0xbd7b0,BASE/Misc,0,,,,,,,,,0,0,0,,refused,free-function
+printsummaryinfo,PrintSummaryInfo,both,0x95b18,SOURCE/SMACKMGR,1,,,,,,,,,0,0,0,,refused,free-function
+processassert,ProcessAssert,both,0xbde90,BASE/Misc,3,,,,,,,,,0,0,0,,refused,free-function
+purgefinishedaudieresamples,PurgeFinishedAudiereSamples,buka,0xcc740,BASE/AudiereEffects,0,,,,,,,,,0,0,0,,refused,free-function
+putint32,putInt32,both,0xc7890,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+putsymbol,putSymbol,both,0xc77e0,BASE/Bzip,3,,,,,,,,,0,0,0,,refused,free-function
+putuchar,putUChar,both,0xc7860,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+putuint32,putUInt32,both,0xc78f0,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+qsortfull,qsortFull,both,0xc8c20,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+querynewpalette,QueryNewPalette,both,0xb1ac6,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+quickviewwait,QuickViewWait,both,0x6aec9,SOURCE/KB,0,,,,,,,,,0,0,0,,refused,free-function
+read_byte,read_byte,both,0x7321d,SOURCE/Modem,0,,,,,,,,,0,0,0,,refused,free-function
+readpacket,ReadPacket,both,0x735ec,SOURCE/Modem,0,,,,,,,,,0,0,0,,refused,free-function
+readprefsfromfile,ReadPrefsFromFile,both,0xbe340,BASE/Misc,0,,,,,,,,,0,0,0,,refused,free-function
+receivehostreportsplayerexit,ReceiveHostReportsPlayerExit,both,0x6edbf,SOURCE/KB,3,,,,,,,,,0,0,0,,refused,free-function
+receiveremotedata,ReceiveRemoteData,both,0x8dba1,SOURCE/REMOTE,3,,,,,,,,,0,0,0,,refused,free-function
+receiveremoteplayerexit,ReceiveRemotePlayerExit,both,0x6f115,SOURCE/KB,1,,,,,,,,,0,0,0,,refused,free-function
+recruitherohandler,RecruitHeroHandler,both,0x688c4,SOURCE/KB,1,,,,,,,,,0,0,0,,refused,free-function
+redrawheroscreen,RedrawHeroScreen,both,0x638b2,SOURCE/HERO,0,,,,,,,,,0,0,0,,refused,free-function
+remapcyrilliccharacter,RemapCyrillicCharacter,buka,0xc37a0,BASE/FONT,,,,,,,,,,0,0,0,,refused,free-function
+remotemain,RemoteMain,both,0x8d1ac,SOURCE/REMOTE,1,,,,,,,,,0,0,0,,refused,free-function
+resetaudieremusic,ResetAudiereMusic,buka,0xcd490,BASE/AudiereMusic,0,,,,,,,,,0,0,0,,refused,free-function
+resetherorvs,ResetHeroRVs,both,0x7e1ef,SOURCE/PHILAI,3,,,,,,,,,0,0,0,,refused,free-function
+resourcemanager::addresource,AddResource,both,0xb86f0,BASE/RESMGR,1,resourcemanager,,,,,0.320,0.200,0,0,0,0,0.000,refused,weak-name (best ResourceManager::ReadFromSpriteResource S=0.32 name=0.20)
+resourcemanager::getbackdropatloc,GetBackdropAtLoc,both,0xb8040,BASE/RESMGR,,resourcemanager,,,,,0.200,0.000,,1,1,1,0.080,refused,weak-name (best ResourceManager::del_Spr_from_Cache S=0.20 name=0.00)
+resourcemanager::geticon,GetIcon,both,0xb8280,BASE/RESMGR,1,resourcemanager,,,,,0.350,0.250,0,0,0,0,0.050,refused,weak-name (best ResourceManager::GetBitmap16 S=0.35 name=0.25)
+resourcemanager::getmidiwrap,GetMIDIWrap,both,0xb85b0,BASE/RESMGR,1,resourcemanager,,,,,0.320,0.200,0,0,0,0,0.070,refused,weak-name (best ResourceManager::GetBitmap16 S=0.32 name=0.20)
+resourcemanager::getmouse,GetMouse,both,0xb8420,BASE/RESMGR,1,resourcemanager,,,,,0.350,0.250,0,0,0,0,0.050,refused,weak-name (best ResourceManager::GetBitmap16 S=0.35 name=0.25)
+resourcemanager::gettileset,GetTileset,both,0xb8360,BASE/RESMGR,1,resourcemanager,,,,,0.350,0.250,0,0,0,0,0.050,refused,weak-name (best ResourceManager::GetBitmap16 S=0.35 name=0.25)
+resourcemanager::loadaggregateheader,LoadAggregateHeader,both,0xb89b0,BASE/RESMGR,1,resourcemanager,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best ResourceManager::GetBitmap16 S=0.20 name=0.00)
+resourcemanager::main,Main,both,0xb8800,BASE/RESMGR,1,resourcemanager,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best ResourceManager::GetBitmap16 S=0.20 name=0.00)
+resourcemanager::makeid,MakeId,both,0xb8ea0,BASE/RESMGR,2,resourcemanager,,,,,0.200,0.000,0,0,0,0,0.100,refused,weak-name (best ResourceManager::SetPixelFormat S=0.20 name=0.00)
+resourcemanager::pointtofile,PointToFile,both,0xb8af0,BASE/RESMGR,1,resourcemanager,,,,,0.340,0.400,-1,0,1,0,0.000,refused,tie (best ResourceManager::PointToSpriteResource vs ResourceManager::PointToBitmapResource S=0.34)
+resourcemanager::query,Query,both,0xb87c0,BASE/RESMGR,1,resourcemanager,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best ResourceManager::GetBitmap16 S=0.20 name=0.00)
+resourcemanager::read13,Read13,both,0xb8f40,BASE/RESMGR,1,resourcemanager,,,,,0.320,0.200,0,0,0,0,0.000,refused,weak-name (best ResourceManager::ReadFromSpriteResource S=0.32 name=0.20)
+resourcemanager::readblock,ReadBlock,both,0xb8f60,BASE/RESMGR,2,resourcemanager,,,,,0.220,0.200,-1,0,0,0,0.000,refused,weak-name (best ResourceManager::ReadFromSpriteResource S=0.22 name=0.20)
+resourcemanager::readbyte,ReadByte,both,0xb8d80,BASE/RESMGR,0,resourcemanager,,,,,0.220,0.200,1,0,0,0,0.000,refused,weak-name (best ResourceManager::ReadFromSpriteResource S=0.22 name=0.20)
+resourcemanager::readlong,ReadLong,both,0xb8e40,BASE/RESMGR,0,resourcemanager,,,,,0.220,0.200,1,0,0,0,0.000,refused,weak-name (best ResourceManager::ReadFromSpriteResource S=0.22 name=0.20)
+resourcemanager::readword,ReadWord,both,0xb8de0,BASE/RESMGR,0,resourcemanager,,,,,0.220,0.200,1,0,0,0,0.000,refused,weak-name (best ResourceManager::ReadFromSpriteResource S=0.22 name=0.20)
+resourcemanager::removeresource,RemoveResource,both,0xb8890,BASE/RESMGR,1,resourcemanager,,,,,0.320,0.200,0,0,0,0,0.000,refused,weak-name (best ResourceManager::ReadFromSpriteResource S=0.32 name=0.20)
+resourcemanager::resourcemanager,resourceManager,both,0xb7ee0,BASE/RESMGR,1,resourcemanager,,,,,0.320,0.200,0,0,1,0,0.000,refused,weak-name (best ResourceManager::ReadFromSpriteResource S=0.32 name=0.20)
+resourcemanager::restoreposition,RestorePosition,both,0xb8d20,BASE/RESMGR,0,resourcemanager,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best ResourceManager::SetPath S=0.20 name=0.00)
+resourcemanager::saveposition,SavePosition,both,0xb8cd0,BASE/RESMGR,0,resourcemanager,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best ResourceManager::SetPath S=0.20 name=0.00)
+restoredisplaymode,RestoreDisplayMode,both,0xb187a,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+riddlestringsequal,RiddleStringsEqual,both,0x49b5c,SOURCE/EVENTS,2,,,,,,,,,0,0,0,,refused,free-function
+searcharray::quickdistance,QuickDistance,both,0x49d3b,SOURCE/FINDPATH,4,searcharray,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best searchArray::build_combat_path S=0.20 name=0.00)
+sendmtfval,sendMTFVal,both,0xc7cd0,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+sendremotedata,SendRemoteData,both,0x8da49,SOURCE/REMOTE,4,,,,,,,,,0,0,0,,refused,free-function
+sendzeroes,sendZeroes,both,0xc8450,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+servicemilessamples,ServiceMilesSamples,buka,0xcdfc0,BASE/MilesSound,0,,,,,,,,,0,0,0,,refused,free-function
+setallaudieresamplevolumes,SetAllAudiereSampleVolumes,buka,0xccea0,BASE/AudiereEffects,1,,,,,,,,,0,0,0,,refused,free-function
+setaudieremusicvolume,SetAudiereMusicVolume,buka,0xcd5d0,BASE/AudiereMusic,2,,,,,,,,,0,0,0,,refused,free-function
+setaudieresamplevolume,SetAudiereSampleVolume,buka,0xccd40,BASE/AudiereEffects,2,,,,,,,,,0,0,0,,refused,free-function
+setdecompressstructuresizes,setDecompressStructureSizes,both,0xc80c0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+setfirst,SETFIRST,both,0xc8270,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+setfirst16,SETFIRST16,both,0xc81f0,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+setfourth,SETFOURTH,both,0xc8330,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+setglobalcrc,setGlobalCRC,both,0xc6ed0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+setgraphicstype,SetGraphicsType,both,0xb1ae0,SOURCE/wingraph,1,,,,,,,,,0,0,0,,refused,free-function
+setinstalldefaults,SetInstallDefaults,both,0xbe050,BASE/Misc,0,,,,,,,,,0,0,0,,refused,free-function
+setmenustatus,SetMenuStatus,both,0x71d60,SOURCE/kbwin,1,,,,,,,,,0,0,0,,refused,free-function
+setmilessamplehandlevolume,SetMilesSampleHandleVolume,buka,0xcdc60,BASE/MilesSound,2,,,,,,,,,0,0,0,,refused,free-function
+setmilessamplevolume,SetMilesSampleVolume,buka,0xcdd90,BASE/MilesSound,2,,,,,,,,,0,0,0,,refused,free-function
+setpalette,SetPalette,both,0xb188f,SOURCE/wingraph,0/2,,,,,,,,,0,0,0,,refused,free-function
+setready2poll,SetReady2Poll,pol,0xcc2a0,BASE/soundmgr,,,,,,,,,,0,0,0,,refused,free-function
+setrest,SETREST,both,0xc8230,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+setrest16,SETREST16,both,0xc81b0,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+setsecond,SETSECOND,both,0xc82b0,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+setthird,SETTHIRD,both,0xc82f0,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+setupbaudhandler,SetupBaudHandler,both,0x93c71,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+setupcampaigngamehandler,SetupCampaignGameHandler,both,0x93b60,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+setupclipper,SetupClipper,both,0xafcbd,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+setupcomporthandler,SetupComPortHandler,both,0x93b73,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+setupdynamicwindow,SetupDynamicWindow,both,0x6e35e,SOURCE/KB,,,,,,,,,,0,0,0,,refused,free-function
+setupgamehandler,SetupGameHandler,both,0x9417c,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+setupheroview,SetupHeroView,both,0x63b0f,SOURCE/HERO,0,,,,,,,,,0,0,0,,refused,free-function
+setuphotseatgamehandler,SetupHotSeatGameHandler,both,0x93d6f,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+setupmodemgamehandler,SetupModemGameHandler,both,0x93e5d,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+setupmultiplayergamehandler,SetupMultiPlayerGameHandler,both,0x93f4c,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+setupnetworkgame2handler,SetupNetworkGame2Handler,both,0x940bc,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+setupnetworkgamehandler,SetupNetworkGameHandler,both,0x9401b,SOURCE/SETUP,1,,,,,,,,,0,0,0,,refused,free-function
+setupnewtrade,SetupNewTrade,both,0xad0a5,SOURCE/tradpost,0,,,,,,,,,0,0,0,,refused,free-function
+setuprecruitwin,SetupRecruitWin,both,0x8c330,SOURCE/RECRUIT,,,,,,,,,,0,0,0,,refused,free-function
+sgenrand,SGenRand,both,0xc0530,BASE/Misc,0,,,,,,,,,0,0,0,,refused,free-function
+shelltrivial,shellTrivial,both,0xc9220,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+showfilenames,showFileNames,both,0xca490,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+showmemorystatus,ShowMemoryStatus,both,0xbd8a0,BASE/Misc,0,,,,,,,,,0,0,0,,refused,free-function
+showthismap,ShowThisMap,both,0x8e826,SOURCE/REQUEST,1,,,,,,,,,0,0,0,,refused,free-function
+showthismapgame,ShowThisMapGame,both,0x8e7b0,SOURCE/REQUEST,1,,,,,,,,,0,0,0,,refused,free-function
+shutdowncomerror,ShutdownComError,both,0x3281f,SOURCE/comwin,1,,,,,,,,,0,0,0,,refused,free-function
+shutdownsmacker,ShutDownSmacker,both,0x958e6,SOURCE/SMACKMGR,0,,,,,,,,,0,0,0,,refused,free-function
+sincrandomize,SIncRandomize,both,0xc0470,BASE/Misc,2,,,,,,,,,0,0,0,,refused,free-function
+smackfade,SmackFade,both,0x6ced3,SOURCE/KB,2,,,,,,,,,0,0,0,,refused,free-function
+smackmanagermain,SmackManagerMain,both,0x94769,SOURCE/SMACKMGR,0,,,,,,,,,0,0,0,,refused,free-function
+sortit,sortIt,both,0xc9320,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+soundmanager::allocatesamplehandles,AllocateSampleHandles,pol,0xcc910,BASE/soundmgr,,soundmanager,,,,,0.150,0.250,,0,0,0,0.150,refused,weak-name (best soundManager::WaitSample S=0.15 name=0.25)
+soundmanager::cdisplaying,CDIsPlaying,pol,0xcb8b0,BASE/soundmgr,,soundmanager,,,,,0.000,0.000,,0,0,0,0.000,refused,weak-name (best soundManager::service_sounds S=0.00 name=0.00)
+soundmanager::cdplay,CDPlay,pol,0xcbc40,BASE/soundmgr,,soundmanager,,,,,0.000,0.000,,0,1,0,0.000,refused,weak-name (best soundManager::service_sounds S=0.00 name=0.00)
+soundmanager::cdpoll,CDPoll,pol,0xcc0c0,BASE/soundmgr,,soundmanager,,,,,0.000,0.000,,0,0,0,0.000,refused,weak-name (best soundManager::service_sounds S=0.00 name=0.00)
+soundmanager::cdsetvolume,CDSetVolume,pol,0xcbb50,BASE/soundmgr,,soundmanager,,,,,0.300,0.500,,0,0,2,0.300,refused,"collision (3 claimants for soundManager::SetMusicVolume, lead 0.20); margin 0.30, no-arity, no-callee-signal"
+soundmanager::cdshutdown,CDShutdown,pol,0xcba70,BASE/soundmgr,,soundmanager,,,,,0.000,0.000,,0,0,0,0.000,refused,weak-name (best soundManager::service_sounds S=0.00 name=0.00)
+soundmanager::cdstartup,CDStartup,both,0xb59b0,BASE/soundmgr,0,soundmanager,,,,,0.200,0.000,0,0,0,2,0.000,refused,weak-name (best soundManager::SetMusicVolume S=0.20 name=0.00)
+soundmanager::cdstop,CDStop,pol,0xcb770,BASE/soundmgr,,soundmanager,,,,,0.150,0.250,,0,0,0,0.030,refused,weak-name (best soundManager::StopMP3 S=0.15 name=0.25)
+soundmanager::convertvolumefloat,ConvertVolumeFloat,buka,0xb5ba0,BASE/soundmgr,2,soundmanager,,,,,0.220,0.200,-2,1,1,2,0.020,refused,weak-name (best soundManager::SetMusicVolume S=0.22 name=0.20)
+soundmanager::digitalreport,DigitalReport,both,0xb6250,BASE/soundmgr,1,soundmanager,,,,,0.100,0.000,-1,0,0,2,0.000,refused,weak-name (best soundManager::SetMusicVolume S=0.10 name=0.00)
+soundmanager::forcepollsound,ForcePollSound,pol,0xcd120,BASE/soundmgr,,soundmanager,,,,,0.000,0.000,,0,0,0,0.000,refused,weak-name (best soundManager::service_sounds S=0.00 name=0.00)
+soundmanager::getnumbercddrives,GetNumberCDDrives,pol,0xcda80,BASE/soundmgr,,soundmanager,,,,,0.000,0.000,,0,0,0,0.000,refused,weak-name (best soundManager::service_sounds S=0.00 name=0.00)
+soundmanager::midiisplaying,MIDIIsPlaying,pol,0xd3f80,BASE/Midi,0,soundmanager,,,,,0.200,0.000,0,0,0,2,0.000,refused,weak-name (best soundManager::SetMusicVolume S=0.20 name=0.00)
+soundmanager::midiplay,MIDIPlay,pol,0xd3ac0,BASE/Midi,1,soundmanager,,,,,0.167,0.000,-1,1,2,2,0.067,refused,weak-name (best soundManager::SetMusicVolume S=0.17 name=0.00)
+soundmanager::midipoll,MIDIPoll,pol,0xd4040,BASE/Midi,,soundmanager,,,,,0.000,0.000,,0,0,0,0.000,refused,weak-name (best soundManager::service_sounds S=0.00 name=0.00)
+soundmanager::midishutdown,MIDIShutdown,pol,0xd3910,BASE/Midi,0,soundmanager,,,,,0.200,0.000,0,0,1,2,0.000,refused,weak-name (best soundManager::SetMusicVolume S=0.20 name=0.00)
+soundmanager::midistartup,MIDIStartup,pol,0xd3850,BASE/Midi,0,soundmanager,,,,,0.200,0.000,0,0,0,2,0.000,refused,weak-name (best soundManager::SetMusicVolume S=0.20 name=0.00)
+soundmanager::midistop,MIDIStop,pol,0xd3e70,BASE/Midi,0,soundmanager,,,,,0.350,0.250,0,0,1,0,0.030,refused,weak-name (best soundManager::StopMP3 S=0.35 name=0.25)
+soundmanager::playambientmusic,PlayAmbientMusic,both,0xb64d0,BASE/soundmgr,1,soundmanager,,,,,0.220,0.200,-1,0,0,2,0.120,refused,weak-name (best soundManager::SetMusicVolume S=0.22 name=0.20)
+soundmanager::pollsound,PollSound,both,0xb65e0,BASE/soundmgr,0,soundmanager,,,,,0.200,0.000,0,0,1,2,0.000,refused,weak-name (best soundManager::SetMusicVolume S=0.20 name=0.00)
+soundmanager::servicesound,ServiceSound,both,0xb69f0,BASE/soundmgr,0,soundmanager,,,,,0.300,0.333,-1,0,0,0,0.100,refused,weak-name (best soundManager::service_sounds S=0.30 name=0.33)
+soundmanager::setmusicquality,SetMusicQuality,both,0xb63e0,BASE/soundmgr,1,soundmanager,,,,,0.400,0.500,-1,0,0,2,0.300,refused,"collision (3 claimants for soundManager::SetMusicVolume, lead 0.20); margin 0.30, no-callee-signal"
+soundmanager::shutdownsoundbackends,ShutdownSoundBackends,buka,0xb5710,BASE/soundmgr,0,soundmanager,,,,,0.200,0.000,0,0,0,2,0.000,refused,weak-name (best soundManager::SetMusicVolume S=0.20 name=0.00)
+soundmanager::startsample,StartSample,pol,0xcca70,BASE/soundmgr,,soundmanager,,,,,0.200,0.333,,0,0,0,0.050,refused,weak-name (best soundManager::WaitSample S=0.20 name=0.33)
+soundmanager::startupmilesbackend,StartupMilesBackend,buka,0xb5820,BASE/soundmgr,0,soundmanager,,,,,0.200,0.000,0,0,0,2,0.000,refused,weak-name (best soundManager::SetMusicVolume S=0.20 name=0.00)
+soundmanager::validatepreviousposition,ValidatePreviousPosition,pol,0xcb6a0,BASE/soundmgr,,soundmanager,,,,,0.000,0.000,,0,0,0,0.000,refused,weak-name (best soundManager::service_sounds S=0.00 name=0.00)
+splitarmyhandler,SplitArmyHandler,both,0xaaa2e,SOURCE/TOWNMGR,1,,,,,,,,,0,0,0,,refused,free-function
+spotblock,spotBlock,both,0xc99a0,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+startupaudieremusic,StartupAudiereMusic,buka,0xcd3f0,BASE/AudiereMusic,1,,,,,,,,,0,0,0,,refused,free-function
+startupmilessamples,StartupMilesSamples,buka,0xcdb30,BASE/MilesSound,1,,,,,,,,,0,0,0,,refused,free-function
+std::g::?$ctype::id,id,buka,0x15a50,BASE/DIMMER,,,,,,,,,,0,0,0,,refused,no-shared-class
+stopallaudieresamples,StopAllAudiereSamples,buka,0xcce20,BASE/AudiereEffects,0,,,,,,,,,0,0,0,,refused,free-function
+stopallmilessamples,StopAllMilesSamples,buka,0xcdcf0,BASE/MilesSound,0,,,,,,,,,0,0,0,,refused,free-function
+stopaudieremusic,StopAudiereMusic,buka,0xcd260,BASE/AudiereMusic,1,,,,,,,,,0,0,0,,refused,free-function
+stopaudieresample,StopAudiereSample,buka,0xcccd0,BASE/AudiereEffects,1,,,,,,,,,0,0,0,,refused,free-function
+stopmilessample,StopMilesSample,buka,0xcdd70,BASE/MilesSound,1,,,,,,,,,0,0,0,,refused,free-function
+stopmilessamplehandle,StopMilesSampleHandle,buka,0xcdb90,BASE/MilesSound,1,,,,,,,,,0,0,0,,refused,free-function
+stopontrigger,StopOnTrigger,both,0x159ab,SOURCE/ADVMGR,1,,,,,,,,,0,0,0,,refused,free-function
+streqnocase,StrEqNoCase,both,0x420e1,SOURCE/EVENTS,2,,,,,,,,,0,0,0,,refused,free-function
+strip::drawframe,DrawFrame,both,0xa202d,SOURCE/STRIP,0,strip,,,,,0.300,0.333,1,0,0,0,0.000,refused,weak-name (best strip::DrawNumber S=0.30 name=0.33)
+stripe,stripe,both,0xc8a00,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+strong_normalise,STRONG_NORMALISE,both,0xc8420,BASE/Bzip,1,,,,,,,,,0,0,0,,refused,free-function
+swapmanager::splitmons,SplitMons,both,0xa3c30,SOURCE/SWAPMGR,0,swapmanager,,,,,0.200,0.000,0,0,4,0,0.000,refused,weak-name (best swapManager::update_all_slots S=0.20 name=0.00)
+swapmanager::swapartifacts,SwapArtifacts,both,0xa344e,SOURCE/SWAPMGR,0,swapmanager,,,,,0.400,0.333,0,0,2,1,0.150,refused,weak-name (best swapManager::swap_side S=0.40 name=0.33)
+systemoptionshandler,SystemOptionsHandler,both,0x14e82,SOURCE/ADVMGR,1,,,,,,,,,0,0,0,,refused,free-function
+tavernhandler,TavernHandler,both,0xaa7e3,SOURCE/TOWNMGR,1,,,,,,,,,0,0,0,,refused,free-function
+testdynamicwindow,TestDynamicWindow,both,0x6eb87,SOURCE/KB,2,,,,,,,,,0,0,0,,refused,free-function
+textentrywidget::read,Read,both,0xd1f60,BASE/Textntry,1,textentrywidget,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best textEntryWidget::SetFocus S=0.20 name=0.00)
+textwidget::read,Read,both,0xc3090,BASE/TEXTWDGT,0,textwidget,,,,,0.200,0.000,0,0,1,0,0.100,refused,weak-name (best textWidget::GetText S=0.20 name=0.00)
+tileset::tileset,tileset,both,0xce090,BASE/TILESET,1,,,,,,,,,0,0,0,,refused,no-shared-class
+tileset::~tileset,tileset,both,0xce1c0,BASE/TILESET,0,,,,,,,,,0,0,0,,refused,no-shared-class
+tiletobitmap,TileToBitmap,both,0xc2554,BASE/TILE,,,,,,,,,,0,0,0,,refused,free-function
+toupper,toupper,both,0x67c38,SOURCE/KB,1,,,,,,,,,0,0,0,,refused,free-function
+town::xformtocastle,XformToCastle,both,0xa4167,SOURCE/TOWN,0,town,,,,,0.350,0.250,0,0,1,0,0.150,refused,weak-name (best town::IsCastle S=0.35 name=0.25)
+townmanager::recruithero,RecruitHero,both,0xaa0d8,SOURCE/TOWNMGR,2,townmanager,,,,,0.400,0.333,0,0,12,0,0.250,refused,weak-name (best townManager::MoveHero S=0.40 name=0.33)
+townmanager::setupthievesguild,SetupThievesGuild,both,0xab344,SOURCE/TOWNMGR,2,townmanager,,,,,0.200,0.000,0,0,8,0,0.100,refused,weak-name (best townManager::MoveHero S=0.20 name=0.00)
+townmanager::shiftqualchange,ShiftQualChange,both,0xa882d,SOURCE/TOWNMGR,0,townmanager,,,,,0.200,0.000,0,0,1,0,0.000,refused,weak-name (best townManager::GetTownTypeName S=0.20 name=0.00)
+townmanager::splitarmy,SplitArmy,both,0xa84b7,SOURCE/TOWNMGR,0,townmanager,,,,,0.200,0.000,0,0,4,0,0.000,refused,weak-name (best townManager::GetTownTypeName S=0.20 name=0.00)
+townmanager::toggle,Toggle,both,0xa88d6,SOURCE/TOWNMGR,1,townmanager,,,,,0.200,0.000,0,0,0,0,0.000,refused,weak-name (best townManager::SetTown S=0.20 name=0.00)
+townportalhandler,TownPortalHandler,both,0x11515,SOURCE/ADVMGR,1,,,,,,,,,0,0,0,,refused,free-function
+tradingposthandler,TradingPostHandler,both,0xad0d4,SOURCE/tradpost,1,,,,,,,,,0,0,0,,refused,free-function
+translateinputcharactercp1251,TranslateInputCharacterCp1251,buka,0xbcad0,BASE/INPUTMGR,,,,,,,,,,0,0,0,,refused,free-function
+transmitandwait,TransmitAndWait,both,0x8e5d3,SOURCE/REMOTE,,,,,,,,,,0,0,0,,refused,free-function
+trivialgt,trivialGt,both,0xc9160,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+unblockerror,unblockError,both,0xca5d0,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+uncompressoutofmemory,uncompressOutOfMemory,both,0xca6f0,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+uncompressstream,uncompressStream,both,0xca250,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+undoreversibletransformation,undoReversibleTransformation,both,0xc97e0,BASE/Bzip,0,,,,,,,,,0,0,0,,refused,free-function
+unloadremotedriver,UnloadRemoteDriver,both,0x8d7ab,SOURCE/REMOTE,1,,,,,,,,,0,0,0,,refused,free-function
+unloadsystemwideicons,UnloadSystemwideIcons,both,0x6d69c,SOURCE/KB,0,,,,,,,,,0,0,0,,refused,free-function
+unrleanddump,unRLEandDump,both,0xc9e70,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+updateappspecificmenus,UpdateAppSpecificMenus,both,0x6e2f0,SOURCE/KB,1,,,,,,,,,0,0,0,,refused,free-function
+updatearenaicons,UpdateArenaIcons,both,0xb313c,SOURCE/x_arena,0,,,,,,,,,0,0,0,,refused,free-function
+updatecombatsystemoptions,UpdateCombatSystemOptions,both,0x2b346,SOURCE/CMBTMGR,1,,,,,,,,,0,0,0,,refused,free-function
+updateheroscreenstatusbar,UpdateHeroScreenStatusBar,both,0x627b6,SOURCE/HERO,1,,,,,,,,,0,0,0,,refused,free-function
+updatemodel,updateModel,both,0xc7730,BASE/Bzip,2,,,,,,,,,0,0,0,,refused,free-function
+updatenormaldialog,UpdateNormalDialog,both,0x70d22,SOURCE/KB,1,,,,,,,,,0,0,0,,refused,free-function
+updatepalette,UpdatePalette,both,0xb19de,SOURCE/wingraph,1,,,,,,,,,0,0,0,,refused,free-function
+updatesystemoptions,UpdateSystemOptions,both,0x14b62,SOURCE/ADVMGR,1,,,,,,,,,0,0,0,,refused,free-function
+updatesystemoptionsmenu,UpdateSystemOptionsMenu,both,0x6dfe5,SOURCE/KB,0,,,,,,,,,0,0,0,,refused,free-function
+updatetimers,UpdateTimers,pol,0xcc300,BASE/soundmgr,,,,,,,,,,0,0,0,,refused,free-function
+updatetradingpost,UpdateTradingPost,both,0xac873,SOURCE/tradpost,1,,,,,,,,,0,0,0,,refused,free-function
+validatehero,ValidateHero,both,0x7fcc0,SOURCE/PHILAI,1,,,,,,,,,0,0,0,,refused,free-function
+validhex,ValidHex,both,0x2a182,SOURCE/CMBTMGR,1,,,,,,,,,0,0,0,,refused,free-function
+viewarmyhandler,ViewArmyHandler,both,0x56231,SOURCE/GAME,1,,,,,,,,,0,0,0,,refused,free-function
+viewspecialhandler,ViewSpecialHandler,both,0x553d1,SOURCE/GAME,1,,,,,,,,,0,0,0,,refused,free-function
+viewspellshandler,ViewSpellsHandler,both,0x54d5e,SOURCE/GAME,1,,,,,,,,,0,0,0,,refused,free-function
+viewworlddialoghandler,ViewWorldDialogHandler,both,0xaf6d0,SOURCE/Viewwrld,1,,,,,,,,,0,0,0,,refused,free-function
+wait,Wait,both,0x72f26,SOURCE/Modem,0,,,,,,,,,0,0,0,,refused,free-function
+waitforaudieresample,WaitForAudiereSample,buka,0xccdb0,BASE/AudiereEffects,1,,,,,,,,,0,0,0,,refused,free-function
+waitfordirectconnect,WaitForDirectConnect,both,0x73408,SOURCE/Modem,0,,,,,,,,,0,0,0,,refused,free-function
+waitforguest,WaitForGuest,both,0x73b23,SOURCE/Netbios,0,,,,,,,,,0,0,0,,refused,free-function
+waitforhost,WaitForHost,both,0x73ae8,SOURCE/Netbios,0,,,,,,,,,0,0,0,,refused,free-function
+waitforotherplayer,WaitForOtherPlayer,both,0x6bfcd,SOURCE/KB,0,,,,,,,,,0,0,0,,refused,free-function
+wave_init_driver,WAVE_init_driver,pol,0xcc410,BASE/soundmgr,,,,,,,,,,0,0,0,,refused,free-function
+wgapppaint,WGAppPaint,both,0xb15d6,SOURCE/wingraph,2,,,,,,,,,0,0,0,,refused,free-function
+wgcleanupwingraphics,WGCleanUpWinGraphics,both,0xb1793,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+wginitgraphics,WGInitGraphics,both,0xb1138,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+wginitializepalette,WGInitializePalette,both,0xb1434,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+wgquerynewpalette,WGQueryNewPalette,both,0xb10c6,SOURCE/wingraph,0,,,,,,,,,0,0,0,,refused,free-function
+wgupdatepalette,WGUpdatePalette,both,0xb1273,SOURCE/wingraph,1,,,,,,,,,0,0,0,,refused,free-function
+wincombathandler,WinCombatHandler,both,0x2de7d,SOURCE/COMMAND,1,,,,,,,,,0,0,0,,refused,free-function
+write_buffer,write_buffer,both,0x731db,SOURCE/Modem,2,,,,,,,,,0,0,0,,refused,free-function
+write_byte,write_byte,both,0x73250,SOURCE/Modem,1,,,,,,,,,0,0,0,,refused,free-function
+writediffheaderinfo,WriteDiffHeaderInfo,both,0x5f29c,SOURCE/GAME,4,,,,,,,,,0,0,0,,refused,free-function
+writemodempacket,WriteModemPacket,both,0x736ec,SOURCE/Modem,2,,,,,,,,,0,0,0,,refused,free-function
+writeprefstofile,WritePrefsToFile,both,0xbed60,BASE/Misc,0,,,,,,,,,0,0,0,,refused,free-function
+wsevaluatemessage,wsEvaluateMessage,both,0xb2653,SOURCE/Wsnetwin,2,,,,,,,,,0,0,0,,refused,free-function
+wsnet_init,wsnet_init,both,0xb1cf0,SOURCE/Wsnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+wsnet_rcv,wsnet_rcv,both,0xb2535,SOURCE/Wsnetwin,3,,,,,,,,,0,0,0,,refused,free-function
+wsnet_snd,wsnet_snd,both,0xb24e8,SOURCE/Wsnetwin,3,,,,,,,,,0,0,0,,refused,free-function
+wsnet_term,wsnet_term,both,0xb2262,SOURCE/Wsnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+wsprocessmessages,wsProcessMessages,both,0xb25c8,SOURCE/Wsnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+wssendmessage,wsSendMessage,both,0xb2315,SOURCE/Wsnetwin,,,,,,,,,,0,0,0,,refused,free-function
+wswaitforextraguests,wsWaitForExtraGuests,both,0xb29b3,SOURCE/Wsnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+wswaitforfirstguest,wsWaitForFirstGuest,both,0xb2997,SOURCE/Wsnetwin,0,,,,,,,,,0,0,0,,refused,free-function
+wswaitforhost,wsWaitForHost,both,0xb2a5d,SOURCE/Wsnetwin,0,,,,,,,,,0,0,0,,refused,free-function

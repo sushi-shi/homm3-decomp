@@ -2,8 +2,8 @@
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
 # date: 2026-08-06
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
-# homm2: HEROES2W.EXE sha256=bc8f362dd49216c9fbcee1eb2e0429b467082a93330dd84ff95757c0182fc8a3 (read-only sibling)
-# homm2 repo: /home/sheep/Projects/homm2/homm2-decomp
+# homm2 pol: HEROES2W.EXE sha256=bc8f362dd49216c9fbcee1eb2e0429b467082a93330dd84ff95757c0182fc8a3 @ /home/sheep/Projects/homm2/homm2-decomp
+# homm2 buka: HMM2PL.exe sha256=bc7e9c9320aa3e5c1ffca6d2bfa530ecedb5a3bca1b91c959501c15ad72c329a @ /home/sheep/Projects/homm2/homm2-buka
 literal,h3_rva,h3_label,h3_provenance,h2_rva,h2_name,h2_unit,h2_fuzzy
 %sattk.82M,0x3d9f0,game_smove_82m_3d9f0,working-label,0x4aec8,army::loadresources,SOURCE/ARMY,100.0
 %sext1.82M,0x3d9f0,game_smove_82m_3d9f0,working-label,0x4aec8,army::loadresources,SOURCE/ARMY,100.0
@@ -55,7 +55,7 @@ goodluck.82m,0x3f900,army_range_attack,working-label,0xafa56,advmanager::eventso
 goodluck.82m,0x41610,army_do_attack,src-VA,0x4f93e,army::checkluck,SOURCE/ARMY,100.0
 goodluck.82m,0x41610,army_do_attack,src-VA,0xafa56,advmanager::eventsound,SOURCE/EVENTS,100.0
 heroWindowManager,0x2021b0,game_herowindowmanager_2021b0,working-label,0xcaad0,herowindowmanager::open,BASE/WINMGR,100.0
-inputManager,0xec4d0,inputManager_vslot00,working-label,0xce230,inputmanager::open,BASE/INPUTMGR,100.0
+inputManager,0xec4d0,?Open@inputManager@@UAEHH@Z,src-VA+base,0xce230,inputmanager::open,BASE/INPUTMGR,100.0
 mouseManager,0x10cb50,??0mouseManager@@QAE@XZ,src-VA+base,0xc9270,mousemanager::mousemanager,BASE/MOUSEMGR,100.0
 nwherolv.82m,0xda720,game_dxp_da720,working-label,0x6d83f,hero::checklevel,SOURCE/HERO,99.8382
 recruitManager,0x14fea0,game_s_s_14fea0,working-label,0x8b49c,recruitunit::open,SOURCE/RECRUIT,99.98788
