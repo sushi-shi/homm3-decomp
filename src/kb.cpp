@@ -40,8 +40,12 @@ void PollSound()
 }
 
 // E:\gamedcs\kb.cpp:431
-DC_ONLY(0xdf4e4, 0x1EC)
-void InitMainClasses()
+// Located by exhaustive order-mapping of the six carve rows after
+// PollSound onto the six DC kb.cpp functions PollSound..oldmain
+// (492->1256 B: the WinCE build strips the Win32 menu loading that
+// gives the retail body its LoadMenuA call). WinMain's first gate.
+VA(0x004ed650, 0x4E8)  // linkorder, dc 0xdf4e4
+int InitMainClasses()
 {
     // @stub
 }
@@ -96,7 +100,9 @@ void LostGame()
 }
 
 // E:\gamedcs\kb.cpp:962
-DC_ONLY(0xe0158, 0x11B4)
+// Located by the same PollSound..oldmain order-mapping (4532->7172 B);
+// WinMain's final call - the game main loop.
+VA(0x004ee3e0, 0x1C04)  // linkorder, dc 0xe0158
 int oldmain()
 {
     // @stub
@@ -292,7 +298,10 @@ void game::ShowLuckInfo(hero* thisHero, int iMBType)
 }
 
 // E:\gamedcs\kb.cpp:3867
-DC_ONLY(0xe3ce4, 0x116)
+// Located by shape + lineage: the carve's "unexpected program
+// termination" routine, called from executive::DoDialog's four
+// manager-add failure arms (homm2's ShutDown(gExecutiveText...)).
+VA(0x004f3690, 0x2A2)  // anchor-callee, dc 0xe3ce4
 void ShutDown(const char* cInExitMessage)
 {
     // @stub
@@ -348,7 +357,11 @@ void EarlyShutDownSystem()
 }
 
 // E:\gamedcs\kb.cpp:4197
-DC_ONLY(0xe45a8, 0x34)
+// Located as AppWndProc's WM_CLOSE gate (homm2 kbwin.cpp calls
+// GameUnsaved there); 52 B on DC vs 53 here, directly before
+// HandleAppSpecificMenuCommands (retail dropped the static
+// LoadGameData between them).
+VA(0x004f4310, 0x35)  // anchor-callee, dc 0xe45a8
 int GameUnsaved()
 {
     // @stub
@@ -362,14 +375,19 @@ unsigned char LoadGameData()
 }
 
 // E:\gamedcs\kb.cpp:4477
-DC_ONLY(0xe49b0, 0x79C)
+// Located by the call-graph lane: sole caller is AppCommand's default
+// arm (retail 0x4f8060, homm2 lineage), size 0x7f2 vs DC Cb 0x79c.
+VA(0x004f4350, 0x7F2)  // anchor-callee, dc 0xe49b0
 int HandleAppSpecificMenuCommands(int idItem)
 {
     // @stub
 }
 
 // E:\gamedcs\kb.cpp:4761
-DC_ONLY(0xe514c, 0x50)
+// Located as AppExit's tail callee (kbwin 0x4f7fa0 jmp target; homm2
+// AppExit calls CleanUpWinGraphics then CleanUpMenus): SetMenu(hwndApp,
+// 0) + DestroyMenu pair over dfltMenu/0x6989e8, zeroes activeMenu.
+VA(0x004f4b50, 0x42)  // anchor-callee, dc 0xe514c
 void CleanUpMenus()
 {
     // @stub
@@ -432,7 +450,11 @@ void NormalDialogTimeOut(const char* cText, int iMBType, int timeOut, int x, int
 }
 
 // E:\gamedcs\kb.cpp:5499
-DC_ONLY(0xe5fbc, 0x120)
+// Located by shape + call graph: 12-arg fastcall taking cText in ecx
+// (strlen via repne scasb), vector-ctor of 8 0x4c widgets, callers
+// include TAdventureMapWindow::ProcessRightSelect and AppCommand's
+// fullscreen-failure arm.
+VA(0x004f6570, 0x29B)  // anchor-callee, dc 0xe5fbc
 void NormalDialog(const char* cText, int iMBType, int x, int y, int iResType1, int iResExtra1, int iResType2, int iResExtra2, int iSpecial, int iTimeout, int iResType3, int iResExtra3)
 {
     // @stub

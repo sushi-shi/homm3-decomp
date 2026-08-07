@@ -3,19 +3,17 @@
 // 3 functions in link order.
 #include <va.h>
 #include "hexcell.h"
+#include "cmbtmgr.h"
 
 // E:\gamedcs\hexcell.cpp:26
-// Residual (71.2%): retail materializes the -1 sentinel with
-// `or ecx,-1` and reuses cl for the byte stores; the local here
-// forces a separate byte immediate - island-track class.
 VA(0x004e7150, 0x20)  // anchor-global, dc 0xd60fc
 hexcell::hexcell()
 {
-    unsigned char none = 0xff;
-    field_14 = -1;
+    int none = -1;
+    field_14 = none;
     field_10 = 0;
-    field_18 = none;
-    field_19 = none;
+    armySide = none;
+    armySlot = none;
     field_1a = none;
     field_1c = 0;
     field_4c = 0;
@@ -24,19 +22,27 @@ hexcell::hexcell()
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\hexcell.cpp:38
 VA(0x004e7170, 0x3C)  // anchor-global, dc 0xd6138
 army* hexcell::get_army()
 {
-    // @stub
+    if (armySide >= 0)
+        return &gpCombatManager->armies[armySide][armySlot];
+    return 0;
 }
 
 // E:\gamedcs\hexcell.cpp:43
 VA(0x004e71b0, 0x4D)  // anchor-global, dc 0xd6178
 army* hexcell::get_dead_army(int i)
 {
-    // @stub
+    if (deadArmySide[i] < 0)
+        return 0;
+    return &gpCombatManager->armies[deadArmySide[i]][deadArmySlot[i]];
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 

@@ -3,6 +3,7 @@
 // 30 functions in link order; 24 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "winmgr.h"
+#include "message.h"
 #include "mousemgr.h"
 #include "window.h"
 
@@ -43,12 +44,26 @@ int heroWindowManager::ConvertToHover(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\winmgr.cpp:234
 VA(0x00602370, 0x3B)  // anchor-global, dc 0x19aa20
 int heroWindowManager::BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra)
 {
-    // @stub
+    message msg;
+
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.window = 0;
+    msg.id = msgId;
+    msg.codeX = msgCodeX;
+    msg.codeY = msgCodeY;
+    msg.extra = msgExtra;
+    return Main(msg);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\winmgr.cpp:267
 DC_ONLY(0x19aa64, 0x1B0)
@@ -60,8 +75,6 @@ void heroWindowManager::AddWindow(heroWindow* newWindow, int newPriority, unsign
 #endif  // @carcass
 
 // E:\gamedcs\winmgr.cpp:387
-// Residual (96.9%): the middle-arm unlink evaluates its two pointers
-// in the opposite order - local-shape work.
 VA(0x006024a0, 0x78)  // dc-callgraph unique, dc 0x19ac14
 void heroWindowManager::RemoveWindow(heroWindow* killWindow)
 {
@@ -69,16 +82,14 @@ void heroWindowManager::RemoveWindow(heroWindow* killWindow)
         return;
     killWindow->Close(1);
     if (killWindow == headWindow) {
-        heroWindow* next = killWindow->nextWindow;
-        headWindow = next;
-        if (!next)
+        headWindow = killWindow->nextWindow;
+        if (!headWindow)
             tailWindow = 0;
         else
-            next->prevWindow = 0;
+            headWindow->prevWindow = 0;
     } else if (killWindow == tailWindow) {
-        heroWindow* prev = killWindow->prevWindow;
-        tailWindow = prev;
-        prev->nextWindow = 0;
+        tailWindow = killWindow->prevWindow;
+        tailWindow->nextWindow = 0;
     } else {
         heroWindow* prev = killWindow->prevWindow;
         if (prev)
@@ -89,8 +100,7 @@ void heroWindowManager::RemoveWindow(heroWindow* killWindow)
     }
     if (activeWindow == killWindow)
         activeWindow = 0;
-    if (!activeWindow)
-        lastActive = tailWindow;
+    lastActive = activeWindow ? activeWindow : tailWindow;
 }
 
 #if 0  // @carcass

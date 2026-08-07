@@ -5,6 +5,11 @@
 #ifndef HOMM3_WINGRAPH_H
 #define HOMM3_WINGRAPH_H
 
+// Live prototypes (claimed wingraph.cpp bodies; called from kbwin's
+// AppCommand fullscreen arm and AppExit).
+unsigned char SetFullScreenStatus(int bFullScreenOn);    // 0x6019a0
+void CleanUpWinGraphics();                               // 0x601890
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\wingraph.cpp:72, dc 0x198af4) void SetPlayerPaletteColors(unsigned short* pPalette, int whichPlayer);
 // CODEVIEW(E:\gamedcs\wingraph.cpp:83, dc 0x198b1c) void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer);

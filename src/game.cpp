@@ -41,6 +41,32 @@ int bufread(void* buf, int size)
     // @stub
 }
 
+// Retail-only Immersion force-feedback mouse block (absent from the
+// WinCE build; no DC lines). Identities from the import table: the
+// singleton ctor at 0x4b6260 calls __imp_??0CImmMouse@@QAE@XZ and
+// touches ?m_dwErrHandlingFlags@CIFCErrors@@0KA - Immersion
+// Foundation Classes (iFeel). Names provisional pending the real
+// source names. font..game bracket; between bufread and generator in
+// the retail layout.
+
+// InitImmMouse: once-guarded `static <ImmWrapper> obj(hInst, hwnd)`
+// construction (guard byte 0x696d58, atexit dtor thunk 0x4b6910);
+// WinMain's post-CreateWindow callee. Always returns 1.
+VA(0x004b6890, 0x64)  // anchor-callee, retail-only
+unsigned char InitImmMouse(void* hInst, void* hwnd)
+{
+    // @stub
+}
+
+// ImmMouseWindowMoved: re-derives the client origin via
+// ClientToScreen and offsets every tracked effect rect (linked list
+// at 0x696d64) by the delta; AppWndProc's WM_MOVE callee.
+VA(0x004b6950, 0x9A)  // anchor-callee, retail-only
+void ImmMouseWindowMoved()
+{
+    // @stub
+}
+
 // E:\gamedcs\game.cpp:408
 VA(0x004b8550, 0x48)  // anchor-global, dc 0xa2da0
 void generator::generator()

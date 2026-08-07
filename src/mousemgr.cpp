@@ -7,6 +7,15 @@
 #include "mousemgr.h"
 #include "kbwin.h"
 
+// Declared without dllimport on purpose: retail reaches timeGetTime
+// through the 6-byte rel32 thunk at 0x4f82e0, not the IAT.
+extern "C" unsigned long __stdcall timeGetTime();
+
+// CheckUpdate's one-time timer latches (BSS; names provisional).
+DATA(0x0069ca20) unsigned char gMouseTimerInit;
+DATA(0x0069ca18) unsigned long gMouseUpdateDeadline;
+DATA(0x0069ca1c) unsigned long gMouseFrameDeadline;
+
 // E:\gamedcs\mousemgr.cpp:315
 VA(0x0050cb50, 0x6F)  // anchor-global, dc 0xfe9d4
 mouseManager::mouseManager()
@@ -46,7 +55,9 @@ void mouseManager::Close()
 }
 
 // E:\gamedcs\mousemgr.cpp:412
-DC_ONLY(0xfeafc, 0x1A)
+// Located as AppWndProc's WM_ACTIVATE callee (26 B on DC vs 27 here;
+// zeroes the drag/saved-pointer state block +0x3c..+0x70).
+VA(0x0050cc80, 0x1B)  // anchor-callee, dc 0xfeafc
 void mouseManager::Reset()
 {
     // @stub
@@ -103,19 +114,41 @@ void mouseManager::RestoreUnderlying(IDirectDrawSurface4* surface, const tagRECT
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mousemgr.cpp:865
 VA(0x0050d540, 0x6F)  // anchor-global, dc 0xff3a8
 void mouseManager::HidePointer()
 {
-    // @stub
+    TCSLock lock(&section_mouse);
+    if (++field_68 == 1 && !IsIconic(hwndApp))
+        Update(1);
 }
 
 // E:\gamedcs\mousemgr.cpp:889
 VA(0x0050d5b0, 0xD0)  // anchor-global, dc 0xff3e0
-void mouseManager::ShowPointer(unsigned char force)
+void mouseManager::ShowPointer(bool force)
 {
-    // @stub
+    TCSLock lock(&section_mouse);
+    if (force)
+        field_68 = 1;
+    if (field_68 > 0 && --field_68 == 0) {
+        field_74++;
+        EnterCriticalSection(&section_mouse);
+        POINT cursor;
+        GetCursorPos(&cursor);
+        cursor.x &= ~1;
+        ScreenToClient(hwndApp, &cursor);
+        field_6c = cursor.x;
+        field_70 = cursor.y;
+        LeaveCriticalSection(&section_mouse);
+        if (!IsIconic(hwndApp))
+            Update(1);
+        field_74--;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\mousemgr.cpp:934
 DC_ONLY(0xff448, 0x3A)
@@ -125,25 +158,177 @@ void mouseManager::GetPointerPosition()
 }
 
 // E:\gamedcs\mousemgr.cpp:955
+// DECODED 2026-08-06 (bytes; homm2 twin CheckUpdateMousePos is only a
+// skeleton - retail grew a scheduler):
+//   TCSLock guard; two one-time-init bits in a BYTE global (bit 1 ->
+//   deadline1 = time() + 0x21, bit 2 -> deadline2 = time() + 0x64);
+//   if (IsIconic(hwndApp)) leave;
+//   if ((int)(time() - deadline1) < 0 || field_74 != 0) leave;
+//   if (time() - deadline1(? second read) < 0x21) deadline1 = time
+//     ... else deadline1 = time() + 0x21; SetPointer/Update(0);
+//   GetForegroundWindow()==<other import>() gate, then bounds
+//   field_6c in [0,800) && field_70 in [0,600):
+//     in-bounds:  if (field_64) { Update?(0); ShowCursor(0);
+//                 field_64 = 0; }
+//     out:        if (!field_64) { ShowCursor(1); <inner TCSLock at
+//                 ebp-0x10>; ++field_68 == 1 -> IsIconic path ... ;
+//                 field_64 = 1; }  (tail still to transcribe past
+//                 +0x184)
+//   All addresses resolved 2026-08-06: init-bits byte 0x69ca20,
+//   deadline1 0x69ca18 (+0x21ms), deadline2 0x69ca1c (+0x64ms); the
+//   time source is the 6-byte thunk `Get` at rva 0xf82e0 (jmp through
+//   an IAT slot - claim it as the timeGetTime thunk in kbwin's
+//   region); the thread gate is GetWindowThreadProcessId(hwndApp,...)
+//   == GetCurrentThreadId(); the +0x141 callee 0x10d890 is the
+//   OUT-OF-LINE TCSLock ctor (claimed below) - CheckUpdate's inner
+//   lock is constructed by call, not inline; +0x1e7 calls LoadFrame
+//   (0x10d8b0), and Update(0) runs at +0xd0/+0x16d/+0x1f0.
+//   STRUCTURE (verified to +0x1ab):
+//     TCSLock lock(&section_mouse);
+//     if (!(init&1)) { init|=1; deadline1 = timeGetTime()+33; }
+//     if (!(init&2)) { init|=2; deadline2 = timeGetTime()+100; }
+//     if (IsIconic(hwndApp)) return;
+//     if ((int)(timeGetTime()-deadline1) >= 0 && field_74 == 0) {
+//       deadline1 = max(now, deadline1+33);   // ternary catch-up:
+//         // sub;cmp 0x21;jge skips the mov eax,0x21 - now vs old+33
+//       Update(0);
+//       if (GetWindowThreadProcessId(hwndApp,0)==GetCurrentThreadId())
+//         if (field_6c in [0,800) && field_70 in [0,600)) {
+//           if (field_64) { ShowPointer(0); ShowCursor(0);
+//                           field_64 = 0; } }
+//         else if (!field_64) { ShowCursor(1);
+//           TCSLock inner(&section_mouse);   // the out-of-line call
+//           if (++field_68 == 1 && !IsIconic(hwndApp)) Update(1);
+//           field_64 = 1; }
+//     }
+//     if ((int)(timeGetTime()-deadline2) >= 0 && field_74 == 0) {
+//       elapsed = timeGetTime() - deadline2;
+//       deadline2 += elapsed >= 100 ? elapsed : 100;   // same shape
+//         // as deadline1's catch-up (jge skips the mov imm)
+//       if (field_4c == 3) {              // animated-pointer mode
+//         int frames = (field_54->f28 > 0 && *field_54->f2c)
+//                          ? **(int**)field_54->f1c : 0;
+//         // ^ sprite obj at [esi+0x54]; count [f+0x28], ptr [f+0x2c],
+//         //   double-deref [f+0x1c] - type it from csprite.h before
+//         //   writing (note: frames==0 path feeds idiv - retail
+//         //   divides by zero if the sprite is empty; keep faithful)
+//         LoadFrame((field_50 + 1) % frames);
+//         Update(1);
+//       }
+//     }
+//   FULLY TRANSCRIBED - implementation is now mechanical: declare the
+//   three globals + timeGetTime (no dllimport), add CheckUpdate/
+//   LoadFrame decls to the class, type the field_54 sprite view.
+//   Globals: init byte 0x69ca20, deadline1 0x69ca18, deadline2
+//   0x69ca1c (BSS, mousemgr-owned, names provisional); timeGetTime
+//   declared WITHOUT dllimport (retail calls the 6-byte thunk at
+//   0xf82e0 rel32).
+#endif  // @carcass
+
 VA(0x0050d680, 0x210)  // anchor-global, dc 0xff484
 void mouseManager::CheckUpdate()
 {
-    // @stub
+    TCSLock lock(&section_mouse);
+    if (!(gMouseTimerInit & 1)) {
+        gMouseTimerInit |= 1;
+        gMouseUpdateDeadline = timeGetTime() + 33;
+    }
+    if (!(gMouseTimerInit & 2)) {
+        gMouseTimerInit |= 2;
+        gMouseFrameDeadline = timeGetTime() + 100;
+    }
+    if (IsIconic(hwndApp))
+        return;
+    unsigned long deadline = gMouseUpdateDeadline;
+    if ((int)(timeGetTime() - deadline) >= 0 && field_74 == 0) {
+        deadline = gMouseUpdateDeadline;
+        unsigned long elapsed = timeGetTime() - deadline;
+        gMouseUpdateDeadline = deadline + (elapsed >= 33 ? elapsed : 33);
+        Update(0);
+        if (GetWindowThreadProcessId(hwndApp, 0) == GetCurrentThreadId()) {
+            if (field_6c >= 0 && field_6c < 800
+                && field_70 >= 0 && field_70 < 600) {
+                if (field_64) {
+                    ShowPointer(0);
+                    ShowCursor(0);
+                    field_64 = 0;
+                }
+            } else if (!field_64) {
+                ShowCursor(1);
+                {
+                    TCSLock inner(&section_mouse);
+                    if (++field_68 == 1 && !IsIconic(hwndApp))
+                        Update(1);
+                }
+                field_64 = 1;
+            }
+        }
+    }
+    deadline = gMouseFrameDeadline;
+    if ((int)(timeGetTime() - deadline) >= 0 && field_74 == 0) {
+        deadline = gMouseFrameDeadline;
+        unsigned long elapsed = timeGetTime() - deadline;
+        gMouseFrameDeadline = deadline + (elapsed >= 100 ? elapsed : 100);
+        if (field_4c == 3) {
+            int frames;
+            if (field_54->f_28 > 0 && *field_54->f_2c != 0)
+                frames = **field_54->f_1c;
+            else
+                frames = 0;
+            LoadFrame((field_50 + 1) % frames);
+            Update(1);
+        }
+    }
+}
+
+#if 0  // @carcass
+
+// E:\gamedcs\mousemgr.cpp:291
+// Byte-identified: the 25-byte body at 0x50d890 stores the CS* at
+// [this], EnterCriticalSection's it, and returns this - the
+// out-of-line copy of the inline ctor in mousemgr.h, which
+// CheckUpdate (+0x141) calls for its inner lock instead of inlining.
+// Retail emits it here, between CheckUpdate and LoadFrame, not at the
+// DC tail position (0xff7e0).
+VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0
+void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
+{
+    // @stub - the definition lives inline in mousemgr.h
 }
 
 // E:\gamedcs\mousemgr.cpp:1026
+// DECODE START 2026-08-06: TCSLock guard (same 0x8 EH shape as
+// CheckUpdate); zeroes a 0x64-byte DDSURFACEDESC on the stack
+// (rep stosd x0x19, then dwSize=0x64); computes a 16-bit colorkey
+// from two byte globals via the divide-by-255 reciprocal idiom
+// (0x80808081 mul, shr edx,7 - i.e. (g*255)/255-style scaling then
+// AND/OR packing); then a vtable call on a surface object
+// ([eax] -> push 0/0x400/&desc/0 ... likely IDirectDrawSurface4::
+// Lock or SetColorKey path). Needs: the two color globals, the
+// surface global, and a DDSURFACEDESC view before the body is
+// honest. Tail untranscribed past +0x60.
 VA(0x0050d8b0, 0x16B)  // anchor-global, dc 0xff610
 void mouseManager::LoadFrame(int new_frame)
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mousemgr.cpp:1120
 VA(0x0050da20, 0x37)  // anchor-global, dc 0xff708
 void mouseManager::ShowSystemCursor(unsigned char show_it)
 {
-    // @stub
+    if (show_it) {
+        ShowCursor(1);
+        HidePointer();
+    } else {
+        ShowPointer(0);
+        ShowCursor(0);
+    }
 }
+
+#if 0  // @carcass
 
 // C:\WCEDreamcast\inc\kfuncs.h:266
 DC_ONLY(0xff76c, 0x8)
@@ -167,11 +352,8 @@ unsigned RGBto16(int r, int g, int b)
 }
 
 // E:\gamedcs\mousemgr.cpp:291
-DC_ONLY(0xff7e0, 0x20)
-void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
-{
-    // @stub
-}
+// (moved to retail link order between CheckUpdate and LoadFrame; the
+// out-of-line TCSLock ctor claim lives there)
 
 // E:\gamedcs\mousemgr.cpp:298
 DC_ONLY(0xff800, 0x18)
