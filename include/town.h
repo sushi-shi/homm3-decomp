@@ -45,6 +45,17 @@ public:
 // is a bootstrap invention.
 DATA(0x0066ce40) extern unsigned int gFountainOfFortuneMask[2];
 
+// The three fortification bits as consecutive two-dword .data pairs,
+// byte-read from the pinned image: 0x66cdd0 = bit 7, 0x66cdd8 = bit 8,
+// 0x66cde0 = bit 9. type_AI_combat_data::check_wall_archery_penalty
+// (0x4247a8..0x424818) ands each against town->built and assigns the
+// wall-distance penalty 4/5/6 in that order, which is what fixes the
+// fort/citadel/castle reading. Owning TU unknown - extern only, no
+// DATA claim.
+extern unsigned int gFortMask[2];
+extern unsigned int gCitadelMask[2];
+extern unsigned int gCastleMask[2];
+
 // Per-town dwelling masks the archer scan walks (8 bytes per level).
 // The retail bounds are relocation-carried (a table start and end the
 // delinked target renders as zeros), so the count is a named constant

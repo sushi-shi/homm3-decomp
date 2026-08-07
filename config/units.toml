@@ -35,6 +35,27 @@ game_o2_ml_gr_windows = [
   "/D_WINDOWS",
 ]
 
+# Game C++ profile WITH /Op (improve float consistency). ai_combat.obj
+# is the first TU whose float codegen proves it (2026-08-07): retail
+# keeps `x / 500.0` as an `fdiv qword` against the 500.0 pool entry
+# (get_enchantment_value 0x423ce7) where the non-/Op build folds it to
+# a reciprocal `fmul`, and it rounds every int->double conversion
+# through memory (`fild dword; fstp qword; fld qword` at
+# get_final_melee_value 0x42648f) where the non-/Op build feeds `fild`
+# straight into `fmul`/`fiadd`. Both are textbook /Op discriminators.
+game_o2_ml_gr_windows_op = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/Ob2",
+  "/Oy-",
+  "/Op",
+  "/ML",
+  "/Gr",
+  "/GX",
+  "/D_WINDOWS",
+]
+
 # Same as the game profile minus /GX: sample.obj's retail dtor is
 # frameless (no EH registration around the buffer delete before
 # ~resource), which /GX cannot produce - the first no-EH TU (2026-08-06).
@@ -296,3 +317,7 @@ unit = "advmgr"
 source = "src/advmgr.cpp"
 flags = "game_o2_ml_gr_windows"
 
+[[unit]]
+unit = "ai_combat"
+source = "src/ai_combat.cpp"
+flags = "game_o2_ml_gr_windows_op"

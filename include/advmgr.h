@@ -32,6 +32,7 @@ public:
         BOTTOM_VIEW_DEFAULT = 0
     };
 
+    void HeroLoses(class hero* who, int vanish_sound);
     void OverrideBottomView(EBottomViewType view, int time);
     void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
     void ForceNewHover();
