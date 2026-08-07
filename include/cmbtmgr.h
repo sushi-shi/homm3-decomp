@@ -9,6 +9,7 @@
 #include "armygrp.h"   // SpellID, for the two spells.obj leaves below
 #include "hexcell.h"
 
+class CSprite;
 class hero;
 struct type_AI_combat_parameters;
 
@@ -24,6 +25,47 @@ enum ECombatSpellRestriction {
     COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS = 0x2
 };
 
+// The drawbridge state held in combatManager+0x53a4. LowerDoor
+// (0x4671c0) walks it 3 -> 2 -> 1 with one DrawFrame per step and
+// leaves it at 1; RaiseDoor (0x4672e0) refuses to run unless it already
+// reads 1. Its three decoded readers (HexIsBlocked 0x469a10,
+// should_lower_door 0x467130, IsInMoat 0x469dc0) all gate on the value
+// 3 - the bridge still up. The intermediate 2 is an animation frame
+// only, so it stays unnamed. BOOTSTRAP INVENTION - no roster attests
+// the domain.
+enum EDrawbridgeState {
+    DRAWBRIDGE_DOWN = 0x1,
+    DRAWBRIDGE_UP = 0x3
+};
+
+// Row 5's three special columns of the 11x17 combat grid, named from
+// the byte tables they are the fifth entry of: 0x60 is
+// gCastleWallColumns[5] (the gate itself), 0x5f gMoatColumns[5] and
+// 0x5e gOuterMoatColumns[5]. HexIsBlocked admits the first two,
+// should_lower_door all three, and IsInMoat excludes 0x5f from the
+// moat proper (0x5e from the Fortress row) while the bridge is down.
+// Names are BOOTSTRAP INVENTIONS.
+enum ECombatGateHex {
+    COMBAT_HEX_OUTER_MOAT = 0x5e,
+    COMBAT_HEX_GATE_MOAT = 0x5f,
+    COMBAT_HEX_GATE = 0x60
+};
+
+// The shape record an obstacle's TObstacle points at (TObstacle+0x4).
+// Byte-proven by PlaceObstacle (0x4669b0) and RemoveObstacle
+// (0x466b30), which both read the unsigned count at +0x6 and then walk
+// that many SIGNED byte hex offsets from +0x8. Everything below +0x6
+// stays padded, and the trailing array is the usual count-follows
+// idiom - nothing decoded so far bounds it. Name is a BOOTSTRAP
+// INVENTION; the DC roster only attests the owning combatManager::
+// TObstacle.
+struct type_obstacle_shape {
+    char pad_00[0x6];
+    unsigned char extra_hex_count;    // +0x6
+    unsigned char pad_07;
+    signed char extra_hex_offsets[1]; // +0x8, extra_hex_count entries
+};
+
 // Head model from the byte-proven leaves. The battlefield holds two
 // sides of 21 army slots (20 used - ResetHitByCreature clears exactly
 // 20 per side - plus one spare making the 0x6ee8 side stride); the
@@ -35,17 +77,49 @@ enum ECombatSpellRestriction {
 // on ResetHitByCreature.)
 class combatManager {
 public:
+    // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
+    // (0x466b30), which divides the manager's obstacle vector extent
+    // (+0x13d5c .. +0x13d60) by 24 with the 0x2aaaaaab/sar 2 magic; the
+    // shape pointer at +0x4 and the anchor hex BYTE at +0x8 are proven
+    // by the same body plus PlaceObstacle. Slot 0 holds a polymorphic
+    // object RemoveObstacle virtual-calls (vtable slot 1) and then
+    // clears - left padded until that class is modelled.
+    struct TObstacle {
+        // RemoveObstacle calls vtable slot 1 on it with no arguments
+        // and then clears the slot - CSprite's slot 1 is Dispose().
+        CSprite* sprite;                    // +0x0
+        const type_obstacle_shape* shape;   // +0x4
+        unsigned char hex;                  // +0x8
+        char pad_09[0xf];
+    };
+
     char pad_0000[0x1c4];
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
     hexcell cells[187];               // +0x1c4, ends 0x5394
-    char pad_5394[0x2c];
+    char pad_5394[0x10];
+    // The drawbridge state (EDrawbridgeState). LowerDoor stores 3/2/1
+    // through it one frame at a time; RaiseDoor gates on 1;
+    // HexIsBlocked, should_lower_door and IsInMoat all gate on 3.
+    int drawbridgeState;              // +0x53a4
+    // "This combat has a moat at all": IsInMoat (0x469dc0) answers 0
+    // outright while this byte is clear, before it looks at any row.
+    // Name provisional.
+    unsigned char field_53a8;         // +0x53a8
+    char pad_53a9[0x17];
     // can_cast_spells (0x41f890) refuses a CREATURE cast (hero_spell
     // clear) while this word reads 2, and refuses every cast at all
     // while the byte below is set. Both names await a writer.
     int field_53c0;                   // +0x53c0
     unsigned char field_53c4;         // +0x53c4
-    char pad_53c5[0x7];
+    char pad_53c5[0x3];
+    // The defending town, byte-proven only at its offset 4: RaiseDoor
+    // (0x4672e0) null-checks the pointer and then compares the BYTE at
+    // +4 against 7 (TTownType TOWN_FORTRESS), and IsInMoat gates its
+    // second moat row on the same byte. Held as a byte view because
+    // that is the whole of what these bodies prove; typing it `town*`
+    // would drag town.h into every cmbtmgr.h consumer.
+    unsigned char* field_53c8;        // +0x53c8
     // The two combat heroes, indexed by side: can_cast_spells indexes
     // heroes[side] for the spellbook test and then walks both slots for
     // the Orb of Inhibition, and army::get_owner (0x442690) does the
@@ -64,7 +138,16 @@ public:
     int numArmies[2];                 // +0x54bc
     char pad_54c4[0x8];
     army armies[2][21];               // +0x54cc
-    char pad_1329c[0x1c];
+    char pad_1329c[0x14];
+    // Two per-side "this side has already lost / fled" latches, byte
+    // proven by CombatIsOver (0x465830) and IsWinner (0x4658b0): both
+    // index them by SIDE as bytes (`byte [this + side + 0x132b2]`,
+    // `byte [this + side + 0x132b0]`) and answer "combat over" / "this
+    // side won" the moment either reads non-zero. Retail tests the
+    // 0x132b2 pair FIRST in both functions. Names await a writer.
+    unsigned char field_132b0[2];     // +0x132b0
+    unsigned char field_132b2[2];     // +0x132b2
+    char pad_132b4[0x4];
     // The stack whose turn it is, as a (side, slot) pair into armies:
     // should_attack_now (0x436c60) forms armies[actingSide][actingSlot]
     // with the flattened index actingSide*21 + actingSlot and then
@@ -74,19 +157,52 @@ public:
     // The side whose stack is acting: get_hex_attack_value (0x436180)
     // rejects a neighbour whose combatSide equals it. Name provisional.
     int currentSide;                  // +0x132c0
-    char pad_132c4[0x1a4];
+    char pad_132c4[0x30];
+    // "This combat is fought over a walled town": HexIsBlocked
+    // (0x469a10) only consults the gate hexes while it is positive and
+    // should_lower_door (0x467130) while it is non-zero. Name pending
+    // a writer.
+    int field_132f4;                  // +0x132f4
+    char pad_132f8[0x170];
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
     short adjacentCells[187][6];      // +0x13468
-    char pad_13d2c[0x3c];
+    char pad_13d2c[0x30];
+    // The placed-obstacle array, as the raw first/last pair retail
+    // tests: RemoveObstacle (0x466b30) null-checks the FIRST pointer,
+    // then divides last-first by sizeof(TObstacle) for the bound. The
+    // DC roster's std::vector<combatManager::TObstacle> COMDATs say
+    // this really is a vector; only its first two members are proven.
+    TObstacle* obstacles_begin;       // +0x13d5c
+    TObstacle* obstacles_end;         // +0x13d60
+    char pad_13d64[0x4];
     // Placement-phase latch: FindPath/ValidPath forward it into
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
     unsigned char bCreaturePlacement; // +0x13d68
 
+    unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();
+    unsigned char is_adjacent(int first, int second);
+    unsigned char enemy_is_adjacent(army* current_army, int grid_index,
+                                    const army* excluded);
+    void RemoveArmyFromGrid(const army* a);
+    void PlaceArmyInGrid(const army* a, int hex);
+    unsigned char should_lower_door(army* this_army, long hex);
+    unsigned char HexIsBlocked(int index);
+    unsigned char IsInMoat(int hex, int* index);
+    void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
+                       unsigned attributes);
+    void RemoveObstacle(int index);
+    // DC header inline (CmbtMgr.h:1542, dc 0x27fa0). Retail re-loads
+    // obstacles_begin here rather than reusing the copy RemoveObstacle's
+    // own guards just tested; routing the call through this inline does
+    // NOT reproduce that (VC6 CSEs the second load away either way) -
+    // it is kept because the DC roster attests the accessor, not as a
+    // matching lever.
+    TObstacle* GetObstacle(int index) { return &obstacles_begin[index]; }
     // Both live in ai.cpp (DC ai.obj) and are claimed there.
     long get_total_combat_value(long side, long lowest_attack,
                                 long lowest_defense,
@@ -126,7 +242,46 @@ extern combatManager* gpCombatManager;
 // combatManager, so retail moved it out of the class).
 extern const unsigned char gCastleWallColumns[];
 
+// The row-column table one hex LEFT of gCastleWallColumns, at 0x63bce8
+// (retail bytes 0b 1c 2c 3d 4d 5f 6f 81 92 a4 b5 - each entry exactly
+// one less than the wall column of the same row). LeftOfMoat divides
+// the hex by the same 0x11 row stride and answers `hex < moat column`;
+// IsInMoat walks all eleven entries looking for an exact hit. Name is
+// a BOOTSTRAP INVENTION in the style of gCastleWallColumns - no roster
+// attests it.
+extern const unsigned char gMoatColumns[];
+
+// The row-column table one hex left again, at 0x63bcf4 (bytes 0a 1b 2b
+// 3c 4c 5e 6e 80 91 a3 b4). Only IsInMoat reads it, and only when the
+// defending town is a Fortress - the second moat ring. Name is a
+// BOOTSTRAP INVENTION.
+extern const unsigned char gOuterMoatColumns[];
+
 unsigned char InCastle(int index);
+unsigned char LeftOfMoat(int index);
+
+// The eight bombardable wall segments, at 0x63be60, stride 0xc - the
+// stride and the leading `short` are byte-proven by GetTargetWallIndex
+// (0x465970), which steps a pointer by 0xc from 0x63be60 to 0x63bec0
+// and movsx-loads the word at offset 0. The remaining ten bytes stay
+// padded: the retail rows read (hex, short, short, short, int) but no
+// decoded consumer proves the split yet. `TWallTargetId` is the DC
+// roster's name for the INDEX this table is searched for.
+struct type_wall_target {
+    short hex;                        // +0x0
+    char pad_02[0xa];
+};
+
+extern const type_wall_target gWallTargets[8];
+
+// Retail moved this out of the class exactly as it did InCastle: the
+// body takes its only value in ECX and returns with a bare `ret`, so
+// it is a free __fastcall(int), not the DC roster's thiscall method.
+int GetTargetWallIndex(int grid_index);
+
+// Also a free __fastcall in retail (start in ECX, stop in EDX, bare
+// `ret`) though the DC roster scopes it to combatManager.
+long get_distance(long start, long stop);
 
 // --- CNetMsgHandlerPause ---
 // CODEVIEW(E:\gamedcs\cmbtmgr.cpp:893, dc 0x63a88) void* CNetMsgHandlerPause::`scalar deleting destructor'(unsigned __flags);
