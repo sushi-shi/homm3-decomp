@@ -63,7 +63,15 @@ struct SSpellTraits {
     char pad_14[4];
     int level;                // the dragons' magic-immunity gate
     unsigned char byte_1c;    // bit 2 crossed with trait 0x4000
-    char pad_1d[0x6b];
+    char pad_1d[0x13];
+    // Spell-power multiplier and the per-mastery flat bonus, both
+    // byte-proven by ai_tactical's get_damage_spell_value (0x436f60):
+    // traits[spell*136 + 0x30] * caster.power + the dword at
+    // [spell*136 + mastery*4 + 0x34]. NH3API names them m_power_factor
+    // and m_mastery_bonus at exactly these offsets.
+    int power_factor;         // +0x30
+    int mastery_bonus[4];     // +0x34
+    char pad_44[0x44];
 };
 SIZE(SSpellTraits, 136);
 
@@ -173,6 +181,12 @@ class game {
 public:
     char pad_0[0x1f698];
     int f_1f698;
+    char pad_1f69c[0x3c];
+    // "The active side is computer-played": ai_tactical crosses it with
+    // combatManager::sideIsAI (get_ranged_attack_value 0x435cb0 tests it
+    // for non-zero; the type_AI_combat_parameters ctor 0x435ec0 tests it
+    // SIGNED-positive, which is what pins the signed char). Provisional.
+    char AI_in_control;   // +0x1f6d8
 };
 DATA(0x006994e8) extern game* gpGame;
 

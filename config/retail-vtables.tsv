@@ -46,6 +46,7 @@ rva	function_count	class
 0x23b764	2	
 0x23b770	2	
 0x23b778	2	
+0x23b7d8	1	type_AI_spellcaster
 0x23b8f8	15	
 0x23b9bc	3	baseManager
 0x23b9c8	3	

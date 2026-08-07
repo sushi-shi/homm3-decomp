@@ -27,7 +27,7 @@ unsigned char combatManager::AICheckRetreat()
 
 // E:\gamedcs\ai.cpp:339
 VA(0x0041eac0, 0xB8)  // anchor-global, dc 0x23f2c
-long combatManager::get_total_combat_value(long side, long lowest_attack, long lowest_defense, unsigned char include_cripples)
+long combatManager::get_total_combat_value(long side, long lowest_attack, long lowest_defense, unsigned char include_cripples) const
 {
     // @stub
 }
