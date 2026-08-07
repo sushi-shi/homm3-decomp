@@ -235,6 +235,21 @@ void hero::update_spell_list()
     // @stub
 }
 
+// ARITY DIVERGENCE, flagged 2026-08-07 by the tail-audit's `ret N` vs DC
+// param-count sweep; the five hero-screen rows below all disagree with
+// their DC row's arity while their SLOTS hold (six DC rows map 1:1 onto
+// six retail rows, and both flanks - update_spell_list `ret 0` above and
+// Deallocate `ret 8` below - are confirmed):
+//     0x004d97f0 HeroMessageUpdate  DC 2 params -> `ret 4`, retail `ret 0`
+//     0x004d9990 HeroScreenUpdate   DC 1 param  -> `ret 0`, retail `ret 8`
+//     0x004d9a00 UpdateArmies       DC 1 param  -> `ret 0`, retail `ret 8`
+//     0x004d9b30 ViewStat           DC 3 params -> `ret 8`, retail `ret 4`
+//     0x004d9cc0 ViewArtifact       DC 3 params -> `ret 8`, retail `ret 4`
+// (0x004d7a20 hero::load is a sixth: DC 2 params, retail `ret 8`.)
+// The block is exactly the hero-SCREEN UI, which the Dreamcast port
+// redesigned, so revision drift is the likely cause - but the parameter
+// lists below are DC's and are NOT retail-verified. Do not reconstruct
+// any of these bodies without settling the arity from the body first.
 // E:\gamedcs\hero.cpp:1594
 VA(0x004d97f0, 0x1A0)  // dc-bracket forced, dc 0xcc49c
 void THeroScreenWindow::HeroMessageUpdate(char* cText)
@@ -934,22 +949,63 @@ long hero::get_combat_speed_bonus()
 }
 
 // E:\gamedcs\hero.cpp:6336
+// SIGNATURE CORRECTED 2026-08-07 (tail order-map audit). The slot is
+// right - it is flanked by two independently confirmed rows and the body
+// is unmistakably the hit-point artifact family (wielding checks for
+// artifacts 0x5e/0x5f/0x60 exactly as 0x004e5aa0 checks the speed family
+// 0x61/0x45/0x63) - but retail's body is `ret 4`, not `ret 0`: it takes a
+// creature type, indexes the 0x74-stride monster table at data_2747b0,
+// and adds `table[type].+0x4c / 4` when artifact 0x83 is worn. DC's row
+// records 1 param (this only); the DC port is a different source
+// revision. Retail's arity is authoritative.
 VA(0x004e5b80, 0x15C)  // anchor-global, dc 0xd5508
-long hero::get_hit_point_bonus()
+long hero::get_hit_point_bonus(int creatureType)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:6355
-DC_ONLY(0xd5548, 0x70)
+// LOCATED 2026-08-07 (was DC_ONLY 0xd5548). Proof: exhaustive order-map
+// of the segment 0x004e5aa0..0x004e5e10 (both flanks confirmed), `ret 0`
+// matches DC params=1, ratio 231/112 = 2.06 in band, and the body is the
+// predicate itself - it builds a type_point from the hero's own packed
+// position words at this+0/+2/+4 (the same three fields hero::IsMobile
+// reads), tests the boat bit 0x40000 of the hero flags dword at
+// this+0x105 (proven to be "aboard a boat" by IsMobile's two-arm
+// fly/water-walk push), and requires cell terrain 8 (water) to agree with
+// it, then checks the cell passability bit 0x40.
+VA(0x004e5ce0, 0xE7)  // anchor-bracket + order-map, dc 0xd5548
 unsigned char hero::can_land()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:6376
-DC_ONLY(0xd55b8, 0x6)
+// LOCATED 2026-08-07 (was DC_ONLY 0xd55b8). Proof: the 16-byte body is
+// `mov eax,[ebp+8]; mov [ecx+0x116],eax; ret 4` - a one-arg setter for
+// hero+0x116. Sibling-field argument: hero::Fly(int) at 0x004e59a0 stores
+// ITS argument to hero+0x112, and hero::IsMobile at 0x004e5f30 loads
+// +0x116 and +0x112 together and pushes them as the pair of "movement
+// override" arguments. `ret 4` matches DC params=2.
+VA(0x004e5dd0, 0x10)  // anchor-callee + order-map, dc 0xd55b8
 void hero::WalkOnWater(int level)
+{
+    // @stub
+}
+
+// RETAIL-ONLY: no DC roster row exists between WalkOnWater (0xd55b8) and
+// IsInIdentifyRange (0xd55c0), so this 45-byte body is a function the DC
+// port inlined away (or a revision difference). It IS a hero member: the
+// body is byte-for-byte the block that opens hero::IsInIdentifyRange at
+// 0x004e5e10 (`cmp [esi+0x129],3 / push 0x8f / lea ecx,[esi+0x91] / call
+// 0x0044adc0`), i.e. the clamped secondary-skill getter that IsInIdentify
+// Range inlines; seven further call sites live in advmgr (0x00416663..).
+// The NAME BELOW IS AN ORDINAL PLACEHOLDER, flagged unattested
+// (WIDGET_RETURN_32 precedent) - NOT a semantic guess. The HD crossbuild
+// map offers `hero::GetRoguePower` on a masked-identity match, but that
+// is NH3API lineage and needs supervised admission.
+VA(0x004e5de0, 0x2D)  // linkorder + order-map, retail-only
+int hero::HeroFn_004E5DE0()
 {
     // @stub
 }
@@ -976,56 +1032,143 @@ int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value)
 }
 
 // E:\gamedcs\hero.cpp:6493
-VA(0x004e6120, 0x39E)  // linkorder, dc 0xd5800
+// IDENTITY CORRECTED 2026-08-07 (tail order-map audit). The SLOT is right
+// - this is hero.obj's last main-.text body, immediately before the
+// COMDAT run documented below - but the DC name does not describe it.
+// `hero::reset_artifacts` is a 1-param void (DC 204 B, `ret 0`); retail's
+// body is `ret 8`: a two-argument member `(creatureType, stats*)` that
+// ADDS the hero's artifact bonuses into a creature stat block - attack
+// into stats+0x54, defense into stats+0x58, hit points into stats+0x4c
+// (the last one inlining the very block that IS 0x004e5b80). Both call
+// sites agree: 0x0043d7b2 in army.obj passes `[ebp+0x10]` as the hero and
+// `ebx+0x74` as the stat block. Name is an ORDINAL PLACEHOLDER flagged
+// unattested (WIDGET_RETURN_32 precedent); `reset_artifacts` returns to
+// the DC_ONLY roster below.
+VA(0x004e6120, 0x39E)  // linkorder + order-map, retail-only signature
+void hero::HeroFn_004E6120(int creatureType, void* creatureStats)
+{
+    // @stub
+}
+
+// ===================================================================
+// hero.obj's COMDAT tail: 0x004e64c0..0x004e6770, SEVEN CLAIMS WITHDRAWN
+// 2026-08-07 - every one of them was a misattribution.
+//
+// The inherited order-map walked the DC roster's seven header/compgen
+// rows (Hero.h:162/702/712, CustomCampaign.h:225, netmsg.h:675,
+// hero.cpp:1226/4186) straight onto the seven retail rows that follow the
+// main .text block. That mapping cannot hold: MSVC places COMDATs by
+// first-reference order, and WHICH inlines get out-of-line copies differs
+// completely between the SH4 DC build and this one. Six of the seven
+// retail bodies are C++ standard-library template instantiations, and all
+// seven contradict their claimed identity on `ret N` and/or body shape:
+//
+//   0x004e64c0  27 B  ret 0   std::bitset<144>::any()
+//        `mov eax,4` = _Nw, then the textbook Dinkumware descending scan
+//        `for (int _I=_Nw; 0<=_I; --_I) if (_A[_I]) return true;` over
+//        _A[5].  _N=144 is pinned by bitset<144>::set at 0x004cf9a0
+//        (`cmp edi,0x90` -> its own _Xran).  All three call sites build a
+//        20-byte stack temp, loop the hero's 0x13 equipped-artifact slots
+//        at hero+0x12d calling that set(), then ask any().
+//        NOT type_obscuring_object::obscures_town: that class has words
+//        at +0/+2/+4, a byte at +6, dwords at +0xc/+0x14 and a byte at
+//        +0x10 (proven by its ctor 0x004d7470 and initialize 0x004d74d0)
+//        - there is no 5-dword array to scan.
+//   0x004e64e0   4 B  ret 0   std::vector<T>::begin()  `mov eax,[ecx+4]`
+//   0x004e64f0   4 B  ret 0   std::vector<T>::end()    `mov eax,[ecx+8]`
+//        Claimed as hero::HasArmy(TCreatureType) and
+//        hero::GetSpellSchoolLevel(TSpellSchool): both DC rows are 2-param
+//        (`ret 4`), both retail bodies are bare `ret`, and a 4-byte field
+//        load cannot scan an army or a school mask.
+//   0x004e6500 434 B  ret 4   std::vector<T>::insert(iterator,const T&)
+//        (the push_back shape: the insert position is _Last, count 1).
+//        Layout +4/+8/+0xc = _First/_Last/_End after the empty
+//        `allocator` subobject - VC6 Dinkumware, not STLport.  Growth is
+//        `_N = size() + (size() < _M ? _M : size())`, and the allocation
+//        is `if (_N<0) _N=0; operator new(_N*4)` - Dinkumware _Allocate
+//        verbatim.  The per-element callee 0x00404dc0 is _Construct for a
+//        4-byte POD: `test ecx,ecx; je; mov eax,[edx]; mov [ecx],eax`,
+//        i.e. placement-new's null check.  276 call sites across the
+//        image (one folded COMDAT serving every TU) - SCampaign::GetExpCap
+//        is a 32-byte `ret 0` getter.
+//   0x004e66c0  40 B  ret 4   std::bitset<48>::_Tidy(unsigned long)
+//        `for (int _I=_Nw; 0<=_I; --_I) _A[_I]=_Wd; if (_Wd) _Trim();`
+//        with _Nw=1 and _Trim's `_A[1] &= 0xFFFF` => _N%32==16, _N=48.
+//        Claimed as CMCDeadHero::CMCDeadHero (DC 3 params => `ret 8`).
+//   0x004e66f0  96 B  ret 8   std::bitset<70>::set(size_t,bool)
+//        `cmp edi,0x46` then _Xran, then |= / &= ~, returns this.
+//        Its three in-hero call sites are inside mark_spells - 70 is the
+//        spell count.  Claimed as a 24-byte `ret 0` ctor closure.
+//   0x004e6750  33 B  ret 4   UNIDENTIFIED 3-arg /Gr free helper
+//        `f(a,b,c) = (*b < *a) ? a : ((*c < *b) ? c : b)` on a signed
+//        4-byte type - a clamp/bound over const refs.  It contains no
+//        delete, no vcall and no vtable load, so it cannot be
+//        THeroScreenWindow's scalar deleting destructor.
+//
+// Corroborating global evidence for the whole run: the image carries
+// "invalid bitset<N> position" (0x0065f450) and "invalid string position"
+// - both Dinkumware/VC6 messages - and NO STLport string anywhere.  The
+// DC dump's hero.obj tail row IS an STLport path (..\stlport\stl_bitset.h)
+// for bitset<48>; the two builds link different standard libraries, which
+// is exactly why this order-map could never have worked.
+//
+// These rows are the STL-COMDAT excluded class and stay unclaimed until
+// the standard-library decision (port plan P2.3) is settled; that
+// decision now has a hard answer for THIS image - VC6's shipped headers,
+// which the toolchain already has.
+// ===================================================================
+
+// E:\gamedcs\hero.cpp:6493
+DC_ONLY(0xd5800, 0xCC)
 void hero::reset_artifacts()
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:162
-VA(0x004e64c0, 0x1B)  // linkorder, dc 0xd58cc
+DC_ONLY(0xd58cc, 0x2A)
 unsigned char type_obscuring_object::obscures_town()
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:702
-VA(0x004e64e0, 0x4)  // linkorder, dc 0xd58f8
+DC_ONLY(0xd58f8, 0x1C)
 unsigned char hero::HasArmy(TCreatureType type)
 {
     // @stub
 }
 
 // E:\gamedcs\Hero.h:712
-VA(0x004e64f0, 0x4)  // linkorder, dc 0xd5914
+DC_ONLY(0xd5914, 0x30)
 TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask)
 {
     // @stub
 }
 
 // E:\gamedcs\CustomCampaign.h:225
-VA(0x004e6500, 0x1B2)  // linkorder, dc 0xd5944
+DC_ONLY(0xd5944, 0x20)
 int SCampaign::GetExpCap()
 {
     // @stub
 }
 
 // E:\gamedcs\netmsg.h:675
-VA(0x004e66c0, 0x28)  // linkorder, dc 0xd5964
+DC_ONLY(0xd5964, 0x54)
 void CMCDeadHero::CMCDeadHero(signed char heroId, type_point point)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:1226
-VA(0x004e66f0, 0x60)  // linkorder, dc 0xd59b8
+DC_ONLY(0xd59b8, 0x18)
 void type_artifact::`default constructor closure'()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:4186
-VA(0x004e6750, 0x21)  // linkorder, dc 0xd59d0
+DC_ONLY(0xd59d0, 0x34)
 void* THeroScreenWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
