@@ -13,6 +13,8 @@
 #include <ddraw.h>
 #include <string.h>
 #include "smackmgr.h"
+#include "binkmanager.h"
+#include "wingraph.h"
 #include "soundmgr.h"
 #include "winmgr.h"
 #include "mousemgr.h"
@@ -21,47 +23,9 @@
 #include "bitmap16.h"
 #include "message.h"
 
-// Partial byte-proven view of the Smacker handle (radlib SmackTag);
-// only the members these wrappers touch are modeled. Width/Height are
-// unsigned (VideoPlay centers with shr); the LastRect quartet compares
-// signed in VideoDrawRects (jge/jle).
-struct Smack {
-    unsigned long Version;   // +0x000
-    unsigned long Width;     // +0x004
-    unsigned long Height;    // +0x008
-    char pad_c[0x374];       // +0x00c..0x37f (unmodeled header/palette)
-    long LastRectx;          // +0x380
-    long LastRecty;          // +0x384
-    long LastRectw;          // +0x388
-    long LastRecth;          // +0x38c
-};
-
-// Partial byte-proven view of the Bink handle: dirty rects at +0x30
-// (stride 0x10), count at +0xb0.
-struct BinkRect {
-    long Left;
-    long Top;
-    long Width;
-    long Height;
-};
-struct Bink {
-    unsigned long Width;      // +0x00
-    unsigned long Height;     // +0x04
-    char pad_8[0x28];         // +0x08..0x2f
-    BinkRect FrameRects[8];   // +0x30
-    long NumRects;            // +0xb0
-};
-
-extern "C" {
-__declspec(dllimport) void __stdcall _SmackToBuffer(Smack* smk, unsigned long left, unsigned long top, unsigned long pitch, unsigned long destheight, void* buf, unsigned long flags);
-__declspec(dllimport) unsigned long __stdcall _SmackToBufferRect(Smack* smk, unsigned long flags);
-__declspec(dllimport) unsigned long __stdcall _SmackDoFrame(Smack* smk);
-__declspec(dllimport) void __stdcall _SmackGoto(Smack* smk, unsigned long frame);
-__declspec(dllimport) void __stdcall _SmackClose(Smack* smk);
-__declspec(dllimport) int __stdcall _BinkPause(Bink* bnk, int pause);
-__declspec(dllimport) int __stdcall _BinkDDSurfaceType(LPDIRECTDRAWSURFACE lpDDS);
-__declspec(dllimport) int __stdcall _BinkGetRects(Bink* bnk, unsigned long flags);
-}
+// The Smack/Bink handle views and the smackw32/binkw32 dllimport
+// surface live in smackmgr.h / binkmanager.h; the underscored import
+// names alias back to the radlib spellings here.
 #define SmackToBuffer _SmackToBuffer
 #define SmackToBufferRect _SmackToBufferRect
 #define SmackDoFrame _SmackDoFrame
@@ -81,49 +45,6 @@ __declspec(dllimport) int __stdcall _BinkGetRects(Bink* bnk, unsigned long flags
 void ShowVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
 void NextSmackFrame();          // 0x598eb0
 
-// The bink TU helpers at 0x44dxxx (names provisional, mirrors of the
-// smack set): the VideoPlay/VideoOpen bink arms and the per-frame
-// advance/draw/close/restart quartet.
-int PlayBinkVideo(int id, int x, int y, int w, int h);                  // 0x44dd20
-void OpenBinkVideo(int id, int x, int y, int w, int h, int a6, int a7); // 0x44d830
-void NextBinkFrame();           // 0x44daa0
-void DrawCurrentBinkFrame();    // 0x44d9e0
-void CloseBinkVideo();          // 0x44dcc0
-void RestartBinkVideo();        // 0x44da50
-
-// Per-id video descriptor table in a foreign TU's .data (0x6839c8,
-// stride 20; ids below 0x1c never consult it). Only the two bytes the
-// wrappers read are modeled: +0 selects the bink arm, +2 requests the
-// fade-out after a user abort. Names provisional.
-struct SVideoDescriptor {
-    unsigned char useBink;      // +0
-    unsigned char field_1;      // +1
-    unsigned char fadeOnAbort;  // +2
-    char pad_3[17];             // 20-byte stride
-};
-extern SVideoDescriptor gVideoDescriptors[];   // .data 0x6839c8
-
-// Foreign globals without an owning header yet (all provisional):
-extern int gbBinkEnabled;        // .bss 0x6987a8 - gates the bink arm
-extern int* gpVideoGameState;    // .bss 0x69923c - *p == 2/3 forces bink for id 0x21
-extern int gbVideoNoSkip;        // .bss 0x699524 - nonzero blocks the user abort
-extern LPDIRECTDRAWSURFACE gpDDSPrimary;  // .bss 0x6aacbc - Blt target
-extern LPDIRECTDRAWSURFACE gpDDSBack;     // .bss 0x6aacc0 - game draw surface
-
-// Bink TU globals (.bss 0x694ca0..0x694ce0, owned by the 0x44dxxx TU;
-// names provisional, mirrored from the smack set below).
-extern int gBinkSurfaceType;         // 0x694ca0 (BinkDDSurfaceType result)
-extern Bink* gBinkVideo;             // 0x694cb0
-extern Bink* gBinkVideo2;            // 0x694cb4
-extern unsigned char* gBinkBuffer;   // 0x694cb8 (screen pixels at the bink origin)
-extern int gBinkPitch;               // 0x694cbc
-extern int gBinkHeight;              // 0x694cc0
-extern int gBinkX;                   // 0x694cc4
-extern int gBinkY;                   // 0x694cc8
-extern int gBinkVideoId;             // 0x694cd4 (0x1d plays via the overlay Blt)
-extern int gBinkPaused;              // 0x694cdc
-extern unsigned char gBinkDirty;     // 0x694ce0
-
 // smackmgr.obj .bss cluster 0x69fdf5..0x69fe5c (names provisional;
 // the unreferenced gaps belong to members only the 0x198xxx TU
 // touches).
@@ -134,7 +55,7 @@ DATA(0x0069fe00) int gSmackX;                      // blit origin on the screen 
 DATA(0x0069fe04) int gSmackY;
 DATA(0x0069fe18) int gSmackPaused;
 DATA(0x0069fe20) unsigned long gSmackBufferFlags;  // SMACKBUFFER555/565
-DATA(0x0069fe30) int gVideoPixelFormat;            // 6 = RGB565 screen
+DATA(0x0069fe30) int gVideoPixelFormat;            // VIDEO_PIXEL_FORMAT_RGB565 screen
 DATA(0x0069fe44) int gVideoPauseCount;
 DATA(0x0069fe48) HANDLE gVideoFile1;               // VideoShutDown's CloseHandle trio
 DATA(0x0069fe4c) HANDLE gVideoFile2;
@@ -166,7 +87,8 @@ void VideoSoundOnOff()
 VA(0x005971f0, 0xD9)  // anchor-global, dc 0x14ac34
 void VideoRealignBuffers()
 {
-    gSmackBufferFlags = (gVideoPixelFormat == 6) ? SMACKBUFFER565 : SMACKBUFFER555;
+    gSmackBufferFlags = (gVideoPixelFormat == VIDEO_PIXEL_FORMAT_RGB565)
+                            ? SMACKBUFFER565 : SMACKBUFFER555;
     if (gSmackVideo)
         SmackToBuffer(gSmackVideo, gSmackX, gSmackY,
             gpWindowManager->screenBitmap->Pitch,
@@ -179,14 +101,15 @@ void VideoRealignBuffers()
             gpWindowManager->screenBitmap->map, gSmackBufferFlags);
     gBinkSurfaceType = BinkDDSurfaceType(gpDDSBack);
     gBinkBuffer = 2 * gBinkX + gpWindowManager->screenBitmap->Pitch * gBinkY
-        + (unsigned char*)gpWindowManager->screenBitmap->map;
+        + static_cast<unsigned char*>(
+              static_cast<void*>(gpWindowManager->screenBitmap->map));
     gBinkPitch = gpWindowManager->screenBitmap->Pitch;
     gBinkHeight = gpWindowManager->screenBitmap->Height;
 }
 
 // E:\gamedcs\smackmgr.cpp:130
 // The wait loop's needs-update check is VideoNeedsUpdate inlined
-// (/Ob2); 0x3e is the one key the abort filter ignores.
+// (/Ob2); F4 (0x3e) is the one key the abort filter ignores.
 // Residual (77.7%): register-allocation cascade. Retail memory-homes
 // the centered blit origin (frame slots -0xc/-8) so ebx is free to be
 // the materialized zero (xor ebx,ebx) across the message loop and the
@@ -208,9 +131,11 @@ int VideoPlay(int id, int x, int y, int w, int h)
     unsigned char result;
     unsigned char aborted;
 
-    if (id >= 0x1c
+    if (id >= VIDEO_ID_FIRST_TABLED
         && (!gVideoDescriptors[id].useBink || !gbBinkEnabled
-            || (id == 0x21 && *gpVideoGameState != 2 && *gpVideoGameState != 3))) {
+            || (id == VIDEO_ID_STATE_GATED
+                && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
+                && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH))) {
         gpSoundManager->field_84 = 1;
         vw = w;
         vh = h;
@@ -240,7 +165,7 @@ int VideoPlay(int id, int x, int y, int w, int h)
                     message msg = gpInputManager->GetEvent();
                     switch (msg.id) {
                         case MESSAGE_KEY_DOWN:
-                            if (msg.codeX == 0x3e)
+                            if (msg.codeX == KEYCODE_F4)
                                 break;
                             // fall through
                         case MESSAGE_LEFT_BUTTON_DOWN:
@@ -285,9 +210,11 @@ stop_playback:
 VA(0x00597570, 0x75)  // anchor-global, dc 0x14ac3c
 void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 {
-    if (id >= 0x1c
+    if (id >= VIDEO_ID_FIRST_TABLED
         && (!gVideoDescriptors[id].useBink || !gbBinkEnabled
-            || (id == 0x21 && *gpVideoGameState != 2 && *gpVideoGameState != 3)))
+            || (id == VIDEO_ID_STATE_GATED
+                && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
+                && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH)))
         ShowVideo(id, x, y, w, h, a6, a7, a8);
     else
         OpenBinkVideo(id, x, y, w, h, a6, a7);
@@ -500,7 +427,7 @@ void VideoDrawRects()
         bnk = gBinkVideo2;
         if (gBinkVideo)
             bnk = gBinkVideo;
-        if (gBinkVideoId != 0x1d) {
+        if (gBinkVideoId != VIDEO_ID_OVERLAY_BLIT) {
             int i;
 
             BinkGetRects(bnk, gBinkSurfaceType);

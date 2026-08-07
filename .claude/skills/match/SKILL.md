@@ -1,6 +1,6 @@
 ---
 name: match
-description: Byte-match HoMM3 functions/TUs against retail HEROES3.EXE - the whole in-tree loop: locate via the DC-roster order-map, claim, reconstruct C++ for VC6 SP3 (/O2 /Ob2 /Oy- /ML /Gr /GX), iterate with homm3 sema diff, ratchet with homm3 build, document residual classes, and judge TU closure. Use when matching a function, reconstructing/mapping/closing a TU, chasing a plateau, or promoting located addresses to claims. Sibling doctrine adapted from homm2/gruntz matcher agents.
+description: Byte-match HoMM3 functions/TUs against retail HEROES3.EXE - the whole in-tree loop: locate via the DC-roster order-map, claim, reconstruct C++ for VC6 SP3 (/O2 /Ob2 /Oy- /Op /ML /Gr /GX), iterate with homm3 sema diff, ratchet with homm3 build, document residual classes, and judge TU closure. Use when matching a function, reconstructing/mapping/closing a TU, chasing a plateau, or promoting located addresses to claims. Sibling doctrine adapted from homm2/gruntz matcher agents.
 ---
 
 # match — reconstruct byte-matching HoMM3 TUs (VC6 SP3 /O2)
@@ -65,7 +65,9 @@ MISSING forever.
    hides immediates (the IDC_ARROW and 0x54cc bugs were invisible masked).
    Structural versions first (homm2 doctrine): pick the retail-compatible CFG
    family before micro-spelling.
-6. **Finish.** Full `homm3 build` exit 0 "ratchet clean". Residual left? Write a
+6. **Finish.** Full `homm3 build` exit 0 "ratchet clean" — read the exit code
+   UNPIPED (`homm3 build; echo $?`); `build 2>&1 | tail; echo $?` reports the
+   pipe's exit and stderr buffering displaces fatal-gate lines to look early. Residual left? Write a
    house-style comment: `// Residual (NN.N%): <delta> - tried and rejected:
    <spellings>.` Never record scores-as-claims in §5 without the ratchet
    agreeing.

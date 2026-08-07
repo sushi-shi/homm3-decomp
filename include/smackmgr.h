@@ -5,6 +5,78 @@
 #ifndef HOMM3_SMACKMGR_H
 #define HOMM3_SMACKMGR_H
 
+// Partial byte-proven view of the Smacker handle (radlib SmackTag);
+// only the members the smackmgr wrappers touch are modeled. Width/
+// Height are unsigned (VideoPlay centers with shr); the LastRect
+// quartet compares signed in VideoDrawRects (jge/jle).
+struct Smack {
+    unsigned long Version;   // +0x000
+    unsigned long Width;     // +0x004
+    unsigned long Height;    // +0x008
+    char pad_c[0x374];       // +0x00c..0x37f (unmodeled header/palette)
+    long LastRectx;          // +0x380
+    long LastRecty;          // +0x384
+    long LastRectw;          // +0x388
+    long LastRecth;          // +0x38c
+};
+
+// The smackw32 import surface (retail IAT: __imp___SmackToBuffer@28 -
+// RAD's own leading underscore, the same convention soundmgr.h
+// documents for Miles). smackmgr.cpp aliases the underscored names
+// back to the radlib spellings.
+extern "C" {
+__declspec(dllimport) void __stdcall _SmackToBuffer(Smack* smk, unsigned long left, unsigned long top, unsigned long pitch, unsigned long destheight, void* buf, unsigned long flags);
+__declspec(dllimport) unsigned long __stdcall _SmackToBufferRect(Smack* smk, unsigned long flags);
+__declspec(dllimport) unsigned long __stdcall _SmackDoFrame(Smack* smk);
+__declspec(dllimport) void __stdcall _SmackGoto(Smack* smk, unsigned long frame);
+__declspec(dllimport) void __stdcall _SmackClose(Smack* smk);
+}
+
+// Per-id video descriptor table in a foreign TU's .data (0x6839c8,
+// stride 20; ids below VIDEO_ID_FIRST_TABLED never consult it). Only
+// the two bytes the wrappers read are modeled: +0 selects the bink
+// arm, +2 requests the fade-out after a user abort. Names provisional;
+// owning TU unknown - declared with its known consumer until the
+// owner's TU lands.
+struct SVideoDescriptor {
+    unsigned char useBink;      // +0
+    unsigned char field_1;      // +1
+    unsigned char fadeOnAbort;  // +2
+    char pad_3[17];             // 20-byte stride
+};
+extern SVideoDescriptor gVideoDescriptors[];   // .data 0x6839c8
+
+// Foreign globals without an owning header yet (all provisional):
+extern int gbBinkEnabled;        // .bss 0x6987a8 - gates the bink arm
+extern int* gpVideoGameState;    // .bss 0x69923c - the forced-bink state pair
+extern int gbVideoNoSkip;        // .bss 0x699524 - nonzero blocks the user abort
+
+// Video ids as the wrappers dispatch them. Names are bootstrap ROLE
+// inventions (no DC/NH3API roster survives for the numeric ids): ids
+// below FIRST_TABLED always take the bink arm; the STATE_GATED id is
+// forced onto bink while *gpVideoGameState holds either forced-bink
+// state; the OVERLAY_BLIT id draws through the primary-surface Blt
+// instead of the merged dirty rect.
+enum EVideoId {
+    VIDEO_ID_FIRST_TABLED = 0x1c,
+    VIDEO_ID_OVERLAY_BLIT = 0x1d,
+    VIDEO_ID_STATE_GATED = 0x21
+};
+
+// The two *gpVideoGameState values that force VIDEO_ID_STATE_GATED
+// onto the bink arm (byte-derived; the pointee's real domain arrives
+// with its owning TU - names provisional).
+enum EVideoGameState {
+    VIDEO_GAME_STATE_FORCED_BINK_LOW = 0x2,
+    VIDEO_GAME_STATE_FORCED_BINK_HIGH = 0x3
+};
+
+// gVideoPixelFormat's one attested value: the RGB565 screen mode that
+// selects SMACKBUFFER565 (name provisional).
+enum EVideoPixelFormat {
+    VIDEO_PIXEL_FORMAT_RGB565 = 0x6
+};
+
 // Live prototypes (all 14 retail bodies reconstructed 2026-08-07).
 // VideoOpen's DC stub is a plain void(); the retail body takes eight
 // args and forwards them to ShowVideo / the bink opener.

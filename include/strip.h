@@ -9,6 +9,15 @@
 class hero;
 class heroWindow;
 
+// The one attested sentinel of the ctor's newIcons icon-set id:
+// DrawOwner's SET_ICON_FRAME arm fires only for this set (every other
+// set draws the akHeroTraits portrait by name). Name is a bootstrap
+// invention - no DC/NH3API name survives; homm2's ctor slot was a
+// portraitIconId.
+enum EStripIconSet {
+    STRIP_PORTRAIT_FRAME_SET = 0xa1
+};
+
 // The seven-slot troop strip: a widget-id remote control over an
 // already-built heroWindow (all drawing goes through WIDGET_* messages
 // to inWin; nothing touches a bitmap directly). `pos` selects one of

@@ -5,6 +5,29 @@
 #ifndef HOMM3_MISC_H
 #define HOMM3_MISC_H
 
+// Live prototypes (claimed misc.cpp bodies).
+int SafeRandom(int min, int max);   // 0x50b1d0
+int Random(int min, int max);       // 0x50b230
+// AppWndProc's WM_MOVE callee: retail 0x50c1b0 is a 5-byte tail jmp
+// into WritePrefsToRegistry (body still @stub in misc.cpp).
+void WritePrefs();                  // 0x50c1b0
+
+// The no-repeat random picker (layout byte-proven by the ctor/Pick
+// pair at 0x50c6e0/0x50c740: six fields, the last two parked at
+// marks+count by the ctor).
+class TPickANumber {
+public:
+    int low;
+    int count;
+    unsigned char flag;
+    unsigned char* marks;
+    unsigned char* end1;
+    unsigned char* end2;
+
+    TPickANumber(int lowBound, int high);
+    int Pick();
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\misc.cpp:41, dc 0xfd81c) int SafeRandom(int min, int max);
 // CODEVIEW(E:\gamedcs\misc.cpp:58, dc 0xfd868) int Random(int min, int max);

@@ -11,6 +11,15 @@
 class palette;
 class paletteHiColor;
 
+// Creature sprite sequence ids (DC CodeView enum creature_seqid,
+// NH3API creatures.hpp identical): only the transition pair
+// iconWidget's idle machine dispatches on is listed - grow the roster
+// as consumers prove values.
+enum creature_seqid {
+    cs_prewalk = 0x14,
+    cs_postwalk = 0x15
+};
+
 // Live VIEW (grown from the button.h bootstrap). Retail layout proven
 // by consumers: GetPalette (0x47bcc0) returns p ? p + 0x1c : 0;
 // button::Draw reads s@0x1c (CSequence**), numSequences@0x28,

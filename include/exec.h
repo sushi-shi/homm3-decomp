@@ -25,6 +25,25 @@ public:
     void MainLoop();
 };
 
+// Provisional MERGED view of the unnamed central object at 0x6a5d5c
+// (1046 refs image-wide; its own TU will name it): both consumers
+// read one entry pointer at +0x20. exec's DoDialog/CallManager show
+// the shutdown message through entry +0x4 for all four failure arms
+// (homm2 had four distinct gExecutiveText strings); kbwin's
+// AppWndProc WM_CLOSE dialog shows the quit-confirm text at entry
+// +0x118.
+struct SUnnamedEntry6a5d5c {
+    char pad_00[4];
+    const char* text;                 // +0x4
+    char pad_08[0x110];
+    const char* quitText;             // +0x118
+};
+struct SUnnamed6a5d5c {
+    char pad_00[0x20];
+    SUnnamedEntry6a5d5c* entry;       // +0x20
+};
+extern SUnnamed6a5d5c* gUnnamed6a5d5c;  // .data 0x6a5d5c; DATA claim lands with its TU
+
 // --- executive ---
 // CODEVIEW(E:\gamedcs\exec.cpp:37, dc 0x9e510) void executive::executive();
 // CODEVIEW(E:\gamedcs\exec.cpp:43, dc 0x9e520) int executive::InitSystem();

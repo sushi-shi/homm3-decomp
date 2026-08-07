@@ -42,19 +42,8 @@ void executive::ShutDownSystem()
 
 #endif  // @carcass
 
-// Provisional view of the unnamed central object at 0x6a5d5c (1046
-// refs image-wide; its own TU will name it). DoDialog reads the one
-// shutdown message through +0x20 -> +4 for all four failure arms
-// (homm2 had four distinct gExecutiveText strings).
-struct SUnnamedEntry6a5d5c {
-    char pad_00[4];
-    const char* text;               // +0x4
-};
-struct SUnnamed6a5d5c {
-    char pad_00[0x20];
-    SUnnamedEntry6a5d5c* errorEntry;  // +0x20
-};
-extern SUnnamed6a5d5c* gUnnamed6a5d5c;  // .data 0x6a5d5c; DATA claim lands with its TU
+// The provisional view of the unnamed central object at 0x6a5d5c
+// (shared with kbwin's quit-confirm arm) lives in exec.h.
 
 // E:\gamedcs\exec.cpp:103
 VA(0x004b0a10, 0x10B)  // anchor-global, dc 0x9e66c
@@ -75,13 +64,13 @@ int executive::DoDialog(baseManager* newDialog)
         m = m->nextManager;
     }
     if (AddManager(newDialog, -1))
-        ShutDown(gUnnamed6a5d5c->errorEntry->text);
+        ShutDown(gUnnamed6a5d5c->entry->text);
     if (dialogExec.AddManager(gpMouseManager, -1))
-        ShutDown(gUnnamed6a5d5c->errorEntry->text);
+        ShutDown(gUnnamed6a5d5c->entry->text);
     if (dialogExec.AddManager(gpWindowManager, -1))
-        ShutDown(gUnnamed6a5d5c->errorEntry->text);
+        ShutDown(gUnnamed6a5d5c->entry->text);
     if (dialogExec.AddManager(newDialog, -1))
-        ShutDown(gUnnamed6a5d5c->errorEntry->text);
+        ShutDown(gUnnamed6a5d5c->entry->text);
     dialogExec.MainLoop();
     RemoveManager(newDialog);
     for (i = 0; i < count; i++) {
@@ -196,7 +185,7 @@ void executive::CallManager(baseManager* newManager)
         RemoveManager(saved);
     }
     if (AddManager(newManager, -1))
-        ShutDown(gUnnamed6a5d5c->errorEntry->text);
+        ShutDown(gUnnamed6a5d5c->entry->text);
     MainLoop();
     RemoveManager(newManager);
     if (saved == gpAdvManager) {
@@ -210,7 +199,7 @@ void executive::CallManager(baseManager* newManager)
             gpWindowManager->FadeScreen(0, 4, 0);
     } else {
         if (AddManager(saved, -1))
-            ShutDown(gUnnamed6a5d5c->errorEntry->text);
+            ShutDown(gUnnamed6a5d5c->entry->text);
     }
     currentManager = saved;
 }
@@ -218,8 +207,8 @@ void executive::CallManager(baseManager* newManager)
 // E:\gamedcs\exec.cpp:340
 // Located by the call-graph lane: DoDialog (0x4b0a10) calls this VA
 // on its local executive between the fourth AddManager and
-// RemoveManager - exactly the roster position. Retail adds one guard
-// to the homm2 shape: key messages (id 4) skip the window manager.
+// RemoveManager - exactly the roster position. Retail keeps homm2's
+// guard: mouse-move messages (id 4) skip the window manager.
 // 88.1 residual (2026-08-06): retail's frame places msg one slot
 // lower (msg@-0x28, GetEvent temp@-0x48) than this compile
 // (-0x24/-0x44) - the frame-layout residual class; the dispatch
@@ -243,20 +232,23 @@ void executive::MainLoop()
             return;
         while (currentManager && dispatch && !done) {
             if (currentManager->status == 1
-                    && (msg.id != 4 || currentManager != gpWindowManager)) {
+                    && (msg.id != MESSAGE_MOUSE_MOVE
+                        || currentManager != gpWindowManager)) {
                 switch (currentManager->Main(msg)) {
-                    case 1:
+                    case MESSAGE_DISPATCH_CONSUME:
                         dispatch = 0;
                         break;
-                    case 2:
-                        if (msg.id & 0x4000) {
+                    case MESSAGE_DISPATCH_FORWARD:
+                        if (msg.id & MESSAGE_EXECUTIVE) {
+                            // Retail merges homm2's TERMINATE_LOOP and
+                            // RETURN_RESULT arms into one store.
                             switch (msg.codeX) {
-                                case 1:
-                                case 4:
+                                case EXECUTIVE_COMMAND_TERMINATE_LOOP:
+                                case EXECUTIVE_COMMAND_RETURN_RESULT:
                                     dialogReturn = msg.extra;
                                     done = 1;
                                     break;
-                                case 2:
+                                case EXECUTIVE_COMMAND_REMOVE_MANAGER:
                                     RemoveManager(currentManager);
                                     currentManager = 0;
                                     break;

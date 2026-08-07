@@ -68,21 +68,21 @@ void font::DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)
 {
     if (c < 0 || c >= 256)
         return;
-    unsigned char* src = (unsigned char*)data + glyphOffsets[c];
-    unsigned char* dst = (unsigned char*)bmp->map + y * bmp->Pitch
-                         + 2 * (x + spec[c].field_0);
+    unsigned char* src = static_cast<unsigned char*>(data) + glyphOffsets[c];
+    unsigned char* dst = static_cast<unsigned char*>(static_cast<void*>(bmp->map))
+                         + y * bmp->Pitch + 2 * (x + spec[c].field_0);
     int width = spec[c].field_4;
     int rows = height;
     if (rows <= 0)
         return;
     do {
-        unsigned short* out = (unsigned short*)dst;
+        unsigned short* out = static_cast<unsigned short*>(static_cast<void*>(dst));
         int cols = width;
         if (cols > 0) {
             do {
                 unsigned char pix = *src++;
                 if (pix != 0) {
-                    if (pix == 0xFF)
+                    if (pix == GLYPH_PIXEL_SOLID)
                         *out = palette.data[color];
                     else
                         *out = palette.data[32];

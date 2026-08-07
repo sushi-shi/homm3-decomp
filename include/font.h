@@ -28,6 +28,14 @@ public:
     char pad_1c[5];
     // Glyph row count (DrawCharacter's outer loop bound, byte at
     // +0x21 inside the header region).
+    // Glyph pixel encoding (byte-derived from DrawCharacter 0x4b51a0):
+    // 0 draws nothing, SOLID takes the color slot, every other value
+    // takes the shadow slot (palette.data[32]). Name is a bootstrap
+    // invention.
+    enum EGlyphPixel {
+        GLYPH_PIXEL_SOLID = 0xff
+    };
+
     unsigned char height;
     char pad_22[0x1a];
     TFontSpec spec[256];

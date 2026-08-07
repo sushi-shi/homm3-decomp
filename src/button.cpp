@@ -16,10 +16,10 @@
 #include "kbwin.h"
 #include "palette.h"
 
-// Declared without dllimport (mousemgr.cpp/misc.cpp precedent):
-// retail's button TU calls straight into the winmm import thunk (an
-// E8 rel32, not an IAT indirect) - Select's match proves the form.
-extern "C" unsigned long __stdcall timeGetTime();
+// Thunk-form timeGetTime (an E8 rel32, not an IAT indirect - Select's
+// match proves the form); the plain declaration and the per-TU
+// import-form doctrine live in winmm_thunks.h.
+#include "winmm_thunks.h"
 
 // homm2 BUTTON.cpp's file-static modifier latch, same name and role.
 DATA(0x00694da8)

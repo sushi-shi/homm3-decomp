@@ -1,5 +1,6 @@
 /build/
 /.nix-gc-roots/
+/.claude/worktrees/
 __pycache__/
 .ninja_log
 .ninja_deps

@@ -27,10 +27,12 @@
 // SeekEnd/SeekCur/GetPosition the guard's return path is a bare `ret`
 // with eax still holding the zero m_hFile (no xor), where Close and
 // GetLength (explicit FALSE / 0) do emit one - so those seven return
-// the null handle VALUE itself, written here as the cast
-// `return (unsigned long)m_hFile;`. The exact retail spelling is
-// unknowable; any formulation that re-uses the loaded member value is
-// equivalent, an explicit `return 0` is provably NOT what was written.
+// the null handle VALUE itself, written here through winfile.h's
+// m_hFileValue union view (retail surely spelled a cast; VC6 allows
+// only reinterpret_cast for pointer->integer and the cleanliness
+// floor bans it). The exact retail spelling is unknowable; any
+// formulation that re-uses the loaded member value is equivalent, an
+// explicit `return 0` is provably NOT what was written.
 #include <va.h>
 #include <io.h>
 #include "winfile.h"
@@ -127,7 +129,7 @@ unsigned long File::Write(void* pData, unsigned long dBytes)
     unsigned long dBytesWritten;
 
     if (!m_hFile)
-        return (unsigned long)m_hFile;
+        return m_hFileValue;
 
     return WriteFile(m_hFile, pData, dBytes, &dBytesWritten, NULL) ? dBytesWritten : 0;
 }
@@ -139,7 +141,7 @@ unsigned long File::Read(void* pData, unsigned long dBytes)
     unsigned long dBytesRead;
 
     if (!m_hFile)
-        return (unsigned long)m_hFile;
+        return m_hFileValue;
 
     return ReadFile(m_hFile, pData, dBytes, &dBytesRead, NULL) ? dBytesRead : 0;
 }
@@ -149,7 +151,7 @@ VA(0x005ffcb0, 0x16)  // vtable-slot 7 of File (0x643d20) + import-anchor (SetFi
 unsigned long File::SeekEnd()
 {
     if (!m_hFile)
-        return (unsigned long)m_hFile;
+        return m_hFileValue;
 
     return SetFilePointer(m_hFile, 0, NULL, FILE_END);
 }
@@ -159,7 +161,7 @@ VA(0x005ffcd0, 0x16)  // vtable-slot 6 of File (0x643d20) + import-anchor (SetFi
 unsigned long File::SeekBegin()
 {
     if (!m_hFile)
-        return (unsigned long)m_hFile;
+        return m_hFileValue;
 
     return SetFilePointer(m_hFile, 0, NULL, FILE_BEGIN);
 }
@@ -169,7 +171,7 @@ VA(0x005ffcf0, 0x21)  // vtable-slot 8 of File (0x643d20) + import-anchor (SetFi
 unsigned long File::SeekCur(int seekAmt)
 {
     if (!m_hFile)
-        return (unsigned long)m_hFile;
+        return m_hFileValue;
 
     return SetFilePointer(m_hFile, seekAmt, NULL, FILE_CURRENT);
 }
@@ -181,7 +183,7 @@ VA(0x005ffd20, 0x4E)  // vtable-slot 5 of File (0x643d20) + import-anchor (SetFi
 unsigned long File::Seek(unsigned long dBytesToSeek, unsigned long dStart)
 {
     if (!m_hFile)
-        return (unsigned long)m_hFile;
+        return m_hFileValue;
 
     if (dStart == 0)
         return SetFilePointer(m_hFile, dBytesToSeek, NULL, FILE_BEGIN);
@@ -195,7 +197,7 @@ VA(0x005ffd70, 0x16)  // vtable-slot 9 of File (0x643d20) + import-anchor (SetFi
 unsigned long File::GetPosition()
 {
     if (!m_hFile)
-        return (unsigned long)m_hFile;
+        return m_hFileValue;
 
     return SetFilePointer(m_hFile, 0, NULL, FILE_CURRENT);
 }

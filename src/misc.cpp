@@ -3,29 +3,14 @@
 // 41 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <stdlib.h>
-// #include "misc.h"
-
+#include "misc.h"
 #include "kbwin.h"
 
-// Reached through the rel32 thunk, same as mousemgr's CheckUpdate
-// (no dllimport on purpose).
-extern "C" unsigned long __stdcall timeGetTime();
-
-// The no-repeat random picker (layout byte-proven by the ctor/Pick
-// pair at 0x50c6e0/0x50c740: six fields, the last two parked at
-// marks+count by the ctor).
-class TPickANumber {
-public:
-    int low;
-    int count;
-    unsigned char flag;
-    unsigned char* marks;
-    unsigned char* end1;
-    unsigned char* end2;
-
-    TPickANumber(int lowBound, int high);
-    int Pick();
-};
+// Thunk-form timeGetTime (rel32, same as mousemgr's CheckUpdate); the
+// plain declaration and the per-TU import-form doctrine live in
+// winmm_thunks.h. Kept AFTER the windows.h-bearing includes so the
+// plain declaration downgrades mmsystem.h's dllimport for this TU.
+#include "winmm_thunks.h"
 
 // Unimplemented carcass stubs stay lexically present (labels and the
 // va-claims gate scan text) but outside compilation until each body
@@ -53,7 +38,8 @@ int SafeRandom(int min, int max)
         return max;
     if (max < min)
         return min;
-    return min + (int)(timeGetTime() % (unsigned)(max - min + 1));
+    return min + static_cast<int>(timeGetTime()
+                                  % static_cast<unsigned>(max - min + 1));
 }
 
 // E:\gamedcs\misc.cpp:58
@@ -209,7 +195,7 @@ TPickANumber::TPickANumber(int lowBound, int high)
     // The shipped uninit artifact: retail copies the reused upper
     // byte of the lowBound slot; this spelling reproduces the byte
     // for constant call sites and awaits a cleanliness ruling.
-    flag = (unsigned char)((unsigned)lowBound >> 24);
+    flag = static_cast<unsigned char>(static_cast<unsigned>(lowBound) >> 24);
     int n = count;
     if (n < 0)
         n = 0;

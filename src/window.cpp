@@ -487,21 +487,6 @@ void heroWindow::SetFocus(int id)
     }
 }
 
-// Retail-only (no DC roster entry): the sleep-nest counter around
-// virtual slot 8, called by executive::CallManager on the adventure
-// window. First sleep and last wake dispatch the vslot.
-VA(0x005ff5b0, 0x33)  // anchor-callee, callers byte-proven
-void heroWindow::SleepAllWidgets(unsigned char sleep)
-{
-    if (sleep) {
-        if (field_48++ == 0)
-            _vslot8(1);
-    } else {
-        if (--field_48 == 0)
-            _vslot8(0);
-    }
-}
-
 #if 0  // @carcass
 
 // E:\gamedcs\window.cpp:934
@@ -522,6 +507,22 @@ void heroWindow::delete_widgets()
             delete *it;
     }
     Widgets.erase(Widgets.begin(), Widgets.end());
+}
+
+// Retail-only (no DC roster entry): the sleep-nest counter around
+// virtual slot 8, called by executive::CallManager on the adventure
+// window. First sleep and last wake dispatch the vslot. Placed after
+// delete_widgets to keep the file's VA order = retail link order.
+VA(0x005ff5b0, 0x33)  // anchor-callee, callers byte-proven
+void heroWindow::SleepAllWidgets(unsigned char sleep)
+{
+    if (sleep) {
+        if (field_48++ == 0)
+            _vslot8(1);
+    } else {
+        if (--field_48 == 0)
+            _vslot8(0);
+    }
 }
 
 #if 0  // @carcass
