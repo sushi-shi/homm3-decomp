@@ -11,6 +11,43 @@
 
 class army;
 
+// The path grid record. Field names and offsets are the Dreamcast
+// fieldlist verbatim; the STRIDE is retail-proven at THIRTY bytes by
+// searchArray::get_travel_time (0x4b3f20 indexes cellData with
+// `lea eax,[eax+eax*2]; lea eax,[eax+eax*4]; lea esi,[ecx+eax*2]`),
+// which the default packing cannot produce - the two longs at 16/20
+// would round sizeof up to 32. Hence pack(1), the same tool hero.h
+// and mapcell.h already use. cost@24 is the only member a retail body
+// reads so far (`movzx`-shaped `mov dx, word ptr [esi+0x18]`).
+#pragma pack(push, 1)
+struct pathCell {
+    type_point point;
+    int visited : 1;
+    int bIsTrigger : 1;
+    int in_boat : 1;
+    int magic_forbidden : 1;
+    int flying : 1;
+    int water_walking : 1;
+    int town_portal : 1;
+    int dimension_door : 1;
+    int castle_gate : 1;
+    int can_stop : 1;
+    int last_can_stop : 1;
+    int direction : 1;
+    int delta_x : 1;
+    int delta_y : 1;
+    int flight_cost : 1;
+    type_point last_point;
+    type_point monster;
+    long barrier_value;
+    long danger_value;
+    unsigned short cost;
+    unsigned short adjusted_cost;
+    unsigned short move_left;
+};
+#pragma pack(pop)
+SIZE(pathCell, 30);
+
 // Retail .data 0x6783c8 / 0x6783cc - the world's x- and y-extents. Every
 // cell index in the engine is ((z * gMapHeight + y) * gMapWidth + x);
 // get_danger_cell below is the smallest reader, game::get_cell the
@@ -38,7 +75,7 @@ public:
     int water_walk_level;
     int flight_level;
     unsigned char limit_reached;
-    void* cellData;
+    pathCell* cellData;
     char valid_rectangle[16];
     std::vector<int> queue;
     std::vector<int> result;
@@ -59,6 +96,11 @@ public:
     // pending findpath.cpp's own carve - the name is the DC roster's.
     void SeedCombatPosition(const army* target, long side, long budget,
                             long start, long limit);
+    // Retail 0x4b3f20: ceil(cell->cost / army->GetSpeed()), floored at
+    // one turn; the null-cellData arm still dereferences (retail reads
+    // [0x18] off a zero base), so the guard is the accessor's, not the
+    // body's.
+    long get_travel_time(const army* current_army, long hex);
     // const per the DC public ?get_danger_value@searchArray@@QBAJUtype_point@@@Z.
     long get_danger_value(type_point point) const;  // 0x42ed30 (ai_player.obj)
 };

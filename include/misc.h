@@ -10,6 +10,7 @@ int SafeRandom(int min, int max);   // 0x50b1d0
 int Random(int min, int max);       // 0x50b230
 // AppWndProc's WM_MOVE callee: retail 0x50c1b0 is a 5-byte tail jmp
 // into WritePrefsToRegistry (body still @stub in misc.cpp).
+void WritePrefsToRegistry();        // 0x50be10 (body @stub)
 void WritePrefs();                  // 0x50c1b0
 
 // The no-repeat random picker (layout byte-proven by the ctor/Pick

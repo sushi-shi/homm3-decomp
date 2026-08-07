@@ -7,6 +7,12 @@
 # date: 2026-08-04
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 # 11943 functions; size INCLUDES jump tables
+# BOUNDARY CORRECTION 2026-08-07: the three C++ EH unwind funclets the
+# carve split off after heroWindowManager::DoQuickView (0x202b7a/25,
+# 0x202b93/31, 0x202bb2/22) are folded back into 0x202a40, whose true
+# extent is 392 B (0x602a40..0x602bc8). Proof: the VC6 compile of the
+# reconstructed body emits the same three blocks as local labels inside
+# one symbol, byte-for-byte. 11940 rows since.
 rva	size
 0x1000	89
 0x1060	96
@@ -5789,10 +5795,7 @@ rva	size
 0x2029e8	31
 0x202a07	19
 0x202a1a	32
-0x202a40	314
-0x202b7a	25
-0x202b93	31
-0x202bb2	22
+0x202a40	392
 0x202bd0	124
 0x202c50	99
 0x202cc0	242

@@ -47,7 +47,10 @@ public:
     // is declared.
     void UpdateScreen(int x, int y, int w, int h);
     int BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
+    void AddWindow(heroWindow* newWindow, int newPriority,
+                   unsigned char update);
     void RemoveWindow(heroWindow* killWindow);
+    void DoQuickView(heroWindow* window);
     void FadeScreen(int inOut, int speed, unsigned char expect_fadein);
     void FadeToBlack(int speed, unsigned char expect_fadein);
     void FadeFromBlack(int speed);
@@ -56,6 +59,27 @@ public:
 // Retail .bss 0x699280 (DC ?gpWindowManager@@3PAVheroWindowManager@@A);
 // the DATA claim lands with winmgr.cpp.
 extern heroWindowManager* gpWindowManager;
+
+// Provisional VIEW of the unnamed central object at .bss 0x69d808 (232
+// code references image-wide, written from six sites inside the
+// unclaimed 0x552e00..0x556900 band; its own TU will name it - the
+// exec.h gUnnamed6a5d5c precedent). DoQuickView's message pump is the
+// only consumer modeled, and every spelling below is offset-anchored
+// rather than semantic: an OUT-OF-LINE getter (retail 0x5537a0, the
+// 7-byte `mov eax,[ecx+0xf0]; ret`) hands back an object whose virtual
+// slots 1 and 2 the pump drives while bVideoPaused is set.
+class CUnnamed69d808_f0 {
+public:
+    virtual void _vslot0() = 0;
+    virtual void _vslot1(int arg0, int arg1) = 0;
+    virtual int _vslot2() = 0;
+};
+struct SUnnamed69d808 {
+    char pad_00[0xf0];
+    CUnnamed69d808_f0* field_f0;      // +0xf0
+    CUnnamed69d808_f0* get_field_f0();  // retail 0x5537a0
+};
+extern SUnnamed69d808* gUnnamed69d808;  // .bss 0x69d808
 
 // --- Bitmap816 ---
 // CODEVIEW(E:\gamedcs\Bitmap816.h:73, dc 0x19c5e8) const TPalette16* Bitmap816::GetPalette();

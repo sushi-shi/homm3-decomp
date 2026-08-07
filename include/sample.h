@@ -19,6 +19,14 @@ public:
     int field_2c;
     int field_30;
 
+    // Retail 0x566da0: six stack params (ret 0x18). The first three are
+    // byte-derived roles (name forwarded to the resource base with type
+    // 0x20, then a new'd buffer memcpy'd from src for len bytes); the
+    // trailing three land in field_28/2c/30 and take the Dreamcast
+    // prototype's channel/volume/loop names - PROVISIONAL, the DC class
+    // itself was rewritten (one MemorySampleStructure member).
+    sample(const char* newName, const void* src, long len,
+           long channel, long volume, long loop);
     virtual ~sample();  // retail 0x566e60; vtable 0x6416d0
 };
 

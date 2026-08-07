@@ -111,6 +111,8 @@ void WritePrefsToRegistry()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\misc.cpp:598
 // Located as AppWndProc's WM_MOVE callee (homm2 kbwin calls WritePrefs
 // there); the retail body is a 5-byte tail jmp into
@@ -118,8 +120,10 @@ void WritePrefsToRegistry()
 VA(0x0050c1b0, 0x5)  // anchor-callee, dc 0xfe050
 void WritePrefs()
 {
-    // @stub
+    WritePrefsToRegistry();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\misc.cpp:603
 DC_ONLY(0xfe060, 0x4)

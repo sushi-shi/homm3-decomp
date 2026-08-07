@@ -7,6 +7,7 @@
 
 #include <windows.h>
 #include "basemgr.h"
+#include "csprite.h"
 
 // mousemgr.cpp's critical-section RAII guard (DC CodeView TCSLock; the
 // Dreamcast build keeps ctor/dtor out of line, retail inlines both -
@@ -29,17 +30,13 @@ public:
 // (baseManager's own field) and then fills its own tail - field_34@0x34,
 // field_4c/0x50 = -1, field_54/0x60 = 0, field_68 = 1, field_74 = 0,
 // and a CRITICAL_SECTION at 0x78.
-// Bootstrap VIEW of the animated-pointer sprite CheckUpdate walks:
-// only the three fields it reads (frame count gate at +0x28, first
-// pointer at +0x2c, count through a double deref at +0x1c). The real
-// class arrives with csprite modeling.
-struct SPointerSprite {
-    char pad_0[0x1c];
-    int** f_1c;
-    char pad_20[0x8];
-    int f_28;
-    int* f_2c;
-};
+// The animated-pointer sprite is a plain CSprite: the three fields
+// CheckUpdate walks (+0x1c, +0x28, +0x2c) are csprite.h's s,
+// numSequences and validSeqMask at exactly those offsets, and
+// SetPointer (0x50cca0) both releases the old one through virtual
+// slot 1 (CSprite::Dispose) and refills the field from
+// ResourceManager::GetSprite - which returns CSprite*. The
+// SPointerSprite bootstrap view is retired.
 
 class mouseManager : public baseManager {
 public:
@@ -66,11 +63,13 @@ public:
     int field_48;
     int field_4c;
     int field_50;
-    SPointerSprite* field_54;
+    CSprite* field_54;
     int field_58;
     int field_5c;
     int field_60;
-    int field_64;
+    // Byte, not int: CheckUpdate (0x50d680) reads it with `mov al,
+    // byte ptr [esi+0x64]; test al,al` and stores 0/1 as byte writes.
+    unsigned char field_64;
     int field_68;
     int field_6c;
     int field_70;
@@ -79,6 +78,7 @@ public:
 
     mouseManager();
     void MouseCoords(int* x, int* y);
+    void SetPointer(int new_frame, EPointerSet new_set);
     void Update(unsigned char bForceIt);
     void HidePointer();
     void ShowPointer(bool restore);
