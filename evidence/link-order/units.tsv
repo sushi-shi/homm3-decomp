@@ -40,8 +40,9 @@ initialize	0xebb10	0xebce9	473	3	0	3	3	0
 inputmgr	0xec0e0	0xeccca	3050	10	0	12	10	2
 kb	0xed490	0xf7a04	42356	11	0	57	11	46
 kbwin	0xf7a30	0xf8490	2656	12	0	12	12	0
-lodfile	0xfa610	0xfac34	1572	6	0	7	6	1
-mapcell	0xfbf90	0x105d12	40322	14	0	78	14	64
+lodfile	0xfa590	0xfac34	1700	8	0	8	8	0
+mainmenu	0xfb2a0	0xfbb94	2292	5	0	5	5	0
+mapcell	0xfbf90	0x105d12	40322	65	0	78	65	13
 misc	0x10b1d0	0x10c792	5570	5	0	15	5	10
 monframeinfo	0x10c810	0x10cb26	790	2	0	2	2	0
 mousemgr	0x10cb50	0x10da57	3847	11	0	15	11	4

@@ -2436,7 +2436,7 @@ rva	size	relation	owner_or_bracket	candidates	label
 0xfa3c0	342	bracketed	kbwin..lodfile	kbwin,levelupwindow,lodfile	game_fa280_sub00_fa3c0
 0xfa520	22	bracketed	kbwin..lodfile	kbwin,levelupwindow,lodfile	game_f9f00_sub02_fa520
 0xfa540	33	bracketed	kbwin..lodfile	kbwin,levelupwindow,lodfile	game_f9f00_sub03_fa540
-0xfa590	119	bracketed	kbwin..lodfile	kbwin,levelupwindow,lodfile	game_15a491_sub00_fa590
+0xfa590	119	in-span	lodfile	lodfile	game_15a491_sub00_fa590
 0xfa610	69	in-span	lodfile	lodfile	LODFile_getItemIndex
 0xfa660	275	in-span	lodfile	lodfile	LODFile_Find
 0xfa780	123	in-span	lodfile	lodfile	game_1591e0_sub00_fa780
@@ -2444,12 +2444,12 @@ rva	size	relation	owner_or_bracket	candidates	label
 0xfa8a0	452	in-span	lodfile	lodfile	LODFile_open
 0xfaa70	171	in-span	lodfile	lodfile	LODFile_pointAt
 0xfab20	276	in-span	lodfile	lodfile	LODFile_read
-0xfac40	619	bracketed	lodfile..mapcell	lodfile,mainmenu,mapcell	game_fa8a0_sub00_fac40
-0xfb2a0	901	bracketed	lodfile..mapcell	lodfile,mainmenu,mapcell	calls_timeGetTime_fb2a0
-0xfb630	33	bracketed	lodfile..mapcell	lodfile,mainmenu,mapcell	game_fb630
-0xfb660	117	bracketed	lodfile..mapcell	lodfile,mainmenu,mapcell	game_ee3e0_sub26_fb660
-0xfb6e0	44	bracketed	lodfile..mapcell	lodfile,mainmenu,mapcell	game_mainmenu_fb6e0
-0xfb710	1156	bracketed	lodfile..mapcell	lodfile,mainmenu,mapcell	calls_timeGetTime_fb710
+0xfac40	619	bracketed	lodfile..mainmenu	lodfile,mainmenu	game_fa8a0_sub00_fac40
+0xfb2a0	901	in-span	mainmenu	mainmenu	calls_timeGetTime_fb2a0
+0xfb630	33	in-span	mainmenu	mainmenu	game_fb630
+0xfb660	117	in-span	mainmenu	mainmenu	game_ee3e0_sub26_fb660
+0xfb6e0	44	in-span	mainmenu	mainmenu	game_mainmenu_fb6e0
+0xfb710	1156	in-span	mainmenu	mainmenu	calls_timeGetTime_fb710
 0xfbf90	97	in-span	mapcell	mapcell	ExtraInfoUnion_SetCellVisited
 0xfc000	410	in-span	mapcell	mapcell	game_fd690_sub00_fc000
 0xfc1a0	494	in-span	mapcell	mapcell	game_fc000_sub00_fc1a0
