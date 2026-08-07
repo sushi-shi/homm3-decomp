@@ -7,7 +7,17 @@
 
 #include <vector>
 
+#include "struct.h"
+
 class army;
+
+// Retail .data 0x6783c8 / 0x6783cc - the world's x- and y-extents. Every
+// cell index in the engine is ((z * gMapHeight + y) * gMapWidth + x);
+// get_danger_cell below is the smallest reader, game::get_cell the
+// nearest relative (it reads the map record's own square Size instead).
+// The DC roster carries no name for either word, so both are provisional.
+extern int gMapWidth;
+extern int gMapHeight;
 
 // Dreamcast roster with the STLport->VC6 vector shift; the retail ctor
 // 0x4b1370 stores every named field and the dtor 0x4b13e0 frees
@@ -34,7 +44,9 @@ public:
     std::vector<int> result;
     std::vector<int> visited_points;
     void* bIsMoatSlowed;
-    void* danger_zones;
+    // +0x6c. `long*` (not void*) from get_danger_value's `[ecx + edx*4]`
+    // load - the danger map is one signed word per cell.
+    long* danger_zones;
 
     searchArray();
     ~searchArray();
@@ -47,7 +59,16 @@ public:
     // pending findpath.cpp's own carve - the name is the DC roster's.
     void SeedCombatPosition(const army* target, long side, long budget,
                             long start, long limit);
+    // const per the DC public ?get_danger_value@searchArray@@QBAJUtype_point@@@Z.
+    long get_danger_value(type_point point) const;  // 0x42ed30 (ai_player.obj)
 };
+
+// findpath.h:265 in the DC roster; no retail row of its own - /Ob2
+// folds it into every caller, ai_player.obj's get_danger_value included.
+inline long* get_danger_cell(long* danger_zones, type_point point)
+{
+    return &danger_zones[(point.z * gMapHeight + point.y) * gMapWidth + point.x];
+}
 
 // Retail .bss 0x699284; the DATA claim lands with findpath.cpp's
 // globals when that TU's data is modeled.

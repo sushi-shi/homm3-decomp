@@ -32,7 +32,14 @@ public:
     // Faction id (armyGroup::GetLuck gates the Fountain of Fortune on
     // type == 1, Rampart).
     unsigned char type;
-    char pad_05[3];
+    // +5..+7, the town's map cell. can_take_town (0x428410) widens all
+    // three with movzx from these bytes and packs them into a
+    // type_point (x &0x3ff, y &0x3ff, z &0xf) before asking
+    // game::get_cell for the tile; the DC roster names them
+    // mapX/mapY/mapZ at the same offsets.
+    unsigned char mapX;
+    unsigned char mapY;
+    unsigned char mapZ;
     unsigned char dockSite;
     char pad_09[0x147];
     // Three 64-bit building bitfields: built@0x150 and available@0x160
@@ -45,6 +52,11 @@ public:
 
     unsigned char CanBuildDock();
     void CalcNumLevelArchers(int* numArchers, int* archerLevel);
+    // 0x5c1460. The DC carries the pair
+    // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
+    // only the const half has a proven retail reader so far
+    // (can_take_town copies 56 bytes out of the returned reference).
+    const class armyGroup& get_army() const;
 
     // DC LF_ONEMETHOD STATIC + public ?initialize_hordes@town@@SAXXZ
     // (dc 0x1664b0); retail 0x5bdf60 is entered by a bare tail jmp

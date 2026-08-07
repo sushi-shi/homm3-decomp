@@ -316,3 +316,8 @@ flags = "game_o2_ml_gr_windows"
 unit = "ai_tactical"
 source = "src/ai_tactical.cpp"
 flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "ai_player"
+source = "src/ai_player.cpp"
+flags = "game_o2_ml_gr_windows"
