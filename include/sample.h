@@ -7,12 +7,18 @@
 
 #include "resource.h"
 
+class ds_memsample;
+
 // Bootstrap VIEW (resource lineage unmodeled): button::Select seeds
 // the three fields before handing the click sample to
 // soundManager::MemorySample; names unattested.
 class sample : public resource {
 public:
-    int field_1c;
+    // Retyped 2026-08-07: soundManager::MemorySample (0x59a210) stores
+    // the Miles handle it started into this slot
+    // (`mov [ebx+0x1c], edi`), so it is the live ds_memsample*, not a
+    // plain int. sample::sample only ever zeroes it.
+    ds_memsample* field_1c;
     void* data;
     int field_24;
     int field_28;
