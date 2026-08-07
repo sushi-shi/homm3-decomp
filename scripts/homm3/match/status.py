@@ -78,10 +78,45 @@ def load_baseline() -> dict:
     return maxima
 
 
+def load_baseline_comments() -> tuple:
+    """Hand-written `#` lines, anchored to the row they precede.
+
+    The ratchet doctrine requires a deliberate max-lowering to carry a dated
+    comment, so a rewrite must not eat them (it did, silently, until
+    2026-08-07). The leading BASELINE_HEADER block is excluded - write_baseline
+    re-emits that itself. Returns (anchored, trailing).
+    """
+    anchored, pending = {}, []
+    if not BASELINE.is_file():
+        return anchored, []
+    header = set(BASELINE_HEADER.splitlines())
+    seen_row = False
+    for line in BASELINE.read_text().splitlines():
+        if line.startswith("#"):
+            if not seen_row and line in header:
+                continue
+            pending.append(line)
+        elif line:
+            seen_row = True
+            unit, fn, _ = line.split("\t")
+            if pending:
+                anchored[(unit, fn)] = pending
+                pending = []
+    return anchored, pending
+
+
 def write_baseline(maxima: dict) -> None:
-    rows = [f"{unit}\t{fn}\t{value:.4f}"
-            for (unit, fn), value in sorted(maxima.items())]
-    BASELINE.write_text(BASELINE_HEADER + "\n".join(rows) + "\n")
+    anchored, trailing = load_baseline_comments()
+    out = []
+    for key in sorted(maxima):
+        out.extend(anchored.pop(key, ()))
+        out.append(f"{key[0]}\t{key[1]}\t{maxima[key]:.4f}")
+    # Comments whose row is gone (a promoted fn's flat-name row) outlive it:
+    # dropping them is the very defect this function exists to prevent.
+    for orphan in anchored.values():
+        out.extend(orphan)
+    out.extend(trailing)
+    BASELINE.write_text(BASELINE_HEADER + "\n".join(out) + "\n")
 
 
 def overall_line(report: dict) -> str:
