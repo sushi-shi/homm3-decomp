@@ -5,6 +5,15 @@
 #ifndef HOMM3_RECRUIT_H
 #define HOMM3_RECRUIT_H
 
+#include <string.h>
+#include <va.h>
+#include "basemgr.h"
+#include "window.h"
+
+class armyGroup;
+class hero;
+class town;
+
 // Creature-record table POINTER at 0x6747b0 - armygrp.h's
 // akCreatureTypeTraits seen as the flat dword table retail's index
 // register walks (stride 0x74 = 29 dwords, the seven costs at dword
@@ -25,6 +34,127 @@ void GetMonsterCost(int monId, int* resCost);
 // from armygrp.h, which recruit.cpp includes first.
 void get_upgrade_cost(enum TCreatureType creature, enum TCreatureType upgrade,
     long amount, int* cost);
+
+// The recruit dialog's own window and its quick-view twin. Both derive
+// DIRECTLY from heroWindow, not from CHeroWindowEx: their retail
+// destructors (0x54fb20 / 0x5516e0) store ONE vptr (0x640c4c /
+// 0x640c7c) and then call heroWindow::~heroWindow (0x5fea80) - an
+// intermediate class with its own vtable would have stored its vptr
+// first. Own data members are NOT modeled: only the destructors are
+// reconstructed so far, and they touch nothing below heroWindow.
+// (recruitUnit::Update reads three widget handles at +0x50/+0x54/+0x58
+// of the global at 0x69d5e8, so TRecruitWindow's own fields start at
+// 0x4c - but that function is not reconstructed yet, so the fields
+// stay unmodeled rather than fabricated. No SIZE assert.)
+class TRecruitWindow : public heroWindow {
+public:
+    virtual ~TRecruitWindow();
+};
+
+class TRecruitQuickWindow : public heroWindow {
+public:
+    virtual ~TRecruitQuickWindow();
+};
+
+// PROVEN layout. Base is baseManager (0x38): all three retail
+// constructors (0x551350 / 0x551460 / 0x551560) open with
+// `call baseManager::baseManager` (0x44d530) and then store the vptr
+// 0x640c70 at [this], and recruitUnit::Close (0x5502d0) parks
+// baseManager::status at [this+0x34]. Own fields 0x38..0xbb, size
+// 0xbc.
+//
+// Every named field below is byte-proven on THIS image; the Dreamcast
+// roster (via the Ghidra struct recovery) supplies only the spellings,
+// and its offsets line up one-for-one:
+//   0x48 type          ctor1/2 store -1, ctor3 stores 0x62, Close
+//                      compares 0x62
+//   0x4c view_only     ctor1/2 store 0 (byte), ctor3 a setne result,
+//                      Update reads it as a byte
+//   0x50 monsterType   ctor arg, indexes the creature-record table
+//   0x54 numAvail      short*; Update stores available[slot] into it
+//   0x58 selectedPos.  ctors zero it, Update reads it as the default
+//                      slot and as a widget-code offset
+//   0x5c-0x68 MonType1..4 / 0x6c-0x78 available[4] - the ctor arg pairs
+//   0x7c thisHero      ctor2 arg; Update passes it to hero::HasArtifact
+//   0x84 goldPerTroop / 0x88 altResource / 0x8c resourcesPerTroop -
+//                      the UpdateCost outputs
+//   0x90 bInTownMainScreen  ctor3 arg, Close reads it
+//   0x98 currArmyGroup / 0x9c bCurrArmyGroupIsTownGarrison - ctor1 args
+//   0xa4 updateNeeded  Close reads it
+//   0xac maxAvail / 0xb0 totalGold / 0xb4 totalResources /
+//   0xb8 numberToBuy   Update computes and displays all four
+// The gaps (0x38, 0x80, 0x94, 0xa0, 0xa8) stay padding: the Dreamcast
+// names them but no retail body reconstructed here touches them.
+class recruitUnit : public baseManager {
+public:
+    char pad_38[16];
+    int type;
+    unsigned char view_only;
+    TCreatureType monsterType;
+    short* numAvail;
+    int selectedPosition;
+    TCreatureType MonType1;
+    TCreatureType MonType2;
+    TCreatureType MonType3;
+    TCreatureType MonType4;
+    short* available[4];
+    hero* thisHero;
+    char pad_80[4];
+    long goldPerTroop;
+    int altResource;
+    int resourcesPerTroop;
+    int bInTownMainScreen;
+    char pad_94[4];
+    armyGroup* currArmyGroup;
+    unsigned char bCurrArmyGroupIsTownGarrison;
+    char pad_a0[4];
+    int updateNeeded;
+    char pad_a8[4];
+    int maxAvail;
+    long totalGold;
+    int totalResources;
+    int numberToBuy;
+
+    recruitUnit(armyGroup* newGroup, unsigned char bGroupIsTownGarrison,
+        TCreatureType _MonType1, short* _numMon1,
+        TCreatureType _MonType2, short* _numMon2,
+        TCreatureType _MonType3, short* _numMon3,
+        TCreatureType _MonType4, short* _numMon4);
+    recruitUnit(hero* _thisHero,
+        TCreatureType _MonType1, short* _numMon1,
+        TCreatureType _MonType2, short* _numMon2,
+        TCreatureType _MonType3, short* _numMon3,
+        TCreatureType _MonType4, short* _numMon4);
+
+    // Defined here, not in recruit.cpp, because retail HAS NO
+    // out-of-line body for it: the recruit band's carve rows are all
+    // accounted for by other functions, and the same ~0x60-byte block
+    // (7-dword cost fetch, gold at dword 6, first non-zero of the
+    // other six) is expanded verbatim inside all three constructors
+    // and at the head of recruitUnit::Update. An out-of-line member
+    // with extern linkage would have been emitted unconditionally, so
+    // retail's definition was an inline one.
+    void UpdateCost()
+    {
+        int cost[7];
+        memcpy(cost, &gCreatureRecords[monsterType * CREATURE_RECORD_DWORDS
+                   + CREATURE_RECORD_COST_DWORD], sizeof(cost));
+        goldPerTroop = cost[6];
+        int i;
+        for (i = 0; i < 6; i++) {
+            if (cost[i] != 0)
+                break;
+        }
+        if (i < 6) {
+            altResource = i;
+            resourcesPerTroop = cost[i];
+        } else {
+            altResource = -1;
+            resourcesPerTroop = 0;
+        }
+    }
+};
+SIZE(recruitUnit, 188);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\recruit.cpp:157, dc 0x118adc) void get_upgrade_cost(TCreatureType creature, long amount, []* cost);

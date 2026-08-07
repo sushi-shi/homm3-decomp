@@ -4,6 +4,9 @@
 #include <va.h>
 #include "armygrp.h"
 #include "recruit.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "widget.h"
 
 // E:\gamedcs\recruit.cpp:157
 // Retail takes FOUR args - both creature rows arrive in ecx/edx (the
@@ -46,6 +49,65 @@ void GetMonsterCost(int monId, int* resCost)
     } while (remaining);
 }
 
+// ---------------------------------------------------------------------
+// recruit.obj order map, recomputed 2026-08-08 from the carve rows in
+// 0x54e750..0x551dc1 plus body evidence. Every carve row in the span is
+// accounted for; the rows below are LOCATED but not claimed - a claim
+// lands with the reconstruction, and the evidence class is noted per
+// row so the next lane can promote in one step.
+//
+//   0x54e750  0x64   get_upgrade_cost                CLAIMED, exact
+//   0x54e7c0  0x31   GetMonsterCost                  CLAIMED, 82.7%
+//   0x54e850  0x1295 TRecruitWindow::TRecruitWindow  body: EH frame,
+//              thiscall, heroWindow ctor with 0x1e5 x 0x18b type 0x12,
+//              and the delinker's working label carries "tprcrt.pcx",
+//              the recruit dialog background
+//   0x54faf0  0x21   TRecruitWindow ??_G             CLAIMED, exact
+//   0x54fb20  0x6b   TRecruitWindow::~TRecruitWindow CLAIMED, exact
+//   0x54fb90  0x30d  add_creature_widgets            order + five stack
+//              args ([ebp+8..0x18]) + `new 0x34` (a widget subclass)
+//   0x54fea0  0x42e  recruitUnit::Open               order + thiscall +
+//              `new 0x6c`
+//   0x5502d0  0x8c   recruitUnit::Close              body: parks
+//              baseManager::status at [this+0x34], RemoveWindow()s the
+//              window global 0x69d5e8 and deletes it through vslot 0,
+//              gates on type==0x62 / [this+0xa4] / bInTownMainScreen,
+//              tail-jumps KBChangeMenu(0x4f8180)
+//   0x550360  0x3c   siege_artifact_to_creature      body: fastcall
+//              switch 3,4,5,6 -> 0x91,0x92,0x93,0x94, `or eax,-1`
+//              default. BLOCKED on two enumerators (0x91 Catapult,
+//              0x92 Ballista) missing from armygrp.h's TCreatureType;
+//              CREATURE_FIRST_AID_TENT/CREATURE_AMMO_CART are already
+//              there. Note the map is NOT the inverse of the creature->
+//              artifact switch inlined in Update (147->6, 148->5 there).
+//   0x5503a0  0x594  recruitUnit::Update             CLAIMED, @stub
+//   0x550940  0xa08  recruitUnit::Main               order only
+//   0x551350  0x101  recruitUnit(armyGroup*, ...)    CLAIMED, 98.0%
+//   0x551460  0xfe   recruitUnit(hero*, ...)         CLAIMED, 96.7%
+//   0x551560  0x14b  recruitUnit(town*, int, int)    body: `ret 0xc`,
+//              baseManager ctor + vptr 0x640c70, type=0x62, reads the
+//              town subtype byte at [town+4] and owner at [town+1],
+//              calls town::get_army (0x5c1460)
+//   0x5516b0  0x21   TRecruitQuickWindow ??_G        CLAIMED, exact
+//   0x5516e0  0x6b   ~TRecruitQuickWindow            CLAIMED, exact
+//   0x551750  0x24   QuickViewRecruit(town*, int)    body: tail-JUMPS
+//              into 0x551780 with a creature id from the dwelling table
+//              at 0x6747b4 and &town->dwellingCount[i]
+//   0x551780  0x641  QuickViewRecruit(char, short*)  the jump target
+//
+// Three DC rows have NO retail body, all three by the /Ob2
+// single-call-site rule: SiegeMonsterToSiegeArtifact (inlined into
+// Update as a jump table), recruitUnit::UpdateCost (expanded in all
+// three ctors and at the head of Update - see recruit.h) and
+// TRecruitQuickWindow::TRecruitQuickWindow (inlined into
+// QuickViewRecruit). SetRolloverText and ExitRecruitUnit likewise have
+// no slot between Update and Main and are presumed folded into Main.
+// RecruitSliderCallback is the one unresolved row: its address is taken
+// (slider callback), so it must exist out of line, but no carve row and
+// no gap in this span fits it - it may have been folded by /OPT:ICF
+// into an identical callback elsewhere.
+// ---------------------------------------------------------------------
+
 #if 0  // @carcass
 
 // E:\gamedcs\recruit.cpp:183
@@ -62,12 +124,33 @@ void TRecruitWindow::TRecruitWindow(int x2, int y2, int altResource, recruitUnit
     // @stub
 }
 
+#endif  // @carcass
+
+// E:\gamedcs\recruit.cpp:288 - TRecruitWindow::`scalar deleting
+// destructor' (dc 0x11b53c). Compiler-generated from the virtual dtor;
+// our base obj already emits ??_GTRecruitWindow@@UAEPAXI@Z, this claim
+// names the retail body so the pair scores. Retail places it BEFORE
+// the dtor (the DC build appends both deleting dtors after everything).
+VA_COMPGEN(0x0054faf0, 0x21, SCALAR_DELETING_DTOR, TRecruitWindow)
+
 // E:\gamedcs\recruit.cpp:292
-DC_ONLY(0x1197bc, 0x62)
-void TRecruitWindow::~TRecruitWindow()
+// Located by body: stores vptr 0x640c4c, walks the heroWindow Widgets
+// vector (_First 0x34 / _Last 0x38, re-read every iteration) deleting
+// each entry through its virtual slot 0, then calls
+// heroWindow::~heroWindow (0x5fea80) directly - which is what proves
+// TRecruitWindow derives straight from heroWindow. The loop is the
+// heroWindow::delete_widgets body MINUS its trailing erase(), so it is
+// written out here rather than delegated.
+VA(0x0054fb20, 0x6B)  // anchor-callee + anchor-vtable 0x640c4c, dc 0x1197bc
+TRecruitWindow::~TRecruitWindow()
 {
-    // @stub
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\recruit.cpp:302
 DC_ONLY(0x119820, 0x12C)
@@ -105,6 +188,39 @@ TCreatureType siege_artifact_to_creature(TArtifact engine)
 }
 
 // E:\gamedcs\recruit.cpp:511
+// BLOCKED 2026-08-08 on include/game.h, which another lane owns: the
+// body divides gpCurrentPlayer's resource row by goldPerTroop and by
+// resourcesPerTroop, and playerData has no field sliced at +0x9c. The
+// retail bytes say playerData carries `int resources[7]` at +0x9c with
+// gold as index 6 (`[esi+0xb4]` for gold, `[esi + 4*altResource +
+// 0x9c]` for the alt resource) - slice that and the function is
+// writable. Everything else is decoded:
+//   `ret 8`, thiscall, uchar new_monster at [ebp+8], long slot at
+//   [ebp+0xc]; slot == -1 falls back to selectedPosition.
+//   UpdateCost() expands at the head (same block as the ctors).
+//   numAvail = available[slot]; if the creature record's flag byte at
+//   dword 4 has 0x40 (siege) then *numAvail = 1 - thisHero->
+//   HasArtifact(<the inlined SiegeMonsterToSiegeArtifact switch:
+//   145->3, 146->4, 147->6, 148->5, default -1>) clamped at 0 - the
+//   `movzx ax, al` says that subtraction happened in SHORT width.
+//   Seven sprintf(gText, "%d", ...) / BroadcastMessage(codeX 3) pairs
+//   drive widget codes 0x226, 0x209, 0x20e, 0x212, 0x200, 0x213,
+//   0x204, plus one sprintf(gText, "%s %s", <ptr at +0x44 of the entry
+//   at +0x20 of the object at 0x6a5d5c>, <char buffer 0x691210>).
+//   maxAvail = min(min(gold/goldPerTroop, res/resourcesPerTroop),
+//   *numAvail); numberToBuy = min(maxAvail, numberToBuy) - and that
+//   min is spelled through memory (`lea eax,[..]` on both arms then
+//   one deref), i.e. a reference-returning min, not a ternary.
+//   Then the widget enables on the window global at 0x69d5e8
+//   (widgets at +0x50/+0x54/+0x58, vslot 9 = widget::enable), the
+//   slider at +0x58 taking vslot 13 (resolution maxAvail+1) and
+//   vslot 14 (state numberToBuy) when new_monster is set, and finally
+//   four WIDGET_SET_COLOR broadcasts on codes 0x21a..0x21d carrying
+//   the short at +0x5a of the object at 0x6aacb0 and one more on
+//   0x21a+selectedPosition carrying its short at +0x64.
+// Still unmodeled after game.h: TRecruitWindow's three widget fields,
+// the slider vslots 13/14, and the globals 0x6aacb0 / 0x69954c /
+// 0x691210.
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
 void recruitUnit::Update(unsigned char new_monster, long slot)
 {
@@ -132,26 +248,100 @@ int recruitUnit::Main(message* msg)
     // @stub
 }
 
-// E:\gamedcs\recruit.cpp:1082
+// E:\gamedcs\recruit.cpp:1082 - no retail body of its own; the
+// definition lives in recruit.h and every call site expanded it. See
+// the note there.
 DC_ONLY(0x11ac7c, 0x88)
 void recruitUnit::UpdateCost()
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\recruit.cpp:1120
-DC_ONLY(0x11ad04, 0xAE)
-void recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char bGroupIsTownGarrison, TCreatureType _MonType1, short* _numMon1, TCreatureType _MonType2, short* _numMon2, TCreatureType _MonType3, short* _numMon3, TCreatureType _MonType4, short* _numMon4)
+// `ret 0x28` = 40 argument bytes = the ten Dreamcast parameters, and
+// each one lands on the field the DC roster names: [ebp+8] -> +0x98,
+// the byte at [ebp+0xc] -> +0x9c, then the four (type, count-pointer)
+// pairs into +0x5c/+0x6c .. +0x68/+0x78, with the first pair also
+// seeding monsterType/numAvail.
+// Residual (98.0%): three head instructions. Retail parks the shared
+// zero in edx before the first store and cycles eax through the
+// argument loads; our CL parks it in eax and hoists the MonType2 load
+// (and its store) ahead of monsterType/MonType1. Statement order was
+// swept: putting `currArmyGroup = newGroup` first reproduces retail's
+// store ORDER for the zero group but then hoists MonType2 the same way
+// AND loses the 0x60 placement (95.8); moving `numAvail` to where
+// retail's store for it lands - after MonType1 (97.7/80.3) or after
+// MonType2 (95.4/79.4) - costs the hero constructor badly.
+// Register-homing family; the value written to every field is
+// identical in all spellings.
+VA(0x00551350, 0x101)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11ad04
+recruitUnit::recruitUnit(armyGroup* newGroup, unsigned char bGroupIsTownGarrison,
+    TCreatureType _MonType1, short* _numMon1,
+    TCreatureType _MonType2, short* _numMon2,
+    TCreatureType _MonType3, short* _numMon3,
+    TCreatureType _MonType4, short* _numMon4)
 {
-    // @stub
+    bInTownMainScreen = 0;
+    thisHero = 0;
+    selectedPosition = 0;
+    currArmyGroup = newGroup;
+    bCurrArmyGroupIsTownGarrison = bGroupIsTownGarrison;
+    monsterType = _MonType1;
+    numAvail = _numMon1;
+    MonType1 = _MonType1;
+    MonType2 = _MonType2;
+    MonType3 = _MonType3;
+    MonType4 = _MonType4;
+    type = -1;
+    view_only = 0;
+    available[0] = _numMon1;
+    available[1] = _numMon2;
+    available[2] = _numMon3;
+    available[3] = _numMon4;
+    glTimers[0] = GameTime::Get() + 100;
+    UpdateCost();
 }
 
 // E:\gamedcs\recruit.cpp:1158
-DC_ONLY(0x11adb4, 0xA4)
-void recruitUnit::recruitUnit(hero* _thisHero, TCreatureType _MonType1, short* _numMon1, TCreatureType _MonType2, short* _numMon2, TCreatureType _MonType3, short* _numMon3, TCreatureType _MonType4, short* _numMon4)
+// `ret 0x24` = the nine hero-flavoured parameters; identical body with
+// thisHero taking the armyGroup pair's place.
+// Residual (96.7%): the same head-scheduling delta as the constructor
+// above, plus the thisHero store. Retail's store order (thisHero
+// first, then the four zeros) is reproduced exactly by writing
+// `thisHero = _thisHero;` first - but that spelling then hoists the
+// MonType2 load/store out of place and scores 95.8. Everything from
+// the MonType3 load onward is byte-identical in both.
+VA(0x00551460, 0xFE)  // anchor-callee(baseManager ctor) + anchor-vtable 0x640c70, dc 0x11adb4
+recruitUnit::recruitUnit(hero* _thisHero,
+    TCreatureType _MonType1, short* _numMon1,
+    TCreatureType _MonType2, short* _numMon2,
+    TCreatureType _MonType3, short* _numMon3,
+    TCreatureType _MonType4, short* _numMon4)
 {
-    // @stub
+    bInTownMainScreen = 0;
+    currArmyGroup = 0;
+    bCurrArmyGroupIsTownGarrison = 0;
+    selectedPosition = 0;
+    thisHero = _thisHero;
+    monsterType = _MonType1;
+    numAvail = _numMon1;
+    MonType1 = _MonType1;
+    MonType2 = _MonType2;
+    MonType3 = _MonType3;
+    MonType4 = _MonType4;
+    type = -1;
+    view_only = 0;
+    available[0] = _numMon1;
+    available[1] = _numMon2;
+    available[2] = _numMon3;
+    available[3] = _numMon4;
+    glTimers[0] = GameTime::Get() + 100;
+    UpdateCost();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\recruit.cpp:1188
 DC_ONLY(0x11ae58, 0xCA)
@@ -160,19 +350,34 @@ void recruitUnit::recruitUnit(town* newTown, int newDwellingIndex, int bInInTown
     // @stub
 }
 
-// E:\gamedcs\recruit.cpp:1219
+// E:\gamedcs\recruit.cpp:1219 - no retail body: the only caller is
+// QuickViewRecruit(char, short*) (0x551780), so /Ob2 inlined it and
+// the single-call-site STATIC rule dropped the out-of-line copy.
 DC_ONLY(0x11af24, 0x74)
 void TRecruitQuickWindow::TRecruitQuickWindow(int x2, int y2)
 {
     // @stub
 }
 
+#endif  // @carcass
+
+// E:\gamedcs\recruit.cpp:1221 - TRecruitQuickWindow::`scalar deleting
+// destructor' (dc 0x11b570); same shape and same placement rule as
+// TRecruitWindow's above.
+VA_COMPGEN(0x005516b0, 0x21, SCALAR_DELETING_DTOR, TRecruitQuickWindow)
+
 // E:\gamedcs\recruit.cpp:1224
-DC_ONLY(0x11af98, 0x62)
-void TRecruitQuickWindow::~TRecruitQuickWindow()
+// Byte-identical to ~TRecruitWindow apart from the vptr (0x640c7c).
+VA(0x005516e0, 0x6B)  // anchor-callee + anchor-vtable 0x640c7c, dc 0x11af98
+TRecruitQuickWindow::~TRecruitQuickWindow()
 {
-    // @stub
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\recruit.cpp:1232
 DC_ONLY(0x11affc, 0x2C)
