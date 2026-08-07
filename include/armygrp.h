@@ -32,6 +32,15 @@ enum TCreatureType {
     // enemy-luck special).
     CREATURE_DEVIL = 0x36,
     CREATURE_ARCH_DEVIL = 0x37,
+    // Proven by GetMorale's two inlined IsMember scans: 0xc/0xd in the
+    // OWN group add +1 morale (0x44af9c) and 0x44/0x45 in the ENEMY
+    // group subtract 1 (0x44afd1) - exactly the Angel/Archangel and
+    // Bone/Ghost Dragon morale rules, at the Complete ids those rules
+    // belong to (NH3API spellings).
+    CREATURE_ANGEL = 0xc,
+    CREATURE_ARCHANGEL = 0xd,
+    CREATURE_BONE_DRAGON = 0x44,
+    CREATURE_GHOST_DRAGON = 0x45,
     // Proven by modify_spell_damage's dispatch table at 0x44b58c:
     // the golem spell-damage ladder (1/2, 1/4, 15/100, 1/20) and the
     // upgraded elementals pairing with their base forms' counter-
@@ -302,6 +311,20 @@ DATA(0x006a5bb8) extern const char* apszArmySizeNames[9][3];
 // name survives for this table) - replace on evidence.
 DATA(0x00643698) extern const TTerrainType akNativeTerrains[9];
 
+// Two more town building masks, in the same .data family as town.h's
+// gFountainOfFortuneMask: every one of them is an entry of the
+// `1i64 << n` bitNumber table at 0x66cd98, so the byte value fixes the
+// building id exactly (0x66cdc0 = 1<<5, 0x66ce48 = 1<<22; town.h
+// already reads 7/8/9 as fort/citadel/castle off the same table).
+// GetMorale ands bit 5 against town->built for +1 morale and bit 22
+// against town->active for +2 more, the latter only for a Castle -
+// the Tavern and Castle's Brotherhood of the Sword. DECLARED HERE, not
+// in town.h, only because the town lane owns that header right now;
+// they belong beside gFountainOfFortuneMask. No DATA claim: the owning
+// TU is unlocated, exactly as for gFortMask/gCitadelMask/gCastleMask.
+extern unsigned int gTavernMask[2];
+extern unsigned int gBrotherhoodOfTheSwordMask[2];
+
 // The game singleton and gpGame now live in their owner's header
 // (game.h); f_1f698 is the one field GetAlignments reads (nonzero ->
 // elementals keep their town alignment; zero -> they census as
@@ -337,11 +360,15 @@ public:
                 const class hero* otherHero, const armyGroup* otherGroup,
                 unsigned char on_cursed_ground, unsigned char apply_limits);
     // SEVEN params in retail (GetArmyMorale's call site pushes seven;
-    // the DC six-param prototype is wrong) - roles of 5..7 pending
-    // GetMorale's own decode.
+    // the DC six-param prototype is wrong). Roles resolved by the
+    // 0x44ae60 decode: 5 is the cursed-ground short circuit (a BYTE
+    // load at 0x44ae63, not the dword an int would force), 6 gates the
+    // alignment-grouping adjustment alone, 7 is the [-3,3] clamp.
+    // group_alignments is a bootstrap name for the byte-proven gate.
     int GetMorale(const class hero* ownerHero, const class town* ownerTown,
                   const class hero* otherHero, const armyGroup* otherGroup,
-                  int arg5, unsigned char arg6, unsigned char arg7);
+                  unsigned char on_cursed_ground,
+                  unsigned char group_alignments, unsigned char apply_limits);
     // SIX params in retail (ret 0x18; the DC five-param prototype is
     // wrong): mode int with sentinels, arg5 forwarded to GetMorale.
     int GetArmyMorale(int index, const class hero* ownerHero,

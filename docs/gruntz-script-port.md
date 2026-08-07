@@ -260,6 +260,65 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — armygrp: GetMorale unblocked by the Dinkumware answer;
+  the whole TSplitWindow bracket found MISATTRIBUTED.** `armygrp`
+  16/34 → 17/34 exact, 26.13% → 31.79% fuzzy; engine-wide 283 → 284
+  exact, 3.68% → 3.72% executable matched.
+  **`armyGroup::GetMorale` (666 B, previously an unwritten stub whose
+  carcass note blamed the STLport question) landed at 87.996%.** The
+  four helpers are Dinkumware `<bitset>` members — `_Tidy(unsigned
+  long)` 0x44c6e0, `set(size_t,bool)` 0x44c680, `operator[]` 0x4cef80,
+  `reference::operator=(bool)` 0x44c610 — with `test()` inlined and
+  `_Xran` at 0x434ad0. **Instantiation cost in practice: just
+  `#include <bitset>`** — no vendoring, no anchor, no pragma, no
+  explicit instantiation. (hero.cpp needed the `inline_depth(0)`
+  scaffold only because those COMDATs had no natural call site; where
+  real call sites exist, the include suffices.) The guard byte +
+  `atexit` pattern proves a FUNCTION-LOCAL static, not file scope — the
+  atexit thunk at 0x44a4c0 is literally one byte, `c3`. Semantics
+  recovered: hero morale, the alignment census with a grouped collapse
+  over {Castle,Rampart,Tower,Stronghold,Fortress}, `morale += 2 -
+  numAlignments`, undead −1, Angel/Archangel +1, enemy Bone/Ghost
+  Dragon −1, Tavern +1, Castle's Brotherhood of the Sword +2, clamp to
+  [-3,3].
+  **The TSplitWindow bracket was systematically misattributed — the
+  carcass generator's 1:1 order pairing slips by one.** Five
+  corrections, each byte-proven, recorded at `src/armygrp.cpp:33-138`:
+  0x4496c0 was `UpdateSplitArmy` → is `SplitSliderCallback` (bare `ret`,
+  ecx used as an INTEGER, window read from file-scope 0x693878: a `/Gr`
+  free function, not a member); 0x449790 was `SplitSliderCallback` →
+  is the 3-arg `TSplitWindow` ctor (call site: `new(0x80)` then thiscall
+  with (0xb1, 0x14, armies[i])); 0x449df0 was that ctor → is the
+  scalar deleting dtor (**`ret 4`**, call-dtor / `test byte[ebp+8],1` /
+  `operator delete` / return this — a 3-arg ctor would be `ret 0xc`);
+  0x44a180 was `SetRolloverText` → is `WindowHandler` (`ret 4` with a
+  `message*`); 0x44a460 was `WindowHandler` → is armygrp.cpp's
+  static-set accessor (no args, no `this`, returns `&bitset<9>` at
+  0x693884). Size ratios corroborate every pairing at 1.05–1.18× once
+  inlining is accounted, against 4.06× for the old SplitSliderCallback
+  pairing. `UpdateSplitArmy` and `SetRolloverText` have **no retail
+  slot** — inlined at their single call sites then dropped by
+  `/OPT:REF` (the HasSomeUndead pattern in this same file) — and moved
+  back to `DC_ONLY`. **Ninth consecutive lane to find inherited claims
+  wrong.**
+  Bonus: 0x44a460 extracted as an extern-linkage helper
+  (`ArmyGrpFn_0044A460`, unattested ordinal placeholder — no DC row)
+  took GetMorale 79.4 → 88.0 as a side effect, because retail emits
+  BOTH the out-of-line body and the inline expansion, and the inline
+  expansion is what leaves the bitset members as calls.
+  **Rejected and recorded so a later lane is not poisoned:** the
+  `_cpp_min`/`_cpp_max` const-reference clamp *is* what retail's three
+  homed temps + address-selection means, but it scores strictly worse
+  in all four consumers (GetMorale 79.4→75.7, GetLuck 84.8→79.6,
+  GetArmyMorale 72.9→45.7) because our compile reuses the stat's memory
+  home as the by-ref temp and reloads it. The ternary was kept **with
+  an explicit in-source warning that it is NOT evidence about retail's
+  source** — the blocker is upstream register homing, not the idiom.
+  **OPEN:** `gTavernMask`/`gBrotherhoodOfTheSwordMask` sit in
+  `armygrp.h` only because another lane owned `town.h` this session;
+  they are `bitNumber[5]` and `bitNumber[22]` and belong beside
+  `gFountainOfFortuneMask`.
+
 - **2026-08-07 — hero +0x430 RE-MODELLED; the Dinkumware surface proven
   BY BYTES and 5 STL COMDATs matched; P2.3 closed in practice.**
   Engine-wide 278 → 283 exact, 3.65% → 3.68% executable matched; `hero`

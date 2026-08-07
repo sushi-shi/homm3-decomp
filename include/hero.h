@@ -103,6 +103,12 @@ public:
     unsigned char IsWieldingArtifact(int whichArtifact);
     int GetLuck(const hero* otherHero, unsigned char on_cursed_ground,
                 unsigned char apply_limits);
+    // Claimed in src/hero.cpp (0x4e39b0); declared here because
+    // armyGroup::GetMorale (0x44ae60) calls it with three arguments -
+    // the DC prototype's arity, corroborated by the retail call site's
+    // three pushes.
+    int GetMorale(const hero* otherHero, unsigned char on_cursed_ground,
+                  unsigned char apply_limits);
     float GetMagicResistanceFactor();
     int CreatureTypeCount(int creatureType);
     int GetNthSS(int iWhich);

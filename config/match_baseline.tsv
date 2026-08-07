@@ -167,6 +167,7 @@ ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	40.4615
 armygrp	??0armyGroup@@QAE@XZ	100.0000
 armygrp	?Add@armyGroup@@QAEHHHH@Z	100.0000
+armygrp	?ArmyGrpFn_0044A460@@YIABV?$bitset@$08@std@@XZ	100.0000
 armygrp	?CanJoin@armyGroup@@QAEHH@Z	100.0000
 armygrp	?Dismiss@armyGroup@@QAEXH@Z	100.0000
 armygrp	?GetAlignments@armyGroup@@QAEHPAE@Z	100.0000
@@ -174,6 +175,7 @@ armygrp	?GetArmyLuck@armyGroup@@QAEHHPBVhero@@PBVtown@@HE@Z	30.3579
 armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	72.8920
 armygrp	?GetArmySizeName@armyGroup@@SIPBDHH@Z	100.0000
 armygrp	?GetLuck@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EE@Z	84.8265
+armygrp	?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z	87.9958
 armygrp	?GetNativeTerrain@armyGroup@@QAE?AW4TTerrainType@@XZ	100.0000
 armygrp	?GetNumArmies@armyGroup@@QAEHXZ	100.0000
 armygrp	?HasAllUndead@armyGroup@@QAEEXZ	100.0000
@@ -192,12 +194,10 @@ armygrp	?merge_armies@armyGroup@@QAEXPAV1@@Z	84.7652
 armygrp	?modify_spell_damage@@YIJJHW4TCreatureType@@@Z	55.6350
 armygrp	?save@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000
 armygrp	SplitSliderCallback	0.0000
-armygrp	TSplitWindow_SetRolloverText	0.0000
 armygrp	TSplitWindow_TSplitWindow	0.0000
 armygrp	TSplitWindow_TSplitWindow_49e20	0.0000
-armygrp	TSplitWindow_UpdateSplitArmy	0.0000
 armygrp	TSplitWindow_WindowHandler	0.0000
-armygrp	armyGroup_GetMorale	0.0000
+armygrp	TSplitWindow_scalar_deleting_destructor	0.0000
 armygrp	armyGroup_SplitArmy	0.0000
 armygrp	armyGroup_get_luck_description	0.0000
 armygrp	armyGroup_get_morale_description	0.0000

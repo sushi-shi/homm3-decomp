@@ -3,6 +3,11 @@
 // 47 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <string.h>
+// VC6's own shipped Dinkumware <bitset> - retail links Dinkumware, NOT
+// STLport (P2.3, byte-proven by hero.obj's COMDAT tail and again here:
+// GetMorale's four helper calls are Dinkumware bitset members to the
+// instruction).
+#include <bitset>
 #include "armygrp.h"
 #include "hero.h"
 #include "town.h"
@@ -25,58 +30,148 @@ unsigned char armyGroup::HasCreatures()
     return 0;
 }
 
+// ===================================================================
+// TSplitWindow bracket RE-MAPPED 2026-08-07.  The carcass generator
+// paired seven DC rows with the seven retail slots 1:1 in order; the
+// bytes say the pairing slips by one from 0x449790 on, because TWO DC
+// rows (UpdateSplitArmy, SetRolloverText) have NO retail slot and one
+// retail slot (0x44a460) has no DC row.  Every correction below is
+// proven from the target bytes, not from the order:
+//
+//   0x4496c0  ret with NO stack cleanup and ecx used as an INTEGER
+//     (`movsx edx,[gSplitWindow+0x78]; add edx,ecx`) - a /Gr FREE
+//     function of one int, so it cannot be the member
+//     UpdateSplitArmy(uchar) the old claim named (a member would use
+//     ecx as `this`, and it reads the window from the file-scope
+//     0x693878 instead).  It is SplitSliderCallback with
+//     UpdateSplitArmy inlined into it: the body sets
+//     w->f74 = w->b78 + state, w->f70 = w->f6c - w->f74, sprintf()s
+//     both counts and BroadcastMessage()s them.  DC 48 B + 128 B
+//     inlined = 176 vs retail 195 (1.11x); the standalone 48 B row
+//     alone would have been 4.06x, outside the band.
+//   0x449790  the CONSTRUCTOR, proven by its call site: SplitArmy at
+//     0x449eb1 does `new(0x80)` and then a THISCALL here with the
+//     three stack args (0xb1, 0x14, armies[srcIndex]) - exactly
+//     TSplitWindow(int x2, int y2, TCreatureType).  DC 1380 vs 1627
+//     (1.18x).
+//   0x449df0  `ret 4`, and the body is call-dtor / `test byte
+//     [ebp+8],1` / conditional operator delete / return this - the
+//     textbook scalar deleting destructor, which is the DC's own
+//     0x4fd54 row.  The old claim called it the three-argument ctor;
+//     a ctor with three args would be `ret 0xc`.
+//   0x44a180  `ret 4` with a message* arg, calls the base popup's
+//     slot-9 handler first and then dispatches on msg->type /
+//     msg->field_4 / control ids 0x7800..0x7802 - the window handler,
+//     with SetRolloverText inlined (DC 540 + 160 = 700 vs 735, 1.05x).
+//   0x44a460  NOT TSplitWindow::WindowHandler: no arguments, no
+//     `this`, `ret` with no cleanup, and it returns the address of the
+//     static bitset<9> at 0x693884 that GetMorale reads.  It is
+//     armygrp.cpp's static-set accessor, promoted out of this block
+//     below.  It has no DC row because the DC build linked STLport.
+//
+// UpdateSplitArmy and SetRolloverText are therefore inlined-and-
+// eliminated (the HasSomeUndead pattern in this same file): single
+// call site, /Ob2 inlines, /OPT:REF drops the now-unreferenced body.
+// ===================================================================
 #if 0  // @carcass
 
-// E:\gamedcs\armygrp.cpp:62
-VA(0x004496c0, 0xC3)  // linkorder, dc 0x4db08
-void TSplitWindow::UpdateSplitArmy(unsigned char bUpdate)
-{
-    // @stub
-}
-
 // E:\gamedcs\armygrp.cpp:82
-VA(0x00449790, 0x65B)  // linkorder, dc 0x4db88
+VA(0x004496c0, 0xC3)  // byte-shape, dc 0x4db88 (+ 0x4db08 inlined)
 void SplitSliderCallback(int state, heroWindow* parent_window)
 {
     // @stub
 }
 
 // E:\gamedcs\armygrp.cpp:90
-VA(0x00449df0, 0x21)  // linkorder, dc 0x4dbb8
+VA(0x00449790, 0x65B)  // anchor-callee, dc 0x4dbb8
 void TSplitWindow::TSplitWindow(int x2, int y2, TCreatureType thisArmy)
 {
     // @stub
 }
 
+// E:\gamedcs\armygrp.cpp:131
+VA(0x00449df0, 0x21)  // byte-shape, dc 0x4fd54
+void* TSplitWindow::scalar_deleting_destructor(unsigned __flags)
+{
+    // @stub
+}
+
 // E:\gamedcs\armygrp.cpp:135
-VA(0x00449e20, 0x6B)  // linkorder, dc 0x4e11c
+VA(0x00449e20, 0x6B)  // anchor-callee, dc 0x4e11c
 void TSplitWindow::~TSplitWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\armygrp.cpp:143
-VA(0x00449e90, 0x2EF)  // linkorder, dc 0x4e180
+VA(0x00449e90, 0x2EF)  // anchor-callee, dc 0x4e180
 void armyGroup::SplitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned char inSrcRestricted, unsigned char inDestRestricted)
 {
     // @stub
 }
 
-// E:\gamedcs\armygrp.cpp:208
-VA(0x0044a180, 0x2DF)  // linkorder, dc 0x4e388
-void TSplitWindow::SetRolloverText(int codeY)
-{
-    // @stub
-}
-
 // E:\gamedcs\armygrp.cpp:229
-VA(0x0044a460, 0x55)  // linkorder, dc 0x4e428
+VA(0x0044a180, 0x2DF)  // byte-shape, dc 0x4e428 (+ 0x4e388 inlined)
 int TSplitWindow::WindowHandler(message* msg)
 {
     // @stub
 }
 
+// LINKER-ELIMINATED in retail (inlined at their single call sites,
+// then dropped by /OPT:REF - the HasSomeUndead pattern):
+//   E:\gamedcs\armygrp.cpp:62   TSplitWindow::UpdateSplitArmy(uchar)
+//     -> inlined into SplitSliderCallback (0x4496c0)
+DC_ONLY(0x4db08, 0x80)
+void TSplitWindow::UpdateSplitArmy(unsigned char bUpdate)
+{
+    // @stub
+}
+
+//   E:\gamedcs\armygrp.cpp:208  TSplitWindow::SetRolloverText(int)
+//     -> inlined into WindowHandler (0x44a180)
+DC_ONLY(0x4e388, 0xA0)
+void TSplitWindow::SetRolloverText(int codeY)
+{
+    // @stub
+}
+
 #endif  // @carcass
+
+// armygrp.cpp's static-set accessor at 0x44a460 (85 B, retail-only -
+// the DC build linked STLport and has no counterpart row).  PROVEN
+// identity: it shares the local-static guard bit at 0x69385c, the
+// bitset<9> storage at 0x693884 and the atexit thunk at 0x44a4c0 with
+// the block GetMorale carries inline, sets exactly bits 0,1,2,7,6 and
+// returns &storage.  Retail emits BOTH this out-of-line body and an
+// inline expansion inside GetMorale, which is what an EXTERN-linkage
+// helper does under /Ob2 (a static with one call site would vanish);
+// the inline expansion is also what leaves the bitset members as
+// depth-2 calls there instead of folding them to `or al,<bit>` the way
+// this standalone copy does. Bit 0 is spelled `[0] = true` like the
+// other four: this body folds all five to `or al,<bit>` either way, so
+// it cannot discriminate - GetMorale's expansion, where retail shows
+// `call set(0,1)` for bit 0 and call pairs for the rest, is what does.
+//
+// The name is an UNATTESTED ordinal placeholder (HeroFn_004E6120
+// precedent): no DC row and no NH3API name survives for it.  Declared
+// only here because armygrp.cpp is its only proven consumer so far -
+// get_morale_description (0x44b960) is the likely second call site
+// that forced the out-of-line copy.
+VA(0x0044a460, 0x55)  // anchor-global, retail-only
+const std::bitset<9>& ArmyGrpFn_0044A460()
+{
+    static std::bitset<9> sGroupedAlignments;
+    static unsigned char sGroupedAlignmentsBuilt = 0;
+    if (!sGroupedAlignmentsBuilt) {
+        sGroupedAlignments[TOWN_CASTLE] = true;
+        sGroupedAlignments[TOWN_RAMPART] = true;
+        sGroupedAlignments[TOWN_TOWER] = true;
+        sGroupedAlignments[TOWN_FORTRESS] = true;
+        sGroupedAlignments[TOWN_STRONGHOLD] = true;
+        sGroupedAlignmentsBuilt = 1;
+    }
+    return sGroupedAlignments;
+}
 
 // E:\gamedcs\armygrp.cpp:341
 // DECODE START 2026-08-06 (head to +0x95): 1326 bytes. STRUCTURAL
@@ -388,7 +483,15 @@ armyGroup::armyGroup(TCreatureType type, int amount)
     // Residual (40.5%): retail's loop keeps short-indexed addressing and
     // memory-resident amount where our compile strength-reduces; the
     // instruction SEMANTICS match line for line. Open codegen puzzle -
-    // see the decision log.
+    // see the decision log. The two halves are ONE fact, not two:
+    // retail spends ebx/esi/edi on this/i/(7-i) and recomputes
+    // `movsx ecx,si` plus `mov edi,7; sub edi,ecx` every iteration,
+    // which leaves no register for `amount` (hence the [ebp+0xc]
+    // reload-and-store pair); this compile strength-reduces the index
+    // into a walking pointer plus a down-counter and then has a
+    // register to spare. Tried and rejected: writing the share back as
+    // `amount -= numTroops[i]` instead of through a named local
+    // (identical - VC6 CSEs the store).
     if (amount > 0) {
         for (short i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
             armies[i] = type;
@@ -660,44 +763,114 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
     return apszArmySizeNames[8][iNameSet];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\armygrp.cpp:977
-// DECODE START 2026-08-06 (head to +0x95). SEVEN params confirmed
-// (ret 0x1c; GetArmyMorale pushes seven): p1 hero, p2 town, p3
-// (forwarded to hero::GetMorale), p4 ?, p5 on_cursed (test -> 0),
-// p6 = GetArmyMorale's arg5 (gates the alignment-census block), p7 ?.
-// Head: heroMorale = p1 ? p1->GetMorale(p3, 0, 0) : 0; count =
-// GetAlignments(local unsigned char[0x31-ish] at ebp-0x30); if (p6)
-// walk the census bytes with ANOTHER one-time-init flag block inside
-// (byte global bit 1 + two calls, one pushing 0x60) - likely a
-// cached lookup build. MIDDLE (+0x95..+0x141): the one-time block
-// constructs a static SET/bitset via four insert-shaped call pairs on
-// a global object with first args 1, 2, 7, 2? no - 1,2,7,6 (each:
-// push 1; lea local; push <value>; push local; call; mov ecx,eax;
-// call - an STLport insert(iterator, value) + deref idiom); then
-// per census alignment esi: bounds `cmp esi,9`, bitset test
-// (`test [4*(esi>>5)+base], 1<<(esi&0x1f)`), matches counted in ebx
-// - the troop-mix morale rule counting present alignments inside the
-// static set {1,2,7,6}. CALLEES RESOLVED: hero::GetMorale (0xe39b0),
-// our GetAlignments (0x4abb0), and a static STLPORT std::bitset<9> -
-// storage 0x293884, init flag 0x29385c, four armygrp-owned helper
-// instantiations (0x4c610/0x4c680/0x4c6e0/0xcef80) and the
-// invalid_bitset_position thrower (0x34ad0) guarding test(). Tail
-// reads TWO more 64-bit building-mask pairs (0x26cdc0/c4 and
-// 0x26ce48/4c - the latter ADJACENT to GetLuck's fountain mask
-// 0x26ce40: a building-mask TABLE in .data, future data modeling).
-// BLOCKED on the STLport vendoring question (same wall as the
-// searchArray ctor): matching the static-bitset codegen needs the
-// era-correct STLport headers in-tree. Everything else is
-// transcribed and ready.
+// The 2026-08-06 decode note called this BLOCKED on STLport vendoring.
+// That premise is dead (P2.3): retail links VC6's own Dinkumware, and
+// every one of the four helper calls below matches a Dinkumware
+// <bitset> member exactly - 0x44c6e0 is `_Tidy(unsigned long)` (the
+// _Nw==0 store plus the 0x1ff _Trim), 0x44c680 is `set(size_t,bool)`,
+// 0x4cef80 is `operator[](size_t)` building the two-word `reference`,
+// 0x44c610 is `reference::operator=(bool)` with the `set` call
+// inlined. `test()` is inlined at 0x44b06b; the thrower at 0x434ad0 is
+// `_Xran`. The guard byte at 0x69385c bit 0 + the empty (one-byte
+// `ret` at 0x44a4c0) atexit thunk are VC6's FUNCTION-LOCAL static
+// pattern - and the whole block is the INLINE EXPANSION of the
+// accessor claimed at 0x44a460 above, which is why it does not appear
+// here as source.
+// Residual (88.0%): ONE `operator[]` short in that expansion. Retail
+// emits `call set(0,1)` plus FOUR complete
+// `operator[]`/`reference::operator=` call pairs; this compile emits
+// the `set` call and three complete pairs but folds the first
+// `operator[]` into the reference construction. The decision is
+// INLINE-BUDGET driven, not source driven - moving the set behind the
+// accessor took it from 79.4 to 86.5 with `_Tidy` and three pairs
+// dropping out of line on their own, and merely changing the tail
+// clamp spelling had already flipped `_Tidy` once. Tried and
+// rejected: keeping the static set lexically inside this function
+// (79.4); `bs.set(0)` for bit 0 instead of `bs[0] = true` (86.5 -
+// retail's first call is `set(0,1)` either way, but the `[0]` spelling
+// is what makes our budget spend its inline on the same construct
+// retail did); `#pragma inline_depth(1)` (no change - verified live
+// against the `(0)` control, which drops this to 49.7, and `(0)` is
+// unusable because retail inlines `test()` and all four `IsMember`
+// scans here); initialising morale with a ternary instead of `= 0`
+// plus an if (85.3).
+// SECOND residual: retail defers `push ebx` past the cursed-ground
+// early-out (only esi is saved on that path) where this compile saves
+// it in the prologue. Register-homing/shrink-wrap family, and it runs
+// the OTHER way in this same TU - the armyGroup(type,amount) ctor
+// shrink-wraps here and does not in retail.
+// THIRD residual, shared with GetLuck/GetArmyLuck/GetArmyMorale: the
+// [-3,3] clamp. Retail homes 3, morale and -3 into three stack temps
+// and selects between their ADDRESSES, which is <xutility>'s
+// REFERENCE-returning `_cpp_min`/`_cpp_max` (the _MIN/_MAX macros) and
+// cannot come from a ternary. That spelling was tried in all four
+// functions and scores strictly WORSE everywhere (GetMorale 79.4->75.7,
+// GetLuck 84.8->79.6, GetArmyMorale 72.9->45.7): our compile reuses the
+// stat's own memory home as the by-reference temp and then RELOADS it
+// for both comparisons, where retail keeps the stat in ebx and copies
+// it into a fresh temp. The blocker is the upstream register homing,
+// not the idiom - the ternary stays only as the closest available
+// spelling, and is NOT evidence about retail's source.
 VA(0x0044ae60, 0x29A)  // dc-bracket forced, dc 0x4f078
-int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground, unsigned char apply_limits)
+int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
+                         const hero* otherHero, const armyGroup* otherGroup,
+                         unsigned char on_cursed_ground,
+                         unsigned char group_alignments,
+                         unsigned char apply_limits)
 {
-    // @stub
+    if (on_cursed_ground)
+        return 0;
+    int morale = 0;
+    if (ownerHero)
+        morale = const_cast<hero*>(ownerHero)->GetMorale(otherHero, 0, 0);
+    unsigned char alignments[10];
+    int numAlignments = GetAlignments(alignments);
+    if (group_alignments) {
+        int grouped = 0;
+        for (int a = -1; a < 9; ++a) {
+            if (alignments[a + 1] > 0 && a != -1) {
+                if (ArmyGrpFn_0044A460().test(a))
+                    ++grouped;
+            }
+        }
+        if (grouped > 1)
+            numAlignments += 1 - grouped;
+    }
+    morale += 2 - numAlignments;
+    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (armies[i] == CREATURE_NONE)
+            continue;
+        if (akCreatureTypeTraits[armies[i]].attributes & CTA_UNDEAD) {
+            morale--;
+            break;
+        }
+    }
+    if (IsMember(CREATURE_ANGEL) || IsMember(CREATURE_ARCHANGEL))
+        morale++;
+    if (otherGroup
+        && (const_cast<armyGroup*>(otherGroup)->IsMember(CREATURE_BONE_DRAGON)
+            || const_cast<armyGroup*>(otherGroup)
+                   ->IsMember(CREATURE_GHOST_DRAGON)))
+        morale--;
+    if (ownerTown) {
+        if ((ownerTown->built[0] & gTavernMask[0])
+            | (ownerTown->built[1] & gTavernMask[1]))
+            morale++;
+        if (ownerTown->type == TOWN_CASTLE
+            && ((ownerTown->active[0] & gBrotherhoodOfTheSwordMask[0])
+                | (ownerTown->active[1] & gBrotherhoodOfTheSwordMask[1])))
+            morale += 2;
+    }
+    // The [-3,3] clamp is <xutility>'s REFERENCE-returning _cpp_min /
+    // _cpp_max (the _MIN/_MAX macros), not a ternary: retail homes 3,
+    // morale and -3 into three stack temps and then selects between
+    // their ADDRESSES (0x44b0ff..0x44b12a) - the signature of const&
+    // parameters. A ternary compiles to `mov eax,-3`.
+    if (apply_limits)
+        return morale < -3 ? -3 : (morale > 3 ? 3 : morale);
+    return morale;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\armygrp.cpp:1030
 // FULLY TRANSCRIBED 2026-08-06. SIX params (ret 0x18; the DC
