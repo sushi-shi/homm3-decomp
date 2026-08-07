@@ -260,6 +260,80 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — recruit reconstructed across two lanes; the JUMP-TABLE
+  LABEL CAP identified as a pipeline-level residual class.** Engine-wide
+  312 → 316 exact, 3.97% → **4.07%** executable matched (crossing 4%);
+  `recruit` 1/3 exact 6.34% → 5/10 exact **93.69%** fuzzy.
+  Lane 1 landed six previously-unlocated stubs — both `TRecruitWindow`
+  and `TRecruitQuickWindow` destructors plus their scalar deleting dtors
+  (all four exact on the FIRST compile) and the two `recruitUnit` ctors
+  at 97.98% / 96.67%. Lane 2 cleared both remaining blockers:
+  `recruitUnit::Update` (1,428 B) 0 → **90.84%** and
+  `siege_artifact_to_creature` 0 → **99.47%**.
+  **NEW RESIDUAL CLASS — jump-table label spelling, NOT fixable from
+  source.** `siege_artifact_to_creature`'s *code* is byte-identical; the
+  only delta is that VC6 emits one local label per case
+  (`$L47262…$L47265`) with a ZERO addend, while the delinker can only
+  name the enclosing function and carries the case offsets
+  (0x0f/0x15/0x1b/0x21) as addends. **This caps every jump-table-bearing
+  function just short of 100%** — `recruitUnit::Update` carries the same
+  table. Wants a pipeline decision (teach the delinker to emit per-case
+  local labels), not more spelling attempts.
+  **The `min()` block was proved, not guessed:** `std::min` does not
+  exist in this toolchain — VC6/Dinkumware spells it `std::_cpp_min`
+  (macro `_MIN`) in `<xutility>`. Retail's shape (two memory slots,
+  address-select, deref) needed
+  `long maxBuy = maxAvail; numberToBuy = std::_MIN<long>(numberToBuy, maxBuy);`
+  — the explicit `<long>` is what creates the `int→long` conversion
+  temporary at `[ebp-4]`, and VC6 parks `maxBuy` in the DEAD `slot`
+  parameter's home at `[ebp+0xc]`, exactly as retail does. **The
+  template-deduction failure (`'_Ty' is ambiguous`) was itself the
+  evidence** that the two operands differ in type.
+  **`recruitUnit`'s layout was byte-CONFIRMED, not adopted** from the
+  Ghidra lead: every offset the TU uses is proven by a named body (base
+  `baseManager` at 0x38 via all three ctors calling 0x44d530 then
+  storing vptr 0x640c70; 0x48 type … 0xb8 numberToBuy; size 0xbc), and
+  five DC-named fields with no local proof (0x38, 0x80, 0x94, 0xa0,
+  0xa8) were left as PADDING rather than fabricated. The lane also
+  contradicted the lead's own labels: 0x151560, which the HD map calls
+  plain `recruitUnit::recruitUnit`, is specifically the **town** ctor
+  (`ret 0xc`, calls `town::get_army`); 0x151350/0x151460 are the DC 10-
+  and 9-parameter ctors (`ret 0x28` / `ret 0x24`). This is the intended
+  standing for `evidence/ghidra-structs/` — leads, never claims.
+  **`playerData::resources[7]` at +0x9c** is byte-proven from two
+  UNRELATED TUs: `recruitUnit::Update` (0x550274) and
+  `TResourceDisplay::Update` (0x558f45), which prints
+  `[player + 4*id + 0x9c]` for the seven ids in the table at
+  0x641008..0x641024. Gold is index 6.
+  **Two inherited claims found wrong (tenth and eleventh consecutive
+  lanes).** `TResourceDisplay::Update` transcribed the DC three-arg
+  prototype but retail is `ret 8` — it reads the gate byte at `[ebp+8]`
+  and forwards the dword at `[ebp+0xc]`; the DC's `inMap` has no retail
+  home. FIXED. And `bVideoPaused` (0x69954c) is contradicted: its 275
+  image-wide references cluster on remote.obj's `CChatEdit`,
+  `type_AI_player::make_gift`, `combatManager::is_computer_action`,
+  `SaveGame` and the advManager turn machinery — it reads as a
+  network-game flag, and `Update`'s gate is a multiplayer test.
+  **Deliberately NOT renamed** — a 275-reference global belongs to its
+  owning lane; the call-site evidence is recorded instead.
+  Two retail switches genuinely DISAGREE and are transcribed as the
+  bytes read, with the asymmetry flagged in-source:
+  `siege_artifact_to_creature` maps artifact 5→0x93 and 6→0x94, while
+  the `SiegeMonsterToSiegeArtifact` table inlined into `Update` pairs
+  0x93→6 and 0x94→5.
+  **Process hazard, fourth occurrence this session:** merging a lane
+  resurrects superseded flat-name baseline rows, because git keeps
+  master's side of lines the lane correctly deleted under the rename
+  rule. The gate catches them as MISSING every time, and each was
+  verified to have a mangled successor before removal — but this is a
+  structural consequence of blessing by hand-edit, and is the case for
+  porting gruntz's `status update --accept-regressions`.
+  Also recorded: VC6 accepts an undeclared member-function DEFINITION
+  far enough to resolve early members, then silently loses member scope
+  for the rest of the body and reports C2065/C2100 at plausible-looking
+  later lines. `recruitUnit::Update` was simply missing from the class
+  declaration; the error cascade pointed everywhere but there.
+
 - **2026-08-08 — the hero/game include CYCLE BROKEN; `sizeof(hero)` landed
   with a third proof; INCLUDE-SET SENSITIVITY identified as a new residual
   class.** Engine-wide 309 → 312 exact, 3.95% → 3.97% executable matched;
