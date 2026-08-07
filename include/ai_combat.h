@@ -89,23 +89,33 @@ struct type_monster_data {
 };
 SIZE(type_monster_data, 0x48);
 
-// The monster roster is a std::vector<type_monster_data> living at
-// +0x04: three pointers, retail reading _M_start at +0x04 and
-// _M_finish at +0x08 and the ctor (0x423f08) zeroing all three. The
-// STLport machinery itself is the OPEN vendoring decision (P2.3), so
-// only the head is modeled here - enough for the inlined size /
-// operator[] retail actually emits.
+// The monster roster is a std::vector<type_monster_data>: three
+// pointers, retail reading _First at +0x04 and _Last at +0x08 and the
+// ctor (0x423f08) zeroing all three.
+//
+// P2.3 IS ANSWERED (2026-08-07): retail links VC6's own Dinkumware
+// <vector>, not STLport, and this very class is one of the proofs.
+// The copy ctor 0x004276c0 opens `mov al,[esi] / mov [edi],al` - a
+// ONE-BYTE copy at +0 before any pointer - then `size()` from
+// [esi+4]/[esi+8], `if (_N<0) _N=0`, `operator new(_N*72)`. That byte
+// is Dinkumware's EMPTY `allocator` SUBOBJECT, which sits at vector+0
+// and pushes _First/_Last/_End to +4/+8/+0xc; STLport's vector has no
+// such member. So the vector starts at type_AI_combat_data+0x00 (16
+// bytes, not 12 at +0x04), and `field_00` below is that subobject.
+// RE-MODELLING THIS CLASS AS A REAL std::vector<type_monster_data> IS
+// NOW REACHABLE - it is deliberately NOT done here, because it moves
+// the head of a class several exact bodies depend on. Flagged for a
+// supervised pass.
 struct type_monster_vector {
     type_monster_data* _M_start;
     type_monster_data* _M_finish;
     type_monster_data* _M_end_of_storage;
 
-    // The only STLport machinery any retail body actually emits: the
-    // destructor, inlined at both ends of AI_quick_combat (0x427462 /
+    // The only vector machinery any retail body actually emits inline:
+    // the destructor, at both ends of AI_quick_combat (0x427462 /
     // 0x427478) and AI_auto_combat as `operator delete(_M_start)`
     // followed by three zero stores. `operator delete` here is the
-    // 11-byte free-thunk at 0x60ab30. Modeling the head only keeps
-    // P2.3 (the STLport vendoring decision) open.
+    // 11-byte free-thunk at 0x60ab30.
     ~type_monster_vector()
     {
         ::operator delete(_M_start);

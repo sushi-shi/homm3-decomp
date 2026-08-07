@@ -41,8 +41,11 @@
 // materialises BOTH operands into stack temps and then selects between
 // their addresses - the signature of these templates, not of a
 // by-value helper - e.g. get_fastest_speed 0x4249a3..0x4249b3 and
-// get_spell_damage 0x423e7c..0x423e86. Declared file-locally so the TU
-// does not pull the STL surface in (P2.3 stays open).
+// get_spell_damage 0x423e7c..0x423e86. Declared file-locally rather
+// than via <xutility>. NOTE (2026-08-07, P2.3 answered): <xutility> is
+// now available and its real signature is `const _Ty&` for BOTH
+// parameters, where these copies take them BY VALUE - swapping to the
+// header is a live experiment, not a blocked one.
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 {
@@ -216,7 +219,7 @@ void type_AI_combat_data::check_wall_archery_penalty(const town* enemy_town)
         penalty_distance = 6;
     }
     if (my_hero) {
-        if (my_hero->noWallPenalty) {
+        if (my_hero->available_spells[SPELL_EARTHQUAKE]) {
             wall_penalty = 0;
             penalty_distance = 0;
         }
@@ -912,14 +915,16 @@ void create_skeletons(const hero* current_hero, const armyGroup* dead_army, army
 // loser's artifacts unless a 60%-Random surrender fired, claim the
 // town, adjust both armies, create_skeletons, and finally the INLINED
 // do_eagle_eye (dc 0x2bcd8).
-// BLOCKER: do_eagle_eye walks `hero[0x430 + spell]` for spell 0..0x45,
-// i.e. a 70-byte known-spell table spanning 0x430..0x475 - which
-// OVERLAPS the noWallPenalty byte this file already models at +0x43e
-// (byte-proven by check_wall_archery_penalty 0x42482b). One of the two
-// readings is wrong and the resolution is a supervised hero.h call.
-// The three secondary-skill slots it needs ARE consistent, and are now
-// named in hero.h: wisdom +0xd0, ballistics +0xd3, eagle eye +0xd4 -
-// exactly slots 7/10/11 of the 28-byte band at 0xc9.
+// The former hero-layout blocker is RESOLVED (2026-08-07): do_eagle_eye
+// walks `hero[0x430 + spell]` for spell 0..0x45 because +0x430 IS a
+// 70-entry per-spell byte table - hero::available_spells, byte-proven by
+// AddSpell 0x4d9330 writing the 0x3ea/0x430 pair and closed at +0x476 by
+// get_primary_skill_total. The old `noWallPenalty` reading of +0x43e was
+// the wrong side of it; check_wall_archery_penalty really reads
+// available_spells[SPELL_EARTHQUAKE], and this file now spells it that
+// way. The three secondary-skill slots do_aftermath needs are named in
+// hero.h: wisdom +0xd0, ballistics +0xd3, eagle eye +0xd4 - exactly
+// slots 7/10/11 of the 28-byte band at 0xc9.
 VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
 void type_AI_combat_data::do_aftermath(type_AI_combat_data& defender, const town* enemy_town)
 {
@@ -1051,7 +1056,12 @@ armyGroup* type_AI_combat_data::get_army()
 // E:\gamedcs\ai_combat.cpp:1356
 // LOCATED (hd-crossbuild + ida): the copy ctor - copies the byte at
 // +0 then reallocates and rep-movsd's the 72-byte elements.
-// STL-machinery body (the vector copy), stays stubbed with P2.3.
+// This body is the PROOF that retail is Dinkumware, not STLport: it
+// opens by copying ONE BYTE at +0 (the empty `allocator` subobject)
+// before touching _First/_Last, then `if (_N<0) _N=0` /
+// `operator new(_N*72)` - Dinkumware's vector copy ctor verbatim. No
+// longer P2.3-blocked; it waits on the type_AI_combat_data head
+// re-model flagged in ai_combat.h.
 VA(0x004276c0, 0x87)  // corroborates (hd-crossbuild + ida), dc 0x2c6b4
 void type_AI_combat_data::type_AI_combat_data(const type_AI_combat_data* __that)
 {
@@ -1097,7 +1107,10 @@ void type_AI_combat_data::~type_AI_combat_data()
 
 #endif  // @carcass
 
-#if 0  // @carcass  (STLport surface - P2.3 open)
+// The rows below are the DREAMCAST build's STLport instantiations and
+// stay DC_ONLY: retail links Dinkumware, so these particular symbols
+// have no retail counterpart at all (P2.3, answered 2026-08-07).
+#if 0  // @carcass  (Dreamcast STLport surface - DC_ONLY by construction)
 
 // ..\stlport\stl_vector.h:179
 DC_ONLY(0x2c720, 0x4)

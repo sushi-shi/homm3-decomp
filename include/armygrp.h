@@ -85,6 +85,10 @@ typedef int SpellID;
 // the DC SpellID enum corroborates every value (eSpellStoneGaze for
 // SPELL_STONE).
 enum ESpellId {
+    // DC eSpellEarthquake = 14. Read by check_wall_archery_penalty
+    // (0x42482b) out of hero::available_spells - a hero who can bring
+    // the town wall down is modeled as taking no wall archery penalty.
+    SPELL_EARTHQUAKE = 0xe,
     SPELL_ICE_BOLT = 0x10,
     SPELL_LIGHTNING_BOLT = 0x11,
     SPELL_CHAIN_LIGHTNING = 0x13,

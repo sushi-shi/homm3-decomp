@@ -374,6 +374,11 @@ gzio	@putLong@8	100.0000
 hero	?CreatureTypeCount@hero@@QAEHH@Z	100.0000
 hero	?GetNthSS@hero@@QAEHH@Z	100.0000
 hero	?HasArtifact@hero@@QAEEH@Z	100.0000
+hero	?any@?$bitset@$0JA@@std@@QBE_NXZ	100.0000
+hero	?begin@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000
+hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000
+hero	?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z	100.0000
+hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000
 hero	THeroScreenWindow_HeroMessageUpdate	0.0000
 hero	boat_GetStandSequence	0.0000
 hero	hero_AddSpell	0.0000

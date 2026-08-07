@@ -60,10 +60,39 @@ public:
     TArtifactSlot equipped[19];
     char pad_1c5[0xf];
     TArtifactSlot backpack[64];
-    char pad_3d4[0x6a];
-    // Set -> the hero takes no wall archery penalty at all
-    // (check_wall_archery_penalty 0x42482b clears both outputs).
-    unsigned char noWallPenalty;    // +0x43e
+    char pad_3d4[0x16];
+    // TWO per-spell byte tables, stride 1, 70 entries each, byte-proven
+    // by hero::AddSpell 0x4d9330 - all 26 bytes of it are
+    //     mov dl,1
+    //     mov [eax + ecx + 0x3ea], dl     ; in_spellbook[whichSpell] = 1
+    //     mov [eax + ecx + 0x430], dl     ; available_spells[whichSpell] = 1
+    // with ecx = this and eax = whichSpell, i.e. two bases exactly
+    // 0x46 = 70 apart. The 70-entry extent is pinned at BOTH ends:
+    //   - 0x3ea + 70 == 0x430, the second table's own base;
+    //   - 0x430 + 70 == 0x476, and 0x476 is where the four primary
+    //     skills start - hero::get_primary_skill_total 0x4e5960 runs a
+    //     four-iteration stride-1 signed-char loop from [ecx+0x476]
+    //     (clamped to 0..99), and 0x4e6120 adds artifact bonuses into
+    //     the same band. A whole-image scan of byte displacements in
+    //     0x3ea..0x47f matches: scattered 1-2-reference reads inside
+    //     the two tables (+0x3ea, +0x3f4, +0x404, +0x420, +0x430,
+    //     +0x436..+0x439, +0x43e, +0x453, +0x455, +0x461), then a jump
+    //     to 20-28 references at +0x476..+0x479.
+    // NAMES ARE DC-ATTESTED, not invented: evidence/dreamcast/members.csv
+    // carries `hero,969,in_spellbook`, `hero,1039,available_spells` and
+    // `hero,1109,stats` - the same 70/70 spacing as retail's
+    // 0x3ea/0x430/0x476, and the DC SpellID enum ends `kNumSpells,70`.
+    // Corroboration for the second table specifically:
+    // hero::can_summon_boat 0x4e5550 opens by testing
+    // byte [this+0x430] and then handles spell 0 = eSpellSummonBoat.
+    // The retail x86 offsets are byte-proven here; only the names come
+    // from the Dreamcast build.
+    enum { NUM_SPELLS = 70 };       // DC SpellID::kNumSpells
+    unsigned char in_spellbook[NUM_SPELLS];     // +0x3ea
+    unsigned char available_spells[NUM_SPELLS]; // +0x430
+    // +0x476 stats[4] (the four primary skills, DC name `stats`) is
+    // byte-proven by get_primary_skill_total but has no consumer in a
+    // compiled TU yet; it is documented here rather than modeled.
 
     unsigned char HasArtifact(int whichArtifact);
     // BYTE-width return, not int (corrected 2026-08-07): 212 of the 224
