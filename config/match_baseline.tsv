@@ -602,8 +602,9 @@ recruit	??1TRecruitWindow@@UAE@XZ	100.0000
 recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	100.0000
 recruit	??_GTRecruitWindow@@UAEPAXI@Z	100.0000
 recruit	?GetMonsterCost@@YIXHPAH@Z	82.6667
+recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000
-recruit	recruitUnit_Update	0.0000
+recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	99.4737
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000
 resource	??1resource@@UAE@XZ	100.0000
 resource	??_Gresource@@UAEPAXI@Z	100.0000

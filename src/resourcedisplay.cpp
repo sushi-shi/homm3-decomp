@@ -19,8 +19,16 @@ void TResourceDisplay::~TResourceDisplay()
 }
 
 // E:\gamedcs\resourcedisplay.cpp:150
+// ARITY CORRECTED 2026-08-08: the declarator carried the Dreamcast
+// THREE-parameter prototype (draw, update, inMap); retail takes TWO.
+// Proof: the body ends `ret 8`, reads the gate byte at [ebp+8] and
+// forwards the dword at [ebp+0xc] as the update flag of
+// TSubWindow::Draw(update, -0xffff, 0xffff) - there is no third slot.
+// Corroborated from the other side by recruitUnit::Close (0x550344),
+// which calls it with exactly two pushes (`push 0; push 1`). DC's
+// `inMap` has no retail home; the first two names are kept.
 VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
-void TResourceDisplay::Update(unsigned char draw, unsigned char update, unsigned char inMap)
+void TResourceDisplay::Update(unsigned char draw, unsigned char update)
 {
     // @stub
 }

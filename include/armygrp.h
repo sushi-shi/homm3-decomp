@@ -77,6 +77,15 @@ enum TCreatureType {
     // a live fireShieldRounds counter. NH3API spelling, Complete
     // numbering (0x34 is the plain Efreeti).
     CREATURE_EFREET_SULTAN = 0x35,
+    // The other two war machines, added 2026-08-08 for recruit.obj's
+    // siege_artifact_to_creature (0x550360), whose jump table returns
+    // 0x91..0x94 for the four siege artifacts in order. The numbering
+    // is corroborated by its own neighbours - 0x93/0x94 below were
+    // already byte-proven - and by the creature->artifact switch
+    // inlined into recruitUnit::Update, which maps 0x91->3 and
+    // 0x92->4. NH3API spellings, Complete numbering.
+    CREATURE_CATAPULT = 0x91,
+    CREATURE_BALLISTA = 0x92,
     CREATURE_FIRST_AID_TENT = 0x93,
     CREATURE_AMMO_CART = 0x94,
     CREATURE_ARROW_TOWER = 0x95,
