@@ -36,6 +36,43 @@ public:
         GLYPH_PIXEL_SOLID = 0xff
     };
 
+    // Dreamcast font::EJustify, verbatim. Retail corroborates the
+    // whole roster: DrawBoundedString strips bit 4 for vertical
+    // centering, bit 8 for bottom alignment, then switches the
+    // remainder on 0/1/2.
+    enum EJustify {
+        LEFT_JUSTIFIED = 0,
+        TOP_JUSTIFIED = 0,
+        CENTER_JUSTIFIED = 1,
+        RIGHT_JUSTIFIED = 2,
+        VERT_CENTER_JUSTIFIED = 4,
+        BOTTOM_JUSTIFIED = 8
+    };
+
+    // Dreamcast font::TColor, verbatim. Retail corroborates
+    // CUSTOM_COLOR: DrawBoundedString's cursor path tests it with
+    // `test ah,1` and clears it with `and ah,-2`.
+    enum TColor {
+        LowestColor = 1,
+        PRIMARY = 1,
+        PRIMARY_HIGHLIGHT = 2,
+        PRIMARY_DIM = 3,
+        WHITE = 4,
+        WHITE_HIGHLIGHT = 5,
+        WHITE_DIM = 6,
+        HEADING = 7,
+        HEADING_HIGHLIGHT = 8,
+        HEADING_DIM = 9,
+        WHITE_PLAYER = 10,
+        WHITE_PLAYER_HIGHLIGHT = 11,
+        WHITE_PLAYER_DIM = 12,
+        CHAT = 13,
+        HighestColor = 14,
+        CHAT_HIGHLIGHT = 14,
+        CHAT_DIM = 15,
+        CUSTOM_COLOR = 256
+    };
+
     unsigned char height;
     char pad_22[0x1a];
     TFontSpec spec[256];
@@ -47,6 +84,7 @@ public:
 
     virtual ~font();  // retail 0x4b5110
 
+    void DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int color_scheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
     void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int color_scheme, unsigned justification, int cursorPos);
     int GetCharacterWidth(unsigned char currChar);
     void SetPalette(const TPalette16* new_palette);

@@ -118,39 +118,156 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font:
 }
 
 // E:\gamedcs\font.cpp:254
-// Decode staged 2026-08-06 (head read to +0x65): bail on null str;
-// strlen; empty string + cursorPos != -1 draws a lone underscore -
-// color reshaped first (`test ah,1`: if (color & 0x100) color &=
-// ~0x100 else color += 9 - the highlight toggle) then
-// DrawCharacter-family call (0x5f, bitmap, x, y, color'). Non-empty:
-// justification bit 4 = vertical centering: clears the bit, height =
-// [this+0x21], lines = LineLength(str, boxWidth), total =
-// lines*height; if (total < boxHeight) yOff = (boxHeight - total)/2
-// (cdq/sar signed halving); else a second compare against 2*total
-// picks the same halving - re-derive the exact else nesting when
-// implementing. justification bit 8 = bottom-align: clears the bit,
-// yOff = boxHeight - LineLength(str, boxWidth)*height when positive.
-// Then bail if len <= 0. Per-line loop (+0x108..+0x2ff, fully read):
-// while (str[pos]) { if (yOff+height > boxHeight && yOff != 0)
-// return; lineStart = pos; skip leading braces; measure: width
-// starts 0 but a NEGATIVE first-glyph lead widens it (record dword 0
-// of (ch+5)*3, negated); walk chars (stop on 0/'\n'/width>boxWidth,
-// braces free, else += triple); at line end trim: a trailing glyph
-// with negative TRAIL ([this + 12*ch + 0x44], i.e. record dword 2 of
-// (ch)*3+17) extends width, and past-boxWidth lines re-wrap with the
-// LineLength-style space backtrack (candidate slot in [ebp-0x10]); a
-// space at the wrap point subtracts the ' ' triple ([this+0x1bc..
-// 0x1c4]). Horizontal justification dec-chain on the (bits-cleared)
-// justification: 0 -> xOff 0, 1 -> (boxWidth-width)/2 (cdq/sar), 2 ->
-// boxWidth-width. Call DrawStringExecute(str+lineStart, count,
-// bitmap, x+xOff, y+yOff, scheme, x, y, boxWidth, boxHeight,
-// cursorPos)-shaped (verify push order at +0x2af..), then yOff +=
-// height, pos advances past the line/wrap point, loop.
+#endif  // @carcass
+
+// The layout pass: split `str` into lines that fit boxWidth, place the
+// block vertically per the justification bits, and hand each line to
+// DrawStringExecute. Locals carry the Dreamcast names (limit,
+// lineStart, iOrigPixelWidth, okWidthIndex); `{` and `}` are the
+// in-string colour markers and are weightless everywhere.
+// Signed/unsigned note, byte-forced throughout: every BEARING TEST
+// indexes spec[] with the character zero-extended, while the bearing
+// VALUE that follows indexes with the plain (signed) char - `and
+// eax,0xff` against `movsx`, in three separate places.
+// Lever found here: NAMING the scanned character costs 10 points. A
+// `char c = str[pos];` local gets a stack home and a reload at every
+// use (VC6 homes char locals far more eagerly than ints); writing
+// `str[pos]` at each use lets the same load stay in `al` exactly as
+// retail does. 86.9% -> 96.3% for that change alone.
+// Residual (96.3%): register allocation only - the frame is the right
+// 0x18, every block, branch and immediate lines up, but retail spends
+// EDX as the spec[] index scratch (and pays a `mov edx,[ebp+8]` to
+// reload `str` afterwards) where we spend EDI and keep `str` live,
+// and that one choice swaps EAX<->EDX through the justification
+// switch and the DrawStringExecute push sequence. Tried and rejected,
+// all identical to the byte: nesting the null test as its own `if`;
+// `width -= lead` vs `width = -lead`; `iHeight*2 + currY` and
+// `boxHeight < iHeight*2 + currY`; `xOff + x` / `currY + y` argument
+// order; `c = str[++pos]` in the scan loop.
 VA(0x004b5490, 0x308)  // anchor-global, dc 0xa2108
-void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, font::TColor color_scheme, unsigned justification, int cursorPos)
+void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
+                             int y, int boxWidth, int boxHeight,
+                             int color_scheme, unsigned justification,
+                             int cursorPos)
 {
-    // @stub
+    int pos = 0;
+    int limit;
+    int currY;
+    int lineStart;
+    int okWidthIndex;
+    int iOrigPixelWidth;
+    int iHeight;
+    int width;
+
+    if (!str)
+        return;
+    currY = 0;
+    limit = strlen(str);
+    if (limit == 0) {
+        if (cursorPos != -1) {
+            if (!(color_scheme & CUSTOM_COLOR))
+                color_scheme += 9;
+            else
+                color_scheme &= ~CUSTOM_COLOR;
+            DrawCharacter('_', bitmap, x, y, color_scheme);
+        }
+        return;
+    }
+
+    if (justification & VERT_CENTER_JUSTIFIED) {
+        int total;
+
+        justification &= ~VERT_CENTER_JUSTIFIED;
+        iHeight = height;
+        total = LineLength(str, boxWidth) * iHeight;
+        if (total < boxHeight)
+            currY = (boxHeight - total) / 2;
+        else if (boxHeight < iHeight * 2)
+            currY = (boxHeight - iHeight) / 2;
+    }
+    if (justification & BOTTOM_JUSTIFIED) {
+        int total;
+
+        justification &= ~BOTTOM_JUSTIFIED;
+        total = LineLength(str, boxWidth) * height;
+        if (total < boxHeight)
+            currY = boxHeight - total;
+    }
+    if (limit <= 0)
+        return;
+
+    while (pos < limit) {
+        int k;
+        int xOff;
+
+        if (str[pos] == 0)
+            return;
+        iHeight = height;
+        if (currY + iHeight > boxHeight && currY != 0)
+            return;
+        width = 0;
+        lineStart = pos;
+        while (str[pos] == '{' || str[pos] == '}')
+            ++pos;
+        if (str[pos] != 0
+            && spec[static_cast<unsigned char>(str[pos])].field_0 < 0)
+            width = -spec[str[pos]].field_0;
+        while (str[pos] != 0 && str[pos] != '\n' && width <= boxWidth) {
+            if (str[pos] != '{' && str[pos] != '}')
+                width += GetCharacterWidth(str[pos]);
+            ++pos;
+        }
+        k = pos - 1;
+        while ((str[k] == '{' || str[k] == '}') && k > lineStart)
+            --k;
+        if (pos > 0 && spec[static_cast<unsigned char>(str[k])].field_8 < 0)
+            width -= spec[static_cast<unsigned char>(str[k])].field_8;
+        if (width > boxWidth) {
+            iOrigPixelWidth = width;
+            okWidthIndex = 0;
+            if (spec[static_cast<unsigned char>(str[k])].field_8 < 0)
+                width += spec[str[k]].field_8;
+            pos = k;
+            while (str[pos] != ' ') {
+                if (pos < lineStart)
+                    break;
+                if (str[pos] != '{' && str[pos] != '}') {
+                    width -= GetCharacterWidth(str[pos]);
+                    if (iHeight * 2 + currY > boxHeight && width < boxWidth)
+                        break;
+                    if (okWidthIndex == 0 && width < boxWidth)
+                        okWidthIndex = pos;
+                }
+                --pos;
+            }
+            if (pos <= lineStart) {
+                pos = okWidthIndex;
+                width = iOrigPixelWidth;
+            }
+            if (str[pos] == ' ')
+                width -= GetCharacterWidth(' ');
+        }
+        xOff = 0;
+        switch (justification) {
+        case LEFT_JUSTIFIED:
+            xOff = 0;
+            break;
+        case CENTER_JUSTIFIED:
+            xOff = (boxWidth - width) / 2;
+            break;
+        case RIGHT_JUSTIFIED:
+            xOff = boxWidth - width;
+            break;
+        }
+        DrawStringExecute(str + lineStart, pos - lineStart, bitmap, x + xOff,
+                          y + currY, color_scheme, x, y, boxWidth, boxHeight,
+                          cursorPos);
+        currY += height;
+        ++pos;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\font.cpp:413
 

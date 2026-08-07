@@ -283,6 +283,7 @@ findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000
 findpath	searchArray_FindCombatPath	0.0000
 findpath	searchArray_SeedCombatPosition	0.0000
 font	??1font@@UAE@XZ	96.6333
+font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	96.3269
 font	?DrawCharacter@font@@QAEXHPAVBitmap16Bit@@HHH@Z	70.6230
 font	?GetCharacterWidth@font@@QAEHE@Z	100.0000
 font	?LineLength@font@@QAEHPBDH@Z	82.2165
@@ -292,7 +293,6 @@ font	?LongestWrappedLineWidth@font@@QAEHPBDH@Z	82.5481
 font	?SetPalette@font@@QAEXPBVTPalette16@@@Z	100.0000
 font	?get_string_width@font@@QAEJPBD@Z	100.0000
 font	?longest_word_length@font@@QAEHPBD@Z	80.1000
-font	font_DrawBoundedString	0.0000
 game	?GetWorldMapData@game@@QAEPAVNewfullMap@@XZ	100.0000
 game	?HasMobileHero@playerData@@QAEEXZ	100.0000
 game	ComputeUALoc	0.0000
@@ -454,7 +454,6 @@ hero	hero_reset_artifacts	0.0000
 hero	hero_save	0.0000
 hero	hero_update_spell_list	0.0000
 hero	mark_spells	0.0000
-hero	std_bitset_48_unsigned_std_bitset_48_unsigned_long_reference_ope	0.0000
 hero	type_artifact__default_constructor_closure	0.0000
 hero	type_artifact_get_rollover_text	0.0000
 hero	type_obscuring_object_get_obscured_town	0.0000
@@ -496,14 +495,14 @@ initialize	?create_included_mask@@YIXPBHPA_J@Z	93.8667
 initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 initialize	?initialize_game_data@@YIXXZ	100.0000
 inputmgr	??0inputManager@@QAE@XZ	86.5667
+inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	95.1257
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000
 inputmgr	?Flush@inputManager@@QAEXXZ	100.0000
+inputmgr	?ForceMouseMove@inputManager@@QAEXXZ	100.0000
 inputmgr	?Main@inputManager@@UAEHPAVmessage@@@Z	100.0000
 inputmgr	?Open@inputManager@@UAEHH@Z	42.3684
 inputmgr	KeyboardMessageHandler	0.0000
 inputmgr	MouseMessageHandler	0.0000
-inputmgr	inputManager_AsciiConvert	0.0000
-inputmgr	inputManager_ForceMouseMove	0.0000
 inputmgr	inputManager_MakeScanCodeTable	0.0000
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000
@@ -693,8 +692,10 @@ winfile	?SeekCur@File@@UAEKH@Z	100.0000
 winfile	?SeekEnd@File@@UAEKXZ	100.0000
 winfile	?Write@File@@UAEKPAXK@Z	100.0000
 winmgr	?BroadcastMessage@heroWindowManager@@QAEHHHHH@Z	100.0000
+winmgr	?DoDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	100.0000
+winmgr	?DoDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@Z	100.0000
 winmgr	?DoQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000
-winmgr	?FadeScreen@heroWindowManager@@QAEXHHE@Z	99.8718
+winmgr	?FadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000
 winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000
 zutil	@zcalloc@12	100.0000
 zutil	@zcfree@8	100.0000

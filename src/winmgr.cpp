@@ -6,6 +6,7 @@
 #include "message.h"
 #include "mousemgr.h"
 #include "window.h"
+#include "widget.h"
 #include "inputmgr.h"
 #include "kbwin.h"
 #include "soundmgr.h"
@@ -106,24 +107,206 @@ void heroWindowManager::RemoveWindow(heroWindow* killWindow)
     lastActive = activeWindow ? activeWindow : tailWindow;
 }
 
-#if 0  // @carcass
-
-
 // E:\gamedcs\winmgr.cpp:461
-DC_ONLY(0x19ad18, 0x1DC)
-int heroWindowManager::DoDialog(heroWindow* dialogWindow, int (*)()* dialogFunction, int bFadeIn)
+// FOUR try levels, read off the unwind funclets the carve split out at
+// 0x602735 / 0x60274e / 0x60276d / 0x602780 - each re-runs one cleanup
+// and then tail-calls _CxxThrowException(0,0), a RETHROW. Innermost
+// first they are: RemoveWindow, the SleepAllWidgets(0) walk,
+// gbInDialog = 0, and the nest-count decrement, which fixes both the
+// nesting and where each try opens (the [ebp-4] walk 0/1/2/3 lands
+// exactly on those four boundaries).
+VA(0x00602520, 0x280)  // anchor-global, dc 0x19ad18
+int heroWindowManager::DoDialog(heroWindow* dialogWindow,
+                                TDialogHandler dialogFunction, int bFadeIn)
 {
-    // @stub
+    heroWindow* w;
+    message msg;
+    int endFlag;
+
+    if (iDialogNestCount++ == 0)
+        SetNoDialogMenus(0);
+    try {
+        gbInDialog = 1;
+        try {
+            for (w = tailWindow; w; w = w->prevWindow)
+                w->SleepAllWidgets(1);
+            try {
+                lastHover = -1;
+                if (dialogWindow)
+                    AddWindow(dialogWindow, -1, 1);
+                try {
+                    if (bFadeIn)
+                        gpWindowManager->FadeScreen(0, 4, 0);
+                    gpInputManager->Flush();
+                    dialogReturn = -1;
+                    endFlag = 0;
+                    msg.id = 0;
+                    msg.codeX = 0;
+                    msg.codeY = 0;
+                    msg.qualifier = 0;
+                    msg.mouseX = 0;
+                    msg.mouseY = 0;
+                    msg.extra = 0;
+                    msg.window = 0;
+                    while (!endFlag) {
+                        PollSound();
+                        Process1WindowsMessage();
+                        msg = gpInputManager->GetEvent();
+                        msg.window = dialogWindow;
+                        gpMouseManager->Main(msg);
+                        if (dialogWindow
+                            && (msg.id != MESSAGE_MOUSE_MOVE
+                                || gbSendMouseMoveMessages)) {
+                            int result = dialogWindow->BroadcastMessage(&msg);
+                            if (result == MESSAGE_DISPATCH_CONSUME)
+                                continue;
+                            if (result == MESSAGE_DISPATCH_FORWARD
+                                && msg.id == MESSAGE_WIDGET
+                                && msg.codeX == widget::WIDGET_END_DIALOG) {
+                                dialogReturn = msg.codeY;
+                                endFlag = 1;
+                            }
+                        }
+                        msg.window = dialogWindow;
+                        if (dialogFunction(msg) == MESSAGE_DISPATCH_FORWARD
+                            && msg.id == MESSAGE_WIDGET
+                            && msg.codeX == widget::WIDGET_END_DIALOG)
+                            endFlag = 1;
+                    }
+                } catch (...) {
+                    if (dialogWindow)
+                        RemoveWindow(dialogWindow);
+                    throw;
+                }
+                if (dialogWindow)
+                    RemoveWindow(dialogWindow);
+            } catch (...) {
+                for (w = headWindow; w; w = w->nextWindow)
+                    w->SleepAllWidgets(0);
+                throw;
+            }
+            for (w = headWindow; w; w = w->nextWindow)
+                w->SleepAllWidgets(0);
+        } catch (...) {
+            gbInDialog = 0;
+            throw;
+        }
+        gbInDialog = 0;
+    } catch (...) {
+        if (--iDialogNestCount == 0)
+            SetNoDialogMenus(1);
+        throw;
+    }
+    if (--iDialogNestCount == 0)
+        SetNoDialogMenus(1);
+    return 0;
 }
 
 // E:\gamedcs\winmgr.cpp:645
-DC_ONLY(0x19aef4, 0x208)
-int heroWindowManager::DoDialogDraw(heroWindow* dialogWindow, int (*)()* dialogFunction, int (*)()* dialogDrawFunction, int bFadeIn)
+// DoDialog's sibling, same four try levels (funclets 0x6029cf /
+// 0x6029e8 / 0x602a07 / 0x602a1a). Four deliberate divergences from
+// DoDialog, all byte-forced: the draw callback runs once before the
+// fade; the window's CONSUME verdict does NOT short-circuit the
+// handler; the level-2 body flushes the input queue after RemoveWindow;
+// and the handler's verdict is a SWITCH, not an if/else chain - the
+// chain lays the WIDGET_END_DIALOG arm out first and falls into it,
+// while retail sinks it past the redraw arm behind a forward `je`,
+// which is exactly VC6's two-case switch layout.
+VA(0x006027a0, 0x29A)  // anchor-global, dc 0x19aef4
+int heroWindowManager::DoDialogDraw(heroWindow* dialogWindow,
+                                    TDialogHandler dialogFunction,
+                                    TDialogHandler dialogDrawFunction,
+                                    int bFadeIn)
 {
-    // @stub
-}
+    heroWindow* w;
+    message msg;
+    int endFlag;
 
-#endif  // @carcass
+    if (iDialogNestCount++ == 0)
+        SetNoDialogMenus(0);
+    try {
+        gbInDialog = 1;
+        try {
+            for (w = tailWindow; w; w = w->prevWindow)
+                w->SleepAllWidgets(1);
+            try {
+                lastHover = -1;
+                if (dialogWindow)
+                    AddWindow(dialogWindow, -1, 1);
+                try {
+                    endFlag = 0;
+                    msg.id = 0;
+                    msg.codeX = 0;
+                    msg.codeY = 0;
+                    msg.qualifier = 0;
+                    msg.mouseX = 0;
+                    msg.mouseY = 0;
+                    msg.extra = 0;
+                    msg.window = 0;
+                    dialogDrawFunction(msg);
+                    if (bFadeIn)
+                        gpWindowManager->FadeScreen(0, 4, 0);
+                    gpInputManager->Flush();
+                    dialogReturn = -1;
+                    while (!endFlag) {
+                        PollSound();
+                        Process1WindowsMessage();
+                        msg = gpInputManager->GetEvent();
+                        msg.window = dialogWindow;
+                        gpMouseManager->Main(msg);
+                        if (dialogWindow
+                            && (msg.id != MESSAGE_MOUSE_MOVE
+                                || gbSendMouseMoveMessages)) {
+                            if (dialogWindow->BroadcastMessage(&msg)
+                                    == MESSAGE_DISPATCH_FORWARD
+                                && msg.id == MESSAGE_WIDGET
+                                && msg.codeX == widget::WIDGET_END_DIALOG) {
+                                dialogReturn = msg.codeY;
+                                endFlag = 1;
+                            }
+                        }
+                        msg.window = dialogWindow;
+                        if (dialogFunction(msg) == MESSAGE_DISPATCH_FORWARD
+                            && msg.id == MESSAGE_WIDGET) {
+                            switch (msg.codeX) {
+                            case widget::WIDGET_END_DIALOG:
+                                endFlag = 1;
+                                break;
+                            case widget::WIDGET_RETURN_32:
+                                dialogDrawFunction(msg);
+                                break;
+                            }
+                        }
+                    }
+                } catch (...) {
+                    if (dialogWindow)
+                        RemoveWindow(dialogWindow);
+                    throw;
+                }
+                if (dialogWindow)
+                    RemoveWindow(dialogWindow);
+                gpInputManager->Flush();
+            } catch (...) {
+                for (w = headWindow; w; w = w->nextWindow)
+                    w->SleepAllWidgets(0);
+                throw;
+            }
+            for (w = headWindow; w; w = w->nextWindow)
+                w->SleepAllWidgets(0);
+        } catch (...) {
+            gbInDialog = 0;
+            throw;
+        }
+        gbInDialog = 0;
+    } catch (...) {
+        if (--iDialogNestCount == 0)
+            SetNoDialogMenus(1);
+        throw;
+    }
+    if (--iDialogNestCount == 0)
+        SetNoDialogMenus(1);
+    return 0;
+}
 
 // E:\gamedcs\winmgr.cpp:795
 // EH STRUCTURE DECODED 2026-08-07 from the unwind funclets the carve
@@ -232,7 +415,6 @@ void heroWindowManager::BlitToScreenWithPointerX(int x, int y, int w, int h, int
 #endif  // @carcass
 
 // E:\gamedcs\winmgr.cpp:1007
-// Residual (99.9%): a single branch-layout byte in the else arm.
 VA(0x00602c50, 0x63)  // anchor-global, dc 0x19b428
 void heroWindowManager::FadeScreen(int inOut, int speed, unsigned char expect_fadein)
 {
@@ -244,10 +426,12 @@ void heroWindowManager::FadeScreen(int inOut, int speed, unsigned char expect_fa
             isWaitingForFadeIn = 1;
     } else {
         FadeFromBlack(speed);
-        if (isWaitingForFadeIn) {
+        // The clear is OUTSIDE the guard: retail's `je` lands ON the
+        // `mov byte [esi+0x48], 0`, not past it (the one byte that kept
+        // this at 99.87%).
+        if (isWaitingForFadeIn)
             gpMouseManager->ShowPointer(0);
-            isWaitingForFadeIn = 0;
-        }
+        isWaitingForFadeIn = 0;
     }
 }
 

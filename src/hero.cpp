@@ -1032,7 +1032,16 @@ void* THeroScreenWindow::`scalar deleting destructor'(unsigned __flags)
 }
 
 // ..\stlport\stl_bitset.h:379
-VA(0x004e6780, 0x20)  // linkorder, dc 0xd5a04
+// CLAIM WITHDRAWN 2026-08-07 - MISATTRIBUTION (cinit excluded class).
+// 0x4e6780 is not an STL body at all: its entire 32 bytes are the
+// guard-byte/atexit prologue of a file-scope initializer -
+//   mov cl,[0x6abaa0]; mov al,1; test al,cl; jne +8; or cl,al;
+//   mov [0x6abaa0],cl; push <vslot>; call _atexit; pop ecx; ret
+// - the exact pattern the match skill lists as never-claimable, and the
+// same block that opens herodefs' run 0x20 bytes before its first
+// initializer. The real reference::operator= is DC 60 B, an STLport
+// header inline with no out-of-line retail body.
+DC_ONLY(0xd5a04, 0x3C)
 std::bitset<48,unsigned* std::bitset<48,unsigned long>::reference::operator=(unsigned char __x)
 {
     // @stub

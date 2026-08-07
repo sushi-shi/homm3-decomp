@@ -260,6 +260,68 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-07 — the va-claims backlog DRAINED (9/9 were bugs, not
+  debt); winmgr CLOSED; the try/catch lever proven twice more.**
+  Engine-wide 273 → 277 exact, 3.45% → 3.59% executable matched.
+  **Part 1 — every one of the nine remaining CLASS rows in
+  `config/va-claims-baseline.tsv` was a real claim misattribution.
+  Zero were legitimately-filed debt.** The backlog is now ONE row (the
+  kbwin `GameTime::Get` entry, correctly filed: a real function whose
+  whole body is `jmp [__imp__timeGetTime]`, which the universe
+  classifier can only read as an import thunk). Two shapes, both the
+  excluded class the skill names verbatim: 0x4e6d60 and 0x4e6780 are
+  32 B guard-byte/atexit prologues (`mov cl,[0x6abaa0]; mov al,1; test
+  al,cl; jne+8; or cl,al; …; call _atexit`); 0x4b4420 and herodefs'
+  six are members of enumerated ten-block runs — the identical
+  `bitset<10>` loop differing only in the trailing
+  `[bss] = (bits & MASK) << N`, with MASK/N stepping 0x3ff/0, 0x1ff/1,
+  0xff/2, 0x7f/3, 0x3f/4, 0x1f/5, 0xf/6, 7/7, 3/8, 1/9 — ten per TU,
+  the `terrain.h:70..79` `$E4xx` statics, corroborated by inputmgr.obj's
+  DC roster printing the run by name. Size plausibility independently
+  condemns six (ratios 0.12, 0.23, 0.235, 3.96, 4.0, 23.75, 23.75 —
+  all outside the 0.3–2.5× band). Where the displaced functions went:
+  the three `Initialize*Traits` are DC `static` with one call site each,
+  so /Ob2 ate them (DC caller+callee 382/536/556 vs retail Table sizes
+  374/482/456 = 0.98/0.90/0.82, one tight cluster, where each Table
+  alone would be 3.0–4.2×); the four `TAutoStrPtr` methods are
+  8/24/4/4-byte anonymous-namespace accessors, inlined away.
+  `army::ValidFlight` (DC 228 B) has no located slot, so fly.obj is now
+  unattributed — deliberately NOT re-anchored on guesswork.
+  **Part 2 — `winmgr` is CLOSED, 6/6 at 100.00%.** `FadeScreen`
+  99.87 → 100% (retail's `je` lands ON `isWaitingForFadeIn = 0`, which
+  is outside the guard); `DoDialog` exact on the FIRST build at the
+  merged 640 B, four try levels read straight off the funclets, with
+  the homm2 buka twin supplying statement order and the DC-confirmed
+  names `gbInDialog`/`gbSendMouseMoveMessages`; `DoDialogDraw` exact at
+  666 B once the handler's verdict was spelled as a **two-case
+  `switch`**, not an if/else chain (the chain falls into the
+  `WIDGET_END_DIALOG` arm; retail sinks it past the redraw arm behind a
+  forward `je`). **Second and third carve boundary corrections** to
+  `config/retail-functions.tsv`, same self-validating standard:
+  0x202520 533 → 640 and 0x2027a0 559 → 666, deleting eight split
+  funclet rows (11,940 → 11,932). Extra corroboration beyond the
+  byte-exact compiles: 533+25+31+19+32 = 640 lands exactly on
+  DoDialogDraw's entry with no padding. Value 0x20 in the widget domain
+  has no DC name and was added as `WIDGET_RETURN_32`, an explicit
+  **ordinal placeholder flagged as unattested** rather than an invented
+  semantic name.
+  **Part 3:** `font::DrawBoundedString` 0 → 96.33% (unit 53.3 → 90.4%),
+  `inputManager::ForceMouseMove` 0 → 100% first build,
+  `inputManager::AsciiConvert` 0 → 95.13% (unit 15.2 → 31.5%).
+  **New lever: naming the scanned character costs 10 points** —
+  `char c = str[pos]` gets a stack home and a reload at every use;
+  writing `str[pos]` at each use keeps it in `al` like retail (86.9 →
+  96.3 from that change alone). Layout correction proven here:
+  `inputManager::scanCodeTable` is **128 shorts, not 256 bytes**
+  (`[ecx + 2*codeX + 0x848]`, `movsx word` for the F-key band).
+  **OPEN — hero.cpp's tail order-map looks unsound beyond the withdrawn
+  row** and wants an audit lane: 0x4e6500 (434 B) is claimed as
+  `SCampaign::GetExpCap` (DC 32 B, ratio 13.6×); 0x4e66f0 (96 B) is
+  claimed as `type_artifact::'default constructor closure'` (DC 24 B)
+  but its body is `bitset<70>::set(pos,bool)` returning `this` with
+  `ret 8`; 0x4e6750 is claimed as a scalar deleting dtor but contains
+  no delete and no vcall. All three left alone.
+
 - **2026-08-07 — small-TU sweep: sample CLOSED, the `_noeh` profile
   RETIRED, and the va-claims backlog found to be MASKING real
   misattributions.** Engine-wide 268 → 273 exact, 3.41% → 3.45%

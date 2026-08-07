@@ -19,7 +19,20 @@ unsigned char army::find_flyer_attack_cell(int target)
 }
 
 // E:\gamedcs\fly.cpp:76
-VA(0x004b4420, 0x5F)  // anchor-bracket, dc 0xa1430
+// CLAIM WITHDRAWN 2026-08-07 - MISATTRIBUTION (cinit excluded class).
+// 0x4b4420 is the FOURTH member of the ten-block file-scope initializer
+// run at 0x4b42f0..0x4b46bf (sizes 89, 96, 97, 95 x7), itself preceded
+// by the 32-byte guard-byte/atexit block at 0x4b42d0. Every member is
+// the same 95-byte body - a ten-iteration std::bitset<10> set loop -
+// differing only in the trailing `[bss] = (bits & MASK) << N`, with
+// MASK/N stepping 0x7f/3, 0x3f/4, ... across the run. That body occurs
+// 900 times image-wide, exactly ten per TU, and the DC roster names the
+// run as ten `$E4xx` STATIC rows from E:\gamedcs\terrain.h:70..79.
+// Same class as the withdrawn exec 0x4b0660 / findpath 0x4b1090.
+// The real army::ValidFlight is DC 228 B and has no located retail slot
+// yet - fly.obj's retail bracket is unattributed now that its only
+// claim is gone. Do not re-anchor it inside the initializer run.
+DC_ONLY(0xa1430, 0xE4)
 unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest)
 {
     // @stub

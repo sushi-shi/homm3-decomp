@@ -13,6 +13,17 @@
 # extent is 392 B (0x602a40..0x602bc8). Proof: the VC6 compile of the
 # reconstructed body emits the same three blocks as local labels inside
 # one symbol, byte-for-byte. 11940 rows since.
+# BOUNDARY CORRECTION 2026-08-07 (second, same class): the four EH
+# unwind funclets after heroWindowManager::DoDialog (0x202735/25,
+# 0x20274e/31, 0x20276d/19, 0x202780/32) fold into 0x202520, true extent
+# 640 B (0x602520..0x6027a0); the four after DoDialogDraw (0x2029cf/25,
+# 0x2029e8/31, 0x202a07/19, 0x202a1a/32) fold into 0x2027a0, true extent
+# 666 B (0x6027a0..0x602a3a). Same self-validating proof as DoQuickView:
+# the VC6 compile of each reconstructed body emits its four blocks as
+# local labels inside one symbol and both functions are byte-exact at
+# the merged size. Corroboration: the merged extents abut exactly -
+# 533+25+31+19+32 = 640 lands on DoDialogDraw's entry with no padding.
+# 11932 rows since.
 rva	size
 0x1000	89
 0x1060	96
@@ -5785,16 +5796,8 @@ rva	size
 0x202370	59
 0x2023b0	231
 0x2024a0	120
-0x202520	533
-0x202735	25
-0x20274e	31
-0x20276d	19
-0x202780	32
-0x2027a0	559
-0x2029cf	25
-0x2029e8	31
-0x202a07	19
-0x202a1a	32
+0x202520	640
+0x2027a0	666
 0x202a40	392
 0x202bd0	124
 0x202c50	99

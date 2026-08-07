@@ -25,50 +25,82 @@ unsigned char InitializeSSkillTraitsTable()
     // @stub
 }
 
+// ----------------------------------------------------------------------
+// CLAIMS WITHDRAWN 2026-08-07 - MISATTRIBUTION (cinit excluded class).
+// The seven claims below had been order-mapped onto herodefs.obj's
+// file-scope initializer block, which occupies 0x4e6d60..0x4e714f:
+//   0x4e6d60  32 B  guard byte 0x6abaa0 + push <vslot> + call _atexit
+//   0x4e6d80  89 B  \
+//   0x4e6de0  96 B   |
+//   0x4e6e40  97 B   |  ten identical bitset<10> set loops, distinguished
+//   0x4e6eb0  95 B   |  only by the trailing `[bss] = (bits & MASK) << N`
+//   0x4e6f10  95 B   |  with MASK/N stepping 0x3ff/0, 0x1ff/1, 0xff/2,
+//   0x4e6f70  95 B   |  0x7f/3, 0x3f/4, 0x1f/5, 0xf/6, 7/7, 3/8, 1/9
+//   0x4e6fd0  95 B   |
+//   0x4e7030  95 B   |
+//   0x4e7090  95 B   |
+//   0x4e70f0  95 B  /
+// That is the run the DC roster names as ten `$E4xx` STATIC rows from
+// E:\gamedcs\terrain.h:70..79 - per-TU file-scope dynamic initializers,
+// 900 occurrences image-wide, exactly ten per TU. Identical class to the
+// withdrawn exec 0x4b0660, findpath 0x4b1090 and fly 0x4b4420.
+//
+// Where the seven really went. The three Initialize*Traits rows are
+// DC `static` with exactly one call site each - their Table function -
+// so /Ob2 single-call-site inlining consumes them and no out-of-line
+// retail body exists. The arithmetic corroborates: DC caller+callee
+// 114+268=382 / 114+422=536 / 152+404=556 against retail's Table sizes
+// 374 / 482 / 456 gives 0.98 / 0.90 / 0.82, one tight cluster inside the
+// SH4->x86 band, where each Table taken alone would be 3.0-4.2x.
+// The four TAutoStrPtr methods are anonymous-namespace accessors of
+// DC size 8 / 24 / 4 / 4 bytes; mapping any of them onto a 95-byte body
+// is 4x to 24x, far outside the band. They inline away entirely.
+// ----------------------------------------------------------------------
+
 // E:\gamedcs\herodefs.cpp:409
-VA(0x004e6d60, 0x20)  // linkorder, dc 0xd5bc0
+DC_ONLY(0xd5bc0, 0x10C)
 void InitializeHeroTraits(int id, const std::vector<char* resource)
 {
     // @stub
 }
 
 // E:\gamedcs\herodefs.cpp:441
-VA(0x004e6de0, 0x60)  // linkorder, dc 0xd5d28
+DC_ONLY(0xd5d28, 0x1A6)
 void InitializeHeroClassTraits(int id, const std::vector<char* resource)
 {
     // @stub
 }
 
 // E:\gamedcs\herodefs.cpp:489
-VA(0x004e6eb0, 0x5F)  // linkorder, dc 0xd5ee8
+DC_ONLY(0xd5ee8, 0x194)
 void InitializeSSkillTraits(int id, const std::vector<char* resource)
 {
     // @stub
 }
 
 // E:\gamedcs\herodefs.cpp:391
-VA(0x004e6fd0, 0x5F)  // linkorder, dc 0xd60d4
+DC_ONLY(0xd60d4, 0x8)
 void `anonymous namespace'::TAutoStrPtr::TAutoStrPtr()
 {
     // @stub
 }
 
 // E:\gamedcs\herodefs.cpp:394
-VA(0x004e7030, 0x5F)  // linkorder, dc 0xd60dc
+DC_ONLY(0xd60dc, 0x18)
 void `anonymous namespace'::TAutoStrPtr::~TAutoStrPtr()
 {
     // @stub
 }
 
 // E:\gamedcs\herodefs.cpp:396
-VA(0x004e7090, 0x5F)  // linkorder, dc 0xd60f4
+DC_ONLY(0xd60f4, 0x4)
 void `anonymous namespace'::TAutoStrPtr::set(char* pStr)
 {
     // @stub
 }
 
 // E:\gamedcs\herodefs.cpp:398
-VA(0x004e70f0, 0x5F)  // linkorder, dc 0xd60f8
+DC_ONLY(0xd60f8, 0x4)
 char* `anonymous namespace'::TAutoStrPtr::get()
 {
     // @stub
