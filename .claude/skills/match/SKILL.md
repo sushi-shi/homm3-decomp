@@ -37,7 +37,13 @@ MISSING forever.
    precedent). cinit-pattern rows (guard byte 0x6abaa0 / atexit / ~95B
    ten-iteration initializers) and STL COMDAT tails are excluded class - never
    claim them. DC size columns NEVER transfer to claims; sizes come from the
-   carve only.
+   carve only. **`DC_ONLY(off, cb)` = "evidenced only in the Dreamcast build"
+   (va.h:31), NOT "no retail body exists".** Many DC_ONLY rows have real retail
+   bodies merely not located yet; promoting one to `VA` on body evidence is
+   ORDINARY locate work needing no special approval. The reverse also holds: a
+   claim found sitting on an excluded class is WITHDRAWN back to DC_ONLY.
+   Arity (`ret N` vs DC parameter count) is the highest-yield screen there is -
+   eight consecutive lanes found misattributed claims, most of them this way.
 2. **Claim.** `VA(0x004xxxxx, 0xSIZE)  // <evidence-tag>, dc 0x<off>` above the
    declarator; absolute VAs; sizes carve-exact; strictly increasing per file
    (the ORDER gate); keep `// @stub` bodies for located-not-reconstructed.
@@ -83,6 +89,15 @@ MISSING forever.
   retail source used `goto`; while/for(;;)+break get rotated (duplicated
   condition) AND win the import an LICM hoist
   (kbwin::Process1WindowsMessage). VC6 does not rotate or LICM goto flow.
+- **The /Ob2 budget cuts BOTH ways - a local win can cost exact functions
+  elsewhere.** Factoring duplicated arms into a shared helper made
+  soundmgr's ConvertVolume score better IN ISOLATION but shrank it under
+  VC6's inline budget, so it got inlined into MemorySample and ModifySample
+  where retail CALLS it - knocking ModifySample off exact (100% -> 57.3%).
+  Writing both arms longhand, as retail does, pushed it back over budget and
+  restored both callers. `--fast` does not surface this; only the per-function
+  scores of the CALLERS do. After any size-changing edit to a callee, check
+  its callers' scores, not just its own. The prettier spelling is often wrong.
 - **/Ob2 single-call-site inlining**: statics AND extern functions with one
   call site inline REGARDLESS OF SIZE (AppInit→WinMain ~300B; AppCommand→
   AppWndProc is our uncracked over-inline residual). Unconditional out-of-line
@@ -136,6 +151,17 @@ corroborate); the DC roster exhausted — each row located, proven inlined-away
 (/Ob2 emission rules), proven retail-dropped (no slot fits), or proven
 DC-port-only. Absent methods are documented, never forced. The claims-only
 scoreboard is NOT closure evidence (the border illusion).
+
+## Running in a worktree lane
+
+`HOMM3_DIR` is baked into the nix devshell pointing at the MAIN repo, and the
+`homm3` CLI resolves every path from it - **cwd is irrelevant**. In a worktree
+lane, prefix every invocation with `export HOMM3_DIR=<your worktree>` or you
+will silently build, delink and ratchet the main repo (and race whoever owns
+it). Re-establish your baseline after fixing it; numbers measured before are
+void. Pipeline order is **build -> delink -> build**: delinking against stale
+objects makes the target side fall back to flat carve names, after which the
+ratchet reports every promoted function MISSING and invents 0.0000 flat rows.
 
 ## House rules
 
