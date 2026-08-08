@@ -216,7 +216,7 @@ other_off_grid:
 
 // E:\gamedcs\path.cpp:238
 VA(0x00523d90, 0x57)  // anchor-global, dc 0x10cbf8
-int army::GetAdjacentCellIndex(int currIndex, int direction)
+int army::GetAdjacentCellIndex(int currIndex, int direction) const
 {
     if (currIndex < 0)
         goto off_grid;
@@ -233,7 +233,7 @@ off_grid:
 // E:\gamedcs\path.cpp:259
 // Two-hex head adjust, then GetAdjacentCellIndex inlined whole.
 VA(0x00523df0, 0x86)  // anchor-bracket, dc 0x10cc80
-long army::get_adjacent_hex(long hex, long direction)
+long army::get_adjacent_hex(long hex, long direction) const
 {
     if (creatureId & 1) {
         if (facing == 0) {

@@ -392,21 +392,77 @@ void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start
 // and breath bonuses are exactly what a routine scoring the hexes
 // adjacent to a target computes.
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:109
+// A multi-headed attack strikes every direction the mask names, so the
+// body sums the loss value of each hex's occupant - skipping our own
+// side, the stack already being attacked, and any stack a previous
+// direction already counted. `counted` starts as the primary target's
+// own bit, which is what keeps the caller from double-paying for it.
+// The loop runs 0..7 because the direction domain includes the two
+// WIDE-CREATURE slots.
+//
+// The kills_only argument here is a LITERAL 0, not estimate's own byte
+// (`push 0` where get_breath_bonus pushes estimate->kills_only), and
+// the ranged argument is 0 in both.
 VA(0x00436620, 0x13A)  // anchor-callee, dc 0x3c608
 long get_multi_head_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate)
 {
-    // @stub
+    long counted = 1 << enemy->bitIndex;
+    long directions = our_army->get_multi_head_directions(our_hex, enemy, enemy_hex);
+    long value = 0;
+    for (long i = 0; i < 8; i++) {
+        if ((directions & (1 << i)) == 0)
+            continue;
+        long hex = our_army->get_adjacent_hex(our_hex, i);
+        if (hex < 0 || hex >= 187)
+            continue;
+        army* target = gpCombatManager->cells[hex].get_army();
+        if (target == 0)
+            continue;
+        if (target->combatSide == our_group)
+            continue;
+        if (counted & (1 << target->bitIndex))
+            continue;
+        long damage = our_army->get_average_damage(target, 0, troop_count, 1, 0);
+        if (estimate->simulated)
+            damage = _cpp_min(damage, target->get_total_hit_points(1));
+        value += target->get_loss_combat_value(estimate->lowest_attack,
+                                               estimate->lowest_defense, 0, damage, 0);
+        counted |= 1 << target->bitIndex;
+    }
+    return value;
 }
 
 // E:\gamedcs\ai_tactical.cpp:155
+// The breath weapon's second victim: walk one more hex along the
+// attack direction and price whatever stands there, SIGNED by whose
+// side it is on - a friendly stack in the breath's path is a cost, not
+// a bonus, which is the closing `if (side == our_group) return -value`.
+// The two guard pairs both spell `||` because retail threads all four
+// bails into one shared `xor eax, eax` at 0x43681c.
 VA(0x00436760, 0xDF)  // anchor-callee, dc 0x3c708
 long get_breath_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate)
 {
-    // @stub
+    long direction = our_army->get_attack_direction(our_hex, enemy, enemy_hex);
+    long breath_hex = our_army->get_adjacent_hex(our_hex, direction);
+    long hex = our_army->GetAdjacentCellIndex(breath_hex, direction);
+    if (hex < 0 || hex >= 187)
+        return 0;
+    army* target = gpCombatManager->cells[hex].get_army();
+    if (target == 0 || target == enemy)
+        return 0;
+    long damage = our_army->get_average_damage(target, 0, troop_count, 1, 0);
+    if (estimate->simulated)
+        damage = _cpp_min(damage, target->get_total_hit_points(1));
+    long value = target->get_loss_combat_value(estimate->lowest_attack,
+                                               estimate->lowest_defense, 0, damage,
+                                               estimate->kills_only);
+    if (target->combatSide == our_group)
+        return -value;
+    return value;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:706
 VA(0x00436840, 0xEA)  // anchor-global, dc 0x3d440
@@ -759,12 +815,23 @@ void type_AI_spellcaster::consider_mass_damage(type_spell_choice* choice)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:1142
+// Age halves a stack's hit points, so the AI prices it as a flat third
+// of what the stack is worth; `caster` is read by neither the retail
+// body nor the DC one, and the by-value parameter still costs its 20
+// stack bytes (`ret 0x18`).
 VA(0x004373f0, 0x34)  // anchor-vtable, dc 0x3df28
 long type_AI_spellcaster::get_age_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    if (field_1c)
+        return 0;
+    return enemy->get_total_combat_value(params.lowest_attack,
+                                         params.lowest_defense) / 3;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1158
 DC_ONLY(0x3df5c, 0x1C4)
@@ -870,12 +937,72 @@ long type_AI_spellcaster::get_blood_lust_value(const army* our_army, type_enchan
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:1302
+// The luck/morale family's canonical shape, and the sibling
+// get_sorrow_value / get_fortune_value / get_misfortune_value all
+// repeat it: clamp the stack's own rating to [-3, 3], price the swing,
+// scale it by how much of the fight the spell actually covers, and
+// multiply the stack's combat value by the pair.
+//
+// AI_value_of_morale is spelled, not value_of_luck_and_morale with the
+// weights re-pushed: the 30-byte forwarder is far under the /Ob2
+// budget, so VC6 inlines it here and STILL emits it out of line at
+// 0x435830 - which is exactly what retail carries.
+//
+// The clamp is the reference-returning _cpp_min/_cpp_max chain, not a
+// pair of ternaries: retail homes 3, the rating and -3 in three
+// separate slots and selects between their ADDRESSES.
+//
+// Residual (82.1%): THE CLAMP FUSION, and it is a property of this
+// TU's _cpp_min/_cpp_max declaration, not of this body. Retail uses
+// THREE slots and never dereferences the inner result - on the
+// `morale < -3` arm it jumps straight out with &(-3), because the
+// outer min bound the inner's RETURN REFERENCE and then constant-
+// folded min(-3, 3). Our by-value helper has to copy `*inner` into a
+// fourth slot, which blocks the fold and costs the 12 bytes.
+// VC6's real XUTILITY:71-83 declares both as
+// `const _Ty& _cpp_max(const _Ty& _X, const _Ty& _Y)` - by CONST
+// REFERENCE - so the by-value reconstruction at the head of this file
+// is structurally wrong; it is left alone because switching it is a
+// TU-wide change that MOVES OTHER FUNCTIONS (measured 2026-08-08:
+// get_cure_value 95.49 -> 91.09, get_damage_value 93.21 -> 92.67,
+// get_hypnotize_value 18.23 -> 19.91, and this body only 82.10 ->
+// 84.30 with `static_cast<long>(morale)` / -3L / 3L prvalue
+// arguments). Deciding it needs the whole luck/morale family
+// (get_sorrow_value, get_fortune_value, get_misfortune_value all
+// repeat this clamp) in one supervised pass.
+// Tried and rejected: _cpp_max(_cpp_min(m, 3), -3) 78.16,
+// _cpp_min(3, _cpp_max(m, -3)) 81.50, _cpp_min(_cpp_max(-3, m), 3)
+// 81.55, a `long` local for the rating 82.10.
 VA(0x00438170, 0x142)  // anchor-vtable, dc 0x3e50c
 long type_AI_spellcaster::get_mirth_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    unsigned char undead = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 17);
+    if (undead & 1)
+        return 0;
+    double effect = AI_value_of_morale(_cpp_min(_cpp_max(our_army->morale, -3), 3),
+                                       akSpellTraits[SPELL_MIRTH].mastery_bonus[caster.mastery]);
+    if (effect == 0.0)
+        return 0;
+    double scale;
+    if (caster.duration >= params.odds)
+        scale = 1.0;
+    else
+        scale = static_cast<double>(caster.duration) / static_cast<double>(params.odds);
+    unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
+    if (slow_flag & 1) {
+        scale = scale - 1.0 / static_cast<double>(params.odds);
+        if (scale < 0.0)
+            scale = 0.0;
+    }
+    double total = static_cast<double>(our_army->get_total_combat_value(params.lowest_attack,
+                                                                        params.lowest_defense));
+    return static_cast<long>(total * scale * effect);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1327
 VA(0x004382c0, 0x1C6)  // anchor-vtable, dc 0x3e658
@@ -971,12 +1098,27 @@ long type_AI_spellcaster::get_prayer_value(const army* our_army, type_enchant_da
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:1545
+// Precision only buys anything for a shooter that is already in range
+// of the stack it has picked, which is the same three-guard preamble
+// get_blood_lust_value carries with the can_shoot test inverted.
 VA(0x00438b50, 0x64)  // anchor-vtable, dc 0x3ef24
 long type_AI_spellcaster::get_precision_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    if (our_army->can_shoot(0)) {
+        const army* target = our_army->AI_target;
+        if (target != 0
+                && our_army->get_AI_target_time(our_army->GetSpeed()) <= 1) {
+            long bonus = akSpellTraits[SPELL_PRECISION].mastery_bonus[caster.mastery];
+            return get_attack_skill_value(our_army, target, caster.duration, bonus);
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1566
 VA(0x00438bc0, 0x99)  // anchor-vtable, dc 0x3ef90
@@ -992,12 +1134,35 @@ long type_AI_spellcaster::get_shield_value(const army* our_army, type_enchant_da
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:1606
+// Slayer is worth nothing unless the stack's chosen victim is one of
+// the creature families the spell actually bites, and which families
+// those are widens with mastery: bit 7 of creatureId is the always-hit
+// group, bit 8 joins at Advanced and bit 9 at Expert. The three tests
+// are the POSITIVE `||` chain - retail threads all three into the one
+// shared call - not the de Morgan'd bail.
 VA(0x00438d00, 0x81)  // anchor-vtable, dc 0x3f158
 long type_AI_spellcaster::get_slayer_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    const army* target = our_army->AI_target;
+    if (target != 0 && our_army->get_AI_target_time(our_army->GetSpeed()) <= 1) {
+        unsigned flags = static_cast<unsigned>(target->creatureId);
+        if ((static_cast<unsigned char>(flags >> 7) & 1)
+                || ((static_cast<unsigned char>(flags >> 8) & 1)
+                    && caster.mastery >= SKILL_MASTERY_ADVANCED)
+                || ((static_cast<unsigned char>(flags >> 9) & 1)
+                    && caster.mastery >= SKILL_MASTERY_EXPERT)) {
+            return get_attack_skill_value(our_army, target, caster.duration,
+                                          akSpellTraits[SPELL_SLAYER]
+                                              .mastery_bonus[caster.mastery]);
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1626
 VA(0x00438d90, 0x25)  // anchor-vtable, dc 0x3f208
@@ -1048,14 +1213,23 @@ long type_AI_spellcaster::get_muck_and_mire_value(const army* enemy, type_enchan
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:1884
+// Poison takes half of what the stack's top creature has left, so the
+// AI prices it as exactly that much damage through the ordinary loss
+// pricer; `caster` never reaches the body.
 VA(0x00439500, 0x4C)  // anchor-vtable, dc 0x3fc20
 long type_AI_spellcaster::get_poison_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    if (field_1c)
+        return 0;
+    long damage = (enemy->hitPoints - enemy->topCreatureDamage) / 2;
+    return enemy->get_loss_combat_value(params.lowest_attack,
+                                        params.lowest_defense,
+                                        enemy->can_shoot(0), damage,
+                                        params.kills_only);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1902
 // Residual (82.4%): retail keeps `this` in ebx and memory-homes
@@ -1458,12 +1632,37 @@ void type_AI_spellcaster::consider_sacrifice(type_spell_choice* choice)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:2788
+// A clone is worth what the original's next blow is worth, so the body
+// prices the stack's own average damage against the victim it has
+// already chosen and hands that to the victim's loss pricer. The four
+// guards SHARE one `return 0` tail (retail threads all four to
+// 0x43b354), which is the positive-nesting form, not four split ifs.
+// `caster` never reaches the body.
 VA(0x0043b2e0, 0x85)  // anchor-vtable, dc 0x41558
 long type_AI_spellcaster::get_clone_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    if (!field_1c) {
+        unsigned char no_target = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
+        if ((no_target & 1) == 0) {
+            const army* target = our_army->AI_target;
+            if (target != 0
+                    && our_army->get_AI_target_time(our_army->GetSpeed()) <= 1) {
+                long damage = our_army->get_average_damage(target, our_army->can_shoot(0),
+                                                           our_army->numTroops, 1, 0);
+                return target->get_loss_combat_value(params.lowest_attack,
+                                                     params.lowest_defense,
+                                                     target->can_shoot(0), damage,
+                                                     params.kills_only);
+            }
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2813
 VA(0x0043b370, 0x18E)  // anchor-vtable, dc 0x41624
