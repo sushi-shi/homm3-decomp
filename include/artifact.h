@@ -33,6 +33,22 @@
 // is a separate, measured decision.
 enum TArtifact {
     ARTIFACT_NONE = -1,
+    // Retail witness: hero::TransferArtifacts (0x4e23d0) refuses to move
+    // an artifact whose id is -1, 2, 0 or one of the four war machines
+    // (`cmp eax,2`, `test eax,eax`, then 3/4/5/6) - the "not a real,
+    // transferable artifact" set. DC spelling eArtifactHolyGrail.
+    // Id 0, the spellbook, is NOT listed here: armygrp.h's EArtifactId
+    // already carries ARTIFACT_SPELLBOOK = 0x0 and that name is what
+    // hero.cpp resolves. Duplicating it here is a hard C2371, and
+    // moving names INTO armygrp.h is the direction that perturbs
+    // initialize_game_data - so the split stands until the two rosters
+    // are unified deliberately.
+    ARTIFACT_HOLY_GRAIL = 2,
+    // Retail witness: hero::remove_artifact(TArtifact) 0x4e2dd0 opens
+    // `cmp ebx,1 / je <return 0>` - a scroll cannot be removed by id,
+    // because what distinguishes two scrolls is the `spell` dword, not
+    // the artifact id. DC spelling eArtifactSpellScroll.
+    ARTIFACT_SPELL_SCROLL = 1,
     ARTIFACT_CATAPULT = 3,
     ARTIFACT_BALLISTA = 4,
     ARTIFACT_AMMO_CART = 5,
