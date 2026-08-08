@@ -176,8 +176,16 @@ public:
     void UpdateCost()
     {
         int cost[7];
-        memcpy(cost, &gCreatureRecords[monsterType * CREATURE_RECORD_DWORDS
-                   + CREATURE_RECORD_COST_DWORD], sizeof(cost));
+        // The +8 stays a POINTER offset, matching the shape byte-proven
+        // in GetMonsterCost: retail addresses the cost row as
+        // base + 4*(29*type) + 0x20, i.e. `&records[29*type] + 8`, NOT
+        // `records[29*type + 8]` (which scales the whole sum and spells
+        // the scale as a separate shift). Byte-neutral at THIS call
+        // site only because Update's `akCreatureTypeTraits[monsterType]`
+        // access shares the product and drags the shift back in - see
+        // Update's residual note.
+        memcpy(cost, &gCreatureRecords[monsterType * CREATURE_RECORD_DWORDS]
+                   + CREATURE_RECORD_COST_DWORD, sizeof(cost));
         goldPerTroop = cost[6];
         int i;
         for (i = 0; i < 6; i++) {

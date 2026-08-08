@@ -39,17 +39,25 @@ void get_upgrade_cost(TCreatureType creature, TCreatureType upgrade, long amount
 #endif  // @carcass
 
 // E:\gamedcs\recruit.cpp:172
-// Residual (82.7%): retail folds the record stride into an lea chain
-// this dword-index form spells as a shift; the 99.3% shape reached
-// earlier used a pointer-type cast the cleanliness floor forbids, so
-// the max below was hand-lowered to the admissible form.
+// The +8 cost offset must NOT be folded into the initial index: retail
+// strength-reduces `gCreatureRecords[index + 8]` to a byte offset
+// `lea eax,[4*ecx+0x20]`, where folding it into `index` instead spells
+// the scale as a separate `shl eax,2` (82.7%).
+// Residual (86.0%): three rows, register allocation only - retail parks
+// the 29*monId product in ECX (`lea ecx,[ecx+4*eax]`) and so schedules
+// `mov ecx,7` one instruction later; ours parks it in EAX. Tried and
+// rejected: `monId *= 29` in place (identical bytes), counter declared
+// first (identical), `while (remaining > 0)` (identical), `--remaining`
+// in the condition (identical), post-increment inside the subscript
+// (64.0), `resCost++` before `index++` (64.0), pointer-walk over
+// `&gCreatureRecords[..] + 8` (69.0), `8 + monId*29` folded (82.7).
 VA(0x0054e7c0, 0x31)  // anchor-global, dc 0x118b38
 void GetMonsterCost(int monId, int* resCost)
 {
-    int index = monId * CREATURE_RECORD_DWORDS + CREATURE_RECORD_COST_DWORD;
     int remaining = 7;
+    int index = monId * CREATURE_RECORD_DWORDS;
     do {
-        *resCost = gCreatureRecords[index];
+        *resCost = gCreatureRecords[index + CREATURE_RECORD_COST_DWORD];
         index++;
         resCost++;
         remaining--;
@@ -251,6 +259,14 @@ TCreatureType siege_artifact_to_creature(TArtifact engine)
 // CSE); declaring `message msg` after the slot fixup (88.2);
 // `if (altResource == -1)` in the other polarity (89.2 - the retained
 // polarity is the byte-proven one). Register-homing family.
+// Re-measured 2026-08-08: branch sequences AGREE (24/24), so nothing
+// structural is left. Rewriting UpdateCost's fetch to the pointer-
+// offset form `&gCreatureRecords[29*type] + 8` - the spelling that is
+// byte-proven correct in GetMonsterCost, where it removes exactly this
+// `shl` - is byte-neutral HERE: VC6 still unifies 4*(29*type) with the
+// 116-byte stride of the akCreatureTypeTraits[monsterType] access in
+// the same function and re-materialises the shift. The CSE, not the
+// subscript spelling, is what has to break.
 VA(0x005503a0, 0x594)  // anchor-global, dc 0x119dcc
 void recruitUnit::Update(unsigned char new_monster, long slot)
 {
