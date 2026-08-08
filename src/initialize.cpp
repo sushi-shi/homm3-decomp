@@ -17,9 +17,32 @@
 // 0x4ebb70 / 0x4ebc50). The definitions below keep DC source order
 // (the one-pass inliner needs every body before its caller); the
 // out-of-source-order claim rides the forward declaration.
+// THE INCLUDE LIST BELOW IS LOAD-BEARING (measured 2026-08-08) and is
+// pure include-set sensitivity, the class documented on
+// initialize_game_data itself: any growth of town.h at all - one extra
+// `class town` method declaration, a free-function prototype further
+// down the header, or the generatorBonus row - knocks this function off
+// 100 with no semantic change anywhere, and the amount of growth is not
+// the lever (a 0..14 sweep of dummy declarations gave 96.088 through
+// k=9, 48.791 at k=10-11 and 92.378 beyond, never 100).
+// What was measured, in order, as town.h grew three times this lane:
+//   * all six permutations of {<va.h>, "town.h", <string.h>} - with the
+//     first growth the three orders that put town.h ahead of <string.h>
+//     held 100 and the other three sat at 96.088; after the second
+//     growth only town.h FIRST held; after the third none did (48.791
+//     across the board);
+//   * eight headers x four positions on top of the town.h-first order.
+//     Only <stdio.h> AHEAD of town.h recovers 100. <stdlib.h> and
+//     advmgr.h reach 92.378, hero.h and game.h 95.043, <stdio.h> in any
+//     later slot 96.088, and armygrp.h / mapcell.h / struct.h are inert.
+// <stdio.h> is not otherwise used in this TU and is NOT independently
+// evidenced as part of retail's include list - it is carried as the
+// closure lever that restores the match and nothing more. Re-derive it,
+// do not trust it, after ANY town.h edit.
+#include <stdio.h>
+#include "town.h"
 #include <va.h>
 #include <string.h>
-#include "town.h"
 // #include "initialize.h"
 
 // E:\gamedcs\initialize.cpp:625 (definition at the bottom of the file;

@@ -6,10 +6,36 @@
 #define HOMM3_ADVMGR_H
 
 #include "basemgr.h"
+#include "window.h"
 
-// Head model from the byte-proven leaves. Names provisional; the ctor
-// claim (0x406df0, 783 B in homm2) will grow this roster.
-class heroWindow;
+// The adventure screen's own window. Only the ONE method a retail body
+// outside adventuremapwindow.obj calls on it is declared here:
+// town::Deallocate (0x5be2d0) ends with
+// `mov ecx,[gpAdvManager+0x44]` / push 1 / push 1 / push 0 /
+// `call 0x403420`, so +0x44 holds a pointer to the class that owns
+// 0x403420 and that entry takes THREE stack arguments.
+//
+// Arity note: the adventuremapwindow.cpp claim file pairs 0x403420
+// with the DC's `TAdventureMapWindow::UpdateTownLocators()`, which the
+// DC build carries as a FOUR-byte stub taking no arguments. The three
+// pushed arguments refute that spelling; the signature that fits is the
+// DC's `TAdvMenu::UpdateTownLocators(int, unsigned char, unsigned
+// char)` (dc 0x2668, 374 B vs retail's 305 - ratio 0.82, and its four
+// band neighbours ratio 0.81-0.92 against the same TAdvMenu roster).
+// On the DC the menu bar was split out of the adventure window; on this
+// image the bodies still sit in adventuremapwindow.obj's own band, so
+// the CLASS stays TAdventureMapWindow and only the parameter list comes
+// from the DC's TAdvMenu twin.
+//
+// It derives heroWindow because executive::CallManager calls
+// `SleepAllWidgets` on this very +0x44 pointer and retail's reloc
+// resolves to `?SleepAllWidgets@heroWindow@@QAEXE@Z` - the base body,
+// not an override.
+class TAdventureMapWindow : public heroWindow {
+public:
+    void UpdateTownLocators(int top, unsigned char drawWin,
+                            unsigned char update);
+};
 
 // Derives baseManager (0x38 bytes): executive::CallManager (0x4b0c70)
 // compares it against executive::currentManager and writes
@@ -17,7 +43,7 @@ class heroWindow;
 class advManager : public baseManager {
 public:
     char pad_038[0xc];
-    heroWindow* advWindow;    // +0x44 (the button-status target)
+    TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
     char pad_048[0x10];
     // +0x58, a dword read as the index into soundmgr's 9-entry terrain
     // -> music-id table at 0x678330 (soundManager::SetMusicVolume
