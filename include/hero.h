@@ -7,6 +7,42 @@
 
 #include <va.h>
 #include "armygrp.h"
+// TArtifact - the id domain hero::remove_artifact takes. It is the
+// artifact domain's own type and artifact.h is deliberately outside
+// initialize.cpp's include closure (see the placement note there), so
+// this edge cannot reach the initialize_game_data tripwire: nothing in
+// that closure includes hero.h.
+#include "artifact.h"
+
+// Hero/boat sprite sequence ids, transcribed COMPLETE from the
+// Dreamcast CodeView enum `hero_seqid` (the creature_seqid precedent in
+// csprite.h). Retail proves the five STAND values and their order
+// directly: hero::GetStandSequence (0x4d9110) and boat::GetStandSequence
+// (0x4d9160) are one eight-entry jump table each over the compass
+// facing, returning 0/1/2/3/4 with 5,6,7 folded back onto 3,2,1 - i.e.
+// the west-facing frames are the east-facing ones mirrored, which is
+// exactly what a n/ne/e/se/s roster with no west members implies.
+enum hero_seqid {
+    hs_stand_n = 0,
+    hs_stand_ne = 1,
+    hs_stand_e = 2,
+    hs_stand_se = 3,
+    hs_stand_s = 4,
+    hs_walk_n = 5,
+    hs_walk_ne = 6,
+    hs_walk_e = 7,
+    hs_walk_se = 8,
+    hs_walk_s = 9,
+    hs_turn_n_ne = 10,
+    hs_turn_ne_n = 11,
+    hs_turn_ne_e = 12,
+    hs_turn_e_ne = 13,
+    hs_turn_e_se = 14,
+    hs_turn_se_e = 15,
+    hs_turn_se_s = 16,
+    hs_turn_s_se = 17,
+    hs_max = 18
+};
 
 // Byte-proven by HasArtifact 0x4d91b0: 19 equipped slots of 8 bytes
 // starting at 0x12d, then 64 backpack slots of 8 bytes at 0x1d4; each
@@ -15,14 +51,38 @@
 // unaligned dword loads). Names provisional.
 #pragma pack(push, 1)
 
-struct TArtifactSlot {
+// The 8-byte artifact record - what an equipped slot or a backpack
+// slot actually holds. NAME CORRECTED 2026-08-08: this header used to
+// call it TArtifactSlot, but on the Dreamcast build TArtifactSlot is
+// the ENUM of wearable positions (eArtifactSlotHead 0 ..
+// eArtifactSlotSpellbook 17) and `type_artifact` is the record - DC
+// members.csv gives it exactly these two dwords, `TArtifact type` at 0
+// and `SpellID spell` at 4. Retail agrees: hero::add_to_backpack
+// (0x4e2f90) takes a `const type_artifact*`, reads its two dwords and
+// copies them straight into a backpack slot. Every carcass declarator
+// in this tree already used the DC meaning of both names, so the live
+// struct was the odd one out. The member spellings stay provisional
+// (no retail body names them).
+struct type_artifact {
     int artifactId;
     int extra;
 };
 
 class hero {
 public:
-    char pad_000[0x18];
+    // The hero's map position, three SHORTS at +0/+2/+4. Byte-proven by
+    // hero::IsMobile (0x4e5f30), which packs exactly these three cells
+    // into a stack type_point with that struct's own field widths -
+    // `and ecx,0x3ff` on +0, `and edx,0x3ff` on +2 and `and eax,0xf`
+    // then `shl eax,0xa` on +4 - and corroborated by
+    // hero::is_in_patrol_radius (0x4e56e0), whose `cmp dx, word [this+4]`
+    // compares the argument point's z against +4 at SIXTEEN bits: VC6
+    // only keeps the bitfield extraction 16-bit (`shl dx,2 / sar dx,0xc`,
+    // no movsx) when the other operand is itself a short.
+    short x;                        // +0x00
+    short y;                        // +0x02
+    short z;                        // +0x04
+    char pad_006[0x12];
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
     // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back
@@ -39,7 +99,39 @@ public:
     // `movsx edx, byte [gpGame + 1170*id + 0x21642]` before comparing
     // it against the acting-player id. Name provisional.
     signed char owner;              // +0x22
-    char pad_023[0x2a];
+    char pad_023[0x21];
+    // The patrol triple at +0x44..+0x46 and the compass facing at
+    // +0x47, all byte-proven by hero::is_in_patrol_radius (0x4e56e0)
+    // and hero::GetStandSequence (0x4d9110). The two coordinates are
+    // read ZERO-extended (`and ebx,0xff`, `xor edx,edx / mov dl,..`)
+    // and the radius SIGNED (`test cl,cl / jl`, then `movsx ecx,cl`) -
+    // the widths the DC roster gives them too (patrolX/patrolY
+    // T_UCHAR, patrolRadius T_CHAR). `facing` is likewise the DC name
+    // and is loaded UNSIGNED here (`xor eax,eax / mov al,[this+0x47]`)
+    // where boat's twin at +0x1b takes a movsx.
+    //
+    // kPatrolNone is the "not patrolling" sentinel patrolX carries.
+    // Retail tests it at BYTE width (`cmp bl,-1` == 0xff) while every
+    // arithmetic use of the field zero-extends, which is what fixes
+    // both the value and the unsigned type. Name role-inferred,
+    // PROVISIONAL.
+    enum { kPatrolNone = 0xff };
+    // The eight compass values `facing` takes. UNATTESTED NAMES - no DC
+    // enum covers the field (its roster types it a bare T_UCHAR), so
+    // these are placeholders. The MAPPING is not guessed: the stand
+    // jump table sends facing 0->hs_stand_n, 1->hs_stand_ne,
+    // 2->hs_stand_e, 3->hs_stand_se, 4->hs_stand_s, and folds 5,6,7
+    // back onto se, e, ne - which fixes 0..4 as n..s going clockwise
+    // and 5..7 as the mirrored sw, w, nw.
+    enum {
+        kFacingN = 0, kFacingNE = 1, kFacingE = 2, kFacingSE = 3,
+        kFacingS = 4, kFacingSW = 5, kFacingW = 6, kFacingNW = 7
+    };
+    unsigned char patrolX;          // +0x44
+    unsigned char patrolY;          // +0x45
+    signed char patrolRadius;       // +0x46
+    unsigned char facing;           // +0x47
+    char pad_048[0x5];
     // +0x4d, the hero's remaining movement points. A full DWORD read
     // SIGNED: hero::GetMobilityFrame (0x4e5330) loads it whole, takes
     // the <= 0 arm with `jg`, and divides it by 100 with the signed
@@ -116,16 +208,25 @@ public:
     // loads +0x116 and +0x112 together as the movement-override pair.
     // Name from the writer; ordinal placeholder for the sibling.
     int waterWalkLevel;                 // +0x116
-    char pad_11a[0xf];
+    // Two one-byte battle temporaries. hero::ApplyBattleWinTemps
+    // (0x4da510) opens by zeroing both from one `xor al,al`, storing
+    // +0x11b BEFORE +0x11a, and then clears twenty-two `flags` bits -
+    // which is what marks the whole body as post-combat cleanup.
+    // Neither byte has a Dreamcast row at these offsets and no other
+    // retail body reads them yet, so the names are ORDINAL PLACEHOLDERS
+    // and the signedness is unproven (a zero store shows neither).
+    signed char field_11a;              // +0x11a
+    signed char field_11b;              // +0x11b
+    char pad_11c[0xd];
     // +0x129, a dword compared against 3 - the secondary-skill
     // mastery domain. hero::HeroFn_004E5DE0 (0x4e5de0) returns it
     // unless it is below 3 and the hero's army holds creature 0x8f,
     // and hero::IsInIdentifyRange (0x4e5e10) opens with the same
     // block inlined. Name unattested - ORDINAL PLACEHOLDER.
     int field_129;                      // +0x129
-    TArtifactSlot equipped[19];
+    type_artifact equipped[19];
     char pad_1c5[0xf];
-    TArtifactSlot backpack[64];
+    type_artifact backpack[64];
     // +0x3d4, a cached backpack count. hero::get_number_in_backpack
     // (0x4d90c0) returns it with `movsx eax, byte [ecx+0x3d4]` on its
     // flag arm instead of walking the 64 slots, which is what proves
@@ -213,6 +314,37 @@ public:
     long get_last_backpack_index();
     void rotate_backpack_left();
     void rotate_backpack_right();
+    // 0x004e2d50 - the fourth backpack primitive; closes the hole a
+    // removed slot leaves and drops `backpackCount`.
+    void remove_backpack_artifact(short slot);
+    // 0x004e56e0 - the patrol test: Manhattan distance from the patrol
+    // anchor, same level, against patrolRadius.
+    unsigned char is_in_patrol_radius(struct type_point point);
+    // 0x004e2bd0 - unequips ONE equipped slot, by slot INDEX. The
+    // Dreamcast spells the parameter `TArtifactSlot`, but on that build
+    // TArtifactSlot is an ENUM of the wearable positions
+    // (eArtifactSlotHead 0 .. eArtifactSlotSpellbook 17,
+    // kNumArtifactSlots 18) - NOT the 8-byte slot record this header
+    // already binds that name to. Retail's caller pushes a bare loop
+    // counter, so the index spelling is what compiles; the DC enum is
+    // recorded here rather than modelled, because retail scans NINETEEN
+    // slots, one more than the DC roster's eighteen.
+    void remove_artifact(long slot);
+    // 0x004d9260 - drops the artifact backing a war machine when the
+    // machine dies.
+    void DestroySiegeWeaponArtifact(int creature_type);
+    // 0x004d9110 - the idle frame for the hero's current facing.
+    hero_seqid GetStandSequence();
+    // 0x004e2f90 - inserts an artifact into the backpack, shifting the
+    // tail up when the requested slot is occupied. `slot` < 0 means
+    // "first free".
+    unsigned char add_to_backpack(const type_artifact* artifact, long slot);
+    // 0x004e2dd0 - the by-id overload: finds the artifact in the
+    // backpack first, then in the equipped slots, and unequips it.
+    unsigned char remove_artifact(TArtifact artifact);
+    // 0x004e23d0 - drains another hero's equipped slots and backpack
+    // into this hero's backpack.
+    void TransferArtifacts(hero* src);
     // BYTE-width return, not int (corrected 2026-08-07): 212 of the 224
     // retail call sites of 0x4d91f0 follow the call with `test al, al`,
     // which an int-returning declaration can never produce. The
@@ -313,6 +445,27 @@ struct type_obscuring_object {
     type_obscuring_object();
     void initialize();
     class town* get_obscured_town();
+};
+
+// boat - the adventure-map vessel. It lives here for the same reason
+// type_obscuring_object does: the Dreamcast roster declares it in
+// E:\gamedcs\Hero.h (boat::boat, dc 0xbcc18, Hero.h:188), even though
+// its one reconstructed method sits in hero.cpp.
+// ONE field is retail-byte-proven - boat::GetStandSequence (0x4d9160)
+// reads the compass facing at +0x1b with `movsx eax, byte [this+0x1b]`
+// and feeds it the same eight-entry jump table hero's twin uses, which
+// is what fixes both the offset and the SIGNED type. The DC roster
+// lands `facing` on offset 27 too, and because its whole 24..28 band is
+// one-byte fields there is no packing ambiguity to resolve; the four
+// neighbours it names (allocated 24, id 25, type 26, playerOwner 28)
+// are therefore very likely at +0x18/+0x19/+0x1a/+0x1c, but no retail
+// body reads them yet, so they stay inside the pad. No SIZE() assert -
+// the extent is not proven.
+class boat {
+public:
+    char pad_000[0x1b];
+    signed char facing;             // +0x1b
+    hero_seqid GetStandSequence();
 };
 
 // THeroTraits - the per-hero static-traits record, 92 B stride

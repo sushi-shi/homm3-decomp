@@ -8,6 +8,9 @@
 // carries the exact headers that built the retail COMDATs.
 #include <bitset>
 #include <vector>
+// abs() - the intrinsic form retail uses (cdq / xor / sub), the
+// stdlib.h precedent already carried by cmbtmgr, window and ai_combat.
+#include <stdlib.h>
 #include "hero.h"
 // gpGame / playerData / game::IsHuman: the owner-record accessors
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
@@ -300,23 +303,54 @@ long hero::get_number_in_backpack(unsigned char countWarMachines)
     return count;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:1362
+// One eight-entry jump table over `facing`. Case bodies are emitted
+// n, ne, se, s and finally e - retail's EMISSION order, which is why
+// the east arm is written last and doubles as the default; the two
+// west facings share the east and north-east arms because those frames
+// are drawn mirrored. The `xor eax,eax / mov al,[this+0x47]` load is
+// the unsigned field; boat's twin takes a movsx off a signed one.
 VA(0x004d9110, 0x4C)  // anchor-global, dc 0xcc1b0
 hero_seqid hero::GetStandSequence()
 {
-    // @stub
+    switch (facing) {
+    case kFacingN:
+        return hs_stand_n;
+    case kFacingNE:
+    case kFacingNW:
+        return hs_stand_ne;
+    case kFacingSE:
+    case kFacingSW:
+        return hs_stand_se;
+    case kFacingS:
+        return hs_stand_s;
+    }
+    return hs_stand_e;
 }
 
 // E:\gamedcs\hero.cpp:1389
+// hero::GetStandSequence's twin, same table and same emission order.
+// The one codegen difference is the load: boat's facing is a SIGNED
+// char (`movsx eax, byte [this+0x1b]`) where hero's is unsigned
+// (`xor eax,eax / mov al,[this+0x47]`) - the DC roster types the two
+// fields exactly that way as well.
 VA(0x004d9160, 0x4C)  // linkorder, dc 0xcc1e8
 hero_seqid boat::GetStandSequence()
 {
-    // @stub
+    switch (facing) {
+    case hero::kFacingN:
+        return hs_stand_n;
+    case hero::kFacingNE:
+    case hero::kFacingNW:
+        return hs_stand_ne;
+    case hero::kFacingSE:
+    case hero::kFacingSW:
+        return hs_stand_se;
+    case hero::kFacingS:
+        return hs_stand_s;
+    }
+    return hs_stand_e;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:1422
 VA(0x004d91b0, 0x3F)  // anchor-global, dc 0xcc220
@@ -356,14 +390,59 @@ unsigned char hero::IsWieldingArtifact(int whichArtifact)
            IsWieldingArtifact(gCombinationArtifacts[combination].artifactId);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:1466
+// Creature -> artifact, then unequip. The jump table covers exactly
+// CREATURE_CATAPULT..CREATURE_AMMO_CART (0x91..0x94) with an `add
+// eax,-0x91` bias, and the CATAPULT arm goes straight to an epilogue:
+// the catapult's artifact is never destroyed. Note this direction is
+// NOT the swapped one - recruit.cpp's siege_artifact_to_creature maps
+// ARTIFACT_AMMO_CART to CREATURE_FIRST_AID_TENT and back, while retail
+// here pairs each machine with its own artifact
+// (0x92->4, 0x93->6, 0x94->5).
+// The `default:` arm is EXPLICIT, not an initialiser - that is what
+// produces the `jmp` closing the third constant arm.
+// Residual (96.5%): the register-homing family. Every instruction and
+// the whole CFG agree; retail leaves the parameter in memory and
+// re-reads it twice (`mov eax,[ebp+8]` / `add eax,-0x91` for the switch
+// bias, then `mov esi,[ebp+8]` in the default arm) where our CL
+// enregisters it once into edx and biases with `lea eax,[edx-0x91]`.
+// Tried and rejected: `int artifact = creature_type;` ahead of the
+// switch - hoists the store to `mov esi,eax` in the prologue and drops
+// the third arm's jmp (89.9%); reusing the PARAMETER as the artifact
+// variable, which is the spelling that would justify the reloads -
+// VC6 then preloads it into esi instead and biases with
+// `lea eax,[esi-0x91]` (86.9%); declaring the loop counter ahead of
+// the switch to shift allocation (no change, 96.5%).
 VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
 void hero::DestroySiegeWeaponArtifact(int creature_type)
 {
-    // @stub
+    int artifact;
+    switch (creature_type) {
+    case CREATURE_CATAPULT:
+        return;
+    case CREATURE_BALLISTA:
+        artifact = ARTIFACT_BALLISTA;
+        break;
+    case CREATURE_FIRST_AID_TENT:
+        artifact = ARTIFACT_FIRST_AID_TENT;
+        break;
+    case CREATURE_AMMO_CART:
+        artifact = ARTIFACT_AMMO_CART;
+        break;
+    default:
+        artifact = creature_type;
+        break;
+    }
+    // Nineteen equipped slots, one more than the DC build's eighteen.
+    for (int slot = 0; slot < 19; slot++) {
+        if (equipped[slot].artifactId == artifact) {
+            remove_artifact(slot);
+            return;
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:1504
 VA(0x004d92d0, 0x59)  // dc-bracket forced, dc 0xcc300
@@ -476,17 +555,68 @@ int hero::GetLevel(int iExperience)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:1886
-// Strips the temporary battle bonuses: clears the two flag bytes at
-// +0x11a/+0x11b and then subtracts eleven individual bits out of the
-// +0x105 dword one `test`/`add` pair at a time. Corroborated by its two
-// callers - ai_combat's do_aftermath (0x426ee0) and command's
-// combatManager::DoVictory (0x477470) - which are exactly the two sites
-// a post-battle temp reset belongs to.
+// Strips the temporary battle bonuses: clears the two bytes at
+// +0x11a/+0x11b and then subtracts TWENTY-TWO individual bits out of
+// the +0x105 dword, one `test`/`add` pair at a time, in the order
+// written below - retail's emission order and so its source order.
+// Corroborated by its two callers - ai_combat's do_aftermath
+// (0x426ee0) and command's combatManager::DoVictory (0x477470) - which
+// are exactly the two sites a post-battle temp reset belongs to.
+// Each bit is SUBTRACTED under its own guard, not masked off: retail
+// emits `test`/`je`/`add eax,-BIT`, where `flags &= ~BIT` would have
+// produced one unconditional `and`. The bit ROLES are unattested - no
+// Dreamcast enum covers the word - so they stay hex.
 VA(0x004da510, 0x1F1)  // anchor-callers, dc 0xccd9c
 void hero::ApplyBattleWinTemps()
 {
-    // @stub
+    field_11a = field_11b = 0;
+    if (flags & 0x8000)
+        flags -= 0x8000;
+    if (flags & 0x400)
+        flags -= 0x400;
+    if (flags & 0x200)
+        flags -= 0x200;
+    if (flags & 0x4)
+        flags -= 0x4;
+    if (flags & 0x80)
+        flags -= 0x80;
+    if (flags & 0x100)
+        flags -= 0x100;
+    if (flags & 0x4000000)
+        flags -= 0x4000000;
+    if (flags & 0x8)
+        flags -= 0x8;
+    if (flags & 0x10)
+        flags -= 0x10;
+    if (flags & 0x2000000)
+        flags -= 0x2000000;
+    if (flags & 0x20)
+        flags -= 0x20;
+    if (flags & 0x8000000)
+        flags -= 0x8000000;
+    if (flags & 0x10000000)
+        flags -= 0x10000000;
+    if (flags & 0x20000000)
+        flags -= 0x20000000;
+    if (flags & 0x4000)
+        flags -= 0x4000;
+    if (flags & 0x40)
+        flags -= 0x40;
+    if (flags & 0x800)
+        flags -= 0x800;
+    if (flags & 0x100000)
+        flags -= 0x100000;
+    if (flags & 0x1000)
+        flags -= 0x1000;
+    if (flags & 0x2000)
+        flags -= 0x2000;
+    if (flags & 0x10000)
+        flags -= 0x10000;
+    if (flags & 0x200000)
+        flags -= 0x200000;
 }
 
 // E:\gamedcs\hero.cpp:2001
@@ -494,8 +624,6 @@ void hero::ApplyBattleWinTemps()
 // is the single statement `ApplyBattleWinTemps();`. The SAME two callers
 // that reach ApplyBattleWinTemps also reach this thunk (do_aftermath and
 // combatManager::DoVictory), which is what pairs the loss/win halves.
-#endif  // @carcass
-
 VA(0x004da710, 0x5)  // anchor-callers + tail-jump, dc 0xccf68
 void hero::ApplyBattleLossTemps()
 {
@@ -653,7 +781,7 @@ void hero::rotate_backpack_left()
     long last = get_last_backpack_index();
     if (last < 0)
         return;
-    TArtifactSlot saved = backpack[last];
+    type_artifact saved = backpack[last];
     for (long slot = last; slot > 0; slot--)
         backpack[slot] = backpack[slot - 1];
     backpack[0] = saved;
@@ -668,7 +796,7 @@ void hero::rotate_backpack_right()
     long last = get_last_backpack_index();
     if (last <= 0)
         return;
-    TArtifactSlot saved = backpack[0];
+    type_artifact saved = backpack[0];
     for (long slot = 0; slot < last; slot++)
         backpack[slot] = backpack[slot + 1];
     backpack[last] = saved;
@@ -878,7 +1006,12 @@ void THeroScreenWindow::SetupHeroView()
 // sites (hero::initialize 0x4d8720, 0x4d8b30, CheckLevel 0x4da720 and
 // this one) are ALL out-of-line in retail. Expect it to close when
 // hero.cpp's real bodies land. Tried and rejected: two call sites;
-// `else if` chain vs early returns (identical bytes either way).
+// `else if` chain vs early returns (identical bytes either way);
+// respelling GiveSS around a `signed char* pLevel = &skillLevel[i]`
+// local to buy inline cost - retail's own `lea edx,[esi+ecx+0xc9]`
+// makes that spelling look right, but it costs GiveSS itself 100.0 ->
+// 73.4 (the pointer defeats the byte reload retail keeps), so the
+// address CSE is the optimiser's, not the source's.
 VA(0x004e2210, 0x3F)  // anchor-callee + band-layout, dc 0xd36e0
 void hero::SetSS(int iWhichSS, int iLevelToSet)
 {
@@ -982,14 +1115,65 @@ int hero::GetNthSS(int iWhich)
     return -1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:4828
+// Equipped slots ascending, then the backpack DESCENDING from 63 - the
+// order retail walks them, and the descending half is the classic
+// pre-decrement form (`dec edi / test edi,edi / jge`).
+// Each slot is COPIED into a stack local first (retail keeps it at
+// [ebp-0x10]/[ebp-0xc] in both loops) because the source slot is
+// cleared before the local is handed on: add_to_backpack takes its
+// address. The seven-way refusal chain is one `||` off a single load,
+// in retail's compare order -1, 2, 0, 3, 4, 5, 6.
+// The equipped half CALLS remove_artifact's slot-index overload; the
+// backpack half's remove_backpack_artifact is INLINED (its `short`
+// parameter is why the counter is narrowed with `mov ecx,edi` /
+// `movsx eax,cx`).
+// Residual (98.0%): two rows, neither a spelling. (1) post-RA
+// SCHEDULING in the backpack loop's slot copy - identical byte
+// multiset, retail sinks `cmp eax,-1` one slot later so the
+// `mov [ebp-0x10],eax` store lands before the `mov ecx,[ebx+4]` load
+// instead of after. The equipped loop's identical copy already
+// matches, so this is the scheduler, not the source. (2) the
+// remove_artifact call's reloc still reads the flat carve name
+// `hero_remove_artifact` on the target side, because 0x4e2bd0 is
+// still a stub and the delinker has no symbol to learn; it resolves
+// itself when that body lands.
 VA(0x004e23d0, 0x176)  // anchor-global, dc 0xd38ec
 void hero::TransferArtifacts(hero* src)
 {
-    // @stub
+    if (!src)
+        return;
+    for (int slot = 0; slot < 19; slot++) {
+        type_artifact artifact = src->equipped[slot];
+        if (artifact.artifactId == ARTIFACT_NONE ||
+            artifact.artifactId == ARTIFACT_HOLY_GRAIL ||
+            artifact.artifactId == ARTIFACT_SPELLBOOK ||
+            artifact.artifactId == ARTIFACT_CATAPULT ||
+            artifact.artifactId == ARTIFACT_BALLISTA ||
+            artifact.artifactId == ARTIFACT_AMMO_CART ||
+            artifact.artifactId == ARTIFACT_FIRST_AID_TENT)
+            continue;
+        if (!add_to_backpack(&artifact, -1))
+            return;
+        src->remove_artifact(slot);
+    }
+    for (int index = 63; index >= 0; index--) {
+        type_artifact artifact = src->backpack[index];
+        if (artifact.artifactId == ARTIFACT_NONE ||
+            artifact.artifactId == ARTIFACT_HOLY_GRAIL ||
+            artifact.artifactId == ARTIFACT_SPELLBOOK ||
+            artifact.artifactId == ARTIFACT_CATAPULT ||
+            artifact.artifactId == ARTIFACT_BALLISTA ||
+            artifact.artifactId == ARTIFACT_AMMO_CART ||
+            artifact.artifactId == ARTIFACT_FIRST_AID_TENT)
+            continue;
+        if (!add_to_backpack(&artifact, -1))
+            return;
+        src->remove_backpack_artifact(index);
+    }
 }
+
+#if 0  // @carcass
 
 // RETAIL-ONLY x2. Nothing sits between TransferArtifacts (0xd38ec) and
 // equip_artifact (0xd39d8) in the Dreamcast roster, but retail carves
@@ -1024,19 +1208,69 @@ void hero::remove_artifact(TArtifactSlot slot)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:4943
+// Closes the hole one backpack slot leaves behind: shift every later
+// slot down by one, blank the vacated tail and drop the cached count.
+// get_last_backpack_index() is INLINED here (extern linkage, so the
+// out-of-line copy at 0x4dbd90 still stands): the `mov edx,0x3f` /
+// `lea edi,[this+0x3cc]` descending walk with its pre-decrement test
+// (`mov ebx,edx / dec edx / test ebx,ebx`) is that function's body,
+// register for register.
+// `slot` is the running index, not just the parameter - retail keeps
+// one SHORT in esi, `inc`s it through the shift and re-reads it with
+// `movsx eax,si` for the blanking store, so the source reuses the
+// parameter instead of declaring a second cursor.
 VA(0x004e2d50, 0x7E)  // anchor-global, dc 0xd3b74
 void hero::remove_backpack_artifact(short slot)
 {
-    // @stub
+    if (backpack[slot].artifactId == -1)
+        return;
+    long last = get_last_backpack_index();
+    while (slot < last) {
+        backpack[slot] = backpack[slot + 1];
+        slot++;
+    }
+    backpack[slot].artifactId = -1;
+    backpackCount--;
 }
 
+#if 0  // @carcass
+
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:4960
+// Backpack first, then the equipped slots. Both cursors are ONE SHORT -
+// retail keeps it in ax and re-widens with `movsx` at every use, and
+// the equipped bound is a 16-bit `cmp ax,0x13`. The backpack half calls
+// remove_backpack_artifact, which /Ob2 INLINES here (its own
+// out-of-line copy at 0x4e2d50 still stands, extern linkage); the
+// equipped half CALLS the slot-index overload at 0x4e2bd0 out of line.
+// The `last` bound also drags in an inlined get_last_backpack_index.
 VA(0x004e2dd0, 0xFC)  // anchor-bracket, dc 0xd3bec
 unsigned char hero::remove_artifact(TArtifact artifact)
 {
-    // @stub
+    if (artifact == ARTIFACT_SPELL_SCROLL)
+        return 0;
+    long last = get_last_backpack_index();
+    short slot;
+    for (slot = 0; slot <= last; slot++) {
+        if (backpack[slot].artifactId == artifact) {
+            remove_backpack_artifact(slot);
+            return 1;
+        }
+    }
+    for (slot = 0; slot < 19; slot++) {
+        if (equipped[slot].artifactId == artifact) {
+            remove_artifact(slot);
+            return 1;
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:4994
 VA(0x004e2ed0, 0xB2)  // dc-bracket forced, dc 0xd3c64
@@ -1045,12 +1279,48 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_bac
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:5005
+// The four war machines are refused one `cmp`/`je` at a time off a
+// single load of artifact->artifactId, all four branching to the shared
+// `xor al,al` tail - the || chain, not a switch (four dense cases would
+// have produced the `lea eax,[r-3]` range test recruit.cpp's
+// siege_artifact_to_creature uses).
+// `slot` is the running cursor: retail reuses the PARAMETER for the
+// first-free search, and that search deliberately runs off the end -
+// if all 64 slots are full it leaves slot == 64 and the code below
+// writes backpack[64]. Transcribed as retail has it; the
+// `backpackCount >= 64` guard at the top is what makes it unreachable.
+// get_last_backpack_index() is inlined again (same descending walk
+// with the pre-decrement test).
 VA(0x004e2f90, 0xD1)  // anchor-global, dc 0xd3cfc
 unsigned char hero::add_to_backpack(const type_artifact* artifact, long slot)
 {
-    // @stub
+    if (backpackCount >= 64)
+        return 0;
+    if (artifact->artifactId == ARTIFACT_CATAPULT ||
+        artifact->artifactId == ARTIFACT_BALLISTA ||
+        artifact->artifactId == ARTIFACT_AMMO_CART ||
+        artifact->artifactId == ARTIFACT_FIRST_AID_TENT)
+        return 0;
+    if (slot < 0) {
+        for (slot = 0; slot < 64; slot++) {
+            if (backpack[slot].artifactId == -1)
+                break;
+        }
+    }
+    if (backpack[slot].artifactId != -1) {
+        long last = get_last_backpack_index();
+        for (long i = last; i >= slot; i--)
+            backpack[i + 1] = backpack[i];
+    }
+    backpack[slot] = *artifact;
+    backpackCount++;
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:5044
 VA(0x004e3070, 0x339)  // anchor-global, dc 0xd3de4
@@ -1458,6 +1728,21 @@ TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask, unsigned char 
 }
 
 // E:\gamedcs\hero.cpp:6025
+// BLOCKED on a cross-TU type collision, not on the reconstruction.
+// The body is fully decoded - four "is this school in the mask, and is
+// it the best so far" blocks in retail's EMISSION order (air, fire,
+// EARTH, water; not the mask's numeric order), the running best
+// starting at -1 and the returned school at the mask itself - but the
+// signature needs the real DC enum TSpellSchool (const_invalid_school
+// 0 / eSchoolAir 1 / eSchoolFire 2 / eSchoolWater 4 / eSchoolEarth 8 /
+// eSchoolAll 15), and include/ai_tactical.h:44 currently holds the
+// name as a placeholder `typedef int TSpellSchool`. Defining the enum
+// anywhere hero.h can see it breaks ai, ai_combat, ai_tactical and
+// ai_player with C2371. Unifying the two is a cross-TU decision.
+// The retail bytes that pin the mapping are recorded here so the work
+// is not lost: bit 1 pairs with +0xd8 (skill 15, Air), bit 2 with
+// +0xd7 (14, Fire), bit 8 with +0xda (17, Earth), bit 4 with +0xd9
+// (16, Water).
 VA(0x004e51c0, 0x73)  // anchor-global, dc 0xd4ed0
 TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask)
 {
@@ -1564,14 +1849,22 @@ playerData* hero::get_player()
     return &gpGame->players[owner];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6251
+// Manhattan distance from the patrol anchor. The two early-outs stay
+// SPLIT (retail duplicates the `mov al,1` tail rather than sinking a
+// shared block), and the sum is spelled x-term FIRST: VC6 evaluates
+// `a + b` right to left, and retail computes the y difference first.
 VA(0x004e56e0, 0x7C)  // anchor-global, dc 0xd52d0
 unsigned char hero::is_in_patrol_radius(type_point point)
 {
-    // @stub
+    if (patrolRadius < 0 || patrolX == kPatrolNone)
+        return 1;
+    if (point.z != z)
+        return 0;
+    return abs(point.x - patrolX) + abs(point.y - patrolY) <= patrolRadius;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6267
 VA(0x004e5760, 0x1F2)  // anchor-global, dc 0xd53a0
