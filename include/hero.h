@@ -132,6 +132,10 @@ public:
     int GetMorale(const hero* otherHero, unsigned char on_cursed_ground,
                   unsigned char apply_limits);
     float GetMagicResistanceFactor();
+    // 0x4e4840, claimed in hero.cpp - cmbtmgr's
+    // CalculateGainedExperience (0x46a350) scales the whole award by it
+    // with a single-precision fmul.
+    float GetExperienceBonusFactor();
     int CreatureTypeCount(int creatureType);
     int GetNthSS(int iWhich);
     // Claimed in src/hero.cpp (0x4e5760 / 0x4e5ff0); declared here so
