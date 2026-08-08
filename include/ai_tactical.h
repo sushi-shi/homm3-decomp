@@ -203,6 +203,14 @@ struct type_AI_spellcaster {
     long get_haste_value(const army* our_army, type_enchant_data caster);
     long get_protection_value(const army* our_army, TSpellSchool school,
                               long level, long duration, long amount);
+    long get_air_protection_value(const army* our_army,
+                                  type_enchant_data caster);
+    long get_fire_protection_value(const army* our_army,
+                                   type_enchant_data caster);
+    long get_earth_protection_value(const army* our_army,
+                                    type_enchant_data caster);
+    long get_water_protection_value(const army* our_army,
+                                    type_enchant_data caster);
     long get_cancel_value(army* current_army, unsigned char bad_spells_only);
     long get_dispel_value(const army* our_army, type_enchant_data caster);
     long get_cure_value(const army* our_army, type_enchant_data caster);
