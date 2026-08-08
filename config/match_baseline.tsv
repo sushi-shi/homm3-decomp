@@ -62,9 +62,9 @@ advmgr	hasFlag	0.0000
 ai	?IsIncapacitated@army@@QAEEXZ	100.0000
 ai	?can_cast_spells@combatManager@@QAEEJE@Z	100.0000
 ai	?compute_fire_shield_damage@combatManager@@QAEJJPBVarmy@@0J@Z	100.0000
+ai	?find_move_order@combatManager@@QAEXPAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000
 ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	96.3533
 ai	?get_total_combat_value@combatManager@@QBEJJJJE@Z	100.0000
-ai	combatManager_find_move_order	0.0000
 ai	combatManager_move_toward	0.0000
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@PBVarmyGroup@@@Z	100.0000
@@ -223,6 +223,7 @@ button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000
 castle	?GetBuildingName@@YIPBDHH@Z	100.0000
 cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110
 cmbtmgr	?CombatIsOver@combatManager@@QAEEXZ	100.0000
+cmbtmgr	?GetGridIndex@combatManager@@QAEHHH@Z	100.0000
 cmbtmgr	?GetTargetWallIndex@@YIHH@Z	100.0000
 cmbtmgr	?HexIsBlocked@combatManager@@QAEEH@Z	100.0000
 cmbtmgr	?InCastle@@YIEH@Z	100.0000
@@ -240,7 +241,6 @@ cmbtmgr	?get_distance@@YIJJJ@Z	100.0000
 cmbtmgr	?is_adjacent@combatManager@@QAEEHH@Z	100.0000
 cmbtmgr	?should_lower_door@combatManager@@QAEEPAVarmy@@J@Z	100.0000
 cmbtmgr	combatManager_CombatSystemOptions	0.0000
-cmbtmgr	combatManager_GetGridIndex	0.0000
 cmbtmgr	combatManager_InLineOfSight	0.0000
 cmbtmgr	combatManager_InitializeArchers	0.0000
 cmbtmgr	combatManager_LowerDoor	0.0000
@@ -277,7 +277,7 @@ exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	68.3663
 exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000
 exec	?MainLoop@executive@@QAEXXZ	88.1290
 exec	?RemoveManager@executive@@QAEXPAVbaseManager@@@Z	100.0000
-findpath	??0searchArray@@QAE@XZ	96.3243
+findpath	??0searchArray@@QAE@XZ	100.0000
 findpath	??1searchArray@@QAE@XZ	100.0000
 findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000
 findpath	searchArray_FindCombatPath	0.0000
