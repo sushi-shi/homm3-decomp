@@ -36,6 +36,7 @@
 // DWORD (`and eax,1` / `and esi,0xffffff40`) where retail works in
 // AL/CL (`and al,1` / `and cl,0x40`); that one change took
 // GetAttackMask 70.44% -> exact with nothing else touched.
+#include "terrain.h"
 #include <va.h>
 #include "army.h"
 #include "hexcell.h"

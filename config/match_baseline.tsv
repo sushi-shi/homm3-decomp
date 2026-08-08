@@ -212,8 +212,13 @@ border	??_GbitmapBorder16@@UAEPAXI@Z	100.0000
 border	??_GbitmapBorder@@UAEPAXI@Z	100.0000
 border	??_Gborder@@UAEPAXI@Z	100.0000
 border	?Draw2@bitmapBorder16@@QAEXXZ	100.0000
+border	?Draw@bitmapBorder16@@UAEXXZ	100.0000
+border	?Draw@bitmapBorder@@UAEXXZ	100.0000
+border	?GetRealHeight@bitmapBorder@@UAEHXZ	100.0000
+border	?GetRealWidth@bitmapBorder@@UAEHXZ	100.0000
 border	?SetImage@bitmapBorder@@QAEXPBD@Z	100.0000
 border	?SetPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000
+border	?zBufferDraw@bitmapBorder@@QAEXPAGH@Z	100.0000
 button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000
 button	??0textButton@@QAE@HHHHHPBD00HHEHHH@Z	88.4400
 button	??0type_func_button@@QAE@JJJJJPBDP6IHPAVmessage@@@ZHH@Z	100.0000
@@ -617,7 +622,19 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 # by-product of the symbol-table population, so a LATER town.h edit can
 # just as easily push it back down, and when it does the honest move is
 # another dated lower here - not a lever include.
-initialize	?initialize_game_data@@YIXXZ	94.0741
+# RESOLVED 2026-08-08: terrain.h is now modelled (include/terrain.h) and
+# initialize.cpp includes it. 94.0741 -> 100.0000 with NO lever header -
+# the honest include list plus the one header retail's bytes prove was
+# there. The ten funclets our CL emits for it are byte-identical to
+# retail's 0x4ebd10..0x4ec0de, and the eleventh (the shared
+# ctype<wchar_t>::id guard the <bitset> closure drags in) is
+# byte-identical to retail's 0x4ebcf0. This row is the FIRST raise this
+# lane that is a model fix rather than a lottery draw. The residual
+# class is not closed, though: a 0..10 unused-struct probe sweep on
+# town.h still moves the row (100/100/94.07/94.07/94.07/100/100/100/
+# 100/94.07/94.07), so the TU's type population is still not retail's -
+# terrain.h was one missing header, not the only one.
+initialize	?initialize_game_data@@YIXXZ	100.0000
 inputmgr	??0inputManager@@QAE@XZ	86.5667
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000
