@@ -21,6 +21,11 @@ public:
     unsigned short BackColor;
 
     virtual ~iconWidget();  // retail 0x4ea7b0
+    // Overrides of widget's two size slots; retail 0x4eab30 / 0x4eab20
+    // (vtable 0x63ec48 slots 5 and 6). Both answer with the sprite's
+    // own extent, not the widget rect.
+    virtual int GetRealHeight();  // slot 5, retail 0x4eab30
+    virtual int GetRealWidth();   // slot 6, retail 0x4eab20
 
     void SetIconFrame(int newFrame);
     void SetSprite(const char* new_sprite);

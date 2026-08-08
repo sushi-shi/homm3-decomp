@@ -40,9 +40,25 @@ class playerData {
 public:
     char pad_00[4];
     int currHeroId;       // +0x04 (Deactivate stores -1)
-    char pad_08[0x37];
-    unsigned char currTownId;  // +0x3f (Deactivate stores 0xff)
-    char pad_40[0x5c];
+    char pad_08[0x36];
+    // +0x3e / +0x40, the player's town roster, sliced 2026-08-08 for
+    // town::Deallocate (0x5be2d0), which is the whole proof: it walks
+    // `i < movsx [player+0x3e]` comparing `[player + i + 0x40]` against
+    // town::id, closes the hole by copying `[j+1]` down over `[j]`,
+    // stores -1 into `[player + count + 0x3f]` (i.e. townIds[count-1]),
+    // and finishes with a BYTE `dec` of +0x3e. The count is SIGNED
+    // (movsx, and the `test/jle` entry guard) and the ids are plain
+    // char - all three -1 stores in that body share the one `or ebx,-1`
+    // (the signedness-CSE lever), which is also what re-types
+    // currTownId from the unsigned char this header used to carry.
+    char numTowns;        // +0x3e
+    char currTownId;      // +0x3f (advManager::DeactivateCurrTown stores -1)
+    // Extent NOT proven: retail only ever touches entries 0..numTowns-1.
+    // Sliced to the next offset any retail body addresses absolutely -
+    // a scan of .text for `gpGame + 0x20ad0 + k` finds +0x40 then
+    // nothing until +0x88 - so 0x48 is an upper bound, not a count.
+    char townIds[0x48];   // +0x40
+    char pad_88[0x14];
     // The seven-resource row, sliced 2026-08-08 for recruit.obj.
     // Byte-proven twice over, from two unrelated TUs:
     // recruitUnit::Update (0x550274) divides `[player+0xb4]` by the
@@ -56,6 +72,10 @@ public:
     int NextHero();
     int NextTown();
     unsigned char IsLocalHuman();
+    // 0x4bada0 (claimed in src/game.cpp). town::buy_building calls it
+    // on gpGame->players[owner] to split the human and computer
+    // resource paths.
+    unsigned char IsHuman();
     unsigned char HasMobileHero();
     // 0x4b9f40 (claimed in src/game.cpp). town::can_build,
     // can_ever_build and get_buildable_mask all call it on
