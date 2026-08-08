@@ -188,28 +188,11 @@ enum TAdventureObjectType {
 #pragma pack(push, 1)
 class NewmapCell {
 public:
-    char pad_00[0x4];
-    // The square's ground type, byte at +0x04. check_shipyard_square
-    // (town.obj 0x5c0c90) accepts a dock tile only when this equals 8,
-    // and terrain.h's ten-mask permutation independently pins Water at
-    // TTerrainType 8 - so the field is the terrain id. Kept as a plain
-    // byte rather than TTerrainType: that roster is still the bootstrap
-    // sentinel-only stub in armygrp.h, and filling it in is a separate,
-    // wider change.
-    unsigned char terrain;
-    char pad_05[0x7];
+    char pad_00[0x0c];
     // +0x0c is the DC's cellFlags word. find_magus_hut_value tests bit
     // 12 of it (`test byte ptr [cell + 0xd], 0x10`); the DC's flag list
     // for this word has is_trigger thirteenth, so that is the name used
     // here - provisional, the bit ORDER is inferred from listing order.
-    // NOT overlaid with a plain-word union, though retail's
-    // check_shipyard_square reads this field as a whole word: adding
-    // the union here is a type DEFINITION in this header's closure and
-    // costs initialize.obj's initialize_game_data 100.0 -> 96.09
-    // through the include-set sensitivity class (measured 2026-08-08,
-    // the same 96.09 that class produces for a bare probe struct). The
-    // word view is taken locally in town.cpp instead - see
-    // cell_flags_word there.
     unsigned short flags_00_11 : 12;
     unsigned short is_trigger : 1;
     unsigned short flags_13_15 : 3;
