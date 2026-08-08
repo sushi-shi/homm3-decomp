@@ -166,17 +166,34 @@ long type_monster_data::get_spell_damage(SpellID spell, const hero* casting_hero
 }
 
 // E:\gamedcs\ai_combat.cpp:148
+// The single return value is the PARAMETER itself, overwritten in the
+// kill arm - not a `dealt` local with two returns. Out of line both
+// spellings are byte-identical (this body is exact either way), but
+// INLINED they differ and the parameter form is retail's: the incoming
+// damage is spilled to a stack slot once, the merged pseudo is loaded
+// with total_hit_points before the compare (`mov ecx,ebx; cmp ecx,eax`)
+// so the kill arm needs no copy at all, and only the survive arm
+// reloads the spill. A `dealt` local makes our CL keep the argument in
+// a register and copy into the result after the two zero stores.
+// Measured 2026-08-08: the if/else parameter form took
+// inflict_melee_damage 97.0, cast_area_effect 97.4 and cast_damage_spell
+// 94.2 all to 100.0 and cast_chain_lightning 71.9 -> 79.7, with no
+// edit at any call site. Tried and rejected: the same parameter
+// assignment with an early return instead of an else (97.06 - the
+// split-exit duplicates the epilogue), a `dealt` local seeded from the
+// parameter and if/else-assigned (99.91 - one copy short), and merely
+// adding the else to the original two-return form (no change).
 VA(0x00423ea0, 0x36)  // anchor-global, dc 0x29dec
 long type_monster_data::take_damage(long damage)
 {
     if (total_hit_points < damage) {
-        long dealt = total_hit_points;
+        damage = total_hit_points;
         total_hit_points = 0;
         count = 0;
-        return dealt;
+    } else {
+        total_hit_points -= damage;
+        count = (total_hit_points + hit_points - 1) / hit_points;
     }
-    total_hit_points -= damage;
-    count = (total_hit_points + hit_points - 1) / hit_points;
     return damage;
 }
 
@@ -257,16 +274,25 @@ type_speed_catagory type_AI_combat_data::get_catagory(TCreatureType creature, lo
 #endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:404
-// Residual (89.8%): retail pushes edi at entry and spends it as a
-// separate down-counter (mov edi,7 / dec edi / jne) for the seven-slot
-// Dismiss loop; our CL shrink-wraps the push into the second arm and
-// keeps `cmp esi,7`. Tried and rejected: `<` vs `!=` on the bound (the
-// `!=` spelling is kept - it is worth 1.4 points), int vs long index.
+// EXACT 2026-08-08 (89.8 -> 100.0): the Dismiss loop's index is a
+// SHORT, like the second loop's below. A short induction variable that
+// is only ever consumed 32-bit (`push esi`) forces VC6 to carry the
+// trip count separately, which is exactly retail's `mov edi,7 /
+// dec edi / jne` beside the `inc esi` - and needing edi in the first
+// arm is what stops the `push edi` being shrink-wrapped into the
+// second, which in turn fixes the monsters-row base/offset add order
+// further down. One declaration, all three deltas.
+// Tried and rejected: long index with `!=` (93.37) or `<` (92.02),
+// int (93.37), unsigned (93.37), `while (i != N) Dismiss(i++)` (90.79),
+// an explicit `do { } while (--left)` down-counter (98.65) and a
+// separate descending `for` with `Dismiss(i++)` (96.57). An explicit
+// two-variable `for (long i = 0, left = N; left; i++, left--)` also
+// reaches 100.0 but says the same thing less plainly.
 VA(0x00424880, 0xDB)  // anchor-global, dc 0x2a588
 void type_AI_combat_data::adjust_army(unsigned char dismiss_hero)
 {
     if (total_hit_points == 0) {
-        for (long i = 0; i != armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
+        for (short i = 0; i != armyGroup::ARMY_GROUP_SLOT_COUNT; i++)
             my_army->Dismiss(i);
         if (my_hero && dismiss_hero)
             gpAdvManager->HeroLoses(my_hero, 0);
@@ -402,10 +428,11 @@ void type_AI_combat_data::get_damage_spell_value(type_spell_choice& choice, cons
 }
 
 // E:\gamedcs\ai_combat.cpp:599
-// Residual (71.9%): pure esi<->edi swap - retail pushes edi at entry
+// Residual (79.7%): pure esi<->edi swap - retail pushes edi at entry
 // and parks `this` there, our CL parks `this` in esi and shrink-wraps
-// the edi push past the shift. Same register-homing family as
-// cast_area_effect / do_general_melee below.
+// the edi push past the shift. 71.9 -> 79.7 on 2026-08-08 when the
+// inlined take_damage was fixed (see take_damage), which closed the
+// three sibling casters outright; here the prologue swap survives it.
 VA(0x00424fb0, 0x145)  // anchor-global, dc 0x2a938
 void type_AI_combat_data::cast_chain_lightning(type_spell_choice& choice, type_AI_combat_data& defender, long damage) const
 {
@@ -424,7 +451,9 @@ void type_AI_combat_data::cast_chain_lightning(type_spell_choice& choice, type_A
 }
 
 // E:\gamedcs\ai_combat.cpp:629
-// Residual (86.0%): register-homing family (see cast_chain_lightning).
+// EXACT 2026-08-08: the whole residual was the inlined take_damage,
+// closed by spelling its return value as the overwritten PARAMETER
+// (see take_damage). No edit in this body.
 VA(0x00425100, 0x15A)  // anchor-global, dc 0x2a9e8
 void type_AI_combat_data::cast_area_effect(type_spell_choice& choice, type_AI_combat_data& defender, long damage, long extra_targets) const
 {
@@ -443,7 +472,8 @@ void type_AI_combat_data::cast_area_effect(type_spell_choice& choice, type_AI_co
 }
 
 // E:\gamedcs\ai_combat.cpp:658
-// Residual (94.2%): register-homing family.
+// EXACT 2026-08-08: the whole residual was the inlined take_damage
+// (see take_damage). No edit in this body.
 VA(0x00425260, 0x180)  // anchor-global, dc 0x2aa7c
 void type_AI_combat_data::cast_damage_spell(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
@@ -673,10 +703,9 @@ long type_AI_combat_data::inflict_catagory_damage(long damage, type_speed_catago
 #endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:1122
-// Residual (97.0%): retail spills take_damage's argument to a stack
-// slot and reloads it after the branch; our CL keeps it in a register.
-// Register-homing family - the ten differing instructions are the same
-// operations under swapped register names.
+// EXACT 2026-08-08: retail's spill-and-reload of take_damage's
+// argument is what the PARAMETER-as-return-value spelling emits (see
+// take_damage); it was never a register-homing cap. No edit here.
 VA(0x00426170, 0x131)  // anchor-global, dc 0x2b408
 long type_AI_combat_data::inflict_melee_damage(long damage, long start, long speed_limit)
 {
@@ -784,10 +813,22 @@ void type_AI_combat_data::do_melee_combat(type_AI_combat_data* defender)
 #endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:1270
-// Residual (79.6%): esi<->edi swap for this/defender plus the zero
-// constant landing in edx instead of ebx, which turns the inlined
-// get_total guard from retail's `jne/xor edx,edx/jmp` merge into a
-// single `je`. Register-homing family.
+// Residual (94.8%): INLINER-DEPTH, the same class as simulate_combat.
+// 79.6 -> 94.8 on 2026-08-08 when get_total became a ternary; what is
+// left is a single /Ob2 budget divergence. `kill()` inlines twice here
+// and retail expands get_total inside BOTH copies (depth 2); our CL's
+// budget runs out after the first, so the second arm keeps a real
+// `call ?get_total@...` and every register downstream of it renames.
+// Nothing in this body causes it - the register naming through the
+// float arms already agrees instruction for instruction. Tried and
+// rejected on the callee: a no-local ternary get_total and an
+// unsigned-cast-free one (both identical here), a doubly-nested
+// ternary (catastrophic, 75.5). Tried and rejected here: hoisting
+// `ratio` above the early-outs (94.79 - a third of a slot, and it
+// declares a variable before the guards that can skip it), moving
+// kill() below the ratio computation (89.30), folding ratio into the
+// argument expression (93.42), naming the damage as well (no change),
+// and inverting the compare so the else arm leads (93.80).
 VA(0x004264d0, 0x2ED)  // anchor-global, dc 0x2b948
 void type_AI_combat_data::do_general_melee(type_AI_combat_data& defender)
 {
@@ -1083,22 +1124,31 @@ void type_AI_combat_data::type_AI_combat_data(const type_AI_combat_data* __that)
 #endif  // @carcass
 
 // E:\gamedcs\ai_combat.h:255
-// Residual (83.6%): two deltas, both register homing. Retail's null
-// path falls into the shared `ret` with eax already holding the zero
-// _M_start (no `xor eax,eax`), and it homes the divide result in edx
-// with a closing `mov eax,edx` - the shape of an inlined callee's
-// return - where our CL targets eax directly. Tried and rejected:
-// `monsters.size()` through begin()/end() (fixes this function and
-// get_area_value, loses the _M_start CSE in the ~12 inlined copies and
-// costs six other functions their exactness) and a bare
-// `_M_finish - _M_start` with no local.
+// EXACT 2026-08-08 (83.6 -> 100.0) by the THREE-OPERAND SELECTOR: the
+// null test is a `?:` on the return expression, not an early-out `if`.
+// The old `if (first == 0) return 0;` split makes our CL target eax
+// directly for the divide; the ternary merges both arms into one
+// pseudo, which VC6 homes in edx and copies out with the closing
+// `mov eax,edx` retail has - and on the null path the merged pseudo
+// is already the zero _M_start, so no `xor eax,eax` is emitted either.
+// Both deltas were one cause.
+//
+// The payoff is in the ~12 INLINED copies, not here: get_area_value
+// 86.6 -> 100, cast_area_effect 86.0 -> 97.4, do_general_melee
+// 79.6 -> 94.8, adjust_army 89.8 -> 93.4 with no other edit.
+//
+// Tried and rejected: `monsters.size()` through begin()/end() (fixes
+// this function and get_area_value, loses the _M_start CSE in the
+// inlined copies and costs six other functions their exactness), a
+// bare `_M_finish - _M_start` with no local, naming the _M_finish load
+// (`last`), naming the difference (`count`, signed and unsigned), and
+// dropping the unsigned cast - all four leave the split-if shape and
+// score 83.57 unchanged.
 VA(0x00427750, 0x21)  // anchor-global, dc 0x2c6ac
 long type_AI_combat_data::get_total() const
 {
     type_monster_data* first = monsters._M_start;
-    if (first == 0)
-        return 0;
-    return (unsigned)(monsters._M_finish - first);
+    return first == 0 ? 0 : (unsigned)(monsters._M_finish - first);
 }
 
 #if 0  // @carcass
