@@ -44,7 +44,13 @@ class advManager : public baseManager {
 public:
     char pad_038[0xc];
     TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
-    char pad_048[0x10];
+    char pad_048[8];
+    // +0x50, the hover reseed latch: advManager::Reseed (0x40ec80) is
+    // `mov dword ptr [ecx+0x50], 0` and nothing else, discarding both
+    // of its arguments. Name unattested - the role is what the bytes
+    // prove.
+    int field_50;
+    char pad_054[4];
     // +0x58, a dword read as the index into soundmgr's 9-entry terrain
     // -> music-id table at 0x678330 (soundManager::SetMusicVolume
     // 0x5994b0: `mov ecx,[gpAdvManager+0x58]` then
@@ -68,6 +74,7 @@ public:
     void HeroLoses(class hero* who, int vanish_sound);
     void OverrideBottomView(EBottomViewType view, int time);
     void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
+    void Reseed(int targetX, int targetY);
     void ForceNewHover();
 };
 
