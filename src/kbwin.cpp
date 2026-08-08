@@ -106,19 +106,32 @@ int WINAPI WinMain(HINSTANCE hInst, HINSTANCE hPrev, LPSTR szCmdLine, int sw)
 // adds the WM_ACTIVATE mouse reset and the WM_ACTIVATEAPP sound/video
 // suspend pair, and WM_CLOSE falls through WM_DESTROY into WM_QUIT's
 // ShutDown guard exactly as in homm2.
-// Residual (74.8%): our compile INLINES AppCommand into the WM_COMMAND
-// arm (VC6 /Ob2's single-call-site expansion - the same mechanism that
-// correctly merges AppInit into WinMain), which then tail-merges every
-// per-case `return 0` epilogue into shared exits; retail keeps the
-// `call AppCommand` and duplicates the epilogues. Every case body is
-// instruction-exact otherwise (the branch lane confirms 15/15 rets and
-// the 5-branch delta is exactly the inline + merge). Tried and
-// rejected: explicit `default:` Def arm (adds a 16th exit), a
-// function-pointer cast at the call (folded through, still inlined),
-// /Ob2-less profiles (kill the GameTime::DelayTil/Delay nested
-// inlines, byte-proven to need /Ob2). The lever that stopped retail's
-// inliner is not yet identified - candidates: a pragma in the original
-// source, or an AppCommand property invisible in its emitted bytes.
+// EXACT 2026-08-08 (was the 74.8% over-inline residual). Three
+// independent facts closed it, each byte-measured:
+//   1. AppCommand must NOT be inlined here. Our /Ob2 expanded its
+//      single in-TU call site, adding exactly its 5 branches (base 36
+//      vs retail 31) and tail-merging the per-case epilogues.
+//      `#pragma auto_inline(off)` around AppCommand's definition
+//      restores retail's `call` and took this 74.8 -> 92.1. Retail's
+//      AppCommand has THREE call sites in the image (0x4ec253,
+//      0x4ec275, 0x4f7f59) - two live in another TU, so the retail
+//      compile saw the same one-call-site TU we do and still did not
+//      inline it; the source-level reason is unidentified and the
+//      pragma stands in for it. It is scoped to AppCommand alone and
+//      leaves every other kbwin function exact.
+//   2. The DefWindowProcA fallthrough is written TWICE - an explicit
+//      `default:` arm plus the post-switch return. Retail emits two
+//      copies (one where `window` is already in edi, one that reloads
+//      it) and 15 rets to our 14; the duplicate supplied the missing
+//      exit and stopped VC6 hoisting `window` into edi at entry.
+//      92.1 -> 99.16.
+//   3. WM_ACTIVATEAPP is one if/else with a single trailing
+//      `return 0`, not two returns (99.16 -> 99.98), and the
+//      deactivate arm's `bAppDeactivated = 1;` sits OUTSIDE its
+//      guard: retail's `jne` lands ON that store (target +0x480, i.e.
+//      instruction 210) rather than past it, so the store is
+//      unconditional while the activate arm's `= 0` stays inside its
+//      guard. 99.98 -> 100.
 VA(0x004f7c00, 0x394)  // anchor-callee, dc 0xe7e38
 LRESULT CALLBACK AppWndProc(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
@@ -185,15 +198,14 @@ LRESULT CALLBACK AppWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
                     gpMouseManager->ShowSystemCursor(0);
                     bAppDeactivated = 0;
                 }
-                return 0;
-            }
-            if (gpSoundManager->MusicPlaying() || gpSoundManager->MP3Playing)
-                bMusicWasPlaying = 1;
-            gpSoundManager->PauseSamples();
-            if (!bVideoPaused)
-                VideoPause();
-            if (!bAppDeactivated) {
-                gpMouseManager->ShowSystemCursor(1);
+            } else {
+                if (gpSoundManager->MusicPlaying() || gpSoundManager->MP3Playing)
+                    bMusicWasPlaying = 1;
+                gpSoundManager->PauseSamples();
+                if (!bVideoPaused)
+                    VideoPause();
+                if (!bAppDeactivated)
+                    gpMouseManager->ShowSystemCursor(1);
                 bAppDeactivated = 1;
             }
             return 0;
@@ -217,6 +229,8 @@ LRESULT CALLBACK AppWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
             break;
         case WM_COMMAND:
             return AppCommand(window, message, messageParam, messageData);
+        default:
+            return DefWindowProcA(window, message, messageParam, messageData);
     }
     return DefWindowProcA(window, message, messageParam, messageData);
 }
@@ -267,6 +281,12 @@ top:
 // E:\gamedcs\kbwin.cpp:648
 // homm2 lineage kept the three non-size menu commands; the About
 // template is the ordinal 0x67 (homm2 passed the string "HEROES").
+// auto_inline(off) is load-bearing, not cosmetic: retail emits a real
+// `call` at AppWndProc+0x359 while our /Ob2 expands this body inline
+// (it is the TU's only call site). See AppWndProc's note - without the
+// pragma that function is 74.8%, with it 100%. The pragma is scoped to
+// this definition and changes no other kbwin function.
+#pragma auto_inline(off)
 VA(0x004f8060, 0xD4)  // linkorder, dc 0xe8014
 LRESULT AppCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messageData)
 {
@@ -299,6 +319,7 @@ LRESULT AppCommand(HWND window, UINT message, WPARAM messageParam, LPARAM messag
     }
     return 0;
 }
+#pragma auto_inline(on)
 
 // E:\gamedcs\kbwin.cpp:680
 // Identity corrected from the linkorder-forced "UpdateDfltMenu": the

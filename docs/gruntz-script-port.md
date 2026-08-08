@@ -260,6 +260,77 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — `kbwin` CLOSED (27 TUs now at 100%); a SYMMETRIC-
+  REGISTER family identified across four TUs; a delinker artifact that
+  will cap `DATA()`-relative reads.** Engine-wide 523 → **524/977 exact
+  (53.6%)**, **5.53%** matched; all gates green. Only +1 exact, and the
+  lane is worth more than that number: five stuck partials went from
+  *two symptoms each* to *one root cause each*.
+  **`kbwin::AppWndProc` 74.76 → 100 (916 B)**, three independent facts:
+  (1) **`AppCommand` must not be inlined** — our `/Ob2` expanded its
+  single in-TU call site, adding exactly its 5 branches (36 vs retail's
+  31) and tail-merging the per-case epilogues. `#pragma
+  auto_inline(off)` scoped to that one definition: 74.8 → 92.1. Retail's
+  `AppCommand` has THREE call sites in the image (0x4ec253, 0x4ec275,
+  0x4f7f59), two in another TU — so the retail compile saw the same
+  one-call-site TU we do and still emitted the `call`. The source-level
+  reason is unidentified and the pragma stands in for it, flagged
+  in-source as load-bearing-but-unexplained (the `ai.cpp` codegen-pin
+  precedent). (2) **The `DefWindowProcA` fallthrough is written TWICE**
+  — an explicit `default:` arm *plus* the post-switch return; retail
+  emits two copies, 15 rets to our 14, and the duplicate stopped VC6
+  hoisting `window` into edi at entry. 92.1 → 99.16. (3)
+  `WM_ACTIVATEAPP` is one if/else with a single trailing return, and
+  the deactivate arm's `bAppDeactivated = 1;` sits **outside** its
+  guard — retail's `jne` lands *on* that store (+0x480) rather than
+  past it, while the activate arm's `= 0` stays inside. The asymmetry
+  is retail's.
+  **Wrong callee corrected:** `button::Main` calls `GameTime::Get()`,
+  not `timeGetTime()`. The delinked target reads
+  `call ?Get@GameTime@@SIKXZ`; `GameTime::Get` (0x4f82e0) is a 6-byte
+  `jmp` through the same import, so the two are runtime-equal but
+  different in the object. `button::Select`'s `timeGetTime` at +0x188
+  is genuinely the thunk form and stays.
+  **NEW RESIDUAL FAMILY — the symmetric-register swap, six functions
+  across four TUs.** `window::CenterWindow` (ebx/edi), `button::Main`
+  (retail esi=msg / edi=parentWindow), `misc::TPickANumber` ctor
+  (retail esi=this / edi=span), and the allocator running out one
+  register earlier in both `iconwdgt` partials. **In every case retail
+  hands the lower register to the value used FIRST and we hand it to
+  the second**, everything else instruction-identical. No source handle
+  in any of them; this belongs with the merged-return / stale-CL
+  question, not with per-function spelling.
+  Root causes replacing symptom lists: `strip::DrawOwner` 93.37 is ONE
+  allocation decision (we pick EAX for the `akHeroTraits` base where
+  retail picks EDX; EAX still holds `frame`, so the load sinks below
+  the index chain and the cross-jumper fires — the pos==0 twin escapes
+  only because its extra `codeY = 122` store keeps EAX live);
+  `iconwdgt::NextRandomSiegeEngineFrame` 86.41 is **loop-invariant
+  hoisting** (our CL lifts the odds-table init into the preheader, so
+  the literal 2 is needed once and takes volatile EAX; retail needs it
+  every iteration, hoists it to callee-saved EDI and homes `this` at
+  [ebp-4] — hence the 0x24-vs-0x20 frame and every table
+  displacement); `soundmgr::ConvertVolume` 67.5 is one defect, not two
+  (retail's clamp tails are one instruction longer, crossing VC6's
+  cross-jump threshold so both clamps are shared — 4 exits to our 6).
+  Two measurements that kill spellings outright: a
+  `const THeroTraits* traits = akHeroTraits;` base local is **folded
+  away entirely** (byte-identical, not a distinct spelling), and a
+  `goto retry` bottom-tested loop is byte-identical to the `while`
+  (VC6 recognises the same natural loop and still hoists).
+  **PIPELINE CAP FOUND, deliberately not worked around:** `src-DATA`
+  labels carry no size (`scripts/homm3/build/labels.py:266-270` emits
+  `"size": ""`), so vostok synthesises a separate `bss_29959c` for
+  `rcAppWindow.top` at 0x69959c and our `rcAppWindow`+4 reloc can never
+  equal the target's addend-0. **This will cap any function that reads
+  a struct member at a non-zero offset from a `DATA()`-claimed
+  aggregate.** An alias probe confirmed the mechanism and was
+  REVERTED — modelling a delinker artifact would make our object differ
+  from the true retail object. Giving `DATA()` an optional size is a
+  contract change and is **open for a supervised decision**.
+  `initialize_game_data` untouched; the 96.0880 pin and its dated
+  rationale intact.
+
 - **2026-08-08 — `game` 6 → 35 exact; the BOOL-RETURN rule; the DC local
   list promoted to a spelling oracle; `type_point`'s retail alignment
   found.** Engine-wide 491 → **523/977 exact (53.5%)**, 5.39% →
@@ -2618,3 +2689,13 @@ longer needed as PR evidence.
    (`homm3-symbols`: Dreamcast dump, NH3API) live relative to this repo?
 5. **General** — do we keep Gruntz module names verbatim (grep-ability across
    the two projects) or rename where HoMM3 semantics differ?
+6. **P0.2 sub-question, raised 2026-08-08** — should `DATA()` carry an
+   optional SIZE? `labels.py:266-270` emits `"size": ""` for every `src-DATA`
+   label, so vostok splits any aggregate that is read at a non-zero offset
+   into a second synthetic symbol (`rcAppWindow.top` at 0x69959c became
+   `bss_29959c`), and our `base+4` reloc can then never equal the target's
+   `addend 0`. This caps every function reading a member of a `DATA()`-claimed
+   aggregate. The cap was confirmed by an alias probe that was deliberately
+   reverted — modelling a delinker artifact in source would make our object
+   diverge from the real retail object. Adding a size to the annotation
+   contract is the honest fix and needs sign-off.
