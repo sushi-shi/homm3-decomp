@@ -145,7 +145,20 @@ public:
     // `x * 0.05f + 1.0f`. That is HoMM3's per-level specialty growth,
     // so the field is the hero's level - name role-inferred, PROVISIONAL.
     short level;                    // +0x55
-    char pad_057[0x3a];
+    char pad_057[0x1c];
+    // +0x73. One dword of "this hero has already used that object"
+    // bits, indexed by the cell's extraInfo: hero::VisitedArena
+    // (0x4e53c0) tests `(1 << cell->extraInfo) & [this+0x73]` and
+    // SetVisitedArena (0x4e53e0) ORs the same bit in.
+    // The DC repack (no alignment, ArenaFlags at DC 120 against retail
+    // 0x73 == 115, a uniform -5) puts ten more such dwords around it -
+    // GardenOfRevelation +0x5f, MercCamp +0x63, PowerSchool +0x67,
+    // TreeOfKnowledge +0x6b, Library +0x6f, then MagicSchool +0x77,
+    // WarSchool +0x7b, University +0x7f, Shrine1 +0x83, Shrine2 +0x87.
+    // Only this one has retail bytes behind it, so only this one is
+    // sliced; the rest stay in the pads as a prediction.
+    unsigned long ArenaFlags;
+    char pad_077[0x1a];
     // Seven army slots: creature type at 0x91+i*4, count at 0xad+i*4
     // (CreatureTypeCount reads [ecx-0x1c] against [ecx] with ecx
     // walking from 0xad) - exactly armyGroup's 56-byte layout, and
@@ -217,7 +230,16 @@ public:
     // and the signedness is unproven (a zero store shows neither).
     signed char field_11a;              // +0x11a
     signed char field_11b;              // +0x11b
-    char pad_11c[0xd];
+    // +0x11c, the "skip me" byte. playerData::NextHero (0x4baa40)
+    // takes a hero only when IsMobile() is true AND this byte is zero,
+    // which is exactly the adventure screen's next-hero button skipping
+    // a sleeping hero. The DC roster has `IsSleeping` (T_UCHAR) a few
+    // slots along in this band, so that is very likely the field - but
+    // the repack shift stops being uniform right here, so the name
+    // stays an ORDINAL PLACEHOLDER and only the offset and the role
+    // are claimed.
+    unsigned char field_11c;            // +0x11c
+    char pad_11d[0xc];
     // +0x129, a dword compared against 3 - the secondary-skill
     // mastery domain. hero::HeroFn_004E5DE0 (0x4e5de0) returns it
     // unless it is below 3 and the hero's army holds creature 0x8f,
@@ -345,6 +367,15 @@ public:
     // 0x004e23d0 - drains another hero's equipped slots and backpack
     // into this hero's backpack.
     void TransferArtifacts(hero* src);
+    // 0x4e5f30 - "this hero can still be given an order this turn".
+    // Declared for playerData::NextHero, which inlines nothing of it -
+    // it is a real call from game.obj.
+    unsigned char IsMobile();
+    // 0x4e53c0 / 0x4e53e0 - the Arena visit pair. The DC mangling
+    // (?VisitedArena@hero@@QBA_NPBVNewmapCell@@@Z) gives the const and
+    // the bool.
+    bool VisitedArena(const NewmapCell* cell) const;
+    void SetVisitedArena(const NewmapCell* cell);
     // BYTE-width return, not int (corrected 2026-08-07): 212 of the 224
     // retail call sites of 0x4d91f0 follow the call with `test al, al`,
     // which an int-returning declaration can never produce. The
@@ -458,15 +489,30 @@ struct type_obscuring_object {
 // lands `facing` on offset 27 too, and because its whole 24..28 band is
 // one-byte fields there is no packing ambiguity to resolve; the four
 // neighbours it names (allocated 24, id 25, type 26, playerOwner 28)
-// are therefore very likely at +0x18/+0x19/+0x1a/+0x1c, but no retail
-// body reads them yet, so they stay inside the pad. No SIZE() assert -
-// the extent is not proven.
+// are therefore very likely at +0x18/+0x19/+0x1a/+0x1c.
+// SLICED AND CLOSED 2026-08-08 by game::GetHeroBoat (0x4ce900), which
+// walks the pool with a 0x28 stride and reads exactly three of those
+// DC slots at their unshifted DC offsets - `allocated` +0x18,
+// `occupying_hero` +0x20 (a dword compare) and `occupied` +0x24 (a byte
+// compare). With facing already proven at +0x1b that is four hits and
+// the stride, so the DC roster transfers to retail unrepacked and the
+// extent is now proven: sizeof is 0x28.
 class boat {
 public:
-    char pad_000[0x1b];
+    // The type_obscuring_object base, 24 B by the DC class record.
+    char pad_000[0x18];
+    unsigned char allocated;        // +0x18
+    unsigned char id;               // +0x19
+    char type;                      // +0x1a
     signed char facing;             // +0x1b
+    char playerOwner;               // +0x1c
+    char pad_01d[3];
+    int occupying_hero;             // +0x20 (THeroID)
+    unsigned char occupied;         // +0x24
+    char pad_025[3];
     hero_seqid GetStandSequence();
 };
+SIZE(boat, 0x28);
 
 // THeroTraits - the per-hero static-traits record, 92 B stride
 // byte-proven by strip::DrawOwner 0x5aa060/0x5aa230-adjacent bodies:

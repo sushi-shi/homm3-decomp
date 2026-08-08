@@ -3,6 +3,8 @@
 // 944 functions in link order; 26 compiler-generated $-thunks omitted.
 #include "terrain.h"
 #include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 #include <va.h>
 #include "game.h"
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
@@ -12,6 +14,20 @@
 #include "findpath.h"
 #include "misc.h"
 #include "soundmgr.h"
+// playerData::ClearNetInfo and GetName read the default player name out
+// of the unnamed central object at 0x6a5d5c;
+// playerData::AssignNetInfo reads a CNetPlayerInfo.
+#include "exec.h"
+#include "netplayer.h"
+// game::GetLocalPlayer / GetLocalPlayerGamePos / IsMultiplayer branch
+// on the protocol selector; IsMultiplayer also reads 0x69954c, which
+// kbwin.h declares as `bVideoPaused` and kbwin.obj DATA-claims. The
+// name is contradicted there and the storage is right - the same
+// finding recruit.obj recorded - so the call site keeps the declared
+// name and this TU includes the owner's header rather than
+// re-declaring it.
+#include "netgame.h"
+#include "kbwin.h"
 
 #if 0  // @carcass
 
@@ -76,12 +92,31 @@ void ImmMouseWindowMoved()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:408
+// Everything to -1 except the two four-slot rows' population half. The
+// embedded armyGroup runs its own constructor between the two byte
+// stores at +0/+1 and the rest - a member subobject, so the call is
+// implicit - and the two rows are fused into one four-iteration loop
+// walking `type` by 4 and `population` by 2, which is what fixes
+// population as SHORTS.
 VA(0x004b8550, 0x48)  // anchor-global, dc 0xa2da0
-void generator::generator()
+generator::generator()
+    : genClass(-1), genType(-1)
 {
-    // @stub
+    playerOwner = -1;
+    mapX = -1;
+    mapY = -1;
+    mapZ = -1;
+    town_id = -1;
+    for (int i = 0; i < 4; i++) {
+        type[i] = -1;
+        population[i] = 0;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:431
 VA(0x004b85a0, 0x13B)  // anchor-global, dc 0xa2e48
@@ -125,12 +160,28 @@ void generator::Initialize(long new_owner)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:601
+// Reseed the guard stack from the creature table: growthRate into the
+// population row (a WORD store - population is shorts), and level-4+
+// creatures also join the guards at three times that. The four-slot
+// loop counts DOWN in a stack slot while the two row pointers walk
+// forward, which is VC6's own strength reduction of `for (i=0;i<4;i++)`.
 VA(0x004b8a60, 0x88)  // anchor-global, dc 0xa3320
-void generator::Grow()
+void generator::Grow(int unusedArg)
 {
-    // @stub
+    guards.Initialize();
+    for (int i = 0; i < 4; i++) {
+        if (type[i] != -1) {
+            population[i] = akCreatureTypeTraits[type[i]].growthRate;
+            if (akCreatureTypeTraits[type[i]].level >= 4)
+                guards.Add(type[i], population[i] * 3, -1);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // ---------------------------------------------------------------------
 // BRACKET generator::Grow (0x4b8a60) .. playerData::playerData (0x4b9df0)
@@ -271,12 +322,19 @@ int game::SaveObeliskPool(void* outfile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:1278
+// The whole body is one store; everything else is the implicit
+// construction of the shipyards vector (empty-allocator copy at +0x8c,
+// then the zeroed _First/_Last/_End triple).
 VA(0x004b9df0, 0x2D)  // anchor-bracket, dc 0xa4cc8
-void playerData::playerData()
+playerData::playerData()
 {
-    // @stub
+    aiField_e8 = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1283
 VA(0x004b9e20, 0x115)  // linkorder, dc 0xa4d58
@@ -285,12 +343,32 @@ void playerData::Init()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:1323
+// One 64-bit bit test per owned town. The mask is bitNumber[13] at
+// .data 0x66ce00 - already identified in town.h as HALL_CAPITOL_ID's
+// slot - and it is read as two dwords ANDed against town::built's two
+// halves and ORed, which is retail's whole __int64 lowering. GetTown's
+// -1 arm is emitted here and never taken.
 VA(0x004b9f40, 0x71)  // anchor-global, dc 0xa4e80
-unsigned char playerData::HasCapitol()
+bool playerData::HasCapitol()
 {
-    // @stub
+    int i = 0;
+    int nTowns = numTowns;
+
+    if (nTowns <= 0)
+        return false;
+loop:
+    if (gpGame->GetTown(townIds[i])->built & bitNumber[HALL_CAPITOL_ID])
+        return true;
+    i++;
+    if (i >= nTowns)
+        return false;
+    goto loop;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1336
 VA(0x004b9fc0, 0x167)  // anchor-global, dc 0xa4ee8
@@ -299,16 +377,34 @@ unsigned char playerData::add_garrison_hero(town* our_town)
     // @stub
 }
 
-// E:\gamedcs\game.cpp:1383
-VA(0x004ba130, 0x34)  // anchor-global, dc 0xa50ac
-void playerData::SetName(char* cNewName)
-{
-    // @stub
-}
+#endif  // @carcass
 
 // E:\gamedcs\game.cpp:1388
-DC_ONLY(0xa5108, 0x2E)
+// CLAIM CORRECTED 2026-08-08 - this row was carrying SetName (dc
+// 0xa50ac) on rank alone; the BODY says AssignNetInfo (dc 0xa5108).
+// It takes a pointer, strncpy's twenty bytes from `p + 4` into cName,
+// copies the DWORD at `p + 0` into dpid and sets isHuman - i.e. it
+// reads a CNetPlayerInfo {dpid @0, sName @4}, which is the DC class
+// record exactly. A `char* cNewName` cannot be read that way, so
+// SetName is not this row. Arity does not separate them (both p=2,
+// both `ret 4`), which is why rank alone got it wrong.
+// SetName and GetNetInfo then have no retail row in the span: the next
+// body starts at 0x4ba170 and is ClearNetInfo. Both are /Ob2 fodder -
+// SetName is a two-statement wrapper and GetNetInfo the mirror of this
+// body.
+VA(0x004ba130, 0x34)  // body (CNetPlayerInfo read), dc 0xa5108
 void playerData::AssignNetInfo(CNetPlayerInfo* pNetPlayerInfo)
+{
+    strncpy(cName, pNetPlayerInfo->sName, 20);
+    dpid = pNetPlayerInfo->dpid;
+    isHuman = 1;
+}
+
+#if 0  // @carcass
+
+// E:\gamedcs\game.cpp:1383
+DC_ONLY(0xa50ac, 0x5C)
+void playerData::SetName(char* cNewName)
 {
     // @stub
 }
@@ -320,12 +416,25 @@ void playerData::GetNetInfo(CNetPlayerInfo* pNetPlayerInfo)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:1401
+// The inverse: the default name (the central object's entry +0x754,
+// the same string GetName compares against for a computer player)
+// replaces cName, and the three net fields go to zero. The name copy
+// is VC6's intrinsic strcpy - repne scasb for the length, then
+// rep movsd/movsb - and the three zero stores all come out of the one
+// `xor eax,eax` the strlen scan already needed.
 VA(0x004ba170, 0x4E)  // anchor-global, dc 0xa5168
 void playerData::ClearNetInfo()
 {
-    // @stub
+    strcpy(cName, gUnnamed6a5d5c->entry->defaultPlayerName);
+    dpid = 0;
+    isHuman = 0;
+    isLocal = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1409
 VA(0x004ba260, 0x401)  // anchor-global, dc 0xa51b0
@@ -383,51 +492,107 @@ int game::LoadHeroPool(void* infile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:1774
+// The -1 guard is the caller's sentinel, not a bound: it skips the
+// whole scan for "no current hero". The roster count is a SIGNED char
+// (movsx + test/jle) and the ids are dwords - which is what separates
+// this body from FindTown's, where the ids are chars and every compare
+// needs its own movsx.
 VA(0x004ba9e0, 0x2D)  // anchor-global, dc 0xa5c4c
 int playerData::FindHero(int id)
 {
-    // @stub
+    if (id != -1) {
+        for (int i = 0; i < numHeroes; i++) {
+            if (id == heroes[i])
+                return i;
+        }
+    }
+    return -1;
 }
 
 // E:\gamedcs\game.cpp:1788
 VA(0x004baa10, 0x2E)  // anchor-global, dc 0xa5c98
 int playerData::FindTown(int id)
 {
-    // @stub
+    if (id != -1) {
+        for (int i = 0; i < numTowns; i++) {
+            if (id == townIds[i])
+                return i;
+        }
+    }
+    return -1;
 }
 
 // E:\gamedcs\game.cpp:1802
+// "The hero after the current one, wrapping." FindHero is inlined here
+// (extern linkage, one in-TU call site - the /Ob2 rule), and the two
+// sweeps are written out rather than shared: the second runs 0..cur
+// INCLUSIVE, so the current hero itself is the last candidate.
+// A hero qualifies when IsMobile() says yes and the +0x11c skip byte
+// is clear.
 VA(0x004baa40, 0xFA)  // anchor-global, dc 0xa5d10
 int playerData::NextHero()
 {
-    // @stub
+    int cur = FindHero(currHeroId);
+
+    for (int i = cur + 1; i < numHeroes; i++) {
+        hero* h = gpGame->GetHero(heroes[i]);
+        if (h->IsMobile() && !h->field_11c)
+            return heroes[i];
+    }
+    for (int j = 0; j <= cur; j++) {
+        hero* h = gpGame->GetHero(heroes[j]);
+        if (h->IsMobile() && !h->field_11c)
+            return heroes[j];
+    }
+    return -1;
 }
 
 // E:\gamedcs\game.cpp:1830
+// "The town after the acting player's current one." The wrap is a
+// signed idiv by numTowns (`inc/cdq/idiv`), and the -1 arm returns the
+// first town rather than the current one - so the current town comes
+// from gpCurrentPlayer while the roster searched is `this`.
 VA(0x004bab40, 0x43)  // anchor-global, dc 0xa5e0c
 int playerData::NextTown()
 {
-    // @stub
+    if (numTowns > 0) {
+        if (gpCurrentPlayer->currTownId == -1)
+            return townIds[0];
+        for (int i = 0; i < numTowns; i++) {
+            if (gpCurrentPlayer->currTownId == townIds[i])
+                return townIds[(i + 1) % numTowns];
+        }
+    }
+    return -1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:1852
 VA(0x004bab90, 0x10)  // anchor-global, dc 0xa5eb0
-unsigned char playerData::HasMobileHero()
+bool playerData::HasMobileHero()
 {
     return NextHero() != -1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:1859
+// 48 obelisk records at gpGame+0x4e3e9, one signed byte of visit bits
+// each. /Gr puts whichPlayer in ecx, which is why the shift needs no
+// move (`mov esi,1` / `shl esi,cl`).
 VA(0x004baba0, 0x29)  // anchor-global, dc 0xa5ee8
 int GetNumObelisks(int whichPlayer)
 {
-    // @stub
+    int numFound = 0;
+
+    for (int i = 0; i < 48; i++) {
+        if (gpGame->obeliskFlags[i] & (1 << whichPlayer))
+            numFound++;
+    }
+    return numFound;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1873
 DC_ONLY(0xa5f30, 0xBE)
@@ -443,26 +608,54 @@ int playerData::NumOfGivenArtifact(int iWhichArtifact)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:1938
 VA(0x004bad80, 0x1A)  // anchor-global, dc 0xa6114
-unsigned char playerData::IsLocalHuman()
+bool playerData::IsLocalHuman() const
 {
-    // @stub
+    if (isHuman && isLocal)
+        return true;
+    return false;
 }
 
 // E:\gamedcs\game.cpp:1946
 VA(0x004bada0, 0xC)  // anchor-global, dc 0xa6144
-unsigned char playerData::IsHuman()
+bool playerData::IsHuman() const
 {
-    // @stub
+    return isHuman ? true : false;
 }
 
 // E:\gamedcs\game.cpp:1955
+// A never-renamed player gets the colour word for a name. WHICH
+// default string counts depends on isHuman - "Player" for a human,
+// the central object's own default for a computer - and the two arms
+// are one `||`, not an if/else: the second disjunct re-loads isHuman
+// after the first _strcmpi call, which an else-arm would not do.
+// The copy is VC6's intrinsic strcpy; the trailing toupper writes the
+// first character back in place and the buffer itself is the return.
+// Residual (95.8%): four instructions of the first call's argument
+// setup. Retail runs the default-name chain through eax then ecx and
+// slots the `lea eax,[this+0xcc]` between the second and third loads;
+// our CL starts the chain in ecx, spends edx on the middle link and
+// emits the lea one slot earlier. Same three loads, same push order,
+// one extra live register - the register-tie-break family. Tried and
+// rejected: `!_strcmpi(...)` for `== 0`; `&cName[0]` for `cName`;
+// hoisting `gUnnamed6a5d5c->entry` to a local (moves the load out of
+// the short circuit and scores worse); the whole thing measured on a
+// derived probe TU, where all four spellings gave our register choice.
 VA(0x004badb0, 0x9C)  // anchor-global, dc 0xa6180
 char* playerData::GetName()
 {
-    // @stub
+    if ((!isHuman && _strcmpi(cName, gUnnamed6a5d5c->entry->defaultPlayerName) == 0) ||
+        (isHuman && _strcmpi(cName, DATA_COMPGEN(0x00677d30, defaultHumanName, "Player")) == 0)) {
+        strcpy(cName, gPlayerColorNames[color]);
+    }
+    cName[0] = toupper(cName[0]);
+    return cName;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1972
 VA(0x004bae50, 0x1B)  // linkorder, dc 0xa6230
@@ -471,12 +664,26 @@ void playerData::guess_grail_location(long player_id)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:1978
+// The mine pool's stride is 64, not the Dreamcast record's 12 - the
+// bound is `(_Last - _First) >> 6`, and the whole loop condition
+// (including the `_First != 0` guard re-tested every iteration) is
+// Dinkumware's vector::size() inlined.
 VA(0x004bae70, 0x55)  // linkorder, dc 0xa6274
 int game::MineTypesOwned(int iWhichPlayer, int iMineType)
 {
-    // @stub
+    int count = 0;
+
+    for (unsigned i = 0; i < mines.size(); i++) {
+        if (mines[i].playerOwner == iWhichPlayer && mines[i].type == iMineType)
+            count++;
+    }
+    return count;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1994
 VA(0x004baed0, 0x2C)  // linkorder, dc 0xa6328
@@ -545,12 +752,24 @@ THeroID game::GetNewHeroId(TTownType alignment, THeroClass excluded, unsigned ch
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:2373
+// Twin of GetGeneratorId below; the only differences are the pool and
+// the field offsets (+5/+6/+7 against +0x54/+0x55/+0x56). Both strides
+// come out of the vector's own size() - 360 here through the signed
+// magic-multiply, 92 there.
 VA(0x004bb870, 0x89)  // anchor-global, dc 0xa6fd4
 int game::GetTownId(int x, int y, int z)
 {
-    // @stub
+    for (unsigned i = 0; i < towns.size(); i++) {
+        if (towns[i].mapX == x && towns[i].mapY == y && towns[i].mapZ == z)
+            return i;
+    }
+    return -1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2390
 DC_ONLY(0xa707c, 0x90)
@@ -566,12 +785,21 @@ int game::GetMineId(int x, int y, int z)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:2419
 VA(0x004bb900, 0x87)  // anchor-global, dc 0xa71b4
 int game::GetGeneratorId(int x, int y, int z)
 {
-    // @stub
+    for (unsigned i = 0; i < generators.size(); i++) {
+        if (generators[i].mapX == x && generators[i].mapY == y &&
+            generators[i].mapZ == z)
+            return i;
+    }
+    return -1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2433
 DC_ONLY(0xa7278, 0xA6)
@@ -1266,11 +1494,32 @@ void game::MakeTerrainVisible(int whichPlayer, unsigned short visMask)
 // >= 0 it writes group->type[slot] and group->count[slot] (the +0x0 /
 // +0x1c pair of armyGroup's 56-byte layout), otherwise it scans the
 // seven slots for a matching creature type first.
+#endif  // @carcass
+
 VA(0x004ca340, 0x6F)  // arity (ret 0x10) + armyGroup layout, dc 0xb6054
 void game::GiveArmy(armyGroup* thisMonInfo, int iMonType, int iMonNum, int slot)
 {
-    // @stub
+    if (slot >= 0) {
+        thisMonInfo->armies[slot] = iMonType;
+        thisMonInfo->numTroops[slot] = iMonNum;
+        return;
+    }
+    for (int i = 0; i < 7; i++) {
+        if (thisMonInfo->armies[i] == iMonType) {
+            thisMonInfo->numTroops[i] += iMonNum;
+            return;
+        }
+    }
+    for (int j = 0; j < 7; j++) {
+        if (thisMonInfo->armies[j] < 0) {
+            thisMonInfo->armies[j] = iMonType;
+            thisMonInfo->numTroops[j] = iMonNum;
+            return;
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:9576
 DC_ONLY(0xb6114, 0xBC)
@@ -1507,26 +1756,39 @@ unsigned char game::get_random_lith(const std::vector<type_point,std::allocator<
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:11635
+// Three one-line wrappers around the four-argument get_random_lith.
+// Each names a pool and a cell type: the colour-indexed arrays at
+// +0x4e6fc (0x2c) and +0x4e67c (0x2d), and the single whirlpool pool
+// at +0x4e77c (0x6f). The `shl 4` in the first two is the 16-byte
+// std::vector stride, which is how the arrays were sized.
 VA(0x004cddc0, 0x22)  // anchor-global, dc 0xbb3e0
 unsigned char game::get_random_lith_exit(long color, type_point* result)
 {
-    // @stub
+    return get_random_lith(&lithExitPools[color], result, 0x2c, -1);
 }
+
+#if 0  // @carcass
+
+#endif  // @carcass
 
 // E:\gamedcs\game.cpp:11644
 VA(0x004cddf0, 0x24)  // anchor-bracket, dc 0xbb41c
 unsigned char game::get_random_lith(long color, long excluded, type_point* result)
 {
-    // @stub
+    return get_random_lith(&lithPools[color], result, 0x2d, excluded);
 }
 
 // E:\gamedcs\game.cpp:11653
 VA(0x004cde20, 0x1D)  // anchor-global, dc 0xbb45c
 unsigned char game::get_random_whirlpool(long excluded, type_point* result)
 {
-    // @stub
+    return get_random_lith(&whirlpools, result, 0x6f, excluded);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:11662
 VA(0x004cde40, 0xE0)  // anchor-global, dc 0xbb490
@@ -1589,11 +1851,14 @@ void HeroExtra::HeroExtra()
 }
 
 // E:\gamedcs\game.cpp:11746
+#endif  // @carcass
+
 VA(0x004ce570, 0x32)  // address-take + ctor-proven layout (+0x90 triple), dc 0xbd630
-void playerData::~playerData()
+playerData::~playerData()
 {
-    // @stub
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:11749
 VA(0x004ce5b0, 0x346)  // anchor-global, dc 0xbbd28
@@ -1602,40 +1867,92 @@ void game::~game()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:11754
+// Iterator walk over the third object pool. It closes boat's layout
+// from hero.h: 0x28 stride, `allocated` +0x18, `occupying_hero` +0x20
+// (dword) and `occupied` +0x24 (byte) - the DC roster's 24/32/36
+// unshifted.
 VA(0x004ce900, 0x3B)  // anchor-global, dc 0xbbe68
 boat* game::GetHeroBoat(int id, unsigned char occupied)
 {
-    // @stub
+    for (boat* i = boats.begin(); i != boats.end(); i++) {
+        if (i->allocated && i->occupying_hero == id && i->occupied == occupied)
+            return i;
+    }
+    return 0;
 }
 
 // E:\gamedcs\game.cpp:11766
+// The out-of-range arm CLAMPS to player 0 here and RETURNS FALSE in
+// IsLocalHuman below - the two guards are not the same guard, which is
+// what keeps the two bodies distinct.
 VA(0x004ce940, 0x27)  // anchor-global, dc 0xbbee4
-unsigned char game::IsHuman(int gamePos)
+bool game::IsHuman(int gamePos) const
 {
-    // @stub
+    if (gamePos >= 8 || gamePos < 0)
+        gamePos = 0;
+    return players[gamePos].IsHuman();
 }
 
 // E:\gamedcs\game.cpp:11780
 VA(0x004ce970, 0x3C)  // anchor-global, dc 0xbbfcc
-unsigned char game::IsLocalHuman(int gamePos)
+bool game::IsLocalHuman(int gamePos) const
 {
-    // @stub
+    if (gamePos >= 8 || gamePos < 0)
+        return false;
+    return players[gamePos].IsLocalHuman();
 }
 
 // E:\gamedcs\game.cpp:11791
+// GetLocalPlayer and GetLocalPlayerGamePos carry the SAME selection
+// longhand rather than one calling the other: this body comes first in
+// address (so in source) order, so VC6 cannot have inlined the later
+// one into it, and neither body contains a call.
+// The selection: on the network game kind, trust the announced net
+// position only if it is in range and human, else take the highest
+// human slot, else player 0. Any other game kind hands back the plain
+// local position unchecked.
 VA(0x004ce9b0, 0x6A)  // anchor-global, dc 0xbc010
 playerData* game::GetLocalPlayer()
 {
-    // @stub
+    int pos;
+
+    if (iMPNetProtocol == MP_HOTSEAT) {
+        pos = gNetLocalGamePos;
+        if (pos < 0 || pos >= 8 || !players[pos].isHuman) {
+            for (pos = 7; pos >= 0; pos--) {
+                if (players[pos].isHuman)
+                    goto found;
+            }
+            pos = 0;
+        }
+    } else {
+        pos = gLocalGamePos;
+    }
+found:
+    return &players[pos];
 }
 
 // E:\gamedcs\game.cpp:11796
 VA(0x004cea20, 0x4E)  // anchor-global, dc 0xbc038
 int game::GetLocalPlayerGamePos()
 {
-    // @stub
+    if (iMPNetProtocol == MP_HOTSEAT) {
+        int pos = gNetLocalGamePos;
+        if (pos >= 0 && pos < 8 && players[pos].isHuman)
+            return pos;
+        for (pos = 7; pos >= 0; pos--) {
+            if (players[pos].isHuman)
+                return pos;
+        }
+        return 0;
+    }
+    return gLocalGamePos;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:11812
 VA(0x004cea70, 0xE7)  // linkorder, dc 0xbc0c0
@@ -1644,33 +1961,66 @@ type_point game::get_puzzle_origin(type_point* __$ReturnUdt)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:11828
+// playerData::GetName inlined behind a clamp - the /Ob2 single-call-
+// site rule in its clean case, since this TU calls GetName nowhere
+// else and GetName still gets its out-of-line body (extern linkage).
+// Residual (99.5%): the inlined copy inherits GetName's own
+// register-tie-break delta (see there) plus three eax/edx/ecx swaps in
+// the strcpy block. Retail's two copies of this body do NOT agree with
+// each other on registers; ours do, which is itself the tell that the
+// difference is allocation order, not shape.
 VA(0x004ceb60, 0xBD)  // anchor-global, dc 0xbc1fc
 char* game::GetPlayerName(int gamePos)
 {
-    // @stub
+    if (gamePos >= 8 || gamePos < 0)
+        gamePos = 0;
+    return players[gamePos].GetName();
 }
 
 // E:\gamedcs\game.cpp:11839
 VA(0x004cec20, 0x25)  // linkorder, dc 0xbc23c
 int game::GetGamePosFromDPID(unsigned long dpid)
 {
-    // @stub
+    for (int i = 0; i < 8; i++) {
+        if (players[i].dpid == dpid)
+            return i;
+    }
+    return -1;
 }
 
 // E:\gamedcs\game.cpp:11850
+// "Nobody human after this slot." IsHuman is inlined, and the loop
+// bound folds away its `>= 8` half - only the `< 0` clamp survives,
+// which is what identifies the callee.
 VA(0x004cec50, 0x3E)  // linkorder, dc 0xbc2b8
-unsigned char game::IsLastHuman(int gamePos)
+bool game::IsLastHuman(int gamePos) const
 {
-    // @stub
+    int i = gamePos + 1;
+
+    if (i >= 8)
+        return true;
+loop:
+    if (IsHuman(i))
+        return false;
+    i++;
+    if (i >= 8)
+        return true;
+    goto loop;
 }
 
 // E:\gamedcs\game.cpp:11861
 VA(0x004cec90, 0x18)  // anchor-global, dc 0xbc300
-unsigned char game::IsMultiplayer()
+bool game::IsMultiplayer() const
 {
-    // @stub
+    if (bVideoPaused || iMPNetProtocol == MP_HOTSEAT)
+        return true;
+    return false;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:11869
 DC_ONLY(0xbc320, 0x64)
