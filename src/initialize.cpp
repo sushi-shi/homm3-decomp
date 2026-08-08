@@ -233,8 +233,26 @@ static void add_to_included_mask(const int* include_list, __int64* included_buil
 // duplicate store is optimized away; no byte of this body changes.
 // Residual (93.9%): retail schedules the memcpy setup count/src/dst
 // (mov ecx / mov esi / lea edi) where our CL hoists the lea two slots
-// earlier - one transposed instruction, same bytes otherwise; every
-// spelling that fixes it costs initialize_game_data its exact match.
+// earlier - one transposed instruction, IDENTICAL byte multiset, and
+// the only real delta in the function (the `bitNumber+4` and
+// `kCommonIncludeList` rows the masked diff shows are reloc-name-only
+// and cost nothing - add_to_included_mask carries the same two rows
+// at 100.00).
+// Corrected 2026-08-08: the earlier note here claimed "every spelling
+// that fixes it costs initialize_game_data its exact match". NO
+// spelling fixes it. 93.8667 is invariant under all of: dropping both
+// const locals and the duplicate store (the plain body - which also
+// drops initialize_game_data to 88.6), &arr[1]/&arr[0], a dst pointer
+// local, a base-pointer local, a *deref store, locals after the
+// stores, signed/unsigned/slot-count spellings of the byte count, a
+// third const local, and a triple store. memset(,0,8) for the zero
+// fill (85.7) and two explicit dword stores (91.2) are strictly
+// worse. It is ALSO not include-set sensitivity: a 0..8 dummy-struct
+// sweep leaves this function at 93.8667 at every count while
+// initialize_game_data swings 100/100/100/94.07/94.07/100/100/100/100
+// over the same sweep. Nor is it the scheduler target: /G5 and the
+// default /GB are byte-identical here and /G6 also scores 93.8667.
+// Treat as a post-RA scheduling difference with no source handle.
 VA(0x004ebb70, 0xD8)  // linkorder+body (common-list + arg-list walks), dc 0xdc3cc
 static void create_included_mask(const int* include_list, __int64* included_buildings)
 {
