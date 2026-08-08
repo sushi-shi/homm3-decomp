@@ -25,6 +25,18 @@ enum ECombatSpellRestriction {
     COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS = 0x2
 };
 
+// Combat-grid geometry, byte-proven wherever a cmbtmgr or findpath body
+// touches it: the cell array is 187 entries (`cmp esi, 0xbb` guards it
+// in move_toward, SeedCombatPosition and FindCombatPath alike) laid out
+// 17 to a row (`idiv 0x11` in get_distance, IsInMoat, PlaceObstacle and
+// RemoveObstacle), which makes columns 0 and 16 the two off-field
+// margins SeedCombatPosition refuses to seed a wide stack's tail into.
+enum ECombatGrid {
+    COMBAT_GRID_CELLS = 0xbb,
+    COMBAT_GRID_ROW_STRIDE = 0x11,
+    COMBAT_GRID_LAST_COLUMN = 0x10
+};
+
 // The drawbridge state held in combatManager+0x53a4. LowerDoor
 // (0x4671c0) walks it 3 -> 2 -> 1 with one DrawFrame per step and
 // leaves it at 1; RaiseDoor (0x4672e0) refuses to run unless it already
@@ -100,7 +112,22 @@ public:
     // not yet modelled as deriving baseManager, so the field is sliced
     // out of the head pad at the offset the bytes prove.
     int status;
-    char pad_0038[0x18c];
+    char pad_0038[0x4];
+    // The pending AI order, written as a (code, hex) pair. move_toward
+    // (0x41f580) sets the code to 2 the moment a path exists, raises it
+    // to 8 when waiting still looks better than the hex it settled on,
+    // and finally forces `consider_waiting ? 8 : 3` whenever the hex it
+    // settled on is the stack's own. The hex slot starts at the stack's
+    // own gridIndex and is overwritten with each accepted step - and
+    // the same body compares it back against gridIndex, so it is a
+    // combat cell index, not a pointer. Both names are ADDRESS
+    // ORDINALS: no DC layout exists for combatManager at all (the
+    // Dreamcast dump carries no fieldlist for it) and no string or
+    // roster entry reaches either slot.
+    int field_3c;                     // +0x3c
+    char pad_0040[0x4];
+    int field_44;                     // +0x44
+    char pad_0048[0x17c];
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
     hexcell cells[187];               // +0x1c4, ends 0x5394
@@ -243,6 +270,14 @@ public:
     long get_attack_change(const army* current_army, const army* enemy,
                            const type_AI_combat_parameters* data);
                                                               // 0x41f3b0
+    unsigned char move_toward(const army* current_army, long target_hex,
+                              const long* enemy_attacks,
+                              unsigned char consider_waiting);  // 0x41f580
+    // command.obj's leaf (0x4763f0, claimed in src/command.cpp); ai.cpp
+    // and findpath.cpp are both located callers and both reach it
+    // through gpCombatManager with (army::combatSide, hex).
+    unsigned char is_outside_placement_boundry(int group, int index);
+                                                              // 0x4763f0
     // spells.obj leaves, both `ret 0x18` (six stack args). Names are
     // the DC roster's (spells.cpp:5086 / 5419); the retail addresses
     // come from ai_tactical's get_damage_value (0x436e30), which calls

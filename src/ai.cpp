@@ -5,6 +5,8 @@
 #include <algorithm>
 #include "ai.h"
 #include "ai_tactical.h"
+#include "findpath.h"
+#include "game.h"
 #include "hero.h"
 
 // A by-value, reference-RETURNING min - compute_fire_shield_damage
@@ -329,37 +331,156 @@ long combatManager::get_attack_change(const army* current_army, const army* enem
     return committed + best_other;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai.cpp:779
-// BLOCKED on the path model, not on decoding. The body is understood:
-// it early-outs on the stack being bound (army+0x2b8) or having no
-// speed, calls searchArray::FindCombatPath(current_army, currentSide,
-// target_hex, bCreaturePlacement, 0x7f, -1) through gpSearchArray, and
-// then walks the resulting path BACKWARDS from the far end, taking the
-// last hex the stack can still afford (speed rounded down to whole
-// steps) that is neither blocked nor outside the placement boundary,
-// scoring candidates against enemy_attacks[hex] and the wide-creature
-// partner hex before committing army+0x44 (facing) and army+0x3c.
+// Walks the path FindCombatPath just built BACKWARDS from the far end
+// and keeps the last hex the stack can still afford. `move_left` is
+// both the remaining step budget (decremented once per step, and
+// slammed to 0 by the moat rule) and the divisor that rounds the path
+// length down to a whole number of turns - retail evaluates the
+// division ONCE, before the loop, so the two uses share one variable.
+// Local NAMES are the DC roster's own (variables.csv: limit,
+// start_danger, step, second_hex); its fifth, `minimum_move`, has no
+// slot in this reconstruction that the retail bytes justify, so the
+// step budget keeps a descriptive name rather than a guessed pairing.
 //
-// What it needs first: (a) `pathCell` has no model anywhere in the tree
-// - the walk indexes gpSearchArray->cellData with a THIRTY-byte stride
-//   (lea/lea/lea x3,x5,x2) and reads one word at +4 that carries a
-//   direction in bits 12..15 and a six-bit blocked mask in bits 26..31;
-// (b) searchArray::result is declared `std::vector<int>` as an admitted
-//   PLACEHOLDER, and this body proves the element type is `pathCell*`
-//   (it loads [result._First + i*4] and dereferences it) - pinning that
-//   is a findpath.h contract change touching every consumer, and the
-//   STLport vendoring decision (P2.3) is still open.
-// Also referenced and not yet modelled: gpGame + 0x1f6d8 (a byte the
-// body compares >= 2) and combatManager + 0x13de4 (a byte).
+// FOUR spellings are byte-load-bearing here:
+//   1. `size() <= 0` must be SIGNED. Dinkumware's size() is
+//      `_First == 0 ? 0 : _Last - _First`; left unsigned the compare
+//      degenerates to `!= 0` and emits `sar ecx,2; jne` where retail
+//      folds the shift into the mask (`test ecx,0xfffffffc; jle`).
+//      81.0% -> 87.8% on that one cast.
+//   2. The three early-outs are ONE nested `if`, not three `return 0`
+//      statements. Retail reaches a single merged `xor al,al` epilogue
+//      from all three sites; three separate returns make our CL
+//      duplicate the six-byte epilogue three times (87.8% -> 97.9%).
+//      Branch senses are unchanged by the rewrite, so this is the
+//      DUP-EXIT shape, not a re-threading.
+//   3. The redundant `if (path_index >= 0)` around a loop whose own
+//      condition repeats it. Retail SINKS `step = path_index + 1` below
+//      the loop-entry test (`test edi,edi; mov limit; jl end; lea`),
+//      and our CL only performs that partial-dead-code sink when the
+//      test is already a separate statement (97.9% -> 99.4%). Rejected:
+//      `step` as a plain statement before the `for` (no change), and an
+//      `if (...) { step = ...; do { } while (...); }` rewrite (95.5% -
+//      the do-while loses the rotation entirely).
+//   4. The commit guard is the compiler's own `!(A) || (B)` shape, not
+//      a paraphrase: retail evaluates `step <= limit` first, jumps
+//      straight past `committed` to the `consider_waiting` test when it
+//      fails (`jg`), and takes the commit branch outright when the
+//      whole left operand is false (`je 0x6f3`) - exactly the
+//      short-circuit of `!(((A && B) || C) && enemy_attacks) || (D && E)`.
+//
+// The moat map is indexed through a SHORT: retail sign-extends the
+// low half of the hex (`movsx edx, si`) before both byte loads, and
+// FindCombatPath (0x4b3400) narrows the same way. The truncation is in
+// the source, not the addressing mode - a `long` subscript on an
+// `unsigned char*` needs no movsx at all.
+//
+// Residual (99.4%): register-homing family, EIGHT instructions in the
+// SECOND inlined min_ref. Retail homes `_X` (enemy_attacks[second_hex])
+// in the fresh local -0x1c and coalesces `_Y` with best_danger's own
+// recycled argument slot +0xc, reusing the same `_Y` home the FIRST
+// min_ref already took; our CL swaps the pair, so the two stores and
+// the two LEAs carry each other's displacements. Byte multiset is
+// identical - it is a slot tie-break, not a shape. Tried and rejected:
+// hoisting the element into a named `long other` temp first (no
+// change); `min_ref(enemy_attacks[second_hex], enemy_attacks[hex])` so
+// that `_Y` is the CSE rather than the variable (97.3%); declaring
+// best_danger last in the local list (no change).
 VA(0x0041f580, 0x304)  // linkorder, dc 0x24b64
 unsigned char combatManager::move_toward(const army* current_army, long target_hex, const long* enemy_attacks, unsigned char consider_waiting)
 {
-    // @stub
-}
+    if (!current_army->boundFlag && current_army->GetSpeed()) {
+        gpSearchArray->FindCombatPath(current_army, currentSide, target_hex,
+                                      bCreaturePlacement, 0x7f, -1);
+        if (static_cast<long>(gpSearchArray->result.size()) > 0) {
+            field_3c = 2;
+            long move_left = current_army->GetSpeed();
+            long path_index = gpSearchArray->result.size() - 1;
+            long step;
+            long start_danger;
+            long limit;
+            long best_danger;
+            long hex = current_army->gridIndex;
+            unsigned char committed;
 
-#endif  // @carcass
+            best_danger = 0;
+            start_danger = 0;
+            field_44 = hex;
+            if (bCreaturePlacement)
+                move_left = path_index + 1;
+            if (bCreaturePlacement || field_13de4)
+                consider_waiting = 0;
+            if (gpGame->AI_in_control < 2 && !sideIsAI[current_army->combatSide])
+                consider_waiting = 0;
+            if (enemy_attacks == 0) {
+                consider_waiting = 0;
+            } else {
+                best_danger = enemy_attacks[hex];
+                if (current_army->creatureId & 1)
+                    best_danger = min_ref(
+                            enemy_attacks[hex
+                                    + (current_army->facing != 0 ? 1 : -1)],
+                            best_danger);
+                start_danger = best_danger;
+            }
+
+            committed = 0;
+            limit = (path_index / move_left) * move_left;
+            if (path_index >= 0) {
+                for (step = path_index + 1; path_index >= 0;
+                        path_index--, step--, move_left--) {
+                    if (move_left <= 0)
+                        break;
+                    hex = const_cast<army*>(current_army)->GetAdjacentCellIndex(
+                            hex, gpSearchArray->result[path_index]->direction);
+                    if (hex < 0 || hex >= 187)
+                        break;
+                    const pathCell* cell = gpSearchArray->cellData == 0
+                            ? 0 : &gpSearchArray->cellData[hex];
+                    if (cell->flight_cost == 0) {
+                        long second_hex = (current_army->creatureId & 1)
+                                ? hex + (current_army->facing != 0 ? 1 : -1) : hex;
+                        if (!(((step <= limit && committed) || consider_waiting)
+                                    && enemy_attacks != 0)
+                                || (enemy_attacks[hex] >= best_danger
+                                    && enemy_attacks[second_hex] >= best_danger)) {
+                            if (!bCreaturePlacement
+                                    || !is_outside_placement_boundry(
+                                            current_army->combatSide, hex)) {
+                                field_44 = hex;
+                                committed = 1;
+                                if (enemy_attacks != 0) {
+                                    best_danger = enemy_attacks[hex];
+                                    if (current_army->creatureId & 1)
+                                        best_danger = min_ref(
+                                                enemy_attacks[second_hex],
+                                                best_danger);
+                                }
+                            }
+                        }
+                        if ((static_cast<unsigned char>(static_cast<unsigned>(
+                                        current_army->creatureId) >> 1) & 1) == 0) {
+                            if (gpSearchArray->bIsMoatSlowed[
+                                        static_cast<short>(hex)]
+                                    || gpSearchArray->bIsMoatSlowed[
+                                            static_cast<short>(second_hex)])
+                                move_left = 0;
+                        }
+                    }
+                }
+            }
+
+            if (consider_waiting && field_44 != hex
+                    && best_danger >= start_danger)
+                field_3c = 8;
+            if (field_44 == current_army->gridIndex)
+                field_3c = consider_waiting ? 8 : 3;
+            return 1;
+        }
+    }
+    return 0;
+}
 
 // E:\gamedcs\ai.cpp:897
 // The first `return 0` costs no instruction: hero_spell is already
