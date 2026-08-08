@@ -82,7 +82,10 @@ off_grid:
 // local declared at function scope and assigned later, and
 // `FindCombatPath(...) == 0` inline. The positive form
 // (`if (found) { pathTarget = ...; return 1; } return 0;`) is much
-// worse (80.1%) - it sinks the success block.
+// worse (80.1%) - it sinks the success block. Re-confirmed 2026-08-08
+// (closeout lane): `int found = ...; if (!found)` is still folded away
+// entirely - our CL emits `test al,al` with no widen and no store, so
+// the two rows retail spends on the dead int are unreachable.
 VA(0x00523a70, 0xA8)  // anchor-bracket, dc 0x10c9a4
 unsigned char army::ValidPath(int destIndex, unsigned char bLiteralTest)
 {

@@ -148,6 +148,20 @@ inline void strip::DrawNumber(int i)
 // slack" theory), if/else instead of the pos==0 early return (no
 // change), and all 24 permutations of the entry preamble. Statement
 // SEMANTICS match store for store on every path.
+//   2026-08-08 (closeout lane), instruction-level re-measure: the two
+// defects are ONE register-allocation decision, not two. Our compile
+// picks EAX for the base (`A1` accumulator form, 5 B) instead of
+// retail's EDX (`8B 15`, 6 B); EAX still holds `frame` until the
+// index chain's last `sub`, so an EAX base CANNOT be issued before
+// the chain and the load sinks below it - which then leaves the
+// closing broadcast schedule identical to the pos==0 arm's and lets
+// the cross-jumper fire. The pos==0 twin escapes only because its
+// extra `codeY = 122` store keeps EAX live across the base load, so
+// EDX gets picked there. Also re-measured today: base-pointer local
+// (`const THeroTraits* traits = akHeroTraits;`) is folded away
+// entirely - byte-identical to the plain inline, 78.11, not a
+// distinct spelling. No source-level lever reaches the EDX choice
+// without emitting a store retail does not have.
 VA(0x005aa060, 0x1CE)  // linkorder + body: akHeroTraits[frame] portrait via WIDGET_SET_IMAGE, owner widgets 100/122/123 (pos==0) and 124/125; dc 0x158a80
 void strip::DrawOwner(int frame)
 {

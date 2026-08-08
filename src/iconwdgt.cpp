@@ -242,6 +242,18 @@ void iconWidget::NextRandomFrame()
 // Tried and rejected: caching `Sprite` in a local (74.02 - it also
 // stops the per-iteration [this+0x30] reload retail does), folding
 // the frame count into the `if` condition instead of a local (83.74).
+// ROOT CAUSE identified 2026-08-08 (closeout lane) from the branch
+// targets: the re-roll loop's back edge lands on `mov edx,0x64` in
+// BOTH builds, but retail's odds-table stores sit AFTER that label
+// (inside the loop) and ours sit BEFORE it - our CL hoists the whole
+// loop-invariant table initialisation into the preheader. With the
+// stores outside the loop the literal 2 is needed exactly once, so it
+// takes a volatile EAX and `this` keeps EDI; retail needs it every
+// iteration, hoists it into callee-saved EDI, and homes `this` at
+// [ebp-4] - hence the 0x24-vs-0x20 frame and every table
+// displacement. Also tried and rejected: rewriting the re-roll as a
+// `goto retry` bottom-tested loop (byte-identical output - VC6
+// recognises it as the same natural loop and still hoists).
 VA(0x004eb250, 0xED)  // anchor-global, dc 0xd9ee8
 void iconWidget::NextRandomSiegeEngineFrame()
 {

@@ -135,6 +135,16 @@ void soundManager::SetMusicVolume()
 // (folds the duplication AND drops under the /Ob2 budget, regressing
 // two exact callers); naming the global in a `setting` local (VC6
 // already CSE'd it - byte-identical).
+// SECOND-ORDER EFFECT measured 2026-08-08 (closeout lane): the edx
+// carrier is also why retail has 4 exits to our 6. Retail's per-arm
+// clamp tails all end `mov eax,edx / pop ebp / ret 8` - one
+// instruction longer than ours - which puts them over VC6's
+// cross-jump threshold, so the `result < 0` and `result > 127` clamps
+// are emitted ONCE and shared by both arms (both arms `jge` the same
+// 0x28b). Ours writes the value straight into EAX, the tails are two
+// instructions, no merge fires, and the whole three-clamp chain is
+// duplicated per arm. So the register choice and the missing merge
+// are one defect, not two - fix the carrier and the merge follows.
 VA(0x005996c0, 0x97)  // anchor-callee, dc 0x14b170
 int soundManager::ConvertVolume(int iVolumeValue, int iVolumeType)
 {
