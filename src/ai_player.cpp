@@ -50,6 +50,13 @@
 // aggregate initialiser never does), unsigned short temporaries,
 // declaring the point before the temporaries, and static_cast<short> /
 // <int> on the byte reads (all identical to the implicit conversion).
+// Re-swept 2026-08-08 with the naming lever that closed the
+// SpellCastWorkChance family: binding gpGame to a named local is the
+// WRONG direction here and loses ground from every position tried -
+// before the point assignments or at the top of the body 89.3, between
+// the x and y stores 85.8, between y and z 85.8, after all three 93.0,
+// and with the z store moved up 83.5. The hoist retail performs is the
+// allocator's, not a source ordering we can spell.
 VA(0x00428410, 0x160)  // anchor-global, dc 0x2dc00
 unsigned char can_take_town(const hero* attacking_hero, const town* defending_town)
 {
