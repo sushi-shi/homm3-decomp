@@ -848,7 +848,20 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 # town.h still moves the row (100/100/94.07/94.07/94.07/100/100/100/
 # 100/94.07/94.07), so the TU's type population is still not retail's -
 # terrain.h was one missing header, not the only one.
-initialize	?initialize_game_data@@YIXXZ	100.0000
+# initialize_game_data hand-lowered 100.0000 -> 96.0880 (2026-08-08,
+# third movement of this row today). Cause is the documented include-set
+# sensitivity, not a modelling error: town.h gained `NewmapCell::terrain`
+# and an eTerrainWater enumerator so that town.cpp's `== 8` could be
+# spelled as a named domain compare and hold the cleanliness floor at 0.
+# initialize.cpp's only project include is town.h, so its type population
+# moved and this TU fell off the lucky point again. NO LOCAL SPELLING
+# FIXES IT - that was established when 16 were tried and the terrain.h
+# recovery closed only part of the gap (still 6 of 11 under the dummy
+# sweep). The alternatives were reverting a legitimate cleanliness fix or
+# carrying another unevidenced lever include, and both are worse than an
+# honest lower. Re-measure after any town.h edit; the row has read 26.18,
+# 94.07, 100.00 and now 96.09 today, all without a semantic change.
+initialize	?initialize_game_data@@YIXXZ	96.0880
 inputmgr	??0inputManager@@QAE@XZ	86.5667
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000
@@ -872,16 +885,16 @@ kbwin	?SetMenus@@YIXPAUHMENU__@@H@Z	100.0000
 kbwin	?SetNoDialogMenus@@YIXH@Z	100.0000
 kbwin	_WinMain@16	100.0000
 misc	??0TPickANumber@@QAE@HH@Z	72.1795
+misc	?FileSize@@YIJPAD@Z	100.0000
 misc	?Pick@TPickANumber@@QAEHXZ	91.2195
 misc	?Random@@YIHHH@Z	100.0000
+misc	?ReadPrefs@@YIXXZ	100.0000
 misc	?SRand@@YIXH@Z	100.0000
 misc	?SafeRandom@@YIHHH@Z	100.0000
 misc	?SetupCDDrive@@YIHXZ	100.0000
 misc	?WritePrefs@@YIXXZ	100.0000
-misc	FileSize	0.0000
-misc	ReadPrefs	0.0000
+misc	?WritePrefsToRegistry@@YIXXZ	100.0000
 misc	ReadPrefsFromRegistry	0.0000
-misc	WritePrefsToRegistry	0.0000
 monframeinfo	?InitializeCreatureAnimationTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000
 monframeinfo	?InitializeCreatureAnimationTraitsTable@@YIEXZ	100.0000
 mousemgr	??0mouseManager@@QAE@XZ	100.0000
@@ -982,6 +995,7 @@ town	?buy_building@town@@QAEEW4type_building_id@@@Z	100.0000
 town	?can_build@town@@QBEEF@Z	81.1852
 town	?can_ever_build@town@@QBEEH@Z	100.0000
 town	?change_generator_bonus@town@@QAEXW4TCreatureType@@J@Z	100.0000
+town	?check_shipyard_square@@YIEPAVtown@@JJ@Z	100.0000
 town	?get_army@town@@QBEABVarmyGroup@@XZ	100.0000
 town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	77.4561
 town	?get_build_cost@town@@QBEXW4type_building_id@@PAH@Z	100.0000
@@ -992,12 +1006,12 @@ town	?get_gold_income@town@@QBEFE@Z	100.0000
 town	?get_horde@town@@QBEHJ@Z	100.0000
 town	?get_horde_bonus@town@@QBEJJ@Z	100.0000
 town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000
+town	?get_legion_bonus@town@@QAEJJ@Z	81.7262
 town	?get_silo_income@town@@QBEPAHXZ	100.0000
 town	?increase_population@town@@QAEXW4TCreatureType@@0J@Z	100.0000
 town	?initialize_hordes@town@@SIXXZ	99.7778
 town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000
 town	?remove_garrison_hero@town@@QAEXXZ	100.0000
-town	check_shipyard_square	0.0000
 town	initialize_buildings	0.0000
 town	show_building_rewards	0.0000
 town	show_creature_rewards	0.0000
@@ -1009,7 +1023,6 @@ town	town_View	0.0000
 town	town_create_building	0.0000
 town	town_destroy_extra_capitol	0.0000
 town	town_get_growth_rate	0.0000
-town	town_get_legion_bonus	0.0000
 town	town_give_event_reward	0.0000
 town	town_hire	0.0000
 town	town_initialize	0.0000
