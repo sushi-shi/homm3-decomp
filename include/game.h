@@ -162,6 +162,15 @@ public:
 DATA(0x006994e8) extern game* gpGame;
 extern playerData* gpCurrentPlayer;
 
+// The world's x- and y-extents, retail .data 0x6783c8 / 0x6783cc.
+// Declared here because game::SetMapSize is what WRITES them, so
+// game.h is the owner's header; findpath.h carries the identical pair
+// for its own TU and the two agree exactly (findpath.cpp includes both
+// headers). Consolidating them into one home is a wider change that
+// belongs to whoever owns findpath.h.
+extern int gMapWidth;
+extern int gMapHeight;
+
 // Located game.cpp bodies kbwin calls (the Imm/tablet mouse hooks;
 // bodies not yet reconstructed - declarators match the kbwin call
 // sites).
