@@ -316,6 +316,14 @@ unsigned char army::IsIncapacitated()
 // not do); `&armies[currentSide][i]` in place of the hoisted row
 // pointer (that is what get_total_combat_value proved biases the
 // induction variable and sinks the loop base past the guard).
+// Re-swept 2026-08-08 (96.35): the delta is exactly an esi<->edi swap
+// between the `enemy` parameter and `enemy_hits` - both callee-saved,
+// same live pattern, and retail creates `enemy`'s pseudo second where
+// ours creates `enemy_hits`' second. Tried and rejected: the counters
+// after the guard (89.2) or before the hit points (88.7), inlining
+// our_hits (90.8), hoisting the armies row first (82.4), and swapping
+// the two get_total_hit_points declarations (79.6). Symmetric-
+// enregistered-parameter tie-break; capped.
 VA(0x0041f3b0, 0x1C2)  // linkorder, dc 0x24a34
 long combatManager::get_attack_change(const army* current_army, const army* enemy, const type_AI_combat_parameters* data)
 {
@@ -717,16 +725,59 @@ unsigned char combatManager::should_stay_in_castle(type_AI_combat_parameters* es
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai.cpp:1866
 // `ret 0xc`, the DC count exactly, and the body walks the 187-cell
 // grid at combatManager+0x1d4 (it materialises 0xbb as the bound)
 // testing an obstacle flag and reaching the obstacle table at
 // +0x13d5c - which is where a fire wall lives.
+// RECONSTRUCTED 2026-08-08. Every hex whose cell carries attribute bit
+// 0x10 holds an obstacle; the obstacle's stored damage is run through
+// ModifySpellDamage for spell 0x0d with the obstacle owner's hero as
+// the caster and the estimate side's hero as the target, and the cost
+// of walking into it is SUBTRACTED from that hex's danger score.
+//
+// SPELL ID 0x0d IS SPELLED AS A LITERAL ON PURPOSE: the roster lives in
+// armygrp.h, which another lane owns this session. It wants
+// `SPELL_FIRE_WALL = 0xd` and this call should read it - flagged for
+// the next armygrp change rather than reached across for.
+//
+// EXACT first try after one naming: `base` must be a NAMED LOCAL, not
+// the inline first argument. Bound to a name its pseudo is created
+// before the two heroes[] subscripts and takes ecx, so the obstacle
+// pointer is spent on the damage load first and the movsx of field_09
+// follows - retail's order exactly (86.4 -> 100.0). The same lever
+// that closed the SpellCastWorkChance family in ai_tactical. Tried and
+// rejected: naming the caster hero instead (73.4), the target hero
+// (88.1), the target side (80.5), and dropping the obstacle local for
+// two GetObstacle calls (86.4).
+//
+// The DUPLICATED lowest_attack is retail's, not a transcription slip:
+// 0x4218b8 loads [estimate+0] ONCE into ecx and pushes it twice, so
+// both the lowest_attack and the lowest_defense argument receive
+// estimate->lowest_attack and estimate->lowest_defense is never read.
+// Every other caller of get_loss_combat_value in this tree passes the
+// pair. Transcribed as found.
 VA(0x004214f0, 0x94)  // anchor-callee, dc 0x26600
 void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks, type_AI_combat_parameters* estimate)
 {
-    // @stub
+    for (long i = 0; i < 187; i++) {
+        if ((cells[i].field_10 & 0x10) == 0)
+            continue;
+        TObstacle* obstacle = GetObstacle(cells[i].field_14);
+        long base = obstacle->spell_damage;
+        long damage = ModifySpellDamage(base, 0xd,
+                                        heroes[obstacle->field_09],
+                                        heroes[estimate->side],
+                                        current_army, 0);
+        enemy_attacks[i] -= current_army->get_loss_combat_value(
+                estimate->lowest_attack, estimate->lowest_attack, 0, damage,
+                estimate->kills_only);
+    }
 }
+
+#if 0  // @carcass
 
 // UNCLAIMED, 0x421590 (225 B). Reads combatManager+0x53a8 and +0x53a4
 // and indexes the eleven-entry byte table at 0x63bce8 - the exact

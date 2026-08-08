@@ -275,12 +275,26 @@ long type_AI_combat_parameters::get_simple_attack_effect(const army* current_arm
 }
 
 // E:\gamedcs\ai_tactical.cpp:342
-// Residual (75.5%): retail places the value/10 early-out block between
-// the three disabled-counter tests and the rest of the body; our CL
-// sinks it past the war-machine chain, which flips the last test's
-// sense and the /5 tail's register pair. Tried and rejected: the
-// `!= 0` spelling of the || chain, an if/else with the remainder in
-// the else arm, and hoisting `value` into a named local.
+// EXACT 2026-08-08 (75.5 -> 95.9 -> 100.0) by two shapes already in
+// the ledger, applied one after the other:
+//   1. DUP-EXIT. The three disabled-counter guards are separate ifs
+//      that GOTO INTO THE THIRD ONE'S BODY. Written as a single `||`
+//      chain our CL sinks the value/10 block past the whole war-machine
+//      chain and inverts the last test; retail lays it out immediately
+//      after the third `test`, with its own epilogue, which is what the
+//      goto form emits (75.5 -> 95.9).
+//   2. THREE-OPERAND SELECTOR. The war-machine tail is one `?:`, not an
+//      if plus a trailing return: only the merged pseudo puts the /5
+//      quotient in edx with a closing `mov eax,edx`, exactly as retail
+//      has it, while the /10 quotient stays in eax. An if/return pair
+//      cannot produce two different homes for two magic divides in the
+//      same body (95.9 -> 100.0).
+// Tried and rejected: the `!= 0` spelling of the || chain, an if/else
+// with the remainder in the else arm, hoisting `value` into a named
+// local, three plain ifs each returning value/10 (84.0), inverting the
+// guard so the rest nests positively (75.5), `value /= 10; return
+// value;` (75.5), and on the tail `value /= 5; return value;`, a named
+// quotient and a braced if/else (all 95.9).
 VA(0x00435cb0, 0x10E)  // anchor-global, dc 0x3cae4
 long type_AI_combat_parameters::get_ranged_attack_value(const army* current_army, const army* enemy)
 {
@@ -289,14 +303,21 @@ long type_AI_combat_parameters::get_ranged_attack_value(const army* current_army
     long value = get_simple_attack_effect(current_army, our_total, enemy, enemy_total, 1, 0);
     if (!gpGame->AI_in_control && !gpCombatManager->sideIsAI[side])
         return value;
-    if (enemy->disabled_290 || enemy->disabled_2b0 || enemy->disabled_2c0)
+    if (enemy->disabled_290)
+        goto disabled;
+    if (enemy->disabled_2b0)
+        goto disabled;
+    if (enemy->disabled_2c0) {
+disabled:
         return value / 10;
+    }
     unsigned char enemy_flags = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 21);
-    if ((enemy_flags & 1) == 0 && enemy->creatureType != CREATURE_FIRST_AID_TENT
-            && enemy->creatureType != CREATURE_AMMO_CART && enemy->AI_target != 0
-            && enemy->get_AI_target_time(enemy->GetSpeed()) <= 5)
-        return value / enemy->get_AI_target_time(enemy->GetSpeed());
-    return value / 5;
+    return ((enemy_flags & 1) == 0 && enemy->creatureType != CREATURE_FIRST_AID_TENT
+                    && enemy->creatureType != CREATURE_AMMO_CART
+                    && enemy->AI_target != 0
+                    && enemy->get_AI_target_time(enemy->GetSpeed()) <= 5)
+            ? value / enemy->get_AI_target_time(enemy->GetSpeed())
+            : value / 5;
 }
 
 // E:\gamedcs\ai_tactical.cpp:367
@@ -368,7 +389,11 @@ type_AI_attack_hex_chooser::type_AI_attack_hex_chooser(const army* attacker, con
 // ebx instead and CSEs data into a spill slot, costing one extra
 // dword of frame. Tried and rejected: naming the two combat values as
 // separate doubles, and hoisting data->lowest_attack/defense into
-// locals. Register-homing family.
+// locals. Register-homing family - and specifically the ORDER OF THE
+// FIRST CALLEE-SAVED PUSH, which no source order reaches: retail pushes
+// EDI first and parks `this` there, our CL pushes EBX first. Re-read
+// unmasked 2026-08-08; the loop-entry `jmp` we emit and retail does not
+// is a consequence of the same allocation, not a separate rotation.
 VA(0x00436180, 0x17A)  // anchor-global, dc 0x3cf50
 long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long* checked)
 {
@@ -652,6 +677,17 @@ unsigned char type_AI_spellcaster::is_last_action()
 // words at 0x132b8/0x132bc are the acting stack's (side, slot) pair -
 // the flattened index side*21 + slot is the same one hexcell::get_army
 // uses. Nothing here needed a new leaf.
+// Re-swept 2026-08-08 (85.6): retail MEMORY-HOMES the first loop index
+// (`mov [ebp-X],0` before `current` is even computed, then reload /
+// inc / store each iteration) and spends the register it frees on
+// loading each disabled counter before testing it; ours enregisters
+// the index and compares against memory. Tried and rejected: dropping
+// either cached `numArmies[side]` local (no change - unlike
+// get_speed_value, this cache is not what crowds the allocator),
+// initialising `i` above `current` (86.68 - the store moves to the
+// right place but nothing else follows it), declaring `i` without an
+// initialiser (no change), hoisting the count above `current` (81.0),
+// and both together (81.7).
 VA(0x00436c60, 0x1C4)  // anchor-global, dc 0x3d838
 unsigned char type_AI_spellcaster::should_attack_now(const army* enemy)
 {
@@ -1256,11 +1292,16 @@ long type_AI_spellcaster::get_fortune_value(const army* our_army, type_enchant_d
 #endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1429
-// Residual (96.2%): scheduling only - retail loads enemies[i] before
-// attacks[i] and leaves a dead `lea this+i*16` behind; our CL folds
-// the base into one address and loads the pair the other way round.
-// Tried and rejected: swapping the two addends, and taking a
-// type_AI_enemy_data* to the first record.
+// EXACT 2026-08-08 (96.2 -> 100.0): the dead `lea this+i*16` and the
+// swapped load order the old note describes were both caused by two
+// CACHED-MEMBER LOCALS - `long odds = params.odds` and `long index =
+// our_army->bitIndex`. Retail re-reads both members at each use;
+// naming them keeps two extra values alive across the sqrt/divide
+// block and re-colours the record addressing. BOTH have to go
+// together: dropping only `odds` leaves 96.15 unchanged. Same shape as
+// get_speed_value, closed the same day.
+// Tried and rejected: swapping the two addends, taking a
+// type_AI_enemy_data* to the first record, and a ternary for `scale`.
 VA(0x004387c0, 0x14A)  // anchor-global, dc 0x3e9d8
 long type_AI_spellcaster::get_defense_boost_value(const army* our_army, const army* enemy, long duration, double increase)
 {
@@ -1279,16 +1320,15 @@ long type_AI_spellcaster::get_defense_boost_value(const army* our_army, const ar
                 < our_army->hitPoints)
             return 0;
     }
-    long odds = params.odds;
-    long index = our_army->bitIndex;
-    if ((attacks[index].total_damage + enemies[index].total_damage) * odds
+    if ((attacks[our_army->bitIndex].total_damage
+                + enemies[our_army->bitIndex].total_damage) * params.odds
             + our_army->topCreatureDamage < our_army->hitPoints)
         return 0;
     double scale;
-    if (duration >= odds)
+    if (duration >= params.odds)
         scale = 1.0;
     else
-        scale = static_cast<double>(duration) / static_cast<double>(odds);
+        scale = static_cast<double>(duration) / static_cast<double>(params.odds);
     double total = static_cast<double>(our_army->get_total_combat_value(params.lowest_attack,
                                                                         params.lowest_defense));
     return static_cast<long>((sqrt(increase) - 1.0) * total * scale);
@@ -1713,11 +1753,25 @@ long type_AI_spellcaster::get_poison_value(const army* enemy, type_enchant_data 
 }
 
 // E:\gamedcs\ai_tactical.cpp:1902
-// Residual (82.4%): retail keeps `this` in ebx and memory-homes
-// new_speed/old_time/new_time in the dead parameter slots; our CL
-// enregisters new_speed and spills `this` instead, which re-colours
-// every later reference. Tried and rejected: reusing the duration
-// parameter for the mastery decrement. Register-homing family.
+// EXACT 2026-08-08 (82.4 -> 100.0). The old note read the symptom
+// right and the cause wrong: `this` was not being spilled by bad luck,
+// it was being CROWDED OUT by a local. `long odds = params.odds;`
+// creates a fourth long-lived pseudo, so `this` loses its callee-saved
+// register and every `params.` reference downstream turns into a
+// reload-then-index; retail simply RE-READS `params.odds` at each of
+// its four uses and keeps `this` in ebx for free. Deleting the local
+// fixed the whole body at once - the memory-homing of new_speed and
+// the two times in the dead parameter slots came back with it.
+// GENERAL SHAPE: a member cached in a local is not free. When retail
+// re-loads the same member repeatedly, that is evidence the source
+// never named it.
+// Tried and rejected: reusing the duration parameter for the mastery
+// decrement, declaring `value` after the four leaf calls (82.0),
+// dropping the new_speed local (82.0) or hoisting it first (79.3),
+// inlining the slow-flag test (80.0), `turns--` instead of
+// `turns = duration - 1` (no change), and passing old_speed to the
+// first get_AI_target_time instead of a second GetSpeed call (81.5).
+// Splitting the += into two statements also reaches 100.0.
 VA(0x00439550, 0x153)  // anchor-global, dc 0x3fc80
 long type_AI_spellcaster::get_speed_value(const army* our_army, long increase, long duration)
 {
@@ -1753,13 +1807,12 @@ long type_AI_spellcaster::get_speed_value(const army* our_army, long increase, l
         }
     }
     if (new_time < old_time) {
-        long odds = params.odds;
-        if (old_time > odds + 1)
-            old_time = odds + 1;
+        if (old_time > params.odds + 1)
+            old_time = params.odds + 1;
         long total = our_army->get_total_combat_value(params.lowest_attack,
                                                       params.lowest_defense);
-        value += (odds - new_time + 1) * total / odds
-                 - (odds - old_time + 1) * total / odds;
+        value += (params.odds - new_time + 1) * total / params.odds
+                 - (params.odds - old_time + 1) * total / params.odds;
     }
     return value;
 }
@@ -1807,7 +1860,7 @@ VA(0x004399a0, 0x29)  // anchor-vtable, dc 0x40060
 long type_AI_spellcaster::get_air_protection_value(const army* our_army, type_enchant_data caster)
 {
     return get_protection_value(
-        our_army, 1, 5, caster.duration,
+        our_army, eSchoolAir, 5, caster.duration,
         akSpellTraits[SPELL_PROTECTION_FROM_AIR].mastery_bonus[caster.mastery]);
 }
 
@@ -1816,7 +1869,7 @@ VA(0x004399d0, 0x29)  // anchor-vtable, dc 0x4008c
 long type_AI_spellcaster::get_fire_protection_value(const army* our_army, type_enchant_data caster)
 {
     return get_protection_value(
-        our_army, 2, 5, caster.duration,
+        our_army, eSchoolFire, 5, caster.duration,
         akSpellTraits[SPELL_PROTECTION_FROM_FIRE].mastery_bonus[caster.mastery]);
 }
 
@@ -1825,7 +1878,7 @@ VA(0x00439a00, 0x32)  // anchor-vtable, dc 0x400b8
 long type_AI_spellcaster::get_earth_protection_value(const army* our_army, type_enchant_data caster)
 {
     long amount = akSpellTraits[caster.spell].mastery_bonus[caster.mastery];
-    return get_protection_value(our_army, 8, 5, caster.duration, amount);
+    return get_protection_value(our_army, eSchoolEarth, 5, caster.duration, amount);
 }
 
 // E:\gamedcs\ai_tactical.cpp:2107
@@ -1833,7 +1886,7 @@ VA(0x00439a40, 0x32)  // anchor-vtable, dc 0x400f4
 long type_AI_spellcaster::get_water_protection_value(const army* our_army, type_enchant_data caster)
 {
     long amount = akSpellTraits[caster.spell].mastery_bonus[caster.mastery];
-    return get_protection_value(our_army, 4, 5, caster.duration, amount);
+    return get_protection_value(our_army, eSchoolWater, 5, caster.duration, amount);
 }
 
 #if 0  // @carcass
@@ -1891,6 +1944,14 @@ long type_AI_spellcaster::get_dispel_value(const army* our_army, type_enchant_da
 // it puts back, capped at what the top creature has actually lost -
 // the `lea &a / jl / lea &b / mov [eax]` pair is _cpp_min's
 // reference-returning selection, not a cmov-style ternary.
+// Re-swept 2026-08-08 with the four levers that closed six functions
+// in this TU the same day - none reaches it. The residual is one
+// SCHEDULING slot: retail loads our_army->topCreatureDamage between
+// the power multiply and the add that finishes `healing`, our CL
+// completes the add first, and the two params pushes rename behind it.
+// Tried and rejected: splitting the multiply from the mastery add
+// (either order), naming topCreatureDamage as its own local, and long
+// instead of int for the pair - all four byte-identical at 95.49.
 VA(0x00439c30, 0x10F)  // linkorder, dc 0x403c0
 long type_AI_spellcaster::get_cure_value(const army* our_army, type_enchant_data caster)
 {
@@ -1919,7 +1980,7 @@ long type_AI_spellcaster::get_antimagic_value(const army* our_army, type_enchant
 {
     army test_army = *our_army;
     long value = get_cancel_value(&test_army, 0);
-    value += get_protection_value(our_army, 15,
+    value += get_protection_value(our_army, eSchoolAll,
                                   akSpellTraits[SPELL_ANTI_MAGIC].mastery_bonus[caster.mastery],
                                   caster.duration, 0);
     return value;
@@ -1934,7 +1995,7 @@ VA(0x00439de0, 0x94)  // linkorder, dc 0x405d4
 long type_AI_spellcaster::get_backlash_value(const army* our_army, type_enchant_data caster)
 {
     army test_army = *our_army;
-    return get_protection_value(our_army, 15, 5, caster.duration,
+    return get_protection_value(our_army, eSchoolAll, 5, caster.duration,
                                 (50 - caster.get_mastery_value()) * 2);
 }
 
@@ -1957,10 +2018,15 @@ long type_AI_spellcaster::get_fire_shield_value(const army* our_army, type_encha
 #endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2360
-// Residual (90.5%): retail sinks both `before - after` subtractions
-// ahead of the first push block; our CL interleaves them with the
-// argument setup. Tried and rejected: naming the two damages as
-// locals in either order (89.8/90.0%).
+// EXACT 2026-08-08 (90.5 -> 100.0): the two damage figures are the
+// SAME VARIABLES the pre-attack totals were saved in, overwritten in
+// place (`enemy_damage -= enemy_hits`) rather than fresh `before -
+// after` expressions. That is what puts both subtractions ahead of the
+// first push block, where retail has them - a NEW local for the
+// difference gets its own pseudo and gets scheduled into the argument
+// setup instead (89.8), and so does the expression form (90.5) and a
+// single summed return (89.6). Same overwrite-the-variable shape as
+// ai_combat's take_damage, found the same day.
 VA(0x0043a340, 0xBE)  // anchor-global, dc 0x40928
 long type_AI_spellcaster::get_traitor_value(const army* enemy, const army* target)
 {
@@ -1968,15 +2034,17 @@ long type_AI_spellcaster::get_traitor_value(const army* enemy, const army* targe
     if (target->combatSide == side)
         return 0;
     long enemy_hits = enemy->get_total_hit_points(0);
-    long enemy_start = enemy_hits;
+    long enemy_damage = enemy_hits;
     long target_hits = target->get_total_hit_points(0);
-    long target_start = target_hits;
+    long target_damage = target_hits;
     params.simulate_attack(enemy, &enemy_hits, target, &target_hits, ranged, 0);
+    enemy_damage -= enemy_hits;
+    target_damage -= target_hits;
     long value = enemy->get_loss_combat_value(params.lowest_attack, params.lowest_defense,
-                                              ranged, enemy_start - enemy_hits,
+                                              ranged, enemy_damage,
                                               params.kills_only);
     return value + target->get_loss_combat_value(params.lowest_attack, params.lowest_defense,
-                                                 ranged, target_start - target_hits,
+                                                 ranged, target_damage,
                                                  params.kills_only);
 }
 
@@ -2015,16 +2083,35 @@ long type_AI_spellcaster::get_berserk_value(const army* enemy, type_enchant_data
 }
 
 // E:\gamedcs\ai_tactical.cpp:2416
-// Residual (18.2%) - SEMANTICS COMPLETE, CODEGEN NOT. Every leaf, every
-// branch and every constant below is read off the retail bytes, but our
-// CL materialises a zero register at the top of the body and folds the
-// three disabled-counter guards into `cmp mem, ebx`, where retail loads
-// each counter and tests it; that one peephole re-colours the whole
-// function and moves the loop-base hoist behind the turns computation.
+// 18.2 -> 96.4 on 2026-08-08, and the old diagnosis above it was
+// backwards: the zero register at the top was a CONSEQUENCE, not the
+// cause. The cause is that retail HOISTS the enemy-side armies-row
+// base out of the loop and above the turns computation, so it needs a
+// callee-saved register (esi) from before the SeedCombatPosition call
+// onwards; naming that base as its own local ahead of the min does the
+// same for us and hands `this` back its ebx, which un-does the zero
+// CSE and the three `cmp mem,ebx` guards in one move (18.2 -> 90.9).
+// Dropping the `slow_flag` local afterwards is worth another 5.5.
+//
+// Residual (96.4%): two items. (1) Retail narrows the bit-26 test to a
+// byte (`shr ecx,0x1a` / `test cl,1`) where our CL folds it to
+// `test ecx,0x4000000`. Forcing the narrowing DOES reproduce those two
+// instructions - but only by spending a register on the narrowed
+// temporary, which spills enemy_row back to the stack and costs 5.5
+// net (90.9 for both the unsigned-char cast and the named `slow_flag`;
+// 90.4 casting the raw signed shift). The folded form is kept because
+// it is worth more, and the byte test is recorded here as the known
+// divergence rather than bought at that price. (2) Retail carries a
+// dead `dec eax` / `inc eax` pair around the loop-entry `test` -
+// leftover induction bookkeeping.
 // Tried and rejected: separate ifs for the three guards instead of the
-// || chain (no change), and sinking `best`'s initialisation past
-// SeedCombatPosition (16.2%). Left as a reconstruction for the next
-// pass rather than a stub.
+// || chain (no change), sinking `best`'s initialisation past
+// SeedCombatPosition (16.2%), naming the seed's reach argument (no
+// change), `int` turns (no change), a `combatManager*` local for the
+// row (no change), declaring turns or `i` before best (80.6 / 96.4),
+// computing the count in the loop condition (43.6), a short loop index
+// (33.3), hoisting the count above the seed call (77.3), and putting
+// the slow-flag load ahead of the min (82.1).
 // Hypnotising a stack is priced as "whatever it would do to its own
 // side": the search is seeded with the victim's reach for as many
 // turns as the spell lasts, and every OTHER stack on the enemy side
@@ -2048,16 +2135,16 @@ long type_AI_spellcaster::get_hypnotize_value(const army* enemy, type_enchant_da
             || enemy->creatureType == CREATURE_AMMO_CART)
         return 0;
     long best = 0;
+    const army* enemy_row = gpCombatManager->armies[enemy_side];
     long turns = _cpp_min(akHypnotizeTurns[caster.mastery], params.odds);
-    unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 26);
-    if (slow_flag & 1)
+    if ((static_cast<unsigned>(enemy->creatureId) >> 26) & 1)
         turns--;
     if (turns == 0)
         return 0;
     gpSearchArray->SeedCombatPosition(enemy, side, enemy->field_c4 * turns, 0, -1);
     long count = gpCombatManager->numArmies[enemy_side];
     for (long i = 0; i < count; i++) {
-        const army* enemy_army = &gpCombatManager->armies[enemy_side][i];
+        const army* enemy_army = &enemy_row[i];
         if (enemy_army == enemy)
             continue;
         unsigned char other_flags = static_cast<unsigned char>(static_cast<unsigned>(enemy_army->creatureId) >> 21);
@@ -2307,7 +2394,12 @@ void type_AI_spellcaster::consider_spell(type_spell_choice* choice)
 // retail colours our_army/target/record as esi/edi/ebx and pushes ebx
 // only after the empty-side early-out, ours as ebx/esi/edi. Tried and
 // rejected: walking the census with an explicit type_AI_enemy_data*
-// cursor (84.6%). NOTE the loop body is loop-INVARIANT in retail: esi
+// cursor (84.6%), the memset ahead of the row local (77.0), the row
+// read inside the loop (69.3), the damage computed before the enemy
+// store (89.7), and a cached numArmies count (84.5) - swept again
+// 2026-08-08 after the cached-member lever closed get_speed_value and
+// get_defense_boost_value; it does not reach this shape. NOTE the loop
+// body is loop-INVARIANT in retail: esi
 // is never advanced, so every iteration re-examines armies[side][0] -
 // transcribed as written.
 VA(0x0043bf20, 0x119)  // anchor-global, dc 0x420ac
