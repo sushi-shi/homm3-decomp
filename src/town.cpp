@@ -248,7 +248,12 @@ void town::SwapHeroes()
 }
 
 // E:\gamedcs\town.cpp:1150
-DC_ONLY(0x166950, 0x214)
+// Runs a 70-iteration loop over the spell band at town+0xd4 (the same
+// 70-entry width hero.h's in_spellbook/available_spells carry) - the
+// mage-guild spell roll. 810 B against DC's 532 because
+// set_spells_available (dc 0x166b64, 164 B) has no retail row of its
+// own and is inlined here.
+VA(0x005be600, 0x32A)  // anchor-bracket + spell-band loop, dc 0x166950
 void town::initialize_spells()
 {
     // @stub
@@ -262,14 +267,19 @@ void town::set_spells_available()
 }
 
 // E:\gamedcs\town.cpp:1226
-DC_ONLY(0x166c08, 0x2CE)
+// ORs the 64-bit building bit for the argument out of the pair table at
+// 0x66cd98 into the town's built mask at +0x150/+0x154, then walks the
+// dependent-building fixups - `create_building` exactly.
+VA(0x005be930, 0x330)  // body (built-mask OR) + order-map, dc 0x166c08
 type_building_id town::create_building(type_building_id building)
 {
     // @stub
 }
 
 // E:\gamedcs\town.cpp:1313
-DC_ONLY(0x166ed8, 0xF0)
+// Masks the same +0x150/+0x154 built mask against the capitol pair at
+// 0x66ce00 and tears the extra one down.
+VA(0x005bec60, 0x173)  // body (capitol mask) + order-map, dc 0x166ed8
 void town::destroy_extra_capitol()
 {
     // @stub
@@ -435,14 +445,33 @@ long town::get_horde_bonus(long dwelling) const
 #if 0  // @carcass
 
 // E:\gamedcs\town.cpp:1581
-DC_ONLY(0x1675d4, 0x172)
+// Widens the town's owner byte at +1 into the 360-byte playerData
+// record (gpGame+0x20ad0) and asks playerData::hasGivenArtifact
+// (0x4bacb0) about artifact 0x85 - the Legion-family growth artifact.
+VA(0x005bf810, 0xE2)  // anchor-callee (playerData::hasGivenArtifact), dc 0x1675d4
 long town::get_legion_bonus(long dwelling)
 {
     // @stub
 }
 
 // E:\gamedcs\town.cpp:1639
-DC_ONLY(0x167748, 0xFE)
+// RETAIL-ONLY row first: 0x005bf900 (`ret 4`) sits between the two DC
+// rows, is called BY get_growth_rate below and by 0x5c5b40, and divides
+// the argument by 7 to split a dwelling index into tier and town - a
+// shared helper the Dreamcast build does not carry separately. ORDINAL
+// PLACEHOLDER name, flagged unattested.
+VA(0x005bf900, 0x258)  // retail-only, town member, ret 4
+long town::TownFn_005BF900(long dwelling)
+{
+    // @stub
+}
+
+// E:\gamedcs\town.cpp:1639
+// SHORT arity is what pins this one: `movsx ebx, word ptr [ebp+8]`,
+// i.e. the `short dwelling` DC declares and no other row in the bracket
+// has. It then masks the dwelling pair at 0x66ce88 against the town's
+// second 64-bit mask at +0x158/+0x15c.
+VA(0x005bfb60, 0x266)  // arity (short) + body, dc 0x167748
 short town::get_growth_rate(short dwelling)
 {
     // @stub
@@ -501,51 +530,74 @@ void town::change_generator_bonus(TCreatureType creature, long change)
 
 #if 0  // @carcass
 
+// STATIC-HELPERS-AFTER-CALLER, twice over. This whole block is ordered
+// by the CALL GRAPH, not by DC rank, and every edge is a rel32 in the
+// image:
+//     0x005bfeb0 -> 0x005c0220, 0x005c0400      (give_event_reward)
+//     0x005c0670 -> 0x005c08c0 -> 0x005c0c90    (town::initialize)
+// Retail emits each free static helper AFTER the member that calls it,
+// where the Dreamcast source has it before. Arity separates the two
+// kinds cleanly: the members are `ret 4` (ecx + one stack argument),
+// the /Gr free helpers are `ret 0` with their arguments in ecx/edx
+// (check_shipyard_square's third goes on the stack).
+// E:\gamedcs\town.cpp:1793
+VA(0x005bfeb0, 0x369)  // anchor-callgraph + arity (ret 4), dc 0x167c3c
+void town::give_event_reward(const TTownEvent* thisEvent)
+{
+    // @stub
+}
+
 // E:\gamedcs\town.cpp:1732
-DC_ONLY(0x167958, 0x132)
+VA(0x005c0220, 0x1DA)  // anchor-caller (give_event_reward), dc 0x167958
 void show_building_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards)
 {
     // @stub
 }
 
 // E:\gamedcs\town.cpp:1760
-DC_ONLY(0x167a8c, 0x1B0)
+VA(0x005c0400, 0x26F)  // anchor-caller (give_event_reward), dc 0x167a8c
 void show_creature_rewards(const town* this_town, std::vector<type_dialog_resource,std::allocator<type_dialog_resource>* rewards)
 {
     // @stub
 }
 
-// E:\gamedcs\town.cpp:1793
-DC_ONLY(0x167c3c, 0x32C)
-void town::give_event_reward(const TTownEvent* thisEvent)
-{
-    // @stub
-}
-
-// E:\gamedcs\town.cpp:1889
-DC_ONLY(0x167f68, 0x8A)
-unsigned char check_shipyard_square(town* current_town, long x, long y)
+// E:\gamedcs\town.cpp:2063
+// `ret 4`, and it calls initialize_buildings below. 590 B against DC's
+// 102 because initialize_army (dc 0x168330, 252 B) has no retail row
+// and is inlined here; update_full_building_mask (dc 0x168494) has no
+// row either.
+VA(0x005c0670, 0x24E)  // anchor-callgraph + arity (ret 4), dc 0x16842c
+void town::initialize(const TownExtra* town_setup)
 {
     // @stub
 }
 
 // E:\gamedcs\town.cpp:1914
-DC_ONLY(0x167ff4, 0x33C)
+// /Gr free function - `ret 0` with the town in ecx and the setup record
+// homed out of edx - called by town::initialize above and calling
+// check_shipyard_square below.
+VA(0x005c08c0, 0x3CE)  // anchor-callgraph + arity (ret 0, /Gr), dc 0x167ff4
 void initialize_buildings(town* current_town, const TownExtra* town_setup)
 {
     // @stub
 }
 
-// E:\gamedcs\town.cpp:2017
-DC_ONLY(0x168330, 0xFC)
-void initialize_army(town* current_town, const TownExtra* town_setup)
+// E:\gamedcs\town.cpp:1889
+// The three-argument /Gr shape settles it: ecx = current_town,
+// edx = x, [ebp+8] = y, and the first thing it does is bounds-check
+// edx and [ebp+8] against the two map-extent globals 0x6783c8 /
+// 0x6783cc that game::SetMapSize writes. 137 B against DC's 138.
+VA(0x005c0c90, 0x89)  // anchor-caller + arity (/Gr, 3 args), dc 0x167f68
+unsigned char check_shipyard_square(town* current_town, long x, long y)
 {
     // @stub
 }
 
-// E:\gamedcs\town.cpp:2063
-DC_ONLY(0x16842c, 0x66)
-void town::initialize(const TownExtra* town_setup)
+// No retail row for either of these two - inlined into town::initialize
+// (initialize_army) and into its callers (update_full_building_mask).
+// E:\gamedcs\town.cpp:2017
+DC_ONLY(0x168330, 0xFC)
+void initialize_army(town* current_town, const TownExtra* town_setup)
 {
     // @stub
 }
@@ -762,7 +814,11 @@ unsigned char town::is_disabled(type_building_id building)
 }
 
 // E:\gamedcs\town.cpp:2312
-DC_ONLY(0x168a98, 0xBC)
+// `ret 8` (hero* + player id), and the body indexes the 360-byte
+// playerData record at gpGame+0x20ad0 by the second argument and then
+// matches the hero's +0x1a id against the player's hero list - exactly
+// town::hire's job. 201 B against DC's 188.
+VA(0x005c12e0, 0xC9)  // arity + playerData stride, dc 0x168a98
 void town::hire(hero* new_hero, long player_id)
 {
     // @stub

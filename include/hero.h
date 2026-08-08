@@ -117,6 +117,16 @@ public:
     char pad_47a[0x18];
 
     unsigned char HasArtifact(int whichArtifact);
+    // 0x004da510 / 0x004da710 - the win half is a stub, but the loss
+    // half's whole retail body is a tail jump into it, so it needs the
+    // declaration.
+    void ApplyBattleWinTemps();
+    void ApplyBattleLossTemps();
+    // The three backpack primitives at 0x004dbd90 / 0x004dbdb0 /
+    // 0x004dbe10; all three walk `backpack` above.
+    long get_last_backpack_index();
+    void rotate_backpack_left();
+    void rotate_backpack_right();
     // BYTE-width return, not int (corrected 2026-08-07): 212 of the 224
     // retail call sites of 0x4d91f0 follow the call with `test al, al`,
     // which an int-returning declaration can never produce. The
