@@ -151,6 +151,13 @@ public:
     // whenever cellData is still null.
     void Init();
     void Close();
+    // 0x4b1530. Empties the three vectors, then zeroes the cellData rows
+    // inside the valid rectangle for every (z, fly-plane) combination.
+    void Clear(long fly_level, long start_z, long stop_z);
+    // 0x4b3b90. The bounds-free cellData accessor whose expansion
+    // get_travel_time and SeedCombatPosition both spell by hand; the
+    // null arm answers 0 and the caller still dereferences it.
+    pathCell* getCellData(long pos);
     unsigned char FindCombatPath(const army* current_army, long current_group,
                                  long destination, unsigned char in_placement_phase,
                                  long limit, long base_speed);  // 0x4b3400
