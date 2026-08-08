@@ -83,22 +83,33 @@ def main(argv=None) -> int:
         return 0
 
     status.cmd_update(report)
-    if status.cmd_check(report, gate=True):
-        return 1
+    # EVERY gate runs, even after one fails. Chaining these with early
+    # returns meant a red ratchet hid the three downstream gates
+    # entirely - a lane that inherited a ratchet regression never saw
+    # its own cleanliness/va-claim/single-view breakage, reported the
+    # build as "failing only on inherited rows", and the damage landed
+    # at merge time (2026-08-08). Collect, report everything, fail once.
+    failed = bool(status.cmd_check(report, gate=True))
 
     from homm3.match import single_view, verify_va_claims
     for gate in (verify_va_claims, single_view):
         fatal = gate.run_gate()
         if fatal:
+            failed = True
             for line in fatal:
                 print(f"[build] {line}", file=sys.stderr)
-            return 1
 
+    # Roll the cleanliness floors down only on an otherwise-green build:
+    # a down-only bless recorded off a failing tree would bake in state
+    # nobody reviewed. Check always, write only when clean.
     from homm3.cleanliness import board
-    violations = board.check_and_roll(write=True)
+    violations = board.check_and_roll(write=not failed)
     if violations:
+        failed = True
         for line in violations:
             print(f"[build] {line}", file=sys.stderr)
+
+    if failed:
         return 1
     try:
         status.write_readme(report)
