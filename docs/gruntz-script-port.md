@@ -260,6 +260,86 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — media lane: soundmgr 98.05%; the RELOC-NAME theory
+  REFUTED; two pipeline-level caps pinned precisely.** Engine-wide
+  330 → 333 exact, 4.18% → **4.25%** executable matched. `soundmgr`
+  16/21 → **18/21 (67.36% → 98.05%)**, `inputmgr` 5/10 → 6/10.
+  **THE ORCHESTRATOR'S RELOC-NAME HYPOTHESIS WAS WRONG, refuted two
+  independent ways — record this so it is not re-derived.** The claim
+  was that objdiff scores relocation targets by symbol name, so
+  unclaimed data globals cap their referencing functions, and that
+  adding `DATA(...)` claims would close the gap.
+  (a) **objdiff does not score reloc names at all.** `StopMP3` is
+  exactly **100.0000%** while carrying five mismatched data reloc names
+  (`?gMP3Stream@@3PAXA` vs `bss_29fe78`, `?bShutDownDone@@3EA` vs
+  `data_299608`, `?service_sounds@@YAXPAX@Z` vs
+  `soundManager_service_sounds`) — verified independently by the
+  orchestrator. smackmgr shows ten more such rows on already-exact
+  functions.
+  (b) **A `DATA` claim could not have produced a matching name anyway:**
+  `labels.py` names src-DATA rows `data_{rva:x}`, never the mangled C++
+  spelling. A `DATA(0x006994e0)` probe moved the target row
+  `bss_2994e0` → `data_2994e0` and `MouseMessageHandler` stayed at
+  exactly 99.9645%.
+  **The skill's "reloc-name-only rows on data are cosmetic" line is
+  therefore CORRECT as written.** The wrong conclusion came from reading
+  the first 30 lines of a masked diff and inferring causation from the
+  only rows visible — the third time in one day that truncated or
+  masked output produced a wrong answer, after the initialize_game_data
+  misread and the `type_obstacle_shape` offset that sat at 99.99%.
+  **Separately confirmed and worth a gate: `labels.py:193` globs
+  `SRC_DIR` only (`*.c*`), so the five `DATA(0x...)` claims in
+  `include/armygrp.h` and `include/game.h` are INERT** — they bind
+  nothing. A claim that can never take effect should be a hard error,
+  not silence.
+  **Two caps pinned precisely, both PIPELINE-level, neither
+  source-addressable:**
+  1. **Symbol-table resync (AsciiConvert, 98.80%).** An address-keyed
+     compare shows base and target **byte-identical AND reloc-identical
+     over the whole [0, 0x1c6) span**. The gap is in the SYMBOL TABLE:
+     the base COMDAT still carries two storage-class-6 `$L` LABEL
+     symbols at +0x144 and +0x190, and because the 0x36-byte index
+     table has no relocations those labels are the only disassembler
+     resync points — so the same 54 data bytes decode into different
+     rows. Fix is a canonicalizer change (drop label-class symbols once
+     their relocs are rewritten). This also supersedes the earlier
+     "jump-table label spelling" framing: the mechanism is leftover
+     label SYMBOLS, not the addend encoding.
+  2. `MouseMessageHandler` 99.9645% is the same family, trailing row.
+  **Exact this lane:** `inputManager::Open` 42.37% → exact (the claim
+  was UNDER-RECONSTRUCTED, not mis-spelled — retail also calls
+  `MakeScanCodeTable()` as a real call despite one call site, sets
+  id/priority/status and `strcpy`s "inputManager"; `priority = -1` and
+  the inline `strlen` counter share one `or ecx,-1`, signedness CSE);
+  `SetMusicVolume` 0 → exact first try (all five parked "missing views"
+  resolved — 0x6993d0 = gpCombatManager, 0x699268 = gpAdvManager,
+  0x66fedc = `"combat%02d"`, 0x678330 = the terrain→music table, and
+  the `vol==0` arm's thread entry is the SAME one `StopMP3` uses, so
+  that arm is `StopMP3()` inlined rather than a distinct body);
+  `StartMP3` 0 → exact.
+  **New lever (StartMP3's last 9%):** spell a name-match early-out as a
+  **negated outer `if` with the `Leave` textually last**, not
+  `if (==0) { Leave; return; }` and not a `goto` — both of those make
+  our CL duplicate the epilogue in place, while the negated form lets
+  VC6 sink the `Leave` into the single shared epilogue AND flips a
+  tail-merge into retail's direction. Two residuals, one placement
+  decision.
+  **New named residual class — vptr-store scheduling.**
+  `inputManager`'s ctor (86.57%) matches instruction for instruction,
+  but retail sinks the compiler's own vptr store past the whole
+  64-entry loop where our CL pins it after the base ctor call. Hoisting
+  `keyboardFilter = 1` above the loop scored 78.2% and the vptr store
+  STILL led, so no statement order can sink it. `soundManager`'s ctor
+  (99.03%) shows the identical signature one slot wide — systematic,
+  not local. Cross-linked in both files.
+  **`KeyboardMessageHandler`'s blocker narrowed from three items to
+  one:** 0x699280 and 0x699268 are `gpWindowManager` and `gpAdvManager`
+  (both modelled), but `advWindow`'s static type is NOT `heroWindow` —
+  that class is 0x4c bytes, so +0x58 is past its end. It is the derived
+  adventure-map window, and `TAdventureMapWindow` has no layout
+  anywhere (adventuremapwindow.h is a comment-only carcass). Full
+  decode recorded in-source; once that class lands it is transcription.
+
 - **2026-08-08 — `ShotIsThroughWall` exact; six NH3API-lineage
   enumerator names ADMITTED (user: "commit everything").** Engine-wide
   329 → 330 exact, 4.17% → **4.18%** executable matched; `cmbtmgr`
