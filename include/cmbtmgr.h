@@ -11,6 +11,7 @@
 
 class CSprite;
 class hero;
+class searchArray;
 struct type_AI_combat_parameters;
 
 // The combat's spell-restriction code, held in combatManager+0x53c0.
@@ -140,7 +141,13 @@ public:
     // Dreamcast dump carries no fieldlist for it) and no string or
     // roster entry reaches either slot.
     int field_3c;                     // +0x3c
-    char pad_0040[0x4];
+    // The order's FIRST hex slot. berserk_attack (0x4222c0) writes the
+    // acting stack's own gridIndex here when the target is already
+    // adjacent and the next step of the path when it is not, with
+    // field_44 taking the target's hex in both cases - so the pair is
+    // (where I go, what I hit). Name is an address ordinal for the same
+    // reason its two neighbours are.
+    int field_40;                     // +0x40
     int field_44;                     // +0x44
     char pad_0048[0x17c];
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
@@ -179,7 +186,13 @@ public:
     // the Orb of Inhibition, and army::get_owner (0x442690) does the
     // same lookup off gpCombatManager.
     hero* heroes[2];                  // +0x53cc
-    char pad_53d4[0xd0];
+    char pad_53d4[0x8];
+    // A per-side latch berserk_attack (0x4222c0) raises, indexed by
+    // SIDE as a byte, on exactly one path: when a berserked stack's
+    // chosen target turns out to be on its OWN side. Name awaits a
+    // writer - no roster or string reaches the pair.
+    unsigned char field_53dc[2];      // +0x53dc
+    char pad_53de[0xc6];
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
@@ -211,7 +224,14 @@ public:
     // The side whose stack is acting: get_hex_attack_value (0x436180)
     // rejects a neighbour whose combatSide equals it. Name provisional.
     int currentSide;                  // +0x132c0
-    char pad_132c4[0x30];
+    char pad_132c4[0x4];
+    // DoCompAI (0x4221f0) zeroes this dword as the very first thing it
+    // does, before it even turns the highlighter off - a per-stack AI
+    // turn counter or latch. Name is an address ordinal; no roster
+    // reaches the slot (the Dreamcast dump carries no combatManager
+    // fieldlist at all).
+    int field_132c8;                  // +0x132c8
+    char pad_132cc[0x28];
     // "This combat is fought over a walled town": HexIsBlocked
     // (0x469a10) only consults the gate hexes while it is positive and
     // should_lower_door (0x467130) while it is non-zero. Name pending
@@ -244,6 +264,21 @@ public:
     // is the second reader. Byte width is proven by the `mov al, [ecx +
     // 0x13de4] / test al, al` pair. Name provisional.
     unsigned char field_13de4;        // +0x13de4
+    char pad_13de5[0x17b];
+    // Per-wall-segment hit points, indexed by TWallTargetId. Sliced
+    // 2026-08-08 by should_stay_in_castle (0x4213f0), which reads
+    // `[this + 4*id + 0x13f60]` for each of the five wall ids and
+    // treats a ZERO as "this segment is down". Fifteen entries because
+    // gWallTargets' own id column runs 5..14 and the largest id the
+    // located reader passes is 12; only 6, 8, 9, 10 and 12 are
+    // retail-proven. The DC roster attests the accessor
+    // (combatManager::get_wall_strength, cmbtmgr.h:1473, dc 0x27edc),
+    // not the field, so the name is the accessor's.
+    int wallStrength[15];             // +0x13f60
+
+    // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); no retail
+    // body - /Ob2 folds it into should_stay_in_castle.
+    long get_wall_strength(long target) const { return wallStrength[target]; }
 
     int GetGridIndex(int x, int y);
     unsigned char CombatIsOver();
@@ -277,6 +312,28 @@ public:
     // it is kept because the DC roster attests the accessor, not as a
     // matching lever.
     TObstacle* GetObstacle(int index) { return &obstacles_begin[index]; }
+    // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). No retail
+    // body; place_shooter (0x422060) carries two copies of it, one on
+    // the loop index (which VC6 strength-reduces onto the same 30-byte
+    // induction variable the cellData walk uses, so it reads as a
+    // `test/jl` plus `cmp 0x15ea/jge` pair) and one on the adjacent hex.
+    unsigned char ValidHex(int iHex) const
+    {
+        return iHex >= 0 && iHex < COMBAT_GRID_CELLS;
+    }
+    // DC header inline (cmbtmgr.h:1478, dc 0x27efc); the DC xref graph
+    // lists it among DoCompAI's callees and retail carries no
+    // out-of-line copy, so it is the /Ob2 inline-away case.
+    army* get_current_army() { return &armies[actingSide][actingSlot]; }
+    // 0x477e10, an unclaimed cmbtmgr-side body. NAME IS THE DREAMCAST
+    // XREF GRAPH'S: the DC dump lists combatManager::TurnOffHighlighter
+    // (command.obj, dc 0x6ed18) as one of DoCompAI's eight callees and
+    // 0x477e10 is the only call DoCompAI makes that no other DC callee
+    // can be - the remaining seven are accounted for (the two ai.cpp
+    // action dispatchers, place_shooter, army::can_shoot, and the three
+    // header inlines army::Is / get_current_army / the adventure-menu
+    // caller). Its own claim waits for the TU that owns 0x477e10.
+    void TurnOffHighlighter(unsigned char restore);           // 0x477e10
     // Both live in ai.cpp (DC ai.obj) and are claimed there.
     long get_total_combat_value(long side, long lowest_attack,
                                 long lowest_defense,
@@ -295,6 +352,49 @@ public:
                               unsigned char consider_waiting);  // 0x41f580
     void mark_firewalls(const army* current_army, long* enemy_attacks,
                         type_AI_combat_parameters* estimate);   // 0x4214f0
+    long choose_shooter_target(const army* current_army,
+                               type_AI_combat_parameters* data,
+                               long* best_value);             // 0x41eb80
+    unsigned char choose_cyclops_action(long best_value, long side,
+                                        type_AI_combat_parameters* estimate);
+                                                              // 0x41eea0
+    unsigned char choose_melee_target(const army* current_army,
+                                      unsigned char teleport,
+                                      long* action_value,
+                                      type_AI_combat_parameters* estimate);
+                                                              // 0x421680
+    unsigned char choose_spell_action(const army* current_army,
+                                      long* best_value,
+                                      type_AI_combat_parameters* estimate);
+                                                              // 0x421280
+    // 0x422b20 (632 B), NOT YET CLAIMED and NOT in any TU's carve span
+    // here - `homm3 sema rva` files it under seg_0002. The DC roster
+    // puts combatManager::find_AI_targets in ai.obj (ai.cpp:2608, dc
+    // 0x27888) with exactly these five parameters, and the DC xref
+    // graph lists it as a callee of choose_shooter_action, which is
+    // where 0x422b20 is called from on the retail side too - along
+    // with choose_cyclops_action, choose_melee_action and two
+    // ai_tactical bodies, every one of which the DC graph also records
+    // as a find_AI_targets caller. Its own VA claim wants the ai.obj
+    // span recomputed past 0x4224d9 and is left to that lane.
+    void find_AI_targets(long our_group, const army* current_army,
+                         unsigned char melee_only,
+                         const type_AI_combat_parameters* data,
+                         searchArray* search_array);          // 0x422b20
+    unsigned char has_ranged_advantage(
+        type_AI_combat_parameters* data);                     // 0x420a80
+    unsigned char should_stay_in_castle(
+        type_AI_combat_parameters* estimate);                 // 0x4213f0
+    void place_shooter(const army* current_army);             // 0x422060
+    void choose_shooter_action(const army* current_army,
+                               unsigned char simulated, long side);
+                                                              // 0x41f060
+    long choose_melee_action(const army* current_army, unsigned char teleport,
+                             unsigned char simulated, long side);
+                                                              // 0x421f80
+    void DoCompAI(int whichGroup);                            // 0x4221f0
+    void berserk_attack(army* current_army, const army* target);
+                                                              // 0x4222c0
     // command.obj's leaf (0x4763f0, claimed in src/command.cpp); ai.cpp
     // and findpath.cpp are both located callers and both reach it
     // through gpCombatManager with (army::combatSide, hex).
@@ -330,6 +430,18 @@ public:
     // because that typedef lives in the header that includes this one.
     void mark_area_effect(SpellID spell, long hex, long mastery,
                           std::vector<army*>& targets);         // 0x5a4920
+    // 0x5a46f0, a SECOND spells.obj leaf of the same family and the
+    // same arity (`ret 0x10` over `this`). ai.cpp's get_area_attack_value
+    // (0x41eda0) is the located caller and hands it (hex, 1, 1,
+    // &targets) - a HEX where the sibling above takes a SpellID, so the
+    // two are different overloads, not one function seen twice. The DC
+    // roster's three combatManager::mark_area_effect rows (spells.cpp
+    // 3159/3227/3303) are all five-parameter and the dump prints no
+    // parameter types, so which of the three this is stays undecided;
+    // the name is therefore an ordinal-free PROVISIONAL, distinguished
+    // from the sibling by the parameter it actually takes.
+    void mark_hex_area_effect(long hex, long shape, long mastery,
+                              std::vector<army*>& targets);      // 0x5a46f0
 };
 
 // Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).
@@ -413,10 +525,42 @@ unsigned char LeftOfMoat(int index);
 // roster's name for the INDEX this table is searched for.
 struct type_wall_target {
     short hex;                        // +0x0
-    char pad_02[0xa];
+    // +0x2, an index into gCastleWallColumns or -1: the hex an
+    // attacker has to stand on once this segment is down. Sliced
+    // 2026-08-08 by combatManager::should_stay_in_castle (0x4213f0),
+    // which reads exactly this word (`mov ax, word [rec+2]`), answers
+    // -1 unchanged and otherwise uses it to index the 0x63bd00 byte
+    // table. The retail values are {-1, 1, 4, 5, 7, 10, -1, -1} - the
+    // three -1 rows are the two towers and the upper keep, the five
+    // real ones are the wall segments the AI cares about.
+    short blocked_column;             // +0x2
+    char pad_04[0x8];
+
+    // The DC roster's combatManager::TWallTarget::get_blocked_hex
+    // (cmbtmgr.h:1150, dc 0x27eac, 28 B). No retail body - /Ob2 folds
+    // it into should_stay_in_castle, which is the only located caller.
+    int get_blocked_hex() const
+    {
+        if (blocked_column != -1)
+            return gCastleWallColumns[blocked_column];
+        return -1;
+    }
 };
 
 extern const type_wall_target gWallTargets[8];
+
+// The five wall segments the castle AI checks, at 0x63abe0: the
+// TWallTargetIds {6, 8, 9, 10, 12}, i.e. gWallTargets rows 1..5 by
+// their id column - the five bombardable WALL sections, with the two
+// towers and the keep left out. should_stay_in_castle walks it as a
+// POINTER, `for (p = begin; p < end; p++)`, and the end address is a
+// reloc of its own in the retail instruction stream. Hence the second
+// symbol: our reloc has to carry addend ZERO to reproduce the bytes,
+// exactly the representation constraint that made town.h's four hit
+// rectangles sixteen separate ints. Neither is defined here - findpath
+// and ai only read them, and an unclaimed extern still pairs.
+extern const long gCastleWallGateTargets[5];   // 0x63abe0
+extern const long gCastleWallGateTargetsEnd[]; // 0x63abf4, one past
 
 // Retail moved this out of the class exactly as it did InCastle: the
 // body takes its only value in ECX and returns with a bare `ret`, so
