@@ -89,6 +89,22 @@ enum TCreatureType {
     CREATURE_FIRST_AID_TENT = 0x93,
     CREATURE_AMMO_CART = 0x94,
     CREATURE_ARROW_TOWER = 0x95,
+    // The four shooters combatManager::ShotIsThroughWall lets past its
+    // wall gate alongside the Arrow Tower: the compare chain at
+    // 0x46753d tests 0x22, 0x23, 0x88, 0x89, 0x95 in that order and
+    // answers "no wall between us" for each. That set is exactly
+    // HoMM3's no-obstacle-penalty shooters - Mage/Arch Mage and
+    // Enchanter/Sharpshooter - at Complete numbering, and the ids the
+    // enum already byte-proves on both sides bracket them: the Tower
+    // dwelling order puts the Mage pair straight after Stone/Iron
+    // Golem (0x20/0x21 above), and the neutral block runs Azure
+    // Dragon 0x84 / Crystal Dragon 0x85 ... Halfling 0x8a, leaving
+    // 0x88/0x89 exactly where Enchanter/Sharpshooter sit in it.
+    // NH3API spellings; values retail-proven.
+    CREATURE_MAGE = 0x22,
+    CREATURE_ARCH_MAGE = 0x23,
+    CREATURE_ENCHANTER = 0x88,
+    CREATURE_SHARPSHOOTER = 0x89,
     // get_spell_work_chance's per-creature immunity switch (0x44a9xx):
     // the magic-resistant dwarves/Crystal Dragon, the level-gated
     // dragons, and the spell-immune Magic Elemental (NH3API spellings;
@@ -285,6 +301,17 @@ enum EArtifactId {
     ARTIFACT_BADGE_OF_COURAGE = 0x31,
     ARTIFACT_SPIRIT_OF_OPPRESSION = 0x54,
     ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR = 0x55,
+    // The two obstacle-penalty bows: combatManager::ShotIsThroughWall
+    // (0x467510) waives the town-wall penalty for a shooter whose own
+    // hero wields either of them, pushing 0x5b then 0x89 into
+    // hero::IsWieldingArtifact. Exactly two artifacts in HoMM3 cancel
+    // the obstacle/wall penalty - the Golden Bow and its combination
+    // successor, the Bow of the Sharpshooter - so the semantics pin
+    // the pairing. NH3API spellings; both values retail-proven by the
+    // pushed immediates. (0x89 is also CREATURE_SHARPSHOOTER's id in
+    // the unrelated creature domain - a coincidence of numbering, not
+    // a shared enum.)
+    ARTIFACT_GOLDEN_BOW = 0x5b,
     ARTIFACT_SPHERE_OF_PERMANENCE = 0x5c,
     ARTIFACT_ORB_OF_VULNERABILITY = 0x5d,
     ARTIFACT_PENDANT_OF_DISPASSION = 0x64,
@@ -296,7 +323,8 @@ enum EArtifactId {
     ARTIFACT_PENDANT_OF_NEGATIVITY = 0x6a,
     ARTIFACT_PENDANT_OF_TOTAL_RECALL = 0x6b,
     ARTIFACT_ORB_OF_INHIBITION = 0x7e,
-    ARTIFACT_POWER_OF_THE_DRAGON_FATHER = 0x86
+    ARTIFACT_POWER_OF_THE_DRAGON_FATHER = 0x86,
+    ARTIFACT_BOW_OF_THE_SHARPSHOOTER = 0x89
 };
 
 // The traits table is reached through a stored pointer (reference

@@ -6,6 +6,7 @@
 #include <va.h>
 #include "cmbtmgr.h"
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
+#include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
 
 #if 0  // @carcass
@@ -496,14 +497,33 @@ unsigned char combatManager::is_adjacent(int first, int second)
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:3509
+// Retail INLINES InCastle at both of the wall tests here (the two
+// magic-divide blocks index gCastleWallColumns at 0x63bd00, not the
+// moat table): the shot must leave a hex OUTSIDE the castle and land
+// on one INSIDE it before any wall can be in the way.
 VA(0x00467510, 0xEA)  // anchor-global, dc 0x61224
-int combatManager::ShotIsThroughWall(int group, int sourceIndex, int destIndex)
+unsigned char combatManager::ShotIsThroughWall(const army* shooter, int sourceIndex,
+                                               int destIndex)
 {
-    // @stub
+    int side = shooter->hypnotizeFlag ? 1 - shooter->combatSide
+                                      : shooter->combatSide;
+    if (shooter->creatureType == CREATURE_MAGE
+            || shooter->creatureType == CREATURE_ARCH_MAGE
+            || shooter->creatureType == CREATURE_ENCHANTER
+            || shooter->creatureType == CREATURE_SHARPSHOOTER
+            || shooter->creatureType == CREATURE_ARROW_TOWER)
+        return 0;
+    if (InCastle(sourceIndex) || !InCastle(destIndex))
+        return 0;
+    if (heroes[side] != 0
+            && (heroes[side]->IsWieldingArtifact(ARTIFACT_GOLDEN_BOW)
+                || heroes[side]->IsWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER)))
+        return 0;
+    return InLineOfSight(sourceIndex, destIndex) == 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3531
 VA(0x00467600, 0x23A)  // anchor-global, dc 0x61284

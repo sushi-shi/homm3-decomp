@@ -233,6 +233,7 @@ cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000
 cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXPBVarmy@@@Z	100.0000
 cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000
+cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000
 cmbtmgr	?enemy_is_adjacent@combatManager@@QAEEPAVarmy@@HPBV2@@Z	100.0000
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000
 cmbtmgr	?is_adjacent@combatManager@@QAEEHH@Z	100.0000
@@ -251,7 +252,6 @@ cmbtmgr	combatManager_ShootAnimatedMissile	0.0000
 cmbtmgr	combatManager_ShootBallisticMissile	0.0000
 cmbtmgr	combatManager_ShootMissile	0.0000
 cmbtmgr	combatManager_ShotIsNotOptimal	0.0000
-cmbtmgr	combatManager_ShotIsThroughWall	0.0000
 cmbtmgr	combatManager_ViewArmy	0.0000
 cmbtmgr	combatManager_combatManager	0.0000
 cmbtmgr	combatManager_damage_message	0.0000
