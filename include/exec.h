@@ -43,6 +43,13 @@ struct SUnnamedEntry6a5d5c {
     const char* field_44;             // +0x44
     char pad_48[0xd0];
     const char* quitText;             // +0x118
+    char pad_11c[0x638];
+    // +0x754. The default player name. playerData::ClearNetInfo
+    // (0x4ba170) strcpy's it over cName, and playerData::GetName
+    // (0x4badb0) _strcmpi's a computer player's name against it before
+    // replacing that name with the colour word - so it is the string a
+    // never-named player carries. Ordinal-free name, role-derived.
+    const char* defaultPlayerName;
 };
 struct SUnnamed6a5d5c {
     char pad_00[0x20];
