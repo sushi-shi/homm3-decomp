@@ -10,6 +10,8 @@
 #include "message.h"
 #include "bitmap16.h"
 #include "winmgr.h"
+#include "mousemgr.h"
+#include "textwdgt.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
 
@@ -484,14 +486,21 @@ void heroWindow::EnableAllWidgets(unsigned char enable)
     // @stub
 }
 
-// E:\gamedcs\window.cpp:904
-DC_ONLY(0x197c08, 0x1A)
-void heroWindow::DoModal(unsigned char fadeIn)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\window.cpp:904
+// Slot 6 of heroWindow's vtable 0x243cc4. The one uchar argument is
+// widened with the `mov eax,[ebp+8]; and eax,0xff` pair retail uses to
+// pass a uchar parameter into an int one, and the middle push is the
+// ADDRESS of HeroWindowHandler (0x5ff500) - which is why this needed no
+// carve row of its own after all: defining the handler below is all the
+// address-take requires. DoDialog is thiscall on gpWindowManager with
+// the three stack arguments.
+VA(0x005ff460, 0x21)  // anchor-vtable (slot 6 of 0x243cc4), dc 0x197c08
+int heroWindow::DoModal(unsigned char fadeIn)
+{
+    return gpWindowManager->DoDialog(this, HeroWindowHandler, fadeIn);
+}
 
 // E:\gamedcs\window.cpp:909
 // Confirms the widget roster tail: the old holder gets OnKillFocus
@@ -513,16 +522,23 @@ void heroWindow::SetFocus(int id)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\window.cpp:934
-DC_ONLY(0x197c74, 0x18)
-int heroWindow::HeroWindowHandler(message* msg)
+// NO VA CLAIM - a CARVE GAP, not a missing body. Retail's handler sits
+// at 0x5ff500, inside the unowned 0x5ff4fc..0x5ff510 run between
+// SetFocus and delete_widgets, and config/retail-functions.tsv has no
+// row there (it is MANUALLY MANAGED; correcting a boundary is not a
+// matcher's call). The twelve bytes are decoded by hand:
+//   mov eax,ecx / push eax / mov ecx,[eax+0x1c] / mov edx,[ecx] /
+//   call [edx+0xc] / ret
+// i.e. fastcall in ecx - the /Gr form of the STATIC member DC's
+// fieldlist marks it as - message::window at +0x1c, and heroWindow
+// vtable slot 3, which independently corroborates handle_message's
+// slot in the roster in window.h. Defined here so that DoModal's
+// address-take resolves; that claim is what scores the pair.
+int heroWindow::HeroWindowHandler(message& msg)
 {
-    // @stub
+    return msg.window->handle_message(msg);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\window.cpp:942
 VA(0x005ff510, 0x60)  // anchor-global, dc 0x197c8c
@@ -571,6 +587,19 @@ void heroWindow::SleepAllWidgets(unsigned char sleep)
     }
 }
 
+// Retail-only (no DC roster entry): heroWindow vtable 0x243cc4 slot 8,
+// the virtual SleepAllWidgets dispatches on its counter edges. It is
+// the window-wide fan-out of widget::sleep - the DC-attested inline
+// (Widget.h:244) whose retail body is the per-widget nest counter at
+// widget+0x2c plus the widget slot-12 edge hook, and which /Ob2
+// expands in full here (its only call site in the image).
+VA(0x005ff5f0, 0x4F)  // anchor-vtable (slot 8 of 0x243cc4), retail-only
+void heroWindow::_vslot8(unsigned char on)
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it)
+        (*it)->sleep(on);
+}
+
 // E:\gamedcs\window.cpp:966
 // The base ctor is /Ob2-inlined store for store (heroWindow's own
 // out-of-line body still serves its external callers); only the vptr
@@ -590,18 +619,55 @@ CHeroWindowEx::CHeroWindowEx(int winX, int winY, int winWidth, int winHeight,
 // the flags&1 operator delete tail.
 VA_COMPGEN(0x005ff6b0, 0x21, SCALAR_DELETING_DTOR, CHeroWindowEx)
 
-#if 0  // @carcass
-
 // E:\gamedcs\window.cpp:972 - vtable 0x243ce8 slot 10. `ret 8` and the
 // findWidgetPtr(mouseX, mouseY) call site both give the arity; the
 // body latches the hit widget's id in rolloverId, swaps the mouse
 // pointer through mouseManager::SetPointer and redraws the rollover
-// text widget. Blocked on the mouseManager and textWidget models.
+// text widget. Unblocked 2026-08-08: the two "missing models" were one
+// declaration each - gpMouseManager (already in mousemgr.h) and
+// textWidget's single introduced virtual at slot 13, which this body
+// reaches purely through the vtable (`call [vptr+0x34]`), so only the
+// DECLARATION was ever needed. The three vcalls corroborate three
+// rosters at once: CHeroWindowEx slot 13 (GetRolloverWidget),
+// textWidget slot 13 (SetText) and heroWindow slot 5 (DrawWindow).
 VA(0x005ff6e0, 0xAE)  // anchor-vtable (slot 10 of 0x243ce8), dc 0x197d9c
 unsigned char CHeroWindowEx::ProcessHover(int mouseX, int mouseY)
 {
-    // @stub
+    textWidget* rollover = GetRolloverWidget();
+    if (!rollover)
+        return 0;
+    widget* hit = findWidgetPtr(mouseX, mouseY);
+    int id = -1;
+    if (hit)
+        id = hit->id;
+    // The id-unchanged early-out shares the function's own `return 1`
+    // tail in retail, so the guard is the NEGATED block form, not
+    // `if (id == rolloverId) return 1;` - that spelling duplicates the
+    // four-instruction exit and costs 7.7 points (92.33).
+    if (id != rolloverId) {
+        rolloverId = id;
+        // Retail materialises the SAME literal address twice (`mov ebx,
+        // offset` on both arms), so it is one allocation, not two
+        // pooled copies - hence the single claim through a local.
+        const char* emptyText = DATA_COMPGEN(0x00691210, emptyRolloverText, "");
+        const char* text = emptyText;
+        if (hit) {
+            text = hit->RollOver;
+            if (!text)
+                text = emptyText;
+            gpMouseManager->SetPointer(1, mouseManager::DEFAULT_SET);
+        } else {
+            gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+        }
+        rollover->SetText(text);
+        DrawWindow(0, rollover->id, rollover->id);
+        gpWindowManager->UpdateScreen(rollover->x + x, rollover->y + y,
+                                      rollover->width, rollover->height);
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\window.cpp:1122 - OnWidgetDeselect has NO window.obj row.
 // Vtable 0x243ce8 slot 12 points at 0x559140 (`xor eax,eax; ret 8`),

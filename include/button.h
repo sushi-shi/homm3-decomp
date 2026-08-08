@@ -27,12 +27,16 @@ void SetPlayerPaletteColors(palette* pal, int whichPlayer);
 void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
 
 
-// The widget base lives in widget.h (owner: widget.obj). Button's own
-// vtables (0x63bb54/0x63bb88/0x63bbbc, 13 slots) extend widget's 12
-// with one button-introduced virtual (slot 12, body 0x456a10,
-// unidentified). Overrides with retail bodies outside the button band:
-// zBufferDraw (slot 3, 0x5bc7e0) and Dim (slot 8, 0x5bc690) - homes
-// unproven.
+// The widget base lives in widget.h (owner: widget.obj). Button's
+// vtables (0x63bb54/0x63bb88/0x63bbbc) have 13 slots because WIDGET
+// has 13 - they introduce nothing. (Correction 2026-08-08: the earlier
+// note here read them as "widget's 12 plus one button-introduced
+// virtual". widget's own vtable 0x243c90 is 13 entries wide -
+// heroWindow's table starts at 0x243c90 + 13*4 - and 0x456a10 is
+// button's OVERRIDE of widget slot 12, its whole body being an
+// explicit `widget::_vslot12(arg)` call.) Overrides with retail bodies
+// outside the button band: zBufferDraw (slot 3, 0x5bc7e0) and Dim
+// (slot 8, 0x5bc690) - homes unproven.
 //
 // Layout PROVEN by the retail ctor 0x455ef0 (member stores) and dtor
 // 0x4560f0 (member teardown): buttonIcon@0x30, normalFrame@0x34,
@@ -77,8 +81,11 @@ public:
 
     virtual void Draw();  // slot 4, retail 0x456940
 
-    virtual ~button();  // retail 0x4560f0; slot 12 (0x456a10) is the
-                        // button-introduced 13th virtual, unidentified
+    virtual ~button();  // retail 0x4560f0
+
+    // widget slot 12, overridden at 0x456a10 - the only override of it
+    // in the image. Placeholder name inherited from widget.h.
+    virtual void _vslot12(int on);  // slot 12, retail 0x456a10
 
     void SetPlayerPaletteColors(int whichPlayer);
 };

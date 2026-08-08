@@ -49,30 +49,54 @@ mouseManager::mouseManager()
     InitializeCriticalSection(&section_mouse);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\mousemgr.cpp:344
-DC_ONLY(0xfea50, 0x2E)
-void mouseManager::~mouseManager()
-{
-    // @stub
-}
+// E:\gamedcs\mousemgr.cpp:332 - mouseManager::`scalar deleting
+// destructor' (dc 0xff818), slot 3 of vtable 0x640028. Retail has NO
+// standalone ~mouseManager row: the 44-byte body here IS the dtor
+// (own-vptr store + DeleteCriticalSection on section_mouse at +0x78)
+// followed by the flags&1 operator delete tail, i.e. the header-inline
+// dtor idiom widget.obj uses. DC keeps the dtor out of line at 0xfea50
+// and appends the sdd at the compiland tail; retail does neither.
+VA_COMPGEN(0x0050cbc0, 0x2C, SCALAR_DELETING_DTOR, mouseManager)
 
 // E:\gamedcs\mousemgr.cpp:357
-DC_ONLY(0xfea80, 0x34)
+// Slot 0. Reset() is /Ob2-inlined here (its own out-of-line copy at
+// 0x50cc80 still serves the external WM_ACTIVATE caller), which is why
+// the nine zero stores run field_38 then Reset's own eight in Reset's
+// order; ShowCursor's argument register is hoisted above all of them.
+// The three baseManager tail stores are id / priority / status, the
+// inputManager::Open shape.
+VA(0x0050cbf0, 0x4A)  // anchor-vtable (slot 0 of 0x640028), dc 0xfea80
 int mouseManager::Open(int newPriority)
 {
-    // @stub
+    field_38 = 0;
+    Reset();
+    ShowCursor(0);
+    field_64 = 0;
+    id = 0x40;
+    priority = newPriority;
+    status = 1;
+    return 0;
 }
 
 // E:\gamedcs\mousemgr.cpp:386
-DC_ONLY(0xfeab4, 0x46)
+// Slot 1, the inputManager::Close shape: everything under status == 1.
+// The pointer sprite is released through CSprite's virtual slot 1
+// (Dispose), the same slot SetPointer uses.
+VA(0x0050cc40, 0x38)  // anchor-vtable (slot 1 of 0x640028), dc 0xfeab4
 void mouseManager::Close()
 {
-    // @stub
+    if (status != 1)
+        return;
+    unsigned char wasHidden = field_64;
+    status = 0;
+    if (!wasHidden) {
+        ShowCursor(1);
+        field_64 = 1;
+    }
+    if (field_54)
+        field_54->Dispose();
+    field_54 = 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\mousemgr.cpp:412
 // Located as AppWndProc's WM_ACTIVATE callee (26 B on DC vs 27 here;
@@ -92,9 +116,12 @@ void mouseManager::Reset()
 
 #if 0  // @carcass
 
-// E:\gamedcs\mousemgr.cpp:431
+// E:\gamedcs\mousemgr.cpp:431 - slot 2. No claim and no definition:
+// the retail body is the program-wide `xor eax,eax; ret 4` at
+// 0x4ec560, an /OPT:ICF fold that inputmgr.cpp already claims as
+// inputManager::Main. Declared in mousemgr.h so the slot is modelled.
 DC_ONLY(0xfeb18, 0x4)
-int mouseManager::Main(message* msg)
+int mouseManager::Main(message& msg)
 {
     // @stub
 }
@@ -342,6 +369,21 @@ void mouseManager::CheckUpdate()
         }
     }
 }
+
+// E:\gamedcs\mousemgr.cpp:298 - TCSLock::~TCSLock (dc 0xff800) lives
+// at 0x50cd80, the ten-byte row directly after SetPointer: `mov
+// eax,[ecx]; push eax; call [__imp__LeaveCriticalSection@4]; ret`.
+// Retail files it HERE, between SetPointer and Update, not at the DC
+// tail position - and our build already emits the identical COMDAT
+// (the EH unwind funclets need a callable copy even though every use
+// site inlines it). NO CLAIM, and this one is a CLAIM-FORM limit, not
+// a modelling gap: VA() must sit on a declarator, the only declarator
+// is the in-class inline in mousemgr.h, and moving the definition down
+// here would stop the four earlier users (SetPointer, HidePointer,
+// ShowPointer, CheckUpdate) from inlining it, which retail does.
+// Parking it in the @carcass block instead would only mint a 0.0000
+// row. Claiming it needs either a header-borne claim form or an
+// out-of-line-copy claim kind; both are contract changes.
 
 #if 0  // @carcass
 

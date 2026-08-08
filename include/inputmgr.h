@@ -71,12 +71,16 @@ public:
     // body: Open clears the 0x200-dword buffer and latches its
     // argument into keyboardFilter; Close undoes it under status==1;
     // Main is the trivial `return 0`.
-    virtual int Open(int kFilter);        // 0x4ec4d0
-    virtual void Close();                 // 0x4ec540
-    virtual int Main(message* msg);       // 0x4ec560
-    virtual void _vslot3() = 0;
-    virtual void _vslot4() = 0;
-    virtual void _vslot5() = 0;
+    // CORRECTION 2026-08-08: the trailing _vslot3/_vslot4/_vslot5 that
+    // used to sit here were basemgr.h's fabricated slots 3-5 (see the
+    // correction note there - baseManager's table is three wide), and
+    // Main took `message*`, which did NOT override baseManager's
+    // `message&` slot and so appended a seventh entry. DC spells it
+    // ?Main@inputManager@@UAAHAAUmessage@@@Z - a reference - and
+    // inputManager's retail table is three slots, exactly these.
+    virtual int Open(int kFilter);        // slot 0, 0x4ec4d0
+    virtual void Close();                 // slot 1, 0x4ec540
+    virtual int Main(message& msg);       // slot 2, 0x4ec560
 };
 
 // Retail .bss 0x6994e0 (DC ?gpInputManager@@3PAVinputManager@@A).
