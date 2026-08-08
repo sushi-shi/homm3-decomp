@@ -139,7 +139,7 @@ const unsigned char NewmapCell::HasTriggerableEvent()
 
 // E:\gamedcs\mapcell.cpp:490
 VA(0x004fce20, 0x116)  // anchor-global, dc 0xec3b4
-TAdventureObjectType NewmapCell::get_special_terrain()
+TAdventureObjectType NewmapCell::get_special_terrain() const
 {
     // @stub
 }

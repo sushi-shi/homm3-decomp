@@ -671,7 +671,7 @@ unsigned char check_shipyard_square(town* current_town, long x, long y)
                     // it for the BOAT compare below - two distinct
                     // source constants (eTerrainWater and BOAT) that
                     // happen to share a value, CSE'd by VC6.
-                    if (cell->terrain == eTerrainWater) {
+                    if (cell->GroundSet == eTerrainWater) {
                         unsigned short flags = cell_flags_word(cell);
                         if (!(flags & 0x100)) {
                             if (!(flags & 0x1000) || cell->type == BOAT) {

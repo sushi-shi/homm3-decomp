@@ -259,6 +259,23 @@ public:
     long get_multi_head_directions(long our_hex, const army* enemy,
                                    long enemy_hex) const;
     int GetSpeed() const;                    // 0x448cd0, claimed in army.cpp
+    // The engine's creatureId bit accessor - the DC roster's
+    // army::Is(unsigned attribute) (Army.h:765, dc 0x27ce4, 14 B), and
+    // the single most-called inline in the combat AI: the Dreamcast
+    // xref graph records 170 call edges into it. No retail body exists
+    // anywhere - it is the /Ob2 inline-away case at every site.
+    // The SHAPE is the one every exact reader in this tree already
+    // spells by hand (get_total_combat_value 0x41eac0,
+    // searchArray::set_moat 0x4b3290, should_attack_now 0x436c60):
+    // shift the whole word down and TRUNCATE to a byte, with the
+    // caller applying its own `& 1`. Writing the `& 1` inside would
+    // put an extra `and eax,1` ahead of every caller's own test, which
+    // none of those bodies has.
+    unsigned char Is(unsigned attribute) const
+    {
+        return static_cast<unsigned char>(
+            static_cast<unsigned>(creatureId) >> attribute);
+    }
     unsigned char is_enemy(const army* arg); // 0x442880
     // Combat-AI leaves, all claimed in army.cpp; declared here so
     // ai_tactical can call them (the retail callsites are the

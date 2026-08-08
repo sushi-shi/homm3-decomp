@@ -114,24 +114,27 @@ advmgr	set_witch_hut_help_text	0.0000
 advmgr	type_cell_adjuster_get_trigger_cell	0.0000
 advmgr	type_cell_adjuster_type_cell_adjuster	0.0000
 advmgr	type_point_type_point	0.0000
+ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697
 ai	?IsIncapacitated@army@@QAEEXZ	100.0000
+ai	?berserk_attack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000
 ai	?can_cast_spells@combatManager@@QAEEJE@Z	100.0000
+ai	?choose_melee_action@combatManager@@QAEJPBVarmy@@EEJ@Z	100.0000
+ai	?choose_shooter_action@combatManager@@QAEXPBVarmy@@EJ@Z	100.0000
 ai	?compute_fire_shield_damage@combatManager@@QAEJJPBVarmy@@0J@Z	100.0000
 ai	?find_move_order@combatManager@@QAEXPAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000
+ai	?get_area_attack_value@@YIJPBVarmy@@JJPAUtype_AI_combat_parameters@@@Z	100.0000
 ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	96.3533
 ai	?get_total_combat_value@combatManager@@QBEJJJJE@Z	100.0000
 ai	?mark_firewalls@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000
 ai	?move_toward@combatManager@@QAEEPBVarmy@@JPBJE@Z	99.4462
-ai	combatManager_DoCompAI	0.0000
+ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	80.5659
+ai	?should_stay_in_castle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000
 ai	combatManager_attempt_shooter_defense	0.0000
-ai	combatManager_berserk_attack	0.0000
 ai	combatManager_choose_creature_spell	0.0000
 ai	combatManager_choose_cyclops_action	0.0000
 ai	combatManager_choose_defense_hex	0.0000
-ai	combatManager_choose_melee_action	0.0000
 ai	combatManager_choose_melee_target	0.0000
 ai	combatManager_choose_resurrect_action	0.0000
-ai	combatManager_choose_shooter_action	0.0000
 ai	combatManager_choose_shooter_target	0.0000
 ai	combatManager_choose_spell_action	0.0000
 ai	combatManager_choose_to_run	0.0000
@@ -140,10 +143,7 @@ ai	combatManager_has_ranged_advantage	0.0000
 ai	combatManager_mark_enemy_attacks	0.0000
 ai	combatManager_mark_friendly_armies	0.0000
 ai	combatManager_mark_multiheaded_enemy	0.0000
-ai	combatManager_place_shooter	0.0000
-ai	combatManager_should_stay_in_castle	0.0000
 ai	find_attack_hexes	0.0000
-ai	get_area_attack_value	0.0000
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@PBVarmyGroup@@@Z	100.0000
 ai_combat	?AI_auto_combat@@YIXPAVhero@@0PAVarmyGroup@@1PBVtown@@PAVNewmapCell@@@Z	100.0000
@@ -435,17 +435,17 @@ exec	?MainLoop@executive@@QAEXXZ	88.1290
 exec	?RemoveManager@executive@@QAEXPAVbaseManager@@@Z	100.0000
 findpath	??0searchArray@@QAE@XZ	100.0000
 findpath	??1searchArray@@QAE@XZ	100.0000
+findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000
 findpath	?Close@searchArray@@QAEXXZ	100.0000
+findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	88.0238
 findpath	?Init@searchArray@@QAEXXZ	100.0000
+findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000
 findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177
 findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	100.0000
 findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000
 findpath	?lower_door@searchArray@@QAEXXZ	100.0000
 findpath	?set_moat@searchArray@@QAEXPBVarmy@@@Z	100.0000
-findpath	CalcTerrainCost	0.0000
-findpath	GetTerrainCost	0.0000
-findpath	MinimumTerrainCost	0.0000
 findpath	searchArray_FindCombatPath	0.0000
 findpath	searchArray_PushCombatPoint	0.0000
 findpath	searchArray_PushPoint	0.0000
@@ -868,7 +868,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 # carrying another unevidenced lever include, and both are worse than an
 # honest lower. Re-measure after any town.h edit; the row has read 26.18,
 # 94.07, 100.00 and now 96.09 today, all without a semantic change.
-initialize	?initialize_game_data@@YIXXZ	96.0880
+initialize	?initialize_game_data@@YIXXZ	100.0000
 inputmgr	??0inputManager@@QAE@XZ	86.5667
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000

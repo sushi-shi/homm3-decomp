@@ -131,7 +131,16 @@ enum TCreatureType {
     CREATURE_BLACK_DRAGON = 0x53,
     CREATURE_MAGIC_ELEMENTAL = 0x79,
     CREATURE_AZURE_DRAGON = 0x84,
-    CREATURE_CRYSTAL_DRAGON = 0x85
+    CREATURE_CRYSTAL_DRAGON = 0x85,
+    // 0x8e, one slot below Rogue in the six-slot run the CREATURE_ROGUE
+    // note above reconstructs (Peasant, Boar, Mummy, NOMAD, Rogue,
+    // Troll). Retail pins the ROLE independently: findpath's
+    // GetTerrainCost (0x4b18c0) asks get_creature_total(0x8e) > 0 and
+    // hands the answer to CalcTerrainCost as the flag whose only effect
+    // is `terrain == 1 -> terrain = 0` - it erases terrain 1's movement
+    // penalty, terrain 1 is Sand (terrain.h's ten-mask permutation),
+    // and Nomads are the creature that cancels the sand penalty.
+    CREATURE_NOMAD = 0x8e
 };
 
 // The spell-id domain (the full roster gets its own header when spell

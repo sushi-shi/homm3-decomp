@@ -173,6 +173,35 @@ enum TAdventureObjectType {
     TERRAIN_WILLOW_TREE        = 159,
     TERRAIN_YUCCA_TREE         = 160,
     TERRAIN_REEF               = 161,
+    // THE EIGHT SoD MAGIC TERRAINS, admitted 2026-08-08. The Dreamcast
+    // enum stops at 165 and these ids are outside it, but retail's
+    // NewmapCell::get_special_terrain (0x4fce20) answers with exactly
+    // ten values - 0x15, 0x2e and this block - and nothing else, so the
+    // block IS a domain of this enum on the retail side, and the block
+    // named here is EXACTLY that answer set - the two SoD ids that
+    // merely duplicate an RoE original (223 Cursed Ground, 230 Magic
+    // Plains) are NOT among the ten and are not named. The two RoE
+    // members of that answer set are CURSED_GROUND (21) and
+    // MAGIC_PLAINS (46), both already named above, which is what fixes
+    // the block's meaning: these are their SoD siblings.
+    // THE SPELLINGS ARE PROVISIONAL AND BEHAVIOUR-DERIVED, not roster
+    // names - no DC row and no string reaches any of them. Only one is
+    // independently pinned by retail bytes: findpath's CalcTerrainCost
+    // (0x4b1740) takes a THIRD off the cost of every step on terrain 8
+    // (Water) when the cell answers 0xe1, and a sea-movement bonus is
+    // what Favorable Winds is; the other seven keep the order the
+    // id block itself imposes. CLOVER_FIELD_2 takes the `_2` suffix the
+    // RANDOM_ARTIFACT_1..4 rows already use because an RoE
+    // CLOVER_FIELD (14) is named above; none of the eight collides
+    // with armygrp.h's separate MAGIC_TERRAIN_* mode enum.
+    CLOVER_FIELD_2             = 222,
+    EVIL_FOG                   = 224,
+    FAVORABLE_WINDS            = 225,
+    FIERY_FIELDS               = 226,
+    HOLY_GROUND                = 227,
+    LUCID_POOLS                = 228,
+    MAGIC_CLOUDS               = 229,
+    ROCKLANDS                  = 231,
     RANDOM_MONSTER_5           = 162,
     RANDOM_MONSTER_6           = 163,
     RANDOM_MONSTER_7           = 164,
@@ -198,19 +227,58 @@ public:
     // this header rides in initialize.cpp's include closure (see the
     // cellFlags note below for what that costs).
     unsigned long extraInfo;
-    // The square's ground type, byte at +0x04. check_shipyard_square
-    // (town.obj 0x5c0c90) accepts a dock tile only when this equals 8,
-    // and terrain.h's ten-mask permutation independently pins Water at
-    // TTerrainType 8 - so the field is the terrain id. Kept as a plain
-    // byte rather than TTerrainType: that roster is still the bootstrap
-    // sentinel-only stub in armygrp.h, and filling it in is a separate,
-    // wider change.
-    unsigned char terrain;
-    char pad_05[0x7];
+    // +0x04 and +0x08: two int allocation units of SIGNED 8-BIT
+    // BITFIELDS, sliced 2026-08-08 out of the old `unsigned char
+    // terrain; char pad_05[7]` pair. findpath's CalcTerrainCost
+    // (0x4b1740) reads BOTH units as `mov eax, dword; shl eax, 0x18;
+    // sar eax, 0x18` - a 32-bit load whose low byte is sign-extended,
+    // which is what VC6 emits for a signed 8-bit bitfield at bit 0 of
+    // an int unit and NOT what it emits for a `char` member (that
+    // would be `movsx eax, byte`). The bit-0 field of the first unit
+    // is the terrain id the old `terrain` byte named:
+    // check_shipyard_square (town.obj 0x5c0c90) accepts a dock tile
+    // only when it equals 8 and terrain.h's ten-mask permutation pins
+    // Water at TTerrainType 8. Names and the six-way split are the
+    // Dreamcast fieldlist's - GroundSet/GroundIndex/RiverSet/RiverIndex
+    // all at DC offset 4, RoadSet/RoadIndex at DC offset 8 - and retail
+    // corroborates the two the code reaches: GroundSet is the terrain
+    // and RoadSet indexes findpath's four-entry road-row table.
+    // GroundSet stays a plain `int` bitfield rather than TTerrainType:
+    // that enum is declared in armygrp.h, which INCLUDES this header,
+    // so the domain type is not nameable from here. findpath spells
+    // CalcTerrainCost's matching parameter `long` for the same reason
+    // its three mastery parameters are `long` (see the note there).
+    // The equality compare in check_shipyard_square stays a BYTE
+    // compare through the bitfield (measured, still exact): VC6 folds
+    // `field == small_constant` on a byte-aligned 8-bit field into
+    // `cmp byte ptr`, so the slice costs nothing there.
+    int GroundSet : 8;
+    int GroundIndex : 8;
+    int RiverSet : 8;
+    int RiverIndex : 8;
+    int RoadSet : 8;
+    int RoadIndex : 8;
+    int pad_0a : 16;
     // +0x0c is the DC's cellFlags word. find_magus_hut_value tests bit
     // 12 of it (`test byte ptr [cell + 0xd], 0x10`); the DC's flag list
     // for this word has is_trigger thirteenth, so that is the name used
     // here - provisional, the bit ORDER is inferred from listing order.
+    // Bit 6 is `Passable`, the seventh name on the same DC list, and
+    // CalcTerrainCost (0x4b1740) corroborates the position
+    // independently: it only lets a flier take min(ground cost, flight
+    // cost) on a tile whose bit 6 is set (`test byte [cell+0xc],
+    // 0x40`) and charges the flat flight cost everywhere else.
+    // NOT SLICED OUT, and the reason is the include-set sensitivity
+    // class again, MEASURED 2026-08-08: splitting this one bitfield
+    // into `flags_00_05:6 / Passable:1 / flags_07_11:5` - three named
+    // members where there was one, no new type, no semantic change -
+    // takes initialize_game_data 96.0880 -> 26.1806, one of the values
+    // that class's own struct sweep produced. So the sensitivity is to
+    // the MEMBER population of this header's types, not only to the
+    // count of type definitions in the TU; the note below was written
+    // when only the latter had been measured. findpath spells the test
+    // `cell->flags_00_11 & 0x40` instead, which compiles to retail's
+    // `test byte ptr [cell+0xc], 0x40` unchanged.
     // NOT overlaid with a plain-word union, though retail's
     // check_shipyard_square reads this field as a whole word: adding
     // the union here is a type DEFINITION in this header's closure and
@@ -226,6 +294,10 @@ public:
     TAdventureObjectType type;  // +0x1e
     short objectIndex;          // +0x22
     short object_type_index;    // +0x24
+
+    // 0x4fce20, claimed (still @stub) in src/mapcell.cpp. Declared here
+    // because findpath's CalcTerrainCost calls it with the cell in ECX.
+    TAdventureObjectType get_special_terrain() const;
 };
 #pragma pack(pop)
 

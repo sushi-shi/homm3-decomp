@@ -195,6 +195,17 @@ inline long* get_danger_cell(long* danger_zones, type_point point)
 // globals when that TU's data is modeled.
 extern searchArray* gpSearchArray;
 
+// The eight-direction step table at 0x678150, four bytes a row:
+// (dx, dy, 0x10, 0) for N, NE, E, SE, S, SW, W, NW in that order.
+// SPELLED AS TWO SEPARATE STRIDE-FOUR ARRAYS, the town.h hit-rectangle
+// precedent: retail reads the dy column with a reloc against 0x678151
+// - the row's SECOND byte - and the delinker gives that address its own
+// symbol, so a `struct { signed char dx, dy; ... }` model would emit
+// `base+1` where the target carries addend zero. Neither is defined
+// here; findpath only reads them and an unclaimed extern still pairs.
+extern const signed char gStepDeltaX[];   // 0x678150, stride 4
+extern const signed char gStepDeltaY[];   // 0x678151, stride 4
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\findpath.cpp:131, dc 0x9f034) int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left, TSkillMastery iPathfinding, TRoadType end_road, TSkillMastery flying, TSkillMastery water_walking, TTerrainType native_terrain);
 // CODEVIEW(E:\gamedcs\findpath.cpp:223, dc 0x9f154) int MinimumTerrainCost(const NewmapCell* cell, int points_left, TSkillMastery iPathfinding, TSkillMastery flying, TSkillMastery water_walking);
