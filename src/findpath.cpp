@@ -28,19 +28,28 @@ unsigned char type_point::is_valid()
 #endif  // @carcass
 
 // E:\gamedcs\findpath.cpp:45
-// Residual (96.3%): the three pointer zeros ride one scheduler slot
-// away from the byte stores - island-track class.
+// STATEMENT ORDER IS THE WHOLE FUNCTION. The three vector members
+// (queue 0x38, result 0x48, visited_points 0x58) construct first
+// because they are members; after them retail zeroes cellData,
+// bIsMoatSlowed and danger_zones and only THEN walks 0x00..0x20. VC6
+// sinks those three stores to the very end if they sit mid-body (the
+// old 96.3% residual, mis-filed as scheduler noise) and hoists them
+// ABOVE the vector ctors if they move into a member-initialiser list
+// (76.1%, because the list runs in DECLARATION order and cellData is
+// declared before the vectors). Writing them as the first three
+// statements of the BODY is the only one of the three spellings that
+// lands them between the two groups, and it is byte-exact.
 VA(0x004b1370, 0x62)  // anchor-global, dc 0x9ed88
 searchArray::searchArray()
 {
+    cellData = 0;
+    bIsMoatSlowed = 0;
+    danger_zones = 0;
     maxQueueCount = 0;
     pay_transition_costs = 0;
     this_turns_movement = 0;
     land_movement = 0;
     sea_movement = 0;
-    cellData = 0;
-    bIsMoatSlowed = 0;
-    danger_zones = 0;
     can_summon_boat = 0;
     can_cast_teleport = 0;
     water_walk_level = -1;
