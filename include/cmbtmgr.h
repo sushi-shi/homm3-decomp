@@ -93,7 +93,14 @@ public:
         char pad_09[0xf];
     };
 
-    char pad_0000[0x1c4];
+    char pad_0000[0x34];
+    // +0x34, the baseManager::status slot every NWC manager carries.
+    // soundManager::SetMusicVolume (0x5994b0) reads it as a dword and
+    // plays combat music while it is non-zero; combatManager itself is
+    // not yet modelled as deriving baseManager, so the field is sliced
+    // out of the head pad at the offset the bytes prove.
+    int status;
+    char pad_0038[0x18c];
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
     hexcell cells[187];               // +0x1c4, ends 0x5394

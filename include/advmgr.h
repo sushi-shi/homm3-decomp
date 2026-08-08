@@ -18,7 +18,14 @@ class advManager : public baseManager {
 public:
     char pad_038[0xc];
     heroWindow* advWindow;    // +0x44 (the button-status target)
-    char pad_048[0x1c4];
+    char pad_048[0x10];
+    // +0x58, a dword read as the index into soundmgr's 9-entry terrain
+    // -> music-id table at 0x678330 (soundManager::SetMusicVolume
+    // 0x5994b0: `mov ecx,[gpAdvManager+0x58]` then
+    // `mov al, byte ptr [ecx + 0x678330]`), so it carries the current
+    // terrain. Name unattested - the role is what the bytes prove.
+    int field_58;
+    char pad_05c[0x1b0];
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
     char pad_20d[0x17f];
     int field_38c;            // +0x38c, zeroed by CallManager's suspend arm

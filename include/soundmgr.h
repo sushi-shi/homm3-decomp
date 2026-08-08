@@ -251,6 +251,13 @@ void __cdecl ProcessStopAndPlayMP3(void* arglist);
 // data symbol there.
 extern const char* const gTerrainMusic[9];
 
+// Retail .data 0x678330: terrain -> music id, the nine bytes
+// {8,7,3,4,5,9,10,6,2} read straight from the image. SetMusicVolume
+// indexes it with advManager::field_58 and hands the result to the same
+// [id - 2] terrain-name lookup SwitchAmbientMusic uses, which is what
+// bounds the id domain to 2..10. Name provisional.
+extern unsigned char gTerrainMusicIds[9];
+
 // Miles Sound System imports. The DLL exports carry their own leading
 // underscore (retail IAT: __imp___AIL_end_sample@4), which is Miles'
 // own header convention: `_AIL_*` dllimports behind `AIL_*` aliases.
@@ -269,6 +276,7 @@ __declspec(dllimport) void __stdcall _AIL_set_sample_loop_count(ds_memsample* sa
 __declspec(dllimport) void __stdcall _AIL_set_sample_volume(ds_memsample* sample,
                                                             int volume);
 __declspec(dllimport) int __stdcall _AIL_stream_status(void* stream);
+__declspec(dllimport) void __stdcall _AIL_set_stream_volume(void* stream, int volume);
 __declspec(dllimport) void __stdcall _AIL_service_stream(void* stream, int fillup);
 __declspec(dllimport) void __stdcall _AIL_serve();
 }
@@ -282,6 +290,7 @@ __declspec(dllimport) void __stdcall _AIL_serve();
 #define AIL_set_sample_loop_count _AIL_set_sample_loop_count
 #define AIL_set_sample_volume _AIL_set_sample_volume
 #define AIL_stream_status _AIL_stream_status
+#define AIL_set_stream_volume _AIL_set_stream_volume
 #define AIL_service_stream _AIL_service_stream
 #define AIL_serve _AIL_serve
 

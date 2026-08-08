@@ -3,10 +3,17 @@
 // 25 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <windows.h>
+#include <stdio.h>
 #include <string.h>
 #include "soundmgr.h"
 #include "sample.h"
 #include "kbwin.h"
+// SetMusicVolume's three cross-TU views: the combat manager's status
+// (which selects combat music), the adventure manager's terrain field,
+// and Random.
+#include "advmgr.h"
+#include "cmbtmgr.h"
+#include "misc.h"
 
 // Provisional file-static, /Ob2-inlined at both of its call sites (no
 // out-of-line body sits anywhere in the soundmgr span). The manager
@@ -44,10 +51,8 @@ static void ServeSampleStream()
     LeaveCriticalSection(section);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\soundmgr.cpp:69
-// LOCATED 2026-08-07 and claimed; body still to reconstruct. Evidence:
+// LOCATED 2026-08-07, RECONSTRUCTED 2026-08-08. Location evidence:
 //   * order-map: the DC roster runs SetMusicVolume < ConvertVolume <
 //     soundManager::soundManager, and 0x5994b0 < 0x5996c0 < 0x599760
 //     with 0x599760 already claimed as the ctor - the two carve rows
@@ -59,46 +64,51 @@ static void ServeSampleStream()
 //     ConvertVolume(127, 101), and spends the result on
 //     AIL_set_stream_volume - which is what SetMusicVolume does.
 //   * size plausibility: 528/244 = 2.16x, inside the 0.3-2.5x band.
-// FULL DECODE (528 B), left unwritten because five cross-TU views are
-// still missing:
-//   if (gbNoSound) return;
-//   int vol = ConvertVolume(127, VOLUME_TYPE_101);
-//   EnterCriticalSection(&gpSoundManager->section_MP3_change);
-//   EnterCriticalSection(&gpSoundManager->section_sound_call);
-//     // NOTE both Enters go through gpSoundManager, both Leaves
-//     // through `this` - transcribe that asymmetry faithfully
-//   if (vol != 0) {
-//     if (gMP3Stream) {
-//       if (MP3Playing) AIL_set_stream_volume(gMP3Stream, vol);
-//       else            ResumeStream();      // /Ob2-inlined verbatim
-//     } else if (gUnk6993d0->field_34) {
-//       char buf[0x50];
-//       sprintf(buf, <0x66fedc>, Random(1, 4));   // ?Random@@YIHHH@Z
-//       gpSoundManager->StartMP3(buf, 0, 1);      //   at 0x50b230
-//     } else {
-//       int terrain = *(unsigned char*)(gUnk699268->field_58
-//                                       + 0x678330);
-//       if (terrain >= 2 && terrain <= 10)
-//         StartMP3(gTerrainMusic[terrain - 2], 0, 0);
-//     }
-//   } else {
-//     // the StopMP3 shape, but re-spawning the thread at 0x59a830,
-//     // NOT service_sounds (0x59a7d0) - a different entry
-//   }
-//   LeaveCriticalSection(&section_sound_call);
-//   LeaveCriticalSection(&section_MP3_change);
-// Missing views: the two manager globals 0x6993d0 (field_34) and
-// 0x699268 (field_58), the terrain byte table at 0x678330, the
-// sprintf format literal at 0x66fedc, and the thread entry 0x59a830 -
-// which has NO carve row (0x59a7d0 + 81 ends at 0x59a821 and the next
-// row starts at 0x59a840), so the carve is missing a boundary there.
+// The five "missing views" the 2026-08-07 note parked on are resolved:
+// 0x6993d0 is gpCombatManager and 0x699268 is gpAdvManager (both were
+// already modelled in their own headers), 0x66fedc is the literal
+// "combat%02d", 0x678330 is the nine-byte terrain->music-id table, and
+// the thread entry the vol==0 arm hands to _beginthread is 0x59a830 -
+// the SAME entry StopMP3 uses (the delinker spells both
+// `service_sounds + 0x60`), so that arm is StopMP3() /Ob2-inlined, not
+// a distinct body. Both Enters go through gpSoundManager and both
+// Leaves through `this`; that asymmetry is retail's and is transcribed
+// verbatim. The two inner arms are ResumeStream() and StopMP3()
+// inlined by /Ob2, written as CALLS per the ClearMemSample precedent.
 VA(0x005994b0, 0x210)  // anchor-callee + order-map, dc 0x14b07c
 void soundManager::SetMusicVolume()
 {
-    // @stub
-}
+    if (gbNoSound)
+        return;
 
-#endif  // @carcass
+    int vol = ConvertVolume(127, VOLUME_TYPE_101);
+
+    EnterCriticalSection(&gpSoundManager->section_MP3_change);
+    EnterCriticalSection(&gpSoundManager->section_sound_call);
+    if (vol != 0) {
+        if (gMP3Stream) {
+            if (MP3Playing)
+                AIL_set_stream_volume(gMP3Stream, vol);
+            else
+                ResumeStream();
+        } else if (gpCombatManager->status) {
+            char cName[100];
+
+            sprintf(cName, DATA_COMPGEN(0x0066fedc, combatMusicFormat,
+                                        "combat%02d"),
+                    Random(1, 4));
+            gpSoundManager->StartMP3(cName, 0, 1);
+        } else {
+            int musicFileId = gTerrainMusicIds[gpAdvManager->field_58];
+            if (musicFileId >= 2 && musicFileId <= 10)
+                StartMP3(gTerrainMusic[musicFileId - 2], 0, 0);
+        }
+    } else {
+        StopMP3();
+    }
+    LeaveCriticalSection(&section_sound_call);
+    LeaveCriticalSection(&section_MP3_change);
+}
 
 // E:\gamedcs\soundmgr.cpp:121
 // LOCATED 2026-08-07 by the same order-map, and pinned independently
@@ -164,6 +174,13 @@ int soundManager::ConvertVolume(int iVolumeValue, int iVolumeType)
 // (pushes the byte store past both rep stosd). The vptr store's
 // position is picked by VC6's post-optimizer scheduler, not by
 // statement order - no source spelling reached it.
+// CROSS-FUNCTION CLASS (2026-08-08): inputManager's ctor (0x4ec460,
+// 86.6%) shows the identical signature at much greater width - retail
+// sinks its vptr store past a whole 64-iteration clear loop while our CL
+// pins it right after the base ctor call. A probe there (hoisting a
+// scalar store above the loop) left the vptr store leading regardless,
+// so VPTR-STORE SCHEDULING is a compiler-generation residual class in
+// its own right, alongside the merged-return/stale-CL-generation one.
 VA(0x00599760, 0x67)  // anchor-global, dc 0x14b1ec
 soundManager::soundManager()
 {
@@ -542,43 +559,69 @@ void soundManager::ResumeStream()
     _beginthread(ProcessStopAndPlayMP3, 0, 0);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\soundmgr.cpp:1343
-// DECODE STARTED 2026-08-07 (head verified to +0x178, 853 B total):
-//   if (gbNoSound) return;
-//   if (!ds) return;
-//   if (field_84 == 0 && !gbUnk691209) return;
-//   if (!gUnk698760) return;        // NOTE: 0x698760, a DIFFERENT
-//                                   // global from MemorySample's
-//                                   // gUnk698764 - do not merge them
-//   EnterCriticalSection(&section_MP3_name_change);
-//   if (strcmp(filename, gMP3NamePlaying) == 0) { Leave; return; }
-//     // both compares are VC6's INLINE strcmp intrinsic: the
-//     // two-bytes-per-iteration loop closing with
-//     // `sbb eax,eax; sbb eax,-1`
-//   if (strcmp(filename, gMP3Name) != 0) { ... +0x26f branch ... }
-//   Leave(section_MP3_name_change);
-//   EnterCriticalSection(&section_sound_call);
-//   int st = AIL_stream_status(gMP3Stream);
-//   Leave(section_sound_call);
-//   if (st == AIL_STREAM_PLAYING) return;
-//   if (bStopSamples && !gbNoSound && ds && (field_84 || gbUnk691209)) {
-//       memset(gSampleWasPlaying, 0, sizeof(gSampleWasPlaying));
-//       EnterCriticalSection(&section_sound_call);
-//       for (i = 0; i < field_7c; i++) ...   // the StopAllSamples
-//                                            // body, /Ob2-inlined
-//   }
-//   ... tail from +0x178 untranscribed ...
-// Needs one new global (gUnk698760 @ 0x698760) and the +0x26f arm
-// before a body is honest.
+// DECODE STARTED 2026-08-07 (head to +0x178), FINISHED 2026-08-08.
+// Both name compares are VC6's INLINE strcmp intrinsic (the
+// two-bytes-per-iteration loop closing with `sbb eax,eax; sbb eax,-1`),
+// so they are written as plain strcmp calls. The gate at +0x81 is
+// gUnk698760 - a DIFFERENT global from MemorySample's gUnk698764, they
+// must not be merged. Three /Ob2 inlines carry the body and are written
+// as CALLS (the ClearMemSample precedent): StopAllSamples(1) in the
+// name-unchanged arm, StopAllSamples(0) in the +0x26f arm, and
+// ResumeStream() as the whole 0x1d5..0x25a tail. VC6 tail-merges the
+// two arms' closing `if (!bShutDownDone) _beginthread(...)` blocks -
+// the +0x26f arm's `jmp` back into the ResumeStream inline's tail is
+// that merge, not a shared source statement.
+// The name-match early-out is spelled as the NEGATED outer `if` with the
+// Leave textually last, NOT as `if (== 0) { Leave; return; }` and not as
+// a `goto`: those two both make our CL duplicate the epilogue in place
+// (90.9%), while retail sinks the Leave to one block that falls into the
+// single shared epilogue the four head guards already jump to. Writing
+// it this way closed the epilogue duplication AND flipped the tail-merge
+// to retail's direction in one step - both deltas were the same
+// placement decision.
 VA(0x0059acb0, 0x355)  // anchor-global, dc 0x14b924
 void soundManager::StartMP3(const char* filename, int loopCount, unsigned char bStopSamples)
 {
-    // @stub
-}
+    if (gbNoSound)
+        return;
+    if (!ds)
+        return;
+    if (field_84 == 0 && !gbUnk691209)
+        return;
+    if (!gUnk698760)
+        return;
 
-#endif  // @carcass
+    EnterCriticalSection(&section_MP3_name_change);
+    if (strcmp(filename, gMP3NamePlaying) != 0) {
+        if (strcmp(filename, gMP3Name) == 0) {
+            LeaveCriticalSection(&section_MP3_name_change);
+            EnterCriticalSection(&section_sound_call);
+            int streamStatus = AIL_stream_status(gMP3Stream);
+            LeaveCriticalSection(&section_sound_call);
+            if (streamStatus == AIL_STREAM_PLAYING)
+                return;
+            if (bStopSamples)
+                StopAllSamples(1);
+            ResumeStream();
+        } else {
+            strcpy(gMP3NamePlaying, filename);
+            gUnk69fe9c = loopCount;
+            LeaveCriticalSection(&section_MP3_name_change);
+            if (bStopSamples)
+                StopAllSamples(0);
+            EnterCriticalSection(&section_sound_call);
+            AIL_serve();
+            Sleep(1);
+            LeaveCriticalSection(&section_sound_call);
+            if (bShutDownDone)
+                return;
+            _beginthread(ProcessStopAndPlayMP3, 0, 0);
+        }
+        return;
+    }
+    LeaveCriticalSection(&section_MP3_name_change);
+}
 
 // E:\gamedcs\soundmgr.cpp:1413
 VA(0x0059b010, 0x6A)  // anchor-global, dc 0x14b974
