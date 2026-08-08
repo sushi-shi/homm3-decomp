@@ -17,26 +17,49 @@ class army;
 // `lea eax,[eax+eax*2]; lea eax,[eax+eax*4]; lea esi,[ecx+eax*2]`),
 // which the default packing cannot produce - the two longs at 16/20
 // would round sizeof up to 32. Hence pack(1), the same tool hero.h
-// and mapcell.h already use. cost@24 is the only member a retail body
-// reads so far (`movzx`-shaped `mov dx, word ptr [esi+0x18]`).
+// and mapcell.h already use.
+//
+// BITFIELD WIDTHS (2026-08-08). The DC dump prints the whole word's
+// LF_BITFIELD records verbatim (dump.txt 0x2687..0x2695): eleven 1-bit
+// flags at 0..10, `direction` 4 bits at 11, `delta_x` 5 SIGNED at 15,
+// `delta_y` 5 SIGNED at 20, `flight_cost` 6 at 25 - 31 bits used. The
+// widths transfer; the POSITIONS do not. Retail is one bit higher
+// throughout and every retail read proves it:
+//   * visited stays at bit 0 - SeedCombatPosition (0x4b2da0) gates on
+//     `test cl, 1` against the same word.
+//   * direction is at 12..15, not 11..14: FindCombatPath (0x4b3400)
+//     WRITES it with `and eax,0xf; shl eax,0xc; and dh,0xf; or` and
+//     move_toward (0x41f580) reads it with `shr eax,0xc; and eax,0xf`.
+//     A 5-bit field at 11 would need the 0xf800 mask, not 0xf000.
+//   * flight_cost is at 26..31, not 25..30: both bodies test it with
+//     `test <dword>, 0xfc000000` and read it with `shr esi,0x1a`.
+// So retail's record carries ONE extra 1-bit flag that the Dreamcast
+// port's does not, and it sits between `visited` (bit 0, pinned) and
+// `direction` (bit 12, pinned). No retail body located so far reads
+// any of bits 1..11 individually, so WHICH of the twelve is the new
+// one is not yet decidable; the placeholder is parked LAST in the flag
+// group so that every DC-attested name keeps its DC-attested position
+// and only the unattested bit is a guess. NAME IS AN ADDRESS ORDINAL -
+// no roster, string or DC field reaches it.
 #pragma pack(push, 1)
 struct pathCell {
     type_point point;
-    int visited : 1;
-    int bIsTrigger : 1;
-    int in_boat : 1;
-    int magic_forbidden : 1;
-    int flying : 1;
-    int water_walking : 1;
-    int town_portal : 1;
-    int dimension_door : 1;
-    int castle_gate : 1;
-    int can_stop : 1;
-    int last_can_stop : 1;
-    int direction : 1;
-    int delta_x : 1;
-    int delta_y : 1;
-    int flight_cost : 1;
+    unsigned int visited : 1;
+    unsigned int bIsTrigger : 1;
+    unsigned int in_boat : 1;
+    unsigned int magic_forbidden : 1;
+    unsigned int flying : 1;
+    unsigned int water_walking : 1;
+    unsigned int town_portal : 1;
+    unsigned int dimension_door : 1;
+    unsigned int castle_gate : 1;
+    unsigned int can_stop : 1;
+    unsigned int last_can_stop : 1;
+    unsigned int field_04_bit11 : 1;
+    unsigned int direction : 4;
+    int delta_x : 5;
+    int delta_y : 5;
+    unsigned int flight_cost : 6;
     type_point last_point;
     type_point monster;
     long barrier_value;
@@ -44,6 +67,15 @@ struct pathCell {
     unsigned short cost;
     unsigned short adjusted_cost;
     unsigned short move_left;
+
+    // DC findpath.cpp:79 attests a pathCell::pathCell, and retail's
+    // searchArray::Init (0x4b1460) proves the retail one is EMPTY but
+    // USER-DECLARED: `new pathCell[n]` there allocates through plain
+    // operator new (no vector-new helper, so nothing is constructed)
+    // and yet still emits VC6's array-construction preamble - the
+    // `dec esi; mov [ebp-4], esi` count-1 temp that a POD would never
+    // produce, and that forces the stack frame Init carries.
+    pathCell() {}
 };
 #pragma pack(pop)
 SIZE(pathCell, 30);
@@ -60,7 +92,7 @@ extern int gMapHeight;
 // 0x4b1370 stores every named field and the dtor 0x4b13e0 frees
 // cellData and bIsMoatSlowed (a heap map, not a flag) before the
 // implicit vector teardowns. valid_rectangle (0x28..0x37) stays
-// uninitialized. Vector element types are unproven - int placeholders.
+// uninitialized by the ctor - Init fills it.
 class searchArray {
 public:
     int maxQueueCount;
@@ -76,26 +108,64 @@ public:
     int flight_level;
     unsigned char limit_reached;
     pathCell* cellData;
-    char valid_rectangle[16];
-    std::vector<int> queue;
-    std::vector<int> result;
+    // tagRECT per the DC fieldlist (searchArray+40). Init (0x4b1460)
+    // writes it in the order left, RIGHT, top, BOTTOM - the same
+    // left/right/top/bottom pairing cmbtmgr's hit rectangles already
+    // carry - zeroing the origin and taking the world extents for the
+    // far corner. Four longs rather than a RECT because the tree has
+    // no windows.h surface here.
+    long valid_left;                  // +0x28
+    long valid_top;                   // +0x2c
+    long valid_right;                 // +0x30
+    long valid_bottom;                // +0x34
+    // Elements are pathCells BY VALUE: FindCombatPath (0x4b3400) pops
+    // the back with `mov esi,[queue+8]; add esi,-0x1e; mov [queue+8],esi`
+    // - a 30-byte stride on _Last, which only a by-value pathCell gives.
+    std::vector<pathCell> queue;
+    // ELEMENT TYPE PROVEN, 2026-08-08. move_toward (0x41f580) walks
+    // this vector's extent with `sar 2` (4-byte elements) and then
+    // dereferences `[_First + 4*i]` at +4 to read a pathCell bitfield -
+    // so the elements are pathCell POINTERS, not the admitted int
+    // placeholder. FindCombatPath (0x4b3400) corroborates: it loads
+    // `[result._First]` and immediately reads `word [that + 8]`,
+    // pathCell::last_point.
+    std::vector<pathCell*> result;
+    // Element type still UNPROVEN - no located body touches it. The DC
+    // fieldlist prints all three of these as std::vector<pathCell...>,
+    // but the dump truncates the argument list at the comma, so it
+    // cannot separate <pathCell> from <pathCell*>; queue and result are
+    // pinned by retail strides (30 and 4), this one by nothing.
     std::vector<int> visited_points;
-    void* bIsMoatSlowed;
+    // One byte per combat hex, indexed by a SIGN-EXTENDED hex
+    // (`movsx edx, si; cmp byte [edx + eax], 0` in move_toward
+    // 0x41f580) - a map, as the dtor's `delete` already implied.
+    unsigned char* bIsMoatSlowed;
     // +0x6c. `long*` (not void*) from get_danger_value's `[ecx + edx*4]`
     // load - the danger map is one signed word per cell.
     long* danger_zones;
 
     searchArray();
     ~searchArray();
+    // 0x4b1460 / 0x4b1500. Init frees whatever Close would have freed
+    // and then re-allocates both maps; SeedCombatPosition calls it
+    // whenever cellData is still null.
+    void Init();
+    void Close();
     unsigned char FindCombatPath(const army* current_army, long current_group,
                                  long destination, unsigned char in_placement_phase,
                                  long limit, long base_speed);  // 0x4b3400
-    // Five stack args; ai_tactical's get_hypnotize_value (0x43a500)
-    // is the located caller and passes (enemy, our side, the stack's
-    // threat weight times the spell's turns, 0, -1). Retail address
-    // pending findpath.cpp's own carve - the name is the DC roster's.
-    void SeedCombatPosition(const army* target, long side, long budget,
-                            long start, long limit);
+    // 0x4b2da0. PARAMETER LIST CORRECTED 2026-08-08 to the DC roster's
+    // (thisArmy, current_group, limit, in_placement_phase, base_speed);
+    // the earlier all-long (target, side, budget, start, limit) guess is
+    // withdrawn. The retail body settles it: [ebp+0x14] is read as a
+    // BYTE and tested before every placement-boundary call, and
+    // [ebp+0x18] is the value it compares each cell's cost against and
+    // forwards as FindCombatPath's base_speed.
+    void SeedCombatPosition(const army* thisArmy, long current_group,
+                            long limit, unsigned char in_placement_phase,
+                            long base_speed);
+    // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
+    void lower_door();
     // Retail 0x4b3f20: ceil(cell->cost / army->GetSpeed()), floored at
     // one turn; the null-cellData arm still dereferences (retail reads
     // [0x18] off a zero base), so the guard is the accessor's, not the

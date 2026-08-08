@@ -38,7 +38,10 @@ public:
     // whose gridIndex cell has it clear, right after seeding the
     // search. Name pending a writer.
     unsigned char field_4a;       // +0x4a
-    unsigned char pad_4b;
+    // Set for the TAIL hex of a two-hex stack while its anchor hex gets
+    // field_4a: searchArray::SeedCombatPosition (0x4b2da0) marks the two
+    // halves through the two different bytes. Name pending a writer.
+    unsigned char field_4b;       // +0x4b
     unsigned char field_4c;
     signed char field_4d;
     // Object stride is 0x70, byte-proven by ValidAttack's cell access
