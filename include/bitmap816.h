@@ -8,14 +8,34 @@
 #include "resource.h"
 #include "palette.h"
 
+class Bitmap16Bit;
+
 // Partial model: the resource base is byte-proven by
 // bitmapBorder::SetImage (name strcmp at +4, Dispose vcall); the
 // embedded palette pair at +0x50/+0x250 by SetPlayerPaletteColors.
 class Bitmap816 : public resource {
 public:
-    char pad_1c[0x34];
+    char pad_1c[0x8];
+    // Byte-proven 2026-08-08 by bitmapBorder::GetRealWidth /
+    // GetRealHeight (0x4504a0 / 0x4504b0), which read +0x24 and +0x28
+    // off this object; the names are the DC fieldlist's (Width@36,
+    // Height@40 - the same offsets, since resource is 0x1c on both
+    // builds). The rest of the head stays padded until a retail body
+    // reads it.
+    int Width;   // +0x24
+    int Height;  // +0x28
+    char pad_2c[0x24];
     palette p16;
     paletteHiColor p24;
+
+    // Blitters, declared for border.cpp's bitmapBorder::Draw /
+    // zBufferDraw (0x450450 / 0x4503f0). Argument lists are the DC
+    // roster's, and each is byte-corroborated by its retail call site's
+    // push run (8 and 11 arguments respectively).
+    void Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst, int dx,
+        int dy, unsigned char tblit);
+    void zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst,
+        int dx, int dy, int dw, int dh, int dpitch, int id);
 
     virtual void _vslot2();
 };
