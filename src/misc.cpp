@@ -91,21 +91,35 @@ void SetDefaultCombatOptions()
 }
 
 // E:\gamedcs\misc.cpp:403
-DC_ONLY(0xfdbc0, 0x10)
-void ReadPrefsFromRegistry()
-{
-    // @stub
-}
-
-// E:\gamedcs\misc.cpp:525
-DC_ONLY(0xfdbd0, 0x7C)
+// STATIC-HELPER-AFTER-CALLER again: retail emits ReadPrefs first and
+// ReadPrefsFromRegistry after it, the reverse of the DC source order.
+// The rel32 edges settle the whole trio without any rank argument:
+//     0x0050b750 -> call 0x0050b7b0,  jmp 0x0050be10
+//     0x0050b7b0 -> call 0x0050b260,  call 0x0050be10
+//     ?WritePrefs@@YIXXZ (0x50c1b0, claimed) -> jmp 0x0050be10
+// so 0x0050be10 is WritePrefsToRegistry (the one body WritePrefs tail-
+// jumps to), 0x0050b750 is ReadPrefs (zeroes the 0x35-dword prefs block
+// at 0x698758, calls the registry reader, sprintf's the three key
+// strings, then tail-jumps to the writer) and 0x0050b7b0 is
+// ReadPrefsFromRegistry - 1623 B of real registry work against DC's
+// 16-byte stub, which is exactly what a Dreamcast port would leave
+// hollow.
+// E:\gamedcs\misc.cpp:243
+VA(0x0050b750, 0x59)  // anchor-callgraph, dc 0xfdbd0
 void ReadPrefs()
 {
     // @stub
 }
 
+// E:\gamedcs\misc.cpp:525
+VA(0x0050b7b0, 0x657)  // anchor-callgraph (called by ReadPrefs), dc 0xfdbc0
+void ReadPrefsFromRegistry()
+{
+    // @stub
+}
+
 // E:\gamedcs\misc.cpp:538
-DC_ONLY(0xfdc4c, 0x404)
+VA(0x0050be10, 0x399)  // anchor-callgraph (WritePrefs tail-jumps here), dc 0xfdc4c
 void WritePrefsToRegistry()
 {
     // @stub
@@ -149,7 +163,9 @@ int IsCDDrive(int drive)
 }
 
 // E:\gamedcs\misc.cpp:764
-DC_ONLY(0xfe068, 0x50)
+// /Gr free function with the filename in ecx: fopen, fseek(0, SEEK_END),
+// ftell - FileSize and nothing else. Only free row in its bracket.
+VA(0x0050c5a0, 0x49)  // body (fopen/fseek/ftell) + arity, dc 0xfe068
 long FileSize(char* filename)
 {
     // @stub

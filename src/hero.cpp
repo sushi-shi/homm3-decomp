@@ -139,14 +139,66 @@ void hero::hero()
 }
 
 // E:\gamedcs\hero.cpp:1233
-DC_ONLY(0xcbe80, 0x23A)
+// Slot pinned by the two flanking claims (hero::hero 0x4d85f0 above,
+// get_equipped_artifacts 0x4d9070 below) and by the body: `movsx edx,
+// word [ebp+8]` takes the SHORT index DC's prototype declares, and the
+// initialiser writes exactly the modelled layout - -1 into the three
+// packed coordinate words, 19 stride-8 equipped slots from +0x12d, 64
+// stride-8 backpack slots from +0x1d4, and the two 28-byte
+// secondary-skill bands at +0xc9 / +0xe5.
+VA(0x004d8720, 0x410)  // anchor-bracket + layout, dc 0xcbe80
 void hero::initialize(short index)
 {
     // @stub
 }
 
+// RETAIL-ONLY x3. The DC roster runs hero::initialize (0xcbe80)
+// straight into belongs_to_human (0xcc0bc) with nothing between them,
+// but retail carves THREE bodies into that gap. All three are hero
+// members (ecx is used as a hero and every displacement lands inside
+// the modelled 0x492 record) and none of them can be named from the
+// Dreamcast build, so the names below are ORDINAL PLACEHOLDERS flagged
+// unattested (HeroFn_004E5DE0 / WIDGET_RETURN_32 precedent). The HD
+// crossbuild map has no row for any of them either.
+//
+// 0x004d8b30 `ret 4`: copies a ~0x330-byte source record into the hero -
+// the packed 10-bit x/y/z out of src+0x301..0x303 into the three
+// coordinate words, src+0 into the owner byte at +0x22, src+4 into the
+// id at +0x1a, akHeroTraits[id].field_8 into +0x30, a 13-byte strncpy
+// of src+0xd into the name at +0x23, and a run into the +0x476 stats
+// band. Its single caller is inside game.obj (0x4cae10).
+VA(0x004d8b30, 0x434)  // retail-only, hero member, ret 4
+void hero::HeroFn_004D8B30(const void* setup)
+{
+    // @stub
+}
+
+// 0x004d8f70 `ret 0`: returns a string - the campaign override
+// (hero id 0x1b under scenario 0xf) or akHeroClasses[class].field_4,
+// the 64-byte-stride class record at 0x67dcec.
+VA(0x004d8f70, 0x3E)  // retail-only, hero member, ret 0
+const char* hero::HeroFn_004D8F70()
+{
+    // @stub
+}
+
+// 0x004d8fb0 `ret 0`: the custom-name path - returns the +0x3de pointer
+// when the +0x3d9 flag is set (falling back to the empty literal at
+// 0x63a608), otherwise strcmp's the +0x23 name band against
+// akHeroTraits[id] and returns the shared name table 0x6a66d8[id].
+VA(0x004d8fb0, 0xA0)  // retail-only, hero member, ret 0
+const char* hero::HeroFn_004D8FB0()
+{
+    // @stub
+}
+
 // E:\gamedcs\hero.cpp:1303
-DC_ONLY(0xcc0bc, 0x26)
+// Whole body: `if ((signed char)owner < 0) return 0; return
+// game::IsHuman(gpGame, owner) != 0;` - the +0x22 signed owner byte the
+// hero model already carries, widened with movsx into the claimed
+// game::IsHuman at 0x4ce940, then normalised with neg/sbb/neg to the
+// unsigned char DC declares.
+VA(0x004d9050, 0x20)  // anchor-callee (game::IsHuman), dc 0xcc0bc
 unsigned char hero::belongs_to_human()
 {
     // @stub
@@ -320,34 +372,66 @@ int hero::GetLevel(int iExperience)
 }
 
 // E:\gamedcs\hero.cpp:1886
-DC_ONLY(0xccd9c, 0x1CA)
+// Strips the temporary battle bonuses: clears the two flag bytes at
+// +0x11a/+0x11b and then subtracts eleven individual bits out of the
+// +0x105 dword one `test`/`add` pair at a time. Corroborated by its two
+// callers - ai_combat's do_aftermath (0x426ee0) and command's
+// combatManager::DoVictory (0x477470) - which are exactly the two sites
+// a post-battle temp reset belongs to.
+VA(0x004da510, 0x1F1)  // anchor-callers, dc 0xccd9c
 void hero::ApplyBattleWinTemps()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:2001
-DC_ONLY(0xccf68, 0x10)
+// A five-byte tail jump into ApplyBattleWinTemps, i.e. the source body
+// is the single statement `ApplyBattleWinTemps();`. The SAME two callers
+// that reach ApplyBattleWinTemps also reach this thunk (do_aftermath and
+// combatManager::DoVictory), which is what pairs the loss/win halves.
+#endif  // @carcass
+
+VA(0x004da710, 0x5)  // anchor-callers + tail-jump, dc 0xccf68
 void hero::ApplyBattleLossTemps()
 {
-    // @stub
+    ApplyBattleWinTemps();
 }
 
-// E:\gamedcs\hero.cpp:2014
-DC_ONLY(0xccf78, 0x204)
-TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_level, TSkillMastery max_level, TSecondarySkill excluded)
-{
-    // @stub
-}
+#if 0  // @carcass
 
+// hero::GetLevel (dc 0xccc8c, 272 B) has NO retail row: the carve is
+// gap-free from GetExperienceIncrement 0x004da420 straight into
+// ApplyBattleWinTemps 0x004da510. Left DC_ONLY above.
+
+// STATIC-HELPER-AFTER-CALLER: retail emits CheckLevel BEFORE
+// get_skill_award, the reverse of the DC source order. Proven by the
+// call graph, not by rank - 0x004da720 calls 0x004dad00, and it also
+// calls philai's AI_choose_secondary_skill and hero::GiveSS
+// (0x004e22d0), which is what a level-up does. The two bodies also
+// disagree on arity in the direction the prototypes demand: 0x004da720
+// reads ecx only (`void hero::CheckLevel()`), 0x004dad00 reads ecx AND
+// edx, i.e. the /Gr free function `get_skill_award(hero*, ...)`.
 // E:\gamedcs\hero.cpp:2147
-DC_ONLY(0xcd17c, 0x510)
+VA(0x004da720, 0x5DD)  // anchor-callgraph + arity, dc 0xcd17c
 void hero::CheckLevel()
 {
     // @stub
 }
 
+// E:\gamedcs\hero.cpp:2014
+// /Gr free function: ecx = current_hero, edx = min_level, the remaining
+// two on the stack. Body reads the 64-byte-stride hero-class record
+// (akHeroClasses, 0x67dcec, indexed by hero+0x30) for the per-class
+// skill probabilities plus a campaign-specific override - exactly the
+// inputs a skill award needs - and its ONLY caller is CheckLevel.
+VA(0x004dad00, 0x283)  // anchor-caller + arity, dc 0xccf78
+TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_level, TSkillMastery max_level, TSecondarySkill excluded)
+{
+    // @stub
+}
+
 // E:\gamedcs\hero.cpp:2340
+// No retail row: inlined into update_slot below (see its note).
 DC_ONLY(0xcd68c, 0x5C)
 void update_artifact_slot(long id, TArtifact artifact)
 {
@@ -355,20 +439,28 @@ void update_artifact_slot(long id, TArtifact artifact)
 }
 
 // E:\gamedcs\hero.cpp:2365
-DC_ONLY(0xcd6e8, 0x58)
+// Pinned from BELOW: update_all_slots (0x004db1d0, next claim) is a
+// 23-byte `for (i = 0; i < 0x13; i++) <this>->call(i)` loop whose only
+// callee is this body, so this is the per-slot updater it drives.
+// Retail is 570 B against DC's 88 - the free helper update_artifact_slot
+// (DC 92 B, no retail row of its own) is inlined into it, and so is the
+// SoD combination-artifact bookkeeping that the DC roster has no rows
+// for at all (the 0x693898 bitset walk).
+VA(0x004daf90, 0x23A)  // anchor-caller, dc 0xcd6e8
 void THeroScreenWindow::update_slot(TArtifactSlot slot)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:2383
-DC_ONLY(0xcd740, 0x2A)
+VA(0x004db1d0, 0x17)  // anchor-callee (update_slot), dc 0xcd740
 void THeroScreenWindow::update_all_slots()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:2393
+// No retail row: inlined into UpdateBackpack below.
 DC_ONLY(0xcd76c, 0x22)
 void UpdateBackpackItem(int i)
 {
@@ -376,7 +468,11 @@ void UpdateBackpackItem(int i)
 }
 
 // E:\gamedcs\hero.cpp:2399
-DC_ONLY(0xcd790, 0xDC)
+// Walks the 64 stride-8 backpack slots of the current hero (the global
+// at 0x698b20, +0x1d4) and pushes a WIDGET message per slot through
+// heroWindow::BroadcastMessage (0x5fede0, claimed in window.obj) - the
+// per-item body DC carries separately as UpdateBackpackItem, inlined.
+VA(0x004db1f0, 0x160)  // anchor-callee (heroWindow::BroadcastMessage), dc 0xcd790
 void UpdateBackpack()
 {
     // @stub
@@ -390,14 +486,22 @@ void type_artifact::get_rollover_text(char* buffer)
 }
 
 // E:\gamedcs\hero.cpp:2450
-DC_ONLY(0xcd8b8, 0x10A)
+// Only free row between get_rollover_text (0x004db350, claimed) and
+// UpdateHeroScreenStatusBar; carries a /GX frame and a hidden
+// return-UDT pointer, which is what a std::string-by-value member
+// needs.
+VA(0x004db3e0, 0x277)  // anchor-bracket, dc 0xcd8b8
 std::basic_string<char,std::char_traits<char>,std::allocator<char> type_artifact::get_description(__$ReturnUdt)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:2477
-DC_ONLY(0xcd9c4, 0x56C)
+// A `message*` dispatcher: switches on msg->field_8 over the 0x02..0x75
+// widget-code range and gates the whole body on the dragged-artifact
+// global 0x698a88 being -1 - i.e. the hero screen's rollover text, which
+// is what UpdateHeroScreenStatusBar is.
+VA(0x004db660, 0x728)  // anchor-bracket + body, dc 0xcd9c4
 void THeroScreenWindow::UpdateHeroScreenStatusBar(message* msg)
 {
     // @stub
@@ -411,35 +515,117 @@ void handle_artifact_click(long code, unsigned char right_mouse)
 }
 
 // E:\gamedcs\hero.cpp:2796
-DC_ONLY(0xce140, 0x28)
+// Whole body proven: `mov eax,0x3f / add ecx,0x3cc` starts at
+// backpack[63] (0x1d4 + 63*8 == 0x3cc) and walks back by 8 until a slot
+// id is not -1, then `or eax,-1` for the not-found return. Both the
+// stride and the base are the modelled backpack array.
+#endif  // @carcass
+
+VA(0x004dbd90, 0x1E)  // body-identified (backpack stride/base), dc 0xce140
 long hero::get_last_backpack_index()
 {
-    // @stub
+    for (long slot = 64; slot--; ) {
+        if (backpack[slot].artifactId != -1)
+            return slot;
+    }
+    return -1;
 }
 
+#if 0  // @carcass
+
 // E:\gamedcs\hero.cpp:2809
-DC_ONLY(0xce168, 0x62)
+// Inlines get_last_backpack_index, saves backpack[last], shifts every
+// slot UP by one (`[edx-8] -> [edx]`, edx walking down) and drops the
+// saved slot into backpack[0]. The left/right pair is separated by DC
+// SOURCE ORDER only (both are 0-arg hero members with mirror bodies);
+// the DC names describe the ARROW pressed, not the direction the array
+// moves.
+#endif  // @carcass
+
+VA(0x004dbdb0, 0x57)  // order-map + mirror-body, dc 0xce168
 void hero::rotate_backpack_left()
 {
-    // @stub
+    long last = get_last_backpack_index();
+    if (last < 0)
+        return;
+    TArtifactSlot saved = backpack[last];
+    for (long slot = last; slot > 0; slot--)
+        backpack[slot] = backpack[slot - 1];
+    backpack[0] = saved;
 }
 
 // E:\gamedcs\hero.cpp:2830
-DC_ONLY(0xce1cc, 0x94)
+// The mirror of the above: saves backpack[0], shifts every slot DOWN by
+// one (`[edx+8] -> [edx]`) and drops the saved slot into backpack[last].
+VA(0x004dbe10, 0x68)  // order-map + mirror-body, dc 0xce1cc
 void hero::rotate_backpack_right()
+{
+    long last = get_last_backpack_index();
+    if (last <= 0)
+        return;
+    TArtifactSlot saved = backpack[0];
+    for (long slot = 0; slot < last; slot++)
+        backpack[slot] = backpack[slot + 1];
+    backpack[last] = saved;
+}
+
+#if 0  // @carcass
+
+// RETAIL-ONLY x4: the Shadow of Death COMBINATION-ARTIFACT family. The
+// Dreamcast roster has no row anywhere in this gap, and all four bodies
+// share one signature shape - a 20-dword (bitset<144>) component mask
+// pulled out of the 24-byte-stride artifact table at 0x660b6c (+4),
+// then walked against the hero's 19 equipped slots at +0x12d. Names are
+// ORDINAL PLACEHOLDERS flagged unattested.
+//   0x004dbe80 `ret 4`  copies the mask for one combo id and clears a
+//                       bit per equipped artifact - the "are all parts
+//                       worn" test. Called from 0x5af590.
+//   0x004dbf30 `ret 8`  the two-argument form (combo id + slot).
+//   0x004dc070 `ret 4`  calls hero::remove_artifact (0x4e2bd0) for the
+//                       slot and then walks the 0x90-bit mask.
+//   0x004dc100 `ret 4`  /GX frame; also reaches the 360-byte playerData
+//                       record at gpGame+0x20ad0 indexed by the owner
+//                       byte.
+VA(0x004dbe80, 0xA4)  // retail-only, hero member, ret 4
+unsigned char hero::HeroFn_004DBE80(int combo)
+{
+    // @stub
+}
+
+VA(0x004dbf30, 0x133)  // retail-only, hero member, ret 8
+unsigned char hero::HeroFn_004DBF30(int combo, long slot)
+{
+    // @stub
+}
+
+VA(0x004dc070, 0x87)  // retail-only, hero member, ret 4
+void hero::HeroFn_004DC070(long slot)
+{
+    // @stub
+}
+
+VA(0x004dc100, 0x217)  // retail-only, hero member, ret 4
+unsigned char hero::HeroFn_004DC100(long slot)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:2849
-DC_ONLY(0xce260, 0x3E8)
+// PROVEN BY CALLER: armygrp's armyGroup::get_morale_description
+// (0x44b960) calls exactly this address, and window.obj's hero-screen
+// status path (0x4f32a0) is the second site. /GX frame + hidden
+// return-UDT pointer, as the by-value std::string return needs.
+VA(0x004dc320, 0x793)  // anchor-caller (armyGroup::get_morale_description), dc 0xce260
 std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_morale_description(__$ReturnUdt)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:3021
-DC_ONLY(0xce648, 0x3F2)
+// PROVEN BY CALLER: armygrp's armyGroup::get_luck_description
+// (0x44c1c0) calls exactly this address; 0x4f3540 is the second site.
+// Same /GX + return-UDT shape as its morale twin above.
+VA(0x004dcac0, 0x7E0)  // anchor-caller (armyGroup::get_luck_description), dc 0xce648
 std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_luck_description(__$ReturnUdt)
 {
     // @stub
@@ -453,7 +639,14 @@ void handle_backpack_click(long code, unsigned char right_mouse)
 }
 
 // E:\gamedcs\hero.cpp:3229
-DC_ONLY(0xcebe0, 0x3C)
+// ANCHOR-VTABLE: 0x004dd2a0 has no rel32 caller at all - it is reached
+// only through slot 14 of vtable 0x63eae8, and 0x63eae8 is the vtable
+// THeroScreenWindow's destructor (0x004e1550, claimed below) stores. It
+// is `ret 4` returning 2 and it fills the pointed-to message with
+// {0x200, 10, 10}, matching `int ExitDialog(message*)`.
+// Retail emits it AFTER the two description bodies, where the DC source
+// has it before ShowWidgets; ShowWidgets itself has no retail row.
+VA(0x004dd2a0, 0x2C)  // anchor-vtable (slot 14 of 0x63eae8), dc 0xcebe0
 int THeroScreenWindow::ExitDialog(message* msg)
 {
     // @stub
@@ -474,28 +667,48 @@ void THeroScreenWindow::show_skills()
 }
 
 // E:\gamedcs\hero.cpp:3486
-DC_ONLY(0xcf54c, 0xC38)
+// The hero screen's message pump, 5182 B against DC's 3128: the two
+// free click handlers (handle_artifact_click 526 B, handle_backpack_click
+// 420 B) and show_skills (416 B) have no retail rows of their own and
+// are inlined here.
+VA(0x004dd2d0, 0x143E)  // anchor-bracket + absent-callees, dc 0xcf54c
 int THeroScreenWindow::WindowHandler(message* msg)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:3964
-DC_ONLY(0xd0184, 0x2A64)
+// The 11,346-byte body, 1.05x DC's 10,852 - by far the largest row in
+// hero.obj and the only slot that can hold the constructor.
+VA(0x004de710, 0x2C52)  // anchor-bracket + size, dc 0xd0184
 void THeroScreenWindow::THeroScreenWindow()
 {
     // @stub
 }
 
+// E:\gamedcs\hero.cpp:4186
+// The compiler-generated ??_G: `call ~THeroScreenWindow; if (flags & 1)
+// operator delete(this); return this;` in 33 bytes, sitting immediately
+// before the destructor it calls. Retail emits it here, not at the DC
+// tail slot 0xd59d0.
+VA_COMPGEN(0x004e1520, 0x21, SCALAR_DELETING_DTOR, THeroScreenWindow)
+
 // E:\gamedcs\hero.cpp:4191
-DC_ONLY(0xd2be8, 0x98)
+// Byte-identified: stores vtable 0x63eae8 into *this, walks the widget
+// vector at +0x34..+0x38 disposing each entry through virtual slot 0,
+// then tail-calls the CAdvPopup base destructor 0x41b120, all inside a
+// /GX fs:[0] frame.
+VA(0x004e1550, 0xA2)  // anchor-vtable (0x63eae8) + anchor-callee, dc 0xd2be8
 void THeroScreenWindow::~THeroScreenWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:4208
-DC_ONLY(0xd2c80, 0xA2)
+// Takes one int (`ret 4`), compares it against the local player's hero
+// count and clears widget status 0x82 + iWhich through
+// heroWindow::WidgetClearStatus (0x5fef60) - a per-locator update.
+VA(0x004e1600, 0xCB)  // anchor-callee (heroWindow::WidgetClearStatus), dc 0xd2c80
 void THeroScreenWindow::UpdateHeroLocator(int iWhich)
 {
     // @stub
@@ -509,42 +722,58 @@ void THeroScreenWindow::UpdateHeroLocators()
 }
 
 // E:\gamedcs\hero.cpp:4240
-DC_ONLY(0xd2d58, 0x128)
+// UpdateHeroLocators (dc 0xd2d24, 50 B) has NO retail row - inlined -
+// so this is the next DC row in the bracket, and 304 B against DC's 296
+// is a 1.03x fit. Body rebuilds the four primary-stat widgets from the
+// current hero's +0x476 band, the same band get_primary_skill_total
+// walks.
+VA(0x004e16d0, 0x130)  // order-map + stats-band, dc 0xd2d58
 void hero::UpdateStats()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:4273
-DC_ONLY(0xd2e80, 0x230)
+// /Gr FREE function - it reads ecx AND edx and stashes them into the
+// hero-view globals (0x698a50 = iHeroID, 0x698a90 = second argument)
+// before calling advManager::TrimLoopingSounds; a member would leave edx
+// alone. That arity is HeroView's, not any THeroScreenWindow method's.
+VA(0x004e1800, 0x24F)  // arity (/Gr, 2 register args) + order-map, dc 0xd2e80
 int HeroView(int iHeroID, int bNoDismiss, int bAlreadyFaded, unsigned char bQuickView)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:4349
-DC_ONLY(0xd30b0, 0x630)
+VA(0x004e1a50, 0x7BB)  // order-map, dc 0xd30b0
 void THeroScreenWindow::SetupHeroView()
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:4589
-DC_ONLY(0xd36e0, 0x50)
+// The SS trio 0x004e2210 / 0x004e2250 / 0x004e22d0 is byte-decoded and
+// mutually pinned: SetSS tail-calls TakeSS with a literal 3 when the new
+// level is 0 and GiveSS when the skill is not yet known, and CheckLevel
+// (0x004da720) calls GiveSS directly. All three index the two 28-entry
+// secondary-skill bands the hero model carries (mastery at +0xc9 read
+// with movsx, acquisition order at +0xe5 compared UNSIGNED) and the
+// skill count at +0x101, and all three are `ret 8`.
+VA(0x004e2210, 0x3F)  // anchor-callee + band-layout, dc 0xd36e0
 void hero::SetSS(int iWhichSS, int iLevelToSet)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:4600
-DC_ONLY(0xd3730, 0x8E)
+VA(0x004e2250, 0x76)  // anchor-caller (SetSS) + band-layout, dc 0xd3730
 int hero::TakeSS(int iWhichSS, int iNumLevelsToTake)
 {
     // @stub
 }
 
 // E:\gamedcs\hero.cpp:4627
-DC_ONLY(0xd37c0, 0x70)
+VA(0x004e22d0, 0x61)  // anchor-caller (SetSS, CheckLevel), dc 0xd37c0
 int hero::GiveSS(int iWhichSS, int iNumLevelsToGive)
 {
     // @stub
@@ -607,6 +836,25 @@ int hero::GetNthSS(int iWhich)
 // E:\gamedcs\hero.cpp:4828
 VA(0x004e23d0, 0x176)  // anchor-global, dc 0xd38ec
 void hero::TransferArtifacts(hero* src)
+{
+    // @stub
+}
+
+// RETAIL-ONLY x2. Nothing sits between TransferArtifacts (0xd38ec) and
+// equip_artifact (0xd39d8) in the Dreamcast roster, but retail carves
+// two more bodies plus one /GX unwind funclet (0x004e29dc, which calls
+// equip_artifact and rethrows - compiler-generated, no claim). Both are
+// hero members, both `ret 8`, and both work the 32-byte-stride artifact
+// table at 0x660b68 against the 19 equipped slots. ORDINAL PLACEHOLDER
+// names, flagged unattested.
+VA(0x004e2550, 0x2EC)  // retail-only, hero member, ret 8
+unsigned char hero::HeroFn_004E2550(long a, long slot)
+{
+    // @stub
+}
+
+VA(0x004e2840, 0x19C)  // retail-only, hero member, ret 8
+unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 {
     // @stub
 }
@@ -691,6 +939,20 @@ int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground, unsigne
 // E:\gamedcs\hero.cpp:5254
 VA(0x004e39b0, 0x2A9)  // anchor-global, dc 0xd41fc
 int hero::GetMorale(const hero* otherHero, unsigned char on_cursed_ground, unsigned char apply_limits)
+{
+    // @stub
+}
+
+// hero::GetNecromancyCreature - NO Dreamcast row; the name is the
+// PROVISIONAL one hero.h already carries (HD-crossbuild + IDA lineage,
+// flagged there). The SLOT and the SIGNATURE are retail-proven here:
+// ai_combat's create_skeletons (0x426df0) calls GetNecromancyFactor and
+// then this address with no argument, and the body returns creature
+// types 0x38/0x3a/0x3c/0x40 (Skeleton / Walking Dead / Wight / Lich)
+// off the Necromancy mastery byte at +0xd5 after testing artifact 0x82
+// across the 19 equipped slots and hero::IsWieldingArtifact.
+VA(0x004e3c60, 0x70)  // anchor-caller (ai_combat create_skeletons) + body, retail-only
+TCreatureType hero::GetNecromancyCreature()
 {
     // @stub
 }
@@ -824,6 +1086,19 @@ int hero::GetMobility()
 // E:\gamedcs\hero.cpp:5943
 VA(0x004e4db0, 0x10D)  // anchor-global, dc 0xd4db0
 int hero::GetSpellDurationBonus()
+{
+    // @stub
+}
+
+// RETAIL-ONLY: no DC row between GetSpellDurationBonus (0xd4db0) and
+// get_special_terrain (0xd4df0). `ret 0`, and it unpacks a five-byte
+// packed point out of `this` - word[+0], word[+2], byte[+4] masked with
+// 0x3ff / 0x3ff / 0xf - i.e. the hero's own map coordinate, exactly the
+// three coordinate words hero::initialize fills with -1. ORDINAL
+// PLACEHOLDER name, flagged unattested (the HD crossbuild map offers
+// `hero::GetGroundModifier`, NH3API lineage, not admitted here).
+VA(0x004e4ec0, 0xD6)  // retail-only, hero member, ret 0
+int hero::HeroFn_004E4EC0()
 {
     // @stub
 }
@@ -1245,11 +1520,8 @@ void type_artifact::`default constructor closure'()
 }
 
 // E:\gamedcs\hero.cpp:4186
-DC_ONLY(0xd59d0, 0x34)
-void* THeroScreenWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+// (moved to retail link order at 0x004e1520, immediately before the
+// destructor it calls; the VA_COMPGEN claim lives there)
 
 // ..\stlport\stl_bitset.h:379
 // CLAIM WITHDRAWN 2026-08-07 - MISATTRIBUTION (cinit excluded class).

@@ -167,6 +167,21 @@ void mouseManager::SetPointer(int new_frame, mouseManager::EPointerSet new_set)
 
 #if 0  // @carcass
 
+// E:\gamedcs\mousemgr.cpp:298
+// The ??1TCSLock COMDAT, byte-identified: the whole body is
+// `mov eax,[ecx]; push eax; call [__imp__LeaveCriticalSection@4]; ret`
+// - LeaveCriticalSection(this->section) with section at offset 0,
+// exactly the class-inline definition in mousemgr.h. Retail flushes
+// the COMDAT here, right after SetPointer (its first user), not at the
+// DC tail position 0xff800; the ctor's copy lands later at 0x50d890 by
+// the same first-out-of-line-need rule. Our object already emits
+// ??1TCSLock@@QAE@XZ, so the claim only pairs it.
+VA(0x0050cd80, 0xA)  // anchor-import (__imp__LeaveCriticalSection@4), dc 0xff800
+void TCSLock::~TCSLock()
+{
+    // @stub - the definition lives inline in mousemgr.h
+}
+
 // E:\gamedcs\mousemgr.cpp:526
 VA(0x0050cd90, 0x770)  // anchor-global, dc 0xfec54
 void mouseManager::Update(unsigned char bForceIt)
@@ -496,11 +511,8 @@ unsigned RGBto16(int r, int g, int b)
 // out-of-line TCSLock ctor claim lives there)
 
 // E:\gamedcs\mousemgr.cpp:298
-DC_ONLY(0xff800, 0x18)
-void TCSLock::~TCSLock()
-{
-    // @stub
-}
+// (moved to retail link order between SetPointer and Update; the
+// out-of-line TCSLock dtor claim lives there)
 
 // E:\gamedcs\mousemgr.cpp:332
 DC_ONLY(0xff818, 0x34)

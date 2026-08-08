@@ -137,6 +137,9 @@ public:
     NewfullMap* GetWorldMapData();
     playerData* GetLocalPlayer();
     unsigned char IsHuman(int gamePos);          // 0x4ce940
+    void TurnOnAIMusic();                        // 0x4c6f80
+    void TurnOffAIMusic();                       // 0x4c6fd0
+    void SetMapSize(int width, int height);      // 0x4ccef0
     NewmapCell* get_cell(type_point point);      // 0x42ed80 (ai_player.obj)
     // DC `game::GetHero`, dc 0x2eb0, 36 B, declared in E:\gamedcs\Game.h
     // line 972 - i.e. an INLINE MEMBER of this header, which is exactly
