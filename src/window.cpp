@@ -3,7 +3,9 @@
 // 56 functions in link order.
 #include <va.h>
 #include <stdlib.h>
+#include <string.h>
 #include "window.h"
+#include "kb.h"
 #include "widget.h"
 #include "message.h"
 #include "bitmap16.h"
@@ -16,18 +18,33 @@ VA(0x005fe9f0, 0x5E)  // anchor-global, dc 0x197138
 heroWindow::heroWindow(int winX, int winY, int winWidth, int winHeight, unsigned winType)
     : field_48(0)
 {
+    // Store order is byte-forced (2026-08-08): VC6 hoists the five
+    // argument copies above every constant store, so the retail order
+    // `[+0xc],[+8],[+4]` needs the link pair written BEFORE priority -
+    // yet the -1 must still be the first constant in the body, or the
+    // shuttle register flips esi->edx and the whole tail moves (40.18).
+    nextWindow = prevWindow = 0;
     priority = -1;
     x = winX;
     y = winY;
     width = winWidth;
     height = winHeight;
     type = winType;
-    nextWindow = prevWindow = 0;
     status = 0;
     headWidget = tailWidget = 0;
     background = 0;
     focusId = -1;
 }
+
+// E:\gamedcs\window.cpp:68 - heroWindow::`scalar deleting destructor'
+// (dc 0x1981ac). Promoted from DC_ONLY 2026-08-08 on body evidence:
+// the 33-byte row at 0x5fea50 is the canonical ??_G shape - `mov
+// esi,ecx; call ??1heroWindow (0x5fea80); test byte [ebp+8],1; je;
+// push esi; call operator delete; mov eax,esi; ret 4` - and retail
+// places it BETWEEN the ctor and the dtor exactly as it does widget's
+// (0x5fe3b0, widget.cpp precedent). The DC build appends both sdds
+// after SetWinText instead.
+VA_COMPGEN(0x005fea50, 0x21, SCALAR_DELETING_DTOR, heroWindow)
 
 // E:\gamedcs\window.cpp:80
 VA(0x005fea80, 0x60)  // anchor-global, dc 0x1971d0
@@ -171,7 +188,7 @@ void heroWindow::RemoveWidget(widget* killWidget)
     }
     widget* prev = killWidget->prevWidget;
     if (!prev) {
-        tailWidget = headWidget = 0;
+        headWidget = tailWidget = 0;
     } else {
         widget* next = killWidget->nextWidget;
         prev->nextWidget = next;
@@ -369,10 +386,19 @@ void heroWindow::MoveWindow(int deltaX, int deltaY)
 #endif  // @carcass
 
 // E:\gamedcs\window.cpp:778
-// Residual (92.9%): register-allocation noise only - retail keeps the
-// old height in EDI where this compile spills; declaration-order
-// permutations plateau here. Statement semantics match store for
-// store.
+// Residual (92.88%): a whole-body ebx/edi role swap - retail pins
+// centerX in EBX and centerY in EDI (loading centerX into ebx before
+// it even pushes esi/edi), this compile the other way round, which
+// also permutes the four old* home slots (retail -4/-8/-0xc/-0x10 =
+// declaration order; ours -8/-0xc/-0x10/-4). VERIFIED not a control
+// flow difference: `homm3 sema diff --branches` reports 9/9 branches
+// and 2/2 rets with the sequences AGREEING. Tried and rejected
+// (2026-08-08, 13 spellings): old*-vs-member operands in the -1
+// defaults and in the clamps (all 92.88), declaration orders
+// x/y/w/h, y/x/h/w and x/y/h/w (92.84-92.88), the declarations moved
+// below the defaults (82.55) or below the clamps (72.85), split
+// between them (88.24), the two clamps merged into if/else-if
+// (88.53), and the x-clamps grouped ahead of the y-clamps (87.49).
 VA(0x005ff240, 0x162)  // anchor-global, dc 0x19797c
 void heroWindow::CenterWindow(int centerX, int centerY)
 {
@@ -509,6 +535,26 @@ void heroWindow::delete_widgets()
     Widgets.erase(Widgets.begin(), Widgets.end());
 }
 
+// E:\gamedcs\window.cpp:949
+// Promoted from DC_ONLY 2026-08-08 on body evidence: the 50-byte row
+// at 0x5ff570 walks THIS window's Widgets vector with delete_widgets'
+// exact iterator shape and re-adds each entry through
+// heroWindow::AddWidget(w, -1) - the only heroWindow method that both
+// reads the vector and calls AddWidget - and routes the null entry to
+// MemError. It sits between delete_widgets (0x5ff510) and the
+// retail-only sleep pair, exactly where the DC roster puts
+// AddWidgetsToMessageStream (dc 0x197cd4, :949).
+VA(0x005ff570, 0x32)  // linkorder + body, dc 0x197cd4
+void heroWindow::AddWidgetsToMessageStream()
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+}
+
 // Retail-only (no DC roster entry): the sleep-nest counter around
 // virtual slot 8, called by executive::CallManager on the adventure
 // window. First sleep and last wake dispatch the vslot. Placed after
@@ -525,63 +571,130 @@ void heroWindow::SleepAllWidgets(unsigned char sleep)
     }
 }
 
+// E:\gamedcs\window.cpp:966
+// The base ctor is /Ob2-inlined store for store (heroWindow's own
+// out-of-line body still serves its external callers); only the vptr
+// changes to the derived table 0x243ce8 and the one added dword lands.
+VA(0x005ff640, 0x61)  // anchor-vtable (stores 0x243ce8) + body, dc 0x197d48
+CHeroWindowEx::CHeroWindowEx(int winX, int winY, int winWidth, int winHeight,
+                             unsigned winType)
+    : heroWindow(winX, winY, winWidth, winHeight, winType)
+{
+    rolloverId = -1;
+}
+
+// E:\gamedcs\window.cpp:969 - CHeroWindowEx::`scalar deleting
+// destructor' (dc 0x1981e0). Slot 0 of vtable 0x243ce8; the 33-byte
+// row calls the ICF-folded empty ~CHeroWindowEx (0x41b110, a
+// `jmp ??1heroWindow` COMDAT the link kept out of window.obj) and then
+// the flags&1 operator delete tail.
+VA_COMPGEN(0x005ff6b0, 0x21, SCALAR_DELETING_DTOR, CHeroWindowEx)
+
 #if 0  // @carcass
 
-// E:\gamedcs\window.cpp:949
-DC_ONLY(0x197cd4, 0x72)
-void heroWindow::AddWidgetsToMessageStream()
-{
-    // @stub
-}
-
-// E:\gamedcs\window.cpp:966
-VA(0x005ff640, 0x61)  // anchor-global, dc 0x197d48
-void CHeroWindowEx::CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType)
-{
-    // @stub
-}
-
-// E:\gamedcs\window.cpp:972
-VA(0x005ff6b0, 0x21)  // linkorder, dc 0x197d9c
+// E:\gamedcs\window.cpp:972 - vtable 0x243ce8 slot 10. `ret 8` and the
+// findWidgetPtr(mouseX, mouseY) call site both give the arity; the
+// body latches the hit widget's id in rolloverId, swaps the mouse
+// pointer through mouseManager::SetPointer and redraws the rollover
+// text widget. Blocked on the mouseManager and textWidget models.
+VA(0x005ff6e0, 0xAE)  // anchor-vtable (slot 10 of 0x243ce8), dc 0x197d9c
 unsigned char CHeroWindowEx::ProcessHover(int mouseX, int mouseY)
 {
     // @stub
 }
 
-// E:\gamedcs\window.cpp:1016
-VA(0x005ff6e0, 0xAE)  // linkorder, dc 0x197e58
-unsigned char CHeroWindowEx::ProcessRightSelect(int id)
-{
-    // @stub
-}
-
-// E:\gamedcs\window.cpp:1036
-VA(0x005ff790, 0x82)  // linkorder, dc 0x197eb4
-int CHeroWindowEx::WindowHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\window.cpp:1122
-VA(0x005ff820, 0xA5)  // linkorder, dc 0x197f48
+// E:\gamedcs\window.cpp:1122 - OnWidgetDeselect has NO window.obj row.
+// Vtable 0x243ce8 slot 12 points at 0x559140 (`xor eax,eax; ret 8`),
+// an /OPT:ICF-folded empty inline - so retail defined it in the header
+// and window.h carries it there.
+DC_ONLY(0x197f48, 0x4)
 int CHeroWindowEx::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 {
     // @stub
 }
 
-// E:\gamedcs\window.cpp:1128
-VA(0x005ff8d0, 0x3)  // linkorder, dc 0x197f4c
+#endif  // @carcass
+
+// E:\gamedcs\window.cpp:1016 - vtable 0x243ce8 slot 11. Byte-proven:
+// GetWidget's tailWidget/prevWidget walk inlines, RightClick (+0x24)
+// falls back to RollOver (+0x20), the empty-string guard is VC6's
+// inline `repne scasb` strlen, and the eleven-argument NormalDialog
+// call passes iMBType = 4 in edx with every other slot -1/0.
+VA(0x005ff790, 0x82)  // anchor-vtable (slot 11 of 0x243ce8), dc 0x197e58
+unsigned char CHeroWindowEx::ProcessRightSelect(int id)
+{
+    widget* current = GetWidget(id);
+    if (!current)
+        return 0;
+    const char* text = current->RightClick;
+    if (!text) {
+        text = current->RollOver;
+        if (!text)
+            return 0;
+    }
+    if (strlen(text) == 0)
+        return 0;
+    NormalDialog(text, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    return 1;
+}
+
+// E:\gamedcs\window.cpp:1036 - vtable 0x243ce8 slot 9. The three arms
+// dispatch through slots 11/10/12 in that order (the [vptr+0x2c],
+// [vptr+0x28] and [vptr+0x30] call sites are what pin the roster
+// order), and the no-match arm returns 0 WITHOUT re-testing the exit
+// flag - retail jumps straight to the shared `xor eax,eax` tail.
+VA(0x005ff820, 0xA5)  // anchor-vtable (slot 9 of 0x243ce8), dc 0x197eb4
+int CHeroWindowEx::WindowHandler(message* msg)
+{
+    unsigned char bExitFlag = 0;
+
+    if ((msg->qualifier & MESSAGE_MODIFIER_RIGHT)
+        && (msg->codeX == widget::WIDGET_SELECT
+            || msg->codeX == widget::WIDGET_RIGHT_SELECT)) {
+        if (ProcessRightSelect(msg->codeY))
+            return 1;
+    } else if (msg->id == MESSAGE_MOUSE_MOVE) {
+        if (ProcessHover(msg->mouseX, msg->mouseY))
+            return 1;
+    } else if (msg->id == MESSAGE_WIDGET
+               && msg->codeX == widget::WIDGET_DESELECT) {
+        OnWidgetDeselect(msg->codeY, &bExitFlag);
+    } else {
+        return 0;
+    }
+    if (bExitFlag) {
+        msg->id = MESSAGE_WIDGET;
+        msg->codeY = widget::WIDGET_END_DIALOG;
+        msg->codeX = widget::WIDGET_END_DIALOG;
+        return 2;
+    }
+    return 0;
+}
+
+// E:\gamedcs\window.cpp:1128 - vtable 0x243ce8 slot 13.
+VA(0x005ff8d0, 0x3)  // anchor-vtable (slot 13 of 0x243ce8), dc 0x197f4c
 textWidget* CHeroWindowEx::GetRolloverWidget()
 {
-    // @stub
+    return 0;
 }
 
 // E:\gamedcs\window.cpp:1133
+// GetWidget's tailWidget/prevWidget walk is /Ob2-inlined into the
+// loop; the row index is (i - start), not i, which is why retail keeps
+// both `start*8` and `i*8` live in edi/esi and subtracts.
 VA(0x005ff8e0, 0x75)  // anchor-global, dc 0x197f50
-void CHeroWindowEx::SetHelpText(THelpText* pHelpText, int start, int stop, unsigned char copyText)
+void CHeroWindowEx::SetHelpText(THelpText* pHelpText, int start, int stop,
+                                unsigned char copyText)
 {
-    // @stub
+    for (int i = start; i < stop; i++) {
+        widget* current = GetWidget(i);
+        if (current)
+            current->set_help_text(pHelpText[i - start].text,
+                                   pHelpText[i - start].rclick, copyText);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\window.cpp:1201
 DC_ONLY(0x197fd8, 0x158)

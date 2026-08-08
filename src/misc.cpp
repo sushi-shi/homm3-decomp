@@ -198,6 +198,21 @@ TPickANumber::TPickANumber(int lowBound, int high)
     // register (`lea edi,[ecx+1]`) and feeds the clamp, the fill guard
     // and both end pointers from it. Computing `count` in place
     // (`inc`) and re-reading the member instead costs the whole tail.
+    // Residual (72.18%): the flag byte is the whole cascade. Retail
+    // reads MEMORY (`mov dl,[ebp+0xb]`) while eax already holds the
+    // lowBound parameter; no well-defined expression over lowBound can
+    // emit that, because VC6 always works from the register copy - a
+    // 2026-08-08 sweep of five arithmetic spellings (unsigned >>24,
+    // signed >>24, (x>>24)&0xFF, (unsigned)x&0xFF000000u >>24, and the
+    // int-typed mask form) x three statement slots gave 72.18/69.10/
+    // 69.10 with NO spelling reaching the byte load. Nine further
+    // statement-order permutations of the four stores peaked at 72.18
+    // (the order below). The extra `mov ecx,eax; shr ecx,0x18` is two
+    // instructions where retail has one, which flips the shuttle
+    // register esi<->edi and moves the whole tail. Control flow AGREES
+    // (`--branches`, 4/4 branches, 1/1 ret). The byte-alias spelling
+    // stays REJECTED: it scores worse (72.13) and would assert a
+    // source construct the evidence contradicts.
     int n = high - lowBound + 1;
     // The shipped uninit artifact: retail reads the byte straight off
     // the lowBound parameter slot (`mov dl,[ebp+0xb]`), which is an
