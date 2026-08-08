@@ -90,29 +90,55 @@ long combatManager::get_total_combat_value(long side, long lowest_attack, long l
 
 #if 0  // @carcass
 
-// E:\gamedcs\ai.cpp:365
-DC_ONLY(0x2400c, 0xD8)
-long get_area_attack_value(const army* current_army, long hex, long our_group, type_AI_combat_parameters* data)
-{
-    // @stub
-}
+// THE SHOOTER SEGMENT, 0x41eb80..0x41f060 (2026-08-08). Four retail
+// rows sit between get_total_combat_value (0x41eac0, claimed) and
+// find_move_order (0x41f140, claimed); the DC roster has five bodies
+// in the same bracket. The map is settled by the CALL GRAPH plus the
+// calling convention, not by address order:
+//   * 0x41f060 reads ecx as `this`, builds a type_AI_combat_parameters
+//     and calls BOTH 0x41eb80 and 0x41eea0; its own single caller is
+//     0x4221f0, the DoCompAI slot. That is choose_shooter_action, the
+//     dispatcher - and 209 B against the DC body's 216 is a 0.97 ratio.
+//   * 0x41eda0 saves BOTH ecx and edx as arguments, so it is a /Gr FREE
+//     function, and `ret 8` makes it exactly four parameters. The only
+//     free function the bracket offers is the static
+//     get_area_attack_value, whose DC parameter count is four.
+//   * 0x41eb80 is its only caller and is a thiscall method with
+//     `ret 0xc` = three parameters: choose_shooter_target, which is
+//     what calls an area-attack valuer.
+//   * 0x41eea0 is the dispatcher's other callee, thiscall, `ret 0xc`,
+//     and rolls Random over army::get_total_combat_value:
+//     choose_cyclops_action.
+//   * get_move_order (dc 0x24604) has no slot - a single-call-site
+//     static that /Ob2 folds into find_move_order.
+// NOTE THE INVERSION: retail defines the static helper AFTER the method
+// that calls it, where the Dreamcast source has it before. The same
+// inversion shows up once more in this TU (find_attack_hexes below), so
+// the entries here are ordered by RETAIL address, not by DC line.
 
 // E:\gamedcs\ai.cpp:397
-DC_ONLY(0x240e4, 0x1B8)
+VA(0x0041eb80, 0x220)  // anchor-callee, dc 0x240e4
 long combatManager::choose_shooter_target(const army* current_army, type_AI_combat_parameters* data, long* best_value)
 {
     // @stub
 }
 
+// E:\gamedcs\ai.cpp:365
+VA(0x0041eda0, 0xFD)  // anchor-callee, dc 0x2400c
+long get_area_attack_value(const army* current_army, long hex, long our_group, type_AI_combat_parameters* data)
+{
+    // @stub
+}
+
 // E:\gamedcs\ai.cpp:475
-DC_ONLY(0x2429c, 0x28E)
+VA(0x0041eea0, 0x1B9)  // anchor-callee, dc 0x2429c
 unsigned char combatManager::choose_cyclops_action(long best_value, long side, type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:558
-DC_ONLY(0x2452c, 0xD8)
+VA(0x0041f060, 0xD1)  // anchor-callee, dc 0x2452c
 void combatManager::choose_shooter_action(const army* current_army, unsigned char simulated, long side)
 {
     // @stub
@@ -508,14 +534,36 @@ unsigned char combatManager::can_cast_spells(long side, unsigned char hero_spell
 
 #if 0  // @carcass
 
+// THE COMBAT-AI SEGMENT, 0x41f920..0x4222c0 (2026-08-08). Twenty-two
+// retail rows sit between can_cast_spells (0x41f890, claimed) and
+// compute_fire_shield_damage (0x422440, claimed); the DC roster has
+// twenty-one bodies in the same bracket. Eighteen of the pairings below
+// match the DC dump's own PARAMETER COUNT exactly - `ret` bytes over
+// the thiscall/fastcall registers - and every one of the eighteen also
+// lands inside the SH4->x86 size band, most of them between 0.95x and
+// 1.15x (place_shooter is 398 B against 398 B). The entries are ordered
+// by RETAIL address; three of them are not in DC line order and say so.
+//
+// Three DC bodies have no retail slot, and all three are STATICS with a
+// single call site - the /Ob2 case that leaves no out-of-line copy:
+// get_enemy_attack_limit (dc 0x250e0) and the four-parameter
+// find_attack_hexes overload (dc 0x253a8), plus get_move_order above.
+//
+// Four retail rows are left UNCLAIMED and are named in place below:
+// 0x420cf0 (a compiler-generated vector teardown), 0x420d20 / 0x420f00
+// (an unresolved two-into-one), and 0x421590 (a moat marker with no DC
+// twin at all).
+
 // E:\gamedcs\ai.cpp:926
-DC_ONLY(0x24ef4, 0x1EC)
+VA(0x0041f920, 0x234)  // linkorder, dc 0x24ef4
 long combatManager::get_area_effect(long side, const army* our_army, long marked_enemies, const type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:1000
+// NO RETAIL SLOT - a two-parameter static with one call site, folded
+// into whichever of get_area_effect / mark_friendly_armies uses it.
 DC_ONLY(0x250e0, 0x42)
 long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameters* estimate)
 {
@@ -523,20 +571,15 @@ long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameter
 }
 
 // E:\gamedcs\ai.cpp:1014
-DC_ONLY(0x25124, 0x1E4)
+VA(0x0041fb60, 0x1F6)  // linkorder, dc 0x25124
 void combatManager::mark_friendly_armies(const army* our_army, long* enemy_attacks, long marked_enemies, const type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
-// E:\gamedcs\ai.cpp:1097
-DC_ONLY(0x25308, 0x9E)
-void find_attack_hexes(const army* our_army, long target_hex, long start, long stop, long limit_cost, const searchArray* search_array, std::vector<long,std::allocator<long>* result)
-{
-    // @stub
-}
-
 // E:\gamedcs\ai.cpp:1121
+// NO RETAIL SLOT - the four-parameter overload; single call site, and
+// the seven-parameter one below absorbed it or its caller did.
 DC_ONLY(0x253a8, 0xA4)
 void find_attack_hexes(const army* our_army, const army* enemy, const searchArray* search_array, std::vector<long,std::allocator<long>* result)
 {
@@ -544,112 +587,196 @@ void find_attack_hexes(const army* our_army, const army* enemy, const searchArra
 }
 
 // E:\gamedcs\ai.cpp:1152
-DC_ONLY(0x2544c, 0x254)
+// `ret 0x18` = six stack arguments over `this`, the DC count exactly,
+// and the body calls army::get_multi_head_directions - the one callee
+// in the whole TU that names this function.
+VA(0x0041fd60, 0x2F6)  // anchor-callee, dc 0x2544c
 void combatManager::mark_multiheaded_enemy(const army* our_army, const army* enemy, long* enemy_attacks, long limit_value, searchArray* search_array, const type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
+// E:\gamedcs\ai.cpp:1097
+// OUT OF DC LINE ORDER, exactly like get_area_attack_value above:
+// retail places this static AFTER its caller. Three signals pin it
+// anyway - it saves BOTH ecx and edx as arguments (a /Gr free
+// function, not a method), `ret 0x14` makes that seven parameters
+// which is the DC count exactly, and its only caller is the
+// mark_multiheaded_enemy slot immediately above. The 158 B -> 507 B
+// growth is the one number outside the usual band; the arity, the
+// convention and the caller are not.
+VA(0x00420060, 0x1FB)  // anchor-callee, dc 0x25308
+void find_attack_hexes(const army* our_army, long target_hex, long start, long stop, long limit_cost, const searchArray* search_array, std::vector<long,std::allocator<long>* result)
+{
+    // @stub
+}
+
 // E:\gamedcs\ai.cpp:1241
-DC_ONLY(0x256a0, 0x2F8)
+VA(0x00420260, 0x368)  // linkorder, dc 0x256a0
 void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks, long* dangerous_enemies, const type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:1357
-DC_ONLY(0x25998, 0x172)
+VA(0x004205d0, 0x185)  // linkorder, dc 0x25998
 unsigned char combatManager::choose_defense_hex(const army* current_army, const army* client, long* best_hex, long* open_hexes, const searchArray* search_array)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:1445
-DC_ONLY(0x25b0c, 0x174)
+VA(0x00420760, 0x187)  // linkorder, dc 0x25b0c
 unsigned char combatManager::attempt_shooter_defense(const army* current_army, const searchArray* search_array, const type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:1513
-DC_ONLY(0x25c80, 0x178)
+VA(0x004208f0, 0x184)  // linkorder, dc 0x25c80
 unsigned char combatManager::choose_to_run(const army* our_army, const long* enemy_attacks, const searchArray* search_array)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:1572
-DC_ONLY(0x25df8, 0x214)
+// `ret 4` = one stack argument over `this`, the DC count exactly, and
+// the body asks town::CalcNumLevelArchers alongside army::can_shoot -
+// the castle's shooter census. Its one caller is the
+// should_stay_in_castle slot below, which is what a ranged-advantage
+// test is for.
+VA(0x00420a80, 0x264)  // anchor-callee, dc 0x25df8
 unsigned char combatManager::has_ranged_advantage(type_AI_combat_parameters* data)
 {
     // @stub
 }
 
+// UNCLAIMED, 0x420cf0 (38 B). A compiler-generated teardown, not an
+// ai.cpp body: it frees the pointer at +0x18 of its `this` and then
+// zeroes +0x18/+0x1c/+0x20 - a std::vector member's three pointers.
+// The DC roster's nearest twin is type_spellvalue::~type_spellvalue
+// (dc 0x28050, ai.cpp:1626, 24 B), which is itself compiler-generated
+// at first use; its cross-TU caller at 0x627a40 is the COMDAT
+// signature. Left alone until the compgen-dtor claim kind covers
+// implicit destructors as well as scalar deleting ones.
+
+// 0x420d20 AND 0x420f00 ARE TWINS AND ONLY ONE IS THE DC BODY. Both
+// are thiscall `ret 0xc` with an EH frame and a ~1 KB stack buffer,
+// both construct and destroy a type_AI_spellcaster, and both are
+// called from the choose_spell_action slot alongside the resurrect
+// chooser. Size alone prefers 0x420f00 (0.82x against 1.53x) and the
+// question stayed open until ai_tactical was order-mapped: 0x420d20 is
+// the ONLY caller of 0x43c330 and 0x43c4a0, which that map identifies
+// as get_ogre_mage_value and get_caliph_value - the two
+// creature-cast spell valuers, and nothing but choose_creature_spell
+// wants them. 0x420f00 calls neither; its one ai_tactical callee,
+// 0x43c620, is itself retail-only (four parameters where the DC rows
+// left in its bracket all take one). So 0x420f00 and 0x43c620 are a
+// retail-only pair - a third spell chooser and its helper that the
+// Dreamcast port does not carry.
+
 // E:\gamedcs\ai.cpp:1635
-DC_ONLY(0x2600c, 0x132)
+VA(0x00420d20, 0x1D5)  // anchor-callee, dc 0x2600c
 unsigned char combatManager::choose_creature_spell(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
+// UNCLAIMED, 0x420f00 (251 B) - the retail-only twin described above.
+
 // E:\gamedcs\ai.cpp:1694
-DC_ONLY(0x26140, 0x324)
+// Nothing else in the TU calls army::get_resurrection_size, and this
+// body does - twice, around two army constructors. `ret 0xc` is the
+// DC parameter count exactly.
+VA(0x00421000, 0x275)  // anchor-callee, dc 0x26140
 unsigned char combatManager::choose_resurrect_action(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:1794
-DC_ONLY(0x26464, 0x96)
+// The dispatcher: its three callees are the two unresolved spell
+// choosers above and the resurrect chooser, and its own caller is the
+// choose_melee_target slot. `ret 0xc` is the DC count exactly; 150 B
+// -> 358 B is the loosest size ratio of the eighteen (2.39x, still in
+// band) and is what a dispatcher looks like once /Ob2 has pulled its
+// small helpers in.
+VA(0x00421280, 0x166)  // anchor-callee, dc 0x26464
 unsigned char combatManager::choose_spell_action(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:1822
-DC_ONLY(0x264fc, 0x102)
+// `ret 4` = one stack argument over `this`, the DC count exactly, and
+// the two callees are InCastle and combatManager::HexIsBlocked. 245 B
+// against 258 B.
+VA(0x004213f0, 0xF5)  // anchor-callee, dc 0x264fc
 unsigned char combatManager::should_stay_in_castle(type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:1866
-DC_ONLY(0x26600, 0xD4)
+// `ret 0xc`, the DC count exactly, and the body walks the 187-cell
+// grid at combatManager+0x1d4 (it materialises 0xbb as the bound)
+// testing an obstacle flag and reaching the obstacle table at
+// +0x13d5c - which is where a fire wall lives.
+VA(0x004214f0, 0x94)  // anchor-callee, dc 0x26600
 void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks, type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
+// UNCLAIMED, 0x421590 (225 B). Reads combatManager+0x53a8 and +0x53a4
+// and indexes the eleven-entry byte table at 0x63bce8 - the exact
+// trio searchArray::set_moat (0x4b3290) uses, so this marks the MOAT
+// hexes for the AI. The Dreamcast ai.obj roster has no such body and
+// no name for one; it is a retail-only function, and this lane does
+// not mint names.
+
 // E:\gamedcs\ai.cpp:1896
-DC_ONLY(0x266d4, 0x80C)
+VA(0x00421680, 0x8F9)  // linkorder, dc 0x266d4
 unsigned char combatManager::choose_melee_target(const army* current_army, unsigned char teleport, long* action_value, type_AI_combat_parameters* estimate)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:2159
-DC_ONLY(0x26ee0, 0xC6)
+VA(0x00421f80, 0xD5)  // anchor-callee, dc 0x26ee0
 long combatManager::choose_melee_action(const army* current_army, unsigned char teleport, unsigned char simulated, long side)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:2187
-DC_ONLY(0x26fa8, 0x18E)
+// 398 bytes against the DC body's 398 - the tightest size agreement in
+// the TU - with `ret 4` matching the DC parameter count and a body
+// that calls searchArray::SeedCombatPosition and
+// combatManager::is_outside_placement_boundry. Placement, by name.
+VA(0x00422060, 0x18E)  // anchor-callee, dc 0x26fa8
 void combatManager::place_shooter(const army* current_army)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:2272
-DC_ONLY(0x27138, 0xC8)
+// The TU's entry point: `ret 4` for the DC count, 208 B against 200,
+// its only caller is OUTSIDE this span (0x477ee0), and its callees are
+// the choose_shooter_action and choose_melee_action slots - the two
+// arms a per-stack AI turn dispatches to.
+VA(0x004221f0, 0xD0)  // anchor-callee, dc 0x27138
 void combatManager::DoCompAI(int whichGroup)
 {
     // @stub
 }
 
 // E:\gamedcs\ai.cpp:2313
-DC_ONLY(0x27200, 0x116)
+// `ret 8` for the DC count, called only from outside the span
+// (0x4456d0, the spell-effect side), and it drives
+// searchArray::FindCombatPath and combatManager::move_toward - a
+// forced attack on someone else's chosen target.
+VA(0x004222c0, 0x175)  // anchor-callee, dc 0x27200
 void combatManager::berserk_attack(army* current_army, const army* target)
 {
     // @stub
