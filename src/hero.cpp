@@ -11,7 +11,13 @@
 // abs() - the intrinsic form retail uses (cdq / xor / sub), the
 // stdlib.h precedent already carried by cmbtmgr, window and ai_combat.
 #include <stdlib.h>
+// sqrt() - hero::get_combat_value_modifier (0x4e5400) calls the CRT
+// entry, not an inlined fsqrt.
+#include <math.h>
 #include "hero.h"
+// class army - hero::modify_spell_damage (0x4e5760) reads the target
+// stack's embedded creature-traits level at +0x78.
+#include "army.h"
 // gpGame / playerData / game::IsHuman: the owner-record accessors
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
 // the real definitions, and game.h is where they live.
@@ -22,6 +28,10 @@
 // TArtifact / akArtifactTraits / gCombinationArtifacts - same placement
 // rationale as herospec.h.
 #include "artifact.h"
+// TMagicTerrain - the battlefield magic-terrain id the spell-school
+// quartet takes as its second argument.
+#include "magicterrain.h"
+
 
 // The per-mastery specialty factor rows, one four-float .rdata run per
 // skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
@@ -34,6 +44,8 @@
 // day by Mysticism mastery and scouting radius in tiles.
 static const int kMysticismBonuses[kNumMasteries] = { 1, 2, 3, 4 };
 static const int kScoutingVisibility[kNumMasteries] = { 5, 6, 7, 8 };
+// Estates gold per day by mastery (retail 0x63ea18, the same band).
+static const int kEstatesGold[kNumMasteries] = { 0, 125, 250, 500 };
 static const float kArcheryFactors[kNumMasteries] =
     { 0.0f, 0.1f, 0.25f, 0.5f };
 static const float kEagleEyeFactors[kNumMasteries] =
@@ -52,6 +64,26 @@ static const float kIntelligenceFactors[kNumMasteries] =
     { 0.0f, 0.25f, 0.5f, 1.0f };
 static const float kFirstAidFactors[kNumMasteries] =
     { 0.0f, 1.0f, 2.0f, 3.0f };
+// Sorcery's spell-damage bonus by mastery (retail 0x63ea78).
+static const float kSorceryFactors[kNumMasteries] =
+    { 0.0f, 0.05f, 0.1f, 0.15f };
+// The two SPELL-specialty ladders GetHeroSpellBonus (0x4e5ff0) indexes
+// by the target creature's level, seven entries each: retail 0x63eaa8
+// (shared by the six buff spells) and 0x63eac4 (Slayer's own).
+static const int kBuffSpecialtyBonus[7] = { 3, 3, 2, 2, 1, 1, 0 };
+static const int kSlayerSpecialtyBonus[7] = { 4, 3, 2, 1, 0, 0, 0 };
+
+// Experience needed to REACH each level, levels 1..12. Retail keeps it
+// in .DATA at 0x679c88 (not .rdata - hence no `const`), immediately
+// after the two reference cells at 0x679c80 / 0x679c84, and addresses
+// it as `&table[-1]` (base 0x679c86) because the index is the 1-based
+// level. Values read from the pinned image; they are HoMM3's own
+// ladder, and the 1.2 extrapolation past level 12 reproduces the
+// published level-13 threshold of 24320 exactly.
+static short kExperienceForLevel[12] = {
+    0, 1000, 2000, 3200, 4600, 6200,
+    8000, 10000, 12200, 14700, 17500, 20600
+};
 
 #if 0  // @carcass
 
@@ -539,19 +571,65 @@ void hero::Deallocate(unsigned char bGameLoaded, unsigned char remote_move)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:1836
+// The experience ladder. Levels 1..12 are the table; every level above
+// it multiplies the PREVIOUS step by 1.2 and adds it on, so the answer
+// for level 13 is 20600 + (20600-17500)*1.2 = 24320 - HoMM3's own
+// level-13 threshold, which is what identifies the table and the
+// factor together.
+// `this` is unused: retail takes iLevel in ECX and never touches the
+// object (see the note over the array), and the Dreamcast row lists
+// iLevel as the only parameter - a STATIC member, which /Gr makes
+// fastcall.
+// Spelling notes, both measured: declaring `total` FIRST and deriving
+// the increment from it is what puts iLevel in EDI and the running sum
+// in ESI the way retail allocates them (the other order swaps the two,
+// 96.9); and the extrapolation loop must be the ASCENDING
+// `for (i = 13; i < iLevel; i++)` - VC6's own induction-variable
+// downcount then rewrites it in place as `add edi,-0xd` / `dec edi` /
+// `jne`, which is retail exactly. Writing that rewrite by hand
+// (`iLevel -= 13; do {...} while (--iLevel);`) emits `sub edi,0xd`
+// instead and costs the last byte (98.6), and
+// `for (i = iLevel - 13; i > 0; i--)` costs three more (87.0).
 VA(0x004da3a0, 0x76)  // anchor-global, dc 0xccb80
 int hero::GetExperience(int iLevel)
 {
-    // @stub
+    if (iLevel <= 12)
+        return kExperienceForLevel[iLevel - 1];
+    int total = kExperienceForLevel[11];
+    int increment =
+        static_cast<int>((total - kExperienceForLevel[10]) * 1.2);
+    total += increment;
+    for (int i = 13; i < iLevel; i++) {
+        increment = static_cast<int>(increment * 1.2);
+        total += increment;
+    }
+    return total;
 }
 
 // E:\gamedcs\hero.cpp:1857
+// Two whole copies of GetExperience above, inlined back to back - the
+// 228 bytes are almost exactly twice its 118, and the second copy's
+// `cmp ebx,0xc` / `add ebx,-0xd` mirror the first's on `esi`. Also
+// STATIC (the Dreamcast row lists only `level`), and the +1 side is
+// evaluated FIRST.
+// Residual (98.1%): four rows, all one register swap in the FIRST
+// inlined copy. Retail keeps the inlined `iLevel` (level+1) in ESI and
+// that copy's running total in EDI; our CL reuses EDI for both, so the
+// `lea`, the `cmp`, the indexed load and the `mov ecx,` name the other
+// register. The second copy, the whole float chain and both loops are
+// identical. Tried and rejected: binding `level + 1` to a named local
+// before the call (98.1, no change); binding the first RESULT to a
+// named local (98.1, no change).
 VA(0x004da420, 0xE4)  // anchor-bracket, dc 0xccc68
 int hero::GetExperienceIncrement(int level)
 {
-    // @stub
+    return GetExperience(level + 1) - GetExperience(level);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:1862
 DC_ONLY(0xccc8c, 0x110)
@@ -1377,11 +1455,28 @@ int hero::GetMorale(const hero* otherHero, unsigned char on_cursed_ground, unsig
 // types 0x38/0x3a/0x3c/0x40 (Skeleton / Walking Dead / Wight / Lich)
 // off the Necromancy mastery byte at +0xd5 after testing artifact 0x82
 // across the 19 equipped slots and hero::IsWieldingArtifact.
+// The three upper rungs share ONE exit with the artifact-absent path:
+// retail loads 0x3a and only then tests `>= 1`, so the last rung is a
+// SELECTOR on the return value, not a fourth if - `mov eax,0x3a / jge
+// <ret> / mov eax,0x38` is a ternary, and the outer "no cloak" branch
+// jumps straight onto that same `mov eax,0x38`.
+#endif  // @carcass
+
 VA(0x004e3c60, 0x70)  // anchor-caller (ai_combat create_skeletons) + body, retail-only
 TCreatureType hero::GetNecromancyCreature()
 {
-    // @stub
+    if (IsWieldingArtifact(ARTIFACT_CLOAK_OF_THE_UNDEAD_KING)) {
+        if (skillLevel[eSecSkillNecromancy] >= 3)
+            return CREATURE_LICH;
+        if (skillLevel[eSecSkillNecromancy] >= 2)
+            return CREATURE_WIGHT;
+        if (skillLevel[eSecSkillNecromancy] >= 1)
+            return CREATURE_WALKING_DEAD;
+    }
+    return CREATURE_SKELETON;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:5332
 VA(0x004e3cd0, 0x268)  // anchor-global, dc 0xd4390
@@ -1505,16 +1600,28 @@ float hero::GetDefenseFactor()
     return 1.0f - factor;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:5542
+// The specialty-factor shape again, in integers, plus a SECOND and
+// independent specialty test: a hero whose specialty record is kind 2
+// (resource) naming GOLD earns a flat 350 a day on top. That second
+// block is outside the `> 0` guard and re-reads the record, which is
+// why retail computes the akHeroSpecificAbilities row TWICE.
 VA(0x004e4390, 0x89)  // anchor-global, dc 0xd46f8
 int hero::GetEstatesBonus()
 {
-    // @stub
+    int bonus = kEstatesGold[skillLevel[eSecSkillEstates]];
+    if (skillLevel[eSecSkillEstates] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill
+            && ability.skill == eSecSkillEstates)
+            bonus = static_cast<int>((level * 0.05f + 1.0f) * bonus);
+    }
+    const THeroSpecificAbility& resource = akHeroSpecificAbilities[id];
+    if (resource.type == eHeroAbilityResource
+        && static_cast<int>(resource.skill) == GOLD)
+        bonus += 350;
+    return bonus;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:5570
 // GetArcheryFactor's nesting (the mastery guard covers the artifacts
@@ -1718,48 +1825,155 @@ TAdventureObjectType hero::get_special_terrain()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:5977
+// Two rules and nothing else: Armageddon's Blade makes Armageddon
+// EXPERT no matter what the hero learned, and every other spell defers
+// to the school mask in its own traits row.
+// The artifact test is IsWieldingArtifact INLINED against a constant
+// id - VC6 folds away the spellbook special case, keeps the 19-slot
+// scan, and leaves only the combination recursion as a call, which is
+// byte-for-byte what retail emits here and in GetManaCost below.
 VA(0x004e5080, 0x7D)  // anchor-bracket, dc 0xd4e4c
-TSkillMastery hero::get_spell_level(SpellID spell, unsigned char is_on_magic_plains)
+int hero::get_spell_level(SpellID spell, int magic_terrain)
 {
-    // @stub
+    if (spell == SPELL_ARMAGEDDON
+        && IsWieldingArtifact(ARTIFACT_ARMAGEDDONS_BLADE))
+        return eMasteryExpert;
+    return GetSpellSchoolLevel(akSpellTraits[spell].school, magic_terrain);
 }
 
 // E:\gamedcs\hero.cpp:5987
+// The mask -> mastery reduction. The battlefield's magic terrain wins
+// outright when it covers any school the spell belongs to (Magic
+// Plains covers all four); otherwise the answer is the best of the
+// hero's own schools among those in the mask.
+// The four school blocks run in retail's EMISSION order - air, fire,
+// EARTH, water - which is NOT the mask's numeric order, and the first
+// one compares against a folded 0 rather than the running best.
 VA(0x004e5100, 0xBC)  // anchor-bracket, dc 0xd4e68
-TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask, unsigned char is_on_magic_plains)
+int hero::GetSpellSchoolLevel(TSpellSchool school_mask, int magic_terrain)
 {
-    // @stub
+    TSpellSchool terrain_school = const_invalid_school;
+    switch (magic_terrain) {
+    case kMagicTerrainMagicPlains:
+        terrain_school = eSchoolAll;
+        break;
+    case kMagicTerrainLucidPools:
+        terrain_school = eSchoolWater;
+        break;
+    case kMagicTerrainFieryFields:
+        terrain_school = eSchoolFire;
+        break;
+    case kMagicTerrainRocklands:
+        terrain_school = eSchoolEarth;
+        break;
+    case kMagicTerrainMagicClouds:
+        terrain_school = eSchoolAir;
+        break;
+    }
+    if (school_mask & terrain_school)
+        return eMasteryExpert;
+    int level = eMasteryNone;
+    if (school_mask & eSchoolAir) {
+        if (skillLevel[eSecSkillSchoolOfAirMagic] > level)
+            level = skillLevel[eSecSkillSchoolOfAirMagic];
+    }
+    if (school_mask & eSchoolFire) {
+        if (skillLevel[eSecSkillSchoolOfFireMagic] > level)
+            level = skillLevel[eSecSkillSchoolOfFireMagic];
+    }
+    if (school_mask & eSchoolEarth) {
+        if (skillLevel[eSecSkillSchoolOfEarthMagic] > level)
+            level = skillLevel[eSecSkillSchoolOfEarthMagic];
+    }
+    if (school_mask & eSchoolWater) {
+        if (skillLevel[eSecSkillSchoolOfWaterMagic] > level)
+            level = skillLevel[eSecSkillSchoolOfWaterMagic];
+    }
+    return level;
 }
 
 // E:\gamedcs\hero.cpp:6025
-// BLOCKED on a cross-TU type collision, not on the reconstruction.
-// The body is fully decoded - four "is this school in the mask, and is
-// it the best so far" blocks in retail's EMISSION order (air, fire,
-// EARTH, water; not the mask's numeric order), the running best
-// starting at -1 and the returned school at the mask itself - but the
-// signature needs the real DC enum TSpellSchool (const_invalid_school
-// 0 / eSchoolAir 1 / eSchoolFire 2 / eSchoolWater 4 / eSchoolEarth 8 /
-// eSchoolAll 15), and include/ai_tactical.h:44 currently holds the
-// name as a placeholder `typedef int TSpellSchool`. Defining the enum
-// anywhere hero.h can see it breaks ai, ai_combat, ai_tactical and
-// ai_player with C2371. Unifying the two is a cross-TU decision.
-// The retail bytes that pin the mapping are recorded here so the work
-// is not lost: bit 1 pairs with +0xd8 (skill 15, Air), bit 2 with
-// +0xd7 (14, Fire), bit 8 with +0xda (17, Earth), bit 4 with +0xd9
-// (16, Water).
+// Same four blocks in the same emission order, but the answer is the
+// SCHOOL rather than the level, the running best starts at -1 (so a
+// zero-level school still wins over nothing), and the fallback is the
+// mask itself. Retail SINKS that fallback into the air block's else
+// path (`mov eax,[ebp+8]` after the air arm's `jmp`), which is what
+// the `&&` + else form produces and the hoisted
+// `best_school = school_mask;` form does not (measured: 77.1).
+// Residual (98.4%): one register-homing instruction. Retail loads only
+// the LOW BYTE for the four mask tests (`mov cl,[ebp+8]`) and re-reads
+// the parameter from its stack slot on the else path
+// (`mov eax,[ebp+8]`); our CL loads the whole dword once
+// (`mov ecx,[ebp+8]`) and copies it (`mov eax,ecx`), one byte shorter.
+// Everything else - the emission order, the folded `cmp eax,-1` in the
+// air arm, the late `push esi`, the dropped `mov edx,esi` in the water
+// arm - agrees. Tried and rejected: an `unsigned char mask =
+// (unsigned char)school_mask;` view for the four tests (98.4, no
+// change - VC6 CSEs it straight back onto the dword load); hoisting
+// the fallback (77.1).
 VA(0x004e51c0, 0x73)  // anchor-global, dc 0xd4ed0
 TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask)
 {
-    // @stub
+    TSpellSchool best_school;
+    int best_level = -1;
+    if ((school_mask & eSchoolAir)
+        && skillLevel[eSecSkillSchoolOfAirMagic] > best_level) {
+        best_level = skillLevel[eSecSkillSchoolOfAirMagic];
+        best_school = eSchoolAir;
+    } else {
+        best_school = school_mask;
+    }
+    if (school_mask & eSchoolFire) {
+        if (skillLevel[eSecSkillSchoolOfFireMagic] > best_level) {
+            best_level = skillLevel[eSecSkillSchoolOfFireMagic];
+            best_school = eSchoolFire;
+        }
+    }
+    if (school_mask & eSchoolEarth) {
+        if (skillLevel[eSecSkillSchoolOfEarthMagic] > best_level) {
+            best_level = skillLevel[eSecSkillSchoolOfEarthMagic];
+            best_school = eSchoolEarth;
+        }
+    }
+    if (school_mask & eSchoolWater) {
+        if (skillLevel[eSecSkillSchoolOfWaterMagic] > best_level) {
+            best_level = skillLevel[eSecSkillSchoolOfWaterMagic];
+            best_school = eSchoolWater;
+        }
+    }
+    return best_school;
 }
 
 // E:\gamedcs\hero.cpp:6071
+// The traits row carries a mana cost PER MASTERY, so the whole of
+// get_spell_level is inlined here just to index it. Titan's Lightning
+// Bolt is free; Pegasi in the defending army tax the caster two points
+// and the caster's own Mages refund two, both gated on there being an
+// enemy group at all; the floor is 1.
 VA(0x004e5240, 0xEF)  // anchor-bracket, dc 0xd4f64
-int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy, unsigned char is_on_magic_plains)
+int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy,
+                      int magic_terrain)
 {
-    // @stub
+    if (iWhichSpell == SPELL_TITANS_LIGHTNING_BOLT)
+        return 0;
+    int cost = akSpellTraits[iWhichSpell]
+                   .mana_cost[get_spell_level(iWhichSpell, magic_terrain)];
+    if (enemy) {
+        if (const_cast<armyGroup*>(enemy)->IsMember(CREATURE_PEGASUS)
+            || const_cast<armyGroup*>(enemy)->IsMember(CREATURE_SILVER_PEGASUS))
+            cost += 2;
+        if (army.IsMember(CREATURE_MAGE) || army.IsMember(CREATURE_ARCH_MAGE))
+            cost -= 2;
+    }
+    if (cost < 1)
+        cost = 1;
+    return cost;
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 
@@ -1828,14 +2042,38 @@ void hero::SetVisitedArena(const NewmapCell* cell)
     ArenaFlags |= 1 << cell->extraInfo;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6171
+// sqrt((1 + attack/20) * (1 + defense/20)) - HoMM3's hero combat-value
+// scale. Both primary skills go through get_primary_skill_total's own
+// clamp shape (>99 -> 99, >0 -> itself, else 0), and retail keeps the
+// 99 in EDX across BOTH clamps and compares bytes against DL, which is
+// what one shared literal in two adjacent clamps produces.
+// The attack term is written FIRST: VC6 evaluates `A * B` right to
+// left, and retail pushes the defense factor onto the stack first.
 VA(0x004e5400, 0x93)  // linkorder, dc 0xd50a0
 float hero::get_combat_value_modifier()
 {
-    // @stub
+    signed char attack = stats[0];
+    int attack_value;
+    if (attack > 99)
+        attack_value = 99;
+    else if (attack > 0)
+        attack_value = attack;
+    else
+        attack_value = 0;
+    signed char defense = stats[1];
+    int defense_value;
+    if (defense > 99)
+        defense_value = 99;
+    else if (defense > 0)
+        defense_value = defense;
+    else
+        defense_value = 0;
+    return static_cast<float>(sqrt((attack_value * 0.05 + 1.0)
+                                   * (defense_value * 0.05 + 1.0)));
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6180
 VA(0x004e54a0, 0xAA)  // anchor-global, dc 0xd519c
@@ -1877,16 +2115,48 @@ unsigned char hero::is_in_patrol_radius(type_point point)
     return abs(point.x - patrolX) + abs(point.y - patrolY) <= patrolRadius;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6267
+// Three multiplicative layers over the raw damage. First the four
+// school ORBS: one `||` chain of "does this spell belong to the school,
+// and is that school's orb worn", each arm inlining
+// IsWieldingArtifact's slot scan, all four converging on ONE `* 1.5`.
+// Then Sorcery, through the same specialty-factor shape as the float
+// getters above, applied as `(1 + factor) * damage`. Then, when a
+// target stack is named, hero::GetHeroSpellBonus on top - and the
+// value handed to it is the damage SO FAR, converted through __ftol
+// and then straight back with fild, which is why the parameter slot
+// [ebp+0xc] is reused as the running float.
+// The school -> orb pairing is byte-proven here: bit 1 (air) with
+// artifact 0x4f, bit 8 (earth) with 0x50, bit 2 (fire) with 0x51,
+// bit 4 (water) with 0x52 - and DC 79..82 in that order are
+// eArtifactOrbOfTheFirmament / OrbOfSilt / OrbOfTempestuousFire /
+// OrbOfDrivingRain, i.e. the air / earth / fire / water orbs.
 VA(0x004e5760, 0x1F2)  // anchor-global, dc 0xd53a0
-long hero::modify_spell_damage(SpellID spell, int damage, const army* target_army)
+long hero::modify_spell_damage(SpellID spell, int damage,
+                               const class army* target_army)
 {
-    // @stub
+    float value = static_cast<float>(damage);
+    int school = akSpellTraits[spell].school;
+    if (((school & eSchoolAir) && IsWieldingArtifact(ARTIFACT_ORB_OF_THE_FIRMAMENT))
+        || ((school & eSchoolEarth) && IsWieldingArtifact(ARTIFACT_ORB_OF_SILT))
+        || ((school & eSchoolFire) && IsWieldingArtifact(ARTIFACT_ORB_OF_TEMPESTUOUS_FIRE))
+        || ((school & eSchoolWater) && IsWieldingArtifact(ARTIFACT_ORB_OF_DRIVING_RAIN)))
+        value = value * 1.5f;
+    float factor = kSorceryFactors[skillLevel[eSecSkillSorcery]];
+    if (skillLevel[eSecSkillSorcery] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill
+            && ability.skill == eSecSkillSorcery)
+            factor = (level * 0.05f + 1.0f) * factor;
+    }
+    value = (factor + 1.0f) * value;
+    if (target_army)
+        value = static_cast<float>(
+                    GetHeroSpellBonus(spell, target_army->monInfoLevel,
+                                      static_cast<int>(value)))
+                + value;
+    return static_cast<long>(value);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:6296
 // Residual (75.6%): the CFG, the three arms, the 8-bit compares and
@@ -1947,8 +2217,6 @@ long hero::get_combat_speed_bonus()
     return bonus;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6336
 // SIGNATURE CORRECTED 2026-08-07 (tail order-map audit). The slot is
 // right - it is flanked by two independently confirmed rows and the body
@@ -1959,11 +2227,32 @@ long hero::get_combat_speed_bonus()
 // and adds `table[type].+0x4c / 4` when artifact 0x83 is worn. DC's row
 // records 1 param (this only); the DC port is a different source
 // revision. Retail's arity is authoritative.
+// CONFIRMED by the reconstruction: the three artifacts are the
+// Ring of Vitality / Ring of Life / Vial of Lifeblood ladder (+1/+1/+2,
+// DC eArtifact spellings at 94/95/96), and 0x83 is their Shadow of
+// Death combination, the Elixir of Life, which adds a further quarter
+// of the creature's own hit points - but only for creature types whose
+// traits attribute bit 4 is set.
+// The `bonus` accumulator lives on the stack throughout: every one of
+// the four gates inlines IsWieldingArtifact's 19-slot scan, which
+// clobbers the registers it would otherwise sit in.
 VA(0x004e5b80, 0x15C)  // anchor-global, dc 0xd5508
 long hero::get_hit_point_bonus(int creatureType)
 {
-    // @stub
+    long bonus = 0;
+    if (IsWieldingArtifact(ARTIFACT_RING_OF_VITALITY))
+        bonus = 1;
+    if (IsWieldingArtifact(ARTIFACT_RING_OF_LIFE))
+        bonus++;
+    if (IsWieldingArtifact(ARTIFACT_VIAL_OF_LIFEBLOOD))
+        bonus += 2;
+    if ((akCreatureTypeTraits[creatureType].attributes & 0x10)
+        && IsWieldingArtifact(ARTIFACT_ELIXIR_OF_LIFE))
+        bonus += akCreatureTypeTraits[creatureType].hitPoints / 4;
+    return bonus;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6355
 // LOCATED 2026-08-07 (was DC_ONLY 0xd5548). Proof: exhaustive order-map
@@ -2032,6 +2321,69 @@ unsigned char hero::IsMobile()
 }
 
 // E:\gamedcs\hero.cpp:6428
+// FULLY DECODED, DELIBERATELY LEFT AS A STUB - the reconstruction is
+// written out below so nothing is lost (the GetHighestSchool
+// precedent). Compiling it costs more than it wins: hero.obj has
+// exactly ONE call site for it today, modify_spell_damage above, so
+// /Ob2's single-call-site rule inlines it there REGARDLESS OF SIZE and
+// takes modify_spell_damage from 100.0 down to 32.6 - where retail
+// plainly CALLS it. Retail's own hero.cpp must have a second call site
+// among the seventy bodies still unreconstructed here; when one lands,
+// this body compiles as it stands. Measured on its own it reaches
+// 99.23% (the residual is one byte in the trailing jump-table run;
+// every instruction, immediate, arm and table agrees).
+//
+//   int hero::GetHeroSpellBonus(SpellID spell_id, int target_level,
+//                               int value)
+//   {
+//       int bonus = 0;
+//       const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+//       if (ability.type == eHeroAbilitySpell
+//           && (int)ability.skill == spell_id) {
+//           switch (spell_id) {
+//           case SPELL_BLOODLUST:
+//           case SPELL_PRECISION:
+//           case SPELL_WEAKNESS:
+//           case SPELL_STONE_SKIN:
+//           case SPELL_PRAYER:
+//           case SPELL_HASTE:
+//               return kBuffSpecialtyBonus[target_level];
+//           case SPELL_SLAYER:
+//               return kSlayerSpecialtyBonus[target_level];
+//           case SPELL_FORTUNE:
+//               return 3 - value;
+//           case SPELL_FIRE_WALL:
+//               return value;
+//           case SPELL_DISRUPTING_RAY:
+//               return 2;
+//           case SPELL_MAGIC_ARROW:
+//               return value >> 1;
+//           }
+//           bonus = (int)ceil(level / (target_level + 1) * value * 0.03);
+//       }
+//       return bonus;
+//   }
+//
+// Three spellings were measured on the way to 99.23 and are worth
+// keeping: the ten arms must be written in RETAIL'S EMISSION ORDER (the
+// two table arms, then 3-value, then value, then 2, then value>>1) and
+// not in case-label order, because VC6 lays switch bodies out in source
+// order; the result must be HOISTED into a `bonus` local initialised to
+// 0 with the default arm ASSIGNING to it (89.9 -> 99.2 - that is what
+// puts retail's `xor eax,eax` up front and merges the default arm's
+// __ftol into the shared exit); and a pointer instead of a reference
+// for `ability` changes nothing (89.9).
+// The two tables it needs are landed at the top of this file
+// (kBuffSpecialtyBonus / kSlayerSpecialtyBonus). The three spell ids it
+// needs are NOT, and deliberately: SPELL_FIRE_WALL 0xd,
+// SPELL_MAGIC_ARROW 0xf and SPELL_HASTE 0x35 belong in armygrp.h's
+// ESpellId, and adding exactly those three enumerators there moved
+// initialize_game_data 96.09 -> 90.16 (measured 2026-08-08) through the
+// include-set sensitivity class - armygrp.h is inside initialize.cpp's
+// closure. The SIX creature ids this lane added to the same header's
+// TCreatureType in the same session moved it by nothing at all, which
+// is the non-monotonicity that class is known for. Land them with the
+// body, and re-measure.
 VA(0x004e5ff0, 0x123)  // anchor-global, dc 0xd5710
 int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value)
 {

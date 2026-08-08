@@ -19,6 +19,7 @@
 // (armygrp.cpp, hero.cpp, town.cpp, ai_tactical.cpp all do).
 #include "mapcell.h"   // TTerrainType, for akNativeTerrains below
 #include "struct.h"    // type_point, used through this header's consumers
+#include "spellschool.h"  // TSpellSchool, the type of SSpellTraits::school
 
 // Bootstrap domain: only the sentinel is modeled; the full creature
 // roster gets its own header when a consumer needs the values.
@@ -119,6 +120,26 @@ enum TCreatureType {
     CREATURE_ARCH_MAGE = 0x23,
     CREATURE_ENCHANTER = 0x88,
     CREATURE_SHARPSHOOTER = 0x89,
+    // hero::GetManaCost (0x4e5240) crosses two pairs: 0x14/0x15 in the
+    // ENEMY group add 2 to the cost, 0x22/0x23 in the caster's own
+    // group take 2 off. The second pair is the Mage/Arch Mage above -
+    // HoMM3's spell-cost reducers - so the first is the pair that
+    // RAISES enemy spell cost, Pegasus/Silver Pegasus, and 0x14/0x15
+    // is exactly where the Rampart dwelling order puts them (after
+    // Wood Elf/Grand Elf 0x12/0x13, before Dendroid Guard 0x16).
+    CREATURE_PEGASUS = 0x14,
+    CREATURE_SILVER_PEGASUS = 0x15,
+    // hero::GetNecromancyCreature (0x4e3c60) returns exactly these four
+    // off the Necromancy mastery byte, in this order - HoMM3's
+    // Necropolis undead ladder, and the Cloak of the Undead King's own
+    // basic/advanced/expert upgrades. DC spellings for 58 and 59 are
+    // eCreatureZombie / eCreatureZombieLord; the NH3API pair used here
+    // (Walking Dead / Zombie) is the same two ids, kept because the
+    // rest of this enum is NH3API-spelled.
+    CREATURE_SKELETON = 0x38,
+    CREATURE_WALKING_DEAD = 0x3a,
+    CREATURE_WIGHT = 0x3c,
+    CREATURE_LICH = 0x40,
     // get_spell_work_chance's per-creature immunity switch (0x44a9xx):
     // the magic-resistant dwarves/Crystal Dragon, the level-gated
     // dragons, and the spell-immune Magic Elemental (NH3API spellings;
@@ -235,8 +256,30 @@ struct SSpellTraits {
     unsigned int flags_10;    // bits 4 / 0x40 / 0x400 = spell families
     char pad_14[4];
     int level;                // the dragons' magic-immunity gate
-    unsigned char byte_1c;    // bit 2 crossed with trait 0x4000
-    char pad_1d[0x13];
+    // +0x1c, the spell's SCHOOL MASK - a full dword, byte-proven by
+    // hero::get_spell_level (0x4e5080) and hero::GetManaCost
+    // (0x4e5240), which both load `[akSpellTraits + spell*136 + 0x1c]`
+    // with a 32-bit `mov` and hand it straight to
+    // hero::GetSpellSchoolLevel as the school_mask argument.
+    // armygrp's own consumer tests bit 1 of it - eSchoolFire - crossed
+    // with creature trait 0x4000, i.e. fire immunity.
+    // Typed TSpellSchool rather than int so that hand-off needs no cast
+    // into the enum domain. That means this header - which IS inside
+    // initialize.cpp's include closure - gains one type definition
+    // through spellschool.h; A/B-measured 2026-08-08, initialize_game_data
+    // stayed at 96.0880 and no scored function in any of the 52 units
+    // moved. (Three ESpellId ENUMERATORS added to this same header in
+    // the same session did move it, 96.09 -> 90.16, and were withdrawn -
+    // the class is non-monotonic, so measure every time.)
+    // For the record: initialize_game_data finished that session at
+    // 100.0000, but NOT from this include - the A/B above is why. The
+    // raise belongs to the wider header change-set and was never
+    // isolated; see the note above its baseline row.
+    TSpellSchool school;      // +0x1c
+    // +0x20, the per-mastery MANA COST row: GetManaCost indexes it
+    // `[base + 4*(mastery + spell*34) + 0x20]` with the mastery
+    // get_spell_level just returned.
+    int mana_cost[4];         // +0x20
     // Spell-power multiplier (NH3API m_power_factor): multiplied by the
     // caster's power in get_resurrection_value (0x423d60),
     // get_mass_damage_value (0x42540a) and ai_tactical's

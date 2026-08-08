@@ -94,6 +94,14 @@ enum THeroAbilityKind {
     // requires kind 0 and then matches the record's second dword
     // against its OWN TSecondarySkill id.
     eHeroAbilitySecondarySkill = 0,
+    // Byte-proven by hero::GetEstatesBonus (0x4e4390): kind 2 with the
+    // subject dword equal to 6 - town.h's EGameResource GOLD - is
+    // worth a flat +350 gold a day, i.e. the RESOURCE specialty.
+    eHeroAbilityResource = 2,
+    // Byte-proven by hero::GetHeroSpellBonus (0x4e5ff0): kind 3 with the
+    // subject dword equal to the spell being cast selects the whole
+    // per-spell bonus switch - the SPELL specialty.
+    eHeroAbilitySpell = 3,
     // Proven only by hero::get_combat_speed_bonus (0x4e5aa0), which
     // adds +2 creature speed for kind 5 and does NOT look at the
     // subject dword at all. Role unattested - ORDINAL PLACEHOLDER

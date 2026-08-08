@@ -10,6 +10,7 @@
 #include "armygrp.h"
 #include "cmbtmgr.h"
 #include "hexcell.h"
+#include "spellschool.h"
 
 class hero;
 class searchArray;
@@ -40,30 +41,12 @@ enum ESkillMastery {
     SKILL_MASTERY_ADVANCED = 2,
     SKILL_MASTERY_EXPERT = 3
 };
-// Magic school selector; get_protection_value (0x4396e0) takes it.
-// The placeholder `typedef int` it replaced (2026-08-08) could not be
-// made visible from hero.h - anything defining the real enum there
-// collided with the typedef (C2371) and blocked five hero bodies.
-// Enumerator names and values are the Dreamcast roster verbatim
-// (evidence/dreamcast/enums.csv); the values are a BITMASK, which is
-// why hero::GetSpellSchoolLevel and get_protection_value take a
-// "school_mask" and why eSchoolAll is 15. kNumSpellSchools sharing
-// eSchoolWater's 4 is the dump's own doing, not a transcription slip.
-// No retail byte is claimed for the spelling - this is DC naming
-// evidence over an int-sized domain, and it changes no codegen:
-// A/B-measured 2026-08-08 against the typedef, ZERO of the 977 scored
-// functions in all 52 units moved by so much as a byte. The six
-// get_protection_value call sites in ai_tactical.cpp lose their bare
-// 1/2/4/8/15 literals to the enumerators in the same change.
-enum TSpellSchool {
-    const_invalid_school = 0,
-    eSchoolAir = 1,
-    eSchoolFire = 2,
-    eSchoolWater = 4,
-    eSchoolEarth = 8,
-    eSchoolAll = 15,
-    kNumSpellSchools = 4
-};
+// TSpellSchool - get_protection_value (0x4396e0) takes it. The
+// definition MOVED to spellschool.h (2026-08-08) so hero.h can see the
+// same enum: this header cannot be included from hero.h (its
+// `typedef int TSkillMastery` is a hard C2371 against herospec.h's
+// enum of the same name), and a second definition here would be the
+// duplication the domain-header split exists to avoid.
 
 // PROVEN layout (2026-08-07): get_mastery_value (0x436930) reads spell
 // at +0, mastery at +4; get_damage_spell_value (0x436f60) reads power
