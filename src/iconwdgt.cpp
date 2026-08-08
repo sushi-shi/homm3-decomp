@@ -59,13 +59,6 @@ int iconWidget::Main(message* msg)
     // @stub
 }
 
-// E:\gamedcs\iconwdgt.cpp:257
-DC_ONLY(0xd96b8, 0x4)
-unsigned char iconWidget::handle_click(unsigned char down_click, unsigned char right_click)
-{
-    // @stub
-}
-
 // E:\gamedcs\iconwdgt.cpp:275
 DC_ONLY(0xd96e4, 0x4)
 void iconWidget::zBufferDraw()
@@ -81,6 +74,20 @@ void iconWidget::Draw()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\iconwdgt.cpp:257
+// Promoted from DC_ONLY 2026-08-08 on four independent corroborations:
+// the row is inside iconwdgt.obj's own carve span, it holds the DC
+// roster's handle_click slot in order (immediately before GetRealWidth
+// and GetRealHeight, exactly as at 0x4eab20 / 0x4eab30), the iconWidget
+// vtable at 0x63ec48 stores it in slot 13, and the body's `ret 8`
+// matches the DC's three parameters (this + two). Both arguments are
+// dead - retail returns a bare zero.
+VA(0x004eab10, 0x5)  // anchor-vtable (slot 13 of 0x63ec48), dc 0xd96b8
+unsigned char iconWidget::handle_click(unsigned char down_click, unsigned char right_click)
+{
+    return 0;
+}
 
 // E:\gamedcs\iconwdgt.cpp:263
 // The two size overrides answer with the SPRITE's extent instead of

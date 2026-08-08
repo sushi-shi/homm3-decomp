@@ -123,6 +123,22 @@ void WritePrefs()
     WritePrefsToRegistry();
 }
 
+// E:\gamedcs\misc.cpp:634
+// Promoted from DC_ONLY 2026-08-08. Which of the DC's two four-byte
+// CD stubs this row is, is settled by the CALLERS, not by the body:
+// evidence/retail-symbols.csv gives 0x50c1c0 exactly one caller,
+// 0x4ed650, which link-order puts inside kb.obj (0xed490..0xf7a04) -
+// and kb.obj's EarlySetup is the ONLY caller of SetupCDDrive in the DC
+// xref graph, while IsCDDrive has no caller anywhere in it (an uncalled
+// extern is what /OPT:REF drops, which is why only one of the pair has
+// a retail row). The constant is the drive slot the setup path hands
+// back.
+VA(0x0050c1c0, 0x6)  // anchor-caller (kb.obj EarlySetup) + dc-bracket, dc 0xfe064
+int SetupCDDrive()
+{
+    return 7;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\misc.cpp:603
@@ -132,23 +148,9 @@ int IsCDDrive(int drive)
     // @stub
 }
 
-// E:\gamedcs\misc.cpp:634
-DC_ONLY(0xfe064, 0x4)
-int SetupCDDrive()
-{
-    // @stub
-}
-
 // E:\gamedcs\misc.cpp:764
 DC_ONLY(0xfe068, 0x50)
 long FileSize(char* filename)
-{
-    // @stub
-}
-
-// E:\gamedcs\misc.cpp:784
-DC_ONLY(0xfe0b8, 0x18)
-void SRand(int iSeed)
 {
     // @stub
 }
@@ -168,6 +170,28 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> format_string
 }
 
 #endif  // @carcass
+
+// The seed SRand records before handing it to the CRT. Retail .data
+// 0x67fb94, and the store below is its ONLY reference in the whole
+// image (one row in config/retail-reloc-evidence.tsv), so nothing
+// attests a name or a linkage - house ordinal placeholder, filed
+// static in the one TU that touches it.
+DATA(0x0067fb94)
+static int gUnnamed67fb94;
+
+// E:\gamedcs\misc.cpp:784
+// Promoted from DC_ONLY 2026-08-08. The row is inside misc.obj's carve
+// span between WritePrefs (0x50c1b0) and the TPickANumber ctor
+// (0x50c6e0), which is the DC roster's own bracket for SRand, and the
+// body is unmistakable: /Gr hands the seed in ecx, retail records it in
+// 0x67fb94 and passes the SAME pushed register to the CRT srand, then
+// pops it back as the cdecl cleanup.
+VA(0x0050c5f0, 0xE)  // dc-bracket + body (records the seed, calls srand), dc 0xfe0b8
+void SRand(int iSeed)
+{
+    gUnnamed67fb94 = iSeed;
+    srand(iSeed);
+}
 
 // E:\gamedcs\misc.cpp:838
 // DECODE NOTES 2026-08-06: layout {low@0, count@4 (=high-low+1),

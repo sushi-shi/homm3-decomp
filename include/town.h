@@ -169,7 +169,17 @@ public:
     // The hero on the town's map tile, -1 for none. HasGarrison
     // short-circuits to "defended" on this one alone.
     int visitingHeroId;
-    char pad_14[0xcc];
+    char pad_14[0x2];
+    // +0x16, fourteen shorts - the accumulated population of each
+    // dwelling slot, base then upgrade, the same 14-wide slot space
+    // generatorBonus and gTownDwellingCreatures use. Sliced 2026-08-08
+    // by increase_population (0x5bfdd0), which walks `[this+0x16]` with
+    // a two-byte step for exactly fourteen iterations (`cmp di,0xe`)
+    // and adds each slot's growth rate into it as a WORD. 0x16 + 14*2
+    // == 0x32, so the row fills the head of the old pad exactly. Name
+    // provisional (no DC symbol covers it); the role is byte-proven.
+    short population[14];
+    char pad_32[0xae];
     // The town's own troops (ctor constructs an armyGroup at +0xe0 and
     // then fills the seven type slots with -1).
     armyGroup garrison;
@@ -214,6 +224,13 @@ public:
     // (the UpgradedDwellingID precedent).
     int get_horde(long dwelling) const;
     long get_horde_bonus(long dwelling) const;
+    // 0x5bfb60, located not reconstructed - declared for
+    // increase_population's call site, which pushes the slot as a dword
+    // and tests the result with `test ax,ax` (a short return).
+    short get_growth_rate(short dwelling);
+    // 0x5bfdd0.
+    void increase_population(TCreatureType bonus_creature,
+                             TCreatureType alternate_bonus, long bonus_amount);
     // 0x5bfe50.
     void change_generator_bonus(TCreatureType creature, long change);
     unsigned char can_build(short building_id) const;
@@ -244,6 +261,13 @@ public:
     void Deallocate();
     // The garrisoned hero steps out onto the town tile (0x5be390).
     void remove_garrison_hero();
+    // 0x5c13b0. `hero_id` is an INT, not the DC's THeroID: retail reads
+    // [ebp+8] as a full dword for both the -1 test and the heroes[]
+    // index. The town's map cell goes to hero::PlaceInMap as a packed
+    // type_point built on an UNINITIALISED local - retail's three
+    // bitfield writes are read-modify-writes over stack garbage, the
+    // same shape can_take_town uses.
+    void PlaceInMap(int hero_id, long player_id, unsigned char reset_flags);
     // 0x5c1440 / 0x5c1450, both `movsx eax,[this+4]` table reads keyed
     // on the town type. Spelled const because neither touches anything
     // else; retail's thiscall is identical either way.
