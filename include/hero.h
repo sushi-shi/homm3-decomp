@@ -58,16 +58,37 @@ public:
     //   +0xd4 slot 11 Eagle Eye  - do_aftermath (0x426eee) gates the
     //                              spell-learning pass on it and adds 1
     //                              to it as the level bound (0x426f20)
-    char pad_0c9[0x7];
-    signed char wisdomLevel;        // +0xd0
-    char pad_0d1[0x2];
-    signed char ballisticsLevel;    // +0xd3
-    signed char eagleEyeLevel;      // +0xd4
-    char pad_0d5[0x10];
-    // 28 secondary-skill level bytes; GetNthSS scans for level
-    // iWhich+1 and returns the slot index.
-    unsigned char skillLevels[28];
-    char pad_101[0x2c];
+    // The 28-entry extent, the SIGNED element type and the 0xc9 base are
+    // byte-proven by the SS trio (0x4e2210 SetSS / 0x4e2250 TakeSS /
+    // 0x4e22d0 GiveSS): all three address the band as
+    // `[iWhichSS + this + 0xc9]`, load it with `movsx`, and TakeSS's
+    // companion sweep over the 0xe5 band runs `cmp ebx,0x1c` - 28.
+    // The union's second arm exists only so the three byte-proven named
+    // slots above keep their spelling for consumers outside this TU;
+    // it adds no field the array does not already describe.
+    union {
+        signed char skillLevel[28];     // +0xc9
+        struct {
+            char pad_0c9[0x7];
+            signed char wisdomLevel;    // +0xd0 == skillLevel[7]
+            char pad_0d1[0x2];
+            signed char ballisticsLevel;// +0xd3 == skillLevel[10]
+            signed char eagleEyeLevel;  // +0xd4 == skillLevel[11]
+            char pad_0d5[0x10];
+        };
+    };
+    // Acquisition-order band, 28 entries at +0xe5, read UNSIGNED
+    // (TakeSS's renumbering sweep compares with `jbe`, not `jle`).
+    // GetNthSS scans it for order iWhich+1 and returns the slot index;
+    // GiveSS writes skillCount+1 into the newly-learned slot and TakeSS
+    // decrements every entry above the vacated one before zeroing it.
+    unsigned char skillOrder[28];       // +0xe5
+    // Number of secondary skills known. A full DWORD: GiveSS's cap test
+    // is `cmp dword [this+0x101],8` and both trio bodies increment /
+    // decrement it 32 bits wide; the narrowed `mov al,byte [this+0x101]`
+    // in GiveSS is just VC6 sinking the load into a byte store.
+    int skillCount;                     // +0x101
+    char pad_105[0x28];
     TArtifactSlot equipped[19];
     char pad_1c5[0xf];
     TArtifactSlot backpack[64];
@@ -148,6 +169,11 @@ public:
     float GetExperienceBonusFactor();
     int CreatureTypeCount(int creatureType);
     int GetNthSS(int iWhich);
+    // The secondary-skill trio at 0x4e2210 / 0x4e2250 / 0x4e22d0; SetSS
+    // dispatches to the other two, so all three need the declaration.
+    void SetSS(int iWhichSS, int iLevelToSet);
+    int TakeSS(int iWhichSS, int iNumLevelsToTake);
+    int GiveSS(int iWhichSS, int iNumLevelsToGive);
     // Claimed in src/hero.cpp (0x4e5760 / 0x4e5ff0); declared here so
     // ai_combat's inlined get_spell_damage / get_resurrection_value can
     // call them.

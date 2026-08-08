@@ -132,7 +132,55 @@ void generator::Grow()
     // @stub
 }
 
+// ---------------------------------------------------------------------
+// BRACKET generator::Grow (0x4b8a60) .. playerData::playerData (0x4b9df0)
+// - ten carve rows, settled by the CALL GRAPH, not by rank.
+//
+// Eight of the ten are the save/load pool pairs, and their direction is
+// mechanical: every Load calls the TAbstractFile vtable slot at +4
+// (read), every Save calls the slot at +8 (write). They alternate
+// Load/Save exactly as the DC roster's line order does, and each Load is
+// called by 0x4bcda0 while each Save is called by 0x4be3f0 - the two
+// bodies that both reference the literal 'H3SVG' at 0x677d38, i.e.
+// game::Load and game::Save.
+//
+// WHICH pool is which is pinned by CLAIMED anchors, not by order:
+//   - game::ClaimMine (0x4c66e0) reads [game+0x4e38c], the _First of the
+//     vector that 0x4b9340/0x4b9580 load and store;
+//   - game::ClaimGarrison (0x4c6960) reads [game+0x4e3ac], the _First of
+//     the vector that 0x4b96f0/0x4b98c0 use.
+// (VC6's Dinkumware vector puts the empty allocator at +0, so _First is
+// at base+4 - hence the 0x4e388 / 0x4e3a8 bases.)
+// The boat pair calls type_obscuring_object::load/save (0x4d74f0 /
+// 0x4d77b0) - a boat obscures the cell it floats on - and the sign pair
+// is the only one left; it is also the only pair that touches strings
+// (the sign text), through the loadString/saveString helpers at
+// 0x4bb990 / 0x4bbb60.
+//
+// ARITY DIVERGES FROM THE DC PORT on two rows and the reason is visible
+// in the bytes: LoadMinePool and LoadGarrisonPool are `ret 8`, and the
+// second argument is a SAVE-GAME VERSION - 0x4b9340 branches on
+// `cmp eax,0x19` (25) and 0x4b96f0 on `cmp eax,0x1c` (28), taking
+// armyGroup::load on the new path and a two-byte legacy stack read plus
+// armyGroup::Add on the old one. The Dreamcast port dropped the
+// parameter (its saves have one version); retail kept it. The other six
+// pool bodies are `ret 4` exactly as the DC prototypes say.
+//
+// The TENTH row, 0x4b9230 (62 B), is NOT claimed and must not be: it is
+// a Dinkumware string COMDAT, not a game.cpp body - it decrements the
+// refcount byte at [p-1], frees through 0x60ab30 when the count is 0 or
+// 0xff, and then zeroes the three-word representation at +8/+0xc/+0x10.
+// Its one caller is outside this span (0x5bcd0). Excluded class.
+//
+// TWO DC ROWS HAVE NO RETAIL SLOT and are therefore inlined away:
+// get_day_bonus (0xa341c) - calculate_production is its only caller -
+// and the Obelisk pair (0xa4c08/0xa4c68, 94 SH4 bytes each), which would
+// have to sit between 0x4b9ded and 0x4b9df0.
+// ---------------------------------------------------------------------
+
 // E:\gamedcs\game.cpp:627
+// No retail row: the byte after SaveBoatPool's caller chain leaves no
+// slot, and calculate_production is the sole caller -> /Ob2 inlined it.
 DC_ONLY(0xa341c, 0x58)
 long get_day_bonus(EGameResource resource, long week_bonus, long day)
 {
@@ -140,69 +188,76 @@ long get_day_bonus(EGameResource resource, long week_bonus, long day)
 }
 
 // E:\gamedcs\game.cpp:643
-DC_ONLY(0xa3474, 0x7F2)
+// `ret` with no stack args (thiscall, no parameters) - the DC row is
+// p=1, i.e. `this` only. Body sweeps the 8 player slots at
+// [game+0x1f636]/[game+0x20bd8] (stride 0x168) and then the 64-byte
+// mine records at [game+0x4e38c].
+VA(0x004b8af0, 0x573)  // arity + mine-vector, dc 0xa3474
 void game::calculate_production()
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:838
-DC_ONLY(0xa3c68, 0xE8)
+VA(0x004b9070, 0x1B3)  // anchor-callee (game::Load) + read-slot, dc 0xa3c68
 int game::LoadSignPool(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:868
-DC_ONLY(0xa3d50, 0x10C)
+VA(0x004b9270, 0xCF)  // anchor-callee (game::Save) + write-slot, dc 0xa3d50
 int game::SaveSignPool(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:896
-DC_ONLY(0xa3e5c, 0x2B0)
-int game::LoadMinePool(void* infile)
+VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
+int game::LoadMinePool(void* infile, int saveVersion)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:964
-DC_ONLY(0xa410c, 0x280)
+VA(0x004b9580, 0x165)  // anchor-global (ClaimMine vector) + write-slot, dc 0xa410c
 int game::SaveMinePool(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:1024
-DC_ONLY(0xa438c, 0x1BC)
-int game::LoadGarrisonPool(void* infile)
+VA(0x004b96f0, 0x1CB)  // anchor-global (ClaimGarrison vector) + read-slot, dc 0xa438c
+int game::LoadGarrisonPool(void* infile, int saveVersion)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:1072
-DC_ONLY(0xa4548, 0x1A0)
+VA(0x004b98c0, 0x139)  // anchor-global (ClaimGarrison vector) + write-slot, dc 0xa4548
 int game::SaveGarrisonPool(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:1114
-DC_ONLY(0xa46e8, 0x296)
+VA(0x004b9a00, 0x239)  // anchor-callee (type_obscuring_object::load), dc 0xa46e8
 int game::LoadBoatPool(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:1178
-DC_ONLY(0xa4980, 0x288)
+VA(0x004b9c40, 0x1AD)  // anchor-callee (type_obscuring_object::save), dc 0xa4980
 int game::SaveBoatPool(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:1235
+// No retail row: SaveBoatPool ends at 0x4b9ded and playerData::playerData
+// starts at 0x4b9df0, so neither obelisk body has a slot. Both are 94
+// SH4 bytes - single-call-site /Ob2 fodder.
 DC_ONLY(0xa4c08, 0x5E)
 int game::LoadObeliskPool(void* infile)
 {
@@ -546,22 +601,62 @@ int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char
     // @stub
 }
 
+// ---------------------------------------------------------------------
+// THE game::Load / game::Save REGION (0x4bb990 .. 0x4c61e0).
+//
+// This stretch is NOT a clean order-map: 54 carve rows against 55
+// game.cpp DC rows is exactly the count coincidence the FORCED-bracket
+// trap is made of, and it is a coincidence - the region is INTERLEAVED
+// with header-origin and Dinkumware COMDATs that game.obj also emits
+// (two rows carry the literal 'invalid bitset<N> position', one is
+// reachable only from /GX unwind funclets, and the DC dump attributes
+// ~390 stlport rows plus 70 header rows to game.obj). Header-origin
+// functions do not anchor, so only rows with independent evidence are
+// claimed here; the rest stay unclaimed on purpose.
+//
+// ARITY IS CALIBRATED, not assumed: across the 71 previously claimed
+// game rows, retail `ret N` equals (DC p - 1) * 4 for members and
+// max(0, (p-2))*4 for /Gr free functions, with four documented
+// exceptions where retail carries ONE MORE parameter than the Dreamcast
+// port (generator::Grow, game::GetNewHeroId, game::CreateTownHeroes and
+// playerData::load - the last one being the same save-version argument
+// the mine and garrison loaders take). Every claim below matches the
+// calibrated form exactly.
+// ---------------------------------------------------------------------
+
 // E:\gamedcs\game.cpp:2564
-DC_ONLY(0xa75d0, 0x1F8)
+// anchor-caller game::Save (0x4be3f0) + the string helper: this body
+// calls 0x4bbb60, the /Gr 2-register-argument string WRITER that
+// SaveSignPool also calls (and that TTimedEvent_Save calls from another
+// TU). Rumours are text, which is why only the two text pools go
+// through it. `ret 4` = the calibrated p=2 form. First Save-side callee
+// of game::Save in address order, matching the DC roster's first
+// Save/Load pair after the string helpers.
+VA(0x004bbc20, 0x21E)  // anchor-caller (game::Save) + string-helper, dc 0xa75d0
 int game::SaveRumours(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:2607
-DC_ONLY(0xa77c8, 0x192)
+// The Load mirror: called by game::Load (0x4bcda0), calls the string
+// READER 0x4bb990 that LoadSignPool and TTimedEvent_Load also call, and
+// sits immediately after SaveRumours - the DC roster's Save-then-Load
+// order for this pair.
+VA(0x004bbe40, 0x294)  // anchor-caller (game::Load) + string-helper, dc 0xa77c8
 int game::LoadRumours(void* infile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:2654
-DC_ONLY(0xa795c, 0xC6)
+// Second Save-side callee of game::Save in address order, `ret 4`.
+// The three carve rows between LoadRumours and this one (0x4bc0e0,
+// 0x4bc340, 0x4bc350) are all `ret 0`, so none of them can be this
+// p=2 body; they are the header COMDATs the bracket note warns about.
+// Size 378 against the DC row's 408 is 0.93x, the closest ratio in the
+// whole span.
+VA(0x004bc5d0, 0x17A)  // anchor-caller (game::Save) + arity + Save-callee order, dc 0xa795c
 int game::SaveBlackMarkets(void* outfile)
 {
     // @stub
@@ -603,7 +698,13 @@ void game::setup_shipyards()
 }
 
 // E:\gamedcs\game.cpp:3026
-DC_ONLY(0xa83d0, 0x778)
+// CALLEE-SET PROOF, the strongest evidence in this TU. 0x4bcda0's rel32
+// callees include generator::generator, generator::load, playerData::load,
+// hero::load, town::town, NewfullMap::Load, searchArray::Close,
+// SCampaign::SCampaign AND all four claimed pool LOADERS
+// (0x4b9070 / 0x4b9340 / 0x4b96f0 / 0x4b9a00) - and none of the savers.
+// It references the literal 'H3SVG' at 0x677d38. `ret 4` = p=2.
+VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
 int game::Load(void* infile)
 {
     // @stub
@@ -638,14 +739,23 @@ int compare_heroes(const void* arg1, const void* arg2)
 }
 
 // E:\gamedcs\game.cpp:3311
-DC_ONLY(0xa8cd0, 0xCFE)
+// The exact mirror of game::Load: rel32 callees include generator::save,
+// playerData::save and all four claimed pool SAVERS (0x4b9270 /
+// 0x4b9580 / 0x4b98c0 / 0x4b9c40), plus SaveRumours and
+// SaveBlackMarkets above; same 'H3SVG' literal; `ret 4` = p=2.
+VA(0x004be3f0, 0xAA5)  // anchor-callee set (4 claimed pool savers) + 'H3SVG', dc 0xa8cd0
 int game::Save(void* outfile)
 {
     // @stub
 }
 
 // E:\gamedcs\game.cpp:3667
-DC_ONLY(0xa99d0, 0x4B8)
+// ARITY: `ret 0x14` = five stack arguments + `this`, i.e. p=6, and this
+// is the only p=6 prototype in the whole span. The body composes a path
+// from '.\GAMES\' with '%s%s' and opens it with the 'wb0+' / 'wb6+'
+// compression modes - a save-file writer - and it sits after game::Save
+// exactly as the DC line order (3667 > 3311) requires.
+VA(0x004beea0, 0x267)  // arity (ret 0x14 = p6, unique in span) + '.\GAMES\' write modes, dc 0xa99d0
 unsigned char game::SaveGame(const char* filename, unsigned char bDetermineSuffix, unsigned char bCampaignWinMode, unsigned char compressIt, unsigned char xferFile)
 {
     // @stub
@@ -925,7 +1035,14 @@ void game::ClaimShipyard(type_point location, int newPlayerOwner)
 }
 
 // E:\gamedcs\game.cpp:7507
-DC_ONLY(0xb1c8c, 0x28E)
+// ARITY, on the only DC row in the bracket. 0x4c6c50 is the single
+// carve row between ClaimShipyard (ends 0x4c6c4f) and StartAITheme
+// (0x4c6f40), and the DC roster has exactly one row between
+// ClaimShipyard (line 7461) and GetRandomNumTroops (line 7572): this
+// one. It is `ret 0x20` - eight stack arguments plus `this` - and the DC
+// prototype is p=9. Eight is a distinctive arity; no other row in the
+// span has it.
+VA(0x004c6c50, 0x2EB)  // arity (ret 0x20 = p9) + anchor-bracket, dc 0xb1c8c
 void game::ViewArmy(armyGroup* group, int iarmy, const hero* this_hero, const town* this_town, int x, int y, unsigned char show_dismiss, unsigned char isQuickView)
 {
     // @stub
@@ -1088,6 +1205,10 @@ SpellID game::GetRandomSpell(const int spell_level)
 }
 
 // E:\gamedcs\game.cpp:8896
+// No retail row. Only ONE carve row (0x4c9730) sits between
+// GetRandomSpell (ends 0x4c972d) and InsertObject (0x4c9890), and that
+// row is `ret 0xc` - three stack arguments, i.e. the p=4 prototype
+// below, not this p=1 one. RandomizeHeroPool was inlined away.
 DC_ONLY(0xb4fa0, 0xF4)
 void game::RandomizeHeroPool()
 {
@@ -1095,7 +1216,10 @@ void game::RandomizeHeroPool()
 }
 
 // E:\gamedcs\game.cpp:8924
-DC_ONLY(0xb5094, 0x268)
+// ARITY: `ret 0xc` = 3 stack args + this = p=4, matching this prototype
+// (iHero, bCheat, minimal) and excluding the p=1 RandomizeHeroPool that
+// precedes it in the DC roster.
+VA(0x004c9730, 0x159)  // arity (ret 0xc = p4) + anchor-bracket, dc 0xb5094
 void game::SetRandomHeroArmies(int iHero, int bCheat, unsigned char minimal)
 {
     // @stub
@@ -1414,6 +1538,59 @@ type_point game::get_underground_gate_exit(type_point* __$ReturnUdt, const Newma
 // E:\gamedcs\game.cpp:11684
 VA(0x004cdf20, 0x585)  // anchor-global, dc 0xbb62c
 void game::game()
+{
+    // @stub
+}
+
+// ---------------------------------------------------------------------
+// BRACKET game::game (0x4cdf20) .. game::~game (0x4ce5b0) - three carve
+// rows, and the proof is ADDRESS-TAKES, not order.
+//
+// None of the three has a rel32 caller. All three are referenced as
+// DATA, which is what a per-element construct/destruct helper handed to
+// a container routine looks like:
+//   0x4ce4b0  address-taken once, in game::game at +0x46
+//   0x4ce520  address-taken in game::game (+0x41), game::~game (+0x306)
+//             and two /GX unwind funclets
+//   0x4ce570  address-taken in game::game (+0x20a), game::~game (+0x2ae),
+//             oldmain twice, and two unwind funclets
+//
+// 0x4ce570 is playerData::~playerData, and the CLAIMED constructor
+// proves it: playerData::playerData (0x4b9df0) zeroes exactly the triple
+// [this+0x90] / [+0x94] / [+0x98], and 0x4ce570 releases that same
+// triple - the Dinkumware three-word string representation - by
+// decrementing nothing and calling the deallocator at 0x60ab30, then
+// re-zeroing all three words. (playerData's OTHER name field is a
+// char[20] at +0xcc, written by the claimed SetName with a 20-byte
+// copy, so this is a second, distinct string member.) Size 50 B against
+// the DC row's 54 is 0.93x.
+//
+// NOTE THE WORKING LABEL WAS WRONG: the delink named 0x4ce570
+// `playerData_playerData`. It is the DESTRUCTOR.
+//
+// 0x4ce4b0 fills 19 8-byte slots at +0x68 and 64 8-byte slots at +0x100
+// with -1, sets a byte at +0x308 and zeroes a string triple at +0x30c -
+// the 19-equipped/64-backpack artifact shape hero.h already carries,
+// plus a name. That is HeroExtra, and its DC row is 96 B against 104
+// (1.08x).
+//
+// 0x4ce520 is the matching element DESTRUCTOR for that same class - it
+// releases the +0x30c triple - and it is address-taken immediately
+// beside 0x4ce4b0 in game::game. It is compiler-generated: the DC
+// roster has no row for it, and no claim kind fits an implicit
+// destructor, so it stays unclaimed and is recorded here instead.
+// ---------------------------------------------------------------------
+
+// E:\gamedcs\game.cpp:11746
+VA(0x004ce4b0, 0x68)  // address-take (game::game +0x46) + layout, dc 0xbd5f4
+void HeroExtra::HeroExtra()
+{
+    // @stub
+}
+
+// E:\gamedcs\game.cpp:11746
+VA(0x004ce570, 0x32)  // address-take + ctor-proven layout (+0x90 triple), dc 0xbd630
+void playerData::~playerData()
 {
     // @stub
 }
@@ -1971,19 +2148,9 @@ void CGameTransferDlg::~CGameTransferDlg()
     // @stub
 }
 
-// E:\gamedcs\game.cpp:11746
-DC_ONLY(0xbd5f4, 0x3C)
-void HeroExtra::HeroExtra()
-{
-    // @stub
-}
-
-// E:\gamedcs\game.cpp:11746
-DC_ONLY(0xbd630, 0x24)
-void playerData::~playerData()
-{
-    // @stub
-}
+// HeroExtra::HeroExtra (dc 0xbd5f4) and playerData::~playerData
+// (dc 0xbd630) are CLAIMED above, in their retail order between
+// game::game and game::~game - see the bracket note there.
 
 // E:\gamedcs\game.cpp:11746
 DC_ONLY(0xbd654, 0x44)
