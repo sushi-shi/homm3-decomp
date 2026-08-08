@@ -260,6 +260,83 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — `ai` 6 → 11, `findpath` 9 → 11; the include-set class
+  is MEMBER population, not just type count; and two change-sets that
+  each reached 100 alone COMPOSE TO 94.07.** Engine-wide 534 →
+  **540/977 exact (55.3%)**, **5.77%** matched. Ten bodies written,
+  seven exact. One deliberate ratchet lower, described below.
+  **THE INCLUDE-SET CLASS IS BETTER CHARACTERISED THAN IT HAS EVER
+  BEEN.** Five clean-build measurements of `initialize_game_data` in
+  one lane (three earlier readings taken against a *broken* build were
+  found void and discarded — a good catch in itself):
+  branch point 96.0880 · + a `mapcell.h` bitfield slice and a method
+  declaration 96.0880 · + `CREATURE_NOMAD` in `armygrp.h` **alone**
+  **26.1806** · + a 10-enumerator SoD block 97.0370 · + an
+  **8**-enumerator block **100.0000**. Two conclusions: enumerator
+  **position is irrelevant** (tail vs middle both 97.0370) — it is the
+  **count**; and **the sensitivity is to MEMBER population, not only to
+  the count of type definitions** — splitting `flags_00_11 : 12` into
+  three named bitfields, no new type and no semantic change, reads
+  26.1806. That bitfield is therefore deliberately NOT sliced, and
+  `findpath` tests bit 6 as `flags_00_11 & 0x40`, which compiles to
+  retail's `test byte ptr [cell+0xc], 0x40` unchanged.
+  **DELIBERATE RATCHET LOWER, 100.0000 → 94.0741.** The hero lane and
+  this lane each drove that row to 100 **alone, by different routes**;
+  merged, the tree reads 94.0741. That composition is the strongest
+  evidence yet that the row is not a property of any source text near
+  `initialize.cpp` but a codegen artifact of its closure's type and
+  member population — **and one that does not add.** Recovering 100
+  would mean adding or removing names for score alone; every name in
+  both change-sets is evidence-tight (the eight SoD ids are exactly
+  what `NewmapCell::get_special_terrain` can answer with; the two that
+  merely duplicate `CURSED_GROUND`/`MAGIC_PLAINS` were excluded on that
+  ground, and `CREATURE_NOMAD` is pinned by `GetTerrainCost`). Carrying
+  an unevidenced lever to hold a number is worse than an honest lower —
+  the same judgement this row already carries from when it read 96.09.
+  Hand-edited with a dated rationale per standing doctrine.
+  **Lever bounded, not just added: a CROSS-TU accessor does not
+  inline.** `berserk_attack` emitted a real
+  `call ?getCellData@searchArray@@…` (defined in `findpath.cpp`) where
+  retail open-codes the two-arm body; substituting
+  `cellData == 0 ? 0 : &cellData[i]` took it **89.8 → 100** and carried
+  the whole function's ESI/EDI colouring with it. This **bounds** the
+  "call the inline accessor instead of open-coding it" lever landed
+  the same day — it holds same-TU only.
+  Other levers, each byte-reasoned: **declaration order colours the
+  allocator** (declaring the `std::vector` before `long total = 0` lets
+  VC6 keep one zeroed register for the three vector words, the EH state
+  slot, the `_First == 0` compare and the running total — 94.4 → 100 on
+  the swap alone); **post-decrement down-count**
+  `for (unsigned i = size(); i-- != 0; )` reproduces retail's
+  `test`/`je` entry and pre-decrement back edge where the signed form
+  gets `cmp/jl` + `jns`; **float compare operand order IS the
+  evaluation order** (`(float)points_left >= (float)full * K` converts
+  `points_left` first, matching retail's `fild`/`fstp` pairing);
+  **invert a tiny accessor's guard so the table lookup is the
+  fallthrough**; **two separate `continue` guards, not one `||`**; and
+  **a second extern symbol at the one-past-the-end address**
+  (`gCastleWallGateTargetsEnd` at 0x63abf4) to give a pointer loop's
+  bound an addend-0 reloc — **the sanctioned way around the DATA-split
+  cap**, as against aliasing, which was rejected the day before.
+  Claims corrected: **`army+0x10`/`+0x14` are the AI's CHOSEN TARGET
+  (side, slot), not the stack's own identity** — `berserk_attack`
+  copies the *target's* `combatSide` (+0xf4) and `bitIndex` (+0xf8)
+  into them and clears both to −1 when it walks instead of striking;
+  and `CalcTerrainCost`'s ninth parameter, previously called
+  unnameable, is `get_creature_total(CREATURE_NOMAD) > 0`, whose only
+  effect is erasing Sand's movement penalty.
+  **A retail out-of-bounds read transcribed faithfully rather than
+  corrected:** `should_stay_in_castle` uses each `TWallTargetId` from
+  `gCastleWallGateTargets` (`{6,8,9,10,12}`) both as a `wallStrength`
+  index (correct, id-indexed) *and* as a `gWallTargets` subscript
+  (wrong — that table is position-indexed with eight rows, as
+  `GetTargetWallIndex` 0x465970 proves).
+  `DoCompAI` capped at 98.4697 by exactly one instruction (retail keeps
+  an `and eax,0xff` our CL folds); **six spellings all landed on the
+  same 98.4697**, and the two that differ are worse (87.8, 81.4).
+  `place_shooter` 80.5659 is structurally settled and residual on
+  register homing.
+
 - **2026-08-08 — hero's spell-school family OPENED (49 → 58 exact); the
   blocker was never the enum; `initialize_game_data` back to 100 from a
   cause nobody could isolate.** Engine-wide 524 → **534/977 exact

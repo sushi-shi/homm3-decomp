@@ -114,24 +114,27 @@ advmgr	set_witch_hut_help_text	0.0000
 advmgr	type_cell_adjuster_get_trigger_cell	0.0000
 advmgr	type_cell_adjuster_type_cell_adjuster	0.0000
 advmgr	type_point_type_point	0.0000
+ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697
 ai	?IsIncapacitated@army@@QAEEXZ	100.0000
+ai	?berserk_attack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000
 ai	?can_cast_spells@combatManager@@QAEEJE@Z	100.0000
+ai	?choose_melee_action@combatManager@@QAEJPBVarmy@@EEJ@Z	100.0000
+ai	?choose_shooter_action@combatManager@@QAEXPBVarmy@@EJ@Z	100.0000
 ai	?compute_fire_shield_damage@combatManager@@QAEJJPBVarmy@@0J@Z	100.0000
 ai	?find_move_order@combatManager@@QAEXPAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000
+ai	?get_area_attack_value@@YIJPBVarmy@@JJPAUtype_AI_combat_parameters@@@Z	100.0000
 ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	96.3533
 ai	?get_total_combat_value@combatManager@@QBEJJJJE@Z	100.0000
 ai	?mark_firewalls@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000
 ai	?move_toward@combatManager@@QAEEPBVarmy@@JPBJE@Z	99.4462
-ai	combatManager_DoCompAI	0.0000
+ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	80.5659
+ai	?should_stay_in_castle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000
 ai	combatManager_attempt_shooter_defense	0.0000
-ai	combatManager_berserk_attack	0.0000
 ai	combatManager_choose_creature_spell	0.0000
 ai	combatManager_choose_cyclops_action	0.0000
 ai	combatManager_choose_defense_hex	0.0000
-ai	combatManager_choose_melee_action	0.0000
 ai	combatManager_choose_melee_target	0.0000
 ai	combatManager_choose_resurrect_action	0.0000
-ai	combatManager_choose_shooter_action	0.0000
 ai	combatManager_choose_shooter_target	0.0000
 ai	combatManager_choose_spell_action	0.0000
 ai	combatManager_choose_to_run	0.0000
@@ -140,10 +143,7 @@ ai	combatManager_has_ranged_advantage	0.0000
 ai	combatManager_mark_enemy_attacks	0.0000
 ai	combatManager_mark_friendly_armies	0.0000
 ai	combatManager_mark_multiheaded_enemy	0.0000
-ai	combatManager_place_shooter	0.0000
-ai	combatManager_should_stay_in_castle	0.0000
 ai	find_attack_hexes	0.0000
-ai	get_area_attack_value	0.0000
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@PBVarmyGroup@@@Z	100.0000
 ai_combat	?AI_auto_combat@@YIXPAVhero@@0PAVarmyGroup@@1PBVtown@@PAVNewmapCell@@@Z	100.0000
@@ -435,17 +435,17 @@ exec	?MainLoop@executive@@QAEXXZ	88.1290
 exec	?RemoveManager@executive@@QAEXPAVbaseManager@@@Z	100.0000
 findpath	??0searchArray@@QAE@XZ	100.0000
 findpath	??1searchArray@@QAE@XZ	100.0000
+findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000
 findpath	?Close@searchArray@@QAEXXZ	100.0000
+findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	88.0238
 findpath	?Init@searchArray@@QAEXXZ	100.0000
+findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000
 findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177
 findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	100.0000
 findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000
 findpath	?lower_door@searchArray@@QAEXXZ	100.0000
 findpath	?set_moat@searchArray@@QAEXPBVarmy@@@Z	100.0000
-findpath	CalcTerrainCost	0.0000
-findpath	GetTerrainCost	0.0000
-findpath	MinimumTerrainCost	0.0000
 findpath	searchArray_FindCombatPath	0.0000
 findpath	searchArray_PushCombatPoint	0.0000
 findpath	searchArray_PushPoint	0.0000
@@ -888,7 +888,42 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 # every other lane: any change to game.h / hero.h / mapcell.h /
 # struct.h / town.h / armygrp.h / artifact.h / army.h must re-measure
 # this row before it lands.
-initialize	?initialize_game_data@@YIXXZ	100.0000
+# A SECOND LANE reached 100.0000 independently the same day, by a
+# different route, and its sweep is the best characterisation of the
+# class we have. Five states, every one a clean build (three earlier
+# readings taken against a BROKEN build were void and discarded):
+#     branch point, untouched                          96.0880
+#     + mapcell.h bitfield slice + a method decl       96.0880
+#     + CREATURE_NOMAD in armygrp.h ONLY               26.1806
+#     + 10-enumerator SoD block + CREATURE_NOMAD       97.0370
+#     + 8-enumerator SoD block + CREATURE_NOMAD       100.0000
+# Two things follow. Enumerator POSITION is irrelevant (tail vs middle
+# both read 97.0370) - it is the COUNT. And the sensitivity is to
+# MEMBER population, not only to the count of type definitions:
+# splitting mapcell.h's `flags_00_11 : 12` into three named bitfields,
+# no new type and no semantic change, reads 26.1806. That is why that
+# bitfield is deliberately NOT sliced.
+# LOWERED BY HAND to 94.0741 (2026-08-08, integration) - a deliberate
+# drop, not a regression anyone can fix by spelling.
+# BOTH change-sets above are now in this tree at once. Each reached
+# 100.0000 ALONE, in its own lane, by a different route; COMPOSED they
+# read 94.0741. That composition is the strongest evidence yet for what
+# this row actually is: not a property of any source text near
+# initialize.cpp, but a codegen artifact of the TU-wide type and member
+# population of its include closure - and one that does not add.
+# Chasing 100 back would mean adding or removing names in mapcell.h /
+# armygrp.h for score alone. Every name in both change-sets is
+# evidence-tight (the eight SoD ids are exactly what
+# NewmapCell::get_special_terrain can answer with; CREATURE_NOMAD is
+# pinned by GetTerrainCost). Carrying an unevidenced lever to hold a
+# number is worse than an honest lower - the same judgement recorded
+# above when this row read 96.09.
+# Values THIS row has shown, all without a semantic change:
+# 26.18, 90.16, 94.07, 96.09, 97.04, 100.00.
+# Do not treat any of them as a target. Re-measure after ANY change to
+# game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
+# artifact.h / army.h, and record what you saw.
+initialize	?initialize_game_data@@YIXXZ	94.0741
 inputmgr	??0inputManager@@QAE@XZ	86.5667
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000
