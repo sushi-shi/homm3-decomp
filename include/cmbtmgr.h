@@ -198,6 +198,7 @@ public:
     void RemoveArmyFromGrid(const army* a);
     void PlaceArmyInGrid(const army* a, int hex);
     unsigned char should_lower_door(army* this_army, long hex);
+    void CalculateGainedExperience(int side, int* experience_gained);
     // Two DC-roster corrections, both byte-proven at 0x467510: the
     // first parameter is an `army*`, NOT the roster's `int group` (the
     // body dereferences it at +0x288, +0xf4 and +0x34), and the return
@@ -246,10 +247,35 @@ public:
     float SpellCastWorkChance(SpellID spell, long side, const army* target,
                               long hex, unsigned char check_immunity,
                               long creature_spell);            // 0x5a8090
+    // 0x5a4920 (66 B), the third spells.obj leaf. Collects every stack
+    // an area spell centred on `hex` would touch into the caller's
+    // vector; ai_tactical's get_area_effect_value (0x437040) is the
+    // located caller and passes a freshly constructed local.
+    // The NAME is PROVISIONAL: the DC roster has three
+    // combatManager::mark_area_effect overloads in spells.obj
+    // (spells.cpp:3159/3227/3303), all five-parameter, and the dump
+    // prints no parameter types to separate them - the pairing here
+    // rests only on arity and the soundmgr..spells link bracket, not
+    // on a proof that this is the spells.cpp:3303 one. Its own claim
+    // waits for src/spells.cpp.
+    // `mastery` is ai_tactical's TSkillMastery, spelled `long` here
+    // because that typedef lives in the header that includes this one.
+    void mark_area_effect(SpellID spell, long hex, long mastery,
+                          std::vector<army*>& targets);         // 0x5a4920
 };
 
 // Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).
 extern combatManager* gpCombatManager;
+
+// Two single-byte .bss flags that are always read as a PAIR, in this
+// order, and always to suppress something: CalculateGainedExperience
+// (0x46a350) docks 500 experience when either is set, and two more
+// cmbtmgr bodies (0x463fc9, 0x46a077) test the same pair. NAMES ARE
+// UNATTESTED - no DC global, roster or string reaches either byte, so
+// both keep an address-ordinal placeholder rather than a guess at the
+// rule they encode. Neither is defined here; cmbtmgr is only a reader.
+DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
+DATA(0x00697744) extern unsigned char gCombatFlag697744;
 
 // Per-castle hex-index table at 0x63bd00: InCastle divides the hex by
 // 0x11 (the row stride) and compares against the row's wall column.
