@@ -190,6 +190,8 @@ struct type_AI_spellcaster {
                           const hero* target_hero, const army* target);
     long get_damage_spell_value(const army* enemy, type_enchant_data caster);
     long get_mass_damage_effect(long enemy_damage, long friendly_damage);
+    long get_area_effect_value(SpellID spell, long base_damage,
+                               TSkillMastery mastery, long hex);
     long get_speed_value(const army* our_army, long increase, long duration);
     unsigned char should_attack_now(const army* enemy);
     long get_defense_boost_value(const army* our_army, const army* enemy,
@@ -207,6 +209,7 @@ struct type_AI_spellcaster {
     long get_antimagic_value(const army* our_army, type_enchant_data caster);
     long get_backlash_value(const army* our_army, type_enchant_data caster);
     long get_hypnotize_value(const army* enemy, type_enchant_data caster);
+    long get_berserk_value(const army* enemy, type_enchant_data caster);
     long get_traitor_value(const army* enemy, const army* target);
     void set_melee_enemies();
 };

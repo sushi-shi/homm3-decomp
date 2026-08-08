@@ -638,16 +638,44 @@ long type_AI_spellcaster::get_mass_damage_effect(long enemy_damage, long friendl
     return enemy_damage - friendly_damage;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1008
-// EH-bearing (P2.2): retail opens with push -1 / push <handler> /
-// mov eax,fs:[0] - blocked until the synth-PDB EH scope lands.
+// EH-bearing (P2.2) and NOT blocked by it - the fs:[0] frame is just
+// the local vector's unwind scope (see get_berserk_value 0x43a400).
+// The tail is get_mass_damage_effect (0x436fb0) INLINED: its whole
+// body - the two clamps, the float odds compare and the
+// `friendly >= our_value` bail - appears here verbatim, while retail
+// still emits the out-of-line copy /Ob2 owes an extern callee.
+// The walk runs BACKWARDS and the loop variable is spelled
+// `i-- > 0`, NOT `i = size-1; i >= 0; i--`. Both are correct C, but
+// only the post-decrement form makes the entry test a signed
+// `size > 0` on the raw count AND makes the latch test the value
+// BEFORE the decrement (`mov edx,eax / dec eax / test edx,edx / jg`);
+// the `size-1` form tests the decremented index at both ends and
+// scores three size-only blocks worse.
+// The two accumulators are declared BEFORE the vector because retail
+// emits their zero stores before the vector's ctor stores, and
+// friendly-before-enemy because VC6 lays this frame's plain locals out
+// first-declared-lowest ([ebp-0x14] then [ebp-0x10]) and emits the
+// zero stores in that same order - declaring them the other way round
+// swaps both and costs the match.
 VA(0x00437040, 0x141)  // anchor-global, dc 0x3db84
 long type_AI_spellcaster::get_area_effect_value(SpellID spell, long base_damage, TSkillMastery mastery, long hex)
 {
-    // @stub
+    long friendly_damage = 0;
+    long enemy_damage = 0;
+    std::vector<army*> targets;
+    gpCombatManager->mark_area_effect(spell, hex, mastery, targets);
+    for (long i = targets.size(); i-- > 0; ) {
+        army* target = targets[i];
+        if (target->combatSide == side)
+            friendly_damage += get_damage_value(spell, base_damage, our_hero, target);
+        else
+            enemy_damage += get_damage_value(spell, base_damage, enemy_hero, target);
+    }
+    return get_mass_damage_effect(enemy_damage, friendly_damage);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1035
 DC_ONLY(0x3dc50, 0x72)
@@ -1210,18 +1238,39 @@ long type_AI_spellcaster::get_traitor_value(const army* enemy, const army* targe
                                                  params.kills_only);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:2393
-// EH-bearing (P2.2): retail opens with push -1 / push <handler> /
-// mov eax,fs:[0] - blocked until the synth-PDB EH scope lands.
+// EH-bearing (P2.2) and NOT blocked by it: the fs:[0] frame is the
+// local vector's unwind scope, and reproducing the two [ebp-4] state
+// stores (0 while the vector is alive, then the teardown) is all the
+// body owes it.
+// Byte proof for the vector head: the ctor stores ONE byte at +0x00
+// (Dinkumware's empty `allocator` subobject, copied from the
+// uninitialized default-argument temp the optimizer coalesced into a
+// live parameter slot) and three zero dwords at +0x04/+0x08/+0x0c, so
+// std::vector<army*> is 16 bytes starting at +0x00.
+// `size()` is VC6's own `_First == 0 ? 0 : _Last - _First` - the null
+// arm is why the emptiness test and the final divisor both branch on
+// the begin pointer before subtracting, and why the loop's exit and
+// the divisor's recompute share one `test ecx,ecx`.
+// The divide is UNSIGNED because size_type is unsigned and drags the
+// long accumulator up with it; the loop counter is unsigned for the
+// same reason (`jae`, not `jl`).
+// `caster` is dead - retail keeps the 20-byte by-value record on the
+// stack and never reads it.
 VA(0x0043a400, 0xF8)  // linkorder, dc 0x40a08
 long type_AI_spellcaster::get_berserk_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    std::vector<army*> targets;
+    if (field_1c)
+        return 0;
+    enemy->get_berserk_targets(targets);
+    if (targets.size() == 0)
+        return 0;
+    long total = 0;
+    for (unsigned i = 0; i < targets.size(); i++)
+        total += get_traitor_value(enemy, targets[i]);
+    return total / targets.size();
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2416
 // Residual (18.2%) - SEMANTICS COMPLETE, CODEGEN NOT. Every leaf, every
