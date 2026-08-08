@@ -646,6 +646,8 @@ soundmgr	?SwitchAmbientMusic@soundManager@@QAEXH@Z	100.0000
 soundmgr	?WaitEndSample@@YIXUSAMPLE2@@H@Z	100.0000
 soundmgr	?WaitSample@soundManager@@QAEXPAVds_memsample@@H@Z	100.0000
 soundmgr	?launch_sample@@YIXPBDHH@Z	100.0000
+soundmgr	soundManager_SetMusicVolume	0.0000
+soundmgr	soundManager_StartMP3	0.0000
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000
 strip	?Draw@strip@@QAEXW4TCreatureType@@@Z	100.0000
 strip	?DrawIcons@strip@@QAEXEW4TCreatureType@@@Z	100.0000
