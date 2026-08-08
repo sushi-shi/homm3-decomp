@@ -15,6 +15,23 @@ public:
     virtual ~border();  // retail 0x44ff50
 };
 
+// Head model only, exactly like border above: the retail dtor 0x4501d0
+// is the empty derived body (it stores ??_7border@@6B@ - the derived
+// store is dead - and tail-jumps to ~widget), so no member of this
+// class is byte-proven here. The DC fieldlist gives color (int) and
+// colorize (uchar) and a base type SHARED with coloredBorder, i.e.
+// both derive straight from border - neither from the other; the two
+// members stay out until a retail body proves their offsets.
+// Retail vtable 0x63ba5c: slot 0 sdd 0x4501a0, slot 2 Main 0x450240
+// (dc 124 B -> 130), slot 3 zBufferDraw folded to 0x5bc7e0, slot 4
+// Draw 0x4501e0 (dc 110 B -> 91). coloredBorder, which overrides no
+// Main, has no retail vtable at all, which is what fixes this table on
+// coloredBorderFrame.
+class coloredBorderFrame : public border {
+public:
+    virtual ~coloredBorderFrame();  // retail 0x4501d0
+};
+
 class Bitmap816;
 
 // The image member sits at +0x30 (first past widget), byte-proven by

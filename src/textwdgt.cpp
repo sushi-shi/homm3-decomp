@@ -24,6 +24,12 @@ void textWidget::textWidget(int textWidgetX, int textWidgetY, int textWidgetWidt
 
 #endif  // @carcass
 
+// E:\gamedcs\textwdgt.cpp:42 - textWidget::`scalar deleting
+// destructor' (dc 0x1652fc). Slot 0 of textWidget's vtable 0x642db0;
+// the 33-byte row calls ??1textWidget (0x5bc3b0) under the flags&1
+// operator delete tail.
+VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
+
 VA(0x005bc3b0, 0x8A)  // anchor-global, dc 0x164d24
 textWidget::~textWidget()
 {
@@ -159,6 +165,19 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
+
+// NO CLAIM on bitmapBackedTextWidget::`scalar deleting destructor'
+// (0x5bc6a0, 33 B, dc 0x16537c, slot 0 of vtable 0x642de8) - the
+// coloredBorderFrame case in border.cpp, same cause: this TU's only
+// bitmapBackedTextWidget body is the dtor, whose own vptr store is
+// dead-store-eliminated against the inlined ~textWidget, so nothing
+// here references ??_7bitmapBackedTextWidget@@6B@ and VC6 emits
+// neither the vtable nor the ??_G COMDAT for the claim to pair with
+// (verified: our textwdgt.obj emits only ??_7textWidget and
+// ??_GtextWidget). Retail keeps both because its textwdgt.cpp also
+// defines the two bitmapBackedTextWidget CONSTRUCTORS (dc 0x165184 /
+// 0x1651d8), which store the derived vtable. Land a ctor and the claim
+// is free.
 
 // E:\gamedcs\textwdgt.cpp:320
 VA(0x005bc6d0, 0x8A)  // anchor-global, dc 0x1653b0

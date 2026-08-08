@@ -15,12 +15,38 @@ class message;
 // RightClick@0x2c, freeText@0x30): retail's dtor 0x5fe430 frees
 // [0x24] then [0x20] under the byte flag [0x28], and set_help_text
 // 0x5fe840 stores text/rclick/copyText to exactly those three - so
-// retail is RollOver@0x20, RightClick@0x24, freeText@0x28, and the
-// ctor's remaining dword [0x2c]=0 is focusable. DC's `on` has no
-// retail home.
+// retail is RollOver@0x20, RightClick@0x24, freeText@0x28, and one
+// remaining dword lands at [0x2c]. DC's `focusable` and `on` have no
+// retail home: retail is exactly DC minus those two, plus field_2C.
 //
-// Virtual roster PROVEN by the retail widget vtable 0x243c90 (12
-// slots; the button family extends it to 13):
+// CORRECTION 2026-08-08 (this replaces the earlier "[0x2c] is
+// focusable" reading, which was a name carried over from the DC
+// fieldlist onto an offset DC does not use for it). field_2C is the
+// retail-only SLEEP NESTING COUNTER, byte-proven three ways:
+//   * heroWindow's slot-8 body 0x5ff5f0 walks the window's Widgets
+//     vector and, per widget, runs
+//       on ? (if ([+0x2c]++ == 0) vslot12(1))
+//          : (if (--[+0x2c] == 0) vslot12(0))
+//     - a ++/-- nest counter with a 0<->1 virtual edge, which a
+//     focus-permission flag cannot be. It is store-for-store the same
+//     shape heroWindow::SleepAllWidgets (0x5ff5b0, exact) runs on its
+//     own counter heroWindow::field_48.
+//   * widget::Main 0x5fe4f0 and button::Main 0x456190 both open with
+//     `if ([+0x2c] > 0) return 0;` - asleep widgets drop every
+//     message. DC's widget::Main (dc 0x196cd0) has NO such guard at
+//     all; it enters the message switch directly.
+//   * DC's own sleeping is a different design: `widget::sleep`
+//     (dc 0x2dec, ?sleep@widget@@QAAX_N@Z, Widget.h:244) is
+//     send_message(on ? WIDGET_SET_STATUS : WIDGET_CLEAR_STATUS,
+//     WIDGET_ASLEEP) - a status BIT, no counter and no virtual. Retail
+//     rewrote it into the counter + hook below.
+// The counter itself is unnamed in every source we may read, so the
+// field keeps the house ordinal placeholder.
+//
+// Virtual roster PROVEN by the retail widget vtable 0x243c90 -
+// THIRTEEN slots, not twelve (config/retail-vtables.tsv row 0x243c90;
+// heroWindow's own vtable begins immediately after at 0x243cc4 =
+// 0x243c90 + 13*4, which bounds the count exactly):
 //   0  scalar deleting dtor 0x5fe3b0 (~widget 0x5fe430 inlined - the
 //      homm2 `inline` dtor idiom)
 //   1  Open 0x5fe4d0 - non-virtual on DC, virtualized in retail
@@ -34,6 +60,19 @@ class message;
 //   9  enable 0x5fe940
 //   10 OnSetFocus / 11 OnKillFocus - both 0x4df0, the /OPT:ICF-folded
 //      empty inline (DC order fixes which name is which)
+//   12 _vslot12 0x485d80 - RETAIL-ONLY (slots 0..11 reproduce the DC
+//      roster order exactly, with Open inserted; DC's list ends at
+//      OnKillFocus, so 12 is appended). One dword argument (`ret 4`)
+//      and an empty body that ICF folded into the program-wide `ret 4`
+//      representative at 0x485d80, so no claim may sit on it - the
+//      widget::Close precedent. Overridden in exactly one place in the
+//      whole image: button's three vtables (0x23bb54/0x23bb88/
+//      0x23bbbc) point slot 12 at 0x456a10, whose entire body is an
+//      explicit `widget::_vslot12(arg)` call; the other 25
+//      widget-family vtables inherit 0x485d80. UNATTESTED NAME - DC
+//      has no such virtual, so this is the house _vslotN placeholder.
+//      Its role is byte-fixed even though its name is not: it is the
+//      per-widget sleep/wake edge hook.
 class widget {
 public:
     heroWindow* parentWindow;
@@ -50,7 +89,10 @@ public:
     char* RollOver;
     char* RightClick;
     unsigned char freeText;
-    int focusable;
+    // Sleep nesting depth; see the CORRECTION note above. Name is the
+    // house ordinal placeholder - the role is proven, the spelling is
+    // not attested anywhere we may read.
+    int field_2C;
 
     // Dreamcast widget::EStatusFlags, values byte-corroborated by the
     // retail ctor (status = WIDGET_ACTIVE | WIDGET_DRAWN) and enable
@@ -143,6 +185,22 @@ public:
     // no local definition, so calls stay extern.
     void Close();
 
+    // DC-attested name (?sleep@widget@@QAAX_N@Z, E:\gamedcs\Widget.h:244)
+    // on a RETAIL-ONLY body: DC's inline is the WIDGET_ASLEEP status-bit
+    // send_message, retail's is the nest counter below. Header-inline
+    // in both builds - retail's only call site is heroWindow's slot-8
+    // body 0x5ff5f0, where /Ob2 expands it in full.
+    void sleep(unsigned char on)
+    {
+        if (on) {
+            if (field_2C++ == 0)
+                _vslot12(1);
+        } else {
+            if (--field_2C == 0)
+                _vslot12(0);
+        }
+    }
+
     virtual ~widget();                                      // slot 0
     virtual int Open(int newPriority, heroWindow* parent);  // slot 1
     virtual int Main(message* msg) = 0;                     // slot 2
@@ -155,6 +213,12 @@ public:
     virtual void enable(unsigned char on);                  // slot 9
     virtual void OnSetFocus() {}                            // slot 10
     virtual void OnKillFocus() {}                           // slot 11
+    // Slot 12. DECLARED ONLY, exactly like Close: retail's body is the
+    // empty `ret 4` that ICF folded to the shared 0x485d80, so it has
+    // no claimable home, and leaving it undefined here is also what
+    // keeps button's override (0x456a10) emitting a real call instead
+    // of an /Ob2-inlined nothing.
+    virtual void _vslot12(int on);                          // slot 12
 };
 SIZE(widget, 48);
 

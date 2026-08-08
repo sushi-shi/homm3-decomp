@@ -41,6 +41,15 @@ button::button()
     endDialog = 0;
 }
 
+// E:\gamedcs\button.cpp:51 - button::`scalar deleting destructor'
+// (dc 0x57de0). Promoted from unclaimed 2026-08-08 on body evidence:
+// slot 0 of button's vtable 0x63bb54, and the 33-byte row is the
+// textbook shape - call ??1button, then the flags&1 operator delete
+// tail, returning this. Retail places the three button-family sdds
+// each just AHEAD of the class they belong to (the DC build appends
+// all three at the tail), the same widget.obj/resource.cpp ordering.
+VA_COMPGEN(0x00455ec0, 0x21, SCALAR_DELETING_DTOR, button)
+
 // E:\gamedcs\button.cpp:69
 // Retail dropped DC's trailing focus parameter outright (ret 0x2c,
 // eleven args).
@@ -143,7 +152,7 @@ int button::Main(message* msg)
         if (static_cast<int>(timeGetTime() - repeatTime) > 0)
             return DeselectSelected(msg);
     }
-    if (focusable > 0)
+    if (field_2C > 0)
         return 0;
     if (!(status & WIDGET_ACTIVE)) {
         if (msg->id != MESSAGE_WIDGET)
@@ -395,6 +404,20 @@ void button::SetPlayerPaletteColors(int whichPlayer)
     ::SetPlayerPaletteColors(buttonIcon->p24, whichPlayer);
 }
 
+// Retail-only (no DC roster entry - DC's widget has no 13th virtual).
+// The three button vtables 0x63bb54/0x63bb88/0x63bbbc all point slot
+// 12 here, and no other vtable in the image does; the 16-byte row sits
+// between SetPlayerPaletteColors (0x4569e0) and textButton's scalar
+// deleting dtor (0x456a20), inside button.obj's band. The body is
+// nothing but the qualified base call - it stays a CALL rather than an
+// /Ob2-inlined nothing because widget::_vslot12 has no definition
+// visible here (widget.h declares it only, the Close idiom).
+VA(0x00456a10, 0x10)  // anchor-vtable (slot 12 of 0x63bb54/0x63bb88/0x63bbbc), retail-only
+void button::_vslot12(int on)
+{
+    widget::_vslot12(on);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\button.cpp:487
@@ -405,6 +428,11 @@ void textButton::textButton()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\button.cpp:488 - textButton::`scalar deleting destructor'
+// (dc 0x57e14). Slot 0 of textButton's vtable 0x63bb88; the 33-byte
+// row calls ??1textButton (0x456bf0) and carries the flags&1 tail.
+VA_COMPGEN(0x00456a20, 0x21, SCALAR_DELETING_DTOR, textButton)
 
 // E:\gamedcs\button.cpp:508
 // Residual (88.4%): retail latches the hotkey argument back into its
@@ -495,6 +523,12 @@ void type_func_button::type_func_button(const type_icon_definition* def, int _id
 
 #endif  // @carcass
 
+// E:\gamedcs\button.cpp:559 - type_func_button::`scalar deleting
+// destructor' (dc 0x57e48). Slot 0 of type_func_button's vtable
+// 0x63bbbc; the 33-byte row calls ??1type_func_button (0x456db0) and
+// carries the flags&1 tail.
+VA_COMPGEN(0x00456d80, 0x21, SCALAR_DELETING_DTOR, type_func_button)
+
 // E:\gamedcs\button.cpp:559
 // Byte-identical in shape to ~button: the derived vtable store followed
 // immediately by inlined ~button's store collapses to one (dead-store
@@ -509,7 +543,7 @@ VA(0x00456e50, 0x44)  // vtable-slot 2 of type_func_button (0x63bbbc), dc 0x57d4
 int type_func_button::Main(message* msg)
 {
     int result = button::Main(msg);
-    if (result != 1 && (status & WIDGET_ACTIVE) && focusable <= 0
+    if (result != 1 && (status & WIDGET_ACTIVE) && field_2C <= 0
         && msg->id == MESSAGE_WIDGET && msg->codeY == id) {
         msg->window = parentWindow;
         return handler(msg);

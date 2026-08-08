@@ -37,6 +37,12 @@ void iconWidget::initialize(int x, int y, int w, int h, int id, const char* imag
 
 #endif  // @carcass
 
+// E:\gamedcs\iconwdgt.cpp:41 - iconWidget::`scalar deleting
+// destructor' (dc 0xda018). Slot 0 of iconWidget's vtable; the
+// 33-byte row calls ??1iconWidget (0x4ea7b0) and carries the flags&1
+// operator delete tail.
+VA_COMPGEN(0x004ea6f0, 0x21, SCALAR_DELETING_DTOR, iconWidget)
+
 VA(0x004ea7b0, 0x55)  // anchor-global, dc 0xd9464
 iconWidget::~iconWidget()
 {
