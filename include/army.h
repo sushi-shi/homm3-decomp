@@ -22,6 +22,16 @@ enum ECombatDirection {
     COMBAT_DIRECTION_WIDE_LOWER = 0x7
 };
 
+// Two-hex creature orientation (army::facing, +0x44). ValidAttack
+// dispatches on it with a real `switch` - byte-proven at 0x523bb0,
+// where retail emits VC6's switch chain (`sub ecx,0` / `dec ecx`) and
+// lays the DEFENDER arm out first, which an if/else-if chain on the
+// same values cannot reproduce. Names are bootstrap inventions.
+enum EFacing {
+    FACING_ATTACKER = 0x0,
+    FACING_DEFENDER = 0x1
+};
+
 // ValidAttack's target-filter modes (byte-derived from the criteria
 // switch at 0x523bb0; names are bootstrap inventions): SELF accepts
 // only this army's own cell, ENEMY a hostile army, OCCUPIED any army.
