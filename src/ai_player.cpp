@@ -73,6 +73,31 @@ unsigned char can_take_town(const hero* attacking_hero, const town* defending_to
 
 #if 0  // @carcass
 
+// THE THREAT-CHECKER BRACKET IS NOT DECIDABLE YET (surveyed
+// 2026-08-08). Retail puts only FOUR rows between can_take_town
+// (0x428410, claimed) and get_attack_bonus (0x428710, claimed) -
+// 0x428570 (13 B), 0x428580 (289 B), 0x4286b0 (33 B) and 0x4286e0
+// (38 B) - while the Dreamcast roster lists ELEVEN bodies there, six of
+// them 4- to 18-byte accessors that /Ob2 folds away without trace. With
+// seven of eleven candidates unplaceable the ranks carry no
+// information, so the arities have to decide alone and they do not:
+//   * 0x428570 is `ret 4` and its whole body is `inc byte [arg+3]`,
+//     which reads like type_town_threat_checker::mark_town (18 B, two
+//     parameters) except that it never touches `this`.
+//   * 0x428580 is `ret 4` with an EH frame and calls town::get_army
+//     and playerData::hasGivenArtifact. Two DC rows have that arity -
+//     get_resource_value (200 B) and type_garrison_purchaser::mark_town
+//     (160 B) - and neither obviously wants those two callees.
+//   * 0x4286b0 IS a constructor (it returns `this` in eax after
+//     storing three arguments), but `ret 0xc` makes it FOUR parameters
+//     and both DC constructors here take two. 33 B against the threat
+//     checker's 34 is the closest size pair in the bracket and the
+//     arity still refuses it.
+//   * 0x4286e0 (`ret`, frees [this+0x30], caller in another TU's band)
+//     is the same compiler-generated vector teardown shape as ai.obj's
+//     0x420cf0, not an ai_player.cpp body at all.
+// Left unclaimed rather than ranked into place.
+
 // E:\gamedcs\ai_player.cpp:89
 DC_ONLY(0x2dd40, 0x22)
 void type_town_threat_checker::type_town_threat_checker(long new_player)
@@ -234,11 +259,31 @@ void type_AI_player::reset_magus_hut_value()
 #if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:752
-DC_ONLY(0x2f280, 0x22E)
+// The row immediately after the reset_magus_hut_value anchor, exactly
+// as the DC roster is ordered, and every independent signal agrees:
+// `ret` with no stack arguments is the DC parameter count of ONE
+// (`this` alone), the body is thiscall with an EH frame, its only
+// caller is the start_turn slot at 0x4297c0 - which is what schedules
+// a turn's reserve - and it drives GetMonsterCost, the price of the
+// creatures a reserve is being held for. 640 B against the DC body's
+// 558 is 1.15x.
+VA(0x00429ad0, 0x280)  // anchor-callee, dc 0x2f280
 void type_AI_player::calculate_reserve()
 {
     // @stub
 }
+
+// UNCLAIMED, 0x429d50 (1017 B). The only other retail row left in the
+// span, and the last thirteen DC bodies of this bracket are all
+// candidates. It saves BOTH ecx and edx, so it is a /Gr free function,
+// and `ret` with no stack arguments makes it exactly two parameters -
+// which fits fill_prohibited_array (524 B), value_of_castle_upgrade
+// (248 B), value_of_silo (36 B), value_of_hall (640 B) and
+// get_requirements (262 B) equally. Its one caller is the end_turn
+// slot at 0x428dd0 and its one named callee is GetMonsterCost; neither
+// narrows five candidates to one. The other eight DC statics here have
+// three or four parameters and are excluded by the arity, but that
+// still leaves a five-way tie, so nothing is claimed.
 
 // E:\gamedcs\ai_player.cpp:834
 DC_ONLY(0x2f4b0, 0x96)

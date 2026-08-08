@@ -85,23 +85,51 @@ double AI_value_of_luck(long luck, long change)
                                    AI_bad_luck_value);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\ai_tactical.cpp:109
-DC_ONLY(0x3c608, 0xFE)
-long get_multi_head_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_tactical.cpp:155
-DC_ONLY(0x3c708, 0x108)
-long get_breath_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate)
-{
-    // @stub
-}
-
-#endif  // @carcass
+// THE AI_TACTICAL ORDER-MAP (2026-08-08). Thirty-six of the span's
+// thirty-eight unmapped rows are claimed in this pass. The map is
+// built gap by gap between the rows earlier lanes already claimed, and
+// every gap closes EXHAUSTIVELY - the unclaimed retail rows in a gap
+// are matched one-for-one against the unclaimed DC rows in the same
+// gap, with the leftovers all explained. The strongest of them:
+//   * 0x4399a0/0x4399d0/0x439a00/0x439a40 measure 41/41/50/50 bytes
+//     against the DC air/fire/earth/water protection quartet's
+//     42/42/58/58 - the same two-then-two size signature in the same
+//     order, and the four sit between the claimed get_protection_value
+//     and get_cancel_value with nothing else in the bracket.
+//   * 0x43af50 is called by the two-parameter consider_sacrifice at
+//     0x43b1e0, which is the DC roster's own overload pair.
+//   * 0x43b8f0 is 548 B against consider_earthquake's 556.
+//
+// THE ENCHANTMENT FAMILY IS ADDRESS-TAKEN, which is the hardest proof
+// this project accepts. get_enchantment_function (0x43b690, claimed)
+// is a 61-case switch over spell id whose every arm loads one member
+// address; the delinker's own `game_3b690_subNN` labels are exactly
+// its forty arm targets. Membership in that table is therefore certain
+// for each row that carries the label, and it pins the SIGNATURE too:
+// every one of them returns `ret 0x18`, which over the thiscall `this`
+// is (const army*, type_enchant_data) - the DC parameter count of
+// three that every get_*_value enchantment body carries, and the count
+// that excludes the helpers sharing their bracket. get_attack_boost_value
+// (both overloads, six and five parameters), get_move_order_change_value
+// (two) and get_duration are all excluded by that count and are the
+// bodies with no retail slot - single-call-site helpers /Ob2 folded
+// into the table entries that use them, which is also why those
+// entries run large (get_bless_value 260 B -> 408).
+//
+// TWO ROWS ARE LEFT UNCLAIMED. 0x437a00 (1786 B) is `army::army`,
+// which the DC roster attributes to ai_tactical.cpp:2183 - a
+// compiler-generated copy constructor instantiated at first use, so a
+// COMDAT the linker parked here rather than an ai_tactical body.
+// 0x43c620 (477 B) is `ret 0xc`, four parameters, and the only DC rows
+// left in its bracket - check_simulation and spells_not_required - are
+// both one-parameter; it is retail-only, and its single caller is
+// ai.obj's 0x420f00, the retail-only spell chooser that lane found.
+// The two anomalies corroborate each other.
+//
+// get_multi_head_bonus and get_breath_bonus (dc 0x3c608 / 0x3c708,
+// ai_tactical.cpp:109 and 155) are claimed FURTHER DOWN, at 0x436620
+// and 0x436760: retail emits both after check_adjacent_hexes, which is
+// where their entries now sit so that the claim VAs stay increasing.
 
 // E:\gamedcs\ai_tactical.cpp:200
 VA(0x00435980, 0x2A)  // anchor-global, dc 0x3c810
@@ -348,6 +376,32 @@ long type_AI_attack_hex_chooser::get_attack_time(const pathCell* cell)
 // E:\gamedcs\ai_tactical.cpp:599
 VA(0x00436300, 0x31C)  // anchor-global, dc 0x3d1e4
 void type_AI_attack_hex_chooser::check_adjacent_hexes(long enemy_hex, long start_direction, long stop_direction)
+{
+    // @stub
+}
+
+// THE TWO SEVEN-PARAMETER STATICS, moved here from their DC line
+// positions (109 and 155). Retail emits them immediately after
+// check_adjacent_hexes, their caller - the same static-after-caller
+// inversion this TU's value_of_luck_and_morale already shows and that
+// ai.obj shows twice more. Three signals fix them regardless of
+// position: both rows are /Gr FREE functions returning `ret 0x14`,
+// which is SEVEN parameters, and get_multi_head_bonus and
+// get_breath_bonus are the only seven-parameter bodies in the entire
+// ai_tactical roster; the sizes are 1.24x and 0.84x; and multi-head
+// and breath bonuses are exactly what a routine scoring the hexes
+// adjacent to a target computes.
+
+// E:\gamedcs\ai_tactical.cpp:109
+VA(0x00436620, 0x13A)  // anchor-callee, dc 0x3c608
+long get_multi_head_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate)
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_tactical.cpp:155
+VA(0x00436760, 0xDF)  // anchor-callee, dc 0x3c708
+long get_breath_bonus(long our_group, const army* our_army, long our_hex, long troop_count, const army* enemy, long enemy_hex, const type_AI_combat_parameters* estimate)
 {
     // @stub
 }
@@ -692,7 +746,7 @@ long type_AI_spellcaster::get_chain_lightning_value(long power, TSkillMastery ma
 }
 
 // E:\gamedcs\ai_tactical.cpp:1094
-DC_ONLY(0x3dde8, 0xA8)
+VA(0x00437310, 0xD1)  // anchor-callee, dc 0x3dde8
 void type_AI_spellcaster::consider_chain_lightning(type_spell_choice* choice)
 {
     // @stub
@@ -706,7 +760,7 @@ void type_AI_spellcaster::consider_mass_damage(type_spell_choice* choice)
 }
 
 // E:\gamedcs\ai_tactical.cpp:1142
-DC_ONLY(0x3df28, 0x32)
+VA(0x004373f0, 0x34)  // anchor-vtable, dc 0x3df28
 long type_AI_spellcaster::get_age_value(const army* enemy, type_enchant_data caster)
 {
     // @stub
@@ -727,14 +781,14 @@ long type_AI_spellcaster::get_attack_boost_value(const army* our_army, const arm
 }
 
 // E:\gamedcs\ai_tactical.cpp:1197
-DC_ONLY(0x3e17c, 0x104)
+VA(0x00437430, 0x198)  // anchor-vtable, dc 0x3e17c
 long type_AI_spellcaster::get_bless_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1218
-DC_ONLY(0x3e280, 0x13A)
+VA(0x004375d0, 0x224)  // anchor-vtable, dc 0x3e280
 long type_AI_spellcaster::get_frenzy_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
@@ -810,28 +864,28 @@ long type_AI_spellcaster::get_attack_skill_value(const army* our_army, const arm
 #if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1281
-DC_ONLY(0x3e4a0, 0x6A)
+VA(0x00438100, 0x64)  // anchor-vtable, dc 0x3e4a0
 long type_AI_spellcaster::get_blood_lust_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1302
-DC_ONLY(0x3e50c, 0x14C)
+VA(0x00438170, 0x142)  // anchor-vtable, dc 0x3e50c
 long type_AI_spellcaster::get_mirth_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1327
-DC_ONLY(0x3e658, 0x224)
+VA(0x004382c0, 0x1C6)  // anchor-vtable, dc 0x3e658
 long type_AI_spellcaster::get_sorrow_value(const army* enemy, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1370
-DC_ONLY(0x3e87c, 0x15C)
+VA(0x00438490, 0x32B)  // anchor-vtable, dc 0x3e87c
 long type_AI_spellcaster::get_fortune_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
@@ -904,77 +958,77 @@ long type_AI_spellcaster::get_defense_skill_value(const army* our_army, long dur
 #if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1498
-DC_ONLY(0x3ed34, 0x174)
+VA(0x00438a10, 0xAD)  // anchor-vtable, dc 0x3ed34
 long type_AI_spellcaster::get_disease_value(const army* enemy, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1523
-DC_ONLY(0x3eea8, 0x7C)
+VA(0x00438ac0, 0x85)  // anchor-vtable, dc 0x3eea8
 long type_AI_spellcaster::get_prayer_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1545
-DC_ONLY(0x3ef24, 0x6A)
+VA(0x00438b50, 0x64)  // anchor-vtable, dc 0x3ef24
 long type_AI_spellcaster::get_precision_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1566
-DC_ONLY(0x3ef90, 0xF0)
+VA(0x00438bc0, 0x99)  // anchor-vtable, dc 0x3ef90
 long type_AI_spellcaster::get_air_shield_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1586
-DC_ONLY(0x3f080, 0xD6)
+VA(0x00438c60, 0x99)  // anchor-vtable, dc 0x3f080
 long type_AI_spellcaster::get_shield_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1606
-DC_ONLY(0x3f158, 0xB0)
+VA(0x00438d00, 0x81)  // anchor-vtable, dc 0x3f158
 long type_AI_spellcaster::get_slayer_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1626
-DC_ONLY(0x3f208, 0x22)
+VA(0x00438d90, 0x25)  // anchor-vtable, dc 0x3f208
 long type_AI_spellcaster::get_tough_skin_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1638
-DC_ONLY(0x3f22c, 0x1DC)
+VA(0x00438dc0, 0x109)  // anchor-vtable, dc 0x3f22c
 long type_AI_spellcaster::get_disruptive_ray_value(const army* enemy, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1671
-DC_ONLY(0x3f408, 0x1E8)
+VA(0x00438ed0, 0x8D)  // anchor-vtable, dc 0x3f408
 long type_AI_spellcaster::get_weakness_value(const army* enemy, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1697
-DC_ONLY(0x3f5f0, 0x200)
+VA(0x00438f60, 0x199)  // anchor-vtable, dc 0x3f5f0
 long type_AI_spellcaster::get_misfortune_value(const army* enemy, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1732
-DC_ONLY(0x3f7f0, 0x1E0)
+VA(0x00439100, 0x169)  // anchor-vtable, dc 0x3f7f0
 long type_AI_spellcaster::get_blind_value(const army* enemy, type_enchant_data caster)
 {
     // @stub
@@ -988,14 +1042,14 @@ long type_AI_spellcaster::get_move_order_change_value(const army* our_army)
 }
 
 // E:\gamedcs\ai_tactical.cpp:1788
-DC_ONLY(0x3fa24, 0x1FA)
+VA(0x00439270, 0x28B)  // anchor-vtable, dc 0x3fa24
 long type_AI_spellcaster::get_muck_and_mire_value(const army* enemy, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:1884
-DC_ONLY(0x3fc20, 0x5E)
+VA(0x00439500, 0x4C)  // anchor-vtable, dc 0x3fc20
 long type_AI_spellcaster::get_poison_value(const army* enemy, type_enchant_data caster)
 {
     // @stub
@@ -1073,28 +1127,28 @@ long type_AI_spellcaster::get_protection_value(const army* our_army, TSpellSchoo
 }
 
 // E:\gamedcs\ai_tactical.cpp:2077
-DC_ONLY(0x40060, 0x2A)
+VA(0x004399a0, 0x29)  // anchor-vtable, dc 0x40060
 long type_AI_spellcaster::get_air_protection_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:2087
-DC_ONLY(0x4008c, 0x2A)
+VA(0x004399d0, 0x29)  // anchor-vtable, dc 0x4008c
 long type_AI_spellcaster::get_fire_protection_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:2097
-DC_ONLY(0x400b8, 0x3A)
+VA(0x00439a00, 0x32)  // anchor-vtable, dc 0x400b8
 long type_AI_spellcaster::get_earth_protection_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:2107
-DC_ONLY(0x400f4, 0x3A)
+VA(0x00439a40, 0x32)  // anchor-vtable, dc 0x400f4
 long type_AI_spellcaster::get_water_protection_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
@@ -1345,21 +1399,21 @@ void type_AI_spellcaster::consider_enchantment(type_spell_choice* choice, long g
 }
 
 // E:\gamedcs\ai_tactical.cpp:2553
-DC_ONLY(0x40ec0, 0x15C)
+VA(0x0043aa60, 0x235)  // anchor-callee, dc 0x40ec0
 void type_AI_spellcaster::consider_teleport(type_spell_choice* choice)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:2608
-DC_ONLY(0x4101c, 0x25C)
+VA(0x0043aca0, 0x2AE)  // anchor-callee, dc 0x4101c
 void type_AI_spellcaster::consider_resurrect(type_spell_choice* choice)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:2685
-DC_ONLY(0x41278, 0x228)
+VA(0x0043af50, 0x284)  // anchor-callee, dc 0x41278
 void type_AI_spellcaster::consider_sacrifice(type_spell_choice* choice, const army* healed_army, long target_hex)
 {
     // @stub
@@ -1376,21 +1430,21 @@ void type_AI_spellcaster::consider_sacrifice(type_spell_choice* choice)
 }
 
 // E:\gamedcs\ai_tactical.cpp:2788
-DC_ONLY(0x41558, 0xCC)
+VA(0x0043b2e0, 0x85)  // anchor-vtable, dc 0x41558
 long type_AI_spellcaster::get_clone_value(const army* our_army, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:2813
-DC_ONLY(0x41624, 0x26C)
+VA(0x0043b370, 0x18E)  // anchor-vtable, dc 0x41624
 long type_AI_spellcaster::get_curse_value(const army* enemy, type_enchant_data caster)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:2847
-DC_ONLY(0x41890, 0x1E2)
+VA(0x0043b500, 0x17D)  // anchor-vtable, dc 0x41890
 long type_AI_spellcaster::get_forgetfulness_value(const army* enemy, type_enchant_data caster)
 {
     // @stub
@@ -1420,7 +1474,7 @@ type_AI_spellcaster::TEnchantValue type_AI_spellcaster::get_enchantment_function
 }
 
 // E:\gamedcs\ai_tactical.cpp:3016
-DC_ONLY(0x41c30, 0x22C)
+VA(0x0043b8f0, 0x224)  // anchor-callee, dc 0x41c30
 void type_AI_spellcaster::consider_earthquake(type_spell_choice* choice)
 {
     // @stub
@@ -1504,14 +1558,14 @@ void type_AI_spellcaster::find_enemy_attacks()
 }
 
 // E:\gamedcs\ai_tactical.cpp:3311
-DC_ONLY(0x423f4, 0xD0)
+VA(0x0043c330, 0x16C)  // anchor-callee, dc 0x423f4
 long type_AI_spellcaster::get_ogre_mage_value(const army* target)
 {
     // @stub
 }
 
 // E:\gamedcs\ai_tactical.cpp:3335
-DC_ONLY(0x424c4, 0xE4)
+VA(0x0043c4a0, 0x180)  // anchor-callee, dc 0x424c4
 long type_AI_spellcaster::get_caliph_value(const army* target)
 {
     // @stub
