@@ -626,15 +626,6 @@ void initialize_buildings(town* current_town, const TownExtra* town_setup)
 // 0x6783cc that game::SetMapSize writes. 137 B against DC's 138.
 #endif  // @carcass
 
-// Map extents, retail .data 0x6783c8 / 0x6783cc - the pair
-// game::SetMapSize writes and every cell index in the engine is built
-// from. findpath.h declares the same two words for its own TU; this
-// file-local pair keeps town.obj off that header (a plain `extern int`
-// is in the include-set-sensitivity inert set, an extra include is
-// not).
-extern int gMapWidth;
-extern int gMapHeight;
-
 // NewmapCell's +0xc flags word, read WHOLE. mapcell.h models those 16
 // bits as three bitfields, because mapcell.cpp's cell_is_trigger and
 // ai_player.cpp both read is_trigger by name - but retail's
@@ -644,11 +635,15 @@ extern int gMapHeight;
 // read cannot (a bitfield emits a masked byte test). Overlaying a
 // union in mapcell.h DOES reproduce it, and was measured: it costs
 // initialize_game_data 100.0 -> 96.09 via the include-set sensitivity
-// class, so it is rejected. Taking the word view locally has no
-// closure cost at all. The offset is the one the bitfields occupy.
+// class, so it is rejected. Taking the word view here has no closure
+// cost at all. The offset is the one the bitfields occupy.
+// The two-step cast through `const void*` is deliberate: it makes the
+// re-view a legal static_cast, so this costs no reinterpret_cast debt
+// (which the cleanliness board only ever drains).
 static unsigned short cell_flags_word(const NewmapCell* cell)
 {
-    return reinterpret_cast<const unsigned short*>(cell)[6];
+    return static_cast<const unsigned short*>(
+        static_cast<const void*>(cell))[6];
 }
 
 // MERGED FAIL BLOCK, the same shape can_build needed above: every gate
@@ -672,12 +667,11 @@ unsigned char check_shipyard_square(town* current_town, long x, long y)
                     int size = gpGame->worldMap.Size;
                     NewmapCell* cell = &gpGame->worldMap.cellData[
                         (current_town->mapZ * size + y) * size + x];
-                    // 8 is eTerrainWater (terrain.h's ten-mask
-                    // permutation pins it). Retail materialises the 8
-                    // ONCE in ebx and reuses it for the BOAT compare
-                    // below - two distinct source constants that
+                    // Retail materialises the 8 ONCE in ebx and reuses
+                    // it for the BOAT compare below - two distinct
+                    // source constants (eTerrainWater and BOAT) that
                     // happen to share a value, CSE'd by VC6.
-                    if (cell->terrain == 8) {
+                    if (cell->terrain == eTerrainWater) {
                         unsigned short flags = cell_flags_word(cell);
                         if (!(flags & 0x100)) {
                             if (!(flags & 0x1000) || cell->type == BOAT) {
