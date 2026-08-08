@@ -5,6 +5,24 @@
 #ifndef HOMM3_AI_H
 #define HOMM3_AI_H
 
+class army;
+
+// E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort
+// predicate. A DC roster row (func_moves_before::operator(), 0x28024,
+// three parameters = this + two) proves it is an empty FUNCTOR class,
+// not a free function: the retail sort call pushes a garbage 4-byte
+// slot for the by-value temp - the same uninitialised-empty-class
+// coalescing std::vector's allocator subobject shows - where a function
+// pointer would have taken a reloc. Retail's only copy is inlined into
+// the _Insertion_sort COMDAT at 0x4233c9, which reads it as
+//   x->field_190 > y->field_190
+//     || (x->field_190 == y->field_190 && x->bitIndex < y->bitIndex)
+// - descending on the move key, ascending on the stack index so equal
+// keys stay in slot order.
+struct func_moves_before {
+    bool operator()(const army* a, const army* b) const;
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\ai.cpp:365, dc 0x2400c) long get_area_attack_value(const army* current_army, long hex, long our_group, type_AI_combat_parameters* data);
 // CODEVIEW(E:\gamedcs\ai.cpp:610, dc 0x24604) long get_move_order(const army* current_army);

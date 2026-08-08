@@ -188,7 +188,17 @@ public:
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
     unsigned char bCreaturePlacement; // +0x13d68
+    char pad_13d69[0x7b];
+    // "Move order is reversed for this combat": find_move_order
+    // (0x41f179) reads it through the gpCombatManager GLOBAL - not
+    // through its own `this` - and, when it is set, keys every stack
+    // that is not already flagged with the NEGATED speed, which turns
+    // the descending sort into an ascending one. move_toward (0x41f580)
+    // is the second reader. Byte width is proven by the `mov al, [ecx +
+    // 0x13de4] / test al, al` pair. Name provisional.
+    unsigned char field_13de4;        // +0x13de4
 
+    int GetGridIndex(int x, int y);
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();
@@ -229,6 +239,7 @@ public:
                                     long target_hits);        // 0x422440
     unsigned char can_cast_spells(long side,
                                   unsigned char hero_spell);  // 0x41f890
+    void find_move_order(std::vector<army*>* result);         // 0x41f140
     long get_attack_change(const army* current_army, const army* enemy,
                            const type_AI_combat_parameters* data);
                                                               // 0x41f3b0
@@ -276,6 +287,40 @@ extern combatManager* gpCombatManager;
 // rule they encode. Neither is defined here; cmbtmgr is only a reader.
 DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
 DATA(0x00697744) extern unsigned char gCombatFlag697744;
+
+// The four screen hit rectangles GetGridIndex (0x4647a0) tests before
+// it falls through to the grid arithmetic, one per special combat hex,
+// in its own test order: 0x694f08 -> hex 252, 0x694ef0 -> 253,
+// 0x694ea8 -> 254, 0x694ed8 -> 255. Each is a left/top/right/bottom
+// quadruple - the read order is left, RIGHT, top, BOTTOM, which is the
+// natural `l <= x && x <= r && t <= y && y <= b` bounding-box test and
+// is what fixes right at +8 rather than +4.
+// SPELLED AS SIXTEEN SEPARATE INTS ON PURPOSE. A four-int struct
+// produces byte-identical IMAGE code (`cmp eax, [0x694eb0]` either
+// way), but in the OBJECT it becomes one reloc against the base symbol
+// with an in-instruction displacement of 8, where the delinked target
+// carries a distinct symbol per referenced address and a displacement
+// of ZERO - and the displacement is part of the scored bytes. So this
+// is a representation choice forced by the delinker's per-address
+// symbol split, NOT evidence that retail's source lacked a struct.
+// NAMES ARE BOOTSTRAP INVENTIONS - no roster, string or DC global
+// reaches any of them, so each keeps an address ordinal.
+DATA(0x00694ea8) extern int gCombatHexLeft694ea8;
+DATA(0x00694eac) extern int gCombatHexTop694eac;
+DATA(0x00694eb0) extern int gCombatHexRight694eb0;
+DATA(0x00694eb4) extern int gCombatHexBottom694eb4;
+DATA(0x00694ed8) extern int gCombatHexLeft694ed8;
+DATA(0x00694edc) extern int gCombatHexTop694edc;
+DATA(0x00694ee0) extern int gCombatHexRight694ee0;
+DATA(0x00694ee4) extern int gCombatHexBottom694ee4;
+DATA(0x00694ef0) extern int gCombatHexLeft694ef0;
+DATA(0x00694ef4) extern int gCombatHexTop694ef4;
+DATA(0x00694ef8) extern int gCombatHexRight694ef8;
+DATA(0x00694efc) extern int gCombatHexBottom694efc;
+DATA(0x00694f08) extern int gCombatHexLeft694f08;
+DATA(0x00694f0c) extern int gCombatHexTop694f0c;
+DATA(0x00694f10) extern int gCombatHexRight694f10;
+DATA(0x00694f14) extern int gCombatHexBottom694f14;
 
 // Per-castle hex-index table at 0x63bd00: InCastle divides the hex by
 // 0x11 (the row stride) and compares against the row's wall column.
