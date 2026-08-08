@@ -160,8 +160,15 @@ public:
     unsigned char mapX;
     unsigned char mapY;
     unsigned char mapZ;
+    // The dock square, as a pair of map bytes. check_shipyard_square
+    // (0x5c0c90) writes BOTH on success - `mov [ecx+8],dl` from the x
+    // parameter and `mov [ecx+9],dl` from y - which is what proves +9
+    // is the partner of +8 and not padding. dockSite therefore doubles
+    // as the square's x; TOWN_DOCK_SITE_NONE (0xff) in it is the "no
+    // dock square" sentinel the CanBuildDock family tests.
     unsigned char dockSite;
-    char pad_09[0x3];
+    unsigned char dockSiteY;
+    char pad_0a[0x2];
     // The hero standing inside the town, -1 for none.
     // remove_garrison_hero moves this id into visitingHeroId and hands
     // the hero to hero::PlaceInMap; SwapHeroes exchanges the pair.
@@ -224,6 +231,11 @@ public:
     // (the UpgradedDwellingID precedent).
     int get_horde(long dwelling) const;
     long get_horde_bonus(long dwelling) const;
+    // NOT const: retail 0x5bf810 is `ret 4` with the town in ecx and
+    // reads only members, but nothing proves constness either way, so
+    // it follows get_castle_growth_bonus' neighbour rather than
+    // asserting one.
+    long get_legion_bonus(long dwelling);
     // 0x5bfb60, located not reconstructed - declared for
     // increase_population's call site, which pushes the slot as a dword
     // and tests the result with `test ax,ax` (a short return).
