@@ -31,16 +31,33 @@ widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeig
     freeText = 0;
 }
 
-#if 0  // @carcass
+// E:\gamedcs\widget.cpp:94 - widget::`scalar deleting destructor'
+// (dc 0x197104). Compiler-generated from the virtual dtor; our base
+// obj already emits ??_Gwidget@@UAEPAXI@Z, this claim names the
+// retail body so the pair scores. Retail places it BETWEEN the ctors
+// and the dtor (the DC build appends it after), the resource.cpp
+// precedent. Promoted from DC_ONLY 2026-08-08 on body evidence: the
+// 0x5fe3b0 row stores ??_7widget@@6B@ at +0, clears
+// widget::last_hover_widget (0x6aac68) when it is this, inlines the
+// whole ~widget free path, and ends on the `flags & 1 -> operator
+// delete` tail that only a scalar deleting dtor carries. The header's
+// vtable roster already named this address in slot 0.
+VA_COMPGEN(0x005fe3b0, 0x5C, SCALAR_DELETING_DTOR, widget)
 
 // E:\gamedcs\widget.cpp:106
-DC_ONLY(0x196bd4, 0x3A)
-void widget::widget()
+// Promoted from DC_ONLY 2026-08-08 on body evidence: 29 retail bytes
+// at 0x5fe410, thiscall with no stack args (`ret`), storing the
+// widget vtable and exactly the five fields below - focusable first,
+// as the six-argument ctor's initialiser list also does.
+VA(0x005fe410, 0x1D)  // anchor-vtable + body, dc 0x196bd4
+widget::widget()
+    : focusable(0)
 {
-    // @stub
+    RollOver = 0;
+    RightClick = 0;
+    freeText = 0;
+    status = WIDGET_ACTIVE | WIDGET_DRAWN;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\widget.cpp:127
 VA(0x005fe430, 0x45)  // call-proven (base-dtor call in the button-family dtors), dc 0x196c10
@@ -186,23 +203,26 @@ int widget::Main(message* msg)
 }
 
 // E:\gamedcs\widget.cpp:477
+// Store order is byte-forced (2026-08-08, exhaustive 720-permutation
+// sweep of the eight assignments against the retail bytes): the three
+// unused fields are cleared first, then the carried fields are filled
+// in message's own declaration order (id, codeX, codeY, extra,
+// window). Five of the 720 orders are byte-exact and all five share
+// that shape - zeros first, codeX before codeY, extra after codeY.
+// The sibling house order used by strip's DrawMonster family (zeros,
+// window, id, codeX, codeY) is NOT one of them: it scores 23.6.
 VA(0x005fe7c0, 0x40)  // anchor-global, dc 0x196f88
 int widget::send_message(widget::ECommands command, int extra)
 {
-    // Residual (79.4%): retail keeps the window/codeX/extra stores below
-    // the zero run where this compile hoists the window statement; the
-    // order sweep (8 permutations) plateaus here - same scheduler-window
-    // signature as the armyGroup(TCreatureType,int) residual. Statement
-    // SEMANTICS match store for store.
     message msg;
-    msg.codeY = id;
     msg.qualifier = 0;
     msg.mouseX = 0;
     msg.mouseY = 0;
-    msg.window = parentWindow;
-    msg.codeX = command;
-    msg.extra = extra;
     msg.id = MESSAGE_WIDGET;
+    msg.codeX = command;
+    msg.codeY = id;
+    msg.extra = extra;
+    msg.window = parentWindow;
     return Main(&msg);
 }
 
@@ -256,16 +276,17 @@ void widget::process_hover()
 VA(0x005fe940, 0x83)  // vtable-slot 9 of the widget family, dc 0x1970c0
 void widget::enable(unsigned char arg)
 {
-    // Residual (89.6%): the two member loads (parentWindow dword, id
-    // movsx) stay swapped against retail whichever statement order
-    // feeds them - the same scheduler-window plateau send_message
-    // documents below. Statement SEMANTICS match store for store.
+    // Store order is byte-forced the same way send_message's is
+    // (2026-08-08, exhaustive 720-permutation sweep): the zero run
+    // must precede the codeY store. Four of the 720 orders are
+    // byte-exact and this is the one that differs from the rest of
+    // the file's house order by that single move.
     if (arg) {
         message msg;
-        msg.codeY = id;
         msg.qualifier = 0;
         msg.mouseX = 0;
         msg.mouseY = 0;
+        msg.codeY = id;
         msg.window = parentWindow;
         msg.id = MESSAGE_WIDGET;
         msg.codeX = WIDGET_CLEAR_STATUS;
@@ -273,10 +294,10 @@ void widget::enable(unsigned char arg)
         Main(&msg);
     } else {
         message msg;
-        msg.codeY = id;
         msg.qualifier = 0;
         msg.mouseX = 0;
         msg.mouseY = 0;
+        msg.codeY = id;
         msg.window = parentWindow;
         msg.id = MESSAGE_WIDGET;
         msg.codeX = WIDGET_SET_STATUS;
@@ -285,16 +306,8 @@ void widget::enable(unsigned char arg)
     }
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\widget.cpp:94
-DC_ONLY(0x197104, 0x34)
-void* widget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
+// widget::`scalar deleting destructor' (dc 0x197104) is claimed in
+// retail link order above, at 0x5fe3b0.
 
 DATA(0x006aac68)
 widget* widget::last_hover_widget;

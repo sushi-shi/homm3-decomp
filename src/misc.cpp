@@ -194,23 +194,49 @@ std::basic_string<char,std::char_traits<char>,std::allocator<char> format_string
 VA(0x0050c6e0, 0x55)  // anchor-global, dc 0xfe150
 TPickANumber::TPickANumber(int lowBound, int high)
 {
-    low = lowBound;
-    count = high - lowBound + 1;
-    // The shipped uninit artifact: retail copies the reused upper
-    // byte of the lowBound slot; this spelling reproduces the byte
-    // for constant call sites and awaits a cleanliness ruling.
+    // The span local `n` is load-bearing: retail keeps the span in one
+    // register (`lea edi,[ecx+1]`) and feeds the clamp, the fill guard
+    // and both end pointers from it. Computing `count` in place
+    // (`inc`) and re-reading the member instead costs the whole tail.
+    int n = high - lowBound + 1;
+    // The shipped uninit artifact: retail reads the byte straight off
+    // the lowBound parameter slot (`mov dl,[ebp+0xb]`), which is an
+    // uninitialised local VC6's slot reuse landed there - not an
+    // expression over lowBound at all. This stand-in reproduces the
+    // VALUE for the constant call sites and awaits a cleanliness
+    // ruling; it is written FIRST only because that placement costs
+    // the fewest registers (72.2 here vs 69.1 in any other slot).
+    // Spelling the alias literally - a byte read through
+    // static_cast<const unsigned char*>(static_cast<const void*>
+    // (&lowBound))[3] - does NOT recover the codegen (72.1) and is
+    // rejected: it would assert a source construct the evidence
+    // contradicts, for no gain.
     flag = static_cast<unsigned char>(static_cast<unsigned>(lowBound) >> 24);
-    int n = count;
-    if (n < 0)
-        n = 0;
-    marks = new unsigned char[n];
-    if (count > 0 && marks) {
-        unsigned char* fill = marks;
-        for (int i = count; i; --i)
-            *fill++ = 1;
+    low = lowBound;
+    count = n;
+    // Retail clamps with a BRANCH (`test/mov/jge/xor`), so the clamp
+    // is an if-statement on a copy, not a ternary - a ternary compiles
+    // to the branchless setl/dec/and idiom.
+    int alloc = n;
+    if (alloc < 0)
+        alloc = 0;
+    marks = new unsigned char[alloc];
+    // Retail's fill guard is `test/jbe` (unsigned) and the loop keeps
+    // a per-iteration null test on the WALKING pointer, so the null
+    // check is inside the body and the counter is unsigned. Hoisting
+    // the check (`if (count > 0 && marks)`) lets VC6 collapse the
+    // whole loop into a dword splat (mov eax,0x1010101) instead.
+    if (static_cast<unsigned>(n) > 0) {
+        unsigned char* p = marks;
+        unsigned i = n;
+        do {
+            if (p)
+                *p = 1;
+            ++p;
+        } while (--i);
     }
-    end1 = marks + count;
-    end2 = marks + count;
+    end1 = marks + n;
+    end2 = marks + n;
 }
 
 // E:\gamedcs\misc.cpp:849
@@ -219,9 +245,21 @@ int TPickANumber::Pick()
 {
     if (count <= 0)
         return low - 1;
-    int skip = 0;
-    if (count - 1 != 0)
-        skip = rand() % count;
+    // Retail tests the span TWICE off one `test edi,edi` - `jne` past
+    // the zero arm, then `jge` into the rand arm - so the source is a
+    // three-arm chain on `count - 1`, not the single `!= 0` guard this
+    // used to carry (which emitted one test and scored 57.8). The
+    // divisor is spelled `m + 1`, not `count`: retail recovers it with
+    // `inc edi` on the span register rather than re-reading the
+    // member.
+    int m = count - 1;
+    int skip;
+    if (m == 0)
+        skip = 0;
+    else if (m < 0)
+        skip = 0;
+    else
+        skip = rand() % (m + 1);
     int idx = 0;
     for (;;) {
         if (marks[idx]) {
@@ -232,6 +270,13 @@ int TPickANumber::Pick()
         idx++;
     }
     count--;
+    // Residual (91.2%): retail RE-READS marks from the object after
+    // the count store (`mov eax,[esi+0xc]` between `mov [esi+4],edi`
+    // and the byte store) where this compile reuses the copy the scan
+    // loop left in eax - one extra load, and `pop edi` sits one slot
+    // later. Tried and rejected: a local scan pointer so the final
+    // store is the only member read (90.98), and `count = count - 1`
+    // instead of `count--` (91.22, identical bytes).
     marks[idx] = 0;
     return low + idx;
 }

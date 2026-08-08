@@ -66,16 +66,31 @@ VA(0x005baba0, 0xA4)  // anchor-global, dc 0x162bbc
 char textEntryWidget::GetCharPressed(message* msg)
 {
     char pressed = 0;
-    unsigned char scanCode;
 
     if (msg->codeX >= 0x100) {
-        // 95.6 residual (2026-08-06): retail extracts the scan byte as
-        // `xor edx,edx; mov dl,ch` (byte-register move off the cached
-        // codeX); every source spelling tried - int shift, uchar local,
-        // HIBYTE word-shift idiom, byte-pointer view - compiles to
-        // `sar ecx,8; and ecx,0xff` or a memory byte re-read instead.
-        // One block, cosmetic; rest of the function is byte-identical.
-        scanCode = static_cast<unsigned char>(msg->codeX >> 8);
+        // The scan byte is the high byte of codeX's low word. Two
+        // details are byte-forced (2026-08-08), not stylistic:
+        //   - the `int code` copy lives INSIDE this block. It forces
+        //     codeX into a register (retail `mov ecx,[edx+4]`) while
+        //     leaving msg live in edx for the else arm's memory read
+        //     (`mov al,[edx+4]`). Hoisting it above the `if` lets VC6
+        //     coalesce msg and codeX into one register (msg moves to
+        //     ecx) and costs four instructions.
+        //   - the 16-bit view is what triggers retail's byte-register
+        //     extract `xor edx,edx; mov dl,ch`. Shifting the full int
+        //     instead compiles to `sar ecx,8; and ecx,0xff`, and
+        //     reading the byte without the `int code` copy compiles to
+        //     a memory re-read `mov dl,[ecx+5]`.
+        // Residual (97.5%): one redundant `and edx,0xff` - VC6 re-widens
+        // the byte for the switch even though `xor edx,edx; mov dl,ch`
+        // already zero-extended it. Tried and rejected: int/unsigned/
+        // ushort/char switch subjects, a bare temporary with no
+        // variable, `(code & 0xFFFF) >> 8`, a trailing `& 0xFF`, the
+        // HIBYTE macro shape, and an unsigned `code` - all keep the mask
+        // (97.5) or lose the `ch` extract entirely (95.6).
+        int code = msg->codeX;
+        unsigned char scanCode = static_cast<unsigned char>(
+            static_cast<unsigned short>(code) >> 8);
         switch (scanCode) {
             case KEYCODE_KP_0:  // numpad Ins
                 return '0';
