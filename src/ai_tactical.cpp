@@ -231,8 +231,11 @@ void type_AI_combat_parameters::simulate_attack(const army* current_army, long* 
 // esi and the pre-simulation our_hits copy in edi, our CL swaps the
 // two (start_enemy takes ebx in both). Tried and rejected: swapping
 // the start_our/start_enemy declaration order, swapping the else-arm
-// assignment order, and folding the copies back into the address-taken
-// locals (91.5%). Register-homing family.
+// assignment order, folding the copies back into the address-taken
+// locals (91.5%), and swapping the our_hits/enemy_hits copy order
+// (99.03, measured 2026-08-08 - the naming lever that closed the
+// SpellCastWorkChance family does not reach this pair). Register-
+// homing family.
 VA(0x00435b90, 0xD2)  // corroborates, dc 0x3c9ac
 long type_AI_combat_parameters::get_simple_attack_effect(const army* current_army, long our_total, const army* enemy, long enemy_total, unsigned char ranged, long distance)
 {
@@ -707,13 +710,18 @@ found:
 }
 
 // E:\gamedcs\ai_tactical.cpp:912
-// Residual (93.2%): register colouring downstream of one pick - retail
-// loads creature_spell into DL (leaving EAX free to normalise
-// `!= 0` with xor/setne al), our CL loads it into AL after homing
-// `damage` and normalises through ECX, and every later scratch pair
-// swaps with it. Tried and rejected: folding both spells.obj calls
-// into one multiply expression so `damage` becomes an unnamed temp
-// (69.4%). Register-homing family.
+// EXACT 2026-08-08 by two namings, both byte-proven (93.2 -> 98.2 ->
+// 100.0). `creature_cast` is the shared SpellCastWorkChance flag
+// naming documented on get_disease_value. `capped` is the second:
+// spelling the _cpp_min as its OWN statement puts the `value` copy-in
+// store ahead of the get_total_hit_points call, exactly where retail
+// has it; left inline as the fourth argument, our CL sinks that store
+// below the call and past the compare (it can, because `value` lives
+// in callee-saved EBX). Tried and rejected: folding both spells.obj
+// calls into one multiply expression so `damage` becomes an unnamed
+// temp (69.4%); naming `can_shoot` (reorders the two leaf calls);
+// naming the hit points instead of the min (no change); swapping the
+// min's operands (inverts the compare).
 // The work chance is a FLOAT and the damage stays float all the way to
 // __ftol (fild dword / fstp DWORD / fmul dword) - the /Op float
 // round-trip, not the double one the rest of the TU uses. The two
@@ -728,14 +736,15 @@ long type_AI_spellcaster::get_damage_value(SpellID spell, long base_damage, cons
         return 0;
     long damage = gpCombatManager->ModifySpellDamage(base_damage, spell, our_hero,
                                                      target_hero, target, 0);
+    long creature_cast = creature_spell != 0;
     long value = static_cast<long>(
         gpCombatManager->SpellCastWorkChance(spell, side, target, 0, 1,
-                                             creature_spell != 0) * damage);
+                                             creature_cast) * damage);
     if (value <= 0)
         return 0;
+    long capped = _cpp_min(target->get_total_hit_points(0), value);
     value = target->get_loss_combat_value(params.lowest_attack, params.lowest_defense,
-                                          target->can_shoot(0),
-                                          _cpp_min(target->get_total_hit_points(0), value),
+                                          target->can_shoot(0), capped,
                                           params.kills_only);
     unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(target->creatureId) >> 21);
     if (target->disabled_290 || target->disabled_2b0 || target->disabled_2c0
@@ -962,7 +971,15 @@ long type_AI_spellcaster::get_bless_value(const army* our_army, type_enchant_dat
 // `factor`, so no other displacement moves). Frame-slot colouring, the
 // class already documented on get_attack_skill_value. Tried and
 // rejected: dropping either explicit cast (98.98 both ways) and
-// dropping the `combined` local for one inlined sum (98.98).
+// dropping the `combined` local for one inlined sum (98.98). Swept
+// again 2026-08-08 with the naming lever that closed the
+// SpellCastWorkChance family - `double increase = combined; increase
+// /= old_damage;`, the same split with an explicit cast, and a named
+// `divisor` - all three move the pair of scratch slots around
+// (increase's own slot, or a named divisor slot) but NONE reproduces
+// retail's single reused slot, because retail's `fld` of the numerator
+// happens BEFORE the divisor's fild and no source order we can write
+// makes our CL emit that fld early.
 VA(0x004375d0, 0x224)  // anchor-vtable, dc 0x3e280
 long type_AI_spellcaster::get_frenzy_value(const army* our_army, type_enchant_data caster)
 {
@@ -1168,10 +1185,8 @@ long type_AI_spellcaster::get_mirth_value(const army* our_army, type_enchant_dat
 // is 50*136 + 0x34, and the work-chance leaf is pushed the literal
 // 0x32 - both SPELL_SORROW.
 //
-// Residual (99.5%): register naming only, branch sequences AGREE - the
-// setne/side pair around SpellCastWorkChance swaps EAX and EDX, and
-// that renames the scale copy and the two params pushes downstream.
-// Register-tie-break cap.
+// EXACT 2026-08-08: the last delta was the shared SpellCastWorkChance
+// EAX/EDX pair, closed by naming the flag (see get_disease_value).
 VA(0x004382c0, 0x1C6)  // anchor-vtable, dc 0x3e658
 long type_AI_spellcaster::get_sorrow_value(const army* enemy, type_enchant_data caster)
 {
@@ -1188,9 +1203,11 @@ long type_AI_spellcaster::get_sorrow_value(const army* enemy, type_enchant_data 
     double effect = -AI_value_of_morale(_cpp_clamp(enemy->morale, 3, -3), -change);
     if (effect == 0.0)
         return 0;
-    if (caster.field_10)
+    if (caster.field_10) {
+        long creature_cast = creature_spell != 0;
         effect = effect * gpCombatManager->SpellCastWorkChance(SPELL_SORROW, side, enemy,
-                                                               0, 1, creature_spell != 0);
+                                                               0, 1, creature_cast);
+    }
     double portion;
     if (caster.duration >= params.odds)
         portion = 1.0;
@@ -1320,16 +1337,29 @@ long type_AI_spellcaster::get_defense_skill_value(const army* our_army, long dur
 // attack/defense debuff and the AI reuses the Weakness resistance
 // query for it. Transcribed as retail spells it.
 //
-// Residual (93.9%): four instructions in the work-chance argument
-// setup, branch sequences AGREE. Retail keeps `creature_spell` in CL
-// and refills ECX with gpCombatManager the moment CL dies, which
-// leaves `side` to be loaded late, right where it is pushed; our CL
-// pre-loads `side` into ECX, so the flag lands in DL and the this-
-// pointer load sinks below the pushes. The same four instructions are
-// the whole residual of get_disruptive_ray_value (97.7%) and part of
-// get_damage_value's and get_misfortune_value's - it is the shared
-// SpellCastWorkChance call site, not this body. Register-homing
-// family.
+// The shared SpellCastWorkChance call-site spelling is settled here
+// (2026-08-08), and it is ONE naming: the normalised creature-spell
+// flag is a NAMED LOCAL, not an inline `creature_spell != 0` argument.
+//
+//     long creature_cast = creature_spell != 0;
+//     ... SpellCastWorkChance(spell, side, enemy, 0, 1, creature_cast)
+//
+// Bound to a name, the flag's pseudo-register is created before
+// `side`'s and therefore takes VC6's first-preference EAX, which is
+// where retail normalises it (`xor eax,eax / setne al / push eax`) in
+// every one of the eight call sites in this TU. Left inline, the
+// argument is evaluated in place, `side` is allocated first, and the
+// flag falls through to DL or CL - the four-instruction delta that
+// used to cap get_damage_value (93.2), get_disease_value (93.9),
+// get_misfortune_value and get_blind_value (96.6),
+// get_disruptive_ray_value (97.7), get_sorrow_value (99.5),
+// get_curse_value (99.7) and get_forgetfulness_value (99.8). All eight
+// call sites now agree unmasked; seven of the eight functions are
+// exact. Where retail puts `side` and the gpCombatManager this-load
+// varies BETWEEN retail bodies (before the setne here and in
+// get_curse_value, after the pushes in get_disruptive_ray_value) and
+// follows from the surrounding pressure once the flag holds EAX - it
+// is not a separate source-level choice.
 VA(0x00438a10, 0xAD)  // anchor-vtable, dc 0x3ed34
 long type_AI_spellcaster::get_disease_value(const army* enemy, type_enchant_data caster)
 {
@@ -1341,10 +1371,12 @@ long type_AI_spellcaster::get_disease_value(const army* enemy, type_enchant_data
                                                                      params.lowest_defense));
     long value = static_cast<long>((total - total * 0.9)
                                    * static_cast<double>(caster.duration));
-    if (caster.field_10)
+    if (caster.field_10) {
+        long creature_cast = creature_spell != 0;
         value = static_cast<long>(
             gpCombatManager->SpellCastWorkChance(SPELL_WEAKNESS, side, enemy, 0, 1,
-                                                 creature_spell != 0) * value);
+                                                 creature_cast) * value);
+    }
     return value;
 }
 
@@ -1478,9 +1510,12 @@ long type_AI_spellcaster::get_tough_skin_value(const army* our_army, type_enchan
 // SPELL_DISRUPTING_RAY is doubly pinned here: traits row +0x192c =
 // 47*136 + 0x34 AND the literal 0x2f pushed into the work-chance leaf.
 //
-// Residual (97.7%): the shared SpellCastWorkChance register tie-break
-// documented on get_disease_value, nothing else - branch sequences
-// AGREE. Tried and rejected: the guard before the armies-base read
+// EXACT 2026-08-08: the last delta was the shared SpellCastWorkChance
+// tie-break, closed by naming the flag (see get_disease_value). This
+// is the body that proves the this-load position is NOT part of that
+// spelling - retail loads gpCombatManager AFTER the pushes here and
+// before the setne in the other seven, and the one naming reproduces
+// both. Tried and rejected: the guard before the armies-base read
 // (68.1%), `i >= count` instead of `i == count` (74.4%), the base read
 // before the guard but `count` after it (90.3%), and calling the leaf
 // through the `combat` local instead of reloading gpCombatManager
@@ -1507,10 +1542,12 @@ long type_AI_spellcaster::get_disruptive_ray_value(const army* enemy, type_encha
                                                                      params.lowest_defense));
     long value = static_cast<long>(
         total - total * sqrt(1.0 - static_cast<double>(bonus) * 0.05));
-    if (caster.field_10)
+    if (caster.field_10) {
+        long creature_cast = creature_spell != 0;
         value = static_cast<long>(
             gpCombatManager->SpellCastWorkChance(SPELL_DISRUPTING_RAY, side, enemy, 0, 1,
-                                                 creature_spell != 0) * value);
+                                                 creature_cast) * value);
+    }
     return value;
 }
 
@@ -1549,10 +1586,10 @@ long type_AI_spellcaster::get_weakness_value(const army* enemy, type_enchant_dat
 // the work-chance leaf is pushed the literal 0x34 - both
 // SPELL_MISFORTUNE.
 //
-// Residual (96.6%): the shared SpellCastWorkChance tie-break documented
-// on get_disease_value plus the register naming it renames downstream;
-// branch sequences AGREE. Tried and rejected: `effect *=` instead of
-// `effect = effect * ...` (no change).
+// EXACT 2026-08-08: the last delta was the shared SpellCastWorkChance
+// tie-break and the register naming it renamed downstream, closed by
+// naming the flag (see get_disease_value). Tried and rejected:
+// `effect *=` instead of `effect = effect * ...` (no change).
 VA(0x00438f60, 0x199)  // anchor-vtable, dc 0x3f5f0
 long type_AI_spellcaster::get_misfortune_value(const army* enemy, type_enchant_data caster)
 {
@@ -1564,9 +1601,11 @@ long type_AI_spellcaster::get_misfortune_value(const army* enemy, type_enchant_d
     double effect = -AI_value_of_luck(_cpp_clamp(enemy->luck, 3, -3), -change);
     if (effect == 0.0)
         return 0;
-    if (caster.field_10)
+    if (caster.field_10) {
+        long creature_cast = creature_spell != 0;
         effect = effect * gpCombatManager->SpellCastWorkChance(SPELL_MISFORTUNE, side, enemy,
-                                                               0, 1, creature_spell != 0);
+                                                               0, 1, creature_cast);
+    }
     double portion;
     if (caster.duration >= params.odds)
         portion = 1.0;
@@ -1596,12 +1635,8 @@ long type_AI_spellcaster::get_misfortune_value(const army* enemy, type_enchant_d
 // Traits row +0x2124 = 62*136 + 0x34 and the work-chance leaf is pushed
 // the literal 0x3e - both SPELL_BLIND.
 //
-// Residual (96.6%): the shared SpellCastWorkChance register tie-break
-// documented on get_disease_value and NOTHING else - every other
-// instruction, immediate, slot and branch agrees unmasked. Retail names
-// EDX for `side` and EAX for the normalised flag and loads
-// gpCombatManager into ECX before the setne; our CL swaps the pair and
-// sinks the this-pointer load below the pushes.
+// EXACT 2026-08-08: the last delta was the shared SpellCastWorkChance
+// tie-break, closed by naming the flag (see get_disease_value).
 // Tried and rejected: separate `total` and `value` locals (95.95) -
 // retail colours the combat value and the priced value into the SAME
 // slot, the dead `enemy` parameter at [ebp+8], which is what one
@@ -1634,10 +1669,12 @@ long type_AI_spellcaster::get_blind_value(const army* enemy, type_enchant_data c
             scale = portion;
         value = static_cast<long>(static_cast<double>(value) * scale);
     }
-    if (caster.field_10)
+    if (caster.field_10) {
+        long creature_cast = creature_spell != 0;
         value = static_cast<long>(
             gpCombatManager->SpellCastWorkChance(SPELL_BLIND, side, enemy, 0, 1,
-                                                 creature_spell != 0) * value);
+                                                 creature_cast) * value);
+    }
     return value;
 }
 
@@ -1844,7 +1881,11 @@ long type_AI_spellcaster::get_dispel_value(const army* our_army, type_enchant_da
 // field_1c in AL; ours holds them in ECX and EAX respectively, which
 // renames the whole tail. Tried and rejected: evaluating the mastery
 // bonus before the power product, and the `&&` form of the field_1c
-// guard instead of nested ifs (both 95.5%). Register-homing family.
+// guard instead of nested ifs (both 95.5%), and un-naming `healing` so
+// the sum is the _cpp_min's inline first argument (95.4886, identical
+// to the named form - the naming lever that closed the
+// SpellCastWorkChance family does not reach this call site).
+// Register-homing family.
 // Cure prices two things at once: dispelling the bad spells off the
 // copy (get_cancel_value with bad_spells_only = 1) and the hit points
 // it puts back, capped at what the top creature has actually lost -
@@ -2115,13 +2156,14 @@ long type_AI_spellcaster::get_clone_value(const army* our_army, type_enchant_dat
 // Traits row +0x1684 = 42*136 + 0x34 and the work-chance leaf is pushed
 // the literal 0x2a - both SPELL_CURSE.
 //
-// Residual (99.7%): two register-homing deltas, no instruction, branch
-// or immediate difference at all (compared unmasked). One is the shared
-// SpellCastWorkChance EAX/EDX tie-break documented on
-// get_disease_value; the other is frame-slot colouring of the three
-// 8-byte double slots - retail lays `average` at [ebp-0x18], `damage`
-// at [ebp-0x10] and `scale` at [ebp-0x8], our CL starts the same
-// sequence one slot higher. Same class as get_attack_skill_value's
+// Residual (99.9%): ONE register-homing delta left, no instruction,
+// branch or immediate difference at all (compared unmasked). The
+// shared SpellCastWorkChance EAX/EDX tie-break closed 2026-08-08 by
+// naming the flag (see get_disease_value); what remains is frame-slot
+// colouring of the three 8-byte double slots - retail lays `average`
+// at [ebp-0x18], `damage` at [ebp-0x10] and `scale` at [ebp-0x8], our
+// CL starts the same sequence one slot higher. Same class as
+// get_attack_skill_value's
 // residual, where declaration hoisting was already measured to change
 // nothing (VC6 colours these by live range).
 // Tried and rejected: separate `total` and `value` locals (99.60) -
@@ -2151,10 +2193,12 @@ long type_AI_spellcaster::get_curse_value(const army* enemy, type_enchant_data c
         else
             scale = portion;
         value = static_cast<long>(value * scale);
-        if (caster.field_10)
+        if (caster.field_10) {
+            long creature_cast = creature_spell != 0;
             value = static_cast<long>(
                 gpCombatManager->SpellCastWorkChance(SPELL_CURSE, side, enemy, 0, 1,
-                                                     creature_spell != 0) * value);
+                                                     creature_cast) * value);
+        }
         return value;
     }
     return 0;
@@ -2170,9 +2214,9 @@ long type_AI_spellcaster::get_curse_value(const army* enemy, type_enchant_data c
 // positive-nesting form, not four split ifs.
 // The work-chance leaf is pushed the literal 0x3d, SPELL_FORGETFULNESS.
 //
-// Residual (99.8%): the shared SpellCastWorkChance EAX/EDX tie-break
-// documented on get_disease_value and nothing else - every other
-// instruction, immediate, frame slot and branch agrees unmasked.
+// EXACT 2026-08-08: the last delta was the shared SpellCastWorkChance
+// EAX/EDX tie-break, closed by naming the flag (see get_disease_value);
+// this is the body the naming was first proven on.
 VA(0x0043b500, 0x17D)  // anchor-vtable, dc 0x41890
 long type_AI_spellcaster::get_forgetfulness_value(const army* enemy, type_enchant_data caster)
 {
@@ -2198,10 +2242,12 @@ long type_AI_spellcaster::get_forgetfulness_value(const army* enemy, type_enchan
             else
                 scale = portion;
             value = static_cast<long>(value * scale);
-            if (caster.field_10)
+            if (caster.field_10) {
+                long creature_cast = creature_spell != 0;
                 value = static_cast<long>(
                     gpCombatManager->SpellCastWorkChance(SPELL_FORGETFULNESS, side, enemy,
-                                                         0, 1, creature_spell != 0) * value);
+                                                         0, 1, creature_cast) * value);
+            }
             return value;
         }
     }
