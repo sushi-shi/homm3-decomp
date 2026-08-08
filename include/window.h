@@ -106,24 +106,42 @@ public:
     int findWidget(int mx, int my);
     widget* findWidgetPtr(int mx, int my);
     void SetFocus(int id);
+    // DC: protected STATIC (no vfptr slot). /Gr makes it fastcall, which
+    // is exactly the TDialogHandler shape DoModal hands to DoDialog.
+    static int HeroWindowHandler(message& msg);
     void SleepAllWidgets(unsigned char sleep);
     void delete_widgets();
 
     virtual ~heroWindow();                            // slot 0, retail 0x5fea80
     virtual int Open(int zOrder, unsigned char update);      // slot 1, retail 0x5feae0
     virtual void Close(unsigned char update);         // slot 2, retail 0x5fec60
-    virtual int handle_message(message& msg) = 0;     // slot 3, sig unproven
-    virtual void handle_widget_hover(widget* w) = 0;  // slot 4
+    // CORRECTION 2026-08-08: slots 3 and 4 are NOT pure. Both hold real
+    // (empty) retail bodies that /OPT:ICF folded onto program-wide
+    // representatives - slot 3 onto 0x4ec560, the `xor eax,eax; ret 4`
+    // that inputmgr.cpp claims as inputManager::Main and mouseManager's
+    // vtable also points at, and slot 4 onto 0x485d80, the `ret 4` that
+    // widget's own slot 12 shares. A pure slot spells _purecall
+    // (0x617d9a), which is exactly what baseManager's three slots do
+    // hold, so the distinction is byte-visible. Declared only, no local
+    // definition (the widget::Close idiom): the folds have no claimable
+    // home in this TU.
+    virtual int handle_message(message& msg);         // slot 3, folded onto 0x4ec560
+    virtual void handle_widget_hover(widget* w);      // slot 4, folded onto 0x485d80
     virtual void DrawWindow(unsigned char update, int iLowID, int iHighID);   // slot 5, retail 0x5ff020
-    // Slot 6's body (0x5ff460, 33 B) hands the uncarved thunk 0x5ff500
-    // to heroWindowManager::DoDialog - reconstruct once that thunk has
-    // a carve row to sit on.
-    virtual int DoModal(unsigned char fadeIn) = 0;    // slot 6, retail 0x5ff460
+    // Slot 6 is NOT pure: 0x5ff460 is a real heroWindow body that hands
+    // HeroWindowHandler to heroWindowManager::DoDialog. Reconstructed
+    // 2026-08-08 - the "uncarved thunk" note was the blocker, and the
+    // thunk needed no carve row of its own: it is HeroWindowHandler,
+    // which the source only has to DEFINE for the address-take to
+    // resolve.
+    virtual int DoModal(unsigned char fadeIn);        // slot 6, retail 0x5ff460
     virtual void AddWidgetsToMessageStream();         // slot 7, retail 0x5ff570
-    // Slot 8's body (0x5ff5f0, 79 B) runs SleepAllWidgets' nest
-    // counter per widget through widget vtable slot 12 - reconstruct
-    // once widget's 13th slot is modeled.
-    virtual void _vslot8(unsigned char arg) = 0;      // slot 8, retail 0x5ff5f0, unidentified
+    // Slot 8 is NOT pure - 0x5ff5f0 is a real heroWindow body in
+    // window.obj's own band (reconstructed 2026-08-08, once widget's
+    // 13th slot was modelled). It runs widget::sleep over the whole
+    // Widgets vector, i.e. it is the window-wide half of the same
+    // nest-counter/edge-hook pair SleepAllWidgets runs on field_48.
+    virtual void _vslot8(unsigned char on);           // slot 8, retail 0x5ff5f0, unidentified
 };
 
 // CHeroWindowEx - heroWindow plus a rollover latch. Layout PROVEN by

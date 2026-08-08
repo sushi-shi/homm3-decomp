@@ -29,8 +29,39 @@ void border::border(int x, int y, int w, int h, int id, int style, unsigned char
 
 #endif  // @carcass
 
+// E:\gamedcs\border.cpp:35 - border::`scalar deleting destructor'
+// (dc 0x54d24). Slot 0 of border's vtable 0x63ba24; the 33-byte row
+// calls ??1border (0x44ff50) and carries the flags&1 operator delete
+// tail. Retail files each border-family sdd immediately AHEAD of its
+// own dtor (the DC build appends all five at the compiland tail).
+VA_COMPGEN(0x0044fee0, 0x21, SCALAR_DELETING_DTOR, border)
+
 VA(0x0044ff50, 0xB)  // anchor-global, dc 0x543d8
 border::~border()
+{
+}
+
+// E:\gamedcs\border.cpp:206 - the coloredBorderFrame dtor, the pair
+// that fixes vtable 0x63ba5c on this class: its sdd 0x4501a0 calls
+// 0x4501d0, and 0x4501d0 is the compiler-generated empty derived dtor
+// - the derived vtable store is dead-store-eliminated against the
+// inlined ~border, so only ??_7border@@6B@ survives before the
+// tail-jump to ~widget (the ~type_func_button shape in button.cpp).
+//
+// NO CLAIM ON THE sdd 0x4501a0 (33 B, dc 0x54da4) - and it is not a
+// spelling problem. That very dead-store elimination leaves nothing in
+// this TU referencing ??_7coloredBorderFrame@@6B@, so VC6 emits
+// neither the vtable nor ??_GcoloredBorderFrame@@UAEPAXI@Z and the
+// claim has no base-side function to pair with (verified: our
+// border.obj emits ??_7border/bitmapBorder/bitmapBorder16 and their
+// three ??_G COMDATs, and no coloredBorderFrame pair). Retail emits
+// both because its border.cpp also defines the coloredBorderFrame
+// CONSTRUCTOR - unclaimed 0x450130, 109 B, dc 0x54650 - which stores
+// the derived vtable and so keeps it alive. Land that ctor (it needs
+// the DC-attested color/colorize members at retail offsets) and the
+// sdd claim becomes free.
+VA(0x004501d0, 0xB)  // anchor-vtable (slot 0 chain of 0x63ba5c), dc 0x54dd8
+coloredBorderFrame::~coloredBorderFrame()
 {
 }
 
@@ -129,6 +160,11 @@ void bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id, const char* 
 
 #endif  // @carcass
 
+// E:\gamedcs\border.cpp:290 - bitmapBorder::`scalar deleting
+// destructor' (dc 0x54df0). Slot 0 of vtable 0x63ba94; calls
+// ??1bitmapBorder (0x450390) under the flags&1 tail.
+VA_COMPGEN(0x00450360, 0x21, SCALAR_DELETING_DTOR, bitmapBorder)
+
 // E:\gamedcs\border.cpp:294
 VA(0x00450390, 0x5B)  // anchor-global, dc 0x54860
 bitmapBorder::~bitmapBorder()
@@ -217,6 +253,11 @@ void bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id, const ch
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\border.cpp:404 - bitmapBorder16::`scalar deleting
+// destructor' (dc 0x54e24). Slot 0 of vtable 0x63bacc; calls
+// ??1bitmapBorder16 (0x450750) under the flags&1 tail.
+VA_COMPGEN(0x00450720, 0x21, SCALAR_DELETING_DTOR, bitmapBorder16)
 
 // E:\gamedcs\border.cpp:408
 VA(0x00450750, 0x5B)  // anchor-global, dc 0x54b68

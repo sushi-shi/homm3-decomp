@@ -22,6 +22,17 @@ public:
     unsigned int Justify;
 
     virtual ~textWidget();  // retail 0x5bc3b0
+    // Slot 13, the ONE virtual textWidget introduces (its vtable
+    // 0x642db0 is 14 wide against widget's 13). Retail body 0x57c6d0,
+    // a /Gy header COMDAT far outside textwdgt.obj's band: it takes one
+    // const char*, runs VC6's inline `repne scasb` strlen and assigns
+    // into the std::string at +0x30 - textWidget::Text. DC corroborates
+    // both ends: TextWdgt.h homes textWidget's small members inline,
+    // and textEntryWidget::SetText(const char*) (dc 0x1635dc) overrides
+    // exactly this slot at 0x5bb950. Declared only - no local
+    // definition, so callers dispatch through the slot (the
+    // widget::Close idiom).
+    virtual void SetText(const char* new_text);  // slot 13, retail 0x57c6d0
 };
 
 // Retail dtor 0x5bc6d0 is the empty derived dtor: the inlined

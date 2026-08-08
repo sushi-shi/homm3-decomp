@@ -396,6 +396,14 @@ public:
     TTerrainType GetNativeTerrain();
     unsigned char Merge(armyGroup* ag);
     void merge_armies(armyGroup* source);
+    // Overload set, both DC-attested and both byte-located 2026-08-08
+    // by arity inside the Swap..GetArmySizeName bracket: the no-arg
+    // form is retail 0x44ada0 (`ret`, dc 0x4ef88, 1 param) and the
+    // typed form 0x44adc0 (`ret 4`, dc 0x4efb8, 2 params). Both walk
+    // the seven slots adding numTroops; the difference is only the
+    // slot predicate.
+    int get_creature_total();
+    int get_creature_total(TCreatureType monType);
     // Param 4 is a full int MODE in retail (dword load, sentinel
     // values 2 and 5) - the DC prototype's on_cursed_ground uchar
     // name does not survive the bytes; class forward-decls suffice

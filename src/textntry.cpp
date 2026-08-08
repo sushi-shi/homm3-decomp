@@ -28,6 +28,13 @@ void textEntryWidget::textEntryWidget(int textEntryWidgetX, int textEntryWidgetY
 
 #endif  // @carcass
 
+// E:\gamedcs\textntry.cpp:71 - textEntryWidget::`scalar deleting
+// destructor' (dc 0x1637d4). Slot 0 of textEntryWidget's vtable
+// 0x642d40; the 33-byte row calls ??1textEntryWidget (0x5baae0) and
+// carries the flags&1 operator delete tail. Retail files it just
+// ahead of the dtor, the widget.obj/border.obj ordering.
+VA_COMPGEN(0x005ba8f0, 0x21, SCALAR_DELETING_DTOR, textEntryWidget)
+
 VA(0x005baae0, 0x62)  // anchor-global, dc 0x162af8
 textEntryWidget::~textEntryWidget()
 {

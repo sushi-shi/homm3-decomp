@@ -77,6 +77,21 @@ public:
     CRITICAL_SECTION section_mouse;
 
     mouseManager();
+    // Vtable 0x640028, FOUR slots (config/retail-vtables.tsv; the next
+    // table starts at 0x640038 = +4*4): baseManager's three overridden,
+    // then the virtual destructor mouseManager introduces at slot 3.
+    //   0 Open  0x50cbf0   1 Close 0x50cc40
+    //   2 Main  0x4ec560 - the program-wide `xor eax,eax; ret 4` that
+    //     /OPT:ICF folded, shared with inputManager::Main (which owns
+    //     the claim) and heroWindow::handle_message; declared only.
+    //   3 ??_GmouseManager 0x50cbc0, with ~mouseManager INLINED into it
+    //     (the widget `inline dtor` idiom) - which is why the dtor is
+    //     defined in this header and has no out-of-line retail row of
+    //     its own, DC's separate 0xfea50 body notwithstanding.
+    virtual int Open(int newPriority);   // slot 0, retail 0x50cbf0
+    virtual void Close();                // slot 1, retail 0x50cc40
+    virtual int Main(message& msg);      // slot 2, folded onto 0x4ec560
+    virtual ~mouseManager() { DeleteCriticalSection(&section_mouse); }
     void MouseCoords(int* x, int* y);
     void SetPointer(int new_frame, EPointerSet new_set);
     void Update(unsigned char bForceIt);

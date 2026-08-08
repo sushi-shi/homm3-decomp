@@ -185,6 +185,8 @@ armygrp	?IsMember@armyGroup@@QAEEW4TCreatureType@@@Z	100.0000
 armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	54.4022
 armygrp	?Swap@armyGroup@@QAEXHPAV1@H@Z	100.0000
 armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000
+armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000
+armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000
 # get_spell_work_chance hand-lowered 53.2143 -> 53.0900 (2026-08-07):
 # the old max was tuned under non-/Op; /Op is now the engine-wide
 # base profile and this unmatched float function re-tunes under it.
@@ -205,6 +207,10 @@ basemgr	??0baseManager@@QAE@XZ	100.0000
 border	??1bitmapBorder16@@UAE@XZ	100.0000
 border	??1bitmapBorder@@UAE@XZ	100.0000
 border	??1border@@UAE@XZ	100.0000
+border	??1coloredBorderFrame@@UAE@XZ	100.0000
+border	??_GbitmapBorder16@@UAEPAXI@Z	100.0000
+border	??_GbitmapBorder@@UAEPAXI@Z	100.0000
+border	??_Gborder@@UAEPAXI@Z	100.0000
 border	?Draw2@bitmapBorder16@@QAEXXZ	100.0000
 border	?SetImage@bitmapBorder@@QAEXPBD@Z	100.0000
 border	?SetPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000
@@ -214,12 +220,16 @@ button	??0type_func_button@@QAE@JJJJJPBDP6IHPAVmessage@@@ZHH@Z	100.0000
 button	??1button@@UAE@XZ	100.0000
 button	??1textButton@@UAE@XZ	100.0000
 button	??1type_func_button@@UAE@XZ	100.0000
+button	??_Gbutton@@UAEPAXI@Z	100.0000
+button	??_GtextButton@@UAEPAXI@Z	100.0000
+button	??_Gtype_func_button@@UAEPAXI@Z	100.0000
 button	?Draw@button@@UAEXXZ	100.0000
 button	?Draw@textButton@@UAEXXZ	93.9216
 button	?Main@button@@UAEHPAVmessage@@@Z	84.6566
 button	?Main@type_func_button@@UAEHPAVmessage@@@Z	100.0000
 button	?Select@button@@QAEHPAVmessage@@@Z	100.0000
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000
+button	?_vslot12@button@@UAEXH@Z	100.0000
 castle	?GetBuildingName@@YIPBDHH@Z	100.0000
 cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110
 cmbtmgr	?CombatIsOver@combatManager@@QAEEXZ	100.0000
@@ -469,6 +479,7 @@ hexcell	??0hexcell@@QAE@XZ	100.0000
 hexcell	?get_army@hexcell@@QAEPAVarmy@@XZ	100.0000
 hexcell	?get_dead_army@hexcell@@QAEPAVarmy@@H@Z	100.0000
 iconwdgt	??1iconWidget@@UAE@XZ	100.0000
+iconwdgt	??_GiconWidget@@UAEPAXI@Z	100.0000
 iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	72.0056
 iconwdgt	?NextRandomSiegeEngineFrame@iconWidget@@QAEXXZ	86.4111
 iconwdgt	?SetIconFrame@iconWidget@@QAEXH@Z	100.0000
@@ -552,7 +563,7 @@ inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000
 inputmgr	?Flush@inputManager@@QAEXXZ	100.0000
 inputmgr	?ForceMouseMove@inputManager@@QAEXXZ	100.0000
-inputmgr	?Main@inputManager@@UAEHPAVmessage@@@Z	100.0000
+inputmgr	?Main@inputManager@@UAEHAAVmessage@@@Z	100.0000
 inputmgr	?MakeScanCodeTable@inputManager@@QAEXXZ	100.0000
 inputmgr	?MouseMessageHandler@@YIHPAXIIJ@Z	99.9645
 inputmgr	?Open@inputManager@@UAEHH@Z	100.0000
@@ -577,9 +588,12 @@ misc	?WritePrefs@@YIXXZ	100.0000
 monframeinfo	?InitializeCreatureAnimationTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000
 monframeinfo	?InitializeCreatureAnimationTraitsTable@@YIEXZ	100.0000
 mousemgr	??0mouseManager@@QAE@XZ	99.9767
+mousemgr	??_GmouseManager@@UAEPAXI@Z	100.0000
 mousemgr	?CheckUpdate@mouseManager@@QAEXXZ	96.8521
+mousemgr	?Close@mouseManager@@UAEXXZ	100.0000
 mousemgr	?HidePointer@mouseManager@@QAEXXZ	100.0000
 mousemgr	?MouseCoords@mouseManager@@QAEXPAH0@Z	100.0000
+mousemgr	?Open@mouseManager@@UAEHH@Z	100.0000
 mousemgr	?Reset@mouseManager@@QAEXXZ	100.0000
 mousemgr	?SetPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	82.9333
 mousemgr	?ShowPointer@mouseManager@@QAEX_N@Z	100.0000
@@ -652,10 +666,12 @@ strip	?DrawIcons@strip@@QAEXEW4TCreatureType@@@Z	100.0000
 strip	?DrawMonster@strip@@IAEXHH@Z	100.0000
 strip	?DrawOwner@strip@@IAEXH@Z	93.3721
 textntry	??1textEntryWidget@@UAE@XZ	100.0000
+textntry	??_GtextEntryWidget@@UAEPAXI@Z	100.0000
 textntry	?GetCharPressed@textEntryWidget@@QAEDPAVmessage@@@Z	100.0000
 textntry	?SetFocus@textEntryWidget@@QAEXE@Z	100.0000
 textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000
 textwdgt	??1textWidget@@UAE@XZ	100.0000
+textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000
 town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000
 town	?CanBuildDock@town@@QAEEXZ	100.0000
 town	?HasGarrison@town@@QAEHXZ	100.0000
@@ -725,10 +741,12 @@ window	?BroadcastMessage@heroWindow@@QAEHHHHH@Z	100.0000
 window	?BroadcastMessage@heroWindow@@QAEHPAVmessage@@@Z	100.0000
 window	?CenterWindow@heroWindow@@QAEXHH@Z	92.8767
 window	?Close@heroWindow@@UAEXE@Z	100.0000
+window	?DoModal@heroWindow@@UAEHE@Z	100.0000
 window	?DrawWindow@heroWindow@@UAEXEHH@Z	100.0000
 window	?GetRolloverWidget@CHeroWindowEx@@UAEPAVtextWidget@@XZ	100.0000
 window	?GetWidget@heroWindow@@QAEPAVwidget@@H@Z	100.0000
 window	?Open@heroWindow@@UAEHHE@Z	100.0000
+window	?ProcessHover@CHeroWindowEx@@UAEEHH@Z	100.0000
 window	?ProcessRightSelect@CHeroWindowEx@@UAEEH@Z	100.0000
 window	?RemoveWidget@heroWindow@@QAEXPAVwidget@@@Z	100.0000
 window	?RestoreBackground@heroWindow@@QAEXE@Z	100.0000
@@ -739,10 +757,10 @@ window	?SleepAllWidgets@heroWindow@@QAEXE@Z	100.0000
 window	?WidgetClearStatus@heroWindow@@QAEHHH@Z	100.0000
 window	?WidgetSetStatus@heroWindow@@QAEHHH@Z	100.0000
 window	?WindowHandler@CHeroWindowEx@@UAEHPAVmessage@@@Z	100.0000
+window	?_vslot8@heroWindow@@UAEXE@Z	100.0000
 window	?delete_widgets@heroWindow@@QAEXXZ	100.0000
 window	?findWidget@heroWindow@@QAEHHH@Z	100.0000
 window	?findWidgetPtr@heroWindow@@QAEPAVwidget@@HH@Z	100.0000
-window	CHeroWindowEx_ProcessHover	0.0000
 winfile	??0File@@QAE@XZ	100.0000
 winfile	??1File@@QAE@XZ	100.0000
 winfile	?Close@File@@UAEEXZ	100.0000

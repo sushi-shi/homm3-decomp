@@ -13,7 +13,7 @@
 // E:\gamedcs\widget.cpp:43
 VA(0x005fe340, 0x62)  // call-proven (base call in button ctor 0x455ef0), dc 0x196b4c
 widget::widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle)
-    : focusable(0)
+    : field_2C(0)
 {
     x = widgetX;
     y = widgetY;
@@ -47,11 +47,11 @@ VA_COMPGEN(0x005fe3b0, 0x5C, SCALAR_DELETING_DTOR, widget)
 // E:\gamedcs\widget.cpp:106
 // Promoted from DC_ONLY 2026-08-08 on body evidence: 29 retail bytes
 // at 0x5fe410, thiscall with no stack args (`ret`), storing the
-// widget vtable and exactly the five fields below - focusable first,
+// widget vtable and exactly the five fields below - field_2C first,
 // as the six-argument ctor's initialiser list also does.
 VA(0x005fe410, 0x1D)  // anchor-vtable + body, dc 0x196bd4
 widget::widget()
-    : focusable(0)
+    : field_2C(0)
 {
     RollOver = 0;
     RightClick = 0;
@@ -111,14 +111,15 @@ void widget::Close()
 #endif  // @carcass
 
 // E:\gamedcs\widget.cpp:249
-// homm2 widget::Main is the template; retail adds the focusable
-// early-out, the DIMMED_NODRAW fast paths, and the hover tracking via
+// homm2 widget::Main is the template; retail adds the asleep
+// early-out (widget::field_2C, the sleep-nest counter - see widget.h;
+// DC's Main has no such guard), the DIMMED_NODRAW fast paths, and the hover tracking via
 // last_hover_widget. Returns: 0 continue, 1 consumed, 2 hover-forward
 // (names unattested).
 VA(0x005fe4f0, 0x2C8)  // linkorder bracket; Draw/Dim/process_hover slots and UpdateScreen callee byte-proven, dc 0x196cd0
 int widget::Main(message* msg)
 {
-    if (focusable > 0)
+    if (field_2C > 0)
         return 0;
     switch (msg->id) {
     case MESSAGE_MOUSE_MOVE: {
