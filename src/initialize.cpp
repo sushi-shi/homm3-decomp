@@ -17,29 +17,50 @@
 // 0x4ebb70 / 0x4ebc50). The definitions below keep DC source order
 // (the one-pass inliner needs every body before its caller); the
 // out-of-source-order claim rides the forward declaration.
-// THE INCLUDE LIST BELOW IS LOAD-BEARING (measured 2026-08-08) and is
-// pure include-set sensitivity, the class documented on
-// initialize_game_data itself: any growth of town.h at all - one extra
-// `class town` method declaration, a free-function prototype further
-// down the header, or the generatorBonus row - knocks this function off
-// 100 with no semantic change anywhere, and the amount of growth is not
-// the lever (a 0..14 sweep of dummy declarations gave 96.088 through
-// k=9, 48.791 at k=10-11 and 92.378 beyond, never 100).
-// What was measured, in order, as town.h grew three times this lane:
-//   * all six permutations of {<va.h>, "town.h", <string.h>} - with the
-//     first growth the three orders that put town.h ahead of <string.h>
-//     held 100 and the other three sat at 96.088; after the second
-//     growth only town.h FIRST held; after the third none did (48.791
-//     across the board);
-//   * eight headers x four positions on top of the town.h-first order.
-//     Only <stdio.h> AHEAD of town.h recovers 100. <stdlib.h> and
-//     advmgr.h reach 92.378, hero.h and game.h 95.043, <stdio.h> in any
-//     later slot 96.088, and armygrp.h / mapcell.h / struct.h are inert.
-// <stdio.h> is not otherwise used in this TU and is NOT independently
-// evidenced as part of retail's include list - it is carried as the
-// closure lever that restores the match and nothing more. Re-derive it,
-// do not trust it, after ANY town.h edit.
-#include <stdio.h>
+// THE INCLUDE LIST BELOW IS HONEST, NOT TUNED (2026-08-08). It carries
+// exactly what this TU uses and nothing more; the <stdio.h> that an
+// earlier lane put ahead of "town.h" purely as a closure lever has been
+// REMOVED, and initialize_game_data's ratchet row lowered to match (see
+// the dated block in config/match_baseline.tsv). Do not re-add a header
+// this TU does not use in order to hold a number.
+// Why: this function's exactness is a function of the TU's whole
+// symbol/type-table population - the include-set-sensitivity class - and
+// the population we can build today is NOT retail's. What was measured
+// this lane, all with `homm3 build --fast` on the pinned toolchain, over
+// a k = 0..10 sweep of unused `struct probeN_t { int a; };` declarations
+// appended to town.h:
+//   * the honest list, in all six orders of {"town.h", <va.h>,
+//     <string.h>}: 26.18 at k=0 and never better than three 100s across
+//     the eleven points. Dropping the redundant <va.h> changes nothing.
+//   * <stdio.h> first: 100 / 94.07 / 94.07 / 100 / 100 / 100 / 100 /
+//     100 / 94.07 / 94.07 / 100. That is the WIDEST 100-coverage of the
+//     eighteen candidate lever headers swept (<stdlib.h>, <math.h>,
+//     <ctype.h>, <time.h>, <signal.h>, <setjmp.h>, <float.h>,
+//     <limits.h>, <wchar.h>, <locale.h>, <new>, <vector>, <bitset>,
+//     <errno.h>, <stddef.h>, <memory.h>, <stdarg.h> all score 2-4 of
+//     11) - which is precisely why it must not stay: a header this TU
+//     never uses, kept because it wins a lottery, is a claim about
+//     retail's source we cannot support.
+// The delta itself is byte-characterised and has NO source handle: in
+// the inlined copies of create_requirement_masks, VC6 either folds the
+// row base into the addressing mode (`mov [8*eax + gHierarchyMask+0x160],
+// ebx`) or CSEs it (`lea eax,[8*eax + gHierarchyMask+0x160]` then
+// `mov [eax],ebx`). RETAIL ITSELF DOES BOTH INSIDE THIS ONE FUNCTION -
+// inline copy 0 hoists with `lea eax,[8*eax]`, copies 1 and 2 fold - so
+// no single spelling of the loop can be right for all three; the choice
+// is optimizer state, not source.
+// WHAT WOULD ACTUALLY FIX IT (evidence found 2026-08-08, not actioned -
+// it is a supervised, tree-wide change): retail's initialize.cpp
+// includes `E:\gamedcs\terrain.h`. The DC CodeView corpus attributes
+// twenty static-init funclets in initialize.obj ($E439..$E467) to
+// terrain.h lines 70-79 - ten file-scope objects with dynamic
+// initializers, duplicated per TU - and that is exactly the cinit tail
+// retail carries at 0x4ebcf0 (guard 0x6abaa0 + ten ~95B funclets) and
+// again in iconwdgt.obj at 0xeb340. terrain.h appears in 75 of the DC
+// game compilands (`awk -F, '$6 ~ /terrain\.h/' evidence/dreamcast/
+// functions.csv`); this tree models no such header anywhere, so EVERY
+// game TU's include closure is short of retail's by it. Model terrain.h
+// and this row comes back for the right reason.
 #include "town.h"
 #include <va.h>
 #include <string.h>

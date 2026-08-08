@@ -486,6 +486,7 @@ iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	72.0056
 iconwdgt	?NextRandomSiegeEngineFrame@iconWidget@@QAEXXZ	86.4111
 iconwdgt	?SetIconFrame@iconWidget@@QAEXH@Z	100.0000
 iconwdgt	?SetSprite@iconWidget@@QAEXPBD@Z	100.0000
+iconwdgt	?handle_click@iconWidget@@UAEEEE@Z	100.0000
 infblock	@inflate_blocks@12	100.0000
 infblock	@inflate_blocks_free@8	100.0000
 infblock	@inflate_blocks_new@12	100.0000
@@ -559,7 +560,61 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 # point with no change to initialize.cpp at all. The row is a ratchet
 # raise, not a lowering; the analysis above is kept because the same
 # sensitivity will move this function again on the next header change.
-initialize	?initialize_game_data@@YIXXZ	100.0000
+# DELIBERATE LOWER 100.0000 -> 26.1806 (2026-08-08, lane/split). The
+# 100 above was being held by an `#include <stdio.h>` placed ahead of
+# "town.h" in initialize.cpp purely as a closure lever - a header this
+# TU does not use and that no evidence puts in retail's include list.
+# That include has been removed; this row records what the honest
+# include list actually scores.
+# What was tried first, and rejected:
+#   * SPLITTING town.h so initialize.cpp stops inheriting its surface.
+#     NOT REALIZABLE. initialize.cpp names town::included_buildings and
+#     town::initialize_hordes, and the DC dump proves both are `class
+#     town` statics (?included_buildings@town@@2PAY0CM@_JA,
+#     ?initialize_hordes@town@@SIXXZ - the latter is also this tree's
+#     own claimed row and the target of initialize_game_data's tail
+#     jmp). Any header supplying them must DEFINE class town, and class
+#     town has an armyGroup by value at +0xe0, so armygrp.h and its
+#     closure come with it. A second, cut-down `class town` in a split
+#     header is an ODR violation and a false model.
+#     Measured anyway as a throwaway probe (reverted, nothing landed):
+#     with initialize.cpp on such a minimal header the function scores
+#     90.16, not 100, and reaching 100 needs its OWN unevidenced lever
+#     (<time.h> or <signal.h>). The split therefore trades one
+#     unevidenced include for another plus a false class model, and
+#     stabilises nothing on its own merits.
+#   * a fresh k = 0..10 dummy-declaration sweep of town.h across the six
+#     honest include orders and eighteen candidate lever headers. The
+#     honest list gives 26.18 at k=0 and at best three 100s in eleven
+#     points; <stdio.h>-first gives seven, the widest of anything tried.
+#     Every other candidate scores 2-4 of 11. There is no configuration
+#     of headers reachable from this tree that is BOTH honest and
+#     stable, which is what makes lowering the right call.
+#   * a source handle for the delta. There is none, and this is now
+#     settled rather than suspected: retail's own initialize_game_data
+#     hoists in inline copy 0 (`lea eax,[8*eax]`) and folds in copies 1
+#     and 2 (`mov [8*eax + gHierarchyMask+0x160], ebx`). One loop body,
+#     two different addressing decisions - no spelling can produce both.
+# THE REAL DEFECT IS NOW NAMED: retail's initialize.cpp includes
+# `E:\gamedcs\terrain.h`, which this tree does not model at all. The DC
+# CodeView corpus attributes twenty static-init funclets in
+# initialize.obj ($E439..$E467) to terrain.h:70-79 - ten file-scope
+# objects with dynamic initializers - and that is exactly the cinit tail
+# retail carries at 0x4ebcf0 (guard 0x6abaa0 + ten ~95B funclets), the
+# same tail iconwdgt.obj has at 0xeb340. terrain.h is attributed in 75
+# DC game compilands, so EVERY game TU here is short of retail's include
+# closure by it. Raise this row again by modelling terrain.h (a
+# supervised, tree-wide change), not by re-adding a lever include.
+# FOOTNOTE, same day: the recorded max is no longer the 26.1806 this
+# block lowered it to - the town.h growth that the rest of this lane
+# landed (the population row, PlaceInMap / increase_population /
+# get_growth_rate declarations) walked the same lottery back up and the
+# ratchet raised the row monotonically, 26.1806 -> 90.1620 -> 94.0741.
+# Nothing was tuned for it and nothing should be: the number is a
+# by-product of the symbol-table population, so a LATER town.h edit can
+# just as easily push it back down, and when it does the honest move is
+# another dated lower here - not a lever include.
+initialize	?initialize_game_data@@YIXXZ	94.0741
 inputmgr	??0inputManager@@QAE@XZ	86.5667
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000
@@ -585,7 +640,9 @@ kbwin	_WinMain@16	100.0000
 misc	??0TPickANumber@@QAE@HH@Z	72.1795
 misc	?Pick@TPickANumber@@QAEHXZ	91.2195
 misc	?Random@@YIHHH@Z	100.0000
+misc	?SRand@@YIXH@Z	100.0000
 misc	?SafeRandom@@YIHHH@Z	100.0000
+misc	?SetupCDDrive@@YIHXZ	100.0000
 misc	?WritePrefs@@YIXXZ	100.0000
 monframeinfo	?InitializeCreatureAnimationTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000
 monframeinfo	?InitializeCreatureAnimationTraitsTable@@YIEXZ	100.0000
@@ -680,6 +737,7 @@ town	?Deallocate@town@@QAEXXZ	100.0000
 town	?GetNativeTerrain@town@@QBE?AW4TTerrainType@@XZ	100.0000
 town	?GetTypeName@town@@QBEPBDXZ	100.0000
 town	?HasGarrison@town@@QAEHXZ	100.0000
+town	?PlaceInMap@town@@QAEXHJE@Z	100.0000
 town	?UpgradedDwellingID@town@@SIHH@Z	100.0000
 town	?buy_building@town@@QAEEW4type_building_id@@@Z	100.0000
 town	?can_build@town@@QBEEF@Z	81.1852
@@ -696,6 +754,7 @@ town	?get_horde@town@@QBEHJ@Z	100.0000
 town	?get_horde_bonus@town@@QBEJJ@Z	100.0000
 town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000
 town	?get_silo_income@town@@QBEPAHXZ	100.0000
+town	?increase_population@town@@QAEXW4TCreatureType@@0J@Z	100.0000
 town	?initialize_hordes@town@@SIXXZ	99.7778
 town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000
 town	?remove_garrison_hero@town@@QAEXXZ	100.0000

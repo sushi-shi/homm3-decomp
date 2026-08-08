@@ -26,6 +26,16 @@ public:
     // own extent, not the widget rect.
     virtual int GetRealHeight();  // slot 5, retail 0x4eab30
     virtual int GetRealWidth();   // slot 6, retail 0x4eab20
+    // Slot 13 of 0x63ec48, i.e. a virtual iconWidget ADDS on top of
+    // widget's twelve-plus-_vslot12 - not an override. That is what the
+    // vtable widths say: button and type_func_button stop at 13 slots
+    // (evidence/vtables/named.tsv) where iconWidget has 14, so no
+    // common base declares it. `border` declares its own twin
+    // (dc 0x54590, same four-byte "return 0" body) and /OPT:ICF folded
+    // the two onto this one row - which is why the carve labels it
+    // border_vslot13.
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
 
     void SetIconFrame(int newFrame);
     void SetSprite(const char* new_sprite);
