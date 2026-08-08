@@ -260,6 +260,66 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — the LOCATE phase: 132 carve rows claimed across two
+  lanes; `sema xref` established as the primary locate instrument; the
+  border illusion measured and removed.** Engine-wide 405 → 414 exact;
+  the baseline denominator went **740 → 877 rows** as unclaimed carve
+  rows were brought in, and per-unit fuzzy fell correspondingly — that
+  drop is the honest denominator arriving, not a regression. The
+  whole-engine figure is **414 / 4,749 (8.7%)**.
+  **The binding constraint is no longer spelling, it is unclaimed carve
+  rows.** `ai` had read 5/7 exact while 26 of the 33 carved functions in
+  its span were simply unclaimed — 2,316 of 14,873 bytes, ~16%. Per-unit
+  percentages had been measuring claims against claims.
+  Claimed this phase: findpath 10 → 0 unclaimed, ai 27 → 3,
+  ai_tactical 39 → 2, hero 41 → 2, town 13 → 0, mousemgr 1 → 0,
+  misc 8 → 4, game 111 → 106.
+  **`homm3 sema xref` is the strongest locate tool in the box** and
+  should lead every locate lane. Real rel32 edges settled `town`
+  outright — `give_event_reward → show_building_rewards/
+  show_creature_rewards`, and `town::initialize → initialize_buildings
+  → check_shipyard_square` — and also `hero::CheckLevel →
+  get_skill_award`, `ApplyBattleWinTemps`'s two callers, and misc's
+  `WritePrefs` jmp edge. **All of these are static-helper-after-caller**
+  (occurrences 5–8 of that pattern): retail defines a static helper
+  AFTER its caller where the DC source has it before, so rank alone
+  mis-maps them and arity plus the call graph settles them.
+  **THE "FORCED" BRACKET IS A TRAP — new cautionary rule.** hero's
+  `0x4db350..0x4e2340` presented 24 DC rows against 24 carve rows, a
+  perfect count match that turned out to be **two compensating errors**:
+  `0x4dbd90` is a 30-byte `get_last_backpack_index`, not the 526-byte
+  `handle_artifact_click`. **Count equality is not proof.** Every
+  pairing must come from bodies, arity or rel32 edges.
+  **A clean `/Ob2` witness:** `0x4c6f80` contains `StartAITheme` inlined
+  AND `0x4c6f40` still exists out-of-line — single-call-site inlining
+  with unconditional extern emission, exactly as the skill documents.
+  All three music functions compiled byte-exact, which retroactively
+  proves the identification.
+  **Ratchet subtlety worth recording:** the `mousemgr TCSLock_TCSLock`
+  row went MISSING and was NOT the constructor despite its name — it
+  was the delinker's fallback label for the DESTRUCTOR at 0x50cd80,
+  which the carve had mislabelled. Claiming the dtor renamed the row to
+  `??1TCSLock@@QAE@XZ` at 100%, so it was a genuine rename; the real
+  constructor at `_10d890` correctly survives at 0.0000. A flat row
+  going MISSING is not automatically a rename — check which function it
+  actually named.
+  Also: `getCellData` and `Clear` (findpath), `searchArray::Init`/
+  `Close`/`lower_door`, and nine hero/game/mousemgr functions driven to
+  exact. `Clear` needed two register-colouring levers — the memset
+  destination must be an ASSIGNED LOCAL rather than an accessor call
+  (the accessor's two-return form makes VC6 load the member twice), and
+  the fly-plane flag must be `unsigned char` (a plain int comparison
+  makes VC6 clear a scratch register where retail reuses one).
+  **OPEN, spans two lanes:** `hero::SetSS`/`TakeSS`/`GiveSS` are
+  byte-decoded but unwritten — they need `hero+0xc9` modelled as
+  `skillLevel[28]`, and `ai_combat.cpp` reads `hero::ballisticsLevel`
+  out of that same band. One rename plus one reference change yields
+  three near-certain exacts, but it crosses lane ownership.
+  **`game`'s remaining 106 needs a different instrument:** 946 DC rows
+  against 176 carve rows in the span means most DC rows were inlined
+  away, so rank alignment carries no information. The `sema xref`
+  caller-graph approach is the way in, one bracket at a time.
+
 - **2026-08-08 — `widget` CLOSED 12/12 at 100%; store order proven
   PER-FUNCTION; a third pipeline cap pinned by elimination.**
   Engine-wide 333 → 337 exact, 4.25% → **4.27%** executable matched.
