@@ -203,6 +203,16 @@ struct type_AI_spellcaster {
     long get_age_value(const army* enemy, type_enchant_data caster);
     long get_clone_value(const army* our_army, type_enchant_data caster);
     long get_mirth_value(const army* our_army, type_enchant_data caster);
+    long get_sorrow_value(const army* enemy, type_enchant_data caster);
+    long get_misfortune_value(const army* enemy, type_enchant_data caster);
+    long get_blood_lust_value(const army* our_army, type_enchant_data caster);
+    long get_disease_value(const army* enemy, type_enchant_data caster);
+    long get_prayer_value(const army* our_army, type_enchant_data caster);
+    long get_air_shield_value(const army* our_army, type_enchant_data caster);
+    long get_shield_value(const army* our_army, type_enchant_data caster);
+    long get_tough_skin_value(const army* our_army, type_enchant_data caster);
+    long get_disruptive_ray_value(const army* enemy, type_enchant_data caster);
+    long get_weakness_value(const army* enemy, type_enchant_data caster);
     long get_precision_value(const army* our_army, type_enchant_data caster);
     long get_slayer_value(const army* our_army, type_enchant_data caster);
     long get_poison_value(const army* enemy, type_enchant_data caster);

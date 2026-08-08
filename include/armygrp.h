@@ -144,6 +144,14 @@ enum ESpellId {
     SPELL_DEATH_RIPPLE = 0x18,
     SPELL_DESTROY_UNDEAD = 0x19,
     SPELL_ARMAGEDDON = 0x1a,
+    // The two damage-reduction shields, byte-proven 2026-08-08 by the
+    // pricers' traits displacement `K*136 + 0x34` (the mastery_bonus
+    // row): get_shield_value (0x438c60) indexes +0xe8c = 27*136 + 0x34
+    // and get_air_shield_value (0x438bc0) indexes +0xf14 = 28*136 +
+    // 0x34. The pair sits immediately below FIRE_SHIELD, which the
+    // surrounding roster already pins.
+    SPELL_SHIELD = 0x1b,
+    SPELL_AIR_SHIELD = 0x1c,
     // compute_fire_shield_damage (0x422440) prices the shield's
     // retaliation through ModifySpellDamage under THIS id, which fixes
     // it against the surrounding roster (0x1e is the first protection).
@@ -164,7 +172,28 @@ enum ESpellId {
     SPELL_ANIMATE_DEAD = 0x27,
     SPELL_BLESS = 0x29,
     SPELL_CURSE = 0x2a,
+    // The 41..52 enchantment ladder, byte-proven end to end 2026-08-08
+    // by the ai_tactical pricers' `K*136 + 0x34` mastery_bonus
+    // displacement. Every rung below is measured, and the two rungs
+    // already here (PRECISION 44, MIRTH 49) plus SORROW 50 and
+    // MISFORTUNE 52 are carried by functions that compile EXACT, so
+    // the ladder is anchored at both ends and no rung can shift:
+    //   get_blood_lust_value    0x438100  +0x170c = 43*136 + 0x34
+    //   get_weakness_value      0x438ed0  +0x181c = 45*136 + 0x34
+    //   get_tough_skin_value    0x438d90  +0x18a4 = 46*136 + 0x34
+    //   get_disruptive_ray_value 0x438dc0 +0x192c = 47*136 + 0x34
+    //   get_prayer_value        0x438ac0  +0x19b4 = 48*136 + 0x34
+    // DISRUPTING_RAY corroborates independently: 0x438dc0 also PUSHES
+    // the literal 0x2f into the work-chance leaf at 0x5a8090.
+    // STONE_SKIN is the DC roster's get_tough_skin_value; the spell it
+    // prices is Stone Skin (the HD crossbuild names that same body
+    // get_stone_skin_value), so the enumerator takes the spell's name.
+    SPELL_BLOODLUST = 0x2b,
     SPELL_PRECISION = 0x2c,
+    SPELL_WEAKNESS = 0x2d,
+    SPELL_STONE_SKIN = 0x2e,
+    SPELL_DISRUPTING_RAY = 0x2f,
+    SPELL_PRAYER = 0x30,
     SPELL_MIRTH = 0x31,
     SPELL_SORROW = 0x32,
     SPELL_FORTUNE = 0x33,
