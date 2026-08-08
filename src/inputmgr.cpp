@@ -13,28 +13,40 @@
 // E:\gamedcs\inputmgr.cpp:48
 // Located as AppWndProc's WM_KEYDOWN/WM_KEYUP callee (homm2 kbwin
 // dispatches the same pair by name); iconwdgt..inputmgr bracket.
-// NOT RECONSTRUCTED 2026-08-07 - decoded but BLOCKED on unmodeled
-// structure, deliberately left a stub rather than guessed. The shape is
+// NOT RECONSTRUCTED - decoded but BLOCKED on unmodeled structure,
+// deliberately left a stub rather than guessed. The shape is
 // MouseMessageHandler's twin: same gpInputManager guard chain (minus the
 // bufferBusy latch), same six zeroing stores, a TWO-CASE switch on
 // WM_KEYDOWN/WM_KEYUP setting id 1/2 and `codeX = (lParam >> 16) & 0xff`
 // (retail sinks the KEYDOWN arm behind the forward `je` - the documented
 // two-case-switch lever), then the identical GetKeyState qualifier
 // block, iTail/iHead `% 64` advance, and `return e->id == 0`.
-// What blocks it is the tail:
+// FULL TAIL DECODE (2026-08-08), inside the `if (e->id != 0)` block and
+// after the iHead advance - retail reuses the gpInputManager already in
+// eax on the head==tail-false edge, so the extendFlag store is the join:
 //     gpInputManager->extendFlag = 0;                       // +0x954
-//     if (<global 0x699280>->status == 1) {                 // +0x34
-//         if (<global 0x699268> == 0 || <..>->+0x44 == 0
-//             || <..+0x44>->+0x58->byte +0x6d == 0) {
+//     if (gpWindowManager->status == 1) {                   // +0x34
+//         if (gpAdvManager == 0 || gpAdvManager->advWindow == 0
+//             || gpAdvManager->advWindow-><+0x58>-><byte +0x6d> == 0) {
 //             if (e->id == 1 && e->codeX == 0x3b)           // F1
 //                 AppCommand(hwndApp, WM_COMMAND, 0x9c74, 0);
 //             if (e->id == 1 && e->codeX == 0x3e)           // F4
 //                 AppCommand(hwndApp, WM_COMMAND, 0x9c49, 0);
 //         }
 //     }
-// Neither 0x699280 nor 0x699268 is modeled, and the +0x44 -> +0x58 ->
-// +0x6d chain needs two layouts this tree does not yet have. Writing it
-// would mean inventing structure, which scores but is not truth.
+// TWO of the three blockers are resolved: 0x699280 is gpWindowManager
+// (winmgr.h, heroWindowManager, `status` inherited from baseManager at
+// +0x34 - the same +0x34 test VideoRealignBuffers' neighbour uses) and
+// 0x699268 is gpAdvManager (advmgr.h, `advWindow` already at +0x44).
+// What remains is exactly ONE chain: advWindow's static type in retail
+// is NOT heroWindow (window.h's heroWindow is 0x4c bytes, so +0x58 is
+// past its end) - it is the derived adventure-map window, and neither
+// that class nor whatever its +0x58 points at is modelled anywhere in
+// this tree (adventuremapwindow.h is still a comment-only carcass, and
+// TAdventureMapWindow has no layout). Writing the tail would mean
+// inventing two class layouts, which scores but is not truth. Once
+// TAdventureMapWindow lands, this body is a transcription, not a
+// reconstruction.
 VA(0x004ec0e0, 0x1AB)  // anchor-callee, dc 0xdc894
 int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam)
 {
@@ -165,16 +177,27 @@ no_position:
 }
 
 // E:\gamedcs\inputmgr.cpp:779
-// Residual (82.3%): retail schedules the vtable store below the
-// buffer-clear loop and biases the loop pointer differently -
-// island-track class.
+// Residual (86.6%): VPTR-STORE SCHEDULING - a compiler-generation class,
+// not a spelling. Every instruction matches except the placement of the
+// compiler's own `mov [esi], offset ??_7inputManager@@6B@`: retail sinks
+// it PAST the whole 64-entry clear loop (landing between `mov eax,1` and
+// the keyboardFilter store), this CL pins it immediately after the
+// baseManager ctor call. The one consequential store reorder follows
+// from that - retail's free slot after `mov eax,1` is filled by the vptr
+// store, ours by `status = 0`, which is why [0x34] moves ahead of the
+// [0x94c]/[0x950] pair even though source order already matches retail's
+// emission order. soundManager's ctor (0x599760, 99.0%) shows the SAME
+// signature one slot wide (retail: MP3Playing byte store, then vptr;
+// ours: vptr, then byte store), so this is systematic across the two
+// ctors in this lane, not local. Probed 2026-08-08 and rejected: hoisting
+// `keyboardFilter = 1` above the loop (78.2% - the vptr store STILL
+// leads, proving no statement order can sink it); earlier lanes rejected
+// the indexed loop form (82.3%) and, on the soundmgr twin, both scalar
+// orders and memsets-first.
 VA(0x004ec460, 0x6F)  // anchor-bracket, dc 0xdd97c
 inputManager::inputManager()
 {
-    // Residual (86.6%): retail hoists `mov eax,1` above the vptr store
-    // where this compile hoists the status=0 store instead - the same
-    // scheduler-window class as the enable/send_message plateau. The
-    // POINTER-WALK loop form below is load-bearing: the indexed form
+    // The POINTER-WALK loop form is load-bearing: the indexed form
     // biases the lea one slot low and scores 82.3.
     message* entry = iBuffer;
     for (int index = 0; index < 64; index++) {
@@ -205,8 +228,12 @@ inputManager::inputManager()
 #endif  // @carcass
 
 // E:\gamedcs\inputmgr.cpp:796
-// Residual (42.4%): the memset lowers to a rep stosd like retail's but
-// the tail stores schedule differently - local-shape work.
+// The baseManager registration tail was missing until 2026-08-08: retail
+// calls MakeScanCodeTable (a real `call`, not an /Ob2 inline, even though
+// this is its only call site in the TU) and then fills the base fields.
+// `priority = -1` and the inline strlen's counter share the single
+// `or ecx,-1` - the signedness-CSE lever - which is what proves the
+// -1 is stored from a register rather than an immediate.
 VA(0x004ec4d0, 0x6D)  // dc-bracket forced + body-verified, dc 0xdd9e4
 int inputManager::Open(int kFilter)
 {
@@ -214,7 +241,11 @@ int inputManager::Open(int kFilter)
     iTail = 0;
     iHead = 0;
     keyboardFilter = kFilter;
+    MakeScanCodeTable();
+    id = 4;
+    priority = -1;
     status = 1;
+    strcpy(cMgrName, DATA_COMPGEN(0x0067f544, inputManagerName, "inputManager"));
     return 0;
 }
 
@@ -286,23 +317,40 @@ void inputManager::SetKeyCodeType(int newType)
 // shifted symbol - a dense jump table whose case bodies retail emits
 // in KEYBOARD ROW order (1..0, then -=\, then ;',./), which is the
 // source order VC6 preserves.
-// Residual (95.1%): the scan-table arm only. Retail reaches ONE byte
-// block from both `codeX < F1` and the fall-through of the F11/F12
-// chain; the three-arm spelling below is the closest our CL gets - it
-// DUPLICATES that block instead of sharing it (the adjacent-early-out
-// residual class, this time with retail merging and us splitting).
-// Everything from `qualifier & 3` onward, jump table included, is
-// byte-identical. Tried and rejected: the two-arm if/else in both
-// polarities (93.6%, and it emits the word arm first either way);
-// `goto function_key` and `goto plain` (93.6% - VC6 always lays the
-// branch target first); a ternary (92.3%).
+// Residual (98.8%): PIPELINE-CAPPED, and provably so - the two
+// NORMALIZED objdiff objects are BYTE-IDENTICAL and RELOC-IDENTICAL over
+// the whole [0, 0x1c6) span (verified 2026-08-08 by an address-keyed
+// compare of build/objdiff/normalized/{base,target}; the canonicalizer
+// already rewrites the base's $L jump-table relocs onto the enclosing
+// function symbol, so even the relocs agree). The score gap comes from
+// the SYMBOL TABLES, not the content: the base COMDAT still carries two
+// storage-class-6 LABEL symbols inside the function - $L<n> at +0x144
+// (the 19-entry pointer table) and at +0x190 (the 0x36-byte index
+// table) - which the delinked target cannot have. The index table
+// carries no relocations, so those labels are the only resync points a
+// disassembler has, and the two sides therefore decode the same 54 data
+// bytes into different instruction rows. Fixing it is a canonicalizer
+// change (drop label-class symbols once their relocs are rewritten),
+// i.e. a pipeline contract change, not a source change.
+// MouseMessageHandler (99.96%) is the same family with only the trailing
+// table row affected. NOTE for future lanes: reloc-symbol NAMES are NOT
+// scored - StopMP3 is exactly 100.0000% with FIVE mismatched data reloc
+// names - so a `DATA()` claim can never buy points here (and cannot
+// anyway: labels.py names src-DATA rows `data_<rva>`, never the mangled
+// C++ spelling).
+// The head is the source shape retail used: ONE `||` chain feeding a
+// two-arm if/else, so the byte block is the fall-through and the word
+// block the branch target - `jl` skipping only the F10 bound (to the F11
+// test, not to the byte block) is the short-circuit signature that
+// proves it. Tried and rejected earlier: a three-arm if/else that
+// duplicated the byte block (95.1%), two-arm if/else in both polarities
+// with the range spelled separately (93.6%), two goto shapes (93.6%),
+// a ternary (92.3%).
 VA(0x004ec6f0, 0x1C6)  // anchor-global, dc 0xddd60
 void inputManager::AsciiConvert(message* msg)
 {
-    if (msg->codeX < KEYCODE_F1)
-        msg->codeX = scanCodeTable[msg->codeX] & 0xff;
-    else if (msg->codeX <= KEYCODE_F10 || msg->codeX == KEYCODE_F11
-             || msg->codeX == KEYCODE_F12)
+    if ((msg->codeX >= KEYCODE_F1 && msg->codeX <= KEYCODE_F10)
+        || msg->codeX == KEYCODE_F11 || msg->codeX == KEYCODE_F12)
         msg->codeX = scanCodeTable[msg->codeX];
     else
         msg->codeX = scanCodeTable[msg->codeX] & 0xff;

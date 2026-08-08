@@ -80,10 +80,17 @@ void VideoSoundOnOff()
 // spelling into (Pitch*gBinkY + map) + scaled-2*gBinkX, folding the
 // scaled term into the final lea. Tried and rejected (all compile to
 // the identical object): term order 2X+P*Y+map, &map[..] indexing,
-// integer-cast arithmetic with map as a plain term, x+x for 2*x, and
-// an explicit off temp (forward-substituted). Instruction count and
-// semantics match; the delta is the add order and the reg choice it
-// drags along.
+// integer-cast arithmetic with map as a plain term, x+x for 2*x, an
+// explicit off temp (forward-substituted), and (2026-08-08) retail's own
+// textual term order P*Y + 2*X + map. Instruction count and semantics
+// match; the delta is the add order and the reg choice it drags along.
+// The cause is narrow and worth naming: `2 * gBinkX` is a SCALED term,
+// and our CL always sinks a scaled term into the LAST lea because a
+// scaled index is free there - so the pointer add lands second and the
+// scaled add third, whichever way the source associates. Retail's CL
+// folded the scaled term into the middle lea instead. No source
+// association reaches it; only un-scaling the term would, and x+x was
+// already rejected.
 VA(0x005971f0, 0xD9)  // anchor-global, dc 0x14ac34
 void VideoRealignBuffers()
 {
@@ -226,9 +233,20 @@ void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 // our CL jump-threads it away, so the fast back edge lands on the dec
 // and the bottom test becomes a memory cmp. The local mirror n (which
 // buys the cached-eax test forms, 95.8% -> 95.9%) is byte-proven by
-// the dec/store/reload shape. Tried and rejected (all identical
-// objects): while+if, if+do-while, while+continue, and the literal
-// goto-loop transcription - the threading happens regardless.
+// the dec/store/reload shape.
+// Sharper structural reading (2026-08-08): retail has THREE test sites
+// and we have two. Retail's are (a) the entry `cmp eax,ebx; je done`
+// BEFORE the hoisted `mov esi,[__imp__BinkPause]` - the duplicated loop
+// guard VC6 emits to make the LICM hoist legal, (b) a real TOP test at
+// +0x17 that the post-store `jne` targets, and (c) the reload edge,
+// which is the end-of-body back edge tail-duplicated THROUGH (b) into
+// `cmp eax,ebx; jne <body>`. So retail's loop is top-tested and
+// unrotated while ours is rotated; every spelling collapses (a) and (b)
+// into one. Tried and rejected (all producing identical objects):
+// while+if, if+do-while, while+continue, the literal goto-loop
+// transcription, and (2026-08-08) that transcription wrapped in the
+// explicit outer `if (n != 0)` that would supply site (a) - VC6 threads
+// the top test away regardless of how the source spells the edges.
 VA(0x005975f0, 0xE1)  // anchor-global, dc 0x14ac40
 void VideoClose()
 {

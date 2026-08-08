@@ -548,14 +548,14 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 # sensitivity will move this function again on the next header change.
 initialize	?initialize_game_data@@YIXXZ	100.0000
 inputmgr	??0inputManager@@QAE@XZ	86.5667
-inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	95.1257
+inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000
 inputmgr	?Flush@inputManager@@QAEXXZ	100.0000
 inputmgr	?ForceMouseMove@inputManager@@QAEXXZ	100.0000
 inputmgr	?Main@inputManager@@UAEHPAVmessage@@@Z	100.0000
 inputmgr	?MakeScanCodeTable@inputManager@@QAEXXZ	100.0000
 inputmgr	?MouseMessageHandler@@YIHPAXIIJ@Z	99.9645
-inputmgr	?Open@inputManager@@UAEHH@Z	42.3684
+inputmgr	?Open@inputManager@@UAEHH@Z	100.0000
 inputmgr	KeyboardMessageHandler	0.0000
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000
@@ -637,6 +637,8 @@ soundmgr	?MusicPlaying@soundManager@@QAEHXZ	100.0000
 soundmgr	?PauseSamples@soundManager@@QAEXXZ	100.0000
 soundmgr	?ResumeSamples@soundManager@@QAEXXZ	100.0000
 soundmgr	?ResumeStream@soundManager@@QAEXXZ	100.0000
+soundmgr	?SetMusicVolume@soundManager@@QAEXXZ	100.0000
+soundmgr	?StartMP3@soundManager@@QAEXPBDHE@Z	100.0000
 soundmgr	?StopAllSamples@soundManager@@QAEXH@Z	100.0000
 soundmgr	?StopMP3@soundManager@@QAEXXZ	100.0000
 soundmgr	?StopSample@soundManager@@QAEXPAVds_memsample@@@Z	100.0000
@@ -644,8 +646,6 @@ soundmgr	?SwitchAmbientMusic@soundManager@@QAEXH@Z	100.0000
 soundmgr	?WaitEndSample@@YIXUSAMPLE2@@H@Z	100.0000
 soundmgr	?WaitSample@soundManager@@QAEXPAVds_memsample@@H@Z	100.0000
 soundmgr	?launch_sample@@YIXPBDHH@Z	100.0000
-soundmgr	soundManager_SetMusicVolume	0.0000
-soundmgr	soundManager_StartMP3	0.0000
 strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000
 strip	?Draw@strip@@QAEXW4TCreatureType@@@Z	100.0000
 strip	?DrawIcons@strip@@QAEXEW4TCreatureType@@@Z	100.0000
