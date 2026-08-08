@@ -174,7 +174,20 @@ public:
     // lets the defender strike back while it is positive, and the DC
     // roster has army::set_retaliation_count feeding it.
     int retaliationCount;         // +0x454
-    char pad_458[0xdc];
+    char pad_458[0x90];
+    // The stack's own morale and luck ratings, sliced 2026-08-08 by the
+    // four ai_tactical luck/morale pricers: get_mirth_value (0x438170)
+    // and get_sorrow_value (0x4382c0) clamp +0x4e8 to [-3, 3] and hand
+    // it to value_of_luck_and_morale as its `morale` argument, while
+    // get_fortune_value (0x438490) and get_misfortune_value (0x438f60)
+    // do the identical thing to +0x4ec through the LUCK weight pair.
+    // SIGNED (the clamp's `cmp eax, -3` / `jge` and the negative rung)
+    // and int-wide (plain dword loads). Names are those parameters';
+    // the DC roster's own army::GetMorale / army::GetLuck accessors are
+    // the corroborating pair, not the proof.
+    int morale;                   // +0x4e8
+    int luck;                     // +0x4ec
+    char pad_4f0[0x44];
     // Damage this stack is already committed to take this turn: the
     // AI subtracts it from the stack's total hit points before every
     // simulation (get_simple_attack_effect 0x435b90).
@@ -214,8 +227,21 @@ public:
     unsigned GetAttackMask(int currIndex, int criteria, int iLiteralTargetIndex);
     int ValidAttack(int currIndex, int direction, int criteria,
                     int iLiteralIndex, int* testCellIndex);
-    int GetAdjacentCellIndex(int currIndex, int direction);
-    long get_adjacent_hex(long hex, long direction);
+    // Both const: ai_tactical's get_breath_bonus (0x436760) drives the
+    // pair off the `const army*` it takes as its second parameter.
+    int GetAdjacentCellIndex(int currIndex, int direction) const;
+    long get_adjacent_hex(long hex, long direction) const;
+    // 0x445840, claimed in army.cpp. Const because ai_tactical's
+    // get_breath_bonus (0x436760) calls it on the `const army*` it
+    // takes as its second parameter.
+    long get_attack_direction(long our_hex, const army* enemy,
+                              long enemy_hex) const;
+    // 0x448ab0 (claimed in army.cpp): the bitmask of the directions a
+    // wide/multi-headed stack would also strike. Const for the same
+    // reason - get_multi_head_bonus (0x436620) drives it off a
+    // `const army*`.
+    long get_multi_head_directions(long our_hex, const army* enemy,
+                                   long enemy_hex) const;
     int GetSpeed() const;                    // 0x448cd0, claimed in army.cpp
     unsigned char is_enemy(const army* arg); // 0x442880
     // Combat-AI leaves, all claimed in army.cpp; declared here so

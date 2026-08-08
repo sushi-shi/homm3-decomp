@@ -527,7 +527,7 @@ void army::GoBerserk()
 
 // E:\gamedcs\army.cpp:4249
 VA(0x00445840, 0x66)  // corroborates, dc 0x4a598
-long army::get_attack_direction(long our_hex, const army* enemy, long enemy_hex)
+long army::get_attack_direction(long our_hex, const army* enemy, long enemy_hex) const
 {
     // @stub
 }
@@ -812,7 +812,7 @@ void army::consider_attack(const army* enemy, long value, long attack_distance)
 
 // E:\gamedcs\army.cpp:5757
 VA(0x00448ab0, 0x114)  // anchor-global, dc 0x4c82c
-long army::get_multi_head_directions(long our_hex, const army* enemy, long enemy_hex)
+long army::get_multi_head_directions(long our_hex, const army* enemy, long enemy_hex) const
 {
     // @stub
 }
