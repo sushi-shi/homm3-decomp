@@ -131,6 +131,14 @@ inline int button::DeselectSelected(message* msg)
 // not ascending by value (+8.9 points); retail's jump table lands the
 // palette body first and cross-jumps SET_ICON_NAME onto the
 // palette-failure tail.
+// CORRECTED 2026-08-08 (closeout lane): the auto-repeat guard calls
+// GameTime::Get(), NOT timeGetTime(). The delinked target reads
+// `call ?Get@GameTime@@SIKXZ` at +0x37 where this TU was emitting the
+// winmm thunk; kbwin's GameTime::Get (0x4f82e0) is a 6-byte
+// `jmp [__imp__timeGetTime@0]`, so the two are observationally equal
+// at runtime but a different callee in the object. button::Select's
+// timeGetTime at +0x188 stays the thunk form - the per-TU import-form
+// note below still applies to THAT call, not to this one.
 // What is left is (a) a whole-body esi/edi role swap (retail pins msg
 // in ESI) that source order does not steer, and (b) ~56 instructions
 // inside the /Ob2-inlined button::SetText: retail's expansion calls a
@@ -149,7 +157,7 @@ int button::Main(message* msg)
 {
     if (style == WIDGET_STYLE_AUTO_REPEAT && (status & WIDGET_SELECTED)) {
         unsigned long repeatTime = glTimers[GLOBAL_BUTTON_REPEAT_TIMER_SLOT];
-        if (static_cast<int>(timeGetTime() - repeatTime) > 0)
+        if (static_cast<int>(GameTime::Get() - repeatTime) > 0)
             return DeselectSelected(msg);
     }
     if (field_2C > 0)

@@ -436,6 +436,19 @@ void heroWindow::MoveWindow(int deltaX, int deltaY)
 // HIGHER and is REJECTED: swapping the main arm to `y = centerY;
 // x = centerX;` reads 92.93 purely because the reversed registers then
 // line up with retail's, which is a masking accident, not a match.
+// CROSS-TU SIGNATURE (2026-08-08, closeout lane): this is not a
+// one-off. An instruction-level sweep found the SAME shape - two
+// symmetric enregistered values whose callee-saved registers are
+// swapped, everything else instruction-identical - in button::Main
+// (retail esi=msg / edi=parentWindow, ours reversed, 84.7%) and
+// TPickANumber::TPickANumber (retail esi=this / edi=span, ours
+// reversed, 72.2%), plus the same allocator running out one register
+// earlier in iconWidget::NextRandomFrame and
+// NextRandomSiegeEngineFrame (retail homes `this`, we do not). In
+// every case retail hands the LOWER register to the value used FIRST
+// and ours hands it to the second. Four TUs, six functions, no source
+// handle in any of them: this belongs with the merged-return /
+// stale-CL-generation open question, not with per-function spelling.
 VA(0x005ff240, 0x162)  // anchor-global, dc 0x19797c
 void heroWindow::CenterWindow(int centerX, int centerY)
 {
