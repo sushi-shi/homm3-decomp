@@ -41,7 +41,12 @@ mouseManager::mouseManager()
 {
     field_74 = 0;
     field_4c = -1;
-    id = 0;
+    // baseManager::status, at +0x34 - NOT id at +0xc. The single
+    // instruction this ctor was off by was `mov [ebx+0xc],edx` against
+    // retail's `mov [ebx+0x34],edx`; 0x34 is where basemgr.h's proven
+    // layout (vptr 0 / next 4 / prev 8 / id 0xc / priority 0x10 /
+    // cMgrName 0x14..0x33 / status 0x34) puts status.
+    status = 0;
     strcpy(cMgrName, DATA_COMPGEN(0x00681618, mouseManagerName, "mouseManager"));
     field_50 = -1;
     field_54 = 0;
