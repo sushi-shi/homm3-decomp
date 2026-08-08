@@ -107,8 +107,48 @@ enum TArtifact {
     ARTIFACT_COLLAR_OF_CONJURING = 0x4c,
     ARTIFACT_RING_OF_CONJURING = 0x4d,
     ARTIFACT_CAPE_OF_CONJURING = 0x4e,
+    // hero::modify_spell_damage (0x4e5760) pairs each of these with one
+    // school bit of the spell's traits row - 0x4f with air, 0x50 with
+    // earth, 0x51 with fire, 0x52 with water - and multiplies the
+    // damage by 1.5 when the matching orb is worn. DC 79..82 are
+    // eArtifactOrbOfTheFirmament / eArtifactOrbOfSilt /
+    // eArtifactOrbOfTempestuousFire / eArtifactOrbOfDrivingRain, whose
+    // HoMM3 schools are air / earth / fire / water in exactly that
+    // order.
+    ARTIFACT_ORB_OF_THE_FIRMAMENT = 0x4f,
+    ARTIFACT_ORB_OF_SILT = 0x50,
+    ARTIFACT_ORB_OF_TEMPESTUOUS_FIRE = 0x51,
+    ARTIFACT_ORB_OF_DRIVING_RAIN = 0x52,
+    // hero::get_hit_point_bonus (0x4e5b80) gates +1 / +1 / +2 hit
+    // points on 0x5e / 0x5f / 0x60 and a further quarter of the
+    // creature's own hit points on 0x83. DC 94/95/96 are
+    // eArtifactRingOfVitality / eArtifactRingOfLife /
+    // eArtifactVialOfLifeblood, whose HoMM3 effects are exactly
+    // +1/+1/+2 health, and 0x83 (131) is their Shadow of Death
+    // combination, the Elixir of Life - past the DC roster, same
+    // Complete band as the other combos above.
+    ARTIFACT_RING_OF_VITALITY = 0x5e,
+    ARTIFACT_RING_OF_LIFE = 0x5f,
+    ARTIFACT_VIAL_OF_LIFEBLOOD = 0x60,
+    ARTIFACT_ELIXIR_OF_LIFE = 0x83,
     ARTIFACT_NECKLACE_OF_SWIFTNESS = 0x61,
     ARTIFACT_CAPE_OF_VELOCITY = 0x63,
+    // The ONE artifact hero::get_spell_level (0x4e5080) and
+    // hero::GetManaCost (0x4e5240) special-case, and they special-case
+    // it against exactly one spell: id 0x1a, SPELL_ARMAGEDDON. Wearing
+    // it makes Armageddon EXPERT regardless of the hero's schools -
+    // the Armageddon's Blade rule. 128 is past the DC's AB-era roster
+    // (the blade is a Shadow of Death artifact), but the pairing with
+    // SPELL_ARMAGEDDON is the identification, and 128 sits in the same
+    // Complete-era band armygrp.h's EArtifactId already byte-proves
+    // twice (0x86 / 0x89).
+    ARTIFACT_ARMAGEDDONS_BLADE = 0x80,
+    // hero::GetNecromancyCreature (0x4e3c60) gates its whole
+    // Walking Dead / Wight / Lich ladder on artifact 0x82 - which is
+    // precisely what the Cloak of the Undead King does in HoMM3, and
+    // the ladder IS the identification. Also a Shadow of Death combo,
+    // hence past the DC roster.
+    ARTIFACT_CLOAK_OF_THE_UNDEAD_KING = 0x82,
     // The fourth gate of GetSpellDurationBonus, worth +50 rounds. 139
     // is past the DC's AB-era roster, but the +50-round effect is
     // unique to the Ring of the Magi, and the Complete numbering that

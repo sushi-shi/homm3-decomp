@@ -260,6 +260,73 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — hero's spell-school family OPENED (49 → 58 exact); the
+  blocker was never the enum; `initialize_game_data` back to 100 from a
+  cause nobody could isolate.** Engine-wide 524 → **534/977 exact
+  (54.7%)**, **5.65%** matched; all gates green.
+  **The C2371 that blocked this family for two lanes was misdiagnosed.**
+  It is not `TSpellSchool` at all — `hero.cpp` can never include
+  `ai_tactical.h` under any spelling, because that header's
+  `typedef int TSkillMastery` collides with `herospec.h`'s enum of the
+  same name. The fix is the domain-header split, not a re-spelling:
+  `TSpellSchool` now lives in **`include/spellschool.h`**, included from
+  both sides — one definition, no duplication, the
+  `artifact.h`/`herospec.h`/`prefs.h` precedent.
+  Family: `get_spell_level` 100, `GetSpellSchoolLevel` 100,
+  `GetManaCost` 100, `GetHighestSchool` 98.375.
+  **SIGNATURE CORRECTED — retail over the Dreamcast, on two of the
+  four.** The DC prototypes say `unsigned char is_on_magic_plains`.
+  Retail reads that parameter with a 32-bit `mov` and switches it over
+  **1..9** into a school mask (1→all, 6→water, 7→fire, 8→earth,
+  9→air) — exactly the domain `NewmapCell::get_magic_terrain_type`
+  (0x4fcf40) returns and `hero::Fly` pushes. The DC build kept only the
+  magic-plains case and narrowed it to a bool; **retail's five-way form
+  is the later revision.** New `include/magicterrain.h` carries
+  `TMagicTerrain`, deliberately not `mapcell.h` (closure).
+  New levers, each with its byte-level reason: **sunk fallback via `&&`
+  + `else`** (`GetHighestSchool` 77.1 → 98.4 — hoisting the assignment
+  keeps the mask dword in a register; the `&&`-with-`else` form sinks it
+  into the air arm's else path, retail's `jmp` + `mov eax,[ebp+8]`);
+  **an ascending `for` beats a hand-written downcount** (`GetExperience`
+  98.6 → 100 — VC6's own induction-variable rewrite emits
+  `add edi,-0xd`/`dec edi`/`jne`; writing that rewrite by hand emits
+  `sub edi,0xd` and costs the last byte); **declaration order fixes
+  register assignment** (declaring `total` first puts the parameter in
+  EDI and the sum in ESI the way retail allocates; the other order
+  swaps both); **switch bodies come out in SOURCE order**, so the ten
+  arms had to be written in retail's emission order, not case-label
+  order; **a plain `if` beats the ternary when retail hoists the
+  constant** (`GetNecromancyCreature` 83.1 → 100 — `x >= 1 ? A : B`
+  lowers branchlessly via `setl`/`dec`/`and 2`/`add`).
+  **A DELIBERATE BACK-OUT worth +1 exact.** `hero::GetHeroSpellBonus`
+  reaches 99.23% and is nevertheless left a `@stub` with its full
+  reconstruction in the comment: `hero.obj` has exactly ONE call site
+  for it today, so `/Ob2`'s single-call-site rule inlines it there and
+  takes `modify_spell_damage` **100 → 32.6**, where retail plainly
+  `call`s it. Retail's `hero.cpp` must have a second call site among the
+  ~70 bodies still unreconstructed. Writing a correct body can cost more
+  than leaving it unwritten, and the rule is now recorded.
+  **`initialize_game_data` 96.0880 → 100.0000 and THE CAUSE WAS NOT
+  ISOLATED.** Four closure headers changed together, and the one
+  candidate A/B-measured alone (`armygrp.h` gaining the `spellschool.h`
+  include) came back **neutral**. An earlier draft of the baseline note
+  credited that include; it was wrong and is corrected in place, in both
+  the header and the baseline. Counter-measurement the same session,
+  same header, opposite sign: three `ESpellId` **enumerators** moved the
+  row 96.09 → 90.16 and were withdrawn. **The row is now pinned at 100,
+  which makes it a constraint on every other lane** — any change to
+  `game.h`/`hero.h`/`mapcell.h`/`struct.h`/`town.h`/`armygrp.h`/
+  `artifact.h`/`army.h` must re-measure it before landing.
+  **GATE GAP, newly evidenced:** the hero lane mis-sliced the embedded
+  `TCreatureTypeTraits` at `army+0x74` by four bytes and silently lost
+  **56 functions** across `ai_tactical`/`ai_combat`/`cmbtmgr` for a
+  build. `SIZE()` is a **clang-only** static assert; VC6 said nothing.
+  A layout error inside a shared header is therefore invisible to the
+  build that decides matches. Wants a VC6-visible size check.
+  Layout landed: `SSpellTraits` +0x1c `school` (a dword, replacing a
+  mis-modelled `byte_1c`) and +0x20 `int mana_cost[4]`; `army` +0x78
+  `monInfoLevel`.
+
 - **2026-08-08 — `kbwin` CLOSED (27 TUs now at 100%); a SYMMETRIC-
   REGISTER family identified across four TUs; a delinker artifact that
   will cap `DATA()`-relative reads.** Engine-wide 523 → **524/977 exact

@@ -375,7 +375,7 @@ float get_spell_work_chance(SpellID spell, TCreatureType target_army_type, const
                 && const_cast<hero*>(target_hero)->IsWieldingArtifact(ARTIFACT_BADGE_OF_COURAGE))
                 return 0.0f;
         }
-        if ((attrs & 0x4000) && (spellRec->byte_1c & 0x2))
+        if ((attrs & 0x4000) && (spellRec->school & 0x2))
             return 0.0f;
         switch (target_army_type) {
         case CREATURE_DWARF:
