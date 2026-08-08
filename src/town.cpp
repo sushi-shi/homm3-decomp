@@ -3,6 +3,7 @@
 // 61 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <string.h>
+#include "advmgr.h"
 #include "game.h"
 #include "town.h"
 
@@ -76,7 +77,16 @@ void town::town()
 // dwelling is the best at 99.78, creature/dwelling/bonus 96.84,
 // bonus/creature/dwelling 89.16, the two dwelling-first orders 84.98.
 // Also tried and rejected: a separate `upgradeSlot` short, `slot +=`
-// vs an explicit cast, and reading the bonus through effect[0].
+// vs an explicit cast, and reading the bonus through effect[0]. A
+// second pass 2026-08-08 added five more, none better: hoisting the
+// bonus into a short local before the stores (99.78, byte-identical),
+// an `effect + 1` cursor local (82.87), the dwelling/creature/bonus
+// order (94.51), inlining `slot + 7` at both uses instead of `slot +=`
+// (88.00), and moving effect[1].dwelling ahead of the bonus copy
+// (96.84). Both registers are dead at that point (eax after the
+// [ecx+0xe] store, edx after [ecx+8]); retail takes the one freed
+// FIRST and our CL the one freed LAST, which no operand spelling
+// reaches.
 VA(0x005bdf60, 0x76)  // linkorder, dc 0x1664b0
 void town::initialize_hordes()
 {
@@ -164,14 +174,36 @@ void town::View(int bAlreadyFaded)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\town.cpp:1058
+// Hands the town back: find its id in the owner's town roster, close
+// the hole by sliding the tail down, blank the freed slot, drop the
+// selection if it pointed here, shorten the roster, repaint the
+// adventure screen's town locators and mark both this record and the
+// scenario's copy unowned. The town-count reload inside the shift loop
+// is retail's, not ours: `numTowns` and `townIds` are both char, so the
+// store aliases the count and VC6 cannot keep it in a register - the
+// entry test still uses the value hoisted before the search loop.
 VA(0x005be2d0, 0xB3)  // linkorder, dc 0x166720
 void town::Deallocate()
 {
-    // @stub
+    playerData* player = &gpGame->players[owner];
+    int slot = -1;
+    for (int i = 0; i < player->numTowns; i++) {
+        if (player->townIds[i] == id)
+            slot = i;
+    }
+    for (int j = slot; j < player->numTowns - 1; j++)
+        player->townIds[j] = player->townIds[j + 1];
+    player->townIds[player->numTowns - 1] = -1;
+    if (player->currTownId == id)
+        player->currTownId = -1;
+    player->numTowns--;
+    gpAdvManager->advWindow->UpdateTownLocators(0, 1, 1);
+    gpGame->towns[id].owner = -1;
+    owner = -1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\town.cpp:1094
 // The garrisoned hero walks out onto the town tile: its id moves into
@@ -256,14 +288,38 @@ void town::update_shipyard()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\town.cpp:1442
+// The purchase gate: an owned town, a legal build, then the cost row.
+// A computer owner gets the 0x526d20 shim run over the row first and
+// bails if that set the town's own veto byte; every owner then has to
+// cover all seven columns before they are debited and BuildBuilding
+// commits. get_build_cost_array inlines here exactly as it does in
+// get_build_cost - all three bands expand in place.
 VA(0x005bf3c0, 0x11E)  // anchor-global, dc 0x167274
 unsigned char town::buy_building(type_building_id building)
 {
-    // @stub
+    if (owner < 0)
+        return 0;
+    if (!can_build(building))
+        return 0;
+    int* costs = get_build_cost_array(building);
+    playerData* player = &gpGame->players[owner];
+    if (!player->IsHuman()) {
+        Unnamed526d20(owner, costs, 1);
+        if (field_02)
+            return 0;
+    }
+    for (int resource = 0; resource < NUM_RESOURCES; resource++) {
+        if (player->resources[resource] < costs[resource])
+            return 0;
+    }
+    for (int paid = 0; paid < NUM_RESOURCES; paid++)
+        player->resources[paid] -= costs[paid];
+    BuildBuilding(building, 1, 1);
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\town.cpp:1466
 VA(0x005bf4e0, 0xC)  // linkorder, dc 0x167378
@@ -332,21 +388,50 @@ short town::get_gold_income(unsigned char include_silo) const
     return income;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\town.cpp:1538
-DC_ONLY(0x1674d4, 0x70)
-type_building_id town::get_horde(long dwelling)
+// Which horde building feeds this dwelling. Promoted from DC_ONLY
+// 2026-08-08: both rows sit in town.obj's carve span in the DC roster's
+// order right after get_gold_income, and the bodies name themselves -
+// the entry gate indexes bitNumber THIRTY slots up (0x66ce88 ==
+// bitNumber + 30*8, i.e. DWELLING_0_ID + dwelling), the scan walks
+// gHordeBuildings 0x642e20..0x642e30, and the row it compares is
+// const_horde_effects[type][slot].dwelling at 0x6887a6 (base + 6).
+// Spelled `int`, not type_building_id: the table is int and the DC
+// return would need a cast at every arm (the UpgradedDwellingID
+// precedent). The sentinel is MAX_BUILDING_TYPE.
+VA(0x005bf6d0, 0x97)  // dc-bracket + body (gHordeBuildings scan), dc 0x1674d4
+int town::get_horde(long dwelling) const
 {
-    // @stub
+    if (!(active & bitNumber[DWELLING_0_ID + dwelling]))
+        return MAX_BUILDING_TYPE;
+    for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
+        if (active & bitNumber[gHordeBuildings[slot]]) {
+            if (const_horde_effects[type][slot].dwelling == dwelling)
+                return gHordeBuildings[slot];
+        }
+    }
+    return MAX_BUILDING_TYPE;
 }
 
 // E:\gamedcs\town.cpp:1559
-DC_ONLY(0x167544, 0x8E)
-long town::get_horde_bonus(long dwelling)
+// Same scan, reading the .bonus column at +4 instead of returning the
+// building id - and with NO break, so the LAST matching horde wins.
+VA(0x005bf770, 0x9E)  // dc-bracket + body, dc 0x167544
+long town::get_horde_bonus(long dwelling) const
 {
-    // @stub
+    if (!(active & bitNumber[DWELLING_0_ID + dwelling]))
+        return 0;
+    long bonus = 0;
+    for (int slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
+        if (active & bitNumber[gHordeBuildings[slot]]) {
+            if (const_horde_effects[type][slot].dwelling == dwelling)
+                bonus = const_horde_effects[type][slot].bonus;
+        }
+    }
+    return bonus;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\town.cpp:1581
 DC_ONLY(0x1675d4, 0x172)
@@ -369,12 +454,33 @@ void town::increase_population(TCreatureType bonus_creature, TCreatureType alter
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\town.cpp:1711
-DC_ONLY(0x167900, 0x56)
+// Credits a growth bonus to the dwelling that produces `creature`, and
+// mirrors it onto the upgrade twin when the hit is a BASE slot.
+// Promoted from DC_ONLY 2026-08-08: the row is in town.obj's carve span
+// in DC order, and the body names itself - it scans this town's 14-wide
+// gTownDwellingCreatures row (`56*type + 4*slot`) and writes the
+// generatorBonus array at +0x118, whose two stores 0x118/0x134 are the
+// base and upgrade halves of one row.
+VA(0x005bfe50, 0x55)  // dc-bracket + body (gTownDwellingCreatures scan), dc 0x167900
 void town::change_generator_bonus(TCreatureType creature, long change)
 {
-    // @stub
+    int slot;
+    for (slot = 0; slot < TOWN_DWELLING_SLOTS; slot++) {
+        if (gTownDwellingCreatures[TOWN_DWELLING_SLOTS * type + slot]
+            == creature)
+            break;
+    }
+    if (slot == TOWN_DWELLING_SLOTS)
+        return;
+    generatorBonus[slot] += change;
+    if (slot < TOWN_DWELLING_COUNT)
+        generatorBonus[slot + TOWN_DWELLING_COUNT] += change;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\town.cpp:1732
 DC_ONLY(0x167958, 0x132)
@@ -650,35 +756,43 @@ void town::PlaceInMap(THeroID hero_id, long player_id, unsigned char reset_flags
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\town.cpp:2356
-DC_ONLY(0x168ba0, 0x16)
-TTerrainType town::GetNativeTerrain()
+// Promoted from DC_ONLY 2026-08-08. All three rows sit in town.obj's
+// own carve span, in the DC roster's order, between PlaceInMap's
+// bracket and UpgradedDwellingID (the next claim). Each is pinned by
+// its body as well as by order: this one indexes the table armygrp.h
+// already owns at 0x643698 with the town's `type` byte.
+VA(0x005c1440, 0xC)  // dc-bracket + body (akNativeTerrains), dc 0x168ba0
+TTerrainType town::GetNativeTerrain() const
 {
-    // @stub
+    return akNativeTerrains[type];
 }
 
 // E:\gamedcs\town.cpp:2367
-DC_ONLY(0x168bb8, 0x16)
-const char* town::GetTypeName()
+// Same `movsx type` row read, against an unnamed .bss pointer table.
+VA(0x005c1450, 0xC)  // dc-bracket + body, dc 0x168bb8
+const char* town::GetTypeName() const
 {
-    // @stub
+    return gUnnamed6a74f4[type];
 }
 
 // E:\gamedcs\town.cpp:2375
-DC_ONLY(0x168bd0, 0x28)
-armyGroup* town::get_army()
+// ONE retail row for the DC's two get_army overloads: identical bodies,
+// so /OPT:ICF folded the const and non-const halves onto this single
+// 56-byte entry (the next carve row is UpgradedDwellingID at 0x5c14a0,
+// so no second copy survives). The body is HasGarrison's phi verbatim -
+// the garrisoned hero's own army when there is one, the town's
+// otherwise - including the `cmp edx,-1` GetHero leaves behind on the
+// unreachable arm and its `xor eax,eax` + `add eax,0x91`.
+VA(0x005c1460, 0x38)  // dc-bracket + body (HasGarrison's phi), dc 0x168bf8
+const armyGroup& town::get_army() const
 {
-    // @stub
+    if (garrisonHeroId < 0)
+        return garrison;
+    return gpGame->GetHero(garrisonHeroId)->army;
 }
-
-// E:\gamedcs\town.cpp:2385
-DC_ONLY(0x168bf8, 0x28)
-const armyGroup* town::get_army()
-{
-    // @stub
-}
-
-#endif  // @carcass
 
 // E:\gamedcs\town.cpp:2397
 // The two horde pairs are named exceptions; every other dwelling's

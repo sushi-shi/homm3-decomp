@@ -66,20 +66,6 @@ unsigned char iconWidget::handle_click(unsigned char down_click, unsigned char r
     // @stub
 }
 
-// E:\gamedcs\iconwdgt.cpp:263
-DC_ONLY(0xd96bc, 0x12)
-int iconWidget::GetRealWidth()
-{
-    // @stub
-}
-
-// E:\gamedcs\iconwdgt.cpp:269
-DC_ONLY(0xd96d0, 0x12)
-int iconWidget::GetRealHeight()
-{
-    // @stub
-}
-
 // E:\gamedcs\iconwdgt.cpp:275
 DC_ONLY(0xd96e4, 0x4)
 void iconWidget::zBufferDraw()
@@ -95,6 +81,28 @@ void iconWidget::Draw()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\iconwdgt.cpp:263
+// The two size overrides answer with the SPRITE's extent instead of
+// the widget rect the base returns. Promoted from DC_ONLY 2026-08-08:
+// both rows sit inside iconwdgt.obj's own carve span, they occupy the
+// DC roster's GetRealWidth/GetRealHeight slots in order, and the
+// iconWidget vtable at 0x63ec48 pins the identity from the other side
+// - slot 6 (widget::GetRealWidth) is 0x4eab20 and slot 5
+// (widget::GetRealHeight) is 0x4eab30, which is also what fixes which
+// CSprite field each one reads (Width@0x30 / Height@0x34).
+VA(0x004eab20, 0x7)  // anchor-vtable (slot 6 of 0x63ec48), dc 0xd96bc
+int iconWidget::GetRealWidth()
+{
+    return Sprite->Width;
+}
+
+// E:\gamedcs\iconwdgt.cpp:269
+VA(0x004eab30, 0x7)  // anchor-vtable (slot 5 of 0x63ec48), dc 0xd96d0
+int iconWidget::GetRealHeight()
+{
+    return Sprite->Height;
+}
 
 // E:\gamedcs\iconwdgt.cpp:437
 // Both arms carry their own modulo; the else divides by the zeroed

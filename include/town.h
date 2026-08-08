@@ -173,7 +173,19 @@ public:
     // The town's own troops (ctor constructs an armyGroup at +0xe0 and
     // then fills the seven type slots with -1).
     armyGroup garrison;
-    char pad_118[0x38];
+    // +0x118, fourteen dwords - one per dwelling slot, base then
+    // upgrade. Sliced 2026-08-08 by change_generator_bonus (0x5bfe50),
+    // which is also what fixes the extent from both ends: it indexes
+    // `[this + 4*slot + 0x118]` for the slot it finds in this town's
+    // 14-wide gTownDwellingCreatures row, and adds the same change to
+    // `[this + 4*slot + 0x134]` when slot < 7 - and 0x134 is exactly
+    // 0x118 + 4*7, so the second store is this array's upgrade half,
+    // not a separate field. 0x118 + 14*4 == 0x150, where `built`
+    // starts, so the row fills the old pad exactly. Name taken from
+    // the DC method that writes it; role provisional.
+    // Spelled 14 rather than TOWN_DWELLING_SLOTS because ETownConstants
+    // is declared below this class; the .cpp uses the named constant.
+    int generatorBonus[14];
     // Three 64-bit building bitfields, all read as pairs of dwords by
     // retail's __int64 lowering (the DC's own set_mask/
     // get_buildable_mask signatures are __int64 too; the DC build
@@ -197,7 +209,22 @@ public:
     void CalcNumLevelArchers(int* numArchers, int* archerLevel);
     long get_castle_growth_bonus(TCreatureType creature) const;
     short get_gold_income(unsigned char include_silo) const;
+    // 0x5bf6d0 / 0x5bf770. `int`, not the DC's type_building_id: the
+    // gHordeBuildings row is int and an enum return would need a cast
+    // (the UpgradedDwellingID precedent).
+    int get_horde(long dwelling) const;
+    long get_horde_bonus(long dwelling) const;
+    // 0x5bfe50.
+    void change_generator_bonus(TCreatureType creature, long change);
     unsigned char can_build(short building_id) const;
+    // 0x5bede0. DC signature; buy_building is the only claimed caller
+    // and it pushes exactly these three.
+    type_building_id BuildBuilding(int buildingId, unsigned char SetBuiltFlag,
+                                   unsigned char apply_special_effect);
+    // 0x5bf3c0. `building` is an INT (the can_ever_build asymmetry):
+    // retail reads [ebp+8] as a full dword for both band compares and
+    // for the inlined get_build_cost_array row arithmetic.
+    unsigned char buy_building(type_building_id building);
     unsigned char can_ever_build(int building_id) const;
     __int64 get_buildable_mask() const;
     int* get_build_cost_array(type_building_id building) const;
@@ -212,12 +239,22 @@ public:
     int* get_silo_income() const;
     unsigned char is_legal_building(type_building_id building) const;
     int HasGarrison();
+    // 0x5be2d0. Removes this town from its owner's roster and marks
+    // both this record and gpGame->towns[id] unowned.
+    void Deallocate();
     // The garrisoned hero steps out onto the town tile (0x5be390).
     void remove_garrison_hero();
+    // 0x5c1440 / 0x5c1450, both `movsx eax,[this+4]` table reads keyed
+    // on the town type. Spelled const because neither touches anything
+    // else; retail's thiscall is identical either way.
+    TTerrainType GetNativeTerrain() const;
+    const char* GetTypeName() const;
     // 0x5c1460. The DC carries the pair
     // ?get_army@town@@QAAAAVarmyGroup@@XZ / ...QBAABVarmyGroup@@XZ;
     // only the const half has a proven retail reader so far
-    // (can_take_town copies 56 bytes out of the returned reference).
+    // (can_take_town copies 56 bytes out of the returned reference),
+    // and only ONE retail row exists for the two - /OPT:ICF folded the
+    // identical bodies.
     const class armyGroup& get_army() const;
 
     // DC LF_ONEMETHOD STATIC + public ?initialize_hordes@town@@SAXXZ
@@ -269,6 +306,15 @@ public:
 };
 SIZE(town, 360);
 
+// Retail 0x526d20, a 30-byte /Gr fastcall shim on the computer-player
+// side: it scales its first argument by 152 into the .bss array at
+// 0x692950 and tail-calls 0x42a470 with the other two. town::buy_building
+// (0x5bf3c0) is the only reader this tree has - it runs the shim for a
+// non-human owner before charging the cost row - and no roster attests a
+// name, so this keeps a house ordinal placeholder (the gUnnamed6a5d5c
+// precedent). Owner TU unlocated; declared, not claimed.
+void Unnamed526d20(int playerId, int* costs, int flag);
+
 // The 1i64 << n building-bit table every mask builder indexes (DC
 // public ?bitNumber@@3PA_JA; retail .data 0x66cd98). VERIFIED against
 // the pinned image 2026-08-07: bitNumber[i] == 1i64 << i holds for
@@ -303,8 +349,21 @@ enum ETownConstants {
     // Base and upgraded dwelling slots per town - the width of a
     // DwellingCosts row and of a gTownDwellingCreatures row, and the
     // +7 UpgradedDwellingID adds.
-    TOWN_DWELLING_COUNT = 7
+    TOWN_DWELLING_COUNT = 7,
+    // Both halves together - the row width of gTownDwellingCreatures
+    // (initialize_hordes steps its creature base by 14 per town) and
+    // the extent of town::generatorBonus (change_generator_bonus scans
+    // 0..13 and stops at 14).
+    TOWN_DWELLING_SLOTS = 14
 };
+
+// Retail .bss 0x6a74f4, the per-town-type name-pointer table
+// town::GetTypeName (0x5c1450) hands out: `movsx eax,[this+4]` then
+// `mov eax,[4*eax + 0x6a74f4]`. The nine-row bound is the same
+// TOWN_TYPE_COUNT every other per-type table in this header carries -
+// the index IS town::type. Name INVENTED (no DC symbol covers it);
+// house ordinal placeholder. Owner TU unlocated - extern only.
+extern const char* gUnnamed6a74f4[TOWN_TYPE_COUNT];
 
 // Retail .data 0x688eb4: nine 7-int rows (one per town type) that
 // get_silo_income hands out whole and get_gold_income reads the GOLD
