@@ -9,6 +9,46 @@
 #include <bitset>
 #include <vector>
 #include "hero.h"
+// gpGame / playerData / game::IsHuman: the owner-record accessors
+// (belongs_to_human, get_player) and every gpGame walk in this TU need
+// the real definitions, and game.h is where they live.
+#include "game.h"
+// TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
+// placement note at the top of that header.
+#include "herospec.h"
+// TArtifact / akArtifactTraits / gCombinationArtifacts - same placement
+// rationale as herospec.h.
+#include "artifact.h"
+
+// The per-mastery specialty factor rows, one four-float .rdata run per
+// skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
+// read from the pinned image; they sit in one contiguous band of
+// four-float rows starting at 0x63e9e8, one row per factor getter in
+// this TU). File-static const, the kTown0Buildings precedent: retail
+// emits them into .rdata with no external name, and each is read only
+// by its own getter.
+// The two INT rows of the same band (0x63e9c8 and 0x63e9d8): mana per
+// day by Mysticism mastery and scouting radius in tiles.
+static const int kMysticismBonuses[kNumMasteries] = { 1, 2, 3, 4 };
+static const int kScoutingVisibility[kNumMasteries] = { 5, 6, 7, 8 };
+static const float kArcheryFactors[kNumMasteries] =
+    { 0.0f, 0.1f, 0.25f, 0.5f };
+static const float kEagleEyeFactors[kNumMasteries] =
+    { 0.0f, 0.4f, 0.5f, 0.6f };
+static const float kDiplomacyFactors[kNumMasteries] =
+    { 0.0f, 0.2f, 0.4f, 0.6f };
+static const float kMagicResistanceFactors[kNumMasteries] =
+    { 0.0f, 0.05f, 0.1f, 0.2f };
+static const float kOffenseFactors[kNumMasteries] =
+    { 0.0f, 0.1f, 0.2f, 0.3f };
+static const float kDefenseFactors[kNumMasteries] =
+    { 0.0f, 0.05f, 0.1f, 0.15f };
+static const float kLearningFactors[kNumMasteries] =
+    { 0.0f, 0.05f, 0.1f, 0.15f };
+static const float kIntelligenceFactors[kNumMasteries] =
+    { 0.0f, 0.25f, 0.5f, 1.0f };
+static const float kFirstAidFactors[kNumMasteries] =
+    { 0.0f, 1.0f, 2.0f, 3.0f };
 
 #if 0  // @carcass
 
@@ -47,12 +87,19 @@ unsigned char initialize_ballistics_table()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:375
+// The whole body is initialize() inlined - same seven stores, same
+// order, only the register roles swapped (`this` in eax here, in ecx
+// there). /Ob2 with the out-of-line copy still emitted.
 VA(0x004d7470, 0x1F)  // anchor-global, dc 0xcaaa0
-void type_obscuring_object::type_obscuring_object()
+type_obscuring_object::type_obscuring_object()
 {
-    // @stub
+    initialize();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:380
 DC_ONLY(0xcaac8, 0x3A)
@@ -68,12 +115,22 @@ town* type_obscuring_object::get_obscured_town()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:403
 VA(0x004d74d0, 0x1D)  // anchor-global, dc 0xcab3c
 void type_obscuring_object::initialize()
 {
-    // @stub
+    x = -1;
+    y = -1;
+    z = -1;
+    field_06 = 0;
+    obscuredType = NOTHING;
+    field_10 = 0;
+    obscuredIndex = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:418
 VA(0x004d74f0, 0xD6)  // linkorder, dc 0xcab54
@@ -192,6 +249,8 @@ const char* hero::HeroFn_004D8FB0()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:1303
 // Whole body: `if ((signed char)owner < 0) return 0; return
 // game::IsHuman(gpGame, owner) != 0;` - the +0x22 signed owner byte the
@@ -201,22 +260,47 @@ const char* hero::HeroFn_004D8FB0()
 VA(0x004d9050, 0x20)  // anchor-callee (game::IsHuman), dc 0xcc0bc
 unsigned char hero::belongs_to_human()
 {
-    // @stub
+    if (owner < 0)
+        return 0;
+    return gpGame->IsHuman(owner) != 0;
 }
 
 // E:\gamedcs\hero.cpp:1314
+// The flag's POLARITY is retail's, not the DC name's: a nonzero
+// argument suppresses the tally entirely (`test bl,bl` / `jne` lands
+// past the `inc`, not on it), so the four war-machine ids are only
+// ever reached with the flag clear. Transcribed as retail emits it.
 VA(0x004d9070, 0x45)  // anchor-global, dc 0xcc0e4
 long hero::get_equipped_artifacts(unsigned char countWarMachines)
 {
-    // @stub
+    long count = 0;
+    for (int slot = 0; slot < 19; slot++) {
+        int id = equipped[slot].artifactId;
+        if (id != -1 && id != ARTIFACT_SPELLBOOK && !countWarMachines &&
+            id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
+            id != ARTIFACT_AMMO_CART && id != ARTIFACT_FIRST_AID_TENT)
+            count++;
+    }
+    return count;
 }
 
 // E:\gamedcs\hero.cpp:1338
 VA(0x004d90c0, 0x4A)  // anchor-bracket, dc 0xcc138
 long hero::get_number_in_backpack(unsigned char countWarMachines)
 {
-    // @stub
+    long count = 0;
+    if (countWarMachines)
+        return backpackCount;
+    for (int slot = 0; slot < 64; slot++) {
+        int id = backpack[slot].artifactId;
+        if (id != -1 && id != ARTIFACT_CATAPULT && id != ARTIFACT_BALLISTA &&
+            id != ARTIFACT_AMMO_CART && id != ARTIFACT_FIRST_AID_TENT)
+            count++;
+    }
+    return count;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:1362
 VA(0x004d9110, 0x4C)  // anchor-global, dc 0xcc1b0
@@ -251,12 +335,28 @@ unsigned char hero::HasArtifact(int whichArtifact)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:1446
+// Three tiers: the spellbook answers from its own fixed slot, the
+// nineteen equipped slots answer directly, and anything left recurses
+// on the COMBINATION artifact this piece belongs to - so wearing an
+// assembled combo counts as wearing each of its components.
 VA(0x004d91f0, 0x70)  // anchor-global, dc 0xcc26c
 unsigned char hero::IsWieldingArtifact(int whichArtifact)
 {
-    // @stub
+    if (whichArtifact == ARTIFACT_SPELLBOOK)
+        return equipped[17].artifactId == ARTIFACT_SPELLBOOK;
+    for (int slot = 0; slot < 19; slot++) {
+        if (equipped[slot].artifactId == whichArtifact)
+            return 1;
+    }
+    int combination = akArtifactTraits[whichArtifact].combination;
+    return combination != -1 &&
+           IsWieldingArtifact(gCombinationArtifacts[combination].artifactId);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:1466
 VA(0x004d9260, 0x68)  // dc-bracket forced, dc 0xcc2a8
@@ -272,12 +372,17 @@ void hero::UseSpell(int cost)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:1515
 VA(0x004d9330, 0x1A)  // dc-bracket forced, dc 0xcc348
 void hero::AddSpell(int whichSpell)
 {
-    // @stub
+    in_spellbook[whichSpell] = 1;
+    available_spells[whichSpell] = 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:1527
 VA(0x004d9350, 0x272)  // dc-bracket forced, dc 0xcc360
@@ -856,15 +961,15 @@ int hero::CreatureTypeCount(int creatureType)
 
 #endif  // @carcass
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:4667
 VA(0x004e2370, 0x26)  // dc-bracket forced, dc 0xd3874
 void hero::UpgradeCreatures(int sourceCreatureType, int destCreatureType)
 {
-    // @stub
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+        if (army.armies[slot] == sourceCreatureType)
+            army.armies[slot] = destCreatureType;
+    }
 }
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:4677
 VA(0x004e23a0, 0x27)  // anchor-global, dc 0xd38b0
@@ -1010,40 +1115,122 @@ float hero::GetNecromancyFactor(unsigned char apply_limit)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:5387
+// The integer half of the specialty family: the mastery row is int, so
+// the specialty scale runs through fild/__ftol instead of staying in
+// the FPU, and the artifact bonuses are plain adds.
 VA(0x004e3f40, 0x12F)  // anchor-global, dc 0xd44a4
 int hero::GetMysticismBonus()
 {
-    // @stub
+    int bonus = kMysticismBonuses[skillLevel[eSecSkillMysticism]];
+    if (skillLevel[eSecSkillMysticism] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        // The one asymmetry in the family: a Mysticism specialist gets
+        // a flat extra point on top of the scaled row - and it is added
+        // AFTER the truncation, not inside the float expression
+        // (retail's `call __ftol; mov ebx,eax; inc ebx`; folding the
+        // +1 into the multiply emits an extra `fadd` instead).
+        if (ability.type == eHeroAbilitySecondarySkill && ability.skill == eSecSkillMysticism) {
+            bonus = (level * 0.05f + 1.0f) * bonus;
+            bonus++;
+        }
+    }
+    if (IsWieldingArtifact(ARTIFACT_CHARM_OF_MANA))
+        bonus++;
+    if (IsWieldingArtifact(ARTIFACT_TALISMAN_OF_MANA))
+        bonus += 2;
+    if (IsWieldingArtifact(ARTIFACT_MYSTIC_ORB_OF_MANA))
+        bonus += 3;
+    return bonus;
 }
 
 // E:\gamedcs\hero.cpp:5424
 VA(0x004e4070, 0xEF)  // anchor-global, dc 0xd4560
 int hero::GetVisibility()
 {
-    // @stub
+    int visibility = kScoutingVisibility[skillLevel[eSecSkillScouting]];
+    if (skillLevel[eSecSkillScouting] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill && ability.skill == eSecSkillScouting)
+            visibility = (level * 0.05f + 1.0f) * visibility;
+    }
+    if (IsWieldingArtifact(ARTIFACT_SPECULUM))
+        visibility++;
+    if (IsWieldingArtifact(ARTIFACT_SPYGLASS))
+        visibility++;
+    return visibility;
 }
 
+#if 0  // @carcass
+
 // E:\gamedcs\hero.cpp:5455
+#endif  // @carcass
+
+// E:\gamedcs\hero.cpp:5455
+// The specialty shape plus HoMM3's three archery artifacts. Retail
+// inlines all three IsWieldingArtifact calls (only the combination
+// recursion inside each survives as a call), which is /Ob2 doing its
+// own budgeting - the source is three plain calls.
 VA(0x004e4160, 0x143)  // anchor-global, dc 0xd45d8
 float hero::GetArcheryFactor()
 {
-    // @stub
+    float factor = kArcheryFactors[skillLevel[eSecSkillArchery]];
+    if (skillLevel[eSecSkillArchery] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill && ability.skill == eSecSkillArchery)
+            factor = (level * 0.05f + 1.0f) * factor;
+        if (IsWieldingArtifact(ARTIFACT_BOW_OF_ELVEN_CHERRYWOOD))
+            factor = factor + 0.05f;
+        if (IsWieldingArtifact(ARTIFACT_BOWSTRING_OF_THE_UNICORNS_MANE))
+            factor = factor + 0.1f;
+        if (IsWieldingArtifact(ARTIFACT_ANGEL_FEATHER_ARROWS))
+            factor = factor + 0.15f;
+    }
+    return factor;
 }
 
+#if 0  // @carcass
+
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:5489
+// The specialty-factor shape, shared verbatim by five bodies in this
+// TU (0x4e42b0 / 0x4e4310 / 0x4e4840 / 0x4e48b0 / 0x4e4920): look the
+// skill's mastery up in a four-float .rdata row, and - only when the
+// skill is actually known - scale it by 1 + level/20 if the hero's
+// specialty record names that same skill. The `> 0` guard is what
+// makes the specialty test unreachable at mastery None, which is why
+// retail computes the table load BEFORE branching on it.
 VA(0x004e42b0, 0x60)  // anchor-global, dc 0xd4664
 float hero::GetOffenseFactor()
 {
-    // @stub
+    float factor = kOffenseFactors[skillLevel[eSecSkillOffense]];
+    if (skillLevel[eSecSkillOffense] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill && ability.skill == eSecSkillOffense)
+            factor = (level * 0.05f + 1.0f) * factor;
+    }
+    return factor;
 }
 
 // E:\gamedcs\hero.cpp:5514
 VA(0x004e4310, 0x7D)  // anchor-global, dc 0xd46a8
 float hero::GetDefenseFactor()
 {
-    // @stub
+    float factor = kDefenseFactors[skillLevel[eSecSkillDefense]];
+    if (skillLevel[eSecSkillDefense] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill && ability.skill == eSecSkillDefense)
+            factor = (level * 0.05f + 1.0f) * factor;
+    }
+    if (factor > 1.0f)
+        factor = 1.0f;
+    return 1.0f - factor;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:5542
 VA(0x004e4390, 0x89)  // anchor-global, dc 0xd46f8
@@ -1052,33 +1239,100 @@ int hero::GetEstatesBonus()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:5570
+// GetArcheryFactor's nesting (the mastery guard covers the artifacts
+// too) with GetDefenseFactor's clamp, but no `1 - x` inversion: an
+// eagle-eye chance is used as-is.
 VA(0x004e4420, 0x15A)  // anchor-global, dc 0xd4768
 float hero::GetEagleEyeChance()
 {
-    // @stub
+    float factor = kEagleEyeFactors[skillLevel[eSecSkillEagleEye]];
+    if (skillLevel[eSecSkillEagleEye] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill && ability.skill == eSecSkillEagleEye)
+            factor = (level * 0.05f + 1.0f) * factor;
+        if (IsWieldingArtifact(ARTIFACT_BIRD_OF_PERCEPTION))
+            factor = factor + 0.05f;
+        if (IsWieldingArtifact(ARTIFACT_STOIC_WATCHMAN))
+            factor = factor + 0.1f;
+        if (IsWieldingArtifact(ARTIFACT_EMBLEM_OF_COGNIZANCE))
+            factor = factor + 0.15f;
+    }
+    if (factor > 1.0f)
+        factor = 1.0f;
+    return factor;
 }
 
+#if 0  // @carcass
+
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:5607
+// Same family as GetArcheryFactor, but the three artifact bonuses sit
+// OUTSIDE the mastery guard here (retail's `jle` lands on the first
+// artifact scan, not on the return) - so a hero with no Diplomacy
+// still gets the artifact discount.
 VA(0x004e4580, 0x15C)  // anchor-global, dc 0xd482c
 float hero::GetSurrenderCostFactor()
 {
-    // @stub
+    float factor = kDiplomacyFactors[skillLevel[eSecSkillDiplomacy]];
+    if (skillLevel[eSecSkillDiplomacy] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill && ability.skill == eSecSkillDiplomacy)
+            factor = (level * 0.05f + 1.0f) * factor;
+    }
+    if (IsWieldingArtifact(ARTIFACT_STATESMANS_MEDAL))
+        factor = factor + 0.1f;
+    if (IsWieldingArtifact(ARTIFACT_DIPLOMATS_RING))
+        factor = factor + 0.1f;
+    if (IsWieldingArtifact(ARTIFACT_AMBASSADORS_SASH))
+        factor = factor + 0.1f;
+    if (factor > 0.9f)
+        factor = 0.9f;
+    return 1.0f - factor;
 }
 
 // E:\gamedcs\hero.cpp:5647
 VA(0x004e46e0, 0x15C)  // anchor-global, dc 0xd48c8
 float hero::GetMagicResistanceFactor()
 {
-    // @stub
+    float factor = kMagicResistanceFactors[skillLevel[eSecSkillMagicResistance]];
+    if (skillLevel[eSecSkillMagicResistance] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill && ability.skill == eSecSkillMagicResistance)
+            factor = (level * 0.05f + 1.0f) * factor;
+    }
+    if (IsWieldingArtifact(ARTIFACT_GARNITURE_OF_INTERFERENCE))
+        factor = factor + 0.05f;
+    if (IsWieldingArtifact(ARTIFACT_SURCOAT_OF_COUNTERPOISE))
+        factor = factor + 0.1f;
+    if (IsWieldingArtifact(ARTIFACT_BOOTS_OF_POLARITY))
+        factor = factor + 0.15f;
+    if (factor > 1.0f)
+        factor = 1.0f;
+    return 1.0f - factor;
 }
+
+#if 0  // @carcass
+
+#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:5684
 VA(0x004e4840, 0x66)  // anchor-global, dc 0xd4960
 float hero::GetExperienceBonusFactor()
 {
-    // @stub
+    float factor = kLearningFactors[skillLevel[eSecSkillLearning]];
+    if (skillLevel[eSecSkillLearning] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill && ability.skill == eSecSkillLearning)
+            factor = (level * 0.05f + 1.0f) * factor;
+    }
+    return factor + 1.0f;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:5709
 DC_ONLY(0xd49a8, 0x48)
@@ -1101,19 +1355,35 @@ float hero::GetSorceryFactor()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:5783
 VA(0x004e48b0, 0x66)  // anchor-global, dc 0xd4a88
 float hero::GetIntelligenceFactor()
 {
-    // @stub
+    float factor = kIntelligenceFactors[skillLevel[eSecSkillIntelligence]];
+    if (skillLevel[eSecSkillIntelligence] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill && ability.skill == eSecSkillIntelligence)
+            factor = (level * 0.05f + 1.0f) * factor;
+    }
+    return factor + 1.0f;
 }
 
 // E:\gamedcs\hero.cpp:5808
 VA(0x004e4920, 0x66)  // anchor-global, dc 0xd4b08
 float hero::GetFirstAidFactor()
 {
-    // @stub
+    float factor = kFirstAidFactors[skillLevel[eSecSkillFirstAid]];
+    if (skillLevel[eSecSkillFirstAid] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill && ability.skill == eSecSkillFirstAid)
+            factor = (level * 0.05f + 1.0f) * factor;
+    }
+    return factor + 1.0f;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:5833
 VA(0x004e4990, 0x3F6)  // corroborates, dc 0xd4b50
@@ -1122,19 +1392,36 @@ int hero::GetMobility(unsigned char sea_movement)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:5932
 VA(0x004e4d90, 0x12)  // corroborates, dc 0xd4d60
 int hero::GetMobility()
 {
-    // @stub
+    return GetMobility((flags >> 18) & 1);
 }
+
+#if 0  // @carcass
+
+#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:5943
 VA(0x004e4db0, 0x10D)  // anchor-global, dc 0xd4db0
 int hero::GetSpellDurationBonus()
 {
-    // @stub
+    int bonus = 0;
+    if (IsWieldingArtifact(ARTIFACT_COLLAR_OF_CONJURING))
+        bonus++;
+    if (IsWieldingArtifact(ARTIFACT_RING_OF_CONJURING))
+        bonus += 2;
+    if (IsWieldingArtifact(ARTIFACT_CAPE_OF_CONJURING))
+        bonus += 3;
+    if (IsWieldingArtifact(ARTIFACT_RING_OF_THE_MAGI))
+        bonus += 50;
+    return bonus;
 }
+
+#if 0  // @carcass
 
 // RETAIL-ONLY: no DC row between GetSpellDurationBonus (0xd4db0) and
 // get_special_terrain (0xd4df0). `ret 0`, and it unpacks a five-byte
@@ -1184,19 +1471,52 @@ int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy, unsigned char is_
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:6103
+// The 26-frame movement gauge: one frame per 100 points below 2300,
+// then three fixed steps. Retail divides with the SIGNED 0x51eb851f/100
+// reciprocal, which is what types movePoints int rather than unsigned.
+// Residual (90.4%): every branch, immediate and reciprocal agrees; only
+// the divide's result register differs. Retail keeps the quotient in
+// EDX for the sign fix-up and copies it out last (`sar edx,5 / mov
+// eax,edx / shr eax,31 / add edx,eax / mov eax,edx`); our CL moves it
+// to EAX first and uses ECX - dead `movePoints` - as the fix-up scratch
+// (`mov eax,edx / sar eax,5 / mov ecx,eax / shr ecx,31 / add eax,ecx`).
+// Same instruction count, register-allocation family; GetManaFrame
+// below carries the identical delta. Tried and rejected: binding the
+// quotient to a named local before returning it (no change).
 VA(0x004e5330, 0x43)  // linkorder, dc 0xd4fe0
 int hero::GetMobilityFrame()
 {
-    // @stub
+    if (movePoints <= 0)
+        return 0;
+    if (movePoints < 2300) {
+        int frame = movePoints / 100;
+        return frame;
+    }
+    if (movePoints < 2500)
+        return 23;
+    return 24 + (movePoints >= 2800);
 }
 
 // E:\gamedcs\hero.cpp:6129
+// Residual (88.9%): the same divide-result register family as
+// GetMobilityFrame above, plus the tail's `xor ecx,ecx / setge cl /
+// add ecx,0x18 / mov eax,ecx` where retail settles the same value in
+// EAX directly. Everything else - the 16-bit compares on the mana
+// word, the +4 bias, the /5 reciprocal, all four thresholds - matches.
 VA(0x004e5380, 0x3E)  // linkorder, dc 0xd5024
 int hero::GetManaFrame()
 {
-    // @stub
+    if (mana < 116)
+        return (mana + 4) / 5;
+    if (mana < 145)
+        return 23;
+    return 24 + (mana >= 170);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6155
 VA(0x004e53c0, 0x1E)  // linkorder, dc 0xd5060
@@ -1233,12 +1553,18 @@ unsigned char hero::can_summon_boat()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:6241
 VA(0x004e56b0, 0x21)  // linkorder, dc 0xd52b0
 playerData* hero::get_player()
 {
-    // @stub
+    if (owner < 0)
+        return 0;
+    return &gpGame->players[owner];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6251
 VA(0x004e56e0, 0x7C)  // anchor-global, dc 0xd52d0
@@ -1254,12 +1580,41 @@ long hero::modify_spell_damage(SpellID spell, int damage, const army* target_arm
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:6296
+// Residual (75.6%): the CFG, the three arms, the 8-bit compares and
+// the `setge` floor all agree; retail keeps `this` in ecx and runs the
+// loop on an index (esi) PLUS a separate trip counter (`mov edi,4` /
+// `dec edi` / `jne`), while our CL folds the exit test onto the index
+// (`inc edx` / `cmp edx,4` / `jl`) and needs a third callee-saved
+// register because the setge scratch collides with `this`.
+// Induction-variable/register-allocation family. Tried and rejected:
+// no `stat` local at all (55.58 - VC6 then strength-reduces the
+// address, hoists `&stats[0]` and RECOVERS the index with
+// `lea ecx,[esi+edx]`, which is strictly further away); `int value`
+// hoisted out of the loop (no change); declaring `value` before `stat`
+// (no change). The `signed char stat` local is what bought 55.58 ->
+// 75.58 by keeping `this` live in a base register.
 VA(0x004e5960, 0x38)  // linkorder, dc 0xd544c
 short hero::get_primary_skill_total()
 {
-    // @stub
+    int total = 0;
+    for (int skill = 0; skill < 4; skill++) {
+        signed char stat = stats[skill];
+        int value;
+        if (stat > 99)
+            value = 99;
+        else if (stat > 0)
+            value = stat;
+        else
+            value = skill >= 2;
+        total += value;
+    }
+    return total;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6310
 VA(0x004e59a0, 0xF8)  // linkorder, dc 0xd5488
@@ -1268,12 +1623,25 @@ void hero::Fly(int level)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:6319
 VA(0x004e5aa0, 0xE0)  // anchor-global, dc 0xd54ac
 long hero::get_combat_speed_bonus()
 {
-    // @stub
+    long bonus = 0;
+    if (IsWieldingArtifact(ARTIFACT_NECKLACE_OF_SWIFTNESS))
+        bonus++;
+    if (IsWieldingArtifact(ARTIFACT_RING_OF_THE_WAYFARER))
+        bonus++;
+    if (IsWieldingArtifact(ARTIFACT_CAPE_OF_VELOCITY))
+        bonus += 2;
+    if (akHeroSpecificAbilities[id].type == eHeroAbilityKind5)
+        bonus += 2;
+    return bonus;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6336
 // SIGNATURE CORRECTED 2026-08-07 (tail order-map audit). The slot is
@@ -1307,6 +1675,8 @@ unsigned char hero::can_land()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:6376
 // LOCATED 2026-08-07 (was DC_ONLY 0xd55b8). Proof: the 16-byte body is
 // `mov eax,[ebp+8]; mov [ecx+0x116],eax; ret 4` - a one-arg setter for
@@ -1317,7 +1687,7 @@ unsigned char hero::can_land()
 VA(0x004e5dd0, 0x10)  // anchor-callee + order-map, dc 0xd55b8
 void hero::WalkOnWater(int level)
 {
-    // @stub
+    waterWalkLevel = level;
 }
 
 // RETAIL-ONLY: no DC roster row exists between WalkOnWater (0xd55b8) and
@@ -1334,8 +1704,12 @@ void hero::WalkOnWater(int level)
 VA(0x004e5de0, 0x2D)  // linkorder + order-map, retail-only
 int hero::HeroFn_004E5DE0()
 {
-    // @stub
+    if (field_129 < 3 && army.get_creature_total(CREATURE_ROGUE) != 0)
+        return 3;
+    return field_129;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6385
 VA(0x004e5e10, 0x11C)  // anchor-global, dc 0xd55c0
