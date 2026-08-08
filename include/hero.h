@@ -13,6 +13,11 @@
 // this edge cannot reach the initialize_game_data tripwire: nothing in
 // that closure includes hero.h.
 #include "artifact.h"
+// TSpellSchool - the mask hero::GetSpellSchoolLevel and
+// hero::GetHighestSchool take. Its own domain header rather than
+// ai_tactical.h (whose `typedef int TSkillMastery` is a hard C2371
+// against herospec.h's enum) and rather than a second copy here.
+#include "spellschool.h"
 
 // Hero/boat sprite sequence ids, transcribed COMPLETE from the
 // Dreamcast CodeView enum `hero_seqid` (the creature_seqid precedent in
@@ -326,6 +331,21 @@ public:
     // 0x4e5330 / 0x4e5380, the two status-bar gauge frames.
     int GetMobilityFrame();
     int GetManaFrame();
+    // 0x4da3a0 - STATIC: retail takes iLevel in ECX and returns with a
+    // bare `ret`, and the Dreamcast row for hero::GetExperience lists
+    // iLevel as its ONLY parameter (no `this`). /Gr makes a static
+    // member fastcall, which is exactly that shape.
+    static int GetExperience(int iLevel);
+    // 0x4da420 - STATIC for the same two reasons, and its whole body is
+    // GetExperience inlined twice.
+    static int GetExperienceIncrement(int level);
+    // 0x4e4390 - Estates gold per day, the int twin of the five
+    // specialty-factor getters.
+    int GetEstatesBonus();
+    // 0x4e5b80 - the hit-point artifact family. Takes a creature type
+    // (`ret 4`); the Dreamcast row's no-argument form is that build's
+    // own revision (see the note over the body).
+    long get_hit_point_bonus(int creatureType);
     // 0x004da510 / 0x004da710 - the win half is a stub, but the loss
     // half's whole retail body is a tail jump into it, so it needs the
     // declaration.
@@ -421,6 +441,29 @@ public:
     // call them.
     long modify_spell_damage(int spell, int damage, const class army* target_army);
     int GetHeroSpellBonus(int spell_id, int target_level, int value);
+    // The spell-school quartet at 0x4e5080 / 0x4e5100 / 0x4e51c0 /
+    // 0x4e5240. Two DIVERGENCES from the Dreamcast prototypes, both
+    // forced by retail bytes:
+    //   - the second parameter of get_spell_level / GetSpellSchoolLevel
+    //     / GetManaCost is a MAGIC-TERRAIN id, not the DC's
+    //     `unsigned char is_on_magic_plains`. Retail reads it with a
+    //     32-bit `mov` and SWITCHES it over 1..9 into a school mask
+    //     (1 -> eSchoolAll, 6 -> water, 7 -> fire, 8 -> earth,
+    //     9 -> air), which is exactly the domain
+    //     NewmapCell::get_magic_terrain_type (0x4fcf40) returns and
+    //     exactly what hero::Fly (0x4e59a0) pushes. The DC build kept
+    //     only the magic-plains case and narrowed the parameter to a
+    //     bool; retail's five-way form is the later one.
+    //   - the mastery returns are spelled `int`, not TSkillMastery:
+    //     that enum lives in herospec.h, and pulling herospec.h into
+    //     hero.h would put four more type definitions into game.h's
+    //     include closure (the initialize_game_data sensitivity
+    //     class). Same width, same codegen.
+    int get_spell_level(SpellID spell, int magic_terrain);
+    int GetSpellSchoolLevel(TSpellSchool school_mask, int magic_terrain);
+    TSpellSchool GetHighestSchool(TSpellSchool school_mask);
+    int GetManaCost(int iWhichSpell, const class armyGroup* enemy,
+                    int magic_terrain);
     float get_combat_value_modifier();
     // ai_combat's create_skeletons (0x426df0) calls both back to back:
     // the factor with a pushed 1, then the creature type with no

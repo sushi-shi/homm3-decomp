@@ -97,7 +97,20 @@ public:
     // increase to it and re-times the stack against the result, while
     // GetSpeed() returns the modified value.
     int baseSpeed;                // +0x64
-    char pad_68[0x1c];
+    char pad_68[0x10];
+    // +0x74 starts an EMBEDDED copy of the creature's traits row (the
+    // Dreamcast roster's `TCreatureTypeTraits sMonInfo` at 116, and the
+    // retail offsets already proven in this class agree with it field
+    // for field: `creatureId` +0x84 is sMonInfo.attributes +0x10,
+    // `hitPoints` +0xc0 is sMonInfo.hitPoints +0x4c, `field_c4` +0xc4
+    // is sMonInfo.speed +0x50). Only the one field a body reads is
+    // sliced out here - hero::modify_spell_damage (0x4e5760) hands
+    // `[army + 0x78]` to GetHeroSpellBonus as the target LEVEL, and
+    // 0x78 is sMonInfo + 4, TCreatureTypeTraits::level. The embedded
+    // record is not modelled as such yet; that is a layout change for
+    // the whole army run.
+    int monInfoLevel;             // +0x78 == sMonInfo.level
+    char pad_7c[0x8];
     // A BITFIELD word, not an id: bit 0 is the two-hex marker in
     // get_adjacent_hex, GetAttackMask, PlaceArmyInGrid (0x4687c0) and
     // RemoveArmyFromGrid (0x468730), and CombatIsOver / IsWinner read

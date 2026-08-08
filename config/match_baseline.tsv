@@ -580,17 +580,24 @@ hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	96.5278
 hero	?GetArcheryFactor@hero@@QAEMXZ	100.0000
 hero	?GetDefenseFactor@hero@@QAEMXZ	100.0000
 hero	?GetEagleEyeChance@hero@@QAEMXZ	100.0000
+hero	?GetEstatesBonus@hero@@QAEHXZ	100.0000
+hero	?GetExperience@hero@@SIHH@Z	100.0000
 hero	?GetExperienceBonusFactor@hero@@QAEMXZ	100.0000
+hero	?GetExperienceIncrement@hero@@SIHH@Z	98.1013
 hero	?GetFirstAidFactor@hero@@QAEMXZ	100.0000
+hero	?GetHighestSchool@hero@@QAE?AW4TSpellSchool@@W42@@Z	98.3750
 hero	?GetIntelligenceFactor@hero@@QAEMXZ	100.0000
 hero	?GetMagicResistanceFactor@hero@@QAEMXZ	100.0000
+hero	?GetManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000
 hero	?GetManaFrame@hero@@QAEHXZ	88.9130
 hero	?GetMobility@hero@@QAEHXZ	100.0000
 hero	?GetMobilityFrame@hero@@QAEHXZ	90.4167
 hero	?GetMysticismBonus@hero@@QAEHXZ	100.0000
+hero	?GetNecromancyCreature@hero@@QAE?AW4TCreatureType@@XZ	100.0000
 hero	?GetNthSS@hero@@QAEHH@Z	100.0000
 hero	?GetOffenseFactor@hero@@QAEMXZ	100.0000
 hero	?GetSpellDurationBonus@hero@@QAEHXZ	100.0000
+hero	?GetSpellSchoolLevel@hero@@QAEHW4TSpellSchool@@H@Z	100.0000
 hero	?GetStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000
 hero	?GetStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000
 hero	?GetSurrenderCostFactor@hero@@QAEMXZ	100.0000
@@ -612,14 +619,18 @@ hero	?begin@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000
 hero	?belongs_to_human@hero@@QAEEXZ	100.0000
 hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000
 hero	?get_combat_speed_bonus@hero@@QAEJXZ	100.0000
+hero	?get_combat_value_modifier@hero@@QAEMXZ	100.0000
 hero	?get_equipped_artifacts@hero@@QAEJE@Z	100.0000
+hero	?get_hit_point_bonus@hero@@QAEJH@Z	100.0000
 hero	?get_last_backpack_index@hero@@QAEJXZ	100.0000
 hero	?get_number_in_backpack@hero@@QAEJE@Z	100.0000
 hero	?get_obscured_town@type_obscuring_object@@QAEPAVtown@@XZ	100.0000
 hero	?get_player@hero@@QAEPAVplayerData@@XZ	100.0000
 hero	?get_primary_skill_total@hero@@QAEFXZ	75.5833
+hero	?get_spell_level@hero@@QAEHHH@Z	100.0000
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000
 hero	?is_in_patrol_radius@hero@@QAEEUtype_point@@@Z	100.0000
+hero	?modify_spell_damage@hero@@QAEJHHPBVarmy@@@Z	100.0000
 hero	?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z	100.0000
 hero	?remove_artifact@hero@@QAEEW4TArtifact@@@Z	100.0000
 hero	?remove_backpack_artifact@hero@@QAEXF@Z	100.0000
@@ -643,18 +654,11 @@ hero	get_skill_award	0.0000
 hero	hero_CheckLevel	0.0000
 hero	hero_Deallocate	0.0000
 hero	hero_Fly	0.0000
-hero	hero_GetEstatesBonus	0.0000
-hero	hero_GetExperience	0.0000
-hero	hero_GetExperienceIncrement	0.0000
 hero	hero_GetHeroSpellBonus	0.0000
-hero	hero_GetHighestSchool	0.0000
 hero	hero_GetLuck	0.0000
-hero	hero_GetManaCost	0.0000
 hero	hero_GetMobility	0.0000
 hero	hero_GetMorale	0.0000
-hero	hero_GetNecromancyCreature	0.0000
 hero	hero_GetNecromancyFactor	0.0000
-hero	hero_GetSpellSchoolLevel	0.0000
 hero	hero_GiveArtifact	0.0000
 hero	hero_GiveExperience	0.0000
 hero	hero_GiveResource	0.0000
@@ -683,17 +687,13 @@ hero	hero_can_summon_boat	0.0000
 hero	hero_equip_artifact	0.0000
 hero	hero_find_summonable_boat	0.0000
 hero	hero_get_backpack_error	0.0000
-hero	hero_get_combat_value_modifier	0.0000
-hero	hero_get_hit_point_bonus	0.0000
 hero	hero_get_luck_description	0.0000
 hero	hero_get_morale_description	0.0000
 hero	hero_get_special_terrain	0.0000
-hero	hero_get_spell_level	0.0000
 hero	hero_hero	0.0000
 hero	hero_hire	0.0000
 hero	hero_initialize	0.0000
 hero	hero_load	0.0000
-hero	hero_modify_spell_damage	0.0000
 hero	hero_remove_artifact	0.0000
 hero	hero_save	0.0000
 hero	hero_update_spell_list	0.0000
@@ -868,7 +868,27 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 # carrying another unevidenced lever include, and both are worse than an
 # honest lower. Re-measure after any town.h edit; the row has read 26.18,
 # 94.07, 100.00 and now 96.09 today, all without a semantic change.
-initialize	?initialize_game_data@@YIXXZ	96.0880
+# RAISED BACK to 100.0000 (2026-08-08, hero lane) with NO semantic
+# change anywhere near this TU - the same include-set sensitivity that
+# has moved this row five times, this time upward.
+# THE CAUSE WAS NOT ISOLATED, and the lane's own two measurements say
+# so. Four headers inside initialize.cpp's closure changed together
+# (hero.h field slices, armygrp.h, artifact.h enumerators, army.h), and
+# the one candidate that WAS A/B-measured alone - armygrp.h gaining the
+# spellschool.h include so SSpellTraits::school could be typed
+# TSpellSchool - came back NEUTRAL at 96.0880 (see the note at that
+# member). So the raise belongs to the change-set, not to any single
+# edit named here; an earlier draft of this note credited the
+# spellschool.h include and was wrong.
+# Counter-measurement from the same session, same header, opposite
+# sign: three ESpellId ENUMERATORS added to armygrp.h moved the row
+# 96.09 -> 90.16 and were withdrawn. The class is non-monotonic in both
+# directions - MEASURE, DO NOT REASON.
+# The row is now pinned at 100.0000, which makes it a constraint on
+# every other lane: any change to game.h / hero.h / mapcell.h /
+# struct.h / town.h / armygrp.h / artifact.h / army.h must re-measure
+# this row before it lands.
+initialize	?initialize_game_data@@YIXXZ	100.0000
 inputmgr	??0inputManager@@QAE@XZ	86.5667
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000
