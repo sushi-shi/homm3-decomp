@@ -125,7 +125,23 @@ public:
     // and re-prices the enemy's damage against it (0x443e30 twice).
     // Name provisional - no roster attests it.
     int defenseSkill;             // +0xcc
-    char pad_d0[0x20];
+    // The damage figure a Curse takes its bite out of: get_curse_value
+    // (0x43b370) subtracts SPELL_CURSE's mastery row from THIS word,
+    // floors the result at 1 and divides it by the stack's own
+    // get_average_damage(), then prices the stack down by
+    // `1 - sqrt(that)`. The quotient is only below 1 - i.e. the spell
+    // only scores positive for the caster - when the word is the LOW
+    // end of the damage range, which is exactly what Curse forces a
+    // stack to roll. Name provisional; no roster attests it.
+    int minDamage;                // +0xd0
+    // The high end of the same range, byte-proven by get_bless_value
+    // (0x437430): Bless adds SPELL_BLESS's mastery row to THIS word and
+    // divides the sum by the stack's own get_average_damage(), which is
+    // above 1 - the spell scores POSITIVE for the caster - exactly when
+    // the word is the range's top. The mirror of minDamage's proof, and
+    // the two sit adjacent. Name provisional; no roster attests it.
+    int maxDamage;                // +0xd4
+    char pad_d8[0x18];
     unsigned char hitByCreature;  // +0xf0
     char pad_f1[0x3];
     // Effective combat side: is_enemy (0x442880) compares it between
@@ -255,6 +271,12 @@ public:
     long get_average_damage(const army* enemy, unsigned char ranged_attack,
                             long amount, unsigned char limit_damage,
                             long distance) const;               // 0x442780
+    // The no-argument overload (0x4426f0, claimed in army.cpp): what
+    // this stack averages per swing, as a double in st(0).
+    // ai_tactical's get_curse_value (0x43b370) is the located caller -
+    // `mov ecx, enemy / call` with no stack arguments, and it divides
+    // the cursed damage by the result.
+    double get_average_damage() const;                          // 0x4426f0
     // 0x443e30 (257 B, ret 0x10 - four stack args, `this` the
     // attacker): null target answers 0, then it runs the same
     // base-damage / attacker-reduction / hero-defense-factor chain

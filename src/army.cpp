@@ -313,8 +313,17 @@ unsigned char is_natural_enemy(TCreatureType attacker, TCreatureType defender)
 }
 
 // E:\gamedcs\army.cpp:2740
-DC_ONLY(0x47a14, 0xE4)
-double army::get_average_damage()
+// Located 2026-08-08 from a call site, not from the roster order: the
+// ai_tactical pricer get_curse_value (0x43b370) calls this address with
+// `mov ecx, enemy` and NO stack arguments and consumes st(0) as a
+// double divisor, which is the no-argument overload's exact shape - the
+// five-argument sibling two rows down is `ret 0x10`. The carve row is
+// 0x4426f0/139 B, it sits in the DC roster's own order (2708
+// is_natural_enemy -> 2740 this -> 2756 the five-argument overload ->
+// 2790 can_shoot, all of whose retail slots are consecutive), and the
+// HD crossbuild names the same body at its own 0x442410.
+VA(0x004426f0, 0x8B)  // anchor-callee, dc 0x47a14
+double army::get_average_damage() const
 {
     // @stub
 }

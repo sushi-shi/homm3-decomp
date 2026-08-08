@@ -162,7 +162,13 @@ struct type_AI_spellcaster {
     // to act against: should_attack_now (0x436c60) answers 0 outright
     // when the enemy's bit is clear. Name pending a writer.
     long field_14;              // +0x14
-    char pad_18[0x4];
+    // A SECOND bitmask, sliced 2026-08-08 out of the old pad by
+    // find_enemy_attacks (0x43c040): the census clears +0x18 and +0x14
+    // together at entry and then folds `1 << j` into +0x18 for every
+    // MELEE enemy it counts while folding `1 << enemy->bitIndex` into
+    // +0x14 for every enemy of either kind - so +0x18 is indexed by the
+    // enemy's SLOT and +0x14 by its bitIndex. Name pending a reader.
+    long field_18;              // +0x18
     unsigned char field_1c;     // +0x1c
     unsigned char creature_spell; // +0x1d
     char pad_1e[0x2];
@@ -213,6 +219,11 @@ struct type_AI_spellcaster {
     long get_tough_skin_value(const army* our_army, type_enchant_data caster);
     long get_disruptive_ray_value(const army* enemy, type_enchant_data caster);
     long get_weakness_value(const army* enemy, type_enchant_data caster);
+    long get_bless_value(const army* our_army, type_enchant_data caster);
+    long get_frenzy_value(const army* our_army, type_enchant_data caster);
+    long get_blind_value(const army* enemy, type_enchant_data caster);
+    long get_curse_value(const army* enemy, type_enchant_data caster);
+    long get_forgetfulness_value(const army* enemy, type_enchant_data caster);
     long get_precision_value(const army* our_army, type_enchant_data caster);
     long get_slayer_value(const army* our_army, type_enchant_data caster);
     long get_poison_value(const army* enemy, type_enchant_data caster);
@@ -236,6 +247,7 @@ struct type_AI_spellcaster {
     long get_berserk_value(const army* enemy, type_enchant_data caster);
     long get_traitor_value(const army* enemy, const army* target);
     void set_melee_enemies();
+    void find_enemy_attacks();
 };
 SIZE(type_AI_spellcaster, 0x410);
 
