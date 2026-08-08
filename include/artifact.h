@@ -5,6 +5,8 @@
 #ifndef HOMM3_ARTIFACT_H
 #define HOMM3_ARTIFACT_H
 
+#include <va.h>
+
 // The artifact-id domain. Added 2026-08-08 with its first consumer,
 // recruit.obj's siege_artifact_to_creature (0x550360) - only the four
 // war machines its jump table covers are listed; grow the roster per
@@ -14,13 +16,136 @@
 // (eArtifactCatapult 3, eArtifactBallista 4, eArtifactAmmoCart 5,
 // eArtifactFirstAidTent 6 in evidence/dreamcast/enums.csv) respelled
 // to this tree's convention.
+// Corroborated 2026-08-08 from a second side: hero.obj's two artifact
+// tallies (get_equipped_artifacts 0x4d9070, get_number_in_backpack
+// 0x4d90c0) both skip exactly the four consecutive ids 3,4,5,6 as the
+// war machine block, independently of recruit's jump table.
+// Grown 2026-08-08 for hero.obj's bonus getters, which are nothing but
+// IsWieldingArtifact gates. Each block below carries its own retail
+// witness; every DC spelling comes from evidence/dreamcast/enums.csv.
+// PLACEMENT NOTE: armygrp.h carries a SECOND artifact roster
+// (EArtifactId, the combat-side gates). These ids went here, into the
+// artifact domain's own owner header, rather than there - armygrp.h is
+// inside initialize.cpp's include closure through town.h, and putting
+// them in EArtifactId measurably moved initialize_game_data 96.09 ->
+// 94.07 through the include-set sensitivity class with no semantic
+// change. artifact.h is not in that closure. Unifying the two rosters
+// is a separate, measured decision.
 enum TArtifact {
     ARTIFACT_NONE = -1,
     ARTIFACT_CATAPULT = 3,
     ARTIFACT_BALLISTA = 4,
     ARTIFACT_AMMO_CART = 5,
-    ARTIFACT_FIRST_AID_TENT = 6
+    ARTIFACT_FIRST_AID_TENT = 6,
+    // hero::GetVisibility (0x4e4070) adds one tile of scouting radius
+    // for each of 0x34/0x35; DC 52/53 are eArtifactSpeculum and
+    // eArtifactSpyglass, HoMM3's two scouting artifacts.
+    ARTIFACT_SPECULUM = 0x34,
+    ARTIFACT_SPYGLASS = 0x35,
+    // hero::GetMagicResistanceFactor (0x4e46e0) adds +0.05/+0.10/+0.15
+    // for 0x39/0x3a/0x3b; DC 57/58/59 are
+    // eArtifactGarnitureOfInterference / eArtifactSurcoatOfCounterpoise
+    // / eArtifactBootsOfPolarity - the magic-resistance set.
+    ARTIFACT_GARNITURE_OF_INTERFERENCE = 0x39,
+    ARTIFACT_SURCOAT_OF_COUNTERPOISE = 0x3a,
+    ARTIFACT_BOOTS_OF_POLARITY = 0x3b,
+    // hero::GetArcheryFactor (0x4e4160) adds +0.05/+0.10/+0.15 for
+    // 0x3c/0x3d/0x3e; DC 60/61/62 are eArtifactBowOfElvenCherrywood /
+    // eArtifactBowstringOfTheUnicornsMane / eArtifactAngelFeatherArrows
+    // - and IsWieldingArtifact's combination recursion pairs exactly
+    // those three with armygrp.h's byte-proven
+    // ARTIFACT_BOW_OF_THE_SHARPSHOOTER (0x89), the artifact they
+    // assemble into.
+    ARTIFACT_BOW_OF_ELVEN_CHERRYWOOD = 0x3c,
+    ARTIFACT_BOWSTRING_OF_THE_UNICORNS_MANE = 0x3d,
+    ARTIFACT_ANGEL_FEATHER_ARROWS = 0x3e,
+    // hero::GetEagleEyeChance (0x4e4420) adds +0.05/+0.10/+0.15 for
+    // 0x3f/0x40/0x41; DC 63/64/65 are eArtifactBirdOfPerception /
+    // eArtifactStoicWatchman / eArtifactEmblemOfCognizance.
+    ARTIFACT_BIRD_OF_PERCEPTION = 0x3f,
+    ARTIFACT_STOIC_WATCHMAN = 0x40,
+    ARTIFACT_EMBLEM_OF_COGNIZANCE = 0x41,
+    // hero::GetSurrenderCostFactor (0x4e4580) adds +0.10 for each of
+    // 0x42/0x43/0x44; DC 66/67/68 are eArtifactStatesmansMedal /
+    // eArtifactDiplomatsRing / eArtifactAmbassadorsSash.
+    ARTIFACT_STATESMANS_MEDAL = 0x42,
+    ARTIFACT_DIPLOMATS_RING = 0x43,
+    ARTIFACT_AMBASSADORS_SASH = 0x44,
+    // hero::get_combat_speed_bonus (0x4e5aa0) adds +1/+1/+2 creature
+    // speed for 0x45/0x61/0x63; DC 69/97/99 are
+    // eArtifactRingOfTheWayfarer / eArtifactNecklaceOfSwiftness /
+    // eArtifactCapeOfVelocity, whose HoMM3 effects are exactly that.
+    ARTIFACT_RING_OF_THE_WAYFARER = 0x45,
+    // hero::GetMysticismBonus (0x4e3f40) adds +1/+2/+3 mana per day for
+    // 0x49/0x4a/0x4b; DC 73/74/75 are eArtifactCharmOfMana /
+    // eArtifactTalismanOfMana / eArtifactMysticOrbOfMana, whose HoMM3
+    // effects are +1/+2/+3 mana per day - the bonus ladder IS the
+    // identification.
+    ARTIFACT_CHARM_OF_MANA = 0x49,
+    ARTIFACT_TALISMAN_OF_MANA = 0x4a,
+    ARTIFACT_MYSTIC_ORB_OF_MANA = 0x4b,
+    // hero::GetSpellDurationBonus (0x4e4db0) adds +1/+2/+3 rounds for
+    // 0x4c/0x4d/0x4e; DC 76/77/78 are eArtifactCollarOfConjuring /
+    // eArtifactRingOfConjuring / eArtifactCapeOfConjuring, +1/+2/+3
+    // spell rounds in HoMM3.
+    ARTIFACT_COLLAR_OF_CONJURING = 0x4c,
+    ARTIFACT_RING_OF_CONJURING = 0x4d,
+    ARTIFACT_CAPE_OF_CONJURING = 0x4e,
+    ARTIFACT_NECKLACE_OF_SWIFTNESS = 0x61,
+    ARTIFACT_CAPE_OF_VELOCITY = 0x63,
+    // The fourth gate of GetSpellDurationBonus, worth +50 rounds. 139
+    // is past the DC's AB-era roster, but the +50-round effect is
+    // unique to the Ring of the Magi, and the Complete numbering that
+    // places it at 139 is the one armygrp.h's EArtifactId already
+    // byte-proves twice - Power of the Dragon Father 0x86 (134) and
+    // Bow of the Sharpshooter 0x89 (137).
+    ARTIFACT_RING_OF_THE_MAGI = 0x8b
 };
+
+// The per-artifact traits record. The 32-byte STRIDE is byte-proven by
+// hero::IsWieldingArtifact's `shl esi,5` index, and +0x18 by the same
+// body: it holds the id of the COMBINATION artifact this piece belongs
+// to, -1 when the artifact is not a component of one.
+// The DC's own TArtifactTraits (evidence/dreamcast/members.csv) is only
+// 20 bytes - m_name 0, m_cost 4, m_allowableSlotMask 8, m_class 12,
+// m_description 16 - i.e. the AB-era record without the Shadow of Death
+// combination column. Those five DC offsets are NOT transferred: no
+// retail body in a compiled TU reads them, so the head stays a pad
+// (the THeroTraits precedent).
+struct TArtifactTraits {
+    char pad_00[0x18];
+    int combination;            // +0x18
+    char pad_1c[0x4];
+};
+SIZE(TArtifactTraits, 32);
+
+// The combination-artifact record. The 24-byte stride is byte-proven by
+// IsWieldingArtifact's `lea r,[id + 2*id]` / `[base + 8*r]` chain, and
+// +0x00 by the same body - it is the assembled artifact's own id, which
+// IsWieldingArtifact recurses on. The remaining 20 bytes are the
+// component mask the four retail-only combination bodies at
+// 0x4dbe80..0x4dc100 walk as a bitset<144> (five dwords); a pad until
+// one of those is written.
+struct TCombinationArtifact {
+    int artifactId;             // +0x00
+    char pad_04[0x14];
+};
+SIZE(TCombinationArtifact, 24);
+
+// Retail .data 0x660b68 and 0x660b6c, two adjacent storage cells retail
+// LOADS and then indexes (`mov eax,[0x660b68]` / `[esi + eax + 0x18]`)
+// - the akHeroTraits reference-cell pattern.
+// akArtifactTraits' name is DC-attested
+// (?akArtifactTraits@@3AAY0HP@$$CBUTArtifactTraits@@A); its DC bound of
+// 127 is AB-era and is NOT carried over, which is why this is spelled
+// as a pointer rather than akHeroTraits' reference-to-array - the
+// Complete-era artifact count is not proven on this image and the
+// codegen is identical either way.
+// The combination table has NO DC row (a Shadow of Death addition); its
+// name is INVENTED. Owner TU unlocated for both - extern only, no DATA
+// claim (the gpWindowManager pattern).
+extern const TArtifactTraits* akArtifactTraits;
+extern const TCombinationArtifact* gCombinationArtifacts;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\artifact.cpp:56, dc 0x4fec0) unsigned char InitializeArtifactTraitsTable();
