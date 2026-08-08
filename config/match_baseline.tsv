@@ -65,7 +65,7 @@ ai	?compute_fire_shield_damage@combatManager@@QAEJJPBVarmy@@0J@Z	100.0000
 ai	?find_move_order@combatManager@@QAEXPAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000
 ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	96.3533
 ai	?get_total_combat_value@combatManager@@QBEJJJJE@Z	100.0000
-ai	combatManager_move_toward	0.0000
+ai	?move_toward@combatManager@@QAEEPBVarmy@@JPBJE@Z	99.4462
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@PBVarmyGroup@@@Z	100.0000
 ai_combat	?AI_auto_combat@@YIXPAVhero@@0PAVarmyGroup@@1PBVtown@@PAVNewmapCell@@@Z	100.0000
@@ -289,9 +289,12 @@ exec	?MainLoop@executive@@QAEXXZ	88.1290
 exec	?RemoveManager@executive@@QAEXPAVbaseManager@@@Z	100.0000
 findpath	??0searchArray@@QAE@XZ	100.0000
 findpath	??1searchArray@@QAE@XZ	100.0000
+findpath	?Close@searchArray@@QAEXXZ	100.0000
+findpath	?Init@searchArray@@QAEXXZ	100.0000
+findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177
 findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000
+findpath	?lower_door@searchArray@@QAEXXZ	100.0000
 findpath	searchArray_FindCombatPath	0.0000
-findpath	searchArray_SeedCombatPosition	0.0000
 font	??1font@@UAE@XZ	96.6333
 font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	96.8123
 font	?DrawCharacter@font@@QAEXHPAVBitmap16Bit@@HHH@Z	78.2623
