@@ -124,8 +124,10 @@ ai_tactical	?AI_value_of_luck@@YINJJ@Z	100.0000
 ai_tactical	?AI_value_of_morale@@YINJJ@Z	100.0000
 ai_tactical	?find_attack_hex@type_AI_attack_hex_chooser@@QAEEXZ	100.0000
 ai_tactical	?get_antimagic_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
+ai_tactical	?get_area_effect_value@type_AI_spellcaster@@QAEJHJHJ@Z	100.0000
 ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	99.8503
 ai_tactical	?get_backlash_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
+ai_tactical	?get_berserk_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
 ai_tactical	?get_cure_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	95.4886
 ai_tactical	?get_damage_spell_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
 ai_tactical	?get_damage_value@type_AI_spellcaster@@QAEJHJPBVhero@@PBVarmy@@@Z	93.2072
@@ -155,8 +157,6 @@ ai_tactical	type_AI_spellcaster_consider_sacrifice	0.0000
 ai_tactical	type_AI_spellcaster_consider_single_enchantment	0.0000
 ai_tactical	type_AI_spellcaster_consider_spell	0.0000
 ai_tactical	type_AI_spellcaster_find_enemy_attacks	0.0000
-ai_tactical	type_AI_spellcaster_get_area_effect_value	0.0000
-ai_tactical	type_AI_spellcaster_get_berserk_value	0.0000
 ai_tactical	type_AI_spellcaster_get_cancel_value	0.0000
 ai_tactical	type_AI_spellcaster_get_chain_lightning_value	0.0000
 ai_tactical	type_AI_spellcaster_get_counterstroke_value	0.0000
@@ -221,6 +221,7 @@ button	?Main@type_func_button@@UAEHPAVmessage@@@Z	100.0000
 button	?Select@button@@QAEHPAVmessage@@@Z	100.0000
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000
 castle	?GetBuildingName@@YIPBDHH@Z	100.0000
+cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110
 cmbtmgr	?CombatIsOver@combatManager@@QAEEXZ	100.0000
 cmbtmgr	?GetTargetWallIndex@@YIHH@Z	100.0000
 cmbtmgr	?HexIsBlocked@combatManager@@QAEEH@Z	100.0000
@@ -238,7 +239,6 @@ cmbtmgr	?enemy_is_adjacent@combatManager@@QAEEPAVarmy@@HPBV2@@Z	100.0000
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000
 cmbtmgr	?is_adjacent@combatManager@@QAEEHH@Z	100.0000
 cmbtmgr	?should_lower_door@combatManager@@QAEEPAVarmy@@J@Z	100.0000
-cmbtmgr	combatManager_CalculateGainedExperience	0.0000
 cmbtmgr	combatManager_CombatSystemOptions	0.0000
 cmbtmgr	combatManager_GetGridIndex	0.0000
 cmbtmgr	combatManager_InLineOfSight	0.0000

@@ -6,6 +6,7 @@
 #define HOMM3_ARMY_H
 
 #include <va.h>
+#include <vector>
 
 class hero;
 
@@ -80,7 +81,18 @@ public:
     // decide whether a boost saves a creature (get_defense_boost_value
     // 0x4387c0). Name provisional.
     int topCreatureDamage;        // +0x58
-    char pad_5c[0x8];
+    char pad_5c[0x4];
+    // The stack's size at the START of the combat, so that
+    // origNumTroops - numTroops is the count this side destroyed:
+    // CalculateGainedExperience (0x46a350) multiplies exactly that
+    // difference by the creature's table hitPoints to price the award.
+    // The NAME is the DC roster's army.origNumTroops - and the DC
+    // layout is aligned with retail's across this whole run
+    // (armyType/creatureType 0x34, facing 0x44, numTroops 0x4c,
+    // residualDamage 0x58, origPos 0x5c, origNumTroops 0x60,
+    // origSpeed 0x64 all land on the offsets already proven here),
+    // so the pairing is positional, not just nominal.
+    int origNumTroops;            // +0x60
     // Unmodified speed: get_speed_value (0x439550) adds the spell's
     // increase to it and re-times the stack against the result, while
     // GetSpeed() returns the modified value.
@@ -227,6 +239,12 @@ public:
     // to this target?" - so the name below is a bootstrap invention.
     long get_estimated_damage(const army* target, long amount,
                               unsigned char ranged, long distance) const;
+    // 0x445490, claimed in army.cpp. Fills the caller's vector with the
+    // stacks a berserked `this` would be allowed to strike; ai_tactical's
+    // get_berserk_value (0x43a400) is the located caller and passes a
+    // freshly default-constructed local, so the callee is the only
+    // writer. Const because that caller holds the stack as `const army*`.
+    void get_berserk_targets(std::vector<army*>& armies) const;
     int get_second_grid_index() const;                          // 0x4466a0
     long get_AI_target_time(long speed) const;                  // 0x448bd0
     long get_total_combat_value(long lowest_attack,

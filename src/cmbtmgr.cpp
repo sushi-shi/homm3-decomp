@@ -801,12 +801,71 @@ void combatManager::LootDeadHero(int side, std::vector<type_artifact,std::alloca
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:4948
+// The award is priced in CREATURES DESTROYED, not damage: the walk
+// takes origNumTroops - numTroops on every LOSING-side stack and
+// multiplies it by that creature's table hitPoints. `armies` is walked
+// as a strength-reduced pointer parked on creatureId (+0x84), which is
+// why the three surviving fields read as -0x50 / -0x38 / -0x24 off it.
+// The two creatureId gates are IsWinner's byte-local idiom again -
+// bit 22 and bit 6, each shifted into a byte before the test - and
+// they are separate `unsigned char` locals for the same reason: one
+// shared dword expression would make our CL work in EAX where retail
+// works in CL.
+// The tail's float round-trip is /Op single precision: the factor
+// comes back in st(0), the total is pushed with fild and spilled
+// through a DWORD slot before the fmul, so the product is computed at
+// float width and not double.
+// Residual (75.0%): register-homing family, and ONLY that - all 17
+// blocks are flow-identical and 10 are byte-identical, including the
+// whole loop core and the fild/fstp/fmul round trip. Retail carries
+// `total` in EBX and WRITES THROUGH to [ebp-4] after each of the three
+// +-500 adjustments, spilling the loop counter and `this` instead; our
+// CL spills `total` to [ebp-4] outright and keeps the counter and
+// `this` in registers. That one choice is the entire delta: it turns
+// retail's `add ebx,imm / mov [ebp-4],ebx` pairs into single
+// read-modify-writes and drops the three callee-saved pops from both
+// tails. Tried and rejected: an explicit pointer walk instead of
+// `armies[other_side][slot]` (fixes B0's size and gains a block but
+// costs fuzzy overall, 73.90%); `if (heroes[side] == 0) { ...; return; }`
+// instead of the if/else (inverts B14 and swaps both tails).
 VA(0x0046a350, 0x10C)  // anchor-global, dc 0x6388c
 void combatManager::CalculateGainedExperience(int side, int* experience_gained)
 {
-    // @stub
+    int other_side = 1 - side;
+    long total = 0;
+    for (int slot = 0; slot < 20; slot++) {
+        const army& a = armies[other_side][slot];
+        if (a.creatureType == -1)
+            continue;
+        unsigned char high = static_cast<unsigned char>(
+            static_cast<unsigned>(a.creatureId) >> 22);
+        if (high & 1)
+            continue;
+        unsigned char flags = static_cast<unsigned char>(
+            static_cast<unsigned>(a.creatureId) >> 6);
+        if (flags & 1)
+            continue;
+        total += (a.origNumTroops - a.numTroops)
+                 * akCreatureTypeTraits[a.creatureType].hitPoints;
+    }
+    if (heroes[other_side])
+        total += 500;
+    if (gCombatFlag6985a3 || gCombatFlag697744)
+        total -= 500;
+    if (field_53c8 && side == 0)
+        total += 500;
+    if (heroes[side])
+        *experience_gained = static_cast<long>(
+            heroes[side]->GetExperienceBonusFactor()
+            * static_cast<float>(total));
+    else
+        *experience_gained = total;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4969
 DC_ONLY(0x63900, 0xC4)
