@@ -260,6 +260,81 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — `game` 6 → 35 exact; the BOOL-RETURN rule; the DC local
+  list promoted to a spelling oracle; `type_point`'s retail alignment
+  found.** Engine-wide 491 → **523/977 exact (53.5%)**, 5.39% →
+  **5.52%** matched; all gates green. Thirty `game` stubs written, 29
+  exact first-or-second try; `hero` 46 → 49. The `sema xref` body walk
+  cleared eleven brackets.
+  **New codegen rule — a `bool` return materialises in AL only when the
+  returned value is a bool LITERAL or LOCAL.** `return x != 0;` emits
+  `xor eax,eax` + `setne`; `return x ? true : false;` and
+  `if (c) return true; return false;` emit retail's `mov al,1` /
+  `xor al,al` / bare `setne al`. Six functions, +6 exact — and the DC
+  mangling (`_N`, `QBA`) predicted every one of them in advance.
+  **`evidence/dreamcast/variables.csv` is a SPELLING ORACLE, and it
+  cuts both ways.** `GetNumObelisks`' DC local list is `i, numFound` —
+  no `mask`. Deleting the `int mask` local and inlining `1 << player`
+  took it **73.8 → 100** and reproduced retail's allocation exactly.
+  This is the **inverse** of the named-local lever landed the same day;
+  the DC local list is what decides which direction to go. Two levers
+  that contradict each other are only usable because the roster
+  arbitrates.
+  **The goto-loop form** — `if (i >= N) return X; loop: …; i++;
+  if (i >= N) return X; goto loop;` — reproduces retail's
+  `jge END; jmp L` back edge *and* makes VC6 fold the redundant `>= N`
+  out of an inlined clamp. `IsLastHuman` 70.7 → 100, `HasCapitol`
+  92.9 → 100, `GetLocalPlayer` 76.3 → 100 via `goto found`.
+  Also: **call the inline accessor instead of open-coding it**
+  (`gpGame->GetTown(i)` for `&gpGame->towns[i]` took
+  `get_obscured_town` 88.9 → 100 — the −1 arm then tail-merges with the
+  outer `return 0`); member-initializer lists to place stores BEFORE an
+  embedded member's ctor; and **probe TUs** (`cc_wrap … /FAs`, ~5 s per
+  ten-spelling sweep) as the cheap way to settle a spelling before
+  touching the real TU.
+  **The "unexplained uninitialised stack read" in `town::town()` is
+  explained and CLOSED.** `playerData::playerData` opens with the same
+  `mov cl,[ebp-1]` + store: it is Dinkumware's **empty-allocator copy**
+  for an embedded `std::vector` — `vector()` copies a temporary
+  `allocator<T>()` into the container's +0. Both ctors are exact with a
+  plain `std::vector` member and no special spelling.
+  **Retail's `type_point` is 4 bytes, ONE-byte aligned; the Dreamcast's
+  is two-byte aligned.** `playerData::puzzle_guess` sits at the odd
+  +0x39 between `extraPuzzlePieces` (+0x38) and `iDeathCountDown`
+  (+0x3d), and `playerData::Init` confirms the bit layout from the
+  other side (`or word [+0x39],0x3ff` / `or word [+0x3b],0x3fff`).
+  `struct.h`'s short-bitfield spelling reproduces the DC alignment, not
+  retail's. **`struct.h` was deliberately NOT changed** — that is a
+  tree-wide move needing a supervised decision; the member is carried
+  as raw bytes with the finding documented in place.
+  **CLAIM CORRECTED: 0x4ba130 was claimed as `playerData::SetName`; the
+  body is `AssignNetInfo`** (dword dpid at +0, `strncpy` 20 from +4,
+  then `isHuman`). Arity does not separate the two — both p=2, both
+  `ret 4` — only the body does. `SetName` and `GetNetInfo` have no
+  retail row in the span. Recorded as a dated comment above the
+  affected baseline rows, with the 32 flat/mangled deletions it belongs
+  to.
+  **Measured and therefore admitted: `#include <vector>` and
+  `#include "town.h"` in `game.h` cost exactly ZERO** across all ten
+  including TUs, both directions — which unblocked honest
+  `std::vector<town|mine|generator|boat|type_point>` pool models
+  instead of pointer-triple approximations. `initialize_game_data`
+  measured 96.08796, exactly its pin, across six header changes.
+  DC-roster transfer is now a three-way result, not a rule: it repacks
+  **unshifted** for `playerData`, `boat` and `generator` (DC 92 IS
+  retail's generator stride; mapX/Y/Z at 84/85/86 exact) but **not**
+  for `mine` (DC 12 vs retail 64), whose tail stays a pad.
+  New headers admitted: `include/netplayer.h` (`CNetPlayerInfo`;
+  DC-declared in `struct.h` but placed apart from `initialize.cpp`'s
+  tripwire closure, the `artifact.h`/`prefs.h`/`herospec.h` precedent)
+  and `include/netgame.h` (`enum eNetGameType` + `iMPNetProtocol` at
+  0x6989f0 — `== 3` is `MP_HOTSEAT`, which is what both local-player
+  accessors branch on).
+  Residual: `playerData::GetName` 95.85 and `game::GetPlayerName` 99.53
+  are four instructions of argument setup (retail runs the default-name
+  chain eax→ecx and slots the `lea` between loads two; ours starts in
+  ecx and spends edx) — the register-tie-break family.
+
 - **2026-08-08 — HALF THE CARVE IS EXACT (491/977, 50.3%); the naming
   lever generalises into FOUR source-level shapes; `TSpellSchool`
   proven codegen-neutral.** Engine-wide 480 → **491 exact (50.3%)**,

@@ -5,6 +5,7 @@
 #ifndef HOMM3_GAME_H
 #define HOMM3_GAME_H
 
+#include <vector>
 #include "mapcell.h"
 #include "struct.h"
 // `class game` embeds the hero array by value, so the COMPLETE hero
@@ -12,6 +13,7 @@
 // longer pulls this header back (see the note at its top) - that is the
 // edge that was cut to make this include legal.
 #include "hero.h"
+#include "town.h"
 
 // The map record GetWorldMapData hands out. Its first 0xd0 bytes are the
 // scenario's object/event vectors (13 of them at VC6's 16-byte
@@ -29,6 +31,67 @@ public:
 };
 
 class town;
+// Declared in E:\gamedcs\struct.h (DC functions.csv puts both ctors
+// there) but DEFINED in include/netplayer.h, not in this tree's
+// struct.h: struct.h rides in initialize.cpp's include closure, and one
+// more user-defined type there moves the initialize_game_data row.
+class CNetPlayerInfo;
+// `mine` and `generator`, two of the four object-pool element types.
+// The DC roster declares both in E:\gamedcs\Game.h, i.e. here.
+//
+// `generator` transfers from the Dreamcast unchanged - DC size 92 IS
+// retail's pool stride, and DC's mapX/mapY/mapZ at 84/85/86 are exactly
+// the three bytes game::GetGeneratorId compares at +0x54/+0x55/+0x56.
+// So the whole DC record is carried, with armyGroup (56 B) closing
+// 28..84 on the nose.
+//
+// `mine` does NOT transfer: the DC record is 12 bytes and retail's pool
+// stride is 64 (game::MineTypesOwned divides the byte span by `sar 6`).
+// The 52-byte difference is the size of an armyGroup plus its
+// alignment, so retail very likely replaced the DC's single
+// guardedByType/guardedByNum pair with a full guard group - but nothing
+// here is byte-proven past +0x01, so the tail stays one pad.
+class mine {
+public:
+    // +0x00/+0x01, both retail-proven: MineTypesOwned sign-extends
+    // each and compares it against an int parameter.
+    char playerOwner;
+    char type;
+    char pad_02[0x3e];
+};
+SIZE(mine, 0x40);
+
+class generator {
+public:
+    char genClass;              // +0x00
+    char genType;               // +0x01
+    char pad_02[2];
+    int type[4];                // +0x04  (DC 0x1CF0, 16 B)
+    // +0x14. Four SHORTS, not two ints: the constructor's fused loop
+    // walks `type` by 4 and this row by 2 over the same four
+    // iterations.
+    short population[4];
+    armyGroup guards;           // +0x1c
+    unsigned char mapX;         // +0x54
+    unsigned char mapY;         // +0x55
+    unsigned char mapZ;         // +0x56
+    char playerOwner;           // +0x57
+    char town_id;               // +0x58
+    char pad_59[3];
+
+    generator();
+    unsigned char load(void* infile);
+    unsigned char save(void* outfile);
+    void update_bonus();
+    void Initialize(long new_owner);
+    // `ret 4` in retail against the Dreamcast's zero-parameter
+    // prototype - one of the four calibrated "retail carries one more
+    // parameter" rows. The body never touches [ebp+8], so the argument
+    // is discarded and nothing attests what it means; the name says
+    // only that.
+    void Grow(int unusedArg);
+};
+SIZE(generator, 0x5c);
 
 // playerData head: NextHero returns -1 when the player has no mobile
 // hero (HasMobileHero is its bool wrapper). sizeof is 360, byte-proven
@@ -36,11 +99,68 @@ class town;
 // (`45*owner` then `[ecx + 8*eax + 0x20ad0]`), and corroborated from
 // the other side: eight such records starting at 0x20ad0 end at
 // 0x21610, sixteen bytes short of the hero array at 0x21620.
+//
+// The 0x00..0x40 head and the 0x88..0xe8 tail were sliced 2026-08-08 by
+// REPACKING THE DREAMCAST ROSTER (evidence/dreamcast/members.csv, class
+// `playerData`, 344 B / 26 members) onto retail's alignment - the same
+// lever the hero roster answered to. One member changes width and
+// everything else follows: DC's `currHero` is a char at 2, retail's is a
+// dword at +4, so every later DC offset shifts by +4 until the two
+// type_point/vector width differences absorb it. Five independent retail
+// facts fall out of the repack with no further assumption, and all five
+// were already byte-proven from unrelated bodies:
+//   +0x3e numTowns, +0x3f currTown, +0x40 towns   (town::Deallocate),
+//   +0x9c resources                               (recruit.obj),
+//   +0xc8 dpid, +0xe1 isLocal, +0xe2 isHuman      (this TU's accessors).
+// The repack additionally predicted +0x01 numHeroes, +0x04 currHero,
+// +0x08 heroes and +0x39 puzzle_guess before those bytes were read, and
+// all four then confirmed (FindHero/NextHero/guess_grail_location).
+//
+// ALIGNMENT NOTE (retail-only fact, worth flagging): puzzle_guess sits
+// at the ODD offset +0x39, between extraPuzzlePieces (+0x38) and
+// iDeathCountDown (+0x3d), with numTowns pinned at +0x3e from the other
+// side. So retail's type_point is a FOUR-BYTE, ONE-BYTE-ALIGNED type,
+// while the Dreamcast's is two-byte aligned (DC puts the same member at
+// an even 54). struct.h's short-bitfield spelling reproduces the DC
+// alignment, not retail's, so the member is carried here as raw bytes
+// rather than as a type_point - changing struct.h is a tree-wide move
+// that belongs to a supervised decision, not to this slice.
 class playerData {
 public:
-    char pad_00[4];
+    // +0x00. playerData::GetName indexes the colour-name table at
+    // .bss 0x6a7df8 with `movsx` of this byte.
+    signed char color;
+    // +0x01. Signed: FindHero/NextHero both `movsx` it and gate on
+    // `test/jle`.
+    signed char numHeroes;
+    char pad_02[2];
+    // +0x04. DC spells it `currHero` (a char at DC 2); retail widened
+    // it to a dword - NextHero compares the full register against -1.
+    // Name kept as-is because advmgr.obj already writes it.
     int currHeroId;       // +0x04 (Deactivate stores -1)
-    char pad_08[0x36];
+    // +0x08. Extent from the DC repack (DC heroes 4..36 == 32 B) and
+    // then PROVEN from retail: playerData::Init (0x4b9e20) fills it
+    // with `lea edi,[this+8] / mov ecx,8 / rep stosd` of -1.
+    int heroes[8];
+    // +0x28, the two heroes the player's taverns are currently
+    // offering. DC type 0x35C7 is 8 bytes; retail reads them as DWORDS
+    // - hero::hire (0x4d7890) scans `[player + 0x28 + 4*i]` for the
+    // hero's own id with a stride of 4 - so the row is two ints, not
+    // eight bytes.
+    int recruits[2];
+    unsigned char startingNumHeroes;  // +0x30
+    char pad_31[3];
+    int personality;               // +0x34
+    char extraPuzzlePieces;        // +0x38
+    // +0x39. A type_point by DC type; see the alignment note above.
+    // playerData::Init settles both the offset and the BIT layout:
+    // `or word [this+0x39], 0x3ff` then `or word [this+0x3b], 0x3fff`
+    // is struct.h's short-bitfield type_point saturated field by field
+    // (x 10 bits in the first unit, y 10 + z 4 in the second) at an
+    // ODD base - which is the alignment finding above, from the other
+    // side.
+    char puzzle_guess[4];
+    char iDeathCountDown;          // +0x3d
     // +0x3e / +0x40, the player's town roster, sliced 2026-08-08 for
     // town::Deallocate (0x5be2d0), which is the whole proof: it walks
     // `i < movsx [player+0x3e]` comparing `[player + i + 0x40]` against
@@ -53,12 +173,25 @@ public:
     // currTownId from the unsigned char this header used to carry.
     char numTowns;        // +0x3e
     char currTownId;      // +0x3f (advManager::DeactivateCurrTown stores -1)
-    // Extent NOT proven: retail only ever touches entries 0..numTowns-1.
-    // Sliced to the next offset any retail body addresses absolutely -
-    // a scan of .text for `gpGame + 0x20ad0 + k` finds +0x40 then
-    // nothing until +0x88 - so 0x48 is an upper bound, not a count.
+    // 0x48 entries, now PROVEN three ways: "nothing addresses
+    // +0x40..+0x88" from the retail side; the DC repack lands
+    // `placement_help_enabled` exactly at +0x88 (DC towns 61..133 ==
+    // 72 == 0x48 bytes); and playerData::Init (0x4b9e20) clears the row
+    // with `lea edi,[this+0x40] / mov ecx,0x12 / rep stosd` - eighteen
+    // dwords, i.e. exactly 72 bytes.
     char townIds[0x48];   // +0x40
-    char pad_88[0x14];
+    unsigned char placement_help_enabled;  // +0x88
+    char pad_89[3];
+    // +0x8c. DC `std::vector<type_point> shipyards` - twelve bytes of
+    // STLport there, sixteen of Dinkumware here, which is exactly the
+    // slack that puts resources back on its proven +0x9c. Retail then
+    // confirms all four words from the other side: the constructor at
+    // 0x4b9df0 copies an EMPTY ALLOCATOR into +0x8c (which is where its
+    // otherwise inexplicable read of uninitialised stack comes from -
+    // `mov cl,[ebp-1]` is the temporary `allocator<type_point>()`) and
+    // zeroes +0x90/+0x94/+0x98, and the destructor at 0x4ce570 frees
+    // +0x90 and re-zeroes the same triple.
+    std::vector<type_point> shipyards;
     // The seven-resource row, sliced 2026-08-08 for recruit.obj.
     // Byte-proven twice over, from two unrelated TUs:
     // recruitUnit::Update (0x550274) divides `[player+0xb4]` by the
@@ -67,20 +200,50 @@ public:
     // `[player + 4*id + 0x9c]` for the seven ids in the table at
     // 0x641008..0x641024. Gold is index 6 (0x9c + 4*6 == 0xb4).
     int resources[7];
-    char pad_b8[0xb0];
+    unsigned long MysticalGardenFlags;  // +0xb8
+    unsigned long MagicSpringFlags;     // +0xbc
+    unsigned long DeadGuyFlags;         // +0xc0
+    unsigned long LeanToFlags;          // +0xc4
+    // +0xc8 / +0xcc. AssignNetInfo copies both out of a
+    // CNetPlayerInfo; SetName's strncpy bound (0x14) fits the
+    // twenty-one byte buffer the DC repack gives (DC 196..217).
+    unsigned long dpid;
+    char cName[21];
+    unsigned char isLocal;              // +0xe1
+    unsigned char isHuman;              // +0xe2
+    char pad_e3[1];
+    int quickCombat;                    // +0xe4
+    // +0xe8. DC type `AI`, 128 B here (0x168 - 0xe8). Only the first
+    // dword is retail-proven - both playerData constructors zero it -
+    // so the record is one sliced field plus a pad. Ordinal name.
+    int aiField_e8;
+    char ai_rest[0x7c];
 
+    playerData();
+    ~playerData();
     int NextHero();
     int NextTown();
-    unsigned char IsLocalHuman();
+    int FindHero(int id);
+    int FindTown(int id);
+    void AssignNetInfo(CNetPlayerInfo* pNetPlayerInfo);
+    void ClearNetInfo();
+    char* GetName();
+    // RETURN TYPE AND CONSTNESS FROM THE DC MANGLING, byte-confirmed:
+    // ?IsHuman@playerData@@QBA_NXZ / ?IsLocalHuman@playerData@@QBA_NXZ
+    // are `_N` (bool), and retail's codegen agrees - it materialises
+    // the answer in AL alone (`mov al,1` / `xor al,al`, and a bare
+    // `setne al` with no `xor eax,eax` ahead of it), which is what a
+    // bool return does and an `unsigned char` return does not.
+    bool IsLocalHuman() const;
     // 0x4bada0 (claimed in src/game.cpp). town::buy_building calls it
     // on gpGame->players[owner] to split the human and computer
     // resource paths.
-    unsigned char IsHuman();
-    unsigned char HasMobileHero();
+    bool IsHuman() const;
+    bool HasMobileHero();
     // 0x4b9f40 (claimed in src/game.cpp). town::can_build,
     // can_ever_build and get_buildable_mask all call it on
     // gpGame->players[town->owner] to veto a second Capitol.
-    unsigned char HasCapitol();
+    bool HasCapitol();
     // 0x4bacb0. town::get_legion_bonus calls it on
     // gpGame->players[town->owner] with artifact id 0x85; the caller's
     // `test al,al` is what types the return as a byte.
@@ -115,20 +278,25 @@ public:
     // Eight 360-byte player records at +0x20ad0 (town.obj indexes them
     // with 45*owner scaled by 8).
     playerData players[8];
-    char pad_21610[0x4];
-    // The scenario's town array. town::can_build reads
-    // gpGame->towns[this->id].field_02 and town::Deallocate writes
-    // gpGame->towns[this->id].owner, both with a 360-byte stride - the
-    // same 360 that closes sizeof(town).
-    town* towns;             // +0x21614
-    char pad_21618[0x8];
+    // +0x21610. The scenario's town pool, and it is a std::vector, not
+    // a bare pointer: game::GetTownId (0x4bb870) reads _First at
+    // +0x21614 AND _Last at +0x21618, divides the byte span by 360 with
+    // the signed magic-multiply, and guards the whole thing on
+    // `_First != 0` - which is Dinkumware's own
+    // `size() { return _First == 0 ? 0 : _Last - _First; }`.
+    // town::can_build reads gpGame->towns[this->id].field_02 and
+    // town::Deallocate writes gpGame->towns[this->id].owner, both with
+    // that same 360-byte stride.
+    std::vector<town> towns;
     // The scenario's 156 hero records. BOTH the base and the extent are
     // byte-proven by one loop, the hero sweep at 0x4be841:
     //     lea edi, [gpGame + 0x21620]      ; &heroes[0]
     //   L: push esi / mov ecx,edi / call ...
     //     add edi, 0x492                   ; += sizeof(hero) == 1170
     //     inc eax / cmp eax, 0x9c / jb L   ; 156 iterations, unsigned
-    // and 0x21620 + 156*1170 == 0x4ded8 clears the next known member
+    // and 0x21620 + 156*1170 == 0x4df18 clears the next known member
+    // (this line used to read 0x4ded8 - an arithmetic slip, corrected
+    // 2026-08-08 when the pools below were sliced and came out 0x40 low)
     // (the 156-dword band at +0x4dfb4 that 0x4bf2a2 fills with -1 via
     // `mov ecx,0x9c` / `rep stosd`, itself a second witness for 156).
     // Every retail reader indexes it with the same 65*9*2 chain
@@ -137,10 +305,62 @@ public:
     // reach it.
     enum { HERO_COUNT = 156 };
     hero heroes[HERO_COUNT];
+    char pad_4df18[0x470];
+    // THE FOUR OBJECT POOLS, +0x4e388 / +0x4e398 / +0x4e3a8 / +0x4e3b8,
+    // sixteen bytes apiece - VC6's Dinkumware vector, whose empty
+    // allocator sits at +0 so _First/_Last/_End follow at +4/+8/+0xc.
+    // Bases: ClaimMine reads +0x4e38c and ClaimGarrison +0x4e3ac (the
+    // Load/Save bracket note), GetGeneratorId reads the +0x4e39c /
+    // +0x4e3a0 pair with a 92-byte stride, and GetHeroBoat the
+    // +0x4e3bc / +0x4e3c0 pair with a 40-byte one.
+    std::vector<mine> mines;             // +0x4e388
+    std::vector<generator> generators;   // +0x4e398
+    // The garrison pool. Its element type is unmodelled - the DC record
+    // is 64 bytes but no retail body in this tree reads a field yet, so
+    // the vector stays raw bytes rather than guess a stride.
+    char garrisons[0x10];                // +0x4e3a8
+    std::vector<boat> boats;             // +0x4e3b8
+    char pad_4e3c8[0x21];
+    // +0x4e3e9, one signed byte of per-player visit bits per obelisk;
+    // GetNumObelisks tests `(1 << player) & flags[i]` over exactly 48
+    // entries.
+    signed char obeliskFlags[0x30];
+    char pad_4e419[0x263];
+    // +0x4e67c / +0x4e6fc / +0x4e77c - the teleport-destination pools,
+    // all std::vector<type_point>. The two arrays are indexed by the
+    // monolith colour (`color << 4` in both wrappers) and the gap
+    // between the three bases is 0x80 each, i.e. eight vectors per
+    // array; the extent rides on that arithmetic, not on a retail
+    // bound check. Cell types come from the wrappers: 0x2d for the
+    // first array, 0x2c for the second, 0x6f for the whirlpool pool.
+    // NAMES ARE PROVISIONAL - nothing attests them.
+    std::vector<type_point> lithPools[8];      // +0x4e67c
+    std::vector<type_point> lithExitPools[8];  // +0x4e6fc
+    std::vector<type_point> whirlpools;        // +0x4e77c
 
     NewfullMap* GetWorldMapData();
     playerData* GetLocalPlayer();
-    unsigned char IsHuman(int gamePos);          // 0x4ce940
+    int GetLocalPlayerGamePos();                 // 0x4cea20
+    int GetGamePosFromDPID(unsigned long dpid);  // 0x4cec20
+    // Same `_N`-and-const family as playerData's pair above.
+    bool IsLastHuman(int gamePos) const;         // 0x4cec50
+    bool IsMultiplayer() const;                  // 0x4cec90
+    char* GetPlayerName(int gamePos);            // 0x4ceb60
+    bool IsLocalHuman(int gamePos) const;        // 0x4ce970
+    boat* GetHeroBoat(int id, unsigned char occupied);       // 0x4ce900
+    int MineTypesOwned(int iWhichPlayer, int iMineType);     // 0x4bae70
+    int GetTownId(int x, int y, int z);                      // 0x4bb870
+    int GetGeneratorId(int x, int y, int z);                 // 0x4bb900
+    void GiveArmy(armyGroup* thisMonInfo, int iMonType,
+                  int iMonNum, int slot);                    // 0x4ca340
+    unsigned char get_random_lith(const std::vector<type_point>* points,
+                                  type_point* result, long cell_type,
+                                  long excluded);            // 0x4cdb80
+    unsigned char get_random_lith_exit(long color, type_point* result);
+    unsigned char get_random_lith(long color, long excluded,
+                                  type_point* result);
+    unsigned char get_random_whirlpool(long excluded, type_point* result);
+    bool IsHuman(int gamePos) const;             // 0x4ce940
     void TurnOnAIMusic();                        // 0x4c6f80
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
@@ -158,6 +378,19 @@ public:
             return 0;
         return &heroes[heroId];
     }
+    // DC `game::GetTown`, dc 0x2f24, declared in E:\gamedcs\Game.h line
+    // 1016 - GetHero's twin, and the same inline-only shape. Its
+    // -1 arm is proven by playerData::HasCapitol (0x4b9f40), which
+    // reaches it with an id straight out of townIds and STILL emits the
+    // `cmp eax,-1` / `xor edx,edx` pair before the 360-byte index -
+    // then dereferences the result unguarded, so the null can never
+    // actually reach a load.
+    town* GetTown(int townId)
+    {
+        if (townId == -1)
+            return 0;
+        return &towns[townId];
+    }
 };
 
 // Retail .bss 0x6994e8 (the game record) and 0x69ccb0 (the acting
@@ -174,6 +407,21 @@ extern playerData* gpCurrentPlayer;
 // belongs to whoever owns findpath.h.
 extern int gMapWidth;
 extern int gMapHeight;
+
+// --- the local-player pair, read by GetLocalPlayer and
+// GetLocalPlayerGamePos (both in this TU). The mode selector they
+// branch on is iMPNetProtocol, in netgame.h.
+// 0x69cca8: the hot-seat game position of this machine's player - the
+// dword eight bytes ahead of gpCurrentPlayer, and range-checked
+// against [0,8) before use. Ordinal placeholder.
+extern int gNetLocalGamePos;                // .bss 0x69cca8
+// 0x699554: the same answer for every other protocol, handed back
+// unchecked. Ordinal placeholder.
+extern int gLocalGamePos;                   // .bss 0x699554
+// 0x6a7df8: eight char* colour names; playerData::GetName copies
+// gPlayerColorNames[color] over an empty/default name. Defined by a TU
+// not yet located - extern only (the bitNumber pattern).
+extern char* gPlayerColorNames[];           // .bss 0x6a7df8
 
 // Located game.cpp bodies kbwin calls (the Imm/tablet mouse hooks;
 // bodies not yet reconstructed - declarators match the kbwin call

@@ -111,14 +111,19 @@ mine* type_obscuring_object::get_obscured_mine()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:390
+// Four gates in series and then the 360-byte index into the town pool.
+// 0x62 is TAdventureObjectType TOWN, and the -1 test on the index is
+// the same "no town" sentinel game::GetTown carries.
 VA(0x004d7490, 0x35)  // anchor-global, dc 0xcab04
 town* type_obscuring_object::get_obscured_town()
 {
-    // @stub
+    if (field_06 && obscuredType == TOWN && field_10)
+        return gpGame->GetTown(obscuredIndex);
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:403
 VA(0x004d74d0, 0x1D)  // anchor-global, dc 0xcab3c
@@ -1803,19 +1808,27 @@ int hero::GetManaFrame()
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:6155
+// The cell's extraInfo is the bit index - `1 << cell->extraInfo`
+// against the hero's own ArenaFlags dword. The answer comes back
+// through the neg/sbb/neg normalisation rather than a setcc, which is
+// what a full-width value tested for non-zero produces.
 VA(0x004e53c0, 0x1E)  // linkorder, dc 0xd5060
-unsigned char hero::VisitedArena(const NewmapCell* cell)
+bool hero::VisitedArena(const NewmapCell* cell) const
 {
-    // @stub
+    return (ArenaFlags & (1 << cell->extraInfo)) != 0;
 }
 
 // E:\gamedcs\hero.cpp:6163
 VA(0x004e53e0, 0x18)  // linkorder, dc 0xd5074
 void hero::SetVisitedArena(const NewmapCell* cell)
 {
-    // @stub
+    ArenaFlags |= 1 << cell->extraInfo;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6171
 VA(0x004e5400, 0x93)  // linkorder, dc 0xd50a0
