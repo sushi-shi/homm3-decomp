@@ -1126,33 +1126,62 @@ long type_AI_spellcaster::get_protection_value(const army* our_army, TSpellSchoo
     // @stub
 }
 
+#endif  // @carcass
+
+// The four protection wrappers, all one `return get_protection_value(
+// ...)` with school 1/2/4/8 and level 5. Retail is INCONSISTENT about
+// the spell whose mastery row it reads and the bytes are what say so:
+// air and fire fold a CONSTANT spell into the displacement (0x1024 and
+// 0x10ac = 0x34 + 136*30 and 0x34 + 136*31, the two enumerators), while
+// earth and water compute `mastery + 34*caster.spell` at run time - the
+// `shl 4 / add / lea eax+2*edx` triple that the constant form cannot
+// produce. Writing all four from `caster.spell` (or all four from the
+// enumerator) mis-spells half of them.
+//
+// The earth/water pair ALSO needs the row in a named local. Inline in
+// the argument list they score 98.5%: identical instruction sequence
+// with eax and edx swapped through the tail, because the subscript's
+// own `mov eax,[akSpellTraits]` (the a1 accumulator form, eax-only)
+// leaves the allocator a free choice of destination for the row load
+// and it takes edx. Binding the row to a local first makes the load
+// land back in eax, as retail does - the whole 1.5%. Air and fire fold
+// their spell into the displacement, leave no live index, and match
+// either way, which is why only two of the four carry the local.
 // E:\gamedcs\ai_tactical.cpp:2077
 VA(0x004399a0, 0x29)  // anchor-vtable, dc 0x40060
 long type_AI_spellcaster::get_air_protection_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    return get_protection_value(
+        our_army, 1, 5, caster.duration,
+        akSpellTraits[SPELL_PROTECTION_FROM_AIR].mastery_bonus[caster.mastery]);
 }
 
 // E:\gamedcs\ai_tactical.cpp:2087
 VA(0x004399d0, 0x29)  // anchor-vtable, dc 0x4008c
 long type_AI_spellcaster::get_fire_protection_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    return get_protection_value(
+        our_army, 2, 5, caster.duration,
+        akSpellTraits[SPELL_PROTECTION_FROM_FIRE].mastery_bonus[caster.mastery]);
 }
 
 // E:\gamedcs\ai_tactical.cpp:2097
 VA(0x00439a00, 0x32)  // anchor-vtable, dc 0x400b8
 long type_AI_spellcaster::get_earth_protection_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    long amount = akSpellTraits[caster.spell].mastery_bonus[caster.mastery];
+    return get_protection_value(our_army, 8, 5, caster.duration, amount);
 }
 
 // E:\gamedcs\ai_tactical.cpp:2107
 VA(0x00439a40, 0x32)  // anchor-vtable, dc 0x400f4
 long type_AI_spellcaster::get_water_protection_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    long amount = akSpellTraits[caster.spell].mastery_bonus[caster.mastery];
+    return get_protection_value(our_army, 4, 5, caster.duration, amount);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2116
 DC_ONLY(0x40130, 0x118)
