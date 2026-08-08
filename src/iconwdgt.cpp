@@ -97,14 +97,7 @@ void iconWidget::Draw()
 VA(0x004eaff0, 0x3E)  // anchor-global, dc 0xd9c7c
 void iconWidget::SetIconFrame(int newFrame)
 {
-    CSprite* sprite = Sprite;
-    int frames = 0;
-    if (seqId < sprite->numSequences && sprite->validSeqMask[seqId] != 0) {
-        frames = sprite->s[seqId]->numFrames;
-        Frame = newFrame % frames;
-    } else {
-        Frame = newFrame % frames;
-    }
+    Frame = newFrame % Sprite->GetNumFrames(seqId);
 }
 
 #if 0  // @carcass
@@ -147,21 +140,23 @@ void iconWidget::SetSprite(const char* new_sprite)
 // per re-roll, matching the retail loop-back into its stores);
 // cs_prewalk/cs_postwalk (0x14/0x15) are the leave/enter transitions
 // with the fidget target parked in PostPostWalkSequence.
+// Residual (72.0%): the SAME `this`-homing difference as the siege
+// twin below - retail spills `this` to [ebp-4] (frame 0x5c vs our
+// 0x58) and pins it in ESI where this compile keeps it in EDI and
+// never homes it; downstream, our allocator also CSEs the literal 0
+// into EBX (`cmp [eax+4*ecx], ebx`) where retail compares against the
+// immediate. Control flow AGREES (`--branches`, 21/21, one merged
+// exit). Fixed here 2026-08-08: the frame-count guard is
+// CSprite::GetNumFrames (a csprite.h inline, DC CSprite.h:293), NOT a
+// cached local - re-expanding it per use took this 69.02 -> 72.01 and
+// SetIconFrame 90.18 -> exact.
 VA(0x004eb060, 0x1EB)  // anchor-global, dc 0xd9d90
 void iconWidget::NextRandomFrame()
 {
-    CSprite* sprite = Sprite;
-    int frames;
-    if (seqId < sprite->numSequences && sprite->validSeqMask[seqId] != 0)
-        frames = sprite->s[seqId]->numFrames;
-    else
-        frames = 0;
+    int frames = Sprite->GetNumFrames(seqId);
     int next = Frame + 1;
     if (next < frames) {
-        if (seqId < sprite->numSequences && sprite->validSeqMask[seqId] != 0)
-            Frame = next % sprite->s[seqId]->numFrames;
-        else
-            Frame = next % frames;
+        Frame = next % Sprite->GetNumFrames(seqId);
         return;
     }
     if (seqId == cs_prewalk) {
@@ -189,24 +184,16 @@ void iconWidget::NextRandomFrame()
                 break;
         }
         chosen = table[pick][0];
-        if (chosen < sprite->numSequences
-            && sprite->validSeqMask[chosen] != 0
-            && sprite->s[chosen]->numFrames > 0)
+        if (Sprite->GetNumFrames(chosen) > 0)
             break;
     }
     if (chosen == 0) {
-        if (seqId != 0
-            && sprite->numSequences > cs_prewalk
-            && sprite->validSeqMask[cs_prewalk] != 0
-            && sprite->s[cs_prewalk]->numFrames > 0) {
+        if (seqId != 0 && Sprite->GetNumFrames(cs_prewalk) > 0) {
             seqId = cs_prewalk;
             Frame = 0;
             return;
         }
-    } else if (seqId == 0
-               && sprite->numSequences > cs_postwalk
-               && sprite->validSeqMask[cs_postwalk] != 0
-               && sprite->s[cs_postwalk]->numFrames > 0) {
+    } else if (seqId == 0 && Sprite->GetNumFrames(cs_postwalk) > 0) {
         PostPostWalkSequence = chosen;
         seqId = cs_postwalk;
         Frame = 0;
@@ -223,21 +210,26 @@ void iconWidget::NextRandomFrame()
 // E:\gamedcs\iconwdgt.cpp:572
 // The siege-engine variant of NextRandomFrame: four-pair odds table
 // (2:94%, fidgets 14-16 2% each), no transition sequences.
+// Residual (86.4%): retail HOMES `this` at [ebp-4] - its frame is
+// 0x24 where ours is 0x20 - because it burns EDI on the CSE'd literal
+// 2 inside the table stores and has to reload `this` from the home
+// after each Random(). This compile keeps `this` in EDI for the whole
+// body and materialises the 2 in EAX, so the table sits one dword
+// higher ([ebp-0x20] vs [ebp-0x24]) and every table store's
+// displacement differs. Control flow AGREES (`--branches`, 10/10).
+// Tried and rejected: caching `Sprite` in a local (74.02 - it also
+// stops the per-iteration [this+0x30] reload retail does), folding
+// the frame count into the `if` condition instead of a local (83.74).
 VA(0x004eb250, 0xED)  // anchor-global, dc 0xd9ee8
 void iconWidget::NextRandomSiegeEngineFrame()
 {
-    CSprite* sprite = Sprite;
-    int frames;
-    if (seqId < sprite->numSequences && sprite->validSeqMask[seqId] != 0)
-        frames = sprite->s[seqId]->numFrames;
-    else
-        frames = 0;
+    // `Sprite` is read through the member every time, NOT cached in a
+    // local: retail homes `this` at [ebp-4] and reloads [this+0x30]
+    // after each Random() call inside the re-roll loop.
+    int frames = Sprite->GetNumFrames(seqId);
     int next = Frame + 1;
     if (next < frames) {
-        if (seqId < sprite->numSequences && sprite->validSeqMask[seqId] != 0)
-            Frame = next % sprite->s[seqId]->numFrames;
-        else
-            Frame = next % frames;
+        Frame = next % Sprite->GetNumFrames(seqId);
         return;
     }
     int chosen;
@@ -254,9 +246,7 @@ void iconWidget::NextRandomSiegeEngineFrame()
                 break;
         }
         chosen = table[pick][0];
-        if (chosen < sprite->numSequences
-            && sprite->validSeqMask[chosen] != 0
-            && sprite->s[chosen]->numFrames > 0)
+        if (Sprite->GetNumFrames(chosen) > 0)
             break;
     }
     seqId = chosen;

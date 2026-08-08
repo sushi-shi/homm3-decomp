@@ -1,6 +1,6 @@
 # generator: homm3.analysis.link_order
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
-# date: 2026-08-07
+# date: 2026-08-08
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 rva	size	unit	current_label	provenance
 0x21d0	5	adventuremapwindow	border_vslot05	working-label
@@ -165,6 +165,7 @@ rva	size	unit	current_label	provenance
 0x47fe0	638	army	game_65330_sub01_47fe0	working-label
 0x487f0	67	army	army_get_mirror_effect	working-label
 0x48840	623	army	game_22b20_sub00_48840	working-label
+0x4a460	85	armygrp	?ArmyGrpFn_0044A460@@YIABV?$bitset@$08@std@@XZ	src-VA+base
 0x4ada0	22	armygrp	armyGroup_get_creature_total	working-label
 0x4adc0	32	armygrp	game_805e0_sub01_4adc0	working-label
 0x4fa40	341	bitmap816	game_4f8d0_sub00_4fa40	working-label
@@ -668,12 +669,13 @@ rva	size	unit	current_label	provenance
 0x12b900	182	philai	game_128040_sub36_12b900	working-label
 0x12b9c0	524	philai	game_bcda0_sub26_12b9c0	working-label
 0x14e850	4757	recruit	game_tprcrt_pcx_14e850	working-label
-0x14faf0	33	recruit	game_14faf0	working-label
-0x14fb20	107	recruit	game_14faf0_sub00_14fb20	working-label
+0x14faf0	33	recruit	??_GTRecruitWindow@@UAEPAXI@Z	src-VA+base
 0x14fb90	781	recruit	game_14e850_sub00_14fb90	working-label
 0x14fea0	1070	recruit	game_s_s_14fea0	working-label
 0x1502d0	140	recruit	game_1502d0	working-label
-0x150360	60	recruit	game_124fc0_sub01_150360	working-label
+0x150940	2568	recruit	calls_timeGetTime_150940	working-label
+0x151560	331	recruit	recruitUnit_recruitUnit	working-label
+0x1516b0	33	recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	src-VA+base
 0x1541a0	90	remote	CChatEdit	working-label
 0x154200	54	remote	CChatEdit_vslot19	working-label
 0x154240	234	remote	CChatEdit_vslot15	working-label
@@ -757,8 +759,8 @@ rva	size	unit	current_label	provenance
 0x166e30	33	sample	??_Gsample@@UAEPAXI@Z	src-VA+base
 0x1997d0	703	soundmgr	game_device_1997d0	working-label
 0x199a90	241	soundmgr	game_199a90	working-label
-0x199b90	171	soundmgr	soundManager_ResumeSamples	src-VA
-0x199c40	331	soundmgr	soundManager_PauseSamples	src-VA
+0x199b90	171	soundmgr	?ResumeSamples@soundManager@@QAEXXZ	src-VA+base
+0x199c40	331	soundmgr	?PauseSamples@soundManager@@QAEXXZ	src-VA+base
 0x19a030	135	soundmgr	game_88fb0_sub01_19a030	working-label
 0x19a6b0	275	soundmgr	game_19a590_sub00_19a6b0	working-label
 0x19a7d0	81	soundmgr	soundManager_service_sounds	working-label
@@ -794,8 +796,7 @@ rva	size	unit	current_label	provenance
 0x1c1460	56	town	town_get_army	working-label
 0x1f2810	69	victorylossconditions	VictoryConditionStruct_CheckForTimeSurvival	working-label
 0x1f2e10	47	victorylossconditions	LossConditionStruct_HeroKilled	working-label
-0x1fe3b0	92	widget	widget_vslot00	working-label
-0x1fe410	29	widget	border_border_1fe410	working-label
+0x1fe3b0	92	widget	??_Gwidget@@UAEPAXI@Z	src-VA+base
 0x1fea50	33	window	heroWindow_vslot00	working-label
 0x1ff460	33	window	TAdventureMapWindow_vslot06	working-label
 0x1ff570	50	window	TAdventureMapWindow_vslot07	working-label

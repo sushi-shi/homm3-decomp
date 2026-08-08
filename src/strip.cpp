@@ -118,22 +118,36 @@ inline void strip::DrawNumber(int i)
 }
 
 // E:\gamedcs\strip.cpp:139
-// Residual (93.4%): the cross-jump half of the old 84.6 residual is
-// GONE (2026-08-08) - reading the portrait name into a local ahead of
-// the codeX store in the pos!=0 arm makes retail's two-return shape
-// fall out, and reordering the closing broadcast to codeY/codeX/extra
-// recovers the last tail store. What is left is one scheduling
-// window inside that same arm: retail computes the akHeroTraits row
-// (base load, lea/shl/sub, cell load) BEFORE the call setup, where
-// this compile emits `lea ecx,[ebp-X]; push ecx; mov ecx,[esi+Y]`
-// first and the row arithmetic after. The pos==0 twin of the block
-// compiles retail-identical. Tried and rejected: a row-pointer local
-// (93.37, same), a cached `win` local (93.37, same), the name local
-// below the codeX store (84.59 - both defects return), extraText
-// before codeX (74.87), and all 24 permutations of the entry
-// preamble (msg zeros / extra=0 / window=0 / id) - the current order
-// is the best of them. Statement SEMANTICS match store for store on
-// every path.
+// Residual (93.37%): one basic block - the pos!=0 WIDGET_SET_IMAGE
+// broadcast at retail +0x163. Retail schedules
+//   frame load / base load (edx) / codeX store / lea-shl-sub (ecx) /
+//   cell load (eax) / call setup / extraText store
+// where this compile emits the call setup (`lea ecx,[ebp-0x20];
+// push ecx; mov ecx,[esi+0x68]`) first, computes the row index into
+// edx, and only then loads the base - into EAX, which takes the 5-byte
+// `A1` accumulator form where retail's edx takes the 6-byte modrm form
+// (the whole function is exactly 1 byte short of retail as a result,
+// so the byte multisets are NOT identical - this is register
+// allocation, not post-RA scheduling). The pos==0 twin of the same
+// block compiles retail-identical.
+//   The block is pinned between two defects. Any spelling that reads
+// the portrait name INLINE in the msg.extraText store gets retail's
+// early codeX store back but lets VC6 cross-jump this arm's closing
+// broadcast into the pos==0 arm's (78.11); reading it into a local
+// first breaks the merge but sinks the codeX store (93.37).
+// Tried and rejected (2026-08-08, 20 spellings): name local before
+// codeX (93.37, kept), `char*` local (93.37), row reference / row
+// pointer / base pointer / index locals (78.11 - all merge),
+// base-local + name-local pair (93.37), `(akHeroTraits+frame)->` and
+// `&...[0]` forms (93.37), plain inline (78.11), name local scoped in
+// braces or placed below the codeX store (78.11/84.59), extraText
+// before codeX (74.87), codeY=124 duplicated into both arms (73.55)
+// or into the else arm alone (77.44), a redundant `msg.extra=0` /
+// `msg.qualifier=0` / `msg.window=0` / `msg.id=` store ahead of the
+// read (78.68/73.40 - refutes the "two stores give the scheduler
+// slack" theory), if/else instead of the pos==0 early return (no
+// change), and all 24 permutations of the entry preamble. Statement
+// SEMANTICS match store for store on every path.
 VA(0x005aa060, 0x1CE)  // linkorder + body: akHeroTraits[frame] portrait via WIDGET_SET_IMAGE, owner widgets 100/122/123 (pos==0) and 124/125; dc 0x158a80
 void strip::DrawOwner(int frame)
 {
@@ -188,13 +202,9 @@ void strip::DrawOwner(int frame)
         msg.codeX = widget::WIDGET_CLEAR_STATUS;
     } else {
         // The portrait name is read into a local AHEAD of the codeX
-        // store (2026-08-08, +7.8 points). It is what makes VC6 hoist
-        // the akHeroTraits base load above the row arithmetic, as
-        // retail does (`mov edx,[akHeroTraits]` before the
-        // lea/shl/sub), and it also stops the cross-jump that merged
-        // this arm's closing broadcast with the pos==0 arm's. Folding
-        // the read back into the msg.extraText store - or moving the
-        // local below the codeX store - restores both defects (84.6).
+        // store. It is what stops the cross-jump that merged this arm's
+        // closing broadcast with the pos==0 arm's (see the residual note
+        // above the claim).
         const char* name = akHeroTraits[frame].largePortraitName;
         msg.codeX = widget::WIDGET_SET_IMAGE;
         msg.extraText = const_cast<char*>(name);
