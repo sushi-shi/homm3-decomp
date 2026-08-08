@@ -130,6 +130,9 @@ public:
     // cleared by the dtor when the dying widget is the hoveree.
     static widget* last_hover_widget;
 
+    // Retail body 0x5fe410 (dc 0x196bd4) - the default ctor really is
+    // emitted; it is not an inlined-away static.
+    widget();
     widget(short widgetX, short widgetY, short widgetWidth, short widgetHeight, short widgetId, short widgetStyle);
     void initialize(int _x, int _y, int _w, int _h, int _id, int _style);
     int send_message(widget::ECommands command, int extra);

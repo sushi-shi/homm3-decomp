@@ -118,19 +118,22 @@ inline void strip::DrawNumber(int i)
 }
 
 // E:\gamedcs\strip.cpp:139
-// Residual (84.6%): retail keeps TWO returns - the pos==0 arm's
-// closing hide-123 broadcast is emitted whole (its own call +
-// epilogue at 0x5aa1a8) with the three branch-final broadcasts
-// cross-jumped into one shared call at 0x5aa17e; this compile makes
-// the opposite merge (branch-final calls stay inline, the two arms'
-// closing broadcasts share one call + return). Second face of the
-// same coin: the pos!=0 SET_IMAGE block schedules the akHeroTraits
-// cell load after the index arithmetic where retail hoists it (the
-// pos==0 twin of that block compiles retail-identical). The order
-// sweep (redundant re-stores, early return, both tail store orders,
-// extraText-first) plateaus here - same merged-return/scheduler-
-// window signature as widget::send_message and src/path.cpp.
-// Statement SEMANTICS match store for store on every path.
+// Residual (93.4%): the cross-jump half of the old 84.6 residual is
+// GONE (2026-08-08) - reading the portrait name into a local ahead of
+// the codeX store in the pos!=0 arm makes retail's two-return shape
+// fall out, and reordering the closing broadcast to codeY/codeX/extra
+// recovers the last tail store. What is left is one scheduling
+// window inside that same arm: retail computes the akHeroTraits row
+// (base load, lea/shl/sub, cell load) BEFORE the call setup, where
+// this compile emits `lea ecx,[ebp-X]; push ecx; mov ecx,[esi+Y]`
+// first and the row arithmetic after. The pos==0 twin of the block
+// compiles retail-identical. Tried and rejected: a row-pointer local
+// (93.37, same), a cached `win` local (93.37, same), the name local
+// below the codeX store (84.59 - both defects return), extraText
+// before codeX (74.87), and all 24 permutations of the entry
+// preamble (msg zeros / extra=0 / window=0 / id) - the current order
+// is the best of them. Statement SEMANTICS match store for store on
+// every path.
 VA(0x005aa060, 0x1CE)  // linkorder + body: akHeroTraits[frame] portrait via WIDGET_SET_IMAGE, owner widgets 100/122/123 (pos==0) and 124/125; dc 0x158a80
 void strip::DrawOwner(int frame)
 {
@@ -184,16 +187,25 @@ void strip::DrawOwner(int frame)
     if (iconFrame == -1) {
         msg.codeX = widget::WIDGET_CLEAR_STATUS;
     } else {
+        // The portrait name is read into a local AHEAD of the codeX
+        // store (2026-08-08, +7.8 points). It is what makes VC6 hoist
+        // the akHeroTraits base load above the row arithmetic, as
+        // retail does (`mov edx,[akHeroTraits]` before the
+        // lea/shl/sub), and it also stops the cross-jump that merged
+        // this arm's closing broadcast with the pos==0 arm's. Folding
+        // the read back into the msg.extraText store - or moving the
+        // local below the codeX store - restores both defects (84.6).
+        const char* name = akHeroTraits[frame].largePortraitName;
         msg.codeX = widget::WIDGET_SET_IMAGE;
-        msg.extraText = const_cast<char*>(akHeroTraits[frame].largePortraitName);
+        msg.extraText = const_cast<char*>(name);
         win->BroadcastMessage(&msg);
         msg.codeX = widget::WIDGET_SET_STATUS;
     }
     msg.extra = widget::WIDGET_DRAWN;
     win->BroadcastMessage(&msg);
+    msg.codeY = 125;
     msg.codeX = widget::WIDGET_CLEAR_STATUS;
     msg.extra = widget::WIDGET_DRAWN;
-    msg.codeY = 125;
     win->BroadcastMessage(&msg);
 }
 
