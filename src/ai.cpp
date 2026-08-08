@@ -123,12 +123,64 @@ long combatManager::choose_shooter_target(const army* current_army, type_AI_comb
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai.cpp:365
+// The value of dropping a Dragon-Breath-shaped area on `hex`: every
+// stack the area would touch is priced, ENEMIES added at their ranged
+// value and OWN stacks subtracted at the simple-attack effect they
+// would suffer. Reached only from choose_shooter_target.
+//
+// Written AFTER choose_shooter_target in retail although the Dreamcast
+// source has it before, which is the inversion the segment note above
+// records; this file keeps retail's order.
+//
+// NOT blocked by P2.2 - the fs:[0] frame is the local vector's unwind
+// scope, exactly as in find_move_order below. The VC6 Dinkumware
+// `size()` is null-guarded (`_First == 0 ? 0 : _Last - _First`), which
+// is the `cmp/jne` pair ahead of the `sar 2` at 0x41ec22.
+//
+// THE TWO-HEX SKIP is a four-term conjunction and its polarity is the
+// whole shape: an area effect is only DOUBLE-counted against a wide
+// stack when the centre hex is neither of the stack's two hexes, so
+// the body drops such a target and prices every other one.
+//
+// TWO SPELLINGS DECIDED THE MATCH.
+// (1) The reverse walk is `for (unsigned i = size(); i-- != 0; )`, not
+// `for (long i = size() - 1; i >= 0; i--)`. Retail's entry guard is
+// `test <size>, <size>; je` and its back edge tests the PRE-decrement
+// value (`mov ecx,eax; dec eax; test ecx,ecx; jne`), which is the
+// post-decrement idiom exactly; the signed form gets `cmp i,0; jl` and
+// `jns` instead (86.5 -> 94.4 on this one change).
+// (2) THE VECTOR IS DECLARED BEFORE `total`. Retail keeps ONE zeroed
+// register (ebx) and spends it on the three vector words, the EH state
+// slot, the `_First == 0` compare AND the running total, which frees
+// ESI to be saved only around the loop - a shrink-wrapped push/pop that
+// is visible in the bytes. With `total` declared first VC6 splits the
+// two, burns ESI on the constant, saves it in the prologue and never
+// recovers (94.4 -> 100.0 on the swap alone). The allocator is reading
+// declaration order, not use order.
 VA(0x0041eda0, 0xFD)  // anchor-callee, dc 0x2400c
 long get_area_attack_value(const army* current_army, long hex, long our_group, type_AI_combat_parameters* data)
 {
-    // @stub
+    std::vector<army*> targets;
+    long total = 0;
+    gpCombatManager->mark_hex_area_effect(hex, 1, 1, targets);
+    for (unsigned i = targets.size(); i-- != 0; ) {
+        army* target = targets[i];
+        if ((current_army->Is(18) & 1) && (target->Is(18) & 1)
+                && target->gridIndex != hex
+                && target->get_second_grid_index() != hex)
+            continue;
+        if (target->combatSide == our_group)
+            total -= data->get_simple_attack_effect(current_army, target, 1, 0);
+        else
+            total += data->get_ranged_attack_value(current_army, target);
+    }
+    return total;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai.cpp:475
 VA(0x0041eea0, 0x1B9)  // anchor-callee, dc 0x2429c
@@ -137,14 +189,41 @@ unsigned char combatManager::choose_cyclops_action(long best_value, long side, t
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai.cpp:558
+// The shooter arm of the per-stack dispatcher, and the DC callee list
+// for this row (choose_shooter_target twice, choose_cyclops_action,
+// find_AI_targets, army::Is, the combat-parameters ctor) is exactly
+// what the retail body calls - six for six, including the DOUBLE
+// choose_shooter_target edge the dump records.
+//
+// The second call is the "no kill is available, price the survivors"
+// retry: the parameters object is built with kills_only set by its own
+// ctor, and when the first pass comes back with a zero best_value the
+// flag is cleared and the whole target scan runs again.
 VA(0x0041f060, 0xD1)  // anchor-callee, dc 0x2452c
 void combatManager::choose_shooter_action(const army* current_army, unsigned char simulated, long side)
 {
-    // @stub
+    long best_value = 0;
+    type_AI_combat_parameters data(this, side);
+    data.simulated = simulated;
+    find_AI_targets(1 - side, 0, 0, &data, 0);
+    long action_value = choose_shooter_target(current_army, &data, &best_value);
+    if (!simulated && (current_army->Is(5) & 1)
+            && choose_cyclops_action(best_value, side, &data))
+        return;
+    if (action_value < 0) {
+        field_3c = 3;
+        return;
+    }
+    if (data.kills_only && !best_value) {
+        data.kills_only = 0;
+        action_value = choose_shooter_target(current_army, &data, &best_value);
+    }
+    field_3c = 7;
+    field_44 = action_value;
 }
-
-#endif  // @carcass
 
 // The out-of-line body of ai.h's sort predicate. /Ob2 folds it into
 // the _Insertion_sort instantiation - retail emits no standalone copy.
@@ -715,17 +794,55 @@ unsigned char combatManager::choose_spell_action(const army* current_army, long*
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai.cpp:1822
 // `ret 4` = one stack argument over `this`, the DC count exactly, and
 // the two callees are InCastle and combatManager::HexIsBlocked. 245 B
 // against 258 B.
+//
+// RECONSTRUCTED 2026-08-08. Only the DEFENDER (side 1) of a walled
+// combat can stay in: every breached wall segment whose hex is walkable
+// is a way in, and one of those loses the argument outright. If the
+// walls still hold, the AI needs a shooting advantage AND every one of
+// its own live stacks - bar the arrow tower - has to be inside the
+// castle already.
+//
+// THE OUT-OF-BOUNDS INDEX IS RETAIL'S. gCastleWallGateTargets holds
+// TWallTargetIds {6,8,9,10,12} - the id column of gWallTargets rows
+// 1..5 - and the body uses each id BOTH as the wallStrength index
+// (correct: that array is id-indexed) AND as a gWallTargets subscript
+// (wrong: that table is POSITION-indexed and has eight rows, as
+// GetTargetWallIndex 0x465970 proves by stepping it 0x63be60..
+// 0x63bec0). Ids 8, 9, 10 and 12 therefore read past the end of an
+// eight-row table. The bytes say so unambiguously - `lea eax,[eax+
+// 2*eax]; lea eax,[4*eax + 0x63be60]` on the same register the
+// wallStrength load just used - so it is transcribed as written.
 VA(0x004213f0, 0xF5)  // anchor-callee, dc 0x264fc
 unsigned char combatManager::should_stay_in_castle(type_AI_combat_parameters* estimate)
 {
-    // @stub
+    if (!field_132f4)
+        return 0;
+    if (estimate->side != 1)
+        return 0;
+    { for (const long* target = gCastleWallGateTargets;
+           target < gCastleWallGateTargetsEnd; target++) {
+        if (get_wall_strength(*target))
+            continue;
+        if (!HexIsBlocked(gWallTargets[*target].get_blocked_hex()))
+            return 0;
+    } }
+    if (!has_ranged_advantage(estimate))
+        return 0;
+    const army* our_army = &armies[estimate->side][0];
+    for (long i = 0; i < numArmies[estimate->side]; i++, our_army++) {
+        if ((our_army->Is(21) & 1) == 0
+                && our_army->creatureType != CREATURE_ARROW_TOWER
+                && !InCastle(our_army->gridIndex))
+            return 0;
+    }
+    return 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai.cpp:1866
 // `ret 0xc`, the DC count exactly, and the body walks the 187-cell
@@ -793,22 +910,134 @@ unsigned char combatManager::choose_melee_target(const army* current_army, unsig
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai.cpp:2159
+// The melee arm. Three ways out, in retail's order: a melee target was
+// found, or a creature spell was worth casting instead (never while
+// simulating), or nothing was - and then the stack either WAITS (code
+// 8) or defends (code 3). The wait is only offered when the move order
+// has not already been reversed for this combat AND either the whole
+// game is running under AI control or this side is a computer player.
+//
+// The `side` parameter slot is reused as the out-parameter both
+// choosers write through, which is why retail zeroes [ebp+0x14] after
+// the last read of `side` and returns it from two of the three exits.
 VA(0x00421f80, 0xD5)  // anchor-callee, dc 0x26ee0
 long combatManager::choose_melee_action(const army* current_army, unsigned char teleport, unsigned char simulated, long side)
 {
-    // @stub
+    type_AI_combat_parameters data(this, side);
+    data.simulated = simulated;
+    find_move_order(0);
+    find_AI_targets(side, current_army, 1, &data, 0);
+    long action_value = 0;
+    if (choose_melee_target(current_army, teleport, &action_value, &data))
+        return action_value;
+    if (!simulated && choose_spell_action(current_army, &action_value, &data))
+        return action_value;
+    if (!field_13de4 && (gpGame->AI_in_control >= 2 || sideIsAI[side])) {
+        field_3c = 8;
+        return 0;
+    }
+    field_3c = 3;
+    return 0;
 }
+
+#if 0  // @carcass
+
+#endif  // @carcass
 
 // E:\gamedcs\ai.cpp:2187
 // 398 bytes against the DC body's 398 - the tightest size agreement in
 // the TU - with `ret 4` matching the DC parameter count and a body
 // that calls searchArray::SeedCombatPosition and
 // combatManager::is_outside_placement_boundry. Placement, by name.
+//
+// A shooter wants the LOWEST score, and the score counts how many of
+// its neighbouring hexes are free (or its own) - so it walks toward the
+// emptiest corner of its placement zone - except that a single
+// neighbour carrying creatureId bit 2 slams the score to 1000 and rules
+// the hex out entirely. Ties go to standing still.
+//
+// The 100 the search starts from is a real ceiling, not a sentinel: a
+// hex with eight free neighbours scores 8, so any reachable hex beats
+// it and only an unreachable board leaves best_hex on the stack's own
+// square - which is the `field_3c = 8` (wait) exit.
+//
+// The two-hex bound test is combatManager::ValidHex, the DC header
+// inline (cmbtmgr.h:1460), used TWICE - once on the loop index and once
+// on the adjacent hex. On the loop index VC6 strength-reduces it onto
+// the SAME 30-byte induction variable the cellData walk uses, which is
+// why the retail bytes read `test esi,esi / jl` plus `cmp esi,0x15ea /
+// jge` (0x15ea = 187 * 30) rather than anything mentioning 187.
+//
+// Residual (80.6%): the register-homing family, and every structural
+// question is already settled - the CFG, both ValidHex expansions, the
+// strength reduction, the two acceptance guards and all three exits
+// line up. What does not is one register: retail parks `this` in EBX,
+// spills it to a slot across the inner loop and RECYCLES EBX as the
+// neighbour counter, which leaves ESI free for the induction and lets
+// the ESI save shrink-wrap into the middle of SeedCombatPosition's
+// argument pushes. Our CL parks `this` in ESI, keeps EBX for something
+// else and spills the counter to memory (`inc dword ptr [ebp-x]`
+// against retail's `inc ebx`). Tried and measured: one sunk shared
+// `field_3c = 8` tail written as an enclosing `if` (76.5), the same
+// tail written with `goto` (76.8 - it does reproduce retail's three
+// `je`s into one block, and is still worse overall), the acceptance
+// test as one `a < b || (a == b && c)` expression (79.2 against 80.6
+// for retail's two separate `continue` guards, which is what produces
+// the DUPLICATED `cmp ebx,eax` retail carries), and swapping the
+// best_hex/best_value declaration order (80.53, no).
 VA(0x00422060, 0x18E)  // anchor-callee, dc 0x26fa8
 void combatManager::place_shooter(const army* current_army)
 {
-    // @stub
+    if (!current_army->GetSpeed()) {
+        field_3c = 8;
+        return;
+    }
+    if (!gpGame->AI_in_control && !sideIsAI[currentSide]) {
+        field_3c = 8;
+        return;
+    }
+    gpSearchArray->SeedCombatPosition(current_army, currentSide, 127,
+                                      bCreaturePlacement, -1);
+    long best_value = 100;
+    long best_hex = current_army->gridIndex;
+    { for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
+        if (!ValidHex(hex))
+            continue;
+        if (is_outside_placement_boundry(currentSide, hex))
+            continue;
+        const pathCell* cell = gpSearchArray->cellData == 0
+            ? 0 : &gpSearchArray->cellData[hex];
+        if (!cell->visited)
+            continue;
+        long value = 0;
+        for (long dir = 0; dir < 8; dir++) {
+            if (dir >= 6 && !(current_army->creatureId & 1))
+                continue;
+            long adjacent = current_army->get_adjacent_hex(hex, dir);
+            if (!ValidHex(adjacent))
+                continue;
+            army* other = cells[adjacent].get_army();
+            if (other == 0 || other == current_army)
+                value++;
+            else if (other->Is(2) & 1)
+                value = 1000;
+        }
+        if (value > best_value)
+            continue;
+        if (value == best_value && hex != current_army->gridIndex)
+            continue;
+        best_value = value;
+        best_hex = hex;
+    } }
+    if (best_hex == current_army->gridIndex) {
+        field_3c = 8;
+        return;
+    }
+    field_3c = 2;
+    field_44 = best_hex;
 }
 
 // E:\gamedcs\ai.cpp:2272
@@ -816,10 +1045,51 @@ void combatManager::place_shooter(const army* current_army)
 // its only caller is OUTSIDE this span (0x477ee0), and its callees are
 // the choose_shooter_action and choose_melee_action slots - the two
 // arms a per-stack AI turn dispatches to.
+//
+// whichGroup IS DEAD. The body has no frame at all (two pushes, no
+// ebp) and never reads [esp+0xc]; the side it dispatches on comes from
+// currentSide, and the stack from get_current_army(). Transcribed
+// faithfully - retail's own unused parameter.
+//
+// The 2-vs-3 arm is dead too: `action` can only be 1, 2 or 3 and only
+// `== 1` is tested. Retail still computes the flier bit, which is why
+// it is written out - a stack that is neither a shooter nor a ballista
+// dispatches to choose_melee_action either way.
+//
+// Residual (98.5%): ONE instruction, an `and eax, 0xff` retail keeps
+// between `not al` and `and eax, 1` and our CL folds away. It is the
+// zero-extension of a byte-wide intermediate, and no spelling of that
+// intermediate reproduces it - measured, all identical at 98.4697:
+// `2 | ((unsigned char)~flying & 1)`, a two-statement `flying =
+// ~flying;` then `2 | (flying & 1)`, `(flying & 1) ? 2 : 3`, the
+// complement moved inside the cast, an intermediate `unsigned`
+// variable, and routing it through the army::Is inline. Writing the
+// mask twice by hand (`& 0xffu & 1`) is strictly WORSE (87.8) because
+// VC6 then drops the `not` shape entirely, and `% 2` in place of `& 1`
+// is worse again (81.4). Filed with the compiler-generation class.
 VA(0x004221f0, 0xD0)  // anchor-callee, dc 0x27138
 void combatManager::DoCompAI(int whichGroup)
 {
-    // @stub
+    field_132c8 = 0;
+    TurnOffHighlighter(1);
+    army* current_army = get_current_army();
+    current_army->side = -1;
+    current_army->slot = -1;
+    long action;
+    if (current_army->can_shoot(0)
+            || current_army->creatureType == CREATURE_BALLISTA)
+        action = 1;
+    else
+        action = (current_army->Is(1) & 1) ? 2 : 3;
+    field_3c = 3;
+    if (action == 1) {
+        if (bCreaturePlacement)
+            place_shooter(current_army);
+        else
+            choose_shooter_action(current_army, 0, currentSide);
+    } else {
+        choose_melee_action(current_army, 0, 0, currentSide);
+    }
 }
 
 // E:\gamedcs\ai.cpp:2313
@@ -827,13 +1097,72 @@ void combatManager::DoCompAI(int whichGroup)
 // (0x4456d0, the spell-effect side), and it drives
 // searchArray::FindCombatPath and combatManager::move_toward - a
 // forced attack on someone else's chosen target.
+//
+// THIS FUNCTION IS THE PROOF THAT army+0x10/+0x14 ARE THE CHOSEN
+// TARGET, not the stack's own identity: its first two statements copy
+// the TARGET's combatSide (+0xf4) and bitIndex (+0xf8) into them, and
+// it clears both back to -1 the moment it decides to walk instead of
+// strike. army.h still calls them `side` and `slot` on ValidAttack's
+// reading (the target hexcell's armySide/armySlot compare against
+// them) - which is the same fact seen from the other end, since what
+// ValidAttack checks is that the hex still holds the chosen target.
+// The rename belongs to a lane that owns army.h's other consumers.
+//
+// Three outcomes, keyed off the path length: no path at all is order
+// 12, a one-cell path (already adjacent) is order 6 aimed from where
+// the stack stands, and anything longer is order 6 aimed at the first
+// step - unless the target is further away than one turn's movement,
+// in which case the order is dropped and move_toward walks instead.
+//
+// getCellData IS HAND-EXPANDED, and that is the whole match. It is a
+// searchArray method DEFINED IN findpath.cpp, so /Ob2 cannot inline it
+// here - VC6 emitted a real `call ?getCellData@searchArray@@...` where
+// retail has the accessor's two-arm body open-coded (89.8 -> 100.0 on
+// that one substitution, and it took the ESI/EDI colouring of the whole
+// function with it: with the call gone, `this` outranks `current_army`
+// again and lands in ESI exactly as retail has it). The rule is
+// general - lever 8's "call the inline accessor" only works when the
+// accessor is visible in the SAME TU.
 VA(0x004222c0, 0x175)  // anchor-callee, dc 0x27200
 void combatManager::berserk_attack(army* current_army, const army* target)
 {
-    // @stub
+    current_army->side = target->combatSide;
+    current_army->slot = target->bitIndex;
+    long hex = target->gridIndex;
+    if (hex >= 0 && hex < COMBAT_GRID_CELLS
+            && (hex % COMBAT_GRID_ROW_STRIDE == 0
+                || hex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
+            && (target->creatureId & 1))
+        hex = target->get_second_grid_index();
+    gpSearchArray->FindCombatPath(current_army, -1, hex, bCreaturePlacement,
+                                  127, -1);
+    if (gpSearchArray->result.size() == 0) {
+        field_3c = 12;
+        return;
+    }
+    if (gpSearchArray->result.size() == 1) {
+        field_3c = 6;
+        field_40 = current_army->gridIndex;
+        field_44 = target->gridIndex;
+        if (target->combatSide == current_army->combatSide)
+            field_53dc[target->combatSide] = 1;
+        return;
+    }
+    long step = gpSearchArray->result[1]->point.x;
+    const pathCell* cell = gpSearchArray->cellData == 0
+        ? 0 : &gpSearchArray->cellData[target->gridIndex];
+    if (cell->cost > current_army->GetSpeed()) {
+        current_army->side = -1;
+        current_army->slot = -1;
+        move_toward(current_army, step, 0, 0);
+        return;
+    }
+    field_3c = 6;
+    field_40 = step;
+    field_44 = target->gridIndex;
+    if (target->combatSide == current_army->combatSide)
+        field_53dc[target->combatSide] = 1;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai.cpp:2372
 // `target` owns the shield, `attacker` takes the burn. The float

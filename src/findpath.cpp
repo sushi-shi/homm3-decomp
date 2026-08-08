@@ -8,6 +8,23 @@
 #include "findpath.h"
 #include "game.h"
 
+// VC6's <xutility> reference-returning min, spelled file-locally for
+// the same reason ai_combat.cpp and ai_tactical.cpp spell it: retail
+// materialises BOTH operands into stack temps and then selects between
+// their ADDRESSES with two LEAs, which is the signature of a
+// reference-returning template and not of a ternary. CalcTerrainCost
+// 0x4b1818..0x4b1828 is this TU's instance - `mov [ebp+0x10], ecx;
+// mov [ebp+0x20], eax; cmp eax, ecx; lea eax, [ebp+0x20]; jl;
+// lea eax, [ebp+0x10]; mov ecx, [eax]`. The operands are taken BY
+// VALUE, the orientation the whole engine has been byte-proven on
+// (the `const _TYPE&` signature was measured and REFUTED in
+// ai_combat.cpp, six exact functions lost).
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\findpath.cpp:36
@@ -193,7 +210,46 @@ void searchArray::Clear(long fly_level, long start_z, long stop_z)
     }
 }
 
-#if 0  // @carcass
+// THE TERRAIN COST TABLES, all four in findpath's own .rdata/.data
+// run and all four read only from CalcTerrainCost (0x4b1740), which
+// is why they are claimed here. Every read is a scaled index off the
+// symbol with a ZERO addend, so each table pairs cleanly.
+//
+// gTerrainCost is thirteen four-wide rows because the same table
+// serves two index domains: rows 0..8 are the nine TTerrainType
+// grounds (row 4 = Swamp is the expensive one, 175/150/125/100 by
+// Pathfinding mastery; row 1 = Sand and row 3 = Snow are 150/125,
+// row 5 = Rough is 125), row 9 is an unused zero row, and rows 10..12
+// are the three ROAD surfaces at a flat 75 / 65 / 50 percent. The
+// road rows are reached through gRoadCostRow, which maps a
+// NewmapCell::RoadSet id straight onto the row - so the table is one
+// array with a road appendix, not two.
+DATA(0x0063e510) const long gTerrainCost[13][4] = {
+    { 100, 100, 100, 100 },
+    { 150, 125, 100, 100 },
+    { 100, 100, 100, 100 },
+    { 150, 125, 100, 100 },
+    { 175, 150, 125, 100 },
+    { 125, 100, 100, 100 },
+    { 100, 100, 100, 100 },
+    { 100, 100, 100, 100 },
+    { 100, 100, 100, 100 },
+    {   0,   0,   0,   0 },
+    {  75,  75,  75,  75 },
+    {  65,  65,  65,  65 },
+    {  50,  50,  50,  50 }
+};
+DATA(0x0063e5e0) const long gRoadCostRow[4] = { 0, 10, 11, 12 };
+// 0x3fb504f3 exactly - the float nearest sqrt(2), and the multiplier
+// every diagonal step pays. Written as a named `const float` because
+// it sits in the middle of this TU's own .rdata run rather than in the
+// compiler's float pool.
+DATA(0x0063e5f0) const float gDiagonalCost = 1.4142135f;
+// The .data twin, indexed by TSkillMastery instead of by terrain: what
+// a tile costs a hero who is FLYING or WATER-WALKING over it. Expert
+// costs the same 100 as flat ground; the lower masteries pay a
+// surcharge. Name is a bootstrap invention - no roster reaches it.
+DATA(0x006778ac) long gMasteryTerrainCost[4] = { 140, 140, 120, 100 };
 
 // E:\gamedcs\findpath.cpp:131
 // NINE parameters in retail, not the Dreamcast port's eight (`ret
@@ -213,11 +269,58 @@ void searchArray::Clear(long fly_level, long start_z, long stop_z)
 // simply forwards its own trailing parameter. The name is left as an
 // ordinal - no roster, string or DC field reaches it - but the shape
 // (a per-hero army predicate that erases one specific terrain's
-// penalty) is what the body does.
+// penalty) is what the body does. Creature 0x8e is the one whose
+// presence erases terrain 1's (Sand's) penalty.
+//
+// `end_road` is spelled `long` rather than the DC roster's TRoadType:
+// that enum has no definition anywhere in the tree yet and minting one
+// is a new type definition, which this header closure has already been
+// measured to punish (see mapcell.h). `native_terrain` is `long` for a
+// different reason: it is compared against NewmapCell::GroundSet, and
+// GroundSet cannot be typed TTerrainType because that enum is declared
+// in armygrp.h, which INCLUDES mapcell.h.
 VA(0x004b1740, 0x13E)  // anchor-callee, dc 0x9f034
-int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left, TSkillMastery iPathfinding, TRoadType end_road, TSkillMastery flying, TSkillMastery water_walking, TTerrainType native_terrain, unsigned char param_9)
+int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left,
+                    long iPathfinding, long end_road, long flying,
+                    long water_walking, long native_terrain,
+                    unsigned char param_9)
 {
-    // @stub
+    long terrain = cell->GroundSet;
+    long road = cell->RoadSet;
+    if (param_9 && terrain == 1)
+        terrain = 0;
+    TAdventureObjectType special = cell->get_special_terrain();
+    long cost;
+    if (road != 0 && end_road != 0)
+        cost = gTerrainCost[gRoadCostRow[road]][iPathfinding];
+    else if (terrain == native_terrain && special != CURSED_GROUND)
+        cost = 100;
+    else
+        cost = gTerrainCost[terrain][iPathfinding];
+    // A third off every sea step. 0xe1 is one of the ten object ids
+    // get_special_terrain (0x4fce20) can answer with and the only one
+    // this body reacts to on water; mapcell.h carries the whole
+    // ten-value answer set now, with the provenance of the eight SoD
+    // spellings spelled out there.
+    if (terrain == eTerrainWater
+            && special == FAVORABLE_WINDS)
+        cost = cost * 2 / 3;
+    if (water_walking >= 0 && terrain == eTerrainWater)
+        cost = gMasteryTerrainCost[water_walking];
+    if (flying >= 0) {
+        if ((cell->flags_00_11 & 0x40) && terrain != eTerrainWater)
+            cost = _cpp_min(cost, gMasteryTerrainCost[flying]);
+        else
+            cost = gMasteryTerrainCost[flying];
+    }
+    if (dir & 1) {
+        long full = gTerrainCost[terrain][iPathfinding];
+        if (points_left < full
+                || static_cast<float>(points_left)
+                        >= static_cast<float>(full) * gDiagonalCost)
+            cost = static_cast<long>(static_cast<float>(cost) * gDiagonalCost);
+    }
+    return cost;
 }
 
 // E:\gamedcs\findpath.cpp:223
@@ -229,9 +332,13 @@ int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left, TSkillMast
 // a "cheapest possible cost from here" estimator does: pretend the
 // destination road is this cell's and that the hero is native here.
 VA(0x004b1880, 0x33)  // anchor-callee, dc 0x9f154
-int MinimumTerrainCost(const NewmapCell* cell, int points_left, TSkillMastery iPathfinding, TSkillMastery flying, TSkillMastery water_walking, unsigned char param_6)
+int MinimumTerrainCost(const NewmapCell* cell, int points_left,
+                       long iPathfinding, long flying, long water_walking,
+                       unsigned char param_6)
 {
-    // @stub
+    return CalcTerrainCost(cell, 0, points_left, iPathfinding, cell->RoadSet,
+                           flying, water_walking,
+                           cell->GroundSet, param_6);
 }
 
 // E:\gamedcs\findpath.cpp:233
@@ -243,11 +350,69 @@ int MinimumTerrainCost(const NewmapCell* cell, int points_left, TSkillMastery iP
 // CalcTerrainCost with the artifact-derived flying/water-walking
 // levels, armyGroup::GetNativeTerrain() for native_terrain and
 // get_creature_total(0x8e) > 0 for the trailing flag.
+//
+// WRITTEN 2026-08-08. Note which cell goes where: the cost is charged
+// against the cell you LEAVE and the road bonus against the cell you
+// ENTER, which is what CalcTerrainCost's `end_road` parameter name has
+// been saying all along. `skillLevel[]`'s index is the literal 0 in the
+// retail bytes (`movsx ecx, byte [hero+0xc9]`), i.e. secondary skill 0
+// - Pathfinding heads the standard order, so the band index needs no
+// new name. hero+0x112 was still a pad when this was decoded; the
+// flightLevel slice that unblocked it is in include/hero.h with the
+// evidence.
+//
+// Artifact ids 0x48 and 0x5a - by role Angel Wings and the
+// water-walking boots - are spelled as LITERALS rather than added to
+// armygrp.h's EArtifactId: that header rides in initialize.cpp's
+// include closure, whose member-population sensitivity is measured and
+// live (see mapcell.h), and two enumerators are not worth a
+// re-measurement of the whole closure for a comment's worth of
+// readability.
+//
+// Residual (88.0%): the register-homing family. Every structural
+// element matches - both cell computations, the three bitfield stores
+// into an uninitialised type_point (retail's `xor`/`and 0x3ff`/`xor
+// word` read-modify-write triple), the two artifact overrides, the
+// chained `water_walking = flying = -1` and the nine-argument tail
+// call. What differs is rematerialisation: retail RELOADS the gpGame
+// global three times (0x4b18c6, 0x4b18fa, 0x4b1920) and re-reads
+// worldMap.Size through each fresh copy, because the first copy's
+// register is needed for the z extraction; our CL has one register
+// more in hand at that point and caches gpGame plus cellData in a
+// stack slot instead. Tried and rejected, both no change at all
+// (88.0238): hoisting each cell index into its own named local, and
+// moving the `to` declaration above the first cell computation. The
+// underlying cause is that our CalcTerrainCost call site does not
+// spend the register retail's does; no local spelling reaches it.
 VA(0x004b18c0, 0x1A2)  // anchor-callee, dc 0x9f184
 int GetTerrainCost(hero* current_hero, type_point start, int direction, int move_left)
 {
-    // @stub
+    NewmapCell* from = &gpGame->worldMap.cellData[
+        (start.z * gpGame->worldMap.Size + start.y) * gpGame->worldMap.Size
+        + start.x];
+    type_point to;
+    to.x = start.x + gStepDeltaX[4 * direction];
+    to.y = start.y + gStepDeltaY[4 * direction];
+    to.z = start.z;
+    NewmapCell* dest = &gpGame->worldMap.cellData[
+        (to.z * gpGame->worldMap.Size + to.y) * gpGame->worldMap.Size + to.x];
+    long flying = current_hero->flightLevel;
+    long water_walking = current_hero->waterWalkLevel;
+    if (current_hero->IsWieldingArtifact(0x48))
+        flying = 3;
+    if (current_hero->IsWieldingArtifact(0x5a))
+        water_walking = 3;
+    if (current_hero->flags & 0x40000)
+        water_walking = flying = -1;
+    long mastery = current_hero->skillLevel[0];
+    return CalcTerrainCost(from, direction, move_left, mastery,
+                           dest->RoadSet, flying, water_walking,
+                           current_hero->army.GetNativeTerrain(),
+                           current_hero->army.get_creature_total(
+                               CREATURE_NOMAD) > 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\findpath.cpp:271
 // `ret 0x20` = eight stack arguments over the thiscall `this`, the DC

@@ -214,7 +214,18 @@ public:
     // no DC symbol covers the word; the extent and the read are
     // byte-proven.
     unsigned int flags;                 // +0x105
-    char pad_109[0xd];
+    char pad_109[0x9];
+    // +0x112, the FLIGHT level - the twin of waterWalkLevel below and
+    // the other half of the movement-override pair hero::IsMobile
+    // (0x4e5f30) loads together. Sliced 2026-08-08 out of the old
+    // pad_109 by findpath's GetTerrainCost (0x4b18c0), which reads
+    // +0x112 and +0x116 back to back as the two mastery levels it
+    // forwards to CalcTerrainCost's `flying` and `water_walking`
+    // slots, raises EITHER to eMasteryExpert when the matching
+    // artifact is worn, and drives BOTH to -1 while the boat bit
+    // (flags & 0x40000) is set. Name from the role; the sibling's
+    // comment already called this slot an ordinal placeholder.
+    int flightLevel;                    // +0x112
     // +0x116, the water-walking level. Byte-proven by
     // hero::WalkOnWater (0x4e5dd0), whose entire body is
     // `mov [ecx+0x116], arg`, and by hero::IsMobile (0x4e5f30), which
