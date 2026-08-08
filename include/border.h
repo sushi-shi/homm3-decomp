@@ -42,6 +42,12 @@ public:
     Bitmap816* image;
 
     virtual ~bitmapBorder();
+    virtual void Draw();          // slot 4, retail 0x450450
+    virtual int GetRealHeight();  // slot 5, retail 0x4504b0
+    virtual int GetRealWidth();   // slot 6, retail 0x4504a0
+    // NOT an override: two arguments where widget's slot 3 has none
+    // (see the body in border.cpp), so this HIDES the pure virtual.
+    void zBufferDraw(unsigned short* zBuffer, int id);
     void SetImage(const char* bitmap_name);
     void SetPlayerPaletteColors(int whichPlayer);
 };
@@ -55,6 +61,7 @@ public:
     Bitmap16Bit* image;
 
     virtual ~bitmapBorder16();
+    virtual void Draw();  // slot 4, retail 0x4507b0
     void Draw2();
 };
 

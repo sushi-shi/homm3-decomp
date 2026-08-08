@@ -182,14 +182,9 @@ rva	size	unit	current_label	provenance
 0x50240	130	border	coloredBorderFrame_vslot02	working-label
 0x502d0	140	border	bitmapBorder	working-label
 0x50360	33	border	??_GbitmapBorder@@UAEPAXI@Z	src-VA+base
-0x503f0	85	border	bitmapBorder_vslot03	working-label
-0x50450	68	border	bitmapBorder_vslot04	working-label
-0x504a0	14	border	bitmapBorder_vslot06	working-label
-0x504b0	14	border	bitmapBorder_vslot05	working-label
 0x50550	306	border	bitmapBorder_vslot02	working-label
 0x50690	140	border	bitmapBorder16	working-label
 0x50720	33	border	??_GbitmapBorder16@@UAEPAXI@Z	src-VA+base
-0x507b0	85	border	game_507b0	working-label
 0x56a10	16	button	?_vslot12@button@@UAEXH@Z	src-VA+base
 0x56a20	33	button	??_GtextButton@@UAEPAXI@Z	src-VA+base
 0x56d80	33	button	??_Gtype_func_button@@UAEPAXI@Z	src-VA+base
@@ -347,8 +342,6 @@ rva	size	unit	current_label	provenance
 0xb0dc2	21	exec	game_b0dc2	working-label
 0xb0dd7	78	exec	game_b0dd7	working-label
 0xb0e25	18	exec	game_b0e25	working-label
-0xb1460	159	findpath	game_b2da0_sub00_b1460	working-label
-0xb1500	47	findpath	game_bcda0_sub04_b1500	working-label
 0xb1530	527	findpath	game_16b440_sub00_b1530	working-label
 0xb1740	318	findpath	game_b1880_sub00_b1740	working-label
 0xb1880	51	findpath	game_805e0_sub13_b1880	working-label
@@ -359,7 +352,6 @@ rva	size	unit	current_label	provenance
 0xb3290	367	findpath	game_b3400_sub00_b3290	working-label
 0xb3b90	32	findpath	searchArray_getCellData	working-label
 0xb3bb0	860	findpath	game_b3400_sub02_b3bb0	working-label
-0xb3f10	15	findpath	game_671c0_sub00_b3f10	working-label
 0xb5250	12	font	game_b5250	working-label
 0xb5260	558	font	game_b5490_sub00_b5260	working-label
 0xb8af0	1395	game	game_167a0_sub02_b8af0	working-label
@@ -516,9 +508,6 @@ rva	size	unit	current_label	provenance
 0xe4ec0	214	hero	hero_GetGroundModifier	working-label
 0xe5de0	45	hero	hero_HeroFn_004E5DE0	src-VA
 0xea810	756	iconwdgt	iconWidget_vslot02	working-label
-0xeab10	5	iconwdgt	border_vslot13	working-label
-0xeab20	7	iconwdgt	button_vslot06	working-label
-0xeab30	7	iconwdgt	button_vslot05	working-label
 0xeab40	1200	iconwdgt	iconWidget_vslot04	working-label
 0xec590	174	inputmgr	inputManager_result	working-label
 0xec640	173	inputmgr	inputManager_result_ec640	working-label
@@ -587,9 +576,7 @@ rva	size	unit	current_label	provenance
 0x10b750	89	misc	game_rmt_src_bin_10b750	working-label
 0x10b7b0	1623	misc	game_software_new_world_compu_10b7b0	working-label
 0x10be10	921	misc	game_software_new_world_compu_10be10	working-label
-0x10c1c0	6	misc	game_ed650_sub23_10c1c0	working-label
 0x10c5a0	73	misc	game_cb206_sub01_10c5a0	working-label
-0x10c5f0	14	misc	game_639f0_sub02_10c5f0	working-label
 0x10c600	221	misc	game_6a20_sub01_10c600	working-label
 0x10cbc0	44	mousemgr	??_GmouseManager@@UAEPAXI@Z	src-VA+base
 0x10cd80	10	mousemgr	calls_LeaveCriticalSection_10cd80	working-label
@@ -773,13 +760,9 @@ rva	size	unit	current_label	provenance
 0x1be600	810	town	game_1c0670_sub00_1be600	working-label
 0x1be930	816	town	game_1bede0_sub00_1be930	working-label
 0x1bec60	371	town	game_aafd0_sub02_1bec60	working-label
-0x1bf6d0	151	town	game_1c5b40_sub00_1bf6d0	working-label
-0x1bf770	158	town	game_1c5b40_sub01_1bf770	working-label
 0x1bf810	226	town	game_1c5b40_sub02_1bf810	working-label
 0x1bf900	600	town	game_1bfb60_sub00_1bf900	working-label
 0x1bfb60	614	town	game_28740_sub04_1bfb60	working-label
-0x1bfdd0	116	town	game_c8780_sub02_1bfdd0	working-label
-0x1bfe50	85	town	game_b87a0_sub00_1bfe50	working-label
 0x1bfeb0	873	town	game_cda10_sub00_1bfeb0	working-label
 0x1c0220	474	town	game_1bfeb0_sub00_1c0220	working-label
 0x1c0400	623	town	game_1bfeb0_sub01_1c0400	working-label
@@ -787,10 +770,6 @@ rva	size	unit	current_label	provenance
 0x1c08c0	974	town	game_1c0670_sub01_1c08c0	working-label
 0x1c0c90	137	town	game_1c08c0_sub00_1c0c90	working-label
 0x1c12e0	201	town	game_31800_sub01_1c12e0	working-label
-0x1c13b0	131	town	game_ca040_sub01_1c13b0	working-label
-0x1c1440	12	town	game_643b0_sub00_1c1440	working-label
-0x1c1450	12	town	game_3010_sub02_1c1450	working-label
-0x1c1460	56	town	town_get_army	working-label
 0x1f2810	69	victorylossconditions	VictoryConditionStruct_CheckForTimeSurvival	working-label
 0x1f2e10	47	victorylossconditions	LossConditionStruct_HeroKilled	working-label
 0x1fe3b0	92	widget	??_Gwidget@@UAEPAXI@Z	src-VA+base

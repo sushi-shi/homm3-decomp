@@ -61,6 +61,24 @@
 // functions.csv`); this tree models no such header anywhere, so EVERY
 // game TU's include closure is short of retail's by it. Model terrain.h
 // and this row comes back for the right reason.
+// DONE, 2026-08-08. include/terrain.h now models the ten file-scope
+// `std::bitset<10>(1) << K` statics; see that header for the byte proof
+// of every part of the model, including which mask is which K. With it
+// first in this list and the honest list otherwise unchanged,
+// initialize_game_data is 100.0000 again - no lever header. Two
+// independent confirmations came out of the same compile:
+//   * the ten funclets our CL emits (_$E15.._$E42) are byte-identical
+//     to retail 0x4ebd10..0x4ec0de, sizes 89/96/97/95*7 and all;
+//   * so is the eleventh, _$E54 - the ctype<wchar_t>::id static-init
+//     guard that <bitset>'s Dinkumware closure (BITSET -> ISTREAM ->
+//     ... -> LOCALE) drags in - against retail 0x4ebcf0, right down to
+//     the 1-byte `ret` destructor it hands atexit.
+// POSITION IS LOAD-BEARING and is the one free parameter here: first =
+// 100.0000, after "town.h" or last = 97.0370. First is what is written.
+// NOT CLOSED: the probe sweep still moves this row (see the dated block
+// in config/match_baseline.tsv), so the TU's type population is still
+// short of retail's by something else as well.
+#include "terrain.h"
 #include "town.h"
 #include <va.h>
 #include <string.h>
