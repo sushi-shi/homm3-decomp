@@ -12,33 +12,6 @@
 // plain declaration downgrades mmsystem.h's dllimport for this TU.
 #include "winmm_thunks.h"
 
-// stdio surface declared FILE-LOCALLY rather than via <stdio.h>: the
-// include-set sensitivity class (initialize_game_data precedent) makes
-// the count of user-defined type DEFINITIONS visible in a TU a real
-// codegen input, and misc.obj already carries five exact bodies. A bare
-// `struct _iobuf;` FORWARD declaration is in the proven-inert set, so
-// this buys the four CRT calls FileSize needs without adding a single
-// type definition to the closure. _CRTIMP is empty under /ML, so these
-// match the real stdio.h declarations.
-extern "C" {
-struct _iobuf;
-typedef struct _iobuf FILE;
-FILE* __cdecl fopen(const char* filename, const char* mode);
-int __cdecl fseek(FILE* stream, long offset, int origin);
-long __cdecl ftell(FILE* stream);
-int __cdecl fclose(FILE* stream);
-void* __cdecl memset(void* dest, int fill, unsigned int count);
-}
-#define SEEK_SET 0
-#define SEEK_END 2
-
-// The dialog FileSize raises when the open fails. Free /Gr row at
-// retail 0x4f3a60, inside kb.obj's carve bracket and UNCLAIMED, so the
-// name is a house ordinal placeholder (the town.h Unnamed526d20
-// precedent). Body: sprintf's a text-table format against the incoming
-// filename into a 500-byte frame buffer, then NormalDialog.
-void Unnamed4f3a60(char* filename);
-
 // Unimplemented carcass stubs stay lexically present (labels and the
 // va-claims gate scan text) but outside compilation until each body
 // is reconstructed.
@@ -131,361 +104,28 @@ void SetDefaultCombatOptions()
 // ReadPrefsFromRegistry - 1623 B of real registry work against DC's
 // 16-byte stub, which is exactly what a Dreamcast port would leave
 // hollow.
-
-#endif  // @carcass
-
-// The preferences block. Extent is byte-proven by ReadPrefs' own
-// `mov ecx,0x35 / xor eax,eax / rep stosd` at 0x698758: 53 dwords =
-// 212 bytes, so 0x698758..0x69882b inclusive is ONE object, and every
-// interior address the TU touches lands inside it - which is what makes
-// them MEMBERS and not neighbours.
-//
-// The FIELD NAMES below are not guesses: WritePrefsToRegistry hands
-// each one to RegSetValueExA next to the registry value name it is
-// stored under, so the name/offset pairing is read straight off the
-// image. The slicing closes EXACTLY - the last field ends at +0xd4 =
-// 212 - which is the arithmetic check that no field was invented:
-//   ...+0x70 the dword run, +0x74..+0x8f untouched by this TU,
-//   +0x90 name[4] ("Unique System ID", written REG_SZ with cbData 4),
-//   +0x94 combatSpeed, +0x98/+0xa5/+0xb2 the three 13-byte RMT keys,
-//   +0xbf networkDefaultName[21] ("Network Default Name", cbData 0x15).
-// The earlier reading of name as char[8] was wrong: 'Combat Speed'
-// sits at +0x94, inside that span, and pins name at four bytes - which
-// is also what makes the 13-byte RMT buffers exactly big enough for
-// "RMT" + a 3-char name + "RC.BIN" + NUL.
-// +0x74..+0x8f keeps a pad: nothing in this TU proves a field there.
-struct SUnnamed698758 {
-    int computerWalkSpeed;        // +0x00  "Computer Walk Speed"
-    int walkSpeed;                // +0x04  "Walk Speed"
-    int musicVolume;              // +0x08  "Music Volume"
-    int soundVolume;              // +0x0c  "Sound Volume"
-    int lastMusicVolume;          // +0x10  "Last Music Volume"
-    int lastSoundVolume;          // +0x14  "Last Sound Volume"
-    int autosave;                 // +0x18  "Autosave"
-    int showRoute;                // +0x1c  "Show Route"
-    int moveReminder;             // +0x20  "Move Reminder"
-    int quickCombat;              // +0x24  "Quick Combat"
-    int videoSubtitles;           // +0x28  "Video Subtitles"
-    int townOutlines;             // +0x2c  "Town Outlines"
-    int animateSpellBook;         // +0x30  "Animate SpellBook"
-    int windowScrollSpeed;        // +0x34  "Window Scroll Speed"
-    int blackoutComputer;         // +0x38  "Blackout Computer"
-    int combatAutoCreatures;      // +0x3c  "Combat Auto Creatures"
-    int combatAutoSpells;         // +0x40  "Combat Auto Spells"
-    int combatCatapult;           // +0x44  "Combat Catapult"
-    int combatBallista;           // +0x48  "Combat Ballista"
-    int combatFirstAidTent;       // +0x4c  "Combat First Aid Tent"
-    int binkVideo;                // +0x50  "Bink Video"
-    int mainGameShowMenu;         // +0x54  "Main Game Show Menu"
-    int mainGameX;                // +0x58  "Main Game X"
-    int mainGameY;                // +0x5c  "Main Game Y"
-    int mainGameFullScreen;       // +0x60  "Main Game Full Screen"
-    int showCombatGrid;           // +0x64  "Show Combat Grid"
-    int showCombatMouseHex;       // +0x68  "Show Combat Mouse Hex"
-    int combatShadeLevel;         // +0x6c  "Combat Shade Level"
-    int combatArmyInfoLevel;      // +0x70  "Combat Army Info Level"
-    unsigned char pad74[0x1c];    // +0x74  untouched by misc.obj
-    char name[4];                 // +0x90  "Unique System ID"
-    int combatSpeed;              // +0x94  "Combat Speed"
-    char rcFile[13];              // +0x98  "RMT%sRC.BIN" destination
-    char rdFile[13];              // +0xa5  "RMT%sRD.BIN" destination
-    char scFile[13];              // +0xb2  "RMT%sSC.BIN" destination
-    char networkDefaultName[21];  // +0xbf  "Network Default Name"
-};
-
-DATA(0x00698758)
-SUnnamed698758 gUnnamed698758;
-
-// Four dwords at 0x699524..0x699530, OUTSIDE the prefs block (it ends
-// at 0x69882b), so they are separate globals and not members. Written
-// under the four diagnostic value names shown; roles otherwise
-// unattested, so the names stay house ordinal placeholders.
-DATA(0x00699524)
-int gUnnamed699524;   // "First Time"
-DATA(0x00699528)
-int gUnnamed699528;   // "Test Decomp"
-DATA(0x0069952c)
-int gUnnamed69952c;   // "Test Read"
-DATA(0x00699530)
-int gUnnamed699530;   // "Test Blit"
-
-// The registry key and value-name table. Retail LOADS each of these
-// (`mov ecx, dword ptr [0x63ff80]`) rather than pushing a literal
-// address, so they are pointer OBJECTS in .rdata, not folded literals -
-// the load is what the `const char* const` spelling has to reproduce.
-// They occupy 0x63ff74..0x64000c in the order below; the three slots
-// this function does not use (0x640004 "AppPath", 0x640008 "CDDrive",
-// 0x640010 "Show Intro") belong to ReadPrefsFromRegistry and land with
-// it.
-
-DATA(0x0063ff74)
-static const char* const szPrefRegKey =
-    DATA_COMPGEN(0x0067fe28, prefsNameRegKey, "SOFTWARE\\New World Computing\\Heroes of Might and Magic\xae" " III\\1.0");
-DATA(0x0063ff78)
-static const char* const szPrefWalkSpeed =
-    DATA_COMPGEN(0x0067fe1c, prefsNameWalkSpeed, "Walk Speed");
-DATA(0x0063ff7c)
-static const char* const szPrefComputerWalkSpeed =
-    DATA_COMPGEN(0x0067fe08, prefsNameComputerWalkSpeed, "Computer Walk Speed");
-DATA(0x0063ff80)
-static const char* const szPrefMusicVolume =
-    DATA_COMPGEN(0x0067fdf8, prefsNameMusicVolume, "Music Volume");
-DATA(0x0063ff84)
-static const char* const szPrefSoundVolume =
-    DATA_COMPGEN(0x0067fde8, prefsNameSoundVolume, "Sound Volume");
-DATA(0x0063ff88)
-static const char* const szPrefAutosave =
-    DATA_COMPGEN(0x0067fddc, prefsNameAutosave, "Autosave");
-DATA(0x0063ff8c)
-static const char* const szPrefShowRoute =
-    DATA_COMPGEN(0x0067fdd0, prefsNameShowRoute, "Show Route");
-DATA(0x0063ff90)
-static const char* const szPrefMoveReminder =
-    DATA_COMPGEN(0x0067fdc0, prefsNameMoveReminder, "Move Reminder");
-DATA(0x0063ff94)
-static const char* const szPrefQuickCombat =
-    DATA_COMPGEN(0x0067fdb0, prefsNameQuickCombat, "Quick Combat");
-DATA(0x0063ff98)
-static const char* const szPrefVideoSubtitles =
-    DATA_COMPGEN(0x0067fda0, prefsNameVideoSubtitles, "Video Subtitles");
-DATA(0x0063ff9c)
-static const char* const szPrefTownOutlines =
-    DATA_COMPGEN(0x0067fd90, prefsNameTownOutlines, "Town Outlines");
-DATA(0x0063ffa0)
-static const char* const szPrefAnimateSpellBook =
-    DATA_COMPGEN(0x0067fd7c, prefsNameAnimateSpellBook, "Animate SpellBook");
-DATA(0x0063ffa4)
-static const char* const szPrefWindowScrollSpeed =
-    DATA_COMPGEN(0x0067fd68, prefsNameWindowScrollSpeed, "Window Scroll Speed");
-DATA(0x0063ffa8)
-static const char* const szPrefBlackoutComputer =
-    DATA_COMPGEN(0x0067fd54, prefsNameBlackoutComputer, "Blackout Computer");
-DATA(0x0063ffac)
-static const char* const szPrefLastMusicVolume =
-    DATA_COMPGEN(0x0067fd40, prefsNameLastMusicVolume, "Last Music Volume");
-DATA(0x0063ffb0)
-static const char* const szPrefLastSoundVolume =
-    DATA_COMPGEN(0x0067fd2c, prefsNameLastSoundVolume, "Last Sound Volume");
-DATA(0x0063ffb4)
-static const char* const szPrefBinkVideo =
-    DATA_COMPGEN(0x0067fd20, prefsNameBinkVideo, "Bink Video");
-DATA(0x0063ffb8)
-static const char* const szPrefFirstTime =
-    DATA_COMPGEN(0x0067fd14, prefsNameFirstTime, "First Time");
-DATA(0x0063ffbc)
-static const char* const szPrefTestDecomp =
-    DATA_COMPGEN(0x0067fd08, prefsNameTestDecomp, "Test Decomp");
-DATA(0x0063ffc0)
-static const char* const szPrefTestRead =
-    DATA_COMPGEN(0x0067fcfc, prefsNameTestRead, "Test Read");
-DATA(0x0063ffc4)
-static const char* const szPrefTestBlit =
-    DATA_COMPGEN(0x0067fcf0, prefsNameTestBlit, "Test Blit");
-DATA(0x0063ffc8)
-static const char* const szPrefShowCombatGrid =
-    DATA_COMPGEN(0x0067fcdc, prefsNameShowCombatGrid, "Show Combat Grid");
-DATA(0x0063ffcc)
-static const char* const szPrefShowCombatMouseHex =
-    DATA_COMPGEN(0x0067fcc4, prefsNameShowCombatMouseHex, "Show Combat Mouse Hex");
-DATA(0x0063ffd0)
-static const char* const szPrefCombatShadeLevel =
-    DATA_COMPGEN(0x0067fcb0, prefsNameCombatShadeLevel, "Combat Shade Level");
-DATA(0x0063ffd4)
-static const char* const szPrefCombatArmyInfoLevel =
-    DATA_COMPGEN(0x0067fc98, prefsNameCombatArmyInfoLevel, "Combat Army Info Level");
-DATA(0x0063ffd8)
-static const char* const szPrefCombatSpeed =
-    DATA_COMPGEN(0x0067fc88, prefsNameCombatSpeed, "Combat Speed");
-DATA(0x0063ffdc)
-static const char* const szPrefCombatAutoCreatures =
-    DATA_COMPGEN(0x0067fc70, prefsNameCombatAutoCreatures, "Combat Auto Creatures");
-DATA(0x0063ffe0)
-static const char* const szPrefCombatAutoSpells =
-    DATA_COMPGEN(0x0067fc5c, prefsNameCombatAutoSpells, "Combat Auto Spells");
-DATA(0x0063ffe4)
-static const char* const szPrefCombatCatapult =
-    DATA_COMPGEN(0x0067fc4c, prefsNameCombatCatapult, "Combat Catapult");
-DATA(0x0063ffe8)
-static const char* const szPrefCombatBallista =
-    DATA_COMPGEN(0x0067fc3c, prefsNameCombatBallista, "Combat Ballista");
-DATA(0x0063ffec)
-static const char* const szPrefCombatFirstAidTent =
-    DATA_COMPGEN(0x0067fc24, prefsNameCombatFirstAidTent, "Combat First Aid Tent");
-DATA(0x0063fff0)
-static const char* const szPrefNetworkDefaultName =
-    DATA_COMPGEN(0x0067fc0c, prefsNameNetworkDefaultName, "Network Default Name");
-DATA(0x0063fff4)
-static const char* const szPrefMainGameShowMenu =
-    DATA_COMPGEN(0x0067fbf8, prefsNameMainGameShowMenu, "Main Game Show Menu");
-DATA(0x0063fff8)
-static const char* const szPrefMainGameX =
-    DATA_COMPGEN(0x0067fbec, prefsNameMainGameX, "Main Game X");
-DATA(0x0063fffc)
-static const char* const szPrefMainGameY =
-    DATA_COMPGEN(0x0067fbe0, prefsNameMainGameY, "Main Game Y");
-DATA(0x00640000)
-static const char* const szPrefMainGameFullScreen =
-    DATA_COMPGEN(0x0067fbc8, prefsNameMainGameFullScreen, "Main Game Full Screen");
-DATA(0x0064000c)
-static const char* const szPrefUniqueSystemID =
-    DATA_COMPGEN(0x0067fba4, prefsNameUniqueSystemID, "Unique System ID");
-
-extern "C" int __cdecl sprintf(char* buffer, const char* format, ...);
-
-void ReadPrefsFromRegistry();
-
 // E:\gamedcs\misc.cpp:243
 VA(0x0050b750, 0x59)  // anchor-callgraph, dc 0xfdbd0
 void ReadPrefs()
 {
-    memset(&gUnnamed698758, 0, sizeof(gUnnamed698758));
-    ReadPrefsFromRegistry();
-    sprintf(gUnnamed698758.rcFile,
-        DATA_COMPGEN(0x0067fea8, readPrefsRcFileFormat, "RMT%sRC.BIN"),
-        gUnnamed698758.name);
-    sprintf(gUnnamed698758.rdFile,
-        DATA_COMPGEN(0x0067fe9c, readPrefsRdFileFormat, "RMT%sRD.BIN"),
-        gUnnamed698758.name);
-    sprintf(gUnnamed698758.scFile,
-        DATA_COMPGEN(0x0067fe90, readPrefsScFileFormat, "RMT%sSC.BIN"),
-        gUnnamed698758.name);
-    // Retail leaves this as a 5-byte tail `jmp` after `pop edi`, which
-    // is the tail-jump-as-statement shape: the writer call is the last
-    // statement of a void function.
-    WritePrefsToRegistry();
+    // @stub
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\misc.cpp:525
-// DECODE NOTES 2026-08-08 (not yet written; the shape below is read
-// off the retail bytes and the writer above supplies every name).
-// Shape:
-//   RegCreateKeyA(HKEY_LOCAL_MACHINE, szPrefRegKey, &hKey)  -- CREATE,
-//     not RegOpenKeyEx as the writer uses; failure skips to the tail.
-//   "Show Intro" (0x640010) is queried into a LOCAL with its own
-//     cbData local; on failure the local is set to 1 and written back
-//     with RegSetValueExA, then stored to the global 0x6993c0.
-//   "Music Volume" is then queried as a PROBE with lpType = &type and
-//     one shared cbData local seeded to 4. If it fails this is a first
-//     run: memset the 212-byte prefs block, call 0x4b4d0 (the defaults
-//     builder, SetGameDefaults' retail row), RegCloseKey, tail-call
-//     WritePrefsToRegistry and RETURN.
-//   Otherwise a BRANCH-FREE run of ~37 RegQueryValueExA calls
-//     (0x1a2..0x5ad, results all discarded, cbData NOT reset between
-//     them - it is seeded once and retail never restores it) reads
-//     every value the writer writes, in its own order, starting with
-//     "Music Volume" a SECOND time.
-//   Tail (0x5ad..0x72e) is the hard part and is NOT uniform: a
-//     _getcwd(buf, 0x104)-shaped call, an inline strcat of the literal
-//     at 0x67fdac, "AppPath" (0x640004) compared with _strcmpi and
-//     rewritten when it differs, "CDDrive" (0x640008) queried into
-//     0x698838, then RegCloseKey, then a screen-extent clamp pair
-//     against 0x2014c0/0x2014d0 minus 0x320/0x258 writing back
-//     gPrefs.mainGameX/mainGameY, a >= 0 clamp on both, and a final
-//     call to 0x50b260.
-//   Two structural warnings for whoever writes it: 0x698a9..0x6b4 is a
-//     rep-movsd/movsb fragment with NO reachable entry, preceded by 17
-//     NOP bytes - retail shipped dead code there; and the writer's
-//     three unused name slots (0x640004 AppPath, 0x640008 CDDrive,
-//     0x640010 Show Intro) belong here and still need their pointer
-//     definitions and DATA claims.
 VA(0x0050b7b0, 0x657)  // anchor-callgraph (called by ReadPrefs), dc 0xfdbc0
 void ReadPrefsFromRegistry()
 {
     // @stub
 }
 
-#endif  // @carcass
-
 // E:\gamedcs\misc.cpp:538
-// The whole body is one guarded run: open the key, write every value
-// under it, close. The failure arm is the `jne` at the top jumping
-// PAST the `pop esi` - esi is only pushed once the open has succeeded,
-// which is what proves the writes are inside the if and not after it.
-// Call ORDER below is retail's emission order verbatim, not the field
-// order; it is the source's statement order and is load-bearing.
 VA(0x0050be10, 0x399)  // anchor-callgraph (WritePrefs tail-jumps here), dc 0xfdc4c
 void WritePrefsToRegistry()
 {
-    HKEY hKey = 0;
-    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, szPrefRegKey, 0, KEY_ALL_ACCESS,
-            &hKey) == ERROR_SUCCESS) {
-        RegSetValueExA(hKey, szPrefMusicVolume, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.musicVolume, 4);
-        RegSetValueExA(hKey, szPrefSoundVolume, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.soundVolume, 4);
-        RegSetValueExA(hKey, szPrefLastMusicVolume, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.lastMusicVolume, 4);
-        RegSetValueExA(hKey, szPrefLastSoundVolume, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.lastSoundVolume, 4);
-        RegSetValueExA(hKey, szPrefWalkSpeed, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.walkSpeed, 4);
-        RegSetValueExA(hKey, szPrefComputerWalkSpeed, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.computerWalkSpeed, 4);
-        RegSetValueExA(hKey, szPrefShowRoute, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.showRoute, 4);
-        RegSetValueExA(hKey, szPrefMoveReminder, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.moveReminder, 4);
-        RegSetValueExA(hKey, szPrefQuickCombat, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.quickCombat, 4);
-        RegSetValueExA(hKey, szPrefVideoSubtitles, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.videoSubtitles, 4);
-        RegSetValueExA(hKey, szPrefTownOutlines, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.townOutlines, 4);
-        RegSetValueExA(hKey, szPrefAnimateSpellBook, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.animateSpellBook, 4);
-        RegSetValueExA(hKey, szPrefWindowScrollSpeed, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.windowScrollSpeed, 4);
-        RegSetValueExA(hKey, szPrefBinkVideo, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.binkVideo, 4);
-        RegSetValueExA(hKey, szPrefBlackoutComputer, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.blackoutComputer, 4);
-        RegSetValueExA(hKey, szPrefFirstTime, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed699524, 4);
-        RegSetValueExA(hKey, szPrefTestDecomp, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed699528, 4);
-        RegSetValueExA(hKey, szPrefTestRead, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed69952c, 4);
-        RegSetValueExA(hKey, szPrefTestBlit, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed699530, 4);
-        RegSetValueExA(hKey, szPrefUniqueSystemID, 0, REG_SZ,
-            (const BYTE*)gUnnamed698758.name, 4);
-        RegSetValueExA(hKey, szPrefNetworkDefaultName, 0, REG_SZ,
-            (const BYTE*)gUnnamed698758.networkDefaultName, 21);
-        RegSetValueExA(hKey, szPrefAutosave, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.autosave, 4);
-        RegSetValueExA(hKey, szPrefShowCombatGrid, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.showCombatGrid, 4);
-        RegSetValueExA(hKey, szPrefShowCombatMouseHex, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.showCombatMouseHex, 4);
-        RegSetValueExA(hKey, szPrefCombatShadeLevel, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.combatShadeLevel, 4);
-        RegSetValueExA(hKey, szPrefCombatArmyInfoLevel, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.combatArmyInfoLevel, 4);
-        RegSetValueExA(hKey, szPrefCombatAutoCreatures, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.combatAutoCreatures, 4);
-        RegSetValueExA(hKey, szPrefCombatAutoSpells, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.combatAutoSpells, 4);
-        RegSetValueExA(hKey, szPrefCombatCatapult, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.combatCatapult, 4);
-        RegSetValueExA(hKey, szPrefCombatBallista, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.combatBallista, 4);
-        RegSetValueExA(hKey, szPrefCombatFirstAidTent, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.combatFirstAidTent, 4);
-        RegSetValueExA(hKey, szPrefCombatSpeed, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.combatSpeed, 4);
-        RegSetValueExA(hKey, szPrefMainGameShowMenu, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.mainGameShowMenu, 4);
-        RegSetValueExA(hKey, szPrefMainGameX, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.mainGameX, 4);
-        RegSetValueExA(hKey, szPrefMainGameY, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.mainGameY, 4);
-        RegSetValueExA(hKey, szPrefMainGameFullScreen, 0, REG_DWORD,
-            (const BYTE*)&gUnnamed698758.mainGameFullScreen, 4);
-        RegCloseKey(hKey);
-    }
+    // @stub
 }
+
+#endif  // @carcass
 
 // E:\gamedcs\misc.cpp:598
 // Located as AppWndProc's WM_MOVE callee (homm2 kbwin calls WritePrefs
@@ -522,28 +162,14 @@ int IsCDDrive(int drive)
     // @stub
 }
 
-#endif  // @carcass
-
 // E:\gamedcs\misc.cpp:764
 // /Gr free function with the filename in ecx: fopen, fseek(0, SEEK_END),
 // ftell - FileSize and nothing else. Only free row in its bracket.
 VA(0x0050c5a0, 0x49)  // body (fopen/fseek/ftell) + arity, dc 0xfe068
 long FileSize(char* filename)
 {
-    // The failure arm FALLS THROUGH: retail raises the dialog and then
-    // seeks the null stream anyway (no return, no else), so this is a
-    // bare `if` and not an early-out. Transcribed faithfully.
-    FILE* stream = fopen(filename, DATA_COMPGEN(0x0067ff20, fileSizeOpenMode, "r+b"));
-    if (!stream)
-        Unnamed4f3a60(filename);
-    fseek(stream, 0, SEEK_END);
-    long size = ftell(stream);
-    fseek(stream, 0, SEEK_SET);
-    fclose(stream);
-    return size;
+    // @stub
 }
-
-#if 0  // @carcass
 
 // E:\gamedcs\misc.cpp:796
 DC_ONLY(0xfe0d0, 0x3C)

@@ -81,10 +81,6 @@ public:
     // can_ever_build and get_buildable_mask all call it on
     // gpGame->players[town->owner] to veto a second Capitol.
     unsigned char HasCapitol();
-    // 0x4bacb0. town::get_legion_bonus calls it on
-    // gpGame->players[town->owner] with artifact id 0x85; the caller's
-    // `test al,al` is what types the return as a byte.
-    unsigned char hasGivenArtifact(int artifact);
 };
 SIZE(playerData, 360);
 

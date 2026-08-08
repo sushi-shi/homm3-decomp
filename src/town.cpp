@@ -442,54 +442,17 @@ long town::get_horde_bonus(long dwelling) const
     return bonus;
 }
 
+#if 0  // @carcass
+
 // E:\gamedcs\town.cpp:1581
 // Widens the town's owner byte at +1 into the 360-byte playerData
 // record (gpGame+0x20ad0) and asks playerData::hasGivenArtifact
 // (0x4bacb0) about artifact 0x85 - the Legion-family growth artifact.
-// The three arms all end in the SAME signed halve, which retail
-// duplicates into each `ret` rather than sharing.
-// Residual (81.7%): control flow AGREES (`--branches`: 4/4 branches,
-// mnemonics and symbolic targets identical) and the whole head - the
-// owner gate, the 45*owner playerData index, the 14*type dwelling
-// lookup, the 116-byte traits stride and the split 64-bit mask test -
-// is byte-exact. Two things are left, and both are register direction:
-// retail accumulates the bonus in EAX while keeping growth in EDI
-// (`mov eax,edi` / `add eax,edi`), where this compile accumulates into
-// EDI and copies out (`add edi,edi` / `add edi,eax; mov eax,edi`); and
-// retail duplicates a FOURTH exit for the neither-bit arm, carrying a
-// dead `xor eax,eax` before its `mov eax,edi` that no spelling here
-// reproduces. Tried and rejected, all four measured:
-//   `return (growth + growth) / 2;` per arm, one expression   73.87
-//   per-arm `bonus = growth + growth;` + explicit else, one
-//     shared `bonus /= 2;` tail                                81.07
-//   per-arm bodies each ending in their own `return bonus / 2;`
-//     (four source returns - VC6 re-merges them to three)      73.87
-//   the spelling below, seeding bonus from growth before the
-//     chain so the Citadel arm can halve in place              81.73
-// The dead `xor eax,eax` is the tell that retail's `bonus` and
-// `growth` did NOT coalesce there and ours do; that is an allocator
-// tie-break, not a statement-order question.
 VA(0x005bf810, 0xE2)  // anchor-callee (playerData::hasGivenArtifact), dc 0x1675d4
 long town::get_legion_bonus(long dwelling)
 {
-    long bonus = 0;
-    if (owner >= 0 && gpGame->players[owner].hasGivenArtifact(0x85)) {
-        long growth = akCreatureTypeTraits[gTownDwellingCreatures[
-            type * (2 * TOWN_DWELLING_COUNT) + dwelling]].growthRate;
-        // built, not available: retail reads the +0x150 qword. The two
-        // bits are bitNumber[9] (Castle) and bitNumber[8] (Citadel),
-        // tested as a 64-bit AND lowered to the low/high pair.
-        bonus = growth;
-        if (built & bitNumber[9])
-            bonus += growth;
-        else if (built & bitNumber[8])
-            bonus = bonus / 2 + growth;
-        bonus /= 2;
-    }
-    return bonus;
+    // @stub
 }
-
-#if 0  // @carcass
 
 // E:\gamedcs\town.cpp:1639
 // RETAIL-ONLY row first: 0x005bf900 (`ret 4`) sits between the two DC
@@ -624,79 +587,11 @@ void initialize_buildings(town* current_town, const TownExtra* town_setup)
 // edx = x, [ebp+8] = y, and the first thing it does is bounds-check
 // edx and [ebp+8] against the two map-extent globals 0x6783c8 /
 // 0x6783cc that game::SetMapSize writes. 137 B against DC's 138.
-#endif  // @carcass
-
-// Map extents, retail .data 0x6783c8 / 0x6783cc - the pair
-// game::SetMapSize writes and every cell index in the engine is built
-// from. findpath.h declares the same two words for its own TU; this
-// file-local pair keeps town.obj off that header (a plain `extern int`
-// is in the include-set-sensitivity inert set, an extra include is
-// not).
-extern int gMapWidth;
-extern int gMapHeight;
-
-// NewmapCell's +0xc flags word, read WHOLE. mapcell.h models those 16
-// bits as three bitfields, because mapcell.cpp's cell_is_trigger and
-// ai_player.cpp both read is_trigger by name - but retail's
-// check_shipyard_square loads the entire field (`mov si, word ptr
-// [cell+0xc]`) and then tests it twice with 32-bit immediates, which
-// is the shape a plain `unsigned short` read produces and a bitfield
-// read cannot (a bitfield emits a masked byte test). Overlaying a
-// union in mapcell.h DOES reproduce it, and was measured: it costs
-// initialize_game_data 100.0 -> 96.09 via the include-set sensitivity
-// class, so it is rejected. Taking the word view locally has no
-// closure cost at all. The offset is the one the bitfields occupy.
-static unsigned short cell_flags_word(const NewmapCell* cell)
-{
-    return reinterpret_cast<const unsigned short*>(cell)[6];
-}
-
-// MERGED FAIL BLOCK, the same shape can_build needed above: every gate
-// is a nested `if` and there is exactly ONE `return 0`, at the end.
-// Retail has 8 branches but only 2 rets - all seven failure paths jump
-// to one shared `xor al,al` epilogue. The flat guard chain (seven
-// separate `return 0` statements) is semantically identical and its
-// BODY assembles byte-for-byte, but VC6 then duplicates the five-
-// instruction epilogue inline at every gate: 8 rets against retail's
-// 2, scoring 17.0.
-// The index is built from the map record's OWN square extent
-// (worldMap.Size, read once into a register and used for both
-// multiplies), not from the two extent globals the guards test.
 VA(0x005c0c90, 0x89)  // anchor-caller + arity (/Gr, 3 args), dc 0x167f68
 unsigned char check_shipyard_square(town* current_town, long x, long y)
 {
-    if (x >= 0) {
-        if (x < gMapWidth) {
-            if (y >= 0) {
-                if (y < gMapHeight) {
-                    int size = gpGame->worldMap.Size;
-                    NewmapCell* cell = &gpGame->worldMap.cellData[
-                        (current_town->mapZ * size + y) * size + x];
-                    // 8 is eTerrainWater (terrain.h's ten-mask
-                    // permutation pins it). Retail materialises the 8
-                    // ONCE in ebx and reuses it for the BOAT compare
-                    // below - two distinct source constants that
-                    // happen to share a value, CSE'd by VC6.
-                    if (cell->terrain == 8) {
-                        unsigned short flags = cell_flags_word(cell);
-                        if (!(flags & 0x100)) {
-                            if (!(flags & 0x1000) || cell->type == BOAT) {
-                                current_town->dockSite =
-                                    static_cast<unsigned char>(x);
-                                current_town->dockSiteY =
-                                    static_cast<unsigned char>(y);
-                                return 1;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-    return 0;
+    // @stub
 }
-
-#if 0  // @carcass
 
 // No retail row for either of these two - inlined into town::initialize
 // (initialize_army) and into its callers (update_full_building_mask).
