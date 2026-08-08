@@ -84,6 +84,20 @@ enum TCreatureType {
     // already byte-proven - and by the creature->artifact switch
     // inlined into recruitUnit::Update, which maps 0x91->3 and
     // 0x92->4. NH3API spellings, Complete numbering.
+    // 0x8f, added 2026-08-08 for hero.obj's HeroFn_004E5DE0 (0x4e5de0)
+    // and the same block inlined into hero::IsInIdentifyRange
+    // (0x4e5e10): both `push 0x8f` into armyGroup::get_creature_total
+    // and, when the count is nonzero, force a mastery field that is
+    // otherwise below 3 up to 3. The id is INTERPOLATED between two ids
+    // this enum already byte-proves, and the gap admits exactly one
+    // ordering: Halfling 0x8a and Catapult 0x91 bracket six slots
+    // (0x8b..0x90), which is exactly the six neutrals HoMM3 places
+    // between them - Peasant, Boar, Mummy, Nomad, Rogue, Troll - so
+    // Rogue lands on 0x8f. The role corroborates it from the other
+    // side: Rogues are the army that reveals enemy hero detail, and the
+    // only consumer of this compare is the identify-range gate. NH3API
+    // spelling.
+    CREATURE_ROGUE = 0x8f,
     CREATURE_CATAPULT = 0x91,
     CREATURE_BALLISTA = 0x92,
     CREATURE_FIRST_AID_TENT = 0x93,

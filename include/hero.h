@@ -39,7 +39,21 @@ public:
     // `movsx edx, byte [gpGame + 1170*id + 0x21642]` before comparing
     // it against the acting-player id. Name provisional.
     signed char owner;              // +0x22
-    char pad_023[0x6e];
+    char pad_023[0x2a];
+    // +0x4d, the hero's remaining movement points. A full DWORD read
+    // SIGNED: hero::GetMobilityFrame (0x4e5330) loads it whole, takes
+    // the <= 0 arm with `jg`, and divides it by 100 with the signed
+    // 0x51eb851f reciprocal - an unsigned field would use the unsigned
+    // magic instead. Name provisional.
+    int movePoints;                 // +0x4d
+    char pad_051[0x4];
+    // +0x55, a SHORT the five specialty factor getters (0x4e42b0,
+    // 0x4e4310, 0x4e4840, 0x4e48b0, 0x4e4920) widen with `movsx eax,
+    // word [this+0x55]` and turn into the specialty scale
+    // `x * 0.05f + 1.0f`. That is HoMM3's per-level specialty growth,
+    // so the field is the hero's level - name role-inferred, PROVISIONAL.
+    short level;                    // +0x55
+    char pad_057[0x3a];
     // Seven army slots: creature type at 0x91+i*4, count at 0xad+i*4
     // (CreatureTypeCount reads [ecx-0x1c] against [ecx] with ecx
     // walking from 0xad) - exactly armyGroup's 56-byte layout, and
@@ -88,11 +102,36 @@ public:
     // decrement it 32 bits wide; the narrowed `mov al,byte [this+0x101]`
     // in GiveSS is just VC6 sinking the load into a byte store.
     int skillCount;                     // +0x101
-    char pad_105[0x28];
+    // +0x105, the hero's flag word. Read as a full DWORD and tested
+    // bitwise: hero::GetMobility() (0x4e4d90) hands bit 18 (0x40000)
+    // to the sea-movement overload, and hero::can_land (0x4e5ce0)
+    // tests the same 0x40000 for "aboard a boat". Name provisional -
+    // no DC symbol covers the word; the extent and the read are
+    // byte-proven.
+    unsigned int flags;                 // +0x105
+    char pad_109[0xd];
+    // +0x116, the water-walking level. Byte-proven by
+    // hero::WalkOnWater (0x4e5dd0), whose entire body is
+    // `mov [ecx+0x116], arg`, and by hero::IsMobile (0x4e5f30), which
+    // loads +0x116 and +0x112 together as the movement-override pair.
+    // Name from the writer; ordinal placeholder for the sibling.
+    int waterWalkLevel;                 // +0x116
+    char pad_11a[0xf];
+    // +0x129, a dword compared against 3 - the secondary-skill
+    // mastery domain. hero::HeroFn_004E5DE0 (0x4e5de0) returns it
+    // unless it is below 3 and the hero's army holds creature 0x8f,
+    // and hero::IsInIdentifyRange (0x4e5e10) opens with the same
+    // block inlined. Name unattested - ORDINAL PLACEHOLDER.
+    int field_129;                      // +0x129
     TArtifactSlot equipped[19];
     char pad_1c5[0xf];
     TArtifactSlot backpack[64];
-    char pad_3d4[0x16];
+    // +0x3d4, a cached backpack count. hero::get_number_in_backpack
+    // (0x4d90c0) returns it with `movsx eax, byte [ecx+0x3d4]` on its
+    // flag arm instead of walking the 64 slots, which is what proves
+    // both the offset and the SIGNED char width. Name provisional.
+    signed char backpackCount;          // +0x3d4
+    char pad_3d5[0x15];
     // TWO per-spell byte tables, stride 1, 70 entries each, byte-proven
     // by hero::AddSpell 0x4d9330 - all 26 bytes of it are
     //     mov dl,1
@@ -138,6 +177,32 @@ public:
     char pad_47a[0x18];
 
     unsigned char HasArtifact(int whichArtifact);
+    // 0x4d9330 - sets both per-spell byte tables for one spell.
+    void AddSpell(int whichSpell);
+    // 0x4d9070 / 0x4d90c0, the two artifact tallies.
+    long get_equipped_artifacts(unsigned char countWarMachines);
+    long get_number_in_backpack(unsigned char countWarMachines);
+    // 0x4e2370 - retypes every matching slot of the hero's own army.
+    void UpgradeCreatures(int sourceCreatureType, int destCreatureType);
+    // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads
+    // the boat bit out of `flags` and forwards to the other.
+    int GetMobility(unsigned char sea_movement);
+    int GetMobility();
+    // 0x4e5960 - the four primary skills, each clamped to 0..99, with
+    // slots 2 and 3 floored at 1.
+    short get_primary_skill_total();
+    // 0x4e5dd0 - one-argument setter for waterWalkLevel.
+    void WalkOnWater(int level);
+    // 0x4e5de0, RETAIL-ONLY (no DC row): the clamped field_129 getter
+    // hero::IsInIdentifyRange inlines. ORDINAL PLACEHOLDER name.
+    int HeroFn_004E5DE0();
+    // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open
+    // with the same `owner < 0` guard.
+    unsigned char belongs_to_human();
+    class playerData* get_player();
+    // 0x4e5330 / 0x4e5380, the two status-bar gauge frames.
+    int GetMobilityFrame();
+    int GetManaFrame();
     // 0x004da510 / 0x004da710 - the win half is a stub, but the loss
     // half's whole retail body is a tail jump into it, so it needs the
     // declaration.
@@ -167,6 +232,20 @@ public:
     // CalculateGainedExperience (0x46a350) scales the whole award by it
     // with a single-precision fmul.
     float GetExperienceBonusFactor();
+    // The rest of the specialty factor family, all one shape (see the
+    // note over GetOffenseFactor in src/hero.cpp): 0x4e42b0 / 0x4e4310 /
+    // 0x4e48b0 / 0x4e4920.
+    float GetArcheryFactor();
+    float GetEagleEyeChance();
+    int GetMysticismBonus();
+    int GetVisibility();
+    int GetSpellDurationBonus();
+    long get_combat_speed_bonus();
+    float GetSurrenderCostFactor();
+    float GetOffenseFactor();
+    float GetDefenseFactor();
+    float GetIntelligenceFactor();
+    float GetFirstAidFactor();
     int CreatureTypeCount(int creatureType);
     int GetNthSS(int iWhich);
     // The secondary-skill trio at 0x4e2210 / 0x4e2250 / 0x4e22d0; SetSS
@@ -205,6 +284,36 @@ public:
 SIZE(hero, 0x492);
 
 #pragma pack(pop)
+
+// type_obscuring_object - the record that remembers the adventure
+// object a hero (or boat) is standing on top of, so the square can be
+// put back when it moves off. DC-declared in E:\gamedcs\Hero.h, which
+// is why it lives here.
+// Field evidence, all from the two bodies claimed in src/hero.cpp:
+// type_obscuring_object::initialize (0x4d74d0) writes exactly seven
+// slots - three WORDS of -1 at +0/+2/+4, then zeros at +6 (BYTE),
+// +0xc (DWORD), +0x10 (BYTE) and +0x14 (DWORD) - and the constructor
+// at 0x4d7470 is that same body inlined, register-for-register.
+// get_obscured_town (0x4d7490) reads the same four tail slots and
+// compares +0xc against TAdventureObjectType TOWN, which is what types
+// that dword; +0x14 is then the index into gpGame->towns. The extent
+// past +0x18 is NOT proven, so no SIZE() assert. Names of the two
+// unattested flags are ordinal placeholders.
+struct type_obscuring_object {
+    short x;                    // +0x00
+    short y;                    // +0x02
+    short z;                    // +0x04
+    unsigned char field_06;     // +0x06 - the "something is obscured" gate
+    char pad_07[0x5];
+    TAdventureObjectType obscuredType;  // +0x0c
+    unsigned char field_10;     // +0x10 - second gate, role unattested
+    char pad_11[0x3];
+    int obscuredIndex;          // +0x14
+
+    type_obscuring_object();
+    void initialize();
+    class town* get_obscured_town();
+};
 
 // THeroTraits - the per-hero static-traits record, 92 B stride
 // byte-proven by strip::DrawOwner 0x5aa060/0x5aa230-adjacent bodies:
