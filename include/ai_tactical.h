@@ -200,6 +200,12 @@ struct type_AI_spellcaster {
                                  long bonus);
     long get_attack_skill_value(const army* our_army, const army* enemy,
                                 long duration, long bonus);
+    long get_age_value(const army* enemy, type_enchant_data caster);
+    long get_clone_value(const army* our_army, type_enchant_data caster);
+    long get_mirth_value(const army* our_army, type_enchant_data caster);
+    long get_precision_value(const army* our_army, type_enchant_data caster);
+    long get_slayer_value(const army* our_army, type_enchant_data caster);
+    long get_poison_value(const army* enemy, type_enchant_data caster);
     long get_haste_value(const army* our_army, type_enchant_data caster);
     long get_protection_value(const army* our_army, TSpellSchool school,
                               long level, long duration, long amount);
