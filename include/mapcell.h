@@ -188,7 +188,16 @@ enum TAdventureObjectType {
 #pragma pack(push, 1)
 class NewmapCell {
 public:
-    char pad_00[0x4];
+    // +0x00. The DC gives NewmapCell a base class `ExtraInfoUnion`
+    // (classes.csv: 4 B, 20 alternative views of one dword) whose plain
+    // arm is `unsigned long extraInfo`; retail agrees on the offset -
+    // hero::VisitedArena / SetVisitedArena (0x4e53c0 / 0x4e53e0) read
+    // the whole dword straight off the cell pointer and use it as a
+    // shift count into the hero's ArenaFlags. Carried as the plain arm
+    // only: the twenty typed views are twenty type DEFINITIONS, and
+    // this header rides in initialize.cpp's include closure (see the
+    // cellFlags note below for what that costs).
+    unsigned long extraInfo;
     // The square's ground type, byte at +0x04. check_shipyard_square
     // (town.obj 0x5c0c90) accepts a dock tile only when this equals 8,
     // and terrain.h's ten-mask permutation independently pins Water at
