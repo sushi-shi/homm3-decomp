@@ -123,13 +123,6 @@ const char* combatManager::GetBackgroundName()
     // @stub
 }
 
-// E:\gamedcs\cmbtmgr.cpp:1891
-VA(0x004647a0, 0x17A)  // anchor-global, dc 0x5f058
-int combatManager::GetGridIndex(int x, int y)
-{
-    // @stub
-}
-
 // E:\gamedcs\cmbtmgr.cpp:1971
 DC_ONLY(0x5f1d0, 0xDE)
 void combatManager::CombineGroups(armyGroup* src, armyGroup* dest)
@@ -166,6 +159,68 @@ void combatManager::SetNextArmy(int group, int index)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\cmbtmgr.cpp:1891 - screen point -> combat hex index.
+// Four special hexes get their own hit rectangles first (252..255, in
+// THIS test order: 0x694f08, 0x694ef0, 0x694ea8, 0x694ed8); everything
+// else falls through to the 11x17 staggered grid, whose origin is
+// (14, 86), whose row pitch is 42 and column pitch 44, and whose odd
+// rows are indented by half a column.
+// The last block is the diagonal-edge fixup: inside the top 10 rows of
+// a cell the hex boundary is a wedge, so a point whose distance from
+// the column centre exceeds twice its depth belongs to the row ABOVE,
+// and the column shifts by one on whichever side of centre it fell -
+// but only when the parity of the CORRECTED row says so, which is why
+// `row` is decremented BEFORE both `cl & 1` tests.
+// `abs(rx - 22) / 2` is byte-proven as a signed `abs` intrinsic
+// (`cdq / xor / sub`) followed by a signed halve (`cdq / sub / sar`) -
+// the compiler does not know the absolute value is non-negative, so an
+// `unsigned` or a hand-written `d < 0 ? -d : d` does not spell it.
+VA(0x004647a0, 0x17A)  // anchor-global, dc 0x5f058
+int combatManager::GetGridIndex(int x, int y)
+{
+    if (gCombatHexLeft694f08 <= x && x <= gCombatHexRight694f10
+            && gCombatHexTop694f0c <= y
+            && y <= gCombatHexBottom694f14)
+        return 252;
+    if (gCombatHexLeft694ef0 <= x && x <= gCombatHexRight694ef8
+            && gCombatHexTop694ef4 <= y
+            && y <= gCombatHexBottom694efc)
+        return 253;
+    if (gCombatHexLeft694ea8 <= x && x <= gCombatHexRight694eb0
+            && gCombatHexTop694eac <= y
+            && y <= gCombatHexBottom694eb4)
+        return 254;
+    if (gCombatHexLeft694ed8 <= x && x <= gCombatHexRight694ee0
+            && gCombatHexTop694edc <= y
+            && y <= gCombatHexBottom694ee4)
+        return 255;
+
+    int px = x - 14;
+    int py = y - 86;
+    int row = py / 42;
+    if ((row & 1) == 0)
+        px -= 22;
+    int col = px / 44;
+    if (px < 0 || px >= 748 || py < 0 || py >= 472)
+        return -1;
+    int depth = py % 42;
+    if (depth < 10) {
+        int across = px % 44;
+        if (depth < abs(across - 22) / 2) {
+            row--;
+            if (across < 22) {
+                if ((row & 1) == 0)
+                    col--;
+            } else if ((row & 1) != 0) {
+                col++;
+            }
+        }
+    }
+    if (row < 0 || row >= 11 || col < 0 || col >= 17)
+        return -1;
+    return row * 17 + col;
+}
 
 // Single-call-site file static: /Ob2 inlines it into CombatIsOver and
 // emits no out-of-line copy, so no retail slot is expected for it.
@@ -355,6 +410,21 @@ void combatManager::PlaceObstacle(const combatManager::TObstacle* obstacle, int 
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3142
+// FULLY DECODED, BLOCKED ON A HEADER THIS LANE MAY NOT TOUCH. The body
+// is a TPickANumber sampler without replacement over obstacle ids
+// 0..0x5a; each draw is admitted when `1 << terrainType`
+// (combatManager+0x5394, live only while field_53c0 is -1) matches the
+// unsigned short at +0 of the 20-byte catalogue row at .rdata
+// 0x63c7c8 + 20*id, or `1 << field_53c0` matches the one at +2. The
+// inner re-draw loop, not a `continue`, is what puts the second
+// `id < 0` test in front of place_obstacle.
+// What it needs: `TPickANumber` (include/misc.h) has NO DESTRUCTOR
+// declared, so a local of it emits neither the fs:[0] scope nor the
+// closing `operator delete(marks)` retail carries at 0x466b28 - and
+// include/misc.h is owned by another lane this session. The DC roster
+// attests the destructor (includes.h:134, dc 0x63a18) and cmbtmgr.cpp
+// already carries its carcass below, so adding it is ordinary work for
+// whoever owns that header next.
 VA(0x00466a70, 0xBD)  // linkorder, dc 0x60a70
 void combatManager::PlaceAllObstacles()
 {
