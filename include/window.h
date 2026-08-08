@@ -9,8 +9,17 @@
 #include "va.h"
 
 class widget;
+class textWidget;
 class message;
 class Bitmap16Bit;
+
+// The rollover/right-click text pair CHeroWindowEx::SetHelpText hands
+// to widget::set_help_text. Stride 8 is byte-proven by 0x5ff8e0's
+// `lea edi,[8*eax]` row arithmetic and the +0/+4 field loads.
+struct THelpText {
+    const char* text;
+    const char* rclick;
+};
 
 // heroWindow::type flag bits. FIXED_LAYER and SAVE_BACKGROUND carry
 // homm2's WindowFlag names and values (byte-proven in Open/Close);
@@ -49,10 +58,22 @@ enum EWindowMetrics {
 // nesting counter (SleepAllWidgets increments/decrements it around
 // virtual slot 8). Total 0x4c.
 //
-// Virtual roster: the DC eight plus one retail addition at slot 8
-// (body 0x5ff5f0, unsigned char arg, reached from SleepAllWidgets).
-// Only dtor and handle_widget_hover have byte-proven retail
-// signatures; the rest keep their DC names and stay pure.
+// Virtual roster BYTE-PROVEN by the retail heroWindow vtable 0x243cc4
+// (config/retail-vtables.tsv: 9 slots; every slot's target is in
+// config/retail-reloc-evidence.tsv 0x243cc4..0x243ce4):
+//   0  sdd 0x5fea50 (~heroWindow 0x5fea80)   1  Open 0x5feae0
+//   2  Close 0x5fec60                        3  handle_message 0x4ec560
+//   4  handle_widget_hover 0x485d80 - the ICF-folded `ret 4`, so it
+//      takes exactly one stack argument
+//   5  DrawWindow 0x5ff020
+//   6  0x5ff460 - masks ONE uchar argument and tail-calls
+//      heroWindowManager::DoDialog(this, 0x5ff500, arg). DC's
+//      DrawWindowX takes THREE arguments and has no retail row, so
+//      slot 6 is DC's DoModal(unsigned char fadeIn) - the only
+//      one-argument roster entry left in that bracket.
+//   7  AddWidgetsToMessageStream 0x5ff570
+//   8  0x5ff5f0 - retail-only, unsigned char arg, the per-widget twin
+//      of SleepAllWidgets; reached only through SleepAllWidgets.
 class heroWindow {
 public:
     int priority;
@@ -94,13 +115,48 @@ public:
     virtual int handle_message(message& msg) = 0;     // slot 3, sig unproven
     virtual void handle_widget_hover(widget* w) = 0;  // slot 4
     virtual void DrawWindow(unsigned char update, int iLowID, int iHighID);   // slot 5, retail 0x5ff020
-    // Slot 6 diverges from DC's DrawWindowX(update, iLow, iHigh): the
-    // retail body (0x5ff460, 33 B) masks ONE uchar arg and defers to a
-    // heroWindowManager callback dispatcher (0x602520) with the thunk
-    // 0x5ff500 - implement once the manager side is modeled.
-    virtual void DrawWindowX(unsigned char update) = 0;                       // slot 6
-    virtual int DoModal() = 0;                        // slot 7, sig unproven
+    // Slot 6's body (0x5ff460, 33 B) hands the uncarved thunk 0x5ff500
+    // to heroWindowManager::DoDialog - reconstruct once that thunk has
+    // a carve row to sit on.
+    virtual int DoModal(unsigned char fadeIn) = 0;    // slot 6, retail 0x5ff460
+    virtual void AddWidgetsToMessageStream();         // slot 7, retail 0x5ff570
+    // Slot 8's body (0x5ff5f0, 79 B) runs SleepAllWidgets' nest
+    // counter per widget through widget vtable slot 12 - reconstruct
+    // once widget's 13th slot is modeled.
     virtual void _vslot8(unsigned char arg) = 0;      // slot 8, retail 0x5ff5f0, unidentified
+};
+
+// CHeroWindowEx - heroWindow plus a rollover latch. Layout PROVEN by
+// the ctor 0x5ff640: it inlines heroWindow's ctor store-for-store,
+// stores the DERIVED vtable 0x243ce8 at +0, and adds exactly one
+// dword, [+0x4c] = -1. Total 0x50.
+//
+// Virtual roster BYTE-PROVEN by vtable 0x243ce8 (14 slots,
+// config/retail-vtables.tsv; targets in retail-reloc-evidence.tsv
+// 0x243ce8..0x243d1c): slots 0-8 are heroWindow's, with slot 0 the
+// class's own sdd 0x5ff6b0 and slot 3 overridden at 0x405680; then
+//   9   WindowHandler       0x5ff820  (ret 4 - one message*)
+//   10  ProcessHover        0x5ff6e0  (ret 8 - findWidgetPtr(x, y))
+//   11  ProcessRightSelect  0x5ff790  (ret 4 - one widget id)
+//   12  OnWidgetDeselect    0x559140  (`xor eax,eax; ret 8` - the
+//       ICF-folded inline below, so window.obj has NO body for it)
+//   13  GetRolloverWidget   0x5ff8d0  (`xor eax,eax; ret`)
+// This CORRECTS the previous 1:1 DC-order mapping of the seven retail
+// rows onto the seven DC roster entries: the sdd sits second (the
+// widget/heroWindow placement), OnWidgetDeselect has no window.obj
+// row, and the three claims in between were each one slot low.
+class CHeroWindowEx : public heroWindow {
+public:
+    int rolloverId;   // +0x4c, -1 in the ctor, latched by ProcessHover
+
+    CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType);
+    void SetHelpText(THelpText* pHelpText, int start, int stop, unsigned char copyText);
+
+    virtual int WindowHandler(message* msg) = 0;                        // slot 9
+    virtual unsigned char ProcessHover(int mouseX, int mouseY) = 0;     // slot 10
+    virtual unsigned char ProcessRightSelect(int id) = 0;               // slot 11
+    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag) { return 0; }  // slot 12
+    virtual textWidget* GetRolloverWidget();                            // slot 13
 };
 
 // --- globals ---

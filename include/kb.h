@@ -26,6 +26,11 @@ void NormalDialog(const char* cText, int iMBType, int x, int y,
 // yet reconstructed; the declarators match the kbwin call sites).
 int InitMainClasses();                                   // 0x4ed650
 int oldmain();                                           // 0x4ee3e0
+// The image-wide allocation-failure handler: every `new` site that
+// null-checks its result calls it (67 B at 0x4f42c0, no args, sprintf
+// into gText then ShutDown). DC kb.obj MemError, dc 0xe44f0/64 B,
+// kb.cpp:4168 - arity and role both agree.
+void MemError();                                         // 0x4f42c0
 int GameUnsaved();                                       // 0x4f4310
 
 // kb.cpp's shared text scratch buffer (.bss 0x6973d8 in kb's band;

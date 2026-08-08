@@ -1,6 +1,6 @@
 # generator: homm3.analysis.link_order
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
-# date: 2026-08-07
+# date: 2026-08-08
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 after_unit	before_unit	gap_start	gap_end	bytes	fns	candidate_owners
 adventuremapwindow	advmgr	0x40a4	0x5de0	7484	52	adventureoptionswindow
@@ -48,7 +48,7 @@ mousemgr	palette	0x10da57	0x122940	85737	269	multiplayerwindow,newgame,overview
 palette	path	0x1235dc	0x1239d0	1012	11	
 path	philai	0x123edf	0x124550	1649	16	
 philai	recruit	0x12bc57	0x14e750	142073	392	playvideo,puzzlewindow,questlogwindow,quickherowindow,quickinfowindow,quicktownwindow
-recruit	remote	0x150934	0x153d00	13260	47	
+recruit	remote	0x15174b	0x153d00	9653	41	
 remote	resource	0x157e21	0x158720	2303	16	
 resource	resourcedisplay	0x1587a7	0x158ba0	1017	11	
 resourcedisplay	resourcemanager	0x1590c4	0x15c0a0	12252	37	
@@ -56,7 +56,7 @@ resourcemanager	sample	0x15c12a	0x166da0	44150	143	ressw,sacrifice_window
 sample	search	0x166e89	0x16a0d0	12871	32	scenarioinfo
 search	slider	0x16a352	0x196180	179758	434	seerhut,singleselectionpopups,singleselectionwindow
 slider	smackmgr	0x1961d9	0x1971b0	4055	13	
-smackmgr	soundmgr	0x197cf4	0x199760	6764	25	
+smackmgr	soundmgr	0x197cf4	0x1994b0	6076	23	
 soundmgr	spells	0x19b07a	0x1a9360	58086	104	spellbookwindow,spelldefs
 spells	strip	0x1a939c	0x1a9d20	2436	15	
 strip	subwindow	0x1aa31e	0x1aa410	242	4	
