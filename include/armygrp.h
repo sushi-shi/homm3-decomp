@@ -218,11 +218,23 @@ SIZE(SSpellTraits, 136);
 // 81-entry count is NH3API-informed (pending retail extent proof).
 DATA(0x00687f58) extern const SSpellTraits (&akSpellTraits)[81];
 
-// Bootstrap domain: only the sentinel is modeled (GetNativeTerrain
-// merges slots against -1); the terrain roster gets its own header
-// when a consumer needs named values.
+// Bootstrap domain: the sentinel (GetNativeTerrain merges slots
+// against -1) plus the one enumerator a consumer has needed so far.
+// The full roster still gets its own header when more are wanted -
+// that move is the wider change terrain.h describes, and this is not
+// it.
+// eTerrainWater is admitted on retail proof, not on the DC roster
+// alone: terrain.h's ten-mask analysis recovers the permutation
+// {Lava=7, Rock=9, Dirt=0, Snow=3, Rough=5, Swamp=4, Subterranean=6,
+// Water=8, Grass=2, Sand=1} from iconwdgt's own .bss store addresses,
+// and initialize.obj repeats the identical ordering independently
+// (a chance agreement of two ten-element orderings is 1 in 10!). The
+// SPELLING is the Dreamcast enum's (eTerrainDirt=0 ... eTerrainRock=9).
+// town.obj's check_shipyard_square is the consumer: it accepts a dock
+// square only on terrain 8.
 enum TTerrainType {
-    TERRAIN_NONE = -1
+    TERRAIN_NONE = -1,
+    eTerrainWater = 8
 };
 
 // The special-ground MODE GetArmyMorale/GetArmyLuck dispatch on (the
