@@ -8,6 +8,7 @@
 // The smackw32/binkw32 imports carry their own leading underscore
 // (retail IAT: __imp___SmackToBuffer@28), the same RAD convention
 // soundmgr.h documents for Miles (_AIL_*).
+#include "terrain.h"
 #include <va.h>
 #include <windows.h>
 #include <ddraw.h>
