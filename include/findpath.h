@@ -171,6 +171,8 @@ public:
     void SeedCombatPosition(const army* thisArmy, long current_group,
                             long limit, unsigned char in_placement_phase,
                             long base_speed);
+    // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
+    void set_moat(const army* current_army);
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
     void lower_door();
     // Retail 0x4b3f20: ceil(cell->cost / army->GetSpeed()), floored at

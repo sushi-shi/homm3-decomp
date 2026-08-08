@@ -404,11 +404,63 @@ void searchArray::mark_teleport(const army* current_army, long current_group)
 // walks the 187-cell combatManager array at +0x1d4 (stride 0x70, bound
 // 0x51d0 = 187*0x70) and finally clears the defender's own hex and,
 // for a two-hex stack, army::get_second_grid_index().
+
+#endif  // @carcass
+
+// The two eleven-entry hex tables the body stamps. Both are read
+// element by element in one 0..10 loop and then indexed by the literal
+// 5 (the gate hex) after it, which is why retail addresses
+// gMoatHexes[5] and gInnerMoatHexes[5] as folded absolute slots.
+// The rows are the two concentric arcs of a Fortress-style moat: the
+// second table is the first shifted one hex left on every row.
+// Names are provisional - no roster reaches either array.
+DATA(0x0063bce8) const unsigned char gMoatHexes[11] = {
+    11, 28, 44, 61, 77, 95, 111, 129, 146, 164, 181
+};
+DATA(0x0063bcf4) const unsigned char gInnerMoatHexes[11] = {
+    10, 27, 43, 60, 76, 94, 110, 128, 145, 163, 180
+};
+
+// E:\gamedcs\findpath.cpp:1080
 VA(0x004b3290, 0x16F)  // anchor-callee, dc 0xa0804
 void searchArray::set_moat(const army* current_army)
 {
-    // @stub
+    memset(bIsMoatSlowed, 0, 187);
+    unsigned char flying = static_cast<unsigned char>(static_cast<unsigned>(current_army->creatureId) >> 1);
+    if (flying & 1)
+        return;
+    if (current_army->creatureType == CREATURE_ARCH_DEVIL)
+        return;
+    if (current_army->creatureType == CREATURE_DEVIL)
+        return;
+    if (gpCombatManager->field_53a8) {
+        { for (int hex = 0; hex < 11; ++hex) {
+            bIsMoatSlowed[gMoatHexes[hex]] = 1;
+            if (gpCombatManager->field_53a9)
+                bIsMoatSlowed[gInnerMoatHexes[hex]] = 1;
+        } }
+        if (gpCombatManager->drawbridgeState != DRAWBRIDGE_UP
+                || (current_army->hypnotizeFlag ? 1 - current_army->combatSide
+                                                : current_army->combatSide) == 1) {
+            bIsMoatSlowed[gMoatHexes[5]] = 0;
+            if (gpCombatManager->field_53a9)
+                bIsMoatSlowed[gInnerMoatHexes[5]] = 0;
+        }
+    }
+    { for (int cell = 0; cell < 187; ++cell) {
+        if (gpCombatManager->cells[cell].field_10 & 4) {
+            const combatManager::TObstacle* obstacle =
+                &gpCombatManager->obstacles_begin[gpCombatManager->cells[cell].field_14];
+            if (current_army->combatSide == obstacle->field_09 || obstacle->field_0a)
+                bIsMoatSlowed[cell] = 1;
+        }
+    } }
+    bIsMoatSlowed[current_army->gridIndex] = 0;
+    if (current_army->creatureId & 1)
+        bIsMoatSlowed[current_army->get_second_grid_index()] = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\findpath.cpp:1136
 // NO RETAIL SLOT for these three: set_moat ends at 0x4b33ff and

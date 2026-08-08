@@ -102,7 +102,15 @@ public:
         CSprite* sprite;                    // +0x0
         const type_obstacle_shape* shape;   // +0x4
         unsigned char hex;                  // +0x8
-        char pad_09[0xf];
+        // Byte-proven by searchArray::set_moat (0x4b3290), which marks
+        // an obstacle's cell as moat-slowed when EITHER the acting
+        // stack's combatSide equals the SIGNED byte at +9 (`movsx ecx,
+        // byte [obstacle+9]` against army::combatSide) or the byte at
+        // +0xa is set. Names are address ordinals - no roster reaches
+        // either slot.
+        signed char field_09;               // +0x9
+        unsigned char field_0a;             // +0xa
+        char pad_0b[0xd];
     };
 
     char pad_0000[0x34];
@@ -140,7 +148,12 @@ public:
     // outright while this byte is clear, before it looks at any row.
     // Name provisional.
     unsigned char field_53a8;         // +0x53a8
-    char pad_53a9[0x17];
+    // "This combat has a SECOND moat row": searchArray::set_moat
+    // (0x4b3290) stamps the eleven hexes of the second table, and later
+    // re-opens that table's gate hex, only while this byte is set -
+    // always nested inside the field_53a8 test above. Name provisional.
+    unsigned char field_53a9;         // +0x53a9
+    char pad_53aa[0x16];
     // can_cast_spells (0x41f890) refuses a CREATURE cast (hero_spell
     // clear) while this word reads 2, and refuses every cast at all
     // while the byte below is set. Both names await a writer.

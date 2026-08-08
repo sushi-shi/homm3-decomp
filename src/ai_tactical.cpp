@@ -888,21 +888,132 @@ long type_AI_spellcaster::get_attack_boost_value(const army* our_army, const arm
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:1197
+// Bless is priced as the damage RATIO it buys: the stack's top damage
+// plus the mastery row over what it currently averages, applied to the
+// swing it is about to make, capped at what is left of the target, and
+// then fed to get_attack_skill_value's own
+// `(sqrt(factor) - 1) * total * scale` tail. Blessed damage reads
+// army::maxDamage, which is what pins that field.
+// Traits row +0x15fc = 41*136 + 0x34 pins SPELL_BLESS.
+//
+// The DC roster's two get_attack_boost_value overloads (dc 0x3df5c /
+// 0x3e120) have NO retail slot, and the whole ladder stands open both
+// here and in get_frenzy_value - so retail's source spells it out at
+// each site. Writing it as a shared helper would put a body in the
+// image that retail does not carry.
 VA(0x00437430, 0x198)  // anchor-vtable, dc 0x3e17c
 long type_AI_spellcaster::get_bless_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    const army* target = our_army->AI_target;
+    if (target != 0 && our_army->get_AI_target_time(our_army->GetSpeed()) <= 1) {
+        double average = our_army->get_average_damage();
+        long blessed = akSpellTraits[SPELL_BLESS].mastery_bonus[caster.mastery]
+                       + our_army->maxDamage;
+        double increase = blessed / average;
+        long damage = our_army->get_average_damage(target, our_army->can_shoot(0),
+                                                   our_army->numTroops, 1, 0);
+        double factor = increase;
+        long boosted = static_cast<long>(damage * increase);
+        long enemy_hits = target->get_total_hit_points(0);
+        if (boosted > enemy_hits) {
+            factor = static_cast<double>(enemy_hits) / static_cast<double>(damage);
+            boosted = enemy_hits;
+        }
+        if (boosted > damage) {
+            double portion;
+            if (caster.duration >= params.odds)
+                portion = 1.0;
+            else
+                portion = static_cast<double>(caster.duration) / static_cast<double>(params.odds);
+            unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
+            double scale;
+            if ((slow_flag & 1)
+                    && (portion = portion - 1.0 / static_cast<double>(params.odds)) < 0.0)
+                scale = 0.0;
+            else
+                scale = portion;
+            double total = static_cast<double>(our_army->get_total_combat_value(params.lowest_attack,
+                                                                                params.lowest_defense));
+            return static_cast<long>((sqrt(factor) - 1.0) * total * scale);
+        }
+    }
+    return 0;
 }
 
 // E:\gamedcs\ai_tactical.cpp:1218
+// Frenzy is the only member of the boost family that SIMULATES: it
+// prices the stack's swing before the exchange, runs one
+// simulate_attack to find out how much of the stack survives to swing
+// again, and adds the second (halved for a shooter that already strikes
+// twice) swing to the first. The ratio of the two-swing total to the
+// one-swing total is then the same `factor` get_bless_value builds, and
+// the tail is the shared `(sqrt(factor) - 1) * total * scale` ladder.
+// `caster` reaches the body only through its duration.
+// No traits row at all - the mastery bonus never enters the price.
+//
+// Residual (99.0%): ONE frame slot, nothing else - every instruction,
+// immediate, reloc and branch agrees unmasked. Retail runs BOTH
+// int->double conversions of the `combined / old_damage` division
+// through the same scratch slot [ebp-0x2c]; our CL gives the divisor's
+// conversion a second slot at [ebp-0x24] (which it then reuses for
+// `factor`, so no other displacement moves). Frame-slot colouring, the
+// class already documented on get_attack_skill_value. Tried and
+// rejected: dropping either explicit cast (98.98 both ways) and
+// dropping the `combined` local for one inlined sum (98.98).
 VA(0x004375d0, 0x224)  // anchor-vtable, dc 0x3e280
 long type_AI_spellcaster::get_frenzy_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    const army* target = our_army->AI_target;
+    if (target != 0 && our_army->get_AI_target_time(our_army->GetSpeed()) <= 1) {
+        unsigned char ranged = our_army->can_shoot(0);
+        long our_hits = our_army->get_total_hit_points(0);
+        long enemy_hits = target->get_total_hit_points(0);
+        long old_damage = our_army->get_average_damage(
+            target, ranged,
+            (our_army->hitPoints + our_hits - 1) / our_army->hitPoints, 1, 0);
+        params.simulate_attack(our_army, &our_hits, target, &enemy_hits, ranged, 0);
+        if (our_hits != 0) {
+            long new_damage = our_army->get_average_damage(
+                target, ranged,
+                (our_army->hitPoints + our_hits - 1) / our_army->hitPoints, 1, 0);
+            unsigned char double_attack = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 15);
+            if (ranged && (double_attack & 1))
+                new_damage /= 2;
+            long combined = new_damage + old_damage;
+            double increase = static_cast<double>(combined) / static_cast<double>(old_damage);
+            long damage = our_army->get_average_damage(target, our_army->can_shoot(0),
+                                                       our_army->numTroops, 1, 0);
+            double factor = increase;
+            long boosted = static_cast<long>(damage * increase);
+            long target_hits = target->get_total_hit_points(0);
+            if (boosted > target_hits) {
+                factor = static_cast<double>(target_hits) / static_cast<double>(damage);
+                boosted = target_hits;
+            }
+            if (boosted > damage) {
+                double portion;
+                if (caster.duration >= params.odds)
+                    portion = 1.0;
+                else
+                    portion = static_cast<double>(caster.duration) / static_cast<double>(params.odds);
+                unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
+                double scale;
+                if ((slow_flag & 1)
+                        && (portion = portion - 1.0 / static_cast<double>(params.odds)) < 0.0)
+                    scale = 0.0;
+                else
+                    scale = portion;
+                double total = static_cast<double>(our_army->get_total_combat_value(params.lowest_attack,
+                                                                                    params.lowest_defense));
+                return static_cast<long>((sqrt(factor) - 1.0) * total * scale);
+            }
+        }
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1256
 // Residual (99.9%): FRAME-SLOT COLOURING ONLY - every instruction and
@@ -1473,14 +1584,64 @@ long type_AI_spellcaster::get_misfortune_value(const army* enemy, type_enchant_d
     return static_cast<long>(total * scale * effect);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1732
+// Blind splits on whether the victim is worth more than everything the
+// enemy side still has standing (params.enemy_live_value): a stack that
+// big is priced OUTRIGHT, as the fraction of itself a blind takes away
+// - `0.5 - sqrt(bonus/400)` of its combat value, the only place in the
+// family where the mastery row is fed to sqrt - and the duration ladder
+// is skipped entirely. Everything smaller goes through the shared
+// portion/scale ladder instead. Both arms then meet at the same
+// work-chance gate.
+// Traits row +0x2124 = 62*136 + 0x34 and the work-chance leaf is pushed
+// the literal 0x3e - both SPELL_BLIND.
+//
+// Residual (96.6%): the shared SpellCastWorkChance register tie-break
+// documented on get_disease_value and NOTHING else - every other
+// instruction, immediate, slot and branch agrees unmasked. Retail names
+// EDX for `side` and EAX for the normalised flag and loads
+// gpCombatManager into ECX before the setne; our CL swaps the pair and
+// sinks the this-pointer load below the pushes.
+// Tried and rejected: separate `total` and `value` locals (95.95) -
+// retail colours the combat value and the priced value into the SAME
+// slot, the dead `enemy` parameter at [ebp+8], which is what one
+// reused variable produces.
 VA(0x00439100, 0x169)  // anchor-vtable, dc 0x3f7f0
 long type_AI_spellcaster::get_blind_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    if ((field_14 & (1 << enemy->bitIndex)) == 0)
+        return 0;
+    if (field_1c)
+        return 0;
+    long value = enemy->get_total_combat_value(params.lowest_attack,
+                                               params.lowest_defense);
+    if (value >= params.enemy_live_value) {
+        long bonus = akSpellTraits[SPELL_BLIND].mastery_bonus[caster.mastery];
+        value = static_cast<long>((0.5 - sqrt(static_cast<double>(bonus) / 400.0))
+                                  * static_cast<double>(value));
+    } else {
+        double portion;
+        if (caster.duration >= params.odds)
+            portion = 1.0;
+        else
+            portion = static_cast<double>(caster.duration) / static_cast<double>(params.odds);
+        unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 26);
+        double scale;
+        if ((slow_flag & 1)
+                && (portion = portion - 1.0 / static_cast<double>(params.odds)) < 0.0)
+            scale = 0.0;
+        else
+            scale = portion;
+        value = static_cast<long>(static_cast<double>(value) * scale);
+    }
+    if (caster.field_10)
+        value = static_cast<long>(
+            gpCombatManager->SpellCastWorkChance(SPELL_BLIND, side, enemy, 0, 1,
+                                                 creature_spell != 0) * value);
+    return value;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1767
 DC_ONLY(0x3f9d0, 0x52)
@@ -1945,21 +2106,109 @@ long type_AI_spellcaster::get_clone_value(const army* our_army, type_enchant_dat
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:2813
+// Curse prices the stack down by the square root of the damage ratio
+// it forces: the stack's own low damage, docked by the mastery row and
+// floored at 1, over what it averages - `total - sqrt(ratio) * total`.
+// Three guards threaded into ONE sunk `xor eax,eax` (positive nesting),
+// then the family's shared portion/scale ladder and work-chance gate.
+// Traits row +0x1684 = 42*136 + 0x34 and the work-chance leaf is pushed
+// the literal 0x2a - both SPELL_CURSE.
+//
+// Residual (99.7%): two register-homing deltas, no instruction, branch
+// or immediate difference at all (compared unmasked). One is the shared
+// SpellCastWorkChance EAX/EDX tie-break documented on
+// get_disease_value; the other is frame-slot colouring of the three
+// 8-byte double slots - retail lays `average` at [ebp-0x18], `damage`
+// at [ebp-0x10] and `scale` at [ebp-0x8], our CL starts the same
+// sequence one slot higher. Same class as get_attack_skill_value's
+// residual, where declaration hoisting was already measured to change
+// nothing (VC6 colours these by live range).
+// Tried and rejected: separate `total` and `value` locals (99.60) -
+// retail shares the dead `enemy` parameter slot between them.
 VA(0x0043b370, 0x18E)  // anchor-vtable, dc 0x41624
 long type_AI_spellcaster::get_curse_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    if ((field_14 & (1 << enemy->bitIndex)) != 0 && !params.kills_only && !field_1c) {
+        long value = enemy->get_total_combat_value(params.lowest_attack,
+                                                   params.lowest_defense);
+        double average = enemy->get_average_damage();
+        double damage = enemy->minDamage - akSpellTraits[SPELL_CURSE].mastery_bonus[caster.mastery];
+        if (damage < 1.0)
+            damage = 1.0;
+        damage = damage / average;
+        value = static_cast<long>(value - sqrt(damage) * value);
+        double portion;
+        if (caster.duration >= params.odds)
+            portion = 1.0;
+        else
+            portion = static_cast<double>(caster.duration) / static_cast<double>(params.odds);
+        unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 26);
+        double scale;
+        if ((slow_flag & 1)
+                && (portion = portion - 1.0 / static_cast<double>(params.odds)) < 0.0)
+            scale = 0.0;
+        else
+            scale = portion;
+        value = static_cast<long>(value * scale);
+        if (caster.field_10)
+            value = static_cast<long>(
+                gpCombatManager->SpellCastWorkChance(SPELL_CURSE, side, enemy, 0, 1,
+                                                     creature_spell != 0) * value);
+        return value;
+    }
+    return 0;
 }
 
 // E:\gamedcs\ai_tactical.cpp:2847
+// Forgetfulness is priced only against a SHOOTER, and the price is the
+// gap between what the stack is worth shooting and what it is worth in
+// melee, spread back over the creatures it still fields (total hit
+// points over per-creature hit points). The duration then runs through
+// the family's shared portion/scale ladder and the work-chance gate.
+// Four guards, all threaded into ONE sunk `xor eax,eax` - the
+// positive-nesting form, not four split ifs.
+// The work-chance leaf is pushed the literal 0x3d, SPELL_FORGETFULNESS.
+//
+// Residual (99.8%): the shared SpellCastWorkChance EAX/EDX tie-break
+// documented on get_disease_value and nothing else - every other
+// instruction, immediate, frame slot and branch agrees unmasked.
 VA(0x0043b500, 0x17D)  // anchor-vtable, dc 0x41890
 long type_AI_spellcaster::get_forgetfulness_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    if (enemy->can_shoot(0)) {
+        unsigned char immune = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 23);
+        if ((immune & 1) == 0 && !params.kills_only && !field_1c) {
+            double damage = enemy->get_unit_combat_value(params.lowest_attack,
+                                                         params.lowest_defense, 1, 0);
+            damage -= enemy->get_unit_combat_value(params.lowest_attack,
+                                                   params.lowest_defense, 0, 0);
+            double hits = enemy->get_total_hit_points(0);
+            long value = static_cast<long>(hits * damage / enemy->hitPoints);
+            double portion;
+            if (caster.duration >= params.odds)
+                portion = 1.0;
+            else
+                portion = static_cast<double>(caster.duration) / static_cast<double>(params.odds);
+            unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 26);
+            double scale;
+            if ((slow_flag & 1)
+                    && (portion = portion - 1.0 / static_cast<double>(params.odds)) < 0.0)
+                scale = 0.0;
+            else
+                scale = portion;
+            value = static_cast<long>(value * scale);
+            if (caster.field_10)
+                value = static_cast<long>(
+                    gpCombatManager->SpellCastWorkChance(SPELL_FORGETFULNESS, side, enemy,
+                                                         0, 1, creature_spell != 0) * value);
+            return value;
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:2876
 DC_ONLY(0x41a74, 0x8)
@@ -2061,12 +2310,101 @@ void type_AI_spellcaster::add_enemy(type_AI_enemy_data* sum, const army* our_arm
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:3254
+// The full two-sided census: set_melee_enemies fills enemies[] with the
+// stack each of ours is already committed to, then this body walks
+// every live enemy against every one of ours and sorts it into the
+// RANGED census (attacks[]) or, if it can reach us on foot and is not
+// the one already recorded, back into enemies[]. worst_enemies[] is
+// then the per-stack maximum of the two.
+//
+// The DC roster's add_enemy (dc 0x42220) and set_worst_enemies
+// (dc 0x42170) have NO retail slot: the count/total/max update stands
+// open at both census sites and the merge loop stands open at the tail,
+// so retail's source spells all three out here. Writing them as members
+// would put two bodies in the image that retail does not carry.
+//
+// Residual (87.7%): register colouring only - branch sequences AGREE
+// (homm3 sema diff --branches), and every instruction, immediate and
+// call site matches unmasked. Retail colours gpCombatManager/our_army/
+// the attacks[] cursor as esi/edx/edi and materialises the entry zero
+// in EAX (the one the two rep stosd already need); our CL takes
+// ebx/edi/esi... with EDX for the manager and parks a second zero in
+// ESI, which renames the whole body and lets it keep the manager live
+// where retail re-loads it for the inner bound. Same class as
+// set_melee_enemies' own 95.3% residual, which permutes the same three
+// registers. Tried and rejected: `field_14 = field_18 = 0` chained
+// (87.73, identical), the two clears moved BELOW the memsets (84.86),
+// and subscripting armies[side][i] / armies[enemy_side][j] instead of
+// advancing pointers (69.70 - retail strength-reduces both loops, and
+// only the pointer spelling reproduces it).
 VA(0x0043c040, 0x2E6)  // anchor-global, dc 0x4227c
 void type_AI_spellcaster::find_enemy_attacks()
 {
-    // @stub
+    field_18 = 0;
+    field_14 = 0;
+    memset(worst_enemies, 0, sizeof(worst_enemies));
+    memset(attacks, 0, sizeof(attacks));
+    set_melee_enemies();
+    const army* our_army = &gpCombatManager->armies[side][0];
+    { for (long i = 0; i < gpCombatManager->numArmies[side]; i++, our_army++) {
+        unsigned char flags = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 21);
+        if (flags & 1)
+            continue;
+        if (our_army->creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        army* enemy = &gpCombatManager->armies[enemy_side][0];
+        const army* melee_enemy = enemies[i].enemy;
+        for (long j = 0; j < gpCombatManager->numArmies[enemy_side]; j++, enemy++) {
+            if (enemy->disabled_290 || enemy->disabled_2b0 || enemy->disabled_2c0)
+                continue;
+            unsigned char enemy_flags = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 21);
+            if (enemy_flags & 1)
+                continue;
+            if (enemy->creatureType == CREATURE_FIRST_AID_TENT
+                    || enemy->creatureType == CREATURE_AMMO_CART)
+                continue;
+            if (enemy->hypnotizeFlag)
+                continue;
+            if (enemy->creatureType == CREATURE_ARROW_TOWER)
+                continue;
+            if (enemy->get_total_hit_points(1) == 0)
+                continue;
+            if (enemy->can_shoot(0)) {
+                long damage = enemy->get_average_damage(our_army, 1, enemy->numTroops, 0, 0);
+                attacks[i].count++;
+                attacks[i].total_damage += damage;
+                if (damage > attacks[i].damage) {
+                    attacks[i].damage = damage;
+                    attacks[i].enemy = enemy;
+                }
+            } else {
+                if (enemy == melee_enemy)
+                    continue;
+                if ((enemy->AI_possible_targets & (1 << i)) == 0)
+                    continue;
+                field_18 |= 1 << j;
+                long damage = enemy->get_average_damage(our_army, 0, enemy->numTroops, 0, 0);
+                enemies[i].count++;
+                enemies[i].total_damage += damage;
+                if (damage > enemies[i].damage) {
+                    enemies[i].damage = damage;
+                    enemies[i].enemy = enemy;
+                }
+            }
+            field_14 |= 1 << enemy->bitIndex;
+        }
+    } }
+    { for (long i = 0; i < gpCombatManager->numArmies[side]; i++) {
+        worst_enemies[i] = enemies[i];
+        if (attacks[i].damage > worst_enemies[i].damage)
+            worst_enemies[i] = attacks[i];
+    } }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:3311
 VA(0x0043c330, 0x16C)  // anchor-callee, dc 0x423f4

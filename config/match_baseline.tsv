@@ -202,6 +202,7 @@ ai_tactical	?AI_get_attack_damage@@YIJPBVarmy@@J0EJ@Z	100.0000
 ai_tactical	?AI_value_of_luck@@YINJJ@Z	100.0000
 ai_tactical	?AI_value_of_morale@@YINJJ@Z	100.0000
 ai_tactical	?find_attack_hex@type_AI_attack_hex_chooser@@QAEEXZ	100.0000
+ai_tactical	?find_enemy_attacks@type_AI_spellcaster@@QAEXXZ	87.7343
 ai_tactical	?get_age_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
 ai_tactical	?get_air_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
 ai_tactical	?get_air_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
@@ -210,10 +211,13 @@ ai_tactical	?get_area_effect_value@type_AI_spellcaster@@QAEJHJHJ@Z	100.0000
 ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	99.8503
 ai_tactical	?get_backlash_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
 ai_tactical	?get_berserk_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
+ai_tactical	?get_bless_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
+ai_tactical	?get_blind_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	96.5574
 ai_tactical	?get_blood_lust_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
 ai_tactical	?get_breath_bonus@@YIJJPBVarmy@@JJ0JPBUtype_AI_combat_parameters@@@Z	100.0000
 ai_tactical	?get_clone_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
 ai_tactical	?get_cure_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	95.4886
+ai_tactical	?get_curse_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	99.6493
 ai_tactical	?get_damage_spell_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
 ai_tactical	?get_damage_value@type_AI_spellcaster@@QAEJHJPBVhero@@PBVarmy@@@Z	93.2072
 ai_tactical	?get_defense_boost_value@type_AI_spellcaster@@QAEJPBVarmy@@0JN@Z	96.1520
@@ -224,6 +228,8 @@ ai_tactical	?get_disruptive_ray_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_en
 ai_tactical	?get_earth_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
 ai_tactical	?get_exchange_effect@type_AI_combat_parameters@@QAEJPBVarmy@@0J@Z	100.0000
 ai_tactical	?get_fire_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
+ai_tactical	?get_forgetfulness_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	99.7656
+ai_tactical	?get_frenzy_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	98.9849
 ai_tactical	?get_haste_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
 ai_tactical	?get_hex_attack_value@type_AI_attack_hex_chooser@@QAEJJPAJ@Z	84.3750
 ai_tactical	?get_hypnotize_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	18.2288
@@ -262,19 +268,13 @@ ai_tactical	type_AI_spellcaster_consider_sacrifice_3b1e0	0.0000
 ai_tactical	type_AI_spellcaster_consider_single_enchantment	0.0000
 ai_tactical	type_AI_spellcaster_consider_spell	0.0000
 ai_tactical	type_AI_spellcaster_consider_teleport	0.0000
-ai_tactical	type_AI_spellcaster_find_enemy_attacks	0.0000
-ai_tactical	type_AI_spellcaster_get_bless_value	0.0000
-ai_tactical	type_AI_spellcaster_get_blind_value	0.0000
 ai_tactical	type_AI_spellcaster_get_caliph_value	0.0000
 ai_tactical	type_AI_spellcaster_get_cancel_value	0.0000
 ai_tactical	type_AI_spellcaster_get_chain_lightning_value	0.0000
 ai_tactical	type_AI_spellcaster_get_counterstroke_value	0.0000
-ai_tactical	type_AI_spellcaster_get_curse_value	0.0000
 ai_tactical	type_AI_spellcaster_get_enchantment_function	0.0000
 ai_tactical	type_AI_spellcaster_get_fire_shield_value	0.0000
-ai_tactical	type_AI_spellcaster_get_forgetfulness_value	0.0000
 ai_tactical	type_AI_spellcaster_get_fortune_value	0.0000
-ai_tactical	type_AI_spellcaster_get_frenzy_value	0.0000
 ai_tactical	type_AI_spellcaster_get_muck_and_mire_value	0.0000
 ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000
 ai_tactical	type_AI_spellcaster_get_protection_value	0.0000
@@ -442,6 +442,7 @@ findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177
 findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	100.0000
 findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000
 findpath	?lower_door@searchArray@@QAEXXZ	100.0000
+findpath	?set_moat@searchArray@@QAEXPBVarmy@@@Z	100.0000
 findpath	CalcTerrainCost	0.0000
 findpath	GetTerrainCost	0.0000
 findpath	MinimumTerrainCost	0.0000
@@ -450,7 +451,6 @@ findpath	searchArray_PushCombatPoint	0.0000
 findpath	searchArray_PushPoint	0.0000
 findpath	searchArray_TestPossibleDirections	0.0000
 findpath	searchArray_mark_teleport	0.0000
-findpath	searchArray_set_moat	0.0000
 font	??1font@@UAE@XZ	96.6333
 font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	96.8123
 font	?DrawCharacter@font@@QAEXHPAVBitmap16Bit@@HHH@Z	78.2623
