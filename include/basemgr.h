@@ -10,11 +10,23 @@ class message;
 
 // PROVEN layout (2026-08-04): Dreamcast size 56 (vptr@0, nextManager@4,
 // prevManager@8, id@12, priority@16, cMgrName@20 char[32], status@52),
-// corroborated store-for-store by the retail ctor (0x44d530). Vtable
-// 0x63b9bc has 6 slots: 0-2 are _purecall - the Open/Close/Main pure
-// interface inherited verbatim from the homm2-era baseManager - and
-// 3-5 hold retail bodies (0x44e020, 0x55d0f0, 0x44e240) whose
-// identities are not yet recovered; bootstrap slot names below.
+// corroborated store-for-store by the retail ctor (0x44d530).
+//
+// CORRECTION 2026-08-08: the vtable 0x63b9bc has THREE slots, not six,
+// and the three "unidentified retail bodies" the old note listed at
+// slots 3-5 (0x44e020, 0x55d0f0, 0x44e240) were rows of the NEXT
+// table. Two independent sources say three:
+//   * config/retail-vtables.tsv row `0x23b9bc 3 baseManager`, and the
+//     following table starts at 0x23b9c8 = 0x23b9bc + 3*4, which
+//     bounds the count exactly.
+//   * the DC fieldlist for baseManager (dump.txt "Size = 56, class
+//     name = baseManager") lists precisely three PURE INTRO methods -
+//     Open@vfptr 0, Close@4, Main@8 - one VANILLA SetStatus, and no
+//     destructor at all. Every derived manager's own table is the same
+//     three slots wide plus whatever IT introduces (mouseManager's
+//     0x640028 is four: Open, Close, Main, then its own ??_G).
+// All three slots are _purecall (0x617d9a) in this table, as DC's PURE
+// INTRO says they must be.
 class baseManager {
 public:
     baseManager* nextManager;
@@ -25,12 +37,9 @@ public:
     int status;
 
     baseManager();
-    virtual int Open(int) = 0;
-    virtual void Close() = 0;
-    virtual int Main(message& msg) = 0;
-    virtual void _vslot3() = 0;  // retail body 0x44e020, unidentified
-    virtual void _vslot4() = 0;  // retail body 0x55d0f0, unidentified
-    virtual void _vslot5() = 0;  // retail body 0x44e240, unidentified
+    virtual int Open(int) = 0;         // slot 0
+    virtual void Close() = 0;          // slot 1
+    virtual int Main(message& msg) = 0;  // slot 2, DC ?Main@...@@UAAHAAUmessage@@@Z
 };
 SIZE(baseManager, 56);
 

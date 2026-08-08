@@ -725,21 +725,38 @@ void armyGroup::DamageGroup(float casualtyRate)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\armygrp.cpp:921
-DC_ONLY(0x4ef88, 0x2E)
+// Located by ARITY inside the Swap (0x44ad60) .. GetArmySizeName
+// (0x44ade0) bracket: the DC roster puts exactly DamageGroup and the
+// two get_creature_total overloads there, DamageGroup has no retail
+// row at all (its float argument and single call site put it inside
+// /Ob2's budget, the HasSomeUndead pattern), and the two rows that DO
+// exist take zero and one stack argument respectively - matching the
+// overloads exactly.
+VA(0x0044ada0, 0x16)  // dc-bracket + arity, dc 0x4ef88
 int armyGroup::get_creature_total()
 {
-    // @stub
+    int total = 0;
+    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; i++) {
+        if (armies[i] != -1)
+            total += numTroops[i];
+    }
+    return total;
 }
 
 // E:\gamedcs\armygrp.cpp:935
-DC_ONLY(0x4efb8, 0x32)
+VA(0x0044adc0, 0x20)  // dc-bracket + arity, dc 0x4efb8
 int armyGroup::get_creature_total(TCreatureType monType)
 {
-    // @stub
+    int total = 0;
+    for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; i++) {
+        if (armies[i] == monType)
+            total += numTroops[i];
+    }
+    return total;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\armygrp.cpp:949
 VA(0x0044ade0, 0x79)  // anchor-global, dc 0x4efec

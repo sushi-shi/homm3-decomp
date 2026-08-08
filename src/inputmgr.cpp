@@ -263,7 +263,7 @@ void inputManager::Close()
 
 // E:\gamedcs\inputmgr.cpp:844
 VA(0x004ec560, 0x5)  // dc-bracket forced + body-verified, dc 0xdda50
-int inputManager::Main(message* msg)
+int inputManager::Main(message& msg)
 {
     return 0;
 }
