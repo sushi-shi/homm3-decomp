@@ -42,6 +42,18 @@ public:
     virtual void Dispose();  // slot 1, retail body 0x55d1a0
     virtual void _vslot2();  // slot 2, retail body 0x47bd50, unidentified
 
+    // Header inline, DC CSprite.h:293 (dc 0x1f1dc, emitted into
+    // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
+    // USE re-expands the guard (the else arm constant-folds to a
+    // literal 0 divisor, `xor ecx,ecx; idiv ecx`), which a cached
+    // frame-count local cannot reproduce.
+    int GetNumFrames(int seq)
+    {
+        if (seq < numSequences && validSeqMask[seq] != 0)
+            return s[seq]->numFrames;
+        return 0;
+    }
+
     palette* GetPalette();
     void SetPalette(const unsigned short* pal);
     void DrawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);

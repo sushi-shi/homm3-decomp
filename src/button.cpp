@@ -113,10 +113,23 @@ inline int button::DeselectSelected(message* msg)
 }
 
 // E:\gamedcs\button.cpp:131
-// Residual (67.4%): every block, callee, and store is in place; the
-// difference is a whole-body esi/edi role swap (retail pins msg in
-// ESI) that source order does not steer - same allocation-cascade
-// class as the send_message residual.
+// Residual (84.7%, was 67.4 on 2026-08-08): two DUP-EXIT defects are
+// GONE. (1) The capture loop's two exits now BREAK to one shared
+// `return DeselectSelected(msg)`; spelling either as its own `return`
+// expands the inlined deselect body twice (+8.4 points). (2) The
+// WIDGET sub-switch case ORDER is retail's emission order -
+// SET_PALETTE, SET_ICON_NAME, SET_TEXT, SET_PLAYER_PALETTE_COLORS -
+// not ascending by value (+8.9 points); retail's jump table lands the
+// palette body first and cross-jumps SET_ICON_NAME onto the
+// palette-failure tail.
+// What is left is (a) a whole-body esi/edi role swap (retail pins msg
+// in ESI) that source order does not steer, and (b) ~56 instructions
+// inside the /Ob2-inlined button::SetText: retail's expansion calls a
+// two-argument reserve on the text object at [this+0x58] and then does
+// a raw movsd/movsb copy, where our text model emits a refcounted
+// assign (`mov al,[ecx-1]` share-count probe). That is a SetText
+// modelling gap, not a spelling one - re-measure after the text-buffer
+// class lands.
 // The left-click capture loop pumps the mouse manager and input queue
 // until a button-up, toggling selection as the pointer crosses the
 // widget - homm2's shape with h3's GetEvent-by-value copy. The WIDGET
@@ -180,10 +193,14 @@ int button::Main(message* msg)
             || mouseY >= y + height)
             return 0;
         Select(msg);
+        // Both exits BREAK to one shared `return DeselectSelected(msg)`
+        // below: DeselectSelected is /Ob2-inlined, so spelling either
+        // exit as its own `return` expands the whole 139-byte deselect
+        // body twice where retail expands it once (67.38 -> ...).
         for (;;) {
             if (msg->id == MESSAGE_LEFT_BUTTON_UP
                 || msg->id == MESSAGE_RIGHT_BUTTON_UP)
-                return DeselectSelected(msg);
+                break;
             gpMouseManager->Main(*msg);
             if (msg->id == MESSAGE_MOUSE_MOVE) {
                 short moveX = msg->codeX - parentWindow->x;
@@ -200,8 +217,9 @@ int button::Main(message* msg)
             PollSound();
             *msg = gpInputManager->GetEvent();
             if (msg->id == MESSAGE_LEFT_BUTTON_UP)
-                return DeselectSelected(msg);
+                break;
         }
+        return DeselectSelected(msg);
     }
     case MESSAGE_LEFT_BUTTON_UP: {
         if (isDisabled)
@@ -218,12 +236,6 @@ int button::Main(message* msg)
         if (msg->codeY != id)
             break;
         switch (msg->codeX) {
-        case widget::WIDGET_SET_TEXT:
-            SetText(msg->extraText);
-            return 1;
-        case widget::WIDGET_SET_ICON_NAME:
-            buttonIcon = ResourceManager::GetSprite(msg->extraText);
-            return 1;
         case widget::WIDGET_SET_PALETTE: {
             TPalette16* newPalette = ResourceManager::GetPalette(msg->extraText);
             if (!newPalette) {
@@ -236,6 +248,12 @@ int button::Main(message* msg)
             newPalette->Dispose();
             return 1;
         }
+        case widget::WIDGET_SET_ICON_NAME:
+            buttonIcon = ResourceManager::GetSprite(msg->extraText);
+            return 1;
+        case widget::WIDGET_SET_TEXT:
+            SetText(msg->extraText);
+            return 1;
         case widget::WIDGET_SET_PLAYER_PALETTE_COLORS:
             SetPlayerPaletteColors(msg->extra);
             return 1;

@@ -1,6 +1,6 @@
 # generator: homm3.analysis.link_order
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
-# date: 2026-08-07
+# date: 2026-08-08
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 unit	first_rva	end_rva	span	anchors	residents	fns_in_span	claimed	unclaimed
 adventuremapwindow	0x1510	0x40a4	11156	24	1	34	24	10
@@ -10,7 +10,7 @@ ai_combat	0x23c80	0x27747	15047	36	1	36	36	0
 ai_player	0x28410	0x2a2a7	7831	9	2	15	9	6
 ai_tactical	0x35830	0x3cb08	29400	49	0	88	49	39
 army	0x3d540	0x48d1b	47067	71	0	93	71	22
-armygrp	0x496a0	0x4c606	12134	34	0	36	34	2
+armygrp	0x496a0	0x4c606	12134	33	0	36	33	3
 basemgr	0x4d530	0x4d575	69	1	0	1	1	0
 bitmap16	0x4e2b0	0x4e5e3	819	4	0	4	4	0
 bitmap816	0x4f9d0	0x4fec0	1264	2	0	10	2	8
@@ -48,7 +48,7 @@ mousemgr	0x10cb50	0x10da57	3847	11	0	15	11	4
 palette	0x122940	0x1235dc	3228	16	0	17	16	1
 path	0x1239d0	0x123edf	1295	8	0	8	8	0
 philai	0x124550	0x12bc57	30471	10	0	81	10	71
-recruit	0x14e750	0x150934	8676	3	0	10	3	7
+recruit	0x14e750	0x15174b	12283	8	0	16	8	8
 remote	0x153d00	0x157e21	16673	18	0	96	18	78
 resource	0x158720	0x1587a7	135	2	0	3	2	1
 resourcedisplay	0x158ba0	0x1590c4	1316	4	0	5	4	1
@@ -57,7 +57,7 @@ sample	0x166da0	0x166e89	233	2	0	3	2	1
 search	0x16a0d0	0x16a352	642	1	0	1	1	0
 slider	0x196180	0x1961d9	89	1	0	1	1	0
 smackmgr	0x1971b0	0x197cf4	2884	14	0	14	14	0
-soundmgr	0x199760	0x19b07a	6426	17	0	25	17	8
+soundmgr	0x1994b0	0x19b07a	7114	19	0	27	19	8
 spells	0x1a9360	0x1a939c	60	1	0	1	1	0
 strip	0x1a9d20	0x1aa31e	1534	5	0	5	5	0
 subwindow	0x1aa410	0x1aa68a	634	6	0	6	6	0
@@ -68,7 +68,7 @@ town	0x1bde80	0x1c14b9	13881	25	0	46	25	21
 townmgr	0x1d2a40	0x1d2d75	821	1	0	1	1	0
 u2dvers	0x1eeda0	0x1ef065	709	3	0	3	3	0
 victorylossconditions	0x1f15a0	0x1f2f70	6608	17	0	19	17	2
-widget	0x1fe340	0x1fe9c3	1667	10	0	12	10	2
+widget	0x1fe340	0x1fe9c3	1667	11	0	12	11	1
 window	0x1fe9f0	0x1ff955	3941	26	0	31	26	5
 winfile	0x1ffb20	0x1ffdc2	674	14	0	14	14	0
 wingraph	0x2014e0	0x2019fa	1306	4	0	6	4	2

@@ -1,6 +1,6 @@
 # generator: homm3.analysis.link_order
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
-# date: 2026-08-07
+# date: 2026-08-08
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE
 position	unit	first_rva	end_rva	gap_to_next
 0	adventuremapwindow	0x1510	0x40a4	7484
@@ -48,7 +48,7 @@ position	unit	first_rva	end_rva	gap_to_next
 42	palette	0x122940	0x1235dc	1012
 43	path	0x1239d0	0x123edf	1649
 44	philai	0x124550	0x12bc57	142073
-45	recruit	0x14e750	0x150934	13260
+45	recruit	0x14e750	0x15174b	9653
 46	remote	0x153d00	0x157e21	2303
 47	resource	0x158720	0x1587a7	1017
 48	resourcedisplay	0x158ba0	0x1590c4	12252
@@ -56,8 +56,8 @@ position	unit	first_rva	end_rva	gap_to_next
 50	sample	0x166da0	0x166e89	12871
 51	search	0x16a0d0	0x16a352	179758
 52	slider	0x196180	0x1961d9	4055
-53	smackmgr	0x1971b0	0x197cf4	6764
-54	soundmgr	0x199760	0x19b07a	58086
+53	smackmgr	0x1971b0	0x197cf4	6076
+54	soundmgr	0x1994b0	0x19b07a	58086
 55	spells	0x1a9360	0x1a939c	2436
 56	strip	0x1a9d20	0x1aa31e	242
 57	subwindow	0x1aa410	0x1aa68a	66646
