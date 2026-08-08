@@ -260,6 +260,51 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — `ShotIsThroughWall` exact; six NH3API-lineage
+  enumerator names ADMITTED (user: "commit everything").** Engine-wide
+  329 → 330 exact, 4.17% → **4.18%** executable matched; `cmbtmgr`
+  15/35 → 16/35.
+  `combatManager::ShotIsThroughWall` (0x00467510, 0xEA) landed at
+  **100.0000% on the first spelling**, verified UNMASKED — every
+  instruction byte identical, the only deltas being obj-local addresses,
+  target-side flat reloc names and trailing alignment `nop`s. The
+  split-if guards tail-merged into retail's single shared `xor al,al`
+  epilogue on their own; no `||`-sinking or `goto` variant was needed.
+  **NAME ADMISSION (the substance of this entry).** Six enumerators
+  entered `include/armygrp.h` with **NH3API lineage**, which the
+  supervised-review rule governs. Every VALUE is retail-proven — the
+  four creature ids read off the compare chain at 0x46753d
+  (`0x22, 0x23, 0x88, 0x89, 0x95` in that order), the two artifact ids
+  are the pushed immediates: `CREATURE_MAGE 0x22`, `CREATURE_ARCH_MAGE
+  0x23`, `CREATURE_ENCHANTER 0x88`, `CREATURE_SHARPSHOOTER 0x89`,
+  `ARTIFACT_GOLDEN_BOW 0x5b`, `ARTIFACT_BOW_OF_THE_SHARPSHOOTER 0x89`.
+  The NAMES are corroborated two ways: semantically these are exactly
+  HoMM3's no-wall-penalty shooters and the two obstacle-penalty
+  artifacts, and positionally they are bracketed by ids this enum
+  already byte-proves — `CREATURE_STONE_GOLEM/IRON_GOLEM` 0x20/0x21 sit
+  immediately below the Mage pair in Tower dwelling order, and
+  `AZURE_DRAGON` 0x84 / `CRYSTAL_DRAGON` 0x85 / `HALFLING` 0x8a leave
+  0x88/0x89 exactly where Enchanter and Sharpshooter fall in the neutral
+  block. Lineage is flagged in-comment per house rules.
+  **Third DC-roster correction in this family, and the second of its
+  kind:** the roster types this `int`, but retail's early exit is
+  `xor al, al`, not `xor eax, eax` — a BYTE return. The control is
+  `is_adjacent` in the same TU, declared `unsigned char` and exact,
+  emitting precisely that. This follows `hero::IsWieldingArtifact`
+  (212 of its 224 call sites follow with `test al, al`), so DC `int`
+  returns in this family should be treated as suspect by default.
+  Also: the first parameter is `const army*`, not the DC roster's
+  `int group`. And a near-miss worth recording — **the two inlined wall
+  tests are `InCastle`, not `LeftOfMoat`**: both magic-divide blocks
+  relocate against `const_23bd00` = `gCastleWallColumns`, while
+  `gMoatColumns` at 0x63bce8 is never touched. The two helpers are
+  adjacent 0x22-byte twins and the wrong one scores nowhere.
+  No regressions: adding `#include "hero.h"` to cmbtmgr.cpp did not
+  move any of the 15 previously-exact functions in that TU
+  (`RemoveObstacle` held at 87.2872) and the enum additions moved
+  nothing tree-wide — a clean negative result for the include-set
+  sensitivity class identified earlier today.
+
 - **2026-08-08 — cmbtmgr 2/35 → 15/35; the combatManager model built
   entirely from retail bytes, with Ghidra deliberately unused.**
   Engine-wide 316 → 329 exact, 4.07% → **4.17%** executable matched;

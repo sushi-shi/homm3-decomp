@@ -191,6 +191,15 @@ public:
     void RemoveArmyFromGrid(const army* a);
     void PlaceArmyInGrid(const army* a, int hex);
     unsigned char should_lower_door(army* this_army, long hex);
+    // Two DC-roster corrections, both byte-proven at 0x467510: the
+    // first parameter is an `army*`, NOT the roster's `int group` (the
+    // body dereferences it at +0x288, +0xf4 and +0x34), and the return
+    // is BYTE width, not int - the early exit is `xor al,al`, which an
+    // int return would spell `xor eax,eax` (compare is_adjacent, whose
+    // unsigned char return produces exactly that `xor al,al`).
+    unsigned char ShotIsThroughWall(const army* shooter, int sourceIndex,
+                                    int destIndex);
+    unsigned char InLineOfSight(int sourceIndex, int destIndex);
     unsigned char HexIsBlocked(int index);
     unsigned char IsInMoat(int hex, int* index);
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
