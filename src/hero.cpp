@@ -759,28 +759,74 @@ void THeroScreenWindow::SetupHeroView()
 // secondary-skill bands the hero model carries (mastery at +0xc9 read
 // with movsx, acquisition order at +0xe5 compared UNSIGNED) and the
 // skill count at +0x101, and all three are `ret 8`.
+#endif  // @carcass
+
+// Residual (3.8%): OVER-INLINE, not a spelling error. Our CL expands
+// GiveSS into this body where retail calls it; everything else is
+// byte-identical, PROVEN by compiling the identical source once under
+// `#pragma auto_inline(off)` around GiveSS - SetSS then matched exactly
+// (27/27 instructions). The pragma is not retail source, so it is not
+// recorded. Nor is this the /Ob2 single-call-site rule: adding a second
+// live call site changed nothing (measured), so retail's GiveSS simply
+// carried more inline cost than this reconstruction does - i.e. the
+// residual is under-reconstruction of GiveSS, whose 4 in-TU retail call
+// sites (hero::initialize 0x4d8720, 0x4d8b30, CheckLevel 0x4da720 and
+// this one) are ALL out-of-line in retail. Expect it to close when
+// hero.cpp's real bodies land. Tried and rejected: two call sites;
+// `else if` chain vs early returns (identical bytes either way).
 VA(0x004e2210, 0x3F)  // anchor-callee + band-layout, dc 0xd36e0
 void hero::SetSS(int iWhichSS, int iLevelToSet)
 {
-    // @stub
+    if (iLevelToSet == 0) {
+        TakeSS(iWhichSS, 3);
+        return;
+    }
+    if (skillLevel[iWhichSS] == 0) {
+        GiveSS(iWhichSS, iLevelToSet);
+        return;
+    }
+    skillLevel[iWhichSS] = iLevelToSet;
 }
 
 // E:\gamedcs\hero.cpp:4600
 VA(0x004e2250, 0x76)  // anchor-caller (SetSS) + band-layout, dc 0xd3730
 int hero::TakeSS(int iWhichSS, int iNumLevelsToTake)
 {
-    // @stub
+    int iOldLevel = skillLevel[iWhichSS];
+    if (skillLevel[iWhichSS] > 0) {
+        skillLevel[iWhichSS] -= iNumLevelsToTake;
+        if (skillLevel[iWhichSS] < 0)
+            skillLevel[iWhichSS] = 0;
+        if (skillLevel[iWhichSS] == 0) {
+            for (int i = 0; i < 28; i++) {
+                if (skillOrder[i] > skillOrder[iWhichSS])
+                    skillOrder[i]--;
+            }
+            skillOrder[iWhichSS] = 0;
+            skillCount--;
+        }
+    }
+    return iOldLevel - skillLevel[iWhichSS];
 }
 
 // E:\gamedcs\hero.cpp:4627
 VA(0x004e22d0, 0x61)  // anchor-caller (SetSS, CheckLevel), dc 0xd37c0
 int hero::GiveSS(int iWhichSS, int iNumLevelsToGive)
 {
-    // @stub
+    int iOldLevel = skillLevel[iWhichSS];
+    if (skillLevel[iWhichSS] > 0) {
+        skillLevel[iWhichSS] += iNumLevelsToGive;
+    } else if (skillCount < 8) {
+        skillLevel[iWhichSS] = iNumLevelsToGive;
+        skillOrder[iWhichSS] = skillCount + 1;
+        skillCount++;
+    }
+    if (skillLevel[iWhichSS] > 3)
+        skillLevel[iWhichSS] = 3;
+    return skillLevel[iWhichSS] - iOldLevel;
 }
 
-
-
+#if 0  // @carcass
 
 
 
@@ -825,7 +871,7 @@ VA(0x004e23a0, 0x27)  // anchor-global, dc 0xd38b0
 int hero::GetNthSS(int iWhich)
 {
     for (int skill = 0; skill < 28; skill++) {
-        if (skillLevels[skill] == iWhich + 1)
+        if (skillOrder[skill] == iWhich + 1)
             return skill;
     }
     return -1;
