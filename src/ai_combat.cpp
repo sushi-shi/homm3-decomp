@@ -46,6 +46,17 @@
 // now available and its real signature is `const _Ty&` for BOTH
 // parameters, where these copies take them BY VALUE - swapping to the
 // header is a live experiment, not a blocked one.
+// EXPERIMENT RUN 2026-08-08, REFUTED: `const _TYPE&` costs SIX exact
+// functions in this TU alone - get_resurrection_value 100.00 -> 92.93,
+// get_spell_damage 100.00 -> 92.18, get_fastest_speed 100.00 -> 78.06,
+// get_next_chain_lightning_target 100.00 -> 89.82,
+// get_damage_spell_value 100.00 -> 87.25, get_mass_damage_value
+// 100.00 -> 85.67 - and raises nothing. get_fastest_speed 0x4249a1 is
+// the clean discriminator: retail COPIES `monsters[i].speed` into a
+// slot although its address is already live in eax, which only a
+// by-value parameter does. Whatever retail's helper was named, its
+// operands were passed by value; the <xutility> signature is not it.
+// See the head of ai_tactical.cpp for the full argument.
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 {

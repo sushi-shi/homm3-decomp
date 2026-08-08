@@ -8,12 +8,33 @@
 #include "findpath.h"
 #include "game.h"
 
-// VC6's own <xutility> reference-returning min (`_cpp_min`, what the
-// <algorithm> min macro expands to). get_cure_value 0x439c30 homes
-// BOTH operands in stack slots, compares them and then selects between
-// their ADDRESSES - the template's shape, not a by-value helper.
-// Declared file-locally so the TU does not pull the STL surface in
-// (P2.3 stays open); ai_combat.cpp carries the same pair.
+// The reference-returning min/max this TU's call sites were compiled
+// against. They resemble <xutility>'s `_cpp_min`/`_cpp_max` (the
+// <algorithm> min/max macros expand to those) but they are NOT the
+// header's declaration: XUTILITY:71-83 takes both operands as
+// `const _Ty&`, and that signature is byte-REFUTED here.
+//
+// The by-value parameters are what retail's code proves, not a
+// convenience. A `const _Ty&` parameter binds an lvalue argument's own
+// address and emits no copy; retail copies BOTH operands into fresh
+// slots even when both are lvalues:
+//   - get_fastest_speed 0x4249a1 (ai_combat) homes the enregistered
+//     accumulator AND `monsters[i].speed`, whose address is already in
+//     eax, before the compare. Under `const _Ty&` our CL passes eax
+//     straight through and homes the accumulator once (100.00 ->
+//     78.06).
+//   - get_breath_bonus 0x436760 stores `damage` into a dead parameter
+//     slot INSIDE the `simulated` branch, at the call - a temporary,
+//     not a home; under `const _Ty&` the store sinks to the variable's
+//     definition (100.00 -> 97.19).
+// Switching the whole pair to `const _Ty&` was measured 2026-08-08 and
+// cost eight exact functions (ai_combat get_resurrection_value,
+// get_spell_damage, get_fastest_speed,
+// get_next_chain_lightning_target, get_damage_spell_value,
+// get_mass_damage_value; ai_tactical get_multi_head_bonus,
+// get_breath_bonus) while raising nothing. Declared file-locally so
+// the TU does not pull the STL surface in; ai_combat.cpp carries the
+// same pair.
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 {
@@ -24,6 +45,26 @@ template <class _TYPE>
 inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
 {
     return (_X < _Y ? _Y : _X);
+}
+
+// The luck/morale family's [-3, 3] rating clamp. Retail's
+// get_mirth_value 0x438170 homes THREE values - the rating, -3 and 3 -
+// and picks between their addresses with `cmp v,-3 / jge / &(-3) /
+// jmp out / cmp v,3 / &3 / jg out / &v`, i.e. ONE test of v against
+// each bound and no fourth slot for an intermediate. A nested
+// _cpp_min(_cpp_max(v,-3),3) cannot produce that with either
+// signature: by value it needs a fourth slot for *inner, by const
+// reference it binds v's own address and drops to two slots (both
+// measured 2026-08-08). A single three-operand selector reproduces the
+// branch shape exactly and takes get_mirth_value to 100.00; the
+// spelling is PROVISIONAL (behaviour-derived from the branch graph, no
+// roster name for it). The argument ORDER is byte-proven: retail
+// materialises the high bound before the low one, which is the
+// (_V, _Hi, _Lo) parameter list, not (_V, _Lo, _Hi).
+template <class _TYPE>
+inline const _TYPE& _cpp_clamp(_TYPE _V, _TYPE _Hi, _TYPE _Lo)
+{
+    return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
 }
 
 // The AI's luck/morale weights. Retail LOADS all four from .rdata
@@ -928,16 +969,25 @@ long type_AI_spellcaster::get_attack_skill_value(const army* our_army, const arm
     return value;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1281
+// get_precision_value's exact mirror - same three-guard preamble, same
+// tail call into get_attack_skill_value - with the can_shoot test the
+// other way round: bloodlust buys melee attack, so it is worth nothing
+// to a stack that shoots.
+// Traits row +0x170c = 43*136 + 0x34 pins SPELL_BLOODLUST.
 VA(0x00438100, 0x64)  // anchor-vtable, dc 0x3e4a0
 long type_AI_spellcaster::get_blood_lust_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    if (!our_army->can_shoot(0)) {
+        const army* target = our_army->AI_target;
+        if (target != 0
+                && our_army->get_AI_target_time(our_army->GetSpeed()) <= 1) {
+            long bonus = akSpellTraits[SPELL_BLOODLUST].mastery_bonus[caster.mastery];
+            return get_attack_skill_value(our_army, target, caster.duration, bonus);
+        }
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1302
 // The luck/morale family's canonical shape, and the sibling
@@ -951,67 +1001,124 @@ long type_AI_spellcaster::get_blood_lust_value(const army* our_army, type_enchan
 // budget, so VC6 inlines it here and STILL emits it out of line at
 // 0x435830 - which is exactly what retail carries.
 //
-// The clamp is the reference-returning _cpp_min/_cpp_max chain, not a
-// pair of ternaries: retail homes 3, the rating and -3 in three
-// separate slots and selects between their ADDRESSES.
-//
-// Residual (82.1%): THE CLAMP FUSION, and it is a property of this
-// TU's _cpp_min/_cpp_max declaration, not of this body. Retail uses
-// THREE slots and never dereferences the inner result - on the
-// `morale < -3` arm it jumps straight out with &(-3), because the
-// outer min bound the inner's RETURN REFERENCE and then constant-
-// folded min(-3, 3). Our by-value helper has to copy `*inner` into a
-// fourth slot, which blocks the fold and costs the 12 bytes.
-// VC6's real XUTILITY:71-83 declares both as
-// `const _Ty& _cpp_max(const _Ty& _X, const _Ty& _Y)` - by CONST
-// REFERENCE - so the by-value reconstruction at the head of this file
-// is structurally wrong; it is left alone because switching it is a
-// TU-wide change that MOVES OTHER FUNCTIONS (measured 2026-08-08:
-// get_cure_value 95.49 -> 91.09, get_damage_value 93.21 -> 92.67,
-// get_hypnotize_value 18.23 -> 19.91, and this body only 82.10 ->
-// 84.30 with `static_cast<long>(morale)` / -3L / 3L prvalue
-// arguments). Deciding it needs the whole luck/morale family
-// (get_sorrow_value, get_fortune_value, get_misfortune_value all
-// repeat this clamp) in one supervised pass.
+// CLOSED 2026-08-08 (82.10 -> 100.00). The clamp is NOT a nested
+// _cpp_min/_cpp_max chain in either signature: it is the single
+// three-operand _cpp_clamp declared at the head of this file. See that
+// declaration for the byte argument. The two remaining edits were
+// ordinary statement shape:
+//   - `change` is a named local evaluated BEFORE the clamp; retail
+//     interleaves the akSpellTraits row load with the clamp's slot
+//     stores, which only happens when the traits read is its own
+//     statement (88.79 -> 95.43 on its own).
+//   - the [-3, 3] portion carries TWO doubles, not one: the running
+//     fraction lives in the dead `caster` parameter slot [ebp+0x18]
+//     while `scale` gets a frame slot of its own, and the "slow" test
+//     and the `< 0.0` test share ONE else-block reached from both
+//     arms - i.e. a single `&&` condition, not a nested if. The
+//     nested-if spelling duplicates `scale = portion` (93.83); the
+//     one-variable spelling drops the copy entirely (95.56).
 // Tried and rejected: _cpp_max(_cpp_min(m, 3), -3) 78.16,
 // _cpp_min(3, _cpp_max(m, -3)) 81.50, _cpp_min(_cpp_max(-3, m), 3)
-// 81.55, a `long` local for the rating 82.10.
+// 81.55, a `long` local for the rating 82.10, the same three chains
+// with `const _TYPE&` parameters 81.99-84.30.
 VA(0x00438170, 0x142)  // anchor-vtable, dc 0x3e50c
 long type_AI_spellcaster::get_mirth_value(const army* our_army, type_enchant_data caster)
 {
     unsigned char undead = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 17);
     if (undead & 1)
         return 0;
-    double effect = AI_value_of_morale(_cpp_min(_cpp_max(our_army->morale, -3), 3),
-                                       akSpellTraits[SPELL_MIRTH].mastery_bonus[caster.mastery]);
+    long change = akSpellTraits[SPELL_MIRTH].mastery_bonus[caster.mastery];
+    double effect = AI_value_of_morale(_cpp_clamp(our_army->morale, 3, -3), change);
     if (effect == 0.0)
         return 0;
-    double scale;
+    double portion;
     if (caster.duration >= params.odds)
-        scale = 1.0;
+        portion = 1.0;
     else
-        scale = static_cast<double>(caster.duration) / static_cast<double>(params.odds);
+        portion = static_cast<double>(caster.duration) / static_cast<double>(params.odds);
     unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(our_army->creatureId) >> 26);
-    if (slow_flag & 1) {
-        scale = scale - 1.0 / static_cast<double>(params.odds);
-        if (scale < 0.0)
-            scale = 0.0;
-    }
+    double scale;
+    if ((slow_flag & 1)
+            && (portion = portion - 1.0 / static_cast<double>(params.odds)) < 0.0)
+        scale = 0.0;
+    else
+        scale = portion;
     double total = static_cast<double>(our_army->get_total_combat_value(params.lowest_attack,
                                                                         params.lowest_defense));
     return static_cast<long>(total * scale * effect);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1327
+// Mirth's mirror image, and the negations are doubled: the mastery row
+// is `neg edx`'d on the way INTO value_of_luck_and_morale and the
+// result is `fchs`'d on the way out, so a sorrow that costs the enemy
+// morale scores as a positive value for us.
+// The traits row is byte-proven: `[akSpellTraits + 4*mastery + 0x1ac4]`
+// is 50*136 + 0x34, and the work-chance leaf is pushed the literal
+// 0x32 - both SPELL_SORROW.
+//
+// Residual (99.5%): register naming only, branch sequences AGREE - the
+// setne/side pair around SpellCastWorkChance swaps EAX and EDX, and
+// that renames the scale copy and the two params pushes downstream.
+// Register-tie-break cap.
 VA(0x004382c0, 0x1C6)  // anchor-vtable, dc 0x3e658
 long type_AI_spellcaster::get_sorrow_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    unsigned char undead = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 17);
+    if (undead & 1)
+        return 0;
+    if ((field_14 & (1 << enemy->bitIndex)) == 0)
+        return 0;
+    if (params.kills_only)
+        return 0;
+    if (field_1c)
+        return 0;
+    long change = akSpellTraits[SPELL_SORROW].mastery_bonus[caster.mastery];
+    double effect = -AI_value_of_morale(_cpp_clamp(enemy->morale, 3, -3), -change);
+    if (effect == 0.0)
+        return 0;
+    if (caster.field_10)
+        effect = effect * gpCombatManager->SpellCastWorkChance(SPELL_SORROW, side, enemy,
+                                                               0, 1, creature_spell != 0);
+    double portion;
+    if (caster.duration >= params.odds)
+        portion = 1.0;
+    else
+        portion = static_cast<double>(caster.duration) / static_cast<double>(params.odds);
+    unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 26);
+    double scale;
+    if ((slow_flag & 1)
+            && (portion = portion - 1.0 / static_cast<double>(params.odds)) < 0.0)
+        scale = 0.0;
+    else
+        scale = portion;
+    double total = static_cast<double>(enemy->get_total_combat_value(params.lowest_attack,
+                                                                     params.lowest_defense));
+    return static_cast<long>(total * scale * effect);
 }
 
+#if 0  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:1370
+// SURVEYED 2026-08-08, NOT the luck/morale family's shape and NOT
+// unblocked by the clamp work: 0x438490 contains ZERO stack-address
+// selections (`lea reg,[ebp+disp]` count is 0 over all 811 bytes), so
+// no _cpp_clamp / _cpp_min / _cpp_max call site exists in it. The
+// [-3, 3] handling is open-coded integer arithmetic instead -
+// `cmp luck,3` for the upper bail, `lea ecx,[luck+change]` then
+// `cmp ecx,-3` for the lower, and `mov ecx,3 / sub ecx,luck` for the
+// trim - i.e. value_of_luck_and_morale's own body specialised inline
+// rather than called (the out-of-line pricer is never reached from
+// here).
+// It is also the only member of the group that INLINES
+// get_defense_boost_value (0x4387c0), TWICE - once per luck arm - so
+// the body carries two full copies of that function's
+// can_shoot / get_average_damage / get_total_hit_points head, its
+// params.odds scale block, its slow-flag subtraction and its
+// `(sqrt(x) - 1.0) * total * scale` tail, plus a `* 2 / 3` weighting
+// (imul by 0x2aaaaaab, sar 2) between them. Reconstructing it is an
+// independent job the size of get_defense_boost_value plus
+// value_of_luck_and_morale, not a variation on get_mirth_value.
 VA(0x00438490, 0x32B)  // anchor-vtable, dc 0x3e87c
 long type_AI_spellcaster::get_fortune_value(const army* our_army, type_enchant_data caster)
 {
@@ -1082,23 +1189,72 @@ long type_AI_spellcaster::get_defense_skill_value(const army* our_army, long dur
     return get_defense_boost_value(our_army, enemy, duration, increase);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1498
+// Disease is priced as a flat tenth of the stack's combat value per
+// turn it lasts - `total - total*0.9`, not `total*0.1`, which is why
+// the 0.9 is what sits in .rdata.
+//
+// ODDITY, SETTLED FROM BYTES (2026-08-08) - the work-chance leaf is
+// pushed the literal 0x2d, i.e. SPELL_WEAKNESS, the same id whose
+// mastery_bonus row get_weakness_value (0x438ed0) reads. It is not a
+// misattribution: the 11-row order-map defense_skill -> disease ->
+// prayer -> precision -> air_shield -> shield -> slayer -> tough_skin
+// -> disruptive_ray -> weakness -> misfortune is monotone and
+// exhaustive against the DC roster (dc 0x3ec10..0x3f5f0), the HD
+// crossbuild names the same eleven bodies at a CONSTANT -0x3b0 offset,
+// and 45 is pinned as Weakness at both ends of the 41..52 ladder by
+// functions that compile exact (PRECISION 44, MIRTH 49, SORROW 50,
+// MISFORTUNE 52). So retail really does ask "would a Weakness land on
+// this stack?" when pricing Disease - the zombie ability is an
+// attack/defense debuff and the AI reuses the Weakness resistance
+// query for it. Transcribed as retail spells it.
+//
+// Residual (93.9%): four instructions in the work-chance argument
+// setup, branch sequences AGREE. Retail keeps `creature_spell` in CL
+// and refills ECX with gpCombatManager the moment CL dies, which
+// leaves `side` to be loaded late, right where it is pushed; our CL
+// pre-loads `side` into ECX, so the flag lands in DL and the this-
+// pointer load sinks below the pushes. The same four instructions are
+// the whole residual of get_disruptive_ray_value (97.7%) and part of
+// get_damage_value's and get_misfortune_value's - it is the shared
+// SpellCastWorkChance call site, not this body. Register-homing
+// family.
 VA(0x00438a10, 0xAD)  // anchor-vtable, dc 0x3ed34
 long type_AI_spellcaster::get_disease_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    if ((field_14 & (1 << enemy->bitIndex)) == 0)
+        return 0;
+    if (params.kills_only)
+        return 0;
+    double total = static_cast<double>(enemy->get_total_combat_value(params.lowest_attack,
+                                                                     params.lowest_defense));
+    long value = static_cast<long>((total - total * 0.9)
+                                   * static_cast<double>(caster.duration));
+    if (caster.field_10)
+        value = static_cast<long>(
+            gpCombatManager->SpellCastWorkChance(SPELL_WEAKNESS, side, enemy, 0, 1,
+                                                 creature_spell != 0) * value);
+    return value;
 }
 
 // E:\gamedcs\ai_tactical.cpp:1523
+// Prayer is the composite blessing: it buys defense, speed and - only
+// when the stack can actually reach what it has picked this turn -
+// attack, all off the SAME mastery row, which is why the row is homed
+// once at [ebp-4] and re-read for the third call.
+// Traits row +0x19b4 = 48*136 + 0x34 pins SPELL_PRAYER.
 VA(0x00438ac0, 0x85)  // anchor-vtable, dc 0x3eea8
 long type_AI_spellcaster::get_prayer_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    long bonus = akSpellTraits[SPELL_PRAYER].mastery_bonus[caster.mastery];
+    const army* target = our_army->AI_target;
+    long value = get_defense_skill_value(our_army, caster.duration, bonus);
+    value += get_speed_value(our_army, bonus, caster.duration);
+    if (target != 0
+            && our_army->get_AI_target_time(our_army->GetSpeed()) == 1)
+        value += get_attack_skill_value(our_army, target, caster.duration, bonus);
+    return value;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1545
 // Precision only buys anything for a shooter that is already in range
@@ -1118,23 +1274,46 @@ long type_AI_spellcaster::get_precision_value(const army* our_army, type_enchant
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1566
+// The two damage-reduction shields are one body written twice with the
+// two censuses swapped. Both take the stack's own bitIndex row, ask
+// which census the spell scales - Air Shield the RANGED one
+// (attacks[], this+0x190), Shield the MELEE one (enemies[], this+0x50)
+// - and hand get_defense_boost_value the ratio
+// (melee + ranged) / (scaled*bonus/100 + unscaled), i.e. the factor by
+// which the stack's incoming damage shrinks. The enemy the boost is
+// priced against comes from the SAME census that gets scaled.
+// Traits row +0xf14 = 28*136 + 0x34 pins SPELL_AIR_SHIELD.
 VA(0x00438bc0, 0x99)  // anchor-vtable, dc 0x3ef90
 long type_AI_spellcaster::get_air_shield_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    const army* enemy = attacks[our_army->bitIndex].enemy;
+    if (enemy == 0)
+        return 0;
+    long melee = enemies[our_army->bitIndex].total_damage;
+    long ranged = attacks[our_army->bitIndex].total_damage;
+    double increase = static_cast<double>(ranged + melee)
+        / static_cast<double>(ranged * akSpellTraits[SPELL_AIR_SHIELD].mastery_bonus[caster.mastery] / 100
+                              + melee);
+    return get_defense_boost_value(our_army, enemy, caster.duration, increase);
 }
 
 // E:\gamedcs\ai_tactical.cpp:1586
+// Air Shield's melee twin; see there. Traits row +0xe8c = 27*136 +
+// 0x34 pins SPELL_SHIELD.
 VA(0x00438c60, 0x99)  // anchor-vtable, dc 0x3f080
 long type_AI_spellcaster::get_shield_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    const army* enemy = enemies[our_army->bitIndex].enemy;
+    if (enemy == 0)
+        return 0;
+    long ranged = attacks[our_army->bitIndex].total_damage;
+    long melee = enemies[our_army->bitIndex].total_damage;
+    double increase = static_cast<double>(melee + ranged)
+        / static_cast<double>(melee * akSpellTraits[SPELL_SHIELD].mastery_bonus[caster.mastery] / 100
+                              + ranged);
+    return get_defense_boost_value(our_army, enemy, caster.duration, increase);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1606
 // Slayer is worth nothing unless the stack's chosen victim is one of
@@ -1162,35 +1341,139 @@ long type_AI_spellcaster::get_slayer_value(const army* our_army, type_enchant_da
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_tactical.cpp:1626
+// Stone Skin is pure defense, so the whole body is a forwarding tail
+// call - retail does not even reload ECX. The DC roster's name for the
+// body is get_tough_skin_value; the spell it prices is Stone Skin
+// (traits row +0x18a4 = 46*136 + 0x34), and the HD crossbuild names
+// this same body get_stone_skin_value.
 VA(0x00438d90, 0x25)  // anchor-vtable, dc 0x3f208
 long type_AI_spellcaster::get_tough_skin_value(const army* our_army, type_enchant_data caster)
 {
-    // @stub
+    return get_defense_skill_value(our_army, caster.duration,
+                                   akSpellTraits[SPELL_STONE_SKIN].mastery_bonus[caster.mastery]);
 }
 
 // E:\gamedcs\ai_tactical.cpp:1638
+// The ray is only worth casting on a stack one of OUR stacks has
+// already picked as its target, which is the linear scan over
+// armies[side] comparing each AI_target against the candidate - the
+// loop runs to `count` and the miss is detected by `i == count`, not
+// by a flag.
+// The value is the extra damage the defense drop buys:
+// `total - total * sqrt(1 - bonus*0.05)`, the engine's 5%-per-point
+// defense curve under a square root. `sqrt` is a real CALL because
+// /Op disables the floating-point intrinsics.
+// SPELL_DISRUPTING_RAY is doubly pinned here: traits row +0x192c =
+// 47*136 + 0x34 AND the literal 0x2f pushed into the work-chance leaf.
+//
+// Residual (97.7%): the shared SpellCastWorkChance register tie-break
+// documented on get_disease_value, nothing else - branch sequences
+// AGREE. Tried and rejected: the guard before the armies-base read
+// (68.1%), `i >= count` instead of `i == count` (74.4%), the base read
+// before the guard but `count` after it (90.3%), and calling the leaf
+// through the `combat` local instead of reloading gpCombatManager
+// (89.9%). What the local BUYS is retail's two live bases across the
+// loop - gpCombatManager itself and &armies[side][0] - which is only
+// reachable when both the row pointer and the count are read before
+// the kills_only guard (90.3 -> 97.7).
 VA(0x00438dc0, 0x109)  // anchor-vtable, dc 0x3f22c
 long type_AI_spellcaster::get_disruptive_ray_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    const combatManager* combat = gpCombatManager;
+    const army* stacks = combat->armies[side];
+    if (params.kills_only)
+        return 0;
+    long count = combat->numArmies[side];
+    long i;
+    for (i = 0; i < count; i++)
+        if (stacks[i].AI_target == enemy)
+            break;
+    if (i == count)
+        return 0;
+    long bonus = akSpellTraits[SPELL_DISRUPTING_RAY].mastery_bonus[caster.mastery];
+    double total = static_cast<double>(enemy->get_total_combat_value(params.lowest_attack,
+                                                                     params.lowest_defense));
+    long value = static_cast<long>(
+        total - total * sqrt(1.0 - static_cast<double>(bonus) * 0.05));
+    if (caster.field_10)
+        value = static_cast<long>(
+            gpCombatManager->SpellCastWorkChance(SPELL_DISRUPTING_RAY, side, enemy, 0, 1,
+                                                 creature_spell != 0) * value);
+    return value;
 }
 
 // E:\gamedcs\ai_tactical.cpp:1671
+// Weakness is priced exactly like bloodlust in reverse - the same
+// AI_target / reach preamble, the same get_attack_skill_value leaf -
+// but the swing is CAPPED at the victim's own attack skill, since a
+// stack cannot be weakened below zero attack.
+// Traits row +0x181c = 45*136 + 0x34 pins SPELL_WEAKNESS.
 VA(0x00438ed0, 0x8D)  // anchor-vtable, dc 0x3f408
 long type_AI_spellcaster::get_weakness_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    if ((field_14 & (1 << enemy->bitIndex)) != 0 && !params.kills_only) {
+        const army* target = enemy->AI_target;
+        if (target != 0
+                && enemy->get_AI_target_time(enemy->GetSpeed()) <= 1) {
+            long capped = _cpp_min(akSpellTraits[SPELL_WEAKNESS].mastery_bonus[caster.mastery],
+                                   enemy->attackSkill);
+            return get_attack_skill_value(enemy, target, caster.duration, capped);
+        }
+    }
+    return 0;
 }
 
 // E:\gamedcs\ai_tactical.cpp:1697
+// Sorrow's luck twin: the same doubled negation (`neg edx` into the
+// pricer, `fchs` on the way out), the same work-chance gate and the
+// same portion/scale tail, but it reads army::luck (+0x4ec) and prices
+// it through AI_value_of_luck - which is why the two weights arrive as
+// `fld dword / sub esp,8 / fstp qword [esp]` pairs (the float pair
+// widened) instead of the morale pair's dword pushes.
+// Two guards only, and NOT the same two sorrow carries: the allowed-
+// target bitmask and params.kills_only. There is no undead test (luck
+// is not a morale-immune trait) and no field_1c test.
+// Traits row `[akSpellTraits + 4*mastery + 0x1bd4]` = 52*136 + 0x34 and
+// the work-chance leaf is pushed the literal 0x34 - both
+// SPELL_MISFORTUNE.
+//
+// Residual (96.6%): the shared SpellCastWorkChance tie-break documented
+// on get_disease_value plus the register naming it renames downstream;
+// branch sequences AGREE. Tried and rejected: `effect *=` instead of
+// `effect = effect * ...` (no change).
 VA(0x00438f60, 0x199)  // anchor-vtable, dc 0x3f5f0
 long type_AI_spellcaster::get_misfortune_value(const army* enemy, type_enchant_data caster)
 {
-    // @stub
+    if ((field_14 & (1 << enemy->bitIndex)) == 0)
+        return 0;
+    if (params.kills_only)
+        return 0;
+    long change = akSpellTraits[SPELL_MISFORTUNE].mastery_bonus[caster.mastery];
+    double effect = -AI_value_of_luck(_cpp_clamp(enemy->luck, 3, -3), -change);
+    if (effect == 0.0)
+        return 0;
+    if (caster.field_10)
+        effect = effect * gpCombatManager->SpellCastWorkChance(SPELL_MISFORTUNE, side, enemy,
+                                                               0, 1, creature_spell != 0);
+    double portion;
+    if (caster.duration >= params.odds)
+        portion = 1.0;
+    else
+        portion = static_cast<double>(caster.duration) / static_cast<double>(params.odds);
+    unsigned char slow_flag = static_cast<unsigned char>(static_cast<unsigned>(enemy->creatureId) >> 26);
+    double scale;
+    if ((slow_flag & 1)
+            && (portion = portion - 1.0 / static_cast<double>(params.odds)) < 0.0)
+        scale = 0.0;
+    else
+        scale = portion;
+    double total = static_cast<double>(enemy->get_total_combat_value(params.lowest_attack,
+                                                                     params.lowest_defense));
+    return static_cast<long>(total * scale * effect);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1732
 VA(0x00439100, 0x169)  // anchor-vtable, dc 0x3f7f0
