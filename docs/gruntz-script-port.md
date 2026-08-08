@@ -260,6 +260,66 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — `widget` CLOSED 12/12 at 100%; store order proven
+  PER-FUNCTION; a third pipeline cap pinned by elimination.**
+  Engine-wide 333 → 337 exact, 4.25% → **4.27%** executable matched.
+  Also `misc` 70.10 → 89.58%, `strip` 95.28 → 97.97%, `textntry`
+  97.86 → 98.78%.
+  **`widget` CLOSES against the skill's bar, not the scoreboard:** all
+  12 carve rows in the rechecked span 0x5fe340..0x5fe9c3 claimed AND
+  exact; both flanks are the excluded cinit class (guard byte 0x6abaa0
+  + atexit, 95-byte ten-iteration funclets); the 13-row DC roster is
+  exhausted, `widget::Close` having already been attributed as the
+  ICF-folded `/Gy` COMDAT at 0x5bc690. Fourth TU closed (after zlib,
+  hexcell, sample, winmgr).
+  **Two of the twelve were FOUND, not fixed** — a pattern worth
+  hunting elsewhere: `config/retail-functions.tsv` carried unclaimed
+  rows at 0x5fe3b0 and 0x5fe410 *inside* the span, both parked as
+  `DC_ONLY` carcasses on the false premise that no retail body existed.
+  Body evidence promoted them (`??_G` stores the widget vtable, clears
+  `last_hover_widget`, ends on the `flags & 1 → operator delete` tail;
+  the default ctor is 29 B thiscall storing exactly five fields), and
+  **both came out byte-exact on the first compile** — which is itself
+  the confirmation. A `DC_ONLY` carcass sitting on a real carve row is
+  free exactness.
+  **NEW DOCTRINE — message-field store order is PER-FUNCTION, not a
+  house style.** `send_message` 79.43 → 100 and `enable` 89.56 → 100
+  came from an exhaustive **720-permutation sweep** of the store order
+  against retail bytes, run out-of-tree so the build was untouched.
+  Five orders are exact for send_message, four for enable; the shared
+  invariant is **the zero run must precede the `codeY` store**. The
+  house order used by strip's already-exact `DrawMonster` family is NOT
+  among them (23.6%). The sweep technique generalises to any TU that
+  builds `message` objects.
+  **THIRD PIPELINE CAP, pinned by elimination rather than assertion:
+  post-RA scheduling with an IDENTICAL BYTE MULTISET.**
+  `initialize::create_included_mask` (93.87) differs only as
+  `mov ecx,0x56 / mov esi,edx / lea edi,[edx+8]` vs our `lea` hoisted
+  two slots. Three hypotheses were ruled out by measurement: NOT
+  reloc-name cost (`add_to_included_mask` carries the *same*
+  `bitNumber+4`→`data_26cd9c` and `kCommonIncludeList`→`data_23fbc4`
+  rows and scores 100.00); NOT include-set sensitivity (a 0..8
+  dummy-struct sweep leaves it at 93.8667 at *every* count, while
+  `initialize_game_data` swings 100/100/100/94.07/94.07/100/100/100/100
+  across the same sweep); NOT scheduler target (`/G5` byte-identical to
+  the default `/GB`; `/G6` also 93.8667).
+  **An inherited residual note was WRONG and is corrected:** it claimed
+  every spelling that fixes create_included_mask costs
+  `initialize_game_data` its exact match. No spelling fixes it — 16
+  were tried.
+  **Discipline worth repeating:** `misc`'s ctor `flag` byte
+  (`mov dl,[ebp+0xb]` in retail, the root of the whole remaining
+  register cascade) was probed with a byte-alias spelling purely as a
+  diagnostic. It scored **worse** (72.13 vs 72.18), so it was rejected
+  rather than asserted, and no `reinterpret_cast` was introduced — the
+  clean `>>24` stand-in stays.
+  **Not attempted, with reasons:** `exec::CallManager` (68.37) needs an
+  unidentified RAII type — retail carries a real `fs:[0]` frame with an
+  unwind table and a `mov byte ptr [ebp-X]` state store we do not
+  model; that is research, not spelling. `exec::MainLoop` (88.13)
+  plateaus on retail memory-homing `dispatch` while keeping constant 1
+  in `edi` (do-while and `for(;;)` both drop it to 65.1).
+
 - **2026-08-08 — media lane: soundmgr 98.05%; the RELOC-NAME theory
   REFUTED; two pipeline-level caps pinned precisely.** Engine-wide
   330 → 333 exact, 4.18% → **4.25%** executable matched. `soundmgr`
