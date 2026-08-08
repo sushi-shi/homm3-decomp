@@ -447,14 +447,32 @@ short town::get_growth_rate(short dwelling)
     // @stub
 }
 
-// E:\gamedcs\town.cpp:1682
-DC_ONLY(0x167848, 0xB6)
-void town::increase_population(TCreatureType bonus_creature, TCreatureType alternate_bonus, long bonus_amount)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\town.cpp:1682
+// Promoted from DC_ONLY 2026-08-08. The row is inside town.obj's carve
+// span in the DC roster's order (last before change_generator_bonus),
+// `ret 0xc` matches the DC's four parameters, and the body is pinned
+// three ways: the fourteen-iteration `[this+0x16]` word walk, the
+// gTownDwellingCreatures row read at 14*type + slot, and the call to
+// 0x5bfb60 which the same bracket makes get_growth_rate.
+VA(0x005bfdd0, 0x74)  // dc-bracket + body (14-slot population walk), dc 0x167848
+void town::increase_population(TCreatureType bonus_creature,
+                               TCreatureType alternate_bonus, long bonus_amount)
+{
+    for (short dwelling = 0; dwelling < TOWN_DWELLING_SLOTS; dwelling++) {
+        short growth = get_growth_rate(dwelling);
+        if (growth > 0) {
+            TCreatureType creature =
+                gTownDwellingCreatures[TOWN_DWELLING_SLOTS * type + dwelling];
+            if (creature == bonus_creature || creature == alternate_bonus)
+                growth += bonus_amount;
+            if (owner == -1)
+                growth = growth / 2;
+            population[dwelling] += growth;
+        }
+    }
+}
 
 // E:\gamedcs\town.cpp:1711
 // Credits a growth bonus to the dwelling that produces `creature`, and
@@ -749,14 +767,28 @@ void town::hire(hero* new_hero, long player_id)
     // @stub
 }
 
-// E:\gamedcs\town.cpp:2343
-DC_ONLY(0x168b54, 0x4C)
-void town::PlaceInMap(THeroID hero_id, long player_id, unsigned char reset_flags)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\town.cpp:2343
+// Promoted from DC_ONLY 2026-08-08. The row sits inside town.obj's own
+// carve span between is_legal_building (0x5c12a0) and GetNativeTerrain
+// (0x5c1440), which is exactly the DC roster's bracket for it, and the
+// body pins the identity from three sides: `ret 0xc` matches the DC's
+// four parameters (this + 3), the three source bytes are this town's
+// mapX/mapY/mapZ at +5/+6/+7, and the tail call is hero::PlaceInMap
+// (0x4d7900) reached through the gpGame + 1170*id + 0x21620 chain that
+// game.h's GetHero owns - including the redundant `cmp edx,-1` the
+// inline accessor always leaves behind.
+VA(0x005c13b0, 0x83)  // dc-bracket + body (hero::PlaceInMap tail), dc 0x168b54
+void town::PlaceInMap(int hero_id, long player_id, unsigned char reset_flags)
+{
+    hero* new_hero = gpGame->GetHero(hero_id);
+    type_point point;
+    point.x = mapX;
+    point.y = mapY;
+    point.z = mapZ;
+    new_hero->PlaceInMap(player_id, point, reset_flags);
+}
 
 // E:\gamedcs\town.cpp:2356
 // Promoted from DC_ONLY 2026-08-08. All three rows sit in town.obj's
