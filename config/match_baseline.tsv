@@ -875,7 +875,7 @@ inputmgr	KeyboardMessageHandler	0.0000
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000
 kbwin	?AppExit@@YIXXZ	100.0000
-kbwin	?AppWndProc@@YGJPAUHWND__@@IIJ@Z	74.7571
+kbwin	?AppWndProc@@YGJPAUHWND__@@IIJ@Z	100.0000
 kbwin	?Delay@GameTime@@SIXH@Z	100.0000
 kbwin	?DelayTil@GameTime@@SIXK@Z	100.0000
 kbwin	?Get@GameTime@@SIKXZ	100.0000
