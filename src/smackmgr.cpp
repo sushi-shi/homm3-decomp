@@ -90,7 +90,12 @@ void VideoSoundOnOff()
 // scaled add third, whichever way the source associates. Retail's CL
 // folded the scaled term into the middle lea instead. No source
 // association reaches it; only un-scaling the term would, and x+x was
-// already rejected.
+// already rejected. Re-measured 2026-08-08: branch sequences AGREE
+// (2/2) and four more spellings compile to the identical object -
+// explicit parentheses around the int sum in either term order,
+// `gBinkX << 1`, and `(unsigned char*)(screenBitmap->map + gBinkX) +
+// Pitch*gBinkY` (the unsigned-short-index form that supplies the
+// scale as pointer arithmetic). CL-generation-capped.
 VA(0x005971f0, 0xD9)  // anchor-global, dc 0x14ac34
 void VideoRealignBuffers()
 {
@@ -117,19 +122,30 @@ void VideoRealignBuffers()
 // E:\gamedcs\smackmgr.cpp:130
 // The wait loop's needs-update check is VideoNeedsUpdate inlined
 // (/Ob2); F4 (0x3e) is the one key the abort filter ignores.
-// Residual (77.7%): register-allocation cascade. Retail memory-homes
-// the centered blit origin (frame slots -0xc/-8) so ebx is free to be
-// the materialized zero (xor ebx,ebx) across the message loop and the
-// closer (cmp [g],ebx / mov [g],ebx forms); our CL promotes the
-// origin's x into ebx across the loop, leaving the loop in
-// test-eax forms and materializing the zero late in edi. Entry also
-// picks edi (not ebx) for the x parameter copy. Structure, frame size
-// (0x4c), the vw/vh param-slot write-backs at the ShowVideo call, and
-// the result/aborted coloring into the dead y arg slot all match after
-// the vw/vh copies (74.1% -> 77.7%). Tried and rejected: an int[2]
-// for the origin (identical to the POINT), plain int locals (0.2%
-// worse), dropping the smk cache, and declaration reorders
-// (byte-identical objects).
+// STRUCTURE, byte-proven 2026-08-08 (77.7% -> 87.2%, branch counts
+// 28/27 -> 27/27): the wait loop MUST be spelled `while (1) { if
+// (gSmackVideo == 0) break; ... }`. Every other spelling -
+// `while (gSmackVideo)`, `for (;;)` + `if (!gSmackVideo) break`,
+// `do {...} while (1)`, and the explicit goto-loop transcription -
+// lets VC6 rotate the loop, which duplicates the guard after the
+// VideoDrawRects call AND jump-threads the VideoNeedsUpdate arms
+// straight to the epilogue (that duplicate was the extra branch).
+// Retail's loop is unrotated: all five back edges land on the single
+// top test at the loop header, which is also why the loop-invariant
+// `xor ebx,ebx` sits inside the header.
+// Residual (87.2%): one register-allocation bit at entry, cascading.
+// Retail assigns the callee-saved registers in ebx,esi,edi order to
+// (x, vw, vh); ours assigns edi,esi,ebx to the same three. Because
+// retail's `x` occupies EBX, `pos.x = x + ...` has to land in EAX and
+// must therefore be spilled to [ebp-0xc] across the loop - which frees
+// EBX for the materialized zero the whole loop body compares against
+// (`cmp [g],ebx`). Ours computes pos.x straight into EBX, where it
+// survives the loop for free, so no zero register is available and
+// every test stays in `mov eax,[g]; test eax,eax` form. Tried and
+// rejected: all ten declaration permutations of pos/vw+vh/result/
+// aborted (byte-identical), split `int vw; int vh;` (identical),
+// int[2] and plain int locals for the origin (earlier lane). `vh = h`
+// before `vw = w` is worth +0.03 and is the form kept.
 VA(0x005972d0, 0x29D)  // anchor-global, dc 0x14ac38
 int VideoPlay(int id, int x, int y, int w, int h)
 {
@@ -143,9 +159,9 @@ int VideoPlay(int id, int x, int y, int w, int h)
             || (id == VIDEO_ID_STATE_GATED
                 && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_LOW
                 && *gpVideoGameState != VIDEO_GAME_STATE_FORCED_BINK_HIGH))) {
-        gpSoundManager->field_84 = 1;
-        vw = w;
         vh = h;
+        vw = w;
+        gpSoundManager->field_84 = 1;
         ShowVideo(id, x, y, vw, vh, 0, 0, 1);
         if (!gSmackVideo) {
             result = 0;
@@ -165,7 +181,9 @@ int VideoPlay(int id, int x, int y, int w, int h)
                 gpWindowManager->screenBitmap->map, gSmackBufferFlags);
             aborted = 0;
             gpInputManager->Flush();
-            while (gSmackVideo) {
+            while (1) {
+                if (gSmackVideo == 0)
+                    break;
                 PollSound();
                 Process1WindowsMessage();
                 {
@@ -247,6 +265,14 @@ void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 // transcription, and (2026-08-08) that transcription wrapped in the
 // explicit outer `if (n != 0)` that would supply site (a) - VC6 threads
 // the top test away regardless of how the source spells the edges.
+// Confirmed 2026-08-08 with the branch counter: base 13, target 14, and
+// the missing site is (b). The `while (1) { if (n == 0) break; ... }`
+// form that unrotated VideoPlay's loop does NOT help here (88.3%, and
+// it costs a site rather than adding one) - the edge our CL threads is
+// the `if (n != 0) continue` back edge, whose value it has just proved
+// nonzero from `dec eax`, and neither `continue`, an explicit `goto
+// top_of_drain`, nor dropping the local mirror for the bare global
+// (95.85%) stops the propagation. NOT source-addressable.
 VA(0x005975f0, 0xE1)  // anchor-global, dc 0x14ac40
 void VideoClose()
 {
@@ -409,7 +435,11 @@ unsigned char VideoPlaying()
 // access instead of a bumped pointer bought 85.1% -> 89.4%. Tried and
 // rejected: retail operand orders in the growth compares (commuted
 // back), first-rect assignment reorder, per-arm vs function-scope
-// merge vars (byte-identical objects).
+// merge vars (byte-identical objects). Re-measured 2026-08-08: branch
+// sequences AGREE (23/23), so nothing structural is left; a sweep of
+// the first-rect assignment orders moved it 89.36 -> 89.63 and `x, y,
+// w, h` is the measured optimum (h,w,x,y and x,h,w,y are the worst at
+// 89.35).
 VA(0x005979d0, 0x294)  // anchor-global, dc 0x14ac60
 void VideoDrawRects()
 {
@@ -425,9 +455,9 @@ void VideoDrawRects()
             smk = gSmackVideo2;
         SmackToBufferRect(smk, gSmackBufferFlags);
         x = smk->LastRectx;
+        y = smk->LastRecty;
         w = smk->LastRectw;
         h = smk->LastRecth;
-        y = smk->LastRecty;
         while (SmackToBufferRect(smk, gSmackBufferFlags)) {
             if (smk->LastRectx < x)
                 x = smk->LastRectx;

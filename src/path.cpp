@@ -3,16 +3,39 @@
 // 9 functions in link order; retail drops GetBestDirection (no carve
 // row fits between OppositeDirection and the cinit cluster - the
 // combat move choice lives in the ai_* units).
-// RESIDUAL CLASS (whole TU, 2026-08-06): retail merges each pair of
-// adjacent bounds-check returns into one inline block (test jl A;
-// cmp jl B; A: ret-block; B:) while our SP3 CL either duplicates the
-// block per test (split-if spelling, closest) or sinks one shared
-// block to the function end (||, goto spellings - the optimizer
-// rethreads them all identically). The same tail-merge divergence
-// appears inverted in kbwin's AppWndProc - consistent with path.obj
-// being a stale object compiled by an earlier CL generation and
-// linked into the final build. Blocked pending a compiler-generation
-// probe; the split-if spelling is kept as the closest form.
+// THE PATH-FAMILY SHAPE, cracked 2026-08-08 (TU 75.97% -> 92.13%,
+// 1/8 -> 6/8 exact). The whole TU used to be parked on a supposed
+// "retail merges adjacent bounds-check returns and our CL cannot"
+// compiler-generation class. It is NOT a CL limitation - it is a
+// source shape, and the shape is a `goto` INTO the second guard's
+// body:
+//
+//     if (index < 0)
+//         goto off_grid;
+//     if (index >= 187)
+//     off_grid:
+//         return <fail>;
+//
+// which emits retail's `test/jl A; cmp/jl B; A: <fail-block>; B:`
+// exactly: guard 1 jumps into the block, guard 2 falls into it, and
+// the block sits BETWEEN the guards instead of being duplicated per
+// guard (split ifs, the old form, +4 bytes each) or sunk to the
+// function end (`||`, `&&`+goto, `!(a && b)`, a goto to a label after
+// the block - all four re-threaded to the sunk form and score ~11
+// points WORSE than the duplicated one). Applying it closed FindPath,
+// GetAdjacentCellIndex, GetAdjacentCellIndexNoArmy and
+// get_adjacent_hex in one edit. The same block-placement trick works
+// for a non-return merged block: see ValidAttack's `other` bounds
+// check, where the `cell = -1` arm has to be the `if` arm and the
+// table load the `else` arm for the -1 block to land first.
+// Second family lever, byte-proven here and worth trying anywhere
+// `creatureId & 1` appears (cmbtmgr, ai_tactical, army): retail
+// computes the two-hex test as a BYTE-typed value and reuses it -
+// `unsigned char twoHex = creatureId & 1;` then `twoHex ? a : b`.
+// Writing `(creatureId & 1) ? a : b` twice makes our CL CSE it as a
+// DWORD (`and eax,1` / `and esi,0xffffff40`) where retail works in
+// AL/CL (`and al,1` / `and cl,0x40`); that one change took
+// GetAttackMask 70.44% -> exact with nothing else touched.
 #include <va.h>
 #include "army.h"
 #include "hexcell.h"
@@ -26,8 +49,9 @@ VA(0x005239d0, 0x96)  // anchor-bracket, dc 0x10c918
 int army::FindPath(int fpTargetCellIndex, int maxMoves, unsigned char bMoveUnlimited, unsigned char bLiteralTarget)
 {
     if (fpTargetCellIndex < 0)
-        return 0;
+        goto off_grid;
     if (fpTargetCellIndex >= 187)
+off_grid:
         return 0;
     int moves;
     if (!gpCombatManager->bCreaturePlacement && !bMoveUnlimited)
@@ -48,12 +72,23 @@ int army::FindPath(int fpTargetCellIndex, int maxMoves, unsigned char bMoveUnlim
 // E:\gamedcs\path.cpp:51
 // The leading GetSpeed() call is real - retail issues it and discards
 // the result before the conditional re-query.
+// Residual (95.7%): three rows at the tail. Retail assigns the
+// FindCombatPath result to an int local it then never reads - it
+// zero-extends (`and eax,0xff`) and STORES to the dead destIndex
+// parameter slot before the `jne`, where our CL dead-codes the store
+// and tests `al` directly. Tried and rejected, all byte-identical:
+// `int found = ...; if (!found)`, the same with `found == 0`, the
+// local declared at function scope and assigned later, and
+// `FindCombatPath(...) == 0` inline. The positive form
+// (`if (found) { pathTarget = ...; return 1; } return 0;`) is much
+// worse (80.1%) - it sinks the success block.
 VA(0x00523a70, 0xA8)  // anchor-bracket, dc 0x10c9a4
 unsigned char army::ValidPath(int destIndex, unsigned char bLiteralTest)
 {
     if (destIndex < 0)
-        return 0;
+        goto off_grid;
     if (destIndex >= 187)
+off_grid:
         return 0;
     GetSpeed();
     int moves;
@@ -80,9 +115,10 @@ VA(0x00523b20, 0x89)  // anchor-global, dc 0x10c9ec
 unsigned army::GetAttackMask(int currIndex, int criteria, int iLiteralTargetIndex)
 {
     int testCellIndex;
+    unsigned char twoHex = static_cast<unsigned char>(creatureId & 1);
     unsigned bit = 1;
-    unsigned mask = (creatureId & 1) ? 0 : 0xc0;
-    int dirs = (creatureId & 1) ? 8 : 6;
+    unsigned mask = twoHex ? 0 : 0xc0;
+    int dirs = twoHex ? 8 : 6;
     for (int i = 0; i < dirs; i++) {
         if (!ValidAttack(currIndex, i, criteria, iLiteralTargetIndex, &testCellIndex))
             mask |= bit;
@@ -95,6 +131,26 @@ unsigned army::GetAttackMask(int currIndex, int criteria, int iLiteralTargetInde
 // The wide-creature 6/7 arms call GetAdjacentCellIndex with a
 // pre-remapped direction; /Ob2 inlines it and keeps its own 6/7 arms
 // live because the argument is not constant enough to fold.
+// Two things were reconstructed here 2026-08-08 (59.72% -> 81.04%):
+//   * `facing` is dispatched with a real `switch` (VC6's `sub ecx,0`
+//     / `dec ecx` chain), not an if/else-if - the switch is what lays
+//     the DEFENDER arm out first and the ATTACKER arm second, which
+//     no if/else ordering reproduces (69.3% / 74.5%);
+//   * each criteria case ends in a POSITIVE `if (...) return 1;
+//     break;`, not `if (!...) return 0; ... return 1;`. The negative
+//     form let our CL fold all three `return 1` tails into `setge` /
+//     `sete` / a neg-sbb-neg bool, losing exactly the three branches
+//     the counter was reporting missing.
+// Residual (81.0%): ONE extra branch, the last real tail-merge in the
+// TU. Retail cross-jumps the two inlined GetAdjacentCellIndex bodies
+// in the wide arms - the WIDE_LOWER arm's `cmp <dir>,6` mismatch
+// jumps straight into the WIDE_UPPER arm's `cmp <dir>,7` block, so
+// one copy serves both call sites. Our CL emits both copies. Unlike
+// the bounds-check merge above this one is NOT reachable from the
+// source: the two inlines have different first tests and only the
+// second half is common. Tried and rejected: a byte-typed twoHex
+// local (byte-identical), `(facing == 1) ?` instead of `facing ?`
+// (78.2%), testing WIDE_LOWER before WIDE_UPPER (80.7%).
 VA(0x00523bb0, 0x1DF)  // anchor-global, dc 0x10ca6c
 int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIndex, int* testCellIndex)
 {
@@ -110,18 +166,26 @@ int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIn
             cell = GetAdjacentCellIndex(currIndex, facing ? 2 : 3);
         } else {
             int other = currIndex;
-            if (facing == 0) {
-                if (direction >= 3)
-                    other = gpCombatManager->adjacentCells[currIndex][4];
-            } else if (direction <= 2) {
-                other = gpCombatManager->adjacentCells[currIndex][1];
+            switch (facing) {
+                case FACING_ATTACKER:
+                    if (direction >= 3)
+                        other = gpCombatManager->adjacentCells[currIndex][4];
+                    break;
+                case FACING_DEFENDER:
+                    if (direction <= 2)
+                        other = gpCombatManager->adjacentCells[currIndex][1];
+                    break;
             }
             if (other == -1)
                 return 0;
-            if (other < 0 || other >= 187)
+            if (other < 0)
+                goto other_off_grid;
+            if (other >= 187) {
+other_off_grid:
                 cell = -1;
-            else
+            } else {
                 cell = gpCombatManager->adjacentCells[other][direction];
+            }
         }
     } else {
         cell = GetAdjacentCellIndex(currIndex, direction);
@@ -134,21 +198,17 @@ int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIn
     hexcell* hc = &gpCombatManager->cells[cell];
     switch (criteria) {
         case ATTACK_CRITERIA_SELF:
-            if (hc->armySide != side)
-                return 0;
-            if (hc->armySlot != slot)
-                return 0;
-            return 1;
+            if (hc->armySide == side && hc->armySlot == slot)
+                return 1;
+            break;
         case ATTACK_CRITERIA_ENEMY:
-            if (hc->armySide < 0)
-                return 0;
-            if (!is_enemy(hc->get_army()))
-                return 0;
-            return 1;
+            if (hc->armySide >= 0 && is_enemy(hc->get_army()))
+                return 1;
+            break;
         case ATTACK_CRITERIA_OCCUPIED:
-            if (hc->armySide < 0)
-                return 0;
-            return 1;
+            if (hc->armySide >= 0)
+                return 1;
+            break;
     }
     return 0;
 }
@@ -158,8 +218,9 @@ VA(0x00523d90, 0x57)  // anchor-global, dc 0x10cbf8
 int army::GetAdjacentCellIndex(int currIndex, int direction)
 {
     if (currIndex < 0)
-        return -1;
+        goto off_grid;
     if (currIndex >= 187)
+off_grid:
         return -1;
     if (direction == COMBAT_DIRECTION_WIDE_UPPER)
         direction = (facing == 1) ? 5 : 0;
@@ -191,8 +252,9 @@ VA(0x00523e80, 0x3B)  // linkorder, dc 0x10ccdc
 int GetAdjacentCellIndexNoArmy(int currIndex, int direction)
 {
     if (currIndex < 0)
-        return -1;
+        goto off_grid;
     if (currIndex >= 187)
+off_grid:
         return -1;
     if (direction == COMBAT_DIRECTION_WIDE_UPPER)
         direction = 5;
