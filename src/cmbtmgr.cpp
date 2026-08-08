@@ -954,6 +954,13 @@ void combatManager::LootDeadHero(int side, std::vector<type_artifact,std::alloca
 // `armies[other_side][slot]` (fixes B0's size and gains a block but
 // costs fuzzy overall, 73.90%); `if (heroes[side] == 0) { ...; return; }`
 // instead of the if/else (inverts B14 and swaps both tails).
+// Re-swept 2026-08-08 against the whole day's lever set: `total`
+// declared before other_side, `int` instead of `long` (either order),
+// a `long` loop index, and a pointer cursor over the row - the first
+// four are byte-identical at 75.01 and the cursor is worse (73.90,
+// already recorded above). Nothing in the source picks which of
+// `total` and `this` gets the register; it is the same first-callee-
+// saved tie-break as ai_tactical's get_hex_attack_value.
 VA(0x0046a350, 0x10C)  // anchor-global, dc 0x6388c
 void combatManager::CalculateGainedExperience(int side, int* experience_gained)
 {

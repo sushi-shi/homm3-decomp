@@ -110,7 +110,14 @@ public:
         // either slot.
         signed char field_09;               // +0x9
         unsigned char field_0a;             // +0xa
-        char pad_0b[0xd];
+        char pad_0b[0x1];
+        // Sliced 2026-08-08 by mark_firewalls (0x4214f0), which feeds
+        // this dword straight into ModifySpellDamage as the base
+        // damage for the fire-wall spell - so it is the damage the
+        // obstacle deals, stored per obstacle when it is placed.
+        // Name provisional; no roster reaches the slot.
+        long spell_damage;                  // +0xc
+        char pad_10[0x8];
     };
 
     char pad_0000[0x34];
@@ -286,6 +293,8 @@ public:
     unsigned char move_toward(const army* current_army, long target_hex,
                               const long* enemy_attacks,
                               unsigned char consider_waiting);  // 0x41f580
+    void mark_firewalls(const army* current_army, long* enemy_attacks,
+                        type_AI_combat_parameters* estimate);   // 0x4214f0
     // command.obj's leaf (0x4763f0, claimed in src/command.cpp); ai.cpp
     // and findpath.cpp are both located callers and both reach it
     // through gpCombatManager with (army::combatSide, hex).

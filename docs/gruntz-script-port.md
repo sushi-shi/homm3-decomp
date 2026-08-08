@@ -260,6 +260,93 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-08 — HALF THE CARVE IS EXACT (491/977, 50.3%); the naming
+  lever generalises into FOUR source-level shapes; `TSpellSchool`
+  proven codegen-neutral.** Engine-wide 480 → **491 exact (50.3%)**,
+  5.35% → **5.39%** executable matched; ratchet clean, eight
+  cleanliness floors at 0, va-claims clean, single-view 0 splits.
+  **The lever that closed the SpellCastWorkChance family is one case of
+  four.** All four are byte-proven, and all four are invisible out of
+  line — they only move bytes once the callee is INLINED, which is why
+  they were never found by looking at the callee's own diff:
+  1. **Overwrite the variable; do not make a new one.**
+     `type_monster_data::take_damage` returns its own PARAMETER,
+     reassigned in an if/else, not a `dealt` local with two returns.
+     One edit: `inflict_melee_damage` 97.0, `cast_area_effect` 97.4 and
+     `cast_damage_spell` 94.2 **all to 100**, `cast_chain_lightning`
+     71.9 → 79.7. Same shape closed `get_traitor_value` 90.5 → 100.
+  2. **Three-operand selector.** `get_total`'s null test is a `?:` on
+     the return expression, not a split `if`. 83.6 → 100, cascading
+     through its ~12 inlined copies: `get_area_value` 86.6 → 100,
+     `cast_area_effect` +11, `do_general_melee` 79.6 → 94.8.
+  3. **A cached member local is not free — it crowds out `this`.**
+     `long odds = params.odds;` cost `get_speed_value` its whole match
+     (82.4 → 100 by deleting it and re-reading the member four times).
+     In `get_defense_boost_value` 96.2 → 100 **both** cached locals had
+     to go; dropping only one changed nothing.
+  4. **The literal lever** (bind an inline argument to a named local)
+     closed the newly written `mark_firewalls`, 86.4 → 100.
+  Also: a DUP-EXIT goto plus a tail rewrite took
+  `get_ranged_attack_value` 75.5 → 100; a `short` loop index (forcing
+  retail's separate `dec edi` down-counter) closed `adjust_army`; and
+  hoisting the armies-row base to a named local took
+  `get_hypnotize_value` **18.2 → 96.3**, correcting an older in-tree
+  note whose "zero register at the top" diagnosis was a consequence of
+  the missing hoist, not the cause.
+  **`TSpellSchool` promoted from `typedef int` to the real DC enum**
+  (`include/ai_tactical.h`, names and values verbatim from
+  `evidence/dreamcast/enums.csv`; it is a BITMASK, and
+  `kNumSpellSchools` sharing `eSchoolWater`'s 4 is the dump's own
+  doing). The typedef could not be made visible from `hero.h` without
+  C2371 and was blocking five hero bodies. **A/B-measured: ZERO of the
+  977 scored functions in all 52 units moved by a byte** — this is DC
+  naming evidence over an int-sized domain, claiming no retail byte.
+  Six `get_protection_value` call sites lost bare `1/2/4/8/15`
+  literals in the same change.
+  `mark_firewalls` (0x4214f0) written exact; it slices
+  `TObstacle::spell_damage` at +0xc. Two facts **transcribed as found
+  rather than corrected**: retail passes `estimate->lowest_attack`
+  TWICE to `get_loss_combat_value` (`lowest_defense` is never read at
+  0x4218b8), and the spell id stays a bare `0xd` because the roster
+  lives in another lane's `armygrp.h` — it wants
+  `SPELL_FIRE_WALL = 0xd`, flagged rather than reached across for.
+  Capped with in-tree residual notes: `get_hex_attack_value` 84.4 and
+  `CalculateGainedExperience` 75.0 are the same **first-callee-saved-
+  push tie-break** (retail pushes EDI first and parks `this` there; we
+  push EBX); `get_attack_change` 96.4 is a symmetric-parameter
+  esi↔edi swap; `do_general_melee` 94.8 is **/Ob2 inliner depth**
+  (retail expands `get_total` inside both inlined `kill()`s, our budget
+  runs out after the first); `can_take_town` 98.8 rejects naming
+  `gpGame` in all five positions tried (83.5–93.0).
+
+- **2026-08-08 — hero 39 → 46 exact; the DC roster REPACKED reproduces
+  retail's layout, and two "rules" are demoted to per-function.**
+  Engine-wide 466 → 480 exact, 5.25% → 5.35% matched. Seven of eight
+  written bodies were exact on the FIRST try, including a 497-byte
+  `ApplyBattleWinTemps`.
+  **The modelling result outranks the score: the Dreamcast `hero`
+  roster, repacked with NO alignment, reproduces retail's layout
+  exactly.** It PREDICTED `facing`@0x47 and `ArenaFlags`@0x73 before
+  retail bytes confirmed them and agrees at eleven independently proven
+  points, which makes hero's whole 0x23..0x12c band cheap to model.
+  Used strictly as a hypothesis generator — only bytes-proven fields
+  were committed.
+  **Two rejections worth as much as the wins.** Respelling `GiveSS`
+  around a `signed char* pLevel` local to fix `SetSS` looks right —
+  retail's own `lea edx,[esi+ecx+0xc9]` invites it — but it costs
+  `GiveSS` 100 → 73.4: **the address CSE is the optimiser's, not the
+  source's.** And `is_in_patrol_radius` INVERTED the guard rule (retail
+  genuinely has the sunk shared block; split early-outs scored 70.5) —
+  **the guard rule is per-function, not directional.**
+  Ratchet trap handled: two baseline rows differ by one suffix —
+  `hero_remove_artifact_e2dd0` was superseded by a promotion while
+  plain `hero_remove_artifact` (0x4e2bd0) is a live stub. Only the
+  former was deleted.
+  **New pipeline hazard recorded for every lane: delinking while any TU
+  fails to compile POISONS the target side**, presenting as a spurious
+  77-function drop. Confirm a clean `homm3 build --fast` before
+  `homm3 delink`.
+
 - **2026-08-08 — the LOCATE phase: 132 carve rows claimed across two
   lanes; `sema xref` established as the primary locate instrument; the
   border illusion measured and removed.** Engine-wide 405 → 414 exact;
