@@ -54,25 +54,30 @@ void font::SetPalette(const TPalette16* new_palette)
 }
 
 // E:\gamedcs\font.cpp:86
-// DECODE (to +0x88): bounds 0..255; src = data + glyphOffsets[c]
-// (the int[256] table at 0xc3c - currently pad_c3c in font.h, model
-// it); dst = bmp->pixels(+0x30) + 2*(y*bmp->width(+0x2c) + x +
-// spec[c].field_0); width = spec[c].field_4; rows = the height BYTE
-// at this+0x21 (inside the pad_1c header region - name it). Pixel
-// loop: 0 = transparent, 0xFF = palette.data[color], else =
-// palette.data[32] (the shadow slot; palette.data resolves at
-// this+0x1058). Tail +0x88..+0xa9 (row advance) unread - finish,
-// extend font.h/bitmap16.h fields, then implement.
+// Residual (78.3%): every block, branch, immediate and memory operand
+// agrees; the whole body is off by ONE register-allocation bit that
+// cascades - retail parks `src` in ESI and `dst` in EDI (so the pixel
+// byte lives in AL/AX and the row cursor in EDX), ours the mirror
+// image, and retail homes `width` in the dead `c` parameter slot
+// [ebp+8] where our CL takes a fresh [ebp-4] (the extra `push ecx`).
+// The declaration order IS load-bearing here: a full 24-permutation
+// sweep of the four head locals scored 58.0 (dst,rows,src,width) to
+// 78.3 (width,src,rows,dst) with no other change, so the order below
+// is the measured optimum, not a guess. Also tried and rejected, all
+// byte-identical to it: `dst` split into declaration + `+=` statement;
+// `bmp->Pitch * y` instead of `y * bmp->Pitch`; `spec[c].field_0 + x`;
+// `glyphOffsets[c] + (unsigned char*)data`; the row loop as a negated
+// outer `if (rows > 0)` instead of the `rows <= 0` early-out.
 VA(0x004b51a0, 0xA9)  // anchor-global, dc 0xa1d58
 void font::DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)
 {
     if (c < 0 || c >= 256)
         return;
+    int width = spec[c].field_4;
     unsigned char* src = static_cast<unsigned char*>(data) + glyphOffsets[c];
+    int rows = height;
     unsigned char* dst = static_cast<unsigned char*>(static_cast<void*>(bmp->map))
                          + y * bmp->Pitch + 2 * (x + spec[c].field_0);
-    int width = spec[c].field_4;
-    int rows = height;
     if (rows <= 0)
         return;
     do {
@@ -134,7 +139,18 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font:
 // use (VC6 homes char locals far more eagerly than ints); writing
 // `str[pos]` at each use lets the same load stay in `al` exactly as
 // retail does. 86.9% -> 96.3% for that change alone.
-// Residual (96.3%): register allocation only - the frame is the right
+// The claim that this was "register allocation only" was WRONG until
+// 2026-08-08: `--branches` reported a TOPOLOGY retarget, the
+// wrap-backtrack's `pos < lineStart` exit landing one block past
+// retail's. Spelling the backtrack as `for (;;) { if (str[pos] == ' ')
+// break; if (pos < lineStart) break; ... }` - the same two-break shape
+// that closed LongestWrappedLineWidth - routes BOTH exits through the
+// shared `if (pos <= lineStart)` instead of letting VC6 jump-thread
+// the lineStart exit straight to the assignment (96.33 -> 96.81, and
+// the branch sequences now AGREE). `while (str[pos] != ' ' &&
+// pos >= lineStart)` scores the same; `pos <= lineStart` as the break
+// condition is worse (96.59).
+// Residual (96.8%): register allocation only - the frame is the right
 // 0x18, every block, branch and immediate lines up, but retail spends
 // EDX as the spec[] index scratch (and pays a `mov edx,[ebp+8]` to
 // reload `str` afterwards) where we spend EDI and keep `str` live,
@@ -228,7 +244,9 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
             if (spec[static_cast<unsigned char>(str[k])].field_8 < 0)
                 width += spec[str[k]].field_8;
             pos = k;
-            while (str[pos] != ' ') {
+            for (;;) {
+                if (str[pos] == ' ')
+                    break;
                 if (pos < lineStart)
                     break;
                 if (str[pos] != '{' && str[pos] != '}') {
@@ -293,15 +311,32 @@ long font::get_string_width(const char* arg)
 }
 
 // E:\gamedcs\font.cpp:435
-// DECODE (to +0xd4): retail DIVERGED from homm2's ExtractLine form -
-// the wrap scan is inlined. Locals: lineStart@[ebp-0x4], count@-0x8,
-// len@-0xc. Forward scan: \n -> +0x78 (line break path); width +=
-// GCW (markers {} skipped) until width > boxWidth -> BACKTRACK: walk
-// esi backwards un-adding GCW (markers skipped) until a space (0x20)
-// or lineStart, with a first-uncommitted flag in ecx and a re-check
-// `width - GCW < boxWidth` gating the wrap point. Tail +0xd4..+0xf2
-// (count increment + loop re-entry + return) unread - one more pass,
-// then implement.
+// The measuring-family shape, byte-proven here and in
+// LongestWrappedLineWidth (both were ~82% under the earlier
+// goto-into-a-wrap-label transcription):
+//   * NEVER name the scanned character. `char c = str[pos];` earns a
+//     stack home and reloads at every use; writing `str[pos]` keeps
+//     the load in DL exactly as retail does, and it also lets VC6 drop
+//     the redundant null re-test the outer `while` already proved.
+//   * the forward scan is `while (str[pos] != 0) { if newline break;
+//     if (width > boxWidth) break; ... }` - the null test as the LOOP
+//     CONDITION (rotated to the bottom, tested once) and the other two
+//     as breaks. Spelling the newline test as a loop condition too
+//     duplicates it at the bottom (87.5%).
+//   * newline is NOT an unconditional line end: all three exits fall
+//     into one `if (width > boxWidth) { backtrack }` after the loop.
+//   * `int width = 0;` is declared BEFORE `int lineStart = pos;`.
+// Residual (91.7%): register allocation only - retail materialises a
+// fresh `xor edi,edi` for `count = 0` (ours reuses the zero the strlen
+// intrinsic already parked in EAX), which frees EAX for a
+// loop-invariant `boxWidth`; ours therefore reloads boxWidth into ECX
+// every iteration and carries `count` in EAX, swapping EAX/ECX/EDX
+// through the whole scan. Tried and rejected: `count` declared first
+// (86.4), declared last (identical), split declaration + assignment
+// (identical), `pos` declared first (identical), `str[pos] != 0 &&
+// pos < len` outer order (68.6), `lineStart` before `width` (91.3),
+// `width` hoisted out of the loop (91.3). `pos++` before `count++`
+// is worth +0.05 and is the form kept.
 VA(0x004b5820, 0xF2)  // anchor-global, dc 0xa246c
 int font::LineLength(const char* str, int boxWidth)
 {
@@ -309,51 +344,40 @@ int font::LineLength(const char* str, int boxWidth)
     int count = 0;
     int pos = 0;
     while (pos < len && str[pos] != 0) {
-        int lineStart = pos;
         int width = 0;
-        char c;
-        for (;;) {
-            c = str[pos];
-            if (c == 0) {
-                if (width <= boxWidth)
-                    break;
-                goto wrap;
-            }
-            if (c == '\n')
+        int lineStart = pos;
+        while (str[pos] != 0) {
+            if (str[pos] == '\n')
                 break;
             if (width > boxWidth)
-                goto wrap;
-            if (c != '{' && c != '}')
-                width += GetCharacterWidth(c);
+                break;
+            if (str[pos] != '{' && str[pos] != '}')
+                width += GetCharacterWidth(str[pos]);
             pos++;
-            continue;
-        wrap:
-            {
-                int candidate = 0;
-                pos--;
-                for (;;) {
-                    c = str[pos];
-                    if (c == ' ') {
-                        if (pos <= lineStart)
-                            pos = candidate;
-                        break;
-                    }
-                    if (pos < lineStart) {
-                        pos = candidate;
-                        break;
-                    }
-                    if (c != '{' && c != '}') {
-                        width -= GetCharacterWidth(c);
-                        if (candidate == 0 && width < boxWidth)
-                            candidate = pos;
-                    }
-                    pos--;
-                }
-            }
-            break;
         }
-        count++;
+        if (width > boxWidth) {
+            int candidate = 0;
+            pos--;
+            for (;;) {
+                if (str[pos] == ' ') {
+                    if (pos <= lineStart)
+                        pos = candidate;
+                    break;
+                }
+                if (pos < lineStart) {
+                    pos = candidate;
+                    break;
+                }
+                if (str[pos] != '{' && str[pos] != '}') {
+                    width -= GetCharacterWidth(str[pos]);
+                    if (candidate == 0 && width < boxWidth)
+                        candidate = pos;
+                }
+                pos--;
+            }
+        }
         pos++;
+        count++;
     }
     return count;
 }
@@ -404,36 +428,32 @@ int font::longest_word_length(const char* str)
 {
     int best = 0;
     const char* p = str;
-    if (*p == 0)
-        return 0;
-    for (;;) {
-        while (*p == ' ' || *p == '\n')
-            p++;
-        int wordWidth = 0;
-        char c = *p;
-        while (c != 0 && c != ' ' && c != '\n') {
-            if (c != '{' && c != '}')
-                wordWidth += GetCharacterWidth(c);
-            c = *++p;
-        }
-        if (wordWidth > best)
-            best = wordWidth;
-        if (c == 0)
-            break;
+    if (*p != 0) {
+        do {
+            int wordWidth = 0;
+            while (*p == ' ' || *p == '\n')
+                p++;
+            while (*p != 0 && *p != ' ' && *p != '\n') {
+                if (*p != '{' && *p != '}')
+                    wordWidth += GetCharacterWidth(*p);
+                p++;
+            }
+            if (wordWidth > best)
+                best = wordWidth;
+        } while (*p != 0);
     }
     return best;
 }
 
 // E:\gamedcs\font.cpp:602
-// Decode staged 2026-08-06: strlen head (repne scasb), then the
-// LineLength-family walk - per char skip '\n' (restart line), stop
-// accumulating past boxWidth, braces contribute nothing, otherwise
-// width += glyph triple [this + (ch+5)*12 +0/+4/+8]; on overflow
-// backtrack to the last space (the ' '/brace/space scan at +0x92..)
-// exactly like LineLength's wrap-backtrack, tracking the max line
-// width in [ebp-0x4] against the running [edi]. Returns the max.
-// Transcribed to LineLength's spelling (same walk, max tracker in
-// place of the line counter).
+// EXACT. LineLength's walk with a max tracker, plus two things the
+// earlier transcription was missing: retail un-adds the trailing
+// space after a wrap (`if (str[pos] == ' ') width -= GCW(' ')` -
+// constant-folded to the three loads at this+0x1bc/0x1c0/0x1c4, the
+// spec[' '] triple), exactly as DrawBoundedString does; and both
+// backtrack exits share ONE `if (pos <= lineStart) pos = candidate;`
+// placed after the loop, where spelling a `pos = candidate` inside
+// each exit duplicates the block (94.6%).
 VA(0x004b5a80, 0x110)  // anchor-global, dc 0xa26d4
 int font::LongestWrappedLineWidth(const char* str, int boxWidth)
 {
@@ -441,48 +461,36 @@ int font::LongestWrappedLineWidth(const char* str, int boxWidth)
     int maxWidth = 0;
     int pos = 0;
     while (pos < len && str[pos] != 0) {
-        int lineStart = pos;
         int width = 0;
-        char c;
-        for (;;) {
-            c = str[pos];
-            if (c == 0) {
-                if (width <= boxWidth)
-                    break;
-                goto wrap;
-            }
-            if (c == '\n')
+        int lineStart = pos;
+        while (str[pos] != 0) {
+            if (str[pos] == '\n')
                 break;
             if (width > boxWidth)
-                goto wrap;
-            if (c != '{' && c != '}')
-                width += GetCharacterWidth(c);
+                break;
+            if (str[pos] != '{' && str[pos] != '}')
+                width += GetCharacterWidth(str[pos]);
             pos++;
-            continue;
-        wrap:
-            {
-                int candidate = 0;
-                pos--;
-                for (;;) {
-                    c = str[pos];
-                    if (c == ' ') {
-                        if (pos <= lineStart)
-                            pos = candidate;
-                        break;
-                    }
-                    if (pos < lineStart) {
-                        pos = candidate;
-                        break;
-                    }
-                    if (c != '{' && c != '}') {
-                        width -= GetCharacterWidth(c);
-                        if (candidate == 0 && width < boxWidth)
-                            candidate = pos;
-                    }
-                    pos--;
+        }
+        if (width > boxWidth) {
+            int candidate = 0;
+            pos--;
+            for (;;) {
+                if (str[pos] == ' ')
+                    break;
+                if (pos < lineStart)
+                    break;
+                if (str[pos] != '{' && str[pos] != '}') {
+                    width -= GetCharacterWidth(str[pos]);
+                    if (candidate == 0 && width < boxWidth)
+                        candidate = pos;
                 }
+                pos--;
             }
-            break;
+            if (pos <= lineStart)
+                pos = candidate;
+            if (str[pos] == ' ')
+                width -= GetCharacterWidth(' ');
         }
         if (width > maxWidth)
             maxWidth = width;
