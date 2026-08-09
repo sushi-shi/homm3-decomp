@@ -610,6 +610,7 @@ public:
                    type_action_type action_type);             // 0x4c66e0
     void ClaimGenerator(int generatorId, int newPlayerOwner); // 0x4c67b0
     void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
+    void ClaimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
     void record_claim_mine(long id, long new_owner);          // 0x49bf90
     void SetVisibility(int startX, int startY, int z,
                        int whichPlayer, int range,

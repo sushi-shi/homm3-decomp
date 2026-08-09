@@ -2,9 +2,12 @@
 #ifndef HOMM3_NETMSG_H
 #define HOMM3_NETMSG_H
 
+#include "struct.h"
+
 enum eRS_Messages {
     RS_CLAIM_GENERATOR = 0x41e,
-    RS_CLAIM_GARRISON = 0x41f
+    RS_CLAIM_GARRISON = 0x41f,
+    RS_CLAIM_SHIPYARD = 0x420
 };
 
 class CNetMsg {
@@ -44,6 +47,16 @@ public:
     CMCClaimGenerator(int id, int player)
         : CMapChange(RS_CLAIM_GENERATOR, sizeof(CMCClaimGenerator)),
           generatorId(id), playerPos(player) {}
+};
+
+class CMCClaimShipYard : public CMapChange {
+public:
+    type_point point;
+    int playerPos;
+
+    CMCClaimShipYard(type_point location, int player)
+        : CMapChange(RS_CLAIM_SHIPYARD, sizeof(CMCClaimShipYard)),
+          point(location), playerPos(player) {}
 };
 
 #endif  // HOMM3_NETMSG_H

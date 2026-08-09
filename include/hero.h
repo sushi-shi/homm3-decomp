@@ -681,7 +681,7 @@ struct type_obscuring_object {
     type_obscuring_object();
     void initialize();
     class town* get_obscured_town();
-#ifdef HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
+#if defined(HOMM3_ADVMGR_CELL_ADJUSTER_VIEW) || defined(HOMM3_GAME_SHIPYARD_VIEW)
     void obscure_cell(TAdventureObjectType new_type, long id);
     void restore_cell();
 #endif
