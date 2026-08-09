@@ -9,6 +9,7 @@
 #include "army.h"
 #include "armygrp.h"   // SpellID, for the two spells.obj leaves below
 #include "hexcell.h"
+#include "struct.h"
 
 class CSprite;
 class hero;
@@ -198,7 +199,13 @@ public:
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
     hexcell cells[187];               // +0x1c4, ends 0x5394
-    char pad_5394[0x10];
+    // Terrain/background state. GetBackgroundName indexes its ordinary
+    // background table with terrainType and then sets the final pair to
+    // (-1, 1) after selecting every kind of background.
+    int terrainType;                  // +0x5394
+    int field_5398;                   // +0x5398
+    int field_539c;                   // +0x539c
+    char pad_53a0[0x4];
     // The drawbridge state (EDrawbridgeState). LowerDoor stores 3/2/1
     // through it one frame at a time; RaiseDoor gates on 1;
     // HexIsBlocked, should_lower_door and IsInMoat all gate on 3.
@@ -218,7 +225,11 @@ public:
     // while the byte below is set. Both names await a writer.
     int field_53c0;                   // +0x53c0
     unsigned char field_53c4;         // +0x53c4
-    char pad_53c5[0x3];
+    char pad_53c5[0x1];
+    // Selects the ship-deck combat background. Width and role are
+    // byte-proven by GetBackgroundName.
+    unsigned char field_53c6;         // +0x53c6
+    char pad_53c7[0x1];
     // The defending town, byte-proven only at its offset 4: RaiseDoor
     // (0x4672e0) null-checks the pointer and then compares the BYTE at
     // +4 against 7 (TTownType TOWN_FORTRESS), and IsInMoat gates its
@@ -351,6 +362,9 @@ public:
     // wallStrength. DamageWall writes exactly `strength != 0`.
     int wallStanding[15];             // +0x13fa8
     int field_13fe4[3];               // +0x13fe4
+    // Adventure-map coordinate used to choose the treed/plain variant
+    // of an ordinary terrain background.
+    type_point battleLocation;         // +0x13ff0
 
     // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); no retail
     // body - /Ob2 folds it into should_stay_in_castle.
@@ -360,6 +374,7 @@ public:
     void SetupAdjacencyArray();
     void UpdateArmyGroup(int whichSide);
     void GenerateMap();
+    const char* GetBackgroundName();
     void DamageWall(TWallTargetId target_wall, int damage);
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
@@ -538,6 +553,12 @@ extern combatManager* gpCombatManager;
 // rule they encode. Neither is defined here; cmbtmgr is only a reader.
 DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
 DATA(0x00697744) extern unsigned char gCombatFlag697744;
+
+// Filename tables selected by GetBackgroundName. Their contents remain
+// retail-owned data; this TU only needs their proven pointer layouts.
+DATA(0x0063d2a0) extern const char* const gTownCombatBackgrounds[9];
+DATA(0x0063d2c8) extern const char* const gSpecialCombatBackgrounds[10];
+DATA(0x0063d2f0) extern const char* const gTerrainCombatBackgrounds[];
 
 // The four screen hit rectangles GetGridIndex (0x4647a0) tests before
 // it falls through to the grid arithmetic, one per special combat hex,
