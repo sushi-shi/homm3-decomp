@@ -362,6 +362,7 @@ cmbtmgr	?GetTargetWallIndex@@YIHH@Z	100.0000	100.0000	100.0000	0x65970
 cmbtmgr	?HexIsBlocked@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x69a10
 cmbtmgr	?InCastle@@YIEH@Z	100.0000	100.0000	100.0000	0x67460
 cmbtmgr	?InLineOfSight@combatManager@@QAEEHH@Z	95.4601	95.4601	95.4601	0x67840
+cmbtmgr	?InitializeArchers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66c50
 cmbtmgr	?IsInMoat@combatManager@@QAEEHPAH@Z	100.0000	100.0000	100.0000	0x69dc0
 cmbtmgr	?IsWinner@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x658b0
 cmbtmgr	?LearnSpellFromEagleEye@combatManager@@QAEXH@Z	89.3674	89.3674	89.3674	0x69fe0
@@ -390,7 +391,6 @@ cmbtmgr	combatManager_Close	0.0000	0.0000	0.0000	0x63260
 cmbtmgr	combatManager_FreeIcons	0.0000	0.0000	0.0000	0x63500
 cmbtmgr	combatManager_GetMissileStartingPosition	0.0000	0.0000	0.0000	0x69880
 cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
-cmbtmgr	combatManager_InitializeArchers	0.0000	0.0000	0.0000	0x66c50
 cmbtmgr	combatManager_KeepAttack	0.0000	0.0000	0.0000	0x65ad0
 cmbtmgr	combatManager_LoadArmies	0.0000	0.0000	0.0000	0x63600
 cmbtmgr	combatManager_LoadIcons	0.0000	0.0000	0.0000	0x63370
