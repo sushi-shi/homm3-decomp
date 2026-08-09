@@ -42,6 +42,17 @@ struct TCombatEagleEyeSide {
 };
 SIZE(TCombatEagleEyeSide, 0x10);
 
+// Per-projectile launch offsets and frame-angle boundaries. Retail indexes
+// the table at 0x67ff24 with an 84-byte stride: three signed coordinate
+// pairs followed by eighteen float boundaries.
+struct TMissileStartInfo {
+    short offsets[3][2];
+    float angles[18];
+};
+SIZE(TMissileStartInfo, 0x54);
+
+extern const TMissileStartInfo* gMissileStartInfo;
+
 // The combat's spell-restriction code, held in combatManager+0x53c0.
 // The per-combat initializer at 0x4643b0 writes it exactly once, as -1
 // or one of 0..9 from ten straight-line branches, and clears the two
@@ -902,6 +913,11 @@ int GetTargetWallIndex(int grid_index);
 // Also a free __fastcall in retail (start in ECX, stop in EDX, bare
 // `ret`) though the DC roster scopes it to combatManager.
 long get_distance(long start, long stop);
+void GetMissileStartingPosition(int army_type, int x, int y, int facing,
+                                int dest_x, int dest_y,
+                                const CSprite* missile, int* start_x,
+                                int* start_y, int* army_dir,
+                                int* missile_frame);
 
 // --- CNetMsgHandlerPause ---
 // CODEVIEW(E:\gamedcs\cmbtmgr.cpp:893, dc 0x63a88) void* CNetMsgHandlerPause::`scalar deleting destructor'(unsigned __flags);

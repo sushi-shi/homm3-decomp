@@ -37,6 +37,7 @@
 //     in the DC cmbtmgr.obj roster, and all but 0x69e50 are called
 //     only from outside this span. Naming them would be invention.
 #define HOMM3_CMBTMGR_OBJ_DECLS
+#include <math.h>
 #include <stdlib.h>
 
 #include <va.h>
@@ -1442,20 +1443,71 @@ void combatManager::UpdateArmyLuckAndMorale()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:4583
 // Only row in the bracket [UpdateArmyLuckAndMorale .. HexIsBlocked]
 // once DoorCanBeLowered is accounted for as inlined, and the body is
 // float trajectory work (`_fabs` plus a CRT float helper), which is
 // GetMissileStartingPosition and nothing else here. ARITY DRIFTS the
-// other way from PlaceLargeObstacle: `ret 0x24` is ten parameters
-// against the DC's eleven. Do not trust the prototype below.
+// other way from PlaceLargeObstacle: `ret 0x24` is nine stack parameters
+// after the two register parameters, so this is a free fastcall rather than
+// the member function implied by the DC roster.
 VA(0x00469880, 0x190)  // dc-bracket forced, dc 0x62fe4
-void combatManager::GetMissileStartingPosition(int army_type, int x, int y, int facing, int dest_x, int dest_y, const CSprite* missile, int* start_x, int* start_y, int* army_dir, int* missile_frame)
+void GetMissileStartingPosition(int army_type, int x, int y, int facing,
+                                int dest_x, int dest_y,
+                                const CSprite* missile, int* start_x,
+                                int* start_y, int* army_dir,
+                                int* missile_frame)
 {
-    // @stub
+    const TMissileStartInfo& info = gMissileStartInfo[army_type];
+    if (!facing)
+        *start_x = x - info.offsets[1][0];
+    else
+        *start_x = x + info.offsets[1][0];
+    *start_y = y + info.offsets[1][1];
+
+    int delta_x = dest_x - *start_x;
+    int delta_y = dest_y - *start_y;
+    float angle;
+    if (!delta_x) {
+        angle = delta_y > 0 ? 90.0 : -90.0;
+    } else {
+        angle = atan(-static_cast<double>(delta_y) / fabs(delta_x))
+                * DATA_COMPGEN(0x0063d408, radiansToDegrees,
+                               57.29577951308232);
+    }
+
+    if (missile) {
+        int frames = missile->GetNumFrames(0);
+        int frame = 1;
+        while (frame < frames
+                && (info.angles[frame - 1] + info.angles[frame]) / 2.0f
+                   >= angle)
+            ++frame;
+        *missile_frame = frame - 1;
+    } else {
+        *missile_frame = 0;
+    }
+
+    int offset;
+    if (angle > DATA_COMPGEN(0x0063d400, upperMissileAngle, 25.0)) {
+        *army_dir = 14;
+        offset = 0;
+    } else if (angle > DATA_COMPGEN(0x0063d3f8, lowerMissileAngle, -25.0)) {
+        *army_dir = 15;
+        offset = 1;
+    } else {
+        *army_dir = 16;
+        offset = 2;
+    }
+
+    if (!facing)
+        *start_x = x - info.offsets[offset][0];
+    else
+        *start_x = x + info.offsets[offset][0];
+    *start_y = y + info.offsets[offset][1];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4669
 DC_ONLY(0x63268, 0x5A)
