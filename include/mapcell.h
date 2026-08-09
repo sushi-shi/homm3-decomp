@@ -306,6 +306,9 @@ public:
     // 0x4fce20, claimed (still @stub) in src/mapcell.cpp. Declared here
     // because findpath's CalcTerrainCost calls it with the cell in ECX.
     TAdventureObjectType get_special_terrain() const;
+#ifdef HOMM3_HERO_BOAT_VIEW
+    int get_magic_terrain_type();
+#endif
     TAdventureObjectType get_map_object();
 #ifdef HOMM3_CMBTMGR_OBJ_DECLS
     unsigned long get_map_extraInfo();

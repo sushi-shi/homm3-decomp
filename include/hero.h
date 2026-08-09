@@ -479,6 +479,10 @@ public:
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
     unsigned char can_land();
 #endif
+#ifdef HOMM3_HERO_BOAT_VIEW
+    // 0x4e5550 - checks spell access, mana, boat reachability and pool space.
+    unsigned char can_summon_boat();
+#endif
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
     unsigned char IsInIdentifyRange(const type_point* location);
     // 0x4e5de0, RETAIL-ONLY (no DC row): the clamped field_129 getter

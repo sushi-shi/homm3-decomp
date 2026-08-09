@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `hero::can_summon_boat` reconstructed to 85.7031%
+  (350 bytes).** Retail requires spell-zero availability, computes Summon
+  Boat mastery first without terrain and then at the hero cell's magic
+  terrain, clamps its mastery-indexed mana cost to one, and rejects heroes
+  who cannot pay. A reachable unoccupied boat succeeds immediately; otherwise
+  Advanced mastery is required and the global boat pool must have a free id.
+  The all-minus-one packed point bypasses the cell lookup. This admits spell
+  id zero as `SPELL_SUMMON_BOAT` and the cell magic-terrain member used by the
+  already reconstructed spell-school reducer. All sixteen blocks, eight
+  branches, and five returns agree; the residual is register allocation around
+  the packed-point comparison. No external implementation body was used.
+
 - **2026-08-09 — `hero::can_land` admitted byte-exact (231 bytes).**
   Retail packs the hero's current point and directly indexes the canonical
   38-byte world-map cell array. The cell's water terrain must agree with the

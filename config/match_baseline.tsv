@@ -633,6 +633,7 @@ hero	?any@?$bitset@$0JA@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xe64c0
 hero	?begin@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64e0
 hero	?belongs_to_human@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xd9050
 hero	?can_land@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5ce0
+hero	?can_summon_boat@hero@@QAEEXZ	85.7031	85.7031	85.7031	0xe5550
 hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64f0
 hero	?find_summonable_boat@hero@@QAEPAVboat@@XZ	100.0000	100.0000	100.0000	0xe54a0
 hero	?get_combat_speed_bonus@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xe5aa0
@@ -692,7 +693,6 @@ hero	hero_UpdateArmies	0.0000	0.0000	0.0000	0xd9a00
 hero	hero_UpdateStats	0.0000	0.0000	0.0000	0xe16d0
 hero	hero_ViewArtifact	0.0000	0.0000	0.0000	0xd9cc0
 hero	hero_ViewStat	0.0000	0.0000	0.0000	0xd9b30
-hero	hero_can_summon_boat	0.0000	0.0000	0.0000	0xe5550
 hero	hero_equip_artifact	0.0000	0.0000	0.0000	0xe2a00
 hero	hero_get_backpack_error	0.0000	0.0000	0.0000	0xe2ed0
 hero	hero_get_luck_description	0.0000	0.0000	0.0000	0xdcac0
