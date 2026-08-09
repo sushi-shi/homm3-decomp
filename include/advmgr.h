@@ -273,10 +273,15 @@ public:
     // TAdventureMapWindow member roster puts chatEdit@0x50 at retail
     // +0x58. KeyboardMessageHandler confirms the result directly with
     // `mov ecx,[advWindow+0x58] / mov al,[ecx+0x6d]`; +0x6d is the
-    // byte-proven textEntryWidget::bHasFocus field. The pointer remains in
-    // InputAdventureMapWindowView so this broad header retains the member
-    // population required by advmgr.obj's retail optimizer state.
+    // byte-proven textEntryWidget::bHasFocus field. The narrow advmgr view
+    // now needs the pointer for SetRolloverText's matching early exit; other
+    // translation units retain the previous member population.
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    textEntryWidget* ChatEditWidget;
+    char pad_05c[4];
+#else
     char pad_058[8];
+#endif
     widget* RolloverTextWidget;  // +0x60, DrawRolloverText redraw bounds
 
     void UpdateTownLocators(int top, unsigned char drawWin,
