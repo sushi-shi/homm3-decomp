@@ -274,6 +274,44 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   fuzzy coverage rises from 45.32% to 45.39% with all 611 exact linked
   functions retained.
 
+- **2026-08-09 — `advManager::UpdateScreen` reconstructed byte-exact
+  (125 bytes).** Retail fixes the update rectangle at (0,8), 608x544,
+  regardless of the two retained formal flags, then samples `GameTime`,
+  tests KB timer slot 0 as a signed due time and advances `animFrame` unless
+  the byte at +0x104 is paused. The target's signed `jg` and local-slot order
+  prove `_cpp_max(elapsedTime, 180)`: the timer advances by at least 180 ms,
+  not by a capped amount, before one Windows message is pumped. Dreamcast
+  CodeView supplies the signature, local names and `animCtrPaused` spelling;
+  the x86 operations, constants, offsets and relocations are retail-proven.
+  No external implementation body was used. Whole-linked fuzzy coverage
+  rises from 45.37% to 45.41%, exact linked functions from 613 to 614, and
+  executable fuzzy coverage from 8.60% to 8.61%.
+
+- **2026-08-09 — `advManager::get_map_center` reconstructed byte-exact
+  (111 bytes).** Retail reads the packed origin at +0xe4, adds the two
+  viewport half-extents at +0xec/+0xf0, preserves the origin's four-bit z,
+  and returns one packed `type_point`. The same three field expressions are
+  independently present in the admitted hover paths, while Dreamcast
+  CodeView supplies only the surviving inline member's const signature.
+  Expressing the result as direct `type_point` construction, rather than
+  assigning three fields after default construction, makes VC6 combine y
+  and z before their single word store and reproduces all retail bytes. No
+  external implementation body was used. Whole-linked fuzzy coverage rises
+  from 45.34% to 45.37% and exact linked functions from 612 to 613.
+
+- **2026-08-09 — `HeroExtra::HeroExtra` reconstructed byte-exact
+  (104 bytes).** Retail's `game::game` hands this constructor to the vector
+  iterator for 156 elements with a 0x334 stride. The body independently
+  proves nineteen 8-byte equipped-artifact records at +0x68, sixty-four
+  backpack records at +0x100, a Dinkumware string at +0x308 and a
+  `std::bitset<70>` at +0x320; `HeroFn_004D8B30` closes the untouched tail
+  offsets and total size. A game-TU-only view gives `type_artifact` its
+  two-`-1` default constructor, allowing VC6's implicit member construction
+  to reproduce both loops, the string triple and the bitset clear exactly.
+  Dreamcast CodeView corroborates the class and member identities only; no
+  external implementation body was used. Whole-linked fuzzy coverage rises
+  from 45.32% to 45.34% and exact linked functions from 611 to 612.
+
 - **2026-08-09 — `advManager::SetRolloverText` extends to 72.3630%.**
   Retail admits Mine's call into the 595-byte helper at 0x40d670: the two
   call sites and `ret 0xc` prove a five-parameter /Gr surface receiving the

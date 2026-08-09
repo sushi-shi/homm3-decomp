@@ -78,6 +78,10 @@ struct type_artifact {
     int artifactId;
     int extra;
 
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+    type_artifact() : artifactId(-1), extra(-1) {}
+#endif
+
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_description();
