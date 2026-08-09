@@ -89,6 +89,10 @@ struct type_artifact {
     void get_rollover_text(char* buffer);
 };
 
+#ifdef HOMM3_HERO_COMBINATION_VIEW
+class boat;
+#endif
+
 class hero {
 public:
     enum {
@@ -603,6 +607,9 @@ public:
     // row - its name is HD-crossbuild + IDA lineage only, PROVISIONAL.
     float GetNecromancyFactor(unsigned char apply_limit);
     TCreatureType GetNecromancyCreature();
+#ifdef HOMM3_HERO_COMBINATION_VIEW
+    boat* find_summonable_boat();
+#endif
     // Claimed in src/hero.cpp (0x4d7900, dc 0xcaedc); declared here
     // because town::remove_garrison_hero calls it with the town's
     // owner, a type_point built from the town's map cell, and 0.
