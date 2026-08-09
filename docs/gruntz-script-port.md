@@ -269,6 +269,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   offsets and match totals remain stable. No external implementation body was
   used, and the generated match baseline is updated only by the full build.
 
+- **2026-08-09 — `game::CreateBoat` reconstructed to 99.9726%.** Retail
+  proves the inlined 64-entry boat-pool allocation, the local-only 0x421
+  map-change message and show-boat record, and every initialized boat field.
+  Dreamcast CodeView supplies the `CMCBuildBoat` and inline
+  `boat::obscure_cell` identities; the latter is also required for retail's
+  byte-to-long zero extension. VC6's retail store schedule requires the
+  source order `type`, `x`, `y`, `z`. All instructions and branches agree;
+  the remaining score delta consists only of four target-side working-label
+  spellings for already-addressed relocations. The temporary shipyard
+  declaration gate was removed completely rather than retained as
+  architecture. `decomp-attempt-1` was checked read-only and
+  contained no body or additional evidence worth admitting; no external
+  implementation material was used. Making those declarations unconditional
+  changes VC6's transitive type population: the already-documented unstable
+  `initialize_game_data` row remeasures from 100% to 94.0741%, and
+  `recruitUnit::Update` from 90.8376% to 90.8325%; both historical peaks remain
+  recorded rather than being presented as semantic regressions.
+
 - **2026-08-09 — `game::Load` extends from 23.1861% to 26.3228%.** Retail
   fixes the prefix order after header restoration: clear recorded events,
   publish the loaded square map extent, close the path search array, restore
