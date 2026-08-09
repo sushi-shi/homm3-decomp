@@ -14,6 +14,7 @@ advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	80.1528	80.1528	80.1528	0x10c00
 advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	75.3619	75.3619	75.3619	0x11590
 advmgr	?DrawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x10760
 advmgr	?DrawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x109b0
+advmgr	?DrawGround@advManager@@QAEXHHHHH@Z	86.6308	86.6308	86.6308	0x12900
 advmgr	?DrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1571	98.1571	98.1571	0xfe30
 advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1745	98.1745	98.1745	0x102c0
 advmgr	?DrawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0
@@ -59,7 +60,6 @@ advmgr	advManager_DoSystemOptions	0.0000	0.0000	0.0000	0x1ac00
 advmgr	advManager_DrawAdventureMapGems	0.0000	0.0000	0.0000	0xf2f0
 advmgr	advManager_DrawArrow	0.0000	0.0000	0.0000	0x120b0
 advmgr	advManager_DrawArrowShadow	0.0000	0.0000	0.0000	0x11f50
-advmgr	advManager_DrawGround	0.0000	0.0000	0.0000	0x12900
 advmgr	advManager_DrawRiver	0.0000	0.0000	0.0000	0x11b80
 advmgr	advManager_DrawRoad	0.0000	0.0000	0.0000	0x11d60
 advmgr	advManager_DrawShroud	0.0000	0.0000	0.0000	0x12220

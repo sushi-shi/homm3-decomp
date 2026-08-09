@@ -161,7 +161,18 @@ public:
     // +0x5c. Both GetCell overloads dereference this NewfullMap record:
     // cellData at +0xd0 and Size at +0xd4.
     NewfullMap* fullMap;
-    char pad_060[0x80];
+    // Retail tile-set rows. Dreamcast supplies the surviving names and
+    // extents; the retail Draw* passes prove every offset reached here.
+    CSprite* groundTileset[10];  // +0x60
+    CSprite* riverTileset[5];    // +0x88
+    CSprite* roadTileset[4];     // +0x9c
+    CSprite* borderTileset;      // +0xac
+    CSprite* arrowTileset;       // +0xb0
+    CSprite* gemIcons[4];        // +0xb4
+    CSprite* starTileset;        // +0xc4
+    CSprite* radarIcons;         // +0xc8
+    CSprite* cloudIcons;         // +0xcc
+    char pad_0d0[0x10];
     CSprite* movingObjectSprite;  // +0xe0, transient object draw override
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.

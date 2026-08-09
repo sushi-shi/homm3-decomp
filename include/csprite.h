@@ -110,6 +110,16 @@ public:
                            dst->Width, dst->Height, dst->Pitch, outcolor,
                            hflip);
     }
+    void DrawTile(int framenum, int sx, int sy, int sw, int sh,
+                  unsigned short* dst, int dx, int dy, int dw, int dh,
+                  int dpitch, unsigned char hflip, unsigned char vflip);
+    void DrawTile(int framenum, int sx, int sy, int sw, int sh,
+                  Bitmap16Bit* dst, int dx, int dy, unsigned char hflip,
+                  unsigned char vflip)
+    {
+        DrawTile(framenum, sx, sy, sw, sh, dst->map, dx, dy, dst->Width,
+                 dst->Height, dst->Pitch, hflip, vflip);
+    }
 };
 
 // --- globals ---

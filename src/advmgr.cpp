@@ -1617,14 +1617,87 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:6911
 VA(0x00412900, 0x2CB)  // linkorder, dc 0x147c4
 void advManager::DrawGround(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    type_point point(srcX, srcY, z);
+    NewmapCell* thisCell;
+    if (!point.is_valid()) {
+        thisCell = fullMap->cellData;
+    } else {
+        thisCell = &fullMap->cellData[
+            (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
+    }
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    if (srcX >= 0 && srcY >= 0 && srcX < gMapWidth
+        && srcY < gMapHeight) {
+        AdvGroundCellView* groundCell = static_cast<AdvGroundCellView*>(
+            static_cast<void*>(thisCell));
+        groundTileset[thisCell->GroundSet]->DrawTile(
+            thisCell->GroundIndex, tilex, tiley, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            groundCell->cellFlags & 1,
+            (groundCell->cellFlags >> 1) & 1);
+        return;
+    }
+
+    int frame = -1;
+    if (srcX == -1) {
+        if (srcY == -1)
+            frame = 16;
+        else if (srcY == gMapHeight)
+            frame = 19;
+        else if (srcY >= 0 && srcY < gMapHeight)
+            frame = 32 + (srcY & 3);
+    } else if (srcX == gMapWidth) {
+        if (srcY == -1)
+            frame = 17;
+        else if (srcY == gMapHeight)
+            frame = 18;
+        else if (srcY >= 0 && srcY < gMapHeight)
+            frame = 24 + (srcY & 3);
+    } else if (srcY == -1) {
+        if (srcX >= 0 && srcX < gMapWidth)
+            frame = 20 + (srcX & 3);
+    } else if (srcY == gMapHeight) {
+        if (srcX >= 0 && srcX < gMapHeight)
+            frame = 28 + (srcX & 3);
+    }
+
+    if (frame == -1)
+        frame = (srcY + 16) % 4 + 4 * ((srcX + 16) % 4);
+
+    borderTileset->DrawTile(
+        frame, tilex, tiley, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8, false, false);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:7019
 DC_ONLY(0x14b08, 0x88)
