@@ -368,6 +368,7 @@ cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872	87.2872	87.2872	0x66b30
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0
 cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510
+cmbtmgr	?UpdateArmyGroup@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x641f0
 cmbtmgr	?enemy_is_adjacent@combatManager@@QAEEPAVarmy@@HPBV2@@Z	100.0000	100.0000	100.0000	0x69600
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670
 cmbtmgr	?is_adjacent@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x674c0
@@ -405,7 +406,6 @@ cmbtmgr	combatManager_ShootAnimatedMissile	0.0000	0.0000	0.0000	0x67db0
 cmbtmgr	combatManager_ShootBallisticMissile	0.0000	0.0000	0.0000	0x67a00
 cmbtmgr	combatManager_ShootMissile	0.0000	0.0000	0.0000	0x68220
 cmbtmgr	combatManager_ShotIsNotOptimal	0.0000	0.0000	0.0000	0x67600
-cmbtmgr	combatManager_UpdateArmyGroup	0.0000	0.0000	0.0000	0x641f0
 cmbtmgr	combatManager_UpdateArmyLuckAndMorale	0.0000	0.0000	0.0000	0x69750
 cmbtmgr	combatManager_ViewArmy	0.0000	0.0000	0.0000	0x68860
 cmbtmgr	combatManager_combatManager	0.0000	0.0000	0.0000	0x62760
