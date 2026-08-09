@@ -364,7 +364,7 @@ cmbtmgr	?InCastle@@YIEH@Z	100.0000	100.0000	100.0000	0x67460
 cmbtmgr	?IsInMoat@combatManager@@QAEEHPAH@Z	100.0000	100.0000	100.0000	0x69dc0
 cmbtmgr	?IsQuickCombat@combatManager@@QBE_NXZ	100.0000	100.0000	100.0000	0x6a4a0
 cmbtmgr	?IsWinner@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x658b0
-cmbtmgr	?LearnSpellFromEagleEye@combatManager@@QAEXH@Z	68.1633	68.1633	68.1633	0x69fe0
+cmbtmgr	?LearnSpellFromEagleEye@combatManager@@QAEXH@Z	89.3674	89.3674	89.3674	0x69fe0
 cmbtmgr	?LeftOfMoat@@YIEH@Z	100.0000	100.0000	100.0000	0x67490
 cmbtmgr	?LoadWallTraitsTable@combatManager@@SIEXZ	100.0000	100.0000	100.0000	0x62990
 cmbtmgr	?LowerDoor@combatManager@@QAEXXZ	83.3951	83.3951	83.3951	0x671c0

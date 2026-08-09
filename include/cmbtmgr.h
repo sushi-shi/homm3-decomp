@@ -23,6 +23,13 @@ struct TDrawbridgeBounds {
 };
 SIZE(TDrawbridgeBounds, 0x10);
 
+// One side's Eagle Eye bookkeeping. Its sole retail-proven member is the
+// 16-byte Dinkumware set walked by LearnSpellFromEagleEye.
+struct TCombatEagleEyeSide {
+    std::set<SpellID> spells;
+};
+SIZE(TCombatEagleEyeSide, 0x10);
+
 // The combat's spell-restriction code, held in combatManager+0x53c0.
 // The per-combat initializer at 0x4643b0 writes it exactly once, as -1
 // or one of 0..9 from ten straight-line branches, and clears the two
@@ -268,9 +275,10 @@ public:
     // writer - no roster or string reaches the pair.
     unsigned char field_53dc[2];      // +0x53dc
     char pad_53de[0x82];
-    // Per-side spells that survived Eagle Eye's battle-time chance gate.
-    // LearnSpellFromEagleEye walks each 16-byte Dinkumware set in place.
-    std::set<SpellID> eagleEyeSpells[2]; // +0x5460
+    // Per-side spells observed during combat and eligible for Eagle Eye.
+    // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
+    // `(side + 0x546) << 4` addresses the selected set at +0x5460.
+    TCombatEagleEyeSide eagleEyeData[2]; // +0x5460
     char pad_5480[0x24];
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
@@ -495,6 +503,7 @@ public:
                                     long target_hits);        // 0x422440
     unsigned char can_cast_spells(long side,
                                   unsigned char hero_spell);  // 0x41f890
+    void LearnSpellFromEagleEye(int side);                    // 0x469fe0
     void find_move_order(std::vector<army*>* result);         // 0x41f140
     long get_attack_change(const army* current_army, const army* enemy,
                            const type_AI_combat_parameters* data);
