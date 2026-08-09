@@ -502,24 +502,29 @@ void type_AI_combat_data::get_damage_spell_value(type_spell_choice& choice, cons
 }
 
 // E:\gamedcs\ai_combat.cpp:599
-// Residual (79.7%): pure esi<->edi swap - retail pushes edi at entry
-// and parks `this` there, our CL parks `this` in esi and shrink-wraps
-// the edi push past the shift. 71.9 -> 79.7 on 2026-08-08 when the
-// inlined take_damage was fixed (see take_damage), which closed the
-// three sibling casters outright; here the prologue swap survives it.
+// EXACT 2026-08-09 (79.7 -> 95.3 -> 100.0): a named defender reference
+// gives that long-lived value ESI and leaves EDI for `this`, reproducing
+// retail's whole-function allocation and prologue. Reassigning the named
+// damage value from the inlined take_damage call then preserves its result
+// through the total-hit-point update and reproduces retail's kill/survive
+// join. Target-first and loop-counter-lifetime probes regressed or were
+// byte-inert and were reverted.
 VA(0x00424fb0, 0x145)  // anchor-global, dc 0x2a938
 void type_AI_combat_data::cast_chain_lightning(type_spell_choice& choice, type_AI_combat_data& defender, long damage) const
 {
+    type_AI_combat_data& target_data = defender;
     long excluded = 1 << choice.target;
     long target = choice.target;
     for (long i = 0; i < 3; i++) {
         damage /= 2;
-        target = get_next_chain_lightning_target(excluded, defender, target, damage);
+        target = get_next_chain_lightning_target(
+            excluded, target_data, target, damage);
         if (target < 0)
             break;
-        long value = defender.monsters[target].get_spell_damage(
-            choice.spell, my_hero, defender.my_hero, damage);
-        defender.total_hit_points -= defender.monsters[target].take_damage(value);
+        long value = target_data.monsters[target].get_spell_damage(
+            choice.spell, my_hero, target_data.my_hero, damage);
+        value = target_data.monsters[target].take_damage(value);
+        target_data.total_hit_points -= value;
         excluded |= 1 << target;
     }
 }
