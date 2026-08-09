@@ -140,6 +140,14 @@ public:
         COMPLETE_DRAW_LAST_Y = 17
     };
 
+    enum ECloudDrawFrame {
+        CLOUD_DRAW_FRAME_1 = 1,
+        CLOUD_DRAW_FRAME_3 = 3,
+        CLOUD_DRAW_FRAME_4 = 4,
+        CLOUD_DRAW_FRAME_5 = 5,
+        CLOUD_DRAW_FLIPPED_OFFSET = 100
+    };
+
     char pad_038[4];
     unsigned char DebugShowFPS;  // +0x3c, DC name; retail FPS branch proves it
     char pad_03d[7];

@@ -18,6 +18,7 @@ advmgr	?DrawGround@advManager@@QAEXHHHHH@Z	86.6308	86.6308	86.6308	0x12900
 advmgr	?DrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1571	98.1571	98.1571	0xfe30
 advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1745	98.1745	98.1745	0x102c0
 advmgr	?DrawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0
+advmgr	?DrawShroud@advManager@@QAEXHHHHH@Z	81.4106	81.4106	81.4106	0x12220
 advmgr	?DrawUnderlay@advManager@@QAEXHHHHH@Z	74.7888	74.7888	74.7888	0x12470
 advmgr	?FindAdjacentMonster@advManager@@QAEEUtype_point@@PAU2@0@Z	82.0057	82.0057	82.0057	0x1a460
 advmgr	?ForceNewHover@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19570
@@ -62,7 +63,6 @@ advmgr	advManager_DrawArrow	0.0000	0.0000	0.0000	0x120b0
 advmgr	advManager_DrawArrowShadow	0.0000	0.0000	0.0000	0x11f50
 advmgr	advManager_DrawRiver	0.0000	0.0000	0.0000	0x11b80
 advmgr	advManager_DrawRoad	0.0000	0.0000	0.0000	0x11d60
-advmgr	advManager_DrawShroud	0.0000	0.0000	0.0000	0x12220
 advmgr	advManager_EnableButtons	0.0000	0.0000	0.0000	0x1a3a0
 advmgr	advManager_GetSoundId	0.0000	0.0000	0.0000	0x18620
 advmgr	advManager_HeroQuickView	0.0000	0.0000	0.0000	0x16590

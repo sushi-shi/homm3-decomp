@@ -1500,14 +1500,76 @@ void advManager::DrawArrow(int srcX, int srcY, int z, int destX, int destY)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:6699
 VA(0x00412220, 0x248)  // linkorder, dc 0x13fc8
 void advManager::DrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
-}
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth)
+        return;
+    if (srcY >= gMapHeight && !gCompleteDrawAllCells)
+        return;
 
-#endif  // @carcass
+    {
+        type_point point(srcX, srcY, z);
+        point.is_valid();
+    }
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    unsigned char hflip = false;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    if (!gCompleteDrawAllCells
+        && (GetMapExtra(srcX, srcY, z) & gMapVisibilityBit))
+        return;
+
+    int lookup;
+    if (gCompleteDrawAllCells) {
+        int frame = ((srcX * 85 ^ srcY * 85) / 64) & 3;
+        starTileset->DrawShroudTile(
+            frame, tilex, tiley, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8, false, false);
+        return;
+    }
+
+    lookup = GetCloudLookup(srcX, srcY, z);
+    if (!lookup)
+        return;
+    if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
+        hflip = true;
+        lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
+    }
+    if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
+        && (srcX & 1))
+        ++lookup;
+    if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
+        lookup = CLOUD_DRAW_FRAME_4;
+    cloudIcons->DrawShroudTile(
+        lookup - 1, tilex, tiley, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8, hflip, false);
+}
 
 // E:\gamedcs\advmgr.cpp:6805
 VA(0x00412470, 0x482)  // linkorder, dc 0x142e0

@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the 584-byte `advManager::DrawShroud` body opened
+  to 81.41%.** Retail instructions and relocations prove the clipped draw
+  rectangle, visibility gate, full-map star tiles, cloud lookup, horizontal
+  flip encoding, alternating edge frames, and the raw shroud-tile sprite
+  target. The reconstruction has the same 21 symbolic branches and two return
+  paths as retail; two remaining polarity/layout differences and VC6 register
+  scheduling prevent an exact claim. Dreamcast CodeView supplied only the
+  surviving names and signatures; no external body was consulted or ported.
+  The generated baseline remains exclusively build-owned.
+
 - **2026-08-09 — the 715-byte `advManager::DrawGround` pass opened
   to 86.63%.** Retail proves the packed-point fallback cell, clipped tile
   rectangle, ten-entry ground tileset, ground frame and two flip bits, four
