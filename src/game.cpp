@@ -1210,11 +1210,31 @@ NewfullMap* game::GetWorldMapData()
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2089
+#endif  // @carcass
+
+// Retail walks the 40-byte boat pool for the first clear +0x18 allocation
+// flag, then grows the pool by one up to the 64-boat cap. The unsigned loop
+// index is material: it makes VC6 share retail's inlined vector::size()
+// null guard and unsigned bound, while a signed spelling adds an empty-vector
+// arm and scores only 83.98%.
 VA(0x004bb170, 0xD6)  // anchor-global, dc 0xa65d4
 int game::get_new_boat_id()
 {
-    // @stub
+    unsigned int i;
+    for (i = 0; i < boats.size(); i++) {
+        if (!boats[i].allocated)
+            return i;
+    }
+
+    if (boats.size() < 64) {
+        boat newBoat;
+        boats.push_back(newBoat);
+        return boats.size() - 1;
+    }
+    return -1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2112
 VA(0x004bb250, 0x1AA)  // anchor-global, dc 0xa6690
