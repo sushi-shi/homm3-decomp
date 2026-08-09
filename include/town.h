@@ -287,6 +287,11 @@ public:
     // it follows get_castle_growth_bonus' neighbour rather than
     // asserting one.
     long get_legion_bonus(long dwelling);
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    // 0x5bf900. Per-tier artifact growth contributed by the two heroes
+    // associated with this town.
+    long TownFn_005BF900(long dwelling);
+#endif
     // 0x5bfb60, located not reconstructed - declared for
     // increase_population's call site, which pushes the slot as a dword
     // and tests the result with `test ax,ax` (a short return).
@@ -464,6 +469,19 @@ enum ETownConstants {
     // 0..13 and stops at 14).
     TOWN_DWELLING_SLOTS = 14
 };
+
+// One-based dwelling tier used by the retail artifact-growth helper.
+// Tier one has no corresponding growth artifact, so only the switch's
+// populated domain is named here.
+#ifdef HOMM3_TOWN_OBJ_DECLS
+enum ETownDwellingTier {
+    TOWN_DWELLING_TIER_2 = 2,
+    TOWN_DWELLING_TIER_3 = 3,
+    TOWN_DWELLING_TIER_4 = 4,
+    TOWN_DWELLING_TIER_5 = 5,
+    TOWN_DWELLING_TIER_6 = 6
+};
+#endif
 
 // Retail .bss 0x6a74f4, the per-town-type name-pointer table
 // town::GetTypeName (0x5c1450) hands out: `movsx eax,[this+4]` then
