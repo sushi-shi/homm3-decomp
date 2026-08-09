@@ -12,6 +12,7 @@
 class NewfullMap;
 class NewmapCell;
 class CSprite;
+class textWidget;
 
 // A narrow retail view of the 16-byte adventure-object traits table.
 // FindAdjacentMonster reaches only byte +1 after get_map_object indexes it.
@@ -36,6 +37,16 @@ extern unsigned char gMapVisibilityBit;
 // its xrefs gate CompleteDraw's normal layers, ScanForHeroOrBoat, ViewPuzzle,
 // and the separate view-world renderer.
 extern int gbInViewWorld;
+
+// Retail .bss 0x699538. CompleteDraw forces the source origin to (0, 0)
+// while this is set, and DrawShroud uses it to bypass normal fog bounds and
+// visibility tests. No public retail spelling survives.
+DATA(0x00699538) extern int gCompleteDrawAllCells;
+
+// Retail-only CompleteDraw gates. Their roles and widths are proved by the
+// entry predicate at 0x40f3f0; spellings remain provisional.
+DATA(0x006989c0) extern int gCompleteDrawEnabled;
+DATA(0x00696a04) extern unsigned char gCompleteDrawMessageBypass;
 
 // Six of these records are filled by ScanForHeroOrBoat. Retail writes the
 // fields at +0/+4/+8/+c with a 0x10 stride; the names and bool type are the
@@ -81,11 +92,13 @@ public:
     // its widget x/y/width/height fields.
     widget* RadarWidget;
     widget* MapWidget;
-    char pad_054[0xc];
+    textWidget* ChatTextWidget;  // +0x54, CompleteDraw's chat update target
+    char pad_058[8];
     widget* RolloverTextWidget;  // +0x60, DrawRolloverText redraw bounds
 
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
+    void DrawChatText(unsigned char update);
 };
 
 // Derives baseManager (0x38 bytes): executive::CallManager (0x4b0c70)
@@ -122,10 +135,17 @@ public:
         OBJECT_DRAW_LAYER_LAST = 6
     };
 
-    char pad_038[0xc];
+    enum ECompleteDrawExtent {
+        COMPLETE_DRAW_LAST_X = 19,
+        COMPLETE_DRAW_LAST_Y = 17
+    };
+
+    char pad_038[4];
+    unsigned char DebugShowFPS;  // +0x3c, DC name; retail FPS branch proves it
+    char pad_03d[7];
     TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
     unsigned short* routeArray;      // +0x48 (GetRouteArrayPtr)
-    char pad_04c[4];
+    int bShowRoute;                  // +0x4c, gates both arrow draw passes
     // +0x50, the hover reseed latch: advManager::Reseed (0x40ec80) is
     // `mov dword ptr [ecx+0x50], 0` and nothing else, discarding both
     // of its arguments. Name unattested - the role is what the bytes
@@ -162,7 +182,8 @@ public:
     CSprite* flagIcons[8];          // +0x16c, indexed by player owner
     CSprite* boatFlagIcons[3][8];   // +0x18c, [boat type][player owner]
     unsigned char drawCursor;     // +0x1ec, gates map cursor overlays
-    char pad_1ed[0x1f];
+    char pad_1ed[0x1b];
+    int cursorDrawn;       // +0x208, cleared at the start of CompleteDraw
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
     char pad_20d[0xb];
     int movingObjectIndex;        // +0x218, transient object-pool index
@@ -182,6 +203,18 @@ public:
     void OverrideBottomView(EBottomViewType view, int time);
     void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
     void Reseed(int targetX, int targetY);
+    void CompleteDraw(int startX, int startY, int z,
+                      unsigned char forceDraw,
+                      unsigned char updateBottomView);
+    void CompleteDraw(unsigned char forceDraw);
+    void DrawAdventureMapGems();
+    void DrawGround(int srcX, int srcY, int z, int destX, int destY);
+    void DrawRiver(int srcX, int srcY, int z, int destX, int destY);
+    void DrawRoad(int srcX, int srcY, int z, int destX, int destY);
+    void DrawArrowShadow(int srcX, int srcY, int z, int destX, int destY);
+    void DrawArrow(int srcX, int srcY, int z, int destX, int destY);
+    void DrawShroud(int srcX, int srcY, int z, int destX, int destY);
+    void DrawAdventureCursor();
     void ForceNewHover();
     int ProcessHover(int mouseX, int mouseY);
     int GetCloudLookup(int srcX, int srcY, int z);
@@ -213,6 +246,8 @@ public:
     void UpdateRadar(unsigned char updateFlag,
                      unsigned char bPartialUpdate, unsigned char view_mines,
                      unsigned char view_heroes, unsigned char view_towns);
+    void UpdBottomView(unsigned char forceUpdate, unsigned char drawWindow,
+                       unsigned char update);
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
 };
 

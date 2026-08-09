@@ -6,6 +6,8 @@
 adler32	@adler32@12	100.0000	100.0000	100.0000	0x206ca0
 advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0
 advmgr	?CheckDimNextHeroBut@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19450
+advmgr	?CompleteDraw@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0xf870
+advmgr	?CompleteDraw@advManager@@QAEXHHHEE@Z	100.0000	100.0000	100.0000	0xf3f0
 advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a0
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570
 advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	80.1528	80.1528	80.1528	0x10c00
@@ -49,8 +51,6 @@ advmgr	advManager_BVResMsg	0.0000	0.0000	0.0000	0x16060
 advmgr	advManager_CheckDimHero	0.0000	0.0000	0.0000	0x19300
 advmgr	advManager_CheckScreenScroll	0.0000	0.0000	0.0000	0x19820
 advmgr	advManager_Close	0.0000	0.0000	0.0000	0x77e0
-advmgr	advManager_CompleteDraw	0.0000	0.0000	0.0000	0xf3f0
-advmgr	advManager_CompleteDraw_f870	0.0000	0.0000	0.0000	0xf870
 advmgr	advManager_DemobilizeCurrHero	0.0000	0.0000	0.0000	0x17680
 advmgr	advManager_DisableButtons	0.0000	0.0000	0.0000	0x1a2e0
 advmgr	advManager_DoAdvCommand	0.0000	0.0000	0.0000	0x7b80

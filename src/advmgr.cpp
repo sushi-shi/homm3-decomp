@@ -52,6 +52,7 @@
 // compiland and no third 5-param help builder - so naming them would
 // be invention. See the help-text note further down.
 #include <va.h>
+#include <stdio.h>
 #include "advmgr.h"
 #include "advmgr_objects.h"
 #include "bitmap16.h"
@@ -61,6 +62,7 @@
 #include "kbwin.h"
 #include "mousemgr.h"
 #include "recruit.h"
+#include "soundmgr.h"
 #include "winmgr.h"
 #include "window.h"
 #include "widget.h"
@@ -523,21 +525,137 @@ void advManager::DrawAdventureMapGems()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:5026
 VA(0x0040f3f0, 0x47D)  // linkorder, dc 0x10788
 void advManager::CompleteDraw(int start_x, int start_y, int z, unsigned char bForceDraw, unsigned char bUpdateBottomView)
 {
-    // @stub
+    PollSound();
+
+    if (!bForceDraw && !gCompleteDrawEnabled && !bVideoPaused)
+        return;
+
+    if (bVideoPaused) {
+        CUnnamed69d808_f0* messageHandler =
+            gUnnamed69d808->get_field_f0();
+        if (messageHandler && messageHandler->field_04
+            && !gCompleteDrawMessageBypass && !gbInViewWorld)
+            return;
+    }
+
+    if (gCompleteDrawAllCells) {
+        start_y = 0;
+        start_x = 0;
+    }
+
+    cursorDrawn = 0;
+
+    int drawheight = COMPLETE_DRAW_LAST_Y;
+    int drawwidth = COMPLETE_DRAW_LAST_X;
+    int x;
+    int y;
+
+    for (y = -1; y <= drawheight; ++y) {
+        for (x = -1; x <= drawwidth; ++x)
+            DrawGround(start_x + x, start_y + y, z, x, y);
+    }
+
+    if (!gbInViewWorld) {
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawRiver(start_x + x, start_y + y, z, x, y);
+        }
+
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawRoad(start_x + x, start_y + y, z, x, y);
+        }
+
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawUnderlay(start_x + x, start_y + y, z, x, y);
+        }
+    }
+
+    for (y = -1; y <= drawheight; ++y) {
+        for (x = -1; x <= drawwidth; ++x)
+            DrawAdvObjShadow(start_x + x, start_y + y, z, x, y);
+    }
+
+    if (bShowRoute && !gbInViewWorld) {
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawArrowShadow(start_x + x, start_y + y, z, x, y);
+        }
+    }
+
+    for (y = -1; y <= drawheight; ++y) {
+        for (x = -1; x <= drawwidth; ++x)
+            DrawAdvObj(start_x + x, start_y + y, z, x, y);
+    }
+
+    if (bShowRoute && !gbInViewWorld) {
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawArrow(start_x + x, start_y + y, z, x, y);
+        }
+    }
+
+    if (gpCurrentPlayer->currHeroId == -1)
+        drawCursor = false;
+    if (drawCursor)
+        DrawAdventureCursor();
+
+    if (!gbInViewWorld) {
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawShroud(start_x + x, start_y + y, z, x, y);
+        }
+    }
+
+    DrawAdventureMapGems();
+
+    if (DebugShowFPS) {
+        if (gCompleteDrawFpsFrame >= 0) {
+            unsigned long currentTime = GameTime::Get();
+            gCompleteDrawFpsTimes[gCompleteDrawFpsFrame] =
+                currentTime - gCompleteDrawFpsLastTime;
+            int elapsedTime = 0;
+            for (int frame = 0; frame < COMPLETE_DRAW_FPS_FRAME_COUNT;
+                 ++frame)
+                elapsedTime += gCompleteDrawFpsTimes[frame];
+            sprintf(gCompleteDrawFpsText, gCompleteDrawFpsFormat,
+                    100.0 / (elapsedTime * 0.001));
+            gCompleteDrawFpsLastTime = currentTime;
+        } else {
+            gCompleteDrawFpsLastTime = GameTime::Get();
+        }
+
+        gCompleteDrawFpsFrame = (gCompleteDrawFpsFrame + 1)
+                                % COMPLETE_DRAW_FPS_FRAME_COUNT;
+        chatMan.ClearChat();
+        UpdateCompleteDrawFps(&chatMan, gCompleteDrawFpsText);
+    }
+
+    PollSound();
+
+    if (!gbInViewWorld) {
+        chatMan.UpdateWidget(advWindow->ChatTextWidget, true, 20);
+        advWindow->DrawChatText(false);
+    }
+
+    if (bUpdateBottomView)
+        UpdBottomView(0, true, true);
 }
 
 // E:\gamedcs\advmgr.cpp:5223
 VA(0x0040f870, 0x43)  // linkorder, dc 0x10c9c
 void advManager::CompleteDraw(unsigned char bForceDraw)
 {
-    // @stub
+    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
+                 bForceDraw, true);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:5505
 VA(0x0040f8c0, 0x265)  // anchor-global, dc 0x10cf4
