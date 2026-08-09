@@ -87,7 +87,15 @@ public:
     short x;                        // +0x00
     short y;                        // +0x02
     short z;                        // +0x04
-    char pad_006[0x12];
+    // The inherited obscuring-object tail. GetFlaggedObjectOwner reaches
+    // the two dwords directly when a map cell names a hero: +0x0c is the
+    // underlying adventure-object type and +0x14 its pool index.
+    unsigned char obscuringField_06;
+    char pad_007[0x5];
+    TAdventureObjectType obscuredType;  // +0x0c
+    unsigned char obscuringField_10;
+    char pad_011[3];
+    int obscuredIndex;                  // +0x14
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
     // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back

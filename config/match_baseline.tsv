@@ -13,6 +13,7 @@ advmgr	?FindAdjacentMonster@advManager@@QAEEUtype_point@@PAU2@0@Z	82.0057	82.005
 advmgr	?ForceNewHover@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19570
 advmgr	?GetCell@advManager@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12bd0
 advmgr	?GetCloudLookup@advManager@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xf8c0
+advmgr	?GetFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xfd20
 advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
 advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
@@ -31,7 +32,6 @@ advmgr	ComputeAdvNetControl	0.0000	0.0000	0.0000	0x1a660
 advmgr	ExtraInfoUnion_get_black_box	0.0000	0.0000	0.0000	0x5de0
 advmgr	ExtraInfoUnion_get_creature_bank_5df0	0.0000	0.0000	0.0000	0x5df0
 advmgr	ExtraInfoUnion_get_university	0.0000	0.0000	0.0000	0x5e10
-advmgr	GetFlaggedObjectOwner	0.0000	0.0000	0.0000	0xfd20
 advmgr	PopupPlayerTurnInfo	0.0000	0.0000	0.0000	0x19c80
 advmgr	SaveGame	0.0000	0.0000	0.0000	0x18160
 advmgr	SetShrineHelpText	0.0000	0.0000	0.0000	0xd8d0

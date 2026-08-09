@@ -648,14 +648,49 @@ bool hasFlag(int objType)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:5634
 VA(0x0040fd20, 0x10E)  // anchor-global, dc 0x1129c
 int GetFlaggedObjectOwner(NewmapCell* thisCell)
 {
-    // @stub
+    TAdventureObjectType type = thisCell->type;
+    int extraInfo = thisCell->extraInfo;
+    int owner = -1;
+
+    if (type == HERO) {
+        hero* thisHero;
+        if (extraInfo == -1)
+            thisHero = 0;
+        else
+            thisHero = &gpGame->heroes[extraInfo];
+        type = thisHero->obscuredType;
+        extraInfo = thisHero->obscuredIndex;
+    }
+
+    switch (type) {
+    case RANDOM_TOWN:
+    case TOWN:
+        owner = gpGame->towns[extraInfo].owner;
+        break;
+    case LIGHTHOUSE:
+    case MINE:
+        owner = gpGame->mines[extraInfo].playerOwner;
+        break;
+    case GARRISON:
+        owner = gpGame->garrisons[extraInfo].playerOwner;
+        break;
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+        owner = gpGame->generators[extraInfo].playerOwner;
+        break;
+    case SHIPYARD:
+        owner = extraInfo << 24 >> 24;
+        break;
+    }
+
+    return owner;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:5688
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
