@@ -3109,7 +3109,7 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 }
 
 // E:\gamedcs\advmgr.cpp:7543
-// RETAIL-RECONSTRUCTED 2026-08-09 (54.0594%). The current QuickInfo slices
+// RETAIL-RECONSTRUCTED 2026-08-09 (55.8089%). The current QuickInfo slices
 // restore point validation and shroud handling, trigger-cell resolution,
 // the shared creature-bank/shrine/tree/witch-hut text helpers, the default
 // object name, border/generator/resource and visited-state cases, optional
@@ -3170,6 +3170,27 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 break
 
             switch (cell->type) {
+            case NOTHING:
+            case ANCHOR_POINT: {
+#pragma inline_depth(0)
+                std::string cellDescription;
+#pragma inline_depth()
+                TAdventureObjectType specialTerrain =
+                    cell->get_special_terrain();
+                if (specialTerrain == NOTHING)
+                    cellDescription = gTerrainNames[cell->GroundSet];
+                else
+                    cellDescription =
+                        gAdventureObjectNames[specialTerrain];
+
+                if (cell->is_diggable()) {
+                    cellDescription += '\n';
+                    cellDescription +=
+                        gUnnamed6a5d5c->entry->quickInfoDiggableText;
+                }
+                strcpy(gText, cellDescription.c_str());
+                break;
+            }
             case ARENA:
                 strcpy(gText, gAdventureObjectNames[ARENA]);
                 if (cell->is_trigger && currHero) {
@@ -3323,6 +3344,13 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     strcat(gText, tempText);
                 }
                 break;
+            case HERO: {
+                hero* mapHero = gpGame->GetHero(cell->extraInfo);
+                sprintf(gText,
+                        gUnnamed6a5d5c->entry->heroRolloverFormat,
+                        mapHero->name, mapHero->HeroFn_004D8F70());
+                break;
+            }
             SET_VISITED_QUICKINFO(IDOL_OF_FORTUNE,
                 currHero->flags & (0x02000000UL | 0x10UL));
             SET_VISITED_QUICKINFO(LEAN_TO,
