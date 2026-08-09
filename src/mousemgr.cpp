@@ -580,6 +580,12 @@ void mouseManager::GetPointerPosition()
 //   0xf82e0 rel32).
 #endif  // @carcass
 
+// EXACT 2026-08-09. Retail inlines the outer TCSLock construction but calls
+// the same constructor for the nested out-of-bounds lock, then inlines both
+// destructors. A block-scoped inline_depth(0) around only the inner
+// declaration reproduces that one-call asymmetry without changing any other
+// expansion. It also emits the byte-exact 25-byte constructor COMDAT claimed
+// below, closing both rows together.
 VA(0x0050d680, 0x210)  // anchor-global, dc 0xff484
 void mouseManager::CheckUpdate()
 {
@@ -611,7 +617,9 @@ void mouseManager::CheckUpdate()
             } else if (!field_64) {
                 ShowCursor(1);
                 {
+#pragma inline_depth(0)
                     TCSLock inner(&section_mouse);
+#pragma inline_depth()
                     if (++field_68 == 1 && !IsIconic(hwndApp))
                         Update(1);
                 }
@@ -642,14 +650,8 @@ void mouseManager::CheckUpdate()
 // Retail files it HERE, between SetPointer and Update, not at the DC
 // tail position - and our build already emits the identical COMDAT
 // (the EH unwind funclets need a callable copy even though every use
-// site inlines it). NO CLAIM, and this one is a CLAIM-FORM limit, not
-// a modelling gap: VA() must sit on a declarator, the only declarator
-// is the in-class inline in mousemgr.h, and moving the definition down
-// here would stop the four earlier users (SetPointer, HidePointer,
-// ShowPointer, CheckUpdate) from inlining it, which retail does.
-// Parking it in the @carcass block instead would only mint a 0.0000
-// row. Claiming it needs either a header-borne claim form or an
-// out-of-line-copy claim kind; both are contract changes.
+// site inlines it). The reviewed carcass declarator pairs that existing
+// COMDAT exactly; no header annotation or duplicate definition is needed.
 
 #if 0  // @carcass
 
@@ -660,16 +662,11 @@ void mouseManager::CheckUpdate()
 // CheckUpdate (+0x141) calls for its inner lock instead of inlining.
 // Retail emits it here, between CheckUpdate and LoadFrame, not at the
 // DC tail position (0xff7e0).
-// BLOCKED 2026-08-07 on the /Ob2 OVER-INLINE residual, and it is the
-// same delta as CheckUpdate's remaining 3%: retail inlines the OUTER
-// TCSLock of CheckUpdate (byte-identical to ours) but CALLS the ctor
-// for the INNER one, while inlining that inner object's DTOR. With
-// the class-inline definition our CL inlines both, so no out-of-line
-// COMDAT body is emitted for the claim to pair with. Moving the
-// definition into the .cpp cannot help: any position before
-// CheckUpdate leaves the asymmetry unexplained, any position after it
-// turns the OUTER lock into a call too. Only the ctor differs - the
-// dtor COMDAT (??1TCSLock) is already emitted.
+// EXACT 2026-08-09: CheckUpdate's block-scoped inline-depth override makes
+// VC6 emit this ordinary constructor COMDAT and use it only for the inner
+// lock. The outer constructor and both destructors remain inlined. The
+// source-authority label pass then joins this already-reviewed claim to the
+// newly present ??0TCSLock public symbol.
 VA(0x0050d890, 0x19)  // byte-identified out-of-line copy, dc 0xff7e0
 void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
 {

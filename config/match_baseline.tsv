@@ -961,10 +961,11 @@ misc	?WritePrefs@@YIXXZ	100.0000
 misc	?WritePrefsToRegistry@@YIXXZ	100.0000
 monframeinfo	?InitializeCreatureAnimationTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000
 monframeinfo	?InitializeCreatureAnimationTraitsTable@@YIEXZ	100.0000
+mousemgr	??0TCSLock@@QAE@PAU_RTL_CRITICAL_SECTION@@@Z	100.0000
 mousemgr	??0mouseManager@@QAE@XZ	100.0000
 mousemgr	??1TCSLock@@QAE@XZ	100.0000
 mousemgr	??_GmouseManager@@UAEPAXI@Z	100.0000
-mousemgr	?CheckUpdate@mouseManager@@QAEXXZ	96.8521
+mousemgr	?CheckUpdate@mouseManager@@QAEXXZ	100.0000
 mousemgr	?Close@mouseManager@@UAEXXZ	100.0000
 mousemgr	?HidePointer@mouseManager@@QAEXXZ	100.0000
 mousemgr	?LoadFrame@mouseManager@@QAEXH@Z	99.3103
@@ -975,7 +976,6 @@ mousemgr	?SetPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	82.9333
 mousemgr	?ShowPointer@mouseManager@@QAEX_N@Z	100.0000
 mousemgr	?ShowSystemCursor@mouseManager@@QAEXE@Z	100.0000
 mousemgr	?Update@mouseManager@@QAEXE@Z	94.1675
-mousemgr	TCSLock_TCSLock_10d890	0.0000
 path	?FindPath@army@@QAEHHHEE@Z	100.0000
 path	?GetAdjacentCellIndex@army@@QBEHHH@Z	100.0000
 path	?GetAdjacentCellIndexNoArmy@@YIHHH@Z	100.0000
