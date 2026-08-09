@@ -84,6 +84,9 @@ public:
     NewmapCell* cell(int x, int y, int z);
     int Load(TAbstractFile* infile, int size, unsigned char twoLayers,
              int saveVersion);
+#ifdef HOMM3_GAME_OBJ_DECLS
+    int Save(TAbstractFile* outfile, int size, unsigned char twoLayers);
+#endif
 };
 
 class town;
@@ -284,6 +287,9 @@ public:
     int currentPlayer;
 
     SavedGameHeader();
+#ifdef HOMM3_GAME_OBJ_DECLS
+    void Reset();
+#endif
     int Save(TAbstractFile* outfile);
     int Load(TAbstractFile* infile);
 };
@@ -569,6 +575,9 @@ public:
     // can_ever_build and get_buildable_mask all call it on
     // gpGame->players[town->owner] to veto a second Capitol.
     bool HasCapitol();
+#ifdef HOMM3_GAME_OBJ_DECLS
+    int save(TAbstractFile* outfile);
+#endif
     int NumOfGivenArtifact(int artifact);
     // 0x4bacb0. town::get_legion_bonus calls it on
     // gpGame->players[town->owner] with artifact id 0x85; the caller's
@@ -808,6 +817,9 @@ public:
     int LoadBoatPool(TAbstractFile* infile);      // 0x4b9a00
     int SaveBoatPool(TAbstractFile* outfile);     // 0x4b9c40
     int Load(TAbstractFile* infile);              // 0x4bcda0
+#ifdef HOMM3_GAME_OBJ_DECLS
+    int Save(TAbstractFile* outfile);             // 0x4be3f0
+#endif
     void clear_event_records();                   // 0x4a0f10
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
 #if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
