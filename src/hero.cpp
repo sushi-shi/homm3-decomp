@@ -8,6 +8,8 @@
 // carries the exact headers that built the retail COMDATs.
 #include <bitset>
 #include <vector>
+#include <stdio.h>
+#include <string.h>
 // abs() - the intrinsic form retail uses (cdq / xor / sub), the
 // stdlib.h precedent already carried by cmbtmgr, window and ai_combat.
 #include <stdlib.h>
@@ -32,7 +34,9 @@
 // TArtifact / akArtifactTraits / gCombinationArtifacts - same placement
 // rationale as herospec.h.
 #include "artifact.h"
+#define HOMM3_HERO_GIVE_RESOURCE_VIEW
 #include "advmgr.h"
+#undef HOMM3_HERO_GIVE_RESOURCE_VIEW
 #include "exec.h"
 #include "town.h"
 #undef HOMM3_HERO_HIRE_VIEW
@@ -47,6 +51,12 @@
 DATA(0x0069774c) extern unsigned char gCampaignMode;
 DATA(0x0067dcec) extern const THeroClassTraits (&akHeroClasses)[18];
 DATA(0x006a7540) extern const char* gPrimaryStatNames[4];
+// Runtime-loaded artifact rollover text. Retail fixes the three storage
+// cells and their roles; no surviving public names them, so the spellings
+// remain provisional.
+DATA(0x006a8040) extern const char* gEmptyArtifactRolloverText;
+DATA(0x006a804c) extern const char* gSpellbookRolloverText;
+DATA(0x006a8050) extern const char* gArtifactRolloverFormat;
 
 // Retail's mana clamp materialises both operands in stack homes and selects
 // one by address. This by-value helper reproduces that Dinkumware-era shape;
@@ -856,12 +866,22 @@ void UpdateBackpack()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:2432
 VA(0x004db350, 0x86)  // anchor-global, dc 0xcd86c
 void type_artifact::get_rollover_text(char* buffer)
 {
-    // @stub
+    if (artifactId == ARTIFACT_NONE)
+        strcpy(buffer, gEmptyArtifactRolloverText);
+    else if (artifactId == ARTIFACT_SPELLBOOK)
+        strcpy(buffer, gSpellbookRolloverText);
+    else
+        sprintf(buffer, gArtifactRolloverFormat,
+                akArtifactTraits[artifactId].name);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:2450
 // Only free row between get_rollover_text (0x004db350, claimed) and
@@ -1511,12 +1531,26 @@ int hero::GiveExperience(int howMuch, int bCheckLevel, unsigned char show_cap_wi
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:5136
 VA(0x004e3600, 0xB2)  // anchor-global, dc 0xd3fb8
 void hero::GiveResource(int whichRes, int howMuch)
 {
-    // @stub
+    if (whichRes >= 0 && whichRes <= NUM_RESOURCES - 1) {
+        gpGame->players[owner].resources[whichRes] += howMuch;
+        if (gpGame->players[owner].resources[whichRes] < 0)
+            gpGame->players[owner].resources[whichRes] = 0;
+    }
+
+    if (&gpGame->players[owner] == gpCurrentPlayer
+        && gpAdvManager->status == baseManager::STATUS_ACTIVE)
+        gpAdvManager->advWindow->UpdateResourceDisplay(1, 1);
+
+    gpGame->IsHuman(owner);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:5165
 VA(0x004e36c0, 0x2E8)  // anchor-global, dc 0xd4070
@@ -2158,14 +2192,31 @@ float hero::get_combat_value_modifier()
                                    * (defense_value * 0.05 + 1.0)));
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6180
 VA(0x004e54a0, 0xAA)  // anchor-global, dc 0xd519c
 boat* hero::find_summonable_boat()
 {
-    // @stub
+    boat* result = gpGame->GetHeroBoat(id, 0);
+    if (result)
+        return result;
+
+    int closestDistance = 0;
+    for (boat* candidate = gpGame->boats.begin();
+         candidate != gpGame->boats.end(); candidate++) {
+        if (candidate->allocated && !candidate->occupied
+            && (candidate->playerOwner == gNetLocalGamePos
+                || candidate->playerOwner == -1)) {
+            int distance = abs(candidate->x - x) + abs(candidate->y - y);
+            if (!result || distance <= closestDistance) {
+                result = candidate;
+                closestDistance = distance;
+            }
+        }
+    }
+    return result;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6219
 VA(0x004e5550, 0x15E)  // anchor-global, dc 0xd524c
