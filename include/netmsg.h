@@ -7,7 +7,8 @@
 enum eRS_Messages {
     RS_CLAIM_GENERATOR = 0x41e,
     RS_CLAIM_GARRISON = 0x41f,
-    RS_CLAIM_SHIPYARD = 0x420
+    RS_CLAIM_SHIPYARD = 0x420,
+    RS_BUILD_BOAT = 0x421
 };
 
 class CNetMsg {
@@ -56,6 +57,16 @@ public:
 
     CMCClaimShipYard(type_point location, int player)
         : CMapChange(RS_CLAIM_SHIPYARD, sizeof(CMCClaimShipYard)),
+          point(location), playerPos(player) {}
+};
+
+class CMCBuildBoat : public CMapChange {
+public:
+    type_point point;
+    int playerPos;
+
+    CMCBuildBoat(type_point location, int player)
+        : CMapChange(RS_BUILD_BOAT, sizeof(CMCBuildBoat)),
           point(location), playerPos(player) {}
 };
 

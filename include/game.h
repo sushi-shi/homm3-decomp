@@ -82,6 +82,8 @@ public:
     unsigned char HasTwoLevels;
 
     NewmapCell* cell(int x, int y, int z);
+    int Load(TAbstractFile* infile, int size, unsigned char twoLayers,
+             int saveVersion);
 };
 
 class town;
@@ -117,7 +119,6 @@ public:
 SIZE(HeroExtra, 0x334);
 #endif
 
-#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_GAME_LOAD_VIEW)
 struct type_university {
     char fields[0x10];
 };
@@ -138,7 +139,6 @@ struct type_creature_bank_vector_view {
     type_creature_bank* end;
 };
 SIZE(type_creature_bank_vector_view, 0x10);
-#endif
 // Declared in E:\gamedcs\struct.h (DC functions.csv puts both ctors
 // there) but DEFINED in include/netplayer.h, not in this tree's
 // struct.h: struct.h rides in initialize.cpp's include closure, and one
@@ -433,6 +433,7 @@ public:
 
     playerData();
     ~playerData();
+    int load(TAbstractFile* infile, int saveVersion);
     void Init();
     int NextHero();
     int NextTown();
@@ -483,21 +484,15 @@ public:
         char pad_11[3];
     };
 
-#ifdef HOMM3_GAME_LOAD_VIEW
-    char pad_00000[0x1f4d4];
-    unsigned char field_1f4d4;
-    char pad_1f4d5[0x15f];
-    unsigned char field_1f634;
-    unsigned char field_1f635;
-#elif defined(HOMM3_HERO_CLASS_NAME_VIEW)
     char pad_00000[0x1f45c];
     // The retail-only hero class-name override compares this full dword
     // against scenario 15.
     int campaignScenario;
-    char pad_1f460[0x1d6];
-#else
-    char pad_00000[0x1f636];
-#endif
+    char pad_1f460[0x74];
+    unsigned char field_1f4d4;
+    char pad_1f4d5[0x15f];
+    unsigned char field_1f634;
+    unsigned char field_1f635;
     // Eight per-player disabled/dead flags. type_AI_player::end_turn
     // skips a gift candidate when the indexed byte is nonzero.
     unsigned char playerDisabled[8];  // +0x1f636
@@ -506,7 +501,6 @@ public:
     // Its wider calendar role is not yet attested, so the name remains
     // ordinal rather than importing a semantic guess.
     unsigned short field_1f63e;
-#ifdef HOMM3_GAME_LOAD_VIEW
     short field_1f640;
     short field_1f642;
     char field_1f644[0x20];
@@ -518,26 +512,8 @@ public:
     unsigned char field_1f695;
     unsigned char ultimateArtifactPresent;
     char pad_1f697;
-#elif defined(HOMM3_ADVMGR_QUICKINFO_VIEW)
-    char pad_1f640[0x50];
-    // The buried Holy Grail coordinate and presence gate. ProcessSearch
-    // compares x/y as signed shorts, z as an unsigned byte, and clears the
-    // gate after handing the artifact to the hero.
-    short ultimateArtifactX;                  // +0x1f690
-    short ultimateArtifactY;                  // +0x1f692
-    unsigned char ultimateArtifactZ;          // +0x1f694
-    char pad_1f695;
-    unsigned char ultimateArtifactPresent;    // +0x1f696
-    char pad_1f697;
-#else
-    char pad_1f640[0x58];
-#endif
     int f_1f698;
-#ifdef HOMM3_GAME_LOAD_VIEW
     unsigned char field_1f69c;
-#else
-    char pad_1f69c[0x1];
-#endif
     // Byte gate town::can_build and get_buildable_mask test before the
     // Castle-Griffin-Tower special case that drops the Blacksmith
     // requirement; it sits four bytes past f_1f698 in the same band.
@@ -553,14 +529,10 @@ public:
     // Eight one-byte alliance/team ids. end_turn compares the candidate
     // byte with the acting player's byte before considering a gift.
     signed char playerTeam[8];  // +0x1f879
-#ifdef HOMM3_GAME_LOAD_VIEW
     char pad_1f881[3];
     int mapSize;                        // +0x1f884
     unsigned char mapHasTwoLevels;      // +0x1f888
     char pad_1f889[0x13];
-#else
-    char pad_1f881[0x1b];
-#endif
     VictoryConditionStruct victoryCondition;  // +0x1f89c
     LossConditionStruct lossCondition;        // +0x1f8e8
     char pad_1f908[0x268];
@@ -596,7 +568,6 @@ public:
     // reach it.
     enum { HERO_COUNT = 156 };
     hero heroes[HERO_COUNT];
-#ifdef HOMM3_GAME_LOAD_VIEW
     char heroAvailability[0x9c];       // +0x4df18
     int heroPoolMap[0x9c];             // +0x4dfb4
     char field_4e224[0x90];
@@ -606,22 +577,6 @@ public:
     unsigned short cartographerMask[3];
     unsigned char cartographerFlags[3];
     char pad_4e375[3];
-#elif defined(HOMM3_ADVMGR_QUICKINFO_VIEW)
-    char pad_4df18[0x42c];
-    // One player-visit bitset per GlobalInfoFlags entry. Retail indexes the
-    // byte by flag and tests the local player's bit.
-    unsigned char globalInfoFlags[32];    // +0x4e344
-    // One player-visit bitset per Border Tent object index. SetRolloverText
-    // indexes the retail GuardFlags band directly and tests the local
-    // player's bit. The sign-pool base proves this band contains eight bytes,
-    // followed by the cartographer state rather than more guard flags.
-    unsigned char borderTentVisitFlags[8]; // +0x4e364
-    unsigned short cartographerMask[3];    // +0x4e36c
-    unsigned char cartographerFlags[3];    // +0x4e372
-    char pad_4e375[3];
-#else
-    char pad_4df18[0x460];
-#endif
     // Sign text and the four object pools, +0x4e378 / +0x4e388 / +0x4e398 /
     // +0x4e3a8 / +0x4e3b8,
     // sixteen bytes apiece - VC6's Dinkumware vector, whose empty
@@ -635,13 +590,9 @@ public:
     std::vector<generator> generators;   // +0x4e398
     std::vector<garrison> garrisons;      // +0x4e3a8
     std::vector<boat> boats;             // +0x4e3b8
-#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_GAME_LOAD_VIEW)
     type_university_vector_view universities;       // +0x4e3c8
     type_creature_bank_vector_view creatureBanks;  // +0x4e3d8
-    char pad_4e3e8[1];
-#else
-    char pad_4e3c8[0x21];
-#endif
+    unsigned char field_4e3e8;
     // +0x4e3e9, one signed byte of per-player visit bits per obelisk;
     // GetNumObelisks tests `(1 << player) & flags[i]` over exactly 48
     // entries.
@@ -650,7 +601,8 @@ public:
     char rumourState[0x100];                 // +0x4e546
     char pad_4e646[2];
     std::vector<TRumour> rumours;             // +0x4e648
-    char pad_4e658[0x24];
+    char field_4e658[0x1c];
+    char pad_4e674[8];
     // +0x4e67c / +0x4e6fc / +0x4e77c - the teleport-destination pools,
     // all std::vector<type_point>. The two arrays are indexed by the
     // monolith colour (`color << 4` in both wrappers) and the gap
@@ -662,13 +614,13 @@ public:
     std::vector<type_point> lithPools[8];      // +0x4e67c
     std::vector<type_point> lithExitPools[8];  // +0x4e6fc
     std::vector<type_point> whirlpools;        // +0x4e77c
-#ifdef HOMM3_GAME_LOAD_VIEW
     std::vector<type_point> field_4e78c;
     std::vector<type_point> field_4e79c;
-#endif
 
     NewfullMap* GetWorldMapData();
     int get_new_boat_id();                    // 0x4bb170
+    int CreateBoat(int x, int y, int z, int owner,
+                   unsigned char remoteMove, signed char type); // 0x4bb250
     playerData* GetLocalPlayer();
     int GetLocalPlayerGamePos();                 // 0x4cea20
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
@@ -708,6 +660,7 @@ public:
     void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
     void ClaimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
     void record_claim_mine(long id, long new_owner);          // 0x49bf90
+    void record_show_boat(boat* current_boat, type_point point); // 0x49c900
     void SetVisibility(int startX, int startY, int z,
                        int whichPlayer, int range,
                        unsigned char remote_move);            // 0x49cdd0
@@ -736,6 +689,7 @@ public:
     int LoadBoatPool(TAbstractFile* infile);      // 0x4b9a00
     int SaveBoatPool(TAbstractFile* outfile);     // 0x4b9c40
     int Load(TAbstractFile* infile);              // 0x4bcda0
+    void clear_event_records();                   // 0x4a0f10
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
 #if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
     // 0x4c9990. town.obj needs this declaration for
