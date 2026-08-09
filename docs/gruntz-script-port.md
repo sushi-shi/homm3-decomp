@@ -347,6 +347,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   applies the HoMM2/Gruntz named-lifetime and multidimensional-layout rules;
   no external implementation or `decomp-attempt-1` material was used.
 
+- **2026-08-09 — `combatManager::UpdateArmyGroup` reconstructed byte-exact
+  (218 bytes).** Retail first clears all seven slots in the selected
+  persistent army group, then walks the side's live combat stacks. Positive
+  survivors pass four `creatureId` bit gates and a conditional fifth rule,
+  require an original slot in 0..6, and write their current creature type and
+  troop count back to that slot. The offsets, bit numbers, conditional gate
+  and loop bounds all come from retail. Reusing the already retail-proven
+  header-inline `army::Is(bit)` is the crucial HoMM2/Gruntz canonical-source
+  boundary: it anchors VC6's induction pointer at `creatureId` and closes the
+  first-pass 97.4085% residual. Dreamcast corroborates the method identity,
+  `origPos` field name and inline call; no external implementation or
+  `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `combatManager::RaiseSkeletons` reconstructed to 93.2203%.**
   The function first merges the pending raised stack unchanged; if the
   destination group has neither a matching nor an empty slot, it promotes

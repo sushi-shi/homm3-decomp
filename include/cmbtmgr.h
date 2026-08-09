@@ -241,7 +241,11 @@ public:
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
     // parameters ctor 0x435ec0). Name provisional.
     unsigned char sideIsAI[2];        // +0x54a4
-    char pad_54a6[0x16];
+    char pad_54a6[0x2];
+    // UpdateArmyGroup applies the creatureId bit-22 exclusion only when
+    // this per-side dword is not -1. Role awaits a decoded writer.
+    int field_54a8[2];                // +0x54a8
+    char pad_54b0[0xc];
     // Live stack count per side; every ai_tactical walk of armies[side]
     // bounds itself with it (type_AI_spellcaster ctor 0x4369c0,
     // set_melee_enemies 0x43bf20).
@@ -365,6 +369,7 @@ public:
     void RemoveObstacle(int index);
     void CombatSystemOptions();
     const char* GetBackgroundName();
+    void UpdateArmyGroup(int whichSide);
     void RaiseSkeletons(int side);
     void LearnSpellFromEagleEye(int side);
     static unsigned char LoadWallTraitsTable();

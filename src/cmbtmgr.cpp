@@ -171,12 +171,49 @@ void combatManager::SetupAdjacencyArray()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:1612
+// EXACT 2026-08-09 from retail's survivor write-back loop. The
+// destination group is cleared first; each live, eligible combat stack then
+// returns to its original 0..6 slot with its current type and troop count.
+// Routing the four flag tests through army::Is anchors retail's induction
+// pointer at creatureId and reproduces all 218 bytes.
 VA(0x004641f0, 0xDA)  // linkorder, dc 0x5eb40
 void combatManager::UpdateArmyGroup(int whichSide)
 {
-    // @stub
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++) {
+        armyGroups[whichSide]->armies[slot] = CREATURE_NONE;
+        armyGroups[whichSide]->numTroops[slot] = 0;
+    }
+
+    for (int index = 0; index < numArmies[whichSide]; index++) {
+        army& current = armies[whichSide][index];
+        if (current.numTroops <= 0)
+            continue;
+
+        if (current.Is(21) & 1)
+            continue;
+        if (field_54a8[whichSide] != -1) {
+            if (current.Is(22) & 1)
+                continue;
+        }
+        if (current.Is(23) & 1)
+            continue;
+        if (current.Is(6) & 1)
+            continue;
+        if (current.originalIndex < 0
+            || current.originalIndex >= armyGroup::ARMY_GROUP_SLOT_COUNT)
+            continue;
+
+        armyGroups[whichSide]->armies[current.originalIndex] =
+            current.creatureType;
+        armyGroups[whichSide]->numTroops[current.originalIndex] =
+            current.numTroops;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1653
 VA(0x004642d0, 0xDC)  // linkorder, dc 0x5eca8
