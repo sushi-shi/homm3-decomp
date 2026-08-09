@@ -91,9 +91,8 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
     return (_X > _Y ? _X : _Y);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:336
+#if 0  // @carcass
 DC_ONLY(0x5714, 0xB6)
 unsigned char InitializeCreatureGeneratorNames()
 {
@@ -107,26 +106,30 @@ unsigned char InitializeExtraInfoText()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:392
 VA(0x00405de0, 0xD)  // anchor-global, dc 0x5864
-BlackBoxData* ExtraInfoUnion::get_black_box()
+BlackBoxData* ExtraInfoUnion::get_black_box() const
 {
-    // @stub
+    return gpAdvManager->get_black_box(this);
 }
 
 // E:\gamedcs\advmgr.cpp:400
 VA(0x00405df0, 0x20)  // anchor-bracket, dc 0x5888
-type_creature_bank* ExtraInfoUnion::get_creature_bank()
+type_creature_bank& ExtraInfoUnion::get_creature_bank() const
 {
-    // @stub
+    return gpGame->creatureBanks.first[creature_bank_info.index];
 }
 
 // E:\gamedcs\advmgr.cpp:408
 VA(0x00405e10, 0x1C)  // anchor-global, dc 0x58bc
-type_university* ExtraInfoUnion::get_university()
+type_university* ExtraInfoUnion::get_university() const
 {
-    // @stub
+    return &gpGame->universities.first[university_info.index];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:420
 VA(0x00405e30, 0x64B)  // dc-bracket forced, dc 0x58f0
