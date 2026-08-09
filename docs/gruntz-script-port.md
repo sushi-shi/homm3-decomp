@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::SetRolloverText` extends to 56.3176%.**
+  Retail admits the Dead Guy, Fountain of Fortune, Lean-To, Magic Spring,
+  Monster, Mystical Garden and Resource arms. The four player-visit fields
+  were already byte-modeled at playerData +0xb8..+0xc4; this caller now
+  corroborates their per-object masks and the Magic Spring/Garden depletion
+  bits. Monster's trigger gate, bounded creature-id lookup, army-size name
+  call and `%s %s` format, and Resource's direct name-table lookup are all
+  relocation- and branch-proven. No external implementation body was used.
+  Whole-linked fuzzy coverage rises from 44.63% to 44.76% with all 599 exact
+  linked functions retained.
+
 - **2026-08-09 — `advManager::SetRolloverText` extends to 51.0853%.**
   Retail's repeated global-info and hero-visit blocks admit the Magic/Power/
   War School, Magic Well, Mercenary Camp, Mermaid, Oasis, Rally Flag, Siren,
