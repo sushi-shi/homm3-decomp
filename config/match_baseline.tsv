@@ -634,6 +634,7 @@ hero	?get_obscured_town@type_obscuring_object@@QAEPAVtown@@XZ	100.0000	100.0000	
 hero	?get_player@hero@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xe56b0
 hero	?get_primary_skill_total@hero@@QAEFXZ	99.5833	99.5833	99.5833	0xe5960
 hero	?get_spell_level@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe5080
+hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0
 hero	?is_in_patrol_radius@hero@@QAEEUtype_point@@@Z	100.0000	100.0000	100.0000	0xe56e0
 hero	?modify_spell_damage@hero@@QAEJHHPBVarmy@@@Z	100.0000	100.0000	100.0000	0xe5760
@@ -694,7 +695,6 @@ hero	hero_get_luck_description	0.0000	0.0000	0.0000	0xdcac0
 hero	hero_get_morale_description	0.0000	0.0000	0.0000	0xdc320
 hero	hero_get_special_terrain	0.0000	0.0000	0.0000	0xe4fa0
 hero	hero_hero	0.0000	0.0000	0.0000	0xd85f0
-hero	hero_hire	0.0000	0.0000	0.0000	0xd7890
 hero	hero_initialize	0.0000	0.0000	0.0000	0xd8720
 hero	hero_load	0.0000	0.0000	0.0000	0xd7a20
 hero	hero_remove_artifact	0.0000	0.0000	0.0000	0xe2bd0
