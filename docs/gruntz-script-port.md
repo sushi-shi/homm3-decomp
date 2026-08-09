@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::ClaimMine` reconstructed byte-exact
+  (203 bytes).** Retail indexes the 64-byte mine pool, constructs a packed map
+  point from the three tail coordinate bytes, records only normal actions,
+  writes the new signed owner byte, and reveals a radius-three area for every
+  nonnegative owner. Non-initialization actions additionally test the embedded
+  flagged-mine victory condition and force an end-game check on success. The
+  four-value action enum, `record_claim_mine`, `SetVisibility`, victory member
+  and `CheckEndGame` identities come from Dreamcast CodeView/xrefs and are each
+  independently fixed by retail call targets and argument shapes. Retail also
+  proves the mine tail layout and every gate, constant and packed-coordinate
+  operation. A game-only header view exposes the already-exact `type_point`
+  constructor body so VC6 reproduces retail's inline bitfield writes without
+  perturbing its out-of-line owner in advmgr.obj. This applies the
+  HoMM2/Gruntz minimal-view and canonical-helper-boundary rules. No external
+  implementation body or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `playerData::Init` reconstructed byte-exact
   (277 bytes).** Retail clears the active hero and town state, empties the
   shipyard vector without releasing its allocation, restores the packed Grail
