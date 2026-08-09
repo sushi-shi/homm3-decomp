@@ -403,6 +403,7 @@ public:
     const char* GetBackgroundName();
     void UpdateArmyGroup(int whichSide);
     void GenerateMap();
+    void SetupAdjacencyArray();
     int PlaceLargeObstacle(unsigned terrain_mask,
                            unsigned special_terrain_mask);
     void RaiseSkeletons(int side);
