@@ -719,6 +719,9 @@ public:
                    unsigned char remoteMove, signed char type); // 0x4bb250
     int GetStartingHeroId(TTownType alignment, int playerPos,
                           int mapPosition);                     // 0x4bb400
+    int GetNewHeroId(int playerPos, THeroClass excludedClass,
+                     unsigned char preferAlignment,
+                     THeroClass preferredClass);               // 0x4bb5e0
     playerData* GetLocalPlayer();
     int GetLocalPlayerGamePos();                 // 0x4cea20
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
