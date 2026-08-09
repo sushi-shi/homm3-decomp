@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::SetRolloverText` extends to 72.1363%.**
+  Retail admits both creature-generator ownership arms, Lighthouse ownership
+  and Town naming. The switch blocks prove the 92-byte generator and 64-byte
+  mine pool indexing, signed subtype/owner loads, the two generator-name
+  tables, the eight-entry ownership-color table and the `%s - %s`/` - %s`
+  formats. Town uses the already proven `game::GetTown` inline path, reads
+  the displayed-name pointer at town +0xc8 with the shared empty fallback,
+  and pairs it with the nine-entry town-type name table. Dreamcast is used
+  only to corroborate the generator-table semantics; no external
+  implementation body was used. Whole-linked fuzzy coverage rises from
+  45.14% to 45.18% with all 606 exact linked functions retained.
+
 - **2026-08-09 — `advManager::SetRolloverText` extends to 70.4286%.**
   Retail admits the Hero and Obelisk arms and completes Border Tent's
   player-visit annotation. The function computes the local-player bit once,
