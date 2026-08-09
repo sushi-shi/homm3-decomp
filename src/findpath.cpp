@@ -25,27 +25,16 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
     return (_Y < _X ? _Y : _X);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\findpath.cpp:36
-// CLAIM WITHDRAWN 2026-08-07 - MISATTRIBUTION, the same defect as
-// exec.cpp's withdrawn executive::executive claim. 0x4b1090 is the
-// FOURTH member of the ten-block run at 0x4b0f60..0x4b12d0, and its
-// 95-byte body is byte-identical to 0x4b0660's apart from the .bss
-// slot it stores (0x696d14 vs 0x696cec): the ten-iteration
-// std::bitset<10> initializer that occurs 900 times image-wide, ten
-// per TU. The Dreamcast roster names findpath.obj's run as the same
-// ten `$E4xx` statics from E:\gamedcs\terrain.h:70..79 - the cinit
-// excluded class. type_point::is_valid itself (DC 0x9ed40, 72 B) has
-// no retail slot in this bracket; being a header-inline predicate it
-// is the /Ob2 inline-away case.
-DC_ONLY(0x9ed40, 0x48)
+// CORRECTION 2026-08-09: the old withdrawal looked only at the cinit run
+// ending at 0x4b12d0 and missed the 59-byte body immediately before the
+// searchArray constructor. GetCell's relocation independently names
+// 0x4b1330 as this predicate, and its four signed bound checks prove it.
+VA(0x004b1330, 0x3B)  // anchor-callee, dc 0x9ed40
 unsigned char type_point::is_valid()
 {
-    // @stub
+    return x >= 0 && x < gMapWidth && y >= 0 && y < gMapHeight;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\findpath.cpp:45
 // STATEMENT ORDER IS THE WHOLE FUNCTION. The three vector members
@@ -140,8 +129,8 @@ void searchArray::Close()
 // into CalcTerrainCost's extra slot: retail threads a trailing flag the
 // Dreamcast port does not have.
 //
-// Five DC rows have no retail slot: type_point::is_valid and the two
-// valid_move_adjacent overloads (no gap between TestPossibleDirections
+// Five DC rows have no retail slot: the two valid_move_adjacent overloads
+// (no gap between TestPossibleDirections
 // 0x4b2300+0xa94 = 0x4b2d94 and SeedCombatPosition 0x4b2da0), and
 // build_combat_path / mark_enemy / check_enemy_armies (no gap between
 // set_moat 0x4b3290+0x16f = 0x4b33ff and FindCombatPath 0x4b3400).
@@ -777,4 +766,3 @@ pathCell* std::__copy_backward(pathCell* __first, pathCell* __last, pathCell* __
 }
 
 #endif  // @carcass
-
