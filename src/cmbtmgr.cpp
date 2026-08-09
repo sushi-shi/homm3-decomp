@@ -102,6 +102,7 @@ unsigned char combatManager::LoadWallTraitsTable()
     }
     return 1;
 }
+#if 0  // @carcass
 
 #if 0  // @carcass
 
