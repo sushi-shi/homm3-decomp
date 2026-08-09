@@ -273,7 +273,9 @@ struct SSpellTraits {
     unsigned int field_c;     // bit 10 gates one immunity family;
                               // bit 12 (byte +0xd & 0x10) blocks the
                               // spell against siege weapons
-    unsigned int flags_10;    // bits 4 / 0x40 / 0x400 = spell families
+    // +0x10 is the display name. SetShrineHelpText passes it as the string
+    // argument to the central shrine format after indexing this 136-byte row.
+    const char* name;
     char pad_14[4];
     int level;                // the dragons' magic-immunity gate
     // +0x1c, the spell's SCHOOL MASK - a full dword, byte-proven by

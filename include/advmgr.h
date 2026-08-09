@@ -9,6 +9,48 @@
 #include "struct.h"
 #include "window.h"
 
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+// Dreamcast CodeView supplies the domain and ordering. Retail indexes the
+// matching 32-byte per-player flag band and the parallel help-name table with
+// this value; the shrine helper currently needs only the type, not individual
+// enumerator spellings.
+enum GlobalInfoFlags {
+    BuoyInfo = 0,
+    CloverFieldInfo,
+    FaerieRingInfo,
+    FountainOfFortuneInfo,
+    GardenOfRevelationInfo,
+    TrainingGroundsInfo,
+    LibraryInfo,
+    DefenseTowerInfo,
+    MercCampInfo,
+    MagicSchoolInfo,
+    WarSchoolInfo,
+    PowerSchoolInfo,
+    WitchHutInfo,
+    FountainOfYouthInfo,
+    HillFortInfo,
+    MagicSpringInfo,
+    MermaidInfo,
+    RallyFlagInfo,
+    TreeOfKnowledgeInfo,
+    Shrine1Info,
+    Shrine2Info,
+    Shrine3Info,
+    IdolOfFortuneInfo,
+    TempleInfo,
+    UniversityInfo,
+    MagicWellInfo,
+    OasisInfo,
+    WateringHoleInfo,
+    const_sacrifice_info,
+    MaxInfoFlags = 32
+};
+
+DATA(0x006a79ec) extern const char* const gAdventureObjectNames[];
+DATA(0x0069127c) extern const char* const gGlobalInfoFlagNames[];
+#endif
+
 // Retail GetSoundId returns this four-byte enum. The semantic aliases have
 // not been admitted; these ordinal names expose only the values proved by
 // that function's return blocks.

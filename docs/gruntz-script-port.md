@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `SetShrineHelpText` reconstructed as the next `QuickInfo`
+  prerequisite at 99.3641%.** Retail copies the cell object's display name,
+  gates detail on the trigger bit, bounds and tests the local player's global
+  shrine-info bit, separately tests the cell-knowledge bits, extracts the
+  signed shrine spell id, formats the spell name, and appends the current
+  hero's spell-availability annotation. All nine branches and both returns
+  agree. The remaining two instruction differences are a byte-width versus
+  dword-width bit test and retail's redundant reload of the saved destination
+  pointer on the unknown-cell path. Retail proves the 32-byte flag band at
+  `game+0x4e344`, spell display name at traits +0x10, hero availability byte at
+  +0x430, both text-record offsets, and the two referenced pointer tables;
+  Dreamcast CodeView supplies `GlobalInfoFlags`, the inline helper names and
+  the function signature only. No external implementation body was used, and
+  the generated baseline remains build-owned.
+
 - **2026-08-09 — two army/creature-bank text builders admitted as
   `QuickInfo` prerequisites.** The retail-only 893-byte army describer at
   0x40abe0 consolidates repeated stacks, emits either a compact-prefix full
