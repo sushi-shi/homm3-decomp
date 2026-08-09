@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the primary AI-combat constructor is fully reconstructed
+  at 99.9969%.** Its Dinkumware vector construction, hero/army ownership,
+  wall penalty, mana and spellbook/orb gates, special-ground selector,
+  pre-SoD Cursed Ground rule, enemy orb gate, and creature initialization
+  call now reproduce every retail instruction, branch, and selector byte.
+  The single-byte residue is semantically dead: VC6 sources the empty
+  allocator byte from `[ebp+0xf]` rather than retail's `[ebp+0xb]`;
+  spelling the allocator default explicitly does not move it and was
+  reverted. The first attempt grew `EMagicTerrain` in `armygrp.h`, which
+  exposed this tree's documented include-closure sensitivity by moving
+  `initialize_game_data` from exact to 96.0880%. Reusing the already
+  isolated, byte-proven 1/6/7/8/9 domain in `magicterrain.h` restores that
+  exact row and keeps the ratchet clean. Retail bytes, the pinned VC6
+  `<vector>` header, and existing admitted map-cell domains supplied the
+  evidence; no external implementation was used.
+
 - **2026-08-09 — AI-combat aftermath reconstructed; its experience helper
   is instruction-identical.** `game::ExperienceValueOfStack` is promoted
   from its Dreamcast-only row to the 88-byte retail slot at 0x4ca3b0:

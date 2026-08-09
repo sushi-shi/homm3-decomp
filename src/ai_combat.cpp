@@ -33,6 +33,7 @@
 #include "advmgr.h"
 #include "armygrp.h"
 #include "game.h"
+#include "magicterrain.h"
 #include "misc.h"
 #include "hero.h"
 #include "town.h"
@@ -198,17 +199,74 @@ long type_monster_data::take_damage(long damage)
     return damage;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_combat.cpp:172
-// EH-bearing (P2.2): retail frames this with push -1 / push 0x627b08 /
-// mov eax,fs:[0] around the vector construction, which cannot close
-// until the synth-PDB EH scope lands.
+// FULLY TRANSCRIBED 2026-08-09. 99.9969%: every instruction, branch and
+// switch byte agrees; the lone byte delta is the dead empty-allocator
+// source slot (`[ebp+0xb]` retail versus `[ebp+0xf]` here). Giving the
+// wrapper the allocator default argument explicitly is byte-inert.
+// The byte selector maps the two RoE
+// magic-ground ids and the four combat-field SoD ids; the other magic
+// grounds deliberately take the default because they affect army
+// morale/luck outside this constructor. GARRISON is a separate answer
+// from NewmapCell::get_special_terrain and disables spellcasting without
+// assigning a magic-terrain mode. The Cursed Ground mode also carries
+// retail's pre-SoD ruleset gate.
 VA(0x00423ee0, 0x233)  // anchor-bracket, dc 0x29e2c
-void type_AI_combat_data::type_AI_combat_data(const hero* new_hero, const armyGroup* new_army, double base_modifier, const hero* _enemy_hero, const town* enemy_town, NewmapCell* map_cell)
+type_AI_combat_data::type_AI_combat_data(const hero* new_hero, const armyGroup* new_army, double base_modifier, const hero* _enemy_hero, const town* enemy_town, NewmapCell* map_cell)
 {
-    // @stub
+    my_army = const_cast<armyGroup*>(new_army);
+    my_hero = const_cast<hero*>(new_hero);
+    check_wall_archery_penalty(enemy_town);
+    enemy_hero = const_cast<hero*>(_enemy_hero);
+
+    if (new_hero == 0)
+        mana = 0;
+    else
+        mana = my_hero->mana;
+
+    can_cast = 1;
+    if (my_hero == 0
+        || !my_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK))
+        can_cast = 0;
+    if (my_hero != 0
+        && my_hero->IsWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION))
+        can_cast = 0;
+
+    terrain = -1;
+    if (map_cell != 0) {
+        switch (map_cell->get_special_terrain()) {
+        case MAGIC_PLAINS:
+            terrain = kMagicTerrainMagicPlains;
+            break;
+        case LUCID_POOLS:
+            terrain = kMagicTerrainLucidPools;
+            break;
+        case FIERY_FIELDS:
+            terrain = kMagicTerrainFieryFields;
+            break;
+        case ROCKLANDS:
+            terrain = kMagicTerrainRocklands;
+            break;
+        case MAGIC_CLOUDS:
+            terrain = kMagicTerrainMagicClouds;
+            break;
+        case CURSED_GROUND:
+            terrain = MAGIC_TERRAIN_CURSED_GROUND;
+            if (gpGame->f_1f698 >= 2)
+                break;
+        case GARRISON:
+            can_cast = 0;
+            break;
+        }
+    }
+
+    if (enemy_hero != 0
+        && enemy_hero->IsWieldingArtifact(ARTIFACT_ORB_OF_INHIBITION))
+        can_cast = 0;
+    initialize_creatures(base_modifier, enemy_hero);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:221
 VA(0x00424120, 0x66E)  // dc-callgraph unique, dc 0x29f58
