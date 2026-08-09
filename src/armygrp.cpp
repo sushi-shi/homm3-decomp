@@ -41,6 +41,13 @@ inline const int& armygrp_clamp(int low, int value, int high)
     return value < low ? low : (high < value ? high : value);
 }
 
+inline const char* armygrp_creature_plural_name(TCreatureType creature)
+{
+    if (creature >= 0 && creature <= 150)
+        return akCreatureTypeTraits[creature].m_plural_name;
+    return "";
+}
+
 DATA(0x00693878)
 static TSplitWindow* gpSplitWindow;
 
@@ -1616,10 +1623,11 @@ source_stack_merges:
 // Retail Complete has two trailing controls: a full-width magic-terrain
 // mode and the alignment-grouping byte forwarded to GetMorale. The body
 // returns with `ret 24h`, proving the hidden result plus eight arguments.
-// COMPLETE semantic transcription 2026-08-09 (63.9572%). Explicit neutral
+// COMPLETE semantic transcription 2026-08-09 (67.5649%). Explicit neutral
 // town cases and no default preserve retail's two nine-entry terrain selector
-// tables. The remaining delta is Dinkumware string-temporary/EH emission and
-// associated register allocation; every observed modifier is represented.
+// tables. Variable creature-name lookups use retail's 0..150 guard and shared
+// empty-text fallback. The remaining delta is Dinkumware string-temporary/EH
+// emission and associated register allocation; every modifier is represented.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::get_morale_description(
     TCreatureType creature, int morale, const hero* ownerHero,
@@ -1753,7 +1761,7 @@ after_magic_terrain:
         if (dragonType != CREATURE_NONE)
             result += format_string(
                 gEnemyCreatureStatFormat,
-                akCreatureTypeTraits[dragonType].m_plural_name);
+                armygrp_creature_plural_name(dragonType));
     }
 
     if (ownerTown) {
@@ -1770,7 +1778,7 @@ after_magic_terrain:
          || creature == CREATURE_MINOTAUR_KING)
         && currentMorale < 1) {
         result += format_string(gAlwaysPositiveMoraleFormat,
-                                creatureTraits.m_plural_name);
+                                armygrp_creature_plural_name(creature));
         currentMorale = 1;
     }
 
@@ -1795,10 +1803,11 @@ after_magic_terrain:
 // E:\gamedcs\armygrp.cpp:1464. Retail Complete's body proves the added
 // creature argument and full-width magic-terrain mode; the older Dreamcast
 // prototype omits the former and calls the latter a boolean.
-// Semantic transcription complete; residual 60.3234%. A branch-local named
+// Semantic transcription complete; residual 74.7874%. A branch-local named
 // result for cursed ground recovers retail's default-construct/assign lifetime
-// and removes three blocks. Direct initialization and a function-wide shared
-// result both regress. The remaining delta is dominated by Dinkumware string
+// and removes three blocks. The bounded variable-creature name lookup raises
+// the body to 74.7874%. Direct initialization and a function-wide shared result
+// both regress. The remaining delta is dominated by Dinkumware string
 // return-object construction/destruction and EH layout.
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::get_luck_description(
@@ -1863,8 +1872,7 @@ std::string armyGroup::get_luck_description(
             devilType = CREATURE_ARCH_DEVIL;
         if (devilType != CREATURE_NONE)
             result += format_string(gEnemyCreatureStatFormat,
-                                    akCreatureTypeTraits[devilType]
-                                        .m_plural_name);
+                                    armygrp_creature_plural_name(devilType));
     }
 
     if (ourTown && ourTown->type == TOWN_RAMPART
@@ -1875,7 +1883,7 @@ std::string armyGroup::get_luck_description(
 
     if (creature == CREATURE_HALFLING && currentLuck < 1) {
         result += format_string("%s are always lucky",
-                                akCreatureTypeTraits[creature].m_plural_name);
+                                armygrp_creature_plural_name(creature));
         currentLuck = 1;
     }
 
