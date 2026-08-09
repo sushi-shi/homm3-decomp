@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — both `advManager::CompleteDraw` overloads admitted
+  byte-exact; `advmgr` 19 → 21 exact.** The 1,149-byte orchestrator
+  reproduces its entry/message gates, forced full-map origin, nine 20-by-18
+  tile passes, view-world and route gating, cursor state, shroud and gem
+  passes, 100-frame FPS timing ring, chat refresh, sound polling, and bottom
+  view update. Its 40 symbolic branches and every instruction compare
+  exactly. The 67-byte packed-origin forwarding overload is exact as well.
+  Retail bytes and relocations prove all control flow, constants, storage
+  widths and call targets; Dreamcast CodeView supplied only surviving member,
+  local and method names. No external body was consulted or ported, and the
+  generated baseline remains exclusively build-owned.
+
 - **2026-08-09 — the 1,154-byte `advManager::DrawUnderlay` body opened
   to 74.79%.** Retail instructions and relocations prove the clipped cell
   lookup, underlay-only object filter, object/type/sprite pool traversal,

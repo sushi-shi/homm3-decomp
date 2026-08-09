@@ -6,6 +6,30 @@
 #include "mapcell.h"
 
 class CSprite;
+class textWidget;
+
+enum ECompleteDrawFps {
+    COMPLETE_DRAW_FPS_FRAME_COUNT = 100
+};
+
+// Narrow view of the retail chat singleton used by CompleteDraw's optional
+// FPS overlay. Both method targets and their calling conventions are proved
+// by the retail call sites; the rest of CChatManager stays unreconstructed.
+class CChatManager {
+public:
+    void ClearChat();
+    void UpdateWidget(textWidget* widget, unsigned char killOld, int numLines);
+};
+
+DATA(0x0069d7b0) extern CChatManager chatMan;
+void __cdecl UpdateCompleteDrawFps(CChatManager* manager, const char* text);
+
+DATA(0x0065f690) extern int gCompleteDrawFpsFrame;
+DATA(0x00691240) extern unsigned long gCompleteDrawFpsLastTime;
+DATA(0x0069136c) extern int
+    gCompleteDrawFpsTimes[COMPLETE_DRAW_FPS_FRAME_COUNT];
+DATA(0x006912ec) extern char gCompleteDrawFpsText[];
+DATA(0x00660388) extern char gCompleteDrawFpsFormat[];
 
 // Narrow renderer views of the retail map object pools. They live in the
 // adventure renderer's header rather than changing the broad game.h include
