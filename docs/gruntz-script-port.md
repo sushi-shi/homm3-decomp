@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `town::GiveSpells` reconstructed to 95.0327% (467
+  bytes).** Retail proves the five six-spell Mage Guild rows at town +0x44,
+  their signed counts at +0xbc, and the existing 70-bit spell veto at +0xd4.
+  The member visits a forced hero once or the visiting and garrison heroes,
+  requires a spellbook and active Mage Guild, grants ordinary rows through
+  Wisdom + 2, and gives an Aurora-Borealis Conflux every eligible non-Titan
+  spell. All 37 retail blocks and both granting paths are present; the
+  residual is VC6 folding retail's dead positive-count preheader. No external
+  implementation material was used.
+
 - **2026-08-09 — `game::ExperienceValueOfStack` admitted byte-exact.**
   Retail's +0x4c creature-traits load proves that the seven stack products use
   `hitPoints`, not the +0x40 AI valuation field; a non-null hero contributes

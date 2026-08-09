@@ -1057,6 +1057,7 @@ town	?CanBuildDock@town@@QAEEXZ	100.0000	100.0000	100.0000	0x1bf4e0
 town	?Deallocate@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be2d0
 town	?GetNativeTerrain@town@@QBE?AW4TTerrainType@@XZ	100.0000	100.0000	100.0000	0x1c1440
 town	?GetTypeName@town@@QBEPBDXZ	100.0000	100.0000	100.0000	0x1c1450
+town	?GiveSpells@town@@QAEXPAVhero@@@Z	95.0327	95.0327	95.0327	0x1be030
 town	?HasGarrison@town@@QAEHXZ	100.0000	100.0000	100.0000	0x1bdfe0
 town	?PlaceInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0
 town	?TownFn_005BF900@town@@QAEJJ@Z	99.8469	99.8469	99.8469	0x1bf900
@@ -1091,7 +1092,6 @@ town	initialize_buildings	0.0000	0.0000	0.0000	0x1c08c0
 town	show_building_rewards	0.0000	0.0000	0.0000	0x1c0220
 town	show_creature_rewards	0.0000	0.0000	0.0000	0x1c0400
 town	town_BuildBuilding	0.0000	0.0000	0.0000	0x1bede0
-town	town_GiveSpells	0.0000	0.0000	0.0000	0x1be030
 town	town_SwapHeroes	0.0000	0.0000	0.0000	0x1be450
 town	town_create_building	0.0000	0.0000	0.0000	0x1be930
 town	town_give_event_reward	0.0000	0.0000	0.0000	0x1bfeb0

@@ -226,7 +226,17 @@ public:
     char pad_35[0x3];
     int field_38;
     int field_3c;
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    char pad_40[0x4];
+    // +0x44, five mage-guild rows of six spell ids. GiveSpells walks
+    // rows with a 0x18 stride and pairs them with the signed counts at
+    // +0xbc; five rows close exactly at that count band.
+    int mageGuildSpells[5][6];
+    signed char mageGuildSpellCounts[5];
+    char pad_c1[3];
+#else
     char pad_40[0x84];
+#endif
     // +0xc4..+0xd3 is a Dinkumware vector: the constructor copies an
     // allocator byte into +0xc4 and clears its three pointer words.
     // Its element semantics are not yet reached, so the name is ordinal.
