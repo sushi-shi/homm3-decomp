@@ -510,6 +510,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   sibling-pattern and minimal-view rules. No external implementation body or
   `decomp-attempt-1` material was used.
 
+- **2026-08-09 — `hero::HeroScreenUpdate` reconstructed byte-exact
+  (101 bytes), settling its retail arity.** Contrary to the no-argument
+  Dreamcast revision, retail consumes two ints: a primary-stat index and a
+  quick-view flag. It inlines the established signed-byte primary-skill
+  clamp, combines the result with the quantity marker, selects normal versus
+  quick dialog type and calls `NormalDialog` with the indexed primary-stat
+  name and resource frame. Retail proves both arguments, the four-name
+  pointer row at 0x6a7540, every dialog ordinal and the complete call shape;
+  Dreamcast contributes only the source-order identity and semantic name
+  family. Rewriting the byte-equivalent skill floor from `skill > 1` to
+  `skill >= 2` selects retail's `cmp 2 / setge` and preserves every existing
+  caller, applying the HoMM2/Gruntz source-shape rule without a duplicate
+  helper. No external implementation body or `decomp-attempt-1` material was
+  used.
+
 - **2026-08-09 — `THeroScreenWindow::update_all_slots` reconstructed
   byte-exact (23 bytes).** Retail retains `this` in EDI and walks a long
   ESI index from zero through all nineteen equipped positions, calling the
