@@ -1014,7 +1014,7 @@ smackmgr	?VideoRestart@@YIXXZ	100.0000
 smackmgr	?VideoResume@@YIXXZ	100.0000
 smackmgr	?VideoShutDown@@YIXXZ	100.0000
 smackmgr	?VideoSoundOnOff@@YIXXZ	100.0000
-soundmgr	??0soundManager@@QAE@XZ	99.0312
+soundmgr	??0soundManager@@QAE@XZ	100.0000
 soundmgr	?AdjustMusicVolumes@soundManager@@QAEXXZ	100.0000
 soundmgr	?AdjustSoundVolumes@soundManager@@QAEXXZ	100.0000
 soundmgr	?ClearMemSample@@YIXUSAMPLE2@@@Z	100.0000
