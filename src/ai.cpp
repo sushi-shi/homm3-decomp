@@ -33,6 +33,15 @@ inline const _TYPE& min_ref(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _X : _Y);
 }
 
+template <class _TYPE>
+inline const _TYPE& min_ref_xvalue(_TYPE _X, const _TYPE& _Y)
+{
+    // The later move_toward expansion keeps _X in a fresh home while the
+    // explicit copy reuses best_danger's dead argument slot for _Y.
+    _TYPE _Y_copy = _Y;
+    return (_X < _Y_copy ? _X : _Y_copy);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\ai.cpp:43
@@ -489,17 +498,10 @@ long combatManager::get_attack_change(const army* current_army, const army* enem
 // the source, not the addressing mode - a `long` subscript on an
 // `unsigned char*` needs no movsx at all.
 //
-// Residual (99.4%): register-homing family, EIGHT instructions in the
-// SECOND inlined min_ref. Retail homes `_X` (enemy_attacks[second_hex])
-// in the fresh local -0x1c and coalesces `_Y` with best_danger's own
-// recycled argument slot +0xc, reusing the same `_Y` home the FIRST
-// min_ref already took; our CL swaps the pair, so the two stores and
-// the two LEAs carry each other's displacements. Byte multiset is
-// identical - it is a slot tie-break, not a shape. Tried and rejected:
-// hoisting the element into a named `long other` temp first (no
-// change); `min_ref(enemy_attacks[second_hex], enemy_attacks[hex])` so
-// that `_Y` is the CSE rather than the variable (97.3%); declaring
-// best_danger last in the local list (no change).
+// The second minimum deliberately uses min_ref_xvalue. Its by-value first
+// operand takes the fresh -0x1c home, while the explicit copy of the
+// referenced second operand coalesces with best_danger's recycled +0xc
+// argument slot. That final home assignment makes all 772 bytes exact.
 VA(0x0041f580, 0x304)  // linkorder, dc 0x24b64
 unsigned char combatManager::move_toward(const army* current_army, long target_hex, const long* enemy_attacks, unsigned char consider_waiting)
 {
@@ -566,7 +568,7 @@ unsigned char combatManager::move_toward(const army* current_army, long target_h
                                 if (enemy_attacks != 0) {
                                     best_danger = enemy_attacks[hex];
                                     if (current_army->creatureId & 1)
-                                        best_danger = min_ref(
+                                        best_danger = min_ref_xvalue(
                                                 enemy_attacks[second_hex],
                                                 best_danger);
                                 }
@@ -2467,4 +2469,3 @@ void std::__pop_heap_aux(army** __first, army** __last, army** __formal, func_mo
 }
 
 #endif  // @carcass
-

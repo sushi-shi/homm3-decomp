@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `combatManager::move_toward` admitted byte-exact.** The
+  772-byte path walker already matched all 65 control-flow blocks; its last
+  mismatch was the second inlined minimum assigning two equivalent stack
+  homes in reverse. A source-private variant takes the enemy value by value,
+  the current best by reference, and explicitly copies that second operand.
+  VC6 consequently places the enemy in the fresh -0x1c local and recycles
+  `best_danger`'s +0xc argument slot for the copy, reproducing the final eight
+  retail instructions without changing behavior. No external implementation
+  was used.
+
 - **2026-08-09 — `town::get_growth_rate` admitted byte-exact; `town`
   gains its 29th exact row.** The 614-byte caller gates base and upgraded
   dwelling slots, adds creature and fortification growth, applies Legion and
