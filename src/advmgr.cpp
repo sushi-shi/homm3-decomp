@@ -1736,9 +1736,10 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
             AdvFullMapObjectsView* mapObjects =
                 static_cast<AdvFullMapObjectsView*>(
                     static_cast<void*>(fullMap));
-            CObject* obj = &mapObjects->objects[objCell->objectIndex];
-            CObjectType* objType = &mapObjects->objectTypes[obj->typeIndex];
-            CSprite* sprite = mapObjects->sprites[obj->typeIndex];
+            CObjectType* objType = &mapObjects->objectTypes[
+                mapObjects->objects[objCell->objectIndex].typeIndex];
+            CSprite* sprite = mapObjects->sprites[
+                mapObjects->objects[objCell->objectIndex].typeIndex];
             if (!objType->suppressDraw)
                 continue;
 
@@ -1753,7 +1754,8 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
             case TOWN: {
                 int triggerX;
                 int triggerY;
-                obj->FindTrigger(&triggerX, &triggerY);
+                mapObjects->objects[objCell->objectIndex].FindTrigger(
+                    &triggerX, &triggerY);
                 type_point triggerPoint;
                 triggerPoint = type_point(triggerX, triggerY, z);
                 NewmapCell* triggerCell;
@@ -1763,7 +1765,9 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                     triggerCell = fullMap->cell(
                         triggerPoint.x, triggerPoint.y, triggerPoint.z);
                 int owner = GetFlaggedObjectOwner(triggerCell);
-                int frame = (animFrame + obj->animationOffset)
+                int frame = (animFrame
+                             + mapObjects->objects[objCell->objectIndex]
+                                   .animationOffset)
                             % sprite->GetNumFrames(0);
                 signed char offsets = objCell->offsets;
                 int yOffset = offsets >> 4;
@@ -1779,7 +1783,9 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                 break;
             }
             default: {
-                int frame = (animFrame + obj->animationOffset)
+                int frame = (animFrame
+                             + mapObjects->objects[objCell->objectIndex]
+                                   .animationOffset)
                             % sprite->GetNumFrames(0);
                 signed char offsets = objCell->offsets;
                 int yOffset = offsets >> 4;
