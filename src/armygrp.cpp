@@ -349,6 +349,13 @@ void armyGroup::SplitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
 }
 
 // E:\gamedcs\armygrp.cpp:229
+// Residual (99.9170%): duplicating the identical end-dialog stores/return
+// in the close/cancel and accept source arms lets VC6 cross-jump them into
+// retail's layout: accept falls through the tail and close/cancel lives
+// out of line with a backward jump. All 34 blocks and branch targets then
+// agree. The sole remaining delta is EAX/EDX swapped across the destination
+// entry arm's splitSlider->SetState virtual call; named argument and slider
+// locals are byte-inert.
 VA(0x0044a180, 0x2DF)  // byte-shape, dc 0x4e428 (+ 0x4e388 inlined)
 int TSplitWindow::WindowHandler(message* msg)
 {
@@ -395,16 +402,17 @@ int TSplitWindow::WindowHandler(message* msg)
             case DIALOG_RETURN_SPLIT_CLOSE:
             case DIALOG_RETURN_SPLIT_CANCEL:
                 gpWindowManager->dialogReturn = msg->codeY;
-                break;
+                msg->codeY = widget::WIDGET_END_DIALOG;
+                msg->codeX = widget::WIDGET_END_DIALOG;
+                return MESSAGE_DISPATCH_FORWARD;
             case DIALOG_RETURN_SPLIT_ACCEPT:
                 gpWindowManager->dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
-                break;
+                msg->codeY = widget::WIDGET_END_DIALOG;
+                msg->codeX = widget::WIDGET_END_DIALOG;
+                return MESSAGE_DISPATCH_FORWARD;
             default:
                 return MESSAGE_DISPATCH_CONSUME;
             }
-            msg->codeY = widget::WIDGET_END_DIALOG;
-            msg->codeX = widget::WIDGET_END_DIALOG;
-            return MESSAGE_DISPATCH_FORWARD;
         }
         break;
 
