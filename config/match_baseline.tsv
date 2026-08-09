@@ -290,7 +290,7 @@ armygrp	?CanJoin@armyGroup@@QAEHH@Z	100.0000
 armygrp	?Dismiss@armyGroup@@QAEXH@Z	100.0000
 armygrp	?GetAlignments@armyGroup@@QAEHPAE@Z	100.0000
 armygrp	?GetArmyLuck@armyGroup@@QAEHHPBVhero@@PBVtown@@HE@Z	90.2526
-armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	80.5625
+armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	96.5625
 armygrp	?GetArmySizeName@armyGroup@@SIPBDHH@Z	100.0000
 armygrp	?GetLuck@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EE@Z	100.0000
 armygrp	?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z	98.5654
