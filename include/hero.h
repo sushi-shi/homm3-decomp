@@ -704,9 +704,22 @@ extern const THeroTraits (&akHeroTraits)[163];
 // CODEVIEW(E:\gamedcs\CustomCampaign.h:225, dc 0xd5944) int SCampaign::GetExpCap();
 
 // --- THeroScreenWindow ---
+// Narrow declaration for the retail slot-refresh loop. Complete carries
+// nineteen equipped positions, one more than the DC TArtifactSlot roster;
+// keep the argument as the retail-proven ordinal index, matching the
+// remove_artifact precedent above.
+class THeroScreenWindow {
+public:
+    enum EArtifactSlotBounds {
+        ARTIFACT_SLOT_FIRST = 0,
+        ARTIFACT_SLOT_COUNT = 19
+    };
+
+    void update_slot(long slot);
+    void update_all_slots();
+};
+
 // CODEVIEW(E:\gamedcs\hero.cpp:1594, dc 0xcc49c) void THeroScreenWindow::HeroMessageUpdate(char* cText);
-// CODEVIEW(E:\gamedcs\hero.cpp:2365, dc 0xcd6e8) void THeroScreenWindow::update_slot(TArtifactSlot slot);
-// CODEVIEW(E:\gamedcs\hero.cpp:2383, dc 0xcd740) void THeroScreenWindow::update_all_slots();
 // CODEVIEW(E:\gamedcs\hero.cpp:2477, dc 0xcd9c4) void THeroScreenWindow::UpdateHeroScreenStatusBar(message* msg);
 // CODEVIEW(E:\gamedcs\hero.cpp:3229, dc 0xcebe0) int THeroScreenWindow::ExitDialog(message* msg);
 // CODEVIEW(E:\gamedcs\hero.cpp:3239, dc 0xcec1c) void THeroScreenWindow::ShowWidgets();

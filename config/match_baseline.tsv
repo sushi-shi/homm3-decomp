@@ -640,6 +640,7 @@ hero	?remove_backpack_artifact@hero@@QAEXF@Z	100.0000	100.0000	100.0000	0xe2d50
 hero	?rotate_backpack_left@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbdb0
 hero	?rotate_backpack_right@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbe10
 hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0
+hero	?update_all_slots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb1d0
 hero	HeroView	0.0000	0.0000	0.0000	0xe1800
 hero	THeroScreenWindow_ExitDialog	0.0000	0.0000	0.0000	0xdd2a0
 hero	THeroScreenWindow_HeroMessageUpdate	0.0000	0.0000	0.0000	0xd97f0
@@ -649,7 +650,6 @@ hero	THeroScreenWindow_THeroScreenWindow_e1550	0.0000	0.0000	0.0000	0xe1550
 hero	THeroScreenWindow_UpdateHeroLocator	0.0000	0.0000	0.0000	0xe1600
 hero	THeroScreenWindow_UpdateHeroScreenStatusBar	0.0000	0.0000	0.0000	0xdb660
 hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
-hero	THeroScreenWindow_update_all_slots	0.0000	0.0000	0.0000	0xdb1d0
 hero	THeroScreenWindow_update_slot	0.0000	0.0000	0.0000	0xdaf90
 hero	UpdateBackpack	0.0000	0.0000	0.0000	0xdb1f0
 hero	__h3cg$hero$scalar_deleting_dtor$THeroScreenWindow	0.0000	0.0000	0.0000	0xe1520
