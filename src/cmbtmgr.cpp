@@ -355,7 +355,7 @@ void combatManager::DetermineCombatTerrain()
                     == COMBAT_MINE_TYPE_6
                 || gpGame->mines[combatCell->get_map_extraInfo()].type
                     == COMBAT_MINE_TYPE_4
-                || gpGame->mines[combatCell->get_map_extraInfo()].pad_02[0])) {
+                || gpGame->mines[combatCell->get_map_extraInfo()].field_02)) {
         terrain = COMBAT_TERRAIN_SUBTERRANEAN;
     } else if (combatCell->flags_00_11 & 0x200) {
         field_53c0 = 0;

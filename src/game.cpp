@@ -273,11 +273,42 @@ int game::LoadMinePool(void* infile, int saveVersion)
 }
 
 // E:\gamedcs\game.cpp:964
+#endif  // @carcass
+
 VA(0x004b9580, 0x165)  // anchor-global (ClaimMine vector) + write-slot, dc 0xa410c
-int game::SaveMinePool(void* outfile)
+int game::SaveMinePool(TAbstractFile* outfile)
 {
-    // @stub
+    unsigned char count = static_cast<unsigned char>(mines.size());
+    if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    for (unsigned int i = 0; i < mines.size(); ++i) {
+        unsigned char value = mines[i].playerOwner;
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        value = mines[i].type;
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        value = mines[i].field_02;
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+
+        mines[i].guards.save(outfile);
+
+        count = mines[i].field_3c;
+        if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+            return -1;
+        count = mines[i].field_3d;
+        if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+            return -1;
+        count = mines[i].field_3e;
+        if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+            return -1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1024
 VA(0x004b96f0, 0x1CB)  // anchor-global (ClaimGarrison vector) + read-slot, dc 0xa438c
