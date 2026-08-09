@@ -961,12 +961,63 @@ unsigned char combatManager::ShotIsNotOptimal(const army* attacker, const army* 
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:3566
 VA(0x00467840, 0x1B6)  // anchor-global, dc 0x61318
 unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex)
 {
-    // @stub
+    if (!field_132f4)
+        return 1;
+
+    int source_x = sourceIndex % COMBAT_GRID_ROW_STRIDE;
+    int source_y = sourceIndex / COMBAT_GRID_ROW_STRIDE;
+    int delta_x = destIndex % COMBAT_GRID_ROW_STRIDE - source_x;
+    int delta_y = destIndex / COMBAT_GRID_ROW_STRIDE - source_y;
+    if (delta_y == 0 && delta_x == 0)
+        return 1;
+    int sample = 0;
+    int abs_y = abs(delta_y);
+    int abs_x = abs(delta_x);
+    float step_x;
+    float step_y;
+    int distance;
+    if (abs_x > abs_y) {
+        step_x = delta_x > 0 ? 1.0 : -1.0;
+        step_y = static_cast<float>(delta_y) / static_cast<float>(abs_x);
+        distance = abs_x;
+    } else {
+        step_y = delta_y > 0 ? 1.0 : -1.0;
+        step_x = static_cast<float>(delta_x) / static_cast<float>(abs_y);
+        distance = abs_y;
+    }
+
+    step_x /= 17.0f;
+    step_y /= 17.0f;
+    float x = static_cast<float>(source_x);
+    float y = static_cast<float>(source_y);
+    int samples = distance * COMBAT_GRID_ROW_STRIDE;
+    for (; sample < samples; sample++) {
+        x += step_x;
+        y += step_y;
+        int hex = static_cast<int>(y) * COMBAT_GRID_ROW_STRIDE
+            + static_cast<int>(x);
+        if (hex == COMBAT_HEX_GATE) {
+            if (drawbridgeState == DRAWBRIDGE_UP)
+                return 0;
+        } else {
+            for (int wall = 0; wall < 11; wall++) {
+                if (hex == gCastleWallColumns[wall]) {
+                    if (cells[gCastleWallColumns[wall]].field_10 & 2)
+                        return 0;
+                }
+            }
+        }
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3640
 VA(0x00467a00, 0x3AF)  // anchor-global, dc 0x614f0
