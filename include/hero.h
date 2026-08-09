@@ -432,6 +432,7 @@ public:
     }
 
     unsigned char HasArtifact(int whichArtifact);
+    void hire(int iPlayer, type_point point);
     void UseSpell(int cost);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     void AddSpell(int whichSpell);
