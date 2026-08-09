@@ -61,6 +61,7 @@
 #include "game.h"
 #include "creature_bank.h"
 #include "exec.h"
+#include "findpath.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "mousemgr.h"
@@ -817,9 +818,8 @@ int advManager::ProcessWaitingHover(int mouseX, int mouseY)
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:4514
+#if 0  // @carcass
 DC_ONLY(0xf23c, 0x84)
 type_adventure_cursor advManager::get_garrison_cursor(NewmapCell* currCell)
 {
@@ -832,15 +832,241 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 {
     // @stub
 }
+#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:4556
+// RETAIL-RECONSTRUCTED 2026-08-09 (69.3789%). Retail proves the complete
+// local-human, visibility, ownership, path reachability/turn count, object
+// cursor dispatch and scroll-zone control flow. Residual codegen differences
+// are concentrated in the packed current-hero location comparison, the
+// Dinkumware result-vector erase expansion and merged exit layout.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
-    // @stub
-}
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return ProcessWaitingHover(mouseX, mouseY);
 
-#endif  // @carcass
+    if (InMapArea(mouseX, mouseY)) {
+        int rx = mouseX / 32;
+        int ry = mouseY / 32;
+        if (rx == lastHoverX && ry == lastHoverY)
+            goto process_window_hover;
+
+        advCommand = -1;
+        lastHoverX = rx;
+        lastHoverY = ry;
+        lastMapHover.x = radarOrigin.x + rx;
+        lastMapHover.y = radarOrigin.y + ry;
+        lastMapHover.z = radarOrigin.z;
+
+        if (!lastMapHover.is_valid()
+            || !(GetMapExtra(lastMapHover) & gMapVisibilityBit))
+            goto normal_cursor_exit;
+
+        type_point point = lastMapHover;
+        NewmapCell* currCell;
+        if (!point.is_valid())
+            currCell = fullMap->cellData;
+        else
+            currCell = fullMap->cell(point.x, point.y, point.z);
+
+        SetRolloverText(currCell, mouseX, mouseY);
+
+        int currHeroId = gpCurrentPlayer->currHeroId;
+        hero* currHero = gpGame->GetHero(currHeroId);
+        if (currHeroId != -1 && currHero->z != lastMapHover.z)
+            goto normal_cursor_exit;
+
+        if (currHeroId == -1) {
+            if (currCell->type == TOWN) {
+                town* cTown = gpGame->GetTown(
+                    currCell->get_trigger_cell()->get_map_extraInfo());
+                if (gpGame->OnSameTeam(cTown->owner, gNetLocalGamePos)
+                    || DebugViewAll) {
+                    gpMouseManager->SetPointer(3,
+                                               mouseManager::ADVENTURE_SET);
+                    advCommand = 3;
+                    return 1;
+                }
+            }
+
+            if (currCell->type == HERO) {
+                hero* mapHero = gpGame->GetHero(currCell->extraInfo);
+                if (mapHero->owner == gNetLocalGamePos)
+                    goto own_hero_cursor_exit;
+            }
+
+            if (currCell->type == SHIPYARD) {
+                int owner = static_cast<int>(
+                    currCell->get_trigger_cell()->get_map_extraInfo() << 24)
+                    >> 24;
+                if (gpGame->OnSameTeam(owner, gNetLocalGamePos))
+                    goto shipyard_cursor_exit;
+            }
+
+            goto normal_cursor_exit;
+        }
+
+        if (currHero->x == lastMapHover.x
+            && currHero->y == lastMapHover.y
+            && currHero->z == lastMapHover.z) {
+            goto own_hero_cursor_exit;
+        }
+
+        if (currCell->flags_00_11 & 0x100) {
+            if (currCell->type == TOWN) {
+                town* cTown = gpGame->GetTown(
+                    currCell->get_trigger_cell()->get_map_extraInfo());
+                if (gpGame->OnSameTeam(cTown->owner, gNetLocalGamePos)
+                    || DebugViewAll) {
+                    gpMouseManager->SetPointer(3,
+                                               mouseManager::ADVENTURE_SET);
+                    advCommand = 5;
+                    return 1;
+                }
+            } else if (currCell->type == SHIPYARD) {
+                int owner = static_cast<int>(
+                    currCell->get_trigger_cell()->get_map_extraInfo() << 24)
+                    >> 24;
+                if (gpGame->OnSameTeam(owner, gNetLocalGamePos))
+                    goto shipyard_cursor_exit;
+            }
+
+            gpSearchArray->clear_path();
+            goto normal_cursor_exit;
+        }
+
+        int inBoat = currHero->flags & 0x40000;
+        if (!inBoat) {
+            if (currCell->GroundSet == eTerrainWater
+                && (currCell->type != HERO || !currCell->is_trigger)
+                && (currCell->type != BOAT || !currCell->is_trigger)
+                && (currCell->type != SHIPWRECK || !currCell->is_trigger)) {
+                gpSearchArray->clear_path();
+                goto normal_cursor_exit;
+            }
+        } else if (currCell->GroundSet != eTerrainWater
+                   && currCell->type != ANCHOR_POINT) {
+            gpSearchArray->clear_path();
+            goto normal_cursor_exit;
+        }
+
+        SeedTo(lastMapHover);
+        pathCell* path_cell = gpSearchArray->get_cell(lastMapHover, 0);
+        int iTurns = 0;
+        int new_cursor = 0;
+        if (path_cell->visited) {
+            if (path_cell->cost <= currHero->movePoints) {
+                iTurns = 0;
+            } else {
+                iTurns = (path_cell->cost - currHero->movePoints - 1)
+                         / currHero->maxMovePoints + 1;
+                if (iTurns > 3)
+                    iTurns = 3;
+            }
+
+            advCommand = 1;
+            switch (currCell->type) {
+            case ANCHOR_POINT:
+                if (cursorType == CURSOR_TYPE_8)
+                    new_cursor = 7;
+                else
+                    new_cursor = get_normal_cursor(currCell);
+                break;
+            case BOAT:
+                if (cursorType != CURSOR_TYPE_8) {
+                    new_cursor = 6;
+                    advCommand = 1;
+                } else {
+                    new_cursor = 0;
+                    advCommand = -1;
+                }
+                break;
+            case GARRISON:
+                if (currCell->is_trigger) {
+                    garrison& mapGarrison = gpGame->garrisons[currCell->extraInfo];
+                    if (!gpGame->OnSameTeam(mapGarrison.playerOwner,
+                                            gNetLocalGamePos)
+                        && mapGarrison.garrisonArmy.HasCreatures()) {
+                        new_cursor = 5;
+                        break;
+                    }
+                }
+                new_cursor = get_normal_cursor(currCell);
+                break;
+            case HERO: {
+                hero* mapHero = gpGame->GetHero(currCell->extraInfo);
+                if (gpGame->OnSameTeam(mapHero->owner, gNetLocalGamePos)) {
+                    new_cursor = 8;
+                    advCommand = 1;
+                } else {
+                    new_cursor = 5;
+                }
+                break;
+            }
+            case MONSTER:
+                new_cursor = 5;
+                break;
+            case TOWN: {
+                town* cTown = gpGame->GetTown(currCell->extraInfo);
+                if (currCell->is_trigger
+                    && !gpGame->OnSameTeam(cTown->owner, gNetLocalGamePos)
+                    && cTown->HasGarrison())
+                    new_cursor = 5;
+                else
+                    new_cursor = get_normal_cursor(currCell);
+                break;
+            }
+            default:
+                new_cursor = get_normal_cursor(currCell);
+                break;
+            }
+
+        }
+
+        int iMouseOffset = iTurns * 6;
+        if (cursorType == CURSOR_TYPE_8
+            && new_cursor == ADV_BOAT_EVENT_POINTER)
+            new_cursor += iTurns;
+        else
+            new_cursor += iMouseOffset;
+        gpMouseManager->SetPointer(new_cursor,
+                                   mouseManager::ADVENTURE_SET);
+        return 1;
+    }
+
+    if (gpMouseManager->field_50 >= HOVER_SCROLL_POINTER_FIRST
+        && gpMouseManager->field_50 <= HOVER_SCROLL_POINTER_LAST) {
+        int rx;
+        int ry;
+        gpMouseManager->MouseCoords(&rx, &ry);
+        if (rx < 0 || rx >= HOVER_SCREEN_WIDTH
+            || ry < 0 || ry >= HOVER_SCREEN_HEIGHT
+            || (rx >= HOVER_SCROLL_MARGIN && rx <= HOVER_SCROLL_RIGHT
+                && ry >= HOVER_SCROLL_MARGIN
+                && ry <= HOVER_SCROLL_BOTTOM)) {
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        }
+    }
+
+process_window_hover:
+    advWindow->ProcessHover(mouseX, mouseY);
+    return 1;
+
+normal_cursor_exit:
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    return 1;
+
+own_hero_cursor_exit:
+    gpMouseManager->SetPointer(2, mouseManager::ADVENTURE_SET);
+    advCommand = 2;
+    return 1;
+
+shipyard_cursor_exit:
+    gpMouseManager->SetPointer(6, mouseManager::ADVENTURE_SET);
+    advCommand = 8;
+    return 1;
+}
 
 // E:\gamedcs\advmgr.cpp:4831 - both arguments are dead. Retail is ten
 // bytes: `mov dword ptr [ecx+0x50], 0` then `ret 8`, with no frame at
