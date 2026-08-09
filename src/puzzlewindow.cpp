@@ -103,8 +103,8 @@ type_point match_puzzle(__$ReturnUdt, long player, []* puzzle_map)
 }
 
 // E:\gamedcs\puzzlewindow.cpp:614
-DC_ONLY(0x115f64, 0x3E4)
-type_point AI_attempt_puzzle_guess(__$ReturnUdt, long player)
+VA(0x0052c9b0, 0x55B)  // anchor-caller, dc 0x115f64
+type_point AI_attempt_puzzle_guess(long player)
 {
     // @stub
 }
@@ -115,4 +115,3 @@ void* TPuzzleWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
-

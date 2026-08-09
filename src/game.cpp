@@ -14,6 +14,7 @@
 #include "findpath.h"
 #include "misc.h"
 #include "soundmgr.h"
+#include "puzzlewindow.h"
 // playerData::ClearNetInfo and GetName read the default player name out
 // of the unnamed central object at 0x6a5d5c;
 // playerData::AssignNetInfo reads a CNetPlayerInfo.
@@ -655,16 +656,13 @@ char* playerData::GetName()
     return cName;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:1972
 VA(0x004bae50, 0x1B)  // linkorder, dc 0xa6230
 void playerData::guess_grail_location(long player_id)
 {
-    // @stub
+    type_point guess = AI_attempt_puzzle_guess(player_id);
+    memcpy(puzzle_guess, &guess, sizeof(guess));
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:1978
 // The mine pool's stride is 64, not the Dreamcast record's 12 - the
