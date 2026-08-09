@@ -522,6 +522,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   fresh retail comparisons. `decomp-attempt-1` remained read-only and supplied
   no implementation or admitted metadata.
 
+- **2026-08-09 — `armyGroup::get_morale_description` raised from
+  60.1036% to 63.9572% by restoring the complete terrain selectors.** The
+  two retail switch tails each contain a nine-byte selector
+  `{0,0,0,1,1,1,2,2,2}` over all town types. Keeping the three neutral
+  cases explicit while omitting a `default` prevents VC6 from folding them
+  into an abbreviated six-value dispatch, matching the source-shape rule
+  already retail-proven in `GetArmyMorale`. Named-result and explicit
+  return-temporary probes regressed or were inert and were reverted. Retail
+  bytes remain the authority; no external implementation was consulted.
+  The generated baseline remains exclusively build-owned.
+
 - **2026-08-09 — the split-army path completed and its message producer is
   exact; both retail combat-stat descriptions reconstructed.**
   `SplitSliderCallback` and `armyGroup::SplitArmy` now match exactly, raising
