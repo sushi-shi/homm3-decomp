@@ -54,11 +54,26 @@ enum WiseTreePrices {
     const_tree_price_count
 };
 
+enum WitchHutSkillEncoding {
+    WitchHutNoSkillMask = 0x000fe000
+};
+
 DATA(0x006a79ec) extern const char* const gAdventureObjectNames[];
 DATA(0x0069127c) extern const char* const gGlobalInfoFlagNames[];
 DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;
 DATA(0x006a64d8) extern const char* const gWiseTreePriceNames[];
 DATA(0x006912c4) extern const char* gKnownTreePriceText;
+DATA(0x006a7bb0) extern const char* gWitchHutName;
+
+// Dreamcast publishes the retail-corroborated `TSSkillTraits` name and
+// 28-row count. This helper proves only the 16-byte stride and name at +0.
+struct TSSkillTraits {
+    const char* name;
+    char pad_04[0xc];
+};
+SIZE(TSSkillTraits, 0x10);
+DATA(0x0067dcf0) extern const TSSkillTraits (&akSSkillTraits)[28];
+DATA(0x006912ac) extern const char* gKnownWitchSkillText;
 #endif
 
 // Retail GetSoundId returns this four-byte enum. The semantic aliases have

@@ -691,14 +691,41 @@ void SetTreeHelpText(char* buffer, hero* current_hero, NewmapCell* cell, const c
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:3002
+// RETAIL-RECONSTRUCTED 2026-08-09 (98.0056%). Retail proves the complete
+// object-name, trigger/sentinel, cell-knowledge, secondary-skill and
+// current-hero paths. All ten branches and the return agree; the residual is
+// register allocation and PlayerKnowsCell's dword mask where retail narrows
+// both operands to their low bytes. Dreamcast CodeView supplies the surviving
+// function, enum and traits names.
 VA(0x0040dcc0, 0x1E4)  // dc-bracket forced, dc 0xbd84
 void set_witch_hut_help_text(char* buffer, hero* current_hero, NewmapCell* cell, const char* separator_1, const char* separator_2)
 {
-    // @stub
+    strcpy(buffer, gWitchHutName);
+    if (!cell->is_trigger)
+        return;
+
+    if ((cell->extraInfo & WitchHutNoSkillMask) == WitchHutNoSkillMask)
+        return;
+
+    if (cell->PlayerKnowsCell(gNetLocalGamePos)) {
+        int skill = static_cast<int>(cell->extraInfo << 12) >> 25;
+        strcat(buffer, separator_1);
+        char tempText[50];
+        sprintf(tempText, gUnnamed6a5d5c->entry->witchSkillFormat,
+                akSSkillTraits[skill].name);
+        strcat(buffer, tempText);
+        if (current_hero && current_hero->skillLevel[skill]) {
+            strcat(buffer, separator_2);
+            strcat(buffer, gUnnamed6a5d5c->entry->heroKnowsWitchSkillText);
+        }
+    } else if (gpGame->GetInfoFlag(WitchHutInfo, gNetLocalGamePos)) {
+        strcat(buffer, separator_1);
+        strcat(buffer, gKnownWitchSkillText);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:4385
 VA(0x0040deb0, 0x3CF)  // anchor-callee, dc 0xed7c
