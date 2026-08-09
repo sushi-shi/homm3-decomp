@@ -403,7 +403,6 @@ cmbtmgr	combatManager_MakeCreaturesVanish	0.0000	0.0000	0.0000	0x66e00
 cmbtmgr	combatManager_NextArmy	0.0000	0.0000	0.0000	0x65080
 cmbtmgr	combatManager_Open	0.0000	0.0000	0.0000	0x62a20
 cmbtmgr	combatManager_PowEffect	0.0000	0.0000	0.0000	0x68990
-cmbtmgr	combatManager_RaiseSkeletons	0.0000	0.0000	0.0000	0x69f20
 cmbtmgr	combatManager_SetNextArmy	0.0000	0.0000	0.0000	0x65330
 cmbtmgr	combatManager_SetupAndLoadObstacles	0.0000	0.0000	0.0000	0x66290
 cmbtmgr	combatManager_SetupCombat	0.0000	0.0000	0.0000	0x639f0
@@ -530,8 +529,6 @@ game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae5
 game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0
 game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
-game	ComputeUALoc	0.0000	0.0000	0.0000	0xbaed0
-game	HeroExtra_HeroExtra	0.0000	0.0000	0.0000	0xce4b0
 game	ImmMouseWindowMoved	0.0000	0.0000	0.0000	0xb6950
 game	InitImmMouse	0.0000	0.0000	0.0000	0xb6890
 game	game_ClaimGarrison	0.0000	0.0000	0.0000	0xc6960
