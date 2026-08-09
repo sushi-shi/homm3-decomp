@@ -1151,6 +1151,17 @@ inline int GetMapExtra(type_point point)
     return ::GetMapExtra(point.x, point.y, point.z);
 }
 
+// The DC header names this expression type_point::operator==. Keeping the
+// retail-proven inline body local avoids changing unrelated compilands while
+// reproducing the packed bitfield comparison in ProcessHover.
+inline unsigned char PointsEqual(const type_point* point,
+                                 const type_point* arg)
+{
+    return point->x == arg->x
+           && point->y == arg->y
+           && point->z == arg->z;
+}
+
 // E:\gamedcs\advmgr.cpp:4385
 // RETAIL-RECONSTRUCTED 2026-08-09 (74.8967%). Retail proves the complete
 // map-area, packed-hover, visibility/current-level, rollover, owned hero/town
@@ -1252,12 +1263,13 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 #endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:4556
-// RETAIL-RECONSTRUCTED 2026-08-09 (71.4102%). Retail proves the complete
+// RETAIL-RECONSTRUCTED 2026-08-09 (74.7787%). Retail proves the complete
 // local-human, visibility, ownership, path reachability/turn count, object
 // cursor dispatch and scroll-zone control flow. The rollover call receives
-// map-cell coordinates, not screen pixels. Residual codegen differences are
-// concentrated in the packed current-hero location comparison, the Dinkumware
-// result-vector erase expansion and merged exit layout.
+// map-cell coordinates, not screen pixels. The current-hero path constructs
+// and compares the same packed type_point as retail. Residual codegen
+// differences are concentrated in the Dinkumware result-vector erase
+// expansion and merged exit layout.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
@@ -1290,11 +1302,12 @@ int advManager::ProcessHover(int mouseX, int mouseY)
 
         SetRolloverText(currCell, rx, ry);
 
-        int currHeroId = gpCurrentPlayer->currHeroId;
-        hero* currHero = gpGame->GetHero(currHeroId);
-        if (currHeroId != -1 && currHero->z != lastMapHover.z)
+        if (gpCurrentPlayer->currHeroId != -1
+            && gpGame->GetHero(gpCurrentPlayer->currHeroId)->z
+               != lastMapHover.z)
             goto normal_cursor_exit;
 
+        int currHeroId = gpCurrentPlayer->currHeroId;
         if (currHeroId == -1) {
             if (currCell->type == TOWN) {
                 town* cTown = gpGame->GetTown(
@@ -1318,16 +1331,20 @@ int advManager::ProcessHover(int mouseX, int mouseY)
                 int owner = static_cast<int>(
                     currCell->get_trigger_cell()->get_map_extraInfo() << 24)
                     >> 24;
-                if (gpGame->OnSameTeam(owner, gNetLocalGamePos))
-                    goto shipyard_cursor_exit;
+                if (!gpGame->OnSameTeam(owner, gNetLocalGamePos))
+                    goto normal_cursor_exit;
+                goto shipyard_cursor_exit;
             }
 
             goto normal_cursor_exit;
         }
 
-        if (currHero->x == lastMapHover.x
-            && currHero->y == lastMapHover.y
-            && currHero->z == lastMapHover.z) {
+        hero* currHero = gpGame->GetHero(currHeroId);
+        type_point heroPoint;
+        heroPoint.x = currHero->x;
+        heroPoint.y = currHero->y;
+        heroPoint.z = currHero->z;
+        if (PointsEqual(&heroPoint, &lastMapHover)) {
             goto own_hero_cursor_exit;
         }
 

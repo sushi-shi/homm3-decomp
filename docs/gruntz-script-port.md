@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::ProcessHover` extends to 74.7787%.**
+  Retail reads the acting hero id directly from the current player for the
+  map-level gate, preserving the redundant `game::GetHero` sentinel check,
+  then constructs a temporary packed `type_point` from the hero's three
+  coordinate shorts and inlines the attested point-equality expression. The
+  no-current-hero shipyard arm branches to the shared normal-cursor exit on
+  team rejection before taking the allied-shipyard exit. Reconstructing these
+  source shapes raises the 2,328-byte function from 71.4102% while preserving
+  its exact retail extent and all 621 exact functions. Retail instructions
+  prove the bitfield masks, branch polarity, lookup repetition and field
+  offsets; Dreamcast CodeView supplies only the surviving
+  `type_point::operator==` identity. No external implementation body was used,
+  and `match_baseline.tsv` remains generated solely by the full build.
+
 - **2026-08-09 — `advManager::ProcessHover` extends to 71.4102%.**
   Retail keeps the screen-to-cell quotients live in EDI/EBX and passes those
   `rx`/`ry` map-cell coordinates to `SetRolloverText`; the earlier candidate
