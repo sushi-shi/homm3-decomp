@@ -924,7 +924,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 # game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
 # artifact.h / army.h, and record what you saw.
 initialize	?initialize_game_data@@YIXXZ	100.0000
-inputmgr	??0inputManager@@QAE@XZ	86.5667
+inputmgr	??0inputManager@@QAE@XZ	100.0000
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000
 inputmgr	?Flush@inputManager@@QAEXXZ	100.0000

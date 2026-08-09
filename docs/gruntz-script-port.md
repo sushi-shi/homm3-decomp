@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — inputmgr reaches 10/10 exact.** Retail clears all 64
+  buffered messages between the base-manager constructor and the derived
+  vptr store. That ordering proves nontrivial member construction, not an
+  ordinary loop in `inputManager`'s body. A layout-neutral, message-derived
+  buffer element with an inline zeroing constructor reproduces the member
+  construction loop and vptr schedule exactly. Keeping the type scoped to
+  inputmgr avoids the regressions caused by the rejected global `message`
+  default-constructor probe; all eight dependent units and the 980-function
+  ratchet remain green.
+
 - **2026-08-09 — `armyGroup::GetArmyLuck` exact.** Retail's mode-5 branch
   lands on the Halfling check, proving that the minimum-one rule follows the
   Clover-only block instead of belonging to it. Within that block, a scoped
