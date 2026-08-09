@@ -1389,12 +1389,117 @@ void advManager::DrawShroud(int srcX, int srcY, int z, int destX, int destY)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:6805
 VA(0x00412470, 0x482)  // linkorder, dc 0x142e0
 void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    type_point point(srcX, srcY, z);
+    NewmapCell* thisCell;
+    if (!point.is_valid())
+        thisCell = fullMap->cell(0, 0, 0);
+    else
+        thisCell = fullMap->cell(point.x, point.y, point.z);
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
+        static_cast<void*>(thisCell));
+    AdvFullMapObjectsView* mapObjects = static_cast<AdvFullMapObjectsView*>(
+        static_cast<void*>(fullMap));
+
+    if (cellObjects->objects.size()) {
+        for (unsigned numObj = 0; numObj < cellObjects->objects.size();
+             ++numObj) {
+            AdvObjectCellView* objCell = &cellObjects->objects[numObj];
+            CObject* obj = &mapObjects->objects[objCell->objectIndex];
+            CObjectType* objType = &mapObjects->objectTypes[obj->typeIndex];
+            CSprite* sprite = mapObjects->sprites[obj->typeIndex];
+            if (!objType->suppressDraw)
+                continue;
+
+            switch (objType->objectType) {
+            case CREATURE_GENERATOR_1:
+            case CREATURE_GENERATOR_4:
+            case GARRISON:
+            case LIGHTHOUSE:
+            case MINE:
+            case RANDOM_TOWN:
+            case SHIPYARD:
+            case TOWN: {
+                int triggerX;
+                int triggerY;
+                obj->FindTrigger(&triggerX, &triggerY);
+                type_point triggerPoint(triggerX, triggerY, z);
+                NewmapCell* triggerCell;
+                if (!triggerPoint.is_valid())
+                    triggerCell = fullMap->cellData;
+                else
+                    triggerCell = fullMap->cell(
+                        triggerPoint.x, triggerPoint.y, triggerPoint.z);
+                int owner = GetFlaggedObjectOwner(triggerCell);
+                int frame = (animFrame + obj->animationOffset)
+                            % sprite->GetNumFrames(0);
+                signed char offsets = objCell->offsets;
+                int yOffset = offsets >> 4;
+                offsets <<= 4;
+                int xOffset = offsets >> 4;
+                sprite->DrawAdvObjWithFlag(
+                    frame,
+                    tilex + (objType->width - xOffset - 1) * 32,
+                    tiley + (objType->height - yOffset - 1) * 32,
+                    tilew, tileh, gpWindowManager->screenBitmap,
+                    baseX, baseY + 8,
+                    gUnnamed6aacb0->playerColors[owner], false);
+                break;
+            }
+            default: {
+                int frame = (animFrame + obj->animationOffset)
+                            % sprite->GetNumFrames(0);
+                signed char offsets = objCell->offsets;
+                int yOffset = offsets >> 4;
+                offsets <<= 4;
+                int xOffset = offsets >> 4;
+                sprite->DrawAdvObj(
+                    frame,
+                    tilex + (objType->width - xOffset - 1) * 32,
+                    tiley + (objType->height - yOffset - 1) * 32,
+                    tilew, tileh, gpWindowManager->screenBitmap,
+                    baseX, baseY + 8, false);
+                break;
+            }
+            }
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:6911
 VA(0x00412900, 0x2CB)  // linkorder, dc 0x147c4

@@ -199,6 +199,7 @@ public:
                             int tileh);
     void DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY);
     void DrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
+    void DrawUnderlay(int srcX, int srcY, int z, int destX, int destY);
     void DrawCursor(int cellX, int cellY);
     void DrawCursorShadow(int cellX, int cellY);
     void DrawRolloverText(char* text);
