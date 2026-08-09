@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::QuickInfo` visited-state dispatch reaches
+  37.2317%.** The retail case blocks share a 512-byte formatting buffer and
+  the `"\n\n%s"` visited/unvisited suffix. Arena, border tent, buoy and
+  clover restore that frame and common tail first; twenty-two further cases
+  then select the same two admitted text fields from their retail-proven hero
+  flags, per-object bitsets or local-player visit flags. The family covers
+  dead guys, defense towers, faerie rings, fountains of youth, gardens,
+  idols, lean-tos, libraries, magic sites, mercenary camps, mermaids, oases,
+  schools, rally flags, sirens, stables, temples, training grounds and
+  watering holes. Each mask, field offset, trigger/current-hero gate and
+  shared formatter is independently visible in retail; the equivalent
+  rollover consumers corroborate only the already-proven domains. This raises
+  the function from 15.9777% and linked fuzzy coverage from 46.96% to 47.50%
+  without reducing the 626 exact functions. Dreamcast supplies names only;
+  no external implementation body was used, and the baseline remains
+  full-build-owned.
+
 - **2026-08-09 — `advManager::QuickInfo` extends to 15.9777%.** Retail's
   border-guard arm combines the indexed color and object names through the
   already-attested rollover format. The two creature-generator arms resolve
