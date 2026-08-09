@@ -376,7 +376,7 @@ cmbtmgr	?LoadWallTraitsTable@combatManager@@SIEXZ	100.0000	100.0000	100.0000	0x6
 cmbtmgr	?LowerDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x671c0
 cmbtmgr	?PlaceAllObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66a70
 cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXPBVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0
-cmbtmgr	?PlaceLargeObstacle@combatManager@@QAEHII@Z	99.9888	99.9888	99.9888	0x668a0
+cmbtmgr	?PlaceLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0
 cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0
 cmbtmgr	?RaiseDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x672e0
 cmbtmgr	?RaiseSkeletons@combatManager@@QAEXH@Z	93.2203	93.2203	93.2203	0x69f20

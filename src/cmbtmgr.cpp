@@ -799,43 +799,34 @@ void combatManager::SetupAndLoadObstacles()
 // The bracket [SetupAndLoadObstacles .. PlaceObstacle] holds exactly
 // one DC row and exactly one retail row, and the retail row is called
 // from SetupAndLoadObstacles and picks a slot through TPickANumber -
-// which is what PlaceLargeObstacle does. ARITY DRIFTS: `ret 8` is
-// three parameters INCLUDING this where the DC signature has two, the same
-// retail-gained-a-parameter shape findpath's CalcTerrainCost shows
-// (nine on x86 against the DC's eight). Retail proves the added second
-// mask at [ebp+0xc].
-// RECONSTRUCTED 2026-08-09 to 99.9888%. The exact ten-block flow samples
-// ids 0..33, accepts either terrain mask, marks up to 25 terminated cell
-// indexes and records the chosen id. Every instruction aligns; the score
-// sliver is interior-data/EH relocation representation plus one unused
-// post-store LEA addend, not executable behavior.
+// which is what PlaceLargeObstacle does. ARITY DRIFTS: `ret 8` proves
+// two explicit masks where the DC signature has one, the same
+// retail-gained-a-parameter shape findpath's CalcTerrainCost shows.
 VA(0x004668a0, 0x108)  // dc-bracket forced, dc 0x6091c
-int combatManager::PlaceLargeObstacle(unsigned terrain_mask,
-                                      unsigned special_terrain_mask)
+int combatManager::PlaceLargeObstacle(unsigned terrainMask,
+                                      unsigned magicTerrainMask)
 {
-    TPickANumber picker(0, 33);
-    int obstacle_id;
-    for (;;) {
-        obstacle_id = picker.Pick();
-        if (obstacle_id < 0)
-            return 0;
-        if ((LargeObstacleInfo[obstacle_id].terrain_mask & terrain_mask)
-            || (LargeObstacleInfo[obstacle_id].special_terrain_mask
-                & special_terrain_mask))
-            break;
+    TPickANumber picker(0, 0x21);
+    int obstacleId = picker.Pick();
+    while (obstacleId >= 0) {
+        if ((terrainMask & gLargeObstacleTerrainMasks[obstacleId * 34])
+                || (magicTerrainMask
+                    & gLargeObstacleMagicTerrainMasks[obstacleId * 34]))
+            goto found;
+        obstacleId = picker.Pick();
     }
+    return 0;
 
-    int placed_cells = 0;
-    for (int i = 0; i < 25; i++) {
-        short cell_index = LargeObstacleInfo[obstacle_id].cells[i];
-        if (cell_index == -1)
-            break;
-        hexcell* cell = &cells[cell_index];
-        cell->field_10 |= 2;
-        placed_cells++;
+found:
+    int count = 0;
+    int i = 0;
+    const short* hex = &gLargeObstacleHexes[obstacleId * 34];
+    for (; i < 25 && *hex != -1; ++i, ++hex) {
+        cells[*hex].field_10 |= 2;
+        ++count;
     }
-    largeObstacleId = obstacle_id;
-    return placed_cells;
+    largeObstacleId = obstacleId;
+    return count;
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3105

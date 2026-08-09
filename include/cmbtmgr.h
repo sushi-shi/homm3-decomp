@@ -580,6 +580,7 @@ public:
     unsigned char InLineOfSight(int sourceIndex, int destIndex);
     void UpdateArmyLuckAndMorale();
     unsigned char place_obstacle(int obstacle_id);
+    int PlaceLargeObstacle(unsigned terrainMask, unsigned magicTerrainMask);
     void PlaceAllObstacles();
     void InitializeArchers();
     void FreeIcons();
@@ -790,6 +791,16 @@ DATA(0x00694f30) extern TDrawbridgeBounds gDrawbridgeBounds694f30;
 extern const char* const gTownCombatBackgrounds[9];          // 0x63d2a0
 extern const char* const gMagicTerrainCombatBackgrounds[10]; // 0x63d2c8
 extern const char* const gTerrainCombatBackgrounds[9][3];    // 0x63d2f0
+
+// The leading two words of each 20-byte obstacle-catalogue row. They
+// are separate declarations because the delinked target relocates each
+// referenced address independently; indexing by ten shorts preserves
+// the common 20-byte stride.
+DATA(0x0063c7c8) extern const unsigned short gObstacleTerrainMasks[];
+DATA(0x0063c7ca) extern const unsigned short gObstacleMagicTerrainMasks[];
+DATA(0x0063bec0) extern const unsigned short gLargeObstacleTerrainMasks[];
+DATA(0x0063bec2) extern const unsigned short gLargeObstacleMagicTerrainMasks[];
+DATA(0x0063becc) extern const short gLargeObstacleHexes[];
 
 // LowerDoor's quick-combat bypass and the four redraw-bound sources.
 // Names are address ordinals because no surviving public symbol names
