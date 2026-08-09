@@ -1420,17 +1420,18 @@ void create_skeletons(const hero* current_hero, const armyGroup* dead_army, army
 // way. The three secondary-skill slots do_aftermath needs are named in
 // hero.h: wisdom +0xd0, ballistics +0xd3, eagle eye +0xd4 - exactly
 // slots 7/10/11 of the 28-byte band at 0xc9.
-// Semantic transcription complete; all 24 branches and the sole return
-// agree. Residual (79.7256%): retail keeps the defender object in EDI and
-// defeated hero in EBX, while this compile uses the opposite pair. Its
-// inlined eagle-eye pass keeps one signed-short index in DX; our CL fuses
-// the same walk into three full-width induction values, leaving two closing
-// branch orientations different. Making `surrendered` memory-resident is
-// load-bearing (75.4146 -> 79.7256). The attested pointer signature, inline
-// get_army/get_hero accessors, a bottom-tested combined spell gate and local
-// declaration order are byte-inert; restoring a separate inline
-// do_eagle_eye helper regresses to 70.8963. No further local spelling probe
-// is justified without a new allocator/inliner hypothesis.
+// Semantic transcription complete. Retail exits the Eagle Eye scan after
+// learning its first eligible spell; restoring that break collapses the
+// three widened induction values and raises 79.7256 -> 93.7805. Binding the
+// victorious hero only after the defeated-hero guard then gives retail's
+// EDI hero lifetime and signed-short DX walker, raising the result to
+// 97.3171. The surviving code delta is two instruction-scheduling choices:
+// retail moves the defender parameter ahead of the surrendered-byte init,
+// and delays the surrender store until between the call-argument pushes.
+// Making `surrendered` memory-resident remains load-bearing (75.4146 ->
+// 79.7256). Register hints, named defender aliases, declaration order and a
+// bottom-tested loop are byte-inert; a separate inline do_eagle_eye helper
+// regresses to 70.8963.
 VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
 void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, const town* enemy_town)
 {
@@ -1448,7 +1449,8 @@ void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, const town
             int experience;
             if (defeatedHero && Random(0, 100) < 60) {
                 surrendered = 1;
-                experience = gpGame->ExperienceValueOfStack(defeatedArmy, 0);
+                experience = gpGame->ExperienceValueOfStack(
+                    defeatedArmy, 0);
             } else {
                 experience = gpGame->ExperienceValueOfStack(
                     defeatedArmy, defeatedHero);
@@ -1475,19 +1477,24 @@ void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, const town
     if (total_hit_points > 0 && my_hero) {
         create_skeletons(my_hero, defeatedArmy, my_army);
 
-        if (defeatedHero && my_hero->eagleEyeLevel > 0
-            && my_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
-            for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                if (!defeatedHero->available_spells[spell]
-                    || my_hero->available_spells[spell])
-                    continue;
-                const SSpellTraits& traits = akSpellTraits[spell];
-                if (my_hero->eagleEyeLevel + 1 < traits.level)
-                    continue;
-                if (!(traits.field_c & 1))
-                    continue;
-                if (traits.level <= my_hero->wisdomLevel + 2)
-                    my_hero->AddSpell(spell);
+        if (defeatedHero) {
+            hero* victoriousHero = my_hero;
+            if (victoriousHero->eagleEyeLevel > 0
+                && victoriousHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+                for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+                    if (!defeatedHero->available_spells[spell]
+                        || victoriousHero->available_spells[spell])
+                        continue;
+                    const SSpellTraits& traits = akSpellTraits[spell];
+                    if (victoriousHero->eagleEyeLevel + 1 < traits.level)
+                        continue;
+                    if (!(traits.field_c & 1))
+                        continue;
+                    if (traits.level <= victoriousHero->wisdomLevel + 2) {
+                        victoriousHero->AddSpell(spell);
+                        break;
+                    }
+                }
             }
         }
     }
