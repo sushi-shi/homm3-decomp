@@ -44,14 +44,14 @@
 // inlined into all four *QuickView bodies), type_cell_adjuster's ctor
 // and restore_cell, and six of the eleven help-text builders.
 //
-// Left UNCLAIMED on purpose: 0xabe0 (893 B, ret 4, builds an army
-// description via armyGroup::Initialize/Add/GetArmySizeName) and
-// 0xd670 (595 B, ret 0xc), a help-text builder with the same two
-// callees as get_creature_bank_help_text. Neither has a DC
-// counterpart - the DC roster has no 2-param army describer in this
-// compiland and no third 5-param help builder - so naming them would
-// be invention. See the help-text note further down.
+// The retail-only 0xabe0 army describer is now claimed by its complete
+// operation set and caller role (see the reconstruction at that address).
+// 0xd670 (595 B, ret 0xc), a help-text builder with the same two callees
+// as get_creature_bank_help_text, remains UNCLAIMED: the DC roster has no
+// third 5-param help builder, so giving that sibling a semantic name would
+// still be invention. See the help-text note further down.
 #define HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
+#define HOMM3_ADVMGR_QUICKINFO_VIEW
 #include <va.h>
 #include <stdio.h>
 #include "advmgr.h"
@@ -59,6 +59,8 @@
 #include "bitmap16.h"
 #include "csprite.h"
 #include "game.h"
+#include "creature_bank.h"
+#include "exec.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "mousemgr.h"
@@ -68,6 +70,7 @@
 #include "window.h"
 #include "widget.h"
 #undef HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
+#undef HOMM3_ADVMGR_QUICKINFO_VIEW
 
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
@@ -359,6 +362,66 @@ void type_cell_adjuster::type_cell_adjuster()
 
 #endif  // @carcass
 
+// RETAIL-RECONSTRUCTED 2026-08-09 (54.9494%). The body consolidates repeated
+// creature slots before choosing either a detailed seven-slot list or one
+// approximate size/name pair. The detailed form stops at the first empty
+// consolidated slot and shares its guarded creature-name append. All retail
+// operations are represented; the residual is Dinkumware append inlining/EH
+// state. Its caller set is the creature-bank help group and QuickInfo; no
+// Dreamcast standalone copy survives, so the name is role-derived.
+VA(0x0040abe0, 0x37D)
+std::string get_army_help_text(const armyGroup* source,
+                              unsigned char show_full_list)
+{
+    armyGroup consolidated_army;
+    consolidated_army.Initialize();
+    int i;
+    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (source->armies[i] != CREATURE_NONE)
+            consolidated_army.Add(source->armies[i], source->numTroops[i], -1);
+    }
+
+    std::string result;
+    result.append(gUnnamed6a5d5c->entry->armyHelpPrefix);
+    result.append(" ");
+    if (show_full_list) {
+        for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+            if (consolidated_army.armies[i] == CREATURE_NONE)
+                break;
+            if (i > 0) {
+                result += ", ";
+                result += gUnnamed6a5d5c->entry->armyEntrySeparator;
+            }
+            result += armyGroup::GetArmySizeName(
+                consolidated_army.numTroops[i], 2);
+            result += " ";
+            int creature = consolidated_army.armies[i];
+            const char* creature_name;
+            if (creature >= 0 && creature <= 150)
+                creature_name = akCreatureTypeTraits[creature].m_plural_name;
+            else
+                creature_name = "";
+            result += creature_name;
+        }
+    } else {
+        int amount = consolidated_army.get_creature_total();
+        const char* army_name;
+        if (consolidated_army.armies[1] == CREATURE_NONE) {
+            int creature = consolidated_army.armies[0];
+            if (creature >= 0 && creature <= 150)
+                army_name = akCreatureTypeTraits[creature].m_plural_name;
+            else
+                army_name = "";
+        } else {
+            army_name = gUnnamed6a5d5c->entry->mixedArmyName;
+        }
+        result.append(armyGroup::GetArmySizeName(amount, 2));
+        result.append(" ");
+        result.append(army_name);
+    }
+    return result;
+}
+
 // 74 B, `ret` with this in ecx: walks the three saved slots [0]/[4]/
 // [8], re-obscuring the first two (type_obscuring_object::obscure_cell
 // with 0x22 and 8) and restoring the third, nulling each slot as it
@@ -496,6 +559,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     // @stub
 }
 
+#endif  // @carcass
+
 // The help-text group. Retail files these five statics AFTER
 // SetRolloverText, not before it as the DC source does (the same
 // define-the-helper-after-its-caller shape border.cpp records); all
@@ -512,17 +577,50 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 // respecting embedding of the DC four into the retail five is UNIQUE,
 // and it leaves 0xd670 - a 5-param row that, like the creature-bank
 // builder, calls the army describer 0xabe0 and armyGroup::HasCreatures
-// - as a retail-only sibling with no DC counterpart. 0xd670 and 0xabe0
-// stay unclaimed rather than take a made-up name.
+// - as a retail-only sibling with no DC counterpart. 0xd670 stays
+// unclaimed; 0xabe0 is now named only by its independently reconstructed
+// army-description role.
 //
 // 0xd3f0 is the one with independent body evidence: 6 params AND the
 // two creature-bank-only callees (0xabe0, armyGroup::HasCreatures).
 // E:\gamedcs\advmgr.cpp:2762
+// RETAIL-RECONSTRUCTED 2026-08-09 (85.3542%). The std::string bank name,
+// short-width visited-player gate and branch-local bank lookups restore the
+// retail frame and control flow. The residual is two disjoint result-string
+// homes versus retail's shared slot and their associated cleanup tail.
 VA(0x0040d3f0, 0x27C)  // anchor-callee, dc 0xb3bc
 void get_creature_bank_help_text(char* buffer, NewmapCell* cell, type_creature_bank_type type, long player_id, const char* separator, unsigned char show_full_list)
 {
-    // @stub
+    strcpy(buffer, const_creature_bank_traits[type].name.c_str());
+    strcat(buffer, separator);
+
+    unsigned long testFlag = cell->extraInfo;
+    const char* army_name;
+    if (!cell->PlayerKnowsCell(player_id)) {
+        army_name = gUnnamed6a5d5c->entry->unknownCreatureBankText;
+    } else if ((testFlag & 0x02000000)
+               || !gpGame->creatureBanks.first[
+                       (testFlag >> 13) & 0xfff].guards.HasCreatures()) {
+        army_name = gUnnamed6a5d5c->entry->emptyCreatureBankText;
+    } else {
+        if (show_full_list) {
+            std::string result = get_army_help_text(
+                &gpGame->creatureBanks.first[
+                    (cell->extraInfo >> 13) & 0xfff].guards, 1);
+            strcat(buffer, result.c_str());
+            return;
+        }
+        strcat(buffer, "(");
+        std::string result = get_army_help_text(
+            &gpGame->creatureBanks.first[
+                (cell->extraInfo >> 13) & 0xfff].guards, 0);
+        strcat(buffer, result.c_str());
+        army_name = ")";
+    }
+    strcat(buffer, army_name);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:2835
 VA(0x0040d8d0, 0x229)  // dc-bracket forced, dc 0xb788

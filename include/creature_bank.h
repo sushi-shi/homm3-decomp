@@ -5,6 +5,44 @@
 #ifndef HOMM3_CREATURE_BANK_H
 #define HOMM3_CREATURE_BANK_H
 
+#include <string>
+#include "armygrp.h"
+
+// Dreamcast CodeView supplies the names/order; retail's help-text selector
+// bounds the player bit, then indexes this domain through a 400-byte traits
+// record. Only the currently consumed name field is exposed.
+enum type_creature_bank_type {
+    CREATURE_BANK_CYCLOPS = 0,
+    CREATURE_BANK_DWARF,
+    CREATURE_BANK_GRIFFIN,
+    CREATURE_BANK_IMP,
+    CREATURE_BANK_MEDUSA,
+    CREATURE_BANK_NAGA,
+    CREATURE_BANK_DRAGONFLY,
+    CREATURE_BANK_SHIPWRECK,
+    CREATURE_BANK_DERELICT,
+    CREATURE_BANK_SEPULCHER,
+    CREATURE_BANK_DRAGON,
+    CREATURE_BANK_COUNT
+};
+
+struct type_creature_bank_traits {
+    std::string name;
+    char pad_010[0x180];
+};
+SIZE(type_creature_bank_traits, 0x190);
+
+// Retail indexes these records with a 108-byte stride. The first 56 bytes are
+// the independently proven armyGroup; the tail stays opaque until a reward
+// consumer is admitted.
+struct type_creature_bank {
+    armyGroup guards;
+    char pad_038[0x34];
+};
+SIZE(type_creature_bank, 0x6c);
+
+extern const type_creature_bank_traits* const_creature_bank_traits;
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:32, dc 0x70fe0) void initialize_creature_bank_level(type_creature_bank_level* traits, const std::vector<char* resource);
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:67, dc 0x7112c) unsigned char initialize_creature_bank_traits();

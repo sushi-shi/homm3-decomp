@@ -45,9 +45,23 @@ struct SUnnamedEntry6a5d5c {
     // name. Ordinal placeholder: the object is still unnamed, so its
     // members are too.
     const char* field_44;             // +0x44
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    char pad_48[0x68];
+    const char* mixedArmyName;         // +0xb0
+    char pad_b4[0x64];
+#else
     char pad_48[0xd0];
+#endif
     const char* quitText;             // +0x118
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    char pad_11c[0x210];
+    const char* armyHelpPrefix;        // +0x32c
+    char pad_330[0x88];
+    const char* armyEntrySeparator;    // +0x3b8
+    char pad_3bc[0x48];
+#else
     char pad_11c[0x2e8];
+#endif
     // +0x404/+0x408: TSplitWindow's rollover text. The first is a
     // printf format receiving the split creature's plural name; the
     // second is passed to sprintf without further arguments. Names
@@ -55,7 +69,14 @@ struct SUnnamedEntry6a5d5c {
     // text record itself remains unnamed.
     const char* splitCreatureRolloverFormat;
     const char* splitOtherRolloverText;
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    char pad_40c[0x178];
+    const char* emptyCreatureBankText;   // +0x584
+    const char* unknownCreatureBankText; // +0x588
+    char pad_58c[0x10];
+#else
     char pad_40c[0x190];
+#endif
     // +0x59c..+0x5a4. make_gift uses these three printf-style strings
     // for the received-gift line, a one-resource request, and a
     // multi-resource request respectively. Names are role-derived from
