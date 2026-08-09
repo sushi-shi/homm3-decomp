@@ -87,7 +87,15 @@ public:
     short x;                        // +0x00
     short y;                        // +0x02
     short z;                        // +0x04
-    char pad_006[0x12];
+    // The inherited obscuring-object tail. GetFlaggedObjectOwner reaches
+    // the two dwords directly when a map cell names a hero: +0x0c is the
+    // underlying adventure-object type and +0x14 its pool index.
+    unsigned char obscuringField_06;
+    char pad_007[0x5];
+    TAdventureObjectType obscuredType;  // +0x0c
+    unsigned char obscuringField_10;
+    char pad_011[3];
+    int obscuredIndex;                  // +0x14
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
     // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back
@@ -104,11 +112,11 @@ public:
     // `movsx edx, byte [gpGame + 1170*id + 0x21642]` before comparing
     // it against the acting-player id. Name provisional.
     signed char owner;              // +0x22
-    char pad_023[0x20];
-    // +0x43, cleared together with field_11c for every owned and
-    // garrisoned hero at the start of an AI turn. The DC repack lands
-    // target_is_critical at this byte; name role-inferred, provisional.
-    unsigned char targetIsCritical;
+    char pad_023[0xd];
+    // +0x30. DrawHeroPart indexes the eighteen-entry cursorIcons sprite row
+    // directly with this dword; the surviving roster names the domain.
+    int heroClass;
+    char pad_034[0x10];
     // The patrol triple at +0x44..+0x46 and the compass facing at
     // +0x47, all byte-proven by hero::is_in_patrol_radius (0x4e56e0)
     // and hero::GetStandSequence (0x4d9110). The two coordinates are
@@ -563,8 +571,12 @@ struct type_obscuring_object {
 // extent is now proven: sizeof is 0x28.
 class boat {
 public:
-    // The type_obscuring_object base, 24 B by the DC class record.
-    char pad_000[0x18];
+    // The type_obscuring_object base, 24 B by the DC class record. The
+    // position words are also read directly by DrawBoatPart.
+    short x;                        // +0x00
+    short y;                        // +0x02
+    short z;                        // +0x04
+    char pad_006[0x12];
     unsigned char allocated;        // +0x18
     unsigned char id;               // +0x19
     char type;                      // +0x1a

@@ -4,6 +4,7 @@
 
 #include <va.h>
 #include "advmgr.h"
+#include "advmgr_popup.h"
 #include "textntry.h"
 #include "widget.h"
 

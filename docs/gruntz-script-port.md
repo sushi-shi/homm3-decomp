@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the adventure-rendering worktree was approved for
+  integration into `master`; narrow views preserve both lanes' optimizer
+  states.** The initial semantic merge placed `CAdvPopup`, `chatEdit`, and
+  `targetIsCritical` into broad headers and compiled cleanly, but retail
+  comparison exposed the include-set effect: `advmgr` fell from 22 exact
+  functions to 4. `CAdvPopup` now lives in the split-dialog-only
+  `advmgr_popup.h`; KeyboardMessageHandler and AI start-turn use narrow
+  +0x58/+0x43 views instead of increasing the member populations of
+  `TAdventureMapWindow` and `hero`. The combined report reaches 582 exact
+  functions while retaining byte-exact `DrawRoad`, `start_turn`, and
+  `KeyboardMessageHandler`. The baseline is regenerated only by the build.
+
 - **2026-08-09 — `type_AI_player::make_gift` rises 64.6655% -> 71.8739%
   by restoring two retail string-append call edges.** The local-human gift
   and single-resource request call the three-argument `std::string::append`
@@ -713,6 +725,204 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   provenance stamp. Full-engine sweep: 540 -> 541 exact, no function score
   decreased; `AsciiConvert` 98.8024% -> 100.0000%. This also disproves the
   earlier theory that its base-only COFF labels capped the match.
+- **2026-08-09 — `advManager::DrawRoad` admitted byte-exact;
+  `advmgr` 21 → 22 exact.** The 492-byte body reproduces its map bounds,
+  packed-point fallback cell, road-presence gate, half-tile vertical origin,
+  viewport clipping, bottom-row crop, road set/frame selection, word-width
+  flip flags, and raw `CSprite::DrawTile` target. All 13 symbolic branches,
+  the single return, and every instruction compare exactly. Retail bytes and
+  relocations are the correctness evidence; Dreamcast CodeView supplied only
+  surviving names and signatures. No external body was consulted or ported,
+  and the generated baseline remains exclusively build-owned.
+
+- **2026-08-09 — the 584-byte `advManager::DrawShroud` body opened
+  to 81.41%.** Retail instructions and relocations prove the clipped draw
+  rectangle, visibility gate, full-map star tiles, cloud lookup, horizontal
+  flip encoding, alternating edge frames, and the raw shroud-tile sprite
+  target. The reconstruction has the same 21 symbolic branches and two return
+  paths as retail; two remaining polarity/layout differences and VC6 register
+  scheduling prevent an exact claim. Dreamcast CodeView supplied only the
+  surviving names and signatures; no external body was consulted or ported.
+  The generated baseline remains exclusively build-owned.
+
+- **2026-08-09 — the 715-byte `advManager::DrawGround` pass opened
+  to 86.63%.** Retail proves the packed-point fallback cell, clipped tile
+  rectangle, ten-entry ground tileset, ground frame and two flip bits, four
+  corners, four edge-pattern families, and the repeating border fallback.
+  The reconstruction has the same 30 symbolic branches and both return paths
+  agree with retail; remaining differences are instruction and local/register
+  scheduling, so no exact claim is made. Dreamcast CodeView supplied only the
+  surviving tileset, field and method names; no external body was consulted or
+  ported. The generated baseline remains exclusively build-owned.
+
+- **2026-08-09 — both `advManager::CompleteDraw` overloads admitted
+  byte-exact; `advmgr` 19 → 21 exact.** The 1,149-byte orchestrator
+  reproduces its entry/message gates, forced full-map origin, nine 20-by-18
+  tile passes, view-world and route gating, cursor state, shroud and gem
+  passes, 100-frame FPS timing ring, chat refresh, sound polling, and bottom
+  view update. Its 40 symbolic branches and every instruction compare
+  exactly. The 67-byte packed-origin forwarding overload is exact as well.
+  Retail bytes and relocations prove all control flow, constants, storage
+  widths and call targets; Dreamcast CodeView supplied only surviving member,
+  local and method names. No external body was consulted or ported, and the
+  generated baseline remains exclusively build-owned.
+
+- **2026-08-09 — the 1,154-byte `advManager::DrawUnderlay` body opened
+  to 74.79%.** Retail instructions and relocations prove the clipped cell
+  lookup, underlay-only object filter, object/type/sprite pool traversal,
+  eight-case flagged-object selector, checked trigger-cell lookup, animation
+  frame, player output color, and normal/flagged sprite paths. The
+  reconstruction has the same 42-block population and its 22 symbolic branch
+  targets agree with retail; the remaining difference is instruction and
+  local-slot scheduling, so no exact claim is made. Dreamcast CodeView
+  supplied surviving names and signatures only; no external body was
+  consulted or ported. The generated baseline remains exclusively build-owned.
+
+- **2026-08-09 — the 2,446-byte `advManager::DrawAdvObj` body opened
+  to 80.15%.** Retail proves the seven-layer object-cell traversal, normal
+  48-bit draw mask, 48-entry view-world terrain selector, 82-entry flagged
+  object selector, trigger-cell ownership lookup, player output color,
+  transient-object override, animated sprite path, interleaved hero/boat
+  parts, and cursor rows. The reconstructed function has the same 125-block
+  CFG population as retail; twenty-seven blocks compare exactly and the
+  remainder are primarily VC6 local/register scheduling differences, so no
+  exact claim is made. Dreamcast CodeView supplied surviving names and
+  signatures only; no external body was consulted or ported. The generated
+  baseline remains exclusively build-owned.
+
+- **2026-08-09 — the 1,508-byte `advManager::DrawAdvObjShadow` body
+  opened to 75.36%.** Retail instructions and relocations prove the clipped
+  map-cell object-vector walk, object/type/sprite pool offsets, 48-bit shadow
+  mask, animation selection, transient-object override, cursor shadows, and
+  the final hero/boat shadow overlays. The view-world switch is reconstructed
+  from its retail 48-byte selector table: terrain ids 114..161 draw except
+  `TERRAIN_HOLE` and the river/road group. Twenty-six of seventy-six retail
+  control-flow blocks compare exactly; remaining differences are VC6 local and
+  register scheduling, so no exact claim is made. Dreamcast CodeView supplied
+  only surviving local/type names and signatures; no external body was
+  consulted or ported. The generated baseline remains exclusively build-owned.
+
+- **2026-08-09 — `advManager::DrawBoatPartShadow` admitted byte-exact;
+  `advmgr` 18 → 19 exact.** The 591-byte shadow twin preserves every
+  matched boat lookup, packed-cell, froth, frame, crop and flip operation
+  from `DrawBoatPart` while relocating both final calls to the distinct raw
+  `CSprite::DrawHeroShadow` body. Retail blocks and relocations are the
+  correctness evidence; CodeView supplied only the signature/name, no
+  external body was consulted, and the generated baseline is build-owned.
+
+- **2026-08-09 — `advManager::DrawBoatPart` admitted byte-exact;
+  `advmgr` 17 → 18 exact.** The 591-byte retail body proves the direct
+  40-byte boat-pool index, its packed position, the asymmetric inlined
+  valid-cell lookup, optional froth layer, boat layer, signed-facing flip,
+  and Bitmap-to-raw-map sprite wrapper. The reached boat position words at
+  +0/+2/+4 are now explicit. CodeView supplied the signature and names only;
+  no external body was consulted or ported. The generated baseline remains
+  owned by `homm3 build` and was not edited manually.
+
+- **2026-08-09 — the 1,172-byte `advManager::DrawHeroPartShadow`
+  body opened to 98.1745%.** Retail proves that the shadow pass mirrors
+  the five hero/boat layers already reconstructed, calls the distinct raw
+  `CSprite::DrawHeroShadow` target, and adds an owner-range guard before the
+  boat path. The matching header-inline Bitmap wrapper and every semantic
+  branch are reconstructed; thirty-five of thirty-six control-flow blocks
+  compare exactly. The remaining block is the same final boat-frame VC6
+  scheduling residual as `DrawHeroPart`, so no byte-exact claim is made.
+  CodeView supplied signatures and names only; no external body was
+  consulted or ported, and the generated baseline is build-owned.
+
+- **2026-08-09 — the 1,156-byte `advManager::DrawHeroPart` body opened
+  to 98.1571%.** Retail instructions and relocations prove the hero/boat
+  split, packed-point validation and map-cell lookup, the optional boat
+  froth layer, the two boat layers, the owner flag/cursor layers, and all
+  reached layout offsets. The five draws use the retail CSprite header
+  wrapper shape: its Bitmap argument expands inline to the raw-map overload.
+  CodeView contributed signatures and names only; no external body was
+  consulted or ported. Thirty-three of the function's thirty-four control-
+  flow blocks now compare exactly. The sole residual is VC6 scheduling in
+  the final boat-sprite draw, so this entry deliberately does not claim a
+  byte-exact admission. The generated baseline remains owned by `homm3
+  build` and was not edited manually.
+
+- **2026-08-09 — `GetFlaggedObjectOwner` admitted exact; `advmgr`
+  16 → 17 exact.** The 270-byte retail body proves and reproduces hero
+  obscured-object unwrapping plus the generator, garrison, mine/lighthouse,
+  town and shipyard ownership paths, including its six-target switch and
+  82-byte selector tables. The reached layout slices are now explicit:
+  hero obscured type/index at +0x0c/+0x14, and a 0x40-byte garrison record
+  with signed owner at +0. All pre-existing exact rows survive those shared
+  header changes. No external body was consulted or ported. The generated
+  score moves 5.89% → 5.91%; the baseline migration came only from
+  `homm3 build`.
+
+- **2026-08-09 — adventure flag-render scan admitted exact;
+  `advmgr` 14 → 16 exact.** `advManager::ScanForHeroOrBoat` (359 B) matches
+  its six-slot result walk, bounds checks, packed-point construction,
+  inlined `GetCell(type_point)`, trigger/type/id predicates, and writes
+  byte-for-byte. The retail xref set corroborates the surviving public name
+  `gbInViewWorld`; CodeView contributes only the function signature and the
+  16-byte `TDrawParts` layout. `hasFlag` (122 B) is also exact, including both
+  compiler tables; its eight named cases were decoded from retail's selector
+  bytes over object ids 17..98. No external body was consulted or ported.
+  The supported build-generated status migration raises executable coverage
+  5.87% → 5.89%; `config/match_baseline.tsv` was not edited manually.
+
+- **2026-08-09 — `advManager::GetCloudLookup` admitted byte-exact from
+  retail evidence; `advmgr` 13 → 14 exact.** The 613-byte body reproduces
+  the boundary-seeded eight-neighbour visibility mask, all sixteen guarded
+  `GetMapExtra` paths, and the final `giCloudType` byte lookup exactly. Retail
+  relocations prove the table at 0x65f694 and the one-byte visibility mask at
+  0x69ccbc; the latter keeps a provisional role-based name because no public
+  retail spelling survives. No external function body was consulted or
+  ported. The generated status update raises the full executable score from
+  5.84% to 5.87% and migrates the function's flat label to its decorated VC6
+  symbol without any manual baseline edit.
+
+- **2026-08-09 — `advmgr` 11 → 13 exact; the first 500-byte body
+  opened to 82.01%; two required member declarations restore
+  `initialize_game_data` to 100%.** `MapExtraPosAndAdjacentsSet`
+  (151 B) and `ForceNewHover` (73 B) are byte-exact from retail control
+  flow and relocations. `FindAdjacentMonster` (507 B) is structurally
+  reconstructed at 82.0057%: retail proves the reference-returning
+  max/min bounds, NewfullMap indexing, trigger/object-trait test,
+  monster/water/excluded-point predicates, and packed result writes;
+  the remaining delta is local/register allocation, not yet claimed
+  exact. Its direct load proves 0x660428 is a pointer to 16-byte object
+  traits (not an inline array). Declaring the two actually-called
+  `NewmapCell` members (`cell_is_trigger`, `get_map_object`) changes the
+  shared include population and independently returns
+  `initialize_game_data` 94.0741 → 100.0000; both declarations are
+  required by retail REL32 calls, so the gain is retained rather than
+  tuned for score. No unadmitted `kb.cpp` body was changed or added to
+  the build, and no Dreamcast body was ported.
+
+- **2026-08-09 — `advmgr` 8 → 11 exact and a withdrawn `findpath`
+  body restored; four retail-derived bodies exact, one jump-table body
+  code-identical at 99.34%.** `advManager::GetCell(type_point)` (108 B),
+  the five-argument `UpdateRadar` forwarding overload (39 B),
+  `DrawRolloverText` (100 B), and `type_point::is_valid` (59 B) match
+  byte-for-byte. The last body corrects the 2026-08-07 claim that it had
+  no retail slot: 0x4b1330 is a 59-byte four-bound predicate immediately
+  before `searchArray::searchArray`, and `GetCell` independently relocates
+  to it. `OverrideBottomView` reproduces all 120 bytes and the six-entry
+  switch table's resolved targets; objdiff reads 99.3415% because base
+  VC6 names case labels locally while the delinker represents them as
+  enclosing-function-plus-addend relocations, the already documented
+  jump-table comparison residual. No Dreamcast body was ported: the
+  implementations were reconstructed from retail instructions and
+  relocation identities; the DC roster supplied signatures only.
+
+- **2026-08-09 — Gruntz's generated per-function `cur` / `max` / `hist`
+  score model approved for adaptation (user: “take idea from gruntz for cur,
+  max, hist for matching functions”); manual baseline editing prohibited.**
+  HoMM3 keeps the deliberately small part needed by its current pipeline:
+  `cur` is refreshed from the current objdiff report, `max` is the enforced
+  regression ratchet, and `hist` is the all-time peak that survives an explicit
+  `homm3 status update --accept-regressions`. Stable retail RVA, rather than a
+  working label, carries all three values across flat-to-decorated promotions.
+  The status writer owns `config/match_baseline.tsv`; it marks the file
+  generated, migrates the legacy three-column form, and automatically retires
+  missing legacy 0% rows because they contain no historical achievement.
+  Gruntz's broader fingerprint/tries machinery is not ported by this decision.
 
 - **2026-08-08 — `ai` 6 → 11, `findpath` 9 → 11; the include-set class
   is MEMBER population, not just type count; and two change-sets that

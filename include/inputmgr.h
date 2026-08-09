@@ -8,6 +8,16 @@
 #include "basemgr.h"
 #include "message.h"
 
+class textEntryWidget;
+
+// Source-private view used by KeyboardMessageHandler. Keeping the proven
+// +0x58 chat editor out of advmgr.h preserves that broad header's retail
+// optimizer state while retaining the same byte-level field access.
+struct InputAdventureMapWindowView {
+    char pad_00[0x58];
+    textEntryWidget* chatEdit;
+};
+
 // Keyboard scan codes as message::codeX carries them (low byte for
 // plain keys, the second byte for extended keys - textntry's numpad
 // row and smackmgr's video-abort filter read them). NH3API

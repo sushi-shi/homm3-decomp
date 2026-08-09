@@ -21,6 +21,10 @@ struct type_point {
     short x : 10;
     short y : 10;
     short z : 4;
+
+    type_point() {}
+    type_point(short new_x, short new_y, short new_z);
+    unsigned char is_valid();
 };
 
 #endif /* HOMM3_STRUCT_H */

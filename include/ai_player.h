@@ -11,6 +11,13 @@ class hero;
 class playerData;
 class town;
 
+// Narrow start-turn view of the one hero byte ai_player.cpp reaches. The
+// broad hero layout stays at its reconstruction-stable member population.
+struct AIHeroStartTurnView {
+    char pad_00[0x43];
+    unsigned char targetIsCritical;
+};
+
 // The 20-byte network-message head and the two gift messages are
 // byte-sliced from make_gift's inlined constructors. The subtype and
 // total-size constants are the immediates retail stores at +8/+0xc;

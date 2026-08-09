@@ -6,36 +6,62 @@
 #define HOMM3_ADVMGR_H
 
 #include "basemgr.h"
+#include "struct.h"
 #include "window.h"
 
 class textEntryWidget;
 
-// The adventure-dialog base. The Dreamcast field list gives the three
-// protected ints at +0x4c/+0x50/+0x54; retail's 8-byte wider Dinkumware
-// vector in heroWindow shifts them to +0x54/+0x58/+0x5c. Retail's ctor
-// independently proves the preceding +0x50 dword and the byte at +0x5c;
-// the latter overlaps the low byte of exitCommand and is restored by the
-// destructor. Total retail size is therefore 0x60.
-class CAdvPopup : public CHeroWindowEx {
-public:
-    int field_50;
-protected:
-    int exitId;
-    int exitCodeX;
-    union {
-        int exitCommand;
-        unsigned char savedPlayerState;
-    };
+class NewfullMap;
+class NewmapCell;
+class CSprite;
+class textWidget;
 
-public:
-    CAdvPopup(int winX, int winY, int winWidth, int winHeight,
-              unsigned winType);
-    virtual ~CAdvPopup();
-    virtual int WindowHandler(message* msg);             // slot 9
-protected:
-    virtual int ExitDialog(message* msg);                 // slot 14
+// A narrow retail view of the 16-byte adventure-object traits table.
+// FindAdjacentMonster reaches only byte +1 after get_map_object indexes it.
+struct TAdventureObjectTraitsView {
+    unsigned char pad_00;
+    unsigned char field_01;
+    char pad_02[14];
 };
-SIZE(CAdvPopup, 0x60);
+DATA(0x00660428) extern TAdventureObjectTraitsView* gAdventureObjectTraits;
+
+// Retail's public .data symbol at 0x65f694. The relocation and final byte
+// load in GetCloudLookup prove a 256-entry lookup indexed by the eight
+// surrounding-cell bits.
+extern unsigned char giCloudType[256];
+
+// Retail .bss 0x69ccbc. GetCloudLookup tests this byte against the low byte
+// of every GetMapExtra result. Its role is proved by those xrefs; no public
+// retail name survives, so the spelling remains provisional.
+extern unsigned char gMapVisibilityBit;
+
+// DC publishes this as `int gbInViewWorld`; retail corroborates the role:
+// its xrefs gate CompleteDraw's normal layers, ScanForHeroOrBoat, ViewPuzzle,
+// and the separate view-world renderer.
+extern int gbInViewWorld;
+
+// Retail .bss 0x699538. CompleteDraw forces the source origin to (0, 0)
+// while this is set, and DrawShroud uses it to bypass normal fog bounds and
+// visibility tests. No public retail spelling survives.
+DATA(0x00699538) extern int gCompleteDrawAllCells;
+
+// Retail-only CompleteDraw gates. Their roles and widths are proved by the
+// entry predicate at 0x40f3f0; spellings remain provisional.
+DATA(0x006989c0) extern int gCompleteDrawEnabled;
+DATA(0x00696a04) extern unsigned char gCompleteDrawMessageBypass;
+
+// Six of these records are filled by ScanForHeroOrBoat. Retail writes the
+// fields at +0/+4/+8/+c with a 0x10 stride; the names and bool type are the
+// surviving CodeView signature/layout evidence.
+struct TDrawParts {
+    bool IsValid;
+    int X;
+    int Y;
+    int id;
+
+    TDrawParts() : IsValid(false) {}
+};
+SIZE(TDrawParts, 0x10);
 
 // The adventure screen's own window. Only the ONE method a retail body
 // outside adventuremapwindow.obj calls on it is declared here:
@@ -62,19 +88,27 @@ SIZE(CAdvPopup, 0x60);
 // not an override.
 class TAdventureMapWindow : public heroWindow {
 public:
+    // The DC roster puts RadarWidget/MapWidget at +0x44/+0x48. Retail's
+    // heroWindow is eight bytes wider, placing them at +0x4c/+0x50;
+    // InMapArea independently proves MapWidget's retail offset and reads
+    // its widget x/y/width/height fields.
+    widget* RadarWidget;
+    widget* MapWidget;
+    textWidget* ChatTextWidget;  // +0x54, CompleteDraw's chat update target
     // Retail heroWindow is 8 bytes wider than the Dreamcast base (0x4c
     // versus 0x44). Applying that independently proven shift to the DC
     // TAdventureMapWindow member roster puts chatEdit@0x50 at retail
     // +0x58. KeyboardMessageHandler confirms the result directly with
     // `mov ecx,[advWindow+0x58] / mov al,[ecx+0x6d]`; +0x6d is the
-    // byte-proven textEntryWidget::bHasFocus field. Keep the pointer as
-    // its modeled base view until the CAdventurMapChatEdit inheritance
-    // chain itself gets reconstructed.
-    char pad_04c[0xc];
-    textEntryWidget* chatEdit;  // +0x58
+    // byte-proven textEntryWidget::bHasFocus field. The pointer remains in
+    // InputAdventureMapWindowView so this broad header retains the member
+    // population required by advmgr.obj's retail optimizer state.
+    char pad_058[8];
+    widget* RolloverTextWidget;  // +0x60, DrawRolloverText redraw bounds
 
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
+    void DrawChatText(unsigned char update);
 };
 
 // Derives baseManager (0x38 bytes): executive::CallManager (0x4b0c70)
@@ -82,9 +116,54 @@ public:
 // baseManager::status (+0x34) as its suspend/resume mode.
 class advManager : public baseManager {
 public:
-    char pad_038[0xc];
+    // Provisional ordinal names. OverrideBottomView proves the complete
+    // 0..8 range and distinct behavior for 0, 1..6 and 8; semantic names
+    // remain unclaimed.
+    enum EBottomViewType {
+        BOTTOM_VIEW_DEFAULT = 0,
+        BOTTOM_VIEW_1,
+        BOTTOM_VIEW_2,
+        BOTTOM_VIEW_3,
+        BOTTOM_VIEW_4,
+        BOTTOM_VIEW_5,
+        BOTTOM_VIEW_6,
+        BOTTOM_VIEW_7,
+        BOTTOM_VIEW_8
+    };
+
+    enum ECursorDrawCell {
+        CURSOR_DEST_Y0 = 7,
+        CURSOR_DEST_Y1 = 8,
+        CURSOR_DEST_X0 = 8,
+        CURSOR_DEST_X1 = 9,
+        CURSOR_DEST_X2 = 10
+    };
+
+    enum EObjectDrawLayer {
+        OBJECT_DRAW_LAYER_HERO_FRONT = 1,
+        OBJECT_DRAW_LAYER_HERO_BACK = 2,
+        OBJECT_DRAW_LAYER_LAST = 6
+    };
+
+    enum ECompleteDrawExtent {
+        COMPLETE_DRAW_LAST_X = 19,
+        COMPLETE_DRAW_LAST_Y = 17
+    };
+
+    enum ECloudDrawFrame {
+        CLOUD_DRAW_FRAME_1 = 1,
+        CLOUD_DRAW_FRAME_3 = 3,
+        CLOUD_DRAW_FRAME_4 = 4,
+        CLOUD_DRAW_FRAME_5 = 5,
+        CLOUD_DRAW_FLIPPED_OFFSET = 100
+    };
+
+    char pad_038[4];
+    unsigned char DebugShowFPS;  // +0x3c, DC name; retail FPS branch proves it
+    char pad_03d[7];
     TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
-    char pad_048[8];
+    unsigned short* routeArray;      // +0x48 (GetRouteArrayPtr)
+    int bShowRoute;                  // +0x4c, gates both arrow draw passes
     // +0x50, the hover reseed latch: advManager::Reseed (0x40ec80) is
     // `mov dword ptr [ecx+0x50], 0` and nothing else, discarding both
     // of its arguments. Name unattested - the role is what the bytes
@@ -97,29 +176,116 @@ public:
     // `mov al, byte ptr [ecx + 0x678330]`), so it carries the current
     // terrain. Name unattested - the role is what the bytes prove.
     int field_58;
-    char pad_05c[0x1b0];
+    // +0x5c. Both GetCell overloads dereference this NewfullMap record:
+    // cellData at +0xd0 and Size at +0xd4.
+    NewfullMap* fullMap;
+    // Retail tile-set rows. Dreamcast supplies the surviving names and
+    // extents; the retail Draw* passes prove every offset reached here.
+    CSprite* groundTileset[10];  // +0x60
+    CSprite* riverTileset[5];    // +0x88
+    CSprite* roadTileset[4];     // +0x9c
+    CSprite* borderTileset;      // +0xac
+    CSprite* arrowTileset;       // +0xb0
+    CSprite* gemIcons[4];        // +0xb4
+    CSprite* starTileset;        // +0xc4
+    CSprite* radarIcons;         // +0xc8
+    CSprite* cloudIcons;         // +0xcc
+    char pad_0d0[0x10];
+    CSprite* movingObjectSprite;  // +0xe0, transient object draw override
+    // +0xe4. The five-argument UpdateRadar overload forwards this packed
+    // point by value as the origin argument of the six-argument overload.
+    type_point radarOrigin;
+    char pad_0e8[4];
+    int lastHover;  // +0xec, ForceNewHover invalidates before ProcessHover
+    char pad_0f0[4];
+    int mapOriginX;               // +0xf4, adventure viewport origin
+    int mapOriginY;               // +0xf8
+    char pad_0fc[4];
+    int animFrame;                  // +0x100, sprite-frame modulo source
+    char pad_104[8];
+    // Retail DrawHeroPart indexes these pointer rows directly. The extents
+    // close every gap through +0x1ec and agree with the surviving roster.
+    CSprite* cursorIcons[18];       // +0x10c, indexed by hero class
+    CSprite* boatIcons[3];          // +0x154, indexed by boat type
+    CSprite* boatFrothIcons[3];     // +0x160, indexed by boat type
+    CSprite* flagIcons[8];          // +0x16c, indexed by player owner
+    CSprite* boatFlagIcons[3][8];   // +0x18c, [boat type][player owner]
+    unsigned char drawCursor;     // +0x1ec, gates map cursor overlays
+    char pad_1ed[0x1b];
+    int cursorDrawn;       // +0x208, cleared at the start of CompleteDraw
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
-    char pad_20d[0x17f];
+    char pad_20d[0xb];
+    int movingObjectIndex;        // +0x218, transient object-pool index
+    int movingObjectSequence;     // +0x21c
+    int movingObjectFrame;        // +0x220
+    char pad_224[0x168];
     int field_38c;            // +0x38c, zeroed by CallManager's suspend arm
+    char pad_390[8];
+    EBottomViewType bottomViewOverride;  // +0x398
+    unsigned long bottomViewDeadline;    // +0x39c
 
     void CheckDimNextHeroBut();
     void DeactivateCurrTown(unsigned char waitingPlayer);
     void DeactivateCurrHero(unsigned char waitingPlayer);
     void DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
-    // Provisional enum: only the CallManager-passed 0 is attested.
-    enum EBottomViewType {
-        BOTTOM_VIEW_DEFAULT = 0
-    };
-
     void HeroLoses(class hero* who, int vanish_sound);
     void OverrideBottomView(EBottomViewType view, int time);
     void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
     void Reseed(int targetX, int targetY);
+    void CompleteDraw(int startX, int startY, int z,
+                      unsigned char forceDraw,
+                      unsigned char updateBottomView);
+    void CompleteDraw(unsigned char forceDraw);
+    void DrawAdventureMapGems();
+    void DrawGround(int srcX, int srcY, int z, int destX, int destY);
+    void DrawRiver(int srcX, int srcY, int z, int destX, int destY);
+    void DrawRoad(int srcX, int srcY, int z, int destX, int destY);
+    void DrawArrowShadow(int srcX, int srcY, int z, int destX, int destY);
+    void DrawArrow(int srcX, int srcY, int z, int destX, int destY);
+    void DrawShroud(int srcX, int srcY, int z, int destX, int destY);
+    void DrawAdventureCursor();
     void ForceNewHover();
+    int ProcessHover(int mouseX, int mouseY);
+    int GetCloudLookup(int srcX, int srcY, int z);
+    bool ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type,
+                           TDrawParts (&parts)[6]);
+    void DrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY,
+                      int tilex, int tiley, int tilew, int tileh);
+    void DrawHeroPartShadow(int part, TDrawParts& heroParts, int baseX,
+                            int baseY, int tilex, int tiley, int tilew,
+                            int tileh);
+    void DrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY,
+                      int tilex, int tiley, int tilew, int tileh);
+    void DrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX,
+                            int baseY, int tilex, int tiley, int tilew,
+                            int tileh);
+    void DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY);
+    void DrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
+    void DrawUnderlay(int srcX, int srcY, int z, int destX, int destY);
+    void DrawCursor(int cellX, int cellY);
+    void DrawCursorShadow(int cellX, int cellY);
+    void DrawRolloverText(char* text);
+    unsigned char FindAdjacentMonster(type_point point, type_point* result,
+                                      type_point excluded);
+    int InMapArea(int x, int y);
+    NewmapCell* GetCell(type_point point);
+    void UpdateRadar(type_point origin, unsigned char updateFlag,
+                     unsigned char bPartialUpdate, unsigned char view_mines,
+                     unsigned char view_heroes, unsigned char view_towns);
+    void UpdateRadar(unsigned char updateFlag,
+                     unsigned char bPartialUpdate, unsigned char view_mines,
+                     unsigned char view_heroes, unsigned char view_towns);
+    void UpdBottomView(unsigned char forceUpdate, unsigned char drawWindow,
+                       unsigned char update);
+    unsigned short* GetRouteArrayPtr(int x, int y, int z);
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
 extern advManager* gpAdvManager;
+
+int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
+bool hasFlag(int objType);
+int GetFlaggedObjectOwner(NewmapCell* thisCell);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\advmgr.cpp:336, dc 0x5714) unsigned char InitializeCreatureGeneratorNames();
