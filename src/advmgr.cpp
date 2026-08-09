@@ -52,10 +52,32 @@
 // compiland and no third 5-param help builder - so naming them would
 // be invention. See the help-text note further down.
 #include <va.h>
+#include <stdio.h>
 #include "advmgr.h"
+#include "advmgr_objects.h"
+#include "bitmap16.h"
+#include "csprite.h"
 #include "game.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "mousemgr.h"
+#include "recruit.h"
+#include "soundmgr.h"
+#include "winmgr.h"
 #include "window.h"
 #include "widget.h"
+
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X > _Y ? _X : _Y);
+}
 
 #if 0  // @carcass
 
@@ -153,11 +175,17 @@ void advManager::Close()
 }
 
 // E:\gamedcs\advmgr.cpp:1217
+#endif  // @carcass
+
 VA(0x00407ac0, 0x44)  // anchor-global, dc 0x793c
 int advManager::InMapArea(int x, int y)
 {
-    // @stub
+    widget* map_widget = advWindow->MapWidget;
+    return x >= map_widget->x && x < map_widget->y + map_widget->width
+        && y >= map_widget->y && y < map_widget->y + map_widget->height;
 }
+
+#if 0  // @carcass
 
 // A header-inline COMDAT that the retail link filed inside advmgr's
 // span (its four call sites all live in OTHER modules - 0x1cdf0,
@@ -203,11 +231,17 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 // lea eax,[ecx+eax*2]` = base + 38*idx, i.e. sizeof(NewmapCell) == 38.
 // Moved here from the DC header block to keep retail link order.
 // E:\gamedcs\MapCell.h:895
+#endif  // @carcass
+
+#pragma auto_inline(off)
 VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
 NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
-    // @stub
+    return &cellData[(z * Size + y) * Size + x];
 }
+#pragma auto_inline(on)
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:1497
 VA(0x004087b0, 0x487)  // anchor-vtable, dc 0x8644
@@ -351,11 +385,26 @@ void type_cell_adjuster::restore_cell()
 }
 
 // E:\gamedcs\advmgr.cpp:3130
+#endif  // @carcass
+
 VA(0x0040b0e0, 0x64)  // anchor-global, dc 0xc094
 void advManager::DrawRolloverText(char* text)
 {
-    // @stub
+    union {
+        char* pointer;
+        int value;
+    } extra;
+    extra.pointer = text;
+    advWindow->BroadcastMessage(0x200, 3, 200, extra.value);
+    advWindow->DrawWindow(0, 200, 200);
+
+    widget* rollover = advWindow->RolloverTextWidget;
+    gpWindowManager->UpdateScreen(advWindow->x + rollover->x,
+                                  advWindow->y + rollover->y,
+                                  rollover->width, rollover->height);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:3146
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
@@ -476,89 +525,952 @@ void advManager::DrawAdventureMapGems()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:5026
 VA(0x0040f3f0, 0x47D)  // linkorder, dc 0x10788
 void advManager::CompleteDraw(int start_x, int start_y, int z, unsigned char bForceDraw, unsigned char bUpdateBottomView)
 {
-    // @stub
+    PollSound();
+
+    if (!bForceDraw && !gCompleteDrawEnabled && !bVideoPaused)
+        return;
+
+    if (bVideoPaused) {
+        CUnnamed69d808_f0* messageHandler =
+            gUnnamed69d808->get_field_f0();
+        if (messageHandler && messageHandler->field_04
+            && !gCompleteDrawMessageBypass && !gbInViewWorld)
+            return;
+    }
+
+    if (gCompleteDrawAllCells) {
+        start_y = 0;
+        start_x = 0;
+    }
+
+    cursorDrawn = 0;
+
+    int drawheight = COMPLETE_DRAW_LAST_Y;
+    int drawwidth = COMPLETE_DRAW_LAST_X;
+    int x;
+    int y;
+
+    for (y = -1; y <= drawheight; ++y) {
+        for (x = -1; x <= drawwidth; ++x)
+            DrawGround(start_x + x, start_y + y, z, x, y);
+    }
+
+    if (!gbInViewWorld) {
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawRiver(start_x + x, start_y + y, z, x, y);
+        }
+
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawRoad(start_x + x, start_y + y, z, x, y);
+        }
+
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawUnderlay(start_x + x, start_y + y, z, x, y);
+        }
+    }
+
+    for (y = -1; y <= drawheight; ++y) {
+        for (x = -1; x <= drawwidth; ++x)
+            DrawAdvObjShadow(start_x + x, start_y + y, z, x, y);
+    }
+
+    if (bShowRoute && !gbInViewWorld) {
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawArrowShadow(start_x + x, start_y + y, z, x, y);
+        }
+    }
+
+    for (y = -1; y <= drawheight; ++y) {
+        for (x = -1; x <= drawwidth; ++x)
+            DrawAdvObj(start_x + x, start_y + y, z, x, y);
+    }
+
+    if (bShowRoute && !gbInViewWorld) {
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawArrow(start_x + x, start_y + y, z, x, y);
+        }
+    }
+
+    if (gpCurrentPlayer->currHeroId == -1)
+        drawCursor = false;
+    if (drawCursor)
+        DrawAdventureCursor();
+
+    if (!gbInViewWorld) {
+        for (y = -1; y <= drawheight; ++y) {
+            for (x = -1; x <= drawwidth; ++x)
+                DrawShroud(start_x + x, start_y + y, z, x, y);
+        }
+    }
+
+    DrawAdventureMapGems();
+
+    if (DebugShowFPS) {
+        if (gCompleteDrawFpsFrame >= 0) {
+            unsigned long currentTime = GameTime::Get();
+            gCompleteDrawFpsTimes[gCompleteDrawFpsFrame] =
+                currentTime - gCompleteDrawFpsLastTime;
+            int elapsedTime = 0;
+            for (int frame = 0; frame < COMPLETE_DRAW_FPS_FRAME_COUNT;
+                 ++frame)
+                elapsedTime += gCompleteDrawFpsTimes[frame];
+            sprintf(gCompleteDrawFpsText, gCompleteDrawFpsFormat,
+                    100.0 / (elapsedTime * 0.001));
+            gCompleteDrawFpsLastTime = currentTime;
+        } else {
+            gCompleteDrawFpsLastTime = GameTime::Get();
+        }
+
+        gCompleteDrawFpsFrame = (gCompleteDrawFpsFrame + 1)
+                                % COMPLETE_DRAW_FPS_FRAME_COUNT;
+        chatMan.ClearChat();
+        UpdateCompleteDrawFps(&chatMan, gCompleteDrawFpsText);
+    }
+
+    PollSound();
+
+    if (!gbInViewWorld) {
+        chatMan.UpdateWidget(advWindow->ChatTextWidget, true, 20);
+        advWindow->DrawChatText(false);
+    }
+
+    if (bUpdateBottomView)
+        UpdBottomView(0, true, true);
 }
 
 // E:\gamedcs\advmgr.cpp:5223
 VA(0x0040f870, 0x43)  // linkorder, dc 0x10c9c
 void advManager::CompleteDraw(unsigned char bForceDraw)
 {
-    // @stub
+    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z,
+                 bForceDraw, true);
 }
 
 // E:\gamedcs\advmgr.cpp:5505
 VA(0x0040f8c0, 0x265)  // anchor-global, dc 0x10cf4
 int advManager::GetCloudLookup(int srcX, int srcY, int z)
 {
-    // @stub
+    int lookup = 0;
+
+    if (srcX < 1)
+        lookup = 0xc8;
+    else if (srcX >= gMapWidth - 1)
+        lookup = 0x32;
+
+    if (srcY < 1)
+        lookup |= 0x91;
+    else if (srcY >= gMapHeight - 1)
+        lookup |= 0x64;
+
+    if (!lookup) {
+        if (!(GetMapExtra(srcX, srcY - 1, z) & gMapVisibilityBit))
+            lookup = 1;
+        if (!(GetMapExtra(srcX + 1, srcY, z) & gMapVisibilityBit))
+            lookup |= 2;
+        if (!(GetMapExtra(srcX, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 4;
+        if (!(GetMapExtra(srcX - 1, srcY, z) & gMapVisibilityBit))
+            lookup |= 8;
+        if (!(GetMapExtra(srcX + 1, srcY - 1, z) & gMapVisibilityBit))
+            lookup |= 0x10;
+        if (!(GetMapExtra(srcX + 1, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 0x20;
+        if (!(GetMapExtra(srcX - 1, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 0x40;
+        if (!(GetMapExtra(srcX - 1, srcY - 1, z) & gMapVisibilityBit))
+            lookup |= 0x80;
+    } else {
+        if (!(lookup & 1)
+            && !(GetMapExtra(srcX, srcY - 1, z) & gMapVisibilityBit))
+            lookup |= 1;
+        if (!(lookup & 2)
+            && !(GetMapExtra(srcX + 1, srcY, z) & gMapVisibilityBit))
+            lookup |= 2;
+        if (!(lookup & 4)
+            && !(GetMapExtra(srcX, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 4;
+        if (!(lookup & 8)
+            && !(GetMapExtra(srcX - 1, srcY, z) & gMapVisibilityBit))
+            lookup |= 8;
+        if (!(lookup & 0x10)
+            && !(GetMapExtra(srcX + 1, srcY - 1, z) & gMapVisibilityBit))
+            lookup |= 0x10;
+        if (!(lookup & 0x20)
+            && !(GetMapExtra(srcX + 1, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 0x20;
+        if (!(lookup & 0x40)
+            && !(GetMapExtra(srcX - 1, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 0x40;
+        if (!(lookup & 0x80)
+            && !(GetMapExtra(srcX - 1, srcY - 1, z) & gMapVisibilityBit))
+            lookup |= 0x80;
+    }
+
+    return giCloudType[lookup];
 }
 
 // E:\gamedcs\advmgr.cpp:5573
 VA(0x0040fb30, 0x167)  // linkorder, dc 0x110c0
-unsigned char advManager::ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type, []* parts)
+bool advManager::ScanForHeroOrBoat(int srcX, int srcY, int z,
+                                   unsigned short type,
+                                   TDrawParts (&parts)[6])
 {
-    // @stub
+    if (gbInViewWorld)
+        return false;
+
+    int partNum = 0;
+    bool found = false;
+    for (int cy = 0; cy < 2; ++cy) {
+        for (int cx = -1; cx < 2; ++cx) {
+            if (srcX + cx >= 0 && srcY + cy >= 0
+                && srcX + cx < gMapWidth && srcY + cy < gMapHeight) {
+                NewmapCell* tempCell =
+                    GetCell(type_point(srcX + cx, srcY + cy, z));
+                if (tempCell->type == type && tempCell->is_trigger
+                    && tempCell->extraInfo != ~0UL) {
+                    parts[partNum].IsValid = true;
+                    parts[partNum].X = cx;
+                    parts[partNum].Y = cy;
+                    parts[partNum].id = tempCell->extraInfo;
+                    found = true;
+                }
+            }
+            ++partNum;
+        }
+    }
+    return found;
 }
 
-// E:\gamedcs\advmgr.cpp:5614
+// E:\gamedcs\advmgr.cpp:5614. The eight cases are read directly from the
+// retail switch's 82-byte selector table for object ids 17..98.
 VA(0x0040fca0, 0x7A)  // anchor-global, dc 0x11238
-unsigned char hasFlag(int objType)
+bool hasFlag(int objType)
 {
-    // @stub
+    switch (objType) {
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+    case GARRISON:
+    case LIGHTHOUSE:
+    case MINE:
+    case RANDOM_TOWN:
+    case SHIPYARD:
+    case TOWN:
+        return true;
+    default:
+        return false;
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:5634
 VA(0x0040fd20, 0x10E)  // anchor-global, dc 0x1129c
 int GetFlaggedObjectOwner(NewmapCell* thisCell)
 {
-    // @stub
+    TAdventureObjectType type = thisCell->type;
+    int extraInfo = thisCell->extraInfo;
+    int owner = -1;
+
+    if (type == HERO) {
+        hero* thisHero;
+        if (extraInfo == -1)
+            thisHero = 0;
+        else
+            thisHero = &gpGame->heroes[extraInfo];
+        type = thisHero->obscuredType;
+        extraInfo = thisHero->obscuredIndex;
+    }
+
+    switch (type) {
+    case RANDOM_TOWN:
+    case TOWN:
+        owner = gpGame->towns[extraInfo].owner;
+        break;
+    case LIGHTHOUSE:
+    case MINE:
+        owner = gpGame->mines[extraInfo].playerOwner;
+        break;
+    case GARRISON:
+        owner = gpGame->garrisons[extraInfo].playerOwner;
+        break;
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+        owner = gpGame->generators[extraInfo].playerOwner;
+        break;
+    case SHIPYARD:
+        owner = extraInfo << 24 >> 24;
+        break;
+    }
+
+    return owner;
+}
+
+static inline NewmapCell* DrawHeroCell(advManager* manager, type_point point)
+{
+    unsigned char valid = point.is_valid();
+    NewfullMap* map = manager->fullMap;
+    if (!valid)
+        return map->cell(0, 0, 0);
+    return map->cell(point.x, point.y, point.z);
+}
+
+static inline NewmapCell* DrawBoatCell(advManager* manager, type_point point)
+{
+    if (!point.is_valid())
+        return manager->fullMap->cell(0, 0, 0);
+    return &manager->fullMap->cellData[
+        (point.z * manager->fullMap->Size + point.y)
+        * manager->fullMap->Size + point.x];
 }
 
 // E:\gamedcs\advmgr.cpp:5688
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
-void advManager::DrawHeroPart(int part, TDrawParts* heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
+                              int baseY, int tilex, int tiley, int tilew,
+                              int tileh)
 {
-    // @stub
+    hero* currHero;
+    if (heroParts.id == -1)
+        currHero = 0;
+    else
+        currHero = &gpGame->heroes[heroParts.id];
+
+    int HeroCellY = part % 3;
+    int HeroCellX = part / 3;
+
+    if (currHero->flags & 0x40000) {
+        boat* currBoat = gpGame->GetHeroBoat(currHero->id, true);
+        NewmapCell* heroCell = DrawHeroCell(
+            this, type_point(currHero->x, currHero->y, currHero->z));
+
+        if (!(heroCell->flags_00_11 & 0x200)) {
+            boatFrothIcons[currBoat->type]->DrawHero(
+                currHero->GetStandSequence(),
+                animFrame
+                    % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+                tilex + (2 - HeroCellY) * 32,
+                tiley - HeroCellX * 32 + 32, tilew, tileh,
+                gpWindowManager->screenBitmap, baseX, baseY + 8,
+                currHero->facing > hero::kFacingS);
+        }
+
+        boatFlagIcons[currBoat->type][currBoat->playerOwner]->DrawHero(
+            currHero->GetStandSequence(),
+            animFrame % boatFlagIcons[currBoat->type][currBoat->playerOwner]
+                                ->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currHero->facing > hero::kFacingS);
+
+        {
+            int boatFrame =
+                animFrame
+                % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n);
+            boatIcons[currBoat->type]->DrawHero(
+                currHero->GetStandSequence(), boatFrame,
+                tilex + (2 - HeroCellY) * 32,
+                tiley - HeroCellX * 32 + 32, tilew, tileh,
+                gpWindowManager->screenBitmap, baseX, baseY + 8,
+                currHero->facing > hero::kFacingS);
+        }
+    } else if (currHero->owner >= 0 && currHero->owner < 8) {
+        flagIcons[currHero->owner]->DrawHero(
+            currHero->GetStandSequence(),
+            animFrame % flagIcons[currHero->owner]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currHero->facing > hero::kFacingS);
+
+        cursorIcons[currHero->heroClass]->DrawHero(
+            currHero->GetStandSequence(),
+            animFrame
+                % cursorIcons[currHero->heroClass]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currHero->facing > hero::kFacingS);
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:5773
 VA(0x004102c0, 0x494)  // anchor-callee, dc 0x11958
-void advManager::DrawHeroPartShadow(int part, TDrawParts* heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
+                                    int baseX, int baseY, int tilex,
+                                    int tiley, int tilew, int tileh)
 {
-    // @stub
+    hero* currHero;
+    if (heroParts.id == -1)
+        currHero = 0;
+    else
+        currHero = &gpGame->heroes[heroParts.id];
+
+    int HeroCellY = part % 3;
+    int HeroCellX = part / 3;
+
+    if (currHero->flags & 0x40000) {
+        if (currHero->owner < 0 || currHero->owner >= 8)
+            return;
+
+        boat* currBoat = gpGame->GetHeroBoat(currHero->id, true);
+        NewmapCell* heroCell = DrawHeroCell(
+            this, type_point(currHero->x, currHero->y, currHero->z));
+
+        if (!(heroCell->flags_00_11 & 0x200)) {
+            boatFrothIcons[currBoat->type]->DrawHeroShadow(
+                currHero->GetStandSequence(),
+                animFrame
+                    % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+                tilex + (2 - HeroCellY) * 32,
+                tiley - HeroCellX * 32 + 32, tilew, tileh,
+                gpWindowManager->screenBitmap, baseX, baseY + 8,
+                currHero->facing > hero::kFacingS);
+        }
+
+        boatFlagIcons[currBoat->type][currBoat->playerOwner]->DrawHeroShadow(
+            currHero->GetStandSequence(),
+            animFrame % boatFlagIcons[currBoat->type][currBoat->playerOwner]
+                                ->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currHero->facing > hero::kFacingS);
+
+        {
+            int boatFrame =
+                animFrame
+                % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n);
+            boatIcons[currBoat->type]->DrawHeroShadow(
+                currHero->GetStandSequence(), boatFrame,
+                tilex + (2 - HeroCellY) * 32,
+                tiley - HeroCellX * 32 + 32, tilew, tileh,
+                gpWindowManager->screenBitmap, baseX, baseY + 8,
+                currHero->facing > hero::kFacingS);
+        }
+    } else if (currHero->owner >= 0 && currHero->owner < 8) {
+        flagIcons[currHero->owner]->DrawHeroShadow(
+            currHero->GetStandSequence(),
+            animFrame % flagIcons[currHero->owner]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currHero->facing > hero::kFacingS);
+
+        cursorIcons[currHero->heroClass]->DrawHeroShadow(
+            currHero->GetStandSequence(),
+            animFrame
+                % cursorIcons[currHero->heroClass]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currHero->facing > hero::kFacingS);
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:5863
 VA(0x00410760, 0x24F)  // anchor-callee, dc 0x11ea4
-void advManager::DrawBoatPart(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::DrawBoatPart(int part, TDrawParts& boatParts, int baseX,
+                              int baseY, int tilex, int tiley, int tilew,
+                              int tileh)
 {
-    // @stub
+    boat* currBoat = &gpGame->boats[boatParts.id];
+    int BoatCellY = part % 3;
+    int BoatCellX = part / 3;
+    NewmapCell* boatCell = DrawBoatCell(
+        this, type_point(currBoat->x, currBoat->y, currBoat->z));
+
+    if (!(boatCell->flags_00_11 & 0x200)) {
+        boatFrothIcons[currBoat->type]->DrawHero(
+            currBoat->GetStandSequence(),
+            animFrame
+                % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+            tilex + (2 - BoatCellY) * 32,
+            tiley - BoatCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currBoat->facing > hero::kFacingS);
+    }
+
+    boatIcons[currBoat->type]->DrawHero(
+        currBoat->GetStandSequence(),
+        animFrame % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+        tilex + (2 - BoatCellY) * 32,
+        tiley - BoatCellX * 32 + 32, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8,
+        currBoat->facing > hero::kFacingS);
 }
 
 // E:\gamedcs\advmgr.cpp:5900
 VA(0x004109b0, 0x24F)  // anchor-callee, dc 0x120ec
-void advManager::DrawBoatPartShadow(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::DrawBoatPartShadow(int part, TDrawParts& boatParts,
+                                    int baseX, int baseY, int tilex,
+                                    int tiley, int tilew, int tileh)
 {
-    // @stub
+    boat* currBoat = &gpGame->boats[boatParts.id];
+    int BoatCellY = part % 3;
+    int BoatCellX = part / 3;
+    NewmapCell* boatCell = DrawBoatCell(
+        this, type_point(currBoat->x, currBoat->y, currBoat->z));
+
+    if (!(boatCell->flags_00_11 & 0x200)) {
+        boatFrothIcons[currBoat->type]->DrawHeroShadow(
+            currBoat->GetStandSequence(),
+            animFrame
+                % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+            tilex + (2 - BoatCellY) * 32,
+            tiley - BoatCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currBoat->facing > hero::kFacingS);
+    }
+
+    boatIcons[currBoat->type]->DrawHeroShadow(
+        currBoat->GetStandSequence(),
+        animFrame % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+        tilex + (2 - BoatCellY) * 32,
+        tiley - BoatCellX * 32 + 32, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8,
+        currBoat->facing > hero::kFacingS);
 }
 
 // E:\gamedcs\advmgr.cpp:5941
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334
 void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    NewmapCell* thisCell;
+    if (z >= 0)
+        thisCell = &fullMap->cellData[(z * fullMap->Size + srcY)
+                                     * fullMap->Size + srcX];
+    else
+        thisCell = fullMap->cellData;
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    TDrawParts heroParts[6];
+    TDrawParts boatParts[6];
+    bool foundHero = ScanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
+    bool foundBoat = ScanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
+
+    AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
+        static_cast<void*>(thisCell));
+    AdvFullMapObjectsView* mapObjects = static_cast<AdvFullMapObjectsView*>(
+        static_cast<void*>(fullMap));
+
+    if (cellObjects->objects.size()) {
+        for (int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
+            for (unsigned numObj = 0; numObj < cellObjects->objects.size();
+                 ++numObj) {
+                AdvObjectCellView* objCell = &cellObjects->objects[numObj];
+                if (objCell->layer != row)
+                    continue;
+
+                CObject* obj = &mapObjects->objects[objCell->objectIndex];
+                CObjectType* objType = &mapObjects->objectTypes[obj->typeIndex];
+                CSprite* sprite = mapObjects->sprites[obj->typeIndex];
+                signed char offsets = objCell->offsets;
+                int yOffset = offsets >> 4;
+                offsets <<= 4;
+                int xOffset = offsets >> 4;
+                int bit = 47 - yOffset * 8 - xOffset;
+                if (!objType->drawCells[bit] || objType->suppressDraw)
+                    continue;
+
+                if (gbInViewWorld) {
+                    switch (objType->objectType) {
+                    case TERRAIN_BRUSH:             break;
+                    case TERRAIN_BUSH:              break;
+                    case TERRAIN_CACTUS:            break;
+                    case TERRAIN_CANYON:            break;
+                    case TERRAIN_CRATER:            break;
+                    case TERRAIN_DEAD_VEGETATION:   break;
+                    case TERRAIN_FLOWER:            break;
+                    case TERRAIN_FROZEN_LAKE:       break;
+                    case TERRAIN_HEDGE:             break;
+                    case TERRAIN_HILL:              break;
+                    case TERRAIN_HOLE:              continue;
+                    case TERRAIN_KELP:              break;
+                    case TERRAIN_LAKE:              break;
+                    case TERRAIN_LAVA_FLOW:         break;
+                    case TERRAIN_LAVA_LAKE:         break;
+                    case TERRAIN_MUSHROOM:          break;
+                    case TERRAIN_LOG:               break;
+                    case TERRAIN_MANDRAKE:          break;
+                    case TERRAIN_MOSS:              break;
+                    case TERRAIN_MOUND:             break;
+                    case TERRAIN_MOUNTAIN:          break;
+                    case TERRAIN_OAK_TREE:          break;
+                    case TERRAIN_OUTCROPPING:       break;
+                    case TERRAIN_PINE_TREE:         break;
+                    case TERRAIN_PLANT:             break;
+                    case TERRAIN_RIVER_1:           continue;
+                    case TERRAIN_RIVER_2:           continue;
+                    case TERRAIN_RIVER_3:           continue;
+                    case TERRAIN_RIVER_4:           continue;
+                    case TERRAIN_RIVER_DELTA:       continue;
+                    case TERRAIN_ROAD_1:            continue;
+                    case TERRAIN_ROAD_2:            continue;
+                    case TERRAIN_ROAD_3:            continue;
+                    case TERRAIN_ROCK:              break;
+                    case TERRAIN_SAND_DUNE:         break;
+                    case TERRAIN_SAND_PIT:          break;
+                    case TERRAIN_SHRUB:             break;
+                    case TERRAIN_SKULL:             break;
+                    case TERRAIN_STALAGMITE:        break;
+                    case TERRAIN_STUMP:             break;
+                    case TERRAIN_TAR_PIT:           break;
+                    case TERRAIN_TREE:              break;
+                    case TERRAIN_VINE:              break;
+                    case TERRAIN_VOLCANIC_VENT:     break;
+                    case TERRAIN_VOLCANO:           break;
+                    case TERRAIN_WILLOW_TREE:       break;
+                    case TERRAIN_YUCCA_TREE:        break;
+                    case TERRAIN_REEF:              break;
+                    default:                        continue;
+                    }
+
+                    int frame = (animFrame + obj->animationOffset)
+                                % sprite->GetNumFrames(0);
+                    sprite->DrawAdvObj(
+                        frame,
+                        tilex + (objType->width - xOffset - 1) * 32,
+                        tiley + (objType->height - yOffset - 1) * 32,
+                        tilew, tileh, gpWindowManager->screenBitmap,
+                        baseX, baseY + 8, false);
+                } else {
+                    switch (objType->objectType) {
+                    case CREATURE_GENERATOR_1:
+                    case CREATURE_GENERATOR_4:
+                    case GARRISON:
+                    case LIGHTHOUSE:
+                    case MINE:
+                    case RANDOM_TOWN:
+                    case SHIPYARD:
+                    case TOWN: {
+                        int triggerX;
+                        int triggerY;
+                        obj->FindTrigger(&triggerX, &triggerY);
+                        NewmapCell* triggerCell =
+                            GetCell(type_point(triggerX, triggerY, z));
+                        int owner = GetFlaggedObjectOwner(triggerCell);
+                        int frame = (animFrame + obj->animationOffset)
+                                    % sprite->GetNumFrames(0);
+                        sprite->DrawAdvObjWithFlag(
+                            frame,
+                            tilex + (objType->width - xOffset - 1) * 32,
+                            tiley + (objType->height - yOffset - 1) * 32,
+                            tilew, tileh, gpWindowManager->screenBitmap,
+                            baseX, baseY + 8,
+                            gUnnamed6aacb0->playerColors[owner], false);
+                        break;
+                    }
+                    default:
+                        if (objCell->objectIndex == movingObjectIndex) {
+                            movingObjectSprite->DrawAdvObj(
+                                movingObjectSequence * 2 + movingObjectFrame,
+                                tilex + (objType->width - xOffset - 1) * 32,
+                                tiley + (objType->height - yOffset - 1) * 32,
+                                tilew, tileh, gpWindowManager->screenBitmap,
+                                baseX, baseY + 8, false);
+                        } else {
+                            int frame = (animFrame + obj->animationOffset)
+                                        % sprite->GetNumFrames(0);
+                            sprite->DrawAdvObj(
+                                frame,
+                                tilex + (objType->width - xOffset - 1) * 32,
+                                tiley + (objType->height - yOffset - 1) * 32,
+                                tilew, tileh, gpWindowManager->screenBitmap,
+                                baseX, baseY + 8, false);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (foundHero || foundBoat) {
+                int firstPart;
+                int lastPart;
+                if (row == OBJECT_DRAW_LAYER_HERO_FRONT) {
+                    firstPart = 0;
+                    lastPart = 2;
+                } else if (row == OBJECT_DRAW_LAYER_HERO_BACK) {
+                    firstPart = 3;
+                    lastPart = 5;
+                } else {
+                    firstPart = 1;
+                    lastPart = 0;
+                }
+                for (int part = firstPart; part <= lastPart; ++part) {
+                    if (heroParts[part].IsValid)
+                        DrawHeroPart(part, heroParts[part], baseX, baseY,
+                                     tilex, tiley, tilew, tileh);
+                    if (boatParts[part].IsValid)
+                        DrawBoatPart(part, boatParts[part], baseX, baseY,
+                                     tilex, tiley, tilew, tileh);
+                }
+            }
+
+            if (row == OBJECT_DRAW_LAYER_HERO_BACK
+                && destY == CURSOR_DEST_Y0 && drawCursor && !gbInViewWorld) {
+                if (destX == CURSOR_DEST_X0)
+                    DrawCursor(0, 0);
+                else if (destX == CURSOR_DEST_X1)
+                    DrawCursor(1, 0);
+                else if (destX == CURSOR_DEST_X2)
+                    DrawCursor(2, 0);
+            } else if (row == OBJECT_DRAW_LAYER_HERO_FRONT
+                       && destY == CURSOR_DEST_Y1
+                       && drawCursor && !gbInViewWorld) {
+                if (destX == CURSOR_DEST_X0)
+                    DrawCursor(0, 1);
+                else if (destX == CURSOR_DEST_X1)
+                    DrawCursor(1, 1);
+                else if (destX == CURSOR_DEST_X2)
+                    DrawCursor(2, 1);
+            }
+        }
+        return;
+    }
+
+    if (foundHero || foundBoat) {
+        for (int part = 0; part < 6; ++part) {
+            if (heroParts[part].IsValid)
+                DrawHeroPart(part, heroParts[part], baseX, baseY,
+                             tilex, tiley, tilew, tileh);
+            if (boatParts[part].IsValid)
+                DrawBoatPart(part, boatParts[part], baseX, baseY,
+                             tilex, tiley, tilew, tileh);
+        }
+    }
+
+    if (destY == CURSOR_DEST_Y0) {
+        if (drawCursor && !gbInViewWorld) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursor(0, 0);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursor(1, 0);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursor(2, 0);
+        }
+    } else if (destY == CURSOR_DEST_Y1) {
+        if (drawCursor && !gbInViewWorld) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursor(0, 1);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursor(1, 1);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursor(2, 1);
+        }
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:6239
 VA(0x00411590, 0x5E4)  // anchor-callee, dc 0x12fcc
 void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    type_point point(srcX, srcY, z);
+    NewmapCell* thisCell;
+    if (!point.is_valid())
+        thisCell = fullMap->cellData;
+    else
+        thisCell = fullMap->cell(point.x, point.y, point.z);
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    TDrawParts heroParts[6];
+    TDrawParts boatParts[6];
+    bool foundHero = ScanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
+    bool foundBoat = ScanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
+
+    AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
+        static_cast<void*>(thisCell));
+    AdvFullMapObjectsView* mapObjects = static_cast<AdvFullMapObjectsView*>(
+        static_cast<void*>(fullMap));
+    for (unsigned numObj = 0; numObj < cellObjects->objects.size(); ++numObj) {
+        AdvObjectCellView* objCell = &cellObjects->objects[numObj];
+        CObject* obj = &mapObjects->objects[objCell->objectIndex];
+        CObjectType* objType = &mapObjects->objectTypes[obj->typeIndex];
+        CSprite* sprite = mapObjects->sprites[obj->typeIndex];
+
+        signed char offsets = objCell->offsets;
+        int yOffset = offsets >> 4;
+        offsets <<= 4;
+        int xOffset = offsets >> 4;
+        int bit = 47 - yOffset * 8 - xOffset;
+        if (!objType->shadowCells[bit] || objType->suppressDraw)
+            continue;
+
+        if (gbInViewWorld) {
+            switch (objType->objectType) {
+            case TERRAIN_BRUSH:             break;
+            case TERRAIN_BUSH:              break;
+            case TERRAIN_CACTUS:            break;
+            case TERRAIN_CANYON:            break;
+            case TERRAIN_CRATER:            break;
+            case TERRAIN_DEAD_VEGETATION:   break;
+            case TERRAIN_FLOWER:            break;
+            case TERRAIN_FROZEN_LAKE:       break;
+            case TERRAIN_HEDGE:             break;
+            case TERRAIN_HILL:              break;
+            case TERRAIN_HOLE:              continue;
+            case TERRAIN_KELP:              break;
+            case TERRAIN_LAKE:              break;
+            case TERRAIN_LAVA_FLOW:         break;
+            case TERRAIN_LAVA_LAKE:         break;
+            case TERRAIN_MUSHROOM:          break;
+            case TERRAIN_LOG:               break;
+            case TERRAIN_MANDRAKE:          break;
+            case TERRAIN_MOSS:              break;
+            case TERRAIN_MOUND:             break;
+            case TERRAIN_MOUNTAIN:          break;
+            case TERRAIN_OAK_TREE:          break;
+            case TERRAIN_OUTCROPPING:       break;
+            case TERRAIN_PINE_TREE:         break;
+            case TERRAIN_PLANT:             break;
+            case TERRAIN_RIVER_1:           continue;
+            case TERRAIN_RIVER_2:           continue;
+            case TERRAIN_RIVER_3:           continue;
+            case TERRAIN_RIVER_4:           continue;
+            case TERRAIN_RIVER_DELTA:       continue;
+            case TERRAIN_ROAD_1:            continue;
+            case TERRAIN_ROAD_2:            continue;
+            case TERRAIN_ROAD_3:            continue;
+            case TERRAIN_ROCK:              break;
+            case TERRAIN_SAND_DUNE:         break;
+            case TERRAIN_SAND_PIT:          break;
+            case TERRAIN_SHRUB:             break;
+            case TERRAIN_SKULL:             break;
+            case TERRAIN_STALAGMITE:        break;
+            case TERRAIN_STUMP:             break;
+            case TERRAIN_TAR_PIT:           break;
+            case TERRAIN_TREE:              break;
+            case TERRAIN_VINE:              break;
+            case TERRAIN_VOLCANIC_VENT:     break;
+            case TERRAIN_VOLCANO:           break;
+            case TERRAIN_WILLOW_TREE:       break;
+            case TERRAIN_YUCCA_TREE:        break;
+            case TERRAIN_REEF:              break;
+            default:                        continue;
+            }
+            int frame = (animFrame + obj->animationOffset)
+                        % sprite->GetNumFrames(0);
+            sprite->DrawAdvObjShadow(
+                frame,
+                tilex + (objType->width - xOffset - 1) * 32,
+                tiley + (objType->height - yOffset - 1) * 32,
+                tilew, tileh, gpWindowManager->screenBitmap,
+                baseX, baseY + 8, false);
+        } else {
+            if (objCell->objectIndex == movingObjectIndex) {
+                movingObjectSprite->DrawAdvObjShadow(
+                    movingObjectSequence * 2 + movingObjectFrame,
+                    tilex + (objType->width - xOffset - 1) * 32,
+                    tiley + (objType->height - yOffset - 1) * 32,
+                    tilew, tileh, gpWindowManager->screenBitmap,
+                    baseX, baseY + 8, false);
+            } else {
+                int frame = (animFrame + obj->animationOffset)
+                            % sprite->GetNumFrames(0);
+                sprite->DrawAdvObjShadow(
+                    frame,
+                    tilex + (objType->width - xOffset - 1) * 32,
+                    tiley + (objType->height - yOffset - 1) * 32,
+                    tilew, tileh, gpWindowManager->screenBitmap,
+                    baseX, baseY + 8, false);
+            }
+        }
+    }
+
+    if (destY == CURSOR_DEST_Y0) {
+        if (drawCursor && !gbInViewWorld) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursorShadow(0, 0);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursorShadow(1, 0);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursorShadow(2, 0);
+        }
+    } else if (destY == CURSOR_DEST_Y1) {
+        if (drawCursor && !gbInViewWorld) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursorShadow(0, 1);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursorShadow(1, 1);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursorShadow(2, 1);
+        }
+    }
+
+    if (foundHero || foundBoat) {
+        for (int part = 0; part < 6; ++part) {
+            if (heroParts[part].IsValid)
+                DrawHeroPartShadow(part, heroParts[part], baseX, baseY,
+                                   tilex, tiley, tilew, tileh);
+            if (boatParts[part].IsValid)
+                DrawBoatPartShadow(part, boatParts[part], baseX, baseY,
+                                   tilex, tiley, tilew, tileh);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:6441
 VA(0x00411b80, 0x1D7)  // linkorder, dc 0x13890
@@ -567,12 +1479,63 @@ void advManager::DrawRiver(int srcX, int srcY, int z, int destX, int destY)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:6504
 VA(0x00411d60, 0x1EC)  // linkorder, dc 0x13a64
 void advManager::DrawRoad(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    type_point point;
+    point = type_point(srcX, srcY, z);
+    NewmapCell* thisCell;
+    if (!point.is_valid()) {
+        thisCell = fullMap->cellData;
+    } else {
+        thisCell = &fullMap->cellData[
+            (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
+    }
+    if (!thisCell->RoadSet)
+        return;
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32 + 16;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (srcY == gMapHeight - 1)
+        tileh -= 16;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    AdvRoadCellView* roadCell = static_cast<AdvRoadCellView*>(
+        static_cast<void*>(thisCell));
+    roadTileset[thisCell->RoadSet]->DrawTile(
+        thisCell->RoadIndex, tilex, tiley, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8,
+        (roadCell->cellFlags >> 4) & 1,
+        (roadCell->cellFlags >> 5) & 1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:6573
 VA(0x00411f50, 0x15F)  // linkorder, dc 0x13c68
@@ -588,26 +1551,266 @@ void advManager::DrawArrow(int srcX, int srcY, int z, int destX, int destY)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:6699
 VA(0x00412220, 0x248)  // linkorder, dc 0x13fc8
 void advManager::DrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth)
+        return;
+    if (srcY >= gMapHeight && !gCompleteDrawAllCells)
+        return;
+
+    {
+        type_point point(srcX, srcY, z);
+        point.is_valid();
+    }
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    unsigned char hflip = false;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    if (!gCompleteDrawAllCells
+        && (GetMapExtra(srcX, srcY, z) & gMapVisibilityBit))
+        return;
+
+    int lookup;
+    if (gCompleteDrawAllCells) {
+        int frame = ((srcX * 85 ^ srcY * 85) / 64) & 3;
+        starTileset->DrawShroudTile(
+            frame, tilex, tiley, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8, false, false);
+        return;
+    }
+
+    lookup = GetCloudLookup(srcX, srcY, z);
+    if (!lookup)
+        return;
+    if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
+        hflip = true;
+        lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
+    }
+    if ((lookup == CLOUD_DRAW_FRAME_1 || lookup == CLOUD_DRAW_FRAME_5)
+        && (srcX & 1))
+        ++lookup;
+    if (lookup == CLOUD_DRAW_FRAME_3 && (srcY & 1))
+        lookup = CLOUD_DRAW_FRAME_4;
+    cloudIcons->DrawShroudTile(
+        lookup - 1, tilex, tiley, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8, hflip, false);
 }
 
 // E:\gamedcs\advmgr.cpp:6805
 VA(0x00412470, 0x482)  // linkorder, dc 0x142e0
 void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    type_point point(srcX, srcY, z);
+    NewmapCell* thisCell;
+    if (!point.is_valid())
+        thisCell = fullMap->cell(0, 0, 0);
+    else
+        thisCell = fullMap->cell(point.x, point.y, point.z);
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
+        static_cast<void*>(thisCell));
+    AdvFullMapObjectsView* mapObjects = static_cast<AdvFullMapObjectsView*>(
+        static_cast<void*>(fullMap));
+
+    if (cellObjects->objects.size()) {
+        for (unsigned numObj = 0; numObj < cellObjects->objects.size();
+             ++numObj) {
+            AdvObjectCellView* objCell = &cellObjects->objects[numObj];
+            CObject* obj = &mapObjects->objects[objCell->objectIndex];
+            CObjectType* objType = &mapObjects->objectTypes[obj->typeIndex];
+            CSprite* sprite = mapObjects->sprites[obj->typeIndex];
+            if (!objType->suppressDraw)
+                continue;
+
+            switch (objType->objectType) {
+            case CREATURE_GENERATOR_1:
+            case CREATURE_GENERATOR_4:
+            case GARRISON:
+            case LIGHTHOUSE:
+            case MINE:
+            case RANDOM_TOWN:
+            case SHIPYARD:
+            case TOWN: {
+                int triggerX;
+                int triggerY;
+                obj->FindTrigger(&triggerX, &triggerY);
+                type_point triggerPoint(triggerX, triggerY, z);
+                NewmapCell* triggerCell;
+                if (!triggerPoint.is_valid())
+                    triggerCell = fullMap->cellData;
+                else
+                    triggerCell = fullMap->cell(
+                        triggerPoint.x, triggerPoint.y, triggerPoint.z);
+                int owner = GetFlaggedObjectOwner(triggerCell);
+                int frame = (animFrame + obj->animationOffset)
+                            % sprite->GetNumFrames(0);
+                signed char offsets = objCell->offsets;
+                int yOffset = offsets >> 4;
+                offsets <<= 4;
+                int xOffset = offsets >> 4;
+                sprite->DrawAdvObjWithFlag(
+                    frame,
+                    tilex + (objType->width - xOffset - 1) * 32,
+                    tiley + (objType->height - yOffset - 1) * 32,
+                    tilew, tileh, gpWindowManager->screenBitmap,
+                    baseX, baseY + 8,
+                    gUnnamed6aacb0->playerColors[owner], false);
+                break;
+            }
+            default: {
+                int frame = (animFrame + obj->animationOffset)
+                            % sprite->GetNumFrames(0);
+                signed char offsets = objCell->offsets;
+                int yOffset = offsets >> 4;
+                offsets <<= 4;
+                int xOffset = offsets >> 4;
+                sprite->DrawAdvObj(
+                    frame,
+                    tilex + (objType->width - xOffset - 1) * 32,
+                    tiley + (objType->height - yOffset - 1) * 32,
+                    tilew, tileh, gpWindowManager->screenBitmap,
+                    baseX, baseY + 8, false);
+                break;
+            }
+            }
+        }
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:6911
 VA(0x00412900, 0x2CB)  // linkorder, dc 0x147c4
 void advManager::DrawGround(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    type_point point(srcX, srcY, z);
+    NewmapCell* thisCell;
+    if (!point.is_valid()) {
+        thisCell = fullMap->cellData;
+    } else {
+        thisCell = &fullMap->cellData[
+            (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
+    }
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    if (srcX >= 0 && srcY >= 0 && srcX < gMapWidth
+        && srcY < gMapHeight) {
+        AdvGroundCellView* groundCell = static_cast<AdvGroundCellView*>(
+            static_cast<void*>(thisCell));
+        groundTileset[thisCell->GroundSet]->DrawTile(
+            thisCell->GroundIndex, tilex, tiley, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            groundCell->cellFlags & 1,
+            (groundCell->cellFlags >> 1) & 1);
+        return;
+    }
+
+    int frame = -1;
+    if (srcX == -1) {
+        if (srcY == -1)
+            frame = 16;
+        else if (srcY == gMapHeight)
+            frame = 19;
+        else if (srcY >= 0 && srcY < gMapHeight)
+            frame = 32 + (srcY & 3);
+    } else if (srcX == gMapWidth) {
+        if (srcY == -1)
+            frame = 17;
+        else if (srcY == gMapHeight)
+            frame = 18;
+        else if (srcY >= 0 && srcY < gMapHeight)
+            frame = 24 + (srcY & 3);
+    } else if (srcY == -1) {
+        if (srcX >= 0 && srcX < gMapWidth)
+            frame = 20 + (srcX & 3);
+    } else if (srcY == gMapHeight) {
+        if (srcX >= 0 && srcX < gMapHeight)
+            frame = 28 + (srcX & 3);
+    }
+
+    if (frame == -1)
+        frame = (srcY + 16) % 4 + 4 * ((srcX + 16) % 4);
+
+    borderTileset->DrawTile(
+        frame, tilex, tiley, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8, false, false);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:7019
 DC_ONLY(0x14b08, 0x88)
@@ -617,11 +1820,18 @@ NewmapCell* advManager::GetCell(int x, int y, int z)
 }
 
 // E:\gamedcs\advmgr.cpp:7026
+#endif  // @carcass
+
 VA(0x00412bd0, 0x6C)  // linkorder, dc 0x14b90
 NewmapCell* advManager::GetCell(type_point point)
 {
-    // @stub
+    if (!point.is_valid())
+        return fullMap->cellData;
+    return &fullMap->cellData[(point.z * fullMap->Size + point.y)
+                              * fullMap->Size + point.x];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:7037
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
@@ -631,11 +1841,16 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
 }
 
 // E:\gamedcs\advmgr.cpp:7537
+#endif  // @carcass
+
 VA(0x00413790, 0x27)  // linkorder, dc 0x15f7c
 void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heroes, unsigned char view_towns)
 {
-    // @stub
+    UpdateRadar(radarOrigin, updateFlag, bPartialUpdate, view_mines,
+                view_heroes, view_towns);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:7543
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
@@ -652,11 +1867,39 @@ void advManager::ClearBottomView()
 }
 
 // E:\gamedcs\advmgr.cpp:8822
+#endif  // @carcass
+
 VA(0x00415d60, 0x78)  // anchor-global, dc 0x18c84
 void advManager::OverrideBottomView(advManager::EBottomViewType view, int time)
 {
-    // @stub
+    bottomViewOverride = view;
+    if (view != BOTTOM_VIEW_DEFAULT && view != BOTTOM_VIEW_8) {
+        if (time < 0) {
+            switch (view) {
+            case BOTTOM_VIEW_1:
+                time = 3000;
+                break;
+            case BOTTOM_VIEW_2:
+                time = 3000;
+                break;
+            case BOTTOM_VIEW_3:
+                time = 3000;
+                break;
+            case BOTTOM_VIEW_4:
+                time = 3000;
+                break;
+            case BOTTOM_VIEW_5:
+                break;
+            case BOTTOM_VIEW_6:
+                time = 5000;
+                break;
+            }
+        }
+        bottomViewDeadline = GameTime::Get() + time;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:8864
 VA(0x00415de0, 0x140)  // anchor-global, dc 0x18d38
@@ -885,11 +2128,17 @@ void advManager::HideRoute(int bUpdateScreen, int bRemoveTarget, int bChangeButt
 
 // E:\gamedcs\struct.h:102 - see the withdrawal note above; moved here
 // from the DC header block to keep the file in retail link order.
+#endif  // @carcass
+
 VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
-void type_point::type_point(short new_x, short new_y, short new_z)
+type_point::type_point(short new_x, short new_y, short new_z)
 {
-    // @stub
+    x = new_x;
+    y = new_y;
+    z = new_z;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10558
 VA(0x00419300, 0x14C)  // linkorder, dc 0x1c580
@@ -922,11 +2171,21 @@ void advManager::SeedTo(type_point target)
 }
 
 // E:\gamedcs\advmgr.cpp:10609
+#endif  // @carcass
+
 VA(0x00419570, 0x49)  // anchor-global, dc 0x1c750
 void advManager::ForceNewHover()
 {
-    // @stub
+    if (gpCurrentPlayer->IsLocalHuman()) {
+        int x;
+        int y;
+        gpMouseManager->MouseCoords(&x, &y);
+        lastHover = -1;
+        ProcessHover(x, y);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10624
 VA(0x004195c0, 0x258)  // anchor-callee, dc 0x1c7e4
@@ -999,11 +2258,42 @@ void advManager::EnableButtons()
 }
 
 // E:\gamedcs\advmgr.cpp:11125
+#endif  // @carcass
+
 VA(0x0041a460, 0x1FB)  // anchor-global, dc 0x1dc24
 unsigned char advManager::FindAdjacentMonster(type_point point, type_point* result, type_point excluded)
 {
-    // @stub
+    int min_x = _cpp_max<int>(point.x - 1, 0);
+    int min_y = _cpp_max<int>(point.y - 1, 0);
+    int max_x = _cpp_min<int>(point.x + 2, gMapWidth);
+    int max_y = _cpp_min<int>(point.y + 2, gMapHeight);
+
+    NewmapCell* center = &fullMap->cellData[
+        (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
+    unsigned char center_is_water = center->GroundSet == eTerrainWater;
+    if (center->cell_is_trigger()
+        && !gAdventureObjectTraits[center->get_map_object()].field_01)
+        min_y = point.y;
+
+    for (int x = min_x; x < max_x; ++x) {
+        for (int y = min_y; y < max_y; ++y) {
+            NewmapCell* cell = &fullMap->cellData[
+                (point.z * fullMap->Size + y) * fullMap->Size + x];
+            if (cell->type == MONSTER && cell->is_trigger
+                && (cell->GroundSet == eTerrainWater) == center_is_water
+                && (x != excluded.x || y != excluded.y
+                    || point.z != excluded.z)) {
+                result->x = x;
+                result->y = y;
+                result->z = point.z;
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11155
 VA(0x0041a660, 0xEB)  // anchor-callee, dc 0x1dde4
@@ -1013,11 +2303,27 @@ void ComputeAdvNetControl()
 }
 
 // E:\gamedcs\advmgr.cpp:11196
+#endif  // @carcass
+
 VA(0x0041a750, 0x97)  // anchor-callee, dc 0x1df7c
 int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
 {
-    // @stub
+    if (GetMapExtra(x, y, z) & bit)
+        return 1;
+
+    for (int test_x = x - 1; test_x <= x + 1; ++test_x) {
+        if (test_x >= 0 && test_x < gMapWidth) {
+            for (int test_y = y - 1; test_y <= y + 1; ++test_y) {
+                if (test_y >= 0 && test_y < gMapHeight
+                    && (GetMapExtra(test_x, test_y, z) & bit))
+                    return 1;
+            }
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11220
 VA(0x0041a7f0, 0x307)  // anchor-callee, dc 0x1e068
@@ -1069,11 +2375,15 @@ unsigned short advManager::GetRouteArray(int x, int y, int z)
 }
 
 // E:\gamedcs\advmgr.cpp:11507
+#endif  // @carcass
+
 VA(0x0041b010, 0x27)  // linkorder, dc 0x1ebb8
 unsigned short* advManager::GetRouteArrayPtr(int x, int y, int z)
 {
-    // @stub
+    return &routeArray[(z * gMapHeight + y) * gMapWidth + x];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11521
 VA(0x0041b040, 0x9A)  // anchor-global, dc 0x1ebf4
@@ -2413,7 +3723,3 @@ void std::__destroy_aux(pathCell** __pointer, __false_type __formal)
 }
 
 #endif  // @carcass
-
-
-
-

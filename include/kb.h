@@ -17,6 +17,9 @@ enum EKbTimerSlots {
 
 extern unsigned long glTimers[10];
 
+// Retail map-extra accessor used by the adventure-map adjacency scan.
+unsigned short GetMapExtra(int x, int y, int z);
+
 // Live prototypes (claimed kb.cpp bodies; called from kbwin's
 // AppCommand and exec's DoDialog).
 void ShutDown(const char* cInExitMessage);               // 0x4f3690

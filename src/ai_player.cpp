@@ -616,7 +616,8 @@ void type_AI_player::start_turn()
 
     for (int i = 0; i < player->numHeroes; i++) {
         hero* current_hero = gpGame->GetHero(player->heroes[i]);
-        current_hero->targetIsCritical = 0;
+        static_cast<AIHeroStartTurnView*>(static_cast<void*>(current_hero))
+            ->targetIsCritical = 0;
         current_hero->field_11c = 0;
     }
 
@@ -624,7 +625,8 @@ void type_AI_player::start_turn()
         town* current_town = gpGame->GetTown(player->townIds[j]);
         if (current_town->garrisonHeroId >= 0) {
             hero* current_hero = gpGame->GetHero(current_town->garrisonHeroId);
-            current_hero->targetIsCritical = 0;
+            static_cast<AIHeroStartTurnView*>(static_cast<void*>(current_hero))
+                ->targetIsCritical = 0;
             current_hero->field_11c = 0;
         }
     }

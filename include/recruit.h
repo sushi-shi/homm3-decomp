@@ -85,6 +85,8 @@ struct SUnnamed6aacb0 {
     unsigned short field_5a;
     char pad_5c[8];
     unsigned short field_64;
+    char pad_66[0x36];
+    unsigned short playerColors[8];  // +0x9c, adventure flag output colors
 };
 extern SUnnamed6aacb0* gUnnamed6aacb0;
 

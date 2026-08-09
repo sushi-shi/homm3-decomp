@@ -106,6 +106,7 @@ public:
     virtual void _vslot0() = 0;
     virtual void _vslot1(int arg0, int arg1) = 0;
     virtual int _vslot2() = 0;
+    unsigned char field_04;  // CompleteDraw's early message-pump gate
 };
 struct SUnnamed69d808 {
     char pad_00[0xf0];

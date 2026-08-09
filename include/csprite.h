@@ -5,6 +5,7 @@
 #ifndef HOMM3_CSPRITE_H
 #define HOMM3_CSPRITE_H
 
+#include "bitmap16.h"
 #include "csequence.h"
 #include "resource.h"
 
@@ -59,6 +60,79 @@ public:
     void DrawPointer(int framenum, unsigned short* dst, int dx, int dy,
                      int dw, int dh, int dpitch, unsigned char hflip);
     void DrawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
+    void DrawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
+                  unsigned short* dst, int dx, int dy, int dw, int dh,
+                  int dpitch, unsigned char hflip);
+    // Header wrapper (DC CSprite.h:426): retail advmgr inlines this view,
+    // then calls the raw-map overload above.
+    void DrawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
+                  Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
+    {
+        DrawHero(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
+                 dst->Width, dst->Height, dst->Pitch, hflip);
+    }
+    void DrawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw,
+                        int sh, unsigned short* dst, int dx, int dy, int dw,
+                        int dh, int dpitch, unsigned char hflip);
+    void DrawHeroShadow(int seqnum, int framenum, int sx, int sy, int sw,
+                        int sh, Bitmap16Bit* dst, int dx, int dy,
+                        unsigned char hflip)
+    {
+        DrawHeroShadow(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
+                       dst->Width, dst->Height, dst->Pitch, hflip);
+    }
+    void DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
+                          unsigned short* dst, int dx, int dy, int dw,
+                          int dh, int dpitch, unsigned char hflip);
+    void DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
+                          Bitmap16Bit* dst, int dx, int dy,
+                          unsigned char hflip)
+    {
+        DrawAdvObjShadow(framenum, sx, sy, sw, sh, dst->map, dx, dy,
+                         dst->Width, dst->Height, dst->Pitch, hflip);
+    }
+    void DrawAdvObj(int framenum, int sx, int sy, int sw, int sh,
+                    unsigned short* dst, int dx, int dy, int dw, int dh,
+                    int dpitch, unsigned char hflip);
+    void DrawAdvObj(int framenum, int sx, int sy, int sw, int sh,
+                    Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
+    {
+        DrawAdvObj(framenum, sx, sy, sw, sh, dst->map, dx, dy, dst->Width,
+                   dst->Height, dst->Pitch, hflip);
+    }
+    void DrawAdvObjWithFlag(int framenum, int sx, int sy, int sw, int sh,
+                            unsigned short* dst, int dx, int dy, int dw,
+                            int dh, int dpitch, unsigned short outcolor,
+                            unsigned char hflip);
+    void DrawAdvObjWithFlag(int framenum, int sx, int sy, int sw, int sh,
+                            Bitmap16Bit* dst, int dx, int dy,
+                            unsigned short outcolor, unsigned char hflip)
+    {
+        DrawAdvObjWithFlag(framenum, sx, sy, sw, sh, dst->map, dx, dy,
+                           dst->Width, dst->Height, dst->Pitch, outcolor,
+                           hflip);
+    }
+    void DrawTile(int framenum, int sx, int sy, int sw, int sh,
+                  unsigned short* dst, int dx, int dy, int dw, int dh,
+                  int dpitch, unsigned char hflip, unsigned char vflip);
+    void DrawTile(int framenum, int sx, int sy, int sw, int sh,
+                  Bitmap16Bit* dst, int dx, int dy, unsigned char hflip,
+                  unsigned char vflip)
+    {
+        DrawTile(framenum, sx, sy, sw, sh, dst->map, dx, dy, dst->Width,
+                 dst->Height, dst->Pitch, hflip, vflip);
+    }
+    void DrawShroudTile(int framenum, int sx, int sy, int sw, int sh,
+                        unsigned short* dst, int dx, int dy, int dw, int dh,
+                        int dpitch, unsigned char hflip,
+                        unsigned char vflip);
+    void DrawShroudTile(int framenum, int sx, int sy, int sw, int sh,
+                        Bitmap16Bit* dst, int dx, int dy,
+                        unsigned char hflip, unsigned char vflip)
+    {
+        DrawShroudTile(framenum, sx, sy, sw, sh, dst->map, dx, dy,
+                       dst->Width, dst->Height, dst->Pitch, hflip, vflip);
+    }
 };
 
 // --- globals ---

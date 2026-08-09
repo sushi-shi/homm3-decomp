@@ -298,6 +298,8 @@ public:
     // 0x4fce20, claimed (still @stub) in src/mapcell.cpp. Declared here
     // because findpath's CalcTerrainCost calls it with the cell in ECX.
     TAdventureObjectType get_special_terrain() const;
+    TAdventureObjectType get_map_object();
+    unsigned char cell_is_trigger();
 };
 #pragma pack(pop)
 

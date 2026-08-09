@@ -28,6 +28,8 @@ public:
     NewmapCell* cellData;
     int Size;
     unsigned char HasTwoLevels;
+
+    NewmapCell* cell(int x, int y, int z);
 };
 
 class town;
@@ -60,6 +62,16 @@ public:
     char pad_02[0x3e];
 };
 SIZE(mine, 0x40);
+
+// Retail's garrison pool element. GetFlaggedObjectOwner reads the first byte
+// as a signed owner and indexes records with a 0x40 stride; the remaining
+// bytes stay opaque.
+class garrison {
+public:
+    char playerOwner;
+    char pad_01[0x3f];
+};
+SIZE(garrison, 0x40);
 
 class generator {
 public:
@@ -340,10 +352,7 @@ public:
     // +0x4e3bc / +0x4e3c0 pair with a 40-byte one.
     std::vector<mine> mines;             // +0x4e388
     std::vector<generator> generators;   // +0x4e398
-    // The garrison pool. Its element type is unmodelled - the DC record
-    // is 64 bytes but no retail body in this tree reads a field yet, so
-    // the vector stays raw bytes rather than guess a stride.
-    char garrisons[0x10];                // +0x4e3a8
+    std::vector<garrison> garrisons;      // +0x4e3a8
     std::vector<boat> boats;             // +0x4e3b8
     char pad_4e3c8[0x21];
     // +0x4e3e9, one signed byte of per-player visit bits per obelisk;
