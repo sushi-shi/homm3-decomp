@@ -697,6 +697,13 @@ public:
     // retail-sensitive game member population in the other compilands.
     void ConvertObject(NewmapCell* tempCell);
 #endif
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    // Retail-only 0x49c720. SwapHeroes proves this three-argument member
+    // queues a hero-state record; no surviving name covers it, so keep the
+    // declaration ordinal and local to town.obj.
+    void GameFn_0049C720(hero* who, signed char owner,
+                         unsigned char state);
+#endif
 #if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_HIRE_VIEW)
     // 0x4c86a0. town::hire passes the player id and consumed two-slot
     // recruit index; hero::hire uses the same closeout call. The body

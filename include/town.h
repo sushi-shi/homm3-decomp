@@ -356,6 +356,8 @@ public:
     void View(int bAlreadyFaded);
     // 0x5c12e0. Charges and places one of the player's tavern offers.
     void hire(hero* new_hero, long player_id);
+    // 0x5be450. Exchanges the garrison and visiting heroes.
+    void SwapHeroes();
 #endif
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.

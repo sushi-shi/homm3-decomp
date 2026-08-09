@@ -8,7 +8,8 @@ enum eRS_Messages {
     RS_CLAIM_GENERATOR = 0x41e,
     RS_CLAIM_GARRISON = 0x41f,
     RS_CLAIM_SHIPYARD = 0x420,
-    RS_BUILD_BOAT = 0x421
+    RS_BUILD_BOAT = 0x421,
+    RS_HIDE_HERO = 0x426
 };
 
 class CNetMsg {
@@ -19,6 +20,9 @@ public:
     unsigned long size;
     int field_10;
 
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    CNetMsg() {}
+#endif
     CNetMsg(int new_sub_type, unsigned long new_size)
         : field_00(-1), field_04(0), subType(new_sub_type),
           size(new_size), field_10(0) {}
@@ -26,6 +30,9 @@ public:
 
 class CMapChange : public CNetMsg {
 public:
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    CMapChange() {}
+#endif
     CMapChange(eRS_Messages id, unsigned long messageSize)
         : CNetMsg(id, messageSize) {}
 };
@@ -69,5 +76,23 @@ public:
         : CMapChange(RS_BUILD_BOAT, sizeof(CMCBuildBoat)),
           point(location), playerPos(player) {}
 };
+
+#ifdef HOMM3_TOWN_OBJ_DECLS
+class CMCHideHero : public CMapChange {
+public:
+    int heroId;
+
+    CMCHideHero(int id)
+        : CMapChange()
+    {
+        heroId = id;
+        subType = RS_HIDE_HERO;
+        field_00 = -1;
+        size = sizeof(CMCHideHero);
+        field_04 = 0;
+        field_10 = 0;
+    }
+};
+#endif
 
 #endif  // HOMM3_NETMSG_H
