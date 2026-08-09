@@ -159,21 +159,6 @@ enum ECombatMineType {
     COMBAT_MINE_TYPE_6 = 6
 };
 
-// Dreamcast CodeView's wall-target domain. DamageWall independently proves
-// the complete 0..7 range with its eight-entry retail jump table.
-enum TWallTargetId {
-    eTargetUpperTower = 0,
-    eTargetUpperWall = 1,
-    eTargetMidUpperWall = 2,
-    eTargetGate = 3,
-    eTargetMidLowerWall = 4,
-    eTargetLowerWall = 5,
-    eTargetLowerTower = 6,
-    eTargetMainBuilding = 7,
-    kNumWallTargets = 8,
-    const_no_wall_target = -1
-};
-
 // The shape record an obstacle's TObstacle points at (TObstacle+0x4).
 // Byte-proven by PlaceObstacle (0x4669b0) and RemoveObstacle
 // (0x466b30), which both read the unsigned count at +0x6 and then walk
@@ -579,9 +564,6 @@ public:
                                    const army* defender);
     unsigned char InLineOfSight(int sourceIndex, int destIndex);
     void UpdateArmyLuckAndMorale();
-    unsigned char place_obstacle(int obstacle_id);
-    int PlaceLargeObstacle(unsigned terrainMask, unsigned magicTerrainMask);
-    void PlaceAllObstacles();
     void InitializeArchers();
     void FreeIcons();
     void Close();
@@ -661,7 +643,6 @@ public:
                                     long target_hits);        // 0x422440
     unsigned char can_cast_spells(long side,
                                   unsigned char hero_spell);  // 0x41f890
-    void LearnSpellFromEagleEye(int side);                    // 0x469fe0
     void find_move_order(std::vector<army*>* result);         // 0x41f140
     long get_attack_change(const army* current_army, const army* enemy,
                            const type_AI_combat_parameters* data);

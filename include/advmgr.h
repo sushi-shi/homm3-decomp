@@ -506,7 +506,6 @@ public:
                       unsigned char forceDraw,
                       unsigned char updateBottomView);
     void CompleteDraw(unsigned char forceDraw);
-    void UpdateScreen(int allowIntermediateMouse, int forceDraw);
     void DrawAdventureMapGems();
     void DrawGround(int srcX, int srcY, int z, int destX, int destY);
     void DrawRiver(int srcX, int srcY, int z, int destX, int destY);
@@ -560,7 +559,6 @@ public:
     void ShowRoute(int updateScreen, int reseed, int changeButton);
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
     e_looping_sound_id GetSoundId(int x, int y, int z);
-    int MoreTreesNear(type_point point);
     type_point get_map_center() const;
 #ifdef HOMM3_TOWN_OBJ_DECLS
     // 0x417b20. town::View is the only admitted caller needing this broad

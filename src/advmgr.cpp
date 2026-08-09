@@ -216,8 +216,6 @@ int advManager::InMapArea(int x, int y)
 // 10/10-bit type_point and stores it through [ebp+8]. Moved here from
 // the DC header block to keep the file in retail link order.
 // E:\gamedcs\AdvMgr.h:1245
-#endif  // @carcass
-
 VA(0x00407b10, 0x6F)  // anchor-callee, dc 0x1f000
 type_point advManager::get_map_center() const
 {
@@ -1694,8 +1692,6 @@ int advManager::ProcessSearch(int x, int y, int z)
 }
 
 // E:\gamedcs\advmgr.cpp:4983
-#endif  // @carcass
-
 VA(0x0040f270, 0x7D)  // anchor-global, dc 0x10520
 void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
 {
