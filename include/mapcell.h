@@ -300,6 +300,14 @@ public:
     TAdventureObjectType get_special_terrain() const;
     TAdventureObjectType get_map_object();
     unsigned char cell_is_trigger();
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    unsigned char PlayerKnowsCell(short player) const
+    {
+        if (player < 0 || player >= 8)
+            return 0;
+        return ((extraInfo >> 5) & (1UL << player)) != 0;
+    }
+#endif
 #ifdef HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
     NewmapCell* get_trigger_cell();
 #endif

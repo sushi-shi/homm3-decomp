@@ -260,6 +260,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — two army/creature-bank text builders admitted as
+  `QuickInfo` prerequisites.** The retail-only 893-byte army describer at
+  0x40abe0 consolidates repeated stacks, emits either a compact-prefix full
+  list or an approximate size/name pair, and guards variable creature names;
+  its operation set and caller role support the provisional
+  `get_army_help_text` name even though no standalone Dreamcast copy survives.
+  It enters comparison at 54.9494%. The 636-byte, DC-named
+  `get_creature_bank_help_text` copies the 400-byte trait record's Dinkumware
+  string name, checks the short-width player-visit bits, distinguishes unknown,
+  emptied and guarded banks, and chooses full versus parenthesized approximate
+  army text. Restoring the inline visit helper and recomputing the 108-byte
+  bank record only in the selected branch raises it from its uncompiled 0% row
+  to 85.3542%. Retail instructions prove the 400/108-byte strides, the game
+  vector at +0x4e3d8, every bit mask and all text-record offsets; Dreamcast
+  CodeView supplies surviving names and the bank/helper types only. The still
+  ambiguous 0x40d670 sibling remains unclaimed. No external implementation
+  body was used, and the generated baseline remains build-owned.
+
 - **2026-08-09 — army morale/luck descriptions restore bounded creature-name
   selection.** Retail checks variable creature ids against the inclusive
   0..150 range before reading the plural-name field and otherwise supplies the
