@@ -1076,16 +1076,32 @@ unsigned char combatManager::ShotIsThroughWall(const army* shooter, int sourceIn
     return InLineOfSight(sourceIndex, destIndex) == 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:3531
 VA(0x00467600, 0x23A)  // anchor-global, dc 0x61284
 unsigned char combatManager::ShotIsNotOptimal(const army* attacker, const army* defender)
 {
-    // @stub
-}
+    int side = attacker->hypnotizeFlag ? 1 - attacker->combatSide
+                                       : attacker->combatSide;
+    if (heroes[side]
+            && (heroes[side]->IsWieldingArtifact(ARTIFACT_GOLDEN_BOW)
+                || heroes[side]->IsWieldingArtifact(
+                    ARTIFACT_BOW_OF_THE_SHARPSHOOTER)))
+        return 0;
+    if (attacker->creatureType == CREATURE_ARROW_TOWER
+            || attacker->creatureType == CREATURE_SHARPSHOOTER)
+        return 0;
 
-#endif  // @carcass
+    int source = attacker->gridIndex;
+    int dest = defender->gridIndex;
+    if (attacker->creatureId & 1)
+        source = attacker->get_second_grid_index();
+    if (get_distance(source, dest) <= 10)
+        return 0;
+    if (!(defender->creatureId & 1))
+        return 1;
+    dest = defender->get_second_grid_index();
+    return get_distance(source, dest) > 10;
+}
 
 // E:\gamedcs\cmbtmgr.cpp:3566
 VA(0x00467840, 0x1B6)  // anchor-global, dc 0x61318
