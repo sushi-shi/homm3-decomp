@@ -15,7 +15,17 @@ class army;
 // gaps stay padded until consumers prove them.
 class hexcell {
 public:
-    char pad_00[0x10];
+    // Screen-space bounds initialized by combatManager::GenerateMap.
+    // Names remain ordinal until drawing/hit-test readers establish the
+    // individual edge roles; all eight SHORT widths are retail-proven.
+    short field_00;
+    short field_02;
+    short field_04;
+    short field_06;
+    short field_08;
+    short field_0a;
+    short field_0c;
+    short field_0e;
     int field_10;
     int field_14;
     // Signed: get_army (0x4e7170) movsx-loads the pair and treats a

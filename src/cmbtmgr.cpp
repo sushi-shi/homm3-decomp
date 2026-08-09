@@ -213,14 +213,46 @@ void combatManager::UpdateArmyGroup(int whichSide)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:1653
+// RECONSTRUCTED 2026-08-09 from retail's 11x17 cell initializer. All eight
+// short coordinate fields, five empty sentinels and three cleared state
+// fields are written in retail order. Residual (58.8421%): the five-block
+// loop flow agrees, but retail spills y and three row expressions while this
+// compile retains/strength-reduces y. Cached/repeated GetCell spellings,
+// function/block y lifetimes and the nested GetHexIndex boundary converge.
 VA(0x004642d0, 0xDC)  // linkorder, dc 0x5eca8
 void combatManager::GenerateMap()
 {
-    // @stub
+    int y;
+    for (y = 0; y < 11; y++) {
+        int upper_offset = RowIsOdd(y) ? 22 : 44;
+        int lower_offset = RowIsOdd(y) ? 22 : 0;
+
+        for (int x = 0; x < 17; x++) {
+            hexcell* cell = GetCell(x, y);
+            cell->field_06 = static_cast<short>(y * 42 + 86);
+            cell->armySide = -1;
+            cell->armySlot = -1;
+            cell->field_1a = -1;
+            cell->field_14 = -1;
+            cell->field_4d = -1;
+            cell->field_00 = static_cast<short>(
+                x * 44 + upper_offset + 14);
+            cell->field_02 = static_cast<short>(y * 42 + 128);
+            cell->field_0a = static_cast<short>(y * 42 + 128);
+            cell->field_04 = static_cast<short>(
+                x * 44 + lower_offset + 14);
+            cell->field_0c = static_cast<short>(y * 42 + 138);
+            cell->field_08 = static_cast<short>(
+                x * 44 + lower_offset + 14 + 44);
+            cell->field_10 = 0;
+            cell->field_1c = 0;
+            cell->field_4c = 0;
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1688
 VA(0x004643b0, 0x317)  // anchor-callee, dc 0x5ed68
