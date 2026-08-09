@@ -763,17 +763,23 @@ void update_artifact_slot(long id, TArtifact artifact)
 // SoD combination-artifact bookkeeping that the DC roster has no rows
 // for at all (the 0x693898 bitset walk).
 VA(0x004daf90, 0x23A)  // anchor-caller, dc 0xcd6e8
-void THeroScreenWindow::update_slot(TArtifactSlot slot)
+void THeroScreenWindow::update_slot(long slot)
 {
     // @stub
 }
+
+#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:2383
 VA(0x004db1d0, 0x17)  // anchor-callee (update_slot), dc 0xcd740
 void THeroScreenWindow::update_all_slots()
 {
-    // @stub
+    for (long slot = ARTIFACT_SLOT_FIRST;
+         slot < ARTIFACT_SLOT_COUNT; slot++)
+        update_slot(slot);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:2393
 // No retail row: inlined into UpdateBackpack below.

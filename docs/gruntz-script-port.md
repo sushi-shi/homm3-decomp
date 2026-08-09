@@ -436,6 +436,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `THeroScreenWindow::update_all_slots` reconstructed
+  byte-exact (23 bytes).** Retail retains `this` in EDI and walks a long
+  ESI index from zero through all nineteen equipped positions, calling the
+  570-byte per-slot updater once per iteration. Dreamcast supplies both
+  method names and their caller edge, but its older artifact-slot enum has
+  only eighteen positions; the retail body and the independently proven
+  nineteen-record hero layout therefore control the bound. The narrow
+  window declaration follows the existing `hero::remove_artifact(long)`
+  precedent and carries only ordinal first/count constants, avoiding a
+  fabricated transfer of the smaller DC enum or any unproved window layout.
+  This is the HoMM2/Gruntz minimal-view and named-bound method. No external
+  implementation body or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — all three retail `ExtraInfoUnion` accessors reconstructed
   byte-exact (13, 32 and 28 bytes).** `get_black_box` forwards the const
   union pointer to the central adventure manager. `get_creature_bank` and
