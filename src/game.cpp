@@ -446,11 +446,39 @@ int game::LoadGarrisonPool(void* infile, int saveVersion)
 }
 
 // E:\gamedcs\game.cpp:1072
+#endif  // @carcass
+
 VA(0x004b98c0, 0x139)  // anchor-global (ClaimGarrison vector) + write-slot, dc 0xa4548
-int game::SaveGarrisonPool(void* outfile)
+int game::SaveGarrisonPool(TAbstractFile* outfile)
 {
-    // @stub
+    unsigned char count = static_cast<unsigned char>(garrisons.size());
+    if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    for (unsigned int i = 0; i < garrisons.size(); ++i) {
+        unsigned char owner = garrisons[i].playerOwner;
+        if (outfile->Write(&owner, sizeof(owner)) < sizeof(owner))
+            return -1;
+
+        garrisons[i].garrisonArmy.save(outfile);
+
+        count = garrisons[i].mapY;
+        if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+            return -1;
+        count = garrisons[i].mapZ;
+        if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+            return -1;
+        count = garrisons[i].pad_3f;
+        if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+            return -1;
+
+        unsigned char last = garrisons[i].mapX;
+        outfile->Write(&last, sizeof(last));
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1114
 VA(0x004b9a00, 0x239)  // anchor-callee (type_obscuring_object::load), dc 0xa46e8
