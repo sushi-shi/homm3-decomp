@@ -355,6 +355,7 @@ cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110	75.0110	75.
 cmbtmgr	?CombatIsOver@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x65830
 cmbtmgr	?CombatSystemOptions@combatManager@@QAEXXZ	99.8919	99.8919	99.8919	0x686b0
 cmbtmgr	?DamageWall@combatManager@@QAEXW4TWallTargetId@@H@Z	100.0000	100.0000	100.0000	0x65990
+cmbtmgr	?DetermineCombatTerrain@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x643b0
 cmbtmgr	?GenerateMap@combatManager@@QAEXXZ	58.8421	58.8421	58.8421	0x642d0
 cmbtmgr	?GetBackgroundName@combatManager@@QAEPBDXZ	100.0000	100.0000	100.0000	0x646d0
 cmbtmgr	?GetGridIndex@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x647a0
@@ -387,7 +388,6 @@ cmbtmgr	?should_lower_door@combatManager@@QAEEPAVarmy@@J@Z	100.0000	100.0000	100
 cmbtmgr	combatManager_CheckApplyBadMorale	0.0000	0.0000	0.0000	0x64b40
 cmbtmgr	combatManager_CheckApplyGoodMorale	0.0000	0.0000	0.0000	0x64920
 cmbtmgr	combatManager_Close	0.0000	0.0000	0.0000	0x63260
-cmbtmgr	combatManager_DetermineCombatTerrain	0.0000	0.0000	0.0000	0x643b0
 cmbtmgr	combatManager_FreeIcons	0.0000	0.0000	0.0000	0x63500
 cmbtmgr	combatManager_GetMissileStartingPosition	0.0000	0.0000	0.0000	0x69880
 cmbtmgr	combatManager_InLineOfSight	0.0000	0.0000	0.0000	0x67840

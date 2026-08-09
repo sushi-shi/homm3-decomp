@@ -36,6 +36,7 @@
 //     moat-damage helper) - retail bodies with no counterpart anywhere
 //     in the DC cmbtmgr.obj roster, and all but 0x69e50 are called
 //     only from outside this span. Naming them would be invention.
+#define HOMM3_CMBTMGR_OBJ_DECLS
 #include <stdlib.h>
 
 #include <va.h>
@@ -49,6 +50,7 @@
 #include "kbwin.h"  // bVideoPaused storage, the network-game gate here
 #include "misc.h"   // TPickANumber, for PlaceAllObstacles
 #include "prefs.h"  // the local quick-combat preference
+#include "mapcell.h"
 #include "resourcemanager.h"
 #include "soundmgr.h" // SAMPLE2 / LoadPlaySample / WaitEndSample
 #include "remote.h"
@@ -317,18 +319,76 @@ void combatManager::GenerateMap()
     }
 }
 
-#if 0  // @carcass
-
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:1688
 VA(0x004643b0, 0x317)  // anchor-callee, dc 0x5ed68
 void combatManager::DetermineCombatTerrain()
 {
-    // @stub
-}
+    field_53c0 = -1;
+    field_53c6 = 0;
+    field_53c4 = 0;
 
-#endif  // @carcass
+    int terrain;
+    if (defendingTown) {
+        terrain = defendingTown->GetNativeTerrain();
+    } else if ((heroes[0] && (heroes[0]->flags & 0x40000))
+            || (heroes[1] && (heroes[1]->flags & 0x40000))
+            || (combatCell->get_map_object() == SHIPWRECK
+                && combatCell->is_trigger)
+            || (combatCell->get_map_object() == DERELICT_SHIP
+                && combatCell->is_trigger)) {
+        terrain = eTerrainWater;
+        field_53c6 = 1;
+    } else if (mapPoint.z > 0) {
+        terrain = COMBAT_TERRAIN_SUBTERRANEAN;
+    } else if (combatCell->get_map_object() == MINE
+            && combatCell->is_trigger
+            && (gpGame->mines[combatCell->get_map_extraInfo()].type
+                    == COMBAT_MINE_TYPE_6
+                || gpGame->mines[combatCell->get_map_extraInfo()].type
+                    == COMBAT_MINE_TYPE_4
+                || gpGame->mines[combatCell->get_map_extraInfo()].pad_02[0])) {
+        terrain = COMBAT_TERRAIN_SUBTERRANEAN;
+    } else if (combatCell->flags_00_11 & 0x200) {
+        field_53c0 = 0;
+        terrain = COMBAT_TERRAIN_SAND;
+    } else {
+        terrain = combatCell->GroundSet;
+    }
+    terrainType = terrain;
+
+    switch (combatCell->get_special_terrain()) {
+    case MAGIC_PLAINS:
+        field_53c0 = 1;
+        break;
+    case CURSED_GROUND:
+        field_53c0 = 2;
+        break;
+    case HOLY_GROUND:
+        field_53c0 = 3;
+        break;
+    case EVIL_FOG:
+        field_53c0 = 4;
+        break;
+    case CLOVER_FIELD_2:
+        field_53c0 = 5;
+        break;
+    case LUCID_POOLS:
+        field_53c0 = 6;
+        break;
+    case FIERY_FIELDS:
+        field_53c0 = 7;
+        break;
+    case ROCKLANDS:
+        field_53c0 = 8;
+        break;
+    case MAGIC_CLOUDS:
+        field_53c0 = 9;
+        break;
+    case GARRISON:
+        field_53c4 = combatCell->objectIndex == 1;
+        break;
+    }
+}
 
 // E:\gamedcs\cmbtmgr.cpp:1786
 // EXACT 2026-08-09 from retail's ordered background-selection
@@ -342,8 +402,7 @@ const char* combatManager::GetBackgroundName()
 {
     const char* background;
     if (field_132f4 > 0) {
-        background = gTownCombatBackgrounds[
-            static_cast<signed char>(field_53c8[4])];
+        background = gTownCombatBackgrounds[defendingTown->type];
     } else {
         int magic_terrain = field_53c0;
         if (magic_terrain != -1 && magic_terrain != 0) {
@@ -924,7 +983,7 @@ void combatManager::LowerDoor()
 VA(0x004672e0, 0x177)  // anchor-global, dc 0x61034
 void combatManager::RaiseDoor()
 {
-    if (!field_53c8 || drawbridgeState != DRAWBRIDGE_DOWN)
+    if (!defendingTown || drawbridgeState != DRAWBRIDGE_DOWN)
         return;
     if (cells[COMBAT_HEX_GATE].armySide >= 0
             || cells[COMBAT_HEX_GATE].field_1c)
@@ -932,7 +991,7 @@ void combatManager::RaiseDoor()
     if (cells[COMBAT_HEX_GATE_MOAT].armySide >= 0
             || cells[COMBAT_HEX_GATE_MOAT].field_1c)
         return;
-    if (field_53c8[4] == TOWN_FORTRESS
+    if (defendingTown->type == TOWN_FORTRESS
             && (cells[COMBAT_HEX_OUTER_MOAT].armySide >= 0
                 || cells[COMBAT_HEX_OUTER_MOAT].field_1c))
         return;
@@ -1269,7 +1328,7 @@ unsigned char combatManager::IsInMoat(int hex, int* index)
                 return 1;
             }
         }
-        if (field_53c8[4] == TOWN_FORTRESS) {
+        if (defendingTown->type == TOWN_FORTRESS) {
             for (int row = 0; row < 11; row++) {
                 if (gOuterMoatColumns[row] == hex
                         && (drawbridgeState == DRAWBRIDGE_UP
@@ -1422,7 +1481,7 @@ void combatManager::CalculateGainedExperience(int side, int* experience_gained)
         total += 500;
     if (gCombatFlag6985a3 || gCombatFlag697744)
         total -= 500;
-    if (field_53c8 && side == 0)
+    if (defendingTown && side == 0)
         total += 500;
     if (heroes[side])
         *experience_gained = static_cast<long>(
