@@ -11,6 +11,7 @@
 #include "hexcell.h"
 #include "struct.h"
 
+class Bitmap816;
 class CSprite;
 class hero;
 class NewmapCell;
@@ -246,6 +247,28 @@ public:
         char pad_10[0x8];
     };
 
+    // Dinkumware's four-word vector representation. FreeIcons exposes the
+    // allocator word as well as first/last/end-capacity and inlines clear's
+    // move range before calling the template's destroy-range helper.
+    struct TObstacleVector {
+        char allocator[4];
+        TObstacle* begin;
+        TObstacle* end;
+        TObstacle* capacity;
+
+        void Destroy(TObstacle* first, TObstacle* last);
+        void erase(TObstacle* first, TObstacle* last)
+        {
+            TObstacle* vectorEnd = end;
+            TObstacle* destination = first;
+            TObstacle* source = last;
+            for (; source != vectorEnd; ++source, ++destination)
+                *destination = *source;
+            Destroy(destination, end);
+            end = destination;
+        }
+    };
+
     // One of the three defending-town archer positions. InitializeArchers
     // clears three contiguous 0x24-byte rows at +0x13d78 and fills these
     // members in this order; DamageWall later uses armySlot from each row
@@ -354,7 +377,10 @@ public:
     // chosen target turns out to be on its OWN side. Name awaits a
     // writer - no roster or string reaches the pair.
     unsigned char field_53dc[2];      // +0x53dc
-    char pad_53de[0x82];
+    char pad_53de[0x26];
+    CSprite* creatureSprites[2];       // +0x5404
+    CSprite* heroFlagSprites[2];       // +0x540c
+    char pad_5414[0x4c];
     // Per-side spells observed during combat and eligible for Eagle Eye.
     // LearnSpellFromEagleEye proves two adjacent 16-byte Dinkumware sets:
     // `(side + 0x546) << 4` addresses the selected set at +0x5460.
@@ -435,15 +461,13 @@ public:
     // count at a two-for-three ratio if the destination group is full.
     int raisedCreatureCount;          // +0x13d4c
     int raisedCreatureType;           // +0x13d50
-    char pad_13d54[0x8];
+    Bitmap816* combatGridBitmap;      // +0x13d54
     // The placed-obstacle array, as the raw first/last pair retail
     // tests: RemoveObstacle (0x466b30) null-checks the FIRST pointer,
     // then divides last-first by sizeof(TObstacle) for the bound. The
     // DC roster's std::vector<combatManager::TObstacle> COMDATs say
     // this really is a vector; only its first two members are proven.
-    TObstacle* obstacles_begin;       // +0x13d5c
-    TObstacle* obstacles_end;         // +0x13d60
-    char pad_13d64[0x4];
+    TObstacleVector obstacles;        // +0x13d58
     // Placement-phase latch: FindPath/ValidPath forward it into
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
@@ -471,7 +495,8 @@ public:
     // tower defenders. DamageWall reads one selected slot when the
     // corresponding target falls and marks that stack removed.
     unsigned char field_13de4;        // +0x13de4
-    char pad_13de5[0x17b];
+    char pad_13de5[0x13];
+    Bitmap816* combatIcons[18][5];    // +0x13df8
     // Per-wall-segment hit points, indexed by TWallTargetId. Sliced
     // 2026-08-08 by should_stay_in_castle (0x4213f0), which reads
     // `[this + 4*id + 0x13f60]` for each of the five wall ids and
@@ -493,6 +518,8 @@ public:
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
     type_point mapPoint;              // +0x13ff0
+    Bitmap816* combatCellGridBitmap;   // +0x13ff4
+    Bitmap816* combatShadowBitmap;     // +0x13ff8
 
     // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); no retail
     // body - /Ob2 folds it into should_stay_in_castle.
@@ -530,6 +557,7 @@ public:
     unsigned char place_obstacle(int obstacle_id);
     void PlaceAllObstacles();
     void InitializeArchers();
+    void FreeIcons();
     unsigned char HexIsBlocked(int index);
     unsigned char IsInMoat(int hex, int* index);
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
@@ -559,7 +587,7 @@ public:
     // NOT reproduce that (VC6 CSEs the second load away either way) -
     // it is kept because the DC roster attests the accessor, not as a
     // matching lever.
-    TObstacle* GetObstacle(int index) { return &obstacles_begin[index]; }
+    TObstacle* GetObstacle(int index) { return &obstacles.begin[index]; }
     // DC header inlines (CmbtMgr.h:1506/1537). Neither has a retail
     // out-of-line body; GenerateMap folds both into its 11x17 walk.
     unsigned char RowIsOdd(int y) const
@@ -596,6 +624,7 @@ public:
     // header inlines army::Is / get_current_army / the adventure-menu
     // caller). Its own claim waits for the TU that owns 0x477e10.
     void TurnOffHighlighter(unsigned char restore);           // 0x477e10
+    CSprite* LoadCreatureSprite(int creatureType);             // 0x5a92f0
     // Both live in ai.cpp (DC ai.obj) and are claimed there.
     long get_total_combat_value(long side, long lowest_attack,
                                 long lowest_defense,
