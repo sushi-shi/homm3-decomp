@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `hero::GiveResource` reconstructed byte-exact
+  (178 bytes).** Retail accepts resource ids 0..6 with the inclusive
+  `cmp 6 / jg` form, adjusts the owning player's proven seven-dword resource
+  row and clamps negative results to zero. It refreshes the resource display
+  only for `gpCurrentPlayer` while the adventure manager is active, then
+  retains the trailing `game::IsHuman(owner)` call whose result is discarded.
+  The single newly consumed window declaration is exposed only in hero.obj's
+  narrow view. Dreamcast CodeView supplies the identity and parameter names;
+  the player indexing, clamp, manager predicate, display call and trailing
+  call are all retail-byte-proven. No external implementation body was used.
+  Whole-linked fuzzy coverage rises from 45.49% to 45.53%, exact linked
+  functions from 616 to 617, and executable fuzzy coverage from 8.63% to
+  8.64%.
+
 - **2026-08-09 — `hero::find_summonable_boat` reconstructed byte-exact
   (170 bytes).** Retail first asks the already-exact `game::GetHeroBoat` for
   the hero's existing unoccupied vessel, then scans the proven 40-byte boat
