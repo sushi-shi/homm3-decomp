@@ -95,6 +95,21 @@ enum ECombatGateHex {
     COMBAT_HEX_GATE = 0x60
 };
 
+// Dreamcast CodeView's wall-target domain. DamageWall independently proves
+// the complete 0..7 range with its eight-entry retail jump table.
+enum TWallTargetId {
+    eTargetUpperTower = 0,
+    eTargetUpperWall = 1,
+    eTargetMidUpperWall = 2,
+    eTargetGate = 3,
+    eTargetMidLowerWall = 4,
+    eTargetLowerWall = 5,
+    eTargetLowerTower = 6,
+    eTargetMainBuilding = 7,
+    kNumWallTargets = 8,
+    const_no_wall_target = -1
+};
+
 // The shape record an obstacle's TObstacle points at (TObstacle+0x4).
 // Byte-proven by PlaceObstacle (0x4669b0) and RemoveObstacle
 // (0x466b30), which both read the unsigned count at +0x6 and then walk
@@ -375,6 +390,14 @@ public:
     // the descending sort into an ascending one. move_toward (0x41f580)
     // is the second reader. Byte width is proven by the `mov al, [ecx +
     // 0x13de4] / test al, al` pair. Name provisional.
+    // Army-slot indexes for the main building, lower tower and upper
+    // tower defenders. DamageWall reads one selected slot when the
+    // corresponding target falls and marks that stack removed.
+    int field_13d98;                  // +0x13d98
+    char pad_13d9c[0x20];
+    int field_13dbc;                  // +0x13dbc
+    char pad_13dc0[0x20];
+    int field_13de0;                  // +0x13de0
     unsigned char field_13de4;        // +0x13de4
     char pad_13de5[0x17b];
     // Per-wall-segment hit points, indexed by TWallTargetId. Sliced
@@ -407,6 +430,7 @@ public:
     void SetupAdjacencyArray();
     void UpdateArmyGroup(int whichSide);
     void GenerateMap();
+    void DamageWall(TWallTargetId target_wall, int damage);
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();
