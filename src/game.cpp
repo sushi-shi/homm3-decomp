@@ -8,7 +8,9 @@
 #include <ctype.h>
 #include <va.h>
 #define HOMM3_GAME_HERO_EXTRA_VIEW
+#define HOMM3_GAME_OBJ_DECLS
 #include "game.h"
+#undef HOMM3_GAME_OBJ_DECLS
 #undef HOMM3_GAME_HERO_EXTRA_VIEW
 #undef HOMM3_GAME_POINT_CTOR_VIEW
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
@@ -2025,6 +2027,75 @@ int game::Load(TAbstractFile* infile)
     return 0;
 }
 
+// E:\gamedcs\game.cpp:3311
+// PARTIAL: retail header/payload prefix through the eight player records.
+VA(0x004be3f0, 0xAA5)  // SavedGameHeader + write/pool callee sequence, dc 0xa8cd0
+int game::Save(TAbstractFile* outfile)
+{
+    SavedGameHeader saved;
+    saved.Reset();
+    if (saved.Save(outfile) < 0)
+        return -1;
+
+    char char_buffer = gUnnamed69950c;
+    outfile->Write(&char_buffer, sizeof(char_buffer));
+    outfile->Write(field_4e2b4, sizeof(field_4e2b4));
+    outfile->Write(field_4e224, sizeof(field_4e224));
+    outfile->Write(field_4e658, sizeof(field_4e658));
+
+    if (SaveRumours(outfile) < 0)
+        return -1;
+
+    char_buffer = field_1f680.size();
+    if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
+        sizeof(char_buffer)) {
+        return -1;
+    }
+    int eventBytes = char_buffer * sizeof(LoadEventRecord);
+    if (outfile->Write(field_1f680.begin(), eventBytes) < eventBytes)
+        return -1;
+
+    if (worldMap.Save(outfile, mapHeader.Size, mapHeader.HasTwoLayers) < 0)
+        return -1;
+    if (SaveSignPool(outfile) < 0)
+        return -1;
+    if (SaveMinePool(outfile) < 0)
+        return -1;
+
+    short short_buffer = generators.size();
+    if (outfile->Write(&short_buffer, sizeof(short_buffer)) <
+        sizeof(short_buffer)) {
+        return -1;
+    }
+    int i;
+    for (i = 0; i < short_buffer; ++i) {
+        if (!generators[i].save(outfile))
+            return -1;
+    }
+
+    if (SaveGarrisonPool(outfile) < 0)
+        return -1;
+    if (SaveBoatPool(outfile) < 0)
+        return -1;
+
+    char_buffer = field_4e3e8;
+    if (outfile->Write(&char_buffer, sizeof(char_buffer)) <
+        sizeof(char_buffer)) {
+        return -1;
+    }
+    if (outfile->Write(obeliskFlags, sizeof(obeliskFlags)) <
+        sizeof(obeliskFlags)) {
+        return -1;
+    }
+
+    for (i = 0; i < 8; ++i) {
+        if (players[i].save(outfile) < 0)
+            return -1;
+    }
+
+    return 0;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:3257
@@ -2055,16 +2126,8 @@ int compare_heroes(const void* arg1, const void* arg2)
     // @stub
 }
 
-// E:\gamedcs\game.cpp:3311
-// The exact mirror of game::Load: rel32 callees include generator::save,
-// playerData::save and all four claimed pool SAVERS (0x4b9270 /
-// 0x4b9580 / 0x4b98c0 / 0x4b9c40), plus SaveRumours and
-// SaveBlackMarkets above; same 'H3SVG' literal; `ret 4` = p=2.
-VA(0x004be3f0, 0xAA5)  // anchor-callee set (4 claimed pool savers) + 'H3SVG', dc 0xa8cd0
-int game::Save(void* outfile)
-{
-    // @stub
-}
+// game::Save is compiled above; the exact SavedGameHeader::Save serializer
+// at 0x4bc5d0 supersedes the old SaveBlackMarkets attribution.
 
 // E:\gamedcs\game.cpp:3667
 // ARITY: `ret 0x14` = five stack arguments + `this`, i.e. p=6, and this

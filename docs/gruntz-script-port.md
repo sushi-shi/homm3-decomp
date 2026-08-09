@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::Save` opens at 27.9354% with its retail prefix
+  through all eight player records.** Retail constructs and resets a
+  0x5a4-byte save header, calls the now byte-exact
+  `SavedGameHeader::Save`, then writes the versioned state bands, rumours,
+  event records, world map, four object pools,
+  generators, obelisk state, and player roster. The remainder of the
+  2,725-byte caller is explicitly left unreconstructed. Its four additional
+  declarations are visible only while compiling `game.obj`, preserving every
+  unrelated exact row despite VC6's member-population sensitivity. Linked
+  fuzzy coverage reaches 52.52% and executable coverage rises from 9.95% to
+  9.99%; the status writer migrates the legacy label by retail RVA. Retail call
+  targets, write widths, and receiver offsets supplied the implementation
+  evidence; no external implementation body was used.
+
 - **2026-08-09 — `SavedGameHeader::Save` replaces a false view and is
   admitted byte-exact (378 bytes).** The previous `game::SaveBlackMarkets`
   claim rested only on cross-build source order. Retail instead proves that
