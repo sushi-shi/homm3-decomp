@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::QuickInfo` object dispatch is structurally
+  complete at 55.8089%.** The last two explicit retail arms are restored.
+  Hero cells resolve the packed id through the inline `game::GetHero`, then
+  format the stored name and admitted hero-class description. Empty and
+  anchor cells construct a temporary string from either the indexed terrain
+  name or `get_special_terrain` object name, append the newly exposed +0x52c
+  text only when retail's `is_diggable` predicate succeeds, and copy the
+  result before destruction. A scoped zero-depth pin retains retail's
+  out-of-line string-construction boundary; measured one-level and fully
+  inlined variants scored lower and were withdrawn. These paths raise the
+  function from 54.0594% and linked fuzzy coverage from 47.98% to 48.02%,
+  preserving all 626 exact functions. Retail fixes the dispatch membership,
+  tables, offsets, calls and string lifetime; Dreamcast supplies semantic
+  names only. No external implementation body was used, and the baseline
+  remains full-build-owned.
+
 - **2026-08-09 — `advManager::QuickInfo` status details reach 54.0594%.**
   Pyramid, wagon, warrior-tomb, water-wheel and windmill cases now append the
   retail double-newline separator and select the admitted visited/unvisited

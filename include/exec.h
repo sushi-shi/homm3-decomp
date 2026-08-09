@@ -92,7 +92,9 @@ struct SUnnamedEntry6a5d5c {
     const char* splitCreatureRolloverFormat;
     const char* splitOtherRolloverText;
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    char pad_40c[0x178];
+    char pad_40c[0x120];
+    const char* quickInfoDiggableText;   // +0x52c
+    char pad_530[0x54];
     // Shared visited/unvisited labels: creature-bank and Tree of Knowledge
     // help paths independently select the same pair.
     const char* visitedObjectText;        // +0x584
