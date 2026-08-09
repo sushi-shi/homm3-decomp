@@ -270,6 +270,47 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   residual is VC6 folding retail's dead positive-count preheader. No external
   implementation material was used.
 
+- **2026-08-09 — `game::Load` extends from 26.3228% to 26.8395%, and its
+  state is canonical.** Retail's call sequence proves eight consecutive
+  `playerData::load(infile, saveVersion)` calls after the obelisk pool; the
+  loop is additive on its own. The temporary `HOMM3_GAME_LOAD_VIEW` is
+  retired: every byte-proven load field now belongs to the single canonical
+  `game` layout compiled by all translation units, while the existing member
+  offsets and match totals remain stable. No external implementation body was
+  used, and the generated match baseline is updated only by the full build.
+
+- **2026-08-09 — `game::CreateBoat` reconstructed to 99.9726%.** Retail
+  proves the inlined 64-entry boat-pool allocation, the local-only 0x421
+  map-change message and show-boat record, and every initialized boat field.
+  Dreamcast CodeView supplies the `CMCBuildBoat` and inline
+  `boat::obscure_cell` identities; the latter is also required for retail's
+  byte-to-long zero extension. VC6's retail store schedule requires the
+  source order `type`, `x`, `y`, `z`. All instructions and branches agree;
+  the remaining score delta consists only of four target-side working-label
+  spellings for already-addressed relocations. The temporary shipyard
+  declaration gate was removed completely rather than retained as
+  architecture. `decomp-attempt-1` was checked read-only and
+  contained no body or additional evidence worth admitting; no external
+  implementation material was used. Making those declarations unconditional
+  changes VC6's transitive type population: the already-documented unstable
+  `initialize_game_data` row remeasures from 100% to 94.0741%, and
+  `recruitUnit::Update` from 90.8376% to 90.8325%; both historical peaks remain
+  recorded rather than being presented as semantic regressions.
+
+- **2026-08-09 — `game::Load` extends from 23.1861% to 26.3228%.** Retail
+  fixes the prefix order after header restoration: clear recorded events,
+  publish the loaded square map extent, close the path search array, restore
+  the versioned 0x90/0x81 scenario bands and the 28-byte post-version-29
+  band, then load rumours, the signed-count 28-byte event vector, the world
+  map and the sign/mine/generator/garrison/boat pools before the 48 obelisk
+  bytes. Generator count is a signed short; each 92-byte record must report
+  success. A function-scope Dinkumware string is independently visible in
+  the target prologue and cleanup: adding it turns every source short-read
+  into retail's shared failure exit and makes the prefix additive. The
+  save-header and player/town/hero roster bands remain explicit follow-up
+  work. No external implementation body was used, and rejected roster and
+  map-extra experiments were not retained.
+
 - **2026-08-09 — `game::ExperienceValueOfStack` admitted byte-exact.**
   Retail's +0x4c creature-traits load proves that the seven stack products use
   `hitPoints`, not the +0x40 AI valuation field; a non-null hero contributes
@@ -286,11 +327,11 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   it, followed by three standalone vectors at +0x4e77c/+0x4e78c/+0x4e79c.
   A short two-byte count skips that vector, while a present count resizes it
   and reads four bytes per point without checking the data read. The
-  load-only header view exposes these byte-proven offsets without changing
-  any other compiland's class view. The save-header/map/pool/roster prefix
-  remains explicit follow-up work, with a temporary leading version read
-  preserving its gates. No external implementation body was used; the full
-  build remains the sole baseline writer.
+  canonical `game` layout exposes these byte-proven offsets to every
+  compiland. The save-header/map/pool/roster prefix remains explicit
+  follow-up work, with a temporary leading version read preserving its gates.
+  No external implementation body was used; the full build remains the sole
+  baseline writer.
 
 - **2026-08-09 — `game::get_new_boat_id` admitted byte-exact.** The
   214-byte member scans the retail-proven 40-byte boat pool for the first
