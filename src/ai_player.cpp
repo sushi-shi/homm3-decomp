@@ -465,17 +465,19 @@ void type_AI_player::end_turn()
 // or the 0x432/0x433 network messages, including negative-surplus requests.
 // The request dialog alone observes CTurnDuration and times out at 15000 ms.
 //
-// Residual (71.8739%): the 0x7c frame, local offsets, player-id lifetime,
+// Residual (79.8885%): the 0x7c frame, local offsets, player-id lifetime,
 // threshold block, network payload layouts, dialog flow and timeout tail
 // agree. The local-human gift and single-resource request now use retail's
 // called three-argument string append overload; the multi-resource request
-// remains expanded as retail does. Scoped inline-depth overrides reproduce
-// those two call edges. Applying the override to both request branches or
-// naming either temporary regresses the surrounding allocation and was
-// reverted. Most remaining bytes are VC6 TU ecology: retail calls the
-// temporary strings' _Tidy helper at a different expansion level, plus
-// register permutations in the two transfer loops. The score also
-// understates one deliberately retained retail gate after the human transfer.
+// assigns its formatted result, reproducing retail's inlined
+// basic_string::assign self/share/grow paths instead of append logic. Scoped
+// inline-depth overrides reproduce the other two call edges. The remaining
+// branch-count delta is three branches: retail inlines the single-request
+// temporary destructor after its called append, while this lexical override
+// calls the destructor. Naming that temporary, direct assign, depth-one, and
+// broader override probes regress or are byte-inert and were reverted. Other
+// residuals are register permutations in the transfer loops and one
+// deliberately retained retail gate after the human transfer.
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
 void type_AI_player::make_gift(long player_id)
 {
@@ -597,7 +599,7 @@ void type_AI_player::make_gift(long player_id)
                            0, std::string::npos);
 #pragma inline_depth()
         } else {
-            message += format_string(
+            message = format_string(
                 gUnnamed6a5d5c->entry->aiMultipleResourceRequestText,
                 gPlayerColorNames[team]);
         }
