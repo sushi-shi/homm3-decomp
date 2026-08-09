@@ -60,6 +60,21 @@ enum EDrawbridgeState {
     DRAWBRIDGE_UP = 0x3
 };
 
+// The eight rows of gWallTargets. Retail DamageWall dispatches on all eight
+// values; names remain ordinal because no local roster names the individual
+// segments.
+enum TWallTargetId {
+    WALL_TARGET_0 = 0,
+    WALL_TARGET_1 = 1,
+    WALL_TARGET_2 = 2,
+    WALL_TARGET_3 = 3,
+    WALL_TARGET_4 = 4,
+    WALL_TARGET_5 = 5,
+    WALL_TARGET_6 = 6,
+    WALL_TARGET_7 = 7,
+    WALL_TARGET_COUNT = 8
+};
+
 // Row 5's three special columns of the 11x17 combat grid, named from
 // the byte tables they are the fifth entry of: 0x60 is
 // gCastleWallColumns[5] (the gate itself), 0x5f gMoatColumns[5] and
@@ -340,7 +355,12 @@ public:
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
     unsigned char bCreaturePlacement; // +0x13d68
-    char pad_13d69[0x7b];
+    char pad_13d69[0x2f];
+    int field_13d98;                  // +0x13d98
+    char pad_13d9c[0x20];
+    int field_13dbc;                  // +0x13dbc
+    char pad_13dc0[0x20];
+    int field_13de0;                  // +0x13de0
     // "Move order is reversed for this combat": find_move_order
     // (0x41f179) reads it through the gpCombatManager GLOBAL - not
     // through its own `this` - and, when it is set, keys every stack
@@ -360,7 +380,14 @@ public:
     // (combatManager::get_wall_strength, cmbtmgr.h:1473, dc 0x27edc),
     // not the field, so the name is the accessor's.
     int wallStrength[15];             // +0x13f60
-    char pad_13f9c[0x54];
+    // DamageWall clears one slot in each three-dword row for targets 7/6/0,
+    // then marks the indexed defender army's creatureId bit 21. Roles await
+    // readers; the shared reversed indexing is byte-proven here.
+    int field_13f9c[3];               // +0x13f9c
+    // One dword per wall id (5..14 used): 1 while strength remains, 0 when
+    // the segment reaches zero.
+    int wallStanding[15];             // +0x13fa8
+    int field_13fe4[3];               // +0x13fe4
     // The battle's packed adventure-map coordinate. GetBackgroundName
     // passes it by value to advManager::MoreTreesNear.
     type_point mapPoint;              // +0x13ff0
@@ -373,6 +400,7 @@ public:
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();
+    void DamageWall(TWallTargetId target_wall, int damage);
     unsigned char is_adjacent(int first, int second);
     unsigned char enemy_is_adjacent(army* current_army, int grid_index,
                                     const army* excluded);
@@ -673,7 +701,10 @@ struct type_wall_target {
     // three -1 rows are the two towers and the upper keep, the five
     // real ones are the wall segments the AI cares about.
     short blocked_column;             // +0x2
-    char pad_04[0x8];
+    char pad_04[0x4];
+    // ID into combatManager::wallStrength / wallStanding. Retail rows are
+    // {5,6,8,9,10,12,13,14}.
+    int wall_id;                       // +0x8
 
     // The DC roster's combatManager::TWallTarget::get_blocked_hex
     // (cmbtmgr.h:1150, dc 0x27eac, 28 B). No retail body - /Ob2 folds
