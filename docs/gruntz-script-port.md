@@ -260,6 +260,15 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::ProcessHover` extends to 71.4102%.**
+  Retail keeps the screen-to-cell quotients live in EDI/EBX and passes those
+  `rx`/`ry` map-cell coordinates to `SetRolloverText`; the earlier candidate
+  incorrectly passed the original pixel coordinates. Correcting the call both
+  restores the behavior and recovers the quotient register lifetimes across a
+  large part of the 2,328-byte hover function. The argument identity and
+  register flow are retail-byte-proven; no external implementation body was
+  used.
+
 - **2026-08-09 — creature-bank rollover help extends to 87.2833%.**
   Retail checks cell knowledge before materializing the bank-state dword, then
   keeps the known-cell work in its own branch. Its full-list and compact-list

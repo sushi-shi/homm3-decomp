@@ -1252,11 +1252,12 @@ type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 #endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:4556
-// RETAIL-RECONSTRUCTED 2026-08-09 (69.3789%). Retail proves the complete
+// RETAIL-RECONSTRUCTED 2026-08-09 (71.4102%). Retail proves the complete
 // local-human, visibility, ownership, path reachability/turn count, object
-// cursor dispatch and scroll-zone control flow. Residual codegen differences
-// are concentrated in the packed current-hero location comparison, the
-// Dinkumware result-vector erase expansion and merged exit layout.
+// cursor dispatch and scroll-zone control flow. The rollover call receives
+// map-cell coordinates, not screen pixels. Residual codegen differences are
+// concentrated in the packed current-hero location comparison, the Dinkumware
+// result-vector erase expansion and merged exit layout.
 VA(0x0040e360, 0x918)  // anchor-callee, dc 0xf3a8
 int advManager::ProcessHover(int mouseX, int mouseY)
 {
@@ -1287,7 +1288,7 @@ int advManager::ProcessHover(int mouseX, int mouseY)
         else
             currCell = fullMap->cell(point.x, point.y, point.z);
 
-        SetRolloverText(currCell, mouseX, mouseY);
+        SetRolloverText(currCell, rx, ry);
 
         int currHeroId = gpCurrentPlayer->currHeroId;
         hero* currHero = gpGame->GetHero(currHeroId);
