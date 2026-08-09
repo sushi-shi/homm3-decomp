@@ -261,6 +261,12 @@ public:
     // and it pushes exactly these three.
     type_building_id BuildBuilding(int buildingId, unsigned char SetBuiltFlag,
                                    unsigned char apply_special_effect);
+    // 0x5be930. Declared for update_shipyard's direct call; the body is
+    // still outside the admitted surface.
+    type_building_id create_building(type_building_id building);
+    // 0x5bf210. Keeps the dock-with-boat pseudo-building synchronized
+    // with the object occupying the town's dock square.
+    void update_shipyard();
     // 0x5bf3c0. `building` is an INT (the can_ever_build asymmetry):
     // retail reads [ebp+8] as a full dword for both band compares and
     // for the inlined get_build_cost_array row arithmetic.

@@ -292,14 +292,44 @@ type_building_id town::BuildBuilding(int buildingId, unsigned char SetBuiltFlag,
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\town.cpp:1417
-VA(0x005bf210, 0x1A5)  // linkorder, dc 0x1671cc
+// The dock square is relevant only while the normal Dock building is
+// active. A trigger object occupying it is usable when it is either a
+// boat or a hero; that state synthesises DOCK_WITH_BOAT_ID. When the
+// square stops being usable, the synthetic building is removed from
+// `built`, `active` is reset to the surviving buildings, and every
+// surviving building's included mask is folded back in. All constants,
+// field offsets, and the 44-entry rebuild are independently visible in
+// retail 0x5bf210; the Dreamcast row supplies the function identity.
+VA(0x005bf210, 0x1A5)  // retail body + dc identity, dc 0x1671cc
 void town::update_shipyard()
 {
-    // @stub
-}
+    if (active & bitNumber[DOCK_ID]) {
+        type_point point;
+        point.x = dockSite;
+        point.y = dockSiteY;
+        point.z = mapZ;
 
-#endif  // @carcass
+        int size = gpGame->worldMap.Size;
+        NewmapCell* cell = &gpGame->worldMap.cellData[
+            (point.z * size + point.y) * size + point.x];
+        if (cell->is_trigger && (cell->type == BOAT || cell->type == HERO)) {
+            if (!(active & bitNumber[DOCK_WITH_BOAT_ID])) {
+                create_building(DOCK_WITH_BOAT_ID);
+                return;
+            }
+        } else if (built & bitNumber[DOCK_WITH_BOAT_ID]) {
+            built &= ~bitNumber[DOCK_WITH_BOAT_ID];
+            active = built;
+            for (int building = 0; building < TOWN_BUILDING_SLOTS; building++) {
+                if (built & bitNumber[building])
+                    active |= included_buildings[type][building];
+            }
+        }
+    }
+}
 
 // E:\gamedcs\town.cpp:1442
 // The purchase gate: an owned town, a legal build, then the cost row.
@@ -1034,7 +1064,4 @@ unsigned char std::bitset<70,unsigned long>::reference::operator bool()
 }
 
 #endif  // @carcass
-
-
-
 

@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `town::update_shipyard` admitted byte-exact from retail;
+  `town` gains its 25th exact row.** The 421-byte body first gates on the
+  active Dock bit, packs the town's dock coordinates into a `type_point`, and
+  indexes the retail map record directly. A trigger holding either a boat or
+  a hero synthesises `DOCK_WITH_BOAT_ID`; when that occupant disappears, the
+  pseudo-building is removed and `active` is rebuilt from the surviving
+  `built` bits plus `town::included_buildings`. Testing `built`, not the
+  evolving `active` mask, in that 44-entry rebuild is both the semantic fix
+  and the final byte-matching lever: it raised the first complete
+  reconstruction from 92.3000% to exact. The function identity and signature
+  are corroborated by the Dreamcast CodeView row, but the implementation was
+  reconstructed from retail disassembly and relocations; no external source
+  implementation was used.
+
 - **2026-08-09 — the adventure-rendering worktree was approved for
   integration into `master`; narrow views preserve both lanes' optimizer
   states.** The initial semantic merge placed `CAdvPopup`, `chatEdit`, and
