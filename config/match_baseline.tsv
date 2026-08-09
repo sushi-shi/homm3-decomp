@@ -464,6 +464,7 @@ font	?LongestWrappedLineWidth@font@@QAEHPBDH@Z	100.0000	100.0000	100.0000	0xb5a8
 font	?SetPalette@font@@QAEXPBVTPalette16@@@Z	100.0000	100.0000	100.0000	0xb5180
 font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10
+game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
@@ -511,7 +512,6 @@ game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0
 game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
 game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50
-game	HeroExtra_HeroExtra	0.0000	0.0000	0.0000	0xce4b0
 game	ImmMouseWindowMoved	0.0000	0.0000	0.0000	0xb6950
 game	InitImmMouse	0.0000	0.0000	0.0000	0xb6890
 game	game_ClaimGarrison	0.0000	0.0000	0.0000	0xc6960
