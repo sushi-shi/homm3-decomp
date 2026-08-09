@@ -389,6 +389,7 @@ public:
     const char* GetBackgroundName();
     void DamageWall(TWallTargetId target_wall, int damage);
     void LowerDoor();
+    void RaiseDoor();
     unsigned char IsQuickCombat();
     void DrawFrame(unsigned char update,
                    unsigned char bLimitCreatureEffect,
