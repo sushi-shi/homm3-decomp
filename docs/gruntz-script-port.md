@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `GetFlaggedObjectOwner` admitted exact; `advmgr`
+  16 → 17 exact.** The 270-byte retail body proves and reproduces hero
+  obscured-object unwrapping plus the generator, garrison, mine/lighthouse,
+  town and shipyard ownership paths, including its six-target switch and
+  82-byte selector tables. The reached layout slices are now explicit:
+  hero obscured type/index at +0x0c/+0x14, and a 0x40-byte garrison record
+  with signed owner at +0. All pre-existing exact rows survive those shared
+  header changes. No external body was consulted or ported. The generated
+  score moves 5.89% → 5.91%; the baseline migration came only from
+  `homm3 build`.
+
 - **2026-08-09 — adventure flag-render scan admitted exact;
   `advmgr` 14 → 16 exact.** `advManager::ScanForHeroOrBoat` (359 B) matches
   its six-slot result walk, bounds checks, packed-point construction,

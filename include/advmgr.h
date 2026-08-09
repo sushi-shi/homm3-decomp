@@ -170,6 +170,7 @@ extern advManager* gpAdvManager;
 
 int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
 bool hasFlag(int objType);
+int GetFlaggedObjectOwner(NewmapCell* thisCell);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\advmgr.cpp:336, dc 0x5714) unsigned char InitializeCreatureGeneratorNames();
