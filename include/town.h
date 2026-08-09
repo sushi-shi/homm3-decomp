@@ -275,10 +275,8 @@ public:
     __int64 get_buildable_mask() const;
     int* get_build_cost_array(type_building_id building) const;
     void get_build_cost(type_building_id building, int* resources) const;
-    // DC: ?get_build_cost@town@@QBAFW4type_building_id@@QAW4EGameResource@@QAH@Z
-    // - `types` is an EGameResource* there; spelled int* here so the
-    // loop counter stores into it cast-free (retail's store is a full
-    // dword, so the two spellings are byte-identical).
+    // DC uses EGameResource* for `types`; int* is byte-identical here and
+    // avoids a source-only enum conversion that the retail code cannot prove.
     short get_build_cost(type_building_id building, int* types,
                          int* amounts) const;
     type_horde_effect* get_horde_effect(type_building_id building) const;

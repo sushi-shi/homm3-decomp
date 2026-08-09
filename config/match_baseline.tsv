@@ -1061,7 +1061,7 @@ town	?can_ever_build@town@@QBEEH@Z	100.0000	100.0000	100.0000	0x1c0e60
 town	?change_generator_bonus@town@@QAEXW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x1bfe50
 town	?check_shipyard_square@@YIEPAVtown@@JJ@Z	100.0000	100.0000	100.0000	0x1c0c90
 town	?get_army@town@@QBEABVarmyGroup@@XZ	100.0000	100.0000	100.0000	0x1c1460
-town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	77.4561	77.4561	77.4561	0x1c1180
+town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	81.4912	81.4912	81.4912	0x1c1180
 town	?get_build_cost@town@@QBEXW4type_building_id@@PAH@Z	100.0000	100.0000	100.0000	0x1c10f0
 town	?get_build_cost_array@town@@QBEPAHW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1080
 town	?get_buildable_mask@town@@QBE_JXZ	81.2143	81.2143	81.2143	0x1c0f20
