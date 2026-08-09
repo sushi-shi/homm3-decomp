@@ -321,6 +321,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `combatManager::PlaceAllObstacles` reconstructed
+  byte-exact (189 bytes).** The function samples obstacle ids 0..90 without
+  replacement, accepting catalogue rows whose terrain or special-terrain
+  mask matches the current battlefield, and stops when the picker is
+  exhausted. Retail proves the two unsigned-short mask offsets, both
+  negative-id exits, the inner redraw loop, and the call sequence. Dreamcast
+  CodeView contributes only the `TObstacleInfo` name/20-byte extent and the
+  existence of `TPickANumber`'s destructor. Making that destructor an
+  inline-only `delete[] marks` cleanup reproduces retail's EH frame and final
+  operator-delete call without adding a standalone x86 row. This applies the
+  HoMM2/Gruntz guidance to restore the natural local-object lifetime and loop
+  boundary instead of transcribing generated cleanup. A fresh delink pairs
+  the formerly unscored row and raises the linked floor 592 -> 593 exact;
+  existing picker scores are unchanged. No external implementation was
+  used, and the earlier read-only `decomp-attempt-1` survey supplied nothing.
+
 - **2026-08-09 — `type_AI_combat_data::do_aftermath` raised from 79.7256%
   to 97.3171% by restoring Eagle Eye's first-success exit and pointer
   lifetime.** Retail leaves the spell scan immediately after `AddSpell`, so

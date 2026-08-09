@@ -90,6 +90,16 @@ struct type_obstacle_shape {
 // on ResetHitByCreature.)
 class combatManager {
 public:
+    // Retail obstacle-catalogue prefix. PlaceAllObstacles reads the two
+    // unsigned masks at +0/+2 from 20-byte rows; the remaining sixteen
+    // bytes are not needed by that function and stay opaque here.
+    struct TObstacleInfo {
+        unsigned short terrain_mask;
+        unsigned short special_terrain_mask;
+        unsigned char opaque_04[0x10];
+    };
+    static const TObstacleInfo ObstacleInfo[];
+
     // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
     // (0x466b30), which divides the manager's obstacle vector extent
     // (+0x13d5c .. +0x13d60) by 24 with the 0x2aaaaaab/sar 2 magic; the
@@ -153,7 +163,10 @@ public:
     // 187 combat cells, stride 0x70 - byte-proven by ValidAttack
     // (0x523bb0: index*112 + 0x1c4).
     hexcell cells[187];               // +0x1c4, ends 0x5394
-    char pad_5394[0x10];
+    // PlaceAllObstacles shifts one by this dword while field_53c0 is -1;
+    // it is the current combat terrain selector for the catalogue mask.
+    int terrainType;                  // +0x5394
+    char pad_5398[0xc];
     // The drawbridge state (EDrawbridgeState). LowerDoor stores 3/2/1
     // through it one frame at a time; RaiseDoor gates on 1;
     // HexIsBlocked, should_lower_door and IsInMoat all gate on 3.
@@ -289,6 +302,7 @@ public:
                                     const army* excluded);
     void RemoveArmyFromGrid(const army* a);
     void PlaceArmyInGrid(const army* a, int hex);
+    unsigned char place_obstacle(int obstacle_id);
     unsigned char should_lower_door(army* this_army, long hex);
     void CalculateGainedExperience(int side, int* experience_gained);
     // Two DC-roster corrections, both byte-proven at 0x467510: the
@@ -304,6 +318,7 @@ public:
     unsigned char IsInMoat(int hex, int* index);
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
                        unsigned attributes);
+    void PlaceAllObstacles();
     void RemoveObstacle(int index);
     // DC header inline (CmbtMgr.h:1542, dc 0x27fa0). Retail re-loads
     // obstacles_begin here rather than reusing the copy RemoveObstacle's
