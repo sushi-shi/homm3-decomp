@@ -537,6 +537,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   helper. No external implementation body or `decomp-attempt-1` material was
   used.
 
+- **2026-08-09 — retail-only `hero::HeroFn_004DC070` reconstructed
+  byte-exact (135 bytes).** The provisional member removes the combination
+  artifact from one equipped slot, uses that artifact's traits field at +0x14
+  to select a 24-byte combination row, walks all 144 component bits and
+  re-equips every set artifact id with extra value -1 into its first legal
+  slot. Retail proves the complete behavior, both table cells and strides,
+  the five-dword bitset, the two helper calls and all bounds; no Dreamcast
+  row exists for this Shadow of Death addition, so the public identity stays
+  ordinal. Only hero.obj sees the typed component bitset, preserving the
+  established layouts elsewhere. A named const reference to that bitset is
+  source-significant: it makes VC6 hoist the row address in EBX across calls,
+  whereas the direct member expression recomputed it inside the loop. This
+  applies the HoMM2/Gruntz minimal-view and lifetime rules. No external
+  implementation body or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `THeroScreenWindow::update_all_slots` reconstructed
   byte-exact (23 bytes).** Retail retains `this` in EDI and walks a long
   ESI index from zero through all nineteen equipped positions, calling the
