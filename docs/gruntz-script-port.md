@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::SetRolloverText` extends to 89.7053%.**
+  Retail's repeated visited-object handlers materialize the byte returned by
+  `game::GetInfoFlag`, widen it through a shared integer temporary, and reuse
+  that temporary for the hero-visit predicate before selecting the visited or
+  unvisited string. Reconstructing that source shape restores the retail
+  byte-store/zero-extend sequence across the shared Buoy/Clover-style handlers
+  and the matching spill used by the remaining visit-text arms. The function's
+  candidate body grows toward the 8,860-byte retail extent while preserving
+  the already exact 216-byte dispatch map. The behavior is derived entirely
+  from retail disassembly; no external implementation body was used.
+
 - **2026-08-09 — `advManager::SetRolloverText` dispatch extends to
   84.1879%.** Retail's 216-byte object-to-handler map and 59-entry target
   table admit the remaining control-flow structure: `BORDER_GATE` (id 212)
