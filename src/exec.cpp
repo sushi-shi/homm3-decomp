@@ -180,11 +180,18 @@ void executive::RemoveManager(baseManager* killManager)
 // RedrawAdvScreen(1,0); KBChangeMenu([0x6989e4]); ForceNewHover();
 // OverrideBottomView(0,-1); if (gpWindowManager->isWaitingForFadeIn)
 // FadeScreen(0,4,0); } else if (AddManager(saved,-1)) ShutDown(...);
-// currentManager = saved (stored in the epilogue). Residual risk: the
-// retail body carries an EH frame with states 0/1/2 bracketing
-// AddManager/MainLoop/RemoveManager - homm2's version is EH-free and
-// no local object is visible; the construct generating those states
-// is unidentified, so this transcription misses the frame.
+// currentManager = saved (stored in the epilogue). Retail's EH frame is
+// now decoded too. Its states 0/1/2 bracket three nested exception-safety
+// scopes. The isolated catch funclets at 0x4b0dc2/0x4b0dd7/0x4b0e25 do,
+// respectively: RemoveManager(newManager); restore the saved manager's
+// active state (the reduced exception path); and restore currentManager;
+// each then rethrows. Writing those three try/catch scopes reproduces the
+// 11-block retail body and funclet boundaries closely, but VC6 emits the
+// generated funclets in CallManager's base COFF section. Objdiff therefore
+// charges them to this symbol while the delinked target exposes three
+// separate carved entries, dropping the reported row to 58.29%. The probe
+// is reverted until comparison-side funclet boundaries can be represented;
+// the present EH-free body remains the best honest scored form (68.3663%).
 VA(0x004b0c70, 0x152)  // anchor-global, dc 0x9e898
 void executive::CallManager(baseManager* newManager)
 {
