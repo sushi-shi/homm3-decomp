@@ -349,6 +349,7 @@ public:
                                       type_point excluded);
     int InMapArea(int x, int y);
     NewmapCell* GetCell(type_point point);
+    int MoreTreesNear(type_point point);
     void UpdateRadar(type_point origin, unsigned char updateFlag,
                      unsigned char bPartialUpdate, unsigned char view_mines,
                      unsigned char view_heroes, unsigned char view_towns);

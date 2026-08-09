@@ -39,6 +39,7 @@
 #include <stdlib.h>
 
 #include <va.h>
+#include "advmgr.h"
 #include "cmbtmgr.h"
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
@@ -266,6 +267,7 @@ void combatManager::GenerateMap()
         }
     }
 }
+
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1688
@@ -275,14 +277,43 @@ void combatManager::DetermineCombatTerrain()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:1786
 VA(0x004646d0, 0xC5)  // anchor-global, dc 0x5ef54
 const char* combatManager::GetBackgroundName()
 {
-    // @stub
+    const char* background;
+    if (field_132f4 > 0) {
+        background = gTownCombatBackgrounds[
+            static_cast<signed char>(field_53c8[4])];
+    } else {
+        int combat_terrain = field_53c0;
+        if (combat_terrain != -1 && combat_terrain != 0) {
+            background = gSpecialCombatBackgrounds[combat_terrain];
+        } else if (heroes[0] && (heroes[0]->flags & 0x40000)
+                && heroes[1] && (heroes[1]->flags & 0x40000)) {
+            background = DATA_COMPGEN(0x0066ff5c, combatBoatBackground,
+                                      "CmBkBoat.pcx");
+        } else if (field_53c6) {
+            background = DATA_COMPGEN(0x0066ff4c, combatDeckBackground,
+                                      "CmBkDeck.pcx");
+        } else if (combat_terrain == 0) {
+            background = DATA_COMPGEN(0x0066ff40, combatBeachBackground,
+                                      "CmBkBch.pcx");
+        } else {
+            int background_index =
+                gpAdvManager->MoreTreesNear(battleLocation);
+            int terrain = terrainType;
+            background_index += terrain * 2;
+            background_index += terrain;
+            background = gTerrainCombatBackgrounds[background_index];
+        }
+    }
+    field_539c = 1;
+    field_5398 = -1;
+    return background;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1891 - screen point -> combat hex index.
 // Four special hexes get their own hit rectangles first (252..255, in
