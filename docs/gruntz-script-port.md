@@ -335,6 +335,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   library/source forms. No external implementation or `decomp-attempt-1`
   material was used.
 
+- **2026-08-09 — `combatManager::GetBackgroundName` reconstructed
+  byte-exact (197 bytes).** Retail's sixteen-block cascade first selects a
+  town-siege background, then a non-default magic-terrain background, then
+  the boat/deck/beach special cases, and finally one of a 9-by-3 ordinary
+  terrain/tree-density table. The three .rdata pointer tables and three
+  direct filenames were decoded from the executable; the method always
+  performs the two trailing animation-state resets. Naming the
+  `MoreTreesNear` result before the combat-terrain snapshot preserves
+  retail's EAX/ECX lifetimes and closes the sole first-pass residual. This
+  applies the HoMM2/Gruntz named-lifetime and multidimensional-layout rules;
+  no external implementation or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `combatManager::RaiseSkeletons` reconstructed to 93.2203%.**
   The function first merges the pending raised stack unchanged; if the
   destination group has neither a matching nor an empty slot, it promotes

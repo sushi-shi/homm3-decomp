@@ -39,6 +39,7 @@
 #include <stdlib.h>
 
 #include <va.h>
+#include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "cmbtmgr.h"
 #include "combatoptionswindow.h"
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
@@ -191,14 +192,51 @@ void combatManager::DetermineCombatTerrain()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:1786
+// EXACT 2026-08-09 from retail's ordered background-selection
+// cascade and three pointer tables. Town sieges and special terrain select
+// directly; otherwise boat/deck/beach conditions precede the ordinary
+// terrain-by-nearby-tree lookup. Naming that lookup result before the terrain
+// snapshot preserves retail's {EAX,ECX} lifetime and proves the final table's
+// 9x3 shape. The two animation-state resets always run.
 VA(0x004646d0, 0xC5)  // anchor-global, dc 0x5ef54
 const char* combatManager::GetBackgroundName()
 {
-    // @stub
-}
+    const char* background;
+    if (field_132f4 > 0) {
+        background = gTownCombatBackgrounds[
+            static_cast<signed char>(field_53c8[4])];
+    } else {
+        int magic_terrain = field_53c0;
+        if (magic_terrain != -1 && magic_terrain != 0) {
+            background = gMagicTerrainCombatBackgrounds[magic_terrain];
+        } else {
+            unsigned int boat_flag = 0x40000;
+            if (heroes[0] && (heroes[0]->flags & boat_flag)
+                && heroes[1] && (heroes[1]->flags & boat_flag)) {
+                background = DATA_COMPGEN(
+                    0x0066ff5c, boatCombatBackground, "CmBkBoat.pcx");
+            } else if (field_53c6) {
+                background = DATA_COMPGEN(
+                    0x0066ff4c, deckCombatBackground, "CmBkDeck.pcx");
+            } else if (magic_terrain == 0) {
+                background = DATA_COMPGEN(
+                    0x0066ff40, beachCombatBackground, "CmBkBch.pcx");
+            } else {
+                int nearby_trees = gpAdvManager->MoreTreesNear(mapPoint);
+                int combat_terrain = terrainType;
+                background = gTerrainCombatBackgrounds[combat_terrain]
+                    [nearby_trees];
+            }
+        }
+    }
 
-#endif  // @carcass
+    field_539c = 1;
+    field_5398 = -1;
+    return background;
+}
 
 // E:\gamedcs\cmbtmgr.cpp:1891 - screen point -> combat hex index.
 // Four special hexes get their own hit rectangles first (252..255, in
