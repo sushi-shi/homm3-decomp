@@ -52,17 +52,22 @@ class type_creature_bank;
 //
 // `mine` does NOT transfer: the DC record is 12 bytes and retail's pool
 // stride is 64 (game::MineTypesOwned divides the byte span by `sar 6`).
-// The 52-byte difference is the size of an armyGroup plus its
-// alignment, so retail very likely replaced the DC's single
-// guardedByType/guardedByNum pair with a full guard group - but nothing
-// here is byte-proven past +0x01, so the tail stays one pad.
+// SaveMinePool serializes the first three bytes, passes +0x04 to
+// armyGroup::save, then serializes +0x3c..+0x3e. The remaining alignment
+// bytes stay opaque.
 class mine {
 public:
     // +0x00/+0x01, both retail-proven: MineTypesOwned sign-extends
     // each and compares it against an int parameter.
     char playerOwner;
     char type;
-    char pad_02[0x3e];
+    unsigned char field_02;
+    char pad_03;
+    armyGroup guards;
+    unsigned char field_3c;
+    unsigned char field_3d;
+    unsigned char field_3e;
+    char pad_3f;
 };
 SIZE(mine, 0x40);
 
@@ -422,6 +427,7 @@ public:
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
     void calculate_production();                 // 0x4b8af0
+    int SaveMinePool(TAbstractFile* outfile);     // 0x4b9580
     int SaveGarrisonPool(TAbstractFile* outfile); // 0x4b98c0
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
 #if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
