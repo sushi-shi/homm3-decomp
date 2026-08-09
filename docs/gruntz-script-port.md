@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — army morale/luck descriptions restore bounded creature-name
+  selection.** Retail checks variable creature ids against the inclusive
+  0..150 range before reading the plural-name field and otherwise supplies the
+  shared empty rollover text. Capturing that repeated inline idiom raises the
+  2,140-byte `armyGroup::get_morale_description` body from 63.9572% to
+  67.5649% and the 968-byte `get_luck_description` body from 60.3234% to
+  74.7874%. The fixed Angel/Archangel and Halfling paths remain direct after
+  VC6 constant propagation, while enemy Dragon and Devil selections retain
+  the retail guards. The behavior and the 150 bound come directly from retail
+  instructions and relocations; the shared string's address is already
+  established in-tree. No external implementation body was used, and the
+  generated baseline remains build-owned.
+
 - **2026-08-09 — the 2,446-byte `advManager::DrawAdvObj` body rises
   85.9125% -> 86.3772% by restoring packed-offset widths.** Retail's initial
   object-vector gate materializes the element count before testing it, which
