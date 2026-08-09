@@ -88,7 +88,12 @@ class hero {
 public:
     enum {
         CLASS_NAME_OVERRIDE_HERO_ID = 27,
-        CLASS_NAME_OVERRIDE_SCENARIO = 15
+        CLASS_NAME_OVERRIDE_SCENARIO = 15,
+        PRIMARY_STAT_DIALOG_TYPE = 1,
+        PRIMARY_STAT_QUICK_DIALOG_TYPE = 4,
+        PRIMARY_STAT_DIALOG_Y = 28,
+        PRIMARY_STAT_RESOURCE_FIRST = 31,
+        PRIMARY_STAT_RESOURCE_QUANTITY = 0x10000
     };
     // The hero's map position, three SHORTS at +0/+2/+4. Byte-proven by
     // hero::IsMobile (0x4e5f30), which packs exactly these three cells
@@ -390,7 +395,7 @@ public:
             return 99;
         if (value > 0)
             return value;
-        return skill > 1 ? 1 : 0;
+        return skill >= 2 ? 1 : 0;
     }
 
     unsigned char HasArtifact(int whichArtifact);
@@ -470,6 +475,9 @@ public:
     // 0x004d92d0 - spends mana and refreshes the local adventure hero
     // locators while that manager is active.
     void UseSpell(int cost);
+    // 0x004d9990 - retail takes two arguments despite the no-argument
+    // Dreamcast revision: primary-stat index and quick-view flag.
+    void HeroScreenUpdate(int whichStat, int isQuickView);
     // 0x004d9110 - the idle frame for the hero's current facing.
     hero_seqid GetStandSequence();
     // 0x004e2f90 - inserts an artifact into the backpack, shifting the

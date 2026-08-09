@@ -38,11 +38,13 @@
 // TMagicTerrain - the battlefield magic-terrain id the spell-school
 // quartet takes as its second argument.
 #include "magicterrain.h"
+#include "kb.h"
 #include "message.h"
 #include "winmgr.h"
 
 DATA(0x0069774c) extern unsigned char gCampaignMode;
 DATA(0x0067dcec) extern const THeroClassTraits (&akHeroClasses)[18];
+DATA(0x006a7540) extern const char* gPrimaryStatNames[4];
 
 // Retail's mana clamp materialises both operands in stack homes and selects
 // one by address. This by-value helper reproduces that Dinkumware-era shape;
@@ -566,9 +568,10 @@ void hero::update_spell_list()
 //     0x004d9cc0 ViewArtifact       DC 3 params -> `ret 8`, retail `ret 4`
 // (0x004d7a20 hero::load is a sixth: DC 2 params, retail `ret 8`.)
 // The block is exactly the hero-SCREEN UI, which the Dreamcast port
-// redesigned, so revision drift is the likely cause - but the parameter
-// lists below are DC's and are NOT retail-verified. Do not reconstruct
-// any of these bodies without settling the arity from the body first.
+// redesigned, so revision drift is the likely cause. HeroScreenUpdate is
+// now settled from its retail body as (int whichStat, int isQuickView);
+// the remaining parameter lists are DC's and are NOT retail-verified. Do
+// not reconstruct those bodies without settling their arity first.
 // E:\gamedcs\hero.cpp:1594
 VA(0x004d97f0, 0x1A0)  // dc-bracket forced, dc 0xcc49c
 void THeroScreenWindow::HeroMessageUpdate(char* cText)
@@ -577,11 +580,22 @@ void THeroScreenWindow::HeroMessageUpdate(char* cText)
 }
 
 // E:\gamedcs\hero.cpp:1606
+#endif  // @carcass
+
 VA(0x004d9990, 0x65)  // dc-bracket forced, dc 0xcc4e0
-void hero::HeroScreenUpdate()
+void hero::HeroScreenUpdate(int whichStat, int isQuickView)
 {
-    // @stub
+    unsigned short statValue = GetPrimarySkill(whichStat);
+    NormalDialog(gPrimaryStatNames[whichStat],
+                 isQuickView ? PRIMARY_STAT_QUICK_DIALOG_TYPE
+                             : PRIMARY_STAT_DIALOG_TYPE,
+                 -1, PRIMARY_STAT_DIALOG_Y,
+                 whichStat + PRIMARY_STAT_RESOURCE_FIRST,
+                 statValue | PRIMARY_STAT_RESOURCE_QUANTITY,
+                 -1, 0, -1, 0, -1, 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:1632
 VA(0x004d9a00, 0x128)  // dc-bracket forced, dc 0xcc540
