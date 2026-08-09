@@ -200,8 +200,6 @@ int advManager::InMapArea(int x, int y)
         && y >= map_widget->y && y < map_widget->y + map_widget->height;
 }
 
-#if 0  // @carcass
-
 // A header-inline COMDAT that the retail link filed inside advmgr's
 // span (its four call sites all live in OTHER modules - 0x1cdf0,
 // 0x1d090, 0x91900, 0x91d00 - so nothing in advmgr.obj anchors it).
@@ -212,10 +210,14 @@ int advManager::InMapArea(int x, int y)
 // the DC header block to keep the file in retail link order.
 // E:\gamedcs\AdvMgr.h:1245
 VA(0x00407b10, 0x6F)  // anchor-callee, dc 0x1f000
-type_point advManager::get_map_center(__$ReturnUdt)
+type_point advManager::get_map_center() const
 {
-    // @stub
+    return type_point(radarOrigin.x + lastHoverX,
+                      radarOrigin.y + lastHoverY,
+                      radarOrigin.z);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:1229
 DC_ONLY(0x79b0, 0x52)
