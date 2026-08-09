@@ -41,6 +41,7 @@
 
 #include <va.h>
 #include "advmgr.h"
+#include "bitmap816.h"
 #include "cmbtmgr.h"
 #include "combatoptionswindow.h"
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
@@ -118,12 +119,40 @@ void combatManager::LoadIcons()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:953
 VA(0x00463500, 0xFD)  // anchor-callee, dc 0x5dfb4
 void combatManager::FreeIcons()
 {
-    // @stub
+    for (int group = 0; group < 18; ++group) {
+        for (int icon = 0; icon < 5; ++icon) {
+            if (combatIcons[group][icon])
+                combatIcons[group][icon]->Dispose();
+        }
+    }
+
+    for (TObstacle* obstacle = obstacles.begin;
+            obstacle != obstacles.end; ++obstacle) {
+        if (obstacle->sprite)
+            obstacle->sprite->Dispose();
+    }
+    obstacles.erase(obstacles.begin, obstacles.end);
+
+    for (int side = 0; side < 2; ++side) {
+        if (creatureSprites[side])
+            creatureSprites[side]->Dispose();
+        if (heroFlagSprites[side])
+            heroFlagSprites[side]->Dispose();
+    }
+
+    LoadCreatureSprite(-1);
+    combatGridBitmap->Dispose();
+    combatCellGridBitmap->Dispose();
+    combatShadowBitmap->Dispose();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1004
 VA(0x00463600, 0x3D8)  // anchor-callee, dc 0x5e09c
@@ -764,9 +793,9 @@ void combatManager::PlaceAllObstacles()
 VA(0x00466b30, 0x11F)  // anchor-global, dc 0x60b20
 void combatManager::RemoveObstacle(int index)
 {
-    if (index < 0 || obstacles_begin == 0
+    if (index < 0 || obstacles.begin == 0
             || static_cast<unsigned>(index)
-               >= static_cast<unsigned>(obstacles_end - obstacles_begin))
+               >= static_cast<unsigned>(obstacles.end - obstacles.begin))
         return;
     TObstacle* obstacle = GetObstacle(index);
     const type_obstacle_shape* shape = obstacle->shape;
