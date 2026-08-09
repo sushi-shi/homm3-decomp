@@ -184,7 +184,7 @@ ai_combat	type_AI_combat_data_type_AI_combat_data_276c0	0.0000
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	86.3767
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	98.7523
-ai_player	?end_turn@type_AI_player@@QAEXXZ	56.8835
+ai_player	?end_turn@type_AI_player@@QAEXXZ	89.0940
 ai_player	?find_magus_hut_value@@YIJJE@Z	100.0000
 ai_player	?get_attack_bonus@type_AI_player@@SIMF@Z	100.0000
 ai_player	?get_cell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000

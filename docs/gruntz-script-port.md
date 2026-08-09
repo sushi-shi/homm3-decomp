@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `type_AI_player::end_turn` rises 56.8835% -> 89.0940%
+  by isolating retail's out-of-line string append and matching its warning
+  scan.** Retail calls the three-argument `std::string::append` overload but
+  inlines destruction of the formatted temporary. Naming that temporary and
+  applying `inline_depth(0)` only to the append statement reproduces the
+  split. Expressing the seven resource iterations as two advancing pointers
+  plus a tail count then matches retail's loop direction and address
+  progression. The remaining cursor/register permutation did not respond to
+  declaration order, register hints, shared alliance indices, or extra
+  scopes, so those byte-inert probes were reverted. This extends the same
+  tightly scoped inline-budget method used for TSplitWindow and mousemgr;
+  retail bytes remained the authority and no external implementation was
+  used.
+
 - **2026-08-09 — mousemgr gains two exact rows: `CheckUpdate` and the
   out-of-line `TCSLock` constructor.** Retail inlines CheckUpdate's outer
   lock constructor but calls the same constructor for the nested

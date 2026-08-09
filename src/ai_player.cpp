@@ -378,11 +378,17 @@ void type_AI_player::calculate_demand()
 // use the first Marketplace town to gift AI allies before human allies.
 // Negative resources are accumulated into one warning string.
 //
-// Residual (56.8835%): the live semantics and major CFG are present. The
-// principal byte delta is TU codegen ecology: retail calls the 230-byte
-// string::append(string, pos, count) instantiation at 0x41b250, while VC6
-// expands it here even after both neighbouring bodies were restored. The
-// player/team checks are the retail inline OnSameTeam form.
+// Residual (89.0940%): the live semantics and major CFG are present. A
+// scoped inline-depth override now reproduces retail's call to the 230-byte
+// string::append(string, pos, count) instantiation at 0x41b250, while a
+// named format result lets its temporary destructor remain inlined. The
+// warning scan also uses retail's two advancing pointers and seven-count
+// tail loop. The remaining delta is register allocation across the
+// Marketplace/alliance scans and those two warning cursors: this compile
+// merges the cursors into one induction plus a delta, whereas retail keeps
+// both in registers. Declaration order, register hints, shared loop indices,
+// and extra lifetime scopes were byte-inert. The player/team checks are the
+// retail inline OnSameTeam form.
 VA(0x00428dd0, 0x33E)  // linkorder, dc 0x2e7d8
 void type_AI_player::end_turn()
 {
@@ -430,13 +436,22 @@ void type_AI_player::end_turn()
     }
 
     std::string warning;
-    for (int warning_resource = 0; warning_resource < 7; warning_resource++) {
-        if (player->resources[warning_resource] < 0)
-            warning.append(format_string(gAIResourceWarningFormat,
-                                         player->resources[warning_resource],
-                                         gResourceNames[warning_resource]),
-                           0, std::string::npos);
-    }
+    long* warning_amount = player->resources;
+    const char** warning_name = gResourceNames;
+    int warning_count = 7;
+    do {
+        if (*warning_amount < 0) {
+            std::string formatted = format_string(
+                gAIResourceWarningFormat,
+                *warning_amount,
+                *warning_name);
+#pragma inline_depth(0)
+            warning.append(formatted, 0, std::string::npos);
+#pragma inline_depth()
+        }
+        warning_amount++;
+        warning_name++;
+    } while (--warning_count);
     if (warning.length())
         NormalDialog(warning.c_str(), 1, -1, -1, -1, 0, -1, 0,
                      -1, 0, -1, 0);
