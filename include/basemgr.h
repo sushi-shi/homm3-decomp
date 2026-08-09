@@ -29,6 +29,8 @@ class message;
 // INTRO says they must be.
 class baseManager {
 public:
+    enum { STATUS_ACTIVE = 1 };
+
     baseManager* nextManager;
     baseManager* prevManager;
     int id;

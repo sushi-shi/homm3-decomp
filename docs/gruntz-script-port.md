@@ -480,6 +480,48 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   This applies the HoMM2/Gruntz named-domain and source-order method. No
   external implementation body or `decomp-attempt-1` material was used.
 
+- **2026-08-09 — `hero::HeroFn_004D8F70` reconstructed byte-exact
+  (62 bytes).** The retail-only getter normally indexes one of eighteen
+  64-byte hero-class records and returns its name pointer at +4. For hero 27
+  in campaign mode and scenario 15 it instead returns the central text
+  record's pointer at +0xb80. Retail instructions and relocations prove both
+  branches, the byte-width campaign flag, the full-dword scenario field and
+  every offset; the public identity remains provisional because no surviving
+  Dreamcast name covers this Complete-only body. The hero-only include view
+  exposes just the scenario and text fields needed here, following the
+  HoMM2/Gruntz minimal-view rule without widening the shared game or text
+  layouts in unrelated translation units. No external implementation body or
+  `decomp-attempt-1` material was used.
+
+- **2026-08-09 — `hero::UseSpell` reconstructed byte-exact (89 bytes).**
+  The method subtracts its cost from the hero's signed-short mana and clamps
+  the result to zero. When the adventure manager is active and the acting
+  player is local, it refreshes all hero locators with the retail arguments
+  `(-1, 1, 1)`. Retail instructions and relocations prove the mana width,
+  manager/player globals, active-state test, caller target and arguments;
+  Dreamcast supplies the public method name and `int cost` signature only.
+  The matching source uses the TU's by-value min/max idiom plus a named
+  integer result: that lifetime keeps retail's 32-bit selected-temporary load
+  before the final short truncation, while direct assignment made VC6 narrow
+  the load to sixteen bits. This applies the HoMM2/Gruntz helper-boundary and
+  lifetime method. No external implementation body or `decomp-attempt-1`
+  material was used.
+
+- **2026-08-09 — `hero::hire` reconstructed byte-exact (100 bytes).**
+  The method finds this hero id in the player's two tavern offers, subtracts
+  the shared hero price from gold, places the hero at the supplied packed
+  point and passes the consumed offer index to the game's town-hire closeout.
+  Retail instructions and relocations prove the player/recruit/resource
+  fields, every stride, both calls and the source-significant unbounded offer
+  scan; Dreamcast supplies the public method name and parameter types. The
+  already exact `town::hire` sibling provided the canonical in-tree helper
+  boundary, while retail selected this shorter variant's exact operations.
+  The shared cost and closeout declarations remain visible only in hero.obj
+  and town.obj: exposing the cost declaration tree-wide measurably regressed
+  `initialize_game_data` and was rejected. This applies the HoMM2/Gruntz
+  sibling-pattern and minimal-view rules. No external implementation body or
+  `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `THeroScreenWindow::update_all_slots` reconstructed
   byte-exact (23 bytes).** Retail retains `this` in EDI and walks a long
   ESI index from zero through all nineteen equipped positions, calling the
