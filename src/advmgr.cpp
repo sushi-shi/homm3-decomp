@@ -725,14 +725,99 @@ void set_witch_hut_help_text(char* buffer, hero* current_hero, NewmapCell* cell,
     }
 }
 
-#if 0  // @carcass
+// The DC header overload survives here only through /Ob2 expansion. The
+// retail instruction stream independently proves its by-value forwarding
+// shape.
+inline int GetMapExtra(type_point point)
+{
+    return ::GetMapExtra(point.x, point.y, point.z);
+}
 
 // E:\gamedcs\advmgr.cpp:4385
+// RETAIL-RECONSTRUCTED 2026-08-09 (74.8967%). Retail proves the complete
+// map-area, packed-hover, visibility/current-level, rollover, owned hero/town
+// cursor and scroll-zone fallback paths. The 27-branch and four-return counts
+// agree; two case-layout branch polarities and VC6 register/stack scheduling
+// around the inlined point helpers remain.
 VA(0x0040deb0, 0x3CF)  // anchor-callee, dc 0xed7c
 int advManager::ProcessWaitingHover(int mouseX, int mouseY)
 {
-    // @stub
+    if (InMapArea(mouseX, mouseY)) {
+        advCommand = -1;
+        lastHoverX = mouseX / 32;
+        lastHoverY = mouseY / 32;
+        lastMapHover.x = radarOrigin.x + lastHoverX;
+        lastMapHover.y = radarOrigin.y + lastHoverY;
+        lastMapHover.z = radarOrigin.z;
+
+        int thisPlayerBit = 1 << gpGame->GetLocalPlayerGamePos();
+        playerData* thisPlayer = gpGame->GetLocalPlayer();
+        if (lastMapHover.is_valid()
+            && (GetMapExtra(lastMapHover) & thisPlayerBit)) {
+            if (thisPlayer->currHeroId == -1
+                || gpGame->GetHero(thisPlayer->currHeroId)->z
+                    == radarOrigin.z) {
+                type_point point;
+                point.x = radarOrigin.x + lastHoverX;
+                point.y = radarOrigin.y + lastHoverY;
+                point.z = radarOrigin.z;
+
+                NewmapCell* currCell;
+                if (!point.is_valid())
+                    currCell = fullMap->cellData;
+                else
+                    currCell = fullMap->cell(point.x, point.y, point.z);
+
+                SetRolloverText(currCell, mouseX, mouseY);
+                switch (currCell->type) {
+                case TOWN: {
+                    town* mapTown = gpGame->GetTown(currCell->extraInfo);
+                    if (gpGame->IsLocalHuman(mapTown->owner)
+                        && mapTown->owner == gNetLocalGamePos) {
+                        gpMouseManager->SetPointer(
+                            2, mouseManager::ADVENTURE_SET);
+                        advCommand = thisPlayer->currHeroId == -1 ? 4 : 2;
+                        return 1;
+                    }
+                    break;
+                }
+                case HERO: {
+                    hero* mapHero = gpGame->GetHero(currCell->extraInfo);
+                    if (gpGame->IsLocalHuman(mapHero->owner)) {
+                        advCommand = thisPlayer->currTownId == -1 ? 5 : 3;
+                        gpMouseManager->SetPointer(
+                            3, mouseManager::ADVENTURE_SET);
+                        return 1;
+                    }
+                    break;
+                }
+                }
+            }
+        }
+
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        return 1;
+    }
+
+    if (gpMouseManager->field_50 >= HOVER_SCROLL_POINTER_FIRST
+        && gpMouseManager->field_50 <= HOVER_SCROLL_POINTER_LAST) {
+        int rx;
+        int ry;
+        gpMouseManager->MouseCoords(&rx, &ry);
+        if (rx < 0 || rx >= HOVER_SCREEN_WIDTH
+            || ry < 0 || ry >= HOVER_SCREEN_HEIGHT
+            || (rx >= HOVER_SCROLL_MARGIN && rx <= HOVER_SCROLL_RIGHT
+                && ry >= HOVER_SCROLL_MARGIN
+                && ry <= HOVER_SCROLL_BOTTOM)) {
+            gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        }
+    }
+
+    advWindow->ProcessHover(mouseX, mouseY);
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:4514
 DC_ONLY(0xf23c, 0x84)
@@ -2715,7 +2800,7 @@ void advManager::ForceNewHover()
         int x;
         int y;
         gpMouseManager->MouseCoords(&x, &y);
-        lastHover = -1;
+        lastHoverX = -1;
         ProcessHover(x, y);
     }
 }

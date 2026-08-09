@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::ProcessWaitingHover` reconstructed at
+  74.8967%.** Retail first bounds the pointer against the adventure map,
+  converts its pixels to cached tile offsets and a packed map point, and
+  admits rollover detail only when the point is valid, visible to the local
+  player and on the current hero's map level. It then resolves the cell,
+  updates rollover text, and selects the owned-town or local-human-hero cursor
+  command; outside the map it preserves active scroll cursors only inside the
+  16-pixel screen-edge zone before forwarding hover to the adventure window.
+  The compiled and retail bodies have the same 975-byte target span, 27
+  conditional branches and four returns. Two case-layout branch polarities
+  and VC6 register/stack scheduling around the inlined packed-point helpers
+  remain. Retail proves the complete control flow, screen/scroll bounds,
+  pointer frames, object/owner gates and the `advManager` fields at
+  +0x40/+0xe8/+0xec/+0xf0; Dreamcast CodeView supplies the function, local,
+  field and helper names only. No external implementation body was used, and
+  the generated baseline remains build-owned.
+
 - **2026-08-09 — `set_witch_hut_help_text` reconstructed as a `QuickInfo`
   prerequisite at 98.0056%.** Retail copies the fixed Witch Hut name, gates
   details on the trigger bit and the seven-bit no-skill sentinel, checks the
