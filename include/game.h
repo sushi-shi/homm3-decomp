@@ -180,9 +180,15 @@ public:
     unsigned char field_00;
     char pad_01[3];
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > text;
+
+    Sign() : field_00(0) {}
 };
 SIZE(Sign, 0x14);
 
+VA(0x004bb990, 0x1CF)
+int __fastcall LoadAbstractString(
+    TAbstractFile* infile,
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> >* text);
 VA(0x004bbb60, 0xBB)
 int __fastcall SaveAbstractString(
     TAbstractFile* outfile,
@@ -637,6 +643,7 @@ public:
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
     void calculate_production();                 // 0x4b8af0
+    int LoadSignPool(TAbstractFile* infile);      // 0x4b9070
     int SaveSignPool(TAbstractFile* outfile);     // 0x4b9270
     int LoadMinePool(TAbstractFile* infile, int saveVersion);
     int LoadGarrisonPool(TAbstractFile* infile, int saveVersion);
