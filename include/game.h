@@ -344,7 +344,15 @@ SIZE(playerData, 360);
 // define the class.)
 class game {
 public:
+#ifdef HOMM3_HERO_CLASS_NAME_VIEW
+    char pad_00000[0x1f45c];
+    // The retail-only hero class-name override compares this full dword
+    // against scenario 15.
+    int campaignScenario;
+    char pad_1f460[0x1d6];
+#else
     char pad_00000[0x1f636];
+#endif
     // Eight per-player disabled/dead flags. type_AI_player::end_turn
     // skips a gift candidate when the indexed byte is nonzero.
     unsigned char playerDisabled[8];  // +0x1f636

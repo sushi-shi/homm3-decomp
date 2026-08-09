@@ -113,6 +113,12 @@ struct SUnnamedEntry6a5d5c {
     // replacing that name with the colour word - so it is the string a
     // never-named player carries. Ordinal-free name, role-derived.
     const char* defaultPlayerName;
+#ifdef HOMM3_HERO_CLASS_NAME_VIEW
+    char pad_758[0x428];
+    // Retail-only campaign override returned instead of the normal hero
+    // class name for hero 27 in scenario 15.
+    const char* campaignHeroClassName;  // +0xb80
+#endif
 };
 struct SUnnamed6a5d5c {
     char pad_00[0x20];

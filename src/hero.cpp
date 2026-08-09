@@ -21,6 +21,7 @@
 // gpGame / playerData / game::IsHuman: the owner-record accessors
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
 // the real definitions, and game.h is where they live.
+#define HOMM3_HERO_CLASS_NAME_VIEW
 #include "game.h"
 // TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
 // placement note at the top of that header.
@@ -28,11 +29,16 @@
 // TArtifact / akArtifactTraits / gCombinationArtifacts - same placement
 // rationale as herospec.h.
 #include "artifact.h"
+#include "exec.h"
+#undef HOMM3_HERO_CLASS_NAME_VIEW
 // TMagicTerrain - the battlefield magic-terrain id the spell-school
 // quartet takes as its second argument.
 #include "magicterrain.h"
 #include "message.h"
 #include "winmgr.h"
+
+DATA(0x0069774c) extern unsigned char gCampaignMode;
+DATA(0x0067dcec) extern const THeroClassTraits (&akHeroClasses)[18];
 
 
 // The per-mastery specialty factor rows, one four-float .rdata run per
@@ -272,14 +278,21 @@ void hero::HeroFn_004D8B30(const void* setup)
     // @stub
 }
 
+#endif  // @carcass
+
 // 0x004d8f70 `ret 0`: returns a string - the campaign override
 // (hero id 0x1b under scenario 0xf) or akHeroClasses[class].field_4,
 // the 64-byte-stride class record at 0x67dcec.
 VA(0x004d8f70, 0x3E)  // retail-only, hero member, ret 0
 const char* hero::HeroFn_004D8F70()
 {
-    // @stub
+    if (id == CLASS_NAME_OVERRIDE_HERO_ID && gCampaignMode &&
+        gpGame->campaignScenario == CLASS_NAME_OVERRIDE_SCENARIO)
+        return gUnnamed6a5d5c->entry->campaignHeroClassName;
+    return akHeroClasses[heroClass].className;
 }
+
+#if 0  // @carcass
 
 // 0x004d8fb0 `ret 0`: the custom-name path - returns the +0x3de pointer
 // when the +0x3d9 flag is set (falling back to the empty literal at
