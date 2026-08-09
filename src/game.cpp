@@ -9,7 +9,9 @@
 #include <va.h>
 #define HOMM3_GAME_HERO_EXTRA_VIEW
 #define HOMM3_GAME_SHIPYARD_VIEW
+#define HOMM3_GAME_LOAD_VIEW
 #include "game.h"
+#undef HOMM3_GAME_LOAD_VIEW
 #undef HOMM3_GAME_SHIPYARD_VIEW
 #undef HOMM3_GAME_HERO_EXTRA_VIEW
 #undef HOMM3_GAME_POINT_CTOR_VIEW
@@ -1526,11 +1528,125 @@ void game::setup_shipyards()
 // SCampaign::SCampaign AND all four claimed pool LOADERS
 // (0x4b9070 / 0x4b9340 / 0x4b96f0 / 0x4b9a00) - and none of the savers.
 // It references the literal 'H3SVG' at 0x677d38. `ret 4` = p=2.
+//
+// PARTIAL (23.1861%): retail's scalar scenario-state tail and nineteen
+// teleport-destination vectors are reconstructed below. The save-header,
+// map, object-pool and roster prefix still remains; until it is admitted,
+// the temporary first read supplies the version that prefix normally leaves
+// live. The target's short vector-count reads deliberately skip only that
+// vector rather than failing the entire load.
+#endif  // @carcass
+
 VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
-int game::Load(void* infile)
+int game::Load(TAbstractFile* infile)
 {
-    // @stub
+    // The save header supplies this value in the complete routine. Keep the
+    // initial read here until that prefix is reconstructed so the admitted
+    // serialization tail retains its version gates.
+    int saveVersion;
+    if (infile->Read(&saveVersion, sizeof(saveVersion)) < sizeof(saveVersion))
+        return -1;
+
+    char char_buffer;
+    short short_buffer;
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    field_1f4d4 = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    field_1f634 = char_buffer;
+
+    if (infile->Read(&short_buffer, sizeof(short_buffer)) < sizeof(short_buffer))
+        return -1;
+    ultimateArtifactX = short_buffer;
+    if (infile->Read(&short_buffer, sizeof(short_buffer)) < sizeof(short_buffer))
+        return -1;
+    ultimateArtifactY = short_buffer;
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    ultimateArtifactZ = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    field_1f695 = char_buffer;
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    ultimateArtifactPresent = char_buffer != 0;
+    if (saveVersion < 40)
+        f_1f698 = char_buffer;
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    field_1f69c = char_buffer;
+
+    if (infile->Read(&short_buffer, sizeof(short_buffer)) < sizeof(short_buffer))
+        return -1;
+    field_1f63e = short_buffer;
+    if (infile->Read(&short_buffer, sizeof(short_buffer)) < sizeof(short_buffer))
+        return -1;
+    field_1f640 = short_buffer;
+    if (infile->Read(&short_buffer, sizeof(short_buffer)) < sizeof(short_buffer))
+        return -1;
+    field_1f642 = short_buffer;
+
+    // Retail asks for all 32 bytes but accepts an eight-byte return here.
+    if (infile->Read(field_1f644, sizeof(field_1f644)) < 8)
+        return -1;
+    if (infile->Read(field_1f664, sizeof(field_1f664)) < sizeof(field_1f664))
+        return -1;
+    if (infile->Read(globalInfoFlags, sizeof(globalInfoFlags)) <
+        sizeof(globalInfoFlags))
+        return -1;
+    if (infile->Read(borderTentVisitFlags, sizeof(borderTentVisitFlags)) <
+        sizeof(borderTentVisitFlags))
+        return -1;
+    if (infile->Read(cartographerMask, sizeof(cartographerMask)) <
+        sizeof(cartographerMask))
+        return -1;
+    if (infile->Read(cartographerFlags, sizeof(cartographerFlags)) <
+        sizeof(cartographerFlags))
+        return -1;
+
+    int poolCount = saveVersion < 32 ? 3 : 8;
+    int i;
+    for (i = 0; i < poolCount; ++i) {
+        if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
+            sizeof(short_buffer)) {
+            lithPools[i].resize(short_buffer);
+            infile->Read(lithPools[i].begin(),
+                         short_buffer * sizeof(type_point));
+        }
+    }
+    for (i = 0; i < poolCount; ++i) {
+        if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
+            sizeof(short_buffer)) {
+            lithExitPools[i].resize(short_buffer);
+            infile->Read(lithExitPools[i].begin(),
+                         short_buffer * sizeof(type_point));
+        }
+    }
+
+    if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
+        sizeof(short_buffer)) {
+        whirlpools.resize(short_buffer);
+        infile->Read(whirlpools.begin(), short_buffer * sizeof(type_point));
+    }
+    if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
+        sizeof(short_buffer)) {
+        field_4e78c.resize(short_buffer);
+        infile->Read(field_4e78c.begin(), short_buffer * sizeof(type_point));
+    }
+    if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
+        sizeof(short_buffer)) {
+        field_4e79c.resize(short_buffer);
+        infile->Read(field_4e79c.begin(), short_buffer * sizeof(type_point));
+    }
+
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:3257
 DC_ONLY(0xa8b48, 0x2A)
