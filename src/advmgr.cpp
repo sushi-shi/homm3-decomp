@@ -596,21 +596,59 @@ int advManager::GetCloudLookup(int srcX, int srcY, int z)
     return giCloudType[lookup];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:5573
 VA(0x0040fb30, 0x167)  // linkorder, dc 0x110c0
-unsigned char advManager::ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type, []* parts)
+bool advManager::ScanForHeroOrBoat(int srcX, int srcY, int z,
+                                   unsigned short type,
+                                   TDrawParts (&parts)[6])
 {
-    // @stub
+    if (gbInViewWorld)
+        return false;
+
+    int partNum = 0;
+    bool found = false;
+    for (int cy = 0; cy < 2; ++cy) {
+        for (int cx = -1; cx < 2; ++cx) {
+            if (srcX + cx >= 0 && srcY + cy >= 0
+                && srcX + cx < gMapWidth && srcY + cy < gMapHeight) {
+                NewmapCell* tempCell =
+                    GetCell(type_point(srcX + cx, srcY + cy, z));
+                if (tempCell->type == type && tempCell->is_trigger
+                    && tempCell->extraInfo != ~0UL) {
+                    parts[partNum].IsValid = true;
+                    parts[partNum].X = cx;
+                    parts[partNum].Y = cy;
+                    parts[partNum].id = tempCell->extraInfo;
+                    found = true;
+                }
+            }
+            ++partNum;
+        }
+    }
+    return found;
 }
 
-// E:\gamedcs\advmgr.cpp:5614
+// E:\gamedcs\advmgr.cpp:5614. The eight cases are read directly from the
+// retail switch's 82-byte selector table for object ids 17..98.
 VA(0x0040fca0, 0x7A)  // anchor-global, dc 0x11238
-unsigned char hasFlag(int objType)
+bool hasFlag(int objType)
 {
-    // @stub
+    switch (objType) {
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+    case GARRISON:
+    case LIGHTHOUSE:
+    case MINE:
+    case RANDOM_TOWN:
+    case SHIPYARD:
+    case TOWN:
+        return true;
+    default:
+        return false;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:5634
 VA(0x0040fd20, 0x10E)  // anchor-global, dc 0x1129c
