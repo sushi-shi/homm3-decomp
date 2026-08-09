@@ -411,11 +411,28 @@ void game::calculate_production()
 }
 
 // E:\gamedcs\game.cpp:838
+#endif  // @carcass
+
 VA(0x004b9070, 0x1B3)  // anchor-callee (game::Load) + read-slot, dc 0xa3c68
-int game::LoadSignPool(void* infile)
+int game::LoadSignPool(TAbstractFile* infile)
 {
-    // @stub
+    signed char count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    signs.resize(count);
+    for (unsigned int i = 0; i < signs.size(); ++i) {
+        if (LoadAbstractString(infile, &signs[i].text) < 0)
+            return -1;
+
+        if (infile->Read(&count, sizeof(count)) < sizeof(count))
+            return -1;
+        signs[i].field_00 = count != 0;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:868
 #endif  // @carcass
