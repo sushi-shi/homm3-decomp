@@ -404,6 +404,15 @@ public:
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
     void calculate_production();                 // 0x4b8af0
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    // 0x4c9990. town.obj needs this declaration for
+    // town::destroy_extra_capitol; keeping it TU-scoped preserves the
+    // retail-sensitive game member population in the other compilands.
+    void ConvertObject(NewmapCell* tempCell);
+    // 0x4c86a0. town::hire passes the player id and consumed two-slot
+    // recruit index; the body remains outside the admitted surface.
+    void finish_town_hire(long player_id, int recruit_slot);
+#endif
     unsigned char OnSameTeam(int player1, int player2)
     {
         if (player1 < 0 || player2 < 0)

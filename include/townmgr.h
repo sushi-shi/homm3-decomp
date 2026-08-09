@@ -5,6 +5,21 @@
 #ifndef HOMM3_TOWNMGR_H
 #define HOMM3_TOWNMGR_H
 
+#ifdef HOMM3_TOWN_OBJ_DECLS
+#include "basemgr.h"
+
+class town;
+
+// Narrow header-owned prefix proven by town::View: the manager base fills
+// +0x00..+0x37 and the selected town pointer follows at +0x38.
+class townManager : public baseManager {
+public:
+    town* townToView;
+};
+
+extern townManager* gpTownManager;  // retail .bss 0x6994fc
+#endif
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5180, dc 0x17320c) void DoEventGarrison(hero* inHero, garrison* thisGarrison);
 // CODEVIEW(E:\gamedcs\townmgr.cpp:5187, dc 0x173238) void do_monster_join_dialog(hero* inHero, TCreatureType type, int amount);

@@ -356,6 +356,13 @@ public:
                        unsigned char update);
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
     e_looping_sound_id GetSoundId(int x, int y, int z);
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    // 0x417b20. town::View is the only admitted caller needing this broad
+    // context switch, so keep its member declaration in town.obj.
+    void SetHeroContext(int heroId, int bInMove,
+                        unsigned char waitingPlayer,
+                        unsigned char draw_changes);
+#endif
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
