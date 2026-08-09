@@ -51,6 +51,12 @@
 DATA(0x0069774c) extern unsigned char gCampaignMode;
 DATA(0x0067dcec) extern const THeroClassTraits (&akHeroClasses)[18];
 DATA(0x006a7540) extern const char* gPrimaryStatNames[4];
+// Runtime hero-view state used by the retail-only name getter below. The
+// storage addresses and access widths are byte-proven; no public symbol
+// roster survives for the three pointer spellings, so they are provisional.
+DATA(0x00698b20) extern hero* gpCurrentHero;
+DATA(0x006a66d8) extern const char* gSharedHeroNames[156];
+DATA(0x006a6948) extern const char* gCampaignHeroName;
 // Runtime-loaded artifact rollover text. Retail fixes the three storage
 // cells and their roles; no surviving public names them, so the spellings
 // remain provisional.
@@ -331,19 +337,35 @@ const char* hero::HeroFn_004D8F70()
     return akHeroClasses[heroClass].className;
 }
 
-#if 0  // @carcass
-
 // 0x004d8fb0 `ret 0`: the custom-name path - returns the +0x3de pointer
 // when the +0x3d9 flag is set (falling back to the empty literal at
 // 0x63a608), otherwise strcmp's the +0x23 name band against
-// akHeroTraits[id] and returns the shared name table 0x6a66d8[id].
+// akHeroTraits[id] and substitutes the shared name table 0x6a66d8[id]
+// only while the live name still equals its default.
 VA(0x004d8fb0, 0xA0)  // retail-only, hero member, ret 0
 const char* hero::HeroFn_004D8FB0()
 {
-    // @stub
-}
+    const char* emptyName = DATA_COMPGEN(0x0063a608, heroNameEmptyText,
+                                         "");
 
-#endif  // @carcass
+    if (hasCustomName) {
+        const char* result = emptyName;
+        if (customName)
+            result = customName;
+        return result;
+    }
+
+    if (gCampaignMode &&
+        gpGame->campaignScenario != CUSTOM_NAME_CAMPAIGN_EXCLUDED_SCENARIO &&
+        gpCurrentHero->portrait == CUSTOM_NAME_CAMPAIGN_PORTRAIT)
+        return gCampaignHeroName;
+
+    const char* heroName = name;
+    const char* defaultName = akHeroTraits[id].defaultName;
+    if (strcmp(heroName, defaultName) == 0)
+        return gSharedHeroNames[id];
+    return heroName;
+}
 
 // E:\gamedcs\hero.cpp:1303
 // Whole body: `if ((signed char)owner < 0) return 0; return

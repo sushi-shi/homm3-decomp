@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `hero::HeroFn_004D8FB0` reconstructed byte-exact
+  (160 bytes).** The retail-only ordinal name remains provisional. Retail
+  first honors the custom-name flag at +0x3d9, returning the unaligned
+  pointer at +0x3de or the empty literal at 0x63a608. Otherwise campaign
+  mode selects a runtime override except in scenario 20 when the current
+  hero's portrait is 156; the ordinary path returns the live +0x23 name,
+  substituting the shared 0x6a66d8 table entry only while that name still
+  equals `akHeroTraits[id].defaultName` at trait offset +0x40. The newly
+  exposed hero fields and member declaration are confined to hero.obj's
+  existing narrow view. Dreamcast corroborates `portrait` at +0x34 and the
+  static trait name role (at a different cross-build offset); all x86
+  offsets, branches, constants and data accesses are retail-byte-proven.
+  No external implementation body was used. Against the re-anchored floor,
+  whole-linked fuzzy coverage rises from 45.81% to 45.85%, executable fuzzy
+  coverage from 8.69% to 8.70%, and exact linked functions from 617 to 618.
+
 - **2026-08-09 — `advManager::SetRolloverText` dispatch extends to
   84.1879%.** Retail's 216-byte object-to-handler map and 59-entry target
   table admit the remaining control-flow structure: `BORDER_GATE` (id 212)
