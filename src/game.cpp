@@ -9,9 +9,7 @@
 #include <va.h>
 #define HOMM3_GAME_HERO_EXTRA_VIEW
 #define HOMM3_GAME_SHIPYARD_VIEW
-#define HOMM3_GAME_LOAD_VIEW
 #include "game.h"
-#undef HOMM3_GAME_LOAD_VIEW
 #undef HOMM3_GAME_SHIPYARD_VIEW
 #undef HOMM3_GAME_HERO_EXTRA_VIEW
 #undef HOMM3_GAME_POINT_CTOR_VIEW
@@ -1529,11 +1527,11 @@ void game::setup_shipyards()
 // (0x4b9070 / 0x4b9340 / 0x4b96f0 / 0x4b9a00) - and none of the savers.
 // It references the literal 'H3SVG' at 0x677d38. `ret 4` = p=2.
 //
-// PARTIAL (26.3228%): retail's scalar scenario-state tail, nineteen
-// teleport-destination vectors, and the map/object-pool prefix are
-// reconstructed below. The function-scope string is also retail-structural:
-// its Dinkumware cleanup gives every short-read the target's shared failure
-// exit. The save-header and player/town/hero roster bands still remain;
+// PARTIAL (26.8395%): retail's scalar scenario-state tail, nineteen
+// teleport-destination vectors, the map/object-pool prefix, and all eight
+// player records are reconstructed below. The function-scope string is also
+// retail-structural: its Dinkumware cleanup gives every short-read the target's
+// shared failure exit. The save-header and town/hero roster bands still remain;
 // until the header is admitted, the temporary first read supplies the
 // version it normally leaves live. Short teleport-vector counts deliberately
 // skip only that vector rather than failing the entire load.
@@ -1611,6 +1609,11 @@ int game::Load(TAbstractFile* infile)
     if (infile->Read(obeliskFlags, sizeof(obeliskFlags)) <
         sizeof(obeliskFlags))
         return -1;
+
+    for (i = 0; i < 8; ++i) {
+        if (players[i].load(infile, saveVersion) < 0)
+            return -1;
+    }
 
     if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
         return -1;
