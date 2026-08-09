@@ -33,6 +33,17 @@ public:
 };
 
 class town;
+struct type_creature_bank;
+
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+struct type_creature_bank_vector_view {
+    char allocator[4];
+    type_creature_bank* first;
+    type_creature_bank* last;
+    type_creature_bank* end;
+};
+SIZE(type_creature_bank_vector_view, 0x10);
+#endif
 // Declared in E:\gamedcs\struct.h (DC functions.csv puts both ctors
 // there) but DEFINED in include/netplayer.h, not in this tree's
 // struct.h: struct.h rides in initialize.cpp's include closure, and one
@@ -389,7 +400,13 @@ public:
     std::vector<generator> generators;   // +0x4e398
     std::vector<garrison> garrisons;      // +0x4e3a8
     std::vector<boat> boats;             // +0x4e3b8
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    char pad_4e3c8[0x10];
+    type_creature_bank_vector_view creatureBanks;  // +0x4e3d8
+    char pad_4e3e8[1];
+#else
     char pad_4e3c8[0x21];
+#endif
     // +0x4e3e9, one signed byte of per-player visit bits per obelisk;
     // GetNumObelisks tests `(1 << player) & flags[i]` over exactly 48
     // entries.
