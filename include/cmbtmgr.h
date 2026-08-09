@@ -438,6 +438,8 @@ public:
     // unsigned char return produces exactly that `xor al,al`).
     unsigned char ShotIsThroughWall(const army* shooter, int sourceIndex,
                                     int destIndex);
+    unsigned char ShotIsNotOptimal(const army* attacker,
+                                   const army* defender);
     unsigned char InLineOfSight(int sourceIndex, int destIndex);
     void UpdateArmyLuckAndMorale();
     unsigned char place_obstacle(int obstacle_id);
