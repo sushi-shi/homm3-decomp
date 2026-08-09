@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::Load` reaches 50.3078% with the complete roster
+  band.** Retail reads a byte town count, resizes the canonical 360-byte town
+  vector through a default temporary, loads every town, then loads 128 heroes
+  before save version 25 and all 156 thereafter. The adjacent compatibility
+  state is required as one unit: pre-version-31 saves consume an eight-byte
+  legacy record, hero availability restores 128 or 156 bytes with 0x40 for
+  the older 28-entry tail, and newer saves rebuild 156 eight-player
+  eligibility bitsets from one byte each. Those eight legacy bytes plus the
+  four-byte bitset temporary close the previously observed 12-byte frame gap.
+  Retail also keeps the already byte-exact `generator` constructor out of
+  line for its 92-byte resize temporary; a pragma scoped to that definition
+  restores the exact 0x7a8-byte frame and saved-header slots without changing
+  the constructor's 100% match. The function rises from 48.8668% to 50.3078%,
+  all 986 cur/max/history ratchets remain clean, and no external implementation
+  body was used.
+
 - **2026-08-09 — `game::Load` extends from 47.6526% to 48.8668%.** Save
   version 41 introduces one unchecked byte read immediately after the path
   search array closes; retail sign-extends that byte into the global at

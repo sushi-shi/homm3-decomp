@@ -131,6 +131,10 @@ void ImmMouseWindowMoved()
 // implicit - and the two rows are fused into one four-iteration loop
 // walking `type` by 4 and `population` by 2, which is what fixes
 // population as SHORTS.
+// Retail keeps this byte-exact constructor out of line when vector::resize
+// creates game::Load's default generator. Preserve that VC6 auto-inline
+// decision so the 92-byte temporary occupies the retail stack slot.
+#pragma auto_inline(off)
 VA(0x004b8550, 0x48)  // anchor-global, dc 0xa2da0
 generator::generator()
     : genClass(-1), genType(-1)
@@ -145,6 +149,7 @@ generator::generator()
         population[i] = 0;
     }
 }
+#pragma auto_inline(on)
 
 // E:\gamedcs\game.cpp:431
 VA(0x004b85a0, 0x13B)  // anchor-global, dc 0xa2e48
@@ -1739,6 +1744,45 @@ int game::Load(TAbstractFile* infile)
     for (i = 0; i < 8; ++i) {
         if (players[i].load(infile, saveVersion) < 0)
             return -1;
+    }
+
+    unsigned char townCount;
+    if (infile->Read(&townCount, sizeof(townCount)) < sizeof(townCount))
+        return -1;
+    towns.resize(townCount);
+    for (i = 0; i < towns.size(); ++i) {
+        if (towns[i].load(infile, saveVersion) < 0)
+            return -1;
+    }
+
+    int heroCount = saveVersion < 25 ? 128 : HERO_COUNT;
+    for (i = 0; i < heroCount; ++i) {
+        if (heroes[i].load(infile, saveVersion) < 0)
+            return -1;
+    }
+
+    unsigned char legacyHeroPoolMap[8];
+    if (saveVersion < 31
+        && infile->Read(legacyHeroPoolMap, sizeof(legacyHeroPoolMap))
+            < sizeof(legacyHeroPoolMap)) {
+        return -1;
+    }
+
+    if (infile->Read(heroAvailability, heroCount) < heroCount)
+        return -1;
+    if (heroCount < HERO_COUNT) {
+        memset(heroAvailability + heroCount, 0x40, HERO_COUNT - heroCount);
+    }
+
+    if (saveVersion >= 31) {
+        for (i = 0; i < HERO_COUNT; ++i) {
+            std::bitset<8> poolMap(0);
+            infile->Read(&char_buffer, sizeof(char_buffer));
+            unsigned int player;
+            for (player = 0; player < 8; ++player)
+                poolMap[player] = (char_buffer & (1 << player)) != 0;
+            heroPoolMap[i] = poolMap;
+        }
     }
 
     if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
