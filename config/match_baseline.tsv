@@ -157,6 +157,7 @@ ai_combat	?cast_damage_spell@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1
 ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25b10
 ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x258a0
 ai_combat	?check_wall_archery_penalty@type_AI_combat_data@@QAEXPBVtown@@@Z	100.0000	100.0000	100.0000	0x24790
+ai_combat	?choose_melee@type_AI_combat_data@@QBE_NABV1@W4type_speed_catagory@@@Z	90.9329	90.9329	90.9329	0x267c0
 ai_combat	?create_skeletons@@YIXPBVhero@@PBVarmyGroup@@PAV2@@Z	100.0000	100.0000	100.0000	0x26df0
 ai_combat	?do_aftermath@type_AI_combat_data@@QAEXPAV1@PBVtown@@@Z	79.7256	79.7256	79.7256	0x26ee0
 ai_combat	?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z	94.7603	94.7603	94.7603	0x264d0
@@ -178,7 +179,6 @@ ai_combat	?kill@type_AI_combat_data@@QAEXXZ	100.0000	100.0000	100.0000	0x262b0
 ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	46.7778	46.7778	46.7778	0x26bc0
 ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000	100.0000	100.0000	0x23ea0
 ai_combat	type_AI_combat_data_cast_spell	0.0000	0.0000	0.0000	0x25bd0
-ai_combat	type_AI_combat_data_choose_melee	0.0000	0.0000	0.0000	0x267c0
 ai_combat	type_AI_combat_data_initialize_creatures	0.0000	0.0000	0.0000	0x24120
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	86.3767	86.3767	86.3767	0x28740
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566	96.4566	96.4566	0x29ad0

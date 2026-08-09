@@ -26,12 +26,18 @@ __declspec(nothrow) void __cdecl operator delete(void* _P);
 
 // The AI's quick-combat speed bands. Retail compares the band against
 // type_monster_data::catagory as a plain signed int (get_attack
-// 0x4263d5 / inflict_melee_damage 0x426207); band 0 is the shooter
-// band (get_attack 0x4263e0 routes catagory==0 with unblocked
-// shooters through the ranged value). The roster beyond that is not
-// byte-proven - only the ordering is.
+// 0x4263d5 / inflict_melee_damage 0x426207); band 0 is the ranged band
+// (get_attack 0x4263e0 routes catagory==0 with unblocked shooters
+// through the ranged value), choose_melee proves slow == 4, and the DC
+// enum supplies the intervening names and legacy `catagory` spelling.
 enum type_speed_catagory {
-    SPEED_CATAGORY_SHOOTER = 0
+    const_ranged = 0,
+    const_very_fast = 1,
+    const_fast = 2,
+    const_average = 3,
+    const_slow = 4,
+    const_max_catagories = 5,
+    SPEED_CATAGORY_SHOOTER = const_ranged
 };
 
 // type_monster_data - PROVEN 72-byte record (0x48 stride: every
@@ -143,8 +149,7 @@ public:
     type_monster_vector monsters;    // +0x00
     long terrain;                    // +0x10
     long mana;                       // +0x14
-    unsigned char can_cast;          // +0x18
-    char pad_19[3];
+    unsigned char can_cast;          // +0x18, natural padding to +0x1c
     long total_hit_points;           // +0x1c
     // The attacker's Tactics edge over the defender. A REAL FIELD, not
     // padding: initialize_creatures (0x424120) seeds it with 0, then
@@ -161,13 +166,13 @@ public:
     hero* my_hero;                   // +0x24
     armyGroup* my_army;              // +0x28
     hero* enemy_hero;                // +0x2c
-    unsigned char wall_penalty;      // +0x30
-    char pad_31[1];
+    unsigned char wall_penalty;      // +0x30, natural padding at +0x31
     short penalty_distance;          // +0x32
 
     type_AI_combat_data(const hero* new_hero, const armyGroup* new_army,
                         double base_modifier, const hero* _enemy_hero,
                         const town* enemy_town, NewmapCell* map_cell);
+    type_AI_combat_data(const type_AI_combat_data& other);
     void initialize_creatures(double base_modifier, const hero* enemy_hero);
     void check_wall_archery_penalty(const town* enemy_town);
     void adjust_army(unsigned char dismiss_hero);
@@ -208,8 +213,13 @@ public:
                           unsigned char increase);
     void cast_enchantment(type_spell_choice& choice, type_AI_combat_data& defender);
     void cast_spell(type_AI_combat_data& defender, type_speed_catagory round);
-    unsigned char choose_melee(const type_AI_combat_data& enemy,
-                               type_speed_catagory current_round) const;
+    void cast_spells(type_AI_combat_data& defender, type_speed_catagory round);
+    bool choose_melee(const type_AI_combat_data& enemy,
+                      type_speed_catagory current_round) const;
+    void do_ranged_combat(type_AI_combat_data& defender);
+    void do_melee_combat(type_speed_catagory attacker_speed,
+                         type_AI_combat_data& defender);
+    void do_melee_combat(type_AI_combat_data& defender);
     void do_general_melee(type_AI_combat_data& defender);
     void simulate_combat(type_AI_combat_data& defender);
     void do_aftermath(type_AI_combat_data* defender, const town* enemy_town);

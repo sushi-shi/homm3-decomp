@@ -260,6 +260,29 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `type_AI_combat_data::choose_melee` reconstructed from
+  retail to 90.9329%.** The formerly unscored 1,021-byte body now rejects
+  armies without a living melee stack, evaluates each possible switch from
+  ranged to melee combat, copies and simulates both sides with spell-order
+  priority, resolves the remaining general melee, and selects whether the
+  current speed band is optimal. Its retail decorated name corrects the
+  carcass to a const `bool` method taking a const reference. The five speed
+  bands and helper names/signatures use Dreamcast CodeView as naming/type
+  evidence; every helper statement was independently reconstructed from its
+  repeated retail expansion. Restoring `cast_spells`, ranged-combat and
+  speed-limited melee helpers is the decisive HoMM2/Gruntz-style source
+  boundary: VC6 expands each helper but leaves its nested calls out of line,
+  raising the first direct transcription from 15.4543% to 77.6098%. Writing
+  the retail-expanded general-melee region locally under `inline_depth(0)`
+  then reaches 90.9329% and the correct effective body length. The residual
+  is local-object stack coloring and call identity: retail calls the already
+  exact `type_monster_vector` wrapper, while this caller expands it into the
+  underlying vector constructor/destructor. Declaration reversal and scoped
+  inline-depth probes regressed or were inert; VC6 SP3 does not support the
+  tested `__declspec(noinline)`, and all probes were removed. Concurrent
+  commit `0dc5cfe` was preserved. `decomp-attempt-1` remained read-only and
+  supplied nothing.
+
 - **2026-08-09 — `AI_value_of_combat` reconstructed from retail to
   99.9592%.** The formerly unscored 792-byte overload now reproduces all
   23 branches and both returns: it simulates copies of both armies, rejects
