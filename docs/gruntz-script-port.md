@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the 1,172-byte `advManager::DrawHeroPartShadow`
+  body opened to 98.1745%.** Retail proves that the shadow pass mirrors
+  the five hero/boat layers already reconstructed, calls the distinct raw
+  `CSprite::DrawHeroShadow` target, and adds an owner-range guard before the
+  boat path. The matching header-inline Bitmap wrapper and every semantic
+  branch are reconstructed; thirty-five of thirty-six control-flow blocks
+  compare exactly. The remaining block is the same final boat-frame VC6
+  scheduling residual as `DrawHeroPart`, so no byte-exact claim is made.
+  CodeView supplied signatures and names only; no external body was
+  consulted or ported, and the generated baseline is build-owned.
+
 - **2026-08-09 — the 1,156-byte `advManager::DrawHeroPart` body opened
   to 98.1571%.** Retail instructions and relocations prove the hero/boat
   split, packed-point validation and map-cell lookup, the optional boat
