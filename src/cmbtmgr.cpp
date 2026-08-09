@@ -315,6 +315,7 @@ void combatManager::GenerateMap()
         }
     }
 }
+#if 0  // @carcass
 
 #if 0  // @carcass
 
