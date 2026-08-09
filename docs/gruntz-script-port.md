@@ -276,6 +276,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   implementation body was used, and `match_baseline.tsv` remains generated
   solely by the full build.
 
+- **2026-08-09 — `playerData::Init` reconstructed byte-exact
+  (277 bytes).** Retail clears the active hero and town state, empties the
+  shipyard vector without releasing its allocation, restores the packed Grail
+  guess's three bitfields to -1, resets visit flags, recruits, personality,
+  resource-production AI state and network flags, fills all eight hero ids and
+  seventy-two town ids with -1, enables placement help, and copies the central
+  default computer-player name into the twenty-one-byte buffer. Bit-preserving
+  two-byte copies express the odd-aligned point updates without casts and fold
+  to retail's two word ORs; the fixed eight-id loop selects retail's
+  `lea/count/value/rep stosd` schedule. Retail proves every offset, width,
+  fill extent, vector operation, default-name chain and duplicate final flag
+  stores. Dreamcast supplies the member identity and its single local only.
+   This applies the HoMM2/Gruntz layout-reuse and source-shape rules. No external
+   implementation body or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `advManager::ProcessHover` extends to 74.7787%.**
   Retail reads the acting hero id directly from the current player for the
   map-level gate, preserving the redundant `game::GetHero` sentinel check,
@@ -289,6 +304,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   offsets; Dreamcast CodeView supplies only the surviving
   `type_point::operator==` identity. No external implementation body was used,
   and `match_baseline.tsv` remains generated solely by the full build.
+
+- **2026-08-09 — `playerData::NumOfGivenArtifact` reconstructed
+  byte-exact (220 bytes).** Retail first walks the player's signed hero count
+  and eight-id roster, resolves each id through the inline `game::GetHero`, and
+  counts matching ids across all nineteen equipped artifact records. It then
+  walks the signed town roster, resolves each town through inline `GetTown`,
+  skips negative garrison-hero ids, and repeats the same nineteen-slot scan for
+  each garrison hero. Retail proves both loops, both inline accessor null arms,
+  the 1,170-byte hero and 360-byte town indexing, the unaligned equipped row at
+  +0x12d, its eight-byte stride and nineteen-slot extent. Dreamcast supplies
+  the member identity and parameter type only. The implementation reuses the
+  admitted layouts and canonical accessors directly, applying the
+  HoMM2/Gruntz minimal-view and helper-boundary rules. No external
+  implementation body or `decomp-attempt-1` material was used.
 
 - **2026-08-09 — `generator::Initialize` reconstructed byte-exact
   (503 bytes).** Retail clears the four creature and population slots,
