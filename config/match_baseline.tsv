@@ -519,6 +519,7 @@ game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.00
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
 game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50
 game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0
+game	?loadString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbb990
 game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
 game	ImmMouseWindowMoved	0.0000	0.0000	0.0000	0xb6950

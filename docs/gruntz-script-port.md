@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the retail `loadString` save-stream helper is byte-exact
+  (463 bytes).** The retail call convention disproves the Dreamcast member
+  shape: the abstract file arrives in ECX and the destination STL string in
+  EDX, so the admitted function is a free `__fastcall` helper. It reads a
+  signed 16-bit length, rejects short reads, allocates and zero-fills a
+  length-plus-one buffer for positive strings, assigns that buffer into the
+  destination and frees it, while nonpositive lengths erase the destination.
+  The direct retail reconstruction reproduces every instruction and supplies
+  the string reader called by `LoadSignPool`, `LoadRumours`, and map-event
+  loaders. No external implementation body was used. The full build added the
+  generated baseline row, raised the project from 626 to 627 exact functions,
+  and moved executable fuzzy coverage from 9.13% to 9.15%; the baseline was
+  never edited by hand.
+
 - **2026-08-09 — `advManager::QuickInfo` object dispatch is structurally
   complete at 55.8089%.** The last two explicit retail arms are restored.
   Hero cells resolve the packed id through the inline `game::GetHero`, then

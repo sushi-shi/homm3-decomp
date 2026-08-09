@@ -52,6 +52,11 @@ inline TCreatureType creature_type_from_int(int value)
 
 const int SAVED_CREATURE_NONE = 0xff;
 
+// Retail keeps the string stream helpers as free /Gr functions: the file
+// arrives in ECX and the destination string in EDX.  Dreamcast's game-member
+// attribution is therefore semantic evidence only for this pair.
+int __fastcall loadString(TAbstractFile* infile, std::string* value);
+
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:208
@@ -1030,6 +1035,29 @@ int game::GetGeneratorId(int x, int y, int z)
             return i;
     }
     return -1;
+}
+
+// E:\gamedcs\game.cpp:2492
+VA(0x004bb990, 0x1CF)
+int __fastcall loadString(TAbstractFile* infile, std::string* value)
+{
+    short length;
+
+    if (infile->Read(&length, sizeof(length)) < sizeof(length))
+        return -1;
+
+    if (length > 0) {
+        char* buffer = new char[length + 1];
+        memset(buffer, 0, length + 1);
+        if (infile->Read(buffer, length) < length)
+            return -1;
+        *value = buffer;
+        delete[] buffer;
+    } else {
+        value->erase();
+    }
+
+    return length;
 }
 
 #if 0  // @carcass
