@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::GetRandomSpell` admitted byte-exact (398 bytes).**
+  Retail proves that the nominal Dreamcast integer argument is physically a
+  five-level bitset passed by value: all three scans inline its bounds-checked
+  test, and the recursive retry pushes the same one-word value. The member
+  counts the 70 ordinary spells whose level is selected, whose school mask is
+  nonzero, and whose game +0x04 draw byte is clear; it chooses one uniformly,
+  marks it drawn, and returns it. When exhausted, it clears reusable entries
+  not blocked by the parallel +0x4a scenario mask and retries, otherwise
+  returning -1. No external implementation body was used.
+
 - **2026-08-09 — `town::initialize_spells` reconstructed to 86.7424%
   (810 bytes).** Retail proves the setup argument and its two 70-bit spell
   masks, the game-wide disabled-spell band, five weighted faction spell rows,
