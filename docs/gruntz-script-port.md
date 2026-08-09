@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the 2,446-byte `advManager::DrawAdvObj` body rises
+  85.9125% -> 86.3772% by restoring packed-offset widths.** Retail's initial
+  object-vector gate materializes the element count before testing it, which
+  selects the explicit `size() > 0` source form. More significantly, its
+  packed object-cell nibble arithmetic stays in CL/AL before sign extension;
+  declaring the extracted x/y offsets as signed bytes recreates that width
+  and instruction tree. All 72 symbolic branches and seven returns still
+  agree. An explicit manager alias, base/tile declaration-order probes,
+  function-lifetime object locals, an ObjCell reference/register hint, and an
+  algebraically reordered bit expression were byte-inert or regressive and
+  were removed. Applying the byte widths to `DrawAdvObjShadow` regressed that
+  twin 83.2068% -> 78.7790%, so it too was restored. Retail bytes selected the
+  retained forms; no external implementation was used, and the generated
+  baseline remains build-owned.
+
 - **2026-08-09 — `type_AI_combat_data::simulate_combat` is byte-exact.**
   The former direct transcription over-expanded nested accessors and damage
   routines, scoring 46.7778%. Restoring the original source boundaries—one

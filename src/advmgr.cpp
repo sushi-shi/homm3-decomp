@@ -1173,7 +1173,7 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
         static_cast<void*>(thisCell));
 
-    if (cellObjects->objects.size()) {
+    if (cellObjects->objects.size() > 0) {
         for (unsigned row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
             for (unsigned numObj = 0; numObj < cellObjects->objects.size();
                  ++numObj) {
@@ -1189,9 +1189,9 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                 CSprite* sprite = mapObjects->sprites[
                     mapObjects->objects[objCell->objectIndex].typeIndex];
                 signed char offsets = objCell->offsets;
-                int yOffset = offsets >> 4;
+                signed char yOffset = offsets >> 4;
                 offsets <<= 4;
-                int xOffset = offsets >> 4;
+                signed char xOffset = offsets >> 4;
                 int bit = 47 - yOffset * 8 - xOffset;
                 if (!objType->drawCells[bit] || objType->suppressDraw)
                     continue;
