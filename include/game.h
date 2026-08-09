@@ -236,7 +236,7 @@ public:
 
     generator();
     unsigned char load(void* infile);
-    unsigned char save(void* outfile);
+    unsigned char save(TAbstractFile* outfile);
     void update_bonus();
     void Initialize(long new_owner);
     // `ret 4` in retail against the Dreamcast's zero-parameter

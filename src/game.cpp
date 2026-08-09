@@ -128,12 +128,32 @@ unsigned char generator::load(void* infile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:476
 VA(0x004b86e0, 0xB1)  // anchor-global, dc 0xa2fdc
-unsigned char generator::save(void* outfile)
+unsigned char generator::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&playerOwner, sizeof(playerOwner));
+    outfile->Write(&genClass, sizeof(genClass));
+    outfile->Write(&genType, sizeof(genType));
+
+    for (int slot = 0; slot < 4; slot++) {
+        char creatureType = type[slot];
+        outfile->Write(&creatureType, sizeof(creatureType));
+    }
+
+    outfile->Write(population, sizeof(population));
+    outfile->Write(&mapX, sizeof(mapX));
+    outfile->Write(&mapY, sizeof(mapY));
+    outfile->Write(&mapZ, sizeof(mapZ));
+    guards.save(outfile);
+    unsigned char saved =
+        outfile->Write(&town_id, sizeof(town_id)) == sizeof(town_id);
+    return saved;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:503
 DC_ONLY(0xa30c4, 0xB2)

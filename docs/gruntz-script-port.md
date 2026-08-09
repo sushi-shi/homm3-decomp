@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `generator::save` reconstructed byte-exact
+  (177 bytes).** Retail serializes the owner byte, generator class and type,
+  the low byte of each of four creature ids, the complete eight-byte
+  population row, three map-coordinate bytes, the embedded guard army, and
+  finally the town id. The retail vtable slot fixes the formerly opaque
+  stream parameter as `TAbstractFile*`; every direct write uses its proven
+  slot-2 `Write` method, and the guard army uses its already-exact save
+  member. Keeping the final `Write(...) == sizeof(town_id)` result in an
+  explicit byte local is codegen-significant: VC6 then emits retail's
+  `cmp/sete` instead of a four-instruction integer normalization. Dreamcast
+  CodeView supplies the member identity and parameter/return widths; the
+  serialized offsets, sizes, order and stream operations are all
+  retail-byte-proven. No external implementation body was used. Against the
+  re-anchored floor, whole-linked fuzzy coverage rises from 46.03% to
+  46.07%, executable fuzzy coverage from 8.73% to 8.74%, and exact linked
+  functions from 619 to 620.
+
 - **2026-08-09 — creature-bank rollover help extends to 87.2833%.**
   Retail checks cell knowledge before materializing the bank-state dword, then
   keeps the known-cell work in its own branch. Its full-list and compact-list

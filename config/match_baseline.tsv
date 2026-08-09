@@ -512,6 +512,7 @@ game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0
 game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
 game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50
+game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0
 game	ImmMouseWindowMoved	0.0000	0.0000	0.0000	0xb6950
 game	InitImmMouse	0.0000	0.0000	0.0000	0xb6890
 game	game_ClaimGarrison	0.0000	0.0000	0.0000	0xc6960
@@ -556,7 +557,6 @@ game	game_get_random_lith	0.0000	0.0000	0.0000	0xcdb80
 game	game_get_underground_gate_exit	0.0000	0.0000	0.0000	0xcde40
 game	generator_Initialize	0.0000	0.0000	0.0000	0xb8860
 game	generator_load	0.0000	0.0000	0.0000	0xb85a0
-game	generator_save	0.0000	0.0000	0.0000	0xb86e0
 game	generator_update_bonus	0.0000	0.0000	0.0000	0xb87a0
 game	playerData_Init	0.0000	0.0000	0.0000	0xb9e20
 game	playerData_NumOfGivenArtifact	0.0000	0.0000	0.0000	0xbabd0
