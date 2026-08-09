@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::SetRolloverText` dispatch extends to
+  84.1879%.** Retail's 216-byte object-to-handler map and 59-entry target
+  table admit the remaining control-flow structure: `BORDER_GATE` (id 212)
+  shares Border Guard's color/name handler; only Nothing, Anchor Point,
+  Event and Holy Grail pass through special-terrain detection; the generic
+  fallback performs a signed 0..231 name lookup with the shared empty text;
+  and the bank/quest, Dead Guy/Defense Tower, Hill Fort/Hero, Lean-To/
+  Library/Lighthouse and Wagon/War School/Warrior Tomb blocks follow their
+  retail physical order. Wagon and Warrior Tomb retain distinct handlers.
+  The resulting candidate reproduces the complete compressed dispatch map
+  byte-for-byte. Names come only from admitted enum/structure evidence and
+  no external implementation body was used. Whole-linked fuzzy coverage
+  rises from 45.48% to 45.68% with all 614 exact linked functions retained.
+
 - **2026-08-09 — `advManager::SetRolloverText` extends to 75.5187%.**
   Retail admits the Quest Guard and Seer string-producing arms. The two
   switch blocks read the first pointers of consecutive VC6 vectors at

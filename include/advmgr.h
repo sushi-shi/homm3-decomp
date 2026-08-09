@@ -95,6 +95,7 @@ enum WitchHutSkillEncoding {
 // quest-guard pool. The name is corroborated by the admitted retail structure
 // evidence; the Dreamcast adventure-object enum predates this object.
 enum EAdvmgrRetailObjectType {
+    BORDER_GATE = 212,
     QUEST_GUARD = 215
 };
 

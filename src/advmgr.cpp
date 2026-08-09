@@ -618,11 +618,18 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         break
 
     switch (cell->type) {
-    case QUEST_GUARD:
-        strcpy(gText,
-            fullMap->QuestGuardList[cell->extraInfo]
-                .QuestGuardFn_00573040(gUnnamed69778c).c_str());
+    case NOTHING:
+    case ANCHOR_POINT:
+    case EVENT:
+    case HOLY_GRAIL: {
+        TAdventureObjectType special = cell->get_special_terrain();
+        if (special != NOTHING)
+            strcpy(gText, gAdventureObjectNames[special]);
+        else
+            strcpy(gText, DATA_COMPGEN(
+                0x00691210, rolloverEmptyText, ""));
         break;
+    }
     case ARENA:
         strcpy(gText, gAdventureObjectNames[ARENA]);
         if (cell->is_trigger && currentHero) {
@@ -630,6 +637,7 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
             APPEND_VISIT_TEXT(currentHero->ArenaFlags & arenaBit);
         }
         break;
+    case BORDER_GATE:
     case BORDER_GUARD:
         sprintf(gText, DATA_COMPGEN(
             0x00660344, rolloverBorderFormat, "%s %s"),
@@ -687,23 +695,36 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         }
         break;
     }
-    case DERELICT_SHIP:
-        get_creature_bank_help_text(gText, cell, CREATURE_BANK_DERELICT,
-            player, separator, 0);
-        break;
-    case DRAGON_CITY:
-        get_creature_bank_help_text(gText, cell, CREATURE_BANK_DRAGON,
-            player, separator, 0);
-        break;
-    SET_VISITED_ROLLOVER(DEFENSE_TOWER, DefenseTowerInfo,
-        currentHero->DefenseTowerFlags
-        & (1UL << (cell->extraInfo & 0x1f)));
     case DEAD_GUY:
         strcpy(gText, gAdventureObjectNames[DEAD_GUY]);
         if (cell->is_trigger && currentHero) {
             unsigned long deadGuyBit = 1UL << (cell->extraInfo & 0x1f);
             APPEND_VISIT_TEXT(thisPlayer->DeadGuyFlags & deadGuyBit);
         }
+        break;
+    SET_VISITED_ROLLOVER(DEFENSE_TOWER, DefenseTowerInfo,
+        currentHero->DefenseTowerFlags
+        & (1UL << (cell->extraInfo & 0x1f)));
+    case DERELICT_SHIP:
+        get_creature_bank_help_text(gText, cell, CREATURE_BANK_DERELICT,
+            player, separator, 0);
+        break;
+    case SEPULCHER:
+        get_creature_bank_help_text(gText, cell, CREATURE_BANK_SEPULCHER,
+            player, separator, 0);
+        break;
+    case SHIPWRECK:
+        get_creature_bank_help_text(gText, cell, CREATURE_BANK_SHIPWRECK,
+            player, separator, 0);
+        break;
+    case DRAGON_CITY:
+        get_creature_bank_help_text(gText, cell, CREATURE_BANK_DRAGON,
+            player, separator, 0);
+        break;
+    case QUEST_GUARD:
+        strcpy(gText,
+            fullMap->QuestGuardList[cell->extraInfo]
+                .QuestGuardFn_00573040(gUnnamed69778c).c_str());
         break;
     SET_VISITED_ROLLOVER(FAERIE_RING, FaerieRingInfo,
         currentHero->flags & 0x2000);
@@ -742,6 +763,13 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     }
     SET_VISITED_ROLLOVER(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
         currentHero->flags & (0x02000000UL | 0x10UL));
+    case LEAN_TO:
+        strcpy(gText, gAdventureObjectNames[LEAN_TO]);
+        if (cell->is_trigger && currentHero) {
+            unsigned long leanToBit = 1UL << (cell->extraInfo & 0x1f);
+            APPEND_VISIT_TEXT(thisPlayer->LeanToFlags & leanToBit);
+        }
+        break;
     SET_VISITED_ROLLOVER(LIBRARY, LibraryInfo,
         currentHero->LibraryFlags
         & (1UL << (cell->extraInfo & 0x1f)));
@@ -755,13 +783,6 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
                         gpGame->mines[cell->extraInfo].playerOwner]);
                 strcat(gText, tempText);
             }
-        }
-        break;
-    case LEAN_TO:
-        strcpy(gText, gAdventureObjectNames[LEAN_TO]);
-        if (cell->is_trigger && currentHero) {
-            unsigned long leanToBit = 1UL << (cell->extraInfo & 0x1f);
-            APPEND_VISIT_TEXT(thisPlayer->LeanToFlags & leanToBit);
         }
         break;
     SET_VISITED_ROLLOVER(MAGIC_SCHOOL, MagicSchoolInfo,
@@ -833,14 +854,6 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
             fullMap->SeerHutList[cell->extraInfo]
                 .SeerHutFn_005741B0(player).c_str());
         break;
-    case SEPULCHER:
-        get_creature_bank_help_text(gText, cell, CREATURE_BANK_SEPULCHER,
-            player, separator, 0);
-        break;
-    case SHIPWRECK:
-        get_creature_bank_help_text(gText, cell, CREATURE_BANK_SHIPWRECK,
-            player, separator, 0);
-        break;
     case SHRINE1:
         SetShrineHelpText(gText, currentHero, cell, Shrine1Info,
                           separator, separator);
@@ -894,8 +907,7 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         }
         break;
     case WAGON:
-    case WARRIOR_TOMB:
-        strcpy(gText, gAdventureObjectNames[cell->type]);
+        strcpy(gText, gAdventureObjectNames[WAGON]);
         if (cell->is_trigger) {
             strcat(gText, separator);
             strcat(gText, cell->PlayerKnowsCell(player)
@@ -906,6 +918,15 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     SET_VISITED_ROLLOVER(WAR_SCHOOL, WarSchoolInfo,
         currentHero->WarSchoolFlags
         & (1UL << (cell->extraInfo & 0x1f)));
+    case WARRIOR_TOMB:
+        strcpy(gText, gAdventureObjectNames[WARRIOR_TOMB]);
+        if (cell->is_trigger) {
+            strcat(gText, separator);
+            strcat(gText, cell->PlayerKnowsCell(player)
+                ? gUnnamed6a5d5c->entry->visitedObjectText
+                : gUnnamed6a5d5c->entry->unvisitedObjectText);
+        }
+        break;
     case WATER_WHEEL:
         strcpy(gText, gAdventureObjectNames[WATER_WHEEL]);
         if (cell->is_trigger && cell->PlayerKnowsCell(player)) {
@@ -931,13 +952,11 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
                                 separator, separator);
         break;
     default: {
-        TAdventureObjectType special = cell->get_special_terrain();
-        if (special != NOTHING)
-            strcpy(gText, gAdventureObjectNames[special]);
-        else if (cell->type >= NOTHING && cell->type < 232)
+        if (cell->type >= NOTHING && cell->type < 232)
             strcpy(gText, gAdventureObjectNames[cell->type]);
         else
-            gText[0] = 0;
+            strcpy(gText, DATA_COMPGEN(
+                0x00691210, rolloverEmptyText, ""));
         break;
     }
     }
