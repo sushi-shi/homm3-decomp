@@ -563,14 +563,70 @@ int GetTargetWallIndex(int grid_index)
     return -1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:2532
+// EXACT 2026-08-09 from retail's clamped strength update and
+// eight-way destruction dispatch. The three special targets disable a
+// defender stack; ordinary wall segments reopen their blocked combat hex.
+// Splitting strength's declaration from its assignment reserves retail's ESI
+// lifetime, while naming wall_id only after the switch retains EAX across the
+// two final stores; together those two source lifetimes close all 21 blocks.
 VA(0x00465990, 0x140)  // linkorder, dc 0x5fd10
 void combatManager::DamageWall(TWallTargetId target_wall, int damage)
 {
-    // @stub
+    if (damage <= 0)
+        return;
+
+    int strength;
+    strength = wallStrength[gWallTargets[target_wall].wall_id] - damage;
+    if (strength < 0)
+        strength = 0;
+
+    if (strength == 0) {
+        switch (target_wall) {
+        case WALL_TARGET_1:
+        case WALL_TARGET_2:
+        case WALL_TARGET_4:
+        case WALL_TARGET_5: {
+            int blocked_hex = gWallTargets[target_wall].get_blocked_hex();
+            cells[blocked_hex].field_10 &= ~2;
+            break;
+        }
+        case WALL_TARGET_3:
+            drawbridgeState = 0;
+            break;
+        case WALL_TARGET_0: {
+            int slot = field_13de0;
+            field_13f9c[2] = 0;
+            field_13fe4[2] = 0;
+            armies[1][slot].creatureId |= 1 << 21;
+            break;
+        }
+        case WALL_TARGET_6: {
+            int slot = field_13dbc;
+            field_13f9c[1] = 0;
+            field_13fe4[1] = 0;
+            armies[1][slot].creatureId |= 1 << 21;
+            break;
+        }
+        case WALL_TARGET_7: {
+            int slot = field_13d98;
+            field_13f9c[0] = 0;
+            field_13fe4[0] = 0;
+            armies[1][slot].creatureId |= 1 << 21;
+            break;
+        }
+        }
+    }
+
+    int wall_id = gWallTargets[target_wall].wall_id;
+    wallStrength[wall_id] = strength;
+    if (strength == 0)
+        wallStanding[wall_id] = 0;
+    else
+        wallStanding[wall_id] = 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2603
 VA(0x00465ad0, 0x443)  // anchor-callee, dc 0x5feac

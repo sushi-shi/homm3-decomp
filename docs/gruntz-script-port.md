@@ -321,6 +321,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `combatManager::DamageWall` reconstructed byte-exact
+  (320 bytes, including its eight-way jump table).** Positive damage is
+  subtracted from the target row's indexed strength and clamped to zero. A
+  destroyed ordinary segment clears bit 1 on its blocked combat cell; target
+  3 clears the drawbridge state; targets 0/6/7 clear paired special-wall
+  dwords and set creatureId bit 21 on an indexed defender stack. The tail
+  writes the clamped strength and a 0/1 standing-state dword. Retail directly
+  proves `type_wall_target::wall_id` at +8, the ID values
+  {5,6,8,9,10,12,13,14}, the three defender indexes at +0x13d98/+0x13dbc/
+  +0x13de0, paired three-dword rows at +0x13f9c/+0x13fe4, and the fifteen-
+  dword standing row at +0x13fa8; these slices close the old padding exactly.
+  The first reconstruction had all 21 blocks flow-identical and 15 exact.
+  Applying the HoMM2/Gruntz named-lifetime rule closed the remaining six:
+  splitting `strength`'s declaration from its assignment reserves ESI for it
+  and leaves the table offset in EDI, while introducing `wall_id` only after
+  the switch keeps EAX live across both final stores. No external code or
+  `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `combatManager::SetupAdjacencyArray` reconstructed
   byte-exact (324 bytes, including its jump table).** Retail walks all 187
   combat indexes and six directions, derives row and column independently,
