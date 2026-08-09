@@ -32,6 +32,7 @@
 #include "netgame.h"
 #include "kbwin.h"
 #include "advmgr_objects.h"
+#include "puzzlewindow.h"
 
 // The generator save format stores creature ids as bytes while the live
 // roster uses TCreatureType. Keep the representation bridge explicit without
@@ -868,6 +869,10 @@ char* playerData::GetName()
 }
 
 // E:\gamedcs\game.cpp:1972
+// AI_attempt_puzzle_guess returns its packed four-byte point through a hidden
+// result pointer. VC6 reuses the now-dead player_id argument slot for that
+// temporary, matching retail's `lea ecx,[ebp+8]`; the dword copy preserves the
+// deliberately unaligned playerData member at +0x39.
 VA(0x004bae50, 0x1B)  // linkorder, dc 0xa6230
 void playerData::guess_grail_location(long player_id)
 {
