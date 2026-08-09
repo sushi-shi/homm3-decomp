@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — adventure flag-render scan admitted exact;
+  `advmgr` 14 → 16 exact.** `advManager::ScanForHeroOrBoat` (359 B) matches
+  its six-slot result walk, bounds checks, packed-point construction,
+  inlined `GetCell(type_point)`, trigger/type/id predicates, and writes
+  byte-for-byte. The retail xref set corroborates the surviving public name
+  `gbInViewWorld`; CodeView contributes only the function signature and the
+  16-byte `TDrawParts` layout. `hasFlag` (122 B) is also exact, including both
+  compiler tables; its eight named cases were decoded from retail's selector
+  bytes over object ids 17..98. No external body was consulted or ported.
+  The supported build-generated status migration raises executable coverage
+  5.87% → 5.89%; `config/match_baseline.tsv` was not edited manually.
+
 - **2026-08-09 — `advManager::GetCloudLookup` admitted byte-exact from
   retail evidence; `advmgr` 13 → 14 exact.** The 613-byte body reproduces
   the boundary-seeded eight-neighbour visibility mask, all sixteen guarded

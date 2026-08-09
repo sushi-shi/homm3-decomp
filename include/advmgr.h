@@ -31,6 +31,22 @@ extern unsigned char giCloudType[256];
 // retail name survives, so the spelling remains provisional.
 extern unsigned char gMapVisibilityBit;
 
+// DC publishes this as `int gbInViewWorld`; retail corroborates the role:
+// its xrefs gate CompleteDraw's normal layers, ScanForHeroOrBoat, ViewPuzzle,
+// and the separate view-world renderer.
+extern int gbInViewWorld;
+
+// Six of these records are filled by ScanForHeroOrBoat. Retail writes the
+// fields at +0/+4/+8/+c with a 0x10 stride; the names and bool type are the
+// surviving CodeView signature/layout evidence.
+struct TDrawParts {
+    bool IsValid;
+    int X;
+    int Y;
+    int id;
+};
+SIZE(TDrawParts, 0x10);
+
 // The adventure screen's own window. Only the ONE method a retail body
 // outside adventuremapwindow.obj calls on it is declared here:
 // town::Deallocate (0x5be2d0) ends with
@@ -133,6 +149,8 @@ public:
     void ForceNewHover();
     int ProcessHover(int mouseX, int mouseY);
     int GetCloudLookup(int srcX, int srcY, int z);
+    bool ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type,
+                           TDrawParts (&parts)[6]);
     void DrawRolloverText(char* text);
     unsigned char FindAdjacentMonster(type_point point, type_point* result,
                                       type_point excluded);
@@ -151,6 +169,7 @@ public:
 extern advManager* gpAdvManager;
 
 int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
+bool hasFlag(int objType);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\advmgr.cpp:336, dc 0x5714) unsigned char InitializeCreatureGeneratorNames();
