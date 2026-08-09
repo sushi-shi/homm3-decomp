@@ -3,6 +3,7 @@
 #define HOMM3_NETMSG_H
 
 enum eRS_Messages {
+    RS_CLAIM_GENERATOR = 0x41e,
     RS_CLAIM_GARRISON = 0x41f
 };
 
@@ -33,6 +34,16 @@ public:
     CMCClaimGarrison(int id, int player)
         : CMapChange(RS_CLAIM_GARRISON, sizeof(CMCClaimGarrison)),
           garrisonId(id), playerPos(player) {}
+};
+
+class CMCClaimGenerator : public CMapChange {
+public:
+    int generatorId;
+    int playerPos;
+
+    CMCClaimGenerator(int id, int player)
+        : CMapChange(RS_CLAIM_GENERATOR, sizeof(CMCClaimGenerator)),
+          generatorId(id), playerPos(player) {}
 };
 
 #endif  // HOMM3_NETMSG_H
