@@ -114,7 +114,7 @@ generator::generator()
     mapZ = -1;
     town_id = -1;
     for (int i = 0; i < 4; i++) {
-        type[i] = -1;
+        type[i] = CREATURE_NONE;
         population[i] = 0;
     }
 }
@@ -128,12 +128,32 @@ unsigned char generator::load(void* infile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:476
 VA(0x004b86e0, 0xB1)  // anchor-global, dc 0xa2fdc
-unsigned char generator::save(void* outfile)
+unsigned char generator::save(TAbstractFile* outfile)
 {
-    // @stub
+    outfile->Write(&playerOwner, sizeof(playerOwner));
+    outfile->Write(&genClass, sizeof(genClass));
+    outfile->Write(&genType, sizeof(genType));
+
+    for (int slot = 0; slot < 4; slot++) {
+        char creatureType = type[slot];
+        outfile->Write(&creatureType, sizeof(creatureType));
+    }
+
+    outfile->Write(population, sizeof(population));
+    outfile->Write(&mapX, sizeof(mapX));
+    outfile->Write(&mapY, sizeof(mapY));
+    outfile->Write(&mapZ, sizeof(mapZ));
+    guards.save(outfile);
+    unsigned char saved =
+        outfile->Write(&town_id, sizeof(town_id)) == sizeof(town_id);
+    return saved;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:503
 DC_ONLY(0xa30c4, 0xB2)
@@ -142,12 +162,36 @@ void generator::remove_bonus()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:530
 VA(0x004b87a0, 0xB8)  // anchor-global, dc 0xa3178
 void generator::update_bonus()
 {
-    // @stub
+    if (playerOwner < 0)
+        return;
+
+    playerData* player = &gpGame->players[playerOwner];
+    int creature = type[0];
+    if (!gpGame->f_1f698 &&
+        (creature == CREATURE_AIR_ELEMENTAL ||
+         creature == CREATURE_EARTH_ELEMENTAL ||
+         creature == CREATURE_FIRE_ELEMENTAL ||
+         creature == CREATURE_WATER_ELEMENTAL))
+        return;
+
+    int townType = akCreatureTypeTraits[creature].townType;
+    if (townType == -1)
+        return;
+
+    for (int index = 0; index < player->numTowns; index++) {
+        town* currentTown = gpGame->GetTown(player->townIds[index]);
+        if (currentTown->type == townType)
+            currentTown->change_generator_bonus(type[0], 1);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:557
 DC_ONLY(0xa3250, 0x38)
