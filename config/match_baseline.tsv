@@ -527,6 +527,7 @@ game	?SetMapSize@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xccef0
 game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40
 game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0
 game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
+game	?get_new_boat_id@game@@QAEHXZ	100.0000	100.0000	100.0000	0xbb170
 game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0
 game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
@@ -557,7 +558,6 @@ game	game_ViewArmy	0.0000	0.0000	0.0000	0xc6c50
 game	game_calculate_production	0.0000	0.0000	0.0000	0xb8af0
 game	game_game	0.0000	0.0000	0.0000	0xcdf20
 game	game_game_ce5b0	0.0000	0.0000	0.0000	0xce5b0
-game	game_get_new_boat_id	0.0000	0.0000	0.0000	0xbb170
 game	game_get_puzzle_origin	0.0000	0.0000	0.0000	0xcea70
 game	game_get_random_lith	0.0000	0.0000	0.0000	0xcdb80
 game	game_get_underground_gate_exit	0.0000	0.0000	0.0000	0xcde40
