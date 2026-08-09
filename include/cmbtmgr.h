@@ -381,6 +381,7 @@ public:
     unsigned char place_obstacle(int obstacle_id);
     unsigned char should_lower_door(army* this_army, long hex);
     void LowerDoor();
+    void RaiseDoor();
     bool IsQuickCombat() const;
     void CalculateGainedExperience(int side, int* experience_gained);
     // Two DC-roster corrections, both byte-proven at 0x467510: the
