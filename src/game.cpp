@@ -30,6 +30,7 @@
 // name and this TU includes the owner's header rather than
 // re-declaring it.
 #include "netgame.h"
+#include "kb.h"
 #include "kbwin.h"
 #include "advmgr_objects.h"
 #include "puzzlewindow.h"
@@ -1696,11 +1697,35 @@ void game::CreateTownHeroes()
 }
 
 // E:\gamedcs\game.cpp:9516
+#endif  // @carcass
+
 VA(0x004ca240, 0xF6)  // anchor-global, dc 0xb5f80
 void game::MakeTerrainVisible(int whichPlayer, unsigned short visMask)
 {
-    // @stub
+    unsigned char players = 0;
+    if (whichPlayer >= 0 && whichPlayer < 8) {
+        int team = playerTeam[whichPlayer];
+        for (int player = 0; player < 8; ++player) {
+            if (playerTeam[player] == team)
+                players |= 1 << player;
+        }
+    }
+
+    unsigned short playerMask = players;
+    for (int z = 0; z < worldMap.HasTwoLevels + 1; ++z) {
+        for (int x = 0; x < gMapWidth; ++x) {
+            for (int y = 0; y < gMapHeight; ++y) {
+                unsigned int mask = visMask;
+                NewmapCell* cell = &worldMap.cellData[
+                    (z * worldMap.Size + y) * worldMap.Size + x];
+                if (mask & (1 << cell->GroundSet))
+                    *GetMapExtraPtr(x, y, z) |= playerMask;
+            }
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:9539
 // `ret 0x10` - a thiscall member with FOUR stack arguments, which is
