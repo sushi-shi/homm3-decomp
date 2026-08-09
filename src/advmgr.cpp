@@ -652,6 +652,34 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         get_creature_bank_help_text(gText, cell,
             bankType.type, player, separator, 0);
         break;
+    case CREATURE_GENERATOR_1: {
+        generator* mapGenerator = &gpGame->generators[cell->extraInfo];
+        int owner = mapGenerator->playerOwner;
+        int generatorType = mapGenerator->genType;
+        if (owner != -1) {
+            sprintf(gText, DATA_COMPGEN(
+                0x0066033c, rolloverOwnedObjectFormat, "%s - %s"),
+                gCreatureGenerator1RolloverNames[generatorType],
+                gObjectOwnerColorNames[owner]);
+        } else {
+            strcpy(gText, gCreatureGenerator1RolloverNames[generatorType]);
+        }
+        break;
+    }
+    case CREATURE_GENERATOR_4: {
+        generator* mapGenerator = &gpGame->generators[cell->extraInfo];
+        int owner = mapGenerator->playerOwner;
+        int generatorType = mapGenerator->genType;
+        if (owner != -1) {
+            sprintf(gText, DATA_COMPGEN(
+                0x0066033c, rolloverOwnedObjectFormat, "%s - %s"),
+                gCreatureGenerator4RolloverNames[generatorType],
+                gObjectOwnerColorNames[owner]);
+        } else {
+            strcpy(gText, gCreatureGenerator4RolloverNames[generatorType]);
+        }
+        break;
+    }
     case DERELICT_SHIP:
         get_creature_bank_help_text(gText, cell, CREATURE_BANK_DERELICT,
             player, separator, 0);
@@ -710,6 +738,18 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     SET_VISITED_ROLLOVER(LIBRARY, LibraryInfo,
         currentHero->LibraryFlags
         & (1UL << (cell->extraInfo & 0x1f)));
+    case LIGHTHOUSE:
+        strcpy(gText, gAdventureObjectNames[LIGHTHOUSE]);
+        if (cell->is_trigger) {
+            if (gpGame->mines[cell->extraInfo].playerOwner != -1) {
+                sprintf(tempText, DATA_COMPGEN(
+                    0x00660334, rolloverOwnerSuffixFormat, " - %s"),
+                    gObjectOwnerColorNames[
+                        gpGame->mines[cell->extraInfo].playerOwner]);
+                strcat(gText, tempText);
+            }
+        }
+        break;
     case LEAN_TO:
         strcpy(gText, gAdventureObjectNames[LEAN_TO]);
         if (cell->is_trigger && currentHero) {
@@ -810,6 +850,19 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         break;
     SET_VISITED_ROLLOVER(TEMPLE, TempleInfo,
         currentHero->flags & (0x04000000UL | 0x100UL));
+    case TOWN: {
+        town* mapTown = gpGame->GetTown(cell->extraInfo);
+        const char* townTypeName = gUnnamed6a74f4[cell->objectIndex];
+        const char* townName = mapTown->field_c4.text;
+        if (!townName) {
+            townName = DATA_COMPGEN(
+                0x0063a608, townRolloverEmptyText, "");
+        }
+        sprintf(gText, DATA_COMPGEN(
+            0x0065f3d4, rolloverTownFormat, "%s, %s"),
+            townName, townTypeName);
+        break;
+    }
     SET_VISITED_ROLLOVER(TRAINING_GROUNDS, TrainingGroundsInfo,
         currentHero->TrainingGroundsFlags
         & (1UL << (cell->extraInfo & 0x1f)));

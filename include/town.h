@@ -124,6 +124,20 @@ struct type_dialog_resource {
 };
 SIZE(type_dialog_resource, 8);
 
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+// Narrow view of town +0xc4 used only by SetRolloverText. The constructor
+// proves the full sixteen-byte Dinkumware storage shape; the rollover arm
+// independently proves that its first pointer at +0xc8 is the displayed
+// town-name text (or null for the shared empty string).
+struct town_rollover_name_storage_view {
+    char allocator[4];
+    const char* text;
+    char* last;
+    char* end;
+};
+SIZE(town_rollover_name_storage_view, 0x10);
+#endif
+
 // DC LF_INTERFACE `type_horde_effect`, size 8, three members at the
 // offsets initialize_hordes writes: creature @0, bonus @4 (16-bit
 // store), dwelling @6 (16-bit store).
@@ -210,7 +224,11 @@ public:
     // +0xc4..+0xd3 is a Dinkumware vector: the constructor copies an
     // allocator byte into +0xc4 and clears its three pointer words.
     // Its element semantics are not yet reached, so the name is ordinal.
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    town_rollover_name_storage_view field_c4;
+#else
     std::vector<type_point> field_c4;
+#endif
     // +0xd4..+0xdf. The three-word default-constructor fill and the
     // 70-position guards in the spell routines prove std::bitset<70>.
     std::bitset<70> spells;

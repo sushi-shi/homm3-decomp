@@ -94,6 +94,12 @@ enum WitchHutSkillEncoding {
 DATA(0x006a79ec) extern const char* const gAdventureObjectNames[];
 DATA(0x0069127c) extern const char* const gGlobalInfoFlagNames[];
 DATA(0x006a7520) extern const char* const gBorderColorNames[];
+// Role-derived retail tables used by SetRolloverText. The generator-name
+// semantics are corroborated by the DC public roster; the x86 bases and
+// owner-color consumer role are fixed directly by the retail switch blocks.
+DATA(0x006a5898) extern const char* const gObjectOwnerColorNames[8];
+DATA(0x006914fc) extern const char* const gCreatureGenerator1RolloverNames[];
+DATA(0x00691354) extern const char* const gCreatureGenerator4RolloverNames[];
 extern const char* gResourceNames[7];
 DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;
 DATA(0x006a64d8) extern const char* const gWiseTreePriceNames[];
