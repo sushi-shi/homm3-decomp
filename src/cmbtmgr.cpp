@@ -275,6 +275,7 @@ void combatManager::UpdateArmyGroup(int whichSide)
             current.numTroops;
     }
 }
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1653
 // RECONSTRUCTED 2026-08-09 from retail's 11x17 cell initializer. All eight
