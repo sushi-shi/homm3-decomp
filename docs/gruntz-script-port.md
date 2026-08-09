@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::calculate_production` reconstructed to
+  88.1659% (1,395 bytes).** Retail proves the eight-player production
+  reset, mine and town income, silo and faction-building effects, the six
+  resource artifacts and Cornucopia, resource-specialist heroes, Crystal
+  Dragon income, difficulty-based computer bonuses, and handicap scaling.
+  The source reproduces 40 of 42 retail branch edges and raises linked fuzzy
+  coverage from 52.52% to 52.85%. Additional declarations remain visible only
+  to `game.obj`, preserving all unrelated exact rows. Dreamcast CodeView
+  supplied names, types, and artifact identities only; no external
+  implementation body was used.
+
 - **2026-08-09 — `game::Save` opens at 27.9354% with its retail prefix
   through all eight player records.** Retail constructs and resets a
   0x5a4-byte save header, calls the now byte-exact
