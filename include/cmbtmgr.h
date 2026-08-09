@@ -475,6 +475,8 @@ public:
                                     int destIndex);
     unsigned char InLineOfSight(int sourceIndex, int destIndex);
     void UpdateArmyLuckAndMorale();
+    unsigned char place_obstacle(int obstacle_id);
+    void PlaceAllObstacles();
     unsigned char HexIsBlocked(int index);
     unsigned char IsInMoat(int hex, int* index);
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
