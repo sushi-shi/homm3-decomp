@@ -1162,14 +1162,32 @@ long get_distance(long start, long stop)
     return abs(a) + abs(b);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:4546
 VA(0x00469750, 0x12B)  // anchor-callee, dc 0x62f00
 void combatManager::UpdateArmyLuckAndMorale()
 {
-    // @stub
+    for (int side = 0; side < 2; side++) {
+        for (int slot = 0; slot < numArmies[side]; slot++) {
+            army& stack = armies[side][slot];
+            int owner_side = stack.hypnotizeFlag
+                ? 1 - stack.combatSide : stack.combatSide;
+            town* owner_town;
+            if (!owner_side)
+                owner_town = 0;
+            else
+                owner_town = defendingTown;
+            stack.SetLuck(heroes[owner_side], armyGroups[owner_side],
+                          owner_town, heroes[1 - owner_side],
+                          armyGroups[1 - owner_side], field_53c0);
+            stack.SetMorale(heroes[owner_side], armyGroups[owner_side],
+                            owner_town, heroes[1 - owner_side],
+                            armyGroups[1 - owner_side], field_53c0,
+                            field_54b2[owner_side]);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4583
 // Only row in the bracket [UpdateArmyLuckAndMorale .. HexIsBlocked]

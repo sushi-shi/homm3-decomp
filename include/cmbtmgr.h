@@ -291,7 +291,12 @@ public:
     // Name provisional because the retail combatManager has no surviving
     // field list.
     int heroIds[2];                    // +0x54a8
-    char pad_54b0[0xc];
+    char pad_54b0[0x2];
+    // Passed as the final, byte-wide SetMorale input for every stack
+    // controlled by the indexed side. Its meaning and public name are
+    // not attested by the available symbols.
+    unsigned char field_54b2[2];       // +0x54b2
+    char pad_54b4[0x8];
     // Live stack count per side; every ai_tactical walk of armies[side]
     // bounds itself with it (type_AI_spellcaster ctor 0x4369c0,
     // set_melee_enemies 0x43bf20).
@@ -434,6 +439,7 @@ public:
     unsigned char ShotIsThroughWall(const army* shooter, int sourceIndex,
                                     int destIndex);
     unsigned char InLineOfSight(int sourceIndex, int destIndex);
+    void UpdateArmyLuckAndMorale();
     unsigned char HexIsBlocked(int index);
     unsigned char IsInMoat(int hex, int* index);
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
