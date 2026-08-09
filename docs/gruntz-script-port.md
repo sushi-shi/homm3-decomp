@@ -436,6 +436,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `playerData::guess_grail_location` reconstructed
+  byte-exact (27 bytes), and its callee identity corrected from retail.**
+  The wrapper passes the player id in EDX and a hidden four-byte return
+  buffer in ECX, then copies that packed point to `playerData+0x39`.
+  Its only retail call lands at 0x52c9b0; that 1,371-byte body begins with
+  `SetupPuzzlePieces`, performs the puzzle-map search and returns a packed
+  `type_point`, while the old IDA name at 0x52ce90 is demonstrably 0x4e0
+  bytes inside the same function. Dreamcast independently supplies the
+  `AI_attempt_puzzle_guess(long)` public signature and the unique
+  `guess_grail_location` caller edge, so 0x52c9b0 is now admitted under
+  that name. The cast-free source keeps the still-raw, odd-aligned member
+  model: a named local receives the UDT return and intrinsic `memcpy`
+  writes its four bytes. Applying the HoMM2/Gruntz lifetime rule makes VC6
+  reuse the dead incoming argument slot for that local and emits every
+  retail instruction exactly. No external implementation body or
+  `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `combatManager::DamageWall` reconstructed byte-exact
   (320 bytes, including its eight-way jump table).** Positive damage is
   subtracted from the target row's indexed strength and clamped to zero. A
