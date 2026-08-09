@@ -221,7 +221,7 @@ public:
     char genClass;              // +0x00
     char genType;               // +0x01
     char pad_02[2];
-    int type[4];                // +0x04  (DC 0x1CF0, 16 B)
+    TCreatureType type[4];      // +0x04  (DC 0x1CF0, 16 B)
     // +0x14. Four SHORTS, not two ints: the constructor's fused loop
     // walks `type` by 4 and this row by 2 over the same four
     // iterations.

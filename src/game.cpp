@@ -114,7 +114,7 @@ generator::generator()
     mapZ = -1;
     town_id = -1;
     for (int i = 0; i < 4; i++) {
-        type[i] = -1;
+        type[i] = CREATURE_NONE;
         population[i] = 0;
     }
 }
@@ -162,12 +162,36 @@ void generator::remove_bonus()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:530
 VA(0x004b87a0, 0xB8)  // anchor-global, dc 0xa3178
 void generator::update_bonus()
 {
-    // @stub
+    if (playerOwner < 0)
+        return;
+
+    playerData* player = &gpGame->players[playerOwner];
+    int creature = type[0];
+    if (!gpGame->f_1f698 &&
+        (creature == CREATURE_AIR_ELEMENTAL ||
+         creature == CREATURE_EARTH_ELEMENTAL ||
+         creature == CREATURE_FIRE_ELEMENTAL ||
+         creature == CREATURE_WATER_ELEMENTAL))
+        return;
+
+    int townType = akCreatureTypeTraits[creature].townType;
+    if (townType == -1)
+        return;
+
+    for (int index = 0; index < player->numTowns; index++) {
+        town* currentTown = gpGame->GetTown(player->townIds[index]);
+        if (currentTown->type == townType)
+            currentTown->change_generator_bonus(type[0], 1);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:557
 DC_ONLY(0xa3250, 0x38)
