@@ -8,9 +8,7 @@
 #include <ctype.h>
 #include <va.h>
 #define HOMM3_GAME_HERO_EXTRA_VIEW
-#define HOMM3_GAME_SHIPYARD_VIEW
 #include "game.h"
-#undef HOMM3_GAME_SHIPYARD_VIEW
 #undef HOMM3_GAME_HERO_EXTRA_VIEW
 #undef HOMM3_GAME_POINT_CTOR_VIEW
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
@@ -1237,11 +1235,49 @@ int game::get_new_boat_id()
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2112
+#endif  // @carcass
+
+// Dreamcast CodeView attests this inline wrapper. Keeping the wrapper is
+// material on x86 too: it makes VC6 zero-extend the byte boat id for the
+// long parameter, as retail does.
+inline void boat::obscure_cell()
+{
+    type_obscuring_object::obscure_cell(BOAT, id);
+}
+
 VA(0x004bb250, 0x1AA)  // anchor-global, dc 0xa6690
 int game::CreateBoat(int x, int y, int z, int owner, unsigned char bIsRemoteMove, signed char type)
 {
-    // @stub
+    int id = get_new_boat_id();
+    if (id == -1)
+        return -1;
+
+    boat* thisBoat = &boats[id];
+    if (!bIsRemoteMove) {
+        type_point location(x, y, z);
+        CMCBuildBoat change(location, gNetLocalGamePos);
+        SendMapChange(&change);
+        record_show_boat(thisBoat, location);
+    }
+
+    thisBoat->initialize();
+    // This source order is also material. VC6 schedules it as retail's
+    // y/type/x/z load-store sequence.
+    thisBoat->type = type;
+    thisBoat->x = x;
+    thisBoat->y = y;
+    thisBoat->z = z;
+    thisBoat->id = static_cast<unsigned char>(id);
+    thisBoat->allocated = 1;
+    thisBoat->facing = 2;
+    thisBoat->playerOwner = owner;
+    thisBoat->occupying_hero = -1;
+    thisBoat->occupied = 0;
+    thisBoat->obscure_cell();
+    return id;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2158
 DC_ONLY(0xa67bc, 0x94)
@@ -1257,12 +1293,79 @@ int game::RandomScan(signed char* whichList, int start, int length, signed char 
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:2190
 VA(0x004bb400, 0x1DC)  // anchor-global, dc 0xa68d8
-THeroID game::GetStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
+int game::GetStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
 {
-    // @stub
+    int heroArray[HERO_COUNT];
+    int heroClass1 = 0;
+    int heroClass2 = 1;
+
+    switch (alignment) {
+    case TOWN_CASTLE:
+        heroClass1 = 0;
+        heroClass2 = 1;
+        break;
+    case TOWN_RAMPART:
+        heroClass1 = 3;
+        heroClass2 = 2;
+        break;
+    case TOWN_TOWER:
+        heroClass1 = 5;
+        heroClass2 = 4;
+        break;
+    case TOWN_INFERNO:
+        heroClass1 = 6;
+        heroClass2 = 7;
+        break;
+    case TOWN_NECROPOLIS:
+        heroClass1 = 8;
+        heroClass2 = 9;
+        break;
+    case TOWN_DUNGEON:
+        heroClass1 = 10;
+        heroClass2 = 11;
+        break;
+    case TOWN_STRONGHOLD:
+        heroClass1 = 12;
+        heroClass2 = 13;
+        break;
+    case TOWN_FORTRESS:
+        heroClass1 = 14;
+        heroClass2 = 15;
+        break;
+    case TOWN_CONFLUX:
+        heroClass1 = 16;
+        heroClass2 = 17;
+        break;
+    }
+
+    int top = 0;
+    int heroIndex;
+    for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
+        if (heroAvailability[heroIndex] == -1
+            && heroPoolMap[heroIndex].test(playerPos)
+            && (heroes[heroIndex].heroClass == heroClass1
+                || heroes[heroIndex].heroClass == heroClass2)) {
+            heroArray[top++] = heroIndex;
+        }
+    }
+
+    if (top == 0) {
+        for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
+            if (heroAvailability[heroIndex] == -1
+                && heroPoolMap[heroIndex].test(playerPos)) {
+                heroArray[top++] = heroIndex;
+            }
+        }
+    }
+
+    return heroArray[Random(1, top) - 1];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2275
 VA(0x004bb5e0, 0x282)  // anchor-global, dc 0xa6cd4
