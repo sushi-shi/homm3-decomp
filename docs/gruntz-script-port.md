@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `type_AI_combat_data::simulate_combat` is byte-exact.**
+  The former direct transcription over-expanded nested accessors and damage
+  routines, scoring 46.7778%. Restoring the original source boundaries—one
+  inline-only spell-order helper plus ranged, speed-limited melee and general
+  melee helpers—makes VC6 expand each outer helper while retaining retail's
+  deeper calls. The four choice arms are now explicit in their true
+  semantics: both choose melee, attacker only, defender only (reverse helper
+  orientation), or neither. That structure first raises the 548-byte body to
+  57.0139%. The remaining excess came from `inflict_damage` repeating
+  `total_hit_points = 0` immediately before `kill()`, which owns the same
+  store. Removing the redundant assignment keeps the 141-byte out-of-line
+  function exact and makes every nested kill/survive arm byte-identical,
+  closing `simulate_combat`. This directly applies the HoMM2/Gruntz rule that
+  helper boundaries are part of optimized codegen, not cosmetic factoring.
+  Retail bytes established the helper expansions and every branch
+  orientation; `decomp-attempt-1` supplied nothing.
+
 - **2026-08-09 — `type_AI_combat_data::cast_chain_lightning` is
   byte-exact.** The 325-byte body already had the correct three-bounce
   algorithm but remained at 79.6984% under a whole-function ESI/EDI swap.

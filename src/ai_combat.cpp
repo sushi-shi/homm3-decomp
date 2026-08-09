@@ -838,12 +838,14 @@ void type_AI_combat_data::kill()
 }
 
 // E:\gamedcs\ai_combat.cpp:1166
+// EXACT out of line and in all measured nested copies: kill() owns the
+// zeroing of total_hit_points. Repeating that store here is byte-inert in
+// this standalone body but survives in simulate_combat's deeper expansions.
 VA(0x00426300, 0x8D)  // anchor-global, dc 0x2b5ec
 void type_AI_combat_data::inflict_damage(long damage, long blocker_speed)
 {
     total_hit_points -= damage;
     if (total_hit_points <= 0) {
-        total_hit_points = 0;
         kill();
         return;
     }
@@ -910,10 +912,10 @@ inline void type_AI_combat_data::do_melee_combat(
 inline void type_AI_combat_data::do_melee_combat(
     type_AI_combat_data& defender)
 {
-    long their_attack = defender.get_attack(const_slow, 1);
     long our_attack = get_attack(const_slow, 1);
-    defender.inflict_damage(our_attack, 0);
+    long their_attack = defender.get_attack(const_slow, 1);
     inflict_damage(their_attack, 0);
+    defender.inflict_damage(our_attack, 0);
 }
 
 inline type_AI_combat_data::type_AI_combat_data(
@@ -1059,14 +1061,12 @@ bool type_AI_combat_data::choose_melee(
 }
 
 // E:\gamedcs\ai_combat.cpp:1363
-// Residual (46.8%): INLINER-DEPTH divergence, not a spelling one.
-// Retail inlines get_fastest_speed here but leaves its inner
-// get_total() as a real `call ?get_total@...` - the /Ob2 budget stops
-// at nesting depth 2 - while our SP3 CL inlines get_total too and
-// unfolds the whole size computation. Splitting the two speed values and
-// suppressing only the defender expansion restores retail's standalone
-// defender call. The attacker still over-inlines get_total, and nested
-// kill expansions account for the remaining excess branches.
+// EXACT 2026-08-09 (46.8 -> 57.0 -> 100.0). The source calls the
+// inline-only cast/ranged/melee helpers above; VC6 expands each outer helper
+// while leaving its nested get_total, kill and damage calls at retail's
+// depth. The bool results mean "choose melee", not the former reconstructed
+// "shoot" names. Removing inflict_damage's redundant pre-kill zero then
+// makes all four damage arms and their shared tails byte-identical.
 VA(0x00426bc0, 0x224)  // anchor-global, dc 0x2bc40
 void type_AI_combat_data::simulate_combat(type_AI_combat_data& defender)
 {
@@ -1075,42 +1075,21 @@ void type_AI_combat_data::simulate_combat(type_AI_combat_data& defender)
             break;
         if (defender.total_hit_points <= 0)
             break;
-        unsigned char we_shoot = choose_melee(defender, (type_speed_catagory)round);
-        unsigned char they_shoot = defender.choose_melee(*this, (type_speed_catagory)round);
-        long our_fastest = get_fastest_speed();
-#pragma inline_depth(0)
-        long their_fastest = defender.get_fastest_speed();
-#pragma inline_depth()
-        if (our_fastest < their_fastest) {
-            defender.cast_spell(*this, (type_speed_catagory)round);
-            cast_spell(defender, (type_speed_catagory)round);
+        unsigned char we_melee = choose_melee(
+            defender, (type_speed_catagory)round);
+        unsigned char they_melee = defender.choose_melee(
+            *this, (type_speed_catagory)round);
+        cast_spells(defender, (type_speed_catagory)round);
+        if (we_melee) {
+            if (they_melee)
+                do_melee_combat(defender);
+            else
+                do_melee_combat(
+                    (type_speed_catagory)round, defender);
+        } else if (they_melee) {
+            defender.do_melee_combat(*this);
         } else {
-            cast_spell(defender, (type_speed_catagory)round);
-            defender.cast_spell(*this, (type_speed_catagory)round);
-        }
-        long our_attack;
-        long their_attack;
-        if (we_shoot) {
-            if (they_shoot) {
-                our_attack = get_attack((type_speed_catagory)4, 1);
-                their_attack = defender.get_attack((type_speed_catagory)4, 1);
-                inflict_damage(their_attack, 0);
-            } else {
-                our_attack = get_attack((type_speed_catagory)round, 0);
-                their_attack = defender.get_attack((type_speed_catagory)4, 1);
-                inflict_damage(their_attack, round);
-            }
-            defender.inflict_damage(our_attack, 0);
-        } else if (they_shoot) {
-            their_attack = defender.get_attack((type_speed_catagory)4, 1);
-            our_attack = get_attack((type_speed_catagory)4, 1);
-            defender.inflict_damage(our_attack, 0);
-            inflict_damage(their_attack, 0);
-        } else {
-            our_attack = get_attack((type_speed_catagory)0, 0);
-            their_attack = defender.get_attack((type_speed_catagory)0, 0);
-            inflict_damage(their_attack, 0);
-            defender.inflict_damage(our_attack, 0);
+            do_ranged_combat(defender);
         }
     }
     do_general_melee(defender);
