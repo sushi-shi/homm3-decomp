@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::ClaimShipyard` reconstructed to 77.4860%
+  (543 bytes).** Retail resolves the packed map point, temporarily restores a
+  hero obscuring the cell, and reads the signed owner from the low byte of the
+  four-byte `ShipyardInfo`. On an ownership change it finds and erases the
+  point from the old player's Dinkumware `vector<type_point>`, reveals and
+  inserts it for a nonnegative new owner, updates the packed owner, sends the
+  28-byte subtype-0x420 map-change message, then re-obscures the hero. The
+  complete `ShipyardInfo` bitfield layout, `this_hero`/`cell`/`i`/
+  `current_player` locals and message identity come from Dreamcast CodeView;
+  retail independently fixes every map offset, vector operation, helper call,
+  gate and argument. Game-only header views expose those proven types and the
+  existing obscuring-object methods without changing other compilands. The
+  remaining flow residual is two null/size guards retained by retail's
+  inlined vector erase but folded by the pinned compiler, followed by register
+  binding and message-store scheduling differences. The measured unnamed
+  old-owner spelling reduced masked register distance but lowered objdiff to
+  73.5140%, so it was withdrawn in favor of the 77.4860% candidate. No
+  external implementation body was used. Linked fuzzy coverage rises from
+  48.13% to 48.24% and executable fuzzy coverage from 9.13% to 9.15%, with all
+  626 exact functions retained.
+
 - **2026-08-09 — `advManager::QuickInfo` object dispatch is structurally
   complete at 55.8089%.** The last two explicit retail arms are restored.
   Hero cells resolve the packed id through the inline `game::GetHero`, then
