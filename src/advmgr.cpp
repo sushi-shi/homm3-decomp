@@ -1623,6 +1623,9 @@ void advManager::DrawArrow(int srcX, int srcY, int z, int destX, int destY)
 #endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:6699
+// A zero cloud lookup shares the full-draw star tail; it does not skip the
+// cell. Keeping that tail after the cloud path gives VC6 retail's two
+// forward branches and one common star draw.
 VA(0x00412220, 0x248)  // linkorder, dc 0x13fc8
 void advManager::DrawShroud(int srcX, int srcY, int z, int destX, int destY)
 {
@@ -1666,17 +1669,12 @@ void advManager::DrawShroud(int srcX, int srcY, int z, int destX, int destY)
         return;
 
     int lookup;
-    if (gCompleteDrawAllCells) {
-        int frame = ((srcX * 85 ^ srcY * 85) / 64) & 3;
-        starTileset->DrawShroudTile(
-            frame, tilex, tiley, tilew, tileh,
-            gpWindowManager->screenBitmap, baseX, baseY + 8, false, false);
-        return;
-    }
+    if (gCompleteDrawAllCells)
+        goto draw_stars;
 
     lookup = GetCloudLookup(srcX, srcY, z);
     if (!lookup)
-        return;
+        goto draw_stars;
     if (lookup >= CLOUD_DRAW_FLIPPED_OFFSET) {
         hflip = true;
         lookup -= CLOUD_DRAW_FLIPPED_OFFSET;
@@ -1689,6 +1687,13 @@ void advManager::DrawShroud(int srcX, int srcY, int z, int destX, int destY)
     cloudIcons->DrawShroudTile(
         lookup - 1, tilex, tiley, tilew, tileh,
         gpWindowManager->screenBitmap, baseX, baseY + 8, hflip, false);
+    return;
+
+draw_stars:
+    int frame = ((srcX * 85 ^ srcY * 85) / 64) & 3;
+    starTileset->DrawShroudTile(
+        frame, tilex, tiley, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8, false, false);
 }
 
 // E:\gamedcs\advmgr.cpp:6805
