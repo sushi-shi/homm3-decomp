@@ -165,6 +165,7 @@ public:
     char pad_38[0x12];
 
     unsigned char applies_to_player(long player_id);
+    unsigned char CheckForFlaggedGeneratorWin();
     unsigned char CheckForFlaggedMineWin();
 };
 SIZE(VictoryConditionStruct, 0x4C);
@@ -251,6 +252,7 @@ public:
     unsigned char load(TAbstractFile* infile);
     unsigned char save(TAbstractFile* outfile);
     void update_bonus();
+    inline void set_owner(long owner);
     void Initialize(long new_owner);
     // `ret 4` in retail against the Dreamcast's zero-parameter
     // prototype - one of the four calibrated "retail carries one more
@@ -606,6 +608,7 @@ public:
                    unsigned char check_end_game);            // 0x4c61e0
     void ClaimMine(int mineId, int newPlayerOwner,
                    type_action_type action_type);             // 0x4c66e0
+    void ClaimGenerator(int generatorId, int newPlayerOwner); // 0x4c67b0
     void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
     void record_claim_mine(long id, long new_owner);          // 0x49bf90
     void SetVisibility(int startX, int startY, int z,
