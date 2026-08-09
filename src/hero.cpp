@@ -32,7 +32,6 @@
 // quartet takes as its second argument.
 #include "magicterrain.h"
 
-
 // The per-mastery specialty factor rows, one four-float .rdata run per
 // skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
 // read from the pinned image; they sit in one contiguous band of
@@ -1284,14 +1283,70 @@ unsigned char hero::equip_artifact(const type_artifact* artifact, long slot)
     // @stub
 }
 
-// E:\gamedcs\hero.cpp:4919
-VA(0x004e2bd0, 0x174)  // anchor-bracket, dc 0xd3ad0
-void hero::remove_artifact(TArtifactSlot slot)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\hero.cpp:4919
+// Dismantling a combination artifact removes every component's four primary
+// skill bonuses, maintains the per-slot counts (preserving the one component
+// that occupies the assembled artifact's slot), then removes the assembled
+// artifact's own bonuses. The spell list is rebuilt if either the assembled
+// artifact or any component affects it. All 23 retail basic blocks and all
+// 13 branches agree; the residual diff is register allocation in the two
+// four-byte subtraction loops.
+VA(0x004e2bd0, 0x174)  // anchor-bracket, dc 0xd3ad0
+void hero::remove_artifact(long slot)
+{
+    type_artifact artifact = equipped[slot];
+    int artifact_id = artifact.artifactId;
+    if (artifact_id == ARTIFACT_NONE)
+        return;
+
+    bool update_spells = false;
+    int combination_index =
+        akArtifactTraits[artifact_id].combinationIndex;
+    if (combination_index != -1) {
+        const std::bitset<144>& components =
+            gCombinationArtifacts[combination_index].components;
+        bool kept_slot = false;
+        int component = 0;
+        const signed char* bonuses = gArtifactPrimarySkillBonuses[0];
+        for (; bonuses < gArtifactPrimarySkillBonusesEnd;
+            component++, bonuses += 4) {
+            if (components.test(component)) {
+                signed char* skill = stats;
+                const signed char* bonus = bonuses;
+                do {
+                    *skill -= *bonus;
+                    skill++;
+                    bonus++;
+                } while (skill < stats + 4);
+                update_spells = update_spells
+                    || akArtifactTraits[component].affectsSpellList;
+                int component_slot = akArtifactTraits[component].slot;
+                if (component_slot
+                        == akArtifactTraits[artifact_id].slot
+                    && !kept_slot)
+                    kept_slot = true;
+                else
+                    artifactSlotCounts[component_slot]--;
+            }
+        }
+    }
+
+    equipped[slot].artifactId = ARTIFACT_NONE;
+    equipped[slot].extra = -1;
+    signed char* skill = stats;
+    const signed char* bonus =
+        gArtifactPrimarySkillBonuses[artifact_id];
+    do {
+        *skill -= *bonus;
+        skill++;
+        bonus++;
+    } while (skill < stats + 4);
+    if (update_spells
+        || akArtifactTraits[artifact_id].affectsSpellList)
+        update_spell_list();
+}
 
 // E:\gamedcs\hero.cpp:4943
 // Closes the hole one backpack slot leaves behind: shift every later

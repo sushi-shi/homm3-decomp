@@ -275,7 +275,10 @@ public:
     // block inlined. Name unattested - ORDINAL PLACEHOLDER.
     int field_129;                      // +0x129
     type_artifact equipped[19];
-    char pad_1c5[0xf];
+    // One byte per artifact slot class. remove_artifact decrements the
+    // component's class after dismantling a combination artifact, except
+    // for the first component occupying the assembled artifact's class.
+    unsigned char artifactSlotCounts[15]; // +0x1c5
     type_artifact backpack[64];
     // +0x3d4, a cached backpack count. hero::get_number_in_backpack
     // (0x4d90c0) returns it with `movsx eax, byte [ecx+0x3d4]` on its
@@ -330,6 +333,8 @@ public:
     unsigned char HasArtifact(int whichArtifact);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     void AddSpell(int whichSpell);
+    // 0x4d95d0 - rebuilds available_spells after artifact changes.
+    void update_spell_list();
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
     long get_equipped_artifacts(unsigned char countWarMachines);
     long get_number_in_backpack(unsigned char countWarMachines);

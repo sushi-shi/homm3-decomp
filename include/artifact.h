@@ -6,6 +6,7 @@
 #define HOMM3_ARTIFACT_H
 
 #include <va.h>
+#include <bitset>
 
 // The artifact-id domain. Added 2026-08-08 with its first consumer,
 // recruit.obj's siege_artifact_to_creature (0x550360) - only the four
@@ -166,15 +167,27 @@ enum TArtifact {
 // 20 bytes - m_name 0, m_cost 4, m_allowableSlotMask 8, m_class 12,
 // m_description 16 - i.e. the AB-era record without the Shadow of Death
 // combination column. Most DC offsets are NOT transferred. Retail
-// armyGroup::get_luck_description independently proves only the name at
-// +0x00; the intervening fields remain padding (the THeroTraits precedent).
+// armyGroup::get_luck_description independently proves the name at +0x00;
+// hero::remove_artifact proves the slot at +0x08, the assembled-artifact
+// lookup index at +0x14 and the spell-list flag at +0x1d. The other
+// intervening fields remain padding (the THeroTraits precedent).
 struct TArtifactTraits {
     // armyGroup::get_luck_description indexes artifact 0x55 at stride
     // 0x20 and passes +0 directly to format_string: the display name.
     const char* name;           // +0x00
-    char pad_04[0x14];
+    char pad_04[0x4];
+    // Equipped-slot class. remove_artifact compares this between the
+    // combination artifact and each component, then uses it to index the
+    // hero's per-slot equipped counts.
+    int slot;                   // +0x08
+    char pad_0c[0x8];
+    // Index into gCombinationArtifacts, or -1 for a normal artifact.
+    int combinationIndex;       // +0x14
     int combination;            // +0x18
-    char pad_1c[0x4];
+    char pad_1c;
+    // Removing this artifact requires rebuilding the available-spell list.
+    unsigned char affectsSpellList; // +0x1d
+    char pad_1e[0x2];
 };
 SIZE(TArtifactTraits, 32);
 
@@ -183,11 +196,10 @@ SIZE(TArtifactTraits, 32);
 // +0x00 by the same body - it is the assembled artifact's own id, which
 // IsWieldingArtifact recurses on. The remaining 20 bytes are the
 // component mask the four retail-only combination bodies at
-// 0x4dbe80..0x4dc100 walk as a bitset<144> (five dwords); a pad until
-// one of those is written.
+// 0x4dbe80..0x4dc100 walk as a bitset<144> (five dwords).
 struct TCombinationArtifact {
     int artifactId;             // +0x00
-    char pad_04[0x14];
+    std::bitset<144> components; // +0x04
 };
 SIZE(TCombinationArtifact, 24);
 
@@ -205,6 +217,14 @@ SIZE(TCombinationArtifact, 24);
 // claim (the gpWindowManager pattern).
 extern const TArtifactTraits* akArtifactTraits;
 extern const TCombinationArtifact* gCombinationArtifacts;
+
+// Four signed primary-skill deltas per artifact. remove_artifact walks all
+// 144 rows when dismantling a combination; the adjacent address is a real
+// retail data symbol and is used as the pointer-loop bound.
+DATA(0x0063e758)
+extern const signed char gArtifactPrimarySkillBonuses[][4];
+DATA(0x0063e998)
+extern const signed char gArtifactPrimarySkillBonusesEnd[];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\artifact.cpp:56, dc 0x4fec0) unsigned char InitializeArtifactTraitsTable();
