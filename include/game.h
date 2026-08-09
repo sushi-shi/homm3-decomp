@@ -525,8 +525,11 @@ public:
     // town::destroy_extra_capitol; keeping it TU-scoped preserves the
     // retail-sensitive game member population in the other compilands.
     void ConvertObject(NewmapCell* tempCell);
+#endif
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_HIRE_VIEW)
     // 0x4c86a0. town::hire passes the player id and consumed two-slot
-    // recruit index; the body remains outside the admitted surface.
+    // recruit index; hero::hire uses the same closeout call. The body
+    // remains outside the admitted surface.
     void finish_town_hire(long player_id, int recruit_slot);
 #endif
     unsigned char OnSameTeam(int player1, int player2)

@@ -113,6 +113,12 @@ enum EGameResource {
     NUM_RESOURCES = 7
 };
 
+// Retail .data 0x67814c; Dreamcast publishes the same global name. Both
+// hero::hire and town::hire subtract it from the player's gold resource.
+#ifdef HOMM3_HERO_HIRE_VIEW
+extern int gHeroGoldCost;
+#endif
+
 // DC struct.h roster: exactly two dwords. make_gift's retail vector
 // advances by eight bytes and writes the resource id followed by the
 // displayed quantity before inserting an entry.
