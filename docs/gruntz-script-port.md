@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `SetTreeHelpText` reconstructed as a `QuickInfo`
+  prerequisite at 99.7414%.** Retail copies the fixed Tree of Knowledge name,
+  gates detail on the trigger bit, checks the `TreeOfKnowledgeInfo` visit bit
+  and cell-knowledge bits, selects one of three signed price states, and then
+  reports whether the current hero's +0x6b visit bit is set for the cell's
+  low-five-bit id. All nine branches and the return agree. The residual is
+  register allocation around the cell/info-level lifetimes and a dword-width
+  `PlayerKnowsCell` test where retail uses the low bytes. This also proves that
+  text-record +0x584/+0x588 are generic visited/unvisited labels rather than
+  creature-bank-specific strings. Retail proves both pointer tables, the two
+  fixed text pointers, every bit extraction and the hero field; Dreamcast
+  CodeView supplies the function/helper names and the `WiseTreePrices` domain
+  only. No external implementation body was used, and the generated baseline
+  remains build-owned.
+
 - **2026-08-09 — `SetShrineHelpText` reconstructed as the next `QuickInfo`
   prerequisite at 99.3641%.** Retail copies the cell object's display name,
   gates detail on the trigger bit, bounds and tests the local player's global
