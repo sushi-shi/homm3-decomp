@@ -281,6 +281,8 @@ public:
 
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
+    void UpdateHeroLocators(int top, unsigned char drawWin,
+                            unsigned char update);
     void DrawChatText(unsigned char update);
     unsigned char ProcessHover(int hx, int hy);
 };
@@ -442,6 +444,7 @@ public:
     void ForceNewHover();
     int ProcessWaitingHover(int mouseX, int mouseY);
     int ProcessHover(int mouseX, int mouseY);
+    int ProcessSearch(int x, int y, int z);
     type_adventure_cursor get_normal_cursor(NewmapCell* currCell);
     void SeedTo(type_point target);
     int GetCloudLookup(int srcX, int srcY, int z);
@@ -476,6 +479,9 @@ public:
                      unsigned char view_heroes, unsigned char view_towns);
     void UpdBottomView(unsigned char forceUpdate, unsigned char drawWindow,
                        unsigned char update);
+    void MobilizeCurrHero(int bInMove, unsigned char waitingPlayer,
+                          unsigned char drawChanges);
+    void ShowRoute(int updateScreen, int reseed, int changeButton);
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
     e_looping_sound_id GetSoundId(int x, int y, int z);
 #ifdef HOMM3_TOWN_OBJ_DECLS

@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::ProcessSearch` reconstructed at 91.3120%.**
+  The 1,453-byte retail Grail-digging command now reproduces all 32 branches:
+  full-movement and backpack gates; AI puzzle-guess invalidation; water and
+  diggability rejection; dig-hole insertion; Holy Grail discovery, dialogs,
+  samples and artifact award; all-player puzzle-location recomputation; and
+  the final movement, route, locator and button updates. Retail instructions
+  and relocations prove every condition, constant, text-record offset, game
+  field and callee. Dreamcast CodeView contributes only the signature and the
+  attested local roles (`curr`, `sample2`, `i`, `tempCell`, `artifact`); no
+  external implementation body was used. The residual is instruction/register
+  selection plus known synthetic-symbol relocation naming. The shared
+  `initialize_game_data` tripwire remains exact, and `match_baseline.tsv`
+  remains generated only by the full build.
+
 - **2026-08-09 — `advManager::ProcessHover` reconstructed at 69.3789%.**
   The 2,328-byte retail body now delegates non-local turns to the waiting
   hover path; caches and visibility-checks the map tile; resolves rollover,
