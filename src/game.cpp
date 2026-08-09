@@ -32,6 +32,21 @@
 #include "netgame.h"
 #include "kbwin.h"
 
+// The generator save format stores creature ids as bytes while the live
+// roster uses TCreatureType. Keep the representation bridge explicit without
+// introducing an enum cast; VC6 reduces this four-byte copy to a move.
+inline TCreatureType creature_type_from_int(int value)
+{
+    union {
+        int value;
+        TCreatureType creature;
+    } storage;
+    storage.value = value;
+    return storage.creature;
+}
+
+const int SAVED_CREATURE_NONE = 0xff;
+
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:208
@@ -119,16 +134,42 @@ generator::generator()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:431
 VA(0x004b85a0, 0x13B)  // anchor-global, dc 0xa2e48
-unsigned char generator::load(void* infile)
+unsigned char generator::load(TAbstractFile* infile)
 {
-    // @stub
-}
+    if (infile->Read(&playerOwner, sizeof(playerOwner)) !=
+        sizeof(playerOwner))
+        return 0;
+    if (infile->Read(&genClass, sizeof(genClass)) != sizeof(genClass))
+        return 0;
+    if (infile->Read(&genType, sizeof(genType)) != sizeof(genType))
+        return 0;
 
-#endif  // @carcass
+    int loaded;
+    for (int slot = 0; slot < 4; slot++) {
+        infile->Read(&loaded, 1);
+        int creature = loaded & 0xff;
+        type[slot] = creature_type_from_int(creature);
+        if (creature == SAVED_CREATURE_NONE)
+            type[slot] = CREATURE_NONE;
+    }
+
+    if (infile->Read(population, sizeof(population)) != sizeof(population))
+        return 0;
+    if (infile->Read(&mapX, sizeof(mapX)) != sizeof(mapX))
+        return 0;
+    if (infile->Read(&mapY, sizeof(mapY)) != sizeof(mapY))
+        return 0;
+    if (infile->Read(&mapZ, sizeof(mapZ)) != sizeof(mapZ))
+        return 0;
+    if (guards.load(infile) == -1)
+        return 0;
+
+    unsigned char success =
+        infile->Read(&town_id, sizeof(town_id)) == sizeof(town_id);
+    return success;
+}
 
 // E:\gamedcs\game.cpp:476
 VA(0x004b86e0, 0xB1)  // anchor-global, dc 0xa2fdc
