@@ -989,8 +989,6 @@ void hero::rotate_backpack_right()
     backpack[last] = saved;
 }
 
-#if 0  // @carcass
-
 // RETAIL-ONLY x4: the Shadow of Death COMBINATION-ARTIFACT family. The
 // Dreamcast roster has no row anywhere in this gap, and all four bodies
 // share one signature shape - a five-dword (bitset<144>) component mask
@@ -1007,10 +1005,19 @@ void hero::rotate_backpack_right()
 //                       record at gpGame+0x20ad0 indexed by the owner
 //                       byte.
 VA(0x004dbe80, 0xA4)  // retail-only, hero member, ret 4
-unsigned char hero::HeroFn_004DBE80(int combo)
+unsigned char hero::HeroFn_004DBE80(int combination)
 {
-    // @stub
+    std::bitset<144> missingComponents =
+        gCombinationArtifacts[combination].components;
+    for (int slot = 0; slot < 19; slot++) {
+        int artifactId = equipped[slot].artifactId;
+        if (artifactId != ARTIFACT_NONE)
+            missingComponents.reset(artifactId);
+    }
+    return !missingComponents.any();
 }
+
+#if 0  // @carcass
 
 VA(0x004dbf30, 0x133)  // retail-only, hero member, ret 8
 unsigned char hero::HeroFn_004DBF30(int combo, long slot)
