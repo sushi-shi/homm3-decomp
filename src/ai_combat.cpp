@@ -921,12 +921,14 @@ unsigned char type_AI_combat_data::choose_melee(const type_AI_combat_data* enemy
 #endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:1363
-// Residual (46.1%): INLINER-DEPTH divergence, not a spelling one.
+// Residual (46.8%): INLINER-DEPTH divergence, not a spelling one.
 // Retail inlines get_fastest_speed here but leaves its inner
 // get_total() as a real `call ?get_total@...` - the /Ob2 budget stops
 // at nesting depth 2 - while our SP3 CL inlines get_total too and
-// unfolds the whole size computation. Everything downstream of that
-// shifts. Blocked on the same compiler-generation question as path.obj.
+// unfolds the whole size computation. Splitting the two speed values and
+// suppressing only the defender expansion restores retail's standalone
+// defender call. The attacker still over-inlines get_total, and nested
+// kill expansions account for the remaining excess branches.
 VA(0x00426bc0, 0x224)  // anchor-global, dc 0x2bc40
 void type_AI_combat_data::simulate_combat(type_AI_combat_data& defender)
 {
@@ -937,7 +939,11 @@ void type_AI_combat_data::simulate_combat(type_AI_combat_data& defender)
             break;
         unsigned char we_shoot = choose_melee(defender, (type_speed_catagory)round);
         unsigned char they_shoot = defender.choose_melee(*this, (type_speed_catagory)round);
-        if (get_fastest_speed() < defender.get_fastest_speed()) {
+        long our_fastest = get_fastest_speed();
+#pragma inline_depth(0)
+        long their_fastest = defender.get_fastest_speed();
+#pragma inline_depth()
+        if (our_fastest < their_fastest) {
             defender.cast_spell(*this, (type_speed_catagory)round);
             cast_spell(defender, (type_speed_catagory)round);
         } else {
