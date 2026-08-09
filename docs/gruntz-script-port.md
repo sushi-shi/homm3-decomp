@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the 1,154-byte `advManager::DrawUnderlay` body opened
+  to 74.79%.** Retail instructions and relocations prove the clipped cell
+  lookup, underlay-only object filter, object/type/sprite pool traversal,
+  eight-case flagged-object selector, checked trigger-cell lookup, animation
+  frame, player output color, and normal/flagged sprite paths. The
+  reconstruction has the same 42-block population and its 22 symbolic branch
+  targets agree with retail; the remaining difference is instruction and
+  local-slot scheduling, so no exact claim is made. Dreamcast CodeView
+  supplied surviving names and signatures only; no external body was
+  consulted or ported. The generated baseline remains exclusively build-owned.
+
 - **2026-08-09 — the 2,446-byte `advManager::DrawAdvObj` body opened
   to 80.15%.** Retail proves the seven-layer object-cell traversal, normal
   48-bit draw mask, 48-entry view-world terrain selector, 82-entry flagged
