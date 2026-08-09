@@ -643,8 +643,29 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     SET_VISITED_ROLLOVER(DEFENSE_TOWER, DefenseTowerInfo,
         currentHero->DefenseTowerFlags
         & (1UL << (cell->extraInfo & 0x1f)));
+    case DEAD_GUY:
+        strcpy(gText, gAdventureObjectNames[DEAD_GUY]);
+        if (cell->is_trigger && currentHero) {
+            unsigned long deadGuyBit = 1UL << (cell->extraInfo & 0x1f);
+            APPEND_VISIT_TEXT(thisPlayer->DeadGuyFlags & deadGuyBit);
+        }
+        break;
     SET_VISITED_ROLLOVER(FAERIE_RING, FaerieRingInfo,
         currentHero->flags & 0x2000);
+    case FOUNTAIN_OF_FORTUNE:
+        strcpy(gText, gAdventureObjectNames[FOUNTAIN_OF_FORTUNE]);
+        if (cell->is_trigger) {
+            if (cell->PlayerKnowsCell(player)) {
+                sprintf(tempText, visitedFormat,
+                        gGlobalInfoFlagNames[FountainOfFortuneInfo]);
+                strcat(gText, tempText);
+            }
+            if (currentHero) {
+                APPEND_VISIT_TEXT(currentHero->flags
+                    & (0x38000000UL | 0x20UL));
+            }
+        }
+        break;
     SET_VISITED_ROLLOVER(FOUNTAIN_OF_YOUTH, FountainOfYouthInfo,
         currentHero->flags & 0x4000);
     SET_VISITED_ROLLOVER(GARDEN_OF_REVELATION, GardenOfRevelationInfo,
@@ -655,9 +676,20 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     SET_VISITED_ROLLOVER(LIBRARY, LibraryInfo,
         currentHero->LibraryFlags
         & (1UL << (cell->extraInfo & 0x1f)));
+    case LEAN_TO:
+        strcpy(gText, gAdventureObjectNames[LEAN_TO]);
+        if (cell->is_trigger && currentHero) {
+            unsigned long leanToBit = 1UL << (cell->extraInfo & 0x1f);
+            APPEND_VISIT_TEXT(thisPlayer->LeanToFlags & leanToBit);
+        }
+        break;
     SET_VISITED_ROLLOVER(MAGIC_SCHOOL, MagicSchoolInfo,
         currentHero->MagicSchoolFlags
         & (1UL << (cell->extraInfo & 0x1f)));
+    SET_VISITED_ROLLOVER(MAGIC_SPRING, MagicSpringInfo,
+        (thisPlayer->MagicSpringFlags
+         & (1UL << (cell->extraInfo & 0x1f)))
+        && !(cell->extraInfo & 0x40));
     SET_VISITED_ROLLOVER(MAGIC_WELL, MagicWellInfo,
         currentHero->flags & 0x1);
     SET_VISITED_ROLLOVER(MERC_CAMP, MercCampInfo,
@@ -665,6 +697,27 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         & (1UL << (cell->extraInfo & 0x1f)));
     SET_VISITED_ROLLOVER(MERMAID, MermaidInfo,
         currentHero->flags & 0x8000);
+    case MONSTER:
+        if (cell->is_trigger) {
+            const char* creatureName = DATA_COMPGEN(
+                0x00691210, rolloverEmptyText, "");
+            if (cell->objectIndex >= 0 && cell->objectIndex <= 150)
+                creatureName =
+                    akCreatureTypeTraits[cell->objectIndex].m_plural_name;
+            sprintf(gText, DATA_COMPGEN(
+                0x00660344, rolloverMonsterFormat, "%s %s"),
+                armyGroup::GetArmySizeName(cell->extraInfo & 0xfff, 1),
+                creatureName);
+        }
+        break;
+    case MYSTICAL_GARDEN:
+        strcpy(gText, gAdventureObjectNames[MYSTICAL_GARDEN]);
+        if (cell->is_trigger) {
+            unsigned long gardenBit = 1UL << (cell->extraInfo & 0x1f);
+            APPEND_VISIT_TEXT((thisPlayer->MysticalGardenFlags & gardenBit)
+                && !(cell->extraInfo & 0x400));
+        }
+        break;
     SET_VISITED_ROLLOVER(OASIS, OasisInfo,
         currentHero->flags & 0x80);
     SET_VISITED_ROLLOVER(POWER_SCHOOL, PowerSchoolInfo,
@@ -672,6 +725,9 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         & (1UL << (cell->extraInfo & 0x1f)));
     SET_VISITED_ROLLOVER(RALLY_FLAG, RallyFlagInfo,
         currentHero->flags & 0x10000);
+    case RESOURCE:
+        strcpy(gText, gResourceNames[cell->objectIndex]);
+        break;
     case SEPULCHER:
         get_creature_bank_help_text(gText, cell, CREATURE_BANK_SEPULCHER,
             player, separator, 0);

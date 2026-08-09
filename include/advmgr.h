@@ -60,6 +60,7 @@ enum WitchHutSkillEncoding {
 
 DATA(0x006a79ec) extern const char* const gAdventureObjectNames[];
 DATA(0x0069127c) extern const char* const gGlobalInfoFlagNames[];
+extern const char* gResourceNames[7];
 DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;
 DATA(0x006a64d8) extern const char* const gWiseTreePriceNames[];
 DATA(0x006912c4) extern const char* gKnownTreePriceText;
