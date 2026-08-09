@@ -9,6 +9,8 @@
 #include <vector>
 
 class hero;
+class armyGroup;
+class town;
 
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
 // the six hex neighbours (combatManager::adjacentCells columns); 6/7
@@ -281,6 +283,13 @@ public:
     long get_multi_head_directions(long our_hex, const army* enemy,
                                    long enemy_hex) const;
     int GetSpeed() const;                    // 0x448cd0, claimed in army.cpp
+    void SetLuck(const hero* ownerHero, const armyGroup* ownerGroup,
+                 const town* ownerTown, const hero* otherHero,
+                 const armyGroup* otherGroup, int magicTerrain);
+    void SetMorale(const hero* ownerHero, const armyGroup* ownerGroup,
+                   const town* ownerTown, const hero* otherHero,
+                   const armyGroup* otherGroup, int magicTerrain,
+                   unsigned char field_54b2);
     // The engine's creatureId bit accessor - the DC roster's
     // army::Is(unsigned attribute) (Army.h:765, dc 0x27ce4, 14 B), and
     // the single most-called inline in the combat AI: the Dreamcast
