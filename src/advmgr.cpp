@@ -3109,7 +3109,7 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 }
 
 // E:\gamedcs\advmgr.cpp:7543
-// RETAIL-RECONSTRUCTED 2026-08-09 (37.2317%). The current QuickInfo slices
+// RETAIL-RECONSTRUCTED 2026-08-09 (43.7530%). The current QuickInfo slices
 // restore point validation and shroud handling, trigger-cell resolution,
 // the shared creature-bank/shrine/tree/witch-hut text helpers, the default
 // object name, border/generator/resource and visited-state cases, optional
@@ -3298,6 +3298,18 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             SET_VISITED_QUICKINFO(LIBRARY,
                 currHero->LibraryFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
+            case LIGHTHOUSE:
+                strcpy(gText, gAdventureObjectNames[LIGHTHOUSE]);
+                if (cell->is_trigger) {
+                    int owner =
+                        gpGame->mines[cell->extraInfo].playerOwner;
+                    if (owner != -1) {
+                        sprintf(tempText, visitFormat,
+                                gObjectOwnerColorNames[owner]);
+                        strcat(gText, tempText);
+                    }
+                }
+                break;
             SET_VISITED_QUICKINFO(MAGIC_SCHOOL,
                 currHero->MagicSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
@@ -3312,8 +3324,34 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     & (1UL << (cell->extraInfo & 0x1f)));
             SET_VISITED_QUICKINFO(MERMAID,
                 currHero->flags & 0x8000);
+            case MINE:
+                AdvmgrFn_0040D670(gText, cell, iPlayer, newLine, 1);
+                break;
+            case MYSTICAL_GARDEN:
+                strcpy(gText, gAdventureObjectNames[MYSTICAL_GARDEN]);
+                if (cell->is_trigger) {
+                    unsigned long gardenBit =
+                        1UL << (cell->extraInfo & 0x1f);
+                    sprintf(tempText, visitFormat,
+                        (player->MysticalGardenFlags & gardenBit)
+                            && !(cell->extraInfo & 0x400)
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
+                break;
             SET_VISITED_QUICKINFO(OASIS,
                 currHero->flags & 0x80);
+            case OBELISK:
+                strcpy(gText, gAdventureObjectNames[OBELISK]);
+                if (cell->is_trigger) {
+                    sprintf(tempText, visitFormat,
+                        gpGame->obeliskFlags[cell->extraInfo] & playerBit
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
+                break;
             SET_VISITED_QUICKINFO(POWER_SCHOOL,
                 currHero->PowerSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
@@ -3321,6 +3359,11 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 currHero->flags & 0x10000);
             case RESOURCE:
                 strcpy(gText, gResourceNames[cell->objectIndex]);
+                break;
+            case SEER:
+                strcpy(gText,
+                    fullMap->SeerHutList[cell->extraInfo]
+                        .SeerHutFn_005741B0(iPlayer).c_str());
                 break;
             case SEPULCHER:
                 get_creature_bank_help_text(
@@ -3365,6 +3408,11 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case WITCH_HUT:
                 set_witch_hut_help_text(gText, currHero, cell,
                                         newLine, separator);
+                break;
+            case QUEST_GUARD:
+                strcpy(gText,
+                    fullMap->QuestGuardList[cell->extraInfo]
+                        .QuestGuardFn_00573040(gUnnamed69778c).c_str());
                 break;
             default:
                 strcpy(gText, gAdventureObjectNames[cell->type]);
