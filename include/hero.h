@@ -444,6 +444,8 @@ public:
     // CalculateGainedExperience (0x46a350) scales the whole award by it
     // with a single-precision fmul.
     float GetExperienceBonusFactor();
+    int GiveExperience(int howMuch, int bCheckLevel,
+                       unsigned char show_cap_window);
     // The rest of the specialty factor family, all one shape (see the
     // note over GetOffenseFactor in src/hero.cpp): 0x4e42b0 / 0x4e4310 /
     // 0x4e48b0 / 0x4e4920.

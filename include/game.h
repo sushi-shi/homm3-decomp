@@ -387,6 +387,11 @@ public:
     int GetGeneratorId(int x, int y, int z);                 // 0x4bb900
     void GiveArmy(armyGroup* thisMonInfo, int iMonType,
                   int iMonNum, int slot);                    // 0x4ca340
+    int ExperienceValueOfStack(const armyGroup* whichGroup,
+                               const hero* whichHero);       // 0x4ca3b0
+    void ClaimTown(int townId, int newPlayerOwner,
+                   unsigned char bIsRemoteMove,
+                   unsigned char check_end_game);            // 0x4c61e0
     unsigned char get_random_lith(const std::vector<type_point>* points,
                                   type_point* result, long cell_type,
                                   long excluded);            // 0x4cdb80
