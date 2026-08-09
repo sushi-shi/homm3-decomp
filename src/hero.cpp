@@ -21,7 +21,9 @@
 // gpGame / playerData / game::IsHuman: the owner-record accessors
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
 // the real definitions, and game.h is where they live.
+#define HOMM3_HERO_OBJ_DECLS
 #include "game.h"
+#undef HOMM3_HERO_OBJ_DECLS
 #include "advmgr.h"
 // TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
 // placement note at the top of that header.
@@ -207,11 +209,21 @@ unsigned char type_obscuring_object::save(void* outfile)
 }
 
 // E:\gamedcs\hero.cpp:523
+#endif  // @carcass
+
 VA(0x004d7890, 0x64)  // linkorder, dc 0xcae60
 void hero::hire(int iPlayer, type_point point)
 {
-    // @stub
+    playerData* player = &gpGame->players[iPlayer];
+    int slot = 0;
+    while (player->recruits[slot] != id)
+        ++slot;
+    player->resources[6] -= gHeroGoldCost;
+    PlaceInMap(iPlayer, point, 1);
+    gpGame->finish_town_hire(iPlayer, slot);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:549
 VA(0x004d7900, 0x11B)  // linkorder, dc 0xcaedc
