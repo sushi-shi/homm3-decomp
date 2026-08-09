@@ -387,6 +387,7 @@ public:
 
     playerData();
     ~playerData();
+    void Init();
     int NextHero();
     int NextTown();
     int FindHero(int id);
