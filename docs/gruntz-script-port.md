@@ -276,6 +276,28 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   all 986 cur/max/history ratchets remain clean, and no external implementation
   body was used.
 
+- **2026-08-09 — `game::GetNewHeroId` reconstructed to 98.9815%.** Retail
+  callers and the callee's `ret 0x10` prove the Complete-build extension to
+  four arguments: the first selects a player setup slot and eligibility bit,
+  while the fourth requests a preferred hero class. The body counts the 156
+  unused, player-eligible heroes by class, applies the signed per-alignment
+  class weights, suppresses empty and excluded classes, enforces the Complete
+  build's Conflux-class gate, optionally restricts selection to the player's
+  alignment, then performs the two one-based random selections. This admits
+  the canonical eighteen-value `THeroClass` domain and the +0x00 town type /
+  +0x33 ten-byte selection-weight slice of `THeroClassTraits`. Dreamcast
+  CodeView corroborates the original class ladder and the `hero_class`,
+  `total_count`, `choice`, `counts`, `hero_id`, `weights`, and `aligned_count`
+  locals; retail alone proves the two added Conflux classes, 156-hero extent,
+  fourth argument, and all control flow. Every branch agrees, and all
+  instruction differences are confined to one known
+  symmetric-register scheduling choice at the `gpGame->f_1f698 >= 2` gate:
+  retail uses eax/ecx where this SP3 compile uses ecx/eax, making the compiled
+  body one byte longer; equivalent condition nesting, operand order, named
+  pointer/value/flag locals, and the attested long/enum local types do not
+  move it. `decomp-attempt-1` was checked read-only and contains only a stub;
+  no external implementation body was used.
+
 - **2026-08-09 — `game::Load` extends from 47.6526% to 48.8668%.** Save
   version 41 introduces one unchecked byte read immediately after the path
   search array closes; retail sign-extends that byte into the global at

@@ -18,6 +18,7 @@
 #include "findpath.h"
 #include "misc.h"
 #include "soundmgr.h"
+#include "smackmgr.h"
 #include "puzzlewindow.h"
 // playerData::ClearNetInfo and GetName read the default player name out
 // of the unnamed central object at 0x6a5d5c;
@@ -1370,16 +1371,114 @@ int game::GetStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
     return heroArray[Random(1, top) - 1];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:2275
 VA(0x004bb5e0, 0x282)  // anchor-global, dc 0xa6cd4
-THeroID game::GetNewHeroId(TTownType alignment, THeroClass excluded, unsigned char prefer_alignment)
+int game::GetNewHeroId(int playerPos, THeroClass excludedClass,
+                       unsigned char preferAlignment,
+                       THeroClass preferredClass)
 {
-    // @stub
-}
+    int heroClass;
+    long totalCount;
+    long choice;
+    long counts[18];
+    int heroId;
+    long weights[18];
 
-#endif  // @carcass
+    totalCount = 0;
+
+    int alignment;
+    if (playerPos >= 0)
+        alignment = setup.alignment[playerPos];
+    else
+        alignment = -1;
+
+    memset(counts, 0, sizeof(counts));
+    for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+         heroClass++) {
+        weights[heroClass] =
+            akHeroClasses[heroClass].selectionWeights[alignment + 1];
+    }
+
+    for (heroId = 0; heroId < HERO_COUNT; heroId++) {
+        if (heroAvailability[heroId] == -1
+            && (playerPos == -1 || heroPoolMap[heroId].test(playerPos))) {
+            totalCount++;
+            counts[heroes[heroId].heroClass]++;
+        }
+    }
+
+    if (totalCount == 0)
+        return -1;
+
+    for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+         heroClass++) {
+        if (counts[heroClass] == 0)
+            weights[heroClass] = 0;
+    }
+
+    // RETAIL RESIDUAL: every branch agrees, but retail binds the gpGame
+    // pointer/value pair to eax/ecx here and this SP3 compile chooses
+    // ecx/eax. Equivalent source-level lifetime spellings do not move it.
+    if (gpGame->f_1f698 >= 2
+        && *gpVideoGameState == VIDEO_GAME_STATE_FORCED_BINK_LOW
+        && alignment != TOWN_CONFLUX
+        && counts[eClassPlanesWalker] + counts[eClassElementalist]
+            < totalCount) {
+        if (preferredClass != eClassPlanesWalker)
+            weights[eClassPlanesWalker] = 0;
+        if (preferredClass != eClassElementalist)
+            weights[eClassElementalist] = 0;
+    }
+
+    if (excludedClass < kNumHeroClasses
+        && counts[excludedClass] < totalCount) {
+        weights[excludedClass] = 0;
+    }
+
+    if (preferAlignment) {
+        long alignedCount = 0;
+        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+             heroClass++) {
+            if (akHeroClasses[heroClass].townType == alignment)
+                alignedCount += weights[heroClass];
+        }
+        if (alignedCount > 0) {
+            for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+                 heroClass++) {
+                if (akHeroClasses[heroClass].townType != alignment)
+                    weights[heroClass] = 0;
+            }
+        }
+    }
+
+    if (preferredClass != kNumHeroClasses && weights[preferredClass] != 0) {
+        heroClass = preferredClass;
+    } else {
+        long totalWeight = 0;
+        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+             heroClass++) {
+            totalWeight += weights[heroClass];
+        }
+        choice = Random(1, totalWeight);
+        for (heroClass = eClassKnight; heroClass < kNumHeroClasses;
+             heroClass++) {
+            choice -= weights[heroClass];
+            if (choice <= 0)
+                break;
+        }
+    }
+
+    choice = Random(1, counts[heroClass]);
+    for (heroId = 0; heroId < HERO_COUNT; heroId++) {
+        if (heroAvailability[heroId] == -1
+            && (playerPos == -1 || heroPoolMap[heroId].test(playerPos))
+            && heroes[heroId].heroClass == heroClass
+            && --choice == 0) {
+            return heroId;
+        }
+    }
+    return -1;
+}
 
 // E:\gamedcs\game.cpp:2373
 // Twin of GetGeneratorId below; the only differences are the pool and
