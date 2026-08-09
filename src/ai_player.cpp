@@ -378,16 +378,19 @@ void type_AI_player::calculate_demand()
 // use the first Marketplace town to gift AI allies before human allies.
 // Negative resources are accumulated into one warning string.
 //
-// Residual (89.0940%): the live semantics and major CFG are present. A
+// Residual (89.5263%): the live semantics and major CFG are present. A
 // scoped inline-depth override now reproduces retail's call to the 230-byte
 // string::append(string, pos, count) instantiation at 0x41b250, while a
 // named format result lets its temporary destructor remain inlined. The
 // warning scan also uses retail's two advancing pointers and seven-count
-// tail loop. The remaining delta is register allocation across the
-// Marketplace/alliance scans and those two warning cursors: this compile
-// merges the cursors into one induction plus a delta, whereas retail keeps
-// both in registers. Declaration order, register hints, shared loop indices,
-// and extra lifetime scopes were byte-inert. The player/team checks are the
+// tail loop. The Marketplace scan now spells retail's initial count test and
+// explicit increment/exit/backedge sequence, making 31 of 32 branch flows
+// agree. The last branch is the warning-length gate: spelling it as unsigned
+// `> 0` recovers retail's jbe but perturbs enough allocation to lower the
+// overall score, so the best form keeps the truth test. Other remaining
+// deltas are register allocation across the alliance scans and two warning
+// cursors: this compile merges the cursors into one induction plus a delta,
+// whereas retail keeps both in registers. The player/team checks are the
 // retail inline OnSameTeam form.
 VA(0x00428dd0, 0x33E)  // linkorder, dc 0x2e7d8
 void type_AI_player::end_turn()
@@ -413,26 +416,32 @@ void type_AI_player::end_turn()
     hire_heroes();
     calculate_demand();
 
-    for (short town_index = 0; town_index < player->numTowns; town_index++) {
-        town* current_town = gpGame->GetTown(player->townIds[town_index]);
-        if (!(current_town->active & bitNumber[MARKETPLACE_ID]))
-            continue;
-        for (short player_id = 0; player_id < 8; player_id++) {
-            if (!gpGame->playerDisabled[player_id]
-                && player_id != team
-                && gpGame->OnSameTeam(player_id, team)
-                && !gpGame->players[player_id].IsHuman())
-                make_gift(player_id);
+    short town_index = 0;
+    if (town_index < player->numTowns) {
+        while (true) {
+            town* current_town = gpGame->GetTown(player->townIds[town_index]);
+            if (current_town->active & bitNumber[MARKETPLACE_ID]) {
+                for (short player_id = 0; player_id < 8; player_id++) {
+                    if (!gpGame->playerDisabled[player_id]
+                        && player_id != team
+                        && gpGame->OnSameTeam(player_id, team)
+                        && !gpGame->players[player_id].IsHuman())
+                        make_gift(player_id);
+                }
+                for (short human_player_id = 0; human_player_id < 8;
+                     human_player_id++) {
+                    if (!gpGame->playerDisabled[human_player_id]
+                        && human_player_id != team
+                        && gpGame->OnSameTeam(human_player_id, team)
+                        && gpGame->players[human_player_id].IsHuman())
+                        make_gift(human_player_id);
+                }
+                break;
+            }
+            town_index++;
+            if (town_index >= player->numTowns)
+                break;
         }
-        for (short human_player_id = 0; human_player_id < 8;
-             human_player_id++) {
-            if (!gpGame->playerDisabled[human_player_id]
-                && human_player_id != team
-                && gpGame->OnSameTeam(human_player_id, team)
-                && gpGame->players[human_player_id].IsHuman())
-                make_gift(human_player_id);
-        }
-        break;
     }
 
     std::string warning;
