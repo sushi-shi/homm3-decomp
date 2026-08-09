@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `playerData::Init` reconstructed byte-exact
+  (277 bytes).** Retail clears the active hero and town state, empties the
+  shipyard vector without releasing its allocation, restores the packed Grail
+  guess's three bitfields to -1, resets visit flags, recruits, personality,
+  resource-production AI state and network flags, fills all eight hero ids and
+  seventy-two town ids with -1, enables placement help, and copies the central
+  default computer-player name into the twenty-one-byte buffer. Bit-preserving
+  two-byte copies express the odd-aligned point updates without casts and fold
+  to retail's two word ORs; the fixed eight-id loop selects retail's
+  `lea/count/value/rep stosd` schedule. Retail proves every offset, width,
+  fill extent, vector operation, default-name chain and duplicate final flag
+  stores. Dreamcast supplies the member identity and its single local only.
+  This applies the HoMM2/Gruntz layout-reuse and source-shape rules. No external
+  implementation body or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `advManager::ProcessHover` extends to 74.7787%.**
   Retail reads the acting hero id directly from the current player for the
   map-level gate, preserving the redundant `game::GetHero` sentinel check,
