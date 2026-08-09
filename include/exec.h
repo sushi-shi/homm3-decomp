@@ -61,7 +61,10 @@ struct SUnnamedEntry6a5d5c {
     const char* searchFoundFormat;             // +0xec
     const char* searchNothingFoundText;        // +0xf0
     const char* searchWaterText;               // +0xf4
-    char pad_f8[0x20];
+    // QuickInfo uses these two messages before object dispatch when the
+    // selected map point is hidden or invalid.
+    const char* quickInfoShroudedText;          // +0xf8
+    char pad_fc[0x1c];
 #else
     char pad_48[0xd0];
 #endif
@@ -69,7 +72,9 @@ struct SUnnamedEntry6a5d5c {
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     char pad_11c[0x6c];
     const char* searchNotDiggableText;         // +0x188
-    char pad_18c[0x1a0];
+    char pad_18c[0x30];
+    const char* quickInfoInvalidPointText;      // +0x1bc
+    char pad_1c0[0x16c];
     const char* armyHelpPrefix;        // +0x32c
     char pad_330[0x88];
     const char* armyEntrySeparator;    // +0x3b8
