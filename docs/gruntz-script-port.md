@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `town::View` admitted byte-exact from retail; `town`
+  gains its 26th exact row.** The 192-byte body sets the two view-state
+  flags, hands `this` through the manager's byte-proven +0x38 town pointer
+  to `executive::CallManager`, then restores the selected visiting hero as
+  the adventure context when its signed owner matches the acting player.
+  The dead `bAlreadyFaded` parameter, both duplicated cleanup returns, six
+  data relocations, and two call relocations all agree. The manager prefix
+  and the two large member calls are header-owned but visible only while
+  compiling town.obj, preserving every existing exact row. No external
+  implementation was used.
+
 - **2026-08-09 — `town::destroy_extra_capitol` reconstructed from retail to
   96.4595%.** The 371-byte body checks the owner's other town ids, downgrades
   a duplicate Capitol to City Hall in `built`, clears the Capitol from

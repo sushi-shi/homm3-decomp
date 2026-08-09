@@ -264,7 +264,7 @@ public:
     // 0x5be930. Declared for update_shipyard's direct call; the body is
     // still outside the admitted surface.
     type_building_id create_building(type_building_id building);
-#ifdef HOMM3_TOWN_DESTROY_EXTRA_CAPITOL_DECLS
+#ifdef HOMM3_TOWN_OBJ_DECLS
     // 0x5bec60. Downgrades this town's duplicate Capitol when another
     // owned town already carries one. The declaration is scoped to
     // town.obj because member population affects VC6 output elsewhere.
@@ -289,6 +289,11 @@ public:
     int* get_silo_income() const;
     unsigned char is_legal_building(type_building_id building) const;
     int HasGarrison();
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    // 0x5be210. Enters the shared town manager and restores the visiting
+    // hero as the adventure-map context on return.
+    void View(int bAlreadyFaded);
+#endif
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.
     void Deallocate();
