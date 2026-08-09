@@ -260,6 +260,15 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `TSplitWindow::WindowHandler` rises 97.4066% ->
+  99.9170%.** Retail keeps the accept arm adjacent to the shared end-dialog
+  return tail and emits close/cancel out of line with a backward jump. A
+  single tail after the inner switch forced the opposite join; repeating the
+  same two message stores and return in both semantic arms lets VC6's
+  cross-jumper recover retail's exact 34-block layout. Only one local
+  EAX/EDX carrier swap at the destination slider call remains; named value
+  and pointer probes were inert and reverted.
+
 - **2026-08-09 — soundmgr reaches 20/21 exact; `MemorySample` rises
   92.0309% -> 98.7963%.** `ConvertVolume` becomes exact by recovering the
   retail CFG: each setting arm owns its range check, divide and minimum-one

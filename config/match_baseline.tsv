@@ -304,7 +304,7 @@ armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	79.5363
 armygrp	?SplitArmy@armyGroup@@QAEXHPAV1@HEE@Z	100.0000
 armygrp	?SplitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000
 armygrp	?Swap@armyGroup@@QAEXHPAV1@H@Z	100.0000
-armygrp	?WindowHandler@TSplitWindow@@UAEHPAVmessage@@@Z	97.4066
+armygrp	?WindowHandler@TSplitWindow@@UAEHPAVmessage@@@Z	99.9170
 armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000
 armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000
 armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000
