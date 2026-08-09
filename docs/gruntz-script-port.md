@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `type_AI_player::make_gift` rises 64.6655% -> 71.8739%
+  by restoring two retail string-append call edges.** The local-human gift
+  and single-resource request call the three-argument `std::string::append`
+  overload in retail, while the multi-resource request expands it. Directly
+  expressing that overload and applying `inline_depth(0)` only to those two
+  statements reproduces the asymmetry. Extending the override to both request
+  branches, using the one-argument operator call, or naming the temporaries
+  all regressed the surrounding allocation and were reverted. No external
+  implementation was used; the retail disassembly and measured objdiff delta
+  selected the retained form.
+
 - **2026-08-09 — `type_AI_player::end_turn` rises 56.8835% -> 89.0940%
   by isolating retail's out-of-line string append and matching its warning
   scan.** Retail calls the three-argument `std::string::append` overload but

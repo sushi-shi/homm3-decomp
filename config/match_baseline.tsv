@@ -190,7 +190,7 @@ ai_player	?get_attack_bonus@type_AI_player@@SIMF@Z	100.0000
 ai_player	?get_cell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000
 ai_player	?get_danger_value@searchArray@@QBEJUtype_point@@@Z	100.0000
 ai_player	?get_total_value@type_AI_player@@QAEJJPAH@Z	100.0000
-ai_player	?make_gift@type_AI_player@@QAEXJ@Z	64.6655
+ai_player	?make_gift@type_AI_player@@QAEXJ@Z	71.8739
 ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000
 ai_player	?start_turn@type_AI_player@@QAEXXZ	100.0000
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000
