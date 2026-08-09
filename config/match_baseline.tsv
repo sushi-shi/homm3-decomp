@@ -27,6 +27,7 @@ advmgr	?GetCell@advManager@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	
 advmgr	?GetCloudLookup@advManager@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xf8c0
 advmgr	?GetFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xfd20
 advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010
+advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	89.5008	89.5008	89.5008	0x18620
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
 advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	99.3415	99.3415	99.3415	0x15d60
@@ -64,7 +65,6 @@ advmgr	advManager_DrawArrow	0.0000	0.0000	0.0000	0x120b0
 advmgr	advManager_DrawArrowShadow	0.0000	0.0000	0.0000	0x11f50
 advmgr	advManager_DrawRiver	0.0000	0.0000	0.0000	0x11b80
 advmgr	advManager_EnableButtons	0.0000	0.0000	0.0000	0x1a3a0
-advmgr	advManager_GetSoundId	0.0000	0.0000	0.0000	0x18620
 advmgr	advManager_HeroQuickView	0.0000	0.0000	0.0000	0x16590
 advmgr	advManager_InsertSound	0.0000	0.0000	0.0000	0x18c10
 advmgr	advManager_LoadRemote	0.0000	0.0000	0.0000	0x1a100

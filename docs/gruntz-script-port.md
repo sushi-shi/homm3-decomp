@@ -866,6 +866,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   The supported build-generated status migration raises executable coverage
   5.87% → 5.89%; `config/match_baseline.tsv` was not edited manually.
 
+- **2026-08-09 — `advManager::GetSoundId` admitted at 89.50% from retail
+  control flow and compiler tables.** The 1,508-byte function reconstructs
+  the ground-overlay fast path, trigger-object dispatch, creature-bank,
+  mine, garrison, creature-generator and terrain-special cases. Retail's
+  two selector arrays and four jump tables prove every admitted ordinal
+  mapping; the surviving public name at 0x63d570 proves the generator-one
+  lookup, while a narrow three-byte mine view avoids widening `game.h`.
+  Sound and creature values deliberately retain ordinal spellings until
+  semantic names have separately admissible evidence. The remaining delta
+  is VC6 block placement and shared-return folding: the object selector is
+  byte-identical, but several equivalent return blocks and compiler tables
+  are emitted in a different order. No external body was consulted or
+  ported. Generated status records the decorated function at 89.50%;
+  `config/match_baseline.tsv` was not edited manually.
+
 - **2026-08-09 — `advManager::GetCloudLookup` admitted byte-exact from
   retail evidence; `advmgr` 13 → 14 exact.** The 613-byte body reproduces
   the boundary-seeded eight-neighbour visibility mask, all sixteen guarded
