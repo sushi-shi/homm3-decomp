@@ -465,6 +465,7 @@ font	?SetPalette@font@@QAEXPBVTPalette16@@@Z	100.0000	100.0000	100.0000	0xb5180
 font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0
+game	??0SavedGameHeader@@QAE@XZ	27.1011	27.1011	27.1011	0xbc0e0
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
@@ -487,6 +488,7 @@ game	?GetLocalPlayerGamePos@game@@QAEHXZ	100.0000	100.0000	100.0000	0xcea20
 game	?GetName@playerData@@QAEPADXZ	95.8491	95.8491	95.8491	0xbadb0
 game	?GetNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0
 game	?GetPlayerName@game@@QAEPADH@Z	99.5312	99.5312	99.5312	0xceb60
+game	?GetStartingHeroId@game@@QAEHW4TTownType@@HH@Z	100.0000	100.0000	100.0000	0xbb400
 game	?GetTownId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb870
 game	?GetWorldMapData@game@@QAEPAVNewfullMap@@XZ	100.0000	100.0000	100.0000	0xbb160
 game	?GiveArmy@game@@QAEXPAVarmyGroup@@HHH@Z	100.0000	100.0000	100.0000	0xca340
@@ -501,7 +503,7 @@ game	?IsLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50
 game	?IsLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970
 game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80
 game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90
-game	?Load@game@@QAEHPAVTAbstractFile@@@Z	26.8395	26.8395	26.8395	0xbcda0
+game	?Load@game@@QAEHPAVTAbstractFile@@@Z	47.6526	47.6526	47.6526	0xbcda0
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a00
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	99.9385	99.9385	99.9385	0xb9340
@@ -546,7 +548,6 @@ game	game_GetNewHeroId	0.0000	0.0000	0.0000	0xbb5e0
 game	game_GetRandomArtifactId	0.0000	0.0000	0.0000	0xc94d0
 game	game_GetRandomMonster	0.0000	0.0000	0.0000	0xc92c0
 game	game_GetRandomSpell	0.0000	0.0000	0.0000	0xc95a0
-game	game_GetStartingHeroId	0.0000	0.0000	0.0000	0xbb400
 game	game_InsertObject	0.0000	0.0000	0.0000	0xc9890
 game	game_ProcessRandomObjects	0.0000	0.0000	0.0000	0xc9dd0
 game	game_Save	0.0000	0.0000	0.0000	0xbe3f0

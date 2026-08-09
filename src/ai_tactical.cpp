@@ -216,7 +216,7 @@ void type_AI_combat_parameters::simulate_attack(const army* current_army, long* 
     unsigned char no_retaliation = static_cast<unsigned char>(static_cast<unsigned>(current_army->creatureId) >> 16);
     if ((no_retaliation & 1) == 0 && enemy->disabled_2b0 == 0
             && enemy->retaliationCount > 0
-            && (gpGame->AI_in_control > 0 || gpCombatManager->sideIsAI[side])) {
+            && (gpGame->setup.difficulty > 0 || gpCombatManager->sideIsAI[side])) {
         simulate_single_attack(enemy, enemy_hits, current_army, our_hits, 0, 0);
         if (*our_hits == 0 || *enemy_hits == 0)
             return;
@@ -301,7 +301,7 @@ long type_AI_combat_parameters::get_ranged_attack_value(const army* current_army
     long our_total = current_army->get_total_hit_points(0);
     long enemy_total = enemy->get_total_hit_points(0);
     long value = get_simple_attack_effect(current_army, our_total, enemy, enemy_total, 1, 0);
-    if (!gpGame->AI_in_control && !gpCombatManager->sideIsAI[side])
+    if (!gpGame->setup.difficulty && !gpCombatManager->sideIsAI[side])
         return value;
     if (enemy->disabled_290)
         goto disabled;
@@ -398,7 +398,7 @@ VA(0x00436180, 0x17A)  // anchor-global, dc 0x3cf50
 long type_AI_attack_hex_chooser::get_hex_attack_value(long hex, long* checked)
 {
     long value = 0;
-    if (!gpGame->AI_in_control && !gpCombatManager->sideIsAI[data->side])
+    if (!gpGame->setup.difficulty && !gpCombatManager->sideIsAI[data->side])
         return 0;
     for (long direction = 0; direction < 6; direction++) {
         long index = gpCombatManager->adjacentCells[hex][direction];

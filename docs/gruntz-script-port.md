@@ -281,6 +281,33 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   residual is VC6 folding retail's dead positive-count preheader. No external
   implementation material was used.
 
+- **2026-08-09 — `game::Load` reaches 47.6526% with the retail save-header
+  frame.** The 0x5a4-byte `SavedGameHeader` is fixed by retail stack offsets,
+  constructor order, copy widths, and member destinations: it contains the
+  0x304-byte `NewSMapHeader`, 0x1cc-byte `SGameSetupOptions`, 0x7c-byte
+  `SCampaign`, Dinkumware filename string, and trailing player-state bands.
+  Those same three aggregates now occupy their canonical `game` offsets
+  (+0x1f86c, +0x1f6a0, and +0x1f458 respectively), replacing flat padding
+  and aliases for every translation unit. Loading and restoring this header
+  raises the function from 26.8395% to 47.6526%. The emitted
+  `SavedGameHeader` constructor is independently admitted at 27.1011%, and
+  the cur/max/history ratchet remains clean across all 986 linked functions.
+  Candidate cross-build data supplied names only; retail instructions prove
+  every admitted size and offset, and no external implementation body was
+  used.
+
+- **2026-08-09 — `game::GetStartingHeroId` admitted byte-exact.** Retail
+  proves the complete algorithm: map each of the nine town types to its two
+  hero classes, collect unused heroes whose per-player eligibility bit is set,
+  fall back to all eligible unused heroes when the class-filtered set is empty,
+  and select the one-based `Random(1, count)` result. The third parameter is
+  unused in this retail body. The +0x4dfb4 band is consequently canonicalized
+  from an integer placeholder to 156 `std::bitset<8>` records; retail's two
+  range-check calls and direct bit tests match VC6 exactly. Dreamcast CodeView
+  supplied the function/local names and corroborated the 156-entry candidate
+  array. `decomp-attempt-1` was checked read-only and contains only a stub, so
+  no external implementation body was used.
+
 - **2026-08-09 — `game::Load` extends from 26.3228% to 26.8395%, and its
   state is canonical.** Retail's call sequence proves eight consecutive
   `playerData::load(infile, saveVersion)` calls after the obelisk pool; the
