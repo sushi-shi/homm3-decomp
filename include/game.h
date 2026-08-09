@@ -5,6 +5,7 @@
 #ifndef HOMM3_GAME_H
 #define HOMM3_GAME_H
 
+#include <map>
 #include <vector>
 #include "mapcell.h"
 #include "netmsg.h"
@@ -160,12 +161,34 @@ enum ELossConditionType {
     LOSS_CONDITION_LOSE_HERO = 1
 };
 
+// Retail's player-slot destructor walks these otherwise unnamed records with
+// a 0x14 stride and destroys the Dinkumware string at +0x4. The map-header
+// tree stores the same record plus a four-byte tail. Names remain ordinal
+// because no approved retail or Dreamcast symbol names them.
+struct type_map_hero_identity {
+    signed char field_00;
+    char pad_01[3];
+    std::string field_04;
+};
+SIZE(type_map_hero_identity, 0x14);
+
+struct type_map_hero_info : public type_map_hero_identity {
+    int field_14;
+};
+SIZE(type_map_hero_info, 0x18);
+
 class VictoryConditionStruct {
 public:
-    signed char Type;             // +0x00
+    signed char Type;
     char pad_01[0x33];
-    int HeroID;                   // +0x34
-    char pad_38[0x12];
+    int HeroID;
+    char pad_38[0x10];
+    unsigned char GameWon;
+    signed char playerWinner;
+    char pad_4a[2];
+
+    VictoryConditionStruct()
+      : Type(-1), GameWon(0), playerWinner(-1) {}
 
     unsigned char applies_to_player(long player_id);
     unsigned char CheckForFlaggedGeneratorWin();
@@ -175,11 +198,17 @@ SIZE(VictoryConditionStruct, 0x4C);
 
 class LossConditionStruct {
 public:
-    signed char Type;             // +0x00
-    char pad_01[0x1B];
-    int HeroID;                   // +0x1c
+    signed char Type;
+    char pad_01[0x1b];
+    int HeroID;
+    short NumDays;
+    unsigned char GameLost;
+    signed char playerLoser;
+
+    LossConditionStruct()
+      : Type(-1), GameLost(0), playerLoser(-1) {}
 };
-SIZE(LossConditionStruct, 0x20);
+SIZE(LossConditionStruct, 0x24);
 
 // The three serialized aggregates embedded consecutively in `game` are
 // fixed by retail's SavedGameHeader constructor, assignment calls, and copy
@@ -187,6 +216,34 @@ SIZE(LossConditionStruct, 0x20);
 // every translation unit.
 class CMapHeaderData {
 public:
+    class TPlayerSlotAttributes {
+    public:
+        unsigned char CanBeHuman;
+        unsigned char CanBeComputer;
+        char pad_02[2];
+        int AIStrategy;
+        short legalAlignments;
+        unsigned char HasRandomAlignment;
+        unsigned char GenerateHero;
+        char pad_0c[0xc];
+        signed char hasRandomHero;
+        char pad_19[3];
+        int nonRandomHeroId;
+        int nonRandomHeroCustomPortrait;
+        char nonRandomHeroCustomName[12];
+        int field_30;
+        std::vector<type_map_hero_identity> field_34;
+
+        TPlayerSlotAttributes()
+          : CanBeHuman(0), CanBeComputer(0), AIStrategy(-1),
+            legalAlignments(0), HasRandomAlignment(0), GenerateHero(0),
+            hasRandomHero(0), nonRandomHeroId(-1),
+            nonRandomHeroCustomPortrait(-1), field_30(0)
+        {
+            nonRandomHeroCustomName[0] = 0;
+        }
+    };
+
     int version;
     unsigned char isPlayable;
     unsigned char difficulty;
@@ -205,19 +262,30 @@ public:
     std::vector<int> placeholders;
     VictoryConditionStruct victoryCondition;
     LossConditionStruct lossCondition;
-    char pad_9c[4];
-    char playerSlotAttributes[8][0x44];
+    TPlayerSlotAttributes playerSlotAttributes[8];
 };
 SIZE(CMapHeaderData, 0x2c0);
+SIZE(CMapHeaderData::TPlayerSlotAttributes, 0x44);
 
 class NewSMapHeader : public CMapHeaderData {
 public:
-    char heroPlayerSetups[0x10];
+    std::map<int, type_map_hero_info> heroPlayerSetups;
     std::string mapName;
     std::string mapDescription;
     std::bitset<156> availableHeroes;
 
-    NewSMapHeader();
+    NewSMapHeader() : availableHeroes(0)
+    {
+        version = 0;
+        difficulty = 0;
+        numPlayers = 0;
+        minNumHumanPlayers = 0;
+        maxNumHumanPlayers = 0;
+        lastTownNameAssigned = 0;
+        mapHasNotBeenSaved = 0;
+        mapName = "";
+        mapDescription = "";
+    }
     ~NewSMapHeader();
     NewSMapHeader& operator=(const NewSMapHeader& that);
     int Save(TAbstractFile* outfile);
@@ -241,7 +309,25 @@ public:
     int startingHero[8];
     signed char startingBonus[8];
 
-    SGameSetupOptions();
+    SGameSetupOptions()
+    {
+        for (int i = 0; i < 8; ++i) {
+            color[i] = i;
+            handicap[i] = 0;
+            alignment[i] = i % 9;
+            playerPos[i] = i;
+            canFlipFromToComputer[i] = i;
+            startingHero[i] = -1;
+            startingBonus[i] = 3;
+        }
+        difficulty = 0;
+        turnDuration = 10;
+        memset(filename, 0, sizeof(filename));
+        memset(path, 0, sizeof(path));
+        curSelectedPlayer = 0;
+        fileInitialized = 0;
+        initializationNumHumans = 0;
+    }
     int save(TAbstractFile* outfile);
 };
 SIZE(SGameSetupOptions, 0x1cc);

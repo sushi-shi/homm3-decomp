@@ -1802,8 +1802,11 @@ int game::LoadRumours(TAbstractFile* infile)
     return 1;
 }
 
-// PARTIAL (27.1011%): member construction order, exact 0x5a4 layout, H3SVG
-// identifier, and version 42 default are reconstructed.
+// PARTIAL (96.4326%): the nested map header and setup constructors, exact
+// 0x5a4 layout, H3SVG identifier, and version 42 default are reconstructed.
+// The residual is one Dinkumware map-constructor inline decision: retail calls
+// its two-argument wrapper while this compile inlines the wrapper and calls
+// the three-argument tree constructor directly.
 VA(0x004bc0e0, 0x251)  // retail SavedGameHeader constructor and H3SVG literal
 SavedGameHeader::SavedGameHeader()
 {
