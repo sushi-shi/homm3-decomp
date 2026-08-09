@@ -486,6 +486,7 @@ game	?GetHeroBoat@game@@QAEPAVboat@@HE@Z	100.0000	100.0000	100.0000	0xce900
 game	?GetLocalPlayer@game@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xce9b0
 game	?GetLocalPlayerGamePos@game@@QAEHXZ	100.0000	100.0000	100.0000	0xcea20
 game	?GetName@playerData@@QAEPADXZ	95.8491	95.8491	95.8491	0xbadb0
+game	?GetNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0
 game	?GetNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0
 game	?GetPlayerName@game@@QAEPADH@Z	99.5312	99.5312	99.5312	0xceb60
 game	?GetStartingHeroId@game@@QAEHW4TTownType@@HH@Z	100.0000	100.0000	100.0000	0xbb400
@@ -503,7 +504,7 @@ game	?IsLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50
 game	?IsLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970
 game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80
 game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90
-game	?Load@game@@QAEHPAVTAbstractFile@@@Z	47.6526	47.6526	47.6526	0xbcda0
+game	?Load@game@@QAEHPAVTAbstractFile@@@Z	50.3078	50.3078	50.3078	0xbcda0
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a00
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	99.9385	99.9385	99.9385	0xb9340
@@ -544,7 +545,6 @@ game	InitImmMouse	0.0000	0.0000	0.0000	0xb6890
 game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
 game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
 game	game_CreateTownHeroes	0.0000	0.0000	0.0000	0xca040
-game	game_GetNewHeroId	0.0000	0.0000	0.0000	0xbb5e0
 game	game_GetRandomArtifactId	0.0000	0.0000	0.0000	0xc94d0
 game	game_GetRandomMonster	0.0000	0.0000	0.0000	0xc92c0
 game	game_GetRandomSpell	0.0000	0.0000	0.0000	0xc95a0

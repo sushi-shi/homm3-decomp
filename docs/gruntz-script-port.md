@@ -291,6 +291,55 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   residual is VC6 folding retail's dead positive-count preheader. No external
   implementation material was used.
 
+- **2026-08-09 — `game::Load` reaches 50.3078% with the complete roster
+  band.** Retail reads a byte town count, resizes the canonical 360-byte town
+  vector through a default temporary, loads every town, then loads 128 heroes
+  before save version 25 and all 156 thereafter. The adjacent compatibility
+  state is required as one unit: pre-version-31 saves consume an eight-byte
+  legacy record, hero availability restores 128 or 156 bytes with 0x40 for
+  the older 28-entry tail, and newer saves rebuild 156 eight-player
+  eligibility bitsets from one byte each. Those eight legacy bytes plus the
+  four-byte bitset temporary close the previously observed 12-byte frame gap.
+  Retail also keeps the already byte-exact `generator` constructor out of
+  line for its 92-byte resize temporary; a pragma scoped to that definition
+  restores the exact 0x7a8-byte frame and saved-header slots without changing
+  the constructor's 100% match. The function rises from 48.8668% to 50.3078%,
+  all 986 cur/max/history ratchets remain clean, and no external implementation
+  body was used.
+
+- **2026-08-09 — `game::GetNewHeroId` reconstructed to 98.9815%.** Retail
+  callers and the callee's `ret 0x10` prove the Complete-build extension to
+  four arguments: the first selects a player setup slot and eligibility bit,
+  while the fourth requests a preferred hero class. The body counts the 156
+  unused, player-eligible heroes by class, applies the signed per-alignment
+  class weights, suppresses empty and excluded classes, enforces the Complete
+  build's Conflux-class gate, optionally restricts selection to the player's
+  alignment, then performs the two one-based random selections. This admits
+  the canonical eighteen-value `THeroClass` domain and the +0x00 town type /
+  +0x33 ten-byte selection-weight slice of `THeroClassTraits`. Dreamcast
+  CodeView corroborates the original class ladder and the `hero_class`,
+  `total_count`, `choice`, `counts`, `hero_id`, `weights`, and `aligned_count`
+  locals; retail alone proves the two added Conflux classes, 156-hero extent,
+  fourth argument, and all control flow. Every branch agrees, and all
+  instruction differences are confined to one known
+  symmetric-register scheduling choice at the `gpGame->f_1f698 >= 2` gate:
+  retail uses eax/ecx where this SP3 compile uses ecx/eax, making the compiled
+  body one byte longer; equivalent condition nesting, operand order, named
+  pointer/value/flag locals, and the attested long/enum local types do not
+  move it. `decomp-attempt-1` was checked read-only and contains only a stub;
+  no external implementation body was used.
+
+- **2026-08-09 — `game::Load` extends from 47.6526% to 48.8668%.** Save
+  version 41 introduces one unchecked byte read immediately after the path
+  search array closes; retail sign-extends that byte into the global at
+  0x69950c and stores -1 for older saves. The address was already independently
+  attested by `advManager`, so its declaration moves to the canonical owner
+  header rather than creating another translation-unit-local extern. The
+  town/hero roster candidate was rejected because either partial form lowered
+  the function score; it remains out until the adjacent retail stack schedule
+  can be reconstructed as one additive unit. All 986 cur/max/history ratchets
+  remain clean, and no external implementation body was used.
+
 - **2026-08-09 — `game::Load` reaches 47.6526% with the retail save-header
   frame.** The 0x5a4-byte `SavedGameHeader` is fixed by retail stack offsets,
   constructor order, copy widths, and member destinations: it contains the

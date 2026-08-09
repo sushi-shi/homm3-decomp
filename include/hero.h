@@ -19,6 +19,31 @@
 // against herospec.h's enum) and rather than a second copy here.
 #include "spellschool.h"
 
+// Hero-class ids. Dreamcast CodeView supplies the original 0..15 ladder;
+// retail GetNewHeroId extends it with the two Conflux classes, indexes all
+// eighteen class-traits rows, and uses 18 as the no-class sentinel.
+enum THeroClass {
+    eClassKnight = 0,
+    eClassCleric = 1,
+    eClassRanger = 2,
+    eClassDruid = 3,
+    eClassAlchemist = 4,
+    eClassWizard = 5,
+    eClassPagan = 6,
+    eClassHeretic = 7,
+    eClassDeathKnight = 8,
+    eClassNecromancer = 9,
+    eClassOverlord = 10,
+    eClassWarlock = 11,
+    eClassBarbarian = 12,
+    eClassBattleMage = 13,
+    eClassBeastmaster = 14,
+    eClassWitch = 15,
+    eClassPlanesWalker = 16,
+    eClassElementalist = 17,
+    kNumHeroClasses = 18
+};
+
 // Hero/boat sprite sequence ids, transcribed COMPLETE from the
 // Dreamcast CodeView enum `hero_seqid` (the creature_seqid precedent in
 // csprite.h). Retail proves the five STAND values and their order
@@ -643,6 +668,7 @@ public:
     // because town::remove_garrison_hero calls it with the town's
     // owner, a type_point built from the town's map cell, and 0.
     void PlaceInMap(int iPlayer, type_point point, unsigned char reset_flags);
+    int load(TAbstractFile* infile, int saveVersion);
 };
 // sizeof(hero) == 1170 (0x492), byte-proven THREE independent ways:
 //   - the save walk at 0x4be841 runs `lea edi,[gpGame+0x21620]` and
@@ -757,9 +783,14 @@ SIZE(THeroTraits, 0x5c);
 // only the pointer at +4; cursor rendering independently proves the eighteen
 // class extent.
 struct THeroClassTraits {
-    char pad_00[4];
-    const char* className;
-    char pad_08[0x38];
+    int townType;                       // +0x00
+    const char* className;              // +0x04
+    char pad_08[0x2b];
+    // +0x33..+0x3c: one signed selection weight for the no-player
+    // bucket followed by the nine town types. GetNewHeroId indexes it
+    // with alignment + 1 and sign-extends the selected byte.
+    signed char selectionWeights[10];
+    char pad_3d[3];
 };
 SIZE(THeroClassTraits, 0x40);
 
