@@ -71,12 +71,6 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _Y : _X);
 }
 
-template<class T>
-inline const T& _cpp_max(T x, T y)
-{
-    return x < y ? y : x;
-}
-
 // The per-mastery specialty factor rows, one four-float .rdata run per
 // skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
 // read from the pinned image; they sit in one contiguous band of
@@ -559,8 +553,6 @@ void hero::DestroySiegeWeaponArtifact(int creature_type)
 }
 
 // E:\gamedcs\hero.cpp:1504
-#endif  // @carcass
-
 VA(0x004d92d0, 0x59)  // dc-bracket forced, dc 0xcc300
 void hero::UseSpell(int cost)
 {

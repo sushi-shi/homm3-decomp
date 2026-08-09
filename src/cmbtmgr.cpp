@@ -110,8 +110,6 @@ unsigned char combatManager::LoadWallTraitsTable()
 }
 #if 0  // @carcass
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:594
 VA(0x00462a20, 0x83F)  // anchor-vtable, dc 0x5d60c
 int combatManager::Open(int newPriority)
@@ -289,8 +287,6 @@ void combatManager::SetupAdjacencyArray()
         }
     }
 }
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:1612
 // EXACT 2026-08-09 from retail's survivor write-back loop. The
 // destination group is cleared first; each live, eligible combat stack then
@@ -330,8 +326,6 @@ void combatManager::UpdateArmyGroup(int whichSide)
             current.numTroops;
     }
 }
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:1653
 // RECONSTRUCTED 2026-08-09 from retail's 11x17 cell initializer. All eight
 // short coordinate fields, five empty sentinels and three cleared state
@@ -1623,8 +1617,6 @@ void combatManager::RaiseSkeletons(int side)
 
     raisedCreatureCount = 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4863
 // Walk the spells recorded for one side and teach each learnable spell to
