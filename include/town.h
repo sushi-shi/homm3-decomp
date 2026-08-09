@@ -6,6 +6,8 @@
 #define HOMM3_TOWN_H
 
 #include <va.h>
+#include <bitset>
+#include <vector>
 #include "armygrp.h"
 
 // Town/faction ids - the domain of town::type and of the creature
@@ -187,7 +189,8 @@ public:
     // The hero on the town's map tile, -1 for none. HasGarrison
     // short-circuits to "defended" on this one alone.
     int visitingHeroId;
-    char pad_14[0x2];
+    unsigned char field_14;
+    char pad_15[0x1];
     // +0x16, fourteen shorts - the accumulated population of each
     // dwelling slot, base then upgrade, the same 14-wide slot space
     // generatorBonus and gTownDwellingCreatures use. Sliced 2026-08-08
@@ -197,7 +200,20 @@ public:
     // == 0x32, so the row fills the head of the old pad exactly. Name
     // provisional (no DC symbol covers it); the role is byte-proven.
     short population[14];
-    char pad_32[0xae];
+    char field_32;
+    unsigned char field_33;
+    char field_34;
+    char pad_35[0x3];
+    int field_38;
+    int field_3c;
+    char pad_40[0x84];
+    // +0xc4..+0xd3 is a Dinkumware vector: the constructor copies an
+    // allocator byte into +0xc4 and clears its three pointer words.
+    // Its element semantics are not yet reached, so the name is ordinal.
+    std::vector<type_point> field_c4;
+    // +0xd4..+0xdf. The three-word default-constructor fill and the
+    // 70-position guards in the spell routines prove std::bitset<70>.
+    std::bitset<70> spells;
     // The town's own troops (ctor constructs an armyGroup at +0xe0 and
     // then fills the seven type slots with -1).
     armyGroup garrison;
@@ -261,6 +277,18 @@ public:
     // and it pushes exactly these three.
     type_building_id BuildBuilding(int buildingId, unsigned char SetBuiltFlag,
                                    unsigned char apply_special_effect);
+    // 0x5be930. Declared for update_shipyard's direct call; the body is
+    // still outside the admitted surface.
+    type_building_id create_building(type_building_id building);
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    // 0x5bec60. Downgrades this town's duplicate Capitol when another
+    // owned town already carries one. The declaration is scoped to
+    // town.obj because member population affects VC6 output elsewhere.
+    void destroy_extra_capitol();
+#endif
+    // 0x5bf210. Keeps the dock-with-boat pseudo-building synchronized
+    // with the object occupying the town's dock square.
+    void update_shipyard();
     // 0x5bf3c0. `building` is an INT (the can_ever_build asymmetry):
     // retail reads [ebp+8] as a full dword for both band compares and
     // for the inlined get_build_cost_array row arithmetic.
@@ -269,16 +297,25 @@ public:
     __int64 get_buildable_mask() const;
     int* get_build_cost_array(type_building_id building) const;
     void get_build_cost(type_building_id building, int* resources) const;
-    // DC: ?get_build_cost@town@@QBAFW4type_building_id@@QAW4EGameResource@@QAH@Z
-    // - `types` is an EGameResource* there; spelled int* here so the
-    // loop counter stores into it cast-free (retail's store is a full
-    // dword, so the two spellings are byte-identical).
+    // DC uses EGameResource* for `types`; int* is byte-identical here and
+    // avoids a source-only enum conversion that the retail code cannot prove.
     short get_build_cost(type_building_id building, int* types,
                          int* amounts) const;
     type_horde_effect* get_horde_effect(type_building_id building) const;
     int* get_silo_income() const;
     unsigned char is_legal_building(type_building_id building) const;
     int HasGarrison();
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    town();
+    // 0x5be030 remains outside the admitted surface; hire needs its
+    // direct town-spell handoff.
+    void GiveSpells(hero* forceHero);
+    // 0x5be210. Enters the shared town manager and restores the visiting
+    // hero as the adventure-map context on return.
+    void View(int bAlreadyFaded);
+    // 0x5c12e0. Charges and places one of the player's tavern offers.
+    void hire(hero* new_hero, long player_id);
+#endif
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.
     void Deallocate();

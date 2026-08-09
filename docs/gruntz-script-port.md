@@ -337,6 +337,74 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   yet be separated from the deliberately out-of-line append without
   disturbing the surrounding allocation. Retail bytes alone selected the
   semantic correction; no external implementation was used.
+- **2026-08-09 — the default `town` constructor admitted byte-exact;
+  `town` gains its 28th exact row.** Retail closes the former +0x32..+0xdf
+  pad: ordinal state at +0x33/+0x34/+0x38/+0x3c, a 16-byte Dinkumware vector
+  at +0xc4, and `std::bitset<70>` at +0xd4 immediately before the +0xe0
+  garrison. Their automatic construction, the garrison constructor call,
+  Village Hall seed, hero sentinels, and redundant seven-slot empty-army fill
+  reproduce all 212 bytes including EH setup. Adding the standard container
+  declarations to the canonical header preserved every dependent unit's
+  exact rows. No external implementation was used.
+
+- **2026-08-09 — `town::hire` admitted byte-exact from retail; `town`
+  gains its 27th exact row.** The 201-byte body scans the player's two tavern
+  offers for the hero id, charges `gHeroGoldCost`, refetches the canonical
+  hero record, and places it on the town's packed cell before teaching town
+  spells and retiring the consumed offer. Retail's uninitialised
+  `type_point` read-modify-writes, two-iteration cursor loop, player and hero
+  strides, and all three call relocations agree. The two unimplemented callees
+  receive TU-scoped declarations only; all pre-existing exact rows remain
+  intact. No external implementation was used.
+
+- **2026-08-09 — `town::View` admitted byte-exact from retail; `town`
+  gains its 26th exact row.** The 192-byte body sets the two view-state
+  flags, hands `this` through the manager's byte-proven +0x38 town pointer
+  to `executive::CallManager`, then restores the selected visiting hero as
+  the adventure context when its signed owner matches the acting player.
+  The dead `bAlreadyFaded` parameter, both duplicated cleanup returns, six
+  data relocations, and two call relocations all agree. The manager prefix
+  and the two large member calls are header-owned but visible only while
+  compiling town.obj, preserving every existing exact row. No external
+  implementation was used.
+
+- **2026-08-09 — `town::destroy_extra_capitol` reconstructed from retail to
+  96.4595%.** The 371-byte body checks the owner's other town ids, downgrades
+  a duplicate Capitol to City Hall in `built`, clears the Capitol from
+  `active`, and converts the corresponding adventure-map cell. The scan now
+  reproduces retail's byte comparison, inlined `GetTown`, shared exit, and
+  32-bit cursor-plus-negative-base induction exactly. A TU-scoped declaration
+  pair preserves `initialize_game_data` and every other existing exact row;
+  broad class declarations were measured and rejected after dropping that
+  initializer to 96.09%. The remaining mismatch is a scratch-register cycle
+  across the City Hall/active masks. No external implementation was used.
+
+- **2026-08-09 — `town::get_build_cost` rises 77.4561% -> 81.4912% by
+  restoring retail's cursor and down-counter loop.** The seven resource
+  columns now advance through the cost row while a separate tail count is
+  decremented; VC6 consequently reuses the dead `building` parameter slot
+  for that count exactly as retail does. An indexed loop, an up-counter,
+  extending the resource lifetime across `memset`, and moving `count` after
+  the cost selection all scored lower and were reverted. The Dreamcast
+  `EGameResource*` output signature was tested with a fresh label/delink pass
+  and produced the same body while requiring a source-only enum cast, so it
+  was also reverted to preserve the zero-cast floor. The remaining mismatch
+  is a register cycle; control flow and the recovered countdown agree. No
+  external implementation was used.
+
+- **2026-08-09 — `town::update_shipyard` admitted byte-exact from retail;
+  `town` gains its 25th exact row.** The 421-byte body first gates on the
+  active Dock bit, packs the town's dock coordinates into a `type_point`, and
+  indexes the retail map record directly. A trigger holding either a boat or
+  a hero synthesises `DOCK_WITH_BOAT_ID`; when that occupant disappears, the
+  pseudo-building is removed and `active` is rebuilt from the surviving
+  `built` bits plus `town::included_buildings`. Testing `built`, not the
+  evolving `active` mask, in that 44-entry rebuild is both the semantic fix
+  and the final byte-matching lever: it raised the first complete
+  reconstruction from 92.3000% to exact. The function identity and signature
+  are corroborated by the Dreamcast CodeView row, but the implementation was
+  reconstructed from retail disassembly and relocations; no external source
+  implementation was used.
 
 - **2026-08-09 — the adventure-rendering worktree was approved for
   integration into `master`; narrow views preserve both lanes' optimizer
