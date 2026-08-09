@@ -657,6 +657,7 @@ public:
     int SaveSignPool(TAbstractFile* outfile);     // 0x4b9270
 private:
     int SaveRumours(TAbstractFile* outfile);      // 0x4bbc20
+    int LoadRumours(TAbstractFile* infile);       // 0x4bbe40
 public:
     int LoadMinePool(TAbstractFile* infile, int saveVersion);
     int LoadGarrisonPool(TAbstractFile* infile, int saveVersion);

@@ -500,6 +500,7 @@ game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90
 game	?LoadBoatPool@game@@QAEHPAVTAbstractFile@@@Z	99.6447	99.6447	99.6447	0xb9a00
 game	?LoadGarrisonPool@game@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xb96f0
 game	?LoadMinePool@game@@QAEHPAVTAbstractFile@@H@Z	99.9385	99.9385	99.9385	0xb9340
+game	?LoadRumours@game@@AAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbbe40
 game	?LoadSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9070
 game	?MakeTerrainVisible@game@@QAEXHG@Z	100.0000	100.0000	100.0000	0xca240
 game	?MineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70
@@ -548,7 +549,6 @@ game	game_GetRandomSpell	0.0000	0.0000	0.0000	0xc95a0
 game	game_GetStartingHeroId	0.0000	0.0000	0.0000	0xbb400
 game	game_InsertObject	0.0000	0.0000	0.0000	0xc9890
 game	game_Load	0.0000	0.0000	0.0000	0xbcda0
-game	game_LoadRumours	0.0000	0.0000	0.0000	0xbbe40
 game	game_ProcessRandomObjects	0.0000	0.0000	0.0000	0xc9dd0
 game	game_Save	0.0000	0.0000	0.0000	0xbe3f0
 game	game_SaveBlackMarkets	0.0000	0.0000	0.0000	0xbc5d0
