@@ -230,6 +230,19 @@ public:
 };
 SIZE(garrison, 0x40);
 
+// Retail's sign pool uses a 20-byte record: the save flag occupies the first
+// byte and the STL string begins at +4. Dreamcast CodeView supplies the
+// surviving Sign/hasText/signText names; retail fixes the offsets and size.
+class Sign {
+public:
+    unsigned char hasText;
+    char pad_01[3];
+    std::string signText;
+
+    Sign() : hasText(0) {}
+};
+SIZE(Sign, 0x14);
+
 class generator {
 public:
     char genClass;              // +0x00
@@ -532,18 +545,25 @@ public:
     // byte by flag and tests the local player's bit.
     unsigned char globalInfoFlags[32];    // +0x4e344
     // One player-visit bitset per Border Tent object index. SetRolloverText
-    // indexes this byte band directly and tests the local player's bit.
-    unsigned char borderTentVisitFlags[0x24]; // +0x4e364
+    // indexes the retail GuardFlags band directly and tests the local
+    // player's bit. The sign-pool base proves this band contains eight bytes,
+    // followed by the cartographer state rather than more guard flags.
+    unsigned char borderTentVisitFlags[8]; // +0x4e364
+    unsigned short cartographerMask[3];    // +0x4e36c
+    unsigned char cartographerFlags[3];    // +0x4e372
+    char pad_4e375[3];
 #else
-    char pad_4df18[0x470];
+    char pad_4df18[0x460];
 #endif
-    // THE FOUR OBJECT POOLS, +0x4e388 / +0x4e398 / +0x4e3a8 / +0x4e3b8,
+    // Sign text and the four object pools, +0x4e378 / +0x4e388 / +0x4e398 /
+    // +0x4e3a8 / +0x4e3b8,
     // sixteen bytes apiece - VC6's Dinkumware vector, whose empty
     // allocator sits at +0 so _First/_Last/_End follow at +4/+8/+0xc.
     // Bases: ClaimMine reads +0x4e38c and ClaimGarrison +0x4e3ac (the
     // Load/Save bracket note), GetGeneratorId reads the +0x4e39c /
     // +0x4e3a0 pair with a 92-byte stride, and GetHeroBoat the
     // +0x4e3bc / +0x4e3c0 pair with a 40-byte one.
+    std::vector<Sign> signPool;           // +0x4e378
     std::vector<mine> mines;             // +0x4e388
     std::vector<generator> generators;   // +0x4e398
     std::vector<garrison> garrisons;      // +0x4e3a8
@@ -627,6 +647,7 @@ public:
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
     void calculate_production();                 // 0x4b8af0
+    int LoadSignPool(TAbstractFile* infile);      // 0x4b9070
 #ifdef HOMM3_TOWN_OBJ_DECLS
     // 0x4c9990. town.obj needs this declaration for
     // town::destroy_extra_capitol; keeping it TU-scoped preserves the

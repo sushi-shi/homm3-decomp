@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::LoadSignPool` reconstructed to 87.3457%
+  (435 bytes).** Retail proves the 20-byte `Sign` record and the pool base at
+  game +0x4e378: a one-byte text gate followed by an STL string at +4. The
+  loader reads a signed-byte count, resizes the Dinkumware vector, calls the
+  now-exact free `loadString` helper for each record, reads and normalizes the
+  saved text flag, and shares retail's -1 short-read exit. The new pool base
+  also corrects the adjacent game layout: the +0x4e364 guard-visit band is
+  eight bytes, followed by the independently attested cartographer state,
+  rather than the provisional 36-byte guard band. The loop body, error flow,
+  offsets and record stride agree with retail; the residual is VC6 emitting
+  the temporary `Sign` string cleanup through `_Tidy` where retail inlines
+  the same refcount/deallocation path. A fully inlined `loadString` attempt
+  scored 41.3951%; pinning only that helper out of line and precomputing the
+  indexed record produced the retained score. Dreamcast supplies the
+  `Sign`/`hasText`/`signText` names only; no external implementation body was
+  used, and the full build remains the sole baseline writer.
+
 - **2026-08-09 — the retail `loadString` save-stream helper is byte-exact
   (463 bytes).** The retail call convention disproves the Dreamcast member
   shape: the abstract file arrives in ECX and the destination STL string in

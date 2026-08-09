@@ -440,11 +440,35 @@ void game::calculate_production()
 }
 
 // E:\gamedcs\game.cpp:838
+#endif  // @carcass
+
 VA(0x004b9070, 0x1B3)  // anchor-callee (game::Load) + read-slot, dc 0xa3c68
-int game::LoadSignPool(void* infile)
+int game::LoadSignPool(TAbstractFile* infile)
 {
-    // @stub
+    signed char count;
+
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    unsigned int i = 0;
+    signPool.resize(count);
+    for (; i < signPool.size(); i++) {
+        Sign* sign = &signPool[i];
+#pragma inline_depth(0)
+        if (loadString(infile, &sign->signText) < 0)
+            return -1;
+#pragma inline_depth()
+
+        unsigned char hasText;
+        if (infile->Read(&hasText, sizeof(hasText)) < sizeof(hasText))
+            return -1;
+        signPool[i].hasText = hasText != 0;
+    }
+
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:868
 VA(0x004b9270, 0xCF)  // anchor-callee (game::Save) + write-slot, dc 0xa3d50
