@@ -429,6 +429,7 @@ public:
     void calculate_production();                 // 0x4b8af0
     int SaveMinePool(TAbstractFile* outfile);     // 0x4b9580
     int SaveGarrisonPool(TAbstractFile* outfile); // 0x4b98c0
+    int SaveBoatPool(TAbstractFile* outfile);     // 0x4b9c40
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
 #if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
     // 0x4c9990. town.obj needs this declaration for
