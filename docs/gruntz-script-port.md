@@ -260,6 +260,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the AI-combat vector copy constructor is identified and
+  byte-exact; an inherited class-copy claim is withdrawn.** The 135-byte
+  retail body at 0x4276c0 copies only an allocator byte and the vector's
+  pointer head, computes the element count from +0x04/+0x08, allocates
+  `count * 72`, and copies each 72-byte `type_monster_data`; it never reads
+  or writes the surrounding `type_AI_combat_data` fields. The pinned VC6
+  `<vector>` copy constructor has exactly that source and compiles to all
+  135 retail bytes when inlined into a source-private derived view. The
+  model now places the real 16-byte Dinkumware vector at class offset zero
+  (allocator byte, alignment, `_First/_Last/_End`) without moving any later
+  field. A direct `operator[]` adapter preserves the prior /Ob2 nesting
+  budget: without it, `cast_chain_lightning` and `get_enchantment_value`
+  rise, but `do_general_melee` regresses; with it every existing score is
+  unchanged and the new constructor alone is exact. The displaced
+  Dreamcast `type_AI_combat_data` copy constructor returns to `DC_ONLY`;
+  no retail slot is claimed for it. Retail bytes plus the pinned toolchain
+  header establish the correction; no external implementation was used.
+
 - **2026-08-09 — `type_AI_player::end_turn` rises 89.0940% -> 89.5263%
   by spelling retail's Marketplace scan exit.** Retail tests the town count
   once, then its inactive-Marketplace path increments the index, exits on

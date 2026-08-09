@@ -6,6 +6,7 @@
 #define HOMM3_AI_COMBAT_H
 
 #include <va.h>
+#include <vector>
 #include "armygrp.h"
 #include "ai_tactical.h"
 
@@ -100,41 +101,26 @@ SIZE(type_monster_data, 0x48);
 // [esi+4]/[esi+8], `if (_N<0) _N=0`, `operator new(_N*72)`. That byte
 // is Dinkumware's EMPTY `allocator` SUBOBJECT, which sits at vector+0
 // and pushes _First/_Last/_End to +4/+8/+0xc; STLport's vector has no
-// such member. So the vector starts at type_AI_combat_data+0x00 (16
-// bytes, not 12 at +0x04), and `field_00` below is that subobject.
-// RE-MODELLING THIS CLASS AS A REAL std::vector<type_monster_data> IS
-// NOW REACHABLE - it is deliberately NOT done here, because it moves
-// the head of a class several exact bodies depend on. Flagged for a
-// supervised pass.
-struct type_monster_vector {
-    type_monster_data* _M_start;
-    type_monster_data* _M_finish;
-    type_monster_data* _M_end_of_storage;
+// such member. The vector therefore starts at type_AI_combat_data+0x00
+// and is 16 bytes, rather than being a 12-byte pointer head at +0x04.
+// This source-private derived view preserves the real Dinkumware layout
+// and copy constructor. Its direct operator[] adapter avoids adding the
+// base implementation's nested begin() inline to established callers;
+// that codegen detail changes no type semantics or offsets.
+struct type_monster_vector : public std::vector<type_monster_data> {
+    friend class type_AI_combat_data;
 
-    // The only vector machinery any retail body actually emits inline:
-    // the destructor, at both ends of AI_quick_combat (0x427462 /
-    // 0x427478) and AI_auto_combat as `operator delete(_M_start)`
-    // followed by three zero stores. `operator delete` here is the
-    // 11-byte free-thunk at 0x60ab30.
-    ~type_monster_vector()
-    {
-        ::operator delete(_M_start);
-        _M_start = 0;
-        _M_finish = 0;
-        _M_end_of_storage = 0;
-    }
-
-    type_monster_data* begin() const { return _M_start; }
-    type_monster_data* end() const { return _M_finish; }
-    unsigned size() const { return (unsigned)(end() - begin()); }
-    type_monster_data& operator[](unsigned n) const { return _M_start[n]; }
+    type_monster_vector(const type_monster_vector& other);
+    type_monster_data& operator[](unsigned n) const { return _First[n]; }
 };
+SIZE(type_monster_vector, 0x10);
 
 // type_AI_combat_data - the quick-combat simulation side. Offsets are
 // byte-proven from the ctor's store sequence (0x423ee0) plus each
 // accessor:
-//   +0x00 byte      - the ctor's first store (0x423f06).
-//   +0x04 monsters  - the vector, zeroed at 0x423f08.
+//   +0x00 monsters  - allocator byte copied at 0x4276c4; the three
+//                     pointers at +0x04/+0x08/+0x0c are zeroed by the
+//                     primary ctor at 0x423f08.
 //   +0x10 terrain   - -1 default, overwritten by the special-terrain
 //                     jump table (0x423f74/0x423f9d).
 //   +0x14 mana      - (short)hero[+0x18] widened (0x423f3d).
@@ -153,9 +139,7 @@ struct type_monster_vector {
 //                     check_wall_archery_penalty's only outputs.
 class type_AI_combat_data {
 public:
-    unsigned char field_00;          // +0x00
-    char pad_01[3];
-    type_monster_vector monsters;    // +0x04
+    type_monster_vector monsters;    // +0x00
     long terrain;                    // +0x10
     long mana;                       // +0x14
     unsigned char can_cast;          // +0x18

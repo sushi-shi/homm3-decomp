@@ -143,6 +143,7 @@ ai	combatManager_mark_enemy_attacks	0.0000	0.0000	0.0000	0x20260
 ai	combatManager_mark_friendly_armies	0.0000	0.0000	0.0000	0x1fb60
 ai	combatManager_mark_multiheaded_enemy	0.0000	0.0000	0.0000	0x1fd60
 ai	find_attack_hexes	0.0000	0.0000	0.0000	0x20060
+ai_combat	??0type_monster_vector@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0x276c0
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x27650
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@PBVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x27690
 ai_combat	?AI_auto_combat@@YIXPAVhero@@0PAVarmyGroup@@1PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x27210
@@ -179,7 +180,6 @@ ai_combat	type_AI_combat_data_choose_melee	0.0000	0.0000	0.0000	0x267c0
 ai_combat	type_AI_combat_data_do_aftermath	0.0000	0.0000	0.0000	0x26ee0
 ai_combat	type_AI_combat_data_initialize_creatures	0.0000	0.0000	0.0000	0x24120
 ai_combat	type_AI_combat_data_type_AI_combat_data	0.0000	0.0000	0.0000	0x23ee0
-ai_combat	type_AI_combat_data_type_AI_combat_data_276c0	0.0000	0.0000	0.0000	0x276c0
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	86.3767	86.3767	86.3767	0x28740
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566	96.4566	96.4566	0x29ad0
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	98.7523	98.7523	98.7523	0x28410
