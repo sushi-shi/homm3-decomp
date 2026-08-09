@@ -864,21 +864,18 @@ void town::get_build_cost(type_building_id building, int* resources) const
 
 // E:\gamedcs\town.cpp:2224
 // Packs the nonzero cost columns down into (types, amounts) and returns
-// how many there were. `types` is spelled int* rather than the DC's
-// EGameResource* so the loop counter stores cast-free (the armyGroup
-// slot-int precedent); retail stores it as a full dword either way.
-// Residual (77.5%): the CFG and every arm match; retail puts `count` in
-// ebx and reloads BOTH output pointers inside the loop body, which
-// leaves it no register for the trip count and spills it to the dead
-// `building` parameter slot as a down-counter. Ours puts `count` in esi,
-// keeps `amounts` live in ebx and tests `resource < 7` directly.
-// Register-homing family. Tried and rejected: memset before the cost
-// selection (0%), `count` declared after `costs` (70.6), an explicit
-// walking `const int* cost` with a separate index (74.0), a while loop
-// (70.6), and hoisting `resource` above the memset (70.6). The one
-// spelling not tried is the DC's own `EGameResource* types`, which needs
-// a static_cast<EGameResource> at the store - the cleanliness board's
-// enum-cast floor is 0 and raising it is a reviewed act, not a lane one.
+// how many there were. The cursor plus explicit seven-entry down-counter
+// reproduce retail's loop direction and its reuse of the dead `building`
+// parameter slot, raising this row 77.46% -> 81.49%. The remaining delta
+// is register homing: retail keeps `count` in ebx, the cursor in ecx and
+// the resource id in edx; this compile rotates those values through
+// esi/edx/ecx and keeps `amounts` live across the memset. The DC's own
+// EGameResource* output signature was also compiled and paired on a fresh
+// delink; it was byte-inert and required a source-only enum cast, so the
+// zero-cast int* spelling remains. Rejected lower-scoring forms: memset
+// before cost selection (0%), count after costs (74.65% with this loop),
+// an indexed for loop (77.46%), a walking pointer with an up-counter
+// (74.0%), and resource lifetime extended across the memset (79.39%).
 VA(0x005c1180, 0xA9)  // linkorder, dc 0x168910
 short town::get_build_cost(type_building_id building, int* types,
                            int* amounts) const
@@ -886,13 +883,17 @@ short town::get_build_cost(type_building_id building, int* types,
     short count = 0;
     const int* costs = get_build_cost_array(building);
     memset(amounts, 0, NUM_RESOURCES * sizeof(int));
-    for (int resource = 0; resource < NUM_RESOURCES; resource++) {
-        if (costs[resource] > 0) {
+    int resource = 0;
+    int resources_left = NUM_RESOURCES;
+    do {
+        if (*costs > 0) {
             types[count] = resource;
-            amounts[count] = costs[resource];
+            amounts[count] = *costs;
             count++;
         }
-    }
+        costs++;
+        resource++;
+    } while (--resources_left);
     return count;
 }
 
@@ -1064,4 +1065,3 @@ unsigned char std::bitset<70,unsigned long>::reference::operator bool()
 }
 
 #endif  // @carcass
-

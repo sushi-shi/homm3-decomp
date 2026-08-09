@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `town::get_build_cost` rises 77.4561% -> 81.4912% by
+  restoring retail's cursor and down-counter loop.** The seven resource
+  columns now advance through the cost row while a separate tail count is
+  decremented; VC6 consequently reuses the dead `building` parameter slot
+  for that count exactly as retail does. An indexed loop, an up-counter,
+  extending the resource lifetime across `memset`, and moving `count` after
+  the cost selection all scored lower and were reverted. The Dreamcast
+  `EGameResource*` output signature was tested with a fresh label/delink pass
+  and produced the same body while requiring a source-only enum cast, so it
+  was also reverted to preserve the zero-cast floor. The remaining mismatch
+  is a register cycle; control flow and the recovered countdown agree. No
+  external implementation was used.
+
 - **2026-08-09 — `town::update_shipyard` admitted byte-exact from retail;
   `town` gains its 25th exact row.** The 421-byte body first gates on the
   active Dock bit, packs the town's dock coordinates into a `type_point`, and
