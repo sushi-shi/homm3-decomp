@@ -5,6 +5,8 @@
 #ifndef HOMM3_PUZZLEWINDOW_H
 #define HOMM3_PUZZLEWINDOW_H
 
+#include "struct.h"
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:103, dc 0x114f14) Bitmap816* get_puzzle_bitmap(long puzzle, long piece);
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:403, dc 0x115838) unsigned char mark_AI_puzzle(long player, unsigned char* visible);
@@ -12,6 +14,10 @@
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:472, dc 0x115a70) long check_match(long player, long first_x, long first_y, type_point origin, []* puzzle_map);
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:520, dc 0x115be8) type_point match_puzzle(__$ReturnUdt, long player, []* puzzle_map);
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:614, dc 0x115f64) type_point AI_attempt_puzzle_guess(__$ReturnUdt, long player);
+// The explicit Dreamcast return-buffer marker is represented by C++'s normal
+// by-value return. Retail's call from playerData::guess_grail_location has the
+// same hidden-result-pointer-in-ECX / player-in-EDX convention.
+type_point AI_attempt_puzzle_guess(long player);
 
 // --- Bitmap816 ---
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:334, dc 0x11577c) void Bitmap816::mark_puzzle(unsigned char* visible, long dest_x, long dest_y);

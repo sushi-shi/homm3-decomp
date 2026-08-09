@@ -28,6 +28,7 @@
 // re-declaring it.
 #include "netgame.h"
 #include "kbwin.h"
+#include "puzzlewindow.h"
 
 #if 0  // @carcass
 
@@ -655,16 +656,17 @@ char* playerData::GetName()
     return cName;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:1972
+// AI_attempt_puzzle_guess returns its packed four-byte point through a hidden
+// result pointer. VC6 reuses the now-dead player_id argument slot for that
+// temporary, matching retail's `lea ecx,[ebp+8]`; the dword copy preserves the
+// deliberately unaligned playerData member at +0x39.
 VA(0x004bae50, 0x1B)  // linkorder, dc 0xa6230
 void playerData::guess_grail_location(long player_id)
 {
-    // @stub
+    type_point guess = AI_attempt_puzzle_guess(player_id);
+    memcpy(puzzle_guess, &guess, sizeof(guess));
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\game.cpp:1978
 // The mine pool's stride is 64, not the Dreamcast record's 12 - the
