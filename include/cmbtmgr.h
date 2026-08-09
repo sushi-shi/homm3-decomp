@@ -14,6 +14,7 @@
 class Bitmap816;
 class CSprite;
 class hero;
+class heroWindow;
 class NewmapCell;
 class searchArray;
 class town;
@@ -26,6 +27,13 @@ struct TDrawbridgeBounds {
     int values[4];
 };
 SIZE(TDrawbridgeBounds, 0x10);
+
+// Polymorphic objects owned by combatManager at offsets where Close only
+// proves scalar deletion. Their concrete roles remain unattested.
+class CCombatOwnedObject {
+public:
+    virtual ~CCombatOwnedObject();
+};
 
 // One side's Eagle Eye bookkeeping. Its sole retail-proven member is the
 // 16-byte Dinkumware set walked by LearnSpellFromEagleEye.
@@ -299,7 +307,7 @@ public:
     // not yet modelled as deriving baseManager, so the field is sliced
     // out of the head pad at the offset the bytes prove.
     int status;
-    char pad_0038[0x4];
+    CCombatOwnedObject* field_38;
     // The pending AI order, written as a (code, hex) pair. move_toward
     // (0x41f580) sets the code to 2 the moment a path exists, raises it
     // to 8 when waiting still looks better than the hex it settled on,
@@ -346,7 +354,10 @@ public:
     // re-opens that table's gate hex, only while this byte is set -
     // always nested inside the field_53a8 test above. Name provisional.
     unsigned char field_53a9;         // +0x53a9
-    char pad_53aa[0xe];
+    char pad_53aa[0x2];
+    CCombatOwnedObject* field_53ac;
+    CCombatOwnedObject* field_53b0;
+    CCombatOwnedObject* field_53b4;
     // CombatSystemOptions clears this dword after the modal dialog closes.
     int field_53b8;                   // +0x53b8
     // Adventure-map cell under the battlefield. DetermineCombatTerrain
@@ -445,7 +456,10 @@ public:
     // should_lower_door (0x467130) while it is non-zero. Name pending
     // a writer.
     ECombatFortification field_132f4; // +0x132f4
-    char pad_132f8[0x170];
+    char pad_132f8[0x4];
+    heroWindow* combatWindow;         // +0x132fc
+    int field_13300;                  // +0x13300
+    char pad_13304[0x164];
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
@@ -558,6 +572,7 @@ public:
     void PlaceAllObstacles();
     void InitializeArchers();
     void FreeIcons();
+    void Close();
     unsigned char HexIsBlocked(int index);
     unsigned char IsInMoat(int hex, int* index);
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
@@ -769,6 +784,7 @@ extern const char* const gTerrainCombatBackgrounds[9][3];    // 0x63d2f0
 // Names are address ordinals because no surviving public symbol names
 // them; widths and uses are byte-proven by the retail body.
 DATA(0x0069877c) extern int gCombatQuickMode69877c;
+extern int gCombatActive698a18;
 
 // The four screen hit rectangles GetGridIndex (0x4647a0) tests before
 // it falls through to the grid arithmetic, one per special combat hex,

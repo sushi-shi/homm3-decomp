@@ -352,6 +352,7 @@ button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000	100.0000	100.0000	0x569e
 button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10
 castle	?GetBuildingName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x610e0
 cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110	75.0110	75.0110	0x6a350
+cmbtmgr	?Close@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x63260
 cmbtmgr	?CombatIsOver@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x65830
 cmbtmgr	?CombatSystemOptions@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x686b0
 cmbtmgr	?DamageWall@combatManager@@QAEXW4TWallTargetId@@H@Z	100.0000	100.0000	100.0000	0x65990
@@ -392,7 +393,6 @@ cmbtmgr	?is_adjacent@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x674c0
 cmbtmgr	?should_lower_door@combatManager@@QAEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
 cmbtmgr	combatManager_CheckApplyBadMorale	0.0000	0.0000	0.0000	0x64b40
 cmbtmgr	combatManager_CheckApplyGoodMorale	0.0000	0.0000	0.0000	0x64920
-cmbtmgr	combatManager_Close	0.0000	0.0000	0.0000	0x63260
 cmbtmgr	combatManager_GetMissileStartingPosition	0.0000	0.0000	0.0000	0x69880
 cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
 cmbtmgr	combatManager_KeepAttack	0.0000	0.0000	0.0000	0x65ad0
