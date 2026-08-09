@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `TSplitWindow::TSplitWindow` rises 77.0387% ->
+  98.3954%.** Retail snapshots `creature` only across the elemental/background
+  selector, then reloads the member for the sprite; that lifetime recovers its
+  ESI/EDI allocation. The destination text entry's navigation argument is the
+  byte-proven source id 4, not its own id 5. Finally, a depth-zero inline
+  adapter evaluates the vector end iterator in the constructor but retains the
+  final `vector::insert` call, avoiding the 16-block recursive expansion that
+  `push_back` otherwise triggers in this compile. All 57 blocks and 25 branches
+  agree. Direct insert, named-value, constructor-wide inline-depth and reserve
+  adapter probes regressed or were inert and were reverted.
+
 - **2026-08-09 — `soundManager::MemorySample` rises 98.7963% ->
   99.7840%.** The guarded explicit cursor repeated the empty-range test.
   Writing the slot search as a natural indexed `while` lets VC6 introduce
