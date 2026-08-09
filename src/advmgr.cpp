@@ -54,10 +54,24 @@
 #include <va.h>
 #include "advmgr.h"
 #include "game.h"
+#include "kb.h"
 #include "kbwin.h"
+#include "mousemgr.h"
 #include "winmgr.h"
 #include "window.h"
 #include "widget.h"
+
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X > _Y ? _X : _Y);
+}
 
 #if 0  // @carcass
 
@@ -995,11 +1009,21 @@ void advManager::SeedTo(type_point target)
 }
 
 // E:\gamedcs\advmgr.cpp:10609
+#endif  // @carcass
+
 VA(0x00419570, 0x49)  // anchor-global, dc 0x1c750
 void advManager::ForceNewHover()
 {
-    // @stub
+    if (gpCurrentPlayer->IsLocalHuman()) {
+        int x;
+        int y;
+        gpMouseManager->MouseCoords(&x, &y);
+        lastHover = -1;
+        ProcessHover(x, y);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10624
 VA(0x004195c0, 0x258)  // anchor-callee, dc 0x1c7e4
@@ -1072,11 +1096,42 @@ void advManager::EnableButtons()
 }
 
 // E:\gamedcs\advmgr.cpp:11125
+#endif  // @carcass
+
 VA(0x0041a460, 0x1FB)  // anchor-global, dc 0x1dc24
 unsigned char advManager::FindAdjacentMonster(type_point point, type_point* result, type_point excluded)
 {
-    // @stub
+    int min_x = _cpp_max<int>(point.x - 1, 0);
+    int min_y = _cpp_max<int>(point.y - 1, 0);
+    int max_x = _cpp_min<int>(point.x + 2, gMapWidth);
+    int max_y = _cpp_min<int>(point.y + 2, gMapHeight);
+
+    NewmapCell* center = &fullMap->cellData[
+        (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
+    unsigned char center_is_water = center->GroundSet == eTerrainWater;
+    if (center->cell_is_trigger()
+        && !gAdventureObjectTraits[center->get_map_object()].field_01)
+        min_y = point.y;
+
+    for (int x = min_x; x < max_x; ++x) {
+        for (int y = min_y; y < max_y; ++y) {
+            NewmapCell* cell = &fullMap->cellData[
+                (point.z * fullMap->Size + y) * fullMap->Size + x];
+            if (cell->type == MONSTER && cell->is_trigger
+                && (cell->GroundSet == eTerrainWater) == center_is_water
+                && (x != excluded.x || y != excluded.y
+                    || point.z != excluded.z)) {
+                result->x = x;
+                result->y = y;
+                result->z = point.z;
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11155
 VA(0x0041a660, 0xEB)  // anchor-callee, dc 0x1dde4
@@ -1086,11 +1141,27 @@ void ComputeAdvNetControl()
 }
 
 // E:\gamedcs\advmgr.cpp:11196
+#endif  // @carcass
+
 VA(0x0041a750, 0x97)  // anchor-callee, dc 0x1df7c
 int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
 {
-    // @stub
+    if (GetMapExtra(x, y, z) & bit)
+        return 1;
+
+    for (int test_x = x - 1; test_x <= x + 1; ++test_x) {
+        if (test_x >= 0 && test_x < gMapWidth) {
+            for (int test_y = y - 1; test_y <= y + 1; ++test_y) {
+                if (test_y >= 0 && test_y < gMapHeight
+                    && (GetMapExtra(test_x, test_y, z) & bit))
+                    return 1;
+            }
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11220
 VA(0x0041a7f0, 0x307)  // anchor-callee, dc 0x1e068

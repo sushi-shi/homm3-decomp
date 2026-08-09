@@ -12,6 +12,15 @@
 class NewfullMap;
 class NewmapCell;
 
+// A narrow retail view of the 16-byte adventure-object traits table.
+// FindAdjacentMonster reaches only byte +1 after get_map_object indexes it.
+struct TAdventureObjectTraitsView {
+    unsigned char pad_00;
+    unsigned char field_01;
+    char pad_02[14];
+};
+DATA(0x00660428) extern TAdventureObjectTraitsView* gAdventureObjectTraits;
+
 // The adventure screen's own window. Only the ONE method a retail body
 // outside adventuremapwindow.obj calls on it is declared here:
 // town::Deallocate (0x5be2d0) ends with
@@ -93,7 +102,9 @@ public:
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.
     type_point radarOrigin;
-    char pad_0e8[0x124];
+    char pad_0e8[4];
+    int lastHover;  // +0xec, ForceNewHover invalidates before ProcessHover
+    char pad_0f0[0x11c];
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
     char pad_20d[0x17f];
     int field_38c;            // +0x38c, zeroed by CallManager's suspend arm
@@ -110,7 +121,10 @@ public:
     void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
     void Reseed(int targetX, int targetY);
     void ForceNewHover();
+    int ProcessHover(int mouseX, int mouseY);
     void DrawRolloverText(char* text);
+    unsigned char FindAdjacentMonster(type_point point, type_point* result,
+                                      type_point excluded);
     int InMapArea(int x, int y);
     NewmapCell* GetCell(type_point point);
     void UpdateRadar(type_point origin, unsigned char updateFlag,
@@ -124,6 +138,8 @@ public:
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
 extern advManager* gpAdvManager;
+
+int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\advmgr.cpp:336, dc 0x5714) unsigned char InitializeCreatureGeneratorNames();

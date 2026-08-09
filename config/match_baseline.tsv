@@ -9,9 +9,12 @@ advmgr	?CheckDimNextHeroBut@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1945
 advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a0
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570
 advmgr	?DrawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0
+advmgr	?FindAdjacentMonster@advManager@@QAEEUtype_point@@PAU2@0@Z	82.0057	82.0057	82.0057	0x1a460
+advmgr	?ForceNewHover@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19570
 advmgr	?GetCell@advManager@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12bd0
 advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
+advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	99.3415	99.3415	99.3415	0x15d60
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790
@@ -26,7 +29,6 @@ advmgr	ExtraInfoUnion_get_black_box	0.0000	0.0000	0.0000	0x5de0
 advmgr	ExtraInfoUnion_get_creature_bank_5df0	0.0000	0.0000	0.0000	0x5df0
 advmgr	ExtraInfoUnion_get_university	0.0000	0.0000	0.0000	0x5e10
 advmgr	GetFlaggedObjectOwner	0.0000	0.0000	0.0000	0xfd20
-advmgr	MapExtraPosAndAdjacentsSet	0.0000	0.0000	0.0000	0x1a750
 advmgr	PopupPlayerTurnInfo	0.0000	0.0000	0.0000	0x19c80
 advmgr	SaveGame	0.0000	0.0000	0.0000	0x18160
 advmgr	SetShrineHelpText	0.0000	0.0000	0.0000	0xd8d0
@@ -59,8 +61,6 @@ advmgr	advManager_DrawRoad	0.0000	0.0000	0.0000	0x11d60
 advmgr	advManager_DrawShroud	0.0000	0.0000	0.0000	0x12220
 advmgr	advManager_DrawUnderlay	0.0000	0.0000	0.0000	0x12470
 advmgr	advManager_EnableButtons	0.0000	0.0000	0.0000	0x1a3a0
-advmgr	advManager_FindAdjacentMonster	0.0000	0.0000	0.0000	0x1a460
-advmgr	advManager_ForceNewHover	0.0000	0.0000	0.0000	0x19570
 advmgr	advManager_GetCloudLookup	0.0000	0.0000	0.0000	0xf8c0
 advmgr	advManager_GetSoundId	0.0000	0.0000	0.0000	0x18620
 advmgr	advManager_HeroQuickView	0.0000	0.0000	0.0000	0x16590
@@ -923,7 +923,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # Do not treat any of them as a target. Re-measure after ANY change to
 # game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
 # artifact.h / army.h, and record what you saw.
-initialize	?initialize_game_data@@YIXXZ	94.0741	94.0741	100.0000	0xeb730
+initialize	?initialize_game_data@@YIXXZ	100.0000	100.0000	100.0000	0xeb730
 inputmgr	??0inputManager@@QAE@XZ	86.5667	86.5667	86.5667	0xec460
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024	98.8024	98.8024	0xec6f0
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540

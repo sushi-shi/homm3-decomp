@@ -260,6 +260,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advmgr` 11 → 13 exact; the first 500-byte body
+  opened to 82.01%; two required member declarations restore
+  `initialize_game_data` to 100%.** `MapExtraPosAndAdjacentsSet`
+  (151 B) and `ForceNewHover` (73 B) are byte-exact from retail control
+  flow and relocations. `FindAdjacentMonster` (507 B) is structurally
+  reconstructed at 82.0057%: retail proves the reference-returning
+  max/min bounds, NewfullMap indexing, trigger/object-trait test,
+  monster/water/excluded-point predicates, and packed result writes;
+  the remaining delta is local/register allocation, not yet claimed
+  exact. Its direct load proves 0x660428 is a pointer to 16-byte object
+  traits (not an inline array). Declaring the two actually-called
+  `NewmapCell` members (`cell_is_trigger`, `get_map_object`) changes the
+  shared include population and independently returns
+  `initialize_game_data` 94.0741 → 100.0000; both declarations are
+  required by retail REL32 calls, so the gain is retained rather than
+  tuned for score. No unadmitted `kb.cpp` body was changed or added to
+  the build, and no Dreamcast body was ported.
+
 - **2026-08-09 — `advmgr` 8 → 11 exact and a withdrawn `findpath`
   body restored; four retail-derived bodies exact, one jump-table body
   code-identical at 99.34%.** `advManager::GetCell(type_point)` (108 B),
