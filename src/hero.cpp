@@ -1510,11 +1510,25 @@ int hero::GiveExperience(int howMuch, int bCheckLevel, unsigned char show_cap_wi
 }
 
 // E:\gamedcs\hero.cpp:5136
+#endif  // @carcass
+
 VA(0x004e3600, 0xB2)  // anchor-global, dc 0xd3fb8
 void hero::GiveResource(int whichRes, int howMuch)
 {
-    // @stub
+    if (whichRes >= 0 && whichRes <= 6) {
+        gpGame->players[owner].resources[whichRes] += howMuch;
+        if (gpGame->players[owner].resources[whichRes] < 0)
+            gpGame->players[owner].resources[whichRes] = 0;
+    }
+
+    if (&gpGame->players[owner] == gpCurrentPlayer
+            && gpAdvManager->status == 1)
+        gpAdvManager->advWindow->UpdateResourceDisplay(1, 1);
+
+    gpGame->IsHuman(owner);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:5165
 VA(0x004e36c0, 0x2E8)  // anchor-global, dc 0xd4070

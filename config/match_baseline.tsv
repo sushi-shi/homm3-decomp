@@ -603,6 +603,7 @@ hero	?GetStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?GetStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110
 hero	?GetSurrenderCostFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4580
 hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070
+hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0
 hero	?HasArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91b0
 hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe5de0
@@ -665,7 +666,6 @@ hero	hero_GetMorale	0.0000	0.0000	0.0000	0xe39b0
 hero	hero_GetNecromancyFactor	0.0000	0.0000	0.0000	0xe3cd0
 hero	hero_GiveArtifact	0.0000	0.0000	0.0000	0xe3070
 hero	hero_GiveExperience	0.0000	0.0000	0.0000	0xe33b0
-hero	hero_GiveResource	0.0000	0.0000	0.0000	0xe3600
 hero	hero_HeroFn_004D8B30	0.0000	0.0000	0.0000	0xd8b30
 hero	hero_HeroFn_004D8F70	0.0000	0.0000	0.0000	0xd8f70
 hero	hero_HeroFn_004D8FB0	0.0000	0.0000	0.0000	0xd8fb0

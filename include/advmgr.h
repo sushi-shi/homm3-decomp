@@ -191,6 +191,7 @@ public:
                             unsigned char update);
     void UpdateHeroLocator(int which, unsigned char drawWin,
                            unsigned char update);
+    void UpdateResourceDisplay(unsigned char draw, unsigned char update);
     void DrawChatText(unsigned char update);
 };
 
