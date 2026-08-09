@@ -56,6 +56,11 @@ struct AdvRoadCellView {
     unsigned short cellFlags;
 };
 
+struct AdvRiverCellView {
+    char pad_00[0xc];
+    unsigned short cellFlags;
+};
+
 // Retail mine records are 0x40 bytes. GetSoundId reaches the type and the
 // one-byte abandoned marker without widening game.h's broad mine layout.
 struct AdvMineSoundView {

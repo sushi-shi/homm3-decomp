@@ -725,6 +725,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   provenance stamp. Full-engine sweep: 540 -> 541 exact, no function score
   decreased; `AsciiConvert` 98.8024% -> 100.0000%. This also disproves the
   earlier theory that its base-only COFF labels capped the match.
+
+- **2026-08-09 — `advManager::DrawRiver` admitted byte-exact;
+  `advmgr` 22 → 23 exact.** The 471-byte body reproduces its map bounds,
+  packed-point fallback cell, river-presence gate, viewport clipping,
+  river set/frame selection, word-width flip flags at bits 2 and 3, and
+  the raw `CSprite::DrawTile` target. Unlike the adjacent road pass, retail
+  proves no half-tile vertical origin or bottom-row crop. All instructions
+  compare exactly. Retail bytes and relocations are the correctness
+  evidence; Dreamcast CodeView supplied only surviving names and signatures.
+  No external body was consulted or ported, and the generated baseline
+  remains exclusively build-owned.
+
 - **2026-08-09 — `advManager::DrawRoad` admitted byte-exact;
   `advmgr` 21 → 22 exact.** The 492-byte body reproduces its map bounds,
   packed-point fallback cell, road-presence gate, half-tile vertical origin,

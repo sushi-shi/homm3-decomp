@@ -1470,16 +1470,57 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:6441
 VA(0x00411b80, 0x1D7)  // linkorder, dc 0x13890
 void advManager::DrawRiver(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
-}
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
 
-#endif  // @carcass
+    type_point point;
+    point = type_point(srcX, srcY, z);
+    NewmapCell* thisCell;
+    if (!point.is_valid()) {
+        thisCell = fullMap->cellData;
+    } else {
+        thisCell = &fullMap->cellData[
+            (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
+    }
+    if (!thisCell->RiverSet)
+        return;
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    AdvRiverCellView* riverCell = static_cast<AdvRiverCellView*>(
+        static_cast<void*>(thisCell));
+    riverTileset[thisCell->RiverSet]->DrawTile(
+        thisCell->RiverIndex, tilex, tiley, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8,
+        (riverCell->cellFlags >> 2) & 1,
+        (riverCell->cellFlags >> 3) & 1);
+}
 
 // E:\gamedcs\advmgr.cpp:6504
 VA(0x00411d60, 0x1EC)  // linkorder, dc 0x13a64
