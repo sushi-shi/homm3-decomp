@@ -998,38 +998,42 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 // 0xd3f0 is the one with independent body evidence: 6 params AND the
 // two creature-bank-only callees (0xabe0, armyGroup::HasCreatures).
 // E:\gamedcs\advmgr.cpp:2762
-// RETAIL-RECONSTRUCTED 2026-08-09 (85.3542%). The std::string bank name,
+// RETAIL-RECONSTRUCTED 2026-08-09 (87.2833%). The std::string bank name,
 // short-width visited-player gate and branch-local bank lookups restore the
-// retail frame and control flow. The residual is two disjoint result-string
-// homes versus retail's shared slot and their associated cleanup tail.
+// retail control flow. Sibling full/compact scopes now share retail's -0x14
+// result-string home and 0x14-byte frame; the residual is register allocation
+// and the associated cleanup-tail scheduling.
 VA(0x0040d3f0, 0x27C)  // anchor-callee, dc 0xb3bc
 void get_creature_bank_help_text(char* buffer, NewmapCell* cell, type_creature_bank_type type, long player_id, const char* separator, unsigned char show_full_list)
 {
     strcpy(buffer, const_creature_bank_traits[type].name.c_str());
     strcat(buffer, separator);
 
-    unsigned long testFlag = cell->extraInfo;
     const char* army_name;
     if (!cell->PlayerKnowsCell(player_id)) {
         army_name = gUnnamed6a5d5c->entry->unvisitedObjectText;
-    } else if ((testFlag & 0x02000000)
-               || !gpGame->creatureBanks.first[
-                       (testFlag >> 13) & 0xfff].guards.HasCreatures()) {
-        army_name = gUnnamed6a5d5c->entry->visitedObjectText;
     } else {
-        if (show_full_list) {
-            std::string result = get_army_help_text(
-                &gpGame->creatureBanks.first[
-                    (cell->extraInfo >> 13) & 0xfff].guards, 1);
-            strcat(buffer, result.c_str());
-            return;
+        unsigned long testFlag = cell->extraInfo;
+        if ((testFlag & 0x02000000)
+            || !gpGame->creatureBanks.first[
+                    (testFlag >> 13) & 0xfff].guards.HasCreatures()) {
+            army_name = gUnnamed6a5d5c->entry->visitedObjectText;
+        } else {
+            if (show_full_list) {
+                std::string result = get_army_help_text(
+                    &gpGame->creatureBanks.first[
+                        (cell->extraInfo >> 13) & 0xfff].guards, 1);
+                strcat(buffer, result.c_str());
+                return;
+            } else {
+                strcat(buffer, "(");
+                std::string result = get_army_help_text(
+                    &gpGame->creatureBanks.first[
+                        (cell->extraInfo >> 13) & 0xfff].guards, 0);
+                strcat(buffer, result.c_str());
+                army_name = ")";
+            }
         }
-        strcat(buffer, "(");
-        std::string result = get_army_help_text(
-            &gpGame->creatureBanks.first[
-                (cell->extraInfo >> 13) & 0xfff].guards, 0);
-        strcat(buffer, result.c_str());
-        army_name = ")";
     }
     strcat(buffer, army_name);
 }

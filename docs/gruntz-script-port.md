@@ -260,6 +260,15 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — creature-bank rollover help extends to 87.2833%.**
+  Retail checks cell knowledge before materializing the bank-state dword, then
+  keeps the known-cell work in its own branch. Its full-list and compact-list
+  result strings occupy sibling scopes and therefore share one `-0x14` VC6
+  string home. Reconstructing those lifetimes reduces the frame from 0x24 to
+  retail's 0x14 bytes and restores the shared cleanup topology without changing
+  either output path. The control flow and lifetime evidence come entirely from
+  retail disassembly; no external implementation body was used.
+
 - **2026-08-09 — `advManager::SetRolloverText` extends to 89.7053%.**
   Retail's repeated visited-object handlers materialize the byte returned by
   `game::GetInfoFlag`, widen it through a shared integer temporary, and reuse
