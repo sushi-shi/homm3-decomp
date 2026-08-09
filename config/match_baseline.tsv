@@ -503,6 +503,7 @@ game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40
 game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
 game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0
+game	?SaveMinePool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9580
 # game: 32 flat/mangled rows deleted 2026-08-08, all superseded by
 # promoted source names in the same change. Two are renames rather
 # than plain promotions: ?HasMobileHero@playerData@@QAEEXZ ->
@@ -550,7 +551,6 @@ game	game_Save	0.0000	0.0000	0.0000	0xbe3f0
 game	game_SaveBlackMarkets	0.0000	0.0000	0.0000	0xbc5d0
 game	game_SaveBoatPool	0.0000	0.0000	0.0000	0xb9c40
 game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0
-game	game_SaveMinePool	0.0000	0.0000	0.0000	0xb9580
 game	game_SaveRumours	0.0000	0.0000	0.0000	0xbbc20
 game	game_SaveSignPool	0.0000	0.0000	0.0000	0xb9270
 game	game_SetRandomHeroArmies	0.0000	0.0000	0.0000	0xc9730
