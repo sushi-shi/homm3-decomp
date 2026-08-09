@@ -597,11 +597,11 @@ void get_creature_bank_help_text(char* buffer, NewmapCell* cell, type_creature_b
     unsigned long testFlag = cell->extraInfo;
     const char* army_name;
     if (!cell->PlayerKnowsCell(player_id)) {
-        army_name = gUnnamed6a5d5c->entry->unknownCreatureBankText;
+        army_name = gUnnamed6a5d5c->entry->unvisitedObjectText;
     } else if ((testFlag & 0x02000000)
                || !gpGame->creatureBanks.first[
                        (testFlag >> 13) & 0xfff].guards.HasCreatures()) {
-        army_name = gUnnamed6a5d5c->entry->emptyCreatureBankText;
+        army_name = gUnnamed6a5d5c->entry->visitedObjectText;
     } else {
         if (show_full_list) {
             std::string result = get_army_help_text(
@@ -654,14 +654,44 @@ void SetShrineHelpText(char* buffer, hero* current_hero, NewmapCell* cell, Globa
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:2878
+// RETAIL-RECONSTRUCTED 2026-08-09 (99.7414%). Retail proves the complete
+// name/trigger, global-visit, cell-knowledge, price and hero-visit paths. All
+// nine branches and the return agree; the residual is register allocation and
+// PlayerKnowsCell's dword bit-test where retail selects the low bytes.
 VA(0x0040db00, 0x1BD)  // dc-bracket forced, dc 0xb930
 void SetTreeHelpText(char* buffer, hero* current_hero, NewmapCell* cell, const char* separator_1, const char* separator_2)
 {
-    // @stub
+    strcpy(buffer, gTreeOfKnowledgeName);
+    if (!cell->is_trigger)
+        return;
+
+    unsigned char visited =
+        gpGame->GetInfoFlag(TreeOfKnowledgeInfo, gNetLocalGamePos);
+    int infolevel = visited;
+    if (cell->PlayerKnowsCell(gNetLocalGamePos)) {
+        strcat(buffer, separator_1);
+        int price = static_cast<int>(cell->extraInfo << 16) >> 29;
+        strcat(buffer, gWiseTreePriceNames[price]);
+    } else if (infolevel) {
+        strcat(buffer, separator_1);
+        strcat(buffer, gKnownTreePriceText);
+    }
+
+    if (current_hero) {
+        unsigned char hero_visited =
+            (current_hero->TreeOfKnowledgeFlags
+             & (1UL << (static_cast<unsigned char>(cell->extraInfo)
+                        & 0x1f))) != 0;
+        strcat(buffer, separator_2);
+        if (hero_visited)
+            strcat(buffer, gUnnamed6a5d5c->entry->visitedObjectText);
+        else
+            strcat(buffer, gUnnamed6a5d5c->entry->unvisitedObjectText);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:3002
 VA(0x0040dcc0, 0x1E4)  // dc-bracket forced, dc 0xbd84
