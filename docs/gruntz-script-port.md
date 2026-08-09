@@ -260,18 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
-- **2026-08-09 — `armyGroup::Merge` raised from 58.0726% to 78.3073%
+- **2026-08-09 — `armyGroup::Merge` raised from 58.0726% to 79.5363%
   by restoring its two local working objects.** Dreamcast CodeView metadata
   names the 56-byte stack objects `ag1` and `ag2`; retail bytes independently
   confirm their four inlined constructor fill loops and remain the authority
   for layout and control flow. Expressing both as ordinary `armyGroup` locals
   and using a natural four-field indexed copy reproduces retail's fused
   pointer-difference copy shape. Reversing the two source-walker declarations
-  gives the best observed VC6 allocation. The residual is bounded to a
-  four-byte frame difference, coalesced type/troop walkers, different stack
-  coloring for the processed count, and one separately emitted dedup-success
-  continuation. Volatile-pointer and explicit-goto probes regressed and were
-  reverted. This follows the HoMM2/Gruntz matching discipline: use debug data
+  gives the best observed VC6 allocation. Spelling the duplicate scan as an
+  empty-body search followed by `if (b < 7)` restores retail's post-search
+  continuation and supplies the final 1.2290-point gain. The residual is
+  bounded to a four-byte frame difference, coalesced type/troop walkers,
+  different stack coloring for the processed count, and one extra retail
+  top-of-loop progress test. Volatile-pointer, alternate-index and
+  explicit-goto probes regressed and were reverted. This follows the
+  HoMM2/Gruntz matching discipline: use debug data
   as naming/type evidence, then accept or reject source shapes solely through
   fresh retail comparisons. `decomp-attempt-1` remained read-only and supplied
   no implementation or admitted metadata.

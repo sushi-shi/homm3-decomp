@@ -1433,12 +1433,14 @@ long modify_spell_damage(long damage, SpellID spell, TCreatureType creature)
 // into retail's four rep-stosd fill loops; the natural indexed copy then
 // reproduces retail's fused pointer-difference copy shape. No homm2 template
 // exists (buka ARMYGRP carries no Merge; renamed or absorbed).
-// Residual (78.3073%): retail keeps distinct type/troop walkers and one more
+// An empty-body duplicate search followed by `if (b < 7)` reproduces the
+// retail post-search continuation and raises the body another 1.2290 points.
+// Residual (79.5363%): retail keeps distinct type/troop walkers and one more
 // stack slot (0x8c frame versus 0x88 here), while this VC6 compile coalesces
-// the walkers and colors the processed count differently. The remaining
-// CFG delta is one separately emitted dedup-success continuation. Artificial
-// volatile qualifiers and goto rewrites worsened the comparison and were
-// reverted.
+// the walkers and colors the processed count differently. Its dedup loop
+// retains one extra top-of-loop progress test. Artificial volatile qualifiers,
+// alternate outer-loop indices and goto rewrites worsened the comparison and
+// were reverted.
 VA(0x0044b620, 0x1FE)  // anchor-global, dc 0x4f3cc
 unsigned char armyGroup::Merge(armyGroup* ag)
 {
@@ -1477,14 +1479,16 @@ unsigned char armyGroup::Merge(armyGroup* ag)
                         unsigned char progress = 0;
                         for (int a = 1; !progress
                                         && a < ARMY_GROUP_SLOT_COUNT; ++a) {
-                            for (int b = a; b < ARMY_GROUP_SLOT_COUNT; ++b) {
-                                if (ag1.armies[a - 1] == ag1.armies[b]) {
-                                    ag1.numTroops[a - 1] += ag1.numTroops[b];
-                                    ag1.numTroops[b] = 0;
-                                    ag1.armies[b] = -1;
-                                    progress = 1;
-                                    break;
-                                }
+                            int b;
+                            for (b = a;
+                                 b < ARMY_GROUP_SLOT_COUNT
+                                 && ag1.armies[a - 1] != ag1.armies[b]; ++b) {
+                            }
+                            if (b < ARMY_GROUP_SLOT_COUNT) {
+                                ag1.numTroops[a - 1] += ag1.numTroops[b];
+                                ag1.numTroops[b] = 0;
+                                ag1.armies[b] = -1;
+                                progress = 1;
                             }
                         }
                         if (!progress)
