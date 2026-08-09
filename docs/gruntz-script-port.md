@@ -601,6 +601,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   bytes remain the authority; no external implementation was consulted.
   The generated baseline remains exclusively build-owned.
 
+- **2026-08-09 — `type_AI_combat_data::simulate_combat` raised from
+  46.0556% to 46.7778% by restoring its asymmetric speed calls.** Retail
+  inlines the attacker's `get_fastest_speed` but calls the defender's copy.
+  Naming the two values and suppressing inlining only on the defender
+  expression restores that call edge; naming alone is byte-inert. Attempts
+  to reproduce the attacker's shallow nested expansion or wrap the damage
+  path regressed sharply and were reverted. The remaining excess branches
+  are the known nested `get_total` and `kill` inline-budget divergence.
+  Retail bytes alone selected the retained shape, and the generated baseline
+  remains exclusively build-owned.
+
 - **2026-08-09 — the split-army path completed and its message producer is
   exact; both retail combat-stat descriptions reconstructed.**
   `SplitSliderCallback` and `armyGroup::SplitArmy` now match exactly, raising
