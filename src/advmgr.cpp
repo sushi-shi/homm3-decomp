@@ -1694,6 +1694,8 @@ int advManager::ProcessSearch(int x, int y, int z)
 }
 
 // E:\gamedcs\advmgr.cpp:4983
+#endif  // @carcass
+
 VA(0x0040f270, 0x7D)  // anchor-global, dc 0x10520
 void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
 {
@@ -1712,7 +1714,6 @@ void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
             _cpp_max(elapsedTime,
                      static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED));
     }
-
     Process1WindowsMessage();
 }
 
