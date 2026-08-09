@@ -16,6 +16,13 @@ class hero;
 class searchArray;
 struct type_AI_combat_parameters;
 
+struct TCombatExtent {
+    int left;
+    int top;
+    int right;
+    int bottom;
+};
+
 // One side's Eagle Eye bookkeeping. Its sole retail-proven member is the
 // 16-byte Dinkumware set walked by LearnSpellFromEagleEye.
 struct TCombatEagleEyeSide {
@@ -313,7 +320,12 @@ public:
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
     short adjacentCells[187][6];      // +0x13468
-    char pad_13d2c[0x30];
+    char pad_13d2c[0xc];
+    // Redraw bounds installed immediately before the drawbridge's
+    // three animation frames. LowerDoor copies four retail globals
+    // here as a contiguous 16-byte record.
+    TCombatExtent field_13d38;         // +0x13d38
+    char pad_13d48[0x14];
     // The placed-obstacle array, as the raw first/last pair retail
     // tests: RemoveObstacle (0x466b30) null-checks the FIRST pointer,
     // then divides last-first by sizeof(TObstacle) for the bound. The
@@ -376,6 +388,13 @@ public:
     void GenerateMap();
     const char* GetBackgroundName();
     void DamageWall(TWallTargetId target_wall, int damage);
+    void LowerDoor();
+    unsigned char IsQuickCombat();
+    void DrawFrame(unsigned char update,
+                   unsigned char bLimitCreatureEffect,
+                   unsigned char bLimitDraw, int iDelay,
+                   unsigned char bRefreshBackground,
+                   unsigned char bDoDelayTil);
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();
@@ -559,6 +578,12 @@ DATA(0x00697744) extern unsigned char gCombatFlag697744;
 DATA(0x0063d2a0) extern const char* const gTownCombatBackgrounds[9];
 DATA(0x0063d2c8) extern const char* const gSpecialCombatBackgrounds[10];
 DATA(0x0063d2f0) extern const char* const gTerrainCombatBackgrounds[];
+
+// LowerDoor's quick-combat bypass and the four redraw-bound sources.
+// Names are address ordinals because no surviving public symbol names
+// them; widths and uses are byte-proven by the retail body.
+DATA(0x0069877c) extern int gCombatQuickMode69877c;
+DATA(0x00694f30) extern TCombatExtent gDoorExtent694f30;
 
 // The four screen hit rectangles GetGridIndex (0x4647a0) tests before
 // it falls through to the grid arithmetic, one per special combat hex,

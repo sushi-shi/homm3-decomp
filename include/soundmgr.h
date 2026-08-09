@@ -49,6 +49,8 @@ extern SAMPLE2 NULL_SAMPLE2;
 // only a temporary home until the owning TU is attributed; the name is
 // provisional.
 sample* LoadSampleResource(const char* cSampleName);
+SAMPLE2 LoadPlaySample(const char* cSampleName);
+void WaitEndSample(SAMPLE2 sample2, int iMilliWait);
 
 // The AIL_sample_status return domain. Only the three members this TU
 // compares against are modelled, and each one's ROLE is byte-proven -
