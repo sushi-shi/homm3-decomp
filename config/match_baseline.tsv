@@ -616,6 +616,7 @@ hero	?SetVisitedArena@hero@@QAEXPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe
 hero	?TakeSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe2250
 hero	?TransferArtifacts@hero@@QAEXPAV1@@Z	97.9658	97.9658	97.9658	0xe23d0
 hero	?UpgradeCreatures@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2370
+hero	?UseSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd92d0
 hero	?VisitedArena@hero@@QBE_NPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53c0
 hero	?WalkOnWater@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe5dd0
 hero	?add_to_backpack@hero@@QAEEPBUtype_artifact@@J@Z	100.0000	100.0000	100.0000	0xe2f90
@@ -682,7 +683,6 @@ hero	hero_IsMobile	0.0000	0.0000	0.0000	0xe5f30
 hero	hero_PlaceInMap	0.0000	0.0000	0.0000	0xd7900
 hero	hero_UpdateArmies	0.0000	0.0000	0.0000	0xd9a00
 hero	hero_UpdateStats	0.0000	0.0000	0.0000	0xe16d0
-hero	hero_UseSpell	0.0000	0.0000	0.0000	0xd92d0
 hero	hero_ViewArtifact	0.0000	0.0000	0.0000	0xd9cc0
 hero	hero_ViewStat	0.0000	0.0000	0.0000	0xd9b30
 hero	hero_can_land	0.0000	0.0000	0.0000	0xe5ce0

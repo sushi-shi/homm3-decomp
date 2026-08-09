@@ -29,6 +29,7 @@
 // TArtifact / akArtifactTraits / gCombinationArtifacts - same placement
 // rationale as herospec.h.
 #include "artifact.h"
+#include "advmgr.h"
 #include "exec.h"
 #undef HOMM3_HERO_CLASS_NAME_VIEW
 // TMagicTerrain - the battlefield magic-terrain id the spell-school
@@ -39,6 +40,15 @@
 
 DATA(0x0069774c) extern unsigned char gCampaignMode;
 DATA(0x0067dcec) extern const THeroClassTraits (&akHeroClasses)[18];
+
+// Retail's mana clamp materialises both operands in stack homes and selects
+// one by address. This by-value helper reproduces that Dinkumware-era shape;
+// VC6's installed reference-taking helper does not.
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
 
 
 // The per-mastery specialty factor rows, one four-float .rdata run per
@@ -494,16 +504,16 @@ void hero::DestroySiegeWeaponArtifact(int creature_type)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:1504
 VA(0x004d92d0, 0x59)  // dc-bracket forced, dc 0xcc300
 void hero::UseSpell(int cost)
 {
-    // @stub
+    int remainingMana = _cpp_max<int>(mana - cost, 0);
+    mana = remainingMana;
+    if (gpAdvManager->status == baseManager::STATUS_ACTIVE &&
+        gpCurrentPlayer->IsLocalHuman())
+        gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 1);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:1515
 VA(0x004d9330, 0x1A)  // dc-bracket forced, dc 0xcc348

@@ -481,6 +481,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   layouts in unrelated translation units. No external implementation body or
   `decomp-attempt-1` material was used.
 
+- **2026-08-09 — `hero::UseSpell` reconstructed byte-exact (89 bytes).**
+  The method subtracts its cost from the hero's signed-short mana and clamps
+  the result to zero. When the adventure manager is active and the acting
+  player is local, it refreshes all hero locators with the retail arguments
+  `(-1, 1, 1)`. Retail instructions and relocations prove the mana width,
+  manager/player globals, active-state test, caller target and arguments;
+  Dreamcast supplies the public method name and `int cost` signature only.
+  The matching source uses the TU's by-value min/max idiom plus a named
+  integer result: that lifetime keeps retail's 32-bit selected-temporary load
+  before the final short truncation, while direct assignment made VC6 narrow
+  the load to sixteen bits. This applies the HoMM2/Gruntz helper-boundary and
+  lifetime method. No external implementation body or `decomp-attempt-1`
+  material was used.
+
 - **2026-08-09 — `THeroScreenWindow::update_all_slots` reconstructed
   byte-exact (23 bytes).** Retail retains `this` in EDI and walks a long
   ESI index from zero through all nineteen equipped positions, calling the

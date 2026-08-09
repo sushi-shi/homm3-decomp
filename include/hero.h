@@ -464,6 +464,9 @@ public:
     // 0x004d9260 - drops the artifact backing a war machine when the
     // machine dies.
     void DestroySiegeWeaponArtifact(int creature_type);
+    // 0x004d92d0 - spends mana and refreshes the local adventure hero
+    // locators while that manager is active.
+    void UseSpell(int cost);
     // 0x004d9110 - the idle frame for the hero's current facing.
     hero_seqid GetStandSequence();
     // 0x004e2f90 - inserts an artifact into the backpack, shifting the
