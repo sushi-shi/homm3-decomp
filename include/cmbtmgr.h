@@ -320,7 +320,7 @@ public:
     int terrainType;                  // +0x5394
     int field_5398;                   // +0x5398
     int field_539c;                   // +0x539c
-    char pad_53a0[0x4];
+    int field_53a0;                   // +0x53a0
     // The drawbridge state (EDrawbridgeState). LowerDoor stores 3/2/1
     // through it one frame at a time; RaiseDoor gates on 1;
     // HexIsBlocked, should_lower_door and IsInMoat all gate on 3.
@@ -543,6 +543,7 @@ public:
     unsigned char InLineOfSight(int sourceIndex, int destIndex);
     void UpdateArmyLuckAndMorale();
     unsigned char place_obstacle(int obstacle_id);
+    int PlaceLargeObstacle(unsigned terrainMask, unsigned magicTerrainMask);
     void PlaceAllObstacles();
     void InitializeArchers();
     void FreeIcons();
@@ -718,6 +719,9 @@ DATA(0x0063d2f0) extern const char* const gTerrainCombatBackgrounds[];
 // the common 20-byte stride.
 DATA(0x0063c7c8) extern const unsigned short gObstacleTerrainMasks[];
 DATA(0x0063c7ca) extern const unsigned short gObstacleMagicTerrainMasks[];
+DATA(0x0063bec0) extern const unsigned short gLargeObstacleTerrainMasks[];
+DATA(0x0063bec2) extern const unsigned short gLargeObstacleMagicTerrainMasks[];
+DATA(0x0063becc) extern const short gLargeObstacleHexes[];
 
 // LowerDoor's quick-combat bypass and the four redraw-bound sources.
 // Names are address ordinals because no surviving public symbol names

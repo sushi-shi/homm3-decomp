@@ -729,22 +729,41 @@ void combatManager::SetupAndLoadObstacles()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:3063
 // The bracket [SetupAndLoadObstacles .. PlaceObstacle] holds exactly
 // one DC row and exactly one retail row, and the retail row is called
 // from SetupAndLoadObstacles and picks a slot through TPickANumber -
-// which is what PlaceLargeObstacle does. ARITY DRIFTS: `ret 8` is
-// three parameters where the DC signature has two, the same
-// retail-gained-a-parameter shape findpath's CalcTerrainCost shows
-// (nine on x86 against the DC's eight). The third parameter is NOT
-// modelled below; fix the prototype before writing a body.
+// which is what PlaceLargeObstacle does. ARITY DRIFTS: `ret 8` proves
+// two explicit masks where the DC signature has one, the same
+// retail-gained-a-parameter shape findpath's CalcTerrainCost shows.
 VA(0x004668a0, 0x108)  // dc-bracket forced, dc 0x6091c
-int combatManager::PlaceLargeObstacle(unsigned terrain_mask)
+int combatManager::PlaceLargeObstacle(unsigned terrainMask,
+                                      unsigned magicTerrainMask)
 {
-    // @stub
-}
+    TPickANumber picker(0, 0x21);
+    int obstacleId = picker.Pick();
+    while (obstacleId >= 0) {
+        if ((terrainMask & gLargeObstacleTerrainMasks[obstacleId * 34])
+                || (magicTerrainMask
+                    & gLargeObstacleMagicTerrainMasks[obstacleId * 34]))
+            goto found;
+        obstacleId = picker.Pick();
+    }
+    return 0;
 
-#endif  // @carcass
+found:
+    int count = 0;
+    int i = 0;
+    const short* hex = &gLargeObstacleHexes[obstacleId * 34];
+    for (; i < 25 && *hex != -1; ++i, ++hex) {
+        cells[*hex].field_10 |= 2;
+        ++count;
+    }
+    field_53a0 = obstacleId;
+    return count;
+}
 
 // E:\gamedcs\cmbtmgr.cpp:3105
 // The shape pointer is hoisted into a local (retail holds it in EBX
