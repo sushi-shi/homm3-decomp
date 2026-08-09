@@ -142,8 +142,8 @@ struct TDrawParts {
 };
 SIZE(TDrawParts, 0x10);
 
-// The adventure screen's own window. Only the ONE method a retail body
-// outside adventuremapwindow.obj calls on it is declared here:
+// The adventure screen's own window. Only the two methods retail bodies
+// outside adventuremapwindow.obj call on it are declared here:
 // town::Deallocate (0x5be2d0) ends with
 // `mov ecx,[gpAdvManager+0x44]` / push 1 / push 1 / push 0 /
 // `call 0x403420`, so +0x44 holds a pointer to the class that owns
@@ -160,6 +160,8 @@ SIZE(TDrawParts, 0x10);
 // image the bodies still sit in adventuremapwindow.obj's own band, so
 // the CLASS stays TAdventureMapWindow and only the parameter list comes
 // from the DC's TAdvMenu twin.
+// hero::UseSpell independently reaches 0x403560 with the same three-argument
+// shape; that neighbouring row is the hero-locator counterpart.
 //
 // It derives heroWindow because executive::CallManager calls
 // `SleepAllWidgets` on this very +0x44 pointer and retail's reloc
@@ -187,6 +189,8 @@ public:
 
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
+    void UpdateHeroLocator(int which, unsigned char drawWin,
+                           unsigned char update);
     void DrawChatText(unsigned char update);
 };
 
