@@ -196,40 +196,14 @@ no_position:
 }
 
 // E:\gamedcs\inputmgr.cpp:779
-// Residual (86.6%): VPTR-STORE SCHEDULING - a compiler-generation class,
-// not a spelling. Every instruction matches except the placement of the
-// compiler's own `mov [esi], offset ??_7inputManager@@6B@`: retail sinks
-// it PAST the whole 64-entry clear loop (landing between `mov eax,1` and
-// the keyboardFilter store), this CL pins it immediately after the
-// baseManager ctor call. The one consequential store reorder follows
-// from that - retail's free slot after `mov eax,1` is filled by the vptr
-// store, ours by `status = 0`, which is why [0x34] moves ahead of the
-// [0x94c]/[0x950] pair even though source order already matches retail's
-// emission order. soundManager's ctor (0x599760, 99.0%) shows the SAME
-// signature one slot wide (retail: MP3Playing byte store, then vptr;
-// ours: vptr, then byte store), so this is systematic across the two
-// ctors in this lane, not local. Probed 2026-08-08 and rejected: hoisting
-// `keyboardFilter = 1` above the loop (78.2% - the vptr store STILL
-// leads, proving no statement order can sink it); earlier lanes rejected
-// the indexed loop form (82.3%) and, on the soundmgr twin, both scalar
-// orders and memsets-first.
+// EXACT 2026-08-09: retail clears the 64 buffer elements before installing
+// inputManager's vptr, proving that the clear belongs to nontrivial member
+// construction rather than this constructor body. The input-only
+// inputBufferMessage type models that lifetime without adding a global
+// message default constructor or perturbing unrelated message producers.
 VA(0x004ec460, 0x6F)  // anchor-bracket, dc 0xdd97c
 inputManager::inputManager()
 {
-    // The POINTER-WALK loop form is load-bearing: the indexed form
-    // biases the lea one slot low and scores 82.3.
-    message* entry = iBuffer;
-    for (int index = 0; index < 64; index++) {
-        entry->id = 0;
-        entry->codeX = 0;
-        entry->codeY = 0;
-        entry->qualifier = 0;
-        entry->mouseX = 0;
-        entry->mouseY = 0;
-        entry->extra = 0;
-        entry->window = 0;
-        entry++;
-    }
     keyboardFilter = 1;
     keyCodeType = 1;
     status = 0;

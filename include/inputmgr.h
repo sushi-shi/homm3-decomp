@@ -40,9 +40,25 @@ enum EKeyCodes {
 // keyboardFilter@0x94c, keyCodeType@0x950, extendFlag@0x954,
 // currWidgetID@0x958, prevDialog@0x95c (tail past that unmodeled).
 // GetEvent returns the message BY VALUE (retail body 0x4ec590).
+class inputBufferMessage : public message {
+public:
+    inputBufferMessage()
+    {
+        id = 0;
+        codeX = 0;
+        codeY = 0;
+        qualifier = 0;
+        mouseX = 0;
+        mouseY = 0;
+        extra = 0;
+        window = 0;
+    }
+};
+SIZE(inputBufferMessage, 32);
+
 class inputManager : public baseManager {
 public:
-    message iBuffer[64];
+    inputBufferMessage iBuffer[64];
     int iHead;
     int iTail;
     int bufferBusy;
