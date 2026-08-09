@@ -164,6 +164,7 @@ public:
     char pad_38[0x12];
 
     unsigned char applies_to_player(long player_id);
+    unsigned char CheckForFlaggedMineWin();
 };
 SIZE(VictoryConditionStruct, 0x4C);
 
@@ -196,9 +197,20 @@ public:
     // each and compares it against an int parameter.
     char playerOwner;
     char type;
-    char pad_02[0x3e];
+    char pad_02[0x3a];
+    unsigned char mapX;
+    unsigned char mapY;
+    unsigned char mapZ;
+    char pad_3f;
 };
 SIZE(mine, 0x40);
+
+enum type_action_type {
+    const_initialization_action = 0,
+    const_normal_action = 1,
+    const_remote_action = 2,
+    const_recorded_action = 3
+};
 
 // Retail's garrison pool element. GetFlaggedObjectOwner reads the first byte
 // as a signed owner and indexes records with a 0x40 stride. ProcessHover
@@ -591,6 +603,12 @@ public:
     void ClaimTown(int townId, int newPlayerOwner,
                    unsigned char bIsRemoteMove,
                    unsigned char check_end_game);            // 0x4c61e0
+    void ClaimMine(int mineId, int newPlayerOwner,
+                   type_action_type action_type);             // 0x4c66e0
+    void record_claim_mine(long id, long new_owner);          // 0x49bf90
+    void SetVisibility(int startX, int startY, int z,
+                       int whichPlayer, int range,
+                       unsigned char remote_move);            // 0x49cdd0
     unsigned char get_random_lith(const std::vector<type_point>* points,
                                   type_point* result, long cell_type,
                                   long excluded);            // 0x4cdb80
