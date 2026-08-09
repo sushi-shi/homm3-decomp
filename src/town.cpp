@@ -20,6 +20,7 @@ DATA(0x00699548) extern int gUnnamed699548;
 DATA(0x0069778c) extern int gUnnamed69778c;
 DATA(0x006994fc) extern townManager* gpTownManager;
 DATA(0x00699500) extern executive* gpExecutive;
+DATA(0x0067814c) extern int gHeroGoldCost;
 
 // DC public ?included_buildings@town@@2PAY0CM@_JA; retail .bss
 // 0x6a8bb8, nine 0x160-stride rows to 0x6a9818. Ownership: the DC
@@ -1014,18 +1015,33 @@ unsigned char town::is_disabled(type_building_id building)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\town.cpp:2312
-// `ret 8` (hero* + player id), and the body indexes the 360-byte
-// playerData record at gpGame+0x20ad0 by the second argument and then
-// matches the hero's +0x1a id against the player's hero list - exactly
-// town::hire's job. 201 B against DC's 188.
-VA(0x005c12e0, 0xC9)  // arity + playerData stride, dc 0x168a98
+// Finds the hero in the player's two tavern offers, charges the global
+// gold cost, places the canonical hero record on this town's cell, teaches
+// its town spells, and retires the used offer through the game record.
+VA(0x005c12e0, 0xC9)  // retail body + dc identity, dc 0x168a98
 void town::hire(hero* new_hero, long player_id)
 {
-    // @stub
-}
+    playerData* player = &gpGame->players[player_id];
+    int recruit_slot;
+    int hero_id = new_hero->id;
+    for (recruit_slot = 0; recruit_slot < 2; recruit_slot++) {
+        if (player->recruits[recruit_slot] == hero_id)
+            break;
+    }
 
-#endif  // @carcass
+    player->resources[GOLD] -= gHeroGoldCost;
+    hero* hired_hero = gpGame->GetHero(hero_id);
+    type_point point;
+    point.x = mapX;
+    point.y = mapY;
+    point.z = mapZ;
+    hired_hero->PlaceInMap(player_id, point, 1);
+    GiveSpells(0);
+    gpGame->finish_town_hire(player_id, recruit_slot);
+}
 
 // E:\gamedcs\town.cpp:2343
 // Promoted from DC_ONLY 2026-08-08. The row sits inside town.obj's own

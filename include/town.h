@@ -290,9 +290,14 @@ public:
     unsigned char is_legal_building(type_building_id building) const;
     int HasGarrison();
 #ifdef HOMM3_TOWN_OBJ_DECLS
+    // 0x5be030 remains outside the admitted surface; hire needs its
+    // direct town-spell handoff.
+    void GiveSpells(hero* forceHero);
     // 0x5be210. Enters the shared town manager and restores the visiting
     // hero as the adventure-map context on return.
     void View(int bAlreadyFaded);
+    // 0x5c12e0. Charges and places one of the player's tavern offers.
+    void hire(hero* new_hero, long player_id);
 #endif
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.

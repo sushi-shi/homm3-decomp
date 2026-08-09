@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `town::hire` admitted byte-exact from retail; `town`
+  gains its 27th exact row.** The 201-byte body scans the player's two tavern
+  offers for the hero id, charges `gHeroGoldCost`, refetches the canonical
+  hero record, and places it on the town's packed cell before teaching town
+  spells and retiring the consumed offer. Retail's uninitialised
+  `type_point` read-modify-writes, two-iteration cursor loop, player and hero
+  strides, and all three call relocations agree. The two unimplemented callees
+  receive TU-scoped declarations only; all pre-existing exact rows remain
+  intact. No external implementation was used.
+
 - **2026-08-09 — `town::View` admitted byte-exact from retail; `town`
   gains its 26th exact row.** The 192-byte body sets the two view-state
   flags, hands `this` through the manager's byte-proven +0x38 town pointer
