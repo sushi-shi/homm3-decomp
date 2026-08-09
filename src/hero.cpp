@@ -35,9 +35,6 @@
 // TArtifact / akArtifactTraits / gCombinationArtifacts - same placement
 // rationale as herospec.h.
 #include "artifact.h"
-#define HOMM3_HERO_GIVE_RESOURCE_VIEW
-#include "advmgr.h"
-#undef HOMM3_HERO_GIVE_RESOURCE_VIEW
 #include "exec.h"
 #include "town.h"
 #undef HOMM3_HERO_HIRE_VIEW

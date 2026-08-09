@@ -340,9 +340,7 @@ public:
                             unsigned char update);
     void UpdateHeroLocators(int top, unsigned char drawWin,
                             unsigned char update);
-#ifdef HOMM3_HERO_GIVE_RESOURCE_VIEW
     void UpdateResourceDisplay(unsigned char draw, unsigned char update);
-#endif
     void DrawChatText(unsigned char update);
     unsigned char ProcessHover(int hx, int hy);
 };
