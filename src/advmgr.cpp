@@ -595,18 +595,21 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         0x00660330, rolloverSpaceSeparator, " ");
     const char* visitedFormat = DATA_COMPGEN(
         0x0066034c, rolloverVisitedFormat, " %s");
+    int visited;
 
 #define APPEND_VISIT_TEXT(isVisited)                                      \
+    visited = (isVisited);                                                \
     sprintf(tempText, visitedFormat,                                     \
-        (isVisited) ? gUnnamed6a5d5c->entry->visitedObjectText            \
-                    : gUnnamed6a5d5c->entry->unvisitedObjectText);        \
+        visited ? gUnnamed6a5d5c->entry->visitedObjectText                \
+                : gUnnamed6a5d5c->entry->unvisitedObjectText);            \
     strcat(gText, tempText)
 
 #define SET_VISITED_ROLLOVER(objectType, infoType, heroFlags)             \
     case objectType:                                                      \
         strcpy(gText, gAdventureObjectNames[objectType]);                 \
         if (cell->is_trigger) {                                           \
-            if (gpGame->GetInfoFlag(infoType, player)) {                  \
+            visited = gpGame->GetInfoFlag(infoType, player);              \
+            if (visited) {                                                \
                 sprintf(tempText, visitedFormat,                          \
                         gGlobalInfoFlagNames[infoType]);                   \
                 strcat(gText, tempText);                                  \
