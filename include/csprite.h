@@ -79,6 +79,16 @@ public:
         DrawHeroShadow(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
                        dst->Width, dst->Height, dst->Pitch, hflip);
     }
+    void DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
+                          unsigned short* dst, int dx, int dy, int dw,
+                          int dh, int dpitch, unsigned char hflip);
+    void DrawAdvObjShadow(int framenum, int sx, int sy, int sw, int sh,
+                          Bitmap16Bit* dst, int dx, int dy,
+                          unsigned char hflip)
+    {
+        DrawAdvObjShadow(framenum, sx, sy, sw, sh, dst->map, dx, dy,
+                         dst->Width, dst->Height, dst->Pitch, hflip);
+    }
 };
 
 // --- globals ---

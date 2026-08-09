@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the 1,508-byte `advManager::DrawAdvObjShadow` body
+  opened to 75.36%.** Retail instructions and relocations prove the clipped
+  map-cell object-vector walk, object/type/sprite pool offsets, 48-bit shadow
+  mask, animation selection, transient-object override, cursor shadows, and
+  the final hero/boat shadow overlays. The view-world switch is reconstructed
+  from its retail 48-byte selector table: terrain ids 114..161 draw except
+  `TERRAIN_HOLE` and the river/road group. Twenty-six of seventy-six retail
+  control-flow blocks compare exactly; remaining differences are VC6 local and
+  register scheduling, so no exact claim is made. Dreamcast CodeView supplied
+  only surviving local/type names and signatures; no external body was
+  consulted or ported. The generated baseline remains exclusively build-owned.
+
 - **2026-08-09 — `advManager::DrawBoatPartShadow` admitted byte-exact;
   `advmgr` 18 → 19 exact.** The 591-byte shadow twin preserves every
   matched boat lookup, packed-cell, froth, frame, crop and flip operation
