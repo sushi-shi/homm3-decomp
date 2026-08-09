@@ -60,6 +60,7 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "mousemgr.h"
+#include "recruit.h"
 #include "winmgr.h"
 #include "window.h"
 #include "widget.h"
@@ -922,16 +923,260 @@ void advManager::DrawBoatPartShadow(int part, TDrawParts& boatParts,
         currBoat->facing > hero::kFacingS);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:5941
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334
 void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
-}
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
 
-#endif  // @carcass
+    NewmapCell* thisCell;
+    if (z >= 0)
+        thisCell = &fullMap->cellData[(z * fullMap->Size + srcY)
+                                     * fullMap->Size + srcX];
+    else
+        thisCell = fullMap->cellData;
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    TDrawParts heroParts[6];
+    TDrawParts boatParts[6];
+    bool foundHero = ScanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
+    bool foundBoat = ScanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
+
+    AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
+        static_cast<void*>(thisCell));
+    AdvFullMapObjectsView* mapObjects = static_cast<AdvFullMapObjectsView*>(
+        static_cast<void*>(fullMap));
+
+    if (cellObjects->objects.size()) {
+        for (int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
+            for (unsigned numObj = 0; numObj < cellObjects->objects.size();
+                 ++numObj) {
+                AdvObjectCellView* objCell = &cellObjects->objects[numObj];
+                if (objCell->layer != row)
+                    continue;
+
+                CObject* obj = &mapObjects->objects[objCell->objectIndex];
+                CObjectType* objType = &mapObjects->objectTypes[obj->typeIndex];
+                CSprite* sprite = mapObjects->sprites[obj->typeIndex];
+                signed char offsets = objCell->offsets;
+                int yOffset = offsets >> 4;
+                offsets <<= 4;
+                int xOffset = offsets >> 4;
+                int bit = 47 - yOffset * 8 - xOffset;
+                if (!objType->drawCells[bit] || objType->suppressDraw)
+                    continue;
+
+                if (gbInViewWorld) {
+                    switch (objType->objectType) {
+                    case TERRAIN_BRUSH:             break;
+                    case TERRAIN_BUSH:              break;
+                    case TERRAIN_CACTUS:            break;
+                    case TERRAIN_CANYON:            break;
+                    case TERRAIN_CRATER:            break;
+                    case TERRAIN_DEAD_VEGETATION:   break;
+                    case TERRAIN_FLOWER:            break;
+                    case TERRAIN_FROZEN_LAKE:       break;
+                    case TERRAIN_HEDGE:             break;
+                    case TERRAIN_HILL:              break;
+                    case TERRAIN_HOLE:              continue;
+                    case TERRAIN_KELP:              break;
+                    case TERRAIN_LAKE:              break;
+                    case TERRAIN_LAVA_FLOW:         break;
+                    case TERRAIN_LAVA_LAKE:         break;
+                    case TERRAIN_MUSHROOM:          break;
+                    case TERRAIN_LOG:               break;
+                    case TERRAIN_MANDRAKE:          break;
+                    case TERRAIN_MOSS:              break;
+                    case TERRAIN_MOUND:             break;
+                    case TERRAIN_MOUNTAIN:          break;
+                    case TERRAIN_OAK_TREE:          break;
+                    case TERRAIN_OUTCROPPING:       break;
+                    case TERRAIN_PINE_TREE:         break;
+                    case TERRAIN_PLANT:             break;
+                    case TERRAIN_RIVER_1:           continue;
+                    case TERRAIN_RIVER_2:           continue;
+                    case TERRAIN_RIVER_3:           continue;
+                    case TERRAIN_RIVER_4:           continue;
+                    case TERRAIN_RIVER_DELTA:       continue;
+                    case TERRAIN_ROAD_1:            continue;
+                    case TERRAIN_ROAD_2:            continue;
+                    case TERRAIN_ROAD_3:            continue;
+                    case TERRAIN_ROCK:              break;
+                    case TERRAIN_SAND_DUNE:         break;
+                    case TERRAIN_SAND_PIT:          break;
+                    case TERRAIN_SHRUB:             break;
+                    case TERRAIN_SKULL:             break;
+                    case TERRAIN_STALAGMITE:        break;
+                    case TERRAIN_STUMP:             break;
+                    case TERRAIN_TAR_PIT:           break;
+                    case TERRAIN_TREE:              break;
+                    case TERRAIN_VINE:              break;
+                    case TERRAIN_VOLCANIC_VENT:     break;
+                    case TERRAIN_VOLCANO:           break;
+                    case TERRAIN_WILLOW_TREE:       break;
+                    case TERRAIN_YUCCA_TREE:        break;
+                    case TERRAIN_REEF:              break;
+                    default:                        continue;
+                    }
+
+                    int frame = (animFrame + obj->animationOffset)
+                                % sprite->GetNumFrames(0);
+                    sprite->DrawAdvObj(
+                        frame,
+                        tilex + (objType->width - xOffset - 1) * 32,
+                        tiley + (objType->height - yOffset - 1) * 32,
+                        tilew, tileh, gpWindowManager->screenBitmap,
+                        baseX, baseY + 8, false);
+                } else {
+                    switch (objType->objectType) {
+                    case CREATURE_GENERATOR_1:
+                    case CREATURE_GENERATOR_4:
+                    case GARRISON:
+                    case LIGHTHOUSE:
+                    case MINE:
+                    case RANDOM_TOWN:
+                    case SHIPYARD:
+                    case TOWN: {
+                        int triggerX;
+                        int triggerY;
+                        obj->FindTrigger(&triggerX, &triggerY);
+                        NewmapCell* triggerCell =
+                            GetCell(type_point(triggerX, triggerY, z));
+                        int owner = GetFlaggedObjectOwner(triggerCell);
+                        int frame = (animFrame + obj->animationOffset)
+                                    % sprite->GetNumFrames(0);
+                        sprite->DrawAdvObjWithFlag(
+                            frame,
+                            tilex + (objType->width - xOffset - 1) * 32,
+                            tiley + (objType->height - yOffset - 1) * 32,
+                            tilew, tileh, gpWindowManager->screenBitmap,
+                            baseX, baseY + 8,
+                            gUnnamed6aacb0->playerColors[owner], false);
+                        break;
+                    }
+                    default:
+                        if (objCell->objectIndex == movingObjectIndex) {
+                            movingObjectSprite->DrawAdvObj(
+                                movingObjectSequence * 2 + movingObjectFrame,
+                                tilex + (objType->width - xOffset - 1) * 32,
+                                tiley + (objType->height - yOffset - 1) * 32,
+                                tilew, tileh, gpWindowManager->screenBitmap,
+                                baseX, baseY + 8, false);
+                        } else {
+                            int frame = (animFrame + obj->animationOffset)
+                                        % sprite->GetNumFrames(0);
+                            sprite->DrawAdvObj(
+                                frame,
+                                tilex + (objType->width - xOffset - 1) * 32,
+                                tiley + (objType->height - yOffset - 1) * 32,
+                                tilew, tileh, gpWindowManager->screenBitmap,
+                                baseX, baseY + 8, false);
+                        }
+                        break;
+                    }
+                }
+            }
+
+            if (foundHero || foundBoat) {
+                int firstPart;
+                int lastPart;
+                if (row == OBJECT_DRAW_LAYER_HERO_FRONT) {
+                    firstPart = 0;
+                    lastPart = 2;
+                } else if (row == OBJECT_DRAW_LAYER_HERO_BACK) {
+                    firstPart = 3;
+                    lastPart = 5;
+                } else {
+                    firstPart = 1;
+                    lastPart = 0;
+                }
+                for (int part = firstPart; part <= lastPart; ++part) {
+                    if (heroParts[part].IsValid)
+                        DrawHeroPart(part, heroParts[part], baseX, baseY,
+                                     tilex, tiley, tilew, tileh);
+                    if (boatParts[part].IsValid)
+                        DrawBoatPart(part, boatParts[part], baseX, baseY,
+                                     tilex, tiley, tilew, tileh);
+                }
+            }
+
+            if (row == OBJECT_DRAW_LAYER_HERO_BACK
+                && destY == CURSOR_DEST_Y0 && drawCursor && !gbInViewWorld) {
+                if (destX == CURSOR_DEST_X0)
+                    DrawCursor(0, 0);
+                else if (destX == CURSOR_DEST_X1)
+                    DrawCursor(1, 0);
+                else if (destX == CURSOR_DEST_X2)
+                    DrawCursor(2, 0);
+            } else if (row == OBJECT_DRAW_LAYER_HERO_FRONT
+                       && destY == CURSOR_DEST_Y1
+                       && drawCursor && !gbInViewWorld) {
+                if (destX == CURSOR_DEST_X0)
+                    DrawCursor(0, 1);
+                else if (destX == CURSOR_DEST_X1)
+                    DrawCursor(1, 1);
+                else if (destX == CURSOR_DEST_X2)
+                    DrawCursor(2, 1);
+            }
+        }
+        return;
+    }
+
+    if (foundHero || foundBoat) {
+        for (int part = 0; part < 6; ++part) {
+            if (heroParts[part].IsValid)
+                DrawHeroPart(part, heroParts[part], baseX, baseY,
+                             tilex, tiley, tilew, tileh);
+            if (boatParts[part].IsValid)
+                DrawBoatPart(part, boatParts[part], baseX, baseY,
+                             tilex, tiley, tilew, tileh);
+        }
+    }
+
+    if (destY == CURSOR_DEST_Y0) {
+        if (drawCursor && !gbInViewWorld) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursor(0, 0);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursor(1, 0);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursor(2, 0);
+        }
+    } else if (destY == CURSOR_DEST_Y1) {
+        if (drawCursor && !gbInViewWorld) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursor(0, 1);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursor(1, 1);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursor(2, 1);
+        }
+    }
+}
 
 // E:\gamedcs\advmgr.cpp:6239
 VA(0x00411590, 0x5E4)  // anchor-callee, dc 0x12fcc
@@ -982,8 +1227,8 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
         static_cast<void*>(fullMap));
     for (unsigned numObj = 0; numObj < cellObjects->objects.size(); ++numObj) {
         AdvObjectCellView* objCell = &cellObjects->objects[numObj];
-        AdvObjectView* obj = &mapObjects->objects[objCell->objectIndex];
-        AdvObjectTypeView* objType = &mapObjects->objectTypes[obj->typeIndex];
+        CObject* obj = &mapObjects->objects[objCell->objectIndex];
+        CObjectType* objType = &mapObjects->objectTypes[obj->typeIndex];
         CSprite* sprite = mapObjects->sprites[obj->typeIndex];
 
         signed char offsets = objCell->offsets;
