@@ -47,6 +47,7 @@
 #include "game.h"
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
 #include "mapcell.h"
+#include "misc.h"
 #include "remote.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
@@ -716,31 +717,35 @@ void combatManager::PlaceObstacle(const combatManager::TObstacle* obstacle, int 
     anchor.field_14 = id;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:3142
-// FULLY DECODED, BLOCKED ON A HEADER THIS LANE MAY NOT TOUCH. The body
-// is a TPickANumber sampler without replacement over obstacle ids
-// 0..0x5a; each draw is admitted when `1 << terrainType`
-// (combatManager+0x5394, live only while field_53c0 is -1) matches the
-// unsigned short at +0 of the 20-byte catalogue row at .rdata
-// 0x63c7c8 + 20*id, or `1 << field_53c0` matches the one at +2. The
-// inner re-draw loop, not a `continue`, is what puts the second
-// `id < 0` test in front of place_obstacle.
-// What it needs: `TPickANumber` (include/misc.h) has NO DESTRUCTOR
-// declared, so a local of it emits neither the fs:[0] scope nor the
-// closing `operator delete(marks)` retail carries at 0x466b28 - and
-// include/misc.h is owned by another lane this session. The DC roster
-// attests the destructor (includes.h:134, dc 0x63a18) and cmbtmgr.cpp
-// already carries its carcass below, so adding it is ordinary work for
-// whoever owns that header next.
+// Samples obstacle ids 0..0x5a without replacement. Each draw is
+// admitted when the battlefield terrain bit matches the first word of
+// its 20-byte catalogue row, or the magic-terrain bit matches the
+// second. The inner redraw loop produces retail's second negative-id
+// test before place_obstacle.
 VA(0x00466a70, 0xBD)  // linkorder, dc 0x60a70
 void combatManager::PlaceAllObstacles()
 {
-    // @stub
-}
+    unsigned terrain_mask = 0;
+    unsigned magic_terrain_mask = 0;
+    if (field_53c0 != -1)
+        magic_terrain_mask = 1 << field_53c0;
+    else
+        terrain_mask = 1 << terrainType;
 
-#endif  // @carcass
+    TPickANumber picker(0, 0x5a);
+    for (;;) {
+        int obstacle_id = picker.Pick();
+        while (obstacle_id >= 0
+                && !(terrain_mask & gObstacleTerrainMasks[obstacle_id * 10])
+                && !(magic_terrain_mask
+                    & gObstacleMagicTerrainMasks[obstacle_id * 10]))
+            obstacle_id = picker.Pick();
+        if (obstacle_id < 0)
+            break;
+        place_obstacle(obstacle_id);
+    }
+}
 
 // E:\gamedcs\cmbtmgr.cpp:3194
 // The mirror of PlaceObstacle: same shape walk and same odd-row

@@ -41,6 +41,7 @@ public:
     unsigned char* end2;
 
     TPickANumber(int lowBound, int high);
+    ~TPickANumber() { delete[] marks; }
     int Pick();
 };
 
