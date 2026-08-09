@@ -6,6 +6,8 @@
 #define HOMM3_TOWN_H
 
 #include <va.h>
+#include <bitset>
+#include <vector>
 #include "armygrp.h"
 
 // Town/faction ids - the domain of town::type and of the creature
@@ -187,7 +189,8 @@ public:
     // The hero on the town's map tile, -1 for none. HasGarrison
     // short-circuits to "defended" on this one alone.
     int visitingHeroId;
-    char pad_14[0x2];
+    unsigned char field_14;
+    char pad_15[0x1];
     // +0x16, fourteen shorts - the accumulated population of each
     // dwelling slot, base then upgrade, the same 14-wide slot space
     // generatorBonus and gTownDwellingCreatures use. Sliced 2026-08-08
@@ -197,7 +200,20 @@ public:
     // == 0x32, so the row fills the head of the old pad exactly. Name
     // provisional (no DC symbol covers it); the role is byte-proven.
     short population[14];
-    char pad_32[0xae];
+    char field_32;
+    unsigned char field_33;
+    char field_34;
+    char pad_35[0x3];
+    int field_38;
+    int field_3c;
+    char pad_40[0x84];
+    // +0xc4..+0xd3 is a Dinkumware vector: the constructor copies an
+    // allocator byte into +0xc4 and clears its three pointer words.
+    // Its element semantics are not yet reached, so the name is ordinal.
+    std::vector<type_point> field_c4;
+    // +0xd4..+0xdf. The three-word default-constructor fill and the
+    // 70-position guards in the spell routines prove std::bitset<70>.
+    std::bitset<70> spells;
     // The town's own troops (ctor constructs an armyGroup at +0xe0 and
     // then fills the seven type slots with -1).
     armyGroup garrison;
@@ -290,6 +306,7 @@ public:
     unsigned char is_legal_building(type_building_id building) const;
     int HasGarrison();
 #ifdef HOMM3_TOWN_OBJ_DECLS
+    town();
     // 0x5be030 remains outside the admitted surface; hire needs its
     // direct town-spell handoff.
     void GiveSpells(hero* forceHero);

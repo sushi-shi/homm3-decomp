@@ -1047,6 +1047,7 @@ textntry	?SetFocus@textEntryWidget@@UAEXE@Z	100.0000	100.0000	100.0000	0x1bab50
 textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc6d0
 textwdgt	??1textWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc3b0
 textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc250
+town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80
 town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0
 town	?CanBuildDock@town@@QAEEXZ	100.0000	100.0000	100.0000	0x1bf4e0
 town	?Deallocate@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be2d0
@@ -1092,7 +1093,6 @@ town	town_get_growth_rate	0.0000	0.0000	0.0000	0x1bfb60
 town	town_give_event_reward	0.0000	0.0000	0.0000	0x1bfeb0
 town	town_initialize	0.0000	0.0000	0.0000	0x1c0670
 town	town_initialize_spells	0.0000	0.0000	0.0000	0x1be600
-town	town_town_1bde80	0.0000	0.0000	0.0000	0x1bde80
 trees	@_tr_align@4	100.0000	100.0000	100.0000	0x206f70
 trees	@_tr_flush_block@16	100.0000	100.0000	100.0000	0x2071c0
 trees	@_tr_init@4	100.0000	100.0000	100.0000	0x206dd0
