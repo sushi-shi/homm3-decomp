@@ -1321,6 +1321,8 @@ int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char
 // ---------------------------------------------------------------------
 
 // E:\gamedcs\game.cpp:2564
+#endif  // @carcass
+
 // anchor-caller game::Save (0x4be3f0) + the string helper: this body
 // calls 0x4bbb60, the /Gr 2-register-argument string WRITER that
 // SaveSignPool also calls (and that TTimedEvent_Save calls from another
@@ -1329,10 +1331,32 @@ int game::saveString(void* outfile, std::basic_string<char,std::char_traits<char
 // of game::Save in address order, matching the DC roster's first
 // Save/Load pair after the string helpers.
 VA(0x004bbc20, 0x21E)  // anchor-caller (game::Save) + string-helper, dc 0xa75d0
-int game::SaveRumours(void* outfile)
+int game::SaveRumours(TAbstractFile* outfile)
 {
-    // @stub
+    unsigned char value;
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
+        current(currentRumour);
+    if (SaveAbstractString(outfile, &current) < 0)
+        return -1;
+
+    if (outfile->Write(rumourState, sizeof(rumourState)) < sizeof(int))
+        return -1;
+
+    int count = rumours.size();
+    if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    for (TRumour* it = rumours.begin(); it != rumours.end(); ++it) {
+        if (SaveAbstractString(outfile, &it->text) < 0)
+            return -1;
+        value = it->field_10;
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2607
 // The Load mirror: called by game::Load (0x4bcda0), calls the string

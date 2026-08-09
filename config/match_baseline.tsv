@@ -509,6 +509,7 @@ game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
 game	?SaveBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40
 game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0
 game	?SaveMinePool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9580
+game	?SaveRumours@game@@AAEHPAVTAbstractFile@@@Z	99.7000	99.7000	99.7000	0xbbc20
 game	?SaveSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9270
 # game: 32 flat/mangled rows deleted 2026-08-08, all superseded by
 # promoted source names in the same change. Two are renames rather
@@ -552,7 +553,6 @@ game	game_ProcessRandomObjects	0.0000	0.0000	0.0000	0xc9dd0
 game	game_Save	0.0000	0.0000	0.0000	0xbe3f0
 game	game_SaveBlackMarkets	0.0000	0.0000	0.0000	0xbc5d0
 game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0
-game	game_SaveRumours	0.0000	0.0000	0.0000	0xbbc20
 game	game_SetRandomHeroArmies	0.0000	0.0000	0.0000	0xc9730
 game	game_SetupPuzzlePieces	0.0000	0.0000	0.0000	0xbaf00
 game	game_ViewArmy	0.0000	0.0000	0.0000	0xc6c50
