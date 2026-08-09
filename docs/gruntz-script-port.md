@@ -267,6 +267,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   branch in the 88-byte body and with the game's battle-experience rule. No
   external implementation material was used.
 
+- **2026-08-09 — the first `game::Load` slice reaches 23.1861% of the
+  3,778-byte routine.** Retail proves the consecutive scenario-state reads at
+  game +0x1f4d4, +0x1f634, +0x1f63e..+0x1f69c and the 32/8/6/3-byte global
+  information bands at +0x4e344..+0x4e374. It also proves nineteen
+  Dinkumware `vector<type_point>` loads: two version-dependent arrays at
+  +0x4e67c/+0x4e6fc use three entries before save version 32 and eight after
+  it, followed by three standalone vectors at +0x4e77c/+0x4e78c/+0x4e79c.
+  A short two-byte count skips that vector, while a present count resizes it
+  and reads four bytes per point without checking the data read. The
+  load-only header view exposes these byte-proven offsets without changing
+  any other compiland's class view. The save-header/map/pool/roster prefix
+  remains explicit follow-up work, with a temporary leading version read
+  preserving its gates. No external implementation body was used; the full
+  build remains the sole baseline writer.
+
 - **2026-08-09 — `game::get_new_boat_id` admitted byte-exact.** The
   214-byte member scans the retail-proven 40-byte boat pool for the first
   clear `allocated` byte at +0x18, returns that reusable index, or appends a
