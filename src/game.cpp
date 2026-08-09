@@ -266,11 +266,59 @@ int game::SaveSignPool(void* outfile)
 }
 
 // E:\gamedcs\game.cpp:896
+#endif  // @carcass
+
 VA(0x004b9340, 0x240)  // anchor-global (ClaimMine vector) + read-slot, dc 0xa3e5c
-int game::LoadMinePool(void* infile, int saveVersion)
+int game::LoadMinePool(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    int count;
+    unsigned int i;
+    if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        return -1;
+
+    mines.resize(static_cast<unsigned char>(count));
+    for (i = 0; i < mines.size(); ++i) {
+        unsigned char value;
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        mines[i].playerOwner = value;
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        mines[i].type = value;
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        mines[i].field_02 = value != 0;
+
+        if (saveVersion >= 25) {
+            mines[i].guards.load(infile);
+        } else {
+            armyGroup* guards = &mines[i].guards;
+            guards->Initialize();
+            volatile legacyMineGuard legacy;
+            infile->Read(const_cast<signed char*>(&legacy.type),
+                         sizeof(legacy.type));
+            infile->Read(const_cast<signed char*>(&legacy.amount),
+                         sizeof(legacy.amount));
+            int typeValue = legacy.type;
+            int amountValue = legacy.amount;
+            if (typeValue != -1 && amountValue > 0)
+                guards->Add(typeValue, amountValue, -1);
+        }
+
+        if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+            return -1;
+        mines[i].field_3c = static_cast<unsigned char>(count);
+        if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+            return -1;
+        mines[i].field_3d = static_cast<unsigned char>(count);
+        if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+            return -1;
+        mines[i].field_3e = static_cast<unsigned char>(count);
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:964
 #endif  // @carcass
