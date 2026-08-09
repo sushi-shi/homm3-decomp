@@ -1147,15 +1147,41 @@ int game::SaveRumours(TAbstractFile* outfile)
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2607
+#endif  // @carcass
+
 // The Load mirror: called by game::Load (0x4bcda0), calls the string
 // READER 0x4bb990 that LoadSignPool and TTimedEvent_Load also call, and
 // sits immediately after SaveRumours - the DC roster's Save-then-Load
 // order for this pair.
 VA(0x004bbe40, 0x294)  // anchor-caller (game::Load) + string-helper, dc 0xa77c8
-int game::LoadRumours(void* infile)
+int game::LoadRumours(TAbstractFile* infile)
 {
-    // @stub
+    unsigned char value;
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
+        current;
+    if (LoadAbstractString(infile, &current) < 0)
+        return -1;
+
+    strcpy(currentRumour, current.c_str());
+    if (infile->Read(rumourState, sizeof(rumourState)) < sizeof(int))
+        return -1;
+
+    int count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    rumours.resize(count);
+    for (TRumour* it = rumours.begin(); it != rumours.end(); ++it) {
+        if (LoadAbstractString(infile, &it->text) < 0)
+            return -1;
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        it->field_10 = value != 0;
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2654
 // Second Save-side callee of game::Save in address order, `ret 4`.
