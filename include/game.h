@@ -36,6 +36,19 @@ class town;
 struct type_creature_bank;
 
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+struct type_university {
+    char fields[0x10];
+};
+SIZE(type_university, 0x10);
+
+struct type_university_vector_view {
+    char allocator[4];
+    type_university* first;
+    type_university* last;
+    type_university* end;
+};
+SIZE(type_university_vector_view, 0x10);
+
 struct type_creature_bank_vector_view {
     char allocator[4];
     type_creature_bank* first;
@@ -430,7 +443,7 @@ public:
     std::vector<garrison> garrisons;      // +0x4e3a8
     std::vector<boat> boats;             // +0x4e3b8
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    char pad_4e3c8[0x10];
+    type_university_vector_view universities;       // +0x4e3c8
     type_creature_bank_vector_view creatureBanks;  // +0x4e3d8
     char pad_4e3e8[1];
 #else
