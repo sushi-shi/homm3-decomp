@@ -47,8 +47,18 @@ enum GlobalInfoFlags {
     MaxInfoFlags = 32
 };
 
+enum WiseTreePrices {
+    const_tree_wants_nothing = 0,
+    const_tree_wants_gold,
+    const_tree_wants_gems,
+    const_tree_price_count
+};
+
 DATA(0x006a79ec) extern const char* const gAdventureObjectNames[];
 DATA(0x0069127c) extern const char* const gGlobalInfoFlagNames[];
+DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;
+DATA(0x006a64d8) extern const char* const gWiseTreePriceNames[];
+DATA(0x006912c4) extern const char* gKnownTreePriceText;
 #endif
 
 // Retail GetSoundId returns this four-byte enum. The semantic aliases have
