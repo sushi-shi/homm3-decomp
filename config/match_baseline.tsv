@@ -43,6 +43,7 @@ advmgr	?get_army_help_text@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$alloca
 advmgr	?get_creature_bank_help_text@@YIXPADPAVNewmapCell@@W4type_creature_bank_type@@JPBDE@Z	85.3542	85.3542	85.3542	0xd3f0
 advmgr	?get_trigger_cell@type_cell_adjuster@@QAEPAVNewmapCell@@PAV2@HH@Z	100.0000	100.0000	100.0000	0xafb0
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0
+advmgr	?set_witch_hut_help_text@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	98.0056	98.0056	98.0056	0xdcc0
 advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	0.0000	0.0000	0.0000	0x6a20
 advmgr	CAdvMgrNetMsgHandler_HandleGiftRequestMsg	0.0000	0.0000	0.0000	0x6480
 advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x5e30
@@ -113,7 +114,6 @@ advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
 advmgr	advManager_garrison_quick_view	0.0000	0.0000	0.0000	0x16f80
 advmgr	advManager_get_map_center	0.0000	0.0000	0.0000	0x7b10
 advmgr	advManager_get_normal_cursor	0.0000	0.0000	0.0000	0xe280
-advmgr	set_witch_hut_help_text	0.0000	0.0000	0.0000	0xdcc0
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0
 ai	?IsIncapacitated@army@@QAEEXZ	100.0000	100.0000	100.0000	0x1f380
 ai	?berserk_attack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000	100.0000	100.0000	0x222c0
