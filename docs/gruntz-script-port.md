@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::Load` reaches 47.6526% with the retail save-header
+  frame.** The 0x5a4-byte `SavedGameHeader` is fixed by retail stack offsets,
+  constructor order, copy widths, and member destinations: it contains the
+  0x304-byte `NewSMapHeader`, 0x1cc-byte `SGameSetupOptions`, 0x7c-byte
+  `SCampaign`, Dinkumware filename string, and trailing player-state bands.
+  Those same three aggregates now occupy their canonical `game` offsets
+  (+0x1f86c, +0x1f6a0, and +0x1f458 respectively), replacing flat padding
+  and aliases for every translation unit. Loading and restoring this header
+  raises the function from 26.8395% to 47.6526%. The emitted
+  `SavedGameHeader` constructor is independently admitted at 27.1011%, and
+  the cur/max/history ratchet remains clean across all 986 linked functions.
+  Candidate cross-build data supplied names only; retail instructions prove
+  every admitted size and offset, and no external implementation body was
+  used.
+
 - **2026-08-09 — `game::Load` extends from 26.3228% to 26.8395%, and its
   state is canonical.** Retail's call sequence proves eight consecutive
   `playerData::load(infile, saveVersion)` calls after the obelisk pool; the

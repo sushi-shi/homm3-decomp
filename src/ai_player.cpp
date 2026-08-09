@@ -644,7 +644,7 @@ void type_AI_player::start_turn()
 
     gpGame->calculate_production();
     magus_hut_value = find_magus_hut_value(
-        team, gpGame->AI_in_control > 0 && player->numTowns > 0);
+        team, gpGame->setup.difficulty > 0 && player->numTowns > 0);
 
     type_garrison_purchaser garrison_purchaser(team);
     garrison_purchaser.check_towns();

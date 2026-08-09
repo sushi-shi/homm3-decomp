@@ -178,6 +178,114 @@ public:
 };
 SIZE(LossConditionStruct, 0x20);
 
+// The three serialized aggregates embedded consecutively in `game` are
+// fixed by retail's SavedGameHeader constructor, assignment calls, and copy
+// widths. Opaque bands remain opaque, but there is only one class layout for
+// every translation unit.
+class CMapHeaderData {
+public:
+    int version;
+    unsigned char isPlayable;
+    unsigned char difficulty;
+    unsigned char numPlayers;
+    unsigned char minNumHumanPlayers;
+    unsigned char maxNumHumanPlayers;
+    unsigned char lastTownNameAssigned;
+    unsigned char mapHasNotBeenSaved;
+    unsigned char maxHeroLevel;
+    unsigned char numTeams;
+    signed char teamInfo[8];
+    char pad_15[3];
+    int Size;
+    unsigned char HasTwoLayers;
+    char pad_1d[3];
+    std::vector<int> placeholders;
+    VictoryConditionStruct victoryCondition;
+    LossConditionStruct lossCondition;
+    char pad_9c[4];
+    char playerSlotAttributes[8][0x44];
+};
+SIZE(CMapHeaderData, 0x2c0);
+
+class NewSMapHeader : public CMapHeaderData {
+public:
+    char heroPlayerSetups[0x10];
+    std::string mapName;
+    std::string mapDescription;
+    std::bitset<156> availableHeroes;
+
+    NewSMapHeader();
+    ~NewSMapHeader();
+    NewSMapHeader& operator=(const NewSMapHeader& that);
+};
+SIZE(NewSMapHeader, 0x304);
+
+class SGameSetupOptions {
+public:
+    signed char color[8];
+    signed char handicap[8];
+    int alignment[8];
+    signed char playerPos[8];
+    signed char difficulty;
+    char filename[251];
+    char path[100];
+    unsigned char canFlipFromToComputer[8];
+    signed char curSelectedPlayer;
+    unsigned char fileInitialized;
+    signed char initializationNumHumans;
+    signed char turnDuration;
+    int startingHero[8];
+    signed char startingBonus[8];
+
+    SGameSetupOptions();
+};
+SIZE(SGameSetupOptions, 0x1cc);
+
+class SCampaign {
+public:
+    unsigned char isCheater;
+    unsigned char secretActive;
+    signed char currentMap;
+    char pad_03;
+    int currentCampaign;
+    int numMapRegions;
+    signed char crossoverArrayIndex;
+    char pad_0d[3];
+    int briefingChoice;
+    char campaignFilename[0x10];
+    unsigned char campaignCompleted[21];
+    char pad_39[3];
+    char carryoverVectors[0x40];
+
+    SCampaign();
+    ~SCampaign();
+    SCampaign& operator=(const SCampaign& that);
+};
+SIZE(SCampaign, 0x7c);
+
+class SavedGameHeader {
+public:
+    char id[8];
+    int version;
+    int gameVersion;
+    NewSMapHeader mapHeader;
+    SGameSetupOptions mapSetup;
+    unsigned char campaignGame;
+    char pad_4e1[3];
+    SCampaign campaign;
+    std::string fileName;
+    short difficultyRating;
+    char pad_572[2];
+    int numDeadPlayers;
+    unsigned char deadPlayer[8];
+    int humanPlayer[8];
+    int currentPlayer;
+
+    SavedGameHeader();
+    int Load(TAbstractFile* infile);
+};
+SIZE(SavedGameHeader, 0x5a4);
+
 class Sign {
 public:
     unsigned char field_00;
@@ -484,11 +592,10 @@ public:
         char pad_11[3];
     };
 
-    char pad_00000[0x1f45c];
-    // The retail-only hero class-name override compares this full dword
-    // against scenario 15.
-    int campaignScenario;
-    char pad_1f460[0x74];
+    char pad_00000[0x1f454];
+    short difficultyRating;
+    char pad_1f456[2];
+    SCampaign campaign;                    // +0x1f458
     unsigned char field_1f4d4;
     char pad_1f4d5[0x15f];
     unsigned char field_1f634;
@@ -519,23 +626,9 @@ public:
     // requirement; it sits four bytes past f_1f698 in the same band.
     // Role unattested - ordinal placeholder.
     char field_1f69d;
-    char pad_1f69e[0x3a];
-    // "The active side is computer-played": ai_tactical crosses it with
-    // combatManager::sideIsAI (get_ranged_attack_value 0x435cb0 tests it
-    // for non-zero; the type_AI_combat_parameters ctor 0x435ec0 tests it
-    // SIGNED-positive, which is what pins the signed char). Provisional.
-    char AI_in_control;   // +0x1f6d8
-    char pad_1f6d9[0x1a0];
-    // Eight one-byte alliance/team ids. end_turn compares the candidate
-    // byte with the acting player's byte before considering a gift.
-    signed char playerTeam[8];  // +0x1f879
-    char pad_1f881[3];
-    int mapSize;                        // +0x1f884
-    unsigned char mapHasTwoLevels;      // +0x1f888
-    char pad_1f889[0x13];
-    VictoryConditionStruct victoryCondition;  // +0x1f89c
-    LossConditionStruct lossCondition;        // +0x1f8e8
-    char pad_1f908[0x268];
+    char pad_1f69e[2];
+    SGameSetupOptions setup;             // +0x1f6a0
+    NewSMapHeader mapHeader;             // +0x1f86c
     NewfullMap worldMap;  // +0x1fb70
     char pad_1fc4c[0xe84];
     // Eight 360-byte player records at +0x20ad0 (town.obj indexes them
@@ -704,7 +797,7 @@ public:
     {
         if (player1 < 0 || player2 < 0)
             return 0;
-        return playerTeam[player1] == playerTeam[player2];
+        return mapHeader.teamInfo[player1] == mapHeader.teamInfo[player2];
     }
     NewmapCell* get_cell(type_point point);      // 0x42ed80 (ai_player.obj)
     // DC `game::GetHero`, dc 0x2eb0, 36 B, declared in E:\gamedcs\Game.h

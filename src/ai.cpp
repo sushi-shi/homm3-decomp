@@ -526,7 +526,7 @@ unsigned char combatManager::move_toward(const army* current_army, long target_h
                 move_left = path_index + 1;
             if (bCreaturePlacement || field_13de4)
                 consider_waiting = 0;
-            if (gpGame->AI_in_control < 2 && !sideIsAI[current_army->combatSide])
+            if (gpGame->setup.difficulty < 2 && !sideIsAI[current_army->combatSide])
                 consider_waiting = 0;
             if (enemy_attacks == 0) {
                 consider_waiting = 0;
@@ -937,7 +937,7 @@ long combatManager::choose_melee_action(const army* current_army, unsigned char 
         return action_value;
     if (!simulated && choose_spell_action(current_army, &action_value, &data))
         return action_value;
-    if (!field_13de4 && (gpGame->AI_in_control >= 2 || sideIsAI[side])) {
+    if (!field_13de4 && (gpGame->setup.difficulty >= 2 || sideIsAI[side])) {
         field_3c = 8;
         return 0;
     }
@@ -997,7 +997,7 @@ void combatManager::place_shooter(const army* current_army)
         field_3c = 8;
         return;
     }
-    if (!gpGame->AI_in_control && !sideIsAI[currentSide]) {
+    if (!gpGame->setup.difficulty && !sideIsAI[currentSide]) {
         field_3c = 8;
         return;
     }

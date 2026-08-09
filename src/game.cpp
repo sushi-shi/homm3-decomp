@@ -1469,6 +1469,16 @@ int game::LoadRumours(TAbstractFile* infile)
     return 1;
 }
 
+// PARTIAL (27.1011%): member construction order, exact 0x5a4 layout, H3SVG
+// identifier, and version 42 default are reconstructed.
+VA(0x004bc0e0, 0x251)  // retail SavedGameHeader constructor and H3SVG literal
+SavedGameHeader::SavedGameHeader()
+{
+    memset(id, 0, sizeof(id));
+    strcpy(id, "H3SVG");
+    version = 42;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2654
@@ -1527,34 +1537,39 @@ void game::setup_shipyards()
 // (0x4b9070 / 0x4b9340 / 0x4b96f0 / 0x4b9a00) - and none of the savers.
 // It references the literal 'H3SVG' at 0x677d38. `ret 4` = p=2.
 //
-// PARTIAL (26.8395%): retail's scalar scenario-state tail, nineteen
-// teleport-destination vectors, the map/object-pool prefix, and all eight
-// player records are reconstructed below. The function-scope string is also
-// retail-structural: its Dinkumware cleanup gives every short-read the target's
-// shared failure exit. The save-header and town/hero roster bands still remain;
-// until the header is admitted, the temporary first read supplies the
-// version it normally leaves live. Short teleport-vector counts deliberately
-// skip only that vector rather than failing the entire load.
+// PARTIAL (47.6526%): retail's SavedGameHeader frame and restoration prefix,
+// scalar scenario-state tail, nineteen teleport-destination vectors,
+// map/object pools, and all eight player records are reconstructed below.
+// The canonical SCampaign, SGameSetupOptions, and NewSMapHeader members make
+// the header copy land on the same object bands in every translation unit.
+// The town/hero roster and final map-extra bands remain. Short teleport-vector
+// counts deliberately skip only that vector rather than failing the load.
 #endif  // @carcass
 
 VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
 int game::Load(TAbstractFile* infile)
 {
-    std::string headerName;
-
-    // The save header supplies this value in the complete routine. Keep the
-    // initial read here until that prefix is reconstructed so the admitted
-    // serialization tail retains its version gates.
-    int saveVersion;
-    if (infile->Read(&saveVersion, sizeof(saveVersion)) < sizeof(saveVersion))
+    SavedGameHeader saved;
+    if (saved.Load(infile))
         return -1;
+
+    int saveVersion = saved.version;
+    f_1f698 = saved.gameVersion;
+    mapHeader = saved.mapHeader;
+    setup = saved.mapSetup;
+    gbUnk69774c = saved.campaignGame;
+    campaign = saved.campaign;
+    strcpy(pad_1f4d5, saved.fileName.c_str());
+    difficultyRating = saved.difficultyRating;
+    field_1f635 = saved.numDeadPlayers;
+    memcpy(playerDisabled, saved.deadPlayer, sizeof(playerDisabled));
 
     char char_buffer;
     short short_buffer;
 
     clear_event_records();
-    gMapWidth = mapSize;
-    gMapHeight = mapSize;
+    gMapWidth = mapHeader.Size;
+    gMapHeight = mapHeader.Size;
     gpSearchArray->Close();
 
     if (saveVersion >= 34) {
@@ -1581,7 +1596,8 @@ int game::Load(TAbstractFile* infile)
     if (infile->Read(field_1f680.begin(), eventBytes) < eventBytes)
         return -1;
 
-    if (worldMap.Load(infile, mapSize, mapHasTwoLevels, saveVersion) < 0)
+    if (worldMap.Load(infile, mapHeader.Size, mapHeader.HasTwoLayers,
+                      saveVersion) < 0)
         return -1;
     if (LoadSignPool(infile) < 0)
         return -1;
@@ -2026,7 +2042,7 @@ void game::ClaimMine(int mineId, int newPlayerOwner, type_action_type action_typ
         SetVisibility(location.x, location.y, location.z,
                       newPlayerOwner, 3, 0);
 
-    if (action_type && victoryCondition.CheckForFlaggedMineWin())
+    if (action_type && mapHeader.victoryCondition.CheckForFlaggedMineWin())
         CheckEndGame(0);
 }
 
@@ -2046,7 +2062,7 @@ void game::ClaimGenerator(int generatorId, int newPlayerOwner)
                       newPlayerOwner, 3, 0);
     }
 
-    if (victoryCondition.CheckForFlaggedGeneratorWin())
+    if (mapHeader.victoryCondition.CheckForFlaggedGeneratorWin())
         CheckEndGame(0);
 }
 
@@ -2348,9 +2364,9 @@ void game::MakeTerrainVisible(int whichPlayer, unsigned short visMask)
 {
     unsigned char players = 0;
     if (whichPlayer >= 0 && whichPlayer < 8) {
-        int team = playerTeam[whichPlayer];
+        int team = mapHeader.teamInfo[whichPlayer];
         for (int player = 0; player < 8; ++player) {
-            if (playerTeam[player] == team)
+            if (mapHeader.teamInfo[player] == team)
                 players |= 1 << player;
         }
     }
