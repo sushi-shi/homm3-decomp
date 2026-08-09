@@ -15,16 +15,67 @@
 #include "hero.h"
 #include "town.h"
 
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+// Retail SetRolloverText indexes these records with a 19-byte stride and
+// calls the string-returning row at 0x5741b0. Dreamcast supplies the class
+// and SeerHutList names only; the retail-only method keeps an ordinal name.
+class TSeerHut {
+public:
+    char fields[0x13];
+
+    std::string SeerHutFn_005741B0(unsigned char player);
+};
+SIZE(TSeerHut, 0x13);
+
+struct TSeerHutVectorView {
+    char allocator[4];
+    TSeerHut* first;
+    TSeerHut* last;
+    TSeerHut* end;
+
+    TSeerHut& operator[](unsigned index) { return first[index]; }
+};
+SIZE(TSeerHutVectorView, 0x10);
+
+class TQuestGuard {
+public:
+    char fields[5];
+
+    std::string QuestGuardFn_00573040(int player);
+};
+SIZE(TQuestGuard, 5);
+
+struct TQuestGuardVectorView {
+    char allocator[4];
+    TQuestGuard* first;
+    TQuestGuard* last;
+    TQuestGuard* end;
+
+    TQuestGuard& operator[](unsigned index) { return first[index]; }
+};
+SIZE(TQuestGuardVectorView, 0x10);
+#endif
+
 // The map record GetWorldMapData hands out. Its first 0xd0 bytes are the
 // scenario's object/event vectors (13 of them at VC6's 16-byte
-// std::vector; the DC build has 9 at STLport's 12) - unmodelled until a
-// retail reader touches one. cellData/Size/HasTwoLevels are the DC's own
-// tail names, and the offsets are byte-proven: game::get_cell reads the
-// pointer at +0xd0 and the square extent at +0xd4, find_magus_hut_value
-// the level count at +0xd8.
+// std::vector; the DC build has 9 at STLport's 12). The seventh and eighth
+// vectors are exposed only to advmgr.cpp: retail SetRolloverText reads their
+// first pointers at +0x64/+0x74; the DC vector order names the seventh
+// SeerHutList, while admitted retail structure evidence names the SoD-only
+// eighth QuestGuardList. cellData/Size/HasTwoLevels are the DC's own tail
+// names, and the offsets are byte-proven: game::get_cell reads the pointer at
+// +0xd0 and the square extent at +0xd4, find_magus_hut_value the level count
+// at +0xd8.
 class NewfullMap {
 public:
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    char pad_000[0x60];
+    TSeerHutVectorView SeerHutList;
+    TQuestGuardVectorView QuestGuardList;
+    char pad_080[0x50];
+#else
     char pad_000[0xd0];
+#endif
     NewmapCell* cellData;
     int Size;
     unsigned char HasTwoLevels;

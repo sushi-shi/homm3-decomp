@@ -616,6 +616,11 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         break
 
     switch (cell->type) {
+    case QUEST_GUARD:
+        strcpy(gText,
+            fullMap->QuestGuardList[cell->extraInfo]
+                .QuestGuardFn_00573040(gUnnamed69778c).c_str());
+        break;
     case ARENA:
         strcpy(gText, gAdventureObjectNames[ARENA]);
         if (cell->is_trigger && currentHero) {
@@ -820,6 +825,11 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         currentHero->flags & 0x10000);
     case RESOURCE:
         strcpy(gText, gResourceNames[cell->objectIndex]);
+        break;
+    case SEER:
+        strcpy(gText,
+            fullMap->SeerHutList[cell->extraInfo]
+                .SeerHutFn_005741B0(player).c_str());
         break;
     case SEPULCHER:
         get_creature_bank_help_text(gText, cell, CREATURE_BANK_SEPULCHER,

@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::SetRolloverText` extends to 75.5187%.**
+  Retail admits the Quest Guard and Seer string-producing arms. The two
+  switch blocks read the first pointers of consecutive VC6 vectors at
+  `NewfullMap+0x64/+0x74`, index five-byte Quest Guard and nineteen-byte
+  Seer records, call the retail-only string-returning rows at 0x573040 and
+  0x5741b0, copy their results to the rollover buffer and run the exact
+  Dinkumware temporary cleanup. Quest Guard receives the dword at 0x69778c;
+  Seer receives the local player. The pool names are corroborated by the
+  admitted structure evidence, but both callees retain ordinal names and
+  their bodies remain unclaimed. No external implementation body was used.
+  The paired temporaries restore retail's 0x234-byte frame. Whole-linked
+  fuzzy coverage rises from 45.32% to 45.39% with all 611 exact linked
+  functions retained.
+
 - **2026-08-09 — `advManager::SetRolloverText` extends to 72.3630%.**
   Retail admits Mine's call into the 595-byte helper at 0x40d670: the two
   call sites and `ret 0xc` prove a five-parameter /Gr surface receiving the
