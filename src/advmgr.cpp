@@ -1322,12 +1322,15 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
         return;
 
-    type_point point(srcX, srcY, z);
+    type_point point;
+    point = type_point(srcX, srcY, z);
     NewmapCell* thisCell;
-    if (!point.is_valid())
-        thisCell = fullMap->cellData;
+    unsigned char valid = point.is_valid();
+    NewfullMap* map = fullMap;
+    if (!valid)
+        thisCell = map->cellData;
     else
-        thisCell = fullMap->cell(point.x, point.y, point.z);
+        thisCell = map->cell(point.x, point.y, point.z);
 
     int baseX = mapOriginX + destX * 32;
     int baseY = mapOriginY + destY * 32;
@@ -1360,13 +1363,15 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
 
     AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
         static_cast<void*>(thisCell));
-    AdvFullMapObjectsView* mapObjects = static_cast<AdvFullMapObjectsView*>(
-        static_cast<void*>(fullMap));
     for (unsigned numObj = 0; numObj < cellObjects->objects.size(); ++numObj) {
         AdvObjectCellView* objCell = &cellObjects->objects[numObj];
-        CObject* obj = &mapObjects->objects[objCell->objectIndex];
-        CObjectType* objType = &mapObjects->objectTypes[obj->typeIndex];
-        CSprite* sprite = mapObjects->sprites[obj->typeIndex];
+        AdvFullMapObjectsView* mapObjects =
+            static_cast<AdvFullMapObjectsView*>(
+                static_cast<void*>(fullMap));
+        CObjectType* objType = &mapObjects->objectTypes[
+            mapObjects->objects[objCell->objectIndex].typeIndex];
+        CSprite* sprite = mapObjects->sprites[
+            mapObjects->objects[objCell->objectIndex].typeIndex];
 
         signed char offsets = objCell->offsets;
         int yOffset = offsets >> 4;
@@ -1428,7 +1433,9 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
             case TERRAIN_REEF:              break;
             default:                        continue;
             }
-            int frame = (animFrame + obj->animationOffset)
+            int frame = (animFrame
+                         + mapObjects->objects[objCell->objectIndex]
+                               .animationOffset)
                         % sprite->GetNumFrames(0);
             sprite->DrawAdvObjShadow(
                 frame,
@@ -1445,7 +1452,9 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
                     tilew, tileh, gpWindowManager->screenBitmap,
                     baseX, baseY + 8, false);
             } else {
-                int frame = (animFrame + obj->animationOffset)
+                int frame = (animFrame
+                             + mapObjects->objects[objCell->objectIndex]
+                                   .animationOffset)
                             % sprite->GetNumFrames(0);
                 sprite->DrawAdvObjShadow(
                     frame,
@@ -1478,7 +1487,7 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     }
 
     if (foundHero || foundBoat) {
-        for (int part = 0; part < 6; ++part) {
+        for (int part = 0; part <= 5; ++part) {
             if (heroParts[part].IsValid)
                 DrawHeroPartShadow(part, heroParts[part], baseX, baseY,
                                    tilex, tiley, tilew, tileh);
