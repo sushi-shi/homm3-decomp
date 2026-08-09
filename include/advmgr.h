@@ -499,6 +499,7 @@ public:
     void HeroLoses(class hero* who, int vanish_sound);
     void OverrideBottomView(EBottomViewType view, int time);
     void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
+    void UpdateScreen(int bAllowIntermediateMouse, int bForceDraw);
     void Reseed(int targetX, int targetY);
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
