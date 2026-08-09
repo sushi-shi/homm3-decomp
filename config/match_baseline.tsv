@@ -1,497 +1,496 @@
-# Per-function best-observed fuzzy match (the RATCHET).
-# unit<TAB>fn<TAB>max_fuzzy - raised by `homm3 build` / `homm3 status
-# update` (monotone); a drop below a recorded max FAILS the build
-# (status check --gate). Lowering a max is an explicit hand edit here.
-# No src_hash epoch column yet: it arrives with the clang fingerprint
-# path when game TUs compile.
-adler32	@adler32@12	100.0000
-advmgr	?CheckDimNextHeroBut@advManager@@QAEXXZ	100.0000
-advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000
-advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000
-advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000
-advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	0.0000
-advmgr	CAdvMgrNetMsgHandler_HandleGiftRequestMsg	0.0000
-advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000
-advmgr	CAdvMgrNetMsgHandler_HandleTradeRequestMsg	0.0000
-advmgr	CAdvPopup_CAdvPopup	0.0000
-advmgr	ComputeAdvNetControl	0.0000
-advmgr	ExtraInfoUnion_get_black_box	0.0000
-advmgr	ExtraInfoUnion_get_creature_bank_5df0	0.0000
-advmgr	ExtraInfoUnion_get_university	0.0000
-advmgr	GetFlaggedObjectOwner	0.0000
-advmgr	MapExtraPosAndAdjacentsSet	0.0000
-advmgr	NewfullMap_cell	0.0000
-advmgr	PopupPlayerTurnInfo	0.0000
-advmgr	SaveGame	0.0000
-advmgr	SetShrineHelpText	0.0000
-advmgr	SetTreeHelpText	0.0000
-advmgr	__h3cg$advmgr$scalar_deleting_dtor$advManager	0.0000
-advmgr	advManager_BVMessage	0.0000
-advmgr	advManager_BVResMsg	0.0000
-advmgr	advManager_CheckDimHero	0.0000
-advmgr	advManager_CheckScreenScroll	0.0000
-advmgr	advManager_Close	0.0000
-advmgr	advManager_CompleteDraw	0.0000
-advmgr	advManager_CompleteDraw_f870	0.0000
-advmgr	advManager_DemobilizeCurrHero	0.0000
-advmgr	advManager_DisableButtons	0.0000
-advmgr	advManager_DoAdvCommand	0.0000
-advmgr	advManager_DoAdventureOptions	0.0000
-advmgr	advManager_DoSystemOptions	0.0000
-advmgr	advManager_DrawAdvObj	0.0000
-advmgr	advManager_DrawAdvObjShadow	0.0000
-advmgr	advManager_DrawAdventureMapGems	0.0000
-advmgr	advManager_DrawArrow	0.0000
-advmgr	advManager_DrawArrowShadow	0.0000
-advmgr	advManager_DrawBoatPart	0.0000
-advmgr	advManager_DrawBoatPartShadow	0.0000
-advmgr	advManager_DrawGround	0.0000
-advmgr	advManager_DrawHeroPart	0.0000
-advmgr	advManager_DrawHeroPartShadow	0.0000
-advmgr	advManager_DrawRiver	0.0000
-advmgr	advManager_DrawRoad	0.0000
-advmgr	advManager_DrawRolloverText	0.0000
-advmgr	advManager_DrawShroud	0.0000
-advmgr	advManager_DrawUnderlay	0.0000
-advmgr	advManager_EnableButtons	0.0000
-advmgr	advManager_FindAdjacentMonster	0.0000
-advmgr	advManager_ForceNewHover	0.0000
-advmgr	advManager_GetCell	0.0000
-advmgr	advManager_GetCloudLookup	0.0000
-advmgr	advManager_GetRouteArrayPtr	0.0000
-advmgr	advManager_GetSoundId	0.0000
-advmgr	advManager_HeroQuickView	0.0000
-advmgr	advManager_InMapArea	0.0000
-advmgr	advManager_InsertSound	0.0000
-advmgr	advManager_LoadRemote	0.0000
-advmgr	advManager_Main	0.0000
-advmgr	advManager_MobilizeCurrHero	0.0000
-advmgr	advManager_MonsterQuickView	0.0000
-advmgr	advManager_MoreTreesNear	0.0000
-advmgr	advManager_Open	0.0000
-advmgr	advManager_OverrideBottomView	0.0000
-advmgr	advManager_ProcessDeSelect	0.0000
-advmgr	advManager_ProcessHover	0.0000
-advmgr	advManager_ProcessKeyPress	0.0000
-advmgr	advManager_ProcessMapSelect	0.0000
-advmgr	advManager_ProcessRadarSelect	0.0000
-advmgr	advManager_ProcessSearch	0.0000
-advmgr	advManager_ProcessSelect	0.0000
-advmgr	advManager_ProcessWaitingHover	0.0000
-advmgr	advManager_QuickInfo	0.0000
-advmgr	advManager_RedrawAdvScreen	0.0000
-advmgr	advManager_ScanForHeroOrBoat	0.0000
-advmgr	advManager_ScreenScroll	0.0000
-advmgr	advManager_SeedTo	0.0000
-advmgr	advManager_SetEnvironmentOrigin	0.0000
-advmgr	advManager_SetHeroContext	0.0000
-advmgr	advManager_SetInitialMapOrigin	0.0000
-advmgr	advManager_SetRolloverText	0.0000
-advmgr	advManager_SetTownContext	0.0000
-advmgr	advManager_ShowRoute	0.0000
-advmgr	advManager_StartLocalPlayerTurn	0.0000
-advmgr	advManager_TownQuickView	0.0000
-advmgr	advManager_TrimLoopingSounds	0.0000
-advmgr	advManager_UpdBottomView	0.0000
-advmgr	advManager_UpdBottomViewEnemyTurn	0.0000
-advmgr	advManager_UpdBottomViewHero	0.0000
-advmgr	advManager_UpdBottomViewKingdom	0.0000
-advmgr	advManager_UpdBottomViewMessage	0.0000
-advmgr	advManager_UpdBottomViewNewTurn	0.0000
-advmgr	advManager_UpdBottomViewResMsg	0.0000
-advmgr	advManager_UpdBottomViewTown	0.0000
-advmgr	advManager_UpdateRadar	0.0000
-advmgr	advManager_UpdateRadar_13790	0.0000
-advmgr	advManager_UpdateScreen	0.0000
-advmgr	advManager_ViewPuzzle	0.0000
-advmgr	advManager_advManager	0.0000
-advmgr	advManager_garrison_quick_view	0.0000
-advmgr	advManager_get_map_center	0.0000
-advmgr	advManager_get_normal_cursor	0.0000
-advmgr	get_creature_bank_help_text	0.0000
-advmgr	hasFlag	0.0000
-advmgr	set_witch_hut_help_text	0.0000
-advmgr	type_cell_adjuster_get_trigger_cell	0.0000
-advmgr	type_cell_adjuster_type_cell_adjuster	0.0000
-advmgr	type_point_type_point	0.0000
-ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697
-ai	?IsIncapacitated@army@@QAEEXZ	100.0000
-ai	?berserk_attack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000
-ai	?can_cast_spells@combatManager@@QAEEJE@Z	100.0000
-ai	?choose_melee_action@combatManager@@QAEJPBVarmy@@EEJ@Z	100.0000
-ai	?choose_shooter_action@combatManager@@QAEXPBVarmy@@EJ@Z	100.0000
-ai	?compute_fire_shield_damage@combatManager@@QAEJJPBVarmy@@0J@Z	100.0000
-ai	?find_move_order@combatManager@@QAEXPAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000
-ai	?get_area_attack_value@@YIJPBVarmy@@JJPAUtype_AI_combat_parameters@@@Z	100.0000
-ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	96.3533
-ai	?get_total_combat_value@combatManager@@QBEJJJJE@Z	100.0000
-ai	?mark_firewalls@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000
-ai	?move_toward@combatManager@@QAEEPBVarmy@@JPBJE@Z	99.4462
-ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	80.5659
-ai	?should_stay_in_castle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000
-ai	combatManager_attempt_shooter_defense	0.0000
-ai	combatManager_choose_creature_spell	0.0000
-ai	combatManager_choose_cyclops_action	0.0000
-ai	combatManager_choose_defense_hex	0.0000
-ai	combatManager_choose_melee_target	0.0000
-ai	combatManager_choose_resurrect_action	0.0000
-ai	combatManager_choose_shooter_target	0.0000
-ai	combatManager_choose_spell_action	0.0000
-ai	combatManager_choose_to_run	0.0000
-ai	combatManager_get_area_effect	0.0000
-ai	combatManager_has_ranged_advantage	0.0000
-ai	combatManager_mark_enemy_attacks	0.0000
-ai	combatManager_mark_friendly_armies	0.0000
-ai	combatManager_mark_multiheaded_enemy	0.0000
-ai	find_attack_hexes	0.0000
-ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000
-ai_combat	?AI_approximate_strength@@YIJPBVhero@@PBVarmyGroup@@@Z	100.0000
-ai_combat	?AI_auto_combat@@YIXPAVhero@@0PAVarmyGroup@@1PBVtown@@PAVNewmapCell@@@Z	100.0000
-ai_combat	?AI_quick_combat@@YIEPAVhero@@0PAVarmyGroup@@PAVtown@@PAVNewmapCell@@@Z	100.0000
-ai_combat	?adjust_army@type_AI_combat_data@@QAEXE@Z	100.0000
-ai_combat	?cast_area_effect@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@JJ@Z	100.0000
-ai_combat	?cast_chain_lightning@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@J@Z	79.6984
-ai_combat	?cast_damage_spell@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@@Z	100.0000
-ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	100.0000
-ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@PBVhero@@E@Z	100.0000
-ai_combat	?check_wall_archery_penalty@type_AI_combat_data@@QAEXPBVtown@@@Z	100.0000
-ai_combat	?create_skeletons@@YIXPBVhero@@PBVarmyGroup@@PAV2@@Z	100.0000
-ai_combat	?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z	94.7603
-ai_combat	?get_area_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@JJ@Z	100.0000
-ai_combat	?get_attack@type_AI_combat_data@@QBEJW4type_speed_catagory@@E@Z	100.0000
-ai_combat	?get_damage_spell_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@@Z	100.0000
-ai_combat	?get_enchantment_value@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	89.4646
-ai_combat	?get_enchantment_value@type_monster_data@@QBEJAAUtype_spell_choice@@PBVhero@@1@Z	100.0000
-ai_combat	?get_fastest_speed@type_AI_combat_data@@QBEJXZ	100.0000
-ai_combat	?get_final_melee_value@type_AI_combat_data@@QBEJXZ	100.0000
-ai_combat	?get_mass_damage_value@type_AI_combat_data@@QBEJAAUtype_spell_choice@@PBVhero@@@Z	100.0000
-ai_combat	?get_next_chain_lightning_target@type_AI_combat_data@@QBEJJABV1@JJ@Z	100.0000
-ai_combat	?get_resurrection_value@type_monster_data@@QBEJAAUtype_spell_choice@@PBVhero@@@Z	100.0000
-ai_combat	?get_spell_damage@type_monster_data@@QBEJHPBVhero@@0J@Z	100.0000
-ai_combat	?get_total@type_AI_combat_data@@QBEJXZ	100.0000
-ai_combat	?inflict_damage@type_AI_combat_data@@QAEXJJ@Z	100.0000
-ai_combat	?inflict_melee_damage@type_AI_combat_data@@QAEJJJJ@Z	100.0000
-ai_combat	?kill@type_AI_combat_data@@QAEXXZ	100.0000
-ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	46.0556
-ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000
-ai_combat	AI_value_of_combat	0.0000
-ai_combat	type_AI_combat_data_cast_spell	0.0000
-ai_combat	type_AI_combat_data_choose_melee	0.0000
-ai_combat	type_AI_combat_data_do_aftermath	0.0000
-ai_combat	type_AI_combat_data_initialize_creatures	0.0000
-ai_combat	type_AI_combat_data_type_AI_combat_data	0.0000
-ai_combat	type_AI_combat_data_type_AI_combat_data_276c0	0.0000
-ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	98.7523
-ai_player	?find_magus_hut_value@@YIJJE@Z	100.0000
-ai_player	?get_attack_bonus@type_AI_player@@SIMF@Z	100.0000
-ai_player	?get_cell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000
-ai_player	?get_danger_value@searchArray@@QBEJUtype_point@@@Z	100.0000
-ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000
-ai_player	type_AI_player_calculate_demand	0.0000
-ai_player	type_AI_player_calculate_reserve	0.0000
-ai_player	type_AI_player_end_turn	0.0000
-ai_player	type_AI_player_get_total_value	0.0000
-ai_player	type_AI_player_make_gift	0.0000
-ai_player	type_AI_player_start_turn	0.0000
-ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000
-ai_tactical	??0type_spell_choice@@QAE@HHJJ@Z	100.0000
-ai_tactical	??0type_spell_choice@@QAE@XZ	100.0000
-ai_tactical	??1type_AI_spellcaster@@UAE@XZ	100.0000
-ai_tactical	??_Gtype_AI_spellcaster@@UAEPAXI@Z	100.0000
-ai_tactical	?AI_get_attack_damage@@YIJPBVarmy@@J0EJ@Z	100.0000
-ai_tactical	?AI_value_of_luck@@YINJJ@Z	100.0000
-ai_tactical	?AI_value_of_morale@@YINJJ@Z	100.0000
-ai_tactical	?find_attack_hex@type_AI_attack_hex_chooser@@QAEEXZ	100.0000
-ai_tactical	?find_enemy_attacks@type_AI_spellcaster@@QAEXXZ	87.7343
-ai_tactical	?get_age_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_air_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_air_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_antimagic_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_area_effect_value@type_AI_spellcaster@@QAEJHJHJ@Z	100.0000
-ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	99.8503
-ai_tactical	?get_backlash_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_berserk_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_bless_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_blind_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_blood_lust_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_breath_bonus@@YIJJPBVarmy@@JJ0JPBUtype_AI_combat_parameters@@@Z	100.0000
-ai_tactical	?get_clone_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_cure_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	95.4886
-ai_tactical	?get_curse_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	99.8731
-ai_tactical	?get_damage_spell_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_damage_value@type_AI_spellcaster@@QAEJHJPBVhero@@PBVarmy@@@Z	100.0000
-ai_tactical	?get_defense_boost_value@type_AI_spellcaster@@QAEJPBVarmy@@0JN@Z	100.0000
-ai_tactical	?get_defense_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	100.0000
-ai_tactical	?get_disease_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_dispel_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_disruptive_ray_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_earth_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_exchange_effect@type_AI_combat_parameters@@QAEJPBVarmy@@0J@Z	100.0000
-ai_tactical	?get_fire_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_forgetfulness_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_frenzy_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	98.9849
-ai_tactical	?get_haste_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_hex_attack_value@type_AI_attack_hex_chooser@@QAEJJPAJ@Z	84.3750
-ai_tactical	?get_hypnotize_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	96.3475
-ai_tactical	?get_mass_damage_effect@type_AI_spellcaster@@QAEJJJ@Z	100.0000
-ai_tactical	?get_mastery_value@type_enchant_data@@QAEJXZ	100.0000
-ai_tactical	?get_mirth_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_misfortune_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_multi_head_bonus@@YIJJPBVarmy@@JJ0JPBUtype_AI_combat_parameters@@@Z	100.0000
-ai_tactical	?get_poison_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_prayer_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_precision_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_ranged_attack_value@type_AI_combat_parameters@@QAEJPBVarmy@@0@Z	100.0000
-ai_tactical	?get_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_simple_attack_effect@type_AI_combat_parameters@@QAEJPBVarmy@@0EJ@Z	100.0000
-ai_tactical	?get_simple_attack_effect@type_AI_combat_parameters@@QAEJPBVarmy@@J0JEJ@Z	99.1053
-ai_tactical	?get_slayer_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_sorrow_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_speed_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	100.0000
-ai_tactical	?get_tough_skin_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_traitor_value@type_AI_spellcaster@@QAEJPBVarmy@@0@Z	100.0000
-ai_tactical	?get_water_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?get_weakness_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000
-ai_tactical	?set_melee_enemies@type_AI_spellcaster@@QAEXXZ	95.2778
-ai_tactical	?should_attack_now@type_AI_spellcaster@@QAEEPBVarmy@@@Z	85.5822
-ai_tactical	?simulate_attack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	100.0000
-ai_tactical	?value_of_luck_and_morale@@YINJJNN@Z	100.0000
-ai_tactical	type_AI_attack_hex_chooser_check_adjacent_hexes	0.0000
-ai_tactical	type_AI_combat_parameters_type_AI_combat_parameters	0.0000
-ai_tactical	type_AI_spellcaster_cast_spell	0.0000
-ai_tactical	type_AI_spellcaster_consider_chain_lightning	0.0000
-ai_tactical	type_AI_spellcaster_consider_earthquake	0.0000
-ai_tactical	type_AI_spellcaster_consider_enchantment	0.0000
-ai_tactical	type_AI_spellcaster_consider_resurrect	0.0000
-ai_tactical	type_AI_spellcaster_consider_sacrifice	0.0000
-ai_tactical	type_AI_spellcaster_consider_sacrifice_3b1e0	0.0000
-ai_tactical	type_AI_spellcaster_consider_single_enchantment	0.0000
-ai_tactical	type_AI_spellcaster_consider_spell	0.0000
-ai_tactical	type_AI_spellcaster_consider_teleport	0.0000
-ai_tactical	type_AI_spellcaster_get_caliph_value	0.0000
-ai_tactical	type_AI_spellcaster_get_cancel_value	0.0000
-ai_tactical	type_AI_spellcaster_get_chain_lightning_value	0.0000
-ai_tactical	type_AI_spellcaster_get_counterstroke_value	0.0000
-ai_tactical	type_AI_spellcaster_get_enchantment_function	0.0000
-ai_tactical	type_AI_spellcaster_get_fire_shield_value	0.0000
-ai_tactical	type_AI_spellcaster_get_fortune_value	0.0000
-ai_tactical	type_AI_spellcaster_get_muck_and_mire_value	0.0000
-ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000
-ai_tactical	type_AI_spellcaster_get_protection_value	0.0000
-ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000
-armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	40.4615
-armygrp	??0armyGroup@@QAE@XZ	100.0000
-armygrp	?Add@armyGroup@@QAEHHHH@Z	100.0000
-armygrp	?ArmyGrpFn_0044A460@@YIABV?$bitset@$08@std@@XZ	100.0000
-armygrp	?CanJoin@armyGroup@@QAEHH@Z	100.0000
-armygrp	?Dismiss@armyGroup@@QAEXH@Z	100.0000
-armygrp	?GetAlignments@armyGroup@@QAEHPAE@Z	100.0000
-armygrp	?GetArmyLuck@armyGroup@@QAEHHPBVhero@@PBVtown@@HE@Z	30.3579
-armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	72.8920
-armygrp	?GetArmySizeName@armyGroup@@SIPBDHH@Z	100.0000
-armygrp	?GetLuck@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EE@Z	85.4592
-armygrp	?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z	88.4346
-armygrp	?GetNativeTerrain@armyGroup@@QAE?AW4TTerrainType@@XZ	100.0000
-armygrp	?GetNumArmies@armyGroup@@QAEHXZ	100.0000
-armygrp	?HasAllUndead@armyGroup@@QAEEXZ	100.0000
-armygrp	?HasCreatures@armyGroup@@QAEEXZ	100.0000
-armygrp	?Initialize@armyGroup@@QAEXXZ	100.0000
-armygrp	?IsMember@armyGroup@@QAEEW4TCreatureType@@@Z	100.0000
-armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	54.4022
-armygrp	?Swap@armyGroup@@QAEXHPAV1@H@Z	100.0000
-armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000
-armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000
-armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000
+# GENERATED by `homm3 build` / `homm3 status update`. DO NOT HAND-EDIT.
+# cur_fuzzy = current build; max_fuzzy = enforced ratchet; hist_fuzzy =
+# all-time high (survives `update --accept-regressions`). Retail RVA carries
+# history across source-label promotion and other same-body renames.
+# unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva
+adler32	@adler32@12	100.0000	100.0000	100.0000	0x206ca0
+advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0
+advmgr	?CheckDimNextHeroBut@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19450
+advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a0
+advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570
+advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010
+advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
+advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
+advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	100.0000	100.0000	100.0000	0x8770
+advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	0.0000	0.0000	0.0000	0x6a20
+advmgr	CAdvMgrNetMsgHandler_HandleGiftRequestMsg	0.0000	0.0000	0.0000	0x6480
+advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x5e30
+advmgr	CAdvMgrNetMsgHandler_HandleTradeRequestMsg	0.0000	0.0000	0.0000	0x6bf0
+advmgr	CAdvPopup_CAdvPopup	0.0000	0.0000	0.0000	0x1b040
+advmgr	ComputeAdvNetControl	0.0000	0.0000	0.0000	0x1a660
+advmgr	ExtraInfoUnion_get_black_box	0.0000	0.0000	0.0000	0x5de0
+advmgr	ExtraInfoUnion_get_creature_bank_5df0	0.0000	0.0000	0.0000	0x5df0
+advmgr	ExtraInfoUnion_get_university	0.0000	0.0000	0.0000	0x5e10
+advmgr	GetFlaggedObjectOwner	0.0000	0.0000	0.0000	0xfd20
+advmgr	MapExtraPosAndAdjacentsSet	0.0000	0.0000	0.0000	0x1a750
+advmgr	PopupPlayerTurnInfo	0.0000	0.0000	0.0000	0x19c80
+advmgr	SaveGame	0.0000	0.0000	0.0000	0x18160
+advmgr	SetShrineHelpText	0.0000	0.0000	0.0000	0xd8d0
+advmgr	SetTreeHelpText	0.0000	0.0000	0.0000	0xdb00
+advmgr	__h3cg$advmgr$scalar_deleting_dtor$advManager	0.0000	0.0000	0.0000	0x77b0
+advmgr	advManager_BVMessage	0.0000	0.0000	0.0000	0x16210
+advmgr	advManager_BVResMsg	0.0000	0.0000	0.0000	0x16060
+advmgr	advManager_CheckDimHero	0.0000	0.0000	0.0000	0x19300
+advmgr	advManager_CheckScreenScroll	0.0000	0.0000	0.0000	0x19820
+advmgr	advManager_Close	0.0000	0.0000	0.0000	0x77e0
+advmgr	advManager_CompleteDraw	0.0000	0.0000	0.0000	0xf3f0
+advmgr	advManager_CompleteDraw_f870	0.0000	0.0000	0.0000	0xf870
+advmgr	advManager_DemobilizeCurrHero	0.0000	0.0000	0.0000	0x17680
+advmgr	advManager_DisableButtons	0.0000	0.0000	0.0000	0x1a2e0
+advmgr	advManager_DoAdvCommand	0.0000	0.0000	0.0000	0x7b80
+advmgr	advManager_DoAdventureOptions	0.0000	0.0000	0.0000	0x1ab00
+advmgr	advManager_DoSystemOptions	0.0000	0.0000	0.0000	0x1ac00
+advmgr	advManager_DrawAdvObj	0.0000	0.0000	0.0000	0x10c00
+advmgr	advManager_DrawAdvObjShadow	0.0000	0.0000	0.0000	0x11590
+advmgr	advManager_DrawAdventureMapGems	0.0000	0.0000	0.0000	0xf2f0
+advmgr	advManager_DrawArrow	0.0000	0.0000	0.0000	0x120b0
+advmgr	advManager_DrawArrowShadow	0.0000	0.0000	0.0000	0x11f50
+advmgr	advManager_DrawBoatPart	0.0000	0.0000	0.0000	0x10760
+advmgr	advManager_DrawBoatPartShadow	0.0000	0.0000	0.0000	0x109b0
+advmgr	advManager_DrawGround	0.0000	0.0000	0.0000	0x12900
+advmgr	advManager_DrawHeroPart	0.0000	0.0000	0.0000	0xfe30
+advmgr	advManager_DrawHeroPartShadow	0.0000	0.0000	0.0000	0x102c0
+advmgr	advManager_DrawRiver	0.0000	0.0000	0.0000	0x11b80
+advmgr	advManager_DrawRoad	0.0000	0.0000	0.0000	0x11d60
+advmgr	advManager_DrawRolloverText	0.0000	0.0000	0.0000	0xb0e0
+advmgr	advManager_DrawShroud	0.0000	0.0000	0.0000	0x12220
+advmgr	advManager_DrawUnderlay	0.0000	0.0000	0.0000	0x12470
+advmgr	advManager_EnableButtons	0.0000	0.0000	0.0000	0x1a3a0
+advmgr	advManager_FindAdjacentMonster	0.0000	0.0000	0.0000	0x1a460
+advmgr	advManager_ForceNewHover	0.0000	0.0000	0.0000	0x19570
+advmgr	advManager_GetCell	0.0000	0.0000	0.0000	0x12bd0
+advmgr	advManager_GetCloudLookup	0.0000	0.0000	0.0000	0xf8c0
+advmgr	advManager_GetSoundId	0.0000	0.0000	0.0000	0x18620
+advmgr	advManager_HeroQuickView	0.0000	0.0000	0.0000	0x16590
+advmgr	advManager_InsertSound	0.0000	0.0000	0.0000	0x18c10
+advmgr	advManager_LoadRemote	0.0000	0.0000	0.0000	0x1a100
+advmgr	advManager_Main	0.0000	0.0000	0.0000	0x87b0
+advmgr	advManager_MobilizeCurrHero	0.0000	0.0000	0.0000	0x175e0
+advmgr	advManager_MonsterQuickView	0.0000	0.0000	0.0000	0x17150
+advmgr	advManager_MoreTreesNear	0.0000	0.0000	0.0000	0x1adb0
+advmgr	advManager_Open	0.0000	0.0000	0.0000	0x6fd0
+advmgr	advManager_OverrideBottomView	0.0000	0.0000	0.0000	0x15d60
+advmgr	advManager_ProcessDeSelect	0.0000	0.0000	0.0000	0x9a70
+advmgr	advManager_ProcessHover	0.0000	0.0000	0.0000	0xe360
+advmgr	advManager_ProcessKeyPress	0.0000	0.0000	0.0000	0x8c40
+advmgr	advManager_ProcessMapSelect	0.0000	0.0000	0.0000	0xa5d0
+advmgr	advManager_ProcessRadarSelect	0.0000	0.0000	0.0000	0xa0c0
+advmgr	advManager_ProcessSearch	0.0000	0.0000	0.0000	0xec90
+advmgr	advManager_ProcessSelect	0.0000	0.0000	0.0000	0x97e0
+advmgr	advManager_ProcessWaitingHover	0.0000	0.0000	0.0000	0xdeb0
+advmgr	advManager_QuickInfo	0.0000	0.0000	0.0000	0x137c0
+advmgr	advManager_RedrawAdvScreen	0.0000	0.0000	0.0000	0x17420
+advmgr	advManager_ScanForHeroOrBoat	0.0000	0.0000	0.0000	0xfb30
+advmgr	advManager_ScreenScroll	0.0000	0.0000	0.0000	0x195c0
+advmgr	advManager_SeedTo	0.0000	0.0000	0.0000	0x194a0
+advmgr	advManager_SetEnvironmentOrigin	0.0000	0.0000	0.0000	0x183d0
+advmgr	advManager_SetHeroContext	0.0000	0.0000	0.0000	0x17b20
+advmgr	advManager_SetInitialMapOrigin	0.0000	0.0000	0.0000	0x19990
+advmgr	advManager_SetRolloverText	0.0000	0.0000	0.0000	0xb150
+advmgr	advManager_SetTownContext	0.0000	0.0000	0.0000	0x17830
+advmgr	advManager_ShowRoute	0.0000	0.0000	0.0000	0x18dd0
+advmgr	advManager_StartLocalPlayerTurn	0.0000	0.0000	0.0000	0x19e00
+advmgr	advManager_TownQuickView	0.0000	0.0000	0.0000	0x167a0
+advmgr	advManager_TrimLoopingSounds	0.0000	0.0000	0.0000	0x1a1e0
+advmgr	advManager_UpdBottomView	0.0000	0.0000	0.0000	0x15de0
+advmgr	advManager_UpdBottomViewEnemyTurn	0.0000	0.0000	0.0000	0x15f20
+advmgr	advManager_UpdBottomViewHero	0.0000	0.0000	0.0000	0x16450
+advmgr	advManager_UpdBottomViewKingdom	0.0000	0.0000	0.0000	0x163a0
+advmgr	advManager_UpdBottomViewMessage	0.0000	0.0000	0.0000	0x162f0
+advmgr	advManager_UpdBottomViewNewTurn	0.0000	0.0000	0.0000	0x15fb0
+advmgr	advManager_UpdBottomViewResMsg	0.0000	0.0000	0.0000	0x16160
+advmgr	advManager_UpdBottomViewTown	0.0000	0.0000	0.0000	0x164f0
+advmgr	advManager_UpdateRadar	0.0000	0.0000	0.0000	0x12c40
+advmgr	advManager_UpdateRadar_13790	0.0000	0.0000	0.0000	0x13790
+advmgr	advManager_UpdateScreen	0.0000	0.0000	0.0000	0xf270
+advmgr	advManager_ViewPuzzle	0.0000	0.0000	0.0000	0x1a7f0
+advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
+advmgr	advManager_garrison_quick_view	0.0000	0.0000	0.0000	0x16f80
+advmgr	advManager_get_map_center	0.0000	0.0000	0.0000	0x7b10
+advmgr	advManager_get_normal_cursor	0.0000	0.0000	0.0000	0xe280
+advmgr	get_creature_bank_help_text	0.0000	0.0000	0.0000	0xd3f0
+advmgr	hasFlag	0.0000	0.0000	0.0000	0xfca0
+advmgr	set_witch_hut_help_text	0.0000	0.0000	0.0000	0xdcc0
+advmgr	type_cell_adjuster_get_trigger_cell	0.0000	0.0000	0.0000	0xafb0
+advmgr	type_cell_adjuster_type_cell_adjuster	0.0000	0.0000	0.0000	0xaf60
+ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0
+ai	?IsIncapacitated@army@@QAEEXZ	100.0000	100.0000	100.0000	0x1f380
+ai	?berserk_attack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000	100.0000	100.0000	0x222c0
+ai	?can_cast_spells@combatManager@@QAEEJE@Z	100.0000	100.0000	100.0000	0x1f890
+ai	?choose_melee_action@combatManager@@QAEJPBVarmy@@EEJ@Z	100.0000	100.0000	100.0000	0x21f80
+ai	?choose_shooter_action@combatManager@@QAEXPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1f060
+ai	?compute_fire_shield_damage@combatManager@@QAEJJPBVarmy@@0J@Z	100.0000	100.0000	100.0000	0x22440
+ai	?find_move_order@combatManager@@QAEXPAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	100.0000	100.0000	100.0000	0x1f140
+ai	?get_area_attack_value@@YIJPBVarmy@@JJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1eda0
+ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	96.3533	96.3533	96.3533	0x1f3b0
+ai	?get_total_combat_value@combatManager@@QBEJJJJE@Z	100.0000	100.0000	100.0000	0x1eac0
+ai	?mark_firewalls@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x214f0
+ai	?move_toward@combatManager@@QAEEPBVarmy@@JPBJE@Z	99.4462	99.4462	99.4462	0x1f580
+ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	80.5659	80.5659	80.5659	0x22060
+ai	?should_stay_in_castle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x213f0
+ai	combatManager_attempt_shooter_defense	0.0000	0.0000	0.0000	0x20760
+ai	combatManager_choose_creature_spell	0.0000	0.0000	0.0000	0x20d20
+ai	combatManager_choose_cyclops_action	0.0000	0.0000	0.0000	0x1eea0
+ai	combatManager_choose_defense_hex	0.0000	0.0000	0.0000	0x205d0
+ai	combatManager_choose_melee_target	0.0000	0.0000	0.0000	0x21680
+ai	combatManager_choose_resurrect_action	0.0000	0.0000	0.0000	0x21000
+ai	combatManager_choose_shooter_target	0.0000	0.0000	0.0000	0x1eb80
+ai	combatManager_choose_spell_action	0.0000	0.0000	0.0000	0x21280
+ai	combatManager_choose_to_run	0.0000	0.0000	0.0000	0x208f0
+ai	combatManager_get_area_effect	0.0000	0.0000	0.0000	0x1f920
+ai	combatManager_has_ranged_advantage	0.0000	0.0000	0.0000	0x20a80
+ai	combatManager_mark_enemy_attacks	0.0000	0.0000	0.0000	0x20260
+ai	combatManager_mark_friendly_armies	0.0000	0.0000	0.0000	0x1fb60
+ai	combatManager_mark_multiheaded_enemy	0.0000	0.0000	0.0000	0x1fd60
+ai	find_attack_hexes	0.0000	0.0000	0.0000	0x20060
+ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x27650
+ai_combat	?AI_approximate_strength@@YIJPBVhero@@PBVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x27690
+ai_combat	?AI_auto_combat@@YIXPAVhero@@0PAVarmyGroup@@1PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x27210
+ai_combat	?AI_quick_combat@@YIEPAVhero@@0PAVarmyGroup@@PAVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x270c0
+ai_combat	?adjust_army@type_AI_combat_data@@QAEXE@Z	100.0000	100.0000	100.0000	0x24880
+ai_combat	?cast_area_effect@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@JJ@Z	100.0000	100.0000	100.0000	0x25100
+ai_combat	?cast_chain_lightning@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@J@Z	79.6984	79.6984	79.6984	0x24fb0
+ai_combat	?cast_damage_spell@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25260
+ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	100.0000	100.0000	100.0000	0x25b10
+ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x258a0
+ai_combat	?check_wall_archery_penalty@type_AI_combat_data@@QAEXPBVtown@@@Z	100.0000	100.0000	100.0000	0x24790
+ai_combat	?create_skeletons@@YIXPBVhero@@PBVarmyGroup@@PAV2@@Z	100.0000	100.0000	100.0000	0x26df0
+ai_combat	?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z	94.7603	94.7603	94.7603	0x264d0
+ai_combat	?get_area_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@JJ@Z	100.0000	100.0000	100.0000	0x24bf0
+ai_combat	?get_attack@type_AI_combat_data@@QBEJW4type_speed_catagory@@E@Z	100.0000	100.0000	100.0000	0x26390
+ai_combat	?get_damage_spell_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@@Z	100.0000	100.0000	100.0000	0x24d20
+ai_combat	?get_enchantment_value@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@@Z	89.4646	89.4646	89.4646	0x25510
+ai_combat	?get_enchantment_value@type_monster_data@@QBEJAAUtype_spell_choice@@PBVhero@@1@Z	100.0000	100.0000	100.0000	0x23c80
+ai_combat	?get_fastest_speed@type_AI_combat_data@@QBEJXZ	100.0000	100.0000	100.0000	0x24960
+ai_combat	?get_final_melee_value@type_AI_combat_data@@QBEJXZ	100.0000	100.0000	100.0000	0x26450
+ai_combat	?get_mass_damage_value@type_AI_combat_data@@QBEJAAUtype_spell_choice@@PBVhero@@@Z	100.0000	100.0000	100.0000	0x253e0
+ai_combat	?get_next_chain_lightning_target@type_AI_combat_data@@QBEJJABV1@JJ@Z	100.0000	100.0000	100.0000	0x249d0
+ai_combat	?get_resurrection_value@type_monster_data@@QBEJAAUtype_spell_choice@@PBVhero@@@Z	100.0000	100.0000	100.0000	0x23d00
+ai_combat	?get_spell_damage@type_monster_data@@QBEJHPBVhero@@0J@Z	100.0000	100.0000	100.0000	0x23de0
+ai_combat	?get_total@type_AI_combat_data@@QBEJXZ	100.0000	100.0000	100.0000	0x27750
+ai_combat	?inflict_damage@type_AI_combat_data@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x26300
+ai_combat	?inflict_melee_damage@type_AI_combat_data@@QAEJJJJ@Z	100.0000	100.0000	100.0000	0x26170
+ai_combat	?kill@type_AI_combat_data@@QAEXXZ	100.0000	100.0000	100.0000	0x262b0
+ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	46.0556	46.0556	46.0556	0x26bc0
+ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000	100.0000	100.0000	0x23ea0
+ai_combat	AI_value_of_combat	0.0000	0.0000	0.0000	0x27330
+ai_combat	type_AI_combat_data_cast_spell	0.0000	0.0000	0.0000	0x25bd0
+ai_combat	type_AI_combat_data_choose_melee	0.0000	0.0000	0.0000	0x267c0
+ai_combat	type_AI_combat_data_do_aftermath	0.0000	0.0000	0.0000	0x26ee0
+ai_combat	type_AI_combat_data_initialize_creatures	0.0000	0.0000	0.0000	0x24120
+ai_combat	type_AI_combat_data_type_AI_combat_data	0.0000	0.0000	0.0000	0x23ee0
+ai_combat	type_AI_combat_data_type_AI_combat_data_276c0	0.0000	0.0000	0.0000	0x276c0
+ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	98.7523	98.7523	98.7523	0x28410
+ai_player	?find_magus_hut_value@@YIJJE@Z	100.0000	100.0000	100.0000	0x29910
+ai_player	?get_attack_bonus@type_AI_player@@SIMF@Z	100.0000	100.0000	100.0000	0x28710
+ai_player	?get_cell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x2ed80
+ai_player	?get_danger_value@searchArray@@QBEJUtype_point@@@Z	100.0000	100.0000	100.0000	0x2ed30
+ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x29ab0
+ai_player	type_AI_player_calculate_demand	0.0000	0.0000	0.0000	0x28740
+ai_player	type_AI_player_calculate_reserve	0.0000	0.0000	0.0000	0x29ad0
+ai_player	type_AI_player_end_turn	0.0000	0.0000	0.0000	0x28dd0
+ai_player	type_AI_player_get_total_value	0.0000	0.0000	0.0000	0x2a150
+ai_player	type_AI_player_make_gift	0.0000	0.0000	0.0000	0x29110
+ai_player	type_AI_player_start_turn	0.0000	0.0000	0.0000	0x297c0
+ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
+ai_tactical	??0type_spell_choice@@QAE@HHJJ@Z	100.0000	100.0000	100.0000	0x36980
+ai_tactical	??0type_spell_choice@@QAE@XZ	100.0000	100.0000	100.0000	0x36950
+ai_tactical	??1type_AI_spellcaster@@UAE@XZ	100.0000	100.0000	100.0000	0x36c30
+ai_tactical	??_Gtype_AI_spellcaster@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x36bf0
+ai_tactical	?AI_get_attack_damage@@YIJPBVarmy@@J0EJ@Z	100.0000	100.0000	100.0000	0x35980
+ai_tactical	?AI_value_of_luck@@YINJJ@Z	100.0000	100.0000	100.0000	0x35960
+ai_tactical	?AI_value_of_morale@@YINJJ@Z	100.0000	100.0000	100.0000	0x35830
+ai_tactical	?find_attack_hex@type_AI_attack_hex_chooser@@QAEEXZ	100.0000	100.0000	100.0000	0x36840
+ai_tactical	?find_enemy_attacks@type_AI_spellcaster@@QAEXXZ	87.7343	87.7343	87.7343	0x3c040
+ai_tactical	?get_age_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x373f0
+ai_tactical	?get_air_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x399a0
+ai_tactical	?get_air_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38bc0
+ai_tactical	?get_antimagic_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39d40
+ai_tactical	?get_area_effect_value@type_AI_spellcaster@@QAEJHJHJ@Z	100.0000	100.0000	100.0000	0x37040
+ai_tactical	?get_attack_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@0JJ@Z	99.8503	99.8503	99.8503	0x37800
+ai_tactical	?get_backlash_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39de0
+ai_tactical	?get_berserk_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3a400
+ai_tactical	?get_bless_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x37430
+ai_tactical	?get_blind_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39100
+ai_tactical	?get_blood_lust_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38100
+ai_tactical	?get_breath_bonus@@YIJJPBVarmy@@JJ0JPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x36760
+ai_tactical	?get_clone_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b2e0
+ai_tactical	?get_cure_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	95.4886	95.4886	95.4886	0x39c30
+ai_tactical	?get_curse_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	99.8731	99.8731	99.8731	0x3b370
+ai_tactical	?get_damage_spell_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x36f60
+ai_tactical	?get_damage_value@type_AI_spellcaster@@QAEJHJPBVhero@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x36e30
+ai_tactical	?get_defense_boost_value@type_AI_spellcaster@@QAEJPBVarmy@@0JN@Z	100.0000	100.0000	100.0000	0x387c0
+ai_tactical	?get_defense_skill_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	100.0000	100.0000	100.0000	0x38910
+ai_tactical	?get_disease_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38a10
+ai_tactical	?get_dispel_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39bc0
+ai_tactical	?get_disruptive_ray_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38dc0
+ai_tactical	?get_earth_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39a00
+ai_tactical	?get_exchange_effect@type_AI_combat_parameters@@QAEJPBVarmy@@0J@Z	100.0000	100.0000	100.0000	0x35dc0
+ai_tactical	?get_fire_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x399d0
+ai_tactical	?get_forgetfulness_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x3b500
+ai_tactical	?get_frenzy_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	98.9849	98.9849	98.9849	0x375d0
+ai_tactical	?get_haste_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x396b0
+ai_tactical	?get_hex_attack_value@type_AI_attack_hex_chooser@@QAEJJPAJ@Z	84.3750	84.3750	84.3750	0x36180
+ai_tactical	?get_hypnotize_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	96.3475	96.3475	96.3475	0x3a500
+ai_tactical	?get_mass_damage_effect@type_AI_spellcaster@@QAEJJJ@Z	100.0000	100.0000	100.0000	0x36fb0
+ai_tactical	?get_mastery_value@type_enchant_data@@QAEJXZ	100.0000	100.0000	100.0000	0x36930
+ai_tactical	?get_mirth_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38170
+ai_tactical	?get_misfortune_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38f60
+ai_tactical	?get_multi_head_bonus@@YIJJPBVarmy@@JJ0JPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x36620
+ai_tactical	?get_poison_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39500
+ai_tactical	?get_prayer_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38ac0
+ai_tactical	?get_precision_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38b50
+ai_tactical	?get_ranged_attack_value@type_AI_combat_parameters@@QAEJPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x35cb0
+ai_tactical	?get_shield_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38c60
+ai_tactical	?get_simple_attack_effect@type_AI_combat_parameters@@QAEJPBVarmy@@0EJ@Z	100.0000	100.0000	100.0000	0x35c70
+ai_tactical	?get_simple_attack_effect@type_AI_combat_parameters@@QAEJPBVarmy@@J0JEJ@Z	99.1053	99.1053	99.1053	0x35b90
+ai_tactical	?get_slayer_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38d00
+ai_tactical	?get_sorrow_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x382c0
+ai_tactical	?get_speed_value@type_AI_spellcaster@@QAEJPBVarmy@@JJ@Z	100.0000	100.0000	100.0000	0x39550
+ai_tactical	?get_tough_skin_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38d90
+ai_tactical	?get_traitor_value@type_AI_spellcaster@@QAEJPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x3a340
+ai_tactical	?get_water_protection_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x39a40
+ai_tactical	?get_weakness_value@type_AI_spellcaster@@QAEJPBVarmy@@Utype_enchant_data@@@Z	100.0000	100.0000	100.0000	0x38ed0
+ai_tactical	?set_melee_enemies@type_AI_spellcaster@@QAEXXZ	95.2778	95.2778	95.2778	0x3bf20
+ai_tactical	?should_attack_now@type_AI_spellcaster@@QAEEPBVarmy@@@Z	85.5822	85.5822	85.5822	0x36c60
+ai_tactical	?simulate_attack@type_AI_combat_parameters@@QAEXPBVarmy@@PAJ01EJ@Z	100.0000	100.0000	100.0000	0x359b0
+ai_tactical	?value_of_luck_and_morale@@YINJJNN@Z	100.0000	100.0000	100.0000	0x35850
+ai_tactical	type_AI_attack_hex_chooser_check_adjacent_hexes	0.0000	0.0000	0.0000	0x36300
+ai_tactical	type_AI_combat_parameters_type_AI_combat_parameters	0.0000	0.0000	0.0000	0x35ec0
+ai_tactical	type_AI_spellcaster_cast_spell	0.0000	0.0000	0.0000	0x3c800
+ai_tactical	type_AI_spellcaster_consider_chain_lightning	0.0000	0.0000	0.0000	0x37310
+ai_tactical	type_AI_spellcaster_consider_earthquake	0.0000	0.0000	0.0000	0x3b8f0
+ai_tactical	type_AI_spellcaster_consider_enchantment	0.0000	0.0000	0.0000	0x3a910
+ai_tactical	type_AI_spellcaster_consider_resurrect	0.0000	0.0000	0.0000	0x3aca0
+ai_tactical	type_AI_spellcaster_consider_sacrifice	0.0000	0.0000	0.0000	0x3af50
+ai_tactical	type_AI_spellcaster_consider_sacrifice_3b1e0	0.0000	0.0000	0.0000	0x3b1e0
+ai_tactical	type_AI_spellcaster_consider_single_enchantment	0.0000	0.0000	0.0000	0x3a670
+ai_tactical	type_AI_spellcaster_consider_spell	0.0000	0.0000	0.0000	0x3bb20
+ai_tactical	type_AI_spellcaster_consider_teleport	0.0000	0.0000	0.0000	0x3aa60
+ai_tactical	type_AI_spellcaster_get_caliph_value	0.0000	0.0000	0.0000	0x3c4a0
+ai_tactical	type_AI_spellcaster_get_cancel_value	0.0000	0.0000	0.0000	0x39a80
+ai_tactical	type_AI_spellcaster_get_chain_lightning_value	0.0000	0.0000	0.0000	0x37190
+ai_tactical	type_AI_spellcaster_get_counterstroke_value	0.0000	0.0000	0.0000	0x39e80
+ai_tactical	type_AI_spellcaster_get_enchantment_function	0.0000	0.0000	0.0000	0x3b690
+ai_tactical	type_AI_spellcaster_get_fire_shield_value	0.0000	0.0000	0.0000	0x3a110
+ai_tactical	type_AI_spellcaster_get_fortune_value	0.0000	0.0000	0.0000	0x38490
+ai_tactical	type_AI_spellcaster_get_muck_and_mire_value	0.0000	0.0000	0.0000	0x39270
+ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000	0.0000	0.0000	0x3c330
+ai_tactical	type_AI_spellcaster_get_protection_value	0.0000	0.0000	0.0000	0x396e0
+ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000	0.0000	0.0000	0x369c0
+armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	40.4615	40.4615	40.4615	0x4aaa0
+armygrp	??0armyGroup@@QAE@XZ	100.0000	100.0000	100.0000	0x4aa80
+armygrp	?Add@armyGroup@@QAEHHHH@Z	100.0000	100.0000	100.0000	0x4ace0
+armygrp	?ArmyGrpFn_0044A460@@YIABV?$bitset@$08@std@@XZ	100.0000	100.0000	100.0000	0x4a460
+armygrp	?CanJoin@armyGroup@@QAEHH@Z	100.0000	100.0000	100.0000	0x4ac50
+armygrp	?Dismiss@armyGroup@@QAEXH@Z	100.0000	100.0000	100.0000	0x4ab60
+armygrp	?GetAlignments@armyGroup@@QAEHPAE@Z	100.0000	100.0000	100.0000	0x4abb0
+armygrp	?GetArmyLuck@armyGroup@@QAEHHPBVhero@@PBVtown@@HE@Z	30.3579	30.3579	30.3579	0x4b3c0
+armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	72.8920	72.8920	72.8920	0x4b100
+armygrp	?GetArmySizeName@armyGroup@@SIPBDHH@Z	100.0000	100.0000	100.0000	0x4ade0
+armygrp	?GetLuck@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EE@Z	85.4592	85.4592	85.4592	0x4b2d0
+armygrp	?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z	88.4346	88.4346	88.4346	0x4ae60
+armygrp	?GetNativeTerrain@armyGroup@@QAE?AW4TTerrainType@@XZ	100.0000	100.0000	100.0000	0x4c590
+armygrp	?GetNumArmies@armyGroup@@QAEHXZ	100.0000	100.0000	100.0000	0x4acc0
+armygrp	?HasAllUndead@armyGroup@@QAEEXZ	100.0000	100.0000	100.0000	0x4ab20
+armygrp	?HasCreatures@armyGroup@@QAEEXZ	100.0000	100.0000	100.0000	0x496a0
+armygrp	?Initialize@armyGroup@@QAEXXZ	100.0000	100.0000	100.0000	0x4ab00
+armygrp	?IsMember@armyGroup@@QAEEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4ab80
+armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	54.4022	54.4022	54.4022	0x4b620
+armygrp	?Swap@armyGroup@@QAEXHPAV1@H@Z	100.0000	100.0000	100.0000	0x4ad60
+armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000	100.0000	100.0000	0x4ac80
+armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4adc0
+armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000	100.0000	100.0000	0x4ada0
 # get_spell_work_chance hand-lowered 53.2143 -> 53.0900 (2026-08-07):
 # the old max was tuned under non-/Op; /Op is now the engine-wide
 # base profile and this unmatched float function re-tunes under it.
-armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	53.1589
-armygrp	?load@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000
-armygrp	?merge_armies@armyGroup@@QAEXPAV1@@Z	84.7652
-armygrp	?modify_spell_damage@@YIJJHW4TCreatureType@@@Z	55.6350
-armygrp	?save@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000
-armygrp	SplitSliderCallback	0.0000
-armygrp	TSplitWindow_TSplitWindow	0.0000
-armygrp	TSplitWindow_TSplitWindow_49e20	0.0000
-armygrp	TSplitWindow_WindowHandler	0.0000
-armygrp	TSplitWindow_scalar_deleting_destructor	0.0000
-armygrp	armyGroup_SplitArmy	0.0000
-armygrp	armyGroup_get_luck_description	0.0000
-armygrp	armyGroup_get_morale_description	0.0000
-basemgr	??0baseManager@@QAE@XZ	100.0000
-border	??1bitmapBorder16@@UAE@XZ	100.0000
-border	??1bitmapBorder@@UAE@XZ	100.0000
-border	??1border@@UAE@XZ	100.0000
-border	??1coloredBorderFrame@@UAE@XZ	100.0000
-border	??_GbitmapBorder16@@UAEPAXI@Z	100.0000
-border	??_GbitmapBorder@@UAEPAXI@Z	100.0000
-border	??_Gborder@@UAEPAXI@Z	100.0000
-border	?Draw2@bitmapBorder16@@QAEXXZ	100.0000
-border	?Draw@bitmapBorder16@@UAEXXZ	100.0000
-border	?Draw@bitmapBorder@@UAEXXZ	100.0000
-border	?GetRealHeight@bitmapBorder@@UAEHXZ	100.0000
-border	?GetRealWidth@bitmapBorder@@UAEHXZ	100.0000
-border	?SetImage@bitmapBorder@@QAEXPBD@Z	100.0000
-border	?SetPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000
-border	?zBufferDraw@bitmapBorder@@QAEXPAGH@Z	100.0000
-button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000
-button	??0textButton@@QAE@HHHHHPBD00HHEHHH@Z	88.4400
-button	??0type_func_button@@QAE@JJJJJPBDP6IHPAVmessage@@@ZHH@Z	100.0000
-button	??1button@@UAE@XZ	100.0000
-button	??1textButton@@UAE@XZ	100.0000
-button	??1type_func_button@@UAE@XZ	100.0000
-button	??_Gbutton@@UAEPAXI@Z	100.0000
-button	??_GtextButton@@UAEPAXI@Z	100.0000
-button	??_Gtype_func_button@@UAEPAXI@Z	100.0000
-button	?Draw@button@@UAEXXZ	100.0000
-button	?Draw@textButton@@UAEXXZ	93.9216
-button	?Main@button@@UAEHPAVmessage@@@Z	84.6566
-button	?Main@type_func_button@@UAEHPAVmessage@@@Z	100.0000
-button	?Select@button@@QAEHPAVmessage@@@Z	100.0000
-button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000
-button	?_vslot12@button@@UAEXH@Z	100.0000
-castle	?GetBuildingName@@YIPBDHH@Z	100.0000
-cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110
-cmbtmgr	?CombatIsOver@combatManager@@QAEEXZ	100.0000
-cmbtmgr	?GetGridIndex@combatManager@@QAEHHH@Z	100.0000
-cmbtmgr	?GetTargetWallIndex@@YIHH@Z	100.0000
-cmbtmgr	?HexIsBlocked@combatManager@@QAEEH@Z	100.0000
-cmbtmgr	?InCastle@@YIEH@Z	100.0000
-cmbtmgr	?IsInMoat@combatManager@@QAEEHPAH@Z	100.0000
-cmbtmgr	?IsWinner@combatManager@@QAEEH@Z	100.0000
-cmbtmgr	?LeftOfMoat@@YIEH@Z	100.0000
-cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXPBVarmy@@H@Z	100.0000
-cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000
-cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXPBVarmy@@@Z	100.0000
-cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872
-cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000
-cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000
-cmbtmgr	?enemy_is_adjacent@combatManager@@QAEEPAVarmy@@HPBV2@@Z	100.0000
-cmbtmgr	?get_distance@@YIJJJ@Z	100.0000
-cmbtmgr	?is_adjacent@combatManager@@QAEEHH@Z	100.0000
-cmbtmgr	?should_lower_door@combatManager@@QAEEPAVarmy@@J@Z	100.0000
-cmbtmgr	combatManager_CheckApplyBadMorale	0.0000
-cmbtmgr	combatManager_CheckApplyGoodMorale	0.0000
-cmbtmgr	combatManager_Close	0.0000
-cmbtmgr	combatManager_CombatSystemOptions	0.0000
-cmbtmgr	combatManager_DamageWall	0.0000
-cmbtmgr	combatManager_DetermineCombatTerrain	0.0000
-cmbtmgr	combatManager_FreeIcons	0.0000
-cmbtmgr	combatManager_GenerateMap	0.0000
-cmbtmgr	combatManager_GetBackgroundName	0.0000
-cmbtmgr	combatManager_GetMissileStartingPosition	0.0000
-cmbtmgr	combatManager_InLineOfSight	0.0000
-cmbtmgr	combatManager_InitNonVisualVars	0.0000
-cmbtmgr	combatManager_InitializeArchers	0.0000
-cmbtmgr	combatManager_KeepAttack	0.0000
-cmbtmgr	combatManager_LearnSpellFromEagleEye	0.0000
-cmbtmgr	combatManager_LoadArmies	0.0000
-cmbtmgr	combatManager_LoadIcons	0.0000
-cmbtmgr	combatManager_LoadWallTraitsTable	0.0000
-cmbtmgr	combatManager_LootDeadHero	0.0000
-cmbtmgr	combatManager_LowerDoor	0.0000
-cmbtmgr	combatManager_MakeCreaturesVanish	0.0000
-cmbtmgr	combatManager_NextArmy	0.0000
-cmbtmgr	combatManager_Open	0.0000
-cmbtmgr	combatManager_PlaceAllObstacles	0.0000
-cmbtmgr	combatManager_PlaceLargeObstacle	0.0000
-cmbtmgr	combatManager_PowEffect	0.0000
-cmbtmgr	combatManager_RaiseDoor	0.0000
-cmbtmgr	combatManager_RaiseSkeletons	0.0000
-cmbtmgr	combatManager_SetNextArmy	0.0000
-cmbtmgr	combatManager_SetupAdjacencyArray	0.0000
-cmbtmgr	combatManager_SetupAndLoadObstacles	0.0000
-cmbtmgr	combatManager_SetupCombat	0.0000
-cmbtmgr	combatManager_ShootAnimatedMissile	0.0000
-cmbtmgr	combatManager_ShootBallisticMissile	0.0000
-cmbtmgr	combatManager_ShootMissile	0.0000
-cmbtmgr	combatManager_ShotIsNotOptimal	0.0000
-cmbtmgr	combatManager_UpdateArmyGroup	0.0000
-cmbtmgr	combatManager_UpdateArmyLuckAndMorale	0.0000
-cmbtmgr	combatManager_ViewArmy	0.0000
-cmbtmgr	combatManager_combatManager	0.0000
-cmbtmgr	combatManager_damage_message	0.0000
-cmbtmgr	combatManager_place_obstacle	0.0000
-compress	@compress2@20	100.0000
-crc32	@crc32@12	100.0000
-deflate	@deflate@8	100.0000
-deflate	@deflateEnd@4	100.0000
-deflate	@deflateInit2_@32	100.0000
-deflate	@deflateInit_@16	100.0000
-deflate	@deflateReset@4	100.0000
-deflate	@deflate_fast@8	100.0000
-deflate	@deflate_slow@8	100.0000
-deflate	@deflate_stored@8	100.0000
-deflate	@fill_window@4	100.0000
-deflate	@flush_pending@4	100.0000
-deflate	@lm_init@4	100.0000
-deflate	@longest_match@8	100.0000
-deflate	@putShortMSB@8	100.0000
-deflate	@read_buf@12	100.0000
-exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000
-exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	68.3663
-exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000
-exec	?MainLoop@executive@@QAEXXZ	88.1290
-exec	?RemoveManager@executive@@QAEXPAVbaseManager@@@Z	100.0000
-findpath	??0searchArray@@QAE@XZ	100.0000
-findpath	??1searchArray@@QAE@XZ	100.0000
-findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000
-findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000
-findpath	?Close@searchArray@@QAEXXZ	100.0000
-findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	88.0238
-findpath	?Init@searchArray@@QAEXXZ	100.0000
-findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000
-findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177
-findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	100.0000
-findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000
-findpath	?lower_door@searchArray@@QAEXXZ	100.0000
-findpath	?set_moat@searchArray@@QAEXPBVarmy@@@Z	100.0000
-findpath	searchArray_FindCombatPath	0.0000
-findpath	searchArray_PushCombatPoint	0.0000
-findpath	searchArray_PushPoint	0.0000
-findpath	searchArray_TestPossibleDirections	0.0000
-findpath	searchArray_mark_teleport	0.0000
-font	??1font@@UAE@XZ	96.6333
-font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	96.8123
-font	?DrawCharacter@font@@QAEXHPAVBitmap16Bit@@HHH@Z	78.2623
-font	?GetCharacterWidth@font@@QAEHE@Z	100.0000
-font	?LineLength@font@@QAEHPBDH@Z	91.7423
-font	?LineWidth@font@@QAEHPBD@Z	100.0000
-font	?LongestLineWidth@font@@QAEHPBD@Z	100.0000
-font	?LongestWrappedLineWidth@font@@QAEHPBDH@Z	100.0000
-font	?SetPalette@font@@QAEXPBVTPalette16@@@Z	100.0000
-font	?get_string_width@font@@QAEJPBD@Z	100.0000
-font	?longest_word_length@font@@QAEHPBD@Z	100.0000
-game	??0generator@@QAE@XZ	100.0000
-game	??0playerData@@QAE@XZ	100.0000
-game	??1playerData@@QAE@XZ	100.0000
-game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000
-game	?ClearNetInfo@playerData@@QAEXXZ	100.0000
-game	?FindHero@playerData@@QAEHH@Z	100.0000
-game	?FindTown@playerData@@QAEHH@Z	100.0000
-game	?GetGamePosFromDPID@game@@QAEHK@Z	100.0000
-game	?GetGeneratorId@game@@QAEHHHH@Z	100.0000
-game	?GetHeroBoat@game@@QAEPAVboat@@HE@Z	100.0000
-game	?GetLocalPlayer@game@@QAEPAVplayerData@@XZ	100.0000
-game	?GetLocalPlayerGamePos@game@@QAEHXZ	100.0000
-game	?GetName@playerData@@QAEPADXZ	95.8491
-game	?GetNumObelisks@@YIHH@Z	100.0000
-game	?GetPlayerName@game@@QAEPADH@Z	99.5312
-game	?GetTownId@game@@QAEHHHH@Z	100.0000
-game	?GetWorldMapData@game@@QAEPAVNewfullMap@@XZ	100.0000
-game	?GiveArmy@game@@QAEXPAVarmyGroup@@HHH@Z	100.0000
-game	?Grow@generator@@QAEXH@Z	100.0000
-game	?HasCapitol@playerData@@QAE_NXZ	100.0000
-game	?HasMobileHero@playerData@@QAE_NXZ	100.0000
-game	?IsHuman@game@@QBE_NH@Z	100.0000
-game	?IsHuman@playerData@@QBE_NXZ	100.0000
-game	?IsLastHuman@game@@QBE_NH@Z	100.0000
-game	?IsLocalHuman@game@@QBE_NH@Z	100.0000
-game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000
-game	?IsMultiplayer@game@@QBE_NXZ	100.0000
-game	?MineTypesOwned@game@@QAEHHH@Z	100.0000
-game	?NextHero@playerData@@QAEHXZ	100.0000
-game	?NextTown@playerData@@QAEHXZ	100.0000
+armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	53.1589	53.1589	53.2143	0x4a4d0
+armygrp	?load@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x4aa40
+armygrp	?merge_armies@armyGroup@@QAEXPAV1@@Z	84.7652	84.7652	84.7652	0x4b820
+armygrp	?modify_spell_damage@@YIJJHW4TCreatureType@@@Z	55.6350	55.6350	55.6350	0x4b4b0
+armygrp	?save@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x4aa00
+armygrp	SplitSliderCallback	0.0000	0.0000	0.0000	0x496c0
+armygrp	TSplitWindow_TSplitWindow	0.0000	0.0000	0.0000	0x49790
+armygrp	TSplitWindow_TSplitWindow_49e20	0.0000	0.0000	0.0000	0x49e20
+armygrp	TSplitWindow_WindowHandler	0.0000	0.0000	0.0000	0x4a180
+armygrp	TSplitWindow_scalar_deleting_destructor	0.0000	0.0000	0.0000	0x49df0
+armygrp	armyGroup_SplitArmy	0.0000	0.0000	0.0000	0x49e90
+armygrp	armyGroup_get_luck_description	0.0000	0.0000	0.0000	0x4c1c0
+armygrp	armyGroup_get_morale_description	0.0000	0.0000	0.0000	0x4b960
+basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530
+border	??1bitmapBorder16@@UAE@XZ	100.0000	100.0000	100.0000	0x50750
+border	??1bitmapBorder@@UAE@XZ	100.0000	100.0000	100.0000	0x50390
+border	??1border@@UAE@XZ	100.0000	100.0000	100.0000	0x4ff50
+border	??1coloredBorderFrame@@UAE@XZ	100.0000	100.0000	100.0000	0x501d0
+border	??_GbitmapBorder16@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x50720
+border	??_GbitmapBorder@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x50360
+border	??_Gborder@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4fee0
+border	?Draw2@bitmapBorder16@@QAEXXZ	100.0000	100.0000	100.0000	0x50810
+border	?Draw@bitmapBorder16@@UAEXXZ	100.0000	100.0000	100.0000	0x507b0
+border	?Draw@bitmapBorder@@UAEXXZ	100.0000	100.0000	100.0000	0x50450
+border	?GetRealHeight@bitmapBorder@@UAEHXZ	100.0000	100.0000	100.0000	0x504b0
+border	?GetRealWidth@bitmapBorder@@UAEHXZ	100.0000	100.0000	100.0000	0x504a0
+border	?SetImage@bitmapBorder@@QAEXPBD@Z	100.0000	100.0000	100.0000	0x504c0
+border	?SetPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000	100.0000	100.0000	0x50520
+border	?zBufferDraw@bitmapBorder@@QAEXPAGH@Z	100.0000	100.0000	100.0000	0x503f0
+button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000	100.0000	100.0000	0x55ef0
+button	??0textButton@@QAE@HHHHHPBD00HHEHHH@Z	88.4400	88.4400	88.4400	0x56a50
+button	??0type_func_button@@QAE@JJJJJPBDP6IHPAVmessage@@@ZHH@Z	100.0000	100.0000	100.0000	0x56d30
+button	??1button@@UAE@XZ	100.0000	100.0000	100.0000	0x560f0
+button	??1textButton@@UAE@XZ	100.0000	100.0000	100.0000	0x56bf0
+button	??1type_func_button@@UAE@XZ	100.0000	100.0000	100.0000	0x56db0
+button	??_Gbutton@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x55ec0
+button	??_GtextButton@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x56a20
+button	??_Gtype_func_button@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x56d80
+button	?Draw@button@@UAEXXZ	100.0000	100.0000	100.0000	0x56940
+button	?Draw@textButton@@UAEXXZ	93.9216	93.9216	93.9216	0x56ca0
+button	?Main@button@@UAEHPAVmessage@@@Z	84.6566	84.6566	84.6566	0x56190
+button	?Main@type_func_button@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x56e50
+button	?Select@button@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x56860
+button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000	100.0000	100.0000	0x569e0
+button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10
+castle	?GetBuildingName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x610e0
+cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110	75.0110	75.0110	0x6a350
+cmbtmgr	?CombatIsOver@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x65830
+cmbtmgr	?GetGridIndex@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x647a0
+cmbtmgr	?GetTargetWallIndex@@YIHH@Z	100.0000	100.0000	100.0000	0x65970
+cmbtmgr	?HexIsBlocked@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x69a10
+cmbtmgr	?InCastle@@YIEH@Z	100.0000	100.0000	100.0000	0x67460
+cmbtmgr	?IsInMoat@combatManager@@QAEEHPAH@Z	100.0000	100.0000	100.0000	0x69dc0
+cmbtmgr	?IsWinner@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x658b0
+cmbtmgr	?LeftOfMoat@@YIEH@Z	100.0000	100.0000	100.0000	0x67490
+cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXPBVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0
+cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0
+cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x68730
+cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872	87.2872	87.2872	0x66b30
+cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0
+cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510
+cmbtmgr	?enemy_is_adjacent@combatManager@@QAEEPAVarmy@@HPBV2@@Z	100.0000	100.0000	100.0000	0x69600
+cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670
+cmbtmgr	?is_adjacent@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x674c0
+cmbtmgr	?should_lower_door@combatManager@@QAEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
+cmbtmgr	combatManager_CheckApplyBadMorale	0.0000	0.0000	0.0000	0x64b40
+cmbtmgr	combatManager_CheckApplyGoodMorale	0.0000	0.0000	0.0000	0x64920
+cmbtmgr	combatManager_Close	0.0000	0.0000	0.0000	0x63260
+cmbtmgr	combatManager_CombatSystemOptions	0.0000	0.0000	0.0000	0x686b0
+cmbtmgr	combatManager_DamageWall	0.0000	0.0000	0.0000	0x65990
+cmbtmgr	combatManager_DetermineCombatTerrain	0.0000	0.0000	0.0000	0x643b0
+cmbtmgr	combatManager_FreeIcons	0.0000	0.0000	0.0000	0x63500
+cmbtmgr	combatManager_GenerateMap	0.0000	0.0000	0.0000	0x642d0
+cmbtmgr	combatManager_GetBackgroundName	0.0000	0.0000	0.0000	0x646d0
+cmbtmgr	combatManager_GetMissileStartingPosition	0.0000	0.0000	0.0000	0x69880
+cmbtmgr	combatManager_InLineOfSight	0.0000	0.0000	0.0000	0x67840
+cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
+cmbtmgr	combatManager_InitializeArchers	0.0000	0.0000	0.0000	0x66c50
+cmbtmgr	combatManager_KeepAttack	0.0000	0.0000	0.0000	0x65ad0
+cmbtmgr	combatManager_LearnSpellFromEagleEye	0.0000	0.0000	0.0000	0x69fe0
+cmbtmgr	combatManager_LoadArmies	0.0000	0.0000	0.0000	0x63600
+cmbtmgr	combatManager_LoadIcons	0.0000	0.0000	0.0000	0x63370
+cmbtmgr	combatManager_LoadWallTraitsTable	0.0000	0.0000	0.0000	0x62990
+cmbtmgr	combatManager_LootDeadHero	0.0000	0.0000	0.0000	0x6a070
+cmbtmgr	combatManager_LowerDoor	0.0000	0.0000	0.0000	0x671c0
+cmbtmgr	combatManager_MakeCreaturesVanish	0.0000	0.0000	0.0000	0x66e00
+cmbtmgr	combatManager_NextArmy	0.0000	0.0000	0.0000	0x65080
+cmbtmgr	combatManager_Open	0.0000	0.0000	0.0000	0x62a20
+cmbtmgr	combatManager_PlaceAllObstacles	0.0000	0.0000	0.0000	0x66a70
+cmbtmgr	combatManager_PlaceLargeObstacle	0.0000	0.0000	0.0000	0x668a0
+cmbtmgr	combatManager_PowEffect	0.0000	0.0000	0.0000	0x68990
+cmbtmgr	combatManager_RaiseDoor	0.0000	0.0000	0.0000	0x672e0
+cmbtmgr	combatManager_RaiseSkeletons	0.0000	0.0000	0.0000	0x69f20
+cmbtmgr	combatManager_SetNextArmy	0.0000	0.0000	0.0000	0x65330
+cmbtmgr	combatManager_SetupAdjacencyArray	0.0000	0.0000	0.0000	0x640a0
+cmbtmgr	combatManager_SetupAndLoadObstacles	0.0000	0.0000	0.0000	0x66290
+cmbtmgr	combatManager_SetupCombat	0.0000	0.0000	0.0000	0x639f0
+cmbtmgr	combatManager_ShootAnimatedMissile	0.0000	0.0000	0.0000	0x67db0
+cmbtmgr	combatManager_ShootBallisticMissile	0.0000	0.0000	0.0000	0x67a00
+cmbtmgr	combatManager_ShootMissile	0.0000	0.0000	0.0000	0x68220
+cmbtmgr	combatManager_ShotIsNotOptimal	0.0000	0.0000	0.0000	0x67600
+cmbtmgr	combatManager_UpdateArmyGroup	0.0000	0.0000	0.0000	0x641f0
+cmbtmgr	combatManager_UpdateArmyLuckAndMorale	0.0000	0.0000	0.0000	0x69750
+cmbtmgr	combatManager_ViewArmy	0.0000	0.0000	0.0000	0x68860
+cmbtmgr	combatManager_combatManager	0.0000	0.0000	0.0000	0x62760
+cmbtmgr	combatManager_damage_message	0.0000	0.0000	0.0000	0x69a90
+cmbtmgr	combatManager_place_obstacle	0.0000	0.0000	0.0000	0x66010
+compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40
+crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0
+deflate	@deflate@8	100.0000	100.0000	100.0000	0x204ac0
+deflate	@deflateEnd@4	100.0000	100.0000	100.0000	0x204e10
+deflate	@deflateInit2_@32	100.0000	100.0000	100.0000	0x204850
+deflate	@deflateInit_@16	100.0000	100.0000	100.0000	0x204830
+deflate	@deflateReset@4	100.0000	100.0000	100.0000	0x204a50
+deflate	@deflate_fast@8	100.0000	100.0000	100.0000	0x205220
+deflate	@deflate_slow@8	100.0000	100.0000	100.0000	0x2056c0
+deflate	@deflate_stored@8	100.0000	100.0000	100.0000	0x204f40
+deflate	@fill_window@4	100.0000	100.0000	100.0000	0x205090
+deflate	@flush_pending@4	100.0000	100.0000	100.0000	0x204da0
+deflate	@lm_init@4	100.0000	100.0000	100.0000	0x204ea0
+deflate	@longest_match@8	100.0000	100.0000	100.0000	0x205550
+deflate	@putShortMSB@8	100.0000	100.0000	100.0000	0x204d70
+deflate	@read_buf@12	100.0000	100.0000	100.0000	0x2051b0
+exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
+exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	68.3663	68.3663	68.3663	0xb0c70
+exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0a10
+exec	?MainLoop@executive@@QAEXXZ	88.1290	88.1290	88.1290	0xb0e40
+exec	?RemoveManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0bf0
+findpath	??0searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb1370
+findpath	??1searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb13e0
+findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.0000	0xb1740
+findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530
+findpath	?Close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500
+findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	88.0238	88.0238	88.0238	0xb18c0
+findpath	?Init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460
+findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880
+findpath	?SeedCombatPosition@searchArray@@QAEXPBVarmy@@JJEJ@Z	89.8177	89.8177	89.8177	0xb2da0
+findpath	?getCellData@searchArray@@QAEPAUpathCell@@J@Z	100.0000	100.0000	100.0000	0xb3b90
+findpath	?get_travel_time@searchArray@@QAEJPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb3f20
+findpath	?lower_door@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb3f10
+findpath	?set_moat@searchArray@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0xb3290
+findpath	searchArray_FindCombatPath	0.0000	0.0000	0.0000	0xb3400
+findpath	searchArray_PushCombatPoint	0.0000	0.0000	0.0000	0xb3bb0
+findpath	searchArray_PushPoint	0.0000	0.0000	0.0000	0xb1a70
+findpath	searchArray_TestPossibleDirections	0.0000	0.0000	0.0000	0xb2300
+findpath	searchArray_mark_teleport	0.0000	0.0000	0.0000	0xb2ff0
+font	??1font@@UAE@XZ	96.6333	96.6333	96.6333	0xb5110
+font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	96.8123	96.8123	96.8123	0xb5490
+font	?DrawCharacter@font@@QAEXHPAVBitmap16Bit@@HHH@Z	78.2623	78.2623	78.2623	0xb51a0
+font	?GetCharacterWidth@font@@QAEHE@Z	100.0000	100.0000	100.0000	0xb57a0
+font	?LineLength@font@@QAEHPBDH@Z	91.7423	91.7423	91.7423	0xb5820
+font	?LineWidth@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5920
+font	?LongestLineWidth@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5990
+font	?LongestWrappedLineWidth@font@@QAEHPBDH@Z	100.0000	100.0000	100.0000	0xb5a80
+font	?SetPalette@font@@QAEXPBVTPalette16@@@Z	100.0000	100.0000	100.0000	0xb5180
+font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0
+font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10
+game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
+game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
+game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
+game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130
+game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
+game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0
+game	?FindTown@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbaa10
+game	?GetGamePosFromDPID@game@@QAEHK@Z	100.0000	100.0000	100.0000	0xcec20
+game	?GetGeneratorId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb900
+game	?GetHeroBoat@game@@QAEPAVboat@@HE@Z	100.0000	100.0000	100.0000	0xce900
+game	?GetLocalPlayer@game@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xce9b0
+game	?GetLocalPlayerGamePos@game@@QAEHXZ	100.0000	100.0000	100.0000	0xcea20
+game	?GetName@playerData@@QAEPADXZ	95.8491	95.8491	95.8491	0xbadb0
+game	?GetNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0
+game	?GetPlayerName@game@@QAEPADH@Z	99.5312	99.5312	99.5312	0xceb60
+game	?GetTownId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb870
+game	?GetWorldMapData@game@@QAEPAVNewfullMap@@XZ	100.0000	100.0000	100.0000	0xbb160
+game	?GiveArmy@game@@QAEXPAVarmyGroup@@HHH@Z	100.0000	100.0000	100.0000	0xca340
+game	?Grow@generator@@QAEXH@Z	100.0000	100.0000	100.0000	0xb8a60
+game	?HasCapitol@playerData@@QAE_NXZ	100.0000	100.0000	100.0000	0xb9f40
+game	?HasMobileHero@playerData@@QAE_NXZ	100.0000	100.0000	100.0000	0xbab90
+game	?IsHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce940
+game	?IsHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbada0
+game	?IsLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50
+game	?IsLocalHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce970
+game	?IsLocalHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbad80
+game	?IsMultiplayer@game@@QBE_NXZ	100.0000	100.0000	100.0000	0xcec90
+game	?MineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70
+game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40
+game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 # game: 32 flat/mangled rows deleted 2026-08-08, all superseded by
 # promoted source names in the same change. Two are renames rather
 # than plain promotions: ?HasMobileHero@playerData@@QAEEXZ ->
@@ -499,244 +498,244 @@ game	?NextTown@playerData@@QAEHXZ	100.0000
 # byte-only materialisation agrees), and playerData_SetName ->
 # ?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z (the claim at
 # 0x4ba130 was misattributed; the body reads a CNetPlayerInfo).
-game	?SetMapSize@game@@QAEXHH@Z	100.0000
-game	?StartAITheme@@YIXXZ	100.0000
-game	?TurnOffAIMusic@game@@QAEXXZ	100.0000
-game	?TurnOnAIMusic@game@@QAEXXZ	100.0000
-game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000
-game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000
-game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000
-game	ComputeUALoc	0.0000
-game	HeroExtra_HeroExtra	0.0000
-game	ImmMouseWindowMoved	0.0000
-game	InitImmMouse	0.0000
-game	game_ClaimGarrison	0.0000
-game	game_ClaimGenerator	0.0000
-game	game_ClaimMine	0.0000
-game	game_ClaimShipyard	0.0000
-game	game_ClaimTown	0.0000
-game	game_ConvertObject	0.0000
-game	game_CreateBoat	0.0000
-game	game_CreateTownHeroes	0.0000
-game	game_GetNewHeroId	0.0000
-game	game_GetRandomArtifactId	0.0000
-game	game_GetRandomMonster	0.0000
-game	game_GetRandomSpell	0.0000
-game	game_GetStartingHeroId	0.0000
-game	game_InsertObject	0.0000
-game	game_Load	0.0000
-game	game_LoadBoatPool	0.0000
-game	game_LoadGarrisonPool	0.0000
-game	game_LoadMinePool	0.0000
-game	game_LoadRumours	0.0000
-game	game_LoadSignPool	0.0000
-game	game_MakeTerrainVisible	0.0000
-game	game_ProcessRandomObjects	0.0000
-game	game_Save	0.0000
-game	game_SaveBlackMarkets	0.0000
-game	game_SaveBoatPool	0.0000
-game	game_SaveGame	0.0000
-game	game_SaveGarrisonPool	0.0000
-game	game_SaveMinePool	0.0000
-game	game_SaveRumours	0.0000
-game	game_SaveSignPool	0.0000
-game	game_SetRandomHeroArmies	0.0000
-game	game_SetupPuzzlePieces	0.0000
-game	game_ViewArmy	0.0000
-game	game_calculate_production	0.0000
-game	game_game	0.0000
-game	game_game_ce5b0	0.0000
-game	game_get_new_boat_id	0.0000
-game	game_get_puzzle_origin	0.0000
-game	game_get_random_lith	0.0000
-game	game_get_underground_gate_exit	0.0000
-game	generator_Initialize	0.0000
-game	generator_load	0.0000
-game	generator_save	0.0000
-game	generator_update_bonus	0.0000
-game	playerData_Init	0.0000
-game	playerData_NumOfGivenArtifact	0.0000
-game	playerData_add_garrison_hero	0.0000
-game	playerData_guess_grail_location	0.0000
-game	playerData_load	0.0000
-game	playerData_save	0.0000
-gzio	@check_header@4	100.0000
-gzio	@destroy@4	100.0000
-gzio	@do_flush@8	100.0000
-gzio	@getLong@4	100.0000
-gzio	@get_byte@4	100.0000
-gzio	@gz_open@12	100.0000
-gzio	@gzclose@4	100.0000
-gzio	@gzopen@8	100.0000
-gzio	@gzread@12	100.0000
-gzio	@gzwrite@12	100.0000
-gzio	@putLong@8	100.0000
-hero	??0type_obscuring_object@@QAE@XZ	100.0000
-hero	?AddSpell@hero@@QAEXH@Z	100.0000
-hero	?ApplyBattleLossTemps@hero@@QAEXXZ	100.0000
-hero	?ApplyBattleWinTemps@hero@@QAEXXZ	100.0000
-hero	?CreatureTypeCount@hero@@QAEHH@Z	100.0000
-hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	96.5278
-hero	?GetArcheryFactor@hero@@QAEMXZ	100.0000
-hero	?GetDefenseFactor@hero@@QAEMXZ	100.0000
-hero	?GetEagleEyeChance@hero@@QAEMXZ	100.0000
-hero	?GetEstatesBonus@hero@@QAEHXZ	100.0000
-hero	?GetExperience@hero@@SIHH@Z	100.0000
-hero	?GetExperienceBonusFactor@hero@@QAEMXZ	100.0000
-hero	?GetExperienceIncrement@hero@@SIHH@Z	98.1013
-hero	?GetFirstAidFactor@hero@@QAEMXZ	100.0000
-hero	?GetHighestSchool@hero@@QAE?AW4TSpellSchool@@W42@@Z	98.3750
-hero	?GetIntelligenceFactor@hero@@QAEMXZ	100.0000
-hero	?GetMagicResistanceFactor@hero@@QAEMXZ	100.0000
-hero	?GetManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000
-hero	?GetManaFrame@hero@@QAEHXZ	88.9130
-hero	?GetMobility@hero@@QAEHXZ	100.0000
-hero	?GetMobilityFrame@hero@@QAEHXZ	90.4167
-hero	?GetMysticismBonus@hero@@QAEHXZ	100.0000
-hero	?GetNecromancyCreature@hero@@QAE?AW4TCreatureType@@XZ	100.0000
-hero	?GetNthSS@hero@@QAEHH@Z	100.0000
-hero	?GetOffenseFactor@hero@@QAEMXZ	100.0000
-hero	?GetSpellDurationBonus@hero@@QAEHXZ	100.0000
-hero	?GetSpellSchoolLevel@hero@@QAEHW4TSpellSchool@@H@Z	100.0000
-hero	?GetStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000
-hero	?GetStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000
-hero	?GetSurrenderCostFactor@hero@@QAEMXZ	100.0000
-hero	?GetVisibility@hero@@QAEHXZ	100.0000
-hero	?GiveSS@hero@@QAEHHH@Z	100.0000
-hero	?HasArtifact@hero@@QAEEH@Z	100.0000
-hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000
-hero	?IsWieldingArtifact@hero@@QAEEH@Z	100.0000
-hero	?SetSS@hero@@QAEXHH@Z	3.8000
-hero	?SetVisitedArena@hero@@QAEXPBVNewmapCell@@@Z	100.0000
-hero	?TakeSS@hero@@QAEHHH@Z	100.0000
-hero	?TransferArtifacts@hero@@QAEXPAV1@@Z	97.9658
-hero	?UpgradeCreatures@hero@@QAEXHH@Z	100.0000
-hero	?VisitedArena@hero@@QBE_NPBVNewmapCell@@@Z	100.0000
-hero	?WalkOnWater@hero@@QAEXH@Z	100.0000
-hero	?add_to_backpack@hero@@QAEEPBUtype_artifact@@J@Z	100.0000
-hero	?any@?$bitset@$0JA@@std@@QBE_NXZ	100.0000
-hero	?begin@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000
-hero	?belongs_to_human@hero@@QAEEXZ	100.0000
-hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000
-hero	?get_combat_speed_bonus@hero@@QAEJXZ	100.0000
-hero	?get_combat_value_modifier@hero@@QAEMXZ	100.0000
-hero	?get_equipped_artifacts@hero@@QAEJE@Z	100.0000
-hero	?get_hit_point_bonus@hero@@QAEJH@Z	100.0000
-hero	?get_last_backpack_index@hero@@QAEJXZ	100.0000
-hero	?get_number_in_backpack@hero@@QAEJE@Z	100.0000
-hero	?get_obscured_town@type_obscuring_object@@QAEPAVtown@@XZ	100.0000
-hero	?get_player@hero@@QAEPAVplayerData@@XZ	100.0000
-hero	?get_primary_skill_total@hero@@QAEFXZ	75.5833
-hero	?get_spell_level@hero@@QAEHHH@Z	100.0000
-hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000
-hero	?is_in_patrol_radius@hero@@QAEEUtype_point@@@Z	100.0000
-hero	?modify_spell_damage@hero@@QAEJHHPBVarmy@@@Z	100.0000
-hero	?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z	100.0000
-hero	?remove_artifact@hero@@QAEEW4TArtifact@@@Z	100.0000
-hero	?remove_backpack_artifact@hero@@QAEXF@Z	100.0000
-hero	?rotate_backpack_left@hero@@QAEXXZ	100.0000
-hero	?rotate_backpack_right@hero@@QAEXXZ	100.0000
-hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000
-hero	HeroView	0.0000
-hero	THeroScreenWindow_ExitDialog	0.0000
-hero	THeroScreenWindow_HeroMessageUpdate	0.0000
-hero	THeroScreenWindow_SetupHeroView	0.0000
-hero	THeroScreenWindow_THeroScreenWindow	0.0000
-hero	THeroScreenWindow_THeroScreenWindow_e1550	0.0000
-hero	THeroScreenWindow_UpdateHeroLocator	0.0000
-hero	THeroScreenWindow_UpdateHeroScreenStatusBar	0.0000
-hero	THeroScreenWindow_WindowHandler	0.0000
-hero	THeroScreenWindow_update_all_slots	0.0000
-hero	THeroScreenWindow_update_slot	0.0000
-hero	UpdateBackpack	0.0000
-hero	__h3cg$hero$scalar_deleting_dtor$THeroScreenWindow	0.0000
-hero	get_skill_award	0.0000
-hero	hero_CheckLevel	0.0000
-hero	hero_Deallocate	0.0000
-hero	hero_Fly	0.0000
-hero	hero_GetHeroSpellBonus	0.0000
-hero	hero_GetLuck	0.0000
-hero	hero_GetMobility	0.0000
-hero	hero_GetMorale	0.0000
-hero	hero_GetNecromancyFactor	0.0000
-hero	hero_GiveArtifact	0.0000
-hero	hero_GiveExperience	0.0000
-hero	hero_GiveResource	0.0000
-hero	hero_HeroFn_004D8B30	0.0000
-hero	hero_HeroFn_004D8F70	0.0000
-hero	hero_HeroFn_004D8FB0	0.0000
-hero	hero_HeroFn_004DBE80	0.0000
-hero	hero_HeroFn_004DBF30	0.0000
-hero	hero_HeroFn_004DC070	0.0000
-hero	hero_HeroFn_004DC100	0.0000
-hero	hero_HeroFn_004E2550	0.0000
-hero	hero_HeroFn_004E2840	0.0000
-hero	hero_HeroFn_004E4EC0	0.0000
-hero	hero_HeroFn_004E6120	0.0000
-hero	hero_HeroScreenUpdate	0.0000
-hero	hero_IsInIdentifyRange	0.0000
-hero	hero_IsMobile	0.0000
-hero	hero_PlaceInMap	0.0000
-hero	hero_UpdateArmies	0.0000
-hero	hero_UpdateStats	0.0000
-hero	hero_UseSpell	0.0000
-hero	hero_ViewArtifact	0.0000
-hero	hero_ViewStat	0.0000
-hero	hero_can_land	0.0000
-hero	hero_can_summon_boat	0.0000
-hero	hero_equip_artifact	0.0000
-hero	hero_find_summonable_boat	0.0000
-hero	hero_get_backpack_error	0.0000
-hero	hero_get_luck_description	0.0000
-hero	hero_get_morale_description	0.0000
-hero	hero_get_special_terrain	0.0000
-hero	hero_hero	0.0000
-hero	hero_hire	0.0000
-hero	hero_initialize	0.0000
-hero	hero_load	0.0000
-hero	hero_remove_artifact	0.0000
-hero	hero_save	0.0000
-hero	hero_update_spell_list	0.0000
-hero	mark_spells	0.0000
-hero	type_artifact_get_description	0.0000
-hero	type_artifact_get_rollover_text	0.0000
-hero	type_obscuring_object_load	0.0000
-hero	type_obscuring_object_obscure_cell	0.0000
-hero	type_obscuring_object_restore_cell	0.0000
-hero	type_obscuring_object_save	0.0000
-hexcell	??0hexcell@@QAE@XZ	100.0000
-hexcell	?get_army@hexcell@@QAEPAVarmy@@XZ	100.0000
-hexcell	?get_dead_army@hexcell@@QAEPAVarmy@@H@Z	100.0000
-iconwdgt	??1iconWidget@@UAE@XZ	100.0000
-iconwdgt	??_GiconWidget@@UAEPAXI@Z	100.0000
-iconwdgt	?GetRealHeight@iconWidget@@UAEHXZ	100.0000
-iconwdgt	?GetRealWidth@iconWidget@@UAEHXZ	100.0000
-iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	72.0056
-iconwdgt	?NextRandomSiegeEngineFrame@iconWidget@@QAEXXZ	86.4111
-iconwdgt	?SetIconFrame@iconWidget@@QAEXH@Z	100.0000
-iconwdgt	?SetSprite@iconWidget@@QAEXPBD@Z	100.0000
-iconwdgt	?handle_click@iconWidget@@UAEEEE@Z	100.0000
-infblock	@inflate_blocks@12	100.0000
-infblock	@inflate_blocks_free@8	100.0000
-infblock	@inflate_blocks_new@12	100.0000
-infblock	@inflate_blocks_reset@12	100.0000
-infcodes	@inflate_codes@12	100.0000
-infcodes	@inflate_codes_free@8	100.0000
-infcodes	@inflate_codes_new@20	100.0000
-inffast	@inflate_fast@24	100.0000
-inflate	@inflate@8	100.0000
-inflate	@inflateEnd@4	100.0000
-inflate	@inflateInit2_@16	100.0000
-inflate	@inflateInit_@12	100.0000
-inflate	@inflateReset@4	100.0000
-inftrees	@huft_build@40	100.0000
-inftrees	@inflate_trees_bits@20	100.0000
-inftrees	@inflate_trees_dynamic@36	100.0000
-inftrees	@inflate_trees_fixed@20	100.0000
-infutil	@inflate_flush@12	100.0000
-initialize	?add_to_included_mask@@YIXPBHPA_J@Z	100.0000
-initialize	?create_included_mask@@YIXPBHPA_J@Z	93.8667
-initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
+game	?SetMapSize@game@@QAEXHH@Z	100.0000	100.0000	100.0000	0xccef0
+game	?StartAITheme@@YIXXZ	100.0000	100.0000	100.0000	0xc6f40
+game	?TurnOffAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6fd0
+game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
+game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0
+game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0
+game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
+game	ComputeUALoc	0.0000	0.0000	0.0000	0xbaed0
+game	HeroExtra_HeroExtra	0.0000	0.0000	0.0000	0xce4b0
+game	ImmMouseWindowMoved	0.0000	0.0000	0.0000	0xb6950
+game	InitImmMouse	0.0000	0.0000	0.0000	0xb6890
+game	game_ClaimGarrison	0.0000	0.0000	0.0000	0xc6960
+game	game_ClaimGenerator	0.0000	0.0000	0.0000	0xc67b0
+game	game_ClaimMine	0.0000	0.0000	0.0000	0xc66e0
+game	game_ClaimShipyard	0.0000	0.0000	0.0000	0xc6a30
+game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
+game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
+game	game_CreateBoat	0.0000	0.0000	0.0000	0xbb250
+game	game_CreateTownHeroes	0.0000	0.0000	0.0000	0xca040
+game	game_GetNewHeroId	0.0000	0.0000	0.0000	0xbb5e0
+game	game_GetRandomArtifactId	0.0000	0.0000	0.0000	0xc94d0
+game	game_GetRandomMonster	0.0000	0.0000	0.0000	0xc92c0
+game	game_GetRandomSpell	0.0000	0.0000	0.0000	0xc95a0
+game	game_GetStartingHeroId	0.0000	0.0000	0.0000	0xbb400
+game	game_InsertObject	0.0000	0.0000	0.0000	0xc9890
+game	game_Load	0.0000	0.0000	0.0000	0xbcda0
+game	game_LoadBoatPool	0.0000	0.0000	0.0000	0xb9a00
+game	game_LoadGarrisonPool	0.0000	0.0000	0.0000	0xb96f0
+game	game_LoadMinePool	0.0000	0.0000	0.0000	0xb9340
+game	game_LoadRumours	0.0000	0.0000	0.0000	0xbbe40
+game	game_LoadSignPool	0.0000	0.0000	0.0000	0xb9070
+game	game_MakeTerrainVisible	0.0000	0.0000	0.0000	0xca240
+game	game_ProcessRandomObjects	0.0000	0.0000	0.0000	0xc9dd0
+game	game_Save	0.0000	0.0000	0.0000	0xbe3f0
+game	game_SaveBlackMarkets	0.0000	0.0000	0.0000	0xbc5d0
+game	game_SaveBoatPool	0.0000	0.0000	0.0000	0xb9c40
+game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0
+game	game_SaveGarrisonPool	0.0000	0.0000	0.0000	0xb98c0
+game	game_SaveMinePool	0.0000	0.0000	0.0000	0xb9580
+game	game_SaveRumours	0.0000	0.0000	0.0000	0xbbc20
+game	game_SaveSignPool	0.0000	0.0000	0.0000	0xb9270
+game	game_SetRandomHeroArmies	0.0000	0.0000	0.0000	0xc9730
+game	game_SetupPuzzlePieces	0.0000	0.0000	0.0000	0xbaf00
+game	game_ViewArmy	0.0000	0.0000	0.0000	0xc6c50
+game	game_calculate_production	0.0000	0.0000	0.0000	0xb8af0
+game	game_game	0.0000	0.0000	0.0000	0xcdf20
+game	game_game_ce5b0	0.0000	0.0000	0.0000	0xce5b0
+game	game_get_new_boat_id	0.0000	0.0000	0.0000	0xbb170
+game	game_get_puzzle_origin	0.0000	0.0000	0.0000	0xcea70
+game	game_get_random_lith	0.0000	0.0000	0.0000	0xcdb80
+game	game_get_underground_gate_exit	0.0000	0.0000	0.0000	0xcde40
+game	generator_Initialize	0.0000	0.0000	0.0000	0xb8860
+game	generator_load	0.0000	0.0000	0.0000	0xb85a0
+game	generator_save	0.0000	0.0000	0.0000	0xb86e0
+game	generator_update_bonus	0.0000	0.0000	0.0000	0xb87a0
+game	playerData_Init	0.0000	0.0000	0.0000	0xb9e20
+game	playerData_NumOfGivenArtifact	0.0000	0.0000	0.0000	0xbabd0
+game	playerData_add_garrison_hero	0.0000	0.0000	0.0000	0xb9fc0
+game	playerData_guess_grail_location	0.0000	0.0000	0.0000	0xbae50
+game	playerData_load	0.0000	0.0000	0.0000	0xba260
+game	playerData_save	0.0000	0.0000	0.0000	0xba670
+gzio	@check_header@4	100.0000	100.0000	100.0000	0x206490
+gzio	@destroy@4	100.0000	100.0000	100.0000	0x206640
+gzio	@do_flush@8	100.0000	100.0000	100.0000	0x2069c0
+gzio	@getLong@4	100.0000	100.0000	100.0000	0x206a80
+gzio	@get_byte@4	100.0000	100.0000	100.0000	0x2065d0
+gzio	@gz_open@12	100.0000	100.0000	100.0000	0x206230
+gzio	@gzclose@4	100.0000	100.0000	100.0000	0x206ac0
+gzio	@gzopen@8	100.0000	100.0000	100.0000	0x206220
+gzio	@gzread@12	100.0000	100.0000	100.0000	0x2066f0
+gzio	@gzwrite@12	100.0000	100.0000	100.0000	0x206930
+gzio	@putLong@8	100.0000	100.0000	100.0000	0x206b10
+hero	??0type_obscuring_object@@QAE@XZ	100.0000	100.0000	100.0000	0xd7470
+hero	?AddSpell@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xd9330
+hero	?ApplyBattleLossTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda710
+hero	?ApplyBattleWinTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda510
+hero	?CreatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340
+hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	96.5278	96.5278	96.5278	0xd9260
+hero	?GetArcheryFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4160
+hero	?GetDefenseFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4310
+hero	?GetEagleEyeChance@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4420
+hero	?GetEstatesBonus@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4390
+hero	?GetExperience@hero@@SIHH@Z	100.0000	100.0000	100.0000	0xda3a0
+hero	?GetExperienceBonusFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4840
+hero	?GetExperienceIncrement@hero@@SIHH@Z	98.1013	98.1013	98.1013	0xda420
+hero	?GetFirstAidFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4920
+hero	?GetHighestSchool@hero@@QAE?AW4TSpellSchool@@W42@@Z	98.3750	98.3750	98.3750	0xe51c0
+hero	?GetIntelligenceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe48b0
+hero	?GetMagicResistanceFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe46e0
+hero	?GetManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe5240
+hero	?GetManaFrame@hero@@QAEHXZ	88.9130	88.9130	88.9130	0xe5380
+hero	?GetMobility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4d90
+hero	?GetMobilityFrame@hero@@QAEHXZ	90.4167	90.4167	90.4167	0xe5330
+hero	?GetMysticismBonus@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe3f40
+hero	?GetNecromancyCreature@hero@@QAE?AW4TCreatureType@@XZ	100.0000	100.0000	100.0000	0xe3c60
+hero	?GetNthSS@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe23a0
+hero	?GetOffenseFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe42b0
+hero	?GetSpellDurationBonus@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4db0
+hero	?GetSpellSchoolLevel@hero@@QAEHW4TSpellSchool@@H@Z	100.0000	100.0000	100.0000	0xe5100
+hero	?GetStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9160
+hero	?GetStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110
+hero	?GetSurrenderCostFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4580
+hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070
+hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0
+hero	?HasArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91b0
+hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe5de0
+hero	?IsWieldingArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91f0
+hero	?SetSS@hero@@QAEXHH@Z	3.8000	3.8000	3.8000	0xe2210
+hero	?SetVisitedArena@hero@@QAEXPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53e0
+hero	?TakeSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe2250
+hero	?TransferArtifacts@hero@@QAEXPAV1@@Z	97.9658	97.9658	97.9658	0xe23d0
+hero	?UpgradeCreatures@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2370
+hero	?VisitedArena@hero@@QBE_NPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53c0
+hero	?WalkOnWater@hero@@QAEXH@Z	100.0000	100.0000	100.0000	0xe5dd0
+hero	?add_to_backpack@hero@@QAEEPBUtype_artifact@@J@Z	100.0000	100.0000	100.0000	0xe2f90
+hero	?any@?$bitset@$0JA@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xe64c0
+hero	?begin@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64e0
+hero	?belongs_to_human@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xd9050
+hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64f0
+hero	?get_combat_speed_bonus@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xe5aa0
+hero	?get_combat_value_modifier@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe5400
+hero	?get_equipped_artifacts@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd9070
+hero	?get_hit_point_bonus@hero@@QAEJH@Z	100.0000	100.0000	100.0000	0xe5b80
+hero	?get_last_backpack_index@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xdbd90
+hero	?get_number_in_backpack@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd90c0
+hero	?get_obscured_town@type_obscuring_object@@QAEPAVtown@@XZ	100.0000	100.0000	100.0000	0xd7490
+hero	?get_player@hero@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xe56b0
+hero	?get_primary_skill_total@hero@@QAEFXZ	75.5833	75.5833	75.5833	0xe5960
+hero	?get_spell_level@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe5080
+hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0
+hero	?is_in_patrol_radius@hero@@QAEEUtype_point@@@Z	100.0000	100.0000	100.0000	0xe56e0
+hero	?modify_spell_damage@hero@@QAEJHHPBVarmy@@@Z	100.0000	100.0000	100.0000	0xe5760
+hero	?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z	100.0000	100.0000	100.0000	0xe6500
+hero	?remove_artifact@hero@@QAEEW4TArtifact@@@Z	100.0000	100.0000	100.0000	0xe2dd0
+hero	?remove_backpack_artifact@hero@@QAEXF@Z	100.0000	100.0000	100.0000	0xe2d50
+hero	?rotate_backpack_left@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbdb0
+hero	?rotate_backpack_right@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbe10
+hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0
+hero	HeroView	0.0000	0.0000	0.0000	0xe1800
+hero	THeroScreenWindow_ExitDialog	0.0000	0.0000	0.0000	0xdd2a0
+hero	THeroScreenWindow_HeroMessageUpdate	0.0000	0.0000	0.0000	0xd97f0
+hero	THeroScreenWindow_SetupHeroView	0.0000	0.0000	0.0000	0xe1a50
+hero	THeroScreenWindow_THeroScreenWindow	0.0000	0.0000	0.0000	0xde710
+hero	THeroScreenWindow_THeroScreenWindow_e1550	0.0000	0.0000	0.0000	0xe1550
+hero	THeroScreenWindow_UpdateHeroLocator	0.0000	0.0000	0.0000	0xe1600
+hero	THeroScreenWindow_UpdateHeroScreenStatusBar	0.0000	0.0000	0.0000	0xdb660
+hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
+hero	THeroScreenWindow_update_all_slots	0.0000	0.0000	0.0000	0xdb1d0
+hero	THeroScreenWindow_update_slot	0.0000	0.0000	0.0000	0xdaf90
+hero	UpdateBackpack	0.0000	0.0000	0.0000	0xdb1f0
+hero	__h3cg$hero$scalar_deleting_dtor$THeroScreenWindow	0.0000	0.0000	0.0000	0xe1520
+hero	get_skill_award	0.0000	0.0000	0.0000	0xdad00
+hero	hero_CheckLevel	0.0000	0.0000	0.0000	0xda720
+hero	hero_Deallocate	0.0000	0.0000	0.0000	0xd9ec0
+hero	hero_Fly	0.0000	0.0000	0.0000	0xe59a0
+hero	hero_GetHeroSpellBonus	0.0000	0.0000	0.0000	0xe5ff0
+hero	hero_GetLuck	0.0000	0.0000	0.0000	0xe36c0
+hero	hero_GetMobility	0.0000	0.0000	0.0000	0xe4990
+hero	hero_GetMorale	0.0000	0.0000	0.0000	0xe39b0
+hero	hero_GetNecromancyFactor	0.0000	0.0000	0.0000	0xe3cd0
+hero	hero_GiveArtifact	0.0000	0.0000	0.0000	0xe3070
+hero	hero_GiveExperience	0.0000	0.0000	0.0000	0xe33b0
+hero	hero_GiveResource	0.0000	0.0000	0.0000	0xe3600
+hero	hero_HeroFn_004D8B30	0.0000	0.0000	0.0000	0xd8b30
+hero	hero_HeroFn_004D8F70	0.0000	0.0000	0.0000	0xd8f70
+hero	hero_HeroFn_004D8FB0	0.0000	0.0000	0.0000	0xd8fb0
+hero	hero_HeroFn_004DBE80	0.0000	0.0000	0.0000	0xdbe80
+hero	hero_HeroFn_004DBF30	0.0000	0.0000	0.0000	0xdbf30
+hero	hero_HeroFn_004DC070	0.0000	0.0000	0.0000	0xdc070
+hero	hero_HeroFn_004DC100	0.0000	0.0000	0.0000	0xdc100
+hero	hero_HeroFn_004E2550	0.0000	0.0000	0.0000	0xe2550
+hero	hero_HeroFn_004E2840	0.0000	0.0000	0.0000	0xe2840
+hero	hero_HeroFn_004E4EC0	0.0000	0.0000	0.0000	0xe4ec0
+hero	hero_HeroFn_004E6120	0.0000	0.0000	0.0000	0xe6120
+hero	hero_HeroScreenUpdate	0.0000	0.0000	0.0000	0xd9990
+hero	hero_IsInIdentifyRange	0.0000	0.0000	0.0000	0xe5e10
+hero	hero_IsMobile	0.0000	0.0000	0.0000	0xe5f30
+hero	hero_PlaceInMap	0.0000	0.0000	0.0000	0xd7900
+hero	hero_UpdateArmies	0.0000	0.0000	0.0000	0xd9a00
+hero	hero_UpdateStats	0.0000	0.0000	0.0000	0xe16d0
+hero	hero_UseSpell	0.0000	0.0000	0.0000	0xd92d0
+hero	hero_ViewArtifact	0.0000	0.0000	0.0000	0xd9cc0
+hero	hero_ViewStat	0.0000	0.0000	0.0000	0xd9b30
+hero	hero_can_land	0.0000	0.0000	0.0000	0xe5ce0
+hero	hero_can_summon_boat	0.0000	0.0000	0.0000	0xe5550
+hero	hero_equip_artifact	0.0000	0.0000	0.0000	0xe2a00
+hero	hero_find_summonable_boat	0.0000	0.0000	0.0000	0xe54a0
+hero	hero_get_backpack_error	0.0000	0.0000	0.0000	0xe2ed0
+hero	hero_get_luck_description	0.0000	0.0000	0.0000	0xdcac0
+hero	hero_get_morale_description	0.0000	0.0000	0.0000	0xdc320
+hero	hero_get_special_terrain	0.0000	0.0000	0.0000	0xe4fa0
+hero	hero_hero	0.0000	0.0000	0.0000	0xd85f0
+hero	hero_hire	0.0000	0.0000	0.0000	0xd7890
+hero	hero_initialize	0.0000	0.0000	0.0000	0xd8720
+hero	hero_load	0.0000	0.0000	0.0000	0xd7a20
+hero	hero_remove_artifact	0.0000	0.0000	0.0000	0xe2bd0
+hero	hero_save	0.0000	0.0000	0.0000	0xd80c0
+hero	hero_update_spell_list	0.0000	0.0000	0.0000	0xd95d0
+hero	mark_spells	0.0000	0.0000	0.0000	0xd9350
+hero	type_artifact_get_description	0.0000	0.0000	0.0000	0xdb3e0
+hero	type_artifact_get_rollover_text	0.0000	0.0000	0.0000	0xdb350
+hero	type_obscuring_object_load	0.0000	0.0000	0.0000	0xd74f0
+hero	type_obscuring_object_obscure_cell	0.0000	0.0000	0.0000	0xd75d0
+hero	type_obscuring_object_restore_cell	0.0000	0.0000	0.0000	0xd76e0
+hero	type_obscuring_object_save	0.0000	0.0000	0.0000	0xd77b0
+hexcell	??0hexcell@@QAE@XZ	100.0000	100.0000	100.0000	0xe7150
+hexcell	?get_army@hexcell@@QAEPAVarmy@@XZ	100.0000	100.0000	100.0000	0xe7170
+hexcell	?get_dead_army@hexcell@@QAEPAVarmy@@H@Z	100.0000	100.0000	100.0000	0xe71b0
+iconwdgt	??1iconWidget@@UAE@XZ	100.0000	100.0000	100.0000	0xea7b0
+iconwdgt	??_GiconWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xea6f0
+iconwdgt	?GetRealHeight@iconWidget@@UAEHXZ	100.0000	100.0000	100.0000	0xeab30
+iconwdgt	?GetRealWidth@iconWidget@@UAEHXZ	100.0000	100.0000	100.0000	0xeab20
+iconwdgt	?NextRandomFrame@iconWidget@@QAEXXZ	72.0056	72.0056	72.0056	0xeb060
+iconwdgt	?NextRandomSiegeEngineFrame@iconWidget@@QAEXXZ	86.4111	86.4111	86.4111	0xeb250
+iconwdgt	?SetIconFrame@iconWidget@@QAEXH@Z	100.0000	100.0000	100.0000	0xeaff0
+iconwdgt	?SetSprite@iconWidget@@QAEXPBD@Z	100.0000	100.0000	100.0000	0xeb030
+iconwdgt	?handle_click@iconWidget@@UAEEEE@Z	100.0000	100.0000	100.0000	0xeab10
+infblock	@inflate_blocks@12	100.0000	100.0000	100.0000	0x208a20
+infblock	@inflate_blocks_free@8	100.0000	100.0000	100.0000	0x2096e0
+infblock	@inflate_blocks_new@12	100.0000	100.0000	100.0000	0x208980
+infblock	@inflate_blocks_reset@12	100.0000	100.0000	100.0000	0x208910
+infcodes	@inflate_codes@12	100.0000	100.0000	100.0000	0x209750
+infcodes	@inflate_codes_free@8	100.0000	100.0000	100.0000	0x209f00
+infcodes	@inflate_codes_new@20	100.0000	100.0000	100.0000	0x209710
+inffast	@inflate_fast@24	100.0000	100.0000	100.0000	0x20a770
+inflate	@inflate@8	100.0000	100.0000	100.0000	0x205df0
+inflate	@inflateEnd@4	100.0000	100.0000	100.0000	0x205c70
+inflate	@inflateInit2_@16	100.0000	100.0000	100.0000	0x205cb0
+inflate	@inflateInit_@12	100.0000	100.0000	100.0000	0x205dd0
+inflate	@inflateReset@4	100.0000	100.0000	100.0000	0x205c30
+inftrees	@huft_build@40	100.0000	100.0000	100.0000	0x209fc0
+inftrees	@inflate_trees_bits@20	100.0000	100.0000	100.0000	0x209f10
+inftrees	@inflate_trees_dynamic@36	100.0000	100.0000	100.0000	0x20a490
+inftrees	@inflate_trees_fixed@20	100.0000	100.0000	100.0000	0x20a5f0
+infutil	@inflate_flush@12	100.0000	100.0000	100.0000	0x20a620
+initialize	?add_to_included_mask@@YIXPBHPA_J@Z	100.0000	100.0000	100.0000	0xebb10
+initialize	?create_included_mask@@YIXPBHPA_J@Z	93.8667	93.8667	93.8667	0xebb70
+initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0xebc50
 # initialize_game_data hand-lowered 100.0000 -> 94.0741 (2026-08-07)
 # when town.h's __int64 building-mask model landed. initialize.cpp's
 # only project include is town.h, so that header is the trigger.
@@ -923,257 +922,257 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 # Do not treat any of them as a target. Re-measure after ANY change to
 # game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
 # artifact.h / army.h, and record what you saw.
-initialize	?initialize_game_data@@YIXXZ	94.0741
-inputmgr	??0inputManager@@QAE@XZ	86.5667
-inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024
-inputmgr	?Close@inputManager@@UAEXXZ	100.0000
-inputmgr	?Flush@inputManager@@QAEXXZ	100.0000
-inputmgr	?ForceMouseMove@inputManager@@QAEXXZ	100.0000
-inputmgr	?Main@inputManager@@UAEHAAVmessage@@@Z	100.0000
-inputmgr	?MakeScanCodeTable@inputManager@@QAEXXZ	100.0000
-inputmgr	?MouseMessageHandler@@YIHPAXIIJ@Z	99.9645
-inputmgr	?Open@inputManager@@UAEHH@Z	100.0000
-inputmgr	KeyboardMessageHandler	0.0000
-kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000
-kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000
-kbwin	?AppExit@@YIXXZ	100.0000
-kbwin	?AppWndProc@@YGJPAUHWND__@@IIJ@Z	100.0000
-kbwin	?Delay@GameTime@@SIXH@Z	100.0000
-kbwin	?DelayTil@GameTime@@SIXK@Z	100.0000
-kbwin	?Get@GameTime@@SIKXZ	100.0000
-kbwin	?KBChangeMenu@@YIXPAUHMENU__@@@Z	100.0000
-kbwin	?Process1WindowsMessage@@YIXXZ	100.0000
-kbwin	?SetMenus@@YIXPAUHMENU__@@H@Z	100.0000
-kbwin	?SetNoDialogMenus@@YIXH@Z	100.0000
-kbwin	_WinMain@16	100.0000
-misc	??0TPickANumber@@QAE@HH@Z	72.1795
-misc	?FileSize@@YIJPAD@Z	100.0000
-misc	?Pick@TPickANumber@@QAEHXZ	91.2195
-misc	?Random@@YIHHH@Z	100.0000
-misc	?ReadPrefs@@YIXXZ	100.0000
-misc	?SRand@@YIXH@Z	100.0000
-misc	?SafeRandom@@YIHHH@Z	100.0000
-misc	?SetupCDDrive@@YIHXZ	100.0000
-misc	?WritePrefs@@YIXXZ	100.0000
-misc	?WritePrefsToRegistry@@YIXXZ	100.0000
-misc	ReadPrefsFromRegistry	0.0000
-monframeinfo	?InitializeCreatureAnimationTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000
-monframeinfo	?InitializeCreatureAnimationTraitsTable@@YIEXZ	100.0000
-mousemgr	??0mouseManager@@QAE@XZ	100.0000
-mousemgr	??1TCSLock@@QAE@XZ	100.0000
-mousemgr	??_GmouseManager@@UAEPAXI@Z	100.0000
-mousemgr	?CheckUpdate@mouseManager@@QAEXXZ	96.8521
-mousemgr	?Close@mouseManager@@UAEXXZ	100.0000
-mousemgr	?HidePointer@mouseManager@@QAEXXZ	100.0000
-mousemgr	?MouseCoords@mouseManager@@QAEXPAH0@Z	100.0000
-mousemgr	?Open@mouseManager@@UAEHH@Z	100.0000
-mousemgr	?Reset@mouseManager@@QAEXXZ	100.0000
-mousemgr	?SetPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	82.9333
-mousemgr	?ShowPointer@mouseManager@@QAEX_N@Z	100.0000
-mousemgr	?ShowSystemCursor@mouseManager@@QAEXE@Z	100.0000
-mousemgr	TCSLock_TCSLock_10d890	0.0000
-mousemgr	mouseManager_LoadFrame	0.0000
-mousemgr	mouseManager_Update	0.0000
-path	?FindPath@army@@QAEHHHEE@Z	100.0000
-path	?GetAdjacentCellIndex@army@@QBEHHH@Z	100.0000
-path	?GetAdjacentCellIndexNoArmy@@YIHHH@Z	100.0000
-path	?GetAttackMask@army@@QAEIHHH@Z	100.0000
-path	?OppositeDirection@@YIHH@Z	100.0000
-path	?ValidAttack@army@@QAEHHHHHPAH@Z	81.0407
-path	?ValidPath@army@@QAEEHE@Z	95.7377
-path	?get_adjacent_hex@army@@QBEJJJ@Z	100.0000
-recruit	??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z	97.9750
-recruit	??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z	96.6709
-recruit	??1TRecruitQuickWindow@@UAE@XZ	100.0000
-recruit	??1TRecruitWindow@@UAE@XZ	100.0000
-recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	100.0000
-recruit	??_GTRecruitWindow@@UAEPAXI@Z	100.0000
-recruit	?GetMonsterCost@@YIXHPAH@Z	86.0000
-recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376
-recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000
-recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	99.4737
-resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000
-resource	??1resource@@UAE@XZ	100.0000
-resource	??_Gresource@@UAEPAXI@Z	100.0000
-sample	??0sample@@QAE@PBDPBXJJJJ@Z	100.0000
-sample	??1sample@@UAE@XZ	100.0000
-sample	??_Gsample@@UAEPAXI@Z	100.0000
-smackmgr	?VideoClose@@YIXXZ	95.9231
-smackmgr	?VideoDrawCurrentFrame@@YIXXZ	100.0000
-smackmgr	?VideoDrawRects@@YIXXZ	89.6347
-smackmgr	?VideoNeedsUpdate@@YIEXZ	100.0000
-smackmgr	?VideoNextFrame@@YIXXZ	100.0000
-smackmgr	?VideoOpen@@YIXHHHHHHHH@Z	100.0000
-smackmgr	?VideoPause@@YIXXZ	100.0000
-smackmgr	?VideoPlay@@YIHHHHHH@Z	87.1912
-smackmgr	?VideoPlaying@@YIEXZ	100.0000
-smackmgr	?VideoRealignBuffers@@YIXXZ	88.9254
-smackmgr	?VideoRestart@@YIXXZ	100.0000
-smackmgr	?VideoResume@@YIXXZ	100.0000
-smackmgr	?VideoShutDown@@YIXXZ	100.0000
-smackmgr	?VideoSoundOnOff@@YIXXZ	100.0000
-soundmgr	??0soundManager@@QAE@XZ	99.0312
-soundmgr	?AdjustMusicVolumes@soundManager@@QAEXXZ	100.0000
-soundmgr	?AdjustSoundVolumes@soundManager@@QAEXXZ	100.0000
-soundmgr	?ClearMemSample@@YIXUSAMPLE2@@@Z	100.0000
-soundmgr	?ConvertVolume@soundManager@@QAEHHH@Z	67.5000
-soundmgr	?LoadPlaySample@@YI?AUSAMPLE2@@PBD@Z	100.0000
-soundmgr	?MemorySample@soundManager@@QAEPAVds_memsample@@PAVsample@@@Z	92.0309
-soundmgr	?ModifySample@soundManager@@QAEXPAVds_memsample@@FJ@Z	100.0000
-soundmgr	?MusicPlaying@soundManager@@QAEHXZ	100.0000
-soundmgr	?PauseSamples@soundManager@@QAEXXZ	100.0000
-soundmgr	?ResumeSamples@soundManager@@QAEXXZ	100.0000
-soundmgr	?ResumeStream@soundManager@@QAEXXZ	100.0000
-soundmgr	?SetMusicVolume@soundManager@@QAEXXZ	100.0000
-soundmgr	?StartMP3@soundManager@@QAEXPBDHE@Z	100.0000
-soundmgr	?StopAllSamples@soundManager@@QAEXH@Z	100.0000
-soundmgr	?StopMP3@soundManager@@QAEXXZ	100.0000
-soundmgr	?StopSample@soundManager@@QAEXPAVds_memsample@@@Z	100.0000
-soundmgr	?SwitchAmbientMusic@soundManager@@QAEXH@Z	100.0000
-soundmgr	?WaitEndSample@@YIXUSAMPLE2@@H@Z	100.0000
-soundmgr	?WaitSample@soundManager@@QAEXPAVds_memsample@@H@Z	100.0000
-soundmgr	?launch_sample@@YIXPBDHH@Z	100.0000
-strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000
-strip	?Draw@strip@@QAEXW4TCreatureType@@@Z	100.0000
-strip	?DrawIcons@strip@@QAEXEW4TCreatureType@@@Z	100.0000
-strip	?DrawMonster@strip@@IAEXHH@Z	100.0000
-strip	?DrawOwner@strip@@IAEXH@Z	93.3721
-textntry	??1textEntryWidget@@UAE@XZ	100.0000
-textntry	??_GtextEntryWidget@@UAEPAXI@Z	100.0000
-textntry	?GetCharPressed@textEntryWidget@@QAEDPAVmessage@@@Z	100.0000
-textntry	?SetFocus@textEntryWidget@@QAEXE@Z	100.0000
-textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000
-textwdgt	??1textWidget@@UAE@XZ	100.0000
-textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000
-town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000
-town	?CanBuildDock@town@@QAEEXZ	100.0000
-town	?Deallocate@town@@QAEXXZ	100.0000
-town	?GetNativeTerrain@town@@QBE?AW4TTerrainType@@XZ	100.0000
-town	?GetTypeName@town@@QBEPBDXZ	100.0000
-town	?HasGarrison@town@@QAEHXZ	100.0000
-town	?PlaceInMap@town@@QAEXHJE@Z	100.0000
-town	?UpgradedDwellingID@town@@SIHH@Z	100.0000
-town	?buy_building@town@@QAEEW4type_building_id@@@Z	100.0000
-town	?can_build@town@@QBEEF@Z	81.1852
-town	?can_ever_build@town@@QBEEH@Z	100.0000
-town	?change_generator_bonus@town@@QAEXW4TCreatureType@@J@Z	100.0000
-town	?check_shipyard_square@@YIEPAVtown@@JJ@Z	100.0000
-town	?get_army@town@@QBEABVarmyGroup@@XZ	100.0000
-town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	77.4561
-town	?get_build_cost@town@@QBEXW4type_building_id@@PAH@Z	100.0000
-town	?get_build_cost_array@town@@QBEPAHW4type_building_id@@@Z	100.0000
-town	?get_buildable_mask@town@@QBE_JXZ	81.2143
-town	?get_castle_growth_bonus@town@@QBEJW4TCreatureType@@@Z	100.0000
-town	?get_gold_income@town@@QBEFE@Z	100.0000
-town	?get_horde@town@@QBEHJ@Z	100.0000
-town	?get_horde_bonus@town@@QBEJJ@Z	100.0000
-town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000
-town	?get_legion_bonus@town@@QAEJJ@Z	81.7262
-town	?get_silo_income@town@@QBEPAHXZ	100.0000
-town	?increase_population@town@@QAEXW4TCreatureType@@0J@Z	100.0000
-town	?initialize_hordes@town@@SIXXZ	99.7778
-town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000
-town	?remove_garrison_hero@town@@QAEXXZ	100.0000
-town	initialize_buildings	0.0000
-town	show_building_rewards	0.0000
-town	show_creature_rewards	0.0000
-town	town_BuildBuilding	0.0000
-town	town_GiveSpells	0.0000
-town	town_SwapHeroes	0.0000
-town	town_TownFn_005BF900	0.0000
-town	town_View	0.0000
-town	town_create_building	0.0000
-town	town_destroy_extra_capitol	0.0000
-town	town_get_growth_rate	0.0000
-town	town_give_event_reward	0.0000
-town	town_hire	0.0000
-town	town_initialize	0.0000
-town	town_initialize_spells	0.0000
-town	town_town_1bde80	0.0000
-town	town_update_shipyard	0.0000
-trees	@_tr_align@4	100.0000
-trees	@_tr_flush_block@16	100.0000
-trees	@_tr_init@4	100.0000
-trees	@_tr_stored_block@16	100.0000
-trees	@bi_flush@4	100.0000
-trees	@bi_reverse@8	100.0000
-trees	@bi_windup@4	100.0000
-trees	@build_bl_tree@4	100.0000
-trees	@build_tree@8	100.0000
-trees	@compress_block@12	100.0000
-trees	@copy_block@16	100.0000
-trees	@gen_bitlen@8	100.0000
-trees	@gen_codes@12	100.0000
-trees	@init_block@4	100.0000
-trees	@pqdownheap@12	100.0000
-trees	@scan_tree@12	100.0000
-trees	@send_all_trees@16	100.0000
-trees	@send_tree@12	100.0000
-trees	@set_data_type@4	100.0000
-trees	@tr_static_init@0	100.0000
-uncompr	@uncompress@16	100.0000
-widget	??0widget@@QAE@FFFFFF@Z	100.0000
-widget	??0widget@@QAE@XZ	100.0000
-widget	??1widget@@UAE@XZ	100.0000
-widget	??_Gwidget@@UAEPAXI@Z	100.0000
-widget	?Dim@widget@@UAEXXZ	100.0000
-widget	?Main@widget@@UAEHPAVmessage@@@Z	100.0000
-widget	?Open@widget@@UAEHHPAVheroWindow@@@Z	100.0000
-widget	?enable@widget@@UAEXE@Z	100.0000
-widget	?initialize@widget@@QAEXHHHHHH@Z	100.0000
-widget	?process_hover@widget@@UAEXXZ	100.0000
-widget	?send_message@widget@@QAEHW4ECommands@1@H@Z	100.0000
-widget	?set_help_text@widget@@QAEXPBD0E@Z	100.0000
-window	??0CHeroWindowEx@@QAE@HHHHI@Z	100.0000
-window	??0heroWindow@@QAE@HHHHI@Z	100.0000
-window	??1heroWindow@@UAE@XZ	100.0000
-window	??_GCHeroWindowEx@@UAEPAXI@Z	100.0000
-window	??_GheroWindow@@UAEPAXI@Z	100.0000
-window	?AddWidget@heroWindow@@QAEXPAVwidget@@H@Z	100.0000
-window	?AddWidgetsToMessageStream@heroWindow@@UAEXXZ	100.0000
-window	?BroadcastMessage@heroWindow@@QAEHHHHH@Z	100.0000
-window	?BroadcastMessage@heroWindow@@QAEHPAVmessage@@@Z	100.0000
-window	?CenterWindow@heroWindow@@QAEXHH@Z	92.8767
-window	?Close@heroWindow@@UAEXE@Z	100.0000
-window	?DoModal@heroWindow@@UAEHE@Z	100.0000
-window	?DrawWindow@heroWindow@@UAEXEHH@Z	100.0000
-window	?GetRolloverWidget@CHeroWindowEx@@UAEPAVtextWidget@@XZ	100.0000
-window	?GetWidget@heroWindow@@QAEPAVwidget@@H@Z	100.0000
-window	?Open@heroWindow@@UAEHHE@Z	100.0000
-window	?ProcessHover@CHeroWindowEx@@UAEEHH@Z	100.0000
-window	?ProcessRightSelect@CHeroWindowEx@@UAEEH@Z	100.0000
-window	?RemoveWidget@heroWindow@@QAEXPAVwidget@@@Z	100.0000
-window	?RestoreBackground@heroWindow@@QAEXE@Z	100.0000
-window	?SaveBackground@heroWindow@@QAEHXZ	100.0000
-window	?SetFocus@heroWindow@@QAEXH@Z	100.0000
-window	?SetHelpText@CHeroWindowEx@@QAEXPAUTHelpText@@HHE@Z	100.0000
-window	?SleepAllWidgets@heroWindow@@QAEXE@Z	100.0000
-window	?WidgetClearStatus@heroWindow@@QAEHHH@Z	100.0000
-window	?WidgetSetStatus@heroWindow@@QAEHHH@Z	100.0000
-window	?WindowHandler@CHeroWindowEx@@UAEHPAVmessage@@@Z	100.0000
-window	?_vslot8@heroWindow@@UAEXE@Z	100.0000
-window	?delete_widgets@heroWindow@@QAEXXZ	100.0000
-window	?findWidget@heroWindow@@QAEHHH@Z	100.0000
-window	?findWidgetPtr@heroWindow@@QAEPAVwidget@@HH@Z	100.0000
-winfile	??0File@@QAE@XZ	100.0000
-winfile	??1File@@QAE@XZ	100.0000
-winfile	?Close@File@@UAEEXZ	100.0000
-winfile	?Delete@File@@SIEPBD@Z	100.0000
-winfile	?GetLength@File@@UAEKXZ	100.0000
-winfile	?GetPosition@File@@UAEKXZ	100.0000
-winfile	?IsOpen@File@@UAEEXZ	100.0000
-winfile	?Open@File@@UAEEPBDW4FileMode@@@Z	100.0000
-winfile	?Read@File@@UAEKPAXK@Z	100.0000
-winfile	?Seek@File@@UAEKKK@Z	100.0000
-winfile	?SeekBegin@File@@UAEKXZ	100.0000
-winfile	?SeekCur@File@@UAEKH@Z	100.0000
-winfile	?SeekEnd@File@@UAEKXZ	100.0000
-winfile	?Write@File@@UAEKPAXK@Z	100.0000
-winmgr	?BroadcastMessage@heroWindowManager@@QAEHHHHH@Z	100.0000
-winmgr	?DoDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	100.0000
-winmgr	?DoDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@Z	100.0000
-winmgr	?DoQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000
-winmgr	?FadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000
-winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000
-zutil	@zcalloc@12	100.0000
-zutil	@zcfree@8	100.0000
+initialize	?initialize_game_data@@YIXXZ	94.0741	94.0741	100.0000	0xeb730
+inputmgr	??0inputManager@@QAE@XZ	86.5667	86.5667	86.5667	0xec460
+inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024	98.8024	98.8024	0xec6f0
+inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540
+inputmgr	?Flush@inputManager@@QAEXXZ	100.0000	100.0000	100.0000	0xec570
+inputmgr	?ForceMouseMove@inputManager@@QAEXXZ	100.0000	100.0000	100.0000	0xecc00
+inputmgr	?Main@inputManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xec560
+inputmgr	?MakeScanCodeTable@inputManager@@QAEXXZ	100.0000	100.0000	100.0000	0xec8c0
+inputmgr	?MouseMessageHandler@@YIHPAXIIJ@Z	99.9645	99.9645	99.9645	0xec290
+inputmgr	?Open@inputManager@@UAEHH@Z	100.0000	100.0000	100.0000	0xec4d0
+inputmgr	KeyboardMessageHandler	0.0000	0.0000	0.0000	0xec0e0
+kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140
+kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8060
+kbwin	?AppExit@@YIXXZ	100.0000	100.0000	100.0000	0xf7fa0
+kbwin	?AppWndProc@@YGJPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf7c00
+kbwin	?Delay@GameTime@@SIXH@Z	100.0000	100.0000	100.0000	0xf83c0
+kbwin	?DelayTil@GameTime@@SIXK@Z	100.0000	100.0000	100.0000	0xf82f0
+kbwin	?Get@GameTime@@SIKXZ	100.0000	100.0000	100.0000	0xf82e0
+kbwin	?KBChangeMenu@@YIXPAUHMENU__@@@Z	100.0000	100.0000	100.0000	0xf8180
+kbwin	?Process1WindowsMessage@@YIXXZ	100.0000	100.0000	100.0000	0xf7fb0
+kbwin	?SetMenus@@YIXPAUHMENU__@@H@Z	100.0000	100.0000	100.0000	0xf8220
+kbwin	?SetNoDialogMenus@@YIXH@Z	100.0000	100.0000	100.0000	0xf81e0
+kbwin	_WinMain@16	100.0000	100.0000	100.0000	0xf7a30
+misc	??0TPickANumber@@QAE@HH@Z	72.1795	72.1795	72.1795	0x10c6e0
+misc	?FileSize@@YIJPAD@Z	100.0000	100.0000	100.0000	0x10c5a0
+misc	?Pick@TPickANumber@@QAEHXZ	91.2195	91.2195	91.2195	0x10c740
+misc	?Random@@YIHHH@Z	100.0000	100.0000	100.0000	0x10b230
+misc	?ReadPrefs@@YIXXZ	100.0000	100.0000	100.0000	0x10b750
+misc	?SRand@@YIXH@Z	100.0000	100.0000	100.0000	0x10c5f0
+misc	?SafeRandom@@YIHHH@Z	100.0000	100.0000	100.0000	0x10b1d0
+misc	?SetupCDDrive@@YIHXZ	100.0000	100.0000	100.0000	0x10c1c0
+misc	?WritePrefs@@YIXXZ	100.0000	100.0000	100.0000	0x10c1b0
+misc	?WritePrefsToRegistry@@YIXXZ	100.0000	100.0000	100.0000	0x10be10
+misc	ReadPrefsFromRegistry	0.0000	0.0000	0.0000	0x10b7b0
+monframeinfo	?InitializeCreatureAnimationTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000	100.0000	100.0000	0x10ca00
+monframeinfo	?InitializeCreatureAnimationTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x10c810
+mousemgr	??0mouseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x10cb50
+mousemgr	??1TCSLock@@QAE@XZ	100.0000	100.0000	100.0000	0x10cd80
+mousemgr	??_GmouseManager@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x10cbc0
+mousemgr	?CheckUpdate@mouseManager@@QAEXXZ	96.8521	96.8521	96.8521	0x10d680
+mousemgr	?Close@mouseManager@@UAEXXZ	100.0000	100.0000	100.0000	0x10cc40
+mousemgr	?HidePointer@mouseManager@@QAEXXZ	100.0000	100.0000	100.0000	0x10d540
+mousemgr	?MouseCoords@mouseManager@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x10d500
+mousemgr	?Open@mouseManager@@UAEHH@Z	100.0000	100.0000	100.0000	0x10cbf0
+mousemgr	?Reset@mouseManager@@QAEXXZ	100.0000	100.0000	100.0000	0x10cc80
+mousemgr	?SetPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	82.9333	82.9333	82.9333	0x10cca0
+mousemgr	?ShowPointer@mouseManager@@QAEX_N@Z	100.0000	100.0000	100.0000	0x10d5b0
+mousemgr	?ShowSystemCursor@mouseManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x10da20
+mousemgr	TCSLock_TCSLock_10d890	0.0000	0.0000	0.0000	0x10d890
+mousemgr	mouseManager_LoadFrame	0.0000	0.0000	0.0000	0x10d8b0
+mousemgr	mouseManager_Update	0.0000	0.0000	0.0000	0x10cd90
+path	?FindPath@army@@QAEHHHEE@Z	100.0000	100.0000	100.0000	0x1239d0
+path	?GetAdjacentCellIndex@army@@QBEHHH@Z	100.0000	100.0000	100.0000	0x123d90
+path	?GetAdjacentCellIndexNoArmy@@YIHHH@Z	100.0000	100.0000	100.0000	0x123e80
+path	?GetAttackMask@army@@QAEIHHH@Z	100.0000	100.0000	100.0000	0x123b20
+path	?OppositeDirection@@YIHH@Z	100.0000	100.0000	100.0000	0x123ec0
+path	?ValidAttack@army@@QAEHHHHHPAH@Z	81.0407	81.0407	81.0407	0x123bb0
+path	?ValidPath@army@@QAEEHE@Z	95.7377	95.7377	95.7377	0x123a70
+path	?get_adjacent_hex@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x123df0
+recruit	??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z	97.9750	97.9750	97.9750	0x151350
+recruit	??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z	96.6709	96.6709	96.6709	0x151460
+recruit	??1TRecruitQuickWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1516e0
+recruit	??1TRecruitWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x14fb20
+recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1516b0
+recruit	??_GTRecruitWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14faf0
+recruit	?GetMonsterCost@@YIXHPAH@Z	86.0000	86.0000	99.3333	0x14e7c0
+recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8325	90.8376	90.8376	0x1503a0
+recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
+recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	99.4737	99.4737	99.4737	0x150360
+resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000	100.0000	100.0000	0x158720
+resource	??1resource@@UAE@XZ	100.0000	100.0000	100.0000	0x1587a0
+resource	??_Gresource@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x158770
+sample	??0sample@@QAE@PBDPBXJJJJ@Z	100.0000	100.0000	100.0000	0x166da0
+sample	??1sample@@UAE@XZ	100.0000	100.0000	100.0000	0x166e60
+sample	??_Gsample@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x166e30
+smackmgr	?VideoClose@@YIXXZ	95.9231	95.9231	95.9231	0x1975f0
+smackmgr	?VideoDrawCurrentFrame@@YIXXZ	100.0000	100.0000	100.0000	0x197740
+smackmgr	?VideoDrawRects@@YIXXZ	89.6347	89.6347	89.6347	0x1979d0
+smackmgr	?VideoNeedsUpdate@@YIEXZ	100.0000	100.0000	100.0000	0x197930
+smackmgr	?VideoNextFrame@@YIXXZ	100.0000	100.0000	100.0000	0x1976e0
+smackmgr	?VideoOpen@@YIXHHHHHHHH@Z	100.0000	100.0000	100.0000	0x197570
+smackmgr	?VideoPause@@YIXXZ	100.0000	100.0000	100.0000	0x1977a0
+smackmgr	?VideoPlay@@YIHHHHHH@Z	87.1912	87.1912	87.1912	0x1972d0
+smackmgr	?VideoPlaying@@YIEXZ	100.0000	100.0000	100.0000	0x197990
+smackmgr	?VideoRealignBuffers@@YIXXZ	88.9254	88.9254	88.9254	0x1971f0
+smackmgr	?VideoRestart@@YIXXZ	100.0000	100.0000	100.0000	0x197900
+smackmgr	?VideoResume@@YIXXZ	100.0000	100.0000	100.0000	0x197850
+smackmgr	?VideoShutDown@@YIXXZ	100.0000	100.0000	100.0000	0x197c70
+smackmgr	?VideoSoundOnOff@@YIXXZ	100.0000	100.0000	100.0000	0x1971b0
+soundmgr	??0soundManager@@QAE@XZ	99.0312	99.0312	99.0312	0x199760
+soundmgr	?AdjustMusicVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a1b0
+soundmgr	?AdjustSoundVolumes@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19a0c0
+soundmgr	?ClearMemSample@@YIXUSAMPLE2@@@Z	100.0000	100.0000	100.0000	0x19a410
+soundmgr	?ConvertVolume@soundManager@@QAEHHH@Z	67.5000	67.5000	67.5000	0x1996c0
+soundmgr	?LoadPlaySample@@YI?AUSAMPLE2@@PBD@Z	100.0000	100.0000	100.0000	0x19a470
+soundmgr	?MemorySample@soundManager@@QAEPAVds_memsample@@PAVsample@@@Z	92.0309	92.0309	92.0309	0x19a210
+soundmgr	?ModifySample@soundManager@@QAEXPAVds_memsample@@FJ@Z	100.0000	100.0000	100.0000	0x199f40
+soundmgr	?MusicPlaying@soundManager@@QAEHXZ	100.0000	100.0000	100.0000	0x19a3f0
+soundmgr	?PauseSamples@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x199c40
+soundmgr	?ResumeSamples@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x199b90
+soundmgr	?ResumeStream@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19ac00
+soundmgr	?SetMusicVolume@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1994b0
+soundmgr	?StartMP3@soundManager@@QAEXPBDHE@Z	100.0000	100.0000	100.0000	0x19acb0
+soundmgr	?StopAllSamples@soundManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x199d90
+soundmgr	?StopMP3@soundManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19b010
+soundmgr	?StopSample@soundManager@@QAEXPAVds_memsample@@@Z	100.0000	100.0000	100.0000	0x199e80
+soundmgr	?SwitchAmbientMusic@soundManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x19a1e0
+soundmgr	?WaitEndSample@@YIXUSAMPLE2@@H@Z	100.0000	100.0000	100.0000	0x19a4c0
+soundmgr	?WaitSample@soundManager@@QAEXPAVds_memsample@@H@Z	100.0000	100.0000	100.0000	0x199ec0
+soundmgr	?launch_sample@@YIXPBDHH@Z	100.0000	100.0000	100.0000	0x19a590
+strip	??0strip@@QAE@HHHHHJPAVhero@@PAVarmyGroup@@HEPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1a9d20
+strip	?Draw@strip@@QAEXW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9d80
+strip	?DrawIcons@strip@@QAEXEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1a9db0
+strip	?DrawMonster@strip@@IAEXHH@Z	100.0000	100.0000	100.0000	0x1aa230
+strip	?DrawOwner@strip@@IAEXH@Z	93.3721	93.3721	93.3721	0x1aa060
+textntry	??1textEntryWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1baae0
+textntry	??_GtextEntryWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ba8f0
+textntry	?GetCharPressed@textEntryWidget@@QAEDPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1baba0
+textntry	?SetFocus@textEntryWidget@@QAEXE@Z	100.0000	100.0000	100.0000	0x1bab50
+textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc6d0
+textwdgt	??1textWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc3b0
+textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc250
+town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0
+town	?CanBuildDock@town@@QAEEXZ	100.0000	100.0000	100.0000	0x1bf4e0
+town	?Deallocate@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be2d0
+town	?GetNativeTerrain@town@@QBE?AW4TTerrainType@@XZ	100.0000	100.0000	100.0000	0x1c1440
+town	?GetTypeName@town@@QBEPBDXZ	100.0000	100.0000	100.0000	0x1c1450
+town	?HasGarrison@town@@QAEHXZ	100.0000	100.0000	100.0000	0x1bdfe0
+town	?PlaceInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0
+town	?UpgradedDwellingID@town@@SIHH@Z	100.0000	100.0000	100.0000	0x1c14a0
+town	?buy_building@town@@QAEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1bf3c0
+town	?can_build@town@@QBEEF@Z	81.1852	81.1852	81.1852	0x1c0d20
+town	?can_ever_build@town@@QBEEH@Z	100.0000	100.0000	100.0000	0x1c0e60
+town	?change_generator_bonus@town@@QAEXW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x1bfe50
+town	?check_shipyard_square@@YIEPAVtown@@JJ@Z	100.0000	100.0000	100.0000	0x1c0c90
+town	?get_army@town@@QBEABVarmyGroup@@XZ	100.0000	100.0000	100.0000	0x1c1460
+town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	77.4561	77.4561	77.4561	0x1c1180
+town	?get_build_cost@town@@QBEXW4type_building_id@@PAH@Z	100.0000	100.0000	100.0000	0x1c10f0
+town	?get_build_cost_array@town@@QBEPAHW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1080
+town	?get_buildable_mask@town@@QBE_JXZ	81.2143	81.2143	81.2143	0x1c0f20
+town	?get_castle_growth_bonus@town@@QBEJW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1bf570
+town	?get_gold_income@town@@QBEFE@Z	100.0000	100.0000	100.0000	0x1bf600
+town	?get_horde@town@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1bf6d0
+town	?get_horde_bonus@town@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1bf770
+town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1230
+town	?get_legion_bonus@town@@QAEJJ@Z	81.7262	81.7262	81.7262	0x1bf810
+town	?get_silo_income@town@@QBEPAHXZ	100.0000	100.0000	100.0000	0x1c1280
+town	?increase_population@town@@QAEXW4TCreatureType@@0J@Z	100.0000	100.0000	100.0000	0x1bfdd0
+town	?initialize_hordes@town@@SIXXZ	99.7778	99.7778	99.7778	0x1bdf60
+town	?is_legal_building@town@@QBEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c12a0
+town	?remove_garrison_hero@town@@QAEXXZ	100.0000	100.0000	100.0000	0x1be390
+town	initialize_buildings	0.0000	0.0000	0.0000	0x1c08c0
+town	show_building_rewards	0.0000	0.0000	0.0000	0x1c0220
+town	show_creature_rewards	0.0000	0.0000	0.0000	0x1c0400
+town	town_BuildBuilding	0.0000	0.0000	0.0000	0x1bede0
+town	town_GiveSpells	0.0000	0.0000	0.0000	0x1be030
+town	town_SwapHeroes	0.0000	0.0000	0.0000	0x1be450
+town	town_TownFn_005BF900	0.0000	0.0000	0.0000	0x1bf900
+town	town_View	0.0000	0.0000	0.0000	0x1be210
+town	town_create_building	0.0000	0.0000	0.0000	0x1be930
+town	town_destroy_extra_capitol	0.0000	0.0000	0.0000	0x1bec60
+town	town_get_growth_rate	0.0000	0.0000	0.0000	0x1bfb60
+town	town_give_event_reward	0.0000	0.0000	0.0000	0x1bfeb0
+town	town_hire	0.0000	0.0000	0.0000	0x1c12e0
+town	town_initialize	0.0000	0.0000	0.0000	0x1c0670
+town	town_initialize_spells	0.0000	0.0000	0.0000	0x1be600
+town	town_town_1bde80	0.0000	0.0000	0.0000	0x1bde80
+town	town_update_shipyard	0.0000	0.0000	0.0000	0x1bf210
+trees	@_tr_align@4	100.0000	100.0000	100.0000	0x206f70
+trees	@_tr_flush_block@16	100.0000	100.0000	100.0000	0x2071c0
+trees	@_tr_init@4	100.0000	100.0000	100.0000	0x206dd0
+trees	@_tr_stored_block@16	100.0000	100.0000	100.0000	0x206ec0
+trees	@bi_flush@4	100.0000	100.0000	100.0000	0x208760
+trees	@bi_reverse@8	100.0000	100.0000	100.0000	0x208740
+trees	@bi_windup@4	100.0000	100.0000	100.0000	0x2087f0
+trees	@build_bl_tree@4	100.0000	100.0000	100.0000	0x207950
+trees	@build_tree@8	100.0000	100.0000	100.0000	0x2073b0
+trees	@compress_block@12	100.0000	100.0000	100.0000	0x208290
+trees	@copy_block@16	100.0000	100.0000	100.0000	0x208870
+trees	@gen_bitlen@8	100.0000	100.0000	100.0000	0x2076c0
+trees	@gen_codes@12	100.0000	100.0000	100.0000	0x2078e0
+trees	@init_block@4	100.0000	100.0000	100.0000	0x206e50
+trees	@pqdownheap@12	100.0000	100.0000	100.0000	0x2075e0
+trees	@scan_tree@12	100.0000	100.0000	100.0000	0x2079c0
+trees	@send_all_trees@16	100.0000	100.0000	100.0000	0x207aa0
+trees	@send_tree@12	100.0000	100.0000	100.0000	0x207d10
+trees	@set_data_type@4	100.0000	100.0000	100.0000	0x2086d0
+trees	@tr_static_init@0	100.0000	100.0000	100.0000	0x206e40
+uncompr	@uncompress@16	100.0000	100.0000	100.0000	0x206be0
+widget	??0widget@@QAE@FFFFFF@Z	100.0000	100.0000	100.0000	0x1fe340
+widget	??0widget@@QAE@XZ	100.0000	100.0000	100.0000	0x1fe410
+widget	??1widget@@UAE@XZ	100.0000	100.0000	100.0000	0x1fe430
+widget	??_Gwidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fe3b0
+widget	?Dim@widget@@UAEXXZ	100.0000	100.0000	100.0000	0x1fe800
+widget	?Main@widget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fe4f0
+widget	?Open@widget@@UAEHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1fe4d0
+widget	?enable@widget@@UAEXE@Z	100.0000	100.0000	100.0000	0x1fe940
+widget	?initialize@widget@@QAEXHHHHHH@Z	100.0000	100.0000	100.0000	0x1fe480
+widget	?process_hover@widget@@UAEXXZ	100.0000	100.0000	100.0000	0x1fe930
+widget	?send_message@widget@@QAEHW4ECommands@1@H@Z	100.0000	100.0000	100.0000	0x1fe7c0
+widget	?set_help_text@widget@@QAEXPBD0E@Z	100.0000	100.0000	100.0000	0x1fe840
+window	??0CHeroWindowEx@@QAE@HHHHI@Z	100.0000	100.0000	100.0000	0x1ff640
+window	??0heroWindow@@QAE@HHHHI@Z	100.0000	100.0000	100.0000	0x1fe9f0
+window	??1heroWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fea80
+window	??_GCHeroWindowEx@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ff6b0
+window	??_GheroWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fea50
+window	?AddWidget@heroWindow@@QAEXPAVwidget@@H@Z	100.0000	100.0000	100.0000	0x1fecb0
+window	?AddWidgetsToMessageStream@heroWindow@@UAEXXZ	100.0000	100.0000	100.0000	0x1ff570
+window	?BroadcastMessage@heroWindow@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x1fee40
+window	?BroadcastMessage@heroWindow@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1fede0
+window	?CenterWindow@heroWindow@@QAEXHH@Z	92.8767	92.8767	92.8767	0x1ff240
+window	?Close@heroWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1fec60
+window	?DoModal@heroWindow@@UAEHE@Z	100.0000	100.0000	100.0000	0x1ff460
+window	?DrawWindow@heroWindow@@UAEXEHH@Z	100.0000	100.0000	100.0000	0x1ff020
+window	?GetRolloverWidget@CHeroWindowEx@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0x1ff8d0
+window	?GetWidget@heroWindow@@QAEPAVwidget@@H@Z	100.0000	100.0000	100.0000	0x1feff0
+window	?Open@heroWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1feae0
+window	?ProcessHover@CHeroWindowEx@@UAEEHH@Z	100.0000	100.0000	100.0000	0x1ff6e0
+window	?ProcessRightSelect@CHeroWindowEx@@UAEEH@Z	100.0000	100.0000	100.0000	0x1ff790
+window	?RemoveWidget@heroWindow@@QAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x1fed60
+window	?RestoreBackground@heroWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x1ff1c0
+window	?SaveBackground@heroWindow@@QAEHXZ	100.0000	100.0000	100.0000	0x1ff100
+window	?SetFocus@heroWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1ff490
+window	?SetHelpText@CHeroWindowEx@@QAEXPAUTHelpText@@HHE@Z	100.0000	100.0000	100.0000	0x1ff8e0
+window	?SleepAllWidgets@heroWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x1ff5b0
+window	?WidgetClearStatus@heroWindow@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1fef60
+window	?WidgetSetStatus@heroWindow@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1feed0
+window	?WindowHandler@CHeroWindowEx@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1ff820
+window	?_vslot8@heroWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1ff5f0
+window	?delete_widgets@heroWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1ff510
+window	?findWidget@heroWindow@@QAEHHH@Z	100.0000	100.0000	100.0000	0x1ff3b0
+window	?findWidgetPtr@heroWindow@@QAEPAVwidget@@HH@Z	100.0000	100.0000	100.0000	0x1ff3e0
+winfile	??0File@@QAE@XZ	100.0000	100.0000	100.0000	0x1ffb20
+winfile	??1File@@QAE@XZ	100.0000	100.0000	100.0000	0x1ffb40
+winfile	?Close@File@@UAEEXZ	100.0000	100.0000	100.0000	0x1ffb70
+winfile	?Delete@File@@SIEPBD@Z	100.0000	100.0000	100.0000	0x1ffb90
+winfile	?GetLength@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffd90
+winfile	?GetPosition@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffd70
+winfile	?IsOpen@File@@UAEEXZ	100.0000	100.0000	100.0000	0x1ffb60
+winfile	?Open@File@@UAEEPBDW4FileMode@@@Z	100.0000	100.0000	100.0000	0x1ffbc0
+winfile	?Read@File@@UAEKPAXK@Z	100.0000	100.0000	100.0000	0x1ffc80
+winfile	?Seek@File@@UAEKKK@Z	100.0000	100.0000	100.0000	0x1ffd20
+winfile	?SeekBegin@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffcd0
+winfile	?SeekCur@File@@UAEKH@Z	100.0000	100.0000	100.0000	0x1ffcf0
+winfile	?SeekEnd@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffcb0
+winfile	?Write@File@@UAEKPAXK@Z	100.0000	100.0000	100.0000	0x1ffc50
+winmgr	?BroadcastMessage@heroWindowManager@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x202370
+winmgr	?DoDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	100.0000	100.0000	100.0000	0x202520
+winmgr	?DoDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@Z	100.0000	100.0000	100.0000	0x2027a0
+winmgr	?DoQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x202a40
+winmgr	?FadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x202c50
+winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x2024a0
+zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70
+zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90

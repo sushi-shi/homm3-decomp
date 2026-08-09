@@ -33,6 +33,13 @@
 // not an override.
 class TAdventureMapWindow : public heroWindow {
 public:
+    // The DC roster puts RadarWidget/MapWidget at +0x44/+0x48. Retail's
+    // heroWindow is eight bytes wider, placing them at +0x4c/+0x50;
+    // InMapArea independently proves MapWidget's retail offset and reads
+    // its widget x/y/width/height fields.
+    widget* RadarWidget;
+    widget* MapWidget;
+
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
 };
@@ -44,7 +51,8 @@ class advManager : public baseManager {
 public:
     char pad_038[0xc];
     TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
-    char pad_048[8];
+    unsigned short* routeArray;      // +0x48 (GetRouteArrayPtr)
+    char pad_04c[4];
     // +0x50, the hover reseed latch: advManager::Reseed (0x40ec80) is
     // `mov dword ptr [ecx+0x50], 0` and nothing else, discarding both
     // of its arguments. Name unattested - the role is what the bytes
@@ -76,6 +84,8 @@ public:
     void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
     void Reseed(int targetX, int targetY);
     void ForceNewHover();
+    int InMapArea(int x, int y);
+    unsigned short* GetRouteArrayPtr(int x, int y, int z);
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).

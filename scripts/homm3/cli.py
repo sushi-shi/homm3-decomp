@@ -32,10 +32,10 @@ Subcommands
         labels -> synth PDB -> data manifests -> vostok -> per-unit target
         objs -> normalize -> objdiff.json.
 
-  status [update|check [--gate]] [--write-readme]
-        Scoreboard (homm3.match.status): per-unit table; `update` raises the
-        per-function maxima (config/match_baseline.tsv); `check` reports
-        functions below their recorded best.
+  status [functions [FILTER...]|update [--accept-regressions]|check [--gate]]
+        Scoreboard (homm3.match.status): per-unit table; `functions` shows
+        cur/max/hist; `update` regenerates config/match_baseline.tsv; `check`
+        reports functions below their enforced max.
 
   sema <xref|diff|disasm|rva|strings> ...
         Read-only navigation over the retail image (homm3.sema): caller
@@ -186,8 +186,7 @@ def main(argv: list[str] | None = None) -> int:
                        "-> vostok -> normalized targets (homm3.build.delink)")
     p.set_defaults(fn=cmd_delink)
 
-    p = sub.add_parser("status", help="objdiff scoreboard + ratchet "
-                       "(homm3.match.status: [update|check] [--write-readme])")
+    p = sub.add_parser("status", help="objdiff scoreboard + cur/max/hist ratchet")
     p.add_argument("status_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_status)
 
