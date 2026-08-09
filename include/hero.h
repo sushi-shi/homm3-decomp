@@ -98,6 +98,8 @@ public:
     enum {
         CLASS_NAME_OVERRIDE_HERO_ID = 27,
         CLASS_NAME_OVERRIDE_SCENARIO = 15,
+        CUSTOM_NAME_CAMPAIGN_EXCLUDED_SCENARIO = 20,
+        CUSTOM_NAME_CAMPAIGN_PORTRAIT = 156,
         PRIMARY_STAT_DIALOG_TYPE = 1,
         PRIMARY_STAT_QUICK_DIALOG_TYPE = 4,
         PRIMARY_STAT_DIALOG_Y = 28,
@@ -147,7 +149,15 @@ public:
     // +0x30. DrawHeroPart indexes the eighteen-entry cursorIcons sprite row
     // directly with this dword; the surviving roster names the domain.
     int heroClass;
+#ifdef HOMM3_HERO_COMBINATION_VIEW
+    // +0x34. The current-hero gate in HeroFn_004D8FB0 compares this byte
+    // directly against portrait id 156. Dreamcast independently places its
+    // `portrait` byte at the same offset.
+    unsigned char portrait;
+    char pad_035[0xf];
+#else
     char pad_034[0x10];
+#endif
     // The patrol triple at +0x44..+0x46 and the compass facing at
     // +0x47, all byte-proven by hero::is_in_patrol_radius (0x4e56e0)
     // and hero::GetStandSequence (0x4d9110). The two coordinates are
@@ -337,7 +347,18 @@ public:
     // flag arm instead of walking the 64 slots, which is what proves
     // both the offset and the SIGNED char width. Name provisional.
     signed char backpackCount;          // +0x3d4
+#ifdef HOMM3_HERO_COMBINATION_VIEW
+    // The custom-name branch in HeroFn_004D8FB0 reads this byte, then the
+    // unaligned pointer five bytes later. Names are role-inferred and
+    // provisional; the intervening bytes remain unmodeled.
+    char pad_3d5[0x4];
+    unsigned char hasCustomName;         // +0x3d9
+    char pad_3da[0x4];
+    const char* customName;              // +0x3de
+    char pad_3e2[0x8];
+#else
     char pad_3d5[0x15];
+#endif
     // TWO per-spell byte tables, stride 1, 70 entries each, byte-proven
     // by hero::AddSpell 0x4d9330 - all 26 bytes of it are
     //     mov dl,1
@@ -608,6 +629,8 @@ public:
     float GetNecromancyFactor(unsigned char apply_limit);
     TCreatureType GetNecromancyCreature();
 #ifdef HOMM3_HERO_COMBINATION_VIEW
+    const char* HeroFn_004D8FB0();
+    unsigned char HeroFn_004DBE80(int combination);
     boat* find_summonable_boat();
     void GiveResource(int whichRes, int howMuch);
 #endif
@@ -714,7 +737,16 @@ SIZE(boat, 0x28);
 struct THeroTraits {
     char pad_00[0x34];              // +0x00 unmodeled
     const char* largePortraitName;  // +0x34 image name for WIDGET_SET_IMAGE
+#ifdef HOMM3_HERO_COMBINATION_VIEW
+    char pad_38[0x8];               // +0x38 unmodeled
+    // HeroFn_004D8FB0 strcmp's the live hero name against this pointer.
+    // Dreamcast calls the analogous pointer m_name, but retail places it
+    // four bytes later, so only the role transfers across builds.
+    const char* defaultName;         // +0x40
+    char pad_44[0x18];              // +0x44 unmodeled
+#else
     char pad_38[0x24];              // +0x38 unmodeled
+#endif
 };
 SIZE(THeroTraits, 0x5c);
 
