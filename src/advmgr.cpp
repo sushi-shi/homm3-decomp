@@ -832,6 +832,15 @@ static inline NewmapCell* DrawBoatCell(advManager* manager, type_point point)
         * manager->fullMap->Size + point.x];
 }
 
+static inline NewmapCell* DrawGroundCell(advManager* manager, type_point point)
+{
+    if (!point.is_valid())
+        return manager->fullMap->cell(0, 0, 0);
+    return &manager->fullMap->cellData[
+        (point.z * manager->fullMap->Size + point.y)
+        * manager->fullMap->Size + point.x];
+}
+
 // E:\gamedcs\advmgr.cpp:5688
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
 void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
@@ -1774,14 +1783,8 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 VA(0x00412900, 0x2CB)  // linkorder, dc 0x147c4
 void advManager::DrawGround(int srcX, int srcY, int z, int destX, int destY)
 {
-    type_point point(srcX, srcY, z);
-    NewmapCell* thisCell;
-    if (!point.is_valid()) {
-        thisCell = fullMap->cellData;
-    } else {
-        thisCell = &fullMap->cellData[
-            (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
-    }
+    NewmapCell* thisCell = DrawGroundCell(
+        this, type_point(srcX, srcY, z));
 
     int baseX = mapOriginX + destX * 32;
     int baseY = mapOriginY + destY * 32;
