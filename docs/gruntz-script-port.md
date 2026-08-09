@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `hero::find_summonable_boat` reconstructed byte-exact
+  (170 bytes).** Retail first asks the already-exact `game::GetHeroBoat` for
+  the hero's existing unoccupied vessel, then scans the proven 40-byte boat
+  vector for allocated, unoccupied boats owned by the local player or by no
+  player. It minimizes Manhattan distance from the hero and deliberately
+  accepts equal-distance later entries. Natural x-first source evaluation
+  produces retail's y-first instruction schedule under VC6. The new member
+  declaration is confined to hero.obj's existing narrow view: exposing it
+  broadly moved an unrelated recruit function below its ratchet, and that
+  experiment was withdrawn rather than accepted. Dreamcast corroborates the
+  identity and boat member names only; no external implementation body was
+  used. Whole-linked fuzzy coverage rises from 45.44% to 45.49%, exact
+  linked functions from 615 to 616, and executable fuzzy coverage from
+  8.62% to 8.63%.
+
 - **2026-08-09 — `type_artifact::get_rollover_text` reconstructed
   byte-exact (134 bytes).** Retail branches directly on artifact id -1 and
   0, copying two runtime-loaded text pointers at 0x6a8040/0x6a804c; every

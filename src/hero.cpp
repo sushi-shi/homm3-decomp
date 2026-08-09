@@ -2176,14 +2176,31 @@ float hero::get_combat_value_modifier()
                                    * (defense_value * 0.05 + 1.0)));
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6180
 VA(0x004e54a0, 0xAA)  // anchor-global, dc 0xd519c
 boat* hero::find_summonable_boat()
 {
-    // @stub
+    boat* result = gpGame->GetHeroBoat(id, 0);
+    if (result)
+        return result;
+
+    int closestDistance = 0;
+    for (boat* candidate = gpGame->boats.begin();
+         candidate != gpGame->boats.end(); candidate++) {
+        if (candidate->allocated && !candidate->occupied
+            && (candidate->playerOwner == gNetLocalGamePos
+                || candidate->playerOwner == -1)) {
+            int distance = abs(candidate->x - x) + abs(candidate->y - y);
+            if (!result || distance <= closestDistance) {
+                result = candidate;
+                closestDistance = distance;
+            }
+        }
+    }
+    return result;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6219
 VA(0x004e5550, 0x15E)  // anchor-global, dc 0xd524c
