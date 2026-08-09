@@ -534,11 +534,21 @@ int advManager::ProcessSearch(int x, int y, int z)
 }
 
 // E:\gamedcs\advmgr.cpp:4983
+#endif  // @carcass
+
 VA(0x0040f270, 0x7D)  // anchor-global, dc 0x10520
 void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
 {
-    // @stub
+    gpWindowManager->UpdateScreen(0, 8, 608, 544);
+    unsigned long now = GameTime::Get();
+    if (static_cast<long>(now - glTimers[0]) >= 0 && !field_104) {
+        ++animFrame;
+        glTimers[0] += _cpp_max<long>(now - glTimers[0], 180);
+    }
+    Process1WindowsMessage();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:5002
 VA(0x0040f2f0, 0xF8)  // linkorder, dc 0x10640
