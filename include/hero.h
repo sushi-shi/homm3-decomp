@@ -86,6 +86,7 @@ struct type_artifact {
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_description();
 #endif
+    void get_rollover_text(char* buffer);
 };
 
 class hero {

@@ -635,6 +635,7 @@ hero	?get_number_in_backpack@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd90c0
 hero	?get_obscured_town@type_obscuring_object@@QAEPAVtown@@XZ	100.0000	100.0000	100.0000	0xd7490
 hero	?get_player@hero@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xe56b0
 hero	?get_primary_skill_total@hero@@QAEFXZ	99.5833	99.5833	99.5833	0xe5960
+hero	?get_rollover_text@type_artifact@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xdb350
 hero	?get_spell_level@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe5080
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0
@@ -702,7 +703,6 @@ hero	hero_save	0.0000	0.0000	0.0000	0xd80c0
 hero	hero_update_spell_list	0.0000	0.0000	0.0000	0xd95d0
 hero	mark_spells	0.0000	0.0000	0.0000	0xd9350
 hero	type_artifact_get_description	0.0000	0.0000	0.0000	0xdb3e0
-hero	type_artifact_get_rollover_text	0.0000	0.0000	0.0000	0xdb350
 hero	type_obscuring_object_load	0.0000	0.0000	0.0000	0xd74f0
 hero	type_obscuring_object_obscure_cell	0.0000	0.0000	0.0000	0xd75d0
 hero	type_obscuring_object_restore_cell	0.0000	0.0000	0.0000	0xd76e0

@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `type_artifact::get_rollover_text` reconstructed
+  byte-exact (134 bytes).** Retail branches directly on artifact id -1 and
+  0, copying two runtime-loaded text pointers at 0x6a8040/0x6a804c; every
+  other id indexes the 32-byte `akArtifactTraits` row and formats its name
+  with the pointer at 0x6a8050. Natural `strcpy` calls reproduce both VC6
+  `repne scasb`/`rep movs` expansions and `sprintf` reproduces the third
+  branch exactly. The three text-cell spellings remain provisional because
+  no public names them. Dreamcast CodeView supplies the member identity and
+  signature only; no external implementation body was used. Whole-linked
+  fuzzy coverage rises from 45.41% to 45.44%, exact linked functions from
+  614 to 615, and executable fuzzy coverage from 8.61% to 8.62%.
+
 - **2026-08-09 — `advManager::UpdateScreen` reconstructed byte-exact
   (125 bytes).** Retail fixes the update rectangle at (0,8), 608x544,
   regardless of the two retained formal flags, then samples `GameTime`,
