@@ -279,8 +279,10 @@ public:
     // point by value as the origin argument of the six-argument overload.
     type_point radarOrigin;
     char pad_0e8[4];
-    int lastHover;  // +0xec, ForceNewHover invalidates before ProcessHover
-    char pad_0f0[4];
+    // ForceNewHover invalidates this before ProcessHover; get_map_center also
+    // uses its low word as the horizontal center adjustment.
+    int lastHover;                // +0xec
+    int field_f0;                 // +0xf0, vertical center adjustment
     int mapOriginX;               // +0xf4, adventure viewport origin
     int mapOriginY;               // +0xf8
     char pad_0fc[4];
@@ -352,6 +354,7 @@ public:
     unsigned char FindAdjacentMonster(type_point point, type_point* result,
                                       type_point excluded);
     int InMapArea(int x, int y);
+    type_point get_map_center();
     NewmapCell* GetCell(type_point point);
     int MoreTreesNear(type_point point);
     void UpdateRadar(type_point origin, unsigned char updateFlag,
