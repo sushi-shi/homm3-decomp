@@ -22,6 +22,7 @@
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
 // the real definitions, and game.h is where they live.
 #include "game.h"
+#include "advmgr.h"
 // TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
 // placement note at the top of that header.
 #include "herospec.h"
@@ -31,6 +32,12 @@
 // TMagicTerrain - the battlefield magic-terrain id the spell-school
 // quartet takes as its second argument.
 #include "magicterrain.h"
+
+template<class T>
+inline const T& _cpp_max(T x, T y)
+{
+    return x < y ? y : x;
+}
 
 // The per-mastery specialty factor rows, one four-float .rdata run per
 // skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
@@ -481,11 +488,20 @@ void hero::DestroySiegeWeaponArtifact(int creature_type)
 #if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:1504
+#endif  // @carcass
+
 VA(0x004d92d0, 0x59)  // dc-bracket forced, dc 0xcc300
 void hero::UseSpell(int cost)
 {
-    // @stub
+    // Preserve the clamp result at int width: retail loads its dword before
+    // storing the low word back into mana.
+    int remaining = _cpp_max<int>(mana - cost, 0);
+    mana = remaining;
+    if (gpAdvManager->status == 1 && gpCurrentPlayer->IsLocalHuman())
+        gpAdvManager->advWindow->UpdateHeroLocator(-1, 1, 1);
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 

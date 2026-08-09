@@ -331,6 +331,7 @@ public:
     char pad_47a[0x18];
 
     unsigned char HasArtifact(int whichArtifact);
+    void UseSpell(int cost);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     void AddSpell(int whichSpell);
     // 0x4d95d0 - rebuilds available_spells after artifact changes.
