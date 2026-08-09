@@ -643,6 +643,7 @@ public:
     // because town::remove_garrison_hero calls it with the town's
     // owner, a type_point built from the town's map cell, and 0.
     void PlaceInMap(int iPlayer, type_point point, unsigned char reset_flags);
+    int load(TAbstractFile* infile, int saveVersion);
 };
 // sizeof(hero) == 1170 (0x492), byte-proven THREE independent ways:
 //   - the save walk at 0x4be841 runs `lea edi,[gpGame+0x21620]` and
