@@ -51,6 +51,11 @@ struct AdvGroundCellView {
     unsigned char cellFlags;
 };
 
+struct AdvRoadCellView {
+    char pad_00[0xc];
+    unsigned short cellFlags;
+};
+
 class CObject {
 public:
     char pad_00[8];

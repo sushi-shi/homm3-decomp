@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::DrawRoad` admitted byte-exact;
+  `advmgr` 21 → 22 exact.** The 492-byte body reproduces its map bounds,
+  packed-point fallback cell, road-presence gate, half-tile vertical origin,
+  viewport clipping, bottom-row crop, road set/frame selection, word-width
+  flip flags, and raw `CSprite::DrawTile` target. All 13 symbolic branches,
+  the single return, and every instruction compare exactly. Retail bytes and
+  relocations are the correctness evidence; Dreamcast CodeView supplied only
+  surviving names and signatures. No external body was consulted or ported,
+  and the generated baseline remains exclusively build-owned.
+
 - **2026-08-09 — the 584-byte `advManager::DrawShroud` body opened
   to 81.41%.** Retail instructions and relocations prove the clipped draw
   rectangle, visibility gate, full-map star tiles, cloud lookup, horizontal

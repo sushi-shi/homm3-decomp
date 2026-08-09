@@ -1479,12 +1479,63 @@ void advManager::DrawRiver(int srcX, int srcY, int z, int destX, int destY)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:6504
 VA(0x00411d60, 0x1EC)  // linkorder, dc 0x13a64
 void advManager::DrawRoad(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    type_point point;
+    point = type_point(srcX, srcY, z);
+    NewmapCell* thisCell;
+    if (!point.is_valid()) {
+        thisCell = fullMap->cellData;
+    } else {
+        thisCell = &fullMap->cellData[
+            (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
+    }
+    if (!thisCell->RoadSet)
+        return;
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32 + 16;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (srcY == gMapHeight - 1)
+        tileh -= 16;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    AdvRoadCellView* roadCell = static_cast<AdvRoadCellView*>(
+        static_cast<void*>(thisCell));
+    roadTileset[thisCell->RoadSet]->DrawTile(
+        thisCell->RoadIndex, tilex, tiley, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8,
+        (roadCell->cellFlags >> 4) & 1,
+        (roadCell->cellFlags >> 5) & 1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:6573
 VA(0x00411f50, 0x15F)  // linkorder, dc 0x13c68
