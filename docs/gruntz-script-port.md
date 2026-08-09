@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::ClaimGenerator` reconstructed to 99.9706%
+  (420 bytes).** Retail indexes the 92-byte generator pool, sends the
+  28-byte subtype-0x41e claim message, removes the old owner's matching town
+  growth bonuses, writes the new signed owner and calls the already-exact
+  bonus updater. Nonnegative owners reveal the generator's packed map point
+  at radius three, after which the flagged-generator victory condition is
+  checked unconditionally. Dreamcast CodeView supplies the message and
+  `generator::set_owner` identities; retail proves the message layout, pool
+  arithmetic, elemental exception, creature-town alignment lookup, player
+  town walk, visibility arguments and victory tail. The retail build has no
+  standalone `set_owner` slot, so the recovered helper remains inline and
+  ClaimGenerator reuses it. Applying that helper to the already-exact
+  `generator::Initialize` changed VC6's caller context and dropped the latter
+  to 63.8323%, so that experiment was withdrawn and its proven longhand source
+  shape retained. Candidate and retail contain the same 136-instruction
+  multiset and branch topology; the only four unpaired slots are the -1 head
+  field and subtype stores transposed by the open B16 scheduler. No external
+  implementation body was used. Linked fuzzy coverage rises from 47.93% to
+  48.09% and executable fuzzy coverage from 9.10% to 9.12%, with all 626 exact
+  functions retained.
+
 - **2026-08-09 — `advManager::QuickInfo` status details reach 54.0594%.**
   Pyramid, wagon, warrior-tomb, water-wheel and windmill cases now append the
   retail double-newline separator and select the admitted visited/unvisited
