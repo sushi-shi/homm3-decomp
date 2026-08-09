@@ -7,6 +7,27 @@
 
 class CSprite;
 class textWidget;
+class hero;
+class boat;
+
+// Dreamcast CodeView names the three pointer members and fixes this helper at
+// 12 bytes. Retail's destructor and get_trigger_cell body independently
+// confirm the same offsets and pointer roles.
+class type_cell_adjuster {
+public:
+    enum {
+        MOBILE_HERO_CELL_X = 9,
+        MOBILE_HERO_CELL_Y = 8
+    };
+
+    hero* obscuring_hero;
+    boat* obscuring_boat;
+    hero* mobile_hero;
+
+    ~type_cell_adjuster();
+    NewmapCell* get_trigger_cell(NewmapCell* map_cell, int x, int y);
+};
+SIZE(type_cell_adjuster, 0xc);
 
 enum ECompleteDrawFps {
     COMPLETE_DRAW_FPS_FRAME_COUNT = 100

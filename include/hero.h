@@ -550,6 +550,10 @@ struct type_obscuring_object {
     type_obscuring_object();
     void initialize();
     class town* get_obscured_town();
+#ifdef HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
+    void obscure_cell(TAdventureObjectType new_type, long id);
+    void restore_cell();
+#endif
 };
 
 // boat - the adventure-map vessel. It lives here for the same reason
