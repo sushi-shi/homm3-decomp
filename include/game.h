@@ -107,12 +107,18 @@ public:
 SIZE(mine, 0x40);
 
 // Retail's garrison pool element. GetFlaggedObjectOwner reads the first byte
-// as a signed owner and indexes records with a 0x40 stride; the remaining
-// bytes stay opaque.
+// as a signed owner and indexes records with a 0x40 stride. ProcessHover
+// independently reaches the army at +4; the DC roster names that member and
+// the three trailing map bytes at +0x3c..+0x3e.
 class garrison {
 public:
     char playerOwner;
-    char pad_01[0x3f];
+    char pad_01[3];
+    armyGroup garrisonArmy;
+    unsigned char mapX;
+    unsigned char mapY;
+    unsigned char mapZ;
+    char pad_3f;
 };
 SIZE(garrison, 0x40);
 

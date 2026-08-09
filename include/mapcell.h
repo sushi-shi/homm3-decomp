@@ -310,6 +310,7 @@ public:
 #endif
 #ifdef HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
     NewmapCell* get_trigger_cell();
+    unsigned long get_map_extraInfo();
 #endif
 };
 #pragma pack(pop)
