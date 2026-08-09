@@ -202,8 +202,23 @@ public:
     unsigned char field_3d;
     unsigned char field_3e;
     char pad_3f;
+
+    mine()
+        : playerOwner(-1), type(-1), field_02(0)
+    {
+        field_3c = -1;
+        field_3d = -1;
+        field_3e = -1;
+        guards.Initialize();
+    }
 };
 SIZE(mine, 0x40);
+
+struct legacyMineGuard {
+    signed char type;
+    signed char amount;
+};
+SIZE(legacyMineGuard, 2);
 
 // Retail's garrison pool element. GetFlaggedObjectOwner reads the first byte
 // as a signed owner and indexes records with a 0x40 stride. ProcessHover
@@ -608,6 +623,7 @@ public:
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
     void calculate_production();                 // 0x4b8af0
+    int LoadMinePool(TAbstractFile* infile, int saveVersion);
     int LoadGarrisonPool(TAbstractFile* infile, int saveVersion);
     int SaveMinePool(TAbstractFile* outfile);     // 0x4b9580
     int SaveGarrisonPool(TAbstractFile* outfile); // 0x4b98c0
