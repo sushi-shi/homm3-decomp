@@ -360,11 +360,47 @@ int game::LoadBoatPool(void* infile)
 }
 
 // E:\gamedcs\game.cpp:1178
+#endif  // @carcass
+
 VA(0x004b9c40, 0x1AD)  // anchor-callee (type_obscuring_object::save), dc 0xa4980
-int game::SaveBoatPool(void* outfile)
+int game::SaveBoatPool(TAbstractFile* outfile)
 {
-    // @stub
+    unsigned char count = static_cast<unsigned char>(boats.size());
+    if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    for (unsigned int i = 0; i < boats.size(); ++i) {
+        unsigned char value = boats[i].allocated;
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        count = boats[i].id;
+        if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+            return -1;
+        value = boats[i].type;
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        value = boats[i].facing;
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        value = boats[i].playerOwner;
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+
+        short occupyingHero = static_cast<short>(boats[i].occupying_hero);
+        if (outfile->Write(&occupyingHero, sizeof(occupyingHero))
+                < sizeof(occupyingHero))
+            return -1;
+
+        value = boats[i].occupied;
+        if (outfile->Write(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        if (!boats[i].save(outfile))
+            return -1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1235
 // No retail row: SaveBoatPool ends at 0x4b9ded and playerData::playerData
