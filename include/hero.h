@@ -692,7 +692,9 @@ struct type_obscuring_object {
     void obscure_cell(TAdventureObjectType new_type, long id);
     void restore_cell();
 #endif
+    unsigned char save(void* outfile);
 };
+SIZE(type_obscuring_object, 0x18);
 
 // boat - the adventure-map vessel. It lives here for the same reason
 // type_obscuring_object does: the Dreamcast roster declares it in
@@ -713,14 +715,8 @@ struct type_obscuring_object {
 // compare). With facing already proven at +0x1b that is four hits and
 // the stride, so the DC roster transfers to retail unrepacked and the
 // extent is now proven: sizeof is 0x28.
-class boat {
+class boat : public type_obscuring_object {
 public:
-    // The type_obscuring_object base, 24 B by the DC class record. The
-    // position words are also read directly by DrawBoatPart.
-    short x;                        // +0x00
-    short y;                        // +0x02
-    short z;                        // +0x04
-    char pad_006[0x12];
     unsigned char allocated;        // +0x18
     unsigned char id;               // +0x19
     char type;                      // +0x1a
