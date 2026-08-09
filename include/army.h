@@ -81,7 +81,9 @@ public:
     // decide whether a boost saves a creature (get_defense_boost_value
     // 0x4387c0). Name provisional.
     int topCreatureDamage;        // +0x58
-    char pad_5c[0x4];
+    // Original army-group slot, restored by combatManager::UpdateArmyGroup
+    // when it writes surviving stacks back after combat.
+    int originalIndex;            // +0x5c (DC origPos)
     // The stack's size at the START of the combat, so that
     // origNumTroops - numTroops is the count this side destroyed:
     // CalculateGainedExperience (0x46a350) multiplies exactly that
