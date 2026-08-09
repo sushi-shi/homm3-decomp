@@ -237,16 +237,36 @@ void generator::update_bonus()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:557
 DC_ONLY(0xa3250, 0x38)
-void generator::set_owner(long owner)
+inline void generator::set_owner(long owner)
 {
-    // @stub
-}
+    if (owner == playerOwner)
+        return;
 
-#endif  // @carcass
+    if (playerOwner >= 0) {
+        playerData* player = &gpGame->players[playerOwner];
+        int creature = type[0];
+        if (gpGame->f_1f698 ||
+            (creature != CREATURE_AIR_ELEMENTAL &&
+             creature != CREATURE_EARTH_ELEMENTAL &&
+             creature != CREATURE_FIRE_ELEMENTAL &&
+             creature != CREATURE_WATER_ELEMENTAL)) {
+            int townType = akCreatureTypeTraits[creature].townType;
+            if (townType != -1) {
+                for (int index = 0; index < player->numTowns; index++) {
+                    town* currentTown =
+                        gpGame->GetTown(player->townIds[index]);
+                    if (currentTown->type == townType)
+                        currentTown->change_generator_bonus(type[0], -1);
+                }
+            }
+        }
+    }
+
+    playerOwner = owner;
+    update_bonus();
+}
 
 // E:\gamedcs\game.cpp:570
 VA(0x004b8860, 0x1F7)  // anchor-global, dc 0xa3288
@@ -1469,16 +1489,25 @@ void game::ClaimMine(int mineId, int newPlayerOwner, type_action_type action_typ
         CheckEndGame(0);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:7407
 VA(0x004c67b0, 0x1A4)  // anchor-global, dc 0xb1828
 void game::ClaimGenerator(int generatorId, int newPlayerOwner)
 {
-    // @stub
-}
+    generator* current_generator = &generators[generatorId];
+    CMCClaimGenerator change(generatorId, newPlayerOwner);
+    SendMapChange(&change);
 
-#endif  // @carcass
+    current_generator->set_owner(newPlayerOwner);
+    if (newPlayerOwner != -1) {
+        type_point location(current_generator->mapX, current_generator->mapY,
+                            current_generator->mapZ);
+        SetVisibility(location.x, location.y, location.z,
+                      newPlayerOwner, 3, 0);
+    }
+
+    if (victoryCondition.CheckForFlaggedGeneratorWin())
+        CheckEndGame(0);
+}
 
 // E:\gamedcs\game.cpp:7441
 VA(0x004c6960, 0xC9)  // anchor-global, dc 0xb1988
