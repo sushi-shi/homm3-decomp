@@ -260,6 +260,15 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::SetRolloverText` extends to 60.3162%.**
+  Retail admits Border Guard/Tent color-name formatting, Hill Fort's global
+  information annotation, Pyramid's current-hero knowledge state, and the
+  Water Wheel/Windmill known-and-depleted states. The retail switch entries,
+  direct name-table relocations, player-knowledge tests, extra-info masks and
+  common visited/unvisited tails prove the behavior; no external
+  implementation body was used. Whole-linked fuzzy coverage rises from
+  44.76% to 44.85% with all 599 exact linked functions retained.
+
 - **2026-08-09 — `advManager::SetRolloverText` extends to 56.3176%.**
   Retail admits the Dead Guy, Fountain of Fortune, Lean-To, Magic Spring,
   Monster, Mystical Garden and Resource arms. The four player-visit fields
