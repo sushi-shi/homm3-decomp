@@ -842,6 +842,10 @@ public:
 DATA(0x006994e8) extern game* gpGame;
 DATA(0x0067814c) extern int gHeroGoldCost;
 DATA(0x0069774c) extern unsigned char gbUnk69774c;
+// Save version 41 added this signed-byte session value. game::Load owns the
+// restore path; advManager also updates it when the local player finds the
+// Holy Grail. Its wider role is not yet byte-proven.
+DATA(0x0069950c) extern int gUnnamed69950c;
 extern playerData* gpCurrentPlayer;
 
 // The world's x- and y-extents, retail .data 0x6783c8 / 0x6783cc.

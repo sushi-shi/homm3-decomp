@@ -76,10 +76,6 @@
 #undef HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 
-// Narrow advmgr.obj-only state written when the local player uncovers the
-// Holy Grail. Its wider role and owning compiland are not yet attested.
-DATA(0x0069950c) extern int gUnnamed69950c;
-
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 {

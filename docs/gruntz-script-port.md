@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::Load` extends from 47.6526% to 48.8668%.** Save
+  version 41 introduces one unchecked byte read immediately after the path
+  search array closes; retail sign-extends that byte into the global at
+  0x69950c and stores -1 for older saves. The address was already independently
+  attested by `advManager`, so its declaration moves to the canonical owner
+  header rather than creating another translation-unit-local extern. The
+  town/hero roster candidate was rejected because either partial form lowered
+  the function score; it remains out until the adjacent retail stack schedule
+  can be reconstructed as one additive unit. All 986 cur/max/history ratchets
+  remain clean, and no external implementation body was used.
+
 - **2026-08-09 — `game::Load` reaches 47.6526% with the retail save-header
   frame.** The 0x5a4-byte `SavedGameHeader` is fixed by retail stack offsets,
   constructor order, copy widths, and member destinations: it contains the

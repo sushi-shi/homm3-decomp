@@ -1675,6 +1675,13 @@ int game::Load(TAbstractFile* infile)
     gMapHeight = mapHeader.Size;
     gpSearchArray->Close();
 
+    if (saveVersion >= 41) {
+        infile->Read(&char_buffer, sizeof(char_buffer));
+        gUnnamed69950c = char_buffer;
+    } else {
+        gUnnamed69950c = -1;
+    }
+
     if (saveVersion >= 34) {
         infile->Read(field_4e2b4, sizeof(field_4e2b4));
         infile->Read(field_4e224, sizeof(field_4e224));
