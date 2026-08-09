@@ -604,7 +604,7 @@ void searchArray::set_moat(const army* current_army)
     { for (int cell = 0; cell < 187; ++cell) {
         if (gpCombatManager->cells[cell].field_10 & 4) {
             const combatManager::TObstacle* obstacle =
-                &gpCombatManager->obstacles_begin[gpCombatManager->cells[cell].field_14];
+                &gpCombatManager->obstacles.begin[gpCombatManager->cells[cell].field_14];
             if (current_army->combatSide == obstacle->field_09 || obstacle->field_0a)
                 bIsMoatSlowed[cell] = 1;
         }
