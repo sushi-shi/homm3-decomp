@@ -887,14 +887,70 @@ void combatManager::RemoveObstacle(int index)
     obstacle->sprite = 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:3240
 VA(0x00466c50, 0x1A1)  // linkorder, dc 0x60c0c
 void combatManager::InitializeArchers()
 {
-    // @stub
+    TArcher* archer = archers;
+    memset(archer, 0, sizeof(archers));
+    if (field_132f4 < COMBAT_FORTIFICATION_CITADEL)
+        return;
+
+    const TSiegeArcherInfo& info = gSiegeArcherInfo[defendingTown->type];
+    TArcherLoadState locals;
+    locals.spriteName =
+        akCreatureTypeTraits[info.creatureType].m_sprite_name;
+
+    archer->creatureType = info.creatureType;
+    locals.sprite = ResourceManager::GetSprite(locals.spriteName);
+    if (archer->sprite)
+        archer->sprite->Dispose();
+    archer->sprite = locals.sprite;
+    locals.sprite = ResourceManager::GetSprite(info.shadowSpriteName);
+    if (archer->shadowSprite)
+        archer->shadowSprite->Dispose();
+    archer->shadowSprite = locals.sprite;
+    archer->x = info.positions[0].x;
+    archer->y = info.positions[0].y;
+    archer->field_14 = 0;
+    archer->field_18 = 2;
+    archer->field_1c = 0;
+
+    if (field_132f4 != COMBAT_FORTIFICATION_CASTLE)
+        return;
+
+    archers[1].creatureType = info.creatureType;
+    locals.sprite = ResourceManager::GetSprite(locals.spriteName);
+    if (archers[1].sprite)
+        archers[1].sprite->Dispose();
+    archers[1].sprite = locals.sprite;
+    locals.sprite = ResourceManager::GetSprite(info.shadowSpriteName);
+    if (archers[1].shadowSprite)
+        archers[1].shadowSprite->Dispose();
+    archers[1].shadowSprite = locals.sprite;
+    archers[1].x = info.positions[1].x;
+    archers[1].y = info.positions[1].y;
+    archers[1].field_14 = 0;
+    archers[1].field_18 = 2;
+    archers[1].field_1c = 0;
+
+    archers[2].creatureType = info.creatureType;
+    locals.sprite = ResourceManager::GetSprite(locals.spriteName);
+    if (archers[2].sprite)
+        archers[2].sprite->Dispose();
+    archers[2].sprite = locals.sprite;
+    locals.sprite = ResourceManager::GetSprite(info.shadowSpriteName);
+    if (archers[2].shadowSprite)
+        archers[2].shadowSprite->Dispose();
+    archers[2].shadowSprite = locals.sprite;
+    archers[2].x = info.positions[2].x;
+    archers[2].y = info.positions[2].y;
+    archers[2].field_14 = 0;
+    archers[2].field_18 = 2;
+    archers[2].field_1c = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3299
 VA(0x00466e00, 0x323)  // anchor-global, dc 0x60ce0

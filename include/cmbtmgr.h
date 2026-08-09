@@ -85,6 +85,16 @@ enum TWallTargetId {
     WALL_TARGET_COUNT = 8
 };
 
+// The defending town's wall tier. InitializeArchers proves that a Citadel
+// installs the keep archer and a Castle installs the two tower archers too;
+// the other combat readers only distinguish an absent wall from any tier.
+enum ECombatFortification {
+    COMBAT_FORTIFICATION_NONE = 0,
+    COMBAT_FORTIFICATION_FORT = 1,
+    COMBAT_FORTIFICATION_CITADEL = 2,
+    COMBAT_FORTIFICATION_CASTLE = 3
+};
+
 // Row 5's three special columns of the 11x17 combat grid, named from
 // the byte tables they are the fifth entry of: 0x60 is
 // gCastleWallColumns[5] (the gate itself), 0x5f gMoatColumns[5] and
@@ -97,6 +107,22 @@ enum ECombatGateHex {
     COMBAT_HEX_GATE_MOAT = 0x5f,
     COMBAT_HEX_GATE = 0x60
 };
+
+// One faction row in the siege-archer table at 0x63cf88. Retail indexes
+// nine 0x20-byte rows by town::type, then uses the three coordinate pairs
+// for the keep, lower tower and upper tower respectively.
+struct TSiegeArcherPosition {
+    int x;
+    int y;
+};
+
+struct TSiegeArcherInfo {
+    int creatureType;
+    TSiegeArcherPosition positions[3];
+    const char* shadowSpriteName;
+};
+
+extern const TSiegeArcherInfo gSiegeArcherInfo[9];
 
 // Two additional TTerrainType values needed only by combat terrain
 // selection. Kept out of armygrp.h's include-sensitive enum: adding
@@ -218,6 +244,29 @@ public:
         // Name provisional; no roster reaches the slot.
         long spell_damage;                  // +0xc
         char pad_10[0x8];
+    };
+
+    // One of the three defending-town archer positions. InitializeArchers
+    // clears three contiguous 0x24-byte rows at +0x13d78 and fills these
+    // members in this order; DamageWall later uses armySlot from each row
+    // when the corresponding tower is destroyed.
+    struct TArcher {
+        int creatureType;             // +0x0
+        CSprite* sprite;              // +0x4
+        CSprite* shadowSprite;        // +0x8
+        int x;                        // +0xc
+        int y;                        // +0x10
+        int field_14;                 // +0x14
+        int field_18;                 // +0x18
+        int field_1c;                 // +0x1c
+        int armySlot;                 // +0x20
+    };
+
+    // InitializeArchers' two simultaneously live resource locals. Keeping
+    // them as one record preserves retail VC6's [-8]/[-4] stack ordering.
+    struct TArcherLoadState {
+        CSprite* sprite;
+        const char* spriteName;
     };
 
     char pad_0000[0x34];
@@ -369,7 +418,7 @@ public:
     // (0x469a10) only consults the gate hexes while it is positive and
     // should_lower_door (0x467130) while it is non-zero. Name pending
     // a writer.
-    int field_132f4;                  // +0x132f4
+    ECombatFortification field_132f4; // +0x132f4
     char pad_132f8[0x170];
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
@@ -399,12 +448,18 @@ public:
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
     unsigned char bCreaturePlacement; // +0x13d68
-    char pad_13d69[0x2f];
-    int field_13d98;                  // +0x13d98
-    char pad_13d9c[0x20];
-    int field_13dbc;                  // +0x13dbc
-    char pad_13dc0[0x20];
-    int field_13de0;                  // +0x13de0
+    char pad_13d69[0xf];
+    union {
+        TArcher archers[3];           // +0x13d78
+        struct {
+            char pad_13d78[0x20];
+            int field_13d98;          // +0x13d98
+            char pad_13d9c[0x20];
+            int field_13dbc;          // +0x13dbc
+            char pad_13dc0[0x20];
+            int field_13de0;          // +0x13de0
+        };
+    };
     // "Move order is reversed for this combat": find_move_order
     // (0x41f179) reads it through the gpCombatManager GLOBAL - not
     // through its own `this` - and, when it is set, keys every stack
@@ -415,11 +470,6 @@ public:
     // Army-slot indexes for the main building, lower tower and upper
     // tower defenders. DamageWall reads one selected slot when the
     // corresponding target falls and marks that stack removed.
-    int field_13d98;                  // +0x13d98
-    char pad_13d9c[0x20];
-    int field_13dbc;                  // +0x13dbc
-    char pad_13dc0[0x20];
-    int field_13de0;                  // +0x13de0
     unsigned char field_13de4;        // +0x13de4
     char pad_13de5[0x17b];
     // Per-wall-segment hit points, indexed by TWallTargetId. Sliced
@@ -479,6 +529,7 @@ public:
     void UpdateArmyLuckAndMorale();
     unsigned char place_obstacle(int obstacle_id);
     void PlaceAllObstacles();
+    void InitializeArchers();
     unsigned char HexIsBlocked(int index);
     unsigned char IsInMoat(int hex, int* index);
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
