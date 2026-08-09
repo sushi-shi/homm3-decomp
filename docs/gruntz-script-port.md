@@ -260,6 +260,15 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `armyGroup::get_luck_description` rises 59.1587% ->
+  60.3234%.** Retail's cursed-ground arm default-constructs a string, assigns
+  the static text and routes it toward the return cleanup. A branch-local named
+  result reproduces that lifetime and removes three generated blocks. Direct
+  string initialization fell to 54.7365%, while a function-wide result with a
+  single source return still emitted two machine returns and fell to 57.6257%;
+  both probes were reverted. The remaining residual is primarily the hidden
+  return-object/EH lowering shared by the two description routines.
+
 - **2026-08-09 — `TSplitWindow::TSplitWindow` rises 77.0387% ->
   98.3954%.** Retail snapshots `creature` only across the elemental/background
   selector, then reloads the member for the sprite; that lifetime recovers its

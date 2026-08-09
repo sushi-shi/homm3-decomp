@@ -308,7 +308,7 @@ armygrp	?WindowHandler@TSplitWindow@@UAEHPAVmessage@@@Z	99.9170
 armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000
 armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000
 armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000
-armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	59.1587
+armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	60.3234
 armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	60.1036
 # Retail-ordered switch bodies, the creature-record cursor, the direct
 # spell-table field_c access, and the byte-proven attrs 0x400 gate raised

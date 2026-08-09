@@ -1797,17 +1797,22 @@ after_magic_terrain:
 // E:\gamedcs\armygrp.cpp:1464. Retail Complete's body proves the added
 // creature argument and full-width magic-terrain mode; the older Dreamcast
 // prototype omits the former and calls the latter a boolean.
-// COMPLETE semantic transcription 2026-08-09 (59.1587%). As above, the
-// residual is dominated by Dinkumware string construction/destruction and
-// EH layout rather than missing retail modifier branches.
+// Semantic transcription complete; residual 60.3234%. A branch-local named
+// result for cursed ground recovers retail's default-construct/assign lifetime
+// and removes three blocks. Direct initialization and a function-wide shared
+// result both regress. The remaining delta is dominated by Dinkumware string
+// return-object construction/destruction and EH layout.
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::get_luck_description(
     TCreatureType creature, int luck, const hero* ourHero,
     const town* ourTown, const hero* enemyHero,
     const armyGroup* enemyGroup, int magicTerrain) const
 {
-    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
-        return gCursedGroundLuckText;
+    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND) {
+        std::string result;
+        result = gCursedGroundLuckText;
+        return result;
+    }
 
     if ((ourHero && const_cast<hero*>(ourHero)->IsWieldingArtifact(
                         ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
@@ -1821,7 +1826,6 @@ std::string armyGroup::get_luck_description(
     int currentLuck = const_cast<armyGroup*>(this)->GetLuck(
         ourHero, ourTown, enemyHero, enemyGroup, 0, 0);
     std::string result;
-
     if (ourHero)
         result += ourHero->get_luck_description();
 
