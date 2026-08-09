@@ -162,7 +162,15 @@ public:
     // `x * 0.05f + 1.0f`. That is HoMM3's per-level specialty growth,
     // so the field is the hero's level - name role-inferred, PROVISIONAL.
     short level;                    // +0x55
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    char pad_057[0x14];
+    // +0x6b, one visit bit per Tree of Knowledge id. SetTreeHelpText
+    // masks the cell's low five extra-info bits into this dword.
+    unsigned long TreeOfKnowledgeFlags;
+    char pad_06f[0x4];
+#else
     char pad_057[0x1c];
+#endif
     // +0x73. One dword of "this hero has already used that object"
     // bits, indexed by the cell's extraInfo: hero::VisitedArena
     // (0x4e53c0) tests `(1 << cell->extraInfo) & [this+0x73]` and
@@ -172,8 +180,8 @@ public:
     // GardenOfRevelation +0x5f, MercCamp +0x63, PowerSchool +0x67,
     // TreeOfKnowledge +0x6b, Library +0x6f, then MagicSchool +0x77,
     // WarSchool +0x7b, University +0x7f, Shrine1 +0x83, Shrine2 +0x87.
-    // Only this one has retail bytes behind it, so only this one is
-    // sliced; the rest stay in the pads as a prediction.
+    // SetTreeHelpText now independently proves TreeOfKnowledgeFlags above;
+    // the other predicted fields remain in the pads.
     unsigned long ArenaFlags;
     char pad_077[0x1a];
     // Seven army slots: creature type at 0x91+i*4, count at 0xad+i*4
