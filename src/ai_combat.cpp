@@ -265,10 +265,10 @@ long type_monster_data::take_damage(long damage)
 }
 
 // E:\gamedcs\ai_combat.cpp:172
-// FULLY TRANSCRIBED 2026-08-09. 99.9969%: every instruction, branch and
-// switch byte agrees; the lone byte delta is the dead empty-allocator
-// source slot (`[ebp+0xb]` retail versus `[ebp+0xf]` here). Giving the
-// wrapper the allocator default argument explicitly is byte-inert.
+// The my_hero-before-my_army assignment order is load-bearing even
+// though VC6 schedules the resulting stores identically: it makes the
+// inlined empty allocator reuse `[ebp+0xb]`, the same dead upper
+// parameter byte retail reads, rather than `[ebp+0xf]`.
 // The byte selector maps the two RoE
 // magic-ground ids and the four combat-field SoD ids; the other magic
 // grounds deliberately take the default because they affect army
@@ -279,8 +279,8 @@ long type_monster_data::take_damage(long damage)
 VA(0x00423ee0, 0x233)  // anchor-bracket, dc 0x29e2c
 type_AI_combat_data::type_AI_combat_data(const hero* new_hero, const armyGroup* new_army, double base_modifier, const hero* _enemy_hero, const town* enemy_town, NewmapCell* map_cell)
 {
-    my_army = const_cast<armyGroup*>(new_army);
     my_hero = const_cast<hero*>(new_hero);
+    my_army = const_cast<armyGroup*>(new_army);
     check_wall_archery_penalty(enemy_town);
     enemy_hero = const_cast<hero*>(_enemy_hero);
 
