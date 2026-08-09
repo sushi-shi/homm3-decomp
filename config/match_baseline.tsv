@@ -36,6 +36,9 @@ advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790
 advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	100.0000	100.0000	100.0000	0x8770
+advmgr	?get_black_box@ExtraInfoUnion@@QAEPAVBlackBoxData@@XZ	100.0000	100.0000	100.0000	0x5de0
+advmgr	?get_creature_bank@ExtraInfoUnion@@QAEPAVtype_creature_bank@@XZ	100.0000	100.0000	100.0000	0x5df0
+advmgr	?get_university@ExtraInfoUnion@@QAEPAVtype_university@@XZ	100.0000	100.0000	100.0000	0x5e10
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0
 advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	0.0000	0.0000	0.0000	0x6a20
 advmgr	CAdvMgrNetMsgHandler_HandleGiftRequestMsg	0.0000	0.0000	0.0000	0x6480
@@ -43,9 +46,6 @@ advmgr	CAdvMgrNetMsgHandler_HandleNetMsg	0.0000	0.0000	0.0000	0x5e30
 advmgr	CAdvMgrNetMsgHandler_HandleTradeRequestMsg	0.0000	0.0000	0.0000	0x6bf0
 advmgr	CAdvPopup_CAdvPopup	0.0000	0.0000	0.0000	0x1b040
 advmgr	ComputeAdvNetControl	0.0000	0.0000	0.0000	0x1a660
-advmgr	ExtraInfoUnion_get_black_box	0.0000	0.0000	0.0000	0x5de0
-advmgr	ExtraInfoUnion_get_creature_bank_5df0	0.0000	0.0000	0.0000	0x5df0
-advmgr	ExtraInfoUnion_get_university	0.0000	0.0000	0.0000	0x5e10
 advmgr	PopupPlayerTurnInfo	0.0000	0.0000	0.0000	0x19c80
 advmgr	SaveGame	0.0000	0.0000	0.0000	0x18160
 advmgr	SetShrineHelpText	0.0000	0.0000	0.0000	0xd8d0

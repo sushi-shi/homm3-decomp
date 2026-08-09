@@ -54,6 +54,9 @@
 #include <va.h>
 #include <stdio.h>
 #include "advmgr.h"
+#include "extrainfo.h"
+#include "creature_bank.h"
+#include "university_window.h"
 #include "advmgr_objects.h"
 #include "bitmap16.h"
 #include "csprite.h"
@@ -95,26 +98,38 @@ unsigned char InitializeExtraInfoText()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:392
+// The shared cell dword is passed unchanged to advManager's full black-box
+// lookup; retail saves the caller's ECX solely to make that one argument.
 VA(0x00405de0, 0xD)  // anchor-global, dc 0x5864
 BlackBoxData* ExtraInfoUnion::get_black_box()
 {
-    // @stub
+    return gpAdvManager->get_black_box(this);
 }
 
 // E:\gamedcs\advmgr.cpp:400
+// Bits 13..24 are the scenario-pool index. The 108-byte element stride and
+// the creatureBanks _First offset are both explicit in retail's address math.
 VA(0x00405df0, 0x20)  // anchor-bracket, dc 0x5888
 type_creature_bank* ExtraInfoUnion::get_creature_bank()
 {
-    // @stub
+    unsigned index = (extraInfo >> 13) & 0xfff;
+    return gpGame->creatureBanksFirst + index;
 }
 
 // E:\gamedcs\advmgr.cpp:408
+// The same 12-bit index selects a 16-byte university record from the adjacent
+// pool.
 VA(0x00405e10, 0x1C)  // anchor-global, dc 0x58bc
 type_university* ExtraInfoUnion::get_university()
 {
-    // @stub
+    unsigned index = (extraInfo >> 13) & 0xfff;
+    return gpGame->universitiesFirst + index;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:420
 VA(0x00405e30, 0x64B)  // dc-bracket forced, dc 0x58f0

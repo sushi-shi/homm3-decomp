@@ -5,6 +5,15 @@
 #ifndef HOMM3_CREATURE_BANK_H
 #define HOMM3_CREATURE_BANK_H
 
+#include <va.h>
+
+// ExtraInfoUnion::get_creature_bank indexes the scenario pool with a
+// 108-byte stride. No field within the retail record is exposed yet.
+class type_creature_bank {
+    char pad_00[0x6c];
+};
+SIZE(type_creature_bank, 0x6c);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:32, dc 0x70fe0) void initialize_creature_bank_level(type_creature_bank_level* traits, const std::vector<char* resource);
 // CODEVIEW(E:\gamedcs\creature_bank.cpp:67, dc 0x7112c) unsigned char initialize_creature_bank_traits();
