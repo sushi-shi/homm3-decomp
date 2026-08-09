@@ -269,6 +269,40 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   register flow are retail-byte-proven; no external implementation body was
   used.
 
+- **2026-08-09 — `generator::update_bonus` reconstructed byte-exact
+  (184 bytes).** Retail ignores unowned generators and, while the existing
+  expansion/version gate is clear, the four base elementals. It takes the
+  town alignment from the first generated creature's 116-byte static-traits
+  row, rejects the -1 alignment, then walks the owning player's signed town
+  roster. Each town whose faction byte matches receives a +1 generator
+  bonus for that creature through the already-exact town member. The inline
+  `game::GetTown` -1 arm and 360-byte town-vector indexing reproduce retail
+  directly. Restoring the generator's four-slot creature row from plain
+  integers to its attested `TCreatureType` domain is layout-neutral and
+  leaves the exact constructor, save, and growth bodies unchanged.
+  Dreamcast CodeView supplies the member identity and creature-row domain;
+  all gates, offsets, constants, indexing, and the called behavior are
+  retail-byte-proven. No external implementation body was used.
+  Whole-linked fuzzy coverage rises from 46.07% to 46.12% and exact linked
+  functions from 620 to 621.
+
+- **2026-08-09 — `generator::save` reconstructed byte-exact
+  (177 bytes).** Retail serializes the owner byte, generator class and type,
+  the low byte of each of four creature ids, the complete eight-byte
+  population row, three map-coordinate bytes, the embedded guard army, and
+  finally the town id. The retail vtable slot fixes the formerly opaque
+  stream parameter as `TAbstractFile*`; every direct write uses its proven
+  slot-2 `Write` method, and the guard army uses its already-exact save
+  member. Keeping the final `Write(...) == sizeof(town_id)` result in an
+  explicit byte local is codegen-significant: VC6 then emits retail's
+  `cmp/sete` instead of a four-instruction integer normalization. Dreamcast
+  CodeView supplies the member identity and parameter/return widths; the
+  serialized offsets, sizes, order and stream operations are all
+  retail-byte-proven. No external implementation body was used. Against the
+  re-anchored floor, whole-linked fuzzy coverage rises from 46.03% to
+  46.07%, executable fuzzy coverage from 8.73% to 8.74%, and exact linked
+  functions from 619 to 620.
+
 - **2026-08-09 — creature-bank rollover help extends to 87.2833%.**
   Retail checks cell knowledge before materializing the bank-state dword, then
   keeps the known-cell work in its own branch. Its full-list and compact-list
