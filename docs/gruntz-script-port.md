@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::QuickInfo` extends to 43.7530%.** The
+  lighthouse path reads its signed owner from the indexed mine record and
+  appends the owner color through the shared quick-info suffix. Mine dispatch
+  calls the independently delimited five-parameter retail helper with the
+  local player id, newline separator and full-list flag. Mystical gardens and
+  obelisks select their visited text from the packed cell flags and admitted
+  player/game bitsets. Seer huts and quest guards index their map-owned
+  vectors and copy the returned temporary string, preserving the retail
+  destructor paths. These six retail-proven cases raise the function from
+  37.2317% and linked fuzzy coverage from 47.50% to 47.67%, with all 626 exact
+  functions retained. Dreamcast supplies surviving method/type identities;
+  retail fixes all indices, gates, arguments and lifetimes. No external body
+  was used, and the baseline remains full-build-owned.
+
 - **2026-08-09 — `advManager::QuickInfo` visited-state dispatch reaches
   37.2317%.** The retail case blocks share a 512-byte formatting buffer and
   the `"\n\n%s"` visited/unvisited suffix. Arena, border tent, buoy and
