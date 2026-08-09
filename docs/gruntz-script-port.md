@@ -436,6 +436,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — all three retail `ExtraInfoUnion` accessors reconstructed
+  byte-exact (13, 32 and 28 bytes).** `get_black_box` forwards the const
+  union pointer to the central adventure manager. `get_creature_bank` and
+  `get_university` extract bits 13..24 as an unsigned twelve-bit index and
+  address the central game's vector first pointers at +0x4e3dc/+0x4e3cc
+  with retail's 108-byte and 16-byte element strides. Dreamcast supplies
+  the union-arm names and correct const/reference signatures; retail proves
+  every field, shift, mask, pool base and stride. Only the two indexed arms
+  needed here were admitted under the existing advmgr-only view—the other
+  eighteen DC alternatives remain unmodelled, and `NewmapCell` keeps its
+  established raw-dword view in every other TU. This applies the
+  HoMM2/Gruntz narrow-view rule without perturbing the wider include graph.
+  No external implementation body or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `ComputeUALoc` reconstructed byte-exact (44 bytes).**
   The function indexes the central game's eight 360-byte player records by
   its fastcall argument and asks that player to update the same player's
