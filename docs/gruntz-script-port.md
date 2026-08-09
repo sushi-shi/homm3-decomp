@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `town::SwapHeroes` admitted byte-exact (428 bytes).**
+  Retail proves the complete exchange: resolve both resident heroes, swap the
+  town ids, remove the former visitor from the acting player's signed-count
+  hero roster, restore its obscured cell, broadcast the 0x426 hide message,
+  clear the current-hero view latches when locally owned, and place the former
+  garrison hero on the town tile. The 24-byte hide-message layout and its store
+  order are local to town.obj; the unnamed 0x49c720 game member remains an
+  ordinal declaration. `std::swap` is required for retail's reference-based
+  exchange schedule. Dreamcast CodeView supplied names and types only; no
+  external implementation body was used.
+
 - **2026-08-09 — `town::GiveSpells` reconstructed to 95.0327% (467
   bytes).** Retail proves the five six-spell Mage Guild rows at town +0x44,
   their signed counts at +0xbc, and the existing 70-bit spell veto at +0xd4.

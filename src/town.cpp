@@ -4,8 +4,10 @@
 #define HOMM3_TOWN_OBJ_DECLS
 #include "terrain.h"
 #include <va.h>
+#include <algorithm>
 #include <string.h>
 #include "advmgr.h"
+#include "cursor.h"
 #include "exec.h"
 #include "game.h"
 #include "town.h"
@@ -320,23 +322,54 @@ void town::remove_garrison_hero()
     placedHero->PlaceInMap(player, point, 0);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\town.cpp:1111
-// BLOCKED on playerData and three unlocated callees. Decoded: it takes
-// GetHero on both slots, swaps garrisonHeroId/visitingHeroId, then
-// removes the (former) visiting hero from the acting player's own hero
-// list - gpCurrentPlayer at 0x69ccb0, whose COUNT is a signed byte at
-// +0x01 and whose id array starts at +0x08 (the compaction loop is
-// `[eax + 4*i + 8] = [eax + 4*i + 0xc]` down to count-1, then the byte
-// is decremented and the freed tail slot set to -1). Needs
-// playerData::FindHero, type_obscuring_object::restore_cell and two
-// still-unnamed game.obj bodies, plus playerData's hero-list fields.
+// Exchanges the two resident heroes, removes the former visitor from the
+// acting player's roster and map cell, broadcasts the hide change, then
+// places the former garrison hero on the town tile. Retail clears the two
+// adventure-view latches only when the hidden hero was both current and
+// locally owned. `std::swap` is byte-material: its reference-based exchange
+// gives VC6 retail's load/store order and register allocation.
 VA(0x005be450, 0x1AC)  // anchor-global, dc 0x166864
 void town::SwapHeroes()
 {
-    // @stub
+    town* currentTown = this;
+    hero* garrisonHero = gpGame->GetHero(currentTown->garrisonHeroId);
+    hero* visitingHero = gpGame->GetHero(currentTown->visitingHeroId);
+
+    std::swap(currentTown->garrisonHeroId, currentTown->visitingHeroId);
+
+    int rosterIndex = gpCurrentPlayer->FindHero(visitingHero->id);
+    gpGame->GameFn_0049C720(visitingHero, visitingHero->owner, 0);
+    type_obscuring_object* obscuringHero =
+        static_cast<type_obscuring_object*>(static_cast<void*>(visitingHero));
+    obscuringHero->restore_cell();
+
+    CMCHideHero hideHero(visitingHero->id);
+    SendMapChange(&hideHero);
+
+    for (int i = rosterIndex; i < gpCurrentPlayer->numHeroes - 1; ++i)
+        gpCurrentPlayer->heroes[i] = gpCurrentPlayer->heroes[i + 1];
+    --gpCurrentPlayer->numHeroes;
+    gpCurrentPlayer->heroes[gpCurrentPlayer->numHeroes] = -1;
+
+    if (gpCurrentPlayer->currHeroId == visitingHero->id) {
+        gpCurrentPlayer->currHeroId = -1;
+        if (gNetLocalGamePos == visitingHero->owner) {
+            gpAdvManager->drawCursor = 0;
+            gpAdvManager->inDialog = 0;
+        }
+    }
+
+    int player = currentTown->owner;
+    hero* placedHero = gpGame->GetHero(garrisonHero->id);
+    type_point point;
+    point.x = currentTown->mapX;
+    point.y = currentTown->mapY;
+    point.z = currentTown->mapZ;
+    placedHero->PlaceInMap(player, point, 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\town.cpp:1150
 // Runs a 70-iteration loop over the spell band at town+0xd4 (the same
