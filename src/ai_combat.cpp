@@ -760,12 +760,26 @@ void type_AI_combat_data::cast_spell(type_AI_combat_data* defender, type_speed_c
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_combat.cpp:1082
-DC_ONLY(0x2b32c, 0x52)
-void type_AI_combat_data::cast_spells(type_AI_combat_data* defender, type_speed_catagory round)
+// Retail inlines every use; these statements are reconstructed from the
+// repeated retail expansions. The Dreamcast contributes only the helper's
+// name/signature and retains an out-of-line body in that build.
+inline void type_AI_combat_data::cast_spells(
+    type_AI_combat_data& defender,
+    type_speed_catagory round)
 {
-    // @stub
+    if (get_fastest_speed() < defender.get_fastest_speed()) {
+        defender.cast_spell(*this, round);
+        cast_spell(defender, round);
+    } else {
+        cast_spell(defender, round);
+        defender.cast_spell(*this, round);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:1100
 DC_ONLY(0x2b380, 0x88)
@@ -861,30 +875,57 @@ long type_AI_combat_data::get_final_melee_value() const
     return value;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_combat.cpp:1224
-DC_ONLY(0x2b890, 0x3A)
-void type_AI_combat_data::do_ranged_combat(type_AI_combat_data* defender)
+// Retail inlines every use; these statements are reconstructed from the
+// repeated retail expansions. The Dreamcast contributes only the helper's
+// name/signature and retains an out-of-line body in that build.
+inline void type_AI_combat_data::do_ranged_combat(
+    type_AI_combat_data& defender)
 {
-    // @stub
+    long our_attack = get_attack(const_ranged, 0);
+    long their_attack = defender.get_attack(const_ranged, 0);
+    inflict_damage(their_attack, 0);
+    defender.inflict_damage(our_attack, 0);
 }
 
 // E:\gamedcs\ai_combat.cpp:1240
-DC_ONLY(0x2b8cc, 0x3E)
-void type_AI_combat_data::do_melee_combat(type_speed_catagory attacker_speed, type_AI_combat_data* defender)
+// Retail inlines every use; the Dreamcast body survives out of line.
+inline void type_AI_combat_data::do_melee_combat(
+    type_speed_catagory attacker_speed,
+    type_AI_combat_data& defender)
 {
-    // @stub
+    long our_attack = get_attack(attacker_speed, 0);
+    long their_attack = defender.get_attack(const_slow, 1);
+    inflict_damage(their_attack, attacker_speed);
+    defender.inflict_damage(our_attack, 0);
 }
 
 // E:\gamedcs\ai_combat.cpp:1255
-DC_ONLY(0x2b90c, 0x3A)
-void type_AI_combat_data::do_melee_combat(type_AI_combat_data* defender)
+// Retail inlines every use; the Dreamcast body survives out of line.
+inline void type_AI_combat_data::do_melee_combat(
+    type_AI_combat_data& defender)
 {
-    // @stub
+    long their_attack = defender.get_attack(const_slow, 1);
+    long our_attack = get_attack(const_slow, 1);
+    defender.inflict_damage(our_attack, 0);
+    inflict_damage(their_attack, 0);
 }
 
-#endif  // @carcass
+inline type_AI_combat_data::type_AI_combat_data(
+    const type_AI_combat_data& other)
+    : monsters(other.monsters),
+      terrain(other.terrain),
+      mana(other.mana),
+      can_cast(other.can_cast),
+      total_hit_points(other.total_hit_points),
+      tactics_advantage(other.tactics_advantage),
+      my_hero(other.my_hero),
+      my_army(other.my_army),
+      enemy_hero(other.enemy_hero),
+      wall_penalty(other.wall_penalty),
+      penalty_distance(other.penalty_distance)
+{
+}
 
 // E:\gamedcs\ai_combat.cpp:1270
 // Residual (94.8%): INLINER-DEPTH, the same class as simulate_combat.
@@ -923,17 +964,94 @@ void type_AI_combat_data::do_general_melee(type_AI_combat_data& defender)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_combat.cpp:1301
 // EH-bearing (P2.2): push -1 / push 0x627b48 / mov eax,fs:[0].
+// RECONSTRUCTED 2026-08-09 (unscored -> 90.9329%). Retail expands the three
+// small combat helpers but keeps their nested accessors as calls. Spelling
+// those source boundaries restores that /Ob2 depth. The general-melee region
+// is written at this call site with nested inlining disabled because our CL
+// otherwise leaves the outer helper as a call; retail expands the outer body
+// and leaves get_final_melee_value/kill/inflict_damage out of line. The
+// residual is bounded to stack coloring plus constructor/destructor call
+// identity: retail calls the exact type_monster_vector wrapper for both local
+// copies, while this compile expands it to the underlying vector copy call.
 VA(0x004267c0, 0x3FD)  // anchor-global, dc 0x2bad8
-unsigned char type_AI_combat_data::choose_melee(const type_AI_combat_data* enemy, type_speed_catagory current_round)
+bool type_AI_combat_data::choose_melee(
+    const type_AI_combat_data& enemy,
+    type_speed_catagory current_round) const
 {
-    // @stub
-}
+    long index;
+    for (index = get_total(); index-- > 0; ) {
+        if (monsters[index].catagory > current_round)
+            continue;
+        if (monsters[index].catagory == SPEED_CATAGORY_SHOOTER)
+            continue;
+        if (monsters[index].count > 0)
+            break;
+    }
+    if (index < 0)
+        return false;
 
-#endif  // @carcass
+    long best_value;
+    long best_index;
+    long melee_round;
+    for (melee_round = const_slow;
+         melee_round >= current_round;
+         melee_round--) {
+        type_AI_combat_data local_data(*this);
+        type_AI_combat_data local_enemy(enemy);
+
+        long round;
+        for (round = current_round; round < melee_round; round++) {
+            if (local_data.total_hit_points <= 0)
+                break;
+            if (local_enemy.total_hit_points <= 0)
+                break;
+            local_data.cast_spells(
+                local_enemy, (type_speed_catagory)round);
+            local_data.do_ranged_combat(local_enemy);
+        }
+
+        for (round = melee_round; round < const_slow; round++) {
+            if (local_data.total_hit_points <= 0)
+                break;
+            if (local_enemy.total_hit_points <= 0)
+                break;
+            local_data.cast_spells(
+                local_enemy, (type_speed_catagory)round);
+            local_data.do_melee_combat(
+                (type_speed_catagory)round, local_enemy);
+        }
+
+#pragma inline_depth(0)
+        float attacker = static_cast<float>(
+            local_data.get_final_melee_value());
+        float target = static_cast<float>(
+            local_enemy.get_final_melee_value());
+        if (attacker != 0.0 && target != 0.0) {
+            if (attacker > target) {
+                local_enemy.kill();
+                float ratio = target / attacker + 0.05;
+                local_data.inflict_damage(
+                    static_cast<long>(ratio * target), 0);
+            } else {
+                local_data.kill();
+                float ratio = attacker / target + 0.05;
+                local_enemy.inflict_damage(
+                    static_cast<long>(ratio * attacker), 0);
+            }
+        }
+#pragma inline_depth()
+        long value = local_data.total_hit_points;
+        if (value == 0)
+            value = -local_enemy.total_hit_points;
+        if (melee_round == const_slow || best_value < value) {
+            best_value = value;
+            best_index = melee_round;
+        }
+    }
+    return static_cast<short>(best_index) == current_round;
+}
 
 // E:\gamedcs\ai_combat.cpp:1363
 // Residual (46.8%): INLINER-DEPTH divergence, not a spelling one.
