@@ -1074,6 +1074,7 @@ town	?get_build_cost_array@town@@QBEPAHW4type_building_id@@@Z	100.0000	100.0000	
 town	?get_buildable_mask@town@@QBE_JXZ	81.2143	81.2143	81.2143	0x1c0f20
 town	?get_castle_growth_bonus@town@@QBEJW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x1bf570
 town	?get_gold_income@town@@QBEFE@Z	100.0000	100.0000	100.0000	0x1bf600
+town	?get_growth_rate@town@@QAEFF@Z	100.0000	100.0000	100.0000	0x1bfb60
 town	?get_horde@town@@QBEHJ@Z	100.0000	100.0000	100.0000	0x1bf6d0
 town	?get_horde_bonus@town@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1bf770
 town	?get_horde_effect@town@@QBEPAUtype_horde_effect@@W4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1c1230
@@ -1092,7 +1093,6 @@ town	town_BuildBuilding	0.0000	0.0000	0.0000	0x1bede0
 town	town_GiveSpells	0.0000	0.0000	0.0000	0x1be030
 town	town_SwapHeroes	0.0000	0.0000	0.0000	0x1be450
 town	town_create_building	0.0000	0.0000	0.0000	0x1be930
-town	town_get_growth_rate	0.0000	0.0000	0.0000	0x1bfb60
 town	town_give_event_reward	0.0000	0.0000	0.0000	0x1bfeb0
 town	town_initialize	0.0000	0.0000	0.0000	0x1c0670
 town	town_initialize_spells	0.0000	0.0000	0.0000	0x1be600

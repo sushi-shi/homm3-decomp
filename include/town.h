@@ -274,6 +274,9 @@ public:
     __int64 available;
 
     unsigned char CanBuildDock();
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    unsigned char HasBuilding(int buildingId, unsigned char check_included);
+#endif
     void CalcNumLevelArchers(int* numArchers, int* archerLevel);
     long get_castle_growth_bonus(TCreatureType creature) const;
     short get_gold_income(unsigned char include_silo) const;
@@ -292,9 +295,8 @@ public:
     // associated with this town.
     long TownFn_005BF900(long dwelling);
 #endif
-    // 0x5bfb60, located not reconstructed - declared for
-    // increase_population's call site, which pushes the slot as a dword
-    // and tests the result with `test ax,ax` (a short return).
+    // 0x5bfb60. Weekly base, castle, artifact, horde, generator, and Grail
+    // growth for one dwelling slot.
     short get_growth_rate(short dwelling);
     // 0x5bfdd0.
     void increase_population(TCreatureType bonus_creature,
