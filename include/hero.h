@@ -123,7 +123,9 @@ public:
     // `movsx edx, byte [gpGame + 1170*id + 0x21642]` before comparing
     // it against the acting-player id. Name provisional.
     signed char owner;              // +0x22
-    char pad_023[0xd];
+    // +0x23. HeroFn_004D8B30 copies exactly thirteen bytes of the setup
+    // record's name here; SetRolloverText passes this band to sprintf.
+    char name[13];
     // +0x30. DrawHeroPart indexes the eighteen-entry cursorIcons sprite row
     // directly with this dword; the surviving roster names the domain.
     int heroClass;
@@ -465,6 +467,9 @@ public:
     // "first free".
     unsigned char add_to_backpack(const type_artifact* artifact, long slot);
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    // 0x004d8f70 - returns the campaign override or this hero class's
+    // display text. SetRolloverText is the admitted caller in this view.
+    const char* HeroFn_004D8F70();
     // 0x004e3070 - gives or equips one artifact and performs the optional
     // end-condition check. ProcessSearch calls it for the Holy Grail.
     void GiveArtifact(const type_artifact* artifact, int bCheckEnd,

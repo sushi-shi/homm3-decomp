@@ -39,7 +39,14 @@ extern executive* gpExecutive;  // retail .bss 0x699500
 struct SUnnamedEntry6a5d5c {
     char pad_00[4];
     const char* text;                 // +0x4
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    char pad_08[0x38];
+    // SetRolloverText formats a map hero's stored name and class text with
+    // this printf-style string. Name describes only that retail consumer.
+    const char* heroRolloverFormat;    // +0x40
+#else
     char pad_08[0x3c];
+#endif
     // recruitUnit::Update (0x550362) sprintf's this as the first "%s"
     // of the recruit dialog's title, ahead of the creature's plural
     // name. Ordinal placeholder: the object is still unnamed, so its

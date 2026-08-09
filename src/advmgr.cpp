@@ -577,6 +577,7 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     char tempText[500];
     int player = gpGame->GetLocalPlayerGamePos();
     playerData* thisPlayer = gpGame->GetLocalPlayer();
+    int playerBit = 1 << player;
     hero* currentHero;
     if (thisPlayer->currHeroId != -1)
         currentHero = &gpGame->heroes[thisPlayer->currHeroId];
@@ -620,11 +621,20 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         }
         break;
     case BORDER_GUARD:
-    case BORDER_TENT:
         sprintf(gText, DATA_COMPGEN(
             0x00660344, rolloverBorderFormat, "%s %s"),
             gBorderColorNames[cell->objectIndex],
             gAdventureObjectNames[cell->type]);
+        break;
+    case BORDER_TENT:
+        sprintf(gText, DATA_COMPGEN(
+            0x00660344, rolloverBorderFormat, "%s %s"),
+            gBorderColorNames[cell->objectIndex],
+            gAdventureObjectNames[BORDER_TENT]);
+        if (cell->is_trigger) {
+            APPEND_VISIT_TEXT(gpGame->borderTentVisitFlags[cell->objectIndex]
+                              & playerBit);
+        }
         break;
     SET_VISITED_ROLLOVER(BUOY, BuoyInfo,
         currentHero->flags & 0x4);
@@ -686,6 +696,12 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
             strcat(gText, tempText);
         }
         break;
+    case HERO: {
+        hero* mapHero = gpGame->GetHero(cell->extraInfo);
+        sprintf(gText, gUnnamed6a5d5c->entry->heroRolloverFormat,
+                mapHero->name, mapHero->HeroFn_004D8F70());
+        break;
+    }
     SET_VISITED_ROLLOVER(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
         currentHero->flags & (0x02000000UL | 0x10UL));
     SET_VISITED_ROLLOVER(LIBRARY, LibraryInfo,
@@ -735,6 +751,13 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         break;
     SET_VISITED_ROLLOVER(OASIS, OasisInfo,
         currentHero->flags & 0x80);
+    case OBELISK:
+        strcpy(gText, gAdventureObjectNames[OBELISK]);
+        if (cell->is_trigger) {
+            APPEND_VISIT_TEXT(gpGame->obeliskFlags[cell->extraInfo]
+                              & playerBit);
+        }
+        break;
     SET_VISITED_ROLLOVER(POWER_SCHOOL, PowerSchoolInfo,
         currentHero->PowerSchoolFlags
         & (1UL << (cell->extraInfo & 0x1f)));
