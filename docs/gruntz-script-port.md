@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::QuickInfo` status details reach 54.0594%.**
+  Pyramid, wagon, warrior-tomb, water-wheel and windmill cases now append the
+  retail double-newline separator and select the admitted visited/unvisited
+  text from the exact current-player visibility tests and packed weekly-state
+  fields. Fountain of Fortune first appends its known-object label, then sums
+  retail's four independent hero visit bits before selecting the same status
+  suffix. Hill fort and university append their global-info labels through
+  the retail single-newline formatter only when the selected cell is known to
+  the local player. These eight retail-proven paths raise the function from
+  43.7530% and linked fuzzy coverage from 47.67% to 47.93%, retaining all 626
+  exact functions. Dreamcast supplies semantic field identities only; retail
+  fixes every gate, mask, string and append order. No external implementation
+  body was used, and the baseline is updated only by the full build.
+
 - **2026-08-09 — `advManager::QuickInfo` extends to 43.7530%.** The
   lighthouse path reads its signed owner from the indexed mine record and
   appends the owner color through the shared quick-info suffix. Mine dispatch

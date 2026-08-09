@@ -3109,7 +3109,7 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 }
 
 // E:\gamedcs\advmgr.cpp:7543
-// RETAIL-RECONSTRUCTED 2026-08-09 (43.7530%). The current QuickInfo slices
+// RETAIL-RECONSTRUCTED 2026-08-09 (54.0594%). The current QuickInfo slices
 // restore point validation and shroud handling, trigger-cell resolution,
 // the shared creature-bank/shrine/tree/witch-hut text helpers, the default
 // object name, border/generator/resource and visited-state cases, optional
@@ -3285,11 +3285,44 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 break;
             SET_VISITED_QUICKINFO(FAERIE_RING,
                 currHero->flags & 0x2000);
+            case FOUNTAIN_OF_FORTUNE:
+                strcpy(gText, gAdventureObjectNames[FOUNTAIN_OF_FORTUNE]);
+                if (cell->is_trigger) {
+                    if (cell->PlayerKnowsCell(gUnnamed69778c)) {
+                        sprintf(tempText, DATA_COMPGEN(
+                            0x006603c0, quickInfoKnownFormat, "\n%s"),
+                            gGlobalInfoFlagNames[FountainOfFortuneInfo]);
+                        strcat(gText, tempText);
+                    }
+                    if (currHero) {
+                        unsigned long fortuneVisits =
+                            (currHero->flags & 0x20000000UL)
+                            + (currHero->flags & 0x10000000UL)
+                            + (currHero->flags & 0x08000000UL)
+                            + (currHero->flags & 0x20UL);
+                        sprintf(tempText, visitFormat,
+                            fortuneVisits
+                                ? gUnnamed6a5d5c->entry->visitedObjectText
+                                : gUnnamed6a5d5c->entry
+                                    ->unvisitedObjectText);
+                        strcat(gText, tempText);
+                    }
+                }
+                break;
             SET_VISITED_QUICKINFO(FOUNTAIN_OF_YOUTH,
                 currHero->flags & 0x4000);
             SET_VISITED_QUICKINFO(GARDEN_OF_REVELATION,
                 currHero->GardenOfRevelationFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
+            case HILL_FORT:
+                strcpy(gText, gAdventureObjectNames[HILL_FORT]);
+                if (cell->is_trigger && cell->PlayerKnowsCell(iPlayer)) {
+                    sprintf(tempText, DATA_COMPGEN(
+                        0x006603c0, quickInfoKnownFormat, "\n%s"),
+                        gGlobalInfoFlagNames[HillFortInfo]);
+                    strcat(gText, tempText);
+                }
+                break;
             SET_VISITED_QUICKINFO(IDOL_OF_FORTUNE,
                 currHero->flags & (0x02000000UL | 0x10UL));
             SET_VISITED_QUICKINFO(LEAN_TO,
@@ -3355,6 +3388,16 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             SET_VISITED_QUICKINFO(POWER_SCHOOL,
                 currHero->PowerSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
+            case PYRAMID:
+                strcpy(gText, gAdventureObjectNames[PYRAMID]);
+                if (cell->is_trigger && currHero) {
+                    strcat(gText, separator);
+                    strcat(gText,
+                        cell->PlayerKnowsCell(currHero->owner)
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                }
+                break;
             SET_VISITED_QUICKINFO(RALLY_FLAG,
                 currHero->flags & 0x10000);
             case RESOURCE:
@@ -3400,11 +3443,60 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 SetTreeHelpText(gText, currHero, cell,
                                 newLine, separator);
                 break;
+            case UNIVERSITY:
+                strcpy(gText, gAdventureObjectNames[UNIVERSITY]);
+                if (cell->is_trigger && cell->PlayerKnowsCell(iPlayer)) {
+                    sprintf(tempText, DATA_COMPGEN(
+                        0x006603c0, quickInfoKnownFormat, "\n%s"),
+                        gGlobalInfoFlagNames[UniversityInfo]);
+                    strcat(gText, tempText);
+                }
+                break;
+            case WAGON:
+                strcpy(gText, gAdventureObjectNames[WAGON]);
+                if (cell->is_trigger) {
+                    strcat(gText, separator);
+                    strcat(gText,
+                        cell->PlayerKnowsCell(gNetLocalGamePos)
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                }
+                break;
             SET_VISITED_QUICKINFO(WAR_SCHOOL,
                 currHero->WarSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
+            case WARRIOR_TOMB:
+                strcpy(gText, gAdventureObjectNames[WARRIOR_TOMB]);
+                if (cell->is_trigger) {
+                    strcat(gText, separator);
+                    strcat(gText,
+                        cell->PlayerKnowsCell(gNetLocalGamePos)
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                }
+                break;
+            case WATER_WHEEL:
+                strcpy(gText, gAdventureObjectNames[WATER_WHEEL]);
+                if (cell->is_trigger
+                    && cell->PlayerKnowsCell(gNetLocalGamePos)) {
+                    strcat(gText, separator);
+                    strcat(gText, (cell->extraInfo & 0x1f) == 0
+                        ? gUnnamed6a5d5c->entry->visitedObjectText
+                        : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                }
+                break;
             SET_VISITED_QUICKINFO(WATERING_HOLE,
                 currHero->flags & 0x40);
+            case WINDMILL:
+                strcpy(gText, gAdventureObjectNames[WINDMILL]);
+                if (cell->is_trigger
+                    && cell->PlayerKnowsCell(gNetLocalGamePos)) {
+                    strcat(gText, separator);
+                    strcat(gText, ((cell->extraInfo >> 13) & 0xf) == 0
+                        ? gUnnamed6a5d5c->entry->visitedObjectText
+                        : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                }
+                break;
             case WITCH_HUT:
                 set_witch_hut_help_text(gText, currHero, cell,
                                         newLine, separator);
