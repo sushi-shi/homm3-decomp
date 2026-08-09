@@ -14,6 +14,9 @@ struct type_point;
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:472, dc 0x115a70) long check_match(long player, long first_x, long first_y, type_point origin, []* puzzle_map);
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:520, dc 0x115be8) type_point match_puzzle(__$ReturnUdt, long player, []* puzzle_map);
 // Retail 0x52c9b0; CODEVIEW(E:\gamedcs\puzzlewindow.cpp:614, dc 0x115f64).
+// The explicit Dreamcast return-buffer marker is represented by C++'s normal
+// by-value return. Retail's call from playerData::guess_grail_location has the
+// same hidden-result-pointer-in-ECX / player-in-EDX convention.
 type_point AI_attempt_puzzle_guess(long player);
 
 // --- Bitmap816 ---
