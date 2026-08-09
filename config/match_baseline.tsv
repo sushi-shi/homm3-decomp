@@ -353,7 +353,7 @@ button	?_vslot12@button@@UAEXH@Z	100.0000	100.0000	100.0000	0x56a10
 castle	?GetBuildingName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x610e0
 cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110	75.0110	75.0110	0x6a350
 cmbtmgr	?CombatIsOver@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x65830
-cmbtmgr	?CombatSystemOptions@combatManager@@QAEXXZ	99.8919	99.8919	99.8919	0x686b0
+cmbtmgr	?CombatSystemOptions@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x686b0
 cmbtmgr	?DamageWall@combatManager@@QAEXW4TWallTargetId@@H@Z	100.0000	100.0000	100.0000	0x65990
 cmbtmgr	?DetermineCombatTerrain@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x643b0
 cmbtmgr	?GenerateMap@combatManager@@QAEXXZ	58.8421	58.8421	58.8421	0x642d0
