@@ -45,6 +45,8 @@ struct TDrawParts {
     int X;
     int Y;
     int id;
+
+    TDrawParts() : IsValid(false) {}
 };
 SIZE(TDrawParts, 0x10);
 
@@ -106,6 +108,14 @@ public:
         BOTTOM_VIEW_8
     };
 
+    enum ECursorDrawCell {
+        CURSOR_DEST_Y0 = 7,
+        CURSOR_DEST_Y1 = 8,
+        CURSOR_DEST_X0 = 8,
+        CURSOR_DEST_X1 = 9,
+        CURSOR_DEST_X2 = 10
+    };
+
     char pad_038[0xc];
     TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
     unsigned short* routeArray;      // +0x48 (GetRouteArrayPtr)
@@ -125,13 +135,17 @@ public:
     // +0x5c. Both GetCell overloads dereference this NewfullMap record:
     // cellData at +0xd0 and Size at +0xd4.
     NewfullMap* fullMap;
-    char pad_060[0x84];
+    char pad_060[0x80];
+    CSprite* movingObjectSprite;  // +0xe0, transient object draw override
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.
     type_point radarOrigin;
     char pad_0e8[4];
     int lastHover;  // +0xec, ForceNewHover invalidates before ProcessHover
-    char pad_0f0[0x10];
+    char pad_0f0[4];
+    int mapOriginX;               // +0xf4, adventure viewport origin
+    int mapOriginY;               // +0xf8
+    char pad_0fc[4];
     int animFrame;                  // +0x100, sprite-frame modulo source
     char pad_104[8];
     // Retail DrawHeroPart indexes these pointer rows directly. The extents
@@ -141,9 +155,14 @@ public:
     CSprite* boatFrothIcons[3];     // +0x160, indexed by boat type
     CSprite* flagIcons[8];          // +0x16c, indexed by player owner
     CSprite* boatFlagIcons[3][8];   // +0x18c, [boat type][player owner]
-    char pad_1ec[0x20];
+    unsigned char drawCursor;     // +0x1ec, gates map cursor overlays
+    char pad_1ed[0x1f];
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
-    char pad_20d[0x17f];
+    char pad_20d[0xb];
+    int movingObjectIndex;        // +0x218, transient object-pool index
+    int movingObjectSequence;     // +0x21c
+    int movingObjectFrame;        // +0x220
+    char pad_224[0x168];
     int field_38c;            // +0x38c, zeroed by CallManager's suspend arm
     char pad_390[8];
     EBottomViewType bottomViewOverride;  // +0x398
@@ -172,6 +191,8 @@ public:
     void DrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX,
                             int baseY, int tilex, int tiley, int tilew,
                             int tileh);
+    void DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY);
+    void DrawCursorShadow(int cellX, int cellY);
     void DrawRolloverText(char* text);
     unsigned char FindAdjacentMonster(type_point point, type_point* result,
                                       type_point excluded);

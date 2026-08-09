@@ -53,6 +53,7 @@
 // be invention. See the help-text note further down.
 #include <va.h>
 #include "advmgr.h"
+#include "advmgr_objects.h"
 #include "bitmap16.h"
 #include "csprite.h"
 #include "game.h"
@@ -930,12 +931,183 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:6239
 VA(0x00411590, 0x5E4)  // anchor-callee, dc 0x12fcc
 void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
+
+    type_point point(srcX, srcY, z);
+    NewmapCell* thisCell;
+    if (!point.is_valid())
+        thisCell = fullMap->cellData;
+    else
+        thisCell = fullMap->cell(point.x, point.y, point.z);
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    TDrawParts heroParts[6];
+    TDrawParts boatParts[6];
+    bool foundHero = ScanForHeroOrBoat(srcX, srcY, z, HERO, heroParts);
+    bool foundBoat = ScanForHeroOrBoat(srcX, srcY, z, BOAT, boatParts);
+
+    AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
+        static_cast<void*>(thisCell));
+    AdvFullMapObjectsView* mapObjects = static_cast<AdvFullMapObjectsView*>(
+        static_cast<void*>(fullMap));
+    for (unsigned numObj = 0; numObj < cellObjects->objects.size(); ++numObj) {
+        AdvObjectCellView* objCell = &cellObjects->objects[numObj];
+        AdvObjectView* obj = &mapObjects->objects[objCell->objectIndex];
+        AdvObjectTypeView* objType = &mapObjects->objectTypes[obj->typeIndex];
+        CSprite* sprite = mapObjects->sprites[obj->typeIndex];
+
+        signed char offsets = objCell->offsets;
+        int yOffset = offsets >> 4;
+        offsets <<= 4;
+        int xOffset = offsets >> 4;
+        int bit = 47 - yOffset * 8 - xOffset;
+        if (!objType->shadowCells[bit] || objType->suppressDraw)
+            continue;
+
+        if (gbInViewWorld) {
+            switch (objType->objectType) {
+            case TERRAIN_BRUSH:             break;
+            case TERRAIN_BUSH:              break;
+            case TERRAIN_CACTUS:            break;
+            case TERRAIN_CANYON:            break;
+            case TERRAIN_CRATER:            break;
+            case TERRAIN_DEAD_VEGETATION:   break;
+            case TERRAIN_FLOWER:            break;
+            case TERRAIN_FROZEN_LAKE:       break;
+            case TERRAIN_HEDGE:             break;
+            case TERRAIN_HILL:              break;
+            case TERRAIN_HOLE:              continue;
+            case TERRAIN_KELP:              break;
+            case TERRAIN_LAKE:              break;
+            case TERRAIN_LAVA_FLOW:         break;
+            case TERRAIN_LAVA_LAKE:         break;
+            case TERRAIN_MUSHROOM:          break;
+            case TERRAIN_LOG:               break;
+            case TERRAIN_MANDRAKE:          break;
+            case TERRAIN_MOSS:              break;
+            case TERRAIN_MOUND:             break;
+            case TERRAIN_MOUNTAIN:          break;
+            case TERRAIN_OAK_TREE:          break;
+            case TERRAIN_OUTCROPPING:       break;
+            case TERRAIN_PINE_TREE:         break;
+            case TERRAIN_PLANT:             break;
+            case TERRAIN_RIVER_1:           continue;
+            case TERRAIN_RIVER_2:           continue;
+            case TERRAIN_RIVER_3:           continue;
+            case TERRAIN_RIVER_4:           continue;
+            case TERRAIN_RIVER_DELTA:       continue;
+            case TERRAIN_ROAD_1:            continue;
+            case TERRAIN_ROAD_2:            continue;
+            case TERRAIN_ROAD_3:            continue;
+            case TERRAIN_ROCK:              break;
+            case TERRAIN_SAND_DUNE:         break;
+            case TERRAIN_SAND_PIT:          break;
+            case TERRAIN_SHRUB:             break;
+            case TERRAIN_SKULL:             break;
+            case TERRAIN_STALAGMITE:        break;
+            case TERRAIN_STUMP:             break;
+            case TERRAIN_TAR_PIT:           break;
+            case TERRAIN_TREE:              break;
+            case TERRAIN_VINE:              break;
+            case TERRAIN_VOLCANIC_VENT:     break;
+            case TERRAIN_VOLCANO:           break;
+            case TERRAIN_WILLOW_TREE:       break;
+            case TERRAIN_YUCCA_TREE:        break;
+            case TERRAIN_REEF:              break;
+            default:                        continue;
+            }
+            int frame = (animFrame + obj->animationOffset)
+                        % sprite->GetNumFrames(0);
+            sprite->DrawAdvObjShadow(
+                frame,
+                tilex + (objType->width - xOffset - 1) * 32,
+                tiley + (objType->height - yOffset - 1) * 32,
+                tilew, tileh, gpWindowManager->screenBitmap,
+                baseX, baseY + 8, false);
+        } else {
+            if (objCell->objectIndex == movingObjectIndex) {
+                movingObjectSprite->DrawAdvObjShadow(
+                    movingObjectSequence * 2 + movingObjectFrame,
+                    tilex + (objType->width - xOffset - 1) * 32,
+                    tiley + (objType->height - yOffset - 1) * 32,
+                    tilew, tileh, gpWindowManager->screenBitmap,
+                    baseX, baseY + 8, false);
+            } else {
+                int frame = (animFrame + obj->animationOffset)
+                            % sprite->GetNumFrames(0);
+                sprite->DrawAdvObjShadow(
+                    frame,
+                    tilex + (objType->width - xOffset - 1) * 32,
+                    tiley + (objType->height - yOffset - 1) * 32,
+                    tilew, tileh, gpWindowManager->screenBitmap,
+                    baseX, baseY + 8, false);
+            }
+        }
+    }
+
+    if (destY == CURSOR_DEST_Y0) {
+        if (drawCursor && !gbInViewWorld) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursorShadow(0, 0);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursorShadow(1, 0);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursorShadow(2, 0);
+        }
+    } else if (destY == CURSOR_DEST_Y1) {
+        if (drawCursor && !gbInViewWorld) {
+            if (destX == CURSOR_DEST_X0)
+                DrawCursorShadow(0, 1);
+            else if (destX == CURSOR_DEST_X1)
+                DrawCursorShadow(1, 1);
+            else if (destX == CURSOR_DEST_X2)
+                DrawCursorShadow(2, 1);
+        }
+    }
+
+    if (foundHero || foundBoat) {
+        for (int part = 0; part < 6; ++part) {
+            if (heroParts[part].IsValid)
+                DrawHeroPartShadow(part, heroParts[part], baseX, baseY,
+                                   tilex, tiley, tilew, tileh);
+            if (boatParts[part].IsValid)
+                DrawBoatPartShadow(part, boatParts[part], baseX, baseY,
+                                   tilex, tiley, tilew, tileh);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:6441
 VA(0x00411b80, 0x1D7)  // linkorder, dc 0x13890
