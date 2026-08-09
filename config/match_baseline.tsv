@@ -515,6 +515,7 @@ game	?MineTypesOwned@game@@QAEHHH@Z	100.0000	100.0000	100.0000	0xbae70
 game	?NextHero@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbaa40
 game	?NextTown@playerData@@QAEHXZ	100.0000	100.0000	100.0000	0xbab40
 game	?NumOfGivenArtifact@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbabd0
+game	?Save@SavedGameHeader@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xbc5d0
 game	?SaveBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40
 game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0
 game	?SaveMinePool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9580
@@ -551,7 +552,6 @@ game	game_GetRandomSpell	0.0000	0.0000	0.0000	0xc95a0
 game	game_InsertObject	0.0000	0.0000	0.0000	0xc9890
 game	game_ProcessRandomObjects	0.0000	0.0000	0.0000	0xc9dd0
 game	game_Save	0.0000	0.0000	0.0000	0xbe3f0
-game	game_SaveBlackMarkets	0.0000	0.0000	0.0000	0xbc5d0
 game	game_SaveGame	0.0000	0.0000	0.0000	0xbeea0
 game	game_SetRandomHeroArmies	0.0000	0.0000	0.0000	0xc9730
 game	game_SetupPuzzlePieces	0.0000	0.0000	0.0000	0xbaf00
