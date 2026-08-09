@@ -56,6 +56,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "advmgr.h"
+#include "university_window.h"
 #include "advmgr_objects.h"
 #include "bitmap16.h"
 #include "csprite.h"
@@ -109,6 +110,8 @@ unsigned char InitializeExtraInfoText()
 #endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:392
+// The shared cell dword is passed unchanged to advManager's full black-box
+// lookup; retail saves the caller's ECX solely to make that one argument.
 VA(0x00405de0, 0xD)  // anchor-global, dc 0x5864
 BlackBoxData* ExtraInfoUnion::get_black_box() const
 {
@@ -116,6 +119,8 @@ BlackBoxData* ExtraInfoUnion::get_black_box() const
 }
 
 // E:\gamedcs\advmgr.cpp:400
+// Bits 13..24 are the scenario-pool index. The 108-byte element stride and
+// the creatureBanks _First offset are both explicit in retail's address math.
 VA(0x00405df0, 0x20)  // anchor-bracket, dc 0x5888
 type_creature_bank& ExtraInfoUnion::get_creature_bank() const
 {
@@ -123,6 +128,8 @@ type_creature_bank& ExtraInfoUnion::get_creature_bank() const
 }
 
 // E:\gamedcs\advmgr.cpp:408
+// The same 12-bit index selects a 16-byte university record from the adjacent
+// pool.
 VA(0x00405e10, 0x1C)  // anchor-global, dc 0x58bc
 type_university* ExtraInfoUnion::get_university() const
 {
