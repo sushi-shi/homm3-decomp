@@ -42,6 +42,7 @@
 #include <va.h>
 #include "advmgr.h"
 #include "cmbtmgr.h"
+#include "combatoptionswindow.h"
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
 #include "findpath.h"
 #include "game.h"
@@ -1061,14 +1062,18 @@ void combatManager::ShootMissile(int startX, int startY, int destX, int destY, c
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:4041
 VA(0x004686b0, 0x7B)  // linkorder, dc 0x622bc
 void combatManager::CombatSystemOptions()
 {
-    // @stub
+    TCombatOptionsWindow options;
+    options.DoModal();
+    field_53b8 = 0;
+    UpdateGrid(0, 1);
+    DrawFrame(1, 0, 0, 0, 1, 0);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4055
 // Byte proof for the hexcell trio: the three -1 stores land on cell

@@ -5,6 +5,18 @@
 #ifndef HOMM3_COMBATOPTIONSWINDOW_H
 #define HOMM3_COMBATOPTIONSWINDOW_H
 
+// Opaque retail layout. CombatSystemOptions' stack frame places this
+// object at ebp-0x60 immediately below the exception record at ebp-0xc,
+// proving its 0x54-byte extent.
+class TCombatOptionsWindow {
+public:
+    char pad_00[0x54];
+
+    TCombatOptionsWindow();
+    ~TCombatOptionsWindow();
+    void DoModal();
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\combatoptionswindow.cpp:278, dc 0x67b7c) int CombatOptionsWindowHandler(message* msg);
 // CODEVIEW(E:\gamedcs\combatoptionswindow.cpp:651, dc 0x68098) void UpdateCombatOptions(int bFirstUpdate);
