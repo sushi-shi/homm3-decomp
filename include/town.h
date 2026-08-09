@@ -264,6 +264,12 @@ public:
     // 0x5be930. Declared for update_shipyard's direct call; the body is
     // still outside the admitted surface.
     type_building_id create_building(type_building_id building);
+#ifdef HOMM3_TOWN_DESTROY_EXTRA_CAPITOL_DECLS
+    // 0x5bec60. Downgrades this town's duplicate Capitol when another
+    // owned town already carries one. The declaration is scoped to
+    // town.obj because member population affects VC6 output elsewhere.
+    void destroy_extra_capitol();
+#endif
     // 0x5bf210. Keeps the dock-with-boat pseudo-building synchronized
     // with the object occupying the town's dock square.
     void update_shipyard();

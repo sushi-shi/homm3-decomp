@@ -189,7 +189,7 @@ ai_player	?get_attack_bonus@type_AI_player@@SIMF@Z	100.0000	100.0000	100.0000	0x
 ai_player	?get_cell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x2ed80
 ai_player	?get_danger_value@searchArray@@QBEJUtype_point@@@Z	100.0000	100.0000	100.0000	0x2ed30
 ai_player	?get_total_value@type_AI_player@@QAEJJPAH@Z	100.0000	100.0000	100.0000	0x2a150
-ai_player	?make_gift@type_AI_player@@QAEXJ@Z	69.4753	71.8739	71.8739	0x29110
+ai_player	?make_gift@type_AI_player@@QAEXJ@Z	71.8739	71.8739	71.8739	0x29110
 ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x29ab0
 ai_player	?start_turn@type_AI_player@@QAEXXZ	100.0000	100.0000	100.0000	0x297c0
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x360c0
@@ -1060,6 +1060,7 @@ town	?can_build@town@@QBEEF@Z	81.1852	81.1852	81.1852	0x1c0d20
 town	?can_ever_build@town@@QBEEH@Z	100.0000	100.0000	100.0000	0x1c0e60
 town	?change_generator_bonus@town@@QAEXW4TCreatureType@@J@Z	100.0000	100.0000	100.0000	0x1bfe50
 town	?check_shipyard_square@@YIEPAVtown@@JJ@Z	100.0000	100.0000	100.0000	0x1c0c90
+town	?destroy_extra_capitol@town@@QAEXXZ	96.4595	96.4595	96.4595	0x1bec60
 town	?get_army@town@@QBEABVarmyGroup@@XZ	100.0000	100.0000	100.0000	0x1c1460
 town	?get_build_cost@town@@QBEFW4type_building_id@@PAH1@Z	81.4912	81.4912	81.4912	0x1c1180
 town	?get_build_cost@town@@QBEXW4type_building_id@@PAH@Z	100.0000	100.0000	100.0000	0x1c10f0
@@ -1086,7 +1087,6 @@ town	town_SwapHeroes	0.0000	0.0000	0.0000	0x1be450
 town	town_TownFn_005BF900	0.0000	0.0000	0.0000	0x1bf900
 town	town_View	0.0000	0.0000	0.0000	0x1be210
 town	town_create_building	0.0000	0.0000	0.0000	0x1be930
-town	town_destroy_extra_capitol	0.0000	0.0000	0.0000	0x1bec60
 town	town_get_growth_rate	0.0000	0.0000	0.0000	0x1bfb60
 town	town_give_event_reward	0.0000	0.0000	0.0000	0x1bfeb0
 town	town_hire	0.0000	0.0000	0.0000	0x1c12e0

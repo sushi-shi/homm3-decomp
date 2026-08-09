@@ -399,6 +399,12 @@ public:
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
     void calculate_production();                 // 0x4b8af0
+#ifdef HOMM3_TOWN_DESTROY_EXTRA_CAPITOL_DECLS
+    // 0x4c9990. town.obj needs this declaration for
+    // town::destroy_extra_capitol; keeping it TU-scoped preserves the
+    // retail-sensitive game member population in the other compilands.
+    void ConvertObject(NewmapCell* tempCell);
+#endif
     unsigned char OnSameTeam(int player1, int player2)
     {
         if (player1 < 0 || player2 < 0)

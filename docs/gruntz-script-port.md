@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `town::destroy_extra_capitol` reconstructed from retail to
+  96.4595%.** The 371-byte body checks the owner's other town ids, downgrades
+  a duplicate Capitol to City Hall in `built`, clears the Capitol from
+  `active`, and converts the corresponding adventure-map cell. The scan now
+  reproduces retail's byte comparison, inlined `GetTown`, shared exit, and
+  32-bit cursor-plus-negative-base induction exactly. A TU-scoped declaration
+  pair preserves `initialize_game_data` and every other existing exact row;
+  broad class declarations were measured and rejected after dropping that
+  initializer to 96.09%. The remaining mismatch is a scratch-register cycle
+  across the City Hall/active masks. No external implementation was used.
+
 - **2026-08-09 — `town::get_build_cost` rises 77.4561% -> 81.4912% by
   restoring retail's cursor and down-counter loop.** The seven resource
   columns now advance through the cost row while a separate tail count is
