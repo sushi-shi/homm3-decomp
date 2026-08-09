@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `AI_value_of_combat` reconstructed from retail to
+  99.9592%.** The formerly unscored 792-byte overload now reproduces all
+  23 branches and both returns: it simulates copies of both armies, rejects
+  a defeated attacker at -1,000,000,000, prices experience and troop loss,
+  adds the defender's attack value, and applies the two 5,000,000 objective
+  bonuses. The decisive codegen fact was the already-admitted, DC-attested
+  inline `hero::get_aggression`: a direct +0x47a float load stalled at
+  93.5061%, while restoring the accessor recreated retail's overlapping
+  float-return temporary and reached 99.9592%. Retail now proves +0x47a as
+  a float and the combat-value consumer, though the field itself remains
+  ordinal. The residual is not an algorithmic mismatch: stripped-image
+  relocation recovery treats integer 5,000,000 as a DIR32 reference because
+  it numerically equals VA 0x4c4b40, and splits the 0x6604d0 double array at
+  its +4 interior read (the open DATA-size decision-point family). Source
+  keeps honest integer/aggregate spellings. `decomp-attempt-1` was surveyed
+  read-only as requested and supplied no code or layout to this change.
+
 - **2026-08-09 — the primary AI-combat constructor is fully reconstructed
   at 99.9969%.** Its Dinkumware vector construction, hero/army ownership,
   wall penalty, mana and spellbook/orb gates, special-ground selector,

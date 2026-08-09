@@ -29,6 +29,7 @@
 #include <va.h>
 #include <stdlib.h>
 #include "ai_combat.h"
+#include "ai_player.h"
 #include "ai_tactical.h"
 #include "advmgr.h"
 #include "armygrp.h"
@@ -79,6 +80,20 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
 // the spelling here is PROVISIONAL (behaviour-derived); declared
 // file-locally for the same reason _cpp_min/_cpp_max are.
 unsigned char spell_is_single_target(SpellID spell, TSkillMastery mastery);
+
+// Retail .data 0x6604d0: five doubles selected by the game's signed
+// difficulty byte. AI_value_of_combat uses the row when either combat
+// side belongs to a human. DC's static-global roster supplies the name;
+// retail fixes the extent and every value before the next datum at +0x28.
+DATA(0x006604d0) static double defense_estimates[5] = {
+    0.5, 0.5, 1.0, 1.25, 1.25
+};
+
+// Retail 0x527710, the sole caller is AI_value_of_combat. The helper
+// combines the hero's level with an army's AI value and returns a float
+// multiplier for the experience award. No surviving name is known.
+float __fastcall get_experience_value_modifier(const hero* current_hero,
+                                                armyGroup* current_army);
 
 // E:\gamedcs\ai_combat.cpp:36
 VA(0x00423c80, 0x79)  // anchor-global, dc 0x29978
@@ -1154,15 +1169,95 @@ void AI_auto_combat(hero* attacking_hero, hero* defending_hero, armyGroup* attac
         defending_hero->mana = static_cast<short>(defender.mana);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_combat.cpp:1565
-// LOCATED (hd-crossbuild + ida).
+// RECONSTRUCTED 2026-08-09 directly from retail. All 23 branches, both
+// returns and the full instruction stream agree after restoring the
+// inline get_aggression boundary and the float lifetime around experience.
+// Residual (99.9592%): relocation identity only. The stripped-image
+// delinker classifies each literal 5,000,000 as a DIR32 relocation because
+// that integer happens to equal VA 0x4c4b40 inside game.obj; honest source
+// emits an integer immediate. The split data symbols at 0x6604d0/+4 are the
+// open aggregate-DATA-size class recorded in decision point P0.2.
 VA(0x00427330, 0x318)  // corroborates (hd-crossbuild + ida), dc 0x2c27c
-long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero, const armyGroup* defending_army, const town* defending_town, NewmapCell* cell)
+long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
+                        const armyGroup& defending_army,
+                        const town* defending_town, NewmapCell* cell)
 {
-    // @stub
+    armyGroup local_army = attacking_hero->army;
+    double aggression = attacking_hero->get_aggression();
+    armyGroup local_defender = defending_army;
+    double defender_luck = 1.25;
+    unsigned char human_combat = 0;
+
+    if (gpGame->victoryCondition.Type == VICTORY_CONDITION_DEFEAT_HERO
+        && gpGame->victoryCondition.HeroID == attacking_hero->id)
+        aggression *= 0.5;
+
+    if (attacking_hero
+        && const_cast<hero*>(attacking_hero)->belongs_to_human())
+        human_combat = 1;
+    if (defending_hero
+        && const_cast<hero*>(defending_hero)->belongs_to_human())
+        human_combat = 1;
+    if ((defending_town && defending_town->owner >= 0
+         && gpGame->IsHuman(defending_town->owner))
+        || human_combat)
+        defender_luck = defense_estimates[gpGame->AI_in_control];
+
+    type_AI_combat_data attacker(attacking_hero, &local_army, aggression,
+                                 defending_hero, defending_town, cell);
+    type_AI_combat_data defender(defending_hero, &local_defender,
+                                 defender_luck, attacking_hero, 0, cell);
+    attacker.simulate_combat(defender);
+    if (attacker.total_hit_points == 0)
+        return -1000000000;
+
+    attacker.adjust_army(1);
+    long experience = gpGame->ExperienceValueOfStack(&defending_army, 0);
+    float experience_value = static_cast<float>(experience);
+    experience = static_cast<long>(
+        experience_value
+        * const_cast<hero*>(attacking_hero)->GetExperienceBonusFactor());
+    long value = static_cast<long>(
+        get_experience_value_modifier(attacking_hero, &local_army)
+        * experience);
+
+    create_skeletons(attacking_hero, &defending_army, &local_army);
+    long original_value = const_cast<armyGroup&>(
+        attacking_hero->army).get_AI_value();
+    long army_loss = original_value - local_army.get_AI_value();
+    value -= army_loss;
+    if (value < 0 && army_loss * 4 < original_value)
+        value = 0;
+
+    if (defending_hero || defending_town) {
+        short defender_player = -1;
+        if (defending_hero)
+            defender_player = defending_hero->owner;
+        if (defending_town)
+            defender_player = defending_town->owner;
+        value = static_cast<long>(
+            static_cast<float>(
+                const_cast<armyGroup&>(defending_army).get_AI_value())
+            * type_AI_player::get_attack_bonus(defender_player)
+            + static_cast<float>(value));
+
+        if (defending_hero) {
+            if (gpGame->victoryCondition.Type
+                    == VICTORY_CONDITION_DEFEAT_HERO
+                && gpGame->victoryCondition.HeroID == defending_hero->id
+                && gpGame->victoryCondition.applies_to_player(
+                    gNetLocalGamePos))
+                value += 5000000;
+            if (gpGame->lossCondition.Type == LOSS_CONDITION_LOSE_HERO
+                && gpGame->lossCondition.HeroID == defending_hero->id)
+                value += 5000000;
+        }
+    }
+    return value;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:1656
 DC_ONLY(0x2c5e8, 0x2C)

@@ -221,6 +221,11 @@ unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero,
 void AI_auto_combat(hero* attacking_hero, hero* defending_hero,
                     armyGroup* attacking_army, armyGroup* defending_army,
                     const town* defending_town, NewmapCell* cell);
+long AI_value_of_combat(const hero* attacking_hero,
+                        const hero* defending_hero,
+                        const armyGroup& defending_army,
+                        const town* defending_town,
+                        NewmapCell* cell);
 
 long AI_approximate_strength(const hero* current_hero);
 long AI_approximate_strength(const hero* current_hero, const armyGroup* current_army);

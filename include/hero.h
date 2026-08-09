@@ -317,15 +317,18 @@ public:
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -
     // and by 0x4e6120, which adds artifact bonuses into the same band.
     signed char stats[4];                       // +0x476
-    // +0x47a..0x491, the record's tail. Ghidra's decompiler recovery
-    // (evidence/ghidra-structs, LEAD-GENERATOR grade) puts six 4-byte
-    // fields here at 0x47a/0x47e/0x482/0x486/0x48a/0x48e, DC-named
-    // aggression / value_of_power / value_of_duration /
-    // value_of_knowledge / value_of_spring / value_of_well - which end
-    // exactly at 0x492. No retail body in a compiled TU reads them yet,
-    // so they stay a pad; the EXTENT, not the field split, is what is
-    // proven (see SIZE below).
-    char pad_47a[0x18];
+    // +0x47a. AI_value_of_combat (0x42730f) reads this as a float,
+    // widens it to double and uses it as the attacking side's combat
+    // modifier. The role remains provisional, so keep the ordinal name.
+    float field_47a;
+    // +0x47e..0x491, the rest of the record's tail. Its extent, not the
+    // remaining field split, is retail-proven (see SIZE below).
+    char pad_47e[0x14];
+
+    // DC-attested inline accessor (ai_combat.h roster, dc 0x2c690).
+    // Retail has no out-of-line row; AI_value_of_combat expands this
+    // one-field return and preserves its float temporary before widening.
+    float get_aggression() const { return field_47a; }
 
     unsigned char HasArtifact(int whichArtifact);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
