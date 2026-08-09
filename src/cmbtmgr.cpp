@@ -315,6 +315,7 @@ void combatManager::GenerateMap()
         }
     }
 }
+
 #if 0  // @carcass
 
 #if 0  // @carcass
@@ -371,7 +372,6 @@ const char* combatManager::GetBackgroundName()
     field_5398 = -1;
     return background;
 }
-
 // E:\gamedcs\cmbtmgr.cpp:1891 - screen point -> combat hex index.
 // Four special hexes get their own hit rectangles first (252..255, in
 // THIS test order: 0x694f08, 0x694ef0, 0x694ea8, 0x694ed8); everything
