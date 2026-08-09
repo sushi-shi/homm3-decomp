@@ -8,6 +8,8 @@
 // carries the exact headers that built the retail COMDATs.
 #include <bitset>
 #include <vector>
+#include <stdio.h>
+#include <string.h>
 // abs() - the intrinsic form retail uses (cdq / xor / sub), the
 // stdlib.h precedent already carried by cmbtmgr, window and ai_combat.
 #include <stdlib.h>
@@ -47,6 +49,12 @@
 DATA(0x0069774c) extern unsigned char gCampaignMode;
 DATA(0x0067dcec) extern const THeroClassTraits (&akHeroClasses)[18];
 DATA(0x006a7540) extern const char* gPrimaryStatNames[4];
+// Runtime-loaded artifact rollover text. Retail fixes the three storage
+// cells and their roles; no surviving public names them, so the spellings
+// remain provisional.
+DATA(0x006a8040) extern const char* gEmptyArtifactRolloverText;
+DATA(0x006a804c) extern const char* gSpellbookRolloverText;
+DATA(0x006a8050) extern const char* gArtifactRolloverFormat;
 
 // Retail's mana clamp materialises both operands in stack homes and selects
 // one by address. This by-value helper reproduces that Dinkumware-era shape;
@@ -856,12 +864,22 @@ void UpdateBackpack()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:2432
 VA(0x004db350, 0x86)  // anchor-global, dc 0xcd86c
 void type_artifact::get_rollover_text(char* buffer)
 {
-    // @stub
+    if (artifactId == ARTIFACT_NONE)
+        strcpy(buffer, gEmptyArtifactRolloverText);
+    else if (artifactId == ARTIFACT_SPELLBOOK)
+        strcpy(buffer, gSpellbookRolloverText);
+    else
+        sprintf(buffer, gArtifactRolloverFormat,
+                akArtifactTraits[artifactId].name);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:2450
 // Only free row between get_rollover_text (0x004db350, claimed) and
