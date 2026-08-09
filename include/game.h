@@ -28,6 +28,8 @@ public:
     NewmapCell* cellData;
     int Size;
     unsigned char HasTwoLevels;
+
+    NewmapCell* cell(int x, int y, int z);
 };
 
 class town;

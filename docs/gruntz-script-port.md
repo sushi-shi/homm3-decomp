@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — Gruntz's generated per-function `cur` / `max` / `hist`
+  score model approved for adaptation (user: “take idea from gruntz for cur,
+  max, hist for matching functions”); manual baseline editing prohibited.**
+  HoMM3 keeps the deliberately small part needed by its current pipeline:
+  `cur` is refreshed from the current objdiff report, `max` is the enforced
+  regression ratchet, and `hist` is the all-time peak that survives an explicit
+  `homm3 status update --accept-regressions`. Stable retail RVA, rather than a
+  working label, carries all three values across flat-to-decorated promotions.
+  The status writer owns `config/match_baseline.tsv`; it marks the file
+  generated, migrates the legacy three-column form, and automatically retires
+  missing legacy 0% rows because they contain no historical achievement.
+  Gruntz's broader fingerprint/tries machinery is not ported by this decision.
+
 - **2026-08-08 — `ai` 6 → 11, `findpath` 9 → 11; the include-set class
   is MEMBER population, not just type count; and two change-sets that
   each reached 100 alone COMPOSE TO 94.07.** Engine-wide 534 →

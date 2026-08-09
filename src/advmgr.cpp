@@ -153,11 +153,17 @@ void advManager::Close()
 }
 
 // E:\gamedcs\advmgr.cpp:1217
+#endif  // @carcass
+
 VA(0x00407ac0, 0x44)  // anchor-global, dc 0x793c
 int advManager::InMapArea(int x, int y)
 {
-    // @stub
+    widget* map_widget = advWindow->MapWidget;
+    return x >= map_widget->x && x < map_widget->y + map_widget->width
+        && y >= map_widget->y && y < map_widget->y + map_widget->height;
 }
+
+#if 0  // @carcass
 
 // A header-inline COMDAT that the retail link filed inside advmgr's
 // span (its four call sites all live in OTHER modules - 0x1cdf0,
@@ -203,11 +209,15 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 // lea eax,[ecx+eax*2]` = base + 38*idx, i.e. sizeof(NewmapCell) == 38.
 // Moved here from the DC header block to keep retail link order.
 // E:\gamedcs\MapCell.h:895
+#endif  // @carcass
+
 VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
 NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
-    // @stub
+    return &cellData[(z * Size + y) * Size + x];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:1497
 VA(0x004087b0, 0x487)  // anchor-vtable, dc 0x8644
@@ -885,11 +895,17 @@ void advManager::HideRoute(int bUpdateScreen, int bRemoveTarget, int bChangeButt
 
 // E:\gamedcs\struct.h:102 - see the withdrawal note above; moved here
 // from the DC header block to keep the file in retail link order.
+#endif  // @carcass
+
 VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
-void type_point::type_point(short new_x, short new_y, short new_z)
+type_point::type_point(short new_x, short new_y, short new_z)
 {
-    // @stub
+    x = new_x;
+    y = new_y;
+    z = new_z;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10558
 VA(0x00419300, 0x14C)  // linkorder, dc 0x1c580
@@ -1069,11 +1085,15 @@ unsigned short advManager::GetRouteArray(int x, int y, int z)
 }
 
 // E:\gamedcs\advmgr.cpp:11507
+#endif  // @carcass
+
 VA(0x0041b010, 0x27)  // linkorder, dc 0x1ebb8
 unsigned short* advManager::GetRouteArrayPtr(int x, int y, int z)
 {
-    // @stub
+    return &routeArray[(z * gMapHeight + y) * gMapWidth + x];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11521
 VA(0x0041b040, 0x9A)  // anchor-global, dc 0x1ebf4
@@ -2413,7 +2433,6 @@ void std::__destroy_aux(pathCell** __pointer, __false_type __formal)
 }
 
 #endif  // @carcass
-
 
 
 
