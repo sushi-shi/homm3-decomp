@@ -48,7 +48,7 @@ public:
     // USE re-expands the guard (the else arm constant-folds to a
     // literal 0 divisor, `xor ecx,ecx; idiv ecx`), which a cached
     // frame-count local cannot reproduce.
-    int GetNumFrames(int seq)
+    int GetNumFrames(int seq) const
     {
         if (seq < numSequences && validSeqMask[seq] != 0)
             return s[seq]->numFrames;
