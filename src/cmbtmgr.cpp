@@ -479,14 +479,56 @@ int GetTargetWallIndex(int grid_index)
     return -1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:2532
 VA(0x00465990, 0x140)  // linkorder, dc 0x5fd10
 void combatManager::DamageWall(TWallTargetId target_wall, int damage)
 {
-    // @stub
+    int strength;
+    if (damage > 0) {
+        strength = wallStrength[gWallTargets[target_wall].id] - damage;
+        if (strength < 0)
+            strength = 0;
+        else if (strength != 0)
+            goto update_wall;
+
+        switch (target_wall) {
+        case eTargetUpperWall:
+        case eTargetMidUpperWall:
+        case eTargetMidLowerWall:
+        case eTargetLowerWall:
+            cells[gWallTargets[target_wall].get_blocked_hex()].field_10 &= ~2;
+            break;
+        case eTargetGate:
+            drawbridgeState = 0;
+            break;
+        case eTargetUpperTower:
+            field_13f9c[2] = 0;
+            field_13fe4[2] = 0;
+            armies[1][field_13de0].creatureId |= 0x200000;
+            break;
+        case eTargetLowerTower:
+            field_13f9c[1] = 0;
+            field_13fe4[1] = 0;
+            armies[1][field_13dbc].creatureId |= 0x200000;
+            break;
+        case eTargetMainBuilding:
+            field_13f9c[0] = 0;
+            field_13fe4[0] = 0;
+            armies[1][field_13d98].creatureId |= 0x200000;
+            break;
+        }
+
+update_wall:
+        int wall_id = gWallTargets[target_wall].id;
+        wallStrength[wall_id] = strength;
+        if (strength == 0)
+            wallStanding[wall_id] = 0;
+        else
+            wallStanding[wall_id] = 1;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2603
 VA(0x00465ad0, 0x443)  // anchor-callee, dc 0x5feac

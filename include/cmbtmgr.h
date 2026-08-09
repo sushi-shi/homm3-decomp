@@ -72,6 +72,21 @@ enum ECombatGateHex {
     COMBAT_HEX_GATE = 0x60
 };
 
+// Dreamcast CodeView's wall-target domain. DamageWall independently proves
+// the complete 0..7 range with its eight-entry retail jump table.
+enum TWallTargetId {
+    eTargetUpperTower = 0,
+    eTargetUpperWall = 1,
+    eTargetMidUpperWall = 2,
+    eTargetGate = 3,
+    eTargetMidLowerWall = 4,
+    eTargetLowerWall = 5,
+    eTargetLowerTower = 6,
+    eTargetMainBuilding = 7,
+    kNumWallTargets = 8,
+    const_no_wall_target = -1
+};
+
 // The shape record an obstacle's TObstacle points at (TObstacle+0x4).
 // Byte-proven by PlaceObstacle (0x4669b0) and RemoveObstacle
 // (0x466b30), which both read the unsigned count at +0x6 and then walk
@@ -300,7 +315,7 @@ public:
     // FindCombatPath's in_placement_phase and lift the speed limit
     // to 99 while it is set. Name provisional.
     unsigned char bCreaturePlacement; // +0x13d68
-    char pad_13d69[0x7b];
+    char pad_13d69[0x2f];
     // "Move order is reversed for this combat": find_move_order
     // (0x41f179) reads it through the gpCombatManager GLOBAL - not
     // through its own `this` - and, when it is set, keys every stack
@@ -308,6 +323,14 @@ public:
     // the descending sort into an ascending one. move_toward (0x41f580)
     // is the second reader. Byte width is proven by the `mov al, [ecx +
     // 0x13de4] / test al, al` pair. Name provisional.
+    // Army-slot indexes for the main building, lower tower and upper
+    // tower defenders. DamageWall reads one selected slot when the
+    // corresponding target falls and marks that stack removed.
+    int field_13d98;                  // +0x13d98
+    char pad_13d9c[0x20];
+    int field_13dbc;                  // +0x13dbc
+    char pad_13dc0[0x20];
+    int field_13de0;                  // +0x13de0
     unsigned char field_13de4;        // +0x13de4
     char pad_13de5[0x17b];
     // Per-wall-segment hit points, indexed by TWallTargetId. Sliced
@@ -320,6 +343,14 @@ public:
     // (combatManager::get_wall_strength, cmbtmgr.h:1473, dc 0x27edc),
     // not the field, so the name is the accessor's.
     int wallStrength[15];             // +0x13f60
+    // DamageWall clears one member of each tower triplet when a tower
+    // falls. Their semantics remain unnamed; the three offsets are
+    // byte-proven by the switch arms.
+    int field_13f9c[3];               // +0x13f9c
+    // Per-wall-segment standing flag, indexed by the same id as
+    // wallStrength. DamageWall writes exactly `strength != 0`.
+    int wallStanding[15];             // +0x13fa8
+    int field_13fe4[3];               // +0x13fe4
 
     // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); no retail
     // body - /Ob2 folds it into should_stay_in_castle.
@@ -329,6 +360,7 @@ public:
     void SetupAdjacencyArray();
     void UpdateArmyGroup(int whichSide);
     void GenerateMap();
+    void DamageWall(TWallTargetId target_wall, int damage);
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();
@@ -584,7 +616,11 @@ struct type_wall_target {
     // three -1 rows are the two towers and the upper keep, the five
     // real ones are the wall segments the AI cares about.
     short blocked_column;             // +0x2
-    char pad_04[0x8];
+    short field_04;                   // +0x4
+    short field_06;                   // +0x6
+    // Wall-strength/standing array index. DamageWall reads it as a
+    // dword; the retail rows contain ids 5, 6, 8, 9, 10, 12, 13, 14.
+    int id;                           // +0x8
 
     // The DC roster's combatManager::TWallTarget::get_blocked_hex
     // (cmbtmgr.h:1150, dc 0x27eac, 28 B). No retail body - /Ob2 folds
