@@ -217,6 +217,7 @@ public:
     NewSMapHeader();
     ~NewSMapHeader();
     NewSMapHeader& operator=(const NewSMapHeader& that);
+    int Save(TAbstractFile* outfile);
 };
 SIZE(NewSMapHeader, 0x304);
 
@@ -238,6 +239,7 @@ public:
     signed char startingBonus[8];
 
     SGameSetupOptions();
+    int save(TAbstractFile* outfile);
 };
 SIZE(SGameSetupOptions, 0x1cc);
 
@@ -260,6 +262,7 @@ public:
     SCampaign();
     ~SCampaign();
     SCampaign& operator=(const SCampaign& that);
+    int Save(TAbstractFile* outfile);
 };
 SIZE(SCampaign, 0x7c);
 
@@ -274,14 +277,14 @@ public:
     char pad_4e1[3];
     SCampaign campaign;
     std::string fileName;
-    short difficultyRating;
-    char pad_572[2];
+    int difficultyRating;
     int numDeadPlayers;
     unsigned char deadPlayer[8];
     int humanPlayer[8];
     int currentPlayer;
 
     SavedGameHeader();
+    int Save(TAbstractFile* outfile);
     int Load(TAbstractFile* infile);
 };
 SIZE(SavedGameHeader, 0x5a4);

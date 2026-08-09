@@ -1688,20 +1688,66 @@ SavedGameHeader::SavedGameHeader()
     version = 42;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\game.cpp:2654
-// Second Save-side callee of game::Save in address order, `ret 4`.
-// The three carve rows between LoadRumours and this one (0x4bc0e0,
-// 0x4bc340, 0x4bc350) are all `ret 0`, so none of them can be this
-// p=2 body; they are the header COMDATs the bracket note warns about.
-// Size 378 against the DC row's 408 is 0.93x, the closest ratio in the
-// whole span.
-VA(0x004bc5d0, 0x17A)  // anchor-caller (game::Save) + arity + Save-callee order, dc 0xa795c
-int game::SaveBlackMarkets(void* outfile)
+// Retail disproves the earlier order-only SaveBlackMarkets claim: every
+// member access is within the 0x5a4-byte SavedGameHeader, and the three
+// callees receive its map-header, setup, and campaign subobjects.  Keep the
+// scalar staging locals in disjoint scopes: VC6 then reuses the dead argument
+// home slots, which is the retail stack schedule.
+VA(0x004bc5d0, 0x17A)  // anchor-layout + game::Save caller
+int SavedGameHeader::Save(TAbstractFile* outfile)
 {
-    // @stub
+    char fileNameBuffer[0x15f];
+    char compatibilityBuffer[32];
+
+    outfile->Write(id, sizeof(id));
+
+    {
+        int buffer = version;
+        outfile->Write(&buffer, sizeof(buffer));
+    }
+    {
+        int buffer = gameVersion;
+        outfile->Write(&buffer, sizeof(buffer));
+    }
+
+    if (outfile->Write(compatibilityBuffer, sizeof(compatibilityBuffer)) <
+        sizeof(compatibilityBuffer))
+        return -1;
+
+    if (mapHeader.Save(outfile) < 0)
+        return -1;
+    if (mapSetup.save(outfile) < 0)
+        return -1;
+
+    {
+        short buffer = campaignGame;
+        outfile->Write(&buffer, sizeof(buffer));
+    }
+    if (campaignGame)
+        campaign.Save(outfile);
+
+    strcpy(fileNameBuffer, fileName.c_str());
+    outfile->Write(fileNameBuffer, sizeof(fileNameBuffer));
+
+    {
+        short buffer = difficultyRating;
+        outfile->Write(&buffer, sizeof(buffer));
+    }
+    {
+        char buffer = numDeadPlayers;
+        outfile->Write(&buffer, sizeof(buffer));
+    }
+    outfile->Write(deadPlayer, sizeof(deadPlayer));
+    outfile->Write(humanPlayer, sizeof(humanPlayer));
+    {
+        int buffer = currentPlayer;
+        outfile->Write(&buffer, sizeof(buffer));
+    }
+
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2672
 DC_ONLY(0xa7a24, 0x98)
