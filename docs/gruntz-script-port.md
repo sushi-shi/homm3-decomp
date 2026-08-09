@@ -274,6 +274,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `type_point::operator==` identity. No external implementation body was used,
   and `match_baseline.tsv` remains generated solely by the full build.
 
+- **2026-08-09 — `generator::Initialize` reconstructed byte-exact
+  (503 bytes).** Retail clears the four creature and population slots,
+  initializes the guard army, selects either one creature from the class-1
+  generator table or four from the class-4 table, copies them backward, marks
+  the town and owner unassigned, and grows the new roster. If the requested
+  owner differs afterward, the inlined transition removes the old player's
+  matching-town bonuses and adds the new player's, retaining the Complete-only
+  elemental gate on both halves. The two table declarations now carry their
+  Dreamcast/retail-symbol `TCreatureType` domains; the additional owning-header
+  edge is byte-inert in the existing adventure-manager consumer. Branch-local
+  generator-type temporaries reproduce retail's separate signed-byte loads,
+  and a call-site `inline_depth(0)` pin preserves the observed out-of-line Grow
+  boundary while leaving the inline `GetTown` accessors intact. Retail proves
+  all control flow, table addresses, bounds, offsets, sentinels and called
+  behavior; Dreamcast supplies the member, local and table identities. This
+  applies the HoMM2/Gruntz source-shape, lifetime and helper-boundary rules. No
+  external implementation body or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `generator::load` reconstructed byte-exact
   (315 bytes).** Retail checks exact read sizes for the owner, generator class
   and type, population row, three map coordinates and town id. Between those

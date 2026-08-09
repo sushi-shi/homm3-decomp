@@ -31,6 +31,7 @@
 // re-declaring it.
 #include "netgame.h"
 #include "kbwin.h"
+#include "advmgr_objects.h"
 
 // The generator save format stores creature ids as bytes while the live
 // roster uses TCreatureType. Keep the representation bridge explicit without
@@ -241,14 +242,84 @@ void generator::set_owner(long owner)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:570
 VA(0x004b8860, 0x1F7)  // anchor-global, dc 0xa3288
 void generator::Initialize(long new_owner)
 {
-    // @stub
-}
+    for (int slot = 0; slot < 4; slot++) {
+        type[slot] = CREATURE_NONE;
+        population[slot] = 0;
+    }
+    guards.Initialize();
 
-#endif  // @carcass
+    TCreatureType* types;
+    int typeCount;
+    if (genClass == CREATURE_GENERATOR_1) {
+        int generatorType = genType;
+        types = &gCreatureGenerator1Types[generatorType];
+        typeCount = 1;
+    } else {
+        int generatorType = genType;
+        types = gCreatureGenerator4Types[generatorType];
+        typeCount = 4;
+    }
+
+    town_id = -1;
+    playerOwner = -1;
+    while (typeCount--) {
+        type[typeCount] = types[typeCount];
+    }
+
+#pragma inline_depth(0)
+    Grow(1);
+#pragma inline_depth()
+
+    if (new_owner == playerOwner)
+        return;
+
+    if (playerOwner >= 0) {
+        playerData* player = &gpGame->players[playerOwner];
+        int creature = type[0];
+        if (gpGame->f_1f698 ||
+            (creature != CREATURE_AIR_ELEMENTAL &&
+             creature != CREATURE_EARTH_ELEMENTAL &&
+             creature != CREATURE_FIRE_ELEMENTAL &&
+             creature != CREATURE_WATER_ELEMENTAL)) {
+            int townType = akCreatureTypeTraits[creature].townType;
+            if (townType != -1) {
+                for (int index = 0; index < player->numTowns; index++) {
+                    town* currentTown =
+                        gpGame->GetTown(player->townIds[index]);
+                    if (currentTown->type == townType)
+                        currentTown->change_generator_bonus(type[0], -1);
+                }
+            }
+        }
+    }
+
+    playerOwner = new_owner;
+    if (playerOwner >= 0) {
+        playerData* player = &gpGame->players[playerOwner];
+        int creature = type[0];
+        if (gpGame->f_1f698 ||
+            (creature != CREATURE_AIR_ELEMENTAL &&
+             creature != CREATURE_EARTH_ELEMENTAL &&
+             creature != CREATURE_FIRE_ELEMENTAL &&
+             creature != CREATURE_WATER_ELEMENTAL)) {
+            int townType = akCreatureTypeTraits[creature].townType;
+            if (townType != -1) {
+                for (int index = 0; index < player->numTowns; index++) {
+                    town* currentTown =
+                        gpGame->GetTown(player->townIds[index]);
+                    if (currentTown->type == townType)
+                        currentTown->change_generator_bonus(type[0], 1);
+                }
+            }
+        }
+    }
+}
 
 // E:\gamedcs\game.cpp:601
 // Reseed the guard stack from the creature table: growthRate into the
