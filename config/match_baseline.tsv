@@ -361,6 +361,7 @@ cmbtmgr	?FreeIcons@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x63500
 cmbtmgr	?GenerateMap@combatManager@@QAEXXZ	58.8421	58.8421	58.8421	0x642d0
 cmbtmgr	?GetBackgroundName@combatManager@@QAEPBDXZ	100.0000	100.0000	100.0000	0x646d0
 cmbtmgr	?GetGridIndex@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x647a0
+cmbtmgr	?GetMissileStartingPosition@@YIXHHHHHHPBVCSprite@@PAH111@Z	100.0000	100.0000	100.0000	0x69880
 cmbtmgr	?GetTargetWallIndex@@YIHH@Z	100.0000	100.0000	100.0000	0x65970
 cmbtmgr	?HexIsBlocked@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x69a10
 cmbtmgr	?InCastle@@YIEH@Z	100.0000	100.0000	100.0000	0x67460
@@ -393,7 +394,6 @@ cmbtmgr	?is_adjacent@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x674c0
 cmbtmgr	?should_lower_door@combatManager@@QAEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
 cmbtmgr	combatManager_CheckApplyBadMorale	0.0000	0.0000	0.0000	0x64b40
 cmbtmgr	combatManager_CheckApplyGoodMorale	0.0000	0.0000	0.0000	0x64920
-cmbtmgr	combatManager_GetMissileStartingPosition	0.0000	0.0000	0.0000	0x69880
 cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
 cmbtmgr	combatManager_KeepAttack	0.0000	0.0000	0.0000	0x65ad0
 cmbtmgr	combatManager_LoadArmies	0.0000	0.0000	0.0000	0x63600
