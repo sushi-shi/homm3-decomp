@@ -5,6 +5,15 @@
 #ifndef HOMM3_UNIVERSITY_WINDOW_H
 #define HOMM3_UNIVERSITY_WINDOW_H
 
+#include <va.h>
+
+// ExtraInfoUnion::get_university indexes the scenario pool with a 16-byte
+// stride. The record stays opaque until another retail body reaches inside.
+class type_university {
+    char pad_00[0x10];
+};
+SIZE(type_university, 0x10);
+
 // --- type_university_skill_button ---
 // CODEVIEW(E:\gamedcs\university_window.cpp:65, dc 0x18e6ac) void type_university_skill_button::type_university_skill_button(long _x, long _y, long _width, long _height, long new_id, const char* _image, TSecondarySkill new_skill);
 // CODEVIEW(E:\gamedcs\university_window.cpp:75, dc 0x18e728) unsigned char type_university_skill_button::handle_click(unsigned char down_click, unsigned char right_click);

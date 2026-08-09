@@ -38,6 +38,9 @@ class town;
 // struct.h: struct.h rides in initialize.cpp's include closure, and one
 // more user-defined type there moves the initialize_game_data row.
 class CNetPlayerInfo;
+class type_university;
+class type_creature_bank;
+
 // `mine` and `generator`, two of the four object-pool element types.
 // The DC roster declares both in E:\gamedcs\Game.h, i.e. here.
 //
@@ -354,7 +357,15 @@ public:
     std::vector<generator> generators;   // +0x4e398
     std::vector<garrison> garrisons;      // +0x4e3a8
     std::vector<boat> boats;             // +0x4e3b8
-    char pad_4e3c8[0x21];
+    // Two more Dinkumware vectors immediately follow the four object pools.
+    // Only their _First fields are exposed: get_university loads +0x4e3cc
+    // and get_creature_bank loads +0x4e3dc. The surrounding allocator,
+    // _Last and _End words remain padding until a retail reader reaches them.
+    char pad_4e3c8[4];
+    type_university* universitiesFirst;       // +0x4e3cc
+    char pad_4e3d0[0xc];
+    type_creature_bank* creatureBanksFirst;   // +0x4e3dc
+    char pad_4e3e0[9];
     // +0x4e3e9, one signed byte of per-player visit bits per obelisk;
     // GetNumObelisks tests `(1 << player) & flags[i]` over exactly 48
     // entries.

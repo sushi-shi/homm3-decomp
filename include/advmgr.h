@@ -90,6 +90,8 @@ class textEntryWidget;
 
 class NewfullMap;
 class NewmapCell;
+class ExtraInfoUnion;
+class BlackBoxData;
 class CSprite;
 class textWidget;
 
@@ -302,6 +304,7 @@ public:
     unsigned long bottomViewDeadline;    // +0x39c
 
     void CheckDimNextHeroBut();
+    BlackBoxData* get_black_box(const ExtraInfoUnion* cell);
     void DeactivateCurrTown(unsigned char waitingPlayer);
     void DeactivateCurrHero(unsigned char waitingPlayer);
     void DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
