@@ -3109,10 +3109,11 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 }
 
 // E:\gamedcs\advmgr.cpp:7543
-// RETAIL-RECONSTRUCTED 2026-08-09 (12.3003%). This first QuickInfo slice
-// restores point validation and shroud handling, trigger-cell resolution,
+// RETAIL-RECONSTRUCTED 2026-08-09 (15.9777%). The current QuickInfo slices
+// restore point validation and shroud handling, trigger-cell resolution,
 // the shared creature-bank/shrine/tree/witch-hut text helpers, the default
-// object name, quick-view sizing, screen-edge clamps and dialog invocation.
+// object name, border/generator/resource cases, optional map coordinates,
+// quick-view sizing, screen-edge clamps and dialog invocation.
 // Retail proves the control flow, constants, field offsets and helper calls;
 // Dreamcast CodeView supplies only the function and local identities.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
@@ -3154,6 +3155,12 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 0x006603bc, quickInfoNewLine, "\n");
 
             switch (cell->type) {
+            case BORDER_GUARD:
+                sprintf(gText, DATA_COMPGEN(
+                    0x00660344, rolloverBorderFormat, "%s %s"),
+                    gBorderColorNames[cell->objectIndex],
+                    gAdventureObjectNames[cell->type]);
+                break;
             case CREATURE_BANK: {
                 union {
                     int value;
@@ -3163,6 +3170,40 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 get_creature_bank_help_text(
                     gText, cell, bankType.type, gUnnamed69778c,
                     newLine, 1);
+                break;
+            }
+            case CREATURE_GENERATOR_1: {
+                generator* mapGenerator =
+                    &gpGame->generators[cell->extraInfo];
+                int owner = mapGenerator->playerOwner;
+                int generatorType = mapGenerator->genType;
+                if (owner != -1) {
+                    sprintf(gText, DATA_COMPGEN(
+                        0x006603b4, quickInfoOwnedObjectFormat,
+                        "%s\n\n%s"),
+                        gCreatureGenerator1RolloverNames[generatorType],
+                        gObjectOwnerColorNames[owner]);
+                } else {
+                    strcpy(gText,
+                        gCreatureGenerator1RolloverNames[generatorType]);
+                }
+                break;
+            }
+            case CREATURE_GENERATOR_4: {
+                generator* mapGenerator =
+                    &gpGame->generators[cell->extraInfo];
+                int owner = mapGenerator->playerOwner;
+                int generatorType = mapGenerator->genType;
+                if (owner != -1) {
+                    sprintf(gText, DATA_COMPGEN(
+                        0x006603b4, quickInfoOwnedObjectFormat,
+                        "%s\n\n%s"),
+                        gCreatureGenerator4RolloverNames[generatorType],
+                        gObjectOwnerColorNames[owner]);
+                } else {
+                    strcpy(gText,
+                        gCreatureGenerator4RolloverNames[generatorType]);
+                }
                 break;
             }
             case DERELICT_SHIP:
@@ -3184,6 +3225,9 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 get_creature_bank_help_text(
                     gText, cell, CREATURE_BANK_SHIPWRECK,
                     gUnnamed69778c, separator, 1);
+                break;
+            case RESOURCE:
+                strcpy(gText, gResourceNames[cell->objectIndex]);
                 break;
             case SHRINE1:
                 SetShrineHelpText(gText, currHero, cell, Shrine1Info,
@@ -3210,6 +3254,15 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 break;
             }
         }
+    }
+
+    if (gUnnamed6989c8 > 0) {
+        char coordinateText[128];
+        sprintf(coordinateText, DATA_COMPGEN(
+            0x00660394, quickInfoCoordinateFormat,
+            "\n\nX: %3d - Y: %3d - Z: %3d"),
+            mapPoint.x, mapPoint.y, mapPoint.z);
+        strcat(gText, coordinateText);
     }
 
     int width;
