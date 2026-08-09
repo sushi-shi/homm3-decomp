@@ -609,6 +609,7 @@ public:
     TCreatureType GetNecromancyCreature();
 #ifdef HOMM3_HERO_COMBINATION_VIEW
     boat* find_summonable_boat();
+    void GiveResource(int whichRes, int howMuch);
 #endif
     // Claimed in src/hero.cpp (0x4d7900, dc 0xcaedc); declared here
     // because town::remove_garrison_hero calls it with the town's

@@ -34,7 +34,9 @@
 // TArtifact / akArtifactTraits / gCombinationArtifacts - same placement
 // rationale as herospec.h.
 #include "artifact.h"
+#define HOMM3_HERO_GIVE_RESOURCE_VIEW
 #include "advmgr.h"
+#undef HOMM3_HERO_GIVE_RESOURCE_VIEW
 #include "exec.h"
 #include "town.h"
 #undef HOMM3_HERO_HIRE_VIEW
@@ -1529,12 +1531,26 @@ int hero::GiveExperience(int howMuch, int bCheckLevel, unsigned char show_cap_wi
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:5136
 VA(0x004e3600, 0xB2)  // anchor-global, dc 0xd3fb8
 void hero::GiveResource(int whichRes, int howMuch)
 {
-    // @stub
+    if (whichRes >= 0 && whichRes <= NUM_RESOURCES - 1) {
+        gpGame->players[owner].resources[whichRes] += howMuch;
+        if (gpGame->players[owner].resources[whichRes] < 0)
+            gpGame->players[owner].resources[whichRes] = 0;
+    }
+
+    if (&gpGame->players[owner] == gpCurrentPlayer
+        && gpAdvManager->status == baseManager::STATUS_ACTIVE)
+        gpAdvManager->advWindow->UpdateResourceDisplay(1, 1);
+
+    gpGame->IsHuman(owner);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:5165
 VA(0x004e36c0, 0x2E8)  // anchor-global, dc 0xd4070
