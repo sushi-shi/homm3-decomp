@@ -595,11 +595,53 @@ int game::SaveGarrisonPool(TAbstractFile* outfile)
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1114
+#endif  // @carcass
+
 VA(0x004b9a00, 0x239)  // anchor-callee (type_obscuring_object::load), dc 0xa46e8
-int game::LoadBoatPool(void* infile)
+int game::LoadBoatPool(TAbstractFile* infile)
 {
-    // @stub
+    int count;
+    if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        return -1;
+
+    boat defaultBoat;
+    unsigned int i = count & 0xff;
+    boats.resize(i, defaultBoat);
+    for (i = 0; i < boats.size(); ++i) {
+        unsigned char value;
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        boats[i].allocated = value != 0;
+
+        if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+            return -1;
+        boats[i].id = static_cast<unsigned char>(count);
+
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        boats[i].type = value;
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        boats[i].facing = value;
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        boats[i].playerOwner = value;
+
+        int occupyingHero;
+        if (infile->Read(&occupyingHero, sizeof(short)) < sizeof(short))
+            return -1;
+        boats[i].occupying_hero = occupyingHero & 0xffff;
+
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        boats[i].occupied = value != 0;
+        if (!boats[i].load(infile))
+            return -1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1178
 #endif  // @carcass

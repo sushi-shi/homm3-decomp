@@ -627,6 +627,7 @@ public:
     int LoadGarrisonPool(TAbstractFile* infile, int saveVersion);
     int SaveMinePool(TAbstractFile* outfile);     // 0x4b9580
     int SaveGarrisonPool(TAbstractFile* outfile); // 0x4b98c0
+    int LoadBoatPool(TAbstractFile* infile);      // 0x4b9a00
     int SaveBoatPool(TAbstractFile* outfile);     // 0x4b9c40
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
 #if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
