@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::SetRolloverText` extends to 72.3630%.**
+  Retail admits Mine's call into the 595-byte helper at 0x40d670: the two
+  call sites and `ret 0xc` prove a five-parameter /Gr surface receiving the
+  output buffer, cell, local player, separator and full-list flag. Because no
+  surviving name identifies that retail-only helper, the declaration remains
+  the ordinal `AdvmgrFn_0040D670` and its body is not admitted. The retail
+  literals at 0x660330/0x66034c also correct the shared separator and visited
+  format to `" "`/`" %s"`. No external implementation body was used.
+  Whole-linked fuzzy coverage rises from 45.27% to 45.28% with all 610 exact
+  linked functions retained.
+
 - **2026-08-09 — `advManager::SetRolloverText` extends to 72.1363%.**
   Retail admits both creature-generator ownership arms, Lighthouse ownership
   and Town naming. The switch blocks prove the 92-byte generator and 64-byte

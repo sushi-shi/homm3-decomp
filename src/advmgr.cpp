@@ -48,8 +48,8 @@
 // operation set and caller role (see the reconstruction at that address).
 // 0xd670 (595 B, ret 0xc), a help-text builder with the same two callees
 // as get_creature_bank_help_text, remains UNCLAIMED: the DC roster has no
-// third 5-param help builder, so giving that sibling a semantic name would
-// still be invention. See the help-text note further down.
+// third 5-param help builder, so its call surface keeps an ordinal placeholder
+// and its body remains unclaimed. See the help-text note further down.
 #define HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
 #define HOMM3_ADVMGR_QUICKINFO_VIEW
 #include <va.h>
@@ -590,9 +590,9 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     type_cell_adjuster adjuster = { 0, 0, 0 };
     NewmapCell* cell = adjuster.get_trigger_cell(testCell, rx, ry);
     const char* separator = DATA_COMPGEN(
-        0x00660330, rolloverCommaSeparator, ", ");
+        0x00660330, rolloverSpaceSeparator, " ");
     const char* visitedFormat = DATA_COMPGEN(
-        0x0066034c, rolloverVisitedFormat, ", %s");
+        0x0066034c, rolloverVisitedFormat, " %s");
 
 #define APPEND_VISIT_TEXT(isVisited)                                      \
     sprintf(tempText, visitedFormat,                                     \
@@ -771,6 +771,9 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         & (1UL << (cell->extraInfo & 0x1f)));
     SET_VISITED_ROLLOVER(MERMAID, MermaidInfo,
         currentHero->flags & 0x8000);
+    case MINE:
+        AdvmgrFn_0040D670(gText, cell, player, separator, 0);
+        break;
     case MONSTER:
         if (cell->is_trigger) {
             const char* creatureName = DATA_COMPGEN(
@@ -953,9 +956,10 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 // respecting embedding of the DC four into the retail five is UNIQUE,
 // and it leaves 0xd670 - a 5-param row that, like the creature-bank
 // builder, calls the army describer 0xabe0 and armyGroup::HasCreatures
-// - as a retail-only sibling with no DC counterpart. 0xd670 stays
-// unclaimed; 0xabe0 is now named only by its independently reconstructed
-// army-description role.
+// - as a retail-only sibling with no DC counterpart. Its two callers and
+// `ret 0xc` now admit only the ordinal five-parameter declaration used above;
+// the body stays unclaimed. 0xabe0 is named only by its independently
+// reconstructed army-description role.
 //
 // 0xd3f0 is the one with independent body evidence: 6 params AND the
 // two creature-bank-only callees (0xabe0, armyGroup::HasCreatures).

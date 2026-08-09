@@ -549,6 +549,12 @@ extern advManager* gpAdvManager;
 int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
 bool hasFlag(int objType);
 int GetFlaggedObjectOwner(NewmapCell* thisCell);
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+// Retail-only 0x40d670. Ordinal placeholder: SetRolloverText and QuickInfo
+// prove this five-parameter /Gr help-text signature, but no surviving name.
+void AdvmgrFn_0040D670(char* buffer, NewmapCell* cell, long playerId,
+                       const char* separator, unsigned char showFullList);
+#endif
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\advmgr.cpp:336, dc 0x5714) unsigned char InitializeCreatureGeneratorNames();
