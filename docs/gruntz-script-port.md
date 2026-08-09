@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::Load` extends from 23.1861% to 26.3228%.** Retail
+  fixes the prefix order after header restoration: clear recorded events,
+  publish the loaded square map extent, close the path search array, restore
+  the versioned 0x90/0x81 scenario bands and the 28-byte post-version-29
+  band, then load rumours, the signed-count 28-byte event vector, the world
+  map and the sign/mine/generator/garrison/boat pools before the 48 obelisk
+  bytes. Generator count is a signed short; each 92-byte record must report
+  success. A function-scope Dinkumware string is independently visible in
+  the target prologue and cleanup: adding it turns every source short-read
+  into retail's shared failure exit and makes the prefix additive. The
+  save-header and player/town/hero roster bands remain explicit follow-up
+  work. No external implementation body was used, and rejected roster and
+  map-extra experiments were not retained.
+
 - **2026-08-09 — the first `game::Load` slice reaches 23.1861% of the
   3,778-byte routine.** Retail proves the consecutive scenario-state reads at
   game +0x1f4d4, +0x1f634, +0x1f63e..+0x1f69c and the 32/8/6/3-byte global

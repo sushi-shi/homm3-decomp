@@ -1529,17 +1529,21 @@ void game::setup_shipyards()
 // (0x4b9070 / 0x4b9340 / 0x4b96f0 / 0x4b9a00) - and none of the savers.
 // It references the literal 'H3SVG' at 0x677d38. `ret 4` = p=2.
 //
-// PARTIAL (23.1861%): retail's scalar scenario-state tail and nineteen
-// teleport-destination vectors are reconstructed below. The save-header,
-// map, object-pool and roster prefix still remains; until it is admitted,
-// the temporary first read supplies the version that prefix normally leaves
-// live. The target's short vector-count reads deliberately skip only that
-// vector rather than failing the entire load.
+// PARTIAL (26.3228%): retail's scalar scenario-state tail, nineteen
+// teleport-destination vectors, and the map/object-pool prefix are
+// reconstructed below. The function-scope string is also retail-structural:
+// its Dinkumware cleanup gives every short-read the target's shared failure
+// exit. The save-header and player/town/hero roster bands still remain;
+// until the header is admitted, the temporary first read supplies the
+// version it normally leaves live. Short teleport-vector counts deliberately
+// skip only that vector rather than failing the entire load.
 #endif  // @carcass
 
 VA(0x004bcda0, 0xEC2)  // anchor-callee set (4 claimed pool loaders) + 'H3SVG', dc 0xa83d0
 int game::Load(TAbstractFile* infile)
 {
+    std::string headerName;
+
     // The save header supplies this value in the complete routine. Keep the
     // initial read here until that prefix is reconstructed so the admitted
     // serialization tail retains its version gates.
@@ -1549,6 +1553,64 @@ int game::Load(TAbstractFile* infile)
 
     char char_buffer;
     short short_buffer;
+
+    clear_event_records();
+    gMapWidth = mapSize;
+    gMapHeight = mapSize;
+    gpSearchArray->Close();
+
+    if (saveVersion >= 34) {
+        infile->Read(field_4e2b4, sizeof(field_4e2b4));
+        infile->Read(field_4e224, sizeof(field_4e224));
+    } else if (saveVersion >= 25) {
+        infile->Read(field_4e2b4, 0x81);
+        infile->Read(field_4e224, 0x81);
+    }
+
+    if (saveVersion >= 29)
+        infile->Read(field_4e658, sizeof(field_4e658));
+    else
+        memset(field_4e658, 0, sizeof(field_4e658));
+
+    if (LoadRumours(infile) < 0)
+        return -1;
+
+    field_1f680.clear();
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    field_1f680.resize(char_buffer);
+    int eventBytes = char_buffer * sizeof(LoadEventRecord);
+    if (infile->Read(field_1f680.begin(), eventBytes) < eventBytes)
+        return -1;
+
+    if (worldMap.Load(infile, mapSize, mapHasTwoLevels, saveVersion) < 0)
+        return -1;
+    if (LoadSignPool(infile) < 0)
+        return -1;
+    if (LoadMinePool(infile, saveVersion) < 0)
+        return -1;
+
+    if (infile->Read(&short_buffer, sizeof(short_buffer)) <
+        sizeof(short_buffer))
+        return -1;
+    generators.resize(short_buffer);
+    int i;
+    for (i = 0; i < short_buffer; ++i) {
+        if (!generators[i].load(infile))
+            return -1;
+    }
+
+    if (LoadGarrisonPool(infile, saveVersion) < 0)
+        return -1;
+    if (LoadBoatPool(infile) < 0)
+        return -1;
+
+    if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
+        return -1;
+    field_4e3e8 = char_buffer;
+    if (infile->Read(obeliskFlags, sizeof(obeliskFlags)) <
+        sizeof(obeliskFlags))
+        return -1;
 
     if (infile->Read(&char_buffer, sizeof(char_buffer)) < sizeof(char_buffer))
         return -1;
@@ -1609,7 +1671,6 @@ int game::Load(TAbstractFile* infile)
         return -1;
 
     int poolCount = saveVersion < 32 ? 3 : 8;
-    int i;
     for (i = 0; i < poolCount; ++i) {
         if (infile->Read(&short_buffer, sizeof(short_buffer)) >=
             sizeof(short_buffer)) {

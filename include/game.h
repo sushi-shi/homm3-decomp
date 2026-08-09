@@ -82,6 +82,10 @@ public:
     unsigned char HasTwoLevels;
 
     NewmapCell* cell(int x, int y, int z);
+#ifdef HOMM3_GAME_LOAD_VIEW
+    int Load(TAbstractFile* infile, int size, unsigned char twoLayers,
+             int saveVersion);
+#endif
 };
 
 class town;
@@ -638,7 +642,11 @@ public:
 #if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_GAME_LOAD_VIEW)
     type_university_vector_view universities;       // +0x4e3c8
     type_creature_bank_vector_view creatureBanks;  // +0x4e3d8
+#ifdef HOMM3_GAME_LOAD_VIEW
+    unsigned char field_4e3e8;
+#else
     char pad_4e3e8[1];
+#endif
 #else
     char pad_4e3c8[0x21];
 #endif
@@ -650,7 +658,12 @@ public:
     char rumourState[0x100];                 // +0x4e546
     char pad_4e646[2];
     std::vector<TRumour> rumours;             // +0x4e648
+#ifdef HOMM3_GAME_LOAD_VIEW
+    char field_4e658[0x1c];
+    char pad_4e674[8];
+#else
     char pad_4e658[0x24];
+#endif
     // +0x4e67c / +0x4e6fc / +0x4e77c - the teleport-destination pools,
     // all std::vector<type_point>. The two arrays are indexed by the
     // monolith colour (`color << 4` in both wrappers) and the gap
@@ -736,6 +749,7 @@ public:
     int LoadBoatPool(TAbstractFile* infile);      // 0x4b9a00
     int SaveBoatPool(TAbstractFile* outfile);     // 0x4b9c40
     int Load(TAbstractFile* infile);              // 0x4bcda0
+    void clear_event_records();                   // 0x4a0f10
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
 #if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
     // 0x4c9990. town.obj needs this declaration for
