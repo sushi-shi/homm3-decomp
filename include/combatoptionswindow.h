@@ -5,6 +5,17 @@
 #ifndef HOMM3_COMBATOPTIONSWINDOW_H
 #define HOMM3_COMBATOPTIONSWINDOW_H
 
+// Retail's CombatSystemOptions owns one 0x50-byte stack instance. The x86
+// body needs only the lifetime/method surface; member layout remains opaque.
+class TCombatOptionsWindow {
+    unsigned char opaque[0x50];
+
+public:
+    TCombatOptionsWindow();
+    ~TCombatOptionsWindow();
+    void DoModal();
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\combatoptionswindow.cpp:278, dc 0x67b7c) int CombatOptionsWindowHandler(message* msg);
 // CODEVIEW(E:\gamedcs\combatoptionswindow.cpp:651, dc 0x68098) void UpdateCombatOptions(int bFirstUpdate);

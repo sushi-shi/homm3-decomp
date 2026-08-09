@@ -5,14 +5,14 @@
 // #include "combatoptionswindow.h"
 
 // E:\gamedcs\combatoptionswindow.cpp:60
-DC_ONLY(0x66c48, 0xD64)
+VA(0x0046e3b0, 0x1320)  // retail caller + dc identity
 void TCombatOptionsWindow::TCombatOptionsWindow()
 {
     // @stub
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:180
-DC_ONLY(0x679ac, 0x68)
+VA(0x0046f700, 0x75)  // retail caller + dc identity
 void TCombatOptionsWindow::~TCombatOptionsWindow()
 {
     // @stub
@@ -26,7 +26,7 @@ int TCombatOptionsWindow::convertID2HelpID(int id)
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:214
-DC_ONLY(0x67a40, 0x38)
+VA(0x0046f780, 0x28)  // retail caller + dc identity
 void TCombatOptionsWindow::DoModal()
 {
     // @stub
@@ -80,4 +80,3 @@ void* TCombatOptionsWindow::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
-

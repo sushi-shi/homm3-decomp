@@ -40,6 +40,7 @@
 
 #include <va.h>
 #include "cmbtmgr.h"
+#include "combatoptionswindow.h"
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
 #include "misc.h"   // TPickANumber, for PlaceAllObstacles
@@ -690,14 +691,22 @@ void combatManager::ShootMissile(int startX, int startY, int destX, int destY, c
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:4041
+// RECONSTRUCTED 2026-08-09. Retail's 0x50-byte stack object and its
+// ctor/DoModal/dtor calls identify TCombatOptionsWindow; the two manager
+// calls and the +0x53b8 clear are instruction-exact. Residual (99.8919%)
+// is stripped-target relocation naming and EH metadata only.
 VA(0x004686b0, 0x7B)  // linkorder, dc 0x622bc
 void combatManager::CombatSystemOptions()
 {
-    // @stub
+    TCombatOptionsWindow panel;
+    panel.DoModal();
+    field_53b8 = 0;
+    UpdateGrid(0, 1);
+    DrawFrame(1, 0, 0, 0, 1, 0);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4055
 // Byte proof for the hexcell trio: the three -1 stores land on cell

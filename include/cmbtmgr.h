@@ -180,7 +180,10 @@ public:
     // re-opens that table's gate hex, only while this byte is set -
     // always nested inside the field_53a8 test above. Name provisional.
     unsigned char field_53a9;         // +0x53a9
-    char pad_53aa[0x16];
+    char pad_53aa[0xe];
+    // CombatSystemOptions clears this dword after the modal dialog closes.
+    int field_53b8;                   // +0x53b8
+    char pad_53bc[0x4];
     // can_cast_spells (0x41f890) refuses a CREATURE cast (hero_spell
     // clear) while this word reads 2, and refuses every cast at all
     // while the byte below is set. Both names await a writer.
@@ -320,6 +323,13 @@ public:
                        unsigned attributes);
     void PlaceAllObstacles();
     void RemoveObstacle(int index);
+    void CombatSystemOptions();
+    int UpdateGrid(int bPostGridIsClean, int bSetupGrid);
+    void DrawFrame(unsigned char update,
+                   unsigned char bLimitCreatureEffect,
+                   unsigned char bLimitDraw, int iDelay,
+                   unsigned char bRefreshBackground,
+                   unsigned char bDoDelayTil);
     // DC header inline (CmbtMgr.h:1542, dc 0x27fa0). Retail re-loads
     // obstacles_begin here rather than reusing the copy RemoveObstacle's
     // own guards just tested; routing the call through this inline does
