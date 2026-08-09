@@ -55,6 +55,7 @@
 #include "soundmgr.h"
 #include "textresource.h"
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
+#include "winmgr.h"
 
 DATA(0x0066d864)
 combatManager::TWallTraits combatManager::akWallTraits[9][18];
@@ -105,12 +106,33 @@ int combatManager::Open(int newPriority)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:842
 VA(0x00463260, 0x105)  // anchor-vtable, dc 0x5dc70
 void combatManager::Close()
 {
-    // @stub
+    if (!IsQuickCombat())
+        gpWindowManager->FadeScreen(1, 4, 1);
+
+    gCombatActive698a18 = 0;
+    delete field_53ac;
+    delete field_53b0;
+    delete field_53b4;
+    if (combatWindow)
+        gpWindowManager->RemoveWindow(combatWindow);
+    gpSoundManager->StopAllSamples(1);
+    FreeIcons();
+    if (combatWindow) {
+        delete combatWindow;
+        combatWindow = 0;
+    }
+    delete field_38;
+    status = 0;
+    field_13300 = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:902
 VA(0x00463370, 0x18D)  // anchor-global, dc 0x5ddc0
