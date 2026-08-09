@@ -260,6 +260,14 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::DrawBoatPartShadow` admitted byte-exact;
+  `advmgr` 18 → 19 exact.** The 591-byte shadow twin preserves every
+  matched boat lookup, packed-cell, froth, frame, crop and flip operation
+  from `DrawBoatPart` while relocating both final calls to the distinct raw
+  `CSprite::DrawHeroShadow` body. Retail blocks and relocations are the
+  correctness evidence; CodeView supplied only the signature/name, no
+  external body was consulted, and the generated baseline is build-owned.
+
 - **2026-08-09 — `advManager::DrawBoatPart` admitted byte-exact;
   `advmgr` 17 → 18 exact.** The 591-byte retail body proves the direct
   40-byte boat-pool index, its packed position, the asymmetric inlined

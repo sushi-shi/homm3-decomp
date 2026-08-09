@@ -889,14 +889,39 @@ void advManager::DrawBoatPart(int part, TDrawParts& boatParts, int baseX,
         currBoat->facing > hero::kFacingS);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:5900
 VA(0x004109b0, 0x24F)  // anchor-callee, dc 0x120ec
-void advManager::DrawBoatPartShadow(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::DrawBoatPartShadow(int part, TDrawParts& boatParts,
+                                    int baseX, int baseY, int tilex,
+                                    int tiley, int tilew, int tileh)
 {
-    // @stub
+    boat* currBoat = &gpGame->boats[boatParts.id];
+    int BoatCellY = part % 3;
+    int BoatCellX = part / 3;
+    NewmapCell* boatCell = DrawBoatCell(
+        this, type_point(currBoat->x, currBoat->y, currBoat->z));
+
+    if (!(boatCell->flags_00_11 & 0x200)) {
+        boatFrothIcons[currBoat->type]->DrawHeroShadow(
+            currBoat->GetStandSequence(),
+            animFrame
+                % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+            tilex + (2 - BoatCellY) * 32,
+            tiley - BoatCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currBoat->facing > hero::kFacingS);
+    }
+
+    boatIcons[currBoat->type]->DrawHeroShadow(
+        currBoat->GetStandSequence(),
+        animFrame % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+        tilex + (2 - BoatCellY) * 32,
+        tiley - BoatCellX * 32 + 32, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8,
+        currBoat->facing > hero::kFacingS);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:5941
 VA(0x00410c00, 0x98E)  // anchor-callee, dc 0x12334

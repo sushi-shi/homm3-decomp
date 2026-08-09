@@ -169,6 +169,9 @@ public:
                             int tileh);
     void DrawBoatPart(int part, TDrawParts& boatParts, int baseX, int baseY,
                       int tilex, int tiley, int tilew, int tileh);
+    void DrawBoatPartShadow(int part, TDrawParts& boatParts, int baseX,
+                            int baseY, int tilex, int tiley, int tilew,
+                            int tileh);
     void DrawRolloverText(char* text);
     unsigned char FindAdjacentMonster(type_point point, type_point* result,
                                       type_point excluded);
