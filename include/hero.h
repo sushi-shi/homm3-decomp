@@ -330,6 +330,19 @@ public:
     // one-field return and preserves its float temporary before widening.
     float get_aggression() const { return field_47a; }
 
+    // DC-attested inline accessor (ai_combat.h roster, dc 0x2c668).
+    // cast_spell's retail expansion fixes the clamp and signed-byte source:
+    // primary skills are confined to 1..99 before spell power is used.
+    int GetPrimarySkill(int skill) const
+    {
+        signed char value = stats[skill];
+        if (value > 99)
+            return 99;
+        if (value > 0)
+            return value;
+        return 1;
+    }
+
     unsigned char HasArtifact(int whichArtifact);
     // 0x4d9330 - sets both per-spell byte tables for one spell.
     void AddSpell(int whichSpell);

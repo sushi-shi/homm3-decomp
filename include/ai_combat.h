@@ -86,6 +86,8 @@ struct type_monster_data {
                                const hero* target_hero) const;
     long get_resurrection_value(type_spell_choice& choice,
                                 const hero* casting_hero) const;
+    void cast_resurrection(type_spell_choice& choice,
+                           const hero* casting_hero);
     long get_spell_damage(SpellID spell, const hero* casting_hero,
                           const hero* target_hero, long damage) const;
     long take_damage(long damage);
@@ -190,6 +192,10 @@ public:
                                 const type_AI_combat_data& defender) const;
     long get_mass_damage_value(type_spell_choice& choice,
                                const hero* casting_hero) const;
+    void get_mass_damage_value(type_spell_choice& choice,
+                               type_AI_combat_data& defender);
+    void cast_mass_damage_spell(type_spell_choice& choice,
+                                const hero* casting_hero);
     long inflict_melee_damage(long damage, long start, long speed_limit);
     void kill();
     void inflict_damage(long damage, long blocker_speed);

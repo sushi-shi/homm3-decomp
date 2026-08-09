@@ -81,6 +81,25 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
 // file-locally for the same reason _cpp_min/_cpp_max are.
 unsigned char spell_is_single_target(SpellID spell, TSkillMastery mastery);
 
+// The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
+// cast_spell masks precisely these six bits twice and switches on the five
+// values below; the sixth bit has no quick-combat implementation. Names are
+// behavior-derived and local to this TU. Kept as constants rather than a new
+// enum because adding enumerators to armygrp.h measurably perturbs unrelated
+// VC6 units through their shared type environment.
+const unsigned int AI_SPELL_DIRECT_DAMAGE = 0x8000;
+const unsigned int AI_SPELL_OPENING_DAMAGE = 0x10000;
+const unsigned int AI_SPELL_MASS_DAMAGE = 0x20000;
+const unsigned int AI_SPELL_ENCHANTMENT = 0x40000;
+const unsigned int AI_SPELL_RESURRECTION = 0x80000;
+const unsigned int AI_SPELL_CLASS_MASK = 0x1f8000;
+
+// Retail uniquely proves both roles in cast_spell: artifact 0x53 suppresses
+// level-3+ magic on either side (Recanter's Cloak), and living creature 0x2b
+// channels one fifth of the spent mana to its hero (Familiar).
+const int ARTIFACT_RECANTERS_CLOAK = 0x53;
+const int CREATURE_FAMILIAR = 0x2b;
+
 // Retail .data 0x6604d0: five doubles selected by the game's signed
 // difficulty byte. AI_value_of_combat uses the row when either combat
 // side belongs to a human. DC's static-global roster supplies the name;
@@ -153,16 +172,19 @@ long type_monster_data::get_resurrection_value(type_spell_choice& choice, const 
                     original_count - count) * hit_points;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_combat.cpp:110
-DC_ONLY(0x29cac, 0x32)
-void type_monster_data::cast_resurrection(type_spell_choice* choice, const hero* casting_hero)
+// Retail expands this helper at cast_spell's selected target and emits no
+// out-of-line row. The Dreamcast supplies the helper boundary/name; the
+// statements below are reconstructed from the retail expansion.
+inline void type_monster_data::cast_resurrection(
+    type_spell_choice& choice,
+    const hero* casting_hero)
 {
-    // @stub
+    long resurrected = get_resurrection_value(choice, casting_hero)
+                       / hit_points;
+    count += resurrected;
+    total_hit_points += resurrected * hit_points;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:123
 VA(0x00423de0, 0xB1)  // anchor-global, dc 0x29ce0
@@ -602,21 +624,40 @@ unsigned char type_AI_combat_data::has_creature(TCreatureType creature)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_combat.cpp:731
-DC_ONLY(0x2ac18, 0x3E)
-void type_AI_combat_data::get_mass_damage_value(type_spell_choice* choice, type_AI_combat_data* defender)
+// Retail expands this helper inside cast_spell and emits no out-of-line row.
+// Its first nested get_mass_damage_value expands while the defender-side
+// call stays out of line, preserving the retail /Ob2 depth boundary.
+inline void type_AI_combat_data::get_mass_damage_value(
+    type_spell_choice& choice,
+    type_AI_combat_data& defender)
 {
-    // @stub
+    long own_damage = get_mass_damage_value(choice, my_hero);
+    long defender_damage = defender.get_mass_damage_value(choice, my_hero);
+    if (own_damage < total_hit_points && own_damage < defender_damage)
+        choice.value = defender_damage - own_damage;
 }
 
 // E:\gamedcs\ai_combat.cpp:747
-DC_ONLY(0x2ac58, 0x8C)
-void type_AI_combat_data::cast_mass_damage_spell(type_spell_choice* choice, const hero* casting_hero)
+// As above, retail keeps only the two cast_spell expansions of this helper.
+inline void type_AI_combat_data::cast_mass_damage_spell(
+    type_spell_choice& choice,
+    const hero* casting_hero)
 {
-    // @stub
+    long damage = choice.get_mastery_value()
+                  + akSpellTraits[choice.spell].power_factor * choice.power;
+    long value = 0;
+    for (long i = get_total(); i-- > 0; ) {
+        type_monster_data& monster = monsters[i];
+#pragma inline_depth(0)
+        value += monster.get_spell_damage(
+            choice.spell, casting_hero, my_hero, damage);
+#pragma inline_depth()
+        total_hit_points -= monster.take_damage(value);
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:768
 // RECONSTRUCTED FROM ITS FOUR INLINED COPIES (dc 0x2ace4) - no retail
@@ -759,13 +800,119 @@ void type_AI_combat_data::cast_summoning(type_spell_choice* choice)
 }
 
 // E:\gamedcs\ai_combat.cpp:965
-VA(0x00425bd0, 0x593)  // anchor-global, dc 0x2b094
-void type_AI_combat_data::cast_spell(type_AI_combat_data* defender, type_speed_catagory round)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\ai_combat.cpp:965
+// Reconstructed from the complete retail body. The Dreamcast contributes
+// the local/helper names and the by-reference signature only; spell gates,
+// dispatch classes, loop directions and all arithmetic come from retail.
+VA(0x00425bd0, 0x593)  // anchor-global, dc 0x2b094
+void type_AI_combat_data::cast_spell(
+    type_AI_combat_data& defender,
+    type_speed_catagory round)
+{
+    if (total_hit_points == 0 || mana == 0 || !can_cast)
+        return;
+
+    type_spell_choice best_choice;
+    unsigned char recanters_cloak = 0;
+    if (my_hero->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK))
+        recanters_cloak = 1;
+    if (enemy_hero
+        && enemy_hero->IsWieldingArtifact(ARTIFACT_RECANTERS_CLOAK))
+        recanters_cloak = 1;
+
+    register long spell_power = my_hero->GetPrimarySkill(2);
+    long spell_duration = spell_power + my_hero->GetSpellDurationBonus();
+    long best_mana_cost;
+    TSkillMastery mastery;
+
+    for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
+        if (!my_hero->available_spells[spell])
+            continue;
+
+        if (akSpellTraits[spell].level > 1
+            && terrain == MAGIC_TERRAIN_CURSED_GROUND)
+            continue;
+        if (akSpellTraits[spell].level > 2 && recanters_cloak)
+            continue;
+
+        mastery = my_hero->get_spell_level(spell, terrain);
+        long mana_cost = my_hero->GetManaCost(spell, defender.my_army, terrain);
+        if (mana_cost > mana)
+            continue;
+
+        type_spell_choice choice(spell, mastery, spell_power, spell_duration);
+        switch (akSpellTraits[spell].field_c & AI_SPELL_CLASS_MASK) {
+        case AI_SPELL_DIRECT_DAMAGE:
+            get_damage_spell_value(choice, defender);
+            break;
+        case AI_SPELL_OPENING_DAMAGE:
+            if (round == const_very_fast)
+                get_damage_spell_value(choice, defender);
+            break;
+        case AI_SPELL_MASS_DAMAGE:
+            get_mass_damage_value(choice, defender);
+            break;
+        case AI_SPELL_ENCHANTMENT:
+            get_enchantment_value(choice, defender);
+            break;
+        case AI_SPELL_RESURRECTION:
+            if (choice.spell < SPELL_RESURRECTION
+                || choice.spell > SPELL_ANIMATE_DEAD)
+                break;
+            for (long i = get_total(); i-- > 0; ) {
+                long value = monsters[i].get_resurrection_value(
+                    choice, my_hero);
+                if (value > choice.value) {
+                    choice.value = value;
+                    choice.target = i;
+                }
+            }
+            break;
+        }
+
+        if (choice.value > best_choice.value) {
+            best_choice = choice;
+            best_mana_cost = mana_cost;
+        }
+    }
+
+    if (best_choice.spell == -1)
+        return;
+
+    mana -= best_mana_cost;
+    if (defender.my_hero) {
+        for (long i = defender.get_total(); i-- > 0; ) {
+            if (defender.monsters[i].creature == CREATURE_FAMILIAR
+                && defender.monsters[i].count > 0) {
+                defender.mana += best_mana_cost / 5;
+                break;
+            }
+        }
+    }
+
+    switch (akSpellTraits[best_choice.spell].field_c
+            & AI_SPELL_CLASS_MASK) {
+    case AI_SPELL_DIRECT_DAMAGE:
+    case AI_SPELL_OPENING_DAMAGE:
+        cast_damage_spell(best_choice, defender);
+        return;
+    case AI_SPELL_MASS_DAMAGE:
+        cast_mass_damage_spell(best_choice, my_hero);
+        defender.cast_mass_damage_spell(best_choice, my_hero);
+        return;
+    case AI_SPELL_ENCHANTMENT:
+        cast_enchantment(best_choice, defender);
+        return;
+    case AI_SPELL_RESURRECTION:
+        if (best_choice.spell >= SPELL_RESURRECTION
+            && best_choice.spell <= SPELL_ANIMATE_DEAD)
+            monsters[best_choice.target].cast_resurrection(
+                best_choice, my_hero);
+        return;
+    }
+}
 
 // E:\gamedcs\ai_combat.cpp:1082
 // Retail inlines every use; these statements are reconstructed from the
