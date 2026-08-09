@@ -54,6 +54,7 @@
 #define HOMM3_ADVMGR_QUICKINFO_VIEW
 #include <va.h>
 #include <stdio.h>
+#include <string.h>
 #include "advmgr.h"
 #include "advmgr_objects.h"
 #include "bitmap16.h"
@@ -72,6 +73,10 @@
 #include "widget.h"
 #undef HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
+
+// Narrow advmgr.obj-only state written when the local player uncovers the
+// Holy Grail. Its wider role and owning compiland are not yet attested.
+DATA(0x0069950c) extern int gUnnamed69950c;
 
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
@@ -1078,14 +1083,178 @@ void advManager::Reseed(int targetX, int targetY)
     field_50 = 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:4840
+// RETAIL-RECONSTRUCTED 2026-08-09. Retail proves the complete dig command:
+// movement/backpack gates, map-cell eligibility, Grail award, sound/dialog
+// split, every player's puzzle refresh and the post-action route/button cleanup.
 VA(0x0040ec90, 0x5AD)  // anchor-callee, dc 0xfd84
 int advManager::ProcessSearch(int x, int y, int z)
 {
-    // @stub
+    hero* currHero;
+    SAMPLE2 digSample;
+    int player;
+    NewmapCell* currCell;
+    type_artifact grail;
+
+    int currHeroId = gpCurrentPlayer->currHeroId;
+    if (currHeroId != -1)
+        currHero = &gpGame->heroes[currHeroId];
+    else
+        currHero = 0;
+
+    if (currHero->movePoints != currHero->maxMovePoints) {
+        if (!gpCurrentPlayer->IsHuman()) {
+            type_point invalidPoint;
+            invalidPoint.x = -1;
+            invalidPoint.y = -1;
+            invalidPoint.z = -1;
+            memcpy(gpCurrentPlayer->puzzle_guess, &invalidPoint,
+                   sizeof(invalidPoint));
+            return 1;
+        }
+        NormalDialog(gUnnamed6a5d5c->entry->searchNeedsFullMoveText,
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return 1;
+    }
+
+    if (currHero->get_number_in_backpack(true)
+            == HERO_BACKPACK_CAPACITY) {
+        if (!gpCurrentPlayer->IsHuman()) {
+            type_point invalidPoint;
+            invalidPoint.x = -1;
+            invalidPoint.y = -1;
+            invalidPoint.z = -1;
+            memcpy(gpCurrentPlayer->puzzle_guess, &invalidPoint,
+                   sizeof(invalidPoint));
+            return 1;
+        }
+        NormalDialog(gUnnamed6a5d5c->entry->searchBackpackFullText,
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return 1;
+    }
+
+    MobilizeCurrHero(0, 0, 0);
+
+    if (x == -1) {
+        x = currHero->x;
+        y = currHero->y;
+        z = currHero->z;
+    }
+
+    type_point point;
+    point.x = x;
+    point.y = y;
+    point.z = z;
+
+    type_point lookupPoint = point;
+    if (!lookupPoint.is_valid())
+        currCell = fullMap->cellData;
+    else
+        currCell = fullMap->cell(lookupPoint.x, lookupPoint.y, lookupPoint.z);
+
+    if (!gpCurrentPlayer->IsHuman() && !currCell->is_diggable()) {
+        type_point invalidPoint;
+        invalidPoint.x = -1;
+        invalidPoint.y = -1;
+        invalidPoint.z = -1;
+        memcpy(gpCurrentPlayer->puzzle_guess, &invalidPoint,
+               sizeof(invalidPoint));
+        return 1;
+    }
+
+    if (currCell->GroundSet == eTerrainWater) {
+        NormalDialog(gUnnamed6a5d5c->entry->searchWaterText,
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return 1;
+    }
+
+    if (!currCell->is_diggable()) {
+        NormalDialog(gUnnamed6a5d5c->entry->searchNotDiggableText,
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return 1;
+    }
+
+    if (gpCurrentPlayer->IsHuman())
+        digSample = LoadPlaySample(DATA_COMPGEN(
+            0x00660378, processSearchDigSample, "DIGSOUND.82M"));
+
+    gpGame->InsertObject(x, y, z, TERRAIN_HOLE, -1, -1);
+
+    if (gpGame->ultimateArtifactX == x
+        && gpGame->ultimateArtifactY == y
+        && gpGame->ultimateArtifactZ == z
+        && gpGame->ultimateArtifactPresent) {
+        if (currHero->get_number_in_backpack(true)
+                >= HERO_BACKPACK_CAPACITY) {
+            if (gpCurrentPlayer->IsHuman())
+                NormalDialog(
+                    gUnnamed6a5d5c->entry->searchBackpackFullFoundText,
+                    1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else {
+            grail.artifactId = ARTIFACT_HOLY_GRAIL;
+            grail.extra = -1;
+
+            if (gpCurrentPlayer->IsHuman()) {
+                gUnnamed69950c = gNetLocalGamePos;
+                launch_sample(DATA_COMPGEN(
+                                  0x00660360, processSearchGrailSample,
+                                  "UltimateArtifact.wav"),
+                              -1, 3);
+                sprintf(gText,
+                        DATA_COMPGEN(0x00660358,
+                                     processSearchFoundFormat, "%s%s"),
+                        gUnnamed6a5d5c->entry->searchFoundFormat,
+                        akArtifactTraits[ARTIFACT_HOLY_GRAIL].name);
+                NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0,
+                             -1, 0, -1, 0);
+
+                type_artifact describedGrail;
+                describedGrail.artifactId = ARTIFACT_HOLY_GRAIL;
+                describedGrail.extra = -1;
+                std::string description = describedGrail.get_description();
+                NormalDialog(description.c_str(), 1, -1, -1, -1, 0,
+                             -1, 0, -1, 0, -1, 0);
+            }
+
+            gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+            currHero->GiveArtifact(&grail, 1, 1);
+            gpGame->ultimateArtifactPresent = 0;
+        }
+    } else if (gpCurrentPlayer->IsHuman()) {
+        NormalDialog(gUnnamed6a5d5c->entry->searchNothingFoundText,
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+
+    if (gpCurrentPlayer->IsHuman())
+        WaitEndSample(digSample, -1);
+
+    for (player = 0; player < 8; player++) {
+        if (!gpGame->playerDisabled[player])
+            ComputeUALoc(player);
+    }
+
+    currHero->movePoints = 0;
+    UpdBottomView(1, 1, 1);
+
+    if (gpCurrentPlayer->IsLocalHuman()
+        && gpCurrentPlayer->currHeroId != -1
+        && !gpGame->heroes[gpCurrentPlayer->currHeroId].IsMobile()) {
+        ShowRoute(1, 0, 0);
+        gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 1);
+        if (gpCurrentPlayer->IsLocalHuman()
+            && gpCurrentPlayer->HasMobileHero())
+            gpAdvManager->advWindow->WidgetClearStatus(
+                11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        else
+            gpAdvManager->advWindow->WidgetSetStatus(
+                11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+    }
+
+    field_50 = 0;
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:4983
 VA(0x0040f270, 0x7D)  // anchor-global, dc 0x10520

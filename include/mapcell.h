@@ -301,6 +301,9 @@ public:
     TAdventureObjectType get_map_object();
     unsigned char cell_is_trigger();
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    unsigned char is_diggable();
+#endif
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     unsigned char PlayerKnowsCell(short player) const
     {
         if (player < 0 || player >= 8)

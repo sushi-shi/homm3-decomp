@@ -55,6 +55,9 @@ void WaitEndSample(SAMPLE2 sample2, int iMilliWait);
 // only a temporary home until the owning TU is attributed; the name is
 // provisional.
 sample* LoadSampleResource(const char* cSampleName);
+SAMPLE2 LoadPlaySample(const char* cSampleName);
+void WaitEndSample(SAMPLE2 sample2, int iMilliWait);
+void launch_sample(const char* sample_name, int max_time, int channel);
 
 // The AIL_sample_status return domain. Only the three members this TU
 // compares against are modelled, and each one's ROLE is byte-proven -
