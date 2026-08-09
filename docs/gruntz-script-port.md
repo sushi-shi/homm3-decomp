@@ -590,6 +590,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   fresh retail comparisons. `decomp-attempt-1` remained read-only and supplied
   no implementation or admitted metadata.
 
+- **2026-08-09 — `armyGroup::get_morale_description` raised from
+  60.1036% to 63.9572% by restoring the complete terrain selectors.** The
+  two retail switch tails each contain a nine-byte selector
+  `{0,0,0,1,1,1,2,2,2}` over all town types. Keeping the three neutral
+  cases explicit while omitting a `default` prevents VC6 from folding them
+  into an abbreviated six-value dispatch, matching the source-shape rule
+  already retail-proven in `GetArmyMorale`. Named-result and explicit
+  return-temporary probes regressed or were inert and were reverted. Retail
+  bytes remain the authority; no external implementation was consulted.
+  The generated baseline remains exclusively build-owned.
+
 - **2026-08-09 — the split-army path completed and its message producer is
   exact; both retail combat-stat descriptions reconstructed.**
   `SplitSliderCallback` and `armyGroup::SplitArmy` now match exactly, raising
@@ -930,8 +941,8 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   generated baseline remains exclusively build-owned.
 
 - **2026-08-09 — the 1,154-byte `advManager::DrawUnderlay` body advanced
-  to 78.31%.** Retail instructions and relocations prove the clipped cell
-  lookup, underlay-only object filter, object/type/sprite pool traversal,
+  from 78.31% to 80.76%.** Retail instructions and relocations prove the
+  clipped cell lookup, underlay-only object filter, object/type/sprite pool traversal,
   eight-case flagged-object selector, checked trigger-cell lookup, animation
   frame, player output color, and normal/flagged sprite paths. The
   reconstruction's 22 symbolic branch targets agree with retail. A later
@@ -941,7 +952,10 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `+0x1e`. Retaining both packed-point assignment temporaries and using the
   already proven inline cell helper then restored retail's shared cell-call
   boundary; narrowing the full-map view's lifetime to one object iteration
-  removed an extra stack slot. The remaining difference is instruction,
+  removed an extra stack slot. Recomputing the object address at its actual
+  type, trigger and animation uses removes the same non-retail long-lived
+  pointer found in the two larger object passes. All 22 symbolic branches
+  and the return still agree. The remaining difference is instruction,
   register and local-slot scheduling, so no exact claim is made. Dreamcast
   CodeView
   supplied surviving names and signatures only; no external body was

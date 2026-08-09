@@ -21,7 +21,7 @@ advmgr	?DrawRiver@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11b80
 advmgr	?DrawRoad@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11d60
 advmgr	?DrawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0
 advmgr	?DrawShroud@advManager@@QAEXHHHHH@Z	81.4106	81.4106	81.4106	0x12220
-advmgr	?DrawUnderlay@advManager@@QAEXHHHHH@Z	78.3056	78.3056	78.3056	0x12470
+advmgr	?DrawUnderlay@advManager@@QAEXHHHHH@Z	80.7551	80.7551	80.7551	0x12470
 advmgr	?FindAdjacentMonster@advManager@@QAEEUtype_point@@PAU2@0@Z	82.0057	82.0057	82.0057	0x1a460
 advmgr	?ForceNewHover@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19570
 advmgr	?GetCell@advManager@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12bd0
@@ -308,7 +308,7 @@ armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000	100.0000	100.0000	0x4ac80
 armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4adc0
 armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000	100.0000	100.0000	0x4ada0
 armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	60.3234	60.3234	60.3234	0x4c1c0
-armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	60.1036	60.1036	60.1036	0x4b960
+armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	63.9572	63.9572	63.9572	0x4b960
 # Retail-ordered switch bodies, the creature-record cursor, the direct
 # spell-table field_c access, and the byte-proven attrs 0x400 gate raised
 # this from 53.1589 to 88.5071 (2026-08-09).
