@@ -749,6 +749,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   provenance stamp. Full-engine sweep: 540 -> 541 exact, no function score
   decreased; `AsciiConvert` 98.8024% -> 100.0000%. This also disproves the
   earlier theory that its base-only COFF labels capped the match.
+
+- **2026-08-09 — `advManager::DrawRiver` admitted byte-exact;
+  `advmgr` 22 → 23 exact.** The 471-byte body reproduces its map bounds,
+  packed-point fallback cell, river-presence gate, viewport clipping,
+  river set/frame selection, word-width flip flags at bits 2 and 3, and
+  the raw `CSprite::DrawTile` target. Unlike the adjacent road pass, retail
+  proves no half-tile vertical origin or bottom-row crop. All instructions
+  compare exactly. Retail bytes and relocations are the correctness
+  evidence; Dreamcast CodeView supplied only surviving names and signatures.
+  No external body was consulted or ported, and the generated baseline
+  remains exclusively build-owned.
+
 - **2026-08-09 — `advManager::DrawRoad` admitted byte-exact;
   `advmgr` 21 → 22 exact.** The 492-byte body reproduces its map bounds,
   packed-point fallback cell, road-presence gate, half-tile vertical origin,
@@ -803,14 +815,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   consulted or ported. The generated baseline remains exclusively build-owned.
 
 - **2026-08-09 — the 2,446-byte `advManager::DrawAdvObj` body opened
-  to 80.15%.** Retail proves the seven-layer object-cell traversal, normal
+  to 80.22%.** Retail proves the seven-layer object-cell traversal, normal
   48-bit draw mask, 48-entry view-world terrain selector, 82-entry flagged
   object selector, trigger-cell ownership lookup, player output color,
   transient-object override, animated sprite path, interleaved hero/boat
   parts, and cursor rows. The reconstructed function has the same 125-block
   CFG population as retail; twenty-seven blocks compare exactly and the
   remainder are primarily VC6 local/register scheduling differences, so no
-  exact claim is made. Dreamcast CodeView supplied surviving names and
+  exact claim is made. The empty-cell overlay loop now spells the retail
+  inclusive `part <= 5` bound, removing its final signed-branch mismatch;
+  the layered-object loop's residual signedness is retained because changing
+  its inferred local types perturbs the whole VC6 frame and regresses the
+  measured function. Dreamcast CodeView supplied surviving names and
   signatures only; no external body was consulted or ported. The generated
   baseline remains exclusively build-owned.
 
@@ -889,6 +905,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   bytes over object ids 17..98. No external body was consulted or ported.
   The supported build-generated status migration raises executable coverage
   5.87% → 5.89%; `config/match_baseline.tsv` was not edited manually.
+
+- **2026-08-09 — `advManager::GetSoundId` admitted at 89.50% from retail
+  control flow and compiler tables.** The 1,508-byte function reconstructs
+  the ground-overlay fast path, trigger-object dispatch, creature-bank,
+  mine, garrison, creature-generator and terrain-special cases. Retail's
+  two selector arrays and four jump tables prove every admitted ordinal
+  mapping; the surviving public name at 0x63d570 proves the generator-one
+  lookup, while a narrow three-byte mine view avoids widening `game.h`.
+  Sound and creature values deliberately retain ordinal spellings until
+  semantic names have separately admissible evidence. The remaining delta
+  is VC6 block placement and shared-return folding: the object selector is
+  byte-identical, but several equivalent return blocks and compiler tables
+  are emitted in a different order. No external body was consulted or
+  ported. Generated status records the decorated function at 89.50%;
+  `config/match_baseline.tsv` was not edited manually.
 
 - **2026-08-09 — `advManager::GetCloudLookup` admitted byte-exact from
   retail evidence; `advmgr` 13 → 14 exact.** The 613-byte body reproduces
