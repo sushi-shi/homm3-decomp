@@ -3108,14 +3108,129 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
                 view_heroes, view_towns);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:7543
+// RETAIL-RECONSTRUCTED 2026-08-09 (12.3003%). This first QuickInfo slice
+// restores point validation and shroud handling, trigger-cell resolution,
+// the shared creature-bank/shrine/tree/witch-hut text helpers, the default
+// object name, quick-view sizing, screen-edge clamps and dialog invocation.
+// Retail proves the control flow, constants, field offsets and helper calls;
+// Dreamcast CodeView supplies only the function and local identities.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
-    // @stub
+    playerData* player = gpGame->GetLocalPlayer();
+    int iPlayer = gpGame->GetLocalPlayerGamePos();
+    int playerBit = 1 << iPlayer;
+    hero* currHero = gpGame->GetHero(player->currHeroId);
+
+    type_point mapPoint;
+    mapPoint.x = radarOrigin.x + cellX;
+    mapPoint.y = radarOrigin.y + cellY;
+    mapPoint.z = z;
+
+    if (!mapPoint.is_valid()) {
+        strcpy(gText, gUnnamed6a5d5c->entry->quickInfoInvalidPointText);
+    } else {
+        type_point point = mapPoint;
+        NewmapCell* testCell;
+        if (!point.is_valid()) {
+            testCell = fullMap->cell(0, 0, 0);
+        } else {
+            testCell = &fullMap->cellData[
+                (point.z * fullMap->Size + point.y) * fullMap->Size
+                + point.x];
+        }
+
+        if (!(GetMapExtra(mapPoint) & playerBit)) {
+            strcpy(gText, gUnnamed6a5d5c->entry->quickInfoShroudedText);
+        } else {
+            type_cell_adjuster adjuster = { 0, 0, 0 };
+            NewmapCell* cell =
+                adjuster.get_trigger_cell(testCell, cellX, cellY);
+
+            const char* separator = DATA_COMPGEN(
+                0x006603b0, quickInfoSeparator, "\n\n");
+            const char* newLine = DATA_COMPGEN(
+                0x006603bc, quickInfoNewLine, "\n");
+
+            switch (cell->type) {
+            case CREATURE_BANK: {
+                union {
+                    int value;
+                    type_creature_bank_type type;
+                } bankType;
+                bankType.value = cell->objectIndex;
+                get_creature_bank_help_text(
+                    gText, cell, bankType.type, gUnnamed69778c,
+                    newLine, 1);
+                break;
+            }
+            case DERELICT_SHIP:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_DERELICT,
+                    gUnnamed69778c, separator, 1);
+                break;
+            case DRAGON_CITY:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_DRAGON,
+                    gUnnamed69778c, separator, 1);
+                break;
+            case SEPULCHER:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_SEPULCHER,
+                    gUnnamed69778c, separator, 1);
+                break;
+            case SHIPWRECK:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_SHIPWRECK,
+                    gUnnamed69778c, separator, 1);
+                break;
+            case SHRINE1:
+                SetShrineHelpText(gText, currHero, cell, Shrine1Info,
+                                  newLine, separator);
+                break;
+            case SHRINE2:
+                SetShrineHelpText(gText, currHero, cell, Shrine2Info,
+                                  newLine, separator);
+                break;
+            case SHRINE3:
+                SetShrineHelpText(gText, currHero, cell, Shrine3Info,
+                                  newLine, separator);
+                break;
+            case TREE_OF_KNOWLEDGE:
+                SetTreeHelpText(gText, currHero, cell,
+                                newLine, separator);
+                break;
+            case WITCH_HUT:
+                set_witch_hut_help_text(gText, currHero, cell,
+                                        newLine, separator);
+                break;
+            default:
+                strcpy(gText, gAdventureObjectNames[cell->type]);
+                break;
+            }
+        }
+    }
+
+    int width;
+    int height;
+    get_quickview_size(gText, &width, &height);
+
+    int x = cellX * 32;
+    int y = cellY * 32;
+    if (x < 8)
+        x = 8;
+    if (y < 8)
+        y = 8;
+    if (x + width > 600)
+        x = 600 - width;
+    if (y + height > 552)
+        y = 552 - height;
+
+    NormalDialog(gText, 4, x, y, -1, 0, -1, 0, -1, 0, -1, 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:8816
 DC_ONLY(0x18c2c, 0x58)

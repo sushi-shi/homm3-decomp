@@ -36,6 +36,7 @@ advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	99.3415	99.34
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	74.7786	74.7786	74.7786	0xe360
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	91.3119	91.3119	91.3119	0xec90
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	74.8967	74.8967	74.8967	0xdeb0
+advmgr	?QuickInfo@advManager@@QAEXHHH@Z	12.3003	12.3003	12.3003	0x137c0
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30
 advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	89.7053	89.7053	89.7053	0xb150
@@ -89,7 +90,6 @@ advmgr	advManager_ProcessKeyPress	0.0000	0.0000	0.0000	0x8c40
 advmgr	advManager_ProcessMapSelect	0.0000	0.0000	0.0000	0xa5d0
 advmgr	advManager_ProcessRadarSelect	0.0000	0.0000	0.0000	0xa0c0
 advmgr	advManager_ProcessSelect	0.0000	0.0000	0.0000	0x97e0
-advmgr	advManager_QuickInfo	0.0000	0.0000	0.0000	0x137c0
 advmgr	advManager_RedrawAdvScreen	0.0000	0.0000	0.0000	0x17420
 advmgr	advManager_ScreenScroll	0.0000	0.0000	0.0000	0x195c0
 advmgr	advManager_SeedTo	0.0000	0.0000	0.0000	0x194a0

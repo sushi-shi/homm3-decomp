@@ -33,6 +33,7 @@ void NormalDialog(const char* cText, int iMBType, int x, int y,
 void extended_dialog(const char* text,
     std::vector<type_dialog_resource>& resources,
     long x, long y, long timeout);                              // 0x4f6cf0
+void get_quickview_size(const char* text, int* width, int* height); // 0x4f5f30
 // Located kb.cpp bodies kbwin's WinMain / AppWndProc call (bodies not
 // yet reconstructed; the declarators match the kbwin call sites).
 int InitMainClasses();                                   // 0x4ed650

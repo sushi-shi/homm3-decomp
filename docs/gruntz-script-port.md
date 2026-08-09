@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the first `advManager::QuickInfo` slice reaches 12.3003%.**
+  The 9,632-byte retail function now validates and packs the selected map
+  point, resolves its cell and trigger through the byte-exact
+  `type_cell_adjuster`, distinguishes invalid and shrouded text, and restores
+  the default object-name path. Ten retail-confirmed dispatch arms reuse the
+  admitted creature-bank, shrine, tree and witch-hut text builders with the
+  exact player, separator and full-list arguments. The shared tail measures
+  the resulting quick view, clamps it to the retail 600-by-552 bounds, and
+  opens the normal dialog. This promotes the placeholder to its authoritative
+  mangled symbol and raises linked fuzzy coverage from 46.37% before the
+  slice to 46.68%, without reducing the 623 exact functions. Retail bytes
+  prove the branches, map indexing, case identities, constants and calls;
+  Dreamcast CodeView supplies only function/local names. No external
+  implementation body was used, and `match_baseline.tsv` remains generated
+  solely by the full build.
+
 - **2026-08-09 — `advManager::ProcessHover` extends to 74.7787%.**
   Retail reads the acting hero id directly from the current player for the
   map-level gate, preserving the redundant `game::GetHero` sentinel check,

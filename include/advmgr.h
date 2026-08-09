@@ -550,6 +550,7 @@ public:
     void UpdateRadar(unsigned char updateFlag,
                      unsigned char bPartialUpdate, unsigned char view_mines,
                      unsigned char view_heroes, unsigned char view_towns);
+    void QuickInfo(int cellX, int cellY, int z);
     void UpdBottomView(unsigned char forceUpdate, unsigned char drawWindow,
                        unsigned char update);
     void MobilizeCurrHero(int bInMove, unsigned char waitingPlayer,
