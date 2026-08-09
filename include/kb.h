@@ -43,6 +43,7 @@ int oldmain();                                           // 0x4ee3e0
 // kb.cpp:4168 - arity and role both agree.
 void MemError();                                         // 0x4f42c0
 int GameUnsaved();                                       // 0x4f4310
+void CheckEndGame(int bForceWin);                        // 0x4f2ce0
 
 // kb.cpp's shared text scratch buffer (.bss 0x6973d8 in kb's band;
 // kbwin's WinMain sprintf's the already-running message into it,
