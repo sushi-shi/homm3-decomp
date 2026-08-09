@@ -143,7 +143,7 @@ ai	combatManager_mark_enemy_attacks	0.0000	0.0000	0.0000	0x20260
 ai	combatManager_mark_friendly_armies	0.0000	0.0000	0.0000	0x1fb60
 ai	combatManager_mark_multiheaded_enemy	0.0000	0.0000	0.0000	0x1fd60
 ai	find_attack_hexes	0.0000	0.0000	0.0000	0x20060
-ai_combat	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z	99.9969	99.9969	99.9969	0x23ee0
+ai_combat	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x23ee0
 ai_combat	??0type_monster_vector@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0x276c0
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x27650
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@PBVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x27690
