@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — mousemgr gains two exact rows: `CheckUpdate` and the
+  out-of-line `TCSLock` constructor.** Retail inlines CheckUpdate's outer
+  lock constructor but calls the same constructor for the nested
+  out-of-bounds lock, while inlining both destructors. A block-scoped VC6
+  `inline_depth(0)` around only the inner declaration reproduces that
+  call-site asymmetry: CheckUpdate rises 96.8521% -> exact and VC6 emits the
+  byte-exact 25-byte `??0TCSLock` COMDAT. The existing reviewed carcass claim
+  at 0x50d890 then binds to that public symbol on the fresh label/delink pass
+  and also becomes exact; no annotation-contract extension is needed. This
+  is the same local inline-budget technique that closed TSplitWindow's final
+  vector insertion, applied to a constructor lifetime rather than an STL
+  call. Retail bytes remained the verdict; `decomp-attempt-1` supplied
+  nothing.
+
 - **2026-08-09 — `executive::CallManager`'s missing exception-safety
   structure is byte-proven but not admitted while funclet attribution makes
   it a scoreboard regression.** The three isolated retail entries directly
