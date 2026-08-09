@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "mapcell.h"
+#include "netmsg.h"
 #include "struct.h"
 // `class game` embeds the hero array by value, so the COMPLETE hero
 // type has to be visible here. hero.h pulls armygrp.h; armygrp.h no
@@ -221,10 +222,10 @@ public:
     char playerOwner;
     char pad_01[3];
     armyGroup garrisonArmy;
+    char pad_3c;
     unsigned char mapX;
     unsigned char mapY;
     unsigned char mapZ;
-    char pad_3f;
 };
 SIZE(garrison, 0x40);
 
@@ -605,6 +606,7 @@ public:
                    unsigned char check_end_game);            // 0x4c61e0
     void ClaimMine(int mineId, int newPlayerOwner,
                    type_action_type action_type);             // 0x4c66e0
+    void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
     void record_claim_mine(long id, long new_owner);          // 0x49bf90
     void SetVisibility(int startX, int startY, int z,
                        int whichPlayer, int range,
