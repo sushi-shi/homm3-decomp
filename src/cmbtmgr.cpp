@@ -42,11 +42,18 @@
 #include "cmbtmgr.h"
 #include "combatoptionswindow.h"
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
+#include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
 #include "misc.h"   // TPickANumber, for PlaceAllObstacles
 #include "resourcemanager.h"
 #include "textresource.h"
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
+
+// Retail's 113-byte creature-family lookup at 0x47b1a0. Its working label
+// remains address-derived until the function itself is reconstructed; the
+// x86 UpgradedCreatureType wrapper calls this same leaf after applying the
+// Complete-vs-RoE elemental guard reproduced below.
+int __fastcall game_69f20_sub00_7b1a0(int creature);
 
 #if 0  // @carcass
 
@@ -954,16 +961,49 @@ unsigned char combatManager::IsInMoat(int hex, int* index)
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:4826
+// RECONSTRUCTED 2026-08-09 from the retail two-stage armyGroup::Add flow.
+// A failed unchanged merge promotes the pending creature through retail's
+// shared family lookup and converts the count at a two-for-three ratio; the
+// four RoE elementals have no promoted form. A second failure clears the
+// pending count, while either successful merge leaves the fields intact.
+// Residual (93.2203%): all twelve blocks, branches and non-conversion
+// instructions agree. Retail materializes each Add result as a byte truth
+// value (`test/setne/test`); this VC6 compile folds both to direct tests.
+// Separate bool/byte locals, explicit comparisons/casts, double negation,
+// a tiny inline adapter and a register hint were byte-inert, so the natural
+// implicit bool assignment is retained.
 VA(0x00469f20, 0xBA)  // anchor-callee, dc 0x6359c
 void combatManager::RaiseSkeletons(int side)
 {
-    // @stub
-}
+    if (raisedCreatureCount > 0) {
+        bool added;
+        added = armyGroups[side]->Add(
+            raisedCreatureType, raisedCreatureCount, -1);
+        if (added)
+            return;
 
-#endif  // @carcass
+        int upgradedType = raisedCreatureType;
+        if (!gpGame->f_1f698
+            && (upgradedType == CREATURE_AIR_ELEMENTAL
+                || upgradedType == CREATURE_EARTH_ELEMENTAL
+                || upgradedType == CREATURE_FIRE_ELEMENTAL
+                || upgradedType == CREATURE_WATER_ELEMENTAL)) {
+            upgradedType = CREATURE_NONE;
+        } else {
+            upgradedType = game_69f20_sub00_7b1a0(upgradedType);
+        }
+
+        raisedCreatureType = upgradedType;
+        raisedCreatureCount = (raisedCreatureCount * 2 + 2) / 3;
+        added = armyGroups[side]->Add(
+            raisedCreatureType, raisedCreatureCount, -1);
+        if (added)
+            return;
+    }
+
+    raisedCreatureCount = 0;
+}
 
 // E:\gamedcs\cmbtmgr.cpp:4863
 // RECONSTRUCTED 2026-08-09 from the retail set walk. The chance-filtered

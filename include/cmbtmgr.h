@@ -238,7 +238,10 @@ public:
     // bounds itself with it (type_AI_spellcaster ctor 0x4369c0,
     // set_melee_enemies 0x43bf20).
     int numArmies[2];                 // +0x54bc
-    char pad_54c4[0x8];
+    // The two persistent army groups combat was initialized from.
+    // RaiseSkeletons indexes this pair by side and tries to merge the
+    // post-combat raised stack into the selected group.
+    armyGroup* armyGroups[2];         // +0x54c4
     army armies[2][21];               // +0x54cc
     char pad_1329c[0x14];
     // Two per-side "this side has already lost / fled" latches, byte
@@ -277,7 +280,13 @@ public:
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
     short adjacentCells[187][6];      // +0x13468
-    char pad_13d2c[0x30];
+    char pad_13d2c[0x20];
+    // Pending post-combat raised stack. RaiseSkeletons first attempts
+    // this pair unchanged, then promotes the creature and converts the
+    // count at a two-for-three ratio if the destination group is full.
+    int raisedCreatureCount;          // +0x13d4c
+    int raisedCreatureType;           // +0x13d50
+    char pad_13d54[0x8];
     // The placed-obstacle array, as the raw first/last pair retail
     // tests: RemoveObstacle (0x466b30) null-checks the FIRST pointer,
     // then divides last-first by sizeof(TObstacle) for the bound. The
@@ -343,6 +352,7 @@ public:
     void PlaceAllObstacles();
     void RemoveObstacle(int index);
     void CombatSystemOptions();
+    void RaiseSkeletons(int side);
     void LearnSpellFromEagleEye(int side);
     static unsigned char LoadWallTraitsTable();
     int UpdateGrid(int bPostGridIsClean, int bSetupGrid);

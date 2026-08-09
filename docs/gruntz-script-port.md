@@ -335,6 +335,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   library/source forms. No external implementation or `decomp-attempt-1`
   material was used.
 
+- **2026-08-09 — `combatManager::RaiseSkeletons` reconstructed to 93.2203%.**
+  The function first merges the pending raised stack unchanged; if the
+  destination group has neither a matching nor an empty slot, it promotes
+  the creature through the same 113-byte family lookup called by retail's
+  `UpgradedCreatureType` wrapper, converts the count as `(2*n+2)/3`, and
+  retries. The four original elementals map to `CREATURE_NONE` under the
+  older ruleset exactly as they do in that wrapper. A second failure, or a
+  non-positive initial count, clears the pending count. The retail call graph,
+  field offsets, comparisons and signed divide establish the implementation;
+  Dreamcast supplies only the method identity. The helper retains its
+  address-derived working label until its own source row is reconstructed.
+  All twelve blocks, all eight branches and every instruction outside the
+  two success conversions agree. The residual is retail's repeated
+  `test/setne/test` byte materialization versus this compile's direct integer
+  test; separate bool/byte locals, explicit comparisons/casts, double
+  negation, a tiny inline adapter and a register hint were byte-inert and
+  removed under the HoMM2/Gruntz bounded-hypothesis rule.
+  `decomp-attempt-1` was checked read-only and contains only the
+  already-admitted prototype, so none of its material was used.
+
 - **2026-08-09 — `combatManager::LearnSpellFromEagleEye` reconstructed
   from unscored to 68.1633%.** Retail walks a per-side 16-byte Dinkumware
   `set<SpellID>` at +0x5460, tests the side's hero for a spellbook, applies
