@@ -367,6 +367,7 @@ cmbtmgr	?LoadWallTraitsTable@combatManager@@SIEXZ	100.0000	100.0000	100.0000	0x6
 cmbtmgr	?LowerDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x671c0
 cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXPBVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0
 cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0
+cmbtmgr	?RaiseDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x672e0
 cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x68730
 cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872	87.2872	87.2872	0x66b30
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0
@@ -397,7 +398,6 @@ cmbtmgr	combatManager_Open	0.0000	0.0000	0.0000	0x62a20
 cmbtmgr	combatManager_PlaceAllObstacles	0.0000	0.0000	0.0000	0x66a70
 cmbtmgr	combatManager_PlaceLargeObstacle	0.0000	0.0000	0.0000	0x668a0
 cmbtmgr	combatManager_PowEffect	0.0000	0.0000	0.0000	0x68990
-cmbtmgr	combatManager_RaiseDoor	0.0000	0.0000	0.0000	0x672e0
 cmbtmgr	combatManager_RaiseSkeletons	0.0000	0.0000	0.0000	0x69f20
 cmbtmgr	combatManager_SetNextArmy	0.0000	0.0000	0.0000	0x65330
 cmbtmgr	combatManager_SetupAndLoadObstacles	0.0000	0.0000	0.0000	0x66290

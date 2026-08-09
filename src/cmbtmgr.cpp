@@ -794,14 +794,38 @@ void combatManager::LowerDoor()
     WaitEndSample(sample, -1);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:3400
 VA(0x004672e0, 0x177)  // anchor-global, dc 0x61034
 void combatManager::RaiseDoor()
 {
-    // @stub
+    if (!field_53c8 || drawbridgeState != DRAWBRIDGE_DOWN)
+        return;
+    if (cells[COMBAT_HEX_GATE].armySide >= 0
+            || cells[COMBAT_HEX_GATE].field_1c)
+        return;
+    if (cells[COMBAT_HEX_GATE_MOAT].armySide >= 0
+            || cells[COMBAT_HEX_GATE_MOAT].field_1c)
+        return;
+    if (field_53c8[4] == TOWN_FORTRESS
+            && (cells[COMBAT_HEX_OUTER_MOAT].armySide >= 0
+                || cells[COMBAT_HEX_OUTER_MOAT].field_1c))
+        return;
+
+    if (IsQuickCombat()) {
+        drawbridgeState = DRAWBRIDGE_UP;
+        return;
+    }
+
+    SAMPLE2 sample = LoadPlaySample("drawbrg.82m");
+    field_13d38 = gDoorExtent694f30;
+    for (int state = DRAWBRIDGE_DOWN; state <= DRAWBRIDGE_UP; state++) {
+        drawbridgeState = state;
+        DrawFrame(1, 0, 1, 100, 1, 1);
+    }
+    WaitEndSample(sample, -1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3426
 DC_ONLY(0x610e0, 0x7E)
