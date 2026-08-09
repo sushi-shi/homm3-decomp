@@ -48,17 +48,27 @@ struct SUnnamedEntry6a5d5c {
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     char pad_48[0x68];
     const char* mixedArmyName;         // +0xb0
-    char pad_b4[0x64];
+    char pad_b4[0x30];
+    const char* searchNeedsFullMoveText;       // +0xe4
+    const char* searchBackpackFullFoundText;   // +0xe8
+    const char* searchFoundFormat;             // +0xec
+    const char* searchNothingFoundText;        // +0xf0
+    const char* searchWaterText;               // +0xf4
+    char pad_f8[0x20];
 #else
     char pad_48[0xd0];
 #endif
     const char* quitText;             // +0x118
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    char pad_11c[0x210];
+    char pad_11c[0x6c];
+    const char* searchNotDiggableText;         // +0x188
+    char pad_18c[0x1a0];
     const char* armyHelpPrefix;        // +0x32c
     char pad_330[0x88];
     const char* armyEntrySeparator;    // +0x3b8
-    char pad_3bc[0x48];
+    char pad_3bc[0x24];
+    const char* searchBackpackFullText;        // +0x3e0
+    char pad_3e4[0x20];
 #else
     char pad_11c[0x2e8];
 #endif

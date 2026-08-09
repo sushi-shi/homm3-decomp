@@ -340,7 +340,20 @@ public:
     // Its wider calendar role is not yet attested, so the name remains
     // ordinal rather than importing a semantic guess.
     unsigned short field_1f63e;
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    char pad_1f640[0x50];
+    // The buried Holy Grail coordinate and presence gate. ProcessSearch
+    // compares x/y as signed shorts, z as an unsigned byte, and clears the
+    // gate after handing the artifact to the hero.
+    short ultimateArtifactX;                  // +0x1f690
+    short ultimateArtifactY;                  // +0x1f692
+    unsigned char ultimateArtifactZ;          // +0x1f694
+    char pad_1f695;
+    unsigned char ultimateArtifactPresent;    // +0x1f696
+    char pad_1f697;
+#else
     char pad_1f640[0x58];
+#endif
     int f_1f698;
     char pad_1f69c[0x1];
     // Byte gate town::can_build and get_buildable_mask test before the
@@ -463,6 +476,10 @@ public:
     int GetGeneratorId(int x, int y, int z);                 // 0x4bb900
     void GiveArmy(armyGroup* thisMonInfo, int iMonType,
                   int iMonNum, int slot);                    // 0x4ca340
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    void InsertObject(int x, int y, int z, int objType,
+                      int objectIndex, int extraInfo);        // 0x4c9890
+#endif
     int ExperienceValueOfStack(const armyGroup* whichGroup,
                                const hero* whichHero);       // 0x4ca3b0
     void ClaimTown(int townId, int newPlayerOwner,
@@ -559,6 +576,7 @@ extern char* gPlayerColorNames[];           // .bss 0x6a7df8
 // sites).
 unsigned char InitImmMouse(void* hInst, void* hwnd);  // 0x4b6890
 void ImmMouseWindowMoved();                           // 0x4b6950
+void ComputeUALoc(int whichPlayer);                   // 0x4baed0
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\game.cpp:208, dc 0xa2af8) unsigned char InitializeRandomTavernText();

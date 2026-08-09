@@ -56,6 +56,12 @@ enum hero_seqid {
 // unaligned dword loads). Names provisional.
 #pragma pack(push, 1)
 
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+enum EHeroBackpackLimit {
+    HERO_BACKPACK_CAPACITY = 64
+};
+#endif
+
 // The 8-byte artifact record - what an equipped slot or a backpack
 // slot actually holds. NAME CORRECTED 2026-08-08: this header used to
 // call it TArtifactSlot, but on the Dreamcast build TArtifactSlot is
@@ -71,6 +77,11 @@ enum hero_seqid {
 struct type_artifact {
     int artifactId;
     int extra;
+
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
+        get_description();
+#endif
 };
 
 class hero {
@@ -441,6 +452,12 @@ public:
     // tail up when the requested slot is occupied. `slot` < 0 means
     // "first free".
     unsigned char add_to_backpack(const type_artifact* artifact, long slot);
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    // 0x004e3070 - gives or equips one artifact and performs the optional
+    // end-condition check. ProcessSearch calls it for the Holy Grail.
+    void GiveArtifact(const type_artifact* artifact, int bCheckEnd,
+                      unsigned char equip_it);
+#endif
     // 0x004e2dd0 - the by-id overload: finds the artifact in the
     // backpack first, then in the equipped slots, and unequips it.
     unsigned char remove_artifact(TArtifact artifact);
