@@ -881,17 +881,14 @@ void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
             currHero->facing > hero::kFacingS);
 
-        {
-            int boatFrame =
-                animFrame
-                % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n);
-            boatIcons[currBoat->type]->DrawHero(
-                currHero->GetStandSequence(), boatFrame,
-                tilex + (2 - HeroCellY) * 32,
-                tiley - HeroCellX * 32 + 32, tilew, tileh,
-                gpWindowManager->screenBitmap, baseX, baseY + 8,
-                currHero->facing > hero::kFacingS);
-        }
+        boatIcons[currBoat->type]->DrawHero(
+            currHero->GetStandSequence(),
+            animFrame
+                % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currHero->facing > hero::kFacingS);
     } else if (currHero->owner >= 0 && currHero->owner < 8) {
         flagIcons[currHero->owner]->DrawHero(
             currHero->GetStandSequence(),
@@ -955,17 +952,14 @@ void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
             currHero->facing > hero::kFacingS);
 
-        {
-            int boatFrame =
-                animFrame
-                % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n);
-            boatIcons[currBoat->type]->DrawHeroShadow(
-                currHero->GetStandSequence(), boatFrame,
-                tilex + (2 - HeroCellY) * 32,
-                tiley - HeroCellX * 32 + 32, tilew, tileh,
-                gpWindowManager->screenBitmap, baseX, baseY + 8,
-                currHero->facing > hero::kFacingS);
-        }
+        boatIcons[currBoat->type]->DrawHeroShadow(
+            currHero->GetStandSequence(),
+            animFrame
+                % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currHero->facing > hero::kFacingS);
     } else if (currHero->owner >= 0 && currHero->owner < 8) {
         flagIcons[currHero->owner]->DrawHeroShadow(
             currHero->GetStandSequence(),
