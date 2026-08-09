@@ -260,6 +260,15 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::DrawBoatPart` admitted byte-exact;
+  `advmgr` 17 → 18 exact.** The 591-byte retail body proves the direct
+  40-byte boat-pool index, its packed position, the asymmetric inlined
+  valid-cell lookup, optional froth layer, boat layer, signed-facing flip,
+  and Bitmap-to-raw-map sprite wrapper. The reached boat position words at
+  +0/+2/+4 are now explicit. CodeView supplied the signature and names only;
+  no external body was consulted or ported. The generated baseline remains
+  owned by `homm3 build` and was not edited manually.
+
 - **2026-08-09 — the 1,172-byte `advManager::DrawHeroPartShadow`
   body opened to 98.1745%.** Retail proves that the shadow pass mirrors
   the five hero/boat layers already reconstructed, calls the distinct raw

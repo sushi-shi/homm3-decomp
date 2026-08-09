@@ -565,8 +565,12 @@ struct type_obscuring_object {
 // extent is now proven: sizeof is 0x28.
 class boat {
 public:
-    // The type_obscuring_object base, 24 B by the DC class record.
-    char pad_000[0x18];
+    // The type_obscuring_object base, 24 B by the DC class record. The
+    // position words are also read directly by DrawBoatPart.
+    short x;                        // +0x00
+    short y;                        // +0x02
+    short z;                        // +0x04
+    char pad_006[0x12];
     unsigned char allocated;        // +0x18
     unsigned char id;               // +0x19
     char type;                      // +0x1a

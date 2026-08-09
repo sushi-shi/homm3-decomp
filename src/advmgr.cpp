@@ -703,6 +703,15 @@ static inline NewmapCell* DrawHeroCell(advManager* manager, type_point point)
     return map->cell(point.x, point.y, point.z);
 }
 
+static inline NewmapCell* DrawBoatCell(advManager* manager, type_point point)
+{
+    if (!point.is_valid())
+        return manager->fullMap->cell(0, 0, 0);
+    return &manager->fullMap->cellData[
+        (point.z * manager->fullMap->Size + point.y)
+        * manager->fullMap->Size + point.x];
+}
+
 // E:\gamedcs\advmgr.cpp:5688
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
 void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
@@ -848,14 +857,39 @@ void advManager::DrawHeroPartShadow(int part, TDrawParts& heroParts,
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:5863
 VA(0x00410760, 0x24F)  // anchor-callee, dc 0x11ea4
-void advManager::DrawBoatPart(int part, TDrawParts* boatParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::DrawBoatPart(int part, TDrawParts& boatParts, int baseX,
+                              int baseY, int tilex, int tiley, int tilew,
+                              int tileh)
 {
-    // @stub
+    boat* currBoat = &gpGame->boats[boatParts.id];
+    int BoatCellY = part % 3;
+    int BoatCellX = part / 3;
+    NewmapCell* boatCell = DrawBoatCell(
+        this, type_point(currBoat->x, currBoat->y, currBoat->z));
+
+    if (!(boatCell->flags_00_11 & 0x200)) {
+        boatFrothIcons[currBoat->type]->DrawHero(
+            currBoat->GetStandSequence(),
+            animFrame
+                % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+            tilex + (2 - BoatCellY) * 32,
+            tiley - BoatCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currBoat->facing > hero::kFacingS);
+    }
+
+    boatIcons[currBoat->type]->DrawHero(
+        currBoat->GetStandSequence(),
+        animFrame % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+        tilex + (2 - BoatCellY) * 32,
+        tiley - BoatCellX * 32 + 32, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8,
+        currBoat->facing > hero::kFacingS);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:5900
 VA(0x004109b0, 0x24F)  // anchor-callee, dc 0x120ec
