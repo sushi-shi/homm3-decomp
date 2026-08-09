@@ -156,7 +156,6 @@ public:
         short pad_22;
     };
     static TWallTraits akWallTraits[9][18];
-
     // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
     // (0x466b30), which divides the manager's obstacle vector extent
     // (+0x13d5c .. +0x13d60) by 24 with the 0x2aaaaaab/sar 2 magic; the
@@ -604,6 +603,7 @@ public:
     void mark_hex_area_effect(long hex, long shape, long mastery,
                               std::vector<army*>& targets);      // 0x5a46f0
 };
+SIZE(combatManager::TWallTraits, 0x24);
 
 // Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).
 extern combatManager* gpCombatManager;
