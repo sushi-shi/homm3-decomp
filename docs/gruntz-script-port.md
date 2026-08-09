@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `generator::update_bonus` reconstructed byte-exact
+  (184 bytes).** Retail ignores unowned generators and, while the existing
+  expansion/version gate is clear, the four base elementals. It takes the
+  town alignment from the first generated creature's 116-byte static-traits
+  row, rejects the -1 alignment, then walks the owning player's signed town
+  roster. Each town whose faction byte matches receives a +1 generator
+  bonus for that creature through the already-exact town member. The inline
+  `game::GetTown` -1 arm and 360-byte town-vector indexing reproduce retail
+  directly. Restoring the generator's four-slot creature row from plain
+  integers to its attested `TCreatureType` domain is layout-neutral and
+  leaves the exact constructor, save, and growth bodies unchanged.
+  Dreamcast CodeView supplies the member identity and creature-row domain;
+  all gates, offsets, constants, indexing, and the called behavior are
+  retail-byte-proven. No external implementation body was used.
+  Whole-linked fuzzy coverage rises from 46.07% to 46.12% and exact linked
+  functions from 620 to 621.
+
 - **2026-08-09 — `generator::save` reconstructed byte-exact
   (177 bytes).** Retail serializes the owner byte, generator class and type,
   the low byte of each of four creature ids, the complete eight-byte
