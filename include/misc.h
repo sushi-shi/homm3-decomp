@@ -41,6 +41,9 @@ public:
     unsigned char* end2;
 
     TPickANumber(int lowBound, int high);
+    // Retail inlines this cleanup into PlaceAllObstacles; no standalone
+    // x86 row survives. The Dreamcast roster independently attests the dtor.
+    ~TPickANumber() { delete[] marks; }
     int Pick();
 };
 
