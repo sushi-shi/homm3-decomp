@@ -190,6 +190,8 @@ public:
                     unsigned char shooters_blocked) const;
     long get_final_melee_value() const;
     long get_total() const;
+    armyGroup* get_army() { return my_army; }
+    hero* get_hero() { return my_hero; }
     void cast_chain_lightning(type_spell_choice& choice,
                               type_AI_combat_data& defender, long damage) const;
     void cast_area_effect(type_spell_choice& choice, type_AI_combat_data& defender,
@@ -208,7 +210,7 @@ public:
                                type_speed_catagory current_round) const;
     void do_general_melee(type_AI_combat_data& defender);
     void simulate_combat(type_AI_combat_data& defender);
-    void do_aftermath(type_AI_combat_data& defender, const town* enemy_town);
+    void do_aftermath(type_AI_combat_data* defender, const town* enemy_town);
 };
 
 unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero,

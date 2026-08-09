@@ -32,6 +32,7 @@
 #include "ai_tactical.h"
 #include "advmgr.h"
 #include "armygrp.h"
+#include "game.h"
 #include "misc.h"
 #include "hero.h"
 #include "town.h"
@@ -913,15 +914,13 @@ void type_AI_combat_data::simulate_combat(type_AI_combat_data& defender)
     do_general_melee(defender);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_combat.cpp:1398
+#if 0  // @carcass
 DC_ONLY(0x2bcd8, 0x92)
 void do_eagle_eye(hero* winner, hero* loser)
 {
     // @stub
 }
-
 #endif  // @carcass
 
 // E:\gamedcs\ai_combat.cpp:1424
@@ -958,17 +957,9 @@ void create_skeletons(const hero* current_hero, const armyGroup* dead_army, army
     destination->Add(skeleton, total, -1);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_combat.cpp:1440
-// DECODED, NOT LANDED - it needs a hero-layout decision first. The
-// body is: swap the simulated mana back into both heroes, then on a
-// win give experience (gpGame->?(army, hero) scaled by
-// hero::GetExperienceBonusFactor), strip artifact slot 2, transfer the
-// loser's artifacts unless a 60%-Random surrender fired, claim the
-// town, adjust both armies, create_skeletons, and finally the INLINED
-// do_eagle_eye (dc 0x2bcd8).
-// The former hero-layout blocker is RESOLVED (2026-08-07): do_eagle_eye
+// The former hero-layout blocker is RESOLVED (2026-08-07): the inlined
+// do_eagle_eye
 // walks `hero[0x430 + spell]` for spell 0..0x45 because +0x430 IS a
 // 70-entry per-spell byte table - hero::available_spells, byte-proven by
 // AddSpell 0x4d9330 writing the 0x3ea/0x430 pair and closed at +0x476 by
@@ -978,13 +969,83 @@ void create_skeletons(const hero* current_hero, const armyGroup* dead_army, army
 // way. The three secondary-skill slots do_aftermath needs are named in
 // hero.h: wisdom +0xd0, ballistics +0xd3, eagle eye +0xd4 - exactly
 // slots 7/10/11 of the 28-byte band at 0xc9.
+// Semantic transcription complete; all 24 branches and the sole return
+// agree. Residual (79.7256%): retail keeps the defender object in EDI and
+// defeated hero in EBX, while this compile uses the opposite pair. Its
+// inlined eagle-eye pass keeps one signed-short index in DX; our CL fuses
+// the same walk into three full-width induction values, leaving two closing
+// branch orientations different. Making `surrendered` memory-resident is
+// load-bearing (75.4146 -> 79.7256). The attested pointer signature, inline
+// get_army/get_hero accessors, a bottom-tested combined spell gate and local
+// declaration order are byte-inert; restoring a separate inline
+// do_eagle_eye helper regresses to 70.8963. No further local spelling probe
+// is justified without a new allocator/inliner hypothesis.
 VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
-void type_AI_combat_data::do_aftermath(type_AI_combat_data& defender, const town* enemy_town)
+void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, const town* enemy_town)
 {
-    // @stub
-}
+    volatile unsigned char surrendered = 0;
+    armyGroup* defeatedArmy = defender->get_army();
+    hero* defeatedHero = defender->get_hero();
 
-#endif  // @carcass
+    if (my_hero)
+        my_hero->mana = static_cast<short>(mana);
+    if (defeatedHero)
+        defeatedHero->mana = static_cast<short>(defender->mana);
+
+    if (total_hit_points > 0) {
+        if (my_hero) {
+            int experience;
+            if (defeatedHero && Random(0, 100) < 60) {
+                surrendered = 1;
+                experience = gpGame->ExperienceValueOfStack(defeatedArmy, 0);
+            } else {
+                experience = gpGame->ExperienceValueOfStack(
+                    defeatedArmy, defeatedHero);
+            }
+            experience = static_cast<int>(
+                my_hero->GetExperienceBonusFactor() * experience);
+            my_hero->GiveExperience(experience, 1, 1);
+
+            if (defeatedHero)
+                defeatedHero->remove_artifact(ARTIFACT_HOLY_GRAIL);
+            if (!surrendered && defeatedHero)
+                defeatedHero->TransferArtifacts(my_hero);
+
+            if (enemy_town)
+                gpGame->ClaimTown(enemy_town->id, my_hero->owner, 0, 1);
+        }
+    } else if (my_hero) {
+        my_hero->remove_artifact(ARTIFACT_HOLY_GRAIL);
+    }
+
+    adjust_army(1);
+    defender->adjust_army(1);
+
+    if (total_hit_points > 0 && my_hero) {
+        create_skeletons(my_hero, defeatedArmy, my_army);
+
+        if (defeatedHero && my_hero->eagleEyeLevel > 0
+            && my_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+            for (short spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+                if (!defeatedHero->available_spells[spell]
+                    || my_hero->available_spells[spell])
+                    continue;
+                const SSpellTraits& traits = akSpellTraits[spell];
+                if (my_hero->eagleEyeLevel + 1 < traits.level)
+                    continue;
+                if (!(traits.field_c & 1))
+                    continue;
+                if (traits.level <= my_hero->wisdomLevel + 2)
+                    my_hero->AddSpell(spell);
+            }
+        }
+    }
+
+    if (my_hero)
+        my_hero->ApplyBattleWinTemps();
+    if (defeatedHero)
+        defeatedHero->ApplyBattleLossTemps();
+}
 
 // E:\gamedcs\ai_combat.cpp:1511
 // EH-bearing: the two stack-local type_AI_combat_data objects give the
@@ -1002,10 +1063,10 @@ unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero, armyGr
                                  defender_modifier, attacking_hero, 0, cell);
     attacker.simulate_combat(defender);
     if (attacker.total_hit_points > 0) {
-        attacker.do_aftermath(defender, defending_town);
+        attacker.do_aftermath(&defender, defending_town);
         return 1;
     }
-    defender.do_aftermath(attacker, 0);
+    defender.do_aftermath(&attacker, 0);
     return 0;
 }
 

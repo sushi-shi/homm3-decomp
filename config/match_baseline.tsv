@@ -156,6 +156,7 @@ ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@AAV1@
 ai_combat	?cast_enchantment@type_AI_combat_data@@QAEXAAUtype_spell_choice@@PBVhero@@E@Z	100.0000	100.0000	100.0000	0x258a0
 ai_combat	?check_wall_archery_penalty@type_AI_combat_data@@QAEXPBVtown@@@Z	100.0000	100.0000	100.0000	0x24790
 ai_combat	?create_skeletons@@YIXPBVhero@@PBVarmyGroup@@PAV2@@Z	100.0000	100.0000	100.0000	0x26df0
+ai_combat	?do_aftermath@type_AI_combat_data@@QAEXPAV1@PBVtown@@@Z	79.7256	79.7256	79.7256	0x26ee0
 ai_combat	?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z	94.7603	94.7603	94.7603	0x264d0
 ai_combat	?get_area_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@JJ@Z	100.0000	100.0000	100.0000	0x24bf0
 ai_combat	?get_attack@type_AI_combat_data@@QBEJW4type_speed_catagory@@E@Z	100.0000	100.0000	100.0000	0x26390
@@ -177,7 +178,6 @@ ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000	100.0000	100.0000	0x2
 ai_combat	AI_value_of_combat	0.0000	0.0000	0.0000	0x27330
 ai_combat	type_AI_combat_data_cast_spell	0.0000	0.0000	0.0000	0x25bd0
 ai_combat	type_AI_combat_data_choose_melee	0.0000	0.0000	0.0000	0x267c0
-ai_combat	type_AI_combat_data_do_aftermath	0.0000	0.0000	0.0000	0x26ee0
 ai_combat	type_AI_combat_data_initialize_creatures	0.0000	0.0000	0.0000	0x24120
 ai_combat	type_AI_combat_data_type_AI_combat_data	0.0000	0.0000	0.0000	0x23ee0
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	86.3767	86.3767	86.3767	0x28740
@@ -467,6 +467,7 @@ game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
 game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
+game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	99.9706	99.9706	99.9706	0xca3b0
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0
 game	?FindTown@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbaa10
 game	?GetGamePosFromDPID@game@@QAEHK@Z	100.0000	100.0000	100.0000	0xcec20

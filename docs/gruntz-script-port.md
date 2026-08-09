@@ -260,6 +260,26 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — AI-combat aftermath reconstructed; its experience helper
+  is instruction-identical.** `game::ExperienceValueOfStack` is promoted
+  from its Dreamcast-only row to the 88-byte retail slot at 0x4ca3b0:
+  retail and the pinned build agree on every instruction and branch, with
+  the 99.9706% display residue solely the target's synthetic name for the
+  creature-traits relocation. `type_AI_combat_data::do_aftermath` is fully
+  transcribed at 79.7256% with all 24 branches and its one return agreeing:
+  mana restoration, surrender-aware experience, the retail-observed
+  artifact-transfer direction, town claim, army adjustment, necromancy,
+  the 70-spell Eagle Eye pass, and battle-temporary cleanup are all present.
+  Its Dreamcast pointer parameter corrects the earlier invented reference
+  signature without moving the exact `AI_quick_combat` caller. A
+  memory-resident surrender byte raises the body from 75.4146%; the residual
+  is an EDI/EBX whole-region allocation swap plus retail's signed-short spell
+  induction versus this CL's fused pointer/index walk. Inline accessors, a
+  bottom-tested loop, local order, and the separate inlined helper boundary
+  were byte-inert or regressed and were reverted where they added no truth.
+  Retail bytes and existing Dreamcast names/signatures supplied the evidence;
+  no external implementation was used.
+
 - **2026-08-09 — the AI-combat vector copy constructor is identified and
   byte-exact; an inherited class-copy claim is withdrawn.** The 135-byte
   retail body at 0x4276c0 copies only an allocator byte and the vector's

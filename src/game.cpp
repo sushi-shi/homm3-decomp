@@ -1519,14 +1519,26 @@ void game::GiveArmy(armyGroup* thisMonInfo, int iMonType, int iMonNum, int slot)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:9576
-DC_ONLY(0xb6114, 0xBC)
+// Retail is shorter than the Dreamcast body but preserves the same public
+// contract and seven-stack value sum. Residual (99.9706%): every instruction
+// and all three branches agree; the only displayed delta is the target's
+// synthetic `data_2747b0` name for akCreatureTypeTraits.
+VA(0x004ca3b0, 0x58)  // dc-name + retail caller/body, dc 0xb6114
 int game::ExperienceValueOfStack(const armyGroup* whichGroup, const hero* whichHero)
 {
-    // @stub
+    int value = 0;
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
+        if (whichGroup->numTroops[i] > 0)
+            value += akCreatureTypeTraits[whichGroup->armies[i]].AI_value
+                     * whichGroup->numTroops[i];
+    }
+    if (whichHero)
+        value += 500;
+    return value;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:9596
 DC_ONLY(0xb61d0, 0x128)
@@ -7214,4 +7226,3 @@ void CObjectType::~CObjectType()
 }
 
 #endif  // @carcass
-
