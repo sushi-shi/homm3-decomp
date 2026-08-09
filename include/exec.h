@@ -77,7 +77,8 @@ struct SUnnamedEntry6a5d5c {
     const char* unvisitedObjectText;      // +0x588
     const char* knownShrineSpellText;     // +0x58c
     const char* shrineSpellFormat;        // +0x590
-    char pad_594[0x8];
+    const char* witchSkillFormat;          // +0x594
+    const char* heroKnowsWitchSkillText;   // +0x598
 #else
     char pad_40c[0x190];
 #endif

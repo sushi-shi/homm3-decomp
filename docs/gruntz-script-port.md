@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `set_witch_hut_help_text` reconstructed as a `QuickInfo`
+  prerequisite at 98.0056%.** Retail copies the fixed Witch Hut name, gates
+  details on the trigger bit and the seven-bit no-skill sentinel, checks the
+  cell-knowledge bits, extracts the signed secondary-skill id, formats the
+  16-byte trait row's name, and reports when the current hero already knows
+  that skill. The unknown-cell path separately checks `WitchHutInfo` and
+  appends its fixed known-skill text. All ten branches and the return agree.
+  The residual is register allocation around the local-player value and the
+  shared `PlayerKnowsCell` dword mask where retail narrows both operands to
+  bytes. Retail proves every mask, the 50-byte local buffer, trait stride/name
+  field, hero skill byte band, text-record offsets and fixed pointers;
+  Dreamcast CodeView supplies the function, `TSecondarySkill`, `TSSkillTraits`
+  and info-flag names only. No external implementation body was used, and the
+  generated baseline remains build-owned.
+
 - **2026-08-09 — `SetTreeHelpText` reconstructed as a `QuickInfo`
   prerequisite at 99.7414%.** Retail copies the fixed Tree of Knowledge name,
   gates detail on the trigger bit, checks the `TreeOfKnowledgeInfo` visit bit
