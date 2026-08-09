@@ -445,6 +445,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `ComputeUALoc` reconstructed byte-exact (44 bytes).**
+  The function indexes the central game's eight 360-byte player records by
+  its fastcall argument and asks that player to update the same player's
+  Grail guess. VC6 inlines the newly exact `guess_grail_location` leaf,
+  producing retail's local hidden-return buffer and odd-offset four-byte
+  store without any duplicated source. Retail proves the global, stride,
+  index reuse and all emitted instructions; Dreamcast independently records
+  the direct `ComputeUALoc` -> `playerData::guess_grail_location` edge. This
+  is the HoMM2/Gruntz canonical-helper-boundary rule applied directly. No
+  external implementation body or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `playerData::guess_grail_location` reconstructed
   byte-exact (27 bytes), and its callee identity corrected from retail.**
   The wrapper passes the player id in EDX and a hidden four-byte return
