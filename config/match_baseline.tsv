@@ -403,6 +403,7 @@ cmbtmgr	combatManager_MakeCreaturesVanish	0.0000	0.0000	0.0000	0x66e00
 cmbtmgr	combatManager_NextArmy	0.0000	0.0000	0.0000	0x65080
 cmbtmgr	combatManager_Open	0.0000	0.0000	0.0000	0x62a20
 cmbtmgr	combatManager_PowEffect	0.0000	0.0000	0.0000	0x68990
+cmbtmgr	combatManager_RaiseSkeletons	0.0000	0.0000	0.0000	0x69f20
 cmbtmgr	combatManager_SetNextArmy	0.0000	0.0000	0.0000	0x65330
 cmbtmgr	combatManager_SetupAndLoadObstacles	0.0000	0.0000	0.0000	0x66290
 cmbtmgr	combatManager_SetupCombat	0.0000	0.0000	0.0000	0x639f0
