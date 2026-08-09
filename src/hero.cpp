@@ -17,9 +17,11 @@
 // entry, not an inlined fsqrt.
 #include <math.h>
 #define HOMM3_HERO_COMBINATION_VIEW
+#define HOMM3_HERO_BOAT_VIEW
 #define HOMM3_HERO_LAND_VIEW
 #include "hero.h"
 #undef HOMM3_HERO_LAND_VIEW
+#undef HOMM3_HERO_BOAT_VIEW
 #undef HOMM3_HERO_COMBINATION_VIEW
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
@@ -2300,16 +2302,50 @@ boat* hero::find_summonable_boat()
     return result;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6219
+// Requires Summon Boat availability and mana at the effective local magic
+// terrain. An existing reachable boat wins; otherwise Advanced mastery can
+// summon one only when the global boat pool still has a free slot.
 VA(0x004e5550, 0x15E)  // anchor-global, dc 0xd524c
 unsigned char hero::can_summon_boat()
 {
-    // @stub
-}
+    if (!available_spells[SPELL_SUMMON_BOAT])
+        return 0;
 
-#endif  // @carcass
+    int baseMastery = GetSpellSchoolLevel(
+        akSpellTraits[SPELL_SUMMON_BOAT].school, kMagicTerrainNone);
+
+    type_point point;
+    point.x = x;
+    point.y = y;
+    point.z = z;
+    type_point invalid;
+    invalid.x = -1;
+    invalid.y = -1;
+    invalid.z = -1;
+
+    int magicTerrain;
+    if (invalid.x == point.x && invalid.y == point.y
+        && invalid.z == point.z) {
+        magicTerrain = kMagicTerrainNone;
+    } else {
+        magicTerrain = gpGame->worldMap.cell(
+            point.x, point.y, point.z)->get_magic_terrain_type();
+    }
+
+    int mastery = GetSpellSchoolLevel(
+        akSpellTraits[SPELL_SUMMON_BOAT].school, magicTerrain);
+    int cost = akSpellTraits[SPELL_SUMMON_BOAT].mana_cost[mastery];
+    if (cost < 1)
+        cost = 1;
+    if (mana < cost)
+        return 0;
+    if (find_summonable_boat())
+        return 1;
+    if (baseMastery < eMasteryAdvanced)
+        return 0;
+    return gpGame->get_new_boat_id() != -1;
+}
 
 // E:\gamedcs\hero.cpp:6241
 VA(0x004e56b0, 0x21)  // linkorder, dc 0xd52b0

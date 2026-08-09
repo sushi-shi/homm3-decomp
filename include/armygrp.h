@@ -185,6 +185,7 @@ typedef int SpellID;
 // the DC SpellID enum corroborates every value (eSpellStoneGaze for
 // SPELL_STONE).
 enum ESpellId {
+    SPELL_SUMMON_BOAT = 0x0,
     // IsInIdentifyRange indexes this row's mastery bonus and multiplies it by
     // spell power to derive the scouting radius; retail displacement 0x144
     // proves spell id 2 independently of the Dreamcast spelling.
