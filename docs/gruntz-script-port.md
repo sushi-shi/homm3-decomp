@@ -915,14 +915,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   surviving names and signatures. No external body was consulted or ported,
   and the generated baseline remains exclusively build-owned.
 
-- **2026-08-09 — the 584-byte `advManager::DrawShroud` body opened
-  to 81.41%.** Retail instructions and relocations prove the clipped draw
-  rectangle, visibility gate, full-map star tiles, cloud lookup, horizontal
+- **2026-08-09 — the 584-byte `advManager::DrawShroud` body advanced
+  from 81.41% to 91.25%.** Retail instructions and relocations prove the
+  clipped draw rectangle, visibility gate, full-map star tiles, cloud lookup, horizontal
   flip encoding, alternating edge frames, and the raw shroud-tile sprite
-  target. The reconstruction has the same 21 symbolic branches and two return
-  paths as retail; two remaining polarity/layout differences and VC6 register
-  scheduling prevent an exact claim. Dreamcast CodeView supplied only the
-  surviving names and signatures; no external body was consulted or ported.
+  target. Retail also proves that a zero cloud lookup draws the star fallback
+  rather than skipping the cell. Routing both full-draw mode and zero lookup
+  to one star tail after the cloud path removes the two polarity/layout
+  defects: all 21 symbolic branches and both returns now agree. VC6 register
+  and local scheduling prevent an exact claim. Dreamcast CodeView supplied
+  only the surviving names and signatures; no external body was consulted or ported.
   The generated baseline remains exclusively build-owned.
 
 - **2026-08-09 — the 715-byte `advManager::DrawGround` pass refined
