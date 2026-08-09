@@ -611,8 +611,6 @@ long town::get_legion_bonus(long dwelling)
     return bonus;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\town.cpp:1639
 // RETAIL-ONLY row first: 0x005bf900 (`ret 4`) sits between the two DC
 // rows, is called BY get_growth_rate below and by 0x5c5b40, and divides
@@ -622,8 +620,65 @@ long town::get_legion_bonus(long dwelling)
 VA(0x005bf900, 0x258)  // retail-only, town member, ret 4
 long town::TownFn_005BF900(long dwelling)
 {
-    // @stub
+    game* current_game = gpGame;
+    int tier = dwelling % TOWN_DWELLING_COUNT + 1;
+    hero* garrison_hero = 0;
+    hero* visiting_hero = 0;
+    int bonus = 0;
+
+    if (garrisonHeroId >= 0)
+        garrison_hero = current_game->GetHero(garrisonHeroId);
+
+    if (visitingHeroId >= 0) {
+        visiting_hero = current_game->GetHero(visitingHeroId);
+    } else {
+        type_point point;
+        point.x = mapX;
+        point.y = mapY;
+        point.z = mapZ;
+        int size = current_game->worldMap.Size;
+        NewmapCell* cell = &current_game->worldMap.cellData[
+            (point.z * size + point.y) * size + point.x];
+        if (cell->type == HERO)
+            visiting_hero = current_game->GetHero(cell->extraInfo);
+    }
+
+    switch (tier) {
+    case TOWN_DWELLING_TIER_2:
+        if (visiting_hero)
+            bonus = 5 * visiting_hero->IsWieldingArtifact(0x76);
+        if (garrison_hero)
+            bonus += 5 * garrison_hero->IsWieldingArtifact(0x76);
+        break;
+    case TOWN_DWELLING_TIER_3:
+        if (visiting_hero)
+            bonus = 4 * visiting_hero->IsWieldingArtifact(0x77);
+        if (garrison_hero)
+            bonus += 4 * garrison_hero->IsWieldingArtifact(0x77);
+        break;
+    case TOWN_DWELLING_TIER_4:
+        if (visiting_hero)
+            bonus = 3 * visiting_hero->IsWieldingArtifact(0x78);
+        if (garrison_hero)
+            bonus += 3 * garrison_hero->IsWieldingArtifact(0x78);
+        break;
+    case TOWN_DWELLING_TIER_5:
+        if (visiting_hero)
+            bonus = 2 * visiting_hero->IsWieldingArtifact(0x79);
+        if (garrison_hero)
+            bonus += 2 * garrison_hero->IsWieldingArtifact(0x79);
+        break;
+    case TOWN_DWELLING_TIER_6:
+        if (visiting_hero)
+            bonus = visiting_hero->IsWieldingArtifact(0x7a);
+        if (garrison_hero)
+            bonus += garrison_hero->IsWieldingArtifact(0x7a);
+        break;
+    }
+    return bonus;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\town.cpp:1639
 // SHORT arity is what pins this one: `movsx ebx, word ptr [ebp+8]`,
