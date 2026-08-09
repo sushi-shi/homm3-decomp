@@ -21,6 +21,16 @@ struct TAdventureObjectTraitsView {
 };
 DATA(0x00660428) extern TAdventureObjectTraitsView* gAdventureObjectTraits;
 
+// Retail's public .data symbol at 0x65f694. The relocation and final byte
+// load in GetCloudLookup prove a 256-entry lookup indexed by the eight
+// surrounding-cell bits.
+extern unsigned char giCloudType[256];
+
+// Retail .bss 0x69ccbc. GetCloudLookup tests this byte against the low byte
+// of every GetMapExtra result. Its role is proved by those xrefs; no public
+// retail name survives, so the spelling remains provisional.
+extern unsigned char gMapVisibilityBit;
+
 // The adventure screen's own window. Only the ONE method a retail body
 // outside adventuremapwindow.obj calls on it is declared here:
 // town::Deallocate (0x5be2d0) ends with
@@ -122,6 +132,7 @@ public:
     void Reseed(int targetX, int targetY);
     void ForceNewHover();
     int ProcessHover(int mouseX, int mouseY);
+    int GetCloudLookup(int srcX, int srcY, int z);
     void DrawRolloverText(char* text);
     unsigned char FindAdjacentMonster(type_point point, type_point* result,
                                       type_point excluded);

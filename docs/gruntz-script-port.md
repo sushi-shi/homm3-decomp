@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::GetCloudLookup` admitted byte-exact from
+  retail evidence; `advmgr` 13 → 14 exact.** The 613-byte body reproduces
+  the boundary-seeded eight-neighbour visibility mask, all sixteen guarded
+  `GetMapExtra` paths, and the final `giCloudType` byte lookup exactly. Retail
+  relocations prove the table at 0x65f694 and the one-byte visibility mask at
+  0x69ccbc; the latter keeps a provisional role-based name because no public
+  retail spelling survives. No external function body was consulted or
+  ported. The generated status update raises the full executable score from
+  5.84% to 5.87% and migrates the function's flat label to its decorated VC6
+  symbol without any manual baseline edit.
+
 - **2026-08-09 — `advmgr` 11 → 13 exact; the first 500-byte body
   opened to 82.01%; two required member declarations restore
   `initialize_game_data` to 100%.** `MapExtraPosAndAdjacentsSet`

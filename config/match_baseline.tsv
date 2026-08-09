@@ -12,6 +12,7 @@ advmgr	?DrawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0
 advmgr	?FindAdjacentMonster@advManager@@QAEEUtype_point@@PAU2@0@Z	82.0057	82.0057	82.0057	0x1a460
 advmgr	?ForceNewHover@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19570
 advmgr	?GetCell@advManager@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12bd0
+advmgr	?GetCloudLookup@advManager@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xf8c0
 advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
 advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
@@ -61,7 +62,6 @@ advmgr	advManager_DrawRoad	0.0000	0.0000	0.0000	0x11d60
 advmgr	advManager_DrawShroud	0.0000	0.0000	0.0000	0x12220
 advmgr	advManager_DrawUnderlay	0.0000	0.0000	0.0000	0x12470
 advmgr	advManager_EnableButtons	0.0000	0.0000	0.0000	0x1a3a0
-advmgr	advManager_GetCloudLookup	0.0000	0.0000	0.0000	0xf8c0
 advmgr	advManager_GetSoundId	0.0000	0.0000	0.0000	0x18620
 advmgr	advManager_HeroQuickView	0.0000	0.0000	0.0000	0x16590
 advmgr	advManager_InsertSound	0.0000	0.0000	0.0000	0x18c10

@@ -531,12 +531,72 @@ void advManager::CompleteDraw(unsigned char bForceDraw)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:5505
 VA(0x0040f8c0, 0x265)  // anchor-global, dc 0x10cf4
 int advManager::GetCloudLookup(int srcX, int srcY, int z)
 {
-    // @stub
+    int lookup = 0;
+
+    if (srcX < 1)
+        lookup = 0xc8;
+    else if (srcX >= gMapWidth - 1)
+        lookup = 0x32;
+
+    if (srcY < 1)
+        lookup |= 0x91;
+    else if (srcY >= gMapHeight - 1)
+        lookup |= 0x64;
+
+    if (!lookup) {
+        if (!(GetMapExtra(srcX, srcY - 1, z) & gMapVisibilityBit))
+            lookup = 1;
+        if (!(GetMapExtra(srcX + 1, srcY, z) & gMapVisibilityBit))
+            lookup |= 2;
+        if (!(GetMapExtra(srcX, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 4;
+        if (!(GetMapExtra(srcX - 1, srcY, z) & gMapVisibilityBit))
+            lookup |= 8;
+        if (!(GetMapExtra(srcX + 1, srcY - 1, z) & gMapVisibilityBit))
+            lookup |= 0x10;
+        if (!(GetMapExtra(srcX + 1, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 0x20;
+        if (!(GetMapExtra(srcX - 1, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 0x40;
+        if (!(GetMapExtra(srcX - 1, srcY - 1, z) & gMapVisibilityBit))
+            lookup |= 0x80;
+    } else {
+        if (!(lookup & 1)
+            && !(GetMapExtra(srcX, srcY - 1, z) & gMapVisibilityBit))
+            lookup |= 1;
+        if (!(lookup & 2)
+            && !(GetMapExtra(srcX + 1, srcY, z) & gMapVisibilityBit))
+            lookup |= 2;
+        if (!(lookup & 4)
+            && !(GetMapExtra(srcX, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 4;
+        if (!(lookup & 8)
+            && !(GetMapExtra(srcX - 1, srcY, z) & gMapVisibilityBit))
+            lookup |= 8;
+        if (!(lookup & 0x10)
+            && !(GetMapExtra(srcX + 1, srcY - 1, z) & gMapVisibilityBit))
+            lookup |= 0x10;
+        if (!(lookup & 0x20)
+            && !(GetMapExtra(srcX + 1, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 0x20;
+        if (!(lookup & 0x40)
+            && !(GetMapExtra(srcX - 1, srcY + 1, z) & gMapVisibilityBit))
+            lookup |= 0x40;
+        if (!(lookup & 0x80)
+            && !(GetMapExtra(srcX - 1, srcY - 1, z) & gMapVisibilityBit))
+            lookup |= 0x80;
+    }
+
+    return giCloudType[lookup];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:5573
 VA(0x0040fb30, 0x167)  // linkorder, dc 0x110c0
