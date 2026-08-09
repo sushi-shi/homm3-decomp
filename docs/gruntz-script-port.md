@@ -275,6 +275,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   every admitted size and offset, and no external implementation body was
   used.
 
+- **2026-08-09 — `game::GetStartingHeroId` admitted byte-exact.** Retail
+  proves the complete algorithm: map each of the nine town types to its two
+  hero classes, collect unused heroes whose per-player eligibility bit is set,
+  fall back to all eligible unused heroes when the class-filtered set is empty,
+  and select the one-based `Random(1, count)` result. The third parameter is
+  unused in this retail body. The +0x4dfb4 band is consequently canonicalized
+  from an integer placeholder to 156 `std::bitset<8>` records; retail's two
+  range-check calls and direct bit tests match VC6 exactly. Dreamcast CodeView
+  supplied the function/local names and corroborated the 156-entry candidate
+  array. `decomp-attempt-1` was checked read-only and contains only a stub, so
+  no external implementation body was used.
+
 - **2026-08-09 — `game::Load` extends from 26.3228% to 26.8395%, and its
   state is canonical.** Retail's call sequence proves eight consecutive
   `playerData::load(infile, saveVersion)` calls after the obelisk pool; the
@@ -283,6 +295,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `game` layout compiled by all translation units, while the existing member
   offsets and match totals remain stable. No external implementation body was
   used, and the generated match baseline is updated only by the full build.
+
+- **2026-08-09 — `game::CreateBoat` reconstructed to 99.9726%.** Retail
+  proves the inlined 64-entry boat-pool allocation, the local-only 0x421
+  map-change message and show-boat record, and every initialized boat field.
+  Dreamcast CodeView supplies the `CMCBuildBoat` and inline
+  `boat::obscure_cell` identities; the latter is also required for retail's
+  byte-to-long zero extension. VC6's retail store schedule requires the
+  source order `type`, `x`, `y`, `z`. All instructions and branches agree;
+  the remaining score delta consists only of four target-side working-label
+  spellings for already-addressed relocations. The temporary shipyard
+  declaration gate was removed completely rather than retained as
+  architecture. `decomp-attempt-1` was checked read-only and
+  contained no body or additional evidence worth admitting; no external
+  implementation material was used. Making those declarations unconditional
+  changes VC6's transitive type population: the already-documented unstable
+  `initialize_game_data` row remeasures from 100% to 94.0741%, and
+  `recruitUnit::Update` from 90.8376% to 90.8325%; both historical peaks remain
+  recorded rather than being presented as semantic regressions.
 
 - **2026-08-09 — `game::Load` extends from 23.1861% to 26.3228%.** Retail
   fixes the prefix order after header restoration: clear recorded events,
