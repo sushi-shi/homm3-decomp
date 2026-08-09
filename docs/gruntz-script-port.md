@@ -779,14 +779,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   consulted or ported. The generated baseline remains exclusively build-owned.
 
 - **2026-08-09 — the 2,446-byte `advManager::DrawAdvObj` body opened
-  to 80.15%.** Retail proves the seven-layer object-cell traversal, normal
+  to 80.22%.** Retail proves the seven-layer object-cell traversal, normal
   48-bit draw mask, 48-entry view-world terrain selector, 82-entry flagged
   object selector, trigger-cell ownership lookup, player output color,
   transient-object override, animated sprite path, interleaved hero/boat
   parts, and cursor rows. The reconstructed function has the same 125-block
   CFG population as retail; twenty-seven blocks compare exactly and the
   remainder are primarily VC6 local/register scheduling differences, so no
-  exact claim is made. Dreamcast CodeView supplied surviving names and
+  exact claim is made. The empty-cell overlay loop now spells the retail
+  inclusive `part <= 5` bound, removing its final signed-branch mismatch;
+  the layered-object loop's residual signedness is retained because changing
+  its inferred local types perturbs the whole VC6 frame and regresses the
+  measured function. Dreamcast CodeView supplied surviving names and
   signatures only; no external body was consulted or ported. The generated
   baseline remains exclusively build-owned.
 

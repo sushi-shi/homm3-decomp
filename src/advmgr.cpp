@@ -1265,7 +1265,7 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     }
 
     if (foundHero || foundBoat) {
-        for (int part = 0; part < 6; ++part) {
+        for (int part = 0; part <= 5; ++part) {
             if (heroParts[part].IsValid)
                 DrawHeroPart(part, heroParts[part], baseX, baseY,
                              tilex, tiley, tilew, tileh);
