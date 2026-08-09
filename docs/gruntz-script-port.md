@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `type_cell_adjuster`'s cleanup and trigger resolver are
+  admitted byte-exact as `QuickInfo` scaffolding.** Dreamcast CodeView fixes
+  the helper at 12 bytes and names its three pointer members; retail then
+  proves every member role through the calls and offsets in the 74-byte
+  destructor and 303-byte `get_trigger_cell`. Both reconstructed bodies are
+  instruction-identical to retail. The resolver's decisive source shapes are
+  direct indexing of `game::heroes` after its explicit `-1` gate (avoiding a
+  redundant `GetHero` null arm) and a shared equal-type return tail. This adds
+  two exact `advmgr` rows, 588 -> 590 exact overall in the full comparison,
+  and supplies the helper used by the still-unmatched 9,632-byte
+  `advManager::QuickInfo`. Retail bytes and Dreamcast names/layouts supplied
+  the evidence; no external implementation was used, and the generated
+  baseline remains build-owned.
+
 - **2026-08-09 — the final boat-frame source lifetime improves both hero
   render twins.** Inlining the final `animFrame % GetNumFrames(...)`
   expression into the draw call restores retail's right-to-left argument

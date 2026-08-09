@@ -300,6 +300,9 @@ public:
     TAdventureObjectType get_special_terrain() const;
     TAdventureObjectType get_map_object();
     unsigned char cell_is_trigger();
+#ifdef HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
+    NewmapCell* get_trigger_cell();
+#endif
 };
 #pragma pack(pop)
 

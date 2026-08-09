@@ -51,6 +51,7 @@
 // counterpart - the DC roster has no 2-param army describer in this
 // compiland and no third 5-param help builder - so naming them would
 // be invention. See the help-text note further down.
+#define HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
 #include <va.h>
 #include <stdio.h>
 #include "advmgr.h"
@@ -66,6 +67,7 @@
 #include "winmgr.h"
 #include "window.h"
 #include "widget.h"
+#undef HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
 
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
@@ -355,6 +357,8 @@ void type_cell_adjuster::type_cell_adjuster()
     // @stub
 }
 
+#endif  // @carcass
+
 // 74 B, `ret` with this in ecx: walks the three saved slots [0]/[4]/
 // [8], re-obscuring the first two (type_obscuring_object::obscure_cell
 // with 0x22 and 8) and restoring the third, nulling each slot as it
@@ -365,17 +369,96 @@ void type_cell_adjuster::type_cell_adjuster()
 // source has the destructor.
 // E:\gamedcs\advmgr.cpp:3064
 VA(0x0040af60, 0x4A)  // anchor-callee, dc 0xbec8
-void type_cell_adjuster::~type_cell_adjuster()
+type_cell_adjuster::~type_cell_adjuster()
 {
-    // @stub
+    if (obscuring_hero) {
+        type_obscuring_object* obscurer =
+            static_cast<type_obscuring_object*>(
+                static_cast<void*>(obscuring_hero));
+        obscurer->obscure_cell(HERO, obscuring_hero->id);
+        obscuring_hero = 0;
+    }
+    if (obscuring_boat) {
+        type_obscuring_object* obscurer =
+            static_cast<type_obscuring_object*>(
+                static_cast<void*>(obscuring_boat));
+        obscurer->obscure_cell(BOAT, obscuring_boat->id);
+        obscuring_boat = 0;
+    }
+    if (mobile_hero) {
+        type_obscuring_object* obscurer =
+            static_cast<type_obscuring_object*>(
+                static_cast<void*>(mobile_hero));
+        obscurer->restore_cell();
+        mobile_hero = 0;
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:3072
 VA(0x0040afb0, 0x12F)  // anchor-callee, dc 0xbf1c
 NewmapCell* type_cell_adjuster::get_trigger_cell(NewmapCell* map_cell, int x, int y)
 {
-    // @stub
+    if (obscuring_hero) {
+        type_obscuring_object* obscurer =
+            static_cast<type_obscuring_object*>(
+                static_cast<void*>(obscuring_hero));
+        obscurer->obscure_cell(HERO, obscuring_hero->id);
+        obscuring_hero = 0;
+    }
+    if (obscuring_boat) {
+        type_obscuring_object* obscurer =
+            static_cast<type_obscuring_object*>(
+                static_cast<void*>(obscuring_boat));
+        obscurer->obscure_cell(BOAT, obscuring_boat->id);
+        obscuring_boat = 0;
+    }
+    if (mobile_hero) {
+        type_obscuring_object* obscurer =
+            static_cast<type_obscuring_object*>(
+                static_cast<void*>(mobile_hero));
+        obscurer->restore_cell();
+        mobile_hero = 0;
+    }
+
+    if (x == MOBILE_HERO_CELL_X && y == MOBILE_HERO_CELL_Y
+            && gpCurrentPlayer->currHeroId != -1) {
+        // The preceding -1 gate lets retail index the hero pool directly;
+        // spelling this through GetHero would retain its redundant null arm.
+        mobile_hero = &gpGame->heroes[gpCurrentPlayer->currHeroId];
+        if (mobile_hero && !mobile_hero->obscuringField_06) {
+            type_obscuring_object* obscurer =
+                static_cast<type_obscuring_object*>(
+                    static_cast<void*>(mobile_hero));
+            obscurer->obscure_cell(HERO, mobile_hero->id);
+            return map_cell;
+        }
+        mobile_hero = 0;
+    }
+
+    NewmapCell* trigger_cell = map_cell->get_trigger_cell();
+    if (!trigger_cell || trigger_cell == map_cell)
+        return map_cell;
+
+    // Retail merges the equal-type path with the ordinary return tail.
+    if (trigger_cell->type != map_cell->type) {
+        if (trigger_cell->type == HERO) {
+            obscuring_hero = gpGame->GetHero(trigger_cell->extraInfo);
+            type_obscuring_object* obscurer =
+                static_cast<type_obscuring_object*>(
+                    static_cast<void*>(obscuring_hero));
+            obscurer->restore_cell();
+        } else if (trigger_cell->type == BOAT) {
+            obscuring_boat = &gpGame->boats[trigger_cell->extraInfo];
+            type_obscuring_object* obscurer =
+                static_cast<type_obscuring_object*>(
+                    static_cast<void*>(obscuring_boat));
+            obscurer->restore_cell();
+        }
+    }
+    return trigger_cell;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:3111
 DC_ONLY(0xc038, 0x5C)
