@@ -493,16 +493,48 @@ playerData::playerData()
     aiField_e8 = 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:1283
 VA(0x004b9e20, 0x115)  // linkorder, dc 0xa4d58
 void playerData::Init()
 {
-    // @stub
-}
+    numHeroes = 0;
+    currHeroId = -1;
+    currTownId = 0;
+    shipyards.erase(shipyards.begin(), shipyards.end());
 
-#endif  // @carcass
+    unsigned short pointWord;
+    memcpy(&pointWord, puzzle_guess, sizeof(pointWord));
+    pointWord |= 0x3ff;
+    memcpy(puzzle_guess, &pointWord, sizeof(pointWord));
+    memcpy(&pointWord, puzzle_guess + 2, sizeof(pointWord));
+    pointWord |= 0x3fff;
+    memcpy(puzzle_guess + 2, &pointWord, sizeof(pointWord));
+
+    startingNumHeroes = 0;
+    MysticalGardenFlags = 0;
+    MagicSpringFlags = 0;
+    DeadGuyFlags = 0;
+    LeanToFlags = 0;
+    numTowns = 0;
+    iDeathCountDown = -1;
+    extraPuzzlePieces = 0;
+    recruits[0] = -1;
+    recruits[1] = -1;
+    personality = 0;
+    memset(ai_pad_ec + 4, 0, 0x78);
+    for (int heroIndex = 0; heroIndex < 8; heroIndex++)
+        heroes[heroIndex] = -1;
+    memset(townIds, 0xff, sizeof(townIds));
+    isLocal = 0;
+    isHuman = 0;
+    quickCombat = 0;
+    placement_help_enabled = 1;
+    aiField_e8 = 0;
+    strcpy(cName, gUnnamed6a5d5c->entry->defaultPlayerName);
+    dpid = 0;
+    isHuman = 0;
+    isLocal = 0;
+}
 
 // E:\gamedcs\game.cpp:1323
 // One 64-bit bit test per owned town. The mask is bitNumber[13] at
@@ -760,14 +792,35 @@ int playerData::BuildingsOwned(int townType, int buildingId, int mageLevel)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:1900
 VA(0x004babd0, 0xDC)  // anchor-global, dc 0xa5ff0
 int playerData::NumOfGivenArtifact(int iWhichArtifact)
 {
-    // @stub
-}
+    int count = 0;
 
-#endif  // @carcass
+    for (int heroIndex = 0; heroIndex < numHeroes; heroIndex++) {
+        hero* currentHero = gpGame->GetHero(heroes[heroIndex]);
+        for (int slot = 0; slot < 19; slot++) {
+            if (currentHero->equipped[slot].artifactId == iWhichArtifact)
+                count++;
+        }
+    }
+
+    for (int townIndex = 0; townIndex < numTowns; townIndex++) {
+        town* currentTown = gpGame->GetTown(townIds[townIndex]);
+        if (currentTown->garrisonHeroId >= 0) {
+            hero* currentHero = gpGame->GetHero(currentTown->garrisonHeroId);
+            for (int slot = 0; slot < 19; slot++) {
+                if (currentHero->equipped[slot].artifactId == iWhichArtifact)
+                    count++;
+            }
+        }
+    }
+
+    return count;
+}
 
 // E:\gamedcs\game.cpp:1938
 VA(0x004bad80, 0x1A)  // anchor-global, dc 0xa6114
