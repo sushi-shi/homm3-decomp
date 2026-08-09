@@ -277,6 +277,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   keeps honest integer/aggregate spellings. `decomp-attempt-1` was surveyed
   read-only as requested and supplied no code or layout to this change.
 
+- **2026-08-09 — the final boat-frame source lifetime improves both hero
+  render twins.** Inlining the final `animFrame % GetNumFrames(...)`
+  expression into the draw call restores retail's right-to-left argument
+  schedule: facing and the screen bitmap are captured before the frame
+  division. `advManager::DrawHeroPart` rises 98.1571% -> 98.1667% and
+  `DrawHeroPartShadow` rises 98.1745% -> 98.1840%, with all 16/18 branches
+  and both exits still agreeing. A named flip and bitmap lifetime was
+  measured separately and regressed both routines to roughly 95.1%, so it
+  was reverted. The remaining shared block difference is VC6 spilling the
+  frame-count divisor where retail keeps it in ECX. Retail bytes selected
+  the retained source shape; no external implementation was used, and the
+  generated baseline remains build-owned.
+
 - **2026-08-09 — the primary AI-combat constructor is fully reconstructed
   at 99.9969%.** Its Dinkumware vector construction, hero/army ownership,
   wall penalty, mana and spellbook/orb gates, special-ground selector,
