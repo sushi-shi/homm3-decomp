@@ -760,14 +760,35 @@ int playerData::BuildingsOwned(int townType, int buildingId, int mageLevel)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:1900
 VA(0x004babd0, 0xDC)  // anchor-global, dc 0xa5ff0
 int playerData::NumOfGivenArtifact(int iWhichArtifact)
 {
-    // @stub
-}
+    int count = 0;
 
-#endif  // @carcass
+    for (int heroIndex = 0; heroIndex < numHeroes; heroIndex++) {
+        hero* currentHero = gpGame->GetHero(heroes[heroIndex]);
+        for (int slot = 0; slot < 19; slot++) {
+            if (currentHero->equipped[slot].artifactId == iWhichArtifact)
+                count++;
+        }
+    }
+
+    for (int townIndex = 0; townIndex < numTowns; townIndex++) {
+        town* currentTown = gpGame->GetTown(townIds[townIndex]);
+        if (currentTown->garrisonHeroId >= 0) {
+            hero* currentHero = gpGame->GetHero(currentTown->garrisonHeroId);
+            for (int slot = 0; slot < 19; slot++) {
+                if (currentHero->equipped[slot].artifactId == iWhichArtifact)
+                    count++;
+            }
+        }
+    }
+
+    return count;
+}
 
 // E:\gamedcs\game.cpp:1938
 VA(0x004bad80, 0x1A)  // anchor-global, dc 0xa6114

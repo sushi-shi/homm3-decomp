@@ -274,6 +274,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `type_point::operator==` identity. No external implementation body was used,
   and `match_baseline.tsv` remains generated solely by the full build.
 
+- **2026-08-09 — `playerData::NumOfGivenArtifact` reconstructed
+  byte-exact (220 bytes).** Retail first walks the player's signed hero count
+  and eight-id roster, resolves each id through the inline `game::GetHero`, and
+  counts matching ids across all nineteen equipped artifact records. It then
+  walks the signed town roster, resolves each town through inline `GetTown`,
+  skips negative garrison-hero ids, and repeats the same nineteen-slot scan for
+  each garrison hero. Retail proves both loops, both inline accessor null arms,
+  the 1,170-byte hero and 360-byte town indexing, the unaligned equipped row at
+  +0x12d, its eight-byte stride and nineteen-slot extent. Dreamcast supplies
+  the member identity and parameter type only. The implementation reuses the
+  admitted layouts and canonical accessors directly, applying the
+  HoMM2/Gruntz minimal-view and helper-boundary rules. No external
+  implementation body or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `generator::Initialize` reconstructed byte-exact
   (503 bytes).** Retail clears the four creature and population slots,
   initializes the guard army, selects either one creature from the class-1
