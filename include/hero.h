@@ -148,7 +148,11 @@ public:
     unsigned char patrolY;          // +0x45
     signed char patrolRadius;       // +0x46
     unsigned char facing;           // +0x47
-    char pad_048[0x5];
+    char pad_048[1];
+    // +0x49. ProcessHover uses this full signed DWORD as the movement
+    // allowance for each later day when converting a path cost to turns.
+    // Dreamcast names the corresponding field maxMobility.
+    int maxMovePoints;
     // +0x4d, the hero's remaining movement points. A full DWORD read
     // SIGNED: hero::GetMobilityFrame (0x4e5330) loads it whole, takes
     // the <= 0 arm with `jg`, and divides it by 100 with the signed

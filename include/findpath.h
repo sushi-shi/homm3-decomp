@@ -182,6 +182,20 @@ public:
     long get_travel_time(const army* current_army, long hex);
     // const per the DC public ?get_danger_value@searchArray@@QBAJUtype_point@@@Z.
     long get_danger_value(type_point point) const;  // 0x42ed30 (ai_player.obj)
+
+    // Header-inline in the DC roster and expanded by ProcessHover in retail.
+    pathCell* get_cell(type_point point, unsigned char flying)
+    {
+        if (!cellData)
+            return cellData;
+        return &cellData[((point.z * 2 + flying) * gMapHeight + point.y)
+                         * gMapWidth + point.x];
+    }
+
+    void clear_path()
+    {
+        result.erase(result.begin(), result.end());
+    }
 };
 
 // findpath.h:265 in the DC roster; no retail row of its own - /Ob2

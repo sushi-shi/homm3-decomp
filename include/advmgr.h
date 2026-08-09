@@ -153,6 +153,35 @@ enum e_looping_sound_id {
     LOOPING_SOUND_69
 };
 
+// Dreamcast CodeView publishes this complete cursor-frame domain. Retail's
+// ProcessHover independently corroborates every value it uses directly.
+enum type_adventure_cursor {
+    ADV_ARROW_POINTER = 0,
+    ADV_WAIT_POINTER = 1,
+    ADV_HERO_INFO_POINTER = 2,
+    ADV_TOWN_INFO_POINTER = 3,
+    ADV_WALK_POINTER = 4,
+    ADV_SWORD_POINTER = 5,
+    ADV_BOAT_POINTER = 6,
+    ADV_ANCHOR_POINTER = 7,
+    ADV_EXCHANGE_POINTER = 8,
+    ADV_EVENT_POINTER = 9,
+    ADV_MULTI_TURN_OFFSET = 6,
+    ADV_BOAT_EVENT_POINTER = 28,
+    ADV_SCROLL_POINTER = 32,
+    ADV_SCROLL_NORTH = 32,
+    ADV_SCROLL_NORTHEAST = 33,
+    ADV_SCROLL_EAST = 34,
+    ADV_SCROLL_SOUTHEAST = 35,
+    ADV_SCROLL_SOUTH = 36,
+    ADV_SCROLL_SOUTHWEST = 37,
+    ADV_SCROLL_WEST = 38,
+    ADV_SCROLL_NORTHWEST = 39,
+    ADV_HIGHLIGHTED_POINTER = 40,
+    ADV_DIMENSION_DOOR_POINTER = 41,
+    ADV_SKUTTLE_BOAT_POINTER = 42
+};
+
 class textEntryWidget;
 
 class NewfullMap;
@@ -174,10 +203,10 @@ DATA(0x00660428) extern TAdventureObjectTraitsView* gAdventureObjectTraits;
 // surrounding-cell bits.
 extern unsigned char giCloudType[256];
 
-// Retail .bss 0x69ccbc. GetCloudLookup tests this byte against the low byte
+// Retail .bss 0x69ccc4. GetCloudLookup tests this byte against the low byte
 // of every GetMapExtra result. Its role is proved by those xrefs; no public
 // retail name survives, so the spelling remains provisional.
-extern unsigned char gMapVisibilityBit;
+DATA(0x0069ccc4) extern unsigned char gMapVisibilityBit;
 
 // DC publishes this as `int gbInViewWorld`; retail corroborates the role:
 // its xrefs gate CompleteDraw's normal layers, ScanForHeroOrBoat, ViewPuzzle,
@@ -284,6 +313,13 @@ public:
         CURSOR_DEST_X2 = 10
     };
 
+    // cursorType is DC-attested as a plain int. Retail ProcessHover proves
+    // only this distinguished state, so retain an ordinal spelling rather
+    // than inventing a semantic domain name.
+    enum ECursorTypeState {
+        CURSOR_TYPE_8 = 8
+    };
+
     enum EObjectDrawLayer {
         OBJECT_DRAW_LAYER_HERO_FRONT = 1,
         OBJECT_DRAW_LAYER_HERO_BACK = 2,
@@ -315,7 +351,8 @@ public:
 
     char pad_038[4];
     unsigned char DebugShowFPS;  // +0x3c, DC name; retail FPS branch proves it
-    char pad_03d[3];
+    unsigned char DebugViewAll;  // +0x3d, bypasses hover ownership checks
+    char pad_03e[2];
     int advCommand;              // +0x40, set by map-hover actions
     TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
     unsigned short* routeArray;      // +0x48 (GetRouteArrayPtr)
@@ -367,7 +404,9 @@ public:
     CSprite* flagIcons[8];          // +0x16c, indexed by player owner
     CSprite* boatFlagIcons[3][8];   // +0x18c, [boat type][player owner]
     unsigned char drawCursor;     // +0x1ec, gates map cursor overlays
-    char pad_1ed[0x1b];
+    char pad_1ed[3];
+    int cursorType;               // +0x1f0, hover cursor-mode discriminator
+    char pad_1f4[0x14];
     int cursorDrawn;       // +0x208, cleared at the start of CompleteDraw
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
     char pad_20d[0xb];
@@ -403,6 +442,8 @@ public:
     void ForceNewHover();
     int ProcessWaitingHover(int mouseX, int mouseY);
     int ProcessHover(int mouseX, int mouseY);
+    type_adventure_cursor get_normal_cursor(NewmapCell* currCell);
+    void SeedTo(type_point target);
     int GetCloudLookup(int srcX, int srcY, int z);
     bool ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type,
                            TDrawParts (&parts)[6]);
