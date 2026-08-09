@@ -176,26 +176,14 @@ int soundManager::ConvertVolume(int iVolumeValue, int iVolumeType)
 }
 
 // E:\gamedcs\soundmgr.cpp:165
-// Residual (99.0%): ONE scheduling delta - retail emits
-// `mov byte ptr [esi+0x8c], dl` (MP3Playing = 0) BEFORE the compiler's
-// vptr store, ours after; every offset, both rep stosd counts and all
-// six scalar stores are otherwise byte-identical. Tried and rejected:
-// `status = 0` ahead of `MP3Playing = 0` (moves the [0x34] store up
-// instead, strictly worse); the memsets ahead of the scalar stores
-// (pushes the byte store past both rep stosd). The vptr store's
-// position is picked by VC6's post-optimizer scheduler, not by
-// statement order - no source spelling reached it.
-// CROSS-FUNCTION CLASS (2026-08-08): inputManager's ctor (0x4ec460,
-// 86.6%) shows the identical signature at much greater width - retail
-// sinks its vptr store past a whole 64-iteration clear loop while our CL
-// pins it right after the base ctor call. A probe there (hoisting a
-// scalar store above the loop) left the vptr store leading regardless,
-// so VPTR-STORE SCHEDULING is a compiler-generation residual class in
-// its own right, alongside the merged-return/stale-CL-generation one.
+// EXACT 2026-08-09: MP3Playing belongs in the member-initializer list.
+// That construction-phase distinction makes VC6 emit its byte clear before
+// the derived vptr store, exactly as retail does; writing the same assignment
+// in the body schedules it after the vptr and plateaus at 99.0312%.
 VA(0x00599760, 0x67)  // anchor-global, dc 0x14b1ec
 soundManager::soundManager()
+    : MP3Playing(0)
 {
-    MP3Playing = 0;
     status = 0;
     memset(gAilDriverState, 0, sizeof(gAilDriverState));
     memset(&field_40, 0, sizeof(field_40) + sizeof(sampleHandles) + sizeof(field_7c));

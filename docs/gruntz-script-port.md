@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `soundManager::soundManager` exact via construction-phase
+  evidence.** The former 99.0312% body differed only in whether
+  `MP3Playing = 0` appeared before or after the compiler-generated derived
+  vptr store. Moving that byte initialization from the constructor body to
+  the member-initializer list makes VC6 schedule it before the vptr, matching
+  retail exactly while leaving both `rep stosd` regions and all other scalar
+  stores unchanged. Body-statement reordering had been inert because it did
+  not change the C++ construction phase. This applies the HoMM2/Gruntz rule
+  to test source-semantic lifetime/phase distinctions before treating a
+  one-instruction residual as register noise. No external implementation or
+  `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `armyGroup::Merge` raised from 58.0726% to 79.5363%
   by restoring its two local working objects.** Dreamcast CodeView metadata
   names the 56-byte stack objects `ag1` and `ag2`; retail bytes independently
