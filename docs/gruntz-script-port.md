@@ -260,6 +260,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::ProcessHover` reconstructed at 69.3789%.**
+  The 2,328-byte retail body now delegates non-local turns to the waiting
+  hover path; caches and visibility-checks the map tile; resolves rollover,
+  owned hero/town and allied shipyard cursors; clears stale paths when terrain
+  and boat state reject the destination; seeds and indexes the retail
+  30-byte path grid; converts movement cost to a capped four-day cursor; and
+  dispatches the anchor, boat, garrison, hero, monster and town cursor cases.
+  The outside-map arm preserves scroll pointers only in the 16-pixel edge
+  zone. Retail proves every predicate, cursor/command ordinal, path formula,
+  object case and field offset. Dreamcast CodeView supplies only names and
+  layouts: `DebugViewAll` +0x3d, `cursorType` +0x1f0, hero `maxMobility`
+  (adapted as `maxMovePoints`) +0x49, the garrison army at +4, and the inline
+  path helpers. The remaining delta is VC6 scheduling around the packed hero
+  location, Dinkumware result-vector erase and shared exit blocks. No external
+  implementation body was used, and `match_baseline.tsv` remains generated
+  solely by the full build.
+
 - **2026-08-09 — `advManager::ProcessWaitingHover` reconstructed at
   74.8967%.** Retail first bounds the pointer against the adventure map,
   converts its pixels to cached tile offsets and a packed map point, and
