@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the retail-only town artifact-growth helper is reconstructed
+  to 99.8523%.** The 600-byte member resolves the town's garrison and visiting
+  heroes (including the packed-coordinate map-cell fallback), then applies the
+  tier-two through tier-six growth artifacts with bonuses 5, 4, 3, 2, and 1.
+  All 36 control-flow blocks and every instruction agree; the sole residue is
+  an independent map-size load scheduled one instruction before retail's
+  packed-coordinate load. Source declaration order recovered retail's EBX game
+  cache, argument-slot hero spill, EDI accumulator, and exact switch layout.
+  No external implementation was used.
+
 - **2026-08-09 — the primary AI-combat constructor is fully reconstructed
   at 99.9969%.** Its Dinkumware vector construction, hero/army ownership,
   wall penalty, mana and spellbook/orb gates, special-ground selector,
