@@ -331,8 +331,9 @@ public:
     float get_aggression() const { return field_47a; }
 
     // DC-attested inline accessor (ai_combat.h roster, dc 0x2c668).
-    // cast_spell's retail expansion fixes the clamp and signed-byte source:
-    // primary skills are confined to 1..99 before spell power is used.
+    // cast_spell and initialize_creatures fix the clamp and signed-byte
+    // source: attack/defense are confined to 0..99, while power/knowledge
+    // use 1 as their floor.
     int GetPrimarySkill(int skill) const
     {
         signed char value = stats[skill];
@@ -340,7 +341,7 @@ public:
             return 99;
         if (value > 0)
             return value;
-        return 1;
+        return skill > 1 ? 1 : 0;
     }
 
     unsigned char HasArtifact(int whichArtifact);

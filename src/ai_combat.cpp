@@ -27,7 +27,10 @@
 // __declspec(nothrow) redeclaration in include/ai_combat.h. That one
 // declaration is what takes both entry points from 96-98% to exact.
 #include <va.h>
+#include <algorithm>
+#include <math.h>
 #include <stdlib.h>
+#include <string.h>
 #include "ai_combat.h"
 #include "ai_player.h"
 #include "ai_tactical.h"
@@ -99,6 +102,31 @@ const unsigned int AI_SPELL_CLASS_MASK = 0x1f8000;
 // channels one fifth of the spent mana to its hero (Familiar).
 const int ARTIFACT_RECANTERS_CLOAK = 0x53;
 const int CREATURE_FAMILIAR = 0x2b;
+const int SECONDARY_SKILL_TACTICS = 19;
+
+// Attribute roles byte-proven by initialize_creatures. Kept TU-local for
+// the same shared-header codegen reason as the cast_spell constants above.
+const unsigned int CTA_FLYING = 0x2;
+const unsigned int CTA_SHOOTER = 0x4;
+const unsigned int CTA_NO_MELEE_PENALTY = 0x1000;
+const unsigned int CTA_DOUBLE_RANGED_VALUE = 0x8000;
+
+// armyGroup deliberately models its mutable roster as int while the
+// consumers' domain is TCreatureType. This bit-preserving inline bridge
+// avoids lying with an enum cast; VC6 reduces the four-byte copy to a move.
+inline TCreatureType creature_type_from_int(int value)
+{
+    TCreatureType creature;
+    memcpy(&creature, &value, sizeof creature);
+    return creature;
+}
+
+inline type_speed_catagory speed_catagory_from_long(long value)
+{
+    type_speed_catagory catagory;
+    memcpy(&catagory, &value, sizeof catagory);
+    return catagory;
+}
 
 // Retail .data 0x6604d0: five doubles selected by the game's signed
 // difficulty byte. AI_value_of_combat uses the row when either combat
@@ -303,16 +331,111 @@ type_AI_combat_data::type_AI_combat_data(const hero* new_hero, const armyGroup* 
     initialize_creatures(base_modifier, enemy_hero);
 }
 
-#if 0  // @carcass
+// E:\gamedcs\ai_combat.cpp:381
+// Retail expands every use and carries no standalone row.
+inline type_speed_catagory type_AI_combat_data::get_catagory(
+    TCreatureType creature,
+    long speed)
+{
+    unsigned int attributes = akCreatureTypeTraits[creature].attributes;
+    if (attributes & CTA_SHOOTER)
+        return const_ranged;
+
+    long catagory = (speed + 2 * (7 - tactics_advantage)) / speed;
+    if (catagory > const_slow)
+        catagory = const_slow;
+    if (penalty_distance > catagory && !(attributes & CTA_FLYING))
+        catagory = penalty_distance;
+    return speed_catagory_from_long(catagory);
+}
 
 // E:\gamedcs\ai_combat.cpp:221
+// Retail has no out-of-line get_catagory row: the helper below expands into
+// this function and OPT:REF removes its body.
 VA(0x00424120, 0x66E)  // dc-callgraph unique, dc 0x29f58
 void type_AI_combat_data::initialize_creatures(double base_modifier, const hero* enemy_hero)
 {
-    // @stub
-}
+    tactics_advantage = 0;
+    if (my_hero)
+        tactics_advantage = my_hero->skillLevel[SECONDARY_SKILL_TACTICS];
+    if (enemy_hero) {
+        tactics_advantage -= enemy_hero->skillLevel[SECONDARY_SKILL_TACTICS];
+        if (tactics_advantage < 0)
+            tactics_advantage = 0;
+    }
 
-#endif  // @carcass
+    double force_modifier = base_modifier;
+    if (my_hero) {
+        long attack = my_hero->GetPrimarySkill(0);
+        long defense = my_hero->GetPrimarySkill(1);
+        if (enemy_hero) {
+            long enemy_defense = enemy_hero->GetPrimarySkill(1);
+            attack -= _cpp_min(attack, enemy_defense);
+            long enemy_attack = enemy_hero->GetPrimarySkill(0);
+            defense -= _cpp_min(defense, enemy_attack);
+        }
+        force_modifier = sqrt(attack * 0.05 + 1.0)
+                         * sqrt(defense * 0.05 + 1.0)
+                         * base_modifier;
+    }
+
+    double archery_modifier = 0.2;
+    if (my_hero)
+        archery_modifier = my_hero->GetArcheryFactor() / 5.0;
+
+    long speed_bonus = 0;
+    if (my_hero)
+        speed_bonus = my_hero->get_combat_speed_bonus();
+
+    total_hit_points = 0;
+    for (long i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        int creature_id = my_army->armies[i];
+        if (creature_id == CREATURE_NONE)
+            continue;
+
+        TCreatureType creature = creature_type_from_int(creature_id);
+        const TCreatureTypeTraits& traits = akCreatureTypeTraits[creature_id];
+        double hit_points = traits.hitPoints;
+        if (my_hero) {
+            long hit_bonus = my_hero->get_hit_point_bonus(creature_id);
+            hit_points += hit_bonus;
+        }
+
+        type_monster_data unit;
+        unit.slot = i;
+        unit.creature = creature;
+        unit.count = my_army->numTroops[i];
+        unit.original_count = unit.count;
+        unit.speed = traits.speed + speed_bonus;
+        unit.hit_points = static_cast<long>(
+            sqrt(hit_points / traits.hitPoints)
+            * traits.baseFightValue * force_modifier);
+        unit.total_hit_points = unit.hit_points * unit.count;
+        unit.catagory = get_catagory(creature, unit.speed);
+        unit.melee_value = 0.2;
+        unit.final_melee_value = 1.0;
+        unit.ranged_value = 0.0;
+        unit.damage_modifier = static_cast<double>(unit.total_hit_points)
+                               / hit_points;
+
+        if (unit.catagory == const_ranged) {
+            if (!(traits.attributes & CTA_NO_MELEE_PENALTY)) {
+                unit.melee_value = 0.1;
+                unit.final_melee_value = 0.7;
+            }
+            unit.ranged_value = archery_modifier;
+            if (traits.attributes & CTA_DOUBLE_RANGED_VALUE)
+                unit.ranged_value *= 2.0;
+            if (wall_penalty && creature != CREATURE_ARCH_MAGE)
+                unit.ranged_value /= 2.0;
+        }
+
+        total_hit_points += unit.total_hit_points;
+        monsters.push_back(unit);
+    }
+
+    std::sort(monsters._First, monsters._Last);
+}
 
 // E:\gamedcs\ai_combat.cpp:332
 // Residual (70.7%): our CL parks 0 in ebx for the six zero constants

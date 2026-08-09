@@ -91,6 +91,10 @@ struct type_monster_data {
     long get_spell_damage(SpellID spell, const hero* casting_hero,
                           const hero* target_hero, long damage) const;
     long take_damage(long damage);
+    bool operator<(const type_monster_data& arg) const
+    {
+        return hit_points < arg.hit_points;
+    }
     // No retail row of its own - /Ob2 inlined every call site and
     // OPT:REF dropped the out-of-line COMDAT, so ai_combat.cpp defines
     // it `inline` (see the note there).
@@ -177,6 +181,7 @@ public:
     type_AI_combat_data(const type_AI_combat_data& other);
     void initialize_creatures(double base_modifier, const hero* enemy_hero);
     void check_wall_archery_penalty(const town* enemy_town);
+    type_speed_catagory get_catagory(TCreatureType creature, long speed);
     void adjust_army(unsigned char dismiss_hero);
     long get_fastest_speed() const;
     long get_next_chain_lightning_target(long excluded,
