@@ -36,6 +36,7 @@
 // rationale as herospec.h.
 #include "artifact.h"
 #include "exec.h"
+#include "findpath.h"
 #include "town.h"
 #undef HOMM3_HERO_HIRE_VIEW
 #undef HOMM3_HERO_CLASS_NAME_VIEW
@@ -2546,14 +2547,34 @@ unsigned char hero::IsInIdentifyRange(const type_point* location)
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6406
+// Compares remaining movement against the cheapest cost of the current cell.
+// Boat movement disables flight and water-walking overrides; both arms carry
+// Pathfinding and the Nomad terrain exemption into MinimumTerrainCost.
 VA(0x004e5f30, 0xBF)  // anchor-global, dc 0xd5644
 unsigned char hero::IsMobile()
 {
-    // @stub
+    type_point point;
+    point.x = x;
+    point.y = y;
+    point.z = z;
+
+    NewmapCell* cell = gpAdvManager->GetCell(point);
+    int pathfinding = skillLevel[eSecSkillPathfinding];
+    int cost;
+    if (flags & 0x40000) {
+        cost = MinimumTerrainCost(
+            cell, movePoints, pathfinding, -1, -1,
+            army.get_creature_total(CREATURE_NOMAD) > 0);
+    } else {
+        cost = MinimumTerrainCost(
+            cell, movePoints, pathfinding, flightLevel, waterWalkLevel,
+            army.get_creature_total(CREATURE_NOMAD) > 0);
+    }
+    return movePoints >= cost;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6428
 // FULLY DECODED, DELIBERATELY LEFT AS A STUB - the reconstruction is

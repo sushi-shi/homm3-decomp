@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `hero::IsMobile` admitted byte-exact (191 bytes).**
+  Retail packs the hero's current point, resolves its map cell, and compares
+  remaining movement at +0x4d with `MinimumTerrainCost`. Pathfinding comes
+  from signed secondary-skill slot zero and the final cost flag is exactly the
+  presence of a Nomad in the hero's army. While aboard a boat, flight and
+  water-walking are both forced to -1; otherwise their +0x112/+0x116 mastery
+  values pass through. This names `MinimumTerrainCost`'s already-proven final
+  argument and matches the shared retail call tail exactly. No external
+  implementation body was used.
+
 - **2026-08-09 — `hero::IsInIdentifyRange` reconstructed to 98.6813%
   (284 bytes).** Retail proves that the inlined +0x129/Rogue mastery getter
   selects the Visions mastery-bonus row, which is multiplied by clamped spell
