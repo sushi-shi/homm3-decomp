@@ -556,14 +556,147 @@ void advManager::DrawRolloverText(char* text)
                                   rollover->width, rollover->height);
 }
 
-#if 0  // @carcass
+void get_creature_bank_help_text(char* buffer, NewmapCell* cell,
+    type_creature_bank_type type, long player_id, const char* separator,
+    unsigned char show_full_list);
+void SetShrineHelpText(char* buffer, hero* current_hero, NewmapCell* cell,
+    GlobalInfoFlags type, const char* separator_1, const char* separator_2);
+void SetTreeHelpText(char* buffer, hero* current_hero, NewmapCell* cell,
+    const char* separator_1, const char* separator_2);
+void set_witch_hut_help_text(char* buffer, hero* current_hero,
+    NewmapCell* cell, const char* separator_1, const char* separator_2);
 
 // E:\gamedcs\advmgr.cpp:3146
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
-    // @stub
+    char tempText[500];
+    int player = gpGame->GetLocalPlayerGamePos();
+    playerData* thisPlayer = gpGame->GetLocalPlayer();
+    hero* currentHero;
+    if (thisPlayer->currHeroId != -1)
+        currentHero = &gpGame->heroes[thisPlayer->currHeroId];
+    else
+        currentHero = 0;
+
+    type_cell_adjuster adjuster = { 0, 0, 0 };
+    NewmapCell* cell = adjuster.get_trigger_cell(testCell, rx, ry);
+    const char* separator = DATA_COMPGEN(
+        0x00660330, rolloverCommaSeparator, ", ");
+    const char* visitedFormat = DATA_COMPGEN(
+        0x0066034c, rolloverVisitedFormat, ", %s");
+
+#define APPEND_VISIT_TEXT(isVisited)                                      \
+    sprintf(tempText, visitedFormat,                                     \
+        (isVisited) ? gUnnamed6a5d5c->entry->visitedObjectText            \
+                    : gUnnamed6a5d5c->entry->unvisitedObjectText);        \
+    strcat(gText, tempText)
+
+#define SET_VISITED_ROLLOVER(objectType, infoType, heroFlags)             \
+    case objectType:                                                      \
+        strcpy(gText, gAdventureObjectNames[objectType]);                 \
+        if (cell->is_trigger) {                                           \
+            if (gpGame->GetInfoFlag(infoType, player)) {                  \
+                sprintf(tempText, visitedFormat,                          \
+                        gGlobalInfoFlagNames[infoType]);                   \
+                strcat(gText, tempText);                                  \
+            }                                                             \
+            if (currentHero) {                                            \
+                APPEND_VISIT_TEXT(heroFlags);                             \
+            }                                                             \
+        }                                                                 \
+        break
+
+    switch (cell->type) {
+    case ARENA:
+        strcpy(gText, gAdventureObjectNames[ARENA]);
+        if (cell->is_trigger && currentHero) {
+            unsigned long arenaBit = 1UL << (cell->extraInfo & 0x1f);
+            APPEND_VISIT_TEXT(currentHero->ArenaFlags & arenaBit);
+        }
+        break;
+    SET_VISITED_ROLLOVER(BUOY, BuoyInfo,
+        currentHero->flags & 0x4);
+    SET_VISITED_ROLLOVER(CLOVER_FIELD, CloverFieldInfo,
+        currentHero->flags & 0x8);
+    case CREATURE_BANK:
+        union {
+            int value;
+            type_creature_bank_type type;
+        } bankType;
+        bankType.value = cell->objectIndex;
+        get_creature_bank_help_text(gText, cell,
+            bankType.type, player, separator, 0);
+        break;
+    case DERELICT_SHIP:
+        get_creature_bank_help_text(gText, cell, CREATURE_BANK_DERELICT,
+            player, separator, 0);
+        break;
+    case DRAGON_CITY:
+        get_creature_bank_help_text(gText, cell, CREATURE_BANK_DRAGON,
+            player, separator, 0);
+        break;
+    SET_VISITED_ROLLOVER(DEFENSE_TOWER, DefenseTowerInfo,
+        currentHero->DefenseTowerFlags
+        & (1UL << (cell->extraInfo & 0x1f)));
+    SET_VISITED_ROLLOVER(FAERIE_RING, FaerieRingInfo,
+        currentHero->flags & 0x2000);
+    SET_VISITED_ROLLOVER(FOUNTAIN_OF_YOUTH, FountainOfYouthInfo,
+        currentHero->flags & 0x4000);
+    SET_VISITED_ROLLOVER(GARDEN_OF_REVELATION, GardenOfRevelationInfo,
+        currentHero->GardenOfRevelationFlags
+        & (1UL << (cell->extraInfo & 0x1f)));
+    SET_VISITED_ROLLOVER(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
+        currentHero->flags & (0x02000000UL | 0x10UL));
+    SET_VISITED_ROLLOVER(LIBRARY, LibraryInfo,
+        currentHero->LibraryFlags
+        & (1UL << (cell->extraInfo & 0x1f)));
+    case SEPULCHER:
+        get_creature_bank_help_text(gText, cell, CREATURE_BANK_SEPULCHER,
+            player, separator, 0);
+        break;
+    case SHIPWRECK:
+        get_creature_bank_help_text(gText, cell, CREATURE_BANK_SHIPWRECK,
+            player, separator, 0);
+        break;
+    case SHRINE1:
+        SetShrineHelpText(gText, currentHero, cell, Shrine1Info,
+                          separator, separator);
+        break;
+    case SHRINE2:
+        SetShrineHelpText(gText, currentHero, cell, Shrine2Info,
+                          separator, separator);
+        break;
+    case SHRINE3:
+        SetShrineHelpText(gText, currentHero, cell, Shrine3Info,
+                          separator, separator);
+        break;
+    case TREE_OF_KNOWLEDGE:
+        SetTreeHelpText(gText, currentHero, cell, separator, separator);
+        break;
+    case WITCH_HUT:
+        set_witch_hut_help_text(gText, currentHero, cell,
+                                separator, separator);
+        break;
+    default: {
+        TAdventureObjectType special = cell->get_special_terrain();
+        if (special != NOTHING)
+            strcpy(gText, gAdventureObjectNames[special]);
+        else if (cell->type >= NOTHING && cell->type < 232)
+            strcpy(gText, gAdventureObjectNames[cell->type]);
+        else
+            gText[0] = 0;
+        break;
+    }
+    }
+
+#undef SET_VISITED_ROLLOVER
+#undef APPEND_VISIT_TEXT
+
+    DrawRolloverText(gText);
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 

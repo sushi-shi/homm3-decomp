@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the first `advManager::SetRolloverText` slice is
+  reconstructed at 29.4501%.** Retail's 216-byte object dispatch table fixes
+  every routed adventure-object id and its handler entry; the reconstructed
+  slice admits the common player/current-hero and trigger-cell setup, the
+  generic special-terrain/object-name fallback, Arena visitation, eight
+  global/hero visitation arms, all five creature-bank variants, the three
+  shrines, Tree of Knowledge, Witch Hut, and the common rollover draw. The
+  remaining specialized handlers intentionally retain the retail fallback
+  behavior for now rather than acquiring guessed details. The retail
+  disassembly, relocations, four format literals, switch bytes, and measured
+  objdiff delta are the correctness evidence; Dreamcast CodeView contributes
+  only the function signature and already-admitted enum/member names. The
+  full build raises whole-linked fuzzy coverage from 42.699493% to 43.39%
+  without reducing the 592 exact functions.
+
 - **2026-08-09 — `advManager::ProcessSearch` reconstructed at 91.3120%.**
   The 1,453-byte retail Grail-digging command now reproduces all 32 branches:
   full-movement and backpack gates; AI puzzle-guess invalidation; water and
