@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `type_AI_player::make_gift` rises 71.8739% -> 79.8885%
+  by restoring assignment in the multi-resource request arm.** Retail's
+  single-resource arm calls the three-argument string append overload, but
+  the multi-resource arm contains the inlined self-assignment, shared-buffer,
+  and growth paths of `basic_string::assign`. Changing only that arm from
+  `+=` to `=` recovers seven blocks and four branches. Direct three-argument
+  assign, a named temporary, and depth-one/broader inline probes regressed or
+  were byte-inert and were reverted. The remaining three missing branches
+  belong to retail's inlined single-request temporary cleanup, which cannot
+  yet be separated from the deliberately out-of-line append without
+  disturbing the surrounding allocation. Retail bytes alone selected the
+  semantic correction; no external implementation was used.
+
 - **2026-08-09 — the adventure-rendering worktree was approved for
   integration into `master`; narrow views preserve both lanes' optimizer
   states.** The initial semantic merge placed `CAdvPopup`, `chatEdit`, and
