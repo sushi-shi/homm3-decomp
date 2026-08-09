@@ -3109,16 +3109,17 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
 }
 
 // E:\gamedcs\advmgr.cpp:7543
-// RETAIL-RECONSTRUCTED 2026-08-09 (15.9777%). The current QuickInfo slices
+// RETAIL-RECONSTRUCTED 2026-08-09 (37.2317%). The current QuickInfo slices
 // restore point validation and shroud handling, trigger-cell resolution,
 // the shared creature-bank/shrine/tree/witch-hut text helpers, the default
-// object name, border/generator/resource cases, optional map coordinates,
-// quick-view sizing, screen-edge clamps and dialog invocation.
+// object name, border/generator/resource and visited-state cases, optional
+// map coordinates, sizing, screen-edge clamps and dialog invocation.
 // Retail proves the control flow, constants, field offsets and helper calls;
 // Dreamcast CodeView supplies only the function and local identities.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
+    char tempText[512];
     playerData* player = gpGame->GetLocalPlayer();
     int iPlayer = gpGame->GetLocalPlayerGamePos();
     int playerBit = 1 << iPlayer;
@@ -3153,13 +3154,73 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 0x006603b0, quickInfoSeparator, "\n\n");
             const char* newLine = DATA_COMPGEN(
                 0x006603bc, quickInfoNewLine, "\n");
+            const char* visitFormat = DATA_COMPGEN(
+                0x006603c4, quickInfoVisitFormat, "\n\n%s");
+
+#define SET_VISITED_QUICKINFO(objectType, condition)                     \
+            case objectType:                                             \
+                strcpy(gText, gAdventureObjectNames[objectType]);         \
+                if (cell->is_trigger && currHero) {                       \
+                    sprintf(tempText, visitFormat,                        \
+                        (condition)                                       \
+                            ? gUnnamed6a5d5c->entry->visitedObjectText    \
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);\
+                    strcat(gText, tempText);                              \
+                }                                                         \
+                break
 
             switch (cell->type) {
+            case ARENA:
+                strcpy(gText, gAdventureObjectNames[ARENA]);
+                if (cell->is_trigger && currHero) {
+                    unsigned long arenaBit =
+                        1UL << (cell->extraInfo & 0x1f);
+                    sprintf(tempText, visitFormat,
+                        currHero->ArenaFlags & arenaBit
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
+                break;
             case BORDER_GUARD:
                 sprintf(gText, DATA_COMPGEN(
                     0x00660344, rolloverBorderFormat, "%s %s"),
                     gBorderColorNames[cell->objectIndex],
                     gAdventureObjectNames[cell->type]);
+                break;
+            case BORDER_TENT:
+                sprintf(gText, DATA_COMPGEN(
+                    0x00660344, rolloverBorderFormat, "%s %s"),
+                    gBorderColorNames[cell->objectIndex],
+                    gAdventureObjectNames[BORDER_TENT]);
+                if (cell->is_trigger) {
+                    sprintf(tempText, visitFormat,
+                        gpGame->borderTentVisitFlags[cell->objectIndex]
+                            & playerBit
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
+                break;
+            case BUOY:
+                strcpy(gText, gAdventureObjectNames[BUOY]);
+                if (cell->is_trigger && currHero) {
+                    sprintf(tempText, visitFormat,
+                        currHero->flags & 0x4
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
+                break;
+            case CLOVER_FIELD:
+                strcpy(gText, gAdventureObjectNames[CLOVER_FIELD]);
+                if (cell->is_trigger && currHero) {
+                    sprintf(tempText, visitFormat,
+                        currHero->flags & 0x8
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
                 break;
             case CREATURE_BANK: {
                 union {
@@ -3206,6 +3267,12 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 }
                 break;
             }
+            SET_VISITED_QUICKINFO(DEAD_GUY,
+                player->DeadGuyFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(DEFENSE_TOWER,
+                currHero->DefenseTowerFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
             case DERELICT_SHIP:
                 get_creature_bank_help_text(
                     gText, cell, CREATURE_BANK_DERELICT,
@@ -3216,6 +3283,45 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     gText, cell, CREATURE_BANK_DRAGON,
                     gUnnamed69778c, separator, 1);
                 break;
+            SET_VISITED_QUICKINFO(FAERIE_RING,
+                currHero->flags & 0x2000);
+            SET_VISITED_QUICKINFO(FOUNTAIN_OF_YOUTH,
+                currHero->flags & 0x4000);
+            SET_VISITED_QUICKINFO(GARDEN_OF_REVELATION,
+                currHero->GardenOfRevelationFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(IDOL_OF_FORTUNE,
+                currHero->flags & (0x02000000UL | 0x10UL));
+            SET_VISITED_QUICKINFO(LEAN_TO,
+                player->LeanToFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(LIBRARY,
+                currHero->LibraryFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(MAGIC_SCHOOL,
+                currHero->MagicSchoolFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(MAGIC_SPRING,
+                (player->MagicSpringFlags
+                    & (1UL << (cell->extraInfo & 0x1f)))
+                    && !(cell->extraInfo & 0x40));
+            SET_VISITED_QUICKINFO(MAGIC_WELL,
+                currHero->flags & 0x1);
+            SET_VISITED_QUICKINFO(MERC_CAMP,
+                currHero->MercCampFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(MERMAID,
+                currHero->flags & 0x8000);
+            SET_VISITED_QUICKINFO(OASIS,
+                currHero->flags & 0x80);
+            SET_VISITED_QUICKINFO(POWER_SCHOOL,
+                currHero->PowerSchoolFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(RALLY_FLAG,
+                currHero->flags & 0x10000);
+            case RESOURCE:
+                strcpy(gText, gResourceNames[cell->objectIndex]);
+                break;
             case SEPULCHER:
                 get_creature_bank_help_text(
                     gText, cell, CREATURE_BANK_SEPULCHER,
@@ -3225,9 +3331,6 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 get_creature_bank_help_text(
                     gText, cell, CREATURE_BANK_SHIPWRECK,
                     gUnnamed69778c, separator, 1);
-                break;
-            case RESOURCE:
-                strcpy(gText, gResourceNames[cell->objectIndex]);
                 break;
             case SHRINE1:
                 SetShrineHelpText(gText, currHero, cell, Shrine1Info,
@@ -3241,10 +3344,24 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 SetShrineHelpText(gText, currHero, cell, Shrine3Info,
                                   newLine, separator);
                 break;
+            SET_VISITED_QUICKINFO(SIREN,
+                currHero->flags & 0x100000);
+            SET_VISITED_QUICKINFO(STABLES,
+                currHero->flags & 0x2);
+            SET_VISITED_QUICKINFO(TEMPLE,
+                currHero->flags & (0x04000000UL | 0x100UL));
+            SET_VISITED_QUICKINFO(TRAINING_GROUNDS,
+                currHero->TrainingGroundsFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
             case TREE_OF_KNOWLEDGE:
                 SetTreeHelpText(gText, currHero, cell,
                                 newLine, separator);
                 break;
+            SET_VISITED_QUICKINFO(WAR_SCHOOL,
+                currHero->WarSchoolFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(WATERING_HOLE,
+                currHero->flags & 0x40);
             case WITCH_HUT:
                 set_witch_hut_help_text(gText, currHero, cell,
                                         newLine, separator);
@@ -3253,6 +3370,8 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 strcpy(gText, gAdventureObjectNames[cell->type]);
                 break;
             }
+
+#undef SET_VISITED_QUICKINFO
         }
     }
 
