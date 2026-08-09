@@ -469,6 +469,7 @@ game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
 game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
+game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0
 game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	99.9706	99.9706	99.9706	0xca3b0
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0
 game	?FindTown@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbaa10
@@ -510,7 +511,6 @@ game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0
 game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
 game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50
-game	ComputeUALoc	0.0000	0.0000	0.0000	0xbaed0
 game	HeroExtra_HeroExtra	0.0000	0.0000	0.0000	0xce4b0
 game	ImmMouseWindowMoved	0.0000	0.0000	0.0000	0xb6950
 game	InitImmMouse	0.0000	0.0000	0.0000	0xb6890
