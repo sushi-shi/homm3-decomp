@@ -819,6 +819,7 @@ public:
     int Load(TAbstractFile* infile);              // 0x4bcda0
 #ifdef HOMM3_GAME_OBJ_DECLS
     int Save(TAbstractFile* outfile);             // 0x4be3f0
+    int ComputeDailyGold(int player, unsigned char includeSilo);
 #endif
     void clear_event_records();                   // 0x4a0f10
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
@@ -880,6 +881,8 @@ public:
 // player's record). Names provisional. 2,264 dir32 references
 // image-wide make gpGame the central object.
 DATA(0x006994e8) extern game* gpGame;
+DATA(0x00677978) extern int mine_production[6];
+DATA(0x00677998) extern double production_handicap[];
 DATA(0x0067814c) extern int gHeroGoldCost;
 DATA(0x0069774c) extern unsigned char gbUnk69774c;
 // Save version 41 added this signed-byte session value. game::Load owns the

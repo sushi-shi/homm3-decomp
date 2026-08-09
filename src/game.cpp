@@ -42,6 +42,7 @@
 #include "cursor.h"
 #include "advmgr_objects.h"
 #include "puzzlewindow.h"
+#include "herospec.h"
 
 // The generator save format stores creature ids as bytes while the live
 // roster uses TCreatureType. Keep the representation bridge explicit without
@@ -57,6 +58,15 @@ inline TCreatureType creature_type_from_int(int value)
 }
 
 const int SAVED_CREATURE_NONE = 0xff;
+
+const int PRODUCTION_ARTIFACT_CRYSTAL = 0x6d;
+const int PRODUCTION_ARTIFACT_GEMS = 0x6e;
+const int PRODUCTION_ARTIFACT_MERCURY = 0x6f;
+const int PRODUCTION_ARTIFACT_ORE = 0x70;
+const int PRODUCTION_ARTIFACT_SULFUR = 0x71;
+const int PRODUCTION_ARTIFACT_WOOD = 0x72;
+const int PRODUCTION_ARTIFACT_CORNUCOPIA = 0x8c;
+const int PRODUCTION_CREATURE_CRYSTAL_DRAGON = 0x85;
 
 // Retail keeps the string stream helpers as free /Gr functions: the file
 // arrives in ECX and the destination string in EDX.  Dreamcast's game-member
@@ -428,28 +438,141 @@ void generator::Grow(int unusedArg)
 // have to sit between 0x4b9ded and 0x4b9df0.
 // ---------------------------------------------------------------------
 
-// E:\gamedcs\game.cpp:627
-// No retail row: the byte after SaveBoatPool's caller chain leaves no
-// slot, and calculate_production is the sole caller -> /Ob2 inlined it.
-DC_ONLY(0xa341c, 0x58)
-long get_day_bonus(EGameResource resource, long week_bonus, long day)
+#endif  // @carcass
+
+static long get_day_bonus(int resource, long weekBonus, long day)
 {
-    // @stub
+    resource;
+    long result = weekBonus / 7;
+    long remainder = weekBonus % 7;
+    if ((day + 6) % 7 < remainder)
+        ++result;
+    return result;
 }
 
 // E:\gamedcs\game.cpp:643
-// `ret` with no stack args (thiscall, no parameters) - the DC row is
-// p=1, i.e. `this` only. Body sweeps the 8 player slots at
-// [game+0x1f636]/[game+0x20bd8] (stride 0x168) and then the 64-byte
-// mine records at [game+0x4e38c].
-VA(0x004b8af0, 0x573)  // arity + mine-vector, dc 0xa3474
+VA(0x004b8af0, 0x573)
 void game::calculate_production()
 {
-    // @stub
+    int playerId;
+    for (playerId = 0; playerId < 8; ++playerId) {
+        if (!playerDisabled[playerId])
+            memset(players[playerId].turnProductionResource, 0,
+                   sizeof(players[playerId].turnProductionResource));
+    }
+
+    unsigned int mineId;
+    for (mineId = 0; mineId < mines.size(); ++mineId) {
+        mine* currentMine = &mines[mineId];
+        if (currentMine->playerOwner >= 0 && currentMine->type < GOLD) {
+            players[currentMine->playerOwner]
+                .turnProductionResource[currentMine->type] +=
+                    mine_production[currentMine->type];
+        }
+    }
+
+    unsigned char crystalDragonIncome[8] = {0};
+    unsigned int townId;
+    for (townId = 0; townId < towns.size(); ++townId) {
+        town* currentTown = &towns[townId];
+        if (currentTown->owner < 0)
+            continue;
+
+        playerData* currentPlayer = &players[currentTown->owner];
+        long* production = currentPlayer->turnProductionResource;
+        if (currentTown->built & bitNumber[MARKETPLACE_SILO_ID]) {
+            int* siloIncome = currentTown->get_silo_income();
+            for (int i = 0; i < NUM_RESOURCES; ++i)
+                production[i] += siloIncome[i];
+        }
+
+        if (const_cast<armyGroup&>(currentTown->get_army()).get_creature_total(
+                creature_type_from_int(PRODUCTION_CREATURE_CRYSTAL_DRAGON)) > 0)
+            crystalDragonIncome[currentTown->owner] = 1;
+
+        if (currentTown->type == TOWN_RAMPART && field_1f63e == 1
+            && (currentTown->active & bitNumber[EXTRA_1_ID])) {
+            production[GOLD] += currentPlayer->resources[GOLD] / 10;
+        }
+        if ((currentTown->active & bitNumber[SPECIAL_BUILDING_ID])
+            && currentTown->field_34 > 0) {
+            production[currentTown->field_38] += currentTown->field_34;
+        }
+    }
+
+    for (playerId = 0; playerId < 8; ++playerId) {
+        if (playerDisabled[playerId])
+            continue;
+        playerData* currentPlayer = &players[playerId];
+        long* production = currentPlayer->turnProductionResource;
+        int cornucopias = currentPlayer->NumOfGivenArtifact(
+            PRODUCTION_ARTIFACT_CORNUCOPIA) * 5;
+        production[SULFUR] += cornucopias + currentPlayer->NumOfGivenArtifact(
+            PRODUCTION_ARTIFACT_SULFUR);
+        production[MERCURY] += cornucopias + currentPlayer->NumOfGivenArtifact(
+            PRODUCTION_ARTIFACT_MERCURY);
+        production[GEMS] += cornucopias + currentPlayer->NumOfGivenArtifact(
+            PRODUCTION_ARTIFACT_GEMS);
+        production[WOOD] += currentPlayer->NumOfGivenArtifact(
+            PRODUCTION_ARTIFACT_WOOD);
+        production[ORE] += currentPlayer->NumOfGivenArtifact(
+            PRODUCTION_ARTIFACT_ORE);
+        production[CRYSTAL] += cornucopias + currentPlayer->NumOfGivenArtifact(
+            PRODUCTION_ARTIFACT_CRYSTAL);
+        production[GOLD] += ComputeDailyGold(playerId, 0);
+    }
+
+    for (int heroId = 0; heroId < HERO_COUNT; ++heroId) {
+        hero* currentHero = &heroes[heroId];
+        if (currentHero->owner < 0)
+            continue;
+        if (currentHero->army.get_creature_total(
+                creature_type_from_int(PRODUCTION_CREATURE_CRYSTAL_DRAGON)) > 0)
+            crystalDragonIncome[currentHero->owner] = 1;
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[heroId];
+        int resource = ability.skill;
+        if (ability.type == eHeroAbilityResource
+            && resource >= WOOD && resource <= GEMS) {
+            ++players[currentHero->owner].turnProductionResource[resource];
+        }
+    }
+
+    for (playerId = 0; playerId < 8; ++playerId) {
+        if (field_1f63e == 1 && crystalDragonIncome[playerId])
+            players[playerId].turnProductionResource[CRYSTAL] += 3;
+    }
+
+    if (setup.difficulty > 2) {
+        for (playerId = 0; playerId < 8; ++playerId) {
+            playerData* currentPlayer = &players[playerId];
+            if (currentPlayer->isHuman || playerDisabled[playerId])
+                continue;
+            long* production = currentPlayer->turnProductionResource;
+            production[WOOD] += get_day_bonus(
+                WOOD, production[WOOD] * 7 / 4, field_1f63e);
+            production[ORE] += get_day_bonus(
+                ORE, production[ORE] * 7 / 4, field_1f63e);
+            for (int resource = WOOD; resource < GOLD; ++resource) {
+                long weeklyBonus = (setup.difficulty - 2) * production[resource];
+                production[resource] += get_day_bonus(
+                    resource, weeklyBonus, field_1f63e);
+            }
+        }
+    }
+
+    for (playerId = 0; playerId < 8; ++playerId) {
+        if (!setup.handicap[playerId] || playerDisabled[playerId])
+            continue;
+        double handicap = production_handicap[setup.handicap[playerId]];
+        for (int resource = WOOD; resource < GOLD; ++resource) {
+            long original = players[playerId].turnProductionResource[resource];
+            players[playerId].turnProductionResource[resource] =
+                original - original * handicap;
+        }
+    }
 }
 
 // E:\gamedcs\game.cpp:838
-#endif  // @carcass
 
 VA(0x004b9070, 0x1B3)  // anchor-callee (game::Load) + read-slot, dc 0xa3c68
 int game::LoadSignPool(TAbstractFile* infile)
