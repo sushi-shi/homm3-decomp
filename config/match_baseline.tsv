@@ -10,7 +10,7 @@ advmgr	?CompleteDraw@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0xf870
 advmgr	?CompleteDraw@advManager@@QAEXHHHEE@Z	100.0000	100.0000	100.0000	0xf3f0
 advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a0
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570
-advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	80.2171	80.2171	80.2171	0x10c00
+advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	80.2192	80.2192	80.2192	0x10c00
 advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	75.3619	75.3619	75.3619	0x11590
 advmgr	?DrawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x10760
 advmgr	?DrawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x109b0
@@ -21,7 +21,7 @@ advmgr	?DrawRiver@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11b80
 advmgr	?DrawRoad@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11d60
 advmgr	?DrawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0
 advmgr	?DrawShroud@advManager@@QAEXHHHHH@Z	81.4106	81.4106	81.4106	0x12220
-advmgr	?DrawUnderlay@advManager@@QAEXHHHHH@Z	74.7888	74.7888	74.7888	0x12470
+advmgr	?DrawUnderlay@advManager@@QAEXHHHHH@Z	78.3056	78.3056	78.3056	0x12470
 advmgr	?FindAdjacentMonster@advManager@@QAEEUtype_point@@PAU2@0@Z	82.0057	82.0057	82.0057	0x1a460
 advmgr	?ForceNewHover@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19570
 advmgr	?GetCell@advManager@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	100.0000	0x12bd0
