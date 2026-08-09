@@ -436,6 +436,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `THeroScreenWindow::ExitDialog` reconstructed byte-exact
+  (44 bytes).** The vtable-only handler sets the shared window manager's
+  dialog return to 0x7802, emits a widget message with both control codes
+  equal to ten, and returns the forward-dispatch verdict. Existing
+  `winmgr.h`/`message.h` domains name every value; retail instructions and
+  the vtable prove the behavior and identity, while Dreamcast corroborates
+  only the method signature. One source-order detail is byte-selected:
+  assigning `codeY` before `codeX` reproduces retail's +8 then +4 stores;
+  the intuitive opposite order emitted those stores in the opposite order.
+  This applies the HoMM2/Gruntz named-domain and source-order method. No
+  external implementation body or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `THeroScreenWindow::update_all_slots` reconstructed
   byte-exact (23 bytes).** Retail retains `this` in EDI and walks a long
   ESI index from zero through all nineteen equipped positions, calling the

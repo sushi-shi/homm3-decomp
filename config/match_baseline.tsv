@@ -580,6 +580,7 @@ hero	?ApplyBattleLossTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda710
 hero	?ApplyBattleWinTemps@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xda510
 hero	?CreatureTypeCount@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe2340
 hero	?DestroySiegeWeaponArtifact@hero@@QAEXH@Z	96.5278	96.5278	96.5278	0xd9260
+hero	?ExitDialog@THeroScreenWindow@@QAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0xdd2a0
 hero	?GetArcheryFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4160
 hero	?GetDefenseFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4310
 hero	?GetEagleEyeChance@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4420
@@ -642,7 +643,6 @@ hero	?rotate_backpack_right@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbe10
 hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0
 hero	?update_all_slots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb1d0
 hero	HeroView	0.0000	0.0000	0.0000	0xe1800
-hero	THeroScreenWindow_ExitDialog	0.0000	0.0000	0.0000	0xdd2a0
 hero	THeroScreenWindow_HeroMessageUpdate	0.0000	0.0000	0.0000	0xd97f0
 hero	THeroScreenWindow_SetupHeroView	0.0000	0.0000	0.0000	0xe1a50
 hero	THeroScreenWindow_THeroScreenWindow	0.0000	0.0000	0.0000	0xde710

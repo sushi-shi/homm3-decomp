@@ -31,6 +31,8 @@
 // TMagicTerrain - the battlefield magic-terrain id the spell-school
 // quartet takes as its second argument.
 #include "magicterrain.h"
+#include "message.h"
+#include "winmgr.h"
 
 
 // The per-mastery specialty factor rows, one four-float .rdata run per
@@ -960,6 +962,8 @@ void handle_backpack_click(long code, unsigned char right_mouse)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:3229
 // ANCHOR-VTABLE: 0x004dd2a0 has no rel32 caller at all - it is reached
 // only through slot 14 of vtable 0x63eae8, and 0x63eae8 is the vtable
@@ -971,8 +975,14 @@ void handle_backpack_click(long code, unsigned char right_mouse)
 VA(0x004dd2a0, 0x2C)  // anchor-vtable (slot 14 of 0x63eae8), dc 0xcebe0
 int THeroScreenWindow::ExitDialog(message* msg)
 {
-    // @stub
+    gpWindowManager->dialogReturn = DIALOG_RETURN_SPLIT_ACCEPT;
+    msg->id = MESSAGE_WIDGET;
+    msg->codeY = 10;
+    msg->codeX = 10;
+    return MESSAGE_DISPATCH_FORWARD;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:3239
 DC_ONLY(0xcec1c, 0x78E)
