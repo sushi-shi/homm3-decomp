@@ -465,12 +465,17 @@ void type_AI_player::end_turn()
 // or the 0x432/0x433 network messages, including negative-surplus requests.
 // The request dialog alone observes CTurnDuration and times out at 15000 ms.
 //
-// Residual (64.6655%): the 0x7c frame, local offsets, player-id lifetime,
+// Residual (71.8739%): the 0x7c frame, local offsets, player-id lifetime,
 // threshold block, network payload layouts, dialog flow and timeout tail
-// agree. The score understates one deliberately retained retail gate after
-// the human transfer. Most remaining bytes are VC6 TU ecology: retail calls
-// the temporary strings' _Tidy helper while this compile expands the same
-// destructor, plus register permutations in the two transfer loops.
+// agree. The local-human gift and single-resource request now use retail's
+// called three-argument string append overload; the multi-resource request
+// remains expanded as retail does. Scoped inline-depth overrides reproduce
+// those two call edges. Applying the override to both request branches or
+// naming either temporary regresses the surrounding allocation and was
+// reverted. Most remaining bytes are VC6 TU ecology: retail calls the
+// temporary strings' _Tidy helper at a different expansion level, plus
+// register permutations in the two transfer loops. The score also
+// understates one deliberately retained retail gate after the human transfer.
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
 void type_AI_player::make_gift(long player_id)
 {
@@ -557,8 +562,12 @@ void type_AI_player::make_gift(long player_id)
 
     std::string message;
     if (gpGame->players[player_id].IsLocalHuman()) {
-        message += format_string(gUnnamed6a5d5c->entry->aiGiftReceivedText,
-                                 gPlayerColorNames[team]);
+#pragma inline_depth(0)
+        message.append(format_string(
+                           gUnnamed6a5d5c->entry->aiGiftReceivedText,
+                           gPlayerColorNames[team]),
+                       0, std::string::npos);
+#pragma inline_depth()
         extended_dialog(message.c_str(), list, -1, -1, 0);
     }
 
@@ -578,15 +587,20 @@ void type_AI_player::make_gift(long player_id)
     }
 
     if (gpGame->players[player_id].IsLocalHuman() && list.size()) {
-        if (list.size() == 1)
-            message += format_string(
-                gUnnamed6a5d5c->entry->aiSingleResourceRequestText,
-                gPlayerColorNames[team],
-                gResourceNames[list[0].resource]);
-        else
+        if (list.size() == 1) {
+#pragma inline_depth(0)
+            message.append(format_string(
+                               gUnnamed6a5d5c->entry
+                                   ->aiSingleResourceRequestText,
+                               gPlayerColorNames[team],
+                               gResourceNames[list[0].resource]),
+                           0, std::string::npos);
+#pragma inline_depth()
+        } else {
             message += format_string(
                 gUnnamed6a5d5c->entry->aiMultipleResourceRequestText,
                 gPlayerColorNames[team]);
+        }
         int timeout = 0;
         if (gTurnDuration69d630.IsOn())
             timeout = 15000;
