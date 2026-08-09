@@ -38,6 +38,38 @@ class town;
 // struct.h: struct.h rides in initialize.cpp's include closure, and one
 // more user-defined type there moves the initialize_game_data row.
 class CNetPlayerInfo;
+
+// Retail victory/loss records embedded in game at +0x1f89c/+0x1f8e8.
+// Only the fields reached by reconstructed consumers are exposed. The
+// defeat-hero ids are fixed independently by AI_value_of_combat's two
+// objective-bonus branches.
+enum EVictoryConditionType {
+    VICTORY_CONDITION_DEFEAT_HERO = 5
+};
+
+enum ELossConditionType {
+    LOSS_CONDITION_LOSE_HERO = 1
+};
+
+class VictoryConditionStruct {
+public:
+    signed char Type;             // +0x00
+    char pad_01[0x33];
+    int HeroID;                   // +0x34
+    char pad_38[0x12];
+
+    unsigned char applies_to_player(long player_id);
+};
+SIZE(VictoryConditionStruct, 0x4C);
+
+class LossConditionStruct {
+public:
+    signed char Type;             // +0x00
+    char pad_01[0x1B];
+    int HeroID;                   // +0x1c
+};
+SIZE(LossConditionStruct, 0x20);
+
 // `mine` and `generator`, two of the four object-pool element types.
 // The DC roster declares both in E:\gamedcs\Game.h, i.e. here.
 //
@@ -309,7 +341,10 @@ public:
     // Eight one-byte alliance/team ids. end_turn compares the candidate
     // byte with the acting player's byte before considering a gift.
     signed char playerTeam[8];  // +0x1f879
-    char pad_1f881[0x2ef];
+    char pad_1f881[0x1b];
+    VictoryConditionStruct victoryCondition;  // +0x1f89c
+    LossConditionStruct lossCondition;        // +0x1f8e8
+    char pad_1f908[0x268];
     NewfullMap worldMap;  // +0x1fb70
     char pad_1fc4c[0xe84];
     // Eight 360-byte player records at +0x20ad0 (town.obj indexes them

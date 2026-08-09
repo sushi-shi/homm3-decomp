@@ -149,6 +149,7 @@ ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@PBVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x27690
 ai_combat	?AI_auto_combat@@YIXPAVhero@@0PAVarmyGroup@@1PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x27210
 ai_combat	?AI_quick_combat@@YIEPAVhero@@0PAVarmyGroup@@PAVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x270c0
+ai_combat	?AI_value_of_combat@@YIJPBVhero@@0ABVarmyGroup@@PBVtown@@PAVNewmapCell@@@Z	99.9592	99.9592	99.9592	0x27330
 ai_combat	?adjust_army@type_AI_combat_data@@QAEXE@Z	100.0000	100.0000	100.0000	0x24880
 ai_combat	?cast_area_effect@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@JJ@Z	100.0000	100.0000	100.0000	0x25100
 ai_combat	?cast_chain_lightning@type_AI_combat_data@@QBEXAAUtype_spell_choice@@AAV1@J@Z	79.6984	79.6984	79.6984	0x24fb0
@@ -176,7 +177,6 @@ ai_combat	?inflict_melee_damage@type_AI_combat_data@@QAEJJJJ@Z	100.0000	100.0000
 ai_combat	?kill@type_AI_combat_data@@QAEXXZ	100.0000	100.0000	100.0000	0x262b0
 ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	46.7778	46.7778	46.7778	0x26bc0
 ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000	100.0000	100.0000	0x23ea0
-ai_combat	AI_value_of_combat	0.0000	0.0000	0.0000	0x27330
 ai_combat	type_AI_combat_data_cast_spell	0.0000	0.0000	0.0000	0x25bd0
 ai_combat	type_AI_combat_data_choose_melee	0.0000	0.0000	0.0000	0x267c0
 ai_combat	type_AI_combat_data_initialize_creatures	0.0000	0.0000	0.0000	0x24120
