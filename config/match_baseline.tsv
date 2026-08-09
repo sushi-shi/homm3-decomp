@@ -38,7 +38,7 @@ advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	91.3119	91.3119	91.3119	0xec90
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	74.8967	74.8967	74.8967	0xdeb0
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30
-advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	72.3630	72.3630	72.3630	0xb150
+advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	75.5187	75.5187	75.5187	0xb150
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	99.3641	99.3641	99.3641	0xd8d0
 advmgr	?SetTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	99.7414	99.7414	99.7414	0xdb00
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790

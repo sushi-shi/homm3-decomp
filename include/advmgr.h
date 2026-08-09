@@ -91,7 +91,15 @@ enum WitchHutSkillEncoding {
     WitchHutNoSkillMask = 0x000fe000
 };
 
+// Retail SetRolloverText dispatches id 215 through NewfullMap's five-byte
+// quest-guard pool. The name is corroborated by the admitted retail structure
+// evidence; the Dreamcast adventure-object enum predates this object.
+enum EAdvmgrRetailObjectType {
+    QUEST_GUARD = 215
+};
+
 DATA(0x006a79ec) extern const char* const gAdventureObjectNames[];
+DATA(0x0069778c) extern int gUnnamed69778c;
 DATA(0x0069127c) extern const char* const gGlobalInfoFlagNames[];
 DATA(0x006a7520) extern const char* const gBorderColorNames[];
 // Role-derived retail tables used by SetRolloverText. The generator-name
