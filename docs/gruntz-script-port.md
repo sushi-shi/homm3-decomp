@@ -260,6 +260,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `hero::HeroFn_004DBE80` reconstructed byte-exact
+  (164 bytes).** The retail-only ordinal name remains provisional. Retail
+  copies `gCombinationArtifacts[combination].components`, the five-dword
+  `std::bitset<144>` at row offset +4, then walks all nineteen equipped
+  artifact slots. Every non-empty artifact id clears its bit in the local
+  mask, including Dinkumware's native out-of-range check, and the function
+  returns the negation of `bitset::any()`—true only when no required
+  component remains missing. The member declaration stays confined to
+  hero.obj's existing narrow view. The Dreamcast build predates this
+  Shadow of Death combination-artifact family and has no corresponding
+  row; the identity therefore stays ordinal while all behavior, layout and
+  constants are retail-byte-proven. No external implementation body was
+  used. Whole-linked fuzzy coverage rises from 45.85% to 45.89% and exact
+  linked functions from 618 to 619.
+
 - **2026-08-09 — `hero::HeroFn_004D8FB0` reconstructed byte-exact
   (160 bytes).** The retail-only ordinal name remains provisional. Retail
   first honors the custom-name flag at +0x3d9, returning the unaligned

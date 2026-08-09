@@ -630,6 +630,7 @@ public:
     TCreatureType GetNecromancyCreature();
 #ifdef HOMM3_HERO_COMBINATION_VIEW
     const char* HeroFn_004D8FB0();
+    unsigned char HeroFn_004DBE80(int combination);
     boat* find_summonable_boat();
     void GiveResource(int whichRes, int howMuch);
 #endif
