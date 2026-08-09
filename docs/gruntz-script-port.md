@@ -260,6 +260,13 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::ExperienceValueOfStack` admitted byte-exact.**
+  Retail's +0x4c creature-traits load proves that the seven stack products use
+  `hitPoints`, not the +0x40 AI valuation field; a non-null hero contributes
+  the remaining fixed 500 experience. This agrees with every instruction and
+  branch in the 88-byte body and with the game's battle-experience rule. No
+  external implementation material was used.
+
 - **2026-08-09 — the first `game::Load` slice reaches 23.1861% of the
   3,778-byte routine.** Retail proves the consecutive scenario-state reads at
   game +0x1f4d4, +0x1f634, +0x1f63e..+0x1f69c and the 32/8/6/3-byte global
