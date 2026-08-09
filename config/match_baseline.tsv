@@ -10,7 +10,7 @@ advmgr	?CompleteDraw@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0xf870
 advmgr	?CompleteDraw@advManager@@QAEXHHHEE@Z	100.0000	100.0000	100.0000	0xf3f0
 advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a0
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570
-advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	80.2192	80.2192	80.2192	0x10c00
+advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	85.9125	85.9125	85.9125	0x10c00
 advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	75.3619	75.3619	75.3619	0x11590
 advmgr	?DrawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x10760
 advmgr	?DrawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x109b0

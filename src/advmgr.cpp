@@ -1095,20 +1095,22 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
         static_cast<void*>(thisCell));
-    AdvFullMapObjectsView* mapObjects = static_cast<AdvFullMapObjectsView*>(
-        static_cast<void*>(fullMap));
 
     if (cellObjects->objects.size()) {
-        for (int row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
+        for (unsigned row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
             for (unsigned numObj = 0; numObj < cellObjects->objects.size();
                  ++numObj) {
                 AdvObjectCellView* objCell = &cellObjects->objects[numObj];
                 if (objCell->layer != row)
                     continue;
 
-                CObject* obj = &mapObjects->objects[objCell->objectIndex];
-                CObjectType* objType = &mapObjects->objectTypes[obj->typeIndex];
-                CSprite* sprite = mapObjects->sprites[obj->typeIndex];
+                AdvFullMapObjectsView* mapObjects =
+                    static_cast<AdvFullMapObjectsView*>(
+                        static_cast<void*>(fullMap));
+                CObjectType* objType = &mapObjects->objectTypes[
+                    mapObjects->objects[objCell->objectIndex].typeIndex];
+                CSprite* sprite = mapObjects->sprites[
+                    mapObjects->objects[objCell->objectIndex].typeIndex];
                 signed char offsets = objCell->offsets;
                 int yOffset = offsets >> 4;
                 offsets <<= 4;
@@ -1170,7 +1172,9 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     default:                        continue;
                     }
 
-                    int frame = (animFrame + obj->animationOffset)
+                    int frame = (animFrame
+                                 + mapObjects->objects[objCell->objectIndex]
+                                       .animationOffset)
                                 % sprite->GetNumFrames(0);
                     sprite->DrawAdvObj(
                         frame,
@@ -1190,11 +1194,15 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     case TOWN: {
                         int triggerX;
                         int triggerY;
-                        obj->FindTrigger(&triggerX, &triggerY);
+                        mapObjects->objects[objCell->objectIndex].FindTrigger(
+                            &triggerX, &triggerY);
                         NewmapCell* triggerCell =
                             GetCell(type_point(triggerX, triggerY, z));
                         int owner = GetFlaggedObjectOwner(triggerCell);
-                        int frame = (animFrame + obj->animationOffset)
+                        int frame = (animFrame
+                                     + mapObjects
+                                           ->objects[objCell->objectIndex]
+                                           .animationOffset)
                                     % sprite->GetNumFrames(0);
                         sprite->DrawAdvObjWithFlag(
                             frame,
@@ -1214,7 +1222,10 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                                 tilew, tileh, gpWindowManager->screenBitmap,
                                 baseX, baseY + 8, false);
                         } else {
-                            int frame = (animFrame + obj->animationOffset)
+                            int frame = (animFrame
+                                         + mapObjects
+                                               ->objects[objCell->objectIndex]
+                                               .animationOffset)
                                         % sprite->GetNumFrames(0);
                             sprite->DrawAdvObj(
                                 frame,
@@ -1238,8 +1249,7 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                     firstPart = 3;
                     lastPart = 5;
                 } else {
-                    firstPart = 1;
-                    lastPart = 0;
+                    continue;
                 }
                 for (int part = firstPart; part <= lastPart; ++part) {
                     if (heroParts[part].IsValid)
