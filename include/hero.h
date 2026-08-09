@@ -178,11 +178,17 @@ public:
     // so the field is the hero's level - name role-inferred, PROVISIONAL.
     short level;                    // +0x55
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    char pad_057[0x14];
+    char pad_057[0x4];
+    // This visit-flag run is fixed by SetRolloverText's retail loads and
+    // the uniform retail/DC hero-layout repack described below.
+    unsigned long DefenseTowerFlags;       // +0x5b
+    unsigned long GardenOfRevelationFlags; // +0x5f
+    unsigned long MercCampFlags;           // +0x63
+    unsigned long PowerSchoolFlags;        // +0x67
     // +0x6b, one visit bit per Tree of Knowledge id. SetTreeHelpText
     // masks the cell's low five extra-info bits into this dword.
     unsigned long TreeOfKnowledgeFlags;
-    char pad_06f[0x4];
+    unsigned long LibraryFlags;             // +0x6f
 #else
     char pad_057[0x1c];
 #endif
@@ -196,9 +202,18 @@ public:
     // TreeOfKnowledge +0x6b, Library +0x6f, then MagicSchool +0x77,
     // WarSchool +0x7b, University +0x7f, Shrine1 +0x83, Shrine2 +0x87.
     // SetTreeHelpText now independently proves TreeOfKnowledgeFlags above;
-    // the other predicted fields remain in the pads.
+    // SetRolloverText proves the fields it reads directly.
     unsigned long ArenaFlags;
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    unsigned long MagicSchoolFlags;         // +0x77
+    unsigned long WarSchoolFlags;           // +0x7b
+    unsigned long UniversityFlags;          // +0x7f
+    unsigned long Shrine1Flags;             // +0x83
+    unsigned long Shrine2Flags;             // +0x87
+    char pad_08b[0x6];
+#else
     char pad_077[0x1a];
+#endif
     // Seven army slots: creature type at 0x91+i*4, count at 0xad+i*4
     // (CreatureTypeCount reads [ecx-0x1c] against [ecx] with ecx
     // walking from 0xad) - exactly armyGroup's 56-byte layout, and
