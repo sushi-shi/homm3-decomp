@@ -406,6 +406,7 @@ public:
     int GetGridIndex(int x, int y);
     void SetupAdjacencyArray();
     void UpdateArmyGroup(int whichSide);
+    void GenerateMap();
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();

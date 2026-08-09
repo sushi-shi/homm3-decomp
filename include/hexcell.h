@@ -9,10 +9,10 @@
 
 class army;
 
-// Head model from the retail ctor 0x4e7150: field_10@0x10 = 0,
-// field_14 = -1, three -1 bytes at 0x18..0x1a, field_1c = 0, then a
-// zero byte at 0x4c and a -1 byte at 0x4d. Names provisional; the
-// gaps stay padded until consumers prove them.
+// Head model from the retail ctor 0x4e7150 and GenerateMap 0x4642d0.
+// The seven leading screen-geometry shorts use the names and offsets in
+// Dreamcast CodeView; their x/y formulas and the remaining initialized
+// fields are independently byte-proven by the retail GenerateMap body.
 class hexcell {
 public:
     // Screen-space bounds initialized by combatManager::GenerateMap.
