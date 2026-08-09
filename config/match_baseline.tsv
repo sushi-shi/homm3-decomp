@@ -617,6 +617,7 @@ hero	?HeroFn_004DBE80@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xdbe80
 hero	?HeroFn_004DC070@hero@@QAEXJ@Z	100.0000	100.0000	100.0000	0xdc070
 hero	?HeroFn_004E5DE0@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe5de0
 hero	?HeroScreenUpdate@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xd9990
+hero	?IsInIdentifyRange@hero@@QAEEPBUtype_point@@@Z	98.6813	98.6813	98.6813	0xe5e10
 hero	?IsWieldingArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91f0
 hero	?SetSS@hero@@QAEXHH@Z	3.8000	3.8000	3.8000	0xe2210
 hero	?SetVisitedArena@hero@@QAEXPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53e0
@@ -684,7 +685,6 @@ hero	hero_HeroFn_004E2550	0.0000	0.0000	0.0000	0xe2550
 hero	hero_HeroFn_004E2840	0.0000	0.0000	0.0000	0xe2840
 hero	hero_HeroFn_004E4EC0	0.0000	0.0000	0.0000	0xe4ec0
 hero	hero_HeroFn_004E6120	0.0000	0.0000	0.0000	0xe6120
-hero	hero_IsInIdentifyRange	0.0000	0.0000	0.0000	0xe5e10
 hero	hero_IsMobile	0.0000	0.0000	0.0000	0xe5f30
 hero	hero_PlaceInMap	0.0000	0.0000	0.0000	0xd7900
 hero	hero_UpdateArmies	0.0000	0.0000	0.0000	0xd9a00

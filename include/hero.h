@@ -475,6 +475,8 @@ public:
     short get_primary_skill_total();
     // 0x4e5dd0 - one-argument setter for waterWalkLevel.
     void WalkOnWater(int level);
+    // 0x4e5e10 - tests whether a packed map point is inside Visions range.
+    unsigned char IsInIdentifyRange(const type_point* location);
     // 0x4e5de0, RETAIL-ONLY (no DC row): the clamped field_129 getter
     // hero::IsInIdentifyRange inlines. ORDINAL PLACEHOLDER name.
     int HeroFn_004E5DE0();
