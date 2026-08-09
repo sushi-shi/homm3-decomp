@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::SetRolloverText` extends to 51.0853%.**
+  Retail's repeated global-info and hero-visit blocks admit the Magic/Power/
+  War School, Magic Well, Mercenary Camp, Mermaid, Oasis, Rally Flag, Siren,
+  Stables, Temple, Training Grounds, University, Wagon, Warrior Tomb and
+  Watering Hole arms, plus the chat-editor focus early exit. Direct retail
+  loads at hero +0x57/+0x63/+0x67/+0x77/+0x7b and +0x105 prove the newly
+  consumed visit fields and masks; the object switch targets, branches,
+  relocations and measured objdiff delta prove the control flow. No external
+  implementation body was used. Whole-linked fuzzy coverage rises from
+  43.39% to 43.90% with all 592 exact linked functions retained.
+
 - **2026-08-09 — the first `advManager::SetRolloverText` slice is
   reconstructed at 29.4501%.** Retail's 216-byte object dispatch table fixes
   every routed adventure-object id and its handler entry; the reconstructed
