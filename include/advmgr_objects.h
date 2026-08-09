@@ -22,19 +22,25 @@ struct AdvMapCellObjectsView {
     std::vector<AdvObjectCellView> objects;
 };
 
-struct AdvObjectView {
+class CObject {
+public:
     char pad_00[8];
     unsigned short typeIndex;
     unsigned char animationOffset;
     unsigned char pad_0b;
-};
-SIZE(AdvObjectView, 0xc);
 
-struct AdvObjectTypeView {
+    void FindTrigger(int* resultX, int* resultY);
+};
+SIZE(CObject, 0xc);
+
+class CObjectType {
+public:
     char pad_00[0x10];
     signed char width;
     signed char height;
-    char pad_12[0x12];
+    char pad_12[2];
+    std::bitset<48> drawCells;
+    char pad_1c[8];
     std::bitset<48> shadowCells;
     char pad_2c[0xc];
     TAdventureObjectType objectType;
@@ -42,13 +48,13 @@ struct AdvObjectTypeView {
     unsigned char suppressDraw;
     char pad_41[3];
 };
-SIZE(AdvObjectTypeView, 0x44);
+SIZE(CObjectType, 0x44);
 
 struct AdvFullMapObjectsView {
     char pad_00[4];
-    AdvObjectTypeView* objectTypes;
+    CObjectType* objectTypes;
     char pad_08[0xc];
-    AdvObjectView* objects;
+    CObject* objects;
     char pad_18[0xc];
     CSprite** sprites;
 };

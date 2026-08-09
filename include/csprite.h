@@ -89,6 +89,27 @@ public:
         DrawAdvObjShadow(framenum, sx, sy, sw, sh, dst->map, dx, dy,
                          dst->Width, dst->Height, dst->Pitch, hflip);
     }
+    void DrawAdvObj(int framenum, int sx, int sy, int sw, int sh,
+                    unsigned short* dst, int dx, int dy, int dw, int dh,
+                    int dpitch, unsigned char hflip);
+    void DrawAdvObj(int framenum, int sx, int sy, int sw, int sh,
+                    Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
+    {
+        DrawAdvObj(framenum, sx, sy, sw, sh, dst->map, dx, dy, dst->Width,
+                   dst->Height, dst->Pitch, hflip);
+    }
+    void DrawAdvObjWithFlag(int framenum, int sx, int sy, int sw, int sh,
+                            unsigned short* dst, int dx, int dy, int dw,
+                            int dh, int dpitch, unsigned short outcolor,
+                            unsigned char hflip);
+    void DrawAdvObjWithFlag(int framenum, int sx, int sy, int sw, int sh,
+                            Bitmap16Bit* dst, int dx, int dy,
+                            unsigned short outcolor, unsigned char hflip)
+    {
+        DrawAdvObjWithFlag(framenum, sx, sy, sw, sh, dst->map, dx, dy,
+                           dst->Width, dst->Height, dst->Pitch, outcolor,
+                           hflip);
+    }
 };
 
 // --- globals ---

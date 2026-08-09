@@ -116,6 +116,12 @@ public:
         CURSOR_DEST_X2 = 10
     };
 
+    enum EObjectDrawLayer {
+        OBJECT_DRAW_LAYER_HERO_FRONT = 1,
+        OBJECT_DRAW_LAYER_HERO_BACK = 2,
+        OBJECT_DRAW_LAYER_LAST = 6
+    };
+
     char pad_038[0xc];
     TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
     unsigned short* routeArray;      // +0x48 (GetRouteArrayPtr)
@@ -192,6 +198,8 @@ public:
                             int baseY, int tilex, int tiley, int tilew,
                             int tileh);
     void DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int destY);
+    void DrawAdvObj(int srcX, int srcY, int z, int destX, int destY);
+    void DrawCursor(int cellX, int cellY);
     void DrawCursorShadow(int cellX, int cellY);
     void DrawRolloverText(char* text);
     unsigned char FindAdjacentMonster(type_point point, type_point* result,
