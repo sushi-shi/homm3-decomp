@@ -323,11 +323,11 @@ int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left,
 VA(0x004b1880, 0x33)  // anchor-callee, dc 0x9f154
 int MinimumTerrainCost(const NewmapCell* cell, int points_left,
                        long iPathfinding, long flying, long water_walking,
-                       unsigned char param_6)
+                       unsigned char hasNomad)
 {
     return CalcTerrainCost(cell, 0, points_left, iPathfinding, cell->RoadSet,
                            flying, water_walking,
-                           cell->GroundSet, param_6);
+                           cell->GroundSet, hasNomad);
 }
 
 // E:\gamedcs\findpath.cpp:233

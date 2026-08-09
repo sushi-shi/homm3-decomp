@@ -221,6 +221,9 @@ extern const signed char gStepDeltaX[];   // 0x678150, stride 4
 extern const signed char gStepDeltaY[];   // 0x678151, stride 4
 
 // --- globals ---
+int MinimumTerrainCost(const NewmapCell* cell, int points_left,
+                       long iPathfinding, long flying, long water_walking,
+                       unsigned char hasNomad);
 // CODEVIEW(E:\gamedcs\findpath.cpp:131, dc 0x9f034) int CalcTerrainCost(const NewmapCell* cell, int dir, int points_left, TSkillMastery iPathfinding, TRoadType end_road, TSkillMastery flying, TSkillMastery water_walking, TTerrainType native_terrain);
 // CODEVIEW(E:\gamedcs\findpath.cpp:223, dc 0x9f154) int MinimumTerrainCost(const NewmapCell* cell, int points_left, TSkillMastery iPathfinding, TSkillMastery flying, TSkillMastery water_walking);
 // CODEVIEW(E:\gamedcs\findpath.cpp:233, dc 0x9f184) int GetTerrainCost(hero* current_hero, type_point start, int direction, int move_left);
