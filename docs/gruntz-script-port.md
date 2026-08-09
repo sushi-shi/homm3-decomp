@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `type_AI_player::end_turn` rises 89.0940% -> 89.5263%
+  by spelling retail's Marketplace scan exit.** Retail tests the town count
+  once, then its inactive-Marketplace path increments the index, exits on
+  `index >= count`, and takes an unconditional backedge. Replacing the
+  source `for`/`continue` with that equivalent explicit scan fixes the first
+  of two remaining branch-flow differences; 31/32 branch flows now agree.
+  Writing the final warning test as unsigned `length() > 0` fixes the last
+  jbe locally but lowers the total score to 88.7143% through allocation
+  churn, so that probe was reverted. Retail control flow and objdiff selected
+  the retained form; no external implementation was used.
+
 - **2026-08-09 — `type_AI_player::make_gift` rises 71.8739% -> 79.8885%
   by restoring assignment in the multi-resource request arm.** Retail's
   single-resource arm calls the three-argument string append overload, but
