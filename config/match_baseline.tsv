@@ -1055,6 +1055,7 @@ town	?GetTypeName@town@@QBEPBDXZ	100.0000	100.0000	100.0000	0x1c1450
 town	?HasGarrison@town@@QAEHXZ	100.0000	100.0000	100.0000	0x1bdfe0
 town	?PlaceInMap@town@@QAEXHJE@Z	100.0000	100.0000	100.0000	0x1c13b0
 town	?UpgradedDwellingID@town@@SIHH@Z	100.0000	100.0000	100.0000	0x1c14a0
+town	?View@town@@QAEXH@Z	100.0000	100.0000	100.0000	0x1be210
 town	?buy_building@town@@QAEEW4type_building_id@@@Z	100.0000	100.0000	100.0000	0x1bf3c0
 town	?can_build@town@@QBEEF@Z	81.1852	81.1852	81.1852	0x1c0d20
 town	?can_ever_build@town@@QBEEH@Z	100.0000	100.0000	100.0000	0x1c0e60
@@ -1085,7 +1086,6 @@ town	town_BuildBuilding	0.0000	0.0000	0.0000	0x1bede0
 town	town_GiveSpells	0.0000	0.0000	0.0000	0x1be030
 town	town_SwapHeroes	0.0000	0.0000	0.0000	0x1be450
 town	town_TownFn_005BF900	0.0000	0.0000	0.0000	0x1bf900
-town	town_View	0.0000	0.0000	0.0000	0x1be210
 town	town_create_building	0.0000	0.0000	0.0000	0x1be930
 town	town_get_growth_rate	0.0000	0.0000	0.0000	0x1bfb60
 town	town_give_event_reward	0.0000	0.0000	0.0000	0x1bfeb0

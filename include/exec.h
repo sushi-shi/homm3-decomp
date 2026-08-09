@@ -25,6 +25,10 @@ public:
     void MainLoop();
 };
 
+#ifdef HOMM3_TOWN_OBJ_DECLS
+extern executive* gpExecutive;  // retail .bss 0x699500
+#endif
+
 // Provisional MERGED view of the unnamed central object at 0x6a5d5c
 // (1046 refs image-wide; its own TU will name it): both consumers
 // read one entry pointer at +0x20. exec's DoDialog/CallManager show
