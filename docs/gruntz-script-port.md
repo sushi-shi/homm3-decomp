@@ -274,6 +274,23 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `type_point::operator==` identity. No external implementation body was used,
   and `match_baseline.tsv` remains generated solely by the full build.
 
+- **2026-08-09 — `generator::load` reconstructed byte-exact
+  (315 bytes).** Retail checks exact read sizes for the owner, generator class
+  and type, population row, three map coordinates and town id. Between those
+  fields it reads four one-byte creature ids into an integer, masks each to
+  the serialized byte domain, restores 0xff as `CREATURE_NONE`, and rejects
+  only an embedded guard load result of -1. The final town-id comparison is
+  retained in an explicit byte local, mirroring the exact save-side result
+  shape. Separating the raw read slot from its masked value is
+  codegen-significant: it gives VC6 retail's escaped local and argument-home
+  loop-counter lifetimes without a spurious masked-value writeback. A small
+  bit-preserving union bridge keeps the live `TCreatureType` row honest while
+  preserving the zero-cast cleanliness floor. Dreamcast CodeView supplies the
+  member identity and typed stream signature; every field, size, sentinel and
+  branch is retail-byte-proven. This applies the HoMM2/Gruntz source-shape and
+  local-lifetime method. No external implementation body or
+  `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `advManager::ProcessHover` extends to 71.4102%.**
   Retail keeps the screen-to-cell quotients live in EDI/EBX and passes those
   `rx`/`ry` map-cell coordinates to `SetRolloverText`; the earlier candidate
