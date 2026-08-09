@@ -321,6 +321,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `combatManager::CombatSystemOptions` reconstructed to
+  99.8919%, with every instruction matching.** Retail proves a 0x50-byte
+  stack object whose lifetime is constructor -> `DoModal` -> destructor,
+  followed between the modal call and destruction by a +0x53b8 clear,
+  `UpdateGrid(0, 1)`, and the six-argument `DrawFrame` refresh. Dreamcast
+  CodeView supplies only the `TCombatOptionsWindow` identity and corroborates
+  those three dialog calls; their retail rows at 0x46e3b0, 0x46f700 and
+  0x46f780 are admitted on the independently matching x86 call graph and
+  compatible sizes. Modelling the local as one opaque class object lets VC6
+  regenerate the exact EH frame and cleanup. The remaining score sliver is
+  stripped-target relocation naming/EH metadata, not code. This follows the
+  HoMM2/Gruntz lifetime-boundary method; no external implementation was used,
+  and `decomp-attempt-1` supplied nothing.
+
 - **2026-08-09 — `combatManager::PlaceAllObstacles` reconstructed
   byte-exact (189 bytes).** The function samples obstacle ids 0..90 without
   replacement, accepting catalogue rows whose terrain or special-terrain
