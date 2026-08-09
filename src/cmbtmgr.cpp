@@ -42,8 +42,12 @@
 #include "advmgr.h"
 #include "cmbtmgr.h"
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
+#include "findpath.h"
+#include "game.h"
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
+#include "remote.h"
 #include "resourcemanager.h"
+#include "soundmgr.h"
 #include "textresource.h"
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
 
@@ -757,14 +761,40 @@ unsigned char combatManager::should_lower_door(army* this_army, long hex)
     return 0;
 }
 
-#if 0  // @carcass
+// Dreamcast lists this as a cmbtmgr.h inline with no retail body.
+// LowerDoor's inlined branch graph proves all four inputs and the exact
+// distinction between network-side quick combat and the global mode.
+inline unsigned char combatManager::IsQuickCombat()
+{
+    if (gpGame->field_1f69d)
+        return 0;
+    if (gNetworkActive69954c && sideIsAI[0] && sideIsAI[1])
+        return gpGame->players[heroIds[0]].quickCombat
+            && gpGame->players[heroIds[1]].quickCombat;
+    return gCombatQuickMode69877c != 0;
+}
 
 // E:\gamedcs\cmbtmgr.cpp:3378
 VA(0x004671c0, 0x113)  // anchor-global, dc 0x60fa8
 void combatManager::LowerDoor()
 {
-    // @stub
+    if (IsQuickCombat()) {
+        drawbridgeState = DRAWBRIDGE_DOWN;
+        return;
+    }
+
+    SAMPLE2 sample = LoadPlaySample(
+        DATA_COMPGEN(0x0066ffb0, drawbridgeSoundName, "drawbrg.82m"));
+    field_13d38 = gDoorExtent694f30;
+    for (int state = DRAWBRIDGE_UP; state >= DRAWBRIDGE_DOWN; state--) {
+        drawbridgeState = state;
+        DrawFrame(1, 0, 1, 100, 1, 1);
+    }
+    gpSearchArray->lower_door();
+    WaitEndSample(sample, -1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3400
 VA(0x004672e0, 0x177)  // anchor-global, dc 0x61034
