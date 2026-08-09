@@ -267,6 +267,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   branch in the 88-byte body and with the game's battle-experience rule. No
   external implementation material was used.
 
+- **2026-08-09 — `game::get_new_boat_id` admitted byte-exact.** The
+  214-byte member scans the retail-proven 40-byte boat pool for the first
+  clear `allocated` byte at +0x18, returns that reusable index, or appends a
+  default boat while the pool contains fewer than 64 entries and returns the
+  new tail index. An unsigned loop index reproduces retail's inlined
+  Dinkumware `vector::size()` null guard and unsigned comparison; the signed
+  spelling scored 83.98% and introduced a non-retail empty-vector arm. Every
+  instruction and relocation agrees. Dreamcast CodeView supplies the method
+  and local names only. The abandoned first attempt contains the already
+  admitted identity/boundary mapping but no implementation body used here;
+  no external implementation material was used.
+
 - **2026-08-09 — the object-pool serialization and claim views are integrated
   without losing their admitted matches.** The mine tail exposes serialization
   ordinals and packed-coordinate names as aliases of the same three retail
