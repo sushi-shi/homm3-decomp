@@ -112,7 +112,11 @@ public:
     // `movsx edx, byte [gpGame + 1170*id + 0x21642]` before comparing
     // it against the acting-player id. Name provisional.
     signed char owner;              // +0x22
-    char pad_023[0x21];
+    char pad_023[0xd];
+    // +0x30. DrawHeroPart indexes the eighteen-entry cursorIcons sprite row
+    // directly with this dword; the surviving roster names the domain.
+    int heroClass;
+    char pad_034[0x10];
     // The patrol triple at +0x44..+0x46 and the compass facing at
     // +0x47, all byte-proven by hero::is_in_patrol_radius (0x4e56e0)
     // and hero::GetStandSequence (0x4d9110). The two coordinates are

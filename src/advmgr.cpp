@@ -53,6 +53,8 @@
 // be invention. See the help-text note further down.
 #include <va.h>
 #include "advmgr.h"
+#include "bitmap16.h"
+#include "csprite.h"
 #include "game.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -227,11 +229,13 @@ NewmapCell* advManager::DoAdvCommand(type_point* trigger_point)
 // E:\gamedcs\MapCell.h:895
 #endif  // @carcass
 
+#pragma auto_inline(off)
 VA(0x00408770, 0x31)  // anchor-callee, dc 0x1f9c8
 NewmapCell* NewfullMap::cell(int x, int y, int z)
 {
     return &cellData[(z * Size + y) * Size + x];
 }
+#pragma auto_inline(on)
 
 #if 0  // @carcass
 
@@ -690,14 +694,87 @@ int GetFlaggedObjectOwner(NewmapCell* thisCell)
     return owner;
 }
 
-#if 0  // @carcass
+static inline NewmapCell* DrawHeroCell(advManager* manager, type_point point)
+{
+    unsigned char valid = point.is_valid();
+    NewfullMap* map = manager->fullMap;
+    if (!valid)
+        return map->cell(0, 0, 0);
+    return map->cell(point.x, point.y, point.z);
+}
 
 // E:\gamedcs\advmgr.cpp:5688
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
-void advManager::DrawHeroPart(int part, TDrawParts* heroParts, int baseX, int baseY, int tilex, int tiley, int tilew, int tileh)
+void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
+                              int baseY, int tilex, int tiley, int tilew,
+                              int tileh)
 {
-    // @stub
+    hero* currHero;
+    if (heroParts.id == -1)
+        currHero = 0;
+    else
+        currHero = &gpGame->heroes[heroParts.id];
+
+    int HeroCellY = part % 3;
+    int HeroCellX = part / 3;
+
+    if (currHero->flags & 0x40000) {
+        boat* currBoat = gpGame->GetHeroBoat(currHero->id, true);
+        NewmapCell* heroCell = DrawHeroCell(
+            this, type_point(currHero->x, currHero->y, currHero->z));
+
+        if (!(heroCell->flags_00_11 & 0x200)) {
+            boatFrothIcons[currBoat->type]->DrawHero(
+                currHero->GetStandSequence(),
+                animFrame
+                    % boatFrothIcons[currBoat->type]->GetNumFrames(hs_stand_n),
+                tilex + (2 - HeroCellY) * 32,
+                tiley - HeroCellX * 32 + 32, tilew, tileh,
+                gpWindowManager->screenBitmap, baseX, baseY + 8,
+                currHero->facing > hero::kFacingS);
+        }
+
+        boatFlagIcons[currBoat->type][currBoat->playerOwner]->DrawHero(
+            currHero->GetStandSequence(),
+            animFrame % boatFlagIcons[currBoat->type][currBoat->playerOwner]
+                                ->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currHero->facing > hero::kFacingS);
+
+        {
+            int boatFrame =
+                animFrame
+                % boatIcons[currBoat->type]->GetNumFrames(hs_stand_n);
+            boatIcons[currBoat->type]->DrawHero(
+                currHero->GetStandSequence(), boatFrame,
+                tilex + (2 - HeroCellY) * 32,
+                tiley - HeroCellX * 32 + 32, tilew, tileh,
+                gpWindowManager->screenBitmap, baseX, baseY + 8,
+                currHero->facing > hero::kFacingS);
+        }
+    } else if (currHero->owner >= 0 && currHero->owner < 8) {
+        flagIcons[currHero->owner]->DrawHero(
+            currHero->GetStandSequence(),
+            animFrame % flagIcons[currHero->owner]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currHero->facing > hero::kFacingS);
+
+        cursorIcons[currHero->heroClass]->DrawHero(
+            currHero->GetStandSequence(),
+            animFrame
+                % cursorIcons[currHero->heroClass]->GetNumFrames(hs_stand_n),
+            tilex + (2 - HeroCellY) * 32,
+            tiley - HeroCellX * 32 + 32, tilew, tileh,
+            gpWindowManager->screenBitmap, baseX, baseY + 8,
+            currHero->facing > hero::kFacingS);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:5773
 VA(0x004102c0, 0x494)  // anchor-callee, dc 0x11958
