@@ -288,6 +288,47 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   fuzzy coverage rises from 45.32% to 45.39% with all 611 exact linked
   functions retained.
 
+- **2026-08-09 — `hero::GiveResource` reconstructed byte-exact
+  (178 bytes).** Retail accepts resource ids 0..6 with the inclusive
+  `cmp 6 / jg` form, adjusts the owning player's proven seven-dword resource
+  row and clamps negative results to zero. It refreshes the resource display
+  only for `gpCurrentPlayer` while the adventure manager is active, then
+  retains the trailing `game::IsHuman(owner)` call whose result is discarded.
+  The single newly consumed window declaration is exposed only in hero.obj's
+  narrow view. Dreamcast CodeView supplies the identity and parameter names;
+  the player indexing, clamp, manager predicate, display call and trailing
+  call are all retail-byte-proven. No external implementation body was used.
+  Whole-linked fuzzy coverage rises from 45.49% to 45.53%, exact linked
+  functions from 616 to 617, and executable fuzzy coverage from 8.63% to
+  8.64%.
+
+- **2026-08-09 — `hero::find_summonable_boat` reconstructed byte-exact
+  (170 bytes).** Retail first asks the already-exact `game::GetHeroBoat` for
+  the hero's existing unoccupied vessel, then scans the proven 40-byte boat
+  vector for allocated, unoccupied boats owned by the local player or by no
+  player. It minimizes Manhattan distance from the hero and deliberately
+  accepts equal-distance later entries. Natural x-first source evaluation
+  produces retail's y-first instruction schedule under VC6. The new member
+  declaration is confined to hero.obj's existing narrow view: exposing it
+  broadly moved an unrelated recruit function below its ratchet, and that
+  experiment was withdrawn rather than accepted. Dreamcast corroborates the
+  identity and boat member names only; no external implementation body was
+  used. Whole-linked fuzzy coverage rises from 45.44% to 45.49%, exact
+  linked functions from 615 to 616, and executable fuzzy coverage from
+  8.62% to 8.63%.
+
+- **2026-08-09 — `type_artifact::get_rollover_text` reconstructed
+  byte-exact (134 bytes).** Retail branches directly on artifact id -1 and
+  0, copying two runtime-loaded text pointers at 0x6a8040/0x6a804c; every
+  other id indexes the 32-byte `akArtifactTraits` row and formats its name
+  with the pointer at 0x6a8050. Natural `strcpy` calls reproduce both VC6
+  `repne scasb`/`rep movs` expansions and `sprintf` reproduces the third
+  branch exactly. The three text-cell spellings remain provisional because
+  no public names them. Dreamcast CodeView supplies the member identity and
+  signature only; no external implementation body was used. Whole-linked
+  fuzzy coverage rises from 45.41% to 45.44%, exact linked functions from
+  614 to 615, and executable fuzzy coverage from 8.61% to 8.62%.
+
 - **2026-08-09 — `advManager::UpdateScreen` reconstructed byte-exact
   (125 bytes).** Retail fixes the update rectangle at (0,8), 608x544,
   regardless of the two retained formal flags, then samples `GameTime`,

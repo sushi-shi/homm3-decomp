@@ -606,6 +606,7 @@ hero	?GetStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?GetStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110
 hero	?GetSurrenderCostFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4580
 hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070
+hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0
 hero	?HasArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91b0
 hero	?HeroFn_004D8F70@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8f70
@@ -626,6 +627,7 @@ hero	?any@?$bitset@$0JA@@std@@QBE_NXZ	100.0000	100.0000	100.0000	0xe64c0
 hero	?begin@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64e0
 hero	?belongs_to_human@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xd9050
 hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64f0
+hero	?find_summonable_boat@hero@@QAEPAVboat@@XZ	100.0000	100.0000	100.0000	0xe54a0
 hero	?get_combat_speed_bonus@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xe5aa0
 hero	?get_combat_value_modifier@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe5400
 hero	?get_equipped_artifacts@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd9070
@@ -635,6 +637,7 @@ hero	?get_number_in_backpack@hero@@QAEJE@Z	100.0000	100.0000	100.0000	0xd90c0
 hero	?get_obscured_town@type_obscuring_object@@QAEPAVtown@@XZ	100.0000	100.0000	100.0000	0xd7490
 hero	?get_player@hero@@QAEPAVplayerData@@XZ	100.0000	100.0000	100.0000	0xe56b0
 hero	?get_primary_skill_total@hero@@QAEFXZ	99.5833	99.5833	99.5833	0xe5960
+hero	?get_rollover_text@type_artifact@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xdb350
 hero	?get_spell_level@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe5080
 hero	?hire@hero@@QAEXHUtype_point@@@Z	100.0000	100.0000	100.0000	0xd7890
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd74d0
@@ -669,7 +672,6 @@ hero	hero_GetMorale	0.0000	0.0000	0.0000	0xe39b0
 hero	hero_GetNecromancyFactor	0.0000	0.0000	0.0000	0xe3cd0
 hero	hero_GiveArtifact	0.0000	0.0000	0.0000	0xe3070
 hero	hero_GiveExperience	0.0000	0.0000	0.0000	0xe33b0
-hero	hero_GiveResource	0.0000	0.0000	0.0000	0xe3600
 hero	hero_HeroFn_004D8B30	0.0000	0.0000	0.0000	0xd8b30
 hero	hero_HeroFn_004D8FB0	0.0000	0.0000	0.0000	0xd8fb0
 hero	hero_HeroFn_004DBE80	0.0000	0.0000	0.0000	0xdbe80
@@ -689,7 +691,6 @@ hero	hero_ViewStat	0.0000	0.0000	0.0000	0xd9b30
 hero	hero_can_land	0.0000	0.0000	0.0000	0xe5ce0
 hero	hero_can_summon_boat	0.0000	0.0000	0.0000	0xe5550
 hero	hero_equip_artifact	0.0000	0.0000	0.0000	0xe2a00
-hero	hero_find_summonable_boat	0.0000	0.0000	0.0000	0xe54a0
 hero	hero_get_backpack_error	0.0000	0.0000	0.0000	0xe2ed0
 hero	hero_get_luck_description	0.0000	0.0000	0.0000	0xdcac0
 hero	hero_get_morale_description	0.0000	0.0000	0.0000	0xdc320
@@ -702,7 +703,6 @@ hero	hero_save	0.0000	0.0000	0.0000	0xd80c0
 hero	hero_update_spell_list	0.0000	0.0000	0.0000	0xd95d0
 hero	mark_spells	0.0000	0.0000	0.0000	0xd9350
 hero	type_artifact_get_description	0.0000	0.0000	0.0000	0xdb3e0
-hero	type_artifact_get_rollover_text	0.0000	0.0000	0.0000	0xdb350
 hero	type_obscuring_object_load	0.0000	0.0000	0.0000	0xd74f0
 hero	type_obscuring_object_obscure_cell	0.0000	0.0000	0.0000	0xd75d0
 hero	type_obscuring_object_restore_cell	0.0000	0.0000	0.0000	0xd76e0
