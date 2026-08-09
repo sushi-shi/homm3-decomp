@@ -10,13 +10,14 @@ advmgr	?CompleteDraw@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0xf870
 advmgr	?CompleteDraw@advManager@@QAEXHHHEE@Z	100.0000	100.0000	100.0000	0xf3f0
 advmgr	?DeactivateCurrHero@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x175a0
 advmgr	?DeactivateCurrTown@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x17570
-advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	80.1528	80.1528	80.1528	0x10c00
+advmgr	?DrawAdvObj@advManager@@QAEXHHHHH@Z	80.2171	80.2171	80.2171	0x10c00
 advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	75.3619	75.3619	75.3619	0x11590
 advmgr	?DrawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x10760
 advmgr	?DrawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x109b0
 advmgr	?DrawGround@advManager@@QAEXHHHHH@Z	86.6308	86.6308	86.6308	0x12900
 advmgr	?DrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1571	98.1571	98.1571	0xfe30
 advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1745	98.1745	98.1745	0x102c0
+advmgr	?DrawRiver@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11b80
 advmgr	?DrawRoad@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11d60
 advmgr	?DrawRolloverText@advManager@@QAEXPAD@Z	100.0000	100.0000	100.0000	0xb0e0
 advmgr	?DrawShroud@advManager@@QAEXHHHHH@Z	81.4106	81.4106	81.4106	0x12220
@@ -27,6 +28,7 @@ advmgr	?GetCell@advManager@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000	100.0000	
 advmgr	?GetCloudLookup@advManager@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xf8c0
 advmgr	?GetFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xfd20
 advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010
+advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	89.5008	89.5008	89.5008	0x18620
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
 advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	99.3415	99.3415	99.3415	0x15d60
@@ -62,9 +64,7 @@ advmgr	advManager_DoSystemOptions	0.0000	0.0000	0.0000	0x1ac00
 advmgr	advManager_DrawAdventureMapGems	0.0000	0.0000	0.0000	0xf2f0
 advmgr	advManager_DrawArrow	0.0000	0.0000	0.0000	0x120b0
 advmgr	advManager_DrawArrowShadow	0.0000	0.0000	0.0000	0x11f50
-advmgr	advManager_DrawRiver	0.0000	0.0000	0.0000	0x11b80
 advmgr	advManager_EnableButtons	0.0000	0.0000	0.0000	0x1a3a0
-advmgr	advManager_GetSoundId	0.0000	0.0000	0.0000	0x18620
 advmgr	advManager_HeroQuickView	0.0000	0.0000	0.0000	0x16590
 advmgr	advManager_InsertSound	0.0000	0.0000	0.0000	0x18c10
 advmgr	advManager_LoadRemote	0.0000	0.0000	0.0000	0x1a100

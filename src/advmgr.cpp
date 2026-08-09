@@ -1265,7 +1265,7 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
     }
 
     if (foundHero || foundBoat) {
-        for (int part = 0; part < 6; ++part) {
+        for (int part = 0; part <= 5; ++part) {
             if (heroParts[part].IsValid)
                 DrawHeroPart(part, heroParts[part], baseX, baseY,
                              tilex, tiley, tilew, tileh);
@@ -1470,16 +1470,57 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:6441
 VA(0x00411b80, 0x1D7)  // linkorder, dc 0x13890
 void advManager::DrawRiver(int srcX, int srcY, int z, int destX, int destY)
 {
-    // @stub
-}
+    if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
+        return;
 
-#endif  // @carcass
+    type_point point;
+    point = type_point(srcX, srcY, z);
+    NewmapCell* thisCell;
+    if (!point.is_valid()) {
+        thisCell = fullMap->cellData;
+    } else {
+        thisCell = &fullMap->cellData[
+            (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
+    }
+    if (!thisCell->RiverSet)
+        return;
+
+    int baseX = mapOriginX + destX * 32;
+    int baseY = mapOriginY + destY * 32;
+    int tilex = 0;
+    int tiley = 0;
+    int tilew = 32;
+    int tileh = 32;
+
+    if (baseX < 8) {
+        tilex = 8 - baseX;
+        tilew = baseX + 24;
+        baseX = 8;
+    }
+    if (baseY < 0) {
+        tiley = -baseY;
+        tileh = baseY + 32;
+        baseY = 0;
+    }
+    if (baseX + tilew > 600)
+        tilew = 600 - baseX;
+    if (baseY + tileh > 544)
+        tileh = 544 - baseY;
+    if (tilew <= 0 || tileh <= 0)
+        return;
+
+    AdvRiverCellView* riverCell = static_cast<AdvRiverCellView*>(
+        static_cast<void*>(thisCell));
+    riverTileset[thisCell->RiverSet]->DrawTile(
+        thisCell->RiverIndex, tilex, tiley, tilew, tileh,
+        gpWindowManager->screenBitmap, baseX, baseY + 8,
+        (riverCell->cellFlags >> 2) & 1,
+        (riverCell->cellFlags >> 3) & 1);
+}
 
 // E:\gamedcs\advmgr.cpp:6504
 VA(0x00411d60, 0x1EC)  // linkorder, dc 0x13a64
@@ -2087,12 +2128,215 @@ void advManager::CheckLoadSample(e_looping_sound_id id_num)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:9945
 VA(0x00418620, 0x5E4)  // anchor-global, dc 0x1b5a8
 e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
 {
-    // @stub
+    NewmapCell* thisCell = &fullMap->cellData[
+        (z * fullMap->Size + y) * fullMap->Size + x];
+
+    if (thisCell->GroundSet == eTerrainWater && thisCell->GroundIndex < 21)
+        return LOOPING_SOUND_69;
+
+    if (thisCell->is_trigger) {
+        switch (thisCell->type) {
+        case CREATURE_BANK:
+            switch (thisCell->objectIndex) {
+            case GET_SOUND_BANK_0: return LOOPING_SOUND_7;
+            case GET_SOUND_BANK_1: return LOOPING_SOUND_50;
+            case GET_SOUND_BANK_2: return LOOPING_SOUND_19;
+            case GET_SOUND_BANK_3: return LOOPING_SOUND_14;
+            case GET_SOUND_BANK_4: return LOOPING_SOUND_59;
+            case GET_SOUND_BANK_5: return LOOPING_SOUND_60;
+            case GET_SOUND_BANK_6: return LOOPING_SOUND_23;
+            default: return LOOPING_SOUND_INVALID;
+            }
+        case MINE: {
+            int extraInfo = thisCell->extraInfo;
+            AdvMineSoundView* mine = static_cast<AdvMineSoundView*>(
+                static_cast<void*>(&gpGame->mines[extraInfo]));
+            if (mine->abandoned)
+                return LOOPING_SOUND_7;
+            switch (mine->type) {
+            case GET_SOUND_MINE_0: return LOOPING_SOUND_24;
+            case GET_SOUND_MINE_1: return LOOPING_SOUND_39;
+            case GET_SOUND_MINE_2:
+            case GET_SOUND_MINE_3: return LOOPING_SOUND_40;
+            case GET_SOUND_MINE_4: return LOOPING_SOUND_47;
+            case GET_SOUND_MINE_5: return LOOPING_SOUND_17;
+            case GET_SOUND_MINE_6: return LOOPING_SOUND_29;
+            default: return LOOPING_SOUND_INVALID;
+            }
+        }
+        case GARRISON:
+            switch (thisCell->objectIndex) {
+            case GET_SOUND_GARRISON_0: return LOOPING_SOUND_41;
+            case GET_SOUND_GARRISON_1: return LOOPING_SOUND_25;
+            default: return LOOPING_SOUND_INVALID;
+            }
+        case WINDMILL:
+            return LOOPING_SOUND_66;
+        case WHIRLPOOL:
+            return LOOPING_SOUND_67;
+        case THIEVES_DEN:
+            return LOOPING_SOUND_49;
+        case ARENA:
+            return LOOPING_SOUND_2;
+        case SIREN:
+            return LOOPING_SOUND_62;
+        case BUOY:
+            return LOOPING_SOUND_5;
+        case CAMPFIRE:
+            return LOOPING_SOUND_6;
+        case UNDERGROUND_GATE:
+            return LOOPING_SOUND_55;
+        case FOUNTAIN_OF_YOUTH:
+            return LOOPING_SOUND_13;
+        case RALLY_FLAG:
+            return LOOPING_SOUND_15;
+        case MYSTICAL_GARDEN:
+            return LOOPING_SOUND_57;
+        case FAERIE_RING:
+            return LOOPING_SOUND_53;
+        case BLACK_MARKET:
+        case TRADING_POST:
+            return LOOPING_SOUND_26;
+        case TAVERN:
+            return LOOPING_SOUND_64;
+        case MERC_CAMP:
+        case REFUGEE_CAMP:
+            return LOOPING_SOUND_27;
+        case WATER_WHEEL:
+            return LOOPING_SOUND_28;
+        case LITH_ONEWAY_ENTRANCE:
+        case LITH_ONEWAY_EXIT:
+            return LOOPING_SOUND_30;
+        case LITH_TWOWAY:
+            return LOOPING_SOUND_31;
+        case SHRINE1:
+        case SHRINE2:
+        case SHRINE3:
+            return LOOPING_SOUND_38;
+        case POWER_SCHOOL:
+            return LOOPING_SOUND_39;
+        case CREATURE_GENERATOR_1:
+            switch (gCreatureGenerator1Types[thisCell->objectIndex]) {
+            case GET_SOUND_CREATURE_106:
+            case GET_SOUND_CREATURE_108: return LOOPING_SOUND_33;
+            case GET_SOUND_CREATURE_096: return LOOPING_SOUND_3;
+            case GET_SOUND_CREATURE_010:
+            case GET_SOUND_CREATURE_014: return LOOPING_SOUND_21;
+            case GET_SOUND_CREATURE_112: return LOOPING_SOUND_46;
+            case GET_SOUND_CREATURE_012: return LOOPING_SOUND_37;
+            case GET_SOUND_CREATURE_054: return LOOPING_SOUND_9;
+            case GET_SOUND_CREATURE_104: return LOOPING_SOUND_23;
+            case GET_SOUND_CREATURE_016: return LOOPING_SOUND_50;
+            case GET_SOUND_CREATURE_113: return LOOPING_SOUND_51;
+            case GET_SOUND_CREATURE_018: return LOOPING_SOUND_52;
+            case GET_SOUND_CREATURE_086: return LOOPING_SOUND_68;
+            case GET_SOUND_CREATURE_084: return LOOPING_SOUND_56;
+            case GET_SOUND_CREATURE_044:
+            case GET_SOUND_CREATURE_052: return LOOPING_SOUND_65;
+            case GET_SOUND_CREATURE_072: return LOOPING_SOUND_20;
+            case GET_SOUND_CREATURE_046: return LOOPING_SOUND_10;
+            case GET_SOUND_CREATURE_110: return LOOPING_SOUND_22;
+            case GET_SOUND_CREATURE_080: return LOOPING_SOUND_58;
+            case GET_SOUND_CREATURE_076: return LOOPING_SOUND_59;
+            case GET_SOUND_CREATURE_078:
+            case GET_SOUND_CREATURE_102: return LOOPING_SOUND_0;
+            case GET_SOUND_CREATURE_008: return LOOPING_SOUND_32;
+            case GET_SOUND_CREATURE_038: return LOOPING_SOUND_60;
+            case GET_SOUND_CREATURE_090: return LOOPING_SOUND_61;
+            case GET_SOUND_CREATURE_088:
+            case GET_SOUND_CREATURE_098: return LOOPING_SOUND_34;
+            case GET_SOUND_CREATURE_042:
+            case GET_SOUND_CREATURE_050:
+            case GET_SOUND_CREATURE_114: return LOOPING_SOUND_14;
+            case GET_SOUND_CREATURE_026:
+            case GET_SOUND_CREATURE_068:
+            case GET_SOUND_CREATURE_082: return LOOPING_SOUND_11;
+            case GET_SOUND_CREATURE_092: return LOOPING_SOUND_4;
+            case GET_SOUND_CREATURE_028: return LOOPING_SOUND_18;
+            case GET_SOUND_CREATURE_022: return LOOPING_SOUND_54;
+            case GET_SOUND_CREATURE_115: return LOOPING_SOUND_16;
+            case GET_SOUND_CREATURE_020: return LOOPING_SOUND_35;
+            case GET_SOUND_CREATURE_024: return LOOPING_SOUND_44;
+            case GET_SOUND_CREATURE_056: return LOOPING_SOUND_63;
+            case GET_SOUND_CREATURE_058:
+            case GET_SOUND_CREATURE_060:
+            case GET_SOUND_CREATURE_062:
+            case GET_SOUND_CREATURE_064:
+            case GET_SOUND_CREATURE_066: return LOOPING_SOUND_8;
+            case GET_SOUND_CREATURE_000: return LOOPING_SOUND_36;
+            case GET_SOUND_CREATURE_002:
+            case GET_SOUND_CREATURE_100: return LOOPING_SOUND_1;
+            case GET_SOUND_CREATURE_004:
+            case GET_SOUND_CREATURE_030: return LOOPING_SOUND_19;
+            case GET_SOUND_CREATURE_034:
+            case GET_SOUND_CREATURE_036: return LOOPING_SOUND_25;
+            case GET_SOUND_CREATURE_048:
+            case GET_SOUND_CREATURE_070:
+            case GET_SOUND_CREATURE_074:
+            case GET_SOUND_CREATURE_094: return LOOPING_SOUND_7;
+            case GET_SOUND_CREATURE_040: return LOOPING_SOUND_43;
+            default: return LOOPING_SOUND_42;
+            }
+        case CREATURE_GENERATOR_4:
+            switch (thisCell->objectIndex) {
+            case GET_SOUND_GENERATOR4_0: return LOOPING_SOUND_43;
+            case GET_SOUND_GENERATOR4_1: return LOOPING_SOUND_12;
+            default: return LOOPING_SOUND_INVALID;
+            }
+        case DEFENSE_TOWER:
+        case HILL_FORT:
+        case WAR_SCHOOL:
+            return LOOPING_SOUND_41;
+        case DRAGON_CITY:
+            return LOOPING_SOUND_11;
+        case FOUNTAIN_OF_FORTUNE:
+        case MAGIC_SPRING:
+            return LOOPING_SOUND_16;
+        case GARDEN_OF_REVELATION:
+            return LOOPING_SOUND_54;
+        case MAGIC_SCHOOL:
+            return LOOPING_SOUND_25;
+        case PILLAR_OF_FIRE:
+            return LOOPING_SOUND_14;
+        case SANCTUARY:
+        case TEMPLE:
+            return LOOPING_SOUND_37;
+        case SEPULCHER:
+            return LOOPING_SOUND_8;
+        case SHIPYARD:
+            return LOOPING_SOUND_24;
+        case STABLES:
+            return LOOPING_SOUND_21;
+        case TRAINING_GROUNDS:
+            return LOOPING_SOUND_23;
+        case WAR_MACHINE_FACTORY:
+            return LOOPING_SOUND_12;
+        default:
+            return LOOPING_SOUND_INVALID;
+        }
+    }
+
+    if (thisCell->type != NOTHING) {
+        if (thisCell->type != TERRAIN_VOLCANO)
+            return LOOPING_SOUND_INVALID;
+        return LOOPING_SOUND_45;
+    }
+
+    TAdventureObjectType specialTerrain = thisCell->get_special_terrain();
+    if (specialTerrain == CURSED_GROUND)
+        return LOOPING_SOUND_48;
+    if (specialTerrain == MAGIC_PLAINS)
+        return LOOPING_SOUND_25;
+    return LOOPING_SOUND_INVALID;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10372
 VA(0x00418c10, 0x1B1)  // anchor-global, dc 0x1be10
