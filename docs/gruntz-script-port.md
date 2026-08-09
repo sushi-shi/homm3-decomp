@@ -360,6 +360,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `origPos` field name and inline call; no external implementation or
   `decomp-attempt-1` material was used.
 
+- **2026-08-09 — `combatManager::GenerateMap` reconstructed from unscored to
+  58.8421% (220 bytes).** Retail initializes the complete 11-by-17 combat
+  grid: eight signed-short screen-coordinate fields, five empty-stack
+  sentinels and three cleared state fields per 112-byte cell. The natural
+  nested loop has the same five-block CFG, bounds and store semantics. The
+  residual is whole-loop allocation and strength reduction: retail spills
+  the row plus three derived coordinates and retains -1 in EBX, while this
+  compile retains/strength-reduces the row and emits immediate sentinels.
+  Cached versus repeated `GetCell`, function/block row lifetimes, a shared
+  sentinel and the nested `GetHexIndex` header boundary were measured; the
+  best canonical form is retained under the HoMM2/Gruntz bounded-hypothesis
+  rule. Dreamcast contributes only the method/helper identities and local
+  name; no external implementation or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `combatManager::RaiseSkeletons` reconstructed to 93.2203%.**
   The function first merges the pending raised stack unchanged; if the
   destination group has neither a matching nor an empty slot, it promotes

@@ -370,6 +370,7 @@ public:
     void CombatSystemOptions();
     const char* GetBackgroundName();
     void UpdateArmyGroup(int whichSide);
+    void GenerateMap();
     void RaiseSkeletons(int side);
     void LearnSpellFromEagleEye(int side);
     static unsigned char LoadWallTraitsTable();
@@ -386,6 +387,20 @@ public:
     // it is kept because the DC roster attests the accessor, not as a
     // matching lever.
     TObstacle* GetObstacle(int index) { return &obstacles_begin[index]; }
+    // DC header inlines (CmbtMgr.h:1506/1537). Neither has a retail
+    // out-of-line body; GenerateMap folds both into its 11x17 walk.
+    unsigned char RowIsOdd(int y) const
+    {
+        return static_cast<unsigned char>(y & 1);
+    }
+    int GetHexIndex(int x, int y) const
+    {
+        return y * 17 + x;
+    }
+    hexcell* GetCell(int x, int y)
+    {
+        return &cells[GetHexIndex(x, y)];
+    }
     // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). No retail
     // body; place_shooter (0x422060) carries two copies of it, one on
     // the loop index (which VC6 strength-reduces onto the same 30-byte
