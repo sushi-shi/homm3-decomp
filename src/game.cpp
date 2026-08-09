@@ -311,11 +311,46 @@ int game::SaveMinePool(TAbstractFile* outfile)
 #if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1024
+#endif  // @carcass
+
 VA(0x004b96f0, 0x1CB)  // anchor-global (ClaimGarrison vector) + read-slot, dc 0xa438c
-int game::LoadGarrisonPool(void* infile, int saveVersion)
+int game::LoadGarrisonPool(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    int count;
+    if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+        return -1;
+
+    garrisons.resize(count & 0xff);
+    for (unsigned int i = 0; i < garrisons.size(); ++i) {
+        unsigned char owner;
+        if (infile->Read(&owner, sizeof(owner)) < sizeof(owner))
+            return -1;
+        garrisons[i].playerOwner = owner;
+
+        garrisons[i].guards.load(infile);
+
+        if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+            return -1;
+        garrisons[i].field_3d = static_cast<unsigned char>(count);
+        if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+            return -1;
+        garrisons[i].field_3e = static_cast<unsigned char>(count);
+        if (infile->Read(&count, sizeof(unsigned char)) < sizeof(unsigned char))
+            return -1;
+        garrisons[i].field_3f = static_cast<unsigned char>(count);
+
+        if (saveVersion < 28) {
+            garrisons[i].field_3c = !gbUnk69774c;
+        } else {
+            unsigned char value;
+            infile->Read(&value, sizeof(value));
+            garrisons[i].field_3c = value != 0;
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1072
 #endif  // @carcass

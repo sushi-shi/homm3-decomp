@@ -427,6 +427,7 @@ public:
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
     void calculate_production();                 // 0x4b8af0
+    int LoadGarrisonPool(TAbstractFile* infile, int saveVersion);
     int SaveMinePool(TAbstractFile* outfile);     // 0x4b9580
     int SaveGarrisonPool(TAbstractFile* outfile); // 0x4b98c0
     int SaveBoatPool(TAbstractFile* outfile);     // 0x4b9c40
@@ -480,6 +481,7 @@ public:
 // image-wide make gpGame the central object.
 DATA(0x006994e8) extern game* gpGame;
 DATA(0x0067814c) extern int gHeroGoldCost;
+DATA(0x0069774c) extern unsigned char gbUnk69774c;
 extern playerData* gpCurrentPlayer;
 
 // The world's x- and y-extents, retail .data 0x6783c8 / 0x6783cc.
