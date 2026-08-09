@@ -488,6 +488,7 @@ game	?GiveArmy@game@@QAEXPAVarmyGroup@@HHH@Z	100.0000	100.0000	100.0000	0xca340
 game	?Grow@generator@@QAEXH@Z	100.0000	100.0000	100.0000	0xb8a60
 game	?HasCapitol@playerData@@QAE_NXZ	100.0000	100.0000	100.0000	0xb9f40
 game	?HasMobileHero@playerData@@QAE_NXZ	100.0000	100.0000	100.0000	0xbab90
+game	?Initialize@generator@@QAEXJ@Z	100.0000	100.0000	100.0000	0xb8860
 game	?IsHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xce940
 game	?IsHuman@playerData@@QBE_NXZ	100.0000	100.0000	100.0000	0xbada0
 game	?IsLastHuman@game@@QBE_NH@Z	100.0000	100.0000	100.0000	0xcec50
@@ -557,7 +558,6 @@ game	game_get_new_boat_id	0.0000	0.0000	0.0000	0xbb170
 game	game_get_puzzle_origin	0.0000	0.0000	0.0000	0xcea70
 game	game_get_random_lith	0.0000	0.0000	0.0000	0xcdb80
 game	game_get_underground_gate_exit	0.0000	0.0000	0.0000	0xcde40
-game	generator_Initialize	0.0000	0.0000	0.0000	0xb8860
 game	playerData_Init	0.0000	0.0000	0.0000	0xb9e20
 game	playerData_NumOfGivenArtifact	0.0000	0.0000	0.0000	0xbabd0
 game	playerData_add_garrison_hero	0.0000	0.0000	0.0000	0xb9fc0

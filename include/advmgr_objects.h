@@ -3,6 +3,7 @@
 
 #include <bitset>
 #include <vector>
+#include "armygrp.h"
 #include "mapcell.h"
 
 class CSprite;
@@ -180,7 +181,8 @@ enum EGetSoundCreatureId {
     GET_SOUND_CREATURE_115 = 115
 };
 
-DATA(0x0063d570) extern int gCreatureGenerator1Types[];
+DATA(0x0063d570) extern TCreatureType gCreatureGenerator1Types[];
+DATA(0x00677938) extern TCreatureType gCreatureGenerator4Types[][4];
 
 class CObject {
 public:
