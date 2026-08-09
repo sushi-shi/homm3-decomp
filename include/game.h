@@ -592,7 +592,14 @@ public:
         char pad_11[3];
     };
 
-#ifdef HOMM3_TOWN_OBJ_DECLS
+#ifdef HOMM3_GAME_OBJ_DECLS
+    char pad_00000[4];
+    // +0x04 and +0x4a, the current draw mask and scenario prohibition mask
+    // used by game::GetRandomSpell.
+    unsigned char spellUsed[70];
+    unsigned char spellDisabled[70];
+    char pad_00090[0x1f3c4];
+#elif defined(HOMM3_TOWN_OBJ_DECLS)
     char pad_00000[0x4a];
     // +0x4a, one scenario-level prohibition byte per retail town spell.
     unsigned char spellDisabled[70];
@@ -729,6 +736,7 @@ public:
     int GetNewHeroId(int playerPos, THeroClass excludedClass,
                      unsigned char preferAlignment,
                      THeroClass preferredClass);               // 0x4bb5e0
+    SpellID GetRandomSpell(std::bitset<5> spellLevels);        // 0x4c95a0
     playerData* GetLocalPlayer();
     int GetLocalPlayerGamePos();                 // 0x4cea20
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW

@@ -489,6 +489,7 @@ game	?GetName@playerData@@QAEPADXZ	95.8491	95.8491	95.8491	0xbadb0
 game	?GetNewHeroId@game@@QAEHHW4THeroClass@@E0@Z	98.9815	98.9815	98.9815	0xbb5e0
 game	?GetNumObelisks@@YIHH@Z	100.0000	100.0000	100.0000	0xbaba0
 game	?GetPlayerName@game@@QAEPADH@Z	99.5312	99.5312	99.5312	0xceb60
+game	?GetRandomSpell@game@@QAEHV?$bitset@$04@std@@@Z	100.0000	100.0000	100.0000	0xc95a0
 game	?GetStartingHeroId@game@@QAEHW4TTownType@@HH@Z	100.0000	100.0000	100.0000	0xbb400
 game	?GetTownId@game@@QAEHHHH@Z	100.0000	100.0000	100.0000	0xbb870
 game	?GetWorldMapData@game@@QAEPAVNewfullMap@@XZ	100.0000	100.0000	100.0000	0xbb160
@@ -547,7 +548,6 @@ game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
 game	game_CreateTownHeroes	0.0000	0.0000	0.0000	0xca040
 game	game_GetRandomArtifactId	0.0000	0.0000	0.0000	0xc94d0
 game	game_GetRandomMonster	0.0000	0.0000	0.0000	0xc92c0
-game	game_GetRandomSpell	0.0000	0.0000	0.0000	0xc95a0
 game	game_InsertObject	0.0000	0.0000	0.0000	0xc9890
 game	game_ProcessRandomObjects	0.0000	0.0000	0.0000	0xc9dd0
 game	game_Save	0.0000	0.0000	0.0000	0xbe3f0
