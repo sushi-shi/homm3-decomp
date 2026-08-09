@@ -20,8 +20,6 @@ DATA(0x00699548) extern int gUnnamed699548;
 DATA(0x0069778c) extern int gUnnamed69778c;
 DATA(0x006994fc) extern townManager* gpTownManager;
 DATA(0x00699500) extern executive* gpExecutive;
-DATA(0x0067814c) extern int gHeroGoldCost;
-
 // DC public ?included_buildings@town@@2PAY0CM@_JA; retail .bss
 // 0x6a8bb8, nine 0x160-stride rows to 0x6a9818. Ownership: the DC
 // data segment brackets it with town's other statics

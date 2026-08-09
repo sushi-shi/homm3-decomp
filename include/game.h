@@ -603,7 +603,7 @@ public:
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
     void calculate_production();                 // 0x4b8af0
-#ifdef HOMM3_TOWN_OBJ_DECLS
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
     // 0x4c9990. town.obj needs this declaration for
     // town::destroy_extra_capitol; keeping it TU-scoped preserves the
     // retail-sensitive game member population in the other compilands.
@@ -654,6 +654,7 @@ public:
 // player's record). Names provisional. 2,264 dir32 references
 // image-wide make gpGame the central object.
 DATA(0x006994e8) extern game* gpGame;
+DATA(0x0067814c) extern int gHeroGoldCost;
 extern playerData* gpCurrentPlayer;
 
 // The world's x- and y-extents, retail .data 0x6783c8 / 0x6783cc.
