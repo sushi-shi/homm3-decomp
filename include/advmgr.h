@@ -545,6 +545,7 @@ public:
     unsigned char FindAdjacentMonster(type_point point, type_point* result,
                                       type_point excluded);
     int InMapArea(int x, int y);
+    type_point get_map_center();
     NewmapCell* GetCell(type_point point);
     int MoreTreesNear(type_point point);
     void UpdateRadar(type_point origin, unsigned char updateFlag,
