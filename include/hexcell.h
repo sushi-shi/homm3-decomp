@@ -9,13 +9,20 @@
 
 class army;
 
-// Head model from the retail ctor 0x4e7150: field_10@0x10 = 0,
-// field_14 = -1, three -1 bytes at 0x18..0x1a, field_1c = 0, then a
-// zero byte at 0x4c and a -1 byte at 0x4d. Names provisional; the
-// gaps stay padded until consumers prove them.
+// Head model from the retail ctor 0x4e7150 and GenerateMap 0x4642d0.
+// The seven leading screen-geometry shorts use the names and offsets in
+// Dreamcast CodeView; their x/y formulas and the remaining initialized
+// fields are independently byte-proven by the retail GenerateMap body.
 class hexcell {
 public:
-    char pad_00[0x10];
+    short refX;                   // +0x0
+    short refY;                   // +0x2
+    short hexULX;                 // +0x4
+    short hexULY;                 // +0x6
+    short hexBRX;                 // +0x8
+    short hexBRY;                 // +0xa
+    short fullHexBRY;             // +0xc
+    char pad_0e[0x2];
     int field_10;
     int field_14;
     // Signed: get_army (0x4e7170) movsx-loads the pair and treats a
