@@ -404,6 +404,7 @@ public:
     long get_wall_strength(long target) const { return wallStrength[target]; }
 
     int GetGridIndex(int x, int y);
+    void SetupAdjacencyArray();
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();

@@ -234,6 +234,7 @@ void combatManager::SetupAdjacencyArray()
         }
     }
 }
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1612
 // EXACT 2026-08-09 from retail's survivor write-back loop. The
