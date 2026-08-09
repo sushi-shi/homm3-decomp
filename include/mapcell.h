@@ -329,6 +329,14 @@ public:
 };
 #pragma pack(pop)
 
+#ifdef HOMM3_HERO_LAND_VIEW
+// Retail .rdata 0x660428 stores a pointer to sixteen bytes per adventure-
+// object type. can_land proves byte zero as the trigger-object landing veto;
+// the remaining bytes stay opaque.
+DATA(0x00660428)
+extern const unsigned char (*gAdventureObjectLandBlocked)[16];
+#endif
+
 // --- BlackBoxData ---
 // CODEVIEW(E:\gamedcs\MapCell.h:364, dc 0xf47cc) void BlackBoxData::BlackBoxData();
 // CODEVIEW(E:\gamedcs\mapcell.cpp:1725, dc 0xf4bfc) void BlackBoxData::~BlackBoxData();

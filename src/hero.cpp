@@ -17,7 +17,9 @@
 // entry, not an inlined fsqrt.
 #include <math.h>
 #define HOMM3_HERO_COMBINATION_VIEW
+#define HOMM3_HERO_LAND_VIEW
 #include "hero.h"
+#undef HOMM3_HERO_LAND_VIEW
 #undef HOMM3_HERO_COMBINATION_VIEW
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
@@ -2468,8 +2470,6 @@ long hero::get_hit_point_bonus(int creatureType)
     return bonus;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6355
 // LOCATED 2026-08-07 (was DC_ONLY 0xd5548). Proof: exhaustive order-map
 // of the segment 0x004e5aa0..0x004e5e10 (both flanks confirmed), `ret 0`
@@ -2483,10 +2483,24 @@ long hero::get_hit_point_bonus(int creatureType)
 VA(0x004e5ce0, 0xE7)  // anchor-bracket + order-map, dc 0xd5548
 unsigned char hero::can_land()
 {
-    // @stub
-}
+    type_point point;
+    point.x = x;
+    point.y = y;
+    point.z = z;
 
-#endif  // @carcass
+    int size = gpGame->worldMap.Size;
+    NewmapCell* cell = &gpGame->worldMap.cellData[
+        (point.z * size + point.y) * size + point.x];
+    if ((cell->GroundSet == eTerrainWater)
+        == ((flags & 0x40000) == 0)) {
+        return 0;
+    }
+    if (!(cell->flags_00_11 & 0x40))
+        return 0;
+    if (cell->is_trigger && gAdventureObjectLandBlocked[cell->type][0])
+        return 0;
+    return 1;
+}
 
 // E:\gamedcs\hero.cpp:6376
 // LOCATED 2026-08-07 (was DC_ONLY 0xd55b8). Proof: the 16-byte body is
