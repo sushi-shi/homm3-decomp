@@ -329,7 +329,7 @@ VA(0x004d8f70, 0x3E)  // retail-only, hero member, ret 0
 const char* hero::HeroFn_004D8F70()
 {
     if (id == CLASS_NAME_OVERRIDE_HERO_ID && gCampaignMode &&
-        gpGame->campaignScenario == CLASS_NAME_OVERRIDE_SCENARIO)
+        gpGame->campaign.currentCampaign == CLASS_NAME_OVERRIDE_SCENARIO)
         return gUnnamed6a5d5c->entry->campaignHeroClassName;
     return akHeroClasses[heroClass].className;
 }
@@ -353,7 +353,7 @@ const char* hero::HeroFn_004D8FB0()
     }
 
     if (gCampaignMode &&
-        gpGame->campaignScenario != CUSTOM_NAME_CAMPAIGN_EXCLUDED_SCENARIO &&
+        gpGame->campaign.currentCampaign != CUSTOM_NAME_CAMPAIGN_EXCLUDED_SCENARIO &&
         gpCurrentHero->portrait == CUSTOM_NAME_CAMPAIGN_PORTRAIT)
         return gCampaignHeroName;
 

@@ -1568,8 +1568,8 @@ long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
     double defender_luck = 1.25;
     unsigned char human_combat = 0;
 
-    if (gpGame->victoryCondition.Type == VICTORY_CONDITION_DEFEAT_HERO
-        && gpGame->victoryCondition.HeroID == attacking_hero->id)
+    if (gpGame->mapHeader.victoryCondition.Type == VICTORY_CONDITION_DEFEAT_HERO
+        && gpGame->mapHeader.victoryCondition.HeroID == attacking_hero->id)
         aggression *= 0.5;
 
     if (attacking_hero
@@ -1581,7 +1581,7 @@ long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
     if ((defending_town && defending_town->owner >= 0
          && gpGame->IsHuman(defending_town->owner))
         || human_combat)
-        defender_luck = defense_estimates[gpGame->AI_in_control];
+        defender_luck = defense_estimates[gpGame->setup.difficulty];
 
     type_AI_combat_data attacker(attacking_hero, &local_army, aggression,
                                  defending_hero, defending_town, cell);
@@ -1622,14 +1622,14 @@ long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
             + static_cast<float>(value));
 
         if (defending_hero) {
-            if (gpGame->victoryCondition.Type
+            if (gpGame->mapHeader.victoryCondition.Type
                     == VICTORY_CONDITION_DEFEAT_HERO
-                && gpGame->victoryCondition.HeroID == defending_hero->id
-                && gpGame->victoryCondition.applies_to_player(
+                && gpGame->mapHeader.victoryCondition.HeroID == defending_hero->id
+                && gpGame->mapHeader.victoryCondition.applies_to_player(
                     gNetLocalGamePos))
                 value += 5000000;
-            if (gpGame->lossCondition.Type == LOSS_CONDITION_LOSE_HERO
-                && gpGame->lossCondition.HeroID == defending_hero->id)
+            if (gpGame->mapHeader.lossCondition.Type == LOSS_CONDITION_LOSE_HERO
+                && gpGame->mapHeader.lossCondition.HeroID == defending_hero->id)
                 value += 5000000;
         }
     }
