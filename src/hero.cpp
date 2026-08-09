@@ -28,6 +28,7 @@
 #define HOMM3_HERO_CLASS_NAME_VIEW
 #define HOMM3_HERO_HIRE_VIEW
 #include "game.h"
+#include "advmgr.h"
 // TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
 // placement note at the top of that header.
 #include "herospec.h"
@@ -71,6 +72,12 @@ template <class _TYPE>
 inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
 {
     return (_X < _Y ? _Y : _X);
+}
+
+template<class T>
+inline const T& _cpp_max(T x, T y)
+{
+    return x < y ? y : x;
 }
 
 // The per-mastery specialty factor rows, one four-float .rdata run per
@@ -555,6 +562,8 @@ void hero::DestroySiegeWeaponArtifact(int creature_type)
 }
 
 // E:\gamedcs\hero.cpp:1504
+#endif  // @carcass
+
 VA(0x004d92d0, 0x59)  // dc-bracket forced, dc 0xcc300
 void hero::UseSpell(int cost)
 {
@@ -564,7 +573,6 @@ void hero::UseSpell(int cost)
         gpCurrentPlayer->IsLocalHuman())
         gpAdvManager->advWindow->UpdateHeroLocators(-1, 1, 1);
 }
-
 // E:\gamedcs\hero.cpp:1515
 VA(0x004d9330, 0x1A)  // dc-bracket forced, dc 0xcc348
 void hero::AddSpell(int whichSpell)
