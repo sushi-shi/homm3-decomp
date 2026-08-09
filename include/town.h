@@ -358,8 +358,9 @@ public:
     int* get_silo_income() const;
     unsigned char is_legal_building(type_building_id building) const;
     int HasGarrison();
-#ifdef HOMM3_TOWN_OBJ_DECLS
     town();
+    int load(TAbstractFile* infile, int saveVersion);
+#ifdef HOMM3_TOWN_OBJ_DECLS
     // 0x5be030 remains outside the admitted surface; hire needs its
     // direct town-spell handoff.
     void GiveSpells(hero* forceHero);
