@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `armyGroup::GetArmyLuck` exact.** Retail's mode-5 branch
+  lands on the Halfling check, proving that the minimum-one rule follows the
+  Clover-only block instead of belonging to it. Within that block, a scoped
+  creature snapshot is reused by the elemental exclusions and town lookup;
+  VC6 consequently reloads the index into EDI and shrink-wraps EBX around
+  the game-state test exactly as retail does. Together with the previously
+  recovered explicit town-selector labels, all instructions, branches and
+  in-text selector data now match. This is the control-flow-and-lifetime-first
+  discipline taken from the HoMM2/Gruntz matching guidance; no external
+  implementation material was used.
+
 - **2026-08-09 — `armyGroup::GetArmyMorale` rises 80.5625% ->
   96.5625%.** Retail's two magic-terrain switches cover all nine town
   values and VC6 lowers each through a 9-byte selector table. Omitting the

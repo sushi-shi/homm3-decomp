@@ -1324,14 +1324,10 @@ int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero*
 // specials), not the DC prototype's on_cursed_ground uchar - retail
 // loads it as a dword. Byte/jump tables (townType cases 6/7/8 -> +2)
 // trail the body; the claim size includes them.
-// Residual (90.2526%): the clamp tail is exact, and explicit no-bonus/+2
-// labels recover retail's 22-block flow and compressed byte-table +
-// two-entry jump-table at the exact offsets. Repeating armies[index]
-// also removes the former cached creature lifetime. Retail still reloads
-// INDEX into edi after the mode-5 test, wraps f_1f698 in push/pop ebx,
-// and keeps this in esi through the later Halfling reload; this compile
-// uses edx for index and CSEs the creature in ecx. The residual is that
-// linked register-allocation choice plus equivalent table target ids.
+// EXACT 2026-08-09: the Halfling minimum applies after the Clover-only
+// block. A Clover-scoped creature snapshot then gives VC6 retail's EDI
+// index reuse and shrink-wrapped EBX save around the game-state test; the
+// explicit no-bonus/+2 labels preserve its compressed town selector.
 VA(0x0044b3c0, 0xED)  // anchor-global, dc 0x4f2e8
 int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char apply_limits)
 {
@@ -1339,12 +1335,13 @@ int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTo
         return 0;
     int luck = GetLuck(ownerHero, ownerTown, 0, 0, 0, 0);
     if (mode == MAGIC_TERRAIN_CLOVER_FIELD) {
+        int creature = armies[index];
         if (gpGame->f_1f698 != 0
-            || (armies[index] != CREATURE_AIR_ELEMENTAL
-                && armies[index] != CREATURE_EARTH_ELEMENTAL
-                && armies[index] != CREATURE_FIRE_ELEMENTAL
-                && armies[index] != CREATURE_WATER_ELEMENTAL)) {
-            switch (akCreatureTypeTraits[armies[index]].townType) {
+            || (creature != CREATURE_AIR_ELEMENTAL
+                && creature != CREATURE_EARTH_ELEMENTAL
+                && creature != CREATURE_FIRE_ELEMENTAL
+                && creature != CREATURE_WATER_ELEMENTAL)) {
+            switch (akCreatureTypeTraits[creature].townType) {
             case TOWN_CASTLE:
             case TOWN_RAMPART:
             case TOWN_TOWER:
@@ -1363,9 +1360,9 @@ int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTo
             luck += 2;
         no_town_luck_bonus:;
         }
-        if (armies[index] == CREATURE_HALFLING && luck < 1)
-            luck = 1;
     }
+    if (armies[index] == CREATURE_HALFLING && luck < 1)
+        luck = 1;
     if (apply_limits)
         return armygrp_clamp(-3, luck, 3);
     return luck;
