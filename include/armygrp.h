@@ -185,6 +185,10 @@ typedef int SpellID;
 // the DC SpellID enum corroborates every value (eSpellStoneGaze for
 // SPELL_STONE).
 enum ESpellId {
+    // IsInIdentifyRange indexes this row's mastery bonus and multiplies it by
+    // spell power to derive the scouting radius; retail displacement 0x144
+    // proves spell id 2 independently of the Dreamcast spelling.
+    SPELL_VISIONS = 0x2,
     // DC eSpellEarthquake = 14. Read by check_wall_archery_penalty
     // (0x42482b) out of hero::available_spells - a hero who can bring
     // the town wall down is modeled as taking no wall archery penalty.

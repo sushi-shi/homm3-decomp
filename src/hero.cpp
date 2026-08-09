@@ -2519,14 +2519,34 @@ int hero::HeroFn_004E5DE0()
     return field_129;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6385
+// Visions range is its per-mastery trait bonus times clamped spell power,
+// floored at three cells. The point must share the hero's map level and lie
+// strictly inside the resulting squared Euclidean radius.
 VA(0x004e5e10, 0x11C)  // anchor-global, dc 0xd55c0
 unsigned char hero::IsInIdentifyRange(const type_point* location)
 {
-    // @stub
+    int identifyLevel = HeroFn_004E5DE0();
+    int range = akSpellTraits[SPELL_VISIONS].mastery_bonus[identifyLevel]
+        * GetPrimarySkill(2);
+    if (range < 3)
+        range = 3;
+
+    if (z == location->z) {
+        type_point heroLocation;
+        heroLocation.x = x;
+        heroLocation.y = y;
+        heroLocation.z = z;
+
+        int xDistance = location->x - heroLocation.x;
+        int yDistance = location->y - heroLocation.y;
+        if (xDistance * xDistance + yDistance * yDistance < range * range)
+            return 1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6406
 VA(0x004e5f30, 0xBF)  // anchor-global, dc 0xd5644

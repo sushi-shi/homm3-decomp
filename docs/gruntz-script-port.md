@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `hero::IsInIdentifyRange` reconstructed to 98.6813%
+  (284 bytes).** Retail proves that the inlined +0x129/Rogue mastery getter
+  selects the Visions mastery-bonus row, which is multiplied by clamped spell
+  power and floored at three cells. A candidate must share the hero's packed
+  map level and lie strictly inside the squared Euclidean radius. This also
+  admits spell id 2 as `SPELL_VISIONS`; the 0x144 traits displacement proves
+  the value independently of the Dreamcast spelling. All thirteen blocks and
+  seven branches agree. The residual is one independent load moving across
+  the adjacent packed-point read. No external implementation body was used.
+
 - **2026-08-09 — `game::GetRandomSpell` admitted byte-exact (398 bytes).**
   Retail proves that the nominal Dreamcast integer argument is physically a
   five-level bitset passed by value: all three scans inline its bounds-checked
