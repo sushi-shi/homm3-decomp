@@ -619,6 +619,13 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
             APPEND_VISIT_TEXT(currentHero->ArenaFlags & arenaBit);
         }
         break;
+    case BORDER_GUARD:
+    case BORDER_TENT:
+        sprintf(gText, DATA_COMPGEN(
+            0x00660344, rolloverBorderFormat, "%s %s"),
+            gBorderColorNames[cell->objectIndex],
+            gAdventureObjectNames[cell->type]);
+        break;
     SET_VISITED_ROLLOVER(BUOY, BuoyInfo,
         currentHero->flags & 0x4);
     SET_VISITED_ROLLOVER(CLOVER_FIELD, CloverFieldInfo,
@@ -671,6 +678,14 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     SET_VISITED_ROLLOVER(GARDEN_OF_REVELATION, GardenOfRevelationInfo,
         currentHero->GardenOfRevelationFlags
         & (1UL << (cell->extraInfo & 0x1f)));
+    case HILL_FORT:
+        strcpy(gText, gAdventureObjectNames[HILL_FORT]);
+        if (cell->is_trigger && gpGame->GetInfoFlag(HillFortInfo, player)) {
+            sprintf(tempText, visitedFormat,
+                    gGlobalInfoFlagNames[HillFortInfo]);
+            strcat(gText, tempText);
+        }
+        break;
     SET_VISITED_ROLLOVER(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
         currentHero->flags & (0x02000000UL | 0x10UL));
     SET_VISITED_ROLLOVER(LIBRARY, LibraryInfo,
@@ -723,6 +738,15 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     SET_VISITED_ROLLOVER(POWER_SCHOOL, PowerSchoolInfo,
         currentHero->PowerSchoolFlags
         & (1UL << (cell->extraInfo & 0x1f)));
+    case PYRAMID:
+        strcpy(gText, gAdventureObjectNames[PYRAMID]);
+        if (cell->is_trigger && currentHero) {
+            strcat(gText, separator);
+            strcat(gText, cell->PlayerKnowsCell(currentHero->owner)
+                ? gUnnamed6a5d5c->entry->visitedObjectText
+                : gUnnamed6a5d5c->entry->unvisitedObjectText);
+        }
+        break;
     SET_VISITED_ROLLOVER(RALLY_FLAG, RallyFlagInfo,
         currentHero->flags & 0x10000);
     case RESOURCE:
@@ -788,8 +812,26 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     SET_VISITED_ROLLOVER(WAR_SCHOOL, WarSchoolInfo,
         currentHero->WarSchoolFlags
         & (1UL << (cell->extraInfo & 0x1f)));
+    case WATER_WHEEL:
+        strcpy(gText, gAdventureObjectNames[WATER_WHEEL]);
+        if (cell->is_trigger && cell->PlayerKnowsCell(player)) {
+            strcat(gText, separator);
+            strcat(gText, (cell->extraInfo & 0x1f) == 0
+                ? gUnnamed6a5d5c->entry->visitedObjectText
+                : gUnnamed6a5d5c->entry->unvisitedObjectText);
+        }
+        break;
     SET_VISITED_ROLLOVER(WATERING_HOLE, WateringHoleInfo,
         currentHero->flags & 0x40);
+    case WINDMILL:
+        strcpy(gText, gAdventureObjectNames[WINDMILL]);
+        if (cell->is_trigger && cell->PlayerKnowsCell(player)) {
+            strcat(gText, separator);
+            strcat(gText, ((cell->extraInfo >> 13) & 0xf) == 0
+                ? gUnnamed6a5d5c->entry->visitedObjectText
+                : gUnnamed6a5d5c->entry->unvisitedObjectText);
+        }
+        break;
     case WITCH_HUT:
         set_witch_hut_help_text(gText, currentHero, cell,
                                 separator, separator);
