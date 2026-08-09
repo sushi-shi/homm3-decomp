@@ -42,11 +42,13 @@ advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	75.5187	75.5187	75.5
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	99.3641	99.3641	99.3641	0xd8d0
 advmgr	?SetTreeHelpText@@YIXPADPAVhero@@PAVNewmapCell@@PBD3@Z	99.7414	99.7414	99.7414	0xdb00
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790
+advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270
 advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	100.0000	100.0000	100.0000	0x8770
 advmgr	?get_army_help_text@@YI?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBVarmyGroup@@E@Z	54.9494	54.9494	54.9494	0xabe0
 advmgr	?get_black_box@ExtraInfoUnion@@QBEPAVBlackBoxData@@XZ	100.0000	100.0000	100.0000	0x5de0
 advmgr	?get_creature_bank@ExtraInfoUnion@@QBEAAUtype_creature_bank@@XZ	100.0000	100.0000	100.0000	0x5df0
 advmgr	?get_creature_bank_help_text@@YIXPADPAVNewmapCell@@W4type_creature_bank_type@@JPBDE@Z	85.3542	85.3542	85.3542	0xd3f0
+advmgr	?get_map_center@advManager@@QBE?AUtype_point@@XZ	100.0000	100.0000	100.0000	0x7b10
 advmgr	?get_trigger_cell@type_cell_adjuster@@QAEPAVNewmapCell@@PAV2@HH@Z	100.0000	100.0000	100.0000	0xafb0
 advmgr	?get_university@ExtraInfoUnion@@QBEPAUtype_university@@XZ	100.0000	100.0000	100.0000	0x5e10
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0
@@ -108,11 +110,9 @@ advmgr	advManager_UpdBottomViewNewTurn	0.0000	0.0000	0.0000	0x15fb0
 advmgr	advManager_UpdBottomViewResMsg	0.0000	0.0000	0.0000	0x16160
 advmgr	advManager_UpdBottomViewTown	0.0000	0.0000	0.0000	0x164f0
 advmgr	advManager_UpdateRadar	0.0000	0.0000	0.0000	0x12c40
-advmgr	advManager_UpdateScreen	0.0000	0.0000	0.0000	0xf270
 advmgr	advManager_ViewPuzzle	0.0000	0.0000	0.0000	0x1a7f0
 advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
 advmgr	advManager_garrison_quick_view	0.0000	0.0000	0.0000	0x16f80
-advmgr	advManager_get_map_center	0.0000	0.0000	0.0000	0x7b10
 advmgr	advManager_get_normal_cursor	0.0000	0.0000	0.0000	0xe280
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0
 ai	?IsIncapacitated@army@@QAEEXZ	100.0000	100.0000	100.0000	0x1f380
@@ -464,6 +464,7 @@ font	?LongestWrappedLineWidth@font@@QAEHPBDH@Z	100.0000	100.0000	100.0000	0xb5a8
 font	?SetPalette@font@@QAEXPBVTPalette16@@@Z	100.0000	100.0000	100.0000	0xb5180
 font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10
+game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0
 game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
@@ -511,7 +512,6 @@ game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0
 game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
 game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50
-game	HeroExtra_HeroExtra	0.0000	0.0000	0.0000	0xce4b0
 game	ImmMouseWindowMoved	0.0000	0.0000	0.0000	0xb6950
 game	InitImmMouse	0.0000	0.0000	0.0000	0xb6890
 game	game_ClaimGarrison	0.0000	0.0000	0.0000	0xc6960

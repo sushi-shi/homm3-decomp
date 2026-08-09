@@ -86,6 +86,36 @@ public:
 class town;
 struct type_creature_bank;
 
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+// Retail game::game constructs 156 records with a 0x334 stride and hands
+// HeroExtra::HeroExtra to the vector-constructor iterator. The constructor
+// itself fixes the only non-trivial bands: nineteen equipped and sixty-four
+// backpack artifact records at +0x68/+0x100, a Dinkumware string at +0x308,
+// and a 70-bit spell set at +0x320. HeroFn_004D8B30 independently reaches
+// the tail flags and closes the total size. Names beyond those surviving in
+// the Dreamcast roster remain provisional.
+class HeroExtra {
+public:
+    char pad_000[0x68];
+    type_artifact artifacts[19];
+    type_artifact backpack[64];
+    char pad_300[0x6];
+    unsigned char customName;
+    char pad_307;
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> > name;
+    int experience;
+    unsigned char customSpells;
+    char pad_31d[0x3];
+    std::bitset<70> spells;
+    unsigned char customPrimarySkills;
+    signed char primarySkills[4];
+    char pad_331[0x3];
+
+    HeroExtra();
+};
+SIZE(HeroExtra, 0x334);
+#endif
+
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 struct type_university {
     char fields[0x10];
