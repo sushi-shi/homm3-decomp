@@ -299,6 +299,9 @@ public:
     // because findpath's CalcTerrainCost calls it with the cell in ECX.
     TAdventureObjectType get_special_terrain() const;
     TAdventureObjectType get_map_object();
+#ifdef HOMM3_CMBTMGR_OBJ_DECLS
+    unsigned long get_map_extraInfo();
+#endif
     unsigned char cell_is_trigger();
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     unsigned char is_diggable();

@@ -13,7 +13,9 @@
 
 class CSprite;
 class hero;
+class NewmapCell;
 class searchArray;
+class town;
 struct type_AI_combat_parameters;
 
 // Four integer drawing bounds copied as one value before a drawbridge
@@ -94,6 +96,21 @@ enum ECombatGateHex {
     COMBAT_HEX_OUTER_MOAT = 0x5e,
     COMBAT_HEX_GATE_MOAT = 0x5f,
     COMBAT_HEX_GATE = 0x60
+};
+
+// Two additional TTerrainType values needed only by combat terrain
+// selection. Kept out of armygrp.h's include-sensitive enum: adding
+// enumerators there perturbs VC6 code generation in initialize.obj.
+enum ECombatTerrainValue {
+    COMBAT_TERRAIN_SAND = 1,
+    COMBAT_TERRAIN_SUBTERRANEAN = 6
+};
+
+// Mine type sentinels that force an underground combat background.
+// Their values are retail-proven; their semantic names are not.
+enum ECombatMineType {
+    COMBAT_MINE_TYPE_4 = 4,
+    COMBAT_MINE_TYPE_6 = 6
 };
 
 // Dreamcast CodeView's wall-target domain. DamageWall independently proves
@@ -260,7 +277,9 @@ public:
     char pad_53aa[0xe];
     // CombatSystemOptions clears this dword after the modal dialog closes.
     int field_53b8;                   // +0x53b8
-    char pad_53bc[0x4];
+    // Adventure-map cell under the battlefield. DetermineCombatTerrain
+    // reads its terrain, object and special-terrain state.
+    NewmapCell* combatCell;            // +0x53bc
     // can_cast_spells (0x41f890) refuses a CREATURE cast (hero_spell
     // clear) while this word reads 2, and refuses every cast at all
     // while the byte below is set. Both names await a writer.
@@ -271,13 +290,10 @@ public:
     // Name remains ordinal until its writer is reconstructed.
     unsigned char field_53c6;         // +0x53c6
     char pad_53c7[0x1];
-    // The defending town, byte-proven only at its offset 4: RaiseDoor
-    // (0x4672e0) null-checks the pointer and then compares the BYTE at
-    // +4 against 7 (TTownType TOWN_FORTRESS), and IsInMoat gates its
-    // second moat row on the same byte. Held as a byte view because
-    // that is the whole of what these bodies prove; typing it `town*`
-    // would drag town.h into every cmbtmgr.h consumer.
-    unsigned char* field_53c8;        // +0x53c8
+    // The defending town. DetermineCombatTerrain calls its
+    // GetNativeTerrain method; RaiseDoor and IsInMoat independently
+    // read the faction byte at town+4.
+    town* defendingTown;               // +0x53c8
     // The two combat heroes, indexed by side: can_cast_spells indexes
     // heroes[side] for the spellbook test and then walks both slots for
     // the Orb of Inhibition, and army::get_owner (0x442690) does the
@@ -463,6 +479,7 @@ public:
     const char* GetBackgroundName();
     void UpdateArmyGroup(int whichSide);
     void GenerateMap();
+    void DetermineCombatTerrain();
     void SetupAdjacencyArray();
     int PlaceLargeObstacle(unsigned terrain_mask,
                            unsigned special_terrain_mask);
