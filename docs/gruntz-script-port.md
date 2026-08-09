@@ -306,6 +306,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `type_AI_combat_data::do_aftermath` raised from 79.7256%
+  to 97.3171% by restoring Eagle Eye's first-success exit and pointer
+  lifetime.** Retail leaves the spell scan immediately after `AddSpell`, so
+  the battle can teach at most one spell; adding the missing `break` is a
+  semantic correction and collapses the reconstruction's three full-width
+  induction values to retail's single signed-short DX walker. Naming the
+  victorious hero inside the defeated-hero guard then keeps that pointer in
+  EDI for the whole scan, matching every loop instruction. These changes
+  apply the HoMM2/Gruntz guidance that control-flow exits and local lifetimes
+  are optimizer inputs, while retail bytes alone prove the behavior and
+  select the retained source. The residual is two harmless instruction-order
+  differences around the volatile surrender byte. Register hints, alternate
+  nesting and surrender-arm aliases were inert and removed. The earlier
+  read-only `decomp-attempt-1` survey supplied no implementation or admitted
+  metadata.
+
 - **2026-08-09 — `type_AI_combat_data::cast_spell` reconstructed from
   unscored to 85.4199%.** The 1,427-byte retail body now selects among every
   available combat spell, enforces Cursed Ground and Recanter's Cloak, pays

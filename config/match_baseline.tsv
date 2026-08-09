@@ -161,7 +161,7 @@ ai_combat	?cast_spell@type_AI_combat_data@@QAEXAAV1@W4type_speed_catagory@@@Z	85
 ai_combat	?check_wall_archery_penalty@type_AI_combat_data@@QAEXPBVtown@@@Z	100.0000	100.0000	100.0000	0x24790
 ai_combat	?choose_melee@type_AI_combat_data@@QBE_NABV1@W4type_speed_catagory@@@Z	90.9329	90.9329	90.9329	0x267c0
 ai_combat	?create_skeletons@@YIXPBVhero@@PBVarmyGroup@@PAV2@@Z	100.0000	100.0000	100.0000	0x26df0
-ai_combat	?do_aftermath@type_AI_combat_data@@QAEXPAV1@PBVtown@@@Z	79.7256	79.7256	79.7256	0x26ee0
+ai_combat	?do_aftermath@type_AI_combat_data@@QAEXPAV1@PBVtown@@@Z	97.3171	97.3171	97.3171	0x26ee0
 ai_combat	?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z	94.7603	94.7603	94.7603	0x264d0
 ai_combat	?get_area_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@JJ@Z	100.0000	100.0000	100.0000	0x24bf0
 ai_combat	?get_attack@type_AI_combat_data@@QBEJW4type_speed_catagory@@E@Z	100.0000	100.0000	100.0000	0x26390
