@@ -51,6 +51,7 @@
 #include "prefs.h"  // the local quick-combat preference
 #include "resourcemanager.h"
 #include "soundmgr.h" // SAMPLE2 / LoadPlaySample / WaitEndSample
+#include "remote.h"
 #include "textresource.h"
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
 
@@ -868,20 +869,17 @@ unsigned char combatManager::should_lower_door(army* this_army, long hex)
     return 0;
 }
 
-// The header-inline copy of the byte-exact IsQuickCombat body below. It is
-// kept file-local here so LowerDoor sees the source boundary without making
-// game/prefs/kbwin part of every cmbtmgr.h consumer's include closure.
-static inline bool lower_door_is_quick_combat(const combatManager* manager)
+// Dreamcast lists this as a cmbtmgr.h inline with no retail body.
+// LowerDoor's inlined branch graph proves all four inputs and the exact
+// distinction between network-side quick combat and the global mode.
+inline unsigned char combatManager::IsQuickCombat()
 {
     if (gpGame->field_1f69d)
-        return false;
-    if (bVideoPaused && manager->sideIsAI[0] && manager->sideIsAI[1]) {
-        if (gpGame->players[manager->playerIds[0]].quickCombat
-                && gpGame->players[manager->playerIds[1]].quickCombat)
-            return true;
-        return false;
-    }
-    return gUnnamed698758.quickCombat != 0;
+        return 0;
+    if (gNetworkActive69954c && sideIsAI[0] && sideIsAI[1])
+        return gpGame->players[playerIds[0]].quickCombat
+            && gpGame->players[playerIds[1]].quickCombat;
+    return gCombatQuickMode69877c != 0;
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3378
@@ -897,23 +895,23 @@ static inline bool lower_door_is_quick_combat(const combatManager* manager)
 VA(0x004671c0, 0x113)  // anchor-global, dc 0x60fa8
 void combatManager::LowerDoor()
 {
-    if (!lower_door_is_quick_combat(this)) {
-        SAMPLE2 sample2 = LoadPlaySample(
-            DATA_COMPGEN(0x0066ffb0, drawbridgeSampleName, "drawbrg.82m"));
-
-        drawbridgeBounds = gDrawbridgeBounds694f30;
-
-        for (int frame = DRAWBRIDGE_UP; frame >= DRAWBRIDGE_DOWN; frame--) {
-            drawbridgeState = frame;
-            DrawFrame(1, 0, 1, 100, 1, 1);
-        }
-
-        gpSearchArray->lower_door();
-        WaitEndSample(sample2, -1);
-    } else {
+    if (IsQuickCombat()) {
         drawbridgeState = DRAWBRIDGE_DOWN;
+        return;
     }
+
+    SAMPLE2 sample = LoadPlaySample(
+        DATA_COMPGEN(0x0066ffb0, drawbridgeSampleName, "drawbrg.82m"));
+    drawbridgeBounds = gDrawbridgeBounds694f30;
+    for (int state = DRAWBRIDGE_UP; state >= DRAWBRIDGE_DOWN; state--) {
+        drawbridgeState = state;
+        DrawFrame(1, 0, 1, 100, 1, 1);
+    }
+    gpSearchArray->lower_door();
+    WaitEndSample(sample, -1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3400
 // RECONSTRUCTED 2026-08-09. Retail refuses to raise the bridge unless the

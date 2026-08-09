@@ -433,6 +433,13 @@ public:
     void GenerateMap();
     const char* GetBackgroundName();
     void DamageWall(TWallTargetId target_wall, int damage);
+    void LowerDoor();
+    unsigned char IsQuickCombat();
+    void DrawFrame(unsigned char update,
+                   unsigned char bLimitCreatureEffect,
+                   unsigned char bLimitDraw, int iDelay,
+                   unsigned char bRefreshBackground,
+                   unsigned char bDoDelayTil);
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();
@@ -661,6 +668,11 @@ DATA(0x00694f30) extern TDrawbridgeBounds gDrawbridgeBounds694f30;
 extern const char* const gTownCombatBackgrounds[9];          // 0x63d2a0
 extern const char* const gMagicTerrainCombatBackgrounds[10]; // 0x63d2c8
 extern const char* const gTerrainCombatBackgrounds[9][3];    // 0x63d2f0
+
+// LowerDoor's quick-combat bypass and the four redraw-bound sources.
+// Names are address ordinals because no surviving public symbol names
+// them; widths and uses are byte-proven by the retail body.
+DATA(0x0069877c) extern int gCombatQuickMode69877c;
 
 // The four screen hit rectangles GetGridIndex (0x4647a0) tests before
 // it falls through to the grid arithmetic, one per special combat hex,
