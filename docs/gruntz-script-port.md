@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `town::initialize_spells` reconstructed to 86.7424%
+  (810 bytes).** Retail proves the setup argument and its two 70-bit spell
+  masks, the game-wide disabled-spell band, five weighted faction spell rows,
+  fixed-spell precedence, and the active Mage Guild count calculation including
+  Tower's Library bonus. The retail body also absorbs `set_spells_available`.
+  A depth-zero adapter preserves VC6's out-of-line two-argument bitset setter
+  while leaving its predicate tests inline; the remaining mismatch is code
+  shape in the spell-selection control flow. Dreamcast CodeView supplied names
+  and types only; no external implementation body was used.
+
 - **2026-08-09 — `town::SwapHeroes` admitted byte-exact (428 bytes).**
   Retail proves the complete exchange: resolve both resident heroes, swap the
   town ids, remove the former visitor from the acting player's signed-count

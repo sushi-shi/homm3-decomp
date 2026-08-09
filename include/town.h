@@ -154,6 +154,18 @@ struct type_horde_effect {
 };
 SIZE(type_horde_effect, 8);
 
+#ifdef HOMM3_TOWN_OBJ_DECLS
+// Retail town.obj view of the map setup record. initialize_spells copies the
+// first 70-bit set into the town and uses the second as forced guild picks.
+class TownExtra {
+public:
+    char pad_000[0x70];
+    std::bitset<70> spells;
+    std::bitset<70> fixedSpells;
+};
+SIZE(TownExtra, 0x88);
+#endif
+
 // Head model. sizeof(town) == 360 is now closed from BOTH ends: the
 // ai_player town-array stride measured 360 last lane, and `available`
 // (the last member the TU touches) sits at 0x160..0x167 - exactly
@@ -358,6 +370,8 @@ public:
     void hire(hero* new_hero, long player_id);
     // 0x5be450. Exchanges the garrison and visiting heroes.
     void SwapHeroes();
+    // 0x5be600. Rolls and publishes the five Mage Guild spell rows.
+    void initialize_spells(const TownExtra* town_setup);
 #endif
     // 0x5be2d0. Removes this town from its owner's roster and marks
     // both this record and gpGame->towns[id] unowned.
@@ -524,6 +538,12 @@ extern int gSiloIncome[9][NUM_RESOURCES];
 // register) - a two-dimensional subscript compiles to the three-term
 // form instead. Name INVENTED (no DC symbol); owner TU unlocated.
 extern TCreatureType gTownDwellingCreatures[TOWN_TYPE_COUNT * 2 * TOWN_DWELLING_COUNT];
+
+// Retail .data 0x6782a4: ordinary spell counts for guild levels one
+// through five. initialize_spells generates one extra candidate per row so
+// Tower's Library can expose it.
+DATA(0x006782a4)
+extern const signed char gMageGuildBaseSpellCounts[5];
 
 // Retail .rdata 0x642e20, the four horde building ids in slot order
 // {HORDE_ID, HORDE_UPG_ID, HORDE_2_ID, HORDE_2_UPG_ID} -

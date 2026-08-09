@@ -10,6 +10,7 @@
 #include "cursor.h"
 #include "exec.h"
 #include "game.h"
+#include "misc.h"
 #include "town.h"
 #include "townmgr.h"
 #undef HOMM3_TOWN_OBJ_DECLS
@@ -369,19 +370,92 @@ void town::SwapHeroes()
     placedHero->PlaceInMap(player, point, 0);
 }
 
-#if 0  // @carcass
+// Keep the two-argument Dinkumware bitset mutation out of line while the
+// tiny adapter itself disappears. Retail town.obj calls the shared COMDAT
+// here but still inlines the predicate's bitset::test.
+#pragma inline_depth(0)
+static inline void set_town_spell_bit(std::bitset<70>& bits,
+                                      unsigned position, bool value)
+{
+    bits.set(position, value);
+}
+#pragma inline_depth()
 
 // E:\gamedcs\town.cpp:1150
-// Runs a 70-iteration loop over the spell band at town+0xd4 (the same
-// 70-entry width hero.h's in_spellbook/available_spells carry) - the
-// mage-guild spell roll. 810 B against DC's 532 because
-// set_spells_available (dc 0x166b64, 164 B) has no retail row of its
-// own and is inlined here.
+// Builds a local prohibited set from the town and scenario masks, then rolls
+// each guild row from the faction weights in SSpellTraits. Fixed map spells
+// win before the weighted fallback. The tail derives the active guild level,
+// accounts for Tower's Library, trims missing picks and copies the setup mask
+// into the town. set_spells_available is inlined in this retail body.
 VA(0x005be600, 0x32A)  // anchor-bracket + spell-band loop, dc 0x166950
-void town::initialize_spells()
+void town::initialize_spells(const TownExtra* town_setup)
 {
-    // @stub
+    std::bitset<70> prohibited;
+    for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+        set_town_spell_bit(
+            prohibited, spell,
+            spells.test(spell) || gpGame->spellDisabled[spell]);
+    }
+
+    for (int level = 1; level <= 5; ++level) {
+        for (int slot = 0;
+             slot < gMageGuildBaseSpellCounts[level - 1] + 1; ++slot) {
+            int totalWeight = 0;
+            int spell;
+            for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+                if (!prohibited.test(spell)
+                    && akSpellTraits[spell].level == level) {
+                    totalWeight +=
+                        akSpellTraits[spell].townProbability[type];
+                    if (town_setup->fixedSpells.test(spell))
+                        break;
+                }
+            }
+
+            if (spell == hero::NUM_SPELLS) {
+                if (totalWeight == 0) {
+                    mageGuildSpells[level - 1][slot] = -1;
+                    continue;
+                }
+                int roll = Random(1, totalWeight);
+                for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+                    if (!prohibited.test(spell)
+                        && akSpellTraits[spell].level == level) {
+                        roll -= akSpellTraits[spell].townProbability[type];
+                        if (roll <= 0)
+                            break;
+                    }
+                }
+            }
+            mageGuildSpells[level - 1][slot] = spell;
+            prohibited.set(spell);
+        }
+    }
+
+    int guildLevel = 5;
+    while (guildLevel > 0
+           && !(built & bitNumber[guildLevel - 1]))
+        --guildLevel;
+    field_14 = static_cast<unsigned char>(guildLevel);
+    memset(mageGuildSpellCounts, 0, sizeof(mageGuildSpellCounts));
+
+    for (int availableLevel = 1;
+         availableLevel <= static_cast<signed char>(field_14);
+         ++availableLevel) {
+        int count = gMageGuildBaseSpellCounts[availableLevel - 1];
+        if (type == TOWN_TOWER && (active & bitNumber[EXTRA_1_ID]))
+            ++count;
+        while (count > 0
+               && mageGuildSpells[availableLevel - 1][count - 1] == -1)
+            --count;
+        mageGuildSpellCounts[availableLevel - 1] =
+            static_cast<signed char>(count);
+    }
+
+    spells = town_setup->spells;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\town.cpp:1206
 DC_ONLY(0x166b64, 0xA4)

@@ -592,7 +592,14 @@ public:
         char pad_11[3];
     };
 
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    char pad_00000[0x4a];
+    // +0x4a, one scenario-level prohibition byte per retail town spell.
+    unsigned char spellDisabled[70];
+    char pad_00090[0x1f3c4];
+#else
     char pad_00000[0x1f454];
+#endif
     short difficultyRating;
     char pad_1f456[2];
     SCampaign campaign;                    // +0x1f458
