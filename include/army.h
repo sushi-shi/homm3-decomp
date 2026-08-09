@@ -19,6 +19,12 @@ class hero;
 // 6<->7). Names are bootstrap inventions - no DC/NH3API roster
 // survives for the direction ids.
 enum ECombatDirection {
+    COMBAT_DIRECTION_UPPER_RIGHT = 0x0,
+    COMBAT_DIRECTION_RIGHT = 0x1,
+    COMBAT_DIRECTION_LOWER_RIGHT = 0x2,
+    COMBAT_DIRECTION_LOWER_LEFT = 0x3,
+    COMBAT_DIRECTION_LEFT = 0x4,
+    COMBAT_DIRECTION_UPPER_LEFT = 0x5,
     COMBAT_DIRECTION_WIDE_UPPER = 0x6,
     COMBAT_DIRECTION_WIDE_LOWER = 0x7
 };

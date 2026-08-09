@@ -152,11 +152,56 @@ void combatManager::CheckNativeTerrain()
 }
 
 // E:\gamedcs\cmbtmgr.cpp:1532
+#endif  // @carcass
 VA(0x004640a0, 0x144)  // linkorder, dc 0x5e9ac
 void combatManager::SetupAdjacencyArray()
 {
-    // @stub
+    for (int hex = 0; hex < COMBAT_GRID_CELLS; ++hex) {
+        int row = hex / COMBAT_GRID_ROW_STRIDE;
+        int iCol = hex % COMBAT_GRID_ROW_STRIDE;
+
+        for (int direction = 0; direction < 6; ++direction) {
+            if (ValidHex(hex)
+                && (iCol == 0 || iCol == COMBAT_GRID_LAST_COLUMN)) {
+                adjacentCells[hex][direction] = -1;
+                if ((iCol == 0 && direction >= 3)
+                    || (iCol != 0 && direction <= 2))
+                    continue;
+            }
+
+            int adjacent;
+            switch (direction) {
+            case COMBAT_DIRECTION_UPPER_RIGHT:
+                adjacent = (row & 1) ? hex - 17 : hex - 16;
+                break;
+            case COMBAT_DIRECTION_RIGHT:
+                adjacent = hex + 1;
+                break;
+            case COMBAT_DIRECTION_LOWER_RIGHT:
+                adjacent = (row & 1) ? hex + 17 : hex + 18;
+                break;
+            case COMBAT_DIRECTION_LOWER_LEFT:
+                adjacent = (row & 1) ? hex + 16 : hex + 17;
+                break;
+            case COMBAT_DIRECTION_LEFT:
+                adjacent = hex - 1;
+                break;
+            case COMBAT_DIRECTION_UPPER_LEFT:
+                adjacent = (row & 1) ? hex - 18 : hex - 17;
+                break;
+            }
+
+            if (ValidHex(adjacent)
+                && adjacent % COMBAT_GRID_ROW_STRIDE != 0
+                && adjacent % COMBAT_GRID_ROW_STRIDE
+                    != COMBAT_GRID_LAST_COLUMN)
+                adjacentCells[hex][direction] = static_cast<short>(adjacent);
+            else
+                adjacentCells[hex][direction] = -1;
+        }
+    }
 }
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1612
 VA(0x004641f0, 0xDA)  // linkorder, dc 0x5eb40
