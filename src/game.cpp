@@ -6,7 +6,9 @@
 #include <string.h>
 #include <ctype.h>
 #include <va.h>
+#define HOMM3_GAME_HERO_EXTRA_VIEW
 #include "game.h"
+#undef HOMM3_GAME_HERO_EXTRA_VIEW
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
 // with Random and hand the name to soundManager::StartMP3;
 // game::SetMapSize (0x4ccef0) writes findpath's two map-extent globals
@@ -1853,15 +1855,13 @@ void game::game()
 // destructor, so it stays unclaimed and is recorded here instead.
 // ---------------------------------------------------------------------
 
-// E:\gamedcs\game.cpp:11746
-VA(0x004ce4b0, 0x68)  // address-take (game::game +0x46) + layout, dc 0xbd5f4
-void HeroExtra::HeroExtra()
-{
-    // @stub
-}
+#endif  // @carcass
 
 // E:\gamedcs\game.cpp:11746
-#endif  // @carcass
+VA(0x004ce4b0, 0x68)  // address-take (game::game +0x46) + layout, dc 0xbd5f4
+HeroExtra::HeroExtra()
+{
+}
 
 VA(0x004ce570, 0x32)  // address-take + ctor-proven layout (+0x90 triple), dc 0xbd630
 playerData::~playerData()

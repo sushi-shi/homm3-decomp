@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `HeroExtra::HeroExtra` reconstructed byte-exact
+  (104 bytes).** Retail's `game::game` hands this constructor to the vector
+  iterator for 156 elements with a 0x334 stride. The body independently
+  proves nineteen 8-byte equipped-artifact records at +0x68, sixty-four
+  backpack records at +0x100, a Dinkumware string at +0x308 and a
+  `std::bitset<70>` at +0x320; `HeroFn_004D8B30` closes the untouched tail
+  offsets and total size. A game-TU-only view gives `type_artifact` its
+  two-`-1` default constructor, allowing VC6's implicit member construction
+  to reproduce both loops, the string triple and the bitset clear exactly.
+  Dreamcast CodeView corroborates the class and member identities only; no
+  external implementation body was used. Whole-linked fuzzy coverage rises
+  from 45.32% to 45.34% and exact linked functions from 611 to 612.
+
 - **2026-08-09 — `advManager::SetRolloverText` extends to 72.3630%.**
   Retail admits Mine's call into the 595-byte helper at 0x40d670: the two
   call sites and `ret 0xc` prove a five-parameter /Gr surface receiving the
