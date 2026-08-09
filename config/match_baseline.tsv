@@ -5,6 +5,7 @@
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva
 adler32	@adler32@12	100.0000	100.0000	100.0000	0x206ca0
 advmgr	??0type_point@@QAE@FFF@Z	100.0000	100.0000	100.0000	0x192b0
+advmgr	??1type_cell_adjuster@@QAE@XZ	100.0000	100.0000	100.0000	0xaf60
 advmgr	?CheckDimNextHeroBut@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x19450
 advmgr	?CompleteDraw@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0xf870
 advmgr	?CompleteDraw@advManager@@QAEXHHHEE@Z	100.0000	100.0000	100.0000	0xf3f0
@@ -36,6 +37,7 @@ advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790
 advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	100.0000	100.0000	100.0000	0x8770
+advmgr	?get_trigger_cell@type_cell_adjuster@@QAEPAVNewmapCell@@PAV2@HH@Z	100.0000	100.0000	100.0000	0xafb0
 advmgr	?hasFlag@@YI_NH@Z	100.0000	100.0000	100.0000	0xfca0
 advmgr	CAdvMgrNetMsgHandler_HandleGiftMsg	0.0000	0.0000	0.0000	0x6a20
 advmgr	CAdvMgrNetMsgHandler_HandleGiftRequestMsg	0.0000	0.0000	0.0000	0x6480
@@ -111,8 +113,6 @@ advmgr	advManager_get_map_center	0.0000	0.0000	0.0000	0x7b10
 advmgr	advManager_get_normal_cursor	0.0000	0.0000	0.0000	0xe280
 advmgr	get_creature_bank_help_text	0.0000	0.0000	0.0000	0xd3f0
 advmgr	set_witch_hut_help_text	0.0000	0.0000	0.0000	0xdcc0
-advmgr	type_cell_adjuster_get_trigger_cell	0.0000	0.0000	0.0000	0xafb0
-advmgr	type_cell_adjuster_type_cell_adjuster	0.0000	0.0000	0.0000	0xaf60
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0
 ai	?IsIncapacitated@army@@QAEEXZ	100.0000	100.0000	100.0000	0x1f380
 ai	?berserk_attack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000	100.0000	100.0000	0x222c0
