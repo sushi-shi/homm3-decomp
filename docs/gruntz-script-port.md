@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::QuickInfo` extends to 15.9777%.** Retail's
+  border-guard arm combines the indexed color and object names through the
+  already-attested rollover format. The two creature-generator arms resolve
+  the generator through the cell's packed id, select the class-specific name,
+  and include its owner only when the signed owner byte is nonnegative, using
+  the retail `"%s\n\n%s"` literal. The resource arm indexes the admitted
+  resource-name table directly. After trigger-adjuster cleanup, the shared
+  tail conditionally appends the selected packed map coordinates through the
+  retail format and a bounded local buffer. These retail-proven paths raise
+  the function from 12.3003% and linked fuzzy coverage from 46.87% to 46.96%
+  while preserving all 626 exact functions. Dreamcast supplies semantic names
+  only; no external implementation body was used, and the match baseline is
+  updated solely by the full build.
+
 - **2026-08-09 — the first `advManager::QuickInfo` slice reaches 12.3003%.**
   The 9,632-byte retail function now validates and packs the selected map
   point, resolves its cell and trigger through the byte-exact

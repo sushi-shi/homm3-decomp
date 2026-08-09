@@ -101,6 +101,7 @@ enum EAdvmgrRetailObjectType {
 
 DATA(0x006a79ec) extern const char* const gAdventureObjectNames[];
 DATA(0x0069778c) extern int gUnnamed69778c;
+DATA(0x006989c8) extern int gUnnamed6989c8;
 DATA(0x0069127c) extern const char* const gGlobalInfoFlagNames[];
 DATA(0x006a7520) extern const char* const gBorderColorNames[];
 // Role-derived retail tables used by SetRolloverText. The generator-name
