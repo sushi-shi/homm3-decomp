@@ -420,6 +420,8 @@ public:
                    unsigned char bLimitDraw, int iDelay,
                    unsigned char bRefreshBackground,
                    unsigned char bDoDelayTil);
+    int UpdateGrid(int bPostGridIsClean, int bSetupGrid);
+    void CombatSystemOptions();
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();
