@@ -1616,10 +1616,10 @@ source_stack_merges:
 // Retail Complete has two trailing controls: a full-width magic-terrain
 // mode and the alignment-grouping byte forwarded to GetMorale. The body
 // returns with `ret 24h`, proving the hidden result plus eight arguments.
-// COMPLETE semantic transcription 2026-08-09 (60.1036%). The remaining
-// delta is Dinkumware string-temporary/EH emission and associated register
-// allocation; the retail branch regions and every observed modifier are
-// represented below.
+// COMPLETE semantic transcription 2026-08-09 (63.9572%). Explicit neutral
+// town cases and no default preserve retail's two nine-entry terrain selector
+// tables. The remaining delta is Dinkumware string-temporary/EH emission and
+// associated register allocation; every observed modifier is represented.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::get_morale_description(
     TCreatureType creature, int morale, const hero* ownerHero,
@@ -1661,7 +1661,6 @@ std::string armyGroup::get_morale_description(
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
-        default:
             goto after_magic_terrain;
         }
     holy_ground_good:
@@ -1692,7 +1691,6 @@ std::string armyGroup::get_morale_description(
         case TOWN_STRONGHOLD:
         case TOWN_FORTRESS:
         case TOWN_CONFLUX:
-        default:
             goto after_magic_terrain;
         }
     evil_fog_good:
