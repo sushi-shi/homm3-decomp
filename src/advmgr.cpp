@@ -832,6 +832,15 @@ static inline NewmapCell* DrawBoatCell(advManager* manager, type_point point)
         * manager->fullMap->Size + point.x];
 }
 
+static inline NewmapCell* DrawGroundCell(advManager* manager, type_point point)
+{
+    if (!point.is_valid())
+        return manager->fullMap->cell(0, 0, 0);
+    return &manager->fullMap->cellData[
+        (point.z * manager->fullMap->Size + point.y)
+        * manager->fullMap->Size + point.x];
+}
+
 // E:\gamedcs\advmgr.cpp:5688
 VA(0x0040fe30, 0x484)  // linkorder, dc 0x11424
 void advManager::DrawHeroPart(int part, TDrawParts& heroParts, int baseX,
@@ -1670,12 +1679,9 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
     if (srcX < 0 || srcY < 0 || srcX >= gMapWidth || srcY >= gMapHeight)
         return;
 
-    type_point point(srcX, srcY, z);
-    NewmapCell* thisCell;
-    if (!point.is_valid())
-        thisCell = fullMap->cell(0, 0, 0);
-    else
-        thisCell = fullMap->cell(point.x, point.y, point.z);
+    type_point point;
+    point = type_point(srcX, srcY, z);
+    NewmapCell* thisCell = DrawHeroCell(this, point);
 
     int baseX = mapOriginX + destX * 32;
     int baseY = mapOriginY + destY * 32;
@@ -1703,13 +1709,14 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 
     AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
         static_cast<void*>(thisCell));
-    AdvFullMapObjectsView* mapObjects = static_cast<AdvFullMapObjectsView*>(
-        static_cast<void*>(fullMap));
 
     if (cellObjects->objects.size()) {
         for (unsigned numObj = 0; numObj < cellObjects->objects.size();
              ++numObj) {
             AdvObjectCellView* objCell = &cellObjects->objects[numObj];
+            AdvFullMapObjectsView* mapObjects =
+                static_cast<AdvFullMapObjectsView*>(
+                    static_cast<void*>(fullMap));
             CObject* obj = &mapObjects->objects[objCell->objectIndex];
             CObjectType* objType = &mapObjects->objectTypes[obj->typeIndex];
             CSprite* sprite = mapObjects->sprites[obj->typeIndex];
@@ -1728,7 +1735,8 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                 int triggerX;
                 int triggerY;
                 obj->FindTrigger(&triggerX, &triggerY);
-                type_point triggerPoint(triggerX, triggerY, z);
+                type_point triggerPoint;
+                triggerPoint = type_point(triggerX, triggerY, z);
                 NewmapCell* triggerCell;
                 if (!triggerPoint.is_valid())
                     triggerCell = fullMap->cellData;
@@ -1775,14 +1783,8 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
 VA(0x00412900, 0x2CB)  // linkorder, dc 0x147c4
 void advManager::DrawGround(int srcX, int srcY, int z, int destX, int destY)
 {
-    type_point point(srcX, srcY, z);
-    NewmapCell* thisCell;
-    if (!point.is_valid()) {
-        thisCell = fullMap->cellData;
-    } else {
-        thisCell = &fullMap->cellData[
-            (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
-    }
+    NewmapCell* thisCell = DrawGroundCell(
+        this, type_point(srcX, srcY, z));
 
     int baseX = mapOriginX + destX * 32;
     int baseY = mapOriginY + destY * 32;

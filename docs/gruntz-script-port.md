@@ -819,15 +819,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   surviving names and signatures; no external body was consulted or ported.
   The generated baseline remains exclusively build-owned.
 
-- **2026-08-09 — the 715-byte `advManager::DrawGround` pass opened
-  to 86.63%.** Retail proves the packed-point fallback cell, clipped tile
-  rectangle, ten-entry ground tileset, ground frame and two flip bits, four
-  corners, four edge-pattern families, and the repeating border fallback.
-  The reconstruction has the same 30 symbolic branches and both return paths
-  agree with retail; remaining differences are instruction and local/register
-  scheduling, so no exact claim is made. Dreamcast CodeView supplied only the
-  surviving tileset, field and method names; no external body was consulted or
-  ported. The generated baseline remains exclusively build-owned.
+- **2026-08-09 — the 715-byte `advManager::DrawGround` pass refined
+  from 86.63% to 91.16%.** Retail proves the packed-point fallback cell,
+  clipped tile rectangle, ten-entry ground tileset, ground frame and two flip
+  bits, four corners, four edge-pattern families, and the repeating border
+  fallback.
+  Passing the packed point by value through the narrow inline cell lookup
+  reproduces retail's 12-byte frame, argument-slot reuse, and point-temporary
+  lifetime; the reconstruction still has the same 30 symbolic branches and
+  both return paths agree with retail. The remaining invalid-cell call shape
+  and local/register scheduling prevent an exact claim. Dreamcast CodeView
+  supplied only the surviving tileset, field and method names; no external
+  body was consulted or ported. The generated baseline remains exclusively
+  build-owned.
 
 - **2026-08-09 — both `advManager::CompleteDraw` overloads admitted
   byte-exact; `advmgr` 19 → 21 exact.** The 1,149-byte orchestrator
@@ -841,14 +845,21 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   local and method names. No external body was consulted or ported, and the
   generated baseline remains exclusively build-owned.
 
-- **2026-08-09 — the 1,154-byte `advManager::DrawUnderlay` body opened
-  to 74.79%.** Retail instructions and relocations prove the clipped cell
+- **2026-08-09 — the 1,154-byte `advManager::DrawUnderlay` body advanced
+  to 78.31%.** Retail instructions and relocations prove the clipped cell
   lookup, underlay-only object filter, object/type/sprite pool traversal,
   eight-case flagged-object selector, checked trigger-cell lookup, animation
   frame, player output color, and normal/flagged sprite paths. The
-  reconstruction has the same 42-block population and its 22 symbolic branch
-  targets agree with retail; the remaining difference is instruction and
-  local-slot scheduling, so no exact claim is made. Dreamcast CodeView
+  reconstruction's 22 symbolic branch targets agree with retail. A later
+  structural pass corrected the byte-packed cell-object view: its 16-byte
+  vector begins at `NewmapCell+0x0e`, placing `_M_start`/`_M_finish` at
+  retail's `+0x12/+0x16` and ending exactly at the proven `type` field at
+  `+0x1e`. Retaining both packed-point assignment temporaries and using the
+  already proven inline cell helper then restored retail's shared cell-call
+  boundary; narrowing the full-map view's lifetime to one object iteration
+  removed an extra stack slot. The remaining difference is instruction,
+  register and local-slot scheduling, so no exact claim is made. Dreamcast
+  CodeView
   supplied surviving names and signatures only; no external body was
   consulted or ported. The generated baseline remains exclusively build-owned.
 

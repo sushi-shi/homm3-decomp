@@ -41,10 +41,16 @@ struct AdvObjectCellView {
 };
 SIZE(AdvObjectCellView, 4);
 
+// NewmapCell is byte-packed: retail reads the vector's first/last pointers at
+// +0x12/+0x16 and the next field at +0x1e, placing this 16-byte vector at
+// +0x0e rather than at a naturally aligned offset.
+#pragma pack(push, 1)
 struct AdvMapCellObjectsView {
-    char pad_00[0xc];
+    char pad_00[0xe];
     std::vector<AdvObjectCellView> objects;
 };
+#pragma pack(pop)
+SIZE(AdvMapCellObjectsView, 0x1e);
 
 struct AdvGroundCellView {
     char pad_00[0xc];
