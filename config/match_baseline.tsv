@@ -509,6 +509,7 @@ game	?TurnOnAIMusic@game@@QAEXXZ	100.0000	100.0000	100.0000	0xc6f80
 game	?get_random_lith@game@@QAEEJJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddf0
 game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcddc0
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
+game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50
 game	ComputeUALoc	0.0000	0.0000	0.0000	0xbaed0
 game	HeroExtra_HeroExtra	0.0000	0.0000	0.0000	0xce4b0
 game	ImmMouseWindowMoved	0.0000	0.0000	0.0000	0xb6950
@@ -560,7 +561,6 @@ game	generator_update_bonus	0.0000	0.0000	0.0000	0xb87a0
 game	playerData_Init	0.0000	0.0000	0.0000	0xb9e20
 game	playerData_NumOfGivenArtifact	0.0000	0.0000	0.0000	0xbabd0
 game	playerData_add_garrison_hero	0.0000	0.0000	0.0000	0xb9fc0
-game	playerData_guess_grail_location	0.0000	0.0000	0.0000	0xbae50
 game	playerData_load	0.0000	0.0000	0.0000	0xba260
 game	playerData_save	0.0000	0.0000	0.0000	0xba670
 gzio	@check_header@4	100.0000	100.0000	100.0000	0x206490
