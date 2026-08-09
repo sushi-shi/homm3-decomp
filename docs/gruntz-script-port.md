@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advmgr` 8 → 11 exact and a withdrawn `findpath`
+  body restored; four retail-derived bodies exact, one jump-table body
+  code-identical at 99.34%.** `advManager::GetCell(type_point)` (108 B),
+  the five-argument `UpdateRadar` forwarding overload (39 B),
+  `DrawRolloverText` (100 B), and `type_point::is_valid` (59 B) match
+  byte-for-byte. The last body corrects the 2026-08-07 claim that it had
+  no retail slot: 0x4b1330 is a 59-byte four-bound predicate immediately
+  before `searchArray::searchArray`, and `GetCell` independently relocates
+  to it. `OverrideBottomView` reproduces all 120 bytes and the six-entry
+  switch table's resolved targets; objdiff reads 99.3415% because base
+  VC6 names case labels locally while the delinker represents them as
+  enclosing-function-plus-addend relocations, the already documented
+  jump-table comparison residual. No Dreamcast body was ported: the
+  implementations were reconstructed from retail instructions and
+  relocation identities; the DC roster supplied signatures only.
+
 - **2026-08-09 — Gruntz's generated per-function `cur` / `max` / `hist`
   score model approved for adaptation (user: “take idea from gruntz for cur,
   max, hist for matching functions”); manual baseline editing prohibited.**

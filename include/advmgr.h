@@ -6,7 +6,11 @@
 #define HOMM3_ADVMGR_H
 
 #include "basemgr.h"
+#include "struct.h"
 #include "window.h"
+
+class NewfullMap;
+class NewmapCell;
 
 // The adventure screen's own window. Only the ONE method a retail body
 // outside adventuremapwindow.obj calls on it is declared here:
@@ -39,6 +43,8 @@ public:
     // its widget x/y/width/height fields.
     widget* RadarWidget;
     widget* MapWidget;
+    char pad_054[0xc];
+    widget* RolloverTextWidget;  // +0x60, DrawRolloverText redraw bounds
 
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
@@ -49,6 +55,21 @@ public:
 // baseManager::status (+0x34) as its suspend/resume mode.
 class advManager : public baseManager {
 public:
+    // Provisional ordinal names. OverrideBottomView proves the complete
+    // 0..8 range and distinct behavior for 0, 1..6 and 8; semantic names
+    // remain unclaimed.
+    enum EBottomViewType {
+        BOTTOM_VIEW_DEFAULT = 0,
+        BOTTOM_VIEW_1,
+        BOTTOM_VIEW_2,
+        BOTTOM_VIEW_3,
+        BOTTOM_VIEW_4,
+        BOTTOM_VIEW_5,
+        BOTTOM_VIEW_6,
+        BOTTOM_VIEW_7,
+        BOTTOM_VIEW_8
+    };
+
     char pad_038[0xc];
     TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
     unsigned short* routeArray;      // +0x48 (GetRouteArrayPtr)
@@ -65,26 +86,39 @@ public:
     // `mov al, byte ptr [ecx + 0x678330]`), so it carries the current
     // terrain. Name unattested - the role is what the bytes prove.
     int field_58;
-    char pad_05c[0x1b0];
+    // +0x5c. Both GetCell overloads dereference this NewfullMap record:
+    // cellData at +0xd0 and Size at +0xd4.
+    NewfullMap* fullMap;
+    char pad_060[0x84];
+    // +0xe4. The five-argument UpdateRadar overload forwards this packed
+    // point by value as the origin argument of the six-argument overload.
+    type_point radarOrigin;
+    char pad_0e8[0x124];
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
     char pad_20d[0x17f];
     int field_38c;            // +0x38c, zeroed by CallManager's suspend arm
+    char pad_390[8];
+    EBottomViewType bottomViewOverride;  // +0x398
+    unsigned long bottomViewDeadline;    // +0x39c
 
     void CheckDimNextHeroBut();
     void DeactivateCurrTown(unsigned char waitingPlayer);
     void DeactivateCurrHero(unsigned char waitingPlayer);
     void DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
-    // Provisional enum: only the CallManager-passed 0 is attested.
-    enum EBottomViewType {
-        BOTTOM_VIEW_DEFAULT = 0
-    };
-
     void HeroLoses(class hero* who, int vanish_sound);
     void OverrideBottomView(EBottomViewType view, int time);
     void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
     void Reseed(int targetX, int targetY);
     void ForceNewHover();
+    void DrawRolloverText(char* text);
     int InMapArea(int x, int y);
+    NewmapCell* GetCell(type_point point);
+    void UpdateRadar(type_point origin, unsigned char updateFlag,
+                     unsigned char bPartialUpdate, unsigned char view_mines,
+                     unsigned char view_heroes, unsigned char view_towns);
+    void UpdateRadar(unsigned char updateFlag,
+                     unsigned char bPartialUpdate, unsigned char view_mines,
+                     unsigned char view_heroes, unsigned char view_towns);
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
 };
 

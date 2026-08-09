@@ -54,6 +54,8 @@
 #include <va.h>
 #include "advmgr.h"
 #include "game.h"
+#include "kbwin.h"
+#include "winmgr.h"
 #include "window.h"
 #include "widget.h"
 
@@ -361,11 +363,26 @@ void type_cell_adjuster::restore_cell()
 }
 
 // E:\gamedcs\advmgr.cpp:3130
+#endif  // @carcass
+
 VA(0x0040b0e0, 0x64)  // anchor-global, dc 0xc094
 void advManager::DrawRolloverText(char* text)
 {
-    // @stub
+    union {
+        char* pointer;
+        int value;
+    } extra;
+    extra.pointer = text;
+    advWindow->BroadcastMessage(0x200, 3, 200, extra.value);
+    advWindow->DrawWindow(0, 200, 200);
+
+    widget* rollover = advWindow->RolloverTextWidget;
+    gpWindowManager->UpdateScreen(advWindow->x + rollover->x,
+                                  advWindow->y + rollover->y,
+                                  rollover->width, rollover->height);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:3146
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
@@ -627,11 +644,18 @@ NewmapCell* advManager::GetCell(int x, int y, int z)
 }
 
 // E:\gamedcs\advmgr.cpp:7026
+#endif  // @carcass
+
 VA(0x00412bd0, 0x6C)  // linkorder, dc 0x14b90
 NewmapCell* advManager::GetCell(type_point point)
 {
-    // @stub
+    if (!point.is_valid())
+        return fullMap->cellData;
+    return &fullMap->cellData[(point.z * fullMap->Size + point.y)
+                              * fullMap->Size + point.x];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:7037
 VA(0x00412c40, 0xB41)  // linkorder, dc 0x14bec
@@ -641,11 +665,16 @@ void advManager::UpdateRadar(type_point origin, unsigned char updateFlag, unsign
 }
 
 // E:\gamedcs\advmgr.cpp:7537
+#endif  // @carcass
+
 VA(0x00413790, 0x27)  // linkorder, dc 0x15f7c
 void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpdate, unsigned char view_mines, unsigned char view_heroes, unsigned char view_towns)
 {
-    // @stub
+    UpdateRadar(radarOrigin, updateFlag, bPartialUpdate, view_mines,
+                view_heroes, view_towns);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:7543
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
@@ -662,11 +691,39 @@ void advManager::ClearBottomView()
 }
 
 // E:\gamedcs\advmgr.cpp:8822
+#endif  // @carcass
+
 VA(0x00415d60, 0x78)  // anchor-global, dc 0x18c84
 void advManager::OverrideBottomView(advManager::EBottomViewType view, int time)
 {
-    // @stub
+    bottomViewOverride = view;
+    if (view != BOTTOM_VIEW_DEFAULT && view != BOTTOM_VIEW_8) {
+        if (time < 0) {
+            switch (view) {
+            case BOTTOM_VIEW_1:
+                time = 3000;
+                break;
+            case BOTTOM_VIEW_2:
+                time = 3000;
+                break;
+            case BOTTOM_VIEW_3:
+                time = 3000;
+                break;
+            case BOTTOM_VIEW_4:
+                time = 3000;
+                break;
+            case BOTTOM_VIEW_5:
+                break;
+            case BOTTOM_VIEW_6:
+                time = 5000;
+                break;
+            }
+        }
+        bottomViewDeadline = GameTime::Get() + time;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:8864
 VA(0x00415de0, 0x140)  // anchor-global, dc 0x18d38
@@ -2433,6 +2490,3 @@ void std::__destroy_aux(pathCell** __pointer, __false_type __formal)
 }
 
 #endif  // @carcass
-
-
-
