@@ -1205,10 +1205,13 @@ int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
 // Minotaur/Minotaur King (0x4e/0x4f) clamp morale to min 1; if
 // (ownerHero && ownerHero->HasArtifact(0x54 Spirit of Oppression) &&
 // morale > 0) morale = 0; apply_limits -> the same [-3,3]
-// Residual (80.5625%): the clamp tail is exact. Both magic-terrain town
-// switches remain full direct jump tables here versus retail's compressed
-// byte-selector tables, linked to an ESI/EDI whole-body allocation mirror.
-// Explicit nine-town value switches were tested and fell to 76.5%.
+// Residual (96.5625%): explicitly routing Stronghold/Fortress/Conflux to
+// named no-op exits keeps all nine town values visible to VC6 switch
+// lowering, producing retail's two compressed byte-selector tables exactly.
+// Empty `break` cases are folded into default too early and remain at 80.56%.
+// All 38 block flows now agree; the remainder is an ESI/EDI whole-body
+// allocation mirror (retail homes `this` in EDI and shrink-wraps ESI for
+// morale after the early returns). `register` hints on either value are inert.
 VA(0x0044b100, 0x1C9)  // anchor-global, dc 0x4f160
 int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* ownerTown, int mode, unsigned char arg5, unsigned char apply_limits)
 {
@@ -1235,7 +1238,13 @@ int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* owner
             case TOWN_DUNGEON:
                 morale--;
                 break;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                goto holy_done;
             }
+holy_done:
+            ;
         }
     }
     if (mode == MAGIC_TERRAIN_EVIL_FOG) {
@@ -1256,7 +1265,13 @@ int armyGroup::GetArmyMorale(int index, const hero* ownerHero, const town* owner
             case TOWN_DUNGEON:
                 morale++;
                 break;
+            case TOWN_STRONGHOLD:
+            case TOWN_FORTRESS:
+            case TOWN_CONFLUX:
+                goto evil_done;
             }
+evil_done:
+            ;
         }
     }
     int type = armies[index];

@@ -260,6 +260,15 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `armyGroup::GetArmyMorale` rises 80.5625% ->
+  96.5625%.** Retail's two magic-terrain switches cover all nine town
+  values and VC6 lowers each through a 9-byte selector table. Omitting the
+  three no-op towns produced direct six-entry jump tables; empty cases were
+  folded into default before lowering. Explicit Stronghold/Fortress/Conflux
+  cases routed to named no-op exits preserve the full domain and reproduce
+  both retail tables. All 38 block flows agree; only an ESI/EDI whole-body
+  allocation mirror and retail's shrink-wrapped morale save remain.
+
 - **2026-08-09 — `TSplitWindow::WindowHandler` rises 97.4066% ->
   99.9170%.** Retail keeps the accept arm adjacent to the shared end-dialog
   return tail and emits close/cancel out of line with a backward jump. A
