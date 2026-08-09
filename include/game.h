@@ -67,12 +67,19 @@ public:
 SIZE(mine, 0x40);
 
 // Retail's garrison pool element. GetFlaggedObjectOwner reads the first byte
-// as a signed owner and indexes records with a 0x40 stride; the remaining
-// bytes stay opaque.
+// as a signed owner and indexes records with a 0x40 stride. SaveGarrisonPool
+// passes +0x04 to armyGroup::save and serializes the last four bytes
+// individually, proving the complete slice without assigning semantics to the
+// four flags.
 class garrison {
 public:
-    char playerOwner;
-    char pad_01[0x3f];
+    char playerOwner;                 // +0x00
+    char pad_01[3];
+    armyGroup guards;                 // +0x04
+    unsigned char field_3c;
+    unsigned char field_3d;
+    unsigned char field_3e;
+    unsigned char field_3f;
 };
 SIZE(garrison, 0x40);
 
@@ -415,6 +422,7 @@ public:
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
     void calculate_production();                 // 0x4b8af0
+    int SaveGarrisonPool(TAbstractFile* outfile); // 0x4b98c0
     void MakeTerrainVisible(int whichPlayer, unsigned short visMask);
 #if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_HERO_OBJ_DECLS)
     // 0x4c9990. town.obj needs this declaration for
