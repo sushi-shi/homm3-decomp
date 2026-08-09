@@ -388,7 +388,15 @@ public:
     // reach it.
     enum { HERO_COUNT = 156 };
     hero heroes[HERO_COUNT];
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    char pad_4df18[0x42c];
+    // One player-visit bitset per GlobalInfoFlags entry. Retail indexes the
+    // byte by flag and tests the local player's bit.
+    unsigned char globalInfoFlags[32];    // +0x4e344
+    char pad_4e364[0x24];
+#else
     char pad_4df18[0x470];
+#endif
     // THE FOUR OBJECT POOLS, +0x4e388 / +0x4e398 / +0x4e3a8 / +0x4e3b8,
     // sixteen bytes apiece - VC6's Dinkumware vector, whose empty
     // allocator sits at +0 so _First/_Last/_End follow at +4/+8/+0xc.
@@ -427,6 +435,16 @@ public:
     NewfullMap* GetWorldMapData();
     playerData* GetLocalPlayer();
     int GetLocalPlayerGamePos();                 // 0x4cea20
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    // DC-attested inline helper. Retail's shrine consumer proves the signed
+    // [0,8) player guard and the byte bitset at +0x4e344.
+    unsigned char GetInfoFlag(GlobalInfoFlags flag, const int playerNum)
+    {
+        if (playerNum < 0 || playerNum >= 8)
+            return 0;
+        return (globalInfoFlags[flag] & (1 << playerNum)) != 0;
+    }
+#endif
     int GetGamePosFromDPID(unsigned long dpid);  // 0x4cec20
     // Same `_N`-and-const family as playerData's pair above.
     bool IsLastHuman(int gamePos) const;         // 0x4cec50

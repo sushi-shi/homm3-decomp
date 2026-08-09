@@ -312,6 +312,14 @@ public:
     enum { NUM_SPELLS = 70 };       // DC SpellID::kNumSpells
     unsigned char in_spellbook[NUM_SPELLS];     // +0x3ea
     unsigned char available_spells[NUM_SPELLS]; // +0x430
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    // DC-attested inline helper; SetShrineHelpText proves the direct
+    // byte-indexed availability read in retail.
+    unsigned char SpellIsAvailable(SpellID spell) const
+    {
+        return available_spells[spell];
+    }
+#endif
     // The four primary skills (DC name `stats`), byte-proven by
     // hero::get_primary_skill_total 0x4e5960 - a four-iteration
     // stride-1 SIGNED-char loop from [this+0x476], clamped to 0..99 -

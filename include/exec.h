@@ -73,7 +73,9 @@ struct SUnnamedEntry6a5d5c {
     char pad_40c[0x178];
     const char* emptyCreatureBankText;   // +0x584
     const char* unknownCreatureBankText; // +0x588
-    char pad_58c[0x10];
+    const char* knownShrineSpellText;     // +0x58c
+    const char* shrineSpellFormat;        // +0x590
+    char pad_594[0x8];
 #else
     char pad_40c[0x190];
 #endif

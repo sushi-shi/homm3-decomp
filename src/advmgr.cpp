@@ -620,14 +620,41 @@ void get_creature_bank_help_text(char* buffer, NewmapCell* cell, type_creature_b
     strcat(buffer, army_name);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:2835
+// RETAIL-RECONSTRUCTED 2026-08-09 (99.3641%). Retail proves the complete
+// operation set: object-name copy, trigger/knowledge and global-visit gates,
+// signed shrine spell extraction, formatted spell name, and the current hero's
+// availability annotation. Dreamcast CodeView supplies the surviving
+// function/domain names. All nine branches and both returns agree; the residual
+// is one byte-width bit test and one redundant buffer reload in retail.
 VA(0x0040d8d0, 0x229)  // dc-bracket forced, dc 0xb788
 void SetShrineHelpText(char* buffer, hero* current_hero, NewmapCell* cell, GlobalInfoFlags type, const char* separator_1, const char* separator_2)
 {
-    // @stub
+    gpGame->GetLocalPlayerGamePos();
+    strcpy(buffer, gAdventureObjectNames[cell->type]);
+    if (!cell->is_trigger)
+        return;
+
+    unsigned char knows_shrine_type =
+        gpGame->GetInfoFlag(type, gNetLocalGamePos);
+    if (cell->PlayerKnowsCell(gNetLocalGamePos)) {
+        SpellID spell = static_cast<int>(cell->extraInfo << 9) >> 22;
+        strcat(buffer, separator_1);
+        char temp[500];
+        sprintf(temp, gUnnamed6a5d5c->entry->shrineSpellFormat,
+                akSpellTraits[spell].name);
+        strcat(buffer, temp);
+        if (current_hero && current_hero->SpellIsAvailable(spell)) {
+            strcat(buffer, separator_2);
+            strcat(buffer, gUnnamed6a5d5c->entry->knownShrineSpellText);
+        }
+    } else if (knows_shrine_type) {
+        strcat(buffer, separator_1);
+        strcat(buffer, gGlobalInfoFlagNames[type]);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:2878
 VA(0x0040db00, 0x1BD)  // dc-bracket forced, dc 0xb930
