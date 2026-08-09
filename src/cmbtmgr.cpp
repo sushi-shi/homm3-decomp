@@ -932,12 +932,32 @@ void combatManager::RaiseSkeletons(int side)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:4863
+// RECONSTRUCTED 2026-08-09 from the retail set walk. The chance-filtered
+// spell ids live in one 16-byte Dinkumware set per side; each surviving id
+// is granted when the hero owns a spellbook and Wisdom admits its level.
+// Residual (68.1633%) is one whole-loop allocation rotation: retail keeps
+// {side,this,spell} in {EBX,EDI,ESI} and spills the set address, while this
+// compile keeps the set in EBX, spills this and uses {ESI,EDI} for
+// {hero,spell}. A named manager is byte-inert; repeating the set expression
+// scores 66.10%, and a volatile set pointer 57.47%, so both are rejected.
 VA(0x00469fe0, 0x88)  // anchor-callee, dc 0x63648
 void combatManager::LearnSpellFromEagleEye(int side)
 {
-    // @stub
+    std::set<SpellID>& spells = eagleEyeSpells[side];
+    for (std::set<SpellID>::iterator it = spells.begin();
+         it != spells.end(); ++it) {
+        hero* current_hero = heroes[side];
+        SpellID spell = *it;
+        if (current_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)
+            && akSpellTraits[spell].level <= current_hero->wisdomLevel + 2)
+            current_hero->AddSpell(spell);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4886
 VA(0x0046a070, 0x2D3)  // anchor-callee, dc 0x63704

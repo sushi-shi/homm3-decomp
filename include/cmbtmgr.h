@@ -5,6 +5,7 @@
 #ifndef HOMM3_CMBTMGR_H
 #define HOMM3_CMBTMGR_H
 
+#include <set>
 #include "army.h"
 #include "armygrp.h"   // SpellID, for the two spells.obj leaves below
 #include "hexcell.h"
@@ -208,7 +209,11 @@ public:
     // chosen target turns out to be on its OWN side. Name awaits a
     // writer - no roster or string reaches the pair.
     unsigned char field_53dc[2];      // +0x53dc
-    char pad_53de[0xc6];
+    char pad_53de[0x82];
+    // Per-side spells that survived Eagle Eye's battle-time chance gate.
+    // LearnSpellFromEagleEye walks each 16-byte Dinkumware set in place.
+    std::set<SpellID> eagleEyeSpells[2]; // +0x5460
+    char pad_5480[0x24];
     // Per-side "this side is played by the computer" latch: ai_tactical
     // crosses it with gpGame's own AI flag before scaling a shooter's
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
@@ -324,6 +329,7 @@ public:
     void PlaceAllObstacles();
     void RemoveObstacle(int index);
     void CombatSystemOptions();
+    void LearnSpellFromEagleEye(int side);
     int UpdateGrid(int bPostGridIsClean, int bSetupGrid);
     void DrawFrame(unsigned char update,
                    unsigned char bLimitCreatureEffect,

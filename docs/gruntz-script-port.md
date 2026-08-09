@@ -321,6 +321,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `combatManager::LearnSpellFromEagleEye` reconstructed
+  from unscored to 68.1633%.** Retail walks a per-side 16-byte Dinkumware
+  `set<SpellID>` at +0x5460, tests the side's hero for a spellbook, applies
+  the Wisdom level gate, and grants every surviving spell. This deliberately
+  differs from quick combat's first-success exit: the full combat path has
+  already chance-filtered the set before this award pass. Restoring the STL
+  container and iterator boundary reproduces the full CFG and call sequence.
+  The residual is a whole-loop register rotation: retail spills the set
+  address and retains `{side,this,spell}` in `{EBX,EDI,ESI}`, while this
+  compile retains the set and spills `this`. Named-manager, repeated-container
+  and volatile-pointer lifetime probes were inert or regressive and removed.
+  Retail bytes alone select the retained form; no external implementation or
+  `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `combatManager::CombatSystemOptions` reconstructed to
   99.8919%, with every instruction matching.** Retail proves a 0x50-byte
   stack object whose lifetime is constructor -> `DoModal` -> destructor,
