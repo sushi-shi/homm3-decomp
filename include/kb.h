@@ -10,8 +10,10 @@
 
 // homm2's KB timer array survives (DC glTimers: unsigned long[10];
 // retail base 0x698998 - button::Select stores slot 2 at 0x6989a0).
-// Slot name is the homm2 2.1 KB.h value.
+// Slot 2's name is the homm2 2.1 KB.h value. UpdateScreen independently
+// proves slot 0's adventure-animation role from retail.
 enum EKbTimerSlots {
+    GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT = 0,
     GLOBAL_BUTTON_REPEAT_TIMER_SLOT = 2
 };
 

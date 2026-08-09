@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::UpdateScreen` reconstructed byte-exact
+  (125 bytes).** Retail fixes the update rectangle at (0,8), 608x544,
+  regardless of the two retained formal flags, then samples `GameTime`,
+  tests KB timer slot 0 as a signed due time and advances `animFrame` unless
+  the byte at +0x104 is paused. The target's signed `jg` and local-slot order
+  prove `_cpp_max(elapsedTime, 180)`: the timer advances by at least 180 ms,
+  not by a capped amount, before one Windows message is pumped. Dreamcast
+  CodeView supplies the signature, local names and `animCtrPaused` spelling;
+  the x86 operations, constants, offsets and relocations are retail-proven.
+  No external implementation body was used. Whole-linked fuzzy coverage
+  rises from 45.37% to 45.41%, exact linked functions from 613 to 614, and
+  executable fuzzy coverage from 8.60% to 8.61%.
+
 - **2026-08-09 — `advManager::get_map_center` reconstructed byte-exact
   (111 bytes).** Retail reads the packed origin at +0xe4, adds the two
   viewport half-extents at +0xec/+0xf0, preserves the origin's four-bit z,
