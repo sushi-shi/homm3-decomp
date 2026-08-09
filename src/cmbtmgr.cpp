@@ -910,12 +910,29 @@ void combatManager::RaiseSkeletons(int side)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:4863
+// Walk the spells recorded for one side and teach each learnable spell to
+// that side's hero. The spellbook gate is repeated per element exactly as in
+// retail; the spell's table level may be at most Eagle Eye mastery + 2. All
+// four branches agree. Residual (89.37%): retail folds the field offset into
+// the side index before scaling (`lea side+0x546; shl 4`), while this class
+// layout emits the equivalent scaled-index-plus-displacement address.
 VA(0x00469fe0, 0x88)  // anchor-callee, dc 0x63648
 void combatManager::LearnSpellFromEagleEye(int side)
 {
-    // @stub
+    for (std::set<SpellID>::iterator it = eagleEyeData[side].spells.begin();
+         it != eagleEyeData[side].spells.end(); it++) {
+        SpellID spell = *it;
+        if (heroes[side]->IsWieldingArtifact(ARTIFACT_SPELLBOOK)
+            && akSpellTraits[spell].level
+                <= heroes[side]->eagleEyeLevel + 2)
+            heroes[side]->AddSpell(spell);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4886
 VA(0x0046a070, 0x2D3)  // anchor-callee, dc 0x63704
@@ -1698,4 +1715,3 @@ void std::__destroy_aux()
 }
 
 #endif  // @carcass
-
