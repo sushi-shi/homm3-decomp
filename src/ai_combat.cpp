@@ -1106,22 +1106,19 @@ armyGroup* type_AI_combat_data::get_army()
     // @stub
 }
 
-// E:\gamedcs\ai_combat.cpp:1356
-// LOCATED (hd-crossbuild + ida): the copy ctor - copies the byte at
-// +0 then reallocates and rep-movsd's the 72-byte elements.
-// This body is the PROOF that retail is Dinkumware, not STLport: it
-// opens by copying ONE BYTE at +0 (the empty `allocator` subobject)
-// before touching _First/_Last, then `if (_N<0) _N=0` /
-// `operator new(_N*72)` - Dinkumware's vector copy ctor verbatim. No
-// longer P2.3-blocked; it waits on the type_AI_combat_data head
-// re-model flagged in ai_combat.h.
-VA(0x004276c0, 0x87)  // corroborates (hd-crossbuild + ida), dc 0x2c6b4
-void type_AI_combat_data::type_AI_combat_data(const type_AI_combat_data* __that)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// IDENTITY CORRECTION 2026-08-09: the inherited order map called this a
+// type_AI_combat_data copy ctor, but retail copies only the embedded
+// vector's 16-byte head. The body is the pinned VC6 <vector> copy ctor
+// instruction for instruction; VC6 inlines it into this source-private
+// wrapper, producing all 135 bytes exactly. The displaced Dreamcast class
+// copy-ctor row remains DC_ONLY below.
+VA(0x004276c0, 0x87)  // retail body + pinned VC6 <vector>
+type_monster_vector::type_monster_vector(const type_monster_vector& other)
+    : std::vector<type_monster_data>(other)
+{
+}
 
 // E:\gamedcs\ai_combat.h:255
 // EXACT 2026-08-08 (83.6 -> 100.0) by the THREE-OPERAND SELECTOR: the
@@ -1147,8 +1144,8 @@ void type_AI_combat_data::type_AI_combat_data(const type_AI_combat_data* __that)
 VA(0x00427750, 0x21)  // anchor-global, dc 0x2c6ac
 long type_AI_combat_data::get_total() const
 {
-    type_monster_data* first = monsters._M_start;
-    return first == 0 ? 0 : (unsigned)(monsters._M_finish - first);
+    type_monster_data* first = monsters._First;
+    return first == 0 ? 0 : (unsigned)(monsters._Last - first);
 }
 
 #if 0  // @carcass
@@ -1156,6 +1153,14 @@ long type_AI_combat_data::get_total() const
 // E:\gamedcs\ai_combat.h:260
 DC_ONLY(0x2c6b0, 0x4)
 hero* type_AI_combat_data::get_hero()
+{
+    // @stub
+}
+
+// E:\gamedcs\ai_combat.cpp:1356. No retail slot was found; the previously
+// assigned 0x4276c0 body is the vector copy constructor above.
+DC_ONLY(0x2c6b4, 0x54)
+void type_AI_combat_data::type_AI_combat_data(const type_AI_combat_data* __that)
 {
     // @stub
 }
