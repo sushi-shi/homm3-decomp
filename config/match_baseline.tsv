@@ -176,7 +176,7 @@ ai_combat	?get_total@type_AI_combat_data@@QBEJXZ	100.0000	100.0000	100.0000	0x27
 ai_combat	?inflict_damage@type_AI_combat_data@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x26300
 ai_combat	?inflict_melee_damage@type_AI_combat_data@@QAEJJJJ@Z	100.0000	100.0000	100.0000	0x26170
 ai_combat	?kill@type_AI_combat_data@@QAEXXZ	100.0000	100.0000	100.0000	0x262b0
-ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	46.7778	46.7778	46.7778	0x26bc0
+ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	100.0000	100.0000	100.0000	0x26bc0
 ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000	100.0000	100.0000	0x23ea0
 ai_combat	type_AI_combat_data_cast_spell	0.0000	0.0000	0.0000	0x25bd0
 ai_combat	type_AI_combat_data_initialize_creatures	0.0000	0.0000	0.0000	0x24120
