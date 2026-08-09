@@ -327,6 +327,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retail-proven ids remain TU-local typed constants. No external
   implementation was used; `decomp-attempt-1` supplied nothing.
 
+- **2026-08-09 — `type_AI_combat_data::initialize_creatures` reconstructed
+  from unscored to 91.0075%; `ai_combat` has no unscored retail body left.**
+  The 1,646-byte function now computes the Tactics edge, square-root
+  attack/defense force modifier, archery and speed bonuses, builds one
+  simulated 72-byte stack record for each occupied army slot, applies the
+  shooter/melee/wall model, accumulates total combat hit points, and sorts
+  the vector by per-creature simulated hit value. Retail proves the full
+  algorithm, including the two `sqrt` calls and all four trait bits.
+  Dreamcast CodeView supplies only local names and the inline-only
+  `get_catagory`/comparison helper boundaries. Restoring those boundaries,
+  `vector::push_back` and `std::sort` lets VC6 regenerate the entire
+  870-byte template-algorithm tail instead of transcribing it. The same
+  retail body completes the DC-attested `hero::GetPrimarySkill` rule:
+  attack/defense floor at zero, power/knowledge at one; that correction also
+  raises `cast_spell` 85.4199% -> 85.4316%. The remaining delta is chiefly
+  the function-wide EBX/EDI choice for `this` plus stripped-target relocation
+  names. A named `this` alias and explicit attribute lifetime regressed
+  91.0075% -> 83.29% and were removed. This applies the HoMM2/Gruntz rule
+  that STL/helper boundaries and local lifetimes are codegen inputs. No
+  external implementation was used; `decomp-attempt-1` supplied nothing.
+
 - **2026-08-09 — `type_AI_combat_data::simulate_combat` is byte-exact.**
   The former direct transcription over-expanded nested accessors and damage
   routines, scoring 46.7778%. Restoring the original source boundaries—one
