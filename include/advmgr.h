@@ -11,6 +11,7 @@
 
 class NewfullMap;
 class NewmapCell;
+class CSprite;
 
 // A narrow retail view of the 16-byte adventure-object traits table.
 // FindAdjacentMonster reaches only byte +1 after get_map_object indexes it.
@@ -130,7 +131,17 @@ public:
     type_point radarOrigin;
     char pad_0e8[4];
     int lastHover;  // +0xec, ForceNewHover invalidates before ProcessHover
-    char pad_0f0[0x11c];
+    char pad_0f0[0x10];
+    int animFrame;                  // +0x100, sprite-frame modulo source
+    char pad_104[8];
+    // Retail DrawHeroPart indexes these pointer rows directly. The extents
+    // close every gap through +0x1ec and agree with the surviving roster.
+    CSprite* cursorIcons[18];       // +0x10c, indexed by hero class
+    CSprite* boatIcons[3];          // +0x154, indexed by boat type
+    CSprite* boatFrothIcons[3];     // +0x160, indexed by boat type
+    CSprite* flagIcons[8];          // +0x16c, indexed by player owner
+    CSprite* boatFlagIcons[3][8];   // +0x18c, [boat type][player owner]
+    char pad_1ec[0x20];
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
     char pad_20d[0x17f];
     int field_38c;            // +0x38c, zeroed by CallManager's suspend arm
@@ -151,6 +162,8 @@ public:
     int GetCloudLookup(int srcX, int srcY, int z);
     bool ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type,
                            TDrawParts (&parts)[6]);
+    void DrawHeroPart(int part, TDrawParts& heroParts, int baseX, int baseY,
+                      int tilex, int tiley, int tilew, int tileh);
     void DrawRolloverText(char* text);
     unsigned char FindAdjacentMonster(type_point point, type_point* result,
                                       type_point excluded);

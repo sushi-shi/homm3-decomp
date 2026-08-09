@@ -5,6 +5,7 @@
 #ifndef HOMM3_CSPRITE_H
 #define HOMM3_CSPRITE_H
 
+#include "bitmap16.h"
 #include "csequence.h"
 #include "resource.h"
 
@@ -57,6 +58,17 @@ public:
     palette* GetPalette();
     void SetPalette(const unsigned short* pal);
     void DrawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
+    void DrawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
+                  unsigned short* dst, int dx, int dy, int dw, int dh,
+                  int dpitch, unsigned char hflip);
+    // Header wrapper (DC CSprite.h:426): retail advmgr inlines this view,
+    // then calls the raw-map overload above.
+    void DrawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
+                  Bitmap16Bit* dst, int dx, int dy, unsigned char hflip)
+    {
+        DrawHero(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
+                 dst->Width, dst->Height, dst->Pitch, hflip);
+    }
 };
 
 // --- globals ---

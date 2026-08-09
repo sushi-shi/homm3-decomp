@@ -260,6 +260,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the 1,156-byte `advManager::DrawHeroPart` body opened
+  to 98.1571%.** Retail instructions and relocations prove the hero/boat
+  split, packed-point validation and map-cell lookup, the optional boat
+  froth layer, the two boat layers, the owner flag/cursor layers, and all
+  reached layout offsets. The five draws use the retail CSprite header
+  wrapper shape: its Bitmap argument expands inline to the raw-map overload.
+  CodeView contributed signatures and names only; no external body was
+  consulted or ported. Thirty-three of the function's thirty-four control-
+  flow blocks now compare exactly. The sole residual is VC6 scheduling in
+  the final boat-sprite draw, so this entry deliberately does not claim a
+  byte-exact admission. The generated baseline remains owned by `homm3
+  build` and was not edited manually.
+
 - **2026-08-09 — `GetFlaggedObjectOwner` admitted exact; `advmgr`
   16 → 17 exact.** The 270-byte retail body proves and reproduces hero
   obscured-object unwrapping plus the generator, garrison, mine/lighthouse,
