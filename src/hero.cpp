@@ -14,7 +14,9 @@
 // sqrt() - hero::get_combat_value_modifier (0x4e5400) calls the CRT
 // entry, not an inlined fsqrt.
 #include <math.h>
+#define HOMM3_HERO_COMBINATION_VIEW
 #include "hero.h"
+#undef HOMM3_HERO_COMBINATION_VIEW
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
 #include "army.h"
@@ -949,7 +951,7 @@ void hero::rotate_backpack_right()
 
 // RETAIL-ONLY x4: the Shadow of Death COMBINATION-ARTIFACT family. The
 // Dreamcast roster has no row anywhere in this gap, and all four bodies
-// share one signature shape - a 20-dword (bitset<144>) component mask
+// share one signature shape - a five-dword (bitset<144>) component mask
 // pulled out of the 24-byte-stride artifact table at 0x660b6c (+4),
 // then walked against the hero's 19 equipped slots at +0x12d. Names are
 // ORDINAL PLACEHOLDERS flagged unattested.
@@ -957,8 +959,8 @@ void hero::rotate_backpack_right()
 //                       bit per equipped artifact - the "are all parts
 //                       worn" test. Called from 0x5af590.
 //   0x004dbf30 `ret 8`  the two-argument form (combo id + slot).
-//   0x004dc070 `ret 4`  calls hero::remove_artifact (0x4e2bd0) for the
-//                       slot and then walks the 0x90-bit mask.
+//   0x004dc070 `ret 4`  EXACT: calls hero::remove_artifact (0x4e2bd0) for
+//                       the slot and then walks the 0x90-bit mask.
 //   0x004dc100 `ret 4`  /GX frame; also reaches the 360-byte playerData
 //                       record at gpGame+0x20ad0 indexed by the owner
 //                       byte.
@@ -974,11 +976,26 @@ unsigned char hero::HeroFn_004DBF30(int combo, long slot)
     // @stub
 }
 
+#endif  // @carcass
+
 VA(0x004dc070, 0x87)  // retail-only, hero member, ret 4
 void hero::HeroFn_004DC070(long slot)
 {
-    // @stub
+    int combination =
+        akArtifactTraits[equipped[slot].artifactId].combinationIndex;
+    remove_artifact(slot);
+
+    const std::bitset<144>& components =
+        gCombinationArtifacts[combination].components;
+    for (int artifactId = 0; artifactId < 144; artifactId++) {
+        if (components.test(artifactId)) {
+            type_artifact artifact = { artifactId, -1 };
+            equip_artifact(&artifact, -1);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 VA(0x004dc100, 0x217)  // retail-only, hero member, ret 4
 unsigned char hero::HeroFn_004DC100(long slot)

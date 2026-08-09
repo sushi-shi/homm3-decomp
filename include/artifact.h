@@ -6,6 +6,9 @@
 #define HOMM3_ARTIFACT_H
 
 #include <va.h>
+#ifdef HOMM3_HERO_COMBINATION_VIEW
+#include <bitset>
+#endif
 
 // The artifact-id domain. Added 2026-08-08 with its first consumer,
 // recruit.obj's siege_artifact_to_creature (0x550360) - only the four
@@ -172,7 +175,10 @@ struct TArtifactTraits {
     // armyGroup::get_luck_description indexes artifact 0x55 at stride
     // 0x20 and passes +0 directly to format_string: the display name.
     const char* name;           // +0x00
-    char pad_04[0x14];
+    char pad_04[0x10];
+    // +0x14 maps an assembled artifact to its 24-byte combination row;
+    // HeroFn_004DC070 uses it to restore every component after unequipping.
+    int combinationIndex;
     int combination;            // +0x18
     char pad_1c[0x4];
 };
@@ -183,11 +189,15 @@ SIZE(TArtifactTraits, 32);
 // +0x00 by the same body - it is the assembled artifact's own id, which
 // IsWieldingArtifact recurses on. The remaining 20 bytes are the
 // component mask the four retail-only combination bodies at
-// 0x4dbe80..0x4dc100 walk as a bitset<144> (five dwords); a pad until
-// one of those is written.
+// 0x4dbe80..0x4dc100 walk as a bitset<144> (five dwords). It is typed only
+// in hero.obj's narrow view; other translation units retain the proven pad.
 struct TCombinationArtifact {
     int artifactId;             // +0x00
+#ifdef HOMM3_HERO_COMBINATION_VIEW
+    std::bitset<144> components;
+#else
     char pad_04[0x14];
+#endif
 };
 SIZE(TCombinationArtifact, 24);
 
