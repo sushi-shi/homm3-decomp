@@ -602,9 +602,9 @@ long town::get_legion_bonus(long dwelling)
         // bits are bitNumber[9] (Castle) and bitNumber[8] (Citadel),
         // tested as a 64-bit AND lowered to the low/high pair.
         bonus = growth;
-        if (built & bitNumber[9])
+        if (built & bitNumber[CASTLE_CASTLE_ID])
             bonus += growth;
-        else if (built & bitNumber[8])
+        else if (built & bitNumber[CASTLE_CITADEL_ID])
             bonus = bonus / 2 + growth;
         bonus /= 2;
     }
@@ -678,20 +678,62 @@ long town::TownFn_005BF900(long dwelling)
     return bonus;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\town.cpp:1639
-// SHORT arity is what pins this one: `movsx ebx, word ptr [ebp+8]`,
-// i.e. the `short dwelling` DC declares and no other row in the bracket
-// has. It then masks the dwelling pair at 0x66ce88 against the town's
-// second 64-bit mask at +0x158/+0x15c.
+// The base and upgraded dwelling gates, creature growth and fortification
+// bonus, Legion and per-tier artifacts, first matching horde, generator
+// adjustment, and Grail half-growth all reproduce retail. Keeping the
+// fortification contribution distinct through its three arms is what gives
+// VC6 retail's shared signed average, dwelling spill, and horde-loop register
+// allocation.
 VA(0x005bfb60, 0x266)  // arity (short) + body, dc 0x167748
 short town::get_growth_rate(short dwelling)
 {
-    // @stub
-}
+    long dwelling_index = dwelling;
+    if (!(active & bitNumber[DWELLING_0_ID + dwelling_index]))
+        return 0;
+    if (dwelling < TOWN_DWELLING_COUNT
+        && (active & bitNumber[DWELLING_0_UPG_ID + dwelling_index]))
+        return 0;
 
-#endif  // @carcass
+    TCreatureType creature = gTownDwellingCreatures[
+        type * TOWN_DWELLING_SLOTS + dwelling_index];
+    short growth = akCreatureTypeTraits[creature].growthRate;
+    growth += get_castle_growth_bonus(creature);
+
+    if (owner >= 0) {
+        long legion_bonus = 0;
+        if (gpGame->players[owner].hasGivenArtifact(0x85)) {
+            TCreatureType legion_creature = gTownDwellingCreatures[
+                type * TOWN_DWELLING_SLOTS + dwelling_index];
+            long legion_growth =
+                akCreatureTypeTraits[legion_creature].growthRate;
+            long castle_bonus;
+            if (built & bitNumber[CASTLE_CASTLE_ID])
+                castle_bonus = legion_growth;
+            else if (HasBuilding(CASTLE_CITADEL_ID, 0))
+                castle_bonus =
+                    akCreatureTypeTraits[legion_creature].growthRate / 2;
+            else
+                castle_bonus = 0;
+            legion_bonus = (legion_growth + castle_bonus) / 2;
+        }
+        growth += legion_bonus;
+        growth += TownFn_005BF900(dwelling_index);
+    }
+
+    for (short slot = 0; slot < TOWN_HORDE_SLOTS; slot++) {
+        if ((active & bitNumber[gHordeBuildings[slot]])
+            && const_horde_effects[type][slot].dwelling == dwelling) {
+            growth += const_horde_effects[type][slot].bonus;
+            break;
+        }
+    }
+
+    growth += generatorBonus[dwelling_index];
+    if (active & bitNumber[HOLY_GRAIL_ID])
+        growth += growth / 2;
+    return growth;
+}
 
 // E:\gamedcs\town.cpp:1682
 // Promoted from DC_ONLY 2026-08-08. The row is inside town.obj's carve

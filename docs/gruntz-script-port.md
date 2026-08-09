@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `town::get_growth_rate` admitted byte-exact; `town`
+  gains its 29th exact row.** The 614-byte caller gates base and upgraded
+  dwelling slots, adds creature and fortification growth, applies Legion and
+  tier artifacts for owned towns, takes the first active matching horde,
+  folds in the generator adjustment, and grants the Grail's signed half-growth.
+  A distinct three-arm castle contribution (full, recomputed half after the
+  out-of-line `HasBuilding`, or explicit zero) recovers retail's shared average,
+  12-byte local frame, dwelling spill, EBX horde index, and all 28 control-flow
+  blocks. Every instruction and relocation agrees. No external implementation
+  was used.
+
 - **2026-08-09 — the retail-only town artifact-growth helper is reconstructed
   to 99.8523%.** The 600-byte member resolves the town's garrison and visiting
   heroes (including the packed-coordinate map-cell fallback), then applies the
