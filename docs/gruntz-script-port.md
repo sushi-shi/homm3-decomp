@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the default `town` constructor admitted byte-exact;
+  `town` gains its 28th exact row.** Retail closes the former +0x32..+0xdf
+  pad: ordinal state at +0x33/+0x34/+0x38/+0x3c, a 16-byte Dinkumware vector
+  at +0xc4, and `std::bitset<70>` at +0xd4 immediately before the +0xe0
+  garrison. Their automatic construction, the garrison constructor call,
+  Village Hall seed, hero sentinels, and redundant seven-slot empty-army fill
+  reproduce all 212 bytes including EH setup. Adding the standard container
+  declarations to the canonical header preserved every dependent unit's
+  exact rows. No external implementation was used.
+
 - **2026-08-09 — `town::hire` admitted byte-exact from retail; `town`
   gains its 27th exact row.** The 201-byte body scans the player's two tavern
   offers for the hero id, charges `gHeroGoldCost`, refetches the canonical

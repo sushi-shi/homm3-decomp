@@ -70,14 +70,34 @@ void town::ApplySpecialBuildingEffect(hero* townHero)
     // @stub
 }
 
-// E:\gamedcs\town.cpp:895
-VA(0x005bde80, 0xD4)  // anchor-global, dc 0x166408
-void town::town()
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\town.cpp:895
+// Constructs the vector and 70-bit spell set ahead of the garrison, then
+// seeds the town head, Village Hall mask, hero sentinels, and seven empty
+// garrison slots in retail statement order.
+VA(0x005bde80, 0xD4)  // retail body + dc identity, dc 0x166408
+town::town()
+{
+    type = 0;
+    field_34 = 0;
+    field_38 = -1;
+    id = 0;
+    mapX = 0;
+    mapY = 0;
+    mapZ = 0;
+    visitingHeroId = -1;
+    built = bitNumber[HALL_VILLAGE_ID];
+    active = built;
+    field_14 = 0;
+    owner = -1;
+    garrisonHeroId = -1;
+    for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++)
+        garrison.armies[slot] = -1;
+    field_3c = -1;
+    field_02 = 0;
+    field_33 = 1;
+}
 
 // E:\gamedcs\town.cpp:930
 // Turns each horde effect's creature into its dwelling index: for every
