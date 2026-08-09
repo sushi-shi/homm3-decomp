@@ -3144,6 +3144,9 @@ void advManager::OverrideBottomView(advManager::EBottomViewType view, int time)
     if (view != BOTTOM_VIEW_DEFAULT && view != BOTTOM_VIEW_8) {
         if (time < 0) {
             switch (view) {
+            case BOTTOM_VIEW_6:
+                time = 5000;
+                break;
             case BOTTOM_VIEW_1:
                 time = 3000;
                 break;
@@ -3157,9 +3160,6 @@ void advManager::OverrideBottomView(advManager::EBottomViewType view, int time)
                 time = 3000;
                 break;
             case BOTTOM_VIEW_5:
-                break;
-            case BOTTOM_VIEW_6:
-                time = 5000;
                 break;
             }
         }
