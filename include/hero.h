@@ -466,6 +466,12 @@ public:
     // recorded here rather than modelled, because retail scans NINETEEN
     // slots, one more than the DC roster's eighteen.
     void remove_artifact(long slot);
+    // 0x004e2a00 - equips an artifact record into an ordinal slot;
+    // negative slot selects the first legal position.
+    unsigned char equip_artifact(const type_artifact* artifact, long slot);
+    // 0x004dc070 - disassembles the combination artifact in one equipped
+    // slot, then equips each component into its first legal position.
+    void HeroFn_004DC070(long slot);
     // 0x004d9260 - drops the artifact backing a war machine when the
     // machine dies.
     void DestroySiegeWeaponArtifact(int creature_type);
