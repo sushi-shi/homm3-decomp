@@ -260,6 +260,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `type_AI_combat_data::cast_chain_lightning` is
+  byte-exact.** The 325-byte body already had the correct three-bounce
+  algorithm but remained at 79.6984% under a whole-function ESI/EDI swap.
+  A named defender reference makes its lifetime explicit: VC6 assigns the
+  defender to ESI and `this` to EDI exactly as retail does, raising the body
+  to 95.3254% and matching the prologue/call setup. Assigning the inlined
+  `take_damage` return back to the existing damage value then reproduces
+  retail's kill/survive join and closes every remaining byte. Reordering the
+  target/mask declarations regressed to 69.78%; hoisting the loop-counter
+  declaration was byte-inert, so both probes were reverted. This is the
+  HoMM2/Gruntz lifetime-first discipline applied to register ownership and
+  an inlined return-value lifetime. Retail bytes alone selected the retained
+  form; `decomp-attempt-1` supplied nothing.
+
 - **2026-08-09 — `type_AI_combat_data::choose_melee` reconstructed from
   retail to 90.9329%.** The formerly unscored 1,021-byte body now rejects
   armies without a living melee stack, evaluates each possible switch from
