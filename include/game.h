@@ -235,7 +235,7 @@ public:
     char pad_59[3];
 
     generator();
-    unsigned char load(void* infile);
+    unsigned char load(TAbstractFile* infile);
     unsigned char save(TAbstractFile* outfile);
     void update_bonus();
     void Initialize(long new_owner);
