@@ -110,6 +110,7 @@ SIZE(type_monster_data, 0x48);
 struct type_monster_vector : public std::vector<type_monster_data> {
     friend class type_AI_combat_data;
 
+    type_monster_vector() {}
     type_monster_vector(const type_monster_vector& other);
     type_monster_data& operator[](unsigned n) const { return _First[n]; }
 };
@@ -167,6 +168,7 @@ public:
     type_AI_combat_data(const hero* new_hero, const armyGroup* new_army,
                         double base_modifier, const hero* _enemy_hero,
                         const town* enemy_town, NewmapCell* map_cell);
+    void initialize_creatures(double base_modifier, const hero* enemy_hero);
     void check_wall_archery_penalty(const town* enemy_town);
     void adjust_army(unsigned char dismiss_hero);
     long get_fastest_speed() const;
