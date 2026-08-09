@@ -68,6 +68,7 @@
 #include "mousemgr.h"
 #include "recruit.h"
 #include "soundmgr.h"
+#include "textntry.h"
 #include "winmgr.h"
 #include "window.h"
 #include "widget.h"
@@ -570,6 +571,9 @@ void set_witch_hut_help_text(char* buffer, hero* current_hero,
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
+    if (advWindow->ChatEditWidget->bHasFocus)
+        return;
+
     char tempText[500];
     int player = gpGame->GetLocalPlayerGamePos();
     playerData* thisPlayer = gpGame->GetLocalPlayer();
@@ -651,6 +655,23 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     SET_VISITED_ROLLOVER(LIBRARY, LibraryInfo,
         currentHero->LibraryFlags
         & (1UL << (cell->extraInfo & 0x1f)));
+    SET_VISITED_ROLLOVER(MAGIC_SCHOOL, MagicSchoolInfo,
+        currentHero->MagicSchoolFlags
+        & (1UL << (cell->extraInfo & 0x1f)));
+    SET_VISITED_ROLLOVER(MAGIC_WELL, MagicWellInfo,
+        currentHero->flags & 0x1);
+    SET_VISITED_ROLLOVER(MERC_CAMP, MercCampInfo,
+        currentHero->MercCampFlags
+        & (1UL << (cell->extraInfo & 0x1f)));
+    SET_VISITED_ROLLOVER(MERMAID, MermaidInfo,
+        currentHero->flags & 0x8000);
+    SET_VISITED_ROLLOVER(OASIS, OasisInfo,
+        currentHero->flags & 0x80);
+    SET_VISITED_ROLLOVER(POWER_SCHOOL, PowerSchoolInfo,
+        currentHero->PowerSchoolFlags
+        & (1UL << (cell->extraInfo & 0x1f)));
+    SET_VISITED_ROLLOVER(RALLY_FLAG, RallyFlagInfo,
+        currentHero->flags & 0x10000);
     case SEPULCHER:
         get_creature_bank_help_text(gText, cell, CREATURE_BANK_SEPULCHER,
             player, separator, 0);
@@ -671,9 +692,48 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         SetShrineHelpText(gText, currentHero, cell, Shrine3Info,
                           separator, separator);
         break;
+    case SIREN:
+        strcpy(gText, gAdventureObjectNames[SIREN]);
+        if (cell->is_trigger && currentHero)
+            APPEND_VISIT_TEXT(currentHero->flags & 0x100000);
+        break;
+    case STABLES:
+        strcpy(gText, gAdventureObjectNames[STABLES]);
+        if (cell->is_trigger && currentHero)
+            APPEND_VISIT_TEXT(currentHero->flags & 0x2);
+        break;
+    SET_VISITED_ROLLOVER(TEMPLE, TempleInfo,
+        currentHero->flags & (0x04000000UL | 0x100UL));
+    SET_VISITED_ROLLOVER(TRAINING_GROUNDS, TrainingGroundsInfo,
+        currentHero->TrainingGroundsFlags
+        & (1UL << (cell->extraInfo & 0x1f)));
     case TREE_OF_KNOWLEDGE:
         SetTreeHelpText(gText, currentHero, cell, separator, separator);
         break;
+    case UNIVERSITY:
+        strcpy(gText, gAdventureObjectNames[UNIVERSITY]);
+        if (cell->is_trigger && gpGame->GetInfoFlag(UniversityInfo, player)) {
+            sprintf(tempText, visitedFormat,
+                    gGlobalInfoFlagNames[UniversityInfo]);
+            strcat(gText, tempText);
+            APPEND_VISIT_TEXT(0);
+        }
+        break;
+    case WAGON:
+    case WARRIOR_TOMB:
+        strcpy(gText, gAdventureObjectNames[cell->type]);
+        if (cell->is_trigger) {
+            strcat(gText, separator);
+            strcat(gText, cell->PlayerKnowsCell(player)
+                ? gUnnamed6a5d5c->entry->visitedObjectText
+                : gUnnamed6a5d5c->entry->unvisitedObjectText);
+        }
+        break;
+    SET_VISITED_ROLLOVER(WAR_SCHOOL, WarSchoolInfo,
+        currentHero->WarSchoolFlags
+        & (1UL << (cell->extraInfo & 0x1f)));
+    SET_VISITED_ROLLOVER(WATERING_HOLE, WateringHoleInfo,
+        currentHero->flags & 0x40);
     case WITCH_HUT:
         set_witch_hut_help_text(gText, currentHero, cell,
                                 separator, separator);
