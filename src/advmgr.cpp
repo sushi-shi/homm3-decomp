@@ -1630,14 +1630,30 @@ int advManager::ProcessSearch(int x, int y, int z)
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:4983
 VA(0x0040f270, 0x7D)  // anchor-global, dc 0x10520
 void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
 {
-    // @stub
+    gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X, ADVENTURE_SCREEN_Y,
+                                  ADVENTURE_SCREEN_WIDTH,
+                                  ADVENTURE_SCREEN_HEIGHT);
+
+    unsigned long curTime = GameTime::Get();
+    if (static_cast<long>(
+            curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
+        && !animCtrPaused) {
+        ++animFrame;
+        long elapsedTime =
+            curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+            _cpp_max(elapsedTime,
+                     static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED));
+    }
+
+    Process1WindowsMessage();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:5002
 VA(0x0040f2f0, 0xF8)  // linkorder, dc 0x10640

@@ -397,6 +397,14 @@ public:
         CLOUD_DRAW_FLIPPED_OFFSET = 100
     };
 
+    enum EAdventureScreenUpdate {
+        ADVENTURE_SCREEN_X = 0,
+        ADVENTURE_SCREEN_Y = 8,
+        ADVENTURE_SCREEN_WIDTH = 608,
+        ADVENTURE_SCREEN_HEIGHT = 544,
+        ADVENTURE_ANIMATION_MAX_ELAPSED = 180
+    };
+
     char pad_038[4];
     unsigned char DebugShowFPS;  // +0x3c, DC name; retail FPS branch proves it
     unsigned char DebugViewAll;  // +0x3d, bypasses hover ownership checks
@@ -443,7 +451,10 @@ public:
     int mapOriginY;               // +0xf8
     char pad_0fc[4];
     int animFrame;                  // +0x100, sprite-frame modulo source
-    char pad_104[8];
+    // +0x104. UpdateScreen skips both the frame increment and timer catch-up
+    // while this byte is set. Dreamcast supplies the surviving member name.
+    unsigned char animCtrPaused;
+    char pad_105[7];
     // Retail DrawHeroPart indexes these pointer rows directly. The extents
     // close every gap through +0x1ec and agree with the surviving roster.
     CSprite* cursorIcons[18];       // +0x10c, indexed by hero class
@@ -482,6 +493,7 @@ public:
                       unsigned char forceDraw,
                       unsigned char updateBottomView);
     void CompleteDraw(unsigned char forceDraw);
+    void UpdateScreen(int allowIntermediateMouse, int forceDraw);
     void DrawAdventureMapGems();
     void DrawGround(int srcX, int srcY, int z, int destX, int destY);
     void DrawRiver(int srcX, int srcY, int z, int destX, int destY);
