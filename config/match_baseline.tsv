@@ -279,7 +279,7 @@ ai_tactical	type_AI_spellcaster_get_muck_and_mire_value	0.0000
 ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000
 ai_tactical	type_AI_spellcaster_get_protection_value	0.0000
 ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000
-armygrp	??0TSplitWindow@@QAE@HHH@Z	77.0387
+armygrp	??0TSplitWindow@@QAE@HHH@Z	98.3954
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000
 armygrp	??0armyGroup@@QAE@XZ	100.0000
 armygrp	??1TSplitWindow@@UAE@XZ	100.0000

@@ -174,12 +174,23 @@ void SplitSliderCallback(int state, heroWindow*)
     gpSplitWindow->UpdateSplitArmy(1);
 }
 
+#pragma inline_depth(0)
+static inline void AppendSplitWidget(std::vector<widget*>& widgets,
+                                     widget** position, widget* value)
+{
+    // Keep insert out of line while allowing this tiny adapter to disappear.
+    widgets.insert(position, 1, value);
+}
+#pragma inline_depth()
+
 // E:\gamedcs\armygrp.cpp:90
-// COMPLETE body reconstructed. Current residual (77.0387%) is concentrated
-// in VC6 vector-growth/EH emission and register allocation; the retail widget
-// roster, dimensions, ids, strings, alignment selection and final AddWidget
-// walk are all present. Keeping this reconstruction-only type source-private
-// preserves initialize_game_data's exact optimizer population.
+// Residual (98.3954%): a background-phase creature snapshot recovers retail's
+// ESI/EDI allocation, and the destination entry's byte-proven back-link is 4.
+// A depth-zero inline append scaffold keeps only the final vector::insert call
+// out of line; all 57 blocks and 25 branches then agree. The remaining deltas
+// are reserve's empty nested-destroy call, one final allocation stack home and
+// EH relocation representation. Keeping the reconstruction-only dialog type
+// source-private preserves initialize_game_data's exact optimizer population.
 VA(0x00449790, 0x65B)  // anchor-callee, dc 0x4dbb8
 TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
     : CAdvPopup(x2, y2, 0x12a, 0x151, 0x12)
@@ -198,15 +209,16 @@ TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
         0, 20, width, 30, gText, "bigfont.fnt", font::HEADING,
         1, 1, 0, 8));
 
+    int creatureType = creature;
     int alignment;
     if (!gpGame->f_1f698
-        && (creature == CREATURE_AIR_ELEMENTAL
-            || creature == CREATURE_EARTH_ELEMENTAL
-            || creature == CREATURE_FIRE_ELEMENTAL
-            || creature == CREATURE_WATER_ELEMENTAL))
+        && (creatureType == CREATURE_AIR_ELEMENTAL
+            || creatureType == CREATURE_EARTH_ELEMENTAL
+            || creatureType == CREATURE_FIRE_ELEMENTAL
+            || creatureType == CREATURE_WATER_ELEMENTAL))
         alignment = -1;
     else
-        alignment = akCreatureTypeTraits[creature].townType;
+        alignment = akCreatureTypeTraits[creatureType].townType;
     strcpy(gText, akCreatureBackgrounds[alignment]);
 
     Widgets.push_back(new bitmapBorder(
@@ -226,7 +238,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
     Widgets.push_back(sourceEntry);
     destinationEntry = new textEntryWidget(
         177, 218, 101, 37, 10, "99999", "bigfont.fnt", 4, 5,
-        0, 0, 5, 0, 5, 0, 0);
+        0, 0, 5, 0, 4, 0, 0);
     Widgets.push_back(destinationEntry);
 
     splitSlider = new TSplitSliderView(
@@ -242,7 +254,8 @@ TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
     Widgets.push_back(new button(
         20, 263, 64, 32, DIALOG_RETURN_SPLIT_ACCEPT,
         "iOk6432.def", 0, 1, 1, 0x1c, 2));
-    Widgets.push_back(new button(
+    std::vector<widget*>* widgetList = &Widgets;
+    AppendSplitWidget(*widgetList, widgetList->end(), new button(
         214, 263, 64, 30, 0x7801,
         "iCancel.def", 0, 1, 1, 1, 2));
 
