@@ -354,6 +354,7 @@ castle	?GetBuildingName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x610e0
 cmbtmgr	?CalculateGainedExperience@combatManager@@QAEXHPAH@Z	75.0110	75.0110	75.0110	0x6a350
 cmbtmgr	?CombatIsOver@combatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x65830
 cmbtmgr	?CombatSystemOptions@combatManager@@QAEXXZ	99.8919	99.8919	99.8919	0x686b0
+cmbtmgr	?GetBackgroundName@combatManager@@QAEPBDXZ	100.0000	100.0000	100.0000	0x646d0
 cmbtmgr	?GetGridIndex@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x647a0
 cmbtmgr	?GetTargetWallIndex@@YIHH@Z	100.0000	100.0000	100.0000	0x65970
 cmbtmgr	?HexIsBlocked@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x69a10
@@ -382,7 +383,6 @@ cmbtmgr	combatManager_DamageWall	0.0000	0.0000	0.0000	0x65990
 cmbtmgr	combatManager_DetermineCombatTerrain	0.0000	0.0000	0.0000	0x643b0
 cmbtmgr	combatManager_FreeIcons	0.0000	0.0000	0.0000	0x63500
 cmbtmgr	combatManager_GenerateMap	0.0000	0.0000	0.0000	0x642d0
-cmbtmgr	combatManager_GetBackgroundName	0.0000	0.0000	0.0000	0x646d0
 cmbtmgr	combatManager_GetMissileStartingPosition	0.0000	0.0000	0.0000	0x69880
 cmbtmgr	combatManager_InLineOfSight	0.0000	0.0000	0.0000	0x67840
 cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60

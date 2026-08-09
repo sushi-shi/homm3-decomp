@@ -181,7 +181,11 @@ public:
     // PlaceAllObstacles shifts one by this dword while field_53c0 is -1;
     // it is the current combat terrain selector for the catalogue mask.
     int terrainType;                  // +0x5394
-    char pad_5398[0xc];
+    // GetBackgroundName resets these two dwords after selecting the image.
+    // Their wider animation roles await decoded readers/writers.
+    int field_5398;                   // +0x5398
+    int field_539c;                   // +0x539c
+    char pad_53a0[0x4];
     // The drawbridge state (EDrawbridgeState). LowerDoor stores 3/2/1
     // through it one frame at a time; RaiseDoor gates on 1;
     // HexIsBlocked, should_lower_door and IsInMoat all gate on 3.
@@ -204,7 +208,11 @@ public:
     // while the byte below is set. Both names await a writer.
     int field_53c0;                   // +0x53c0
     unsigned char field_53c4;         // +0x53c4
-    char pad_53c5[0x3];
+    char pad_53c5[0x1];
+    // GetBackgroundName selects CmBkDeck.pcx while this byte is set.
+    // Name remains ordinal until its writer is reconstructed.
+    unsigned char field_53c6;         // +0x53c6
+    char pad_53c7[0x1];
     // The defending town, byte-proven only at its offset 4: RaiseDoor
     // (0x4672e0) null-checks the pointer and then compares the BYTE at
     // +4 against 7 (TTownType TOWN_FORTRESS), and IsInMoat gates its
@@ -319,6 +327,10 @@ public:
     // (combatManager::get_wall_strength, cmbtmgr.h:1473, dc 0x27edc),
     // not the field, so the name is the accessor's.
     int wallStrength[15];             // +0x13f60
+    char pad_13f9c[0x54];
+    // The battle's packed adventure-map coordinate. GetBackgroundName
+    // passes it by value to advManager::MoreTreesNear.
+    type_point mapPoint;              // +0x13ff0
 
     // DC header inline (cmbtmgr.h:1473, dc 0x27edc, 32 B); no retail
     // body - /Ob2 folds it into should_stay_in_castle.
@@ -352,6 +364,7 @@ public:
     void PlaceAllObstacles();
     void RemoveObstacle(int index);
     void CombatSystemOptions();
+    const char* GetBackgroundName();
     void RaiseSkeletons(int side);
     void LearnSpellFromEagleEye(int side);
     static unsigned char LoadWallTraitsTable();
@@ -512,6 +525,15 @@ extern combatManager* gpCombatManager;
 // rule they encode. Neither is defined here; cmbtmgr is only a reader.
 DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
 DATA(0x00697744) extern unsigned char gCombatFlag697744;
+
+// Combat-background pointer tables decoded from retail .rdata. The first
+// table is indexed by town type, the second by special-terrain mode (slot
+// zero is null), and the last by combatTerrain*3 + MoreTreesNear(mapPoint).
+// Names are source-facing inventions; their addresses, extents and contents
+// are all direct retail data.
+extern const char* const gTownCombatBackgrounds[9];          // 0x63d2a0
+extern const char* const gMagicTerrainCombatBackgrounds[10]; // 0x63d2c8
+extern const char* const gTerrainCombatBackgrounds[9][3];    // 0x63d2f0
 
 // The four screen hit rectangles GetGridIndex (0x4647a0) tests before
 // it falls through to the grid arithmetic, one per special combat hex,
