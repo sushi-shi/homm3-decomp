@@ -475,7 +475,7 @@ game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0x
 game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	77.4860	77.4860	77.4860	0xc6a30
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
 game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0
-game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	99.9706	99.9706	99.9706	0xca3b0
+game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	100.0000	100.0000	100.0000	0xca3b0
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0
 game	?FindTown@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbaa10
 game	?GetGamePosFromDPID@game@@QAEHK@Z	100.0000	100.0000	100.0000	0xcec20

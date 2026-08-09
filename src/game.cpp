@@ -2204,16 +2204,15 @@ void game::GiveArmy(armyGroup* thisMonInfo, int iMonType, int iMonNum, int slot)
 
 // E:\gamedcs\game.cpp:9576
 // Retail is shorter than the Dreamcast body but preserves the same public
-// contract and seven-stack value sum. Residual (99.9706%): every instruction
-// and all three branches agree; the only displayed delta is the target's
-// synthetic `data_2747b0` name for akCreatureTypeTraits.
+// contract: battle experience is the seven-stack hit-point sum, plus 500 for
+// a hero. The +0x4c traits load independently identifies hitPoints here.
 VA(0x004ca3b0, 0x58)  // dc-name + retail caller/body, dc 0xb6114
 int game::ExperienceValueOfStack(const armyGroup* whichGroup, const hero* whichHero)
 {
     int value = 0;
     for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
         if (whichGroup->numTroops[i] > 0)
-            value += akCreatureTypeTraits[whichGroup->armies[i]].AI_value
+            value += akCreatureTypeTraits[whichGroup->armies[i]].hitPoints
                      * whichGroup->numTroops[i];
     }
     if (whichHero)
