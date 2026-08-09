@@ -6,6 +6,7 @@
 #define HOMM3_AI_PLAYER_H
 
 #include <vector>
+#include "netmsg.h"
 
 class hero;
 class playerData;
@@ -18,23 +19,9 @@ struct AIHeroStartTurnView {
     unsigned char targetIsCritical;
 };
 
-// The 20-byte network-message head and the two gift messages are
-// byte-sliced from make_gift's inlined constructors. The subtype and
-// total-size constants are the immediates retail stores at +8/+0xc;
-// the derived payload offsets agree with the DC member roster.
-class CNetMsg {
-public:
-    int field_00;
-    int field_04;
-    int subType;
-    unsigned long size;
-    int field_10;
-
-    CNetMsg(int new_sub_type, unsigned long new_size)
-        : field_00(-1), field_04(0), subType(new_sub_type),
-          size(new_size), field_10(0) {}
-};
-
+// The two gift messages extend the shared 20-byte network-message head.
+// Their subtype and total-size constants are the immediates retail stores at
+// +8/+0xc; the derived payload offsets agree with the DC member roster.
 class CGiftMsg : public CNetMsg {
 public:
     int m_niceGuy;
