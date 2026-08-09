@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "mapcell.h"
+#include "netmsg.h"
 #include "struct.h"
 // `class game` embeds the hero array by value, so the COMPLETE hero
 // type has to be visible here. hero.h pulls armygrp.h; armygrp.h no
@@ -164,6 +165,8 @@ public:
     char pad_38[0x12];
 
     unsigned char applies_to_player(long player_id);
+    unsigned char CheckForFlaggedGeneratorWin();
+    unsigned char CheckForFlaggedMineWin();
 };
 SIZE(VictoryConditionStruct, 0x4C);
 
@@ -185,10 +188,6 @@ public:
 };
 SIZE(Sign, 0x14);
 
-VA(0x004bb990, 0x1CF)
-int __fastcall LoadAbstractString(
-    TAbstractFile* infile,
-    std::basic_string<char, std::char_traits<char>, std::allocator<char> >* text);
 VA(0x004bbb60, 0xBB)
 int __fastcall SaveAbstractString(
     TAbstractFile* outfile,
@@ -217,9 +216,9 @@ public:
     unsigned char field_02;
     char pad_03;
     armyGroup guards;
-    unsigned char field_3c;
-    unsigned char field_3d;
-    unsigned char field_3e;
+    union { unsigned char field_3c; unsigned char mapX; };
+    union { unsigned char field_3d; unsigned char mapY; };
+    union { unsigned char field_3e; unsigned char mapZ; };
     char pad_3f;
 
     mine()
@@ -239,6 +238,13 @@ struct legacyMineGuard {
 };
 SIZE(legacyMineGuard, 2);
 
+enum type_action_type {
+    const_initialization_action = 0,
+    const_normal_action = 1,
+    const_remote_action = 2,
+    const_recorded_action = 3
+};
+
 // Retail's garrison pool element. GetFlaggedObjectOwner reads the first byte
 // as a signed owner and indexes records with a 0x40 stride. ProcessHover
 // independently reaches the army at +4; the DC roster names that member and
@@ -248,10 +254,10 @@ public:
     char playerOwner;
     char pad_01[3];
     armyGroup garrisonArmy;
+    char pad_3c;
     unsigned char mapX;
     unsigned char mapY;
     unsigned char mapZ;
-    char pad_3f;
 };
 SIZE(garrison, 0x40);
 
@@ -277,6 +283,7 @@ public:
     unsigned char load(TAbstractFile* infile);
     unsigned char save(TAbstractFile* outfile);
     void update_bonus();
+    inline void set_owner(long owner);
     void Initialize(long new_owner);
     // `ret 4` in retail against the Dreamcast's zero-parameter
     // prototype - one of the four calibrated "retail carries one more
@@ -641,6 +648,15 @@ public:
     void ClaimTown(int townId, int newPlayerOwner,
                    unsigned char bIsRemoteMove,
                    unsigned char check_end_game);            // 0x4c61e0
+    void ClaimMine(int mineId, int newPlayerOwner,
+                   type_action_type action_type);             // 0x4c66e0
+    void ClaimGenerator(int generatorId, int newPlayerOwner); // 0x4c67b0
+    void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
+    void ClaimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
+    void record_claim_mine(long id, long new_owner);          // 0x49bf90
+    void SetVisibility(int startX, int startY, int z,
+                       int whichPlayer, int range,
+                       unsigned char remote_move);            // 0x49cdd0
     unsigned char get_random_lith(const std::vector<type_point>* points,
                                   type_point* result, long cell_type,
                                   long excluded);            // 0x4cdb80

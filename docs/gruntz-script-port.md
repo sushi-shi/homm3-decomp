@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the object-pool serialization and claim views are integrated
+  without losing their admitted matches.** The mine tail exposes serialization
+  ordinals and packed-coordinate names as aliases of the same three retail
+  bytes, while the garrison loader uses the newer +0x3d..+0x3f coordinate names
+  and retains +0x3c as its serialized flag. The now-byte-exact free `loadString`
+  owns 0x4bb990; a scoped `auto_inline(off)` on that definition preserves the
+  out-of-line calls required for byte-exact `LoadSignPool` and `LoadRumours`.
+  A clean delink rebuild reports 650/985 exact functions, 50.90% linked fuzzy
+  coverage and no ratchet, claim, single-view or cleanliness regressions. No
+  external implementation material was used.
+
 - **2026-08-09 — `combatManager::move_toward` admitted byte-exact.** The
   772-byte path walker already matched all 65 control-flow blocks; its last
   mismatch was the second inlined minimum assigning two equivalent stack
@@ -290,6 +301,189 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   packed-coordinate load. Source declaration order recovered retail's EBX game
   cache, argument-slot hero spill, EDI accumulator, and exact switch layout.
   No external implementation was used.
+- **2026-08-09 — the retail `loadString` save-stream helper is byte-exact
+  (463 bytes).** The retail call convention disproves the Dreamcast member
+  shape: the abstract file arrives in ECX and the destination STL string in
+  EDX, so the admitted function is a free `__fastcall` helper. It reads a
+  signed 16-bit length, rejects short reads, allocates and zero-fills a
+  length-plus-one buffer for positive strings, assigns that buffer into the
+  destination and frees it, while nonpositive lengths erase the destination.
+  The direct retail reconstruction reproduces every instruction and supplies
+  the string reader called by `LoadSignPool`, `LoadRumours`, and map-event
+  loaders. No external implementation body was used. The full build added the
+  generated baseline row, raised the project from 626 to 627 exact functions,
+  and moved executable fuzzy coverage from 9.13% to 9.15%; the baseline was
+  never edited by hand.
+
+- **2026-08-09 — `game::ClaimShipyard` reconstructed to 77.4860%
+  (543 bytes).** Retail resolves the packed map point, temporarily restores a
+  hero obscuring the cell, and reads the signed owner from the low byte of the
+  four-byte `ShipyardInfo`. On an ownership change it finds and erases the
+  point from the old player's Dinkumware `vector<type_point>`, reveals and
+  inserts it for a nonnegative new owner, updates the packed owner, sends the
+  28-byte subtype-0x420 map-change message, then re-obscures the hero. The
+  complete `ShipyardInfo` bitfield layout, `this_hero`/`cell`/`i`/
+  `current_player` locals and message identity come from Dreamcast CodeView;
+  retail independently fixes every map offset, vector operation, helper call,
+  gate and argument. Game-only header views expose those proven types and the
+  existing obscuring-object methods without changing other compilands. The
+  remaining flow residual is two null/size guards retained by retail's
+  inlined vector erase but folded by the pinned compiler, followed by register
+  binding and message-store scheduling differences. The measured unnamed
+  old-owner spelling reduced masked register distance but lowered objdiff to
+  73.5140%, so it was withdrawn in favor of the 77.4860% candidate. No
+  external implementation body was used. Linked fuzzy coverage rises from
+  48.13% to 48.24% and executable fuzzy coverage from 9.13% to 9.15%, with all
+  626 exact functions retained.
+
+- **2026-08-09 — `advManager::QuickInfo` object dispatch is structurally
+  complete at 55.8089%.** The last two explicit retail arms are restored.
+  Hero cells resolve the packed id through the inline `game::GetHero`, then
+  format the stored name and admitted hero-class description. Empty and
+  anchor cells construct a temporary string from either the indexed terrain
+  name or `get_special_terrain` object name, append the newly exposed +0x52c
+  text only when retail's `is_diggable` predicate succeeds, and copy the
+  result before destruction. A scoped zero-depth pin retains retail's
+  out-of-line string-construction boundary; measured one-level and fully
+  inlined variants scored lower and were withdrawn. These paths raise the
+  function from 54.0594% and linked fuzzy coverage from 47.98% to 48.02%,
+  preserving all 626 exact functions. Retail fixes the dispatch membership,
+  tables, offsets, calls and string lifetime; Dreamcast supplies semantic
+  names only. No external implementation body was used, and the baseline
+  remains full-build-owned.
+
+- **2026-08-09 — `game::ClaimGenerator` reconstructed to 99.9706%
+  (420 bytes).** Retail indexes the 92-byte generator pool, sends the
+  28-byte subtype-0x41e claim message, removes the old owner's matching town
+  growth bonuses, writes the new signed owner and calls the already-exact
+  bonus updater. Nonnegative owners reveal the generator's packed map point
+  at radius three, after which the flagged-generator victory condition is
+  checked unconditionally. Dreamcast CodeView supplies the message and
+  `generator::set_owner` identities; retail proves the message layout, pool
+  arithmetic, elemental exception, creature-town alignment lookup, player
+  town walk, visibility arguments and victory tail. The retail build has no
+  standalone `set_owner` slot, so the recovered helper remains inline and
+  ClaimGenerator reuses it. Applying that helper to the already-exact
+  `generator::Initialize` changed VC6's caller context and dropped the latter
+  to 63.8323%, so that experiment was withdrawn and its proven longhand source
+  shape retained. Candidate and retail contain the same 136-instruction
+  multiset and branch topology; the only four unpaired slots are the -1 head
+  field and subtype stores transposed by the open B16 scheduler. No external
+  implementation body was used. Linked fuzzy coverage rises from 47.93% to
+   48.09% and executable fuzzy coverage from 9.10% to 9.12%, with all 626 exact
+   functions retained.
+
+- **2026-08-09 — `advManager::QuickInfo` status details reach 54.0594%.**
+  Pyramid, wagon, warrior-tomb, water-wheel and windmill cases now append the
+  retail double-newline separator and select the admitted visited/unvisited
+  text from the exact current-player visibility tests and packed weekly-state
+  fields. Fountain of Fortune first appends its known-object label, then sums
+  retail's four independent hero visit bits before selecting the same status
+  suffix. Hill fort and university append their global-info labels through
+  the retail single-newline formatter only when the selected cell is known to
+  the local player. These eight retail-proven paths raise the function from
+  43.7530% and linked fuzzy coverage from 47.67% to 47.93%, retaining all 626
+  exact functions. Dreamcast supplies semantic field identities only; retail
+  fixes every gate, mask, string and append order. No external implementation
+  body was used, and the baseline is updated only by the full build.
+
+- **2026-08-09 — `game::ClaimGarrison` reconstructed to 84.4118%
+  (201 bytes).** Retail indexes the 64-byte garrison pool, packs the three
+  coordinate bytes at +0x3d..+0x3f, sends a 28-byte claim-garrison map-change
+  message, writes the new signed owner and reveals a radius-three area for
+  every nonnegative owner. Retail fixes message subtype 0x41f, size 0x1c,
+  payload offsets +0x14/+0x18 and the `SendMapChange` target; Dreamcast
+  CodeView supplies the `CNetMsg`/`CMapChange`/`CMCClaimGarrison` hierarchy,
+  member identities and helper name. The shared 20-byte message head was
+  lifted unchanged from the already-admitted gift-message view rather than
+  duplicated, following the HoMM2/Gruntz layout-reuse and canonical-helper
+  rules. The candidate and retail have the same 68-instruction multiset and
+  three-block flow; the remaining ten unpaired slots are five constructor
+  stores transposed by VC6's open B16 post-register-allocation scheduler.
+  Initializer/body splits and declaration orderings were measured and
+  withdrawn when they worsened that residual. `decomp-attempt-1` contains
+  only generated stubs and CodeView inventories for these rows, while NH3API
+  independently corroborates the layout and subtype but has no constructor
+  body; neither supplied implementation material. Linked fuzzy coverage rises
+   from 47.67% to 47.71% and executable fuzzy coverage from 9.04% to 9.05%,
+   with all 626 exact functions retained.
+
+- **2026-08-09 — `advManager::QuickInfo` extends to 43.7530%.** The
+  lighthouse path reads its signed owner from the indexed mine record and
+  appends the owner color through the shared quick-info suffix. Mine dispatch
+  calls the independently delimited five-parameter retail helper with the
+  local player id, newline separator and full-list flag. Mystical gardens and
+  obelisks select their visited text from the packed cell flags and admitted
+  player/game bitsets. Seer huts and quest guards index their map-owned
+  vectors and copy the returned temporary string, preserving the retail
+  destructor paths. These six retail-proven cases raise the function from
+  37.2317% and linked fuzzy coverage from 47.50% to 47.67%, with all 626 exact
+  functions retained. Dreamcast supplies surviving method/type identities;
+  retail fixes all indices, gates, arguments and lifetimes. No external body
+  was used, and the baseline remains full-build-owned.
+
+- **2026-08-09 — `advManager::QuickInfo` visited-state dispatch reaches
+  37.2317%.** The retail case blocks share a 512-byte formatting buffer and
+  the `"\n\n%s"` visited/unvisited suffix. Arena, border tent, buoy and
+  clover restore that frame and common tail first; twenty-two further cases
+  then select the same two admitted text fields from their retail-proven hero
+  flags, per-object bitsets or local-player visit flags. The family covers
+  dead guys, defense towers, faerie rings, fountains of youth, gardens,
+  idols, lean-tos, libraries, magic sites, mercenary camps, mermaids, oases,
+  schools, rally flags, sirens, stables, temples, training grounds and
+  watering holes. Each mask, field offset, trigger/current-hero gate and
+  shared formatter is independently visible in retail; the equivalent
+  rollover consumers corroborate only the already-proven domains. This raises
+  the function from 15.9777% and linked fuzzy coverage from 46.96% to 47.50%
+  without reducing the 626 exact functions. Dreamcast supplies names only;
+  no external implementation body was used, and the baseline remains
+  full-build-owned.
+
+- **2026-08-09 — `advManager::QuickInfo` extends to 15.9777%.** Retail's
+  border-guard arm combines the indexed color and object names through the
+  already-attested rollover format. The two creature-generator arms resolve
+  the generator through the cell's packed id, select the class-specific name,
+  and include its owner only when the signed owner byte is nonnegative, using
+  the retail `"%s\n\n%s"` literal. The resource arm indexes the admitted
+  resource-name table directly. After trigger-adjuster cleanup, the shared
+  tail conditionally appends the selected packed map coordinates through the
+  retail format and a bounded local buffer. These retail-proven paths raise
+  the function from 12.3003% and linked fuzzy coverage from 46.87% to 46.96%
+  while preserving all 626 exact functions. Dreamcast supplies semantic names
+  only; no external implementation body was used, and the match baseline is
+  updated solely by the full build.
+
+- **2026-08-09 — the first `advManager::QuickInfo` slice reaches 12.3003%.**
+  The 9,632-byte retail function now validates and packs the selected map
+  point, resolves its cell and trigger through the byte-exact
+  `type_cell_adjuster`, distinguishes invalid and shrouded text, and restores
+  the default object-name path. Ten retail-confirmed dispatch arms reuse the
+  admitted creature-bank, shrine, tree and witch-hut text builders with the
+  exact player, separator and full-list arguments. The shared tail measures
+  the resulting quick view, clamps it to the retail 600-by-552 bounds, and
+  opens the normal dialog. This promotes the placeholder to its authoritative
+  mangled symbol and raises linked fuzzy coverage from 46.37% before the
+  slice to 46.68%, without reducing the 623 exact functions. Retail bytes
+  prove the branches, map indexing, case identities, constants and calls;
+  Dreamcast CodeView supplies only function/local names. No external
+  implementation body was used, and `match_baseline.tsv` remains generated
+  solely by the full build.
+
+- **2026-08-09 — `game::ClaimMine` reconstructed byte-exact
+  (203 bytes).** Retail indexes the 64-byte mine pool, constructs a packed map
+  point from the three tail coordinate bytes, records only normal actions,
+  writes the new signed owner byte, and reveals a radius-three area for every
+  nonnegative owner. Non-initialization actions additionally test the embedded
+  flagged-mine victory condition and force an end-game check on success. The
+  four-value action enum, `record_claim_mine`, `SetVisibility`, victory member
+  and `CheckEndGame` identities come from Dreamcast CodeView/xrefs and are each
+  independently fixed by retail call targets and argument shapes. Retail also
+  proves the mine tail layout and every gate, constant and packed-coordinate
+  operation. A game-only header view exposes the already-exact `type_point`
+  constructor body so VC6 reproduces retail's inline bitfield writes without
+  perturbing its out-of-line owner in advmgr.obj. This applies the
+   HoMM2/Gruntz minimal-view and canonical-helper-boundary rules. No external
+   implementation body or `decomp-attempt-1` material was used.
 
 - **2026-08-09 — `playerData::Init` reconstructed byte-exact
   (277 bytes).** Retail clears the active hero and town state, empties the
@@ -303,8 +497,8 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `lea/count/value/rep stosd` schedule. Retail proves every offset, width,
   fill extent, vector operation, default-name chain and duplicate final flag
   stores. Dreamcast supplies the member identity and its single local only.
-  This applies the HoMM2/Gruntz layout-reuse and source-shape rules. No external
-  implementation body or `decomp-attempt-1` material was used.
+   This applies the HoMM2/Gruntz layout-reuse and source-shape rules. No external
+   implementation body or `decomp-attempt-1` material was used.
 
 - **2026-08-09 — `advManager::ProcessHover` extends to 74.7787%.**
   Retail reads the acting hero id directly from the current player for the

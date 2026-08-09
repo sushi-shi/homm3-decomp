@@ -208,6 +208,16 @@ enum TAdventureObjectType {
     MAX_EVENT_TYPE             = 165
 };
 
+#ifdef HOMM3_GAME_SHIPYARD_VIEW
+struct ShipyardInfo {
+    signed int owner : 8;
+    unsigned int boatX : 8;
+    unsigned int boatY : 8;
+    unsigned int unused : 8;
+};
+SIZE(ShipyardInfo, 4);
+#endif
+
 // Stride 38 (0x26), byte-proven by game::get_cell's `*19` then `*2`
 // address math. A 38-byte record cannot be 4-aligned, which is also how
 // the 4-byte object-type field lands at the odd-dword offset 0x1e that

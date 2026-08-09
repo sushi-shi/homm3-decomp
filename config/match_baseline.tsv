@@ -36,6 +36,7 @@ advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	100.0000	100.
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	74.7786	74.7786	74.7786	0xe360
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	91.3119	91.3119	91.3119	0xec90
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	74.8967	74.8967	74.8967	0xdeb0
+advmgr	?QuickInfo@advManager@@QAEXHHH@Z	55.8089	55.8089	55.8089	0x137c0
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30
 advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	89.7053	89.7053	89.7053	0xb150
@@ -89,7 +90,6 @@ advmgr	advManager_ProcessKeyPress	0.0000	0.0000	0.0000	0x8c40
 advmgr	advManager_ProcessMapSelect	0.0000	0.0000	0.0000	0xa5d0
 advmgr	advManager_ProcessRadarSelect	0.0000	0.0000	0.0000	0xa0c0
 advmgr	advManager_ProcessSelect	0.0000	0.0000	0.0000	0x97e0
-advmgr	advManager_QuickInfo	0.0000	0.0000	0.0000	0x137c0
 advmgr	advManager_RedrawAdvScreen	0.0000	0.0000	0.0000	0x17420
 advmgr	advManager_ScreenScroll	0.0000	0.0000	0.0000	0x195c0
 advmgr	advManager_SeedTo	0.0000	0.0000	0.0000	0x194a0
@@ -469,6 +469,10 @@ game	??0generator@@QAE@XZ	100.0000	100.0000	100.0000	0xb8550
 game	??0playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xb9df0
 game	??1playerData@@QAE@XZ	100.0000	100.0000	100.0000	0xce570
 game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.0000	0xba130
+game	?ClaimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960
+game	?ClaimGenerator@game@@QAEXHH@Z	99.9706	99.9706	99.9706	0xc67b0
+game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0xc66e0
+game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	77.4860	77.4860	77.4860	0xc6a30
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
 game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0
 game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	99.9706	99.9706	99.9706	0xca3b0
@@ -527,14 +531,11 @@ game	?get_random_lith_exit@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.00
 game	?get_random_whirlpool@game@@QAEEJPAUtype_point@@@Z	100.0000	100.0000	100.0000	0xcde20
 game	?guess_grail_location@playerData@@QAEXJ@Z	100.0000	100.0000	100.0000	0xbae50
 game	?load@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb85a0
+game	?loadString@@YIHPAVTAbstractFile@@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0xbb990
 game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e0
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
 game	ImmMouseWindowMoved	0.0000	0.0000	0.0000	0xb6950
 game	InitImmMouse	0.0000	0.0000	0.0000	0xb6890
-game	game_ClaimGarrison	0.0000	0.0000	0.0000	0xc6960
-game	game_ClaimGenerator	0.0000	0.0000	0.0000	0xc67b0
-game	game_ClaimMine	0.0000	0.0000	0.0000	0xc66e0
-game	game_ClaimShipyard	0.0000	0.0000	0.0000	0xc6a30
 game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
 game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
 game	game_CreateBoat	0.0000	0.0000	0.0000	0xbb250
