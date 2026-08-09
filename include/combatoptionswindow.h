@@ -5,12 +5,13 @@
 #ifndef HOMM3_COMBATOPTIONSWINDOW_H
 #define HOMM3_COMBATOPTIONSWINDOW_H
 
-// Retail's CombatSystemOptions owns one 0x50-byte stack instance. The x86
-// body needs only the lifetime/method surface; member layout remains opaque.
+// Opaque retail layout. CombatSystemOptions' stack frame places this
+// object at ebp-0x60 immediately below the exception record at ebp-0xc,
+// proving its 0x54-byte extent.
 class TCombatOptionsWindow {
-    unsigned char opaque[0x50];
-
 public:
+    char pad_00[0x54];
+
     TCombatOptionsWindow();
     ~TCombatOptionsWindow();
     void DoModal();
