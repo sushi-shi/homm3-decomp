@@ -14,10 +14,18 @@
 class Bitmap816;
 class CSprite;
 class hero;
+class heroWindow;
 class NewmapCell;
 class searchArray;
 class town;
 struct type_AI_combat_parameters;
+
+// Polymorphic objects owned by combatManager at offsets where Close only
+// proves scalar deletion. Their concrete roles remain unattested.
+class CCombatOwnedObject {
+public:
+    virtual ~CCombatOwnedObject();
+};
 
 struct TCombatExtent {
     int left;
@@ -270,7 +278,7 @@ public:
     // not yet modelled as deriving baseManager, so the field is sliced
     // out of the head pad at the offset the bytes prove.
     int status;
-    char pad_0038[0x4];
+    CCombatOwnedObject* field_38;
     // The pending AI order, written as a (code, hex) pair. move_toward
     // (0x41f580) sets the code to 2 the moment a path exists, raises it
     // to 8 when waiting still looks better than the hex it settled on,
@@ -315,7 +323,10 @@ public:
     // re-opens that table's gate hex, only while this byte is set -
     // always nested inside the field_53a8 test above. Name provisional.
     unsigned char field_53a9;         // +0x53a9
-    char pad_53aa[0xe];
+    char pad_53aa[0x2];
+    CCombatOwnedObject* field_53ac;
+    CCombatOwnedObject* field_53b0;
+    CCombatOwnedObject* field_53b4;
     int field_53b8;                   // +0x53b8
     // Adventure-map cell under the battlefield. DetermineCombatTerrain
     // reads its terrain, object and special-terrain state.
@@ -413,7 +424,10 @@ public:
     // should_lower_door (0x467130) while it is non-zero. Name pending
     // a writer.
     ECombatFortification field_132f4; // +0x132f4
-    char pad_132f8[0x170];
+    char pad_132f8[0x4];
+    heroWindow* combatWindow;         // +0x132fc
+    int field_13300;                  // +0x13300
+    char pad_13304[0x164];
     // Adjacency table [cell][direction] of int16 cell indexes (-1 =
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
@@ -521,6 +535,7 @@ public:
     void PlaceAllObstacles();
     void InitializeArchers();
     void FreeIcons();
+    void Close();
     unsigned char HexIsBlocked(int index);
     unsigned char IsInMoat(int hex, int* index);
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
@@ -698,6 +713,7 @@ DATA(0x0063c7ca) extern const unsigned short gObstacleMagicTerrainMasks[];
 // them; widths and uses are byte-proven by the retail body.
 DATA(0x0069877c) extern int gCombatQuickMode69877c;
 DATA(0x00694f30) extern TCombatExtent gDoorExtent694f30;
+extern int gCombatActive698a18;
 
 // The four screen hit rectangles GetGridIndex (0x4647a0) tests before
 // it falls through to the grid arithmetic, one per special combat hex,
