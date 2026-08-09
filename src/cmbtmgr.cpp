@@ -798,14 +798,49 @@ void combatManager::LowerDoor()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:3400
+// RECONSTRUCTED 2026-08-09. Retail refuses to raise the bridge unless the
+// defending town exists, the bridge is down, and the gate plus moat cells
+// are empty; Fortress additionally checks the outer-moat hex. The remaining
+// quick-mode/animation split is LowerDoor's exact twin in the other direction.
+// Residual (86.9340%): the byte-exact helper inline places its local fallback
+// before the animation rather than after it, which also separates retail's
+// shared animation/guard epilogue; the aggregate copy has the same three
+// interior DATA-relocation addends documented on LowerDoor. Every guard and
+// every instruction in the animation path otherwise agrees.
 VA(0x004672e0, 0x177)  // anchor-global, dc 0x61034
 void combatManager::RaiseDoor()
 {
-    // @stub
+    if (!field_53c8 || drawbridgeState != DRAWBRIDGE_DOWN)
+        return;
+    if (cells[COMBAT_HEX_GATE].armySide >= 0
+            || cells[COMBAT_HEX_GATE].field_1c != 0)
+        return;
+    if (cells[COMBAT_HEX_GATE_MOAT].armySide >= 0
+            || cells[COMBAT_HEX_GATE_MOAT].field_1c != 0)
+        return;
+    if (field_53c8[4] == TOWN_FORTRESS
+            && (cells[COMBAT_HEX_OUTER_MOAT].armySide >= 0
+                || cells[COMBAT_HEX_OUTER_MOAT].field_1c != 0))
+        return;
+
+    if (!lower_door_is_quick_combat(this)) {
+        SAMPLE2 sample2 = LoadPlaySample("drawbrg.82m");
+
+        drawbridgeBounds = gDrawbridgeBounds694f30;
+
+        for (int frame = DRAWBRIDGE_DOWN; frame <= DRAWBRIDGE_UP; frame++) {
+            drawbridgeState = frame;
+            DrawFrame(1, 0, 1, 100, 1, 1);
+        }
+
+        WaitEndSample(sample2, -1);
+    } else {
+        drawbridgeState = DRAWBRIDGE_UP;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3426
 DC_ONLY(0x610e0, 0x7E)

@@ -321,6 +321,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `combatManager::RaiseDoor` reconstructed from unscored to
+  86.9340% (375 bytes).** Retail exits unless a defending town exists, the
+  bridge is down, cells 96 and 95 have neither an army nor the +0x1c blocker,
+  and (for a Fortress) cell 94 passes the same pair of tests. Quick combat
+  raises the state directly to 3; otherwise the shared sound/bounds path
+  draws states 1/2/3 and waits for `drawbrg.82m`. All nine entry guards, the
+  town-type branch, exact IsQuickCombat expansion, aggregate destination
+  formation, loop and calls are byte-aligned with retail. The residual is
+  LowerDoor's same VC6 inliner-layout family (local fallback before the
+  animation instead of after, splitting retail's shared animation/guard
+  epilogue) plus the three known interior DATA-relocation addends. Reusing
+  the exact helper and aggregate is the HoMM2/Gruntz canonical-form choice;
+  no external implementation or `decomp-attempt-1` material was used. One
+  pipeline detail was proven along the way: the two methods' identical
+  `drawbrg.82m` literals need one `DATA_COMPGEN` claim and one plain use in
+  the same TU, letting VC6 pool both references into the single retail
+  compiler-generated string without a duplicate-RVA label claim.
+
 - **2026-08-09 — combat quick mode and drawbridge lowering reconstructed.**
   `combatManager::IsQuickCombat` is byte-exact (113 bytes): the special-mode
   byte vetoes quick combat; a network battle with both per-side latches set
