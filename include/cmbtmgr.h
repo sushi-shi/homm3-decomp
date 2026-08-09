@@ -233,12 +233,22 @@ public:
     // value (get_ranged_attack_value 0x435cb0, the type_AI_combat_
     // parameters ctor 0x435ec0). Name provisional.
     unsigned char sideIsAI[2];        // +0x54a4
-    char pad_54a6[0x16];
+    char pad_54a6[0x2];
+    // Per-side combat hero ids. UpdateArmyGroup uses -1 as the no-hero
+    // sentinel before filtering creature-attribute bit 22; Open indexes
+    // gpGame's hero table with both values when both sides have heroes.
+    // Name provisional because the retail combatManager has no surviving
+    // field list.
+    int heroIds[2];                    // +0x54a8
+    char pad_54b0[0xc];
     // Live stack count per side; every ai_tactical walk of armies[side]
     // bounds itself with it (type_AI_spellcaster ctor 0x4369c0,
     // set_melee_enemies 0x43bf20).
     int numArmies[2];                 // +0x54bc
-    char pad_54c4[0x8];
+    // The two source army groups updated with the surviving seven-slot
+    // composition after combat. UpdateArmyGroup proves both pointers and
+    // the armyGroup layout they address.
+    armyGroup* armyGroups[2];          // +0x54c4
     army armies[2][21];               // +0x54cc
     char pad_1329c[0x14];
     // Two per-side "this side has already lost / fled" latches, byte
@@ -317,6 +327,7 @@ public:
 
     int GetGridIndex(int x, int y);
     void SetupAdjacencyArray();
+    void UpdateArmyGroup(int whichSide);
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();

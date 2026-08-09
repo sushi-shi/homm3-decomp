@@ -204,11 +204,32 @@ void combatManager::SetupAdjacencyArray()
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1612
+#endif  // @carcass
 VA(0x004641f0, 0xDA)  // linkorder, dc 0x5eb40
 void combatManager::UpdateArmyGroup(int whichSide)
 {
-    // @stub
+    { for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+        armyGroups[whichSide]->armies[slot] = -1;
+        armyGroups[whichSide]->numTroops[slot] = 0;
+    } }
+
+    { for (int slot = 0; slot < numArmies[whichSide]; ++slot) {
+        army& stack = armies[whichSide][slot];
+        if (stack.numTroops > 0
+            && (stack.Is(21) & 1) == 0
+            && (heroIds[whichSide] == -1 || (stack.Is(22) & 1) == 0)
+            && (stack.Is(23) & 1) == 0
+            && (stack.Is(6) & 1) == 0
+            && stack.origPos >= 0
+            && stack.origPos < armyGroup::ARMY_GROUP_SLOT_COUNT) {
+            armyGroups[whichSide]->armies[stack.origPos] =
+                stack.creatureType;
+            armyGroups[whichSide]->numTroops[stack.origPos] =
+                stack.numTroops;
+        }
+    } }
 }
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1653
 VA(0x004642d0, 0xDC)  // linkorder, dc 0x5eca8
