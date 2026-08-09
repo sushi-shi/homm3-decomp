@@ -216,6 +216,8 @@ int advManager::InMapArea(int x, int y)
 // 10/10-bit type_point and stores it through [ebp+8]. Moved here from
 // the DC header block to keep the file in retail link order.
 // E:\gamedcs\AdvMgr.h:1245
+#endif  // @carcass
+
 VA(0x00407b10, 0x6F)  // anchor-callee, dc 0x1f000
 type_point advManager::get_map_center() const
 {
