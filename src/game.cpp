@@ -1293,12 +1293,79 @@ int game::RandomScan(signed char* whichList, int start, int length, signed char 
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:2190
 VA(0x004bb400, 0x1DC)  // anchor-global, dc 0xa68d8
-THeroID game::GetStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
+int game::GetStartingHeroId(TTownType alignment, int playerPos, int mapPosition)
 {
-    // @stub
+    int heroArray[HERO_COUNT];
+    int heroClass1 = 0;
+    int heroClass2 = 1;
+
+    switch (alignment) {
+    case TOWN_CASTLE:
+        heroClass1 = 0;
+        heroClass2 = 1;
+        break;
+    case TOWN_RAMPART:
+        heroClass1 = 3;
+        heroClass2 = 2;
+        break;
+    case TOWN_TOWER:
+        heroClass1 = 5;
+        heroClass2 = 4;
+        break;
+    case TOWN_INFERNO:
+        heroClass1 = 6;
+        heroClass2 = 7;
+        break;
+    case TOWN_NECROPOLIS:
+        heroClass1 = 8;
+        heroClass2 = 9;
+        break;
+    case TOWN_DUNGEON:
+        heroClass1 = 10;
+        heroClass2 = 11;
+        break;
+    case TOWN_STRONGHOLD:
+        heroClass1 = 12;
+        heroClass2 = 13;
+        break;
+    case TOWN_FORTRESS:
+        heroClass1 = 14;
+        heroClass2 = 15;
+        break;
+    case TOWN_CONFLUX:
+        heroClass1 = 16;
+        heroClass2 = 17;
+        break;
+    }
+
+    int top = 0;
+    int heroIndex;
+    for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
+        if (heroAvailability[heroIndex] == -1
+            && heroPoolMap[heroIndex].test(playerPos)
+            && (heroes[heroIndex].heroClass == heroClass1
+                || heroes[heroIndex].heroClass == heroClass2)) {
+            heroArray[top++] = heroIndex;
+        }
+    }
+
+    if (top == 0) {
+        for (heroIndex = 0; heroIndex < HERO_COUNT; heroIndex++) {
+            if (heroAvailability[heroIndex] == -1
+                && heroPoolMap[heroIndex].test(playerPos)) {
+                heroArray[top++] = heroIndex;
+            }
+        }
+    }
+
+    return heroArray[Random(1, top) - 1];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:2275
 VA(0x004bb5e0, 0x282)  // anchor-global, dc 0xa6cd4

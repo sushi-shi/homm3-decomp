@@ -569,7 +569,10 @@ public:
     enum { HERO_COUNT = 156 };
     hero heroes[HERO_COUNT];
     char heroAvailability[0x9c];       // +0x4df18
-    int heroPoolMap[0x9c];             // +0x4dfb4
+    // One eight-player eligibility mask per hero. GetStartingHeroId tests
+    // the caller's player position through Dinkumware bitset::test(), and
+    // the hero-placement path sets the same bit through bitset::set().
+    std::bitset<8> heroPoolMap[0x9c];  // +0x4dfb4
     char field_4e224[0x90];
     char field_4e2b4[0x90];
     unsigned char globalInfoFlags[32];
@@ -621,6 +624,8 @@ public:
     int get_new_boat_id();                    // 0x4bb170
     int CreateBoat(int x, int y, int z, int owner,
                    unsigned char remoteMove, signed char type); // 0x4bb250
+    int GetStartingHeroId(TTownType alignment, int playerPos,
+                          int mapPosition);                     // 0x4bb400
     playerData* GetLocalPlayer();
     int GetLocalPlayerGamePos();                 // 0x4cea20
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
