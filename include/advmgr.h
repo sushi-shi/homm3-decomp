@@ -9,6 +9,83 @@
 #include "struct.h"
 #include "window.h"
 
+// Retail GetSoundId returns this four-byte enum. The semantic aliases have
+// not been admitted; these ordinal names expose only the values proved by
+// that function's return blocks.
+enum e_looping_sound_id {
+    LOOPING_SOUND_INVALID = -1,
+    LOOPING_SOUND_0 = 0,
+    LOOPING_SOUND_1,
+    LOOPING_SOUND_2,
+    LOOPING_SOUND_3,
+    LOOPING_SOUND_4,
+    LOOPING_SOUND_5,
+    LOOPING_SOUND_6,
+    LOOPING_SOUND_7,
+    LOOPING_SOUND_8,
+    LOOPING_SOUND_9,
+    LOOPING_SOUND_10,
+    LOOPING_SOUND_11,
+    LOOPING_SOUND_12,
+    LOOPING_SOUND_13,
+    LOOPING_SOUND_14,
+    LOOPING_SOUND_15,
+    LOOPING_SOUND_16,
+    LOOPING_SOUND_17,
+    LOOPING_SOUND_18,
+    LOOPING_SOUND_19,
+    LOOPING_SOUND_20,
+    LOOPING_SOUND_21,
+    LOOPING_SOUND_22,
+    LOOPING_SOUND_23,
+    LOOPING_SOUND_24,
+    LOOPING_SOUND_25,
+    LOOPING_SOUND_26,
+    LOOPING_SOUND_27,
+    LOOPING_SOUND_28,
+    LOOPING_SOUND_29,
+    LOOPING_SOUND_30,
+    LOOPING_SOUND_31,
+    LOOPING_SOUND_32,
+    LOOPING_SOUND_33,
+    LOOPING_SOUND_34,
+    LOOPING_SOUND_35,
+    LOOPING_SOUND_36,
+    LOOPING_SOUND_37,
+    LOOPING_SOUND_38,
+    LOOPING_SOUND_39,
+    LOOPING_SOUND_40,
+    LOOPING_SOUND_41,
+    LOOPING_SOUND_42,
+    LOOPING_SOUND_43,
+    LOOPING_SOUND_44,
+    LOOPING_SOUND_45,
+    LOOPING_SOUND_46,
+    LOOPING_SOUND_47,
+    LOOPING_SOUND_48,
+    LOOPING_SOUND_49,
+    LOOPING_SOUND_50,
+    LOOPING_SOUND_51,
+    LOOPING_SOUND_52,
+    LOOPING_SOUND_53,
+    LOOPING_SOUND_54,
+    LOOPING_SOUND_55,
+    LOOPING_SOUND_56,
+    LOOPING_SOUND_57,
+    LOOPING_SOUND_58,
+    LOOPING_SOUND_59,
+    LOOPING_SOUND_60,
+    LOOPING_SOUND_61,
+    LOOPING_SOUND_62,
+    LOOPING_SOUND_63,
+    LOOPING_SOUND_64,
+    LOOPING_SOUND_65,
+    LOOPING_SOUND_66,
+    LOOPING_SOUND_67,
+    LOOPING_SOUND_68,
+    LOOPING_SOUND_69
+};
+
 class textEntryWidget;
 
 class NewfullMap;
@@ -278,6 +355,7 @@ public:
     void UpdBottomView(unsigned char forceUpdate, unsigned char drawWindow,
                        unsigned char update);
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
+    e_looping_sound_id GetSoundId(int x, int y, int z);
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
