@@ -466,6 +466,12 @@ SIZE(playerData, 360);
 // define the class.)
 class game {
 public:
+    struct TRumour {
+        std::basic_string<char, std::char_traits<char>, std::allocator<char> > text;
+        unsigned char field_10;
+        char pad_11[3];
+    };
+
 #ifdef HOMM3_HERO_CLASS_NAME_VIEW
     char pad_00000[0x1f45c];
     // The retail-only hero class-name override compares this full dword
@@ -584,7 +590,11 @@ public:
     // GetNumObelisks tests `(1 << player) & flags[i]` over exactly 48
     // entries.
     signed char obeliskFlags[0x30];
-    char pad_4e419[0x263];
+    char currentRumour[0x12d];               // +0x4e419
+    char rumourState[0x100];                 // +0x4e546
+    char pad_4e646[2];
+    std::vector<TRumour> rumours;             // +0x4e648
+    char pad_4e658[0x24];
     // +0x4e67c / +0x4e6fc / +0x4e77c - the teleport-destination pools,
     // all std::vector<type_point>. The two arrays are indexed by the
     // monolith colour (`color << 4` in both wrappers) and the gap
@@ -645,6 +655,9 @@ public:
     void calculate_production();                 // 0x4b8af0
     int LoadSignPool(TAbstractFile* infile);      // 0x4b9070
     int SaveSignPool(TAbstractFile* outfile);     // 0x4b9270
+private:
+    int SaveRumours(TAbstractFile* outfile);      // 0x4bbc20
+public:
     int LoadMinePool(TAbstractFile* infile, int saveVersion);
     int LoadGarrisonPool(TAbstractFile* infile, int saveVersion);
     int SaveMinePool(TAbstractFile* outfile);     // 0x4b9580
