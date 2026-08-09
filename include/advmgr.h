@@ -253,6 +253,7 @@ public:
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
     void DrawChatText(unsigned char update);
+    unsigned char ProcessHover(int hx, int hy);
 };
 
 // Derives baseManager (0x38 bytes): executive::CallManager (0x4b0c70)
@@ -294,6 +295,16 @@ public:
         COMPLETE_DRAW_LAST_Y = 17
     };
 
+    enum EHoverBounds {
+        HOVER_SCREEN_WIDTH = 800,
+        HOVER_SCREEN_HEIGHT = 600,
+        HOVER_SCROLL_MARGIN = 16,
+        HOVER_SCROLL_RIGHT = 784,
+        HOVER_SCROLL_BOTTOM = 584,
+        HOVER_SCROLL_POINTER_FIRST = 32,
+        HOVER_SCROLL_POINTER_LAST = 39
+    };
+
     enum ECloudDrawFrame {
         CLOUD_DRAW_FRAME_1 = 1,
         CLOUD_DRAW_FRAME_3 = 3,
@@ -304,7 +315,8 @@ public:
 
     char pad_038[4];
     unsigned char DebugShowFPS;  // +0x3c, DC name; retail FPS branch proves it
-    char pad_03d[7];
+    char pad_03d[3];
+    int advCommand;              // +0x40, set by map-hover actions
     TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
     unsigned short* routeArray;      // +0x48 (GetRouteArrayPtr)
     int bShowRoute;                  // +0x4c, gates both arrow draw passes
@@ -339,9 +351,9 @@ public:
     // +0xe4. The five-argument UpdateRadar overload forwards this packed
     // point by value as the origin argument of the six-argument overload.
     type_point radarOrigin;
-    char pad_0e8[4];
-    int lastHover;  // +0xec, ForceNewHover invalidates before ProcessHover
-    char pad_0f0[4];
+    type_point lastMapHover;       // +0xe8
+    int lastHoverX;                // +0xec
+    int lastHoverY;                // +0xf0
     int mapOriginX;               // +0xf4, adventure viewport origin
     int mapOriginY;               // +0xf8
     char pad_0fc[4];
@@ -389,6 +401,7 @@ public:
     void DrawShroud(int srcX, int srcY, int z, int destX, int destY);
     void DrawAdventureCursor();
     void ForceNewHover();
+    int ProcessWaitingHover(int mouseX, int mouseY);
     int ProcessHover(int mouseX, int mouseY);
     int GetCloudLookup(int srcX, int srcY, int z);
     bool ScanForHeroOrBoat(int srcX, int srcY, int z, unsigned short type,
@@ -409,6 +422,7 @@ public:
     void DrawCursor(int cellX, int cellY);
     void DrawCursorShadow(int cellX, int cellY);
     void DrawRolloverText(char* text);
+    void SetRolloverText(NewmapCell* testCell, int rx, int ry);
     unsigned char FindAdjacentMonster(type_point point, type_point* result,
                                       type_point excluded);
     int InMapArea(int x, int y);

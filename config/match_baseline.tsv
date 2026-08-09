@@ -33,6 +33,7 @@ advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	89.5008	89.5008	
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
 advmgr	?MapExtraPosAndAdjacentsSet@@YIHHHHE@Z	100.0000	100.0000	100.0000	0x1a750
 advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	99.3415	99.3415	99.3415	0x15d60
+advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	74.8967	74.8967	74.8967	0xdeb0
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30
 advmgr	?SetShrineHelpText@@YIXPADPAVhero@@PAVNewmapCell@@W4GlobalInfoFlags@@PBD4@Z	99.3641	99.3641	99.3641	0xd8d0
@@ -85,7 +86,6 @@ advmgr	advManager_ProcessMapSelect	0.0000	0.0000	0.0000	0xa5d0
 advmgr	advManager_ProcessRadarSelect	0.0000	0.0000	0.0000	0xa0c0
 advmgr	advManager_ProcessSearch	0.0000	0.0000	0.0000	0xec90
 advmgr	advManager_ProcessSelect	0.0000	0.0000	0.0000	0x97e0
-advmgr	advManager_ProcessWaitingHover	0.0000	0.0000	0.0000	0xdeb0
 advmgr	advManager_QuickInfo	0.0000	0.0000	0.0000	0x137c0
 advmgr	advManager_RedrawAdvScreen	0.0000	0.0000	0.0000	0x17420
 advmgr	advManager_ScreenScroll	0.0000	0.0000	0.0000	0x195c0
