@@ -692,6 +692,7 @@ struct type_obscuring_object {
     void obscure_cell(TAdventureObjectType new_type, long id);
     void restore_cell();
 #endif
+    unsigned char load(void* infile);
     unsigned char save(void* outfile);
 };
 SIZE(type_obscuring_object, 0x18);
@@ -726,6 +727,8 @@ public:
     int occupying_hero;             // +0x20 (THeroID)
     unsigned char occupied;         // +0x24
     char pad_025[3];
+
+    boat() : allocated(0) {}
     hero_seqid GetStandSequence();
 };
 SIZE(boat, 0x28);
