@@ -101,6 +101,18 @@ public:
     };
     static const TObstacleInfo ObstacleInfo[];
 
+    // Separate 68-byte catalogue used for large battlefield features.
+    // PlaceLargeObstacle reads the two masks and up to 25 signed-short
+    // combat-cell indexes beginning at +0xc, terminated by -1.
+    struct TLargeObstacleInfo {
+        unsigned short terrain_mask;
+        unsigned short special_terrain_mask;
+        unsigned char opaque_04[0x8];
+        short cells[25];
+        unsigned char opaque_3e[0x6];
+    };
+    static const TLargeObstacleInfo LargeObstacleInfo[];
+
     // Retail writes only name/hitpoints here; Dreamcast CodeView supplies
     // the intervening field identities and confirms the 36-byte extent.
     struct TWallTraits {
@@ -185,7 +197,8 @@ public:
     // Their wider animation roles await decoded readers/writers.
     int field_5398;                   // +0x5398
     int field_539c;                   // +0x539c
-    char pad_53a0[0x4];
+    // Selected large-obstacle catalogue id, written by PlaceLargeObstacle.
+    int largeObstacleId;              // +0x53a0
     // The drawbridge state (EDrawbridgeState). LowerDoor stores 3/2/1
     // through it one frame at a time; RaiseDoor gates on 1;
     // HexIsBlocked, should_lower_door and IsInMoat all gate on 3.
@@ -371,6 +384,8 @@ public:
     const char* GetBackgroundName();
     void UpdateArmyGroup(int whichSide);
     void GenerateMap();
+    int PlaceLargeObstacle(unsigned terrain_mask,
+                           unsigned special_terrain_mask);
     void RaiseSkeletons(int side);
     void LearnSpellFromEagleEye(int side);
     static unsigned char LoadWallTraitsTable();
