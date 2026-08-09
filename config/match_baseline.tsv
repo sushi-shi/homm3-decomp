@@ -358,6 +358,7 @@ cmbtmgr	?HexIsBlocked@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x69a10
 cmbtmgr	?InCastle@@YIEH@Z	100.0000	100.0000	100.0000	0x67460
 cmbtmgr	?IsInMoat@combatManager@@QAEEHPAH@Z	100.0000	100.0000	100.0000	0x69dc0
 cmbtmgr	?IsWinner@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x658b0
+cmbtmgr	?LearnSpellFromEagleEye@combatManager@@QAEXH@Z	89.3674	89.3674	89.3674	0x69fe0
 cmbtmgr	?LeftOfMoat@@YIEH@Z	100.0000	100.0000	100.0000	0x67490
 cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXPBVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0
 cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0
@@ -383,7 +384,6 @@ cmbtmgr	combatManager_InLineOfSight	0.0000	0.0000	0.0000	0x67840
 cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
 cmbtmgr	combatManager_InitializeArchers	0.0000	0.0000	0.0000	0x66c50
 cmbtmgr	combatManager_KeepAttack	0.0000	0.0000	0.0000	0x65ad0
-cmbtmgr	combatManager_LearnSpellFromEagleEye	0.0000	0.0000	0.0000	0x69fe0
 cmbtmgr	combatManager_LoadArmies	0.0000	0.0000	0.0000	0x63600
 cmbtmgr	combatManager_LoadIcons	0.0000	0.0000	0.0000	0x63370
 cmbtmgr	combatManager_LoadWallTraitsTable	0.0000	0.0000	0.0000	0x62990
