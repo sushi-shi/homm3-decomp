@@ -260,6 +260,25 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `SavedGameHeader::Save` replaces a false view and is
+  admitted byte-exact (378 bytes).** The previous `game::SaveBlackMarkets`
+  claim rested only on cross-build source order. Retail instead proves that
+  every access belongs to the 0x5a4-byte save header: it writes the `H3SVG`
+  id, version fields, a 32-byte compatibility band, the embedded map header
+  and setup options, an optional campaign, the fixed-width filename, and the
+  trailing difficulty and player-state bands. The saver narrows the canonical
+  four-byte difficulty field to its serialized short; the adjacent retail
+  constructor and loader independently prove that in-memory width. Disjoint
+  scalar-local scopes are codegen-significant because VC6 reuses the dead
+  parameter home for retail's exact stack schedule. The compatibility buffer
+  remains deliberately uninitialized, as in retail, and only its short write
+  is checked. Dreamcast CodeView corroborates the `SavedGameHeader::Save`,
+  `NewSMapHeader::Save`, and `SGameSetupOptions::save` identities; retail
+  layout and call targets prove this x86 body, with the campaign callee named
+  from its embedded receiver. `decomp-attempt-1` was checked read-only and
+  contains only stubs for both competing names, so no external implementation
+  body was used.
+
 - **2026-08-09 — `town::initialize_spells` reconstructed to 86.7424%
   (810 bytes).** Retail proves the setup argument and its two 70-bit spell
   masks, the game-wide disabled-spell band, five weighted faction spell rows,
