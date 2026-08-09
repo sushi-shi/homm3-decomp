@@ -86,6 +86,10 @@ struct type_artifact {
 
 class hero {
 public:
+    enum {
+        CLASS_NAME_OVERRIDE_HERO_ID = 27,
+        CLASS_NAME_OVERRIDE_SCENARIO = 15
+    };
     // The hero's map position, three SHORTS at +0/+2/+4. Byte-proven by
     // hero::IsMobile (0x4e5f30), which packs exactly these three cells
     // into a stack type_point with that struct's own field widths -
@@ -467,14 +471,14 @@ public:
     // "first free".
     unsigned char add_to_backpack(const type_artifact* artifact, long slot);
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    // 0x004d8f70 - returns the campaign override or this hero class's
-    // display text. SetRolloverText is the admitted caller in this view.
-    const char* HeroFn_004D8F70();
     // 0x004e3070 - gives or equips one artifact and performs the optional
     // end-condition check. ProcessSearch calls it for the Holy Grail.
     void GiveArtifact(const type_artifact* artifact, int bCheckEnd,
                       unsigned char equip_it);
 #endif
+    // 0x004d8f70 - returns the campaign override or this hero class's
+    // display text. Retail callers span both adventure and hero UI paths.
+    const char* HeroFn_004D8F70();
     // 0x004e2dd0 - the by-id overload: finds the artifact in the
     // backpack first, then in the equipped slots, and unequips it.
     unsigned char remove_artifact(TArtifact artifact);
@@ -680,6 +684,18 @@ struct THeroTraits {
     char pad_38[0x24];              // +0x38 unmodeled
 };
 SIZE(THeroTraits, 0x5c);
+
+// Retail's eighteen 64-byte hero-class rows. The class-name getter reaches
+// only the pointer at +4; cursor rendering independently proves the eighteen
+// class extent.
+struct THeroClassTraits {
+    char pad_00[4];
+    const char* className;
+    char pad_08[0x38];
+};
+SIZE(THeroClassTraits, 0x40);
+
+extern const THeroClassTraits (&akHeroClasses)[18];
 
 // Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner
 // as pointer+index). The IDA-lineage mangling

@@ -468,6 +468,19 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   This applies the HoMM2/Gruntz named-domain and source-order method. No
   external implementation body or `decomp-attempt-1` material was used.
 
+- **2026-08-09 — `hero::HeroFn_004D8F70` reconstructed byte-exact
+  (62 bytes).** The retail-only getter normally indexes one of eighteen
+  64-byte hero-class records and returns its name pointer at +4. For hero 27
+  in campaign mode and scenario 15 it instead returns the central text
+  record's pointer at +0xb80. Retail instructions and relocations prove both
+  branches, the byte-width campaign flag, the full-dword scenario field and
+  every offset; the public identity remains provisional because no surviving
+  Dreamcast name covers this Complete-only body. The hero-only include view
+  exposes just the scenario and text fields needed here, following the
+  HoMM2/Gruntz minimal-view rule without widening the shared game or text
+  layouts in unrelated translation units. No external implementation body or
+  `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `THeroScreenWindow::update_all_slots` reconstructed
   byte-exact (23 bytes).** Retail retains `this` in EDI and walks a long
   ESI index from zero through all nineteen equipped positions, calling the
