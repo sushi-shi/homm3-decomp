@@ -46,6 +46,11 @@ struct AdvMapCellObjectsView {
     std::vector<AdvObjectCellView> objects;
 };
 
+struct AdvGroundCellView {
+    char pad_00[0xc];
+    unsigned char cellFlags;
+};
+
 class CObject {
 public:
     char pad_00[8];

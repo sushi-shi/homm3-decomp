@@ -260,6 +260,16 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — the 715-byte `advManager::DrawGround` pass opened
+  to 86.63%.** Retail proves the packed-point fallback cell, clipped tile
+  rectangle, ten-entry ground tileset, ground frame and two flip bits, four
+  corners, four edge-pattern families, and the repeating border fallback.
+  The reconstruction has the same 30 symbolic branches and both return paths
+  agree with retail; remaining differences are instruction and local/register
+  scheduling, so no exact claim is made. Dreamcast CodeView supplied only the
+  surviving tileset, field and method names; no external body was consulted or
+  ported. The generated baseline remains exclusively build-owned.
+
 - **2026-08-09 — both `advManager::CompleteDraw` overloads admitted
   byte-exact; `advmgr` 19 → 21 exact.** The 1,149-byte orchestrator
   reproduces its entry/message gates, forced full-map origin, nine 20-by-18
