@@ -178,9 +178,9 @@ public:
     // so the field is the hero's level - name role-inferred, PROVISIONAL.
     short level;                    // +0x55
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    char pad_057[0x4];
     // This visit-flag run is fixed by SetRolloverText's retail loads and
     // the uniform retail/DC hero-layout repack described below.
+    unsigned long TrainingGroundsFlags;    // +0x57
     unsigned long DefenseTowerFlags;       // +0x5b
     unsigned long GardenOfRevelationFlags; // +0x5f
     unsigned long MercCampFlags;           // +0x63
@@ -207,10 +207,7 @@ public:
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     unsigned long MagicSchoolFlags;         // +0x77
     unsigned long WarSchoolFlags;           // +0x7b
-    unsigned long UniversityFlags;          // +0x7f
-    unsigned long Shrine1Flags;             // +0x83
-    unsigned long Shrine2Flags;             // +0x87
-    char pad_08b[0x6];
+    char pad_07f[0x12];
 #else
     char pad_077[0x1a];
 #endif
