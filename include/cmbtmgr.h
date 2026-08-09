@@ -428,18 +428,7 @@ public:
     long get_wall_strength(long target) const { return wallStrength[target]; }
 
     int GetGridIndex(int x, int y);
-    void SetupAdjacencyArray();
-    void UpdateArmyGroup(int whichSide);
-    void GenerateMap();
-    const char* GetBackgroundName();
-    void DamageWall(TWallTargetId target_wall, int damage);
-    void LowerDoor();
     unsigned char IsQuickCombat();
-    void DrawFrame(unsigned char update,
-                   unsigned char bLimitCreatureEffect,
-                   unsigned char bLimitDraw, int iDelay,
-                   unsigned char bRefreshBackground,
-                   unsigned char bDoDelayTil);
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
     void ResetHitByCreature();

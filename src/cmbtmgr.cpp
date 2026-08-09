@@ -911,8 +911,6 @@ void combatManager::LowerDoor()
     WaitEndSample(sample, -1);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:3400
 // RECONSTRUCTED 2026-08-09. Retail refuses to raise the bridge unless the
 // defending town exists, the bridge is down, and the gate plus moat cells
@@ -929,30 +927,28 @@ void combatManager::RaiseDoor()
     if (!field_53c8 || drawbridgeState != DRAWBRIDGE_DOWN)
         return;
     if (cells[COMBAT_HEX_GATE].armySide >= 0
-            || cells[COMBAT_HEX_GATE].field_1c != 0)
+            || cells[COMBAT_HEX_GATE].field_1c)
         return;
     if (cells[COMBAT_HEX_GATE_MOAT].armySide >= 0
-            || cells[COMBAT_HEX_GATE_MOAT].field_1c != 0)
+            || cells[COMBAT_HEX_GATE_MOAT].field_1c)
         return;
     if (field_53c8[4] == TOWN_FORTRESS
             && (cells[COMBAT_HEX_OUTER_MOAT].armySide >= 0
-                || cells[COMBAT_HEX_OUTER_MOAT].field_1c != 0))
+                || cells[COMBAT_HEX_OUTER_MOAT].field_1c))
         return;
 
-    if (!lower_door_is_quick_combat(this)) {
-        SAMPLE2 sample2 = LoadPlaySample("drawbrg.82m");
-
-        drawbridgeBounds = gDrawbridgeBounds694f30;
-
-        for (int frame = DRAWBRIDGE_DOWN; frame <= DRAWBRIDGE_UP; frame++) {
-            drawbridgeState = frame;
-            DrawFrame(1, 0, 1, 100, 1, 1);
-        }
-
-        WaitEndSample(sample2, -1);
-    } else {
+    if (IsQuickCombat()) {
         drawbridgeState = DRAWBRIDGE_UP;
+        return;
     }
+
+    SAMPLE2 sample = LoadPlaySample("drawbrg.82m");
+    drawbridgeBounds = gDrawbridgeBounds694f30;
+    for (int state = DRAWBRIDGE_DOWN; state <= DRAWBRIDGE_UP; state++) {
+        drawbridgeState = state;
+        DrawFrame(1, 0, 1, 100, 1, 1);
+    }
+    WaitEndSample(sample, -1);
 }
 
 #if 0  // @carcass
