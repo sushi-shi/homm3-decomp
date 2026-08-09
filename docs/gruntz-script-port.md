@@ -374,6 +374,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   rule. Dreamcast contributes only the method/helper identities and local
   name; no external implementation or `decomp-attempt-1` material was used.
 
+- **2026-08-09 — `combatManager::PlaceLargeObstacle` reconstructed to
+  99.9888% (264 bytes).** Retail's second stack parameter is a special-
+  terrain mask absent from the older Dreamcast signature. A
+  `TPickANumber(0,33)` loop rejects catalogue rows until either unsigned
+  mask matches, routes exhaustion directly through the inline destructor,
+  then walks up to 25 signed-short cell indexes (terminated by -1), marks
+  each cell with bit 2, records the selected id and returns the marked count.
+  The natural early-return picker loop reproduces all ten blocks and every
+  instruction. The score sliver is stripped-target EH/interior-data
+  relocation representation and one unused post-store LEA addend, not code
+  behavior. Retail proves the 68-byte row and all used offsets; Dreamcast
+  supplies the method and picker identities only. No external implementation
+  or `decomp-attempt-1` material was used.
+
 - **2026-08-09 — `combatManager::RaiseSkeletons` reconstructed to 93.2203%.**
   The function first merges the pending raised stack unchanged; if the
   destination group has neither a matching nor an empty slot, it promotes
