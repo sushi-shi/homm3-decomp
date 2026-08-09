@@ -232,11 +232,41 @@ void combatManager::UpdateArmyGroup(int whichSide)
 #if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1653
+#endif  // @carcass
 VA(0x004642d0, 0xDC)  // linkorder, dc 0x5eca8
 void combatManager::GenerateMap()
 {
-    // @stub
+    int none = -1;
+    hexcell* cell = cells;
+    for (int row = 0; row < 11; ++row) {
+        unsigned char parity = static_cast<unsigned char>(row) & 1;
+        int refXOffset = parity ? 22 : 44;
+        int rowOffset = row * 42;
+        int refY = rowOffset + 128;
+        int hexXOffset = parity ? 0 : 22;
+
+        for (int column = 0; column < COMBAT_GRID_ROW_STRIDE; ++column) {
+            cell->hexULX = static_cast<short>(column * 44 + hexXOffset + 14);
+            cell->hexULY = static_cast<short>(rowOffset + 86);
+            cell->armySide = static_cast<signed char>(none);
+            cell->armySlot = static_cast<signed char>(none);
+            cell->field_1a = static_cast<signed char>(none);
+            cell->field_14 = none;
+            cell->field_4d = static_cast<signed char>(none);
+            cell->refX = static_cast<short>(column * 44 + refXOffset + 14);
+            cell->refY = static_cast<short>(refY);
+            cell->hexBRX =
+                static_cast<short>(column * 44 + hexXOffset + 58);
+            cell->hexBRY = static_cast<short>(rowOffset + 128);
+            cell->fullHexBRY = static_cast<short>(rowOffset + 138);
+            cell->field_10 = 0;
+            cell->field_1c = 0;
+            cell->field_4c = 0;
+            ++cell;
+        }
+    }
 }
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:1688
 VA(0x004643b0, 0x317)  // anchor-callee, dc 0x5ed68
