@@ -621,6 +621,7 @@ public:
     std::vector<type_point> whirlpools;        // +0x4e77c
 
     NewfullMap* GetWorldMapData();
+    int get_new_boat_id();                    // 0x4bb170
     playerData* GetLocalPlayer();
     int GetLocalPlayerGamePos();                 // 0x4cea20
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
