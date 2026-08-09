@@ -260,6 +260,15 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `soundManager::MemorySample` rises 98.7963% ->
+  99.7840%.** The guarded explicit cursor repeated the empty-range test.
+  Writing the slot search as a natural indexed `while` lets VC6 introduce
+  retail's `[ebp-8]` cursor as a strength-reduction variable after the one
+  range guard. All 30 blocks and 21 branches now agree; the only residual is
+  a scratch-register rotation in the inlined stream-service tail. Named
+  stream and split section-pointer lifetime probes were byte-inert and
+  reverted.
+
 - **2026-08-09 — inputmgr reaches 10/10 exact.** Retail clears all 64
   buffered messages between the base-manager constructor and the derived
   vptr store. That ordering proves nontrivial member construction, not an

@@ -347,16 +347,12 @@ void soundManager::SwitchAmbientMusic(int newMusicFileId)
 }
 
 // E:\gamedcs\soundmgr.cpp:759
-// Residual (98.80%): the explicit sampleHandles cursor gives retail's
-// stack homes (`this` at [ebp-4], cursor at [ebp-8]) and makes B0..B24
-// instruction-identical except for one duplicate empty-range `jge` from
-// the guarded initialization plus for-loop condition. Loading `handle`
-// before writing gAilDriverState fixes the common block's EDI lifetime;
-// spelling the volume selection as two calls gives retail's push-eax /
-// push-zero cross-jump. The only other delta is two scratch-register
-// choices in the inlined ServeSampleStream tail. Positive nested and
-// linear do/while forms remove the duplicate compare but disrupt the
-// allocation wholesale (83.51%); the retained form is the bounded best.
+// Residual (99.7840%): a natural indexed scan lets VC6 synthesize retail's
+// cursor stack home after a single range test; all 30 blocks and 21 branches
+// now agree. Loading `handle` before writing gAilDriverState and spelling the
+// volume selection as two calls preserve the exact main allocation. Only an
+// EAX/EDX/ECX scratch rotation in the inlined ServeSampleStream tail remains;
+// named stream and split section-pointer lifetimes are byte-inert.
 VA(0x0059a210, 0x1DB)  // anchor-global, dc 0x14b528
 ds_memsample* soundManager::MemorySample(sample* sPtr)
 {
@@ -369,12 +365,11 @@ ds_memsample* soundManager::MemorySample(sample* sPtr)
         SoundChannelRange* range = &gSoundChannels[sPtr->field_28];
         EnterCriticalSection(&section_sound_call);
         int slot = range->first;
-        ds_memsample** slotHandle;
-        if (slot < range->last)
-            slotHandle = &sampleHandles[slot];
-        for (; slot < range->last; slot++, slotHandle++)
-            if (AIL_sample_status(*slotHandle) == AIL_SAMPLE_SLOT_FREE)
+        while (slot < range->last) {
+            if (AIL_sample_status(sampleHandles[slot]) == AIL_SAMPLE_SLOT_FREE)
                 break;
+            slot++;
+        }
         if (slot == range->last) {
             if (sPtr->field_28 == SOUND_CHANNEL_COUNT) {
                 LeaveCriticalSection(&section_sound_call);

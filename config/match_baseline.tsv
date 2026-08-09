@@ -1020,7 +1020,7 @@ soundmgr	?AdjustSoundVolumes@soundManager@@QAEXXZ	100.0000
 soundmgr	?ClearMemSample@@YIXUSAMPLE2@@@Z	100.0000
 soundmgr	?ConvertVolume@soundManager@@QAEHHH@Z	100.0000
 soundmgr	?LoadPlaySample@@YI?AUSAMPLE2@@PBD@Z	100.0000
-soundmgr	?MemorySample@soundManager@@QAEPAVds_memsample@@PAVsample@@@Z	98.7963
+soundmgr	?MemorySample@soundManager@@QAEPAVds_memsample@@PAVsample@@@Z	99.7840
 soundmgr	?ModifySample@soundManager@@QAEXPAVds_memsample@@FJ@Z	100.0000
 soundmgr	?MusicPlaying@soundManager@@QAEHXZ	100.0000
 soundmgr	?PauseSamples@soundManager@@QAEXXZ	100.0000
