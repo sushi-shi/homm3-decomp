@@ -34,6 +34,7 @@ void NormalDialog(const char* cText, int iMBType, int x, int y,
 void extended_dialog(const char* text,
     std::vector<type_dialog_resource>& resources,
     long x, long y, long timeout);                              // 0x4f6cf0
+void get_quickview_size(const char* text, int* width, int* height); // 0x4f5f30
 // Located kb.cpp bodies kbwin's WinMain / AppWndProc call (bodies not
 // yet reconstructed; the declarators match the kbwin call sites).
 int InitMainClasses();                                   // 0x4ed650
@@ -44,6 +45,7 @@ int oldmain();                                           // 0x4ee3e0
 // kb.cpp:4168 - arity and role both agree.
 void MemError();                                         // 0x4f42c0
 int GameUnsaved();                                       // 0x4f4310
+void CheckEndGame(int bForceWin);                        // 0x4f2ce0
 
 // kb.cpp's shared text scratch buffer (.bss 0x6973d8 in kb's band;
 // kbwin's WinMain sprintf's the already-running message into it,

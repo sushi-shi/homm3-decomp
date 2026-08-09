@@ -3114,14 +3114,469 @@ void advManager::UpdateRadar(unsigned char updateFlag, unsigned char bPartialUpd
                 view_heroes, view_towns);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:7543
+// RETAIL-RECONSTRUCTED 2026-08-09 (55.8089%). The current QuickInfo slices
+// restore point validation and shroud handling, trigger-cell resolution,
+// the shared creature-bank/shrine/tree/witch-hut text helpers, the default
+// object name, border/generator/resource and visited-state cases, optional
+// map coordinates, sizing, screen-edge clamps and dialog invocation.
+// Retail proves the control flow, constants, field offsets and helper calls;
+// Dreamcast CodeView supplies only the function and local identities.
 VA(0x004137c0, 0x25A0)  // linkorder, dc 0x15fdc
 void advManager::QuickInfo(int cellX, int cellY, int z)
 {
-    // @stub
+    char tempText[512];
+    playerData* player = gpGame->GetLocalPlayer();
+    int iPlayer = gpGame->GetLocalPlayerGamePos();
+    int playerBit = 1 << iPlayer;
+    hero* currHero = gpGame->GetHero(player->currHeroId);
+
+    type_point mapPoint;
+    mapPoint.x = radarOrigin.x + cellX;
+    mapPoint.y = radarOrigin.y + cellY;
+    mapPoint.z = z;
+
+    if (!mapPoint.is_valid()) {
+        strcpy(gText, gUnnamed6a5d5c->entry->quickInfoInvalidPointText);
+    } else {
+        type_point point = mapPoint;
+        NewmapCell* testCell;
+        if (!point.is_valid()) {
+            testCell = fullMap->cell(0, 0, 0);
+        } else {
+            testCell = &fullMap->cellData[
+                (point.z * fullMap->Size + point.y) * fullMap->Size
+                + point.x];
+        }
+
+        if (!(GetMapExtra(mapPoint) & playerBit)) {
+            strcpy(gText, gUnnamed6a5d5c->entry->quickInfoShroudedText);
+        } else {
+            type_cell_adjuster adjuster = { 0, 0, 0 };
+            NewmapCell* cell =
+                adjuster.get_trigger_cell(testCell, cellX, cellY);
+
+            const char* separator = DATA_COMPGEN(
+                0x006603b0, quickInfoSeparator, "\n\n");
+            const char* newLine = DATA_COMPGEN(
+                0x006603bc, quickInfoNewLine, "\n");
+            const char* visitFormat = DATA_COMPGEN(
+                0x006603c4, quickInfoVisitFormat, "\n\n%s");
+
+#define SET_VISITED_QUICKINFO(objectType, condition)                     \
+            case objectType:                                             \
+                strcpy(gText, gAdventureObjectNames[objectType]);         \
+                if (cell->is_trigger && currHero) {                       \
+                    sprintf(tempText, visitFormat,                        \
+                        (condition)                                       \
+                            ? gUnnamed6a5d5c->entry->visitedObjectText    \
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);\
+                    strcat(gText, tempText);                              \
+                }                                                         \
+                break
+
+            switch (cell->type) {
+            case NOTHING:
+            case ANCHOR_POINT: {
+#pragma inline_depth(0)
+                std::string cellDescription;
+#pragma inline_depth()
+                TAdventureObjectType specialTerrain =
+                    cell->get_special_terrain();
+                if (specialTerrain == NOTHING)
+                    cellDescription = gTerrainNames[cell->GroundSet];
+                else
+                    cellDescription =
+                        gAdventureObjectNames[specialTerrain];
+
+                if (cell->is_diggable()) {
+                    cellDescription += '\n';
+                    cellDescription +=
+                        gUnnamed6a5d5c->entry->quickInfoDiggableText;
+                }
+                strcpy(gText, cellDescription.c_str());
+                break;
+            }
+            case ARENA:
+                strcpy(gText, gAdventureObjectNames[ARENA]);
+                if (cell->is_trigger && currHero) {
+                    unsigned long arenaBit =
+                        1UL << (cell->extraInfo & 0x1f);
+                    sprintf(tempText, visitFormat,
+                        currHero->ArenaFlags & arenaBit
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
+                break;
+            case BORDER_GUARD:
+                sprintf(gText, DATA_COMPGEN(
+                    0x00660344, rolloverBorderFormat, "%s %s"),
+                    gBorderColorNames[cell->objectIndex],
+                    gAdventureObjectNames[cell->type]);
+                break;
+            case BORDER_TENT:
+                sprintf(gText, DATA_COMPGEN(
+                    0x00660344, rolloverBorderFormat, "%s %s"),
+                    gBorderColorNames[cell->objectIndex],
+                    gAdventureObjectNames[BORDER_TENT]);
+                if (cell->is_trigger) {
+                    sprintf(tempText, visitFormat,
+                        gpGame->borderTentVisitFlags[cell->objectIndex]
+                            & playerBit
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
+                break;
+            case BUOY:
+                strcpy(gText, gAdventureObjectNames[BUOY]);
+                if (cell->is_trigger && currHero) {
+                    sprintf(tempText, visitFormat,
+                        currHero->flags & 0x4
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
+                break;
+            case CLOVER_FIELD:
+                strcpy(gText, gAdventureObjectNames[CLOVER_FIELD]);
+                if (cell->is_trigger && currHero) {
+                    sprintf(tempText, visitFormat,
+                        currHero->flags & 0x8
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
+                break;
+            case CREATURE_BANK: {
+                union {
+                    int value;
+                    type_creature_bank_type type;
+                } bankType;
+                bankType.value = cell->objectIndex;
+                get_creature_bank_help_text(
+                    gText, cell, bankType.type, gUnnamed69778c,
+                    newLine, 1);
+                break;
+            }
+            case CREATURE_GENERATOR_1: {
+                generator* mapGenerator =
+                    &gpGame->generators[cell->extraInfo];
+                int owner = mapGenerator->playerOwner;
+                int generatorType = mapGenerator->genType;
+                if (owner != -1) {
+                    sprintf(gText, DATA_COMPGEN(
+                        0x006603b4, quickInfoOwnedObjectFormat,
+                        "%s\n\n%s"),
+                        gCreatureGenerator1RolloverNames[generatorType],
+                        gObjectOwnerColorNames[owner]);
+                } else {
+                    strcpy(gText,
+                        gCreatureGenerator1RolloverNames[generatorType]);
+                }
+                break;
+            }
+            case CREATURE_GENERATOR_4: {
+                generator* mapGenerator =
+                    &gpGame->generators[cell->extraInfo];
+                int owner = mapGenerator->playerOwner;
+                int generatorType = mapGenerator->genType;
+                if (owner != -1) {
+                    sprintf(gText, DATA_COMPGEN(
+                        0x006603b4, quickInfoOwnedObjectFormat,
+                        "%s\n\n%s"),
+                        gCreatureGenerator4RolloverNames[generatorType],
+                        gObjectOwnerColorNames[owner]);
+                } else {
+                    strcpy(gText,
+                        gCreatureGenerator4RolloverNames[generatorType]);
+                }
+                break;
+            }
+            SET_VISITED_QUICKINFO(DEAD_GUY,
+                player->DeadGuyFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(DEFENSE_TOWER,
+                currHero->DefenseTowerFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            case DERELICT_SHIP:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_DERELICT,
+                    gUnnamed69778c, separator, 1);
+                break;
+            case DRAGON_CITY:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_DRAGON,
+                    gUnnamed69778c, separator, 1);
+                break;
+            SET_VISITED_QUICKINFO(FAERIE_RING,
+                currHero->flags & 0x2000);
+            case FOUNTAIN_OF_FORTUNE:
+                strcpy(gText, gAdventureObjectNames[FOUNTAIN_OF_FORTUNE]);
+                if (cell->is_trigger) {
+                    if (cell->PlayerKnowsCell(gUnnamed69778c)) {
+                        sprintf(tempText, DATA_COMPGEN(
+                            0x006603c0, quickInfoKnownFormat, "\n%s"),
+                            gGlobalInfoFlagNames[FountainOfFortuneInfo]);
+                        strcat(gText, tempText);
+                    }
+                    if (currHero) {
+                        unsigned long fortuneVisits =
+                            (currHero->flags & 0x20000000UL)
+                            + (currHero->flags & 0x10000000UL)
+                            + (currHero->flags & 0x08000000UL)
+                            + (currHero->flags & 0x20UL);
+                        sprintf(tempText, visitFormat,
+                            fortuneVisits
+                                ? gUnnamed6a5d5c->entry->visitedObjectText
+                                : gUnnamed6a5d5c->entry
+                                    ->unvisitedObjectText);
+                        strcat(gText, tempText);
+                    }
+                }
+                break;
+            SET_VISITED_QUICKINFO(FOUNTAIN_OF_YOUTH,
+                currHero->flags & 0x4000);
+            SET_VISITED_QUICKINFO(GARDEN_OF_REVELATION,
+                currHero->GardenOfRevelationFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            case HILL_FORT:
+                strcpy(gText, gAdventureObjectNames[HILL_FORT]);
+                if (cell->is_trigger && cell->PlayerKnowsCell(iPlayer)) {
+                    sprintf(tempText, DATA_COMPGEN(
+                        0x006603c0, quickInfoKnownFormat, "\n%s"),
+                        gGlobalInfoFlagNames[HillFortInfo]);
+                    strcat(gText, tempText);
+                }
+                break;
+            case HERO: {
+                hero* mapHero = gpGame->GetHero(cell->extraInfo);
+                sprintf(gText,
+                        gUnnamed6a5d5c->entry->heroRolloverFormat,
+                        mapHero->name, mapHero->HeroFn_004D8F70());
+                break;
+            }
+            SET_VISITED_QUICKINFO(IDOL_OF_FORTUNE,
+                currHero->flags & (0x02000000UL | 0x10UL));
+            SET_VISITED_QUICKINFO(LEAN_TO,
+                player->LeanToFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(LIBRARY,
+                currHero->LibraryFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            case LIGHTHOUSE:
+                strcpy(gText, gAdventureObjectNames[LIGHTHOUSE]);
+                if (cell->is_trigger) {
+                    int owner =
+                        gpGame->mines[cell->extraInfo].playerOwner;
+                    if (owner != -1) {
+                        sprintf(tempText, visitFormat,
+                                gObjectOwnerColorNames[owner]);
+                        strcat(gText, tempText);
+                    }
+                }
+                break;
+            SET_VISITED_QUICKINFO(MAGIC_SCHOOL,
+                currHero->MagicSchoolFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(MAGIC_SPRING,
+                (player->MagicSpringFlags
+                    & (1UL << (cell->extraInfo & 0x1f)))
+                    && !(cell->extraInfo & 0x40));
+            SET_VISITED_QUICKINFO(MAGIC_WELL,
+                currHero->flags & 0x1);
+            SET_VISITED_QUICKINFO(MERC_CAMP,
+                currHero->MercCampFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            SET_VISITED_QUICKINFO(MERMAID,
+                currHero->flags & 0x8000);
+            case MINE:
+                AdvmgrFn_0040D670(gText, cell, iPlayer, newLine, 1);
+                break;
+            case MYSTICAL_GARDEN:
+                strcpy(gText, gAdventureObjectNames[MYSTICAL_GARDEN]);
+                if (cell->is_trigger) {
+                    unsigned long gardenBit =
+                        1UL << (cell->extraInfo & 0x1f);
+                    sprintf(tempText, visitFormat,
+                        (player->MysticalGardenFlags & gardenBit)
+                            && !(cell->extraInfo & 0x400)
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
+                break;
+            SET_VISITED_QUICKINFO(OASIS,
+                currHero->flags & 0x80);
+            case OBELISK:
+                strcpy(gText, gAdventureObjectNames[OBELISK]);
+                if (cell->is_trigger) {
+                    sprintf(tempText, visitFormat,
+                        gpGame->obeliskFlags[cell->extraInfo] & playerBit
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                    strcat(gText, tempText);
+                }
+                break;
+            SET_VISITED_QUICKINFO(POWER_SCHOOL,
+                currHero->PowerSchoolFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            case PYRAMID:
+                strcpy(gText, gAdventureObjectNames[PYRAMID]);
+                if (cell->is_trigger && currHero) {
+                    strcat(gText, separator);
+                    strcat(gText,
+                        cell->PlayerKnowsCell(currHero->owner)
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                }
+                break;
+            SET_VISITED_QUICKINFO(RALLY_FLAG,
+                currHero->flags & 0x10000);
+            case RESOURCE:
+                strcpy(gText, gResourceNames[cell->objectIndex]);
+                break;
+            case SEER:
+                strcpy(gText,
+                    fullMap->SeerHutList[cell->extraInfo]
+                        .SeerHutFn_005741B0(iPlayer).c_str());
+                break;
+            case SEPULCHER:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_SEPULCHER,
+                    gUnnamed69778c, separator, 1);
+                break;
+            case SHIPWRECK:
+                get_creature_bank_help_text(
+                    gText, cell, CREATURE_BANK_SHIPWRECK,
+                    gUnnamed69778c, separator, 1);
+                break;
+            case SHRINE1:
+                SetShrineHelpText(gText, currHero, cell, Shrine1Info,
+                                  newLine, separator);
+                break;
+            case SHRINE2:
+                SetShrineHelpText(gText, currHero, cell, Shrine2Info,
+                                  newLine, separator);
+                break;
+            case SHRINE3:
+                SetShrineHelpText(gText, currHero, cell, Shrine3Info,
+                                  newLine, separator);
+                break;
+            SET_VISITED_QUICKINFO(SIREN,
+                currHero->flags & 0x100000);
+            SET_VISITED_QUICKINFO(STABLES,
+                currHero->flags & 0x2);
+            SET_VISITED_QUICKINFO(TEMPLE,
+                currHero->flags & (0x04000000UL | 0x100UL));
+            SET_VISITED_QUICKINFO(TRAINING_GROUNDS,
+                currHero->TrainingGroundsFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            case TREE_OF_KNOWLEDGE:
+                SetTreeHelpText(gText, currHero, cell,
+                                newLine, separator);
+                break;
+            case UNIVERSITY:
+                strcpy(gText, gAdventureObjectNames[UNIVERSITY]);
+                if (cell->is_trigger && cell->PlayerKnowsCell(iPlayer)) {
+                    sprintf(tempText, DATA_COMPGEN(
+                        0x006603c0, quickInfoKnownFormat, "\n%s"),
+                        gGlobalInfoFlagNames[UniversityInfo]);
+                    strcat(gText, tempText);
+                }
+                break;
+            case WAGON:
+                strcpy(gText, gAdventureObjectNames[WAGON]);
+                if (cell->is_trigger) {
+                    strcat(gText, separator);
+                    strcat(gText,
+                        cell->PlayerKnowsCell(gNetLocalGamePos)
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                }
+                break;
+            SET_VISITED_QUICKINFO(WAR_SCHOOL,
+                currHero->WarSchoolFlags
+                    & (1UL << (cell->extraInfo & 0x1f)));
+            case WARRIOR_TOMB:
+                strcpy(gText, gAdventureObjectNames[WARRIOR_TOMB]);
+                if (cell->is_trigger) {
+                    strcat(gText, separator);
+                    strcat(gText,
+                        cell->PlayerKnowsCell(gNetLocalGamePos)
+                            ? gUnnamed6a5d5c->entry->visitedObjectText
+                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                }
+                break;
+            case WATER_WHEEL:
+                strcpy(gText, gAdventureObjectNames[WATER_WHEEL]);
+                if (cell->is_trigger
+                    && cell->PlayerKnowsCell(gNetLocalGamePos)) {
+                    strcat(gText, separator);
+                    strcat(gText, (cell->extraInfo & 0x1f) == 0
+                        ? gUnnamed6a5d5c->entry->visitedObjectText
+                        : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                }
+                break;
+            SET_VISITED_QUICKINFO(WATERING_HOLE,
+                currHero->flags & 0x40);
+            case WINDMILL:
+                strcpy(gText, gAdventureObjectNames[WINDMILL]);
+                if (cell->is_trigger
+                    && cell->PlayerKnowsCell(gNetLocalGamePos)) {
+                    strcat(gText, separator);
+                    strcat(gText, ((cell->extraInfo >> 13) & 0xf) == 0
+                        ? gUnnamed6a5d5c->entry->visitedObjectText
+                        : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                }
+                break;
+            case WITCH_HUT:
+                set_witch_hut_help_text(gText, currHero, cell,
+                                        newLine, separator);
+                break;
+            case QUEST_GUARD:
+                strcpy(gText,
+                    fullMap->QuestGuardList[cell->extraInfo]
+                        .QuestGuardFn_00573040(gUnnamed69778c).c_str());
+                break;
+            default:
+                strcpy(gText, gAdventureObjectNames[cell->type]);
+                break;
+            }
+
+#undef SET_VISITED_QUICKINFO
+        }
+    }
+
+    if (gUnnamed6989c8 > 0) {
+        char coordinateText[128];
+        sprintf(coordinateText, DATA_COMPGEN(
+            0x00660394, quickInfoCoordinateFormat,
+            "\n\nX: %3d - Y: %3d - Z: %3d"),
+            mapPoint.x, mapPoint.y, mapPoint.z);
+        strcat(gText, coordinateText);
+    }
+
+    int width;
+    int height;
+    get_quickview_size(gText, &width, &height);
+
+    int x = cellX * 32;
+    int y = cellY * 32;
+    if (x < 8)
+        x = 8;
+    if (y < 8)
+        y = 8;
+    if (x + width > 600)
+        x = 600 - width;
+    if (y + height > 552)
+        y = 552 - height;
+
+    NormalDialog(gText, 4, x, y, -1, 0, -1, 0, -1, 0, -1, 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:8816
 DC_ONLY(0x18c2c, 0x58)
