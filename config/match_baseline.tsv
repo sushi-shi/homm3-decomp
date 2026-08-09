@@ -300,7 +300,7 @@ armygrp	?HasAllUndead@armyGroup@@QAEEXZ	100.0000
 armygrp	?HasCreatures@armyGroup@@QAEEXZ	100.0000
 armygrp	?Initialize@armyGroup@@QAEXXZ	100.0000
 armygrp	?IsMember@armyGroup@@QAEEW4TCreatureType@@@Z	100.0000
-armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	78.3073
+armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	79.5363
 armygrp	?SplitArmy@armyGroup@@QAEXHPAV1@HEE@Z	100.0000
 armygrp	?SplitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000
 armygrp	?Swap@armyGroup@@QAEXHPAV1@H@Z	100.0000
