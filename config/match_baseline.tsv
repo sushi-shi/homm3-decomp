@@ -125,7 +125,7 @@ ai	?get_area_attack_value@@YIJPBVarmy@@JJPAUtype_AI_combat_parameters@@@Z	100.00
 ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	96.3533	96.3533	96.3533	0x1f3b0
 ai	?get_total_combat_value@combatManager@@QBEJJJJE@Z	100.0000	100.0000	100.0000	0x1eac0
 ai	?mark_firewalls@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x214f0
-ai	?move_toward@combatManager@@QAEEPBVarmy@@JPBJE@Z	99.4462	99.4462	99.4462	0x1f580
+ai	?move_toward@combatManager@@QAEEPBVarmy@@JPBJE@Z	100.0000	100.0000	100.0000	0x1f580
 ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	80.5659	80.5659	80.5659	0x22060
 ai	?should_stay_in_castle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x213f0
 ai	combatManager_attempt_shooter_defense	0.0000	0.0000	0.0000	0x20760
