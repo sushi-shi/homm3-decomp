@@ -21,8 +21,13 @@ public:
     unsigned char bAutoDraw;   // 0x6e, gates SetFocus's redraw
                                // (SetAutoDraw's slot, name provisional)
 
+    textEntryWidget(int x, int y, int w, int h, int textSize,
+                    const char* text, const char* fontName, int color,
+                    unsigned justification, const char* backgroundIcon,
+                    int backgroundFrame, int id, int style, int readType,
+                    int insetX, int insetY);
     virtual ~textEntryWidget();  // retail 0x5baae0
-    void SetFocus(unsigned char state);
+    virtual void SetFocus(unsigned char state);  // slot 14, retail 0x5bab50
     char GetCharPressed(message* msg);
 };
 

@@ -39,8 +39,8 @@ enum EMessageDispatchResult {
 
 // Executive commands carried in codeX of a MESSAGE_EXECUTIVE-flagged
 // message (homm2 BASE/message.h ExecutiveCommand names/values
-// verbatim; retail's MainLoop merges the TERMINATE_LOOP and
-// RETURN_RESULT arms into one dialogReturn store).
+// verbatim; retail's MainLoop keeps TERMINATE_LOOP as a done-only arm
+// and stores dialogReturn only for RETURN_RESULT).
 enum EExecutiveCommand {
     EXECUTIVE_COMMAND_TERMINATE_LOOP = 0x1,
     EXECUTIVE_COMMAND_REMOVE_MANAGER = 0x2,

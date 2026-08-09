@@ -213,14 +213,14 @@ static TArtifact SiegeMonsterToSiegeArtifact(TCreatureType siegeMon)
     return ARTIFACT_NONE;
 }
 
-// Residual (99.5%): the CODE is byte-identical; the only difference is
-// how the four jump-table slots are spelled. VC6 emits one local label
-// ($L47262..$L47265) per case and stores a zero addend against it,
-// while the delinker can only name the enclosing function and so
-// carries the case offsets (0x0f/0x15/0x1b/0x21) as addends. Nothing
-// in the source can reconcile that - it is a representation gap in the
-// comparison, and it caps every jump-table function just short of
-// 100%. New residual class; recruitUnit::Update carries the same table.
+// Residual (99.5%): code bytes and ordered relocation semantics are
+// identical. The canonicalizer now rewrites VC6's four local-label table
+// relocations onto this function with the same 0x0f/0x15/0x1b/0x21
+// addends as the delinked target, superseding the older addend-gap
+// diagnosis. The remaining display/scoring residue is a function-boundary
+// decode artifact: the target's shared .text decoder begins an instruction
+// in the last table byte and reads the next function's 0x55, while the base
+// COMDAT ends there. There is no source mismatch to work around.
 VA(0x00550360, 0x3C)  // anchor-bracket + body, dc 0x119d98
 TCreatureType siege_artifact_to_creature(TArtifact engine)
 {
@@ -595,4 +595,3 @@ void* TRecruitQuickWindow::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
-

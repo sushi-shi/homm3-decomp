@@ -721,10 +721,13 @@ def _trim_text_alignment_padding(
     section alignment, while the delinked target packs functions at their
     claimed retail sizes - the same matched function then compares at two
     lengths and the fill bytes score as a difference (widget::Main lost
-    1.4% to eight trailing nops). The fill belongs to no function, so the
-    disposable comparison copies drop it on BOTH sides. A relocation span
-    is never trimmed (jump-table dwords carry DIR32 relocs) and at most
-    TEXT_PAD_TRIM_LIMIT bytes go - one alignment's worth, never code."""
+    1.4% to eight trailing nops). The fill belongs to no function, so this
+    first pass drops it. normalize_objs later restores only the smaller NOP
+    suffix that the linked target necessarily retains before its next
+    aligned function, and only when both logical function lengths agree. A
+    relocation span is never trimmed (jump-table dwords carry DIR32 relocs)
+    and at most TEXT_PAD_TRIM_LIMIT bytes go - one alignment's worth, never
+    code."""
     data = bytearray(payload)
     trims = []
     for section in coff.sections:

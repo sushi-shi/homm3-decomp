@@ -5,6 +5,15 @@
 #ifndef HOMM3_TRADPOST_H
 #define HOMM3_TRADPOST_H
 
+#include "town.h"
+
+long get_market_value(EGameResource resource);
+
+// Retail .data 0x678344. The public retail name carries this spelling;
+// calculate_demand indexes entries 1..10 after clamping the number of
+// owned legal Marketplaces. Owner definition has not yet been admitted.
+extern float fTradingPostEfficency[];
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\tradpost.cpp:74, dc 0x181a34) void TradeResourceSlider(int state, heroWindow* parent_window);
 // CODEVIEW(E:\gamedcs\tradpost.cpp:80, dc 0x181a50) void GiveResourceSlider(int state, heroWindow* parent_window);

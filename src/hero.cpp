@@ -2159,24 +2159,20 @@ long hero::modify_spell_damage(SpellID spell, int damage,
 }
 
 // E:\gamedcs\hero.cpp:6296
-// Residual (75.6%): the CFG, the three arms, the 8-bit compares and
-// the `setge` floor all agree; retail keeps `this` in ecx and runs the
-// loop on an index (esi) PLUS a separate trip counter (`mov edi,4` /
-// `dec edi` / `jne`), while our CL folds the exit test onto the index
-// (`inc edx` / `cmp edx,4` / `jl`) and needs a third callee-saved
-// register because the setge scratch collides with `this`.
-// Induction-variable/register-allocation family. Tried and rejected:
-// no `stat` local at all (55.58 - VC6 then strength-reduces the
-// address, hoists `&stats[0]` and RECOVERS the index with
-// `lea ecx,[esi+edx]`, which is strictly further away); `int value`
-// hoisted out of the loop (no change); declaring `value` before `stat`
-// (no change). The `signed char stat` local is what bought 55.58 ->
-// 75.58 by keeping `this` live in a base register.
+// Residual (99.5833%): the explicit index plus separate four-iteration
+// countdown reproduces retail's ESI index / EDI counter and makes every
+// instruction agree. The sole byte delta is the commutative scale-1 SIB
+// encoding of `stats[skill]`: retail encodes ESI as the base and ECX as
+// the index; this compile encodes ECX as the base and ESI as the index.
+// Pointer-arithmetic spelling is byte-identical. Earlier single-index
+// `for` form scored 75.5833%; omitting the `stat` local scored 55.58%.
 VA(0x004e5960, 0x38)  // linkorder, dc 0xd544c
 short hero::get_primary_skill_total()
 {
     int total = 0;
-    for (int skill = 0; skill < 4; skill++) {
+    int skill = 0;
+    int remaining = 4;
+    do {
         signed char stat = stats[skill];
         int value;
         if (stat > 99)
@@ -2186,7 +2182,9 @@ short hero::get_primary_skill_total()
         else
             value = skill >= 2;
         total += value;
-    }
+        skill++;
+        remaining--;
+    } while (remaining);
     return total;
 }
 
@@ -2652,4 +2650,3 @@ void h3_stl_comdat_anchor(std::vector<int>& v, const int& value,
     artifacts.any();
 }
 #pragma inline_depth()
-

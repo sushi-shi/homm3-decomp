@@ -181,18 +181,18 @@ ai_combat	type_AI_combat_data_do_aftermath	0.0000
 ai_combat	type_AI_combat_data_initialize_creatures	0.0000
 ai_combat	type_AI_combat_data_type_AI_combat_data	0.0000
 ai_combat	type_AI_combat_data_type_AI_combat_data_276c0	0.0000
+ai_player	?calculate_demand@type_AI_player@@QAEXXZ	86.3767
+ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566
 ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	98.7523
+ai_player	?end_turn@type_AI_player@@QAEXXZ	56.8835
 ai_player	?find_magus_hut_value@@YIJJE@Z	100.0000
 ai_player	?get_attack_bonus@type_AI_player@@SIMF@Z	100.0000
 ai_player	?get_cell@game@@QAEPAVNewmapCell@@Utype_point@@@Z	100.0000
 ai_player	?get_danger_value@searchArray@@QBEJUtype_point@@@Z	100.0000
+ai_player	?get_total_value@type_AI_player@@QAEJJPAH@Z	100.0000
+ai_player	?make_gift@type_AI_player@@QAEXJ@Z	64.6655
 ai_player	?reset_magus_hut_value@type_AI_player@@QAEXXZ	100.0000
-ai_player	type_AI_player_calculate_demand	0.0000
-ai_player	type_AI_player_calculate_reserve	0.0000
-ai_player	type_AI_player_end_turn	0.0000
-ai_player	type_AI_player_get_total_value	0.0000
-ai_player	type_AI_player_make_gift	0.0000
-ai_player	type_AI_player_start_turn	0.0000
+ai_player	?start_turn@type_AI_player@@QAEXXZ	100.0000
 ai_tactical	??0type_AI_attack_hex_chooser@@QAE@PBVarmy@@0PBJPAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000
 ai_tactical	??0type_spell_choice@@QAE@HHJJ@Z	100.0000
 ai_tactical	??0type_spell_choice@@QAE@XZ	100.0000
@@ -279,45 +279,45 @@ ai_tactical	type_AI_spellcaster_get_muck_and_mire_value	0.0000
 ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000
 ai_tactical	type_AI_spellcaster_get_protection_value	0.0000
 ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000
-armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	40.4615
+armygrp	??0TSplitWindow@@QAE@HHH@Z	77.0387
+armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000
 armygrp	??0armyGroup@@QAE@XZ	100.0000
+armygrp	??1TSplitWindow@@UAE@XZ	100.0000
+armygrp	??_GTSplitWindow@@UAEPAXI@Z	100.0000
 armygrp	?Add@armyGroup@@QAEHHHH@Z	100.0000
 armygrp	?ArmyGrpFn_0044A460@@YIABV?$bitset@$08@std@@XZ	100.0000
 armygrp	?CanJoin@armyGroup@@QAEHH@Z	100.0000
 armygrp	?Dismiss@armyGroup@@QAEXH@Z	100.0000
 armygrp	?GetAlignments@armyGroup@@QAEHPAE@Z	100.0000
-armygrp	?GetArmyLuck@armyGroup@@QAEHHPBVhero@@PBVtown@@HE@Z	30.3579
-armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	72.8920
+armygrp	?GetArmyLuck@armyGroup@@QAEHHPBVhero@@PBVtown@@HE@Z	90.2526
+armygrp	?GetArmyMorale@armyGroup@@QAEHHPBVhero@@PBVtown@@HEE@Z	80.5625
 armygrp	?GetArmySizeName@armyGroup@@SIPBDHH@Z	100.0000
-armygrp	?GetLuck@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EE@Z	85.4592
-armygrp	?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z	88.4346
+armygrp	?GetLuck@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EE@Z	100.0000
+armygrp	?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z	98.5654
 armygrp	?GetNativeTerrain@armyGroup@@QAE?AW4TTerrainType@@XZ	100.0000
 armygrp	?GetNumArmies@armyGroup@@QAEHXZ	100.0000
 armygrp	?HasAllUndead@armyGroup@@QAEEXZ	100.0000
 armygrp	?HasCreatures@armyGroup@@QAEEXZ	100.0000
 armygrp	?Initialize@armyGroup@@QAEXXZ	100.0000
 armygrp	?IsMember@armyGroup@@QAEEW4TCreatureType@@@Z	100.0000
-armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	54.4022
+armygrp	?Merge@armyGroup@@QAEEPAV1@@Z	78.3073
+armygrp	?SplitArmy@armyGroup@@QAEXHPAV1@HEE@Z	100.0000
+armygrp	?SplitSliderCallback@@YIXHPAVheroWindow@@@Z	100.0000
 armygrp	?Swap@armyGroup@@QAEXHPAV1@H@Z	100.0000
+armygrp	?WindowHandler@TSplitWindow@@UAEHPAVmessage@@@Z	97.4066
 armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000
 armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000
 armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000
-# get_spell_work_chance hand-lowered 53.2143 -> 53.0900 (2026-08-07):
-# the old max was tuned under non-/Op; /Op is now the engine-wide
-# base profile and this unmatched float function re-tunes under it.
-armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	53.1589
+armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	59.1587
+armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	60.1036
+# Retail-ordered switch bodies, the creature-record cursor, the direct
+# spell-table field_c access, and the byte-proven attrs 0x400 gate raised
+# this from 53.1589 to 88.5071 (2026-08-09).
+armygrp	?get_spell_work_chance@@YIMHW4TCreatureType@@PBVhero@@1@Z	88.5071
 armygrp	?load@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000
-armygrp	?merge_armies@armyGroup@@QAEXPAV1@@Z	84.7652
-armygrp	?modify_spell_damage@@YIJJHW4TCreatureType@@@Z	55.6350
+armygrp	?merge_armies@armyGroup@@QAEXPAV1@@Z	100.0000
+armygrp	?modify_spell_damage@@YIJJHW4TCreatureType@@@Z	100.0000
 armygrp	?save@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000
-armygrp	SplitSliderCallback	0.0000
-armygrp	TSplitWindow_TSplitWindow	0.0000
-armygrp	TSplitWindow_TSplitWindow_49e20	0.0000
-armygrp	TSplitWindow_WindowHandler	0.0000
-armygrp	TSplitWindow_scalar_deleting_destructor	0.0000
-armygrp	armyGroup_SplitArmy	0.0000
-armygrp	armyGroup_get_luck_description	0.0000
-armygrp	armyGroup_get_morale_description	0.0000
 basemgr	??0baseManager@@QAE@XZ	100.0000
 border	??1bitmapBorder16@@UAE@XZ	100.0000
 border	??1bitmapBorder@@UAE@XZ	100.0000
@@ -345,7 +345,7 @@ button	??_GtextButton@@UAEPAXI@Z	100.0000
 button	??_Gtype_func_button@@UAEPAXI@Z	100.0000
 button	?Draw@button@@UAEXXZ	100.0000
 button	?Draw@textButton@@UAEXXZ	93.9216
-button	?Main@button@@UAEHPAVmessage@@@Z	84.6566
+button	?Main@button@@UAEHPAVmessage@@@Z	88.1009
 button	?Main@type_func_button@@UAEHPAVmessage@@@Z	100.0000
 button	?Select@button@@QAEHPAVmessage@@@Z	100.0000
 button	?SetPlayerPaletteColors@button@@QAEXH@Z	100.0000
@@ -431,7 +431,7 @@ deflate	@read_buf@12	100.0000
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	68.3663
 exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000
-exec	?MainLoop@executive@@QAEXXZ	88.1290
+exec	?MainLoop@executive@@QAEXXZ	100.0000
 exec	?RemoveManager@executive@@QAEXPAVbaseManager@@@Z	100.0000
 findpath	??0searchArray@@QAE@XZ	100.0000
 findpath	??1searchArray@@QAE@XZ	100.0000
@@ -626,7 +626,7 @@ hero	?get_last_backpack_index@hero@@QAEJXZ	100.0000
 hero	?get_number_in_backpack@hero@@QAEJE@Z	100.0000
 hero	?get_obscured_town@type_obscuring_object@@QAEPAVtown@@XZ	100.0000
 hero	?get_player@hero@@QAEPAVplayerData@@XZ	100.0000
-hero	?get_primary_skill_total@hero@@QAEFXZ	75.5833
+hero	?get_primary_skill_total@hero@@QAEFXZ	99.5833
 hero	?get_spell_level@hero@@QAEHHH@Z	100.0000
 hero	?initialize@type_obscuring_object@@QAEXXZ	100.0000
 hero	?is_in_patrol_radius@hero@@QAEEUtype_point@@@Z	100.0000
@@ -923,17 +923,17 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000
 # Do not treat any of them as a target. Re-measure after ANY change to
 # game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
 # artifact.h / army.h, and record what you saw.
-initialize	?initialize_game_data@@YIXXZ	94.0741
+initialize	?initialize_game_data@@YIXXZ	100.0000
 inputmgr	??0inputManager@@QAE@XZ	86.5667
-inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	98.8024
+inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000
 inputmgr	?Flush@inputManager@@QAEXXZ	100.0000
 inputmgr	?ForceMouseMove@inputManager@@QAEXXZ	100.0000
+inputmgr	?KeyboardMessageHandler@@YIHPAXIIJ@Z	100.0000
 inputmgr	?Main@inputManager@@UAEHAAVmessage@@@Z	100.0000
 inputmgr	?MakeScanCodeTable@inputManager@@QAEXXZ	100.0000
-inputmgr	?MouseMessageHandler@@YIHPAXIIJ@Z	99.9645
+inputmgr	?MouseMessageHandler@@YIHPAXIIJ@Z	100.0000
 inputmgr	?Open@inputManager@@UAEHH@Z	100.0000
-inputmgr	KeyboardMessageHandler	0.0000
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000
 kbwin	?AppCommand@@YIJPAUHWND__@@IIJ@Z	100.0000
 kbwin	?AppExit@@YIXXZ	100.0000
@@ -947,16 +947,18 @@ kbwin	?SetMenus@@YIXPAUHMENU__@@H@Z	100.0000
 kbwin	?SetNoDialogMenus@@YIXH@Z	100.0000
 kbwin	_WinMain@16	100.0000
 misc	??0TPickANumber@@QAE@HH@Z	72.1795
+misc	?CheckConfigFile@@YIXXZ	98.5030
 misc	?FileSize@@YIJPAD@Z	100.0000
 misc	?Pick@TPickANumber@@QAEHXZ	91.2195
 misc	?Random@@YIHHH@Z	100.0000
 misc	?ReadPrefs@@YIXXZ	100.0000
+misc	?ReadPrefsFromRegistry@@YIXXZ	95.9319
 misc	?SRand@@YIXH@Z	100.0000
 misc	?SafeRandom@@YIHHH@Z	100.0000
+misc	?SetGameDefaults@@YIXXZ	100.0000
 misc	?SetupCDDrive@@YIHXZ	100.0000
 misc	?WritePrefs@@YIXXZ	100.0000
 misc	?WritePrefsToRegistry@@YIXXZ	100.0000
-misc	ReadPrefsFromRegistry	0.0000
 monframeinfo	?InitializeCreatureAnimationTraits@@YIXHABV?$vector@PADV?$allocator@PAD@std@@@std@@@Z	100.0000
 monframeinfo	?InitializeCreatureAnimationTraitsTable@@YIEXZ	100.0000
 mousemgr	??0mouseManager@@QAE@XZ	100.0000
@@ -965,15 +967,15 @@ mousemgr	??_GmouseManager@@UAEPAXI@Z	100.0000
 mousemgr	?CheckUpdate@mouseManager@@QAEXXZ	96.8521
 mousemgr	?Close@mouseManager@@UAEXXZ	100.0000
 mousemgr	?HidePointer@mouseManager@@QAEXXZ	100.0000
+mousemgr	?LoadFrame@mouseManager@@QAEXH@Z	99.3103
 mousemgr	?MouseCoords@mouseManager@@QAEXPAH0@Z	100.0000
 mousemgr	?Open@mouseManager@@UAEHH@Z	100.0000
 mousemgr	?Reset@mouseManager@@QAEXXZ	100.0000
 mousemgr	?SetPointer@mouseManager@@QAEXHW4EPointerSet@1@@Z	82.9333
 mousemgr	?ShowPointer@mouseManager@@QAEX_N@Z	100.0000
 mousemgr	?ShowSystemCursor@mouseManager@@QAEXE@Z	100.0000
+mousemgr	?Update@mouseManager@@QAEXE@Z	94.1675
 mousemgr	TCSLock_TCSLock_10d890	0.0000
-mousemgr	mouseManager_LoadFrame	0.0000
-mousemgr	mouseManager_Update	0.0000
 path	?FindPath@army@@QAEHHHEE@Z	100.0000
 path	?GetAdjacentCellIndex@army@@QBEHHH@Z	100.0000
 path	?GetAdjacentCellIndexNoArmy@@YIHHH@Z	100.0000
@@ -1041,7 +1043,7 @@ strip	?DrawOwner@strip@@IAEXH@Z	93.3721
 textntry	??1textEntryWidget@@UAE@XZ	100.0000
 textntry	??_GtextEntryWidget@@UAEPAXI@Z	100.0000
 textntry	?GetCharPressed@textEntryWidget@@QAEDPAVmessage@@@Z	100.0000
-textntry	?SetFocus@textEntryWidget@@QAEXE@Z	100.0000
+textntry	?SetFocus@textEntryWidget@@UAEXE@Z	100.0000
 textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000
 textwdgt	??1textWidget@@UAE@XZ	100.0000
 textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000
@@ -1170,6 +1172,7 @@ winfile	?SeekCur@File@@UAEKH@Z	100.0000
 winfile	?SeekEnd@File@@UAEKXZ	100.0000
 winfile	?Write@File@@UAEKPAXK@Z	100.0000
 winmgr	?BroadcastMessage@heroWindowManager@@QAEHHHHH@Z	100.0000
+winmgr	?ConvertToHover@heroWindowManager@@QAEHAAVmessage@@@Z	100.0000
 winmgr	?DoDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	100.0000
 winmgr	?DoDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@Z	100.0000
 winmgr	?DoQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000

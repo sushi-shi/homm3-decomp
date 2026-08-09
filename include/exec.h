@@ -43,7 +43,23 @@ struct SUnnamedEntry6a5d5c {
     const char* field_44;             // +0x44
     char pad_48[0xd0];
     const char* quitText;             // +0x118
-    char pad_11c[0x638];
+    char pad_11c[0x2e8];
+    // +0x404/+0x408: TSplitWindow's rollover text. The first is a
+    // printf format receiving the split creature's plural name; the
+    // second is passed to sprintf without further arguments. Names
+    // describe only those byte-proven consumer roles while the central
+    // text record itself remains unnamed.
+    const char* splitCreatureRolloverFormat;
+    const char* splitOtherRolloverText;
+    char pad_40c[0x190];
+    // +0x59c..+0x5a4. make_gift uses these three printf-style strings
+    // for the received-gift line, a one-resource request, and a
+    // multi-resource request respectively. Names are role-derived from
+    // those retail call sites.
+    const char* aiGiftReceivedText;
+    const char* aiSingleResourceRequestText;
+    const char* aiMultipleResourceRequestText;
+    char pad_5a8[0x1ac];
     // +0x754. The default player name. playerData::ClearNetInfo
     // (0x4ba170) strcpy's it over cName, and playerData::GetName
     // (0x4badb0) _strcmpi's a computer player's name against it before

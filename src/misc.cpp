@@ -19,6 +19,7 @@
 // definition does not live in misc.h.
 #include "crt_stdio.h"
 #include "prefs.h"
+#include "wingraph.h"
 
 // The dialog FileSize raises when the open fails. Free /Gr row at
 // retail 0x4f3a60, inside kb.obj's carve bracket and UNCLAIMED, so the
@@ -68,41 +69,114 @@ int Random(int min, int max)
     return min + rand() % (max - min + 1);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\misc.cpp:151
 DC_ONLY(0xfd8a4, 0xB4)
 void GenerateUniqueSystemID()
 {
-    // @stub
+    long value;
+    const char* characters =
+        DATA_COMPGEN(0x0067fe68, uniqueSystemIDCharacters,
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789");
+
+    memset(gUnnamed698758.name, 0, sizeof(gUnnamed698758.name));
+    value = Random(1, 999999) + GameTime::Get();
+    gUnnamed698758.name[2] = characters[value % 36];
+    value += Random(1, 999999) + GameTime::Get();
+    gUnnamed698758.name[1] = characters[value % 36];
+    value += Random(1, 999999) + GameTime::Get();
+    gUnnamed698758.name[0] = static_cast<char>(value % 26 + 'A');
 }
 
 // E:\gamedcs\misc.cpp:170
-DC_ONLY(0xfd958, 0x134)
+// All 24 CFG blocks agree and 23 are instruction-exact. Retail's B0 has
+// one redundant second `and eax, 1` on an already-masked value; repeating
+// the source assignment is eliminated by VC6, so the canonical validation
+// code deliberately carries this one-instruction optimizer residual.
+VA(0x0050b260, 0x26C)  // body + sole retail caller, dc 0xfd958
 void CheckConfigFile()
 {
-    // @stub
-}
+    gUnnamed698758.showRoute &= 1;
+    gUnnamed698758.animateSpellBook &= 1;
+    gUnnamed698758.videoSubtitles &= 1;
+    gUnnamed698758.quickCombat &= 1;
+    gUnnamed698758.moveReminder &= 1;
+    gUnnamed698758.showCombatGrid &= 1;
+    gUnnamed698758.showCombatMouseHex &= 1;
+    gUnnamed698758.townOutlines &= 1;
+    gUnnamed698758.combatAutoSpells &= 1;
+    gUnnamed698758.combatCatapult &= 1;
+    gUnnamed698758.combatAutoCreatures &= 1;
+    gUnnamed698758.combatBallista &= 1;
+    gUnnamed698758.combatFirstAidTent &= 1;
+    gUnnamed698758.autosave &= 1;
+    gUnnamed698758.blackoutComputer &= 1;
+    gUnnamed699524 &= 1;
+    gUnnamed698758.unnamed8f &= 1;
+    gUnnamed698758.mainGameShowMenu &= 1;
+    gUnnamed698758.mainGameFullScreen &= 1;
+    gUnnamed698758.combatShadeLevel &= 1;
 
-// E:\gamedcs\misc.cpp:300
-DC_ONLY(0xfda8c, 0xEC)
-void SetGameDefaults()
-{
-    // @stub
+    if (gUnnamed698758.combatArmyInfoLevel < 0 ||
+            gUnnamed698758.combatArmyInfoLevel > 2)
+        gUnnamed698758.combatArmyInfoLevel = 0;
+    if (gUnnamed698758.combatSpeed < 0 ||
+            gUnnamed698758.combatSpeed > 2)
+        gUnnamed698758.combatSpeed = 0;
+    if (gUnnamed698758.windowScrollSpeed < 0 ||
+            gUnnamed698758.windowScrollSpeed > 2)
+        gUnnamed698758.windowScrollSpeed = 1;
+    if (gUnnamed698758.computerWalkSpeed < 2 ||
+            gUnnamed698758.computerWalkSpeed > 5)
+        gUnnamed698758.computerWalkSpeed = 3;
+    if (gUnnamed698758.walkSpeed <= 0 ||
+            gUnnamed698758.walkSpeed > 4)
+        gUnnamed698758.walkSpeed = 2;
+    if (gUnnamed698758.musicVolume < 0 ||
+            gUnnamed698758.musicVolume > 9)
+        gUnnamed698758.musicVolume = 5;
+    if (gUnnamed698758.soundVolume < 0 ||
+            gUnnamed698758.soundVolume > 9)
+        gUnnamed698758.soundVolume = 5;
+
+    gUnnamed698758.lastMusicVolume = gUnnamed698758.musicVolume;
+    gUnnamed698758.lastSoundVolume = gUnnamed698758.soundVolume;
+    if (strlen(gUnnamed698758.name) < 3)
+        GenerateUniqueSystemID();
 }
 
 // E:\gamedcs\misc.cpp:352
+// These statement boundaries are byte-significant after inlining into
+// SetGameDefaults: retail places the movement speeds between the window
+// scroll and spell-book stores.
 DC_ONLY(0xfdb78, 0x20)
 void SetDefaultSystemOptions()
 {
-    // @stub
+    gUnnamed698758.showRoute = 1;
+    gUnnamed698758.moveReminder = 1;
+    gUnnamed698758.quickCombat = 0;
+    gUnnamed698758.videoSubtitles = 1;
+    gUnnamed698758.townOutlines = 1;
+    gUnnamed698758.windowScrollSpeed = 1;
+    gUnnamed698758.computerWalkSpeed = 3;
+    gUnnamed698758.walkSpeed = 2;
+    gUnnamed698758.animateSpellBook = 1;
 }
 
 // E:\gamedcs\misc.cpp:371
+// Retail likewise places combatSpeed before the five auto-combat flags.
 DC_ONLY(0xfdb98, 0x28)
 void SetDefaultCombatOptions()
 {
-    // @stub
+    gUnnamed698758.showCombatGrid = 0;
+    gUnnamed698758.showCombatMouseHex = 0;
+    gUnnamed698758.combatShadeLevel = 0;
+    gUnnamed698758.combatArmyInfoLevel = 0;
+    gUnnamed698758.combatSpeed = 0;
+    gUnnamed698758.combatAutoCreatures = 1;
+    gUnnamed698758.combatAutoSpells = 1;
+    gUnnamed698758.combatCatapult = 1;
+    gUnnamed698758.combatBallista = 1;
+    gUnnamed698758.combatFirstAidTent = 1;
 }
 
 // E:\gamedcs\misc.cpp:403
@@ -120,13 +194,18 @@ void SetDefaultCombatOptions()
 // 16-byte stub, which is exactly what a Dreamcast port would leave
 // hollow.
 
-#endif  // @carcass
-
 // The prefs block type and the four sibling dwords are defined in
 // include/prefs.h; their DEFINITIONS and DATA claims stay here, in
 // the owning TU.
 DATA(0x00698758)
 SUnnamed698758 gUnnamed698758;
+
+DATA(0x006985c4)
+char gcRegAppPath[351];
+DATA(0x00698838)
+char gcRegCDRomPath[350];
+DATA(0x006993c0)
+int giShowIntro;
 
 DATA(0x00699524)
 int gUnnamed699524;   // "First Time"
@@ -141,10 +220,9 @@ int gUnnamed699530;   // "Test Blit"
 // (`mov ecx, dword ptr [0x63ff80]`) rather than pushing a literal
 // address, so they are pointer OBJECTS in .rdata, not folded literals -
 // the load is what the `const char* const` spelling has to reproduce.
-// They occupy 0x63ff74..0x64000c in the order below; the three slots
-// this function does not use (0x640004 "AppPath", 0x640008 "CDDrive",
-// 0x640010 "Show Intro") belong to ReadPrefsFromRegistry and land with
-// it.
+// They occupy 0x63ff74..0x640010 in the order below; the three reader-only
+// slots are retained alongside the writer's table because retail emitted
+// one contiguous pointer-object run for this TU.
 
 DATA(0x0063ff74)
 static const char* const szPrefRegKey =
@@ -254,11 +332,55 @@ static const char* const szPrefMainGameY =
 DATA(0x00640000)
 static const char* const szPrefMainGameFullScreen =
     DATA_COMPGEN(0x0067fbc8, prefsNameMainGameFullScreen, "Main Game Full Screen");
+DATA(0x00640004)
+static const char* const szPrefAppPath =
+    DATA_COMPGEN(0x0067fbc0, prefsNameAppPath, "AppPath");
+DATA(0x00640008)
+static const char* const szPrefCDDrive =
+    DATA_COMPGEN(0x0067fbb8, prefsNameCDDrive, "CDDrive");
 DATA(0x0064000c)
 static const char* const szPrefUniqueSystemID =
     DATA_COMPGEN(0x0067fba4, prefsNameUniqueSystemID, "Unique System ID");
+DATA(0x00640010)
+static const char* const szPrefShowIntro =
+    DATA_COMPGEN(0x0067fb98, prefsNameShowIntro, "Show Intro");
 
-void ReadPrefsFromRegistry();
+// E:\gamedcs\misc.cpp:300
+// The inlined helpers, default-store order, Player copy, generated ID,
+// path construction, and registry write are instruction-exact in retail.
+VA(0x0050b4d0, 0x222)  // body + source-order/callgraph, dc 0xfda8c
+void SetGameDefaults()
+{
+    gUnnamed698758.musicVolume = 5;
+    gUnnamed698758.lastMusicVolume = 5;
+    gUnnamed698758.soundVolume = 5;
+    gUnnamed698758.lastSoundVolume = 5;
+    gUnnamed698758.mainGameX = 10;
+    gUnnamed698758.mainGameY = 10;
+    SetDefaultSystemOptions();
+    SetDefaultCombatOptions();
+    gUnnamed698758.autosave = 1;
+    gUnnamed698758.blackoutComputer = 0;
+    gUnnamed698758.mainGameShowMenu = 1;
+    gUnnamed698758.mainGameFullScreen = 1;
+    gUnnamed699524 = 1;
+    strcpy(gUnnamed698758.networkDefaultName, "Player");
+    GenerateUniqueSystemID();
+    gUnnamed698758.unnamed8f = 0;
+
+    _getcwd(gcRegAppPath, sizeof(gcRegAppPath));
+    strcat(gcRegAppPath,
+        DATA_COMPGEN(0x00677dac, prefsPathSeparator, "\\"));
+
+    HKEY hKey = 0;
+    if (RegOpenKeyExA(HKEY_LOCAL_MACHINE, szPrefRegKey, 0,
+            KEY_ALL_ACCESS, &hKey) == ERROR_SUCCESS) {
+        RegSetValueExA(hKey, szPrefAppPath, 0, REG_SZ,
+            static_cast<const BYTE*>(static_cast<const void*>(
+                gcRegAppPath)), strlen(gcRegAppPath));
+        RegCloseKey(hKey);
+    }
+}
 
 // E:\gamedcs\misc.cpp:243
 VA(0x0050b750, 0x59)  // anchor-callgraph, dc 0xfdbd0
@@ -281,48 +403,166 @@ void ReadPrefs()
     WritePrefsToRegistry();
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\misc.cpp:525
-// DECODE NOTES 2026-08-08 (not yet written; the shape below is read
-// off the retail bytes and the writer above supplies every name).
-// Shape:
-//   RegCreateKeyA(HKEY_LOCAL_MACHINE, szPrefRegKey, &hKey)  -- CREATE,
-//     not RegOpenKeyEx as the writer uses; failure skips to the tail.
-//   "Show Intro" (0x640010) is queried into a LOCAL with its own
-//     cbData local; on failure the local is set to 1 and written back
-//     with RegSetValueExA, then stored to the global 0x6993c0.
-//   "Music Volume" is then queried as a PROBE with lpType = &type and
-//     one shared cbData local seeded to 4. If it fails this is a first
-//     run: memset the 212-byte prefs block, call 0x4b4d0 (the defaults
-//     builder, SetGameDefaults' retail row), RegCloseKey, tail-call
-//     WritePrefsToRegistry and RETURN.
-//   Otherwise a BRANCH-FREE run of ~37 RegQueryValueExA calls
-//     (0x1a2..0x5ad, results all discarded, cbData NOT reset between
-//     them - it is seeded once and retail never restores it) reads
-//     every value the writer writes, in its own order, starting with
-//     "Music Volume" a SECOND time.
-//   Tail (0x5ad..0x72e) is the hard part and is NOT uniform: a
-//     _getcwd(buf, 0x104)-shaped call, an inline strcat of the literal
-//     at 0x67fdac, "AppPath" (0x640004) compared with _strcmpi and
-//     rewritten when it differs, "CDDrive" (0x640008) queried into
-//     0x698838, then RegCloseKey, then a screen-extent clamp pair
-//     against 0x2014c0/0x2014d0 minus 0x320/0x258 writing back
-//     gPrefs.mainGameX/mainGameY, a >= 0 clamp on both, and a final
-//     call to 0x50b260.
-//   Two structural warnings for whoever writes it: 0x698a9..0x6b4 is a
-//     rep-movsd/movsb fragment with NO reachable entry, preceded by 17
-//     NOP bytes - retail shipped dead code there; and the writer's
-//     three unused name slots (0x640004 AppPath, 0x640008 CDDrive,
-//     0x640010 Show Intro) belong here and still need their pointer
-//     definitions and DATA claims.
+// Retail's query order is deliberately kept distinct from the writer's
+// order. One shared cbData is reused without being restored after every
+// call; only the three differently-sized values reset it. The first music
+// query is a probe, so it appears once in the guard and again in the normal
+// read run. Canonical source ends with strcpy(CDDrive, AppPath). Retail was
+// binary-patched there to a four-byte assignment plus a jump over 17 NOPs,
+// leaving the final five instructions of the old inline strcpy unreachable.
+// Keeping strcpy restores the exact live tail and scores 95.9319%; spelling
+// the patched assignment in C falls to 91.136%, so no binary-patch artifact
+// is encoded in source.
 VA(0x0050b7b0, 0x657)  // anchor-callgraph (called by ReadPrefs), dc 0xfdbc0
 void ReadPrefsFromRegistry()
 {
-    // @stub
-}
+    DWORD cbData;
+    HKEY hKey;
+    DWORD type;
+    DWORD showIntro;
+    DWORD showIntroSize;
+    char appPath[260];
 
-#endif  // @carcass
+    if (RegCreateKeyA(HKEY_LOCAL_MACHINE, szPrefRegKey, &hKey)
+            == ERROR_SUCCESS) {
+        const char* showIntroName = szPrefShowIntro;
+        HKEY showIntroKey = hKey;
+        showIntroSize = 4;
+        if (RegQueryValueExA(showIntroKey, showIntroName, 0, 0,
+                static_cast<BYTE*>(static_cast<void*>(&showIntro)),
+                &showIntroSize) != ERROR_SUCCESS) {
+            showIntro = 1;
+            RegSetValueExA(showIntroKey, showIntroName, 0, REG_DWORD,
+                static_cast<const BYTE*>(static_cast<const void*>(
+                    &showIntro)), 4);
+        }
+        giShowIntro = showIntro;
+
+        cbData = 4;
+        if (RegQueryValueExA(hKey, szPrefMusicVolume, 0, &type,
+                static_cast<BYTE*>(static_cast<void*>(
+                    &gUnnamed698758.musicVolume)), &cbData)
+                != ERROR_SUCCESS) {
+            memset(&gUnnamed698758, 0, sizeof(gUnnamed698758));
+            SetGameDefaults();
+            RegCloseKey(hKey);
+            WritePrefsToRegistry();
+            return;
+        }
+
+#define READ_REG_PREF(name, address) \
+        RegQueryValueExA(hKey, name, 0, &type, \
+            static_cast<BYTE*>(static_cast<void*>(address)), &cbData)
+
+        READ_REG_PREF(szPrefMusicVolume,
+            &gUnnamed698758.musicVolume);
+        READ_REG_PREF(szPrefSoundVolume,
+            &gUnnamed698758.soundVolume);
+        READ_REG_PREF(szPrefLastMusicVolume,
+            &gUnnamed698758.lastMusicVolume);
+        READ_REG_PREF(szPrefLastSoundVolume,
+            &gUnnamed698758.lastSoundVolume);
+        READ_REG_PREF(szPrefWalkSpeed,
+            &gUnnamed698758.walkSpeed);
+        READ_REG_PREF(szPrefComputerWalkSpeed,
+            &gUnnamed698758.computerWalkSpeed);
+        READ_REG_PREF(szPrefShowRoute,
+            &gUnnamed698758.showRoute);
+        READ_REG_PREF(szPrefMoveReminder,
+            &gUnnamed698758.moveReminder);
+        READ_REG_PREF(szPrefQuickCombat,
+            &gUnnamed698758.quickCombat);
+        READ_REG_PREF(szPrefVideoSubtitles,
+            &gUnnamed698758.videoSubtitles);
+        READ_REG_PREF(szPrefTownOutlines,
+            &gUnnamed698758.townOutlines);
+        READ_REG_PREF(szPrefAnimateSpellBook,
+            &gUnnamed698758.animateSpellBook);
+        READ_REG_PREF(szPrefWindowScrollSpeed,
+            &gUnnamed698758.windowScrollSpeed);
+        READ_REG_PREF(szPrefBlackoutComputer,
+            &gUnnamed698758.blackoutComputer);
+        READ_REG_PREF(szPrefFirstTime, &gUnnamed699524);
+        READ_REG_PREF(szPrefTestDecomp, &gUnnamed699528);
+        READ_REG_PREF(szPrefTestRead, &gUnnamed69952c);
+        READ_REG_PREF(szPrefTestBlit, &gUnnamed699530);
+        READ_REG_PREF(szPrefBinkVideo,
+            &gUnnamed698758.binkVideo);
+
+        cbData = 4;
+        READ_REG_PREF(szPrefUniqueSystemID, gUnnamed698758.name);
+        gUnnamed698758.name[3] = 0;
+        cbData = 31;
+        READ_REG_PREF(szPrefNetworkDefaultName,
+            gUnnamed698758.networkDefaultName);
+        cbData = 4;
+        READ_REG_PREF(szPrefAutosave,
+            &gUnnamed698758.autosave);
+        READ_REG_PREF(szPrefShowCombatGrid,
+            &gUnnamed698758.showCombatGrid);
+        READ_REG_PREF(szPrefShowCombatMouseHex,
+            &gUnnamed698758.showCombatMouseHex);
+        READ_REG_PREF(szPrefCombatShadeLevel,
+            &gUnnamed698758.combatShadeLevel);
+        READ_REG_PREF(szPrefCombatArmyInfoLevel,
+            &gUnnamed698758.combatArmyInfoLevel);
+        READ_REG_PREF(szPrefCombatAutoCreatures,
+            &gUnnamed698758.combatAutoCreatures);
+        READ_REG_PREF(szPrefCombatAutoSpells,
+            &gUnnamed698758.combatAutoSpells);
+        READ_REG_PREF(szPrefCombatCatapult,
+            &gUnnamed698758.combatCatapult);
+        READ_REG_PREF(szPrefCombatBallista,
+            &gUnnamed698758.combatBallista);
+        READ_REG_PREF(szPrefCombatFirstAidTent,
+            &gUnnamed698758.combatFirstAidTent);
+        READ_REG_PREF(szPrefCombatSpeed,
+            &gUnnamed698758.combatSpeed);
+        READ_REG_PREF(szPrefMainGameShowMenu,
+            &gUnnamed698758.mainGameShowMenu);
+        READ_REG_PREF(szPrefMainGameX,
+            &gUnnamed698758.mainGameX);
+        READ_REG_PREF(szPrefMainGameY,
+            &gUnnamed698758.mainGameY);
+        READ_REG_PREF(szPrefMainGameFullScreen,
+            &gUnnamed698758.mainGameFullScreen);
+
+        cbData = 350;
+        _getcwd(appPath, sizeof(appPath));
+        strcat(appPath, "\\");
+        if (RegQueryValueExA(hKey, szPrefAppPath, 0, &type,
+                static_cast<BYTE*>(static_cast<void*>(gcRegAppPath)),
+                &cbData)
+                != ERROR_SUCCESS ||
+                _strcmpi(gcRegAppPath, appPath) != 0) {
+            strcpy(gcRegAppPath, appPath);
+            RegSetValueExA(hKey, szPrefAppPath, 0, REG_SZ,
+                static_cast<const BYTE*>(static_cast<const void*>(
+                    gcRegAppPath)),
+                strlen(gcRegAppPath));
+        }
+
+        cbData = 350;
+        RegQueryValueExA(hKey, szPrefCDDrive, 0, &type,
+            static_cast<BYTE*>(static_cast<void*>(gcRegCDRomPath)),
+            &cbData);
+        strcpy(gcRegCDRomPath, gcRegAppPath);
+        RegCloseKey(hKey);
+
+        if (gUnnamed698758.mainGameX > GetDesktopWidth() - 800)
+            gUnnamed698758.mainGameX = GetDesktopWidth() - 800;
+        if (gUnnamed698758.mainGameY > GetDesktopHeight() - 600)
+            gUnnamed698758.mainGameY = GetDesktopHeight() - 600;
+        if (gUnnamed698758.mainGameX < 0)
+            gUnnamed698758.mainGameX = 0;
+        if (gUnnamed698758.mainGameY < 0)
+            gUnnamed698758.mainGameY = 0;
+
+#undef READ_REG_PREF
+    }
+    CheckConfigFile();
+}
 
 // E:\gamedcs\misc.cpp:538
 // The whole body is one guarded run: open the key, write every value

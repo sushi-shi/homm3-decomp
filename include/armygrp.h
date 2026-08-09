@@ -21,6 +21,17 @@
 #include "struct.h"    // type_point, used through this header's consumers
 #include "spellschool.h"  // TSpellSchool, the type of SSpellTraits::school
 
+// Keep the description-only string surface out of unrelated TUs: VC6's
+// optimizer is sensitive even to otherwise unused class members. armygrp.cpp
+// opts into this source-boundary view while reconstructing the two bodies.
+#ifdef HOMM3_ARMYGRP_DESCRIPTION_API
+namespace std {
+template<class T> class allocator;
+template<class E> struct char_traits;
+template<class E, class Tr, class A> class basic_string;
+}
+#endif
+
 // Bootstrap domain: only the sentinel is modeled; the full creature
 // roster gets its own header when a consumer needs the values.
 // (Dreamcast CodeView types armies[] and IsMember's parameter as
@@ -501,6 +512,9 @@ public:
     int GetAlignments(unsigned char* alignments);
     long get_AI_value();
     TTerrainType GetNativeTerrain();
+    void SplitArmy(int srcIndex, armyGroup* ag, int destIndex,
+                   unsigned char inSrcRestricted,
+                   unsigned char inDestRestricted);
     unsigned char Merge(armyGroup* ag);
     void merge_armies(armyGroup* source);
     // Overload set, both DC-attested and both byte-located 2026-08-08
@@ -536,6 +550,26 @@ public:
     int GetArmyLuck(int index, const class hero* ownerHero,
                     const class town* ownerTown, int mode,
                     unsigned char apply_limits);
+#ifdef HOMM3_ARMYGRP_DESCRIPTION_API
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
+        get_morale_description(TCreatureType creature, int morale,
+                               const class hero* ownerHero,
+                               const class town* ownerTown,
+                               const class hero* otherHero,
+                               const armyGroup* otherGroup,
+                               int magicTerrain,
+                               unsigned char groupAlignments) const;
+    // Retail Complete added CREATURE and widened the final magic-terrain
+    // parameter relative to the older Dreamcast prototype. The body indexes
+    // creature traits from the first argument and returns with `ret 20h`.
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
+        get_luck_description(TCreatureType creature, int luck,
+                             const class hero* ourHero,
+                             const class town* ourTown,
+                             const class hero* enemyHero,
+                             const armyGroup* enemyGroup,
+                             int magicTerrain) const;
+#endif
     int GetNumArmies();
     int Add(int armyType, int newNumTroops, int newIndex);
     static const char* GetArmySizeName(int howMany, int iNameSet);
@@ -596,8 +630,8 @@ long modify_spell_damage(long damage, SpellID spell, TCreatureType creature);  /
 // CODEVIEW(E:\gamedcs\armygrp.cpp:1113, dc 0x4f2e8) int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTown, unsigned char on_cursed_ground, unsigned char apply_limits);
 // CODEVIEW(E:\gamedcs\armygrp.cpp:1182, dc 0x4f3cc) unsigned char armyGroup::Merge(armyGroup* ag);
 // CODEVIEW(E:\gamedcs\armygrp.cpp:1276, dc 0x4f5ec) void armyGroup::merge_armies(armyGroup* source);
-// CODEVIEW(E:\gamedcs\armygrp.cpp:1347, dc 0x4f708) std::basic_string<char,std::char_traits<char>,std::allocator<char> armyGroup::get_morale_description(__$ReturnUdt, TCreatureType creature, int morale, const hero* ownerHero, const town* ownerTown, const hero* other_hero, const armyGroup* other_group, unsigned char on_cursed_ground);
-// CODEVIEW(E:\gamedcs\armygrp.cpp:1464, dc 0x4fab4) std::basic_string<char,std::char_traits<char>,std::allocator<char> armyGroup::get_luck_description(__$ReturnUdt, int luck, const hero* our_hero, const town* our_town, const hero* enemy_hero, const armyGroup* enemy_group, unsigned char on_cursed_ground);
+// CODEVIEW(E:\gamedcs\armygrp.cpp:1347, dc 0x4f708) older Dreamcast prototype; retail Complete's ret 0x24 and body prove the corrected declaration above.
+// CODEVIEW(E:\gamedcs\armygrp.cpp:1464, dc 0x4fab4) older Dreamcast prototype; retail Complete's ret 0x20 and creature indexing prove the corrected declaration above.
 // CODEVIEW(E:\gamedcs\armygrp.cpp:1516, dc 0x4fc98) TTerrainType armyGroup::GetNativeTerrain();
 
 // --- std ---

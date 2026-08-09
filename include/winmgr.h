@@ -22,6 +22,7 @@ typedef int (*TDialogHandler)(message& msg);
 // NH3API window_manager.hpp DialogReturnType spelling - the roster
 // grows as consumers prove values.
 enum EDialogReturnType {
+    DIALOG_RETURN_SPLIT_ACCEPT = 0x7802,
     DIALOG_RETURN_ACCEPT = 0x7805
 };
 
@@ -57,6 +58,8 @@ public:
     // DC overload set also has () and (int,int,int,int,int,int); only
     // the consumed 4-int form (retail 0x602bd0, called by widget::Main)
     // is declared.
+    virtual int Main(message& msg);  // slot 2
+    int ConvertToHover(message& msg);
     void UpdateScreen(int x, int y, int w, int h);
     int BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
     void AddWindow(heroWindow* newWindow, int newPriority,

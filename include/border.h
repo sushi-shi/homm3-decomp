@@ -12,6 +12,9 @@
 // Vtable 0x63ba24.
 class border : public widget {
 public:
+    virtual int Main(message* msg);  // slot 2, retail 0x44ff60
+    virtual void zBufferDraw();      // slot 3, folded onto 0x5bc7e0
+    virtual void Draw();             // slot 4
     virtual ~border();  // retail 0x44ff50
 };
 
@@ -41,6 +44,10 @@ class bitmapBorder : public border {
 public:
     Bitmap816* image;
 
+    // Retail dropped DC's final focusable argument; the 0x4502d0 body
+    // consumes seven stack arguments and returns with `ret 0x1c`.
+    bitmapBorder(int x, int y, int w, int h, int id,
+                 const char* image, int style);
     virtual ~bitmapBorder();
     virtual void Draw();          // slot 4, retail 0x450450
     virtual int GetRealHeight();  // slot 5, retail 0x4504b0

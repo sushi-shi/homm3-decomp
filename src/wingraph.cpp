@@ -4,6 +4,14 @@
 #include <va.h>
 // #include "wingraph.h"
 
+// Private desktop extents returned by the two six-byte accessors below.
+// No retail or Dreamcast symbol attests storage names, so these remain
+// house-ordinal placeholders in their owning TU.
+DATA(0x0068c874)
+static int gUnnamed68c874;
+DATA(0x0068c878)
+static int gUnnamed68c878;
+
 // E:\gamedcs\wingraph.cpp:72
 DC_ONLY(0x198af4, 0x26)
 void SetPlayerPaletteColors(unsigned short* pPalette, int whichPlayer)
@@ -152,17 +160,17 @@ unsigned char GetDesktopInfo()
 }
 
 // E:\gamedcs\wingraph.cpp:1857
-DC_ONLY(0x19a41c, 0x6)
+VA(0x006014c0, 0x6)  // exact load of giDesktopWidth, dc 0x19a41c
 int GetDesktopWidth()
 {
-    // @stub
+    return gUnnamed68c874;
 }
 
 // E:\gamedcs\wingraph.cpp:1870
-DC_ONLY(0x19a424, 0x6)
+VA(0x006014d0, 0x6)  // exact load of giDesktopHeight, dc 0x19a424
 int GetDesktopHeight()
 {
-    // @stub
+    return gUnnamed68c878;
 }
 
 // E:\gamedcs\wingraph.cpp:1876
@@ -204,4 +212,3 @@ unsigned char SetFullScreenStatus(int bFullScreenOn)
 {
     // @stub
 }
-

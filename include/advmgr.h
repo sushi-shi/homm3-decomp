@@ -8,6 +8,35 @@
 #include "basemgr.h"
 #include "window.h"
 
+class textEntryWidget;
+
+// The adventure-dialog base. The Dreamcast field list gives the three
+// protected ints at +0x4c/+0x50/+0x54; retail's 8-byte wider Dinkumware
+// vector in heroWindow shifts them to +0x54/+0x58/+0x5c. Retail's ctor
+// independently proves the preceding +0x50 dword and the byte at +0x5c;
+// the latter overlaps the low byte of exitCommand and is restored by the
+// destructor. Total retail size is therefore 0x60.
+class CAdvPopup : public CHeroWindowEx {
+public:
+    int field_50;
+protected:
+    int exitId;
+    int exitCodeX;
+    union {
+        int exitCommand;
+        unsigned char savedPlayerState;
+    };
+
+public:
+    CAdvPopup(int winX, int winY, int winWidth, int winHeight,
+              unsigned winType);
+    virtual ~CAdvPopup();
+    virtual int WindowHandler(message* msg);             // slot 9
+protected:
+    virtual int ExitDialog(message* msg);                 // slot 14
+};
+SIZE(CAdvPopup, 0x60);
+
 // The adventure screen's own window. Only the ONE method a retail body
 // outside adventuremapwindow.obj calls on it is declared here:
 // town::Deallocate (0x5be2d0) ends with
@@ -33,6 +62,17 @@
 // not an override.
 class TAdventureMapWindow : public heroWindow {
 public:
+    // Retail heroWindow is 8 bytes wider than the Dreamcast base (0x4c
+    // versus 0x44). Applying that independently proven shift to the DC
+    // TAdventureMapWindow member roster puts chatEdit@0x50 at retail
+    // +0x58. KeyboardMessageHandler confirms the result directly with
+    // `mov ecx,[advWindow+0x58] / mov al,[ecx+0x6d]`; +0x6d is the
+    // byte-proven textEntryWidget::bHasFocus field. Keep the pointer as
+    // its modeled base view until the CAdventurMapChatEdit inheritance
+    // chain itself gets reconstructed.
+    char pad_04c[0xc];
+    textEntryWidget* chatEdit;  // +0x58
+
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
 };

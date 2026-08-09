@@ -111,6 +111,17 @@ enum EGameResource {
     NUM_RESOURCES = 7
 };
 
+// DC struct.h roster: exactly two dwords. make_gift's retail vector
+// advances by eight bytes and writes the resource id followed by the
+// displayed quantity before inserting an entry.
+struct type_dialog_resource {
+    // Retail only proves a four-byte resource index in the dialog vector;
+    // the DC enum name is semantic evidence, not an x86 layout requirement.
+    int resource;
+    long qualifier;
+};
+SIZE(type_dialog_resource, 8);
+
 // DC LF_INTERFACE `type_horde_effect`, size 8, three members at the
 // offsets initialize_hordes writes: creature @0, bonus @4 (16-bit
 // store), dwelling @6 (16-bit store).

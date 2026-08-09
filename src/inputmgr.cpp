@@ -7,51 +7,73 @@
 #include "message.h"
 #include "kbwin.h"
 #include "mousemgr.h"
-
-#if 0  // @carcass
+#include "advmgr.h"
+#include "textntry.h"
+#include "winmgr.h"
 
 // E:\gamedcs\inputmgr.cpp:48
 // Located as AppWndProc's WM_KEYDOWN/WM_KEYUP callee (homm2 kbwin
 // dispatches the same pair by name); iconwdgt..inputmgr bracket.
-// NOT RECONSTRUCTED - decoded but BLOCKED on unmodeled structure,
-// deliberately left a stub rather than guessed. The shape is
-// MouseMessageHandler's twin: same gpInputManager guard chain (minus the
-// bufferBusy latch), same six zeroing stores, a TWO-CASE switch on
-// WM_KEYDOWN/WM_KEYUP setting id 1/2 and `codeX = (lParam >> 16) & 0xff`
-// (retail sinks the KEYDOWN arm behind the forward `je` - the documented
-// two-case-switch lever), then the identical GetKeyState qualifier
-// block, iTail/iHead `% 64` advance, and `return e->id == 0`.
-// FULL TAIL DECODE (2026-08-08), inside the `if (e->id != 0)` block and
-// after the iHead advance - retail reuses the gpInputManager already in
-// eax on the head==tail-false edge, so the extendFlag store is the join:
-//     gpInputManager->extendFlag = 0;                       // +0x954
-//     if (gpWindowManager->status == 1) {                   // +0x34
-//         if (gpAdvManager == 0 || gpAdvManager->advWindow == 0
-//             || gpAdvManager->advWindow-><+0x58>-><byte +0x6d> == 0) {
-//             if (e->id == 1 && e->codeX == 0x3b)           // F1
-//                 AppCommand(hwndApp, WM_COMMAND, 0x9c74, 0);
-//             if (e->id == 1 && e->codeX == 0x3e)           // F4
-//                 AppCommand(hwndApp, WM_COMMAND, 0x9c49, 0);
-//         }
-//     }
-// TWO of the three blockers are resolved: 0x699280 is gpWindowManager
-// (winmgr.h, heroWindowManager, `status` inherited from baseManager at
-// +0x34 - the same +0x34 test VideoRealignBuffers' neighbour uses) and
-// 0x699268 is gpAdvManager (advmgr.h, `advWindow` already at +0x44).
-// What remains is exactly ONE chain: advWindow's static type in retail
-// is NOT heroWindow (window.h's heroWindow is 0x4c bytes, so +0x58 is
-// past its end) - it is the derived adventure-map window, and neither
-// that class nor whatever its +0x58 points at is modelled anywhere in
-// this tree (adventuremapwindow.h is still a comment-only carcass, and
-// TAdventureMapWindow has no layout). Writing the tail would mean
-// inventing two class layouts, which scores but is not truth. Once
-// TAdventureMapWindow lands, this body is a transcription, not a
-// reconstruction.
+// RECONSTRUCTED 2026-08-09 after resolving the last field chain without
+// fabrication: DC puts TAdventureMapWindow::chatEdit at +0x50 and retail's
+// proven heroWindow base is eight bytes wider, placing it at +0x58; the
+// retail load from chatEdit+0x6d is textEntryWidget::bHasFocus, already
+// byte-proven by SetFocus. The rest is MouseMessageHandler's twin: same
+// manager guard, chained six-field clear, two-case key switch, qualifier
+// block, ring advance and the F1/F4 menu-command tail decoded below. The
+// Win32 HIWORD spelling is codegen-significant: VC6 preserves retail's
+// full-width load/shift/mask instead of folding it to a byte load.
 VA(0x004ec0e0, 0x1AB)  // anchor-callee, dc 0xdc894
 int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam)
 {
-    // @stub
+    message* e;
+
+    if (gpInputManager == 0)
+        return 1;
+    if (gpInputManager->status != 1)
+        return 1;
+    e = &gpInputManager->iBuffer[gpInputManager->iTail];
+    e->id = e->codeX = e->codeY = e->mouseX = e->mouseY = e->qualifier = 0;
+    switch (winMsg) {
+    case WM_KEYDOWN:
+        e->id = MESSAGE_KEY_DOWN;
+        e->codeX = HIWORD(lParam) & 0xff;
+        break;
+    case WM_KEYUP:
+        e->id = MESSAGE_KEY_UP;
+        e->codeX = HIWORD(lParam) & 0xff;
+        break;
+    }
+    if (e->id != 0) {
+        int quals = 0;
+        if (GetKeyState(VK_CONTROL) & 0x8000)
+            quals = MESSAGE_MODIFIER_CONTROL;
+        if (GetKeyState(VK_MENU) & 0x8000)
+            quals |= MESSAGE_MODIFIER_ALT;
+        if (GetKeyState(VK_SHIFT) & 0x8000)
+            quals |= MESSAGE_MODIFIER_SHIFT;
+        e->qualifier = quals;
+        gpInputManager->iTail++;
+        gpInputManager->iTail %= 64;
+        if (gpInputManager->iHead == gpInputManager->iTail) {
+            gpInputManager->iHead++;
+            gpInputManager->iHead %= 64;
+        }
+        gpInputManager->extendFlag = 0;
+        if (gpWindowManager->status == 1) {
+            if (gpAdvManager == 0 || gpAdvManager->advWindow == 0
+                || gpAdvManager->advWindow->chatEdit->bHasFocus == 0) {
+                if (e->id == MESSAGE_KEY_DOWN && e->codeX == KEYCODE_F1)
+                    AppCommand(hwndApp, WM_COMMAND, KBWIN_MENU_HELP, 0);
+                if (e->id == MESSAGE_KEY_DOWN && e->codeX == KEYCODE_F4)
+                    AppCommand(hwndApp, WM_COMMAND, KBWIN_MENU_FULLSCREEN, 0);
+            }
+        }
+    }
+    return e->id == 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\inputmgr.cpp:274
 DC_ONLY(0xdcc4c, 0x7EC)
@@ -98,7 +120,9 @@ int inputManager::CheckDown(int x, int y, int width, int height, int id, unsigne
 // the coordinates are inside the handled arms, not after the switch.
 // gpInputManager is reloaded after `bufferBusy = 1` because that store
 // kills VC6's CSE of the global - the guard chain above it shares one
-// load, exactly as retail does.
+// load, exactly as retail does. EXACT after expressing the six-field clear
+// as the same chained assignment proven by KeyboardMessageHandler; the
+// reverse store order is VC6's source fingerprint for that spelling.
 VA(0x004ec290, 0x1CC)  // anchor-callee, dc 0xdcaa0
 int MouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lParam)
 {
@@ -114,12 +138,7 @@ int MouseMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lPara
         return 1;
     gpInputManager->bufferBusy = 1;
     e = &gpInputManager->iBuffer[gpInputManager->iTail];
-    e->codeX = 0;
-    e->codeY = 0;
-    e->qualifier = 0;
-    e->mouseX = 0;
-    e->mouseY = 0;
-    e->id = 0;
+    e->id = e->codeX = e->codeY = e->mouseX = e->mouseY = e->qualifier = 0;
     switch (winMsg) {
     case WM_MOUSEMOVE:
         e->id = MESSAGE_MOUSE_MOVE;
@@ -317,23 +336,17 @@ void inputManager::SetKeyCodeType(int newType)
 // shifted symbol - a dense jump table whose case bodies retail emits
 // in KEYBOARD ROW order (1..0, then -=\, then ;',./), which is the
 // source order VC6 preserves.
-// Residual (98.8%): PIPELINE-CAPPED, and provably so - the two
-// NORMALIZED objdiff objects are BYTE-IDENTICAL and RELOC-IDENTICAL over
-// the whole [0, 0x1c6) span (verified 2026-08-08 by an address-keyed
-// compare of build/objdiff/normalized/{base,target}; the canonicalizer
-// already rewrites the base's $L jump-table relocs onto the enclosing
-// function symbol, so even the relocs agree). The score gap comes from
-// the SYMBOL TABLES, not the content: the base COMDAT still carries two
-// storage-class-6 LABEL symbols inside the function - $L<n> at +0x144
-// (the 19-entry pointer table) and at +0x190 (the 0x36-byte index
-// table) - which the delinked target cannot have. The index table
-// carries no relocations, so those labels are the only resync points a
-// disassembler has, and the two sides therefore decode the same 54 data
-// bytes into different instruction rows. Fixing it is a canonicalizer
-// change (drop label-class symbols once their relocs are rewritten),
-// i.e. a pipeline contract change, not a source change.
-// MouseMessageHandler (99.96%) is the same family with only the trailing
-// table row affected. NOTE for future lanes: reloc-symbol NAMES are NOT
+// EXACT after the 2026-08-09 paired-padding correction. The code and
+// relocations were already identical over the claimed 0x1c6-byte body;
+// the remaining 1.2% was two alignment NOPs that the linked target keeps
+// before the next 4-byte-aligned function, while the comparison-copy
+// canonicalizer stripped all ten NOPs from the base COMDAT. The paired
+// pass now retains only those two target-carried NOPs after proving that
+// stripping the target suffix makes the logical lengths agree. The base's
+// storage-class-6 labels inside the pointer and index tables are therefore
+// not an obstacle to an exact comparison, contrary to the earlier diagnosis.
+// MouseMessageHandler remains at 99.96%; its equal-length table residual is
+// a separate comparison issue. NOTE for future lanes: reloc-symbol NAMES are NOT
 // scored - StopMP3 is exactly 100.0000% with FIVE mismatched data reloc
 // names - so a `DATA()` claim can never buy points here (and cannot
 // anyway: labels.py names src-DATA rows `data_<rva>`, never the mangled
@@ -551,4 +564,3 @@ void* VRKeyboard::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
-

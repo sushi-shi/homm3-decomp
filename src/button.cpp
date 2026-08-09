@@ -122,7 +122,7 @@ inline int button::DeselectSelected(message* msg)
 }
 
 // E:\gamedcs\button.cpp:131
-// Residual (84.7%, was 67.4 on 2026-08-08): two DUP-EXIT defects are
+// Residual (88.1%, was 67.4 on 2026-08-08): two DUP-EXIT defects are
 // GONE. (1) The capture loop's two exits now BREAK to one shared
 // `return DeselectSelected(msg)`; spelling either as its own `return`
 // expands the inlined deselect body twice (+8.4 points). (2) The
@@ -130,7 +130,8 @@ inline int button::DeselectSelected(message* msg)
 // SET_PALETTE, SET_ICON_NAME, SET_TEXT, SET_PLAYER_PALETTE_COLORS -
 // not ascending by value (+8.9 points); retail's jump table lands the
 // palette body first and cross-jumps SET_ICON_NAME onto the
-// palette-failure tail.
+// palette-failure tail. Spelling the palette case positively likewise
+// restores retail's success-first layout (+2.75 points).
 // CORRECTED 2026-08-08 (closeout lane): the auto-repeat guard calls
 // GameTime::Get(), NOT timeGetTime(). The delinked target reads
 // `call ?Get@GameTime@@SIKXZ` at +0x37 where this TU was emitting the
@@ -140,13 +141,13 @@ inline int button::DeselectSelected(message* msg)
 // timeGetTime at +0x188 stays the thunk form - the per-TU import-form
 // note below still applies to THAT call, not to this one.
 // What is left is (a) a whole-body esi/edi role swap (retail pins msg
-// in ESI) that source order does not steer, and (b) ~56 instructions
-// inside the /Ob2-inlined button::SetText: retail's expansion calls a
-// two-argument reserve on the text object at [this+0x58] and then does
-// a raw movsd/movsb copy, where our text model emits a refcounted
-// assign (`mov al,[ecx-1]` share-count probe). That is a SetText
-// modelling gap, not a spelling one - re-measure after the text-buffer
-// class lands.
+// in ESI) that source order does not steer, and (b) the /Ob2 boundary
+// inside button::SetText. `Text = new_text` recovers retail's strlen and
+// raw movsd/movsb tail, but this compile expands std::string::_Grow while
+// retail calls its two-argument COMDAT at 0x404a90. The same header body
+// makes the opposite inline-boundary choice in the textButton ctor, so
+// this is translation-unit optimizer state rather than a text-layout gap.
+// `inline_depth(1..4)` and scoped auto_inline did not move the decision.
 // The left-click capture loop pumps the mouse manager and input queue
 // until a button-up, toggling selection as the pointer crosses the
 // widget - homm2's shape with h3's GetEvent-by-value copy. The WIDGET
@@ -255,14 +256,14 @@ int button::Main(message* msg)
         switch (msg->codeX) {
         case widget::WIDGET_SET_PALETTE: {
             TPalette16* newPalette = ResourceManager::GetPalette(msg->extraText);
-            if (!newPalette) {
-                if (buttonIcon)
-                    buttonIcon->Dispose();
-                buttonIcon = ResourceManager::GetSprite(msg->extraText);
+            if (newPalette) {
+                buttonIcon->SetPalette(newPalette->data);
+                newPalette->Dispose();
                 return 1;
             }
-            buttonIcon->SetPalette(newPalette->data);
-            newPalette->Dispose();
+            if (buttonIcon)
+                buttonIcon->Dispose();
+            buttonIcon = ResourceManager::GetSprite(msg->extraText);
             return 1;
         }
         case widget::WIDGET_SET_ICON_NAME:

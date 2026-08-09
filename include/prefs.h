@@ -66,7 +66,8 @@ struct SUnnamed698758 {
     int showCombatMouseHex;       // +0x68  "Show Combat Mouse Hex"
     int combatShadeLevel;         // +0x6c  "Combat Shade Level"
     int combatArmyInfoLevel;      // +0x70  "Combat Army Info Level"
-    unsigned char pad74[0x1c];    // +0x74  untouched by misc.obj
+    unsigned char pad74[0x1b];    // +0x74  otherwise untouched by misc.obj
+    unsigned char unnamed8f;      // +0x8f  boolean checked/defaulted here
     char name[4];                 // +0x90  "Unique System ID"
     int combatSpeed;              // +0x94  "Combat Speed"
     char rcFile[13];              // +0x98  "RMT%sRC.BIN" destination

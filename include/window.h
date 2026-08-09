@@ -170,9 +170,9 @@ public:
     CHeroWindowEx(int winX, int winY, int winWidth, int winHeight, unsigned winType);
     void SetHelpText(THelpText* pHelpText, int start, int stop, unsigned char copyText);
 
-    virtual int WindowHandler(message* msg) = 0;                        // slot 9
-    virtual unsigned char ProcessHover(int mouseX, int mouseY) = 0;     // slot 10
-    virtual unsigned char ProcessRightSelect(int id) = 0;               // slot 11
+    virtual int WindowHandler(message* msg);                            // slot 9
+    virtual unsigned char ProcessHover(int mouseX, int mouseY);         // slot 10
+    virtual unsigned char ProcessRightSelect(int id);                   // slot 11
     virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag) { return 0; }  // slot 12
     virtual textWidget* GetRolloverWidget();                            // slot 13
 };

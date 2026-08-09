@@ -17,13 +17,43 @@
 // The DC sizes corroborate the corrected pairing and reject the old one:
 // 405/382 = 1.06 and 329/286 = 1.15, against 0.86 and 1.42 swapped.
 #include <va.h>
+#include <algorithm>
+#include <functional>
 #include "ai_player.h"
 #include "ai_combat.h"
 #include "armygrp.h"
 #include "findpath.h"
+#include "exec.h"
 #include "game.h"
 #include "hero.h"
+#include "kb.h"
+#include "misc.h"
+#include "netgame.h"
+#include "remote.h"
 #include "town.h"
+#include "tradpost.h"
+#include "recruit.h"
+
+// VC6's retail min/max sites in this TU copy both operands into homes
+// and select one by address. These by-value wrappers reproduce that
+// shape; the installed Dinkumware overloads take const references.
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+
+template <class _TYPE>
+inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
+{
+    return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
+}
 
 // E:\gamedcs\ai_player.cpp:69
 // Both armyGroups are plain 56-byte copies (`rep movsd` of 14 dwords)
@@ -198,37 +228,391 @@ float type_AI_player::get_attack_bonus(short player)
     return attack_computer_bonus;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai_player.cpp:258
+// Retail establishes the complete economy model: current stock plus two
+// turns of production supplies resources; every legal build contributes
+// the per-resource maximum cost; all 145 creature records are valued and
+// sorted so the strongest three populations contribute recruitment cost;
+// Marketplace count selects the trading efficiency; and the resulting
+// seven doubles are mirrored into playerData before the six-resource
+// running total is divided by five.
+//
+// Residual (86.3767%): the algorithm, calls, loops, floating-point flow,
+// and persistent fields agree. The remaining concentrated delta is VC6's
+// final-insertion implementation/register allocation for std::sort plus one
+// growth-add register choice; source-equivalent loop and temporary shapes
+// were measured and this is the stable structure-first plateau.
 VA(0x00428740, 0x68E)  // linkorder, dc 0x2e188
 void type_AI_player::calculate_demand()
 {
-    // @stub
+    playerData* player = &gpGame->players[team];
+    memset(resource_supply, 0, sizeof(resource_supply));
+    memset(resource_demand, 0, sizeof(resource_demand));
+
+    int supply_resource;
+    for (supply_resource = 0; supply_resource < 7; supply_resource++)
+        resource_supply[supply_resource] = player->resources[supply_resource]
+            + 2 * player->turnProductionResource[supply_resource];
+
+    int building_town_index;
+    for (building_town_index = 0; building_town_index < player->numTowns;
+         building_town_index++) {
+        town* current_town = gpGame->GetTown(
+            player->townIds[building_town_index]);
+        __int64 build_mask = current_town->get_buildable_mask();
+        union {
+            int index;
+            type_building_id id;
+        } building;
+        for (building.index = 0; building.index < 44; building.index++) {
+            if (bitNumber[building.index] & build_mask) {
+                int* build_cost = current_town->get_build_cost_array(
+                    building.id);
+                int build_resource;
+                for (build_resource = 0; build_resource < 7; build_resource++)
+                    resource_demand[build_resource] = _cpp_max(
+                        resource_demand[build_resource],
+                        static_cast<long>(build_cost[build_resource]));
+            }
+        }
+    }
+
+    std::vector<type_creature_value> creatures(145);
+    int creature_index;
+    for (creature_index = 0; creature_index < 145; creature_index++) {
+        creatures[creature_index].type = creature_index;
+        creatures[creature_index].amount = 0;
+    }
+
+    int dwelling_town_index;
+    for (dwelling_town_index = 0; dwelling_town_index < player->numTowns;
+         dwelling_town_index++) {
+        town* current_town = gpGame->GetTown(
+            player->townIds[dwelling_town_index]);
+        short* population = current_town->population;
+        for (int dwelling = 0; dwelling < 14; dwelling++, population++) {
+            short amount = *population;
+            if (gpGame->field_1f63e >= 5) {
+                short growth = current_town->get_growth_rate(dwelling);
+                amount += growth;
+            }
+            if (amount > 0) {
+                int creature_type = gTownDwellingCreatures[
+                    current_town->type * 14 + dwelling];
+                creatures[creature_type].amount += amount;
+            }
+        }
+    }
+
+    int value_creature;
+    for (value_creature = 0; value_creature < 145; value_creature++)
+        creatures[value_creature].value = creatures[value_creature].amount
+            * akCreatureTypeTraits[value_creature].AI_value;
+
+    std::sort(creatures.begin(), creatures.end(),
+              std::greater<type_creature_value>());
+    int valuable_creature;
+    for (valuable_creature = 0;
+         valuable_creature < 3 && valuable_creature < creatures.size();
+         valuable_creature++) {
+        const type_creature_value& creature_info = creatures[valuable_creature];
+        int cost_resource;
+        for (cost_resource = 0; cost_resource < 7; cost_resource++)
+            resource_demand[cost_resource] +=
+                akCreatureTypeTraits[creature_info.type].cost[cost_resource]
+                * creature_info.amount;
+    }
+
+    int markets = 0;
+    int market_town_index;
+    for (market_town_index = 0; market_town_index < player->numTowns;
+         market_town_index++) {
+        town* current_town = gpGame->GetTown(
+            player->townIds[market_town_index]);
+        if (current_town->is_legal_building(MARKETPLACE_ID))
+            markets++;
+    }
+    markets = _cpp_limit(1, markets, 10);
+    double efficiency = fTradingPostEfficency[markets];
+
+    union {
+        int index;
+        EGameResource id;
+    } value_resource;
+    for (value_resource.index = 0; value_resource.index < 7;
+         value_resource.index++) {
+        double total_value;
+        if (resource_demand[value_resource.index] == 0) {
+            total_value = efficiency;
+        } else {
+            total_value = resource_demand[value_resource.index];
+            if (resource_demand[value_resource.index]
+                <= resource_supply[value_resource.index]) {
+                total_value += (resource_supply[value_resource.index]
+                    - resource_demand[value_resource.index]) * efficiency;
+                total_value /= resource_supply[value_resource.index];
+            } else {
+                if (resource_supply[value_resource.index] > 1)
+                    total_value /= resource_supply[value_resource.index];
+                if (total_value > 1.0 / efficiency)
+                    total_value = 1.0 / efficiency;
+            }
+        }
+        total_value *= get_market_value(value_resource.id);
+        resource_value[value_resource.index] = total_value;
+        player->resourceValue[value_resource.index] = total_value;
+    }
+
+    long average_value = 0;
+    int average_resource;
+    for (average_resource = 0; average_resource < 6; average_resource++)
+        average_value = static_cast<long>(average_value
+            + resource_value[average_resource]);
+    player->averageResourceValue = average_value / 5;
 }
 
 // E:\gamedcs\ai_player.cpp:414
+// Retail proves the whole turn-close sequence: refresh production and
+// reduce the reserve, re-run both town strategies, purchase while the
+// prohibited-creature table permits it, hire, recalculate demand, then
+// use the first Marketplace town to gift AI allies before human allies.
+// Negative resources are accumulated into one warning string.
+//
+// Residual (56.8835%): the live semantics and major CFG are present. The
+// principal byte delta is TU codegen ecology: retail calls the 230-byte
+// string::append(string, pos, count) instantiation at 0x41b250, while VC6
+// expands it here even after both neighbouring bodies were restored. The
+// player/team checks are the retail inline OnSameTeam form.
 VA(0x00428dd0, 0x33E)  // linkorder, dc 0x2e7d8
 void type_AI_player::end_turn()
 {
-    // @stub
+    playerData* player = &gpGame->players[team];
+    gpGame->calculate_production();
+
+    for (int resource = 0; resource < 7; resource++) {
+        reserved_funds[resource] -= player->turnProductionResource[resource];
+        if (reserved_funds[resource] < 0)
+            reserved_funds[resource] = 0;
+    }
+
+    type_garrison_purchaser garrison_purchaser(team);
+    garrison_purchaser.check_towns();
+    type_town_threat_checker threat_checker(team);
+    threat_checker.check_towns();
+
+    unsigned char prohibited_creatures[145];
+    fill_prohibited_array(&gpGame->players[team], prohibited_creatures);
+    while (purchase_buildings(prohibited_creatures)) {
+    }
+    hire_heroes();
+    calculate_demand();
+
+    for (short town_index = 0; town_index < player->numTowns; town_index++) {
+        town* current_town = gpGame->GetTown(player->townIds[town_index]);
+        if (!(current_town->active & bitNumber[MARKETPLACE_ID]))
+            continue;
+        for (short player_id = 0; player_id < 8; player_id++) {
+            if (!gpGame->playerDisabled[player_id]
+                && player_id != team
+                && gpGame->OnSameTeam(player_id, team)
+                && !gpGame->players[player_id].IsHuman())
+                make_gift(player_id);
+        }
+        for (short human_player_id = 0; human_player_id < 8;
+             human_player_id++) {
+            if (!gpGame->playerDisabled[human_player_id]
+                && human_player_id != team
+                && gpGame->OnSameTeam(human_player_id, team)
+                && gpGame->players[human_player_id].IsHuman())
+                make_gift(human_player_id);
+        }
+        break;
+    }
+
+    std::string warning;
+    for (int warning_resource = 0; warning_resource < 7; warning_resource++) {
+        if (player->resources[warning_resource] < 0)
+            warning.append(format_string(gAIResourceWarningFormat,
+                                         player->resources[warning_resource],
+                                         gResourceNames[warning_resource]),
+                           0, std::string::npos);
+    }
+    if (warning.length())
+        NormalDialog(warning.c_str(), 1, -1, -1, -1, 0, -1, 0,
+                     -1, 0, -1, 0);
 }
 
 // E:\gamedcs\ai_player.cpp:504
+// Retail proves both halves of the alliance exchange. Positive surplus is
+// capped by the recipient gap, minimum reserves, explicit reservations,
+// threshold and five-times-recipient tests. AI recipients refresh demand
+// and receive only their shortage; human recipients receive local dialogs
+// or the 0x432/0x433 network messages, including negative-surplus requests.
+// The request dialog alone observes CTurnDuration and times out at 15000 ms.
+//
+// Residual (64.6655%): the 0x7c frame, local offsets, player-id lifetime,
+// threshold block, network payload layouts, dialog flow and timeout tail
+// agree. The score understates one deliberately retained retail gate after
+// the human transfer. Most remaining bytes are VC6 TU ecology: retail calls
+// the temporary strings' _Tidy helper while this compile expands the same
+// destructor, plus register permutations in the two transfer loops.
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
 void type_AI_player::make_gift(long player_id)
 {
-    // @stub
+    playerData* player = &gpGame->players[team];
+    long surplus[7];
+    int resource;
+
+    for (resource = 0; resource < 7; resource++) {
+        surplus[resource] = resource_supply[resource]
+            - resource_demand[resource];
+        if (surplus[resource] > 0) {
+            long recipient_amount = gpGame->players[player_id].resources[resource];
+            surplus[resource] = _cpp_min(
+                surplus[resource],
+                (player->resources[resource] - recipient_amount) / 2L);
+            if (resource == GOLD)
+                surplus[resource] = _cpp_min(
+                    surplus[resource], player->resources[resource] - 10000L);
+            else
+                surplus[resource] = _cpp_min(
+                    surplus[resource], player->resources[resource] - 20L);
+
+            surplus[resource] -= reserved_funds[resource];
+            if (resource == GOLD) {
+                if (surplus[resource] < 1000)
+                    surplus[GOLD] = 0;
+            } else if (surplus[resource] < 5) {
+                surplus[resource] = 0;
+            }
+            if (surplus[resource] < 5 * recipient_amount)
+                surplus[resource] = 0;
+            surplus[resource] = _cpp_max(surplus[resource], 0L);
+        }
+    }
+
+    bool has_surplus = false;
+    for (resource = 0; resource < 7; resource++) {
+        if (surplus[resource] > 0)
+            has_surplus = true;
+    }
+    if (!has_surplus)
+        return;
+
+    if (!gpGame->players[player_id].IsHuman()) {
+        type_AI_player* recipient_ai = &gAIPlayers[player_id];
+        recipient_ai->calculate_demand();
+        for (resource = 0; resource < 7; resource++) {
+            surplus[resource] = _cpp_min(
+                surplus[resource],
+                recipient_ai->resource_demand[resource]
+                    - recipient_ai->resource_supply[resource]);
+            if (surplus[resource] > 0) {
+                gpGame->players[player_id].resources[resource] += surplus[resource];
+                player->resources[resource] -= surplus[resource];
+            }
+        }
+        return;
+    }
+
+    for (resource = 0; resource < 7; resource++) {
+        if (surplus[resource] > 0) {
+            gpGame->players[player_id].resources[resource] += surplus[resource];
+            player->resources[resource] -= surplus[resource];
+        }
+    }
+
+    if (!gpGame->players[player_id].IsHuman())
+        return;
+
+    std::vector<type_dialog_resource> list;
+    for (resource = 0; resource < 7; resource++) {
+        if (surplus[resource] > 0) {
+            if (gpGame->players[player_id].IsLocalHuman()) {
+                type_dialog_resource displayed_resource;
+                displayed_resource.resource = resource;
+                displayed_resource.qualifier = surplus[resource];
+                list.push_back(displayed_resource);
+            } else if (gNetworkActive69954c) {
+                CGiftMsg msg(gNetLocalGamePos, resource, surplus[resource]);
+                TransmitRemoteData(&msg, player_id, 0, 1);
+            }
+        }
+    }
+
+    std::string message;
+    if (gpGame->players[player_id].IsLocalHuman()) {
+        message += format_string(gUnnamed6a5d5c->entry->aiGiftReceivedText,
+                                 gPlayerColorNames[team]);
+        extended_dialog(message.c_str(), list, -1, -1, 0);
+    }
+
+    list.clear();
+    for (resource = 0; resource < 7; resource++) {
+        if (surplus[resource] < 0) {
+            if (gpGame->players[player_id].IsLocalHuman()) {
+                type_dialog_resource requested_resource;
+                requested_resource.resource = resource;
+                requested_resource.qualifier = 0;
+                list.push_back(requested_resource);
+            } else if (gNetworkActive69954c) {
+                CGiftRequestMsg msg(gNetLocalGamePos, resource);
+                TransmitRemoteData(&msg, player_id, 0, 1);
+            }
+        }
+    }
+
+    if (gpGame->players[player_id].IsLocalHuman() && list.size()) {
+        if (list.size() == 1)
+            message += format_string(
+                gUnnamed6a5d5c->entry->aiSingleResourceRequestText,
+                gPlayerColorNames[team],
+                gResourceNames[list[0].resource]);
+        else
+            message += format_string(
+                gUnnamed6a5d5c->entry->aiMultipleResourceRequestText,
+                gPlayerColorNames[team]);
+        int timeout = 0;
+        if (gTurnDuration69d630.IsOn())
+            timeout = 15000;
+        extended_dialog(message.c_str(), list, -1, -1, timeout);
+    }
 }
 
 // E:\gamedcs\ai_player.cpp:695
 VA(0x004297c0, 0x149)  // anchor-callee corrected, dc 0x2f148
 void type_AI_player::start_turn()
 {
-    // @stub
-}
+    playerData* player = &gpGame->players[team];
 
-#endif  // @carcass
+    for (int i = 0; i < player->numHeroes; i++) {
+        hero* current_hero = gpGame->GetHero(player->heroes[i]);
+        current_hero->targetIsCritical = 0;
+        current_hero->field_11c = 0;
+    }
+
+    for (int j = 0; j < player->numTowns; j++) {
+        town* current_town = gpGame->GetTown(player->townIds[j]);
+        if (current_town->garrisonHeroId >= 0) {
+            hero* current_hero = gpGame->GetHero(current_town->garrisonHeroId);
+            current_hero->targetIsCritical = 0;
+            current_hero->field_11c = 0;
+        }
+    }
+
+    gpGame->calculate_production();
+    magus_hut_value = find_magus_hut_value(
+        team, gpGame->AI_in_control > 0 && player->numTowns > 0);
+
+    type_garrison_purchaser garrison_purchaser(team);
+    garrison_purchaser.check_towns();
+    type_town_threat_checker threat_checker(team);
+    threat_checker.check_towns();
+
+    calculate_reserve();
+    calculate_demand();
+    player->guess_grail_location(team);
+}
 
 // E:\gamedcs\ai_player.cpp:664
 // A whole-world sweep for Eyes of Magi: every level, every column,
@@ -273,12 +657,70 @@ void type_AI_player::reset_magus_hut_value()
 // caller is the start_turn slot at 0x4297c0 - which is what schedules
 // a turn's reserve - and it drives GetMonsterCost, the price of the
 // creatures a reserve is being held for. 640 B against the DC body's
-// 558 is 1.15x.
+// 558 is 1.15x. Retail then proves the complete algorithm: build one
+// 12-byte value record per populated dwelling, sort ascending, price the
+// last two records, and retain the per-resource maximum over all towns.
+// The multiply deliberately narrows through short before the long store.
+//
+// Residual (96.4566%): the full 640-byte size, CFG, stack frame, calls,
+// arithmetic, and all code after the dwelling scan agree. The remaining
+// span is one VC6 register-allocation cycle: retail keeps vector finish,
+// dwelling, and population in ESI/EBX/EDI; this compile chooses ECX/EDI/ESI.
+// Volatile pointer homes recover retail's two memory reads and town spill.
+// Plain indexed/pointer loops, int/short indices, declaration order,
+// register hints, combined for-initializers, and explicit vector insert
+// forms were tested; none exceeded this source-equivalent plateau.
+#endif  // @carcass
+
 VA(0x00429ad0, 0x280)  // anchor-callee, dc 0x2f280
 void type_AI_player::calculate_reserve()
 {
-    // @stub
+    playerData* player = &gpGame->players[team];
+    std::vector<type_creature_value> creatures;
+    memset(reserved_funds, 0, sizeof(reserved_funds));
+    short dwelling;
+    volatile short* population;
+    town* volatile current_town;
+
+    for (short town_index = 0; town_index < player->numTowns; town_index++) {
+        current_town = gpGame->GetTown(player->townIds[town_index]);
+        creatures.clear();
+
+        dwelling = 0;
+        population = current_town->population;
+        for (; dwelling < 14; dwelling++, population++) {
+            if (*population > 0) {
+                type_creature_value creature_info;
+                creature_info.type = gTownDwellingCreatures[
+                    current_town->type * 14 + dwelling];
+                creature_info.amount = *population;
+                creature_info.value = static_cast<short>(creature_info.amount
+                    * akCreatureTypeTraits[creature_info.type].AI_value);
+                creatures.push_back(creature_info);
+            }
+        }
+
+        std::sort(creatures.begin(), creatures.end());
+        int total_cost[7];
+        memset(total_cost, 0, sizeof(total_cost));
+        int cost[7];
+        for (short creature = static_cast<short>(creatures.size() - 1);
+             creature >= 0 && creature >= creatures.size() - 2;
+             creature--) {
+            GetMonsterCost(creatures[creature].type, cost);
+            for (short resource = 0; resource < 7; resource++)
+                total_cost[resource] += cost[resource]
+                    * creatures[creature].amount;
+        }
+
+        for (int reserve_resource = 0; reserve_resource < 7; reserve_resource++) {
+            if (total_cost[reserve_resource] > reserved_funds[reserve_resource])
+                reserved_funds[reserve_resource] = total_cost[reserve_resource];
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // UNCLAIMED, 0x429d50 (1017 B). The only other retail row left in the
 // span, and the last thirteen DC bodies of this bracket are all
@@ -376,12 +818,37 @@ void get_full_cost(const town* current_town, int* result, __int64 requirements)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_player.cpp:1337
 VA(0x0042a150, 0x157)  // anchor-global, dc 0x301c4
 long type_AI_player::get_total_value(long basic_value, int* cost)
 {
-    // @stub
+    playerData* player = &gpGame->players[team];
+    unsigned char trade_needed = 0;
+    for (int i = 0; i < 7; i++) {
+        if (cost[i] > player->resources[i]
+            && player->turnProductionResource[i] == 0)
+            trade_needed = 1;
+    }
+
+    if (trade_needed) {
+        int supply[7];
+        std::vector<long> trade_qty;
+        if (!check_trade_supply(cost, 1, supply, trade_qty))
+            return -1;
+        if (!can_trade_resources(cost, supply, trade_qty))
+            return -1;
+    }
+
+    long total_cost = 0;
+    for (int resource = 0; resource < 7; resource++)
+        total_cost = static_cast<long>(
+            total_cost + cost[resource] * resource_value[resource]);
+    return basic_value * 1000 / total_cost;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_player.cpp:1367
 DC_ONLY(0x302e0, 0x54)

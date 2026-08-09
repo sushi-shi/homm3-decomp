@@ -165,11 +165,14 @@ enum TArtifact {
 // The DC's own TArtifactTraits (evidence/dreamcast/members.csv) is only
 // 20 bytes - m_name 0, m_cost 4, m_allowableSlotMask 8, m_class 12,
 // m_description 16 - i.e. the AB-era record without the Shadow of Death
-// combination column. Those five DC offsets are NOT transferred: no
-// retail body in a compiled TU reads them, so the head stays a pad
-// (the THeroTraits precedent).
+// combination column. Most DC offsets are NOT transferred. Retail
+// armyGroup::get_luck_description independently proves only the name at
+// +0x00; the intervening fields remain padding (the THeroTraits precedent).
 struct TArtifactTraits {
-    char pad_00[0x18];
+    // armyGroup::get_luck_description indexes artifact 0x55 at stride
+    // 0x20 and passes +0 directly to format_string: the display name.
+    const char* name;           // +0x00
+    char pad_04[0x14];
     int combination;            // +0x18
     char pad_1c[0x4];
 };

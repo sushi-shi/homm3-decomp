@@ -11,6 +11,15 @@ unsigned char SetFullScreenStatus(int bFullScreenOn);    // 0x6019a0
 void CleanUpWinGraphics();                               // 0x601890
 int AppPaint(void* hwnd, void* hdc);                     // 0x601820
 void InitGraphics();                                     // 0x6014e0
+int GetDesktopWidth();                                   // 0x6014c0
+int GetDesktopHeight();                                  // 0x6014d0
+
+struct IDirectDrawSurface4;
+struct IDirectDrawSurface;
+struct tagRECT;
+void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
+            IDirectDrawSurface4* srcSurface, const tagRECT* srcRect,
+            unsigned long flags);                        // 0x6001d0
 
 // The DirectDraw surface pair (Blt target and game draw surface).
 // Owner attribution: the DD lifecycle (DDCreatePrimary/DDCreateSurface
@@ -18,7 +27,6 @@ void InitGraphics();                                     // 0x6014e0
 // here; the .bss addresses stay extern-only until the owning TU's
 // claims land. The forward declaration keeps <ddraw.h> out of
 // includers that never touch DirectDraw.
-struct IDirectDrawSurface;
 extern IDirectDrawSurface* gpDDSPrimary;  // .bss 0x6aacbc
 extern IDirectDrawSurface* gpDDSBack;     // .bss 0x6aacc0
 
