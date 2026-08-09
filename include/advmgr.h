@@ -10,6 +10,39 @@
 #include "window.h"
 
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+class BlackBoxData;
+struct type_creature_bank;
+struct type_university;
+
+// Two retail-used arms of the four-byte ExtraInfoUnion. Both getters extract
+// bits 13..24 as a pool index; Dreamcast supplies the arm and field names.
+// The other eighteen DC arms remain unmodelled until a retail consumer needs
+// them.
+struct type_creature_bank_info {
+    unsigned long unused : 13;
+    unsigned long index : 12;
+    unsigned long tail : 7;
+};
+SIZE(type_creature_bank_info, 4);
+
+struct type_university_info {
+    unsigned long unused : 13;
+    unsigned long index : 12;
+    unsigned long tail : 7;
+};
+SIZE(type_university_info, 4);
+
+union ExtraInfoUnion {
+    unsigned long value;
+    type_creature_bank_info creature_bank_info;
+    type_university_info university_info;
+
+    BlackBoxData* get_black_box() const;
+    type_creature_bank& get_creature_bank() const;
+    type_university* get_university() const;
+};
+SIZE(ExtraInfoUnion, 4);
+
 // Dreamcast CodeView supplies the domain and ordering. Retail indexes the
 // matching 32-byte per-player flag band and the parallel help-name table with
 // this value; the shrine helper currently needs only the type, not individual
@@ -435,6 +468,9 @@ public:
     void OverrideBottomView(EBottomViewType view, int time);
     void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
     void Reseed(int targetX, int targetY);
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
+#endif
     void CompleteDraw(int startX, int startY, int z,
                       unsigned char forceDraw,
                       unsigned char updateBottomView);
