@@ -260,6 +260,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `SavedGameHeader::SavedGameHeader` reconstructed to
+  96.4326% (593 bytes).** Retail proves the flattened construction order for
+  the map-header vector, victory and loss records, eight 0x44-byte player
+  slots, 0x10-byte map, two strings, 156-bit availability set, and setup
+  options. It also proves the condition defaults, player-slot defaults, setup
+  loop and defaults, `H3SVG` identifier, and version 42. The canonical layouts
+  now include the 0x24-byte loss record, player-slot vector at +0x34, and the
+  destructor-compatible ordinal map records; opaque fields remain ordinal.
+  All four blocks, the sole branch, and the return agree. The residual is a
+  VC6 inline-boundary choice: retail calls the public two-argument Dinkumware
+  map constructor, while this compile inlines that wrapper and calls its
+  three-argument tree constructor, shifting two bytes and the associated EH
+  state schedule. Equivalent constructor spellings and scoped inline pragmas
+  did not change that choice. Dreamcast CodeView supplied original aggregate
+  and field names only; retail bytes supplied every x86 offset, default, and
+  call target admitted here. The approved read-only `decomp-attempt-1` survey
+  found only stubs for this unit, and no material from it was admitted.
+
 - **2026-08-09 — `hero::can_summon_boat` reconstructed to 85.7031%
   (350 bytes).** Retail requires spell-zero availability, computes Summon
   Boat mastery first without terrain and then at the hero cell's magic
