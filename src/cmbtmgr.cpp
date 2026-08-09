@@ -21,7 +21,7 @@
 // CombineGroups (0x5f1d0), ComputeDamageModifier (0x6021c, four bytes
 // on SH4), ExperienceValueOfStack (0x60220 - single call site in
 // CalculateGainedExperience), TestRaiseDoor (0x610e0),
-// DoorCanBeLowered (0x63268), IsQuickCombat (0x63900), and FreeArmies
+// DoorCanBeLowered (0x63268), and FreeArmies
 // (0x5e3d8, whose only caller is Close).
 //
 // Left UNCLAIMED on purpose, with the reason:
@@ -45,8 +45,12 @@
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
 #include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
+#include "findpath.h" // searchArray::lower_door, for LowerDoor
+#include "kbwin.h"  // bVideoPaused storage, the network-game gate here
 #include "misc.h"   // TPickANumber, for PlaceAllObstacles
+#include "prefs.h"  // the local quick-combat preference
 #include "resourcemanager.h"
+#include "soundmgr.h" // SAMPLE2 / LoadPlaySample / WaitEndSample
 #include "textresource.h"
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
 
@@ -194,7 +198,7 @@ void combatManager::UpdateArmyGroup(int whichSide)
 
         if (current.Is(21) & 1)
             continue;
-        if (field_54a8[whichSide] != -1) {
+        if (playerIds[whichSide] != -1) {
             if (current.Is(22) & 1)
                 continue;
         }
@@ -747,14 +751,54 @@ unsigned char combatManager::should_lower_door(army* this_army, long hex)
     return 0;
 }
 
-#if 0  // @carcass
+// The header-inline copy of the byte-exact IsQuickCombat body below. It is
+// kept file-local here so LowerDoor sees the source boundary without making
+// game/prefs/kbwin part of every cmbtmgr.h consumer's include closure.
+static inline bool lower_door_is_quick_combat(const combatManager* manager)
+{
+    if (gpGame->field_1f69d)
+        return false;
+    if (bVideoPaused && manager->sideIsAI[0] && manager->sideIsAI[1]) {
+        if (gpGame->players[manager->playerIds[0]].quickCombat
+                && gpGame->players[manager->playerIds[1]].quickCombat)
+            return true;
+        return false;
+    }
+    return gUnnamed698758.quickCombat != 0;
+}
 
 // E:\gamedcs\cmbtmgr.cpp:3378
+// RECONSTRUCTED 2026-08-09 from retail's inlined IsQuickCombat gate and
+// three-frame drawbridge animation. `bVideoPaused` is only the current
+// address-owning name for 0x69954c; its network-game role is established by
+// the wider reader set and no rename is made in this lane. Residual
+// (83.3951%): the exact helper source still places its local-preference block
+// before the animation when inlined here, while retail places that fallback
+// after the animation; the four aggregate-source relocations are the known
+// DATA-size/addend representation limit. The animation itself is instruction-
+// exact apart from those three interior relocation addends.
 VA(0x004671c0, 0x113)  // anchor-global, dc 0x60fa8
 void combatManager::LowerDoor()
 {
-    // @stub
+    if (!lower_door_is_quick_combat(this)) {
+        SAMPLE2 sample2 = LoadPlaySample(
+            DATA_COMPGEN(0x0066ffb0, drawbridgeSampleName, "drawbrg.82m"));
+
+        drawbridgeBounds = gDrawbridgeBounds694f30;
+
+        for (int frame = DRAWBRIDGE_UP; frame >= DRAWBRIDGE_DOWN; frame--) {
+            drawbridgeState = frame;
+            DrawFrame(1, 0, 1, 100, 1, 1);
+        }
+
+        gpSearchArray->lower_door();
+        WaitEndSample(sample2, -1);
+    } else {
+        drawbridgeState = DRAWBRIDGE_DOWN;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:3400
 VA(0x004672e0, 0x177)  // anchor-global, dc 0x61034
@@ -1243,14 +1287,26 @@ void combatManager::CalculateGainedExperience(int side, int* experience_gained)
         *experience_gained = total;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:4969
-DC_ONLY(0x63900, 0xC4)
-unsigned char combatManager::IsQuickCombat()
+// DC public ?IsQuickCombat@combatManager@@QBA_NXZ proves const bool. The
+// retail body is the same query LowerDoor expands inline: a special-mode
+// veto, per-player quick-combat settings for a two-sided network battle,
+// and the local registry preference otherwise.
+VA(0x0046a4a0, 0x71)  // retail-located, dc 0x63900
+bool combatManager::IsQuickCombat() const
 {
-    // @stub
+    if (gpGame->field_1f69d)
+        return false;
+    if (bVideoPaused && sideIsAI[0] && sideIsAI[1]) {
+        if (gpGame->players[playerIds[0]].quickCombat
+                && gpGame->players[playerIds[1]].quickCombat)
+            return true;
+        return false;
+    }
+    return gUnnamed698758.quickCombat != 0;
 }
+
+#if 0  // @carcass
 
 // ..\stlport\stl_bvector.h:684
 DC_ONLY(0x639c4, 0x18)

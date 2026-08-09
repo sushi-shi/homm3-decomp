@@ -321,6 +321,36 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — combat quick mode and drawbridge lowering reconstructed.**
+  `combatManager::IsQuickCombat` is byte-exact (113 bytes): the special-mode
+  byte vetoes quick combat; a network battle with both per-side latches set
+  requires both indexed players' `quickCombat` dwords; every other case uses
+  the registry-backed `Quick Combat` preference at 0x69877c. The local DC
+  public name (`?IsQuickCombat@combatManager@@QBA_NXZ`) corrects the carcass
+  prototype to `const bool`, and the retail body corrects the stale
+  `army_WaitSample` working identity at 0x46a4a0. Writing the two player tests
+  as one `&&` is the decisive HoMM2/Gruntz canonical-source lever: it shares
+  retail's early false return and removes both the duplicate epilogue and the
+  second-result `setne`.
+  `combatManager::LowerDoor` is reconstructed from unscored to **83.3951%**
+  (275 bytes). Its inline query selects either an immediate state 1 or the
+  full path: play `drawbrg.82m`, copy the 16-byte drawing-bounds aggregate,
+  draw states 3/2/1 with the retail six `DrawFrame` arguments, reopen the two
+  pathfinding gate cells, and wait for the sample. The aggregate assignment
+  reproduces retail's destination-pointer formation, sound-return lifetimes,
+  loop and calls instruction-for-instruction; three interior source-data
+  relocation addends remain subject to the already-recorded DATA-size
+  contract limitation. The other residual is VC6 block placement: even the
+  exact helper source puts the local-preference fallback before the animation
+  when inlined here, while retail puts it after. Natural if/else, inverted
+  if/else, early-return, explicit-label and sequential-return forms were
+  measured; 83.3951% is the best semantics-preserving form. This also proves
+  `combatManager+0x54a8` as the two player ids and +0x13d38 as the copied
+  16-byte bounds. `decomp-attempt-1` was surveyed read-only and does contain
+  old bodies for both names, but they were not opened, copied or used; all
+  admitted implementation and identity evidence came from current retail
+  bytes and the local Dreamcast public-name inventory.
+
 - **2026-08-09 — `combatManager::LoadWallTraitsTable` reconstructed
   byte-exact (143 bytes).** The loader opens `walls.txt`, rejects a missing
   or sub-179-row sheet (disposing only the undersized resource), then walks

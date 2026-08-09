@@ -15,6 +15,14 @@ class hero;
 class searchArray;
 struct type_AI_combat_parameters;
 
+// Four integer drawing bounds copied as one value before a drawbridge
+// animation. Retail's assignment establishes the 16-byte extent; the
+// coordinate roles remain unnamed until a drawing reader is decoded.
+struct TDrawbridgeBounds {
+    int values[4];
+};
+SIZE(TDrawbridgeBounds, 0x10);
+
 // The combat's spell-restriction code, held in combatManager+0x53c0.
 // The per-combat initializer at 0x4643b0 writes it exactly once, as -1
 // or one of 0..9 from ten straight-line branches, and clears the two
@@ -255,9 +263,12 @@ public:
     // parameters ctor 0x435ec0). Name provisional.
     unsigned char sideIsAI[2];        // +0x54a4
     char pad_54a6[0x2];
-    // UpdateArmyGroup applies the creatureId bit-22 exclusion only when
-    // this per-side dword is not -1. Role awaits a decoded writer.
-    int field_54a8[2];                // +0x54a8
+    // The adventure-map player ids behind the two combat sides. LowerDoor's
+    // inlined IsQuickCombat indexes the 360-byte gpGame->players row with
+    // each value and reads that player's +0xe4 quickCombat preference;
+    // UpdateArmyGroup applies its creatureId bit-22 exclusion only while
+    // the selected id is not -1.
+    int playerIds[2];                 // +0x54a8
     char pad_54b0[0xc];
     // Live stack count per side; every ai_tactical walk of armies[side]
     // bounds itself with it (type_AI_spellcaster ctor 0x4369c0,
@@ -305,7 +316,12 @@ public:
     // off-grid); path.cpp's whole direction system reads it. Slots
     // 6/7 are resolved to real directions by facing first.
     short adjacentCells[187][6];      // +0x13468
-    char pad_13d2c[0x20];
+    char pad_13d2c[0xc];
+    // Four-dword drawing bounds copied from 0x694f30..0x694f3c before
+    // every drawbridge animation. The role of each coordinate awaits a
+    // decoded drawing reader, so the member stays an ordinal array.
+    TDrawbridgeBounds drawbridgeBounds; // +0x13d38
+    char pad_13d48[0x4];
     // Pending post-combat raised stack. RaiseSkeletons first attempts
     // this pair unchanged, then promotes the creature and converts the
     // count at a two-for-three ratio if the destination group is full.
@@ -364,6 +380,8 @@ public:
     void PlaceArmyInGrid(const army* a, int hex);
     unsigned char place_obstacle(int obstacle_id);
     unsigned char should_lower_door(army* this_army, long hex);
+    void LowerDoor();
+    bool IsQuickCombat() const;
     void CalculateGainedExperience(int side, int* experience_gained);
     // Two DC-roster corrections, both byte-proven at 0x467510: the
     // first parameter is an `army*`, NOT the roster's `int group` (the
@@ -560,6 +578,12 @@ extern combatManager* gpCombatManager;
 // rule they encode. Neither is defined here; cmbtmgr is only a reader.
 DATA(0x006985a3) extern unsigned char gCombatFlag6985a3;
 DATA(0x00697744) extern unsigned char gCombatFlag697744;
+
+// Source aggregate copied into combatManager+0x13d38 by the constructor,
+// LowerDoor and RaiseDoor. The current DATA contract cannot express its
+// size, so the stripped target still represents interior relocations as
+// separate symbols; source keeps the retail-proven aggregate shape.
+DATA(0x00694f30) extern TDrawbridgeBounds gDrawbridgeBounds694f30;
 
 // Combat-background pointer tables decoded from retail .rdata. The first
 // table is indexed by town type, the second by special-terrain mode (slot
@@ -763,7 +787,7 @@ long get_distance(long start, long stop);
 // CODEVIEW(E:\gamedcs\cmbtmgr.cpp:4863, dc 0x63648) void combatManager::LearnSpellFromEagleEye(int side);
 // CODEVIEW(E:\gamedcs\cmbtmgr.cpp:4886, dc 0x63704) void combatManager::LootDeadHero(int side, std::vector<type_artifact,std::allocator<type_artifact>* looted_artifacts);
 // CODEVIEW(E:\gamedcs\cmbtmgr.cpp:4948, dc 0x6388c) void combatManager::CalculateGainedExperience(int side, int* experience_gained);
-// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:4969, dc 0x63900) unsigned char combatManager::IsQuickCombat();
+// CODEVIEW(E:\gamedcs\cmbtmgr.cpp:4969, dc 0x63900) bool combatManager::IsQuickCombat() const;
 // CODEVIEW(E:\gamedcs\CmbtMgr.h:1500, dc 0x63a44) int combatManager::GetHexIndex(int x, int y);
 // CODEVIEW(E:\gamedcs\CmbtMgr.h:1506, dc 0x63a50) unsigned char combatManager::RowIsOdd(int y);
 // CODEVIEW(E:\gamedcs\CmbtMgr.h:1537, dc 0x63a5c) hexcell* combatManager::GetCell(int x, int y);

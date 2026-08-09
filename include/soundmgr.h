@@ -43,6 +43,12 @@ void __cdecl WaitEndSampleThread(void* arglist);
 // the empty pair LoadPlaySample returns on either failure path.
 extern SAMPLE2 NULL_SAMPLE2;
 
+// Retail 0x59a470 / 0x59a4c0. With the compiland's /Gr default the
+// filename and wait-time scalar travel in ECX, while SAMPLE2 is returned
+// in EDX:EAX and passed by value on the stack.
+SAMPLE2 LoadPlaySample(const char* cSampleName);
+void WaitEndSample(SAMPLE2 sample2, int iMilliWait);
+
 // Retail 0x55c720, reached fastcall with the name in ecx and returning
 // the loaded `sample*` (LoadPlaySample and launch_sample are its only
 // callers here). It lives OUTSIDE the soundmgr span, so this header is
