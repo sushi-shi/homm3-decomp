@@ -34,6 +34,7 @@
 #include "netgame.h"
 #include "kbwin.h"
 #include "kb.h"
+#include "cursor.h"
 #include "advmgr_objects.h"
 
 // The generator save format stores creature ids as bytes while the live
@@ -1477,12 +1478,25 @@ void game::ClaimGenerator(int generatorId, int newPlayerOwner)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\game.cpp:7441
 VA(0x004c6960, 0xC9)  // anchor-global, dc 0xb1988
 void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
 {
-    // @stub
+    garrison* current_garrison = &garrisons[garrisonId];
+    type_point location(current_garrison->mapX, current_garrison->mapY,
+                        current_garrison->mapZ);
+    CMCClaimGarrison change(garrisonId, newPlayerOwner);
+    SendMapChange(&change);
+
+    current_garrison->playerOwner = newPlayerOwner;
+    if (newPlayerOwner != -1)
+        SetVisibility(location.x, location.y, location.z,
+                      newPlayerOwner, 3, 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:7461
 VA(0x004c6a30, 0x21F)  // anchor-global, dc 0xb1a50

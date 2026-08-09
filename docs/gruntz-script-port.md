@@ -260,6 +260,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::ClaimGarrison` reconstructed to 84.4118%
+  (201 bytes).** Retail indexes the 64-byte garrison pool, packs the three
+  coordinate bytes at +0x3d..+0x3f, sends a 28-byte claim-garrison map-change
+  message, writes the new signed owner and reveals a radius-three area for
+  every nonnegative owner. Retail fixes message subtype 0x41f, size 0x1c,
+  payload offsets +0x14/+0x18 and the `SendMapChange` target; Dreamcast
+  CodeView supplies the `CNetMsg`/`CMapChange`/`CMCClaimGarrison` hierarchy,
+  member identities and helper name. The shared 20-byte message head was
+  lifted unchanged from the already-admitted gift-message view rather than
+  duplicated, following the HoMM2/Gruntz layout-reuse and canonical-helper
+  rules. The candidate and retail have the same 68-instruction multiset and
+  three-block flow; the remaining ten unpaired slots are five constructor
+  stores transposed by VC6's open B16 post-register-allocation scheduler.
+  Initializer/body splits and declaration orderings were measured and
+  withdrawn when they worsened that residual. `decomp-attempt-1` contains
+  only generated stubs and CodeView inventories for these rows, while NH3API
+  independently corroborates the layout and subtype but has no constructor
+  body; neither supplied implementation material. Linked fuzzy coverage rises
+  from 47.67% to 47.71% and executable fuzzy coverage from 9.04% to 9.05%,
+  with all 626 exact functions retained.
+
 - **2026-08-09 — `advManager::QuickInfo` extends to 43.7530%.** The
   lighthouse path reads its signed owner from the indexed mine record and
   appends the owner color through the shared quick-info suffix. Mine dispatch

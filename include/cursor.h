@@ -5,8 +5,10 @@
 #ifndef HOMM3_CURSOR_H
 #define HOMM3_CURSOR_H
 
+class CMapChange;
+
 // --- globals ---
-// CODEVIEW(E:\gamedcs\cursor.cpp:1343, dc 0x7c9f8) void SendMapChange(CMapChange* pMapChange);
+void SendMapChange(CMapChange* pMapChange);  // 0x482390, dc 0x7c9f8
 
 // --- advManager ---
 // CODEVIEW(E:\gamedcs\cursor.cpp:52, dc 0x79a48) void advManager::StartCursor(int direction);
