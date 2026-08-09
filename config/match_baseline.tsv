@@ -35,6 +35,7 @@ advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	99.3415	99.34
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30
 advmgr	?UpdateRadar@advManager@@QAEXEEEEE@Z	100.0000	100.0000	100.0000	0x13790
+advmgr	?UpdateScreen@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xf270
 advmgr	?cell@NewfullMap@@QAEPAVNewmapCell@@HHH@Z	100.0000	100.0000	100.0000	0x8770
 advmgr	?get_black_box@ExtraInfoUnion@@QAEPAVBlackBoxData@@XZ	100.0000	100.0000	100.0000	0x5de0
 advmgr	?get_creature_bank@ExtraInfoUnion@@QAEPAVtype_creature_bank@@XZ	100.0000	100.0000	100.0000	0x5df0
@@ -104,7 +105,6 @@ advmgr	advManager_UpdBottomViewNewTurn	0.0000	0.0000	0.0000	0x15fb0
 advmgr	advManager_UpdBottomViewResMsg	0.0000	0.0000	0.0000	0x16160
 advmgr	advManager_UpdBottomViewTown	0.0000	0.0000	0.0000	0x164f0
 advmgr	advManager_UpdateRadar	0.0000	0.0000	0.0000	0x12c40
-advmgr	advManager_UpdateScreen	0.0000	0.0000	0.0000	0xf270
 advmgr	advManager_ViewPuzzle	0.0000	0.0000	0.0000	0x1a7f0
 advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
 advmgr	advManager_garrison_quick_view	0.0000	0.0000	0.0000	0x16f80

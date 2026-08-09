@@ -287,7 +287,8 @@ public:
     int mapOriginY;               // +0xf8
     char pad_0fc[4];
     int animFrame;                  // +0x100, sprite-frame modulo source
-    char pad_104[8];
+    unsigned char field_104;        // +0x104, pauses UpdateScreen animation
+    char pad_105[7];
     // Retail DrawHeroPart indexes these pointer rows directly. The extents
     // close every gap through +0x1ec and agree with the surviving roster.
     CSprite* cursorIcons[18];       // +0x10c, indexed by hero class
@@ -317,6 +318,7 @@ public:
     void HeroLoses(class hero* who, int vanish_sound);
     void OverrideBottomView(EBottomViewType view, int time);
     void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
+    void UpdateScreen(int bAllowIntermediateMouse, int bForceDraw);
     void Reseed(int targetX, int targetY);
     void CompleteDraw(int startX, int startY, int z,
                       unsigned char forceDraw,
