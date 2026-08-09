@@ -722,11 +722,11 @@ public:
 
     void update_slot(long slot);
     void update_all_slots();
+    int ExitDialog(class message* msg);
 };
 
 // CODEVIEW(E:\gamedcs\hero.cpp:1594, dc 0xcc49c) void THeroScreenWindow::HeroMessageUpdate(char* cText);
 // CODEVIEW(E:\gamedcs\hero.cpp:2477, dc 0xcd9c4) void THeroScreenWindow::UpdateHeroScreenStatusBar(message* msg);
-// CODEVIEW(E:\gamedcs\hero.cpp:3229, dc 0xcebe0) int THeroScreenWindow::ExitDialog(message* msg);
 // CODEVIEW(E:\gamedcs\hero.cpp:3239, dc 0xcec1c) void THeroScreenWindow::ShowWidgets();
 // CODEVIEW(E:\gamedcs\hero.cpp:3421, dc 0xcf3ac) void THeroScreenWindow::show_skills();
 // CODEVIEW(E:\gamedcs\hero.cpp:3486, dc 0xcf54c) int THeroScreenWindow::WindowHandler(message* msg);
