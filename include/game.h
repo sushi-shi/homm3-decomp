@@ -412,7 +412,9 @@ public:
     // One player-visit bitset per GlobalInfoFlags entry. Retail indexes the
     // byte by flag and tests the local player's bit.
     unsigned char globalInfoFlags[32];    // +0x4e344
-    char pad_4e364[0x24];
+    // One player-visit bitset per Border Tent object index. SetRolloverText
+    // indexes this byte band directly and tests the local player's bit.
+    unsigned char borderTentVisitFlags[0x24]; // +0x4e364
 #else
     char pad_4df18[0x470];
 #endif

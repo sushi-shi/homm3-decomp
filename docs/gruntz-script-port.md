@@ -260,6 +260,17 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::SetRolloverText` extends to 70.4286%.**
+  Retail admits the Hero and Obelisk arms and completes Border Tent's
+  player-visit annotation. The function computes the local-player bit once,
+  reads Border Tent bytes at game +0x4e364 and signed Obelisk bytes at
+  +0x4e3e9, and formats a map hero's thirteen-byte +0x23 name with the
+  central +0x40 format and the retail-only class-text helper. These offsets,
+  the switch targets, call relocations and visited/unvisited tails are all
+  retail-byte-proven; no external implementation body was used. Whole-linked
+  fuzzy coverage rises from 44.87% to 45.10% with all 601 exact linked
+  functions retained.
+
 - **2026-08-09 — `advManager::SetRolloverText` extends to 60.3162%.**
   Retail admits Border Guard/Tent color-name formatting, Hill Fort's global
   information annotation, Pyramid's current-hero knowledge state, and the
