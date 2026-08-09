@@ -681,14 +681,14 @@ int game::MineTypesOwned(int iWhichPlayer, int iMineType)
     return count;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:1994
 VA(0x004baed0, 0x2C)  // linkorder, dc 0xa6328
 void ComputeUALoc(int whichPlayer)
 {
-    // @stub
+    gpGame->players[whichPlayer].guess_grail_location(whichPlayer);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:1999
 VA(0x004baf00, 0x25A)  // linkorder, dc 0xa6350
