@@ -310,7 +310,12 @@ struct SSpellTraits {
     // Per-mastery flat bonus row (NH3API m_mastery_bonus):
     // get_damage_spell_value adds [spell*136 + mastery*4 + 0x34].
     int mastery_bonus[4];     // +0x34
+#ifdef HOMM3_TOWN_OBJ_DECLS
+    // +0x44, nine faction weights used by town::initialize_spells.
+    int townProbability[9];
+#else
     char pad_44[0x24];
+#endif
     // A SECOND per-mastery dword row: get_enchantment_value indexes it
     // as spell*34 + mastery dwords from the table base (0x423cab) =
     // record +0x68 + mastery*4. Distinct from mastery_bonus - both
