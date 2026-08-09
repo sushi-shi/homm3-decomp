@@ -74,11 +74,12 @@ public:
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
     // kept COMDAT copies land in earlier objs' bands (set_hotkey at
     // 0x404200), so no claims live here.
-    void SetText(const char* new_text) { Text.assign(new_text, strlen(new_text)); }
+    void SetText(const char* new_text) { Text = new_text; }
     void set_hotkey(int code) { hotKeyCodes.insert(hotKeyCodes.end(), 1, code); }
 
     virtual int Main(message* msg);  // slot 2, retail 0x456190
 
+    virtual void zBufferDraw();  // slot 3, folded onto 0x5bc7e0
     virtual void Draw();  // slot 4, retail 0x456940
 
     virtual ~button();  // retail 0x4560f0

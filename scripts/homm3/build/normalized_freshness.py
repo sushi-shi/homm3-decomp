@@ -19,7 +19,9 @@ import os
 from pathlib import Path
 
 STAMP_SUFFIX = ".stamp.json"
-STAMP_SCHEMA = 3  # 2: text-pad trim; 3: non-code sections dropped (functions-only scope)
+# 2: text-pad trim; 3: non-code sections dropped (functions-only scope);
+# 4: paired base/target padding normalization.
+STAMP_SCHEMA = 4
 
 _HASH_CACHE: dict[str, tuple[tuple[int, int], str]] = {}
 

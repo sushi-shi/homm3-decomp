@@ -260,6 +260,304 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `armyGroup::Merge` raised from 58.0726% to 78.3073%
+  by restoring its two local working objects.** Dreamcast CodeView metadata
+  names the 56-byte stack objects `ag1` and `ag2`; retail bytes independently
+  confirm their four inlined constructor fill loops and remain the authority
+  for layout and control flow. Expressing both as ordinary `armyGroup` locals
+  and using a natural four-field indexed copy reproduces retail's fused
+  pointer-difference copy shape. Reversing the two source-walker declarations
+  gives the best observed VC6 allocation. The residual is bounded to a
+  four-byte frame difference, coalesced type/troop walkers, different stack
+  coloring for the processed count, and one separately emitted dedup-success
+  continuation. Volatile-pointer and explicit-goto probes regressed and were
+  reverted. This follows the HoMM2/Gruntz matching discipline: use debug data
+  as naming/type evidence, then accept or reject source shapes solely through
+  fresh retail comparisons. `decomp-attempt-1` remained read-only and supplied
+  no implementation or admitted metadata.
+
+- **2026-08-09 — the split-army path completed and its message producer is
+  exact; both retail combat-stat descriptions reconstructed.**
+  `SplitSliderCallback` and `armyGroup::SplitArmy` now match exactly, raising
+  the engine scoreboard to 557/980 exact functions. `SplitArmy` required the
+  natural member-by-member `message` initialization order evidenced by retail
+  stores—qualifier through window first, followed by id/codeX/codeY; aggregate
+  initialization is semantically equivalent but schedules different VC6
+  stores. The complete `TSplitWindow` constructor is present at 77.0387%, and
+  its handler remains at the best-measured 97.4066% with 29/34 blocks exact.
+  Reconstruction-only dialog and description declarations stay behind the
+  armygrp source boundary because exposing them globally perturbs VC6 `/Ob2`;
+  that boundary restores `initialize_game_data` to exact. Retail `ret 24h` and
+  `ret 20h`, trait indexing and string uses correct the stale Dreamcast
+  description prototypes. `get_morale_description` (60.1036%) now covers
+  cursed/no-morale exits, hero, terrain, alignment, undead, creature, town,
+  artifact and residual modifiers; `get_luck_description` (59.1587%) covers
+  cursed ground, Hourglass, hero, Clover Field, enemy Devils, Fountain,
+  Halfling and residual modifiers. Their remaining deltas are dominated by
+  Dinkumware string-temporary/EH layout. The HoMM2/Gruntz matching guidance
+  was applied directly: recover natural control-flow and library source forms,
+  keep reconstruction types local, and validate each source-shape experiment
+  against fresh retail comparisons. `decomp-attempt-1` was surveyed read-only;
+  its bodies are mostly stubs and supplied no implementation or admitted
+  metadata.
+
+- **2026-08-09 — the TSplitWindow destructor pair reconstructed exactly;
+  `SplitSliderCallback` raised from unimplemented to 96.8246%.** Retail's
+  `TSplitWindow` is a 0x80-byte `CAdvPopup` derivative: the callback proves
+  the count fields at +0x6c/+0x70/+0x74 and signed transfer minimum at
+  +0x78, while the constructor proves the creature at +0x7c. The
+  Dreamcast `CAdvPopup` field list, adjusted by retail's independently
+  proven 8-byte `heroWindow` vector delta, agrees with the retail ctor and
+  dtor at +0x50..+0x5c and fixes the base at 0x60 bytes. With that layout,
+  a normal virtual destructor containing the widget-pointer walk emits the
+  retail 107-byte body exactly, and the established `VA_COMPGEN` scalar
+  deleting-destructor form emits its 33-byte wrapper exactly. The slider
+  callback keeps the CodeView member helper inline-only, as retail does;
+  its branchless 195-byte body and all calls now agree, with only VC6's
+  equivalent temporary-register rotation remaining. Making
+  `CHeroWindowEx`'s byte-proven concrete slots non-pure caused no score
+  regression in the 25 dependent units rebuilt. A fresh delink admitted
+  only these source-derived names. `decomp-attempt-1` remained read-only:
+  its implementations are predominantly stubs, so nothing was copied or
+  admitted; its inventories remain candidate metadata pending P4.2 and
+  explicit approval.
+
+- **2026-08-09 — `get_spell_work_chance` raised from 53.1589% to
+  88.5071% by restoring retail dataflow and switch-body order.** Both
+  switches keep their byte-proven selector maps, but their action bodies
+  are written in retail layout order. A named creature-traits cursor
+  recovers the reused record pointer, while the later bit-10 gate must read
+  `akSpellTraits[spell].field_c` directly: this keeps retail's
+  `spell * sizeof(SSpellTraits)` offset live in ESI. The nested gate then
+  tests creature attributes bit `0x400`; the former `spellRec->flags_10`
+  test was semantically wrong. Animate Dead likewise checks undead status
+  only—retail has no damage-bound test there. The two Orb of Vulnerability
+  checks guard the resistance/immunity block, after which retail shares the
+  spell-record `field_0` check and chance floor. Explicit shared tails now
+  model the pendant checks and the 0.8/0.6 resistance calculation. The
+  remaining mismatch is confined to VC6 layout choices: immediate pushes
+  versus an enregistered shared artifact id, four over-merged zero exits,
+  the resistance-tail fall-through direction, and prologue instruction
+  scheduling. The Gruntz/HoMM2 discipline of matching semantic control-flow
+  regions before local instruction tuning directly drove this recovery.
+  The same control-flow-first pass raised `GetArmyLuck` from 84.8947% to
+  90.2526%: a dense town 0–8 switch with explicit no-bonus and `+2` labels
+  reproduces retail's two-destination byte selector, and repeated
+  `armies[index]` accesses remove the incorrect creature cache. All 22 code
+  blocks and both dispatch-table offsets now agree; only the index/register
+  allocation and equivalent table target identities remain.
+
+- **2026-08-09 — the shared armygrp clamp recovered: `GetLuck` exact,
+  `GetMorale` 98.5654%, `GetArmyMorale` 80.5625%, and `GetArmyLuck`
+  84.8947%.** Retail's common tail is not a nested min/max or a direct
+  ternary. It is one by-value, reference-returning three-operand selector;
+  the byte-proven argument order is `(low, value, high)`. That order alone
+  produces retail's low/high/value stack homes without forcing the running
+  rating into memory early. It closes `GetLuck` (91.1735% to exact), raises
+  `GetMorale` from 88.4346% to 98.5654%, `GetArmyMorale` from 72.8920% to
+  80.5625%, and `GetArmyLuck` from 75.6316% to 84.8947%. In `GetMorale` it
+  also shifts `/Ob2`'s budget so all four bitset operator[] assignments now
+  match; all 57 block flows agree, leaving only EBX shrink-wrapping and an
+  equivalent atexit-thunk relocation representation. An explicit nine-town
+  value-switch probe in `GetArmyMorale` fell to 76.5% and was reverted.
+  `Merge` also moved 54.4022% to 58.0726% by expressing copy-in as one
+  byte-offset loop and walking the source troop array directly, which
+  prevents four incorrect rep-movsd runs and recovers another piece of
+  retail's source-pointer induction;
+  its remaining frame/pointer-induction reconstruction stays active.
+  `decomp-attempt-1` remained read-only and supplied nothing to these edits.
+
+- **2026-08-09 — `armyGroup::merge_armies` exact; luck routines raised by
+  restoring retail expression and switch structure; `modify_spell_damage`
+  exact.** `merge_armies` rose
+  from 84.7652% to exact after three semantic corrections: stop the weakest
+  scan at the first empty slot, express both fit searches as direct jumps to
+  their success continuations, and use the two CodeView-attested
+  `std::swap` calls with source as the first argument. The swap spelling is
+  load-bearing: hand-written exchanges preserve values but change the
+  entire frame/register allocation; reversing the references changes the
+  final load/store order. `GetLuck` rose from 85.4592% to 91.1735% by
+  combining the two Hourglass artifact gates into one short-circuit
+  expression and shared return. `GetArmyLuck` rose from 30.3579% to
+  75.6316% by spelling its nine town cases as a value-producing switch;
+  retail uses a compressed two-destination selector table while this VC6
+  spelling retains a full jump table, so that codegen residual remains
+  bounded. This directly applies the HoMM2/Gruntz guidance: first match
+  branch topology, fallthrough and standard-library source forms, then
+  assess register-only residuals. `modify_spell_damage` rose from 55.6350%
+  to exact by putting the elemental arms before the golems in retail order,
+  mutating the damage parameter and breaking to the shared return. The
+  jump table also corrected a semantic error: Earth/Magma, not Water/Ice,
+  take double Meteor Shower damage; Water/Ice take double damage from the
+  three fire spells. `decomp-attempt-1` remained read-only and supplied no
+  implementation or admitted metadata.
+
+- **2026-08-09 — `armyGroup(TCreatureType,int)` exact and
+  `hero::get_primary_skill_total` raised to 99.5833% by restoring retail
+  loop structure.** The army constructor's prior outer guard was
+  semantically wrong: once entered, it populated all seven slots even if
+  the remaining amount became zero. Retail tests the short index first and
+  the remaining amount second; preserving that short-circuit order lets
+  VC6 sink the index bound to the back-edge, retain the amount test at the
+  loop head, and reproduce all 90 bytes exactly. For the hero total, an
+  explicit index plus a separate four-step countdown reproduces retail's
+  ESI/EDI induction pair and every instruction; only the equivalent
+  scale-1 SIB choice for `this + index` remains different. These fixes
+  apply the HoMM2/Gruntz structure-first rule directly: recover the retail
+  branch and induction family before attempting register-level spellings.
+  `decomp-attempt-1` was kept read-only and contributed no source to either
+  reconstruction.
+
+- **2026-08-09 — six `type_AI_player` turn-economy routines reconstructed;
+  two are exact; demand reaches 86.3767%, reserve 96.4566%, gifting 64.6655%,
+  and end-turn is structurally restored.** `start_turn` (329 bytes) is
+  exact after restoring the retail-proven hero critical-target byte, the
+  production/Grail calls, and the two 8-byte threat-checker strategy
+  objects; spelling the base constructor assignment in its body reproduces
+  retail's vptr-before-member store. `get_total_value` (343 bytes) is exact
+  with the player AI production slice at +0x108 and retail's trade-supply,
+  trade-feasibility, weighted-cost, and ratio flow. `calculate_reserve`
+  reconstructs the full 640-byte algorithm and exact CFG: collect populated
+  dwellings as 12-byte value records, narrow the AI-value product through
+  short, sort ascending, price the strongest two, and keep each resource's
+  maximum across towns. Its residual is confined to one VC6 allocation
+  cycle in the dwelling scan; the rest of the body agrees. `calculate_demand`
+  restores stock plus two production turns, maximum legal-building costs,
+  the full 145-record creature valuation/sort and strongest-three pricing,
+  Marketplace efficiency, seven resource-value doubles, and retail's
+  six-resource running total divided by five. Its residual is concentrated
+  in VC6's sort final-insertion allocation. `make_gift` restores the surplus
+  caps and thresholds, AI-recipient shortage transfer, human gift/request
+  resource vectors, the exact 0x432/0x433 wire payloads and network gate,
+  all three localized messages, and the turn-duration-dependent 15000 ms
+  request timeout. Directly indexing the recipient, rather than retaining a
+  convenience pointer, recovered retail's 0x7c frame and `ebx` player-id
+  lifetime; the asymmetric gold compare/indexed store was likewise
+  preserved from the bytes. Its remaining delta is chiefly VC6 choosing to
+  inline temporary-string destruction where retail calls `_Tidy`, plus two
+  transfer-loop register permutations. This applies the HoMM2/Gruntz
+  structure-first rule and records failed type/lifetime/codegen probes
+  instead of guessing through the plateau. `end_turn` now implements
+  production/reserve accounting, both town strategies, the prohibited
+  purchase loop, hero hiring, demand refresh, the first-Marketplace gift
+  passes (AI allies before human allies), and negative-resource warning.
+  Its current 56.8835% retains a TU optimizer dependency: even with both
+  neighbouring routines restored, VC6 expands the 230-byte `string::append`
+  body that retail calls out of line. `decomp-attempt-1` was checked
+  read-only and contains only stubs/prototypes for these routines; no
+  implementation, layout, or name was imported from it.
+
+- **2026-08-09 — `button::Main` improved from 84.6566% to 88.1009%;
+  remaining string delta is an inline-boundary choice.** Retail emits the
+  palette-success arm first, then falls through to the sprite-reload path;
+  expressing that case positively recovered the complete block order.
+  Restoring the natural header spelling `Text = new_text` also aligned the
+  strlen and raw `movsd`/`movsb` copy tail. The remaining text region is
+  source-equivalent VC6 `/Ob2` state: retail calls the 0x404a90
+  `std::string::_Grow(size, true)` COMDAT here, while this compile expands
+  it; the same header body makes the inverse boundary choice in the
+  `textButton` constructor. Inline-depth 1 through 4 and scoped
+  `auto_inline` probes were inert and reverted. The rest is the already
+  bounded ESI/EDI whole-body allocation mirror. HoMM2/Gruntz's
+  structure-first method led to the success-first branch correction;
+  `decomp-attempt-1` was checked read-only and contains only Button
+  prototypes/stubs, so nothing was imported from it.
+
+- **2026-08-09 — `mouseManager::Update` retail reconstruction reached
+  94.1675%; its inlined helper boundaries are restored.** The 0x770-byte
+  body now has retail's complete 72-block CFG: re-entrancy and busy gates,
+  cursor sampling, interleaved hotspot lookup, clipping, overlap union,
+  DirectDraw save/draw/restore paths, and cleanup. Applying the
+  homm2/Gruntz structure-first method identified the decisive source shape:
+  the retail stack retains argument homes and private `RECT`s from the
+  known `SaveAndDraw` and `RestoreUnderlying` members even though their
+  standalone retail copies were eliminated. Restoring those helpers raised
+  the body from 83.1422% to 92.1801%; preserving separate screen/client
+  rectangles in the non-overlap path and the shared helper rectangle
+  initialization reached 94.1675%, with all 72 branch flows and 68 block
+  sizes exact. The bounded remainder is VC6 parameter-homing/zero-CSE state,
+  an eight-byte frame-allocation delta, and the Y-coordinate relocation form
+  (`POINT` base + 4 locally versus a retail relocation rooted at the +4
+  address). Ordinary inline, volatile parameters, coordinate temporaries,
+  declaration-order changes, and alternate rectangle spellings did not
+  improve the best. `decomp-attempt-1` was checked read-only: these mouse
+  bodies are stubs there, so it supplied no admitted implementation; its
+  potentially useful content remains limited to inventory metadata that
+  still requires separate supervised approval.
+
+- **2026-08-09 — `mouseManager::LoadFrame` reconstructed from retail at
+  99.3104%; attempt-1 remained inventory-only.** The 0x16b-byte body proves
+  a 0x64-byte `DDBLTFX`, the older 0x6c-byte `DDSURFACEDESC` passed through
+  the DirectDraw4 ABI, a referenced `Bitmap16Bit`, and the eight-argument
+  `CSprite::DrawPointer` call. Using `DDSURFACEDESC2` first produced a
+  structurally useful 96.8793%; correcting the stack type reached 97.00%,
+  and preserving the sprite pointer in a named local made the entire
+  draw/unlock block exact and reached 99.3104%. All three CFG blocks agree;
+  B1/B2 are instruction-exact. B0 is bounded to the inlined color-mask
+  accumulator's register assignment plus the normalized EH-handler addend;
+  an explicit accumulator-local spelling fell to 88.72%. The corresponding
+  `decomp-attempt-1` body is a stub, so no source or data identity was
+  imported from it.
+
+- **2026-08-09 — `misc` preference lifecycle reconstructed; defaults exact,
+  two retail/codegen residuals bounded.** Retail calls and registry value
+  names pin `CheckConfigFile` at 0x50b260, `SetGameDefaults` at 0x50b4d0,
+  and `ReadPrefsFromRegistry` at 0x50b7b0, as well as the 212-byte prefs
+  layout, path buffers, and three missing registry-name pointer objects.
+  Applying the homm2/Gruntz structural-first method exposed the original
+  inline-helper boundaries: movement speeds belong to system defaults,
+  combat speed precedes the auto-combat flags, and blackout is top-level.
+  That made all three `SetGameDefaults` blocks instruction-exact and raised
+  the engine 544 -> 545 exact. `CheckConfigFile` is 98.5030% with 23/24
+  blocks exact; retail alone retains one redundant second AND that VC6
+  removes from every equivalent C spelling tried. `ReadPrefsFromRegistry`
+  is 95.9319%: all live code surrounding its CD-path tail agrees, while the
+  shipped image contains a four-byte-copy hot patch, jump, and 17 NOPs over
+  the unreachable remainder of an older inline `strcpy`; canonical strcpy
+  was retained instead of encoding patched bytes as source. The two
+  6-byte desktop-size getters at 0x6014c0/0x6014d0 are direct retail loads.
+  `decomp-attempt-1` was surveyed read-only and supplied no admitted source.
+
+- **2026-08-09 — `executive::MainLoop` exact after correcting command
+  semantics.** The earlier reconstruction incorrectly merged executive
+  commands 1 and 4 into one `dialogReturn = msg.extra; done = 1` arm.
+  Retail's unmasked `dec`/`dec`/`sub 2` dispatch proves three distinct
+  cases: TERMINATE_LOOP sets only `done`, REMOVE_MANAGER removes the current
+  manager, and RETURN_RESULT copies `msg.extra` before setting `done`.
+  Splitting those arms also restored retail's stack frame, dispatch homing,
+  register allocation, and branch polarity with no codegen lever. Result:
+  88.1290% -> 100.0000%, engine-wide 543 -> 544 exact.
+
+- **2026-08-09 — both Windows input handlers exact; canonical field chain
+  admitted.** `KeyboardMessageHandler`'s 0x1ab-byte body now models the
+  input ring entry, key-state qualifiers, `% 64` head/tail advance,
+  `extendFlag`, and F1/F4 command tail. The previously unresolved field chain
+  is represented by the real types: Dreamcast places
+  `TAdventureMapWindow::chatEdit` at +0x50, retail's independently proven
+  `heroWindow` base is eight bytes wider, and retail directly confirms the
+  resulting +0x58 pointer followed by the byte-proven
+  `textEntryWidget::bHasFocus` at +0x6d. A bounded VC6 sweep applied the
+  homm2/Gruntz structural-first doctrine: the six clears are one chained
+  assignment, and `HIWORD(lParam) & 0xff` preserves retail's full-width
+  load/shift/mask. The same chained clear then moved the otherwise
+  byte-identical `MouseMessageHandler` from 99.9645% to 100.0000%.
+  Result: keyboard 94.9323% initial reconstruction -> 100.0000%,
+  engine-wide 541 -> 543 exact. `decomp-attempt-1` was surveyed read-only;
+  it corroborates the address, size, and +0x58 layout but contains only a
+  stub body, so no source was admitted from it.
+
+- **2026-08-09 — text-pad normalization corrected for linked-target
+  alignment.** `inputManager::AsciiConvert` was byte/reloc-identical over
+  its claimed 0x1c6 bytes but remained at 98.80% because the delinked target
+  necessarily kept two NOPs before the next 4-byte-aligned function while
+  the base COMDAT normalizer removed all ten of its trailing NOPs. The
+  normalization driver now pairs base and target: it restores only a target
+  NOP suffix of at most 15 bytes, only when removing that suffix makes the
+  two logical function lengths equal, and records both raw objects in the
+  provenance stamp. Full-engine sweep: 540 -> 541 exact, no function score
+  decreased; `AsciiConvert` 98.8024% -> 100.0000%. This also disproves the
+  earlier theory that its base-only COFF labels capped the match.
+
 - **2026-08-08 — `ai` 6 → 11, `findpath` 9 → 11; the include-set class
   is MEMBER population, not just type count; and two change-sets that
   each reached 100 alone COMPOSE TO 94.07.** Engine-wide 534 →
@@ -2283,12 +2581,10 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   base publics by COFF section number - definition order both sides);
   claim keys strip the step-1 rva-dedup suffix. Two ratchet
   rename-artifact cleanups hand-edited (19 stale declarator rows).
-  RESIDUAL: armyGroup(TCreatureType,int) at 40.5% - semantics match
-  line for line but retail's loop keeps short-indexed addressing and
-  memory-resident `amount` where our compile strength-reduces;
-  resisted /GX and three source shapes (guard-return, hoisted short
-  i); open codegen puzzle, candidate explanations: VC6 service-pack
-  optimizer delta or a source spelling not yet found. Scoreboard:
+  The constructor residual recorded in this session was resolved on
+  2026-08-09: the missing fact was the source's `i < 7 && amount > 0`
+  short-circuit order, which is both semantically significant and now
+  byte-exact. Scoreboard at the time of this original wave:
   83/102 exact (81.4%) in linked units.
 
 - **2026-08-04 — FIRST GAME-CODE MATCHES (P5.2 milestone): Random,

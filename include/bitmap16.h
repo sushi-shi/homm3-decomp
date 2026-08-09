@@ -33,6 +33,7 @@ public:
     virtual void _vslot2();
 
     Bitmap16Bit(int w, int h);
+    void reference(int w, int h, int pitch, unsigned short* data);
     void Darken(int x, int y, int w, int h);
     void Grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
     void Draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;

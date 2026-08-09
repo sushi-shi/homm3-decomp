@@ -56,6 +56,8 @@ public:
 
     palette* GetPalette();
     void SetPalette(const unsigned short* pal);
+    void DrawPointer(int framenum, unsigned short* dst, int dx, int dy,
+                     int dw, int dh, int dpitch, unsigned char hflip);
     void DrawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
 };
 

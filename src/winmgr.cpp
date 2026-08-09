@@ -34,21 +34,16 @@ void heroWindowManager::Close()
     // @stub
 }
 
-// E:\gamedcs\winmgr.cpp:181
-DC_ONLY(0x19a9c0, 0x46)
-int heroWindowManager::Main(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\winmgr.cpp:216
-DC_ONLY(0x19aa08, 0x16)
-int heroWindowManager::ConvertToHover(message* msg)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\winmgr.cpp:216. Retail's entire body is the virtual slot-2
+// forwarding call; the DC name and message-reference signature fit it
+// store-for-store.
+VA(0x00602360, 0x10)  // byte-shape, dc 0x19aa08
+int heroWindowManager::ConvertToHover(message& msg)
+{
+    return Main(msg);
+}
 
 // E:\gamedcs\winmgr.cpp:234
 VA(0x00602370, 0x3B)  // anchor-global, dc 0x19aa20
@@ -529,4 +524,3 @@ const unsigned char* Bitmap816::GetMap(int x, int y)
 }
 
 #endif  // @carcass
-

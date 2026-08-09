@@ -5,13 +5,28 @@
 #ifndef HOMM3_MISC_H
 #define HOMM3_MISC_H
 
+#include <string>
+
 // Live prototypes (claimed misc.cpp bodies).
 int SafeRandom(int min, int max);   // 0x50b1d0
 int Random(int min, int max);       // 0x50b230
+void CheckConfigFile();             // 0x50b260
+void SetGameDefaults();             // 0x50b4d0
+void SetDefaultSystemOptions();
+void SetDefaultCombatOptions();
+void ReadPrefsFromRegistry();       // 0x50b7b0
 // AppWndProc's WM_MOVE callee: retail 0x50c1b0 is a 5-byte tail jmp
-// into WritePrefsToRegistry (body still @stub in misc.cpp).
-void WritePrefsToRegistry();        // 0x50be10 (body @stub)
+// into WritePrefsToRegistry.
+void WritePrefsToRegistry();        // 0x50be10
 void WritePrefs();                  // 0x50c1b0
+std::string format_string(const char* format, ...);  // 0x50c600
+
+// Registry-path state owned by misc.cpp. AppPath's 351-byte extent is
+// byte-proven by SetGameDefaults' _getcwd bound; registry reads cap both
+// paths at 350 bytes, which also proves CDDrive's extent.
+extern char gcRegAppPath[351];       // .bss 0x6985c4
+extern char gcRegCDRomPath[350];     // .bss 0x698838
+extern int giShowIntro;              // .bss 0x6993c0
 
 // The no-repeat random picker (layout byte-proven by the ctor/Pick
 // pair at 0x50c6e0/0x50c740: six fields, the last two parked at

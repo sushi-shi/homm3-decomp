@@ -9,6 +9,8 @@
 #include "basemgr.h"
 #include "csprite.h"
 
+struct IDirectDrawSurface4;
+
 // mousemgr.cpp's critical-section RAII guard (DC CodeView TCSLock; the
 // Dreamcast build keeps ctor/dtor out of line, retail inlines both -
 // the fs:[0] frame in every user is the unwind scaffolding).
@@ -57,10 +59,7 @@ public:
     };
 
     int field_38;
-    int field_3c;
-    int field_40;
-    int field_44;
-    int field_48;
+    RECT savedRect;
     int field_4c;
     int field_50;
     CSprite* field_54;
@@ -95,6 +94,11 @@ public:
     void MouseCoords(int* x, int* y);
     void SetPointer(int new_frame, EPointerSet new_set);
     void Update(unsigned char bForceIt);
+    void SaveAndDraw(IDirectDrawSurface4* dst_surface,
+                     IDirectDrawSurface4* save_surface,
+                     const RECT* dst_rect, int x, int y);
+    void RestoreUnderlying(IDirectDrawSurface4* surface,
+                           const RECT* dst_rect);
     void HidePointer();
     void ShowPointer(bool restore);
     void CheckUpdate();

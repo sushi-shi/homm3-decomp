@@ -4,10 +4,13 @@
 #include "terrain.h"
 #include <va.h>
 #include <windows.h>
+#include <ddraw.h>
 #include <string.h>
 #include "mousemgr.h"
 #include "kbwin.h"
 #include "resourcemanager.h"
+#include "bitmap16.h"
+#include "wingraph.h"
 
 // Thunk-form timeGetTime (retail reaches it through the 6-byte rel32
 // thunk at 0x4f82e0, not the IAT); the plain declaration and the
@@ -24,6 +27,16 @@ DATA(0x0069ca20) unsigned char gMouseTimerInit;
 DATA(0x0069ca21) unsigned char gMouseSetPointerBusy;
 DATA(0x0069ca18) unsigned long gMouseUpdateDeadline;
 DATA(0x0069ca1c) unsigned long gMouseFrameDeadline;
+DATA(0x0069ca22) unsigned char gMouseInUpdate;
+
+// LoadFrame's DirectDraw target and the two live channel masks. Their
+// storage addresses and widths are direct retail operands; names remain
+// house descriptions because no retail symbol survives for them.
+DATA(0x006aacc4) IDirectDrawSurface4* gpDDSMouseSurface;
+DATA(0x006aacc8) IDirectDrawSurface4* gpDDSMouseSaveSurface;
+DATA(0x006aaccc) IDirectDrawSurface4* gpDDSMouseScratchSurface;
+DATA(0x0068c864) unsigned long gColorMask68c864;
+DATA(0x0068c868) unsigned long gColorMask68c868;
 
 // The pointer-set sprite table SetPointer indexes with field_4c: five
 // .DEF names in EPointerSet order (.data 0x67ff38).
@@ -34,6 +47,10 @@ DATA(0x0067ff38) const char* gPointerSetSprites[mouseManager::MAX_POINTER_SETS] 
     DATA_COMPGEN(0x006815e0, pointerSpriteSpell, "crspell.DEF"),
     DATA_COMPGEN(0x006815d0, pointerSpriteArtifact, "artifact.DEF")
 };
+
+// Five pointer sets, 144 frames per set, one POINT per frame. The extent
+// closes exactly at the first pointer-name string at 0x6815d0.
+DATA(0x0067ff50) POINT gMouseHotSpots[mouseManager::MAX_POINTER_SETS][144];
 
 // E:\gamedcs\mousemgr.cpp:315
 VA(0x0050cb50, 0x6F)  // anchor-global, dc 0xfe9d4
@@ -110,10 +127,10 @@ void mouseManager::Close()
 VA(0x0050cc80, 0x1B)  // anchor-callee, dc 0xfeafc
 void mouseManager::Reset()
 {
-    field_3c = 0;
-    field_40 = 0;
-    field_44 = 0;
-    field_48 = 0;
+    savedRect.left = 0;
+    savedRect.top = 0;
+    savedRect.right = 0;
+    savedRect.bottom = 0;
     field_58 = 0;
     field_5c = 0;
     field_6c = 0;
@@ -187,14 +204,242 @@ void TCSLock::~TCSLock()
     // @stub - the definition lives inline in mousemgr.h
 }
 
+#endif  // @carcass
+
+// These two drawing helpers are fully inlined into Update in retail. Their
+// parameter spills and private RECT temporaries are still visible in that
+// body, while no out-of-line retail copies survive.
+__forceinline void mouseManager::SaveAndDraw(
+    IDirectDrawSurface4* dst_surface,
+    IDirectDrawSurface4* save_surface,
+    const RECT* dst_rect, int x, int y)
+{
+    if (!IsRectEmpty(dst_rect)) {
+        RECT saveRect;
+        RECT sourceRect;
+        saveRect.left = saveRect.top = 0;
+        sourceRect.left = sourceRect.top = 0;
+        saveRect.right = sourceRect.right =
+            dst_rect->right - dst_rect->left;
+        saveRect.bottom = sourceRect.bottom =
+            dst_rect->bottom - dst_rect->top;
+        OffsetRect(&sourceRect, dst_rect->left - x, dst_rect->top - y);
+        DDBlit(save_surface, &saveRect, dst_surface, dst_rect, DDBLT_WAIT);
+        if (field_68 == 0)
+            DDBlit(dst_surface, dst_rect, gpDDSMouseSurface, &sourceRect,
+                DDBLT_WAIT | DDBLT_KEYSRC);
+    }
+}
+
+__forceinline void mouseManager::RestoreUnderlying(
+    IDirectDrawSurface4* surface, const RECT* dst_rect)
+{
+    if (!IsRectEmpty(dst_rect)) {
+        RECT sourceRect;
+        sourceRect.left = 0;
+        sourceRect.top = 0;
+        sourceRect.right = dst_rect->right - dst_rect->left;
+        sourceRect.bottom = dst_rect->bottom - dst_rect->top;
+        DDBlit(surface, dst_rect, gpDDSMouseSaveSurface, &sourceRect,
+            DDBLT_WAIT);
+    }
+}
+
 // E:\gamedcs\mousemgr.cpp:526
+// RETAIL-RECONSTRUCTED 2026-08-09. The 72-block CFG now agrees exactly,
+// including both early-return families, overlap/non-overlap selection, all
+// four clipping ladders and the final cleanup. Reintroducing SaveAndDraw and
+// RestoreUnderlying as forced-inline members was the decisive source-shape
+// correction: their argument homes and private RECTs are visible in retail's
+// Update stack frame even though no standalone retail copies survive.
+//
+// Residual (94.1675%): four helper-expansion blocks differ only in VC6
+// parameter homing/zero CSE, and the local frame is eight bytes smaller
+// (0xfc versus 0x104). The two hotspot Y loads also use a relocation to the
+// +4 half of the interleaved POINT table in retail, while the canonical POINT
+// view emits a base relocation plus a +4 displacement. Volatile parameters,
+// ordinary inline, separate coordinate locals and alternate RECT
+// initialization spellings were bounded at <=94.1675%; preserve the
+// canonical semantics instead of encoding allocator state.
 VA(0x0050cd90, 0x770)  // anchor-global, dc 0xfec54
 void mouseManager::Update(unsigned char bForceIt)
 {
-    // @stub
-}
+    TCSLock lock(&section_mouse);
+    POINT cursor;
+    RECT pointerRect;
+    RECT combinedRect;
+    RECT clientRect;
+    RECT surfaceRect;
+    RECT oldRect;
+    RECT scratchRect;
+    DDSURFACEDESC surfaceDesc;
+    int pointerX;
 
-#endif  // @carcass
+    if (gMouseInUpdate)
+        return;
+    gMouseInUpdate = 1;
+
+    if (!bForceIt) {
+        EnterCriticalSection(&section_mouse);
+        GetCursorPos(&cursor);
+        pointerX = cursor.x;
+        pointerX &= ~1;
+        cursor.x = pointerX;
+        ScreenToClient(hwndApp, &cursor);
+        field_6c = cursor.x;
+        field_70 = cursor.y;
+        LeaveCriticalSection(&section_mouse);
+    }
+
+    if (field_68 > 0 && !bForceIt) {
+        gMouseInUpdate = 0;
+        return;
+    }
+    if (field_60 > 0) {
+        gMouseInUpdate = 0;
+        return;
+    }
+
+    field_74++;
+    if (!bForceIt
+            && field_58
+                == field_6c - gMouseHotSpots[field_4c][field_50].x
+            && field_5c
+                == field_70 - gMouseHotSpots[field_4c][field_50].y) {
+        gMouseInUpdate = 0;
+        field_74--;
+        return;
+    }
+
+    field_58 = field_6c - gMouseHotSpots[field_4c][field_50].x;
+    field_5c = field_70 - gMouseHotSpots[field_4c][field_50].y;
+
+    pointerRect.left = field_58;
+    pointerRect.top = field_5c;
+    pointerRect.right = field_58 + field_54->Width;
+    pointerRect.bottom = field_5c + field_54->Height;
+    if (pointerRect.left < 0)
+        pointerRect.left = 0;
+    if (pointerRect.top < 0)
+        pointerRect.top = 0;
+    if (pointerRect.right > 800)
+        pointerRect.right = 800;
+    if (pointerRect.bottom > 600)
+        pointerRect.bottom = 600;
+
+    if (pointerRect.left < savedRect.right
+            && pointerRect.right > savedRect.left
+            && pointerRect.top < savedRect.bottom
+            && pointerRect.bottom > savedRect.top) {
+        UnionRect(&combinedRect, &pointerRect, &savedRect);
+
+        cursor.x = 0;
+        cursor.y = 0;
+        ClientToScreen(hwndApp, &cursor);
+        OffsetRect(&combinedRect, cursor.x, cursor.y);
+
+        memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+        surfaceDesc.dwSize = sizeof(surfaceDesc);
+        gpDDSPrimary->GetSurfaceDesc(&surfaceDesc);
+        if (combinedRect.left < 0)
+            combinedRect.left = 0;
+        if (combinedRect.right > static_cast<long>(surfaceDesc.dwWidth))
+            combinedRect.right = surfaceDesc.dwWidth;
+        if (combinedRect.top < 0)
+            combinedRect.top = 0;
+        if (combinedRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
+            combinedRect.bottom = surfaceDesc.dwHeight;
+
+        clientRect = combinedRect;
+        OffsetRect(&clientRect, -cursor.x, -cursor.y);
+
+        surfaceRect.left = 0;
+        surfaceRect.top = 0;
+        surfaceRect.right = combinedRect.right - combinedRect.left;
+        surfaceRect.bottom = combinedRect.bottom - combinedRect.top;
+        DDBlit(gpDDSMouseScratchSurface, &surfaceRect,
+            static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSPrimary)),
+            &combinedRect, DDBLT_WAIT);
+
+        oldRect = savedRect;
+        OffsetRect(&oldRect, -clientRect.left, -clientRect.top);
+        RestoreUnderlying(gpDDSMouseScratchSurface, &oldRect);
+
+        if (pointerRect.left < -cursor.x)
+            pointerRect.left = -cursor.x;
+        if (pointerRect.right
+                > static_cast<long>(surfaceDesc.dwWidth) - cursor.x)
+            pointerRect.right = surfaceDesc.dwWidth - cursor.x;
+        if (pointerRect.top < -cursor.y)
+            pointerRect.top = -cursor.y;
+        if (pointerRect.bottom
+                > static_cast<long>(surfaceDesc.dwHeight) - cursor.y)
+            pointerRect.bottom = surfaceDesc.dwHeight - cursor.y;
+
+        savedRect = pointerRect;
+        OffsetRect(&pointerRect, -clientRect.left, -clientRect.top);
+        SaveAndDraw(gpDDSMouseScratchSurface, gpDDSMouseSaveSurface,
+            &pointerRect, field_58 - clientRect.left,
+            field_5c - clientRect.top);
+
+        scratchRect.left = 0;
+        scratchRect.top = 0;
+        scratchRect.right = combinedRect.right - combinedRect.left;
+        scratchRect.bottom = combinedRect.bottom - combinedRect.top;
+        DDBlit(
+            static_cast<IDirectDrawSurface4*>(static_cast<void*>(gpDDSPrimary)),
+            &combinedRect, gpDDSMouseScratchSurface, &scratchRect, DDBLT_WAIT);
+    } else {
+        combinedRect = pointerRect;
+        cursor.x = 0;
+        cursor.y = 0;
+        ClientToScreen(hwndApp, &cursor);
+        OffsetRect(&combinedRect, cursor.x, cursor.y);
+
+        memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+        surfaceDesc.dwSize = sizeof(surfaceDesc);
+        gpDDSPrimary->GetSurfaceDesc(&surfaceDesc);
+        if (combinedRect.left < 0)
+            combinedRect.left = 0;
+        if (combinedRect.right > static_cast<long>(surfaceDesc.dwWidth))
+            combinedRect.right = surfaceDesc.dwWidth;
+        if (combinedRect.top < 0)
+            combinedRect.top = 0;
+        if (combinedRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
+            combinedRect.bottom = surfaceDesc.dwHeight;
+
+        clientRect = combinedRect;
+        OffsetRect(&clientRect, -cursor.x, -cursor.y);
+        SaveAndDraw(static_cast<IDirectDrawSurface4*>(
+                static_cast<void*>(gpDDSPrimary)),
+            gpDDSMouseScratchSurface, &combinedRect,
+            field_58 + cursor.x, field_5c + cursor.y);
+
+        OffsetRect(&savedRect, cursor.x, cursor.y);
+        if (savedRect.left < 0)
+            savedRect.left = 0;
+        if (savedRect.right > static_cast<long>(surfaceDesc.dwWidth))
+            savedRect.right = surfaceDesc.dwWidth;
+        if (savedRect.top < 0)
+            savedRect.top = 0;
+        if (savedRect.bottom > static_cast<long>(surfaceDesc.dwHeight))
+            savedRect.bottom = surfaceDesc.dwHeight;
+        RestoreUnderlying(static_cast<IDirectDrawSurface4*>(
+                static_cast<void*>(gpDDSPrimary)),
+            &savedRect);
+
+        scratchRect.left = 0;
+        scratchRect.top = 0;
+        scratchRect.right = clientRect.right - clientRect.left;
+        scratchRect.bottom = clientRect.bottom - clientRect.top;
+        DDBlit(gpDDSMouseSaveSurface, &scratchRect,
+            gpDDSMouseScratchSurface, &scratchRect, DDBLT_WAIT);
+        savedRect = clientRect;
+    }
+
+    gMouseInUpdate = 0;
+    field_74--;
+}
 
 // E:\gamedcs\mousemgr.cpp:774
 VA(0x0050d500, 0x3F)  // anchor-global, dc 0xff22c
@@ -431,6 +676,8 @@ void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
     // @stub - the definition lives inline in mousemgr.h
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mousemgr.cpp:1026
 // FULLY TRANSCRIBED 2026-08-07. The 2026-08-06 note above was wrong on
 // one point: the first 0x64-byte stack struct is a DDBLTFX, not a
@@ -441,13 +688,13 @@ void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
 //   fx.dwFillColor = <colorkey>;      // see below
 //   gSurface->Blt(0, 0, 0, DDBLT_COLORFILL /*0x400*/, &fx);
 //                                     // vtbl +0x14 == Blt
-//   DDSURFACEDESC2 sd; memset(&sd,0,0x6c); sd.dwSize = 0x6c;
+//   DDSURFACEDESC sd; memset(&sd,0,0x6c); sd.dwSize = 0x6c;
 //   if (gSurface->Lock(0, &sd, 1, 0) == DD_OK) {   // vtbl +0x64
 //       Bitmap16Bit bmp(0, 0);        // ctor 0x44df70, `push 0;push 0`
 //       bmp.reference(sd.dwWidth, sd.dwHeight, sd.lPitch,
 //                     static_cast<unsigned short*>(sd.lpSurface));
 //                                     // 0x44e250; the four stack
-//                                     // slots are DDSURFACEDESC2
+//                                     // slots are DDSURFACEDESC
 //                                     // +12/+8/+16/+36 exactly
 //       field_54->Draw8(new_frame, bmp.map, 0, 0, bmp.Width,
 //                       bmp.Height, bmp.Pitch, 0);   // CSprite 0x47beb0
@@ -460,20 +707,46 @@ void TCSLock::TCSLock(CRITICAL_SECTION* lpCriticalSection)
 // RGBto16 inline mousemgr.h already attests (DC WinGraph.h:55) with
 // two of its three channel terms surviving; the two globals are the
 // live 16-bit channel masks.
-// BLOCKED on cross-TU modelling, all of it unclaimed today: the
-// DirectDraw surface global 0x6aacc4 and which interface its vtable
-// is, the two mask globals 0x68c864/0x68c868, Bitmap16Bit::reference
-// (0x44e250, declared in bitmap16.h but unclaimed) and the 8-argument
-// CSprite draw at 0x47beb0 (csprite.h has no such member yet). Landing
-// those views is a supervised decision, not a matcher one - modelling
-// them wrong would ratchet in a structurally-wrong spelling.
+// The vtable offsets prove IDirectDrawSurface4; the 0x44e250 callee is
+// the already rostered Bitmap16Bit::reference, and the eight stack
+// arguments make 0x47beb0 the rostered CSprite::DrawPointer overload.
+// Residual (99.3104%): all three CFG blocks agree, and the complete
+// 39-instruction draw/unlock block plus the 10-instruction cleanup block
+// are exact. B0 differs only in the inlined two-mask color accumulator's
+// register assignment and the normalized EH-handler addend. Reversing the
+// commutative source operands stayed at 97.00%; naming the accumulator
+// locals fell to 88.72%. The explicit sprite local is source-significant:
+// it raised 97.00% to 99.31% by making the whole draw block exact.
 VA(0x0050d8b0, 0x16B)  // anchor-global, dc 0xff610
 void mouseManager::LoadFrame(int new_frame)
 {
-    // @stub
-}
+    TCSLock lock(&section_mouse);
 
-#endif  // @carcass
+    DDBLTFX fx;
+    memset(&fx, 0, sizeof(fx));
+    fx.dwSize = sizeof(fx);
+    fx.dwFillColor =
+        ((255 * gColorMask68c864 / 255) & gColorMask68c864) |
+        ((255 * gColorMask68c868 / 255) & gColorMask68c868);
+    gpDDSMouseSurface->Blt(0, 0, 0, DDBLT_COLORFILL, &fx);
+
+    DDSURFACEDESC surfaceDesc;
+    memset(&surfaceDesc, 0, sizeof(surfaceDesc));
+    surfaceDesc.dwSize = sizeof(surfaceDesc);
+    if (gpDDSMouseSurface->Lock(0,
+            static_cast<DDSURFACEDESC2*>(static_cast<void*>(&surfaceDesc)),
+            DDLOCK_WAIT, 0) == DD_OK) {
+        Bitmap16Bit bitmap(0, 0);
+        bitmap.reference(surfaceDesc.dwWidth, surfaceDesc.dwHeight,
+            surfaceDesc.lPitch,
+            static_cast<unsigned short*>(surfaceDesc.lpSurface));
+        CSprite* sprite = field_54;
+        sprite->DrawPointer(new_frame, bitmap.map, 0, 0,
+            bitmap.Width, bitmap.Height, bitmap.Pitch, 0);
+        gpDDSMouseSurface->Unlock(0);
+        field_50 = new_frame;
+    }
+}
 
 // E:\gamedcs\mousemgr.cpp:1120
 VA(0x0050da20, 0x37)  // anchor-global, dc 0xff708
@@ -527,4 +800,3 @@ void* mouseManager::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
-

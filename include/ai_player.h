@@ -5,8 +5,95 @@
 #ifndef HOMM3_AI_PLAYER_H
 #define HOMM3_AI_PLAYER_H
 
+#include <vector>
+
 class hero;
+class playerData;
 class town;
+
+// The 20-byte network-message head and the two gift messages are
+// byte-sliced from make_gift's inlined constructors. The subtype and
+// total-size constants are the immediates retail stores at +8/+0xc;
+// the derived payload offsets agree with the DC member roster.
+class CNetMsg {
+public:
+    int field_00;
+    int field_04;
+    int subType;
+    unsigned long size;
+    int field_10;
+
+    CNetMsg(int new_sub_type, unsigned long new_size)
+        : field_00(-1), field_04(0), subType(new_sub_type),
+          size(new_size), field_10(0) {}
+};
+
+class CGiftMsg : public CNetMsg {
+public:
+    int m_niceGuy;
+    int m_resource;
+    int m_qty;
+
+    CGiftMsg(int niceGuy, int resource, int qty)
+        : CNetMsg(0x432, sizeof(CGiftMsg)), m_niceGuy(niceGuy),
+          m_resource(resource), m_qty(qty) {}
+};
+
+class CGiftRequestMsg : public CNetMsg {
+public:
+    int m_greedyGuy;
+    int m_resource;
+
+    CGiftRequestMsg(int greedyGuy, int resource)
+        : CNetMsg(0x433, sizeof(CGiftRequestMsg)), m_greedyGuy(greedyGuy),
+          m_resource(resource) {}
+};
+
+SIZE(CNetMsg, 20);
+SIZE(CGiftMsg, 32);
+SIZE(CGiftRequestMsg, 28);
+
+// Retail and Dreamcast both make this an 8-byte strategy object: a
+// three-slot vptr followed by the current player id. start_turn inlines
+// both constructors and calls check_towns on one base and one derived
+// instance. The virtual roster/order comes from the three retail vtable
+// entries and the corresponding DC public names.
+class type_town_threat_checker {
+public:
+    int current_player_id;
+
+    type_town_threat_checker(int new_player) { current_player_id = new_player; }
+    void check_towns();
+    virtual void clear_marks();
+    virtual unsigned char is_marked(const town* our_town);
+    virtual void mark_town(town* our_town);
+};
+
+class type_garrison_purchaser : public type_town_threat_checker {
+public:
+    type_garrison_purchaser(int new_player)
+        : type_town_threat_checker(new_player) {}
+    virtual void clear_marks();
+    virtual unsigned char is_marked(const town* our_town);
+    virtual void mark_town(town* our_town);
+};
+
+// Dreamcast records this exact 12-byte sort key; retail calculate_reserve
+// copies it three dwords at a time and compares the value at +4.
+struct type_creature_value {
+    int type;
+    long value;
+    short amount;
+
+    bool operator<(const type_creature_value& arg) const
+    {
+        return value < arg.value;
+    }
+    bool operator>(const type_creature_value& arg) const
+    {
+        return value > arg.value;
+    }
+};
 
 // Full DC layout (classes.csv: 152 B, 6 members, 2 statics) and every
 // offset is corroborated by a retail reader: reset_magus_hut_value
@@ -31,14 +118,28 @@ public:
 
     static float get_attack_bonus(short player);  // 0x428710
     void calculate_demand();                      // 0x428740
+    void end_turn();                              // 0x428dd0
+    void make_gift(long player_id);               // 0x429110
     void start_turn();                            // 0x4297c0
     void reset_magus_hut_value();                 // 0x429ab0
     void calculate_reserve();                     // 0x429ad0
+    long get_total_value(long basic_value, int* cost);  // 0x42a150
+    unsigned char purchase_buildings(unsigned char* prohibited_creatures);
+    unsigned char hire_heroes();
+    bool check_trade_supply(const int* cost, long number, int* supply,
+                            std::vector<long>& trade_qty);
+    bool can_trade_resources(const int* cost, int* supply,
+                             std::vector<long>& trade_qty);
 
 private:
     static float attack_computer_bonus;
     static float attack_human_bonus;
 };
+
+// Retail .bss 0x692950, eight adjacent 152-byte AI records. make_gift
+// recalculates the recipient's demand through this array before giving
+// resources to another computer player. Owner TU remains unlocated.
+extern type_AI_player gAIPlayers[8];
 
 // Both are `static` in the DC roster (functions.csv kind column) and
 // have no DC public. They are spelled with external linkage here
@@ -48,6 +149,10 @@ private:
 // to the code bytes.
 unsigned char can_take_town(const hero* attacking_hero, const town* defending_town);
 long find_magus_hut_value(long player_id, unsigned char explore_mode);
+void fill_prohibited_array(playerData* player, unsigned char* prohibited);
+
+extern const char* gResourceNames[7];
+extern char gAIResourceWarningFormat[];
 
 // 0x432220 - find_magus_hut_value's only callee, reached with
 // (point, player_id, 10). /Gr leaves the 4-byte struct on the stack and

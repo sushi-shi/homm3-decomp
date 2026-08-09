@@ -199,7 +199,7 @@ public:
     // price, and TResourceDisplay::Update (0x558f45) prints
     // `[player + 4*id + 0x9c]` for the seven ids in the table at
     // 0x641008..0x641024. Gold is index 6 (0x9c + 4*6 == 0xb4).
-    int resources[7];
+    long resources[7];
     unsigned long MysticalGardenFlags;  // +0xb8
     unsigned long MagicSpringFlags;     // +0xbc
     unsigned long DeadGuyFlags;         // +0xc0
@@ -214,10 +214,21 @@ public:
     char pad_e3[1];
     int quickCombat;                    // +0xe4
     // +0xe8. DC type `AI`, 128 B here (0x168 - 0xe8). Only the first
-    // dword is retail-proven - both playerData constructors zero it -
-    // so the record is one sliced field plus a pad. Ordinal name.
+    // dword is retail-proven by both playerData constructors. Retail
+    // get_total_value additionally proves the seven-dword production
+    // row at +0x108: it pairs each entry with resources[i] while
+    // deciding whether a resource trade is needed. The 0x20-byte lead
+    // is the VC6-width form of the DC AI record's first two containers.
     int aiField_e8;
-    char ai_rest[0x7c];
+    char ai_pad_ec[0x1c];
+    long turnProductionResource[7];  // +0x108
+    // +0x128 / +0x160. calculate_demand writes each computed resource
+    // value to the AI record as a double, then rounds a running sum of
+    // the first six entries and stores one tenth of it at +0x160.
+    char ai_pad_124[4];
+    double resourceValue[7];
+    int averageResourceValue;
+    char ai_rest_164[4];
 
     playerData();
     ~playerData();
@@ -248,6 +259,7 @@ public:
     // gpGame->players[town->owner] with artifact id 0x85; the caller's
     // `test al,al` is what types the return as a byte.
     unsigned char hasGivenArtifact(int artifact);
+    void guess_grail_location(long player_id);  // 0x4bae50
 };
 SIZE(playerData, 360);
 
@@ -258,7 +270,16 @@ SIZE(playerData, 360);
 // define the class.)
 class game {
 public:
-    char pad_00000[0x1f698];
+    char pad_00000[0x1f636];
+    // Eight per-player disabled/dead flags. type_AI_player::end_turn
+    // skips a gift candidate when the indexed byte is nonzero.
+    unsigned char playerDisabled[8];  // +0x1f636
+    // Unsigned word gate used by calculate_demand: from value five on,
+    // current dwelling population is augmented by one growth cycle.
+    // Its wider calendar role is not yet attested, so the name remains
+    // ordinal rather than importing a semantic guess.
+    unsigned short field_1f63e;
+    char pad_1f640[0x58];
     int f_1f698;
     char pad_1f69c[0x1];
     // Byte gate town::can_build and get_buildable_mask test before the
@@ -272,7 +293,11 @@ public:
     // for non-zero; the type_AI_combat_parameters ctor 0x435ec0 tests it
     // SIGNED-positive, which is what pins the signed char). Provisional.
     char AI_in_control;   // +0x1f6d8
-    char pad_1f6d9[0x497];
+    char pad_1f6d9[0x1a0];
+    // Eight one-byte alliance/team ids. end_turn compares the candidate
+    // byte with the acting player's byte before considering a gift.
+    signed char playerTeam[8];  // +0x1f879
+    char pad_1f881[0x2ef];
     NewfullMap worldMap;  // +0x1fb70
     char pad_1fc4c[0xe84];
     // Eight 360-byte player records at +0x20ad0 (town.obj indexes them
@@ -364,6 +389,13 @@ public:
     void TurnOnAIMusic();                        // 0x4c6f80
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
+    void calculate_production();                 // 0x4b8af0
+    unsigned char OnSameTeam(int player1, int player2)
+    {
+        if (player1 < 0 || player2 < 0)
+            return 0;
+        return playerTeam[player1] == playerTeam[player2];
+    }
     NewmapCell* get_cell(type_point point);      // 0x42ed80 (ai_player.obj)
     // DC `game::GetHero`, dc 0x2eb0, 36 B, declared in E:\gamedcs\Game.h
     // line 972 - i.e. an INLINE MEMBER of this header, which is exactly

@@ -20,7 +20,15 @@ public:
     int PostPostWalkSequence;
     unsigned short BackColor;
 
+    // Retail fixes style=2 internally and keeps eleven arguments
+    // (`ret 0x2c` at 0x4ea7a9), unlike the twelve-argument DC form.
+    iconWidget(int x, int y, int w, int h, int id, const char* image,
+               int frame, int sequence, unsigned char flipped,
+               unsigned backColor, unsigned char focusable);
     virtual ~iconWidget();  // retail 0x4ea7b0
+    virtual int Main(message* msg);
+    virtual void zBufferDraw();
+    virtual void Draw();
     // Overrides of widget's two size slots; retail 0x4eab30 / 0x4eab20
     // (vtable 0x63ec48 slots 5 and 6). Both answer with the sprite's
     // own extent, not the widget rect.

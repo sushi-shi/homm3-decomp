@@ -21,7 +21,13 @@ public:
     int BackColor;
     unsigned int Justify;
 
+    textWidget(int x, int y, int w, int h, const char* text,
+               const char* fontName, font::TColor color, int id,
+               unsigned justify, int backColor, unsigned char focusable);
     virtual ~textWidget();  // retail 0x5bc3b0
+    virtual int Main(message* msg);
+    virtual void zBufferDraw();
+    virtual void Draw();
     // Slot 13, the ONE virtual textWidget introduces (its vtable
     // 0x642db0 is 14 wide against widget's 13). Retail body 0x57c6d0,
     // a /Gy header COMDAT far outside textwdgt.obj's band: it takes one

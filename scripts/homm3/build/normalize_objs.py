@@ -20,6 +20,13 @@ can never wedge between "build says fresh" and "sema says stale".
 Known trade-off: the stamp records data inputs only; a change to the
 canonicalizer's own code is not detected. Bump STAMP_SCHEMA (which
 invalidates every stamp) when the transform changes behavior.
+
+The first canonicalization pass strips trailing COMDAT NOP fill. A linked
+target sometimes has the same logical function length but necessarily keeps
+one to three of those NOPs before the next 4-byte-aligned function. The paired
+pass below restores exactly that target-carried fill to the base comparison
+copy. It only does so when stripping the target's NOP suffix makes both logical
+lengths equal; a genuinely longer or shorter function is left alone.
 """
 from __future__ import annotations
 
@@ -34,6 +41,8 @@ from homm3.core import common
 OBJDIFF = common.HOMM3_DIR / "build/objdiff"
 
 CNT_CODE = 0x00000020
+FUNCTION_TYPE = 0x0020
+TEXT_PAD_TRIM_LIMIT = 15
 
 
 def _drop_data_sections(payload: bytes) -> bytes:
@@ -72,6 +81,78 @@ def _drop_data_sections(payload: bytes) -> bytes:
     return bytes(data)
 
 
+def _retain_matching_target_padding(base_payload: bytes,
+                                    target_payload: bytes) -> tuple[bytes, int]:
+    """Retain linked-target NOP fill when the logical function sizes agree.
+
+    VC6 emits each base function in its own padded /Gy section, whereas the
+    delinked retail object packs every function into one .text section. The
+    canonicalizer initially removes all trailing base fill. If retail's next
+    function is 4-byte aligned, objdiff still assigns the intervening NOPs to
+    the previous function. Restore only that proven suffix, without changing
+    either function's logical code extent.
+    """
+    data = bytearray(base_payload)
+    base = canon.CoffObject(base_payload)
+    target = canon.CoffObject(target_payload)
+
+    base_functions: dict[int, list] = {}
+    for symbol in base.symbols.values():
+        if symbol.typ == FUNCTION_TYPE and symbol.section > 0:
+            base_functions.setdefault(symbol.section, []).append(symbol)
+
+    target_functions: dict[int, list] = {}
+    target_by_name: dict[str, list] = {}
+    for symbol in target.symbols.values():
+        if symbol.typ != FUNCTION_TYPE or symbol.section <= 0:
+            continue
+        target_functions.setdefault(symbol.section, []).append(symbol)
+        target_by_name.setdefault(symbol.name, []).append(symbol)
+
+    retained = 0
+    for section_index, functions in base_functions.items():
+        # A normal /Gy contribution owns exactly one external function. Skip
+        # unusual multi-function sections rather than guessing their extents.
+        if len(functions) != 1:
+            continue
+        function = functions[0]
+        section = base.sections[section_index - 1]
+        if function.value != 0 or not section.characteristics & CNT_CODE:
+            continue
+        counterparts = target_by_name.get(function.name, ())
+        if len(counterparts) != 1:
+            continue
+        counterpart = counterparts[0]
+        target_section = target.sections[counterpart.section - 1]
+        later = [
+            row.value for row in target_functions[counterpart.section]
+            if row.value > counterpart.value
+        ]
+        end = min(later) if later else target_section.raw_size
+        if end <= counterpart.value:
+            continue
+        extent = end - counterpart.value
+        target_bytes = target.section_bytes(target_section)[counterpart.value:end]
+        pad = 0
+        while (pad < min(TEXT_PAD_TRIM_LIMIT, len(target_bytes))
+               and target_bytes[-1 - pad] == 0x90):
+            pad += 1
+        if not pad or section.raw_size != extent - pad:
+            continue
+
+        # Shrinking a section header leaves its original bytes in the file.
+        # Require those hidden bytes to be the exact same NOP suffix before
+        # making them visible again.
+        fill_start = section.raw_offset + section.raw_size
+        fill_end = section.raw_offset + extent
+        if base_payload[fill_start:fill_end] != b"\x90" * pad:
+            continue
+        struct.pack_into("<I", data, section.header_offset + 16, extent)
+        retained += 1
+
+    return bytes(data), retained
+
+
 def main(argv=None) -> int:
     argv = list(argv or [])
     wrote = skipped = 0
@@ -94,7 +175,29 @@ def main(argv=None) -> int:
             sidecar.write_bytes(canon.sidecar_bytes(result.rows))
             write_stamp(out, {"raw": obj})
             wrote += 1
-    print(f"[build normalize_objs] {wrote} normalized, {skipped} fresh "
+    retained = 0
+    base_root = OBJDIFF / "base"
+    for base_obj in sorted(base_root.rglob("*.obj")):
+        rel = base_obj.relative_to(base_root)
+        target_rel = rel.with_name(rel.stem + ".c.obj")
+        target_obj = OBJDIFF / "target" / target_rel
+        normalized_base = OBJDIFF / "normalized/base" / rel
+        normalized_target = OBJDIFF / "normalized/target" / target_rel
+        if not (target_obj.is_file() and normalized_base.is_file()
+                and normalized_target.is_file()):
+            continue
+        padded, count = _retain_matching_target_padding(
+            normalized_base.read_bytes(), normalized_target.read_bytes())
+        if count:
+            normalized_base.write_bytes(padded)
+            retained += count
+        # Padding is a paired normalization decision, so the base copy is
+        # stale whenever either raw input changes, even when this run found no
+        # suffix to retain.
+        write_stamp(normalized_base, {"raw": base_obj, "target": target_obj})
+
+    print(f"[build normalize_objs] {wrote} normalized, {skipped} fresh, "
+          f"{retained} target-padding span(s) retained "
           f"-> {OBJDIFF / 'normalized'}")
     return 0
 

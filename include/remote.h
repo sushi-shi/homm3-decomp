@@ -5,6 +5,26 @@
 #ifndef HOMM3_REMOTE_H
 #define HOMM3_REMOTE_H
 
+class CNetMsg;
+
+// Opaque here: retail make_gift only proves this public query and the
+// object at .data 0x69d630. The DC prototype independently supplies the
+// method's unsigned-char return type; no object layout is claimed.
+class CTurnDuration {
+public:
+    unsigned char IsOn();
+};
+
+extern CTurnDuration gTurnDuration69d630;
+
+int TransmitRemoteData(CNetMsg* pMsg, int toWho,
+                       unsigned char compressMsg,
+                       unsigned char guaranteed);
+
+// Retail .data 0x69954c. make_gift only uses it as the gate for sending
+// a gift/request message to a non-local human; wider role unattested.
+extern int gNetworkActive69954c;
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\remote.cpp:102, dc 0x11b8c4) void DPSD(int iDPErr, char* cFile, int iLine);
 // CODEVIEW(E:\gamedcs\remote.cpp:129, dc 0x11b940) int calc_crc_long(unsigned char* buffer, int len);

@@ -32,6 +32,11 @@ long __cdecl ftell(FILE* stream);
 int __cdecl fclose(FILE* stream);
 int __cdecl sprintf(char* buffer, const char* format, ...);
 void* __cdecl memset(void* dest, int fill, unsigned int count);
+char* __cdecl _getcwd(char* buffer, int maxlen);
+int __cdecl _strcmpi(const char* lhs, const char* rhs);
+char* __cdecl strcat(char* dest, const char* src);
+char* __cdecl strcpy(char* dest, const char* src);
+unsigned int __cdecl strlen(const char* text);
 }
 
 #define SEEK_SET 0

@@ -79,8 +79,11 @@ off_grid:
 // parameter slot before the `jne`, where our CL dead-codes the store
 // and tests `al` directly. Tried and rejected, all byte-identical:
 // `int found = ...; if (!found)`, the same with `found == 0`, the
-// local declared at function scope and assigned later, and
-// `FindCombatPath(...) == 0` inline. The positive form
+// local declared at function scope and assigned later,
+// `FindCombatPath(...) == 0` inline, and preserving the original target
+// in a local while assigning the result back to the formal `destIndex`
+// slot (the source-plausible explanation for retail's reuse of [ebp+8]).
+// VC6 folds that parameter assignment away too. The positive form
 // (`if (found) { pathTarget = ...; return 1; } return 0;`) is much
 // worse (80.1%) - it sinks the success block. Re-confirmed 2026-08-08
 // (closeout lane): `int found = ...; if (!found)` is still folded away

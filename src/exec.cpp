@@ -98,9 +98,9 @@ int executive::DoDialog(baseManager* newDialog)
 #endif  // @carcass
 
 // E:\gamedcs\exec.cpp:147
-// Residual (90.1%): whole-body ebx/edi role swap from the entry
-// block - island-track class. homm2's shape with the heroWindow-style
-// tail-first walk; 3 is the homm2 OPEN_FAILURE lineage code.
+// EXACT with homm2's heroWindow-style tail-first walk; 3 is the homm2
+// OPEN_FAILURE lineage code. The older whole-body ebx/edi role-swap
+// residual disappeared once the TU's canonical include closure landed.
 VA(0x004b0b20, 0xCB)  // anchor-global, dc 0x9e778
 int executive::AddManager(baseManager* newManager, int newPriority)
 {
@@ -222,10 +222,9 @@ void executive::CallManager(baseManager* newManager)
 // on its local executive between the fourth AddManager and
 // RemoveManager - exactly the roster position. Retail keeps homm2's
 // guard: mouse-move messages (id 4) skip the window manager.
-// 88.1 residual (2026-08-06): retail's frame places msg one slot
-// lower (msg@-0x28, GetEvent temp@-0x48) than this compile
-// (-0x24/-0x44) - the frame-layout residual class; the dispatch
-// protocol itself is block-identical (switch-on-Main via dec-chain).
+// The command switch is deliberately asymmetric: TERMINATE_LOOP sets
+// only done, while RETURN_RESULT first copies msg.extra to dialogReturn.
+// Retail's dec/dec/sub-2 chain proves the three distinct arms.
 VA(0x004b0e40, 0xF5)  // anchor-callee, dc 0x9e9b0
 void executive::MainLoop()
 {
@@ -254,9 +253,12 @@ void executive::MainLoop()
                     case MESSAGE_DISPATCH_FORWARD:
                         if (msg.id & MESSAGE_EXECUTIVE) {
                             // Retail merges homm2's TERMINATE_LOOP and
-                            // RETURN_RESULT arms into one store.
+                            // RETURN_RESULT tails at the done store, but
+                            // only RETURN_RESULT copies msg.extra first.
                             switch (msg.codeX) {
                                 case EXECUTIVE_COMMAND_TERMINATE_LOOP:
+                                    done = 1;
+                                    break;
                                 case EXECUTIVE_COMMAND_RETURN_RESULT:
                                     dialogReturn = msg.extra;
                                     done = 1;

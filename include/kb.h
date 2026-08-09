@@ -5,6 +5,9 @@
 #ifndef HOMM3_KB_H
 #define HOMM3_KB_H
 
+#include <vector>
+#include "town.h"
+
 // homm2's KB timer array survives (DC glTimers: unsigned long[10];
 // retail base 0x698998 - button::Select stores slot 2 at 0x6989a0).
 // Slot name is the homm2 2.1 KB.h value.
@@ -22,6 +25,9 @@ void CleanUpMenus();                                     // 0x4f4b50
 void NormalDialog(const char* cText, int iMBType, int x, int y,
     int iResType1, int iResExtra1, int iResType2, int iResExtra2,
     int iSpecial, int iTimeout, int iResType3, int iResExtra3);  // 0x4f6570
+void extended_dialog(const char* text,
+    std::vector<type_dialog_resource>& resources,
+    long x, long y, long timeout);                              // 0x4f6cf0
 // Located kb.cpp bodies kbwin's WinMain / AppWndProc call (bodies not
 // yet reconstructed; the declarators match the kbwin call sites).
 int InitMainClasses();                                   // 0x4ed650
