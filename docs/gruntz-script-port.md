@@ -321,6 +321,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `combatManager::SetupAdjacencyArray` reconstructed
+  byte-exact (324 bytes, including its jump table).** Retail walks all 187
+  combat indexes and six directions, derives row and column independently,
+  rejects the two off-field margin columns, computes each neighbour from row
+  parity, and admits it only when both its index and resulting column are on
+  the playable grid. The six direction names remain honest ordinal
+  placeholders; all values and formulas are direct retail-byte proof. The
+  natural nested loops, `ValidHex` inline boundary and switch reproduce every
+  instruction on the first build. One apparently odd source detail is also
+  byte-selected: the switch destination is declared before the loops without
+  an initializer. Although directions 0..5 assign it on every reachable
+  iteration, VC6 retains a default switch edge and loads the prior value at
+  entry exactly as retail does. This is the HoMM2/Gruntz source-lifetime and
+  helper-boundary method applied without external code; `decomp-attempt-1`
+  was not used.
+
 - **2026-08-09 — `combatManager::RaiseDoor` reconstructed from unscored to
   86.9340% (375 bytes).** Retail exits unless a defending town exists, the
   bridge is down, cells 96 and 95 have neither an army nor the +0x1c blocker,

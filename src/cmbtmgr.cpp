@@ -168,14 +168,71 @@ void combatManager::CheckNativeTerrain()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\cmbtmgr.cpp:1532
+// EXACT 2026-08-09 from retail's six-way hex-neighbour table.
+// Columns 0 and 16 are off-field margins; every stored neighbour must be a
+// valid 0..186 index whose own column is not either margin. The uninitialized
+// switch destination is intentional: VC6 retains the switch default edge and
+// reproduces retail's otherwise-dead entry load before directions 0..5 assign
+// it on every reachable iteration.
 VA(0x004640a0, 0x144)  // linkorder, dc 0x5e9ac
 void combatManager::SetupAdjacencyArray()
 {
-    // @stub
-}
+    int adjacent;
+    for (int hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
+        int row = hex / COMBAT_GRID_ROW_STRIDE;
+        int column = hex % COMBAT_GRID_ROW_STRIDE;
 
-#endif  // @carcass
+        for (int direction = 0; direction < COMBAT_DIRECTION_COUNT;
+                direction++) {
+            if (ValidHex(hex)
+                    && (column == 0
+                        || column == COMBAT_GRID_LAST_COLUMN)) {
+                adjacentCells[hex][direction] = -1;
+                if (column == 0) {
+                    if (direction >= COMBAT_DIRECTION_3)
+                        continue;
+                } else if (direction <= COMBAT_DIRECTION_2) {
+                    continue;
+                }
+            }
+
+            switch (direction) {
+            case COMBAT_DIRECTION_0:
+                adjacent = (row & 1) ? hex - 17 : hex - 16;
+                break;
+            case COMBAT_DIRECTION_1:
+                adjacent = hex + 1;
+                break;
+            case COMBAT_DIRECTION_2:
+                adjacent = (row & 1) ? hex + 17 : hex + 18;
+                break;
+            case COMBAT_DIRECTION_3:
+                adjacent = (row & 1) ? hex + 16 : hex + 17;
+                break;
+            case COMBAT_DIRECTION_4:
+                adjacent = hex - 1;
+                break;
+            case COMBAT_DIRECTION_5:
+                adjacent = (row & 1) ? hex - 18 : hex - 17;
+                break;
+            }
+
+            if (ValidHex(adjacent)) {
+                int adjacent_column = adjacent % COMBAT_GRID_ROW_STRIDE;
+                if (adjacent_column != 0
+                        && adjacent_column != COMBAT_GRID_LAST_COLUMN) {
+                    adjacentCells[hex][direction] =
+                        static_cast<short>(adjacent);
+                    continue;
+                }
+            }
+            adjacentCells[hex][direction] = -1;
+        }
+    }
+}
 
 // E:\gamedcs\cmbtmgr.cpp:1612
 // EXACT 2026-08-09 from retail's survivor write-back loop. The
