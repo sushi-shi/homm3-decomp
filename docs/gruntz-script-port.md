@@ -260,6 +260,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `advManager::get_map_center` reconstructed byte-exact
+  (111 bytes).** Retail reads the packed origin at +0xe4, adds the two
+  viewport half-extents at +0xec/+0xf0, preserves the origin's four-bit z,
+  and returns one packed `type_point`. The same three field expressions are
+  independently present in the admitted hover paths, while Dreamcast
+  CodeView supplies only the surviving inline member's const signature.
+  Expressing the result as direct `type_point` construction, rather than
+  assigning three fields after default construction, makes VC6 combine y
+  and z before their single word store and reproduces all retail bytes. No
+  external implementation body was used. Whole-linked fuzzy coverage rises
+  from 45.34% to 45.37% and exact linked functions from 612 to 613.
+
 - **2026-08-09 — `HeroExtra::HeroExtra` reconstructed byte-exact
   (104 bytes).** Retail's `game::game` hands this constructor to the vector
   iterator for 156 elements with a 0x334 stride. The body independently
