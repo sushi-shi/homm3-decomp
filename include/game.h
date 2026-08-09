@@ -569,19 +569,25 @@ public:
     // byte by flag and tests the local player's bit.
     unsigned char globalInfoFlags[32];    // +0x4e344
     // One player-visit bitset per Border Tent object index. SetRolloverText
-    // indexes this byte band directly and tests the local player's bit.
-    unsigned char borderTentVisitFlags[0x24]; // +0x4e364
+    // indexes the retail GuardFlags band directly and tests the local
+    // player's bit. The sign-pool base proves this band contains eight bytes,
+    // followed by the cartographer state rather than more guard flags.
+    unsigned char borderTentVisitFlags[8]; // +0x4e364
+    unsigned short cartographerMask[3];    // +0x4e36c
+    unsigned char cartographerFlags[3];    // +0x4e372
+    char pad_4e375[3];
 #else
     char pad_4df18[0x460];
-    std::vector<Sign> signs;            // +0x4e378
 #endif
-    // THE FOUR OBJECT POOLS, +0x4e388 / +0x4e398 / +0x4e3a8 / +0x4e3b8,
+    // Sign text and the four object pools, +0x4e378 / +0x4e388 / +0x4e398 /
+    // +0x4e3a8 / +0x4e3b8,
     // sixteen bytes apiece - VC6's Dinkumware vector, whose empty
     // allocator sits at +0 so _First/_Last/_End follow at +4/+8/+0xc.
     // Bases: ClaimMine reads +0x4e38c and ClaimGarrison +0x4e3ac (the
     // Load/Save bracket note), GetGeneratorId reads the +0x4e39c /
     // +0x4e3a0 pair with a 92-byte stride, and GetHeroBoat the
     // +0x4e3bc / +0x4e3c0 pair with a 40-byte one.
+    std::vector<Sign> signs;              // +0x4e378
     std::vector<mine> mines;             // +0x4e388
     std::vector<generator> generators;   // +0x4e398
     std::vector<garrison> garrisons;      // +0x4e3a8
