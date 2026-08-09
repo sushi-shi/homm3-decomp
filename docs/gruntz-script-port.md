@@ -260,6 +260,24 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `executive::CallManager`'s missing exception-safety
+  structure is byte-proven but not admitted while funclet attribution makes
+  it a scoreboard regression.** The three isolated retail entries directly
+  after the 0x4b0c70 body are catch funclets: 0x4b0dc2 removes the temporary
+  manager and rethrows; 0x4b0dd7 performs the reduced exception-path resume
+  of the saved manager and rethrows; 0x4b0e25 restores `currentManager` and
+  rethrows. Three nested `try`/`catch (...)` scopes reproduce retail's EH
+  prologue, state 0/1/2 transitions, 11 shared body blocks, and the funclet
+  boundaries. VC6 places the generated catch blocks in CallManager's base
+  COFF section, however, while the delinked retail object exposes them as
+  three separately carved functions. Objdiff consequently appends five
+  base-only blocks to CallManager and lowers its row from 68.3663% to 58.29%.
+  The source probe was reverted and the ratchet was not lowered. This is a
+  comparison-boundary problem to revisit when generated EH funclets can be
+  paired explicitly, not evidence that the retail scopes are absent. The
+  discovery came solely from retail bytes and the project's own carved
+  entries; `decomp-attempt-1` supplied nothing.
+
 - **2026-08-09 — `armyGroup::get_luck_description` rises 59.1587% ->
   60.3234%.** Retail's cursed-ground arm default-constructs a string, assigns
   the static text and routes it toward the return cleanup. A branch-local named
