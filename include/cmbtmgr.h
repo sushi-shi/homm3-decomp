@@ -98,6 +98,28 @@ struct type_obstacle_shape {
 // on ResetHitByCreature.)
 class combatManager {
 public:
+    // One walls.txt entry. The 0x24-byte stride is byte-proven by
+    // LoadWallTraitsTable (0x462990); Dreamcast CodeView supplies the
+    // member names and offsets. The filenames container at +0x8 is not
+    // decoded by this body, so it remains opaque while preserving its
+    // 20-byte extent.
+    struct TWallTraits {
+        short x;                       // +0x0
+        short y;                       // +0x2
+        short hex;                     // +0x4
+        char pad_06[0x2];
+        char filenames[0x14];          // +0x8
+        const char* name;              // +0x1c
+        short hitpoints;               // +0x20
+        char pad_22[0x2];
+    };
+
+private:
+    static TWallTraits akWallTraits[9][18];
+
+public:
+    static unsigned char LoadWallTraitsTable();
+
     // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
     // (0x466b30), which divides the manager's obstacle vector extent
     // (+0x13d5c .. +0x13d60) by 24 with the 0x2aaaaaab/sar 2 magic; the
@@ -457,6 +479,7 @@ public:
     void mark_hex_area_effect(long hex, long shape, long mastery,
                               std::vector<army*>& targets);      // 0x5a46f0
 };
+SIZE(combatManager::TWallTraits, 0x24);
 
 // Retail .bss 0x6993d0 (DC ?gpCombatManager@@3PAVcombatManager@@A).
 extern combatManager* gpCombatManager;

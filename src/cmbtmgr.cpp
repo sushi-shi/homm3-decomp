@@ -42,7 +42,12 @@
 #include "cmbtmgr.h"
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
+#include "resourcemanager.h"
+#include "textresource.h"
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
+
+DATA(0x0066d864)
+combatManager::TWallTraits combatManager::akWallTraits[9][18];
 
 #if 0  // @carcass
 
@@ -54,11 +59,34 @@ void combatManager::combatManager()
 }
 
 // E:\gamedcs\cmbtmgr.cpp:546
+#endif  // @carcass
 VA(0x00462990, 0x8F)  // anchor-global, dc 0x5d538
 unsigned char combatManager::LoadWallTraitsTable()
 {
-    // @stub
+    TSpreadsheetResource* sheet = ResourceManager::GetSpreadsheet(
+        DATA_COMPGEN(0x0066fec0, wallTraitsSpreadsheetName, "walls.txt"));
+    if (!sheet)
+        return 0;
+    if (sheet->GetNumberOfRows() < 179) {
+        sheet->Dispose();
+        return 0;
+    }
+
+    int row = 1;
+    for (int town = 0; town < 9; ++town) {
+        row += 2;
+        for (int wall = 0; wall < 18; ++wall) {
+            const TSpreadsheetResource::TStringVector& values =
+                sheet->GetRow(row);
+            akWallTraits[town][wall].name = values[0];
+            akWallTraits[town][wall].hitpoints =
+                static_cast<short>(atoi(values[1]));
+            ++row;
+        }
+    }
+    return 1;
 }
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:594
 VA(0x00462a20, 0x83F)  // anchor-vtable, dc 0x5d60c
