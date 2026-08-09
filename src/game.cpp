@@ -418,11 +418,27 @@ int game::LoadSignPool(void* infile)
 }
 
 // E:\gamedcs\game.cpp:868
+#endif  // @carcass
+
 VA(0x004b9270, 0xCF)  // anchor-callee (game::Save) + write-slot, dc 0xa3d50
-int game::SaveSignPool(void* outfile)
+int game::SaveSignPool(TAbstractFile* outfile)
 {
-    // @stub
+    unsigned char count = static_cast<unsigned char>(signs.size());
+    if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    for (unsigned int i = 0; i < signs.size(); ++i) {
+        if (SaveAbstractString(outfile, &signs[i].text) < 0)
+            return -1;
+
+        count = signs[i].field_00;
+        if (outfile->Write(&count, sizeof(count)) < sizeof(count))
+            return -1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:896
 #endif  // @carcass

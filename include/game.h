@@ -175,6 +175,19 @@ public:
 };
 SIZE(LossConditionStruct, 0x20);
 
+class Sign {
+public:
+    unsigned char field_00;
+    char pad_01[3];
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> > text;
+};
+SIZE(Sign, 0x14);
+
+VA(0x004bbb60, 0xBB)
+int __fastcall SaveAbstractString(
+    TAbstractFile* outfile,
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> >* text);
+
 // `mine` and `generator`, two of the four object-pool element types.
 // The DC roster declares both in E:\gamedcs\Game.h, i.e. here.
 //
@@ -540,7 +553,8 @@ public:
     // indexes this byte band directly and tests the local player's bit.
     unsigned char borderTentVisitFlags[0x24]; // +0x4e364
 #else
-    char pad_4df18[0x470];
+    char pad_4df18[0x460];
+    std::vector<Sign> signs;            // +0x4e378
 #endif
     // THE FOUR OBJECT POOLS, +0x4e388 / +0x4e398 / +0x4e3a8 / +0x4e3b8,
     // sixteen bytes apiece - VC6's Dinkumware vector, whose empty
@@ -623,6 +637,7 @@ public:
     void TurnOffAIMusic();                       // 0x4c6fd0
     void SetMapSize(int width, int height);      // 0x4ccef0
     void calculate_production();                 // 0x4b8af0
+    int SaveSignPool(TAbstractFile* outfile);     // 0x4b9270
     int LoadMinePool(TAbstractFile* infile, int saveVersion);
     int LoadGarrisonPool(TAbstractFile* infile, int saveVersion);
     int SaveMinePool(TAbstractFile* outfile);     // 0x4b9580
