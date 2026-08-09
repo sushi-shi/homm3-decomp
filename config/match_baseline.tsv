@@ -647,6 +647,7 @@ hero	?is_in_patrol_radius@hero@@QAEEUtype_point@@@Z	100.0000	100.0000	100.0000	0
 hero	?modify_spell_damage@hero@@QAEJHHPBVarmy@@@Z	100.0000	100.0000	100.0000	0xe5760
 hero	?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z	100.0000	100.0000	100.0000	0xe6500
 hero	?remove_artifact@hero@@QAEEW4TArtifact@@@Z	100.0000	100.0000	100.0000	0xe2dd0
+hero	?remove_artifact@hero@@QAEXJ@Z	74.4872	74.4872	74.4872	0xe2bd0
 hero	?remove_backpack_artifact@hero@@QAEXF@Z	100.0000	100.0000	100.0000	0xe2d50
 hero	?rotate_backpack_left@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbdb0
 hero	?rotate_backpack_right@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbe10
@@ -698,7 +699,6 @@ hero	hero_get_special_terrain	0.0000	0.0000	0.0000	0xe4fa0
 hero	hero_hero	0.0000	0.0000	0.0000	0xd85f0
 hero	hero_initialize	0.0000	0.0000	0.0000	0xd8720
 hero	hero_load	0.0000	0.0000	0.0000	0xd7a20
-hero	hero_remove_artifact	0.0000	0.0000	0.0000	0xe2bd0
 hero	hero_save	0.0000	0.0000	0.0000	0xd80c0
 hero	hero_update_spell_list	0.0000	0.0000	0.0000	0xd95d0
 hero	mark_spells	0.0000	0.0000	0.0000	0xd9350

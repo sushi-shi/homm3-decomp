@@ -169,18 +169,27 @@ enum TArtifact {
 // 20 bytes - m_name 0, m_cost 4, m_allowableSlotMask 8, m_class 12,
 // m_description 16 - i.e. the AB-era record without the Shadow of Death
 // combination column. Most DC offsets are NOT transferred. Retail
-// armyGroup::get_luck_description independently proves only the name at
-// +0x00; the intervening fields remain padding (the THeroTraits precedent).
+// armyGroup::get_luck_description independently proves the name at +0x00;
+// hero::remove_artifact proves the slot at +0x08, the assembled-artifact
+// lookup index at +0x14 and the spell-list flag at +0x1d. The other
+// intervening fields remain padding (the THeroTraits precedent).
 struct TArtifactTraits {
     // armyGroup::get_luck_description indexes artifact 0x55 at stride
     // 0x20 and passes +0 directly to format_string: the display name.
     const char* name;           // +0x00
-    char pad_04[0x10];
-    // +0x14 maps an assembled artifact to its 24-byte combination row;
-    // HeroFn_004DC070 uses it to restore every component after unequipping.
-    int combinationIndex;
+    char pad_04[0x4];
+    // Equipped-slot class. remove_artifact compares this between the
+    // combination artifact and each component, then uses it to index the
+    // hero's per-slot equipped counts.
+    int slot;                   // +0x08
+    char pad_0c[0x8];
+    // Index into gCombinationArtifacts, or -1 for a normal artifact.
+    int combinationIndex;       // +0x14
     int combination;            // +0x18
-    char pad_1c[0x4];
+    char pad_1c;
+    // Removing this artifact requires rebuilding the available-spell list.
+    unsigned char affectsSpellList; // +0x1d
+    char pad_1e[0x2];
 };
 SIZE(TArtifactTraits, 32);
 
@@ -215,6 +224,14 @@ SIZE(TCombinationArtifact, 24);
 // claim (the gpWindowManager pattern).
 extern const TArtifactTraits* akArtifactTraits;
 extern const TCombinationArtifact* gCombinationArtifacts;
+
+// Four signed primary-skill deltas per artifact. remove_artifact walks all
+// 144 rows when dismantling a combination; the adjacent address is a real
+// retail data symbol and is used as the pointer-loop bound.
+DATA(0x0063e758)
+extern const signed char gArtifactPrimarySkillBonuses[][4];
+DATA(0x0063e998)
+extern const signed char gArtifactPrimarySkillBonusesEnd[];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\artifact.cpp:56, dc 0x4fec0) unsigned char InitializeArtifactTraitsTable();
