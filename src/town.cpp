@@ -171,24 +171,67 @@ int town::HasGarrison()
 #if 0  // @carcass
 
 // E:\gamedcs\town.cpp:976
-// BLOCKED on the mage-guild surface, not on the hero model (decoded
-// 2026-08-07 while the hero array landed). The body walks the visiting
-// then the garrisoned hero (two passes, cut to one when forceHero is
-// non-null), gates on hero::IsWieldingArtifact(0), on
-// `active & bitNumber[MAGE_GUILD_ID]`, and - for type 8 (Conflux) -
-// on `active & bitNumber[HOLY_GRAIL_ID]`. What it needs that the tree
-// does not model yet: the town's own spell bitset at +0xd4 (three
-// dwords, 70 bits, and the `invalid_bitset<N>_position` guard call
-// proves it is a real std::bitset - it ends exactly at the garrison at
-// +0xe0), the mage-guild tables at town +0x14 (guild level), +0x44
-// (6-int rows, 0x18 stride) and +0xbc (per-level counts), and the
-// global spell-traits table at 0x687f58 whose 0x88 stride and 0x2530
-// bound give 70 spells with the required level at +0x18.
+// Walks a forced hero once, or the visiting and garrison heroes in that
+// order. A spellbook and the active Mage Guild bit gate both paths. Normal
+// towns grant the five six-spell guild rows through Wisdom + 2; a Conflux
+// with its Grail grants every eligible spell outside the town's 70-bit veto
+// set, excluding Titan's Lightning Bolt.
+// Residual (95.0327%): all 37 retail blocks and both spell-granting paths are
+// reconstructed. VC6 proves `2 - (forceHero != 0)` is positive and removes
+// retail's otherwise-dead outer-loop `test`/`jle` preheader, shifting the
+// subsequent block layout. Making the count volatile and using a checked
+// `for` retain that branch but perturb the dominant register assignment and
+// score 92.92% and 87.28%, respectively.
+#endif  // @carcass
+
 VA(0x005be030, 0x1D3)  // linkorder, dc 0x1665a0
 void town::GiveSpells(hero* forceHero)
 {
-    // @stub
+    if (!forceHero && visitingHeroId == -1 && garrisonHeroId == -1)
+        return;
+
+    int heroIndex = 0;
+    int heroCount = 2 - (forceHero != 0);
+    do {
+        hero* currentHero;
+        if (forceHero) {
+            currentHero = forceHero;
+        } else {
+            int heroId;
+            if (heroIndex)
+                heroId = garrisonHeroId;
+            else
+                heroId = visitingHeroId;
+            currentHero = gpGame->GetHero(heroId);
+        }
+
+        if (currentHero && currentHero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)
+            && (active & bitNumber[MAGE_GUILD_ID])) {
+            if (type == TOWN_CONFLUX
+                && (active & bitNumber[HOLY_GRAIL_ID])) {
+                for (int spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+                    if (!spells.test(spell)
+                        && akSpellTraits[spell].level
+                            < currentHero->wisdomLevel + 3
+                        && spell != SPELL_TITANS_LIGHTNING_BOLT)
+                        currentHero->AddSpell(spell);
+                }
+            } else {
+                for (int level = 0;
+                     level < currentHero->wisdomLevel + 2
+                         && level <= static_cast<signed char>(field_14);
+                     ++level) {
+                    for (int slot = 0;
+                         slot < mageGuildSpellCounts[level]; ++slot)
+                        currentHero->AddSpell(mageGuildSpells[level][slot]);
+                }
+            }
+        }
+        ++heroIndex;
+    } while (heroIndex < heroCount);
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 
