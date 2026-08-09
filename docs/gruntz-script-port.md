@@ -260,6 +260,15 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `game::Load` extends from 26.3228% to 26.8395%, and its
+  state is canonical.** Retail's call sequence proves eight consecutive
+  `playerData::load(infile, saveVersion)` calls after the obelisk pool; the
+  loop is additive on its own. The temporary `HOMM3_GAME_LOAD_VIEW` is
+  retired: every byte-proven load field now belongs to the single canonical
+  `game` layout compiled by all translation units, while the existing member
+  offsets and match totals remain stable. No external implementation body was
+  used, and the generated match baseline is updated only by the full build.
+
 - **2026-08-09 — `game::Load` extends from 23.1861% to 26.3228%.** Retail
   fixes the prefix order after header restoration: clear recorded events,
   publish the loaded square map extent, close the path search array, restore
@@ -290,11 +299,11 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   it, followed by three standalone vectors at +0x4e77c/+0x4e78c/+0x4e79c.
   A short two-byte count skips that vector, while a present count resizes it
   and reads four bytes per point without checking the data read. The
-  load-only header view exposes these byte-proven offsets without changing
-  any other compiland's class view. The save-header/map/pool/roster prefix
-  remains explicit follow-up work, with a temporary leading version read
-  preserving its gates. No external implementation body was used; the full
-  build remains the sole baseline writer.
+  canonical `game` layout exposes these byte-proven offsets to every
+  compiland. The save-header/map/pool/roster prefix remains explicit
+  follow-up work, with a temporary leading version read preserving its gates.
+  No external implementation body was used; the full build remains the sole
+  baseline writer.
 
 - **2026-08-09 — `game::get_new_boat_id` admitted byte-exact.** The
   214-byte member scans the retail-proven 40-byte boat pool for the first
