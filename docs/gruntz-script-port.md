@@ -260,6 +260,15 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — `hero::can_land` admitted byte-exact (231 bytes).**
+  Retail packs the hero's current point and directly indexes the canonical
+  38-byte world-map cell array. The cell's water terrain must agree with the
+  hero's boat flag and cell flag 0x40 must permit passage. A trigger cell is
+  additionally rejected when byte zero of its sixteen-byte adventure-object
+  traits row is set; retail proves that 0x660428 stores the row-table pointer,
+  not the table itself. All eight blocks, four branches, and four returns are
+  exact. No external implementation body was used.
+
 - **2026-08-09 — `hero::IsMobile` admitted byte-exact (191 bytes).**
   Retail packs the hero's current point, resolves its map cell, and compares
   remaining movement at +0x4d with `MinimumTerrainCost`. Pathfinding comes
