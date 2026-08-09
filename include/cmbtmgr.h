@@ -9,6 +9,7 @@
 #include "army.h"
 #include "armygrp.h"   // SpellID, for the two spells.obj leaves below
 #include "hexcell.h"
+#include "struct.h"
 
 class CSprite;
 class hero;
@@ -430,6 +431,7 @@ public:
     void SetupAdjacencyArray();
     void UpdateArmyGroup(int whichSide);
     void GenerateMap();
+    const char* GetBackgroundName();
     void DamageWall(TWallTargetId target_wall, int damage);
     unsigned char CombatIsOver();
     unsigned char IsWinner(int this_side);
