@@ -36,7 +36,7 @@ advmgr	?OverrideBottomView@advManager@@QAEXW4EBottomViewType@1@H@Z	99.3415	99.34
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	74.7786	74.7786	74.7786	0xe360
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	91.3119	91.3119	91.3119	0xec90
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	74.8967	74.8967	74.8967	0xdeb0
-advmgr	?QuickInfo@advManager@@QAEXHHH@Z	43.7530	43.7530	43.7530	0x137c0
+advmgr	?QuickInfo@advManager@@QAEXHHH@Z	54.0594	54.0594	54.0594	0x137c0
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30
 advmgr	?SetRolloverText@advManager@@QAEXPAVNewmapCell@@HH@Z	89.7053	89.7053	89.7053	0xb150
