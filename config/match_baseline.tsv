@@ -472,6 +472,7 @@ game	?AssignNetInfo@playerData@@QAEXPAVCNetPlayerInfo@@@Z	100.0000	100.0000	100.
 game	?ClaimGarrison@game@@QAEXHH@Z	84.4118	84.4118	84.4118	0xc6960
 game	?ClaimGenerator@game@@QAEXHH@Z	99.9706	99.9706	99.9706	0xc67b0
 game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0xc66e0
+game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	77.4860	77.4860	77.4860	0xc6a30
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
 game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0
 game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	99.9706	99.9706	99.9706	0xca3b0
@@ -524,7 +525,6 @@ game	?save@generator@@QAEEPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb86e
 game	?update_bonus@generator@@QAEXXZ	100.0000	100.0000	100.0000	0xb87a0
 game	ImmMouseWindowMoved	0.0000	0.0000	0.0000	0xb6950
 game	InitImmMouse	0.0000	0.0000	0.0000	0xb6890
-game	game_ClaimShipyard	0.0000	0.0000	0.0000	0xc6a30
 game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
 game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
 game	game_CreateBoat	0.0000	0.0000	0.0000	0xbb250

@@ -8,7 +8,9 @@
 #include <ctype.h>
 #include <va.h>
 #define HOMM3_GAME_HERO_EXTRA_VIEW
+#define HOMM3_GAME_SHIPYARD_VIEW
 #include "game.h"
+#undef HOMM3_GAME_SHIPYARD_VIEW
 #undef HOMM3_GAME_HERO_EXTRA_VIEW
 #undef HOMM3_GAME_POINT_CTOR_VIEW
 // StartAITheme / TurnOnAIMusic (0x4c6f40 / 0x4c6f80) roll a theme index
@@ -1553,14 +1555,60 @@ void game::ClaimGarrison(int garrisonId, int newPlayerOwner)
                       newPlayerOwner, 3, 0);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\game.cpp:7461
 VA(0x004c6a30, 0x21F)  // anchor-global, dc 0xb1a50
 void game::ClaimShipyard(type_point location, int newPlayerOwner)
 {
-    // @stub
+    hero* obscuringHero = 0;
+    NewmapCell* mapCell =
+        &worldMap.cellData[location.x + worldMap.Size *
+            (location.y + worldMap.Size * location.z)];
+    if (mapCell->type == HERO) {
+        obscuringHero = GetHero(mapCell->extraInfo);
+        type_obscuring_object* obscurer =
+            static_cast<type_obscuring_object*>(
+                static_cast<void*>(obscuringHero));
+        obscurer->restore_cell();
+    }
+
+    ShipyardInfo* shipyardInfo =
+        static_cast<ShipyardInfo*>(
+            static_cast<void*>(&mapCell->extraInfo));
+    int oldPlayerOwner = shipyardInfo->owner;
+    if (oldPlayerOwner != newPlayerOwner) {
+        if (oldPlayerOwner >= 0) {
+            playerData* oldPlayer = &players[oldPlayerOwner];
+            long index = 0;
+            while (index < oldPlayer->shipyards.size()) {
+                if (oldPlayer->shipyards[index].x == location.x &&
+                    oldPlayer->shipyards[index].y == location.y &&
+                    oldPlayer->shipyards[index].z == location.z)
+                    break;
+                ++index;
+            }
+            oldPlayer->shipyards.erase(oldPlayer->shipyards.begin() + index);
+        }
+
+        if (newPlayerOwner >= 0) {
+            SetVisibility(location.x, location.y, location.z,
+                          newPlayerOwner, 3, 0);
+            players[newPlayerOwner].shipyards.push_back(location);
+        }
+
+        shipyardInfo->owner = newPlayerOwner;
+        CMCClaimShipYard change(location, newPlayerOwner);
+        SendMapChange(&change);
+    }
+
+    if (obscuringHero) {
+        type_obscuring_object* obscurer =
+            static_cast<type_obscuring_object*>(
+                static_cast<void*>(obscuringHero));
+        obscurer->obscure_cell(HERO, obscuringHero->id);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\game.cpp:7507
 // ARITY, on the only DC row in the bracket. 0x4c6c50 is the single
