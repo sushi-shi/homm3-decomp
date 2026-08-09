@@ -118,33 +118,14 @@ void soundManager::SetMusicVolume()
 // SetMusicVolume calls it `push 0x65; push 0x7f` and feeds the result
 // to AIL_set_stream_volume. `this` is never read - the body only
 // selects between the two volume-setting globals.
-// The two arms are written LONGHAND on purpose. Factoring them into a
-// shared helper is the obvious spelling and it is wrong twice over:
-// retail duplicates the range check, the divide and all three clamps
-// per arm, and - decisively - the small version drops under VC6's
-// /Ob2 budget, so ConvertVolume gets inlined into MemorySample and
-// ModifySample and knocks both off exact. Retail calls it at all
-// three sites.
-// Residual (67.5%): register-carrier choice, the same family as
-// MemorySample. Control flow, both arms, the /10 magic-multiply and
-// all three clamps line up instruction for instruction; retail carries
-// `result` in edx (and so ends every exit with `mov eax,edx`) while
-// ours carries it in eax and writes the clamps straight into the
-// return register - which also turns retail's `lea ecx,[eax+1]` into
-// our `inc ecx`. Tried and rejected: a shared ScaleVolume helper
-// (folds the duplication AND drops under the /Ob2 budget, regressing
-// two exact callers); naming the global in a `setting` local (VC6
-// already CSE'd it - byte-identical).
-// SECOND-ORDER EFFECT measured 2026-08-08 (closeout lane): the edx
-// carrier is also why retail has 4 exits to our 6. Retail's per-arm
-// clamp tails all end `mov eax,edx / pop ebp / ret 8` - one
-// instruction longer than ours - which puts them over VC6's
-// cross-jump threshold, so the `result < 0` and `result > 127` clamps
-// are emitted ONCE and shared by both arms (both arms `jge` the same
-// 0x28b). Ours writes the value straight into EAX, the tails are two
-// instructions, no merge fires, and the whole three-clamp chain is
-// duplicated per arm. So the register choice and the missing merge
-// are one defect, not two - fix the carrier and the merge follows.
+// EXACT 2026-08-09. Retail duplicates the range check, scale and
+// minimum-one clamp in the two arms, then joins before the negative and
+// 127 clamps. That shared tail lengthens `result`'s lifetime, selects EDX
+// as its carrier and enables the retail cross-jumps. The scoped
+// auto_inline pin is separately load-bearing: the exact smaller body falls
+// under this compile's /Ob2 budget, but retail calls it from SetMusicVolume,
+// ModifySample and MemorySample rather than expanding it.
+#pragma auto_inline(off)
 VA(0x005996c0, 0x97)  // anchor-callee, dc 0x14b170
 int soundManager::ConvertVolume(int iVolumeValue, int iVolumeType)
 {
@@ -155,10 +136,6 @@ int soundManager::ConvertVolume(int iVolumeValue, int iVolumeType)
             result = (setting + 1) * iVolumeValue / 10;
             if (result < 1)
                 result = 1;
-            if (result < 0)
-                result = 0;
-            if (result > 127)
-                result = 127;
         }
     } else {
         int setting = gUnk698764;
@@ -166,14 +143,15 @@ int soundManager::ConvertVolume(int iVolumeValue, int iVolumeType)
             result = (setting + 1) * iVolumeValue / 10;
             if (result < 1)
                 result = 1;
-            if (result < 0)
-                result = 0;
-            if (result > 127)
-                result = 127;
         }
     }
+    if (result < 0)
+        result = 0;
+    if (result > 127)
+        result = 127;
     return result;
 }
+#pragma auto_inline(on)
 
 // E:\gamedcs\soundmgr.cpp:165
 // EXACT 2026-08-09: MP3Playing belongs in the member-initializer list.
@@ -369,17 +347,16 @@ void soundManager::SwitchAmbientMusic(int newMusicFileId)
 }
 
 // E:\gamedcs\soundmgr.cpp:759
-// Residual (92.0%): register-homing family. The control flow, the
-// guard sinking, every call and every immediate match; what differs is
-// which of {this, sPtr} loses the tie-break for a callee-saved
-// register. Retail homes `this` at [ebp-4] and gives ebx to sPtr, edi
-// to the channel range; ours keeps `this` in edi and re-reads sPtr
-// from [ebp+8], which also costs the `push 0` peephole in the volume
-// ternary (ours materialises `xor eax,eax; push eax`) and one extra
-// `jmp` in the round-robin arm's layout. Tried and rejected: one
-// `handle` local spanning both blocks (spills it to the frame); two
-// block-scoped locals (no change - VC6 already scoped them);
-// re-indexing sampleHandles[slot] at each use (48.8%, far worse).
+// Residual (98.80%): the explicit sampleHandles cursor gives retail's
+// stack homes (`this` at [ebp-4], cursor at [ebp-8]) and makes B0..B24
+// instruction-identical except for one duplicate empty-range `jge` from
+// the guarded initialization plus for-loop condition. Loading `handle`
+// before writing gAilDriverState fixes the common block's EDI lifetime;
+// spelling the volume selection as two calls gives retail's push-eax /
+// push-zero cross-jump. The only other delta is two scratch-register
+// choices in the inlined ServeSampleStream tail. Positive nested and
+// linear do/while forms remove the duplicate compare but disrupt the
+// allocation wholesale (83.51%); the retained form is the bounded best.
 VA(0x0059a210, 0x1DB)  // anchor-global, dc 0x14b528
 ds_memsample* soundManager::MemorySample(sample* sPtr)
 {
@@ -392,8 +369,11 @@ ds_memsample* soundManager::MemorySample(sample* sPtr)
         SoundChannelRange* range = &gSoundChannels[sPtr->field_28];
         EnterCriticalSection(&section_sound_call);
         int slot = range->first;
-        for (; slot < range->last; slot++)
-            if (AIL_sample_status(sampleHandles[slot]) == AIL_SAMPLE_SLOT_FREE)
+        ds_memsample** slotHandle;
+        if (slot < range->last)
+            slotHandle = &sampleHandles[slot];
+        for (; slot < range->last; slot++, slotHandle++)
+            if (AIL_sample_status(*slotHandle) == AIL_SAMPLE_SLOT_FREE)
                 break;
         if (slot == range->last) {
             if (sPtr->field_28 == SOUND_CHANNEL_COUNT) {
@@ -414,13 +394,15 @@ ds_memsample* soundManager::MemorySample(sample* sPtr)
             StopSample(prevHandle);
         }
 
-        gAilDriverState[slot] = static_cast<short>(sPtr->field_2c);
         ds_memsample* handle = sampleHandles[slot];
+        gAilDriverState[slot] = static_cast<short>(sPtr->field_2c);
         AIL_init_sample(handle);
         AIL_set_sample_file(handle, sPtr->data, 0);
         AIL_set_sample_loop_count(handle, sPtr->field_30);
-        AIL_set_sample_volume(handle,
-                              gUnk698764 ? ConvertVolume(sPtr->field_2c, 100) : 0);
+        if (gUnk698764)
+            AIL_set_sample_volume(handle, ConvertVolume(sPtr->field_2c, 100));
+        else
+            AIL_set_sample_volume(handle, 0);
         AIL_start_sample(handle);
         sPtr->field_1c = handle;
         LeaveCriticalSection(&section_sound_call);

@@ -260,6 +260,22 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-09 — soundmgr reaches 20/21 exact; `MemorySample` rises
+  92.0309% -> 98.7963%.** `ConvertVolume` becomes exact by recovering the
+  retail CFG: each setting arm owns its range check, divide and minimum-one
+  clamp, while the negative and 127 clamps are shared after the join. That
+  semantic lifetime selects retail's EDX result carrier and its cross-jumped
+  exits. A scoped `auto_inline(off)` is required because VC6 otherwise
+  expands the newly smaller exact body into three callers that retail leaves
+  as calls. In `MemorySample`, an explicit guarded `sampleHandles` cursor
+  recovers retail's two stack homes; loading the chosen handle before the
+  independent driver-state write preserves EDI through the playback tail;
+  and two volume-call arms reproduce retail's push-eax/push-zero cross-jump.
+  Retail bytes established each CFG; HoMM2's exact counterparts independently
+  corroborate the shared-clamp and if/else-call source shapes. Remaining:
+  one duplicate loop-entry compare and two scratch-register choices in an
+  inlined helper. `decomp-attempt-1` remained read-only and supplied nothing.
+
 - **2026-08-09 — `soundManager::soundManager` exact via construction-phase
   evidence.** The former 99.0312% body differed only in whether
   `MP3Playing = 0` appeared before or after the compiler-generated derived
