@@ -619,6 +619,8 @@ public:
 
     NewfullMap* GetWorldMapData();
     int get_new_boat_id();                    // 0x4bb170
+    int CreateBoat(int x, int y, int z, int owner,
+                   unsigned char remoteMove, signed char type); // 0x4bb250
     playerData* GetLocalPlayer();
     int GetLocalPlayerGamePos();                 // 0x4cea20
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
@@ -658,6 +660,7 @@ public:
     void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
     void ClaimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
     void record_claim_mine(long id, long new_owner);          // 0x49bf90
+    void record_show_boat(boat* current_boat, type_point point); // 0x49c900
     void SetVisibility(int startX, int startY, int z,
                        int whichPlayer, int range,
                        unsigned char remote_move);            // 0x49cdd0

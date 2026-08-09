@@ -686,10 +686,8 @@ struct type_obscuring_object {
     type_obscuring_object();
     void initialize();
     class town* get_obscured_town();
-#if defined(HOMM3_ADVMGR_CELL_ADJUSTER_VIEW) || defined(HOMM3_GAME_SHIPYARD_VIEW)
     void obscure_cell(TAdventureObjectType new_type, long id);
     void restore_cell();
-#endif
     unsigned char load(void* infile);
     unsigned char save(void* outfile);
 };
@@ -728,6 +726,7 @@ public:
 
     boat() : allocated(0) {}
     hero_seqid GetStandSequence();
+    void obscure_cell();
 };
 SIZE(boat, 0x28);
 

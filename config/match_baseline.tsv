@@ -475,6 +475,7 @@ game	?ClaimMine@game@@QAEXHHW4type_action_type@@@Z	100.0000	100.0000	100.0000	0x
 game	?ClaimShipyard@game@@QAEXUtype_point@@H@Z	77.4860	77.4860	77.4860	0xc6a30
 game	?ClearNetInfo@playerData@@QAEXXZ	100.0000	100.0000	100.0000	0xba170
 game	?ComputeUALoc@@YIXH@Z	100.0000	100.0000	100.0000	0xbaed0
+game	?CreateBoat@game@@QAEHHHHHEC@Z	99.9726	99.9726	99.9726	0xbb250
 game	?ExperienceValueOfStack@game@@QAEHPBVarmyGroup@@PBVhero@@@Z	100.0000	100.0000	100.0000	0xca3b0
 game	?FindHero@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xba9e0
 game	?FindTown@playerData@@QAEHH@Z	100.0000	100.0000	100.0000	0xbaa10
@@ -540,7 +541,6 @@ game	ImmMouseWindowMoved	0.0000	0.0000	0.0000	0xb6950
 game	InitImmMouse	0.0000	0.0000	0.0000	0xb6890
 game	game_ClaimTown	0.0000	0.0000	0.0000	0xc61e0
 game	game_ConvertObject	0.0000	0.0000	0.0000	0xc9990
-game	game_CreateBoat	0.0000	0.0000	0.0000	0xbb250
 game	game_CreateTownHeroes	0.0000	0.0000	0.0000	0xca040
 game	game_GetNewHeroId	0.0000	0.0000	0.0000	0xbb5e0
 game	game_GetRandomArtifactId	0.0000	0.0000	0.0000	0xc94d0
@@ -927,7 +927,7 @@ initialize	?create_requirement_masks@@YIXPBHPA_J1@Z	100.0000	100.0000	100.0000	0
 # Do not treat any of them as a target. Re-measure after ANY change to
 # game.h / hero.h / mapcell.h / struct.h / town.h / armygrp.h /
 # artifact.h / army.h, and record what you saw.
-initialize	?initialize_game_data@@YIXXZ	100.0000	100.0000	100.0000	0xeb730
+initialize	?initialize_game_data@@YIXXZ	94.0741	94.0741	100.0000	0xeb730
 inputmgr	??0inputManager@@QAE@XZ	100.0000	100.0000	100.0000	0xec460
 inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.0000	0xec6f0
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540
@@ -995,7 +995,7 @@ recruit	??1TRecruitWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x14fb20
 recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1516b0
 recruit	??_GTRecruitWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14faf0
 recruit	?GetMonsterCost@@YIXHPAH@Z	86.0000	86.0000	99.3333	0x14e7c0
-recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8325	90.8376	90.8376	0x1503a0
+recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8325	90.8325	90.8376	0x1503a0
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	99.4737	99.4737	99.4737	0x150360
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000	100.0000	100.0000	0x158720
