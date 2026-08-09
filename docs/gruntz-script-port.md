@@ -321,6 +321,20 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `combatManager::LoadWallTraitsTable` reconstructed
+  byte-exact (143 bytes).** The loader opens `walls.txt`, rejects a missing
+  or sub-179-row sheet (disposing only the undersized resource), then walks
+  nine town groups of eighteen wall rows with two skipped rows before each
+  group. Each row supplies the wall record's name and parsed hit points.
+  Retail proves the row schedule, 9×18×36-byte destination extent, and both
+  written offsets; Dreamcast CodeView supplies only the `TWallTraits` names
+  and corroborating 36-byte layout. Reusing the already retail-proven
+  `TSpreadsheetResource::GetNumberOfRows`/`GetRow` source boundary from the
+  animation-table loader lets VC6 reproduce every instruction on the first
+  build. This directly applies the HoMM2/Gruntz rule to reuse canonical
+  library/source forms. No external implementation or `decomp-attempt-1`
+  material was used.
+
 - **2026-08-09 — `combatManager::LearnSpellFromEagleEye` reconstructed
   from unscored to 68.1633%.** Retail walks a per-side 16-byte Dinkumware
   `set<SpellID>` at +0x5460, tests the side's hero for a spellbook, applies

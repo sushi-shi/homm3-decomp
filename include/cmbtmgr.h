@@ -101,6 +101,20 @@ public:
     };
     static const TObstacleInfo ObstacleInfo[];
 
+    // Retail writes only name/hitpoints here; Dreamcast CodeView supplies
+    // the intervening field identities and confirms the 36-byte extent.
+    struct TWallTraits {
+        short x;
+        short y;
+        short hex;
+        short pad_06;
+        const char* filenames[5];
+        const char* name;
+        short hitpoints;
+        short pad_22;
+    };
+    static TWallTraits akWallTraits[9][18];
+
     // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
     // (0x466b30), which divides the manager's obstacle vector extent
     // (+0x13d5c .. +0x13d60) by 24 with the 0x2aaaaaab/sar 2 magic; the
@@ -330,6 +344,7 @@ public:
     void RemoveObstacle(int index);
     void CombatSystemOptions();
     void LearnSpellFromEagleEye(int side);
+    static unsigned char LoadWallTraitsTable();
     int UpdateGrid(int bPostGridIsClean, int bSetupGrid);
     void DrawFrame(unsigned char update,
                    unsigned char bLimitCreatureEffect,
