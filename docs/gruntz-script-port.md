@@ -288,6 +288,27 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   retained forms; no external implementation was used, and the generated
   baseline remains build-owned.
 
+- **2026-08-09 — `type_AI_combat_data::cast_spell` reconstructed from
+  unscored to 85.4199%.** The 1,427-byte retail body now selects among every
+  available combat spell, enforces Cursed Ground and Recanter's Cloak, pays
+  mana (including the Familiar's one-fifth channel), evaluates direct,
+  opening-round, mass, enchantment and resurrection families, and applies
+  the winning cast. Dreamcast CodeView contributes only the local names,
+  reference signature and three helper boundaries. Retail independently
+  proves all gates, values, loop directions and effects. Restoring the
+  inline-only resurrection, mass-value and mass-cast helpers is the decisive
+  HoMM2/Gruntz source-shape step; a scoped inline-depth boundary keeps the
+  nested damage call out of line while allowing the surrounding helper to
+  disappear. Making spell power's lifetime explicit raises the first
+  transcription from 67.5762% to 85.4199%. The residual is predominantly an
+  ESI/EDI coloring swap in the selection loop and the two expanded mass
+  loops. A named defender reference regressed 85.4199% -> 85.3984% and was
+  removed. Adding Recanter/Familiar to the widely included roster enums made
+  `initialize_game_data` and `recruitUnit::Update` regress through VC6's
+  type environment, so those enumerators were withdrawn and the same
+  retail-proven ids remain TU-local typed constants. No external
+  implementation was used; `decomp-attempt-1` supplied nothing.
+
 - **2026-08-09 — `type_AI_combat_data::simulate_combat` is byte-exact.**
   The former direct transcription over-expanded nested accessors and damage
   routines, scoring 46.7778%. Restoring the original source boundaries—one
