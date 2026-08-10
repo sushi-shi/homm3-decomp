@@ -1,0 +1,164 @@
+#!/usr/bin/env python3
+"""homm3.vc6.diagnose - one command from a red `sema diff` to a routed solver.
+
+Given UNIT:FN, read the same base-vs-delinked-target pair the ratchet scores,
+classify the residual into a wall family (register / control-flow / inliner /
+masked-cosmetic), and route to the solver that owns it:
+
+    register-homing  -> why-reg     (guided register-knob search)
+    control-flow     -> why-branch  (guided CFG-knob search)
+    inliner (block-count / string-return)  -> predict-inline  [Phase 3]
+    masked-equal     -> no source knob (objdiff-only residual)
+
+With --run it invokes the routed solver(s) and prints the proposed edit;
+otherwise it prints the exact command(s) to run. It NEVER edits source - the
+solvers propose under the supervised-review rule.
+"""
+from __future__ import annotations
+
+import json
+
+from homm3.sema import _asm
+from homm3.vc6 import _common, _unit, inline_model, report
+
+
+def _resolve(target: str):
+    """(unit, fn, source_path) from UNIT:FN or a bare mangled name."""
+    if ":" in target:
+        unit, fn = target.split(":", 1)
+        src = _unit.source_for_unit(unit)
+        return unit, fn, src
+    # bare name: resolve the owning unit via the carve roster
+    try:
+        from homm3.sema.context import get_context
+        _n, unit, *_ = get_context().symbols.resolve_fn(target)
+    except Exception:
+        unit = None
+    return unit, target, (_unit.source_for_unit(unit) if unit else None)
+
+
+def _inline_divergence(unit: str, fn: str):
+    """A short 'N under-inline, M over-inline' note if the out-of-line CALL
+    multisets of base vs retail differ, else None. Reads built objs; no
+    compile."""
+    from homm3.vc6 import reg_model
+    base, tgt = _asm.BASE / f"{unit}.obj", _asm.TARGET / f"{unit}.c.obj"
+    if not base.is_file() or not tgt.is_file():
+        return None
+    try:
+        bc = inline_model._called(
+            _asm.objdump(base, reg_model._resolve_symbol(base, fn), 0))
+        rc = inline_model._called(
+            _asm.objdump(tgt, reg_model._resolve_symbol(tgt, fn), 0))
+    except (Exception, SystemExit):
+        return None
+    keys = set(bc) | set(rc)
+    under = sum(max(0, bc[s] - rc[s]) for s in keys)
+    over = sum(max(0, rc[s] - bc[s]) for s in keys)
+    if not under and not over:
+        return None
+    return ", ".join([f"{under} under-inline"] * bool(under)
+                     + [f"{over} over-inline"] * bool(over))
+
+
+def run(args) -> int:
+    unit, fn, src = _resolve(args.target)
+    if not unit:
+        _common.die(f"could not resolve the owning unit for {args.target!r} "
+                    "(pass UNIT:FN explicitly)")
+    d = report._diagnose_one(unit, fn)
+    if d is None:
+        _common.die(f"no build objects for {unit} - run `homm3 build` first")
+    if "error" in d:
+        _common.die(f"diagnosis failed: {d['error']}")
+
+    reg, flow = d["reg_dist"], d["flow_dist"]
+    cls = d["class"]
+    # inline structure first: a diverging out-of-line CALL multiset means a
+    # callee is inlined on one side only (the A-family), which reshapes blocks
+    # and registers downstream - fix it before any spelling.
+    inline_div = _inline_divergence(unit, fn)
+    # routing: inline -> control-flow -> register (structural before spelling)
+    routes = []
+    if inline_div:
+        routes.append(("predict-inline",
+                       f"inline structure diverges ({inline_div}) - a callee "
+                       "is expanded on one side only (A8/A9/A12)"))
+    if "control-flow" in cls or (flow and flow >= 3):
+        routes.append(("why-branch", "control-flow (CFG shape) first - "
+                       "structural before register"))
+    if "register" in cls or (reg and reg > 0 and not routes):
+        routes.append(("why-reg", "register-binding / homing knobs"))
+    if "masked" in cls:
+        routes.append((None, "objdiff-only residual (displacement/reloc); "
+                       "no source knob - see catalog C9/D21"))
+    if not routes:
+        routes.append((None, "unclassified - try why-reg then why-branch"))
+
+    solver_cmds = []
+    for solver, _why in routes:
+        if solver:
+            solver_cmds.append(
+                f"homm3 vc6 {solver} {src and src.relative_to(_common.REPO)} "
+                f"--fn '{fn}' --against {unit}:'{fn}'")
+
+    if args.json:
+        print(json.dumps({
+            "target": args.target, "unit": unit, "fn": fn,
+            "reg_dist": reg, "flow_dist": flow, "class": cls,
+            "knob": d["knob"], "routes": [r[0] for r in routes],
+            "commands": solver_cmds}, indent=2))
+        return 0
+
+    print(f"[diagnose] {fn}  in {unit}")
+    print(f"  register-distance {reg} | flow-distance {flow}")
+    print(f"  wall class : {cls}")
+    if d.get("reg_top"):
+        print(f"  reg signal : {d['reg_top']}")
+    if d.get("flow_top"):
+        print(f"  flow signal: {d['flow_top']}")
+    print(f"  knob to try: {d['knob']}")
+    print("  route ->")
+    for solver, why in routes:
+        tag = solver or "(none)"
+        print(f"    {tag:<11} {why}")
+    if solver_cmds:
+        print("  run:")
+        for c in solver_cmds:
+            print(f"    {c}")
+
+    if args.run and src:
+        from types import SimpleNamespace
+        for solver, _why in routes:
+            if not solver:
+                continue
+            print(f"\n===== {solver} =====")
+            sub = SimpleNamespace(src=str(src), fn=fn,
+                                  against=f"{unit}:{fn}", against_src=None,
+                                  json=False,
+                                  # v2 model path for register walls (it
+                                  # predicts + bounds in 1 compile); harmless
+                                  # attrs the other solvers ignore.
+                                  model=(solver == "why-reg"), tries=1,
+                                  il_order=False)
+            modname, fname = {
+                "why-reg": ("reg_model", "run_why"),
+                "why-branch": ("flow_model", "run_why"),
+                "predict-inline": ("inline_model", "run_predict"),
+            }[solver]
+            mod = __import__(f"homm3.vc6.{modname}", fromlist=[fname])
+            try:
+                getattr(mod, fname)(sub)
+            except SystemExit:
+                pass
+    return 0
+
+
+if __name__ == "__main__":
+    import argparse
+    import sys
+    ap = argparse.ArgumentParser(prog="python3 -m homm3.vc6.diagnose")
+    ap.add_argument("target")
+    ap.add_argument("--run", action="store_true")
+    ap.add_argument("--json", action="store_true")
+    sys.exit(run(ap.parse_args()))

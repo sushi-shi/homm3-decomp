@@ -260,6 +260,51 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log (approved in supervised sessions)
 
+- **2026-08-10 — the `vc6` compiler-model area landed (supervised).** A new
+  role package `scripts/homm3/vc6/` reverse-engineers the pinned toolchain
+  itself to model the codegen decisions matching plateaus on, and ships solvers
+  that diagnose a residual instead of blind spelling sweeps. Binary-only RE (no
+  leaked MSVC sources); the RE subjects are hash-gated in `vc6/_toolchain.py`.
+  Delivered: the CL option-spec decoder (`argv`, `evidence/vc6/cl-option-spec.tsv`,
+  proving `/Ob2` front-end-only and `/d2` C2-verbatim); a byte-inert C2 pass-through
+  shim (`_InvokeCompilerPass(argc,argv,fLastTU)` ABI) with an inertness gate + negative
+  control; the behavior catalog (`docs/vc6/behavior-catalog.md`) + 23 real-compiler
+  probes + `oracle`; the **/Ob2 inliner fully RE'd and validated 9/9**
+  (`docs/vc6/inliner.md`: budget = clamp(2·caller_cb, 1000, 35000), sequential,
+  nested budget ÷ sites-remaining) with the STL under-inline verdict (budget
+  starvation, "finish the caller"); the **register allocator's preference order**
+  (`docs/vc6/regalloc.md`: first-fit EAX ECX EDX ESI EDI EBX EBP in pseudo-creation
+  order); the **IL tap** settling the include-set (C1) wall as C1XX symbol-handle
+  renumbering (`docs/vc6/il-format.md`); the **handle-order model**
+  (`docs/vc6/handle-order.md`, 32/32 + 4/4 blind) splitting register/include-set
+  residuals into source-movable vs C1-capped; the optimization-scope writeup
+  (`docs/vc6/optimization-scope.md`); the Ghidra C2 atlas
+  (`atlas`, `evidence/vc6/c2-{tu-map,globals}.tsv`, 48/48 TUs anchored 115/115
+  byte-corroborated, project under gitignored `build/re/vc6/`); the solvers
+  `why-reg` (v1 sweep + v2 model), `why-branch`, `predict-inline` (+`--gap`),
+  `diagnose` (inline→control-flow→register routing), and the `check` census
+  (behavioral gate with negative control + informational consistency). The
+  `wall-identifier` skill teaches the loop. **Track R admission:** RTM
+  `C2.DLL` 12.00.8168 (sha256 `45187b0b6288240f73272a7c61e6329c50048a76e57db3bb87b6f0229e09e27d`,
+  737,329 B, sourced from archive.org, staged OUTSIDE the repo at
+  `../orig/vc6-rtm/`) is admitted as a hash-pinned A/B-only input; the `ab`
+  harness proved 0/18 walls are C2-generation artifacts, retiring the
+  stale-generation hypothesis. Generated tables live in `evidence/vc6/`
+  (regenerable); no game or toolchain bytes entered the repository.
+
+- **2026-08-09 — wall-identifier cross-project field note approved.** The
+  Gruntz `TmDeflectStep` plateau was used as a read-only portability test of
+  the wall taxonomy and register model documented under `docs/vc6/`. The
+  HOMM3 command itself was not run against Gruntz because its unit manifest,
+  profiles and object paths are project-specific; the classification was
+  reproduced with Gruntz's own objdump/sema and Cartesian-variant tools. The
+  exercise showed that call-multiset classification must precede a register
+  hypothesis, and that a clean rebuild must precede the classification: a
+  batch trial's stale raw object first suggested an inline-boundary mismatch,
+  while the rebuilt candidate proved every helper-call count exact and routed
+  the residue back to register/scheduler analysis. No source or implementation
+  material was copied between projects.
+
 - **2026-08-09 — `SavedGameHeader::SavedGameHeader` reconstructed to
   96.4326% (593 bytes).** Retail proves the flattened construction order for
   the map-header vector, victory and loss records, eight 0x44-byte player
