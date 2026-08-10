@@ -124,6 +124,10 @@ def cmd_sema(args) -> int:
     return run_module("homm3.sema", *args.sema_args)
 
 
+def cmd_vc6(args) -> int:
+    return run_module("homm3.vc6", *args.vc6_args)
+
+
 def cmd_link(args) -> int:
     if run_module("homm3.build.configure"):
         return 1
@@ -194,6 +198,11 @@ def main(argv: list[str] | None = None) -> int:
                        "disasm / rva / strings (homm3.sema, logged)")
     p.add_argument("sema_args", nargs=argparse.REMAINDER)
     p.set_defaults(fn=cmd_sema)
+
+    p = sub.add_parser("vc6", help="compiler model + solvers: argv / il-diff / "
+                       "predict-inline / why-reg / oracle / check (homm3.vc6)")
+    p.add_argument("vc6_args", nargs=argparse.REMAINDER)
+    p.set_defaults(fn=cmd_vc6)
 
     p = sub.add_parser("link", help="candidate link (layout study)")
     p.add_argument("link_args", nargs=argparse.REMAINDER)
