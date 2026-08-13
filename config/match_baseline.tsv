@@ -569,11 +569,11 @@ findpath	?mark_teleport@searchArray@@QAEXPBVarmy@@J@Z	100.0000	100.0000	100.0000
 findpath	?set_moat@searchArray@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0xb3290
 findpath	searchArray_PushPoint	0.0000	0.0000	0.0000	0xb1a70
 findpath	searchArray_TestPossibleDirections	0.0000	0.0000	0.0000	0xb2300
+fly	?Fly@army@@QAEHH@Z	85.9057	85.9057	85.9057	0xb4a40
 fly	?FlyTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb49c0
 fly	?Teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10
 fly	?TeleportTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb4e90
 fly	?ValidFlight@army@@QAEEHE@Z	89.1445	89.1445	89.1445	0xb46c0
-fly	army_Fly	0.0000	0.0000	0.0000	0xb4a40
 font	??1font@@UAE@XZ	100.0000	100.0000	100.0000	0xb5110
 font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	98.7864	98.7864	98.7864	0xb5490
 font	?DrawCharacter@font@@QAEXHPAVBitmap16Bit@@HHH@Z	78.2623	78.2623	78.2623	0xb51a0
