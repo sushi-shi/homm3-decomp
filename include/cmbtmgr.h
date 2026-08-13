@@ -76,7 +76,14 @@ enum ECombatSpellRestriction {
 enum ECombatGrid {
     COMBAT_GRID_CELLS = 0xbb,
     COMBAT_GRID_ROW_STRIDE = 0x11,
-    COMBAT_GRID_LAST_COLUMN = 0x10
+    COMBAT_GRID_LAST_COLUMN = 0x10,
+    // The two hero-portrait pseudo-hexes GetGridIndex answers with when
+    // the cursor is over a hero panel rather than the field. RightClick
+    // (0x4769c0) is what pairs each with a side: 0xfc opens heroes[0]'s
+    // panel and 0xfd heroes[1]'s, which is also the order the four
+    // screen hit rectangles at 0x694ea8..0x694f08 are tested in.
+    COMBAT_HEX_ATTACKER_HERO = 0xfc,
+    COMBAT_HEX_DEFENDER_HERO = 0xfd
 };
 
 // The drawbridge state held in combatManager+0x53a4. LowerDoor
@@ -476,7 +483,12 @@ public:
     unsigned char field_132cc;        // +0x132cc
     char pad_132cd[0x3];
     int field_132d0;                  // +0x132d0
-    char pad_132d4[0xc];
+    // RightClick (0x4769c0) parks -1 here the moment a human player
+    // right-clicks a stack on the acting side, immediately before it
+    // clears the combat message line - a "no hex is selected" latch.
+    // Name is an address ordinal.
+    int field_132d4;                  // +0x132d4
+    char pad_132d8[0x8];
     int field_132e0;                  // +0x132e0
     char pad_132e4[0x10];
     // "This combat is fought over a walled town": HexIsBlocked
@@ -779,6 +791,13 @@ public:
     // initialises the stack there and optionally fizzles it in.
     army* AddArmy(int iSide, int iMonType, int iMonQty, int iGridIndex,
                   int iSetAttributes, int bFizzleItIn);
+    int RightClick(int newIndex);                              // 0x4769c0
+    // 0x47a380. LOCATED from RightClick, which calls it with the literal
+    // 1 for the three wall-target hexes; the DC command.obj roster puts
+    // ViewCastleBallista (command.cpp:3932) between AddArmy (3867) and
+    // HandleCombatPlayerDrop (3953), and retail's rows run 0x47a100
+    // AddArmy, 0x47a2d0 (get_tower_string), 0x47a380 - the same order.
+    void ViewCastleBallista(int bIsQuickInfo);
     // 0x46a460, RETAIL-ONLY - the DC roster has nothing between
     // CalculateGainedExperience and IsQuickCombat, where this 57-byte row
     // sits. It switches on the tower's grid index (254 / 251 / 255) and
