@@ -572,8 +572,8 @@ findpath	searchArray_TestPossibleDirections	0.0000	0.0000	0.0000	0xb2300
 fly	?FlyTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb49c0
 fly	?Teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10
 fly	?TeleportTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb4e90
+fly	?ValidFlight@army@@QAEEHE@Z	89.1445	89.1445	89.1445	0xb46c0
 fly	army_Fly	0.0000	0.0000	0.0000	0xb4a40
-fly	army_ValidFlight_b46c0	0.0000	0.0000	0.0000	0xb46c0
 font	??1font@@UAE@XZ	100.0000	100.0000	100.0000	0xb5110
 font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	98.7864	98.7864	98.7864	0xb5490
 font	?DrawCharacter@font@@QAEXHPAVBitmap16Bit@@HHH@Z	78.2623	78.2623	78.2623	0xb51a0
