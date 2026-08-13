@@ -95,11 +95,13 @@ int CombatOptionsWindowHandler(message& msg);
 // leaves room for 43). Definition + DATA claim in src/combatoptionswindow.cpp.
 extern THelpText gCombatOptionsHelp[39];
 
-// Retail 0x50b700, an unclaimed 44-byte body outside this compiland's band:
-// the "Default" button's only callee, and the preference sweep that follows
-// it re-reads every combat field of the 0x698758 block, which is what names
-// it. /Gr makes it fastcall with no arguments.
-void SetDefaultCombatOptions();
+// The "Default" button's callee is misc.obj's SetDefaultCombatOptions
+// (declared in misc.h, defined in src/misc.cpp) - NOT a new function: its
+// ten stores into the 0x698758 prefs block are exactly the fields this
+// dialog's Default case re-reads afterwards, and the register-shared form
+// misc.cpp spells (`xor eax,eax` / `mov eax,1` feeding ten six-byte
+// stores) accounts for retail 0x50b700's 0x44 bytes exactly. Declared
+// once in its owner's header; this TU just includes misc.h.
 
 // --- globals ---
 // CODEVIEW(E:\\gamedcs\\combatoptionswindow.cpp:278, dc 0x67b7c) int CombatOptionsWindowHandler(message* msg);
