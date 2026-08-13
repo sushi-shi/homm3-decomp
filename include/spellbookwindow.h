@@ -5,6 +5,76 @@
 #ifndef HOMM3_SPELLBOOKWINDOW_H
 #define HOMM3_SPELLBOOKWINDOW_H
 
+#include "advmgr_popup.h"
+#include "spellschool.h"
+
+class armyGroup;
+class bitmapBackedTextWidget;
+class bitmapBorder;
+class hero;
+class iconWidget;
+class textWidget;
+
+typedef int SpellID;
+
+// DC lays this class out over its 0x58-byte CAdvPopup and has six spell
+// entries per page. Retail's constructor and GotoPage prove both divergences:
+// its base is 0x60 bytes, and the loop at 0x59cf54 walks twelve SpellMap
+// entries. The widget-range pointers then occupy +0xac through +0xb4, and
+// the five individual widget pointers occupy +0xb8 through +0xc8.
+class TSpellbookWindow : public CAdvPopup {
+public:
+    enum TSpellContext {
+        eContextInvalid = -1,
+        eContextCombat = 0,
+        eContextAdventure = 1,
+        eContextNeither = 2
+    };
+
+    enum { SPELLS_PER_PAGE = 12 };
+
+    TSpellbookWindow(const hero* h, const armyGroup* g,
+                     TSpellContext context, int magicTerrain);
+    virtual ~TSpellbookWindow();
+    virtual int Open(int newPriority, unsigned char update);
+    virtual void Close(unsigned char update);
+    virtual int WindowHandler(message* msg);
+
+    void SetSchool(TSpellSchool school);
+    unsigned GetSchool();
+    void SetContext(TSpellContext context);
+    unsigned GetContextMask();
+    void GotoPage(int page);
+    int GetPage();
+    void PreviousPage();
+    void NextPage();
+    static void Reset();
+
+private:
+    const TSpellContext AllowedContext;       // +0x60
+    const hero* Hero;                         // +0x64
+    const armyGroup* EnemyGroup;              // +0x68
+    int OnMagicPlains;                        // +0x6c; retail widens DC's byte
+    TSpellSchool School;                      // +0x70
+    unsigned ContextMask;                     // +0x74
+    int Page;                                 // +0x78
+    SpellID SpellMap[SPELLS_PER_PAGE];        // +0x7c
+    iconWidget** SpellLevelWidgets;           // +0xac
+    iconWidget** SpellIconWidgets;            // +0xb0
+    textWidget** SpellNameWidgets;            // +0xb4
+    iconWidget* HeadingWidget;                // +0xb8
+    bitmapBorder* NextPageWidget;              // +0xbc
+    bitmapBorder* PreviousPageWidget;          // +0xc0
+    iconWidget* SchoolTabsWidget;              // +0xc4
+    bitmapBackedTextWidget* RolloverWidget;    // +0xc8
+
+    int convertID2HelpID(int id);
+    static int GetPositionFromSchool(unsigned schoolMask);
+    static TSpellSchool GetSchoolFromPosition(int position);
+    void DisplayNewSchool(int position);
+};
+SIZE(TSpellbookWindow, 0xcc);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\spellbookwindow.cpp:115, dc 0x14bc80) const char* get_level_string(SpellID spell);
 

@@ -22,8 +22,8 @@
 // Every cross-TU callee and global now comes from its owner's header
 // (inputmgr.h message bridges, game.h Imm hooks, misc.h WritePrefs,
 // kb.h InitMainClasses/oldmain/GameUnsaved/gText/bForegroundApp,
-// wingraph.h AppPaint/InitGraphics, exec.h's 0x6a5d5c central-object
-// view). NOTE the timeGetTime import-form split: this TU takes the
+// wingraph.h AppPaint/InitGraphics, textresource.h's gpGeneralText).
+// NOTE the timeGetTime import-form split: this TU takes the
 // IAT form from mmsystem.h via <windows.h> and must never see
 // winmm_thunks.h's plain declaration (see that header).
 
@@ -169,7 +169,7 @@ LRESULT CALLBACK AppWndProc(HWND window, UINT message, WPARAM messageParam, LPAR
         case WM_CLOSE:
             if (window == hwndApp && GameUnsaved()) {
                 VideoPause();
-                NormalDialog(gUnnamed6a5d5c->entry->quitText, 2,
+                NormalDialog(gpGeneralText->GetText(GENERAL_TEXT_QUIT), 2,
                     -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
                 VideoResume();
                 if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT)

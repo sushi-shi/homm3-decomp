@@ -5,6 +5,41 @@
 #ifndef HOMM3_BITMAP24_H
 #define HOMM3_BITMAP24_H
 
+#include "resource.h"
+
+class Bitmap16Bit;
+
+// Retail's two constructors and destructor prove the resource base and the
+// five-dword tail. The data constructor stores its byte-count at +0x1c,
+// width/height at +0x24/+0x28 and the owned pixel pointer at +0x2c; the
+// destructor releases that pointer. Slot 2 then reports DataSize plus the
+// fixed 0x30-byte object extent, matching the resource-size virtual used by
+// Bitmap16Bit and Bitmap816.
+class Bitmap24Bit : public resource {
+public:
+    unsigned int DataSize;
+    int ImageSize;
+    int Width;
+    int Height;
+    unsigned char* data;
+
+    virtual ~Bitmap24Bit();
+    virtual unsigned int _vslot2() const;
+
+    Bitmap24Bit(const char* name, int w, int h,
+                const unsigned char* source, int size);
+    Bitmap24Bit(const char* name, const char* path);
+
+    void Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
+              int dx, int dy) const;
+    void Draw(int sx, int sy, int sw, int sh, unsigned short* dst,
+              int dx, int dy, int dw, int dh, int dpitch) const;
+
+private:
+    int importPCXFile(const char* filename);
+};
+SIZE(Bitmap24Bit, 0x30);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\bitmap24.cpp:39, dc 0x525b4) long ftol(double d);
 // CODEVIEW(E:\gamedcs\bitmap24.cpp:446, dc 0x52ecc) void RGBToHSV(unsigned r, unsigned g, unsigned b, float* h, float* s, float* v);

@@ -46,6 +46,9 @@ public:
                                        unsigned char right_click);
 
     void SetIconFrame(int newFrame);
+    void SetIconSequence(int new_sequence);
+    void SetPalette(const char* palette_name);
+    void SetPlayerPaletteColors(int whichPlayer);
     void SetSprite(const char* new_sprite);
     void NextRandomFrame();
     void NextRandomSiegeEngineFrame();

@@ -44,6 +44,8 @@ def main(argv=None) -> int:
          "--engine-path", "c:\\proj\\",
          "--reloc-manifest", str(common.HOMM3_DIR /
                                  "config/retail-relocs.tsv"),
+         "--reloc-alias-manifest", str(common.HOMM3_DIR /
+                                       "config/delink-reloc-aliases.tsv"),
          "--data-manifest", str(common.HOMM3_DIR /
                                 "build/gen/delink_data_manifest.tsv")],
         check=True)

@@ -15,7 +15,10 @@ class Bitmap16Bit;
 // embedded palette pair at +0x50/+0x250 by SetPlayerPaletteColors.
 class Bitmap816 : public resource {
 public:
-    char pad_1c[0x8];
+    // DC names both dwords; retail vtable slot 2 reads DataSize directly
+    // and adds the fixed 0x56c-byte object extent.
+    int DataSize;   // +0x1c
+    int ImageSize;  // +0x20
     // Byte-proven 2026-08-08 by bitmapBorder::GetRealWidth /
     // GetRealHeight (0x4504a0 / 0x4504b0), which read +0x24 and +0x28
     // off this object; the names are the DC fieldlist's (Width@36,
@@ -24,9 +27,10 @@ public:
     // reads it.
     int Width;   // +0x24
     int Height;  // +0x28
-    char pad_2c[0x24];
-    palette p16;
-    paletteHiColor p24;
+    int Pitch;   // +0x2c
+    unsigned char* map;  // +0x30
+    TPalette16 p16;
+    TPalette24 p24;
 
     // Blitters, declared for border.cpp's bitmapBorder::Draw /
     // zBufferDraw (0x450450 / 0x4503f0). Argument lists are the DC
@@ -36,9 +40,15 @@ public:
         int dy, unsigned char tblit);
     void zBufferDraw(int sx, int sy, int sw, int sh, unsigned short* dst,
         int dx, int dy, int dw, int dh, int dpitch, int id);
+    void mark_puzzle(unsigned char* visible, long dest_x, long dest_y);
+    void SetPalette(const unsigned short* pal);
+    void SetPalette(TPalette24* pal24);
+    void ResetPalette();
 
-    virtual void _vslot2();
+    virtual ~Bitmap816();
+    virtual unsigned int _vslot2() const;
 };
+SIZE(Bitmap816, 0x56c);
 
 // --- Bitmap816 ---
 // CODEVIEW(E:\gamedcs\bitmap816.cpp:36, dc 0x53854) void Bitmap816::Bitmap816(int w, int h);

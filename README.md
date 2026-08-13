@@ -12,22 +12,22 @@ legally obtained `HEROES3.EXE` locally to initialize the matching workspace.
 
 <!-- match-score:start -->
 
-**Executable matched: 10.14%** — fuzzy-weighted bytes over all 1,996,135 unfiltered bytes.
+**Executable matched: 14.09%** — fuzzy-weighted bytes over all 1,996,012 unfiltered bytes.
 
-**Match score** — 657 / 4,749 functions exact (13.8%) across the full engine (986 in linked units).
+**Match score** — 1,013 / 4,748 functions exact (21.3%) across the full engine (1382 in linked units).
 
-| Module        | Units |   Functions exact |   Fuzzy | Fuzzy Max |
-| :------------ | ----: | ----------------: | ------: | --------: |
-| `game`        |    38 | 588 / 917 (64.1%) |  50.05% |    50.05% |
-| `zlib-1.1.3`  |    14 |  69 / 69 (100.0%) | 100.00% |   100.00% |
-| `(unmatched)` |     — |  0 / 3,763 (0.0%) |    0.0% |      0.0% |
+| Module        | Units |    Functions exact |   Fuzzy | Fuzzy Max |
+| :------------ | ----: | -----------------: | ------: | --------: |
+| `game`        |   117 | 944 / 1313 (71.9%) |  52.37% |    52.37% |
+| `zlib-1.1.3`  |    14 |   69 / 69 (100.0%) | 100.00% |   100.00% |
+| `(unmatched)` |     — |   0 / 3,366 (0.0%) |    0.0% |      0.0% |
 
 _Excluded from the % above — generated/library code, not independent reconstruction targets:_
 
 | Category              | Functions | Code (B) | Why excluded                                                       |
 | :-------------------- | --------: | -------: | :----------------------------------------------------------------- |
 | `EH unwind funclets`  |     5,125 |   53,151 | compiler EH unwind funclets; match with their parent function      |
-| `CRT/C++ runtime`     |       912 |  110,450 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
+| `CRT/C++ runtime`     |       916 |  110,788 | CRT/C++ runtime, named not matched (config/retail-runtime-map.tsv) |
 | `init/cleanup thunks` |     1,119 |   94,433 | .CRT$XCU dynamic-initializer bodies (compiler-generated)           |
 | `import thunks`       |        27 |      162 | FF 25 jumps through the IAT                                        |
 

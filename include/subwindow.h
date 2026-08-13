@@ -5,6 +5,44 @@
 #ifndef HOMM3_SUBWINDOW_H
 #define HOMM3_SUBWINDOW_H
 
+#include <vector>
+#include "va.h"
+
+class Bitmap16Bit;
+class heroWindow;
+class widget;
+
+// PROVEN retail layout (size 0x34). Both constructors at 0x5aa340 and
+// 0x5aa3c0 store x/y/width/height at +4..+0x10, construct VC6's
+// 16-byte vector at +0x14 (allocator byte + three pointers), then
+// store parentWindow/lowId/highId/background at +0x24..+0x30.
+// The sole vtable entry at 0x64234c is the scalar deleting destructor
+// 0x5aa390, so only the destructor is virtual.
+class TSubWindow {
+public:
+    int x;
+    int y;
+    int width;
+    int height;
+    std::vector<widget*> Widgets;
+    heroWindow* parentWindow;
+    int lowId;
+    int highId;
+    Bitmap16Bit* background;
+
+    TSubWindow();
+    TSubWindow(int x, int y, int w, int h, heroWindow* parent_window);
+    virtual ~TSubWindow();
+
+    void initialize(int x, int y, int w, int h, heroWindow* parent_window);
+    void AddWidget(widget* newWidget, int newPriority);
+    void RemoveWidget(widget* killWidget);
+    void Draw(unsigned char update, int iLowID, int iHighID);
+    void SaveBackground();
+    void RestoreBackground();
+};
+SIZE(TSubWindow, 0x34);
+
 // --- TSubWindow ---
 // CODEVIEW(E:\gamedcs\subwindow.cpp:43, dc 0x158d34) void TSubWindow::TSubWindow();
 // CODEVIEW(E:\gamedcs\subwindow.cpp:51, dc 0x158dac) void TSubWindow::TSubWindow(int x, int y, int w, int h, heroWindow* parent_window);

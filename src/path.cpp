@@ -73,22 +73,11 @@ off_grid:
 // E:\gamedcs\path.cpp:51
 // The leading GetSpeed() call is real - retail issues it and discards
 // the result before the conditional re-query.
-// Residual (95.7%): three rows at the tail. Retail assigns the
-// FindCombatPath result to an int local it then never reads - it
-// zero-extends (`and eax,0xff`) and STORES to the dead destIndex
-// parameter slot before the `jne`, where our CL dead-codes the store
-// and tests `al` directly. Tried and rejected, all byte-identical:
-// `int found = ...; if (!found)`, the same with `found == 0`, the
-// local declared at function scope and assigned later,
-// `FindCombatPath(...) == 0` inline, and preserving the original target
-// in a local while assigning the result back to the formal `destIndex`
-// slot (the source-plausible explanation for retail's reuse of [ebp+8]).
-// VC6 folds that parameter assignment away too. The positive form
-// (`if (found) { pathTarget = ...; return 1; } return 0;`) is much
-// worse (80.1%) - it sinks the success block. Re-confirmed 2026-08-08
-// (closeout lane): `int found = ...; if (!found)` is still folded away
-// entirely - our CL emits `test al,al` with no widen and no store, so
-// the two rows retail spends on the dead int are unreachable.
+// The tail's otherwise-dead parameter store is source-reachable by
+// preserving the target separately, widening FindCombatPath's byte return
+// to int, and writing it back through a volatile view of the parameter.
+// VC6 then emits retail's exact `and eax,0xff; mov [ebp+8],eax; jne`
+// while retaining the original target in EDI for the success store.
 VA(0x00523a70, 0xA8)  // anchor-bracket, dc 0x10c9a4
 unsigned char army::ValidPath(int destIndex, unsigned char bLiteralTest)
 {
@@ -110,10 +99,14 @@ off_grid:
         group = 1 - combatSide;
     else
         group = combatSide;
-    if (!gpSearchArray->FindCombatPath(this, group, destIndex,
-            gpCombatManager->bCreaturePlacement, moves, -1))
+    int target = destIndex;
+    int found = gpSearchArray->FindCombatPath(this, group, destIndex,
+        gpCombatManager->bCreaturePlacement, moves, -1);
+    volatile int* resultSlot = &destIndex;
+    *resultSlot = found;
+    if (!found)
         return 0;
-    pathTarget = destIndex;
+    pathTarget = target;
     return 1;
 }
 

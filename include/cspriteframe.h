@@ -5,6 +5,32 @@
 #ifndef HOMM3_CSPRITEFRAME_H
 #define HOMM3_CSPRITEFRAME_H
 
+#include "resource.h"
+
+// Retail layout is byte-proven by both constructors at 0x47c2b0/0x47c360
+// and the destructor at 0x47c430.  The Dreamcast field roster agrees
+// through map@0x44; retail omits that build's DirectDraw tail, leaving a
+// 0x48-byte resource.  Retail vtable 0x63d6bc has the ordinary resource
+// trio: scalar deleting destructor, Dispose, and the memory-size query.
+class CSpriteFrame : public resource {
+public:
+    int DataSize;
+    int ImageSize;
+    int EncodingMethod;
+    int Width;
+    int Height;
+    int CroppedWidth;
+    int CroppedHeight;
+    int CroppedX;
+    int CroppedY;
+    int Pitch;
+    unsigned char* map;
+
+    virtual ~CSpriteFrame();
+    virtual unsigned int _vslot2() const;
+};
+SIZE(CSpriteFrame, 0x48);
+
 // --- CSpriteFrame ---
 // CODEVIEW(E:\gamedcs\cspriteframe.cpp:67, dc 0x74600) void CSpriteFrame::CSpriteFrame();
 // CODEVIEW(E:\gamedcs\cspriteframe.cpp:76, dc 0x74664) void CSpriteFrame::CSpriteFrame(const char* name, int w, int h, unsigned char* data, int csize, TEncodingMethod encoding);

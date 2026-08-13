@@ -50,7 +50,7 @@
 // no single spelling of the loop can be right for all three; the choice
 // is optimizer state, not source.
 // WHAT WOULD ACTUALLY FIX IT (evidence found 2026-08-08, not actioned -
-// it is a supervised, tree-wide change): retail's initialize.cpp
+// it is a deliberate, tree-wide change): retail's initialize.cpp
 // includes `E:\gamedcs\terrain.h`. The DC CodeView corpus attributes
 // twenty static-init funclets in initialize.obj ($E439..$E467) to
 // terrain.h lines 70-79 - ten file-scope objects with dynamic

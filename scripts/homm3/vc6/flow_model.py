@@ -41,8 +41,7 @@ changes the zero-trip case; descending induction reverses iteration
 order). They stay in the menu deliberately: in this domain the RETAIL
 BYTES are the semantic ground truth - a rewrite that reproduces them is
 evidence the original source had that form - and every winning edit is
-only ever PROPOSED for supervised review, never landed. Such labels say
-so ("retail arbitrates").
+only ever proposed, never landed. Such labels say so ("retail arbitrates").
 
 Pipeline per candidate: compile via homm3.core.cc_wrap with the game
 profile (config/units.toml `game_o2_ml_gr_windows` + /GR-) + /FAs, slice
@@ -55,7 +54,7 @@ or retail F via the sema machinery (--against UNIT:FN - the delinked
 target object when one exists, else capstone over the image).
 
 rc: 0 = zero branch-shape divergence reached (already, or by a mutation -
-the winning edit prints as a diff for SUPERVISED application, never
+the winning edit prints as a diff for manual application, never
 auto-applied); 1 = improved-but-not-exact or no mutation helped; 2 =
 error (die). Scratch: build/vc6/whybranch/{base,ref,mut}/.
 """
@@ -762,6 +761,5 @@ def run_why(args) -> int:
         fromfile=str(src.name), tofile=f"{src.name} (mutated)", lineterm="")
     for ln in diff:
         print("  " + ln)
-    print("[apply under the supervised-review rule - why-branch proposes, "
-          "never lands]")
+    print("[why-branch proposes this edit; it never applies source changes]")
     return rc

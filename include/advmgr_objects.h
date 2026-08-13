@@ -34,16 +34,7 @@ enum ECompleteDrawFps {
     COMPLETE_DRAW_FPS_FRAME_COUNT = 100
 };
 
-// Narrow view of the retail chat singleton used by CompleteDraw's optional
-// FPS overlay. Both method targets and their calling conventions are proved
-// by the retail call sites; the rest of CChatManager stays unreconstructed.
-class CChatManager {
-public:
-    void ClearChat();
-    void UpdateWidget(textWidget* widget, unsigned char killOld, int numLines);
-};
-
-DATA(0x0069d7b0) extern CChatManager chatMan;
+class CChatManager;
 void __cdecl UpdateCompleteDrawFps(CChatManager* manager, const char* text);
 
 DATA(0x0065f690) extern int gCompleteDrawFpsFrame;
@@ -53,9 +44,9 @@ DATA(0x0069136c) extern int
 DATA(0x006912ec) extern char gCompleteDrawFpsText[];
 DATA(0x00660388) extern char gCompleteDrawFpsFormat[];
 
-// Narrow renderer views of the retail map object pools. They live in the
-// adventure renderer's header rather than changing the broad game.h include
-// closure before the rest of NewfullMap is reconstructed.
+// These source-private renderer layouts are intentionally separate from the
+// broad canonical map types: VC6 changes register allocation in the three
+// large drawing bodies when their type identities are merged.
 struct AdvObjectCellView {
     unsigned short objectIndex;
     unsigned char offsets;
@@ -63,9 +54,6 @@ struct AdvObjectCellView {
 };
 SIZE(AdvObjectCellView, 4);
 
-// NewmapCell is byte-packed: retail reads the vector's first/last pointers at
-// +0x12/+0x16 and the next field at +0x1e, placing this 16-byte vector at
-// +0x0e rather than at a naturally aligned offset.
 #pragma pack(push, 1)
 struct AdvMapCellObjectsView {
     char pad_00[0xe];
@@ -73,29 +61,6 @@ struct AdvMapCellObjectsView {
 };
 #pragma pack(pop)
 SIZE(AdvMapCellObjectsView, 0x1e);
-
-struct AdvGroundCellView {
-    char pad_00[0xc];
-    unsigned char cellFlags;
-};
-
-struct AdvRoadCellView {
-    char pad_00[0xc];
-    unsigned short cellFlags;
-};
-
-struct AdvRiverCellView {
-    char pad_00[0xc];
-    unsigned short cellFlags;
-};
-
-// Retail mine records are 0x40 bytes. GetSoundId reaches the type and the
-// one-byte abandoned marker without widening game.h's broad mine layout.
-struct AdvMineSoundView {
-    signed char owner;
-    signed char type;
-    unsigned char abandoned;
-};
 
 enum EGetSoundObjectIndex {
     GET_SOUND_BANK_0 = 0,
@@ -184,13 +149,40 @@ enum EGetSoundCreatureId {
 DATA(0x0063d570) extern TCreatureType gCreatureGenerator1Types[];
 DATA(0x00677938) extern TCreatureType gCreatureGenerator4Types[][4];
 
+class CObjectType;
+
+#ifdef HOMM3_GAME_OBJ_DECLS
+int __fastcall Random(int minimum, int maximum);
+#endif
+
 class CObject {
 public:
-    char pad_00[8];
+    unsigned long extraInfo;
+    unsigned char x;
+    unsigned char y;
+    unsigned char z;
+    unsigned char pad_07;
     unsigned short typeIndex;
     unsigned char animationOffset;
     unsigned char pad_0b;
 
+#ifdef HOMM3_GAME_OBJ_DECLS
+    // MapCell.h:595. game::InsertObject byte-proves this header body: the
+    // coordinates narrow to bytes, type starts at zero, extra info remains a
+    // dword, and each dynamic object receives a random animation phase.
+    CObject(unsigned char newX, unsigned char newY, unsigned char newZ,
+            unsigned short newType, unsigned long newExtraInfo)
+    {
+        x = newX;
+        y = newY;
+        z = newZ;
+        typeIndex = newType;
+        extraInfo = newExtraInfo;
+        animationOffset = static_cast<unsigned char>(Random(0, 255));
+    }
+#endif
+
+    CObjectType* get_object_type_ptr();
     void FindTrigger(int* resultX, int* resultY);
 };
 SIZE(CObject, 0xc);
@@ -204,9 +196,12 @@ public:
     std::bitset<48> drawCells;
     char pad_1c[8];
     std::bitset<48> shadowCells;
-    char pad_2c[0xc];
+    // Fourth 48-cell mask, byte-proven at +0x2c by FindTrigger. The prior
+    // padding spelling incorrectly conflated it with shadowCells at +0x24.
+    std::bitset<48> triggerCells;
+    char pad_34[4];
     TAdventureObjectType objectType;
-    char pad_3c[4];
+    int extra;
     unsigned char suppressDraw;
     char pad_41[3];
 };

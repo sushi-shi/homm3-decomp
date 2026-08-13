@@ -10,6 +10,19 @@
 #include "struct.h"
 
 class army;
+class hero;
+class NewmapCell;
+
+// Dreamcast CodeView supplies the complete domain and names; SeedTo's retail
+// call proves const_normal_search == 0 on x86.
+enum type_search_type {
+    const_normal_search = 0,
+    const_AI_treasure_search,
+    const_AI_allied_search,
+    const_AI_enemy_search,
+    const_AI_search,
+    const_AI_alternate_search
+};
 
 // The path grid record. Field names and offsets are the Dreamcast
 // fieldlist verbatim; the STRIDE is retail-proven at THIRTY bytes by
@@ -158,6 +171,8 @@ public:
     // get_travel_time and SeedCombatPosition both spell by hand; the
     // null arm answers 0 and the caller still dereferences it.
     pathCell* getCellData(long pos);
+    void PushCombatPoint(int index, int direction, int cost,
+                         int flight_cost, int limit);  // 0x4b3bb0
     unsigned char FindCombatPath(const army* current_army, long current_group,
                                  long destination, unsigned char in_placement_phase,
                                  long limit, long base_speed);  // 0x4b3400
@@ -171,6 +186,12 @@ public:
     void SeedCombatPosition(const army* thisArmy, long current_group,
                             long limit, unsigned char in_placement_phase,
                             long base_speed);
+    // 0x4b2ff0. Rebuilds the teleport-reachable combat cells, then keeps
+    // enemy occupied cells marked when they border that reachable set.
+    void mark_teleport(const army* current_army, long current_group);
+    // DC findpath.cpp:1172. Retail inlines both calls into mark_teleport and
+    // carries no distinct body.
+    void mark_enemy(long hex, long cost);
     // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
     void set_moat(const army* current_army);
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
@@ -196,6 +217,14 @@ public:
     {
         result.erase(result.begin(), result.end());
     }
+
+    int BuildPath(const hero* current_hero, long limit);
+    void SeedPosition(hero* current_hero, type_point start,
+                      type_point target, int maxMobility,
+                      unsigned char is_boat,
+                      type_search_type search_type,
+                      int iCurTempMobility,
+                      unsigned char bSeedContinuation);
 };
 
 // findpath.h:265 in the DC roster; no retail row of its own - /Ob2

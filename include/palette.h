@@ -7,6 +7,16 @@
 
 #include "resource.h"
 
+// Dreamcast CodeView type 0x184c; retail's TPalette24 constructor consumes
+// this exact four-byte stride and copies the first three channels.
+struct TRGBA {
+    unsigned char Red;
+    unsigned char Green;
+    unsigned char Blue;
+    unsigned char Alpha;
+};
+SIZE(TRGBA, 4);
+
 // Bootstrap VIEW of the 16-bit palette resource: the RGB555 table
 // lives at +0x1c past the resource head (same shape CSprite::GetPalette
 // exposes); Dispose is the shared resource slot 1.
@@ -25,18 +35,46 @@ public:
     unsigned char data[256][3];
 };
 
+// Retail constructors at 0x522e80 and 0x522f00 copy 0x300 palette bytes
+// to/from +0x1c; vtable slot 2 at 0x522f70 returns the resulting 0x31c
+// total extent. This is the resource-owning 24-bit palette class, distinct
+// from the same-sized paletteHiColor raw record embedded in Bitmap816.
+class TPalette24 : public resource {
+public:
+    paletteHiColor colors;
+
+    TPalette24();
+    TPalette24(const unsigned char* data);
+    TPalette24(const TRGBA* rgba);
+    TPalette24(const TPalette24* copy);
+    TPalette24& operator=(const TPalette24& from);
+    virtual ~TPalette24() throw();
+    virtual unsigned int _vslot2() const;
+};
+SIZE(TPalette24, 0x31c);
+
 class TPalette16 : public resource {
 public:
-    unsigned short data[256];
+    union {
+        unsigned short data[256];
+        palette colors;
+    };
 
-    // Concrete in retail (constructed by the loaders); the slot-2
-    // override body is unlocated.
-    virtual void _vslot2();
+    TPalette16(const TPalette24* p24);
+
+    // Retail 0x522940 reinstalls the TPalette16 vptr and tail-calls the
+    // resource destructor. Keeping this out-of-line declaration is also
+    // codegen-significant for owners of embedded palettes (font::~font).
+    virtual ~TPalette16();
+
+    // Retail 0x522b40 returns the fixed 0x21c-byte resource extent.
+    virtual unsigned int _vslot2() const;
 
     // The NWC pointer-taking assignment DC CodeView attests
     // (palette.cpp:194, dc 0x10a8a0); font::SetPalette calls the
     // retail body at 0x522910.
     TPalette16* operator=(const TPalette16* from);
+    void Cycle(int begin, int end, int step);
 };
 
 // Dreamcast ?GetPalette@ResourceManager@@YAPAVTPalette16@@PBD_N@Z

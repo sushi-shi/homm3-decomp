@@ -5,6 +5,11 @@
 #ifndef HOMM3_TOWNMGR_H
 #define HOMM3_TOWNMGR_H
 
+struct type_point;
+
+unsigned char DoTavern();
+void DoMapTavern(type_point point);
+
 #ifdef HOMM3_TOWN_OBJ_DECLS
 #include "basemgr.h"
 

@@ -16,23 +16,20 @@
 // sqrt() - hero::get_combat_value_modifier (0x4e5400) calls the CRT
 // entry, not an inlined fsqrt.
 #include <math.h>
-#define HOMM3_HERO_COMBINATION_VIEW
-#define HOMM3_HERO_BOAT_VIEW
-#define HOMM3_HERO_LAND_VIEW
+#define HOMM3_GAME_HERO_EXTRA_VIEW
 #include "hero.h"
-#undef HOMM3_HERO_LAND_VIEW
-#undef HOMM3_HERO_BOAT_VIEW
-#undef HOMM3_HERO_COMBINATION_VIEW
+#undef HOMM3_GAME_HERO_EXTRA_VIEW
 // class army - hero::modify_spell_damage (0x4e5760) reads the target
 // stack's embedded creature-traits level at +0x78.
 #include "army.h"
 // gpGame / playerData / game::IsHuman: the owner-record accessors
 // (belongs_to_human, get_player) and every gpGame walk in this TU need
 // the real definitions, and game.h is where they live.
-#define HOMM3_HERO_CLASS_NAME_VIEW
-#define HOMM3_HERO_HIRE_VIEW
+#define HOMM3_HERO_OBJ_DECLS
 #include "game.h"
+#undef HOMM3_HERO_OBJ_DECLS
 #include "advmgr.h"
+#include "cursor.h"
 // TSecondarySkill / TSkillMastery / akHeroSpecificAbilities - see the
 // placement note at the top of that header.
 #include "herospec.h"
@@ -42,22 +39,36 @@
 #include "exec.h"
 #include "findpath.h"
 #include "town.h"
-#undef HOMM3_HERO_HIRE_VIEW
-#undef HOMM3_HERO_CLASS_NAME_VIEW
 // TMagicTerrain - the battlefield magic-terrain id the spell-school
 // quartet takes as its second argument.
 #include "magicterrain.h"
 #include "kb.h"
 #include "message.h"
+#include "misc.h"
 #include "winmgr.h"
+
+inline CMCTeleportHero::CMCTeleportHero(int id, type_point location)
+{
+    field_00 = -1;
+    field_04 = 0;
+    subType = RS_TELEPORT_HERO;
+    size = sizeof(CMCTeleportHero);
+    field_10 = 0;
+    heroId = id;
+    point = location;
+    playerPos = gNetLocalGamePos;
+}
+
+#include "mousemgr.h"
+#include "widget.h"
 
 DATA(0x0069774c) extern unsigned char gCampaignMode;
 DATA(0x0067dcec) extern const THeroClassTraits (&akHeroClasses)[18];
 DATA(0x006a7540) extern const char* gPrimaryStatNames[4];
 // Runtime hero-view state used by the retail-only name getter below. The
 // storage addresses and access widths are byte-proven; no public symbol
-// roster survives for the three pointer spellings, so they are provisional.
-DATA(0x00698b20) extern hero* gpCurrentHero;
+// roster survives for the two name-table pointer spellings, so they are
+// provisional. gpCurrentHero and the hero-screen globals live in hero.h.
 DATA(0x006a66d8) extern const char* gSharedHeroNames[156];
 DATA(0x006a6948) extern const char* gCampaignHeroName;
 // Runtime-loaded artifact rollover text. Retail fixes the three storage
@@ -115,6 +126,12 @@ static const float kSorceryFactors[kNumMasteries] =
 // (shared by the six buff spells) and 0x63eac4 (Slayer's own).
 static const int kBuffSpecialtyBonus[7] = { 3, 3, 2, 2, 1, 1, 0 };
 static const int kSlayerSpecialtyBonus[7] = { 4, 3, 2, 1, 0, 0, 0 };
+// These three switch-only ids remain source-private because adding otherwise
+// unused enumerators to armygrp.h changes initialize.obj's VC6 include
+// personality. Retail and the DC SpellID roster prove the values.
+static const SpellID kSpellFireWall = 0xd;
+static const SpellID kSpellMagicArrow = 0xf;
+static const SpellID kSpellHaste = 0x35;
 
 // Experience needed to REACH each level, levels 1..12. Retail keeps it
 // in .DATA at 0x679c88 (not .rdata - hence no `const`), immediately
@@ -195,8 +212,8 @@ mine* type_obscuring_object::get_obscured_mine()
 VA(0x004d7490, 0x35)  // anchor-global, dc 0xcab04
 town* type_obscuring_object::get_obscured_town()
 {
-    if (field_06 && obscuredType == TOWN && field_10)
-        return gpGame->GetTown(obscuredIndex);
+    if (valid && obscuredType == TOWN && was_trigger)
+        return gpGame->GetTown(extra_info);
     return 0;
 }
 
@@ -207,41 +224,117 @@ void type_obscuring_object::initialize()
     x = -1;
     y = -1;
     z = -1;
-    field_06 = 0;
+    valid = 0;
     obscuredType = NOTHING;
-    field_10 = 0;
-    obscuredIndex = 0;
+    was_trigger = 0;
+    extra_info = 0;
 }
 
 #if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:418
+#endif  // @carcass
+
 VA(0x004d74f0, 0xD6)  // linkorder, dc 0xcab54
-unsigned char type_obscuring_object::load(void* infile)
+bool type_obscuring_object::load(void* infile_)
 {
-    // @stub
+    TAbstractFile* infile = static_cast<TAbstractFile*>(infile_);
+    if (infile->Read(&x, sizeof(x)) < sizeof(x))
+        return 0;
+    if (infile->Read(&y, sizeof(y)) < sizeof(y))
+        return 0;
+    if (infile->Read(&z, sizeof(z)) < sizeof(z))
+        return 0;
+    if (infile->Read(&valid, sizeof(valid)) < sizeof(valid))
+        return 0;
+    if (infile->Read(&obscured_location, sizeof(obscured_location))
+            < sizeof(obscured_location))
+        return 0;
+    if (infile->Read(&obscuredType, sizeof(obscuredType))
+            < sizeof(obscuredType))
+        return 0;
+    if (infile->Read(&was_trigger, sizeof(was_trigger))
+            < sizeof(was_trigger))
+        return 0;
+    bool success = infile->Read(&extra_info, sizeof(extra_info))
+        >= sizeof(extra_info);
+    return success;
 }
 
 // E:\gamedcs\hero.cpp:443
 VA(0x004d75d0, 0x10A)  // anchor-global, dc 0xcac58
 void type_obscuring_object::obscure_cell(TAdventureObjectType new_type, long id)
 {
-    // @stub
+    if (!valid) {
+        type_point location;
+        location.x = x;
+        location.y = y;
+        location.z = z;
+        obscured_location = location;
+        NewmapCell* cell = gpGame->worldMap.cell(obscured_location);
+        valid = 1;
+        obscuredType = cell->type;
+        was_trigger = cell->is_trigger;
+        extra_info = cell->extraInfo;
+        cell->is_trigger = 1;
+        cell->type = new_type;
+        cell->extraInfo = id;
+
+        if (obscuredType == TOWN && was_trigger)
+            gpGame->GetTown(extra_info)->visitingHeroId = id;
+    }
 }
 
 // E:\gamedcs\hero.cpp:473
+
+// Restores the cell saved by obscure_cell. The packed-point map lookup is
+// the MapCell.h inline overload: retail carries no call, only its 38-byte
+// NewmapCell indexing expansion. A restored visiting town must forget the
+// hero or boat which had occupied its trigger cell.
 VA(0x004d76e0, 0xD0)  // anchor-global, dc 0xcacfc
 void type_obscuring_object::restore_cell()
 {
-    // @stub
+    if (valid) {
+        NewmapCell* cell = gpGame->worldMap.cell(obscured_location);
+        valid = 0;
+        cell->type = obscuredType;
+        cell->is_trigger = was_trigger;
+        cell->extraInfo = extra_info;
+
+        if (obscuredType == TOWN && was_trigger)
+            gpGame->GetTown(extra_info)->visitingHeroId = -1;
+    }
 }
 
 // E:\gamedcs\hero.cpp:498
+
 VA(0x004d77b0, 0xD6)  // linkorder, dc 0xcad80
-unsigned char type_obscuring_object::save(void* outfile)
+bool type_obscuring_object::save(void* outfile_)
 {
-    // @stub
+    TAbstractFile* outfile = static_cast<TAbstractFile*>(outfile_);
+    if (outfile->Write(&x, sizeof(x)) < sizeof(x))
+        return 0;
+    if (outfile->Write(&y, sizeof(y)) < sizeof(y))
+        return 0;
+    if (outfile->Write(&z, sizeof(z)) < sizeof(z))
+        return 0;
+    if (outfile->Write(&valid, sizeof(valid)) < sizeof(valid))
+        return 0;
+    if (outfile->Write(&obscured_location, sizeof(obscured_location))
+            < sizeof(obscured_location))
+        return 0;
+    if (outfile->Write(&obscuredType, sizeof(obscuredType))
+            < sizeof(obscuredType))
+        return 0;
+    if (outfile->Write(&was_trigger, sizeof(was_trigger))
+            < sizeof(was_trigger))
+        return 0;
+    bool success = outfile->Write(&extra_info, sizeof(extra_info))
+        >= sizeof(extra_info);
+    return success;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:523
 #endif  // @carcass
@@ -263,11 +356,35 @@ void hero::hire(int iPlayer, type_point point)
 #if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:549
+#endif  // @carcass
+
 VA(0x004d7900, 0x11B)  // linkorder, dc 0xcaedc
 void hero::PlaceInMap(int iPlayer, type_point point, unsigned char reset_flags)
 {
-    // @stub
+    playerData* player = &gpGame->players[iPlayer];
+    gpGame->record_show_hero(this, static_cast<signed char>(iPlayer),
+                             point, 0);
+
+    player->heroes[player->numHeroes] = id;
+    ++player->numHeroes;
+    gpGame->heroAvailability[id] = static_cast<char>(iPlayer);
+    gpGame->heroPoolMap[id].set(iPlayer);
+
+    owner = static_cast<signed char>(iPlayer);
+    x = point.x;
+    y = point.y;
+    z = point.z;
+    facing = 2;
+    if (reset_flags)
+        flags &= 0xfff9ffff;
+
+    type_obscuring_object::obscure_cell(HERO, id);
+
+    CMCTeleportHero change(id, point);
+    SendMapChange(&change);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:577
 VA(0x004d7a20, 0x69F)  // linkorder, dc 0xcaf98
@@ -298,11 +415,129 @@ void hero::hero()
 // packed coordinate words, 19 stride-8 equipped slots from +0x12d, 64
 // stride-8 backpack slots from +0x1d4, and the two 28-byte
 // secondary-skill bands at +0xc9 / +0xe5.
+#endif  // @carcass
+
+// Reconstructed through every retail store and branch. The 82.86% residual
+// is dominated by VC6 front-end/inliner state: retail leaves two Dinkumware
+// string::_Tidy calls and expands operator delete, while this compile leaves
+// one _Tidy call and one delete call. `operator=`, direct `assign`, a class
+// inline wrapper, and inline_depth 2/3/4 are byte-identical. The remaining
+// non-string deltas are register/order choices (memset address setup and the
+// four-byte stats loop), not missing initialization semantics.
 VA(0x004d8720, 0x410)  // anchor-bracket + layout, dc 0xcbe80
 void hero::initialize(short index)
 {
-    // @stub
+    const int& initialSex = akHeroTraits[index].sex;
+
+    type_obscuring_object::initialize();
+    memset(in_spellbook, 0, sizeof(in_spellbook));
+    memset(available_spells, 0, sizeof(available_spells));
+
+    int i;
+    for (i = 0; i < 19; i++)
+        equipped[i] = type_artifact();
+
+    memset(artifactSlotCounts, 0, sizeof(artifactSlotCounts));
+    for (i = 0; i < 64; i++)
+        backpack[i] = type_artifact();
+    backpackCount = 0;
+    memset(skillLevel, 0, sizeof(skillLevel));
+    memset(skillOrder, 0, sizeof(skillOrder));
+
+    patrolY = kPatrolNone;
+    patrolX = kPatrolNone;
+    id = index;
+    portrait = static_cast<unsigned char>(index);
+    sex = initialSex;
+    TownSpecialGrantedMask.reset();
+    owner = -1;
+    facing = kFacingE;
+
+    strncpy(name, akHeroTraits[index].defaultName, sizeof(name));
+    name[sizeof(name) - 1] = 0;
+    heroClass = akHeroTraits[index].heroClass;
+    skillCount = 0;
+    int statIndex = 0;
+    signed char* stat = stats;
+    int statCount = 4;
+    do {
+        *stat = akHeroClasses[heroClass].initialPrimarySkill[statIndex];
+        statIndex++;
+        stat++;
+    } while (--statCount);
+
+    if (akHeroTraits[index].firstSkill != eSecSkillNone) {
+#pragma inline_depth(0)
+        GiveSS(akHeroTraits[index].firstSkill,
+               akHeroTraits[index].firstSkillLevel);
+#pragma inline_depth()
+    }
+    if (akHeroTraits[index].secondSkill != eSecSkillNone) {
+#pragma inline_depth(0)
+        GiveSS(akHeroTraits[index].secondSkill,
+               akHeroTraits[index].secondSkillLevel);
+#pragma inline_depth()
+    }
+    if (akHeroTraits[index].startsWithSpellbook)
+        equipped[17].artifactId = ARTIFACT_SPELLBOOK;
+    if (akHeroTraits[index].startingSpell != -1)
+        AddSpell(akHeroTraits[index].startingSpell);
+
+    field_47a = static_cast<float>(Random(75, 100)) *
+                akHeroClasses[heroClass].aggression /
+                static_cast<float>(Random(100, 125));
+
+    equipped[16].artifactId = ARTIFACT_CATAPULT;
+    for (i = 0; i < 7; i++)
+        army.armies[i] = CREATURE_NONE;
+    pathTargetY = -1;
+    pathTargetX = -1;
+    level = 1;
+
+    int knowledge = GetPrimarySkill(3);
+    float intelligence = kIntelligenceFactors[
+        skillLevel[eSecSkillIntelligence]];
+    if (skillLevel[eSecSkillIntelligence] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill &&
+            ability.skill == eSecSkillIntelligence)
+            intelligence *= 1.05f;
+    }
+    float baseMana = static_cast<float>(knowledge * 10);
+    mana = static_cast<short>(static_cast<long>(
+        baseMana * (intelligence + 1.0f)));
+
+    maxMovePoints = 0;
+    movePoints = 0;
+    flightLevel = eMasteryInvalid;
+    waterWalkLevel = eMasteryInvalid;
+    disguiseLevel = eMasteryInvalid;
+    dWalkSpellsCast = 0;
+    field_129 = eMasteryInvalid;
+    hasCustomName = 0;
+    customName = emptyRolloverText;
+    field_11c = 0;
+    formation = 2;
+    flags = 0;
+    TrainingGroundsFlags = 0;
+    DefenseTowerFlags = 0;
+    GardenOfRevelationFlags = 0;
+    MercCampFlags = 0;
+    PowerSchoolFlags = 0;
+    TreeOfKnowledgeFlags = 0;
+    LibraryFlags = 0;
+    ArenaFlags = 0;
+    MagicSchoolFlags = 0;
+    WarSchoolFlags = 0;
+    UniversityFlags = 0;
+    Shrine1Flags = 0;
+    Shrine2Flags = 0;
+    Shrine3Flags = 0;
+    field_11a = 0;
+    field_11b = 0;
 }
+
+#if 0  // @carcass
 
 // RETAIL-ONLY x3. The DC roster runs hero::initialize (0xcbe80)
 // straight into belongs_to_human (0xcc0bc) with nothing between them,
@@ -335,7 +570,7 @@ const char* hero::HeroFn_004D8F70()
 {
     if (id == CLASS_NAME_OVERRIDE_HERO_ID && gCampaignMode &&
         gpGame->campaign.currentCampaign == CLASS_NAME_OVERRIDE_SCENARIO)
-        return gUnnamed6a5d5c->entry->campaignHeroClassName;
+        return gpGeneralText->GetText(GENERAL_TEXT_CAMPAIGN_HERO_CLASS);
     return akHeroClasses[heroClass].className;
 }
 
@@ -350,12 +585,8 @@ const char* hero::HeroFn_004D8FB0()
     const char* emptyName = DATA_COMPGEN(0x0063a608, heroNameEmptyText,
                                          "");
 
-    if (hasCustomName) {
-        const char* result = emptyName;
-        if (customName)
-            result = customName;
-        return result;
-    }
+    if (hasCustomName)
+        return customName.c_str();
 
     if (gCampaignMode &&
         gpGame->campaign.currentCampaign != CUSTOM_NAME_CAMPAIGN_EXCLUDED_SCENARIO &&
@@ -500,7 +731,7 @@ unsigned char hero::IsWieldingArtifact(int whichArtifact)
         if (equipped[slot].artifactId == whichArtifact)
             return 1;
     }
-    int combination = akArtifactTraits[whichArtifact].combination;
+    int combination = akArtifactTraits[whichArtifact].targetCombo;
     return combination != -1 &&
            IsWieldingArtifact(gCombinationArtifacts[combination].artifactId);
 }
@@ -1032,14 +1263,14 @@ VA(0x004dc070, 0x87)  // retail-only, hero member, ret 4
 void hero::HeroFn_004DC070(long slot)
 {
     int combination =
-        akArtifactTraits[equipped[slot].artifactId].combinationIndex;
+        akArtifactTraits[equipped[slot].artifactId].comboType;
     remove_artifact(slot);
 
     const std::bitset<144>& components =
         gCombinationArtifacts[combination].components;
     for (int artifactId = 0; artifactId < 144; artifactId++) {
         if (components.test(artifactId)) {
-            type_artifact artifact = { artifactId, -1 };
+            type_artifact artifact(artifactId, -1);
             equip_artifact(&artifact, -1);
         }
     }
@@ -1138,32 +1369,68 @@ void THeroScreenWindow::THeroScreenWindow()
 }
 
 // E:\gamedcs\hero.cpp:4186
-// The compiler-generated ??_G: `call ~THeroScreenWindow; if (flags & 1)
-// operator delete(this); return this;` in 33 bytes, sitting immediately
-// before the destructor it calls. Retail emits it here, not at the DC
-// tail slot 0xd59d0.
+// RETAIL_LOCATED(0x004e1520, 0x21): compiler-generated ??_G immediately
+// before the destructor it calls. VC6 emits it naturally from the virtual
+// destructor below.
 VA_COMPGEN(0x004e1520, 0x21, SCALAR_DELETING_DTOR, THeroScreenWindow)
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:4191
-// Byte-identified: stores vtable 0x63eae8 into *this, walks the widget
-// vector at +0x34..+0x38 disposing each entry through virtual slot 0,
-// then tail-calls the CAdvPopup base destructor 0x41b120, all inside a
-// /GX fs:[0] frame.
+// Byte-identified: restores a dragged artifact to the current hero, resets
+// the default mouse pointer and army-slot state, walks the canonical Widgets
+// vector disposing each entry through virtual slot 0, then destroys the
+// CAdvPopup base. The vtable store and the base call prove the inheritance.
 VA(0x004e1550, 0xA2)  // anchor-vtable (0x63eae8) + anchor-callee, dc 0xd2be8
-void THeroScreenWindow::~THeroScreenWindow()
+THeroScreenWindow::~THeroScreenWindow()
 {
-    // @stub
+    if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE) {
+        gpCurrentHero->GiveArtifact(&gHeroScreenDraggedArtifact, 0, 0);
+        gHeroScreenDraggedArtifact.artifactId = ARTIFACT_NONE;
+        gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+    }
+
+    gHeroScreenArmySlot = -1;
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
 }
 
 // E:\gamedcs\hero.cpp:4208
-// Takes one int (`ret 4`), compares it against the local player's hero
-// count and clears widget status 0x82 + iWhich through
-// heroWindow::WidgetClearStatus (0x5fef60) - a per-locator update.
+// The locator row displays the local player's hero at topHero + iWhich,
+// sends that hero's small portrait name to the corresponding widget, and
+// highlights the row containing the position HeroView selected. GetHero's
+// inline -1 arm accounts for retail's intentional null-through portrait
+// load without a local layout surrogate.
 VA(0x004e1600, 0xCB)  // anchor-callee (heroWindow::WidgetClearStatus), dc 0xd2c80
 void THeroScreenWindow::UpdateHeroLocator(int iWhich)
 {
-    // @stub
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    if (iWhich >= localPlayer->numHeroes) {
+        WidgetClearStatus(iWhich + 0x82, 2);
+        return;
+    }
+
+    hero* displayedHero = gpGame->GetHero(
+        localPlayer->heroes[topHero + iWhich]);
+    const char* portraitName =
+        akHeroTraits[displayedHero->portrait].smallPortraitName;
+    union {
+        const char* pointer;
+        int value;
+    } portraitMessage;
+    portraitMessage.pointer = portraitName;
+    BroadcastMessage(0x200, 0xb, iWhich + 0x82,
+                     portraitMessage.value);
+
+    if (topHero + iWhich == gHeroScreenHeroPosition) {
+        WidgetSetStatus(0x8a, 6);
+        BroadcastMessage(0x200, 0x35, 0x8a, 0x57 + 54 * iWhich);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:4231
 DC_ONLY(0xd2d24, 0x32)
@@ -1212,18 +1479,11 @@ void THeroScreenWindow::SetupHeroView()
 // skill count at +0x101, and all three are `ret 8`.
 #endif  // @carcass
 
-// Residual (3.8%): OVER-INLINE, not a spelling error. Our CL expands
-// GiveSS into this body where retail calls it; everything else is
-// byte-identical, PROVEN by compiling the identical source once under
-// `#pragma auto_inline(off)` around GiveSS - SetSS then matched exactly
-// (27/27 instructions). The pragma is not retail source, so it is not
-// recorded. Nor is this the /Ob2 single-call-site rule: adding a second
-// live call site changed nothing (measured), so retail's GiveSS simply
-// carried more inline cost than this reconstruction does - i.e. the
-// residual is under-reconstruction of GiveSS, whose 4 in-TU retail call
-// sites (hero::initialize 0x4d8720, 0x4d8b30, CheckLevel 0x4da720 and
-// this one) are ALL out-of-line in retail. Expect it to close when
-// hero.cpp's real bodies land. Tried and rejected: two call sites;
+// Exact after pinning only the GiveSS call at inline depth zero. Retail calls
+// all four in-TU GiveSS sites out of line even though the reconstructed body
+// is small enough for this VC6 /Ob2 compile to inline here; the localized pin
+// preserves retail's decision without changing GiveSS (it remains exact) or
+// suppressing unrelated inlining in the TU. Tried and rejected: two call sites;
 // `else if` chain vs early returns (identical bytes either way);
 // respelling GiveSS around a `signed char* pLevel = &skillLevel[i]`
 // local to buy inline cost - retail's own `lea edx,[esi+ecx+0xc9]`
@@ -1238,7 +1498,9 @@ void hero::SetSS(int iWhichSS, int iLevelToSet)
         return;
     }
     if (skillLevel[iWhichSS] == 0) {
+#pragma inline_depth(0)
         GiveSS(iWhichSS, iLevelToSet);
+#pragma inline_depth()
         return;
     }
     skillLevel[iWhichSS] = iLevelToSet;
@@ -1433,13 +1695,12 @@ VA(0x004e2bd0, 0x174)  // anchor-bracket, dc 0xd3ad0
 void hero::remove_artifact(long slot)
 {
     type_artifact artifact = equipped[slot];
-    int artifact_id = artifact.artifactId;
-    if (artifact_id == ARTIFACT_NONE)
+    if (artifact.artifactId == ARTIFACT_NONE)
         return;
 
     bool update_spells = false;
     int combination_index =
-        akArtifactTraits[artifact_id].combinationIndex;
+        akArtifactTraits[artifact.artifactId].comboType;
     if (combination_index != -1) {
         const std::bitset<144>& components =
             gCombinationArtifacts[combination_index].components;
@@ -1457,10 +1718,11 @@ void hero::remove_artifact(long slot)
                     bonus++;
                 } while (skill < stats + 4);
                 update_spells = update_spells
-                    || akArtifactTraits[component].affectsSpellList;
-                int component_slot = akArtifactTraits[component].slot;
+                    || akArtifactTraits[component].givesSpells;
+                int component_slot =
+                    akArtifactTraits[component].allowableSlotMask;
                 if (component_slot
-                        == akArtifactTraits[artifact_id].slot
+                        == akArtifactTraits[artifact.artifactId].allowableSlotMask
                     && !kept_slot)
                     kept_slot = true;
                 else
@@ -1473,14 +1735,14 @@ void hero::remove_artifact(long slot)
     equipped[slot].extra = -1;
     signed char* skill = stats;
     const signed char* bonus =
-        gArtifactPrimarySkillBonuses[artifact_id];
+        gArtifactPrimarySkillBonuses[artifact.artifactId];
     do {
         *skill -= *bonus;
         skill++;
         bonus++;
     } while (skill < stats + 4);
     if (update_spells
-        || akArtifactTraits[artifact_id].affectsSpellList)
+        || akArtifactTraits[artifact.artifactId].givesSpells)
         update_spell_list();
 }
 
@@ -1544,16 +1806,24 @@ unsigned char hero::remove_artifact(TArtifact artifact)
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:4994
+// A full backpack returns the fixed capacity error. Otherwise the artifact
+// name is interpolated into the ordinary rejection format. The retail body
+// independently fixes both text-record offsets and the 32-byte artifact-row
+// stride; Dreamcast CodeView supplies the const member signature.
+// Residual (15.26%): retail leaves Dinkumware basic_string::_Grow out of line
+// in the fixed-text arm, while this TU's current front-end state expands it.
+// Explicit pointer/count construction and inline-depth 2/3 probes were lower
+// scoring or byte-identical; the formatted arm itself has the retail shape.
 VA(0x004e2ed0, 0xB2)  // dc-bracket forced, dc 0xd3c64
-std::basic_string<char,std::char_traits<char>,std::allocator<char> hero::get_backpack_error(__$ReturnUdt, TArtifact artifact)
+std::string hero::get_backpack_error(TArtifact artifact) const
 {
-    // @stub
+    if (backpackCount >= 64) {
+        return std::string(gpGeneralText->GetText(GENERAL_TEXT_BACKPACK_FULL));
+    }
+    return format_string(gpGeneralText->GetText(GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT),
+                         akArtifactTraits[artifact].name);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:5005
 // The four war machines are refused one `cmp`/`je` at a time off a
@@ -2017,20 +2287,54 @@ int hero::GetSpellDurationBonus()
 // three coordinate words hero::initialize fills with -1. ORDINAL
 // PLACEHOLDER name, flagged unattested (the HD crossbuild map offers
 // `hero::GetGroundModifier`, NH3API lineage, not admitted here).
-VA(0x004e4ec0, 0xD6)  // retail-only, hero member, ret 0
-int hero::HeroFn_004E4EC0()
+#endif  // @carcass
+
+VA(0x004e4ec0, 0xD6)  // exact packed-point/map-cell lookup; retail-only
+TAdventureObjectType hero::HeroFn_004E4EC0()
 {
-    // @stub
+    type_point point;
+    point.x = x;
+    point.y = y;
+    point.z = z;
+
+    type_point invalid;
+    invalid.x = -1;
+    invalid.y = -1;
+    invalid.z = -1;
+
+    if (invalid.x == point.x && invalid.y == point.y
+        && invalid.z == point.z)
+        return NOTHING;
+
+    int size = gpGame->worldMap.Size;
+    NewmapCell* cell = &gpGame->worldMap.cellData[
+        (point.z * size + point.y) * size + point.x];
+    return cell->get_special_terrain();
 }
 
 // E:\gamedcs\hero.cpp:5962
-VA(0x004e4fa0, 0xD7)  // anchor-global, dc 0xd4df0
-TAdventureObjectType hero::get_special_terrain()
+VA(0x004e4fa0, 0xD7)  // exact packed-point/map-cell lookup, dc 0xd4df0
+int hero::get_special_terrain()
 {
-    // @stub
-}
+    type_point point;
+    point.x = x;
+    point.y = y;
+    point.z = z;
 
-#endif  // @carcass
+    type_point invalid;
+    invalid.x = -1;
+    invalid.y = -1;
+    invalid.z = -1;
+
+    if (invalid.x == point.x && invalid.y == point.y
+        && invalid.z == point.z)
+        return kMagicTerrainNone;
+
+    int size = gpGame->worldMap.Size;
+    NewmapCell* cell = &gpGame->worldMap.cellData[
+        (point.z * size + point.y) * size + point.x];
+    return cell->get_magic_terrain_type();
+}
 
 // E:\gamedcs\hero.cpp:5977
 // Two rules and nothing else: Armageddon's Blade makes Armageddon
@@ -2104,46 +2408,40 @@ int hero::GetSpellSchoolLevel(TSpellSchool school_mask, int magic_terrain)
 // Same four blocks in the same emission order, but the answer is the
 // SCHOOL rather than the level, the running best starts at -1 (so a
 // zero-level school still wins over nothing), and the fallback is the
-// mask itself. Retail SINKS that fallback into the air block's else
-// path (`mov eax,[ebp+8]` after the air arm's `jmp`), which is what
-// the `&&` + else form produces and the hoisted
-// `best_school = school_mask;` form does not (measured: 77.1).
-// Residual (98.4%): one register-homing instruction. Retail loads only
-// the LOW BYTE for the four mask tests (`mov cl,[ebp+8]`) and re-reads
-// the parameter from its stack slot on the else path
-// (`mov eax,[ebp+8]`); our CL loads the whole dword once
-// (`mov ecx,[ebp+8]`) and copies it (`mov eax,ecx`), one byte shorter.
-// Everything else - the emission order, the folded `cmp eax,-1` in the
-// air arm, the late `push esi`, the dropped `mov edx,esi` in the water
-// arm - agrees. Tried and rejected: an `unsigned char mask =
-// (unsigned char)school_mask;` view for the four tests (98.4, no
-// change - VC6 CSEs it straight back onto the dword load); hoisting
-// the fallback (77.1).
+// mask itself. The surviving CodeView symbol makes the member const.
+// Retail reads only the low byte for the four mask tests (`mov
+// cl,[ebp+8]`) yet re-reads the complete enum on the fallback path
+// (`mov eax,[ebp+8]`). The volatile byte access preserves those two
+// deliberate widths without inventing a second enum or layout view.
+// The `&&` + else form sinks the fallback into the air arm as retail
+// does; hoisting `best_school = school_mask` measured only 77.1%.
 VA(0x004e51c0, 0x73)  // anchor-global, dc 0xd4ed0
-TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask)
+TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask) const
 {
+    volatile void* mask_storage = &school_mask;
+    unsigned char mask = *static_cast<volatile unsigned char*>(mask_storage);
     TSpellSchool best_school;
     int best_level = -1;
-    if ((school_mask & eSchoolAir)
+    if ((mask & eSchoolAir)
         && skillLevel[eSecSkillSchoolOfAirMagic] > best_level) {
         best_level = skillLevel[eSecSkillSchoolOfAirMagic];
         best_school = eSchoolAir;
     } else {
         best_school = school_mask;
     }
-    if (school_mask & eSchoolFire) {
+    if (mask & eSchoolFire) {
         if (skillLevel[eSecSkillSchoolOfFireMagic] > best_level) {
             best_level = skillLevel[eSecSkillSchoolOfFireMagic];
             best_school = eSchoolFire;
         }
     }
-    if (school_mask & eSchoolEarth) {
+    if (mask & eSchoolEarth) {
         if (skillLevel[eSecSkillSchoolOfEarthMagic] > best_level) {
             best_level = skillLevel[eSecSkillSchoolOfEarthMagic];
             best_school = eSchoolEarth;
         }
     }
-    if (school_mask & eSchoolWater) {
+    if (mask & eSchoolWater) {
         if (skillLevel[eSecSkillSchoolOfWaterMagic] > best_level) {
             best_level = skillLevel[eSecSkillSchoolOfWaterMagic];
             best_school = eSchoolWater;
@@ -2186,43 +2484,41 @@ int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy,
 // The 26-frame movement gauge: one frame per 100 points below 2300,
 // then three fixed steps. Retail divides with the SIGNED 0x51eb851f/100
 // reciprocal, which is what types movePoints int rather than unsigned.
-// Residual (90.4%): every branch, immediate and reciprocal agrees; only
-// the divide's result register differs. Retail keeps the quotient in
-// EDX for the sign fix-up and copies it out last (`sar edx,5 / mov
-// eax,edx / shr eax,31 / add edx,eax / mov eax,edx`); our CL moves it
-// to EAX first and uses ECX - dead `movePoints` - as the fix-up scratch
-// (`mov eax,edx / sar eax,5 / mov ecx,eax / shr ecx,31 / add eax,ecx`).
-// Same instruction count, register-allocation family; GetManaFrame
-// below carries the identical delta. Tried and rejected: binding the
-// quotient to a named local before returning it (no change).
+// Exact (67/67). The DC decorated public proves the const qualifier. A
+// shared result local is source-significant under VC6: C2 still duplicates
+// the four returns, but retains the quotient in EDX and uses EAX for the
+// signed-division fix-up exactly as retail does.
 VA(0x004e5330, 0x43)  // linkorder, dc 0xd4fe0
-int hero::GetMobilityFrame()
+int hero::GetMobilityFrame() const
 {
+    int frame;
     if (movePoints <= 0)
-        return 0;
-    if (movePoints < 2300) {
-        int frame = movePoints / 100;
-        return frame;
-    }
-    if (movePoints < 2500)
-        return 23;
-    return 24 + (movePoints >= 2800);
+        frame = 0;
+    else if (movePoints < 2300)
+        frame = movePoints / 100;
+    else if (movePoints < 2500)
+        frame = 23;
+    else
+        frame = 24 + (movePoints >= 2800);
+    return frame;
 }
 
 // E:\gamedcs\hero.cpp:6129
-// Residual (88.9%): the same divide-result register family as
-// GetMobilityFrame above, plus the tail's `xor ecx,ecx / setge cl /
-// add ecx,0x18 / mov eax,ecx` where retail settles the same value in
-// EAX directly. Everything else - the 16-bit compares on the mana
-// word, the +4 bias, the /5 reciprocal, all four thresholds - matches.
+// Exact (62/62). The shared result local induces the retail EDX quotient
+// lifetime and the `xor ecx,ecx / setge cl` final-threshold sequence while
+// C2 preserves the separate early returns.
 VA(0x004e5380, 0x3E)  // linkorder, dc 0xd5024
-int hero::GetManaFrame()
+int hero::GetManaFrame() const
 {
-    if (mana < 116)
-        return (mana + 4) / 5;
-    if (mana < 145)
-        return 23;
-    return 24 + (mana >= 170);
+    short currentMana = mana;
+    int frame;
+    if (currentMana < 116)
+        frame = (currentMana + 4) / 5;
+    else if (currentMana < 145)
+        frame = 23;
+    else
+        frame = 24 + (currentMana >= 170);
+    return frame;
 }
 
 #if 0  // @carcass
@@ -2415,13 +2711,13 @@ long hero::modify_spell_damage(SpellID spell, int damage,
 }
 
 // E:\gamedcs\hero.cpp:6296
-// Residual (99.5833%): the explicit index plus separate four-iteration
-// countdown reproduces retail's ESI index / EDI counter and makes every
-// instruction agree. The sole byte delta is the commutative scale-1 SIB
-// encoding of `stats[skill]`: retail encodes ESI as the base and ECX as
-// the index; this compile encodes ECX as the base and ESI as the index.
-// Pointer-arithmetic spelling is byte-identical. Earlier single-index
-// `for` form scored 75.5833%; omitting the `stat` local scored 55.58%.
+// Residual (99.5833%): the natural inline GetPrimarySkill call plus separate
+// four-iteration countdown reproduces retail's ESI index / EDI counter and
+// makes every instruction agree. The sole byte delta is the commutative
+// scale-1 SIB encoding of `stats[skill]`: retail encodes ESI as the base and
+// ECX as the index; this compile encodes ECX as the base and ESI as the
+// index. Direct indexing, reversed indexing and pointer-arithmetic spellings
+// are byte-identical. The earlier single-index `for` form scored 75.5833%.
 VA(0x004e5960, 0x38)  // linkorder, dc 0xd544c
 short hero::get_primary_skill_total()
 {
@@ -2429,31 +2725,51 @@ short hero::get_primary_skill_total()
     int skill = 0;
     int remaining = 4;
     do {
-        signed char stat = stats[skill];
-        int value;
-        if (stat > 99)
-            value = 99;
-        else if (stat > 0)
-            value = stat;
-        else
-            value = skill >= 2;
-        total += value;
+        total += GetPrimarySkill(skill);
         skill++;
         remaining--;
     } while (remaining);
     return total;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6310
+// Sets the overland-flight mastery, derives the current magic terrain from
+// the packed hero location, charges Fly's per-mastery mana cost with a floor
+// of one, and refreshes local adventure UI through UseSpell's exact inline
+// body. Residual (94.2468%): retail forwards type_point's constructor result
+// in EAX into its packed equality sequence and saves that dword for get_cell;
+// VC6 reloads the named local and rotates the same comparisons through
+// ECX/EDX. The DC-attested inline operator, both operand orders, a TU-local
+// equivalent, and direct field comparisons are byte-identical. A call-site
+// inline_depth(0) is retained because retail calls get_spell_level here while
+// inlining it in GetManaCost; without the pin this body scores 90.9221%.
 VA(0x004e59a0, 0xF8)  // linkorder, dc 0xd5488
 void hero::Fly(int level)
 {
-    // @stub
-}
+    flightLevel = level;
 
-#endif  // @carcass
+    type_point point(x, y, z);
+    type_point invalid;
+    invalid.x = -1;
+    invalid.y = -1;
+    invalid.z = -1;
+
+    int magicTerrain;
+    if (invalid.x == point.x && invalid.y == point.y
+        && invalid.z == point.z) {
+        magicTerrain = kMagicTerrainNone;
+    } else {
+        magicTerrain = gpGame->get_cell(point)->get_magic_terrain_type();
+    }
+
+#pragma inline_depth(0)
+    int mastery = get_spell_level(SPELL_FLY, magicTerrain);
+#pragma inline_depth()
+    int cost = akSpellTraits[SPELL_FLY].mana_cost[mastery];
+    if (cost < 1)
+        cost = 1;
+    UseSpell(cost);
+}
 
 // E:\gamedcs\hero.cpp:6319
 VA(0x004e5aa0, 0xE0)  // anchor-global, dc 0xd54ac
@@ -2561,7 +2877,7 @@ void hero::WalkOnWater(int level)
 // The NAME BELOW IS AN ORDINAL PLACEHOLDER, flagged unattested
 // (WIDGET_RETURN_32 precedent) - NOT a semantic guess. The HD crossbuild
 // map offers `hero::GetRoguePower` on a masked-identity match, but that
-// is NH3API lineage and needs supervised admission.
+// is NH3API lineage and still needs independent retail corroboration.
 VA(0x004e5de0, 0x2D)  // linkorder + order-map, retail-only
 int hero::HeroFn_004E5DE0()
 {
@@ -2624,77 +2940,45 @@ unsigned char hero::IsMobile()
     return movePoints >= cost;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:6428
-// FULLY DECODED, DELIBERATELY LEFT AS A STUB - the reconstruction is
-// written out below so nothing is lost (the GetHighestSchool
-// precedent). Compiling it costs more than it wins: hero.obj has
-// exactly ONE call site for it today, modify_spell_damage above, so
-// /Ob2's single-call-site rule inlines it there REGARDLESS OF SIZE and
-// takes modify_spell_damage from 100.0 down to 32.6 - where retail
-// plainly CALLS it. Retail's own hero.cpp must have a second call site
-// among the seventy bodies still unreconstructed here; when one lands,
-// this body compiles as it stands. Measured on its own it reaches
-// 99.23% (the residual is one byte in the trailing jump-table run;
-// every instruction, immediate, arm and table agrees).
-//
-//   int hero::GetHeroSpellBonus(SpellID spell_id, int target_level,
-//                               int value)
-//   {
-//       int bonus = 0;
-//       const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
-//       if (ability.type == eHeroAbilitySpell
-//           && (int)ability.skill == spell_id) {
-//           switch (spell_id) {
-//           case SPELL_BLOODLUST:
-//           case SPELL_PRECISION:
-//           case SPELL_WEAKNESS:
-//           case SPELL_STONE_SKIN:
-//           case SPELL_PRAYER:
-//           case SPELL_HASTE:
-//               return kBuffSpecialtyBonus[target_level];
-//           case SPELL_SLAYER:
-//               return kSlayerSpecialtyBonus[target_level];
-//           case SPELL_FORTUNE:
-//               return 3 - value;
-//           case SPELL_FIRE_WALL:
-//               return value;
-//           case SPELL_DISRUPTING_RAY:
-//               return 2;
-//           case SPELL_MAGIC_ARROW:
-//               return value >> 1;
-//           }
-//           bonus = (int)ceil(level / (target_level + 1) * value * 0.03);
-//       }
-//       return bonus;
-//   }
-//
-// Three spellings were measured on the way to 99.23 and are worth
-// keeping: the ten arms must be written in RETAIL'S EMISSION ORDER (the
-// two table arms, then 3-value, then value, then 2, then value>>1) and
-// not in case-label order, because VC6 lays switch bodies out in source
-// order; the result must be HOISTED into a `bonus` local initialised to
-// 0 with the default arm ASSIGNING to it (89.9 -> 99.2 - that is what
-// puts retail's `xor eax,eax` up front and merges the default arm's
-// __ftol into the shared exit); and a pointer instead of a reference
-// for `ability` changes nothing (89.9).
-// The two tables it needs are landed at the top of this file
-// (kBuffSpecialtyBonus / kSlayerSpecialtyBonus). The three spell ids it
-// needs are NOT, and deliberately: SPELL_FIRE_WALL 0xd,
-// SPELL_MAGIC_ARROW 0xf and SPELL_HASTE 0x35 belong in armygrp.h's
-// ESpellId, and adding exactly those three enumerators there moved
-// initialize_game_data 96.09 -> 90.16 (measured 2026-08-08) through the
-// include-set sensitivity class - armygrp.h is inside initialize.cpp's
-// closure. The SIX creature ids this lane added to the same header's
-// TCreatureType in the same session moved it by nothing at all, which
-// is the non-monotonicity that class is known for. Land them with the
-// body, and re-measure.
+// The scoped inline pin is required while this TU has only one reconstructed
+// caller: VC6 otherwise expands the body into modify_spell_damage, whereas
+// retail calls it there. Cross-TU retail callers prove the external body.
+#pragma auto_inline(off)
 VA(0x004e5ff0, 0x123)  // anchor-global, dc 0xd5710
-int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value)
+int hero::GetHeroSpellBonus(SpellID spell_id, int target_level, int value) const
 {
-    // @stub
+    int bonus = 0;
+    const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+    if (ability.type == eHeroAbilitySpell
+        && static_cast<int>(ability.skill) == spell_id) {
+        switch (spell_id) {
+        case SPELL_BLOODLUST:
+        case SPELL_PRECISION:
+        case SPELL_WEAKNESS:
+        case SPELL_STONE_SKIN:
+        case SPELL_PRAYER:
+        case kSpellHaste:
+            return kBuffSpecialtyBonus[target_level];
+        case SPELL_SLAYER:
+            return kSlayerSpecialtyBonus[target_level];
+        case SPELL_FORTUNE:
+            return 3 - value;
+        case kSpellFireWall:
+            return value;
+        case SPELL_DISRUPTING_RAY:
+            return 2;
+        case kSpellMagicArrow:
+            return value >> 1;
+        }
+        bonus = static_cast<int>(
+            ceil(level / (target_level + 1) * value * 0.03));
+    }
+    return bonus;
 }
+#pragma auto_inline(on)
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:6493
 // IDENTITY CORRECTED 2026-08-07 (tail order-map audit). The SLOT is right

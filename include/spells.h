@@ -5,6 +5,10 @@
 #ifndef HOMM3_SPELLS_H
 #define HOMM3_SPELLS_H
 
+#include "armygrp.h"
+
+TCreatureType get_elemental_type(SpellID spell);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\spells.cpp:1862, dc 0x151e94) int handle_sacrifice_beneficiary(message* msg);
 // CODEVIEW(E:\gamedcs\spells.cpp:1961, dc 0x15205c) int HandleCastSacrifice(message* msg);

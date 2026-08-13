@@ -13,7 +13,7 @@ The tree currently declares ZERO externs (the cleanliness board's
 `cpp extern decls` row keeps .cpp files that way; owner headers are
 where externs will appear), so this gate is pure arrival-prevention:
 the backlog (config/single-view-baseline.tsv, gruntz shape - frozen
-splits reported as standing debt, drained in supervised review) starts
+splits reported as standing debt, drained by explicit review) starts
 empty and any new split is fatal in the `homm3 build` tail. Never runs
 in `--fast`.
 
@@ -89,7 +89,7 @@ def load_backlog() -> set[str]:
 
 def write_backlog(found: list) -> None:
     head = ("# KNOWN split-view backlog - standing debt reported by\n"
-            "# homm3.match.single_view, drained in supervised review;\n"
+            "# homm3.match.single_view, drained by explicit review;\n"
             "# NEW splits are fatal.\n")
     BASELINE.write_text(head + "".join(
         f"{name}\t{len(forms)} views\n" for name, forms in found))

@@ -2,7 +2,7 @@
 
 **This package is bootstrap scaffolding, not product.** It exists to produce two
 reviewed inventories from the pinned retail `HEROES3.EXE` and nothing else. Once the
-inventories are reviewed and admitted into `config/` in a supervised session, this whole
+inventories are reviewed and admitted into `config/` with retail evidence, this whole
 directory moves to `scripts/archive/` per the port-plan convention and is not
 resurrected. It is deliberately **not** a `homm3` CLI subcommand — the durable CLI never
 learns a verb that retirement must unlearn.

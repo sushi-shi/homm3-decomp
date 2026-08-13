@@ -19,10 +19,12 @@
 //   LODHeader::LODHeader - visibly inlined in LODFile::LODFile at 0xfa780
 //     ("LOD" strcpy into this+0x11c, +0x120=500, 20 dwords zeroed).
 #include <va.h>
-// #include "lodfile.h"
+#include "lodfile.h"
+
+#if 0  // @carcass
 
 // E:\gamedcs\lodfile.cpp:38
-VA(0x004fa590, 0x77)  // order-map: TU head; fclose(this->file), free(+0x108), clears open flag +0x104, degenerate entry-flush loop stride 0x20 (same body inlined at open's head; DC clear calls DCfclose+vector::clear, DC open calls clear); callers on InitMainClasses + ShutDown paths, dc 0xe908c
+// RETAIL_LOCATED(0x004fa590, 0x77): not reconstructed; order-map TU head, dc 0xe908c
 void LODFile::clear()
 {
     // @stub
@@ -42,12 +44,21 @@ void* LODFile::getDataPtr(const char* item_name)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\lodfile.cpp:93
 VA(0x004fa610, 0x45)  // anchor-global, dc 0xe9154
 LODEntry* LODFile::getItemIndex(const char* item_name)
 {
-    // @stub
+    if (opened) {
+        Find(0, numEntries, item_name);
+        if (matchindex >= 0)
+            return &subindex[matchindex];
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\lodfile.cpp:112
 DC_ONLY(0xe9198, 0x26)
@@ -57,7 +68,7 @@ unsigned char LODFile::exist(const char* item_name)
 }
 
 // E:\gamedcs\lodfile.cpp:125
-VA(0x004fa660, 0x113)  // anchor-global, dc 0xe91c0
+// RETAIL_LOCATED(0x004fa660, 0x113): not reconstructed; anchor-global, dc 0xe91c0
 void LODFile::Find(unsigned begin, unsigned end, const char* item_name)
 {
     // @stub
@@ -78,14 +89,14 @@ void LODEntry::LODEntry()
 }
 
 // E:\gamedcs\lodfile.cpp:240
-VA(0x004fa780, 0x7B)  // order-map: returns this; strcpy "LOD" (0x67fa58) into header +0x11c with +0x120=500 (LODHeader ctor inlined, matching DC callee), zeroes vector triple +0x180..0x188 and +0/+0x104/+0x108; sole caller 0x5591e0 <- cinit0778 static-init chain, dc 0xe9330
+// RETAIL_LOCATED(0x004fa780, 0x7b): not reconstructed; order-map constructor, dc 0xe9330
 void LODFile::LODFile()
 {
     // @stub
 }
 
 // E:\gamedcs\lodfile.cpp:252
-VA(0x004fa800, 0x97)  // anchor-global, dc 0xe9374
+// RETAIL_LOCATED(0x004fa800, 0x97): not reconstructed; anchor-global, dc 0xe9374
 void LODFile::~LODFile()
 {
     // @stub
@@ -99,7 +110,7 @@ void LODHeader::LODHeader()
 }
 
 // E:\gamedcs\lodfile.cpp:277
-VA(0x004fa8a0, 0x1C4)  // anchor-bracket, dc 0xe941c
+// RETAIL_LOCATED(0x004fa8a0, 0x1c4): not reconstructed; anchor-bracket, dc 0xe941c
 int LODFile::open(const char* filename, int flags)
 {
     // @stub
@@ -127,14 +138,14 @@ void LODFile::sort()
 }
 
 // E:\gamedcs\lodfile.cpp:430
-VA(0x004faa70, 0xAB)  // anchor-global, dc 0xe9690
+// RETAIL_LOCATED(0x004faa70, 0xab): not reconstructed; anchor-global, dc 0xe9690
 unsigned char LODFile::pointAt(const char* itemName)
 {
     // @stub
 }
 
 // E:\gamedcs\lodfile.cpp:452
-VA(0x004fab20, 0x114)  // anchor-global, dc 0xe96e0
+// RETAIL_LOCATED(0x004fab20, 0x114): not reconstructed; anchor-global, dc 0xe96e0
 int LODFile::read(void* dest, int numBytes)
 {
     // @stub
@@ -448,3 +459,4 @@ void std::__destroy_aux()
     // @stub
 }
 
+#endif  // @carcass

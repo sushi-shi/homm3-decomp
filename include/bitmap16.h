@@ -27,10 +27,10 @@ public:
     unsigned char referenced;
 
     // Slot 0 is the scalar deleting destructor: heroWindow deletes its
-    // background through [vptr]+flag 1; retail news it, so slot 2 has
-    // a concrete override somewhere.
+    // background through [vptr]+flag 1. Slot 2 reports the resource's
+    // total in-memory extent: the 0x38-byte object plus DataSize.
     virtual ~Bitmap16Bit();
-    virtual void _vslot2();
+    virtual unsigned int _vslot2() const;
 
     Bitmap16Bit(int w, int h);
     void reference(int w, int h, int pitch, unsigned short* data);
@@ -38,6 +38,7 @@ public:
     void Grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
     void Draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
 };
+SIZE(Bitmap16Bit, 0x38);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\bitmap16.cpp:59, dc 0x50a9c) long ftol(double d);

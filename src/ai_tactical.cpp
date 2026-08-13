@@ -880,6 +880,10 @@ void type_AI_spellcaster::consider_area_effect(type_spell_choice* choice)
     // @stub
 }
 
+#endif  // @carcass
+
+#if 0  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:1059
 VA(0x00437190, 0x17D)  // anchor-global, dc 0x3dcc4
 long type_AI_spellcaster::get_chain_lightning_value(long power, TSkillMastery mastery, army* target)
@@ -887,12 +891,39 @@ long type_AI_spellcaster::get_chain_lightning_value(long power, TSkillMastery ma
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai_tactical.cpp:1094
+// EXACT 2026-08-11. The enemy-side walk is the ordinary
+// `1 - side` / numArmies / armies loop. Retail's one unusual edge is
+// source-natural short circuiting: creature bit 21 rejects the stack
+// before SpellCastWorks, preserving the side/global registers across
+// that arm, while a successful value replaces all three choice fields.
 VA(0x00437310, 0xD1)  // anchor-callee, dc 0x3dde8
 void type_AI_spellcaster::consider_chain_lightning(type_spell_choice* choice)
 {
-    // @stub
+    long target_side = 1 - side;
+    for (long i = 0; i < gpCombatManager->numArmies[target_side]; ++i) {
+        army* target = &gpCombatManager->armies[target_side][i];
+        unsigned char immune = static_cast<unsigned char>(
+            static_cast<unsigned>(target->creatureId) >> 21);
+        long creature_cast = creature_spell != 0;
+        if (!(immune & 1)
+                && gpCombatManager->SpellCastWorks(SPELL_CHAIN_LIGHTNING,
+                                                   side, target, 1,
+                                                   creature_cast)) {
+            long value = get_chain_lightning_value(choice->power,
+                                                    choice->mastery, target);
+            if (value > choice->value) {
+                choice->value = value;
+                choice->target = target->gridIndex;
+                choice->field_20 = 1;
+            }
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai_tactical.cpp:1126
 DC_ONLY(0x3de90, 0x98)
@@ -2189,22 +2220,44 @@ void type_AI_spellcaster::consider_resurrect(type_spell_choice* choice)
 
 // E:\gamedcs\ai_tactical.cpp:2685
 VA(0x0043af50, 0x284)  // anchor-callee, dc 0x41278
-void type_AI_spellcaster::consider_sacrifice(type_spell_choice* choice, const army* healed_army, long target_hex)
-{
-    // @stub
-}
-
-// E:\gamedcs\ai_tactical.cpp:2751
-// Blocked on three unclaimed spells.obj leaves (0x5a3c80 validity,
-// 0x5a3cc0 / 0x5a3f50 target lookup) plus the three-argument
-// consider_sacrifice overload at 0x43af50, which has no claim yet.
-VA(0x0043b1e0, 0xF2)  // dc-callgraph unique, dc 0x414a0
-void type_AI_spellcaster::consider_sacrifice(type_spell_choice* choice)
+void type_AI_spellcaster::consider_sacrifice(type_spell_choice& choice, const army* healed_army, long target_hex) const
 {
     // @stub
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\ai_tactical.cpp:2751
+// Scans every surviving friendly stack that can receive Sacrifice, then
+// accepts it only when the corresponding resurrection lookup resolves back
+// to that same stack. Wide creatures retry from their second occupied hex.
+VA(0x0043b1e0, 0xF2)  // dc-callgraph unique, dc 0x414a0
+void type_AI_spellcaster::consider_sacrifice(type_spell_choice& choice) const
+{
+    const army* healedArmy = gpCombatManager->armies[side];
+    long count = gpCombatManager->numArmies[side];
+    for (; count-- > 0; ++healedArmy) {
+        long creatureSpell = creature_spell != 0;
+        if (!gpCombatManager->ValidSpellTargetArmy(
+                choice.spell, side, healedArmy, 1, creatureSpell))
+            continue;
+
+        long targetHex = healedArmy->gridIndex;
+        army* target = gpCombatManager->find_resurrection_target(
+            choice.spell, side, targetHex, 0);
+
+        if (target != healedArmy) {
+            if (!(healedArmy->creatureId & 1))
+                continue;
+            targetHex = healedArmy->get_second_grid_index();
+            target = gpCombatManager->find_resurrection_target(
+                choice.spell, side, targetHex, 0);
+            if (target != healedArmy)
+                continue;
+        }
+        consider_sacrifice(choice, healedArmy, targetHex);
+    }
+}
 
 // E:\gamedcs\ai_tactical.cpp:2788
 // A clone is worth what the original's next blow is worth, so the body

@@ -11,6 +11,10 @@
 // consumers prove them.
 enum EResourceType {
     RESOURCE_TYPE_NONE = 0,
+    // Both retail text-resource constructors pass 2 to the base ctor.
+    RESOURCE_TYPE_TEXT = 2,
+    // Bitmap24Bit's retail constructors pass 0x11 to resource::resource.
+    RESOURCE_TYPE_BITMAP24 = 17,
     // Byte-proven by sample::sample (0x566da0 pushes 0x20 into the base
     // ctor); the value's DC name is RType_sfx (evidence/dreamcast/
     // enums.csv), respelled to this file's convention.
@@ -23,8 +27,8 @@ enum EResourceType {
 //   slot 0  0x558770  scalar deleting destructor (uncarved entry)
 //   slot 1  0x55d0f0  Dispose - the base body (ICF-shared with
 //                     baseManager slot 4)
-//   slot 2  _purecall - introduced pure here (CSprite overrides it
-//                     with 0x47bd50)
+//   slot 2  _purecall - the resource-size query; concrete derived bodies
+//                     return their fixed extent plus owned data bytes
 class resource {
 public:
     char Name[13];
@@ -34,7 +38,7 @@ public:
     resource(const char* newName, EResourceType newType);
     virtual ~resource();         // slot 0
     virtual void Dispose();      // slot 1, base body 0x55d0f0
-    virtual void _vslot2() = 0;  // slot 2, pure at the base
+    virtual unsigned int _vslot2() const = 0;  // slot 2, pure at the base
 };
 SIZE(resource, 28);
 

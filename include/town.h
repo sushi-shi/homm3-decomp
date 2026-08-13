@@ -7,6 +7,7 @@
 
 #include <va.h>
 #include <bitset>
+#include <string>
 #include <vector>
 #include "armygrp.h"
 
@@ -113,11 +114,13 @@ enum EGameResource {
     NUM_RESOURCES = 7
 };
 
+// town.cpp owns the DATA claim; TResourceDisplay consumes the current
+// player-position selector directly, as its retail bodies do.
+extern int gUnnamed69778c;
+
 // Retail .data 0x67814c; Dreamcast publishes the same global name. Both
 // hero::hire and town::hire subtract it from the player's gold resource.
-#ifdef HOMM3_HERO_HIRE_VIEW
 extern int gHeroGoldCost;
-#endif
 
 // DC struct.h roster: exactly two dwords. make_gift's retail vector
 // advances by eight bytes and writes the resource id followed by the
@@ -129,20 +132,6 @@ struct type_dialog_resource {
     long qualifier;
 };
 SIZE(type_dialog_resource, 8);
-
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-// Narrow view of town +0xc4 used only by SetRolloverText. The constructor
-// proves the full sixteen-byte Dinkumware storage shape; the rollover arm
-// independently proves that its first pointer at +0xc8 is the displayed
-// town-name text (or null for the shared empty string).
-struct town_rollover_name_storage_view {
-    char allocator[4];
-    const char* text;
-    char* last;
-    char* end;
-};
-SIZE(town_rollover_name_storage_view, 0x10);
-#endif
 
 // DC LF_INTERFACE `type_horde_effect`, size 8, three members at the
 // offsets initialize_hordes writes: creature @0, bonus @4 (16-bit
@@ -252,11 +241,11 @@ public:
     // +0xc4..+0xd3 is a Dinkumware vector: the constructor copies an
     // allocator byte into +0xc4 and clears its three pointer words.
     // Its element semantics are not yet reached, so the name is ordinal.
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    town_rollover_name_storage_view field_c4;
-#else
-    std::vector<type_point> field_c4;
-#endif
+    // Retail's Dinkumware string: town::town initializes the allocator byte
+    // and three pointers at +0xc4..+0xd3; TQuickTownWindow's c_str() reader
+    // independently proves the text pointer at +0xc8. Dreamcast names the
+    // corresponding fixed-buffer field cName; Complete widened the storage.
+    std::string cName;
     // +0xd4..+0xdf. The three-word default-constructor fill and the
     // 70-position guards in the spell routines prove std::bitset<70>.
     std::bitset<70> spells;
@@ -302,6 +291,10 @@ public:
     void CalcNumLevelArchers(int* numArchers, int* archerLevel);
     long get_castle_growth_bonus(TCreatureType creature) const;
     short get_gold_income(unsigned char include_silo) const;
+    // 0x5bd700. Portrait row = faction*2 when a fort is active, or the
+    // no-fort band at +18; the town-state and small-icon flags select the
+    // adjacent variants. DC's `_N` parameter proves native bool.
+    int GetPortraitFrame(bool is_small) const;
     // 0x5bf6d0 / 0x5bf770. `int`, not the DC's type_building_id: the
     // gHordeBuildings row is int and an enum return would need a cast
     // (the UpgradedDwellingID precedent).
@@ -453,7 +446,7 @@ SIZE(town, 360);
 // 0x692950 and tail-calls 0x42a470 with the other two. town::buy_building
 // (0x5bf3c0) is the only reader this tree has - it runs the shim for a
 // non-human owner before charging the cost row - and no roster attests a
-// name, so this keeps a house ordinal placeholder (the gUnnamed6a5d5c
+// name, so this keeps a house ordinal placeholder (the general-text
 // precedent). Owner TU unlocated; declared, not claimed.
 void Unnamed526d20(int playerId, int* costs, int flag);
 
@@ -466,6 +459,10 @@ void Unnamed526d20(int playerId, int* costs, int flag);
 // are bitNumber[7], [8], [9] and [21]. Defined by a TU not yet located
 // - extern only, no DATA claim (the gpWindowManager pattern).
 extern __int64 bitNumber[];
+
+// DC public gTownSizeNames; retail 0x6a6294 is indexed by the four hall
+// levels in TQuickTownWindow. Its owning data compiland is not yet located.
+extern const char* gTownSizeNames[4];
 
 // Per-town-type legal-building rollup create_requirement_masks
 // accumulates (DC public ?gTownEligibleBuildMask@@3PA_JA; retail .bss

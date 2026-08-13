@@ -5,6 +5,18 @@
 #ifndef HOMM3_UNIVERSITY_WINDOW_H
 #define HOMM3_UNIVERSITY_WINDOW_H
 
+#include "advmgr_popup.h"
+
+// Retail's +0x70 rollover pointer and +0x74 skill-array accesses translate
+// DC's +0x68/+0x6c fields by exactly the eight-byte CAdvPopup widening already
+// proven in advmgr_popup.h.  The tail layout remains undeclared until its
+// type_university_skill record is reconstructed; no opaque layout view is
+// needed by the first admitted method.
+class type_university_window : public CAdvPopup {
+public:
+    virtual int ExitDialog(message* msg);  // slot 14
+};
+
 // --- type_university_skill_button ---
 // CODEVIEW(E:\gamedcs\university_window.cpp:65, dc 0x18e6ac) void type_university_skill_button::type_university_skill_button(long _x, long _y, long _width, long _height, long new_id, const char* _image, TSecondarySkill new_skill);
 // CODEVIEW(E:\gamedcs\university_window.cpp:75, dc 0x18e728) unsigned char type_university_skill_button::handle_click(unsigned char down_click, unsigned char right_click);
@@ -23,7 +35,7 @@
 // CODEVIEW(E:\gamedcs\university_window.cpp:433, dc 0x18f8b0) int type_university_window::cancel_click(message* msg);
 // CODEVIEW(E:\gamedcs\university_window.cpp:457, dc 0x18f91c) int type_university_window::exit_click(message* msg);
 // CODEVIEW(E:\gamedcs\university_window.cpp:479, dc 0x18f97c) int type_university_window::purchase_click(message* msg);
-// CODEVIEW(E:\gamedcs\university_window.cpp:515, dc 0x18faa4) int type_university_window::ExitDialog(message* msg);
+// CODEVIEW(E:\gamedcs\university_window.cpp:515, dc 0x18faa4) int type_university_window::ExitDialog(message& msg);
 // CODEVIEW(E:\gamedcs\university_window.cpp:277, dc 0x18fb30) void* type_university_window::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_UNIVERSITY_WINDOW_H */

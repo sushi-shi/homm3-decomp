@@ -29,7 +29,7 @@ model cannot rot.
   admitted separately, hash-pinned, and §5-logged.
 - **The Wine VC6 build stays the sole verdict.** A model prediction is a
   hypothesis; a compile settles it. Solvers propose edits — the human applies
-  them under the supervised-review rule.
+  them after checking the evidence.
 
 ## Layout
 

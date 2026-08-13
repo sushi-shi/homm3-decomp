@@ -5,6 +5,89 @@
 #ifndef HOMM3_VIEWARMYWINDOW_H
 #define HOMM3_VIEWARMYWINDOW_H
 
+#include <string>
+#include "advmgr_popup.h"
+
+class army;
+class armyGroup;
+class hero;
+class town;
+class textWidget;
+class iconWidget;
+
+// DC's named tail begins at +0x58 after its 0x58-byte CAdvPopup. Retail's
+// proven CAdvPopup is 0x60, and each of the two STLport 12-byte strings
+// expands to a 16-byte VC6 string. Retail's destructor independently
+// confirms their data pointers at +0x70/+0x84 and the total allocation
+// sites bound the resulting 0xb8-byte object.
+class TViewArmyWindow : public CAdvPopup {
+public:
+    enum EWidgetIDs {
+        NAME_ID = 203,
+        NUMBER_ID = 204,
+        ATTACK_LABEL_ID = 205,
+        ATTACK_ID = 206,
+        DEFENSE_LABEL_ID = 207,
+        DEFENSE_ID = 208,
+        SHOTS_LABEL_ID = 209,
+        SHOTS_ID = 210,
+        DAMAGE_LABEL_ID = 211,
+        DAMAGE_ID = 212,
+        HEALTH_LABEL_ID = 213,
+        HEALTH_ID = 214,
+        HEALTH_REMAINING_LABEL_ID = 215,
+        HEALTH_REMAINING_ID = 216,
+        SPEED_LABEL_ID = 217,
+        SPEED_ID = 218,
+        MORALE_ID = 219,
+        LUCK_ID = 220,
+        AFFECTING_SPELLS_0_ID = 221,
+        AFFECTING_SPELLS_1_ID = 222,
+        AFFECTING_SPELLS_2_ID = 223,
+        UPGRADE_ID = 300,
+        OK_ID = 301,
+        ACCEPT_ID = 0x7802,
+        DISMISS_ID = 0x7803
+    };
+    enum { VIEW_ARMY_DELAY = 100 };
+
+    int ArmyType;
+    int ArmySize;
+    int morale;
+    std::string morale_help;
+    int luck;
+    std::string luck_help;
+    int Upgrade;
+    unsigned char ShowingUpgradeButton;
+    unsigned char ShowingDismissButton;
+    unsigned char ShowingOkButton;
+    unsigned char pad_97;
+    int Influence[3];
+    int Duration[3];
+    textWidget* RolloverWidget;
+    iconWidget* SpriteWidget;
+
+    TViewArmyWindow(const army* this_army, int x0, int y0,
+                    unsigned char show_ok);
+    virtual ~TViewArmyWindow();
+    virtual int WindowHandler(message* msg);
+    int convertID2HelpID(int id) const;
+    void QuickView();
+    void DoModal();
+    void create_attack_widget(int normal_attack_skill,
+                              int current_attack_skill);
+    void create_defense_widget(int normal_defense_skill,
+                               int current_defense_skill);
+    void create_hitpoints_widget(int normal_hitpoints,
+                                 int current_hitpoints);
+    void create_hitpoints_left_widget(int hitpoints_left);
+    void create_speed_widget(int normal_speed, int current_speed);
+    void create_ok_widget();
+    void create_upgrade_widget();
+    void create_dismiss_widget();
+};
+SIZE(TViewArmyWindow, 0xb8);
+
 // --- TViewArmyWindow ---
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:55, dc 0x190abc) void TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0, unsigned char show_ok);
 // CODEVIEW(E:\gamedcs\viewarmywindow.cpp:140, dc 0x190e78) void TViewArmyWindow::TViewArmyWindow(const armyGroup* group, int iarmy, const hero* this_hero, const town* this_town, int x0, int y0, int upgrade, unsigned char show_dismiss, unsigned char show_ok);

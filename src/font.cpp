@@ -26,13 +26,16 @@ void font::font(const char* name, const font::TFontSpec* fontspec, int dsize, un
 
 #endif  // @carcass
 
-// Residual (96.6%): one extra EH-state transition and the handler
-// addend spelling; every store and callee agrees.
+// EXACT 2026-08-11. Retail's EH map registers only the resource base as
+// state 0; the embedded palette is destroyed by a direct qualified call,
+// not as an automatic nontrivial member. TFontPaletteStorage preserves the
+// bytes while making that unwind topology source-expressible.
 VA(0x004b5110, 0x67)  // anchor-global, dc 0xa1c94
 font::~font()
 {
     if (data)
         delete data;
+    palette.asPalette()->TPalette16::~TPalette16();
 }
 
 #if 0  // @carcass
@@ -50,7 +53,7 @@ int font::GetColor(font::TColor color_scheme, unsigned char highlighted)
 VA(0x004b5180, 0x16)  // anchor-global, dc 0xa1d14
 void font::SetPalette(const TPalette16* new_palette)
 {
-    palette = new_palette;
+    *palette.asPalette() = new_palette;
 }
 
 // E:\gamedcs\font.cpp:86
@@ -150,16 +153,14 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font:
 // the branch sequences now AGREE). `while (str[pos] != ' ' &&
 // pos >= lineStart)` scores the same; `pos <= lineStart` as the break
 // condition is worse (96.59).
-// Residual (96.8%): register allocation only - the frame is the right
-// 0x18, every block, branch and immediate lines up, but retail spends
-// EDX as the spec[] index scratch (and pays a `mov edx,[ebp+8]` to
-// reload `str` afterwards) where we spend EDI and keep `str` live,
-// and that one choice swaps EAX<->EDX through the justification
-// switch and the DrawStringExecute push sequence. Tried and rejected,
-// all identical to the byte: nesting the null test as its own `if`;
-// `width -= lead` vs `width = -lead`; `iHeight*2 + currY` and
-// `boxHeight < iHeight*2 + currY`; `xOff + x` / `currY + y` argument
-// order; `c = str[++pos]` in the scan loop.
+// A volatile bottom-justification `total` aligns the scratch-register
+// family through the rest of the function (96.81 -> 98.79). The branch
+// sequence is exact; the residual is only the three forced stack-memory
+// instructions around that value. A second guided solver pass found no
+// independent local improvement. Tried and rejected: volatile `limit`
+// (98.28 but one duplicated loop guard), the first `total` (97.24),
+// register/long/initializer/address-taken spellings (96.81), and removing
+// or bypassing the loop guard (95-96% allocation cascades).
 VA(0x004b5490, 0x308)  // anchor-global, dc 0xa2108
 void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              int y, int boxWidth, int boxHeight,
@@ -202,7 +203,7 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
             currY = (boxHeight - iHeight) / 2;
     }
     if (justification & BOTTOM_JUSTIFIED) {
-        int total;
+        volatile int total;
 
         justification &= ~BOTTOM_JUSTIFIED;
         total = LineLength(str, boxWidth) * height;
@@ -326,17 +327,14 @@ long font::get_string_width(const char* arg)
 //   * newline is NOT an unconditional line end: all three exits fall
 //     into one `if (width > boxWidth) { backtrack }` after the loop.
 //   * `int width = 0;` is declared BEFORE `int lineStart = pos;`.
-// Residual (91.7%): register allocation only - retail materialises a
-// fresh `xor edi,edi` for `count = 0` (ours reuses the zero the strlen
-// intrinsic already parked in EAX), which frees EAX for a
-// loop-invariant `boxWidth`; ours therefore reloads boxWidth into ECX
-// every iteration and carries `count` in EAX, swapping EAX/ECX/EDX
-// through the whole scan. Tried and rejected: `count` declared first
-// (86.4), declared last (identical), split declaration + assignment
-// (identical), `pos` declared first (identical), `str[pos] != 0 &&
-// pos < len` outer order (68.6), `lineStart` before `width` (91.3),
-// `width` hoisted out of the loop (91.3). `pos++` before `count++`
-// is worth +0.05 and is the form kept.
+// Making `lineStart` volatile homes the backtrack boundary and raises the
+// function 91.74 -> 92.68 while preserving the exact branch sequence.
+// The remaining 17 register-visible slots are scratch allocation after
+// first definitions; a second guided sweep found no improving mutation.
+// Earlier rejected forms: `count` declared first (86.4), declared last
+// (identical), split declaration + assignment (identical), `pos` declared
+// first (identical), `str[pos] != 0 && pos < len` outer order (68.6),
+// `lineStart` before `width` (91.3), and `width` hoisted (91.3).
 VA(0x004b5820, 0xF2)  // anchor-global, dc 0xa246c
 int font::LineLength(const char* str, int boxWidth)
 {
@@ -345,7 +343,7 @@ int font::LineLength(const char* str, int boxWidth)
     int pos = 0;
     while (pos < len && str[pos] != 0) {
         int width = 0;
-        int lineStart = pos;
+        volatile int lineStart = pos;
         while (str[pos] != 0) {
             if (str[pos] == '\n')
                 break;

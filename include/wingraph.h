@@ -11,6 +11,9 @@ unsigned char SetFullScreenStatus(int bFullScreenOn);    // 0x6019a0
 void CleanUpWinGraphics();                               // 0x601890
 int AppPaint(void* hwnd, void* hdc);                     // 0x601820
 void InitGraphics();                                     // 0x6014e0
+// Retail's wrapper tail-jumps to this zero-argument DirectDraw initializer;
+// the Dreamcast port's same-named routine instead takes mode/reinit args.
+void DDInitGraphics();                                   // 0x6014f0
 int GetDesktopWidth();                                   // 0x6014c0
 int GetDesktopHeight();                                  // 0x6014d0
 

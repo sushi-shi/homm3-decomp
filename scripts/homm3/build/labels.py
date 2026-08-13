@@ -18,6 +18,10 @@ in authority order:
   runtime-map      config/retail-runtime-map.tsv, empty unit - vostok
                    buckets these into _msvc_internal objects, which is
                    correct: runtime code is never a reconstruction target.
+  reloc-alias      reviewed owner symbols from
+                   config/delink-reloc-aliases.tsv. The synthetic PDB must
+                   declare these data owners before vostok can apply the
+                   alias manifest.
   working-label    every remaining function of the universe
                    (config/retail-functions.tsv), bucketed `seg_%04x`
                    gruntz-style. Named by the naming layer where
@@ -56,12 +60,14 @@ from pathlib import Path
 from homm3.core import common
 
 OUT = common.HOMM3_DIR / "build/gen/symbol_names.csv"
+COMPGEN_OUT = common.HOMM3_DIR / "build/gen/compgen_claims.tsv"
 SRC_DIR = common.HOMM3_DIR / "src"
 ZLIB_MAP = common.HOMM3_DIR / "config/retail-zlib-map.tsv"
 RUNTIME_MAP = common.HOMM3_DIR / "config/retail-runtime-map.tsv"
 FUNCTIONS = common.HOMM3_DIR / "config/retail-functions.tsv"
 VTABLES = common.HOMM3_DIR / "config/retail-vtables.tsv"
 RELOC_EVIDENCE = common.HOMM3_DIR / "config/retail-reloc-evidence.tsv"
+RELOC_ALIASES = common.HOMM3_DIR / "config/delink-reloc-aliases.tsv"
 SYMBOLS = common.EVIDENCE_DIR / "retail-symbols.csv"
 VTABLE_SYMBOLS = common.EVIDENCE_DIR / "retail-vtable-symbols.csv"
 
@@ -247,7 +253,9 @@ def scan_sources(functions):
                 rows.append({"rva": rva, "unit": unit,
                              "size": int(m.group(2), 0), "kind": "func",
                              "name": name,
-                             "provenance": "src-VA_COMPGEN"})
+                             "provenance": "src-VA_COMPGEN",
+                             "compgen_kind": m.group(3),
+                             "owner": m.group(4)})
                 continue
             for m in DATA_COMPGEN_GUARD_RE.finditer(line):
                 name = f"__h3cg${unit}$static_init_guard${m.group(2)}"
@@ -367,7 +375,8 @@ def _demangle_key(mangled: str):
     Ctors (??0) key as class_class - the same collapse the declarator
     scan produces for `armyGroup::armyGroup`; dtors (??1) key as
     class_class@dtor so an overloaded-ctor group never absorbs its
-    dtor; other specials (operators) return None."""
+    dtor. Assignment (??4) keys to the declarator scanner's stable
+    `Class_Class_operator` spelling; other special operators return None."""
     if mangled.startswith("??_G"):
         # scalar deleting destructor - joined by the VA_COMPGEN
         # SCALAR_DELETING_DTOR claims (owner = the class)
@@ -377,6 +386,9 @@ def _demangle_key(mangled: str):
         cls = mangled[3:].split("@@", 1)[0].split("@")[0]
         key = f"{cls}_{cls}".lower()
         return f"{key}@dtor" if mangled.startswith("??1") else key
+    if mangled.startswith("??4"):
+        cls = mangled[3:].split("@@", 1)[0].split("@")[0]
+        return f"{cls}_{cls}_operator".lower()
     m = TEMPLATE_MEMBER_RE.match(mangled)
     if m:
         # member of a class template: namespace_template_member, the same
@@ -480,6 +492,20 @@ def main(argv=None) -> int:
     # 1. src annotations (declarator-derived names; disambiguate overloads
     # by rva suffix, matching the naming layer's convention)
     src_rows = scan_sources(functions)
+    compgen_rows = [r for r in src_rows
+                    if r["provenance"] == "src-VA_COMPGEN"]
+    COMPGEN_OUT.parent.mkdir(parents=True, exist_ok=True)
+    with COMPGEN_OUT.open("w", newline="") as fh:
+        fh.write("# GENERATED: python3 -m homm3.build.labels - source-owned "
+                 "compiler-function claims.\n")
+        for prov in common.provenance("homm3.build.labels"):
+            fh.write(prov + "\n")
+        writer = csv.writer(fh, delimiter="\t")
+        writer.writerow(["unit", "name", "kind", "owner", "size"])
+        for r in sorted(compgen_rows,
+                        key=lambda row: (row["unit"], row["rva"])):
+            writer.writerow([r["unit"], r["name"], r["compgen_kind"],
+                             r["owner"], f"0x{r['size']:x}"])
     dtor_rvas = {r["rva"] for r in src_rows if r.get("dtor")}
     seen_names = set()
     for r in src_rows:
@@ -577,6 +603,29 @@ def main(argv=None) -> int:
     image, info = common.load_image()
     secmap = {s.name: s for s in image.sections}
     rdata, dat = secmap[".rdata"], secmap[".data"]
+
+    # Reviewed relocation aliases name the real source-level data owner.
+    # Vostok requires that owner to exist in the PDB before it can rewrite
+    # an otherwise anonymous stripped-image relocation to it. Multiple
+    # reviewed sites may share one owner, but conflicting names at one
+    # target are a manifest defect.
+    _h, alias_rows = read_tsv_body(RELOC_ALIASES)
+    alias_owner_by_target = {}
+    for alias in alias_rows:
+        target = int(alias[1], 16)
+        owner = alias[3]
+        prior = alias_owner_by_target.get(target)
+        if prior and prior != owner:
+            common.die(f"reloc aliases disagree at data rva 0x{target:x}: "
+                       f"{prior!r} vs {owner!r}")
+        alias_owner_by_target[target] = owner
+    for target, owner in sorted(alias_owner_by_target.items()):
+        if target in rows:
+            if rows[target]["name"] != owner:
+                common.die(f"reloc alias owner {owner!r} conflicts with "
+                           f"{rows[target]['name']!r} at 0x{target:x}")
+            continue
+        put(target, owner, "", "", "data", "reloc-alias")
 
     vt_class = {}
     if VTABLE_SYMBOLS.is_file():  # analysis enrichment for unnamed rows

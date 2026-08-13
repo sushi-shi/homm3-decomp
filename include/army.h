@@ -11,6 +11,7 @@
 class hero;
 class armyGroup;
 class town;
+class sample;
 
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
 // the six hex neighbours (combatManager::adjacentCells columns); 6/7
@@ -51,6 +52,16 @@ enum EAttackCriteria {
     ATTACK_CRITERIA_OCCUPIED = 0x2
 };
 
+// Cancellation moments accepted by army::CancelSpellType.  Retail's
+// switch at 0x4444d0 independently proves the attack/damage values; the
+// zero move value is corroborated by the exact FlyTo consumer.  Names
+// follow the mature HoMM2 sibling domain, whose behavior is homologous.
+enum EArmySpellCancelType {
+    ARMY_CANCEL_SPELLS_AFTER_MOVE = 0,
+    ARMY_CANCEL_SPELLS_AFTER_ATTACK = 1,
+    ARMY_CANCEL_SPELLS_AFTER_DAMAGE = 2
+};
+
 // Opaque head model. The 0x548 stride and the 0x54cc array base in
 // combatManager are byte-proven by hexcell::get_army/get_dead_army
 // (0x4e7170/0x4e71b0: index = side*21 + slot, scaled by 0x548 from
@@ -59,6 +70,22 @@ enum EAttackCriteria {
 // tests the int at army+0x84 against -1. Field names provisional.
 class army {
 public:
+    army();
+
+    // Dreamcast Army.h enum; retail Teleport passes the two corresponding
+    // immediate values to the independently located play_sample body.
+    enum TSampleID {
+        WALK_SAMPLE = 0,
+        ATTACK_SAMPLE = 1,
+        WINCE_SAMPLE = 2,
+        SHOOT_SAMPLE = 3,
+        DIE_SAMPLE = 4,
+        DEFEND_SAMPLE = 5,
+        PRE_WALK_SAMPLE = 6,
+        POST_WALK_SAMPLE = 7,
+        MAX_SAMPLES = 8
+    };
+
     char pad_00[0x10];
     // Grid identity, byte-proven by ValidAttack (0x523bb0): the target
     // hexcell's armySide/armySlot pair compares against these.
@@ -84,7 +111,11 @@ public:
     // Stack size: set_melee_enemies (0x43bf20) feeds it to
     // get_average_damage as the attacking creature count.
     int numTroops;                // +0x4c
-    char pad_50[0x8];
+    // Dreamcast names the adjacent display override and the count restored
+    // during this battle. Retail get_surrender_cost subtracts the latter
+    // before pricing the surviving stack, independently fixing +0x54.
+    int numTroopsToShowOverride;  // +0x50
+    int numTroopsBattleResurrected; // +0x54
     // Damage already carried by the stack's top creature: the AI adds
     // its expected extra damage to it and compares against hitPoints to
     // decide whether a boost saves a creature (get_defense_boost_value
@@ -108,7 +139,7 @@ public:
     // increase to it and re-times the stack against the result, while
     // GetSpeed() returns the modified value.
     int baseSpeed;                // +0x64
-    char pad_68[0x10];
+    char pad_68[0xc];
     // +0x74 starts an EMBEDDED copy of the creature's traits row (the
     // Dreamcast roster's `TCreatureTypeTraits sMonInfo` at 116, and the
     // retail offsets already proven in this class agree with it field
@@ -120,6 +151,7 @@ public:
     // 0x78 is sMonInfo + 4, TCreatureTypeTraits::level. The embedded
     // record is not modelled as such yet; that is a layout change for
     // the whole army run.
+    int monInfoTownType;          // +0x74 == sMonInfo.townType
     int monInfoLevel;             // +0x78 == sMonInfo.level
     char pad_7c[0x8];
     // A BITFIELD word, not an id: bit 0 is the two-hex marker in
@@ -180,7 +212,10 @@ public:
     // combatSide (+0xf4) as armySide. Renaming waits on a lane that
     // owns the ai_tactical call sites.
     int bitIndex;                 // +0xf8
-    char pad_fc[0x94];
+    char pad_fc[0x74];
+    // DC army::armySample is sample*[8] at +0x15c; retail's preceding STL
+    // expansion shifts it to +0x170, independently confirmed by play_sample.
+    sample* armySample[8];        // +0x170
     // Ordering key the AI compares BETWEEN stacks: should_attack_now
     // (0x436c60) refuses to cast now when any other still-able stack
     // on our side outranks the target's own value here. Name pending a
@@ -193,7 +228,17 @@ public:
     // word (or the Efreet Sultan's innate shield) as the whole gate on
     // whether a retaliating shield fires at all.
     int fireShieldRounds;         // +0x20c
-    char pad_210[0x74];
+    char pad_210[0x18];
+    // SPELL_MAGIC_MIRROR's entry in the 81-dword spellInfluence row.
+    int magicMirrorRounds;        // +0x228
+    char pad_22c[0x30];
+    // Timed morale/luck modifiers. SetMorale and SetLuck test the round
+    // counters here and apply the matching signed amounts at +0x47c.
+    int moraleBonusRounds;        // +0x25c
+    int moralePenaltyRounds;      // +0x260
+    int luckBonusRounds;          // +0x264
+    int luckPenaltyRounds;        // +0x268
+    char pad_26c[0x18];
     int berserkFlag;              // +0x284 (is_enemy: true vs everyone)
     int hypnotizeFlag;            // +0x288 (flips the effective side)
     char pad_28c[0x4];
@@ -214,7 +259,24 @@ public:
     // lets the defender strike back while it is positive, and the DC
     // roster has army::set_retaliation_count feeding it.
     int retaliationCount;         // +0x454
-    char pad_458[0x90];
+    char pad_458[0x24];
+    int moraleBonus;              // +0x47c
+    int moralePenalty;            // +0x480
+    int luckBonus;                // +0x484
+    int luckPenalty;              // +0x488
+    char pad_48c[0x14];
+    // Active Fire Shield multiplier.  get_fire_shield_strength loads
+    // this float whenever fireShieldRounds is non-zero; otherwise the
+    // innate Efreet Sultan path supplies the shared 0.2f constant.
+    float fireShieldStrength;     // +0x4a0
+    char pad_4a4[0x3c];
+    // Read by combatManager::ViewArmy and forwarded as the first
+    // argument of the post-dialog command. The DC name for the nearby
+    // scalar run does not survive the retail STL-layout shift, so keep
+    // this address-ordinal until that callee is identified.
+    int field_4e0;                // +0x4e0
+    // Magic Mirror redirect percentage; DC/NH3API name backlash_chance.
+    unsigned int backlashChance;  // +0x4e4
     // The stack's own morale and luck ratings, sliced 2026-08-08 by the
     // four ai_tactical luck/morale pricers: get_mirth_value (0x438170)
     // and get_sorrow_value (0x4382c0) clamp +0x4e8 to [-3, 3] and hand
@@ -282,7 +344,33 @@ public:
     // `const army*`.
     long get_multi_head_directions(long our_hex, const army* enemy,
                                    long enemy_hex) const;
+    // DC public ?CanFit@army@@QBAHHHPAH@Z; mark_teleport's retail call
+    // passes (hex, 0, 0) through a const army pointer.
+    int CanFit(int destIndex, int bAllowShifting,
+               int* iNewDestIndex) const;
     int GetSpeed() const;                    // 0x448cd0, claimed in army.cpp
+    // Combat movement surface. The retail call graph from simple_move and
+    // the five-function block at 0x4b46c0..0x4b5011 locate fly.obj; these
+    // declarations are consumed by the admitted FlyTo/TeleportTo wrappers.
+    void add_aura();                         // 0x43ea70
+    void remove_aura();                      // 0x43ec50
+    void remove_binding();                   // 0x43ee10
+    void play_sample(TSampleID id);          // 0x43d540
+    void stop_sample(TSampleID id);          // 0x43d580
+    unsigned char simple_move(int hex, unsigned char restore_facing);
+    unsigned char move_to(int hex, unsigned char restore_facing);
+    unsigned char check_obstacle_attacks(unsigned char is_walking);
+    void Turn(unsigned char play_animation); // 0x446720
+    void SetupAnimation();                   // 0x446830
+    void PlayAnimation(int sequence, int nframes, int start_frame);
+    void CancelSpellType(int iSpellType);    // 0x4444d0
+    void CancelIndividualSpell(int spell);   // 0x444510
+    unsigned char ValidFlight(int destIndex,
+                              unsigned char bLiteralTest);
+    int FlyTo(int destIndex, unsigned char restore_facing);
+    int Fly(int destIndex);
+    int TeleportTo(int destIndex, unsigned char restore_facing);
+    int Teleport(int destIndex);
     void SetLuck(const hero* ownerHero, const armyGroup* ownerGroup,
                  const town* ownerTown, const hero* otherHero,
                  const armyGroup* otherGroup, int magicTerrain);
@@ -308,6 +396,10 @@ public:
             static_cast<unsigned>(creatureId) >> attribute);
     }
     unsigned char is_enemy(const army* arg); // 0x442880
+    long get_adjusted_attack(const army* enemy,
+                             unsigned char ranged_attack) const;
+    long get_attack_modifier(const army* enemy,
+                             unsigned char ranged_attack) const;
     // Combat-AI leaves, all claimed in army.cpp; declared here so
     // ai_tactical can call them (the retail callsites are the
     // location evidence for get_average_damage's own claim).
@@ -342,6 +434,7 @@ public:
     // writer. Const because that caller holds the stack as `const army*`.
     void get_berserk_targets(std::vector<army*>& armies) const;
     int get_second_grid_index() const;                          // 0x4466a0
+    int get_mirror_effect() const;                              // 0x4487f0
     long get_AI_target_time(long speed) const;                  // 0x448bd0
     long get_total_combat_value(long lowest_attack,
                                 long lowest_defense) const;     // 0x442e60

@@ -5,6 +5,7 @@
 #ifndef HOMM3_HERO_H
 #define HOMM3_HERO_H
 
+#include <string>
 #include <va.h>
 #include "armygrp.h"
 // TArtifact - the id domain hero::remove_artifact takes. It is the
@@ -18,6 +19,7 @@
 // ai_tactical.h (whose `typedef int TSkillMastery` is a hard C2371
 // against herospec.h's enum) and rather than a second copy here.
 #include "spellschool.h"
+#include "advmgr_popup.h"
 
 // Hero-class ids. Dreamcast CodeView supplies the original 0..15 ladder;
 // retail GetNewHeroId extends it with the two Conflux classes, indexes all
@@ -105,6 +107,8 @@ struct type_artifact {
 
 #ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     type_artifact() : artifactId(-1), extra(-1) {}
+    type_artifact(int id, int extraValue)
+        : artifactId(id), extra(extraValue) {}
 #endif
 
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
@@ -114,11 +118,35 @@ struct type_artifact {
     void get_rollover_text(char* buffer);
 };
 
-#ifdef HOMM3_HERO_COMBINATION_VIEW
-class boat;
-#endif
+// Shared packed prefix of heroes and boats. Dreamcast CodeView proves both
+// inheritance edges and supplies the member identities; retail proves the
+// 0x18-byte extent and every serialized offset. Retail packs type_point at
+// +0x07, one byte earlier than the naturally aligned Dreamcast build.
+struct type_obscuring_object {
+    short x;                              // +0x00 (DC mapX)
+    short y;                              // +0x02 (DC mapY)
+    short z;                              // +0x04 (DC mapZ)
+    unsigned char valid;                  // +0x06
+    type_point obscured_location;         // +0x07
+    char pad_0b;
+    TAdventureObjectType obscuredType;    // +0x0c (DC type)
+    unsigned char was_trigger;            // +0x10
+    char pad_11[3];
+    unsigned long extra_info;             // +0x14
 
-class hero {
+    type_obscuring_object();
+    void initialize();
+    class town* get_obscured_town();
+    void obscure_cell(TAdventureObjectType new_type, long id);
+    void restore_cell();
+    bool load(void* infile);
+    bool save(void* outfile);
+};
+SIZE(type_obscuring_object, 0x18);
+
+class boat;
+
+class hero : public type_obscuring_object {
 public:
     enum {
         CLASS_NAME_OVERRIDE_HERO_ID = 27,
@@ -131,27 +159,6 @@ public:
         PRIMARY_STAT_RESOURCE_FIRST = 31,
         PRIMARY_STAT_RESOURCE_QUANTITY = 0x10000
     };
-    // The hero's map position, three SHORTS at +0/+2/+4. Byte-proven by
-    // hero::IsMobile (0x4e5f30), which packs exactly these three cells
-    // into a stack type_point with that struct's own field widths -
-    // `and ecx,0x3ff` on +0, `and edx,0x3ff` on +2 and `and eax,0xf`
-    // then `shl eax,0xa` on +4 - and corroborated by
-    // hero::is_in_patrol_radius (0x4e56e0), whose `cmp dx, word [this+4]`
-    // compares the argument point's z against +4 at SIXTEEN bits: VC6
-    // only keeps the bitfield extraction 16-bit (`shl dx,2 / sar dx,0xc`,
-    // no movsx) when the other operand is itself a short.
-    short x;                        // +0x00
-    short y;                        // +0x02
-    short z;                        // +0x04
-    // The inherited obscuring-object tail. GetFlaggedObjectOwner reaches
-    // the two dwords directly when a map cell names a hero: +0x0c is the
-    // underlying adventure-object type and +0x14 its pool index.
-    unsigned char obscuringField_06;
-    char pad_007[0x5];
-    TAdventureObjectType obscuredType;  // +0x0c
-    unsigned char obscuringField_10;
-    char pad_011[3];
-    int obscuredIndex;                  // +0x14
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
     // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back
@@ -174,15 +181,18 @@ public:
     // +0x30. DrawHeroPart indexes the eighteen-entry cursorIcons sprite row
     // directly with this dword; the surviving roster names the domain.
     int heroClass;
-#ifdef HOMM3_HERO_COMBINATION_VIEW
     // +0x34. The current-hero gate in HeroFn_004D8FB0 compares this byte
     // directly against portrait id 156. Dreamcast independently places its
     // `portrait` byte at the same offset.
     unsigned char portrait;
-    char pad_035[0xf];
-#else
-    char pad_034[0x10];
-#endif
+    // BuildPath copies these three unaligned dwords into its packed target
+    // point. The retail load widths are narrowed by the destination
+    // bitfields, but their four-byte spacing proves the stored type.
+    int pathTargetX;                    // +0x35
+    int pathTargetY;                    // +0x39
+    int pathTargetZ;                    // +0x3d
+    char pad_041[2];
+    unsigned char targetIsCritical;       // +0x43
     // The patrol triple at +0x44..+0x46 and the compass facing at
     // +0x47, all byte-proven by hero::is_in_patrol_radius (0x4e56e0)
     // and hero::GetStandSequence (0x4d9110). The two coordinates are
@@ -214,7 +224,7 @@ public:
     unsigned char patrolY;          // +0x45
     signed char patrolRadius;       // +0x46
     unsigned char facing;           // +0x47
-    char pad_048[1];
+    unsigned char formation;        // +0x48 (DC name)
     // +0x49. ProcessHover uses this full signed DWORD as the movement
     // allowance for each later day when converting a path cost to turns.
     // Dreamcast names the corresponding field maxMobility.
@@ -225,16 +235,17 @@ public:
     // 0x51eb851f reciprocal - an unsigned field would use the unsigned
     // magic instead. Name provisional.
     int movePoints;                 // +0x4d
-    char pad_051[0x4];
+    int experience;                 // +0x51 (DC name; retail packed)
     // +0x55, a SHORT the five specialty factor getters (0x4e42b0,
     // 0x4e4310, 0x4e4840, 0x4e48b0, 0x4e4920) widen with `movsx eax,
     // word [this+0x55]` and turn into the specialty scale
     // `x * 0.05f + 1.0f`. That is HoMM3's per-level specialty growth,
     // so the field is the hero's level - name role-inferred, PROVISIONAL.
     short level;                    // +0x55
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     // This visit-flag run is fixed by SetRolloverText's retail loads and
-    // the uniform retail/DC hero-layout repack described below.
+    // the uniform retail/DC hero-layout repack described below. These are
+    // canonical members: the former pad-vs-fields include personality was
+    // unnecessary because both arms had the same layout.
     unsigned long TrainingGroundsFlags;    // +0x57
     unsigned long DefenseTowerFlags;       // +0x5b
     unsigned long GardenOfRevelationFlags; // +0x5f
@@ -244,9 +255,6 @@ public:
     // masks the cell's low five extra-info bits into this dword.
     unsigned long TreeOfKnowledgeFlags;
     unsigned long LibraryFlags;             // +0x6f
-#else
-    char pad_057[0x1c];
-#endif
     // +0x73. One dword of "this hero has already used that object"
     // bits, indexed by the cell's extraInfo: hero::VisitedArena
     // (0x4e53c0) tests `(1 << cell->extraInfo) & [this+0x73]` and
@@ -259,13 +267,13 @@ public:
     // SetTreeHelpText now independently proves TreeOfKnowledgeFlags above;
     // SetRolloverText proves the fields it reads directly.
     unsigned long ArenaFlags;
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     unsigned long MagicSchoolFlags;         // +0x77
     unsigned long WarSchoolFlags;           // +0x7b
-    char pad_07f[0x12];
-#else
-    char pad_077[0x1a];
-#endif
+    unsigned long UniversityFlags;          // +0x7f
+    unsigned long Shrine1Flags;             // +0x83
+    unsigned long Shrine2Flags;             // +0x87
+    unsigned long Shrine3Flags;             // +0x8b
+    char pad_08f[0x2];
     // Seven army slots: creature type at 0x91+i*4, count at 0xad+i*4
     // (CreatureTypeCount reads [ecx-0x1c] against [ecx] with ecx
     // walking from 0xad) - exactly armyGroup's 56-byte layout, and
@@ -321,7 +329,15 @@ public:
     // no DC symbol covers the word; the extent and the read are
     // byte-proven.
     unsigned int flags;                 // +0x105
-    char pad_109[0x9];
+    float turnExperienceToRVRatio;          // +0x109 (DC name)
+    signed char dWalkSpellsCast;            // +0x10d (DC name)
+    // +0x10e. TQuickHeroWindow reads the full mastery value to decide
+    // whether an enemy army is shown normally, as copies of its strongest
+    // stack, or as the strongest creature of the owner's alignment. The
+    // Dreamcast roster independently names the corresponding dword
+    // `disguiseLevel`; retail's later flight/water-walk pair fixes the
+    // four-byte extent from the other side.
+    int disguiseLevel;
     // +0x112, the FLIGHT level - the twin of waterWalkLevel below and
     // the other half of the movement-override pair hero::IsMobile
     // (0x4e5f30) loads together. Sliced 2026-08-08 out of the old
@@ -357,7 +373,10 @@ public:
     // stays an ORDINAL PLACEHOLDER and only the offset and the role
     // are claimed.
     unsigned char field_11c;            // +0x11c
-    char pad_11d[0xc];
+    int bounty;                         // +0x11d (DC name)
+    // Packed retail counterpart of DC's std::bitset<48> member. Its reset
+    // writes the two backing dwords at +0x121/+0x125.
+    std::bitset<48> TownSpecialGrantedMask; // +0x121 (DC name)
     // +0x129, a dword compared against 3 - the secondary-skill
     // mastery domain. hero::HeroFn_004E5DE0 (0x4e5de0) returns it
     // unless it is below 3 and the hero's army holds creature 0x8f,
@@ -375,18 +394,15 @@ public:
     // flag arm instead of walking the 64 slots, which is what proves
     // both the offset and the SIGNED char width. Name provisional.
     signed char backpackCount;          // +0x3d4
-#ifdef HOMM3_HERO_COMBINATION_VIEW
-    // The custom-name branch in HeroFn_004D8FB0 reads this byte, then the
-    // unaligned pointer five bytes later. Names are role-inferred and
-    // provisional; the intervening bytes remain unmodeled.
-    char pad_3d5[0x4];
+    // Per-hero sex copied from THeroTraits during initialize. The retail
+    // build added this four-byte field ahead of the custom-name state.
+    int sex;                              // +0x3d5 (DC trait name)
     unsigned char hasCustomName;         // +0x3d9
-    char pad_3da[0x4];
-    const char* customName;              // +0x3de
-    char pad_3e2[0x8];
-#else
-    char pad_3d5[0x15];
-#endif
+    // Dinkumware std::string object, not merely its internal +4 pointer.
+    // hero::initialize assigns the shared empty string through the normal
+    // operator= path, which proves the full 16-byte object at +0x3da.
+    std::string customName;               // +0x3da
+
     // TWO per-spell byte tables, stride 1, 70 entries each, byte-proven
     // by hero::AddSpell 0x4d9330 - all 26 bytes of it are
     //     mov dl,1
@@ -442,6 +458,8 @@ public:
     // one-field return and preserves its float temporary before widening.
     float get_aggression() const { return field_47a; }
 
+    void initialize(short index);
+
     // DC-attested inline accessor (ai_combat.h roster, dc 0x2c668).
     // cast_spell and initialize_creatures fix the clamp and signed-byte
     // source: attack/defense are confined to 0..99, while power/knowledge
@@ -473,16 +491,15 @@ public:
     // 0x4e5960 - the four primary skills, each clamped to 0..99, with
     // slots 2 and 3 floored at 1.
     short get_primary_skill_total();
+    // 0x4e59a0 - enables overland flight and charges its terrain-adjusted
+    // per-mastery mana cost.
+    void Fly(int level);
     // 0x4e5dd0 - one-argument setter for waterWalkLevel.
     void WalkOnWater(int level);
-#ifdef HOMM3_HERO_LAND_VIEW
     // 0x4e5ce0 - checks terrain, passability and blocking trigger objects.
     unsigned char can_land();
-#endif
-#ifdef HOMM3_HERO_BOAT_VIEW
     // 0x4e5550 - checks spell access, mana, boat reachability and pool space.
     unsigned char can_summon_boat();
-#endif
     // 0x4e5e10 - tests whether a packed map point is inside Visions range.
     unsigned char IsInIdentifyRange(const type_point* location);
     // 0x4e5de0, RETAIL-ONLY (no DC row): the clamped field_129 getter
@@ -493,8 +510,8 @@ public:
     unsigned char belongs_to_human();
     class playerData* get_player();
     // 0x4e5330 / 0x4e5380, the two status-bar gauge frames.
-    int GetMobilityFrame();
-    int GetManaFrame();
+    int GetMobilityFrame() const;
+    int GetManaFrame() const;
     // 0x4da3a0 - STATIC: retail takes iLevel in ECX and returns with a
     // bare `ret`, and the Dreamcast row for hero::GetExperience lists
     // iLevel as its ONLY parameter (no `this`). /Gr makes a static
@@ -560,12 +577,11 @@ public:
     // tail up when the requested slot is occupied. `slot` < 0 means
     // "first free".
     unsigned char add_to_backpack(const type_artifact* artifact, long slot);
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+    std::string get_backpack_error(TArtifact artifact) const;
     // 0x004e3070 - gives or equips one artifact and performs the optional
     // end-condition check. ProcessSearch calls it for the Holy Grail.
     void GiveArtifact(const type_artifact* artifact, int bCheckEnd,
                       unsigned char equip_it);
-#endif
     // 0x004d8f70 - returns the campaign override or this hero class's
     // display text. Retail callers span both adventure and hero UI paths.
     const char* HeroFn_004D8F70();
@@ -590,6 +606,10 @@ public:
     // definition's own `xor eax,eax` / `sete al` does NOT contradict it -
     // that is just how VC6 lowers an `==` result, at either width.
     unsigned char IsWieldingArtifact(int whichArtifact);
+    // Retail philai.obj uses a thiscall-shaped entry (this in ECX, spell on
+    // the stack); the Dreamcast port exposes the same logic as a file-local
+    // two-argument helper instead.
+    int ValueOfSpell(SpellID spell) const;
 #ifdef HOMM3_ARMYGRP_DESCRIPTION_API
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_morale_description() const;
@@ -620,6 +640,12 @@ public:
     int GetMysticismBonus();
     int GetVisibility();
     int GetSpellDurationBonus();
+    // Retail's same-coordinate pair diverges from the DC prototype names:
+    // 0x4e4ec0 returns the adventure-object type at the hero's square,
+    // while the DC-named get_special_terrain at 0x4e4fa0 returns retail's
+    // integer magic-terrain id.
+    TAdventureObjectType HeroFn_004E4EC0();
+    int get_special_terrain();
     long get_combat_speed_bonus();
     float GetSurrenderCostFactor();
     float GetOffenseFactor();
@@ -637,7 +663,7 @@ public:
     // ai_combat's inlined get_spell_damage / get_resurrection_value can
     // call them.
     long modify_spell_damage(int spell, int damage, const class army* target_army);
-    int GetHeroSpellBonus(int spell_id, int target_level, int value);
+    int GetHeroSpellBonus(int spell_id, int target_level, int value) const;
     // The spell-school quartet at 0x4e5080 / 0x4e5100 / 0x4e51c0 /
     // 0x4e5240. Two DIVERGENCES from the Dreamcast prototypes, both
     // forced by retail bytes:
@@ -658,7 +684,7 @@ public:
     //     class). Same width, same codegen.
     int get_spell_level(SpellID spell, int magic_terrain);
     int GetSpellSchoolLevel(TSpellSchool school_mask, int magic_terrain);
-    TSpellSchool GetHighestSchool(TSpellSchool school_mask);
+    TSpellSchool GetHighestSchool(TSpellSchool school_mask) const;
     int GetManaCost(int iWhichSpell, const class armyGroup* enemy,
                     int magic_terrain);
     float get_combat_value_modifier();
@@ -669,11 +695,9 @@ public:
     // row - its name is HD-crossbuild + IDA lineage only, PROVISIONAL.
     float GetNecromancyFactor(unsigned char apply_limit);
     TCreatureType GetNecromancyCreature();
-#ifdef HOMM3_HERO_COMBINATION_VIEW
     const char* HeroFn_004D8FB0();
     unsigned char HeroFn_004DBE80(int combination);
     boat* find_summonable_boat();
-#endif
     // Claimed in src/hero.cpp (0x4d7900, dc 0xcaedc); declared here
     // because town::remove_garrison_hero calls it with the town's
     // owner, a type_point built from the town's map cell, and 0.
@@ -693,41 +717,6 @@ public:
 SIZE(hero, 0x492);
 
 #pragma pack(pop)
-
-// type_obscuring_object - the record that remembers the adventure
-// object a hero (or boat) is standing on top of, so the square can be
-// put back when it moves off. DC-declared in E:\gamedcs\Hero.h, which
-// is why it lives here.
-// Field evidence, all from the two bodies claimed in src/hero.cpp:
-// type_obscuring_object::initialize (0x4d74d0) writes exactly seven
-// slots - three WORDS of -1 at +0/+2/+4, then zeros at +6 (BYTE),
-// +0xc (DWORD), +0x10 (BYTE) and +0x14 (DWORD) - and the constructor
-// at 0x4d7470 is that same body inlined, register-for-register.
-// get_obscured_town (0x4d7490) reads the same four tail slots and
-// compares +0xc against TAdventureObjectType TOWN, which is what types
-// that dword; +0x14 is then the index into gpGame->towns. The extent
-// past +0x18 is NOT proven, so no SIZE() assert. Names of the two
-// unattested flags are ordinal placeholders.
-struct type_obscuring_object {
-    short x;                    // +0x00
-    short y;                    // +0x02
-    short z;                    // +0x04
-    unsigned char field_06;     // +0x06 - the "something is obscured" gate
-    char pad_07[0x5];
-    TAdventureObjectType obscuredType;  // +0x0c
-    unsigned char field_10;     // +0x10 - second gate, role unattested
-    char pad_11[0x3];
-    int obscuredIndex;          // +0x14
-
-    type_obscuring_object();
-    void initialize();
-    class town* get_obscured_town();
-    void obscure_cell(TAdventureObjectType new_type, long id);
-    void restore_cell();
-    unsigned char load(void* infile);
-    unsigned char save(void* outfile);
-};
-SIZE(type_obscuring_object, 0x18);
 
 // boat - the adventure-map vessel. It lives here for the same reason
 // type_obscuring_object does: the Dreamcast roster declares it in
@@ -774,18 +763,36 @@ SIZE(boat, 0x28);
 // FLAGGED for review). Every other field stays an unmodeled pad until
 // a retail body touches it.
 struct THeroTraits {
-    char pad_00[0x34];              // +0x00 unmodeled
+    int sex;                        // +0x00 (DC m_sex)
+    int race;                       // +0x04 (DC m_race)
+    THeroClass heroClass;           // +0x08 (DC m_class)
+    int firstSkill;                 // +0x0c (TSecondarySkill)
+    int firstSkillLevel;            // +0x10 (TSkillMastery)
+    int secondSkill;                // +0x14 (TSecondarySkill)
+    int secondSkillLevel;           // +0x18 (TSkillMastery)
+    unsigned char startsWithSpellbook; // +0x1c
+    char pad_1d[3];
+    int startingSpell;              // +0x20 (SpellID)
+    TCreatureType firstStack;       // +0x24
+    TCreatureType secondStack;      // +0x28
+    TCreatureType thirdStack;       // +0x2c
+    // UpdateHeroLocator sends this pointer to the portrait widget. Dreamcast
+    // independently names the same +0x30 member m_small_portrait_name.
+    const char* smallPortraitName;  // +0x30 image name for locator portraits
     const char* largePortraitName;  // +0x34 image name for WIDGET_SET_IMAGE
-#ifdef HOMM3_HERO_COMBINATION_VIEW
-    char pad_38[0x8];               // +0x38 unmodeled
+    unsigned int attributes;        // +0x38 (DC name)
+    char pad_3c[4];                 // +0x3c retail-only field
     // HeroFn_004D8FB0 strcmp's the live hero name against this pointer.
-    // Dreamcast calls the analogous pointer m_name, but retail places it
-    // four bytes later, so only the role transfers across builds.
+    // InitializeHeroTraitsTable independently fills it from hotraits.txt.
     const char* defaultName;         // +0x40
-    char pad_44[0x18];              // +0x44 unmodeled
-#else
-    char pad_38[0x24];              // +0x38 unmodeled
-#endif
+    // Retail parses columns 1/2, 4/5, and 7/8 into these six dwords;
+    // Dreamcast independently names the same three low/high stack pairs.
+    int firstStackLow;               // +0x44
+    int firstStackHigh;              // +0x48
+    int secondStackLow;              // +0x4c
+    int secondStackHigh;             // +0x50
+    int thirdStackLow;               // +0x54
+    int thirdStackHigh;              // +0x58
 };
 SIZE(THeroTraits, 0x5c);
 
@@ -795,24 +802,27 @@ SIZE(THeroTraits, 0x5c);
 struct THeroClassTraits {
     int townType;                       // +0x00
     const char* className;              // +0x04
-    char pad_08[0x2b];
-    // +0x33..+0x3c: one signed selection weight for the no-player
-    // bucket followed by the nine town types. GetNewHeroId indexes it
-    // with alignment + 1 and sign-extends the selected byte.
-    signed char selectionWeights[10];
+    float aggression;                   // +0x08
+    signed char initialPrimarySkill[4]; // +0x0c
+    signed char gainPrimarySkillChance[4];    // +0x10
+    signed char gainPrimarySkillChance10P[4]; // +0x14
+    signed char gainSecondarySkillChance[28]; // +0x18
+    signed char foundInTownType[9];      // +0x34
     char pad_3d[3];
 };
 SIZE(THeroClassTraits, 0x40);
 
+DATA(0x0067d868) extern THeroClassTraits aHeroClassTraits[18];
 extern const THeroClassTraits (&akHeroClasses)[18];
 
 // Retail .data 0x67dce8 (reloc-evidence datum; read by strip::DrawOwner
 // as pointer+index). The IDA-lineage mangling
-// ?akHeroTraits@@3AAY0KD@$$CBUTHeroTraits@@A types it a reference to
-// const THeroTraits[163] - a reference global loads its storage cell
-// exactly as retail does (`mov edx,[0x67dce8]`). Extern only; the DATA
-// claim lands with the owning TU.
-extern const THeroTraits (&akHeroTraits)[163];
+// ?akHeroTraits@@3AAY0KD@$$CBUTHeroTraits@@A types it as an array
+// reference. Retail's parser settles the Complete bound: its direct
+// 0x5c-stride walk covers exactly 156 rows. The reference cell's retail
+// value is 0x679dd0; the loader begins at the +0x40 defaultName field.
+DATA(0x00679dd0) extern THeroTraits aHeroTraits[156];
+DATA(0x0067dce8) extern const THeroTraits (&akHeroTraits)[156];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\hero.cpp:219, dc 0xca728) unsigned char InitializeHeroSpecificAbilitiesTable();
@@ -834,21 +844,44 @@ extern const THeroTraits (&akHeroTraits)[163];
 // CODEVIEW(E:\gamedcs\CustomCampaign.h:225, dc 0xd5944) int SCampaign::GetExpCap();
 
 // --- THeroScreenWindow ---
-// Narrow declaration for the retail slot-refresh loop. Complete carries
-// nineteen equipped positions, one more than the DC TArtifactSlot roster;
-// keep the argument as the retail-proven ordinal index, matching the
-// remove_artifact precedent above.
-class THeroScreenWindow {
+// Retail hero-screen state. The first datum is an actual type_artifact:
+// its adjacent dword is initialized to -1 by the same static initializer,
+// and every artifact-drag path treats the pair as one artifact record.
+// The second is the selected army slot used by the hero-screen message
+// paths. Both spellings are role-derived because no retail symbols survive.
+DATA(0x00698a88) extern type_artifact gHeroScreenDraggedArtifact;
+DATA(0x00697738) extern int gHeroScreenArmySlot;
+DATA(0x00698b20) extern hero* gpCurrentHero;
+// HeroView stores GetLocalPlayer()->FindHero(gpCurrentHero->id) here before
+// SetupHeroView. UpdateHeroLocator compares it with topHero + locator index.
+DATA(0x00698a84) extern int gHeroScreenHeroPosition;
+
+// The vtable and destructor prove direct CAdvPopup inheritance. Complete
+// carries nineteen equipped positions, one more than the DC TArtifactSlot
+// roster; keep the refresh argument as the retail-proven ordinal index.
+// The constructor also touches a still-unmodelled two-dword retail tail;
+// no method admitted here relies on those fields.
+class THeroScreenWindow : public CAdvPopup {
 public:
     enum EArtifactSlotBounds {
         ARTIFACT_SLOT_FIRST = 0,
         ARTIFACT_SLOT_COUNT = 19
     };
 
+    // Constructor-initialized hero-list scroll origin. Locator i displays
+    // localPlayer->heroes[topHero + i].
+    int topHero;                    // +0x60
+    int field_64;                   // +0x64, role not yet admitted
+
+    THeroScreenWindow();
+    virtual ~THeroScreenWindow();
+    virtual int WindowHandler(class message* msg);
     void update_slot(long slot);
     void update_all_slots();
-    int ExitDialog(class message* msg);
+    void UpdateHeroLocator(int iWhich);
+    virtual int ExitDialog(class message* msg);
 };
+SIZE(THeroScreenWindow, 0x68);
 
 // CODEVIEW(E:\gamedcs\hero.cpp:1594, dc 0xcc49c) void THeroScreenWindow::HeroMessageUpdate(char* cText);
 // CODEVIEW(E:\gamedcs\hero.cpp:2477, dc 0xcd9c4) void THeroScreenWindow::UpdateHeroScreenStatusBar(message* msg);
@@ -943,7 +976,7 @@ public:
 // CODEVIEW(E:\gamedcs\hero.cpp:5962, dc 0xd4df0) TAdventureObjectType hero::get_special_terrain();
 // CODEVIEW(E:\gamedcs\hero.cpp:5977, dc 0xd4e4c) TSkillMastery hero::get_spell_level(SpellID spell, unsigned char is_on_magic_plains);
 // CODEVIEW(E:\gamedcs\hero.cpp:5987, dc 0xd4e68) TSkillMastery hero::GetSpellSchoolLevel(TSpellSchool school_mask, unsigned char is_on_magic_plains);
-// CODEVIEW(E:\gamedcs\hero.cpp:6025, dc 0xd4ed0) TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask);
+// CODEVIEW(E:\gamedcs\hero.cpp:6025, dc 0xd4ed0) TSpellSchool hero::GetHighestSchool(TSpellSchool school_mask) const;
 // CODEVIEW(E:\gamedcs\hero.cpp:6071, dc 0xd4f64) int hero::GetManaCost(int iWhichSpell, const armyGroup* enemy, unsigned char is_on_magic_plains);
 // CODEVIEW(E:\gamedcs\hero.cpp:6103, dc 0xd4fe0) int hero::GetMobilityFrame();
 // CODEVIEW(E:\gamedcs\hero.cpp:6129, dc 0xd5024) int hero::GetManaFrame();

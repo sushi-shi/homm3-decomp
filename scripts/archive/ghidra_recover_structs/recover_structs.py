@@ -11,7 +11,7 @@ input ever changes and the tables must be refreshed, run this file directly agai
 (`python3 scripts/archive/ghidra_recover_structs/recover_structs.py`) from a dev shell
 that provides GHIDRA_INSTALL_DIR + pyghidra. Do not resurrect it as a pipeline stage.
 
-Ported (user-approved, supervised session 2026-08-07) from decomp-attempt-1's
+Ported in the user-approved 2026-08-07 attempt-1 session from
 `scripts/homm3/ghidra/scripts/recover_structs.py`, adapted to this repo's inputs:
 attempt-1 read MSVC-decorated CodeView names straight out of its symbol table; this
 tree's `build/gen/symbol_names.csv` is mostly working labels, so class ownership is

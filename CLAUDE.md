@@ -3,13 +3,6 @@
 Binary-matching decompilation of Heroes of Might and Magic III Complete. The goal is C++
 that reproduces the retail MSVC 6.0 object code.
 
-## The supervised-review rule
-
-**Nothing is ported, copied, or admitted into this repository — from decomp-attempt-1,
-Gruntz, NH3API, or anywhere else — without the user's explicit approval in a supervised
-session.** Survey, propose, and prepare; never land unrequested material. Approved
-decisions are recorded in the port plan's decision log (§5) in the same change.
-
 ## Ground truth
 
 - The retail executable is authoritative for code, data, and addresses:
@@ -34,10 +27,9 @@ decisions are recorded in the port plan's decision log (§5) in the same change.
     Correction: an earlier note here claimed "873 land on x86 entry patterns". That
     misread attempt-1's scorer — its `exec` column (873) only means the address lies in
     an executable section; its prologue-like column was 100. Do not resurrect the claim.
-  - **decomp-attempt-1** (`../decomp-attempt-1`): the abandoned first attempt. Its
-    reviewed inventories (12,012 function boundaries, `text-map.tsv`, vtable tables,
-    synth-PDB/VC6 knowledge) are evidence pending re-admission — port plan P4.2 decides
-    which survive as reviewed inputs. Read-only; treat as a quarry, not a dependency.
+  - **decomp-attempt-1** (`../decomp-attempt-1`): the abandoned first attempt and a
+    secondary evidence source. Its admitted inventories are now hand-owned here; its
+    remaining artifacts may be consulted as hypotheses but never outrank retail bytes.
 - Local retail copies live outside every repo at `../orig/` (safekeeping;
   hash-verify before use). The repo never contains game bytes; `build/` is gitignored.
 

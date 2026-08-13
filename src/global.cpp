@@ -4,6 +4,14 @@
 #include <va.h>
 // #include "global.h"
 
+// RETAIL-DROPPED (2026-08-11): both roster rows below are Dreamcast STLport
+// bitset constructors. The x86 build uses VC6's shipped Dinkumware surface;
+// no corresponding two-word constructor entries occur after global.obj's
+// terrain initializer run. That retail bracket instead continues with the
+// Complete-only TGzInflateBuf family beginning at 0x4d6050, which has no
+// Dreamcast source row and is separate reconstruction work. Keep these two
+// rows as DC_ONLY and do not turn the retail-only family into guessed claims.
+
 // ..\stlport\stl_bitset.h:414
 DC_ONLY(0xc9b28, 0x1C)
 void std::bitset<48,unsigned long>::bitset<48,unsigned long>()
@@ -17,4 +25,3 @@ void std::_Base_bitset<2,unsigned long>::_Base_bitset<2,unsigned long>()
 {
     // @stub
 }
-

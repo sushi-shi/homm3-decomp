@@ -5,17 +5,159 @@
 #ifndef HOMM3_REMOTE_H
 #define HOMM3_REMOTE_H
 
-class CNetMsg;
+#include "dxplay.h"
 
-// Opaque here: retail make_gift only proves this public query and the
-// object at .data 0x69d630. The DC prototype independently supplies the
-// method's unsigned-char return type; no object layout is claimed.
+class CNetMsg;
+class textWidget;
+class sample;
+
+// Retail inlines these accessors in the adventure-popup constructor and proves
+// m_inPopup at +4. Dreamcast supplies the names, the abort pointer at +8, and
+// the polymorphic class identity.
+class CNetMsgHandler {
+public:
+    virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
+                                    unsigned char* msgReceived);
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);
+
+    unsigned char IsInPopup() { return m_inPopup; }
+    CNetMsg* GetAbortPopupMsg() { return m_pAbortPopupMsg; }
+    void SetInPopup(unsigned char b) { m_inPopup = b; }
+
+private:
+    unsigned char m_inPopup;       // +0x04
+    char pad_05[3];
+    CNetMsg* m_pAbortPopupMsg;      // +0x08
+};
+SIZE(CNetMsgHandler, 0x0c);
+
+// Adventure-map network dispatch. Retail's trade handler reads the inherited
+// m_inPopup byte through IsInPopup; the DC roster supplies the class and
+// method names but no additional data members.
+class CAdvMgrNetMsgHandler : public CNetMsgHandler {
+protected:
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);
+    void HandleGiftRequestMsg(CNetMsg* pNetMsg);
+    void HandleGiftMsg(CNetMsg* pNetMsg);
+    void HandleTradeRequestMsg(CNetMsg* pNetMsg);
+};
+SIZE(CAdvMgrNetMsgHandler, 0x0c);
+
+// DC proves the CDPlayLobby base and names m_pNetMsgHandler. Retail proves the
+// pointer at +0xf0: its Dinkumware deque widens the derived state by eight
+// bytes relative to DC's +0xe8 layout.
+class CDPlayHeroes : public CDPlayLobby {
+public:
+    CNetMsgHandler* GetNetMsgHandler();
+
+private:
+    char m_remoteState[0x90];       // +0x60..+0xef
+    CNetMsgHandler* m_pNetMsgHandler; // +0xf0
+};
+SIZE(CDPlayHeroes, 0xf4);
+
+extern CDPlayHeroes* pDPlay;
+extern unsigned char gbDPlayReady;
+
+extern unsigned char gbUnk69774c;
+
+// Retail's chat methods independently prove every offset used here; the
+// Dreamcast CodeView field list supplies the source names and the 0x88-byte
+// nested record extent.
+class CChatManager {
+public:
+    class CChatStr {
+    public:
+        char sText[128];
+        unsigned long killTime;
+        unsigned char isSystem;
+        char pad_85[3];
+
+        CChatStr()
+        {
+            sText[0] = 0;
+            killTime = 0;
+            isSystem = 0;
+        }
+    };
+
+    CChatStr* msgArray;       // +0x00
+    int currMsg;              // +0x04
+    int msgCount;             // +0x08
+    char* widgetText;         // +0x0c
+    unsigned long pauseTime;  // +0x10
+    unsigned char changed;    // +0x14
+    char pad_15[3];
+    textWidget* lastWidget;   // +0x18
+    int maxLines;             // +0x1c
+    int position;             // +0x20
+    unsigned char chatKilled; // +0x24
+    unsigned char isSysMsg;   // +0x25
+    char pad_26[2];
+    sample* g_chatSample;        // +0x28
+    sample* g_playerDropSample;  // +0x2c
+    sample* g_sysMsgSample;      // +0x30
+    sample* g_turnDurSample;     // +0x34
+    sample* g_playerEnterSample; // +0x38
+
+    void UpdateWidget(textWidget* widget, unsigned char killOld, int numLines);
+    void KillOldChat();
+    void UpdateWidgetText(int numLines, textWidget* widget);
+    void PauseTimeOuts();
+    void ResumeTimeOuts();
+    unsigned char HasOldChat();
+    void ClearChat();
+    void SetMaxLines(int maxChatLines);
+    void SetPosition(int newPos);
+};
+SIZE(CChatManager::CChatStr, 0x88);
+SIZE(CChatManager, 0x3c);
+
+DATA(0x0069d7b0) extern CChatManager chatMan;
+
+// Retail's complete method family proves five unsigned-long lanes at
+// +0/+4/+8/+c/+10; Dreamcast CodeView supplies their source names.
 class CTurnDuration {
 public:
     unsigned char IsOn();
+    unsigned char IsExpired();
+    unsigned char IsClose(unsigned long howClose);
+    void Clear();
+    void SetDuration(unsigned long ms);
+    void Start();
+    void Pause();
+    void Resume();
+
+    // The retail source-level IsOn boundary is inlined into IsClose. Keep its
+    // natural expression separate from the byte-tuned out-of-line body.
+    unsigned char IsOnInline()
+    {
+        return m_currDuration != 0 && !gbUnk69774c;
+    }
+protected:
+    unsigned long m_lastWarned;
+    unsigned long m_turnStartTime;
+    unsigned long m_currDuration;
+    unsigned long m_nextWarning;
+    unsigned long m_pauseTime;
 };
+SIZE(CTurnDuration, 0x14);
 
 extern CTurnDuration gTurnDuration69d630;
+
+// Retail's constructor/destructor pair stores and tests only this byte;
+// Dreamcast supplies the class and member names.
+class CHourGlass {
+public:
+    CHourGlass(unsigned char thread);
+    ~CHourGlass();
+    void Start();
+    void Stop();
+
+protected:
+    unsigned char m_thread;
+};
+SIZE(CHourGlass, 1);
 
 int TransmitRemoteData(CNetMsg* pMsg, int toWho,
                        unsigned char compressMsg,

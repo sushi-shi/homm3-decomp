@@ -11,44 +11,249 @@
 //   contribution is fully accounted for and its non-COMDAT globals would have to
 //   sit in this run -> DC-port-only class; recorded unlocated, not forced.
 #include <va.h>
-// #include "mainmenu.h"
+#include "mainmenu.h"
+#include "button.h"
+#include "dxplay.h"
+#include "gametypewindow.h"
+#include "exec.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "misc.h"
+#include "remote.h"
+#include "smackmgr.h"
+#include "soundmgr.h"
+#include "widget.h"
+#include "winmgr.h"
+
+DATA(0x00699660) static TMainMenu* gpMainMenu;
+// Set after the one-time missing-CD notice has been shown. The constructor
+// uses it only as the persistent suppression latch; the disk-space check has
+// its own DC-named static below.
+DATA(0x00699674) static unsigned char cdMessageShown;
+DATA(0x00699678) static unsigned long last_disk_space_check;
+
+DATA(0x0067fa60) static int lastIMHoverID = -1;
+DATA(0x0067fa64) static unsigned char check_disk_space = 1;
+
+// SetupCDDrive's result is stored by kb.obj's startup path and consumed here
+// to select the localized missing-CD wording. No public DC name survives.
+DATA(0x0069957c) extern int gCDDriveNumber;
+
+// DC public gMainMenuHelp; InitializeHelpText fills the same five retail
+// THelpText rows at this address.
+DATA(0x006a6c24) extern THelpText gMainMenuHelp[5];
+
+DATA(0x0063ff28)
+static const TMainMenuButtonRect mainMenuButtonRects[5] = {
+    {540,  10, 207, 121},
+    {532, 132, 226, 120},
+    {524, 251, 239, 106},
+    {557, 359, 173, 110},
+    {586, 469, 114, 102}
+};
 
 // E:\gamedcs\mainmenu.cpp:66
 VA(0x004fb2a0, 0x385)  // order-map: heroWindow(0,0,800,600) base + 5 button ctors from mmenung/lg/hs/cr/qt.def (ids 0x65-0x69), installs vtbl 0x63ff50, this-global 0x699660; called by oldmain; EH-bearing, dc 0xea2ec
-void TMainMenu::TMainMenu()
+TMainMenu::TMainMenu()
+    : heroWindow(0, 0, 800, 600, 0)
 {
-    // @stub
+    gpMainMenu = this;
+    bShowCDMessage = gbRestrictedGameTypeMenu && !cdMessageShown;
+
+    Widgets.reserve(NWIDGETS);
+    Widgets.push_back(new button(
+        mainMenuButtonRects[0].x, mainMenuButtonRects[0].y,
+        mainMenuButtonRects[0].width, mainMenuButtonRects[0].height,
+        NEW_GAME_ID, "mmenung.def", 0, 1, 0, 49, 2));
+    Widgets.push_back(new button(
+        mainMenuButtonRects[1].x, mainMenuButtonRects[1].y,
+        mainMenuButtonRects[1].width, mainMenuButtonRects[1].height,
+        LOAD_GAME_ID, "mmenulg.def", 0, 1, 0, 38, 2));
+    Widgets.push_back(new button(
+        mainMenuButtonRects[2].x, mainMenuButtonRects[2].y,
+        mainMenuButtonRects[2].width, mainMenuButtonRects[2].height,
+        HIGH_SCORE_ID, "mmenuhs.def", 0, 1, 0, 35, 2));
+    Widgets.push_back(new button(
+        mainMenuButtonRects[3].x, mainMenuButtonRects[3].y,
+        mainMenuButtonRects[3].width, mainMenuButtonRects[3].height,
+        CREDITS_ID, "mmenucr.def", 0, 1, 0, 46, 2));
+    Widgets.push_back(new button(
+        mainMenuButtonRects[4].x, mainMenuButtonRects[4].y,
+        mainMenuButtonRects[4].width, mainMenuButtonRects[4].height,
+        QUIT_ID, "mmenuqt.def", 0, 1, 0, 1, 2));
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    if (gbDPlayReady) {
+        if (pDPlay && pDPlay->IsHost()) {
+            widget* disabledWidget = GetWidget(HIGH_SCORE_ID);
+            disabledWidget->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+            disabledWidget = GetWidget(CREDITS_ID);
+            disabledWidget->send_message(widget::WIDGET_CLEAR_STATUS, 6);
+        }
+        last_disk_space_check = GameTime::Get();
+    }
 }
 
-// E:\gamedcs\mainmenu.cpp:109
-// moved above ~TMainMenu: retail emits the compiler-generated dtor in
-// source-line order (109 < 113); the DC dump listed it at module end.
-VA(0x004fb630, 0x21)  // order-map: flag&1 delete wrapper around ~TMainMenu 0x4fb660; vtbl 0x63ff50 slot 0, dc 0xeb33c
-void* TMainMenu::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
+// Retail emits the generated wrapper immediately before the destructor.
+VA_COMPGEN(0x004fb630, 0x21, SCALAR_DELETING_DTOR, TMainMenu)
 
-// E:\gamedcs\mainmenu.cpp:113
-VA(0x004fb660, 0x75)  // order-map: re-installs vtbl 0x63ff50, clears this-global 0x699660, deletes widget list, calls ~heroWindow; EH-bearing, dc 0xea578
-void TMainMenu::~TMainMenu()
+VA(0x004fb660, 0x75)
+TMainMenu::~TMainMenu()
 {
-    // @stub
+    gpMainMenu = 0;
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
 }
 
 // E:\gamedcs\mainmenu.cpp:122
 VA(0x004fb6e0, 0x2C)  // order-map: StartMP3("MainMenu"), passes MainMenuHandler 0x4fb710 to the winManager modal loop; called by oldmain, dc 0xea5ec
 void TMainMenu::DoModal()
 {
-    // @stub
+    gpSoundManager->StartMP3("MainMenu", 0, 1);
+    gpWindowManager->DoDialog(this, MainMenuHandler, 0);
 }
 
 // E:\gamedcs\mainmenu.cpp:135
-VA(0x004fb710, 0x484)  // order-map: address-taken by DoModal 0x4fb6e0 as the modal handler; GetDiskFreeSpaceA low-space NormalDialog, dispatches button ids 0x65-0x69; EH-bearing, dc 0xea618
-int MainMenuHandler(message* msg)
+VA(0x004fb710, 0x484)  // admitted row includes the jump table/padding; decoded body ends at +0x46d, dc 0xea618
+int MainMenuHandler(message& msg)
 {
-    // @stub
+    unsigned char updatePlease = 0;
+    unsigned char hoverChanged = 0;
+
+    if (check_disk_space) {
+        if (get_available_disk_space() < 5 * 1024 * 1024) {
+            NormalDialog(gpGeneralText->Text[GENERAL_TEXT_MAIN_MENU_LOW_DISK],
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            updatePlease = 1;
+            gpWindowManager->dialogReturn = TMainMenu::QUIT_ID;
+        }
+        check_disk_space = 0;
+    }
+
+    if (gpMainMenu->bShowCDMessage && !updatePlease) {
+        TTextResource* text = gpGeneralText;
+        const char* fill = text->GetText(
+            GENERAL_TEXT_MAIN_MENU_CD_DEFAULT_ARGUMENT);
+
+        gpMainMenu->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW,
+                               WINDOW_ALL_WIDGETS_HIGH);
+        if (gCDDriveNumber == CD_DRIVE_NUMBER_5 ||
+            gCDDriveNumber == CD_DRIVE_NUMBER_6) {
+            const char* drive = gCDDriveNumber == CD_DRIVE_NUMBER_5
+                ? text->GetText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5)
+                : text->GetText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6);
+            std::string notice = format_string(
+                text->GetText(GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT),
+                                                drive, fill, fill, fill, fill);
+            NormalDialog(notice.c_str(), 1, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+        } else {
+            std::string notice = format_string(
+                text->GetText(GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT),
+                                                fill, fill, fill, fill);
+            NormalDialog(notice.c_str(), 1, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+        }
+        cdMessageShown = 1;
+        gpMainMenu->bShowCDMessage = 0;
+    }
+
+    PollSound();
+    if (gpWindowManager->isWaitingForFadeIn)
+        gpWindowManager->FadeScreen(0, 4, 0);
+
+    if (msg.qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if ((msg.codeX == widget::WIDGET_SELECT ||
+             msg.codeX == widget::WIDGET_RIGHT_SELECT)) {
+            int helpID;
+            switch (msg.codeY) {
+            case TMainMenu::NEW_GAME_ID:  helpID = 0; break;
+            case TMainMenu::LOAD_GAME_ID: helpID = 1; break;
+            case TMainMenu::HIGH_SCORE_ID: helpID = 2; break;
+            case TMainMenu::CREDITS_ID: helpID = 3; break;
+            case TMainMenu::QUIT_ID: helpID = 4; break;
+            default: goto draw_update;
+            }
+            if (!gbDPlayReady)
+                NormalDialog(gMainMenuHelp[helpID].text, 4, -1, -1,
+                             -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+    } else if (msg.id == MESSAGE_WIDGET) {
+        if (msg.codeY < TMainMenu::NEW_GAME_ID ||
+            msg.codeY > TMainMenu::QUIT_ID)
+            return 0;
+
+        if (msg.codeX == widget::WIDGET_DESELECT) {
+            if (msg.codeY == TMainMenu::QUIT_ID) {
+                VideoPause();
+                if (!gbDPlayReady) {
+                    NormalDialog(gpGeneralText->GetText(GENERAL_TEXT_QUIT),
+                                 2, -1, -1, -1, 0, -1, 0,
+                                 -1, 0, -1, 0);
+                    VideoResume();
+                    if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT) {
+                        updatePlease = 0;
+                        goto draw_update;
+                    }
+                }
+            }
+            updatePlease = 1;
+            gpWindowManager->dialogReturn = msg.codeY;
+        }
+    } else if (msg.id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = gpMainMenu->findWidget(msg.mouseX, msg.mouseY);
+        if (hoverID != lastIMHoverID) {
+            hoverChanged = 1;
+            lastIMHoverID = hoverID;
+            for (int id = TMainMenu::NEW_GAME_ID;
+                 id <= TMainMenu::QUIT_ID; ++id) {
+                widget* w = gpMainMenu->GetWidget(id);
+                if (w)
+                    w->send_message(widget::WIDGET_CLEAR_STATUS,
+                                    widget::WIDGET_HIGHLIGHTED);
+            }
+            if (hoverID != -1) {
+                gpMainMenu->GetWidget(hoverID)->send_message(
+                    widget::WIDGET_SET_STATUS, widget::WIDGET_HIGHLIGHTED);
+            }
+        }
+    }
+
+draw_update:
+    if (VideoNeedsUpdate() || hoverChanged) {
+        gpMainMenu->DrawWindow(0, TMainMenu::NEW_GAME_ID,
+                               TMainMenu::QUIT_ID);
+        gpWindowManager->UpdateScreen(520, 4, 250, 567);
+        VideoDrawRects();
+    }
+
+    if (!updatePlease) {
+        if (gbDPlayReady) {
+            unsigned long lastCheck = last_disk_space_check;
+            if (static_cast<long>(GameTime::Get() - lastCheck) > 10000)
+                gpWindowManager->dialogReturn = TMainMenu::NEW_GAME_ID;
+            else
+                return MESSAGE_DISPATCH_CONSUME;
+        } else {
+            return MESSAGE_DISPATCH_CONSUME;
+        }
+    }
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeY = widget::WIDGET_END_DIALOG;
+    msg.codeX = widget::WIDGET_END_DIALOG;
+    return MESSAGE_DISPATCH_FORWARD;
 }
+
+#if 0  // @carcass: Dreamcast-only video-mode class
 
 // E:\gamedcs\mainmenu.cpp:308
 DC_ONLY(0xea9b0, 0x6D0)
@@ -85,3 +290,4 @@ void* VideomodeChoice::`scalar deleting destructor'(unsigned __flags)
     // @stub
 }
 
+#endif  // @carcass

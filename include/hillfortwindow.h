@@ -5,6 +5,27 @@
 #ifndef HOMM3_HILLFORTWINDOW_H
 #define HOMM3_HILLFORTWINDOW_H
 
+#include "window.h"
+
+class message;
+
+// Retail vtable 0x63eb68 has heroWindow's nine-slot shape; the constructor
+// invokes heroWindow directly and installs that derived vptr. The substantial
+// slot/cost tail is deliberately not represented until a compiled method
+// needs it, avoiding a second partial-layout view.
+class THillFortWindow : public heroWindow {
+public:
+    THillFortWindow();
+    virtual ~THillFortWindow();
+    void DoModal();
+
+private:
+    void Recalculate(unsigned char drawDimmedButtons);
+};
+
+// Retail /Gr passes the message by reference in ECX, matching DoDialog.
+int HillFortWindowHandler(message& msg);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\hillfortwindow.cpp:192, dc 0xd6bd4) unsigned char CanAfford(const long* cost, const long* playerRes);
 // CODEVIEW(E:\gamedcs\hillfortwindow.cpp:612, dc 0xd7458) int HillFortWindowHandler(message* msg);

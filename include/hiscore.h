@@ -5,6 +5,85 @@
 #ifndef HOMM3_HISCORE_H
 #define HOMM3_HISCORE_H
 
+#include "basemgr.h"
+#include "window.h"
+#include "textntry.h"
+#include "bitmap16.h"
+
+class message;
+class textWidget;
+class CHighScoreEdit : public textEntryWidget {
+public:
+    CHighScoreEdit* nextEdit;
+    CHighScoreEdit* prevEdit;
+};
+SIZE(CHighScoreEdit, 0x78);
+
+// Retail ctor 0x4e9070 proves the baseManager head, vtable 0x63eb8c,
+// and the trailing score-table selector at +0x8d0.  Open 0x4e90a0 reads
+// exactly 0x898 bytes beginning at +0x38, so the opaque table span and
+// total size below are independently byte-bounded without inventing the
+// private HighScoreRec fields.
+class highScoreManager : public baseManager {
+public:
+    unsigned char highScores[0x898];
+    int highScoreType;
+
+    highScoreManager();
+    ~highScoreManager();
+    virtual int Open(int newPriority);
+    virtual void Close();
+    virtual int Main(message& msg);
+
+    void ResetHighScores();
+    void ViewHiScore();
+    int AddScoreToHighScore(int score, int days, int difficulty,
+                            int scoreType, const char* land);
+    static int GetMonType(int score, int scoreType);
+};
+SIZE(highScoreManager, 0x8d4);
+
+// DC names the three CHeroWindowEx-tail pointers at +0x4c/+0x50/+0x54.
+// Retail's proven CHeroWindowEx is four bytes wider, putting them at
+// +0x50/+0x54/+0x58; GetRolloverWidget 0x4e97f0 directly confirms the
+// last shifted offset.
+class CHSInputDlg : public CHeroWindowEx {
+public:
+    enum EWidgetIDs {
+        FIELD1_ID = 501,
+        OKAY_ID = 503,
+        ROLLOVER_ID = 504
+    };
+
+    CHighScoreEdit* field1;
+    textWidget* header1;
+    textWidget* rollover;
+
+    CHSInputDlg(int maxChars);
+    virtual ~CHSInputDlg();
+    virtual int WindowHandler(message* msg);
+    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
+    virtual textWidget* GetRolloverWidget();
+    unsigned char OnOK();
+};
+SIZE(CHSInputDlg, 0x5c);
+
+// Retail's heroWindow base is eight bytes smaller than the Dreamcast
+// base.  Applying that proven shift to the DC tail puts hiScoreBack at
+// +0x108; the retail destructor independently loads +0x108/+0x10c.
+// The intervening creature-widget/frame state remains intentionally opaque.
+class THighScoreWindow : public heroWindow {
+public:
+    unsigned char highScoreState[0xbc];
+    Bitmap16Bit* hiScoreBack[2];
+
+    THighScoreWindow();
+    virtual ~THighScoreWindow();
+    void DoModal();
+    void Update();
+};
+SIZE(THighScoreWindow, 0x110);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\hiscore.cpp:738, dc 0xd7bf4) void WriteHighScores();
 // CODEVIEW(E:\gamedcs\hiscore.cpp:1014, dc 0xd8848) void UpdateCreatures();

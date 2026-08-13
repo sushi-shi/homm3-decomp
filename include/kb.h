@@ -8,6 +8,8 @@
 #include <vector>
 #include "town.h"
 
+class message;
+
 // homm2's KB timer array survives (DC glTimers: unsigned long[10];
 // retail base 0x698998 - button::Select stores slot 2 at 0x6989a0).
 // Slot 2's name is the homm2 2.1 KB.h value. UpdateScreen independently
@@ -18,6 +20,10 @@ enum EKbTimerSlots {
 };
 
 extern unsigned long glTimers[10];
+
+// Retail .bss pointer cell used by both map-extra accessors. The complete
+// linearization is ((z * height + y) * width + x), with 16-bit elements.
+DATA(0x006989f8) extern unsigned short* gMapExtra;
 
 // Retail map-extra accessor used by the adventure-map adjacency scan.
 unsigned short GetMapExtra(int x, int y, int z);
@@ -31,6 +37,9 @@ void CleanUpMenus();                                     // 0x4f4b50
 void NormalDialog(const char* cText, int iMBType, int x, int y,
     int iResType1, int iResExtra1, int iResType2, int iResExtra2,
     int iSpecial, int iTimeout, int iResType3, int iResExtra3);  // 0x4f6570
+void NormalDialogTimeOut(const char* cText, int iMBType, int timeOut,
+    int x, int y, int iResType1, int iResExtra1, int iResType2,
+    int iResExtra2, int iSpecial, int iResType3, int iResExtra3); // 0x4f6530
 void extended_dialog(const char* text,
     std::vector<type_dialog_resource>& resources,
     long x, long y, long timeout);                              // 0x4f6cf0
@@ -46,6 +55,9 @@ int oldmain();                                           // 0x4ee3e0
 void MemError();                                         // 0x4f42c0
 int GameUnsaved();                                       // 0x4f4310
 void CheckEndGame(int bForceWin);                        // 0x4f2ce0
+// The retail entry at 0x4f1190 is the five-byte public thunk used by
+// questlogwindow; the implementation body follows at 0x4f1820.
+int TrueFalseDialogHandler(message* msg);
 
 // kb.cpp's shared text scratch buffer (.bss 0x6973d8 in kb's band;
 // kbwin's WinMain sprintf's the already-running message into it,

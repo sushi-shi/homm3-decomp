@@ -5,6 +5,33 @@
 #ifndef HOMM3_QUICKINFOWINDOW_H
 #define HOMM3_QUICKINFOWINDOW_H
 
+#include "armygrp.h"
+#include "dialogbox.h"
+
+// The retail caller allocates exactly 0x54 bytes and the destructor merely
+// installs vtable 0x6406cc before tail-calling TDialogBox::~TDialogBox. Thus
+// this class adds no storage to the byte-proven 0x54-byte base.
+class TQuickCreatureWindow : public TDialogBox {
+public:
+    enum TViewLevel {
+        ViewNone = 0,
+        ViewAll = 1
+    };
+
+    enum TDisposition {
+        Flee = 0,
+        Attack = 1,
+        Join = 2,
+        JoinPrice = 3
+    };
+
+    TQuickCreatureWindow(TViewLevel view_level, TCreatureType id, int count,
+                         TDisposition disposition, int cost);
+    virtual ~TQuickCreatureWindow();
+    void QuickWindowWait();
+};
+SIZE(TQuickCreatureWindow, 0x54);
+
 // --- TQuickCreatureWindow ---
 // CODEVIEW(E:\gamedcs\quickinfowindow.cpp:31, dc 0x11787c) void TQuickCreatureWindow::TQuickCreatureWindow(TQuickCreatureWindow::TViewLevel view_level, TCreatureType id, int count, TQuickCreatureWindow::TDisposition disposition, int cost);
 // CODEVIEW(E:\gamedcs\quickinfowindow.cpp:81, dc 0x117b5c) void TQuickCreatureWindow::~TQuickCreatureWindow();

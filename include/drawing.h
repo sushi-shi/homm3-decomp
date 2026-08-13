@@ -5,6 +5,19 @@
 #ifndef HOMM3_DRAWING_H
 #define HOMM3_DRAWING_H
 
+#include "cmbtmgr.h"
+
+// The effect-latch tail lies beyond the currently materialized
+// combatManager prefix. These offsets are retail-byte-proven by
+// ResetLimitCreature; naming them avoids a second access-layout class.
+enum ECombatDrawingOffsets {
+    COMBAT_DRAWING_EXTENT_OFFSET = 0x13d38,
+    COMBAT_CREATURE_EFFECT_OFFSET = 0x14000,
+    COMBAT_HERO_EFFECT_OFFSET = 0x14028,
+    COMBAT_FLAG_EFFECT_OFFSET = 0x1402a,
+    COMBAT_ARCHER_EFFECT_OFFSET = 0x1402c
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\drawing.cpp:47, dc 0x831b4) void get_creature_spell_message(char* buffer, const army* current_army, long current_hex);
 // CODEVIEW(E:\gamedcs\drawing.cpp:122, dc 0x832d8) std::basic_string<char,std::char_traits<char>,std::allocator<char> format_rounded(__$ReturnUdt, long amount, long high);
@@ -37,7 +50,7 @@
 // --- combatManager ---
 // CODEVIEW(E:\gamedcs\drawing.cpp:178, dc 0x8354c) unsigned char combatManager::show_creature_spell_error(char* buffer, const army* current_army);
 // CODEVIEW(E:\gamedcs\drawing.cpp:326, dc 0x838f0) void combatManager::CombatMessage(int command);
-// CODEVIEW(E:\gamedcs\drawing.cpp:467, dc 0x83db0) void combatManager::ResetLimitCreature();
+// RETAIL(0x00493710, 0x63), CODEVIEW(E:\gamedcs\drawing.cpp:467, dc 0x83db0) void combatManager::ResetLimitCreature();
 // CODEVIEW(E:\gamedcs\drawing.cpp:492, dc 0x83e58) void combatManager::UpdateCombatArea();
 // CODEVIEW(E:\gamedcs\drawing.cpp:506, dc 0x83e8c) void combatManager::FullUpdate();
 // CODEVIEW(E:\gamedcs\drawing.cpp:513, dc 0x83ec0) void combatManager::UpdateCombatArea(SLimitData area);

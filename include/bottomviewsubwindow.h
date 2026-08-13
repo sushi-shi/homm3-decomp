@@ -5,6 +5,81 @@
 #ifndef HOMM3_BOTTOMVIEWSUBWINDOW_H
 #define HOMM3_BOTTOMVIEWSUBWINDOW_H
 
+#include "subwindow.h"
+
+// PROVEN narrow retail layouts. The constructor reached by
+// advManager::UpdBottomViewEnemyTurn allocates 0x74 bytes and uses the
+// TSubWindow subobject at offset zero; its first derived-field access is
+// +0x34. The retail type_bottom_view_window vtable at 0x63bb04 has two
+// entries, agreeing with the Dreamcast record's virtual destructor and
+// animate slot. No unobserved derived fields are named here.
+class type_bottom_view_window : public TSubWindow {
+public:
+    type_bottom_view_window(heroWindow* parent_window);
+    virtual ~type_bottom_view_window();
+    virtual void animate();
+};
+SIZE(type_bottom_view_window, 0x34);
+
+// Retail allocates each of these three presentation-only subclasses at the
+// unchanged 0x34-byte base extent. Dreamcast supplies the real class and
+// constructor identities; their UI state is owned by the inherited window.
+class TBottomViewHero : public type_bottom_view_window {
+public:
+    TBottomViewHero(heroWindow* parent);
+    virtual ~TBottomViewHero();
+};
+SIZE(TBottomViewHero, 0x34);
+
+class TBottomViewTown : public type_bottom_view_window {
+public:
+    TBottomViewTown(heroWindow* parent);
+    virtual ~TBottomViewTown();
+};
+SIZE(TBottomViewTown, 0x34);
+
+class TBottomViewKingdom : public type_bottom_view_window {
+public:
+    TBottomViewKingdom(heroWindow* parent);
+    virtual ~TBottomViewKingdom();
+};
+SIZE(TBottomViewKingdom, 0x34);
+
+class TBottomViewEnemyTurn : public type_bottom_view_window {
+private:
+    char pad_034[0x40];
+
+public:
+    TBottomViewEnemyTurn(heroWindow* parent);
+};
+SIZE(TBottomViewEnemyTurn, 0x74);
+
+// Retail UpdBottomViewNewTurn allocates 0x48 bytes before invoking the
+// Dreamcast-attested constructor. The derived tail remains opaque here.
+class TBottomViewNewTurn : public type_bottom_view_window {
+private:
+    char pad_034[0x14];
+
+public:
+    TBottomViewNewTurn(heroWindow* parent);
+};
+SIZE(TBottomViewNewTurn, 0x48);
+
+// Resource-message state is supplied by advManager; retail allocates no
+// derived storage beyond the 0x34-byte bottom-view base.
+class TBottomViewResourceMessage : public type_bottom_view_window {
+public:
+    TBottomViewResourceMessage(heroWindow* parent, int resource,
+                               int quantity, const std::string* message);
+};
+SIZE(TBottomViewResourceMessage, 0x34);
+
+class TBottomViewMessage : public type_bottom_view_window {
+public:
+    TBottomViewMessage(heroWindow* parent, const std::string* message);
+};
+SIZE(TBottomViewMessage, 0x34);
+
 // --- TBottomViewEnemyTurn ---
 // CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:599, dc 0x56880) void TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent);
 // CODEVIEW(E:\gamedcs\bottomviewsubwindow.cpp:646, dc 0x56bbc) long TBottomViewEnemyTurn::sum_mobility(long player_id);

@@ -10,6 +10,71 @@
 #include <va.h>
 #include "resource.h"
 
+// Named indices into genrltxt.txt. Every value is retail-byte-proven by the
+// corresponding TTextResource::Text[index] consumer; names describe those
+// consumers until the original source roster supplies stronger wording.
+enum EGeneralTextIndex {
+    GENERAL_TEXT_SHUTDOWN = 1,
+    GENERAL_TEXT_LEVEL_UP_OR = 5,
+    GENERAL_TEXT_PLAYER_TURN_FORMAT = 14,
+    GENERAL_TEXT_HERO_ROLLOVER_FORMAT = 16,
+    GENERAL_TEXT_RECRUIT_TITLE = 17,
+    GENERAL_TEXT_MIXED_ARMY = 44,
+    GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE = 57,
+    GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND = 58,
+    GENERAL_TEXT_SEARCH_FOUND_FORMAT = 59,
+    GENERAL_TEXT_SEARCH_NOTHING_FOUND = 60,
+    GENERAL_TEXT_SEARCH_WATER = 61,
+    GENERAL_TEXT_QUICK_INFO_SHROUDED = 62,
+    GENERAL_TEXT_RESOURCE_DISPLAY_0 = 63,
+    GENERAL_TEXT_RESOURCE_DISPLAY_1 = 64,
+    GENERAL_TEXT_RESOURCE_DISPLAY_2 = 65,
+    GENERAL_TEXT_QUIT = 70,
+    GENERAL_TEXT_SEARCH_NOT_DIGGABLE = 98,
+    GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT = 107,
+    GENERAL_TEXT_QUICK_INFO_INVALID_POINT = 111,
+    GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE = 151,
+    GENERAL_TEXT_BACKPACK_FULL = 153,
+    GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT = 154,
+    GENERAL_TEXT_VIEW_ARMY_SPEED = 194,
+    GENERAL_TEXT_VIEW_ARMY_HEALTH_REMAINING = 201,
+    GENERAL_TEXT_ARMY_HELP_PREFIX = 203,
+    GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE = 204,
+    GENERAL_TEXT_LEVEL_UP_CHOICE = 205,
+    GENERAL_TEXT_ARMY_ENTRY_SEPARATOR = 238,
+    GENERAL_TEXT_QUICK_CREATURE_JOIN = 244,
+    GENERAL_TEXT_QUICK_CREATURE_JOIN_COST = 245,
+    GENERAL_TEXT_QUICK_CREATURE_FLEE = 246,
+    GENERAL_TEXT_QUICK_CREATURE_ATTACK = 247,
+    GENERAL_TEXT_SEARCH_BACKPACK_FULL = 248,
+    GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER = 257,
+    GENERAL_TEXT_SPLIT_OTHER_ROLLOVER = 258,
+    GENERAL_TEXT_QUICK_INFO_DIGGABLE = 331,
+    GENERAL_TEXT_VISITED_OBJECT = 353,
+    GENERAL_TEXT_UNVISITED_OBJECT = 354,
+    GENERAL_TEXT_KNOWN_SHRINE_SPELL = 355,
+    GENERAL_TEXT_SHRINE_SPELL_FORMAT = 356,
+    GENERAL_TEXT_WITCH_SKILL_FORMAT = 357,
+    GENERAL_TEXT_HERO_KNOWS_WITCH_SKILL = 358,
+    GENERAL_TEXT_AI_GIFT_RECEIVED = 359,
+    GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST = 360,
+    GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST = 361,
+    GENERAL_TEXT_VIEW_ARMY_HEALTH = 389,
+    GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT = 445,
+    GENERAL_TEXT_LEVEL_UP_HERO_FORMAT = 446,
+    GENERAL_TEXT_PUZZLE_WINDOW = 464,
+    GENERAL_TEXT_DEFAULT_PLAYER_NAME = 469,
+    GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM = 579,
+    GENERAL_TEXT_GARRISON_ADVENTURE_SPELL = 685,
+    GENERAL_TEXT_MAIN_MENU_LOW_DISK = 708,
+    GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT = 730,
+    GENERAL_TEXT_CAMPAIGN_HERO_CLASS = 736,
+    GENERAL_TEXT_MAIN_MENU_CD_DRIVE_6 = 746,
+    GENERAL_TEXT_MAIN_MENU_CD_DEFAULT_ARGUMENT = 747,
+    GENERAL_TEXT_CURSED_GROUND_HIGH_LEVEL_SPELL = 748,
+    GENERAL_TEXT_MAIN_MENU_CD_DRIVE_5 = 763
+};
+
 // PROVEN layout (retail monframeinfo parser 0x50c810/0x50ca00): the
 // Spreadsheet row vector sits at +0x1c on the resource base - VC6
 // Dinkumware vector, so _First lands at +0x20 and _Last at +0x24
@@ -25,13 +90,52 @@ public:
     typedef std::vector<char*> TStringVector;
     typedef std::vector<TStringVector*> TArray;
 
+    TSpreadsheetResource();
+    TSpreadsheetResource(const char* name, int size, const char* data);
+    virtual ~TSpreadsheetResource();
+
+    // Retail vtable slot 2. Kept non-virtual in this partial header until the
+    // resource base's provisional `_vslot2` declaration is renamed/retyped.
+    unsigned int GetSize() const;
     int GetNumberOfRows() const { return Spreadsheet.size(); }
     const TStringVector& GetRow(int r) const { return *Spreadsheet[r]; }
 
 private:
     TArray Spreadsheet;  // +0x1c (_First +0x20, _Last +0x24)
     char* Data;          // +0x2c
+    int DataSize;        // +0x30, retail constructor stores size here
 };
+SIZE(TSpreadsheetResource, 52);
+
+// PROVEN layout (retail InitializeCampaignMapTraitsTable 0x45dee0):
+// the text pointer vector begins at +0x1c and its Dinkumware _First
+// member is loaded from +0x20. This is the same retail vector layout as
+// TSpreadsheetResource above. The names are Dreamcast-attested; Data's
+// +0x2c position follows the adjacent vector/data members used by both
+// text-resource variants.
+class TTextResource : public resource {
+public:
+    typedef std::vector<char*> TTextArray;
+
+    TTextResource();
+    TTextResource(const char* name, int size, const char* data);
+    virtual ~TTextResource();
+
+    // Retail vtable slot 2; see the base-signature note above.
+    unsigned int GetSize() const;
+    const char* GetText(int r) const { return Text[r]; }
+    const char* operator[](int i) const { return Text[i]; }
+
+public:
+    // Canonical backing vector. Public while the decompilation still has
+    // direct retail consumers; this replaces the former fake +0x20 view.
+    TTextArray Text;  // +0x1c (_First +0x20)
+private:
+    char* Data;       // +0x2c
+};
+SIZE(TTextResource, 48);
+
+extern TTextResource* gpGeneralText;  // retail .data 0x6a5d5c
 
 // --- TSpreadsheetResource ---
 // CODEVIEW(E:\gamedcs\textresource.cpp:177, dc 0x1639ec) void TSpreadsheetResource::TSpreadsheetResource();

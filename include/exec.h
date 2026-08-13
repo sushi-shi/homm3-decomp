@@ -6,6 +6,7 @@
 #define HOMM3_EXEC_H
 
 #include "basemgr.h"
+#include "textresource.h"
 
 // Dreamcast roster verbatim: headManager@0, tailManager@4,
 // currentManager@8, dialogReturn@12 - byte-corroborated by the retail
@@ -28,110 +29,6 @@ public:
 #ifdef HOMM3_TOWN_OBJ_DECLS
 extern executive* gpExecutive;  // retail .bss 0x699500
 #endif
-
-// Provisional MERGED view of the unnamed central object at 0x6a5d5c
-// (1046 refs image-wide; its own TU will name it): both consumers
-// read one entry pointer at +0x20. exec's DoDialog/CallManager show
-// the shutdown message through entry +0x4 for all four failure arms
-// (homm2 had four distinct gExecutiveText strings); kbwin's
-// AppWndProc WM_CLOSE dialog shows the quit-confirm text at entry
-// +0x118.
-struct SUnnamedEntry6a5d5c {
-    char pad_00[4];
-    const char* text;                 // +0x4
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    char pad_08[0x38];
-    // SetRolloverText formats a map hero's stored name and class text with
-    // this printf-style string. Name describes only that retail consumer.
-    const char* heroRolloverFormat;    // +0x40
-#else
-    char pad_08[0x3c];
-#endif
-    // recruitUnit::Update (0x550362) sprintf's this as the first "%s"
-    // of the recruit dialog's title, ahead of the creature's plural
-    // name. Ordinal placeholder: the object is still unnamed, so its
-    // members are too.
-    const char* field_44;             // +0x44
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    char pad_48[0x68];
-    const char* mixedArmyName;         // +0xb0
-    char pad_b4[0x30];
-    const char* searchNeedsFullMoveText;       // +0xe4
-    const char* searchBackpackFullFoundText;   // +0xe8
-    const char* searchFoundFormat;             // +0xec
-    const char* searchNothingFoundText;        // +0xf0
-    const char* searchWaterText;               // +0xf4
-    // QuickInfo uses these two messages before object dispatch when the
-    // selected map point is hidden or invalid.
-    const char* quickInfoShroudedText;          // +0xf8
-    char pad_fc[0x1c];
-#else
-    char pad_48[0xd0];
-#endif
-    const char* quitText;             // +0x118
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    char pad_11c[0x6c];
-    const char* searchNotDiggableText;         // +0x188
-    char pad_18c[0x30];
-    const char* quickInfoInvalidPointText;      // +0x1bc
-    char pad_1c0[0x16c];
-    const char* armyHelpPrefix;        // +0x32c
-    char pad_330[0x88];
-    const char* armyEntrySeparator;    // +0x3b8
-    char pad_3bc[0x24];
-    const char* searchBackpackFullText;        // +0x3e0
-    char pad_3e4[0x20];
-#else
-    char pad_11c[0x2e8];
-#endif
-    // +0x404/+0x408: TSplitWindow's rollover text. The first is a
-    // printf format receiving the split creature's plural name; the
-    // second is passed to sprintf without further arguments. Names
-    // describe only those byte-proven consumer roles while the central
-    // text record itself remains unnamed.
-    const char* splitCreatureRolloverFormat;
-    const char* splitOtherRolloverText;
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    char pad_40c[0x120];
-    const char* quickInfoDiggableText;   // +0x52c
-    char pad_530[0x54];
-    // Shared visited/unvisited labels: creature-bank and Tree of Knowledge
-    // help paths independently select the same pair.
-    const char* visitedObjectText;        // +0x584
-    const char* unvisitedObjectText;      // +0x588
-    const char* knownShrineSpellText;     // +0x58c
-    const char* shrineSpellFormat;        // +0x590
-    const char* witchSkillFormat;          // +0x594
-    const char* heroKnowsWitchSkillText;   // +0x598
-#else
-    char pad_40c[0x190];
-#endif
-    // +0x59c..+0x5a4. make_gift uses these three printf-style strings
-    // for the received-gift line, a one-resource request, and a
-    // multi-resource request respectively. Names are role-derived from
-    // those retail call sites.
-    const char* aiGiftReceivedText;
-    const char* aiSingleResourceRequestText;
-    const char* aiMultipleResourceRequestText;
-    char pad_5a8[0x1ac];
-    // +0x754. The default player name. playerData::ClearNetInfo
-    // (0x4ba170) strcpy's it over cName, and playerData::GetName
-    // (0x4badb0) _strcmpi's a computer player's name against it before
-    // replacing that name with the colour word - so it is the string a
-    // never-named player carries. Ordinal-free name, role-derived.
-    const char* defaultPlayerName;
-#ifdef HOMM3_HERO_CLASS_NAME_VIEW
-    char pad_758[0x428];
-    // Retail-only campaign override returned instead of the normal hero
-    // class name for hero 27 in scenario 15.
-    const char* campaignHeroClassName;  // +0xb80
-#endif
-};
-struct SUnnamed6a5d5c {
-    char pad_00[0x20];
-    SUnnamedEntry6a5d5c* entry;       // +0x20
-};
-extern SUnnamed6a5d5c* gUnnamed6a5d5c;  // .data 0x6a5d5c; DATA claim lands with its TU
 
 // --- executive ---
 // CODEVIEW(E:\gamedcs\exec.cpp:37, dc 0x9e510) void executive::executive();

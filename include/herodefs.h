@@ -5,6 +5,28 @@
 #ifndef HOMM3_HERODEFS_H
 #define HOMM3_HERODEFS_H
 
+#include "sskilltraits.h"
+
+namespace {
+
+// Source-private owner used by all three retail trait-table loaders.
+class TAutoStrPtr {
+public:
+    TAutoStrPtr() : pStr(0) {}
+    ~TAutoStrPtr() { delete[] pStr; }
+    void set(char* value) { pStr = value; }
+    char* get() const { return pStr; }
+
+private:
+    char* pStr;
+};
+
+}
+
+unsigned char InitializeHeroTraitsTable();
+unsigned char InitializeHeroClassTraitsTable();
+unsigned char InitializeSSkillTraitsTable();
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\herodefs.cpp:204, dc 0xd5a40) unsigned char InitializeHeroTraitsTable();
 // CODEVIEW(E:\gamedcs\herodefs.cpp:238, dc 0xd5ab4) unsigned char InitializeHeroClassTraitsTable();

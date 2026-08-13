@@ -219,7 +219,7 @@ out of scope.
 | `scripts/homm3/vc6/ghidra_scripts/regasg_probe.py` | read-only dump/refs/bytes queries over the persisted C2 project |
 | `build/re/vc6/raw/regasg/` | RE working data (gitignored) |
 
-Follow-ups for a supervised session: land the assignment-order probes as
+Follow-ups: land the assignment-order probes as
 `b*` oracle cases + catalog rows (B1 gains its first standalone probe);
 wire a `--model` flag into `homm3 vc6 why-reg`'s argparse; chase the
 processing-order source in p2symtab.c (the C1 mechanism's last mile).

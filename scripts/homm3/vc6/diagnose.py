@@ -11,8 +11,8 @@ masked-cosmetic), and route to the solver that owns it:
     masked-equal     -> no source knob (objdiff-only residual)
 
 With --run it invokes the routed solver(s) and prints the proposed edit;
-otherwise it prints the exact command(s) to run. It NEVER edits source - the
-solvers propose under the supervised-review rule.
+otherwise it prints the exact command(s) to run. It NEVER edits source; the
+solvers leave application to the caller.
 """
 from __future__ import annotations
 

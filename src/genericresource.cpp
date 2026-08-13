@@ -4,6 +4,12 @@
 #include <va.h>
 // #include "genericresource.h"
 
+// Retail-dropped surface: Dreamcast's sole constructor caller is
+// ResourceManager::GetResource. In retail that getter and this class's vtable
+// are absent; after gametypewindow the complete carve runs through cinit0415..
+// cinit0429 directly into global.obj's TGzInflateBuf family. The authoritative
+// resource::resource caller graph likewise has no generic-resource wrapper.
+
 // E:\gamedcs\genericresource.cpp:26
 DC_ONLY(0xc9788, 0x68)
 void TGenericResource::TGenericResource(const char* name, int s, const void* d)
@@ -24,4 +30,3 @@ void* TGenericResource::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
-

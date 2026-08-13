@@ -6,6 +6,16 @@
 #define HOMM3_AI_H
 
 class army;
+struct type_AI_combat_parameters;
+
+// The three shooters whose splash damage choose_shooter_target prices over
+// both occupied hexes. Values and spellings are Dreamcast-attested; kept in
+// this narrow header because adding members to the widely included creature
+// enum perturbs VC6 code generation in initialize_game_data.
+enum EAreaAttackCreature {
+    CREATURE_MAGOG = 45,
+    CREATURE_POWER_LICH = 65
+};
 
 // E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort
 // predicate. A DC roster row (func_moves_before::operator(), 0x28024,
@@ -24,7 +34,9 @@ struct func_moves_before {
 };
 
 // --- globals ---
-// CODEVIEW(E:\gamedcs\ai.cpp:365, dc 0x2400c) long get_area_attack_value(const army* current_army, long hex, long our_group, type_AI_combat_parameters* data);
+// CODEVIEW(E:\gamedcs\ai.cpp:365, dc 0x2400c)
+long get_area_attack_value(const army* current_army, long hex, long our_group,
+                           type_AI_combat_parameters* data);
 // CODEVIEW(E:\gamedcs\ai.cpp:610, dc 0x24604) long get_move_order(const army* current_army);
 // CODEVIEW(E:\gamedcs\ai.cpp:696, dc 0x248b4) long get_attack_value(const army* current_army, const army* enemy, long enemy_hit_points, type_AI_combat_parameters* data);
 // CODEVIEW(E:\gamedcs\ai.cpp:1000, dc 0x250e0) long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameters* estimate);

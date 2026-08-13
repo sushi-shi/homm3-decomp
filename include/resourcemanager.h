@@ -7,6 +7,7 @@
 
 class CSprite;
 class font;
+class resource;
 
 // Dreamcast: ?GetSprite@ResourceManager@@YAPAVCSprite@@PBD@Z and
 // ?GetFont@ResourceManager@@YAPAVfont@@PBD@Z - the namespace-level
@@ -14,14 +15,64 @@ class font;
 // under /Gr; called by the button ctors).
 class Bitmap816;
 class TSpreadsheetResource;
+class TTextResource;
 
 namespace ResourceManager {
 CSprite* GetSprite(const char* name);
 font* GetFont(const char* name);
 // Retail body 0x55a800 (bitmapBorder::SetImage's loader).
 Bitmap816* GetBitmap816(const char* name);
+// Retail body 0x55bdd0 (campaignmap's camptext.txt loader).
+TTextResource* GetText(const char* name);
 // Retail body 0x55c0a0 (monframeinfo's cranim.txt parser calls it).
 TSpreadsheetResource* GetSpreadsheet(const char* name);
+// Retail body 0x5594b0; its 12-byte key copy, map insertion and reference
+// increment are repeated inline at the tail of GetSpreadsheet.
+void AddToCache(resource* value);
+
+// PROVEN retail cache ABI used by AddToCache/GetSpreadsheet. The global map
+// starts at 0x69e528; head is +4. A node holds its 13-byte key at +0xc and
+// resource pointer at +0x1c.
+struct TCacheMapKey {
+    char name[13];
+    TCacheMapKey(const char* value);
+};
+
+struct TCacheValue {
+    TCacheMapKey first;
+    resource* second;
+    TCacheValue(resource* value);
+};
+
+struct TCacheNode {
+    TCacheNode* left;
+    TCacheNode* parent;
+    TCacheNode* right;
+    TCacheValue value;
+};
+
+struct TCacheIterator {
+    TCacheNode* node;
+};
+
+struct TCacheInsertResult {
+    TCacheIterator first;
+    unsigned char second;
+};
+
+class TCacheMap {
+public:
+    unsigned char allocator;
+    unsigned char compare;
+    unsigned char pad_02[2];
+    TCacheNode* head;
+    unsigned char multi;
+    unsigned char pad_09[3];
+    unsigned int size;
+
+    TCacheIterator find(const TCacheMapKey& key);
+    TCacheInsertResult insert(const TCacheValue& value);
+};
 }
 
 // --- Bitmap16Bit ---

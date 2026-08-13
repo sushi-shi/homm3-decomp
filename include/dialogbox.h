@@ -5,12 +5,59 @@
 #ifndef HOMM3_DIALOGBOX_H
 #define HOMM3_DIALOGBOX_H
 
+#include "window.h"
+
+struct message;
+class font;
+class textWidget;
+
+// DC gives heroWindow as the sole base, followed by beginID/endID at
+// +68/+72. Retail's VC6 vector widens heroWindow from 0x44 to 0x4c, so the
+// translated fields are +0x4c/+0x50 and the class is 0x54. Retail vtable
+// 0x63db40 has ten slots: heroWindow's nine followed by Setup.
+class TDialogBox : public heroWindow {
+public:
+    enum {
+        EDGE_SIZE = 64,
+        TILE_SIZE = 256
+    };
+
+    int beginID;
+    int endID;
+
+    TDialogBox(int winX, int winY, int winWidth, int winHeight,
+               unsigned winType);
+    TDialogBox(unsigned winType);
+    virtual ~TDialogBox();
+    virtual unsigned char Setup(int winX, int winY,
+                                int winWidth, int winHeight);
+};
+SIZE(TDialogBox, 0x54);
+
+class CTextDialog : public TDialogBox {
+public:
+    CTextDialog(const char* cText, font* pFont, unsigned winType);
+    CTextDialog(unsigned winType);
+    virtual ~CTextDialog();
+
+    int ExitDialog(message& msg);
+    virtual unsigned char Setup(const char* cText, font* pFont);
+    virtual void UpdateText(const char* cNewText);
+
+protected:
+    textWidget* pTextWidget;
+    virtual void CalcDimensions(const char* cText, font* pFont,
+                                int& winX, int& winY,
+                                int& winWidth, int& winHeight);
+};
+SIZE(CTextDialog, 0x58);
+
 // --- CTextDialog ---
 // CODEVIEW(E:\gamedcs\dialogbox.cpp:139, dc 0x81d8c) void CTextDialog::CTextDialog(const char* cText, font* pFont, unsigned winType);
 // CODEVIEW(E:\gamedcs\dialogbox.cpp:146, dc 0x81e00) void CTextDialog::CTextDialog(unsigned winType);
 // CODEVIEW(E:\gamedcs\dialogbox.cpp:151, dc 0x81e38) unsigned char CTextDialog::Setup(const char* cText, font* pFont);
 // CODEVIEW(E:\gamedcs\dialogbox.cpp:175, dc 0x81f00) void CTextDialog::CalcDimensions(const char* cText, font* pFont, int* winX, int* winY, int* winWidth, int* winHeight);
-// CODEVIEW(E:\gamedcs\dialogbox.cpp:200, dc 0x81f98) int CTextDialog::ExitDialog(message* msg);
+// CODEVIEW(E:\gamedcs\dialogbox.cpp:200, dc 0x81f98) int CTextDialog::ExitDialog(message& msg);
 // CODEVIEW(E:\gamedcs\dialogbox.cpp:211, dc 0x81fb0) void CTextDialog::UpdateText(const char* cNewText);
 // CODEVIEW(E:\gamedcs\dialogbox.cpp:143, dc 0x82034) void* CTextDialog::`scalar deleting destructor'(unsigned __flags);
 // CODEVIEW(E:\gamedcs\dialogbox.cpp:143, dc 0x82068) void CTextDialog::~CTextDialog();

@@ -86,9 +86,9 @@ closure); `IL IDENTICAL` ⇒ look at C2 state. There is no local body knob.
 
 ## Doctrine (do not violate)
 
-- **The tools PROPOSE, never apply.** Every solver prints a diff for supervised
-  application. Nothing lands without the supervised-review rule (CLAUDE.md) and a
-  §5 decision-log entry in the same change. Never auto-edit source.
+- **The tools PROPOSE, never apply.** Every solver prints a diff for the matching
+  agent to review against retail evidence. Record an applied result in the §5
+  decision log; the solver itself must never auto-edit source.
 - **In-unit fidelity is built in** — solvers diagnose off the real
   `build/objdiff/base/<unit>.obj` and compile mutants with the unit's exact
   `units.toml` flags, so their distances match the ratchet. Trust them; do not

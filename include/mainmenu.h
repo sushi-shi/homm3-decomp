@@ -5,6 +5,58 @@
 #ifndef HOMM3_MAINMENU_H
 #define HOMM3_MAINMENU_H
 
+#include "window.h"
+
+class message;
+
+struct TMainMenuButtonRect {
+    short x;
+    short y;
+    short width;
+    short height;
+};
+SIZE(TMainMenuButtonRect, 0x8);
+
+// DC gives bShowCDMessage@68 and RolloverWidget@72. Retail's 8-byte-larger
+// heroWindow moves them to +0x4c/+0x50; the constructor stores +0x4c and
+// oldmain's two stack instances independently prove the 0x54 total size.
+class TMainMenu : public heroWindow {
+public:
+    enum EGameCommandIDs {
+        NEW_GAME_ID = 101,
+        LOAD_GAME_ID,
+        HIGH_SCORE_ID,
+        CREDITS_ID,
+        QUIT_ID,
+        SAVE_GAME_ID,
+        RESTART_ID,
+        MAIN_MENU_ID
+    };
+
+    enum EOtherWidgetIDs {
+        BACKGROUND_ID = 200,
+        TITLE_ID,
+        VERSION_ID,
+        ROLLOVER_ID
+    };
+
+    enum { NWIDGETS = 10 };
+
+    TMainMenu();
+    virtual ~TMainMenu();
+    void DoModal();
+
+    friend int MainMenuHandler(message& msg);
+
+private:
+    unsigned char bShowCDMessage;
+    char pad_4d[3];
+    widget* RolloverWidget;
+};
+SIZE(TMainMenu, 0x54);
+
+int MainMenuHandler(message& msg);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\mainmenu.cpp:135, dc 0xea618) int MainMenuHandler(message* msg);
 

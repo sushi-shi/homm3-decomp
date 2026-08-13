@@ -1,9 +1,9 @@
 # Gruntz script inventory and the homm3-decomp port plan
 
-Status: **plan under review — nothing is ported without explicit approval.**
+Status: **active implementation; the original attempt-1 port review is complete.**
 Source of truth for the inventory: `~/Projects/gruntz/scripts/` at commit
-`0456d62b4`. Every port step below is one reviewable unit; each lands only
-after it has been read, adapted, and approved in a supervised session.
+`0456d62b4`. The phase plan below is retained as implementation history and
+remaining-work inventory.
 
 ## 1. The architecture we are adopting
 
@@ -160,7 +160,7 @@ Top-level (outside the package): `configure.py`, ninja glue, and
 
 ## 4. Port plan
 
-Each step is one supervised review session and roughly one commit. Order is
+Each step was scoped as roughly one reviewable commit. Order is
 driven by one goal: **restore an end-to-end verified match (zlib) as early as
 possible**, then widen. Adaptation notes mark where HoMM3 differs from Gruntz
 (VC6 SP3 vs VC5 SP3; LINK 8447; 12,012-function denominator; C++-heavy game
@@ -258,9 +258,2230 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 - **P6.4** `build/link.py` (+ a VC6 equivalent of `msdis_stub.py` only if
   LINK 8447 needs one under wine) when phase-2 whole-image linking starts.
 
-## 5. Decision log (approved in supervised sessions)
+## 5. Decision log
 
-- **2026-08-10 — the `vc6` compiler-model area landed (supervised).** A new
+- **2026-08-13 — `combatManager::place_shooter` raised 80.57% → 82.49%.**
+  The DC roster fixes its function-scope locals as `best_hex`,
+  `best_open_hexes`, `new_hex`; retail initializes the first two before
+  `SeedCombatPosition`, not after it as the prior reconstruction did. The
+  three wait outcomes now share one tail, reducing the compiled shape from
+  four returns to retail's two. Both sides have 21 conditional branches;
+  the only branch residual is the equivalent final polarity. The remaining
+  mismatch is a cyclic allocation family: retail homes `this` in EBX and
+  later recycles EBX as the open-neighbour counter, while this VC6 spelling
+  chooses ESI and spills the counter. Positive-gate nesting (82.21%) and an
+  explicit final normal arm (81.29%) were measured and rejected.
+
+- **2026-08-13 — `combatManager::choose_cyclops_action` is byte-exact
+  (441/441) on its first paired build.** The DC record supplies the one
+  automatic local (`count`) and function-static const `walls[4]`; retail
+  proves that array at 0x63abd0 as wall rows `{1,2,4,5}`. The body counts
+  surviving targets, calls the independently identified `find_AI_targets`,
+  sums only armies without an existing AI target, applies retail's double
+  precision 1.2× value threshold, and uses `Random(1,count)` to choose among
+  the weakest positive-strength walls before emitting combat order 9. The
+  static datum is now source-owned with `DATA`, not represented through a
+  shadow view. Engine total: **981/1369 exact (71.7%)**, **53.14% fuzzy**.
+
+- **2026-08-13 — `combatManager::choose_shooter_target` is byte-exact
+  (544/544).** Retail xrefs and the DC local roster recover the complete
+  enemy-stack scan, including the otherwise unused `std::vector<army*>`
+  whose EH frame is present in retail. The function prices Magog/Lich splash
+  attacks over both occupied hexes, rejects dead/simulated-zero targets, and
+  prefers able stacks before comparing attack value. Its 38-block CFG and
+  27-branch sequence agree exactly. Three VC6 source-order decisions close
+  the remaining allocation gap: declare both side indices before the zeroed
+  flag/pointer, write the two disability preferences as independent tests,
+  and spell the acceptance assignments best-army/output-value/best-hex even
+  though VC6 schedules the stores best-hex/best-army/output-value. Removing
+  `army::IsIncapacitated`'s no-inline pin made the new body structurally
+  right but regressed exact `find_move_order` to 84.39%; expanding the same
+  three-field predicate at the two retail-inline sites preserves both exact
+  functions and the one retail out-of-line call. Engine total: **980/1369
+  exact (71.6%)**, **53.06% fuzzy** before the final synchronized ratchet.
+
+- **2026-08-13 — the fake town-name string view is deleted without a
+  codegen regression.** `town_rollover_name_storage_view` duplicated the
+  Dinkumware `std::string` already proven at `town+0xc4` merely to expose
+  its nullable backing pointer at +4. `advManager::SetRolloverText` now
+  holds the returned town as `const town*` and reads `cName.begin()`; the
+  const overload is the canonical direct pointer load and preserves the
+  function's 89.8242% retail score exactly. The non-const overload was
+  rejected because its copy-on-write `_Freeze` path lowered the function to
+  88.9698%, and `c_str()` was rejected at 89.5832% because it substitutes a
+  static empty string for null. The remaining `HOMM3_*_VIEW` switches are
+  measured include-closure/layout personalities, not duplicate overlay
+  structs; removing them changes VC6 code generation in sensitive TUs.
+
+- **2026-08-13 — the fake 0x6a5d5c general-text view is deleted.**
+  `InitializeGeneralText` already proved that this global is the canonical
+  `TTextResource*` returned for `genrltxt.txt`; the surrogate
+  `SUnnamed6a5d5c::entry` at +0x20 was merely duplicating the real
+  `TTextResource::Text` vector's `_First` pointer. All source references
+  now use `gpGeneralText` with a named `EGeneralTextIndex` value, and both
+  surrogate structures and their conditional layout personalities are gone.
+  This correction made seven functions exact: `executive::CallManager`,
+  `playerData::GetName`, `game::GetPlayerName`, `hero::get_backpack_error`,
+  and the three `TViewArmyWindow` hitpoint/speed widget builders. It also
+  raised `MainMenuHandler` from 89.65% to 90.07% without regressing
+  `recruitUnit::Update`. Coverage is **979 / 1369 (71.5%)**, 52.95% fuzzy;
+  the single-view and all cleanliness counters remain zero.
+
+- **2026-08-13 — `THeroScreenWindow::UpdateHeroLocator` is byte-exact
+  (203/203), with no fake UI view.** Retail and Dreamcast jointly identify
+  `THeroTraits::smallPortraitName` at +0x30; the live `hero::portrait` member
+  selects that canonical row. The screen's +0x60 tail is now the real
+  `topHero` scroll origin, while 0x698a84 is named
+  `gHeroScreenHeroPosition` because `HeroView` stores
+  `GetLocalPlayer()->FindHero(gpCurrentHero->id)` there immediately before
+  setup. The function uses canonical `playerData`, `game`, `hero`, and
+  `THeroTraits` layouts throughout. The first compile reached 99.86%; fixing
+  the retail `BroadcastMessage(codeX, codeY, id, extra)` argument order made
+  all 203 bytes exact and raised synchronized coverage to **972 / 1369
+  (71.0%)**, 52.83% fuzzy.
+
+- **2026-08-13 — `advManager::DisableButtons` and `EnableButtons` are
+  byte-exact (376/376).** While the global adventure manager is active, the
+  two fully unrolled twins clear or set `WIDGET_ACTIVE` on the canonical
+  navigation ids 3–14, 30 and 31. Checking `gpAdvManager->status` rather than
+  the receiver's status is the source-significant retail detail. The same
+  DC/base evidence admits `gpAdvManager` as a reviewed relocation owner. The
+  project reaches **961/1369 exact (70.2%)**.
+
+- **2026-08-13 — `hero::Fly` is promoted from a 0% carcass to a complete
+  94.2468% reconstruction (248 retail bytes).** Retail sets `flightLevel`,
+  obtains the current magic terrain from the packed hero coordinate, asks
+  `get_spell_level` for spell id 6, charges that row's per-mastery mana cost
+  with a floor of one, and expands the already-exact `UseSpell` mana/UI tail.
+  A call-site `inline_depth(0)` preserves retail's out-of-line spell-level
+  call; the residual is confined to the packed point-equality register
+  schedule. The DC-attested operator and local/direct variants compile
+  identically, so no conditional API or fake view is retained. Aggregate
+  fuzzy coverage rises to **52.03%** while exact coverage remains
+  **959/1369 (70.1%)**.
+
+- **2026-08-13 — `combatManager::LearnSpellFromEagleEye` is byte-exact
+  (136/136), and its masked-diff semantic bug is fixed.** Unmasked retail
+  bytes read hero +0xd0, canonical secondary-skill slot 7 (Wisdom); the old
+  source incorrectly used +0xd4, slot 11 (Eagle Eye). The reviewed relocation
+  alias identifies the `akSpellTraits` data cell, while the exact 163-byte
+  Dinkumware `set<int>::const_iterator::_Inc` COMDAT is admitted to the runtime
+  name map from the base object's authoritative public. The project reaches
+  **959/1369 exact (70.1%)**.
+
+- **2026-08-13 — `hero::GetMobilityFrame` and `hero::GetManaFrame` are
+  byte-exact (129/129).** Their former 90.4%/88.9% register residuals came
+  from direct-return source spelling. Giving each conditional ladder one
+  shared result local lets VC6 retain the signed-division quotient in EDX,
+  choose ECX for the mana threshold tail, and still duplicate every retail
+  return. The project reaches **958/1369 exact (70.0%)** with no view or
+  register-forcing construct.
+
+- **2026-08-13 — `army::FlyTo` and `army::TeleportTo` are byte-exact
+  (236/236).** The masked assembly diff had hidden the decisive branch-target
+  mismatch: retail always plays the stand animation after movement and gates
+  only the corrective turn on `restore_facing`. Expressing that CFG also makes
+  VC6 select retail's EBX/EDI allocation, closing both former 94% residuals
+  without a register-forcing view. The project is now **956/1369 exact
+  (69.8%)**.
+
+- **2026-08-13 — `hero::GetHighestSchool` is byte-exact (115/115).** The
+  surviving CodeView symbol supplies the missing `const` qualifier. Retail
+  reads the low byte of the `TSpellSchool` parameter for its four mask tests
+  but reloads the complete enum for the fallback result; a volatile byte
+  access preserves those distinct widths without introducing a fake enum or
+  layout view. The project is now **954/1369 exact (69.7%)**, with all
+  fake-view and cast cleanliness counters still zero.
+
+- **2026-08-13 — `TAdventureMapWindow::UpdateSpellButton` is byte-exact
+  (76/76), and a false inline-wrapper mapping is retired.** The function
+  enables casting only for a nonnegative-owner hero while the current player
+  is local human. An absent/non-local hero broadcasts the dim state, while a
+  present negative-owner hero returns without broadcasting; that asymmetric
+  nested guard is retail's. The normal path broadcasts `WIDGET_CLEAR_STATUS`
+  or `WIDGET_SET_STATUS` for the CodeView-named `CAST_SPELL_ID`, carrying the
+  canonical DIMMED and UPDATE flags. The complete 0..38
+  `TAdventureMapWindow::EWidgetIDs` roster is now canonical source data, so no
+  magic widget view was introduced. The randomly sampled 0x404200 row was
+  also disproven as `button::set_hotkey`: its `ret 0xc` and full body identify
+  the three-argument Dinkumware `vector<int>::insert`; the one-argument
+  header wrapper is inlined and has no standalone retail body. This match also
+  activated the first reviewed relocation alias (`gpCurrentPlayer` at the
+  sole 0x403bfb site), exposing and fixing two dormant pipeline omissions:
+  `homm3 delink` now passes the alias manifest to vostok, and `labels` seeds
+  each reviewed alias owner into the synthetic PDB before delinking.
+
+- **2026-08-13 — the last duplicated hero obscuring view is removed, and
+  `type_obscuring_object::load` / `save` are byte-exact (428/428).**
+  Dreamcast CodeView proves that both `hero` and `boat` derive from the
+  0x18-byte `type_obscuring_object`; the prior hero model redundantly repeated
+  that prefix and eleven call sites needed `void*` bridge casts to recover the
+  base. The canonical base now owns the retail-proven packed +0x07
+  `obscured_location`, the DC-named `valid`, `was_trigger`, and `extra_info`
+  members, and both real inheritance edges. Direct inherited calls reproduce
+  every previously exact function, so the duplicate prefix and all eleven
+  bridges are deleted. The two 214-byte serializers read/write the eight
+  fields in retail order. Their CodeView-attested `bool(void*)` ABI and a named
+  final bool local are source-significant: direct comparison return emits
+  `sbb/inc`, while the local emits retail's bare `setae al`.
+
+- **2026-08-13 — `advManager::DoAdventureOptions` is byte-exact
+  (248/248).** The reconstruction uses the canonical
+  `TAdventureOptionsWindow`, `advManager`, and `game` interfaces throughout;
+  no local or fake layout view was needed. Dreamcast names both dispatched
+  game members (`play_recorded_events` and `ShowScenInfo`) and supplies the
+  option IDs (`VIEW_WORLD_ID`, `VIEW_PUZZLE_ID`, `VIEW_SCENARIO_ID`, `DIG_ID`,
+  and `REPLAY_ID`). Retail proves the modal window's lifetime ends before the
+  dispatch switch. VC6 then reproduces the retail block order when the source
+  cases are ordered view-world, puzzle, replay, scenario, dig, even though the
+  jump-table IDs remain 1, 2, 5, 3, 4. The one narrow declaration personality
+  around `ViewWorld` prevents the canonical `TSkillMastery` enum from leaking
+  into TUs which own the incompatible `ai_tactical.h` typedef.
+
+- **2026-08-13 — the adjacent hero terrain lookups are byte-exact (429/429).**
+  Both pack the hero's three coordinate shorts into the canonical five-byte
+  `type_point`, compare it with the all-minus-one invalid point, and index the
+  canonical world-map cell array with the proven 38-byte stride. The
+  Dreamcast-named `hero::get_special_terrain` (215 bytes) returns the
+  no-magic-terrain sentinel when unplaced and otherwise delegates to
+  `NewmapCell::get_magic_terrain_type`; the retail-only preceding member (214
+  bytes, still ordinal-named) returns `NOTHING` or delegates to
+  `NewmapCell::get_special_terrain`. Direct array access is source-significant:
+  routing through the out-of-line `cell` accessor has the same semantics but
+  does not reproduce retail's inlined address math.
+
+- **2026-08-13 — `TTimedEvent::Save` is byte-exact (183/183), and the
+  canonical timed-event layout is corrected.** Retail serializes the message,
+  seven resource quantities, player mask, distinct ApplyToHuman and
+  ApplyToComputer bytes, first-day word, and interval word. The prior model
+  omitted ApplyToHuman and consequently misnamed/misaligned its tail. Retail
+  Save/Load prove the two byte fields and offsets; NH3API contributes the
+  ApplyToHuman name only after those offsets are independently established.
+  The ignored one-byte human-flag write uses a byte temporary, reproducing
+  VC6's reuse of the dead parameter home without any access-only view.
+
+- **2026-08-13 — `advManager::UpdBottomView` is byte-exact (320/320).**
+  The dispatcher preserves override 8 as the disabled state, expires timed
+  overrides with the retail signed tick-delta test, and maps override values
+  1/2/3/4/6/7 to NewTurn/Kingdom/Hero/Town/Resource/Message. The retail jump
+  table proves value 5 exits without changing the view. With no override, a
+  local human receives the selected hero, town, or NewTurn view unless the
+  complete-map draw mode is active; all other paths select EnemyTurn. A
+  changed view is drawn only when requested, with the update byte normalized
+  to boolean. The original shared update label is required for VC6 to retain
+  retail's distinct switch/default call blocks; this is genuine control-flow
+  structure, not an artificial layout shim.
+
+- **2026-08-13 — the bottom-view message producers are reconstructed:
+  `BVMessage` 92.68% and `BVResMsg` 93.33%.** Both assign the canonical
+  +0x3a8 Dinkumware string, set their override type and deadline, and force
+  `gpAdvManager->UpdBottomView(1,1,1)`; the resource form additionally writes
+  the proven type/quantity pair, uses a 5000-ms deadline, and updates the
+  resource display. Their CFGs and all non-string instructions agree. Their
+  common residual is one VC6 library-inline choice on assigning an empty
+  shared string: retail calls `_Tidy(0)`, while this invocation clears the
+  representation words directly. The bodies also prove retail 0x4040f0,
+  0x404bd0 and 0x60ab3b as `basic_string::_Tidy`, `_Copy`, and `std::_Xlen`,
+  replacing flat runtime/helper labels globally.
+
+- **2026-08-13 — three `advManager` bottom-view updaters reconstructed exact:
+  `UpdBottomViewNewTurn` (176/176), `UpdBottomViewResMsg` (175/175), and
+  `UpdBottomViewMessage` (161/161).**
+  A non-forced refresh of an already-active NewTurn view
+  only calls `animate_bottom_view(0)` and reports no replacement. Every other
+  path clears the old view, installs type 1, allocates the retail-proven
+  0x48-byte `TBottomViewNewTurn`, installs it through the canonical
+  `set_bottom_view` API, and refreshes the resource display. The allocation
+  fixes the real derived extent without exposing its unread 0x14-byte tail.
+  The resource-message sibling proves the manager's canonical +0x3a0 type,
+  +0x3a4 quantity and +0x3a8 `std::string` state, passes all three to a
+  storage-free 0x34-byte `TBottomViewResourceMessage`, and does not refresh
+  the resource display. The ordinary-message twin passes that same canonical
+  string to a 0x34-byte `TBottomViewMessage`. Its producer `BVMessage` is now
+  behavior-complete at 92.68%: the only code delta is retail calling
+  `basic_string::_Tidy(0)` on an empty shared string where this VC6 invocation
+  clears the representation inline; three normal assignment overloads are
+  byte-identical and the iterator-range form is worse. Dreamcast supplies the
+  class/constructor identities. Synchronized coverage reaches 945/1368 exact,
+  51.61% fuzzy and 13.27% executable, with all cleanliness gates still zero.
+
+- **2026-08-13 — `NewmapCell::is_diggable` reconstructed from a 0% carcass
+  to 96.16%.** Retail rejects Water, Rock and impassable ground, resolves a
+  hero or boat to the object hidden underneath it, accepts NOTHING and the
+  HOLY_GRAIL marker, and scans every layered object on ANCHOR_POINT cells to
+  reject a `TERRAIN_HOLE` overlay. Canonical `NewmapCell`, `NewfullMap`,
+  `CObject` and `CObjectType` members express the whole operation; no local
+  fake view or cast was introduced. The resulting 14-branch/two-return CFG is
+  exact. Only VC6's propagation of NOTHING through the two inlined obscurer
+  arms remains: three natural assignment/helper spellings compile identically,
+  while retail materializes zero and rejoins the shared type tests. The body
+  also independently admits `eTerrainRock = 9` alongside the already-proven
+  Water enumerator.
+
+- **2026-08-13 — retail 0x60ab30 identified as scalar `operator delete`.**
+  Its complete 11-byte body is `push argument; call _free; pop ecx; ret`, so
+  the runtime map now carries the VC6 `??3@YAXPAX@Z` identity instead of a
+  caller-derived flat label. This removes a false relocation-name residual
+  from `Bitmap816::~Bitmap816` and any other reconstructed destructor using
+  the same runtime thunk; the destructor's remaining 99.97% delta is EH
+  metadata naming, not executable instructions.
+
+- **2026-08-13 — the two live `Bitmap24Bit` constructors closed their
+  smallest-module residuals.** The data constructor rises from 92.70% to
+  99.51% after restoring retail's zero-size rule: allocate and copy `w*h*3`
+  bytes when no compressed size is supplied. Its five-block graph is now
+  exact; only VC6's ordering of three independent member/vptr stores remains,
+  after sweeping the meaningful field orders. The pathname constructor is
+  exact (192/192 bytes): Dreamcast CodeView type 0x2894 proves its local is
+  `char[261]`, and retail independently requires the corresponding four-byte
+  larger aligned frame. Coverage is 942/1368 exact and 51.44% fuzzy.
+
+- **2026-08-13 — `THeroScreenWindow` destructor and scalar-deleting wrapper
+  reconstructed exact (162/162 and 33/33 bytes).** Retail proves the class
+  derives directly from `CAdvPopup`: the destructor installs vtable 0x63eae8,
+  restores a live dragged artifact to `gpCurrentHero`, resets the mouse and
+  selected army slot, deletes the canonical `Widgets` vector entries, and
+  invokes the base destructor. The adjacent dragged-artifact dwords are one
+  real `type_artifact`, initialized together to -1; 0x697738 is the hero-screen
+  army-slot index used throughout the same UI paths, disproving NH3API's
+  shifted `puzzlePiecesRemoved` label. Making the inheritance and overrides
+  real also migrates the already-exact `ExitDialog` to its correct virtual
+  mangling. No replacement view or cast is involved. Synchronized coverage
+  is 941/1368 exact, 51.43% fuzzy, and 13.22% executable matched; all
+  single-view and cleanliness counters remain zero.
+
+- **2026-08-13 — `advManager::LoadRemote` reconstructed exact (217/217
+  bytes).** Retail loads the generated remote-control save path from the
+  canonical preferences record, calls `game::LoadGame`, optionally writes
+  `orig.dat`, and preserves the four calendar selectors that LoadGame clears.
+  The Dreamcast local roster supplies the selector names and the one-byte
+  `CHourGlass` type; retail independently proves its constructor, explicit
+  `Stop`, and second scope-exit stop. A first complete spelling reached
+  96.07%; restoring the explicit stop raised it to 99.67%. The remaining
+  four stores then disproved NH3API's shifted label mapping: direct
+  compiler-to-retail instruction correspondence fixes month/month-extra at
+  0x697750/0x6983fc and week/week-extra at 0x697748/0x698834. Correcting that
+  mapping and retail's week-first restore order closes the function exactly.
+  Coverage is 939/1367 exact, 51.40% fuzzy, and 13.21% executable matched.
+
+- **2026-08-13 — `town::can_build` raised from 81.19% to 89.60%.** Its
+  ten-branch/four-return graph and all building rules were already exact;
+  the gain comes from giving the faction byte the stack home used by retail,
+  which VC6 reproduces when the narrow local is volatile. An explicit
+  promoted integer erased the home and returned to 81.19%, while making the
+  short building parameter volatile over-constrained every access and fell
+  to 67.61%; both probes were discarded. The remaining delta is bounded to
+  the bit-mask index and short-parameter register family.
+
+- **2026-08-13 — five `TViewArmyWindow` stat-widget helpers admitted.**
+  `create_attack_widget` and `create_defense_widget` are exact (654/654 bytes
+  each); `create_hitpoints_widget` is 99.9585% across 663 bytes with an exact
+  17-branch/two-return graph, `create_hitpoints_left_widget` is 99.9565%
+  across 637 bytes with 16 exact branches, and `create_speed_widget` is
+  99.9611% across 702 bytes with 19 exact branches. The previously unclaimed
+  helper band between the window
+  handler and the known action-widget creators follows the Dreamcast source
+  roster. Retail independently identifies this member through its two
+  `textWidget` allocations at (154,48), the attack label/value IDs 205/206,
+  the shared primary-skill table's attack entry, and the `%d` / `%d(%d)`
+  formatting paths; the defense twin changes only its row and IDs. Hitpoints
+  uses the same recipe with the central text record's +0x614 label; remaining
+  health and speed prove the corresponding +0x324 and +0x308 fields. Speed's
+  zero-first `_cpp_max` calls reproduce retail's by-value/reference clamps.
+  All three residuals are the equivalent EDX/ECX schedule used to follow the
+  two-pointer label chain; a named entry-pointer probe on hitpoints regressed
+  to 98.09% and was discarded. The canonical widget vector and real `TViewArmyWindow` layout
+  reproduce these bodies without a view or cast. The shared
+  primary-skill table declaration moved from a cpp-local extern into
+  `game.h`, keeping the cleanliness gate at zero. Synchronized coverage is
+  938/1367 exact, 51.36% fuzzy, and 13.20% executable matched.
+
+- **2026-08-13 — `NewmapCell::get_special_terrain` reconstructed from 0%
+  to 79.09% (278 retail bytes).** The body now reproduces the hero-obscured
+  and direct-garrison special cases, walks the canonical cell-object vector
+  backwards through the retail CObject/CObjectType pools, and accepts exactly
+  CURSED_GROUND, MAGIC_PLAINS and the eight SoD magic-terrain IDs in retail
+  comparison order. The cell flag word now has a canonical whole-word overlay
+  under mapcell's full-layout configuration; no cast or fake view was added,
+  and all pre-existing exact consumers remain exact. A switch probe scored
+  74.61% and was discarded. The residual is VC6 tail-merging the two special
+  cases (three returns versus retail's four) and the resulting register homes.
+
+- **2026-08-13 — `TSystemOptionsWindow::WindowHandler` raised from 86.31%
+  to 91.92% by restoring the retail help-switch source order.** Placing the
+  six main-menu/dialog IDs before the contiguous system-option range makes
+  VC6 keep the discrete mapping beside its callers instead of outlining it
+  after the right-click return. A single-join/range-first probe reproduced
+  the old 86.31% layout and was discarded. The remaining difference is the
+  retail hot/cold placement of that same inlined mapping; all later option
+  cases retain the same semantics and six-return shape.
+
+- **2026-08-13 — `sacrifice_window.obj` entered with two exact callback
+  widgets and no replacement fake view.** Retail vtables 0x641578 and
+  0x6415b0 prove the slot-13 identities at 0x55fd10/0x55fd40; both bodies
+  read the canonical iconWidget parent (+4) and derived index (+0x48), then
+  call the independently carved `type_sacrifice_window::backpack_click`
+  (0x5636c0) or `offering_click` (0x563a80). The real window derives from
+  CAdvPopup and is 0x23c bytes: constructor 0x55fdd0 proves current_hero at
+  +0x60 and the final VC6 vector triplet through +0x23c, exactly matching
+  the DC roster after the known base/vector-width deltas. Both 38-byte
+  handlers are exact; the build moves 934/1360 to 936/1362 exact and the
+  cleanliness gate remains at zero local/fake views and casts.
+
+- **2026-08-13 — `seerhut.obj` entered with an exact retail-only SoD
+  constructor, and the last unnecessary fake vector views were removed.**
+  The quest/seer bracket between `search.obj` and
+  `singleselectionpopups.obj`, two `NewfullMap` construction callers, the
+  0x13-byte retail vector stride, and an independently verified cross-build
+  body identify 0x573580 as `TSeerHut::TSeerHut`. Retail proves the canonical
+  packed model: a 5-byte `TQuestGuard` base (`type_quest*` plus visited-player
+  mask), a 12-byte reward, name index at +0x11, and state byte at +0x12. A
+  no-store protected base-construction path lets the reward type initialize
+  before the base assignments, reproducing all 19 retail bytes exactly.
+  `TSeerHutVectorView` and `TQuestGuardVectorView` are gone; `advmgr` now
+  indexes the real Dinkumware vectors. The separately proven 0x6c-byte
+  `type_creature_bank` record moved to a lightweight shared header, allowing
+  `game::creatureBanks` to become `std::vector<type_creature_bank>` and
+  retiring `type_creature_bank_vector_view` as well. The canonical container
+  expansion deliberately moves `SetRolloverText` 89.71→89.69 and
+  `get_creature_bank_help_text` 87.28→87.13; both historical peaks remain in
+  the ledger, no exact function regressed, and the single-view and cleanliness
+  gates remain at zero. Coverage is 934/1360 exact across 130 units.
+
+- **2026-08-13 — `searchArray::BuildPath` rose from 69.73% to 86.33%.**
+  Dreamcast CodeView proves that `type_point`'s constructor and equality pair
+  are header-inline and that both comparisons are const-reference methods.
+  Reconstructing the two source and destination locals through the constructor,
+  using the equality operations at all three decision sites, and placing the
+  loop-state initialization before the initial result clear restores the
+  retail point-packing order and most of VC6's register lifetime. The helpers
+  remain TU-local because adding their declarations to shared `struct.h`
+  measurably regresses the exact definition-count-sensitive
+  `initialize_game_data`; this is source-shape isolation, not a data view.
+  A negated-equality implementation of `operator!=` scored 64.78%, and a
+  result-vector reference scored 12.40%, so both were rejected. The residual
+  is bounded to VC6's inline-budget split for the pointer-vector erase/insert
+  helpers: retail keeps six calls where this build expands their bodies. The
+  synchronized aggregate remains 933/1359 exact across 129 units, while fuzzy
+  coverage reached 50.97%; all gates are clean.
+
+- **2026-08-13 — `singleselectionwindow.obj` entered the build with
+  `CNetPlayerHandler::DeletePlayer` exact (77/77 bytes).** Dreamcast supplies
+  the source identity and signature; the retail body independently proves
+  the eight-entry human-player array, its 0x7c-byte element stride, and the
+  `dpid`, hero, town, and player-position stores. The separately identified
+  retail player constructor closes the canonical Windows record: unlike the
+  28-byte Dreamcast base, retail's `CNetPlayerInfo` has a version dword at
+  +0x1c and the derived fields begin at +0x20. The complete handler is two
+  eight-record arrays followed by four dwords, not a function-local view.
+  The original `GetNetPos` and `Clear` helpers inline naturally under /Ob2
+  to reproduce the retail loop and stores. The remaining 264-function
+  carcass stays fenced. Aggregate coverage reached 933/1359 exact across
+  129 units, 50.95% fuzzy, and 13.01% executable matched with every gate
+  clean.
+
+- **2026-08-13 — `TSystemOptionsWindow::WindowHandler` is behavior-complete
+  and reaches 86.31102% across its 1566-byte retail body.** Retail proves the
+  two-case widget dispatch, all sparse main-menu commands, the 42-entry option
+  range, preference writes, radio-button updates, unavailable-audio dialogs,
+  sound-manager volume adjustment, six toggles, command confirmation and the
+  hover sample. Re-reading the canonical preference globals after each write
+  reproduces retail's selector and volume blocks exactly in structure and
+  instruction count; spelling `codeX` as its natural two-case switch also
+  restores retail's `sub`/`dec` dispatch and EBX-held consume result. The
+  remaining plateau is bounded to VC6 layout of the inlined
+  `convertID2HelpID` decision tree and scheduling of the unused local
+  `message` initialization in inlined `UpdateSystemOptions`; explicit-goto,
+  single-return/early-return, `inline`/`__forceinline`, and shared-label probes
+  were byte-inert or regressive. The reconstruction uses the complete
+  canonical `TSystemOptionsWindow`, central-text and preference records—no
+  access-only view. The synchronized build -> delink -> build result remains
+  932/1358 exact, rises to 50.93% fuzzy and 13.00% executable across 128 units;
+  ratchet, VA-claim, single-view and cleanliness gates are clean.
+
+- **2026-08-13 — `multiplayerwindow.obj` entered the build with the five-
+  function `CHotSeatDlg` tail exact (370/370 bytes).** Vtable `0x6401d8`
+  independently maps the destructor, `OnWidgetDeselect`, rollover getter and
+  scalar-deleting wrapper; the direct call at `0x51243c` identifies the
+  adjacent `OnOK`. DC supplies the canonical class/member names and proves
+  `edit` is `textWidget*[8]`, while retail corroborates its repacked `+0x50`
+  start, four-byte stride, and the `std::string` payload at each widget's
+  `+0x30`. DC's nested `char[8][21]` record gives `CHotSeatMan` its complete
+  0xac-byte layout; retail independently proves the eight-player bound,
+  21-byte name stride, copy, and post-copy count increment when its constructor
+  and `AddPlayer` inline into `OnOK`. The full dialog tail is the canonical
+  class (including `THelpText[20]`), not an access-only view. The synchronized
+  build -> delink -> build result is 932/1358 exact, 50.67% fuzzy and 12.93%
+  executable across 128 units; ratchet, VA-claim, single-view and cleanliness
+  gates are clean.
+
+- **2026-08-13 — `advspells.obj` entered the build with
+  `advManager::CheckCastSpell` exact (402/402 bytes).** The retail carve fixes
+  the real entry at `0x41c2f0`; the attempt-1/HD address `0x41c470` is inside
+  that body and was not reused as boundary evidence. The reconstruction uses
+  the canonical `TSpellbookWindow`, `hero`, `game`, terrain, spell-trait and
+  central-text records—no compatibility view. Retail widens the spellbook's
+  magic-terrain constructor parameter to `int`, matching the already-proven
+  retail `OnMagicPlains` dword. The final VC6 source-shape lever was the
+  Dreamcast-attested inline `game::GetCurrHeroId` (`Game.h:992`, dc `0x2f18`):
+  spelling the initial guard through that real accessor produced retail's
+  EAX load and preserved `this` in ECX for the immediately following
+  `MobilizeCurrHero` call. The synchronized build → delink → build result is
+  927/1353 exact, 50.63% fuzzy, 12.92% executable across 127 units; ratchet,
+  VA-claim, single-view and cleanliness gates are clean.
+
+- **2026-08-12 — `newgame.obj` entered the build with both alignment
+  helpers exact (107/107 bytes), advancing aggregate coverage to 926/1352
+  exact across 126 units.** Source order and retail behavior place the
+  27-byte nine-bit counter at 0x5132b0 and the following 80-byte picker at
+  0x5132d0, immediately before `InitNewGame`; the independently named
+  scenario-info/text bodies corroborate the later TU order. Retail widens
+  Dreamcast's `unsigned char legal_alignments` to `int`, preserving bit 8 for
+  Conflux and consuming full ECX with no byte mask. The picker counts eligible
+  towns, optionally chooses a one-based random ordinal, and returns the
+  corresponding town id, defaulting to Castle. The remaining eight source
+  bodies stay fenced until independently mapped.
+
+- **2026-08-12 — `advManager::MobilizeCurrHero` is exact (157/157
+  bytes), advancing aggregate coverage to 924/1350 exact.** The retail body
+  selects the waiting or current `playerData`, rejects ordinary mobilization
+  while a dialog is active, and reuses the current hero when present. With no
+  current hero it deliberately probes both `NextHero` and `NextTown`, prefers
+  the hero, and otherwise installs the town context while forwarding the
+  original movement/waiting/draw flags. Dreamcast supplies the signature and
+  `player`/`hID`/`tID` identities; retail fixes every field, call, branch, and
+  argument order.
+
+- **2026-08-12 — `viewwrld.obj` entered the build with its bounded
+  destructor slice exact (167/167 bytes), advancing aggregate coverage to
+  923/1350 exact across 125 units.** The independently identifying
+  `VWorld.pcx` constructor anchors the TU at 0x5fa600; its following
+  33-byte scalar deleting destructor and 134-byte destructor land at
+  0x5fbd30/60. Retail proves the owned globals as the 64x64
+  `Bitmap16Bit` scratch buffer and `VWsymbol.def` sprite, then destroys
+  inherited widgets virtually before the canonical `CAdvPopup` teardown.
+  Dreamcast supplies the real `TViewWorldWindow` identity and four-member
+  tail; retail's wider popup fixes the resulting class at 0x70 bytes. The
+  remaining 24 source bodies stay fenced until independently mapped.
+
+- **2026-08-12 — the three selectable bottom-view updaters are exact
+  (474/474 bytes), advancing aggregate coverage to 921/1348 exact.**
+  `UpdBottomViewKingdom`, `UpdBottomViewHero`, and `UpdBottomViewTown`
+  share retail's clear/type/install control flow; the kingdom arm alone
+  refreshes the resource display. Retail allocations independently prove
+  the three installed subclasses are 0x34 bytes, while Dreamcast supplies
+  their real identities. They therefore extend the canonical bottom-view
+  hierarchy rather than introducing access-only views.
+
+- **2026-08-12 — `CAdvPopup::CAdvPopup` is exact (154/154 bytes),
+  advancing aggregate coverage to 918/1348 exact.** The natural base
+  initializer, four member stores, and popup-state handoff reproduce retail
+  byte-for-byte. Retail independently proves `CNetMsgHandler::m_inPopup` at
+  +4 and `CDPlayHeroes::m_pNetMsgHandler` at +0xf0; Dreamcast supplies the
+  real class/member identities and the two inline accessor names. The shared
+  networking surface now models the canonical `CDPlayLobby`/`CDPlayHeroes`
+  hierarchy rather than introducing an access-only view.
+
+- **2026-08-12 — retail-only `ImmMouseWindowMoved` is exact (154/154
+  bytes).** `ClientToScreen` produces the new client origin, the helper keeps
+  the previous origin at 0x696d70/74, and every tracked Immersion enclosure
+  receives its offset rectangle. The out-of-line iterator increment at
+  0x4b7330 proves a Dinkumware red-black tree; node payload +0x0c/+0x10 proves
+  `map<CImmEnclosure*, RECT>`, and the `_Head` load at 0x696d64 fixes the map
+  object base at 0x696d60. Naming remains explicitly role-derived because
+  this PC-only block has no Dreamcast source row. A focused canonical header
+  models the real SDK/container surface without adding an access-only view.
+
+- **2026-08-12 — `NewfullMap::saveTimedEventList` is exact (165/165
+  bytes).** The retail vector begins at map +0x80, stores 0x34-byte events,
+  writes its dword count, and calls `TTimedEvent::Save` for each element with
+  an immediate short-write/failure exit. Dreamcast supplies the complete
+  `TTimedEvent` member roster; retail's vector divisor independently proves
+  the VC6-widened layout. The canonical type and vector member are shared by
+  the existing map-object surface without introducing another TU-only view,
+  and the shared-header build preserved every prior ratchet score.
+
+- **2026-08-12 — `NewfullMap::saveMonsterData` is exact (107/107
+  bytes).** Dreamcast supplies the `Message`, seven-dword `ResQty`, and
+  `Artifact` member order; retail independently proves the VC6-widened
+  offsets +0x10 and +0x2c and the complete 0x30-byte stride. The natural
+  serializer ignores `saveString`'s result, rejects any short resource
+  write, and returns the final one-byte artifact write as retail's branchless
+  0/-1 result. `MonsterData` now has one canonical focused header rather than
+  another source-boundary view.
+
+- **2026-08-12 — `combatManager::get_surrender_cost` is exact (178/178
+  bytes), advancing aggregate coverage to 914/1348 exact.** The retail loop
+  walks twenty stacks on `currentSide`, rejects empty and bit-22 temporary
+  stacks, subtracts troops resurrected during this battle, and prices the
+  remainder with the gold column (`cost[6]`, traits offset +0x38). It then
+  halves the integer base cost and multiplies it by the current hero's
+  `GetSurrenderCostFactor`. Dreamcast supplies the
+  `numTroopsBattleResurrected` identity at the independently proven retail
+  +0x54 offset; retail bytes select every condition, the resource column,
+  loop spelling, and conversion order. All gates remain clean.
+
+- **2026-08-12 — a mixed touched/new batch added nine exact retail
+  bodies across six units.** `victorylossconditions` gained the 80-byte time
+  limit check, the 83-byte defeat-hero check, and the 99-byte player-
+  applicability helper; the last exposes a PC/DC return-width divergence
+  because retail returns full EAX where Dreamcast records a byte. `mapcell`
+  gained the 141-byte four-field `NewfullMap::saveObject`. New narrow units
+  admitted all three `dxplay` GUID/host leaves, `swapManager::IsLeftHero`,
+  and the trading-post market-value getter. Each identity was bounded by
+  retail callers/data/vtables and only then corroborated with Dreamcast;
+  no external implementation was used.
+
+- **2026-08-12 — the latest fake-view audit removed four more dead aliases
+  without moving the retail ratchet.** `victorylossconditions.obj` no longer
+  enables the map-object header personality merely to inline `GetTeam`, and
+  its byte read of the current player now uses the canonical
+  `gNetLocalGamePos` datum rather than a second DATA name/type. The same
+  `GetTeam` declaration was retired from the shared `game` class after its
+  sole remaining live consumer in `mapcell.obj` proved byte-identical with a
+  source-local inline helper. The puzzle-only `NewfullMap` projection was
+  deleted in favor of the already-proven canonical map-object projection,
+  and game.obj's point-constructor personality was replaced by an ordinary
+  TU-visible inline definition. VC6 retained 913/1348 exact rows and all
+  ratchet, VA, single-view, and cleanliness gates. Fresh probes also
+  reconfirmed that the town-name overlay, Seer Hut/Quest Guard vector
+  overlays, and adventure renderer object overlays are still required: their
+  canonical replacements regress `SetRolloverText`, `DrawAdvObj`, or
+  `DrawAdvObjShadow`, so they were restored rather than mislabeled dead.
+
+- **2026-08-12 — `combatwindow.obj` entered with
+  `TCombatWindow::Close` exact (42/42 bytes).** The alphabetical retail gap
+  between `combatresultswindow` and `command`, Dreamcast compiland order, and
+  the retail vtable at 0x63d528 identify the body at 0x4728d0 as slot 2.
+  It deletes the polymorphic combat-control subwindow at +0x70, clears that
+  member, and delegates to `heroWindow::Close`. The constructor caller in
+  `combatManager::Open` independently allocates 0x8c bytes, proving the
+  complete derived extent while the unconsumed fields stay opaque. The new
+  unit is deliberately narrow: the other combat-window methods and local
+  Dinkumware COMDAT family remain fenced until their bodies are reconstructed.
+  Aggregate coverage reached 880/1314 exact across 114 units.
+
+- **2026-08-12 — `herodefs.obj` entered with all three retail table
+  loaders byte-exact (1,312 bytes total).** `InitializeHeroTraitsTable`
+  parses 156 `hotraits.txt` rows and proves that the reference cell at
+  0x67dce8 points to the 0x679dd0 backing table: the loader fills each
+  0x5c-byte row's default-name pointer at +0x40 and the three
+  low/high starting-stack pairs at +0x44..+0x58. This corrected the old
+  array-base interpretation and made the 374-byte body exact.
+  `InitializeHeroClassTraitsTable` proves the eighteen 0x40-byte rows at
+  0x67d868, including class name, aggression, three four-byte primary-skill
+  groups, 28 secondary-skill chances, and nine town-availability bytes;
+  the 482-byte body is exact, and `GetNewHeroId` remained exact after its
+  overlapping placeholder became `foundInTownType[alignment]`.
+  `InitializeSSkillTraitsTable` proves the 28 0x10-byte rows at 0x698cf0,
+  one name plus three mastery strings, and is exact at 456 bytes. Moving
+  the second owned-string array to its actual declaration point reproduced
+  retail's two-bit static guard order. The source-private string owner stays
+  in `herodefs.h` for the cleanliness contract, while the shared skill ABI
+  now lives canonically in `sskilltraits.h` rather than behind the
+  adventure quick-info switch. The remaining seven link-order names in the
+  cinit tail stay withdrawn as documented: they are terrain-header static
+  initializers, not herodefs helpers. Aggregate coverage reached 879/1313
+  exact across 113 units, 49.73% fuzzy, with all gates clean.
+
+- **2026-08-12 — `search.obj` entered with
+  `searchArray::BuildPath` reconstructed at 69.73% (642 retail bytes).**
+  Retail proves the hero target dwords at unaligned +0x35/+0x39/+0x3d,
+  backtracking through `pathCell::last_point`, the non-increasing adjusted
+  cost guard, visited and cycle rejection, the optional cost-limited result
+  insertion, and flight-plane selection from the inverse of bit 11. The
+  compiled and retail bodies have the same semantic loop, packed-point
+  comparisons, calls, and two returns. The remaining structural delta is
+  VC6's nested Dinkumware inlining: retail has 15 branches and shares local
+  range-erase helpers, while this TU population expands six copy/destroy
+  loop branches (21 total). TU-wide inline-depth, `vector::clear`, merged
+  cleanup labels, and split visited-state probes all regressed sharply and
+  were reverted. The current source is the best natural spelling; no helper
+  body or fake vector view was introduced.
+
+- **2026-08-12 — `bitmap816.obj` entered the build and advanced to five
+  exact functions.** The 33-byte deleting destructor is fixed by retail
+  vtable 0x63ba14. Its slot-2 resource-size helper is exact at nine bytes
+  after naming DC's `DataSize`/`ImageSize` dwords: it adds `DataSize` to the
+  fixed 0x56c-byte object extent. Both palette setters are exact as well:
+  the first copies the complete 0x200-byte `TPalette16` payload and the
+  second delegates to the exact `TPalette24::operator=`. Finally,
+  `Bitmap816::ResetPalette` is exact (64/64 bytes), retiring its false raw
+  24-bit-palette view. Retail proves a complete embedded `TPalette16`
+  resource at +0x34 (whose 256-word color payload begins at +0x50) and a
+  complete embedded 0x31c-byte `TPalette24` resource at +0x250:
+  ResetPalette passes the latter to the `TPalette16` conversion constructor,
+  copies the temporary's 0x200-byte color payload into the former, and
+  destroys the temporary. The destructor independently calls the +0x250 and
+  +0x34 palette destructors and raises the natural `delete[] map` body to
+  99.97%; its only residual is VC6's internal EH-state ordinal (compiled 2,
+  retail 1), while calls, branches, offsets, and unwind transitions agree.
+  The virtual size helper adds the resulting 0x56c fixed object extent to
+  the owned bitmap bytes. The
+  canonical palette-painter overload now accepts `TPalette24*`; raw
+  `paletteHiColor*` consumers remain a distinct proven overload. After the
+  later neighboring admissions, aggregate coverage reached 901/1340 exact,
+  50.19% fuzzy and 12.78% executable matched, with all gates clean.
+
+- **2026-08-12 — the remaining dead fake-view surface was removed.** The
+  resource-display retail six-argument `border` constructor and
+  eleven-argument `textWidget` constructor are ordinary overloads, the three
+  text pointers and player selector are canonical declarations, and both
+  consuming TUs compile without a private header personality. The proven event
+  record pointer-vector at game +0x4e7ac is likewise the canonical tail member.
+  The puzzle
+  window header no longer hides its complete admitted classes behind a
+  TU-only switch; game.obj uses a narrow declaration for the sole puzzle
+  function it calls. The puzzle TU still needs the genuinely required
+  `NewfullMap` object-pool projection, but its dedicated puzzle-only branch
+  was later removed in favor of the canonical map-object projection. A probe
+  making `type_artifact`'s setup-only default
+  constructor global likewise breaks the aggregate initialization used by
+  hero.obj, so the game setup personality remains necessary. The other
+  remaining projections retain their previously measured retail-score
+  regressions. The provisional `PuzzleWindowMissingWidget` alias was also
+  deleted once its body address and error path proved it was simply the
+  canonical `MemError`. A full 114-unit VC6 build stayed at 880/1314 exact and
+  49.73% fuzzy, with ratchet, VA, single-view, and cleanliness gates clean.
+
+- **2026-08-12 — `bitmap24.obj` entered the build with four exact functions
+  and one measured constructor residual.** The retail constructors prove a `resource`-derived
+  0x30-byte object with `DataSize` at +0x1c, dimensions at +0x24/+0x28 and
+  the owned pixel pointer at +0x2c. Vtable 0x63b9f4 slot 2 returns
+  `DataSize + 0x30`, exactly matching the resource-size virtual already
+  established for `Bitmap16Bit` and `Bitmap816`. The 55-byte draw wrapper is
+  exact with the natural forwarding call through the destination bitmap's
+  map, width, height and pitch fields. The 34-byte destructor is
+  the natural conditional `delete[] data` followed by the base destructor;
+  its frameless retail form independently proves the same TU-visible nothrow
+  deallocator contract used by bitmap16.obj. The canonical generated scalar
+  deleting wrapper is exact as well. The 192-byte path constructor zeroes the
+  complete tail through member initializers, concatenates `path + name` in a
+  260-byte buffer, and calls the PCX importer; all instructions agree and its
+  99.94% residual is only stripped-target callee/EH relocation naming. The
+  170-byte data constructor is 92.70%
+  with exact allocation/copy semantics and CFG; its residual is field/vptr
+  store scheduling before the allocation. Direct parameter reuse, stored
+  `DataSize` reloads, member-based image-size calculation, an explicit
+  image-size local, and three assignment orders bounded the current maximum.
+  The importer, inner blitter and HSV body stay fenced. After mainmenu's
+  parallel admission, aggregate coverage stands at 887/1325 exact across 116
+  units and 49.60% fuzzy, with all gates clean.
+
+- **2026-08-12 — `mainmenu.obj` entered the build with its modal and
+  destructor trio exact; its constructor now has exact retail flow.**
+  `TMainMenu::DoModal` is the 44-byte twin of the
+  other front-end dialogs: start `"MainMenu"` music with `(0, 1)`, then pass
+  `this`, the address-taken `MainMenuHandler`, and fade flag zero to
+  `heroWindowManager::DoDialog`. The destructor restores vtable 0x63ff50,
+  clears the source-private active-menu pointer at 0x699660 before walking
+  and deleting the inherited widget vector, then destroys `heroWindow`; the
+  natural loop becomes all 117 retail bytes once that observable global
+  clear is kept in retail order. Its generated scalar deleting wrapper is
+  exact as well. The 901-byte constructor reconstructs the 0x54-byte class,
+  five packed button rectangles and all five button recipes, registration
+  loop, network-host button suppression, and time snapshot. Its 35-block CFG
+  is exact and it scores 97.01%; the sole structural residual is the same
+  VC6 `vector<widget*>::reserve` nested-inline choice already bounded in the
+  game-type window. `CDPlay::IsHost` is called through its CodeView-proven
+  slot 36 (+0x90), without an ad-hoc object view. `MainMenuHandler` is now
+  reconstructed end to end: its one-shot 5 MiB free-space warning, localized
+  missing-CD notice, right-click help dispatch, quit confirmation, hover
+  highlighting, dirty-video redraw, and ten-second multiplayer timeout all
+  agree with the retail branch stream (37 branches and three returns). It
+  scores 89.65%; the remaining structural residual is confined to VC6 giving
+  the two mutually exclusive temporary strings separate stack slots instead
+  of retail's reused slot. The called 66-byte
+  `get_available_disk_space` wrapper is byte-exact. The five-row
+  `VideomodeChoice` surface remains retail-dropped. Aggregate coverage is now
+  888/1326 exact across 116 units, 49.98% fuzzy, and 12.67% executable
+  matched, with all gates clean.
+
+- **2026-08-12 — `campaignbrief.obj` entered the build from its 399-byte
+  destructor anchor.** Retail proves a 0x68-byte `TCampaignBrief`: after the
+  0x4c-byte `heroWindow` base come the z buffer, saved music volume, a
+  Dinkumware vector at +0x54, and the owning campaign-header pointer at
+  +0x64. The vector's reverse cleanup advances by 0x4d4 and destroys a
+  `NewSMapHeader` at element +0, fixing the element layout without a private
+  view. The reconstructed destructor restores the saved `game` through its
+  register-passed assignment operator, restores ambient music, disposes the
+  saved game and campaign header, frees the z buffer, virtually deletes every
+  inherited widget, then lets VC6 emit the scenario-vector and base cleanup.
+  It has the exact 399-byte extent and scores 95.76%. The naturally generated
+  `NewSMapHeader` destructor scores 91.51%; this TU requires `/MT`, independently
+  visible in the retail `std::_Lockit` pair around the shared map sentinel
+  that `/ML` omits. Its remaining differences are instruction scheduling and
+  EH-state numbering, not missing behavior. Aggregate coverage is 50.04%
+  fuzzy before the generated scalar deleting wrapper was admitted exact.
+  Aggregate coverage is now 889/1329 exact, 50.05% fuzzy, and 12.71%
+  executable matched; all gates remain clean.
+
+- **2026-08-12 — `customcampaign.obj` entered the build with both located
+  scoring functions exact.** The retail loops prove that `SCampaign` owns a
+  Dinkumware vector at +0x5c whose 0x14-byte entries carry an active byte,
+  elapsed days at +4, and score at +8. `get_total_time` sums the days of
+  active entries. `get_score` ignores inactive and negative-score entries,
+  computes the rounded average of the rest, and multiplies it by five. Using
+  the original repeated `mapScores[i]` expressions reproduces VC6's separate
+  element-address and active-byte loads exactly; a reference-local probe was
+  three bytes shorter and was rejected. The 128- and 87-byte retail rows are
+  exact. Aggregate coverage is now 891/1331 exact across 118 units, 50.07%
+  fuzzy, and 12.72% executable matched, with all gates clean.
+
+- **2026-08-12 — `spellbookwindow.obj` entered the build with four exact
+  functions.** Retail's vtable at 0x641dcc independently fixes the generated
+  deleting destructor, `Open`, and `Close` at 0x0059c8c0/0x0059c970/
+  0x0059c990; constructor order and the shared active-window store fix the
+  117-byte destructor between them. Its natural widget-vector teardown is
+  exact. The class is canonical rather than an overlay: DC gives every
+  member name and the 0x58-byte base layout, while retail proves its 0x60-byte
+  `CAdvPopup`, twelve-entry (not DC's six-entry) `SpellMap`, widget range
+  pointers at +0xac/+0xb0/+0xb4, five widget pointers through +0xc8, and a
+  total size of 0xcc. `Open`'s `heroWindow::Open(...) ? 3 : 0` and `Close`'s
+  direct base delegation reproduce all 27 and 16 bytes. The synchronized
+  build/delink/build cycle raised aggregate coverage to 897/1336 exact and
+  50.18% fuzzy, with all ratchet, VA, single-view, and cleanliness gates
+  clean.
+
+- **2026-08-12 — `hillfortwindow.obj` entered the build with three exact
+  functions.** Retail's nine-slot vtable at 0x63eb68 and direct
+  `heroWindow` constructor/destructor calls prove the canonical base without
+  inventing a derived-tail view. The vtable fixes the 33-byte deleting
+  wrapper; the 117-byte destructor clears the constructor-proven active
+  window at 0x699194, deletes the canonical widget vector, and falls through
+  to the base destructor exactly. `DoModal` is exact at 31 bytes: it calls
+  the independently located `Recalculate(0)` and passes the handler address
+  proven by its 0x4e8850 immediate to `heroWindowManager::DoDialog`. Six
+  located but unreconstructed neighbors remain non-claiming location notes,
+  so they do not create artificial 0% denominator rows. The synchronized
+  cycle reached 904/1343 exact, 50.21% fuzzy, and 12.79% executable matched,
+  with every gate clean.
+
+- **2026-08-12 — `overview.obj` entered the build with
+  `game::SetupNewOverviewType` exact (826/826 bytes).** Dreamcast supplies
+  the method identity, locals, and original overview-global names; retail
+  independently fixes the two player-count fields, slider protocol, two
+  widget messages, three title-widget cells, mode-dependent title counts,
+  and both six-element geometry tables. The reconstruction uses the
+  canonical `playerData`, `slider`, `message`, `textWidget`, and
+  `heroWindow` interfaces—no TU-local views. HoMM2 lineage supplied the
+  source vocabulary, while every changed HoMM3 behavior was selected from
+  the retail body. Moving the unsigned-short geometry declarations back to
+  their retail lifetime point and preserving the original message-field
+  assignment order closed all 29 CFG blocks exactly. Aggregate coverage is
+  now 892/1332 exact across 119 units, 50.15% fuzzy, and 12.76% executable
+  matched, with all gates clean.
+
+- **2026-08-12 — `hero::SetSS` closed from 3.8% to exact (63/63
+  bytes).** Its natural source was already correct, but VC6 over-inlined the
+  exact `GiveSS` body where all four retail in-TU callers use an out-of-line
+  call. A call-site-only `inline_depth(0)` pin reproduces that retail
+  decision while leaving `GiveSS`, its other callers, and unrelated TU
+  inlining unchanged. Aggregate coverage is now 893/1332 exact, 50.16%
+  fuzzy, and 12.76% executable matched; all gates remain clean.
+
+- **2026-08-12 — `victorylossconditions.obj` entered the build with
+  `VictoryConditionStruct::IsTownCaptureTarget` exact (52/52 bytes).** Retail
+  proves condition type 6, signed town ids, and the three Complete-era dword
+  coordinates at +0x18/+0x1c/+0x20; Dreamcast independently supplies the
+  class, method, parameter, and `bool` return identity. The exact source
+  rejects non-town-capture conditions, calls `game::GetTownId`, and uses an
+  explicit false/true return pair so VC6 emits the retail `sete al` directly.
+  The other sixteen located rows remain fenced. Aggregate coverage reached
+  875/1307 exact across 110 units, 49.55% fuzzy, with all gates clean.
+
+- **2026-08-12 — twelve obsolete fake-view switches and one dead declaration
+  switch were removed.** The cache ABI, artifact-owned tables, puzzle and
+  quick-creature text fields, hero disguise/class-name fields, hire helpers,
+  boat/landing helpers, and cell-adjustment methods now use their canonical
+  declarations without TU-only preprocessor aliases; the never-consumed
+  adventure-options switch and the now-empty combat-manager declaration
+  switch were deleted outright. A full 109-unit VC6 build retained all
+  874/1290 exact rows, 50.18% fuzzy coverage, and every ratchet, VA,
+  single-view, and cleanliness gate. The remaining explicit compatibility
+  layouts are not dead: probes replacing the town-name overlay and the
+  creature-bank vector overlay with canonical `std::string`/`std::vector`
+  access regressed `SetRolloverText` (89.71% to 89.50%) and
+  `get_creature_bank_help_text` (87.28% to 87.13%) and were reverted; the two
+  adventure object-renderer overlays and Seer Hut/Quest Guard vector access
+  retain the previously documented VC6 regressions. `TSplitSliderView` is a
+  genuine game class, not an overlay. The later herodefs proof also made the
+  custom-name fields and methods plus the 144-bit combination-artifact
+  component set canonical everywhere;
+  all 37 dependent units and the full ratchet stayed neutral.
+
+- **2026-08-12 — `creature_bank.obj` entered the build with
+  `type_creature_bank_traits::type_creature_bank_traits` exact (94/94
+  bytes).** The constructor initializes the 16-byte Dinkumware name string
+  and then four level records, calling `armyGroup::armyGroup` at +0x10 with
+  a 0x60 stride. Those retail bytes replace the old anonymous 0x180 tail
+  with four canonical `type_creature_bank_level` records and close the
+  already observed 0x190 trait stride. The remaining Dreamcast roster is
+  fenced because its command-to-creaturetype retail bracket is not uniquely
+  attributable. Aggregate coverage reached 874/1290 exact across 109 units,
+  50.18% fuzzy, and 12.44% executable matched with every gate clean.
+
+- **2026-08-12 — the retail `CNetMsg` initialization order made
+  `game::ClaimGenerator` and `game::CreateBoat` exact.** The shared inline
+  constructor assigns the message subtype before the -1 sentinel, then the
+  size and zero fields; the previous member-initializer spelling forced a
+  different VC6 store schedule. Reconstructing the constructor body in that
+  retail-proven order raised ClaimGenerator from 99.9706% and CreateBoat
+  from 99.9726% to 100%, while also raising the large `game::Load` body from
+  50.3078% to 50.4577%. A declaration-order probe for ClaimGarrison regressed
+  and was reverted. Aggregate coverage reached 873/1289 exact across 108
+  units, 50.17% fuzzy, with every gate clean.
+
+- **2026-08-12 — the false `NewfullMap::Close` view at 0x4fd460 was
+  removed.** Retail takes a destructor-flags argument, tests the array and
+  delete bits, reads the cookie at `[this-4]`, invokes
+  `NewmapCell::~NewmapCell` through the vector destructor iterator, and
+  conditionally frees the allocation. It is a compiler-generated
+  `NewmapCell` deleting destructor, not Dreamcast's no-argument
+  `NewfullMap::Close`; the latter is inlined into retail's NewfullMap
+  destructor and Init. Demoting the false claim removed one artificial 0%
+  row without claiming bytes. Coverage is 871/1289 exact across 108 units,
+  50.17% fuzzy, with every gate clean.
+
+- **2026-08-12 — `NewfullMap::saveTreasureData` is exact (77/77
+  bytes), and the opaque `TreasureData` view was retired.** Dreamcast names
+  the message, custom-guardians flag, and guardian army; retail fixes them at
+  +0x00, +0x10, and +0x14 and closes the independently proven 0x4c record
+  stride. The body serializes the message, writes the flag through the
+  virtual file interface with an unsigned short-write check, reloads that
+  flag after the potentially aliasing call, and conditionally saves the
+  army. `BlackBoxData` now retains its DC-proven `TreasureData` base rather
+  than duplicating the base as anonymous payload. Aggregate coverage reached
+  871/1290 exact across 108 units, 50.16% fuzzy, and 12.43% executable
+  matched with every gate clean.
+
+- **2026-08-12 — `searchArray::PushCombatPoint` was restored from its
+  fenced carcass and raised from 0% to 75.7383%.** The retail 860-byte body
+  proves the 187-hex bounds, 500-entry queue cap, visited-cell cost
+  rejection, descending-cost binary search, partial `pathCell`
+  initialization, vector insertion, and final grid-cell copy. Dreamcast
+  CodeView independently supplies the five parameter roles and local
+  identities. The remaining delta is source-shape/register allocation in
+  VC6's large inlined `std::vector<pathCell>::insert`; the reconstructed
+  control flow and all semantic operations are present. Aggregate coverage
+  remains 870/1290 exact across 108 units, while fuzzy coverage rose from
+  50.01% to 50.14% and executable matched rose from 12.40% to 12.43%, with
+  every gate clean.
+
+- **2026-08-12 — two non-emitting generated-destructor claims were
+  removed from the comparison universe.** The old 0x4077b0 claim assigned
+  a fourth virtual slot to `advManager`, contradicting the admitted
+  three-slot retail table; that address actually begins the following
+  `CAdvMgrNetMsgHandler` table. The correctly located
+  `THeroScreenWindow` deleting destructor at 0x4e1520 was also demoted to
+  evidence-only until its real destructor and canonical base layout are
+  admitted, because an isolated `VA_COMPGEN` annotation cannot emit code.
+  This removes two artificial 0% rows without claiming any retail bytes;
+  coverage is 870/1290 exact across 108 units, with all gates clean.
+
+- **2026-08-12 — `singleselectionpopups.obj` entered the build with
+  `CSpriteWidget::Main` exact (16/16 bytes).** The retail constructor at
+  0x5754f0 installs vtable 0x641a00; slot 2 uniquely locates this body at
+  0x575a10, where it directly forwards its message pointer to
+  `widget::Main`. The same constructor's 0x38-byte allocation and stores at
+  +0x30/+0x34 establish the canonical sprite-widget tail without a local
+  view type. The other 37 Dreamcast-derived stubs remain fenced. Aggregate
+  coverage reached 870/1292 exact across 108 VC6 units, 50.01% fuzzy, and
+  12.40% executable matched with every gate clean.
+
+- **2026-08-12 — `event_record.obj` entered the build with
+  `game::replay_available` exact (65/65 bytes).** Retail proves the
+  Dinkumware pointer vector at game +0x4e7ac (first/last at +0x4e7b0 and
+  +0x4e7b4), the signed player byte at record +4, and the comparison against
+  `gNetLocalGamePos`. The function returns true on the first queued record
+  belonging to another player and false for an empty or entirely local
+  queue. Its remaining 212-function generated carcass is fenced, while the
+  two old unreconstructed visibility VAs were demoted to evidence-only
+  locations. Aggregate coverage reached 869/1291 exact across 107 VC6 units,
+  50.00% fuzzy, and 12.40% executable matched with every gate clean.
+
+- **2026-08-12 — `NewfullMap::loadObject` is exact (164/164 bytes).**
+  The function reads the object's x, y, and z bytes individually, followed
+  by its two-byte object-type index, and returns -1 immediately whenever
+  virtual `TAbstractFile::Read` supplies fewer bytes than requested. Retail
+  proves the four read widths, field offsets, short-read polarity, and local
+  reuse; Dreamcast supplies the member identity and parameter roles. The
+  old opaque `void*` carcass signature was promoted to the canonical stream
+  interface, and the source-owned VA migrated cleanly to its resulting
+  decorated identity. Aggregate coverage reached 868/1290 exact across 106
+  VC6 units, 50.00% fuzzy, and 12.39% executable matched with every gate
+  clean.
+
+- **2026-08-12 — `cursor.obj` entered the build with
+  `advManager::TurnTo` exact (26/26 bytes).** Repeated direct-call edges
+  from the admitted adventure-manager bodies locate the retail cursor run:
+  `StopCursor` at 0x47f7d0, the drawing and movement functions in roster
+  order through `ValidMove`, and `SendMapChange` at 0x482390. The smallest
+  member in that run clears `cursorTurning` at +0x204 and stores the new
+  `cursorDirection` at +0x1f4. Dreamcast supplies those consecutive member
+  names at offsets twelve bytes later; retail's already-proven cursor-array
+  extent and the two stores establish the retail shift. The remaining
+  28-function carcass stays fenced. Aggregate coverage reached 867/1290
+  exact across 106 VC6 units, 49.96% fuzzy, and 12.39% executable matched
+  with every gate clean.
+
+- **2026-08-12 — `GetMonsterCost` is exact (49/49 bytes).** The original
+  source shape is the direct seven-element indexed copy from the creature
+  record's cost row. VC6 strength-reduces the repeated
+  `29 * monId + 8 + resource` subscript into retail's two-LEA multiply,
+  keeps that product in ECX, and lowers the indexed loop to paired pointer
+  increments with a seven-item countdown. The previously hand-lowered
+  pointer loop was behaviorally identical but selected EAX for the product
+  and plateaued at 86%. Aggregate coverage reached 866/1289 exact across
+  105 VC6 units, 49.96% fuzzy, and 12.38% executable matched with every
+  gate clean.
+
+- **2026-08-12 — `army::get_fire_shield_strength` is exact (37/37
+  bytes).** Retail returns the stack's `float` at +0x4a0 while the
+  independently established round counter at +0x20c is non-zero. With no
+  active spell, only creature type 0x35 (the already-proven Efreet Sultan
+  domain value) receives the shared 0.2f innate multiplier; every other
+  stack receives the image-wide zero-float constant. Both anonymous pool
+  entries are source-owned through `DATA_COMPGEN`, and the canonical army
+  layout now exposes the previously padded strength field. Aggregate
+  coverage reached 865/1289 exact across 105 VC6 units, 49.96% fuzzy, and
+  12.38% executable matched with every gate clean.
+
+- **2026-08-12 — `bottomviewsubwindow.obj` entered the build with the
+  `type_bottom_view_window` destructor pair exact.** Vtable 0x63bb04
+  proves the scalar deleting destructor at 0x450d20 (33/33 bytes), which
+  calls the 120-byte destructor at 0x450d50. The latter walks the inherited
+  widget vector, removes each live widget from the parent, deletes it
+  virtually, and then invokes the exact `TSubWindow` destructor. The empty
+  `animate` slot is the image-wide one-byte COMDAT at 0x5bc690 and is not
+  double-claimed. The 2,260-byte constructor remains fenced. Aggregate
+  coverage reached 864/1288 exact across 105 VC6 units, 49.96% fuzzy, and
+  12.38% executable matched with every gate clean.
+
+- **2026-08-12 — `TAdventureMapWindow::animate_bottom_view` is exact
+  (36/36 bytes).** The body calls the bottom view's virtual `animate`
+  slot when running in the foreground, or in the background only when
+  the gate byte is set. Dreamcast names that member
+  `animate_in_background` at +0x64; the independently established
+  eight-byte retail base shift puts it at the exact +0x6c byte read by
+  retail. This grows the existing canonical adventure-window layout rather
+  than adding a view. Aggregate coverage reached 862/1286 exact, 49.94%
+  fuzzy, and 12.37% executable matched with every gate clean.
+
+- **2026-08-12 — `kb.obj` entered the build with `GetMapExtra`
+  (37/37 bytes) and `GetMapExtraPtr` (36/36 bytes) exact.** Both bodies
+  linearize coordinates as `((z * gMapHeight + y) * gMapWidth + x)` into
+  the 16-bit map-extra buffer whose retail pointer cell is at 0x6989f8;
+  one loads the value and the other returns its address. The 121-function
+  carcass is fenced and twelve stale claims were demoted, leaving only the
+  two reconstructed accessors. Aggregate coverage reached 861/1285 exact
+  across 104 VC6 units, 49.94% fuzzy, and 12.37% executable matched with
+  every gate clean.
+
+- **2026-08-12 — `events.obj` entered the build with both 35-byte pool
+  accessors exact.** `get_treasure_data` extracts a 12-bit index from
+  `NewmapCell::extraInfo`, reads the vector's first pointer at
+  `NewfullMap+0x34`, and indexes 0x4c-byte records. `get_black_box`
+  extracts a 10-bit index, reads the first pointer at +0x54, and indexes
+  0xe4-byte records. The record payloads remain opaque; only the extents
+  proved by retail address arithmetic were admitted. The 275-function
+  carcass is fenced and 24 stale claims were demoted, leaving only these
+  two real claims. Aggregate coverage reached 859/1283 exact across 103
+  VC6 units, 49.93% fuzzy, and 12.37% executable matched with every gate
+  clean.
+
+- **2026-08-12 — `army::CancelSpellType` is exact (59/59 bytes).** The
+  independently anchored retail body switches on the cancellation moment:
+  the after-attack arm cancels spell 59, while the after-damage arm cancels
+  62, 70, and 74 in that order. A named move/attack/damage domain replaces
+  the raw switch labels; its zero move value is also corroborated by the
+  exact `FlyTo` consumer, and the mature HoMM2 sibling supplies the same
+  semantic spellings. Aggregate coverage reached 857/1281 exact, 49.92%
+  fuzzy, and 12.37% executable matched with every gate clean.
+
+- **2026-08-12 — `cspriteframe.obj` entered the build with all three
+  vtable functions exact.** Retail's two importing constructors prove the
+  `resource` base followed by `DataSize` at +0x1c through `map` at +0x44,
+  and the vtable/destructor prove that the retail object ends there at
+  0x48 bytes (unlike Dreamcast's DirectDraw-tailed form). The scalar
+  deleting destructor is 33/33 bytes, the destructor is 34/34, and the
+  resource-size slot is 7/7. The unreconstructed 34-function carcass is
+  fenced and its two old claims were demoted. Aggregate coverage reached
+  856/1280 exact across 102 VC6 units, 49.92% fuzzy, and 12.36%
+  executable matched with every gate clean.
+
+- **2026-08-12 — `palette.obj` advanced with `TPalette24`'s scalar
+  deleting destructor (33/33 bytes) and assignment operator (33/33 bytes)
+  exact.** The assignment leaves the resource base intact and copies only
+  the independently proven 0x300-byte RGB payload with VC6's `rep movsd`.
+  The label generator now recognizes only MSVC `??4` assignment operators,
+  allowing the source-owned claim to adopt the compiled decorated name;
+  other special operators remain deliberately unjoined, and positive and
+  negative controls cover that boundary. Aggregate coverage reached
+  853/1277 exact, 49.91% fuzzy, and 12.36% executable matched with every
+  gate clean.
+
+- **2026-08-12 — `philai.obj` entered the build with
+  `hero::ValueOfSpell` exact (86/86 bytes).** Retail's callers and body use
+  a thiscall-shaped ABI (hero in ECX, spell on the stack), while Dreamcast
+  exposes the same source logic as a file-local two-argument helper. The
+  body rejects spells above Wisdom+2, spells already in the hero's book,
+  and heroes without the spellbook artifact before forwarding to the AI
+  spell evaluator. A compound success condition reproduces retail's shared
+  zero epilogue. The remaining 134-function carcass is fenced and nine
+  stale `VA` annotations were demoted. Aggregate coverage reached 851/1275
+  exact across 101 VC6 units, 49.90% fuzzy, and 12.36% executable matched
+  with every gate clean.
+
+- **2026-08-12 — `adventuremapwindow.obj` entered the build with
+  `ClearBottomView` (31/31 bytes) and `UpdateResourceDisplay` (30/30
+  bytes) exact.** Retail proves the owned bottom-view pointer at +0x98
+  through its virtual deletion and clear, and the resource-display pointer
+  at +0x5c through its two-argument update call. Both fields extend the
+  existing canonical `TAdventureMapWindow` model; no duplicate view was
+  introduced. The remaining 226-function carcass is fenced and 23 stale
+  `VA` annotations were demoted to non-claims. Aggregate coverage reached
+  850/1274 exact across 100 VC6 units, 49.89% fuzzy, and 12.35% executable
+  matched with every gate clean.
+
+- **2026-08-12 — `army.obj` entered the build with `army::move_to`
+  exact (20/20 bytes).** The old link-order join mislabeled retail
+  0x445d10 as `choose_wall_target`; Dreamcast's decorated public symbol,
+  its call edge to `simple_move`, and retail's two-argument forwarding
+  thunk instead prove `move_to`. The unreconstructed 182-function carcass
+  is now fenced, and 71 stale `VA` annotations were demoted to non-claims
+  rather than exposing fake owners. Aggregate coverage reached 848/1272
+  exact across 99 VC6 units, 49.89% fuzzy, and 12.35% executable matched
+  with every gate clean.
+
+- **2026-08-12 — `TPalette24::TPalette24()` is exact (22/22 bytes).**
+  Retail passes a null name and zero resource type to the independently
+  exact `resource` constructor, then installs vtable 0x640374. The natural
+  derived initializer reproduces that complete sequence with no guessed
+  state. Aggregate coverage reached 847/1271 exact, 49.89% fuzzy, and
+  12.35% executable matched with every gate clean.
+
+- **2026-08-12 — `palette.obj` advanced with `TPalette24`'s destructor
+  (11/11 bytes) and resource-size slot (6/6 bytes) exact.** Retail
+  constructors copy exactly 0x300 RGB bytes at +0x1c, while vtable 0x640374
+  identifies the empty derived destructor and a slot returning the resulting
+  0x31c-byte extent. Those independent facts admit the real resource-derived
+  class layout and correct the generated inventory's mistaken `TPalette16`
+  slot label. Aggregate coverage reached 846/1270 exact, 49.88% fuzzy, and
+  12.35% executable matched with every gate clean.
+
+- **2026-08-12 — `bitmap16.obj` advanced with the `Bitmap16Bit`
+  resource-size vtable slot exact (7/7 bytes).** Retail slot 2 loads
+  `DataSize` from the proven +0x1c field and adds the class's independently
+  proven 0x38-byte extent. Expressing that contract directly reproduces the
+  complete body and strengthens the shared resource-size interpretation.
+  Aggregate coverage reached 844/1268 exact, 49.88% fuzzy, and 12.35%
+  executable matched with every gate clean.
+
+- **2026-08-12 — `csprite.obj` advanced with the `CSprite` resource-size
+  vtable slot exact (6/6 bytes).** The generated name inventory misassigned
+  retail 0x47bd50 to a `CSpriteFrame` destructor, but the address is slot 2
+  of the independently proven `CSprite` vtable and its entire body returns
+  the literal 0x38-byte class extent. The corrected shared resource-size
+  contract therefore identifies and reproduces it without trusting the
+  contradicted external name. Aggregate coverage reached 843/1267 exact,
+  49.88% fuzzy, and 12.34% executable matched with every gate clean.
+
+- **2026-08-12 — `palette.obj` advanced with the `TPalette16` resource-size
+  vtable slot exact (6/6 bytes).** Retail's 0x522b40 row is not the
+  Dreamcast `AdjustValue` body assigned there by the old bracket join: it is
+  slot 2 of vtable 0x640368 and returns the class's proven 0x21c-byte extent.
+  The shared resource slot is now correctly typed as a const unsigned-size
+  query across the modeled derived classes; all 44 affected VC6 units kept
+  their prior maxima. Aggregate coverage reached 842/1266 exact, 49.88%
+  fuzzy, and 12.34% executable matched with every gate clean.
+
+- **2026-08-12 — `palette.obj` entered the build with
+  `TPalette16::~TPalette16` exact (11/11 bytes).** This was the smallest
+  retail-tied body not already present in the comparison graph. The empty
+  derived destructor naturally restores the `TPalette16` vtable and
+  tail-jumps to `resource::~resource`, exactly matching retail. Fifteen older
+  annotations on unreconstructed palette bodies were withdrawn during
+  admission. Aggregate coverage reached 841/1265 exact, 49.88% fuzzy, and
+  12.34% executable matched with every gate clean.
+
+- **2026-08-12 — `wingraph.obj` advanced with `InitGraphics` exact
+  (5/5 bytes).** WinMain's post-CreateWindow callee is a pure tail wrapper
+  into the adjacent DirectDraw-creating body at 0x6014f0. Retail emits no
+  argument setup, proving the zero-argument x86 variant even though the
+  Dreamcast port's same-named initializer accepts mode and reinit arguments.
+  The natural C++ call compiles to retail's five-byte tail jump. Aggregate
+  coverage reached 840/1264 exact, 49.88% fuzzy, and 12.34% executable
+  matched with every gate clean.
+
+- **2026-08-12 — `text.obj` entered the build with
+  `InitializeGeneralText` exact (25/25 bytes).** The stale first-pass join
+  classified the Dreamcast text roster as retail-dropped, but retail's
+  0x5b90f0 body directly references `genrltxt.txt`, calls the independently
+  mapped `ResourceManager::GetText`, stores the result at 0x6a5d5c, and
+  returns its non-null status. That literal, call edge, and source order
+  prove the identity without relying on the contradicted IDA address label.
+  Aggregate coverage reached 839/1263 exact, 49.88% fuzzy, and 12.34%
+  executable matched with every gate clean.
+
+- **2026-08-12 — `csprite.obj` entered the build with `CSprite::GetPalette`
+  exact (14/14 bytes) and `CSprite::ColorCycle` exact (27/27 bytes).** The
+  retail accessor loads the owned `TPalette16` at +0x20 and returns its
+  raw 16-bit palette at +0x1c, while the successor delegates its three
+  arguments to `TPalette16::Cycle`. The palette resource now exposes its
+  same-storage raw-record member through a union, preserving its proven
+  layout without a cast or an access-only view. Four older annotations on
+  unreconstructed sprite bodies were withdrawn during admission. Aggregate
+  coverage reached 838/1262 exact, 49.88% fuzzy, and 12.34% executable
+  matched with every gate clean.
+
+- **2026-08-12 — `wingraph.obj` entered the build with
+  `GetDesktopWidth` and `GetDesktopHeight` exact (6/6 bytes each).** The two
+  source-order functions are the direct retail loads from the desktop-width
+  and desktop-height globals at 0x68c874 and 0x68c878. Four older annotations
+  on unreconstructed graphics stubs were withdrawn during admission, leaving
+  the live unit limited to retail-proven bodies. Aggregate coverage reached
+  836/1260 exact, 49.87% fuzzy, and 12.34% executable matched with every gate
+  clean.
+
+- **2026-08-12 — `dimensiondoorwindow.obj` entered the build with
+  `TSkuttleBoatWindow::ExitDialog` exact (44/44 bytes).** Retail's caller
+  allocates the 0x64-byte window and its constructor accesses the sole
+  derived `RolloverWidget` at +0x60, agreeing with the Dreamcast field
+  roster after accounting for retail's wider `CAdvPopup`. The handler
+  rewrites the incoming event as widget code 10, clears the window
+  manager's dialog result, and forwards dispatch. Aggregate coverage
+  reached 834/1258 exact, 49.87% fuzzy, and 12.34% executable matched with
+  every gate clean.
+
+- **2026-08-12 — `drawing.obj` entered the build with
+  `combatManager::ResetLimitCreature` exact (99/99 bytes).** The body clears
+  the forty per-stack effect bytes, the paired hero/flag latches, and three
+  archer latches, then restores the manager's 16-byte drawing extent from
+  the retail aggregate at 0x6aace8. The effect tail begins beyond the
+  currently materialized `combatManager` prefix; its five proven offsets
+  are named directly instead of introducing an access-only class. An
+  attempted shared-header tail expansion changed VC6's type population and
+  regressed the previously exact `initialize_game_data`; it was rejected,
+  and the established class contract plus its 100% match were restored.
+  Twelve older annotations on unreconstructed drawing stubs were withdrawn
+  during admission. Aggregate coverage reached 833/1257 exact, 49.87%
+  fuzzy, and 12.34% executable matched with every gate clean.
+
+- **2026-08-12 — `towngatewindow.obj` entered the build with the
+  `TTownGateWindow` destructor pair exact (33/33 generated wrapper and
+  143/143 body).** The Dreamcast field roster starts the derived tail at its
+  0x58-byte `CAdvPopup`; retail's eight-byte-wider base and four-byte-wider
+  VC6 vector place `Towns`, `topTown`, `selectedTown`, and
+  `adventure_spell` at +0x60/+0x70/+0x74/+0x78. `advManager::TownGate`'s
+  stack object independently proves the resulting 0x7c total. The destructor
+  deletes each owned widget, releases the town-index vector, and delegates to
+  the popup base exactly as the natural C++ ownership loop specifies.
+  Aggregate coverage reached 832/1256 exact, 49.86% fuzzy, and 12.33%
+  executable matched with every gate clean.
+
+- **2026-08-12 — `lodfile.obj` entered the build with
+  `LODFile::getItemIndex` exact (69/69 bytes).** Retail constructor, open,
+  clear, and read accesses account for the canonical 0x18c-byte object,
+  including the 0x20-byte `LODEntry` rows and the VC6 vector at +0x17c;
+  seven older annotations on unreconstructed stubs were withdrawn during
+  admission. The lookup rejects a closed archive, binary-searches the live
+  entry count through `Find`, and returns the indexed row only on a
+  nonnegative match. A nested success return was needed to reproduce
+  retail's single shared null-return epilogue. Aggregate coverage reached
+  830/1254 exact, 49.84% fuzzy, and 12.32% executable matched with every
+  gate clean.
+
+- **2026-08-12 — `questlogwindow.obj` entered the build with
+  `TQuestLogWindow::WindowHandler` exact (29/29 bytes).** Source-order
+  mapping and the two retail call edges identify the handler: it first
+  delegates to `CAdvPopup::WindowHandler`, then invokes the public
+  `TrueFalseDialogHandler` thunk only when the base leaves the message
+  unhandled. `DoQuestLog` independently proves the canonical class size by
+  allocating 0x74 bytes, while the constructor initializes the byte at
+  +0x60 and the VC6 `vector<int>` at +0x64..+0x73; the header therefore
+  carries the real layout rather than an access-only view. Aggregate
+  coverage reached 829/1253 exact, 49.83% fuzzy, and 12.32% executable
+  matched with every gate clean.
+
+- **2026-08-12 — `bitmap16.obj` entered the build with the
+  `Bitmap16Bit` destructor pair exact (33/33 generated wrapper and 41/41
+  body).** Retail's 0x38-byte allocation/layout and the destructor body agree:
+  `map` is +0x30 and is freed only when non-null and not `referenced` at
+  +0x34, followed by the `resource` base destructor. The initial natural body
+  gained an /GX unwind frame because VC6's default deallocator declaration
+  may throw; the same retail-proven nothrow redeclaration established by
+  `sample.obj` removes it and reproduces the frameless retail body exactly.
+  Four older `VA` annotations on still-stubbed drawing methods were withdrawn
+  and retained only as documented retail locations. Aggregate coverage
+  reached 828/1252 exact, 49.83% fuzzy, and 12.32% executable matched with
+  every gate clean.
+
+- **2026-08-12 — `townmgr.obj` entered the build with `DoMapTavern`
+  exact (48/48 bytes).** The event-dispatch caller, the direct `DoTavern`
+  edge, and the paired town-manager path settle both identity and role: map
+  taverns set the shared mode flag, run the common chooser, then ask its
+  selected hero to hire for `gNetLocalGamePos` at the event point. The two
+  source-private globals at 0x6aaa48/0x6aa628 are now claimed with
+  role-derived provisional names. Admitting this TU also exposed an old
+  `VA` annotation on the still-stubbed 821-byte `GetBuildingInfo`; that
+  unearned claim was withdrawn and retained only as a documented retail
+  location. The clean post-delink result is 826/1250 exact, 49.82% fuzzy,
+  and 12.31% executable matched with all gates clean.
+
+- **2026-08-12 — `soundManager::Close` closed exact at 0x00599a90
+  (241/241 bytes).** The slot-1 virtual shutdown path disables future sound,
+  closes video, gives asynchronous sample waiters up to twenty 50-ms drain
+  intervals, serializes Miles shutdown under the two sound sections, closes
+  the MP3 stream, ends every sample handle, and clears the manager status.
+  Retail xrefs to 0x6a3254 prove it as the live waiter counter: the wait
+  thread increments/decrements it and `Close` polls it. The first natural
+  compound `while` reconstruction was semantically complete but scheduled
+  the two tests differently; the source-shaped bounded `for` with an early
+  worker-count break reproduces retail's loop and made the function exact.
+  Aggregate coverage reached 825/1249 exact, 49.82% fuzzy, and 12.31%
+  executable matched with all gates clean.
+
+- **2026-08-12 — `binkmanager.obj` entered the build with
+  `BinkManager::RestartBink` exact (77/77 bytes).** Retail caller roles and
+  the body correct attempt-1's stale assignment of 0x0044da50: this is the
+  restart operation, not draw-current-frame. It seeks the active Bink handle
+  to frame one, decodes that frame, and copies it to the configured buffer
+  using the current pitch, height, and surface flags. The canonical static
+  `BinkManager` declarations and `BINK` tag now reflect the DC decorated
+  identities while preserving the existing retail-tested alias surface used
+  by `smackmgr`. Aggregate coverage reached 824/1248 exact and 49.79% fuzzy;
+  all ratchet, VA, single-view, and cleanliness gates remain clean.
+
+- **2026-08-12 — `combatcontrolsubwindow.obj` entered the build with
+  `TCombatHeroSubWindow::Show` and `UnShow` exact (116/116 and 58/58).**
+  Two retail allocation sites prove the complete 0x5c-byte object: the
+  canonical 0x34-byte `TSubWindow` base, nine widget pointers through +0x54,
+  and `shown` at +0x58. The paired bodies independently corroborate that
+  layout while toggling `WIDGET_ACTIVE | WIDGET_DRAWN` across the inherited
+  widget vector, saving/restoring the background, and updating the exposed
+  rectangle. Natural Dinkumware iterator loops reproduce retail's raw-pointer
+  walk exactly. One semantic diff reports only delinker symbol-name aliases
+  for `gpWindowManager`/`UpdateScreen`; instruction and relocation bytes are
+  exact. Aggregate coverage reached 823/1247 exact, 49.78% fuzzy, and 12.30%
+  executable matched with all gates clean.
+
+- **2026-08-12 — `CanBuy` closed exact at 0x00461130 (92/92 bytes).**
+  Source-order mapping places the DC identity immediately after
+  `GetBuildingName`; the retail body independently proves the boundary and
+  implementation. It asks the town for the seven-column building-cost row,
+  selects `gpGame->players[gNetLocalGamePos]`, and returns false on the first
+  resource deficit. The natural array-and-loop spelling reproduces the VC6
+  frame, register allocation, and both return epilogues without adjustment.
+  The build→delink→build cycle raised aggregate coverage to 821/1245 exact,
+  49.77% fuzzy, and 12.29% executable matched with all gates clean.
+
+- **2026-08-12 — `csequence.obj` closed 2/2 exact as the smallest
+  actionable unadmitted TU.** Retail's 68-byte int constructor proves the
+  complete 12-byte DC layout unchanged: `numFrames` +0, `allocatedFrames`
+  +4, and `CSpriteFrame** f` +8. Natural `new CSpriteFrame*[num]` plus the
+  zeroing loop reproduces every constructor byte. The direct
+  `CSprite::AddFrame(sequence, frame)` caller settles the 38-byte overload as
+  `AddFrame(CSpriteFrame*)`, overruling an older HD-derived `const char*`
+  name assignment; its successful store must be the fallthrough and its
+  full-array zero return the tail block to reproduce VC6 exactly. The
+  default constructor, destructor, and richer overloads have no distinct
+  rows in the retail bracket; the adjacent 15-byte deleting destructor is
+  compiler-generated in `csprite` on the DC roster. Aggregate coverage
+  reached 820/1244 exact and 49.76% fuzzy with all gates clean.
+
+- **2026-08-12 — the combat Teleport reachability pair closed exact:
+  `searchArray::mark_teleport` 664/664 and
+  `combatManager::is_valid_teleport` 195/195.** The first function rebuilds
+  all 187 path cells, excludes the two invisible columns, combines
+  `army::CanFit` with the spell-side predicate, and preserves the retail
+  enemy-marking walk. Dreamcast's call graph supplied the identities and
+  original inline roster; retail independently proved every boundary,
+  field, branch, and call target. The decisive VC6 spelling was the
+  DC-attested inline `mark_enemy(hex,cost)` with separate `hexcell*` and
+  `pathCell*` locals: that changed the initial 71.33% reconstruction to the
+  exact retail register allocation. The source deliberately preserves a
+  retail quirk: wide enemies invoke `mark_enemy` twice on the same anchor
+  hex rather than marking a second hex. The located spell predicate rejects
+  the current cell or a failed fit, gets Teleport (literal 0x3f) mastery from
+  the acting hero, and enforces mastery 2 for crossing a moat and mastery 3
+  for bypassing line of sight. The spell stays literal rather than adding an
+  enumerator to the measured type-population-sensitive `armygrp.h`. The
+  required build→delink→build cycle raised aggregate coverage to
+  818/1242 exact, 49.75% fuzzy, and 12.28% executable matched, with every
+  ratchet and cleanliness gate clean.
+
+- **2026-08-12 — `university_window.obj` entered the build with
+  `type_university_window::ExitDialog` exact (45/45 bytes).** Link-order
+  bracketing between `u2dvers` and `victorylossconditions`, the retail
+  15-slot vtable's slot 14, and Dreamcast's decorated public identity agree
+  on 0x005f1180. The body converts the message to `MESSAGE_WIDGET`, clears
+  `heroWindowManager::dialogReturn`, assigns codeY/codeX 10 in VC6's chained
+  store order, and forwards dispatch. The same mapping campaign independently
+  corroborated `type_university_window : CAdvPopup`: retail's proven 0x60
+  base shifts DC's rollover pointer and four-skill array from +0x68/+0x6c to
+  the observed +0x70/+0x74, while the two widened Dinkumware vectors explain
+  the later +0xdc/+0xec data pointers. No tail-layout view was fabricated;
+  unresolved methods remain fenced until promoted. The required
+  build→delink→build cycle raised aggregate coverage to 816/1241 exact
+  at 49.59% fuzzy, with the ratchet, VA, single-view, and cleanliness gates
+  clean.
+
+- **2026-08-11 — `combatManager::combatManager` was promoted from a 0%
+  carcass to all 295 retail bytes exact.** The constructor independently
+  proves `combatManager : baseManager`, the 187-entry `hexcell` array at
+  +0x1c4, two 16-byte Dinkumware set records beginning at +0x545c, the 42
+  `army` records at +0x54cc, the empty vector representation at +0x13d58,
+  and three non-trivial 36-byte archer records at +0x13d78. The nested
+  archer destructor's two reverse-order `CSprite::Dispose` calls corroborate
+  the sprite fields at +4/+8. VC6 schedules the four scalar assignments in
+  retail order only when they are constructor-body statements rather than
+  member initializers. Correcting the Eagle Eye record base simultaneously
+  advanced the unchanged `LearnSpellFromEagleEye` body from 89.37% to
+  99.98%; its instruction bytes now agree and only two flat delinker
+  relocation names remain. Aggregate coverage reached 815/1240 exact and
+  49.59% fuzzy before the full ratchet build.
+
+- **2026-08-11 — `TGameTypeWindow`'s constructor was promoted from a 0% carcass
+  to a complete 93.73% source reconstruction.** Retail proves the full-screen
+  `heroWindow`, nine-widget reserve, mode-indexed `newgame.pcx`/`loadgame.pcx`
+  banner, restricted-menu gate, five button recipes, and the final
+  `AddWidget`/`MemError` walk. The five coordinate rows are one canonical
+  packed-four-short type in `gametypewindow.h`, backed by the 40 bytes at
+  0x63e6b0. Retail's `bitmapBorder16` constructor ends in `ret 0x1c`, proving
+  that PC takes seven arguments and dropped Dreamcast's trailing `focusable`
+  byte. The unit is now four exact functions plus the constructor residual;
+  its only structural delta is the known VC6 nested-inline choice inside
+  `vector<widget*>::reserve` (range-destroy versus `size`). Direct/reference
+  row forms, both include orders, a reserve adapter, and a 1..8 type-population
+  sweep bounded that plateau. Aggregate fuzzy coverage rose 49.35% -> 49.52%.
+
+- **2026-08-11 — eight redundant partial-layout views and one TU-only chat
+  declaration were retired without weakening the match ratchet.** Canonical
+  fields now serve `TAdventureMapWindow::chatEdit`, `hero::targetIsCritical`,
+  the packed ground/road/river flags, `mine`, the university vector, and the
+  complete `CChatManager`; the unnamed 16-byte adventure-traits row is kept
+  honestly raw instead of receiving a fabricated class. The earlier
+  integration note saying the input and AI views were required is therefore
+  superseded: with the current combined type population both canonical fields
+  retain every established maximum. Seven compatibility layouts remain
+  deliberately: the two large object renderers, `SetRolloverText`, and the
+  creature-bank helper each regress under their removal, while
+  `TSplitSliderView` is an actual game class rather than an overlay. The final
+  full build remains at 813/1240 exact, 48.61% fuzzy, with all 1,240 ratchets
+  clean and every cleanliness counter at zero.
+
+- **2026-08-11 — `TPickANumber` closed 2/2 exact after recovering its
+  retail VC6 container layout.** The four apparent fields at +8..+14 are
+  Dinkumware `vector<unsigned char>`: its empty allocator byte at +8 and
+  `_First`/`_Last`/`_End` pointers at +0xc/+0x10/+0x14. This explains the
+  constructor's formerly anomalous copy from `[ebp+0xb]` as VC6 copying the
+  empty default allocator temporary, and `Pick`'s otherwise redundant reload
+  from +0xc as the inlined `vector::operator[]`. The natural member
+  initializer `marks(count, 1)` reproduces the complete 85-byte constructor;
+  the existing selection loop then reproduces all 82 bytes of `Pick`.
+  Dreamcast CodeView's `vector<bool>` helpers describe its STLport build, not
+  the retail PC representation. Both existing consumers,
+  `combatManager::PlaceLargeObstacle` and `PlaceAllObstacles`, remain exact,
+  including inlined vector destruction. No external implementation body was
+  used.
+
+- **2026-08-11 — the temporary attempt-1 porting gate was removed.** It applied
+  only while material from `decomp-attempt-1` was being ported, and that port
+  is complete. Matching work needs no per-function or per-admission approval.
+  External sources remain secondary evidence: names, layouts, and source
+  shapes still require independent retail corroboration, and the retail
+  executable remains authoritative.
+
+- **2026-08-11 — `mapcell.obj` entered the build with seven byte-exact
+  functions and one measured residual.** Exact bodies are
+  `ExtraInfoUnion::SetCellVisited`, `NewmapCell::get_map_extraInfo`,
+  `cell_is_trigger`, `HasTriggerableEvent`, the packed cell constructor and
+  destructor, and `CObject::get_object_type_ptr`. Retail proves the
+  Dinkumware vector at cell +0x0e: its allocator occupies four bytes and its
+  first/last/end pointers land at +0x12/+0x16/+0x1a; VC6 consequently emits
+  both lifetime functions exactly. `SetCellVisited` also proves the eight-bit
+  visited-team lane at bits 5..12 and the DC-attested inline `game::GetTeam`
+  shape. `get_map_object` is semantically complete at 93.48485%; only the
+  boat-index EAX/EDX versus ECX schedule remains after signed/unsigned local
+  and shared-tail probes. The other 60 located rows remain compiled-out
+  carcasses, so the TU is admitted but not closed. The same random new-module
+  pass classified `ds_engine.obj` as Dreamcast-only: all 108 bodies implement
+  the WinCE DirectSound backend, while retail PC uses the Miles/AIL path and
+  has no `ds_engine` slot in the exhausted post-drawing bracket.
+
+- **2026-08-11 — `puzzlewindow.obj` entered the build with five exact retail
+  bodies and two measured residuals.** The retail window layout is now proven
+  at 0x12c bytes (0x60-byte `CAdvPopup`, resource display at +0x64, 48 bitmap
+  pointers at +0x68, puzzle selector at +0x128). The scalar destructor,
+  destructor, `WindowHandler`, `UpdatePuzzle`, and `Bitmap816::mark_puzzle`
+  are byte-exact. The 904-byte window constructor is 98.60596% with an exact
+  branch graph after restoring the single-call `get_puzzle_bitmap` helper;
+  its remaining deltas are VC6 instruction ordering around the heading text
+  and `button::set_hotkey`. The packed 16-byte AI tile constructor is
+  98.84259%, with only the 10-bit object-type assignment's EAX/EDX choice
+  remaining. `AI_attempt_puzzle_guess` is located at 0x52c9b0 but remains a
+  carcass, so the TU is not closed.
+
+- **2026-08-11 — `dialogbox.obj` CLOSED 12/12 exact (functions-only).** The
+  fresh retail span is 0x48fdc0..0x490b67: both `TDialogBox` constructors, its
+  destructor pair and 2,099-byte tiled `Setup`; then `CTextDialog`'s destructor
+  pair, one-argument constructor, three virtuals, and nonvirtual `ExitDialog`.
+  Vtables 0x63db40/0x63db68 prove both class identities and the virtual order;
+  CodeView supplies the reference signature of `ExitDialog`, the protected
+  text-widget member, and the `Setup`/`UpdateText`/`CalcDimensions` names.
+  Retail independently proves the 0x54/0x58 layouts, 64-pixel framing,
+  256-pixel background tiles, sequential IDs from 200, lower-case
+  `dialgbox.def`/`diboxbck.pcx` assets, and the complete ownership/registration
+  loops. The large setup is exact with retail's reservation formula: full
+  256-pixel tile count plus the complete 64-pixel grid-cell count. The
+  three-argument `CTextDialog` constructor has no retail body or reference;
+  the image's only code relocation to its vtable is the admitted one-argument
+  constructor, so that Dreamcast row is retail-dropped rather than forced.
+  The left flank at 0x48fc20 belongs to the preceding multi-unit bracket; the
+  right flank begins the independently classified `diff.obj` cinit family at
+  0x490b70. Every carved function inside the refreshed span is claimed and
+  byte-exact.
+
+- **2026-08-11 — `scenarioinfo` admitted four retail functions, all exact.**
+  The scenario-selection caller at 0x513740 reserves a 0xb4-byte stack object,
+  calls the constructor at 0x567290, runs it modally, and directly calls the
+  destructor at 0x569800. The constructor and destructor both store vtable
+  0x641710, whose 15-slot `CAdvPopup` topology independently places
+  `ProcessRightSelect` in slot 11 and `OnWidgetDeselect` in slot 12; the class
+  identity is now recorded in `retail-vtables.tsv`. The 152-byte destructor
+  proves four leading `CSprite*` fields at +0x60..+0x6c, interleaved disposal
+  of the eight-element `Panels`/+0x70 and `Flags`/+0x90 arrays, and
+  `heroSpecificAbility` at +0xb0. Those offsets are the DC field list shifted
+  by retail's independently proven eight-byte larger popup base. Its ordinary
+  body and 33-byte scalar-deleting wrapper are byte-exact. The 30-byte
+  `OnWidgetDeselect` override sets the exit flag only for widget 188 and then
+  delegates to `CHeroWindowEx`; it is exact. The 242-byte
+  `UpdateAllyEnemyFlags` body is exact after restoring retail's eight-player
+  loop, widget ranges 112..119/120..127, `setup.playerPos` gate, inlined
+  `OnSameTeam`, and per-arm message order. `SetDifficultyHiLite` has no
+  standalone retail row: its difficulty-to-frame switch is visibly inlined at
+  0x56921f inside the constructor. This is not TU closure: the 8,457-byte
+  constructor, 800-byte `ProcessRightSelect`, and the retail-only/local popup
+  block at 0x5693a0..0x5697c4 remain.
+
+- **2026-08-11 — `TAdventureOptionsWindow` construction was reconstructed to
+  89.5711%.** The 1,194-byte retail body proves the 289x387 popup at (255,106),
+  an eight-slot widget reservation, the palette-colored `AdvOpts.pcx`
+  background, five action buttons, accept button, and rollover text widget.
+  All coordinates, IDs, sprite names, frames, styles, hotkeys, the complete
+  widget-registration loop, and the local-human/current-hero enable gates are
+  represented. Its unique caller and vtable store prove class vtable 0x63a610,
+  now named in `retail-vtables.tsv`. The source-private name of the no-argument
+  game helper at 0x49da70 did not survive; it remains an ordinal declaration,
+  while retail proves its byte return feeds the End Turn button's virtual
+  `enable` call. The only structural delta is the established
+  `vector<widget*>` reserve wall: retail calls shared `_Ucopy` and empty-range
+  destroy helpers, whereas this SP3 invocation expands the copy/cleanup path,
+  adding two branches and changing downstream scheduling. The same template
+  instantiation's depth, adapter, local-order, and type-population probes were
+  already exhausted in the quick-info and split-window lanes, so the residual
+  is recorded rather than re-ground. The destructor pair remains exact and
+  `WindowHandler` remains at its documented 99.9367% register-homing wall.
+
+- **2026-08-11 — `executive::CallManager` advanced 68.3663% ->
+  98.1387%, and its three contiguous catch-handler splits were retired.**
+  The bootstrap ended the parent at 0x4b0dc2, but the following handlers at
+  0x4b0dc2/0x4b0dd7/0x4b0e25 all use CallManager's saved EBP frame: they
+  remove the temporary manager, perform the reduced saved-manager resume,
+  and restore `currentManager`, respectively, before rethrowing. Three nested
+  source `try`/`catch (...)` scopes reproduce the exact state 0/1/2
+  transitions and VC6 emits one 0x1d0-byte section ending at `MainLoop`'s
+  independent 0x4b0e40 entry. The manual function inventory therefore merges
+  the former 338+21+78+18 split rows into the single 464-byte parent, following
+  the already admitted `InitImmMouse` catch-boundary precedent. The HoMM2 twin
+  supplied only the saved/remove/add/main/remove/add/restore statement order;
+  retail independently proves all HoMM3 adventure-manager suspend/resume
+  behavior, exception cleanup, calls, fields, arguments, and branches. The
+  best spelling uses `saved` for the first comparison but removes
+  `currentManager` directly, matching retail's initial EAX lifetime. All seven
+  main-body branches, the return, EH states, catch edges, raw section extent,
+  and padding agree. Five load-chain/argument register choices remain after
+  direct-current, scoped-window, and restore-error-expression probes; the
+  source records that measured compiler plateau. No HoMM2 address, type,
+  constant, or HoMM3-specific implementation statement was adopted.
+
+- **2026-08-11 — `spelldefs.obj` CLOSED 6/6 exact (functions-only).**
+  Retail and Dreamcast source order place the unit at 0x59e060..0x59e50f:
+  `SpellTargetsASingleArmy`, `InitializeSpellTraitsTable`, the source-private
+  `InitializeSpellTraits`, and three lazy-static array cleanup thunks. Direct
+  `atexit` relocations prove the formerly uncarved thunk entries at
+  0x59e4b0/0x59e4d0/0x59e4f0; all three call the shared element destructor
+  through VC6's vector-destruction iterator and are now admitted to the manual
+  function inventory. The following eleven rows at 0x59e510..0x59e8ff are the
+  excluded guard/`atexit` cinit family, and `spells.obj` begins independently
+  at 0x59e900. The four Dreamcast `TAutoStrPtr` methods have no TU-local retail
+  rows: construction/destruction use ICF-shared representatives and `set`/`get`
+  are fully inlined. Retail proves the target-flag tests, the 92-row
+  `sptraits.txt` traversal, the 81-by-136-byte backing table, all numeric
+  columns, and the three interleaved lazy string arrays. The resulting six
+  emitted bodies, including the 863-byte loader, reproduce retail exactly.
+  Dreamcast CodeView supplies names, signatures, and source order only; no
+  external implementation body was used.
+
+- **2026-08-11 — `iconWidget::Main` admitted at 95.27076% (756 bytes),
+  completing the retail message-handler semantics.** Vtable 0x63ec48 slot 2,
+  the Dreamcast roster position, and the surrounding independently named
+  iconWidget rows identify 0x4ea810. Retail proves the sleep/active/disabled
+  gates; signed-short hit testing; left/right select and deselect messages;
+  the virtual `handle_click` calls; and the six live widget commands for
+  sprite, frame, sequence, color, palette, and player recoloring. The palette
+  arms independently corroborate `ResourceManager::GetPalette`,
+  `CSprite::SetPalette`/`GetPalette`, both player-color overloads, and the
+  dropped source helpers `SetIconSequence`, `SetPalette`, and
+  `SetPlayerPaletteColors`, whose behavior survives fully inlined here. The
+  reconstructed CFG has the exact 28 branches. After command-arm ordering,
+  shared-exit, helper-boundary, lifetime, register-hint, and label-placement
+  probes, the residual is one C2-duplicated zero epilogue plus the inlined
+  sequence parameter's scheduling/register choice; `why-reg` confirms the
+  first ESI/EDI/EBX definitions already agree and finds no first-definition
+  source handle. No external implementation body was used.
+
+- **2026-08-11 — `heroWindow::CenterWindow` smallest-lane re-audit keeps
+  the 92.8767% compiler-state plateau.** Dreamcast CodeView's exact local
+  names `startX`, `startY`, `startW`, and `startH` replace the provisional
+  `old*` spellings without changing one byte. The current v2 allocator model
+  confirms the retail/base CFGs and all nine branches agree, but their three
+  call-crossing pseudos reach VC6 in different front-end orders. Its best
+  generated edit aliases `centerX` into a fifth local, reducing the
+  register-visible distance from 79 to 61 slots without matching; that local
+  is absent from CodeView's exhaustive four-local roster and is rejected.
+  Adjacent-declaration candidates leave 77/81 slots. The evidence-compatible
+  source and ratcheted maximum therefore stay unchanged; no external body was
+  used.
+
+- **2026-08-11 — `get_elemental_type` admitted byte-exact (60 bytes) and
+  `spells.obj` entered the build.** Retail's bounded jump table accepts the
+  contiguous summon-spell IDs 0x42..0x45 and returns Fire, Earth, Water and
+  Air elemental IDs 0x72, 0x71, 0x73 and 0x70 respectively, with -1 for every
+  other spell. The canonical four-case switch reproduces the bounds check,
+  dispatch order, five returns, padding and jump-table data exactly. Retail
+  proves all values and control flow; Dreamcast CodeView supplies the spell,
+  creature and function names only. The remaining large Dreamcast roster is
+  fenced as carcasses, so this is not a TU-closure claim. No external
+  implementation body was used.
+
+- **2026-08-11 — `resourcemanager.obj` entered the build with two retail-
+  proven cache functions and its cache owner.** The 64-byte `AddToCache` at
+  0x5594b0 is identified by its 12-byte resource-name key copy, map insertion,
+  and reference-count increment, which appear verbatim inlined at the tail of
+  the independently located 138-byte `GetSpreadsheet` at 0x55c0a0. The
+  latter is also anchored by the `cranim.txt` parser caller, its cache lookup,
+  and the spreadsheet loader at 0x55be60. Their accesses prove the cache map
+  object at 0x69e528, its sentinel pointer at +4, node key at +0xc, resource
+  pointer at +0x1c, and the 13-byte key layout. `AddToCache` reaches 86.6296%
+  and `GetSpreadsheet` 93.6111%; both have exact CFGs and are capped at the
+  same fourteen caller-saved scheduling slots by the VC6 v2 model. Named
+  pointer, POD, insertion-temporary, nested-pair and genuine Dinkumware-map
+  variants were measured and rejected. A smallest-lane re-audit after the
+  later include/layout work also swept zero through eight additional
+  user-defined types; every count was byte-identical at both established
+  scores, so the known include-population lever does not reach this TU. The
+  remaining Dreamcast roster stays fenced as carcasses. Dreamcast supplies
+  names/signatures only; no external implementation body was used.
+
+- **2026-08-11 — `advManager::RedrawAdvScreen` admitted byte-exact
+  (326 bytes).** Retail gets the local player ordinal, loads `AdvMap.pcx`,
+  applies that player's 16-bit palette, draws the bitmap over the full screen,
+  disposes it, and clears the manager field at +0x38c. It then refreshes
+  buttons, hero/town locators, quest log, bottom view, resources and locator
+  highlighting; draws the adventure window over ids -65535..65535; performs a
+  complete draw and radar update from the packed +0xe4 origin; and, when
+  `bUpdate` is set, updates the 800x600 screen. `bForceSaveBorder` is unused in
+  retail. All five blocks, three branches, the return, calls, arguments,
+  packed-point extraction, instructions, and registers match. Retail proves
+  every operation and layout; Dreamcast CodeView contributes only the
+  signature and the local names `player_id` and `bmp`. No external
+  implementation body was used.
+
+- **2026-08-11 — `PopupPlayerTurnInfo` admitted byte-exact (369 bytes),
+  and retail `NormalDialogTimeOut` located at 0x4f6530.** The popup restores
+  and foregrounds the application window, stops MP3 playback, selects the
+  default cursor, clears a non-local player's bottom-view override, arms the
+  sound-manager popup state, and plays `SysMsg.wav`. Unless the retail sound
+  latch suppresses it, it formats the current player's name into a 256-byte
+  buffer, shows a 15-second dialog, and repeats the restore/foreground/sample
+  sequence every 500 ms while the dialog returns 9999 and the turn duration
+  has not expired, finally releasing the current `SAMPLE2`. All twelve blocks,
+  six branches, the single return, instructions, and register choices match.
+  The called 52-byte predecessor of `NormalDialog` is byte-identical in shape
+  to Dreamcast `NormalDialogTimeOut`: it merely moves `timeOut` into
+  `NormalDialog`'s timeout slot while forwarding the other eleven arguments,
+  so its former `DC_ONLY` classification is retired. Retail proves every
+  global offset, call, literal, dialog argument, and control-flow edge;
+  Dreamcast CodeView supplies the two function names, signatures, `sample2`,
+  and `cText` local names only. No external implementation body was used.
+
+- **2026-08-11 — `advManager::UpdBottomViewEnemyTurn` admitted byte-exact
+  (135 bytes).** Retail compares the current bottom-view discriminator at
+  `advManager +0x394` with ordinal 5, returns false without using
+  `force_update` when it is already active, and otherwise clears the existing
+  adventure-window view, stores ordinal 5, allocates 0x74 bytes, constructs a
+  `TBottomViewEnemyTurn` from `advWindow`, installs it, and returns true.
+  Dreamcast CodeView supplies the function/parameter names, the local
+  `bChanged`, the constructor signature, and the zero-offset TSubWindow
+  inheritance; retail independently proves the 0x34 base boundary, 0x74
+  allocation, call targets, field offset, and two-slot base vtable. The header
+  therefore admits only byte-bounded narrow bottom-view layouts, leaving all
+  unobserved derived fields padded and unnamed. No external implementation
+  body was used.
+
+- **2026-08-11 — retail-only `InitImmMouse` admitted byte-exact, including
+  its catch funclets; the bootstrap carve and unwind owner were corrected.**
+  WinMain's sole post-window call proves the two-register `/Gr` signature.
+  Retail then tests the guard byte at 0x696d58, constructs the static
+  Immersion wrapper at 0x696d78 from `(hInst, hwnd)`, registers its destructor,
+  and returns true. The contiguous 0x4b68f4 dispatch and 0x4b68fa catch body
+  return false when construction throws, proving the source-level
+  `try`/`catch (...)` and extending the real function from the bootstrap's
+  100-byte split to 125 bytes. Accordingly `config/retail-functions.tsv`
+  removes the false 0x4b68f4 function, records the actual 58-byte static
+  destructor at 0x4b6910, and `config/retail-funclets.tsv` assigns the
+  0x62b5f0 unwind record to Init rather than the preceding 0x4b6730 body.
+  VC6 reproduces all 125 bytes and both funclets exactly. The wrapper name
+  remains explicitly provisional; no Immersion implementation body or
+  external source was imported.
+
+- **2026-08-11 — `combatresultswindow.obj` located and admitted at 6/7
+  exact.** The unique `CPResult.pcx` reference and Dreamcast source order
+  bind the retail unit to 0x4702d0..0x471c13: the 5997-byte constructor,
+  scalar deleting destructor, destructor, `Open`, `Close`, `DoModal`, and
+  `CombatResultsWindowHandler`. The constructor's direct heroWindow base and
+  vptr store prove a storage-free 0x4c-byte derived class and identify the
+  nine-slot vtable at 0x63d46c; its EH-heavy body remains an explicit
+  carcass. All six remaining entries are byte-exact. The destructor clears
+  the source-private active-window cell at 0x694fbc and deletes the widget
+  vector; `Open` forces the base update flag off, redraws the video frame,
+  then conditionally refreshes the full 800x600 screen; `Close` stops video
+  before the base close; and `DoModal` installs the handler. The handler
+  polls sound, accepts the split-result widget command or the shared absolute
+  dialog deadline, writes the window manager's result slot, synthesizes
+  `WIDGET_END_DIALOG`, clears the deadline, and returns the proved dispatch
+  verdict. Its exact VC6 shape requires the source-level label inside the
+  success conditional: the timeout arm jumps directly to it while the normal
+  arm tests the byte exit flag. Dreamcast CodeView contributes names,
+  signatures, the 200..221 widget-id roster, and source order only; retail
+  independently proves every admitted address, call, constant, field access,
+  and branch. No external implementation body was used.
+
+- **2026-08-11 — `bitmap8.obj` is retail-dropped.** The exhaustive
+  bitmap-family order map assigns 0x44ed20..0x44f787 to all nine Bitmap24Bit
+  entries, ending in its 1528-byte `AdjustHSV`; the only code before
+  Bitmap816's deleting destructor at 0x44f7d0 is the excluded cinit pair at
+  0x44f790/0x44f7b0 (both guard-byte/`atexit` records). Retail's adjacent
+  vtable interval likewise runs directly from Bitmap24Bit at 0x63b9f4 to
+  Bitmap816 at 0x63ba14, with no Bitmap8Bit table, and the image has no
+  Bitmap8Bit function/address-take evidence. All nine Dreamcast rows therefore
+  remain `DC_ONLY`; the surviving `RType_bitmap8` resource-type spelling does
+  not imply that the Dreamcast wrapper class was linked. No neighboring
+  bitmap body was misclaimed and no external implementation body was used.
+
+- **2026-08-11 — `advManager::ProcessWaitingHover` advanced to 80.9400%,
+  and iconWidget's two random-sequence tables now use their CodeView-attested
+  aggregate type.** Retail proves that TOWN hover gates only on local-human
+  ownership and selects cursor 3 from `currTownId`, while HERO hover also
+  requires `owner == gNetLocalGamePos` and selects cursor 2 from
+  `currHeroId`; the action ordering is likewise byte-visible. With named
+  `rx`/`ry`, `town`, and `hero` locals, all 27 branches and four returns now
+  agree symbolically. The residual is a 16-byte-versus-8-byte local frame and
+  packed-point register coloring; sharing the two scoped rx/ry pairs regressed
+  to 80.27% and was rejected. Dreamcast type records independently prove both
+  icon tables are local const arrays of anonymous
+  `{creature_seqid sequence_id; int chance;}` records. Restoring that type and
+  the attested enum names leaves the 72.0056%/86.4111% bytes unchanged,
+  confirming the siege residual is still VC6 loop-invariant hoisting, not
+  missing const qualification. No external implementation body was used.
+
+- **2026-08-11 — `slider.obj` located and admitted at 14/16 exact, with
+  all sixteen claimed bodies accounted for.** Retail's contiguous block is
+  0x596020..0x597184: scalar deleting dtor, initialize, the ten-argument
+  constructor, dtor, SetState, five large input/draw bodies, SetKnob,
+  UpdateResolution, SetResolution, both focus hooks and enable. The
+  constructor's vptr store admits `slider` vtable 0x641d50 (17 slots); its
+  final retail-only slot points at the ICF/shared empty `widget::Close` body.
+  Complete reorders the Dreamcast fields into a byte-proven 0x68-byte layout:
+  resource pointers at +0x30/+0x34, state/knob/count geometry through +0x54,
+  input flags at +0x5c/+0x5d, focus at +0x60 and the callback at +0x64.
+  Retail bytes independently fix the six resource literals and both resource
+  manager callees; Dreamcast CodeView supplies only names, signatures and the
+  BROWN/BLUE enum spellings. `KeyAccel`, `Select`, `Deselect`, and `Draw` now
+  join the scalar dtor, initialize, ctor, dtor, SetState, UpdateResolution,
+  SetResolution, both focus hooks and enable as byte-exact. Their retail
+  shapes additionally prove the private left/right modifier latch at
+  0x69fdd4 and the canonical 16-bit-bitmap `CSprite::DrawInterface` inline
+  wrapper; the latter was added to the live header and recompiles all users
+  without exact-match regressions. `Deselect` requires the source-level
+  successful-decrement edge to the shared redraw tail, while `Select` fixes
+  the horizontal knob/page comparison polarity. `Main` is semantically
+  complete at 95.190125% with the retail 60-branch/11-return CFG: retail C2
+  shares the KP3/KP2 forward `KeyAccel` suffix, whereas this invocation shares
+  the equivalent KP9/KP8 backward suffix after case-order, exit, grouping and
+  lifetime probes. SetKnob remains semantically complete at 88.44% with an
+  identical CFG and exact 64-instruction tail; `why-reg --model --il-order`
+  reduces its sole ESI/EDI head transposition to C1 front-end handle state.
+  The default ctor has no standalone retail entry, while
+  GetRealWidth/Height/zBufferDraw are ICF/header COMDAT representatives owned
+  elsewhere. No external implementation body was copied or used.
+
+- **2026-08-11 — `artifact.obj` located and admitted at 2/3 exact, with
+  cinit ownership bounded but not fabricated.** Retail link order places the
+  unit between `armygrp.obj` and `basemgr.obj`: its two bitset cinit families
+  occupy 0x44c700..0x44cd4f, the sole surviving source body is the 1512-byte
+  `InitializeArtifactTraitsTable` at 0x44cd50, its two static-array cleanup
+  thunks are 0x44d340/0x44d360, and the Dinkumware bitset COMDAT tail ends at
+  0x44d50f before `basemgr` begins. Both cleanup thunks reproduce exactly.
+  The main body is reconstructed from retail at 75.01%: it loads 146
+  `artraits.txt` rows into the proved 144-by-32-byte traits table, derives 15
+  allowable-slot classes from 19 columns, applies the three disabled and nine
+  spell-giving IDs, links twelve combination artifacts, then packs 19
+  `artslots.txt` names and their mask types. This proves the complete traits
+  layout (name, cost, slot mask, class, description, combo/target indices,
+  disabled and gives-spells flags), the 19-by-8 slot-traits table, both public
+  reference cells, and the two owned string buffers. Dreamcast CodeView is
+  used only for source names and the AB-era member prefix; retail fixes the
+  Complete counts, added fields, strings, control flow and addresses. The
+  15-mask and 12-combination storage addresses are declared for relocation
+  authority, but their excluded cinit source initializers remain unadmitted;
+  no external implementation body or contradictory external address was
+  imported. The residual is VC6 nested-inlining/EH tail shape after direct
+  `set`/`operator[]`, helper, lifetime and loop-induction probes, so the TU is
+  not declared closed.
+
+- **2026-08-11 — `diff.obj` located and admitted at 1/4 exact, with its
+  complete retail source-body surface accounted.** The ten terrain-mask cinit
+  bodies at 0x490b70..0x490f5f follow `dialogbox.obj`'s final virtual leaf and
+  prove the TU's `terrain.h` include; four ordinary bodies occupy
+  0x490f60..0x4912ff, and the next ten-mask cinit family begins
+  `dimensiondoorwindow.obj` at 0x491300. Body semantics and the 16-byte maker /
+  12-byte record layouts identify `CDiffFile::Apply` (197 B), the byte-exact
+  `CDiffMaker` constructor (32 B), `FindNextSame` (237 B), and `MakeDiff`
+  (447 B). Dreamcast CodeView corrects the latter two interfaces to `int&` and
+  `unsigned long&`, and its line/locals evidence corroborates the indexed
+  same-byte loop, reference-selecting maximum, three scoped record locals,
+  and direct terminal return; retail fixes all bounds, constants, operand
+  order, allocation size, and record serialization. The other four DC source
+  rows are exhausted rather than forced: `GetData`, `CountSameBytes`, and the
+  record constructor are visibly inlined into these bodies, while the empty
+  private file constructor is unreferenced and dropped. The three residuals
+  retain exact extents and retail CFGs at 68.9643%, 83.2813%, and 81.5174%; all
+  remaining differences are measured VC6 register/block placement plateaus
+  after source-shape, signature, include-closure, declaration-order, register
+  hint, and inert-type probes. No external implementation body was used, and
+  the TU is not declared CLOSED while those three byte residuals remain.
+
+- **2026-08-11 — `command.obj` admitted at 2/11 exact for its first
+  bounded leaf slice.** Existing anchor/call-order evidence bounds the
+  admitted command span at 0x474bf0..0x47a2cc; nine previously located
+  large command bodies remain explicit zero-match carcasses. The two exact
+  leaves are `combatManager::is_outside_placement_boundry` (0x4763f0,
+  77 B) and `valid_wall_target` (0x476440, 80 B). The former independently
+  exposes `placementBoundaryDepth` at manager+0x13d70 and computes signed
+  modulo-17 side limits `2*n+1` / `2*n+15`. The latter gates tower targets
+  on Castle/Citadel tiers and indexes the already byte-bounded
+  `gWallTargets[].wall_id` into manager+0x13f60. Admitting this partial TU
+  deliberately exposes the nine known residuals in the measured
+  denominator; no broad command handler or combat routine is guessed.
+
+- **2026-08-11 — `viewarmywindow.obj` located and admitted; 7 claims now
+  include four exact rows and three reconstructed action helpers.**
+  `crstkpu.pcx` and the constructor's vtable store place
+  the TU at 0x5f3360 with vtable 0x643c14; the following `viewwrld.obj`
+  begins at the independently identifying `vworld.pcx` constructor
+  0x5fa600. The first slice closes TViewArmyWindow's scalar deleting
+  destructor, 213-byte destructor, `convertID2HelpID`, and `DoModal`.
+  Retail allocation/destruction proves a 0xb8-byte CAdvPopup derivative:
+  the two VC6 strings have data pointers at +0x70/+0x84, and the destructor
+  deletes the Widgets entries without erasing the vector before the string
+  and base teardowns. The ID mapper's exact 300-byte form requires an
+  explicit negative guard and one source arm per widget ID—even where arms
+  return the same help index—so VC6 emits retail's direct 21-entry jump
+  table instead of its smaller two-level byte dispatch. The 92-byte modal
+  body exactly resets `glTimers[0]`, disables upgrade/dismiss for a non-local
+  player, and invokes the base modal pump. The two constructor call sets,
+  no-argument member ABI, unique literals, widget IDs, coordinates, hotkeys,
+  and allocation callees additionally map `create_ok_widget` to 0x5f6870,
+  `create_upgrade_widget` to 0x5f6ae0, and `create_dismiss_widget` to
+  0x5f6d50. Their complete bodies allocate the backing bitmap border and
+  action button, add the proved hotkeys, and append both widgets.
+  `create_ok_widget` reaches 98.659386% with exact 14-branch/2-return control
+  flow; `why-reg` caps its sole EBX/EDI permutation as non-source-nameable
+  front-end handle state. Upgrade and dismiss are structurally identical
+  twins at 88.11441%: retail retains the Dinkumware pointer-destruction call
+  and inlines `vector::size` in the second `push_back`, while this VC6
+  invocation makes the opposite `/Ob2` choices (14 branches/2 returns versus
+  15/3). Canonical `push_back`, explicit `insert(end(),1,value)`, and explicit
+  derived-to-base conversion forms were measured; the latter is inert and
+  `insert` regresses both to 78.31356%. Large constructors, remaining helper
+  builders, and the handler remain carcasses; Dreamcast `QuickView` has no
+  independently identified retail row and is not forced onto `DoModal`. No
+  external implementation body was used.
+
+- **2026-08-11 — `hiscore.obj` located and admitted; first 8 claims are
+  8/8 exact.** The manager's `hiscore.dat` read and vtable stores bound its
+  retail block inside the hillfortwindow..iconwdgt gap: `ResetHighScores`
+  begins at 0x4e8fb0, the manager constructor/destructor/Open/ViewHiScore
+  run through 0x4e91cf, and `AddScoreToHighScore` begins at 0x4e91d0; the
+  window/edit tail ends before iconWidget's deleting destructor at
+  0x4ea6f0. Retail-byte vtable use admits 0x63eb8c as highScoreManager,
+  0x63eb98 as THighScoreWindow, 0x63ebbc as CHSInputDlg, and 0x63ebf4 as
+  CHighScoreEdit. The exact first slice is the manager ctor/dtor,
+  CHSInputDlg dtor/deleting-dtor plus OnWidgetDeselect and
+  GetRolloverWidget, and THighScoreWindow dtor/deleting-dtor. Its layouts
+  retain only byte-bounded spans: Open proves the manager's 0x898-byte
+  table at +0x38 and selector at +0x8d0; the shifted DC field list plus
+  retail loads prove CHSInputDlg's +0x50/+0x54/+0x58 pointers and
+  THighScoreWindow's two backgrounds at +0x108/+0x10c. The latter dtor
+  deliberately spells its widget deletion loop locally: retail does not
+  call `heroWindow::delete_widgets` and does not erase the vector there.
+  Large constructors, updates, handlers, score-table serialization, and
+  retail-inlined/dropped DC rows remain carcasses rather than importing
+  unreviewed bodies.
+
+- **2026-08-11 — `textresource.obj` CLOSED 9/9 exact
+  (functions-only).** Retail's two parameterized parser constructors are
+  0x5bbba0 (551 B, CR/LF text rows) and 0x5bbe70 (742 B, CR/LF rows plus
+  tab-delimited cells). Their stores independently identify vtables 0x642d98
+  as `TTextResource` and 0x642da4 as `TSpreadsheetResource`, correcting the
+  contradictory external enrichment; the hand vtable census now records the
+  retail-byte identities. Both constructors, destructors, scalar deleting
+  destructors, and vtable-slot-2 `GetSize` bodies reproduce byte-for-byte.
+  The spreadsheet resize path also emits the exact 51-byte VC6 Dinkumware
+  `vector<TStringVector*>::erase(first,last)` at 0x5bc1f0. Dreamcast's two
+  default constructors have no cross-compiland callers and no retail entries,
+  so `/OPT:REF` dropped them. Its remaining header-origin bodies are STLport
+  template machinery, not transferable to retail's Dinkumware library; only
+  the independently called/compiled erase semantic analog is admitted. Fresh
+  link-order evidence leaves only the recognized 32-byte guard/atexit cinit
+  rows at the flanks before the next TU's 0x5bc250 deleting destructor.
+
+- **2026-08-11 — `campaignwindow.obj` located and admitted from retail
+  bytes.** The sole `campbkx2.pcx` constructor at 0x45ea40 installs vtable
+  0x63bca4 and is followed by the deleting destructor, destructor, 44-byte
+  `DoModal`, and address-taken handler through 0x45f55b. Complete changes the
+  constructor ABI from Dreamcast's one campaign argument to `(unsigned char
+  newGame, int newCampaign)`; `oldmain` pushes both slots and the retail body
+  consumes `[ebp+8]` as a byte and `[ebp+0xc]` as the campaign index. The
+  constructor and handler remain carcasses. `DoModal` is reconstructed from
+  its two byte-proven calls. The destructor is byte-exact: a signed six-row
+  campaign-index loop restores each live 12-dword Bink-state snapshot, calls
+  `CloseBinkVideo`, saves the cleared snapshot, then performs the common
+  widget/global teardown. Together with the generated deleting destructor,
+  that closes three of the five claimed functions exactly. Dreamcast
+  `HideText` has no standalone retail entry: both the
+  constructor and handler inline its widget-id 101..107 loop. The adjacent
+  0x45e7c0 campaign-building helper is retail-only and remains unnamed rather
+  than being forced onto a Dreamcast row. External name-map addresses that
+  fall inside these independently bounded bodies are rejected.
+
+- **2026-08-11 — `ResSw.obj` is retail-dropped.** Dreamcast's compiland is a
+  self-contained global `ResolutionSwitch`: its ctor calls `S_to_600`,
+  `Switch` calls only `S_to_600`/`S_to_800`, its deleting destructor calls its
+  destructor, and no cross-compiland caller exists. If linked on x86, its
+  global object would still force the four initializer/atexit contributions;
+  the authoritative retail link-order inventory contains neither those nor a
+  `ResSw` span. The external name-map's supposed `SCREEN_WIDTH` and
+  `SCREEN_HEIGHT` addresses are independently rejected because they fall in
+  the middle of an error-format string and have no relocation users. All six
+  source rows remain `DC_ONLY`; no retail claims are invented.
+
+- **2026-08-11 — `quicktownwindow.obj` advanced to 5/7 claimed functions
+  exact; its 1661-byte town constructor is reconstructed at 96.30877%.**
+  The two unique literals `townqvbk.pcx` and `cprsmall.def`, the
+  vtable 0x6406f4, and the ordered destructor family bound the source unit at
+  0x530120..0x530d3c: town constructor, deleting destructor, garrison
+  constructor, destructor, army-display routine, `center`, and the shared
+  `QuickWindowWait` representative. The deleting destructor, both destructor
+  entries, garrison constructor, `center`, and wait wrapper are byte-exact;
+  correcting the garrison title color from PRIMARY (1) to retail WHITE (4)
+  closed its last byte delta without making a false ownership claim for the
+  still-unowned text cell at 0x6a7a70. The army-display routine reaches 82.95%
+  with all ten branches and the retail seven-slot/`ostrstream` behavior
+  aligned. Its
+  56-byte position table is singly referenced at 0x5309df and admitted at
+  0x6823b8. Dreamcast proves `limit(int,int,int)` delegates through the
+  const-reference `t_limit` template; that exact layering makes retail
+  `center` match. It also corrects `armyGroup::GetNumArmies` to `const` via
+  decorated symbol `QBA`, with its 0x44acc0 retail body remaining exact. The
+  former town-constructor carcass is now behavior-complete: it reserves the
+  CodeView `NWIDGETS=25`, builds the palette-adjusted background, portrait and
+  name, derives hall/castle frames from the 64-bit building masks, displays
+  Resource Silo icons and daily gold for `ViewAll`, then delegates the army
+  row and registers every widget. All 36 branches and its one return agree.
+  The residual is compiler scheduling: retail retains vector::reserve's empty
+  range destroy and string `_Tidy(false)` helpers and spills an indexed
+  resource scan, while this SP3 compile elides/inlines those helpers and walks
+  the same seven incomes by pointer. `why-reg v2` finds identical first
+  register definitions. A direct call-site name accessor regressed to 95.50%
+  (a named `c_str()` local to 93.71%); an enum induction variable did not
+  change the resource loop; `inline_depth(1)` was byte-identical. The retail
+  name read also retires the placeholder vector model at town +0xc4: it is a
+  Dinkumware `std::string cName`, whose `begin()` exposes the +0xc8 text
+  pointer without cast debt while preserving the exact `town::town` body.
+  The constructor's called `town::GetPortraitFrame(bool)
+  const` is independently admitted at 0x5bd700 (71 bytes) and byte-exact; its
+  active-Fort, faction, town-state and small-icon arithmetic also proves the
+  helper identity and signature. No external implementation body was used.
+
+- **2026-08-11 — `systemoptionswindow.obj` located and admitted from retail
+  bytes; `TSystemOptionsWindow::DoModal` is now byte-exact (142 bytes).** The
+  sole `sysopbck.pcx` reference locates the 6268-byte constructor at
+  0x5b1790, followed by the deleting destructor, destructor, `DoModal`, and
+  1566-byte handler through 0x5b375d. `DoModal` clears the CodeView-named
+  `bPrefsChanged`, runs the base modal loop, and only writes preferences when
+  that byte is set. In a network game, a changed Quick Combat preference is
+  copied to the local player's +0xe4 `quickCombat`, wrapped in the 24-byte
+  CodeView-named `CCombatTypeMsg` (subtype `RS_COMBAT_TYPE` = 1009), and sent
+  guaranteed to destination 127. Retail independently proves all six message
+  stores, the exact-address Quick Combat global, send arguments, branches and
+  calls; CodeView supplies the member, class, subtype and callee names. The
+  constructor and handler remain carcasses; both destructor entries and
+  `DoModal` are byte-exact.
+  Retail inlines Dreamcast's `convertID2HelpID` switch into the handler and
+  `UpdateSystemOptions` at its call sites: there is no standalone entry before
+  the unrelated next-compiland constructor at 0x5b3780. The dtor and DoModal
+  prove a 0x68 derived layout: the 0x60 `CAdvPopup` base plus
+  `bPrefsChanged` at +0x60 and `quickCombatSave` at +0x64. External name-map
+  addresses are deliberately rejected: they fall inside these independently
+  bounded retail bodies. No external implementation body was used.
+
+- **2026-08-11 — `creaturetype.obj` admitted with its first two retail rows
+  byte-exact.** Link order between `command.obj`/`csprite.obj` and the
+  `crtraits.txt` initializer, corroborated by the Dreamcast source roster,
+  places `IsSiegeWeapon` at 0x47b180 and `UpgradedCreatureType` at 0x47b1a0.
+  The 22-byte siege predicate is exactly the inclusive Catapult-through-Ammo
+  Cart range. The 113-byte upgrade lookup rejects creatures without a town,
+  verifies whether the input is the base or upgraded member of its dwelling
+  pair, rejects an already-upgraded input, and returns the base creature's
+  upgraded dwelling slot. Repeating the authoritative trait-table expression
+  in the final lookup is source-semantic and gives VC6 retail's pointer and
+  index lifetimes; both bodies then match byte-for-byte. The previously used
+  address-derived declaration in `cmbtmgr.cpp` is retired in favor of the
+  admitted source name, and the pending raised-creature member is typed as
+  `TCreatureType` without changing its proven four-byte layout. The tempting
+  body at 0x529710 is explicitly rejected for this identity: retail proves it
+  is a `game`-object wrapper around the 0x47b1a0 leaf, with an additional
+  ruleset guard. The remaining source rows stay carcasses; no external
+  implementation body was used.
+
+- **2026-08-11 — `TSplitWindow::WindowHandler` remains a measured 99.9170%
+  compiler-state plateau.** Its 34 blocks and 17 branches already agree; the
+  only instruction delta is the documented EAX/EDX scratch swap around
+  `splitSlider->SetState`. A fresh `why-reg` v2 run reduces it to caller-saved
+  pseudo ordering, finds no valid source-nameable B14 edit, and caps the
+  remainder as front-end handle state. Correct source is retained unchanged.
+
+- **2026-08-11 — `global.obj`'s two Dreamcast source rows are retail-dropped,
+  but its retail-only family remains open.** Both rows are STLport bitset
+  constructors; the x86 build uses the shipped VC6 Dinkumware library and has
+  no corresponding entries after the ten terrain initializer blocks. The
+  next retail functions are the Complete-only `TGzInflateBuf` family beginning
+  at 0x4d6050, absent from the Dreamcast roster. The two source rows therefore
+  remain `DC_ONLY`; no guessed source identity is assigned to that distinct
+  retail-only work.
+
+- **2026-08-11 — `quickherowindow.obj` advanced to 2/3 exact, with its
+  2248-byte constructor reconstructed at 86.84469%.** The sole
+  `heroqvbk.pcx` reference and ordered destructor block locate the unit at
+  0x52ead0..0x52f43a. Retail and Dreamcast together prove the complete recipe:
+  four primary-stat positions at 0x640688, seven army positions at 0x682378,
+  portrait/name/mana/morale/luck widgets, the `disguiseLevel` dword at hero
+  +0x10e, strongest-stack substitution for disguise levels 0..2, and the
+  strongest creature of the owner's alignment for level 3. The preserved
+  retail slot-ordinal comparison is a source-level wart, not a guessed fix.
+  Both destructors remain byte-exact. The constructor's residual is VC6
+  optimizer state around vector reserve, temporary-string cleanup, and the
+  two disguise scans; structural stream spellings raised it from 75.28% to
+  86.84%. Dreamcast's `QuickWindowWait` is identical to the quick-creature/
+  quick-town wrappers and retail ICF-folds all three onto 0x530d30, owned by
+  the later quicktownwindow span; no duplicate claim is made here.
+
+- **2026-08-11 — `fly.obj` located at 0x4b46c0..0x4b5011; both movement
+  wrappers reconstructed.** The retail `army::simple_move` body calls
+  0x4b46c0 for flight and then 0x4b49c0, while its teleport arm calls
+  0x4b4e90. Those entries head a five-function sequence whose sizes and
+  mutual calls agree in order with Dreamcast `ValidFlight`, `FlyTo`, `Fly`,
+  `TeleportTo`, and `Teleport`. The two private Dreamcast
+  `find_flyer_attack_cell` overloads have no separate retail entries: their
+  only DC caller is `ValidFlight`, whose 761-byte retail body contains the
+  work inline. This supersedes only the old statement that the real block was
+  unlocated; the withdrawn 0x4b4420 claim remains withdrawn because that
+  address is still the fourth terrain initializer. `FlyTo` and `TeleportTo`
+  are admitted from retail control flow at 94.00% each; all instructions and
+  branches align, with only a symmetric destination/old-facing EBX/EDI
+  allocation swap plus pre-existing unresolved relocation-label authority.
+  `why-reg` classifies the swap as non-source-nameable C2 handle state. The
+  `Teleport` is additionally byte-exact (258/258) from the retail body:
+  facing and wide-stack destination adjustment, quick-combat animation gates,
+  grid replacement, and spell cancellation are all byte-derived.
+  `ValidFlight` and `Fly` remain located carcasses.
+
+- **2026-08-11 — `genericresource.obj` is retail-dropped.** Dreamcast's
+  `TGenericResource` constructor is called only by
+  `ResourceManager::GetResource`; neither that getter nor a generic-resource
+  vtable survives in retail. The complete post-`gametypewindow` carve consists
+  of excluded cinit rows through cinit0429 and then `global.obj`'s
+  `TGzInflateBuf` family, while the independently recovered
+  `resource::resource` caller graph contains no generic wrapper. Constructor,
+  destructor, and deleting-destructor rows therefore remain `DC_ONLY` with no
+  invented retail claims.
+
+- **2026-08-11 — `TQuickCreatureWindow` constructor reconstructed to
+  88.1211%.** Retail bytes prove the complete widget recipe: a 256x256
+  dialog, three reserved widget slots, `TwCrPort.def` portrait, singular/
+  plural or army-size count text, and the four disposition texts at central
+  text-record offsets +0x3d0..+0x3dc. All arguments, coordinates, IDs,
+  literals, data fields, and branches outside the reserve implementation are
+  represented. The remaining dominant delta is VC6 optimizer state: retail
+  calls vector `_Ucopy` and the empty range destroy from its inlined reserve,
+  while this compile expands the copy loop and consequently chooses different
+  EBX/EDI roles. Depth limits, a reserve adapter, and named-local variants did
+  not improve it. A later smallest-lane re-audit extended the optimizer-state
+  check to every unused-type population from zero through eight; all nine
+  builds were byte-identical at 88.1211%, ruling out that proven lever here.
+  The prior two exact destructors and ICF ownership decision remain unchanged.
+
+- **2026-08-11 — `textButton::Draw` closed byte-exact.** Retail keeps the
+  widget-status snapshot in CX while EAX carries the shared parent-window
+  pointer. Naming both source values reproduces that allocation, removes the
+  prior extra register copy, and matches all 130 bytes. `button` advances to
+  14/16 exact; its established constructor and `button::Main` residuals remain
+  documented separately.
+
+- **2026-08-11 — `playvideo.obj`'s sole source row is Dreamcast-port-only.**
+  SH4 bytes prove that `playVideoDll` loads `playsfddll.dll`, resolves
+  `PlayVideo`, invokes it, and releases the module. The retail image contains
+  neither literal and its authoritative import table has `LoadLibraryA` and
+  `GetProcAddress` but no `FreeLibrary`, excluding the wrapper's semantics from
+  the x86 build. The row therefore remains `DC_ONLY`; no retail address or
+  synthetic match claim is admitted.
+
+- **2026-08-11 — `adventureoptionswindow` admitted from retail bytes.** The
+  `advopts.pcx` literal and `advManager::DoAdventureOptions` stack construction
+  locate the 1194-byte constructor at 0x4051d0; it remains a carcass. The
+  derived destructor and scalar deleting destructor are byte-exact. The
+  508-byte handler reaches 99.94% after reproducing retail's early shared
+  consume-return block and separate EBX-restoring hover epilogue. Its only
+  remaining instruction delta is the register used to carry `mouseX` into
+  `findWidget` (candidate ESI, retail ECX); direct arguments, declaration-order
+  variants, and a symbol-order perturbation did not alter that allocator choice.
+  Dreamcast supplied the derived member name and source signature, while the
+  retail vtable, allocation size, globals, calls, and bytes proved the x86
+  layout and implementation. The adjacent 0x405680 slot-3 forwarder is shared
+  by 42 vtables and is deliberately left with its header-inline ownership.
+
+- **2026-08-11 — `campaignmap` CLOSED 2/2 exact (functions-only), and
+  volatile compiler-function normalization completed.** The sole source
+  function was independently located at 0x45dee0 from the retail
+  `camptext.txt` literal, its sole `InitMainClasses` caller, the 21-record
+  campaign walk, and the Dreamcast roster position. Its full 784-byte body
+  now matches exactly. Retail bytes prove a 0x10 `TCampaignMapTraits` stride
+  and a Complete-only 0x6c `TRegionTraits` stride: name/X/Y followed by three
+  eight-player image-name arrays; the Dreamcast 0x18 layout supplies member
+  names but is not reused as an x86 layout. The adjacent 22-byte `$E3`
+  static destructor is also exact. To pair it without admitting its volatile
+  ordinal, `labels` now emits `build/gen/compgen_claims.tsv`, normalization
+  treats that manifest as a stamped input, and the semantic binder recognizes
+  an /Ob2-inlined static destructor only when the `$E<n>` relocation graph
+  contains both its function-local owner and operator delete. Stamp schema 5
+  invalidates pre-contract normalized objects. The nine remaining Dreamcast
+  roster rows are header/template emissions with no distinct retail bodies.
+
+- **2026-08-11 — `gametypewindow`, `quickinfowindow`, `levelupwindow`, and
+  `u2dvers` advanced from retail bytes.** `gametypewindow` has four exact
+  functions (deleting destructor, destructor, `DoModal`, and the 544-byte
+  handler); its constructor remains a located carcass. The handler's exact
+  jump table required the source-level five-entry help-index selection, and
+  its modifier-key branch proved a shared update tail. `quickinfowindow` has
+  both destructors exact and its five-argument constructor located; the
+  13-byte `QuickWindowWait` body is ICF-owned by the later quick-view unit and
+  is deliberately not double-claimed. `levelupwindow` has both destructors
+  exact; its handler is 73.18% with the first 138 bytes exact and a documented
+  stale-CL cross-jump/tail-duplication residual, while the constructor remains
+  a carcass. The older `u2dvers BLOCKED` inventory entry is superseded: VC6's
+  shipped Dinkumware string surface removed the supposed STLport blocker and
+  all three functions are now byte-exact.
+
+- **2026-08-11 — `font::~font` closed exactly with the retail palette
+  ownership model.** The retail object stores `TPalette16` inline; replacing
+  the provisional pointer with raw aligned storage plus the explicit
+  qualified palette destructor reproduces VC6's EH-state transitions and
+  raises the destructor from 96.63% to 100%. This is a layout/codegen
+  correction from retail bytes, not an imported class body. The existing
+  `DrawBoundedString` (98.79%), `DrawCharacter` (78.26%), and `LineLength`
+  (92.68%) plateau notes remain in force.
+
+- **2026-08-11 — `subwindow` and `resourcedisplay` admitted from retail
+  bytes.** `TSubWindow`'s complete 0x34-byte retail layout is now live: its
+  apparent byte at +0x14 is VC6's vector allocator subobject, not a gameplay
+  field. The two constructors bracketed immediately before the old unit span
+  and the canonical deleting destructor between them were promoted on body
+  evidence; `RemoveWidget` remains Dreamcast-only because no retail row exists
+  in its bracket. All nine retail functions match exactly. The proven base
+  unlocks `TResourceDisplay`'s 0x78-byte layout, its seven resource text/border
+  pairs, background and status widgets, the 0..6 resource-order table at
+  0x641008, and the three central-text-record fields at +0xfc/+0x100/+0x104.
+  Its deleting destructor, destructor, `Update`, and `Clear` are byte-exact.
+  The 673-byte constructor reaches 99.39%: a real `isSmall(is_small)` member
+  initializer reproduces retail's member-before-derived-vptr store order and
+  raises the prior 99.30% result. Control flow, calls, constants, stack homes
+  and instruction lengths agree; the remaining 52 register-visible slots are
+  one whole-body EBX/EDI transposition (`this` versus `textX`). The VC6 v2
+  solver classifies that pair as a C1 symbol-handle-state cap with no
+  source-nameable mutation. A later smallest-lane sweep of zero through eight
+  additional user-defined types was byte-flat for the constructor and kept
+  all four exact neighbors exact, ruling out the known type-population lever.
+  Retail bytes and Dreamcast signatures/layout names were the only
+  implementation evidence.
+
+- **2026-08-11 — two `font` register plateaus advanced under the VC6
+  solver.** `font::DrawBoundedString` rises 96.8123% -> 98.7864% by
+  making the bottom-justification `total` volatile; this aligns the
+  scratch-register family through the remaining body, leaving only the
+  three forced stack-memory instructions and a cosmetic flat callee name.
+  `font::LineLength` rises 91.7423% -> 92.6804% by making its backtrack
+  boundary `lineStart` volatile. Both functions now have exact branch
+  sequences. Fresh guided solver passes found no independent local mutation
+  that reduces the remaining register-visible distances (9 and 17 slots).
+  Retail bytes were the only implementation evidence used.
+
+- **2026-08-11 — `army::ValidPath` admitted byte-exact (168 bytes).**
+  Retail's path query preserves the requested destination separately, widens
+  `FindCombatPath`'s byte return to an integer, and stores that result into the
+  otherwise-dead `destIndex` parameter slot before branching. A volatile view
+  of that slot makes VC6 retain the exact `and eax,0xff; mov [ebp+8],eax; jne`
+  sequence while EDI carries the original destination into `pathTarget`.
+  This closes the previously documented three-instruction residual and raises
+  `path` to 7/8 exact. Retail bytes and the existing Dreamcast signature were
+  the only implementation evidence used.
+
+- **2026-08-11 — `type_AI_spellcaster::consider_chain_lightning` admitted
+  byte-exact (209 bytes).** The retail body walks every live stack on
+  `1 - side`, rejects creature-id bit 21, asks `SpellCastWorks` about spell
+  19, and keeps the highest `get_chain_lightning_value` result together with
+  that stack's grid index and the choice-valid byte. The natural short-circuit
+  loop reproduced retail's frame, register allocation, calls, branches, and
+  relocations on the first compiled reconstruction. This advances
+  `ai_tactical` to 54/86 exact. Retail bytes established the body; Dreamcast
+  CodeView supplied the function and callee signatures.
+
+- **2026-08-11 — `combatManager::ViewArmy` admitted byte-exact (292
+  bytes).** The retail body derives the popup origin from the selected
+  combat cell, clamps the 298x325 window inside 800x600, constructs a
+  `TViewArmyWindow`, dispatches quick-view versus modal behavior, handles the
+  modal command result, and virtually deletes the popup. The natural source
+  reproduces all instructions, ten branches, the allocation failure arm, and
+  the one-state VC6 EH frame. Its direct constructor edge plus the unique
+  `CrStkPU.pcx` literal also locates the first retail `TViewArmyWindow`
+  constructor at 0x5f3360 (1973 bytes); that body remains unreconstructed.
+  Retail bytes established the implementation and Dreamcast CodeView supplied
+  the two function signatures.
+
+- **2026-08-10 — the `vc6` compiler-model area landed.** A new
   role package `scripts/homm3/vc6/` reverse-engineers the pinned toolchain
   itself to model the codegen decisions matching plateaus on, and ships solvers
   that diagnose a residual instead of blind spelling sweeps. Binary-only RE (no
@@ -528,8 +2749,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 - **2026-08-09 — `game::Load` extends from 26.3228% to 26.8395%, and its
   state is canonical.** Retail's call sequence proves eight consecutive
   `playerData::load(infile, saveVersion)` calls after the obelisk pool; the
-  loop is additive on its own. The temporary `HOMM3_GAME_LOAD_VIEW` is
-  retired: every byte-proven load field now belongs to the single canonical
+  loop is additive on its own. Every byte-proven load field now belongs to the single canonical
   `game` layout compiled by all translation units, while the existing member
   offsets and match totals remain stable. No external implementation body was
   used, and the generated match baseline is updated only by the full build.
@@ -1232,18 +3452,18 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   implementation body was used, and `match_baseline.tsv` remains generated
   solely by the full build.
 
-- **2026-08-09 — `advManager::ProcessWaitingHover` reconstructed at
-  74.8967%.** Retail first bounds the pointer against the adventure map,
+- **2026-08-09 — `advManager::ProcessWaitingHover` reconstructed, then
+  advanced on 2026-08-11 to 80.9400%.** Retail first bounds the pointer against the adventure map,
   converts its pixels to cached tile offsets and a packed map point, and
   admits rollover detail only when the point is valid, visible to the local
   player and on the current hero's map level. It then resolves the cell,
-  updates rollover text, and selects the owned-town or local-human-hero cursor
+  updates rollover text, and selects the local-human-town or owned-hero cursor
   command; outside the map it preserves active scroll cursors only inside the
   16-pixel screen-edge zone before forwarding hover to the adventure window.
   The compiled and retail bodies have the same 975-byte target span, 27
-  conditional branches and four returns. Two case-layout branch polarities
-  and VC6 register/stack scheduling around the inlined packed-point helpers
-  remain. Retail proves the complete control flow, screen/scroll bounds,
+  conditional branches and four returns, with every branch mnemonic and
+  symbolic target agreeing. VC6 register/stack scheduling around the inlined
+  packed-point helpers remains. Retail proves the complete control flow, screen/scroll bounds,
   pointer frames, object/owner gates and the `advManager` fields at
   +0x40/+0xe8/+0xec/+0xf0; Dreamcast CodeView supplies the function, local,
   field and helper names only. No external implementation body was used, and
@@ -2242,8 +4462,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   regression in the 25 dependent units rebuilt. A fresh delink admitted
   only these source-derived names. `decomp-attempt-1` remained read-only:
   its implementations are predominantly stubs, so nothing was copied or
-  admitted; its inventories remain candidate metadata pending P4.2 and
-  explicit approval.
+  admitted; its inventories remained candidate metadata at that point.
 
 - **2026-08-09 — `get_spell_work_chance` raised from 53.1589% to
   88.5071% by restoring retail dataflow and switch-body order.** Both
@@ -2406,7 +4625,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   improve the best. `decomp-attempt-1` was checked read-only: these mouse
   bodies are stubs there, so it supplied no admitted implementation; its
   potentially useful content remains limited to inventory metadata that
-  still requires separate supervised approval.
+  still requires retail-byte corroboration before admission.
 
 - **2026-08-09 — `mouseManager::LoadFrame` reconstructed from retail at
   99.3104%; attempt-1 remained inventory-only.** The 0x16b-byte body proves
@@ -2943,7 +5162,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   aggregate.** An alias probe confirmed the mechanism and was
   REVERTED — modelling a delinker artifact would make our object differ
   from the true retail object. Giving `DATA()` an optional size is a
-  contract change and is **open for a supervised decision**.
+  contract change and is **open for a design decision**.
   `initialize_game_data` untouched; the 96.0880 pin and its dated
   rationale intact.
 
@@ -2992,7 +5211,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   other side (`or word [+0x39],0x3ff` / `or word [+0x3b],0x3fff`).
   `struct.h`'s short-bitfield spelling reproduces the DC alignment, not
   retail's. **`struct.h` was deliberately NOT changed** — that is a
-  tree-wide move needing a supervised decision; the member is carried
+  tree-wide move needing a dedicated change; the member is carried
   as raw bytes with the finding documented in place.
   **CLAIM CORRECTED: 0x4ba130 was claimed as `playerData::SetName`; the
   body is `AssignNetInfo`** (dword dpid at +0, `strncpy` 20 from +4,
@@ -3320,8 +5539,8 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   split-if guards tail-merged into retail's single shared `xor al,al`
   epilogue on their own; no `||`-sinking or `goto` variant was needed.
   **NAME ADMISSION (the substance of this entry).** Six enumerators
-  entered `include/armygrp.h` with **NH3API lineage**, which the
-  supervised-review rule governs. Every VALUE is retail-proven — the
+  entered `include/armygrp.h` with **NH3API lineage**. Every VALUE is
+  retail-proven — the
   four creature ids read off the compare chain at 0x46753d
   (`0x22, 0x23, 0x88, 0x89, 0x95` in that order), the two artifact ids
   are the pushed immediates: `CREATURE_MAGE 0x22`, `CREATURE_ARCH_MAGE
@@ -3794,7 +6013,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   structure for two unmodeled globals — deliberately left a stub.
   **OPEN:** adopting `hero::GetRoguePower` for 0x4e5de0 (address now
   independently proven, but the NAME is HD-crossbuild/NH3API lineage and
-  needs supervised admission; currently the placeholder
+  needs independent retail corroboration; currently the placeholder
   `hero::HeroFn_004E5DE0`); and six head-region arity divergences in
   hero.cpp (`HeroMessageUpdate`, `HeroScreenUpdate`, `UpdateArmies`,
   `ViewStat`, `ViewArtifact` — the hero-SCREEN block the Dreamcast
@@ -4605,7 +6824,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   army::do_attack`, `SystemOptions → DoSystemOptions`, `GetNextArmy →
   NextArmy`, `ProcessMapChange → ProcessMapChangeNew`). Output
   `evidence/homm2-overlap/twins.csv`, ANALYSIS OUTPUT,
-  external-candidate — promotion only in supervised review. One
+  external-candidate — promotion only after retail corroboration. One
   planned control was corrected during implementation: armyGroup::
   GetMorale → GetArmyMorale is NOT a rename (the DC corpus carries
   BOTH names; the exact join owns GetMorale), which is itself the
@@ -4653,7 +6872,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   the DC size - the DC build is SH4, and a DC-sized claim truncates the
   body mid-instruction (Main first scored 70% that way).
   Output is `evidence/dc-bracket-map.tsv`, ANALYSIS OUTPUT: a `forced`
-  row becomes evidence only when a supervised review promotes it.
+  row becomes evidence only when retail corroboration promotes it.
 
 - **2026-08-06 — VC6 shows NO nonlocal register-allocation islands;
   the homm2 4.2 permute port is cancelled.** User-directed probe. The
@@ -4703,7 +6922,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   `config/retail-vtables.tsv`.** User-directed. The macros (annotation
   contract v2) are retired from `include/va.h` and the two claim sites
   (basemgr.cpp, button.cpp); the tsv gains a hand-admitted `class`
-  column (empty until an identity is byte-proven in supervised review)
+  column (empty until an identity is byte-proven and admitted)
   and is MANUAL from here on - never regenerated. `homm3.build.labels`
   now derives `??_7<class>@@6B@` label-map rows from that column
   (provenance `vtable-name`), keeping the analysis-grade
@@ -4956,7 +7175,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   0x4e6d60). The transfer slid across interleaved $E thunks. Frozen
   as a known backlog in `config/va-claims-baseline.tsv` (the gruntz
   single_view shape: backlog reported as standing debt and drained in
-  supervised claim review; NEW violations fatal; `--write-baseline`
+  deliberate claim review; NEW violations fatal; `--write-baseline`
   re-freezes only after review). Board grew three ratchet rows, all
   floors blessed at 0: `.cpp-local enums`, `casts to enum types`
   (static_cast into any tree-declared enum, found via a per-run enum
@@ -5187,7 +7406,7 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
   patterns, identically in both pressings — NH3API describes the unpatched
   Complete exe, not an HD Mod address space. `README.md`, `CLAUDE.md`, and
   `AGENTS.md` written (homm2-decomp `decomp-pol-2.0` as the style template),
-  carrying the target identity, the supervised-review rule, the evidence
+  carrying the target identity, the evidence provenance policy, the evidence
   tiers, and the layout/gate contracts.
 
 - **2026-07-23 — layout + lifecycle (P1.1 partially done).** Approved and

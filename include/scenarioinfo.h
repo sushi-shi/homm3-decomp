@@ -5,6 +5,40 @@
 #ifndef HOMM3_SCENARIOINFO_H
 #define HOMM3_SCENARIOINFO_H
 
+#include "advmgr_popup.h"
+
+class CSprite;
+
+// Retail's stack owner at 0x513740 reserves 0xb4 bytes for this object.
+// The vtable at 0x641710 has the inherited 15-slot CAdvPopup shape, with
+// retail overrides in slots 0, 11, and 12. The sprite fields and their order
+// are proven by the retail destructor at 0x569800; the names come from DC
+// CodeView and retain the retail build's +8 base-class displacement.
+class CScenarioInfoDlg : public CAdvPopup {
+public:
+    enum EWidgetIDs {
+        SCENARIO_INFO_ALLY_FIRST_ID = 112,
+        SCENARIO_INFO_ENEMY_FIRST_ID = 120,
+        SCENARIO_INFO_ACCEPT_ID = 188
+    };
+
+    CSprite* VictoryIcon;              // +0x60
+    CSprite* LossIcon;                 // +0x64
+    CSprite* TownPix;                  // +0x68
+    CSprite* bonusSprite;              // +0x6c
+    CSprite* Panels[8];                // +0x70
+    CSprite* Flags[8];                 // +0x90
+    CSprite* heroSpecificAbility;      // +0xb0
+
+    CScenarioInfoDlg();
+    virtual ~CScenarioInfoDlg();
+    virtual unsigned char ProcessRightSelect(int id);
+    virtual int OnWidgetDeselect(int id, unsigned char* bExitFlag);
+    void UpdateAllyEnemyFlags();
+    void SetDifficultyHiLite();
+};
+SIZE(CScenarioInfoDlg, 0xb4);
+
 // --- CBonusDlg ---
 // CODEVIEW(E:\gamedcs\scenarioinfo.cpp:657, dc 0x12b068) void CBonusDlg::~CBonusDlg();
 

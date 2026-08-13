@@ -21,10 +21,12 @@
 // cross this TU. Type NAMES are provisional (no DC/NH3API evidence).
 class palette;
 class paletteHiColor;
+class TPalette24;
 class sample;
 
 void SetPlayerPaletteColors(palette* pal, int whichPlayer);
 void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
+void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer);
 
 
 // The widget base lives in widget.h (owner: widget.obj). Button's
@@ -72,8 +74,9 @@ public:
     int DeselectSelected(message* msg);
 
     // Dreamcast homes SetText and set_hotkey in Button.h itself; the
-    // kept COMDAT copies land in earlier objs' bands (set_hotkey at
-    // 0x404200), so no claims live here.
+    // wrapper is inlined at its retail call sites. The old 0x404200 mapping
+    // was disproven by that body's `ret 0xc`: it is the three-argument
+    // vector<int>::insert implementation, not this one-argument member.
     void SetText(const char* new_text) { Text = new_text; }
     void set_hotkey(int code) { hotKeyCodes.insert(hotKeyCodes.end(), 1, code); }
 

@@ -22,6 +22,9 @@ typedef int (*TDialogHandler)(message& msg);
 // NH3API window_manager.hpp DialogReturnType spelling - the roster
 // grows as consumers prove values.
 enum EDialogReturnType {
+    DIALOG_RETURN_TIMEOUT = 9999,
+    DIALOG_RETURN_CANCEL = 0x7801,
+    DIALOG_RETURN_OK = 0x7802,
     DIALOG_RETURN_SPLIT_ACCEPT = 0x7802,
     DIALOG_RETURN_ACCEPT = 0x7805
 };
@@ -93,10 +96,14 @@ extern int gbInDialog;
 extern int gbSendMouseMoveMessages;
 extern int iDialogNestCount;
 
+// Shared absolute deadline consumed by modal-dialog handlers. The DATA claim
+// currently lives with levelupwindow.cpp, the first admitted owner/consumer.
+extern unsigned long gDialogDeadline697784;
+
 // Provisional VIEW of the unnamed central object at .bss 0x69d808 (232
 // code references image-wide, written from six sites inside the
 // unclaimed 0x552e00..0x556900 band; its own TU will name it - the
-// exec.h gUnnamed6a5d5c precedent). DoQuickView's message pump is the
+// textresource.h gpGeneralText precedent). DoQuickView's message pump is the
 // only consumer modeled, and every spelling below is offset-anchored
 // rather than semantic: an OUT-OF-LINE getter (retail 0x5537a0, the
 // 7-byte `mov eax,[ecx+0xf0]; ret`) hands back an object whose virtual

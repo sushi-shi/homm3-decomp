@@ -5,6 +5,28 @@
 #ifndef HOMM3_COMBATWINDOW_H
 #define HOMM3_COMBATWINDOW_H
 
+#include "window.h"
+
+class TSubWindow;
+class TCombatCreatureSubWindow;
+class TCombatHeroSubWindow;
+
+// Retail vtable 0x63d528 and Close independently prove the heroWindow base;
+// combatManager::Open allocates the complete 0x8c-byte object. Close deletes
+// the polymorphic combat-control subwindow at +0x70 before delegating to
+// heroWindow::Close. DrawCreatureAndHeroSubwindows independently proves the
+// two hero panels and four creature panels that fill the remaining tail.
+class TCombatWindow : public heroWindow {
+public:
+    char pad_4c[0x24];
+    TSubWindow* controlSubWindow;
+    TCombatHeroSubWindow* heroSubWindows[2];
+    TCombatCreatureSubWindow* creatureSubWindows[4];
+
+    virtual void Close(unsigned char update);
+};
+SIZE(TCombatWindow, 0x8c);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\combatwindow.cpp:42, dc 0x69638) void CheckCombatCheatCode(std::basic_string<char,std::char_traits<char>,std::allocator<char>* chatString);
 

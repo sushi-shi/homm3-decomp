@@ -5,8 +5,56 @@
 #ifndef HOMM3_COMBATRESULTSWINDOW_H
 #define HOMM3_COMBATRESULTSWINDOW_H
 
-// --- globals ---
-// CODEVIEW(E:\gamedcs\combatresultswindow.cpp:417, dc 0x692cc) int CombatResultsWindowHandler(message* msg);
+#include "window.h"
+
+class hero;
+class message;
+
+// Retail's constructor initializes heroWindow directly, installs vtable
+// 0x63d46c, and adds no derived storage. The nine slots reproduce the
+// heroWindow roster, with this class overriding dtor/Open/Close only.
+class TCombatResultsWindow : public heroWindow {
+public:
+    TCombatResultsWindow(const hero* attacker, const hero* defender,
+        int my_side, int winning_side, unsigned char is_siege,
+        int experience);
+    virtual ~TCombatResultsWindow();
+    virtual int Open(int newPriority, unsigned char update);
+    virtual void Close(unsigned char update);
+    void DoModal();
+
+    // Dreamcast TCombatResultsWindow::EOtherWidgetIDs. Retail's constructor
+    // uses the same consecutive 200..221 id band.
+    enum EOtherWidgetIDs {
+        BACKGROUND_ID = 200,
+        ATTACKER_NAME = 201,
+        ATTACKER_PORTRAIT = 202,
+        ATTACKER_STATUS = 203,
+        DEFENDER_NAME = 204,
+        DEFENDER_PORTRAIT = 205,
+        DEFENDER_STATUS = 206,
+        RESULTS = 207,
+        ATTACKER_LOSS_1 = 208,
+        ATTACKER_LOSS_2 = 209,
+        ATTACKER_LOSS_3 = 210,
+        ATTACKER_LOSS_4 = 211,
+        ATTACKER_LOSS_5 = 212,
+        ATTACKER_LOSS_6 = 213,
+        ATTACKER_LOSS_7 = 214,
+        DEFENDER_LOSS_1 = 215,
+        DEFENDER_LOSS_2 = 216,
+        DEFENDER_LOSS_3 = 217,
+        DEFENDER_LOSS_4 = 218,
+        DEFENDER_LOSS_5 = 219,
+        DEFENDER_LOSS_6 = 220,
+        DEFENDER_LOSS_7 = 221,
+        NWIDGETS = 21
+    };
+};
+SIZE(TCombatResultsWindow, 0x4c);
+
+// Retail /Gr passes the message in ECX, matching DoDialog's callback shape.
+int CombatResultsWindowHandler(message& msg);
 
 // --- TCombatResultsWindow ---
 // CODEVIEW(E:\gamedcs\combatresultswindow.cpp:72, dc 0x68364) void TCombatResultsWindow::TCombatResultsWindow(const hero* attacker, const hero* defender, int my_side, int winning_side, unsigned char is_siege, int experience);

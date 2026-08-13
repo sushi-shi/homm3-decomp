@@ -5,6 +5,59 @@
 #ifndef HOMM3_SINGLESELECTIONWINDOW_H
 #define HOMM3_SINGLESELECTIONWINDOW_H
 
+#include "netplayer.h"
+#include "va.h"
+
+// DC supplies the source identities and member names.  Retail independently
+// proves the Windows layout used here: DeletePlayer walks eight records with
+// a 0x7c stride and clears dpid/+0x20/+0x24/+0x70; the constructor at
+// 0x57c790 proves the remaining initialized offsets and the full record
+// extent.  The containing handler's two eight-record arrays and four tail
+// dwords are the complete 0x7d0-byte Windows layout.
+class CNetPlayerHandlerPlayer : public CNetPlayerInfo {
+public:
+    int heroIndex;             // +0x20
+    int townIndex;             // +0x24
+    int availableHeroesCount;  // +0x28
+    int availableHeroes[16];   // +0x2c
+    int startBonusIndex;       // +0x6c
+    int playerPos;             // +0x70
+    int color;                 // +0x74
+    int handicap;              // +0x78
+
+    void Clear()
+    {
+        dpid = 0;
+        playerPos = -1;
+        townIndex = -1;
+        heroIndex = -1;
+    }
+};
+SIZE(CNetPlayerHandlerPlayer, 0x7c);
+
+class CNetPlayerHandler {
+public:
+    enum { MAX_PLAYERS = 8 };
+
+    CNetPlayerHandlerPlayer humanPlayers[MAX_PLAYERS];       // +0x000
+    CNetPlayerHandlerPlayer computerPlayers[MAX_PLAYERS];    // +0x3e0
+    int playerPos;                                           // +0x7c0
+    int playersCount;                                        // +0x7c4
+    int unused;                                              // +0x7c8
+    int assignedPos;                                         // +0x7cc
+
+    int GetNetPos(unsigned long dpid)
+    {
+        for (int i = 0; i < MAX_PLAYERS; ++i)
+            if (humanPlayers[i].dpid == dpid)
+                return i;
+        return -1;
+    }
+
+    bool DeletePlayer(unsigned long dpid);
+};
+SIZE(CNetPlayerHandler, 0x7d0);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:164, dc 0x12f6d4) const char* GetResourceBonusCaption(int townType);
 // CODEVIEW(E:\gamedcs\singleselectionwindow.cpp:187, dc 0x12f790) const char* GetResourceBonusDescription(int townType);

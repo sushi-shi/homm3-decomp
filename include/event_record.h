@@ -5,6 +5,15 @@
 #ifndef HOMM3_EVENT_RECORD_H
 #define HOMM3_EVENT_RECORD_H
 
+// Polymorphic base of the recorded adventure actions. Retail's
+// replay_available reads the signed owner byte immediately after the vptr;
+// Dreamcast supplies the class and `player_id` identity at the same offset.
+class type_event_record {
+public:
+    virtual ~type_event_record();
+    signed char player_id;  // +0x04
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\event_record.cpp:65, dc 0x8c6b8) void set_player(char new_player);
 

@@ -5,11 +5,63 @@
 #ifndef HOMM3_QUICKTOWNWINDOW_H
 #define HOMM3_QUICKTOWNWINDOW_H
 
+#include "window.h"
+
+class town;
+class garrison;
+class armyGroup;
+
+// Retail .bss 0x6a7a70. This is the quick-view label consumed by the
+// garrison constructor; storage ownership remains with the text-loading TU.
+extern const char* gQuickViewGarrisonText;
+
+// Both retail constructors initialize heroWindow directly, install vtable
+// 0x6406f4, and touch no storage beyond heroWindow's proven 0x4c-byte extent.
+class TQuickTownWindow : public heroWindow {
+public:
+    enum TViewLevel {
+        ViewNone = 0,
+        ViewArmyTypes = 1,
+        ViewArmySizes = 2,
+        ViewAll = 3
+    };
+
+    // Dreamcast CodeView EWidgetIDs/NWIDGETS; every value is independently
+    // present as a retail widget id in the two constructors.
+    enum EWidgetIDs {
+        BACKGROUND_ID = 2000,
+        PORTRAIT_ID = 2001,
+        NAME_ID = 2002,
+        HALL_LEVEL_ID = 2003,
+        CASTLE_LEVEL_ID = 2004,
+        TYPE_LEVEL_NAME_ID = 2005,
+        GOLD_PER_DAY_ID = 2006,
+        RESOURCE_BONUS_ID = 2007,
+        GARRISON_HERO_ID = 2008,
+        ARMY_1_SPRITE_ID = 2009
+    };
+
+    enum {
+        NWIDGETS = 25,
+        SINGLE_RESOURCE_BONUS = 1,
+        DOUBLE_RESOURCE_BONUS = 2
+    };
+
+    TQuickTownWindow(const town* thisTown, TViewLevel view_level);
+    TQuickTownWindow(const garrison* this_garrison, TViewLevel view_level);
+    virtual ~TQuickTownWindow();
+    void initialize_army_display(const armyGroup& army_group,
+                                 TViewLevel view_level);
+    void center(long new_x, long new_y);
+    void QuickWindowWait();
+};
+SIZE(TQuickTownWindow, 0x4c);
+
 // --- TQuickTownWindow ---
 // CODEVIEW(E:\gamedcs\quicktownwindow.cpp:39, dc 0x117e48) void TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TViewLevel view_level);
 // CODEVIEW(E:\gamedcs\quicktownwindow.cpp:149, dc 0x1183b8) void TQuickTownWindow::TQuickTownWindow(const garrison* this_garrison, TQuickTownWindow::TViewLevel view_level);
 // CODEVIEW(E:\gamedcs\quicktownwindow.cpp:170, dc 0x1184c4) void TQuickTownWindow::~TQuickTownWindow();
-// CODEVIEW(E:\gamedcs\quicktownwindow.cpp:177, dc 0x118564) void TQuickTownWindow::initialize_army_display(const armyGroup* army_group, TQuickTownWindow::TViewLevel view_level);
+// CODEVIEW(E:\gamedcs\quicktownwindow.cpp:177, dc 0x118564) void TQuickTownWindow::initialize_army_display(const armyGroup& army_group, TQuickTownWindow::TViewLevel view_level);
 // CODEVIEW(E:\gamedcs\quicktownwindow.cpp:254, dc 0x118794) void TQuickTownWindow::center(long new_x, long new_y);
 // CODEVIEW(E:\gamedcs\quicktownwindow.cpp:260, dc 0x1187f8) void TQuickTownWindow::QuickWindowWait();
 // CODEVIEW(E:\gamedcs\quicktownwindow.cpp:139, dc 0x118848) void* TQuickTownWindow::`scalar deleting destructor'(unsigned __flags);

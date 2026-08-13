@@ -89,6 +89,9 @@ enum TCreatureType {
     // a live fireShieldRounds counter. NH3API spelling, Complete
     // numbering (0x34 is the plain Efreeti).
     CREATURE_EFREET_SULTAN = 0x35,
+    // Retail army::get_mirror_effect floors this creature's backlash chance
+    // at Magic Mirror's base value. NH3API supplies the Complete-era spelling.
+    CREATURE_FAERIE_DRAGON = 0x86,
     // The other two war machines, added 2026-08-08 for recruit.obj's
     // siege_artifact_to_creature (0x550360), whose jump table returns
     // 0x91..0x94 for the four siege artifacts in order. The numbering
@@ -190,6 +193,9 @@ enum ESpellId {
     // spell power to derive the scouting radius; retail displacement 0x144
     // proves spell id 2 independently of the Dreamcast spelling.
     SPELL_VISIONS = 0x2,
+    // hero::Fly at 0x4e59a0 passes 6 to get_spell_level and indexes the
+    // corresponding 0x88-byte traits row's per-mastery mana-cost band.
+    SPELL_FLY = 0x6,
     // DC eSpellEarthquake = 14. Read by check_wall_archery_penalty
     // (0x42482b) out of hero::available_spells - a hero who can bring
     // the town wall down is modeled as taking no wall archery penalty.
@@ -264,6 +270,13 @@ enum ESpellId {
     SPELL_HYPNOTIZE = 0x3c,
     SPELL_FORGETFULNESS = 0x3d,
     SPELL_BLIND = 0x3e,
+    // get_elemental_type's 0x5a9360 jump table independently proves this
+    // contiguous summon family and its mapping to the four base elementals.
+    // Dreamcast CodeView supplies the enumerator spellings.
+    SPELL_SUMMON_FIRE_ELEMENTAL = 0x42,
+    SPELL_SUMMON_EARTH_ELEMENTAL = 0x43,
+    SPELL_SUMMON_WATER_ELEMENTAL = 0x44,
+    SPELL_SUMMON_AIR_ELEMENTAL = 0x45,
     SPELL_STONE = 0x46,
     SPELL_POISON = 0x47
 };
@@ -281,7 +294,9 @@ struct SSpellTraits {
     // +0x10 is the display name. SetShrineHelpText passes it as the string
     // argument to the central shrine format after indexing this 136-byte row.
     const char* name;
-    char pad_14[4];
+    // Dreamcast-attested m_abbreviated_name; retail's loader duplicates
+    // sptraits.txt column 1 into this pointer.
+    const char* abbreviated_name;
     int level;                // the dragons' magic-immunity gate
     // +0x1c, the spell's SCHOOL MASK - a full dword, byte-proven by
     // hero::get_spell_level (0x4e5080) and hero::GetManaCost
@@ -302,7 +317,10 @@ struct SSpellTraits {
     // 100.0000, but NOT from this include - the A/B above is why. The
     // raise belongs to the wider header change-set and was never
     // isolated; see the note above its baseline row.
-    TSpellSchool school;      // +0x1c
+    union {
+        TSpellSchool school;  // typed consumer view
+        unsigned int schoolBits;  // loader's OR-accumulator view
+    };                        // +0x1c
     // +0x20, the per-mastery MANA COST row: GetManaCost indexes it
     // `[base + 4*(mastery + spell*34) + 0x20]` with the mastery
     // get_spell_level just returned.
@@ -315,44 +333,48 @@ struct SSpellTraits {
     // Per-mastery flat bonus row (NH3API m_mastery_bonus):
     // get_damage_spell_value adds [spell*136 + mastery*4 + 0x34].
     int mastery_bonus[4];     // +0x34
-#ifdef HOMM3_TOWN_OBJ_DECLS
     // +0x44, nine faction weights used by town::initialize_spells.
     int townProbability[9];
-#else
-    char pad_44[0x24];
-#endif
     // A SECOND per-mastery dword row: get_enchantment_value indexes it
     // as spell*34 + mastery dwords from the table base (0x423cab) =
     // record +0x68 + mastery*4. Distinct from mastery_bonus - both
     // rows are byte-proven by their own consumers. Name provisional.
     int mastery_values[4];    // +0x68
-    char pad_78[0x10];
+    // Complete's four per-mastery descriptions. Dreamcast names this
+    // m_description at +0x74 before the added ninth town-probability dword;
+    // retail InitializeSpellTraits writes the shifted +0x78 row.
+    const char* levelDescriptions[4];  // +0x78
 };
 SIZE(SSpellTraits, 136);
 
 // The spell table is reached through a stored pointer, exactly like
 // akCreatureTypeTraits: retail loads [0x687f58] before indexing.
-// NAME is a bootstrap invention modeled on the creature analog; the
-// 81-entry count is NH3API-informed (pending retail extent proof).
+// The 81-entry count is now retail-proven: spelldefs constructs 81 strings
+// and writes the contiguous 136-byte backing rows at 0x685450, whose exact
+// end is this pointer cell (0x685450 + 81*136 == 0x687f58).
 DATA(0x00687f58) extern const SSpellTraits (&akSpellTraits)[81];
+
+// spelldefs.cpp owner; retail /Gr passes spell/mastery in ECX/EDX.
+unsigned char SpellTargetsASingleArmy(int spell, int sslevel);
 
 // Bootstrap domain: the sentinel (GetNativeTerrain merges slots
 // against -1) plus the one enumerator a consumer has needed so far.
 // The full roster still gets its own header when more are wanted -
 // that move is the wider change terrain.h describes, and this is not
 // it.
-// eTerrainWater is admitted on retail proof, not on the DC roster
+// eTerrainWater and eTerrainRock are admitted on retail proof, not on the DC roster
 // alone: terrain.h's ten-mask analysis recovers the permutation
 // {Lava=7, Rock=9, Dirt=0, Snow=3, Rough=5, Swamp=4, Subterranean=6,
 // Water=8, Grass=2, Sand=1} from iconwdgt's own .bss store addresses,
 // and initialize.obj repeats the identical ordering independently
 // (a chance agreement of two ten-element orderings is 1 in 10!). The
 // SPELLING is the Dreamcast enum's (eTerrainDirt=0 ... eTerrainRock=9).
-// town.obj's check_shipyard_square is the consumer: it accepts a dock
-// square only on terrain 8.
+// town.obj's check_shipyard_square accepts a dock square only on terrain 8;
+// mapcell.obj's is_diggable independently rejects both 8 and 9.
 enum TTerrainType {
     TERRAIN_NONE = -1,
-    eTerrainWater = 8
+    eTerrainWater = 8,
+    eTerrainRock = 9
 };
 
 // The special-ground MODE GetArmyMorale/GetArmyLuck dispatch on (the
@@ -582,7 +604,7 @@ public:
                              const armyGroup* enemyGroup,
                              int magicTerrain) const;
 #endif
-    int GetNumArmies();
+    int GetNumArmies() const;
     int Add(int armyType, int newNumTroops, int newIndex);
     static const char* GetArmySizeName(int howMany, int iNameSet);
     void Swap(int srcIndex, armyGroup* destGroup, int destIndex);

@@ -20,8 +20,9 @@ from pathlib import Path
 
 STAMP_SUFFIX = ".stamp.json"
 # 2: text-pad trim; 3: non-code sections dropped (functions-only scope);
-# 4: paired base/target padding normalization.
-STAMP_SCHEMA = 4
+# 4: paired base/target padding normalization; 5: source-owned compiler-
+# function manifest participates in semantic `$E<n>` canonicalization.
+STAMP_SCHEMA = 5
 
 _HASH_CACHE: dict[str, tuple[tuple[int, int], str]] = {}
 

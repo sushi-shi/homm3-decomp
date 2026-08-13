@@ -1,6 +1,6 @@
 ---
 name: match
-description: Byte-match HoMM3 functions/TUs against retail HEROES3.EXE - the whole in-tree loop: locate via the DC-roster order-map, claim, reconstruct C++ for VC6 SP3 (/O2 /Ob2 /Oy- /Op /ML /Gr /GX), iterate with homm3 sema diff, ratchet with homm3 build, document residual classes, and judge TU closure. Use when matching a function, reconstructing/mapping/closing a TU, chasing a plateau, or promoting located addresses to claims. Sibling doctrine adapted from homm2/gruntz matcher agents.
+description: "Byte-match HoMM3 functions/TUs against retail HEROES3.EXE - the whole in-tree loop: locate via the DC-roster order-map, claim, reconstruct C++ for VC6 SP3 (/O2 /Ob2 /Oy- /Op /ML /Gr /GX), iterate with homm3 sema diff, ratchet with homm3 build, document residual classes, and judge TU closure. Use when matching a function, reconstructing/mapping/closing a TU, chasing a plateau, or promoting located addresses to claims. Sibling doctrine adapted from homm2/gruntz matcher agents."
 ---
 
 # match — reconstruct byte-matching HoMM3 TUs (VC6 SP3 /O2)
@@ -8,9 +8,8 @@ description: Byte-match HoMM3 functions/TUs against retail HEROES3.EXE - the who
 You write C++ that, compiled with VC6 SP3 `CL.EXE` under wine (per-TU flags in
 `config/units.toml`; default game profile `/O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS` - /Op is engine-wide, byte-proven by the AI TUs),
 produces code byte-identical to retail `HEROES3.EXE`, verified by objdiff through
-`homm3 build`. Nothing lands without the supervised-review rule (CLAUDE.md);
-approved outcomes are recorded in the port plan's §5 decision log in the same
-change.
+`homm3 build`. External sources remain hypotheses until retail-byte evidence proves
+them; substantive outcomes are recorded in the port plan's §5 decision log.
 
 ## The governing ledger: per-function MAX fuzzy (ratchet)
 
@@ -124,8 +123,8 @@ MISSING forever.
   left/top ordering).
 - **Statement order from homm2**: when a buka twin exists
   (evidence/homm2-overlap/), adopt its statement ORDER as the starting shape —
-  proven closer on the whole basewin family. Per-function supervised adoption,
-  §5-recorded.
+  proven closer on the whole basewin family. Preserve its provenance in the
+  §5 record.
 
 ## Known residual classes (document, don't grind past 3-4 real hypotheses)
 

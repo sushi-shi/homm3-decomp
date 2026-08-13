@@ -23,15 +23,9 @@ struct type_point {
     short z : 4;
 
     type_point() {}
-#ifdef HOMM3_GAME_POINT_CTOR_VIEW
-    type_point(short new_x, short new_y, short new_z)
-    {
-        x = new_x;
-        y = new_y;
-        z = new_z;
-    }
-#else
     type_point(short new_x, short new_y, short new_z);
+#ifdef HOMM3_TYPE_POINT_EQUALITY
+    unsigned char operator==(const type_point* arg);
 #endif
     unsigned char is_valid();
 };

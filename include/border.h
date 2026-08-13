@@ -12,6 +12,9 @@
 // Vtable 0x63ba24.
 class border : public widget {
 public:
+    // Retail's 0x44ff10 constructor consumes six stack arguments and
+    // forwards them to widget; DC's trailing focusable byte is absent.
+    border(int x, int y, int w, int h, int id, int style);
     virtual int Main(message* msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw();      // slot 3, folded onto 0x5bc7e0
     virtual void Draw();             // slot 4
@@ -32,8 +35,17 @@ public:
 // coloredBorderFrame.
 class coloredBorderFrame : public border {
 public:
+    // Retail's constructor at 0x450130 stores these directly after the
+    // 0x30-byte widget/border head.  Dreamcast gives the same member names.
+    int color;
+    unsigned char colorize;
+    char pad_35[3];
+
+    coloredBorderFrame(int x, int y, int w, int h, int id,
+                       int color_, int style);
     virtual ~coloredBorderFrame();  // retail 0x4501d0
 };
+SIZE(coloredBorderFrame, 0x38);
 
 class Bitmap816;
 
@@ -67,6 +79,8 @@ class bitmapBorder16 : public border {
 public:
     Bitmap16Bit* image;
 
+    bitmapBorder16(int x, int y, int w, int h, int id,
+                   const char* image, int style);
     virtual ~bitmapBorder16();
     virtual void Draw();  // slot 4, retail 0x4507b0
     void Draw2();
@@ -76,8 +90,10 @@ public:
 // re-declared here for the border family).
 class palette;
 class paletteHiColor;
+class TPalette24;
 void SetPlayerPaletteColors(palette* pal, int whichPlayer);
 void SetPlayerPaletteColors(paletteHiColor* pal, int whichPlayer);
+void SetPlayerPaletteColors(TPalette24* pal, int whichPlayer);
 
 // --- bitmapBorder ---
 // CODEVIEW(E:\gamedcs\border.cpp:280, dc 0x547c0) void bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id, const char* image, int style, unsigned char focusable);

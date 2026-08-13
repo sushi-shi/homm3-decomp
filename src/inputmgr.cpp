@@ -62,9 +62,7 @@ int KeyboardMessageHandler(void* hwnd, unsigned winMsg, unsigned wParam, long lP
         gpInputManager->extendFlag = 0;
         if (gpWindowManager->status == 1) {
             if (gpAdvManager == 0 || gpAdvManager->advWindow == 0
-                || static_cast<InputAdventureMapWindowView*>(
-                       static_cast<void*>(gpAdvManager->advWindow))
-                       ->chatEdit->bHasFocus == 0) {
+                || gpAdvManager->advWindow->chatEdit->bHasFocus == 0) {
                 if (e->id == MESSAGE_KEY_DOWN && e->codeX == KEYCODE_F1)
                     AppCommand(hwndApp, WM_COMMAND, KBWIN_MENU_HELP, 0);
                 if (e->id == MESSAGE_KEY_DOWN && e->codeX == KEYCODE_F4)

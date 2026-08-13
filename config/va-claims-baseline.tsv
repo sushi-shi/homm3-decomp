@@ -1,4 +1,4 @@
 # KNOWN VA-claim backlog - standing debt reported by
-# homm3.match.verify_va_claims, drained in supervised
+# homm3.match.verify_va_claims, drained by explicit review
 # claim-review sessions; NEW violations are fatal.
 CLASS	0x004f82e0	src/kbwin.cpp claims 0x004f82e0 (GameTime::Get) - a real kbwin.cpp:823 function whose entire body is `jmp [__imp__timeGetTime]`, so the universe classifier reads it as an import thunk; DC roster proves the source function

@@ -5,6 +5,57 @@
 #ifndef HOMM3_LODFILE_H
 #define HOMM3_LODFILE_H
 
+#include <stdio.h>
+#include <vector>
+#include "va.h"
+
+// The 32-byte archive-directory row. Retail Find's indexing uses a five-bit
+// shift, while open reads these same five fields from the on-disk table.
+struct LODEntry {
+    char name[16];
+    int offset;
+    int size;
+    int attrib;
+    int csize;
+};
+SIZE(LODEntry, 0x20);
+
+// Retail's inlined header constructor writes "LOD" at +0, version 500 at
+// +4, and clears the remaining 84 bytes.
+struct LODHeader {
+    char LOD_ID[4];
+    int version;
+    int numEntries;
+    char reserved[80];
+};
+SIZE(LODHeader, 0x5c);
+
+// Canonical retail layout. The constructor and clear/open/read bodies account
+// for every field and DoNewGame's static storage proves the total 0x18c size.
+class LODFile {
+public:
+    FILE* fileptr;
+    char LODFileName[256];
+    int opened;
+    unsigned char* dataBuffer;
+    unsigned long dataBufferSize;
+    int dataItemIndex;
+    int dataPos;
+    int matchindex;
+    LODHeader header;
+    int numEntries;
+    std::vector<LODEntry> subindex;
+
+    LODFile();
+    ~LODFile();
+    void clear();
+    LODEntry* getItemIndex(const char* item_name);
+
+private:
+    void Find(unsigned begin, unsigned end, const char* item_name);
+};
+SIZE(LODFile, 0x18c);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\lodfile.cpp:393, dc 0xe9654) int compare(const void* arg1, const void* arg2);
 
@@ -15,7 +66,7 @@
 // CODEVIEW(E:\gamedcs\lodfile.cpp:38, dc 0xe908c) void LODFile::clear();
 // CODEVIEW(E:\gamedcs\lodfile.cpp:53, dc 0xe90c0) int LODFile::GetFileSize();
 // CODEVIEW(E:\gamedcs\lodfile.cpp:72, dc 0xe9100) void* LODFile::getDataPtr(const char* item_name);
-// CODEVIEW(E:\gamedcs\lodfile.cpp:93, dc 0xe9154) LODEntry* LODFile::getItemIndex(const char* item_name);
+// RETAIL(0x004fa610, 0x45), CODEVIEW(E:\gamedcs\lodfile.cpp:93, dc 0xe9154) LODEntry* LODFile::getItemIndex(const char* item_name);
 // CODEVIEW(E:\gamedcs\lodfile.cpp:112, dc 0xe9198) unsigned char LODFile::exist(const char* item_name);
 // CODEVIEW(E:\gamedcs\lodfile.cpp:125, dc 0xe91c0) void LODFile::Find(unsigned begin, unsigned end, const char* item_name);
 // CODEVIEW(E:\gamedcs\lodfile.cpp:189, dc 0xe92b4) char* LODFile::getErrorString(int LODErr);

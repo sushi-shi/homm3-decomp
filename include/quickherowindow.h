@@ -5,6 +5,53 @@
 #ifndef HOMM3_QUICKHEROWINDOW_H
 #define HOMM3_QUICKHEROWINDOW_H
 
+#include "window.h"
+
+class hero;
+
+// Retail's constructor initializes heroWindow directly and the deleting
+// destructor passes the same allocation head back to operator delete. No
+// derived storage is touched; the DC 0x44 size differs only by its 12-byte
+// vector/base layout, while retail inherits the byte-proven 0x4c base.
+class TQuickHeroWindow : public heroWindow {
+public:
+    enum TViewLevel {
+        ViewNone = 0,
+        ViewSome = 1,
+        ViewAll = 2
+    };
+
+    // The Disguise spell stores the standard four mastery levels plus the
+    // -1 inactive sentinel in hero::disguiseLevel. Kept local to this narrow
+    // consumer view so hero.h's optimizer-sensitive include closure does not
+    // acquire the wider hero-specialty domain header.
+    enum EDisguiseLevel {
+        DisguiseInvalid = -1,
+        DisguiseNone = 0,
+        DisguiseBasic = 1,
+        DisguiseAdvanced = 2,
+        DisguiseExpert = 3
+    };
+
+    enum EWidgetIDs {
+        BACKGROUND_ID = 2000,
+        PORTRAIT_ID = 2001,
+        NAME_ID = 2002,
+        PRIMARY_SKILL_1_ID = 2003,
+        MORALE_ID = 2008,
+        LUCK_ID = 2009,
+        MANA_ID = 2010,
+        ARMY_1_SPRITE_ID = 2011
+    };
+
+    enum { NWIDGETS = 25 };
+
+    TQuickHeroWindow(hero* thisHero, TViewLevel view_level);
+    virtual ~TQuickHeroWindow();
+    void QuickWindowWait();
+};
+SIZE(TQuickHeroWindow, 0x4c);
+
 // --- TQuickHeroWindow ---
 // CODEVIEW(E:\gamedcs\quickherowindow.cpp:37, dc 0x1170bc) void TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TQuickHeroWindow::TViewLevel view_level);
 // CODEVIEW(E:\gamedcs\quickherowindow.cpp:214, dc 0x1177b4) void TQuickHeroWindow::~TQuickHeroWindow();

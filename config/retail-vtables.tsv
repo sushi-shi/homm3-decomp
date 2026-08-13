@@ -4,7 +4,7 @@
 # over hand edits.
 # The class column is the hand-admitted vtable NAME census (moved out
 # of source VTBL() macros 2026-08-06): empty until the identity is
-# byte-proven in supervised review; it feeds ??_7<class>@@6B@ into the
+# byte-proven by explicit review; it feeds ??_7<class>@@6B@ into the
 # label map. This file is manual - never regenerate.
 # generator: homm3.carve.vtables
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274 size=2732032
@@ -13,7 +13,7 @@
 rva	function_count	class
 0x23a578	27	
 0x23a5e4	9	
-0x23a610	15	
+0x23a610	15	TAdventureOptionsWindow
 0x23a678	3	
 0x23a684	5	
 0x23a6a8	15	
@@ -75,7 +75,7 @@ rva	function_count	class
 0x23d420	4	
 0x23d430	4	
 0x23d448	9	
-0x23d46c	9	
+0x23d46c	9	TCombatResultsWindow
 0x23d4bc	27	
 0x23d528	9	
 0x23d6b0	3	CSprite
@@ -128,10 +128,10 @@ rva	function_count	class
 0x23e74c	3	
 0x23eae8	15	
 0x23eb68	9	
-0x23eb8c	3	
-0x23eb98	9	
-0x23ebbc	14	
-0x23ebf4	21	
+0x23eb8c	3	highScoreManager
+0x23eb98	9	THighScoreWindow
+0x23ebbc	14	CHSInputDlg
+0x23ebf4	21	CHighScoreEdit
 0x23ec48	14	iconWidget
 0x23fe10	3	
 0x23fe1c	14
@@ -236,7 +236,7 @@ rva	function_count	class
 0x241694	15	
 0x2416d0	3	sample
 0x2416dc	13	
-0x241710	15	
+0x241710	15	CScenarioInfoDlg
 0x24174c	15	
 0x241788	15	
 0x2417c4	15	
@@ -268,7 +268,7 @@ rva	function_count	class
 0x241d30	2	
 0x241d38	3	
 0x241d44	3	
-0x241d50	17	
+0x241d50	17	slider
 0x241dcc	15	
 0x242350	27	
 0x2423bc	27	
@@ -283,8 +283,8 @@ rva	function_count	class
 0x242d0c	13	
 0x242d40	19	textEntryWidget
 0x242d8c	3	
-0x242d98	3	
-0x242da4	3	
+0x242d98	3	TTextResource
+0x242da4	3	TSpreadsheetResource
 0x242db0	14	textWidget
 0x242de8	14	
 0x242e30	15	
@@ -309,7 +309,7 @@ rva	function_count	class
 0x243ae8	15	
 0x243ba0	14	
 0x243bd8	15	
-0x243c14	15	
+0x243c14	15	TViewArmyWindow
 0x243c54	15	
 0x243c90	13	widget
 0x243cc4	9	heroWindow

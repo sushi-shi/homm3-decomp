@@ -7,6 +7,79 @@
 
 struct type_point;
 
+#include <bitset>
+#include "advmgr_popup.h"
+#include "struct.h"
+
+class Bitmap816;
+class NewmapCell;
+class TResourceDisplay;
+
+union TPuzzleCoordinatePointer {
+    char* bytes;
+    short* values;
+};
+
+// Retail preserves the Dreamcast record's four packed allocation units:
+// a 10-bit object type, two signed four-bit object offsets, three terrain
+// descriptors, and the diggable/grail/visible flag trio.
+struct type_AI_puzzle_tile {
+    int object_type : 10;
+    int pad_00 : 22;
+    signed char object_x : 4;
+    signed char object_y : 4;
+    char pad_05[3];
+    int terrain : 5;
+    int river : 4;
+    int road : 4;
+    int pad_08 : 19;
+    unsigned char diggable : 1;
+    unsigned char has_grail : 1;
+    unsigned char visible : 1;
+    unsigned char pad_0c : 5;
+    char pad_0d[3];
+
+    type_AI_puzzle_tile();
+    type_AI_puzzle_tile(NewmapCell* cell, type_point point);
+    unsigned char operator==(const type_AI_puzzle_tile* arg) const;
+};
+SIZE(type_AI_puzzle_tile, 0x10);
+
+// DC's 0x58-byte CAdvPopup grows to retail's proven 0x60-byte base. The
+// remaining fields translate directly: one piece-count byte, the resource
+// display pointer, 48 puzzle bitmaps, and the selected puzzle index.
+class TPuzzleWindow : public CAdvPopup {
+public:
+    enum {
+        ACCEPT_ID = 0x7802,
+        DIALOG_CLOSE_KEY = 1,
+        DIALOG_ACCEPT_KEY = 28,
+        BACKGROUND_ID = 200,
+        ROLLOVER_ID = 201,
+        NWIDGETS = 5
+    };
+
+    char numPieces;
+    char pad_61[3];
+    TResourceDisplay* puzzleResourceBar;
+    Bitmap816* puzzlePieces[48];
+    int puzWhich;
+
+    TPuzzleWindow(int puzzlenum);
+    virtual ~TPuzzleWindow();
+    virtual int WindowHandler(message* msg);
+    int UpdatePuzzle(int full);
+
+private:
+    int convertID2HelpID(int id) const;
+};
+SIZE(TPuzzleWindow, 0x12c);
+
+extern std::bitset<48> puzzlePiecesRemoved;
+extern short puzzlePieceOrder[];
+extern char puzzlePieceX[];
+extern char puzzlePieceY[];
+extern const char* puzzleFilePrefixes[];
 // --- globals ---
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:103, dc 0x114f14) Bitmap816* get_puzzle_bitmap(long puzzle, long piece);
 // CODEVIEW(E:\gamedcs\puzzlewindow.cpp:403, dc 0x115838) unsigned char mark_AI_puzzle(long player, unsigned char* visible);
