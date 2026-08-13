@@ -33,6 +33,12 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_SEARCH_NOT_DIGGABLE = 98,
     GENERAL_TEXT_MAIN_MENU_CD_GENERIC_FORMAT = 107,
     GENERAL_TEXT_QUICK_INFO_INVALID_POINT = 111,
+    // combatManager::DoCommand (0x476bd0) shows this entry instead of
+    // opening the spell book while the acting side's field_54b4 latch
+    // is set - i.e. the hero has already cast this round. The NAME
+    // describes that consumer, which is this enum's stated convention;
+    // the index is retail-byte-proven (a folded [Text._First + 0x204]).
+    GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST = 129,
     GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE = 151,
     GENERAL_TEXT_BACKPACK_FULL = 153,
     GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT = 154,

@@ -194,6 +194,22 @@ public:
     void mark_enemy(long hex, long cost);
     // 0x4b3290. Rebuilds bIsMoatSlowed for one acting stack.
     void set_moat(const army* current_army);
+    // findpath.h:242 in the DC roster (ai.obj carries the only 10-byte
+    // out-of-line copy). The PARAMETER IS A SHORT, and that is what the
+    // retail bodies prove: move_toward (0x41f580) and FindCombatPath
+    // (0x4b3400) both index bIsMoatSlowed through a `movsx` from a
+    // 16-bit value, and FindCombatPath even does the neighbour's
+    // `+/- 1` in 16-bit arithmetic (`mov di, word [..]; sar di, 6;
+    // add; movsx ecx, cx`) - which only a short parameter forces. The
+    // one call whose argument is already a sign-extended 16-bit value
+    // loses the movsx, exactly as it should.
+    unsigned char is_moat(short hex) { return bIsMoatSlowed[hex]; }
+    // DC findpath.cpp:1187. Retail inlines it at both of FindCombatPath's
+    // call sites and carries no distinct body; the range check the
+    // second site needs is spelled at that site, because the first
+    // site's hex is already proven in range by the direction loop.
+    unsigned char check_enemy_armies(long hex, long cost, long current_group,
+                                     long destination);
     // 0x4b3f10. Clears the two drawbridge hexes in the moat map.
     void lower_door();
     // Retail 0x4b3f20: ceil(cell->cost / army->GetSpeed()), floored at
@@ -233,6 +249,17 @@ inline long* get_danger_cell(long* danger_zones, type_point point)
 {
     return &danger_zones[(point.z * gMapHeight + point.y) * gMapWidth + point.x];
 }
+
+// Retail .rdata 0x63bd18, nine dwords indexed by town::type:
+// { 70, 70, 150, 90, 70, 90, 70, 90, 70 }. FindCombatPath (0x4b3400)
+// is the only located reader and it uses the row twice - once at x4 as
+// the "this stack is weak enough to be pushed into the moat" floor and
+// once at x40 as the ceiling above which the pressure is dropped again.
+// Left as an UNCLAIMED extern: the row sits between findpath's own moat
+// tables (0x63bce8) and cmbtmgr's gWallTargets (0x63be60), so the owning
+// TU is not settled, and the tenth dword reads 0 - it may or may not be
+// part of the array. Name is an address ordinal.
+extern const long gTownSiegeStrength63bd18[];
 
 // Retail .bss 0x699284; the DATA claim lands with findpath.cpp's
 // globals when that TU's data is modeled.
