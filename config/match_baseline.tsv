@@ -1381,11 +1381,11 @@ subwindow	?RestoreBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa
 subwindow	?SaveBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa560
 subwindow	?initialize@TSubWindow@@QAEXHHHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1aa470
 swapmgr	?IsLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380
+systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	88.2634	88.2634	88.2634	0x1b1790
 systemoptionswindow	??1TSystemOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3040
 systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b3010
 systemoptionswindow	?DoModal@TSystemOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1b30b0
 systemoptionswindow	?WindowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	91.9193	91.9193	91.9193	0x1b3140
-systemoptionswindow	TSystemOptionsWindow_TSystemOptionsWindow	0.0000	0.0000	0.0000	0x1b1790
 text	?InitializeGeneralText@@YIEXZ	100.0000	100.0000	100.0000	0x1b90f0
 textntry	??1textEntryWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1baae0
 textntry	??_GtextEntryWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ba8f0
