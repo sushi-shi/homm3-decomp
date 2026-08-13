@@ -73,6 +73,20 @@ public:
     int DoDialogDraw(heroWindow* dialogWindow, TDialogHandler dialogFunction,
                      TDialogHandler dialogDrawFunction, int bFadeIn);
     void DoQuickView(heroWindow* window);
+    // 0x602cc0 / 0x602dc0, LOCATED 2026-08-13 from combatManager::AddArmy
+    // (0x47a100): it saves a screen rectangle, redraws the combat frame
+    // and fizzles the same rectangle forward over 75 ms, which is the
+    // save/forward pair by role. The X variants rather than the plain
+    // ones because the DC command.obj roster carries
+    // heroWindowManager::SaveFizzleSourceX and ::FizzleForwardX as its
+    // own header-inline COMDATs (winmgr.h:193/198) - i.e. command.cpp is
+    // a caller of the X pair specifically - and AddArmy is the command.obj
+    // body that does this. Those DC inlines take a `const SLimitData*`;
+    // retail passes the four ints, and combatManager's own
+    // TDrawbridgeBounds quadruple is what it passes them from.
+    void SaveFizzleSourceX(int startX, int startY, int width, int height);
+    void FizzleForwardX(int startX, int startY, int width, int height,
+                        int iFadeTime);
     void FadeScreen(int inOut, int speed, unsigned char expect_fadein);
     void FadeToBlack(int speed, unsigned char expect_fadein);
     void FadeFromBlack(int speed);

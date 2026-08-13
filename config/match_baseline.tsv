@@ -478,11 +478,11 @@ combatresultswindow	?DoModal@TCombatResultsWindow@@QAEXXZ	100.0000	100.0000	100.
 combatresultswindow	?Open@TCombatResultsWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x71af0
 combatresultswindow	TCombatResultsWindow_TCombatResultsWindow	0.0000	0.0000	0.0000	0x702d0
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
+command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0
 command	?is_outside_placement_boundry@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x763f0
 command	?valid_wall_target@combatManager@@QAEEW4TWallTargetId@@@Z	100.0000	100.0000	100.0000	0x76440
-command	combatManager_AddArmy	0.0000	0.0000	0.0000	0x7a100
 command	combatManager_DoCommand	0.0000	0.0000	0.0000	0x76bd0
 command	combatManager_DoVictory	0.0000	0.0000	0.0000	0x77470
 command	combatManager_GetCommand	0.0000	0.0000	0.0000	0x76490

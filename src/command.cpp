@@ -7,6 +7,7 @@
 #include "hero.h"
 #include "prefs.h"
 #include "soundmgr.h"
+#include "winmgr.h"
 
 #if 0  // @carcass
 
@@ -502,12 +503,79 @@ void combatManager::SetCombatGrid(int bCombatShowEntireGrid, int bCombatShowMous
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\command.cpp:3867
+// THE SLOT SEARCH TAKES TWENTY, NOT TWENTY-ONE. Retail walks
+// armies[iSide][0..19] with the 0x548 stride and stops on the first
+// empty creatureType, or on the first spent stack whose creatureId
+// carries BOTH bit 21 and bit 22 - the "already dead and already
+// cleared" pair - and only that second case counts as a replacement, so
+// only the first case bumps numArmies.
+//
+// THE FIZZLE TAIL. combatManager::drawbridgeBounds is not
+// drawbridge-only: ComputeMaxExtent refreshes the same four dwords and
+// AddArmy hands them to the window manager as (left, top,
+// right-left+1, bottom-top+1) - which is what fixes their roles as a
+// left/top/right/bottom rectangle. The save/redraw/fizzle triple around
+// DrawFrame(0,0,0,0,1,0) is what makes a mid-combat summon appear.
 VA(0x0047a100, 0x1CD)  // anchor-global, dc 0x70474
-army* combatManager::AddArmy(int iSide, int iMonType, int iMonQty, int iGridIndex, int iSetAttributes, int bFizzleItIn)
+army* combatManager::AddArmy(int iSide, int iMonType, int iMonQty,
+                             int iGridIndex, int iSetAttributes,
+                             int bFizzleItIn)
 {
-    // @stub
+    long replaced = 0;
+    long slot = -1;
+    { for (long candidate = 0; candidate < 20; candidate++) {
+        const army* stack = &armies[iSide][candidate];
+        if (stack->creatureType == -1) {
+            slot = candidate;
+            break;
+        }
+        if (stack->numTroops == 0
+                && (static_cast<unsigned char>(static_cast<unsigned>(
+                        stack->creatureId) >> 21) & 1)
+                && (static_cast<unsigned char>(static_cast<unsigned>(
+                        stack->creatureId) >> 22) & 1)) {
+            slot = candidate;
+            replaced = 1;
+            break;
+        }
+    } }
+    if (slot == -1 || cells[iGridIndex].armySide >= 0)
+        return 0;
+
+    army* newArmy = &armies[iSide][slot];
+    newArmy->Init(iMonType, iMonQty, heroes[iSide], iSide, slot, iGridIndex,
+                  -1);
+    newArmy->LoadResources();
+    newArmy->creatureId |= iSetAttributes;
+    if (!replaced)
+        numArmies[iSide]++;
+
+    if (bFizzleItIn
+            && !static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        ResetLimitCreature();
+        if (armies[iSide][slot].creatureType == CREATURE_ARROW_TOWER)
+            mark_tower_army(newArmy);
+        else
+            field_14000[iSide][slot] = 1;
+        ComputeMaxExtent();
+        gpWindowManager->SaveFizzleSourceX(
+            drawbridgeBounds.values[0], drawbridgeBounds.values[1],
+            drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
+            drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1);
+        DrawFrame(0, 0, 0, 0, 1, 0);
+        gpWindowManager->FizzleForwardX(
+            drawbridgeBounds.values[0], drawbridgeBounds.values[1],
+            drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
+            drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1, 75);
+    }
+    return newArmy;
 }
+
+#if 0  // @carcass
+
 
 // E:\gamedcs\command.cpp:3922
 DC_ONLY(0x70650, 0xC4)
