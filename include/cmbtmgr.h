@@ -12,6 +12,7 @@
 #include "hexcell.h"
 #include "struct.h"
 
+class Bitmap16Bit;
 class Bitmap816;
 class CSprite;
 class hero;
@@ -374,7 +375,12 @@ public:
     unsigned char field_53a9;         // +0x53a9
     char pad_53aa[0x2];
     CCombatOwnedObject* field_53ac;
-    CCombatOwnedObject* field_53b0;
+    // RETYPED 2026-08-13: army::Fly (0x4b4a40) calls Bitmap16Bit::Draw
+    // on this slot once per animation frame, blitting the clean
+    // battlefield back over the previous frame's extent - so it is the
+    // combat back-buffer, not a bare polymorphic object. Close still
+    // deletes it through the same slot-0 virtual destructor either way.
+    Bitmap16Bit* field_53b0;
     CCombatOwnedObject* field_53b4;
     // CombatSystemOptions clears this dword after the modal dialog closes.
     int field_53b8;                   // +0x53b8
