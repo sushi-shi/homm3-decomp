@@ -27,6 +27,14 @@ public:
         CAMPAIGN_LAST_ID = 127
     };
 
+    // The escape key, as puzzlewindow's DIALOG_CLOSE_KEY. The handler
+    // dispatches on it with a switch: retail's `mov eax,[esi+4]; dec eax`
+    // is a switch selector load, not a `cmp mem,1`, and keeping it a switch
+    // is what stops VC6 caching the literal 1 in a callee-saved register.
+    enum EKeys {
+        DIALOG_CLOSE_KEY = 1
+    };
+
     // Not sliced yet: the constructor stores 0 at +0x4c, -1 at +0x50 and a
     // 21-byte availability block at +0x60, none of which this subset needs.
     char pad_4c[0x2c];
@@ -40,8 +48,9 @@ public:
     TCampaignWindow(unsigned char newGame, int newCampaign);
     virtual ~TCampaignWindow();
     void DoModal();
-
-private:
+    // Retail emits no out-of-line body: every caller expands it under /Ob2,
+    // and the expansion is register-visible - the hoisted `this` is the EBX
+    // the handler's two preview sweeps share (see campaignwindow.cpp).
     void HideText();
 };
 
