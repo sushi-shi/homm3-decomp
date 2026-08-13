@@ -23,8 +23,19 @@ public:
     virtual void Close(unsigned char update);
     void DoModal();
 
-    // Dreamcast TCombatResultsWindow::EOtherWidgetIDs. Retail's constructor
-    // uses the same consecutive 200..221 id band.
+    // Dreamcast TCombatResultsWindow::EOtherWidgetIDs.
+    //
+    // CORRECTION (retail bytes, constructor 0x4702d0): only 200..207 are
+    // reached. Retail confirms BACKGROUND_ID..RESULTS one for one - the
+    // CPResult background, the attacker/defender name texts (201/204), the
+    // TwCrPort portrait pair (202/205), the two status texts (203/206) and
+    // the results text (207) are pushed with exactly those ids. The
+    // fourteen ATTACKER_LOSS_*/DEFENDER_LOSS_* rows are NOT: every
+    // per-creature loss icon and count text the loss loop emits carries
+    // BACKGROUND_ID, because Complete builds them from a data-driven
+    // aggregation loop rather than from fourteen fixed slots. The 208..221
+    // half of this roster is Dreamcast-only and must not be used to name a
+    // retail widget.
     enum EOtherWidgetIDs {
         BACKGROUND_ID = 200,
         ATTACKER_NAME = 201,
