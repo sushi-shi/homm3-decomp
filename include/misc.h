@@ -14,8 +14,8 @@ int Random(int min, int max);       // 0x50b230
 void SRand(int iSeed);              // 0x50c5f0
 void CheckConfigFile();             // 0x50b260
 void SetGameDefaults();             // 0x50b4d0
-void SetDefaultSystemOptions();
-void SetDefaultCombatOptions();
+void SetDefaultSystemOptions();     // inlined away - no retail body
+void SetDefaultCombatOptions();     // 0x50b700
 void ReadPrefsFromRegistry();       // 0x50b7b0
 // AppWndProc's WM_MOVE callee: retail 0x50c1b0 is a 5-byte tail jmp
 // into WritePrefsToRegistry.
