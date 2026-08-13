@@ -396,7 +396,7 @@ campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0
 campaignwindow	??1TCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x5f210
 campaignwindow	??_GTCampaignWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5f0e0
-campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	71.0339	71.0339	71.0339	0x5f2f0
+campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	81.6384	81.6384	81.6384	0x5f2f0
 campaignwindow	?DoModal@TCampaignWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x5f2c0
 campaignwindow	TCampaignWindow_TCampaignWindow	0.0000	0.0000	0.0000	0x5ea40
 castle	?CanBuy@@YIHPBVtown@@H@Z	100.0000	100.0000	100.0000	0x61130

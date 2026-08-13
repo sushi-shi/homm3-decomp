@@ -21,13 +21,22 @@ DATA(0x00694e2c) static TCampaignWindow* gpCampaignWindow;
 // the initialized rows; this TU view intentionally makes no DATA claim yet.
 
 // E:\gamedcs\campaignwindow.cpp:78
-#if 0  // @carcass -- retail inlines the 101..107 hide loop at both call sites
-DC_ONLY(0x5b53c, 0x34)
-void TCampaignWindow::HideText()
+//
+// Dreamcast emits it out of line (dc 0x5b53c, 0x34 B); retail has no slot for
+// it, because /Ob2 expands it at all three call sites. The expansion is
+// register-visible and is what the handler's EBX is: the inlined `this` is
+// loaded once from gpCampaignWindow ahead of the sweep and reused by every
+// GetWidget in it, where a direct global load would be reloaded per call.
+// Spelled `inline` so no out-of-line copy is emitted here either.
+inline void TCampaignWindow::HideText()
 {
-    // @stub
+    for (int line = PREVIEW_FIRST_ID; line <= PREVIEW_LAST_ID; ++line) {
+        widget* text = GetWidget(line);
+        if (text)
+            text->send_message(widget::WIDGET_CLEAR_STATUS,
+                widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    }
 }
-#endif
 
 // E:\gamedcs\campaignwindow.cpp:86
 //
@@ -188,6 +197,26 @@ void TCampaignWindow::DoModal()
 DATA(0x0066cad8) static int lastCampaignHoverID;
 
 // E:\gamedcs\campaignwindow.cpp:291
+//
+// Residual (81.6%): D-family block placement only - the shared end-dialog
+// join. Retail gives the fall-through into it to the widget arm (`jne
+// consume`, then straight into the tail) and sends the campaign-pick and
+// key-down arms back with `jmp`s; our CL sinks the same three-predecessor
+// join past the key-down arm, costing one `jmp` at the widget arm and
+// re-aligning everything downstream. Both layouts spend exactly two
+// unconditional jumps, so it is an internal tie-break on IL block creation
+// order rather than a spelling - tried and rejected: forward `goto
+// pick_campaign` with the arm parked behind the `ret` (VC6 folds the branch
+// and hoists the arm back, 75.4), inverted arms `if (id <= LAST) {...} else
+// if (...)` (75.4), the three-site inlined-helper spelling that would let
+// tail-merge pick the surviving copy (VC6 constant-folds the key-down
+// copy's dialogReturn and merges only the epilogue, 80.1), `goto` inside
+// the switch case (81.6), explicit `goto end_dialog` in both arms (81.6),
+// if/else-if chain (81.6). `if (id == CANCEL) goto end_dialog; goto
+// consume;` and plain `return MESSAGE_DISPATCH_CONSUME` both reach 84.5 but
+// only by DUPLICATING the consume epilogue, which retail does not have
+// (retail's body has exactly two `ret`s) - alignment luck, not a match, so
+// both are rejected. Everything else in the body is register-exact.
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int CampaignWindowHandler(message& msg)
 {
@@ -225,9 +254,13 @@ end_dialog:
     }
 
     if (msg.id == MESSAGE_KEY_DOWN) {
-        if (msg.codeX != 1)
+        switch (msg.codeX) {
+        case TCampaignWindow::DIALOG_CLOSE_KEY:
+            msg.codeY = DIALOG_RETURN_CANCEL;
+            break;
+        default:
             goto consume;
-        msg.codeY = DIALOG_RETURN_CANCEL;
+        }
         goto end_dialog;
     }
 
@@ -244,13 +277,7 @@ end_dialog:
                 && hoverID <= TCampaignWindow::CAMPAIGN_LAST_ID) {
             int* preview = gCampaignPreviews
                 + (hoverID - TCampaignWindow::CAMPAIGN_FIRST_ID) * 20;
-            for (int shown = TCampaignWindow::PREVIEW_FIRST_ID;
-                 shown <= TCampaignWindow::PREVIEW_LAST_ID; ++shown) {
-                widget* line = gpCampaignWindow->GetWidget(shown);
-                if (line)
-                    line->send_message(widget::WIDGET_CLEAR_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-            }
+            gpCampaignWindow->HideText();
             gpCampaignWindow->GetWidget(hoverID
                     - gpCampaignWindow->firstCampaign - 7)->send_message(
                 widget::WIDGET_SET_STATUS,
@@ -262,13 +289,7 @@ end_dialog:
         } else {
             gBinkPaused = 1;
             _BinkPause(gBinkVideo, 1);
-            for (int hidden = TCampaignWindow::PREVIEW_FIRST_ID;
-                 hidden <= TCampaignWindow::PREVIEW_LAST_ID; ++hidden) {
-                widget* line = gpCampaignWindow->GetWidget(hidden);
-                if (line)
-                    line->send_message(widget::WIDGET_CLEAR_STATUS,
-                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-            }
+            gpCampaignWindow->HideText();
         }
 
         if (hoverID == DIALOG_RETURN_CANCEL)
