@@ -163,7 +163,19 @@ public:
     // empty-slot test in both 0x465830 and 0x4658b0 is on +0x34,
     // creatureType. Both functions are byte-exact on that reading.)
     int creatureId;               // +0x84
-    char pad_88[0x38];
+    // Three more slices out of the SAME embedded traits row, byte-proven
+    // by TCombatResultsWindow's constructor (0x4702d0): when a side has no
+    // hero it names that side's strongest stack, reading +0x88 for one
+    // creature and +0x8c for several, and it ranks the stacks by +0xb4.
+    // Against TCreatureTypeTraits at sMonInfo == +0x74 those are exactly
+    // m_name (+0x14), m_plural_name (+0x18) and AI_value (+0x40) - the
+    // same three-field spacing the struct already has, which is what makes
+    // the pairing positional rather than nominal.
+    const char* monInfoName;        // +0x88 == sMonInfo.m_name
+    const char* monInfoPluralName;  // +0x8c == sMonInfo.m_plural_name
+    char pad_90[0x24];
+    int monInfoAIValue;             // +0xb4 == sMonInfo.AI_value
+    char pad_b8[0x8];
     // Hit points per creature: AI_get_attack_damage (0x435980) and the
     // attack-hex chooser ctor (0x4360c0) both divide a stack's total
     // hit points by it with the (hp + total - 1)/hp ceiling idiom.

@@ -490,6 +490,10 @@ public:
     SCampaign();
     ~SCampaign();
     SCampaign& operator=(const SCampaign& that);
+    // Retail 0x489590, thiscall on gpGame->campaign with the selected
+    // campaign's ordinal and its data-file name; CampaignWindowHandler's
+    // deselect arm is the caller that proves the shape. Provisional name.
+    void select_campaign(int campaignIndex, const char* filename);
     int get_score() const;
     int get_total_time() const;
     int Save(TAbstractFile* outfile);

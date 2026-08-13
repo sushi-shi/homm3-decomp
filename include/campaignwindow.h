@@ -15,6 +15,26 @@ class message;
 // deliberately unmodelled until a compiled consumer needs it.
 class TCampaignWindow : public heroWindow {
 public:
+    // Widget ids, byte-proven by the handler: the seven preview rows it
+    // sweeps live at 101..107, and the campaign selector answers 108..127 -
+    // twenty campaigns, exactly the twenty 0x50-byte rows of
+    // gCampaignPreviews (the handler's `lea edi,[edi+4*edi-0x21c]; shl
+    // edi,4` is &gCampaignPreviews[id - 108]).
+    enum EOtherWidgetIDs {
+        PREVIEW_FIRST_ID = 101,
+        PREVIEW_LAST_ID = 107,
+        CAMPAIGN_FIRST_ID = 108,
+        CAMPAIGN_LAST_ID = 127
+    };
+
+    // Not sliced yet: the constructor stores 0 at +0x4c, -1 at +0x50 and a
+    // 21-byte availability block at +0x60, none of which this subset needs.
+    char pad_4c[0x2c];
+    // +0x78. The handler subtracts it (plus 7) from a campaign id to reach
+    // that campaign's preview widget, so it is the ordinal of the first
+    // campaign the current page shows; the constructor seeds 0, 7 or 13.
+    int firstCampaign;
+
     // Complete added the leading new-game selector to Dreamcast's
     // one-argument constructor; oldmain and the retail body prove both slots.
     TCampaignWindow(unsigned char newGame, int newCampaign);
@@ -32,6 +52,14 @@ int CampaignWindowHandler(message& msg);
 // Its full row type lands with the constructor/helper reconstruction; the
 // destructor currently consumes only the flat dword view.
 extern int gCampaignPreviews[];
+
+// The twenty campaign data-file names the handler hands to
+// SCampaign::select_campaign. Retail addresses them as
+// `[4*id + 0x66c92c]` with id in 108..127, i.e. base 0x66cadc indexed by
+// id - CAMPAIGN_FIRST_ID - the constant-folded form of a twenty-entry
+// table that starts immediately after the 0x66cad8 hover latch. No DATA
+// claim yet: the fold means the table's own extent is not carved.
+extern const char* gCampaignFileNames[20];
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\campaignwindow.cpp:291, dc 0x5bd94) int CampaignWindowHandler(message* msg);
