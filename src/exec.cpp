@@ -55,8 +55,7 @@ void executive::ShutDownSystem()
 
 #endif  // @carcass
 
-// The provisional view of the unnamed central object at 0x6a5d5c
-// (shared with kbwin's quit-confirm arm) lives in exec.h.
+// gpGeneralText is the canonical TTextResource loaded from genrltxt.txt.
 
 // E:\gamedcs\exec.cpp:103
 VA(0x004b0a10, 0x10B)  // anchor-global, dc 0x9e66c
@@ -77,13 +76,13 @@ int executive::DoDialog(baseManager* newDialog)
         m = m->nextManager;
     }
     if (AddManager(newDialog, -1))
-        ShutDown(gUnnamed6a5d5c->entry->text);
+        ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
     if (dialogExec.AddManager(gpMouseManager, -1))
-        ShutDown(gUnnamed6a5d5c->entry->text);
+        ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
     if (dialogExec.AddManager(gpWindowManager, -1))
-        ShutDown(gUnnamed6a5d5c->entry->text);
+        ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
     if (dialogExec.AddManager(newDialog, -1))
-        ShutDown(gUnnamed6a5d5c->entry->text);
+        ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
     dialogExec.MainLoop();
     RemoveManager(newDialog);
     for (i = 0; i < count; i++) {
@@ -174,7 +173,7 @@ void executive::RemoveManager(baseManager* killManager)
 // currentManager; if saved == gpAdvManager (0x699268) { advMgr+0x34=2;
 // (heroWindow* at advMgr+0x44)->SleepAllWidgets(1); advMgr+0x38c=0; }
 // else RemoveManager(saved); if (AddManager(newManager,-1))
-// ShutDown(<0x6a5d5c +0x20 +0x4 text>); MainLoop();
+// ShutDown(gpGeneralText->Text[GENERAL_TEXT_SHUTDOWN]); MainLoop();
 // RemoveManager(newManager); then the mirror resume arm: if saved ==
 // gpAdvManager { advMgr+0x34=1; SleepAllWidgets(0);
 // RedrawAdvScreen(1,0); KBChangeMenu([0x6989e4]); ForceNewHover();
@@ -185,41 +184,66 @@ void executive::RemoveManager(baseManager* killManager)
 // scopes. The isolated catch funclets at 0x4b0dc2/0x4b0dd7/0x4b0e25 do,
 // respectively: RemoveManager(newManager); restore the saved manager's
 // active state (the reduced exception path); and restore currentManager;
-// each then rethrows. Writing those three try/catch scopes reproduces the
-// 11-block retail body and funclet boundaries closely, but VC6 emits the
-// generated funclets in CallManager's base COFF section. Objdiff therefore
-// charges them to this symbol while the delinked target exposes three
-// separate carved entries, dropping the reported row to 58.29%. The probe
-// is reverted until comparison-side funclet boundaries can be represented;
-// the present EH-free body remains the best honest scored form (68.3663%).
-VA(0x004b0c70, 0x152)  // anchor-global, dc 0x9e898
+// each then rethrows. The former bootstrap split at 0x4b0dc2 is corrected:
+// all three handlers share this function's frame and the merged aligned
+// extent ends exactly at MainLoop's independent entry.
+// Residual (98.1387%): the 0x1d0 section, EH states, seven main-body
+// branches, return, calls, arguments, and every catch edge agree. Five
+// load-chain/argument register choices remain across the resume body and
+// generated catches. Using currentManager for both the first comparison and
+// removal regressed to 88.7372%; scoped advWindow aliases regressed to
+// 96.4234%; scoped restore-error text was byte-inert. The asymmetric direct
+// RemoveManager(currentManager) spelling is the measured maximum.
+VA(0x004b0c70, 0x1D0)  // anchor-global + contiguous catch handlers, dc 0x9e898
 void executive::CallManager(baseManager* newManager)
 {
     baseManager* saved = currentManager;
 
-    if (saved == gpAdvManager) {
-        gpAdvManager->status = 2;
-        gpAdvManager->advWindow->SleepAllWidgets(1);
-        gpAdvManager->field_38c = 0;
-    } else {
-        RemoveManager(saved);
-    }
-    if (AddManager(newManager, -1))
-        ShutDown(gUnnamed6a5d5c->entry->text);
-    MainLoop();
-    RemoveManager(newManager);
-    if (saved == gpAdvManager) {
-        gpAdvManager->status = 1;
-        gpAdvManager->advWindow->SleepAllWidgets(0);
-        gpAdvManager->RedrawAdvScreen(1, 0);
-        KBChangeMenu(dfltMenu);
-        gpAdvManager->ForceNewHover();
-        gpAdvManager->OverrideBottomView(advManager::BOTTOM_VIEW_DEFAULT, -1);
-        if (gpWindowManager->isWaitingForFadeIn)
-            gpWindowManager->FadeScreen(0, 4, 0);
-    } else {
-        if (AddManager(saved, -1))
-            ShutDown(gUnnamed6a5d5c->entry->text);
+    try {
+        if (saved == gpAdvManager) {
+            gpAdvManager->status = 2;
+            gpAdvManager->advWindow->SleepAllWidgets(1);
+            gpAdvManager->field_38c = 0;
+        } else {
+            RemoveManager(currentManager);
+        }
+        try {
+            if (AddManager(newManager, -1))
+                ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
+            try {
+                MainLoop();
+            } catch (...) {
+                RemoveManager(newManager);
+                throw;
+            }
+            RemoveManager(newManager);
+        } catch (...) {
+            if (saved == gpAdvManager) {
+                gpAdvManager->status = 1;
+                gpAdvManager->advWindow->SleepAllWidgets(0);
+            } else {
+                if (AddManager(saved, -1))
+                    ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
+            }
+            throw;
+        }
+        if (saved == gpAdvManager) {
+            gpAdvManager->status = 1;
+            gpAdvManager->advWindow->SleepAllWidgets(0);
+            gpAdvManager->RedrawAdvScreen(1, 0);
+            KBChangeMenu(dfltMenu);
+            gpAdvManager->ForceNewHover();
+            gpAdvManager->OverrideBottomView(
+                advManager::BOTTOM_VIEW_DEFAULT, -1);
+            if (gpWindowManager->isWaitingForFadeIn)
+                gpWindowManager->FadeScreen(0, 4, 0);
+        } else {
+            if (AddManager(saved, -1))
+                ShutDown(gpGeneralText->GetText(GENERAL_TEXT_SHUTDOWN));
+        }
+    } catch (...) {
+        currentManager = saved;
+        throw;
     }
     currentManager = saved;
 }

@@ -8,6 +8,7 @@
 #include "findpath.h"
 #include "game.h"
 #include "hero.h"
+#include "misc.h"
 
 // A by-value, reference-RETURNING min - compute_fire_shield_damage
 // (0x422440) homes both operands in dead argument slots and selects
@@ -97,8 +98,6 @@ long combatManager::get_total_combat_value(long side, long lowest_attack, long l
     return total;
 }
 
-#if 0  // @carcass
-
 // THE SHOOTER SEGMENT, 0x41eb80..0x41f060 (2026-08-08). Four retail
 // rows sit between get_total_combat_value (0x41eac0, claimed) and
 // find_move_order (0x41f140, claimed); the DC roster has five bodies
@@ -126,13 +125,87 @@ long combatManager::get_total_combat_value(long side, long lowest_attack, long l
 // the entries here are ordered by RETAIL address, not by DC line.
 
 // E:\gamedcs\ai.cpp:397
+// The DC locals (`best_target`, `is_area_effect`, `hex`, `our_group`,
+// `targets`, `enemy_group`) and the retail xrefs recover this whole target
+// scan. The apparently unused vector is real: its three zeroed words and EH
+// cleanup are the retail frame. Declaration order is codegen-bearing. In
+// particular, loading enemy_group beside our_group before declaring the
+// zero-valued flag/best pointer gives retail's EDI home and prologue exactly.
+//
+// Retail expands IsIncapacitated's three-field test twice in this function,
+// but calls the separately emitted member from find_move_order. The member's
+// TU-wide no-inline pin below is therefore retained, and these two predicates
+// are source-expanded to reproduce the retail mixed decision. They must be
+// independent `if`s: an `else if` lets VC6 share the candidate result and
+// removes two retail blocks. Finally, the deliberately non-semantic-looking
+// source assignment order (best army, output value, best hex) is what VC6
+// schedules into retail's best-hex/best-army/output store order with the exact
+// EAX/ECX/EDX colouring. All 38 blocks and all 544 bytes match.
 VA(0x0041eb80, 0x220)  // anchor-callee, dc 0x240e4
 long combatManager::choose_shooter_target(const army* current_army, type_AI_combat_parameters* data, long* best_value)
 {
-    // @stub
-}
+    long best_target = -1;
+    long hex;
+    long our_group = data->side;
+    long enemy_group = data->enemy_side;
+    unsigned char is_area_effect = 0;
+    army* best_army = 0;
+    std::vector<army*> targets;
 
-#endif  // @carcass
+    if (current_army->creatureType == CREATURE_MAGOG
+            || current_army->creatureType == CREATURE_LICH
+            || current_army->creatureType == CREATURE_POWER_LICH)
+        is_area_effect = 1;
+
+    for (long i = 0; i < numArmies[enemy_group]; i++) {
+        army* target = &armies[enemy_group][i];
+        unsigned char dead = static_cast<unsigned char>(
+            static_cast<unsigned>(target->creatureId) >> 21);
+        if ((dead & 1) != 0 || target->creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        if (data->simulated && target->get_total_hit_points(1) == 0)
+            continue;
+
+        hex = target->gridIndex;
+        long value;
+        if (is_area_effect) {
+            value = get_area_attack_value(current_army, hex, our_group, data);
+            if (target->creatureId & 1) {
+                long second_value = get_area_attack_value(
+                    current_army, target->get_second_grid_index(), our_group,
+                    data);
+                if (second_value > value) {
+                    hex = target->get_second_grid_index();
+                    value = second_value;
+                }
+            }
+            if (value < 0)
+                continue;
+        } else {
+            value = data->get_ranged_attack_value(current_army, target);
+        }
+
+        if (best_army) {
+            if ((target->disabled_290 || target->disabled_2b0
+                    || target->disabled_2c0)
+                    && !(best_army->disabled_290 || best_army->disabled_2b0
+                        || best_army->disabled_2c0))
+                continue;
+            if (!(target->disabled_290 || target->disabled_2b0
+                    || target->disabled_2c0)
+                    && (best_army->disabled_290 || best_army->disabled_2b0
+                        || best_army->disabled_2c0))
+                goto accept_target;
+            if (value < *best_value)
+                continue;
+        }
+accept_target:
+        best_army = target;
+        *best_value = value;
+        best_target = hex;
+    }
+    return best_target;
+}
 
 // E:\gamedcs\ai.cpp:365
 // The value of dropping a Dragon-Breath-shaped area on `hex`: every
@@ -189,16 +262,78 @@ long get_area_attack_value(const army* current_army, long hex, long our_group, t
     return total;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai.cpp:475
+// DC names the sole automatic local `count` and its function-local static
+// `walls` as const TWallTargetId[4]. Retail places that array at 0x63abd0
+// with values {1,2,4,5}; every loop strength-reduces the array index to the
+// pointer walk visible in the bytes. The first census rejects a siege with no
+// surviving catapult target. After find_AI_targets marks committed stacks,
+// the second census sums only uncommitted army value and requires it to beat
+// 1.2 * the current shooter value ratio. The final two passes count and then
+// randomly select among the weakest positive-strength walls. The output is
+// order 9, no movement hex, and the selected wall record's combat hex.
+// This literal transcription matched all 441 bytes on its first paired build.
 VA(0x0041eea0, 0x1B9)  // anchor-callee, dc 0x2429c
 unsigned char combatManager::choose_cyclops_action(long best_value, long side, type_AI_combat_parameters* estimate)
 {
-    // @stub
-}
+    DATA(0x0063abd0) static const TWallTargetId walls[4] = {
+        WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_4, WALL_TARGET_5
+    };
 
-#endif  // @carcass
+    if (side == 1)
+        return 0;
+    if (field_132f4 == COMBAT_FORTIFICATION_NONE)
+        return 0;
+
+    long count = 0;
+    { for (long i = 0; i < 4; i++) {
+            long wall = gWallTargets[walls[i]].wall_id;
+            if (wallStrength[wall] > 0)
+                count++;
+        }
+    }
+    if (!count)
+        return 0;
+
+    find_AI_targets(side, 0, 0, estimate, 0);
+    count = 0;
+    { for (long i = 0; i < numArmies[side]; i++) {
+            army* current_army = &armies[side][i];
+            if (!current_army->AI_target)
+                count += current_army->get_total_combat_value(
+                    estimate->lowest_attack, estimate->lowest_defense);
+        }
+    }
+
+    if (static_cast<double>(count) / estimate->our_value
+            <= static_cast<double>(best_value) * 1.2 / estimate->enemy_value)
+        return 0;
+
+    long weakest = 100;
+    count = 0;
+    { for (long i = 0; i < 4; i++) {
+            long strength = wallStrength[gWallTargets[walls[i]].wall_id];
+            if (strength <= 0 || strength > weakest)
+                continue;
+            if (strength < weakest)
+                count = 0;
+            count++;
+            weakest = strength;
+        }
+    }
+
+    long choice = Random(1, count);
+    long target = 0;
+    for (; target < 4; target++) {
+        long strength = wallStrength[gWallTargets[walls[target]].wall_id];
+        if (strength == weakest && --choice == 0)
+            break;
+    }
+    field_3c = 9;
+    field_44 = gWallTargets[walls[target]].hex;
+    field_40 = -1;
+    return 1;
+}
 
 // E:\gamedcs\ai.cpp:558
 // The shooter arm of the per-stack dispatcher, and the DC callee list
@@ -376,8 +511,12 @@ long get_attack_value(const army* current_army, const army* enemy, long enemy_hi
 // bodies differs. Definition ORDER does not move it - the expansion is
 // identical with this definition placed before or after its caller
 // (measured 2026-08-08), so no source arrangement reproduces retail's
-// choice. Remove the pragma the moment a second ai.cpp caller lands and
-// re-measure.
+// choice. Re-measured when choose_shooter_target landed on 2026-08-13:
+// removing the pin correctly inlines both of that function's predicate
+// evaluations, but also inlines this sole retail call and drops
+// find_move_order from 100% to 84.39%. The shooter source-expands the exact
+// same three-field predicate above, leaving this proven out-of-line body and
+// its only retail call intact.
 #pragma auto_inline(off)
 VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
 unsigned char army::IsIncapacitated()
@@ -722,11 +861,67 @@ unsigned char combatManager::attempt_shooter_defense(const army* current_army, c
 }
 
 // E:\gamedcs\ai.cpp:1513
+#endif  // @carcass
+
+// Selects a reachable ground hex that improves the stack's worst incoming
+// danger, preferring shorter paths when danger ties. Two-hex stacks price
+// both occupied cells; immobile/disabled stacks and low-difficulty human
+// sides never run. The cellData null arm deliberately mirrors retail's
+// inline accessor, which returns null and is immediately dereferenced.
 VA(0x004208f0, 0x184)  // linkorder, dc 0x25c80
 unsigned char combatManager::choose_to_run(const army* our_army, const long* enemy_attacks, const searchArray* search_array)
 {
-    // @stub
+    if (gpGame->setup.difficulty < 2
+        && !sideIsAI[our_army->combatSide])
+        return 0;
+
+    long worst_danger = enemy_attacks[our_army->gridIndex];
+    if (our_army->creatureId & 1) {
+        long second_hex = our_army->get_second_grid_index();
+        worst_danger = min_ref(
+            enemy_attacks[second_hex], worst_danger);
+    }
+
+    if (worst_danger >= 0
+        || our_army->disabled_290
+        || our_army->disabled_2b0
+        || our_army->disabled_2c0
+        || our_army->boundFlag)
+        return 0;
+
+    long best_distance = 0;
+    long best_hex = -1;
+    for (long hex = 0; hex < COMBAT_GRID_CELLS; ++hex) {
+        const pathCell* cell = search_array->cellData;
+        if (cell)
+            cell += hex;
+        if (!cell->visited || cell->flight_cost > 0)
+            continue;
+
+        long distance = cell->cost;
+        if (distance > our_army->GetSpeed())
+            continue;
+
+        long danger = enemy_attacks[hex];
+        if (our_army->creatureId & 1) {
+            long second_hex = hex + (our_army->facing ? 1 : -1);
+            danger = min_ref(enemy_attacks[second_hex], danger);
+        }
+        if (danger < worst_danger)
+            continue;
+        if (danger == worst_danger && best_distance < distance)
+            continue;
+        worst_danger = danger;
+        best_distance = distance;
+        best_hex = hex;
+    }
+
+    if (best_hex < 0 || best_hex == our_army->gridIndex)
+        return 0;
+    return move_toward(our_army, best_hex, enemy_attacks, 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai.cpp:1572
 // `ret 4` = one stack argument over `this`, the DC count exactly, and
@@ -973,10 +1168,12 @@ long combatManager::choose_melee_action(const army* current_army, unsigned char 
 // why the retail bytes read `test esi,esi / jl` plus `cmp esi,0x15ea /
 // jge` (0x15ea = 187 * 30) rather than anything mentioning 187.
 //
-// Residual (80.6%): the register-homing family, and every structural
-// question is already settled - the CFG, both ValidHex expansions, the
-// strength reduction, the two acceptance guards and all three exits
-// line up. What does not is one register: retail parks `this` in EBX,
+// Residual (82.49%): the register-homing family, and every semantic
+// question is settled - both ValidHex expansions, the strength reduction,
+// the two acceptance guards and the shared wait tail line up. Retail has
+// 21 branches / two returns, as does this source; only the equivalent final
+// best-hex test has opposite layout polarity. What does not align is one
+// cyclic register choice: retail parks `this` in EBX,
 // spills it to a slot across the inner loop and RECYCLES EBX as the
 // neighbour counter, which leaves ESI free for the induction and lets
 // the ESI save shrink-wrap into the middle of SeedCombatPosition's
@@ -989,36 +1186,41 @@ long combatManager::choose_melee_action(const army* current_army, unsigned char 
 // test as one `a < b || (a == b && c)` expression (79.2 against 80.6
 // for retail's two separate `continue` guards, which is what produces
 // the DUPLICATED `cmp ebx,eax` retail carries), and swapping the
-// best_hex/best_value declaration order (80.53, no).
+// best_hex/best_value declaration order (80.53 under that older layout).
+// Revisited 2026-08-13 with the DC local roster: the actual function-scope
+// locals are `best_hex`, `best_open_hexes`, `new_hex` in that order. Moving
+// their assignments before SeedCombatPosition, swapping the first two into
+// roster order and merging the three wait exits raised 80.57 -> 82.49.
+// Nesting the positive gates aligns every branch target but scores 82.21;
+// spelling the last normal arm explicitly scores 81.29. Both were rejected.
 VA(0x00422060, 0x18E)  // anchor-callee, dc 0x26fa8
 void combatManager::place_shooter(const army* current_army)
 {
-    if (!current_army->GetSpeed()) {
-        field_3c = 8;
-        return;
-    }
-    if (!gpGame->setup.difficulty && !sideIsAI[currentSide]) {
-        field_3c = 8;
-        return;
-    }
+    long best_hex;
+    long best_open_hexes;
+    long new_hex;
+    if (!current_army->GetSpeed())
+        goto wait;
+    if (!gpGame->setup.difficulty && !sideIsAI[currentSide])
+        goto wait;
+    best_hex = current_army->gridIndex;
+    best_open_hexes = 100;
     gpSearchArray->SeedCombatPosition(current_army, currentSide, 127,
                                       bCreaturePlacement, -1);
-    long best_value = 100;
-    long best_hex = current_army->gridIndex;
-    { for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
-        if (!ValidHex(hex))
+    for (new_hex = 0; new_hex < COMBAT_GRID_CELLS; new_hex++) {
+        if (!ValidHex(new_hex))
             continue;
-        if (is_outside_placement_boundry(currentSide, hex))
+        if (is_outside_placement_boundry(currentSide, new_hex))
             continue;
         const pathCell* cell = gpSearchArray->cellData == 0
-            ? 0 : &gpSearchArray->cellData[hex];
+            ? 0 : &gpSearchArray->cellData[new_hex];
         if (!cell->visited)
             continue;
         long value = 0;
         for (long dir = 0; dir < 8; dir++) {
             if (dir >= 6 && !(current_army->creatureId & 1))
                 continue;
-            long adjacent = current_army->get_adjacent_hex(hex, dir);
+            long adjacent = current_army->get_adjacent_hex(new_hex, dir);
             if (!ValidHex(adjacent))
                 continue;
             army* other = cells[adjacent].get_army();
@@ -1027,19 +1229,21 @@ void combatManager::place_shooter(const army* current_army)
             else if (other->Is(2) & 1)
                 value = 1000;
         }
-        if (value > best_value)
+        if (value > best_open_hexes)
             continue;
-        if (value == best_value && hex != current_army->gridIndex)
+        if (value == best_open_hexes
+                && new_hex != current_army->gridIndex)
             continue;
-        best_value = value;
-        best_hex = hex;
-    } }
-    if (best_hex == current_army->gridIndex) {
-        field_3c = 8;
-        return;
+        best_open_hexes = value;
+        best_hex = new_hex;
     }
+    if (best_hex == current_army->gridIndex)
+        goto wait;
     field_3c = 2;
     field_44 = best_hex;
+    return;
+wait:
+    field_3c = 8;
 }
 
 // E:\gamedcs\ai.cpp:2272

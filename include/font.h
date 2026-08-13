@@ -25,6 +25,22 @@ public:
         int field_8;
     };
 
+    // Storage view of the embedded TPalette16. Retail font::~font calls the
+    // out-of-line TPalette16 destructor, but its EH map registers only the
+    // font's resource base (state 0), not the palette as an automatic member
+    // cleanup. Modelling the bytes separately and making that call explicit
+    // reproduces the observed unwind contract without changing the layout.
+    struct TFontPaletteStorage {
+        char resourcePart[0x1c];
+        unsigned short data[256];
+
+        TPalette16* asPalette()
+        {
+            return static_cast<TPalette16*>(static_cast<void*>(this));
+        }
+    };
+    SIZE(TFontPaletteStorage, 0x21c);
+
     char pad_1c[5];
     // Glyph row count (DrawCharacter's outer loop bound, byte at
     // +0x21 inside the header region).
@@ -79,7 +95,7 @@ public:
     // Per-character offsets into `data` (DrawCharacter indexes this
     // int[256] at +0xc3c; formerly an opaque pad).
     int glyphOffsets[256];
-    TPalette16 palette;
+    TFontPaletteStorage palette;
     void* data;
 
     virtual ~font();  // retail 0x4b5110

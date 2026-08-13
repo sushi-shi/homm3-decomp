@@ -39,6 +39,7 @@ from homm3.build.normalized_freshness import freshness_problems, write_stamp
 from homm3.core import common
 
 OBJDIFF = common.HOMM3_DIR / "build/objdiff"
+COMPGEN_MANIFEST = common.HOMM3_DIR / "build/gen/compgen_claims.tsv"
 
 CNT_CODE = 0x00000020
 FUNCTION_TYPE = 0x0020
@@ -163,6 +164,13 @@ def main(argv=None) -> int:
             continue
         for obj in sorted(root.rglob("*.obj")):
             rel = obj.relative_to(root)
+            unit = rel.name[:-6] if rel.name.endswith(".c.obj") else rel.stem
+            claims = ()
+            if COMPGEN_MANIFEST.is_file():
+                claims = tuple(
+                    claim for claim in canon.load_compgen_claims(
+                        COMPGEN_MANIFEST, unit)
+                    if claim.kind != "SCALAR_DELETING_DTOR")
             out = out_root / rel
             sidecar = out.with_suffix(".symbols.tsv")
             out.parent.mkdir(parents=True, exist_ok=True)
@@ -170,10 +178,13 @@ def main(argv=None) -> int:
                     and not freshness_problems(out):
                 skipped += 1
                 continue
-            result = canon.canonicalize_coff(obj.read_bytes())
+            result = canon.canonicalize_coff(obj.read_bytes(), claims)
             out.write_bytes(_drop_data_sections(result.data))
             sidecar.write_bytes(canon.sidecar_bytes(result.rows))
-            write_stamp(out, {"raw": obj})
+            stamp_inputs = {"raw": obj}
+            if COMPGEN_MANIFEST.is_file():
+                stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
+            write_stamp(out, stamp_inputs)
             wrote += 1
     retained = 0
     base_root = OBJDIFF / "base"
@@ -194,7 +205,10 @@ def main(argv=None) -> int:
         # Padding is a paired normalization decision, so the base copy is
         # stale whenever either raw input changes, even when this run found no
         # suffix to retain.
-        write_stamp(normalized_base, {"raw": base_obj, "target": target_obj})
+        stamp_inputs = {"raw": base_obj, "target": target_obj}
+        if COMPGEN_MANIFEST.is_file():
+            stamp_inputs["compgen_manifest"] = COMPGEN_MANIFEST
+        write_stamp(normalized_base, stamp_inputs)
 
     print(f"[build normalize_objs] {wrote} normalized, {skipped} fresh, "
           f"{retained} target-padding span(s) retained "

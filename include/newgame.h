@@ -5,6 +5,14 @@
 #ifndef HOMM3_NEWGAME_H
 #define HOMM3_NEWGAME_H
 
+#include "town.h"
+
+// Retail widened Dreamcast's eight-town byte mask to hold the ninth Conflux
+// bit. Both helper entries consume the full ECX value without a byte mask.
+long get_alignment_count(int legal_alignments);
+TTownType pick_alignment(int legal_alignments,
+                         unsigned char getFirstAvail);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\newgame.cpp:191, dc 0x103494) long get_alignment_count(unsigned char legal_alignments);
 // CODEVIEW(E:\gamedcs\newgame.cpp:204, dc 0x1034b4) TTownType pick_alignment(unsigned char legal_alignments, unsigned char getFirstAvail);

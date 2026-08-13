@@ -4,6 +4,15 @@
 #include <va.h>
 // #include "bitmap8.h"
 
+// RETAIL-DROPPED (2026-08-11): the exhaustive bitmap-family bracket contains
+// Bitmap24Bit through its 1528-byte AdjustHSV body at 0x44f190..0x44f787,
+// two excluded 32-byte cinit records at 0x44f790 and 0x44f7b0, then
+// Bitmap816's deleting destructor at 0x44f7d0. There is no Bitmap8Bit
+// vtable between Bitmap24Bit's 0x63b9f4 table and Bitmap816's 0x63ba14 table,
+// and no retail function/address-take names this class. Thus none of the nine
+// Dreamcast source rows has a retail body; keep them DC_ONLY rather than
+// manufacturing claims from the neighboring bitmap implementations.
+
 // E:\gamedcs\bitmap8.cpp:32
 DC_ONLY(0x533f0, 0x58)
 void Bitmap8Bit::Bitmap8Bit()
@@ -66,4 +75,3 @@ void* Bitmap8Bit::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
-

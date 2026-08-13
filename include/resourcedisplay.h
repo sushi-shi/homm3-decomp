@@ -5,6 +5,34 @@
 #ifndef HOMM3_RESOURCEDISPLAY_H
 #define HOMM3_RESOURCEDISPLAY_H
 
+#include "subwindow.h"
+
+class bitmapBorder;
+class border;
+class heroWindow;
+class textWidget;
+
+// PROVEN retail layout, size 0x78. The constructor stores the seven
+// text pointers at +0x38..+0x50, the seven border pointers at
+// +0x54..+0x6c, the bitmap background at +0x70 and the final status
+// text at +0x74. TSubWindow is exactly 0x34 bytes; isSmall occupies
+// the derived head byte at +0x34.
+class TResourceDisplay : public TSubWindow {
+public:
+    unsigned char isSmall;
+    char pad_35[3];
+    textWidget* resourceWidgets[7];
+    border* resourceBorders[7];
+    bitmapBorder* resourceBackground;
+    textWidget* statusWidget;
+
+    TResourceDisplay(heroWindow* parent, unsigned char is_small);
+    virtual ~TResourceDisplay();
+    void Update(unsigned char draw, unsigned char update);
+    void Clear();
+};
+SIZE(TResourceDisplay, 0x78);
+
 // --- TResourceDisplay ---
 // CODEVIEW(E:\gamedcs\resourcedisplay.cpp:40, dc 0x120c54) void TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small);
 // CODEVIEW(E:\gamedcs\resourcedisplay.cpp:112, dc 0x120ee8) void TResourceDisplay::~TResourceDisplay();

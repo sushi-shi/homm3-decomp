@@ -37,7 +37,7 @@ The pinned SP3 toolchain is never modified in place, MSVC_DIR selects the
 overlay per compile through homm3.core.cc_wrap (the same wrapper ninja
 runs), and nothing here lands source edits: a `RTM-closes` verdict is a
 DIAGNOSIS (the wall is a generation artifact, closable with zero further
-reverse-engineering), recorded for the supervised decision log.
+reverse-engineering), recorded for the decision log.
 
 rc: 0 = ran, RTM side available; 1 = ran with RTM-unavailable rows;
 2 = error (vc6 convention).  Run inside `nix develop .#build`.

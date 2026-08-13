@@ -4,6 +4,16 @@
 #include <va.h>
 // #include "ResSw.h"
 
+// RETAIL-DROPPED (2026-08-11): the Dreamcast compiland is a self-contained
+// global ResolutionSwitch object. Its ctor calls S_to_600, Switch calls only
+// S_to_600/S_to_800, the deleting dtor calls only the dtor, and the DC xref
+// graph has no caller from another compiland. Consequently an included x86 TU
+// would necessarily contribute its global ctor/dtor dispatch even if Switch
+// were unused. The retail link-order inventory has no ResSw span or equivalent
+// initializer quartet, and the alleged external SCREEN_WIDTH/HEIGHT names at
+// 0x68c8c4/0x68c8c8 land inside an error-format string with no relocations.
+// Keep all six source rows DC_ONLY; do not manufacture a retail bracket.
+
 // E:\gamedcs\ResSw.cpp:30
 DC_ONLY(0x123b10, 0x44)
 void ResolutionSwitch::ResolutionSwitch()
@@ -45,4 +55,3 @@ void* ResolutionSwitch::`scalar deleting destructor'(unsigned __flags)
 {
     // @stub
 }
-

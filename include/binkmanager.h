@@ -19,13 +19,14 @@ struct BinkRect {
     long Width;
     long Height;
 };
-struct Bink {
+struct BINK {
     unsigned long Width;      // +0x00
     unsigned long Height;     // +0x04
     char pad_8[0x28];         // +0x08..0x2f
     BinkRect FrameRects[8];   // +0x30
     long NumRects;            // +0xb0
 };
+typedef BINK Bink;
 
 // The binkw32 import surface (leading underscore, the RAD convention -
 // see smackmgr.h; smackmgr.cpp aliases the names back).
@@ -33,7 +34,31 @@ extern "C" {
 __declspec(dllimport) int __stdcall _BinkPause(Bink* bnk, int pause);
 __declspec(dllimport) int __stdcall _BinkDDSurfaceType(IDirectDrawSurface* lpDDS);
 __declspec(dllimport) int __stdcall _BinkGetRects(Bink* bnk, unsigned long flags);
+__declspec(dllimport) int __stdcall _BinkGoto(Bink* bnk,
+                                              unsigned long frame,
+                                              int flags);
+__declspec(dllimport) int __stdcall _BinkDoFrame(Bink* bnk);
+__declspec(dllimport) int __stdcall _BinkCopyToBuffer(
+    Bink* bnk, void* destination, int pitch, unsigned long height,
+    unsigned long x, unsigned long y, unsigned long flags);
 }
+
+// Dreamcast proves these are static members (the `YA` decorated forms and
+// static data roster); retail supplies the full PC implementations.
+class BinkManager {
+public:
+    static BINK* GetBinkFilePtr(char* filename, int binkOptions);
+    static void SetPixelFormat(unsigned long redMask,
+                               unsigned long greenMask,
+                               unsigned long blueMask);
+    static void OpenBink(int id, int x, int y, int w, int h, int flags,
+                         bool updateScreen);
+    static void DrawCurrentBinkFrame();
+    static void RestartBink();
+    static void NextBinkFrame();
+    static void CloseBink();
+    static int PlayBink(int id, int x, int y, int w, int h);
+};
 
 // The bink TU helpers at 0x44dxxx (names provisional, mirrors of the
 // smack set in smackmgr.cpp): the VideoPlay/VideoOpen bink arms and

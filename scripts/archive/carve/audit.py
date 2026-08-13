@@ -282,7 +282,7 @@ def emit_config(funcs):
         dst.parent.mkdir(parents=True, exist_ok=True)
         dst.write_text(common.MANUAL_BANNER + src.read_text())
     print(f"[carve audit] admission candidates -> {CANDIDATE_DIR} "
-          "(supervised review required before anything reaches config/)")
+          "(explicit evidence review required before anything reaches config/)")
 
 
 def main(argv=None) -> int:

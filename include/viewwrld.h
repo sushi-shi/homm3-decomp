@@ -5,6 +5,40 @@
 #ifndef HOMM3_VIEWWRLD_H
 #define HOMM3_VIEWWRLD_H
 
+#include "advmgr_popup.h"
+#include "struct.h"
+
+class type_func_button;
+
+// Dreamcast supplies the complete four-member tail after CAdvPopup. Retail's
+// independently proven 0x60-byte popup base shifts that tail by eight bytes,
+// giving a 0x70-byte object. The constructor and destructor corroborate the
+// vtable and the inherited Widgets ownership policy.
+class TViewWorldWindow : public CAdvPopup {
+public:
+    enum EOtherWidgetIDs { MAP_ID = 0 };
+    enum { NWIDGETS = 2 };
+
+private:
+    type_func_button* RolloverWidget;
+    type_point origin;
+    int viewable_width;
+    int viewable_height;
+
+public:
+    TViewWorldWindow();
+    virtual ~TViewWorldWindow();
+    void init(type_point new_center, unsigned char updateFlag);
+    void draw_window();
+    virtual int WindowHandler(message* msg);
+
+private:
+    int convertID2HelpID(int id) const;
+    void update_radar(int mrx, int mry, float fRadarDivisor);
+    void update_view_world(message* msg);
+};
+SIZE(TViewWorldWindow, 0x70);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\viewwrld.cpp:100, dc 0x192ee8) long ftol(double d);
 // CODEVIEW(E:\gamedcs\viewwrld.cpp:110, dc 0x192f4c) void VWDrawSprite(CSprite* srcIcon, NewmapCell* thisCell, int frame, int x, int y, int z);

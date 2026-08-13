@@ -42,7 +42,7 @@ refused (weak-name / tie / no-shared-class / free-function / collision
 / no-candidates).
 
 ANALYSIS OUTPUT, not retail evidence: a twin-* row is a naming/template
-proposal, external-candidate grade, promoted only in supervised review.
+proposal, external-candidate grade, promoted only with retail corroboration.
 
   python3 -m homm3.analysis.h2_twins              write evidence/homm2-overlap/twins.csv
   python3 -m homm3.analysis.h2_twins --calibrate  report calibration, write nothing

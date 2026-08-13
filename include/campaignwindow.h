@@ -5,6 +5,34 @@
 #ifndef HOMM3_CAMPAIGNWINDOW_H
 #define HOMM3_CAMPAIGNWINDOW_H
 
+#include "window.h"
+
+class message;
+
+// Retail's constructor initializes heroWindow directly, installs vtable
+// 0x63bca4, and accesses derived storage through +0x78.  That tail differs
+// substantially from Dreamcast's smaller campaign roster, so it remains
+// deliberately unmodelled until a compiled consumer needs it.
+class TCampaignWindow : public heroWindow {
+public:
+    // Complete added the leading new-game selector to Dreamcast's
+    // one-argument constructor; oldmain and the retail body prove both slots.
+    TCampaignWindow(unsigned char newGame, int newCampaign);
+    virtual ~TCampaignWindow();
+    void DoModal();
+
+private:
+    void HideText();
+};
+
+// Retail /Gr passes the message in ECX, as DoDialog's TDialogHandler does.
+int CampaignWindowHandler(message& msg);
+
+// Complete-only initialized campaign-preview table at retail 0x66c498.
+// Its full row type lands with the constructor/helper reconstruction; the
+// destructor currently consumes only the flat dword view.
+extern int gCampaignPreviews[];
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\campaignwindow.cpp:291, dc 0x5bd94) int CampaignWindowHandler(message* msg);
 

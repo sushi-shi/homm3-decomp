@@ -40,29 +40,18 @@ void get_upgrade_cost(TCreatureType creature, TCreatureType upgrade, long amount
 #endif  // @carcass
 
 // E:\gamedcs\recruit.cpp:172
-// The +8 cost offset must NOT be folded into the initial index: retail
-// strength-reduces `gCreatureRecords[index + 8]` to a byte offset
-// `lea eax,[4*ecx+0x20]`, where folding it into `index` instead spells
-// the scale as a separate `shl eax,2` (82.7%).
-// Residual (86.0%): three rows, register allocation only - retail parks
-// the 29*monId product in ECX (`lea ecx,[ecx+4*eax]`) and so schedules
-// `mov ecx,7` one instruction later; ours parks it in EAX. Tried and
-// rejected: `monId *= 29` in place (identical bytes), counter declared
-// first (identical), `while (remaining > 0)` (identical), `--remaining`
-// in the condition (identical), post-increment inside the subscript
-// (64.0), `resCost++` before `index++` (64.0), pointer-walk over
-// `&gCreatureRecords[..] + 8` (69.0), `8 + monId*29` folded (82.7).
+// The source-level indexed loop matters. VC6 strength-reduces its repeated
+// `29 * monId + 8 + resource` subscript into retail's two-LEA multiply,
+// keeps the product in ECX, then lowers the loop itself to the exact paired
+// source/destination pointer walk with a seven-element countdown. Manually
+// spelling that lowered pointer walk instead changes the product register.
 VA(0x0054e7c0, 0x31)  // anchor-global, dc 0x118b38
 void GetMonsterCost(int monId, int* resCost)
 {
-    int remaining = 7;
-    int index = monId * CREATURE_RECORD_DWORDS;
-    do {
-        *resCost = gCreatureRecords[index + CREATURE_RECORD_COST_DWORD];
-        index++;
-        resCost++;
-        remaining--;
-    } while (remaining);
+    for (int resource = 0; resource < 7; resource++)
+        resCost[resource] =
+            gCreatureRecords[monId * CREATURE_RECORD_DWORDS
+                             + CREATURE_RECORD_COST_DWORD + resource];
 }
 
 // ---------------------------------------------------------------------
@@ -73,7 +62,7 @@ void GetMonsterCost(int monId, int* resCost)
 // row so the next lane can promote in one step.
 //
 //   0x54e750  0x64   get_upgrade_cost                CLAIMED, exact
-//   0x54e7c0  0x31   GetMonsterCost                  CLAIMED, 82.7%
+//   0x54e7c0  0x31   GetMonsterCost                  CLAIMED, exact
 //   0x54e850  0x1295 TRecruitWindow::TRecruitWindow  body: EH frame,
 //              thiscall, heroWindow ctor with 0x1e5 x 0x18b type 0x12,
 //              and the delinker's working label carries "tprcrt.pcx",
@@ -213,14 +202,10 @@ static TArtifact SiegeMonsterToSiegeArtifact(TCreatureType siegeMon)
     return ARTIFACT_NONE;
 }
 
-// Residual (99.5%): code bytes and ordered relocation semantics are
-// identical. The canonicalizer now rewrites VC6's four local-label table
-// relocations onto this function with the same 0x0f/0x15/0x1b/0x21
-// addends as the delinked target, superseding the older addend-gap
-// diagnosis. The remaining display/scoring residue is a function-boundary
-// decode artifact: the target's shared .text decoder begins an instruction
-// in the last table byte and reads the next function's 0x55, while the base
-// COMDAT ends there. There is no source mismatch to work around.
+// Retail's code blocks return the consecutive creature ids 0x91..0x94,
+// while its jump table is 0x0f/0x15/0x21/0x1b for artifact ids 3..6.
+// Therefore the source case order is Catapult, Ballista, First Aid, Ammo:
+// artifact 5 maps to Ammo Cart and artifact 6 maps to First Aid Tent.
 VA(0x00550360, 0x3C)  // anchor-bracket + body, dc 0x119d98
 TCreatureType siege_artifact_to_creature(TArtifact engine)
 {
@@ -229,9 +214,9 @@ TCreatureType siege_artifact_to_creature(TArtifact engine)
         return CREATURE_CATAPULT;
     case ARTIFACT_BALLISTA:
         return CREATURE_BALLISTA;
-    case ARTIFACT_AMMO_CART:
-        return CREATURE_FIRST_AID_TENT;
     case ARTIFACT_FIRST_AID_TENT:
+        return CREATURE_FIRST_AID_TENT;
+    case ARTIFACT_AMMO_CART:
         return CREATURE_AMMO_CART;
     }
     return CREATURE_NONE;
@@ -283,7 +268,9 @@ void recruitUnit::Update(unsigned char new_monster, long slot)
         creatureName = akCreatureTypeTraits[monsterType].m_plural_name;
     else
         creatureName = "";
-    sprintf(gText, "%s %s", gUnnamed6a5d5c->entry->field_44, creatureName);
+    const char* recruitTitle =
+        gpGeneralText->GetText(GENERAL_TEXT_RECRUIT_TITLE);
+    sprintf(gText, "%s %s", recruitTitle, creatureName);
     msg.id = MESSAGE_WIDGET;
     msg.codeX = widget::WIDGET_SET_TEXT;
     msg.codeY = 0x226;

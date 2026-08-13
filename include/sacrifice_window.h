@@ -5,6 +5,47 @@
 #ifndef HOMM3_SACRIFICE_WINDOW_H
 #define HOMM3_SACRIFICE_WINDOW_H
 
+#include "advmgr_popup.h"
+#include "iconwdgt.h"
+
+class hero;
+
+// Retail's constructor at 0x55fdd0 proves the CAdvPopup base, current_hero
+// at +0x60, and eight VC6 vectors whose last storage triplet ends at +0x23c.
+// That is also exactly the Dreamcast 0x214-byte field roster widened by the
+// proven 8-byte CAdvPopup delta and eight 12->16-byte vector deltas. Keep the
+// still-unadmitted tail opaque, but keep its complete, canonical extent here:
+// callback widgets need the real derived type, not a synthetic window view.
+class type_sacrifice_window : public CAdvPopup {
+public:
+    hero* current_hero;
+    unsigned char field_64[0x1d8];
+
+    void backpack_click(long slot, unsigned char right_click);
+    void offering_click(long slot, unsigned char right_click);
+};
+SIZE(type_sacrifice_window, 0x23c);
+
+// iconWidget ends at +0x48 in retail. Each vtable's added slot 13 reads the
+// sole derived dword there before forwarding to its parent sacrifice window.
+class type_backpack_slot_widget : public iconWidget {
+public:
+    long slot;
+
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
+};
+SIZE(type_backpack_slot_widget, 0x4c);
+
+class type_artifact_offering_widget : public iconWidget {
+public:
+    long item_number;
+
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
+};
+SIZE(type_artifact_offering_widget, 0x4c);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:760, dc 0x1258ac) std::basic_string<char,std::char_traits<char>,std::allocator<char> convert_with_commas(__$ReturnUdt, long value);
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:800, dc 0x125a4c) void update_artifact_widget(iconWidget* slot_widget, type_artifact artifact);

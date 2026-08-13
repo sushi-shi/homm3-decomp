@@ -1,7 +1,7 @@
 # generator: homm3.analysis.dc_callgraph
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE - a
-# `callgraph-unique` row is a proposal for supervised
+# `callgraph-unique` row needs retail-corroborated
 # promotion into a VA() claim.
 unit	dc_offset	proposed_rva	candidates	grade	name	detail
 adventuremapwindow	0x1284			no-signal	TAdvMenu::TAdvMenu	gap 33 dc vs 4 retail [0x3f60..0x4200]
@@ -1263,12 +1263,8 @@ window	0x197690			no-signal	heroWindow::DrawWindowX	gap 2 dc vs 1 retail [0x1fef
 window	0x197bdc			no-signal	heroWindow::EnableAllWidgets	gap 2 dc vs 1 retail [0x1ff3e0..0x1ff490]
 window	0x197c08			no-signal	heroWindow::DoModal	gap 2 dc vs 1 retail [0x1ff3e0..0x1ff490]
 window	0x197cd4			no-signal	heroWindow::AddWidgetsToMessageStream	gap 1 dc vs 3 retail [0x1ff510..0x1ff640]
-winmgr	0x19aa64		0x2023b0,0x2024a0	callgraph-narrowed	heroWindowManager::AddWindow	gap 4 dc vs 12 retail [0x202370..0x202a40]
-winmgr	0x19ac14	0x2024a0	0x2024a0	callgraph-unique	heroWindowManager::RemoveWindow	gap 4 dc vs 12 retail [0x202370..0x202a40]
-winmgr	0x19ad18			no-signal	heroWindowManager::DoDialog	gap 4 dc vs 12 retail [0x202370..0x202a40]
-winmgr	0x19aef4			no-signal	heroWindowManager::DoDialogDraw	gap 4 dc vs 12 retail [0x202370..0x202a40]
-winmgr	0x19b1f0			no-signal	heroWindowManager::UpdateScreen	gap 5 dc vs 4 retail [0x202a40..0x202c50]
-winmgr	0x19b230			no-signal	heroWindowManager::UpdateScreen	gap 5 dc vs 4 retail [0x202a40..0x202c50]
-winmgr	0x19b328			no-signal	heroWindowManager::UpdateScreen	gap 5 dc vs 4 retail [0x202a40..0x202c50]
-winmgr	0x19b3c4			no-signal	heroWindowManager::BlitToScreenWithPointer	gap 5 dc vs 4 retail [0x202a40..0x202c50]
-winmgr	0x19b3f0			no-signal	heroWindowManager::BlitToScreenWithPointerX	gap 5 dc vs 4 retail [0x202a40..0x202c50]
+winmgr	0x19b1f0			no-signal	heroWindowManager::UpdateScreen	gap 5 dc vs 1 retail [0x202a40..0x202c50]
+winmgr	0x19b230			no-signal	heroWindowManager::UpdateScreen	gap 5 dc vs 1 retail [0x202a40..0x202c50]
+winmgr	0x19b328			no-signal	heroWindowManager::UpdateScreen	gap 5 dc vs 1 retail [0x202a40..0x202c50]
+winmgr	0x19b3c4			no-signal	heroWindowManager::BlitToScreenWithPointer	gap 5 dc vs 1 retail [0x202a40..0x202c50]
+winmgr	0x19b3f0			no-signal	heroWindowManager::BlitToScreenWithPointerX	gap 5 dc vs 1 retail [0x202a40..0x202c50]

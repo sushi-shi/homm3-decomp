@@ -5,11 +5,26 @@
 #ifndef HOMM3_CSEQUENCE_H
 #define HOMM3_CSEQUENCE_H
 
-// Bootstrap VIEW: button::Draw reads numFrames through CSprite::s[0].
+#include "va.h"
+
+class CSprite;
+class CSpriteFrame;
+
+// DC's complete three-member fieldlist transfers without adjustment, and
+// retail's int constructor writes all three fields at +0/+4/+8. button::Draw
+// independently reads numFrames through CSprite::s[0].
 class CSequence {
 public:
     int numFrames;
+    int allocatedFrames;
+    CSpriteFrame** f;
+
+private:
+    friend class CSprite;
+    CSequence(int num);
+    int AddFrame(CSpriteFrame* frame);
 };
+SIZE(CSequence, 0x0c);
 
 // --- CSequence ---
 // CODEVIEW(E:\gamedcs\csequence.cpp:32, dc 0x71f14) void CSequence::CSequence();

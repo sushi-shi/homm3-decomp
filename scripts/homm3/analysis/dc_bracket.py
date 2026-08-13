@@ -32,7 +32,7 @@ Grades emitted:
   unbracketed  the gap has no closing anchor (TU tail) - no proof
 
 ANALYSIS OUTPUT, not retail evidence: nothing here is admitted until a
-supervised review promotes a row into a `VA()` claim. The forced rows
+independent retail proof promotes a row into a `VA()` claim. The forced rows
 are the queue for that review.
 
   homm3 analysis dc-bracket            write evidence/dc-bracket-map.tsv
@@ -183,7 +183,7 @@ def main(argv=None) -> int:
             fh.write(f"# exe: HEROES3.EXE sha256={common.TARGET_SHA256}\n")
             fh.write("# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE - a `forced`\n"
                      "# row is a link-order proof proposal; it becomes\n"
-                     "# evidence only when a supervised review promotes it\n"
+                     "# evidence only when independent retail proof promotes it\n"
                      "# into a VA() claim.\n")
             fh.write("unit\tdc_offset\tdc_size\tproposed_rva\t"
                      "proposed_size\tgrade\tname\tdetail\n")

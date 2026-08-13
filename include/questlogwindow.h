@@ -5,6 +5,22 @@
 #ifndef HOMM3_QUESTLOGWINDOW_H
 #define HOMM3_QUESTLOGWINDOW_H
 
+#include <vector>
+#include "advmgr_popup.h"
+
+// Retail DoQuestLog allocates 0x74 bytes. The constructor independently
+// proves the CAdvPopup base through +0x5f, the byte at +0x60, and the VC6
+// vector<int> storage at +0x64..+0x73; its quest-building callers pass int
+// indices into that vector. This is the canonical layout, not an access view.
+class TQuestLogWindow : public CAdvPopup {
+public:
+    bool unknown;
+    std::vector<int> seerHutLogList;
+
+    virtual int WindowHandler(message* msg);
+};
+SIZE(TQuestLogWindow, 0x74);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\questlogwindow.cpp:34, dc 0x1165dc) void QuestSliderCallback(int state, heroWindow* parent_window);
 // CODEVIEW(E:\gamedcs\questlogwindow.cpp:142, dc 0x116ccc) void DoQuestLog(int player);
@@ -14,7 +30,7 @@
 // CODEVIEW(E:\gamedcs\questlogwindow.cpp:81, dc 0x116b6c) void TQuestLogWindow::~TQuestLogWindow();
 // CODEVIEW(E:\gamedcs\questlogwindow.cpp:89, dc 0x116bd8) void TQuestLogWindow::UpdateQuestLocator(int i);
 // CODEVIEW(E:\gamedcs\questlogwindow.cpp:105, dc 0x116c78) void TQuestLogWindow::UpdateQuestLocators();
-// CODEVIEW(E:\gamedcs\questlogwindow.cpp:111, dc 0x116ca4) int TQuestLogWindow::WindowHandler(message* msg);
+// RETAIL(0x0052e410, 0x1d), CODEVIEW(E:\gamedcs\questlogwindow.cpp:111, dc 0x116ca4) int TQuestLogWindow::WindowHandler(message* msg);
 // CODEVIEW(E:\gamedcs\questlogwindow.cpp:78, dc 0x116e28) void* TQuestLogWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_QUESTLOGWINDOW_H */

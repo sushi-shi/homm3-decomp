@@ -40,6 +40,21 @@ game_o2_ml_gr_windows = [
   "/GX",
   "/D_WINDOWS",
 ]
+# campaignbrief.obj's NewSMapHeader destructor contains std::_Lockit around
+# Dinkumware's shared map sentinel. /ML removes those calls; /MT reproduces
+# them while leaving the campaign-window destructor unchanged.
+game_o2_mt_gr_windows = [
+  "/nologo",
+  "/c",
+  "/O2",
+  "/Ob2",
+  "/Oy-",
+  "/Op",
+  "/MT",
+  "/Gr",
+  "/GX",
+  "/D_WINDOWS",
+]
 # RETIRED 2026-08-07 (game_o2_ml_gr_windows_noeh): the "first no-EH TU"
 # inference was wrong. sample.obj's frameless ~sample does NOT exclude
 # /GX - it only proves `operator delete` was visible as nothrow, exactly
@@ -180,6 +195,16 @@ source = "src/textntry.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
+unit = "textresource"
+source = "src/textresource.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "hiscore"
+source = "src/hiscore.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
 unit = "sample"
 source = "src/sample.cpp"
 flags = "game_o2_ml_gr_windows"
@@ -240,6 +265,71 @@ source = "src/winmgr.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
+unit = "subwindow"
+source = "src/subwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "resourcedisplay"
+source = "src/resourcedisplay.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "resourcemanager"
+source = "src/resourcemanager.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "spells"
+source = "src/spells.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "creaturetype"
+source = "src/creaturetype.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "creature_bank"
+source = "src/creature_bank.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "u2dvers"
+source = "src/u2dvers.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "levelupwindow"
+source = "src/levelupwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "gametypewindow"
+source = "src/gametypewindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "quickinfowindow"
+source = "src/quickinfowindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "campaignmap"
+source = "src/campaignmap.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "campaignwindow"
+source = "src/campaignwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "adventureoptionswindow"
+source = "src/adventureoptionswindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
 unit = "kbwin"
 source = "src/kbwin.cpp"
 flags = "game_o2_ml_gr_windows"
@@ -257,6 +347,126 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "castle"
 source = "src/castle.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "combatcontrolsubwindow"
+source = "src/combatcontrolsubwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "binkmanager"
+source = "src/binkmanager.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "townmgr"
+source = "src/townmgr.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "bitmap16"
+source = "src/bitmap16.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "bitmap24"
+source = "src/bitmap24.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "mainmenu"
+source = "src/mainmenu.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "campaignbrief"
+source = "src/campaignbrief.cpp"
+flags = "game_o2_mt_gr_windows"
+
+[[unit]]
+unit = "customcampaign"
+source = "src/customcampaign.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "questlogwindow"
+source = "src/questlogwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "lodfile"
+source = "src/lodfile.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "towngatewindow"
+source = "src/towngatewindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "drawing"
+source = "src/drawing.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "dimensiondoorwindow"
+source = "src/dimensiondoorwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "wingraph"
+source = "src/wingraph.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "csprite"
+source = "src/csprite.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "text"
+source = "src/text.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "palette"
+source = "src/palette.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "army"
+source = "src/army.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "adventuremapwindow"
+source = "src/adventuremapwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "philai"
+source = "src/philai.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "cspriteframe"
+source = "src/cspriteframe.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "events"
+source = "src/events.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "kb"
+source = "src/kb.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "bottomviewsubwindow"
+source = "src/bottomviewsubwindow.cpp"
 flags = "game_o2_ml_gr_windows"
 
 
@@ -288,8 +498,18 @@ source = "src/game.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
+unit = "mapcell"
+source = "src/mapcell.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
 unit = "cmbtmgr"
 source = "src/cmbtmgr.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "command"
+source = "src/command.cpp"
 flags = "game_o2_ml_gr_windows"
 
 [[unit]]
@@ -315,4 +535,194 @@ flags = "game_o2_ml_gr_windows"
 [[unit]]
 unit = "ai_player"
 source = "src/ai_player.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "fly"
+source = "src/fly.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "quickherowindow"
+source = "src/quickherowindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "systemoptionswindow"
+source = "src/systemoptionswindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "viewarmywindow"
+source = "src/viewarmywindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "viewwrld"
+source = "src/viewwrld.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "newgame"
+source = "src/newgame.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "advspells"
+source = "src/advspells.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "multiplayerwindow"
+source = "src/multiplayerwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "singleselectionwindow"
+source = "src/singleselectionwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "diff"
+source = "src/diff.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "artifact"
+source = "src/artifact.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "quicktownwindow"
+source = "src/quicktownwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "slider"
+source = "src/slider.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "combatresultswindow"
+source = "src/combatresultswindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "combatoptionswindow"
+source = "src/combatoptionswindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "combatwindow"
+source = "src/combatwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "spelldefs"
+source = "src/spelldefs.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "scenarioinfo"
+source = "src/scenarioinfo.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "dialogbox"
+source = "src/dialogbox.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "puzzlewindow"
+source = "src/puzzlewindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "remote"
+source = "src/remote.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "university_window"
+source = "src/university_window.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "csequence"
+source = "src/csequence.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "cursor"
+source = "src/cursor.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "event_record"
+source = "src/event_record.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "singleselectionpopups"
+source = "src/singleselectionpopups.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "victorylossconditions"
+source = "src/victorylossconditions.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "bitmap816"
+source = "src/bitmap816.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "search"
+source = "src/search.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "herodefs"
+source = "src/herodefs.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "overview"
+source = "src/overview.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "spellbookwindow"
+source = "src/spellbookwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "hillfortwindow"
+source = "src/hillfortwindow.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "dxplay"
+source = "src/dxplay.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "swapmgr"
+source = "src/swapmgr.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "tradpost"
+source = "src/tradpost.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "seerhut"
+source = "src/seerhut.cpp"
+flags = "game_o2_ml_gr_windows"
+
+[[unit]]
+unit = "sacrifice_window"
+source = "src/sacrifice_window.cpp"
 flags = "game_o2_ml_gr_windows"

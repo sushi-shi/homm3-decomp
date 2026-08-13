@@ -6,7 +6,7 @@ branch-shape** residual (not a register binding) and runs a guided oracle
 search over control-flow source spellings for the one that reproduces the
 reference's jumps. Same contract as `why-reg` throughout: rc 0 = zero
 divergence reached (already, or by a mutation, which prints as a diff for
-SUPERVISED application — the tool proposes, never lands); rc 1 =
+reviewed application — the tool proposes, never lands); rc 1 =
 improved-but-not-exact or nothing helped; rc 2 = error. Scratch:
 `build/vc6/whybranch/{base,ref,mut}/`.
 
@@ -78,7 +78,7 @@ Two rewrites are not semantics-preserving in general and their labels say
 "retail arbitrates": `do..while` (zero-trip) and descending induction
 (iteration order). They stay in the menu deliberately — retail bytes are
 the semantic ground truth in this domain, and every winner is only a
-proposal under the supervised-review rule.
+proposal until the matching agent verifies and applies it.
 
 Not covered in v1 (documented non-coverage): nested-if → flat-chain (the
 reverse of nest-exits needs brace-tree parsing), goto-into-block →

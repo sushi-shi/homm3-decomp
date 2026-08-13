@@ -5,9 +5,12 @@
 // #include "playvideo.h"
 
 // E:\gamedcs\playvideo.cpp:26
+// Dreamcast-port-only: its body loads L"playsfddll.dll", resolves
+// L"PlayVideo", invokes the five-argument entry point, then calls
+// FreeLibrary. Retail contains neither literal and does not import
+// FreeLibrary, so no x86 body is forced into the philiai..puzzlewindow gap.
 DC_ONLY(0x114c20, 0x94)
 void playVideoDll(IDirectDraw4* Vddraw, IDirectDrawSurface4* dds_prim, IDirectDrawSurface4* dds_back, IDirectSound* dsobj, unsigned short* fname)
 {
     // @stub
 }
-

@@ -6,10 +6,12 @@
 #define HOMM3_MISC_H
 
 #include <string>
+#include <vector>
 
 // Live prototypes (claimed misc.cpp bodies).
 int SafeRandom(int min, int max);   // 0x50b1d0
 int Random(int min, int max);       // 0x50b230
+void SRand(int iSeed);              // 0x50c5f0
 void CheckConfigFile();             // 0x50b260
 void SetGameDefaults();             // 0x50b4d0
 void SetDefaultSystemOptions();
@@ -20,6 +22,14 @@ void ReadPrefsFromRegistry();       // 0x50b7b0
 void WritePrefsToRegistry();        // 0x50be10
 void WritePrefs();                  // 0x50c1b0
 std::string format_string(const char* format, ...);  // 0x50c600
+unsigned long get_available_disk_space();            // 0x50c7a0
+
+// SetupCDDrive result values singled out by the retail startup/menu paths.
+// The remaining values retain their ordinary drive-number meaning.
+enum ECDDriveNumber {
+    CD_DRIVE_NUMBER_5 = 5,
+    CD_DRIVE_NUMBER_6 = 6
+};
 
 // Registry-path state owned by misc.cpp. AppPath's 351-byte extent is
 // byte-proven by SetGameDefaults' _getcwd bound; registry reads cap both
@@ -28,22 +38,20 @@ extern char gcRegAppPath[351];       // .bss 0x6985c4
 extern char gcRegCDRomPath[350];     // .bss 0x698838
 extern int giShowIntro;              // .bss 0x6993c0
 
-// The no-repeat random picker (layout byte-proven by the ctor/Pick
-// pair at 0x50c6e0/0x50c740: six fields, the last two parked at
-// marks+count by the ctor).
+// The no-repeat random picker. Retail's ctor/Pick pair byte-proves the
+// VC6 generic vector<unsigned char> representation at +8: allocator
+// byte, _First, _Last, _End. Dreamcast instead instantiated STLport's
+// vector<bool>, a platform-library divergence rather than x86 evidence.
 class TPickANumber {
 public:
     int low;
     int count;
-    unsigned char flag;
-    unsigned char* marks;
-    unsigned char* end1;
-    unsigned char* end2;
+    std::vector<unsigned char> marks;
 
     TPickANumber(int lowBound, int high);
     // Retail inlines this cleanup into PlaceAllObstacles; no standalone
     // x86 row survives. The Dreamcast roster independently attests the dtor.
-    ~TPickANumber() { delete[] marks; }
+    ~TPickANumber() {}
     int Pick();
 };
 

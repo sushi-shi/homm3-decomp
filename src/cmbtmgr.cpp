@@ -36,7 +36,6 @@
 //     moat-damage helper) - retail bodies with no counterpart anywhere
 //     in the DC cmbtmgr.obj roster, and all but 0x69e50 are called
 //     only from outside this span. Naming them would be invention.
-#define HOMM3_CMBTMGR_OBJ_DECLS
 #include <math.h>
 #include <stdlib.h>
 
@@ -44,7 +43,9 @@
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
 #include "cmbtmgr.h"
+#include "combatwindow.h"
 #include "combatoptionswindow.h"
+#include "creaturetype.h" // UpgradedCreatureType, for RaiseSkeletons
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
 #include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
@@ -58,24 +59,46 @@
 #include "remote.h"
 #include "textresource.h"
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
+#include "viewarmywindow.h"
 #include "winmgr.h"
 
-// Retail's 113-byte creature-family lookup at 0x47b1a0. Its working label
-// remains address-derived until the function itself is reconstructed; the
-// x86 UpgradedCreatureType wrapper calls this same leaf after applying the
-// Complete-vs-RoE elemental guard reproduced below.
-int __fastcall game_69f20_sub00_7b1a0(int creature);
-
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:510
+// EXACT 2026-08-11. Retail proves the baseManager base, the 187-element
+// hexcell array, two Dinkumware set records, 42 army records, the empty
+// obstacle vector and three non-trivial archer records. Keeping the four
+// scalar initializations in the body is material: VC6 then schedules them
+// after member construction and reproduces retail's vptr/store order.
 VA(0x00462760, 0x127)  // anchor-global, dc 0x5d3e0
-void combatManager::combatManager()
+combatManager::combatManager()
+    : combatWindow(0)
 {
-    // @stub
+    actingSide = 1;
+    actingSlot = -1;
+    currentSide = 1;
+    field_132d0 = -1;
+    field_13d2c = 0;
+    field_13d30 = 0;
+    field_13d34 = 0;
+    field_132c8 = 0;
+    field_132cc = 0;
+    field_132e0 = 0;
+    field_132f4 = COMBAT_FORTIFICATION_NONE;
+    field_13300 = 0;
+    field_38 = 0;
 }
 
-#endif  // @carcass
+combatManager::TArcher::TArcher()
+    : sprite(0), shadowSprite(0)
+{
+}
+
+combatManager::TArcher::~TArcher()
+{
+    if (shadowSprite)
+        shadowSprite->Dispose();
+    if (sprite)
+        sprite->Dispose();
+}
 
 // E:\gamedcs\cmbtmgr.cpp:546
 // EXACT 2026-08-09. The walls.txt sheet contains nine town groups of
@@ -705,21 +728,21 @@ void combatManager::DamageWall(TWallTargetId target_wall, int damage)
             drawbridgeState = 0;
             break;
         case WALL_TARGET_0: {
-            int slot = field_13de0;
+            int slot = archers[2].armySlot;
             field_13f9c[2] = 0;
             field_13fe4[2] = 0;
             armies[1][slot].creatureId |= 1 << 21;
             break;
         }
         case WALL_TARGET_6: {
-            int slot = field_13dbc;
+            int slot = archers[1].armySlot;
             field_13f9c[1] = 0;
             field_13fe4[1] = 0;
             armies[1][slot].creatureId |= 1 << 21;
             break;
         }
         case WALL_TARGET_7: {
-            int slot = field_13d98;
+            int slot = archers[0].armySlot;
             field_13f9c[0] = 0;
             field_13fe4[0] = 0;
             armies[1][slot].creatureId |= 1 << 21;
@@ -1332,14 +1355,45 @@ void combatManager::PlaceArmyInGrid(const army* a, int hex)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:4090
+// EXACT 2026-08-11. Retail centers the 298x325 popup on the stack's
+// cell, clamps it to 800x600, and passes `!isQuickView` to the army
+// popup constructor. The modal arm optionally forwards the stack's
+// +0x4e0 command word and normalizes pending action 1 to 10; both arms
+// converge on virtual scalar deletion. The natural `new` expression
+// also reproduces the complete one-state VC6 EH frame.
 VA(0x00468860, 0x124)  // linkorder, dc 0x62478
 void combatManager::ViewArmy(army* thisArmy, int isQuickView)
 {
-    // @stub
+    if (thisArmy) {
+        int x = cells[thisArmy->gridIndex].field_00 - 149;
+        int y = cells[thisArmy->gridIndex].field_02 - 140;
+        if (x < 0)
+            x = 0;
+        else if (x > 502)
+            x = 502;
+        if (y < 0)
+            y = 0;
+        else if (y > 275)
+            y = 275;
+
+        TViewArmyWindow* view = new TViewArmyWindow(
+            thisArmy, x, y, static_cast<unsigned char>(!isQuickView));
+        if (isQuickView) {
+            view->QuickView();
+        } else {
+            view->DoModal();
+            if (gpWindowManager->dialogReturn == TViewArmyWindow::OK_ID) {
+                InitiateSpell(thisArmy->field_4e0, 1);
+                if (field_3c == 1)
+                    field_3c = 10;
+            }
+        }
+        delete view;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4158
 VA(0x00468990, 0xA08)  // anchor-global, dc 0x62560
@@ -1596,7 +1650,7 @@ void combatManager::RaiseSkeletons(int side)
         if (added)
             return;
 
-        int upgradedType = raisedCreatureType;
+        TCreatureType upgradedType = raisedCreatureType;
         if (!gpGame->f_1f698
             && (upgradedType == CREATURE_AIR_ELEMENTAL
                 || upgradedType == CREATURE_EARTH_ELEMENTAL
@@ -1604,7 +1658,7 @@ void combatManager::RaiseSkeletons(int side)
                 || upgradedType == CREATURE_WATER_ELEMENTAL)) {
             upgradedType = CREATURE_NONE;
         } else {
-            upgradedType = game_69f20_sub00_7b1a0(upgradedType);
+            upgradedType = UpgradedCreatureType(upgradedType);
         }
 
         raisedCreatureType = upgradedType;
@@ -1621,10 +1675,12 @@ void combatManager::RaiseSkeletons(int side)
 // E:\gamedcs\cmbtmgr.cpp:4863
 // Walk the spells recorded for one side and teach each learnable spell to
 // that side's hero. The spellbook gate is repeated per element exactly as in
-// retail; the spell's table level may be at most Eagle Eye mastery + 2. All
-// four branches agree. Residual (89.37%): retail folds the field offset into
-// the side index before scaling (`lea side+0x546; shl 4`), while this class
-// layout emits the equivalent scaled-index-plus-displacement address.
+// retail; the spell's table level may be at most Wisdom mastery + 2. The
+// constructor proved the outer records begin at +0x545c, putting each set's
+// root at +0x5460 and restoring retail's `lea side+0x546; shl 4` address.
+// Exact (136/136). Retail's +0xd0 byte is canonical secondary-skill slot 7
+// (Wisdom), not slot 11 (Eagle Eye); the unmasked displacement is
+// source-level evidence.
 VA(0x00469fe0, 0x88)  // anchor-callee, dc 0x63648
 void combatManager::LearnSpellFromEagleEye(int side)
 {
@@ -1633,7 +1689,7 @@ void combatManager::LearnSpellFromEagleEye(int side)
         SpellID spell = *it;
         if (heroes[side]->IsWieldingArtifact(ARTIFACT_SPELLBOOK)
             && akSpellTraits[spell].level
-                <= heroes[side]->eagleEyeLevel + 2)
+                <= heroes[side]->wisdomLevel + 2)
             heroes[side]->AddSpell(spell);
     }
 }

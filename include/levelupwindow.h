@@ -5,6 +5,61 @@
 #ifndef HOMM3_LEVELUPWINDOW_H
 #define HOMM3_LEVELUPWINDOW_H
 
+#include "advmgr_popup.h"
+
+class hero;
+class message;
+
+struct TLevelUpSkillTraits {
+    const char* name;
+    const char* levelNames[3];
+};
+SIZE(TLevelUpSkillTraits, 0x10);
+extern const TLevelUpSkillTraits (&akLevelUpSkillTraits)[28];
+
+// Retail's vtable at 0x63fe60 has the inherited CAdvPopup shape: slot 0 is
+// the scalar-deleting destructor at 0x4f9700 and slot 9 is WindowHandler at
+// 0x4f9780.  The destructor touches no tail state, and the constructor's
+// allocation/call sites allocate only the CAdvPopup-sized object; no derived
+// data members are presently evidenced.
+class TLevelUpWindow : public CAdvPopup {
+public:
+    enum EOtherWidgetIDs {
+        BACKGROUND_ID = 2000,
+        PORTRAIT_ID,
+        TEXT1_ID,
+        TEXT2_ID,
+        TEXT3_ID,
+        TEXT4_ID,
+        TEXT5_ID,
+        TEXT6_ID,
+        TEXT7_ID,
+        PRISKILL_ID,
+        SKILLICON_1_ID,
+        SKILLICON_2_ID,
+        SKILLBORDER_1_ID,
+        SKILLBORDER_2_ID
+    };
+    enum ERetailDialogIDs {
+        LEVELUP_ACCEPT_ID = 0x7802
+    };
+    enum ESelectionKeys {
+        LEVELUP_SELECT_LEFT_KEY = 2,
+        LEVELUP_SELECT_RIGHT_KEY = 3
+    };
+
+    TLevelUpWindow(hero* thisHero, int gained_skill,
+                   int first_choice, int second_choice);
+    virtual ~TLevelUpWindow();
+    virtual int WindowHandler(message* msg); // slot 9
+
+    int left_skill;   // +0x60 retail (+0x58 DC)
+    int right_skill;  // +0x64 retail (+0x5c DC)
+private:
+    int Selected;     // +0x68 retail (+0x60 DC)
+};
+SIZE(TLevelUpWindow, 0x6c);
+
 // --- TLevelUpWindow ---
 // CODEVIEW(E:\gamedcs\levelupwindow.cpp:48, dc 0xe8344) void TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill, int first_choice, int second_choice);
 // CODEVIEW(E:\gamedcs\levelupwindow.cpp:159, dc 0xe8c2c) void TLevelUpWindow::~TLevelUpWindow();

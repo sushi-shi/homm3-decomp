@@ -5,6 +5,12 @@
 #ifndef HOMM3_PHILAI_H
 #define HOMM3_PHILAI_H
 
+#include "armygrp.h"
+
+class hero;
+
+long AI_get_spell_value(const hero* our_hero, SpellID spell);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\philai.cpp:58, dc 0x10d458) int OnMySide(int iWhichPlayer);
 // CODEVIEW(E:\gamedcs\philai.cpp:67, dc 0x10d47c) void CheckDoMain(int bForceMouseCheck, int bMouseOnly);

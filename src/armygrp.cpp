@@ -209,7 +209,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
         0, 0, width, height, 0, "GPuCrDiv.pcx", 0x800));
 
     const char* titleFormat =
-        gUnnamed6a5d5c->entry->splitCreatureRolloverFormat;
+        gpGeneralText->GetText(GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER);
     sprintf(gText, titleFormat,
             akCreatureTypeTraits[creature].m_plural_name);
     Widgets.push_back(new textWidget(
@@ -375,7 +375,10 @@ void armyGroup::SplitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
 // out of line with a backward jump. All 34 blocks and branch targets then
 // agree. The sole remaining delta is EAX/EDX swapped across the destination
 // entry arm's splitSlider->SetState virtual call; named argument and slider
-// locals are byte-inert.
+// locals are byte-inert. why-reg v2 (2026-08-11) likewise reduces this to a
+// caller-saved scratch-pseudo ordering difference; its sole proposed B14
+// naming site is not a valid standalone expression and the model caps the
+// remainder as front-end handle state.
 VA(0x0044a180, 0x2DF)  // byte-shape, dc 0x4e428 (+ 0x4e388 inlined)
 int TSplitWindow::WindowHandler(message* msg)
 {
@@ -444,11 +447,13 @@ int TSplitWindow::WindowHandler(message* msg)
 
         switch (msg->codeY) {
         case DIALOG_RETURN_SPLIT_CANCEL:
-            sprintf(gText, gUnnamed6a5d5c->entry->splitOtherRolloverText);
+            sprintf(gText,
+                    gpGeneralText->GetText(GENERAL_TEXT_SPLIT_OTHER_ROLLOVER));
             break;
         case DIALOG_RETURN_SPLIT_ACCEPT:
             sprintf(gText,
-                    gUnnamed6a5d5c->entry->splitCreatureRolloverFormat,
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_SPLIT_CREATURE_ROLLOVER),
                     akCreatureTypeTraits[creature].m_plural_name);
             break;
         default:
@@ -1009,7 +1014,7 @@ long armyGroup::get_AI_value()
 
 // E:\gamedcs\armygrp.cpp:804
 VA(0x0044acc0, 0x14)  // anchor-global, dc 0x4ed28
-int armyGroup::GetNumArmies()
+int armyGroup::GetNumArmies() const
 {
     int numArmies = 0;
     for (int i = 0; i < ARMY_GROUP_SLOT_COUNT; ++i) {

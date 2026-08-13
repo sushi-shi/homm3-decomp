@@ -139,20 +139,19 @@ dropped. ANALYSIS OUTPUT, external-candidate grade.
 ## Admission path (nothing admitted by this report)
 
 Evidence grade for everything here: **external-candidate** (homm2 is
-another game's build; no HoMM3 retail-byte proof). Recommended use, per
-the supervised-review rule:
+another game's build; no HoMM3 retail-byte proof). Recommended use:
 
 1. `string-anchor` rows → propose as *naming evidence* for the labeled
-   functions (each needs a supervised look at both bodies; the anchor
+   functions (each needs a comparison of both bodies; the anchor
    literal is the argument).
 2. `h2-source-template` rows → when the owning TU comes up for
    reconstruction (P5.2+), start the body from homm2's matched source
-   and adapt; record the template's origin in the TU's review.
+   and adapt; record the template's origin in the TU.
 3. The 43 shared classes → corroborating input for the class-modeling
    phase (a third oracle beside Dreamcast layouts and NH3API types —
    homm2's layouts are VC 4.2-proven and will differ, but member
    *rosters* and method sets transfer).
 4. `twin-strong` / `twin-candidate` rows → a rename proposal is BOTH a
-   naming candidate and a template pointer; each needs a supervised
+   naming candidate and a template pointer; each needs an evidence-backed
    look at the homm2 body against the DC/retail evidence before its
    template is used, exactly like a `h2-source-template` row.

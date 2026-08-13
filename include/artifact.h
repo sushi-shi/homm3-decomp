@@ -5,10 +5,8 @@
 #ifndef HOMM3_ARTIFACT_H
 #define HOMM3_ARTIFACT_H
 
-#include <va.h>
-#ifdef HOMM3_HERO_COMBINATION_VIEW
 #include <bitset>
-#endif
+#include <va.h>
 
 // The artifact-id domain. Added 2026-08-08 with its first consumer,
 // recruit.obj's siege_artifact_to_creature (0x550360) - only the four
@@ -168,30 +166,41 @@ enum TArtifact {
 // The DC's own TArtifactTraits (evidence/dreamcast/members.csv) is only
 // 20 bytes - m_name 0, m_cost 4, m_allowableSlotMask 8, m_class 12,
 // m_description 16 - i.e. the AB-era record without the Shadow of Death
-// combination column. Most DC offsets are NOT transferred. Retail
-// armyGroup::get_luck_description independently proves the name at +0x00;
-// hero::remove_artifact proves the slot at +0x08, the assembled-artifact
-// lookup index at +0x14 and the spell-list flag at +0x1d. The other
-// intervening fields remain padding (the THeroTraits precedent).
+// combination column. Retail's artraits.txt parser at 0x44cd50 independently
+// confirms every DC-era member at the same offset, then writes the four
+// Complete-era fields at +0x14..+0x1d. hero::remove_artifact corroborates the
+// allowable-slot class, combination indices and spell-list flag.
 struct TArtifactTraits {
     // armyGroup::get_luck_description indexes artifact 0x55 at stride
     // 0x20 and passes +0 directly to format_string: the display name.
     const char* name;           // +0x00
-    char pad_04[0x4];
+    int cost;                   // +0x04
     // Equipped-slot class. remove_artifact compares this between the
     // combination artifact and each component, then uses it to index the
     // hero's per-slot equipped counts.
-    int slot;                   // +0x08
-    char pad_0c[0x8];
-    // Index into gCombinationArtifacts, or -1 for a normal artifact.
-    int combinationIndex;       // +0x14
-    int combination;            // +0x18
-    char pad_1c;
+    int allowableSlotMask;      // +0x08
+    int artifactClass;          // +0x0c
+    const char* description;    // +0x10
+    // comboType is set on an assembled artifact; targetCombo is set on each
+    // component. Both are indices into gCombinationArtifacts, or -1.
+    int comboType;              // +0x14
+    int targetCombo;            // +0x18
+    unsigned char disabled;     // +0x1c
     // Removing this artifact requires rebuilding the available-spell list.
-    unsigned char affectsSpellList; // +0x1d
+    unsigned char givesSpells;      // +0x1d
     char pad_1e[0x2];
 };
 SIZE(TArtifactTraits, 32);
+
+// The retail artslots.txt table: 19 display names paired with the first of
+// the 15 allowable-slot masks containing that physical equipment slot.
+// Its 8-byte stride and both fields are written by 0x44cd50; the public name
+// is preserved by the retail symbol at 0x660b64.
+struct TArtifactSlotTraits {
+    const char* name;
+    int type;
+};
+SIZE(TArtifactSlotTraits, 8);
 
 // The combination-artifact record. The 24-byte stride is byte-proven by
 // IsWieldingArtifact's `lea r,[id + 2*id]` / `[base + 8*r]` chain, and
@@ -202,13 +211,15 @@ SIZE(TArtifactTraits, 32);
 // in hero.obj's narrow view; other translation units retain the proven pad.
 struct TCombinationArtifact {
     int artifactId;             // +0x00
-#ifdef HOMM3_HERO_COMBINATION_VIEW
     std::bitset<144> components;
-#else
-    char pad_04[0x14];
-#endif
 };
 SIZE(TCombinationArtifact, 24);
+
+// Cinit-owned tables consumed by artifact.cpp's ordinary source body.
+DATA(0x00693898)
+extern const std::bitset<19> aArtifactSlotMasks[15];
+DATA(0x006938d8)
+extern const TCombinationArtifact aCombinationArtifacts[12];
 
 // Retail .data 0x660b68 and 0x660b6c, two adjacent storage cells retail
 // LOADS and then indexes (`mov eax,[0x660b68]` / `[esi + eax + 0x18]`)
@@ -217,13 +228,14 @@ SIZE(TCombinationArtifact, 24);
 // (?akArtifactTraits@@3AAY0HP@$$CBUTArtifactTraits@@A); its DC bound of
 // 127 is AB-era and is NOT carried over, which is why this is spelled
 // as a pointer rather than akHeroTraits' reference-to-array - the
-// Complete-era artifact count is not proven on this image and the
-// codegen is identical either way.
-// The combination table has NO DC row (a Shadow of Death addition); its
-// name is INVENTED. Owner TU unlocated for both - extern only, no DATA
-// claim (the gpWindowManager pattern).
+// Complete-era artifact count is 144, now proved by artifact.obj's retail
+// parser and table extent. The combination table has NO DC row (a Shadow of
+// Death addition); its name is INVENTED. artifact.obj owns both reference
+// cells and their underlying storage; the two excluded cinit tables remain a
+// separate source-initializer admission.
 extern const TArtifactTraits* akArtifactTraits;
 extern const TCombinationArtifact* gCombinationArtifacts;
+extern const TArtifactSlotTraits* akArtifactSlotTraits;
 
 // Four signed primary-skill deltas per artifact. remove_artifact walks all
 // 144 rows when dismantling a combination; the adjacent address is a real

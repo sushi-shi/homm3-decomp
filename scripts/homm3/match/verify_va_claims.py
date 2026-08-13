@@ -30,7 +30,7 @@ matcher's inner loop):
 Known-backlog ratchet (the gruntz single_view shape): the violations
 that existed when the gate landed are frozen in
 config/va-claims-baseline.tsv - reported as standing debt, drained in
-supervised claim-review sessions, never silently re-blessed - and any
+explicit claim-review sessions, never silently re-blessed - and any
 violation NOT in that file is fatal. `--write-baseline` re-freezes
 (only ever after a review). The 2026-08-04 backlog is 11 CLASS rows:
 linkorder-grade DC names bracketed onto addresses that are byte-provably
@@ -137,7 +137,7 @@ def check(claims_by_file: dict, functions: dict, classes: dict) -> list[tuple]:
 
 
 def load_backlog() -> set[tuple]:
-    """{(kind, va)} rows frozen at gate-landing time, awaiting supervised
+    """{(kind, va)} rows frozen at gate-landing time, awaiting explicit
     claim re-review. Keyed on (kind, va), not file:line - carcass edits
     move lines, the debt's identity is the address."""
     if not BASELINE.is_file():
@@ -153,7 +153,7 @@ def load_backlog() -> set[tuple]:
 
 def write_backlog(violations: list[tuple]) -> None:
     head = ("# KNOWN VA-claim backlog - standing debt reported by\n"
-            "# homm3.match.verify_va_claims, drained in supervised\n"
+            "# homm3.match.verify_va_claims, drained by explicit review\n"
             "# claim-review sessions; NEW violations are fatal.\n")
     rows = "".join(f"{kind}\t0x{va:08x}\t{msg.split(': ', 1)[1]}\n"
                    for kind, va, msg in violations)

@@ -5,6 +5,115 @@
 #ifndef HOMM3_DXPLAY_H
 #define HOMM3_DXPLAY_H
 
+#include <windows.h>
+
+class CDPlayConnection;
+class CDPlayGroup;
+class CDPlayMsg;
+class CDPlayPlayer;
+class CDPlaySession;
+template<class T> class CAutoArray;
+struct DPCAPS;
+struct DPNAME;
+struct DPSESSIONDESC2;
+
+// Dreamcast CodeView proves this complete virtual order. Retail's
+// CDPlay/CDPlayLobby/CDPlayHeroes vtables preserve it: in particular,
+// IsHost is slot 36 (+0x90), exactly the indirect call emitted by the main
+// menu and oldmain. Retail bodies also prove the complete base data layout.
+class CDPlay {
+public:
+    virtual ~CDPlay();
+    virtual unsigned char Init();
+    virtual unsigned char InitConnection(CDPlayConnection* connection);
+    virtual unsigned char HostSession(char* sessionName,
+        unsigned long flags, unsigned long maxPlayers, char* password);
+    virtual unsigned char JoinSession(GUID* sessionGuid, char* password);
+    virtual unsigned char StartSession(unsigned long groupId);
+    virtual unsigned char CloseSession();
+    virtual unsigned long CreatePlayer(char* playerName, void* data,
+        unsigned long size, void* eventHandle);
+    virtual unsigned char DestroyPlayer(unsigned long playerId);
+    virtual unsigned long CreateGroup(char* groupName, void* data,
+        unsigned long size, unsigned char stagingArea);
+    virtual unsigned char DestroyGroup(unsigned long groupId);
+    virtual unsigned char DeleteGroupFromGroup(unsigned long parentId,
+        unsigned long groupId);
+    virtual unsigned char SetGroupName(unsigned long groupId, char* shortName,
+        char* longName, unsigned long flags);
+    virtual unsigned char SetGroupData(unsigned long groupId, void* data,
+        unsigned long size, unsigned long flags);
+    virtual unsigned char SetPlayerName(unsigned long playerId,
+        char* shortName, char* longName, unsigned long flags);
+    virtual unsigned char SetPlayerData(unsigned long playerId, void* data,
+        unsigned long size, unsigned long flags);
+    virtual void* GetGroupData(unsigned long groupId, unsigned long* size,
+        unsigned long flags);
+    virtual unsigned char GetGroupName(unsigned long groupId, char* shortName,
+        int maxShort, char* longName, int maxLong);
+    virtual void* GetPlayerData(unsigned long playerId, unsigned long* size,
+        unsigned long flags);
+    virtual unsigned char GetPlayerName(unsigned long playerId,
+        char* shortName, int maxShort, char* longName, int maxLong);
+    virtual unsigned long CreateGroupInGroup(unsigned long parentId,
+        char* groupName, void* data, unsigned long size,
+        unsigned char stagingArea);
+    virtual unsigned char AddPlayerToGroup(unsigned long groupId,
+        unsigned long playerId);
+    virtual unsigned char DeletePlayerFromGroup(unsigned long groupId,
+        unsigned long playerId);
+    virtual unsigned char UpdateSessionDesc(DPSESSIONDESC2* session);
+    virtual DPSESSIONDESC2* GetCurrSession();
+    virtual unsigned char EnumConnections(
+        CAutoArray<CDPlayConnection>* connections);
+    virtual unsigned char EnumSessions(CAutoArray<CDPlaySession>* sessions,
+        unsigned long timeout, unsigned long flags);
+    virtual unsigned char EnumGroups(CAutoArray<CDPlayGroup>* groups,
+        GUID* instance, unsigned long flags);
+    virtual unsigned char EnumPlayers(CAutoArray<CDPlayPlayer>* players,
+        GUID* instance, unsigned long flags);
+    virtual unsigned char EnumGroupPlayers(CAutoArray<CDPlayPlayer>* players,
+        unsigned long groupId, GUID* instance, unsigned long flags);
+    virtual void SetGuid(GUID guid);
+    virtual GUID* GetGuid();
+    virtual unsigned char Send(void* data, unsigned long size,
+        unsigned long fromId, unsigned long toId, unsigned char guaranteed);
+    virtual unsigned char SendChat(char* message, unsigned long fromId,
+        unsigned long toId);
+    virtual unsigned char Receive(unsigned long* fromId, unsigned long* toId,
+        CDPlayMsg* message, unsigned long flags);
+    virtual void GetErrorDesc(long error, char* description);
+    virtual unsigned char IsHost();
+
+private:
+    // Retail's vtable slots 30, 31, and 36 prove the GUID and IsHost
+    // offsets. The intervening names are Dreamcast CodeView's and agree
+    // with the PC methods; DPCAPS stays opaque until a retail body needs it.
+    char m_caps[0x28];                  // +0x04
+    void* m_lpDP;                       // +0x2c
+    GUID m_guid;                        // +0x30
+    int m_hRes;                         // +0x40
+    CAutoArray<CDPlaySession>* m_pSessionArray;       // +0x44
+    CAutoArray<CDPlayConnection>* m_pConnectionArray; // +0x48
+    CAutoArray<CDPlayGroup>* m_pGroupArray;           // +0x4c
+    CAutoArray<CDPlayPlayer>* m_pPlayerArray;          // +0x50
+    unsigned char m_connected;          // +0x54
+    unsigned char m_inSession;          // +0x55
+    unsigned char m_isHost;             // +0x56
+    char pad_57;
+};
+SIZE(CDPlay, 0x58);
+
+// Dreamcast CodeView and retail's inherited IsHost call both prove the
+// zero-offset CDPlay base.  The two trailing pointers retain their DC offsets
+// in retail, so this is also the complete PC layout needed by CDPlayHeroes.
+class CDPlayLobby : public CDPlay {
+private:
+    void* m_lpLobby;                         // +0x58
+    CAutoArray<CDPlayConnection>* m_pAddressArray; // +0x5c
+};
+SIZE(CDPlayLobby, 0x60);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\dxplay.cpp:1941, dc 0x8bba4) int EnumAddressCallback(const _GUID* guidDataType, unsigned long dwDataSize, const void* lpData, void* lpContext);
 // CODEVIEW(E:\gamedcs\dxplay.cpp:1948, dc 0x8bbc4) int EnumSession(const DPSESSIONDESC2* lpDPSessionDesc, unsigned long* lpdwTimeOut, unsigned long dwFlags, void* lpContext);

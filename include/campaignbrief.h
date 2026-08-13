@@ -5,6 +5,40 @@
 #ifndef HOMM3_CAMPAIGNBRIEF_H
 #define HOMM3_CAMPAIGNBRIEF_H
 
+#include "game.h"
+#include "window.h"
+
+// Retail Complete diverges from the Dreamcast class after heroWindow.
+// The destructor proves the four fields below directly: +0x4c is freed as
+// the z buffer, +0x50 restores the music volume, +0x54 is a Dinkumware
+// vector with a 0x4d4 element stride, and +0x64 owns the campaign header.
+class TCampaignBrief : public heroWindow {
+public:
+    struct CampaignHeaderStruct {
+        // The independently located retail destructor at 0x4886a0 reaches
+        // the final member at +0x58, fixing the complete 0x5c extent.
+        char fields[0x5c];
+        ~CampaignHeaderStruct();
+    };
+
+    struct ScenarioStruct {
+        // The vector cleanup in TCampaignBrief::~TCampaignBrief destroys a
+        // NewSMapHeader at element +0 and advances by exactly 0x4d4.
+        NewSMapHeader mapHeader;
+        char pad_304[0x1d0];
+    };
+
+    unsigned short* zBuffer;
+    int oldVolume;
+    std::vector<ScenarioStruct> scenarios;
+    CampaignHeaderStruct* campaign;
+
+    virtual ~TCampaignBrief();
+};
+SIZE(TCampaignBrief::CampaignHeaderStruct, 0x5c);
+SIZE(TCampaignBrief::ScenarioStruct, 0x4d4);
+SIZE(TCampaignBrief, 0x68);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:202, dc 0x58244) void CampaignWait(int which);
 // CODEVIEW(E:\gamedcs\campaignbrief.cpp:365, dc 0x58774) void ShowTerritorySmacker(unsigned char bEvil2Post);

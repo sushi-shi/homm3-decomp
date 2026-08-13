@@ -8,6 +8,7 @@
 #include <string.h>
 #include "soundmgr.h"
 #include "sample.h"
+#include "smackmgr.h"
 #include "kbwin.h"
 // SetMusicVolume's three cross-TU views: the combat manager's status
 // (which selects combat music), the adventure manager's terrain field,
@@ -15,6 +16,11 @@
 #include "advmgr.h"
 #include "cmbtmgr.h"
 #include "misc.h"
+
+// Number of live asynchronous sample waiters. WaitEndSampleThread increments
+// and decrements this counter; Close gives them up to one second to drain.
+// The role and storage are retail-byte-proven; no surviving name covers it.
+DATA(0x006a3254) int gSampleWorkerCount;
 
 // Provisional file-static, /Ob2-inlined at both of its call sites (no
 // out-of-line body sits anywhere in the soundmgr span). The manager
@@ -171,6 +177,44 @@ soundManager::soundManager()
     InitializeCriticalSection(&section_sound_call);
     InitializeCriticalSection(&section_MP3_change);
     InitializeCriticalSection(&section_MP3_name_change);
+}
+
+// E:\gamedcs\soundmgr.cpp:410
+VA(0x00599a90, 0xF1)  // vtable slot + compiland order, dc 0x14b270
+void soundManager::Close()
+{
+    if (status == STATUS_ACTIVE) {
+        gpSoundManager->field_84 = 1;
+        gbUnk691209 = 0;
+        VideoShutDown();
+
+        if (!gbNoSound) {
+            for (int waits = 0; waits < 20; ++waits) {
+                if (gSampleWorkerCount <= 0)
+                    break;
+                Sleep(50);
+            }
+
+            EnterCriticalSection(&section_MP3_change);
+            EnterCriticalSection(&section_sound_call);
+            if (gMP3Stream) {
+                AIL_pause_stream(gMP3Stream, 1);
+                AIL_close_stream(gMP3Stream);
+                gMP3Stream = 0;
+            }
+            for (int i = 0; i < field_7c; ++i)
+                AIL_end_sample(sampleHandles[i]);
+            field_40 = 0;
+            AIL_serve();
+            Sleep(1);
+            AIL_shutdown();
+            LeaveCriticalSection(&section_sound_call);
+            LeaveCriticalSection(&section_MP3_change);
+        }
+
+        status = 0;
+        gbNoSound = 1;
+    }
 }
 
 // Retail-only pair (no DC lines; the WinCE build has no app-switch

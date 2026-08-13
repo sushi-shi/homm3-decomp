@@ -13,6 +13,10 @@ class textWidget;
 class message;
 class Bitmap16Bit;
 
+// One pooled empty rollover string shared by window::UpdateRollover and
+// hero::initialize's custom-name string reset.
+DATA(0x00691210) extern const char emptyRolloverText[];
+
 // The rollover/right-click text pair CHeroWindowEx::SetHelpText hands
 // to widget::set_help_text. Stride 8 is byte-proven by 0x5ff8e0's
 // `lea edi,[8*eax]` row arithmetic and the +0/+4 field loads.

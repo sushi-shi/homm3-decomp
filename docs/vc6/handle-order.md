@@ -266,7 +266,7 @@ except Exception:
     pass
 ```
 
-Not landed here (supervised-review rule; this phase's file set is
+Not landed here (this phase's file set is
 `_handles.py`, `handle_probe.py`, this doc, and the `handles` mode in
 `il.py`).  why-reg's default behavior is untouched.
 

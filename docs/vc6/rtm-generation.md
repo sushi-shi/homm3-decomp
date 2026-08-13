@@ -183,7 +183,7 @@ Consequences:
   They are real model gaps for the vc6 area's inliner/allocator phases,
   or front-end differences - not back-end vintage.
 - **Residual comments citing "CL generation" should be re-worded** (a
-  supervised edit, not part of this track): the measured fact is now
+  deliberate edit, not part of this track): the measured fact is now
   "invariant under C2 8168/8447", which is stronger and narrower than
   "generation-capped".
 - **The one unexplored generation lever is the front end**: retail's 26

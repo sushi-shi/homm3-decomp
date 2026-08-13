@@ -5,6 +5,11 @@
 #ifndef HOMM3_CREATURETYPE_H
 #define HOMM3_CREATURETYPE_H
 
+#include "armygrp.h"
+
+unsigned char IsSiegeWeapon(TCreatureType creature);
+TCreatureType UpgradedCreatureType(TCreatureType type);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:202, dc 0x718dc) TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr);
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:213, dc 0x718fc) unsigned char IsBaseCreature(TCreatureType monType);

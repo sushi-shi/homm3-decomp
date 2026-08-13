@@ -78,14 +78,17 @@ extern TRecruitWindow* gpRecruitWindow;
 // of some kind. Update reads exactly two unsigned shorts out of it
 // and hands them to WIDGET_SET_COLOR: +0x5a for the four creature
 // name widgets and +0x64 for the selected one. Same standing as
-// exec.h's SUnnamed6a5d5c: consumer-side model, ordinal names, moves
+// textresource.h's canonical general-text index domain moves
 // to its own header when that TU lands.
 struct SUnnamed6aacb0 {
     char pad_00[0x5a];
     unsigned short field_5a;
     char pad_5c[8];
     unsigned short field_64;
-    char pad_66[0x36];
+    char pad_66[0x10];
+    // Level-up choice borders pass this color to coloredBorderFrame.
+    unsigned short levelUpSelectionColor;  // +0x76
+    char pad_78[0x24];
     unsigned short playerColors[8];  // +0x9c, adventure flag output colors
 };
 extern SUnnamed6aacb0* gUnnamed6aacb0;

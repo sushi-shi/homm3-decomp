@@ -32,7 +32,7 @@ Grades:
                      silent (the bracket lane's verdict stands)
 
 ANALYSIS OUTPUT, not retail evidence. A `callgraph-unique` row is a
-proposal for supervised promotion into a `VA()` claim, exactly like a
+proposal for retail-corroborated promotion into a `VA()` claim, exactly like a
 bracket `forced` row.
 
   homm3 analysis dc-callgraph            write evidence/dc-callgraph-map.tsv
@@ -218,7 +218,7 @@ def main(argv=None) -> int:
             fh.write("# generator: homm3.analysis.dc_callgraph\n")
             fh.write(f"# exe: HEROES3.EXE sha256={common.TARGET_SHA256}\n")
             fh.write("# ANALYSIS OUTPUT, NOT RETAIL EVIDENCE - a\n"
-                     "# `callgraph-unique` row is a proposal for supervised\n"
+                     "# `callgraph-unique` row needs retail-corroborated\n"
                      "# promotion into a VA() claim.\n")
             fh.write("unit\tdc_offset\tproposed_rva\tcandidates\tgrade\t"
                      "name\tdetail\n")

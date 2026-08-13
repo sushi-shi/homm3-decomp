@@ -4,9 +4,13 @@
 #include "terrain.h"
 #include <va.h>
 #include "iconwdgt.h"
+#include "button.h"
 #include "csprite.h"
 #include "csequence.h"
+#include "message.h"
+#include "palette.h"
 #include "resourcemanager.h"
+#include "window.h"
 
 // misc's Random (dc 0xfd868, retail 0x50b230).
 int Random(int min, int max);
@@ -51,14 +55,115 @@ iconWidget::~iconWidget()
         Sprite->Dispose();
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\iconwdgt.cpp:119
-DC_ONLY(0xd94a4, 0x212)
+// Retail independently fixes the complete message protocol and six live
+// widget-command arms. The reconstructed body has all 28 branches and is
+// measured at 95.27076%; this C2 invocation duplicates one shared zero
+// epilogue and schedules the inlined sequence parameter differently after
+// source-order, helper-boundary, register-hint, and label-placement probes.
+VA(0x004ea810, 0x2F4)  // vtable 0x63ec48 slot 2, dc 0xd94a4
 int iconWidget::Main(message* msg)
 {
-    // @stub
+    if (field_2C > 0) {
+returnZero:
+        return 0;
+    }
+
+    if (!(status & WIDGET_ACTIVE)) {
+        if (msg->id != MESSAGE_WIDGET)
+            goto returnZero;
+        return widget::Main(msg);
+    }
+
+    unsigned char isDisabled = 0;
+    if (status & WIDGET_DISABLED)
+        isDisabled = 1;
+
+    switch (msg->id) {
+    case MESSAGE_LEFT_BUTTON_DOWN:
+        if (isDisabled)
+            goto returnZero;
+        // fall through
+    case MESSAGE_RIGHT_BUTTON_DOWN: {
+        short mouseX = msg->codeX - parentWindow->x;
+        short mouseY = msg->codeY - parentWindow->y;
+        if (mouseX < x || mouseY < y || mouseX >= x + width
+            || mouseY >= y + height)
+            goto returnZero;
+        if (handle_click(1, msg->id == MESSAGE_RIGHT_BUTTON_DOWN))
+            return 1;
+        if (msg->id == MESSAGE_RIGHT_BUTTON_DOWN) {
+            msg->qualifier = MESSAGE_MODIFIER_RIGHT;
+            msg->codeX = WIDGET_RIGHT_SELECT;
+            msg->id = MESSAGE_WIDGET;
+            msg->codeY = id;
+            return 2;
+        }
+        status |= WIDGET_SELECTED;
+        msg->codeX = WIDGET_SELECT;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeY = id;
+        return 2;
+    }
+
+    case MESSAGE_LEFT_BUTTON_UP:
+        if (isDisabled)
+            goto returnZero;
+        // fall through
+    case MESSAGE_RIGHT_BUTTON_UP:
+        if (!(status & WIDGET_SELECTED))
+            goto returnZero;
+        status &= ~WIDGET_SELECTED;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeX = WIDGET_DESELECT;
+        msg->codeY = id;
+        if (handle_click(0, 0))
+            return 1;
+        if (msg->id == MESSAGE_RIGHT_BUTTON_UP)
+            msg->qualifier = MESSAGE_MODIFIER_RIGHT;
+        return 2;
+
+    case MESSAGE_WIDGET:
+        if (msg->codeY != id)
+            break;
+        switch (msg->codeX) {
+        case WIDGET_SET_ICON_NAME:
+            SetSprite(msg->extraText);
+            return 1;
+        case WIDGET_SET_ICON_FRAME:
+            SetIconFrame(msg->extra & 0xFFFF);
+            return 1;
+        case WIDGET_SET_ICON_SEQUENCE:
+            Frame = 0;
+            seqId = msg->extra & 0xFFFF;
+            return 1;
+        case WIDGET_SET_ICON_COLOR:
+            BackColor = static_cast<unsigned short>(msg->extra);
+            return 1;
+        case WIDGET_SET_PALETTE: {
+            TPalette16* newPalette = ResourceManager::GetPalette(msg->extraText);
+            if (newPalette) {
+                Sprite->SetPalette(newPalette->data);
+                newPalette->Dispose();
+            }
+            return 1;
+        }
+        case WIDGET_SET_PLAYER_PALETTE_COLORS:
+            SetPlayerPaletteColors(msg->extra);
+            return 1;
+        }
+        break;
+
+    default:
+        if (isDisabled)
+            return 0;
+        break;
+    }
+
+    return widget::Main(msg);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\iconwdgt.cpp:275
 DC_ONLY(0xd96e4, 0x4)
@@ -122,30 +227,32 @@ void iconWidget::SetIconFrame(int newFrame)
     Frame = newFrame % Sprite->GetNumFrames(seqId);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\iconwdgt.cpp:444
 DC_ONLY(0xd9ca4, 0x8)
 void iconWidget::SetIconSequence(int new_sequence)
 {
-    // @stub
+    Frame = 0;
+    seqId = new_sequence;
 }
 
 // E:\gamedcs\iconwdgt.cpp:452
 DC_ONLY(0xd9cac, 0x32)
 void iconWidget::SetPalette(const char* palette_name)
 {
-    // @stub
+    TPalette16* newPalette = ResourceManager::GetPalette(palette_name);
+    if (newPalette) {
+        Sprite->SetPalette(newPalette->data);
+        newPalette->Dispose();
+    }
 }
 
 // E:\gamedcs\iconwdgt.cpp:462
 DC_ONLY(0xd9ce0, 0x84)
 void iconWidget::SetPlayerPaletteColors(int whichPlayer)
 {
-    // @stub
+    ::SetPlayerPaletteColors(Sprite->GetPalette(), whichPlayer);
+    ::SetPlayerPaletteColors(Sprite->p24, whichPlayer);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\iconwdgt.cpp:470
 VA(0x004eb030, 0x22)  // anchor-global, dc 0xd9d64
@@ -171,7 +278,11 @@ void iconWidget::SetSprite(const char* new_sprite)
 // exit). Fixed here 2026-08-08: the frame-count guard is
 // CSprite::GetNumFrames (a csprite.h inline, DC CSprite.h:293), NOT a
 // cached local - re-expanding it per use took this 69.02 -> 72.01 and
-// SetIconFrame 90.18 -> exact.
+// SetIconFrame 90.18 -> exact. Dreamcast CodeView further proves that
+// sequenceList is a local const array of an anonymous
+// {creature_seqid sequence_id; int chance;} aggregate; restoring that exact
+// source type and the enum names is byte-identical and does not move this
+// register-allocation plateau.
 VA(0x004eb060, 0x1EB)  // anchor-global, dc 0xd9d90
 void iconWidget::NextRandomFrame()
 {
@@ -193,19 +304,31 @@ void iconWidget::NextRandomFrame()
     }
     int chosen;
     for (;;) {
-        int table[11][2] = {
-            {0, 65}, {2, 15}, {4, 5}, {1, 5}, {3, 4},
-            {11, 1}, {12, 1}, {13, 1}, {14, 1}, {15, 1}, {16, 1},
+        const struct {
+            creature_seqid sequence_id;
+            int chance;
+        } sequenceList[11] = {
+            {cs_walk, 65},
+            {cs_wait, 15},
+            {cs_defend, 5},
+            {cs_fidget, 5},
+            {cs_wince, 4},
+            {cs_attack_ur, 1},
+            {cs_attack_r, 1},
+            {cs_attack_dr, 1},
+            {cs_range_ur, 1},
+            {cs_range_r, 1},
+            {cs_range_dr, 1},
         };
         int roll = Random(1, 100);
         int cumulative = 0;
         unsigned int pick = 0;
         for (; pick < 11; ++pick) {
-            cumulative += table[pick][1];
+            cumulative += sequenceList[pick].chance;
             if (roll <= cumulative)
                 break;
         }
-        chosen = table[pick][0];
+        chosen = sequenceList[pick].sequence_id;
         if (Sprite->GetNumFrames(chosen) > 0)
             break;
     }
@@ -253,7 +376,13 @@ void iconWidget::NextRandomFrame()
 // [ebp-4] - hence the 0x24-vs-0x20 frame and every table
 // displacement. Also tried and rejected: rewriting the re-roll as a
 // `goto retry` bottom-tested loop (byte-identical output - VC6
-// recognises it as the same natural loop and still hoists).
+// recognises it as the same natural loop and still hoists). Dreamcast
+// CodeView's exact local type is a const anonymous
+// {creature_seqid sequence_id; int chance;} sequenceList[4]; restoring it is
+// also byte-identical, so const qualification is not the missing hoist lever.
+// A named `const int fidgetChance = 2` outside the retry loop, reused by all
+// three fidget rows, was tested 2026-08-11 and is likewise byte-identical:
+// VC6 folds the name away before allocation and still hoists the table.
 VA(0x004eb250, 0xED)  // anchor-global, dc 0xd9ee8
 void iconWidget::NextRandomSiegeEngineFrame()
 {
@@ -268,18 +397,24 @@ void iconWidget::NextRandomSiegeEngineFrame()
     }
     int chosen;
     for (;;) {
-        int table[4][2] = {
-            {2, 94}, {14, 2}, {15, 2}, {16, 2},
+        const struct {
+            creature_seqid sequence_id;
+            int chance;
+        } sequenceList[4] = {
+            {cs_wait, 94},
+            {cs_range_ur, 2},
+            {cs_range_r, 2},
+            {cs_range_dr, 2},
         };
         int roll = Random(1, 100);
         int cumulative = 0;
         unsigned int pick = 0;
         for (; pick < 4; ++pick) {
-            cumulative += table[pick][1];
+            cumulative += sequenceList[pick].chance;
             if (roll <= cumulative)
                 break;
         }
-        chosen = table[pick][0];
+        chosen = sequenceList[pick].sequence_id;
         if (Sprite->GetNumFrames(chosen) > 0)
             break;
     }

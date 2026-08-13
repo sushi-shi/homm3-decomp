@@ -480,31 +480,32 @@ textButton::~textButton()
 #endif  // @carcass
 
 // E:\gamedcs\button.cpp:525
-// Residual (93.9%): the status load lands in AX where retail picks CX
-// - a two-instruction register-choice tail of the same allocation
-// class as button::Main's.
 // The pressed state nudges the caption right and down by one; dimmed
 // or disabled shifts the color scheme by two; VC6's inlined c_str()
-// supplies the empty-string literal when Text is unallocated.
+// supplies the empty-string literal when Text is unallocated. Keeping the
+// shared parentWindow pointer as a named local reproduces retail's paired
+// allocation: status stays in CX and the parent pointer occupies EAX.
 VA(0x00456ca0, 0x82)  // vtable-slot 4 of textButton (0x63bb88), dc 0x57b98
 void textButton::Draw()
 {
     if (!(status & WIDGET_DRAWN))
         return;
     button::Draw();
+    short buttonStatus = status;
     int color = textColor;
-    if (status & (WIDGET_DIMMED | WIDGET_DISABLED))
+    if (buttonStatus & (WIDGET_DIMMED | WIDGET_DISABLED))
         color += 2;
+    heroWindow* parent = parentWindow;
     int drawY;
-    if (status & WIDGET_SELECTED)
-        drawY = y + parentWindow->y;
+    if (buttonStatus & WIDGET_SELECTED)
+        drawY = y + parent->y;
     else
-        drawY = y + parentWindow->y - 1;
+        drawY = y + parent->y - 1;
     int drawX;
-    if (status & WIDGET_SELECTED)
-        drawX = x + parentWindow->x + 1;
+    if (buttonStatus & WIDGET_SELECTED)
+        drawX = x + parent->x + 1;
     else
-        drawX = x + parentWindow->x;
+        drawX = x + parent->x;
     Font->DrawBoundedString(Text.c_str(), gpWindowManager->screenBitmap,
                             drawX, drawY, width, height, color, 5, -1);
 }

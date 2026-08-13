@@ -5,9 +5,45 @@
 #ifndef HOMM3_SPELLDEFS_H
 #define HOMM3_SPELLDEFS_H
 
+#include <vector>
+#include "armygrp.h"
+
+// Retail spell-class flag roles in SSpellTraits::field_c. Names are
+// behavior-derived; values and mastery thresholds are byte-proven by
+// SpellTargetsASingleArmy.
+enum ESpellTargetFlags {
+    SPELL_TARGET_ALWAYS_SINGLE = 0x10,
+    SPELL_TARGET_MASS_AT_ADVANCED = 0x20,
+    SPELL_TARGET_MASS_AT_EXPERT = 0x40
+};
+
+unsigned char SpellTargetsASingleArmy(int spell, int sslevel);
+unsigned char InitializeSpellTraitsTable();
+
+// Mutable implementation storage filled from sptraits.txt. The public
+// akSpellTraits pointer/reference cell is at 0x687f58; retail writes this
+// adjacent 81*136-byte backing array directly. Name is provisional because
+// only the public DC array name survives.
+extern SSpellTraits aSpellTraitsImp[81];
+
+namespace {
+
+// Source-private Dreamcast TAutoStrPtr. Its retail ctor/dtor are ICF-shared
+// inline representatives; spelldefs' lazy static arrays are its only storage.
+class TAutoStrPtr {
+public:
+    TAutoStrPtr() : pStr(0) {}
+    ~TAutoStrPtr() { delete[] pStr; }
+    void set(char* value) { pStr = value; }
+    char* get() const { return pStr; }
+
+private:
+    char* pStr;
+};
+
+}
+
 // --- globals ---
-// CODEVIEW(E:\gamedcs\spelldefs.cpp:215, dc 0x14e278) unsigned char SpellTargetsASingleArmy(int spell, int sslevel);
-// CODEVIEW(E:\gamedcs\spelldefs.cpp:230, dc 0x14e2c8) unsigned char InitializeSpellTraitsTable();
 // CODEVIEW(E:\gamedcs\spelldefs.cpp:335, dc 0x14e39c) void InitializeSpellTraits(int id, const std::vector<char* resource);
 
 // --- `anonymous namespace' ---

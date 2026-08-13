@@ -6,11 +6,25 @@
 #define HOMM3_ADVMGR_H
 
 #include "basemgr.h"
+#include "sskilltraits.h"
 #include "struct.h"
 #include "window.h"
 
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 class BlackBoxData;
+class sample;
+class TreasureData;
+union ExtraInfoUnion;
+
+#ifdef HOMM3_EVENTS_VIEW
+// events.obj only needs the plain packed dword arm. Keeping this narrow
+// avoids importing the many object-specific bitfield views into its TU.
+union ExtraInfoUnion {
+    unsigned long value;
+};
+SIZE(ExtraInfoUnion, 4);
+#endif
+
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 struct type_creature_bank;
 struct type_university;
 
@@ -32,14 +46,32 @@ struct type_university_info {
 };
 SIZE(type_university_info, 4);
 
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+// SetCellVisited updates this eight-bit team-visibility lane. Retail's RMW
+// masks the shifted bit to one byte and then places it at bit 5, proving both
+// the field width and offset.
+struct type_cell_visited_info {
+    unsigned long unused : 5;
+    unsigned long visited : 8;
+    unsigned long tail : 19;
+};
+SIZE(type_cell_visited_info, 4);
+#endif
+
 union ExtraInfoUnion {
     unsigned long value;
     type_creature_bank_info creature_bank_info;
     type_university_info university_info;
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    type_cell_visited_info cell_visited_info;
+#endif
 
     BlackBoxData* get_black_box() const;
     type_creature_bank& get_creature_bank() const;
     type_university* get_university() const;
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    void SetCellVisited(short player);
+#endif
 };
 SIZE(ExtraInfoUnion, 4);
 
@@ -103,6 +135,9 @@ DATA(0x006a79ec) extern const char* const gAdventureObjectNames[];
 DATA(0x006a5e84) extern const char* const gTerrainNames[];
 DATA(0x0069778c) extern int gUnnamed69778c;
 DATA(0x006989c8) extern int gUnnamed6989c8;
+// Paired with gUnnamed6989c8 by every non-local adventure command gate.
+// The role is byte-proven; no surviving symbol attests a semantic name.
+DATA(0x0069ccd4) extern int gUnnamed69ccd4;
 DATA(0x0069127c) extern const char* const gGlobalInfoFlagNames[];
 DATA(0x006a7520) extern const char* const gBorderColorNames[];
 // Role-derived retail tables used by SetRolloverText. The generator-name
@@ -117,14 +152,6 @@ DATA(0x006a64d8) extern const char* const gWiseTreePriceNames[];
 DATA(0x006912c4) extern const char* gKnownTreePriceText;
 DATA(0x006a7bb0) extern const char* gWitchHutName;
 
-// Dreamcast publishes the retail-corroborated `TSSkillTraits` name and
-// 28-row count. This helper proves only the 16-byte stride and name at +0.
-struct TSSkillTraits {
-    const char* name;
-    char pad_04[0xc];
-};
-SIZE(TSSkillTraits, 0x10);
-DATA(0x0067dcf0) extern const TSSkillTraits (&akSSkillTraits)[28];
 DATA(0x006912ac) extern const char* gKnownWitchSkillText;
 #endif
 
@@ -202,8 +229,18 @@ enum e_looping_sound_id {
     LOOPING_SOUND_66,
     LOOPING_SOUND_67,
     LOOPING_SOUND_68,
-    LOOPING_SOUND_69
+    LOOPING_SOUND_69,
+    LOOPING_SOUND_COUNT
 };
+
+// Dreamcast CodeView publishes this complete eight-byte record and both
+// member names. Retail TrimLoopingSounds independently proves the four-entry
+// array, stride, and soundId field.
+struct soundNode {
+    e_looping_sound_id soundId;
+    int priority;
+};
+SIZE(soundNode, 8);
 
 // Dreamcast CodeView publishes this complete cursor-frame domain. Retail's
 // ProcessHover independently corroborates every value it uses directly.
@@ -234,6 +271,13 @@ enum type_adventure_cursor {
     ADV_SKUTTLE_BOAT_POINTER = 42
 };
 
+// GetMapExtra's ninth bit records a monster occupying the map square. The
+// role is independently described by the cross-build map inventory and is
+// used by retail's normal-cursor decision before inspecting the cell below.
+enum EMapExtraFlag {
+    MAP_EXTRA_MONSTER = 0x100
+};
+
 class textEntryWidget;
 
 class NewfullMap;
@@ -241,14 +285,9 @@ class NewmapCell;
 class CSprite;
 class textWidget;
 
-// A narrow retail view of the 16-byte adventure-object traits table.
-// FindAdjacentMonster reaches only byte +1 after get_map_object indexes it.
-struct TAdventureObjectTraitsView {
-    unsigned char pad_00;
-    unsigned char field_01;
-    char pad_02[14];
-};
-DATA(0x00660428) extern TAdventureObjectTraitsView* gAdventureObjectTraits;
+// Only byte +1 of this 16-byte row is named by behavior, so keep the
+// otherwise unknown table raw instead of inventing a partial object type.
+DATA(0x00660428) extern unsigned char (*gAdventureObjectTraits)[16];
 
 // Retail's public .data symbol at 0x65f694. The relocation and final byte
 // load in GetCloudLookup prove a 256-entry lookup indexed by the eight
@@ -315,6 +354,52 @@ SIZE(TDrawParts, 0x10);
 // not an override.
 class TAdventureMapWindow : public heroWindow {
 public:
+    // Dreamcast TAdventureMapWindow::EWidgetIDs, complete. Retail uses the
+    // same ids in the window's broadcast-message helpers.
+    enum EWidgetIDs {
+        MAP_ID = 0,
+        RADAR_ID = 1,
+        SELECTION_WINDOW_ID = 2,
+        KINGDOM_OVERVIEW_ID = 3,
+        ELEVATION_TOGGLE_ID = 4,
+        QUEST_LOG_ID = 5,
+        SLEEP_ID = 6,
+        MOVE_ID = 7,
+        CAST_SPELL_ID = 8,
+        ADVENTURE_OPTIONS_ID = 9,
+        SYSTEM_OPTIONS_ID = 10,
+        NEXT_HERO_ID = 11,
+        END_TURN_ID = 12,
+        HERO_UP_ID = 13,
+        HERO_DOWN_ID = 14,
+        HERO_0_ID = 15,
+        HERO_1_ID = 16,
+        HERO_2_ID = 17,
+        HERO_3_ID = 18,
+        HERO_4_ID = 19,
+        HERO_MOVEMENT_0_ID = 20,
+        HERO_MOVEMENT_1_ID = 21,
+        HERO_MOVEMENT_2_ID = 22,
+        HERO_MOVEMENT_3_ID = 23,
+        HERO_MOVEMENT_4_ID = 24,
+        HERO_MANA_0_ID = 25,
+        HERO_MANA_1_ID = 26,
+        HERO_MANA_2_ID = 27,
+        HERO_MANA_3_ID = 28,
+        HERO_MANA_4_ID = 29,
+        TOWN_UP_ID = 30,
+        TOWN_DOWN_ID = 31,
+        TOWN_0_ID = 32,
+        TOWN_1_ID = 33,
+        TOWN_2_ID = 34,
+        TOWN_3_ID = 35,
+        TOWN_4_ID = 36,
+        CHAT_TEXT_ID = 37,
+        CHAT_EDIT_ID = 38,
+        NUM_HERO_BUTTONS = 5,
+        NUM_TOWN_BUTTONS = 5
+    };
+
     // The DC roster puts RadarWidget/MapWidget at +0x44/+0x48. Retail's
     // heroWindow is eight bytes wider, placing them at +0x4c/+0x50;
     // InMapArea independently proves MapWidget's retail offset and reads
@@ -327,25 +412,37 @@ public:
     // TAdventureMapWindow member roster puts chatEdit@0x50 at retail
     // +0x58. KeyboardMessageHandler confirms the result directly with
     // `mov ecx,[advWindow+0x58] / mov al,[ecx+0x6d]`; +0x6d is the
-    // byte-proven textEntryWidget::bHasFocus field. The narrow advmgr view
-    // now needs the pointer for SetRolloverText's matching early exit; other
-    // translation units retain the previous member population.
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
-    textEntryWidget* ChatEditWidget;
-    char pad_05c[4];
-#else
-    char pad_058[8];
-#endif
+    // byte-proven textEntryWidget::bHasFocus field.
+    textEntryWidget* chatEdit;
+    // UpdateResourceDisplay (0x403f00) calls through this +0x5c field.
+    class TResourceDisplay* ResourceDisplay;
     widget* RolloverTextWidget;  // +0x60, DrawRolloverText redraw bounds
+    char pad_064[8];
+    // DC member name at +0x64; retail's independently proven 8-byte base
+    // shift places it at +0x6c, exactly where animate_bottom_view reads it.
+    unsigned char animateInBackground;
+    // ClearBottomView (0x403ee0) owns and clears the pointer at +0x98.
+    char pad_06d[0x2b];
+    class type_bottom_view_window* bottomView;
+    char pad_09c[4];
 
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
     void UpdateHeroLocators(int top, unsigned char drawWin,
                             unsigned char update);
     void UpdateResourceDisplay(unsigned char draw, unsigned char update);
+    void UpdateButtons(unsigned char draw, unsigned char update);
+    void UpdateQuestLogButton(unsigned char update);
+    void HighlightLocators(unsigned char update);
     void DrawChatText(unsigned char update);
+    void UpdateSpellButton(const class hero* thisHero);
+    void draw_bottom_view(unsigned char update);
+    void animate_bottom_view(unsigned char in_background);
     unsigned char ProcessHover(int hx, int hy);
+    void ClearBottomView();
+    void set_bottom_view(class type_bottom_view_window* new_view);
 };
+SIZE(TAdventureMapWindow, 0xa0);
 
 // Derives baseManager (0x38 bytes): executive::CallManager (0x4b0c70)
 // compares it against executive::currentManager and writes
@@ -419,6 +516,11 @@ public:
         ADVENTURE_ANIMATION_MAX_ELAPSED = 180
     };
 
+    enum EAdventureSoundExtent {
+        ADVENTURE_ACTIVE_SOUND_COUNT = 4,
+        ADVENTURE_XLARGE_MAP_WIDTH = 144
+    };
+
     char pad_038[4];
     unsigned char DebugShowFPS;  // +0x3c, DC name; retail FPS branch proves it
     unsigned char DebugViewAll;  // +0x3d, bypasses hover ownership checks
@@ -427,12 +529,11 @@ public:
     TAdventureMapWindow* advWindow;  // +0x44 (the button-status target)
     unsigned short* routeArray;      // +0x48 (GetRouteArrayPtr)
     int bShowRoute;                  // +0x4c, gates both arrow draw passes
-    // +0x50, the hover reseed latch: advManager::Reseed (0x40ec80) is
-    // `mov dword ptr [ecx+0x50], 0` and nothing else, discarding both
-    // of its arguments. Name unattested - the role is what the bytes
-    // prove.
-    int field_50;
-    char pad_054[4];
+    // Dreamcast supplies both names. Retail SeedTo independently proves the
+    // pair at +0x50/+0x54: a zero seedingValid starts a fresh search, while a
+    // set fullySeeded suppresses an attempted continuation.
+    int seedingValid;
+    int fullySeeded;
     // +0x58, a dword read as the index into soundmgr's 9-entry terrain
     // -> music-id table at 0x678330 (soundManager::SetMusicVolume
     // 0x5994b0: `mov ecx,[gpAdvManager+0x58]` then
@@ -479,28 +580,58 @@ public:
     unsigned char drawCursor;     // +0x1ec, gates map cursor overlays
     char pad_1ed[3];
     int cursorType;               // +0x1f0, hover cursor-mode discriminator
-    char pad_1f4[0x14];
+    // Cursor animation run. Dreamcast supplies the five consecutive names
+    // at +0x200..+0x210; retail's independently proven cursor-array extent
+    // and TurnTo body place the same run twelve bytes earlier.
+    int cursorDirection;          // +0x1f4
+    int cursorBaseFrame;          // +0x1f8
+    int cursorSequence;           // +0x1fc
+    int cursorFrameCount;         // +0x200
+    int cursorTurning;            // +0x204
     int cursorDrawn;       // +0x208, cleared at the start of CompleteDraw
     unsigned char inDialog;   // +0x20c (Mobilize bails when set)
     char pad_20d[0xb];
     int movingObjectIndex;        // +0x218, transient object-pool index
     int movingObjectSequence;     // +0x21c
     int movingObjectFrame;        // +0x220
-    char pad_224[0x168];
+    int touchedSounds;             // +0x224, DC name
+    soundNode soundArray[4];       // +0x228, DC name and extent
+    sample* loopedSample[LOOPING_SOUND_COUNT];  // +0x248, DC name
+    sample* heroSamples[11];       // +0x360, DC name and extent
     int field_38c;            // +0x38c, zeroed by CallManager's suspend arm
-    char pad_390[8];
+    char pad_390[4];
+    // +0x394: UpdBottomViewEnemyTurn compares this against 5 before
+    // rebuilding the view, then stores 5 before installing the new window.
+    EBottomViewType bottomViewType;
     EBottomViewType bottomViewOverride;  // +0x398
     unsigned long bottomViewDeadline;    // +0x39c
+    int bottomViewResourceType;           // +0x3a0
+    int bottomViewResourceQuantity;       // +0x3a4
+    std::string bottomViewMessage;        // +0x3a8
 
     void CheckDimNextHeroBut();
     void DeactivateCurrTown(unsigned char waitingPlayer);
     void DeactivateCurrHero(unsigned char waitingPlayer);
     void DemobilizeCurrHero(unsigned char waitingPlayer, unsigned char update);
     void HeroLoses(class hero* who, int vanish_sound);
+    void BVResMsg(const char* message, int resourceType, int quantity);
+    void BVMessage(const char* message);
     void OverrideBottomView(EBottomViewType view, int time);
+    unsigned char UpdBottomViewEnemyTurn(unsigned char force_update);
+    unsigned char UpdBottomViewNewTurn(unsigned char force_update);
+    unsigned char UpdBottomViewResMsg(unsigned char force_update);
+    unsigned char UpdBottomViewMessage(unsigned char force_update);
+    unsigned char UpdBottomViewKingdom(unsigned char force_update);
+    unsigned char UpdBottomViewHero(unsigned char force_update);
+    unsigned char UpdBottomViewTown(unsigned char force_update);
     void RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder);
     void UpdateScreen(int bAllowIntermediateMouse, int bForceDraw);
     void Reseed(int targetX, int targetY);
+    void HideRoute(int bUpdateScreen, int bRemoveTarget, int bChangeButton);
+#ifdef HOMM3_EVENTS_VIEW
+    TreasureData* get_treasure_data(NewmapCell* cell) const;
+    BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
+#endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
 #endif
@@ -516,6 +647,7 @@ public:
     void DrawArrow(int srcX, int srcY, int z, int destX, int destY);
     void DrawShroud(int srcX, int srcY, int z, int destX, int destY);
     void DrawAdventureCursor();
+    void TurnTo(int newDirection);
     void ForceNewHover();
     int ProcessWaitingHover(int mouseX, int mouseY);
     int ProcessHover(int mouseX, int mouseY);
@@ -557,25 +689,36 @@ public:
     void QuickInfo(int cellX, int cellY, int z);
     void UpdBottomView(unsigned char forceUpdate, unsigned char drawWindow,
                        unsigned char update);
+    void CheckCastSpell();
+    void CastSpell(int whichSpell);
     void MobilizeCurrHero(int bInMove, unsigned char waitingPlayer,
                           unsigned char drawChanges);
-    void ShowRoute(int updateScreen, int reseed, int changeButton);
-    unsigned short* GetRouteArrayPtr(int x, int y, int z);
-    e_looping_sound_id GetSoundId(int x, int y, int z);
-    type_point get_map_center() const;
-#ifdef HOMM3_TOWN_OBJ_DECLS
-    // 0x417b20. town::View is the only admitted caller needing this broad
-    // context switch, so keep its member declaration in town.obj.
+    void SetTownContext(int townId, unsigned char waitingPlayer,
+                        unsigned char update);
     void SetHeroContext(int heroId, int bInMove,
                         unsigned char waitingPlayer,
                         unsigned char draw_changes);
+    void ShowRoute(int updateScreen, int reseed, int changeButton);
+    void StartLocalPlayerTurn();
+    void LoadRemote(unsigned char makeOrig);
+    void TrimLoopingSounds(int maxSoundsAllowed);
+    void DisableButtons();
+    void EnableButtons();
+    void ViewPuzzle();
+#ifdef HOMM3_ADVMGR_OPTIONS_DECLS
+    void ViewWorld(int whatToDraw, TSkillMastery level);
 #endif
+    void DoAdventureOptions();
+    unsigned short* GetRouteArrayPtr(int x, int y, int z);
+    e_looping_sound_id GetSoundId(int x, int y, int z);
+    type_point get_map_center() const;
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
 extern advManager* gpAdvManager;
 
 int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit);
+void ComputeAdvNetControl();
 bool hasFlag(int objType);
 int GetFlaggedObjectOwner(NewmapCell* thisCell);
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
@@ -586,6 +729,9 @@ void AdvmgrFn_0040D670(char* buffer, NewmapCell* cell, long playerId,
 #endif
 
 // --- globals ---
+// Dreamcast public ?giHighMemBuffer@@3HA; retail TrimLoopingSounds fixes the
+// dword at 0x67f570 through its divide-by-100 adjustment.
+extern int giHighMemBuffer;
 // CODEVIEW(E:\gamedcs\advmgr.cpp:336, dc 0x5714) unsigned char InitializeCreatureGeneratorNames();
 // CODEVIEW(E:\gamedcs\advmgr.cpp:368, dc 0x57cc) unsigned char InitializeExtraInfoText();
 // CODEVIEW(E:\gamedcs\advmgr.cpp:2708, dc 0xb208) void set_town_help(char* buffer, const NewmapCell* cell);

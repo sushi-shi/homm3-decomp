@@ -34,9 +34,8 @@ DATA(0x00699500) extern executive* gpExecutive;
 DATA(0x006a8bb8)
 __int64 town::included_buildings[TOWN_TYPE_COUNT][TOWN_BUILDING_SLOTS];
 
-#if 0  // @carcass
-
 // E:\gamedcs\town.cpp:458
+#if 0  // @carcass
 DC_ONLY(0x165628, 0x360)
 int town::load(void* infile)
 {
@@ -50,12 +49,26 @@ int town::save(void* outfile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\town.cpp:761
-DC_ONLY(0x165d5c, 0x46)
-int town::GetPortraitFrame(unsigned char is_small)
+VA(0x005bd700, 0x47)  // active fort mask + faction/state/small frame, dc 0x165d5c
+int town::GetPortraitFrame(bool is_small) const
 {
-    // @stub
+    int frame;
+    if (active & bitNumber[CASTLE_FORT_ID])
+        frame = type * 2;
+    else
+        frame = type * 2 + 18;
+
+    if (field_02)
+        frame++;
+    if (is_small)
+        frame += 2;
+    return frame;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\town.cpp:779
 DC_ONLY(0x165da4, 0xFC)
@@ -341,9 +354,7 @@ void town::SwapHeroes()
 
     int rosterIndex = gpCurrentPlayer->FindHero(visitingHero->id);
     gpGame->GameFn_0049C720(visitingHero, visitingHero->owner, 0);
-    type_obscuring_object* obscuringHero =
-        static_cast<type_obscuring_object*>(static_cast<void*>(visitingHero));
-    obscuringHero->restore_cell();
+    visitingHero->restore_cell();
 
     CMCHideHero hideHero(visitingHero->id);
     SendMapChange(&hideHero);
@@ -387,6 +398,13 @@ static inline void set_town_spell_bit(std::bitset<70>& bits,
 // win before the weighted fallback. The tail derives the active guild level,
 // accounts for Tower's Library, trims missing picks and copies the setup mask
 // into the town. set_spells_available is inlined in this retail body.
+// Residual (89.8561%): duplicating the selected-spell store/bitset mutation
+// for the fixed-spell arm and continuing immediately raises the row from
+// 86.7424% and restores the retail branch count. Moving that arm directly
+// inside the scan loses one branch and scores 83.25%; spelling the sentinel
+// as `spell < NUM_SPELLS` instead of `!=` keeps 32 branches but scores 82.47%.
+// The remaining one-block layout delta begins at that sentinel/bitset range
+// check; the weighted picker and the guild-level/count tail remain complete.
 VA(0x005be600, 0x32A)  // anchor-bracket + spell-band loop, dc 0x166950
 void town::initialize_spells(const TownExtra* town_setup)
 {
@@ -412,19 +430,22 @@ void town::initialize_spells(const TownExtra* town_setup)
                 }
             }
 
-            if (spell == hero::NUM_SPELLS) {
-                if (totalWeight == 0) {
-                    mageGuildSpells[level - 1][slot] = -1;
-                    continue;
-                }
-                int roll = Random(1, totalWeight);
-                for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
-                    if (!prohibited.test(spell)
-                        && akSpellTraits[spell].level == level) {
-                        roll -= akSpellTraits[spell].townProbability[type];
-                        if (roll <= 0)
-                            break;
-                    }
+            if (spell != hero::NUM_SPELLS) {
+                mageGuildSpells[level - 1][slot] = spell;
+                prohibited.set(spell);
+                continue;
+            }
+            if (totalWeight == 0) {
+                mageGuildSpells[level - 1][slot] = -1;
+                continue;
+            }
+            int roll = Random(1, totalWeight);
+            for (spell = 0; spell < hero::NUM_SPELLS; ++spell) {
+                if (!prohibited.test(spell)
+                    && akSpellTraits[spell].level == level) {
+                    roll -= akSpellTraits[spell].townProbability[type];
+                    if (roll <= 0)
+                        break;
                 }
             }
             mageGuildSpells[level - 1][slot] = spell;
@@ -765,6 +786,13 @@ long town::get_legion_bonus(long dwelling)
 // the argument by 7 to split a dwelling index into tier and town - a
 // shared helper the Dreamcast build does not carry separately. ORDINAL
 // PLACEHOLDER name, flagged unattested.
+// Residual (99.8469%): all 36 blocks and the symbolic branch stream are
+// exact. The only scored code delta is a post-RA scheduling swap in the
+// no-visiting-hero map lookup: retail loads the packed point from [ebp-0xa]
+// before worldMap.Size, while this compile emits the two independent loads
+// in the opposite order. DC's canonical NewfullMap::cell(type_point) inline
+// spelling was measured and is byte-identical to the expression below.
+// The additional gpGame/bss_2994e8 row is relocation-name-only and cosmetic.
 VA(0x005bf900, 0x258)  // retail-only, town member, ret 4
 long town::TownFn_005BF900(long dwelling)
 {
@@ -1082,16 +1110,19 @@ void town::update_full_building_mask()
 // mask, the dock/capitol special cases, then requirements-not-yet-met.
 // The Castle exception drops the Blacksmith prerequisite from the
 // Griffin Tower row when gpGame's flag byte is set.
-// Residual (81.2%): structurally exact, including the merged fail block
+// Residual (89.6%): structurally exact, including the merged fail block
 // (nested ifs with ONE `return 0` - the flat guard chain with several
 // `return 0` statements duplicates the epilogue inline and scores 64.2,
 // and an explicit `if (...) return 0; return 1;` tail scores 62.6).
-// What is left is homing: retail re-reads the short parameter from
-// [ebp+8] for both `cmp ax` tests instead of caching it in bx, homes
-// `type` in a byte local, and keeps only the HIGH half of
-// bitNumber[building_id] on the stack. Tried and rejected: an int temp
-// for the bitNumber index (no change - VC6 CSEs it back), and calling
-// is_legal_building (short -> type_building_id needs an explicit cast).
+// What is left is homing: retail forms the bit-number index in EDX where
+// this compile uses ESI and re-reads the short parameter through AX where
+// this compile retains it in DX. Making the town-type byte volatile is
+// load-bearing: it gives the byte the retail stack home and raises the old
+// 81.2% body to 89.6%. An explicit promoted integer loses that home and
+// returns to 81.2%; a volatile building parameter falls to 67.6%. Also
+// tried and rejected: an int temp for the bitNumber index (no change - VC6
+// CSEs it back), and calling is_legal_building (short -> type_building_id
+// needs an explicit cast).
 VA(0x005c0d20, 0x13D)  // anchor-global, dc 0x168504
 unsigned char town::can_build(short building_id) const
 {
@@ -1102,7 +1133,7 @@ unsigned char town::can_build(short building_id) const
                 return dockSite != TOWN_DOCK_SITE_NONE;
             if (building_id == HALL_CAPITOL_ID)
                 return !gpGame->players[owner].HasCapitol();
-            char townType = type;
+            volatile char townType = type;
             __int64 requirements = gHierarchyMask[townType][building_id];
             if (gpGame->field_1f69d && building_id == DWELLING_2_ID
                 && townType == TOWN_CASTLE)
@@ -1213,6 +1244,10 @@ void town::get_build_cost(type_building_id building, int* resources) const
 // before cost selection (0%), count after costs (74.65% with this loop),
 // an indexed for loop (77.46%), a walking pointer with an up-counter
 // (74.0%), and resource lifetime extended across the memset (79.39%).
+// why-reg v2 --model --il-order (2026-08-13) classifies the remaining
+// EBX/ESI transposition as the C1 front-end handle-state class: target and
+// base expose the same definition slots in different pseudo processing
+// order, and the earlier target pseudo is not source-nameable.
 VA(0x005c1180, 0xA9)  // linkorder, dc 0x168910
 short town::get_build_cost(type_building_id building, int* types,
                            int* amounts) const

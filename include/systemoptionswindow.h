@@ -5,6 +5,80 @@
 #ifndef HOMM3_SYSTEMOPTIONSWINDOW_H
 #define HOMM3_SYSTEMOPTIONSWINDOW_H
 
+#include "advmgr_popup.h"
+
+// Retail's DoModal/handler use a byte at +0x60 and a dword at +0x64 after
+// the byte-proven 0x60 CAdvPopup base. Dreamcast CodeView names both members;
+// retail DoModal independently proves their preference/Quick Combat roles.
+class TSystemOptionsWindow : public CAdvPopup {
+public:
+    // Dreamcast EOtherWidgetIDs, verbatim; retail's handler independently
+    // proves every range and preference mapping.
+    enum EOtherWidgetIDs {
+        BACKGROUND_ID = 200,
+        MUSIC_VOLUME_0_ID = 201,
+        MUSIC_VOLUME_1_ID = 202,
+        MUSIC_VOLUME_2_ID = 203,
+        MUSIC_VOLUME_3_ID = 204,
+        MUSIC_VOLUME_4_ID = 205,
+        MUSIC_VOLUME_5_ID = 206,
+        MUSIC_VOLUME_6_ID = 207,
+        MUSIC_VOLUME_7_ID = 208,
+        MUSIC_VOLUME_8_ID = 209,
+        MUSIC_VOLUME_9_ID = 210,
+        EFFECTS_VOLUME_0_ID = 211,
+        EFFECTS_VOLUME_1_ID = 212,
+        EFFECTS_VOLUME_2_ID = 213,
+        EFFECTS_VOLUME_3_ID = 214,
+        EFFECTS_VOLUME_4_ID = 215,
+        EFFECTS_VOLUME_5_ID = 216,
+        EFFECTS_VOLUME_6_ID = 217,
+        EFFECTS_VOLUME_7_ID = 218,
+        EFFECTS_VOLUME_8_ID = 219,
+        EFFECTS_VOLUME_9_ID = 220,
+        MUSIC_TYPE_NONE_ID = 221,
+        MUSIC_TYPE_CD_ID = 222,
+        MUSIC_TYPE_MIDI_ID = 223,
+        HERO_SPEED_WALK_ID = 224,
+        HERO_SPEED_CANTER_ID = 225,
+        HERO_SPEED_GALLOP_ID = 226,
+        HERO_SPEED_JUMP_ID = 227,
+        AI_SPEED_CANTER_ID = 228,
+        AI_SPEED_GALLOP_ID = 229,
+        AI_SPEED_JUMP_ID = 230,
+        AI_SPEED_NONE_ID = 231,
+        AI_SPEED_BLACKOUT_VALUE =
+            AI_SPEED_NONE_ID - HERO_SPEED_GALLOP_ID,
+        WINDOW_SCROLL_SLOW = 232,
+        WINDOW_SCROLL_MEDIUM = 233,
+        WINDOW_SCROLL_FAST = 234,
+        SHOW_PATH_ID = 235,
+        MOVE_REMINDER_ID = 236,
+        QUICK_COMBAT_ID = 237,
+        VIDEO_SUBTITLES_ID = 238,
+        VIDEO_QUALITY_LOW = 239,
+        VIDEO_QUALITY_HIGH = 240,
+        TOWN_OUTLINES_ID = 241,
+        ANIMATE_SPELLBOOK_ID = 242
+    };
+
+    enum { NWIDGETS = 44 };
+
+    unsigned char bPrefsChanged;   // +0x60
+    char pad_61[3];
+    int quickCombatSave;           // +0x64
+
+    TSystemOptionsWindow();
+    virtual ~TSystemOptionsWindow();
+    int convertID2HelpID(int id) const;
+    void DoModal();
+    virtual int WindowHandler(message* msg);
+    void UpdateSystemOptions(unsigned char bFirstUpdate);
+};
+SIZE(TSystemOptionsWindow, 0x68);
+
+DATA(0x006a7584) extern THelpText gSystemOptionsHelp[48];
+
 // --- TSystemOptionsWindow ---
 // CODEVIEW(E:\gamedcs\systemoptionswindow.cpp:43, dc 0x15f588) void TSystemOptionsWindow::TSystemOptionsWindow();
 // CODEVIEW(E:\gamedcs\systemoptionswindow.cpp:198, dc 0x160634) void TSystemOptionsWindow::~TSystemOptionsWindow();

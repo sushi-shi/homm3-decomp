@@ -533,7 +533,16 @@ void searchArray::SeedCombatPosition(const army* thisArmy, long current_group, l
     }
 }
 
-#if 0  // @carcass
+// E:\gamedcs\findpath.cpp:1172
+inline void searchArray::mark_enemy(long hex, long cost)
+{
+    hexcell* combat_cell = &gpCombatManager->cells[hex];
+    pathCell* cell = getCellData(hex);
+    if (!combat_cell->field_4a || cell->cost > cost) {
+        combat_cell->field_4a = 1;
+        cell->cost = static_cast<unsigned short>(cost);
+    }
+}
 
 // E:\gamedcs\findpath.cpp:1004
 // `ret 8` = two stack arguments over `this`, the DC count exactly, and
@@ -544,8 +553,67 @@ void searchArray::SeedCombatPosition(const army* thisArmy, long current_group, l
 VA(0x004b2ff0, 0x298)  // anchor-callee, dc 0xa0630
 void searchArray::mark_teleport(const army* current_army, long current_group)
 {
-    // @stub
+    if (cellData == 0)
+        Init();
+
+    for (long hex = 0; hex < COMBAT_GRID_CELLS; ++hex) {
+        pathCell* cell = cellData == 0 ? 0 : &cellData[hex];
+        cell->point.x = static_cast<short>(hex);
+        if (!gpCombatManager->InInvisibleColumn(hex)
+                && current_army->CanFit(hex, 0, 0)
+                && gpCombatManager->is_valid_teleport(current_army, hex)) {
+            gpCombatManager->cells[hex].field_4a = 1;
+            cell->flight_cost = 0;
+            cell->cost = 1;
+            cell->visited = 1;
+        } else {
+            gpCombatManager->cells[hex].field_4a = 0;
+            cell->visited = 0;
+        }
+    }
+
+    long other_group = 1 - current_group;
+    for (long enemy_group = 0; enemy_group < 2; ++enemy_group) {
+        if (enemy_group == current_group)
+            continue;
+        const army* enemy = &gpCombatManager->armies[enemy_group][0];
+        for (long enemy_index = 0;
+                enemy_index < gpCombatManager->numArmies[other_group];
+                ++enemy_index, ++enemy) {
+            if (enemy == current_army
+                    || (static_cast<unsigned char>(static_cast<unsigned>(
+                            enemy->creatureId) >> 21) & 1)
+                    || enemy->creatureType == CREATURE_ARROW_TOWER)
+                continue;
+
+            long direction =
+                (static_cast<unsigned char>(static_cast<unsigned>(
+                    enemy->creatureId)) & 1) ? 8 : 6;
+            while (direction-- > 0) {
+                long adjacent = enemy->get_adjacent_hex(enemy->gridIndex,
+                                                        direction);
+                if (gpCombatManager->ValidHex(adjacent)) {
+                    pathCell* adjacent_cell =
+                        cellData == 0 ? 0 : &cellData[adjacent];
+                    if (adjacent_cell->visited)
+                        break;
+                }
+            }
+            if (direction < 0)
+                continue;
+
+            mark_enemy(enemy->gridIndex, 1);
+
+            // Retail repeats the same anchor-hex mark for a wide stack;
+            // preserve the original behavior rather than "fixing" it.
+            if (static_cast<unsigned char>(static_cast<unsigned>(
+                    enemy->creatureId)) & 1)
+                mark_enemy(enemy->gridIndex, 1);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\findpath.cpp:1080
 // The clearest identification in the span. `ret 4` = one stack
@@ -668,8 +736,6 @@ pathCell* searchArray::getCellData(long pos)
     return &cellData[pos];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\findpath.cpp:1372
 // `ret 0x14` = five stack arguments over `this`, the DC count exactly,
 // and the body opens by bounds-checking its first argument against the
@@ -678,10 +744,37 @@ pathCell* searchArray::getCellData(long pos)
 VA(0x004b3bb0, 0x35C)  // anchor-bracket, dc 0xa0f54
 void searchArray::PushCombatPoint(int index, int direction, int cost, int flight_cost, int limit)
 {
-    // @stub
-}
+    if (index < 0 || index >= 187 || cost > limit)
+        return;
 
-#endif  // @carcass
+    pathCell* pCell = getCellData(index);
+    if (pCell->visited && pCell->cost <= cost)
+        return;
+    if (queue.size() >= 500)
+        return;
+
+    int first = 0;
+    int last = queue.size();
+    int middle = last / 2;
+    while (last > first) {
+        if (cost < queue[middle].cost)
+            first = middle + 1;
+        else
+            last = middle;
+        middle = (first + last) / 2;
+    }
+
+    pathCell path_cell;
+    path_cell.point.x = index;
+    path_cell.visited = 1;
+    path_cell.direction = direction;
+    path_cell.flight_cost = flight_cost;
+    path_cell.point.y = 0;
+    path_cell.cost = cost;
+
+    queue.insert(queue.begin() + middle, path_cell);
+    *pCell = path_cell;
+}
 
 // E:\gamedcs\findpath.cpp:1427
 // The two drawbridge hexes, spelled as two statements because retail

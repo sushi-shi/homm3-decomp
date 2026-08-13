@@ -6,7 +6,8 @@
 #define HOMM3_CREATURE_BANK_H
 
 #include <string>
-#include "armygrp.h"
+#include <vector>
+#include "creature_bank_types.h"
 
 // Dreamcast CodeView supplies the names/order; retail's help-text selector
 // bounds the player bit, then indexes this domain through a 400-byte traits
@@ -26,20 +27,28 @@ enum type_creature_bank_type {
     CREATURE_BANK_COUNT
 };
 
+// Retail's constructor at 0x47aad0 walks four records at a 0x60 stride and
+// invokes armyGroup::armyGroup at the start of each. The still-unread tail
+// is kept opaque until initialize_creature_bank names its reward fields.
+struct type_creature_bank_level {
+    armyGroup guards;
+    char pad_038[0x28];
+
+    type_creature_bank_level() {}
+};
+SIZE(type_creature_bank_level, 0x60);
+
+// The constructor first initializes the retail 16-byte Dinkumware string
+// consumed by the help-text selector, then the four levels above. This
+// independently closes the 0x190 stride; only the old anonymous tail is
+// retired.
 struct type_creature_bank_traits {
     std::string name;
-    char pad_010[0x180];
+    type_creature_bank_level levels[4];
+
+    type_creature_bank_traits();
 };
 SIZE(type_creature_bank_traits, 0x190);
-
-// Retail indexes these records with a 108-byte stride. The first 56 bytes are
-// the independently proven armyGroup; the tail stays opaque until a reward
-// consumer is admitted.
-struct type_creature_bank {
-    armyGroup guards;
-    char pad_038[0x34];
-};
-SIZE(type_creature_bank, 0x6c);
 
 extern const type_creature_bank_traits* const_creature_bank_traits;
 

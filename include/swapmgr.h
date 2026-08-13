@@ -5,6 +5,23 @@
 #ifndef HOMM3_SWAPMGR_H
 #define HOMM3_SWAPMGR_H
 
+#include "basemgr.h"
+
+class Bitmap816;
+class hero;
+class heroWindow;
+
+// Canonical partial retail layout. IsLeftHero and its sole retail caller
+// prove the two hero pointers at +0x40/+0x44; no parallel local view is used.
+class swapManager : public baseManager {
+public:
+    heroWindow* parent;  // +0x38
+    Bitmap816* border;   // +0x3c
+    hero* heroes[2];     // +0x40
+
+    bool IsLeftHero();
+};
+
 // --- CGiveMeStuffMsg ---
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:151, dc 0x15f084) void CGiveMeStuffMsg::CGiveMeStuffMsg();
 
@@ -59,7 +76,7 @@
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:2140, dc 0x15eb90) void swapManager::OnChatUpdate();
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:2147, dc 0x15ebac) void swapManager::HandleHeroUpdateMsg(CNetMsg* pNetMsg);
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:2165, dc 0x15ec58) void swapManager::OnWidgetDeselect(message* msg, int* exitFlag);
-// CODEVIEW(E:\gamedcs\swapmgr.cpp:2231, dc 0x15edf8) unsigned char swapManager::IsLeftHero();
+// CODEVIEW(E:\gamedcs\swapmgr.cpp:2231, dc 0x15edf8) bool swapManager::IsLeftHero();
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:2241, dc 0x15ee24) unsigned char swapManager::IsRightHero();
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:2251, dc 0x15ee50) hero* swapManager::GetOtherHero();
 // CODEVIEW(E:\gamedcs\swapmgr.cpp:2259, dc 0x15ee74) hero* swapManager::GetOurHero();

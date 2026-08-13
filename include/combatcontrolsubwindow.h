@@ -5,6 +5,51 @@
 #ifndef HOMM3_COMBATCONTROLSUBWINDOW_H
 #define HOMM3_COMBATCONTROLSUBWINDOW_H
 
+#include "subwindow.h"
+
+class bitmapBorder;
+class hero;
+class iconWidget;
+class textWidget;
+
+// Retail's two construction sites allocate 0x5c bytes. The constructor and
+// Show/UnShow pair independently fix the TSubWindow base, the nine pointer
+// fields at +0x34..+0x54, and the shown byte at +0x58.
+class TCombatHeroSubWindow : public TSubWindow {
+public:
+    bitmapBorder* backgroundWidget;
+    bitmapBorder* portrait;
+    textWidget* attackText;
+    textWidget* defenseText;
+    textWidget* powerText;
+    textWidget* knowledgeText;
+    iconWidget* moraleIcon;
+    iconWidget* luckIcon;
+    textWidget* manaText;
+    bool shown;
+
+    TCombatHeroSubWindow(int x, int y, int w, int h, heroWindow* parent);
+    virtual ~TCombatHeroSubWindow();
+    void Update(const hero& info, const hero* otherHero,
+                bool on_cursed_ground);
+    void Show();
+    void UnShow();
+    bool IsShown() const { return shown; }
+};
+SIZE(TCombatHeroSubWindow, 0x5c);
+
+// DrawCreatureAndHeroSubwindows proves the common TSubWindow base and the
+// shown byte at +0x68 for each of the four creature panels owned by
+// TCombatWindow. The intervening derived state remains opaque until one of
+// the panel's own retail bodies is reconstructed.
+class TCombatCreatureSubWindow : public TSubWindow {
+public:
+    char pad_34[0x34];
+    bool shown;
+
+    bool IsShown() const { return shown; }
+};
+
 // --- TCombatControlSubWindow ---
 // CODEVIEW(E:\gamedcs\combatcontrolsubwindow.cpp:177, dc 0x64fcc) void TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent);
 // CODEVIEW(E:\gamedcs\combatcontrolsubwindow.cpp:222, dc 0x65244) void TCombatControlSubWindow::~TCombatControlSubWindow();

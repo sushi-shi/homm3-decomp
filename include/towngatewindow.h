@@ -5,12 +5,34 @@
 #ifndef HOMM3_TOWNGATEWINDOW_H
 #define HOMM3_TOWNGATEWINDOW_H
 
+#include <vector>
+#include "advmgr_popup.h"
+
+// The DC field roster starts the derived tail at its +0x58 CAdvPopup end.
+// Retail's proven base is eight bytes wider and its VC6 vector is four bytes
+// wider, placing the same fields at +0x60/+0x70/+0x74/+0x78. advManager's
+// stack instance spans exactly 0x7c bytes, proving the canonical total size.
+class TTownGateWindow : public CAdvPopup {
+public:
+    std::vector<int> Towns;
+    int topTown;
+    int selectedTown;
+    bool adventure_spell;
+
+    TTownGateWindow(bool adventure_spell);
+    virtual ~TTownGateWindow();
+    void AddTown(int new_town);
+    void DoModal();
+    virtual int WindowHandler(message* msg);
+};
+SIZE(TTownGateWindow, 0x7c);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\towngatewindow.cpp:259, dc 0x169ba8) void TownGateSliderCallback(int state, heroWindow* parent_window);
 
 // --- TTownGateWindow ---
 // CODEVIEW(E:\gamedcs\towngatewindow.cpp:40, dc 0x1690b0) void TTownGateWindow::TTownGateWindow(unsigned char _adventure_spell);
-// CODEVIEW(E:\gamedcs\towngatewindow.cpp:101, dc 0x169824) void TTownGateWindow::~TTownGateWindow();
+// RETAIL(0x005c2370, 0x8f), CODEVIEW(E:\gamedcs\towngatewindow.cpp:101, dc 0x169824) void TTownGateWindow::~TTownGateWindow();
 // CODEVIEW(E:\gamedcs\towngatewindow.cpp:110, dc 0x169890) void TTownGateWindow::AddTown(int new_town);
 // CODEVIEW(E:\gamedcs\towngatewindow.cpp:115, dc 0x1698ac) void TTownGateWindow::UpdateTownLocator(int i);
 // CODEVIEW(E:\gamedcs\towngatewindow.cpp:168, dc 0x1699e8) void TTownGateWindow::UpdateTownLocators();

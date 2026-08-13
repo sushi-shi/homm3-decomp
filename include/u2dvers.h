@@ -5,6 +5,35 @@
 #ifndef HOMM3_U2DVERS_H
 #define HOMM3_U2DVERS_H
 
+#include <string>
+#include "va.h"
+
+// version.dll imports are called through the executable's stdcall thunks,
+// so this TU deliberately uses plain declarations rather than dllimport.
+// The narrow pointer types model the byte-proven call sites without casts:
+// the constructor reuses its filename slot as the ignored handle output,
+// and VerQueryValue returns the queried character buffer.
+extern "C" unsigned long __stdcall GetFileVersionInfoSizeA(
+    const char* filename, unsigned long* ignoredHandle);
+extern "C" int __stdcall GetFileVersionInfoA(
+    const char* filename, unsigned long ignoredHandle,
+    unsigned long size, void* data);
+extern "C" int __stdcall VerQueryValueA(
+    const void* data, const char* subBlock,
+    char** value, unsigned int* length);
+
+// PROVEN retail layout: both ctor and dtor access only the allocation
+// pointer at +0; callers allocate four bytes for the object.
+class TFileVersionInfo {
+public:
+    char* data;
+
+    TFileVersionInfo(const char* filename);
+    ~TFileVersionInfo();
+    unsigned char GetVersionInfo(const char* name, std::string* buffer);
+};
+SIZE(TFileVersionInfo, 4);
+
 // --- TFileVersionInfo ---
 // CODEVIEW(E:\gamedcs\u2dvers.cpp:33, dc 0x18e3b0) void TFileVersionInfo::TFileVersionInfo(const char* filename);
 // CODEVIEW(E:\gamedcs\u2dvers.cpp:56, dc 0x18e3b4) void TFileVersionInfo::~TFileVersionInfo();

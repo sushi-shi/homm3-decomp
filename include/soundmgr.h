@@ -47,6 +47,7 @@ extern SAMPLE2 NULL_SAMPLE2;
 // filename and wait-time scalar travel in ECX, while SAMPLE2 is returned
 // in EDX:EAX and passed by value on the stack.
 SAMPLE2 LoadPlaySample(const char* cSampleName);
+void ClearMemSample(SAMPLE2 sample2);
 void WaitEndSample(SAMPLE2 sample2, int iMilliWait);
 
 // Retail 0x55c720, reached fastcall with the name in ecx and returning
@@ -149,6 +150,7 @@ public:
     CRITICAL_SECTION section_MP3_name_change;
 
     soundManager();
+    virtual void Close();
     ds_memsample* MemorySample(sample* memSample);
     void StopSample(ds_memsample* inSample);
     void WaitSample(ds_memsample* sample, int time);
@@ -287,6 +289,9 @@ __declspec(dllimport) void __stdcall _AIL_set_sample_volume(ds_memsample* sample
 __declspec(dllimport) int __stdcall _AIL_stream_status(void* stream);
 __declspec(dllimport) void __stdcall _AIL_set_stream_volume(void* stream, int volume);
 __declspec(dllimport) void __stdcall _AIL_service_stream(void* stream, int fillup);
+__declspec(dllimport) void __stdcall _AIL_pause_stream(void* stream, int pause);
+__declspec(dllimport) void __stdcall _AIL_close_stream(void* stream);
+__declspec(dllimport) void __stdcall _AIL_shutdown();
 __declspec(dllimport) void __stdcall _AIL_serve();
 }
 #define AIL_end_sample _AIL_end_sample
@@ -301,6 +306,9 @@ __declspec(dllimport) void __stdcall _AIL_serve();
 #define AIL_stream_status _AIL_stream_status
 #define AIL_set_stream_volume _AIL_set_stream_volume
 #define AIL_service_stream _AIL_service_stream
+#define AIL_pause_stream _AIL_pause_stream
+#define AIL_close_stream _AIL_close_stream
+#define AIL_shutdown _AIL_shutdown
 #define AIL_serve _AIL_serve
 
 // The CRT thread spawner retail reaches with a plain `call __beginthread`
@@ -316,7 +324,7 @@ extern "C" unsigned long __cdecl _beginthread(void(__cdecl* start_address)(void*
 // _beginthread's parameter type cannot accept a pointer-to-member, so
 // retail's soundmgr.cpp must have had a free-function declaration of
 // that body in scope; this is that view. TWO VIEWS OF ONE ADDRESS -
-// flagged for supervised adjudication, not claimed by either side.
+// flagged for evidence-backed adjudication, not claimed by either side.
 void __cdecl service_sounds(void* arglist);
 
 // Retail .bss 0x2993c4 (DC ?gpSoundManager@@3PAVsoundManager@@A).

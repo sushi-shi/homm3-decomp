@@ -416,7 +416,8 @@ void heroWindow::MoveWindow(int deltaX, int deltaY)
 //     centerX+width} - produced `mov edi,[ebp+8]` in EVERY ONE; not a
 //     single variant put centerX in ebx;
 //   * in-tree, all 24 declaration orders score 92.71-92.88 with the
-//     current x/y/w/h the best; comma-form, declare-then-assign, four
+//     current startX/startY/startW/startH the best; comma-form,
+//     declare-then-assign, four
 //     assignment orders, `this->`-qualified reads and the if/else form
 //     instead of the early return all keep centerX in edi;
 //   * the ONLY shapes that flip it to ebx drop oldHeight (locals
@@ -449,13 +450,19 @@ void heroWindow::MoveWindow(int deltaX, int deltaY)
 // and ours hands it to the second. Four TUs, six functions, no source
 // handle in any of them: this belongs with the merged-return /
 // stale-CL-generation open question, not with per-function spelling.
+// The v2 allocator model was rerun 2026-08-11 after restoring CodeView's
+// exact four local names. The names are byte-neutral. Its best proposal,
+// aliasing centerX into a new earliest-created local, reduces the register
+// distance from 79 to 61 slots but does not match and invents a fifth local
+// absent from the DC roster; adjacent-declaration proposals leave 77/81.
+// Thus no evidence-compatible source handle remains.
 VA(0x005ff240, 0x162)  // anchor-global, dc 0x19797c
 void heroWindow::CenterWindow(int centerX, int centerY)
 {
-    int oldX = x;
-    int oldY = y;
-    int oldWidth = width;
-    int oldHeight = height;
+    int startX = x;
+    int startY = y;
+    int startW = width;
+    int startH = height;
     if (centerX == -1)
         centerX = (WINDOW_SCREEN_WIDTH - width) / 2;
     if (centerY == -1)
@@ -485,13 +492,13 @@ void heroWindow::CenterWindow(int centerX, int centerY)
                      gpWindowManager->screenBitmap->Height,
                      gpWindowManager->screenBitmap->Pitch);
     DrawWindow(0, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
-    oldWidth += abs(x - oldX);
-    oldHeight += abs(y - oldY);
-    if (x < oldX)
-        oldX = x;
-    if (y < oldY)
-        oldY = y;
-    gpWindowManager->UpdateScreen(oldX, oldY, oldWidth, oldHeight);
+    startW += abs(x - startX);
+    startH += abs(y - startY);
+    if (x < startX)
+        startX = x;
+    if (y < startY)
+        startY = y;
+    gpWindowManager->UpdateScreen(startX, startY, startW, startH);
 }
 
 // E:\gamedcs\window.cpp:855
@@ -697,7 +704,7 @@ unsigned char CHeroWindowEx::ProcessHover(int mouseX, int mouseY)
         // Retail materialises the SAME literal address twice (`mov ebx,
         // offset` on both arms), so it is one allocation, not two
         // pooled copies - hence the single claim through a local.
-        const char* emptyText = DATA_COMPGEN(0x00691210, emptyRolloverText, "");
+        const char* emptyText = emptyRolloverText;
         const char* text = emptyText;
         if (hit) {
             text = hit->RollOver;

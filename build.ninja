@@ -117,6 +117,14 @@ build build/objdiff/base/textntry.obj: cl src/textntry.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = textntry
+build build/objdiff/base/textresource.obj: cl src/textresource.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = textresource
+build build/objdiff/base/hiscore.obj: cl src/hiscore.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = hiscore
 build build/objdiff/base/sample.obj: cl src/sample.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
@@ -165,6 +173,58 @@ build build/objdiff/base/winmgr.obj: cl src/winmgr.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = winmgr
+build build/objdiff/base/subwindow.obj: cl src/subwindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = subwindow
+build build/objdiff/base/resourcedisplay.obj: cl src/resourcedisplay.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = resourcedisplay
+build build/objdiff/base/resourcemanager.obj: cl src/resourcemanager.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = resourcemanager
+build build/objdiff/base/spells.obj: cl src/spells.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = spells
+build build/objdiff/base/creaturetype.obj: cl src/creaturetype.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = creaturetype
+build build/objdiff/base/creature_bank.obj: cl src/creature_bank.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = creature_bank
+build build/objdiff/base/u2dvers.obj: cl src/u2dvers.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = u2dvers
+build build/objdiff/base/levelupwindow.obj: cl src/levelupwindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = levelupwindow
+build build/objdiff/base/gametypewindow.obj: cl src/gametypewindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = gametypewindow
+build build/objdiff/base/quickinfowindow.obj: cl src/quickinfowindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = quickinfowindow
+build build/objdiff/base/campaignmap.obj: cl src/campaignmap.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = campaignmap
+build build/objdiff/base/campaignwindow.obj: cl src/campaignwindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = campaignwindow
+build build/objdiff/base/adventureoptionswindow.obj: cl $
+    src/adventureoptionswindow.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = adventureoptionswindow
 build build/objdiff/base/kbwin.obj: cl src/kbwin.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
@@ -181,6 +241,101 @@ build build/objdiff/base/castle.obj: cl src/castle.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = castle
+build build/objdiff/base/combatcontrolsubwindow.obj: cl $
+    src/combatcontrolsubwindow.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = combatcontrolsubwindow
+build build/objdiff/base/binkmanager.obj: cl src/binkmanager.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = binkmanager
+build build/objdiff/base/townmgr.obj: cl src/townmgr.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = townmgr
+build build/objdiff/base/bitmap16.obj: cl src/bitmap16.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = bitmap16
+build build/objdiff/base/bitmap24.obj: cl src/bitmap24.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = bitmap24
+build build/objdiff/base/mainmenu.obj: cl src/mainmenu.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = mainmenu
+build build/objdiff/base/campaignbrief.obj: cl src/campaignbrief.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /MT /Gr /GX /D_WINDOWS
+  unit = campaignbrief
+build build/objdiff/base/customcampaign.obj: cl src/customcampaign.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = customcampaign
+build build/objdiff/base/questlogwindow.obj: cl src/questlogwindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = questlogwindow
+build build/objdiff/base/lodfile.obj: cl src/lodfile.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = lodfile
+build build/objdiff/base/towngatewindow.obj: cl src/towngatewindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = towngatewindow
+build build/objdiff/base/drawing.obj: cl src/drawing.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = drawing
+build build/objdiff/base/dimensiondoorwindow.obj: cl $
+    src/dimensiondoorwindow.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = dimensiondoorwindow
+build build/objdiff/base/wingraph.obj: cl src/wingraph.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = wingraph
+build build/objdiff/base/csprite.obj: cl src/csprite.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = csprite
+build build/objdiff/base/text.obj: cl src/text.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = text
+build build/objdiff/base/palette.obj: cl src/palette.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = palette
+build build/objdiff/base/army.obj: cl src/army.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = army
+build build/objdiff/base/adventuremapwindow.obj: cl $
+    src/adventuremapwindow.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = adventuremapwindow
+build build/objdiff/base/philai.obj: cl src/philai.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = philai
+build build/objdiff/base/cspriteframe.obj: cl src/cspriteframe.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = cspriteframe
+build build/objdiff/base/events.obj: cl src/events.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = events
+build build/objdiff/base/kb.obj: cl src/kb.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = kb
+build build/objdiff/base/bottomviewsubwindow.obj: cl $
+    src/bottomviewsubwindow.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = bottomviewsubwindow
 build build/objdiff/base/recruit.obj: cl src/recruit.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
@@ -201,10 +356,18 @@ build build/objdiff/base/game.obj: cl src/game.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = game
+build build/objdiff/base/mapcell.obj: cl src/mapcell.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = mapcell
 build build/objdiff/base/cmbtmgr.obj: cl src/cmbtmgr.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = cmbtmgr
+build build/objdiff/base/command.obj: cl src/command.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = command
 build build/objdiff/base/advmgr.obj: cl src/advmgr.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
@@ -224,6 +387,158 @@ build build/objdiff/base/ai_player.obj: cl src/ai_player.cpp | $
     scripts/homm3/core/cc_wrap.py
   flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
   unit = ai_player
+build build/objdiff/base/fly.obj: cl src/fly.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = fly
+build build/objdiff/base/quickherowindow.obj: cl src/quickherowindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = quickherowindow
+build build/objdiff/base/systemoptionswindow.obj: cl $
+    src/systemoptionswindow.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = systemoptionswindow
+build build/objdiff/base/viewarmywindow.obj: cl src/viewarmywindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = viewarmywindow
+build build/objdiff/base/viewwrld.obj: cl src/viewwrld.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = viewwrld
+build build/objdiff/base/newgame.obj: cl src/newgame.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = newgame
+build build/objdiff/base/advspells.obj: cl src/advspells.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = advspells
+build build/objdiff/base/multiplayerwindow.obj: cl $
+    src/multiplayerwindow.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = multiplayerwindow
+build build/objdiff/base/singleselectionwindow.obj: cl $
+    src/singleselectionwindow.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = singleselectionwindow
+build build/objdiff/base/diff.obj: cl src/diff.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = diff
+build build/objdiff/base/artifact.obj: cl src/artifact.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = artifact
+build build/objdiff/base/quicktownwindow.obj: cl src/quicktownwindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = quicktownwindow
+build build/objdiff/base/slider.obj: cl src/slider.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = slider
+build build/objdiff/base/combatresultswindow.obj: cl $
+    src/combatresultswindow.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = combatresultswindow
+build build/objdiff/base/combatoptionswindow.obj: cl $
+    src/combatoptionswindow.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = combatoptionswindow
+build build/objdiff/base/combatwindow.obj: cl src/combatwindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = combatwindow
+build build/objdiff/base/spelldefs.obj: cl src/spelldefs.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = spelldefs
+build build/objdiff/base/scenarioinfo.obj: cl src/scenarioinfo.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = scenarioinfo
+build build/objdiff/base/dialogbox.obj: cl src/dialogbox.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = dialogbox
+build build/objdiff/base/puzzlewindow.obj: cl src/puzzlewindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = puzzlewindow
+build build/objdiff/base/remote.obj: cl src/remote.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = remote
+build build/objdiff/base/university_window.obj: cl $
+    src/university_window.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = university_window
+build build/objdiff/base/csequence.obj: cl src/csequence.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = csequence
+build build/objdiff/base/cursor.obj: cl src/cursor.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = cursor
+build build/objdiff/base/event_record.obj: cl src/event_record.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = event_record
+build build/objdiff/base/singleselectionpopups.obj: cl $
+    src/singleselectionpopups.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = singleselectionpopups
+build build/objdiff/base/victorylossconditions.obj: cl $
+    src/victorylossconditions.cpp | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = victorylossconditions
+build build/objdiff/base/bitmap816.obj: cl src/bitmap816.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = bitmap816
+build build/objdiff/base/search.obj: cl src/search.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = search
+build build/objdiff/base/herodefs.obj: cl src/herodefs.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = herodefs
+build build/objdiff/base/overview.obj: cl src/overview.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = overview
+build build/objdiff/base/spellbookwindow.obj: cl src/spellbookwindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = spellbookwindow
+build build/objdiff/base/hillfortwindow.obj: cl src/hillfortwindow.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = hillfortwindow
+build build/objdiff/base/dxplay.obj: cl src/dxplay.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = dxplay
+build build/objdiff/base/swapmgr.obj: cl src/swapmgr.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = swapmgr
+build build/objdiff/base/tradpost.obj: cl src/tradpost.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = tradpost
+build build/objdiff/base/seerhut.obj: cl src/seerhut.cpp | $
+    scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = seerhut
+build build/objdiff/base/sacrifice_window.obj: cl src/sacrifice_window.cpp $
+    | scripts/homm3/core/cc_wrap.py
+  flags = /nologo /c /O2 /Ob2 /Oy- /Op /ML /Gr /GX /D_WINDOWS
+  unit = sacrifice_window
 build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -237,20 +552,70 @@ build objects: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/window.obj build/objdiff/base/resource.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
+    build/objdiff/base/textresource.obj build/objdiff/base/hiscore.obj $
     build/objdiff/base/sample.obj build/objdiff/base/font.obj $
     build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
     build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
     build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
     build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
     build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
+    build/objdiff/base/creaturetype.obj $
+    build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
+    build/objdiff/base/levelupwindow.obj $
+    build/objdiff/base/gametypewindow.obj $
+    build/objdiff/base/quickinfowindow.obj $
+    build/objdiff/base/campaignmap.obj $
+    build/objdiff/base/campaignwindow.obj $
+    build/objdiff/base/adventureoptionswindow.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $
     build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
+    build/objdiff/base/combatcontrolsubwindow.obj $
+    build/objdiff/base/binkmanager.obj build/objdiff/base/townmgr.obj $
+    build/objdiff/base/bitmap16.obj build/objdiff/base/bitmap24.obj $
+    build/objdiff/base/mainmenu.obj build/objdiff/base/campaignbrief.obj $
+    build/objdiff/base/customcampaign.obj $
+    build/objdiff/base/questlogwindow.obj build/objdiff/base/lodfile.obj $
+    build/objdiff/base/towngatewindow.obj build/objdiff/base/drawing.obj $
+    build/objdiff/base/dimensiondoorwindow.obj $
+    build/objdiff/base/wingraph.obj build/objdiff/base/csprite.obj $
+    build/objdiff/base/text.obj build/objdiff/base/palette.obj $
+    build/objdiff/base/army.obj build/objdiff/base/adventuremapwindow.obj $
+    build/objdiff/base/philai.obj build/objdiff/base/cspriteframe.obj $
+    build/objdiff/base/events.obj build/objdiff/base/kb.obj $
+    build/objdiff/base/bottomviewsubwindow.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $
     build/objdiff/base/town.obj build/objdiff/base/hero.obj $
-    build/objdiff/base/game.obj build/objdiff/base/cmbtmgr.obj $
+    build/objdiff/base/game.obj build/objdiff/base/mapcell.obj $
+    build/objdiff/base/cmbtmgr.obj build/objdiff/base/command.obj $
     build/objdiff/base/advmgr.obj build/objdiff/base/ai.obj $
     build/objdiff/base/ai_combat.obj build/objdiff/base/ai_tactical.obj $
-    build/objdiff/base/ai_player.obj
+    build/objdiff/base/ai_player.obj build/objdiff/base/fly.obj $
+    build/objdiff/base/quickherowindow.obj $
+    build/objdiff/base/systemoptionswindow.obj $
+    build/objdiff/base/viewarmywindow.obj build/objdiff/base/viewwrld.obj $
+    build/objdiff/base/newgame.obj build/objdiff/base/advspells.obj $
+    build/objdiff/base/multiplayerwindow.obj $
+    build/objdiff/base/singleselectionwindow.obj $
+    build/objdiff/base/diff.obj build/objdiff/base/artifact.obj $
+    build/objdiff/base/quicktownwindow.obj build/objdiff/base/slider.obj $
+    build/objdiff/base/combatresultswindow.obj $
+    build/objdiff/base/combatoptionswindow.obj $
+    build/objdiff/base/combatwindow.obj build/objdiff/base/spelldefs.obj $
+    build/objdiff/base/scenarioinfo.obj build/objdiff/base/dialogbox.obj $
+    build/objdiff/base/puzzlewindow.obj build/objdiff/base/remote.obj $
+    build/objdiff/base/university_window.obj $
+    build/objdiff/base/csequence.obj build/objdiff/base/cursor.obj $
+    build/objdiff/base/event_record.obj $
+    build/objdiff/base/singleselectionpopups.obj $
+    build/objdiff/base/victorylossconditions.obj $
+    build/objdiff/base/bitmap816.obj build/objdiff/base/search.obj $
+    build/objdiff/base/herodefs.obj build/objdiff/base/overview.obj $
+    build/objdiff/base/spellbookwindow.obj $
+    build/objdiff/base/hillfortwindow.obj build/objdiff/base/dxplay.obj $
+    build/objdiff/base/swapmgr.obj build/objdiff/base/tradpost.obj $
+    build/objdiff/base/seerhut.obj build/objdiff/base/sacrifice_window.obj
 build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
     build/objdiff/base/deflate.obj build/objdiff/base/gzio.obj $
@@ -264,20 +629,70 @@ build all: phony build/objdiff/base/adler32.obj $
     build/objdiff/base/window.obj build/objdiff/base/resource.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
+    build/objdiff/base/textresource.obj build/objdiff/base/hiscore.obj $
     build/objdiff/base/sample.obj build/objdiff/base/font.obj $
     build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
     build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
     build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
     build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
     build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
+    build/objdiff/base/creaturetype.obj $
+    build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
+    build/objdiff/base/levelupwindow.obj $
+    build/objdiff/base/gametypewindow.obj $
+    build/objdiff/base/quickinfowindow.obj $
+    build/objdiff/base/campaignmap.obj $
+    build/objdiff/base/campaignwindow.obj $
+    build/objdiff/base/adventureoptionswindow.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $
     build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
+    build/objdiff/base/combatcontrolsubwindow.obj $
+    build/objdiff/base/binkmanager.obj build/objdiff/base/townmgr.obj $
+    build/objdiff/base/bitmap16.obj build/objdiff/base/bitmap24.obj $
+    build/objdiff/base/mainmenu.obj build/objdiff/base/campaignbrief.obj $
+    build/objdiff/base/customcampaign.obj $
+    build/objdiff/base/questlogwindow.obj build/objdiff/base/lodfile.obj $
+    build/objdiff/base/towngatewindow.obj build/objdiff/base/drawing.obj $
+    build/objdiff/base/dimensiondoorwindow.obj $
+    build/objdiff/base/wingraph.obj build/objdiff/base/csprite.obj $
+    build/objdiff/base/text.obj build/objdiff/base/palette.obj $
+    build/objdiff/base/army.obj build/objdiff/base/adventuremapwindow.obj $
+    build/objdiff/base/philai.obj build/objdiff/base/cspriteframe.obj $
+    build/objdiff/base/events.obj build/objdiff/base/kb.obj $
+    build/objdiff/base/bottomviewsubwindow.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $
     build/objdiff/base/town.obj build/objdiff/base/hero.obj $
-    build/objdiff/base/game.obj build/objdiff/base/cmbtmgr.obj $
+    build/objdiff/base/game.obj build/objdiff/base/mapcell.obj $
+    build/objdiff/base/cmbtmgr.obj build/objdiff/base/command.obj $
     build/objdiff/base/advmgr.obj build/objdiff/base/ai.obj $
     build/objdiff/base/ai_combat.obj build/objdiff/base/ai_tactical.obj $
-    build/objdiff/base/ai_player.obj
+    build/objdiff/base/ai_player.obj build/objdiff/base/fly.obj $
+    build/objdiff/base/quickherowindow.obj $
+    build/objdiff/base/systemoptionswindow.obj $
+    build/objdiff/base/viewarmywindow.obj build/objdiff/base/viewwrld.obj $
+    build/objdiff/base/newgame.obj build/objdiff/base/advspells.obj $
+    build/objdiff/base/multiplayerwindow.obj $
+    build/objdiff/base/singleselectionwindow.obj $
+    build/objdiff/base/diff.obj build/objdiff/base/artifact.obj $
+    build/objdiff/base/quicktownwindow.obj build/objdiff/base/slider.obj $
+    build/objdiff/base/combatresultswindow.obj $
+    build/objdiff/base/combatoptionswindow.obj $
+    build/objdiff/base/combatwindow.obj build/objdiff/base/spelldefs.obj $
+    build/objdiff/base/scenarioinfo.obj build/objdiff/base/dialogbox.obj $
+    build/objdiff/base/puzzlewindow.obj build/objdiff/base/remote.obj $
+    build/objdiff/base/university_window.obj $
+    build/objdiff/base/csequence.obj build/objdiff/base/cursor.obj $
+    build/objdiff/base/event_record.obj $
+    build/objdiff/base/singleselectionpopups.obj $
+    build/objdiff/base/victorylossconditions.obj $
+    build/objdiff/base/bitmap816.obj build/objdiff/base/search.obj $
+    build/objdiff/base/herodefs.obj build/objdiff/base/overview.obj $
+    build/objdiff/base/spellbookwindow.obj $
+    build/objdiff/base/hillfortwindow.obj build/objdiff/base/dxplay.obj $
+    build/objdiff/base/swapmgr.obj build/objdiff/base/tradpost.obj $
+    build/objdiff/base/seerhut.obj build/objdiff/base/sacrifice_window.obj
 default all
 build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/compress.obj build/objdiff/base/crc32.obj $
@@ -292,18 +707,69 @@ build build/exe/HEROES3.candidate.EXE: link build/objdiff/base/adler32.obj $
     build/objdiff/base/window.obj build/objdiff/base/resource.obj $
     build/objdiff/base/border.obj build/objdiff/base/iconwdgt.obj $
     build/objdiff/base/textwdgt.obj build/objdiff/base/textntry.obj $
+    build/objdiff/base/textresource.obj build/objdiff/base/hiscore.obj $
     build/objdiff/base/sample.obj build/objdiff/base/font.obj $
     build/objdiff/base/exec.obj build/objdiff/base/inputmgr.obj $
     build/objdiff/base/findpath.obj build/objdiff/base/smackmgr.obj $
     build/objdiff/base/path.obj build/objdiff/base/monframeinfo.obj $
     build/objdiff/base/initialize.obj build/objdiff/base/winfile.obj $
     build/objdiff/base/strip.obj build/objdiff/base/winmgr.obj $
+    build/objdiff/base/subwindow.obj build/objdiff/base/resourcedisplay.obj $
+    build/objdiff/base/resourcemanager.obj build/objdiff/base/spells.obj $
+    build/objdiff/base/creaturetype.obj $
+    build/objdiff/base/creature_bank.obj build/objdiff/base/u2dvers.obj $
+    build/objdiff/base/levelupwindow.obj $
+    build/objdiff/base/gametypewindow.obj $
+    build/objdiff/base/quickinfowindow.obj $
+    build/objdiff/base/campaignmap.obj $
+    build/objdiff/base/campaignwindow.obj $
+    build/objdiff/base/adventureoptionswindow.obj $
     build/objdiff/base/kbwin.obj build/objdiff/base/soundmgr.obj $
     build/objdiff/base/mousemgr.obj build/objdiff/base/castle.obj $
+    build/objdiff/base/combatcontrolsubwindow.obj $
+    build/objdiff/base/binkmanager.obj build/objdiff/base/townmgr.obj $
+    build/objdiff/base/bitmap16.obj build/objdiff/base/bitmap24.obj $
+    build/objdiff/base/mainmenu.obj build/objdiff/base/campaignbrief.obj $
+    build/objdiff/base/customcampaign.obj $
+    build/objdiff/base/questlogwindow.obj build/objdiff/base/lodfile.obj $
+    build/objdiff/base/towngatewindow.obj build/objdiff/base/drawing.obj $
+    build/objdiff/base/dimensiondoorwindow.obj $
+    build/objdiff/base/wingraph.obj build/objdiff/base/csprite.obj $
+    build/objdiff/base/text.obj build/objdiff/base/palette.obj $
+    build/objdiff/base/army.obj build/objdiff/base/adventuremapwindow.obj $
+    build/objdiff/base/philai.obj build/objdiff/base/cspriteframe.obj $
+    build/objdiff/base/events.obj build/objdiff/base/kb.obj $
+    build/objdiff/base/bottomviewsubwindow.obj $
     build/objdiff/base/recruit.obj build/objdiff/base/hexcell.obj $
     build/objdiff/base/town.obj build/objdiff/base/hero.obj $
-    build/objdiff/base/game.obj build/objdiff/base/cmbtmgr.obj $
+    build/objdiff/base/game.obj build/objdiff/base/mapcell.obj $
+    build/objdiff/base/cmbtmgr.obj build/objdiff/base/command.obj $
     build/objdiff/base/advmgr.obj build/objdiff/base/ai.obj $
     build/objdiff/base/ai_combat.obj build/objdiff/base/ai_tactical.obj $
-    build/objdiff/base/ai_player.obj | scripts/homm3/build/link.py
+    build/objdiff/base/ai_player.obj build/objdiff/base/fly.obj $
+    build/objdiff/base/quickherowindow.obj $
+    build/objdiff/base/systemoptionswindow.obj $
+    build/objdiff/base/viewarmywindow.obj build/objdiff/base/viewwrld.obj $
+    build/objdiff/base/newgame.obj build/objdiff/base/advspells.obj $
+    build/objdiff/base/multiplayerwindow.obj $
+    build/objdiff/base/singleselectionwindow.obj $
+    build/objdiff/base/diff.obj build/objdiff/base/artifact.obj $
+    build/objdiff/base/quicktownwindow.obj build/objdiff/base/slider.obj $
+    build/objdiff/base/combatresultswindow.obj $
+    build/objdiff/base/combatoptionswindow.obj $
+    build/objdiff/base/combatwindow.obj build/objdiff/base/spelldefs.obj $
+    build/objdiff/base/scenarioinfo.obj build/objdiff/base/dialogbox.obj $
+    build/objdiff/base/puzzlewindow.obj build/objdiff/base/remote.obj $
+    build/objdiff/base/university_window.obj $
+    build/objdiff/base/csequence.obj build/objdiff/base/cursor.obj $
+    build/objdiff/base/event_record.obj $
+    build/objdiff/base/singleselectionpopups.obj $
+    build/objdiff/base/victorylossconditions.obj $
+    build/objdiff/base/bitmap816.obj build/objdiff/base/search.obj $
+    build/objdiff/base/herodefs.obj build/objdiff/base/overview.obj $
+    build/objdiff/base/spellbookwindow.obj $
+    build/objdiff/base/hillfortwindow.obj build/objdiff/base/dxplay.obj $
+    build/objdiff/base/swapmgr.obj build/objdiff/base/tradpost.obj $
+    build/objdiff/base/seerhut.obj build/objdiff/base/sacrifice_window.obj $
+    | scripts/homm3/build/link.py
 build candidate: phony build/exe/HEROES3.candidate.EXE

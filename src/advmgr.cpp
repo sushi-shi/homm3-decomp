@@ -50,15 +50,22 @@
 // as get_creature_bank_help_text, remains UNCLAIMED: the DC roster has no
 // third 5-param help builder, so its call surface keeps an ordinal placeholder
 // and its body remains unclaimed. See the help-text note further down.
-#define HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
 #define HOMM3_ADVMGR_QUICKINFO_VIEW
+#define HOMM3_MAPCELL_OBJECTS_VIEW
+#define HOMM3_ADVMGR_OBJ_DECLS
+#define HOMM3_ADVMGR_OPTIONS_DECLS
 #include <va.h>
 #include <stdio.h>
 #include <string.h>
+#include "herospec.h"
 #include "advmgr.h"
+#include "adventureoptionswindow.h"
 #include "university_window.h"
 #include "advmgr_objects.h"
 #include "bitmap16.h"
+#include "bitmap816.h"
+#include "bottomviewsubwindow.h"
+#include "button.h"
 #include "csprite.h"
 #include "game.h"
 #include "creature_bank.h"
@@ -67,14 +74,26 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "mousemgr.h"
+#include "misc.h"
+#include "prefs.h"
 #include "recruit.h"
+#include "remote.h"
+#include "sample.h"
+
+// Adventure-turn ownership for this machine. Dreamcast publishes the
+// original name; retail fixes the dword at 0x697788 through this routine and
+// every remote-turn consumer.
+DATA(0x00697788) int gbThisNetGotAdventureControl;
+#include "resourcemanager.h"
 #include "soundmgr.h"
 #include "textntry.h"
 #include "winmgr.h"
 #include "window.h"
 #include "widget.h"
-#undef HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
+#undef HOMM3_MAPCELL_OBJECTS_VIEW
+#undef HOMM3_ADVMGR_OBJ_DECLS
+#undef HOMM3_ADVMGR_OPTIONS_DECLS
 
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
@@ -120,7 +139,7 @@ BlackBoxData* ExtraInfoUnion::get_black_box() const
 VA(0x00405df0, 0x20)  // anchor-bracket, dc 0x5888
 type_creature_bank& ExtraInfoUnion::get_creature_bank() const
 {
-    return gpGame->creatureBanks.first[creature_bank_info.index];
+    return gpGame->creatureBanks[creature_bank_info.index];
 }
 
 // E:\gamedcs\advmgr.cpp:408
@@ -129,7 +148,7 @@ type_creature_bank& ExtraInfoUnion::get_creature_bank() const
 VA(0x00405e10, 0x1C)  // anchor-global, dc 0x58bc
 type_university* ExtraInfoUnion::get_university() const
 {
-    return &gpGame->universities.first[university_info.index];
+    return &gpGame->universities[university_info.index];
 }
 
 #if 0  // @carcass
@@ -155,12 +174,40 @@ void CAdvMgrNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:713
 VA(0x00406bf0, 0x1FA)  // dc-bracket forced, dc 0x6428
 void CAdvMgrNetMsgHandler::HandleTradeRequestMsg(CNetMsg* pNetMsg)
 {
-    // @stub
+    CTradeRequestMsg* pMsg = static_cast<CTradeRequestMsg*>(pNetMsg);
+    std::string text;
+    if (gpGame->players[pMsg->playerPos].IsHuman()) {
+        text = format_string(
+            gpGeneralText->GetText(GENERAL_TEXT_AI_GIFT_RECEIVED),
+            gpGame->players[pMsg->playerPos].cName);
+    } else {
+        text = format_string(
+            gpGeneralText->GetText(GENERAL_TEXT_AI_GIFT_RECEIVED),
+            gPlayerColorNames[pMsg->playerPos]);
+    }
+
+    std::vector<type_dialog_resource> resources;
+    type_dialog_resource resource;
+    resource.resource = pMsg->resource;
+    resource.qualifier = pMsg->amount;
+    resources.push_back(resource);
+    extended_dialog(text.c_str(), resources, -1, -1, 15000);
+    resources.clear();
+
+    playerData* localPlayer = gpGame->GetLocalPlayer();
+    if (localPlayer) {
+        localPlayer->resources[pMsg->resource] += pMsg->amount;
+        gpAdvManager->advWindow->UpdateResourceDisplay(!IsInPopup(), 1);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:734
 VA(0x00406df0, 0x1DF)  // anchor-global, dc 0x66f4
@@ -176,14 +223,12 @@ int advManager::Open(int newPriority)
     // @stub
 }
 
-// advManager::`scalar deleting destructor' - slot 3 of advManager's
-// vtable 0x23a678 (slots 0..3 = 0x406fd0 Open, 0x4077e0 Close,
-// 0x4087b0 Main, 0x4077b0). The 33-byte row is the textbook ??_G
-// shape: call the dtor (0x57d160, a 5-byte COMDAT out of another
-// module), then the `flags & 1` operator delete tail. Not in the DC
-// roster - the Dreamcast advManager has three virtuals, no virtual
-// dtor - so this is retail-only compiler-generated code.
-VA_COMPGEN(0x004077b0, 0x21, SCALAR_DELETING_DTOR, advManager)
+// The admitted retail vtable inventory bounds advManager at exactly three
+// slots (0x63a678..0x63a683): Open, Close and Main, matching Dreamcast.
+// The old generated-dtor claim at 0x4077b0 was false. That address is the
+// first entry of the following five-slot CAdvMgrNetMsgHandler table at
+// 0x63a684 and calls the CNetMsgHandlerPause-family destructor at 0x57d160.
+// Keep it unclaimed until that network-handler class is admitted.
 
 // E:\gamedcs\advmgr.cpp:1092
 VA(0x004077e0, 0x2D1)  // anchor-vtable, dc 0x74ec
@@ -397,7 +442,7 @@ std::string get_army_help_text(const armyGroup* source,
     }
 
     std::string result;
-    result.append(gUnnamed6a5d5c->entry->armyHelpPrefix);
+    result.append(gpGeneralText->GetText(GENERAL_TEXT_ARMY_HELP_PREFIX));
     result.append(" ");
     if (show_full_list) {
         for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; ++i) {
@@ -405,7 +450,8 @@ std::string get_army_help_text(const armyGroup* source,
                 break;
             if (i > 0) {
                 result += ", ";
-                result += gUnnamed6a5d5c->entry->armyEntrySeparator;
+                result += gpGeneralText->GetText(
+                    GENERAL_TEXT_ARMY_ENTRY_SEPARATOR);
             }
             result += armyGroup::GetArmySizeName(
                 consolidated_army.numTroops[i], 2);
@@ -428,7 +474,7 @@ std::string get_army_help_text(const armyGroup* source,
             else
                 army_name = "";
         } else {
-            army_name = gUnnamed6a5d5c->entry->mixedArmyName;
+            army_name = gpGeneralText->GetText(GENERAL_TEXT_MIXED_ARMY);
         }
         result.append(armyGroup::GetArmySizeName(amount, 2));
         result.append(" ");
@@ -450,24 +496,16 @@ VA(0x0040af60, 0x4A)  // anchor-callee, dc 0xbec8
 type_cell_adjuster::~type_cell_adjuster()
 {
     if (obscuring_hero) {
-        type_obscuring_object* obscurer =
-            static_cast<type_obscuring_object*>(
-                static_cast<void*>(obscuring_hero));
-        obscurer->obscure_cell(HERO, obscuring_hero->id);
+        obscuring_hero->obscure_cell(HERO, obscuring_hero->id);
         obscuring_hero = 0;
     }
     if (obscuring_boat) {
-        type_obscuring_object* obscurer =
-            static_cast<type_obscuring_object*>(
-                static_cast<void*>(obscuring_boat));
-        obscurer->obscure_cell(BOAT, obscuring_boat->id);
+        obscuring_boat->type_obscuring_object::obscure_cell(
+            BOAT, obscuring_boat->id);
         obscuring_boat = 0;
     }
     if (mobile_hero) {
-        type_obscuring_object* obscurer =
-            static_cast<type_obscuring_object*>(
-                static_cast<void*>(mobile_hero));
-        obscurer->restore_cell();
+        mobile_hero->restore_cell();
         mobile_hero = 0;
     }
 }
@@ -477,24 +515,16 @@ VA(0x0040afb0, 0x12F)  // anchor-callee, dc 0xbf1c
 NewmapCell* type_cell_adjuster::get_trigger_cell(NewmapCell* map_cell, int x, int y)
 {
     if (obscuring_hero) {
-        type_obscuring_object* obscurer =
-            static_cast<type_obscuring_object*>(
-                static_cast<void*>(obscuring_hero));
-        obscurer->obscure_cell(HERO, obscuring_hero->id);
+        obscuring_hero->obscure_cell(HERO, obscuring_hero->id);
         obscuring_hero = 0;
     }
     if (obscuring_boat) {
-        type_obscuring_object* obscurer =
-            static_cast<type_obscuring_object*>(
-                static_cast<void*>(obscuring_boat));
-        obscurer->obscure_cell(BOAT, obscuring_boat->id);
+        obscuring_boat->type_obscuring_object::obscure_cell(
+            BOAT, obscuring_boat->id);
         obscuring_boat = 0;
     }
     if (mobile_hero) {
-        type_obscuring_object* obscurer =
-            static_cast<type_obscuring_object*>(
-                static_cast<void*>(mobile_hero));
-        obscurer->restore_cell();
+        mobile_hero->restore_cell();
         mobile_hero = 0;
     }
 
@@ -503,11 +533,8 @@ NewmapCell* type_cell_adjuster::get_trigger_cell(NewmapCell* map_cell, int x, in
         // The preceding -1 gate lets retail index the hero pool directly;
         // spelling this through GetHero would retain its redundant null arm.
         mobile_hero = &gpGame->heroes[gpCurrentPlayer->currHeroId];
-        if (mobile_hero && !mobile_hero->obscuringField_06) {
-            type_obscuring_object* obscurer =
-                static_cast<type_obscuring_object*>(
-                    static_cast<void*>(mobile_hero));
-            obscurer->obscure_cell(HERO, mobile_hero->id);
+        if (mobile_hero && !mobile_hero->valid) {
+            mobile_hero->obscure_cell(HERO, mobile_hero->id);
             return map_cell;
         }
         mobile_hero = 0;
@@ -521,16 +548,10 @@ NewmapCell* type_cell_adjuster::get_trigger_cell(NewmapCell* map_cell, int x, in
     if (trigger_cell->type != map_cell->type) {
         if (trigger_cell->type == HERO) {
             obscuring_hero = gpGame->GetHero(trigger_cell->extraInfo);
-            type_obscuring_object* obscurer =
-                static_cast<type_obscuring_object*>(
-                    static_cast<void*>(obscuring_hero));
-            obscurer->restore_cell();
+            obscuring_hero->restore_cell();
         } else if (trigger_cell->type == BOAT) {
             obscuring_boat = &gpGame->boats[trigger_cell->extraInfo];
-            type_obscuring_object* obscurer =
-                static_cast<type_obscuring_object*>(
-                    static_cast<void*>(obscuring_boat));
-            obscurer->restore_cell();
+            obscuring_boat->restore_cell();
         }
     }
     return trigger_cell;
@@ -579,7 +600,7 @@ void set_witch_hut_help_text(char* buffer, hero* current_hero,
 VA(0x0040b150, 0x229C)  // anchor-global, dc 0xc13c
 void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 {
-    if (advWindow->ChatEditWidget->bHasFocus)
+    if (advWindow->chatEdit->bHasFocus)
         return;
 
     char tempText[500];
@@ -603,8 +624,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
 #define APPEND_VISIT_TEXT(isVisited)                                      \
     visited = (isVisited);                                                \
     sprintf(tempText, visitedFormat,                                     \
-        visited ? gUnnamed6a5d5c->entry->visitedObjectText                \
-                : gUnnamed6a5d5c->entry->unvisitedObjectText);            \
+        visited ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)     \
+                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT)); \
     strcat(gText, tempText)
 
 #define SET_VISITED_ROLLOVER(objectType, infoType, heroFlags)             \
@@ -727,11 +748,12 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         get_creature_bank_help_text(gText, cell, CREATURE_BANK_DRAGON,
             player, separator, 0);
         break;
-    case QUEST_GUARD:
+    case QUEST_GUARD: {
         strcpy(gText,
             fullMap->QuestGuardList[cell->extraInfo]
                 .QuestGuardFn_00573040(gUnnamed69778c).c_str());
         break;
+    }
     SET_VISITED_ROLLOVER(FAERIE_RING, FaerieRingInfo,
         currentHero->flags & 0x2000);
     case FOUNTAIN_OF_FORTUNE:
@@ -763,7 +785,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         break;
     case HERO: {
         hero* mapHero = gpGame->GetHero(cell->extraInfo);
-        sprintf(gText, gUnnamed6a5d5c->entry->heroRolloverFormat,
+        sprintf(gText,
+                gpGeneralText->GetText(GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                 mapHero->name, mapHero->HeroFn_004D8F70());
         break;
     }
@@ -846,8 +869,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         if (cell->is_trigger && currentHero) {
             strcat(gText, separator);
             strcat(gText, cell->PlayerKnowsCell(currentHero->owner)
-                ? gUnnamed6a5d5c->entry->visitedObjectText
-                : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
         }
         break;
     SET_VISITED_ROLLOVER(RALLY_FLAG, RallyFlagInfo,
@@ -855,11 +878,12 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     case RESOURCE:
         strcpy(gText, gResourceNames[cell->objectIndex]);
         break;
-    case SEER:
+    case SEER: {
         strcpy(gText,
             fullMap->SeerHutList[cell->extraInfo]
                 .SeerHutFn_005741B0(player).c_str());
         break;
+    }
     case SHRINE1:
         SetShrineHelpText(gText, currentHero, cell, Shrine1Info,
                           separator, separator);
@@ -885,9 +909,9 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
     SET_VISITED_ROLLOVER(TEMPLE, TempleInfo,
         currentHero->flags & (0x04000000UL | 0x100UL));
     case TOWN: {
-        town* mapTown = gpGame->GetTown(cell->extraInfo);
+        const town* mapTown = gpGame->GetTown(cell->extraInfo);
         const char* townTypeName = gUnnamed6a74f4[cell->objectIndex];
-        const char* townName = mapTown->field_c4.text;
+        const char* townName = mapTown->cName.begin();
         if (!townName) {
             townName = DATA_COMPGEN(
                 0x0063a608, townRolloverEmptyText, "");
@@ -917,8 +941,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         if (cell->is_trigger) {
             strcat(gText, separator);
             strcat(gText, cell->PlayerKnowsCell(player)
-                ? gUnnamed6a5d5c->entry->visitedObjectText
-                : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
         }
         break;
     SET_VISITED_ROLLOVER(WAR_SCHOOL, WarSchoolInfo,
@@ -929,8 +953,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         if (cell->is_trigger) {
             strcat(gText, separator);
             strcat(gText, cell->PlayerKnowsCell(player)
-                ? gUnnamed6a5d5c->entry->visitedObjectText
-                : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
         }
         break;
     case WATER_WHEEL:
@@ -938,8 +962,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         if (cell->is_trigger && cell->PlayerKnowsCell(player)) {
             strcat(gText, separator);
             strcat(gText, (cell->extraInfo & 0x1f) == 0
-                ? gUnnamed6a5d5c->entry->visitedObjectText
-                : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
         }
         break;
     SET_VISITED_ROLLOVER(WATERING_HOLE, WateringHoleInfo,
@@ -949,8 +973,8 @@ void advManager::SetRolloverText(NewmapCell* testCell, int rx, int ry)
         if (cell->is_trigger && cell->PlayerKnowsCell(player)) {
             strcat(gText, separator);
             strcat(gText, ((cell->extraInfo >> 13) & 0xf) == 0
-                ? gUnnamed6a5d5c->entry->visitedObjectText
-                : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                : gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
         }
         break;
     case WITCH_HUT:
@@ -1014,24 +1038,24 @@ void get_creature_bank_help_text(char* buffer, NewmapCell* cell, type_creature_b
 
     const char* army_name;
     if (!cell->PlayerKnowsCell(player_id)) {
-        army_name = gUnnamed6a5d5c->entry->unvisitedObjectText;
+        army_name = gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT);
     } else {
         unsigned long testFlag = cell->extraInfo;
         if ((testFlag & 0x02000000)
-            || !gpGame->creatureBanks.first[
+            || !gpGame->creatureBanks[
                     (testFlag >> 13) & 0xfff].guards.HasCreatures()) {
-            army_name = gUnnamed6a5d5c->entry->visitedObjectText;
+            army_name = gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT);
         } else {
             if (show_full_list) {
                 std::string result = get_army_help_text(
-                    &gpGame->creatureBanks.first[
+                    &gpGame->creatureBanks[
                         (cell->extraInfo >> 13) & 0xfff].guards, 1);
                 strcat(buffer, result.c_str());
                 return;
             } else {
                 strcat(buffer, "(");
                 std::string result = get_army_help_text(
-                    &gpGame->creatureBanks.first[
+                    &gpGame->creatureBanks[
                         (cell->extraInfo >> 13) & 0xfff].guards, 0);
                 strcat(buffer, result.c_str());
                 army_name = ")";
@@ -1062,12 +1086,13 @@ void SetShrineHelpText(char* buffer, hero* current_hero, NewmapCell* cell, Globa
         SpellID spell = static_cast<int>(cell->extraInfo << 9) >> 22;
         strcat(buffer, separator_1);
         char temp[500];
-        sprintf(temp, gUnnamed6a5d5c->entry->shrineSpellFormat,
+        sprintf(temp, gpGeneralText->GetText(GENERAL_TEXT_SHRINE_SPELL_FORMAT),
                 akSpellTraits[spell].name);
         strcat(buffer, temp);
         if (current_hero && current_hero->SpellIsAvailable(spell)) {
             strcat(buffer, separator_2);
-            strcat(buffer, gUnnamed6a5d5c->entry->knownShrineSpellText);
+            strcat(buffer,
+                   gpGeneralText->GetText(GENERAL_TEXT_KNOWN_SHRINE_SPELL));
         }
     } else if (knows_shrine_type) {
         strcat(buffer, separator_1);
@@ -1106,9 +1131,11 @@ void SetTreeHelpText(char* buffer, hero* current_hero, NewmapCell* cell, const c
                         & 0x1f))) != 0;
         strcat(buffer, separator_2);
         if (hero_visited)
-            strcat(buffer, gUnnamed6a5d5c->entry->visitedObjectText);
+            strcat(buffer,
+                   gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT));
         else
-            strcat(buffer, gUnnamed6a5d5c->entry->unvisitedObjectText);
+            strcat(buffer,
+                   gpGeneralText->GetText(GENERAL_TEXT_UNVISITED_OBJECT));
     }
 }
 
@@ -1133,12 +1160,14 @@ void set_witch_hut_help_text(char* buffer, hero* current_hero, NewmapCell* cell,
         int skill = static_cast<int>(cell->extraInfo << 12) >> 25;
         strcat(buffer, separator_1);
         char tempText[50];
-        sprintf(tempText, gUnnamed6a5d5c->entry->witchSkillFormat,
+        sprintf(tempText,
+                gpGeneralText->GetText(GENERAL_TEXT_WITCH_SKILL_FORMAT),
                 akSSkillTraits[skill].name);
         strcat(buffer, tempText);
         if (current_hero && current_hero->skillLevel[skill]) {
             strcat(buffer, separator_2);
-            strcat(buffer, gUnnamed6a5d5c->entry->heroKnowsWitchSkillText);
+            strcat(buffer, gpGeneralText->GetText(
+                GENERAL_TEXT_HERO_KNOWS_WITCH_SKILL));
         }
     } else if (gpGame->GetInfoFlag(WitchHutInfo, gNetLocalGamePos)) {
         strcat(buffer, separator_1);
@@ -1166,20 +1195,25 @@ inline unsigned char PointsEqual(const type_point* point,
 }
 
 // E:\gamedcs\advmgr.cpp:4385
-// RETAIL-RECONSTRUCTED 2026-08-09 (74.8967%). Retail proves the complete
+// RETAIL-RECONSTRUCTED 2026-08-11 (80.9400%). Retail proves the complete
 // map-area, packed-hover, visibility/current-level, rollover, owned hero/town
 // cursor and scroll-zone fallback paths. The 27-branch and four-return counts
-// agree; two case-layout branch polarities and VC6 register/stack scheduling
-// around the inlined point helpers remain.
+// and every symbolic branch target agree. The remaining delta is VC6
+// register/stack scheduling around the inlined point helpers: retail retains
+// mouseY/mouseX in EBX/EDI and reuses their parameter homes for local-player
+// state, giving an eight-byte local frame; this compile spills that state and
+// uses sixteen bytes. A shared rx/ry scope was tested and rejected (80.27%).
 VA(0x0040deb0, 0x3CF)  // anchor-callee, dc 0xed7c
 int advManager::ProcessWaitingHover(int mouseX, int mouseY)
 {
     if (InMapArea(mouseX, mouseY)) {
+        int rx = mouseX / 32;
+        int ry = mouseY / 32;
         advCommand = -1;
-        lastHoverX = mouseX / 32;
-        lastHoverY = mouseY / 32;
-        lastMapHover.x = radarOrigin.x + lastHoverX;
-        lastMapHover.y = radarOrigin.y + lastHoverY;
+        lastHoverX = rx;
+        lastHoverY = ry;
+        lastMapHover.x = radarOrigin.x + rx;
+        lastMapHover.y = radarOrigin.y + ry;
         lastMapHover.z = radarOrigin.z;
 
         int thisPlayerBit = 1 << gpGame->GetLocalPlayerGamePos();
@@ -1203,22 +1237,22 @@ int advManager::ProcessWaitingHover(int mouseX, int mouseY)
                 SetRolloverText(currCell, mouseX, mouseY);
                 switch (currCell->type) {
                 case TOWN: {
-                    town* mapTown = gpGame->GetTown(currCell->extraInfo);
-                    if (gpGame->IsLocalHuman(mapTown->owner)
-                        && mapTown->owner == gNetLocalGamePos) {
+                    class town* town = gpGame->GetTown(currCell->extraInfo);
+                    if (gpGame->IsLocalHuman(town->owner)) {
+                        advCommand = thisPlayer->currTownId == -1 ? 5 : 3;
                         gpMouseManager->SetPointer(
-                            2, mouseManager::ADVENTURE_SET);
-                        advCommand = thisPlayer->currHeroId == -1 ? 4 : 2;
+                            3, mouseManager::ADVENTURE_SET);
                         return 1;
                     }
                     break;
                 }
                 case HERO: {
-                    hero* mapHero = gpGame->GetHero(currCell->extraInfo);
-                    if (gpGame->IsLocalHuman(mapHero->owner)) {
-                        advCommand = thisPlayer->currTownId == -1 ? 5 : 3;
+                    class hero* hero = gpGame->GetHero(currCell->extraInfo);
+                    if (gpGame->IsLocalHuman(hero->owner)
+                        && hero->owner == gNetLocalGamePos) {
                         gpMouseManager->SetPointer(
-                            3, mouseManager::ADVENTURE_SET);
+                            2, mouseManager::ADVENTURE_SET);
+                        advCommand = thisPlayer->currHeroId == -1 ? 4 : 2;
                         return 1;
                     }
                     break;
@@ -1257,13 +1291,38 @@ type_adventure_cursor advManager::get_garrison_cursor(NewmapCell* currCell)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:4530
+// Chooses the base cursor before ProcessHover adds its multi-turn offset.
+// The ninth GetMapExtra bit is the monster-occupancy plane. On a trigger
+// square, the first byte of the canonical 16-byte object-traits row says
+// whether the underlying object blocks landing.
+#pragma auto_inline(off)
 VA(0x0040e280, 0xD3)  // anchor-global, dc 0xf2c0
 type_adventure_cursor advManager::get_normal_cursor(NewmapCell* currCell)
 {
-    // @stub
+    if ((GetMapExtra(lastMapHover) & MAP_EXTRA_MONSTER)
+        && (!currCell->is_trigger
+            || !gAdventureObjectLandBlocked[currCell->type][0])) {
+        return ADV_SWORD_POINTER;
+    }
+
+    if (cursorType == CURSOR_TYPE_8) {
+        if (currCell->is_trigger && currCell->GroundSet == eTerrainWater)
+            return ADV_BOAT_EVENT_POINTER;
+        return ADV_BOAT_POINTER;
+    }
+
+    if (currCell->is_trigger) {
+        if (currCell->GroundSet != eTerrainWater)
+            return ADV_EVENT_POINTER;
+        if (currCell->type == SHIPWRECK)
+            return ADV_EVENT_POINTER;
+    }
+    return ADV_WALK_POINTER;
 }
-#endif  // @carcass
+#pragma auto_inline(on)
 
 // E:\gamedcs\advmgr.cpp:4556
 // RETAIL-RECONSTRUCTED 2026-08-09 (74.7787%). Retail proves the complete
@@ -1513,7 +1572,7 @@ shipyard_cursor_exit:
 VA(0x0040ec80, 0xA)  // linkorder, dc 0xfd6c
 void advManager::Reseed(int targetX, int targetY)
 {
-    field_50 = 0;
+    seedingValid = 0;
 }
 
 // E:\gamedcs\advmgr.cpp:4840
@@ -1545,7 +1604,8 @@ int advManager::ProcessSearch(int x, int y, int z)
                    sizeof(invalidPoint));
             return 1;
         }
-        NormalDialog(gUnnamed6a5d5c->entry->searchNeedsFullMoveText,
+        NormalDialog(gpGeneralText->GetText(
+                         GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
@@ -1561,7 +1621,8 @@ int advManager::ProcessSearch(int x, int y, int z)
                    sizeof(invalidPoint));
             return 1;
         }
-        NormalDialog(gUnnamed6a5d5c->entry->searchBackpackFullText,
+        NormalDialog(gpGeneralText->GetText(
+                         GENERAL_TEXT_SEARCH_BACKPACK_FULL),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
@@ -1596,13 +1657,14 @@ int advManager::ProcessSearch(int x, int y, int z)
     }
 
     if (currCell->GroundSet == eTerrainWater) {
-        NormalDialog(gUnnamed6a5d5c->entry->searchWaterText,
+        NormalDialog(gpGeneralText->GetText(GENERAL_TEXT_SEARCH_WATER),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
 
     if (!currCell->is_diggable()) {
-        NormalDialog(gUnnamed6a5d5c->entry->searchNotDiggableText,
+        NormalDialog(gpGeneralText->GetText(
+                         GENERAL_TEXT_SEARCH_NOT_DIGGABLE),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         return 1;
     }
@@ -1621,7 +1683,8 @@ int advManager::ProcessSearch(int x, int y, int z)
                 >= HERO_BACKPACK_CAPACITY) {
             if (gpCurrentPlayer->IsHuman())
                 NormalDialog(
-                    gUnnamed6a5d5c->entry->searchBackpackFullFoundText,
+                    gpGeneralText->GetText(
+                        GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND),
                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         } else {
             grail.artifactId = ARTIFACT_HOLY_GRAIL;
@@ -1636,7 +1699,7 @@ int advManager::ProcessSearch(int x, int y, int z)
                 sprintf(gText,
                         DATA_COMPGEN(0x00660358,
                                      processSearchFoundFormat, "%s%s"),
-                        gUnnamed6a5d5c->entry->searchFoundFormat,
+                        gpGeneralText->GetText(GENERAL_TEXT_SEARCH_FOUND_FORMAT),
                         akArtifactTraits[ARTIFACT_HOLY_GRAIL].name);
                 NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0,
                              -1, 0, -1, 0);
@@ -1654,7 +1717,8 @@ int advManager::ProcessSearch(int x, int y, int z)
             gpGame->ultimateArtifactPresent = 0;
         }
     } else if (gpCurrentPlayer->IsHuman()) {
-        NormalDialog(gUnnamed6a5d5c->entry->searchNothingFoundText,
+        NormalDialog(gpGeneralText->GetText(
+                         GENERAL_TEXT_SEARCH_NOTHING_FOUND),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 
@@ -1683,7 +1747,7 @@ int advManager::ProcessSearch(int x, int y, int z)
                 11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
     }
 
-    field_50 = 0;
+    seedingValid = 0;
     return 1;
 }
 
@@ -1709,16 +1773,20 @@ void advManager::UpdateScreen(int bAllowIntermediateMouse, int bForceDraw)
     Process1WindowsMessage();
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:5002
 VA(0x0040f2f0, 0xF8)  // linkorder, dc 0x10640
 void advManager::DrawAdventureMapGems()
 {
-    // @stub
+    int player = gpGame->GetLocalPlayerGamePos();
+    gemIcons[0]->Draw(0, player, 0, 0, 46, 46,
+                      gpWindowManager->screenBitmap, 6, 6, 0, 1);
+    gemIcons[1]->Draw(0, player, 0, 0, 46, 46,
+                      gpWindowManager->screenBitmap, 556, 6, 0, 1);
+    gemIcons[2]->Draw(0, player, 0, 0, 46, 46,
+                      gpWindowManager->screenBitmap, 6, 508, 0, 1);
+    gemIcons[3]->Draw(0, player, 0, 0, 46, 46,
+                      gpWindowManager->screenBitmap, 556, 508, 0, 1);
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:5026
 VA(0x0040f3f0, 0x47D)  // linkorder, dc 0x10788
@@ -1980,7 +2048,7 @@ int GetFlaggedObjectOwner(NewmapCell* thisCell)
         else
             thisHero = &gpGame->heroes[extraInfo];
         type = thisHero->obscuredType;
-        extraInfo = thisHero->obscuredIndex;
+        extraInfo = thisHero->extra_info;
     }
 
     switch (type) {
@@ -2282,7 +2350,6 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
 
     AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
         static_cast<void*>(thisCell));
-
     if (cellObjects->objects.size() > 0) {
         for (unsigned row = 0; row <= OBJECT_DRAW_LAYER_LAST; ++row) {
             for (unsigned numObj = 0; numObj < cellObjects->objects.size();
@@ -2387,8 +2454,7 @@ void advManager::DrawAdvObj(int srcX, int srcY, int z, int destX, int destY)
                             GetCell(type_point(triggerX, triggerY, z));
                         int owner = GetFlaggedObjectOwner(triggerCell);
                         int frame = (animFrame
-                                     + mapObjects
-                                           ->objects[objCell->objectIndex]
+                                     + mapObjects->objects[objCell->objectIndex]
                                            .animationOffset)
                                     % sprite->GetNumFrames(0);
                         sprite->DrawAdvObjWithFlag(
@@ -2553,8 +2619,7 @@ void advManager::DrawAdvObjShadow(int srcX, int srcY, int z, int destX, int dest
     for (unsigned numObj = 0; numObj < cellObjects->objects.size(); ++numObj) {
         AdvObjectCellView* objCell = &cellObjects->objects[numObj];
         AdvFullMapObjectsView* mapObjects =
-            static_cast<AdvFullMapObjectsView*>(
-                static_cast<void*>(fullMap));
+            static_cast<AdvFullMapObjectsView*>(static_cast<void*>(fullMap));
         CObjectType* objType = &mapObjects->objectTypes[
             mapObjects->objects[objCell->objectIndex].typeIndex];
         CSprite* sprite = mapObjects->sprites[
@@ -2728,13 +2793,11 @@ void advManager::DrawRiver(int srcX, int srcY, int z, int destX, int destY)
     if (tilew <= 0 || tileh <= 0)
         return;
 
-    AdvRiverCellView* riverCell = static_cast<AdvRiverCellView*>(
-        static_cast<void*>(thisCell));
     riverTileset[thisCell->RiverSet]->DrawTile(
         thisCell->RiverIndex, tilex, tiley, tilew, tileh,
         gpWindowManager->screenBitmap, baseX, baseY + 8,
-        (riverCell->cellFlags >> 2) & 1,
-        (riverCell->cellFlags >> 3) & 1);
+        (thisCell->flags_00_11 >> 2) & 1,
+        (thisCell->flags_00_11 >> 3) & 1);
 }
 
 // E:\gamedcs\advmgr.cpp:6504
@@ -2782,13 +2845,11 @@ void advManager::DrawRoad(int srcX, int srcY, int z, int destX, int destY)
     if (tilew <= 0 || tileh <= 0)
         return;
 
-    AdvRoadCellView* roadCell = static_cast<AdvRoadCellView*>(
-        static_cast<void*>(thisCell));
     roadTileset[thisCell->RoadSet]->DrawTile(
         thisCell->RoadIndex, tilex, tiley, tilew, tileh,
         gpWindowManager->screenBitmap, baseX, baseY + 8,
-        (roadCell->cellFlags >> 4) & 1,
-        (roadCell->cellFlags >> 5) & 1);
+        (thisCell->flags_00_11 >> 4) & 1,
+        (thisCell->flags_00_11 >> 5) & 1);
 }
 
 #if 0  // @carcass
@@ -2918,20 +2979,14 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
     if (tilew <= 0 || tileh <= 0)
         return;
 
-    AdvMapCellObjectsView* cellObjects = static_cast<AdvMapCellObjectsView*>(
-        static_cast<void*>(thisCell));
-
-    if (cellObjects->objects.size()) {
-        for (unsigned numObj = 0; numObj < cellObjects->objects.size();
+    if (thisCell->objects.size()) {
+        for (unsigned numObj = 0; numObj < thisCell->objects.size();
              ++numObj) {
-            AdvObjectCellView* objCell = &cellObjects->objects[numObj];
-            AdvFullMapObjectsView* mapObjects =
-                static_cast<AdvFullMapObjectsView*>(
-                    static_cast<void*>(fullMap));
-            CObjectType* objType = &mapObjects->objectTypes[
-                mapObjects->objects[objCell->objectIndex].typeIndex];
-            CSprite* sprite = mapObjects->sprites[
-                mapObjects->objects[objCell->objectIndex].typeIndex];
+            NewmapCell::TObjectCell* objCell = &thisCell->objects[numObj];
+            CObjectType* objType = &fullMap->objectTypes[
+                fullMap->objects[objCell->objectIndex].typeIndex];
+            CSprite* sprite = fullMap->sprites[
+                fullMap->objects[objCell->objectIndex].typeIndex];
             if (!objType->suppressDraw)
                 continue;
 
@@ -2946,7 +3001,7 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
             case TOWN: {
                 int triggerX;
                 int triggerY;
-                mapObjects->objects[objCell->objectIndex].FindTrigger(
+                fullMap->objects[objCell->objectIndex].FindTrigger(
                     &triggerX, &triggerY);
                 type_point triggerPoint;
                 triggerPoint = type_point(triggerX, triggerY, z);
@@ -2958,7 +3013,7 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
                         triggerPoint.x, triggerPoint.y, triggerPoint.z);
                 int owner = GetFlaggedObjectOwner(triggerCell);
                 int frame = (animFrame
-                             + mapObjects->objects[objCell->objectIndex]
+                             + fullMap->objects[objCell->objectIndex]
                                    .animationOffset)
                             % sprite->GetNumFrames(0);
                 signed char offsets = objCell->offsets;
@@ -2976,7 +3031,7 @@ void advManager::DrawUnderlay(int srcX, int srcY, int z, int destX, int destY)
             }
             default: {
                 int frame = (animFrame
-                             + mapObjects->objects[objCell->objectIndex]
+                             + fullMap->objects[objCell->objectIndex]
                                    .animationOffset)
                             % sprite->GetNumFrames(0);
                 signed char offsets = objCell->offsets;
@@ -3029,13 +3084,11 @@ void advManager::DrawGround(int srcX, int srcY, int z, int destX, int destY)
 
     if (srcX >= 0 && srcY >= 0 && srcX < gMapWidth
         && srcY < gMapHeight) {
-        AdvGroundCellView* groundCell = static_cast<AdvGroundCellView*>(
-            static_cast<void*>(thisCell));
         groundTileset[thisCell->GroundSet]->DrawTile(
             thisCell->GroundIndex, tilex, tiley, tilew, tileh,
             gpWindowManager->screenBitmap, baseX, baseY + 8,
-            groundCell->cellFlags & 1,
-            (groundCell->cellFlags >> 1) & 1);
+            thisCell->flags_00_11 & 1,
+            (thisCell->flags_00_11 >> 1) & 1);
         return;
     }
 
@@ -3133,7 +3186,8 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
     mapPoint.z = z;
 
     if (!mapPoint.is_valid()) {
-        strcpy(gText, gUnnamed6a5d5c->entry->quickInfoInvalidPointText);
+        strcpy(gText, gpGeneralText->GetText(
+            GENERAL_TEXT_QUICK_INFO_INVALID_POINT));
     } else {
         type_point point = mapPoint;
         NewmapCell* testCell;
@@ -3146,7 +3200,8 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
         }
 
         if (!(GetMapExtra(mapPoint) & playerBit)) {
-            strcpy(gText, gUnnamed6a5d5c->entry->quickInfoShroudedText);
+            strcpy(gText, gpGeneralText->GetText(
+                GENERAL_TEXT_QUICK_INFO_SHROUDED));
         } else {
             type_cell_adjuster adjuster = { 0, 0, 0 };
             NewmapCell* cell =
@@ -3165,8 +3220,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 if (cell->is_trigger && currHero) {                       \
                     sprintf(tempText, visitFormat,                        \
                         (condition)                                       \
-                            ? gUnnamed6a5d5c->entry->visitedObjectText    \
-                            : gUnnamed6a5d5c->entry->unvisitedObjectText);\
+                            ? gpGeneralText->GetText(                    \
+                                  GENERAL_TEXT_VISITED_OBJECT)           \
+                            : gpGeneralText->GetText(                    \
+                                  GENERAL_TEXT_UNVISITED_OBJECT));       \
                     strcat(gText, tempText);                              \
                 }                                                         \
                 break
@@ -3188,7 +3245,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 if (cell->is_diggable()) {
                     cellDescription += '\n';
                     cellDescription +=
-                        gUnnamed6a5d5c->entry->quickInfoDiggableText;
+                        gpGeneralText->GetText(GENERAL_TEXT_QUICK_INFO_DIGGABLE);
                 }
                 strcpy(gText, cellDescription.c_str());
                 break;
@@ -3200,8 +3257,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                         1UL << (cell->extraInfo & 0x1f);
                     sprintf(tempText, visitFormat,
                         currHero->ArenaFlags & arenaBit
-                            ? gUnnamed6a5d5c->entry->visitedObjectText
-                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                            ? gpGeneralText->GetText(
+                                  GENERAL_TEXT_VISITED_OBJECT)
+                            : gpGeneralText->GetText(
+                                  GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(gText, tempText);
                 }
                 break;
@@ -3220,8 +3279,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     sprintf(tempText, visitFormat,
                         gpGame->borderTentVisitFlags[cell->objectIndex]
                             & playerBit
-                            ? gUnnamed6a5d5c->entry->visitedObjectText
-                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                            ? gpGeneralText->GetText(
+                                  GENERAL_TEXT_VISITED_OBJECT)
+                            : gpGeneralText->GetText(
+                                  GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(gText, tempText);
                 }
                 break;
@@ -3230,8 +3291,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 if (cell->is_trigger && currHero) {
                     sprintf(tempText, visitFormat,
                         currHero->flags & 0x4
-                            ? gUnnamed6a5d5c->entry->visitedObjectText
-                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                            ? gpGeneralText->GetText(
+                                  GENERAL_TEXT_VISITED_OBJECT)
+                            : gpGeneralText->GetText(
+                                  GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(gText, tempText);
                 }
                 break;
@@ -3240,8 +3303,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 if (cell->is_trigger && currHero) {
                     sprintf(tempText, visitFormat,
                         currHero->flags & 0x8
-                            ? gUnnamed6a5d5c->entry->visitedObjectText
-                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                            ? gpGeneralText->GetText(
+                                  GENERAL_TEXT_VISITED_OBJECT)
+                            : gpGeneralText->GetText(
+                                  GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(gText, tempText);
                 }
                 break;
@@ -3325,9 +3390,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                             + (currHero->flags & 0x20UL);
                         sprintf(tempText, visitFormat,
                             fortuneVisits
-                                ? gUnnamed6a5d5c->entry->visitedObjectText
-                                : gUnnamed6a5d5c->entry
-                                    ->unvisitedObjectText);
+                                ? gpGeneralText->GetText(
+                                      GENERAL_TEXT_VISITED_OBJECT)
+                                : gpGeneralText->GetText(
+                                      GENERAL_TEXT_UNVISITED_OBJECT));
                         strcat(gText, tempText);
                     }
                 }
@@ -3349,7 +3415,8 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             case HERO: {
                 hero* mapHero = gpGame->GetHero(cell->extraInfo);
                 sprintf(gText,
-                        gUnnamed6a5d5c->entry->heroRolloverFormat,
+                        gpGeneralText->GetText(
+                            GENERAL_TEXT_HERO_ROLLOVER_FORMAT),
                         mapHero->name, mapHero->HeroFn_004D8F70());
                 break;
             }
@@ -3398,8 +3465,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     sprintf(tempText, visitFormat,
                         (player->MysticalGardenFlags & gardenBit)
                             && !(cell->extraInfo & 0x400)
-                            ? gUnnamed6a5d5c->entry->visitedObjectText
-                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                            ? gpGeneralText->GetText(
+                                  GENERAL_TEXT_VISITED_OBJECT)
+                            : gpGeneralText->GetText(
+                                  GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(gText, tempText);
                 }
                 break;
@@ -3410,8 +3479,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 if (cell->is_trigger) {
                     sprintf(tempText, visitFormat,
                         gpGame->obeliskFlags[cell->extraInfo] & playerBit
-                            ? gUnnamed6a5d5c->entry->visitedObjectText
-                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                            ? gpGeneralText->GetText(
+                                  GENERAL_TEXT_VISITED_OBJECT)
+                            : gpGeneralText->GetText(
+                                  GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(gText, tempText);
                 }
                 break;
@@ -3424,8 +3495,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     strcat(gText, separator);
                     strcat(gText,
                         cell->PlayerKnowsCell(currHero->owner)
-                            ? gUnnamed6a5d5c->entry->visitedObjectText
-                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                            ? gpGeneralText->GetText(
+                                  GENERAL_TEXT_VISITED_OBJECT)
+                            : gpGeneralText->GetText(
+                                  GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
             SET_VISITED_QUICKINFO(RALLY_FLAG,
@@ -3488,8 +3561,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     strcat(gText, separator);
                     strcat(gText,
                         cell->PlayerKnowsCell(gNetLocalGamePos)
-                            ? gUnnamed6a5d5c->entry->visitedObjectText
-                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                            ? gpGeneralText->GetText(
+                                  GENERAL_TEXT_VISITED_OBJECT)
+                            : gpGeneralText->GetText(
+                                  GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
             SET_VISITED_QUICKINFO(WAR_SCHOOL,
@@ -3501,8 +3576,10 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     strcat(gText, separator);
                     strcat(gText,
                         cell->PlayerKnowsCell(gNetLocalGamePos)
-                            ? gUnnamed6a5d5c->entry->visitedObjectText
-                            : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                            ? gpGeneralText->GetText(
+                                  GENERAL_TEXT_VISITED_OBJECT)
+                            : gpGeneralText->GetText(
+                                  GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
             case WATER_WHEEL:
@@ -3511,8 +3588,9 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     && cell->PlayerKnowsCell(gNetLocalGamePos)) {
                     strcat(gText, separator);
                     strcat(gText, (cell->extraInfo & 0x1f) == 0
-                        ? gUnnamed6a5d5c->entry->visitedObjectText
-                        : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                        ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                        : gpGeneralText->GetText(
+                              GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
             SET_VISITED_QUICKINFO(WATERING_HOLE,
@@ -3523,8 +3601,9 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                     && cell->PlayerKnowsCell(gNetLocalGamePos)) {
                     strcat(gText, separator);
                     strcat(gText, ((cell->extraInfo >> 13) & 0xf) == 0
-                        ? gUnnamed6a5d5c->entry->visitedObjectText
-                        : gUnnamed6a5d5c->entry->unvisitedObjectText);
+                        ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
+                        : gpGeneralText->GetText(
+                              GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
             case WITCH_HUT:
@@ -3614,77 +3693,195 @@ void advManager::OverrideBottomView(advManager::EBottomViewType view, int time)
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:8864
-VA(0x00415de0, 0x140)  // anchor-global, dc 0x18d38
+VA(0x00415de0, 0x140)  // exact dispatcher/deadline/draw flow, dc 0x18d38
 void advManager::UpdBottomView(unsigned char force_update, unsigned char bDrawWindow, unsigned char bUpdate)
 {
-    // @stub
+    if (bottomViewOverride == BOTTOM_VIEW_8)
+        return;
+
+    unsigned long deadline = bottomViewDeadline;
+    if (static_cast<long>(GameTime::Get() - deadline) >= 0)
+        bottomViewOverride = BOTTOM_VIEW_DEFAULT;
+
+    int bChanged = 0;
+    if (bottomViewOverride != BOTTOM_VIEW_DEFAULT) {
+        // This order follows retail's case-block layout; the jump table maps
+        // the ordinal values back to their corresponding updater.
+        switch (bottomViewOverride) {
+        case BOTTOM_VIEW_1:
+            bChanged = UpdBottomViewNewTurn(force_update);
+            break;
+        case BOTTOM_VIEW_2:
+            bChanged = UpdBottomViewKingdom(force_update);
+            break;
+        case BOTTOM_VIEW_6:
+            bChanged = UpdBottomViewResMsg(force_update);
+            break;
+        case BOTTOM_VIEW_7:
+            bChanged = UpdBottomViewMessage(force_update);
+            break;
+        case BOTTOM_VIEW_3:
+            bChanged = UpdBottomViewHero(force_update);
+            break;
+        case BOTTOM_VIEW_4:
+            bChanged = UpdBottomViewTown(force_update);
+            break;
+        }
+        goto update_bottom_view;
+    }
+
+    if (gpCurrentPlayer->IsLocalHuman() && !gCompleteDrawAllCells) {
+        if (gpCurrentPlayer->currHeroId != -1)
+            bChanged = UpdBottomViewHero(force_update);
+        else if (gpCurrentPlayer->currTownId != -1)
+            bChanged = UpdBottomViewTown(force_update);
+        else
+            bChanged = UpdBottomViewNewTurn(force_update);
+    } else {
+        bChanged = UpdBottomViewEnemyTurn(force_update);
+    }
+
+update_bottom_view:
+    if (bChanged && bDrawWindow)
+        advWindow->draw_bottom_view(bUpdate != 0);
 }
 
 // E:\gamedcs\advmgr.cpp:8935
 VA(0x00415f20, 0x87)  // linkorder, dc 0x18f48
 unsigned char advManager::UpdBottomViewEnemyTurn(unsigned char force_update)
 {
-    // @stub
+    unsigned char bChanged = 0;
+
+    if (bottomViewType != BOTTOM_VIEW_5) {
+        bChanged = 1;
+        advWindow->ClearBottomView();
+        bottomViewType = BOTTOM_VIEW_5;
+        advWindow->set_bottom_view(new TBottomViewEnemyTurn(advWindow));
+    }
+
+    return bChanged;
 }
 
 // E:\gamedcs\advmgr.cpp:8950
-VA(0x00415fb0, 0xB0)  // linkorder, dc 0x18fc4
+VA(0x00415fb0, 0xB0)  // exact NewTurn allocation/animate paths, dc 0x18fc4
 unsigned char advManager::UpdBottomViewNewTurn(unsigned char force_update)
 {
-    // @stub
+    if (!force_update && bottomViewType == BOTTOM_VIEW_1) {
+        advWindow->animate_bottom_view(0);
+        return 0;
+    }
+
+    advWindow->ClearBottomView();
+    bottomViewType = BOTTOM_VIEW_1;
+    advWindow->set_bottom_view(new TBottomViewNewTurn(advWindow));
+    advWindow->UpdateResourceDisplay(1, 1);
+    return 1;
 }
 
 // E:\gamedcs\advmgr.cpp:8968
+// Residual (93.33%): identical to BVMessage's one string-library choice -
+// retail calls basic_string::_Tidy(0) for an empty shared string while this
+// invocation clears the representation inline. All resource stores, override
+// timing, forced refresh and resource-display update instructions agree.
 VA(0x00416060, 0xF7)  // anchor-global, dc 0x19098
 void advManager::BVResMsg(const char* cMsg, int iResType, int iResQty)
 {
-    // @stub
+    bottomViewResourceType = iResType;
+    bottomViewResourceQuantity = iResQty;
+    bottomViewMessage = cMsg;
+    bottomViewOverride = BOTTOM_VIEW_6;
+    bottomViewDeadline = GameTime::Get() + 5000;
+    gpAdvManager->UpdBottomView(1, 1, 1);
+    advWindow->UpdateResourceDisplay(1, 1);
 }
 
 // E:\gamedcs\advmgr.cpp:8979
-VA(0x00416160, 0xAF)  // linkorder, dc 0x190fc
+VA(0x00416160, 0xAF)  // exact resource-state/constructor path, dc 0x190fc
 unsigned char advManager::UpdBottomViewResMsg(unsigned char force_update)
 {
-    // @stub
+    if (!force_update && bottomViewType == BOTTOM_VIEW_6)
+        return 0;
+
+    advWindow->ClearBottomView();
+    bottomViewType = BOTTOM_VIEW_6;
+    advWindow->set_bottom_view(new TBottomViewResourceMessage(
+        advWindow, bottomViewResourceType, bottomViewResourceQuantity,
+        &bottomViewMessage));
+    return 1;
 }
 
 // E:\gamedcs\advmgr.cpp:8994
+// Residual (92.68%): the complete string assignment and update tail match;
+// only the empty shared-string arm differs. Retail decrements the reference
+// count and calls basic_string::_Tidy(0), while this VC6 invocation clears the
+// three representation words inline. operator=, assign(const char*), and
+// assign(const char*, length) are byte-identical; iterator-range assign is
+// worse and was rejected.
 VA(0x00416210, 0xD7)  // anchor-global, dc 0x19194
 void advManager::BVMessage(const char* cMsg)
 {
-    // @stub
+    bottomViewMessage = cMsg;
+    bottomViewOverride = BOTTOM_VIEW_7;
+    bottomViewDeadline = GameTime::Get() - 1;
+    gpAdvManager->UpdBottomView(1, 1, 1);
 }
 
 // E:\gamedcs\advmgr.cpp:9002
-VA(0x004162f0, 0xA1)  // dc-callgraph unique, dc 0x191d0
+VA(0x004162f0, 0xA1)  // exact message-state/constructor path, dc 0x191d0
 unsigned char advManager::UpdBottomViewMessage(unsigned char force_update)
 {
-    // @stub
+    if (!force_update && bottomViewType == BOTTOM_VIEW_7)
+        return 0;
+
+    advWindow->ClearBottomView();
+    bottomViewType = BOTTOM_VIEW_7;
+    advWindow->set_bottom_view(
+        new TBottomViewMessage(advWindow, &bottomViewMessage));
+    return 1;
 }
 
 // E:\gamedcs\advmgr.cpp:9016
 VA(0x004163a0, 0xA6)  // dc-callgraph unique, dc 0x1927c
 unsigned char advManager::UpdBottomViewKingdom(unsigned char force_update)
 {
-    // @stub
+    if (!force_update && bottomViewType == BOTTOM_VIEW_2)
+        return 0;
+
+    advWindow->ClearBottomView();
+    bottomViewType = BOTTOM_VIEW_2;
+    advWindow->set_bottom_view(new TBottomViewKingdom(advWindow));
+    advWindow->UpdateResourceDisplay(1, 1);
+    return 1;
 }
 
 // E:\gamedcs\advmgr.cpp:9032
 VA(0x00416450, 0x9A)  // dc-callgraph unique, dc 0x1930c
 unsigned char advManager::UpdBottomViewHero(unsigned char force_update)
 {
-    // @stub
+    if (!force_update && bottomViewType == BOTTOM_VIEW_3)
+        return 0;
+
+    advWindow->ClearBottomView();
+    bottomViewType = BOTTOM_VIEW_3;
+    advWindow->set_bottom_view(new TBottomViewHero(advWindow));
+    return 1;
 }
 
 // E:\gamedcs\advmgr.cpp:9046
 VA(0x004164f0, 0x9A)  // dc-callgraph unique, dc 0x19388
 unsigned char advManager::UpdBottomViewTown(unsigned char force_update)
 {
-    // @stub
+    if (!force_update && bottomViewType == BOTTOM_VIEW_4)
+        return 0;
+
+    advWindow->ClearBottomView();
+    bottomViewType = BOTTOM_VIEW_4;
+    advWindow->set_bottom_view(new TBottomViewTown(advWindow));
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9063
 DC_ONLY(0x19420, 0x9C)
@@ -3722,13 +3919,36 @@ void advManager::MonsterQuickView(const NewmapCell* cell, int cellx, int celly)
 }
 
 // E:\gamedcs\advmgr.cpp:9349
+#endif  // @carcass
+
 VA(0x00417420, 0x146)  // anchor-global, dc 0x1a230
 void advManager::RedrawAdvScreen(unsigned char bUpdate, unsigned char bForceSaveBorder)
 {
-    // @stub
-}
+    int player_id = gpGame->GetLocalPlayerGamePos();
+    Bitmap816* bmp = ResourceManager::GetBitmap816("AdvMap.pcx");
 
-#endif  // @carcass
+    if (bmp) {
+        SetPlayerPaletteColors(&bmp->p16.colors, player_id);
+        bmp->Draw(0, 0, bmp->Width, bmp->Height,
+                  gpWindowManager->screenBitmap, 0, 0, 0);
+        bmp->Dispose();
+        field_38c = 0;
+    }
+
+    advWindow->UpdateButtons(0, 0);
+    advWindow->UpdateHeroLocators(-1, 0, 0);
+    advWindow->UpdateTownLocators(-1, 0, 0);
+    advWindow->UpdateQuestLogButton(0);
+    UpdBottomView(1, 0, 0);
+    advWindow->UpdateResourceDisplay(1, 0);
+    advWindow->DrawWindow(0, -65535, 65535);
+    advWindow->HighlightLocators(0);
+    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+    UpdateRadar(radarOrigin, 0, 1, 0, 0, 0);
+
+    if (bUpdate)
+        gpWindowManager->UpdateScreen(0, 0, 800, 600);
+}
 
 // E:\gamedcs\advmgr.cpp:9388
 VA(0x00417570, 0x2A)  // anchor-global, dc 0x1a3b0
@@ -3754,11 +3974,33 @@ void advManager::DeactivateCurrHero(unsigned char waitingPlayer)
 #if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9406
-VA(0x004175e0, 0x9D)  // anchor-global, dc 0x1a440
+#endif  // @carcass
+
+VA(0x004175e0, 0x9D)  // complete call/field flow, dc 0x1a440
 void advManager::MobilizeCurrHero(int bInMove, unsigned char waitingPlayer, unsigned char draw_changes)
 {
-    // @stub
+    playerData* player = gpCurrentPlayer;
+
+    if (waitingPlayer)
+        player = gpGame->GetLocalPlayer();
+    else if (inDialog)
+        return;
+
+    if (player->currHeroId == -1) {
+        int hID = player->NextHero();
+        int tID = player->NextTown();
+
+        if (hID != -1)
+            SetHeroContext(hID, bInMove, waitingPlayer, draw_changes);
+        else if (tID != -1)
+            SetTownContext(tID, waitingPlayer, draw_changes);
+    } else {
+        SetHeroContext(player->currHeroId, bInMove, waitingPlayer,
+                       draw_changes);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9434
 VA(0x00417680, 0x1AF)  // anchor-global, dc 0x1a520
@@ -3829,11 +4071,10 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
             }
         case MINE: {
             int extraInfo = thisCell->extraInfo;
-            AdvMineSoundView* mine = static_cast<AdvMineSoundView*>(
-                static_cast<void*>(&gpGame->mines[extraInfo]));
-            if (mine->abandoned)
+            mine* currentMine = &gpGame->mines[extraInfo];
+            if (currentMine->field_02)
                 return LOOPING_SOUND_7;
-            switch (mine->type) {
+            switch (currentMine->type) {
             case GET_SOUND_MINE_0: return LOOPING_SOUND_24;
             case GET_SOUND_MINE_1: return LOOPING_SOUND_39;
             case GET_SOUND_MINE_2:
@@ -4026,26 +4267,10 @@ void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
     // @stub
 }
 
-// WITHDRAWN 2026-08-08: this row is NOT advManager::HideRoute. Its
-// body writes packed 16-bit words at [this] and [this+2] - x into bits
-// 0..9 of word 0, y into bits 0..9 and z into bits 10..13 of word 1 -
-// which is struct.h's type_point bitfield layout exactly, and which
-// advManager cannot have because advManager carries a vptr at +0
-// (vtable 0x23a678, four slots, all inside this span). `ret 0xc` is
-// four parameters, matching the DC's four-parameter type_point ctor;
-// the five callers (0x16b440, 0x18dd0, 0x2e0b0, 0x2fee0, 0xe59a0) sit
-// in four different modules, the COMDAT signature that also put
-// get_map_center and NewfullMap::cell in this span. The claim moves to
-// that ctor below. HideRoute has NO located retail row.
-// E:\gamedcs\advmgr.cpp:10526
-DC_ONLY(0x1c484, 0xFC)
-void advManager::HideRoute(int bUpdateScreen, int bRemoveTarget, int bChangeButton)
-{
-    // @stub
-}
-
-// E:\gamedcs\struct.h:102 - see the withdrawal note above; moved here
-// from the DC header block to keep the file in retail link order.
+// The packed-coordinate body once mistaken for HideRoute is the type_point
+// constructor below. HideRoute itself follows that COMDAT at retail 0x419300.
+// E:\gamedcs\struct.h:102 - moved here from the DC header block to keep
+// the file in retail link order.
 #endif  // @carcass
 
 VA(0x004192b0, 0x44)  // anchor-callee, dc 0x1edb0
@@ -4056,17 +4281,68 @@ type_point::type_point(short new_x, short new_y, short new_z)
     z = new_z;
 }
 
-#if 0  // @carcass
+// E:\gamedcs\advmgr.cpp:10526
+// Retail retains HideRoute both here and inline in ShowRoute. It dims the
+// move button on request, discards the current hero's route target, clears
+// the visible-route latch, and optionally redraws the map plus animation
+// timer state. Its three consumed arguments and `ret 0xc` rule out the
+// neighboring zero-argument CheckDimHero identity previously assigned here.
+VA(0x00419300, 0x14C)  // anchor-callee/body-twin, dc 0x1c484
+void advManager::HideRoute(int bUpdateScreen, int bRemoveTarget,
+                           int bChangeButton)
+{
+    if (!gpCurrentPlayer->IsLocalHuman()
+        && (!gUnnamed6989c8 || !gUnnamed69ccd4))
+        return;
 
+    if (bChangeButton) {
+        gpWindowManager->BroadcastMessage(
+            MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+            TAdventureMapWindow::MOVE_ID,
+            widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+    }
+
+    if (bRemoveTarget) {
+        int heroId = gpCurrentPlayer->currHeroId;
+        if (heroId != -1) {
+            hero* currentHero = &gpGame->heroes[heroId];
+            currentHero->pathTargetX = -1;
+            currentHero->pathTargetY = -1;
+        }
+    }
+
+    if (!bShowRoute)
+        return;
+    bShowRoute = 0;
+    if (!bUpdateScreen)
+        return;
+
+    CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+    gpWindowManager->UpdateScreen(ADVENTURE_SCREEN_X, ADVENTURE_SCREEN_Y,
+                                  ADVENTURE_SCREEN_WIDTH,
+                                  ADVENTURE_SCREEN_HEIGHT);
+
+    unsigned long curTime = GameTime::Get();
+    if (static_cast<long>(
+            curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]) >= 0
+        && !animCtrPaused) {
+        ++animFrame;
+        long elapsedTime =
+            curTime - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+            _cpp_max(elapsedTime,
+                     static_cast<long>(ADVENTURE_ANIMATION_MAX_ELAPSED));
+    }
+    Process1WindowsMessage();
+}
+
+#if 0  // @carcass
 // E:\gamedcs\advmgr.cpp:10558
-VA(0x00419300, 0x14C)  // linkorder, dc 0x1c580
+DC_ONLY(0x1c580, 0x16)
 void advManager::CheckDimHero()
 {
     // @stub
 }
-
-
-
 #endif  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10571
@@ -4079,18 +4355,40 @@ void advManager::CheckDimNextHeroBut()
         advWindow->WidgetSetStatus(11, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:10579
+// A local human's current hero seeds a normal route search from the hero's
+// live map position. seedingValid selects fresh/continuation mode, and a
+// fully completed seed is not repeated. The cursor's distinguished state 8
+// is the boat-search flag passed to SeedPosition.
 VA(0x004194a0, 0xC7)  // anchor-global, dc 0x1c64c
 void advManager::SeedTo(type_point target)
 {
-    // @stub
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+
+    int heroId = gpCurrentPlayer->currHeroId;
+    if (heroId == -1)
+        return;
+
+    hero* currentHero = &gpGame->heroes[heroId];
+    type_point start(currentHero->x, currentHero->y, currentHero->z);
+
+    if (!seedingValid) {
+        gpSearchArray->SeedPosition(currentHero, start, target, 59999,
+                                    cursorType == CURSOR_TYPE_8,
+                                    const_normal_search,
+                                    currentHero->movePoints, 0);
+    } else {
+        if (fullySeeded)
+            return;
+        gpSearchArray->SeedPosition(currentHero, start, target, 59999,
+                                    cursorType == CURSOR_TYPE_8,
+                                    const_normal_search,
+                                    currentHero->movePoints, 1);
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:10609
-#endif  // @carcass
-
 VA(0x00419570, 0x49)  // anchor-global, dc 0x1c750
 void advManager::ForceNewHover()
 {
@@ -4134,11 +4432,51 @@ void advManager::SetInitialMapOrigin()
 }
 
 // E:\gamedcs\advmgr.cpp:10842
+#endif  // @carcass
+
 VA(0x00419c80, 0x171)  // anchor-callee, dc 0x1d0bc
 void PopupPlayerTurnInfo()
 {
-    // @stub
+    if (IsIconic(hwndApp))
+        ShowWindow(hwndApp, SW_RESTORE);
+
+    gpSoundManager->StopMP3();
+    SetForegroundWindow(hwndApp);
+    gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+
+    if (!gpCurrentPlayer->IsLocalHuman())
+        gpAdvManager->bottomViewOverride = advManager::BOTTOM_VIEW_DEFAULT;
+
+    gpSoundManager->field_84 = 1;
+    SAMPLE2 sample2 = LoadPlaySample("SysMsg.wav");
+
+    if (!gbUnk691209) {
+        char cText[256];
+        const char* format =
+            gpGeneralText->GetText(GENERAL_TEXT_PLAYER_TURN_FORMAT);
+        sprintf(cText, format, gpGame->GetLocalPlayer()->GetName());
+
+        int dialogReturn;
+        do {
+            NormalDialogTimeOut(cText, 1, 15000, -1, -1, 10,
+                                gpGame->GetLocalPlayerGamePos(), -1, 0,
+                                -1, -1, 0);
+            dialogReturn = gpWindowManager->dialogReturn;
+            if (dialogReturn == DIALOG_RETURN_TIMEOUT) {
+                if (IsIconic(hwndApp))
+                    ShowWindow(hwndApp, SW_RESTORE);
+                SetForegroundWindow(hwndApp);
+                Sleep(500);
+                sample2 = LoadPlaySample("SysMsg.wav");
+            }
+        } while (dialogReturn == DIALOG_RETURN_TIMEOUT
+                 && !gTurnDuration69d630.IsExpired());
+
+        ClearMemSample(sample2);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:10898
 VA(0x00419e00, 0x300)  // anchor-callee, dc 0x1d30c
@@ -4147,37 +4485,163 @@ void advManager::StartLocalPlayerTurn()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:10987
+// Saves the calendar selectors because LoadGame resets them, uses the
+// generated remote-control save path, optionally refreshes orig.dat, then
+// restores the selectors before releasing the wait cursor and starting the
+// local turn. The explicit Stop plus the scope-exit destructor are both in
+// retail and are intentionally retained.
 VA(0x0041a100, 0xD9)  // anchor-callee, dc 0x1d6ec
 void advManager::LoadRemote(unsigned char makeOrig)
 {
-    // @stub
+    gTurnDuration69d630.Clear();
+    CHourGlass hourGlass(1);
+
+    int iWeekTypeExtra = giWeekTypeExtra;
+    int iWeekType = giWeekType;
+    int iMonthType = giMonthType;
+    int iMonthTypeExtra = giMonthTypeExtra;
+
+    gpGame->LoadGame(gUnnamed698758.rcFile, 0, 1);
+    if (makeOrig)
+        gpGame->SaveGame("orig.dat", 0, 0, 0, 1);
+
+    giWeekTypeExtra = iWeekTypeExtra;
+    giWeekType = iWeekType;
+    giMonthType = iMonthType;
+    giMonthTypeExtra = iMonthTypeExtra;
+
+    hourGlass.Stop();
+    StartLocalPlayerTurn();
 }
 
 // E:\gamedcs\advmgr.cpp:11021
 VA(0x0041a1e0, 0xF1)  // anchor-global, dc 0x1d804
 void advManager::TrimLoopingSounds(int iMaxSoundsAllowed)
 {
-    // @stub
+    if (giHighMemBuffer > 0)
+        iMaxSoundsAllowed += giHighMemBuffer / 100;
+
+    if (gMapWidth != ADVENTURE_XLARGE_MAP_WIDTH)
+        ++iMaxSoundsAllowed;
+
+    if (iMaxSoundsAllowed >= LOOPING_SOUND_COUNT)
+        return;
+
+    int soundsFound = 0;
+    char saveSounds[LOOPING_SOUND_COUNT];
+    memset(saveSounds, 0, sizeof(saveSounds));
+
+    int i;
+    for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; ++i) {
+        int soundId = soundArray[i].soundId;
+        if (soundId >= LOOPING_SOUND_0 && soundId < LOOPING_SOUND_COUNT)
+            ++saveSounds[soundId];
+    }
+
+    for (i = 0; i < LOOPING_SOUND_COUNT; ++i) {
+        if (saveSounds[i])
+            ++soundsFound;
+    }
+
+    if (soundsFound < iMaxSoundsAllowed) {
+        for (i = 0; i < LOOPING_SOUND_COUNT; ++i) {
+            if (!saveSounds[i] && loopedSample[i]) {
+                ++soundsFound;
+                ++saveSounds[i];
+                if (soundsFound >= iMaxSoundsAllowed)
+                    goto disposeSamples;
+            }
+        }
+    }
+
+disposeSamples:
+    for (i = 0; i < LOOPING_SOUND_COUNT; ++i) {
+        if (loopedSample[i] && !saveSounds[i]) {
+            loopedSample[i]->Dispose();
+            loopedSample[i] = 0;
+        }
+    }
 }
 
 // E:\gamedcs\advmgr.cpp:11080
+// Exact (188/188). Retail deliberately gates through the global active
+// manager and explicitly clears WIDGET_ACTIVE on fourteen navigation buttons.
 VA(0x0041a2e0, 0xBC)  // linkorder, dc 0x1d9e0
 void advManager::DisableButtons()
 {
-    // @stub
+    if (gpAdvManager->status != baseManager::STATUS_ACTIVE)
+        return;
+    advWindow->WidgetClearStatus(TAdventureMapWindow::KINGDOM_OVERVIEW_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::ELEVATION_TOGGLE_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::QUEST_LOG_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::SLEEP_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::MOVE_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::CAST_SPELL_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::ADVENTURE_OPTIONS_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::SYSTEM_OPTIONS_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::NEXT_HERO_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::END_TURN_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::HERO_UP_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::HERO_DOWN_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::TOWN_UP_ID,
+                                 widget::WIDGET_ACTIVE);
+    advWindow->WidgetClearStatus(TAdventureMapWindow::TOWN_DOWN_ID,
+                                 widget::WIDGET_ACTIVE);
 }
 
 // E:\gamedcs\advmgr.cpp:11102
+// Exact (188/188), the WidgetSetStatus twin of DisableButtons above.
 VA(0x0041a3a0, 0xBC)  // linkorder, dc 0x1dafc
 void advManager::EnableButtons()
 {
-    // @stub
+    if (gpAdvManager->status != baseManager::STATUS_ACTIVE)
+        return;
+    advWindow->WidgetSetStatus(TAdventureMapWindow::KINGDOM_OVERVIEW_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::ELEVATION_TOGGLE_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::QUEST_LOG_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::SLEEP_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::MOVE_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::CAST_SPELL_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::ADVENTURE_OPTIONS_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::SYSTEM_OPTIONS_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::NEXT_HERO_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::END_TURN_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::HERO_UP_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::HERO_DOWN_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::TOWN_UP_ID,
+                               widget::WIDGET_ACTIVE);
+    advWindow->WidgetSetStatus(TAdventureMapWindow::TOWN_DOWN_ID,
+                               widget::WIDGET_ACTIVE);
 }
 
 // E:\gamedcs\advmgr.cpp:11125
-#endif  // @carcass
-
 VA(0x0041a460, 0x1FB)  // anchor-global, dc 0x1dc24
 unsigned char advManager::FindAdjacentMonster(type_point point, type_point* result, type_point excluded)
 {
@@ -4190,7 +4654,7 @@ unsigned char advManager::FindAdjacentMonster(type_point point, type_point* resu
         (point.z * fullMap->Size + point.y) * fullMap->Size + point.x];
     unsigned char center_is_water = center->GroundSet == eTerrainWater;
     if (center->cell_is_trigger()
-        && !gAdventureObjectTraits[center->get_map_object()].field_01)
+        && !gAdventureObjectTraits[center->get_map_object()][1])
         min_y = point.y;
 
     for (int x = min_x; x < max_x; ++x) {
@@ -4211,18 +4675,42 @@ unsigned char advManager::FindAdjacentMonster(type_point point, type_point* resu
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:11155
+// The current player owns control unless a remote session says otherwise.
+// If that player has been eliminated, the first surviving human in turn
+// order owns it. Otherwise the last surviving human before the current
+// player is selected; this is the hot-seat wraparound rule shared with HoMM2.
 VA(0x0041a660, 0xEB)  // anchor-callee, dc 0x1dde4
 void ComputeAdvNetControl()
 {
-    // @stub
+    if (!gNetworkActive69954c) {
+        gbThisNetGotAdventureControl = 1;
+        return;
+    }
+
+    int lastHuman = -1;
+    int player;
+    if (gpGame->playerDisabled[gNetLocalGamePos]) {
+        player = (gNetLocalGamePos + 1) % 8;
+        while (player != gNetLocalGamePos) {
+            if (!gpGame->playerDisabled[player] && gpGame->IsHuman(player)) {
+                gbThisNetGotAdventureControl = gpGame->IsLocalHuman(player);
+                return;
+            }
+            player = (player + 1) % 8;
+        }
+    }
+
+    player = (gNetLocalGamePos + 1) % 8;
+    while (player != gNetLocalGamePos) {
+        player = (player + 1) % 8;
+        if (!gpGame->playerDisabled[player] && gpGame->IsHuman(player))
+            lastHuman = player;
+    }
+    gbThisNetGotAdventureControl = gpGame->IsLocalHuman(lastHuman);
 }
 
 // E:\gamedcs\advmgr.cpp:11196
-#endif  // @carcass
-
 VA(0x0041a750, 0x97)  // anchor-callee, dc 0x1df7c
 int MapExtraPosAndAdjacentsSet(int x, int y, int z, unsigned char bit)
 {
@@ -4258,11 +4746,45 @@ void advManager::PuzzleDraw(int startX, int startY, int z, int ultX, int ultY)
 }
 
 // E:\gamedcs\advmgr.cpp:11310
+#endif  // @carcass
+
 VA(0x0041ab00, 0xF8)  // anchor-callee, dc 0x1e448
 void advManager::DoAdventureOptions()
 {
-    // @stub
+    TrimLoopingSounds(4);
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+
+    unsigned char bSaveMobile = inDialog;
+    DemobilizeCurrHero(0, 1);
+
+    {
+        TAdventureOptionsWindow adventure_options_window;
+        adventure_options_window.DoModal(0);
+    }
+
+    switch (gpWindowManager->dialogReturn) {
+    case TAdventureOptionsWindow::VIEW_WORLD_ID:
+        ViewWorld(0, eMasteryNone);
+        break;
+    case TAdventureOptionsWindow::VIEW_PUZZLE_ID:
+        ViewPuzzle();
+        break;
+    case TAdventureOptionsWindow::REPLAY_ID:
+        gpGame->play_recorded_events();
+        break;
+    case TAdventureOptionsWindow::VIEW_SCENARIO_ID:
+        gpGame->ShowScenInfo();
+        break;
+    case TAdventureOptionsWindow::DIG_ID:
+        ProcessSearch(-1, -1, -1);
+        break;
+    }
+
+    if (bSaveMobile)
+        MobilizeCurrHero(0, 0, 1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11352
 DC_ONLY(0x1e598, 0x4E)
@@ -4301,14 +4823,28 @@ unsigned short* advManager::GetRouteArrayPtr(int x, int y, int z)
     return &routeArray[(z * gMapHeight + y) * gMapWidth + x];
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:11521
 VA(0x0041b040, 0x9A)  // anchor-global, dc 0x1ebf4
-void CAdvPopup::CAdvPopup(int winX, int winY, int winWidth, int winHeight, unsigned winType)
+CAdvPopup::CAdvPopup(int winX, int winY, int winWidth, int winHeight,
+                     unsigned winType)
+    : CHeroWindowEx(winX, winY, winWidth, winHeight, winType)
 {
-    // @stub
+    field_50 = 0x200;
+    exitId = 10;
+    exitCodeX = 0x7801;
+    savedPlayerState = 0;
+
+    if (bVideoPaused) {
+        CNetMsgHandler* pNetMsgHandler = pDPlay->GetNetMsgHandler();
+        if (pNetMsgHandler) {
+            if (pNetMsgHandler->IsInPopup())
+                savedPlayerState = 1;
+            pNetMsgHandler->SetInPopup(1);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11528
 DC_ONLY(0x1ec80, 0x32)

@@ -201,7 +201,7 @@ pressings) into two generated CSVs:
   masked channel, in vtable order, under the class NH3API independently names.
 
 Both CSVs are GENERATED (regenerate, don't hand-edit) and stay candidates
-until a supervised admission; the source carcass that consumes them is a
+until a retail-corroborated admission; the source carcass that consumes them is a
 later stage.
 
 ## Naming every function

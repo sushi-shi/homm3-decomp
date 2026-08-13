@@ -97,7 +97,7 @@ A useful port would add a Gruntz input adapter that supplies:
 1. the base and delinked-target COFF section for one function;
 2. the unit's exact VC5 flags and include closure;
 3. ordered call-relocation, branch/return, frame and aligned-register features;
-4. the existing Gruntz Cartesian runner as the supervised confirmation step.
+4. the existing Gruntz Cartesian runner as the confirmation step.
 
 That adapter should preserve the skill's output contract: classify first,
 name the controlling lever, propose several ranked candidates, and let the

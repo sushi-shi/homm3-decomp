@@ -12,6 +12,8 @@
 
 // --- VictoryConditionStruct ---
 // CODEVIEW(E:\gamedcs\victorylossconditions.cpp:25, dc 0x18fdc4) unsigned char VictoryConditionStruct::applies_to_player(long player_id);
+// Retail returns the full EAX value (`int`); the Dreamcast byte return above
+// documents a platform/build divergence, not the PC signature.
 // CODEVIEW(E:\gamedcs\victorylossconditions.cpp:31, dc 0x18fdf8) unsigned char VictoryConditionStruct::CheckForArtifactWin();
 // CODEVIEW(E:\gamedcs\victorylossconditions.cpp:61, dc 0x18fe98) unsigned char VictoryConditionStruct::CheckForTotalCreatures();
 // CODEVIEW(E:\gamedcs\victorylossconditions.cpp:100, dc 0x18ff84) unsigned char VictoryConditionStruct::CheckForTotalResources();

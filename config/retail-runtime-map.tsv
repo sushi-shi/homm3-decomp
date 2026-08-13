@@ -11,7 +11,14 @@
 # label otherwise. Rows get properly mapped as matching
 # proceeds. MFC is absent from the image (docs/exe-dna.md).
 rva	name
-0x20ab3b	cxx_string_too_long_20ab3b
+0x40f0	?_Tidy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEX_N@Z
+0x4bd0	?_Copy@?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@AAEXI@Z
+# Exact 163-byte Dinkumware set<int>::const_iterator increment COMDAT;
+# LearnSpellFromEagleEye's base object supplies the authoritative public.
+0x6ae00	?_Inc@const_iterator@?$_Tree@HHU_Kfn@?$set@HU?$less@H@std@@V?$allocator@H@2@@std@@U?$less@H@3@V?$allocator@H@3@@std@@QAEXXZ
+# 11-byte scalar operator-delete thunk: push arg; call _free; pop ecx; ret.
+0x20ab30	??3@YAXPAX@Z
+0x20ab3b	?_Xlen@std@@YAXXZ
 0x20ab95	cxx_20abef_sub00_20ab95
 0x20abd2	cxx_20abd2
 0x20abef	cxx_20abef

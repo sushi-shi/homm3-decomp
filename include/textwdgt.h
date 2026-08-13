@@ -23,6 +23,9 @@ public:
 
     textWidget(int x, int y, int w, int h, const char* text,
                const char* fontName, font::TColor color, int id,
+               unsigned justify, int backColor, int style);
+    textWidget(int x, int y, int w, int h, const char* text,
+               const char* fontName, font::TColor color, int id,
                unsigned justify, int backColor, unsigned char focusable);
     virtual ~textWidget();  // retail 0x5bc3b0
     virtual int Main(message* msg);

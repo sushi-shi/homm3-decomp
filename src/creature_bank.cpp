@@ -7,6 +7,16 @@
 DATA(0x0067029c)
 const type_creature_bank_traits* const_creature_bank_traits;
 
+// E:\gamedcs\creature_bank.cpp:25. Retail initializes the Dinkumware string
+// at +0 and then calls armyGroup::armyGroup four times at +0x10 with a 0x60
+// stride, exactly the implicit member construction this empty body requests.
+VA(0x0047aad0, 0x5E)  // bracket + constructor shape, dc 0x714e0
+type_creature_bank_traits::type_creature_bank_traits()
+{
+}
+
+#if 0  // @carcass -- remaining Dreamcast hypotheses
+
 // E:\gamedcs\creature_bank.cpp:32
 DC_ONLY(0x70fe0, 0x14A)
 void initialize_creature_bank_level(type_creature_bank_level* traits, const std::vector<char* resource)
@@ -202,3 +212,5 @@ void std::__destroy_aux()
 {
     // @stub
 }
+
+#endif  // @carcass

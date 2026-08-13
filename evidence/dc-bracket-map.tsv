@@ -2,7 +2,7 @@
 # exe: HEROES3.EXE sha256=057c9d88e7206f6669a4615de2c6e02ab6c4e2d570a9e2badf07fe0bd6247274
 # ANALYSIS OUTPUT, NOT RETAIL EVIDENCE - a `forced`
 # row is a link-order proof proposal; it becomes
-# evidence only when a supervised review promotes it
+# evidence only when independent retail proof promotes it
 # into a VA() claim.
 unit	dc_offset	dc_size	proposed_rva	proposed_size	grade	name	detail
 adventuremapwindow	0x1238	34		0	ambiguous	TAdvMenu::SetAdvWinButtonPalette	gap 1 dc vs 0 retail [0x3f20..0x3f60]
@@ -1383,12 +1383,12 @@ window	0x197bdc	42		0	ambiguous	heroWindow::EnableAllWidgets	gap 2 dc vs 1 retai
 window	0x197c08	26		0	ambiguous	heroWindow::DoModal	gap 2 dc vs 1 retail [0x1ff3e0..0x1ff490]
 window	0x197c74	24		0	ambiguous	heroWindow::HeroWindowHandler	gap 1 dc vs 0 retail [0x1ff490..0x1ff510]
 window	0x197cd4	114		0	ambiguous	heroWindow::AddWidgetsToMessageStream	gap 1 dc vs 3 retail [0x1ff510..0x1ff640]
-winmgr	0x19aa64	432		0	ambiguous	heroWindowManager::AddWindow	gap 4 dc vs 12 retail [0x202370..0x202a40]
-winmgr	0x19ac14	260		0	ambiguous	heroWindowManager::RemoveWindow	gap 4 dc vs 12 retail [0x202370..0x202a40]
-winmgr	0x19ad18	476		0	ambiguous	heroWindowManager::DoDialog	gap 4 dc vs 12 retail [0x202370..0x202a40]
-winmgr	0x19aef4	520		0	ambiguous	heroWindowManager::DoDialogDraw	gap 4 dc vs 12 retail [0x202370..0x202a40]
-winmgr	0x19b1f0	62		0	ambiguous	heroWindowManager::UpdateScreen	gap 5 dc vs 4 retail [0x202a40..0x202c50]
-winmgr	0x19b230	248		0	ambiguous	heroWindowManager::UpdateScreen	gap 5 dc vs 4 retail [0x202a40..0x202c50]
-winmgr	0x19b328	156		0	ambiguous	heroWindowManager::UpdateScreen	gap 5 dc vs 4 retail [0x202a40..0x202c50]
-winmgr	0x19b3c4	42		0	ambiguous	heroWindowManager::BlitToScreenWithPointer	gap 5 dc vs 4 retail [0x202a40..0x202c50]
-winmgr	0x19b3f0	56		0	ambiguous	heroWindowManager::BlitToScreenWithPointerX	gap 5 dc vs 4 retail [0x202a40..0x202c50]
+winmgr	0x19aa64	432	0x2023b0	231	forced	heroWindowManager::AddWindow	gap of 4 [0x202370..0x202a40]
+winmgr	0x19ac14	260	0x2024a0	120	forced	heroWindowManager::RemoveWindow	gap of 4 [0x202370..0x202a40]
+winmgr	0x19ad18	476	0x202520	640	forced	heroWindowManager::DoDialog	gap of 4 [0x202370..0x202a40]
+winmgr	0x19aef4	520	0x2027a0	666	forced	heroWindowManager::DoDialogDraw	gap of 4 [0x202370..0x202a40]
+winmgr	0x19b1f0	62		0	ambiguous	heroWindowManager::UpdateScreen	gap 5 dc vs 1 retail [0x202a40..0x202c50]
+winmgr	0x19b230	248		0	ambiguous	heroWindowManager::UpdateScreen	gap 5 dc vs 1 retail [0x202a40..0x202c50]
+winmgr	0x19b328	156		0	ambiguous	heroWindowManager::UpdateScreen	gap 5 dc vs 1 retail [0x202a40..0x202c50]
+winmgr	0x19b3c4	42		0	ambiguous	heroWindowManager::BlitToScreenWithPointer	gap 5 dc vs 1 retail [0x202a40..0x202c50]
+winmgr	0x19b3f0	56		0	ambiguous	heroWindowManager::BlitToScreenWithPointerX	gap 5 dc vs 1 retail [0x202a40..0x202c50]

@@ -5,6 +5,10 @@
 #ifndef HOMM3_MAPCELL_H
 #define HOMM3_MAPCELL_H
 
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+#include <vector>
+#endif
+
 // The adventure-map object domain, the type of NewmapCell::type.
 // Transcribed COMPLETE from the Dreamcast CodeView enum (163
 // enumerators, every value written out explicitly so the four values
@@ -295,28 +299,55 @@ public:
     // the same 96.09 that class produces for a bare probe struct). The
     // word view is taken locally in town.cpp instead - see
     // cell_flags_word there.
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    // mapcell.obj also needs the whole-word spelling used by retail's
+    // get_special_terrain (`test word ptr [cell+0xc], 0x1000`). Keep it as
+    // the canonical overlay of the same proven flag word, not a cast/view.
+    union {
+        struct {
+            unsigned short flags_00_11 : 12;
+            unsigned short is_trigger : 1;
+            unsigned short flags_13_15 : 3;
+        };
+        unsigned short cellFlags;
+    };
+#else
     unsigned short flags_00_11 : 12;
     unsigned short is_trigger : 1;
     unsigned short flags_13_15 : 3;
+#endif
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    // Retail mapcell.obj constructs and destroys a Dinkumware vector here.
+    // Its empty allocator occupies +0x0e..+0x11 and its first/last/end
+    // pointers are the three dwords at +0x12/+0x16/+0x1a. The four-byte
+    // element stride is independently proven by the object renderers.
+    struct TObjectCell {
+        unsigned short objectIndex;
+        unsigned char offsets;
+        signed char layer;
+    };
+    std::vector<TObjectCell> objects;
+#else
     char pad_0e[0x10];
+#endif
     TAdventureObjectType type;  // +0x1e
     short objectIndex;          // +0x22
     short object_type_index;    // +0x24
 
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    NewmapCell();
+    ~NewmapCell();
+    const unsigned char HasTriggerableEvent();
+#endif
+
     // 0x4fce20, claimed (still @stub) in src/mapcell.cpp. Declared here
     // because findpath's CalcTerrainCost calls it with the cell in ECX.
     TAdventureObjectType get_special_terrain() const;
-#ifdef HOMM3_HERO_BOAT_VIEW
     int get_magic_terrain_type();
-#endif
     TAdventureObjectType get_map_object();
-#ifdef HOMM3_CMBTMGR_OBJ_DECLS
     unsigned long get_map_extraInfo();
-#endif
     unsigned char cell_is_trigger();
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     unsigned char is_diggable();
-#endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     unsigned char PlayerKnowsCell(short player) const
     {
@@ -325,20 +356,15 @@ public:
         return ((extraInfo >> 5) & (1UL << player)) != 0;
     }
 #endif
-#ifdef HOMM3_ADVMGR_CELL_ADJUSTER_VIEW
     NewmapCell* get_trigger_cell();
-    unsigned long get_map_extraInfo();
-#endif
 };
 #pragma pack(pop)
 
-#ifdef HOMM3_HERO_LAND_VIEW
 // Retail .rdata 0x660428 stores a pointer to sixteen bytes per adventure-
 // object type. can_land proves byte zero as the trigger-object landing veto;
 // the remaining bytes stay opaque.
 DATA(0x00660428)
 extern const unsigned char (*gAdventureObjectLandBlocked)[16];
-#endif
 
 // --- BlackBoxData ---
 // CODEVIEW(E:\gamedcs\MapCell.h:364, dc 0xf47cc) void BlackBoxData::BlackBoxData();
@@ -376,7 +402,7 @@ extern const unsigned char (*gAdventureObjectLandBlocked)[16];
 // CODEVIEW(E:\gamedcs\mapcell.cpp:307, dc 0xebe3c) int NewfullMap::loadTownEventList(void* infile);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:524, dc 0xec4fc) void NewfullMap::NewfullMap();
 // CODEVIEW(E:\gamedcs\mapcell.cpp:530, dc 0xec6a4) void NewfullMap::~NewfullMap();
-// CODEVIEW(E:\gamedcs\mapcell.cpp:537, dc 0xec724) void NewfullMap::Close();
+// CODEVIEW(E:\gamedcs\mapcell.cpp:537, dc 0xec724) void NewfullMap::Close(); // inlined in retail; old 0x4fd460 claim disproven
 // CODEVIEW(E:\gamedcs\mapcell.cpp:550, dc 0xec80c) void NewfullMap::Init(int size, unsigned char two_layers);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:614, dc 0xec8f4) int NewfullMap::Read(void* infile, int size, unsigned char two_layers);
 // CODEVIEW(E:\gamedcs\mapcell.cpp:679, dc 0xecb94) int NewfullMap::Load(void* infile, int size, unsigned char two_layers);

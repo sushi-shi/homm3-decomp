@@ -4,6 +4,7 @@
 #include "terrain.h"
 #include <va.h>
 #include "castle.h"
+#include "game.h"
 
 // E:\gamedcs\castle.cpp:285
 VA(0x004610e0, 0x49)  // anchor-global, dc 0x5c1d8
@@ -21,12 +22,24 @@ const char* GetBuildingName(int townType, int buildingId)
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\castle.cpp:307
-DC_ONLY(0x5c228, 0x50)
+VA(0x00461130, 0x5C)  // source-order map + unique retail body, dc 0x5c228
 int CanBuy(const town* currTown, int buildingId)
 {
-    // @stub
+    int cost[NUM_RESOURCES];
+    currTown->get_build_cost((type_building_id) buildingId, cost);
+
+    playerData* player = &gpGame->players[gNetLocalGamePos];
+    for (int resource = 0; resource < NUM_RESOURCES; ++resource) {
+        if (player->resources[resource] < cost[resource])
+            return 0;
+    }
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\castle.cpp:328
 DC_ONLY(0x5c278, 0x60C)
@@ -43,4 +56,3 @@ int THallWindow::WindowHandler(message* msg)
 }
 
 #endif  // @carcass
-

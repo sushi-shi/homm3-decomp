@@ -11,12 +11,24 @@
 
 class palette;
 class paletteHiColor;
+class TPalette16;
 
 // Creature sprite sequence ids (DC CodeView enum creature_seqid,
 // NH3API creatures.hpp identical): only the transition pair
 // iconWidget's idle machine dispatches on is listed - grow the roster
 // as consumers prove values.
 enum creature_seqid {
+    cs_walk = 0,
+    cs_fidget = 1,
+    cs_wait = 2,
+    cs_wince = 3,
+    cs_defend = 4,
+    cs_attack_ur = 11,
+    cs_attack_r = 12,
+    cs_attack_dr = 13,
+    cs_range_ur = 14,
+    cs_range_r = 15,
+    cs_range_dr = 16,
     cs_prewalk = 0x14,
     cs_postwalk = 0x15
 };
@@ -28,11 +40,11 @@ enum creature_seqid {
 // call Dispose through slot 1. The DC roster names the fields (retail
 // dropped SpecialCacheFlag/Sp_loaded and hoisted s ahead of p).
 // Retail vtable 0x63d6b0: slot 0 = scalar deleting dtor (0x47b8f0),
-// slot 1 = Dispose (0x55d1a0), slot 2 = 0x47bd50 unidentified.
+// slot 1 = Dispose (0x55d1a0), slot 2 = resource size (0x47bd50).
 class CSprite : public resource {
 public:
     CSequence** s;
-    void* p;
+    TPalette16* p;
     paletteHiColor* p24;
     int numSequences;
     int* validSeqMask;
@@ -41,7 +53,7 @@ public:
 
     virtual ~CSprite();      // slot 0
     virtual void Dispose();  // slot 1, retail body 0x55d1a0
-    virtual void _vslot2();  // slot 2, retail body 0x47bd50, unidentified
+    virtual unsigned int _vslot2() const;  // slot 2, retail 0x47bd50
 
     // Header inline, DC CSprite.h:293 (dc 0x1f1dc, emitted into
     // advmgr.obj there). Byte-proven by iconwdgt's frame walkers: each
@@ -56,10 +68,31 @@ public:
     }
 
     palette* GetPalette();
+    void ColorCycle(int begin, int end, int step);
     void SetPalette(const unsigned short* pal);
+    void Draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
+              unsigned short* dst, int dx, int dy, int dw, int dh,
+              int dpitch, unsigned char hflip, unsigned char tblit);
+    // DC CSprite.h wrapper, expanded four times by DrawAdventureMapGems.
+    void Draw(int seqnum, int framenum, int sx, int sy, int sw, int sh,
+              Bitmap16Bit* dst, int dx, int dy, unsigned char hflip,
+              unsigned char tblit)
+    {
+        Draw(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
+             dst->Width, dst->Height, dst->Pitch, hflip, tblit);
+    }
     void DrawPointer(int framenum, unsigned short* dst, int dx, int dy,
                      int dw, int dh, int dpitch, unsigned char hflip);
     void DrawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);
+    // Header wrapper (DC CSprite.h:385). KeyAccel's four expanded call sites
+    // byte-prove the Bitmap16Bit member forwarding in retail.
+    void DrawInterface(int framenum, int sx, int sy, int sw, int sh,
+                       Bitmap16Bit* dst, int dx, int dy,
+                       unsigned char hflip)
+    {
+        DrawInterface(framenum, sx, sy, sw, sh, dst->map, dx, dy,
+                      dst->Width, dst->Height, dst->Pitch, hflip);
+    }
     void DrawHero(int seqnum, int framenum, int sx, int sy, int sw, int sh,
                   unsigned short* dst, int dx, int dy, int dw, int dh,
                   int dpitch, unsigned char hflip);

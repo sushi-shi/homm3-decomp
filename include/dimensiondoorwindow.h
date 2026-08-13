@@ -5,6 +5,24 @@
 #ifndef HOMM3_DIMENSIONDOORWINDOW_H
 #define HOMM3_DIMENSIONDOORWINDOW_H
 
+#include "advmgr_popup.h"
+
+class textWidget;
+
+// DC places the sole derived member at its CAdvPopup end (+0x58). Retail's
+// base widening moves it to +0x60, and the stack instance in the skuttle-boat
+// adventure action proves the resulting 0x64-byte canonical layout.
+class TSkuttleBoatWindow : public CAdvPopup {
+public:
+    textWidget* RolloverWidget;
+
+    TSkuttleBoatWindow();
+    virtual ~TSkuttleBoatWindow();
+    virtual int WindowHandler(message* msg);
+    virtual int ExitDialog(message* msg);
+};
+SIZE(TSkuttleBoatWindow, 0x64);
+
 // --- TDimensionDoorWindow ---
 // CODEVIEW(E:\gamedcs\dimensiondoorwindow.cpp:53, dc 0x827f8) void TDimensionDoorWindow::TDimensionDoorWindow();
 // CODEVIEW(E:\gamedcs\dimensiondoorwindow.cpp:74, dc 0x82938) void TDimensionDoorWindow::~TDimensionDoorWindow();
@@ -16,7 +34,7 @@
 // CODEVIEW(E:\gamedcs\dimensiondoorwindow.cpp:235, dc 0x82b9c) void TSkuttleBoatWindow::TSkuttleBoatWindow();
 // CODEVIEW(E:\gamedcs\dimensiondoorwindow.cpp:254, dc 0x82cb0) void TSkuttleBoatWindow::~TSkuttleBoatWindow();
 // CODEVIEW(E:\gamedcs\dimensiondoorwindow.cpp:280, dc 0x82d14) int TSkuttleBoatWindow::WindowHandler(message* msg);
-// CODEVIEW(E:\gamedcs\dimensiondoorwindow.cpp:395, dc 0x82ed0) int TSkuttleBoatWindow::ExitDialog(message* msg);
+// RETAIL(0x00491eb0, 0x2c), CODEVIEW(E:\gamedcs\dimensiondoorwindow.cpp:395, dc 0x82ed0) int TSkuttleBoatWindow::ExitDialog(message* msg);
 // CODEVIEW(E:\gamedcs\dimensiondoorwindow.cpp:250, dc 0x82f20) void* TSkuttleBoatWindow::`scalar deleting destructor'(unsigned __flags);
 
 #endif  /* HOMM3_DIMENSIONDOORWINDOW_H */

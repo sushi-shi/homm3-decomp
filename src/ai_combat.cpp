@@ -75,15 +75,6 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _Y : _X);
 }
 
-// 0x59e060 (48 B, fastcall spell in ecx / mastery in edx): reads
-// akSpellTraits[spell].field_c and answers "does this cast hit ONE
-// stack?" - bit 0x10 forces single, 0x40 goes mass at mastery 3, 0x20
-// at mastery 2. cast_enchantment (0x4258a0) branches on it. The
-// function belongs to another TU and carries no DC or NH3API name, so
-// the spelling here is PROVISIONAL (behaviour-derived); declared
-// file-locally for the same reason _cpp_min/_cpp_max are.
-unsigned char spell_is_single_target(SpellID spell, TSkillMastery mastery);
-
 // The mutually exclusive AI-dispatch family encoded in SSpellTraits::field_c.
 // cast_spell masks precisely these six bits twice and switches on the five
 // values below; the sixth bit has no quick-combat implementation. Names are
@@ -789,7 +780,7 @@ inline void type_AI_combat_data::cast_mass_damage_spell(
 // carry a base-only function retail never shipped.
 inline void type_AI_combat_data::get_enchantment_value(type_spell_choice& choice, const hero* casting_hero)
 {
-    unsigned char mass = !spell_is_single_target(choice.spell, choice.mastery);
+    unsigned char mass = !SpellTargetsASingleArmy(choice.spell, choice.mastery);
     for (long i = get_total(); i-- > 0; ) {
         long value = monsters[i].get_enchantment_value(choice, casting_hero, my_hero);
         if (mass) {
@@ -857,7 +848,7 @@ VA(0x004258a0, 0x269)  // corroborates (hd-crossbuild + ida), dc 0x2ae60
 void type_AI_combat_data::cast_enchantment(type_spell_choice& choice, const hero* casting_hero, unsigned char increase)
 {
     long value;
-    if (spell_is_single_target(choice.spell, choice.mastery)) {
+    if (SpellTargetsASingleArmy(choice.spell, choice.mastery)) {
         value = monsters[choice.target].get_enchantment_value(choice, casting_hero, my_hero);
         monsters[choice.target].cast_enchantment(value, increase);
         return;
@@ -1625,8 +1616,8 @@ long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
             if (gpGame->mapHeader.victoryCondition.Type
                     == VICTORY_CONDITION_DEFEAT_HERO
                 && gpGame->mapHeader.victoryCondition.HeroID == defending_hero->id
-                && gpGame->mapHeader.victoryCondition.applies_to_player(
-                    gNetLocalGamePos))
+                && static_cast<unsigned char>(gpGame->mapHeader.victoryCondition
+                    .applies_to_player(gNetLocalGamePos)))
                 value += 5000000;
             if (gpGame->mapHeader.lossCondition.Type == LOSS_CONDITION_LOSE_HERO
                 && gpGame->mapHeader.lossCondition.HeroID == defending_hero->id)

@@ -513,13 +513,31 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...]):
         return {coff.symbols[target].name for target in outgoing[index]}
 
     def owner_present(names, owner):
-        return any(name == "_" + owner or name.startswith("?" + owner + "@@")
-                   for name in names)
+        return any(
+            name == "_" + owner or
+            name.startswith("?" + owner + "@@") or
+            # Function-local statics use `_?name@?1??function...` rather
+            # than the external-data `?name@@...` spelling.
+            name.startswith("_?" + owner + "@?")
+            for name in names)
 
     def is_special_member(index, owner, prefix):
         names = target_names(index)
         return (owner_present(names, owner) and
                 any(name.startswith(prefix) for name in names))
+
+    def is_static_dtor(index, owner):
+        names = target_names(index)
+        if (owner_present(names, owner) and
+                any(name.startswith("??1") for name in names)):
+            return True
+        # VC6 /Ob2 can inline a small destructor completely into its
+        # volatile `$E<n>` exit function. Such a function still has two
+        # independent semantic edges: the owned datum and operator delete
+        # (scalar or vector). Requiring both keeps this distinct from an
+        # arbitrary `$E<n>` that merely touches the same global.
+        return (owner_present(names, owner) and
+                any(name.startswith(("??3@", "??_V@")) for name in names))
 
     def is_atexit(index, owner):
         return ("_atexit" in target_names(index) and
@@ -531,7 +549,7 @@ def _compgen_renames(coff: CoffObject, claims: tuple[CompgenClaim, ...]):
         if claim.kind == "STATIC_CTOR":
             return is_special_member(index, claim.owner, "??0")
         if claim.kind == "STATIC_DTOR":
-            return is_special_member(index, claim.owner, "??1")
+            return is_static_dtor(index, claim.owner)
         if claim.kind == "STATIC_ATEXIT":
             return is_atexit(index, claim.owner)
         if claim.kind == "STATIC_INIT_DISPATCH":
@@ -1180,7 +1198,9 @@ def load_compgen_claims(path: Path | None, unit: str | None):
     if not path.exists():
         raise FileNotFoundError("compiler-function manifest does not exist: %s" % path)
     with path.open(newline="") as stream:
-        rows = csv.DictReader(stream)
+        rows = csv.DictReader(
+            (line for line in stream if not line.startswith("#")),
+            delimiter="\t")
         return tuple(CompgenClaim(
             row["name"], row["kind"], row["owner"], int(row["size"], 0))
             for row in rows if row["unit"] == unit)

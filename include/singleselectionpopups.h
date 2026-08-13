@@ -5,6 +5,26 @@
 #ifndef HOMM3_SINGLESELECTIONPOPUPS_H
 #define HOMM3_SINGLESELECTIONPOPUPS_H
 
+#include "widget.h"
+
+class CSprite;
+
+// Retail's constructor allocates 0x38 bytes and writes the sprite and frame
+// immediately after widget's proven 0x30-byte base. Its vtable at 0x641a00
+// independently fixes the four overrides below.
+class CSpriteWidget : public widget {
+public:
+    CSprite* sprite;
+    int frame;
+
+    CSpriteWidget(int xPos, int yPos, CSprite* pSprite, int spriteFrame);
+    virtual ~CSpriteWidget();
+    virtual int Main(message* msg);
+    virtual void zBufferDraw();
+    virtual void Draw();
+};
+SIZE(CSpriteWidget, 0x38);
+
 // --- CBitmapWidget ---
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:82, dc 0x12f168) void CBitmapWidget::CBitmapWidget(int xPos, int yPos, Bitmap816* pImage);
 // CODEVIEW(E:\gamedcs\singleselectionpopups.cpp:93, dc 0x12f1e0) int CBitmapWidget::Main(message* msg);

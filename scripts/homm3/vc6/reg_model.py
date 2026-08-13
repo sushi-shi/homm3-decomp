@@ -35,7 +35,7 @@ the image; the image producer carries cross-producer syntax skew, see
 _align's caveat).
 
 rc: 0 = zero divergence reached (already, or by a mutation - the winning
-edit is printed as a diff for SUPERVISED application, never auto-applied);
+edit is printed as a diff for manual application, never auto-applied);
 1 = improved-but-not-exact or no mutation helped; 2 = error (die).
 Scratch: build/vc6/whyreg/{base,ref,mut}/.
 
@@ -770,8 +770,7 @@ def run_why(args) -> int:
         fromfile=str(src.name), tofile=f"{src.name} (mutated)", lineterm="")
     for ln in diff:
         print("  " + ln)
-    print("[apply under the supervised-review rule - why-reg proposes, "
-          "never lands]")
+    print("[why-reg proposes this edit; it never applies source changes]")
     return rc
 
 
@@ -1232,8 +1231,7 @@ def run_model(args) -> int:
                 fromfile=src.name, tofile=f"{src.name} (model edit)",
                 lineterm=""):
             print("  " + ln)
-        print("[apply under the supervised-review rule - why-reg proposes, "
-              "never lands]")
+        print("[why-reg proposes this edit; it never applies source changes]")
     else:
         print("[why-reg v2] the model-proposed edit(s) did not move the "
               "binding - the creation-order lever is copy-propagated or "

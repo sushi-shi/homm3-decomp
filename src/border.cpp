@@ -265,7 +265,7 @@ void bitmapBorder::SetImage(const char* bitmap_name)
 VA(0x00450520, 0x2D)  // anchor-global, dc 0x549ec
 void bitmapBorder::SetPlayerPaletteColors(int whichPlayer)
 {
-    ::SetPlayerPaletteColors(&image->p16, whichPlayer);
+    ::SetPlayerPaletteColors(&image->p16.colors, whichPlayer);
     ::SetPlayerPaletteColors(&image->p24, whichPlayer);
 }
 

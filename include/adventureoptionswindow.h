@@ -5,6 +5,57 @@
 #ifndef HOMM3_ADVENTUREOPTIONSWINDOW_H
 #define HOMM3_ADVENTUREOPTIONSWINDOW_H
 
+#include <va.h>
+#include "advmgr_popup.h"
+
+class textWidget;
+
+// Dreamcast supplies the sole derived member name and offset (+0x58 on its
+// 0x58-byte CAdvPopup). Retail's proven 0x60 base shifts the pointer to +0x60;
+// advManager::DoAdventureOptions allocates exactly 0x64 bytes on its stack.
+class TAdventureOptionsWindow : public CAdvPopup {
+public:
+    enum EWidgetIDs {
+        VIEW_WORLD_ID = 1,
+        VIEW_PUZZLE_ID = 2,
+        VIEW_SCENARIO_ID = 3,
+        DIG_ID = 4,
+        REPLAY_ID = 5,
+        ADVENTURE_OPTION_BACKGROUND_ID = 200,
+        ADVENTURE_OPTION_ROLLOVER_ID = 201,
+        ADVENTURE_OPTION_ACCEPT_ID = 0x7802
+    };
+
+    enum EHotkeys {
+        ADVENTURE_OPTION_VIEW_HOTKEY = 47,
+        ADVENTURE_OPTION_PUZZLE_HOTKEY = 25,
+        ADVENTURE_OPTION_DIG_HOTKEY = 32,
+        ADVENTURE_OPTION_INFO_HOTKEY = 23,
+        ADVENTURE_OPTION_TURN_HOTKEY = 19,
+        ADVENTURE_OPTION_ACCEPT_HOTKEY_1 = 28,
+        ADVENTURE_OPTION_ACCEPT_HOTKEY_2 = 1
+    };
+
+    textWidget* RolloverWidget;
+
+    TAdventureOptionsWindow();
+    virtual ~TAdventureOptionsWindow();
+    int convertID2HelpID(int id) const
+    {
+        switch (id) {
+        case VIEW_WORLD_ID: return 0;
+        case VIEW_PUZZLE_ID: return 1;
+        case VIEW_SCENARIO_ID: return 2;
+        case DIG_ID: return 3;
+        case REPLAY_ID: return 4;
+        case ADVENTURE_OPTION_ACCEPT_ID: return 6;
+        default: return -1;
+        }
+    }
+    virtual int WindowHandler(message* msg);
+};
+SIZE(TAdventureOptionsWindow, 0x64);
+
 // --- TAdventureOptionsWindow ---
 // CODEVIEW(E:\gamedcs\adventureoptionswindow.cpp:40, dc 0x4cf4) void TAdventureOptionsWindow::TAdventureOptionsWindow();
 // CODEVIEW(E:\gamedcs\adventureoptionswindow.cpp:105, dc 0x514c) void TAdventureOptionsWindow::~TAdventureOptionsWindow();

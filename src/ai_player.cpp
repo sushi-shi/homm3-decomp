@@ -575,7 +575,8 @@ void type_AI_player::make_gift(long player_id)
     if (gpGame->players[player_id].IsLocalHuman()) {
 #pragma inline_depth(0)
         message.append(format_string(
-                           gUnnamed6a5d5c->entry->aiGiftReceivedText,
+                           gpGeneralText->GetText(
+                               GENERAL_TEXT_AI_GIFT_RECEIVED),
                            gPlayerColorNames[team]),
                        0, std::string::npos);
 #pragma inline_depth()
@@ -601,15 +602,16 @@ void type_AI_player::make_gift(long player_id)
         if (list.size() == 1) {
 #pragma inline_depth(0)
             message.append(format_string(
-                               gUnnamed6a5d5c->entry
-                                   ->aiSingleResourceRequestText,
+                               gpGeneralText->GetText(
+                                   GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST),
                                gPlayerColorNames[team],
                                gResourceNames[list[0].resource]),
                            0, std::string::npos);
 #pragma inline_depth()
         } else {
             message = format_string(
-                gUnnamed6a5d5c->entry->aiMultipleResourceRequestText,
+                gpGeneralText->GetText(
+                    GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST),
                 gPlayerColorNames[team]);
         }
         int timeout = 0;
@@ -627,8 +629,7 @@ void type_AI_player::start_turn()
 
     for (int i = 0; i < player->numHeroes; i++) {
         hero* current_hero = gpGame->GetHero(player->heroes[i]);
-        static_cast<AIHeroStartTurnView*>(static_cast<void*>(current_hero))
-            ->targetIsCritical = 0;
+        current_hero->targetIsCritical = 0;
         current_hero->field_11c = 0;
     }
 
@@ -636,8 +637,7 @@ void type_AI_player::start_turn()
         town* current_town = gpGame->GetTown(player->townIds[j]);
         if (current_town->garrisonHeroId >= 0) {
             hero* current_hero = gpGame->GetHero(current_town->garrisonHeroId);
-            static_cast<AIHeroStartTurnView*>(static_cast<void*>(current_hero))
-                ->targetIsCritical = 0;
+            current_hero->targetIsCritical = 0;
             current_hero->field_11c = 0;
         }
     }

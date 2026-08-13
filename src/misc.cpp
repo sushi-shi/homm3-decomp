@@ -786,88 +786,24 @@ void SRand(int iSeed)
 }
 
 // E:\gamedcs\misc.cpp:838
-// DECODE NOTES 2026-08-06: layout {low@0, count@4 (=high-low+1),
-// byte flag@8, mark buffer@0xc}; ctor allocates max(count,0) bytes
-// (call through the masked allocator) and zero-fills; Pick(): count
-// <= 0 -> low-1; else idx = rand?%count, scan the mark buffer from
+// RETAIL LAYOUT RESOLVED 2026-08-11: the apparent {flag, marks, end1,
+// end2} quartet at +8 is VC6's generic vector<unsigned char> object:
+// its one-byte allocator followed by _First/_Last/_End. That explains
+// both the ctor's otherwise-mysterious copy from [ebp+0xb] (the empty
+// default allocator temporary carries no initialized state) and Pick's
+// reload of _First through vector::operator[]. Dreamcast used STLport's
+// bit-vector specialization, a library/platform divergence. Pick():
+// count <= 0 -> low-1; else idx = rand?%count, scan the mark buffer from
 // idx for the first zero. Pick() FULLY DECODED: pick the
 // (rand%count)-th FREE slot scanning with wrap (marked slots skipped,
 // the random counter consumed only on free ones), then count--,
 // marks[idx] = 0 (so the ctor fills ONES = free), return low + idx.
-// Remaining for the pair: extract the ctor's allocator callee (cdecl,
-// one arg, add esp,4) and its fill loop tail, then implement with a
-// file-scope class decl (misc.h is not yet active).
-// ANOMALY RESOLVED via the call site in
-// combatManager::place_obstacle (0x66010: push 0xa8; push 0x12 -
-// ctor(18, 168), two ints, prototype CORRECT): the `byte [ebp+0xb]`
-// read into flag@8 is retail reading the reused UPPER BYTE of the
-// low-param slot - almost certainly an uninitialized bool local that
-// VC6's slot reuse landed there, shipped as-is. Reproducing that
-// byte-for-byte from clean source may be impossible (the classic
-// uninit-artifact wall); when implementing, copy `(unsigned char)
-// (low >> 24)` only if a cleanliness review admits it, else accept
-// the sliver.
 VA(0x0050c6e0, 0x55)  // anchor-global, dc 0xfe150
 TPickANumber::TPickANumber(int lowBound, int high)
+    : low(lowBound),
+      count(high - lowBound + 1),
+      marks(count, 1)
 {
-    // The span local `n` is load-bearing: retail keeps the span in one
-    // register (`lea edi,[ecx+1]`) and feeds the clamp, the fill guard
-    // and both end pointers from it. Computing `count` in place
-    // (`inc`) and re-reading the member instead costs the whole tail.
-    // Residual (72.18%): the flag byte is the whole cascade. Retail
-    // reads MEMORY (`mov dl,[ebp+0xb]`) while eax already holds the
-    // lowBound parameter; no well-defined expression over lowBound can
-    // emit that, because VC6 always works from the register copy - a
-    // 2026-08-08 sweep of five arithmetic spellings (unsigned >>24,
-    // signed >>24, (x>>24)&0xFF, (unsigned)x&0xFF000000u >>24, and the
-    // int-typed mask form) x three statement slots gave 72.18/69.10/
-    // 69.10 with NO spelling reaching the byte load. Nine further
-    // statement-order permutations of the four stores peaked at 72.18
-    // (the order below). The extra `mov ecx,eax; shr ecx,0x18` is two
-    // instructions where retail has one, which flips the shuttle
-    // register esi<->edi and moves the whole tail. Control flow AGREES
-    // (`--branches`, 4/4 branches, 1/1 ret). The byte-alias spelling
-    // stays REJECTED: it scores worse (72.13) and would assert a
-    // source construct the evidence contradicts.
-    int n = high - lowBound + 1;
-    // The shipped uninit artifact: retail reads the byte straight off
-    // the lowBound parameter slot (`mov dl,[ebp+0xb]`), which is an
-    // uninitialised local VC6's slot reuse landed there - not an
-    // expression over lowBound at all. This stand-in reproduces the
-    // VALUE for the constant call sites and awaits a cleanliness
-    // ruling; it is written FIRST only because that placement costs
-    // the fewest registers (72.2 here vs 69.1 in any other slot).
-    // Spelling the alias literally - a byte read through
-    // static_cast<const unsigned char*>(static_cast<const void*>
-    // (&lowBound))[3] - does NOT recover the codegen (72.1) and is
-    // rejected: it would assert a source construct the evidence
-    // contradicts, for no gain.
-    flag = static_cast<unsigned char>(static_cast<unsigned>(lowBound) >> 24);
-    low = lowBound;
-    count = n;
-    // Retail clamps with a BRANCH (`test/mov/jge/xor`), so the clamp
-    // is an if-statement on a copy, not a ternary - a ternary compiles
-    // to the branchless setl/dec/and idiom.
-    int alloc = n;
-    if (alloc < 0)
-        alloc = 0;
-    marks = new unsigned char[alloc];
-    // Retail's fill guard is `test/jbe` (unsigned) and the loop keeps
-    // a per-iteration null test on the WALKING pointer, so the null
-    // check is inside the body and the counter is unsigned. Hoisting
-    // the check (`if (count > 0 && marks)`) lets VC6 collapse the
-    // whole loop into a dword splat (mov eax,0x1010101) instead.
-    if (static_cast<unsigned>(n) > 0) {
-        unsigned char* p = marks;
-        unsigned i = n;
-        do {
-            if (p)
-                *p = 1;
-            ++p;
-        } while (--i);
-    }
-    end1 = marks + n;
-    end2 = marks + n;
 }
 
 // E:\gamedcs\misc.cpp:849
@@ -901,15 +837,26 @@ int TPickANumber::Pick()
         idx++;
     }
     count--;
-    // Residual (91.2%): retail RE-READS marks from the object after
-    // the count store (`mov eax,[esi+0xc]` between `mov [esi+4],edi`
-    // and the byte store) where this compile reuses the copy the scan
-    // loop left in eax - one extra load, and `pop edi` sits one slot
-    // later. Tried and rejected: a local scan pointer so the final
-    // store is the only member read (90.98), and `count = count - 1`
-    // instead of `count--` (91.22, identical bytes).
     marks[idx] = 0;
     return low + idx;
+}
+
+// E:\gamedcs\misc.cpp:893
+// Retail passes a null root path and multiplies the three low-order
+// geometry results, deliberately retaining the original 32-bit overflow
+// behaviour. The unused total-cluster output is still supplied to Win32.
+VA(0x0050c7a0, 0x42)  // unique whole-body structure, dc 0xfe248
+unsigned long get_available_disk_space()
+{
+    unsigned long sectorsPerCluster = 0;
+    unsigned long bytesPerSector = 0;
+    unsigned long numberOfFreeClusters = 0;
+    unsigned long totalNumberOfClusters = 0;
+
+    if (!GetDiskFreeSpaceA(0, &sectorsPerCluster, &bytesPerSector,
+                           &numberOfFreeClusters, &totalNumberOfClusters))
+        return 0;
+    return numberOfFreeClusters * bytesPerSector * sectorsPerCluster;
 }
 
 #if 0  // @carcass
@@ -917,13 +864,6 @@ int TPickANumber::Pick()
 // E:\gamedcs\misc.cpp:884
 DC_ONLY(0xfe208, 0x40)
 void TPickANumber::MarkOut(int number)
-{
-    // @stub
-}
-
-// E:\gamedcs\misc.cpp:893
-DC_ONLY(0xfe248, 0x70)
-unsigned long get_available_disk_space()
 {
     // @stub
 }
