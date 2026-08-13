@@ -444,7 +444,11 @@ public:
     // 0x132b2 pair FIRST in both functions. Names await a writer.
     unsigned char field_132b0[2];     // +0x132b0
     unsigned char field_132b2[2];     // +0x132b2
-    char pad_132b4[0x4];
+    // Read as a full dword by is_computer_action (0x474bf0) and paired
+    // there with the byte global at 0x691209: when that byte is set and
+    // this slot is non-zero the acting stack is computer-driven no
+    // matter whose side it is on. Name is an address ordinal.
+    int field_132b4;                  // +0x132b4
     // The stack whose turn it is, as a (side, slot) pair into armies:
     // should_attack_now (0x436c60) forms armies[actingSide][actingSlot]
     // with the flattened index actingSide*21 + actingSlot and then
@@ -454,7 +458,12 @@ public:
     // The side whose stack is acting: get_hex_attack_value (0x436180)
     // rejects a neighbour whose combatSide equals it. Name provisional.
     int currentSide;                  // +0x132c0
-    char pad_132c4[0x4];
+    // The war-machine automation gate. is_computer_action (0x474bf0)
+    // reads this dword before every one of its four per-machine option
+    // globals (0x69879c catapult, 0x6987a0 ballista/arrow tower,
+    // 0x6987a4 first-aid tent, 0x698794 otherwise) and only honours the
+    // option while it is non-zero. Name is an address ordinal.
+    int field_132c4;                  // +0x132c4
     // DoCompAI (0x4221f0) zeroes this dword as the very first thing it
     // does, before it even turns the highlighter off - a per-stack AI
     // turn counter or latch. Name is an address ordinal; no roster
@@ -743,6 +752,11 @@ public:
     // caller target at 0x5a3700 with (army*, hex).
     unsigned char is_valid_teleport(const army* this_army, long new_hex);
     unsigned char valid_wall_target(TWallTargetId wall);       // 0x476440
+    // 0x474bf0. `ret 4` proves the retail body takes the acting stack
+    // that the DC roster's nullary prototype omits; the body reaches
+    // it at +0x34 (creatureType), +0xf4 (combatSide) and +0x288
+    // (hypnotizeFlag) and hands it to army::get_owner.
+    unsigned char is_computer_action(const army* current_army);
     long get_surrender_cost();                                 // 0x477a00
     // spells.obj leaves, both `ret 0x18` (six stack args). Names are
     // the DC roster's (spells.cpp:5086 / 5419); the retail addresses
@@ -855,6 +869,21 @@ DATA(0x0063becc) extern const short gLargeObstacleHexes[];
 // them; widths and uses are byte-proven by the retail body.
 DATA(0x0069877c) extern int gCombatQuickMode69877c;
 extern int gCombatActive698a18;
+
+// The four war-machine automation options. is_computer_action
+// (0x474bf0) is the only located reader on this image and the pairing
+// there is what names them - 0x69879c for the catapult, 0x6987a0 for
+// the ballista and the arrow tower, 0x6987a4 for the first-aid tent,
+// and 0x698794 for every other stack. Unclaimed: the writing TU (the
+// system-options window is the likely owner) is not modelled yet, and
+// an unclaimed extern still pairs.
+extern int gCombatAutoCatapult69879c;
+extern int gCombatAutoBallista6987a0;
+extern int gCombatAutoFirstAid6987a4;
+extern int gCombatAutoOther698794;
+// A BYTE, not a dword - is_computer_action loads it with
+// `mov al, byte ptr [0x691209]`. Gated by combatManager::field_132b4.
+extern unsigned char gCombatForceComputer691209;
 
 // The four screen hit rectangles GetGridIndex (0x4647a0) tests before
 // it falls through to the grid arithmetic, one per special combat hex,
