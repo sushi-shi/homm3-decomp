@@ -470,13 +470,13 @@ combatoptionswindow	??1TCombatOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0
 combatoptionswindow	??_GTCombatOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6f6d0
 combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	81.5152	81.5152	81.5152	0x6f7b0
 combatoptionswindow	?DoModal@TCombatOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6f780
+combatresultswindow	??0TCombatResultsWindow@@QAE@PBVhero@@0HHEH@Z	92.7678	92.7678	92.7678	0x702d0
 combatresultswindow	??1TCombatResultsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x71a70
 combatresultswindow	??_GTCombatResultsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x71a40
 combatresultswindow	?Close@TCombatResultsWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x71b50
 combatresultswindow	?CombatResultsWindowHandler@@YIHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x71b90
 combatresultswindow	?DoModal@TCombatResultsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x71b70
 combatresultswindow	?Open@TCombatResultsWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x71af0
-combatresultswindow	TCombatResultsWindow_TCombatResultsWindow	0.0000	0.0000	0.0000	0x702d0
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?is_outside_placement_boundry@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x763f0
