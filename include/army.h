@@ -453,6 +453,16 @@ public:
     // the return type and `get_controller` at army.cpp:2691 is the same
     // size.
     hero* get_owner() const;                                    // 0x442690
+    // 0x43d8b0 / 0x43d9f0, LOCATED 2026-08-13 from combatManager::AddArmy
+    // (0x47a100), which calls them back to back on the freshly claimed
+    // slot. Init's SEVEN stack arguments are an exact arity match for the
+    // DC army.cpp:261 prototype and AddArmy supplies each one in the DC
+    // order (armyId, count, the side's hero, side, slot, hex, -1);
+    // LoadResources takes only `this`. Size ratios corroborate the pair
+    // at the same 1.35 (309/228) and 1.36 (1317/970).
+    void Init(int armyId, int newNumTroops, const hero* owner, int side,
+              int inIndex, int iGridIndex, int iOrigPos);
+    void LoadResources();
     // Header inline of the DC Army.h (line 840); its single retail
     // out-of-line copy is the COMDAT the linker parked in the ai.obj
     // band at 0x41f380 - the same `disabled_290 || disabled_2b0 ||

@@ -560,6 +560,21 @@ public:
     type_point mapPoint;              // +0x13ff0
     Bitmap816* combatCellGridBitmap;   // +0x13ff4
     Bitmap816* combatShadowBitmap;     // +0x13ff8
+    char pad_13ffc[0x4];
+    // "This slot's stack was added mid-combat and still owes a fizzle-in
+    // frame": AddArmy (0x47a100) stamps [iSide][slot] with the flattened
+    // index 20*iSide + slot for every stack that is NOT an arrow tower.
+    // Twenty slots a side, not the twenty-one `armies` carries - AddArmy
+    // only ever searches 0..19. Name is an address ordinal.
+    unsigned char field_14000[2][20];  // +0x14000
+    char pad_14028[0x4];
+    // The three arrow-tower latches, keyed by the tower's grid index by
+    // 0x46a460: hex 254 -> +0x1402c, hex 251 -> +0x1402d, hex 255 ->
+    // +0x1402e. Declared as three bytes rather than an array because the
+    // hex order and the slot order do not agree. Names are ordinals.
+    unsigned char field_1402c;         // +0x1402c
+    unsigned char field_1402d;         // +0x1402d
+    unsigned char field_1402e;         // +0x1402e
 
     combatManager();
 
@@ -760,6 +775,19 @@ public:
     // it at +0x34 (creatureType), +0xf4 (combatSide) and +0x288
     // (hypnotizeFlag) and hands it to army::get_owner.
     unsigned char is_computer_action(const army* current_army);
+    // 0x47a100. Claims the first free (or expendable) slot on a side,
+    // initialises the stack there and optionally fizzles it in.
+    army* AddArmy(int iSide, int iMonType, int iMonQty, int iGridIndex,
+                  int iSetAttributes, int bFizzleItIn);
+    // 0x46a460, RETAIL-ONLY - the DC roster has nothing between
+    // CalculateGainedExperience and IsQuickCombat, where this 57-byte row
+    // sits. It switches on the tower's grid index (254 / 251 / 255) and
+    // sets the matching field_1402c..e latch. Name is a BOOTSTRAP
+    // INVENTION; only the behaviour is proven.
+    void mark_tower_army(const army* tower);
+    // 0x495bf0, carried by drawing.obj (drawing.cpp:2093) and located
+    // there already; declared here because AddArmy calls it.
+    void ComputeMaxExtent();
     long get_surrender_cost();                                 // 0x477a00
     // spells.obj leaves, both `ret 0x18` (six stack args). Names are
     // the DC roster's (spells.cpp:5086 / 5419); the retail addresses
