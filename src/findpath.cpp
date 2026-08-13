@@ -7,6 +7,7 @@
 #include "cmbtmgr.h"
 #include "findpath.h"
 #include "game.h"
+#include "path.h"
 
 // VC6's <xutility> reference-returning min, spelled file-locally for
 // the same reason ai_combat.cpp and ai_tactical.cpp spell it: retail
@@ -702,21 +703,252 @@ void searchArray::mark_enemy(long hex, long cost)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\findpath.cpp:1187
-DC_ONLY(0xa0a8c, 0x8C)
-unsigned char searchArray::check_enemy_armies(long hex, long cost, long current_group, long destination)
+// Both of FindCombatPath's expansions are here; the DC body's own range
+// check is not, because retail's first call site has it hoisted into the
+// direction loop and its second spells it at the site. It answers "the
+// hex this enemy stands on IS the destination", which is why retail's
+// caller consumes the result with `sete`/`test`/`jne` rather than with a
+// plain compare.
+unsigned char searchArray::check_enemy_armies(long hex, long cost,
+                                              long current_group,
+                                              long destination)
 {
-    // @stub
+    const army* enemy = gpCombatManager->cells[hex].get_army();
+    if (enemy == 0 || enemy->combatSide == current_group)
+        return 0;
+
+    mark_enemy(enemy->gridIndex, cost);
+    if (enemy->creatureId & 1)
+        mark_enemy(enemy->get_second_grid_index(), cost);
+    return hex == destination;
 }
 
 // E:\gamedcs\findpath.cpp:1218
+// `ret 0x18` = six stack arguments over `this`, and the DC roster's
+// seven-parameter count matches exactly.
+//
+// THE SIEGE-PRESSURE PREAMBLE is the only part of this body that is not
+// a plain Dijkstra. It fires only while a town is defending AND the
+// acting stack is computer-driven (is_computer_action, landed in
+// command.obj), and it decides whether a stack that CANNOT FIT on a hex,
+// or that is moat-slowed there, may still press the attack. Both
+// hit-point comparisons re-read the whole
+// gpCombatManager->defendingTown->type chain and re-call
+// get_total_hit_points rather than caching either - transcribed
+// faithfully. The second comparison's `siege_pressure &&` guard is
+// invisible in the bytes on the path where the first comparison has just
+// set the flag, which is exactly the retail branch layout.
+//
+// THE THREE INLINED-AWAY DC HELPERS. mark_enemy and check_enemy_armies
+// are spelled out of line above and expand here. The third,
+// build_combat_path, is the block reached by `goto found`: retail has ONE
+// copy of it and enters it from BOTH check_enemy_armies results, so a
+// goto is the shape - a `break` plus a flag would need a frame slot the
+// retail frame does not have, and `adjacent`/`direction` have to outlive
+// the direction loop for the block to read them.
+//
+// bIsMoatSlowed is reached through is_moat(short) throughout; see
+// findpath.h for why that parameter width is proven rather than chosen.
+//
+// Residual (46.5%): ONE class, and it is the /Ob2 budget, not the body.
+// The preamble, the 187-cell clear, the placement branch, the two
+// vector clears, the 5610-byte cellData wipe, the seed PushCombatPoint,
+// the queue.size() guard (null-check included - VC6's vector spells
+// size() as `_First == 0 ? 0 : _Last - _First`, which is what those
+// guards are), back()/pop_back(), the destination probe and the
+// direction loop's guards all land instruction-for-instruction. What
+// diverges is SEVEN expansion decisions, every one of them ours being
+// more eager than retail's: retail CALLS std::copy three times (both
+// clears and the pop), searchArray::getCellData four times (we inline
+// three) and vector<pathCell*>::insert twice (we inline one, which is
+// what leaks the _Ucopy / _Ufill / operator new / operator delete calls
+// retail does not have). That is +17 conditional branches on our side
+// and accounts for the whole gap; retail's six return points against
+// our three are the same story downstream.
+//
+// Per the RE'd rule (docs/vc6/inliner.md) a nested expansion gets
+// `budget / sites-remaining`, so our being MORE eager means our
+// front-end statement mass is larger than retail's at those sites, not
+// smaller - the reverse of the usual starvation case, and not something
+// a local spelling reaches. Tried and rejected (no movement at all,
+// 46.4584 both ways): hoisting the wide-stack `facing ? 1 : -1` into one
+// `side_step` local so the moat pair computes it once, as retail does.
 VA(0x004b3400, 0x787)  // anchor-global, dc 0xa0b18
-unsigned char searchArray::FindCombatPath(const army* current_army, long current_group, long destination, unsigned char in_placement_phase, long limit, long base_speed)
+unsigned char searchArray::FindCombatPath(const army* current_army,
+                                          long current_group, long destination,
+                                          unsigned char in_placement_phase,
+                                          long limit, long base_speed)
 {
-    // @stub
-}
+    if (current_army == 0)
+        return 0;
 
-#endif  // @carcass
+    unsigned char siege_pressure = 0;
+    if (gpCombatManager->defendingTown != 0
+            && gpCombatManager->is_computer_action(current_army)) {
+        if (current_group == 1
+                || gpCombatManager->drawbridgeState != DRAWBRIDGE_UP)
+            siege_pressure = 1;
+        if (current_army->get_total_hit_points(0)
+                <= gTownSiegeStrength63bd18[
+                        gpCombatManager->defendingTown->type] * 4)
+            siege_pressure = 1;
+        if (siege_pressure
+                && current_army->get_total_hit_points(0)
+                    > gTownSiegeStrength63bd18[
+                            gpCombatManager->defendingTown->type] * 40)
+            siege_pressure = 0;
+    }
+
+    { for (long clear_hex = 0; clear_hex < COMBAT_GRID_CELLS; clear_hex++) {
+        gpCombatManager->cells[clear_hex].field_4a = 0;
+        gpCombatManager->cells[clear_hex].field_4b = 0;
+    } }
+
+    if (in_placement_phase) {
+        base_speed = limit = 1000;
+    } else {
+        if (base_speed < 0)
+            base_speed = current_army->GetSpeed();
+        if (base_speed == 0 || current_army->boundFlag)
+            limit = 0;
+    }
+
+    long start_hex = current_army->gridIndex;
+    if (cellData == 0)
+        Init();
+    set_moat(current_army);
+
+    long best_distance = 800;
+    long best_hex = -1;
+    result.clear();
+    queue.clear();
+    memset(cellData, 0, COMBAT_GRID_CELLS * sizeof(pathCell));
+
+    PushCombatPoint(start_hex, current_army->facing ? 1 : 4, 0, 0, limit);
+
+    while (queue.size() > 0) {
+        pathCell cell = queue.back();
+        queue.pop_back();
+
+        long cost = cell.cost;
+        if (cost > limit)
+            continue;
+
+        if (destination >= 0 && destination < COMBAT_GRID_CELLS
+                && cell.flight_cost == 0) {
+            long distance = get_distance(cell.point.x, destination);
+            if (distance < best_distance) {
+                best_hex = cell.point.x;
+                best_distance = distance;
+                if (distance == 0)
+                    break;
+            }
+        }
+
+        long hex = cell.point.x;
+        long adjacent;
+        long direction;
+        for (direction = 0; direction < 6; direction++) {
+            adjacent = current_army->GetAdjacentCellIndex(hex, direction);
+            if (adjacent < 0 || adjacent >= COMBAT_GRID_CELLS)
+                continue;
+
+            long flight_cost = 0;
+            unsigned char moat = 0;
+            if (current_army->creatureId & 1) {
+                long side_step = current_army->facing ? 1 : -1;
+                long tail = adjacent + side_step;
+                if (is_moat(adjacent) && adjacent != hex + side_step)
+                    moat = 1;
+                if (is_moat(tail) && tail != hex)
+                    moat = 1;
+            } else {
+                moat = is_moat(adjacent);
+            }
+
+            long step = 1;
+            if (moat && base_speed > 0)
+                step = base_speed - cost % base_speed;
+
+            if (!current_army->CanFit(adjacent, 0, 0)
+                    || (siege_pressure && moat)) {
+                long enemy_cost = cost;
+                if (is_moat(hex))
+                    enemy_cost += base_speed;
+                unsigned char blocked = 0;
+                if (limit <= base_speed) {
+                    if (is_moat(hex))
+                        blocked = 1;
+                    if ((current_army->creatureId & 1)
+                            && is_moat(static_cast<short>(
+                                    cell.point.x
+                                    + (current_army->facing ? 1 : -1))))
+                        blocked = 1;
+                }
+                if (enemy_cost <= limit && !blocked) {
+                    if (check_enemy_armies(adjacent, enemy_cost, current_group,
+                                           destination))
+                        goto found;
+                    if (current_army->creatureId & 1) {
+                        long tail = adjacent
+                            + (current_army->facing ? 1 : -1);
+                        if (tail >= 0 && tail < COMBAT_GRID_CELLS
+                                && check_enemy_armies(tail, enemy_cost,
+                                                      current_group,
+                                                      destination))
+                            goto found;
+                    }
+                }
+                if (!(((static_cast<unsigned>(current_army->creatureId) >> 1)
+                            & 1)
+                        || current_army->creatureType == CREATURE_DEVIL
+                        || current_army->creatureType == CREATURE_ARCH_DEVIL))
+                    continue;
+                flight_cost = cell.flight_cost + 1;
+                if (flight_cost >= current_army->GetSpeed())
+                    continue;
+            }
+            PushCombatPoint(adjacent, direction, cost + step, flight_cost,
+                            limit);
+        }
+        goto searched;
+
+    found:
+        {
+            pathCell* reached = getCellData(adjacent);
+            reached->point.x = static_cast<short>(adjacent);
+            reached->direction = direction;
+            reached->last_point = cell.point;
+            result.push_back(reached);
+        }
+
+    searched:
+        if (result.size() > 0) {
+            best_hex = result[0]->last_point.x;
+            break;
+        }
+    }
+
+    if (destination < 0 || destination >= COMBAT_GRID_CELLS)
+        return 0;
+    if (current_army->side == -1) {
+        if (best_hex != destination)
+            return 0;
+    } else if (result.size() == 0) {
+        return 0;
+    }
+
+    while (best_hex != start_hex) {
+        pathCell* step_cell = getCellData(best_hex);
+        result.push_back(step_cell);
+        best_hex = current_army->GetAdjacentCellIndex(
+            best_hex, OppositeDirection(step_cell->direction));
+    }
+    return result.size() > 0;
+}
 
 // THE ONE RETAIL ROW WITH NO DREAMCAST TWIN. 0x4b3b90 sits between
 // FindCombatPath and PushCombatPoint, where the DC roster has nothing,
