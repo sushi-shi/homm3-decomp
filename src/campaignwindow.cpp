@@ -5,6 +5,7 @@
 #include <string.h>
 #include "binkmanager.h"
 #include "campaignwindow.h"
+#include "game.h"
 #include "message.h"
 #include "soundmgr.h"
 #include "widget.h"
@@ -72,14 +73,109 @@ void TCampaignWindow::DoModal()
     gpWindowManager->DoDialog(this, CampaignWindowHandler, 0);
 }
 
+// File-static hover latch: the handler is its only image-wide reader and
+// writer, and it sits in the four bytes between the last gCampaignPreviews
+// row and the campaign-filename table.
+DATA(0x0066cad8) static int lastCampaignHoverID;
+
 // E:\gamedcs\campaignwindow.cpp:291
-#if 0  // @carcass
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int CampaignWindowHandler(message& msg)
 {
-    // @stub
+    if (gBinkDirty) {
+        gpCampaignWindow->DrawWindow(0, 0x80, 0x86);
+        gpWindowManager->UpdateScreen(gBinkX, gBinkY,
+            gBinkUpdateWidth, gBinkUpdateHeight);
+    }
+
+    if (msg.id == MESSAGE_WIDGET) {
+        if (msg.codeX != widget::WIDGET_DESELECT)
+            goto consume;
+        {
+            int id = msg.codeY;
+            if (id < TCampaignWindow::CAMPAIGN_FIRST_ID)
+                goto consume;
+            if (id > TCampaignWindow::CAMPAIGN_LAST_ID) {
+                if (id != DIALOG_RETURN_CANCEL)
+                    goto consume;
+            } else {
+                gpGame->campaign.select_campaign(
+                    id - TCampaignWindow::CAMPAIGN_FIRST_ID,
+                    gCampaignFileNames[
+                        id - TCampaignWindow::CAMPAIGN_FIRST_ID]);
+                gBinkPaused = 1;
+                _BinkPause(gBinkVideo, 1);
+            }
+        }
+end_dialog:
+        msg.id = MESSAGE_WIDGET;
+        gpWindowManager->dialogReturn = msg.codeY;
+        msg.codeY = widget::WIDGET_END_DIALOG;
+        msg.codeX = widget::WIDGET_END_DIALOG;
+        return MESSAGE_DISPATCH_FORWARD;
+    }
+
+    if (msg.id == MESSAGE_KEY_DOWN) {
+        if (msg.codeX != 1)
+            goto consume;
+        msg.codeY = DIALOG_RETURN_CANCEL;
+        goto end_dialog;
+    }
+
+    if (msg.id != MESSAGE_MOUSE_MOVE)
+        goto consume;
+
+    {
+        int hoverID = gpCampaignWindow->findWidget(msg.mouseX, msg.mouseY);
+        if (hoverID == lastCampaignHoverID)
+            goto consume;
+        lastCampaignHoverID = hoverID;
+
+        if (hoverID >= TCampaignWindow::CAMPAIGN_FIRST_ID
+                && hoverID <= TCampaignWindow::CAMPAIGN_LAST_ID) {
+            int* preview = gCampaignPreviews
+                + (hoverID - TCampaignWindow::CAMPAIGN_FIRST_ID) * 20;
+            for (int shown = TCampaignWindow::PREVIEW_FIRST_ID;
+                 shown <= TCampaignWindow::PREVIEW_LAST_ID; ++shown) {
+                widget* line = gpCampaignWindow->GetWidget(shown);
+                if (line)
+                    line->send_message(widget::WIDGET_CLEAR_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            }
+            gpCampaignWindow->GetWidget(hoverID
+                    - gpCampaignWindow->firstCampaign - 7)->send_message(
+                widget::WIDGET_SET_STATUS,
+                widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            memcpy(&gBinkVideo, preview + 8, 12 * sizeof(int));
+            gBinkPaused = 0;
+            _BinkPause(gBinkVideo, 0);
+            BinkManager::RestartBink();
+        } else {
+            gBinkPaused = 1;
+            _BinkPause(gBinkVideo, 1);
+            for (int hidden = TCampaignWindow::PREVIEW_FIRST_ID;
+                 hidden <= TCampaignWindow::PREVIEW_LAST_ID; ++hidden) {
+                widget* line = gpCampaignWindow->GetWidget(hidden);
+                if (line)
+                    line->send_message(widget::WIDGET_CLEAR_STATUS,
+                        widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+            }
+        }
+
+        if (hoverID == DIALOG_RETURN_CANCEL)
+            gpCampaignWindow->GetWidget(DIALOG_RETURN_CANCEL)->send_message(
+                widget::WIDGET_SET_STATUS, widget::WIDGET_HIGHLIGHTED);
+        else
+            gpCampaignWindow->GetWidget(DIALOG_RETURN_CANCEL)->send_message(
+                widget::WIDGET_CLEAR_STATUS, widget::WIDGET_HIGHLIGHTED);
+        gpCampaignWindow->DrawWindow(0, 0xffff0001, 0xffff);
+        gpWindowManager->UpdateScreen(0, 0, WINDOW_SCREEN_WIDTH,
+            WINDOW_SCREEN_HEIGHT);
+    }
+
+consume:
+    return MESSAGE_DISPATCH_CONSUME;
 }
-#endif
 
 // E:\gamedcs\campaignwindow.cpp:258
 #if 0  // @carcass -- represented by VA_COMPGEN above
