@@ -3,6 +3,7 @@
 // 78 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "cmbtmgr.h"
+#include "game.h"
 #include "hero.h"
 
 #if 0  // @carcass
@@ -84,12 +85,96 @@ int combatManager::GetPointer(int inCombatCommand, int iHexIndex)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\command.cpp:928
+// NINE PARAMETERS' WORTH OF EVIDENCE IN ONE BYTE: `ret 4`. The DC
+// roster prints is_computer_action as nullary (one parameter, `this`),
+// but retail pops a stack argument, and every use of it identifies the
+// argument as the acting stack - +0x34 against the five war-machine
+// creature ids, +0x288/+0xf4 as the hypnotize/side pair set_moat
+// already spells the same way, and `mov ecx, arg; call 0x442690`,
+// army::get_owner. The DC port hoisted it to a member; retail passes
+// it.
+//
+// CASE ORDER IS THE SOURCE'S, not the case values'. The jump table at
+// the tail maps 0x91..0x95 onto four blocks, and those blocks are
+// EMITTED in the order ballista/arrow-tower, catapult, first-aid tent,
+// default - so the switch was written with the artillery pair first.
+// Each of the three machine arms repeats the same three guards
+// verbatim; retail duplicates them rather than factoring, and the two
+// `return 1` epilogues (one shared, one tail-duplicated at the end of
+// each arm) are what that longhand costs.
+//
+// Only the artillery arm null-checks the owner. That asymmetry is
+// retail's, not a modelling gap: the catapult and first-aid arms
+// dereference get_owner's result unguarded.
+//
+// Residual (81.4%): the merged-return family, and nothing else - every
+// instruction, operand and immediate agrees, the two arms that matter
+// are byte-for-byte, and the whole 36-byte gap is three tail-merge
+// decisions our SP3 CL takes and retail does not. Retail lays a LOCAL
+// `return 1` epilogue at the fall-through of the first-aid arm, of the
+// default arm and of the post-switch 0x691209 guard; our CL cross-jumps
+// all three into the shared copy it parked in the catapult arm (and
+// turns the first-aid tail into a bare `jmp` into the catapult tail).
+// Tried and rejected: spelling the default arm's `&&` as two `== 0`
+// breaks with the `return 1` last, which flips the polarity our CL
+// already agrees on elsewhere and LOSES ground (81.37 -> 80.97).
 VA(0x00474bf0, 0x188)  // anchor-global, dc 0x6bebc
-unsigned char combatManager::is_computer_action()
+unsigned char combatManager::is_computer_action(const army* current_army)
 {
-    // @stub
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return 1;
+
+    hero* owner = current_army->get_owner();
+    switch (current_army->creatureType) {
+    case CREATURE_BALLISTA:
+    case CREATURE_ARROW_TOWER:
+        if (bCreaturePlacement)
+            return 0;
+        if (field_132c4 && gCombatAutoBallista6987a0)
+            return 1;
+        if (owner == 0)
+            return 1;
+        if (owner->skillLevel[20] == 0)
+            return 1;
+        break;
+    case CREATURE_CATAPULT:
+        if (bCreaturePlacement)
+            return 0;
+        if (field_132c4 && gCombatAutoCatapult69879c)
+            return 1;
+        if (owner->ballisticsLevel == 0)
+            return 1;
+        break;
+    case CREATURE_FIRST_AID_TENT:
+        if (bCreaturePlacement)
+            return 0;
+        if (field_132c4 && gCombatAutoFirstAid6987a4)
+            return 1;
+        if (owner->skillLevel[27] == 0)
+            return 1;
+        break;
+    default:
+        if (field_132c4 && gCombatAutoOther698794)
+            return 1;
+        break;
+    }
+
+    if (gCombatForceComputer691209 && field_132b4)
+        return 1;
+
+    long side = current_army->hypnotizeFlag
+        ? 1 - current_army->combatSide
+        : current_army->combatSide;
+    int player = playerIds[side];
+    if (player != -1 && gpGame->IsHuman(player))
+        return 0;
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\command.cpp:1001
 DC_ONLY(0x6c070, 0xB08)

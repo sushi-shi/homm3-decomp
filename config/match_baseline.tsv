@@ -479,6 +479,7 @@ combatresultswindow	?Open@TCombatResultsWindow@@UAEHHE@Z	100.0000	100.0000	100.0
 combatresultswindow	TCombatResultsWindow_TCombatResultsWindow	0.0000	0.0000	0.0000	0x702d0
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
+command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0
 command	?is_outside_placement_boundry@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x763f0
 command	?valid_wall_target@combatManager@@QAEEW4TWallTargetId@@@Z	100.0000	100.0000	100.0000	0x76440
 command	combatManager_AddArmy	0.0000	0.0000	0.0000	0x7a100
@@ -486,7 +487,6 @@ command	combatManager_DoCommand	0.0000	0.0000	0.0000	0x76bd0
 command	combatManager_DoVictory	0.0000	0.0000	0.0000	0x77470
 command	combatManager_GetCommand	0.0000	0.0000	0.0000	0x76490
 command	combatManager_RightClick	0.0000	0.0000	0.0000	0x769c0
-command	combatManager_is_computer_action	0.0000	0.0000	0.0000	0x74bf0
 command	combatManager_show_eagle_eye	0.0000	0.0000	0.0000	0x76fe0
 command	combatManager_show_looted_artifacts	0.0000	0.0000	0.0000	0x772b0
 compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40
@@ -646,7 +646,7 @@ game	?Save@game@@QAEHPAVTAbstractFile@@@Z	27.9354	27.9354	27.9354	0xbe3f0
 game	?SaveBoatPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9c40
 game	?SaveGarrisonPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb98c0
 game	?SaveMinePool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9580
-game	?SaveRumours@game@@AAEHPAVTAbstractFile@@@Z	91.8100	99.7000	99.7000	0xbbc20
+game	?SaveRumours@game@@AAEHPAVTAbstractFile@@@Z	99.7000	99.7000	99.7000	0xbbc20
 game	?SaveSignPool@game@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xb9270
 # game: 32 flat/mangled rows deleted 2026-08-08, all superseded by
 # promoted source names in the same change. Two are renames rather
