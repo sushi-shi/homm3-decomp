@@ -15,6 +15,41 @@ class textWidget;
 // combatManager::CombatSystemOptions' 0x54-byte stack object.
 class TCombatOptionsWindow : public heroWindow {
 public:
+    // Widget ids, byte-proven by the constructor's creation order and the
+    // post-AddWidget preference sweep (every id below is either a literal
+    // in a widget constructor or a loop bound in that sweep). Names follow
+    // the preference field each id drives; the four Highlight* Dreamcast
+    // methods corroborate the grid/shadow/speed group.
+    enum EOtherWidgetIDs {
+        BACKGROUND_ID = 200,
+        DEFAULT_ID = 201,
+        MUSIC_VOLUME_0_ID = 202,
+        MUSIC_VOLUME_9_ID = 211,
+        EFFECTS_VOLUME_0_ID = 212,
+        EFFECTS_VOLUME_9_ID = 221,
+        AUTO_CREATURES_ID = 225,
+        AUTO_SPELLS_ID = 226,
+        AUTO_CATAPULT_ID = 227,
+        AUTO_BALLISTA_ID = 228,
+        AUTO_FIRST_AID_TENT_ID = 229,
+        COMBAT_SPEED_0_ID = 230,
+        COMBAT_SPEED_2_ID = 232,
+        CREATURE_INFO_VERBOSE_ID = 233,
+        CREATURE_INFO_COMPACT_ID = 234,
+        SHOW_GRID_ID = 235,
+        MOVEMENT_SHADOW_ID = 236,
+        MOUSE_SHADOW_ID = 237,
+        ANIMATE_SPELLBOOK_ID = 238
+    };
+
+    // The domain of the prefs block's combatArmyInfoLevel, byte-proven by
+    // the constructor: it lights CREATURE_INFO_VERBOSE_ID when the field is
+    // 1 and CREATURE_INFO_COMPACT_ID when it is 2.
+    enum ECreatureInfoLevel {
+        CREATURE_INFO_LEVEL_VERBOSE = 1,
+        CREATURE_INFO_LEVEL_COMPACT = 2
+    };
+
     unsigned char bPrefsChanged;  // +0x4c
     char pad_4d[3];
     textWidget* RolloverWidget;   // +0x50
