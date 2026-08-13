@@ -468,7 +468,7 @@ combatcontrolsubwindow	?UnShow@TCombatHeroSubWindow@@QAEXXZ	100.0000	100.0000	10
 combatoptionswindow	??0TCombatOptionsWindow@@QAE@XZ	77.1191	77.1191	77.1191	0x6e3b0
 combatoptionswindow	??1TCombatOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x6f700
 combatoptionswindow	??_GTCombatOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6f6d0
-combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	81.5152	81.5152	81.5152	0x6f7b0
+combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	83.3598	83.3598	83.3598	0x6f7b0
 combatoptionswindow	?DoModal@TCombatOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6f780
 combatresultswindow	??0TCombatResultsWindow@@QAE@PBVhero@@0HHEH@Z	92.7678	92.7678	92.7678	0x702d0
 combatresultswindow	??1TCombatResultsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x71a70

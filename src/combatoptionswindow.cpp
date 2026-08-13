@@ -264,19 +264,44 @@ void TCombatOptionsWindow::DoModal()
         WritePrefs();
 }
 
-// The four highlight helpers are present out of line on Dreamcast, but every
-// retail use is inlined into the constructor/handler; no retail entries occur
-// between DoModal and the handler.
-#if 0  // @carcass
-DC_ONLY(0x67a78, 0x52)
-void TCombatOptionsWindow::HighlightCombatSpeed() { /* @stub */ }
-DC_ONLY(0x67acc, 0x22)
-void TCombatOptionsWindow::HighlightGrid() { /* @stub */ }
-DC_ONLY(0x67af0, 0x22)
-void TCombatOptionsWindow::HighlightMovementShadow() { /* @stub */ }
-DC_ONLY(0x67b14, 0x68)
-void TCombatOptionsWindow::HighlightMouseShadow() { /* @stub */ }
-#endif
+// The four highlight helpers are present out of line on Dreamcast (dc
+// 0x67a78/0x67acc/0x67af0/0x67b14) but every retail use is expanded by /Ob2;
+// no retail entry occurs between DoModal and the handler. They are real
+// source, not open-coded loops: HighlightCombatSpeed's expansion holds its
+// inlined `this` in EDI across the whole three-widget sweep, which is what
+// retail's Default and speed cases do and what a direct
+// `gpCombatOptionsWindow->GetWidget(...)` per iteration cannot produce.
+// Spelled `inline` so no out-of-line copy lands in this obj either.
+// E:\gamedcs\combatoptionswindow.cpp:230
+inline void TCombatOptionsWindow::HighlightCombatSpeed()
+{
+    for (int speed = COMBAT_SPEED_0_ID; speed <= COMBAT_SPEED_2_ID; ++speed)
+        GetWidget(speed)->send_message(widget::WIDGET_CLEAR_STATUS,
+            widget::WIDGET_DIMMED_NODRAW);
+    GetWidget(gUnnamed698758.combatSpeed + COMBAT_SPEED_0_ID)->send_message(
+        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:243
+inline void TCombatOptionsWindow::HighlightGrid()
+{
+    GetWidget(SHOW_GRID_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
+        gUnnamed698758.showCombatGrid);
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:254
+inline void TCombatOptionsWindow::HighlightMovementShadow()
+{
+    GetWidget(MOVEMENT_SHADOW_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
+        gUnnamed698758.combatShadeLevel);
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:265
+inline void TCombatOptionsWindow::HighlightMouseShadow()
+{
+    GetWidget(MOUSE_SHADOW_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
+        gUnnamed698758.showCombatMouseHex);
+}
 
 // Dreamcast homes this helper after the handler, but retail inlines it at
 // both call sites (the next retail entry after the handler, 0x46fee0, is an
@@ -332,25 +357,10 @@ int CombatOptionsWindowHandler(message& msg)
         switch (id) {
         case TCombatOptionsWindow::DEFAULT_ID: {
             SetDefaultCombatOptions();
-            for (int speed = TCombatOptionsWindow::COMBAT_SPEED_0_ID;
-                 speed <= TCombatOptionsWindow::COMBAT_SPEED_2_ID; ++speed)
-                gpCombatOptionsWindow->GetWidget(speed)->send_message(
-                    widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DIMMED_NODRAW);
-            gpCombatOptionsWindow->GetWidget(gUnnamed698758.combatSpeed
-                    + TCombatOptionsWindow::COMBAT_SPEED_0_ID)->send_message(
-                widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::SHOW_GRID_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.showCombatGrid);
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::MOVEMENT_SHADOW_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.combatShadeLevel);
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::MOUSE_SHADOW_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.showCombatMouseHex);
+            gpCombatOptionsWindow->HighlightCombatSpeed();
+            gpCombatOptionsWindow->HighlightGrid();
+            gpCombatOptionsWindow->HighlightMovementShadow();
+            gpCombatOptionsWindow->HighlightMouseShadow();
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_CREATURES_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -497,13 +507,7 @@ int CombatOptionsWindowHandler(message& msg)
         case TCombatOptionsWindow::COMBAT_SPEED_2_ID: {
             gUnnamed698758.combatSpeed =
                 id - TCombatOptionsWindow::COMBAT_SPEED_0_ID;
-            for (int speed = TCombatOptionsWindow::COMBAT_SPEED_0_ID;
-                 speed <= TCombatOptionsWindow::COMBAT_SPEED_2_ID; ++speed)
-                gpCombatOptionsWindow->GetWidget(speed)->send_message(
-                    widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DIMMED_NODRAW);
-            gpCombatOptionsWindow->GetWidget(gUnnamed698758.combatSpeed
-                    + TCombatOptionsWindow::COMBAT_SPEED_0_ID)->send_message(
-                widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
+            gpCombatOptionsWindow->HighlightCombatSpeed();
             break;
         }
 
@@ -545,26 +549,17 @@ int CombatOptionsWindowHandler(message& msg)
 
         case TCombatOptionsWindow::SHOW_GRID_ID:
             gUnnamed698758.showCombatGrid ^= one;
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::SHOW_GRID_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.showCombatGrid);
+            gpCombatOptionsWindow->HighlightGrid();
             break;
 
         case TCombatOptionsWindow::MOVEMENT_SHADOW_ID:
             gUnnamed698758.combatShadeLevel ^= one;
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::MOVEMENT_SHADOW_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.combatShadeLevel);
+            gpCombatOptionsWindow->HighlightMovementShadow();
             break;
 
         case TCombatOptionsWindow::MOUSE_SHADOW_ID:
             gUnnamed698758.showCombatMouseHex ^= one;
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::MOUSE_SHADOW_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.showCombatMouseHex);
+            gpCombatOptionsWindow->HighlightMouseShadow();
             break;
 
         default:
