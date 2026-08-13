@@ -64,6 +64,15 @@ public:
 };
 SIZE(TCombatResultsWindow, 0x4c);
 
+// Retail .bss 0x695014, declared here for want of a proven owner: the
+// constructor below writes it eight times, always paired with the video id it
+// hands VideoOpen, and the ONLY other site in the image that touches it is the
+// still-unclaimed 0x477470 (config/retail-reloc-evidence.tsv lists exactly ten
+// references, eight of them ours). No DATA claim is made - this TU does not
+// define it - and the declaration moves to the real owner's header as soon as
+// 0x477470's compiland is located.
+extern int gCombatResultFlag695014;
+
 // Retail /Gr passes the message in ECX, matching DoDialog's callback shape.
 int CombatResultsWindowHandler(message& msg);
 
