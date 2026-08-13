@@ -24,6 +24,14 @@ public:
     TCombatCreatureSubWindow* creatureSubWindows[4];
 
     virtual void Close(unsigned char update);
+    // 0x472bf0, LOCATED 2026-08-13 from combatManager::RightClick. The
+    // 54-byte body clears the +0x64 latch and re-sets the message line
+    // from the string at 0x691210 once GameTime has run 3000 ticks past
+    // the +0x6c stamp, and it forwards to the three-argument
+    // combat_message at 0x472e90 - which is what pairs it with the DC's
+    // TCombatWindow::ClearCombatMessages (combatwindow.cpp:417, 58 SH4
+    // bytes against 54).
+    void ClearCombatMessages();
 };
 SIZE(TCombatWindow, 0x8c);
 

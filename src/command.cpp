@@ -3,8 +3,12 @@
 // 78 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "cmbtmgr.h"
+#include "combatcontrolsubwindow.h"
+#include "combatwindow.h"
 #include "game.h"
 #include "hero.h"
+#include "inputmgr.h"
+#include "mousemgr.h"
 #include "prefs.h"
 #include "soundmgr.h"
 #include "winmgr.h"
@@ -328,12 +332,79 @@ int combatManager::GetCommand(int newIndex)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\command.cpp:2210
+// THE THREE HEX DOMAINS, in retail's own test order: the two hero
+// panels (253 attacker-side, 252 defender-side), then any occupied
+// combat hex, then the three bombardable structures. The hero arms are
+// mirror images down to the operand order, and both consult
+// gUnnamed698758.combatArmyInfoLevel (0x6987c8 - an INTERIOR field of
+// the misc.obj preferences object, not a global of its own) to decide
+// whether the panel stays up after the quick-view pump returns.
+//
+// The wall arm is one `goto`: gWallTargets[7] short-circuits the whole
+// hex test, while gWallTargets[0] and [6] are only reachable once the
+// hex test has failed AND the town is a full castle. All three land on
+// ViewCastleBallista(1).
 VA(0x004769c0, 0x207)  // linkorder, dc 0x6d988
 int combatManager::RightClick(int newIndex)
 {
-    // @stub
+    if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
+        if (heroes[1]) {
+            combatWindow->heroSubWindows[1]->Update(*heroes[1], heroes[0],
+                                                    field_53c0 == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
+            combatWindow->heroSubWindows[1]->Show();
+            gpWindowManager->DoQuickView(0);
+            if (gUnnamed698758.combatArmyInfoLevel)
+                return 0;
+            combatWindow->heroSubWindows[1]->UnShow();
+        }
+        return 0;
+    }
+
+    if (newIndex == COMBAT_HEX_ATTACKER_HERO) {
+        if (heroes[0]) {
+            combatWindow->heroSubWindows[0]->Update(*heroes[0], heroes[1],
+                                                    field_53c0 == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
+            combatWindow->heroSubWindows[0]->Show();
+            gpWindowManager->DoQuickView(0);
+            if (gUnnamed698758.combatArmyInfoLevel)
+                return 0;
+            combatWindow->heroSubWindows[0]->UnShow();
+        }
+        return 0;
+    }
+
+    if (newIndex != gWallTargets[7].hex) {
+        if (newIndex >= 0 && newIndex < COMBAT_GRID_CELLS
+                && cells[newIndex].armySide >= 0) {
+            gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+            ViewArmy(cells[newIndex].get_army(), 1);
+            if (static_cast<const combatManager*>(this)->IsQuickCombat())
+                return 0;
+            if (field_132b4 && playerIds[currentSide] >= 0
+                    && gpGame->IsHuman(playerIds[currentSide])) {
+                field_132d4 = -1;
+                if (combatWindow)
+                    combatWindow->ClearCombatMessages();
+                gpInputManager->ForceMouseMove();
+                return 0;
+            }
+            gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+            return 0;
+        }
+        if (field_132f4 != COMBAT_FORTIFICATION_CASTLE)
+            return 0;
+        if (newIndex != gWallTargets[0].hex && newIndex != gWallTargets[6].hex)
+            return 0;
+    }
+    ViewCastleBallista(1);
+    return 0;
 }
+
+#if 0  // @carcass
+
 
 // E:\gamedcs\command.cpp:2279
 VA(0x00476bd0, 0x402)  // linkorder, dc 0x6db78
