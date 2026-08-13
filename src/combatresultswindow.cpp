@@ -16,6 +16,67 @@
 DATA(0x00694fbc) static TCombatResultsWindow* gpCombatResultsWindow;
 
 // E:\gamedcs\combatresultswindow.cpp:72
+//
+// DECODE MAP (read off retail 0x4702d0; ~80% of the body is resolved - the
+// unresolved tail is the two set_hotkey expansions, the AddWidget sweep and
+// the epilogue). Everything named below is already modelled in an existing
+// header, so the remaining work is transcription, not modelling:
+//
+//   frame/params  [ebp+8] attacker, +0xc defender, +0x10 my_side,
+//                 +0x14 winning_side, +0x18 is_siege, +0x1c experience.
+//                 Retail reuses the +8 slot for `my_side ? defender
+//                 : attacker` - the hero whose result the window narrates -
+//                 and the +0x18 slot for the video id it computes.
+//   base          heroWindow(0xa5, 0x13, 0x1d6, 0x231, 0x10), then the
+//                 vtable store and gpCombatResultsWindow = this. There is
+//                 NO reserve() call: this constructor grows the vector
+//                 organically, which is why so many vector<widget*>::insert
+//                 expansions sit inline in the body.
+//   widgets       CPResult.pcx background (BACKGROUND_ID) under
+//                 gpGame->GetLocalPlayerGamePos()'s palette; the
+//                 attacker/defender name texts (201/204, BigFont.fnt,
+//                 genrltxt 408..410 by side); the TwCrPort.def portrait
+//                 pair (202/205) with SetIconFrame(portrait + 2) behind a
+//                 Box64x30 bitmapBorder whose image comes from
+//                 akHeroTraits[hero->portrait].largePortraitName; the two
+//                 result texts at x=17 and x=367 selecting genrltxt 411 vs
+//                 412 on `winning_side == side`; the aggregated loss rows;
+//                 and the iOkay.def accept button (385, 507, 64, 30,
+//                 DIALOG_RETURN_SPLIT_ACCEPT) carrying hotkeys 28 and 1.
+//   no-hero arm   When a side has no hero, retail names that side's
+//                 STRONGEST stack instead: walk the twenty combatManager
+//                 stacks, skip creatureType -1 and 0x95 (the war machine),
+//                 track the maximum of army + 0xb4 and count the live
+//                 stacks, then name the survivor. The `(8*i - i)*3` /
+//                 `+ 8*i` index arithmetic is exactly `armies[side][i]`
+//                 with the 0x548 stride already modelled in cmbtmgr.h
+//                 (`army armies[2][21]` at +0x54cc); the 0x5500 / 0xc3e8
+//                 bases in the disassembly are &armies[side][0].creatureType
+//                 (+0x34), and the side pitch 0x6ee8 is 21 * 0x548.
+//   losses        A 2x20 aggregation into two frame arrays - creature ids
+//                 at [ebp-0xd4], counts at [ebp-0x1d8], live rows per side
+//                 at [ebp-0x34]. Per side, per stack: skip creatureType
+//                 == -1, take origNumTroops - numTroops, skip if <= 0, then
+//                 linear-search that side's id list and either add into the
+//                 matching row or append a new one. Each surviving row
+//                 becomes a cprsmall.def iconWidget (frame creatureType + 2)
+//                 plus a sprintf("%d") count text, both carrying
+//                 BACKGROUND_ID; the row pitch is 0x2a and the first x is
+//                 `(0x1d4 - 21*n) / 2 + 11`, i.e. the run is centred.
+//   result text   `my_side == winning_side` selects victory phrasing
+//                 (genrltxt 303/304/305 chosen by gCombatFlag697744 /
+//                 gCombatFlag6985a3, plus a 306-formatted
+//                 "<hero> gains <experience>" appended when the narrated
+//                 hero exists); otherwise defeat phrasing (307/308/309 with
+//                 a hero, 310/311/312 without). Both arms then pick the
+//                 video id and 0x695014 together: victory gives (4, 2) for
+//                 a siege the defender lost and (0, 0) otherwise; defeat
+//                 gives (1, 5) for that same siege case, else (3, 4) /
+//                 (2, 3) / (5, 1) on the same two combat flags. gText is
+//                 the strcpy/strcat target throughout.
+//
+// Left as a carcass deliberately: transcribing it is a session's work on
+// its own, and a half-written body would be worse evidence than this map.
 #if 0  // @carcass
 VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
 TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
