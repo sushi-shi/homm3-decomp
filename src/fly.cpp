@@ -31,15 +31,100 @@ unsigned char army::find_flyer_attack_cell(int target)
 // The earlier 0x4b4420 claim was correctly withdrawn: it is a terrain.h
 // initializer. Retail simple_move independently calls 0x4b46c0, and the
 // following FlyTo/Fly/TeleportTo/Teleport shapes form the complete ordered
-// fly.obj block. ValidFlight remains a carcass until its inlined search is
-// reconstructed.
-#if 0  // @carcass
+// fly.obj block.
+//
+// RECONSTRUCTED 2026-08-13. The 761 retail bytes are FOUR copies of the
+// same six-step adjacency scan, which is exactly the two DC
+// find_flyer_attack_cell overloads expanded by /Ob2: the scan is spelled
+// once here as a file-local static so VC6 folds it back the way retail's
+// helper was folded, and the static then has no out-of-line body of its
+// own - the same emission rule initialize.obj's two inlined creators
+// established.
+//
+// WHAT THE FOUR COPIES VARY. The pair (start, target) walks
+// (this hex, enemy hex), (this second hex, enemy hex),
+// (this hex, enemy second hex), (this second hex, enemy second hex), each
+// guarded by the wide-stack bit of the stack it belongs to - which is why
+// the third and fourth copies sit inside one `enemy->creatureId & 1`
+// block and the second and fourth inside their own `creatureId & 1`
+// tests. Retail computes the adjacency ROW ADDRESS once per target and
+// reuses it across the two copies that share a target (`[ebp-8]`), so the
+// two hexes are locals, not re-read members.
+//
+// side/slot (+0x10/+0x14) are read here as the CHOSEN ATTACK TARGET's
+// (side, slot), not as this stack's own identity: retail indexes
+// gpCombatManager->armies with them and then scans the cells adjacent to
+// the resulting stack, and the -1 pair is the "no target selected" case
+// that falls through to the literal reachability test.
+//
+// Residual (89.1%): two classes, both bounded, no third.
+// (1) The entry pair of bound checks. Retail emits ONE `return 0` block
+//     between the two tests and jumps into it from both (`jl` twice);
+//     split ifs give us TWO inline copies and the `||` spelling sinks a
+//     shared block to the tail, which is worse still (86.08 vs 89.14) -
+//     the known merged-return class, and split-if is the closest of the
+//     three as the doctrine already records.
+// (2) Reassociation inside the scan, four times over. Retail computes
+//     `hex` starting FROM the adjacency word (`mov ebx,[this+0x38]`,
+//     `mov edi,edx`, `sub edi,start`, `add edi,ebx`); our CL shortens the
+//     dependency chain to `(gridIndex - start) + adjacent` and so creates
+//     the pseudo straight out of the member load. Tried and rejected,
+//     all three exactly 89.1445: splitting the expression into
+//     `hex = adjacent; hex -= start; hex += gridIndex;`, the two-step
+//     `hex = adjacent - start; hex += gridIndex;`, and hoisting
+//     gridIndex into its own local ahead of the adjacency read. The
+//     reassociation is C2's, not reachable from the statement order.
+static unsigned char find_flyer_attack_cell(const army* self, long start,
+                                            long target)
+{
+    for (long dir = 0; dir < 6; dir++) {
+        long adjacent = gpCombatManager->adjacentCells[target][dir];
+        long hex = adjacent - start + self->gridIndex;
+        if (adjacent >= 0 && hex >= 0 && hex < COMBAT_GRID_CELLS
+                && get_distance(start, adjacent) <= self->GetSpeed()
+                && self->CanFit(hex, 0, 0))
+            return 1;
+    }
+    return 0;
+}
+
 VA(0x004b46c0, 0x2F9)  // simple_move call + ordered fly block, dc 0xa1430
 unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest)
 {
-    // @stub
+    if (destIndex < 0)
+        return 0;
+    if (destIndex >= COMBAT_GRID_CELLS)
+        return 0;
+
+    if (!bLiteralTest && side != -1 && slot != -1) {
+        const army* enemy = &gpCombatManager->armies[side][slot];
+        long enemyHex = enemy->gridIndex;
+        if (find_flyer_attack_cell(this, gridIndex, enemyHex))
+            return 1;
+        if (creatureId & 1) {
+            if (find_flyer_attack_cell(this, get_second_grid_index(), enemyHex))
+                return 1;
+        }
+        if (enemy->creatureId & 1) {
+            long enemySecondHex = enemy->get_second_grid_index();
+            if (find_flyer_attack_cell(this, gridIndex, enemySecondHex))
+                return 1;
+            if (creatureId & 1) {
+                if (find_flyer_attack_cell(this, get_second_grid_index(),
+                                           enemySecondHex))
+                    return 1;
+            }
+        }
+        return 0;
+    }
+
+    if (get_distance(gridIndex, destIndex) > GetSpeed()
+            && !gpCombatManager->bCreaturePlacement)
+        return 0;
+    if (!CanFit(destIndex, 0, 0))
+        return 0;
+    return 1;
 }
-#endif
 
 // E:\gamedcs\fly.cpp:114
 // Exact (118/118). The stand animation is unconditional: only the corrective
