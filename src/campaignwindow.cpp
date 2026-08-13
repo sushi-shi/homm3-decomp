@@ -30,6 +30,115 @@ void TCampaignWindow::HideText()
 #endif
 
 // E:\gamedcs\campaignwindow.cpp:86
+//
+// DECODE MAP (read off retail 0x45ea40; the whole body is resolved - what is
+// missing is MODELLING, not reading, and the four items it needs are listed
+// at the end). `ret 8` against two parameters: +8 `unsigned char newGame`,
+// +0xc `int newCampaign`, both slots reused as temps once dead. EH frame with
+// twelve unwind states, `sub esp, 0x8c`.
+//
+//   base          heroWindow(0, 0, 0x320, 0x258, 0) - the full 800x600
+//                 screen - then vtable 0x63bca4, gpCampaignWindow = this,
+//                 this+0x4c = 0 and this+0x50 = -1.
+//   newGame arm   `gpGame->campaign = SCampaign();`. A default-constructed
+//                 temporary is built at [ebp-0x98], assigned into
+//                 gpGame->campaign (+0x1f458) and destroyed; BOTH the
+//                 assignment and the destruction are inlined member by
+//                 member, which is what makes this the most informative
+//                 40 bytes in the function:
+//                   +0x00/+0x01/+0x02 bytes, +0x04/+0x08 dwords,
+//                   +0x0c byte, +0x10 dword - copied straight;
+//                   +0x14 `assign(that, 0, npos)` through 0x404860 with the
+//                     npos word at 0x63a60c, i.e. +0x14 is a std::string.
+//                     CORRECTION for game.h: SCampaign models that slot as
+//                     `char campaignFilename[0x10]`. The width is right and
+//                     the type is not - the teardown confirms it by calling
+//                     basic_string::_Tidy(true) on temp+0x14. Left alone
+//                     here because game.h is shared and nothing compiled
+//                     needs the member yet.
+//                   +0x24 twenty-one bytes copied by an inlined byte loop -
+//                     campaignCompleted[21], already named;
+//                   +0x3c, +0x4c, +0x5c, +0x6c: four sub-object
+//                     assignments (0x45f5e0, 0x45f810, 0x45f9e0, 0x50ac00).
+//                     So game.h's pad_3c[0x20] hides TWO assignable members
+//                     (+0x3c, +0x4c), mapScores is the +0x5c one, and
+//                     pad_6c[0x10] is a fourth - a vector, since the
+//                     teardown destroys [temp+0x70, temp+0x74) and frees
+//                     temp+0x70 before zeroing all three words.
+//                   the destructor order is the mirror: ~vector(+0x6c),
+//                     0x46a650(+0x5c), 0x45f7b0(+0x4c), 0x45f560(+0x3c),
+//                     ~string(+0x14).
+//   availability  this+0x60..0x74 is a 21-byte block, zeroed as five dwords
+//                 plus a byte, then filled by a three-way switch on
+//                 newCampaign that also seeds firstCampaign (+0x78):
+//                   0  -> +0x78 = 0;  +0x60/+0x62/+0x64 = 1;
+//                         completed[0] && [2] && [4] -> +0x61 = +0x65 = 1;
+//                         completed[1] && [5]        -> +0x63 = 1;
+//                         completed[3]               -> +0x66 = 1.
+//                   1  -> +0x78 = 7;  +0x67..+0x6a, +0x6c, +0x6b = 1;
+//                         then `for (i = 7; i <= 12; i++)` clears +0x6b and
+//                         breaks on the first `!completed[i] && i != 11`.
+//                   2  -> +0x78 = 0xd; +0x6d..+0x70 = 1;
+//                         completed[13..16] all -> +0x71 = 1;
+//                         completed[17]         -> +0x72 = 1;
+//                         completed[18]         -> +0x73 = 1;
+//                 every gate reads gpGame->campaign.campaignCompleted, whose
+//                 element 0 is the 0x1f47c the disassembly shows.
+//   widgets       Widgets.reserve(77) - inlined, the 0x134 allocation - then
+//                 in order:
+//                   bitmapBorder16(0, 0, 0x320, 0x258, 100,
+//                       newCampaign == 2 ? "campbkx2.pcx" : "campback.pcx",
+//                       0x800);
+//                   button(0x292, 0x1e0, 0x84, 0x6a,
+//                       DIALOG_RETURN_SPLIT_CANCEL, "cmpscan.def",
+//                       0, 1, 0, 0, 2);
+//                   `for (i = 0; i < 20; i++) if (available[i]) <0x45e7c0>(i);`
+//                       - a thiscall member on this window carrying the
+//                       BinkPause import: the per-row preview opener;
+//                   the "no scenario" plate, guarded by
+//                       (newCampaign == 0 && !this->m66) || newCampaign == 1
+//                       || (newCampaign == 2 && !this->m73):
+//                       bitmapBorder16(0x181, 0x191, 0xee, 0x8f, 100,
+//                           "campnosc.pcx", 0x800);
+//                   the forward plate, guarded by !this->m6b && newCampaign
+//                       == 1: bitmapBorder16(0x1e, 0x19e, 0xcc, 0x77, 100,
+//                           "camp1fwX.pcx", 0x800);
+//                   then `last = newCampaign == 0 ? 6 : newCampaign == 1 ?
+//                       12 : 19` and one pass per campaign row,
+//                       `for (i = firstCampaign; i <= last; i++)`, walking
+//                       gCampaignPreviews with the 0x50 stride from base
+//                       0x66c49c (note: +4 into the carved 0x66c498 table)
+//                       and a SECOND eight-byte-stride table at 0x6a5f88
+//                       whose first word is the row's caption:
+//                         if (completed[i]) bitmapBorder(row[0] + 6,
+//                             row[1] + 0x4a, 0x2a, 0x28,
+//                             i - firstCampaign + 0x80, "CampChk.pcx",
+//                             0x800);
+//                         textWidget(row[2], row[3], row[4], 0x22,
+//                             caption[i], "medfont.fnt",
+//                             font::HEADING_HIGHLIGHT,
+//                             i - firstCampaign + PREVIEW_FIRST_ID,
+//                             5, 0, 8);
+//                       so the check marks answer 128..134, a range the
+//                       header's EOtherWidgetIDs roster does not yet name.
+//   tail          the usual AddWidget/MemError sweep over begin()..end(),
+//                 then `for (id = 101; id <= 107; id++)` GetWidget(id) and,
+//                 when non-null, send_message(6, 6) - HideText, inlined
+//                 exactly as the header already records.
+//
+// Left as a carcass deliberately. Reading it is done; landing it needs four
+// modelling decisions that all touch shared headers, and none of them should
+// be taken in a lane that is also holding army.h open:
+//   1. TCampaignWindow's pad_4c must become +0x4c/+0x50 scalars and a
+//      21-byte availability array at +0x60 (firstCampaign at +0x78 is
+//      already there).
+//   2. gCampaignPreviews needs its real 0x50-byte row type; this body reads
+//      five dwords of it, at +0, +4, +8, +0xc and +0x10 of the 0x66c49c
+//      view.
+//   3. The caption table at 0x6a5f88 needs a name and a claim.
+//   4. game.h's SCampaign::campaignFilename must become a std::string, and
+//      pad_3c/pad_6c must be split into the three assignable sub-objects the
+//      inlined operator= proves.
 #if 0  // @carcass
 VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete adds newGame, dc 0x5b570
 TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
