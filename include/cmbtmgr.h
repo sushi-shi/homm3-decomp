@@ -12,6 +12,7 @@
 #include "hexcell.h"
 #include "struct.h"
 
+class Bitmap16Bit;
 class Bitmap816;
 class CSprite;
 class hero;
@@ -76,7 +77,28 @@ enum ECombatSpellRestriction {
 enum ECombatGrid {
     COMBAT_GRID_CELLS = 0xbb,
     COMBAT_GRID_ROW_STRIDE = 0x11,
-    COMBAT_GRID_LAST_COLUMN = 0x10
+    COMBAT_GRID_LAST_COLUMN = 0x10,
+    // The two hero-portrait pseudo-hexes GetGridIndex answers with when
+    // the cursor is over a hero panel rather than the field. RightClick
+    // (0x4769c0) is what pairs each with a side: 0xfc opens heroes[0]'s
+    // panel and 0xfd heroes[1]'s, which is also the order the four
+    // screen hit rectangles at 0x694ea8..0x694f08 are tested in.
+    COMBAT_HEX_ATTACKER_HERO = 0xfc,
+    COMBAT_HEX_DEFENDER_HERO = 0xfd,
+    // Two more pseudo-hexes in the same domain, both bombardable castle
+    // structures and both gWallTargets rows: 0xfe is row 7 and 0xff is
+    // row 0 (the table's own `hex` column carries exactly 254 and 255,
+    // read straight from the image). valid_wall_target is what SPLITS
+    // them - it refuses row 7 below a CITADEL and rows 0 and 6 below a
+    // full CASTLE, which is the tier that builds the central keep and
+    // the tier that builds the two side towers respectively. So 0xfe is
+    // the KEEP and 0xff is one of the two side towers, the other being
+    // row 6's ordinary hex 183. Which of the two side towers 0xff is
+    // (upper or lower) is the one half of this naming NOT proven;
+    // GetCommand (0x476490) tests it first, ahead of the keep, and the
+    // four GetGridIndex hit rectangles are tested 252, 253, 254, 255.
+    COMBAT_HEX_KEEP = 0xfe,
+    COMBAT_HEX_UPPER_TOWER = 0xff
 };
 
 // The drawbridge state held in combatManager+0x53a4. LowerDoor
@@ -367,7 +389,12 @@ public:
     unsigned char field_53a9;         // +0x53a9
     char pad_53aa[0x2];
     CCombatOwnedObject* field_53ac;
-    CCombatOwnedObject* field_53b0;
+    // RETYPED 2026-08-13: army::Fly (0x4b4a40) calls Bitmap16Bit::Draw
+    // on this slot once per animation frame, blitting the clean
+    // battlefield back over the previous frame's extent - so it is the
+    // combat back-buffer, not a bare polymorphic object. Close still
+    // deletes it through the same slot-0 virtual destructor either way.
+    Bitmap16Bit* field_53b0;
     CCombatOwnedObject* field_53b4;
     // CombatSystemOptions clears this dword after the modal dialog closes.
     int field_53b8;                   // +0x53b8
@@ -425,7 +452,12 @@ public:
     // controlled by the indexed side. Its meaning and public name are
     // not attested by the available symbols.
     unsigned char field_54b2[2];       // +0x54b2
-    char pad_54b4[0x8];
+    // Per-side "this side's hero has already cast this round" latch:
+    // DoCommand (0x476bd0) refuses to open the spell book, and shows
+    // genrltxt entry 129 instead, while the acting side's word is set
+    // and field_13d74 is clear. Name is an address ordinal - no roster
+    // or string reaches the pair.
+    int field_54b4[2];                // +0x54b4
     // Live stack count per side; every ai_tactical walk of armies[side]
     // bounds itself with it (type_AI_spellcaster ctor 0x4369c0,
     // set_melee_enemies 0x43bf20).
@@ -444,7 +476,12 @@ public:
     // 0x132b2 pair FIRST in both functions. Names await a writer.
     unsigned char field_132b0[2];     // +0x132b0
     unsigned char field_132b2[2];     // +0x132b2
-    char pad_132b4[0x4];
+    // Read as a full dword by is_computer_action (0x474bf0) and paired
+    // there with soundmgr's byte gbUnk691209: when that byte is set and
+    // this slot is non-zero the acting stack is computer-driven no
+    // matter whose side it is on, whatever the per-machine options say.
+    // Name is an address ordinal.
+    int field_132b4;                  // +0x132b4
     // The stack whose turn it is, as a (side, slot) pair into armies:
     // should_attack_now (0x436c60) forms armies[actingSide][actingSlot]
     // with the flattened index actingSide*21 + actingSlot and then
@@ -454,7 +491,14 @@ public:
     // The side whose stack is acting: get_hex_attack_value (0x436180)
     // rejects a neighbour whose combatSide equals it. Name provisional.
     int currentSide;                  // +0x132c0
-    char pad_132c4[0x4];
+    // The automation-preference gate. is_computer_action (0x474bf0)
+    // reads this dword before every one of the four preference fields it
+    // consults in gUnnamed698758 (combatCatapult for the catapult,
+    // combatBallista for the ballista and the arrow tower,
+    // combatFirstAidTent for the tent, combatAutoCreatures for every
+    // other stack) and only honours the preference while it is non-zero.
+    // Name is an address ordinal.
+    int field_132c4;                  // +0x132c4
     // DoCompAI (0x4221f0) zeroes this dword as the very first thing it
     // does, before it even turns the highlighter off - a per-stack AI
     // turn counter or latch. Name is an address ordinal; no roster
@@ -464,7 +508,17 @@ public:
     unsigned char field_132cc;        // +0x132cc
     char pad_132cd[0x3];
     int field_132d0;                  // +0x132d0
-    char pad_132d4[0xc];
+    // RightClick (0x4769c0) parks -1 here the moment a human player
+    // right-clicks a stack on the acting side, immediately before it
+    // clears the combat message line - a "no hex is selected" latch.
+    // Name is an address ordinal.
+    int field_132d4;                  // +0x132d4
+    // The order's SECOND hex, the companion of field_132d4: DoCommand's
+    // melee-attack case copies field_132d4 into field_44 and this word
+    // into field_40, which is the same (where I go, what I hit) pair
+    // field_40/field_44 already carry. Name is an address ordinal.
+    int field_132d8;                  // +0x132d8
+    char pad_132dc[0x4];
     int field_132e0;                  // +0x132e0
     char pad_132e4[0x10];
     // "This combat is fought over a walled town": HexIsBlocked
@@ -510,7 +564,12 @@ public:
     // is_outside_placement_boundry reads it at +0x13d70 and forms the
     // two side limits as 2*n+1 and 2*n+15 respectively.
     int placementBoundaryDepth;       // +0x13d70
-    char pad_13d74[0x4];
+    // Second half of DoCommand's spell-book gate: the dialog only fires
+    // while field_54b4[currentSide] is set AND this byte is clear, so it
+    // reads as a "casting restriction lifted" latch. Name is an address
+    // ordinal - nothing else decoded reaches it.
+    unsigned char field_13d74;        // +0x13d74
+    char pad_13d75[0x3];
     TArcher archers[3];               // +0x13d78; armySlot at +0x20
     // "Move order is reversed for this combat": find_move_order
     // (0x41f179) reads it through the gpCombatManager GLOBAL - not
@@ -548,6 +607,21 @@ public:
     type_point mapPoint;              // +0x13ff0
     Bitmap816* combatCellGridBitmap;   // +0x13ff4
     Bitmap816* combatShadowBitmap;     // +0x13ff8
+    char pad_13ffc[0x4];
+    // "This slot's stack was added mid-combat and still owes a fizzle-in
+    // frame": AddArmy (0x47a100) stamps [iSide][slot] with the flattened
+    // index 20*iSide + slot for every stack that is NOT an arrow tower.
+    // Twenty slots a side, not the twenty-one `armies` carries - AddArmy
+    // only ever searches 0..19. Name is an address ordinal.
+    unsigned char field_14000[2][20];  // +0x14000
+    char pad_14028[0x4];
+    // The three arrow-tower latches, keyed by the tower's grid index by
+    // 0x46a460: hex 254 -> +0x1402c, hex 251 -> +0x1402d, hex 255 ->
+    // +0x1402e. Declared as three bytes rather than an array because the
+    // hex order and the slot order do not agree. Names are ordinals.
+    unsigned char field_1402c;         // +0x1402c
+    unsigned char field_1402d;         // +0x1402d
+    unsigned char field_1402e;         // +0x1402e
 
     combatManager();
 
@@ -743,6 +817,44 @@ public:
     // caller target at 0x5a3700 with (army*, hex).
     unsigned char is_valid_teleport(const army* this_army, long new_hex);
     unsigned char valid_wall_target(TWallTargetId wall);       // 0x476440
+    // 0x474bf0. `ret 4` proves the retail body takes the acting stack
+    // that the DC roster's nullary prototype omits; the body reaches
+    // it at +0x34 (creatureType), +0xf4 (combatSide) and +0x288
+    // (hypnotizeFlag) and hands it to army::get_owner.
+    unsigned char is_computer_action(const army* current_army);
+    // 0x47a100. Claims the first free (or expendable) slot on a side,
+    // initialises the stack there and optionally fizzles it in.
+    army* AddArmy(int iSide, int iMonType, int iMonQty, int iGridIndex,
+                  int iSetAttributes, int bFizzleItIn);
+    // 0x476490 / 0x476bd0, the command.obj pair: GetCommand answers
+    // "what would clicking this hex do", DoCommand performs it.
+    int GetCommand(int newIndex);
+    void DoCommand(int command);
+    int RightClick(int newIndex);                              // 0x4769c0
+    // 0x59e900, spells.obj. LOCATED 2026-08-13 from DoCommand's
+    // spell-book case, which calls it with `this` only, compares the
+    // result against -1 and forwards it straight into InitiateSpell.
+    // The DC spells.obj roster puts combatManager::ViewSpells
+    // (spells.cpp:97, 680 SH4 B, ONE parameter) immediately before
+    // InitiateSpell (spells.cpp:176), and retail's 847-byte row at
+    // 0x59e900 ends exactly where the already-claimed InitiateSpell
+    // begins at 0x59ec50 - the same order with no gap.
+    int ViewSpells();
+    // 0x47a380. LOCATED from RightClick, which calls it with the literal
+    // 1 for the three wall-target hexes; the DC command.obj roster puts
+    // ViewCastleBallista (command.cpp:3932) between AddArmy (3867) and
+    // HandleCombatPlayerDrop (3953), and retail's rows run 0x47a100
+    // AddArmy, 0x47a2d0 (get_tower_string), 0x47a380 - the same order.
+    void ViewCastleBallista(int bIsQuickInfo);
+    // 0x46a460, RETAIL-ONLY - the DC roster has nothing between
+    // CalculateGainedExperience and IsQuickCombat, where this 57-byte row
+    // sits. It switches on the tower's grid index (254 / 251 / 255) and
+    // sets the matching field_1402c..e latch. Name is a BOOTSTRAP
+    // INVENTION; only the behaviour is proven.
+    void mark_tower_army(const army* tower);
+    // 0x495bf0, carried by drawing.obj (drawing.cpp:2093) and located
+    // there already; declared here because AddArmy calls it.
+    void ComputeMaxExtent();
     long get_surrender_cost();                                 // 0x477a00
     // spells.obj leaves, both `ret 0x18` (six stack args). Names are
     // the DC roster's (spells.cpp:5086 / 5419); the retail addresses

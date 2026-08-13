@@ -3,7 +3,20 @@
 // 78 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "cmbtmgr.h"
+#include "combatcontrolsubwindow.h"
+#include "command.h"
+#include "combatwindow.h"
+#include "findpath.h"
+#include "game.h"
 #include "hero.h"
+#include "inputmgr.h"
+#include "kb.h"
+#include "mousemgr.h"
+#include "prefs.h"
+#include "remote.h"
+#include "soundmgr.h"
+#include "textresource.h"
+#include "winmgr.h"
 
 #if 0  // @carcass
 
@@ -84,12 +97,113 @@ int combatManager::GetPointer(int inCombatCommand, int iHexIndex)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\command.cpp:928
+// NINE PARAMETERS' WORTH OF EVIDENCE IN ONE BYTE: `ret 4`. The DC
+// roster prints is_computer_action as nullary (one parameter, `this`),
+// but retail pops a stack argument, and every use of it identifies the
+// argument as the acting stack - +0x34 against the five war-machine
+// creature ids, +0x288/+0xf4 as the hypnotize/side pair set_moat
+// already spells the same way, and `mov ecx, arg; call 0x442690`,
+// army::get_owner. The DC port hoisted it to a member; retail passes
+// it.
+//
+// THE OPTIONS ARE PREFERENCE FIELDS, NOT STANDALONE GLOBALS. All four
+// dwords this body reads land inside SUnnamed698758 (retail .bss
+// 0x698758, claimed in misc.cpp): combatCatapult (+0x44),
+// combatBallista (+0x48), combatFirstAidTent (+0x4c) and
+// combatAutoCreatures (+0x3c) - the same five war-machine flags
+// SetDefaultCombatOptions initialises, which is what fixes the DEFAULT
+// arm's field as combatAutoCreatures rather than a catch-all.
+//
+// The byte at 0x691209 is soundmgr's gbUnk691209. Nothing here
+// contradicts that TU's reading: the address is an ordinal-named byte
+// flag with two independent readers, and both do nothing but test it
+// non-zero (`mov al, byte [0x691209]; test al, al`). The sound guard's
+// `field_84 || gbUnk691209` and this body's `gbUnk691209 && field_132b4`
+// are both consistent with a single global "an automated/attract mode is
+// running" latch; neither reader constrains the other, so the name
+// stays soundmgr's.
+//
+// CASE ORDER IS THE SOURCE'S, not the case values'. The jump table at
+// the tail maps 0x91..0x95 onto four blocks, and those blocks are
+// EMITTED in the order ballista/arrow-tower, catapult, first-aid tent,
+// default - so the switch was written with the artillery pair first.
+// Each of the three machine arms repeats the same three guards
+// verbatim; retail duplicates them rather than factoring, and the two
+// `return 1` epilogues (one shared, one tail-duplicated at the end of
+// each arm) are what that longhand costs.
+//
+// Only the artillery arm null-checks the owner. That asymmetry is
+// retail's, not a modelling gap: the catapult and first-aid arms
+// dereference get_owner's result unguarded.
+//
+// Residual (81.4%): the merged-return family, and nothing else - every
+// instruction, operand and immediate agrees, the two arms that matter
+// are byte-for-byte, and the whole 36-byte gap is three tail-merge
+// decisions our SP3 CL takes and retail does not. Retail lays a LOCAL
+// `return 1` epilogue at the fall-through of the first-aid arm, of the
+// default arm and of the post-switch 0x691209 guard; our CL cross-jumps
+// all three into the shared copy it parked in the catapult arm (and
+// turns the first-aid tail into a bare `jmp` into the catapult tail).
+// Tried and rejected: spelling the default arm's `&&` as two `== 0`
+// breaks with the `return 1` last, which flips the polarity our CL
+// already agrees on elsewhere and LOSES ground (81.37 -> 80.97).
 VA(0x00474bf0, 0x188)  // anchor-global, dc 0x6bebc
-unsigned char combatManager::is_computer_action()
+unsigned char combatManager::is_computer_action(const army* current_army)
 {
-    // @stub
+    if (static_cast<const combatManager*>(this)->IsQuickCombat())
+        return 1;
+
+    hero* owner = current_army->get_owner();
+    switch (current_army->creatureType) {
+    case CREATURE_BALLISTA:
+    case CREATURE_ARROW_TOWER:
+        if (bCreaturePlacement)
+            return 0;
+        if (field_132c4 && gUnnamed698758.combatBallista)
+            return 1;
+        if (owner == 0)
+            return 1;
+        if (owner->skillLevel[20] == 0)
+            return 1;
+        break;
+    case CREATURE_CATAPULT:
+        if (bCreaturePlacement)
+            return 0;
+        if (field_132c4 && gUnnamed698758.combatCatapult)
+            return 1;
+        if (owner->ballisticsLevel == 0)
+            return 1;
+        break;
+    case CREATURE_FIRST_AID_TENT:
+        if (bCreaturePlacement)
+            return 0;
+        if (field_132c4 && gUnnamed698758.combatFirstAidTent)
+            return 1;
+        if (owner->skillLevel[27] == 0)
+            return 1;
+        break;
+    default:
+        if (field_132c4 && gUnnamed698758.combatAutoCreatures)
+            return 1;
+        break;
+    }
+
+    if (gbUnk691209 && field_132b4)
+        return 1;
+
+    long side = current_army->hypnotizeFlag
+        ? 1 - current_army->combatSide
+        : current_army->combatSide;
+    int player = playerIds[side];
+    if (player != -1 && gpGame->IsHuman(player))
+        return 0;
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\command.cpp:1001
 DC_ONLY(0x6c070, 0xB08)
@@ -214,28 +328,448 @@ unsigned char combatManager::valid_wall_target(TWallTargetId wall)
     return wallStrength[gWallTargets[wall].wall_id] > 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\command.cpp:1964
+//
+// RECONSTRUCTED 2026-08-13. NOT A SWITCH: an earlier note on this lane
+// called it "a 22-case jump table". There is no jump table anywhere in
+// the 1322 bytes - the twenty-two are the COMMAND IDS this body returns
+// (0..7, 15, 16, 17, 20, 21, 22), and the body is a straight-line ladder
+// of guards that answers "what would clicking hex `newIndex` do right
+// now". The retail `ret 4` and the single stack argument agree with the
+// DC prototype.
+//
+// THE LADDER, in retail's own test order. -1 (no hex) answers 0. A
+// network game in which this side is not under interactive control
+// (field_132b4 clear) short-circuits the whole thing and answers the
+// bare hover pair 5/6. The two hero panels answer 4 for the panel that
+// belongs to the side on turn and 21 for the other, and 0 when that
+// side has no hero at all. Then the two castle structures GetGridIndex
+// answers with pseudo-hexes for, then the real grid.
+//
+// VALID_WALL_TARGET IS INLINED THREE TIMES, and its expansion is what
+// gives this body its two odd-looking shapes. (1) The fortification
+// guard is hoisted out ahead of the pseudo-hex test in the 255 and 254
+// arms - `cmp [this+0x132f4], 3` then `cmp newIndex, 0xff` - because
+// the same member load serves both arms (retail loads it ONCE at
+// 0x4764f6 and compares it against 3 and then 2), and inside each arm
+// the redundant `< CASTLE` / `< CITADEL` half of the inlined predicate
+// is folded away by the dominating test. (2) In the wall LOOP the
+// expansion keeps both halves, reading field_132f4 out of the ebx it
+// parked the value in, which is why the loop body carries the
+// `i == 0 || i == 6` / `i == 7` tier tests verbatim.
+//
+// TWO JUMP-THREADED COMPARES look like duplicated source and are not.
+// Retail tests `targetSide == currentSide` twice (0x476ff1 and
+// 0x47701f) and `bCreaturePlacement` twice (0x476a05 and 0x476a30); in
+// both pairs the FIRST test's failure edge jumps past the second test
+// entirely, which is exactly what VC6 does to two consecutive ifs on
+// the same condition. Writing them as one if with the arms merged
+// produces a different graph.
+//
+// THE WALL LOOP breaks on the first row whose hex matches, whether or
+// not that row is a legal target - retail's failure edges out of the
+// inlined valid_wall_target all land on the loop EXIT, not on the
+// increment.
+//
+// SEEDCOMBATPOSITION's `limit` argument is army+0xc4, the speed field
+// of the embedded traits record; its `in_placement_phase` is pushed as
+// a whole register whose low byte only is loaded, the ordinary
+// unsigned char argument form.
+//
+// Residual (92.6%): two bounded classes, no third.
+// (1) FOUR CALLEES ARE UNCLAIMED on the target side, so their reloc
+//     names cannot pair: army::can_cast_spell (twice), army::can_shoot
+//     and army::can_cast_resurrect are all carcasses in army.cpp, and
+//     the delinker only learns a mangled name from a COMPILED base
+//     object. This half closes for free when army.obj reconstructs
+//     those three; nothing in command.obj can reach it.
+// (2) One register-lifetime split. Retail lets its `newIndex` copy DIE
+//     at the bounds check and recycles EBX for the &cells[newIndex]
+//     pointer (and later for field_132f4), re-reading the parameter
+//     from [ebp+8] at all eight later uses; our CL keeps newIndex in
+//     EBX for the whole body and therefore parks the cell pointer in a
+//     stack slot and `target` in the now-free parameter slot. Byte
+//     counts and the whole CFG agree - the two differ only in which
+//     value owns EBX at each point. Tried and rejected: hoisting the
+//     cell into an explicit `hexcell* cell = &cells[newIndex]` local
+//     and driving armySide / get_army / armySlot / field_4a / field_4b
+//     off it. That is what retail's own EBX holds, but our CL folds the
+//     +0x1c4 into the lea and still spills it (92.57 -> 92.46), because
+//     the register it would need is the one newIndex is sitting in.
 VA(0x00476490, 0x52A)  // anchor-global, dc 0x6d58c
 int combatManager::GetCommand(int newIndex)
 {
-    // @stub
+    if (newIndex == -1)
+        return COMBAT_COMMAND_NONE;
+
+    if (gNetworkActive69954c && field_132b4 == 0)
+        return cells[newIndex].armySide < 0 ? COMBAT_COMMAND_HOVER
+                                            : COMBAT_COMMAND_VIEW_ARMY;
+
+    if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
+        if (heroes[1] == 0)
+            return COMBAT_COMMAND_NONE;
+        return currentSide == 1 ? COMBAT_COMMAND_SPELL_BOOK
+                                : COMBAT_COMMAND_VIEW_OTHER_HERO;
+    }
+
+    if (newIndex == COMBAT_HEX_ATTACKER_HERO) {
+        if (heroes[0] == 0)
+            return COMBAT_COMMAND_NONE;
+        return currentSide == 0 ? COMBAT_COMMAND_SPELL_BOOK
+                                : COMBAT_COMMAND_VIEW_OTHER_HERO;
+    }
+
+    army* currentArmy = get_current_army();
+
+    if (field_132f4 >= COMBAT_FORTIFICATION_CASTLE
+            && newIndex == COMBAT_HEX_UPPER_TOWER) {
+        if ((currentArmy->Is(5) & 1) && currentSide == 0
+                && !bCreaturePlacement
+                && valid_wall_target(WALL_TARGET_0)) {
+            currentArmy->slot = COMBAT_HEX_UPPER_TOWER;
+            currentArmy->side = -1;
+            return COMBAT_COMMAND_BOMBARD_WALL;
+        }
+        return COMBAT_COMMAND_VIEW_TOWERS;
+    }
+
+    if (field_132f4 >= COMBAT_FORTIFICATION_CITADEL
+            && newIndex == COMBAT_HEX_KEEP) {
+        if ((currentArmy->Is(5) & 1) && currentSide == 0
+                && !bCreaturePlacement
+                && valid_wall_target(WALL_TARGET_7)) {
+            currentArmy->slot = COMBAT_HEX_KEEP;
+            currentArmy->side = -1;
+            return COMBAT_COMMAND_BOMBARD_WALL;
+        }
+        return COMBAT_COMMAND_VIEW_TOWERS;
+    }
+
+    if (newIndex < 0 || newIndex >= COMBAT_GRID_CELLS)
+        return COMBAT_COMMAND_NONE;
+
+    long column = newIndex % COMBAT_GRID_ROW_STRIDE;
+    if (column == 0)
+        return COMBAT_COMMAND_NONE;
+    if (column == COMBAT_GRID_LAST_COLUMN)
+        return COMBAT_COMMAND_NONE;
+
+    currentArmy->side = -1;
+    currentArmy->slot = -1;
+
+    if (cells[newIndex].armySide >= 0
+            && currentArmy->creatureType != CREATURE_CATAPULT) {
+        army* target = cells[newIndex].get_army();
+        long targetSide = target->combatSide;
+
+        if (bCreaturePlacement)
+            return COMBAT_COMMAND_VIEW_ARMY;
+        if (target == currentArmy)
+            return COMBAT_COMMAND_VIEW_ARMY;
+        if (currentArmy->creatureType == CREATURE_FAERIE_DRAGON
+                && currentArmy->can_cast_spell(newIndex))
+            return COMBAT_COMMAND_CREATURE_SPELL;
+        if (targetSide == currentSide && currentArmy->can_cast_spell(newIndex))
+            return COMBAT_COMMAND_CREATURE_SPELL;
+        if (targetSide == currentSide
+                && currentArmy->creatureType == CREATURE_FIRST_AID_TENT
+                && target->topCreatureDamage > 0
+                && (target->Is(6) & 1) == 0)
+            return COMBAT_COMMAND_FIRST_AID;
+        if (targetSide == currentSide)
+            return COMBAT_COMMAND_VIEW_ARMY;
+
+        currentArmy->side = cells[newIndex].armySide;
+        currentArmy->slot = cells[newIndex].armySlot;
+
+        if (currentArmy->can_shoot(0)) {
+            if (currentArmy->creatureType == CREATURE_ARROW_TOWER)
+                return COMBAT_COMMAND_SHOOT;
+            if (!ShotIsThroughWall(currentArmy, currentArmy->gridIndex,
+                                   newIndex)
+                    && !ShotIsNotOptimal(currentArmy, target))
+                return COMBAT_COMMAND_SHOOT;
+            return COMBAT_COMMAND_SHOOT_PENALTY;
+        }
+        if (currentArmy->ValidPath(newIndex, 0))
+            return currentArmy->creatureType == CREATURE_BALLISTA
+                ? COMBAT_COMMAND_SHOOT : COMBAT_COMMAND_ATTACK;
+
+        currentArmy->side = -1;
+        currentArmy->slot = -1;
+        return COMBAT_COMMAND_NONE;
+    }
+
+    if ((currentArmy->Is(5) & 1)
+            && field_132f4 > COMBAT_FORTIFICATION_NONE
+            && currentSide == 0
+            && !bCreaturePlacement) {
+        // The counter is TWallTargetId-typed rather than a long with a
+        // cast at the call: the value IS a wall-target id everywhere it
+        // is used, both as gWallTargets' subscript and as
+        // valid_wall_target's argument. Codegen is identical - retail's
+        // own counter is a plain dword in ecx.
+        for (TWallTargetId wall = WALL_TARGET_0; wall < WALL_TARGET_COUNT;
+                wall = TWallTargetId(wall + 1)) {
+            if (newIndex == gWallTargets[wall].hex) {
+                if (valid_wall_target(wall)) {
+                    currentArmy->side = -1;
+                    currentArmy->slot = newIndex;
+                    return COMBAT_COMMAND_BOMBARD_WALL;
+                }
+                break;
+            }
+        }
+    }
+
+    if (!bCreaturePlacement && currentArmy->can_cast_resurrect(newIndex))
+        return COMBAT_COMMAND_CREATURE_SPELL;
+
+    if (!bCreaturePlacement
+            || !is_outside_placement_boundry(currentArmy->combatSide,
+                                             newIndex)) {
+        gpSearchArray->SeedCombatPosition(currentArmy, currentSide,
+                                          currentArmy->field_c4,
+                                          bCreaturePlacement, -1);
+        if (cells[newIndex].field_4a || cells[newIndex].field_4b)
+            return (currentArmy->Is(1) & 1) ? COMBAT_COMMAND_FLY
+                                            : COMBAT_COMMAND_WALK;
+    }
+
+    if (newIndex == gWallTargets[WALL_TARGET_6].hex
+            && field_132f4 == COMBAT_FORTIFICATION_CASTLE)
+        return COMBAT_COMMAND_VIEW_TOWERS;
+    return COMBAT_COMMAND_NONE;
 }
 
 // E:\gamedcs\command.cpp:2210
+// THE THREE HEX DOMAINS, in retail's own test order: the two hero
+// panels (253 attacker-side, 252 defender-side), then any occupied
+// combat hex, then the three bombardable structures. The hero arms are
+// mirror images down to the operand order, and both consult
+// gUnnamed698758.combatArmyInfoLevel (0x6987c8 - an INTERIOR field of
+// the misc.obj preferences object, not a global of its own) to decide
+// whether the panel stays up after the quick-view pump returns.
+//
+// The wall arm is one `goto`: gWallTargets[7] short-circuits the whole
+// hex test, while gWallTargets[0] and [6] are only reachable once the
+// hex test has failed AND the town is a full castle. All three land on
+// ViewCastleBallista(1).
 VA(0x004769c0, 0x207)  // linkorder, dc 0x6d988
 int combatManager::RightClick(int newIndex)
 {
-    // @stub
+    if (newIndex == COMBAT_HEX_DEFENDER_HERO) {
+        if (heroes[1]) {
+            combatWindow->heroSubWindows[1]->Update(*heroes[1], heroes[0],
+                                                    field_53c0 == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
+            combatWindow->heroSubWindows[1]->Show();
+            gpWindowManager->DoQuickView(0);
+            if (gUnnamed698758.combatArmyInfoLevel)
+                return 0;
+            combatWindow->heroSubWindows[1]->UnShow();
+        }
+        return 0;
+    }
+
+    if (newIndex == COMBAT_HEX_ATTACKER_HERO) {
+        if (heroes[0]) {
+            combatWindow->heroSubWindows[0]->Update(*heroes[0], heroes[1],
+                                                    field_53c0 == COMBAT_SPELL_RESTRICTION_NO_CREATURE_SPELLS);
+            combatWindow->heroSubWindows[0]->Show();
+            gpWindowManager->DoQuickView(0);
+            if (gUnnamed698758.combatArmyInfoLevel)
+                return 0;
+            combatWindow->heroSubWindows[0]->UnShow();
+        }
+        return 0;
+    }
+
+    if (newIndex != gWallTargets[7].hex) {
+        if (newIndex >= 0 && newIndex < COMBAT_GRID_CELLS
+                && cells[newIndex].armySide >= 0) {
+            gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+            ViewArmy(cells[newIndex].get_army(), 1);
+            if (static_cast<const combatManager*>(this)->IsQuickCombat())
+                return 0;
+            if (field_132b4 && playerIds[currentSide] >= 0
+                    && gpGame->IsHuman(playerIds[currentSide])) {
+                field_132d4 = -1;
+                if (combatWindow)
+                    combatWindow->ClearCombatMessages();
+                gpInputManager->ForceMouseMove();
+                return 0;
+            }
+            gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+            return 0;
+        }
+        if (field_132f4 != COMBAT_FORTIFICATION_CASTLE)
+            return 0;
+        if (newIndex != gWallTargets[0].hex && newIndex != gWallTargets[6].hex)
+            return 0;
+    }
+    ViewCastleBallista(1);
+    return 0;
 }
 
+#if 0  // @carcass
+
+
+#endif  // @carcass
+
 // E:\gamedcs\command.cpp:2279
+//
+// RECONSTRUCTED 2026-08-13. THIS is the switch the lane's earlier note
+// attributed to GetCommand: a real VC6 two-level jump table over
+// `command - 1` (a 22-byte index table at DoCommand+0x3ec selecting one
+// of ten dword targets at DoCommand+0x3c4), and it is the OTHER half of
+// GetCommand's command domain - every value GetCommand can answer with
+// either lands on a case here or falls into the empty default.
+//
+// CASE ORDER RECOVERED FROM THE TABLE. VC6 numbers jump-table slots in
+// ascending case VALUE but emits the bodies in SOURCE order, so the two
+// together recover retail's original source order exactly: the slots
+// run 1, {3,15}, 4, 5, 7, 16, 17, 20, 22, default by value, while the
+// bodies are laid down 1/2, 3/15, 20, 7, 4, 22, 5, 16, 17 - which is
+// the order the cases are written in below. The pairings are the
+// domain's own: walking (1) and flying (2) issue the same MOVE order,
+// a clean shot (3) and a penalised one (15) the same SHOOT order.
+//
+// THE FIVE ORDER CASES all write the same (what, where, how) triple -
+// field_3c the order code, field_44 the target hex and field_40 the
+// companion hex - and only the melee case has a real second hex
+// (field_132d8); the rest park -1 there. Case 1/2's extra arm is the
+// wide-stack shift: when the destination cell's field_4b marks it as a
+// tail hex, the anchor moves one column against the stack's facing.
+//
+// THE THREE UI CASES (spell book, castle-tower info, view stack) end in
+// the same post-dialog tail RightClick already spells - quick-combat
+// bypass, then "a human is on turn" -> clear the hex latch, clear the
+// message line, force a mouse move, else just restore the pointer.
+// Retail has three source copies and cross-jumps their shared halves;
+// the two `if (combatWindow)` guards and the single ForceMouseMove
+// block are one merged tail in the bytes.
+//
+// EXACT (1026/1026) as written - jump table, index table and all ten
+// bodies.
 VA(0x00476bd0, 0x402)  // linkorder, dc 0x6db78
 void combatManager::DoCommand(int command)
 {
-    // @stub
+    army* currentArmy = get_current_army();
+
+    switch (command) {
+    case COMBAT_COMMAND_WALK:
+    case COMBAT_COMMAND_FLY:
+        field_3c = 2;
+        field_44 = field_132d4;
+        if ((currentArmy->Is(0) & 1) && cells[field_132d4].field_4b)
+            field_44 = field_132d4 - (currentArmy->facing ? 1 : -1);
+        field_40 = -1;
+        break;
+
+    case COMBAT_COMMAND_SHOOT:
+    case COMBAT_COMMAND_SHOOT_PENALTY:
+        field_3c = 7;
+        field_44 = field_132d4;
+        field_40 = -1;
+        break;
+
+    case COMBAT_COMMAND_CREATURE_SPELL:
+        field_3c = 10;
+        field_44 = field_132d4;
+        field_40 = -1;
+        break;
+
+    case COMBAT_COMMAND_ATTACK:
+        field_44 = field_132d4;
+        field_3c = 6;
+        field_40 = field_132d8;
+        break;
+
+    case COMBAT_COMMAND_SPELL_BOOK:
+        if (bCreaturePlacement)
+            break;
+        {
+            int spell = ViewSpells();
+            if (spell == -1)
+                break;
+            if (field_54b4[currentSide] && !field_13d74) {
+                NormalDialog(gpGeneralText->GetText(
+                                 GENERAL_TEXT_COMBAT_SPELL_ALREADY_CAST),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                break;
+            }
+            combatWindow->heroSubWindows[0]->UnShow();
+            combatWindow->heroSubWindows[1]->UnShow();
+            combatWindow->creatureSubWindows[0]->UnShow();
+            combatWindow->creatureSubWindows[1]->UnShow();
+            combatWindow->creatureSubWindows[2]->UnShow();
+            combatWindow->creatureSubWindows[3]->UnShow();
+            gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+            InitiateSpell(spell, 0);
+            if (static_cast<const combatManager*>(this)->IsQuickCombat())
+                break;
+            if (field_132b4 && playerIds[currentSide] >= 0
+                    && gpGame->IsHuman(playerIds[currentSide])) {
+                field_132d4 = -1;
+                if (combatWindow)
+                    combatWindow->ClearCombatMessages();
+                gpInputManager->ForceMouseMove();
+                break;
+            }
+            gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+        }
+        break;
+
+    case COMBAT_COMMAND_VIEW_TOWERS:
+        gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+        ViewCastleBallista(0);
+        if (static_cast<const combatManager*>(this)->IsQuickCombat())
+            break;
+        if (field_132b4 && playerIds[currentSide] >= 0
+                && gpGame->IsHuman(playerIds[currentSide])) {
+            field_132d4 = -1;
+            if (combatWindow)
+                combatWindow->ClearCombatMessages();
+            gpInputManager->ForceMouseMove();
+            break;
+        }
+        gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+        break;
+
+    case COMBAT_COMMAND_VIEW_ARMY:
+        gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+        if (field_132d4 < 0 || field_132d4 >= COMBAT_GRID_CELLS)
+            break;
+        ViewArmy(cells[field_132d4].get_army(), 0);
+        if (static_cast<const combatManager*>(this)->IsQuickCombat())
+            break;
+        if (field_132b4 && playerIds[currentSide] >= 0
+                && gpGame->IsHuman(playerIds[currentSide])) {
+            field_132d4 = -1;
+            if (combatWindow)
+                combatWindow->ClearCombatMessages();
+            gpInputManager->ForceMouseMove();
+            break;
+        }
+        gpMouseManager->SetPointer(6, mouseManager::COMBAT_SET);
+        break;
+
+    case COMBAT_COMMAND_BOMBARD_WALL:
+        field_3c = 9;
+        field_44 = field_132d4;
+        field_40 = -1;
+        break;
+
+    case COMBAT_COMMAND_FIRST_AID:
+        field_3c = 11;
+        field_44 = field_132d4;
+        field_40 = -1;
+        break;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\command.cpp:2423
 VA(0x00476fe0, 0x2C4)  // linkorder, dc 0x6de24
@@ -398,12 +932,79 @@ void combatManager::SetCombatGrid(int bCombatShowEntireGrid, int bCombatShowMous
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\command.cpp:3867
+// THE SLOT SEARCH TAKES TWENTY, NOT TWENTY-ONE. Retail walks
+// armies[iSide][0..19] with the 0x548 stride and stops on the first
+// empty creatureType, or on the first spent stack whose creatureId
+// carries BOTH bit 21 and bit 22 - the "already dead and already
+// cleared" pair - and only that second case counts as a replacement, so
+// only the first case bumps numArmies.
+//
+// THE FIZZLE TAIL. combatManager::drawbridgeBounds is not
+// drawbridge-only: ComputeMaxExtent refreshes the same four dwords and
+// AddArmy hands them to the window manager as (left, top,
+// right-left+1, bottom-top+1) - which is what fixes their roles as a
+// left/top/right/bottom rectangle. The save/redraw/fizzle triple around
+// DrawFrame(0,0,0,0,1,0) is what makes a mid-combat summon appear.
 VA(0x0047a100, 0x1CD)  // anchor-global, dc 0x70474
-army* combatManager::AddArmy(int iSide, int iMonType, int iMonQty, int iGridIndex, int iSetAttributes, int bFizzleItIn)
+army* combatManager::AddArmy(int iSide, int iMonType, int iMonQty,
+                             int iGridIndex, int iSetAttributes,
+                             int bFizzleItIn)
 {
-    // @stub
+    long replaced = 0;
+    long slot = -1;
+    { for (long candidate = 0; candidate < 20; candidate++) {
+        const army* stack = &armies[iSide][candidate];
+        if (stack->creatureType == -1) {
+            slot = candidate;
+            break;
+        }
+        if (stack->numTroops == 0
+                && (static_cast<unsigned char>(static_cast<unsigned>(
+                        stack->creatureId) >> 21) & 1)
+                && (static_cast<unsigned char>(static_cast<unsigned>(
+                        stack->creatureId) >> 22) & 1)) {
+            slot = candidate;
+            replaced = 1;
+            break;
+        }
+    } }
+    if (slot == -1 || cells[iGridIndex].armySide >= 0)
+        return 0;
+
+    army* newArmy = &armies[iSide][slot];
+    newArmy->Init(iMonType, iMonQty, heroes[iSide], iSide, slot, iGridIndex,
+                  -1);
+    newArmy->LoadResources();
+    newArmy->creatureId |= iSetAttributes;
+    if (!replaced)
+        numArmies[iSide]++;
+
+    if (bFizzleItIn
+            && !static_cast<const combatManager*>(this)->IsQuickCombat()) {
+        ResetLimitCreature();
+        if (armies[iSide][slot].creatureType == CREATURE_ARROW_TOWER)
+            mark_tower_army(newArmy);
+        else
+            field_14000[iSide][slot] = 1;
+        ComputeMaxExtent();
+        gpWindowManager->SaveFizzleSourceX(
+            drawbridgeBounds.values[0], drawbridgeBounds.values[1],
+            drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
+            drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1);
+        DrawFrame(0, 0, 0, 0, 1, 0);
+        gpWindowManager->FizzleForwardX(
+            drawbridgeBounds.values[0], drawbridgeBounds.values[1],
+            drawbridgeBounds.values[2] - drawbridgeBounds.values[0] + 1,
+            drawbridgeBounds.values[3] - drawbridgeBounds.values[1] + 1, 75);
+    }
+    return newArmy;
 }
+
+#if 0  // @carcass
+
 
 // E:\gamedcs\command.cpp:3922
 DC_ONLY(0x70650, 0xC4)

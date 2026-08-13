@@ -47,6 +47,19 @@ public:
     char pad_34[0x34];
     bool shown;
 
+    // 0x46df80. LOCATED 2026-08-13 from combatManager::DoCommand
+    // (0x476bd0), which closes the two hero panels through the proven
+    // TCombatHeroSubWindow::UnShow and then calls this nullary thiscall
+    // on all four creature panels in the same statement run. Three
+    // independent corroborations: the carve size is 58 B, EXACTLY the
+    // size of the sibling TCombatHeroSubWindow::UnShow at 0x46ce70 (the
+    // two bodies are the same loop over Widgets); the DC roster's only
+    // nullary TCombatCreatureSubWindow members are Show and UnShow, and
+    // this site closes panels; and it sits after the four other
+    // creature-panel bodies, in the DC roster's own order. The BODY is
+    // not reconstructed here - combatcontrolsubwindow.cpp still carries
+    // it as a carcass.
+    void UnShow();
     bool IsShown() const { return shown; }
 };
 

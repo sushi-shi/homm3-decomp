@@ -18,6 +18,23 @@ enum ECombatDrawingOffsets {
     COMBAT_ARCHER_EFFECT_OFFSET = 0x1402c
 };
 
+// combatManager::CombatAreaLimits, retail .data 0x6aace8 - the value
+// every accumulating draw pass resets the combat drawing extent to
+// before it starts. Definition and DATA claim are src/drawing.cpp's;
+// declared here because fly.obj resets the extent through it once per
+// flight frame.
+extern TDrawbridgeBounds gCombatAreaLimits;
+
+// The three combat animation speed multipliers at .rdata 0x63cf7c -
+// 1.0f, 0.63f and 0.4f exactly - indexed by gUnnamed698758.combatSpeed.
+// Read at eighteen sites image-wide (config/retail-reloc-evidence.tsv)
+// and NOT owned by drawing.obj: no admitted TU defines it yet, so this
+// is a reader-side declaration parked in the nearest combat-drawing
+// header, the way winmgr.h carries DoDialog's three unowned dialog
+// globals. The NAME is a source-facing invention; the address, extent
+// and contents are read straight from the hash-verified image.
+extern const float gCombatSpeedFactors[3];
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\drawing.cpp:47, dc 0x831b4) void get_creature_spell_message(char* buffer, const army* current_army, long current_hex);
 // CODEVIEW(E:\gamedcs\drawing.cpp:122, dc 0x832d8) std::basic_string<char,std::char_traits<char>,std::allocator<char> format_rounded(__$ReturnUdt, long amount, long high);

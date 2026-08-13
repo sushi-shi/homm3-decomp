@@ -12,6 +12,7 @@ class hero;
 class armyGroup;
 class town;
 class sample;
+class CSprite;
 
 // Combat-grid directions as path.cpp's walkers consume them: 0..5 are
 // the six hex neighbours (combatManager::adjacentCells columns); 6/7
@@ -94,7 +95,14 @@ public:
     char pad_18[0x4];
     // ValidPath stores the validated destination here on success.
     int pathTarget;               // +0x1c
-    char pad_20[0x14];
+    char pad_20[0x10];
+    // DC army.IsMoving (members.csv army@48, which is retail +0x30 -
+    // the whole DC run 48..100 lands on retail 0x30..0x64 unshifted).
+    // army::Fly (0x4b4a40) raises it for the duration of the flight
+    // animation and clears it in the same quick-combat-gated tail that
+    // stops the walk sample.
+    unsigned char IsMoving;       // +0x30
+    char pad_31[0x3];
     // Creature roster id: ai_tactical compares it against the war
     // machines 0x93/0x94 (get_ranged_attack_value 0x435cb0,
     // set_melee_enemies 0x43bf20) and 0x95 (get_damage_value 0x436e30).
@@ -103,7 +111,13 @@ public:
     // feeds it straight into check_adjacent_hexes as the enemy hex,
     // and the type_AI_spellcaster ctor walks armies by it.
     int gridIndex;                // +0x38
-    char pad_3c[0x8];
+    // DC army.currFrameType / army.currFrameIndex (members.csv army@60
+    // and @64). army::Fly drives BOTH: it parks frame type 2 (the stand
+    // pose) with index 0 before the drawbridge redraw, switches to type
+    // 0 (cs_walk) for the flight, and uses currFrameIndex itself as the
+    // per-step frame loop's induction variable.
+    int currFrameType;            // +0x3c
+    int currFrameIndex;           // +0x40
     // 0 = attacker-facing, 1 = defender-facing: selects the 6/7
     // special-direction remaps in GetAdjacentCellIndex.
     int facing;                   // +0x44
@@ -224,7 +238,27 @@ public:
     // combatSide (+0xf4) as armySide. Renaming waits on a lane that
     // owns the ai_tactical call sites.
     int bitIndex;                 // +0xf8
-    char pad_fc[0x74];
+    // +0x110 starts an EMBEDDED copy of the creature's ANIMATION traits
+    // row - the DC roster's `SMonFrameInfo sMonFrameInfo` at 252, whose
+    // 84-byte layout monframeinfo.h already carries. The pairing is
+    // positional and exact: DC 336 stdIcon lands on retail +0x164 and
+    // DC 348 armySample on the +0x170 play_sample already proved, so
+    // retail +0x110 == DC 252 with no shift across the record. Only the
+    // two fields army::Fly reads are sliced out, the same way sMonInfo
+    // above is sliced; the record itself is not modelled as such,
+    // because that would put monframeinfo.h in every army.h consumer's
+    // include closure.
+    char pad_fc[0x5c];
+    int frameInfoWalkCycleTime;   // +0x158 == sMonFrameInfo.iWalkCycleTime
+    char pad_15c[0x4];
+    int frameInfoFlightPixelSpan; // +0x160 == sMonFrameInfo.iFlightPixelSpan
+    // DC army.stdIcon (members.csv army@336). army::Fly asks it for the
+    // walk sequence's frame count through CSprite::GetNumFrames, which
+    // is what fixes the type: the retail expansion is that inline's
+    // exact three-part shape (numSequences at +0x28, validSeqMask at
+    // +0x2c, s at +0x1c) against the CSprite layout csprite.h proves.
+    CSprite* stdIcon;             // +0x164
+    char pad_168[0x8];
     // DC army::armySample is sample*[8] at +0x15c; retail's preceding STL
     // expansion shifts it to +0x170, independently confirmed by play_sample.
     sample* armySample[8];        // +0x170
@@ -375,6 +409,9 @@ public:
     void Turn(unsigned char play_animation); // 0x446720
     void SetupAnimation();                   // 0x446830
     void PlayAnimation(int sequence, int nframes, int start_frame);
+    // 0x43e140, carcass in army.cpp; declared here because army::Fly
+    // (fly.obj) calls it once per animation frame.
+    void DrawToBuffer(int x, int y, int bNumBoxOnly);
     void CancelSpellType(int iSpellType);    // 0x4444d0
     void CancelIndividualSpell(int spell);   // 0x444510
     unsigned char ValidFlight(int destIndex,
@@ -416,6 +453,10 @@ public:
     // ai_tactical can call them (the retail callsites are the
     // location evidence for get_average_damage's own claim).
     unsigned char can_shoot(const army* excluded) const;        // 0x4428f0
+    // 0x4473d0 / 0x4476c0, carcasses in army.cpp; declared here because
+    // combatManager::GetCommand (command.obj) is a caller of both.
+    unsigned char can_cast_resurrect(long hex);
+    unsigned char can_cast_spell(long hex);
     long get_loss_combat_value(long lowest_attack, long lowest_defense,
                                unsigned char ranged, long damage,
                                unsigned char kills_only) const; // 0x442fd0
@@ -465,6 +506,16 @@ public:
     // the return type and `get_controller` at army.cpp:2691 is the same
     // size.
     hero* get_owner() const;                                    // 0x442690
+    // 0x43d8b0 / 0x43d9f0, LOCATED 2026-08-13 from combatManager::AddArmy
+    // (0x47a100), which calls them back to back on the freshly claimed
+    // slot. Init's SEVEN stack arguments are an exact arity match for the
+    // DC army.cpp:261 prototype and AddArmy supplies each one in the DC
+    // order (armyId, count, the side's hero, side, slot, hex, -1);
+    // LoadResources takes only `this`. Size ratios corroborate the pair
+    // at the same 1.35 (309/228) and 1.36 (1317/970).
+    void Init(int armyId, int newNumTroops, const hero* owner, int side,
+              int inIndex, int iGridIndex, int iOrigPos);
+    void LoadResources();
     // Header inline of the DC Army.h (line 840); its single retail
     // out-of-line copy is the COMDAT the linker parked in the ai.obj
     // band at 0x41f380 - the same `disabled_290 || disabled_2b0 ||
