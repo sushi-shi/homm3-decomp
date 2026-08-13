@@ -80,6 +80,13 @@ extern int gBinkPitch;               // 0x694cbc
 extern int gBinkHeight;              // 0x694cc0
 extern int gBinkX;                   // 0x694cc4
 extern int gBinkY;                   // 0x694cc8
+// The two dwords between gBinkY and gBinkVideoId: CampaignWindowHandler
+// hands 0x694cc4/0x694cc8/0x694ccc/0x694cd0 straight to
+// heroWindowManager::UpdateScreen(x, y, w, h), which pairs them with the
+// already-named gBinkX/gBinkY as that call's width and height. Ordinal
+// names until a producer in the bink TU proves stronger ones.
+extern int gBinkUpdateWidth;         // 0x694ccc
+extern int gBinkUpdateHeight;        // 0x694cd0
 extern int gBinkVideoId;             // 0x694cd4 (VIDEO_ID_OVERLAY_BLIT plays via the overlay Blt)
 extern int gBinkPaused;              // 0x694cdc
 extern unsigned char gBinkDirty;     // 0x694ce0

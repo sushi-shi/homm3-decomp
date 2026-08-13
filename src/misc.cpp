@@ -146,8 +146,22 @@ void CheckConfigFile()
 
 // E:\gamedcs\misc.cpp:352
 // These statement boundaries are byte-significant after inlining into
-// SetGameDefaults: retail places the movement speeds between the window
-// scroll and spell-book stores.
+// SetGameDefaults: retail places the movement speeds last, after the window
+// scroll store. The spell-book store that used to close this body belongs to
+// SetDefaultCombatOptions - see the promotion note there.
+//
+// NOT promotable, checked 2026-08-13 against the same evidence that promoted
+// its sibling: there is no retail body to promote. Source order would emit it
+// between SetGameDefaults (0x50b4d0, ends 0x50b6f2) and
+// SetDefaultCombatOptions (0x50b700), and that gap is fourteen bytes of
+// padding; no other carve row in misc.obj's band fits eight dword stores
+// either (the unclaimed rows are 95/95 B before the band starts and
+// 221/32/489 B at its end). An EXTERN function is emitted out of line
+// unconditionally under /Ob2, so the absence of a body is itself the
+// evidence: retail's SetDefaultSystemOptions has internal linkage and its one
+// call site inlined it away. Left non-static and DC_ONLY because the linkage
+// change would buy no compared bytes - objdiff never scores this symbol - and
+// would touch misc.h for nothing.
 DC_ONLY(0xfdb78, 0x20)
 void SetDefaultSystemOptions()
 {
@@ -159,24 +173,6 @@ void SetDefaultSystemOptions()
     gUnnamed698758.windowScrollSpeed = 1;
     gUnnamed698758.computerWalkSpeed = 3;
     gUnnamed698758.walkSpeed = 2;
-    gUnnamed698758.animateSpellBook = 1;
-}
-
-// E:\gamedcs\misc.cpp:371
-// Retail likewise places combatSpeed before the five auto-combat flags.
-DC_ONLY(0xfdb98, 0x28)
-void SetDefaultCombatOptions()
-{
-    gUnnamed698758.showCombatGrid = 0;
-    gUnnamed698758.showCombatMouseHex = 0;
-    gUnnamed698758.combatShadeLevel = 0;
-    gUnnamed698758.combatArmyInfoLevel = 0;
-    gUnnamed698758.combatSpeed = 0;
-    gUnnamed698758.combatAutoCreatures = 1;
-    gUnnamed698758.combatAutoSpells = 1;
-    gUnnamed698758.combatCatapult = 1;
-    gUnnamed698758.combatBallista = 1;
-    gUnnamed698758.combatFirstAidTent = 1;
 }
 
 // E:\gamedcs\misc.cpp:403
@@ -380,6 +376,40 @@ void SetGameDefaults()
                 gcRegAppPath)), strlen(gcRegAppPath));
         RegCloseKey(hKey);
     }
+}
+
+// E:\gamedcs\misc.cpp:371
+// PROMOTED from DC_ONLY 2026-08-13. Retail 0x50b700, 68 B, `ret` with no
+// argument bytes against the DC prototype's zero parameters, and its SOLE
+// caller in the image is CombatOptionsWindowHandler's Default case
+// (0x46f7b0) - which is what forces this one of the two defaults helpers to
+// have external linkage and an out-of-line body at all. The eleven stores
+// are the DC roster's ten, in the DC's own order (combatSpeed still ahead of
+// the five auto-combat flags), with `animateSpellBook = 1` added AHEAD of
+// them: the store lands at 0x50b372 inside SetGameDefaults' inlined copy,
+// immediately before showCombatGrid, so it belongs to this function and not
+// to the tail of SetDefaultSystemOptions where the reconstruction used to
+// carry it. Both readings give SetGameDefaults the same bytes; only this one
+// also gives 0x50b700 its.
+//
+// The definition sits AFTER SetGameDefaults because the ORDER gate follows
+// retail's link order (0x50b4d0 then 0x50b700), which is also the original
+// source order the DC line numbers record (misc.cpp:300 then :371). VC6
+// still inlines it into SetGameDefaults from below.
+VA(0x0050b700, 0x44)  // anchor-callee (sole caller CombatOptionsWindowHandler) + body, dc 0xfdb98
+void SetDefaultCombatOptions()
+{
+    gUnnamed698758.animateSpellBook = 1;
+    gUnnamed698758.showCombatGrid = 0;
+    gUnnamed698758.showCombatMouseHex = 0;
+    gUnnamed698758.combatShadeLevel = 0;
+    gUnnamed698758.combatArmyInfoLevel = 0;
+    gUnnamed698758.combatSpeed = 0;
+    gUnnamed698758.combatAutoCreatures = 1;
+    gUnnamed698758.combatAutoSpells = 1;
+    gUnnamed698758.combatCatapult = 1;
+    gUnnamed698758.combatBallista = 1;
+    gUnnamed698758.combatFirstAidTent = 1;
 }
 
 // E:\gamedcs\misc.cpp:243
