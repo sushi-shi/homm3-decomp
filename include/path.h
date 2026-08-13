@@ -6,6 +6,11 @@
 #define HOMM3_PATH_H
 
 // --- globals ---
+// 0x523ec0, claimed in src/path.cpp. Declared here (rather than left as
+// a CODEVIEW comment) because findpath.obj's FindCombatPath walks the
+// recovered path back through it.
+int OppositeDirection(int direction);
+
 // CODEVIEW(E:\gamedcs\path.cpp:278, dc 0x10ccdc) int GetAdjacentCellIndexNoArmy(int currIndex, int direction);
 // CODEVIEW(E:\gamedcs\path.cpp:469, dc 0x10cd28) int OppositeDirection(int direction);
 

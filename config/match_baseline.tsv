@@ -555,6 +555,7 @@ findpath	??1searchArray@@QAE@XZ	100.0000	100.0000	100.0000	0xb13e0
 findpath	?CalcTerrainCost@@YIHPBVNewmapCell@@HHJJJJJE@Z	100.0000	100.0000	100.0000	0xb1740
 findpath	?Clear@searchArray@@QAEXJJJ@Z	100.0000	100.0000	100.0000	0xb1530
 findpath	?Close@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1500
+findpath	?FindCombatPath@searchArray@@QAEEPBVarmy@@JJEJJ@Z	46.4584	46.4584	46.4584	0xb3400
 findpath	?GetTerrainCost@@YIHPAVhero@@Utype_point@@HH@Z	88.0238	88.0238	88.0238	0xb18c0
 findpath	?Init@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb1460
 findpath	?MinimumTerrainCost@@YIHPBVNewmapCell@@HJJJE@Z	100.0000	100.0000	100.0000	0xb1880
@@ -566,7 +567,6 @@ findpath	?is_valid@type_point@@QAEEXZ	100.0000	100.0000	100.0000	0xb1330
 findpath	?lower_door@searchArray@@QAEXXZ	100.0000	100.0000	100.0000	0xb3f10
 findpath	?mark_teleport@searchArray@@QAEXPBVarmy@@J@Z	100.0000	100.0000	100.0000	0xb2ff0
 findpath	?set_moat@searchArray@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0xb3290
-findpath	searchArray_FindCombatPath	0.0000	0.0000	0.0000	0xb3400
 findpath	searchArray_PushPoint	0.0000	0.0000	0.0000	0xb1a70
 findpath	searchArray_TestPossibleDirections	0.0000	0.0000	0.0000	0xb2300
 fly	?FlyTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb49c0
