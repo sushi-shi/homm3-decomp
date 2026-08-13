@@ -646,6 +646,17 @@ public:
     // integer magic-terrain id.
     TAdventureObjectType HeroFn_004E4EC0();
     int get_special_terrain();
+    // 0x431160, unclaimed. findpath's TestPossibleDirections calls it with
+    // the hero in ECX and one packed type_point on the stack, and folds the
+    // result into pathCell::barrier_value - i.e. it prices a map square for
+    // this hero. The body corroborates the receiver and the domain: it walks
+    // gpGame->players[this->owner].townIds (numTowns at +0x3e, ids at +0x40),
+    // compares each town's packed (x, y, z) bytes against the argument, and
+    // answers either the -200000 sentinel or the negated AI_resource_cost of
+    // town::get_build_cost(6, ...) - a shipyard valuation. NAME IS AN ADDRESS
+    // ORDINAL, the convention HeroFn_004D8B30 and HeroFn_004E4EC0 already use
+    // here: no DC roster row, string or public symbol reaches it.
+    long HeroFn_00431160(type_point point);
     long get_combat_speed_bonus();
     float GetSurrenderCostFactor();
     float GetOffenseFactor();
