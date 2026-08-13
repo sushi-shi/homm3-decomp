@@ -84,7 +84,21 @@ enum ECombatGrid {
     // panel and 0xfd heroes[1]'s, which is also the order the four
     // screen hit rectangles at 0x694ea8..0x694f08 are tested in.
     COMBAT_HEX_ATTACKER_HERO = 0xfc,
-    COMBAT_HEX_DEFENDER_HERO = 0xfd
+    COMBAT_HEX_DEFENDER_HERO = 0xfd,
+    // Two more pseudo-hexes in the same domain, both bombardable castle
+    // structures and both gWallTargets rows: 0xfe is row 7 and 0xff is
+    // row 0 (the table's own `hex` column carries exactly 254 and 255,
+    // read straight from the image). valid_wall_target is what SPLITS
+    // them - it refuses row 7 below a CITADEL and rows 0 and 6 below a
+    // full CASTLE, which is the tier that builds the central keep and
+    // the tier that builds the two side towers respectively. So 0xfe is
+    // the KEEP and 0xff is one of the two side towers, the other being
+    // row 6's ordinary hex 183. Which of the two side towers 0xff is
+    // (upper or lower) is the one half of this naming NOT proven;
+    // GetCommand (0x476490) tests it first, ahead of the keep, and the
+    // four GetGridIndex hit rectangles are tested 252, 253, 254, 255.
+    COMBAT_HEX_KEEP = 0xfe,
+    COMBAT_HEX_UPPER_TOWER = 0xff
 };
 
 // The drawbridge state held in combatManager+0x53a4. LowerDoor
@@ -438,7 +452,12 @@ public:
     // controlled by the indexed side. Its meaning and public name are
     // not attested by the available symbols.
     unsigned char field_54b2[2];       // +0x54b2
-    char pad_54b4[0x8];
+    // Per-side "this side's hero has already cast this round" latch:
+    // DoCommand (0x476bd0) refuses to open the spell book, and shows
+    // genrltxt entry 129 instead, while the acting side's word is set
+    // and field_13d74 is clear. Name is an address ordinal - no roster
+    // or string reaches the pair.
+    int field_54b4[2];                // +0x54b4
     // Live stack count per side; every ai_tactical walk of armies[side]
     // bounds itself with it (type_AI_spellcaster ctor 0x4369c0,
     // set_melee_enemies 0x43bf20).
@@ -494,7 +513,12 @@ public:
     // clears the combat message line - a "no hex is selected" latch.
     // Name is an address ordinal.
     int field_132d4;                  // +0x132d4
-    char pad_132d8[0x8];
+    // The order's SECOND hex, the companion of field_132d4: DoCommand's
+    // melee-attack case copies field_132d4 into field_44 and this word
+    // into field_40, which is the same (where I go, what I hit) pair
+    // field_40/field_44 already carry. Name is an address ordinal.
+    int field_132d8;                  // +0x132d8
+    char pad_132dc[0x4];
     int field_132e0;                  // +0x132e0
     char pad_132e4[0x10];
     // "This combat is fought over a walled town": HexIsBlocked
@@ -540,7 +564,12 @@ public:
     // is_outside_placement_boundry reads it at +0x13d70 and forms the
     // two side limits as 2*n+1 and 2*n+15 respectively.
     int placementBoundaryDepth;       // +0x13d70
-    char pad_13d74[0x4];
+    // Second half of DoCommand's spell-book gate: the dialog only fires
+    // while field_54b4[currentSide] is set AND this byte is clear, so it
+    // reads as a "casting restriction lifted" latch. Name is an address
+    // ordinal - nothing else decoded reaches it.
+    unsigned char field_13d74;        // +0x13d74
+    char pad_13d75[0x3];
     TArcher archers[3];               // +0x13d78; armySlot at +0x20
     // "Move order is reversed for this combat": find_move_order
     // (0x41f179) reads it through the gpCombatManager GLOBAL - not
@@ -797,7 +826,20 @@ public:
     // initialises the stack there and optionally fizzles it in.
     army* AddArmy(int iSide, int iMonType, int iMonQty, int iGridIndex,
                   int iSetAttributes, int bFizzleItIn);
+    // 0x476490 / 0x476bd0, the command.obj pair: GetCommand answers
+    // "what would clicking this hex do", DoCommand performs it.
+    int GetCommand(int newIndex);
+    void DoCommand(int command);
     int RightClick(int newIndex);                              // 0x4769c0
+    // 0x59e900, spells.obj. LOCATED 2026-08-13 from DoCommand's
+    // spell-book case, which calls it with `this` only, compares the
+    // result against -1 and forwards it straight into InitiateSpell.
+    // The DC spells.obj roster puts combatManager::ViewSpells
+    // (spells.cpp:97, 680 SH4 B, ONE parameter) immediately before
+    // InitiateSpell (spells.cpp:176), and retail's 847-byte row at
+    // 0x59e900 ends exactly where the already-claimed InitiateSpell
+    // begins at 0x59ec50 - the same order with no gap.
+    int ViewSpells();
     // 0x47a380. LOCATED from RightClick, which calls it with the literal
     // 1 for the three wall-target hexes; the DC command.obj roster puts
     // ViewCastleBallista (command.cpp:3932) between AddArmy (3867) and
