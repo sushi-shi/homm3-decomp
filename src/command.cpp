@@ -5,6 +5,8 @@
 #include "cmbtmgr.h"
 #include "game.h"
 #include "hero.h"
+#include "prefs.h"
+#include "soundmgr.h"
 
 #if 0  // @carcass
 
@@ -97,6 +99,23 @@ int combatManager::GetPointer(int inCombatCommand, int iHexIndex)
 // army::get_owner. The DC port hoisted it to a member; retail passes
 // it.
 //
+// THE OPTIONS ARE PREFERENCE FIELDS, NOT STANDALONE GLOBALS. All four
+// dwords this body reads land inside SUnnamed698758 (retail .bss
+// 0x698758, claimed in misc.cpp): combatCatapult (+0x44),
+// combatBallista (+0x48), combatFirstAidTent (+0x4c) and
+// combatAutoCreatures (+0x3c) - the same five war-machine flags
+// SetDefaultCombatOptions initialises, which is what fixes the DEFAULT
+// arm's field as combatAutoCreatures rather than a catch-all.
+//
+// The byte at 0x691209 is soundmgr's gbUnk691209. Nothing here
+// contradicts that TU's reading: the address is an ordinal-named byte
+// flag with two independent readers, and both do nothing but test it
+// non-zero (`mov al, byte [0x691209]; test al, al`). The sound guard's
+// `field_84 || gbUnk691209` and this body's `gbUnk691209 && field_132b4`
+// are both consistent with a single global "an automated/attract mode is
+// running" latch; neither reader constrains the other, so the name
+// stays soundmgr's.
+//
 // CASE ORDER IS THE SOURCE'S, not the case values'. The jump table at
 // the tail maps 0x91..0x95 onto four blocks, and those blocks are
 // EMITTED in the order ballista/arrow-tower, catapult, first-aid tent,
@@ -133,7 +152,7 @@ unsigned char combatManager::is_computer_action(const army* current_army)
     case CREATURE_ARROW_TOWER:
         if (bCreaturePlacement)
             return 0;
-        if (field_132c4 && gCombatAutoBallista6987a0)
+        if (field_132c4 && gUnnamed698758.combatBallista)
             return 1;
         if (owner == 0)
             return 1;
@@ -143,7 +162,7 @@ unsigned char combatManager::is_computer_action(const army* current_army)
     case CREATURE_CATAPULT:
         if (bCreaturePlacement)
             return 0;
-        if (field_132c4 && gCombatAutoCatapult69879c)
+        if (field_132c4 && gUnnamed698758.combatCatapult)
             return 1;
         if (owner->ballisticsLevel == 0)
             return 1;
@@ -151,18 +170,18 @@ unsigned char combatManager::is_computer_action(const army* current_army)
     case CREATURE_FIRST_AID_TENT:
         if (bCreaturePlacement)
             return 0;
-        if (field_132c4 && gCombatAutoFirstAid6987a4)
+        if (field_132c4 && gUnnamed698758.combatFirstAidTent)
             return 1;
         if (owner->skillLevel[27] == 0)
             return 1;
         break;
     default:
-        if (field_132c4 && gCombatAutoOther698794)
+        if (field_132c4 && gUnnamed698758.combatAutoCreatures)
             return 1;
         break;
     }
 
-    if (gCombatForceComputer691209 && field_132b4)
+    if (gbUnk691209 && field_132b4)
         return 1;
 
     long side = current_army->hypnotizeFlag
