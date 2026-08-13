@@ -421,6 +421,63 @@ void searchArray::PushPoint(const pathCell* old_cell, pathCell* point, int direc
 // `mov ebx,[ebp+0xc]; mov eax,[ebx]; call advManager::GetCell` - it
 // reads the type_point at pathCell+0 out of `source` and asks the
 // adventure manager for that cell.
+//
+// DECODED MAP 2026-08-13 (analysis banked; the body is NOT reconstructed
+// yet - 2708 bytes, and a half-landed version of a function this size
+// would mislead more than the carcass does).
+//
+// FRAME AND PARAMETERS. `this` is homed to [ebp-8] - every searchArray
+// member read in the body goes through that slot, which is what proves
+// the receiver (the fields it touches are +0xc, +0x10, +0x14, +0x18 and
+// +0x1c, i.e. the four cost/limit words plus the water_walk_level /
+// flight_level pair findpath.h already carries). The nine stack slots
+// land on the declarator below one for one: hero* at +8, pathCell*
+// source at +0xc, turn_mobility +0x10, maxMobility +0x14, the
+// adjacent_monster BYTE at +0x18, the packed four-byte monster_location
+// type_point at +0x1c (the body reads it as [ebp+0x1c] and [ebp+0x1e],
+// the 10/10/4 bitfield split), iPathfinding +0x20, search_type +0x24 and
+// native_terrain +0x28.
+//
+// THE CANDIDATE POINT is built in [ebp-0x60]/[ebp-0x5e] with the
+// engine-wide read-modify-write bitfield triple (`shl 6 / sar 6` to
+// extract, `xor / and 0x3ff / xor word` to insert) and then bound-checked
+// against gMapWidth (0x6783c8) and gMapHeight (0x6783cc) before anything
+// else. When adjacent_monster is set, the candidate is compared against
+// monster_location field by field (x, then y, then the z nibble masked
+// with 0x3c00) and rejected on a match.
+//
+// THE THREE UNLOCATED CALLEES, all three confirmed against the bytes:
+//   0x56aad0  searchArray MEMBER, thiscall - `mov ecx, [ebp-8]`'s value
+//             in ebx, `push &[ebp-0x60]; push edi` where edi is
+//             reloaded from [ebp+8], so the signature is
+//             (hero* current_hero, pathCell* candidate). Reached only
+//             when the destination cell's +0xd bit 4 is set, search_type
+//             is at least 4, and the cell's object id is 0x21, 0x22 or
+//             0x36. 104 B; the DC enter_hostile_trigger (search.cpp:367)
+//             is the size and arity match.
+//   0x56a360  FREE FASTCALL - `mov ecx, edi` (hero*), `lea edx,
+//             [ebp-0x60]` (pathCell*), one stack push of [ebp+0x24],
+//             i.e. (hero*, pathCell*, long search_type). 158 B.
+//   0x431160  hero MEMBER, thiscall - `mov ecx, [ebp+8]` with a single
+//             stack argument taken from [ebp-0x80], the packed
+//             type_point; its result accumulates into the cost word.
+// Everything else it calls is already claimed: CalcTerrainCost (five
+// expansions, all with the nine-argument form this TU already spells),
+// PushPoint (three), hero::get_spell_level (three),
+// hero::get_special_terrain (three), hero::IsWieldingArtifact (two),
+// NewmapCell::get_map_object (two), NewmapCell::cell_is_trigger (two),
+// GetMapExtra (two), advManager::GetCell and playerData::IsHuman.
+//
+// THE FOG GATE is `GetMapExtra(x, y, z) & gMapVisibilityBit` (the byte
+// at 0x69ccc4, advmgr.h's name), tested twice: once for the candidate
+// and once for the source point, and skipped entirely when search_type
+// is 3 or when gpCurrentPlayer->IsHuman().
+//
+// THE TOWN SCAN near 0x4b3861 walks gpGame's town array (stride 1170,
+// base +0x21620) and compares the row's owner byte at +0x22 against the
+// hero's own +0x22 while the row's +0xc reads 0x50 - i.e. "an enemy town
+// stands here", which sets the [ebp-1] latch that later forces the
+// expensive-cost branch.
 VA(0x004b2300, 0xA94)  // anchor-callee, dc 0x9f718
 void searchArray::TestPossibleDirections(const hero* current_hero, pathCell* source, long turn_mobility, long maxMobility, unsigned char adjacent_monster, type_point monster_location, TSkillMastery iPathfinding, type_search_type search_type, TTerrainType native_terrain)
 {
