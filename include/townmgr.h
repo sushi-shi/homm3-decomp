@@ -16,13 +16,100 @@ void DoMapTavern(type_point point);
 #ifdef HOMM3_TOWNMGR_WINDOW_DECLS
 #include "advmgr_popup.h"
 
+// The compiland's dialog family. Every one of these classes is fixed by
+// a vtable of its own, each the slot-0 owner of one 33-byte scalar
+// deleting destructor and each stored by the 107-byte destructor that
+// wrapper calls: 0x643764 TThievesGuildWindow, 0x6437a0 THallWindow,
+// 0x6437dc TMageGuildWindow, 0x643818 / 0x643854 / 0x643890 the three
+// garrison windows, 0x6438cc TBlacksmithWindow, 0x643908 TShipWindow,
+// 0x643944 TBuyBuildWindow, 0x643980 TTavernWindow, 0x6439bc
+// TCastleWindow - the order the Dreamcast roster declares them in, with
+// 0x643980 independently anchored by the Open/Close pair below.
+// Only the destructor is declared for each: no constructor is
+// reconstructed yet, so no member below CAdvPopup's 0x60 is attested
+// except where a destructor reads one, and no size is asserted.
+
+// The town screen's own window, and the one member of the family that is
+// NOT a CAdvPopup: its vtable 0x64372c is 9 slots, the plain heroWindow
+// width, and its destructor runs ~heroWindow rather than ~CAdvPopup.
+class TTownScreenWindow : public heroWindow {
+public:
+    int field_4c;    // +0x4c  town-list scroll offset (UpdateTownLocators)
+    char* field_50;  // +0x50  raw allocation, freed with plain operator delete
+
+    virtual ~TTownScreenWindow();
+    void UpdateTownLocator(int i);
+    void UpdateTownLocators();
+};
+
+class TThievesGuildWindow : public CAdvPopup {
+public:
+    char pad_60[0x20];
+    // +0x80: attested only as the destructor's first teardown - deleted
+    // through slot 0 before the widget list, so it is an owned object
+    // with a virtual destructor and nothing else about it is proven.
+    widget* field_80;
+
+    virtual ~TThievesGuildWindow();
+};
+
+class THallWindow : public CAdvPopup {
+public:
+    virtual ~THallWindow();
+};
+
+class TMageGuildWindow : public CAdvPopup {
+public:
+    virtual ~TMageGuildWindow();
+};
+
+class type_garrison_base_window : public CAdvPopup {
+public:
+    virtual ~type_garrison_base_window();
+};
+
+// The two derived garrison windows have EMPTY destructors: retail inlines
+// the base body into each and then drops the derived vptr store the
+// inlined base immediately overwrites, which is why both bodies store
+// 0x643818 even though 0x643854 and 0x643890 exist and hold their ??_G.
+class type_monster_join_window : public type_garrison_base_window {
+public:
+    virtual ~type_monster_join_window();
+};
+
+class TGarrisonWindow : public type_garrison_base_window {
+public:
+    virtual ~TGarrisonWindow();
+};
+
+class TBlacksmithWindow : public CAdvPopup {
+public:
+    virtual ~TBlacksmithWindow();
+};
+
+class TShipWindow : public CAdvPopup {
+public:
+    virtual ~TShipWindow();
+};
+
+class TBuyBuildWindow : public CAdvPopup {
+public:
+    virtual ~TBuyBuildWindow();
+};
+
 // The tavern chooser. Its vtable 0x643980 is 15 slots wide - the CAdvPopup
 // width - and the two slots reconstructed are the ones retail overrides to
 // bracket the dialog with the tavern's background video.
 class TTavernWindow : public CAdvPopup {
 public:
+    virtual ~TTavernWindow();
     virtual int Open(int zOrder, unsigned char update);  // slot 1
     virtual void Close(unsigned char update);            // slot 2
+};
+
+class TCastleWindow : public CAdvPopup {
+public:
+    virtual ~TCastleWindow();
 };
 #endif
 
@@ -30,12 +117,60 @@ public:
 #include "basemgr.h"
 
 class town;
+class strip;
+class townObject;
+class heroWindow;
+class widget;
 
-// Narrow header-owned prefix proven by town::View: the manager base fills
-// +0x00..+0x37 and the selected town pointer follows at +0x38.
+// Layout proven store-for-store by townManager::townManager 0x5c3310,
+// which writes every member below, and corroborated by ::UnloadTown
+// 0x5c70b0 (the two arrays and their counts), ::Close 0x5c71b0 (the two
+// owned windows) and ::ResetStrips 0x5d5530 (the two hovered strips -
+// it stores -2 into strip::current at +0x2c through both). The tail is
+// modelled only as far as retail proves it, so no size is asserted; the
+// unattested run at +0x144 stays an opaque pad. The three virtuals are
+// the three slots of vtable 0x643720.
 class townManager : public baseManager {
 public:
-    town* townToView;
+    town* townToView;             // +0x38
+    widget* field_3c;             // +0x3c
+    townObject* TownObjects[7];   // +0x40
+    strip* Strips[44];            // +0x5c
+    int StripCount;               // +0x10c
+    int field_110;                // +0x110  ctor -1
+    int field_114;                // +0x114
+    heroWindow* TownWindow;       // +0x118
+    strip* field_11c;             // +0x11c
+    strip* field_120;             // +0x120
+    int field_124;                // +0x124
+    int field_128;                // +0x128  ctor -1
+    strip* field_12c;             // +0x12c
+    int field_130;                // +0x130  ctor -1
+    strip* field_134;             // +0x134
+    int field_138;                // +0x138  ctor -1
+    heroWindow* field_13c;        // +0x13c
+    int field_140;                // +0x140
+    char pad_144[0x50];           // +0x144  untouched by the retail bodies
+    int field_194;                // +0x194  ctor -1
+    int field_198;                // +0x198  ctor -1
+    int field_19c;                // +0x19c  ctor -1
+    int field_1a0;                // +0x1a0
+    int field_1a4;                // +0x1a4
+    int field_1a8;                // +0x1a8
+    int field_1ac;                // +0x1ac
+    heroWindow* field_1b0;        // +0x1b0
+    int field_1b4;                // +0x1b4
+    int field_1b8;                // +0x1b8  ctor -1
+    int field_1bc;                // +0x1bc
+    int field_1c0;                // +0x1c0
+    int field_1c4;                // +0x1c4  ResetStrips
+
+    townManager();
+    void UnloadTown();
+    void ResetStrips();
+    virtual int Open(int newPriority) OVERRIDE;   // slot 0, 0x5c63c0
+    virtual void Close() OVERRIDE;                // slot 1, 0x5c71b0
+    virtual int Main(message& msg) OVERRIDE;      // slot 2, 0x5d3240
 };
 
 extern townManager* gpTownManager;  // retail .bss 0x6994fc
