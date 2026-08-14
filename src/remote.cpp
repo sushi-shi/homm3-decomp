@@ -7,6 +7,7 @@
 #include "kbwin.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "animateddlg.h"
 
 // DC names the network singleton pDPlay; retail references at 0x69d808 and
 // the adjacent readiness byte are rooted throughout the remote/front-end
@@ -469,6 +470,47 @@ void CChatManager::SetPosition(int newPos)
         newPos = msgCount - 1;
     position = newPos;
     changed = 1;
+}
+
+// E:\gamedcs\remote.cpp:1539 - CAnimatedDlg's constructor, and the row
+// that unblocks this class's whole vtable. Nothing else in remote.obj
+// referenced ??_7CAnimatedDlg@@6B@: the only other body that stores it is
+// the destructor below, and the four derived dialogs reach it through
+// their own vtables. The `mov [esi], offset ??_7CAnimatedDlg` here is the
+// live store that makes VC6 emit the vtable and, with it, the slot-0
+// scalar deleting destructor the claim beneath pairs against.
+//
+// It takes no arguments (DC: Parms = 1, this only; retail: bare `ret`)
+// and builds its base as CTextDialog(0x12). The four member stores sit in
+// the BODY, not a member-init list: retail's vptr store precedes all of
+// them, and their order is m_pSprite, m_spriteFrame, m_lastTick,
+// m_palUpdated - not declaration order, which a member-init list would
+// have forced.
+VA(0x00554a50, 0x22)  // anchor-vtable 0x640e94, dc 0x11d1ec
+CAnimatedDlg::CAnimatedDlg()
+    : CTextDialog(0x12)
+{
+    m_pSprite = 0;
+    m_spriteFrame = 0;
+    m_lastTick = 0;
+    m_palUpdated = 0;
+}
+
+// E:\gamedcs\remote.cpp:1543 - CAnimatedDlg::`scalar deleting destructor',
+// slot 0 of vtable 0x640e94.
+VA_COMPGEN(0x00554a80, 0x21, SCALAR_DELETING_DTOR, CAnimatedDlg)
+
+// E:\gamedcs\remote.cpp:1547 - CAnimatedDlg::~CAnimatedDlg, NO CLAIM.
+// Retail 0x554ab0 (85 B, dc 0x11d250) is EH-BEARING: it carries an fs:[0]
+// frame with the state 0 / -1 pair that guards the base teardown while
+// `if (m_pSprite) m_pSprite->Dispose();` runs, which is P2.2 territory and
+// cannot close until the synth-PDB EH scope lands. The body is left empty
+// here on purpose - spelling the Dispose call would drag csprite.h into
+// this TU's include closure (16 exact rows) to buy a row that still could
+// not reach 100%. What the claim beneath needs from it is only that it be
+// an out-of-line virtual destructor, so that ??_G calls it.
+CAnimatedDlg::~CAnimatedDlg()
+{
 }
 
 // E:\gamedcs\remote.cpp:1293
