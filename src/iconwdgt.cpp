@@ -101,6 +101,16 @@ iconWidget::~iconWidget()
 // 4.7%. Rejected 2026-08-13: deleting the `returnZero:` label and spelling
 // all five sites as plain `return 0;` (89.1336%). This is the tail-merge
 // generation family; the placement is not source-reachable here.
+// Rejected 2026-08-14, all byte-identical at 95.2708: MOVING the
+// `returnZero:` label body out of the `field_2C > 0` gate and into each
+// of the three gates retail could be merging at - the LEFT_BUTTON_DOWN
+// disabled gate, the LEFT_BUTTON_UP disabled gate (retail's own merge
+// point) and the RIGHT_BUTTON_UP selected gate - with `isDisabled` split
+// into declaration + assignment so the leading `goto` may legally cross
+// it (that split is itself byte-inert). VC6 normalises the label
+// position away before layout, so the merge point is a C2 choice and not
+// a source one. The /Ob2 two-axis probe (byte-inert statement mass 0..32
+// crossed with 0..8 tail `xx_nop()` candidate sites) is flat here too.
 VA(0x004ea810, 0x2F4)  // vtable 0x63ec48 slot 2, dc 0xd94a4
 int iconWidget::Main(message* msg)
 {
@@ -688,6 +698,21 @@ void iconWidget::NextRandomFrame()
 // is what nothing reaches.
 // `homm3 vc6 why-reg` was run over it the same day: 20 mutations, best
 // is `volatile int cumulative` at 58 slots against 59, not exact.
+// RE-TESTED ON THE /Ob2 AXES 2026-08-14. A sibling lane found two
+// functions that only close at a specific (statement mass, candidate
+// site count) PAIR after each axis alone had been measured byte-flat, so
+// the frame/homing half was swept over the whole grid rather than one
+// axis: byte-inert statement mass m = 0,1,2,3,4,6,8,20,60,120,200
+// crossed with k = 0,1,2,3,8,12,20,40 tail `xx_nop()` candidate sites
+// (an empty file static, so each call inlines to nothing yet still
+// counts in the remaining/sites-to-come divisor). Every cell is 86.4111
+// here and 72.0056 for NextRandomFrame, to four decimals. The probe is
+// not inert by construction - the identical harness with a single
+// `volatile int` mass statement moves winmgr's FadeToBlack 88.51 ->
+// 82.80 - so the flat grid is a real negative. Neither half of this
+// residual is on an /Ob2 axis: the inliner is not what places the
+// odds-table stores, the loop-invariant store motion that runs after it
+// is.
 VA(0x004eb250, 0xED)  // anchor-global, dc 0xd9ee8
 void iconWidget::NextRandomSiegeEngineFrame()
 {

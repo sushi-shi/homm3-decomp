@@ -300,7 +300,17 @@ void font::DrawCursor(Bitmap16Bit* bitmap, int x, int y, int color, int clipX, i
 // DrawCharacter did not move by one part in ten thousand: 98.4598 and
 // 78.2623 before and after. Whatever selects the ESI/EDI binding, it is
 // NOT the count or the position of the TU's symbols. Do not spend another
-// run on TU-content probes.
+// run on TU-content probes. Corroborated from the other side 2026-08-14:
+// a bare `struct probeN_t { int a; };` block inserted after the includes
+// at N = 1, 3, 6, 11 and 19 cumulative definitions - the same knob that
+// moved initialize_game_data 100.0 -> 96.09 in the include-set residual
+// class - leaves this function, DrawCharacter, DrawBoundedString and
+// LineLength unmoved to four decimals at every count. font.obj's
+// allocator state is insensitive to the TU's user-defined type
+// population as well as to its symbol population. The /Ob2 two-axis
+// probe (byte-inert statement mass 0..32 crossed with 0..8 tail
+// `xx_nop()` candidate sites, 16 cells) is likewise flat here and on
+// DrawCharacter.
 VA(0x004b5260, 0x22E)  // anchor-global, dc 0xa1e5c
 void font::DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
                              int x, int y, int color_scheme, int clipX,
@@ -424,6 +434,28 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font:
 // (98.28 but one duplicated loop guard), the first `total` (97.24),
 // register/long/initializer/address-taken spellings (96.81), and removing
 // or bypassing the loop guard (95-96% allocation cascades).
+//
+// WHAT THE VOLATILE IS DOING, read off the bytes 2026-08-14. The residual
+// is exactly three memory instructions and nothing else: retail spends
+// `imul eax,ecx / cmp eax,edi / jge / mov ecx,edi / sub ecx,eax /
+// mov [ebp-4],ecx` with `total` living only in EAX, where the volatile
+// forces `mov [ebp-0x10],eax` and reloads it for both reads. The frame
+// is the SAME six slots on both sides (-4,-8,-0xc,-0x10,-0x14,-0x18);
+// retail touches -0x10 four times, we touch it seven. What the volatile
+// buys is slot ORDER, not the slot count: with a plain `total` the pair
+// at [ebp-4] and [ebp-0xc] SWAPS against retail (visible as retail's
+// `mov eax,[ebp-0xc] / mov edi,[ebp-4] / lea eax,[edi+2*eax]` becoming
+// `mov eax,[ebp-4] / mov edi,[ebp-0xc] / lea eax,[eax+2*edi]`) and an
+// EDX/EDI scratch cascade opens through the whole tail - 96.81.
+// Rejected 2026-08-14: all sixteen single-variable relocations of the
+// eight function-scope declarations (each of pos/limit/currY/lineStart/
+// okWidthIndex/iOrigPixelWidth/iHeight/width moved to the front and to
+// the back of the block), crossed with plain and volatile `total` -
+// every one of the 32 compiles is 96.8123 or 98.7864 to four decimals,
+// so VC6's slot assignment here is NOT driven by source declaration
+// order. `why-reg --model` on the plain base declines (bindings agree at
+// every first definition). The /Ob2 two-axis probe (mass 0..32 x 0..8
+// tail candidate sites) is flat in all sixteen cells.
 VA(0x004b5490, 0x308)  // anchor-global, dc 0xa2108
 void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              int y, int boxWidth, int boxHeight,
@@ -592,12 +624,67 @@ long font::get_string_width(const char* arg)
 //   * `int width = 0;` is declared BEFORE `int lineStart = pos;`.
 // Making `lineStart` volatile homes the backtrack boundary and raises the
 // function 91.74 -> 92.68 while preserving the exact branch sequence.
-// The remaining 17 register-visible slots are scratch allocation after
-// first definitions; a second guided sweep found no improving mutation.
 // Earlier rejected forms: `count` declared first (86.4), declared last
 // (identical), split declaration + assignment (identical), `pos` declared
 // first (identical), `str[pos] != 0 && pos < len` outer order (68.6),
 // `lineStart` before `width` (91.3), and `width` hoisted (91.3).
+//
+// WHAT THE `volatile` ACTUALLY BUYS AND COSTS, measured 2026-08-14 by
+// diffing BOTH spellings against retail instruction-for-instruction
+// instead of reading their scores. The two spellings are exact in
+// COMPLEMENTARY halves of the function, and each half is the other's
+// whole residual:
+//   * PLAIN `int lineStart` (91.74, 94 instructions) reproduces the
+//     entire BACKTRACK LOOP byte-for-byte - `mov eax,[ebp+8]` for str,
+//     retail's `lea edx,[edx+2*edx] / mov eax,[ebx+4*edx+8] /
+//     lea edx,[ebx+4*edx]` scratch order, `cmp edi,[ebp+0xc]` as a
+//     memory operand, and the FOLDED `cmp esi,[ebp-4]` at the space
+//     exit. So volatile is exactly what blocks that fold: it splits the
+//     one compare into `mov edx,[ebp-4]; cmp esi,edx`.
+//   * VOLATILE (92.68, 98 instructions against retail's 97) reproduces
+//     everything ELSE: `xor edi,edi` + `mov [ebp-8],edi` at entry,
+//     boxWidth HOISTED into EAX in the outer preheader (the back edge
+//     lands past it, at `mov ecx,[ebp+8]`), `cmp edi,eax` twice, ECX as
+//     the forward-loop width scratch, and `mov eax,edi` at the return.
+//     The plain spelling loses all of that: with EAX free it gives count
+//     EAX (saving retail's two instructions) and re-loads boxWidth into
+//     ECX at the loop HEAD instead of hoisting it.
+// The volatile residual is therefore ONE optimizer decision and its nine
+// rows: retail SPLITS the boxWidth pseudo's EAX live range across the
+// backtrack region - EAX is dead there (so str takes it and the width
+// scratch takes it) and is reloaded once at the backtrack EXIT
+// (`mov eax,[ebp+0xc]` at retail+0xd1). Our C2 keeps the pseudo live
+// through the loop and rematerialises it INSIDE, right after the `sub
+// edi,eax` that clobbers it. Live-range splitting, not a binding.
+// Measured against that and all byte-identical or worse, 2026-08-14:
+//   - all six declaration orders of len/count/pos, each crossed with
+//     `lineStart` before/after `width` (the three orders that keep
+//     `len` first are 91.7423 to four decimals; putting count or pos
+//     first costs the shared `xor eax,eax` and drops to 80-86);
+//   - a `const int limit = boxWidth` copy used in all three compares,
+//     and one used only in the backtrack compare, and one used only in
+//     the forward compares - VC6 folds the name away every time, 0 of
+//     the 3 changed a byte or the frame;
+//   - `const int boxWidth` parameter, outer loop as `for(;;)`+breaks,
+//     `count++` before `pos++`, `width`/`lineStart`/`candidate` hoisted
+//     to function scope (all 91.7423);
+//   - the space exit as `if (lineStart >= pos)` (92.06, worse), as
+//     `if (!(pos > lineStart))` and as an INVERTED guard `if (pos >
+//     lineStart) break; pos = candidate; break;` - the latter is
+//     retail's exact block layout and is byte-identical to the current
+//     spelling, so VC6 normalises it;
+//   - volatile moved to count / len / pos / width / candidate on the
+//     plain base (86.4 / 81.2 / 46.7 / 75.2 / 84.7 - all worse);
+//   - `homm3 vc6 why-reg --model` declines on both bases (bindings
+//     agree at every first definition), and its 16-mutation guided
+//     sweep on the volatile base reports no mutation moving the
+//     divergence toward the reference;
+//   - the /Ob2 two-axis probe (byte-inert statement mass 0..32 crossed
+//     with 0..8 tail `xx_nop()` candidate sites) is FLAT to four
+//     decimals in every cell, with a `volatile` mass control proving
+//     the probe reaches the function.
+// Next lever would be a loop-optimizer solver that can express "split
+// this pseudo's live range across the inner region", not a spelling.
 VA(0x004b5820, 0xF2)  // anchor-global, dc 0xa246c
 int font::LineLength(const char* str, int boxWidth)
 {
