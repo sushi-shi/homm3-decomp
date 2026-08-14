@@ -383,6 +383,122 @@ void townManager::Close()
     status = 0;
 }
 
+// The thieves' guild scoreboard, the widest dialog in the compiland: a
+// full-screen CAdvPopup with eight player columns and thirteen category
+// rows. Anchored by its own vftable 0x643764 (already proven
+// TThievesGuildWindow's by the destructor below), by the TPRank.pcx
+// background the carve named the row after, and by `ret 4` against the
+// Dreamcast roster's one-int declarator.
+
+// E:\gamedcs\townmgr.cpp:3859
+VA(0x005c8190, 0x14C8)  // anchor-vtable 0x643764 + anchor-string TPRank.pcx + arity, dc 0x16d298
+TThievesGuildWindow::TThievesGuildWindow(int num_guilds)
+    : CAdvPopup(0, 0, 800, 600, 2)
+{
+    Widgets.reserve(30);
+
+    bitmapBorder* background = new bitmapBorder(0, 0, 800, 600, 0,
+                                                "TPRank.pcx", 0x800);
+    background->SetPlayerPaletteColors(gpGame->GetLocalPlayerGamePos());
+    Widgets.push_back(background);
+
+    Widgets.push_back(new iconWidget(317, 7, 66, 540, 700, "PRStrips.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(383, 7, 66, 540, 701, "PRStrips.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(449, 7, 66, 540, 702, "PRStrips.def",
+                                     2, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(515, 7, 66, 540, 703, "PRStrips.def",
+                                     3, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(581, 7, 66, 540, 704, "PRStrips.def",
+                                     4, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(647, 7, 66, 540, 705, "PRStrips.def",
+                                     5, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(713, 7, 66, 540, 706, "PRStrips.def",
+                                     6, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new bitmapBorder(253, 334, 62, 109, 900, "PRRed.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(319, 334, 62, 109, 901, "PRRed.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(385, 334, 62, 109, 902, "PRRed.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(451, 334, 62, 109, 903, "PRRed.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(517, 334, 62, 109, 904, "PRRed.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(583, 334, 62, 109, 905, "PRRed.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(649, 334, 62, 109, 906, "PRRed.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(715, 334, 62, 109, 907, "PRRed.pcx", 0x800));
+
+    Widgets.push_back(new textWidget(253, 12, 62, 30, 0, "bigfont.fnt",
+                                     font::HEADING, 800, 1, 0, 8));
+    Widgets.push_back(new textWidget(319, 12, 62, 30, 0, "bigfont.fnt",
+                                     font::HEADING, 801, 1, 0, 8));
+    Widgets.push_back(new textWidget(385, 12, 62, 30, 0, "bigfont.fnt",
+                                     font::HEADING, 802, 1, 0, 8));
+    Widgets.push_back(new textWidget(451, 12, 62, 30, 0, "bigfont.fnt",
+                                     font::HEADING, 803, 1, 0, 8));
+    Widgets.push_back(new textWidget(517, 12, 62, 30, 0, "bigfont.fnt",
+                                     font::HEADING, 804, 1, 0, 8));
+    Widgets.push_back(new textWidget(583, 12, 62, 30, 0, "bigfont.fnt",
+                                     font::HEADING, 805, 1, 0, 8));
+    Widgets.push_back(new textWidget(649, 12, 62, 30, 0, "bigfont.fnt",
+                                     font::HEADING, 806, 1, 0, 8));
+    Widgets.push_back(new textWidget(715, 12, 62, 30, 0, "bigfont.fnt",
+                                     font::HEADING, 807, 1, 0, 8));
+
+    Widgets.push_back(new textWidget(26, 42, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 604, 1, 0, 8));
+    Widgets.push_back(new textWidget(26, 74, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 605, 1, 0, 8));
+    Widgets.push_back(new textWidget(26, 106, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 606, 1, 0, 8));
+    Widgets.push_back(new textWidget(26, 138, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 607, 1, 0, 8));
+    Widgets.push_back(new textWidget(26, 170, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 608, 1, 0, 8));
+    Widgets.push_back(new textWidget(26, 202, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 609, 1, 0, 8));
+    Widgets.push_back(new textWidget(26, 234, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 610, 1, 0, 8));
+    Widgets.push_back(new textWidget(26, 266, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 611, 1, 0, 8));
+    Widgets.push_back(new textWidget(26, 299, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 612, 1, 0, 8));
+
+    Widgets.push_back(new textWidget(26, 392, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 620, 1, 0, 8));
+    Widgets.push_back(new textWidget(26, 450, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 621, 1, 0, 8));
+    Widgets.push_back(new textWidget(26, 500, 224, 30, 0, "medfont.fnt",
+                                     font::HEADING, 622, 1, 0, 8));
+
+    Widgets.push_back(new bitmapBorder(9, 556, 734, 18, 40,
+                                       "TStatBar.pcx", 0x800));
+    Widgets.push_back(new textWidget(9, 556, 734, 18, 0, "smalfont.fnt",
+                                     font::PRIMARY, 41, 1, 0, 8));
+
+    // The second hotkey, spelled as the vector operation rather than
+    // through button::set_hotkey. The two are semantically identical, but
+    // set_hotkey's body is the THREE-argument insert, which leaves
+    // vector<int>::size() one /Ob2 level shallower than push_back does -
+    // and at that level our CL expands size() inline three times where
+    // retail still CALLS it, the extra seventeen instructions cascading
+    // into the register assignment of the whole insert expansion
+    // (98.92% -> 100%). The same divergence is the open half of
+    // combatresultswindow's residual, seen there from the other side.
+    button* mageButton = new button(747, 556, 48, 40, MAGE_BUTTON_ID,
+                                    "TPMage1.def", 0, 1, 1, 28, 2);
+    mageButton->hotKeyCodes.push_back(1);
+    Widgets.push_back(mageButton);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    SetWinText(this, 14);
+    SetupThievesGuild(num_guilds);
+}
+
 VA_COMPGEN(0x005c9660, 0x21, SCALAR_DELETING_DTOR, TThievesGuildWindow)
 
 // E:\gamedcs\townmgr.cpp:3939
