@@ -143,6 +143,7 @@ Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
     importPCXFile(filename);
 }
 
+// E:\gamedcs\bitmap24.cpp:94
 VA(0x0044eec0, 0x22)
 Bitmap24Bit::~Bitmap24Bit()
 {

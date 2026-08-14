@@ -212,6 +212,7 @@ void SendMapChange(CMapChange* pMapChange)
 
 #endif  // @carcass
 
+// E:\gamedcs\cursor.cpp:386
 VA(0x0047ffe0, 0x1A)  // DC roster order + exact cursor member stores
 void advManager::TurnTo(int newDirection)
 {

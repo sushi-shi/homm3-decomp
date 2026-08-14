@@ -32,6 +32,7 @@ unsigned char* CDiffFile::GetData()
 // but retail colors output/diff offsets in EBX/EAX/EDI while this CL colors the
 // same lifetimes in EDI/stack/EAX. Tried and rejected: caching GetData(), a
 // common for-loop increment, declaration permutations, and register hints.
+// E:\gamedcs\diff.cpp:62
 VA(0x00490f60, 0xc5)  // linkorder + body: allocated output size and 12-byte copy/reference records, dc 0x822ec
 void* CDiffFile::Apply(unsigned char* oldSaveGame, int oldSaveGameSize)
 {
@@ -63,6 +64,7 @@ void* CDiffFile::Apply(unsigned char* oldSaveGame, int oldSaveGameSize)
     return result;
 }
 
+// E:\gamedcs\diff.cpp:107
 VA(0x00491030, 0x20)  // linkorder + 16-byte retail field layout, dc 0x82378
 CDiffMaker::CDiffMaker(unsigned char* oldData, int oldSize,
                        unsigned char* newData, int newSize)
@@ -88,6 +90,7 @@ int CDiffMaker::CountSameBytes(int oldOffset, int newOffset)
 // distance 0 (identical 11-block / 5-branch / 2-return shape), while why-reg's
 // model finds no binding divergence in its source-addressable slice and its
 // seven fallback mutations are all byte-neutral or worse.
+// E:\gamedcs\diff.cpp:133
 VA(0x00491050, 0xed)  // linkorder + 64x64 search for a 16-byte synchronization run, dc 0x823d8
 bool CDiffMaker::FindNextSame(int oldOffset, int newOffset,
                               int& oldCount, int& newCount)
@@ -140,6 +143,7 @@ found:
 // indexed helper, reference-selecting max, scoped headers, reference
 // signatures, and direct terminal return are all independently DC/retail
 // evidenced and are the measured best shape.
+// E:\gamedcs\diff.cpp:174
 VA(0x00491140, 0x1bf)  // linkorder + calls FindNextSame and emits 12-byte records, dc 0x82488
 CDiffFile* CDiffMaker::MakeDiff(unsigned long& diffSize)
 {

@@ -101,6 +101,7 @@ TPalette16* TPalette16::operator=(const TPalette16* from)
 // E:\gamedcs\palette.cpp:204
 #endif  // @carcass
 
+// E:\gamedcs\palette.cpp:204
 VA(0x00522940, 0xB)  // anchor-global, dc 0x10a8e0
 TPalette16::~TPalette16()
 {
@@ -234,6 +235,7 @@ TPalette24& TPalette24::operator=(const TPalette24& from)
     return *this;
 }
 
+// E:\gamedcs\palette.cpp:650
 VA(0x00522f60, 0x0b)  // TPalette24 vtable 0x640374 + resource dtor tail
 TPalette24::~TPalette24() throw()
 {

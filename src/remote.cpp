@@ -261,6 +261,7 @@ void CChatManager::PlayerEnterMsg(const char* cChatMsg)
 // header instead is what cost advmgr's CAdvPopup constructor 30 points on
 // 2026-08-13; that measurement was a real semantic dependency, not the
 // include-set class, and this is its resolution.
+// E:\gamedcs\remote.cpp:783
 VA(0x00553770, 0x30)  // anchor-callee (Copy 0x555150 inlined), dc 0x11c268
 void CDPlayHeroes::SetNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
 {
@@ -272,12 +273,14 @@ void CDPlayHeroes::SetNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
 
 // E:\gamedcs\remote.cpp:793 - seven bytes, frameless, and the reason
 // advmgr's CAdvPopup constructor is exact with a CALL here.
+// E:\gamedcs\remote.cpp:793
 VA(0x005537a0, 0x7)  // anchor-caller (advmgr.cpp:4838), dc 0x11c290
 CNetMsgHandler* CDPlayHeroes::GetNetMsgHandler()
 {
     return m_pNetMsgHandler;
 }
 
+// E:\gamedcs\remote.cpp:1033
 VA(0x00553d00, 0xA1)  // anchor-global, dc 0x11c6bc
 void CChatManager::UpdateWidget(textWidget* widget, unsigned char killOld, int numLines)
 {
@@ -317,6 +320,7 @@ int CChatManager::GetNextMsgNbr(int msgNbr)
 // E:\gamedcs\remote.cpp:1070
 #endif  // @carcass
 
+// E:\gamedcs\remote.cpp:1070
 VA(0x00553db0, 0x33)  // anchor-global, dc 0x11c754
 unsigned char CChatManager::HasOldChat()
 {
@@ -332,6 +336,7 @@ unsigned char CChatManager::HasOldChat()
 // lane to EBX, while this compile assigns those two nonvolatile registers in
 // the opposite order. Declaration-scope and discarded-result probes do not
 // move VC6's allocation.
+// E:\gamedcs\remote.cpp:1080
 VA(0x00553df0, 0xE4)  // anchor-global, dc 0x11c7b0
 void CChatManager::KillOldChat()
 {
@@ -390,6 +395,7 @@ void CChatManager::UpdateNewChat()
 // widget->width is the base widget's short (movsx at +0x1c) and Font is
 // textWidget's +0x40; font::LineLength answers a LINE COUNT, not pixels,
 // which is what makes `totalLines > numLines` the trim condition.
+// E:\gamedcs\remote.cpp:1128
 VA(0x00553ee0, 0x163)  // anchor-global, dc 0x11c8d0
 void CChatManager::UpdateWidgetText(int numLines, textWidget* widget)
 {
@@ -439,6 +445,7 @@ void CChatManager::UpdateWidgetText(int numLines, textWidget* widget)
 
 // E:\gamedcs\remote.cpp:1195
 
+// E:\gamedcs\remote.cpp:1195
 VA(0x00554050, 0xD)  // anchor-global, dc 0x11c9fc
 void CChatManager::PauseTimeOuts()
 {
@@ -470,6 +477,7 @@ unsigned char CChatManager::HasChat()
 // E:\gamedcs\remote.cpp:1221
 #endif  // @carcass
 
+// E:\gamedcs\remote.cpp:1221
 VA(0x005540b0, 0x20)  // anchor-bracket, dc 0x11ca70
 void CChatManager::ClearChat()
 {
@@ -510,6 +518,7 @@ void CChatManager::SetPosition(int newPos)
 // pushed here and never leaves the wrapper, and /Gr's ecx - the only
 // register argument this body touches - is pushed straight through as the
 // removeFromQueue flag.
+// E:\gamedcs\remote.cpp:1384
 VA(0x00554400, 0xF)  // anchor-callee (CDPlayHeroes::GetRemoteData 0x553040), dc 0x11cdfc
 CNetMsg* GetRemoteData(unsigned char removeFromQueue)
 {
@@ -520,6 +529,7 @@ CNetMsg* GetRemoteData(unsigned char removeFromQueue)
 // through /Gr puts the text in ecx and the sender in edx; the text is the
 // one that survives to the last vararg, because retail saves ecx across the
 // GetPlayerName call and pushes it first.
+// E:\gamedcs\remote.cpp:1529
 VA(0x00554a20, 0x21)  // anchor-callee (AddChat 0x553840), dc 0x11d1c8
 void ReceiveChat(char* chatString, int fromPlayer)
 {
@@ -541,6 +551,7 @@ void ReceiveChat(char* chatString, int fromPlayer)
 // them, and their order is m_pSprite, m_spriteFrame, m_lastTick,
 // m_palUpdated - not declaration order, which a member-init list would
 // have forced.
+// E:\gamedcs\remote.cpp:1539
 VA(0x00554a50, 0x22)  // anchor-vtable 0x640e94, dc 0x11d1ec
 CAnimatedDlg::CAnimatedDlg()
     : CTextDialog(0x12)
@@ -571,6 +582,7 @@ CAnimatedDlg::~CAnimatedDlg()
 // E:\gamedcs\remote.h:632 - CNetMsgHandler::Copy. The popup byte comes off
 // the other handler's field directly; the abort message comes back through
 // its vtable slot 2.
+// E:\gamedcs\remote.h:632
 VA(0x00555150, 0x1C)  // anchor-vtable (slot 2 call of 0x640f14), dc 0x11f7e0
 void CNetMsgHandler::Copy(CNetMsgHandler* pOther)
 {
@@ -585,6 +597,7 @@ void CNetMsgHandler::Copy(CNetMsgHandler* pOther)
 // the rest of the class, because retail's are header-origin COMDATs and
 // that is where the linker grouped them - which is itself the corroboration
 // that DC homes all three in remote.h.
+// E:\gamedcs\remote.h:658
 VA(0x00555170, 0x5)  // anchor-vtable (slot 1 of 0x640f04), dc 0x11f80c
 CNetMsg* CNetMsgHandlerPause::CheckHandleNet(unsigned char inPopup,
                                              unsigned char* msgReceived)
@@ -592,6 +605,7 @@ CNetMsg* CNetMsgHandlerPause::CheckHandleNet(unsigned char inPopup,
     return 0;
 }
 
+// E:\gamedcs\remote.h:659
 VA(0x00555180, 0x5)  // anchor-vtable (slot 3 of 0x640f04), dc 0x11f810
 CNetMsg* CNetMsgHandlerPause::HandleNetMsg(CNetMsg* pNetMsg)
 {
@@ -614,6 +628,7 @@ CNetMsg* CNetMsgHandlerPause::HandleNetMsg(CNetMsg* pNetMsg)
 //
 // EH-bearing: the frame carries the unwind state for the member's lifetime,
 // raised to 1 at 0x556b0a once the pause handler is live.
+// E:\gamedcs\remote.cpp:2479
 VA(0x00556ab0, 0xB6)  // anchor-vtable 0x640f40, dc 0x11e630
 CLevelPickWaitDlg::CLevelPickWaitDlg()
 {
@@ -636,6 +651,7 @@ VA_COMPGEN(0x00556b70, 0x21, SCALAR_DELETING_DTOR, CLevelPickWaitDlg)
 // Two arguments (DC: Parms = 3; retail: `ret 8`), both forwarded straight to
 // Bitmap16Bit, then the three members zeroed in the body - retail's vptr
 // store precedes all three.
+// E:\gamedcs\remote.cpp:2673
 VA(0x005572e0, 0x2D)  // anchor-vtable 0x640fb0, dc 0x11eb40
 CSaveScreen::CSaveScreen(int w, int h)
     : Bitmap16Bit(w, h)
@@ -657,6 +673,7 @@ VA_COMPGEN(0x00557310, 0x21, SCALAR_DELETING_DTOR, CSaveScreen)
 // E:\gamedcs\remote.cpp:2680 - grab the screen into this bitmap and
 // remember where it came from. Bitmap16Bit::Grab takes the source
 // geometry, so all four screen fields come off the same screenBitmap.
+// E:\gamedcs\remote.cpp:2680
 VA(0x00557350, 0x3A)  // anchor-callee (Bitmap16Bit::Grab), dc 0x11eb9c
 void CSaveScreen::Save(int x, int y)
 {
@@ -673,6 +690,7 @@ void CSaveScreen::Save(int x, int y)
 // then tell the window manager about it. The whole body sits under the
 // screenSaved guard: retail's `je` from the entry test skips the
 // UpdateScreen call too.
+// E:\gamedcs\remote.cpp:2689
 VA(0x00557390, 0x69)  // anchor-callee (Bitmap16Bit::Draw), dc 0x11ebc8
 void CSaveScreen::Restore(unsigned char update)
 {
@@ -710,6 +728,7 @@ void CloseVideo();  // 0x599050
 // with unconditional out-of-line emission for extern linkage), and the two
 // copies write the same seven members in the same source order under
 // different schedules - which is what pins the order here.
+// E:\gamedcs\remote.cpp:2713
 VA(0x00557410, 0x1E)  // anchor-callee (inlined into 0x557720), dc 0x11ec64
 CGameTransferSmack::CGameTransferSmack()
 {
@@ -728,6 +747,7 @@ CGameTransferSmack::CGameTransferSmack()
 // call: /Ob2 auto-inlines it and still emits it out of line for its extern
 // linkage. The delete dispatches through CSaveScreen's slot 0 with the
 // flag 1, the ??_G that 0x557310 pairs.
+// E:\gamedcs\remote.cpp:2724
 VA(0x00557430, 0x22)  // anchor-callee (Stop 0x5575e0 inlined), dc 0x11ec88
 CGameTransferSmack::~CGameTransferSmack()
 {
@@ -739,6 +759,7 @@ CGameTransferSmack::~CGameTransferSmack()
 // rewritten from the caller. DC's `?Setup@CGameTransferSmack@@QAAXHH_N0@Z`
 // is (int, int, bool, bool) and retail's `ret 0x10` reads the two bools as
 // bytes straight into 0x0d and 0x0e.
+// E:\gamedcs\remote.cpp:2733
 VA(0x00557460, 0x1E)  // anchor-bracket (CGameTransferSmack members), dc 0x11ecbc
 void CGameTransferSmack::Setup(int x, int y, unsigned char sending,
                                unsigned char drawText)
@@ -755,6 +776,7 @@ void CGameTransferSmack::Setup(int x, int y, unsigned char sending,
 // argument while m_x rides edx as its second; m_started is raised BETWEEN
 // the argument pushes, which is retail scheduling a store that has no
 // ordering constraint against them.
+// E:\gamedcs\remote.cpp:2741
 VA(0x00557480, 0x25)  // anchor-callee (ShowVideo 0x598af0), dc 0x11ecd8
 void CGameTransferSmack::Start()
 {
@@ -765,6 +787,7 @@ void CGameTransferSmack::Start()
 // E:\gamedcs\remote.cpp:2789 - the guard-and-clear half of the destructor,
 // standing on its own. Twenty-one bytes: test the byte, close the handle,
 // clear the byte.
+// E:\gamedcs\remote.cpp:2789
 VA(0x005575e0, 0x15)  // anchor-callee (CloseVideo 0x599050), dc 0x11edec
 void CGameTransferSmack::Stop()
 {
@@ -785,6 +808,7 @@ void CGameTransferSmack::Stop()
 // EH-bearing: the fs:[0] frame with the 0/-1 state pair is the standard
 // /GX guard `new` puts around a constructor call. It is not a wall - 118 of
 // this tree's exact rows carry one.
+// E:\gamedcs\remote.cpp:2799
 VA(0x00557600, 0xAB)  // anchor-callee (Bitmap16Bit::Grab 0x44e3f0), dc 0x11ee04
 void CGameTransferSmack::SaveScreen()
 {
@@ -797,6 +821,7 @@ void CGameTransferSmack::SaveScreen()
 // inlines with its update argument folded to 1, which is why the
 // UpdateScreen call here is unconditional where the out-of-line 0x557390
 // branches on it; the outer `je` is this file's own null check.
+// E:\gamedcs\remote.cpp:2807
 VA(0x005576b0, 0x61)  // anchor-callee (Bitmap16Bit::Draw 0x44e2b0), dc 0x11ee3c
 void CGameTransferSmack::RestoreScreen()
 {
@@ -814,6 +839,7 @@ void CGameTransferSmack::RestoreScreen()
 // reading `mov al, [ebp+8]`). The `smack` member's constructor is inlined
 // ahead of it, which is why the seven CGameTransferSmack stores sit between
 // the CTextDialog base call and m_sending.
+// E:\gamedcs\remote.cpp:2816
 VA(0x00557720, 0x3C)  // anchor-vtable 0x640fbc, dc 0x11ee54
 CGameTransferDlg::CGameTransferDlg(unsigned char sending)
     : CTextDialog(0x12)
@@ -836,6 +862,7 @@ VA_COMPGEN(0x00557760, 0x21, SCALAR_DELETING_DTOR, CGameTransferDlg)
 // member is then placed fifteen pixels inside the box; CGameTransferSmack
 //::Setup inlines into the four member stores at the tail. cText and pFont
 // are dead here, as retail leaves them.
+// E:\gamedcs\remote.cpp:2821
 VA(0x00557790, 0x51)  // anchor-vtable (slot 12 of 0x640fbc), dc 0x11eed8
 void CGameTransferDlg::CalcDimensions(const char* cText, font* pFont,
                                       int& winX, int& winY,
@@ -1359,6 +1386,7 @@ void CTurnDuration::CTurnDuration()
 // E:\gamedcs\remote.cpp:2834 - CNetMsgHandler's constructor. Its
 // `mov [eax], offset ??_7CNetMsgHandler` is the live vtable store that
 // keeps 0x640f14 alive in this object.
+// E:\gamedcs\remote.cpp:2834
 VA(0x005577f0, 0x11)  // anchor-vtable 0x640f14, dc 0x11ef34
 CNetMsgHandler::CNetMsgHandler()
 {
@@ -1384,6 +1412,7 @@ VA_COMPGEN(0x00557810, 0x45, SCALAR_DELETING_DTOR, CNetMsgHandler)
 // The abort message is taken into a local, cleared from the member, and
 // only then handed to HandleNetMsg; when there is none, the queue is read
 // through the singleton with the literal pair (1, 0).
+// E:\gamedcs\remote.cpp:2840
 VA(0x00557860, 0x70)  // anchor-vtable (slot 1 of 0x640f14), dc 0x11ef60
 CNetMsg* CNetMsgHandler::CheckHandleNet(unsigned char inPopup,
                                         unsigned char* msgReceived)
@@ -1453,6 +1482,7 @@ void CNetMsgHandler::SetAbortPopupMsg(CNetMsg* pNetMsg)
     m_pAbortPopupMsg = pNetMsg;
 }
 
+// E:\gamedcs\remote.cpp:2920
 VA(0x00557a80, 0x15)  // anchor-global, dc 0x11f070
 unsigned char CTurnDuration::IsOn()
 {
@@ -1506,6 +1536,7 @@ unsigned char CTurnDuration::IsExpired()
 //     two-constant form `setcc; dec; and -K; add K` (96.16 against 95.26).
 // The two Get() calls really are two calls - retail saves the first in EBX
 // for the m_lastWarned store and prices the gap with the second.
+// E:\gamedcs\remote.cpp:2950
 VA(0x00557af0, 0x208)  // anchor-global, dc 0x11f108
 void CTurnDuration::CheckForWarning()
 {
@@ -1574,6 +1605,7 @@ void CTurnDuration::CheckForWarning()
 
 // E:\gamedcs\remote.cpp:3020
 
+// E:\gamedcs\remote.cpp:3020
 VA(0x00557d00, 0x55)  // anchor-global, dc 0x11f2fc
 unsigned char CTurnDuration::IsClose(unsigned long howClose)
 {
@@ -1628,6 +1660,7 @@ void CTurnDuration::AddTime(unsigned long howMuch)
 // E:\gamedcs\remote.cpp:3076
 #endif  // @carcass
 
+// E:\gamedcs\remote.cpp:3076
 VA(0x00557dd0, 0x14)  // anchor-global, dc 0x11f3fc
 void CTurnDuration::Pause()
 {
@@ -1653,6 +1686,7 @@ void CTurnDuration::Resume()
 // through `this`, which may alias pDPlay, so VC6 must re-read the global
 // before the swap. EH-bearing (the /GX frame the base subobject's lifetime
 // needs), which is not a wall.
+// E:\gamedcs\remote.cpp:3095
 VA(0x00557e30, 0x7A)  // anchor-vtable 0x640f04, dc 0x11f448
 CNetMsgHandlerPause::CNetMsgHandlerPause()
 {
@@ -1671,6 +1705,7 @@ VA_COMPGEN(0x00557eb0, 0x21, SCALAR_DELETING_DTOR, CNetMsgHandlerPause)
 // E:\gamedcs\remote.cpp:3105 - put the parked handler back, then run the
 // base destructor. Both vptr stores are visible: 0x640f04 on entry, then
 // 0x640f14 before ~CNetMsgHandler's own body, which /Ob2 inlines here.
+// E:\gamedcs\remote.cpp:3105
 VA(0x00557ee0, 0x91)  // anchor-vtable 0x640f04, dc 0x11f498
 CNetMsgHandlerPause::~CNetMsgHandlerPause()
 {

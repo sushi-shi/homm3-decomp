@@ -247,7 +247,9 @@ widget** std::vector<widget *,std::allocator<widget *> >::operator[](unsigned __
 // both retail bodies because the cinit block separated their positions.
 VA_COMPGEN(0x00450d20, 0x21, SCALAR_DELETING_DTOR, type_bottom_view_window)
 
-VA(0x00450d50, 0x78)  // vtable + widget-removal loop + TSubWindow dtor
+
+// E:\gamedcs\bottomviewsubwindow.cpp:47
+VA(0x00450d50, 0x78)  // vtable + widget-removal loop + TSubWindow dtor, dc 0x55114
 type_bottom_view_window::~type_bottom_view_window()
 {
     for (std::vector<widget*>::iterator it = Widgets.begin();
@@ -303,49 +305,63 @@ type_bottom_view_window::~type_bottom_view_window()
 
 // BLOCKED on the constructor: VA_COMPGEN(0x004510f0, 0x21, SCALAR_DELETING_DTOR, TBottomViewNewTurn)
 
-VA(0x00451120, 0x78)
+
+// E:\gamedcs\bottomviewsubwindow.cpp:118
+VA(0x00451120, 0x78)  // anchor-vtable, dc 0x56ea4
 TBottomViewNewTurn::~TBottomViewNewTurn()
 {
 }
 
 // BLOCKED on the constructor: VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, TBottomViewResourceMessage)
 
-VA(0x004517a0, 0x78)
+
+// E:\gamedcs\bottomviewsubwindow.cpp:183
+VA(0x004517a0, 0x78)  // anchor-vtable, dc 0x56ef0
 TBottomViewResourceMessage::~TBottomViewResourceMessage()
 {
 }
 
 // BLOCKED on the constructor: VA_COMPGEN(0x00451a00, 0x21, SCALAR_DELETING_DTOR, TBottomViewMessage)
 
-VA(0x00451a30, 0x78)
+
+// E:\gamedcs\bottomviewsubwindow.cpp:209
+VA(0x00451a30, 0x78)  // anchor-vtable, dc 0x56f3c
 TBottomViewMessage::~TBottomViewMessage()
 {
 }
 
 // BLOCKED on the constructor: VA_COMPGEN(0x00452140, 0x21, SCALAR_DELETING_DTOR, TBottomViewHero)
 
-VA(0x00452170, 0x78)
+
+// E:\gamedcs\bottomviewsubwindow.cpp:339
+VA(0x00452170, 0x78)  // anchor-vtable, dc 0x56f88
 TBottomViewHero::~TBottomViewHero()
 {
 }
 
 // BLOCKED on the constructor: VA_COMPGEN(0x00452ad0, 0x21, SCALAR_DELETING_DTOR, TBottomViewTown)
 
-VA(0x00452b00, 0x78)
+
+// E:\gamedcs\bottomviewsubwindow.cpp:503
+VA(0x00452b00, 0x78)  // anchor-vtable, dc 0x56fd4
 TBottomViewTown::~TBottomViewTown()
 {
 }
 
 // BLOCKED on the constructor: VA_COMPGEN(0x004531a0, 0x21, SCALAR_DELETING_DTOR, TBottomViewKingdom)
 
-VA(0x004531d0, 0x78)
+
+// E:\gamedcs\bottomviewsubwindow.cpp:586
+VA(0x004531d0, 0x78)  // anchor-vtable, dc 0x57020
 TBottomViewKingdom::~TBottomViewKingdom()
 {
 }
 
 // BLOCKED on the constructor: VA_COMPGEN(0x00453640, 0x21, SCALAR_DELETING_DTOR, TBottomViewEnemyTurn)
 
-VA(0x00453670, 0x78)
+
+// E:\gamedcs\bottomviewsubwindow.cpp:643
+VA(0x00453670, 0x78)  // anchor-vtable, dc 0x5706c
 TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
 {
 }
