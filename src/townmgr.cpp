@@ -339,15 +339,15 @@ VA(0x005c3310, 0xDF)  // anchor-vtable 0x643720 + baseManager base ctor, dc 0x16
 townManager::townManager()
 {
     townToView = 0;
-    field_1bc = 0;
+    hallWindow = 0;
     field_114 = 0;
     field_1b8 = -1;
     gUnnamed6aa9d8 = 0;
     pResourceDisplay = 0;
-    field_140 = 0;
+    dialogResourceDisplay = 0;
     field_1c0 = 0;
     gUnnamed6aa9ec = 0;
-    field_1b0 = 0;
+    netMsgHandler = 0;
     field_1b4 = 0;
     field_3c = 0;
     memset(MonPix, 0, sizeof(MonPix));
@@ -859,10 +859,10 @@ void townManager::Close()
         pResourceDisplay = 0;
     }
     gpWindowManager->FadeScreen(1, 4, 1);
-    if (gNetworkActive69954c && field_1b0) {
+    if (gNetworkActive69954c && netMsgHandler) {
         gUnnamed69d808->set_field_f0(field_1b4);
-        delete field_1b0;
-        field_1b0 = 0;
+        delete netMsgHandler;
+        netMsgHandler = 0;
     }
     status = 0;
 }
@@ -2317,6 +2317,76 @@ void DoShipyard(int type)
         MemError();
     gpShipWindow->DoModal(0);
     delete gpShipWindow;
+}
+
+// The town hall page. It is the compiland's fullest modal run, and the
+// one that shows what the manager's +0x140 bar is for: the page gets a
+// resource display of its OWN, the net handler is pointed at it for as
+// long as the page is up, and on the way out the handler is pointed
+// back at the town screen's bar at +0x13c. Both of those hand-overs are
+// CTownNetMsgHandler::SetResourceDisplay, four bytes on the Dreamcast,
+// so /Ob2 expands each to the single store retail emits.
+//
+// The page itself is filled by castle.obj's townManager::SetupCastle
+// (0x461190, dc 0x5c278) - the row directly after castle.cpp's two
+// claimed ones and the only caller in the image is this line.
+//
+// show_hall_side (dc 0x174990, 618 B) has no carve row of its own
+// anywhere between DoShipyard and DoPortalOfSummoning, so retail
+// expanded it at its single call site as well - inside THallWindow's
+// constructor, which is where the page's two sides are actually drawn.
+//
+// Residual (87.13%): the two net-handler hand-overs, and nothing else.
+// Retail's `if (netMsgHandler) netMsgHandler->SetResourceDisplay(x)`
+// is six instructions apiece and this body has neither, because
+// spelling them needs +0x1b0 typed as CTownNetMsgHandler*, which needs
+// a forward declaration in townmgr.h that recruit.cpp would also see -
+// and ANY forward declaration there costs recruitUnit::Update
+// 90.84 -> 88.24 (measured, and name-independent: a dummy
+// `class HOMM3_PROBE_ZZ;` moves it by exactly the same amount). Written
+// out in full this row reaches 90.71 and the ratchet fails on the
+// canary, so the two statements stay out until recruit.cpp's handle
+// stream is put back the way that file's own note describes - one more
+// type DEFINITION restores it, but `#include "button.h"` is not the
+// one. See the +0x1b0 note in townmgr.h.
+//
+// The rest is instruction for instruction. The one consequence of the
+// two missing blocks is a register cache: retail keeps hallWindow in
+// edi across the resource-display teardown and this body re-reads
+// +0x1bc, which is the live range the missing statements would have
+// created.
+
+// E:\gamedcs\townmgr.cpp:5540
+VA(0x005d27b0, 0x195)  // anchor-callee(THallWindow ctor 0x5c9be0 + SetupCastle) + arity(bare ret), dc 0x17484c
+void townManager::DoHall()
+{
+    hallWindow = new THallWindow(townToView->type);
+    if (!hallWindow)
+        MemError();
+    SetupCastle(hallWindow, 0);
+
+    if (dialogResourceDisplay) {
+        delete dialogResourceDisplay;
+        dialogResourceDisplay = 0;
+    }
+    dialogResourceDisplay = new TResourceDisplay(hallWindow, 1);
+    dialogResourceDisplay->Update(1, 0);
+
+
+    hallWindow->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    gpWindowManager->UpdateScreen(0, 0, WINDOW_SCREEN_WIDTH,
+                                  WINDOW_SCREEN_HEIGHT);
+    hallWindow->DoModal(0);
+
+    delete hallWindow;
+    delete dialogResourceDisplay;
+    dialogResourceDisplay = 0;
+
+    RedrawTownScreen();
+    if (field_1b8 != -1)
+        BuildObj(field_1b8);
+    static_cast<TTownScreenWindow*>(TownWindow)->UpdateTownLocators();
+    RedrawTownScreen();
 }
 
 // The Portal of Summoning: Dungeon's external dwelling. The generator is
