@@ -116,6 +116,11 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // 86.28, and a pointer local alone is 87.89. The open work is a
     // byte-neutral construct worth exactly +2 candidate sites. Do NOT re-test
     // pragmas or vector rebinding - see mainmenu.cpp for the dead-end ledger.
+    // Two +2 spellings measured 2026-08-14 and REJECTED, because
+    // insert(end(), x) is not byte-neutral at these particular sites even
+    // though it is in mainmenu: the two slider-loop push_backs 88.1531, and
+    // the first two top-level push_backs (background + the first button)
+    // 87.7930. The site pair has to come from somewhere that emits nothing.
     // The slot-IV rewrite was re-measured a third time ON TOP of the
     // initializer-list fix, in case that had moved the phase: 88.3182 ->
     // 88.2908 (x derived as 29+slot*19), 88.2908 (operands reversed), 88.1660

@@ -107,6 +107,12 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 //   - `for (unsigned i = 0; i < Widgets.size(); i++)` over the widget list is
 //     +1 site but is NOT byte-neutral (tested on gametypewindow: 93.73 ->
 //     91.79), so it cannot serve as a divisor knob.
+//   - the C1XX CANDIDACY cliff (adding byte-inert statement mass to the callee
+//     until it drops out of the save gate, the lever that closed
+//     textEntryWidget::OnKeyPress in a sibling lane) is the other axis onto the
+//     same outcome, and it is UNREACHABLE here: the callee is Dinkumware's
+//     `_Destroy` inside the pinned toolchain's <vector>, which this repo may
+//     not edit. The divisor is the only axis this callee exposes to source.
 //
 // The other seven constructors are the SAME wall with different arithmetic;
 // each needs its own site count, titrated with the same xx_nop probe:
