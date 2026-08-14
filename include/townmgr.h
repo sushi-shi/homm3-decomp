@@ -10,6 +10,22 @@ struct type_point;
 unsigned char DoTavern();
 void DoMapTavern(type_point point);
 
+// Gated for the same reason townManager below is: townmgr.h is pulled in by
+// advmgr.h and by town.cpp, and a class definition visible there widens
+// their include closure for no benefit. townmgr.cpp is the only consumer.
+#ifdef HOMM3_TOWNMGR_WINDOW_DECLS
+#include "advmgr_popup.h"
+
+// The tavern chooser. Its vtable 0x643980 is 15 slots wide - the CAdvPopup
+// width - and the two slots reconstructed are the ones retail overrides to
+// bracket the dialog with the tavern's background video.
+class TTavernWindow : public CAdvPopup {
+public:
+    virtual int Open(int zOrder, unsigned char update);  // slot 1
+    virtual void Close(unsigned char update);            // slot 2
+};
+#endif
+
 #ifdef HOMM3_TOWN_OBJ_DECLS
 #include "basemgr.h"
 
