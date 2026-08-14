@@ -114,21 +114,6 @@ enum EDrawbridgeState {
     DRAWBRIDGE_UP = 0x3
 };
 
-// The eight rows of gWallTargets. Retail DamageWall dispatches on all eight
-// values; names remain ordinal because no local roster names the individual
-// segments.
-enum TWallTargetId {
-    WALL_TARGET_0 = 0,
-    WALL_TARGET_1 = 1,
-    WALL_TARGET_2 = 2,
-    WALL_TARGET_3 = 3,
-    WALL_TARGET_4 = 4,
-    WALL_TARGET_5 = 5,
-    WALL_TARGET_6 = 6,
-    WALL_TARGET_7 = 7,
-    WALL_TARGET_COUNT = 8
-};
-
 // The defending town's wall tier. InitializeArchers proves that a Citadel
 // installs the keep archer and a Castle installs the two tower archers too;
 // the other combat readers only distinguish an absent wall from any tier.

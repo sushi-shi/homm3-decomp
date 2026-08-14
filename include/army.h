@@ -85,11 +85,70 @@ enum EArmySpellRowId {
 };
 #endif
 
+// The eight rows of cmbtmgr's gWallTargets. Retail DamageWall dispatches
+// on all eight values; names remain ordinal because no local roster names
+// the individual segments.
+//
+// DECLARED HERE RATHER THAN IN cmbtmgr.h, WHICH IS WHERE IT READS: that
+// header INCLUDES this one, so a domain army's own members take by value
+// - attack_wall's `wall` - cannot be named there and seen here. The move
+// is include-set NEUTRAL for every TU that takes both headers (the same
+// nine enumerators, one file earlier in the same closure); hero.cpp is
+// the only consumer that gains them, and its rows were re-measured
+// unchanged.
+enum TWallTargetId {
+    WALL_TARGET_0 = 0,
+    WALL_TARGET_1 = 1,
+    WALL_TARGET_2 = 2,
+    WALL_TARGET_3 = 3,
+    WALL_TARGET_4 = 4,
+    WALL_TARGET_5 = 5,
+    WALL_TARGET_6 = 6,
+    WALL_TARGET_7 = 7,
+    WALL_TARGET_COUNT = 8
+};
+
 enum EArmySpellCancelType {
     ARMY_CANCEL_SPELLS_AFTER_MOVE = 0,
     ARMY_CANCEL_SPELLS_AFTER_ATTACK = 1,
     ARMY_CANCEL_SPELLS_AFTER_DAMAGE = 2
 };
+
+// One row of the ballistics table the catapult fires by, indexed by the
+// attacker's Ballistics mastery. EIGHT BYTES, byte-proven by its two
+// readers: AttackWall (0x445d30) indexes the table pointer at 0x679c84
+// with `movsx ebx, [edx + eax*8 + 4]` and hands `edx + eax*8` straight
+// to attack_wall as the row, and attack_wall (0x445ec0) movsx-loads
+// +0x0..+0x3 and +0x5..+0x6 off that pointer. Every read is a movsx, so
+// every field is a SIGNED char.
+//
+// The first four are per-target hit chances out of 100, and
+// attack_wall's own switch is what maps them: +0x1 answers the two
+// tower rows (WALL_TARGET_0 and _6), +0x0 the keep (WALL_TARGET_7),
+// +0x2 WALL_TARGET_3, and +0x3 every remaining segment. Names stay
+// ordinal past that pairing - no roster reaches the row.
+//
+// Behind the wall view for the usual measured reason: a struct
+// definition is the include-set class's own trigger shape.
+#ifdef HOMM3_ARMY_WALL_VIEW
+struct type_ballistics_traits {
+    signed char field_00;
+    signed char field_01;
+    signed char field_02;
+    signed char field_03;
+    // Shots per bombardment: AttackWall reads it as the trip count of
+    // the loop that calls attack_wall.
+    signed char shots;                // +0x4
+    // The two cumulative rolls that decide how many levels one hit
+    // takes off: attack_wall subtracts [0] and then [1] from a single
+    // Random(1, 100) and stops at the first non-positive remainder, so
+    // the answer is 0, 1 or 2. AN ARRAY, not two fields - the retail
+    // load is `movsx edx, byte [row + i + 5]` off the loop counter.
+    signed char levelChance[2];       // +0x5
+    signed char pad_07;
+};
+SIZE(type_ballistics_traits, 8);
+#endif
 
 // Opaque head model. The 0x548 stride and the 0x54cc array base in
 // combatManager are byte-proven by hexcell::get_army/get_dead_army
@@ -779,6 +838,26 @@ public:
     unsigned char WalkTo(int destIndex, unsigned char restore_facing);
 #endif
     unsigned char move_to(int hex, unsigned char restore_facing);
+    // The catapult pair, both claimed in army.cpp and both behind a view
+    // for the same measured reason every other member declaration in
+    // this header carries. army.cpp is the only consumer: AttackWall
+    // (0x445d30) drives the traits overload once per shot and that one
+    // tail-calls the other.
+#ifdef HOMM3_ARMY_WALL_VIEW
+    // 0x445ec0. Rolls this shot's damage and its target: the row's own
+    // per-segment chance decides whether the aimed segment is hit at
+    // all, and a miss re-aims at the nearest OTHER valid segment.
+    void attack_wall(TWallTargetId wall,
+                     const type_ballistics_traits& ballistics);
+    // 0x445fd0 (0x526), LOCATED 2026-08-14 from the traits overload's
+    // own tail call (`push <levels> / push <wall> / mov ecx,<this> /
+    // call`) - a thiscall with TWO stack arguments, which is what the
+    // DC roster's two-parameter row says. Body still a carcass.
+    // PRIVATE on its DC public (?attack_wall@army@@AAAXW4TWallTargetId@@J@Z),
+    // recorded here and NOT acted on: the access move is the same
+    // whole-family pass simple_move's note above is waiting on.
+    void attack_wall(TWallTargetId wall, long levelsDestroyed);
+#endif
     unsigned char check_obstacle_attacks(unsigned char is_walking);
     void Turn(unsigned char play_animation); // 0x446720
     void SetupAnimation();                   // 0x446830
