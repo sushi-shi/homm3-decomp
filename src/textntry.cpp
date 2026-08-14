@@ -6,6 +6,8 @@
 #include "textntry.h"
 #include "bitmap816.h"
 #include "inputmgr.h"
+#include "kb.h"
+#include "kbwin.h"
 #include "message.h"
 #include "resourcemanager.h"
 #include "window.h"
@@ -117,6 +119,22 @@ void textEntryWidget::SetFocus(unsigned char state)
 // numpad row maps to digits (source cases written in numeral order -
 // the retail bodies emit '0'..'9' ascending). Plain keys pass
 // through except the braces, which the text renderer reserves.
+//
+// The ten cases are `pressed = 'N'; break;`, NOT `return 'N';`. The
+// two spellings are byte-identical HERE - VC6 clones the
+// two-instruction `pop ebp; ret 4` epilogue into every arm either way -
+// but they are not interchangeable for the CALLER. OnKeyPress is the
+// only site in textntry.obj that calls this, so /Ob2's single-call-site
+// rule expands it there unless C1XX declines to SAVE the body at all:
+// with `return` the body is saved and OnKeyPress over-inlines it
+// (88.03%), and with the ten extra statements it crosses C1XX's save
+// gate, stops being a candidate, and retail's out-of-line
+// `call 0x5baba0` comes back with OnKeyPress exact. Budget arithmetic
+// cannot explain the retail call - the budget floor is 1000 and the
+// collector only admits callees with cb < 1000, so the first non-free
+// candidate in any caller ALWAYS expands (docs/vc6/inliner.md S2 and
+// S4) - which leaves the front end's candidacy cliff as the mechanism
+// and statement mass as its only input.
 VA(0x005baba0, 0xA4)  // anchor-global, dc 0x162bbc
 char textEntryWidget::GetCharPressed(message* msg)
 {
@@ -146,25 +164,35 @@ char textEntryWidget::GetCharPressed(message* msg)
         int scanCode = (code & 0xFF00) >> 8;
         switch (scanCode) {
             case KEYCODE_KP_0:  // numpad Ins
-                return '0';
+                pressed = '0';
+                break;
             case KEYCODE_KP_1:  // numpad End
-                return '1';
+                pressed = '1';
+                break;
             case KEYCODE_KP_2:  // numpad Down
-                return '2';
+                pressed = '2';
+                break;
             case KEYCODE_KP_3:  // numpad PgDn
-                return '3';
+                pressed = '3';
+                break;
             case KEYCODE_KP_4:  // numpad Left
-                return '4';
+                pressed = '4';
+                break;
             case KEYCODE_KP_5:  // numpad center
-                return '5';
+                pressed = '5';
+                break;
             case KEYCODE_KP_6:  // numpad Right
-                return '6';
+                pressed = '6';
+                break;
             case KEYCODE_KP_7:  // numpad Home
-                return '7';
+                pressed = '7';
+                break;
             case KEYCODE_KP_8:  // numpad Up
-                return '8';
+                pressed = '8';
+                break;
             case KEYCODE_KP_9:  // numpad PgUp
-                return '9';
+                pressed = '9';
+                break;
         }
     } else {
         pressed = static_cast<char>(msg->codeX);
@@ -206,23 +234,6 @@ char textEntryWidget::GetCharPressed(message* msg)
 // slot 15's 0x5bac50 is referenced exactly once image-wide.
 #if 0  // @carcass
 
-// E:\gamedcs\textntry.cpp:213
-// RETAIL_LOCATED 0x005bac50, 0x4FD - vtable slot 15 + line order.
-DC_ONLY(0x162c2c, 0x2FE)
-int textEntryWidget::OnKeyPress(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\textntry.cpp:568
-// RETAIL_LOCATED 0x005bb660, 0x2E7 - line order; the only non-virtual
-// row in the seam, and OnKeyPress/Main both call it.
-DC_ONLY(0x1633d8, 0x202)
-void textEntryWidget::SetupDisplayString(char* cCore, unsigned short inCursorIndex)
-{
-    // @stub
-}
-
 // E:\gamedcs\textntry.cpp:38 / :44 / :50 - CTextEntrySave's ctor, Save
 // and IsSaved. All three are inlined into their single call sites
 // (SetAutoDraw / SaveBackground / Draw); the definitions live at the
@@ -250,6 +261,115 @@ void CTextEntrySave::~CTextEntrySave()
 // 0x642d40 except the sixteen-argument constructor 0x5ba920.
 
 #endif  // @carcass
+
+// Retail .bss cell written here and referenced NOWHERE else in the
+// image - 0x1bb0fe is the only reloc against it in the whole reloc
+// table, and its two neighbours 0x697784/0x697788 are already other
+// units' claims, so the cell is textntry.obj's own. Its role is not
+// recoverable: no body reads it.
+DATA(0x00697780) int gUnnamed697780;
+
+// E:\gamedcs\textntry.cpp:213 - the caret editor. The five named cases
+// come out of the dense jump table at 0x5bb128 (indices over codeX
+// 0x47..0x53); the block order End/Home/Del/Left/Right/default is the
+// source case order the table's targets are laid out in.
+//
+// Two retail oddities are transcribed as found: the `Text = cCore`
+// inside the insert arm re-stores a value Text already holds (cCore
+// was seeded from Text at entry and no case has touched it on this
+// path), and the wrap check below it measures Text - the string BEFORE
+// the insert - rather than the freshly spliced cCore.
+VA(0x005bac50, 0x4FD)  // anchor-vtable slot 15, dc 0x162c2c
+int textEntryWidget::OnKeyPress(message* msg)
+{
+    if (!bHasFocus)
+        return 0;
+    if (IgnoreKey(msg))
+        return 0;
+
+    field_6C = 1;
+    short xLoc = x + parentWindow->x;
+    short yLoc = y + parentWindow->y;
+    char cCore[600];
+    char cTemp[600];
+    char cSave[600];
+
+    strcpy(cCore, Text.c_str());
+    if (cursorIndex > strlen(cCore))
+        cursorIndex = static_cast<unsigned short>(strlen(cCore));
+
+    switch (msg->codeX) {
+        case KEYCODE_KP_1:
+            cursorIndex = static_cast<unsigned short>(strlen(cCore));
+            break;
+
+        case KEYCODE_KP_7:
+            cursorIndex = 0;
+            break;
+
+        case KEYCODE_KP_DECIMAL:
+            if (cursorIndex < strlen(cCore)) {
+                strcpy(cTemp, &cCore[cursorIndex + 1]);
+                strcpy(&cCore[cursorIndex], cTemp);
+            }
+            break;
+
+        case KEYCODE_KP_4:
+            if (cursorIndex > 0) {
+                cursorIndex--;
+                if (cursorIndex < displayStart)
+                    displayStart = cursorIndex;
+            }
+            break;
+
+        case KEYCODE_KP_6:
+            if (cursorIndex < strlen(cCore))
+                cursorIndex++;
+            break;
+
+        default:
+            gpInputManager->AsciiConvert(msg);
+            if (msg->codeX == KEYCODE_ASCII_BACKSPACE) {
+                if (cursorIndex > 0) {
+                    strcpy(cTemp, &cCore[cursorIndex]);
+                    strcpy(&cCore[cursorIndex - 1], cTemp);
+                    cursorIndex--;
+                    if (cursorIndex < displayStart)
+                        displayStart = cursorIndex;
+                }
+            } else if (strlen(cCore) + 1 < maxLength && msg->codeX) {
+                strcpy(cSave, cCore);
+                char cPressed = GetCharPressed(msg);
+                if (cPressed) {
+                    strcpy(cTemp, Text.c_str());
+                    Text = cCore;
+                    cTemp[cursorIndex] = cPressed;
+                    cTemp[cursorIndex + 1] = 0;
+                    strcat(cTemp, &cCore[cursorIndex]);
+                    strcpy(cCore, cTemp);
+                    cursorIndex++;
+                    if (field_68 != FIELD_68_SCROLLED) {
+                        if (Font->LineLength(Text.c_str(), boxWidth) > field_64) {
+                            strcpy(cCore, cSave);
+                            cursorIndex--;
+                        }
+                    }
+                }
+            }
+            break;
+    }
+
+    SetupDisplayString(cCore, cursorIndex);
+    if (bAutoDraw) {
+        Draw();
+        gpWindowManager->UpdateScreen(xLoc, yLoc, width, height);
+    }
+    gUnnamed697780 = 0;
+    msg->id = MESSAGE_WIDGET;
+    msg->codeX = WIDGET_SELECT;
+    msg->codeY = id;
+    return MESSAGE_DISPATCH_FORWARD;
+}
 
 // E:\gamedcs\textntry.cpp:335 - the widget message pump. The hit test
 // runs in 16-bit arithmetic because both the local and every widget
@@ -395,6 +515,52 @@ void textEntryWidget::Draw()
             boxWidth, boxHeight,
             (status & WIDGET_DIMMED) ? font::PRIMARY_DIM : Color,
             Justify, -1);
+    }
+}
+
+// E:\gamedcs\textntry.cpp:568 - the caret's rebuild step: it re-splices
+// Text out of the raw edit buffer around the caret, blinks the caret
+// flag off the global timer, and (in the scrolled mode) walks
+// displayStart until the visible window fits boxWidth.
+//
+// The blink guard is GameTime::IsPast, not a hand-spelled compare: the
+// deadline is loaded into edi BEFORE the Get() call, which is the
+// argument-evaluated-ahead-of-its-guard fingerprint of an expanded
+// inline, and the test is `sub eax, edi; js` on the SIGN of the
+// difference. glTimers is kb.h's claim; slot 0 is the same cell
+// recruit.cpp and advmgr.cpp drive.
+VA(0x005bb660, 0x2E7)  // linkorder, dc 0x1633d8
+void textEntryWidget::SetupDisplayString(char* cCore, unsigned short inCursorIndex)
+{
+    if (GameTime::IsPast(glTimers[0])) {
+        field_6C = static_cast<unsigned char>(1 - field_6C);
+        glTimers[0] = GameTime::Get() + 360;
+    }
+
+    if (inCursorIndex > 0)
+        Text = std::string(cCore).substr(0, inCursorIndex);
+    else
+        Text.erase();
+
+    if (strlen(cCore) > inCursorIndex)
+        Text.append(cCore + inCursorIndex);
+
+    if (field_68 == FIELD_68_SCROLLED) {
+        char shown[300];
+        for (;;) {
+            strcpy(shown, Text.substr(displayStart).c_str());
+            if (Font->LineWidth(shown) <= boxWidth)
+                break;
+            shown[inCursorIndex - displayStart + 1] = 0;
+            if (Font->LineWidth(shown) <= boxWidth)
+                break;
+            displayStart++;
+        }
+        if (displayStart > 0) {
+            strcpy(shown, Text.substr(displayStart - 1).c_str());
+            if (Font->LineWidth(shown) <= boxWidth)
+                displayStart--;
+        }
     }
 }
 

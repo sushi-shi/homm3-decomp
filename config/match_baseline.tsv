@@ -1409,12 +1409,14 @@ textntry	?Draw@textEntryWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bb400
 textntry	?GetCharPressed@textEntryWidget@@QAEDPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1baba0
 textntry	?IgnoreKey@textEntryWidget@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1bba20
 textntry	?Main@textEntryWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1bb150
+textntry	?OnKeyPress@textEntryWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1bac50
 textntry	?OnKillFocus@textEntryWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bba60
 textntry	?OnSetFocus@textEntryWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bba50
 textntry	?SaveBackground@textEntryWidget@@MBEXXZ	100.0000	100.0000	100.0000	0x1bba70
 textntry	?SetAutoDraw@textEntryWidget@@UAEXE@Z	100.0000	100.0000	100.0000	0x1bbac0
 textntry	?SetFocus@textEntryWidget@@UAEXE@Z	100.0000	100.0000	100.0000	0x1bab50
 textntry	?SetText@textEntryWidget@@UAEXPBD@Z	100.0000	100.0000	100.0000	0x1bb950
+textntry	?SetupDisplayString@textEntryWidget@@QAEXPADG@Z	100.0000	100.0000	100.0000	0x1bb660
 textresource	??0TSpreadsheetResource@@QAE@PBDH0@Z	100.0000	100.0000	100.0000	0x1bbe70
 textresource	??0TTextResource@@QAE@PBDH0@Z	100.0000	100.0000	100.0000	0x1bbba0
 textresource	??1TSpreadsheetResource@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc170
