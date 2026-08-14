@@ -510,6 +510,7 @@ csprite	?GetPalette@CSprite@@QAEPAVpalette@@XZ	100.0000	100.0000	100.0000	0x7bcc
 csprite	?_vslot2@CSprite@@UBEIXZ	100.0000	100.0000	100.0000	0x7bd50
 cspriteframe	??1CSpriteFrame@@UAE@XZ	100.0000	100.0000	100.0000	0x7c430
 cspriteframe	??_GCSpriteFrame@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x7c280
+cspriteframe	?SetPixelFormat@CSpriteFrame@@SIXIII@Z	84.7170	84.7170	84.7170	0x7c460
 cspriteframe	?_vslot2@CSpriteFrame@@UBEIXZ	100.0000	100.0000	100.0000	0x7c560
 cursor	?TurnTo@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x7ffe0
 customcampaign	?get_score@SCampaign@@QBEHXZ	100.0000	100.0000	100.0000	0x8b200
