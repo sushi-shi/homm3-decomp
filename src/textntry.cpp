@@ -7,6 +7,7 @@
 #include "bitmap816.h"
 #include "inputmgr.h"
 #include "message.h"
+#include "resourcemanager.h"
 #include "window.h"
 #include "winmgr.h"
 
@@ -31,16 +32,49 @@ void textEntryWidget::textEntryWidget()
     // @stub
 }
 
-// E:\gamedcs\textntry.cpp:92
-DC_ONLY(0x1629e8, 0x10E)
-void textEntryWidget::textEntryWidget(int textEntryWidgetX, int textEntryWidgetY, int textEntryWidgetWidth, int textEntryWidgetHeight, int textStringSize, char* textString, char* textFontName, int color, unsigned justification, char* backgroundIconName, int textBackgroundFrame, int textEntryWidgetId, int textEntryWidgetStyle, int iReadType, int textInsetX, int textInsetY)
-{
-    // @stub
-}
-
 // E:\gamedcs\textntry.cpp:158
 
 #endif  // @carcass
+
+// E:\gamedcs\textntry.cpp:92. The inset box reads the widget members
+// the base constructor has just filled in, not the parameters that fed
+// them - `mov dx, word ptr [ebx+0x18]` off `this`, never a stack slot -
+// so every bound below is spelled `this->`.
+VA(0x005ba920, 0x1B5)  // anchor-vtable, dc 0x1629e8
+textEntryWidget::textEntryWidget(int x, int y, int w, int h, int textSize,
+    const char* text, const char* fontName, font::TColor color,
+    unsigned justification, const char* backgroundIcon, int backgroundFrame,
+    int id, int style, int readType, int insetX, int insetY)
+    : textWidget(x, y, w, h, text, fontName, color, id, justification, 0, 0x100)
+{
+    cursorIndex = 0;
+    bAutoDraw = 0;
+    textBack = 0;
+    saveBack = 0;
+    if (backgroundIcon)
+        textBack = ResourceManager::GetBitmap816(backgroundIcon);
+    displayStart = 0;
+    field_64 = 1;
+    maxLength = static_cast<unsigned short>(textSize);
+    Justify = justification;
+    bHasFocus = 0;
+    if (text)
+        Text = text;
+    if (readType == READ_TYPE_INSET) {
+        field_66 = 1;
+        boxX = static_cast<short>(this->x + insetX);
+        boxY = static_cast<short>(this->y + insetY);
+        boxWidth = static_cast<short>(this->width - insetX * 2);
+        boxHeight = static_cast<short>(this->height - insetY * 2);
+    } else {
+        field_66 = 0;
+        boxX = this->x;
+        boxY = this->y;
+        boxWidth = this->width;
+        boxHeight = this->height;
+    }
+    cursorIndex = static_cast<unsigned short>(Text.size());
+}
 
 // E:\gamedcs\textntry.cpp:71 - textEntryWidget::`scalar deleting
 // destructor' (dc 0x1637d4). Slot 0 of textEntryWidget's vtable

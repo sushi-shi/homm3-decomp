@@ -240,11 +240,11 @@ TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
         177, 54, 100, 130, 3, gText, 0, 2, 0, 0, 0x12));
 
     sourceEntry = new textEntryWidget(
-        20, 218, 101, 37, 10, "99999", "bigfont.fnt", 4, 5,
+        20, 218, 101, 37, 10, "99999", "bigfont.fnt", font::WHITE, 5,
         0, 0, 4, 0, 4, 0, 0);
     Widgets.push_back(sourceEntry);
     destinationEntry = new textEntryWidget(
-        177, 218, 101, 37, 10, "99999", "bigfont.fnt", 4, 5,
+        177, 218, 101, 37, 10, "99999", "bigfont.fnt", font::WHITE, 5,
         0, 0, 5, 0, 4, 0, 0);
     Widgets.push_back(destinationEntry);
 
