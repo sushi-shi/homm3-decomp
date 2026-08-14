@@ -717,6 +717,13 @@ unsigned char army::can_shoot(const army* excluded) const
 // FLOORS the answer at zero through the reference-returning max, whose two
 // LEAs (`lea eax,[ebp+8]` / `lea eax,[ebp-4]` around a `js`) are the same
 // <xutility> signature findpath's CalcTerrainCost carries.
+//
+// ARGUMENT ORDER IS THE MATCH. `_cpp_max(v, 0)` and `_cpp_max(0, v)` compute
+// the same number and differ by one byte of codegen: with the running total
+// FIRST the template's compare is `_X < _Y`, i.e. `v < 0`, and VC6 spends the
+// sign flag the subtraction already set (`js`); with zero first it has to
+// re-test the other way (`jg`) and the body plateaus at 93.63%. Written in
+// retail's order, exact.
 VA(0x00443080, 0x50)  // anchor-global, dc 0x48454
 long army::get_total_hit_points(unsigned char simulated) const
 {
@@ -724,7 +731,7 @@ long army::get_total_hit_points(unsigned char simulated) const
         ? 1
         : hitPoints * numTroops - topCreatureDamage;
     if (simulated)
-        return _cpp_max<long>(0, total - AI_expected_damage);
+        return _cpp_max<long>(total - AI_expected_damage, 0);
     return total;
 }
 
