@@ -1455,12 +1455,81 @@ unsigned char combatManager::has_ranged_advantage(type_AI_combat_parameters* dat
 // retail-only pair - a third spell chooser and its helper that the
 // Dreamcast port does not carry.
 
+#endif  // @carcass
+
 // E:\gamedcs\ai.cpp:1635
+// The Master Genie / Dragon Fly chooser: it walks OUR OWN side from the
+// last slot down, skips anything the caster cannot legally target, and
+// takes the best-scoring friend. Two gates are worth naming - once a
+// spell has already been chosen this round the whole call is abandoned
+// three times in ten, and once *best_value is positive a friend is only
+// considered when it is worth at least as much as the caster itself.
+//
+// `value` IS UNINITIALISED on the fall-through arm: retail's third path
+// through the creatureType test reads the dead `estimate` parameter slot
+// straight back out (0x420dee reloads [ebp+0x10] with nothing having
+// written it). Only choose_spell_action reaches this body, and it only
+// sends the two ids the test names, so the arm is unreachable - but it
+// is transcribed as written.
+//
+// EH-bearing (P2.2) and NOT blocked by it: the fs:[0] frame is the local
+// type_AI_spellcaster's unwind scaffolding, one state.
+//
+// Residual (95.9%): the trip counter. Retail keeps TWO induction
+// variables - the decremented index feeding the armies[] address and a
+// separate down-counter it rebuilds with an `inc` - where our CL folds
+// the -1 into the address lea and stores the undecremented count. The
+// two-case dispatch has to be a real `switch` (95.89 against 93.17 for
+// if/else-if: retail puts both compares up front and lays the second
+// arm first, which only switch lowering does), and `count` has to be a
+// named local (83.68 with numArmies[side] inline).
 VA(0x00420d20, 0x1D5)  // anchor-callee, dc 0x2600c
 unsigned char combatManager::choose_creature_spell(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
 {
-    // @stub
+    long side = estimate->side;
+    long count = numArmies[side];
+    long best_hex = -1;
+    long our_value = current_army->get_total_combat_value(
+            estimate->lowest_attack, estimate->lowest_defense);
+    type_AI_spellcaster caster(this, estimate->side, 1);
+    if (*best_value != 0 && Random(1, 100) <= 30)
+        return 0;
+    for (long i = count; i-- > 0; ) {
+        const army* target = &armies[side][i];
+        if (target == current_army)
+            continue;
+        if (target->creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        if (!current_army->can_cast_spell(target->gridIndex))
+            continue;
+        if (*best_value > 0
+                && our_value > target->get_total_combat_value(
+                        estimate->lowest_attack, estimate->lowest_defense))
+            continue;
+        long value;
+        switch (current_army->creatureType) {
+        case CREATURE_MASTER_GENIE:
+            value = caster.get_caliph_value(target);
+            break;
+        case CREATURE_DRAGON_FLY:
+            value = caster.get_ogre_mage_value(target);
+            break;
+        }
+        if (value <= 0)
+            continue;
+        if (value <= *best_value)
+            continue;
+        *best_value = value;
+        best_hex = target->gridIndex;
+    }
+    if (best_hex < 0)
+        return 0;
+    field_3c = 10;
+    field_44 = best_hex;
+    return 1;
 }
+
+#if 0  // @carcass
 
 // UNCLAIMED, 0x420f00 (251 B) - the retail-only twin described above.
 // NAMED 2026-08-14 by choose_spell_action's jump table: it is the arm
