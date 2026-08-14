@@ -14,6 +14,7 @@ class hero;
 class town;
 class textWidget;
 class iconWidget;
+struct TCreatureTypeTraits;
 
 // DC's named tail begins at +0x58 after its 0x58-byte CAdvPopup. Retail's
 // proven CAdvPopup is 0x60, and each of the two STLport 12-byte strings
@@ -44,6 +45,11 @@ public:
         AFFECTING_SPELLS_0_ID = 221,
         AFFECTING_SPELLS_1_ID = 222,
         AFFECTING_SPELLS_2_ID = 223,
+        // The bitmapBackedTextWidget the one-army constructor parks in
+        // RolloverWidget: id 0xe0 pushed at 0x5f3940, one past the
+        // spell row and the only widget id in the popup that is not
+        // already named.
+        ROLLOVER_ID = 224,
         UPGRADE_ID = 300,
         OK_ID = 301,
         ACCEPT_ID = 0x7802,
@@ -74,6 +80,35 @@ public:
     int convertID2HelpID(int id) const;
     void QuickView();
     void DoModal();
+    // The four row builders the one-army constructor CALLS rather than
+    // inlines, located 2026-08-14 from its own reloc census: the ctor's
+    // argument lists match the Dreamcast prototypes term for term
+    // (portrait takes sprite/townType/count off the stack's embedded
+    // traits row, shots takes that row plus the table's and the row's
+    // own numShots, damage takes the row and army::get_owner()'s hero,
+    // spell-influence takes the army). `town_type` is spelled int
+    // rather than TTownType so this header does not need mapcell.h;
+    // same width, same codegen.
+    // The five rows retail INLINES at every call site, so /OPT:REF
+    // dropped their COMDATs and the carve has no row for any of them.
+    // Their Dreamcast argument lists are what the inline expansions
+    // read: create_morale_widget's by-value `new_morale` is the
+    // caller-side home whose ADDRESS the [-3, 3] selector receives, and
+    // create_background_widget/create_name_widget take their hero and
+    // name from the caller because the ctor computes both before the
+    // allocation.
+    void create_background_widget(const hero* this_hero);
+    void create_name_widget(const char* name);
+    void create_morale_widget(int new_morale);
+    void create_luck_widget(int new_luck);
+    void create_rollover_widget();
+    void create_portrait_widget(const char* sprite_name, int town_type,
+                                int count);                      // 0x5f5060
+    void create_damage_widget(const TCreatureTypeTraits* traits,
+                              const hero* our_hero);             // 0x5f5860
+    void create_shots_widget(const TCreatureTypeTraits* traits,
+                             int normal_shots, int current_shots);  // 0x5f5b30
+    void create_spell_influence_widgets(const army* this_army);   // 0x5f65b0
     void create_attack_widget(int normal_attack_skill,
                               int current_attack_skill);
     void create_defense_widget(int normal_defense_skill,

@@ -454,6 +454,12 @@ public:
     unsigned char is_enemy(const army* arg); // 0x442880
     long get_adjusted_attack(const army* enemy,
                              unsigned char ranged_attack) const;
+    // 0x4427e8's twin (DC army.cpp:2633). Const and two-argument for
+    // the same reason get_adjusted_attack is: TViewArmyWindow's
+    // one-army constructor (0x5f3360) drives BOTH off the `const army*`
+    // it takes, pushing (0, 1) here and (0, can_shoot()) there.
+    long get_adjusted_defense(const army* enemy,
+                              unsigned char frenzy_included) const;
     long get_attack_modifier(const army* enemy,
                              unsigned char ranged_attack) const;
     // Combat-AI leaves, all claimed in army.cpp; declared here so
@@ -530,6 +536,16 @@ public:
     // the return type and `get_controller` at army.cpp:2691 is the same
     // size.
     hero* get_owner() const;                                    // 0x442690
+    // Its 20-byte neighbour at 0x4426d0 is the SAME lookup WITHOUT the
+    // hypnotize undo - `gpCombatManager->heroes[combatSide]`, i.e. the
+    // hero whose side currently commands the stack. That settles the
+    // DC pair the note above left provisional: 0x442690 is get_owner
+    // (army.cpp:2698, the flip-undoing one) and 0x4426d0 is
+    // get_controller (army.cpp:2691), matching the DC roster's own
+    // order. TViewArmyWindow's one-army constructor calls both - owner
+    // for the plate's player palette and the damage row, controller for
+    // the morale/luck describers' hero argument.
+    hero* get_controller() const;                               // 0x4426d0
     // 0x43d8b0 / 0x43d9f0, LOCATED 2026-08-13 from combatManager::AddArmy
     // (0x47a100), which calls them back to back on the freshly claimed
     // slot. Init's SEVEN stack arguments are an exact arity match for the
