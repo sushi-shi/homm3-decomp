@@ -598,6 +598,33 @@ CNetMsg* CNetMsgHandlerPause::HandleNetMsg(CNetMsg* pNetMsg)
     return 0;
 }
 
+// E:\gamedcs\remote.cpp:2479 - CLevelPickWaitDlg's constructor, and the
+// fourth vtable this file unblocks. Nothing else in remote.obj referenced
+// ??_7CLevelPickWaitDlg@@6B@, so VC6 emitted neither the table nor the
+// slot-0 ??_G below; the `mov [esi], offset ??_7CLevelPickWaitDlg` at the
+// tail is the live store that brings both back.
+//
+// The whole construction sequence is visible and in VC6's order: the base
+// CAnimatedDlg constructor inlined (its CTextDialog(0x12) call, its 0x640e94
+// vptr store, and its four member zeroes in this file's own source order),
+// then the m_netMsgHandler member's constructor inlined at
+// `lea edi, [esi+0x7c]`, then this class's own vptr, then the two body
+// stores. m_fromWho and m_playerDropped therefore sit in the BODY, not in a
+// mem-init list - a list would have run them ahead of the vptr store.
+//
+// EH-bearing: the frame carries the unwind state for the member's lifetime,
+// raised to 1 at 0x556b0a once the pause handler is live.
+VA(0x00556ab0, 0xB6)  // anchor-vtable 0x640f40, dc 0x11e630
+CLevelPickWaitDlg::CLevelPickWaitDlg()
+{
+    m_fromWho = -1;
+    m_playerDropped = 0;
+}
+
+// E:\gamedcs\remote.cpp:2482 - CLevelPickWaitDlg::`scalar deleting
+// destructor', slot 0 of vtable 0x640f40.
+VA_COMPGEN(0x00556b70, 0x21, SCALAR_DELETING_DTOR, CLevelPickWaitDlg)
+
 // E:\gamedcs\remote.cpp:2673 - CSaveScreen's constructor, the second row in
 // this file that unblocks a vtable. Nothing else referenced
 // ??_7CSaveScreen@@6B@: the destructor is compiler-generated and its derived
