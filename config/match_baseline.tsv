@@ -4,10 +4,20 @@
 # history across source-label promotion and other same-body renames.
 # unit<TAB>fn<TAB>cur_fuzzy<TAB>max_fuzzy<TAB>hist_fuzzy<TAB>rva
 adler32	@adler32@12	100.0000	100.0000	100.0000	0x206ca0
+adventuremapwindow	??1TAdventureMapWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x2b10
+adventuremapwindow	??_GTAdventureMapWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x2ae0
 adventuremapwindow	?ClearBottomView@TAdventureMapWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee0
+adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3220
+adventuremapwindow	?DoTownKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3280
+adventuremapwindow	?DrawChatText@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3f20
+adventuremapwindow	?SetElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x3c40
+adventuremapwindow	?UpdateButtons@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f60
 adventuremapwindow	?UpdateResourceDisplay@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f00
+adventuremapwindow	?UpdateSleepButton@TAdventureMapWindow@@QAEXPBVhero@@@Z	100.0000	100.0000	100.0000	0x3ba0
 adventuremapwindow	?UpdateSpellButton@TAdventureMapWindow@@QAEXPBVhero@@@Z	100.0000	100.0000	100.0000	0x3bf0
 adventuremapwindow	?animate_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2b90
+adventuremapwindow	?draw_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2bc0
+adventuremapwindow	?set_bottom_view@TAdventureMapWindow@@QAEXPAVtype_bottom_view_window@@@Z	100.0000	100.0000	100.0000	0x2c10
 adventureoptionswindow	??0TAdventureOptionsWindow@@QAE@XZ	89.5711	89.5711	89.5711	0x51d0
 adventureoptionswindow	??1TAdventureOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x56c0
 adventureoptionswindow	??_GTAdventureOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5690
@@ -1615,9 +1625,12 @@ winfile	?SeekBegin@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffcd0
 winfile	?SeekCur@File@@UAEKH@Z	100.0000	100.0000	100.0000	0x1ffcf0
 winfile	?SeekEnd@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffcb0
 winfile	?Write@File@@UAEKPAXK@Z	100.0000	100.0000	100.0000	0x1ffc50
+wingraph	?AppPaint@@YIHPAX0@Z	100.0000	100.0000	100.0000	0x201820
+wingraph	?CleanUpWinGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x201890
 wingraph	?GetDesktopHeight@@YIHXZ	100.0000	100.0000	100.0000	0x2014d0
 wingraph	?GetDesktopWidth@@YIHXZ	100.0000	100.0000	100.0000	0x2014c0
 wingraph	?InitGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x2014e0
+wingraph	?SetFullScreenStatus@@YIEH@Z	100.0000	100.0000	100.0000	0x2019a0
 winmgr	?AddWindow@heroWindowManager@@QAEXPAVheroWindow@@HE@Z	100.0000	100.0000	100.0000	0x2023b0
 winmgr	?BroadcastMessage@heroWindowManager@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x202370
 winmgr	?Close@heroWindowManager@@UAEXXZ	100.0000	100.0000	100.0000	0x2022d0

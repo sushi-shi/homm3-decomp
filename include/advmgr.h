@@ -417,7 +417,15 @@ public:
     // UpdateResourceDisplay (0x403f00) calls through this +0x5c field.
     class TResourceDisplay* ResourceDisplay;
     widget* RolloverTextWidget;  // +0x60, DrawRolloverText redraw bounds
-    char pad_064[8];
+    // DC names these topHero/topTown (member offsets 88/92). Retail moved
+    // RolloverWidget ahead of the pair, so the DC->retail shift here is
+    // +12 rather than the +8 that holds above; DoHeroKnob (0x403220) and
+    // DoTownKnob (0x403280) settle the result directly - the hero knob
+    // scrolls +0x64 against `playerData::numHeroes - 5` and the town knob
+    // scrolls +0x68 against `playerData::numTowns - 5`. animateInBackground
+    // at +0x6c below is unmoved, so the pair exactly fills the old pad.
+    int topHero;
+    int topTown;
     // DC member name at +0x64; retail's independently proven 8-byte base
     // shift places it at +0x6c, exactly where animate_bottom_view reads it.
     unsigned char animateInBackground;
@@ -426,15 +434,24 @@ public:
     class type_bottom_view_window* bottomView;
     char pad_09c[4];
 
+    ~TAdventureMapWindow();
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
     void UpdateHeroLocators(int top, unsigned char drawWin,
                             unsigned char update);
+    void DoHeroKnob(unsigned char up);
+    void DoTownKnob(unsigned char up);
+    unsigned char SetElevationToggleImage(int level);
     void UpdateResourceDisplay(unsigned char draw, unsigned char update);
     void UpdateButtons(unsigned char draw, unsigned char update);
     void UpdateQuestLogButton(unsigned char update);
     void HighlightLocators(unsigned char update);
     void DrawChatText(unsigned char update);
+    // Retail 0x403ba0 is `ret 4` over one null-tested stack argument; the
+    // Dreamcast roster's zero-parameter spelling comes from a four-byte
+    // stub body, so the hero parameter is retail's - matching both
+    // UpdateSpellButton below and DC's real TAdvMenu::UpdateSleepButton.
+    void UpdateSleepButton(const class hero* thisHero);
     void UpdateSpellButton(const class hero* thisHero);
     void draw_bottom_view(unsigned char update);
     void animate_bottom_view(unsigned char in_background);
