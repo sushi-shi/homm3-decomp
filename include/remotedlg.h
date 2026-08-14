@@ -109,6 +109,30 @@ SIZE(CAnimatedDlg, 0x78);
 // CODEVIEW(E:\gamedcs\remote.cpp:1658, dc 0x11d56c) void CAnimatedDlg::TickAnimation();
 // CODEVIEW(E:\gamedcs\remote.cpp:1673, dc 0x11d5dc) void CAnimatedDlg::DrawWindow(bool update, int iLowID, int iHighID);
 
+// CLevelPickWaitDlg - the modal that waits on the other players' level-up
+// picks. DC gives it as 136 bytes over a 112-byte CAnimatedDlg with three
+// members, and the retail constructor 0x556ab0 writes all three at exactly
+// the offsets the +8 CTextDialog widening predicts:
+//   m_fromWho        DC 112 -> 0x78   set to -1 in the body
+//   m_netMsgHandler  DC 116 -> 0x7c   the sixteen bytes 0x556af7..0x556b3d fill
+//   m_playerDropped  DC 132 -> 0x8c   zeroed (byte) in the body
+// DC's 136 becomes 0x90. Vtable 0x640f40 is fourteen slots, CAnimatedDlg's
+// own width, so the class introduces no virtual: slot 3 is its
+// handle_message override at 0x556c20 and every other entry is inherited,
+// down to CAnimatedDlg's own CalcDimensions (0x554c30), Setup (0x554b10) and
+// DrawWindow (0x554e90).
+class CLevelPickWaitDlg : public CAnimatedDlg {
+public:
+    CLevelPickWaitDlg();
+    virtual int handle_message(message& msg);  // slot 3
+
+protected:
+    int m_fromWho;                        // +0x78
+    CNetMsgHandlerPause m_netMsgHandler;  // +0x7c
+    unsigned char m_playerDropped;        // +0x8c
+};
+SIZE(CLevelPickWaitDlg, 0x90);
+
 // CSaveScreen - the off-screen backing store the transfer dialog parks the
 // framebuffer in. DC's field list sits on a 184-byte Bitmap16Bit; retail's
 // Bitmap16Bit is 0x38, and the three trailing members land on exactly the
