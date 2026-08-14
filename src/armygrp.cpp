@@ -1853,6 +1853,20 @@ after_magic_terrain:
 // the body to 74.7874%. Direct initialization and a function-wide shared result
 // both regress. The remaining delta is dominated by Dinkumware string
 // return-object construction/destruction and EH layout.
+// 2026-08-14, a DC-census lead that does NOT transfer: the xref graph records
+// `GetArmyName` (dc 0x1ef94, E:\gamedcs\CreatureType.h:296) from both this
+// body (x1) and get_morale_description (x3), and that helper is what closed
+// ??0TQuickCreatureWindow. Respelling `armygrp_creature_plural_name(x)` as
+// `GetArmyName(x, 0)` - the same lookup, with the count test folding away -
+// costs 74.7874 -> 72.8862 here, and is byte-flat on get_morale_description
+// (67.5649) and get_spell_work_chance (88.5071). The plain plural lookup with
+// no count parameter is retail's x86 spelling in this compiland; the census
+// counts (x1/x3 against our x2/x2) already said the port's bodies differ.
+// Two census leads here are real but not reachable from this file:
+// `town::HasBuilding` x1 (E:\gamedcs\Town.h:324) where we read
+// `ourTown->active & bitNumber[EXTRA_0_ID]` as a field - town.h keeps the
+// declaration behind HOMM3_TOWN_OBJ_DECLS - and `std::string::operator+=` x3
+// against our mixed `+=`/`append`.
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::get_luck_description(
     TCreatureType creature, int luck, const hero* ourHero,
