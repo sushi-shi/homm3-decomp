@@ -115,12 +115,27 @@ SIZE(CChatManager, 0x3c);
 
 DATA(0x0069d7b0) extern CChatManager chatMan;
 
+// Retail turns the Dreamcast member CChatManager::TurnDurationMsg
+// (remote.cpp:904, dc 0x11c4ac) into a FREE varargs formatter that takes
+// the manager as an explicit first argument: 0x553960 vsprintf's its own
+// 0x400-byte stack buffer from [ebp+0x10] onward and hands the result to
+// the AddChat body at 0x553840. The order-map over remote.obj's chat band
+// fixes the identity - 0x153770/0x1537a0/0x1537b0/0x153800/0x153840/
+// 0x153960/0x153aa0/0x153b60/0x153c30 carry the ctor, dtor, Init,
+// ShutDown, AddChat, TurnDurationMsg, SystemMsg, PlayerDropMsg and
+// PlayerEnterMsg rows in DC line order down to UpdateWidget at 0x153d00.
+// Varargs forces __cdecl through /Gr, which is exactly the form retail's
+// call sites use (four pushes + `add esp,0x10`); the same shape already
+// has a precedent in advmgr_objects.h's UpdateCompleteDrawFps.
+void __cdecl TurnDurationMsg(CChatManager* manager, const char* format, ...);
+
 // Retail's complete method family proves five unsigned-long lanes at
 // +0/+4/+8/+c/+10; Dreamcast CodeView supplies their source names.
 class CTurnDuration {
 public:
     unsigned char IsOn();
     unsigned char IsExpired();
+    void CheckForWarning();
     unsigned char IsClose(unsigned long howClose);
     void Clear();
     void SetDuration(unsigned long ms);

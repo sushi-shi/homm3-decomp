@@ -5,6 +5,7 @@
 #include "remote.h"
 #include "game.h"
 #include "kbwin.h"
+#include "textresource.h"
 #include "textwdgt.h"
 
 // DC names the network singleton pDPlay; retail references at 0x69d808 and
@@ -338,14 +339,72 @@ void CChatManager::UpdateNewChat()
 }
 
 // E:\gamedcs\remote.cpp:1128
+#endif  // @carcass
+
+// EXACT. Rebuilds widgetText from the ring of pending messages so that at
+// most numLines rendered lines are shown, oldest-first. Three spellings are
+// byte-load-bearing:
+//   * the per-message line counts are indexed by their OWN counter, not by
+//     `i - firstMsg` - retail walks &lineCounts[0] with a plain pointer and
+//     a downcounter, which the relative index turns into a `lea [4*edi]`
+//     subtraction at every store (94.75 against 87.19);
+//   * the trailing walk increments `i` INSIDE the body, ahead of the
+//     `msgNbr == currMsg` break, not in the for-increment - the for form
+//     lays `i++` after the break test, retail has it before (100.00
+//     against 94.75);
+//   * the stack array is exactly 20 ints (0x50 of the 0x60 frame), the same
+//     ring bound ClearChat and ResumeTimeOuts walk.
+// widget->width is the base widget's short (movsx at +0x1c) and Font is
+// textWidget's +0x40; font::LineLength answers a LINE COUNT, not pixels,
+// which is what makes `totalLines > numLines` the trim condition.
 VA(0x00553ee0, 0x163)  // anchor-global, dc 0x11c8d0
 void CChatManager::UpdateWidgetText(int numLines, textWidget* widget)
 {
-    // @stub
+    int lineCounts[20];
+
+    widgetText[0] = 0;
+    if (msgCount == 0)
+        return;
+    if (position == -1)
+        position = msgCount - 1;
+
+    int lastMsg = position;
+    int firstMsg = position - numLines + 1;
+    if (firstMsg < 0)
+        firstMsg = 0;
+
+    int msgNbr = (firstMsg + currMsg) % maxLines;
+    int totalLines = 0;
+    int lineNbr = 0;
+    int i;
+    for (i = firstMsg; i <= lastMsg; i++) {
+        lineCounts[lineNbr] =
+            widget->Font->LineLength(msgArray[msgNbr].sText, widget->width);
+        msgNbr = (msgNbr + 1) % maxLines;
+        totalLines += lineCounts[lineNbr];
+        lineNbr++;
+    }
+
+    lineNbr = 0;
+    while (totalLines > numLines) {
+        totalLines -= lineCounts[lineNbr];
+        firstMsg++;
+        lineNbr++;
+    }
+
+    msgNbr = (firstMsg + currMsg) % maxLines;
+    for (i = firstMsg; i <= lastMsg;) {
+        strcat(widgetText, msgArray[msgNbr].sText);
+        if (i < lastMsg)
+            strcat(widgetText, DATA_COMPGEN(0x006603bc, chatLineBreak, "\n"));
+        i++;
+        msgNbr = (msgNbr + 1) % maxLines;
+        if (msgNbr == currMsg)
+            break;
+    }
 }
 
 // E:\gamedcs\remote.cpp:1195
-#endif  // @carcass
 
 VA(0x00554050, 0xD)  // anchor-global, dc 0x11c9fc
 void CChatManager::PauseTimeOuts()
@@ -946,15 +1005,100 @@ unsigned char CTurnDuration::IsExpired()
 }
 
 // E:\gamedcs\remote.cpp:2950
-#if 0  // @carcass
+// Residual (97.09%): flow-distance 0, register-distance 38 - one
+// caller-saved permutation at the head of the re-arm block. Retail parks
+// m_currDuration in ECX and the half in EAX; this compile parks them the
+// other way round, and that single swap is what makes our two `timeLeft`
+// arms reassociate to `m_currDuration - currTime + m_turnStartTime` where
+// retail keeps `m_turnStartTime - currTime + m_currDuration`. `why-reg
+// --model` reports the creation-order lever copy-propagated (C1 handle
+// state, capped); naming the half as a local does not move it.
+//
+// Three spellings ARE byte-load-bearing and were found the hard way:
+//   * `((m_currDuration >> 1) << 1) > 120000` and NOT the semantically
+//     identical `(m_currDuration / 2) * 2`. C1XX folds a shift pair into
+//     `and x,-2` in the front end, before C2 ever sees it; the divide form
+//     stays a DIVIDE/MULTIPLY pair that C2 lowers only AFTER CSE-ing the
+//     `/2` it shares with the two neighbouring uses, so it comes out as
+//     `lea [ecx+ecx]` off the shared half (96.16 against 97.09).
+//   * `m_lastWarned` must be READ INTO A LOCAL between the two
+//     GameTime::Get() calls. Retail's `mov edi,[esi]` sits between them,
+//     and no compiler may hoist a member load across an opaque call - so
+//     the load is in source order there, not in the subtraction (95.26
+//     against 93.95).
+//   * the last arm assigns 1000 in the THEN arm and 0 in the ELSE. VC6
+//     lowers `c ? K : 0` as `setcc(!c); dec; and K`, which is retail's
+//     three instructions; written the other way round it takes the general
+//     two-constant form `setcc; dec; and -K; add K` (96.16 against 95.26).
+// The two Get() calls really are two calls - retail saves the first in EBX
+// for the m_lastWarned store and prices the gap with the second.
 VA(0x00557af0, 0x208)  // anchor-global, dc 0x11f108
 void CTurnDuration::CheckForWarning()
 {
-    // @stub
+    if (m_currDuration == 0)
+        return;
+    if (gbUnk69774c)
+        return;
+    if (m_nextWarning == 0)
+        return;
+    if (m_turnStartTime == 0)
+        return;
+    if (m_lastWarned == 0)
+        return;
+    if (gpCurrentPlayer == 0)
+        return;
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+    if (m_pauseTime > 0)
+        return;
+
+    unsigned long currTime = GameTime::Get();
+    unsigned long lastWarned = m_lastWarned;
+    if (GameTime::Get() - lastWarned < m_nextWarning)
+        return;
+
+    long timeLeft = m_turnStartTime - currTime + m_currDuration;
+    if (timeLeft < 0) {
+        m_nextWarning = 0;
+        return;
+    }
+
+    if (timeLeft > 60000) {
+        float minutes = timeLeft / 60000.0f;
+        if (minutes >= 0.8 && minutes <= 1.2)
+            TurnDurationMsg(&chatMan, gpGeneralText->GetText(629));
+        else
+            TurnDurationMsg(&chatMan, gpGeneralText->GetText(630), minutes);
+    } else {
+        // A 29-second remainder is announced as the 30-second mark. The
+        // bound is spelled as a named local rather than an enumerator on
+        // purpose: remote.h is included by eight TUs (cmbtmgr, ai_player,
+        // advmgr among them) and a new type definition there moves their
+        // front-end handle numbering - the documented include-set class.
+        const int roundUpSeconds = 29;
+        int seconds = timeLeft / 1000;
+        if (seconds == roundUpSeconds)
+            seconds = 30;
+        if (seconds == 1)
+            TurnDurationMsg(&chatMan, gpGeneralText->GetText(627));
+        else
+            TurnDurationMsg(&chatMan, gpGeneralText->GetText(628), seconds);
+    }
+
+    m_lastWarned = currTime;
+    if (timeLeft > m_currDuration / 2 && ((m_currDuration >> 1) << 1) > 120000)
+        m_nextWarning = m_currDuration / 2;
+    else if (timeLeft > 60000)
+        m_nextWarning = m_turnStartTime - currTime + m_currDuration - 60000;
+    else if (timeLeft > 10000)
+        m_nextWarning = m_turnStartTime - currTime + m_currDuration - 10000;
+    else if (timeLeft >= 2000)
+        m_nextWarning = 1000;
+    else
+        m_nextWarning = 0;
 }
 
 // E:\gamedcs\remote.cpp:3020
-#endif  // @carcass
 
 VA(0x00557d00, 0x55)  // anchor-global, dc 0x11f2fc
 unsigned char CTurnDuration::IsClose(unsigned long howClose)
