@@ -52,7 +52,11 @@ Bitmap816::~Bitmap816()
 // VC6 EH state is 2 rather than retail's 1. Removing TPalette24's throw()
 // specification or adding one to TPalette16 makes the cleanup-state sequence
 // structurally worse (96.94%); both palette destructors themselves remain
-// exact with the retained declarations.
+// exact with the retained declarations. Also rejected 2026-08-13: the
+// `__declspec(nothrow) void __cdecl operator delete[](void*)` declaration
+// that bitmap24.obj carries for the SCALAR form - the hypothesis was that a
+// nothrow array deallocator removes p24's unwind entry and drops the entry
+// state to retail's 1, but it lands on the same 96.94% cleanup-state shape.
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
