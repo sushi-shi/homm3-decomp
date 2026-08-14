@@ -339,7 +339,10 @@ always counts `call` + tail `jmp`.
 
 12. **Per-row deficits measured with the same probe (2026-08-14)**, the other
     two still unlanded: `bottomviewsubwindow:??0TBottomViewTown` +2
-    (95.6295 → 97.4523), `armygrp:?get_luck_description` +4
+    (95.6295 → 97.4523; re-measured 2026-08-14 after that row's
+    `game::GetCurrTown` landing it is STILL +2, 97.3638 → 98.8631, flat at
+    +3 — the accessor bought a site but not this one),
+    `armygrp:?get_luck_description` +4
     (82.5689 → 90.1916). Every one of them is the same direction — **our
     reconstruction lets the allowance run one level deeper than retail's**
     — which is the mirror image of §0's under-inline guidance and the

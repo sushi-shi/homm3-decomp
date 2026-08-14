@@ -102,7 +102,7 @@ including a divergence this document's first draft got **wrong** (below).
 |---|---|---|---|
 | ~~97.1049~~ **EXACT** | 961 | COUNT | `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` |
 | 95.7583 | 399 | ORDER | `campaignbrief:??1TCampaignBrief@@UAE@XZ` |
-| 94.3114 | 2260 | COUNT | `bottomviewsubwindow:??0TBottomViewTown` |
+| ~~94.3114~~ 97.3638 | 2260 | COUNT | `bottomviewsubwindow:??0TBottomViewTown` |
 | 90.9329 | 1021 | COUNT | `ai_combat:?choose_melee@type_AI_combat_data` |
 | 86.8447 | 2248 | COUNT | `quickherowindow:??0TQuickHeroWindow` |
 | 74.7874 | 968 | COUNT | `armygrp:?get_luck_description` |
@@ -134,6 +134,7 @@ predicts. Three worth naming:
 | `armygrp:?get_luck_description` | 74.7874 | **82.5689** | a whole extra lifetime: a branch-local `std::string` where retail returns the literal into the NRV |
 | `quickherowindow:??0TQuickHeroWindow` | 86.8447 | **90.7834** | an extra reset per if-arm: `push_back(new …)` in each arm, not a shared pointer pushed once |
 | `bottomviewsubwindow:??0TBottomViewTown` | 94.3114 | **95.6295** | a state store that moved: copy-initialize the `std::string`, do not default-construct and assign |
+| `bottomviewsubwindow:??0TBottomViewTown` (again, off the line table) | 95.6295 | **97.3638** | not an EH finding: `game::GetCurrTown`, see `docs/dc-line-tables.md` |
 | `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` | 97.1049 | **100.0000** | the missing region is one free inline candidate site away — and that site is the post-Dreamcast version gate (below) |
 
 Two of the three landings were **invisible to every other lens**, and that is
@@ -204,7 +205,7 @@ with `Widgets.capacity()`-style FREE candidates (cb ≤ 0x28, no bytes emitted):
 | row | extra free sites to flip | result |
 |---|---|---|
 | `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` | +1 | 97.1049 → **100.0000, LANDED** |
-| `bottomviewsubwindow:??0TBottomViewTown` | +2 | 95.6295 → 97.4523 |
+| `bottomviewsubwindow:??0TBottomViewTown` | +2 | ~~95.6295 → 97.4523~~ **97.3638 → 98.8631** (re-measured after the GetCurrTown landing; still +2, flat at +3) |
 | `armygrp:?get_luck_description` | +4 | 82.5689 → 90.1916 |
 
 **The first row is landed and EXACT** (2026-08-14); the padding is not what
@@ -227,6 +228,24 @@ to spend it. Note the placement rule from `inliner.md` §5.9 still
 applies: a site helps only if it is at or after the divergent site in the
 tuple stream, except where the divergent site is at index 0 or in the
 member-initializer prologue, where any site in the body raises the divisor.
+
+**How far the table actually gets you, seven rows in (2026-08-14).** The
+survey in `docs/dc-line-tables.md` says which of three answers a row gets,
+and it is worth knowing before spending a round:
+
+* the divergent site is a statement the Dreamcast build spells differently
+  and retail's bytes AGREE with the DC spelling → the table names it
+  outright. That is what closed `TViewArmyWindow` and what moved
+  `TBottomViewTown`/`TBottomViewHero` (`game::GetCurrTown`/`GetCurrHero`);
+* the divergent site sits inside a POST-Dreamcast block → the table bounds
+  the search negatively and no further. `TBottomViewTown`'s remaining +2 is
+  somewhere in sixteen source lines of quantity text, `get_luck_description`'s
+  +4 in its clover and halfling arms;
+* the row has NO post-Dreamcast region at all (`TBottomViewKingdom`) → the
+  missing site MUST be a differently-spelled statement, and the table
+  enumerates the candidates. Refusing one of them (`memset`, whose intrinsic
+  expansion is not retail's four stores) is the asymmetry rule working, not
+  a dead end.
 
 ## Correction, same day — `[N,0,N+1,0,…]` is NOT a cleanup-count divergence
 
