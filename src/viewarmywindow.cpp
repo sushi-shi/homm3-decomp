@@ -756,6 +756,17 @@ DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
 // three of the four `text +=` expansions retail inlines (45 branches
 // against retail's 55) - the local unions carry the same four-byte copy
 // with no call site at all.
+// NOT the residual, MEASURED so the next reader does not chase it: the
+// two text arrays' relocation FORM. Our rows reference gLuckTexts /
+// gMoraleTexts with addends 0/4/8/12/48/92 where the delinked target
+// has a separate zero-addend symbol per referenced address, and
+// gViewArmyHelp's `.rclick` carries +4 against the target's own
+// `[esi*8]` row. Replacing both arrays with ten individually claimed
+// scalars - every reloc then zero-addend, the shape
+// adventureoptionswindow's 99.94% handler has - scores 35.5280, i.e.
+// IDENTICAL to the digit. The scorer does not see the addend, so the
+// array model (which text.obj's loader proves) stays and the block
+// placement really is the whole of it.
 VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
 int TViewArmyWindow::WindowHandler(message* msg)
 {
@@ -1240,6 +1251,24 @@ void TViewArmyWindow::create_ok_widget()
 // these two stop at 88.11. A7, the OPEN calibration class. Tried and
 // rejected: explicit insert(end(), 1, value) (78.31356%, 19 branches) and
 // an explicit derived-to-base pointer conversion (byte-identical).
+// Also rejected 2026-08-14, the DIVISOR lever in both positions.
+// `push_back(x)` is ONE /Ob2 candidate site and `insert(end(), x)` is
+// TWO, which is the standard way to raise a caller's site count: on the
+// FIRST push_back it scores 85.5720, on the SECOND 85.6314, and BOTH are
+// worse than this plateau. The extra `end()` site does not starve the
+// grow path at all - what it does is break the `-1` materialisation at
+// the TOP of the function, where retail hoists `or ebx,0xffffffff` once
+// and reuses ebx for the bitmapBorder id push AND the EH state store
+// while our CL then falls back to two immediates. The sites-remaining
+// knob is real but points the wrong way here: the divergent expansion
+// sits inside the LAST call site, whose divisor is 1 however many sites
+// precede it, so a preceding site can only perturb register allocation.
+// create_ok_widget's extra set_hotkey - itself a header inline over
+// `hotKeyCodes.insert(hotKeyCodes.end(), 1, code)`, i.e. two more sites
+// with the `end()` half expanded and the three-argument insert called -
+// remains the one observation that separates 98.66 from 88.11, and it is
+// not reproducible here without emitting a second hotkey call retail
+// does not have.
 VA(0x005f6ae0, 0x265)  // ctor call set + literals + arity, dc 0x192ad8
 void TViewArmyWindow::create_upgrade_widget()
 {
