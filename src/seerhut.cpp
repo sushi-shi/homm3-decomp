@@ -203,6 +203,10 @@ TSeerHut* std::__copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __
 //
 // Retail-only rows: no Dreamcast roster entry corresponds to any of them.
 
+// ai.obj's per-artifact valuation, 0x433aa0: an 8-byte type_artifact record
+// in ecx and the player index in edx.
+int AI_get_value_of_artifact(const type_artifact* artifact, int player);
+
 // The AI's resource valuation, 0x526cc0: player index in ecx, a seven-entry
 // cost vector in edx, summed against the per-player multiplier table the
 // same 0x168-byte player stride reaches. Declared here rather than pulled in
@@ -218,7 +222,7 @@ std::string format_string(const char* format, ...);
 // skill bytes and returns their description. Unclaimed - the call form (both
 // the hidden return pointer and the argument on the stack) is what proves it
 // is not the /Gr fastcall default.
-std::string __stdcall skill_requirement_text(const unsigned char (&skills)[4]);
+std::string __stdcall skill_requirement_text(const signed char (&skills)[4]);
 
 VA(0x0056d3e0, 0x2A)  // anchor-vtable 0x641788 slot 6, retail-only
 std::string type_experience_quest::GetRequirementText()
@@ -228,7 +232,7 @@ std::string type_experience_quest::GetRequirementText()
 }
 
 VA(0x0056d490, 0x1A)  // anchor-vtable 0x641788 slot 2, retail-only
-unsigned char type_experience_quest::is_satisfied(const hero* current_hero)
+unsigned char type_experience_quest::is_satisfied(hero* current_hero)
 {
     return current_hero->level >= required_level;
 }
@@ -249,12 +253,30 @@ void type_experience_quest::Load(TAbstractFile* file, int version)
 // scratch-register preference at register-distance 4, flow-distance 0 (its
 // predict-inline UNDER/OVER pair is the name-pairing artefact - the callee is
 // unclaimed). Tried and rejected: `const unsigned char*` parameter, a named
-// `const unsigned char* skills` local, and a `const unsigned char (&)[4]`
+// `const signed char* skills` local, and a `const signed char (&)[4]`
 // reference parameter - all three give the same `add`.
 VA(0x0056d960, 0x22)  // anchor-vtable 0x6417c4 slot 6, retail-only
 std::string type_skill_quest::GetRequirementText()
 {
     return skill_requirement_text(required_skills);
+}
+
+VA(0x0056da70, 0x60)  // anchor-vtable 0x6417c4 slot 2, retail-only
+unsigned char type_skill_quest::is_satisfied(hero* current_hero)
+{
+    for (int i = 0; i < 4; ++i) {
+        int have;
+
+        if (current_hero->stats[i] > 99)
+            have = 99;
+        else if (current_hero->stats[i] > 0)
+            have = current_hero->stats[i];
+        else
+            have = i >= 2;
+        if (have < required_skills[i])
+            return 0;
+    }
+    return 1;
 }
 
 VA(0x0056de60, 0x29)  // anchor-vtable 0x6417c4 slot 11, retail-only
@@ -278,7 +300,7 @@ int type_defeat_hero_quest::quest_type()
 }
 
 VA(0x0056e3e0, 0x29)  // anchor-vtable 0x641800 slot 2, retail-only
-unsigned char type_defeat_hero_quest::is_satisfied(const hero* current_hero)
+unsigned char type_defeat_hero_quest::is_satisfied(hero* current_hero)
 {
     if (current_hero->owner < 0)
         return 0;
@@ -319,7 +341,7 @@ int type_monster_quest::quest_type()
 }
 
 VA(0x0056ebd0, 0x26)  // anchor-vtable 0x64183c slot 2, retail-only
-unsigned char type_monster_quest::is_satisfied(const hero* current_hero)
+unsigned char type_monster_quest::is_satisfied(hero* current_hero)
 {
     int owner = current_hero->owner;
 
@@ -383,6 +405,60 @@ void type_experience_quest::LoadFromMap(TAbstractFile* file)
     type_quest::LoadFromMap(file);
 }
 
+VA(0x0056f5a0, 0x4C)  // anchor-vtable 0x641878 slot 1, retail-only
+int type_artifact_quest::GetAIValue(int player)
+{
+    int total = 0;
+
+    for (unsigned i = 0; i < artifacts.size(); ++i) {
+        type_artifact wanted;
+
+        wanted.artifactId = artifacts[i];
+        wanted.extra = -1;
+        total += AI_get_value_of_artifact(&wanted, player);
+    }
+    return total;
+}
+
+VA(0x0056f800, 0x58)  // anchor-vtable 0x641878 slot 2, retail-only
+unsigned char type_artifact_quest::is_satisfied(hero* current_hero)
+{
+    if (artifacts.size() == 0)
+        return 0;
+    for (unsigned i = 0; i < artifacts.size(); ++i)
+        if (!current_hero->HasArtifact(artifacts[i]))
+            return 0;
+    return 1;
+}
+
+VA(0x0056f860, 0x37)  // anchor-vtable 0x641878 slot 3, retail-only
+void type_artifact_quest::TakePayment(hero* current_hero)
+{
+    for (unsigned i = 0; i < artifacts.size(); ++i)
+        current_hero->remove_artifact(artifacts[i]);
+}
+
+VA(0x00570480, 0x55)  // anchor-vtable 0x6418b4 slot 1, retail-only
+int type_creature_quest::GetAIValue(int player)
+{
+    int total = 0;
+
+    for (unsigned i = 0; i < types.size(); ++i)
+        total += akCreatureTypeTraits[types[i]].AI_value * counts[i];
+    return total;
+}
+
+VA(0x00570760, 0x60)  // anchor-vtable 0x6418b4 slot 2, retail-only
+unsigned char type_creature_quest::is_satisfied(hero* current_hero)
+{
+    if (types.size() == 0)
+        return 0;
+    for (unsigned i = 0; i < types.size(); ++i)
+        if (current_hero->army.get_creature_total(types[i]) < counts[i])
+            return 0;
+    return 1;
+}
+
 VA(0x00571560, 0x12)  // anchor-vtable 0x6418f0 slot 1, retail-only
 int type_resource_quest::GetAIValue(int player)
 {
@@ -404,7 +480,7 @@ void type_resource_quest::LoadFromMap(TAbstractFile* file)
 }
 
 VA(0x00571f00, 0x19)  // anchor-vtable 0x64192c slot 2, retail-only
-unsigned char type_be_hero_quest::is_satisfied(const hero* current_hero)
+unsigned char type_be_hero_quest::is_satisfied(hero* current_hero)
 {
     return current_hero->id == required_hero;
 }
@@ -439,7 +515,7 @@ void type_be_hero_quest::LoadFromMap(TAbstractFile* file)
 }
 
 VA(0x005724f0, 0x1A)  // anchor-vtable 0x641968 slot 2, retail-only
-unsigned char type_belong_to_player_quest::is_satisfied(const hero* current_hero)
+unsigned char type_belong_to_player_quest::is_satisfied(hero* current_hero)
 {
     return current_hero->owner == required_owner;
 }
