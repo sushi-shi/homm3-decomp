@@ -39,11 +39,28 @@ by wall class + the knob to try).
 
 | class | signal | tool | lever — and is it LOCALLY editable? |
 |---|---|---|---|
+| **eh-cleanup** | the `[ebp-4]` EH state transcript diverges (COUNT / ORDER) | read the funclets | **object lifetimes** — a statement or temporary is missing, or a callee is nothrow on one side; see below |
 | **inliner** | out-of-line CALL multiset diverges (a callee inlined on one side only; A8/A9/A12) | `predict-inline` | **budget starvation** — usually NOT a local edit; *finish the caller's body* |
 | **control-flow** | CFG/branch shape diverges — block count, ret count, loop rotation, merged-return (D-family) | `why-branch` | loop form / merged-return placement / case order / ternary / bool spelling — often local |
 | **register-homing** | schedule aligned, register bindings permuted (ESI/EDI swap), memory-homing, spill (B-family) | `why-reg --model` | pseudo-creation order — local ONLY when the swapped value is a named local; else C1 handle-state |
 | **masked-equal** | reg-dist 0 AND flow-dist 0 but objdiff < 100 | — | displacement/reloc only (C9/D21) — **not a real wall**, don't grind |
 | **include-set** | a header/type edit moved an *unrelated* function's score | `il-diff` | front-end symbol-handle renumbering — match retail's include closure (TU-global) |
+
+### eh-cleanup walls — read this BEFORE any spelling (new 2026-08-14)
+`diagnose` prints an `eh signal` line whenever the two sides' `[ebp-4]` state
+stores disagree. That transcript is a **record of object lifetimes**, and it is
+the one signal `predict-inline` / `why-branch` / `why-reg` all miss.
+**The rule: VC6 emits a cleanup chain only for a region that can THROW.** So a
+COUNT divergence names a *missing statement or a missing throwing call*, not a
+mis-spelling — and it is often a TU-input fact rather than a body fact: VC6's
+`<new>` declares `operator delete(void*) _THROW0()` while the implicit
+declaration (and `NEW.H`, which has only the placement forms) leaves it
+throwing. Do not infer the map — **retail publishes it as data**: the funclet
+group under `<Class>_<fn>_unwindNN` in `build/gen/symbol_names.csv`, each entry
+an `add ecx,<off>; jmp ~T` naming the subobject it cleans. Byte-proven closure:
+`Bitmap816::~Bitmap816` (`docs/vc6/eh-cleanup.md`). Caveats already measured:
+a `[N,0,N+1,0,…]`-vs-`[N,N+1,…]` shape is an *inliner* witness, and the body's
+site count does **not** reach a member-initialiser expansion.
 
 ### inliner walls — the dominant class (~65% of plateaus)
 `homm3 vc6 predict-inline <src> --fn <caller> --against <unit:caller>` lists which
@@ -84,6 +101,20 @@ through the IL (proven: `docs/vc6/il-format.md`). Confirm with
 `homm3 vc6 il-diff <A.cpp> <B.cpp>` — `IL DIFFERS` ⇒ front-end (match the include
 closure); `IL IDENTICAL` ⇒ look at C2 state. There is no local body knob.
 
+### body location (fixed 2026-08-14 — re-test old CAPPED verdicts)
+Both solvers locate F's body with `homm3.vc6._source`, which now handles
+constructors **with** member-initialiser lists, destructors, operators,
+qualified `Class::method` definitions and `const`/`throw()` suffixes — the whole
+constructor and member-function population was outside both solvers before this.
+It also masks `#if 0  // @carcass` regions, which the old locator did not: it
+returned the fenced `{ /* @stub */ }` first, so every mutation was a no-op and
+the run reported a CAPPED verdict **it had never measured**. 102 source files
+carry a carcass block. **Any CAPPED verdict recorded before 2026-08-14 on a
+constructor, destructor, operator, or on a function whose file has a carcass
+block, is unmeasured — re-run it.** A row with no body now says which case it is
+(compiler-generated `??_G`, fenced carcass, defined elsewhere) instead of
+"cannot locate". Gate: `homm3 vc6 check --locator`.
+
 ## Doctrine (do not violate)
 
 - **The tools PROPOSE, never apply.** Every solver prints a diff for the matching
@@ -119,7 +150,8 @@ closure); `IL IDENTICAL` ⇒ look at C2 state. There is no local body knob.
 ## Reference (read the doc for the class you're in)
 
 `docs/vc6/behavior-catalog.md` (the ~90 byte-verified behaviors, A/B/C/D IDs —
-the shared vocabulary) · `inliner.md` (the `/Ob2` rule + address ledger) ·
+the shared vocabulary) · `eh-cleanup.md` (the cleanup-count rule + the
+tree-wide transcript table) · `inliner.md` (the `/Ob2` rule + address ledger) ·
 `regalloc.md` (the preference table + first-fit order) · `il-format.md` (IL
 capture + the include-set verdict) · `driver-passes.md` (the CL spec table) ·
 `c2-atlas.md` (C2 module RVAs) · `rtm-generation.md` (Track R). The full picture:
