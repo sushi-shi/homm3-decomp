@@ -24,20 +24,6 @@ void iconWidget::iconWidget()
     // @stub
 }
 
-// E:\gamedcs\iconwdgt.cpp:63
-DC_ONLY(0xd9350, 0xA2)
-void iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image, int frame, int sequence, unsigned char flipped, unsigned back_color, int style, unsigned char focusable)
-{
-    // @stub
-}
-
-// E:\gamedcs\iconwdgt.cpp:75
-DC_ONLY(0xd93f4, 0x6E)
-void iconWidget::initialize(int x, int y, int w, int h, int id, const char* image, int frame, int sequence, unsigned char flipped, unsigned back_color, int style, unsigned char focusable)
-{
-    // @stub
-}
-
 // E:\gamedcs\iconwdgt.cpp:88
 
 #endif  // @carcass
@@ -47,6 +33,49 @@ void iconWidget::initialize(int x, int y, int w, int h, int id, const char* imag
 // 33-byte row calls ??1iconWidget (0x4ea7b0) and carries the flags&1
 // operator delete tail.
 VA_COMPGEN(0x004ea6f0, 0x21, SCALAR_DELETING_DTOR, iconWidget)
+
+// E:\gamedcs\iconwdgt.cpp:63 - promoted from DC_ONLY 2026-08-14. The one
+// unclaimed row between iconWidget's sdd and its dtor, and it absorbs
+// BOTH of DC's remaining head rows: `initialize` has no retail slot
+// because the ctor does the stores itself.
+//
+// Arity fixes the signature: `ret 0x2c` is eleven stack dwords, so DC's
+// trailing `focusable` is dropped and the last one - [ebp+0x30] - is
+// `style`, pushed as widget's sixth base-ctor argument. The dword 2 goes
+// to [this+0x40], PostPostWalkSequence, which is the idle machine's
+// "sequence to resume after cs_postwalk" seed; NextRandomFrame reads it
+// back at exactly that offset.
+//
+// The sprite load is a TERNARY, not an if/else: retail materialises the
+// zero once (`xor eax,eax`) and both arms fall into ONE
+// `mov [esi+0x30], eax` - the opposite of bitmapBorder's ctor, which
+// duplicates its store and its epilogue. The fs:[0] frame is here
+// because GetSprite runs in the ctor body and the widget base has to be
+// unwindable across it.
+//
+// The SPLIT is byte-forced and was the whole match (2026-08-14): the five
+// scalars are MEMBER INITIALISERS and only the sprite is assigned in the
+// body. Written as six body assignments, VC6 emits the compiler's vptr
+// store at the HEAD of the trailing store group where retail sinks it
+// past both of them; no permutation of six body statements reaches it
+// (96.65 / 97.06 / 97.14 / 97.55 over six orderings, and hoisting the
+// sprite to the front collapses to 61.14). Moving the five into the
+// mem-init list sinks the vptr store and closes the function outright.
+// Putting the SPRITE in the list too is much worse (57.08) - its ternary
+// has to run before the vptr store there.
+VA(0x004ea720, 0x8C)  // anchor-bracket + arity (`ret 0x2c`), dc 0xd9350
+iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
+                       int frame, int sequence, unsigned char flipped,
+                       unsigned backColor, int style)
+    : widget(x, y, w, h, id, style),
+      Frame(frame),
+      seqId(sequence),
+      IsFlipped(flipped),
+      BackColor(static_cast<unsigned short>(backColor)),
+      PostPostWalkSequence(cs_wait)
+{
+    Sprite = image ? ResourceManager::GetSprite(image) : 0;
+}
 
 VA(0x004ea7b0, 0x55)  // anchor-global, dc 0xd9464
 iconWidget::~iconWidget()

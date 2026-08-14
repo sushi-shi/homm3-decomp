@@ -97,8 +97,16 @@ public:
     int glyphOffsets[256];
     TFontPaletteStorage palette;
     void* data;
+    // The glyph payload's byte count, byte-proven by _vslot2 below: the
+    // whole class is 0x1260 and the only member past `data` is the dword
+    // at 0x125c that the size query adds to it.
+    int DataSize;
 
     virtual ~font();  // retail 0x4b5110
+    // Slot 2 of vtable 0x63e5f4 (the resource size query, pure at the
+    // base). Retail 0x4b5250 - the twelve-byte
+    // `mov eax,[ecx+0x125c]; add eax,0x1260; ret`.
+    virtual unsigned int _vslot2() const;
 
     void DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int color_scheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
     void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int color_scheme, unsigned justification, int cursorPos);
