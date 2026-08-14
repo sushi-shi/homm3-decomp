@@ -16,7 +16,9 @@
 #include "hero.h"
 #include "iconwdgt.h"
 #include "kb.h"
+#include "kbwin.h"
 #include "message.h"
+#include "misc.h"
 #include "mousemgr.h"
 #include "remote.h"
 #include "smackmgr.h"
@@ -63,6 +65,21 @@ DATA(0x0068a340) static const char* const gBoatDefNames[9] = {
     emptyRolloverText, "AB03_.def",       "AB01_.def"
 };
 
+// The war machine each town's blacksmith sells, as a creature type
+// (146 Ballista, 147 First Aid Tent, 148 Ammo Cart), and the artifact
+// that machine occupies once bought. All seven references to the
+// creature table land inside townmgr's bracket, so this compiland owns
+// it; the artifact table is also read from advmgr's town-event path
+// (0x525903), so it is a definition rather than a file-static. The
+// second column of each artifact pair is never read by a reconstructed
+// body.
+// (146 ballista, 147 first aid tent, 148 ammo cart - no enumerator for
+// the war machines exists yet and armygrp.h is not this lane's to grow.)
+DATA(0x00642e90) static const int gBlacksmithMachines[9] = {
+    146, 147, 148, 148, 147, 146, 148, 147, 146
+};
+DATA(0x006aa9f8) int gBlacksmithArtifacts[9][2];
+
 // window.obj's text setter, retail 0x5ffa30: a free function, so /Gr
 // makes it fastcall (heroWindow* in ecx, the text id in edx) - which is
 // exactly the two-register call shape TShipWindow's constructor emits.
@@ -84,6 +101,18 @@ void SetWinText(heroWindow* win, int which);
 // candidate site behind that push_back restores retail's divisor and the
 // whole body goes exact (75.73% -> 100%). The helper is that site, and
 // the inline accounting is the evidence for the shape.
+// The blacksmith's half of the same price gate, and the same
+// single-call-site static for the same reason: open-coded in the caller
+// it compiles to identical bytes everywhere except inside
+// Widgets.reserve, where one fewer candidate site raises that nested
+// site's `remaining / sites-still-to-come` share enough for
+// vector::size to expand inline - which retail does not do here (it
+// does in TBuyBuildWindow, whose site count differs). 98.12% -> 100%.
+static bool SmithAffordable(int cost)
+{
+    return gpGame->players[gpGame->GetLocalPlayerGamePos()].resources[6] >= cost;
+}
+
 static bool ShipyardAffordable()
 {
     return gpGame->players[gpGame->GetLocalPlayerGamePos()].resources[6] >= 1000
@@ -496,6 +525,96 @@ void do_monster_join_dialog(hero* inHero, armyGroup* monsters, int flags)
     gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
     gpMouseManager->ShowPointer(true);
     joinWindow.DoModal(0);
+}
+
+// The blacksmith. Same recipe again, with the compiland's first use of a
+// std::string temporary: the price label is format_string("%d", cost)
+// handed straight to textWidget, so VC6 carries the temporary across the
+// `new`'s null diamond under a lifetime bit ([ebp-0x18]) and drops the
+// reference at the end of the full expression.
+//
+// The first parameter is DEAD - no body byte reads [ebp+8]. The window
+// takes the acting hero from gpTownManager->townToView->visitingHeroId
+// instead, and only to ask whether he already owns the machine.
+
+// E:\gamedcs\townmgr.cpp:5214
+VA(0x005d1360, 0x69A)  // anchor-vtable 0x6438cc + anchor-string TPSmith.pcx + arity, dc 0x1732e8
+TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
+    : CAdvPopup(235, 106, 329, 388, 0x12)
+{
+    int cost = akCreatureTypeTraits[gBlacksmithMachines[inTownType]].cost[6];
+    townType = inTownType;
+    Widgets.reserve(12);
+
+    Widgets.push_back(new bitmapBorder(0, 0, width, height, 0,
+                                       "TPSmith.pcx", 0x800));
+
+    sprintf(gText, gpGeneralText->GetText(275),
+            akCreatureTypeTraits[gBlacksmithMachines[townType]].m_name);
+    Widgets.push_back(new textWidget(0, 15, width, 30, gText, "bigfont.fnt",
+                                     font::HEADING, 1, 1, 0, 8));
+    Widgets.push_back(new textWidget(0, 210, width, 30, 0, "medfont.fnt",
+                                     font::PRIMARY, 2, 1, 0, 8));
+    Widgets.push_back(new textWidget(129, 284, 69, 17,
+                                     format_string("%d", cost).c_str(),
+                                     "smalfont.fnt", font::PRIMARY, 3, 5, 0, 8));
+    Widgets.push_back(new iconWidget(147, 244, 32, 32, 4, "resource.def",
+                                     6, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new bitmapBorder(64, 50, 200, 150, 5,
+                                       "tpsmitbk.pcx", 0x800));
+    machineIcon = new iconWidget(
+        64, 50, 200, 150, 6,
+        akCreatureTypeTraits[gBlacksmithMachines[townType]].m_sprite_name,
+        0, 2, 0, 0, 0x12);
+    Widgets.push_back(machineIcon);
+
+    Widgets.push_back(new bitmapBorder(8, 363, 312, 17, 7,
+                                       "StatBar.pcx", 0x800));
+    Widgets.push_back(new textWidget(8, 363, 312, 17, 0, "smalfont.fnt",
+                                     font::PRIMARY, 8, 1, 0, 8));
+    Widgets.push_back(new button(42, 312, 64, 30, BUY_BUTTON_ID,
+                                 "iBUY30.def", 0, 1, 1, 28, 2));
+    Widgets.push_back(new button(224, 312, 64, 30, CANCEL_BUTTON_ID,
+                                 "iCancel.def", 0, 1, 1, 1, 2));
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    if (!gpCurrentPlayer->IsLocalHuman())
+        GetWidget(BUY_BUTTON_ID)->enable(0);
+    SetWinText(this, 25);
+
+    message msg;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 0;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    BroadcastMessage(&msg);
+
+    hero* visitor = gpGame->GetHero(gpTownManager->townToView->visitingHeroId);
+    if (!SmithAffordable(cost)
+        || visitor->HasArtifact(gBlacksmithArtifacts[townType][0])) {
+        msg.codeX = widget::WIDGET_SET_STATUS;
+        msg.codeY = BUY_BUTTON_ID;
+        msg.extra = widget::WIDGET_DIMMED_NODRAW;
+        BroadcastMessage(&msg);
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.extra = widget::WIDGET_ACTIVE;
+        BroadcastMessage(&msg);
+    }
+
+    field_68 = 0;
+    glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] = GameTime::Get() + 100;
 }
 
 VA_COMPGEN(0x005d1a00, 0x21, SCALAR_DELETING_DTOR, TBlacksmithWindow)
