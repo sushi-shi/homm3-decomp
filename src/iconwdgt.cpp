@@ -293,8 +293,10 @@ int iconWidget::GetRealHeight()
 // EResourceType enumerators, and that is a measurement, not taste - see
 // the note on the enum in iconwdgt.h. resource.h sits at the head of
 // recruit.obj's include closure and recruitUnit::Update is knife-edge
-// on symbol-handle position: ONE added enumerator anywhere in
-// EResourceType drops it 90.84% -> 88.24%, at every count tried.
+// on symbol-handle position: growing EResourceType by FIVE or more
+// enumerators drops it 90.8376% -> 88.2360%. Corrected 2026-08-14 by
+// bisection - the threshold is five, not one; the first four are free,
+// and RESOURCE_TYPE_FONT (font::font 0x4b5070) now spends one of them.
 //
 // The creature path is the one with real arithmetic: it centres on the
 // crop box of the FIRST FRAME OF THE cs_wait SEQUENCE (Sprite->s[2]
