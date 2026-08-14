@@ -102,7 +102,27 @@ public:
     // animation and clears it in the same quick-combat-gated tail that
     // stops the walk sample.
     unsigned char IsMoving;       // +0x30
+    // DC army.LetsPretendImNotHere (members.csv army@49, the byte
+    // straight after IsMoving in the run this header already pairs
+    // unshifted). SetupAnimation (0x446830) raises it across the single
+    // combatManager::DrawFrame that captures the clean background and
+    // drops it again immediately after - "draw the field without me".
+    //
+    // BEHIND THE SAME VIEW AS WalkTo, AND MEASURED. Slicing this byte
+    // unconditionally costs command.obj's GetCommand 92.5714 -> 92.5357
+    // with no semantic change anywhere - the include-set class again,
+    // fired here by a DATA member where the earlier triggers in this
+    // header were a method declaration and three enumerators. Bisected
+    // against the three includes SetupAnimation needs (drawing.h,
+    // winmgr.h, bitmap16.h), which are army.cpp-local and move nothing.
+    // Both arms spell the SAME four bytes, so the two views cannot
+    // disagree about the layout; only the name is scoped.
+#ifdef HOMM3_ARMY_MOVE_VIEW
+    unsigned char LetsPretendImNotHere;  // +0x31
+    char pad_32[0x2];
+#else
     char pad_31[0x3];
+#endif
     // Creature roster id: ai_tactical compares it against the war
     // machines 0x93/0x94 (get_ranged_attack_value 0x435cb0,
     // set_melee_enemies 0x43bf20) and 0x95 (get_damage_value 0x436e30).

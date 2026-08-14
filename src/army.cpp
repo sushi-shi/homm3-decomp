@@ -19,14 +19,17 @@
 #undef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
 #undef HOMM3_ARMY_MULTI_HEAD_VIEW
 #include "armygrp.h"
+#include "bitmap16.h"
 #define HOMM3_CMBTMGR_MOVE_VIEW
 #include "cmbtmgr.h"
 #undef HOMM3_CMBTMGR_MOVE_VIEW
+#include "drawing.h"
 #include "hero.h"
 #include "misc.h"
 #include "sample.h"
 #include "soundmgr.h"
 #include "town.h"
+#include "winmgr.h"
 
 // VC6 <xutility>'s reference-returning min/max, taken BY VALUE - the
 // orientation byte-proven engine-wide (findpath.cpp carries the
@@ -1683,11 +1686,37 @@ void army::Turn(unsigned char play_animation)
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4956
-// RETAIL_LOCATED(0x00446830, 0x103)  // anchor-global, dc 0x4b558
+#endif  // @carcass
+
+// Capture the battlefield without this stack on it, once, before an
+// animation starts: widen the draw limits to the whole combat area,
+// draw this stack's cell into the buffer, take one full frame with
+// LetsPretendImNotHere raised, and blit the 800x600 result into the
+// manager's backup bitmap. Quick combat skips the lot.
+VA(0x00446830, 0x103)  // anchor-global, dc 0x4b558
 void army::SetupAnimation()
 {
-    // @stub
+    if (gpCombatManager->IsQuickCombat())
+        return;
+    hexcell* cell = &gpCombatManager->cells[gridIndex];
+    gpCombatManager->drawbridgeBounds = gCombatAreaLimits;
+    gpCombatManager->field_13d2c = 1;
+    gpCombatManager->field_13d34 = 1;
+    DrawToBuffer(cell->field_00, cell->field_02, 0);
+    gpCombatManager->field_13d34 = 0;
+    gpCombatManager->field_13d2c = 0;
+    LetsPretendImNotHere = 1;
+    gpCombatManager->DrawFrame(0, 0, 0, 0, 1, 0);
+    LetsPretendImNotHere = 0;
+    gpWindowManager->screenBitmap->Draw(
+        0, 0, 800, 600, gpCombatManager->field_53b0->map, 0, 0,
+        gpCombatManager->field_53b0->Width,
+        gpCombatManager->field_53b0->Height,
+        gpCombatManager->field_53b0->Pitch, false);
+    gpCombatManager->field_53b8 = 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4995
 // RETAIL_LOCATED(0x00446940, 0x2FE)  // anchor-bracket, dc 0x4b624
