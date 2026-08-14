@@ -593,6 +593,7 @@ events	?get_black_box@advManager@@QBEPAVBlackBoxData@@PBTExtraInfoUnion@@@Z	100.
 events	?get_force_modifier@advManager@@SIHM@Z	100.0000	100.0000	100.0000	0xa76c0
 events	?get_like_modifier@advManager@@SIHPAVhero@@W4TCreatureType@@@Z	100.0000	100.0000	100.0000	0xa75c0
 events	?get_treasure_data@advManager@@QBEPAVTreasureData@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9f040
+events	?monsters_fight@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6c60
 exec	?AddManager@executive@@QAEHPAVbaseManager@@H@Z	100.0000	100.0000	100.0000	0xb0b20
 exec	?CallManager@executive@@QAEXPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0c70
 exec	?DoDialog@executive@@QAEHPAVbaseManager@@@Z	100.0000	100.0000	100.0000	0xb0a10

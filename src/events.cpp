@@ -2028,6 +2028,24 @@ void std::__pop_heap_aux(SpellID* __first, SpellID* __last, SpellID* __formal, s
 // the identity is byte-proven - 0x49e0e0 stores the ResourceManager
 // return for "advevent.txt" (0x677710) into 0x696a18 and every one of
 // the 194 references to that cell is inside events.obj's link bracket.
+// The int->TCreatureType representation bridge, copied verbatim from the
+// head of game.cpp: NewmapCell's +0x22 is a GENERIC `short objectIndex`
+// shared by all 163 adventure-object types (T_SHORT in the DC fieldlist,
+// `movsx ecx, word ptr` in retail), while the Dreamcast types this
+// caller's local TCreatureType and decorates get_like_modifier's
+// parameter `W4TCreatureType@@`. The union keeps the bridge explicit
+// without an enum cast, exactly as game.cpp records; VC6 reduces it to
+// the move it already was.
+inline TCreatureType creature_type_from_int(int value)
+{
+    union {
+        int value;
+        TCreatureType creature;
+    } storage;
+    storage.value = value;
+    return storage.creature;
+}
+
 DATA(0x00696a18) static TTextResource* gpAdventureEventText;
 DATA(0x00696a1c) static TTextResource* gpRandomSignText;
 DATA(0x00696a2c) static char* gArtifactEventText[144];
@@ -2148,6 +2166,47 @@ int game::GetTeam(int playerNum) const
 TCreatureType UpgradedCreatureType(TCreatureType type);
 TCreatureType DowngradedCreatureType(TCreatureType type);
 
+// E:\gamedcs\events.cpp:3627.  The wandering stack is fought. The combat
+// itself is CombatMonsterEvent; what belongs to this body is the count
+// write-back, the reward when the stack is beaten, the defeated-monster
+// victory check, and the erase-and-fizzle when the tile is left empty.
+//
+// EraseAndFizzle is INLINED here - its own out-of-line body stays emitted
+// for its external linkage, and FizzleCenter is inlined inside it in turn,
+// so the whole save/force/restore bracket and the 224x224 kill fade appear
+// in this function. With the sound fixed at KILL_FADE the fizzle's switch
+// folds away and only its gCompleteDrawEnabled gate survives - as an `if`
+// around the block rather than as an early return, which is why the two
+// restores appear ONCE here where EraseAndFizzle's own body carries three
+// copies of them.
+//
+// The count write-back is unconditional and lands between the result test
+// and its branch: retail reads the twelve-bit field back out of the local
+// the combat was given a pointer to, whatever the combat returned.
+VA(0x004a6c60, 0x188)  // linkorder + CombatMonsterEvent/EraseAndFizzle, dc 0x96b14
+void advManager::monsters_fight(hero* current_hero, NewmapCell* cell,
+                                type_point point, bool human_player)
+{
+    TCreatureType monType = creature_type_from_int(cell->objectIndex);
+    int numMons = cell->monster_info.qty;
+    int survived = CombatMonsterEvent(current_hero, monType, &numMons,
+                                      cell, point,
+                                      creature_type_from_int(-1), 0, 0,
+                                      creature_type_from_int(-1), 0, 0);
+    cell->monster_info.qty = numMons;
+
+    if (!survived) {
+        monsters_give_reward(current_hero, cell, human_player);
+        if (gpGame->mapHeader.victoryCondition.CheckForDefeatedMonsterWin(
+                current_hero, point))
+            CheckEndGame(0);
+    }
+
+    if (numMons == 0)
+        EraseAndFizzle(cell, point, FIZZLE_SOUND_KILL_FADE);
+}
+
+
 // E:\gamedcs\events.cpp:3805.  How much a wandering stack's mood moves
 // with what the visiting hero is already carrying: the stack likes an
 // army built out of its own kind, and out of the creature one step up or
@@ -2257,24 +2316,6 @@ inline type_point::type_point(short new_x, short new_y, short new_z)
     x = new_x;
     y = new_y;
     z = new_z;
-}
-
-// The int->TCreatureType representation bridge, copied verbatim from the
-// head of game.cpp: NewmapCell's +0x22 is a GENERIC `short objectIndex`
-// shared by all 163 adventure-object types (T_SHORT in the DC fieldlist,
-// `movsx ecx, word ptr` in retail), while the Dreamcast types this
-// caller's local TCreatureType and decorates get_like_modifier's
-// parameter `W4TCreatureType@@`. The union keeps the bridge explicit
-// without an enum cast, exactly as game.cpp records; VC6 reduces it to
-// the move it already was.
-inline TCreatureType creature_type_from_int(int value)
-{
-    union {
-        int value;
-        TCreatureType creature;
-    } storage;
-    storage.value = value;
-    return storage.creature;
 }
 
 // ai_combat.obj's army valuer (0x427650), redeclared here rather than
