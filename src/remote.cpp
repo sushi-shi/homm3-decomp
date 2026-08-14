@@ -1167,6 +1167,36 @@ void CTurnDuration::CTurnDuration()
 // E:\gamedcs\remote.cpp:2920
 #endif  // @carcass
 
+// E:\gamedcs\remote.cpp:2834 - CNetMsgHandler's constructor. Its
+// `mov [eax], offset ??_7CNetMsgHandler` is the live vtable store that
+// keeps 0x640f14 alive in this object.
+VA(0x005577f0, 0x11)  // anchor-vtable 0x640f14, dc 0x11ef34
+CNetMsgHandler::CNetMsgHandler()
+{
+    m_inPopup = 0;
+    m_pAbortPopupMsg = 0;
+}
+
+// NO CLAIM on 0x557810 (0x45) or 0x5578d0 (0x30). They are the scalar
+// deleting destructor and ~CNetMsgHandler, and the destructor unhooks
+// itself from the network singleton in place - `if (pDPlay &&
+// pDPlay->GetNetMsgHandler() == this) pDPlay->SetNetMsgHandler(0);` with
+// both accessors inlined. Spelling that needs inline bodies on
+// CDPlayHeroes, and MEASURING it showed the cost: advmgr's CAdvPopup
+// constructor drops 100.00 -> 69.33 the moment remote.h grows them. The
+// deleting destructor is 0x45 rather than the usual 0x21 because the
+// destructor is small and not EH-bearing, so /Ob2 inlines it there while
+// still emitting it out of line at 0x5578d0.
+
+// E:\gamedcs\remote.cpp:2834 - slot 2 of vtable 0x640f14. DC has it as an
+// INTRODUCING VIRTUAL in remote.h at vfptr offset 4; retail's virtual
+// destructor in slot 0 pushes it to slot 2.
+VA(0x00557900, 0x4)  // anchor-vtable (slot 2 of 0x640f14), dc 0x201f8
+CNetMsg* CNetMsgHandler::GetAbortPopupMsg()
+{
+    return m_pAbortPopupMsg;
+}
+
 VA(0x00557a80, 0x15)  // anchor-global, dc 0x11f070
 unsigned char CTurnDuration::IsOn()
 {
