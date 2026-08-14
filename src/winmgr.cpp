@@ -590,6 +590,7 @@ void heroWindowManager::SaveFizzleSource(int startX, int startY, int width, int 
 }
 
 // E:\gamedcs\winmgr.cpp:1125
+// RETAIL_LOCATED 0x00602cc0, 0xF2 - see winmgr.h.
 DC_ONLY(0x19b5c0, 0xAA)
 void heroWindowManager::SaveFizzleSourceX(int startX, int startY, int width, int height)
 {
@@ -604,18 +605,22 @@ void heroWindowManager::FizzleForward(int startX, int startY, int width, int hei
 }
 
 // E:\gamedcs\winmgr.cpp:1314
+// RETAIL_LOCATED 0x00602dc0, 0x2F7 - see winmgr.h.
 DC_ONLY(0x19b8fc, 0x2AA)
 void heroWindowManager::FizzleForwardX(int startX, int startY, int width, int height, int iFadeTime)
 {
     // @stub
 }
 
-// E:\gamedcs\winmgr.cpp:1447
-DC_ONLY(0x19bba8, 0x2C)
-void heroWindowManager::ReleaseFizzleSource()
-{
-    // @stub
-}
+// The three rows below have NO retail body. The winmgr tail is
+// order-mapped exhaustively: the five carve rows past FadeScreen are
+// 0x602cc0 SaveFizzleSourceX, 0x602dc0 FizzleForwardX, 0x6030c0
+// ReleaseFizzleSource, 0x6030e0 FadeToBlack, 0x6032e0 FadeFromBlack,
+// and the next row (0x6034d0) is a cinit followed by the import-thunk
+// run, so the compiland ends there. ScreenShot, SaveFizzleSource,
+// FizzleForward, NextFlashFrame, Flash and FadeBlit are all
+// retail-dropped or inlined - retail kept only the X half of the
+// fizzle pair.
 
 // E:\gamedcs\winmgr.cpp:1455
 DC_ONLY(0x19bbd4, 0x80)
@@ -639,6 +644,8 @@ void heroWindowManager::FadeBlit(int sx, int sy, int sw, int sh, const Bitmap816
 }
 
 // E:\gamedcs\winmgr.cpp:1707
+// RETAIL_LOCATED 0x006030e0, 0x1F9 - FadeScreen's `mov` + `call` at
+// 0x602c78, i.e. an exact claimed caller naming it directly.
 DC_ONLY(0x19c1bc, 0x1FA)
 void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
 {
@@ -646,6 +653,8 @@ void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
 }
 
 // E:\gamedcs\winmgr.cpp:1866
+// RETAIL_LOCATED 0x006032e0, 0x1E5 - FadeScreen's second call, at
+// 0x602c91. Two other call sites, both in the DoDialog family.
 DC_ONLY(0x19c3b8, 0x230)
 void heroWindowManager::FadeFromBlack(int speed)
 {
@@ -667,3 +676,15 @@ const unsigned char* Bitmap816::GetMap(int x, int y)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\winmgr.cpp:1447. The fizzle buffer is released through the
+// same virtual slot-0 + flag-1 tail Close uses on the manager's two
+// owned bitmaps. Its only caller is 0x41aa20, the same body that calls
+// SaveFizzleSourceX (0x41a8d5) and FizzleForwardX (0x41aa13).
+VA(0x006030c0, 0x19)  // anchor-caller + dc order, dc 0x19bba8
+void heroWindowManager::ReleaseFizzleSource()
+{
+    if (field_4C)
+        delete field_4C;
+    field_4C = 0;
+}

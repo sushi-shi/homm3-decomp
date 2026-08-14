@@ -97,6 +97,10 @@ public:
     void SaveFizzleSourceX(int startX, int startY, int width, int height);
     void FizzleForwardX(int startX, int startY, int width, int height,
                         int iFadeTime);
+    // 0x6030c0, the fizzle buffer's release. Order-mapped between
+    // FizzleForwardX and FadeToBlack and byte-shaped: it deletes
+    // field_4C through the virtual slot-0 tail and nulls it.
+    void ReleaseFizzleSource();
     void FadeScreen(int inOut, int speed, unsigned char expect_fadein);
     void FadeToBlack(int speed, unsigned char expect_fadein);
     void FadeFromBlack(int speed);
