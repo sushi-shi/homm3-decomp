@@ -69,6 +69,23 @@ int oldmain();                                           // 0x4ee3e0
 void MemError();                                         // 0x4f42c0
 int GameUnsaved();                                       // 0x4f4310
 void CheckEndGame(int bForceWin);                        // 0x4f2ce0
+// Retail .bss 0x6972b8, an INT that every CheckEndGame caller which then
+// wants to keep touching the adventure UI reads immediately afterwards -
+// 36 image-wide references, the bulk of them inside kb.obj's own band
+// beside CheckEndGame itself. The Dreamcast carries exactly one int
+// public that fits the role, `?gbGameOver@@3HA`; the name comes from
+// there and the address from retail. NOT claimed - the owning TU is
+// kb.cpp and its data band has not landed.
+//
+// GATED, and it has to be: ungated, this ONE `extern int` takes
+// recruit.obj's recruitUnit::Update 90.84 -> 88.24 - the same function
+// and the same two numbers the RS_ERASE_OBJECT enumerator produced last
+// round. So the standing note that plain externs are inert is wrong for
+// this consumer; kb.h reaches it and its include-set sensitivity counts
+// declarations of every kind. Measured both ways 2026-08-14.
+#ifdef HOMM3_EVENTS_VIEW
+extern int gbGameOver;
+#endif
 // The retail entry at 0x4f1190 is the five-byte public thunk used by
 // questlogwindow; the implementation body follows at 0x4f1820.
 int TrueFalseDialogHandler(message* msg);

@@ -13,6 +13,7 @@
 #include "kb.h"
 #include "misc.h"
 #include "mousemgr.h"
+#include "philai.h"
 #include "remote.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
@@ -2908,6 +2909,104 @@ void advManager::EraseObj(NewmapCell* thisCell, type_point point,
                    radarOrigin.y + type_cell_adjuster::MOBILE_HERO_CELL_Y,
                    radarOrigin.z),
         1);
+}
+
+// E:\gamedcs\events.cpp:5264.  A hero steps onto a town tile. Three
+// outcomes: the town is already friendly and is simply entered, the town
+// is hostile but undefended and changes hands without a fight, or it is
+// defended and a combat decides it.
+VA(0x004aafd0, 0x431)  // linkorder + GetTownId/DoCombat pair, dc 0x99eb0
+void advManager::TownEvent(NewmapCell* cell, type_point point,
+                           unsigned char human_player)
+{
+    town* thisTown = gpGame->GetTown(
+        gpGame->GetTownId(point.x, point.y, point.z));
+    hero* currentHero = gpGame->GetCurrHero();
+    int oldOwner = thisTown->owner;
+
+    DemobilizeCurrHero(0, 1);
+
+    if (gpGame->OnSameTeam(thisTown->owner, gNetLocalGamePos)) {
+        if (thisTown->owner == gNetLocalGamePos
+                && gpGame->mapHeader.victoryCondition
+                       .CheckForArtifactTransportWin(currentHero, point))
+            goto end_game;
+        if (human_player)
+            thisTown->View(0);
+        else
+            AI_enter_town(currentHero, thisTown);
+    } else if (!const_cast<armyGroup&>(thisTown->get_army()).HasCreatures()
+               && (thisTown->visitingHeroId < 0
+                   || thisTown->visitingHeroId == currentHero->id)) {
+        if (thisTown->garrisonHeroId > -1) {
+            HeroLoses(&gpGame->heroes[thisTown->garrisonHeroId], -1);
+            thisTown->garrisonHeroId = -1;
+        }
+        gpGame->ClaimTown(thisTown->id, gNetLocalGamePos, 0, 1);
+        thisTown->destroy_extra_capitol();
+        gpGame->mapHeader.lossCondition.CheckForDefeatedTownLoss(oldOwner,
+                                                                 thisTown);
+        CheckEndGame(0);
+        if (gbGameOver)
+            return;
+        UpdateRadar(1, 1, 0, 0, 0);
+        advWindow->UpdateHeroLocators(-1, 1, 1);
+        advWindow->UpdateTownLocators(-1, 1, 1);
+        if (gpGame->mapHeader.victoryCondition
+                .CheckForArtifactTransportWin(currentHero, point))
+            goto end_game;
+        if (human_player)
+            thisTown->View(0);
+        else
+            AI_enter_town(currentHero, thisTown);
+    } else {
+        hero* defender;
+        armyGroup* defendingArmy;
+
+        if (thisTown->visitingHeroId >= 0) {
+            defender = gpGame->GetHero(thisTown->visitingHeroId);
+            if (thisTown->garrisonHeroId >= 0) {
+                DoCombat(point, currentHero, &currentHero->army,
+                         defender->owner, 0, defender, &defender->army,
+                         -1, 1, 0);
+                currentHero->CheckLevel();
+                CheckEndGame(0);
+                return;
+            }
+            defender->army.merge_armies(
+                const_cast<armyGroup*>(&thisTown->get_army()));
+            defendingArmy = &defender->army;
+        } else {
+            if (thisTown->garrisonHeroId < 0)
+                defender = 0;
+            else
+                defender = gpGame->GetHero(thisTown->garrisonHeroId);
+            defendingArmy = const_cast<armyGroup*>(&thisTown->get_army());
+        }
+
+        if (DoCombat(point, currentHero, &currentHero->army,
+                     thisTown->owner, thisTown, defender, defendingArmy,
+                     -1, 1, 0) == 0) {
+            thisTown->garrisonHeroId = -1;
+            gpGame->ClaimTown(thisTown->id, gNetLocalGamePos, 0, 1);
+            thisTown->destroy_extra_capitol();
+            if (gpGame->mapHeader.lossCondition.CheckForDefeatedTownLoss(
+                    oldOwner, thisTown))
+                CheckEndGame(0);
+            if (gbGameOver)
+                return;
+            UpdateRadar(1, 1, 0, 0, 0);
+            advWindow->UpdateHeroLocators(-1, 1, 1);
+            advWindow->UpdateTownLocators(-1, 1, 1);
+        }
+    }
+
+    thisTown->GiveSpells(0);
+    currentHero->CheckLevel();
+    gpGame->mapHeader.victoryCondition.CheckForTotalCreatures();
+    gpGame->mapHeader.victoryCondition.CheckForTotalResources();
+end_game:
+    CheckEndGame(0);
 }
 
 // E:\gamedcs\events.cpp:6007.  Retires a hero from the adventure map -

@@ -9,8 +9,18 @@
 #include "herospec.h"  // TSecondarySkill, the appraisals' skill parameter
 
 class hero;
+class town;
 
 long AI_get_spell_value(const hero* our_hero, SpellID spell);
+
+// 0x5253d0. DECLARED, not defined - advManager::TownEvent is the caller
+// that needs the declarator, and TownEvent is also what located the row:
+// the Dreamcast xref graph gives TownEvent exactly ONE philai.obj callee,
+// retail's call is a /Gr two-register fastcall taking (hero*, town*) in
+// that callee's own parameter order, and 0x5253d0 lands in the
+// path..philai link bracket whose only candidate compilands are path.obj
+// and philai.obj. The row is not claimed from here.
+void AI_enter_town(hero* current_hero, town* current_town);
 
 // Retail .data 0x678370, the row immediately after tradpost.h's
 // fTradingPostEfficency (0x678344): three consecutive eleven-float rows
