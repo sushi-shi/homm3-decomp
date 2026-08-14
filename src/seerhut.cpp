@@ -3,6 +3,8 @@
 // 24 functions in link order; 21 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "seerhut.h"
+#include "hero.h"
+#include "quest.h"
 
 #if 0  // @carcass: older Dreamcast quest model, not retail SoD source order
 
@@ -175,6 +177,63 @@ TSeerHut* std::__copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __
 }
 
 #endif  // @carcass
+
+// --- retail's virtual quest family ------------------------------------
+// The Dreamcast port has no counterpart for any of these: its TSeerHut
+// carries the quest inline and switches on a type word. Retail's ten quest
+// classes each own a 13-slot vtable, and the two slots reconstructed below
+// are the ones whose bodies are self-identifying.
+//
+// Slot 2 is the "does this hero satisfy the quest" predicate, and the three
+// bodies here name their own classes: the experience quest compares the
+// short at hero+0x55 (hero::level), the be-hero quest the dword at hero+0x1a
+// (hero::id), and the belong-to-player quest the signed byte at hero+0x22
+// (hero::owner) - three different widths at three fields hero.h already
+// names, each matching its class. Slot 8 is the type discriminator, a bare
+// constant, and its four values agree with the same class names: 3, 4, 8, 9.
+// Retail-only rows: no Dreamcast roster entry corresponds to any of them.
+
+VA(0x0056d490, 0x1A)  // anchor-vtable 0x641788 slot 2, retail-only
+int type_experience_quest::is_satisfied(const hero* current_hero)
+{
+    return current_hero->level >= required_level;
+}
+
+VA(0x0056e3d0, 0x06)  // anchor-vtable 0x641800 slot 8, retail-only
+int type_defeat_hero_quest::quest_type()
+{
+    return 3;
+}
+
+VA(0x0056ebc0, 0x06)  // anchor-vtable 0x64183c slot 8, retail-only
+int type_monster_quest::quest_type()
+{
+    return 4;
+}
+
+VA(0x00571f00, 0x19)  // anchor-vtable 0x64192c slot 2, retail-only
+int type_be_hero_quest::is_satisfied(const hero* current_hero)
+{
+    return current_hero->id == required_hero;
+}
+
+VA(0x005721f0, 0x06)  // anchor-vtable 0x64192c slot 8, retail-only
+int type_be_hero_quest::quest_type()
+{
+    return 8;
+}
+
+VA(0x005724f0, 0x1A)  // anchor-vtable 0x641968 slot 2, retail-only
+int type_belong_to_player_quest::is_satisfied(const hero* current_hero)
+{
+    return current_hero->owner == required_owner;
+}
+
+VA(0x00572810, 0x06)  // anchor-vtable 0x641968 slot 8, retail-only
+int type_belong_to_player_quest::quest_type()
+{
+    return 9;
+}
 
 // The retail identity is fixed by its 0x13-byte vector stride, two NewfullMap
 // construction callers, and the independently verified cross-build body.
