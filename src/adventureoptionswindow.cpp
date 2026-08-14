@@ -23,14 +23,34 @@ DATA(0x006a6530) extern THelpText gAdventureWindowHelp[7];
 DATA(0x0065f46c) static int lastIMHoverID = -1;
 
 // E:\gamedcs\adventureoptionswindow.cpp:40
-// Residual (89.5711%): every widget, argument, literal, hotkey, player gate,
-// post-reserve gameplay branch and return agrees. Retail's inlined
-// vector<widget*>::reserve calls the shared _Ucopy/range-destroy helpers;
-// this SP3 compile expands the element-copy/cleanup loop, adding two branches
-// and perturbing downstream register scheduling. The identical instantiation
-// is already bounded by the quickinfowindow/armygrp probes: inline-depth 0/1,
-// a reserve adapter, named-local variants and type-population noise did not
-// recover retail's helper choice.
+// EXACT 2026-08-14 (95.1212 -> 100.0). The residual was the usual
+// vector<widget*>::reserve phase - retail's inlined reserve calls the shared
+// _Ucopy/range-destroy helpers while this SP3 compile expanded the
+// element-copy/cleanup loop, adding two branches and perturbing downstream
+// register scheduling. Earlier probes bounded the wrong axes (inline-depth
+// 0/1, a reserve adapter, named-local variants, type-population noise); the
+// input is the /Ob2 budget, solved in mainmenu.cpp and gametypewindow.cpp.
+// Two-axis titration (byte-inert pad statements ahead of `reserve` x xx_nop
+// candidate sites at the tail) puts this constructor in a narrow cell:
+//     M\k        0         1         2         3
+//     0     95.1212  100.0000  100.0000  100.0000
+//     2     95.1212   95.1212  100.0000  100.0000
+//     8     95.1212   95.1212  100.0000  100.0000
+//     16    95.1212   95.1212   95.1212  100.0000
+//     32    95.1212   95.1212   95.1212   95.1212
+// so the supply has to be TWO sites carrying at most a couple of statements of
+// mass. The guarded do-while registration loop below is exactly that: naming
+// `Widgets.begin()` and `Widgets.end()` twice each is +2 candidate sites whose
+// duplicate loads are CSE-folded, and a `for` over a non-empty range is the
+// same guarded do-while the compiler builds anyway. The loop SHAPE is
+// load-bearing on top of the count: every `for`-bodied +2 spelling stops at
+// 99.9720 with retail's `mov esi,[edi+0x34]; mov eax,[edi+0x38]` pair
+// transposed (the hoisted-first guard, a hoisted `last` as well, the bare
+// begin/end guard, the reversed guard, and the guard with `it` hoisted out of
+// the `for`), while `<` instead of `!=` is 99.8322. Also measured and NOT +2:
+// `if (!Widgets.empty())` 93.4662, a pointer local 95.0210,
+// `insert(end(), x)` on the last push_back 95.1072, on `accept` 93.2214, on
+// the background 91.9790.
 VA(0x004051d0, 0x4AA)  // advopts.pcx + advManager caller, dc 0x4cf4
 TAdventureOptionsWindow::TAdventureOptionsWindow()
     : CAdvPopup(255, 106, 289, 387, 0x12)
@@ -86,11 +106,15 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
         ADVENTURE_OPTION_ROLLOVER_ID, 5, 0, 8);
     Widgets.push_back(RolloverWidget);
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
-        if (*it)
-            AddWidget(*it, -1);
-        else
-            MemError();
+    widget** first = Widgets.begin();
+    if (first != Widgets.end()) {
+        widget** it = Widgets.begin();
+        do {
+            if (*it)
+                AddWidget(*it, -1);
+            else
+                MemError();
+        } while (++it != Widgets.end());
     }
 
     if (gpCurrentPlayer->currHeroId == -1) {

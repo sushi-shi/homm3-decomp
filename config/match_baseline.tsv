@@ -8,7 +8,7 @@ adventuremapwindow	?ClearBottomView@TAdventureMapWindow@@QAEXXZ	100.0000	100.000
 adventuremapwindow	?UpdateResourceDisplay@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f00
 adventuremapwindow	?UpdateSpellButton@TAdventureMapWindow@@QAEXPBVhero@@@Z	100.0000	100.0000	100.0000	0x3bf0
 adventuremapwindow	?animate_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2b90
-adventureoptionswindow	??0TAdventureOptionsWindow@@QAE@XZ	95.1212	95.1212	95.1212	0x51d0
+adventureoptionswindow	??0TAdventureOptionsWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x51d0
 adventureoptionswindow	??1TAdventureOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x56c0
 adventureoptionswindow	??_GTAdventureOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5690
 adventureoptionswindow	?WindowHandler@TAdventureOptionsWindow@@UAEHPAVmessage@@@Z	99.9367	99.9367	99.9367	0x5730
