@@ -99,6 +99,30 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 // behind HOMM3_TOWN_OBJ_DECLS is the obvious follow-up, and quicktownwindow's
 // and armygrp's `town::HasBuilding` rows are the neighbours that would pay for
 // the same edit.
+// 2026-08-14, town.h OPENED and the follow-up was surveyed before spending the
+// edit: IT HAS NO CONSUMER THAT CAN PAY TODAY, so the helper stays file-local.
+// `town::get_location` has exactly TEN DC call sites and every one is either
+// unreconstructed, already converted, or a Dreamcast-only factoring:
+//   advManager::DoAdvCommand / TownQuickView / SetTownContext, and
+//     advspells' advManager::TownGate - all four score 0.0, not reconstructed
+//   type_town_threat_checker::mark_towns - no reconstructed row
+//   searchArray::check_town_portal - no reconstructed row
+//   townManager::MoveHero - another lane's unit
+//   town::PlaceInMap - ALREADY 100.0000 without it
+//   town::get_legion_bonus - 81.7262, and RETAIL'S x86 BODY CONTAINS NO
+//     type_point AT ALL (84 instructions, no struct return, no map lookup), so
+//     that census row is Dreamcast source too. Seven spellings measured against
+//     it while town.cpp was open, all negative or flat: explicit per-arm
+//     assignment 81.0714, `2 * growth` 81.0714, per-arm divide 75.0000, keeping
+//     `bonus = growth` ahead of an else-arm 81.7262 (flat), direct returns per
+//     arm 73.8691 twice, and two independent `if`s 63.3333. Its residual is the
+//     bonus/growth register split and retail's THREE duplicated `/2` tails
+//     against our two - a block-duplication class, not a struct return.
+//   can_take_town - this body, already converted below
+// The promotion becomes worth making when advmgr's three rows and
+// event_record are reconstructed; until then it is a wide-header edit with a
+// documented downside (an ungated town.h slice once cost initialize_game_data
+// 100.0 -> 96.09) and no upside.
 static type_point get_location(const town* t)
 {
     short town_x = t->mapX;
