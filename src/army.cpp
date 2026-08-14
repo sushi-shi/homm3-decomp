@@ -33,9 +33,13 @@
 #undef HOMM3_CMBTMGR_ROUND_VIEW
 #undef HOMM3_CMBTMGR_RESURRECT_VIEW
 #undef HOMM3_CMBTMGR_MOVE_VIEW
+#include "csprite.h"
 #include "drawing.h"
 #include "hero.h"
+#include "kb.h"
+#include "kbwin.h"
 #include "misc.h"
+#include "prefs.h"
 #include "sample.h"
 #include "soundmgr.h"
 #include "town.h"
@@ -1819,17 +1823,81 @@ void army::SetupAnimation()
     gpCombatManager->field_53b8 = 0;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:4995
-// RETAIL_LOCATED(0x00446940, 0x2FE)  // anchor-bracket, dc 0x4b624
+// Run one animation sequence to the screen, frame by frame, pacing
+// itself off the adventure timer. Every frame first repaints the clean
+// background SetupAnimation captured over the extent the LAST frame
+// dirtied, then redraws this stack into the buffer with the extent
+// widened by half a hex either side, unions the two rectangles, takes a
+// full frame and blits exactly that union. Quick combat skips the lot.
+VA(0x00446940, 0x2FE)  // anchor-bracket, dc 0x4b624
 void army::PlayAnimation(int sequence, int nframes, int start_frame)
 {
-    // @stub
-}
+    if (gpCombatManager->IsQuickCombat())
+        return;
+    if (nframes < 0)
+        nframes = stdIcon->GetNumFrames(sequence) - start_frame;
+    currFrameType = sequence;
+    int frameDelay;
+    if (sequence == 0)
+        frameDelay = static_cast<int>(
+            static_cast<float>(frameInfoWalkCycleTime)
+            * gCombatSpeedFactors[gUnnamed698758.combatSpeed]
+            / static_cast<float>(stdIcon->GetNumFrames(0)));
+    else
+        frameDelay = static_cast<int>(
+            gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 100.0f);
 
-// E:\gamedcs\army.cpp:5096
-#endif  // @carcass
+    TDrawbridgeBounds bounds = gpCombatManager->drawbridgeBounds;
+    for (currFrameIndex = start_frame;
+         currFrameIndex < nframes + start_frame; currFrameIndex++) {
+        TDrawbridgeBounds frame = bounds;
+        gpCombatManager->field_53b0->Draw(
+            frame.values[0], frame.values[1],
+            frame.values[2] - frame.values[0] + 1,
+            frame.values[3] - frame.values[1] + 1,
+            gpWindowManager->screenBitmap->map,
+            frame.values[0], frame.values[1],
+            gpWindowManager->screenBitmap->Width,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->Pitch, false);
+
+        gpCombatManager->drawbridgeBounds = gCombatAreaLimits;
+        gpCombatManager->field_13d2c = 1;
+        gpCombatManager->field_13d34 = 1;
+        DrawToBuffer(gpCombatManager->cells[gridIndex].field_00,
+                     gpCombatManager->cells[gridIndex].field_02, 0);
+        gpCombatManager->field_13d34 = 0;
+        gpCombatManager->field_13d2c = 0;
+
+        gpCombatManager->drawbridgeBounds.values[0] -= 17;
+        gpCombatManager->drawbridgeBounds.values[2] += 17;
+        bounds = gpCombatManager->drawbridgeBounds;
+        if (frame.values[0] > bounds.values[0])
+            frame.values[0] = bounds.values[0];
+        if (frame.values[1] > bounds.values[1])
+            frame.values[1] = bounds.values[1];
+        if (frame.values[2] < bounds.values[2])
+            frame.values[2] = bounds.values[2];
+        if (frame.values[3] < bounds.values[3])
+            frame.values[3] = bounds.values[3];
+        gpCombatManager->drawbridgeBounds = frame;
+
+        gpCombatManager->field_13d30 = 1;
+        gpCombatManager->DrawFrame(0, 0, 0, 0, 0, 0);
+        gpCombatManager->field_13d30 = 0;
+        GameTime::DelayTil(glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]);
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT]
+            = GameTime::NextFrameTime(
+                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT], frameDelay);
+        gpWindowManager->UpdateScreen(
+            frame.values[0], frame.values[1],
+            frame.values[2] - frame.values[0] + 1,
+            frame.values[3] - frame.values[1] + 1);
+    }
+
+    if (nframes > 0)
+        currFrameIndex--;
+}
 
 // "Can this stack stand on destIndex?" - the placement predicate
 // searchArray::mark_teleport (0x4b2ff0) already calls with (hex, 0, 0).
