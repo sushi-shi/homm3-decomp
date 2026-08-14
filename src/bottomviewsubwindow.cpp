@@ -953,6 +953,25 @@ static const int gTownArmyCoords[7][2] = {
 // mass is. Open: which two candidate sites retail's body has after the
 // declaration that ours does not.
 //
+// STILL +2 AFTER THE GetCurrTown LANDING, re-measured 2026-08-14 with real
+// free candidates placed after the declaration: 97.36 base, 97.16 at +1,
+// 98.86 at +2, flat at +3. The Dreamcast line table BOUNDS the search and
+// cannot close it - dc 0x55df4 has NO LINE AT ALL between 476 (the creature
+// icon) and 493 (the loop's closing braces), i.e. the whole quantity-text
+// block is post-Dreamcast, and the DC army loop pushes the icon and nothing
+// else. The two sites are therefore somewhere in those sixteen source lines
+// and nowhere else in 2260 bytes; retail's and our call sequences across the
+// block are otherwise 1:1, so whatever they are, they emit no calls of their
+// own. Tried and rejected on that basis: `quantity_text.rdbuf()->str()` plus
+// `rdbuf()->freeze(false)`, the historical strstream idiom, which is
+// byte-neutral in itself and nets only ONE extra site (97.36 -> 97.16, the
+// same number the +1 probe gives). The sibling DC compilands are no help
+// either: TQuickTownWindow::initialize_army_display (dc 0x118564) and
+// TQuickHeroWindow (dc 0x1170bc) both format their counts with
+// `memset`+`sprintf` into a char buffer in the Dreamcast revision - the
+// S_REGREL32 record even names that buffer `quantity_text` - so the
+// ostrstream idiom is post-Dreamcast everywhere it appears.
+//
 // The silo sweep's own shape is a memory-homed `i`: retail indexes
 // `income[i]` as `[eax + 4*ecx]` and RELOADS `i` from [ebp-0x2c] after
 // every `slots[found++] = i` store, because that store may alias it,
@@ -1120,6 +1139,30 @@ TBottomViewTown::~TBottomViewTown()
 // of its own. No plausible statement with that signature has been
 // found, so the probe is deliberately NOT landed - a bare
 // `Widgets.size();` is a score, not a reconstruction.
+//
+// THE DREAMCAST LINE TABLE SAYS THIS BODY HAS NO POST-DC REGION AT ALL
+// (2026-08-14, `python3 -m homm3.analysis.dc_lines 0x563b8`). All 41 DC
+// statements account for retail's body one for one, which rules out the
+// direction that closed TViewArmyWindow - there is no later-edited block
+// for the site to hide in. It must therefore be a statement the Dreamcast
+// build SPELLS DIFFERENTLY, and the table names the only three:
+//   * line 524 is a `memset` where we write four assignments. REFUSED, and
+//     the refusal is the asymmetry rule working: retail's bytes disagree.
+//     VC6 under /O2 expands memset as the intrinsic (`mov ecx,N / rep
+//     stosd`, as armyGroup::armyGroup shows), not the four `mov [ebp-N],eax`
+//     stores retail emits here - and an intrinsic is not a candidate site
+//     anyway.
+//   * lines 531/533/535 call `town::HasBuilding(id, check_included)`, a
+//     Town.h inline (dc 0x1fe14, Town.h:324) whose `check_included == 0` arm
+//     is exactly this ladder's 64-bit mask test, so retail's bytes DO agree.
+//     That is the strongest candidate, but it is three sites where the
+//     measurement wants one, and `town::HasBuilding`'s declaration lives
+//     behind `#ifdef HOMM3_TOWN_OBJ_DECLS` in town.h - making it a visible
+//     header inline is a declaration-surface change for every TU that
+//     includes town.h and it re-decides town.cpp's own caller. Not attempted
+//     here; it needs its own gated round with the full-tree diff.
+//   * lines 554/557 call `TTextResource::operator[]` where we call
+//     `GetText`. Both are one header inline, so the count is unchanged.
 //
 // The remaining 1.48 is a SECOND, independent divergence: our CL CSEs
 // the constant zero into ESI across the whole prologue (`xor esi,esi`,
