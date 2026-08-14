@@ -107,16 +107,21 @@ SIZE(CSaveScreen, 0x44);
 //   m_x           0   m_started     12 (byte)   m_saveScreen  16
 //   m_y           4   m_sending     13 (byte)
 //   m_lastFrame   8   m_drawText    14 (byte)
-// The destructor is DECLARED ONLY: retail's 0x557430 closes the Smacker
-// handle through an unnamed smackmgr free function at 0x599050 and then
-// `delete m_saveScreen` through CSaveScreen's slot 0, and naming that
-// smackmgr entry is out of this file's scope. CGameTransferDlg's implicit
-// destructor references it and that is all the ??_G below needs.
+// The destructor closes the Smacker handle through the 0x198xxx video
+// free function at 0x599050 and then deletes m_saveScreen through
+// CSaveScreen's slot 0. Its guard-and-clear half is CGameTransferSmack::Stop
+// byte for byte (0x5575e0 is those nine instructions and nothing else),
+// which is what proves the destructor's first statement is a Stop() call
+// rather than an open-coded repeat.
 class CGameTransferSmack {
 public:
     CGameTransferSmack();
     ~CGameTransferSmack();
     void Setup(int x, int y, unsigned char sending, unsigned char drawText);
+    void Start();
+    void Stop();
+    void SaveScreen();
+    void RestoreScreen();
 
 protected:
     int m_x;                     // +0x00

@@ -1269,6 +1269,7 @@ remote	??0CGameTransferDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x157720
 remote	??0CGameTransferSmack@@QAE@XZ	100.0000	100.0000	100.0000	0x157410
 remote	??0CNetMsgHandler@@QAE@XZ	100.0000	100.0000	100.0000	0x1577f0
 remote	??0CSaveScreen@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1572e0
+remote	??1CGameTransferSmack@@QAE@XZ	100.0000	100.0000	100.0000	0x157430
 remote	??_GCAnimatedDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x154a80
 remote	??_GCGameTransferDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157760
 remote	??_GCSaveScreen@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157310
@@ -1288,15 +1289,19 @@ remote	?Pause@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157dd0
 remote	?PauseTimeOuts@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x154050
 remote	?ReceiveChat@@YIXPADH@Z	100.0000	100.0000	100.0000	0x154a20
 remote	?Restore@CSaveScreen@@QAEXE@Z	100.0000	100.0000	100.0000	0x157390
+remote	?RestoreScreen@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x1576b0
 remote	?Resume@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157df0
 remote	?ResumeTimeOuts@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x154060
 remote	?Save@CSaveScreen@@QAEXHH@Z	100.0000	100.0000	100.0000	0x157350
+remote	?SaveScreen@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x157600
 remote	?SetAbortPopupMsg@CNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x157910
 remote	?SetDuration@CTurnDuration@@QAEXK@Z	100.0000	100.0000	100.0000	0x157d70
 remote	?SetMaxLines@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1540d0
 remote	?SetPosition@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x154170
 remote	?Setup@CGameTransferSmack@@QAEXHHEE@Z	100.0000	100.0000	100.0000	0x157460
+remote	?Start@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x157480
 remote	?Start@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157d90
+remote	?Stop@CGameTransferSmack@@QAEXXZ	100.0000	100.0000	100.0000	0x1575e0
 remote	?UpdateWidget@CChatManager@@QAEXPAVtextWidget@@EH@Z	100.0000	100.0000	100.0000	0x153d00
 remote	?UpdateWidgetText@CChatManager@@QAEXHPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x153ee0
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000	100.0000	100.0000	0x158720
