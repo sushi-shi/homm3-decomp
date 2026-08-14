@@ -559,12 +559,32 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 // those extra uses are what tip VC6 into parking 0 in EBX where retail
 // writes the immediate each time.
 //
-// MEASURED NEGATIVE - do not repeat: the body's site count does not reach a
-// mem-init expansion. Appending free candidate sites before `Influence[0]`
-// leaves this row at 97.1049 for +0, +1, +2, +3, +5 and +8, while the
-// armyGroup overload in the same TU moves 88.7021 -> 87.0343 -> 83.1490 on
-// the same probes. The probes reach the compiler; the member-construction
-// prologue is simply accounted separately from the body's site list.
+// THAT NEGATIVE IS WITHDRAWN (2026-08-14). It read "the body's site count
+// does not reach a mem-init expansion - 97.1049 at +0,+1,+2,+3,+5,+8". Re-run
+// with `Widgets.capacity();` (cb <= 0x28, so free, and it emits no bytes)
+// placed right after `Widgets.reserve(NWIDGETS)`, the row goes
+//     +1 -> 99.9352   +2 -> 99.9352   +3 -> 99.9352   +6 -> 92.8920
+// The prologue IS in the same site list as the body; the earlier probe simply
+// was not creating candidate sites. The window is one site wide, exactly as
+// the rule predicts: the two string members sit at consecutive indices, so
+// their allowances differ only by the factor (n-1)/(n-2), and cb of
+// `basic_string(const allocator&)` falls inside that gap. ONE more site drops
+// the later allowance onto the earlier one's side and both constructors
+// become calls, as retail has them.
+//
+// At +1 the body is byte-identical to retail except its LAST four
+// instructions: retail materializes the -1 for Influence[0..2] in EDX
+// (`or edx,-1`) and then re-pushes the immediate `push -0x1` for AddWidget
+// because EDX does not survive the call, where our compile parks it in the
+// callee-saved EBX and reuses it (`push ebx`). That is a why-reg residual and
+// all that is left of this row.
+//
+// So the open question is no longer "does the lever reach" but WHICH ONE
+// candidate site retail's source has that this body does not. The Dreamcast
+// xref for dc 0x19148c is no help - it lists exactly our call set (the eleven
+// create_* builders, reserve, push_back, begin, end, textWidget, MemError,
+// CAdvPopup, and basic_string twice) and nothing more. NOTHING IS LANDED: the
+// padding is a measurement, not a spelling.
 // E:\gamedcs\viewarmywindow.cpp:274
 VA(0x005f4210, 0x3C1)  // vtable-store + builder call set + CrStkPU.pcx, dc 0x19148c
 TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0,

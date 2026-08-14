@@ -127,6 +127,94 @@ predicts. Three worth naming:
   against our `…,15,16,14,0`): a throwing statement between two regions that
   our compile expanded away.
 
+## The signal converted — four rows worked, three landed (2026-08-14)
+
+| row | before | after | what the transcript named |
+|---|---|---|---|
+| `armygrp:?get_luck_description` | 74.7874 | **82.5689** | a whole extra lifetime: a branch-local `std::string` where retail returns the literal into the NRV |
+| `quickherowindow:??0TQuickHeroWindow` | 86.8447 | **90.7834** | an extra reset per if-arm: `push_back(new …)` in each arm, not a shared pointer pushed once |
+| `bottomviewsubwindow:??0TBottomViewTown` | 94.3114 | **95.6295** | a state store that moved: copy-initialize the `std::string`, do not default-construct and assign |
+| `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` | 97.1049 | (99.9352 measured, not landed) | the missing region is one free inline candidate site away |
+
+Two of the three landings were **invisible to every other lens**, and that is
+the finding worth keeping:
+
+- On `TQuickHeroWindow` the edit changes the object's call multiset by
+  **nothing at all** — VC6 tail-merges the two arms' `push_back` sequences
+  back down to a single `vector::insert` — so `predict-inline`, a CALL diff
+  and the score itself had no way to point at it. Only the unwind map did.
+- On `TBottomViewTown` the divergence was not a COUNT at all but the
+  **position** of a store: retail's `mov [ebp-4],5` sits after the whole
+  `strlen`/`_Grow`/`rep movs` block, ours sat before it. Read transcripts
+  POSITIONALLY — which instructions each store sits between — not just as a
+  multiset. `diagnose` reports COUNT/ORDER; the positional read is yours.
+
+Method that worked three times: **compare the two state sequences with their
+neighbouring calls attached** (`grep -E '\tcall\t|REL32|\[ebp - 0x4\]'` over
+`homm3 sema disasm --verbose` on both sides, then `diff`). The call names
+localize the store; the store localizes the statement.
+
+The Dreamcast xref graph is the natural corroborator for a lifetime claim,
+because it names the CALLS a compiland makes at source level:
+`awk -F'\t' '$1=="0x<dcoff>"' evidence/dc-xref-graph.tsv`. It confirmed
+`TBottomViewTown` reaches `basic_string`'s **constructor** (plus the
+`allocator<char>` temporary of the `const _A& = _A()` default argument) and no
+`operator=`.
+
+### What the remaining rows now say
+
+- **`ai_combat:?choose_melee`** `[0,1,-1]` vs `[0,1,0,-1]` — the missing reset
+  is not a statement: retail CALLS `type_monster_vector`'s copy constructor at
+  both local-copy sites and takes one of the two teardowns out of line, while
+  our compile expands both one level further (down to `std::vector`'s copy
+  ctor and to inline `operator delete`). Inline depth, not lifetimes.
+- **`armygrp:?get_morale_description`** — the one extra region is the inlined
+  `std::bitset<N>::_Xran()`: retail CALLS the out-of-line
+  "invalid bitset<N> position" thrower at `0x434ad0`, we expand the whole
+  `basic_string` + `out_of_range` + `_CxxThrowException` sequence at the
+  `test()` site and that string temporary is the extra lifetime. Every other
+  lifetime in that 2140-byte body already matches.
+- **`campaignbrief:??1TCampaignBrief`** (ORDER) — destruction order is
+  identical; only the unwind-map INDEX assigned to each `NewSMapHeader`
+  sub-object differs (retail `0x2c0→2, 0x2d0→3, 0x20→4, 0xa0→5`, ours
+  `0xa0→2, 0x2c0→3, 0x2d0→4, 0x20→5`). Retail numbers the derived class's own
+  members before the base's; we interleave. That is a `game.h` layout/ctor
+  question and the row's bigger residual is a callee-saved role swap
+  (`ebx`↔`edi`) anyway.
+- **`game:?Save`** — retail opens **44** more regions than we do and has 55
+  conditional branches against our 24. The transcript agrees for its first 13
+  stores and then we skip retail's 13/14/15. This is not a wall, it is an
+  unfinished body, and the transcript measures how unfinished: 44 object
+  lifetimes.
+- **`game:?Load`** — 80 stores against retail's 81, i.e. the lifetimes are
+  essentially right while the body is over-inlined (97 conditional branches
+  against 72). Opposite diagnosis to `Save` on the same pair of functions.
+
+### The recurring shape behind the COUNT rows: we inline one level deeper
+
+Once the lifetime bugs are out, every remaining row in the table is the same
+divergence in the same direction — **retail stops one inline level earlier
+than we do**: `basic_string::assign` (luck), `_Tidy` (`TQuickHeroWindow`),
+`bitset::_Xran` (morale), `type_monster_vector`'s ctor/dtor (`choose_melee`),
+`strstreambuf::strstreambuf` vs `basic_ostream`'s ctor (`TBottomViewTown`).
+Per `docs/vc6/inliner.md` that is the `budget / sites-remaining` allowance
+being too large, and the site-count probe quantifies the deficit per row —
+with `Widgets.capacity()`-style FREE candidates (cb ≤ 0x28, no bytes emitted):
+
+| row | extra free sites to flip | result |
+|---|---|---|
+| `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` | +1 | 97.1049 → **99.9352** |
+| `bottomviewsubwindow:??0TBottomViewTown` | +2 | 95.6295 → 97.4523 |
+| `armygrp:?get_luck_description` | +4 | 82.5689 → 90.1916 |
+
+**None of it is landed** — padding is a measurement, not a spelling. But the
+deficit is now a measured per-row integer, and "which candidate site does
+retail's source have here that ours does not" is a sharper question than "why
+won't this inline". Note the placement rule from `inliner.md` §5.9 still
+applies: a site helps only if it is at or after the divergent site in the
+tuple stream, except where the divergent site is at index 0 or in the
+member-initializer prologue, where any site in the body raises the divisor.
+
 ## Correction, same day — `[N,0,N+1,0,…]` is NOT a cleanup-count divergence
 
 The first draft of this document named a second recurring shape:
