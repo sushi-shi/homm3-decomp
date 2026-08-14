@@ -253,6 +253,39 @@ static bool ShipyardAffordable()
 char* GetBuildingInfo(const town* this_town, int buildingId,
                       unsigned char bIncludeTitle, unsigned char extended);
 
+// The two unclaimed rows behind it, screened 2026-08-14 by CALLSITE.
+//
+// 0x5d2da0 (488 B) IS a townManager method, and the body says so
+// outright: it opens `mov ecx,[ebx+0x38]` then reads +0x10 and +0xc off
+// that - this class's townToView, then its visiting and garrison hero
+// ids, the same three-load opening a dozen reconstructed rows here
+// share. It is EH-framed (0x11c of locals), has exactly ONE caller
+// (0x5d3af1), and is itself the first of GetBuildingInfo's fourteen
+// callers (0x5d2e50 is inside it). Worth claiming next lane; the
+// standing note that these rows are "not townManager methods" holds for
+// 0x5d2d80 only.
+//
+// 0x5d2d80 (30 B) is NOT this compiland's code and stays unclaimed. It
+// is `mov eax,ecx` + four stores of 14,15,16,17 - the four elemental
+// magic-school secondary skills - + `ret`: an inline default
+// constructor, no frame, returning `this`. All THREE image-wide callers
+// sit in AI code far outside this bracket (0x5258aa and 0x525952 inside
+// 0x5253d0, and 0x52b21e inside 0x52b1e0), and each builds it as a
+// STACK object: `lea ecx,[ebp-0x30] / call / lea edx,[ebp-0x30]` feeding
+// a /Gr evaluator.
+//
+// Cross-build callsite identity RAN and came back inconclusive, which is
+// itself the result. 0x5253d0 pairs with philai.obj's
+// `buy_special_building` on its whole callee multiset - can_build,
+// get_build_cost_array, buy_building, AI_resource_cost and
+// hero::GetExperienceIncrement, all five, and nothing else in the image
+// carries that set - but the Dreamcast build's copy of that function
+// calls no counterpart at the matching site: the SH4 build inlined it.
+// So no NAMED Dreamcast row can be its identity, and the DC townmgr.obj
+// roster is contiguous across the gap anyway (GetBuildingInfo 0x174f78
+// is followed directly by townManager::Main 0x175160). Guessing a name
+// here would be inventing one.
+
 // VC6's <xutility> reference-returning min/max, spelled file-locally for
 // the reason findpath.cpp and army.cpp record: retail materialises BOTH
 // operands into stack temps and selects between their ADDRESSES with two
@@ -1283,6 +1316,36 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // shape exactly. Both of THallWindow's int[9][18] initializers already
 // spell all 18 columns, and neither side emits a single `rep stosd`, so
 // that lever is already pulled here.
+
+// MEASURED 2026-08-14, and it sharpens "line-complete" into a target.
+// The row is NOT closed. Three structural facts, all compile-free:
+//
+//   * The FRAME LAYOUT differs, and that is what spreads the residual
+//     over the whole body. The two big tables agree exactly ([ebp-0x60c],
+//     [ebp-0x608], [ebp-0x5f0], [ebp-0x5e4] on both sides), but the small
+//     locals do not: retail parks the saved `this` at [ebp-0x7c] against
+//     our [ebp-0x60], and puts slotX at [ebp-0x50] / slotY at [ebp-0x2c]
+//     against our [ebp-0x58] / [ebp-0x34]. So retail holds about 0x2c
+//     MORE bytes of locals below slotX than we do, and 8 FEWER between
+//     the EH record and slotY. Every `[ebp-K]` in the body then differs
+//     by a constant - which is exactly the "diff is everywhere" picture,
+//     and it is a missing DECLARATION, not an expression-level cb tax.
+//
+//   * `sema diff --branches` reports 177 branches / 1 ret against
+//     retail's 179 / 2. Retail's second exit is a DUPLICATED epilogue on
+//     the AddWidget loop's not-entered path; we share one. Retail also
+//     hoists the `this` reload out of that loop (`mov ebx,[ebp-0x7c]`
+//     once, ahead of it) where we re-read [ebp-0x60] every iteration and
+//     hold a zero in EDI to test `*it` against - the register pressure of
+//     that extra live zero is what costs us the hoist.
+//
+//   * The EH state immediate is `push 0xb` in retail against our
+//     `push 0x0` - retail's frame carries a cleanup chain over eleven
+//     states. Read with the frame gap above, that is the same finding
+//     twice: retail constructs objects here that we do not.
+//
+// So the lever for lane 14 is to find ~0x2c bytes of retail locals (and
+// the destructors that give them EH states), not to titrate dead stores.
 
 // E:\gamedcs\townmgr.cpp:4302
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
