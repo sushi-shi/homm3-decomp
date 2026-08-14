@@ -564,6 +564,15 @@ unsigned char advManager::monsters_sell_out(hero* current_hero, NewmapCell* cell
 }
 
 // E:\gamedcs\events.cpp:3805
+// ARITY CORRECTION 2026-08-14: BOTH modifiers are STATIC members.
+// Retail 0x4a75c0 is a plain `ret` that takes the hero in ECX and the
+// creature type in EDX - /Gr fastcall, which a non-static member cannot
+// be - and the Dreamcast still scopes the row to advManager, so static
+// is the only spelling that satisfies both. The DC parameter counts
+// agree once read that way: get_like_modifier reports 2 (its two real
+// arguments) and get_force_modifier reports 1, which cannot include a
+// `this` because retail's 0x4a76c0 does take a float argument.
+// The declarator below therefore wants `static` when it lands.
 // RETAIL_LOCATED(0x004a75c0, 0xFD)  // anchor-global, dc 0x97144
 int advManager::get_like_modifier(hero* current_hero, TCreatureType creature)
 {
@@ -648,6 +657,20 @@ void advManager::do_event_whirlpool(hero* current_hero, NewmapCell* cell, unsign
 }
 
 // E:\gamedcs\events.cpp:4302
+// MISATTRIBUTION 2026-08-14 - DO NOT RECONSTRUCT AGAINST THIS ROW.
+// Retail 0x4aaa40 is 92 B and a PLAIN `ret`: no stack arguments at all,
+// where DispatchEvent has four. Its body frees two three-dword rows at
+// this+0xdc and this+0xec through operator delete, zeroes both, and
+// tail-calls 0x41b120 - a teardown helper, not an event dispatcher.
+// The size screen agrees: DC DispatchEvent is 6256 B, and the only
+// retail row in this bracket that can hold it is its PREDECESSOR
+// 0x4a84f0 (9538 B, EH-framed, opening on MobilizeCurrHero), which the
+// carcass currently hands to do_event_whirlpool - a 96-byte DC row that
+// DispatchEvent is the sole caller of, i.e. exactly the /Ob2
+// single-call-site shape. The working hypothesis is therefore
+// 0x4a84f0 = DispatchEvent with do_event_whirlpool inlined into it, and
+// 0x4aaa40 a retail-only row with no Dreamcast twin. Both pairings need
+// body proof before either address is claimed.
 // RETAIL_LOCATED(0x004aaa40, 0x5C)  // linkorder, dc 0x9824c
 void advManager::DispatchEvent(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
 {
