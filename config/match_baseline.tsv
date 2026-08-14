@@ -18,6 +18,8 @@ adventuremapwindow	?UpdateHeroLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	1
 adventuremapwindow	?UpdateResourceDisplay@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f00
 adventuremapwindow	?UpdateSleepButton@TAdventureMapWindow@@QAEXPBVhero@@@Z	100.0000	100.0000	100.0000	0x3ba0
 adventuremapwindow	?UpdateSpellButton@TAdventureMapWindow@@QAEXPBVhero@@@Z	100.0000	100.0000	100.0000	0x3bf0
+adventuremapwindow	?UpdateTownLocator@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x37a0
+adventuremapwindow	?UpdateTownLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3420
 adventuremapwindow	?animate_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2b90
 adventuremapwindow	?draw_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2bc0
 adventuremapwindow	?set_bottom_view@TAdventureMapWindow@@QAEXPAVtype_bottom_view_window@@@Z	100.0000	100.0000	100.0000	0x2c10
