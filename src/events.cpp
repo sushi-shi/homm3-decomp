@@ -2124,6 +2124,79 @@ void advManager::DoEventWanderingMonster(NewmapCell* cell, hero* current_hero,
     movingObjectSequence = -1;
 }
 
+// An ai_player..ai_tactical bracket helper (109 B at 0x433b40) the AI arm
+// of the tomb runs after picking the artifact up: it walks the hero's
+// backpack from get_last_backpack_index down and offers each entry to
+// 0x433e20 with request 0x13. Retail takes the hero in ECX and pushes
+// nothing, which under /Gr is exactly a one-pointer free function - so it
+// is spelled that way here rather than invented as a `hero` member. The
+// call relocation's SYMBOL NAME is not scored; the identity of the callee
+// belongs to whichever AI TU lands it, and this declarator claims nothing.
+void AiFn_00433B40(hero* current_hero);
+
+// E:\gamedcs\events.cpp:4039.  The warrior's tomb: a yes/no prompt for a
+// human, a two-part "would this even help?" screen for the AI, and then
+// the same body either way - take the buried artifact if there is one and
+// pay -3 morale, once per hero, whatever the outcome.
+//
+// The two guards on the AI arm are what the prompt replaces: it declines
+// tombs its own team has already opened (the inlined PlayerKnowsCell over
+// the eight-bit visited lane) and tombs it could not carry the artifact
+// out of (a full 64-slot backpack). The human arm asks instead, and reads
+// the answer back out of heroWindowManager::dialogReturn.
+//
+// The backpack test is then repeated verbatim on the shared path, which
+// is why get_number_in_backpack is called TWICE on the AI arm: retail does
+// not fold the two, so neither does this.
+VA(0x004a7c30, 0x1A1)  // linkorder + advevent.txt 161/162/163, dc 0x9784c
+void advManager::do_event_warrior_tomb(hero* current_hero, ExtraInfoUnion* cell,
+                                       bool human_player)
+{
+    if (human_player) {
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_WARRIOR_TOMB_PROMPT),
+                     2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            return;
+    } else {
+        if (cell->PlayerKnowsCell(gNetLocalGamePos))
+            return;
+        if (current_hero->get_number_in_backpack(1) >= 64)
+            return;
+    }
+
+    if (cell->tomb_is_full() && current_hero->get_number_in_backpack(1) < 64) {
+        type_artifact artifact;
+        artifact.artifactId = cell->get_tomb_artifact();
+        artifact.extra = -1;
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_WARRIOR_TOMB_ARTIFACT),
+                    akArtifactTraits[artifact.artifactId].name);
+            // iResType1 8 is the artifact picture class; the water wheel's
+            // twin passes a resource id in the same slot.
+            NormalDialog(gText, 1, -1, -1, 8, artifact.artifactId,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        current_hero->GiveArtifact(&artifact, 1, 1);
+        if (!human_player)
+            AiFn_00433B40(current_hero);
+        cell->empty_tomb();
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WARRIOR_TOMB_EMPTY),
+                         1, -1, -1, 16, 0, 16, 0, -1, 0, 16, 0);
+    }
+
+    cell->SetCellVisited(current_hero->owner);
+    if (!(current_hero->flags & 0x200000)) {
+        current_hero->flags |= 0x200000;
+        current_hero->field_11a -= 3;
+    }
+}
+
 // E:\gamedcs\events.cpp:4090.  The water wheel banks 500 gold per turn
 // in a five-bit counter; visiting it empties the counter and pays out.
 // `human_player` only gates the dialog - the payout and the reset run
@@ -2215,6 +2288,63 @@ void advManager::do_event_windmill(hero* current_hero, ExtraInfoUnion* cell,
                          1, -1, -1, resource, amount, -1, 0, -1, 0, -1, 0);
         current_hero->GiveResource(resource, amount);
         cell->set_windmill(resource, 0);
+    }
+}
+
+// E:\gamedcs\events.cpp:4170.  The witch hut teaches one fixed secondary
+// skill. The cell is stamped visited and the team's WitchHutInfo flag is
+// set BEFORE anything is decided - the visit counts even when nothing is
+// learned - and the four outcomes then cascade: no skill on the cell at
+// all, the hero already has it, the hero is already carrying eight, or the
+// skill is taught.
+//
+// The two rejection arms are byte-identical apart from the text row, and
+// retail cross-jumps the second into the first's sprintf/NormalDialog tail
+// rather than emitting it twice; writing them out longhand is what lets
+// our CL find the same merge.
+VA(0x004a8080, 0x1A5)  // linkorder + GlobalInfoFlags[WitchHutInfo], dc 0x97dc8
+void advManager::do_event_witch_hut(hero* current_hero, ExtraInfoUnion* cell,
+                                    bool human_player)
+{
+    int skill = cell->get_witch_skill();
+
+    cell->SetCellVisited(current_hero->owner);
+    gpGame->SetInfoFlag(WitchHutInfo, gNetLocalGamePos);
+    if (skill == -1) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WITCH_HUT_NO_SKILL),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else if (current_hero->skillLevel[skill]) {
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_WITCH_HUT_KNOWN),
+                    akSSkillTraits[skill].name);
+            goto refuse;
+        }
+    } else if (current_hero->skillCount >= 8) {
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_WITCH_HUT_FULL),
+                    akSSkillTraits[skill].name);
+refuse:
+            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+    } else {
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_WITCH_HUT_LEARN),
+                    akSSkillTraits[skill].name);
+            // iResType1 20 is the secondary-skill picture class and the
+            // extra is the icon slot: three mastery frames per skill, the
+            // basic one being 3*skill + 3.
+            NormalDialog(gText, 1, -1, -1, 20, skill * 3 + 3,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        current_hero->GiveSS(skill, 1);
     }
 }
 

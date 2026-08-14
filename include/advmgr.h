@@ -42,10 +42,48 @@ struct type_windmill_info {
 };
 SIZE(type_windmill_info, 4);
 
+// do_event_warrior_tomb (0x4a7c30) reads a ONE-BIT occupancy flag at bit 0
+// (`test byte ptr [cell],1`) and a SIGNED ten-bit artifact id at bits
+// 13..22 (`shl eax,9 / sar eax,0x16`); emptying the tomb clears bit 0
+// alone (`and al,0xfe` over the whole dword), so the two lanes are
+// separate fields rather than one packed value.
+struct type_tomb_info {
+    unsigned long has_artifact : 1;
+    unsigned long unused : 12;
+    signed long artifact : 10;
+    unsigned long tail : 9;
+};
+SIZE(type_tomb_info, 4);
+
+// do_event_witch_hut (0x4a8080) reads a SIGNED seven-bit secondary-skill
+// id at bits 13..19 (`shl esi,0xc / sar esi,0x19`) and compares it with
+// -1 - the all-ones encoding this header already names
+// WitchHutNoSkillMask (0x000fe000), i.e. exactly these seven bits.
+struct type_witch_hut_info {
+    unsigned long unused : 13;
+    signed long skill : 7;
+    unsigned long tail : 12;
+};
+SIZE(type_witch_hut_info, 4);
+
+// The eight-bit team-visibility lane SetCellVisited writes. Proven from
+// the READER side here: do_event_warrior_tomb's inlined PlayerKnowsCell
+// narrows the AND to one byte (`mov ecx,[cell] / shr ecx,5 / test cl,al`),
+// which is only legal because the field is exactly eight bits wide.
+struct type_cell_visited_info {
+    unsigned long unused : 5;
+    unsigned long visited : 8;
+    unsigned long tail : 19;
+};
+SIZE(type_cell_visited_info, 4);
+
 union ExtraInfoUnion {
     unsigned long value;
     type_water_wheel_info water_wheel_info;
     type_windmill_info windmill_info;
+    type_tomb_info tomb_info;
+    type_witch_hut_info witch_hut_info;
+    type_cell_visited_info cell_visited_info;
 
     void SetCellVisited(short player);
 
@@ -69,6 +107,30 @@ union ExtraInfoUnion {
         windmill_info.resource = resource;
         windmill_info.amount = amount;
     }
+
+    // The five further MapCell.h accessors the tomb and witch-hut
+    // handlers inline. Dreamcast decorations fix every signature:
+    // PlayerKnowsCell is `unsigned char (short) const` (MapCell.h:914),
+    // tomb_is_full `unsigned char () const` (1203), get_tomb_artifact
+    // `TArtifact () const` (1198), empty_tomb `void ()` (1193) and
+    // get_witch_skill `TSecondarySkill () const` (1246).
+    //
+    // The two enum-returning getters are spelled `int` because neither
+    // TArtifact nor TSecondarySkill has a modelled definition in this
+    // tree; the WIDTH is what the bytes constrain, and an enum return is
+    // int-wide under VC6, so no truncation barrier exists on either -
+    // which is what lets do_event_witch_hut compare the raw skill with
+    // `cmp esi,-1` and index the trait table without a `movsx`.
+    unsigned char PlayerKnowsCell(short player) const
+    {
+        if (player < 0 || player >= 8)
+            return 0;
+        return (cell_visited_info.visited & (1 << player)) != 0;
+    }
+    unsigned char tomb_is_full() const { return tomb_info.has_artifact; }
+    int get_tomb_artifact() const { return tomb_info.artifact; }
+    void empty_tomb() { tomb_info.has_artifact = 0; }
+    int get_witch_skill() const { return witch_hut_info.skill; }
 };
 SIZE(ExtraInfoUnion, 4);
 #endif
@@ -726,12 +788,16 @@ public:
     // to ExtraInfoUnion::SetCellVisited as `this`, i.e. only the +0x00
     // dword is ever touched. The access specifier is dropped because
     // advManager is a single public block here.
+    void do_event_warrior_tomb(class hero* current_hero, ExtraInfoUnion* cell,
+                               bool human_player);
     void do_event_watering_hole(class hero* current_hero, NewmapCell* cell,
                                 bool human_player);
     void do_event_water_wheel(class hero* current_hero, ExtraInfoUnion* cell,
                               bool human_player);
     void do_event_windmill(class hero* current_hero, ExtraInfoUnion* cell,
                            bool human_player);
+    void do_event_witch_hut(class hero* current_hero, ExtraInfoUnion* cell,
+                            bool human_player);
     void DoWanderingMonsterResult(NewmapCell* cell, class hero* current_hero,
                                   type_point point, bool human_player);
     void DoEventWanderingMonster(NewmapCell* cell, class hero* current_hero,
