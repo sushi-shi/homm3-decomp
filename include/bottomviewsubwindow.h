@@ -22,7 +22,10 @@ public:
     // pass 0x7d0 for the backdrop and 0x834 for the text.
     enum EWidgetIDs {
         BOTTOM_VIEW_BACKGROUND_ID = 0x7d0,
-        BOTTOM_VIEW_TEXT_ID = 0x834
+        BOTTOM_VIEW_TEXT_ID = 0x834,
+        // The enemy-turn window numbers its own widgets from a separate
+        // base; its constructor seeds one incrementing local with 0x88e.
+        BOTTOM_VIEW_ENEMY_TURN_ID = 0x88e
     };
 
     type_bottom_view_window(heroWindow* parent_window);
@@ -60,14 +63,36 @@ SIZE(TBottomViewKingdom, 0x34);
 // not. Every derived destructor here is virtual and empty in retail - all
 // seven bodies are byte-identical apart from their EH table pointer, each
 // one the base destructor inlined whole.
+// The 0x40-byte derived tail is byte-proven twice over - the constructor
+// writes every field and animate reads every one of them back.
 class TBottomViewEnemyTurn : public type_bottom_view_window {
-private:
-    char pad_034[0x40];
-
 public:
+    // +0x34, 'crest58.def' at (20,51). Its FRAME is the acting player's
+    // game position, and animate re-frames it whenever that position
+    // changes - which is what pairs it with lastPlayerPos below.
+    iconWidget* crest;
+    // +0x38 / +0x3c, the two halves of the hourglass at (98,51):
+    // 'HourGlas.def' is the animated one (animate reads ITS sprite's
+    // sequence-0 frame count) and 'HourSand.def' the level indicator.
+    iconWidget* hourGlass;
+    iconWidget* sand;
+    unsigned long lastStepTime;  // +0x40, GameTime::Get at the last step
+    // +0x44. One entry per player, filled here and refreshed by animate
+    // through the SAME sum_mobility below, which is why the two bodies
+    // carry the identical inlined loop.
+    long mobility[8];
+    int lastPlayerPos;           // +0x64
+    int frame;                   // +0x68
+    int frameDelay;              // +0x6c, 50 ticks
+    int step;                    // +0x70
+
     TBottomViewEnemyTurn(heroWindow* parent);
     virtual ~TBottomViewEnemyTurn();
     virtual void animate();
+
+    // dc 0x56bbc, :646. No retail body: /Ob2 expands it into both of
+    // its call sites and the unreferenced copy is dropped.
+    long sum_mobility(long player_id);
 };
 SIZE(TBottomViewEnemyTurn, 0x74);
 

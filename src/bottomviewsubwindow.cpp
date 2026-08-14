@@ -548,11 +548,189 @@ TBottomViewKingdom::~TBottomViewKingdom()
 {
 }
 
-// BLOCKED on the constructor: VA_COMPGEN(0x00453640, 0x21, SCALAR_DELETING_DTOR, TBottomViewEnemyTurn)
+// E:\gamedcs\bottomviewsubwindow.cpp:599
+// The enemy-turn banner. Its four widgets and the eight-entry mobility
+// row are all read straight off the body:
+//
+//   * the backdrop is 'AdStatNx.pcx' - the Nx twin of the Ot bitmap the
+//     other six use - at the full 176x166 with style 0x800;
+//   * 'crest58.def' at (20,51,58,64) with the acting player's position
+//     as its FRAME, then the two hourglass halves at the same
+//     (98,51,58,64): 'HourSand.def' (frame reset to 0) and
+//     'HourGlas.def';
+//   * the two captions only exist when the acting player is human -
+//     general text 631 at y=20 and the player's own name at y=123, both
+//     'medfont.fnt' in font::PRIMARY, centred, with id -1.
+//
+// THE WIDGET IDS ARE ONE INCREMENTING LOCAL. Retail seeds ESI with
+// 0x88e BEFORE the first allocation and only advances it inside each
+// `new`'s non-null arm (`mov esi,0x88f` sits among the bitmapBorder
+// pushes), so a failed allocation leaves the id unconsumed - the `id++`
+// -in-an-argument-list signature, the same one TBottomViewNewTurn has.
+//
+// sum_mobility IS A REAL METHOD, not a hand-inlined loop: DC gives it
+// its own line (:646) and retail expands the identical body here and in
+// animate. Its accessor is game::GetHero, whose -1 arm is what makes
+// retail call hero::GetMobility on a NULL `this` (`xor ecx,ecx` falls
+// straight into the call) rather than branch around it.
+VA(0x00453250, 0x3EE)  // anchor-vtable 0x63bb44 + advManager::UpdBottomViewEnemyTurn, dc 0x56880
+TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
+    : type_bottom_view_window(parent)
+{
+    int id = BOTTOM_VIEW_ENEMY_TURN_ID;
+
+    Widgets.push_back(new bitmapBorder(
+        0, 0, 176, 166, id++, "AdStatNx.pcx", 0x800));
+
+    crest = new iconWidget(20, 51, 58, 64, id++, "crest58.def",
+        gNetLocalGamePos, 0, 0, 0, 0x10);
+    Widgets.push_back(crest);
+
+    sand = new iconWidget(98, 51, 58, 64, id++, "HourSand.def",
+        0, 0, 0, 0, 0x10);
+    sand->SetIconFrame(0);
+    Widgets.push_back(sand);
+
+    frame = 0;
+    frameDelay = 50;
+
+    hourGlass = new iconWidget(98, 51, 58, 64, id++, "HourGlas.def",
+        0, 0, 0, 0, 0x10);
+    Widgets.push_back(hourGlass);
+
+    step = 0;
+    lastPlayerPos = gNetLocalGamePos;
+
+    for (int i = 0; i < 8; i++) {
+        if (gpGame->playerDisabled[i] || gpGame->players[i].IsHuman())
+            mobility[i] = 0;
+        else
+            mobility[i] = sum_mobility(i);
+    }
+
+    if (gpCurrentPlayer->IsHuman()) {
+        Widgets.push_back(new textWidget(0, 20, 176, 31,
+            gpGeneralText->GetText(631), "medfont.fnt", font::PRIMARY,
+            -1, 1, 0, 8));
+        Widgets.push_back(new textWidget(0, 123, 176, 31,
+            gpCurrentPlayer->cName, "medfont.fnt", font::PRIMARY,
+            -1, 1, 0, 8));
+    }
+
+    for (unsigned int w = 0; w < Widgets.size(); w++)
+        AddWidget(Widgets[w], -1);
+
+    lastStepTime = GameTime::Get();
+}
+
+// UNBLOCKED by the constructor above - its 0x63bb44 store is the one
+// image-wide reference to this class's table.
+VA_COMPGEN(0x00453640, 0x21, SCALAR_DELETING_DTOR, TBottomViewEnemyTurn)
 
 
 // E:\gamedcs\bottomviewsubwindow.cpp:643
 VA(0x00453670, 0x78)  // anchor-vtable, dc 0x5706c
 TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
 {
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:646
+// `player` IS A LOCAL, and it is worth 8.2 points. Retail pins
+// &players[player_id].numHeroes in a register across the GetMobility
+// call and walks heroes[] through a separate stack pointer; spelled
+// `gpGame->players[player_id]` twice instead, our CL re-derives both
+// addresses from gpGame every iteration. Same lever as the mouseX/mouseY
+// and glTimers hoists - the value has to be a statement before the call.
+long TBottomViewEnemyTurn::sum_mobility(long player_id)
+{
+    playerData* player = &gpGame->players[player_id];
+    long total = 1000;
+    for (int i = 0; i < player->numHeroes; i++)
+        total += gpGame->GetHero(player->heroes[i])->GetMobility();
+    return total;
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:661
+// Slot 1 of this class's own table 0x63bb44, and the second witness for
+// the whole 0x40-byte derived tail - it reads every field the
+// constructor wrote.
+//
+// THE FRAME COUNT IS COMPUTED BEFORE THE CLOCK IS STAMPED. Retail's
+// CSprite::GetNumFrames(0) expansion - the numSequences/validSeqMask
+// guard pair with its `xor eax,eax` else arm - sits AHEAD of the
+// GameTime::Get that refreshes lastStepTime, and its answer lives in a
+// stack local until the very last block. The order is not schedulable:
+// the expansion cannot cross the call in either direction.
+//
+// lastStepTime IS READ INTO A LOCAL BEFORE THE FIRST CALL, exactly as
+// in TBottomViewNewTurn::animate.
+//
+// THE TWO HERO SWEEPS ARE DELIBERATELY DIFFERENT SHAPES. sum_mobility
+// re-reads numHeroes every iteration because GetMobility is a call the
+// compiler cannot see through; the movePoints sweep below has no call
+// in it, so VC6 hoists the count and turns the loop into a `dec`/`jne`
+// countdown. Both are plain `for (i = 0; i < ...numHeroes; i++)`.
+VA(0x004536f0, 0x271)  // anchor-vtable (0x63bb44 slot 1), dc 0x56c14
+void TBottomViewEnemyTurn::animate()
+{
+    unsigned long lastStep = lastStepTime;
+    if (static_cast<long>(GameTime::Get() - lastStep) < frameDelay)
+        return;
+
+    int numFrames = hourGlass->Sprite->GetNumFrames(0);
+
+    lastStepTime = GameTime::Get();
+
+    if (lastPlayerPos != gNetLocalGamePos) {
+        lastPlayerPos = gNetLocalGamePos;
+        crest->SetIconFrame(gNetLocalGamePos);
+        crest->Draw();
+        crest->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+        if (gpCurrentPlayer->IsHuman()) {
+            hourGlass->send_message(widget::WIDGET_CLEAR_STATUS,
+                                    widget::WIDGET_DRAWN);
+            sand->send_message(widget::WIDGET_CLEAR_STATUS,
+                               widget::WIDGET_DRAWN);
+            return;
+        }
+        hourGlass->send_message(widget::WIDGET_SET_STATUS,
+                                widget::WIDGET_DRAWN);
+        sand->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
+        mobility[gNetLocalGamePos] = sum_mobility(gNetLocalGamePos);
+        step = 0;
+    }
+
+    if (gpCurrentPlayer->IsHuman())
+        return;
+
+    int movePointsLeft = 0;
+    for (int i = 0; i < gpCurrentPlayer->numHeroes; i++)
+        movePointsLeft +=
+            gpGame->GetHero(gpCurrentPlayer->heroes[i])->movePoints;
+
+    int total = mobility[gNetLocalGamePos];
+    if (movePointsLeft > total)
+        movePointsLeft = total;
+
+    int target;
+    if (total == 0)
+        target = numFrames - 1;
+    else
+        target = (total - movePointsLeft) * (numFrames - 1) / total;
+
+    if (step < target)
+        step++;
+
+    frame++;
+    if (frame >= sand->Sprite->GetNumFrames(0))
+        frame = 0;
+
+    hourGlass->SetIconFrame(step);
+    sand->SetIconFrame(frame);
+    sand->Draw();
+    hourGlass->Draw();
+    hourGlass->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    crest->SetIconFrame(gNetLocalGamePos);
+    crest->Draw();
+    crest->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
 }
