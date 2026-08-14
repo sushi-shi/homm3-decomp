@@ -3,7 +3,10 @@
 // 40 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "combatcontrolsubwindow.h"
+#include "border.h"
 #include "button.h"
+#include "cmbtmgr.h"
+#include "game.h"
 #include "inputmgr.h"
 #include "textwdgt.h"
 #include "widget.h"
@@ -173,6 +176,131 @@ void TCombatHeroSubWindow::Update(const hero* info, const hero* otherHero, unsig
 // call. The derived class's own vptr store is dead - the inlined base
 // overwrites it - and VC6 kills it, which is why not one of these bodies
 // names its own table.
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:44
+// The family base, and this compiland's biggest body. Both derived
+// constructors CALL it out of line, so everything below is read off this
+// one body and nothing is inferred from theirs.
+//
+// It is an 800x44 strip at (0, 556) with a ten-slot reserve, a
+// bitmapBorder over the caller's sprite and SEVEN buttons -
+// 'icm001.def'..'icm007.def', all 48x36 on row 5, ids 0x7d1..0x7d4 then
+// 0x7d8..0x7da. The four-id gap is real: 0x7d5/0x7d6/0x7d7 belong to
+// TCombatControlSubWindow's rollover strip and its two log arrows, which
+// is why these are seven literal ids and not one incrementing local.
+// The help rows are 0..3 and 6..8 of the same eleven-row table, leaving
+// 4/5 to the control bar and 9/10 to the placement bar - the table's
+// three consumers partition it exactly, which is the second witness for
+// the table's extent.
+//
+// THE BACKDROP TAKES THE ACTING SIDE'S PALETTE. gpCombatManager's
+// playerIds[currentSide] is negative in the observer case, and only then
+// does retail fall back to game::GetLocalPlayerGamePos.
+//
+// rolloverWidget IS NULLED HERE, IN THE BODY - the 0x63d410 vptr store
+// precedes it, so it is not a mem-init - and that is what makes the
+// member the base's rather than TCombatControlSubWindow's.
+//
+// THE LAST BUTTON CARRIES TWO HOTKEYS. Retail emits two set_hotkey
+// expansions back to back on 0x7da, the second through the &hotKeyCodes
+// it already materialised, which is the vector-insert idiom repeated -
+// not a second widget.
+//
+// The tail dims 0x7d4 through the PARENT window rather than through this
+// sub-window, and only when both sides are AI.
+//
+// Residual (89.4751%): flow-distance ZERO - every widget, literal, id,
+// help row, hotkey and both the reserve and AddWidget loops agree, and
+// the whole delta is ONE register binding that cascades. Retail parks
+// the CSE'd constant zero in EDI, where it dies at the reserve block and
+// the copy loop inherits the register; this build parks it in EBX, where
+// it survives to the end of the body (every later `test eax,eax` becomes
+// `cmp eax,ebx` and every `push 0` a `push ebx`) and the reserve's copy
+// destination spills to a fourth stack local (`sub esp,0x10` against
+// retail's 0xc). `homm3 vc6 why-reg --model` calls it: the two compiles
+// fed the allocator the same pseudos in a different processing order,
+// and the transposed value is a C2-side constant rather than a named
+// local, so no statement-level knob reaches it.
+//
+// Tried and rejected: `Widgets.reserve(10)` ahead of the rolloverWidget
+// store scores HIGHER (92.5664) but is structurally contradicted -
+// retail's `add esi,0x14` overwrites `this` with `&Widgets`, which it can
+// only do because no member store follows the reserve, and that spelling
+// forces the `lea esi,[edi+0x14]` form with `this` kept live in EDI. The
+// mem-init form `, rolloverWidget(0)` is 89.4212, i.e. the same wall one
+// notch worse. The include-set lever is INERT here (hero.h, army.h and
+// csprite.h added together moved nothing), which is itself the finding:
+// this is C2 state, not C1 handle order. A ternary for the palette
+// fallback is byte-identical to the `if`.
+VA(0x0046b610, 0x570)  // anchor-callee (both derived ctors), dc 0x64a84
+type_combat_sub_window::type_combat_sub_window(
+    heroWindow* parent, const char* background_sprite_name)
+    : TSubWindow(0, 556, 800, 44, parent)
+{
+    rolloverWidget = 0;
+    Widgets.reserve(10);
+
+    bitmapBorder* background = new bitmapBorder(0, 0, 800, 44, 0x7d0,
+        background_sprite_name, 0x800);
+    int gamePos = gpCombatManager->playerIds[gpCombatManager->currentSide];
+    if (gamePos < 0)
+        gamePos = gpGame->GetLocalPlayerGamePos();
+    background->SetPlayerPaletteColors(gamePos);
+    Widgets.push_back(background);
+
+    // The hotkeys are scancodes: S, R, O, A, C, W, then D and SPACE.
+    button* b = new button(54, 5, 48, 36, 0x7d1, "icm001.def",
+        0, 1, 0, 0, 2);
+    b->set_help_text(gCombatSubWindowHelp[0].text,
+        gCombatSubWindowHelp[0].rclick, 1);
+    b->set_hotkey(0x1f);
+    Widgets.push_back(b);
+
+    b = new button(105, 5, 48, 36, 0x7d2, "icm002.def", 0, 1, 0, 0, 2);
+    b->set_help_text(gCombatSubWindowHelp[1].text,
+        gCombatSubWindowHelp[1].rclick, 1);
+    b->set_hotkey(0x13);
+    Widgets.push_back(b);
+
+    b = new button(3, 5, 48, 36, 0x7d3, "icm003.def", 0, 1, 0, 0, 2);
+    b->set_help_text(gCombatSubWindowHelp[2].text,
+        gCombatSubWindowHelp[2].rclick, 1);
+    b->set_hotkey(0x18);
+    Widgets.push_back(b);
+
+    b = new button(156, 5, 48, 36, 0x7d4, "icm004.def", 0, 1, 0, 0, 2);
+    b->set_help_text(gCombatSubWindowHelp[3].text,
+        gCombatSubWindowHelp[3].rclick, 1);
+    b->set_hotkey(0x1e);
+    Widgets.push_back(b);
+
+    b = new button(645, 5, 48, 36, 0x7d8, "icm005.def", 0, 1, 0, 0, 2);
+    b->set_help_text(gCombatSubWindowHelp[6].text,
+        gCombatSubWindowHelp[6].rclick, 1);
+    b->set_hotkey(0x2e);
+    Widgets.push_back(b);
+
+    b = new button(696, 5, 48, 36, 0x7d9, "icm006.def", 0, 1, 0, 0, 2);
+    b->set_help_text(gCombatSubWindowHelp[7].text,
+        gCombatSubWindowHelp[7].rclick, 1);
+    b->set_hotkey(0x11);
+    Widgets.push_back(b);
+
+    b = new button(747, 5, 48, 36, 0x7da, "icm007.def", 0, 1, 0, 0, 2);
+    b->set_help_text(gCombatSubWindowHelp[8].text,
+        gCombatSubWindowHelp[8].rclick, 1);
+    b->set_hotkey(0x20);
+    b->set_hotkey(0x39);
+    Widgets.push_back(b);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+    }
+
+    if (gpCombatManager->sideIsAI[0] && gpCombatManager->sideIsAI[1])
+        parent->WidgetSetStatus(0x7d4, widget::WIDGET_DIMMED_NODRAW);
+}
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:116
 VA_COMPGEN(0x0046bb80, 0x21, SCALAR_DELETING_DTOR, type_combat_sub_window)
