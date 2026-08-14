@@ -113,6 +113,26 @@ const unsigned int CTA_SHOOTER = 0x4;
 // 88.24 with no semantic change anywhere - the include-set class.
 const int SPELL_BIND = 0x48;
 
+// The four BASE elementals, tested behind the version gate everywhere the
+// game asks whether a creature has an alignment at all - eight times in
+// armygrp.cpp, four in game.cpp, once each in cmbtmgr.cpp and
+// quickherowindow.cpp, and TWICE in this file. TU-local for the reason
+// CTA_SHOOTER and SPELL_BIND above are: the shared header stays as small as
+// its own consumers need.
+//
+// This is a CODEGEN construct as much as a spelling, and the constructor at
+// 0x5f4210 is where that was proven: it expands to exactly the four
+// `cmp eax,0x7N / je` compares the longhand chain gives (both call sites in
+// this file are byte-flat under the substitution), while costing the /Ob2
+// allowance one more candidate site in each caller - which is what stops
+// the SECOND std::string member's `_Tidy` from being expanded there. See
+// that constructor's note.
+inline bool is_base_elemental(int type)
+{
+    return type == CREATURE_AIR_ELEMENTAL || type == CREATURE_EARTH_ELEMENTAL
+        || type == CREATURE_FIRE_ELEMENTAL || type == CREATURE_WATER_ELEMENTAL;
+}
+
 // The two rows of convertID2HelpID's compact 0..15 domain that
 // WindowHandler builds text for instead of reading HELP.TXT.
 const int MORALE_HELP_INDEX = 9;
@@ -431,11 +451,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
     create_name_widget(name);
 
     int town_type;
-    if (!gpGame->f_1f698
-            && (ArmyType == CREATURE_AIR_ELEMENTAL
-                || ArmyType == CREATURE_EARTH_ELEMENTAL
-                || ArmyType == CREATURE_FIRE_ELEMENTAL
-                || ArmyType == CREATURE_WATER_ELEMENTAL))
+    if (!gpGame->f_1f698 && is_base_elemental(ArmyType))
         town_type = -1;
     else
         town_type = akCreatureTypeTraits[ArmyType].townType;
@@ -524,67 +540,48 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 // the cached 116*type byte offset) where every other field goes through the
 // row pointer, so the indexed spelling is what the source has there.
 //
-// Residual (97.1018%): the CFG is EXACT - 18 conditional branches and one
-// return, with the branch sequences agreeing on mnemonics AND symbolic
-// targets - and the whole body from the vptr store on is byte-identical.
-// What is left is the same A7 item the one-army constructor has: the two
-// `_Tidy(false)` calls the implicit string constructions make from the
-// MEM-INIT LIST, which retail CALLS and our budget folds into stores.
+// EXACT (2026-08-14). Two edits closed it, and the Dreamcast LINE/BLOCK
+// tables - not the score - named both.
 //
-// Correction to that constructor's note, measured here: the statement
-// pragma DOES reach a mem-init list. `#pragma inline_depth(0)` before the
-// declarator with a reset at the top of the body is NOT a no-op - it takes
-// basic_string's constructor itself out of line (`lea edx,[ebp+N] / push
-// edx / call ctor` against retail's `push 0 / call _Tidy`) and scores
-// 94.0463. The earlier "positional over statements only" reading came from
-// testing depths 1 and 2, which are no-ops EVERYWHERE because VC6 expands
-// bottom-up: by the time basic_string's constructor is considered for
-// inlining, its own saved IL already contains the expanded _Tidy, so the
-// depth counter never exceeds 1 and no depth value can split the two.
-// Reproducing retail here needs _Tidy to have been rejected when it was
-// expanded INTO basic_string's constructor, which is a property of that
-// compile, not of any spelling available in this TU.
+// 1. The three Influence slots are stamped by a LOOP, not by three straight
+//    stores. dump.txt's line/addr table for dc 0x19148c gives line 300 at
+//    0x1925ba `bra .. / mov #0,r4 / add #1,r4 / mov #3,r2 / cmp/gt r4,r2 /
+//    bf exit` and line 302 at 0x1925c6 `mov #-1,r1 / shll2 r3 /
+//    mov.l r1,@(r0,r3)` - a counted `for (i = 0; i < 3; i++) Influence[i] =
+//    -1;`, corroborated by the doubly nested S_BLOCK32 pair at 0x1915c6
+//    (the for-scope plus its braced body). VC6 fully unrolls it back into
+//    retail's three stores AND picks retail's register: the induction
+//    variable's -1 is loop-invariant and dies at the third store, so it
+//    lands in the volatile EDX (`or edx,-1`) and AddWidget re-pushes the
+//    immediate, where three separate stores made our CL park it in the
+//    callee-saved EBX and reuse it (`push ebx`). Worth 97.1049 -> 97.1698
+//    on its own; it is the whole of the old why-reg residual.
 //
-// The EH CLEANUP TRANSCRIPT names the boundary exactly (docs/vc6/
-// eh-cleanup.md): retail's state stores are [0,1,2,3,2,4,2,5,2,6,2] and ours
-// [reg,2,3,2,4,2,5,2,6,2] - our first store is the CSE'd zero out of EBX, so
-// the deficit is ONE region, not two, and it is the SECOND string member's
-// construction. Retail CALLS the constructor at BOTH +0x6c and +0x80; we
-// call the first and INLINE the second, which is what the
-// /Ob2 allowance `budget / sites-remaining` predicts, since that quotient
-// GROWS along the site list and the later of two identical sites is the one
-// that gets expanded. The `xor ebx,ebx` constant-zero CSE that follows is
-// downstream of that, not a wall of its own: inlining the second string
-// constructor adds the [esi+0x84]/[esi+0x88]/[esi+0x8c] zero stores, and
-// those extra uses are what tip VC6 into parking 0 in EBX where retail
-// writes the immediate each time.
+// 2. The elemental gate is a CALL. The /Ob2 allowance `budget /
+//    sites-remaining` decides the second std::string member's construction
+//    one index after the first, so the two differ only by (n-1)/(n-2) and
+//    the window is exactly ONE site wide: with one more candidate in the
+//    body both `basic_string(const allocator&)` expansions stop at
+//    `push 0 / call _Tidy`, as retail has them at +0x6c and +0x80, and the
+//    [esi+0x84..0x8c] zero stores and their `xor ebx,ebx` CSE go away with
+//    them. Worth 97.1049 -> 99.9352 on its own.
 //
-// THAT NEGATIVE IS WITHDRAWN (2026-08-14). It read "the body's site count
-// does not reach a mem-init expansion - 97.1049 at +0,+1,+2,+3,+5,+8". Re-run
-// with `Widgets.capacity();` (cb <= 0x28, so free, and it emits no bytes)
-// placed right after `Widgets.reserve(NWIDGETS)`, the row goes
-//     +1 -> 99.9352   +2 -> 99.9352   +3 -> 99.9352   +6 -> 92.8920
-// The prologue IS in the same site list as the body; the earlier probe simply
-// was not creating candidate sites. The window is one site wide, exactly as
-// the rule predicts: the two string members sit at consecutive indices, so
-// their allowances differ only by the factor (n-1)/(n-2), and cb of
-// `basic_string(const allocator&)` falls inside that gap. ONE more site drops
-// the later allowance onto the earlier one's side and both constructors
-// become calls, as retail has them.
+//    WHICH site is settled by the Dreamcast source being a strictly older
+//    revision of this file. dc 0x19148c passes the portrait builder
+//    `traits->townType` straight through (line 284, `mov.l @r10,r6 /
+//    bsr create_portrait_widget`): the version gate does not exist there at
+//    all. Every other statement of retail's body has a Dreamcast line of its
+//    own with the same call in it, so the gate is the ONE thing retail's
+//    source has here that dc 0x19148c does not - and it is therefore where
+//    the one extra inline candidate has to live. `is_base_elemental` is that
+//    call: free (cb <= 0x28), byte-identical when expanded, and used at BOTH
+//    of this file's copies of the test, which leaves the armyGroup
+//    constructor byte-flat at 88.7021.
 //
-// At +1 the body is byte-identical to retail except its LAST four
-// instructions: retail materializes the -1 for Influence[0..2] in EDX
-// (`or edx,-1`) and then re-pushes the immediate `push -0x1` for AddWidget
-// because EDX does not survive the call, where our compile parks it in the
-// callee-saved EBX and reuses it (`push ebx`). That is a why-reg residual and
-// all that is left of this row.
-//
-// So the open question is no longer "does the lever reach" but WHICH ONE
-// candidate site retail's source has that this body does not. The Dreamcast
-// xref for dc 0x19148c is no help - it lists exactly our call set (the eleven
-// create_* builders, reserve, push_back, begin, end, textWidget, MemError,
-// CAdvPopup, and basic_string twice) and nothing more. NOTHING IS LANDED: the
-// padding is a measurement, not a spelling.
+// Method note: the earlier probe measured the same +1 with a bare
+// `Widgets.capacity();` and was correctly refused. A free candidate site is
+// an instrument - it tells you the deficit is one - and the reconstruction
+// is the separate job of finding which statement carries it.
 // E:\gamedcs\viewarmywindow.cpp:274
 VA(0x005f4210, 0x3C1)  // vtable-store + builder call set + CrStkPU.pcx, dc 0x19148c
 TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0,
@@ -606,11 +603,7 @@ TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0,
     create_name_widget(traits->m_plural_name);
 
     int town_type;
-    if (!gpGame->f_1f698
-            && (army_type == CREATURE_AIR_ELEMENTAL
-                || army_type == CREATURE_EARTH_ELEMENTAL
-                || army_type == CREATURE_FIRE_ELEMENTAL
-                || army_type == CREATURE_WATER_ELEMENTAL))
+    if (!gpGame->f_1f698 && is_base_elemental(army_type))
         town_type = -1;
     else
         town_type = akCreatureTypeTraits[army_type].townType;
@@ -634,9 +627,8 @@ TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0,
 
     create_rollover_widget();
 
-    Influence[0] = -1;
-    Influence[1] = -1;
-    Influence[2] = -1;
+    for (int i = 0; i < 3; i++)
+        Influence[i] = -1;
 
     for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
         if (*it)
