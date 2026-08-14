@@ -846,22 +846,151 @@ void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai.cpp:1357
+// Where a stack should stand to shield `client`: the walk visits the
+// client's six neighbours - eight when the client is two hexes wide -
+// keeps the hexes that are empty or already the mover's own, and counts
+// every one of them into *open_hexes even when it is unreachable. Among
+// the reachable ones the cheapest to walk to wins; a tie goes to the hex
+// that also puts the mover's SECOND cell next to the client, and a tie
+// on that goes by screen x, toward the side the client faces.
+//
+// best_time / best_contact are deliberately uninitialised: retail writes
+// neither before the loop and both are only read once *best_hex is no
+// longer -1.
+//
+// Residual (99.1%): a caller-saved permutation only - retail materialises
+// the `facing ? 1 : -1` step in EAX and takes EDX for the best_hex
+// pointer, our CL coalesces the step into EDX (killing the current_army
+// pseudo) and takes EAX. `homm3 vc6 why-reg --model` confirms all three
+// callee-saved bindings (EDI open_hexes, ESI hex, EBX cell) already
+// agree and caps the rest as C1 handle state. Tried and rejected:
+// storing best_contact before best_time in the accept block (99.09),
+// `long contact = 1;` with a single `contact = 2` arm (78.6, the wrong
+// branch shape), and the `if (cell) cell += hex;` accessor spelling
+// choose_to_run uses (80.9 - retail wants getCellData's ternary here).
 VA(0x004205d0, 0x185)  // linkorder, dc 0x25998
-unsigned char combatManager::choose_defense_hex(const army* current_army, const army* client, long* best_hex, long* open_hexes, const searchArray* search_array)
+unsigned char combatManager::choose_defense_hex(const army* current_army, const army* client, long* best_hex, long* open_hexes, searchArray* search_array)
 {
-    // @stub
+    long best_time;
+    long best_contact;
+
+    *open_hexes = 0;
+    *best_hex = -1;
+    for (long direction = 0; direction < 8; direction++) {
+        if (direction >= 6 && !(client->creatureId & 1))
+            continue;
+        long hex = client->get_adjacent_hex(client->gridIndex, direction);
+        if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+            continue;
+        hexcell* cell = &cells[hex];
+        army* occupant = cell->get_army();
+        if (occupant != 0 && occupant != current_army)
+            continue;
+        (*open_hexes)++;
+        const pathCell* path = search_array->cellData == 0
+                ? 0
+                : &search_array->cellData[hex];
+        if (!path->visited)
+            continue;
+        long time = bCreaturePlacement
+                ? 1
+                : search_array->get_travel_time(current_army, hex);
+        long contact;
+        if ((current_army->creatureId & 1)
+                && client->is_adjacent(hex + (current_army->facing ? 1 : -1)))
+            contact = 2;
+        else
+            contact = 1;
+        if (*best_hex >= 0) {
+            if (time > best_time)
+                continue;
+            if (time == best_time) {
+                if (contact < best_contact)
+                    continue;
+                if (contact == best_contact) {
+                    if (client->facing == 1) {
+                        if (cell->field_00 < cells[*best_hex].field_00)
+                            continue;
+                    } else if (cell->field_00 > cells[*best_hex].field_00) {
+                        continue;
+                    }
+                }
+            }
+        }
+        best_time = time;
+        best_contact = contact;
+        *best_hex = hex;
+    }
+    return static_cast<unsigned char>(*best_hex >= 0);
 }
 
 // E:\gamedcs\ai.cpp:1445
+// Walks our own side's live shooters - arrow tower and catapult are not
+// shooters for this purpose - and asks choose_defense_hex where the
+// mover would have to stand to guard each. The shooter worth the most
+// per open approach hex wins, with the shortest walk breaking ties.
+//
+// THE TRAILING `hex` READ IS RETAIL'S, not a transcription slip: 0x4207bf
+// compares [ebp-0xc] - the scratch out-parameter the LAST choose_defense_hex
+// call wrote, whichever shooter that was - against the mover's own grid
+// index, and then moves toward [ebp-0x1c], the saved best. The two are the
+// same value only when the winning shooter was also the last one scanned.
 VA(0x00420760, 0x187)  // linkorder, dc 0x25b0c
-unsigned char combatManager::attempt_shooter_defense(const army* current_army, const searchArray* search_array, const type_AI_combat_parameters* estimate)
+unsigned char combatManager::attempt_shooter_defense(const army* current_army, searchArray* search_array, const type_AI_combat_parameters* estimate)
 {
-    // @stub
+    long hex;
+
+    long best_hex = -1;
+    const army* client = armies[currentSide];
+    long open_hexes = 0;
+    const army* best_client = 0;
+    long best_time = 0;
+    long best_value = 0;
+    for (long i = 0; i < numArmies[currentSide]; i++, client++) {
+        if (client->Is(21) & 1)
+            continue;
+        if (client->creatureType == CREATURE_ARROW_TOWER
+                || client->creatureType == CREATURE_CATAPULT)
+            continue;
+        if (!client->can_shoot(0))
+            continue;
+        if (client->Is(12) & 1)
+            continue;
+        if (!choose_defense_hex(current_army, client, &hex, &open_hexes,
+                                search_array))
+            continue;
+        long time = bCreaturePlacement
+                ? 1
+                : search_array->get_travel_time(current_army, hex);
+        long value = client->get_total_combat_value(estimate->lowest_attack,
+                                                    estimate->lowest_defense);
+        if (open_hexes > 1)
+            value /= open_hexes;
+        if (best_client != 0) {
+            if (time > best_time)
+                continue;
+            if (time == best_time && best_value > value)
+                continue;
+        }
+        best_value = value;
+        best_client = client;
+        best_time = time;
+        best_hex = hex;
+    }
+    if (best_client == 0)
+        return 0;
+    if (hex == current_army->gridIndex) {
+        field_3c = 3;
+        return 1;
+    }
+    move_toward(current_army, best_hex, 0, 0);
+    return 1;
 }
 
 // E:\gamedcs\ai.cpp:1513
-#endif  // @carcass
 
 // Selects a reachable ground hex that improves the stack's worst incoming
 // danger, preferring shorter paths when danger ties. Two-hex stacks price
