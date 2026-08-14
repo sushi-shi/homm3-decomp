@@ -751,6 +751,39 @@ public:
 };
 SIZE(army, 0x548);
 
+// The caliph (creature-cast) spell predicates, both /Gr free functions
+// taking their two arguments in ECX/EDX.
+//
+// 0x447eb0 is is_valid_caliph_spell, and that is an ATTRIBUTION
+// CORRECTION - the carcass had it as `army::get_valid_caliph_spells`
+// and put is_valid_caliph_spell on 0x447a80. Both halves are refuted.
+// Convention refutes the old pairing outright: 0x447eb0 indexes
+// akSpellTraits by ECX (`shl eax,4; add eax,ecx` => spell*136) and
+// returns bare, so ECX is a SPELL, not a `this`, where the member
+// `get_valid_caliph_spells(const army*)` would be `ret 4` on a this.
+// Cross-build callsite identity settles it positively: the DC xref
+// graph has type_AI_spellcaster::get_caliph_value calling
+// is_valid_caliph_spell, and retail's get_caliph_value (0x43c4a0)
+// calls 0x447eb0. The size ratio is the same false negative
+// check_obstacle_attacks turned up - 33 retail bytes against the DC
+// row's 356 is 0.09 because retail FACTORED the shared worker out
+// where DC has it inline - and the discarded pairing's own ratio
+// (1065/356 = 2.99) was out of band in the other direction.
+// `spell` is int, not ESpellId: that enum lives in armygrp.h, which
+// army.h does not include (and must not start to - the include-set
+// wall this header already routes around for TCreatureType). The
+// class models creatureType the same way, as a plain int.
+unsigned char is_valid_caliph_spell(int spell, const army* target);
+// 0x447a80 (1065 B), the worker is_valid_caliph_spell tail-jumps to
+// and army::can_cast_spell (0x4476c0) also calls. It opens by
+// rejecting a target that already carries the spell
+// (`target->rounds[spell]`, the +0x198 row base again). The DC build
+// has NO row for it - that logic lives inside DC's
+// is_valid_caliph_spell and can_cast_spell - so it is a retail-only
+// factoring and the NAME BELOW IS A BOOTSTRAP INVENTION, same class as
+// get_estimated_damage. Declared so the wrapper can call it; not claimed.
+unsigned char spell_is_valid_on_target(int spell, const army* target);
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\army.cpp:917, dc 0x44e14) unsigned char add_item(std::vector<army* array, army* arg);
 // CODEVIEW(E:\gamedcs\army.cpp:930, dc 0x44ec0) void erase_item(std::vector<army* array, const army* arg);
