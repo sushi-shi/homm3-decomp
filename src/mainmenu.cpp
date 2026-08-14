@@ -333,13 +333,15 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 // widgets want them COALESCED in the dead parameter slot (which is what naming
 // the widget in a local does). Read the slot out of retail before choosing.
 // THE CENSUS SWEPT TREE-WIDE (2026-08-14). The diff above was run against
-// EVERY non-exact function in the lanes reachable from here - 45 of them with
-// a `dc 0x` body map, 40 with at least one under-count row - and the honest
-// verdict is that its ACTIONABLE class is much narrower than the
-// ??0TQuickCreatureWindow success suggests. NINE leads were spelled out and
-// measured; ONE is landed (byte-flat, for fidelity), NONE converted a score.
-// The rule that explains all nine, and the thing to check BEFORE spending a
-// build on a census row:
+// EVERY non-exact function in the lanes reachable from here - 51 rows, 45 of
+// them with a `dc 0x` body map, 38 carrying at least one under-count row. TEN
+// leads were spelled out and measured: ONE converted to EXACT
+// (ai_player ?can_take_town 98.7523 -> 100.0000 on `town::get_location`), one
+// is landed byte-flat for fidelity, the other eight are negatives. The method
+// works, but its ACTIONABLE class is much narrower than the
+// ??0TQuickCreatureWindow success suggests, and the two rules below are what
+// separate the two conversions from the eight misses. Check them BEFORE
+// spending a build on a census row:
 //
 //   A FILE-LOCAL MODEL OF A DC HEADER INLINE IS BYTE-INERT WHENEVER ITS BODY
 //   CONSTANT-FOLDS AT THE CALL SITE. C1 folds the expansion before the /Ob2
@@ -348,6 +350,22 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 //   runtime bounds test plus two array loads plus a ternary on a runtime
 //   count, at THREE sites. A one-argument accessor over a field, or a
 //   two-way ternary whose selector is a compile-time constant, is free.
+//
+//   AND THE STRONGEST SUB-CLASS OF ALL, because it changes the FRAME and not
+//   just the inliner's arithmetic: A CENSUS CALLEE THAT RETURNS A UDT BY
+//   VALUE. `town::get_location` (dc 0x1fdac, E:\gamedcs\Town.h:311) took
+//   ai_player ?can_take_town from 98.7523 to EXACT on the first spelling.
+//   That body built its `type_point` field by field in its own frame and had
+//   plateaued against ALL 36 declaration x assignment orders of the three
+//   coordinates; the recorded verdict there was "the hoist retail performs is
+//   the allocator's, not a source ordering we can spell". Right about order,
+//   wrong about the construct - the point is not built in that frame at all.
+//   Returning it from a helper gives the construction its own NRV slot and
+//   retail's load order falls out of that. A struct return can never fold
+//   away, so this is the one census shape worth a build ON SIGHT.
+//   Cross-referencing the DC `__$ReturnUdt` prototypes in include/*.h against
+//   the under-count rows is how to find the rest; in these lanes
+//   `town::get_location` was the only one left.
 //
 // Measured this round, all byte-EXACTLY flat (do not re-spend a build on
 // them; each is recorded again at its own site):
@@ -384,6 +402,8 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 //     so the DC count is a port difference. `IsMindSpell` x1 (dc 0x4fd34,
 //     E:\gamedcs\SpellDefs.h:345) likewise costs 0.46 in both an expression
 //     and an IL-preserving spelling.
+// LANDED, EXACT: ai_player ?can_take_town on `town::get_location` x1 - the
+// UDT-return class above; the ledger at that body carries the full account.
 // LANDED, byte-flat, for fidelity: armygrp's house-coined `armygrp_clamp` is
 // retail's `limit`/`t_limit` pair - the census names it by COUNT as well as
 // by name (x2 from TSplitWindow::WindowHandler, x1 from GetMorale, x1 from
@@ -391,9 +411,10 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 //
 // SO: run the census diff on a plateau - it is one awk and it is the only
 // instrument that NAMES a missing site - but budget one build, not a
-// campaign, and screen the row first. A row is worth a build when (a) the
-// callee's body does work our spelling does not do at all, and (b) the count
-// gap is >= 2. Rows that only RENAME an expression we already spell
+// campaign, and screen the row first. A row is worth a build when the
+// callee's body does work our spelling does not do at all: UNCONDITIONALLY if
+// it returns a UDT by value, and otherwise when the count gap is >= 2.
+// Rows that only RENAME an expression we already spell
 // (TTextResource::operator[] for GetText, `min` for _cpp_min, `limit` for a
 // local clamp, `SpellIsAvailable` for a byte-array read) are fidelity, never
 // score. And the census's own systemoptions/levelup verdict stands: for the
