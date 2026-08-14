@@ -1196,22 +1196,46 @@ inline type_AI_combat_data::type_AI_combat_data(
 }
 
 // E:\gamedcs\ai_combat.cpp:1270
-// Residual (94.8%): INLINER-DEPTH, the same class as simulate_combat.
+// Residual (94.7945%): INLINER-DEPTH, the same class as simulate_combat.
 // 79.6 -> 94.8 on 2026-08-08 when get_total became a ternary; what is
 // left is a single /Ob2 budget divergence. `kill()` inlines twice here
 // and retail expands get_total inside BOTH copies (depth 2); our CL's
 // budget runs out after the first, so the second arm keeps a real
 // `call ?get_total@...` and every register downstream of it renames.
-// Nothing in this body causes it - the register naming through the
-// float arms already agrees instruction for instruction. Tried and
-// rejected on the callee: a no-local ternary get_total and an
+// `predict-inline` names exactly that one row: base 5 out-of-line calls
+// vs retail 4, UNDER-inline `get_total` x1 and nothing else.
+// Tried and rejected on the callee: a no-local ternary get_total and an
 // unsigned-cast-free one (both identical here), a doubly-nested
-// ternary (catastrophic, 75.5). Tried and rejected here: hoisting
-// `ratio` above the early-outs (94.79 - a third of a slot, and it
-// declares a variable before the guards that can skip it), moving
+// ternary (catastrophic, 75.5). Tried and rejected here: moving
 // kill() below the ratio computation (89.30), folding ratio into the
-// argument expression (93.42), naming the damage as well (no change),
-// and inverting the compare so the else arm leads (93.80).
+// argument expression (93.42), and inverting the compare so the else
+// arm leads (93.80).
+//
+// 2026-08-14, THE BUDGET IS TITRATED AND THE SLOT IS BYTE-PROVEN.
+// Dead-store mass ahead of the body is byte-flat 0..38 units and steps to
+// 99.9657 at 40 (plateau through 128, decaying past 192): this body sits on
+// the RE'd budget's LOWER CLAMP, `clamp(2*cb,1000,35000)`, so no small
+// amount of caller mass moves it at all - the step is where 2*cb finally
+// clears 1000. At mass 40 the ONLY surviving row is the `ratio` slot:
+// retail spills it to a fresh [ebp-0x8] while ours reuses the dead
+// `defender` parameter slot [ebp+0x8], and DECLARING `ratio` ONCE AT
+// FUNCTION SCOPE (rather than a fresh one per arm) is exactly the
+// 99.9657 -> 100.0000 step. That spelling is landed below: it is retail's,
+// it costs nothing, and it is +0.0342 on its own (94.7603 -> 94.7945).
+// Position within the function is irrelevant - before the guards or after
+// them both measure 94.7945 at mass 0 and 100.0000 at mass 40 - so the form
+// after the guards is kept. `long damage` named as well is byte-flat;
+// `double ratio` regresses to 94.6747.
+// WHAT THE MASS UNIT IS (new, and it generalises): `int padN = N;` alone is
+// byte-flat to n=80, and `padv = <const>` repeated is byte-flat to n=80 -
+// C1 dead-store-eliminates both BEFORE the inliner measures `cb`. Only the
+// SELF-ASSIGNMENT survives to be counted: `padv = padv;` x80 reaches the
+// same 99.9657, and `int padN = N; padN = padN;` x40 does it with half the
+// statements, so distinct locals and assignment nodes both feed `cb`.
+// Titration scaffolding is NOT landed - the 40 units have no real-source
+// counterpart in a sixteen-statement body, and every realistic spelling
+// measured (naming either damage, float or long, at either scope) is
+// byte-flat at 94.7945. This function is budget-capped, not mis-spelled.
 VA(0x004264d0, 0x2ED)  // anchor-global, dc 0x2b948
 void type_AI_combat_data::do_general_melee(type_AI_combat_data& defender)
 {
@@ -1221,13 +1245,14 @@ void type_AI_combat_data::do_general_melee(type_AI_combat_data& defender)
         return;
     if (target == 0.0)
         return;
+    float ratio;
     if (attacker > target) {
         defender.kill();
-        float ratio = target / attacker + 0.05;
+        ratio = target / attacker + 0.05;
         inflict_damage(static_cast<long>(ratio * target), 0);
     } else {
         kill();
-        float ratio = attacker / target + 0.05;
+        ratio = attacker / target + 0.05;
         defender.inflict_damage(static_cast<long>(ratio * attacker), 0);
     }
 }
