@@ -741,7 +741,7 @@ long army::get_average_damage(const army* enemy, unsigned char ranged_attack, lo
 #endif  // @carcass
 
 VA(0x00442880, 0x68)  // anchor-callee, dc 0x47bcc
-unsigned char army::is_enemy(const army* arg)
+unsigned char army::is_enemy(const army* arg) const
 {
     if (!arg)
         return 0;
@@ -755,10 +755,63 @@ unsigned char army::is_enemy(const army* arg)
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2790
+// RECONSTRUCTED AND WITHDRAWN 2026-08-14, body kept for the next lane.
+// The predicate below is verified instruction-for-instruction against
+// the retail slot - the ballista and the arrow tower shoot
+// unconditionally; otherwise the creature's shooter bit Is(2) and a
+// positive shotsLeft are required; then, unless the controlling hero
+// carries the Bow of the Sharpshooter, an adjacent enemy on EITHER hex
+// disqualifies the shot; and finally advanced-or-better Forgetfulness
+// stops it regardless. Every field it reads is sliced in army.h off
+// this body.
+//
+// It scores 60.00 and is NOT claimed. The residual is the documented
+// EDI shrink-wrap: retail sinks `push edi` past the four early-out
+// tests, so its two early `return 0`s share ONE three-instruction
+// epilogue that does not pop edi, while our CL saves edi in the
+// prologue and therefore has to emit a separate popping epilogue at
+// every early exit. That is the register-homing family, not a
+// source-addressable knob, and it is the same wall an earlier lane
+// recorded here at 83.29.
+//
+// WHAT THIS COSTS ITS CALLER, measured: get_total_combat_value
+// (0x442e60) inlines this body with `excluded` constant-folded to 0,
+// and without the inline it sits at 49.64 - everything from the
+// get_unit_combat_value call onward is already byte-identical, so the
+// whole gap is the missing expansion. The inline IS reachable: marking
+// this definition `inline` fires it and takes the caller to 81.97 -
+// but VC6 then emits no out-of-line body at all (can_shoot 0.0), which
+// retail plainly has, so the keyword is not the answer. And the
+// merged function brings its own divergence: our CL hoists the literal
+// 0 into EBX across the inlined arms (`xor ebx,ebx` / `cmp [numTroops],
+// ebx` / `mov [ranged], bl`) where retail materializes each constant,
+// which is exactly the literal-into-EBX hoist army::Turn's residual
+// note records. So the caller does not reach 100 by winning the inline
+// either, and BOTH rows are parked rather than landed low.
 // RETAIL_LOCATED(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
 unsigned char army::can_shoot(const army* excluded) const
 {
-    // @stub
+    if (creatureType == ARMY_CREATURE_BALLISTA
+        || creatureType == ARMY_CREATURE_ARROW_TOWER)
+        return 1;
+    if (!(Is(2) & 1))
+        return 0;
+    if (shotsLeft <= 0)
+        return 0;
+    hero* controller = get_controller();
+    if (!controller
+        || !controller->IsWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
+        if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded))
+            return 0;
+        if (creatureId & 1) {
+            int hex = gridIndex + (facing ? 1 : -1);
+            if (gpCombatManager->enemy_is_adjacent(this, hex, excluded))
+                return 0;
+        }
+    }
+    if (forgetfulnessRounds && forgetfulnessLevel >= 2)
+        return 0;
+    return 1;
 }
 
 // E:\gamedcs\army.cpp:2804
@@ -790,10 +843,40 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsi
 }
 
 // E:\gamedcs\army.cpp:2910
+// RECONSTRUCTED AND WITHDRAWN 2026-08-14 with can_shoot, body kept.
+// What the whole stack is worth to the AI. can_shoot is INLINED here -
+// retail's copy is the 0x4428f0 body with `excluded` constant-folded
+// to 0 at both enemy_is_adjacent calls, which is the /Ob2 signature of
+// a real `can_shoot(0)` call site rather than duplicated source - and
+// get_unit_combat_value is NOT (0x410 bytes is far over the budget,
+// and retail calls it).
+//
+// The two tails are the same product seen two ways: a stack whose
+// creature bit 23 is set is priced by raw count, everyone else by the
+// EFFECTIVE count `(hitPoints * numTroops - topCreatureDamage) /
+// hitPoints`, which folds the wounded top creature back in as a
+// fraction. Both quotients divide the per-unit value, so the division
+// is written last in both arms.
+//
+// NOT CLAIMED: 49.64 as written (our CL keeps the can_shoot call) and
+// 81.97 once the inline is forced. Everything from the
+// get_unit_combat_value call to the end - both floating-point tails,
+// the argument-slot homing, the /Op fild round trips - is already
+// byte-identical in BOTH states, so this body is right and only the
+// inliner stands between it and exact. The full measurement is in
+// can_shoot's note above.
 // RETAIL_LOCATED(0x00442e60, 0x169)  // anchor-global, dc 0x48168
 long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
 {
-    // @stub
+    if (numTroops <= 0)
+        return 0;
+    unsigned char ranged = can_shoot(0);
+    double value = get_unit_combat_value(lowest_attack, lowest_defense,
+                                         ranged, 0);
+    if (Is(23) & 1)
+        return static_cast<long>(numTroops * value / 5.0);
+    return static_cast<long>((hitPoints * numTroops - topCreatureDamage)
+                             * value / hitPoints);
 }
 
 // E:\gamedcs\army.cpp:2928
