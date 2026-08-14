@@ -500,12 +500,16 @@ public:
     // other stack) and only honours the preference while it is non-zero.
     // Name is an address ordinal.
     int field_132c4;                  // +0x132c4
-    // DoCompAI (0x4221f0) zeroes this dword as the very first thing it
-    // does, before it even turns the highlighter off - a per-stack AI
-    // turn counter or latch. Name is an address ordinal; no roster
-    // reaches the slot (the Dreamcast dump carries no combatManager
-    // fieldlist at all).
-    int field_132c8;                  // +0x132c8
+    // The stack that most recently finished a move. army::simple_move
+    // (0x445950) clears it before it moves anything and stores `this`
+    // into it on EVERY exit afterwards - the successful fly, the
+    // successful teleport, the walk and both ValidFlight refusals -
+    // and DoCompAI (0x4221f0) zeroes it as the very first thing it
+    // does, before it even turns the highlighter off. An `army*`, not
+    // a counter: simple_move's store is `mov [ecx+0x132c8], esi` with
+    // esi holding `this`. Name is provisional; no roster reaches the
+    // slot (the Dreamcast dump carries no combatManager fieldlist).
+    army* lastMovedArmy;              // +0x132c8
     unsigned char field_132cc;        // +0x132cc
     char pad_132cd[0x3];
     int field_132d0;                  // +0x132d0
@@ -781,6 +785,28 @@ public:
     // header inlines army::Is / get_current_army / the adventure-menu
     // caller). Its own claim waits for the TU that owns 0x477e10.
     void TurnOffHighlighter(unsigned char restore);           // 0x477e10
+    // 0x46a520 (68 B), army::simple_move's second call: it zeroes a
+    // 187-byte per-hex row at this + 0x14031 with a `rep stosd` of 46
+    // dwords plus a word plus a byte - the cell count exactly - and
+    // then raises the hex, or the two hexes, the passed stack stands
+    // on. It sits in cmbtmgr.obj's own bracket (immediately after
+    // IsQuickCombat 0x46a4a0) but the DC roster has no row for it
+    // there, so both the NAME and the parameter's constness are
+    // PROVISIONAL and its claim waits for the lane that reconstructs
+    // the body. The row it clears is deliberately NOT modelled here:
+    // this declaration alone already costs GetCommand 92.5714 ->
+    // 92.5357 unconditionally (include-set class, bisected), so it is
+    // scoped to army.cpp and the field waits for the same lane.
+#ifdef HOMM3_CMBTMGR_MOVE_VIEW
+    void mark_moving_army(const army* moving_army);           // 0x46a520
+#endif
+    // 0x46a520 (68 B), the row above's only decoded writer and
+    // army::simple_move's second call: it zeroes field_14031 and marks
+    // the hex - or the two hexes - the passed stack stands on. It sits
+    // in cmbtmgr.obj's own bracket (immediately after IsQuickCombat
+    // 0x46a4a0) but the DC roster has no row for it there, so both the
+    // NAME and the parameter's constness are PROVISIONAL and its claim
+    // waits for the lane that reconstructs the body.
     CSprite* LoadCreatureSprite(int creatureType);             // 0x5a92f0
     // Both live in ai.cpp (DC ai.obj) and are claimed there.
     long get_total_combat_value(long side, long lowest_attack,

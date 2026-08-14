@@ -79,7 +79,7 @@ combatManager::combatManager()
     field_13d2c = 0;
     field_13d30 = 0;
     field_13d34 = 0;
-    field_132c8 = 0;
+    lastMovedArmy = 0;
     field_132cc = 0;
     field_132e0 = 0;
     field_132f4 = COMBAT_FORTIFICATION_NONE;

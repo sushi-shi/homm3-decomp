@@ -1276,7 +1276,7 @@ wait:
 VA(0x004221f0, 0xD0)  // anchor-callee, dc 0x27138
 void combatManager::DoCompAI(int whichGroup)
 {
-    field_132c8 = 0;
+    lastMovedArmy = 0;
     TurnOffHighlighter(1);
     army* current_army = get_current_army();
     current_army->side = -1;
