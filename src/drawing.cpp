@@ -11,6 +11,43 @@
 // dword lanes are proven by ResetLimitCreature and thirteen other readers.
 DATA(0x006aace8) TDrawbridgeBounds gCombatAreaLimits;
 
+// ARITY SCREEN over the located rows, run 2026-08-14 before reconstructing
+// anything here. `ret N` against the Dreamcast parameter count:
+//
+//   0x4937d0 ret 4    SetupGridForArmy(const army*)          1  OK
+//   0x493930 ret 8    UpdateGrid(int, int)                   2  OK
+//   0x493cf0 ret      DrawBackground()                       0  OK
+//   0x494440 ret 0x18 DrawFrame(6)                           6  OK
+//   0x495650 ret      DrawCreatureAndHeroSubwindows()        0  OK (claimed)
+//   0x495bf0 ret      ComputeMaxExtent()                     0  OK
+//   0x495f50 ret 0x20 ComputeExtent(8)                       8  OK
+//   0x4960d0 ret      CycleCombatScreen()                    0  OK
+//   0x494c20 ret 8    DrawObstacleAt(int)                    1  +1
+//   0x494f40 ret 0xc  DrawWallAt(int, int)                   2  +1
+//   0x495090 ret 0x20 DrawArcher(7)                          7  +1
+//
+// Eight of eleven agree; the three that do not all carry exactly ONE MORE
+// stack argument than the DC prototype, so this is not a shifted map (a
+// shift would scatter the deltas rather than line them up at +1). Write
+// the DC prototype for those three and the frame can never match - the
+// extra parameter is trailing.
+//
+// 0x495090's extra argument is decoded: a byte that selects table index 0
+// vs 0x60 in the 16-bit table at [0x6aacb0 + 0x1c], i.e. a colour row -
+// exactly what DrawCreatureAlpha's trailing `iColor` does, and
+// DrawCreatureAlpha (dc 0x85b50) is the neighbouring DC row with eight
+// parameters. So either these three gained a Complete-era colour argument
+// or 0x495090 is DrawCreatureAlpha. Its body forwards its other seven
+// arguments verbatim to ComputeExtent (0x495f50) plus the +0x13d2c limit
+// byte as SaveBiggestExtent, and the screen puts ComputeExtent at eight,
+// which is what makes the forwarding legible.
+//
+// Every row here reads the combatManager limit band at +0x13d2c..+0x13d44
+// - a byte at +0x13d2c, then dwords at +0x13d30/+0x13d34 (two enables) and
+// +0x13d38/+0x13d3c/+0x13d40/+0x13d44 used as clip bounds compared in the
+// order (>= , <= , > , <) against SLimitData's four dwords at +0/+4/+8/+0xc.
+// cmbtmgr.h wants that band modelled before this TU is opened.
+
 #if 0  // @carcass
 
 // E:\gamedcs\drawing.cpp:47
