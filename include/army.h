@@ -530,6 +530,25 @@ public:
     // `const army*`.
     long get_multi_head_directions(long our_hex, const army* enemy,
                                    long enemy_hex) const;
+    // The two neighbours of a combat direction. DC rows 0x45fc0 /
+    // 0x46008, and NEITHER has a retail out-of-line slot - the whole
+    // bracket 0x440160..0x440306 is accounted for and the next carve
+    // row is 0x440310 - so retail inlines both away. They are defined
+    // `inline` in army.cpp for exactly that reason.
+    // BEHIND A VIEW, and the reason is MEASURED: declaring this pair
+    // unconditionally in the class costs command.obj's
+    // combatManager::GetCommand 92.5714 -> 92.5357, with no semantic
+    // change anywhere and nothing else in the tree moving. That is the
+    // include-set-sensitivity class - two more member declarations
+    // shift VC6's optimizer state in every TU that sees this header -
+    // and army.cpp is the only consumer, so the surface is scoped to
+    // it the way advmgr / events / hero already scope theirs. The
+    // measurement is the whole justification: remove the guard and
+    // GetCommand drops again.
+#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
+    long get_clockwise(long direction) const;
+    long get_counter_clockwise(long direction) const;
+#endif
     // DC public ?CanFit@army@@QBAHHHPAH@Z; mark_teleport's retail call
     // passes (hex, 0, 0) through a const army pointer.
     int CanFit(int destIndex, int bAllowShifting,
@@ -592,6 +611,16 @@ public:
     // which is the whole reason this enum can exist at all. Fold it back
     // into TCreatureType when an owner moves initialize.cpp's includes.
     enum EArmyCreatureId {
+        // The three-headed attacker. get_multi_head_directions
+        // (0x448ab0) hands every OTHER creature the full adjacency
+        // mask (0xff wide, 0x3f narrow) and only this id gets the
+        // three-direction fan, which is exactly the Cerberus rule.
+        // The id is fixed by arithmetic, not by a roster: Demon is
+        // 0x30 two lines below on independent evidence, and 0x2f is
+        // the slot immediately before it - the Inferno tier that ends
+        // Imp / Familiar / Gog / Magog / Hell Hound / CERBERUS /
+        // Demon. NH3API spelling.
+        ARMY_CREATURE_CERBERUS = 0x2f,
         ARMY_CREATURE_DEMON = 0x30,
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
@@ -808,6 +837,24 @@ public:
     unsigned char IsIncapacitated() const;                      // 0x41f380
 };
 SIZE(army, 0x548);
+
+// The WIDE-creature direction ring, byte-read from the hash-verified
+// image and self-proving: the two tables are exact mutual inverses
+// (0x660878 = {0,1,2,4,5,6,7,3}, 0x660898 = {0,1,2,7,3,4,5,6}), so one
+// maps a direction id onto its position around an eight-slot ring and
+// the other maps back. That is what lets a two-hex stack's clockwise /
+// counter-clockwise neighbours be found with a single +-1 step modulo
+// 8 where a one-hex stack needs only +-1 modulo 6: the two WIDE slots
+// 6 and 7 do not sit at the end of the ring, they sit between the real
+// neighbours (the ring order is 0,1,2,7,3,4,5,6), and the tables exist
+// to say where. Sliced by army::get_clockwise / get_counter_clockwise,
+// whose only located expansion is get_multi_head_directions
+// (0x448ab0). Names are bootstrap inventions - no roster attests them.
+// Scoped to army.cpp with the accessor pair above, same measurement.
+#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
+DATA(0x00660878) extern const long akWideDirectionRingIndex[8];
+DATA(0x00660898) extern const long akWideDirectionRingOrder[8];
+#endif
 
 // The caliph (creature-cast) spell predicates, both /Gr free functions
 // taking their two arguments in ECX/EDX.
