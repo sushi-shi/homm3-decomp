@@ -522,8 +522,23 @@ public:
     enum EArmyCreatureId {
         ARMY_CREATURE_DEMON = 0x30,
         ARMY_CREATURE_BEHEMOTH = 0x60,
-        ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61
+        ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
+        // The highest id GetName (0x440100) accepts: its range guard is
+        // `type < 0 || type > 0x96`, so the name rows it indexes run
+        // 0..150 inclusive - one past the 150-entry bound armygrp.h
+        // currently declares for akCreatureTypeTraits.
+        ARMY_CREATURE_LAST = 0x96
     };
+
+    // 0x440100, a STATIC member: retail passes both arguments in
+    // registers (ecx = the creature id it indexes akCreatureTypeTraits
+    // by, edx = the count it compares against 1), which is /Gr's
+    // convention for a static member or free function and is exactly
+    // what refutes the carcass's `range_attack()` here. Answers the
+    // singular name for a count of one and the plural otherwise, and
+    // the shared empty string for an out-of-range id. Name is the HD
+    // crossbuild's, which pairs this rva by masked byte identity.
+    static const char* GetName(int type, long count);
 
     // The engine's creatureId bit accessor - the DC roster's
     // army::Is(unsigned attribute) (Army.h:765, dc 0x27ce4, 14 B), and

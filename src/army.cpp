@@ -388,15 +388,21 @@ void army::range_attack(army* armyToAttack)
 // this bracket at all (0x440160 + 0x1a6 = 0x440306, and the next
 // carve row is 0x440310): retail inlined or dropped both.
 
-// E:\gamedcs\army.cpp:1541
-// RETAIL_LOCATED(0x00440100, 0x3E)  // anchor-global (HD masked-byte
-//     identity + body: akCreatureTypeTraits +0x14/+0x18 name pair,
-//     two fastcall register arguments), retail-only slot
-const char* army::GetName(long count)
-{
-    // @stub
-}
 #endif  // @carcass
+
+// E:\gamedcs\army.cpp:1541
+VA(0x00440100, 0x3E)  // anchor-global (HD masked-byte identity + body:
+                      // akCreatureTypeTraits +0x14/+0x18 name pair, two
+                      // fastcall register arguments), retail-only slot
+const char* army::GetName(int type, long count)
+{
+    if (type >= 0 && type <= ARMY_CREATURE_LAST) {
+        if (count == 1)
+            return akCreatureTypeTraits[type].m_name;
+        return akCreatureTypeTraits[type].m_plural_name;
+    }
+    return DATA_COMPGEN(0x00691210, emptyCreatureName, "");
+}
 
 // The 31-byte slot between GetName and range_attack(), and the ONE
 // body in this TU that answers "whose stack is this right now": the
@@ -1125,11 +1131,56 @@ int army::OtherArmyAdjacent(int OAgroup, int OAindex)
 }
 
 // E:\gamedcs\army.cpp:4891
-// RETAIL_LOCATED(0x00446720, 0x107)  // anchor-global, dc 0x4b454
+#endif  // @carcass
+
+// Residual (91.7125%): control flow is EXACT (`homm3 vc6 why-reg`
+// reports flow-distance 0; all 16 unpaired slots are one register
+// binding). Our CL hoists the literal 1 into EBX - costing a `push ebx`
+// in the prologue and turning retail's `test al, 1` / `mov [cell], 1`
+// into `test bl, al` / `mov [cell], bl` - because the value is used
+// three times per arm. Retail materializes it at every site instead.
+// Rejected, all byte-identical to the spelling kept: `Is(0) & 1` for
+// the two-hex test (retail's separate `mov al, byte ptr [esi+0x84]`
+// looked like that shape), literal 0/1 in place of FACING_ATTACKER /
+// FACING_DEFENDER, both of those together, and hexcell::field_1a
+// re-typed `unsigned char` (the signedness-CSE lever, which moves -1
+// but not +1). `homm3 vc6 why-reg`'s guided search finds ONE catalog
+// mutation for this class and it does not compile here; its verdict is
+// "a value promoted on one side only (register pressure shifted)",
+// i.e. the register-homing family, not a source-addressable knob.
+VA(0x00446720, 0x107)  // anchor-global, dc 0x4b454
 void army::Turn(unsigned char play_animation)
 {
-    // @stub
+    if (facing == FACING_ATTACKER) {
+        if (play_animation)
+            PlayAnimation(9, -1, 0);
+        facing = FACING_DEFENDER;
+        if (creatureId & 1) {
+            gridIndex--;
+            gpCombatManager->cells[gridIndex].field_1a = 0;
+            gpCombatManager->cells[gridIndex + 1].field_1a = 1;
+        }
+        if (play_animation) {
+            PlayAnimation(8, -1, 0);
+            PlayAnimation(2, 1, 0);
+        }
+    } else {
+        if (play_animation)
+            PlayAnimation(7, -1, 0);
+        facing = FACING_ATTACKER;
+        if (creatureId & 1) {
+            gridIndex++;
+            gpCombatManager->cells[gridIndex].field_1a = 1;
+            gpCombatManager->cells[gridIndex - 1].field_1a = 0;
+        }
+        if (play_animation) {
+            PlayAnimation(10, -1, 0);
+            PlayAnimation(2, 1, 0);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4956
 // RETAIL_LOCATED(0x00446830, 0x103)  // anchor-global, dc 0x4b558
