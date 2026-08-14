@@ -3,10 +3,18 @@
 // 27 functions in link order; 28 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "wingraph.h"
+#include "kbwin.h"
+#include "misc.h"
+#include "mousemgr.h"
+#include "winmgr.h"
 
-// Private desktop extents returned by the two six-byte accessors below.
-// No retail or Dreamcast symbol attests storage names, so these remain
-// house-ordinal placeholders in their owning TU.
+// Private desktop metrics, written as one consecutive triple by
+// GetDesktopInfo's three GetDeviceCaps calls (BITSPIXEL, HORZRES, VERTRES)
+// and read back by the two six-byte accessors below. No retail or Dreamcast
+// symbol attests storage names, so these remain house-ordinal placeholders
+// in their owning TU.
+DATA(0x0068c870)
+static int gUnnamed68c870;
 DATA(0x0068c874)
 static int gUnnamed68c874;
 DATA(0x0068c878)
@@ -154,15 +162,26 @@ unsigned char DDSetFullScreenStatus(int iNewStatus)
     // @stub
 }
 
-// E:\gamedcs\wingraph.cpp:1833
-DC_ONLY(0x19a418, 0x4)
-unsigned char GetDesktopInfo()
-{
-    // @stub
-}
-
 // E:\gamedcs\wingraph.cpp:1857
 #endif  // @carcass
+
+// E:\gamedcs\wingraph.cpp:1833
+// Retail's row is the real query the Dreamcast port stubbed out to four
+// bytes: it fills the desktop-metric triple the two accessors below read,
+// which pins the identity independently of the roster order.
+VA(0x00601460, 0x52)  // anchor-global (the 0x68c870 triple), dc 0x19a418
+unsigned char GetDesktopInfo()
+{
+    HDC hDesktopDC = GetDC(0);
+    if (hDesktopDC) {
+        gUnnamed68c870 = GetDeviceCaps(hDesktopDC, BITSPIXEL);
+        gUnnamed68c874 = GetDeviceCaps(hDesktopDC, HORZRES);
+        gUnnamed68c878 = GetDeviceCaps(hDesktopDC, VERTRES);
+        ReleaseDC(0, hDesktopDC);
+        return gUnnamed68c870 == DESKTOP_REQUIRED_BITS_PER_PIXEL;
+    }
+    return 0;
+}
 
 VA(0x006014c0, 0x6)  // exact load of giDesktopWidth, dc 0x19a41c
 int GetDesktopWidth()
@@ -190,37 +209,58 @@ void InitGraphics()
     DDInitGraphics();
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\wingraph.cpp:1882
-// Located as AppWndProc's WM_PAINT callee, called (hwnd, NULL) - the
-// homm2 shape; a 4-byte WinCE stub on DC, a real 112-byte paint here.
-// RETAIL_LOCATED(0x00601820, 0x70): not reconstructed; anchor-callee, dc 0x19a440
+// AppWndProc's WM_PAINT callee, called (hwnd, NULL) - the homm2 shape; a
+// four-byte WinCE stub on Dreamcast, a real 112-byte paint here. An empty
+// update rectangle from BeginPaint is widened to the whole client area
+// before the blit, and the blit is skipped on a degenerate rectangle.
+VA(0x00601820, 0x70)  // anchor-callee (AppWndProc WM_PAINT), dc 0x19a440
 int AppPaint(void* hwnd, void* hdc)
 {
-    // @stub
+    PAINTSTRUCT ps;
+    RECT clientRect;
+    HWND window = static_cast<HWND>(hwnd);
+
+    BeginPaint(window, &ps);
+    if (!ps.rcPaint.right || !ps.rcPaint.bottom) {
+        GetClientRect(window, &clientRect);
+        ps.rcPaint = clientRect;
+    }
+    if (ps.rcPaint.right - ps.rcPaint.left > 0
+        && ps.rcPaint.bottom - ps.rcPaint.top > 0)
+        RobAppBlit(&ps.rcPaint);
+    EndPaint(window, &ps);
+    return 1;
 }
 
 // E:\gamedcs\wingraph.cpp:1916
-// Located as AppExit's first callee (kbwin 0x4f7fa0; homm2 AppExit
-// order). Retail body is a 5-byte tail jmp into 0x6018a0 - the WING
-// arm of homm2's wrapper is gone, only the DD path survives.
-// RETAIL_LOCATED(0x00601890, 0x5): not reconstructed; anchor-callee, dc 0x19a444
+// AppExit's first callee (kbwin 0x4f7fa0; homm2 AppExit order). Retail
+// body is a 5-byte tail jmp into 0x6018a0 - the WING arm of homm2's
+// wrapper is gone, only the DD path survives.
+VA(0x00601890, 0x5)  // anchor-callee, dc 0x19a444
 void CleanUpWinGraphics()
 {
-    // @stub
+    DDCleanUpWinGraphics();
 }
 
 // E:\gamedcs\wingraph.cpp:1922
-// Located by shape: fastcall bool(int) that early-outs on the
-// 0x6989d4 flag, compares the argument against bWindowedMode
-// (0x6987b8), calls the adjacent static DDSetFullScreenStatus
-// (0x601a00) and gpWindowManager->UpdateScreen(0,0,800,600); sole
-// caller is AppCommand's KBWIN_MENU_FULLSCREEN arm (homm2 lineage).
-// RETAIL_LOCATED(0x006019a0, 0x5A): not reconstructed; anchor-callee, dc 0x19a454
+// Located by shape: fastcall bool(int) that early-outs on the 0x6989d4
+// flag, compares the argument against bWindowedMode (0x6987b8), calls the
+// adjacent static DDSetFullScreenStatus (0x601a00) and
+// gpWindowManager->UpdateScreen(0,0,800,600); sole caller is AppCommand's
+// KBWIN_MENU_FULLSCREEN arm (homm2 lineage).
+VA(0x006019a0, 0x5a)  // anchor-callee, dc 0x19a454
 unsigned char SetFullScreenStatus(int bFullScreenOn)
 {
-    // @stub
-}
+    if (gUnnamed6989d4)
+        return 0;
+    if (bFullScreenOn == bWindowedMode)
+        return 1;
 
-#endif  // @carcass
+    unsigned char bChanged = DDSetFullScreenStatus(bFullScreenOn);
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    if (bFullScreenOn)
+        gpMouseManager->Update(1);
+    WritePrefs();
+    return bChanged;
+}

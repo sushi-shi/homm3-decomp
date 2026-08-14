@@ -16,6 +16,31 @@ void InitGraphics();                                     // 0x6014e0
 void DDInitGraphics();                                   // 0x6014f0
 int GetDesktopWidth();                                   // 0x6014c0
 int GetDesktopHeight();                                  // 0x6014d0
+// GetDesktopInfo's verdict: the engine's 16-bit surfaces need a desktop
+// already at 16bpp, so the GetDeviceCaps(BITSPIXEL) reading is compared
+// against this depth and the result is the function's return value.
+enum { DESKTOP_REQUIRED_BITS_PER_PIXEL = 16 };
+unsigned char GetDesktopInfo();                          // 0x601460
+
+// The two DirectDraw workers the wrappers above hand off to. Retail emits
+// each immediately after its own wrapper (0x6018a0 follows
+// CleanUpWinGraphics, 0x601a00 follows SetFullScreenStatus) - the
+// file-static emission pattern - so they are declared, not defined, until
+// their bodies are reconstructed.
+void DDCleanUpWinGraphics();                             // 0x6018a0
+unsigned char DDSetFullScreenStatus(int iNewStatus);     // 0x601a00
+
+// The blitter AppPaint hands its damaged rectangle to; the wingraph roster's
+// RobAppBlit slot (fastcall, one tagRECT* in ecx).
+struct tagRECT;
+void RobAppBlit(tagRECT* comb_rect);                     // 0x5ffe70
+
+// Fullscreen-toggle inhibitor read by SetFullScreenStatus's leading test.
+// That test is the ONLY reference to .bss 0x6989d4 anywhere in the image (a
+// whole-image scan for the absolute operand returns exactly one hit), so no
+// writer attests an owning TU; the extern stays with its one consumer and
+// the name is a house ordinal.
+extern int gUnnamed6989d4;                               // .bss 0x6989d4
 
 struct IDirectDrawSurface4;
 struct IDirectDrawSurface;

@@ -1573,9 +1573,13 @@ winfile	?SeekBegin@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffcd0
 winfile	?SeekCur@File@@UAEKH@Z	100.0000	100.0000	100.0000	0x1ffcf0
 winfile	?SeekEnd@File@@UAEKXZ	100.0000	100.0000	100.0000	0x1ffcb0
 winfile	?Write@File@@UAEKPAXK@Z	100.0000	100.0000	100.0000	0x1ffc50
+wingraph	?AppPaint@@YIHPAX0@Z	100.0000	100.0000	100.0000	0x201820
+wingraph	?CleanUpWinGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x201890
 wingraph	?GetDesktopHeight@@YIHXZ	100.0000	100.0000	100.0000	0x2014d0
+wingraph	?GetDesktopInfo@@YIEXZ	100.0000	100.0000	100.0000	0x201460
 wingraph	?GetDesktopWidth@@YIHXZ	100.0000	100.0000	100.0000	0x2014c0
 wingraph	?InitGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x2014e0
+wingraph	?SetFullScreenStatus@@YIEH@Z	100.0000	100.0000	100.0000	0x2019a0
 winmgr	?BroadcastMessage@heroWindowManager@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x202370
 winmgr	?ConvertToHover@heroWindowManager@@QAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202360
 winmgr	?DoDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	100.0000	100.0000	100.0000	0x202520
