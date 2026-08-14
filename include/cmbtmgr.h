@@ -771,6 +771,18 @@ public:
                                 const searchArray* search_array); // 0x4208f0
     void mark_firewalls(const army* current_army, long* enemy_attacks,
                         type_AI_combat_parameters* estimate);   // 0x4214f0
+    // The moat twin of mark_firewalls, retail-only: 0x421590 walks the
+    // eleven gMoatColumns entries and, when the defending town is not a
+    // Fortress, subtracts the moat's get_loss_combat_value from each of
+    // those hexes' danger scores, then repeats over gOuterMoatColumns
+    // under the second flag at +0x53a9. Its argument list is
+    // mark_firewalls' exactly, and choose_melee_target is its only
+    // caller. NO Dreamcast roster row attests it, so the name follows
+    // this TU's own mark_* family rather than importing a guess; the
+    // body is left unreconstructed (declared only, so the call stays
+    // extern).
+    void mark_moat(const army* current_army, long* enemy_attacks,
+                   type_AI_combat_parameters* estimate);        // 0x421590
     long choose_shooter_target(const army* current_army,
                                type_AI_combat_parameters* data,
                                long* best_value);             // 0x41eb80

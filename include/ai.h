@@ -32,7 +32,18 @@ enum EAreaAttackCreature {
     // plain Demon, two slots below Pit Fiend in the same run.
     CREATURE_DEMON = 0x30,
     CREATURE_PIT_LORD = 0x33,
-    CREATURE_DRAGON_FLY = 0x5b
+    CREATURE_DRAGON_FLY = 0x5b,
+    // The one pair choose_melee_target names: 0x421680 compares
+    // current_army->creatureType against 0x48 and 0x49 back to back and
+    // gives both the same arm - take the raw hex value instead of adding
+    // it to the accumulated change, which is the no-retaliation flyer
+    // rule. 0x48/0x49 are the two-slot Harpy run of the Dungeon roster,
+    // immediately below Beholder 0x4a. They live here for the same
+    // reason every enumerator above does: armygrp.h's roster is included
+    // nearly tree-wide, and adding to it moved initialize_game_data off
+    // exact.
+    CREATURE_HARPY = 0x48,
+    CREATURE_HARPY_HAG = 0x49
 };
 
 // E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort
