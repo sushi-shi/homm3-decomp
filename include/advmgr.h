@@ -450,6 +450,8 @@ public:
                             unsigned char update);
     void UpdateHeroLocator(int which, unsigned char drawWinSect,
                            unsigned char update);
+    void UpdateTownLocator(int which, unsigned char drawWinSect,
+                           unsigned char update);
     void DoHeroKnob(unsigned char up);
     void DoTownKnob(unsigned char up);
     unsigned char SetElevationToggleImage(int level);

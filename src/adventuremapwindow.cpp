@@ -8,6 +8,7 @@
 #include "button.h"
 #include "game.h"
 #include "hero.h"
+#include "town.h"
 #include "message.h"
 #include "resourcedisplay.h"
 #include "textwdgt.h"
@@ -70,20 +71,6 @@ unsigned char TAdventureMapWindow::ProcessRightSelect(const message* msg)
 // E:\gamedcs\adventuremapwindow.cpp:678
 // RETAIL_LOCATED(0x00403010, 0x20A)  // anchor-global, dc 0xed8
 unsigned char TAdventureMapWindow::ProcessHover(int hx, int hy)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:914
-// RETAIL_LOCATED(0x00403420, 0x131)  // anchor-global, dc 0x10e8
-void TAdventureMapWindow::UpdateTownLocators()
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1043
-// RETAIL_LOCATED(0x004037a0, 0x117)  // anchor-global, dc 0x10f0
-void TAdventureMapWindow::UpdateTownLocator()
 {
     // @stub
 }
@@ -251,6 +238,60 @@ void TAdventureMapWindow::UpdateHeroLocators(int top, unsigned char drawWin,
         gpWindowManager->UpdateScreen(0, 0, 800, 600);
 }
 
+// E:\gamedcs\adventuremapwindow.cpp:914
+// The hero twin above, slot for slot, over topTown / numTowns /
+// TOWN_UP_ID / TOWN_DOWN_ID - including the same two shapes: the
+// WidgetSetStatus arm sits on the fall-through of each dim pair, and the
+// current-town sweep lives inside the drawWin block.
+VA(0x00403420, 0x131)  // anchor-global, dc 0x10e8
+void TAdventureMapWindow::UpdateTownLocators(int top, unsigned char drawWin,
+                                             unsigned char update)
+{
+    playerData* player = gpGame->GetLocalPlayer();
+    if (!player->IsHuman())
+        return;
+
+    if (top >= 0 && (top < topTown || top >= topTown + NUM_TOWN_BUTTONS)) {
+        if (top > player->numTowns - NUM_TOWN_BUTTONS)
+            top = player->numTowns - NUM_TOWN_BUTTONS;
+        if (top < 0)
+            top = 0;
+        topTown = top;
+    }
+
+    int i;
+    for (i = 0; i < NUM_TOWN_BUTTONS; i++)
+        UpdateTownLocator(i, 0, 0);
+
+    if (!topTown)
+        WidgetSetStatus(TOWN_UP_ID, widget::WIDGET_DIMMED);
+    else
+        WidgetClearStatus(TOWN_UP_ID, widget::WIDGET_DIMMED);
+
+    if (player->numTowns <= topTown + NUM_TOWN_BUTTONS)
+        WidgetSetStatus(TOWN_DOWN_ID, widget::WIDGET_DIMMED);
+    else
+        WidgetClearStatus(TOWN_DOWN_ID, widget::WIDGET_DIMMED);
+
+    if (drawWin) {
+        DrawWindow(0, 0xffff0001, 0xffff);
+
+        for (i = 0; i < NUM_TOWN_BUTTONS; i++) {
+            int townId = player->townIds[topTown + i];
+            if (townId != -1 && !gCompleteDrawAllCells
+                && townId == player->currTownId) {
+                BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+                                 TOWN_0_ID + i, 1);
+                DrawWindow(0, TOWN_0_ID + i, TOWN_0_ID + i);
+                break;
+            }
+        }
+    }
+
+    if (update)
+        gpWindowManager->UpdateScreen(0, 0, 800, 600);
+}
+
 // E:\gamedcs\adventuremapwindow.cpp:972
 // ARITY from retail: `ret 0xc` over (which, drawWinSect, update), the
 // DC TAdvMenu::UpdateHeroLocator shape. A negative `which` means "the
@@ -334,6 +375,42 @@ void TAdventureMapWindow::UpdateHeroLocator(int which, unsigned char drawWinSect
         }
         if (update)
             gpWindowManager->UpdateScreen(0x261, 32 * which + 0xd4, 0x30, 0x20);
+    }
+}
+
+// E:\gamedcs\adventuremapwindow.cpp:1043
+// The occupancy gate here is `which < player->numTowns`, NOT the hero
+// row's `townId != -1` - retail compares the slot index against the town
+// count and still calls GetPortraitFrame through game::GetTown, whose own
+// -1 arm hands the member a null `this`. That null call is retail's: the
+// portrait frame is read out of a town it never dereferences on that path.
+VA(0x004037a0, 0x117)  // anchor-global, dc 0x10f0
+void TAdventureMapWindow::UpdateTownLocator(int which, unsigned char drawWinSect,
+                                            unsigned char update)
+{
+    playerData* player = gpGame->GetLocalPlayer();
+    int townId = player->townIds[topTown + which];
+
+    if (which < player->numTowns && !gCompleteDrawAllCells) {
+        WidgetSetStatus(TOWN_0_ID + which, widget::WIDGET_ACTIVE);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+            TOWN_0_ID + which, gpGame->GetTown(townId)->GetPortraitFrame(1));
+    } else {
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+            TOWN_0_ID + which, 0);
+        WidgetClearStatus(TOWN_0_ID + which, widget::WIDGET_ACTIVE);
+    }
+
+    if (drawWinSect) {
+        DrawWindow(0, TOWN_0_ID + which, TOWN_0_ID + which);
+        if (which < player->numTowns && !gCompleteDrawAllCells
+            && townId == player->currTownId) {
+            BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+                             TOWN_0_ID + which, 1);
+            DrawWindow(0, TOWN_0_ID + which, TOWN_0_ID + which);
+        }
+        if (update)
+            gpWindowManager->UpdateScreen(0x2eb, 32 * which + 0xd4, 0x30, 0x20);
     }
 }
 
