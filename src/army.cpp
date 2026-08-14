@@ -17,7 +17,9 @@
 #define HOMM3_ARMY_SPELLCAST_VIEW
 #define HOMM3_ARMY_BERSERK_VIEW
 #define HOMM3_ARMY_ROUND_VIEW
+#define HOMM3_ARMY_CALIPH_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_CALIPH_VIEW
 #undef HOMM3_ARMY_ROUND_VIEW
 #undef HOMM3_ARMY_BERSERK_VIEW
 #undef HOMM3_ARMY_SPELLCAST_VIEW
@@ -29,7 +31,9 @@
 #define HOMM3_CMBTMGR_MOVE_VIEW
 #define HOMM3_CMBTMGR_RESURRECT_VIEW
 #define HOMM3_CMBTMGR_ROUND_VIEW
+#define HOMM3_CMBTMGR_CALIPH_VIEW
 #include "cmbtmgr.h"
+#undef HOMM3_CMBTMGR_CALIPH_VIEW
 #undef HOMM3_CMBTMGR_ROUND_VIEW
 #undef HOMM3_CMBTMGR_RESURRECT_VIEW
 #undef HOMM3_CMBTMGR_MOVE_VIEW
@@ -2175,14 +2179,48 @@ unsigned char is_valid_caliph_spell(int spell, const army* target)
     return spell_is_valid_on_target(spell, target);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:5564
-// RETAIL_LOCATED(0x00447ee0, 0xF8)  // dc-callgraph unique, dc 0x4c3ac
+// Roll one of the caliph spells the stack standing on `hex` is a legal
+// target for, and cast it. Counted first, then picked, then walked
+// again - two passes over the same 10..69 window, which is the shape
+// DC's army::get_valid_caliph_spells (0x4c374, no retail slot) supplies
+// for the first pass and retail expands here.
+//
+// is_valid_caliph_spell IS EXPANDED, NOT CALLED: the 33-byte wrapper
+// two rows above is exactly the akSpellTraits bit test plus the tail
+// jump to the worker, and that pair is what retail emits twice here
+// while still keeping the wrapper's out-of-line body at 0x447eb0.
+VA(0x00447ee0, 0xF8)  // dc-callgraph unique, dc 0x4c3ac
 void army::cast_caliph_spell(long hex)
 {
-    // @stub
+    if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+        return;
+    army* target = gpCombatManager->cells[hex].get_army();
+    if (!target)
+        return;
+    SpellID spell;
+    long count = 0;
+    for (spell = 10; spell < 70; spell++) {
+        if (is_valid_caliph_spell(spell, target))
+            count++;
+    }
+    if (count == 0)
+        return;
+    long pick = Random(1, count);
+    for (spell = 10; spell < 70; spell++) {
+        if (is_valid_caliph_spell(spell, target)) {
+            if (--pick == 0) {
+                // mastery 2 is ADVANCED on ai_tactical.h's
+                // TSkillMastery ladder, spelled as a literal because
+                // that header is not in this TU's closure.
+                gpCombatManager->CastSpell(spell, hex, 1, -1, 2, 6);
+                return;
+            }
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:5601
 // RETAIL_LOCATED(0x00448260, 0x582)  // anchor-global, dc 0x4c468
