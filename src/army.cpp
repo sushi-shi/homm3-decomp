@@ -15,7 +15,9 @@
 #define HOMM3_ARMY_ELEMENTAL_RULE_VIEW
 #define HOMM3_ARMY_MOVE_VIEW
 #define HOMM3_ARMY_SPELLCAST_VIEW
+#define HOMM3_ARMY_BERSERK_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_BERSERK_VIEW
 #undef HOMM3_ARMY_SPELLCAST_VIEW
 #undef HOMM3_ARMY_MOVE_VIEW
 #undef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
@@ -926,6 +928,17 @@ inline unsigned char army::can_shoot(const army* excluded) const
 // E:\gamedcs\army.cpp:2804
 #endif  // @carcass
 
+// auto_inline(off) IS LOAD-BEARING, and the reason is /Ob2's
+// single-call-site rule rather than any cost. GoBerserk (0x4456d0) is
+// this wrapper's ONLY call site in the TU as reconstructed so far, so
+// A12 fires and our CL expands the whole 92-byte body there - two
+// combatManager::enemy_is_adjacent calls where retail emits ONE call to
+// this function (predict-inline names the pair exactly). Retail's own
+// army.cpp plainly had more sites among the bodies still carcassed
+// here, which is why its A12 never fired; the pragma reproduces that
+// without inventing a call site. The out-of-line body is unaffected and
+// stays exact.
+#pragma auto_inline(off)
 VA(0x004429f0, 0x5C)  // anchor-global, dc 0x47c74
 unsigned char army::enemy_is_adjacent(const army* excluded) const
 {
@@ -941,6 +954,7 @@ unsigned char army::enemy_is_adjacent(const army* excluded) const
     }
     return 0;
 }
+#pragma auto_inline(on)
 
 #if 0  // @carcass
 
@@ -1366,15 +1380,73 @@ void army::get_berserk_targets(std::vector<army*>& armies) const
     // @stub
 }
 
-// E:\gamedcs\army.cpp:4208
-// RETAIL_LOCATED(0x004456d0, 0x164)  // anchor-global, dc 0x4a480
-void army::GoBerserk()
-{
-    // @stub
-}
-
 // E:\gamedcs\army.cpp:4249
 #endif  // @carcass
+
+// A berserked stack picks one of its legal victims at random and does
+// whatever it can to it - shoot if it may shoot, swing otherwise - and
+// if the list came back empty it simply defends.
+//
+// THE PREDICATE IS can_shoot's, SPELLED OUT rather than called. Retail
+// emits ONE call to army::enemy_is_adjacent(0) here where can_shoot's
+// own body expands the combat manager's three-argument form twice (once
+// per hex of a wide creature), so this is not that function inlined -
+// it is the same rule written again against the one-argument wrapper,
+// and it costs no call site can_shoot does not already own.
+//
+// AND IT HAS NO FLAG. can_shoot needs `int bCanShoot` because it has a
+// value to return; here the two answers are two STATEMENT arms, so the
+// condition stays one expression and the branches go straight to the
+// arms - which is why the controller lookup is an assignment inside the
+// chain rather than a statement above it. Hoisting it costs the
+// get_controlling_side expansion its position between the shotsLeft
+// test and the artifact test.
+//
+// Residual (86.01%): ONE branch polarity and its consequences. Every
+// instruction from the prologue through `cmp [forgetfulnessLevel], 2`
+// is byte-identical; retail then emits `jge <melee>` and lays the SHOOT
+// arm out at the fall-through, where our C2 emits `jl <shoot>` and
+// hoists the MELEE arm above it. The register permutation inside the
+// shoot arm (eax/edx against our ecx/eax) and the shared-versus-cloned
+// vector destructor push are both downstream of that one choice.
+// NOT SOURCE-ADDRESSABLE, and the probes say so: all FOUR spellings of
+// the same predicate - `if (mayShoot) {shoot} else {melee}`,
+// `if (!mayShoot) {melee} else {shoot}`, the same with an explicit
+// `return` closing the shoot arm, and the condition rewritten
+// positively as the MELEE rule - produce byte-identical code, and so
+// does an explicit `goto melee` with the melee block written LAST in
+// the source. C2 reorders the two arms itself on this CFG whatever the
+// source says. This is the merged-return / stale-CL-generation class.
+// The `push 0x8` against our `push 0x0` in the EH prologue is the
+// relocation addend and is not scored.
+VA(0x004456d0, 0x164)  // anchor-global, dc 0x4a480
+void army::GoBerserk()
+{
+    std::vector<army*> berserkTargets;
+    get_berserk_targets(berserkTargets);
+    int count = berserkTargets.size();
+    if (count == 0) {
+        gpCombatManager->field_3c = 12;
+        return;
+    }
+    army* target = berserkTargets[Random(0, count - 1)];
+    hero* controller;
+    if (creatureType == ARMY_CREATURE_BALLISTA
+        || creatureType == ARMY_CREATURE_ARROW_TOWER
+        || ((Is(2) & 1) && shotsLeft > 0
+            && ((controller = get_controller()) != 0
+                    && controller->IsWieldingArtifact(
+                           ARTIFACT_BOW_OF_THE_SHARPSHOOTER)
+                || !enemy_is_adjacent(0))
+            && (forgetfulnessRounds == 0 || forgetfulnessLevel < 2))) {
+        gpCombatManager->field_3c = 7;
+        gpCombatManager->field_44 = target->gridIndex;
+        if (target->combatSide == combatSide)
+            gpCombatManager->field_53dc[combatSide] = 1;
+    } else {
+        gpCombatManager->berserk_attack(this, target);
+    }
+}
 
 VA(0x00445840, 0x66)  // corroborates, dc 0x4a598
 long army::get_attack_direction(long our_hex, const army* enemy,
