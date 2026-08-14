@@ -23,6 +23,7 @@
 #ifndef HOMM3_QUEST_H
 #define HOMM3_QUEST_H
 
+#include <string>
 #include <va.h>
 // TAbstractFile, the two-slot save/load stream every quest deserializer
 // virtual-calls (slot 1 = Read). This adds NOTHING to seerhut.cpp's include
@@ -31,6 +32,18 @@
 #include "armygrp.h"
 
 class hero;
+
+// The packed map position the defeat-monster quest carries at +0x44 and
+// compares field by field in slot 10. The three widths are read straight off
+// that body: it xors the low word against the argument's and masks 0x3ff,
+// then xors the high word and masks 0x3ff and 0x3c00 out of the SAME xor.
+struct TQuestPosition {
+    unsigned short x : 10;
+    unsigned short : 6;
+    unsigned short y : 10;
+    unsigned short z : 4;
+    unsigned short : 2;
+};
 
 // Every derived class reads its own payload at +0x40, so the base closes at
 // 0x40; nothing between the vptr and there is attested.
@@ -50,8 +63,11 @@ public:
     // default to the shared `ret 8` stub at 0x5bc7e0, so both take two dword
     // arguments and return nothing. The NAMES are provisional inventions -
     // only the argument shape and the two overriding bodies are attested.
+    virtual std::string GetRequirementText();
     virtual void NotifyHeroDefeated(int hero_id, int player);
-    virtual void NotifyMonsterDefeated(int packed_position, int player);
+    // Slot 10's monster override (0x56ed40) is decoded but NOT claimed - see
+    // the residual note in seerhut.cpp.
+    virtual void NotifyMonsterDefeated(TQuestPosition where, int player);
     // Slot 11 / slot 12: the two deserializers. Both are loads - every body
     // in the family calls TAbstractFile slot 1 and then stores what came back
     // into the object - and they differ in format, not direction: slot 11
@@ -69,6 +85,7 @@ public:
     int required_level;  // +0x40
 
     virtual unsigned char is_satisfied(const hero* current_hero);
+    virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
     virtual void LoadFromMap(TAbstractFile* file);
 };
@@ -79,6 +96,7 @@ class type_skill_quest : public type_quest {
 public:
     unsigned char required_skills[4];  // +0x40
 
+    virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
     virtual void LoadFromMap(TAbstractFile* file);
 };
@@ -97,8 +115,8 @@ public:
 
 class type_monster_quest : public type_quest {
 public:
-    int map_monster;      // +0x40, the h3m identity slot 12 fills
-    int position;         // +0x44, packed x/y/z
+    int map_monster;             // +0x40, the h3m identity slot 12 fills
+    TQuestPosition position;     // +0x44
     int monster_id;       // +0x48
     int defeated_by;      // +0x4c, -1 until some player kills it
 
@@ -133,6 +151,7 @@ public:
 
     virtual unsigned char is_satisfied(const hero* current_hero);
     virtual int quest_type();
+    virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
 };
 
