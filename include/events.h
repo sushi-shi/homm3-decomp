@@ -52,6 +52,13 @@ enum EAdventureEventText {
     // pictures are what differ - and 63 is the already-visited line.
     ADV_EVENT_TEXT_IDOL = 62,
     ADV_EVENT_TEXT_IDOL_VISITED = 63,
+    // DoEventFountain (0x4a2480), the Fountain of FORTUNE - 55 is the
+    // reward and 56 the already-drunk line, immediately before the
+    // fountain of youth's own pair, which is exactly where the alphabet
+    // puts the two and where the DC roster puts DoEventFountain
+    // (dc 0x9312c) against DoEventFountainOfYouth (dc 0x93298).
+    ADV_EVENT_TEXT_FOUNTAIN_OF_FORTUNE = 55,
+    ADV_EVENT_TEXT_FOUNTAIN_OF_FORTUNE_VISITED = 56,
     // DoEventFountainOfYouth (0x4a25f0). The reward carries picture 0x0e,
     // the same morale icon do_event_watering_hole shows, and the pair is
     // reward-then-visited like the rest of this block.
@@ -187,6 +194,20 @@ enum EAdventureEventText {
 // calendar role is not yet attested.
 enum EDayOfWeek {
     DAY_OF_WEEK_SUNDAY = 7
+};
+
+// The Fountain of Fortune's luck tiers, and the domain is closed by
+// construction: DoEventFountain (0x4a2480) range-checks `luck + 1`
+// against 4 and jump-tables the five slots, so nothing outside -1..3 can
+// reach an arm. The VALUES are the luck the fountain grants, which is why
+// the enumerators are spelled as the amounts; only the cursed tier and
+// the three positive ones carry a hero flag bit, so 0 has no arm.
+enum EFountainLuck {
+    FOUNTAIN_LUCK_CURSED = -1,
+    FOUNTAIN_LUCK_NONE = 0,
+    FOUNTAIN_LUCK_PLUS_1 = 1,
+    FOUNTAIN_LUCK_PLUS_2 = 2,
+    FOUNTAIN_LUCK_PLUS_3 = 3
 };
 
 // DoEventStables' (0x4a60a0) report selector: a two-bit accumulator the

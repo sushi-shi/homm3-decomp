@@ -105,6 +105,18 @@ struct type_witch_hut_info {
 };
 SIZE(type_witch_hut_info, 4);
 
+// The Fountain of Fortune's luck tier, a SIGNED four-bit field at bits
+// 13..16. DoEventFountain (0x4a2480) proves both ends of it: the value
+// reads are `shl eax,0xf / sar eax,0x1c`, the signature of a signed
+// bitfield at bit 13, and the range check that guards the jump table is
+// `lea eax,[luck+1] / cmp eax,4 / ja`, i.e. a dense -1..3 domain.
+struct type_fountain_info {
+    unsigned long unused : 13;
+    signed long luck : 4;
+    unsigned long tail : 15;
+};
+SIZE(type_fountain_info, 4);
+
 // The eight-bit team-visibility lane SetCellVisited writes. Proven from
 // the READER side here: do_event_warrior_tomb's inlined PlayerKnowsCell
 // narrows the AND to one byte (`mov ecx,[cell] / shr ecx,5 / test cl,al`),
@@ -125,6 +137,7 @@ union ExtraInfoUnion {
     type_garden_info garden_info;
     type_tomb_info tomb_info;
     type_witch_hut_info witch_hut_info;
+    type_fountain_info fountain_info;
     type_cell_visited_info cell_visited_info;
 
     void SetCellVisited(short player);
@@ -883,6 +896,12 @@ public:
     // exactly the Dreamcast's `(hero*, NewmapCell*)` - the one handler in
     // the band with no human_player, because it shows no dialog.
     void DoEventBoat(class hero* current_hero, NewmapCell* cell);
+    // The Fountain of Fortune (jump-table arm 0x1e). The Dreamcast gives
+    // it `(hero*, NewmapCell*, bool)`; the cell is spelled with the union
+    // pointer for the reason the whole once-per-hero family is - nothing
+    // but the +0x00 dword is ever touched.
+    void DoEventFountain(class hero* current_hero, ExtraInfoUnion* cell,
+                         bool human_player);
     // The Arena (jump-table arm 0x04), the Dreamcast's own
     // `(hero*, NewmapCell*, bool)` against retail's `ret 0xc`.
     void DoEventArena(class hero* current_hero, NewmapCell* cell,

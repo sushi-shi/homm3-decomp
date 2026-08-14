@@ -573,6 +573,7 @@ events	?DoEventArena@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0
 events	?DoEventBoat@advManager@@QAEXPAVhero@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xa1010
 events	?DoEventCoverOfDarkness@advManager@@QAEXPAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa14b0
 events	?DoEventDefenseTower@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa2050
+events	?DoEventFountain@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa2480
 events	?DoEventFountainOfYouth@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa25f0
 events	?DoEventGarden@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa2710
 events	?DoEventIdol@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa12f0
