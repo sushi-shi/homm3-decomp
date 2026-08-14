@@ -55,6 +55,15 @@ DATA(0x0067f578) static const char* const gTownHallDefNames[9] = {
     "HALLelem.def"
 };
 
+// The mage guild background for each town type, indexed by town::type.
+// The table's ONE image-wide reference is the load inside
+// TMageGuildWindow's constructor, so this compiland owns it.
+DATA(0x0068a31c) static const char* const gMageGuildDefNames[9] = {
+    "TPMageCs.pcx", "TPMageRm.pcx", "TPMageTw.pcx", "TPMageIn.pcx",
+    "TPMageNc.pcx", "TPMageDn.pcx", "TPMageSt.pcx", "TPMageFr.pcx",
+    "TPMageEl.pcx"
+};
+
 // The nine boat pictures the shipyard dialog shows, indexed by town
 // type; the five towns with no boat of their own share the empty
 // rollover string. The table's ONE image-wide reference is the load
@@ -483,7 +492,7 @@ TThievesGuildWindow::TThievesGuildWindow(int num_guilds)
     // into the register assignment of the whole insert expansion
     // (98.92% -> 100%). The same divergence is the open half of
     // combatresultswindow's residual, seen there from the other side.
-    button* mageButton = new button(747, 556, 48, 40, MAGE_BUTTON_ID,
+    button* mageButton = new button(747, 556, 48, 40, EXIT_BUTTON_ID,
                                     "TPMage1.def", 0, 1, 1, 28, 2);
     mageButton->hotKeyCodes.push_back(1);
     Widgets.push_back(mageButton);
@@ -521,6 +530,139 @@ THallWindow::~THallWindow()
     for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
         if (*it)
             delete *it;
+    }
+}
+
+// The mage guild page: the town's own background, the guild picture the
+// town type selects, then five rows of spell frames and the scrolls that
+// sit in them - twenty of each, numbered by row and thirty apart. The
+// carve names the row after TPMage.pcx; the vptr it stores is 0x6437dc,
+// the table whose slot 0 holds ~TMageGuildWindow above; and `ret` with
+// no argument agrees with the Dreamcast roster's empty declarator.
+
+// E:\gamedcs\townmgr.cpp:4476
+VA(0x005cc980, 0x179F)  // anchor-vtable 0x6437dc + anchor-string TPMage.pcx + arity, dc 0x170128
+TMageGuildWindow::TMageGuildWindow()
+    : CAdvPopup(0, 0, 800, 600, 0)
+{
+    Widgets.reserve(77);
+
+    Widgets.push_back(new bitmapBorder16(0, 0, 800, 600, 0,
+                                         "TPMage.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(
+        332, 76, 141, 217, 1,
+        gMageGuildDefNames[gpTownManager->townToView->type], 0x800));
+
+    Widgets.push_back(new iconWidget(222, 445, 83, 61, 10, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(312, 445, 83, 61, 11, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(402, 445, 83, 61, 12, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(520, 445, 83, 61, 13, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(610, 445, 83, 61, 14, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(700, 445, 83, 61, 15, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(48, 53, 83, 61, 16, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(48, 147, 83, 61, 17, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(48, 241, 83, 61, 18, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(48, 335, 83, 61, 19, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(48, 429, 83, 61, 20, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new iconWidget(570, 82, 83, 61, 22, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(672, 82, 83, 61, 23, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(570, 157, 83, 61, 24, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(672, 157, 83, 61, 25, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new iconWidget(183, 42, 83, 61, 28, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(183, 148, 83, 61, 29, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(183, 253, 83, 61, 30, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new iconWidget(491, 325, 83, 61, 34, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(591, 325, 83, 61, 35, "TPMageS.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new iconWidget(222, 445, 83, 61, 40, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(312, 445, 83, 61, 41, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(402, 445, 83, 61, 42, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(520, 445, 83, 61, 43, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(610, 445, 83, 61, 44, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(700, 445, 83, 61, 45, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(48, 53, 83, 61, 46, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(48, 147, 83, 61, 47, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(48, 241, 83, 61, 48, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(48, 335, 83, 61, 49, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(48, 429, 83, 61, 50, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new iconWidget(570, 82, 83, 61, 52, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(672, 82, 83, 61, 53, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(570, 157, 83, 61, 54, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(672, 157, 83, 61, 55, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new iconWidget(183, 42, 83, 61, 58, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(183, 148, 83, 61, 59, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(183, 253, 83, 61, 60, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new iconWidget(491, 325, 83, 61, 64, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(591, 325, 83, 61, 65, "spellscr.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new bitmapBorder(9, 556, 734, 18, 2,
+                                       "TStatBar.pcx", 0x800));
+    Widgets.push_back(new textWidget(8, 556, 736, 18, 0, "smalfont.fnt",
+                                     font::PRIMARY, 3, 1, 0, 8));
+
+    // The vector spelling rather than button::set_hotkey, for the reason
+    // TThievesGuildWindow's constructor documents. Here the extra /Ob2
+    // level does not change WHICH size() calls survive - the bodies are
+    // instruction-identical either way - it changes the order the three
+    // vector temps claim their stack slots, and with set_hotkey the
+    // reserve buffer, the push_back temp and the inline-insert temp sit
+    // in retail's slots rotated by one (98.49% -> 100%).
+    button* exitButton = new button(747, 556, 48, 40, EXIT_BUTTON_ID,
+                                    "TPMage1.def", 0, 1, 1, 28, 2);
+    exitButton->hotKeyCodes.push_back(1);
+    Widgets.push_back(exitButton);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
     }
 }
 

@@ -53,9 +53,10 @@ class TThievesGuildWindow : public CAdvPopup {
 public:
     // The one non-literal widget id the constructor uses; the rest of
     // this dialog's widgets sit in the 40/600/700/800/900 bands and
-    // stay literal.
+    // stay literal. 0x7800 is the same dialog-button enumerator
+    // TTavernWindow spells CANCEL_BUTTON_ID.
     enum {
-        MAGE_BUTTON_ID = 0x7800
+        EXIT_BUTTON_ID = 0x7800
     };
 
     char pad_60[0x20];
@@ -76,8 +77,16 @@ public:
     virtual ~THallWindow();
 };
 
+// The mage guild, one full-screen page of five spell rows: twenty frame
+// icons over twenty scroll icons, both runs numbered by row. Its
+// constructor writes nothing past CAdvPopup's 0x60.
 class TMageGuildWindow : public CAdvPopup {
 public:
+    enum {
+        EXIT_BUTTON_ID = 0x7800
+    };
+
+    TMageGuildWindow();
     virtual ~TMageGuildWindow();
 };
 
