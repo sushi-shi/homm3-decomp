@@ -35,7 +35,9 @@
 // Opened for town.h ALONE and ahead of game.h's own include of it, so
 // nothing else in this file's closure widens.
 #define HOMM3_TOWN_OBJ_DECLS
+#define HOMM3_TOWNMGR_TOWN_VISIT_DECLS
 #include "town.h"
+#undef HOMM3_TOWNMGR_TOWN_VISIT_DECLS
 #undef HOMM3_TOWN_OBJ_DECLS
 // game.h's grail-win declarator, for handle_hall_click's one call. Held
 // on its own gate so no other consumer of that header widens.
@@ -4167,14 +4169,54 @@ void DoMapTavern(type_point point)
         gTavernHero->hire(gNetLocalGamePos, point);
 }
 
-#if 0  // @carcass
+// The town's own tavern. Same chooser as the map object's - the flag the
+// two share is cleared here and set there, which is the whole difference
+// the chooser sees - but the hire lands on the TOWN rather than on the
+// map, and the page has to be rebuilt around the new arrival: the hero
+// strip is thrown away and remade over the tavern hero's army, both
+// strips redraw with no creature divided out, and the whole 494x64 band
+// fizzles back in over the saved rectangle while the sample plays.
+//
+// The visiting hero is fetched twice - once for the strip's owner
+// picture and once for the building effect at the end - and the first
+// fetch is dereferenced UNGUARDED (`mov al,[edi+0x34]` with no null
+// test), which is retail's own code and not a spelling artefact: the
+// hire two calls earlier is what makes the id non-negative.
 
 // E:\gamedcs\townmgr.cpp:8164
-DC_ONLY(0x17b154, 0x1C4)
+VA(0x005d82b0, 0x1D0)  // order-map(after DoMapTavern) + DoTavern/RedrawTownScreen edges + arity(bare ret), dc 0x17b154
 void townManager::DoTownTavern()
 {
-    // @stub
+    gMapTavern = 0;
+    if (!DoTavern())
+        return;
+
+    townToView->hire(gTavernHero, gpGame->GetLocalPlayerGamePos());
+    RedrawTownScreen();
+    gpWindowManager->SaveFizzleSourceX(0xf1, 0x1e3, 0x1ee, 0x40);
+
+    if (field_120)
+        delete field_120;
+    field_120 = new strip(0xf1, 0x1e3, 1, 0xa2,
+                          gpGame->GetHero(townToView->visitingHeroId)->portrait,
+                          gpGame->GetLocalPlayerGamePos(), gTavernHero,
+                          &gTavernHero->army, 0x7c, 0, TownWindow);
+    if (!field_120)
+        MemError();
+
+    SAMPLE2 sample = LoadPlaySample("buildtwn.82M");
+    field_1c4 = 0;
+    TownWindow->DrawWindow(0, WINDOW_ALL_WIDGETS_LOW,
+                           WINDOW_ALL_WIDGETS_HIGH);
+    field_11c->DrawIcons(0, CREATURE_NONE);
+    field_120->DrawIcons(0, CREATURE_NONE);
+    gpWindowManager->FizzleForwardX(0xf1, 0x1e3, 0x1ee, 0x40, -1);
+    WaitEndSample(sample, -1);
+    townToView->ApplySpecialBuildingEffect(
+        gpGame->GetHero(townToView->visitingHeroId));
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\townmgr.cpp:8203
 DC_ONLY(0x17b318, 0x10E)
