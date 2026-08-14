@@ -867,6 +867,7 @@ hiscore	?OnWidgetDeselect@CHSInputDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0xe
 iconwdgt	??0iconWidget@@QAE@HHHHHPBDHHEIH@Z	100.0000	100.0000	100.0000	0xea720
 iconwdgt	??1iconWidget@@UAE@XZ	100.0000	100.0000	100.0000	0xea7b0
 iconwdgt	??_GiconWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xea6f0
+iconwdgt	?Draw@iconWidget@@UAEXXZ	100.0000	100.0000	100.0000	0xeab40
 iconwdgt	?GetRealHeight@iconWidget@@UAEHXZ	100.0000	100.0000	100.0000	0xeab30
 iconwdgt	?GetRealWidth@iconWidget@@UAEHXZ	100.0000	100.0000	100.0000	0xeab20
 iconwdgt	?Main@iconWidget@@UAEHPAVmessage@@@Z	95.2708	95.2708	95.2708	0xea810

@@ -7,10 +7,12 @@
 #include "button.h"
 #include "csprite.h"
 #include "csequence.h"
+#include "cspriteframe.h"
 #include "message.h"
 #include "palette.h"
 #include "resourcemanager.h"
 #include "window.h"
+#include "winmgr.h"
 
 // misc's Random (dc 0xfd868, retail 0x50b230).
 int Random(int min, int max);
@@ -210,13 +212,6 @@ void iconWidget::zBufferDraw()
     // @stub
 }
 
-// E:\gamedcs\iconwdgt.cpp:280
-DC_ONLY(0xd96e8, 0x592)
-void iconWidget::Draw()
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 // E:\gamedcs\iconwdgt.cpp:257
@@ -253,6 +248,243 @@ VA(0x004eab30, 0x7)  // anchor-vtable (slot 5 of 0x63ec48), dc 0xd96d0
 int iconWidget::GetRealHeight()
 {
     return Sprite->Height;
+}
+
+// E:\gamedcs\iconwdgt.cpp:280
+// EXACT 2026-08-14, first compile. Slot 4 of vtable 0x63ec48 (the carve
+// labels the row iconWidget_vslot04); 1200 bytes, 44 blocks, two
+// ten-entry jump tables at 0x4eafa0 and 0x4eafc8.
+//
+// The dispatch is two-level and both levels are byte-fixed. The outer
+// one is widget::style, lowered as `sub eax,0x10 / je / dec je / dec
+// jne` - only 0x10, 0x11 and 0x12 draw anything at all. The inner one
+// is the SPRITE'S RESOURCE TYPE, `Sprite->resType - 64` bounded at 9,
+// and the two tables are the same dispatch twice: the ONLY difference
+// between ICON_STYLE_PLAIN and ICON_STYLE_CENTERED is the centring
+// applied to drawX/drawY ahead of it, so the eight arms are spelled
+// twice in the source and VC6 cross-jumped what it could. Every
+// second-copy arm is a `jmp` into the first copy's tail, and the
+// RESOURCE_TYPE_POINTER arm at 0x4eaddb is SHARED OUTRIGHT by both
+// tables - DrawPointer takes no sw/sh, so the two copies were fully
+// identical and folded onto one row.
+//
+// The arm-to-callee map is self-confirming, which is what makes it
+// safe: each retail call target, identified purely by its argument
+// shape, turns out to be the CSprite entry point named after the DC
+// resource type that selects it -
+//   64 RType_sprite      -> 0x47bcf0 Draw          14 args, tblit = 1
+//   66 RType_creature    -> 0x47bd60 DrawCreature  14 args, outcolor 0
+//   67 RType_advobj      -> 0x47bdc0 DrawAdvObj    12 args
+//   68 RType_hero        -> 0x47c080 DrawHero      13 args
+//   69 RType_tileset     -> 0x47bf50 DrawTile      13 args, vflip = 0
+//   70 RType_pointer     -> 0x47beb0 DrawPointer    8 args
+//   71 RType_interface   -> 0x47bf00 DrawInterface 12 args
+//   73 RType_combat_hero -> 0x47bd60 DrawCreature  again
+// - and that agrees row for row with the csprite order-map against the
+// DC roster (0x47bcf0 Draw, 0x47bd60 DrawCreature, 0x47bdc0 DrawAdvObj,
+// 0x47be10 DrawAdvObjWithFlag, 0x47be60 DrawAdvObjShadow, 0x47beb0
+// DrawPointer, 0x47bf00 DrawInterface, 0x47bf50 DrawTile, 0x47bfa0
+// DrawTileShadow, 0x47bff0 DrawShroudTile, 0x47c080 DrawHero - retail
+// dropped DC's two "Alpha" variants). Two independent channels with no
+// shared assumption. Only prototypes land here; the bodies stay
+// csprite's.
+//
+// The type domain is iconWidget::ESpriteResType rather than ten new
+// EResourceType enumerators, and that is a measurement, not taste - see
+// the note on the enum in iconwdgt.h. resource.h sits at the head of
+// recruit.obj's include closure and recruitUnit::Update is knife-edge
+// on symbol-handle position: ONE added enumerator anywhere in
+// EResourceType drops it 90.84% -> 88.24%, at every count tried.
+//
+// The creature path is the one with real arithmetic: it centres on the
+// crop box of the FIRST FRAME OF THE cs_wait SEQUENCE (Sprite->s[2]
+// ->f[0]), puts the portrait 275 rows up from the widget's bottom edge,
+// and then clips the source rectangle on all four sides - each negative
+// offset moving into sx/sy and shrinking sw/sh, each overrun clamping
+// sw/sh against the widget box.
+VA(0x004eab40, 0x4B0)  // anchor-vtable (slot 4 of 0x63ec48), dc 0xd96e8
+void iconWidget::Draw()
+{
+    int drawX = x + parentWindow->x;
+    int drawY = y + parentWindow->y;
+
+    switch (style) {
+    case ICON_STYLE_CREATURE: {
+        CSprite* sprite;
+        CSpriteFrame* frame;
+        int sx;
+        int sy;
+        int sw;
+        int sh;
+        int boxWidth;
+        int boxHeight;
+        int offX;
+        int offY;
+
+        sx = 0;
+        sy = 0;
+        sprite = Sprite;
+        sw = sprite->Width;
+        sh = sprite->Height;
+        frame = sprite->s[cs_wait]->f[0];
+        boxWidth = width;
+        offX = boxWidth / 2 - frame->CroppedWidth / 2 - frame->CroppedX;
+        boxHeight = height;
+        offY = boxHeight - 275;
+        if (offX < 0) {
+            sx = -offX;
+            sw += offX;
+            offX = 0;
+        }
+        if (offY < 0) {
+            sy = -offY;
+            sh += offY;
+            offY = 0;
+        }
+        if (offX + sw > boxWidth)
+            sw = boxWidth - offX;
+        if (offY + sh > boxHeight)
+            sh = boxHeight - offY;
+        sprite->DrawCreature(seqId, Frame, sx, sy, sw, sh,
+            gpWindowManager->screenBitmap->map, offX + drawX, offY + drawY,
+            gpWindowManager->screenBitmap->Width,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->Pitch, 0, 0);
+        break;
+    }
+
+    case ICON_STYLE_CENTERED:
+        if (Sprite->Width < width)
+            drawX += (width - Sprite->Width) / 2;
+        if (Sprite->Height + 2 < height)
+            drawY += height - Sprite->Height - 2;
+        switch (Sprite->resType) {
+        case SPRITE_RES_SPRITE:
+            Sprite->Draw(seqId, Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 1);
+            break;
+        case SPRITE_RES_CREATURE:
+            Sprite->DrawCreature(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        case SPRITE_RES_ADVOBJ:
+            Sprite->DrawAdvObj(Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_HERO:
+            Sprite->DrawHero(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_TILESET:
+            Sprite->DrawTile(Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        case SPRITE_RES_POINTER:
+            Sprite->DrawPointer(Frame, gpWindowManager->screenBitmap->map,
+                drawX, drawY, gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_INTERFACE:
+            Sprite->DrawInterface(Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_COMBAT_HERO:
+            Sprite->DrawCreature(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        }
+        break;
+
+    case ICON_STYLE_PLAIN:
+        switch (Sprite->resType) {
+        case SPRITE_RES_SPRITE:
+            Sprite->Draw(seqId, Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 1);
+            break;
+        case SPRITE_RES_CREATURE:
+            Sprite->DrawCreature(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        case SPRITE_RES_ADVOBJ:
+            Sprite->DrawAdvObj(Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_HERO:
+            Sprite->DrawHero(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_TILESET:
+            Sprite->DrawTile(Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        case SPRITE_RES_POINTER:
+            Sprite->DrawPointer(Frame, gpWindowManager->screenBitmap->map,
+                drawX, drawY, gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_INTERFACE:
+            Sprite->DrawInterface(Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_COMBAT_HERO:
+            Sprite->DrawCreature(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        }
+        break;
+    }
 }
 
 // E:\gamedcs\iconwdgt.cpp:437
