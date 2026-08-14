@@ -41,6 +41,35 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel view_level,
     // `added` local 91.0592, and testing `Widgets.back()` before using it
     // 58.7831. `Widgets.back()` -> `Widgets.end()[-1]` is exactly byte-neutral
     // (92.7916) but is +0 sites: back() and end() are one candidate site each.
+    //
+    // SUPPLY FOUND, NOT LANDED (2026-08-14). "No byte-neutral supply exists"
+    // is now false. A DEAD local initialised from a free vector accessor is a
+    // full divisor site and emits nothing at all - C1XX counts the inline
+    // candidate, C2 dead-codes the load:
+    //     widget** widgetsBegin = Widgets.begin();   // never read
+    //     AddWidget(Widgets.back(), -1);
+    // Two of those, one before each of the last two AddWidget calls, hit the
+    // titrated ceiling exactly: 92.7916 -> 96.8141 (one site 92.7916, two
+    // 96.8141, three 96.8141 - the same ladder as the xx_nop probe). The
+    // `end()`-twice shape of the same trick - a dead `widget** widgetsEnd =
+    // Widgets.end();` plus `AddWidget(Widgets.end()[-1], -1)` - measures
+    // identically, 96.8141 at two sites. This is the family's
+    // registration-loop hoist with the loop removed, so it works in ANY body:
+    // the loop was never the mechanism, the duplicated free accessor call was.
+    // It is NOT landed here because a local that is never read is titration
+    // scaffolding rather than a reconstruction of retail's source. The honest
+    // supply for this body is still open.
+    // Also measured while hunting for one, all NEGATIVE: `*Widgets.rbegin()`
+    // for `Widgets.back()` is exactly byte-neutral but worth +0 sites at one,
+    // two or three call sites (92.7916 throughout - VC6 folds the
+    // reverse_iterator wrapper away before candidacy); the three-argument
+    // `insert(end(), 1, x)` that button.h's set_hotkey uses is catastrophic
+    // here (52.9493 / 28.1268 / 26.0958 at one/two/three push_backs);
+    // `begin()[end() - begin() - 1]` and `*(begin() + (end() - begin()) - 1)`
+    // are +2 sites but cost bytes (94.4254 at one site, 91.9887 at two); and
+    // the NEGATIVE-mass direction the original sweep never covered - hoisting
+    // the duplicated creature-name ternary into one `const char*` ahead of the
+    // count branch - is 79.0507.
     Widgets.reserve(Widgets.size() + 3);
 
     Widgets.push_back(new iconWidget(

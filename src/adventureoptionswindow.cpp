@@ -205,7 +205,13 @@ consume:
         // epilogue, and remaining instruction agrees. Tried and rejected:
         // direct member arguments, split declarations, moving hoverID's
         // declaration ahead of the coordinates, and an unused symbol-order
-        // perturbation.
+        // perturbation. 2026-08-14 two-axis /Ob2 re-test: HELD - pad
+        // statements ahead of the CAdvPopup call x xx_nop sites at the tail
+        // are 99.9367 in all fifteen cells of M in {0,2,4,8,16} x k in
+        // {0,1,2}. (The other flagged row, `[8*eax+4]` against retail's
+        // `[8*eax]` at the right-click NormalDialog, is the unscored
+        // relocation-addend split - our reloc names gAdventureWindowHelp with
+        // addend 4, retail's names the field directly with addend 0.)
         int mouseY = msg->mouseY, mouseX = msg->mouseX;
         int hoverID = findWidget(mouseX, mouseY);
         if (hoverID != lastIMHoverID) {

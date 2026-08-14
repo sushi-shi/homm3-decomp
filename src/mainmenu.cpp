@@ -182,6 +182,26 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 // are +1 with a byte cost; an index loop over `size()`/`operator[]`, a hoisted
 // `last`, `Widgets.back()` -> `begin()[size()-1]`, and `<` for `!=` all cost
 // bytes; `Widgets.back()` -> `Widgets.end()[-1]` is byte-neutral but +0.
+// Also NOT a knob (2026-08-14, quickinfowindow): `*Widgets.rbegin()` for
+// `Widgets.back()` is exactly byte-neutral but +0 sites at one, two and three
+// call sites - VC6 folds the reverse_iterator wrapper away before candidacy,
+// so rbegin/ctor/operator* are not three sites, they are one.
+//
+// THE LOOP WAS NEVER THE MECHANISM (2026-08-14, measured on quickinfowindow,
+// which has no registration loop at all). What supplies a divisor site is a
+// duplicated call to a FREE accessor, and it does not need a loop to live in:
+// a DEAD local initialised from one is a full site and emits nothing, because
+// C1XX counts the inline candidate and C2 dead-codes the load.
+//     widget** widgetsBegin = Widgets.begin();   // never read
+//     AddWidget(Widgets.back(), -1);
+// Two of those took ??0TQuickCreatureWindow 92.7916 -> 96.8141, landing
+// exactly on its titrated xx_nop ceiling, and the `end()`-twice spelling of
+// the same thing (dead `Widgets.end()` local + `Widgets.end()[-1]`) measures
+// identically. That makes the divisor axis reachable in ANY body.
+// It is deliberately NOT landed anywhere: a local that is never read is
+// titration scaffolding, not a reconstruction of retail's source. Its value is
+// as a MEASURING instrument - it tells you what a body's k ladder is worth
+// using real source constructs, before you go looking for an honest supply.
 // E:\gamedcs\mainmenu.cpp:66
 VA(0x004fb2a0, 0x385)  // order-map: heroWindow(0,0,800,600) base + 5 button ctors from mmenung/lg/hs/cr/qt.def (ids 0x65-0x69), installs vtbl 0x63ff50, this-global 0x699660; called by oldmain; EH-bearing, dc 0xea2ec
 TMainMenu::TMainMenu()

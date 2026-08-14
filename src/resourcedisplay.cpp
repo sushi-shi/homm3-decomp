@@ -47,6 +47,12 @@ static const int resourceDisplayOrder[NUM_RESOURCES] = {
 // best of the 23 only ties the current spelling; six are strictly worse
 // (cursor walk 91.55, id counters 90.15, AddWidget-after-both 88.27).
 // Verdict CONFIRMED: C1 handle state, not source-nameable.
+// 2026-08-14, RE-TESTED AGAIN on the second /Ob2 axis, since `predict-inline`
+// classifies this row as an inliner wall (12 under / 12 over): still HELD.
+// Pad statements ahead of the `isSmall` branch x xx_nop sites before the final
+// AddWidget are 99.3919 in all twenty cells of M in {0,2,4,8,16} x k in
+// {0,1,2,3} - the flattest grid measured in this sweep. Neither budget axis
+// touches this transposition.
 VA(0x00558ba0, 0x2A1)  // anchor-global, dc 0x120c54
 TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)
     : isSmall(is_small)

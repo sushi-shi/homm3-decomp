@@ -33,6 +33,13 @@ unsigned char* CDiffFile::GetData()
 // index=ESI(this) (SIB 0x30), our CL the reverse (SIB 0x06). Everything else is
 // byte-exact. Tried and rejected (all byte-identical): `diffOffset + GetData()`,
 // `&GetData()[diffOffset]`. Same class as hero.cpp:2162.
+// 2026-08-14 two-axis /Ob2 re-test (the campaign rule that a one-axis "flat"
+// verdict is not a verdict): HELD. Pad statements ahead of `resultOffset` x
+// xx_nop sites before the return are 99.6429 in all twelve cells of
+// M in {0,2,4,8} x k in {0,1,2}. Four further spellings measured byte-identical
+// as well: `int diffOffset`, a hoisted `GetData()` pointer local, a named
+// `diffCursor` for the header cast, and an extra unused local. The SIB
+// base/index choice is not source-reachable here.
 // The 68.96% plateau was structural, not register coloring: retail advances
 // diffOffset PAST the header before the payload memcpy and re-derives the source
 // as GetData() + diffOffset, which is what keeps diffOffset in a register and
