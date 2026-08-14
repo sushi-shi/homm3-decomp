@@ -7,8 +7,11 @@
 
 #include "subwindow.h"
 
+class bitmapBackedTextWidget;
+class message;
 class bitmapBorder;
 class hero;
+class type_func_button;
 class iconWidget;
 class textWidget;
 
@@ -29,6 +32,13 @@ class textWidget;
 // touches only the inherited TSubWindow subobject.
 class type_combat_sub_window : public TSubWindow {
 public:
+    // +0x34, and the base owns it: the base constructor NULLS it and the
+    // family's set_rollover slot is what reads it. Only
+    // TCombatControlSubWindow fills it in - with a bitmapBackedTextWidget
+    // over 'cRollovr.pcx' - and the derived TYPE is what the constructor
+    // proves, because push_back has to build a widget* temporary for it.
+    bitmapBackedTextWidget* rolloverWidget;
+
     // Retail CALLS this out of line from both derived constructors
     // (0x46b610), so it is declared and not defined here - the body is
     // still one of this compiland's unreconstructed rows.
@@ -36,6 +46,7 @@ public:
                            const char* background_sprite_name);
     virtual ~type_combat_sub_window();
 };
+SIZE(type_combat_sub_window, 0x38);
 
 // Its constructor stores 0x63d420 and passes "cbar.pcx" (0x670030) to the
 // base; the sole construction site is 0x4721d0, reached from
@@ -43,16 +54,42 @@ public:
 // bytes are the base destructor inlined whole.
 class TCombatControlSubWindow : public type_combat_sub_window {
 public:
+    // The two 'ComSlide.def' arrows over the combat message log, +0x38 and
+    // +0x3c; the constructor is the only body that writes either, and it
+    // dims both at the end.
+    type_func_button* logScrollUpButton;
+    type_func_button* logScrollDownButton;
+
+    TCombatControlSubWindow(heroWindow* parent);
     virtual ~TCombatControlSubWindow();
 };
+SIZE(TCombatControlSubWindow, 0x40);
 
 // The same shape one class over: 0x63d430, "coplacbr.pcx" (0x670054), the
 // same 0x4721d0 construction site, the same empty destructor.
 class TCombatPlacementSubWindow : public type_combat_sub_window {
+private:
+    // 0x4721d0 allocates this class at 0x3c against the base's 0x38, and
+    // no body in the image writes the difference.
+    char pad_038[4];
+
 public:
     TCombatPlacementSubWindow(heroWindow* parent);
     virtual ~TCombatPlacementSubWindow();
 };
+SIZE(TCombatPlacementSubWindow, 0x3c);
+
+// The two message-log scroll handlers the control bar's arrows carry.
+// NEITHER IS CARVED: they sit in the 160-byte gap between 0x472db0+64 and
+// 0x472e90, which the entry heuristics skip because nothing CALLS them -
+// their addresses are only ever taken, here. Both are the same 79 bytes
+// apart from one opcode (`dec edx` against `inc edx`) and both hand the
+// adjusted line to 0x472c30. They belong to combatwindow.obj, not to this
+// compiland; they are declared here because this is the only consumer and
+// this header may not reach into another unit's. Names are provisional -
+// nothing attests them.
+int combat_log_scroll_up(message* msg);    // 0x472df0, uncarved
+int combat_log_scroll_down(message* msg);  // 0x472e40, uncarved
 
 // Retail's two construction sites allocate 0x5c bytes. The constructor and
 // Show/UnShow pair independently fix the TSubWindow base, the nine pointer
