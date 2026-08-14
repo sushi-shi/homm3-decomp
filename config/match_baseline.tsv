@@ -581,6 +581,7 @@ events	?DoEventMysticalGarden@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	1
 events	?DoEventOasis@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa3ca0
 events	?DoEventPowerSchool@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa3dc0
 events	?DoEventRallyFlag@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa44c0
+events	?DoEventStables@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa60a0
 events	?DoEventTemple@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa6200
 events	?DoEventTrainingGrounds@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa6330
 events	?DoEventWanderingMonster@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa79c0

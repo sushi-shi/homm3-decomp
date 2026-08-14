@@ -2793,6 +2793,74 @@ int game::GetTeam(int playerNum) const
     return mapHeader.teamInfo[playerNum];
 }
 
+// E:\gamedcs\events.cpp:3246.  The Stables, jump-table arm 0x5e =
+// OBJECT_STABLES, and the only adventure object in this file that does
+// TWO unrelated things and then reports whichever ones actually happened.
+// The movement grant is once per hero (flag bit 1, the same lane the
+// Stables BUILDING uses - town.obj 0x5bd8e0 tests bit 1 of +0x105 and
+// makes the identical pair of adds); the Cavalier -> Champion upgrade is
+// NOT gated at all and runs every visit, for the AI as well.
+//
+// THE GLOBAL IS RE-READ BETWEEN THE TWO ADDS, and that is the alias
+// barrier, not a spelling: `maxMovePoints += gStablesMovementBonus`
+// stores through a hero* before `movePoints += gStablesMovementBonus`
+// loads again, and VC6 cannot prove the int at 0x698a94 is not that same
+// object, so it reloads. Caching the bonus in a local would fold the
+// second load and lose the row.
+//
+// The report is a two-bit accumulator - bit 0 the movement, bit 1 the
+// upgrade - switched over at the end, which is what makes FOUR
+// contiguous advevent.txt rows (136..139) instead of a cascade. It is a
+// plain signed char: retail widens it with `movsx eax,bl` before the
+// range check.
+VA(0x004a60a0, 0x160)  // jump-table arm 0x5e + advevent.txt 136..139, dc 0x95f18
+void advManager::DoEventStables(hero* current_hero, NewmapCell* cell,
+                                bool human_player)
+{
+    char granted = STABLES_NOTHING;
+
+    if (!(current_hero->flags & 2)) {
+        current_hero->flags |= 2;
+        current_hero->maxMovePoints += gStablesMovementBonus;
+        current_hero->movePoints += gStablesMovementBonus;
+        if (human_player)
+            advWindow->UpdateHeroLocators(-1, 1, 1);
+        granted = STABLES_MOVEMENT;
+    }
+    // 10 and 11 are the Cavalier and its Champion upgrade; the reward
+    // dialogs below show 11 as their picture for the same reason.
+    if (current_hero->CreatureTypeCount(10)) {
+        current_hero->UpgradeCreatures(10, 11);
+        granted |= STABLES_UPGRADE;
+    }
+
+    if (!human_player)
+        return;
+
+    switch (granted) {
+    case STABLES_NOTHING:
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_STABLES_NOTHING),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    case STABLES_MOVEMENT:
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_STABLES_MOVEMENT),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    case STABLES_UPGRADE:
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_STABLES_UPGRADE),
+                     1, -1, -1, 0x15, 11, -1, 0, -1, 0, -1, 0);
+        break;
+    case STABLES_MOVEMENT_AND_UPGRADE:
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_STABLES_BOTH),
+                     1, -1, -1, 0x15, 11, -1, 0, -1, 0, -1, 0);
+        break;
+    }
+}
+
 // E:\gamedcs\events.cpp:3308.  The Temple: +1 morale, or +2 on the
 // seventh day of the week - game::field_1f63e is the day-of-week counter
 // and 7 is its Sunday. The visit is recorded in a DIFFERENT hero flag bit
