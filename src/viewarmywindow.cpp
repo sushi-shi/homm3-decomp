@@ -331,14 +331,101 @@ void TViewArmyWindow::TViewArmyWindow(const armyGroup* group, int iarmy, const h
     // @stub
 }
 
-// E:\gamedcs\viewarmywindow.cpp:274 - retail 0x5f4210, 961 B
-DC_ONLY(0x19148c, 0x1D2)
-void TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0, unsigned char show_ok)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// The creature-TYPE popup: the same 298x311 plate driven off a table row
+// rather than a live stack, so every base/modified pair collapses to one
+// value and there is no morale, luck or spell row at all. ArmySize stays
+// out of the mem-init list - retail never writes +0x64 here - and the
+// three Influence slots are stamped -1 at the end instead.
+//
+// The portrait's alignment is the one place this constructor is not a
+// straight table read: with gpGame->f_1f698 clear the four BASE elementals
+// take backdrop -1, i.e. the entry immediately BEFORE akCreatureBackgrounds
+// - which is the biased base armygrp.cpp's own claim already describes.
+// The table base is rematerialised for that read (`mov ecx,[0x6747b0]` with
+// the cached 116*type byte offset) where every other field goes through the
+// row pointer, so the indexed spelling is what the source has there.
+//
+// Residual (97.1018%): the CFG is EXACT - 18 conditional branches and one
+// return, with the branch sequences agreeing on mnemonics AND symbolic
+// targets - and the whole body from the vptr store on is byte-identical.
+// What is left is the same A7 item the one-army constructor has: the two
+// `_Tidy(false)` calls the implicit string constructions make from the
+// MEM-INIT LIST, which retail CALLS and our budget folds into stores.
+//
+// Correction to that constructor's note, measured here: the statement
+// pragma DOES reach a mem-init list. `#pragma inline_depth(0)` before the
+// declarator with a reset at the top of the body is NOT a no-op - it takes
+// basic_string's constructor itself out of line (`lea edx,[ebp+N] / push
+// edx / call ctor` against retail's `push 0 / call _Tidy`) and scores
+// 94.0463. The earlier "positional over statements only" reading came from
+// testing depths 1 and 2, which are no-ops EVERYWHERE because VC6 expands
+// bottom-up: by the time basic_string's constructor is considered for
+// inlining, its own saved IL already contains the expanded _Tidy, so the
+// depth counter never exceeds 1 and no depth value can split the two.
+// Reproducing retail here needs _Tidy to have been rejected when it was
+// expanded INTO basic_string's constructor, which is a property of that
+// compile, not of any spelling available in this TU.
+VA(0x005f4210, 0x3C1)  // vtable-store + builder call set + CrStkPU.pcx, dc 0x19148c
+TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0,
+                                 unsigned char show_ok)
+    : CAdvPopup(x0, y0, 298, 311, 0x12),
+      ArmyType(army_type),
+      ShowingUpgradeButton(0),
+      ShowingDismissButton(0),
+      ShowingOkButton(show_ok)
+{
+    const TCreatureTypeTraits* traits = &akCreatureTypeTraits[army_type];
+
+    Widgets.reserve(NWIDGETS);
+
+    // No hero owns a bare creature type, so the plate takes the local
+    // player's colours unconditionally - the null argument is what folds
+    // create_background_widget's ternary down to that one call.
+    create_background_widget(0);
+    create_name_widget(traits->m_plural_name);
+
+    int town_type;
+    if (!gpGame->f_1f698
+            && (army_type == CREATURE_AIR_ELEMENTAL
+                || army_type == CREATURE_EARTH_ELEMENTAL
+                || army_type == CREATURE_FIRE_ELEMENTAL
+                || army_type == CREATURE_WATER_ELEMENTAL))
+        town_type = -1;
+    else
+        town_type = akCreatureTypeTraits[army_type].townType;
+    create_portrait_widget(traits->m_sprite_name, town_type, 0);
+
+    create_attack_widget(traits->attackSkill, traits->attackSkill);
+    create_defense_widget(traits->defenseSkill, traits->defenseSkill);
+    create_shots_widget(traits, traits->numShots, traits->numShots);
+    create_damage_widget(traits, 0);
+    create_hitpoints_widget(traits->hitPoints, traits->hitPoints);
+    create_speed_widget(traits->speed, traits->speed);
+
+    if (show_ok)
+        create_ok_widget();
+
+    if (traits->special_ability) {
+        Widgets.push_back(new textWidget(
+            20, 232, 192, 41, traits->special_ability, "smalfont.fnt",
+            font::WHITE, -1, 0, 0, 8));
+    }
+
+    create_rollover_widget();
+
+    Influence[0] = -1;
+    Influence[1] = -1;
+    Influence[2] = -1;
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+}
 
 // Retail owns the widget objects without clearing the vector here, then
 // tears down luck_help, morale_help, and the CAdvPopup base in that order.
