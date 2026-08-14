@@ -215,6 +215,21 @@ public:
     // info through it once the object's entry has been spliced out.
     void CalculateCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
 #endif
+#ifdef HOMM3_EVENTS_VIEW
+    // Retail-only helper at 0x505d60, and RETAIL-ONLY IS LITERAL HERE: it
+    // walks the +0xb0 vector of CMapObjectData pointers - the member the
+    // Dreamcast's NewfullMap does not have at all, its nine STLport
+    // vectors running 0..108 with cellData straight after - and hands
+    // each record the same (point, player) pair through virtual slot ten.
+    // That absence is also why the DC xref graph shows no such callee for
+    // any of the four bodies that reach it here. Exactly four call sites
+    // exist image-wide (0x4a6eda, 0x4a70ee, 0x4a7444, 0x4ae499): the
+    // three no-combat ways a wandering stack leaves the map -
+    // monsters_flee, monsters_join, monsters_sell_out - and DoCombat.
+    // No surviving symbol names it, so the address-bearing spelling
+    // follows NewfullMapFn_00505F20's precedent below.
+    void NewfullMapFn_00505D60(type_point point, int player);
+#endif
 #ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     // Retail-only helper at 0x505f20. Its behavior selects or appends the
     // matching object-type/sprite pair and writes the resulting type index.

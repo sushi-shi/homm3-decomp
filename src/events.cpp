@@ -571,9 +571,10 @@ void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell, unsi
 //     0x4a7250 on the band above it (sell out), and 0x4a6df0 only when
 //     the stack neither wants to fight nor carries the never-flee bit
 //     (flee).
-// The bodies are not reconstructed here, so the rows stay unclaimed; the
-// declarators live in advmgr.h and a call relocation's symbol name is not
-// scored.
+// ALL FOUR are now reconstructed and claimed below, which confirms the
+// four-way pairing from the other side: each body's own text rows, its
+// own dialog reply and its own philai callee are what the location
+// predicted, and the four carcass stubs here are superseded.
 //
 // E:\gamedcs\events.cpp:3627
 // RETAIL_LOCATED(0x004a6c60, 0x188)  // caller-arity + role, dc 0x96b14
@@ -2204,6 +2205,212 @@ void advManager::monsters_fight(hero* current_hero, NewmapCell* cell,
 
     if (numMons == 0)
         EraseAndFizzle(cell, point, FIZZLE_SOUND_KILL_FADE);
+}
+
+// E:\gamedcs\CreatureType.h:296.  The creature-name accessor the three
+// remaining outcome handlers below expand FOUR times between them; the
+// Dreamcast files its emitted copy under advmgr.obj (dc 0x1ef94, 92 B)
+// but the FILE column is CreatureType.h, i.e. it is a header inline and
+// retail expands it at every site rather than calling it. The guard
+// bound is retail's own and is deliberately transcribed as written:
+// `> 0x96` admits index 150 into a 150-entry table.
+//
+// The count argument selects singular against plural and every one of
+// the four sites passes a LITERAL - which is what makes the test fold
+// away in all four, leaving a bare +0x14 or +0x18 load. monsters_flee
+// and monsters_join name the stack in the plural unconditionally;
+// monsters_sell_out has already branched on `numMons == 1` for its own
+// message split, so each arm passes the constant that arm implies.
+static const char* GetArmyName(int type, int count)
+{
+    if (type < 0 || type > 0x96)
+        return emptyRolloverText;
+    return count == 1 ? akCreatureTypeTraits[type].m_name
+                      : akCreatureTypeTraits[type].m_plural_name;
+}
+
+// The three philai.obj appraisals the outcome handlers consult, named by
+// the Dreamcast xref graph: monsters_flee's single philai callee is
+// AI_value_of_event (dc 0x114b44) and retail's 0x52bd10 is a /Gr
+// two-argument fastcall returning long, monsters_join's is
+// AI_join_decision (dc 0x114adc) at 0x52bc60, and monsters_sell_out
+// carries BOTH plus AI_bribe_monsters (dc 0x112dd4) at 0x527f60 - a
+// five-parameter fastcall whose (hero, cell) pair lands in ecx/edx
+// exactly as the DC declares it. The DC decorates both creature counts
+// `short`; retail passes them as full dwords with no narrowing at any of
+// the three call sites, and the same locals reach armyGroup::Add's int
+// parameter unconverted, so the declarators here are int. Declared file
+// locally, the AI_approximate_strength precedent above.
+long AI_value_of_event(const hero* current_hero, type_point point);
+void AI_join_decision(hero* current_hero, TCreatureType creature, int amount);
+unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell,
+                                TCreatureType type, int amount,
+                                long gold_cost);
+// townmgr.obj's "they will not all fit" report (dc 0x173238, the
+// TCreatureType overload of the two); both surviving-army handlers reach
+// it on the same failed armyGroup::Add the AI reaches AI_join_decision on.
+void do_monster_join_dialog(hero* inHero, TCreatureType type, int amount);
+
+// E:\gamedcs\events.cpp:3655.  The stack offers to surrender rather than
+// fight. A human is asked whether to pursue it anyway and the ACCEPT arm
+// falls straight through into monsters_fight; the AI pursues when the
+// tile is worth something to it. Otherwise the stack is gone: the map's
+// object records are told the tile changed hands, the tile is erased
+// with the kill fade, and a defeated-monster victory condition still
+// counts the stack as beaten.
+//
+// EraseAndFizzle is inlined here exactly as in monsters_fight, and with
+// it FizzleCenter, so the save/force/restore bracket and the 224x224
+// fade appear in this body.
+//
+// The two monsters_fight calls are separate sites with their own
+// epilogues - the human arm forwards `human_player` and the AI arm the
+// literal false, which is what keeps them from tail-merging.
+VA(0x004a6df0, 0x20B)  // linkorder + advevent.txt 91 + AI_value_of_event, dc 0x96c18
+void advManager::monsters_flee(hero* current_hero, NewmapCell* cell,
+                               type_point point, bool human_player)
+{
+    TCreatureType monType = creature_type_from_int(cell->objectIndex);
+
+    if (human_player) {
+        sprintf(gText,
+                gpAdventureEventText->GetText(ADV_EVENT_TEXT_MONSTERS_FLEE),
+                GetArmyName(monType, 2));
+        NormalDialog(gText, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT) {
+            monsters_fight(current_hero, cell, point, human_player);
+            return;
+        }
+    } else if (AI_value_of_event(current_hero, point) > 0) {
+        monsters_fight(current_hero, cell, point, false);
+        return;
+    }
+
+    gpGame->worldMap.NewfullMapFn_00505D60(point, current_hero->owner);
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_KILL_FADE);
+    if (gpGame->mapHeader.victoryCondition.CheckForDefeatedMonsterWin(
+            current_hero, point))
+        CheckEndGame(0);
+}
+
+// E:\gamedcs\events.cpp:3698.  The stack offers to join for free. A human
+// is asked and may refuse - and a refusal that the mood total says was
+// borderline earns the insult line and hands the fight back to the
+// caller by returning false. The AI never refuses this one.
+//
+// Joining is the same three steps in both surviving-army handlers: tell
+// the map's object records the tile changed hands, put the creatures in
+// the hero's army, and report the overflow when they do not fit - the
+// human through townmgr's dialog, the AI through its own appraisal.
+// monsters_give_reward then runs whatever happened to the army.
+VA(0x004a7000, 0x248)  // linkorder + advevent.txt 86/87 + armyGroup::Add, dc 0x96d54
+bool advManager::monsters_join(hero* current_hero, NewmapCell* cell,
+                               type_point point, bool want_to_fight,
+                               bool human_player)
+{
+    TCreatureType monType = creature_type_from_int(cell->objectIndex);
+    int numMons = cell->monster_info.qty;
+
+    if (human_player) {
+        sprintf(gText,
+                gpAdventureEventText->GetText(ADV_EVENT_TEXT_MONSTERS_JOIN),
+                GetArmyName(monType, 2));
+        NormalDialog(gText, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE) {
+            if (want_to_fight)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_MONSTERS_INSULTED),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return false;
+        }
+    }
+
+    gpGame->worldMap.NewfullMapFn_00505D60(point, current_hero->owner);
+    if (!current_hero->army.Add(monType, numMons, -1)) {
+        if (human_player)
+            do_monster_join_dialog(current_hero, monType, numMons);
+        else
+            AI_join_decision(current_hero, monType, numMons);
+    }
+
+    monsters_give_reward(current_hero, cell, human_player);
+    if (human_player)
+        UpdBottomView(1, 1, 1);
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_KILL_FADE);
+    return true;
+}
+
+// E:\gamedcs\events.cpp:3738.  The stack offers to leave for gold. The
+// price is the creature's own gold cost times the stack size, and a
+// kingdom that cannot pay it never sees the offer at all - that check
+// runs BEFORE the human/AI split, which is why the traits row is indexed
+// once at the top and the element address is reused by both name
+// lookups below.
+//
+// The prompt is split by count, and the plural form is built in two
+// pieces: the lead-in is copied whole into gText and the (count, name,
+// gold) tail is formatted into a 300-byte local and appended, which is
+// what the 0x13c frame is for. Both forms carry the price as an
+// iResType1 GOLD picture on the dialog.
+VA(0x004a7250, 0x36F)  // linkorder + advevent.txt 88..90 + AI_bribe_monsters, dc 0x96eec
+bool advManager::monsters_sell_out(hero* current_hero, NewmapCell* cell,
+                                   type_point point, bool want_to_fight,
+                                   bool human_player)
+{
+    TCreatureType monType = creature_type_from_int(cell->objectIndex);
+    int numMons = cell->monster_info.qty;
+    int cost = akCreatureTypeTraits[monType].cost[GOLD] * numMons;
+
+    if (cost > gpGame->players[current_hero->owner].resources[GOLD])
+        return false;
+
+    if (!human_player) {
+        if (!AI_bribe_monsters(current_hero, cell, monType, numMons, cost))
+            return false;
+    } else {
+        if (numMons == 1) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_MONSTERS_SELL_OUT_ONE),
+                    GetArmyName(monType, 1), cost);
+        } else {
+            char text[300];
+            strcpy(gText, gpAdventureEventText->GetText(
+                              ADV_EVENT_TEXT_MONSTERS_SELL_OUT_LEAD));
+            sprintf(text,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_MONSTERS_SELL_OUT_MANY),
+                    numMons, GetArmyName(monType, 2), cost);
+            strcat(gText, text);
+        }
+        NormalDialog(gText, 2, -1, -1, GOLD, cost, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE) {
+            if (want_to_fight)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_MONSTERS_INSULTED),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return false;
+        }
+    }
+
+    gpGame->worldMap.NewfullMapFn_00505D60(point, current_hero->owner);
+    gpGame->players[current_hero->owner].resources[GOLD] -= cost;
+    if (!current_hero->army.Add(monType, numMons, -1)) {
+        if (human_player)
+            do_monster_join_dialog(current_hero, monType, numMons);
+        else
+            AI_join_decision(current_hero, monType, numMons);
+    }
+
+    monsters_give_reward(current_hero, cell, human_player);
+    if (human_player) {
+        advWindow->UpdateResourceDisplay(1, 1);
+        UpdBottomView(1, 1, 1);
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_KILL_FADE);
+    return true;
 }
 
 
