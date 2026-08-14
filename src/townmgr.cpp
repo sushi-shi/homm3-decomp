@@ -45,6 +45,14 @@ DATA(0x006aaa48) int gMapTavern;
 DATA(0x006aa9d8) extern int gUnnamed6aa9d8;
 DATA(0x006aa9ec) static int gUnnamed6aa9ec;
 
+// The eight resource icons of the town screen's bottom bar, as x/y
+// pairs; the constructor's one loop walks them. Its single image-wide
+// reference is that loop, so this compiland owns it.
+DATA(0x006436e0) static const int gResourceIconPos[8][2] = {
+    { 22, 459 }, { 77, 459 }, { 132, 459 }, { 187, 459 },
+    { 22, 507 }, { 77, 507 }, { 132, 507 }, { 187, 507 }
+};
+
 // The nine town-hall icon definitions, indexed by town::type. Both
 // image-wide references to the table (0x5d5721 in TBuyBuildWindow's
 // constructor and 0x5d966d) land inside townmgr's bracket, so this
@@ -242,6 +250,205 @@ townManager::townManager()
 // CAdvPopup base - differing only in the vtable immediate and the EH
 // state table, which is also why /OPT:ICF could not fold them.
 // ---------------------------------------------------------------------
+
+// Residual (95.59%): a stack-slot count, and one /Ob2 candidate site
+// under it. Every widget, literal, id, font, frame, coordinate, branch
+// and the resource loop's whole shape are retail's - the two bodies
+// agree instruction for instruction and both expand exactly nine vector
+// inserts inline. What differs is the frame: retail reserves SIX scalar
+// dwords (`sub esp, 0x18`) and ours five, because our CL folds the
+// reserve expansion's dead buffer temp onto the slot that later carries
+// the raw `new` pointer and the push_back value, where retail keeps them
+// apart. Every later slot is renamed by one position, and that rename is
+// the whole delta. A byte-inert single-call-site probe placed at the end
+// of the body - one /Ob2 candidate site - lifts it to 97.05%, so the
+// site count is one short here as well, but even then the frame does not
+// grow, so the slot fold is a separate cause and no legitimate spelling
+// for that site was found. Tried and rejected: named locals for the two
+// loop widgets (95.50), a named local for the off-screen buffer (95.54),
+// a function-scope `int i` (95.59, byte-identical), and retail's own
+// induction variable - the text widget id counting 172..179 with the
+// icon id spelled `id - 8` (95.53).
+
+// The town screen itself - the one window in the compiland that is a
+// plain heroWindow rather than a CAdvPopup, which is what its nine-slot
+// vftable 0x64372c says and what its destructor confirms. The town it
+// scrolls to is the local player's index of the town being viewed,
+// clamped to the last page of three; the off-screen buffer it allocates
+// is the window's own extent at two bytes a pixel. Anchored by that
+// vftable, by the townscrn.pcx background the carve named the row after,
+// and by a bare `ret`.
+
+// E:\gamedcs\townmgr.cpp:2261
+VA(0x005c34d0, 0x23D2)  // anchor-vtable 0x64372c + anchor-string townscrn.pcx + arity, dc 0x16a72c
+TTownScreenWindow::TTownScreenWindow()
+    : heroWindow(0, 0, 800, 600, 1)
+{
+    field_4c = gpGame->GetLocalPlayer()->FindTown(gpTownManager->townToView->id) - 1;
+    if (field_4c > gpGame->GetLocalPlayer()->numTowns - 3)
+        field_4c = gpGame->GetLocalPlayer()->numTowns - 3;
+    if (field_4c < 0)
+        field_4c = 0;
+
+    field_50 = new char[height * width * 2];
+    memset(field_50, 0, height * width * 2);
+
+    Widgets.reserve(96);
+
+    Widgets.push_back(new border(0, 0, 800, 375, 147, 1));
+    Widgets.push_back(new bitmapBorder(0, 374, 800, 226, 148,
+                                       "townscrn.pcx", 0x800));
+
+    Widgets.push_back(new iconWidget(241, 387, 58, 64, 100, "crest58.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new bitmapBorder(241, 387, 58, 64, 122, 0, 0x800));
+    Widgets.push_back(new iconWidget(241, 387, 58, 64, 123, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new bitmapBorder(241, 483, 58, 64, 124, 0, 0x800));
+    Widgets.push_back(new iconWidget(241, 483, 58, 64, 125, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new iconWidget(744, 430, 48, 32, 155, "ITPA.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(744, 462, 48, 32, 156, "ITPA.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(744, 494, 48, 32, 157, "ITPA.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(744, 494, 48, 32, 163, "ITPA.def",
+                                     1, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new iconWidget(15, 387, 58, 64, 150, "itpt.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(80, 413, 38, 38, 158, "itmtl.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(122, 413, 38, 38, 159, "itmcl.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new textWidget(163, 434, 64, 18, 0, "smalfont.fnt",
+                                     font::PRIMARY, 160, 5, 0, 8));
+
+    for (int i = 0; i < 8; i++) {
+        resourceIcons[i] = new iconWidget(
+            gResourceIconPos[i][0], gResourceIconPos[i][1], 32, 32, 164 + i,
+            "cprsmall.def", 0, 0, 0, 0, 0x10);
+        Widgets.push_back(resourceIcons[i]);
+        resourceTexts[i] = new textWidget(
+            gResourceIconPos[i][0], gResourceIconPos[i][1] + 32, 32, 20,
+            emptyRolloverText, "smalfont.fnt", font::WHITE, 172 + i, 1, 0, 8);
+        Widgets.push_back(resourceTexts[i]);
+    }
+
+    Widgets.push_back(new iconWidget(305, 387, 58, 64, 101, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(367, 387, 58, 64, 102, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 387, 58, 64, 103, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(491, 387, 58, 64, 104, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(553, 387, 58, 64, 105, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(615, 387, 58, 64, 106, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(677, 387, 58, 64, 107, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(305, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 108, 2, 0, 8));
+    Widgets.push_back(new textWidget(367, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 109, 2, 0, 8));
+    Widgets.push_back(new textWidget(429, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 110, 2, 0, 8));
+    Widgets.push_back(new textWidget(491, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 111, 2, 0, 8));
+    Widgets.push_back(new textWidget(553, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 112, 2, 0, 8));
+    Widgets.push_back(new textWidget(615, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 113, 2, 0, 8));
+    Widgets.push_back(new textWidget(677, 436, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 114, 2, 0, 8));
+
+    Widgets.push_back(new iconWidget(305, 387, 58, 64, 115, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(367, 387, 58, 64, 116, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 387, 58, 64, 117, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(491, 387, 58, 64, 118, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(553, 387, 58, 64, 119, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(615, 387, 58, 64, 120, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(677, 387, 58, 64, 121, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new iconWidget(305, 483, 58, 64, 126, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(367, 483, 58, 64, 127, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 483, 58, 64, 128, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(491, 483, 58, 64, 129, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(553, 483, 58, 64, 130, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(615, 483, 58, 64, 131, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(677, 483, 58, 64, 132, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(305, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 133, 2, 0, 8));
+    Widgets.push_back(new textWidget(367, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 134, 2, 0, 8));
+    Widgets.push_back(new textWidget(429, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 135, 2, 0, 8));
+    Widgets.push_back(new textWidget(491, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 136, 2, 0, 8));
+    Widgets.push_back(new textWidget(553, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 137, 2, 0, 8));
+    Widgets.push_back(new textWidget(615, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 138, 2, 0, 8));
+    Widgets.push_back(new textWidget(677, 532, 58, 20, "0", "Verd10B.fnt",
+                                     font::WHITE, 139, 2, 0, 8));
+
+    Widgets.push_back(new iconWidget(305, 483, 58, 64, 140, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(367, 483, 58, 64, 141, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(429, 483, 58, 64, 142, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(491, 483, 58, 64, 143, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(553, 483, 58, 64, 144, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(615, 483, 58, 64, 145, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(677, 483, 58, 64, 146, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new button(744, 414, 48, 16, 152, "iam014.def",
+                                 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(744, 526, 48, 16, 153, "iam015.def",
+                                 0, 1, 0, 0, 2));
+    Widgets.push_back(new button(744, 382, 48, 30, 154, "tsbtns.def",
+                                 0, 1, 0, 32, 2));
+    Widgets.push_back(new button(744, 544, 48, 30, EXIT_BUTTON_ID,
+                                 "tsbtns.def", 4, 5, 1, 28, 2));
+
+    Widgets.push_back(new bitmapBackedTextWidget(7, 555, 734, 19, 0,
+                                                "smalfont.fnt", "TStatBar.pcx",
+                                                font::PRIMARY, 151, 1, 0));
+    Widgets.push_back(new textWidget(85, 387, 147, 20, 0, "medfont.fnt",
+                                     font::PRIMARY, 149, 0, 0, 8));
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+}
 
 VA_COMPGEN(0x005c58b0, 0x21, SCALAR_DELETING_DTOR, TTownScreenWindow)
 

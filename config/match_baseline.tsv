@@ -1485,6 +1485,7 @@ townmgr	??0TMageGuildWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1cc980
 townmgr	??0TShipWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d1ef0
 townmgr	??0TTavernWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d70b0
 townmgr	??0TThievesGuildWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1c8190
+townmgr	??0TTownScreenWindow@@QAE@XZ	95.5868	95.5868	95.5868	0x1c34d0
 townmgr	??0townManager@@QAE@XZ	100.0000	100.0000	100.0000	0x1c3310
 townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HPAVarmyGroup@@@Z	98.2932	98.2932	98.2932	0x1ce830
 townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	93.8770	93.8770	93.8770	0x1d0b40
