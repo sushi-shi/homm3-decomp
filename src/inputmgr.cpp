@@ -10,6 +10,7 @@
 #include "advmgr.h"
 #include "textntry.h"
 #include "winmgr.h"
+#include "soundmgr.h"
 
 // E:\gamedcs\inputmgr.cpp:48
 // Located as AppWndProc's WM_KEYDOWN/WM_KEYUP callee (homm2 kbwin
@@ -270,21 +271,64 @@ void inputManager::Flush()
     iHead = 0;
 }
 
+// E:\gamedcs\inputmgr.cpp:864 - promoted from DC_ONLY 2026-08-14. The two
+// unclaimed rows between Flush and AsciiConvert are the GetEvent/PeekEvent
+// pair in the DC roster's order; both return the message BY VALUE (the
+// hidden pointer at [ebp+8], `ret 4`), both open with the eight-dword
+// inputBufferMessage clear, and both call the already-claimed
+// AsciiConvert at 0x4ec6f0 - which is what tells them apart from the
+// GetCurrQuals/SetKeyCodeType rows the DC roster files between them and
+// retail never emitted.
+//
+// `iHead = (iHead + 1) % 64` is a SIGNED modulo: retail's
+// `and eax,0x8000003f / jns / dec / or eax,0xffffffc0 / inc` is VC6's
+// power-of-two remainder for a signed dividend, so the index is `int`,
+// not unsigned.
+VA(0x004ec590, 0xAE)  // anchor-callee (AsciiConvert) + dc order, dc 0xdda74
+message inputManager::GetEvent()
+{
+    inputBufferMessage msg;
+
+    PollSound();
+    if (status == STATUS_ACTIVE && iHead != iTail) {
+        msg = iBuffer[iHead];
+        iHead = (iHead + 1) % 64;
+        if (msg.id == MESSAGE_KEY_DOWN && keyCodeType == 0)
+            AsciiConvert(&msg);
+    } else {
+        msg.id = 0;
+        msg.codeY = 0;
+        msg.codeX = 0;
+        msg.qualifier = 0;
+    }
+    return msg;
+}
+
+// E:\gamedcs\inputmgr.cpp:913 - GetEvent verbatim except that the queue
+// head is only NORMALISED, never advanced: retail masks the
+// un-incremented index and stores it straight back, which is what makes
+// this the non-consuming peek.
+VA(0x004ec640, 0xAD)  // anchor-callee (AsciiConvert) + dc order, dc 0xddc14
+message inputManager::PeekEvent()
+{
+    inputBufferMessage msg;
+
+    PollSound();
+    if (status == STATUS_ACTIVE && iHead != iTail) {
+        msg = iBuffer[iHead];
+        iHead = iHead % 64;
+        if (msg.id == MESSAGE_KEY_DOWN && keyCodeType == 0)
+            AsciiConvert(&msg);
+    } else {
+        msg.id = 0;
+        msg.codeY = 0;
+        msg.codeX = 0;
+        msg.qualifier = 0;
+    }
+    return msg;
+}
+
 #if 0  // @carcass
-
-// E:\gamedcs\inputmgr.cpp:864
-DC_ONLY(0xdda74, 0x19E)
-message inputManager::GetEvent(message* __$ReturnUdt)
-{
-    // @stub
-}
-
-// E:\gamedcs\inputmgr.cpp:913
-DC_ONLY(0xddc14, 0xF2)
-message inputManager::PeekEvent(message* __$ReturnUdt)
-{
-    // @stub
-}
 
 // E:\gamedcs\inputmgr.cpp:970
 DC_ONLY(0xddd08, 0x42)
