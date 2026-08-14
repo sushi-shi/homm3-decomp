@@ -45,23 +45,33 @@ public:
 };
 SIZE(TBottomViewKingdom, 0x34);
 
+// Slot 1 of 0x63bb44 is this class's own body 0x4536f0, so it overrides
+// animate; the five classes whose slot 1 is still the base's 0x5bc690 do
+// not. Every derived destructor here is virtual and empty in retail - all
+// seven bodies are byte-identical apart from their EH table pointer, each
+// one the base destructor inlined whole.
 class TBottomViewEnemyTurn : public type_bottom_view_window {
 private:
     char pad_034[0x40];
 
 public:
     TBottomViewEnemyTurn(heroWindow* parent);
+    virtual ~TBottomViewEnemyTurn();
+    virtual void animate();
 };
 SIZE(TBottomViewEnemyTurn, 0x74);
 
 // Retail UpdBottomViewNewTurn allocates 0x48 bytes before invoking the
 // Dreamcast-attested constructor. The derived tail remains opaque here.
+// Slot 1 of 0x63bb0c is 0x4511a0, this class's own animate.
 class TBottomViewNewTurn : public type_bottom_view_window {
 private:
     char pad_034[0x14];
 
 public:
     TBottomViewNewTurn(heroWindow* parent);
+    virtual ~TBottomViewNewTurn();
+    virtual void animate();
 };
 SIZE(TBottomViewNewTurn, 0x48);
 
@@ -71,12 +81,14 @@ class TBottomViewResourceMessage : public type_bottom_view_window {
 public:
     TBottomViewResourceMessage(heroWindow* parent, int resource,
                                int quantity, const std::string* message);
+    virtual ~TBottomViewResourceMessage();
 };
 SIZE(TBottomViewResourceMessage, 0x34);
 
 class TBottomViewMessage : public type_bottom_view_window {
 public:
     TBottomViewMessage(heroWindow* parent, const std::string* message);
+    virtual ~TBottomViewMessage();
 };
 SIZE(TBottomViewMessage, 0x34);
 
