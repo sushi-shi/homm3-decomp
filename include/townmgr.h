@@ -41,9 +41,18 @@ class town;
 // width, and its destructor runs ~heroWindow rather than ~CAdvPopup.
 class TTownScreenWindow : public heroWindow {
 public:
+    enum {
+        EXIT_BUTTON_ID = 0x7800
+    };
+
     int field_4c;    // +0x4c  town-list scroll offset (UpdateTownLocators)
     char* field_50;  // +0x50  raw allocation, freed with plain operator delete
+    // +0x54 and +0x74: the resource row the constructor builds in one
+    // eight-iteration loop, each widget kept by the window as it is made.
+    iconWidget* resourceIcons[8];
+    textWidget* resourceTexts[8];
 
+    TTownScreenWindow();
     virtual ~TTownScreenWindow();
     void UpdateTownLocator(int i);
     void UpdateTownLocators();
