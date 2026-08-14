@@ -93,6 +93,12 @@ inline TCreatureType creature_type_from_int(int value)
 // would put an unpaired function in this object.
 int ViewArmyCastSpellHandler(message* msg);
 
+// The shooter bit, byte-proven by initialize_creatures and consumed here
+// by create_shots_widget's single `test byte [traits+0x10], 4` guard.
+// TU-local for the reason ai_combat.cpp keeps its own copy: the shared
+// header stays as small as its own consumers need.
+const unsigned int CTA_SHOOTER = 0x4;
+
 // The five inlined-away rows, spelled as the Dreamcast members they
 // are. `inline` (not a plain out-of-line definition) is what models
 // retail's link: each of the three constructors expands them, nothing
@@ -104,7 +110,7 @@ int ViewArmyCastSpellHandler(message* msg);
 inline void TViewArmyWindow::create_background_widget(const hero* this_hero)
 {
     bitmapBorder* plate = new bitmapBorder(
-        0, 0, 298, 311, 200,
+        0, 0, 298, 311, BACKGROUND_ID,
         DATA_COMPGEN(0x0068c698, viewArmyPlate, "CrStkPU.pcx"),
         0x800);
     plate->SetPlayerPaletteColors(
@@ -207,7 +213,7 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
         attack = _cpp_max(attack, melee);
     }
 
-    Widgets.reserve(28);
+    Widgets.reserve(NWIDGETS);
 
     // The plate is recoloured for the stack's OWNER (not its current
     // controller), falling back to the local player when it has no hero.
@@ -316,6 +322,24 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
 // the virtual destructor below and precedes the remaining out-of-line rows.
 VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 
+#if 0  // @carcass
+
+// E:\gamedcs\viewarmywindow.cpp:140 - retail 0x5f3b50, 1714 B
+DC_ONLY(0x190e78, 0x614)
+void TViewArmyWindow::TViewArmyWindow(const armyGroup* group, int iarmy, const hero* this_hero, const town* this_town, int x0, int y0, int upgrade, unsigned char show_dismiss, unsigned char show_ok)
+{
+    // @stub
+}
+
+// E:\gamedcs\viewarmywindow.cpp:274 - retail 0x5f4210, 961 B
+DC_ONLY(0x19148c, 0x1D2)
+void TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0, unsigned char show_ok)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // Retail owns the widget objects without clearing the vector here, then
 // tears down luck_help, morale_help, and the CAdvPopup base in that order.
 VA(0x005f45e0, 0xD5)  // vtable-store + layout, dc 0x191660
@@ -366,6 +390,19 @@ int TViewArmyWindow::convertID2HelpID(int id) const
     }
 }
 
+#if 0  // @carcass
+
+// E:\gamedcs\viewarmywindow.cpp:366 - no retail row: the carve has nothing
+// between DoModal (0x5f47f0 + 92 = 0x5f484c) and WindowHandler (0x5f4850),
+// so retail either inlined this at its one call site or /OPT:REF dropped it.
+DC_ONLY(0x191764, 0x40)
+void TViewArmyWindow::QuickView()
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // The modal entry resets the image-wide animation timer, disables actions
 // unavailable to a non-local player, and delegates to heroWindow's modal
 // pump without a fade. The two widget IDs are immediate-proven here and at
@@ -385,6 +422,44 @@ void TViewArmyWindow::DoModal()
             action->enable(0);
     }
     heroWindow::DoModal(0);
+}
+
+#if 0  // @carcass
+
+// E:\gamedcs\viewarmywindow.cpp:404 - retail 0x5f4850, 2007 B
+DC_ONLY(0x191804, 0x604)
+int TViewArmyWindow::WindowHandler(message* msg)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
+// The creature portrait: the town-alignment backdrop, the creature's own
+// animated sprite kept in SpriteWidget, and the stack size printed under
+// them in the popup's one Verd10B row. The count line is suppressed for an
+// empty slot, which is what the three-widget/two-widget split of the retail
+// tail encodes.
+VA(0x005f5060, 0x2D6)  // ctor call set + CrBkg table + Verd10B.fnt, dc 0x191f2c
+void TViewArmyWindow::create_portrait_widget(const char* sprite_name,
+                                             int town_type, int count)
+{
+    Widgets.push_back(new bitmapBorder(
+        21, 48, 100, 130, SPRITE_BACKGROUND_ID,
+        akCreatureBackgrounds[town_type],
+        0x800));
+
+    SpriteWidget = new iconWidget(
+        21, 48, 100, 130, SPRITE_ID, sprite_name, 0, 2, 0, 0, 0x12);
+    Widgets.push_back(SpriteWidget);
+
+    if (count > 0) {
+        sprintf(gText, "%d", count);
+        Widgets.push_back(new textWidget(
+            21, 160, 100, 20, gText,
+            DATA_COMPGEN(0x006700b4, viewArmyCountFont, "Verd10B.fnt"),
+            font::WHITE, NUMBER_ID, 10, 0, 8));
+    }
 }
 
 // The two text widgets are the attack label and its current value. Retail
@@ -427,6 +502,84 @@ void TViewArmyWindow::create_defense_widget(int normal_defense_skill,
     Widgets.push_back(new textWidget(
         154, 66, 122, 17, gText, "smalfont.fnt",
         font::PRIMARY, DEFENSE_ID, 6, 0, 8));
+}
+
+// The damage row prints a single number when the creature's low and high
+// bounds agree and a "low - high" range otherwise. The one creature whose
+// damage is not the table's is the BALLISTA: its bounds are scaled by the
+// wielding hero's Attack skill, which is why the builder takes a hero at
+// all. Both `+ 1` factors expand hero::GetPrimarySkill(0) - the 0..99
+// clamp is byte-visible twice over a single `mov cl,[hero+0x476]`, and
+// its `skill >= 2 ? 1 : 0` floor folds to `xor edi,edi` for skill 0,
+// which is what fixes the index as Attack.
+//
+// Residual (96.4286%): the body is byte-identical to retail up to and
+// including the second textWidget, and diverges by ONE inline decision
+// inside the last push_back's growth path. Dinkumware's `insert` needs
+// the vector's size twice - once folded into `max(size(), 1)`, once for
+// the new capacity - and retail CALLS vector::size() for the second one
+// where our budget expands it (one extra conditional branch, base 21 vs
+// retail 20). A7 /Ob2 budget, not a spelling: the two SIBLING builders
+// with the identical three-push_back shape, create_portrait_widget and
+// create_shots_widget, are EXACT and retail inlines the same size()
+// there - what separates this row is that its own two GetPrimarySkill
+// expansions spend budget the siblings do not. Tried and rejected:
+// `#pragma inline_depth(2)` around the last push_back (an exact no-op -
+// VC6 expands bottom-up, so the depth counter never exceeds 1 and only
+// depth 0 does anything, which would cost the push_back itself), and
+// the Dreamcast's own `const TCreatureTypeTraits&` parameter, which is
+// byte-identical here and only renames the row.
+VA(0x005f5860, 0x2C2)  // widget IDs + text-record field + "%d - %d", dc 0x19226c
+void TViewArmyWindow::create_damage_widget(const TCreatureTypeTraits* traits,
+                                           const hero* our_hero)
+{
+    Widgets.push_back(new textWidget(
+        154, 104, 122, 17,
+        gpGeneralText->GetText(GENERAL_TEXT_VIEW_ARMY_DAMAGE),
+        "smalfont.fnt", font::PRIMARY, DAMAGE_LABEL_ID, 4, 0, 8));
+
+    int low = traits->damageLowBound;
+    int high = traits->damageHighBound;
+    if (our_hero != 0 && ArmyType == CREATURE_BALLISTA) {
+        low *= our_hero->GetPrimarySkill(0) + 1;
+        high *= our_hero->GetPrimarySkill(0) + 1;
+    }
+
+    if (low == high)
+        sprintf(gText, "%d", low);
+    else
+        sprintf(gText, DATA_COMPGEN(0x0068c6a4, viewArmyDamageRangeFormat,
+                                    "%d - %d"),
+                low, high);
+
+    Widgets.push_back(new textWidget(
+        154, 103, 122, 17, gText, "smalfont.fnt",
+        font::PRIMARY, DAMAGE_ID, 6, 0, 8));
+}
+
+// The ammunition row exists only for a shooter, which is what the whole
+// body sitting under one `test byte [traits+0x10], 4` says: a melee stack
+// gets neither the label nor the count. Inside, the base/modified pair is
+// the same presentation the primary skills use, on one shared y.
+VA(0x005f5b30, 0x29D)  // widget IDs + text-record field + format literals, dc 0x1923c0
+void TViewArmyWindow::create_shots_widget(const TCreatureTypeTraits* traits,
+                                          int normal_shots, int current_shots)
+{
+    if (traits->attributes & CTA_SHOOTER) {
+        Widgets.push_back(new textWidget(
+            154, 85, 122, 17,
+            gpGeneralText->GetText(GENERAL_TEXT_VIEW_ARMY_SHOTS),
+            "smalfont.fnt", font::PRIMARY, SHOTS_LABEL_ID, 4, 0, 8));
+
+        if (normal_shots == current_shots)
+            sprintf(gText, "%d", normal_shots);
+        else
+            sprintf(gText, "%d(%d)", normal_shots, current_shots);
+
+        Widgets.push_back(new textWidget(
+            154, 85, 122, 17, gText, "smalfont.fnt",
+            font::PRIMARY, SHOTS_ID, 6, 0, 8));
+    }
 }
 
 // Base and modified hitpoints use the same two-widget presentation as the
@@ -500,6 +653,17 @@ void TViewArmyWindow::create_speed_widget(int normal_speed,
         font::PRIMARY, SPEED_ID, 6, 0, 8));
 }
 
+#if 0  // @carcass
+
+// E:\gamedcs\viewarmywindow.cpp:837 - retail 0x5f65b0, 693 B
+DC_ONLY(0x192900, 0x128)
+void TViewArmyWindow::create_spell_influence_widgets(const army* this_army)
+{
+    // @stub
+}
+
+#endif  // @carcass
+
 // Both retail constructors call this no-argument helper. Its two allocations,
 // ACCEPT_ID, Box64x30.pcx/iOKAY.def literals, Enter/Escape hotkeys and vector
 // insertions distinguish it from the neighboring action-widget creators.
@@ -509,7 +673,7 @@ VA(0x005f6870, 0x264)  // ctor call set + literals + arity, dc 0x192a28
 void TViewArmyWindow::create_ok_widget()
 {
     Widgets.push_back(new bitmapBorder(
-        215, 237, 66, 32, 225,
+        215, 237, 66, 32, OK_BORDER_ID,
         DATA_COMPGEN(0x0067016c, viewArmyOkBorder, "Box64x30.pcx"),
         0x800));
 
@@ -560,126 +724,3 @@ void TViewArmyWindow::create_dismiss_widget()
     dismiss->set_hotkey(32);
     Widgets.push_back(dismiss);
 }
-
-#if 0  // @carcass
-
-// E:\gamedcs\viewarmywindow.cpp:140
-DC_ONLY(0x190e78, 0x614)
-void TViewArmyWindow::TViewArmyWindow(const armyGroup* group, int iarmy, const hero* this_hero, const town* this_town, int x0, int y0, int upgrade, unsigned char show_dismiss, unsigned char show_ok)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:274
-DC_ONLY(0x19148c, 0x1D2)
-void TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0, unsigned char show_ok)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:318
-DC_ONLY(0x191660, 0x72)
-void TViewArmyWindow::~TViewArmyWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:325
-DC_ONLY(0x1916d4, 0x8E)
-int TViewArmyWindow::convertID2HelpID(int id)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:366
-DC_ONLY(0x191764, 0x40)
-void TViewArmyWindow::QuickView()
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:374
-DC_ONLY(0x1917a4, 0x60)
-void TViewArmyWindow::DoModal()
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:404
-DC_ONLY(0x191804, 0x604)
-int TViewArmyWindow::WindowHandler(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:617
-DC_ONLY(0x191e08, 0xC2)
-void TViewArmyWindow::create_background_widget(const hero* this_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:635
-DC_ONLY(0x191ecc, 0x60)
-void TViewArmyWindow::create_name_widget(const char* name)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:646
-DC_ONLY(0x191f2c, 0x154)
-void TViewArmyWindow::create_portrait_widget(const char* sprite_name, TTownType town_type, int count)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:707
-DC_ONLY(0x19226c, 0x154)
-void TViewArmyWindow::create_damage_widget(const TCreatureTypeTraits* traits, const hero* our_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:735
-DC_ONLY(0x1923c0, 0xF0)
-void TViewArmyWindow::create_shots_widget(const TCreatureTypeTraits* traits, int normal_shots, int current_shots)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:809
-DC_ONLY(0x1927d4, 0xB8)
-void TViewArmyWindow::create_morale_widget(int new_morale)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:823
-DC_ONLY(0x19288c, 0x74)
-void TViewArmyWindow::create_luck_widget(int new_luck)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:837
-DC_ONLY(0x192900, 0x128)
-void TViewArmyWindow::create_spell_influence_widgets(const army* this_army)
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:917
-DC_ONLY(0x192bdc, 0x78)
-void TViewArmyWindow::create_rollover_widget()
-{
-    // @stub
-}
-
-// E:\gamedcs\viewarmywindow.cpp:124
-DC_ONLY(0x192c54, 0x34)
-void* TViewArmyWindow::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-#endif  // @carcass
