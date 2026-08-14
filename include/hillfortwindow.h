@@ -123,7 +123,7 @@ public:
         char szCount[10];         // +0x00
         char szGoldCost[10];      // +0x0a
         char szResourceCost[12];  // +0x14
-        long cost[7];             // +0x20
+        int cost[7];              // +0x20
         int resourceIndex;        // +0x3c
         int type;                 // +0x40 (TCreatureType domain)
         int count;                // +0x44
@@ -145,7 +145,7 @@ public:
     void DoModal();
 
     TUpgradeSlot slot[armyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
-    long totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
+    int totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];       // +0x27c
     int UpgradeAllButtonState;                             // +0x298
     widget* RolloverWidget;                                // +0x29c
 
