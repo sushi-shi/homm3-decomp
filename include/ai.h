@@ -43,7 +43,14 @@ enum EAreaAttackCreature {
     // nearly tree-wide, and adding to it moved initialize_game_data off
     // exact.
     CREATURE_HARPY = 0x48,
-    CREATURE_HARPY_HAG = 0x49
+    CREATURE_HARPY_HAG = 0x49,
+    // The creature a besieged town's keep and towers shoot AS:
+    // has_ranged_advantage (0x420a80) prices each of them off
+    // akCreatureTypeTraits[2].AI_value (`[table + 0x128]`, i.e. record
+    // 2's field +0x40). 2 is the Archer, third row of the Castle
+    // dwelling run below Pikeman 0 and Halberdier 1. Here for the same
+    // reason as every enumerator above.
+    CREATURE_ARCHER = 0x2
 };
 
 // E:\gamedcs\ai.cpp:597 - combatManager::find_move_order's std::sort
