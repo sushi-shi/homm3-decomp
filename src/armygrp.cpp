@@ -1237,7 +1237,19 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
 // modelled as a file-local helper, so the inline scan stays. `limit` x1 is the
 // clamp at the tail, now spelled as retail's pair. `town::HasBuilding` x1
 // against `ownerTown->built & bitNumber[TAVERN_ID]` needs town.h's
-// HOMM3_TOWN_OBJ_DECLS declaration and is out of this lane's reach.
+// HOMM3_TOWN_OBJ_DECLS declaration - and when town.h opened on 2026-08-14 that
+// promotion turned out to be CONTRA-INDICATED BY RETAIL BYTES, so it is closed
+// here rather than left as a standing follow-up. Two functions carry the same
+// DC `town::HasBuilding` census row and are ALREADY BYTE-EXACT with the
+// predicate spelled inline: armygrp::GetLuck (0x44b2d0, 100.0000,
+// `ownerTown->active & bitNumber[EXTRA_0_ID]`) and
+// ai_combat::check_wall_archery_penalty (0x424790, 100.0000). Retail x86
+// therefore inlined HasBuilding to exactly the form already spelled at all six
+// armygrp/ai_player sites; the census row is a DREAMCAST SOURCE FACTORING, not
+// a missing construct, and adding the declarator to a wide header can only put
+// two exact functions at risk. The remaining armygrp rows (this body,
+// get_morale_description, get_luck_description) have residuals in a different
+// class entirely - see the ranker verdict below.
 // RANKED 2026-08-14 (normalized disasm, real-vs-artefact split): 98.5654 is
 // 10 real rows of 237 and 5 artefact, and ALL TEN ARE THE ONE CLASS ALREADY
 // NAMED - retail's `push ebx` sits AFTER the on-cursed-ground return (first
