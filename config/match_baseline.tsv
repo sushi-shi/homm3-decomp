@@ -1481,6 +1481,7 @@ towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c234
 townmgr	??0TBlacksmithWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d1360
 townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1d55c0
 townmgr	??0TGarrisonWindow@@QAE@PAVhero@@HPAVarmyGroup@@@Z	100.0000	100.0000	100.0000	0x1d0e00
+townmgr	??0TMageGuildWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x1cc980
 townmgr	??0TShipWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d1ef0
 townmgr	??0TTavernWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d70b0
 townmgr	??0TThievesGuildWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1c8190
