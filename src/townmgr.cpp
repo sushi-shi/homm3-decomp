@@ -10,6 +10,7 @@
 #undef HOMM3_TOWNMGR_WINDOW_DECLS
 #include "game.h"
 #include "hero.h"
+#include "mousemgr.h"
 #include "remote.h"
 #include "smackmgr.h"
 #include "strip.h"
@@ -285,6 +286,46 @@ type_monster_join_window::~type_monster_join_window()
 VA(0x005d10c0, 0x6B)  // anchor-vtable 0x643890 slot 0 + ??_G call edge, dc 0x181684
 TGarrisonWindow::~TGarrisonWindow()
 {
+}
+
+// Three modal entry points that build one of the two garrison windows on
+// the stack, run it, and let the local's destructor - the empty derived
+// one two rows up, base inlined - tear it down. All three carry an
+// fs:[0] frame for exactly that.
+
+// E:\gamedcs\townmgr.cpp:5180
+VA(0x005d1130, 0x96)  // anchor-callee 0x5d0e00 TGarrisonWindow ctor, dc 0x17320c
+void DoEventGarrison(hero* inHero, garrison* thisGarrison)
+{
+    int owner = thisGarrison->playerOwner;
+    if (!thisGarrison->pad_3c)
+        owner = -1;
+    TGarrisonWindow garrisonWindow(inHero, owner, &thisGarrison->garrisonArmy);
+    garrisonWindow.DoModal(0);
+}
+
+// E:\gamedcs\townmgr.cpp:5187
+VA(0x005d11d0, 0xDA)  // anchor-callee 0x5d0b40 join-window ctor + arity, dc 0x173238
+void do_monster_join_dialog(hero* inHero, TCreatureType type, int amount)
+{
+    armyGroup monsters;
+    monsters.Initialize();
+    monsters.Add(type, amount, -1);
+
+    type_monster_join_window joinWindow(inHero, &monsters, 0);
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    gpMouseManager->ShowPointer(true);
+    joinWindow.DoModal(0);
+}
+
+// E:\gamedcs\townmgr.cpp:5201
+VA(0x005d12b0, 0xA5)  // anchor-callee 0x5d0b40 join-window ctor + arity, dc 0x1732a8
+void do_monster_join_dialog(hero* inHero, armyGroup* monsters, int flags)
+{
+    type_monster_join_window joinWindow(inHero, monsters, flags);
+    gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+    gpMouseManager->ShowPointer(true);
+    joinWindow.DoModal(0);
 }
 
 VA_COMPGEN(0x005d1a00, 0x21, SCALAR_DELETING_DTOR, TBlacksmithWindow)
