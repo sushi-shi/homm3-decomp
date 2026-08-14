@@ -432,12 +432,73 @@ type_garrison_base_window::~type_garrison_base_window()
     }
 }
 
-// NOT claimed: 0x5d0d60, this class's ??_G. Nothing in the TU references
-// ??_7type_monster_join_window - the destructor below stores the BASE
-// vptr, exactly as retail does - so VC6 emits neither the vftable nor the
-// wrapper. The row is gated on the constructor at 0x5d0b40, which is the
-// only body that stores the derived vptr (the bitmapBackedTextWidget
-// precedent).
+// The join-offer window's constructor, and the second of the two rows
+// that free a withdrawn ??_G: it is the only body that stores vftable
+// 0x643854, so emitting the store emits the table and its slot-0
+// wrapper at 0x5d0d60 with it.
+//
+// One text widget over the base window, titled either with the generic
+// join prompt (the flags arm) or with the offered stack's own creature
+// name - singular when exactly one is offered, plural otherwise, and the
+// empty string when the slot scan falls off the end. The scan is
+// retail's verbatim, including the fact that it can leave i at 7 and
+// read one past the type array.
+//
+// The third parameter is a BYTE: retail tests it with `test al,al` off
+// [ebp+0x10], which an int parameter does not produce, and both entry
+// points push a literal 0 there so neither call site moves.
+//
+// Residual (93.88%): the slot scan is rotated - our CL peels the first
+// `armies[0] == -1` load in front of the loop and duplicates the
+// compare, where retail keeps one top-tested block with a single
+// backward jl, and the peel costs `this` and `monsters` their
+// esi/edi assignment for the rest of the body. Tried and rejected:
+// `while (a && ++i < 7);`, `while (a) { if (++i >= 7) break; }`,
+// `for (;;)` with two breaks, a single-label `goto` with the `&&`
+// condition, and a two-label goto that spells retail's block graph
+// exactly - all five compile to the same rotated shape, so this is C2
+// loop inversion, not a source spelling. Everything else in the body -
+// the base call, the vptr, the byte at +0x6c, both title arms with
+// their string temporaries, the widget and the AddWidget - is
+// byte-identical.
+
+// E:\gamedcs\townmgr.cpp:5136
+VA(0x005d0b40, 0x21F)  // anchor-vtable 0x643854 + ??_G call edge + arity, dc 0x172f34
+type_monster_join_window::type_monster_join_window(hero* inHero,
+                                                   armyGroup* monsters,
+                                                   unsigned char flags)
+    : type_garrison_base_window(inHero, inHero->owner, monsters)
+{
+    std::string title;
+    field_6c = 1;
+    if (flags) {
+        title = gpGeneralText->GetText(710);
+    } else {
+        int i = 0;
+        while (monsters->armies[i] == CREATURE_NONE) {
+            if (++i >= 7)
+                break;
+        }
+
+        const char* name;
+        int type = monsters->armies[i];
+        if (type < 0 || type > 150)
+            name = emptyRolloverText;
+        else if (monsters->numTroops[i] == 1)
+            name = akCreatureTypeTraits[type].m_name;
+        else
+            name = akCreatureTypeTraits[type].m_plural_name;
+        title = format_string(gpGeneralText->GetText(36), name);
+    }
+
+    widget* newWidget = new textWidget(0, 20, width, 30, title.c_str(),
+                                       "medfont.fnt", font::HEADING,
+                                       203, 1, 0, 8);
+    Widgets.push_back(newWidget);
+    AddWidget(newWidget, -1);
+}
+
+VA_COMPGEN(0x005d0d60, 0x21, SCALAR_DELETING_DTOR, type_monster_join_window)
 
 // E:\gamedcs\townmgr.cpp:5156
 VA(0x005d0d90, 0x6B)  // anchor-vtable 0x643854 slot 0 + ??_G call edge, dc 0x181638

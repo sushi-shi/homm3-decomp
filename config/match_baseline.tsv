@@ -1484,6 +1484,7 @@ townmgr	??0TGarrisonWindow@@QAE@PAVhero@@HPAVarmyGroup@@@Z	100.0000	100.0000	100
 townmgr	??0TShipWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d1ef0
 townmgr	??0TTavernWindow@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1d70b0
 townmgr	??0townManager@@QAE@XZ	100.0000	100.0000	100.0000	0x1c3310
+townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	93.8770	93.8770	93.8770	0x1d0b40
 townmgr	??1TBlacksmithWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d1a30
 townmgr	??1TBuyBuildWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d5b70
 townmgr	??1TCastleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1dcb80
@@ -1507,6 +1508,7 @@ townmgr	??_GTTavernWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d7880
 townmgr	??_GTThievesGuildWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c9660
 townmgr	??_GTTownScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c58b0
 townmgr	??_Gtype_garrison_base_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d0550
+townmgr	??_Gtype_monster_join_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d0d60
 townmgr	?Close@TTavernWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1d7e70
 townmgr	?Close@townManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1c71b0
 townmgr	?DoEventGarrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000	0x1d1130
