@@ -4434,7 +4434,18 @@ void townManager::DoTownTavern()
 //     note records for that TU-wide census.
 // Both are spelled out in place because neither is defined in this
 // compiland ahead of this body, so writing the call would emit the call
-// retail does not have.
+// retail does not have - and for MoveHero there is a stronger reason:
+// retail has NO out-of-line body for it anywhere. The carve runs
+// DoTownTavern 0x5d82b0 / DoTownGate 0x5d8480 / TCastleWindow 0x5d86f0
+// with fifteen bytes of alignment between the last two and no row
+// between, and an extern-linkage member is emitted unconditionally, so
+// the Dreamcast roster's townManager::MoveHero cannot be a member in
+// retail's source - it is a single-call-site file static that /Ob2
+// expanded and dropped, the initialize.obj pattern. Spelling it as such
+// (a 3-arg static taking the town id) WAS measured and vanishes exactly
+// as the model predicts, but scores the same 98.6070 to the digit and
+// would invent a declarator the Dreamcast contradicts, so the
+// transcription is kept - the DrawTown/ShowText treatment two rows up.
 //
 // `town::get_location` is the by-value type_point accessor town.h gates:
 // retail builds the point straight into TeleportTo's argument slot with
