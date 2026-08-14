@@ -654,6 +654,9 @@ public:
     // recruit dialog, rolling the generator first if the town has not
     // picked a creature yet.
     void DoPortalOfSummoning();
+    // Retail 0x5d82b0 (dc 0x17b154). The town's own tavern: the shared
+    // chooser, then the hire onto the town and the page rebuild.
+    void DoTownTavern();
     // Retail 0x5d30d0 (dc 0x174da0). The town hall button, and the
     // Grail offer that stands in front of it.
     void handle_hall_click();

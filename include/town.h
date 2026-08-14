@@ -369,6 +369,17 @@ public:
     // see a new declarator.
     void SetSummoningGenerator();
 #endif
+#ifdef HOMM3_TOWNMGR_TOWN_VISIT_DECLS
+    // 0x5bd8e0, 1361 B. The DC roster's row between SetSummoningGenerator
+    // (dc 0x165da4) and town::town (dc 0x166408) is
+    // ApplySpecialBuildingEffect, and the retail bracket has exactly one
+    // unclaimed body in that slot; the SH4 span 0x165ea0..0x166408 is
+    // 1384 bytes against retail's 1361, inside the band. Declared for
+    // townManager::DoTownTavern, which calls it on the town's visiting
+    // hero right after the tavern hire, and on a gate of its own because
+    // town.cpp must not see a new declarator.
+    void ApplySpecialBuildingEffect(hero* townHero);
+#endif
     // 0x5bf6d0 / 0x5bf770. `int`, not the DC's type_building_id: the
     // gHordeBuildings row is int and an enum return would need a cast
     // (the UpgradedDwellingID precedent).
