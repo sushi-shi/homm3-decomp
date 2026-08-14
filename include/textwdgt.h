@@ -56,6 +56,14 @@ public:
     // widget extent against its +0x24/+0x28 Width/Height.
     Bitmap816* image;
 
+    // Retail 0x5bc760. Eleven parameters, ten of which it forwards straight
+    // through to the textWidget base in retail's own push order, with a
+    // literal 0 taking the back-colour slot; the eleventh - the backing
+    // bitmap's name - is the one it keeps.
+    bitmapBackedTextWidget(int x, int y, int w, int h, const char* text,
+                           const char* fontName, const char* backName,
+                           font::TColor color, int id, unsigned justify,
+                           int style);
     virtual ~bitmapBackedTextWidget();
     virtual void Draw();  // slot 4, retail 0x5bc7f0
 };
