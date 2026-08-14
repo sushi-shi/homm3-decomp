@@ -10,6 +10,7 @@
 #include "iconwdgt.h"
 #include "textwdgt.h"
 
+class armyGroup;
 class hero;
 class sample;
 
@@ -124,6 +125,11 @@ public:
     // the only delta, since nothing before it is a vector - lands it here.
     std::vector<sample*> death_samples;
 
+    // 0x5654f0 (dc 0x1275c0). Declared for townManager::
+    // DoSkeletonTransformer, which builds one of these on the STACK -
+    // 0x16c bytes of frame - runs it modal and lets the scope end call
+    // the destructor below. Not defined here.
+    type_skeleton_window(armyGroup* new_army);
     void creature_click(long side, long slot, unsigned char right_click);
 
     virtual ~type_skeleton_window();
