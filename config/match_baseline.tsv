@@ -569,6 +569,9 @@ dxplay	?IsHost@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x96cb0
 dxplay	?SetGuid@CDPlay@@UAEXU_GUID@@@Z	100.0000	100.0000	100.0000	0x96c70
 event_record	?replay_available@game@@QBEEXZ	100.0000	100.0000	100.0000	0x9da70
 events	?GetTeam@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xa5960
+events	?InitializeAdventureEventText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e0e0
+events	?do_event_water_wheel@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7de0
+events	?do_event_windmill@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7fc0
 events	?get_black_box@advManager@@QBEPAVBlackBoxData@@PBTExtraInfoUnion@@@Z	100.0000	100.0000	100.0000	0xa0c20
 events	?get_force_modifier@advManager@@SIHM@Z	100.0000	100.0000	100.0000	0xa76c0
 events	?get_treasure_data@advManager@@QBEPAVTreasureData@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x9f040

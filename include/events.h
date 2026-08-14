@@ -5,6 +5,18 @@
 #ifndef HOMM3_EVENTS_H
 #define HOMM3_EVENTS_H
 
+// Named indices into advevent.txt, the adventure-object text resource
+// events.obj loads through InitializeAdventureEventText (0x49e0e0).
+// Every value is retail-byte-proven by the [Text._First + 4*N] load in
+// the handler named beside it; the names describe those consumers,
+// which is the convention textresource.h's EGeneralTextIndex sets.
+enum EAdventureEventText {
+    ADV_EVENT_TEXT_WATER_WHEEL_GOLD = 164,
+    ADV_EVENT_TEXT_WATER_WHEEL_EMPTY = 165,
+    ADV_EVENT_TEXT_WINDMILL_EMPTY = 169,
+    ADV_EVENT_TEXT_WINDMILL_RESOURCE = 170
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\events.cpp:61, dc 0x9028c) unsigned char InitializeAdventureEventText();
 // CODEVIEW(E:\gamedcs\events.cpp:265, dc 0x902b0) unsigned char InitializeArtifactEventText();

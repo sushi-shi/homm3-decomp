@@ -16,10 +16,59 @@ class TreasureData;
 union ExtraInfoUnion;
 
 #ifdef HOMM3_EVENTS_VIEW
-// events.obj only needs the plain packed dword arm. Keeping this narrow
-// avoids importing the many object-specific bitfield views into its TU.
+// events.obj needs the plain packed dword arm plus the object views its
+// reconstructed handlers actually read. Keeping this narrow avoids
+// importing the remaining eighteen bitfield views into its TU.
+
+// do_event_water_wheel (0x4a7de0) loads bits 0..4 with `mov al,[cell] /
+// and eax,0x1f`, multiplies the result by 500 and clears the same bits
+// again with `and al,0xe0` after paying - an UNSIGNED five-bit count of
+// 500-gold units.
+struct type_water_wheel_info {
+    unsigned long gold : 5;
+    unsigned long tail : 27;
+};
+SIZE(type_water_wheel_info, 4);
+
+// do_event_windmill (0x4a7fc0) reads a SIGNED four-bit resource id at
+// bits 0..3 (`shl eax,0x1c / sar eax,0x1c`) and an UNSIGNED four-bit
+// amount at bits 13..16 (`shr esi,0xd / and esi,0xf`); the payout
+// clears both with `and eax,0xfffe1ff0` and re-inserts the resource.
+struct type_windmill_info {
+    EGameResource resource : 4;
+    unsigned long unused : 9;
+    unsigned long amount : 4;
+    unsigned long tail : 15;
+};
+SIZE(type_windmill_info, 4);
+
 union ExtraInfoUnion {
     unsigned long value;
+    type_water_wheel_info water_wheel_info;
+    type_windmill_info windmill_info;
+
+    void SetCellVisited(short player);
+
+    // The five MapCell.h accessors the two mill handlers inline. The
+    // Dreamcast publishes all five with their signatures - get_wheel_gold
+    // and get_windmill_amount return `short` (?...@@QBAFXZ),
+    // get_windmill_resource returns EGameResource, and both setters take
+    // the same pair - and the retail bytes fix the bodies:
+    //   * the wheel's *500 lives INSIDE get_wheel_gold, which is why
+    //     do_event_water_wheel truncates the product with `movsx esi,ax`
+    //     even though 31*500 provably fits in a short;
+    //   * set_windmill writes BOTH fields, which is why the payout tail
+    //     is a single `and eax,0xfffe1ff0 / xor eax,edi` on the dword
+    //     instead of two read-modify-writes.
+    short get_wheel_gold() const { return water_wheel_info.gold * 500; }
+    void set_wheel_gold(short amount) { water_wheel_info.gold = amount / 500; }
+    EGameResource get_windmill_resource() const { return windmill_info.resource; }
+    short get_windmill_amount() const { return windmill_info.amount; }
+    void set_windmill(EGameResource resource, short amount)
+    {
+        windmill_info.resource = resource;
+        windmill_info.amount = amount;
+    }
 };
 SIZE(ExtraInfoUnion, 4);
 #endif
@@ -661,6 +710,18 @@ public:
 #ifdef HOMM3_EVENTS_VIEW
     TreasureData* get_treasure_data(NewmapCell* cell) const;
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
+    // The Dreamcast decorations give these `(hero*, NewmapCell*, bool)`
+    // and make them PRIVATE members. The cell is spelled with the union
+    // pointer instead because the DC's NewmapCell DERIVES from
+    // ExtraInfoUnion where retail's does not, and every use in these
+    // bodies is the implicit upcast: the raw cell pointer goes straight
+    // to ExtraInfoUnion::SetCellVisited as `this`, i.e. only the +0x00
+    // dword is ever touched. The access specifier is dropped because
+    // advManager is a single public block here.
+    void do_event_water_wheel(class hero* current_hero, ExtraInfoUnion* cell,
+                              bool human_player);
+    void do_event_windmill(class hero* current_hero, ExtraInfoUnion* cell,
+                           bool human_player);
 #endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
