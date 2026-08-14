@@ -578,6 +578,19 @@ void townManager::SetupExtraStuff()
 // and by a bare `ret`.
 
 // E:\gamedcs\townmgr.cpp:2261
+// CLASSIFIED 2026-08-14, so lane 15 need not re-derive it: this row is
+// the same /Ob2 POSITIONAL class as BuyBuild and THallWindow, not a
+// shape row. `sema diff --branches` reports 165 branches and 1 ret on
+// BOTH sides and then refuses to pair them ("more than 4 rows differ"),
+// which reads like a differently-shaped body and is not one. Aligning
+// the two branch-mnemonic streams directly puts the first 115 branches
+// in exact agreement, then a TWO-BRANCH phase shift, then agreement
+// again to the last: at the widget whose `new` lands at +0x141c retail
+// CALLS the push_back's insert (`push edx / push 1 / push eax /
+// mov ecx,esi / call`) and expands the NEXT one, while we expand that
+// one and call a later one. Equal counts, one site of shift. The frame
+// slot for the temp moves with it ([ebp-0x24] against our [ebp-0x1c]),
+// which is what smears the rest. Nothing here is unreconstructed.
 VA(0x005c34d0, 0x23D2)  // anchor-vtable 0x64372c + anchor-string townscrn.pcx + arity, dc 0x16a72c
 TTownScreenWindow::TTownScreenWindow()
     : heroWindow(0, 0, 800, 600, 1)
@@ -1338,35 +1351,76 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // spell all 18 columns, and neither side emits a single `rep stosd`, so
 // that lever is already pulled here.
 
-// MEASURED 2026-08-14, and it sharpens "line-complete" into a target.
-// The row is NOT closed. Three structural facts, all compile-free:
+// The note that stood here - "retail holds ~0x2c more bytes of locals",
+// "eleven EH cleanup states", "a missing DECLARATION" - is WITHDRAWN.
+// All three readings were wrong, and each is refuted by one command.
 //
-//   * The FRAME LAYOUT differs, and that is what spreads the residual
-//     over the whole body. The two big tables agree exactly ([ebp-0x60c],
-//     [ebp-0x608], [ebp-0x5f0], [ebp-0x5e4] on both sides), but the small
-//     locals do not: retail parks the saved `this` at [ebp-0x7c] against
-//     our [ebp-0x60], and puts slotX at [ebp-0x50] / slotY at [ebp-0x2c]
-//     against our [ebp-0x58] / [ebp-0x34]. So retail holds about 0x2c
-//     MORE bytes of locals below slotX than we do, and 8 FEWER between
-//     the EH record and slotY. Every `[ebp-K]` in the body then differs
-//     by a constant - which is exactly the "diff is everywhere" picture,
-//     and it is a missing DECLARATION, not an expression-level cb tax.
+//   * `push 0xb` is a RELOCATION ADDEND, not a state count. Retail's
+//     prologue is `push 0xb` with an IMAGE_REL_I386_DIR32 to
+//     game_tpthbkcs_pcx_1c9be0_unwind49; ours is `push 0x0` with a
+//     DIR32 to $L77675. Both push the address of this function's scope
+//     table; the 0xb is where the delinker's synthesized symbol starts
+//     inside it. TThievesGuildWindow, which is EXACT, carries the same
+//     `push 0xb` against our `push 0x0`. This is precisely the
+//     prologue split the residual-class list already records as not
+//     scored - it says nothing about object lifetimes.
 //
-//   * `sema diff --branches` reports 177 branches / 1 ret against
-//     retail's 179 / 2. Retail's second exit is a DUPLICATED epilogue on
-//     the AddWidget loop's not-entered path; we share one. Retail also
-//     hoists the `this` reload out of that loop (`mov ebx,[ebp-0x7c]`
-//     once, ahead of it) where we re-read [ebp-0x60] every iteration and
-//     hold a zero in EDI to test `*it` against - the register pressure of
-//     that extra live zero is what costs us the hoist.
+//   * The FRAME TOTAL AGREES: `sub esp,0x604` on both sides, and the
+//     0x604 is fully accounted with nothing left over - 324 table ints
+//     (0x510) + slotX 7 + slotY 5 + `this` 1 + exactly 48 temporary
+//     dwords. Retail holds no more locals than we do; it holds the SAME
+//     number in a different order.
 //
-//   * The EH state immediate is `push 0xb` in retail against our
-//     `push 0x0` - retail's frame carries a cleanup chain over eleven
-//     states. Read with the frame gap above, that is the same finding
-//     twice: retail constructs objects here that we do not.
+//   * The ordering gap is EIGHT bytes, not 0x2c, and it is downstream
+//     of one inline decision. Retail slotX [ebp-0x50] / slotY
+//     [ebp-0x2c]; ours [ebp-0x58] / [ebp-0x34]; both leave the same
+//     8-byte hole between the two arrays. The eight bytes are the two
+//     iterator temps ([ebp-0x1c], [ebp-0x20]) that our reserve loop
+//     homes in memory because it CALLS _Construct where retail expands
+//     it (`cmp ecx,edi / je / mov edx,[eax] / mov [ecx],edx`). `this`
+//     at -0x7c vs -0x60 is the same story one level up.
 //
-// So the lever for lane 14 is to find ~0x2c bytes of retail locals (and
-// the destructors that give them EH states), not to titrate dead stores.
+// So the row is what the 85.99% note above already said it was - a pure
+// /Ob2 caller-cb row - and the following is now PROVEN rather than
+// inferred. At 60 byte-inert probes the two instruction streams are
+// IDENTICAL over all 3540 instructions once branch targets are compared
+// symbolically, with `push 0xb` the single exception; `sema diff
+// --branches` reports 179 branches and 2 rets on BOTH sides, i.e. the
+// duplicated epilogue, the hoisted `this` and the whole frame layout
+// (`mov eax,[ebp-0x7c]`) come back on their own. The 0.34% that remains
+// at the plateau is the trailing jump-table data and the unwind addend.
+// Nothing about this body's SHAPE is unknown.
+//
+// Two things were newly eliminated this lane, both compile-free or one
+// compile each:
+//
+//   * `set_hotkey(1)` IS retail's spelling, and the score at zero mass
+//     lies about it. `exitButton->hotKeyCodes.push_back(1)` - the
+//     idiom TThievesGuildWindow and TMageGuildWindow both need - scores
+//     86.03 here against set_hotkey's 85.99, but at the titration
+//     plateau the order REVERSES and stays reversed: 99.4651 for
+//     push_back against 99.6605 for set_hotkey, on the same harness in
+//     the same session. The plateau is the honest comparison, because
+//     only there is the inline structure retail's. Do not bank the
+//     four hundredths.
+//   * Table-initializer BRACING is cb-neutral. Rewriting both
+//     int[9][18] initializers as flat 162-element lists (no row braces)
+//     measures 85.9895, unchanged to the digit.
+//
+// And the direction of the wall is now bracketed from the other side.
+// Retail does NOT inline _Construct anywhere else in this compiland:
+// TCastleWindow (17498 B, the biggest body here) and
+// type_garrison_base_window both CALL it with the iterators homed in
+// memory, byte for byte our shape. THallWindow is the only row where
+// retail expands it. So this is not "retail's caller is bigger" - it is
+// the `budget / (n - k)` division at the FIRST candidate site, where the
+// quotient is smallest and reserve always sits. Raising cb is the only
+// lever the model leaves, and the titration staircase measured this
+// lane brackets how much: with set_hotkey, 0 -> 85.99, 40 -> 93.21,
+// 60 and 80 -> 99.66; with push_back, 0-15 -> 86.03, 20-35 -> 93.11,
+// 40-80 -> 99.4651, 90-120 -> 92.09, 150 -> 89.53, 200 -> 87.22. The
+// window is wide, it is NOT a knife edge, and no byte-inert real-source
+// construct that lands in it has been found in four lanes.
 
 // E:\gamedcs\townmgr.cpp:4302
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
