@@ -16,6 +16,12 @@ enum eRS_Messages {
     // monolith handlers stamp 0x3fd into the message they transmit.
 #ifdef HOMM3_EVENTS_VIEW
     RS_SET_VISIBILITY = 0x3fd,
+    // The next rung, and the DC ladder is gapless: 1022. Retail's
+    // DoEventCoverOfDarkness (0x4a14b0) stamps 0x3fe into a message whose
+    // layout is CSetVisibilityMsg's member for member, which is exactly the
+    // pairing the two names describe. Gated for the same reason its
+    // neighbours are.
+    RS_RESET_VISIBILITY = 0x3fe,
 #endif
     RS_CLAIM_GENERATOR = 0x41e,
     RS_CLAIM_GARRISON = 0x41f,
@@ -174,6 +180,24 @@ public:
           m_point(point), m_playerPos(playerPos), m_range(range) {}
 };
 SIZE(CSetVisibilityMsg, 0x20);
+
+// CResetVisibilityMsg (netmsg.h:747 in the DC roster, dc 0x9ccd4) is
+// CSetVisibilityMsg with the opposite subtype and nothing else changed:
+// advManager::DoEventCoverOfDarkness builds a 0x20-byte frame record with
+// -1/0/0x3fe/0x20/0 in the CNetMsg base and the point, the player and the
+// range at +0x14/+0x18/+0x1c, then hands it to TransmitRemoteData exactly
+// as the monolith pair hands over the set message.
+class CResetVisibilityMsg : public CNetMsg {
+public:
+    type_point m_point;
+    int m_playerPos;
+    int m_range;
+
+    CResetVisibilityMsg(type_point point, int playerPos, int range)
+        : CNetMsg(RS_RESET_VISIBILITY, sizeof(CResetVisibilityMsg)),
+          m_point(point), m_playerPos(playerPos), m_range(range) {}
+};
+SIZE(CResetVisibilityMsg, 0x20);
 #endif
 
 #ifdef HOMM3_HERO_OBJ_DECLS
