@@ -35,6 +35,18 @@ inline unsigned char PointsNotEqual(const type_point& point,
 }
 
 // E:\gamedcs\search.cpp:32
+// Residual (86.3333%): two enregistration choices, both measured unreachable
+// on 2026-08-14. (1) retail materialises `this + 0x48` (the `result` vector)
+// once into ESI and addresses every field through it (`[esi+4]`, `[esi+8]`),
+// where our CL keeps `this` in EDI, reads the fields as `[edi+0x4c]`/`[edi+0x50]`
+// and separately computes `lea esi,[edi+0x48]` for the calls. Binding `result`
+// to a reference, to a pointer, before or after the loop locals, or for the
+// insert only, all give the same 86.4571 - a +0.12 tie among four spellings,
+// i.e. different-but-not-retail, so none is landed. (2) retail keeps
+// previous_cost (0x30d400) in EBX; our CL spills it into the incoming
+// parameter slot [ebp+8]. An EXHAUSTIVE sweep of all 24 orderings of
+// {path_cell decl, flying, previous_cost, clear_path()} is byte-flat at
+// 86.3333, so statement order does not reach the allocator here.
 VA(0x0056a0d0, 0x282)  // anchor-global, dc 0x12b2e0
 int searchArray::BuildPath(const hero* current_hero, long limit)
 {
