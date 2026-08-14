@@ -9,6 +9,8 @@
 #include "widget.h"
 #include "font.h"
 
+class Bitmap816;
+
 // Dreamcast roster with the STLport->VC6 string shift: Text@0x30
 // (16 B), Font@0x40, Color@0x44, BackColor@0x48, Justify@0x4c - total
 // 0x50. Vtable 0x642db0; the dtor Disposes the font, the string
@@ -46,9 +48,14 @@ public:
 
 // Retail dtor 0x5bc6d0 is the empty derived dtor: the inlined
 // ~textWidget body under this class's vtable store, then ~widget.
-// No members beyond textWidget are touched, so none are modeled.
 class bitmapBackedTextWidget : public textWidget {
 public:
+    // +0x50, the one member this class adds: its constructor stores
+    // ResourceManager::GetBitmap816(back) straight into it, immediately
+    // after the 0x642de8 vtable store. The dtor does NOT release it -
+    // 0x5bc6d0 touches nothing past ~textWidget.
+    Bitmap816* Background;
+
     // Retail 0x5bc760 keeps all ELEVEN of the DC parameters below;
     // TViewArmyWindow's one-army constructor (0x5f3360) is a located
     // caller and pushes exactly them, in this order (7, 285, 284, 19,

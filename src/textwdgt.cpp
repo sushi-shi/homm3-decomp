@@ -3,6 +3,10 @@
 // 22 functions in link order.
 #include <va.h>
 #include "textwdgt.h"
+// ResourceManager::GetBitmap816, the loader bitmapBackedTextWidget's
+// constructor calls. The header is pure forward declarations - it adds no
+// type definitions to this TU's closure.
+#include "resourcemanager.h"
 
 #if 0  // @carcass
 
@@ -166,23 +170,34 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 
 #endif  // @carcass
 
-// NO CLAIM on bitmapBackedTextWidget::`scalar deleting destructor'
-// (0x5bc6a0, 33 B, dc 0x16537c, slot 0 of vtable 0x642de8) - the
-// coloredBorderFrame case in border.cpp, same cause: this TU's only
-// bitmapBackedTextWidget body is the dtor, whose own vptr store is
+// E:\gamedcs\textwdgt.cpp:320 - bitmapBackedTextWidget::`scalar
+// deleting destructor' (dc 0x16537c), slot 0 of vtable 0x642de8. This
+// claim used to be blocked exactly as the note here recorded: the TU's
+// only bitmapBackedTextWidget body was the dtor, whose own vptr store is
 // dead-store-eliminated against the inlined ~textWidget, so nothing
-// here references ??_7bitmapBackedTextWidget@@6B@ and VC6 emits
-// neither the vtable nor the ??_G COMDAT for the claim to pair with
-// (verified: our textwdgt.obj emits only ??_7textWidget and
-// ??_GtextWidget). Retail keeps both because its textwdgt.cpp also
-// defines the two bitmapBackedTextWidget CONSTRUCTORS (dc 0x165184 /
-// 0x1651d8), which store the derived vtable. Land a ctor and the claim
-// is free.
+// referenced ??_7bitmapBackedTextWidget@@6B@ and VC6 emitted neither the
+// vtable nor the ??_G COMDAT. Landing the eleven-parameter constructor
+// below - whose `mov [esi], offset ??_7bitmapBackedTextWidget` is a LIVE
+// vptr store - supplies the reference, and the claim pairs.
+VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 
 // E:\gamedcs\textwdgt.cpp:320
 VA(0x005bc6d0, 0x8A)  // anchor-global, dc 0x1653b0
 bitmapBackedTextWidget::~bitmapBackedTextWidget()
 {
+}
+
+// E:\gamedcs\textwdgt.cpp:325
+VA(0x005bc760, 0x7B)  // anchor-vtable 0x642de8, dc 0x1651d8
+bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h,
+                                               const char* text,
+                                               const char* fontName,
+                                               const char* back,
+                                               font::TColor color, int id,
+                                               unsigned justify, int style)
+    : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
+{
+    Background = ResourceManager::GetBitmap816(back);
 }
 
 #if 0  // @carcass
