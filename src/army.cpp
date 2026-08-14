@@ -10,6 +10,25 @@
 #include "soundmgr.h"
 #include "town.h"
 
+// VC6 <xutility>'s reference-returning min/max, taken BY VALUE - the
+// orientation byte-proven engine-wide (findpath.cpp carries the
+// measurement; the `const _TYPE&` signature was refuted there). The
+// operand landing in the HIGHER stack slot is _Y: every army.obj site
+// below (get_total_hit_points, set_AI_expected_damage,
+// get_average_damage, ComputeBaseDamage) reproduces that placement
+// together with the branch polarity the retail body emits.
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:52
@@ -348,23 +367,61 @@ void army::range_attack(army* armyToAttack)
     // @stub
 }
 
+// WITHDRAWN 2026-08-14: the `dc-bracket forced` run 0x440100 /
+// 0x440140 / 0x440160 was mapped onto the DC rows range_attack() /
+// get_clockwise / get_counter_clockwise purely by ORDER, and all
+// three pairings are wrong. Retail's three slots are 62 / 31 / 422 B
+// against DC's 336 / 70 / 70 - ratios 0.18, 0.44 and 6.03, every one
+// outside the 0.3-2.5 band - and the bodies refute them outright:
+//   0x440100 takes TWO fastcall register arguments (`cmp edx, 1` with
+//     no prior load) and indexes akCreatureTypeTraits by ecx for the
+//     +0x14 / +0x18 name pair, i.e. it is the creature-NAME accessor
+//     the HD crossbuild also names army::GetName(count) at this exact
+//     rva. `army::range_attack()` is a member with no arguments and
+//     cannot use edx.
+//   0x440140 is a bare `ret`, so it takes NO stack argument;
+//     `get_clockwise(long direction)` would be `ret 4`.
+//   0x440160 (422 B) is what the HD crossbuild names range_attack()
+//     here, and 422/336 = 1.26 against the DC row - so the whole run
+//     is shifted, not merely mislabelled.
+// DC's get_clockwise / get_counter_clockwise have no retail slot in
+// this bracket at all (0x440160 + 0x1a6 = 0x440306, and the next
+// carve row is 0x440310): retail inlined or dropped both.
+
 // E:\gamedcs\army.cpp:1541
-// RETAIL_LOCATED(0x00440100, 0x3E)  // dc-bracket forced, dc 0x45e70
+// RETAIL_LOCATED(0x00440100, 0x3E)  // anchor-global (HD masked-byte
+//     identity + body: akCreatureTypeTraits +0x14/+0x18 name pair,
+//     two fastcall register arguments), retail-only slot
+const char* army::GetName(long count)
+{
+    // @stub
+}
+#endif  // @carcass
+
+// The 31-byte slot between GetName and range_attack(), and the ONE
+// body in this TU that answers "whose stack is this right now": the
+// same five instructions appear inlined verbatim in get_controller
+// (0x442690), is_enemy (0x442880) and ComputeBaseDamage (0x443160),
+// all later in the link order, which is the /Ob2 extern-linkage case
+// (out-of-line copy emitted unconditionally, inlined at every site).
+// Arity refutes the carcass's `get_clockwise(long)` outright - this
+// is a bare `ret`. Name is NH3API's army::get_controlling_side, whose
+// own spelling of is_enemy (`get_controlling_side() != other->group`)
+// is exactly the asymmetric compare retail emits there.
+VA(0x00440140, 0x1F)  // anchor-callee + body identity, retail-only slot
+int army::get_controlling_side() const
+{
+    if (hypnotizeFlag)
+        return 1 - combatSide;
+    return combatSide;
+}
+
+#if 0  // @carcass
+
+// E:\gamedcs\army.cpp:1541
+// RETAIL_LOCATED(0x00440160, 0x1A6)  // anchor-global (HD masked-byte
+//     identity), dc 0x45e70 -- the DC row the carcass had on 0x440100
 void army::range_attack()
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:1629
-// RETAIL_LOCATED(0x00440140, 0x1F)  // dc-bracket forced, dc 0x45fc0
-long army::get_clockwise(long direction)
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:1643
-// RETAIL_LOCATED(0x00440160, 0x1A6)  // dc-bracket forced, dc 0x46008
-long army::get_counter_clockwise(long direction)
 {
     // @stub
 }
@@ -504,11 +561,19 @@ unsigned char is_natural_enemy(TCreatureType attacker, TCreatureType defender)
 // is_natural_enemy -> 2740 this -> 2756 the five-argument overload ->
 // 2790 can_shoot, all of whose retail slots are consecutive), and the
 // HD crossbuild names the same body at its own 0x442410.
-// RETAIL_LOCATED(0x004426f0, 0x8B)  // anchor-callee, dc 0x47a14
+#endif  // @carcass
+
+VA(0x004426f0, 0x8B)  // anchor-callee, dc 0x47a14
 double army::get_average_damage() const
 {
-    // @stub
+    if (blessRounds)
+        return blessAmount + maxDamage;
+    if (curseRounds)
+        return _cpp_max(minDamage - curseAmount, 1);
+    return (maxDamage + minDamage) / 2.0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2756
 // The carve slot immediately before is_enemy (0x442880), matching the
@@ -528,11 +593,21 @@ long army::get_average_damage(const army* enemy, unsigned char ranged_attack, lo
 // true for everyone, hypnotize (+0x288) flips the effective side, then
 // an effective-side inequality on +0xf4. path.cpp's ValidAttack
 // criteria-1 arm calls it on the target cell's army.
-// RETAIL_LOCATED(0x00442880, 0x68)  // anchor-callee, dc 0x47bcc
+#endif  // @carcass
+
+VA(0x00442880, 0x68)  // anchor-callee, dc 0x47bcc
 unsigned char army::is_enemy(const army* arg)
 {
-    // @stub
+    if (!arg)
+        return 0;
+    if (this == arg)
+        return 0;
+    if (!berserkFlag && !arg->berserkFlag)
+        return get_controlling_side() != arg->combatSide;
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2790
 // RETAIL_LOCATED(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
@@ -542,11 +617,25 @@ unsigned char army::can_shoot(const army* excluded) const
 }
 
 // E:\gamedcs\army.cpp:2804
-// RETAIL_LOCATED(0x004429f0, 0x5C)  // anchor-global, dc 0x47c74
+#endif  // @carcass
+
+VA(0x004429f0, 0x5C)  // anchor-global, dc 0x47c74
 unsigned char army::enemy_is_adjacent(const army* excluded)
 {
-    // @stub
+    if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded))
+        return 1;
+    if (creatureId & 1) {
+        // The second hex has to be a STATEMENT: folded into the call's
+        // argument list it costs 10.6 points (89.40%), and naming only
+        // the +-1 delta 6.4 (93.57%) - retail loads both halves before
+        // it spills `excluded`, which is what the named local buys.
+        int hex = gridIndex + (facing ? 1 : -1);
+        return gpCombatManager->enemy_is_adjacent(this, hex, excluded);
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2820
 // RETAIL_LOCATED(0x00442a50, 0x410)  // anchor-global, dc 0x47cf4
@@ -570,25 +659,29 @@ long army::get_loss_combat_value(long lowest_attack, long lowest_defense, unsign
 }
 
 // E:\gamedcs\army.cpp:2960
-// RETAIL_LOCATED(0x00443080, 0x50)  // anchor-global, dc 0x48454
+#endif  // @carcass
+
+VA(0x00443080, 0x50)  // anchor-global, dc 0x48454
 long army::get_total_hit_points(unsigned char simulated) const
 {
-    // @stub
+    long total;
+    if (Is(23) & 1)
+        total = 1;
+    else
+        total = hitPoints * numTroops - topCreatureDamage;
+    if (simulated)
+        total = _cpp_max(total - AI_expected_damage, 0);
+    return total;
 }
 
 // E:\gamedcs\army.cpp:2982
-// RETAIL_LOCATED(0x004430d0, 0x56)  // anchor-global, dc 0x484a0
+VA(0x004430d0, 0x56)  // anchor-global, dc 0x484a0
 void army::set_AI_expected_damage(long arg)
 {
-    // @stub
+    AI_expected_damage = _cpp_min(arg, get_total_hit_points(0));
 }
 
-// E:\gamedcs\army.cpp:2988
-// RETAIL_LOCATED(0x00443130, 0x25)  // anchor-global, dc 0x484d0
-float army::get_fire_shield_strength()
-{
-    // @stub
-}
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:3002
 // RETAIL_LOCATED(0x00443160, 0x1BF)  // anchor-global, dc 0x48524
@@ -740,11 +833,26 @@ void army::GoBerserk()
 }
 
 // E:\gamedcs\army.cpp:4249
-// RETAIL_LOCATED(0x00445840, 0x66)  // corroborates, dc 0x4a598
-long army::get_attack_direction(long our_hex, const army* enemy, long enemy_hex) const
+#endif  // @carcass
+
+VA(0x00445840, 0x66)  // corroborates, dc 0x4a598
+long army::get_attack_direction(long our_hex, const army* enemy,
+                                long enemy_hex) const
 {
-    // @stub
+    long second_hex = enemy_hex;
+    if (enemy->creatureId & 1)
+        second_hex = enemy_hex + (enemy->facing ? 1 : -1);
+    for (long direction = 0; direction < 8; direction++) {
+        if (direction < COMBAT_DIRECTION_COUNT || (creatureId & 1)) {
+            long hex = get_adjacent_hex(our_hex, direction);
+            if (hex == enemy_hex || hex == second_hex)
+                return direction;
+        }
+    }
+    return -1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4273
 // RETAIL_LOCATED(0x004458b0, 0x9D)  // corroborates, dc 0x4a610

@@ -277,7 +277,28 @@ public:
     char pad_210[0x18];
     // SPELL_MAGIC_MIRROR's entry in the 81-dword spellInfluence row.
     int magicMirrorRounds;        // +0x228
-    char pad_22c[0x30];
+    char pad_22c[0x10];
+    // Bless / Curse round counters, byte-proven by get_average_damage
+    // (0x4426f0): while +0x23c is set the stack always rolls its TOP
+    // damage plus the amount at +0x458, and while +0x240 is set it
+    // always rolls its BOTTOM damage minus the amount at +0x45c
+    // floored at 1 - which is exactly what those two spells do.
+    // The pair also lands where the standard SpellID numbering puts
+    // them: taking the already-proven SPELL_MAGIC_MIRROR (36) at
+    // +0x228 as the anchor, the round row starts at +0x198, and
+    // SPELL_BLESS (41) / SPELL_CURSE (42) fall on +0x23c / +0x240
+    // while SPELL_FIRE_SHIELD (29) -> +0x20c, SPELL_MIRTH (49)
+    // .. SPELL_MISFORTUNE (52) -> +0x25c..+0x268, SPELL_BERSERK (59)
+    // -> +0x284, SPELL_HYPNOTIZE (60) -> +0x288, SPELL_FORGETFULNESS
+    // (61) -> +0x28c, SPELL_BLIND (62) -> +0x290, SPELL_STONE (70)
+    // -> +0x2b0, SPELL_BIND (72) -> +0x2b8 and SPELL_PARALYZE (74)
+    // -> +0x2c0 reproduce EVERY other round field this class already
+    // slices, each on independent evidence. The row is not modelled
+    // as an array yet: that is a layout change for the whole army run
+    // and for CancelIndividualSpell's consumers.
+    int blessRounds;              // +0x23c
+    int curseRounds;              // +0x240
+    char pad_244[0x18];
     // Timed morale/luck modifiers. SetMorale and SetLuck test the round
     // counters here and apply the matching signed amounts at +0x47c.
     int moraleBonusRounds;        // +0x25c
@@ -305,7 +326,15 @@ public:
     // lets the defender strike back while it is positive, and the DC
     // roster has army::set_retaliation_count feeding it.
     int retaliationCount;         // +0x454
-    char pad_458[0x24];
+    // The two signed amounts get_average_damage (0x4426f0) pairs with
+    // the Bless and Curse round counters above: it adds +0x458 to
+    // maxDamage under Bless and subtracts +0x45c from minDamage under
+    // Curse. Sliced from that body alone - the amounts row is offset
+    // from the rounds row by one slot against the morale/luck pair
+    // below, so no array relation is asserted here.
+    int blessAmount;              // +0x458
+    int curseAmount;              // +0x45c
+    char pad_460[0x1c];
     int moraleBonus;              // +0x47c
     int moralePenalty;            // +0x480
     int luckBonus;                // +0x484
@@ -444,7 +473,28 @@ public:
         return static_cast<unsigned char>(
             static_cast<unsigned>(creatureId) >> attribute);
     }
+    // 0x440140 (31 B, `this` only): the side that is CURRENTLY driving
+    // this stack - combatSide, or its complement while the hypnotize
+    // counter is up. Located 2026-08-14 by body identity: the same
+    // five-instruction flip is inlined verbatim into is_enemy
+    // (0x442880), get_controller (0x442690) and ComputeBaseDamage
+    // (0x443160), all of which sit LATER in the retail link order, so
+    // an out-of-line copy this early is the /Ob2 extern-linkage case.
+    // The carcass had this slot as `get_clockwise(long direction)`,
+    // which is refuted outright by the arity: that takes a stack
+    // argument and this body is a bare `ret`. Name is NH3API's
+    // army::get_controlling_side, whose spelling
+    // (`get_controlling_side() != other->group`) is also exactly what
+    // is_enemy's asymmetric compare does.
+    int get_controlling_side() const;        // 0x440140
     unsigned char is_enemy(const army* arg); // 0x442880
+    // 0x4429f0: asks the combat manager whether any enemy stack (other
+    // than `excluded`) neighbours this stack's own hex, and for a
+    // two-hex creature its second hex as well.
+    unsigned char enemy_is_adjacent(const army* excluded);
+    // 0x4430d0: clamps the AI's committed damage to what the stack can
+    // actually absorb - `_cpp_min(get_total_hit_points(), arg)`.
+    void set_AI_expected_damage(long arg);
     long get_adjusted_attack(const army* enemy,
                              unsigned char ranged_attack) const;
     long get_attack_modifier(const army* enemy,
