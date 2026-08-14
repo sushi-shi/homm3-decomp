@@ -47,6 +47,9 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_ARMY_HELP_PREFIX = 203,
     GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE = 204,
     GENERAL_TEXT_LEVEL_UP_CHOICE = 205,
+    // kb's MemError (0x4f42c0) formats this entry into gText and hands
+    // the result to ShutDown: the allocation-failure line.
+    GENERAL_TEXT_OUT_OF_MEMORY = 223,
     GENERAL_TEXT_ARMY_ENTRY_SEPARATOR = 238,
     GENERAL_TEXT_QUICK_CREATURE_JOIN = 244,
     GENERAL_TEXT_QUICK_CREATURE_JOIN_COST = 245,
