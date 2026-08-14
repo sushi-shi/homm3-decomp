@@ -742,6 +742,10 @@ public:
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
     e_looping_sound_id GetSoundId(int x, int y, int z);
     type_point get_map_center() const;
+    // Wandering-monster mood modifiers. Neither reads `this` - the
+    // Dreamcast files both as members of advManager and retail keeps the
+    // thiscall shape.
+    int get_force_modifier(float strength_ratio);
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
