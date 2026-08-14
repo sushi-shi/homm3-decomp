@@ -6,6 +6,9 @@
 #include "game.h"
 #include "advmgr.h"
 #include "events.h"
+#include "kb.h"
+#include "resourcemanager.h"
+#include "textresource.h"
 #undef HOMM3_EVENTS_VIEW
 
 #if 0  // @carcass
@@ -1960,6 +1963,27 @@ void std::__pop_heap_aux(SpellID* __first, SpellID* __last, SpellID* __formal, s
 
 #endif  // @carcass
 
+// The three adventure text resources events.obj loads at startup, in
+// retail .bss order. Names are the Dreamcast's own loader names carried
+// onto the cells each loader stores into; PROVISIONAL as spellings, but
+// the identity is byte-proven - 0x49e0e0 stores the ResourceManager
+// return for "advevent.txt" (0x677710) into 0x696a18 and every one of
+// the 194 references to that cell is inside events.obj's link bracket.
+DATA(0x00696a18) static TTextResource* gpAdventureEventText;
+
+// E:\gamedcs\events.cpp:61.  Loads advevent.txt and reports whether the
+// resource manager found it; the `test` lands before the store because
+// VC6 schedules the setne's flag producer as early as it can.
+VA(0x0049e0e0, 0x15)  // anchor-global 0x696a18 + "advevent.txt" literal, dc 0x9028c
+bool InitializeAdventureEventText()
+{
+    gpAdventureEventText = ResourceManager::GetText(
+        DATA_COMPGEN(0x00677710, advEventTextName, "advevent.txt"));
+    if (!gpAdventureEventText)
+        return false;
+    return true;
+}
+
 VA(0x0049f040, 0x23)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
 {
@@ -2005,4 +2029,57 @@ int advManager::get_force_modifier(float strength_ratio)
     if (strength_ratio > 0.333)
         return -2;
     return -3;
+}
+
+// E:\gamedcs\events.cpp:4090.  The water wheel banks 500 gold per turn
+// in a five-bit counter; visiting it empties the counter and pays out.
+// `human_player` only gates the dialog - the payout and the reset run
+// for the AI too.
+VA(0x004a7de0, 0xB1)  // linkorder + advevent.txt 164/165, dc 0x97a9c
+void advManager::do_event_water_wheel(hero* current_hero, ExtraInfoUnion* cell,
+                                      bool human_player)
+{
+    int gold = cell->get_wheel_gold();
+
+    cell->SetCellVisited(current_hero->owner);
+    if (gold == 0) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WATER_WHEEL_EMPTY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WATER_WHEEL_GOLD),
+                         1, -1, -1, GOLD, gold, -1, 0, -1, 0, -1, 0);
+        current_hero->GiveResource(GOLD, gold);
+        cell->set_wheel_gold(0);
+    }
+}
+
+// E:\gamedcs\events.cpp:4144.  The windmill's twin: a signed resource id
+// and a four-bit amount, both stored in the cell's extra-info dword.
+// Retail rewrites the resource id back unchanged alongside the cleared
+// amount, so the two stores fold into one masked read-modify-write.
+VA(0x004a7fc0, 0xBD)  // linkorder + advevent.txt 169/170, dc 0x97cac
+void advManager::do_event_windmill(hero* current_hero, ExtraInfoUnion* cell,
+                                   bool human_player)
+{
+    short amount = cell->get_windmill_amount();
+    EGameResource resource = cell->get_windmill_resource();
+
+    cell->SetCellVisited(current_hero->owner);
+    if (amount == 0) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WINDMILL_EMPTY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WINDMILL_RESOURCE),
+                         1, -1, -1, resource, amount, -1, 0, -1, 0, -1, 0);
+        current_hero->GiveResource(resource, amount);
+        cell->set_windmill(resource, 0);
+    }
 }
