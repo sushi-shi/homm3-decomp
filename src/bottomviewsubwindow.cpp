@@ -919,11 +919,29 @@ static const int gTownArmyCoords[7][2] = {
 //     lea ecx,[ebp-0xcc] / call <no stack args>
 // i.e. one more sub-object CONSTRUCTED on a frame local, with its address
 // parked in a second slot - which is also why retail's frame is 4 bytes
-// wider here (-0xd0/-0xcc against our -0xc8/-0xc4). So the "around three
-// sites" reading is the shadow of a missing CONSTRUCTION in the ostrstream
-// chain, not a tuning number, and the honest fix is to find the statement
-// that builds that object rather than to pad the body. That is the highest
-// value open question left in this file after ResourceMessage's `str`.
+// wider here (-0xd0/-0xcc against our -0xc8/-0xc4).
+//
+// NAMED, 2026-08-14: it is NOT a missing statement. Reading the calls
+// either side of it, retail's state-0xe call is `basic_ostream(streambuf*,
+// bool, bool)` taken OUT OF LINE on the whole object (this=[ebp-0xd0],
+// args `&_Sb,0,1,0` - the trailing 0 is the virtual-base flag), state 0xf
+// is `basic_streambuf::basic_streambuf()` and state 0x10 is
+// `strstreambuf::_Init(0,0,0,0)`. That is retail INLINING
+// `strstreambuf::strstreambuf(streamsize)` - a two-line header inline whose
+// base-class ctor opens the extra region. We do the exact opposite: we
+// inline `basic_ostream`'s ctor (vftable store + an out-of-line
+// `basic_ios::init`) and CALL `??0strstreambuf@std@@QAE@H@Z`. Two swapped
+// depth-2 decisions in one statement, so the statement is right and the
+// nested budget is not: per docs/vc6/inliner.md the depth-2 budget is
+// `budget / sites-remaining`, and we need it in [cb(strstreambuf ctor),
+// cb(basic_ostream ctor)) where ours is above both. Two more free
+// candidate sites at or after the declaration put it there (95.63 -> 97.45,
+// flat at +3 and +4), and the proven-exact sibling
+// TQuickTownWindow::initialize_army_display shows retail's OTHER side of
+// the same knife-edge: there BOTH ctors are out of line, exactly as ours
+// is. So `str()`/`freeze(false)` are not the lever - the caller's statement
+// mass is. Open: which two candidate sites retail's body has after the
+// declaration that ours does not.
 //
 // The silo sweep's own shape is a memory-homed `i`: retail indexes
 // `income[i]` as `[eax + 4*ecx]` and RELOADS `i` from [ebp-0x2c] after
@@ -940,6 +958,15 @@ static const int gTownArmyCoords[7][2] = {
 // ostrstream idiom TQuickTownWindow::initialize_army_display already
 // matches exactly, including the freeze(false) after the widget, and
 // the coordinate cursor advances only for a NON-EMPTY slot.
+//
+// town_size_name IS COPY-INITIALIZED, not default-constructed and then
+// assigned (94.31 -> 95.63, 2026-08-14). The EH transcript is what says
+// so: retail's `mov [ebp-4],5` sits AFTER the whole strlen/_Grow/copy
+// block, ours sat between _Tidy and it. One region that opens only when
+// the ctor has fully run is one constructor call, not a ctor plus an
+// operator=. The DC xref graph corroborates - this compiland reaches
+// basic_string's CONSTRUCTOR (plus an allocator<char> temporary) and no
+// assignment operator.
 VA(0x004521f0, 0x8D4)  // anchor-vtable 0x63bb34 + advManager::UpdBottomViewTown, dc 0x55df4
 TBottomViewTown::TBottomViewTown(heroWindow* parent)
     : type_bottom_view_window(parent)
@@ -964,8 +991,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
     else if (which->built & bitNumber[HALL_CAPITOL_ID])
         hallLevel = 3;
 
-    std::string town_size_name;
-    town_size_name = gTownSizeNames[hallLevel];
+    std::string town_size_name = gTownSizeNames[hallLevel];
 
     Widgets.push_back(new iconWidget(67, 31, 34, 34, 0x7d3, "itmtls.def",
         hallLevel, 0, 0, 0, 0x10));
