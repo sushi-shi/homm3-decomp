@@ -10,8 +10,11 @@ adventuremapwindow	?ClearBottomView@TAdventureMapWindow@@QAEXXZ	100.0000	100.000
 adventuremapwindow	?DoHeroKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3220
 adventuremapwindow	?DoTownKnob@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3280
 adventuremapwindow	?DrawChatText@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x3f20
+adventuremapwindow	?HighlightLocators@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x38c0
 adventuremapwindow	?SetElevationToggleImage@TAdventureMapWindow@@QAEEH@Z	100.0000	100.0000	100.0000	0x3c40
 adventuremapwindow	?UpdateButtons@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f60
+adventuremapwindow	?UpdateHeroLocator@TAdventureMapWindow@@QAEXHEE@Z	98.5808	98.5808	98.5808	0x3560
+adventuremapwindow	?UpdateHeroLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x32e0
 adventuremapwindow	?UpdateResourceDisplay@TAdventureMapWindow@@QAEXEE@Z	100.0000	100.0000	100.0000	0x3f00
 adventuremapwindow	?UpdateSleepButton@TAdventureMapWindow@@QAEXPBVhero@@@Z	100.0000	100.0000	100.0000	0x3ba0
 adventuremapwindow	?UpdateSpellButton@TAdventureMapWindow@@QAEXPBVhero@@@Z	100.0000	100.0000	100.0000	0x3bf0
