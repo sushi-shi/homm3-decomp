@@ -352,6 +352,12 @@ void type_sacrifice_window::creature_slider_change(int state, heroWindow* parent
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1815
+// RETAIL_LOCATED(0x005653b0, 0x37): not reconstructed. One carve row ahead of
+// handle_widget_hover in the Dreamcast roster's own order, and the body is
+// that shape: a byte test at +0x75 selecting between two same-class helpers
+// (0x562a20 / 0x563150), then heroWindow::DoModal(fadeIn) tail-duplicated
+// into both arms. Blocked only on naming those two helpers - neither has a
+// call edge that fixes which roster entry it is.
 DC_ONLY(0x127404, 0x38)
 void type_sacrifice_window::DoModal(unsigned char fadeIn)
 {
@@ -366,6 +372,15 @@ void type_sacrifice_window::handle_widget_hover(widget* current_widget)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1846
+// The retail row at 0x565430 (0x80) between handle_widget_hover and the
+// transformer-slot rows is ExitDialog, NOT this: it writes MESSAGE_WIDGET
+// into msg->id, zeroes dialogReturn, stores 10 into codeY then codeX and
+// returns MESSAGE_DISPATCH_FORWARD - the ExitDialog shape this tree already
+// has exact twice - before disposing the held artifact at +0x64 through
+// hero::equip_artifact / hero::add_to_backpack. So WindowHandler has no
+// retail row of its own in this bracket. Reconstructing ExitDialog needs
+// type_artifact modelled at +0x64 and hero.h pulled into this TU's include
+// closure; deferred rather than blocked.
 DC_ONLY(0x127484, 0x36)
 int type_sacrifice_window::WindowHandler(message* msg)
 {
@@ -1525,6 +1540,22 @@ unsigned char type_army_slot_widget::handle_click(
         return 1;
     }
     return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1830
+// The sacrifice window's own slot-4 hover hook, found by scanning the image
+// for the tail-merged `push emptyRolloverText / jmp +1 / push eax /
+// call [edx+0x34]` run: it occurs exactly three times image-wide, here and
+// in the two already landed. 59 bytes rather than 56 only because the
+// rollover pointer at +0x8c needs a 32-bit displacement.
+VA(0x005653f0, 0x3b)  // anchor-vtable (slot 4 shape) + RollOver read, dc 0x12743c
+void type_sacrifice_window::handle_widget_hover(widget* current_widget)
+{
+    if (!current_widget->RollOver)
+        rolloverText->SetText(emptyRolloverText);
+    else
+        rolloverText->SetText(current_widget->RollOver);
+    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1900
