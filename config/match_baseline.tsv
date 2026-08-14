@@ -1084,11 +1084,13 @@ inputmgr	?AsciiConvert@inputManager@@QAEXPAVmessage@@@Z	100.0000	100.0000	100.00
 inputmgr	?Close@inputManager@@UAEXXZ	100.0000	100.0000	100.0000	0xec540
 inputmgr	?Flush@inputManager@@QAEXXZ	100.0000	100.0000	100.0000	0xec570
 inputmgr	?ForceMouseMove@inputManager@@QAEXXZ	100.0000	100.0000	100.0000	0xecc00
+inputmgr	?GetEvent@inputManager@@QAE?AVmessage@@XZ	100.0000	100.0000	100.0000	0xec590
 inputmgr	?KeyboardMessageHandler@@YIHPAXIIJ@Z	100.0000	100.0000	100.0000	0xec0e0
 inputmgr	?Main@inputManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0xec560
 inputmgr	?MakeScanCodeTable@inputManager@@QAEXXZ	100.0000	100.0000	100.0000	0xec8c0
 inputmgr	?MouseMessageHandler@@YIHPAXIIJ@Z	100.0000	100.0000	100.0000	0xec290
 inputmgr	?Open@inputManager@@UAEHH@Z	100.0000	100.0000	100.0000	0xec4d0
+inputmgr	?PeekEvent@inputManager@@QAE?AVmessage@@XZ	100.0000	100.0000	100.0000	0xec640
 kb	?GetMapExtra@@YIGHHH@Z	100.0000	100.0000	100.0000	0xf79b0
 kb	?GetMapExtraPtr@@YIPAGHHH@Z	100.0000	100.0000	100.0000	0xf79e0
 kbwin	?AppAbout@@YGHPAUHWND__@@IIJ@Z	100.0000	100.0000	100.0000	0xf8140

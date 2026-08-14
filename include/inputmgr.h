@@ -77,6 +77,10 @@ public:
 
     inputManager();
     message GetEvent();
+    // Retail 0x4ec640, GetEvent's twin one row over: same queue head,
+    // same AsciiConvert hook, but it normalises iHead instead of
+    // advancing it (`and eax,0x8000003f` on the UN-incremented index).
+    message PeekEvent();
     void Flush();
     void ForceMouseMove();
     void AsciiConvert(message* msg);
