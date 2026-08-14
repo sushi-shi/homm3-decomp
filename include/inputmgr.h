@@ -14,6 +14,12 @@
 // interface/key_codes.hpp EKeyCodes spellings; only the byte-proven
 // consumers' values are listed - grow the roster as consumers land.
 enum EKeyCodes {
+    // The three keys textEntryWidget::IgnoreKey (0x5bba20) swallows
+    // before its OnKeyPress ever sees them; its dec/sub/sub switch
+    // descent fixes the values 1, 15 and 28 exactly.
+    KEYCODE_ESCAPE = 0x01,
+    KEYCODE_TAB = 0x0f,
+    KEYCODE_ENTER = 0x1c,
     // The function-key band AsciiConvert singles out: F1..F10 are the
     // contiguous 0x3b..0x44 run, F11/F12 sit apart at 0x57/0x58 - all
     // four bounds byte-proven by its scan-table branch.

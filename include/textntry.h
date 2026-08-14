@@ -8,18 +8,67 @@
 #include "textwdgt.h"
 #include "bitmap16.h"
 
+class Bitmap816;
+
+// The background snapshot textEntryWidget hangs off saveBack@0x54.
+// Retail keeps NO out-of-line body for any of it - every method is
+// inlined into its single textntry.cpp call site (SetAutoDraw 0x5bbac0
+// opens with `push 0x3c` and closes with the vtable store + the
+// `[+0x38]=0` flag; SaveBackground 0x5bba70 carries Save's `[+0x38]=1`
+// and Grab verbatim; Draw 0x5bb400 reads the flag inline). Extent
+// PROVEN 0x3c by that allocation size against Bitmap16Bit's 0x38;
+// vtable 0x642d8c = {0x557310, 0x55d0f0, 0x44e240}, its own scalar
+// deleting destructor over Bitmap16Bit's two inherited slots.
+//
+// Save's body needs gpWindowManager, which this header must not pull
+// in, so it is defined `inline` at the top of textntry.cpp.
+class CTextEntrySave : public Bitmap16Bit {
+public:
+    unsigned char bSaved;  // +0x38
+
+    // E:\gamedcs\textntry.cpp:38 (dc 0x16370c)
+    CTextEntrySave(int w, int h) : Bitmap16Bit(w, h) { bSaved = 0; }
+    // E:\gamedcs\textntry.cpp:44 (dc 0x163750)
+    void Save(int saveX, int saveY);
+    // E:\gamedcs\textntry.cpp:50 (dc 0x16377c)
+    unsigned char IsSaved() const { return bSaved; }
+};
+
 // textEntryWidget derives from textWidget in retail (the dtor calls
-// ~textWidget as its base) - Dreamcast agrees. Only the dtor-consumed
-// head is modeled: textBack@0x50 (Disposed), saveBack@0x54 (deleted
-// polymorphically). Vtable 0x642d40.
+// ~textWidget as its base) - Dreamcast agrees. Vtable 0x642d40, 19
+// slots: 0..12 widget's, 13 textWidget::SetText, and the five this
+// class introduces - SetFocus(14), OnKeyPress(15), IgnoreKey(16),
+// SetAutoDraw(17), SaveBackground(18). The slot->body assignment is
+// forced from both ends: the retail vtable's own contents, and the
+// exhaustive source-line order-map of the ten carve rows 0x5bac50..
+// 0x5bbac0 onto textntry.cpp's DC roster lines 213..666.
+//
+// The 0x58..0x6e tail is read out of those ten bodies. Every field is
+// a 16-bit slot except the three trailing flags; 0x64/0x66/0x68 keep
+// house ordinal placeholders because no source we may read names them.
 class textEntryWidget : public textWidget {
 public:
-    Bitmap16Bit* textBack;
-    Bitmap16Bit* saveBack;
-    char pad_58[0x15];         // 0x58..0x6c: cursor/inset state, unmodeled
-    unsigned char bHasFocus;   // 0x6d, stored by SetFocus 0x5bab50
-    unsigned char bAutoDraw;   // 0x6e, gates SetFocus's redraw
-                               // (SetAutoDraw's slot, name provisional)
+    Bitmap816* textBack;         // 0x50, ResourceManager::GetBitmap816
+    CTextEntrySave* saveBack;    // 0x54
+    unsigned short cursorIndex;  // 0x58, = Text.size() after every edit
+    unsigned short maxLength;    // 0x5a, the ctor's textStringSize
+    short boxWidth;              // 0x5c, the inset text box
+    short boxHeight;             // 0x5e
+    short boxX;                  // 0x60
+    short boxY;                  // 0x62
+    short field_64;              // 0x64, ctor stores 1
+    short field_66;              // 0x66, ctor stores the inset flag
+    short field_68;              // 0x68, compared against 3 by Draw /
+                                 // SetupDisplayString / OnKeyPress. NO
+                                 // retail body anywhere in the image
+                                 // writes it - scanned every 8/16/32-bit
+                                 // store form at this displacement.
+    short displayStart;          // 0x6a, first shown character
+    unsigned char field_6C;      // 0x6c, OnKeyPress sets it, SetupDisplayString
+                                 // reads then clears it
+    unsigned char bHasFocus;     // 0x6d, stored by SetFocus 0x5bab50
+    unsigned char bAutoDraw;     // 0x6e, gates SetFocus's redraw
+    char pad_6F[1];
 
     textEntryWidget(int x, int y, int w, int h, int textSize,
                     const char* text, const char* fontName, int color,
@@ -27,9 +76,23 @@ public:
                     int backgroundFrame, int id, int style, int readType,
                     int insetX, int insetY);
     virtual ~textEntryWidget();  // retail 0x5baae0
+    virtual int Main(message* msg);              // slot 2, retail 0x5bb150
+    virtual void Draw();                         // slot 4, retail 0x5bb400
+    virtual void OnSetFocus();                   // slot 10, retail 0x5bba50
+    virtual void OnKillFocus();                  // slot 11, retail 0x5bba60
+    virtual void SetText(const char* new_text);  // slot 13, retail 0x5bb950
     virtual void SetFocus(unsigned char state);  // slot 14, retail 0x5bab50
+    virtual int OnKeyPress(message* msg);        // slot 15, retail 0x5bac50
+    virtual unsigned char IgnoreKey(message* msg);  // slot 16, retail 0x5bba20
+    virtual void SetAutoDraw(unsigned char b);   // slot 17, retail 0x5bbac0
     char GetCharPressed(message* msg);
+    void SetupDisplayString(char* cCore, unsigned short inCursorIndex);
+protected:
+    virtual void SaveBackground() const;         // slot 18, retail 0x5bba70
 };
+// No SIZE() assert: the class rides std::string, whose extent differs
+// between the VC6 arm (0x10, giving textWidget 0x50 and this 0x70) and
+// the clang editor arm.
 
 // --- CTextEntrySave ---
 // CODEVIEW(E:\gamedcs\textntry.cpp:38, dc 0x16370c) void CTextEntrySave::CTextEntrySave(int w, int h);
