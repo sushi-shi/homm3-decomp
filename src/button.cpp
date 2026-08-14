@@ -140,6 +140,15 @@ inline int button::DeselectSelected(message* msg)
 // at runtime but a different callee in the object. button::Select's
 // timeGetTime at +0x188 stays the thunk form - the per-TU import-form
 // note below still applies to THAT call, not to this one.
+// DC-census verdict (2026-08-14), both rows negative: `GameTime::ElapsedSince`
+// x1 (E:\gamedcs\struct.h:411, dc 0x1eed4 = `Elapsed(Get(), t)`) against the
+// `(int)(GameTime::Get() - repeatTime) > 0` below is byte-EXACTLY flat at
+// 88.1009 modelled file-locally - it folds. And `combatManager::CombatIsOver`
+// x3 is pure Dreamcast platform delta: the DC census records it from
+// button::Select x1 and button::Deselect x1 as well, and both of those are
+// already EXACT here without it, so the DC widget pump polls combat-over where
+// retail does not. slider::Main carries the identical ElapsedSince row with
+// the identical verdict.
 // What is left is (a) a whole-body esi/edi role swap (retail pins msg
 // in ESI) that source order does not steer, and (b) the /Ob2 boundary
 // inside button::SetText. `Text = new_text` recovers retail's strlen and

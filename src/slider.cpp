@@ -186,6 +186,10 @@ void slider::KeyAccel(int x1, int x2, int x3, int x4, int key)
 }
 
 // E:\gamedcs\slider.cpp:244
+// DC-census verdict (2026-08-14): the sole under-count row is
+// `GameTime::ElapsedSince` x1 (dc 0x1eed4) against the
+// `(int)(GameTime::Get() - repeatTime) > 0` head below, and modelling it
+// file-locally is byte-EXACTLY flat at 95.1901. Same result in button::Main.
 // The source-compatible 60-branch/11-return CFG is complete. Retail shares
 // the KP3/KP2 forward KeyAccel suffix; this VC6 invocation instead shares the
 // equivalent KP9/KP8 backward suffix, leaving the measured 95.190125% C2

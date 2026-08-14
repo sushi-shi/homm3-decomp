@@ -30,15 +30,30 @@
 #include "misc.h"
 #include "armygrp_split.h"
 
-// Retail's inlined clamp users home low, high and value, then select one
-// of their addresses; returning const int& is codegen-significant. The
-// by-value inputs keep the rating enregistered until the clamp site. The
-// (low,value,high) order is byte-proven by all four users below; this is
-// the armygrp form of the three-operand selector also recovered in
-// ai_tactical.cpp.
-inline const int& armygrp_clamp(int low, int value, int high)
+// E:\gamedcs\includes.h:124/134, the pair quickherowindow.cpp and
+// quicktownwindow.cpp already carry. The DC xref census names it here by
+// COUNT as well as by name: `limit` (dc 0x1ef5c) x2 from
+// TSplitWindow::WindowHandler, x1 from GetMorale and x1 from GetArmyMorale -
+// exactly the four sites below. Retail's inlined clamp users home low, high
+// and value then select one of their ADDRESSES, which is what the reference-
+// returning template does; the by-value `limit` wrapper in front of it keeps
+// the rating enregistered until the clamp site. The (low,value,high) order is
+// byte-proven by all four users. Respelling the former house-coined
+// `armygrp_clamp` as this pair is EXACTLY byte-flat at all four sites
+// (99.9912 / 99.9170 / 98.5654 / 96.5625 unchanged), so it is landed for
+// fidelity, not for score - a forwarding wrapper replaces the call site it
+// wraps and supplies no /Ob2 divisor site.
+template <class T>
+static inline const T& t_limit(const T& minimum, const T& value,
+                               const T& maximum)
 {
-    return value < low ? low : (high < value ? high : value);
+    return value < minimum ? minimum
+                           : (maximum < value ? maximum : value);
+}
+
+static inline int limit(int minimum, int value, int maximum)
+{
+    return t_limit(minimum, value, maximum);
 }
 
 inline const char* armygrp_creature_plural_name(TCreatureType creature)
@@ -388,7 +403,7 @@ void armyGroup::SplitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
     if (gpWindowManager->dialogReturn == DIALOG_RETURN_SPLIT_ACCEPT) {
         int maximumTransfer = gpSplitWindow->totalTroops
             - gpSplitWindow->sourceMustKeep;
-        gpSplitWindow->destinationTroops = armygrp_clamp(
+        gpSplitWindow->destinationTroops = limit(
             gpSplitWindow->minimumTransfer,
             gpSplitWindow->destinationTroops,
             maximumTransfer);
@@ -435,7 +450,7 @@ int TSplitWindow::WindowHandler(message* msg)
             switch (msg->codeY) {
             case SPLIT_WIDGET_DESTINATION_ENTRY:
                 destinationTroops = atoi(msg->extraText);
-                destinationTroops = armygrp_clamp(
+                destinationTroops = limit(
                     0, destinationTroops, totalTroops);
                 sourceTroops = totalTroops - destinationTroops;
                 sourceEntry->SetFocus(0);
@@ -444,7 +459,7 @@ int TSplitWindow::WindowHandler(message* msg)
 
             case SPLIT_WIDGET_SOURCE_ENTRY:
                 sourceTroops = atoi(msg->extraText);
-                sourceTroops = armygrp_clamp(0, sourceTroops, totalTroops);
+                sourceTroops = limit(0, sourceTroops, totalTroops);
                 destinationTroops = totalTroops - sourceTroops;
                 destinationEntry->SetFocus(0);
                 // The source-entry arm shares the default slider update.
@@ -639,6 +654,20 @@ const std::bitset<9>& ArmyGrpFn_0044A460()
 // hero bypasses resistance; artifact 0x31 in the field_c bit-10 family
 // when creature trait 0x400 is absent; base
 // chances 1.0/0.8/0.6 minus GetMagicResistanceFactor; floor at 0.
+// DC-CENSUS VERDICT (2026-08-14), and it is a NEGATIVE worth recording because
+// the row looked like a certainty. The census gives this body
+// `hero::IsWieldingArtifact` x11 against the EIGHT sites spelled here, and the
+// residual note below already said retail duplicates four sites we merge - so
+// the shared `check_protection_artifact` label was the obvious missing supply
+// (7 + 4 = 11 exactly). It is not: un-sharing all six pendant arms into their
+// own `IsWieldingArtifact(...) -> return 0.0f` costs 88.5071 -> 84.9089, and
+// un-sharing the three simple arms (berserk / lightning+chain / hypnotize)
+// costs 83.1929. The shared label is strictly closer, so the DC count is a
+// port difference, not a missing site.
+// The census's other row, `IsMindSpell` x1 (E:\gamedcs\SpellDefs.h:345,
+// dc 0x4fd34) against the `field_c >> 10 & 1` test below, also costs: 88.0464
+// as a folded expression AND 88.0464 with the local shift preserved inside the
+// helper, so the 0.46 is the call SITE, not the helper's internals.
 // CURRENT RESIDUAL (88.5071%): retail pushes each shared pendant id before
 // jumping to the common artifact call, while this compile keeps the id in
 // EAX and pushes it at the tail; four zero-return sites merge here but are
@@ -1191,7 +1220,7 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
 // pattern - and the whole block is the INLINE EXPANSION of the
 // accessor claimed at 0x44a460 above, which is why it does not appear
 // here as source.
-// Residual (98.5654%): the (low,value,high) armygrp_clamp form both
+// Residual (98.5654%): the (low,value,high) `limit` form both
 // closes the address-selecting tail and shifts /Ob2's budget so the set()
 // plus all four operator[]/reference assignments now match. All 57 block
 // flows agree. Retail still shrink-wraps EBX past the cursed-ground return
@@ -1200,6 +1229,13 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
 // retail's atexit argument names the empty thunk as
 // ArmyGrpFn_0044A460+0x60; the base COFF names the equivalent _$E20 COMDAT
 // at addend zero. No source statement differs there.
+// DC-census verdict (2026-08-14): the census's `armyGroup::HasSomeUndead` x1
+// (dc 0x4eb88 - the member retail emitted and /OPT:REF then removed) against
+// the undead scan spelled inline below is byte-EXACTLY flat at 98.5654 when
+// modelled as a file-local helper, so the inline scan stays. `limit` x1 is the
+// clamp at the tail, now spelled as retail's pair. `town::HasBuilding` x1
+// against `ownerTown->built & bitNumber[TAVERN_ID]` needs town.h's
+// HOMM3_TOWN_OBJ_DECLS declaration and is out of this lane's reach.
 VA(0x0044ae60, 0x29A)  // dc-bracket forced, dc 0x4f078
 int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
                          const hero* otherHero, const armyGroup* otherGroup,
@@ -1248,10 +1284,10 @@ int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
             && (ownerTown->active & bitNumber[EXTRA_1_ID]))
             morale += 2;
     }
-    // The by-value, reference-returning three-operand selector preserves
+    // The by-value wrapper over the reference-returning template preserves
     // EBX until this site and reproduces retail's three operand homes.
     if (apply_limits)
-        return armygrp_clamp(-3, morale, 3);
+        return limit(-3, morale, 3);
     return morale;
 }
 
@@ -1347,7 +1383,7 @@ evil_done:
         && morale > 0)
         morale = 0;
     if (apply_limits)
-        return armygrp_clamp(-3, morale, 3);
+        return limit(-3, morale, 3);
     return morale;
 }
 
@@ -1356,7 +1392,7 @@ evil_done:
 // short-circuit expression, so both hero gates share retail's single
 // zero-return block. The hero luck call, inlined Devil/Arch Devil scans,
 // Rampart Fountain of Fortune bonus and all branches through the limits
-// gate are exact. armygrp_clamp(low,value,high) supplies the final retail
+// gate are exact. limit(low,value,high) supplies the final retail
 // low/high/value homes and reference-selecting return.
 VA(0x0044b2d0, 0xEB)  // anchor-global, dc 0x4f20c
 int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground, unsigned char apply_limits)
@@ -1379,7 +1415,7 @@ int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero*
         && (ownerTown->active & bitNumber[EXTRA_0_ID]))
         luck += 2;
     if (apply_limits)
-        return armygrp_clamp(-3, luck, 3);
+        return limit(-3, luck, 3);
     return luck;
 }
 
@@ -1428,7 +1464,7 @@ int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     if (armies[index] == CREATURE_HALFLING && luck < 1)
         luck = 1;
     if (apply_limits)
-        return armygrp_clamp(-3, luck, 3);
+        return limit(-3, luck, 3);
     return luck;
 }
 

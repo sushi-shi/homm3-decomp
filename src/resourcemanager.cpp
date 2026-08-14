@@ -140,6 +140,13 @@ TTextResource* ResourceManager::GetText(const char* name)
 // `name[12]=0` before the strncpy (78.81) and a 13-byte strncpy (86.59).
 // The delta is retail issuing both `lea`s and the name[12] terminator BEFORE
 // the argument pushes; no source ordering reaches it.
+// DC-census verdict (2026-08-14): the census's one real row here is
+// `resource::get_Name` x1 (E:\gamedcs\resrce.h:34, dc 0x74060, a 6-byte
+// header inline) where TCacheValue's initialiser reads `value->Name` as a
+// field. Spelling it as a call is byte-EXACTLY flat at 86.6296 in both the
+// `inline` and the plain-file-static form - the body is one field address, so
+// C1 folds it before the /Ob2 inliner can count a site. The C1 handle-state
+// cap above stands.
 VA(0x005594b0, 0x40)  // anchor-callee/body-twin, dc 0x122984
 void ResourceManager::AddToCache(resource* value)
 {
