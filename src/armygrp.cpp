@@ -183,7 +183,7 @@ void SplitSliderCallback(int state, heroWindow*)
 
 #pragma inline_depth(0)
 static inline void AppendSplitWidget(std::vector<widget*>& widgets,
-                                     widget** position, widget* value)
+                                     widget** position, widget* const& value)
 {
     // Keep insert out of line while allowing this tiny adapter to disappear.
     widgets.insert(position, 1, value);
@@ -191,7 +191,7 @@ static inline void AppendSplitWidget(std::vector<widget*>& widgets,
 #pragma inline_depth()
 
 // E:\gamedcs\armygrp.cpp:90
-// Residual (98.3954%): a background-phase creature snapshot recovers retail's
+// Residual (99.9912%): a background-phase creature snapshot recovers retail's
 // ESI/EDI allocation, and the destination entry's byte-proven back-link is 4.
 // A depth-zero inline append scaffold keeps only the final vector::insert call
 // out of line; all 57 blocks and 25 branches then agree. The remaining deltas
@@ -214,11 +214,29 @@ static inline void AppendSplitWidget(std::vector<widget*>& widgets,
 // direct 3-argument insert 75.2777 or for a plain push_back 77.6995 (so the
 // depth-zero adapter is still load-bearing); naming `Widgets` at the adapter
 // call instead of the pointer local 99.9684; a reference local 99.9789.
-// What is left at 99.9789 is TWO instructions: the last insert reads
-// `Widgets._Last` as `[edi+0x38]` (off `this`) where retail reads `[ebx+0x8]`
-// (off the &Widgets pointer it keeps in EBX), and the widget temp homes at
-// [ebp+0xc] where retail uses [ebp+0x8]. Both survive every widgetList
-// spelling above.
+// The two instructions that supplying the site left over, and how each closed
+// (99.9789 -> 99.9895 -> 99.9912, i.e. the body is now byte-identical to
+// retail and only the two known non-defects remain):
+//   - the last insert read `Widgets._Last` as `[edi+0x38]`, off `this`, where
+//     retail reads `[ebx+0x8]`, off the &Widgets pointer it keeps in EBX. Fixed
+//     by DECLARING `widgetList` one statement earlier - ahead of the iOk button
+//     rather than between the two buttons - and spelling that button's insert
+//     through it. Naming `Widgets` at either call site puts the address back on
+//     `this` (99.9684); the declaration's position is the whole lever.
+//   - the cancel button's `operator new` result homed at [ebp+0xc], reusing the
+//     slot the insert's value temp had just vacated, where retail keeps it in
+//     [ebp+0x8] - every other widget in the body already agreed on [ebp+0x8],
+//     this was the one that did not. Fixed by taking the adapter's value
+//     parameter as `widget* const&`: by value, the parameter IS the object the
+//     inlined `insert(P, 1, X)` takes its reference to, so the raw pointer and
+//     the reference target coalesce into one slot; by reference the temp is
+//     materialised at the call site and the two stay apart, as in retail.
+//     Naming the button in a local does NOT do it (99.9895), and neither does
+//     swapping the adapter's parameter order (99.9895).
+// What remains is only the delinker's `push 0x0`+`$L24205` against `push 0xb`
+// + `SplitSliderCallback_unwind13` prologue split, which is not a defect and is
+// not scored (~TSplitWindow in this same file carries it at 100.0), plus one
+// trailing alignment nop. The masked asm diff is reloc NAMES only.
 VA(0x00449790, 0x65B)  // anchor-callee, dc 0x4dbb8
 TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
     : CAdvPopup(x2, y2, 0x12a, 0x151, 0x12)
@@ -279,10 +297,10 @@ TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
         8, 312, 282, 17, "", "smalfont.fnt", font::PRIMARY,
         8, 1, 0, 8));
 
-    Widgets.insert(Widgets.end(), new button(
+    std::vector<widget*>* widgetList = &Widgets;
+    widgetList->insert(widgetList->end(), new button(
         20, 263, 64, 32, DIALOG_RETURN_SPLIT_ACCEPT,
         "iOk6432.def", 0, 1, 1, 0x1c, 2));
-    std::vector<widget*>* widgetList = &Widgets;
     AppendSplitWidget(*widgetList, widgetList->end(), new button(
         214, 263, 64, 30, 0x7801,
         "iCancel.def", 0, 1, 1, 1, 2));
