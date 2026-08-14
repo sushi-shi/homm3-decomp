@@ -41,7 +41,9 @@ model cannot rot.
 | `scripts/homm3/vc6/passes.py` | run C1XX / C2 as separate steps (IL persistence) |
 | `scripts/homm3/vc6/oracle.py` | real-compiler ground-truth runners |
 | `scripts/homm3/vc6/{inline_model,reg_model,il}.py` | the predictors + solvers |
+| `scripts/homm3/vc6/_source.py` | the solvers' source-body locator (demangle + definition grammar + `#if 0` masking) |
 | `scripts/homm3/vc6/census.py` | the gates (each with a negative control) |
+| `scripts/homm3/vc6/test_locator.py` | the `locator` gate's cases (`homm3 vc6 check --locator`) |
 | `scripts/homm3/vc6/shim/` | the C2-slot pass-through/instrumentation DLL |
 | `scripts/homm3/vc6/ghidra_scripts/` | in-Ghidra headless scripts (no `__init__`) |
 | `scripts/homm3/vc6/probes/` | one probe TU per catalogued behaviour |
