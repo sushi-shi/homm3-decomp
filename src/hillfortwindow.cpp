@@ -11,6 +11,7 @@
 #include "hero.h"
 #include "kb.h"
 #include "message.h"
+#include "recruit.h"
 #include "mousemgr.h"
 #include "soundmgr.h"
 #include "textresource.h"
@@ -81,6 +82,27 @@ static TCreatureType GetUpgradedCreature(TCreatureType type)
     return UpgradedCreatureType(type);
 }
 
+// The three .rdata objects hillfortwindow.obj contributes, in retail's own
+// order: the per-slot upgrade-button icons indexed by TUpgradeSlot::state,
+// the same three colours for the upgrade-all button indexed by
+// UpgradeAllButtonState, and the level multiplier Recalculate scales the
+// gold cost by. The float row is bounded exactly - 0x63eb4c + 7*4 lands on
+// the vftable at 0x63eb68.
+DATA(0x0063eb34)
+static const char* const aszUpgradeIcons[3] = {
+    "aphlf1y.def", "aphlf1g.def", "aphlf1r.def"
+};
+
+DATA(0x0063eb40)
+static const char* const aszUpgradeAllIcons[3] = {
+    "aphlf4y.def", "aphlf4g.def", "aphlf4r.def"
+};
+
+DATA(0x0063eb4c)
+static const float afUpgradeCostFactor[7] = {
+    0.0f, 0.25f, 0.5f, 0.75f, 1.0f, 1.0f, 1.0f
+};
+
 // E:\gamedcs\hillfortwindow.cpp:65
 #if 0  // @carcass
 // RETAIL_LOCATED(0x004e75f0, 0x7E9): aphlftbk.pcx + vtable/global stores.
@@ -130,13 +152,228 @@ unsigned char CanAfford(const long* cost, const long* playerRes)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hillfortwindow.cpp:203
-// RETAIL_LOCATED(0x004e7eb0, 0x64D): source/call order, dc 0xd6bf8.
+// Residual (79.70%): ONE strength-reduction choice, cascading. Every
+// statement, branch, message recipe and inline strcpy/sprintf expansion
+// agrees; what does not is which two values VC6 keeps live across the
+// slot loop's calls. Retail homes the WIDGET ID (0xd4-based) in [ebp-8]
+// and bases the slot induction variable on slot[i].count (this+0x90,
+// `add ebx,0x50`), so every message id is `id`, `id-7`, `id+14`, `id+21`
+// and every member is a small displacement off count. This compile homes
+// the slot INDEX instead and bases the induction variable on
+// slot[i].cost[6] (this+0x84), so each message id costs an extra
+// `lea eax,[edx+0xd4]` and every member displacement is shifted by 0xc -
+// which is most of the byte delta, and it also pushes the frame to 0x44
+// because both counters need a home.
+// Tried and rejected (measured 2026-08-14, best first): `TUpgradeSlot& s
+// = slot[i]` / an equivalent `TUpgradeSlot*` walk with `for (i = 0; i <
+// 7; i++)` and `id = CREATURE_NUM_1_ID + i` (79.70, kept); retail's own
+// loop test `for (id = CREATURE_NUM_1_ID; id - CREATURE_NUM_1_ID < 7;
+// id++)` with a derived index (79.08); `id <= CREATURE_NUM_7_ID` (78.66);
+// direct `slot[i].` member spellings throughout (78.83); a second
+// induction variable `for (i = 0; ...; i++, id++)` (77.12); and the
+// id-driven loop without the reference local (68.18). The clear order at
+// the top of the body IS byte-proven and is spelled as retail has it
+// (szGoldCost, szResourceCost, resourceIndex, szCount).
+VA(0x004e7eb0, 0x64D)  // source/call order + DoModal/handler call sites, dc 0xd6bf8
 void THillFortWindow::Recalculate(unsigned char DrawDimmedButtons)
 {
-    // @stub
+    message msg;
+    msg.id = 0;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+
+    hero* pHero = GetCurrHero();
+
+    unsigned char bAnyUpgradable = 0;
+    unsigned char bNoneUpgradable = 1;
+    memset(totalCost, 0, sizeof totalCost);
+
+    for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+        int id = CREATURE_NUM_1_ID + i;
+        TUpgradeSlot& s = slot[i];
+        s.szGoldCost[0] = 0;
+        s.szResourceCost[0] = 0;
+        s.resourceIndex = -1;
+        s.szCount[0] = 0;
+        s.type = pHero->army.armies[i];
+        s.count = pHero->army.numTroops[i];
+        s.level = akCreatureTypeTraits[s.type].level;
+        sprintf(s.szCount, "%d", s.count);
+        memset(s.cost, 0, sizeof s.cost);
+
+        if (CanUpgradeCreature(creature_type_from_int(s.type))) {
+            bAnyUpgradable = 1;
+            bNoneUpgradable = 0;
+            if (s.level == 0) {
+                strcpy(s.szGoldCost, gpGeneralText->GetText(345));
+                strcpy(s.szResourceCost, emptyRolloverText);
+            } else {
+                TCreatureType upgraded =
+                    GetUpgradedCreature(creature_type_from_int(s.type));
+                get_upgrade_cost(creature_type_from_int(s.type), upgraded,
+                                 s.count, s.cost);
+                s.cost[6] = static_cast<int>(
+                    s.cost[6] * afUpgradeCostFactor[s.level]);
+                totalCost[6] += s.cost[6];
+                for (int r = 0; r < 6; r++) {
+                    if (s.cost[r]) {
+                        totalCost[r] += s.cost[r];
+                        s.resourceIndex = r;
+                    }
+                }
+                sprintf(s.szGoldCost, "%d", s.cost[6]);
+                if (s.resourceIndex == -1)
+                    sprintf(s.szResourceCost, emptyRolloverText);
+                else
+                    sprintf(s.szResourceCost, "%d",
+                            s.cost[s.resourceIndex]);
+            }
+        } else {
+            strcpy(s.szGoldCost, gpGeneralText->GetText(346));
+        }
+
+        if (s.type != CREATURE_NONE && s.count > 0) {
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+            msg.codeY = id - 7;
+            msg.extra = s.type + 2;
+            BroadcastMessage(&msg);
+
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_SET_TEXT;
+            msg.codeY = id;
+            msg.extraText = s.szCount;
+            BroadcastMessage(&msg);
+
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_SET_TEXT;
+            msg.codeY = id + 14;
+            msg.extraText = s.szGoldCost;
+            BroadcastMessage(&msg);
+
+            msg.id = MESSAGE_WIDGET;
+            if (s.resourceIndex != -1) {
+                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.codeY = id + 21;
+                msg.extra = s.resourceIndex;
+                BroadcastMessage(&msg);
+
+                msg.id = MESSAGE_WIDGET;
+                msg.codeX = widget::WIDGET_SET_TEXT;
+                msg.codeY = id + 28;
+                msg.extraText = s.szResourceCost;
+                BroadcastMessage(&msg);
+            } else {
+                msg.codeX = widget::WIDGET_CLEAR_STATUS;
+                msg.codeY = id + 21;
+                msg.extra = widget::WIDGET_CLEAR_STATUS;
+                BroadcastMessage(&msg);
+            }
+
+            if (!CanUpgradeCreature(creature_type_from_int(s.type))) {
+                s.state = UPGRADE_STATE_NONE;
+            } else {
+                int r;
+                for (r = 0; r < armyGroup::ARMY_GROUP_SLOT_COUNT; r++) {
+                    if (s.cost[r] > gpCurrentPlayer->resources[r])
+                        break;
+                }
+                s.state = r < armyGroup::ARMY_GROUP_SLOT_COUNT
+                                    ? UPGRADE_STATE_TOO_EXPENSIVE
+                                    : UPGRADE_STATE_AFFORDABLE;
+            }
+
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_SET_ICON_NAME;
+            msg.codeY = id + 0x31;
+            msg.extraText = aszUpgradeIcons[s.state];
+            BroadcastMessage(&msg);
+        } else {
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.codeY = id - 7;
+            msg.extra = widget::WIDGET_CLEAR_STATUS;
+            BroadcastMessage(&msg);
+
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.codeY = id;
+            msg.extra = widget::WIDGET_CLEAR_STATUS;
+            BroadcastMessage(&msg);
+
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.codeY = id + 7;
+            msg.extra = widget::WIDGET_CLEAR_STATUS;
+            BroadcastMessage(&msg);
+
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.codeY = id + 21;
+            msg.extra = widget::WIDGET_CLEAR_STATUS;
+            BroadcastMessage(&msg);
+
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_SET_STATUS;
+            msg.codeY = id + 0x31;
+            msg.extra = DrawDimmedButtons ? widget::WIDGET_DIMMED
+                                          : widget::WIDGET_DIMMED_NODRAW;
+            BroadcastMessage(&msg);
+        }
+    }
+
+    char text[12];
+    for (int t = 0; t < armyGroup::ARMY_GROUP_SLOT_COUNT; t++) {
+        int totalID = TOTAL_RES_COST_1_ID + t;
+        if (totalCost[t] > 0) {
+            sprintf(text, "%d", totalCost[t]);
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_SET_TEXT;
+            msg.codeY = totalID;
+            msg.extraText = text;
+            BroadcastMessage(&msg);
+        } else {
+            strcpy(text, emptyRolloverText);
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_SET_TEXT;
+            msg.codeY = totalID;
+            msg.extraText = text;
+            BroadcastMessage(&msg);
+
+            msg.id = MESSAGE_WIDGET;
+            msg.codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.codeY = totalID - 7;
+            msg.extra = widget::WIDGET_CLEAR_STATUS;
+            BroadcastMessage(&msg);
+        }
+    }
+
+    int a;
+    for (a = 0; a < armyGroup::ARMY_GROUP_SLOT_COUNT; a++) {
+        if (totalCost[a] > gpCurrentPlayer->resources[a])
+            break;
+    }
+    if (a == armyGroup::ARMY_GROUP_SLOT_COUNT && bAnyUpgradable)
+        UpgradeAllButtonState = UPGRADE_STATE_AFFORDABLE;
+    else if (bNoneUpgradable)
+        UpgradeAllButtonState = UPGRADE_STATE_NONE;
+    else
+        UpgradeAllButtonState = UPGRADE_STATE_TOO_EXPENSIVE;
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_ICON_NAME;
+    msg.codeY = UPGRADE_ALL_BUTTON_ID;
+    msg.extraText = aszUpgradeAllIcons[UpgradeAllButtonState];
+    BroadcastMessage(&msg);
 }
-#endif  // @carcass
 
 // E:\gamedcs\hillfortwindow.cpp:458
 VA(0x004e8500, 0x18F)  // source/call order + handler call site, dc 0xd7124
