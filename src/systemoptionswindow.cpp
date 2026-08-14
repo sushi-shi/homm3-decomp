@@ -101,25 +101,21 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // so quickCombatSave genuinely belongs in the BODY and bPrefsChanged in
     // the list, which is also the only combination that matches retail's
     // member/vptr/member sandwich.
-    // NEW DATUM on the budget phase, and it points the opposite way to the
-    // note above: in the reserve expansion retail emits an out-of-line
-    // `push _Last; push _First; mov ecx,esi; call 0x404140` - a 3-byte `ret 8`
-    // body, i.e. the EMPTY std::_Destroy(pointer,pointer), ICF-folded by LINK
-    // onto sample's vtable slot 3 (evidence/retail-symbols.csv:61). We inline
-    // that call away entirely. So at the very FIRST statement of the body,
-    // before either side has spent budget on anything, retail is already
-    // inlining LESS than we are. That is not consumption phase - it is a
-    // different starting budget, i.e. retail's caller IL is SMALLER than ours
-    // here. It is the one measurement that argues the missing-statement theory
-    // is backwards and that the fix is a spelling that costs less front-end
-    // mass, not more. Fully characterised in mainmenu.cpp, where the SAME
-    // missing _Destroy call is the ONLY defect in TMainMenu::TMainMenu
-    // (34/35 blocks exact): not a generation wall (`ab run` = neither for this
-    // constructor too), not reachable by inline_depth/auto_inline pragmas, not
-    // reachable by rebinding the vector. The open lead is that button::button
-    // gets the out-of-line _Destroy for free because set_hotkey puts it at
-    // inline depth 3, so retail's window constructors are probably reaching
-    // `reserve` through a wrapper we have not found.
+    // The reserve expansion's missing out-of-line `call 0x404140` (the empty
+    // std::vector<widget*>::_Destroy) is SOLVED in mainmenu.cpp, and the
+    // starting-budget reading recorded here was right in direction but wrong in
+    // cause: it is not a smaller caller IL, it is the /Ob2 budget DIVISOR.
+    // `reserve` is candidate site k=0, so its interior gets
+    // (2*cb_ctor - cb_reserve)/n, and retail's constructor carries MORE
+    // inline-candidate call sites n than ours. Titrated with the xx_nop probe
+    // (k byte-inert free calls appended to the body): this constructor wants
+    // exactly TWO more sites - k=0 88.3182, k=1 89.8642, k=2 97.1839, k=3
+    // 95.8290, k=4 84.6273, k=6 77.0523. That +8.87 is the single largest
+    // available move on this function and it is NOT reachable by converting the
+    // push_backs: all 41 of them to insert(end(), x) is +41 sites and lands at
+    // 86.28, and a pointer local alone is 87.89. The open work is a
+    // byte-neutral construct worth exactly +2 candidate sites. Do NOT re-test
+    // pragmas or vector rebinding - see mainmenu.cpp for the dead-end ledger.
     // The slot-IV rewrite was re-measured a third time ON TOP of the
     // initializer-list fix, in case that had moved the phase: 88.3182 ->
     // 88.2908 (x derived as 29+slot*19), 88.2908 (operands reversed), 88.1660
