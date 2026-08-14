@@ -10,15 +10,50 @@
 #include "inputmgr.h"
 #include "kbwin.h"
 #include "soundmgr.h"
+// Close deletes both owned bitmaps through the virtual slot-0 tail, so
+// this TU needs the COMPLETE Bitmap16Bit.
+#include "bitmap16.h"
 
+// E:\gamedcs\winmgr.cpp:66. The four unclaimed rows ahead of
+// ConvertToHover are the DC roster's ctor / Open / Close / Main run in
+// order (84->56, 282->276, 98->70, 70->54 SH4->x86); Close and Main are
+// reconstructed below.
+//
+// RETAIL_LOCATED(0x00602170, 0x38): the constructor, LOCATED and
+// reconstructed but NOT claimed. The body below is semantically complete
+// - `homm3 vc6 diagnose` reports flow-distance 0 with register-distance
+// 8 - but it will not close, and objdiff scores the pair 0.0 rather than
+// the ~85% the instruction stream deserves, so claiming it would bank a
+// zero row. Two residual deltas, both the same cause: retail sinks the
+// compiler's vptr store past every member store (ours emits it second)
+// and materialises the shared -1 in ECX up front (`or ecx,-1`) where our
+// allocator recycles EAX after the zero run. `homm3 vc6 why-reg --model`
+// returns CAPPED: the transposed value is `this`/a parameter, i.e.
+// front-end handle state (C1), not a statement-level knob. Six body
+// orderings, a `dialogReturn = lastHover = -1` chain, a four-way pointer
+// chain and a full member-initialiser list were all measured - the
+// mem-init list is strictly worse (16 diff lines vs 10), every other
+// spelling is identical.
 #if 0  // @carcass
 
-// E:\gamedcs\winmgr.cpp:66
-DC_ONLY(0x19a7ec, 0x54)
-void heroWindowManager::heroWindowManager()
+heroWindowManager::heroWindowManager()
 {
-    // @stub
+    status = 0;
+    activeWindow = 0;
+    lastActive = 0;
+    tailWindow = 0;
+    headWindow = 0;
+    screenBitmap = 0;
+    colorCyclingOn = 0;
+    field_4C = 0;
+    isWaitingForFadeIn = 0;
+    lastHover = -1;
+    dialogReturn = -1;
 }
+
+#endif  // @carcass
+
+#if 0  // @carcass
 
 // E:\gamedcs\winmgr.cpp:101
 DC_ONLY(0x19a840, 0x11A)
@@ -27,14 +62,50 @@ int heroWindowManager::Open(int newPriority)
     // @stub
 }
 
-// E:\gamedcs\winmgr.cpp:142
-DC_ONLY(0x19a95c, 0x62)
+#endif  // @carcass
+
+// E:\gamedcs\winmgr.cpp:142 - slot 1. The teardown walks the list from
+// the TAIL through prevWindow (retail reads [w+0xc] before each
+// RemoveWindow, because RemoveWindow unlinks the node it is handed), then
+// deletes both owned bitmaps through their virtual slot-0 + flag-1 tail.
+VA(0x006022d0, 0x46)  // anchor-callee (RemoveWindow) + dc order, dc 0x19a95c
 void heroWindowManager::Close()
 {
-    // @stub
+    if (status != STATUS_ACTIVE)
+        return;
+    heroWindow* w = tailWindow;
+    while (w) {
+        heroWindow* prev = w->prevWindow;
+        RemoveWindow(w);
+        w = prev;
+    }
+    if (screenBitmap)
+        delete screenBitmap;
+    if (field_4C)
+        delete field_4C;
+    status = 0;
 }
 
-#endif  // @carcass
+// E:\gamedcs\winmgr.cpp:181 - slot 2, the manager's message pump.
+// Retail's exit test is the SIGNED RANGE `test eax,eax; jle <next>` +
+// `cmp eax,2; jle <out>`, not an equality pair: a verdict above FORWARD
+// keeps the walk going and the last verdict seen is what the manager
+// returns. Sleeping windows (field_48 > 0) are skipped without
+// disturbing it.
+VA(0x00602320, 0x36)  // anchor-callee (heroWindow::BroadcastMessage), dc 0x19a9c0
+int heroWindowManager::Main(message& msg)
+{
+    int result = 0;
+
+    for (heroWindow* w = tailWindow; w; w = w->prevWindow) {
+        if (w->field_48 > 0)
+            continue;
+        result = w->BroadcastMessage(&msg);
+        if (result > 0 && result <= MESSAGE_DISPATCH_FORWARD)
+            break;
+    }
+    return result;
+}
 
 // E:\gamedcs\winmgr.cpp:216. Retail's entire body is the virtual slot-2
 // forwarding call; the DC name and message-reference signature fit it
