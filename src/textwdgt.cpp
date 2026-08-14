@@ -6,6 +6,7 @@
 #include "bitmap16.h"
 #include "bitmap816.h"
 #include "recruit.h"
+#include "resourcemanager.h"
 #include "window.h"
 #include "winmgr.h"
 
@@ -213,22 +214,38 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 
 #endif  // @carcass
 
-// STILL NO CLAIM on bitmapBackedTextWidget::`scalar deleting destructor'
-// (0x5bc6a0, 33 B, dc 0x16537c, slot 0 of vtable 0x642de8). The earlier note
-// here predicted the claim would pair once another body landed; MEASURED
-// 2026-08-14 and refuted - adding the Draw override below emits no vtable
-// and no ??_G, and the claim scored 0.0. Only a STORE of
-// ??_7bitmapBackedTextWidget@@6B@ makes VC6 emit the COMDAT pair, and this
-// class's two constructors (dc 0x165184 / 0x1651d8) are the only bodies that
-// store it - both EH-bearing (0x5bc760 opens an fs:[0] frame). The empty
-// dtor's own vptr store is dead-store-eliminated against the inlined
-// ~textWidget, so it does not count. Land a constructor and the claim is
-// free; nothing short of that works.
+// bitmapBackedTextWidget::`scalar deleting destructor' (0x5bc6a0, 33 B,
+// dc 0x16537c, slot 0 of vtable 0x642de8). The earlier note here recorded
+// the measurement that the Draw override alone emits no vtable and no ??_G:
+// only a STORE of ??_7bitmapBackedTextWidget@@6B@ makes VC6 emit the COMDAT
+// pair, this class's constructors are the only bodies that store it, and the
+// empty destructor's own store is dead against the inlined ~textWidget. The
+// constructor is landed below, so the claim pairs exactly as predicted.
+VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 
 // E:\gamedcs\textwdgt.cpp:320
 VA(0x005bc6d0, 0x8A)  // anchor-global, dc 0x1653b0
 bitmapBackedTextWidget::~bitmapBackedTextWidget()
 {
+}
+
+// E:\gamedcs\textwdgt.cpp:325
+// The eleven-parameter constructor. Its own argument slots identify it: ten
+// of the eleven go straight through to the textWidget base in retail's push
+// order, with a literal 0 in the back-colour slot, and the one it holds
+// back - the dword at +0x20 - is the single fastcall argument to
+// GetBitmap816, whose result lands in the +0x50 image pointer Draw already
+// reads. That is the Dreamcast prototype (x, y, w, h, text, font, back,
+// color, id, justify, style) verbatim. The vptr store retail makes right
+// after the base call is the one that emits vtable 0x642de8.
+VA(0x005bc760, 0x7B)  // anchor-vtable 0x642de8 + arity screen, dc 0x1651d8
+bitmapBackedTextWidget::bitmapBackedTextWidget(
+    int x, int y, int w, int h, const char* text, const char* fontName,
+    const char* backName, font::TColor color, int id, unsigned justify,
+    int style)
+    : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
+{
+    image = ResourceManager::GetBitmap816(backName);
 }
 
 // E:\gamedcs\textwdgt.cpp:348
