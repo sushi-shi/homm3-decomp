@@ -20,6 +20,12 @@
 #if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
 #include "herospec.h"
 #endif
+#ifdef HOMM3_EVENTS_VIEW
+// NewfullMap's custom-monster pool, read by DoWanderingMonsterResult.
+// The record type was already modelled for mapcell.obj; nothing about it
+// changes here.
+#include "monsterdata.h"
+#endif
 #if defined(HOMM3_MAPCELL_OBJECTS_VIEW) && defined(HOMM3_ADVMGR_QUICKINFO_VIEW)
 #include "timedevent.h"
 #endif
@@ -110,7 +116,14 @@ public:
 #ifdef HOMM3_EVENTS_VIEW
     char pad_000[0x30];
     std::vector<TreasureData> customTreasure; // +0x30, first at +0x34
-    char pad_040[0x10];
+    // +0x40, first at +0x44. DoWanderingMonsterResult indexes it with the
+    // cell's eight-bit custom-record field and a 48-byte stride, which is
+    // exactly sizeof(MonsterData) once the Dinkumware string is 16 wide;
+    // the record's own +0x04/+0x08 are that string's _Ptr and _Len. The
+    // DC roster names the member CustomMonsterList and carries the
+    // matching std::vector<MonsterData> operator[]/begin rows in
+    // events.obj.
+    std::vector<MonsterData> CustomMonsterList;
     std::vector<BlackBoxData> blackBoxes;      // +0x50, first at +0x54
     char pad_060[0x70];
 #elif defined(HOMM3_MAPCELL_OBJECTS_VIEW)
@@ -312,6 +325,13 @@ public:
     // other twenty-odd consumers of this header until one of them needs
     // it.
     unsigned char CheckForTotalCreatures();
+    // 0x5f2390. The Dreamcast decoration
+    // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
+    // Utype_point@@@Z` fixes the whole signature - public, bool, a const
+    // hero and a type_point BY VALUE - and retail's `ret 8` agrees.
+    // Gated for the same reason as its neighbour above.
+    bool CheckForDefeatedMonsterWin(const hero* thisHero,
+                                    type_point monster_loc);
 #endif
     bool CheckForHeroDefeatWin(int winningPlayer, const hero* loser);
     unsigned char IsGrailTarget(town* thisTown);
