@@ -1276,6 +1276,7 @@ remote	?CalcDimensions@CGameTransferDlg@@UAEXPBDPAVfont@@AAH222@Z	100.0000	100.0
 remote	?CheckForWarning@CTurnDuration@@QAEXXZ	97.0930	97.0930	97.0930	0x157af0
 remote	?Clear@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157d60
 remote	?ClearChat@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1540b0
+remote	?Copy@CNetMsgHandler@@QAEXPAV1@@Z	100.0000	100.0000	100.0000	0x155150
 remote	?GetAbortPopupMsg@CNetMsgHandler@@UAEPAVCNetMsg@@XZ	100.0000	100.0000	100.0000	0x157900
 remote	?HasOldChat@CChatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x153db0
 remote	?IsClose@CTurnDuration@@QAEEK@Z	100.0000	100.0000	100.0000	0x157d00
@@ -1285,10 +1286,12 @@ remote	?IsSaved@CSaveScreen@@QAEEXZ	100.0000	100.0000	100.0000	0x157400
 remote	?KillOldChat@CChatManager@@QAEXXZ	96.6265	96.6265	96.6265	0x153df0
 remote	?Pause@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157dd0
 remote	?PauseTimeOuts@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x154050
+remote	?ReceiveChat@@YIXPADH@Z	100.0000	100.0000	100.0000	0x154a20
 remote	?Restore@CSaveScreen@@QAEXE@Z	100.0000	100.0000	100.0000	0x157390
 remote	?Resume@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157df0
 remote	?ResumeTimeOuts@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x154060
 remote	?Save@CSaveScreen@@QAEXHH@Z	100.0000	100.0000	100.0000	0x157350
+remote	?SetAbortPopupMsg@CNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x157910
 remote	?SetDuration@CTurnDuration@@QAEXK@Z	100.0000	100.0000	100.0000	0x157d70
 remote	?SetMaxLines@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1540d0
 remote	?SetPosition@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x154170
