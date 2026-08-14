@@ -2239,6 +2239,24 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
     return (_Y < _X ? _Y : _X);
 }
 
+// The int->TCreatureType representation bridge, copied verbatim from the
+// head of game.cpp: NewmapCell's +0x22 is a GENERIC `short objectIndex`
+// shared by all 163 adventure-object types (T_SHORT in the DC fieldlist,
+// `movsx ecx, word ptr` in retail), while the Dreamcast types this
+// caller's local TCreatureType and decorates get_like_modifier's
+// parameter `W4TCreatureType@@`. The union keeps the bridge explicit
+// without an enum cast, exactly as game.cpp records; VC6 reduces it to
+// the move it already was.
+inline TCreatureType creature_type_from_int(int value)
+{
+    union {
+        int value;
+        TCreatureType creature;
+    } storage;
+    storage.value = value;
+    return storage.creature;
+}
+
 // ai_combat.obj's army valuer (0x427650), redeclared here rather than
 // pulling ai_combat.h into a TU with two dozen exact rows - the same
 // trade the UpgradedCreatureType pair above records. /Gr fastcall with
@@ -2294,23 +2312,7 @@ void advManager::DoWanderingMonsterResult(NewmapCell* cell,
                                           hero* current_hero, type_point point,
                                           bool human_player)
 {
-    // CLEANLINESS FLOOR RAISED HERE, 2026-08-14: `casts to enum types`
-    // 0 -> 1, the first non-zero floor on the board, and it is called out
-    // in the commit message for that reason. The conversion is REAL and
-    // Dreamcast-attested on both ends: NewmapCell's +0x22 is
-    // `T_SHORT objectIndex` in the DC fieldlist - a GENERIC object index
-    // shared by all 163 adventure-object types, which is exactly why it
-    // cannot be typed TCreatureType at the field - while the DC types this
-    // very local `iMonType` as TCreatureType and decorates
-    // get_like_modifier's parameter `W4TCreatureType@@`. Retail agrees:
-    // `movsx ecx, word ptr [cell+0x22]`, a 16-bit read widened into an
-    // int-wide enum domain. The board cannot tell a genuine int-to-enum
-    // conversion from the enum-to-enum one it is hunting, so the floor is
-    // the only place to record it.
-    // REJECTED alternative: typing the events view's +0x22 as a 16-bit
-    // TCreatureType bitfield. It contradicts the DC fieldlist and would be
-    // wrong for every non-monster cell - worse modelling than the cast.
-    TCreatureType iMonType = static_cast<TCreatureType>(cell->objectIndex);
+    TCreatureType iMonType = creature_type_from_int(cell->objectIndex);
     int iNumTroops = cell->monster_info.qty;
     int disposition = cell->monster_info.disposition;
 
