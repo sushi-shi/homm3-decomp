@@ -78,7 +78,26 @@ public:
     // was disproven by that body's `ret 0xc`: it is the three-argument
     // vector<int>::insert implementation, not this one-argument member.
     void SetText(const char* new_text) { Text = new_text; }
-    void set_hotkey(int code) { hotKeyCodes.insert(hotKeyCodes.end(), 1, code); }
+    // The pointer local is load-bearing, and every caller's whole
+    // register allocation hangs off it. Retail materialises the inlined
+    // `this` for the insert BEFORE the const-ref argument temp - `lea
+    // ecx,[button+0x48]` then `lea edx,[ebp-N]` - and that pair consumes
+    // two scratch registers, which sets the phase of the round-robin
+    // ecx/edx alternation running through the rest of the caller. Naming
+    // the sub-object directly (`hotKeyCodes.insert(hotKeyCodes.end(), 1,
+    // code)`) defers the object address to the call and consumes ECX
+    // twice instead, inverting that phase for the entire body. The
+    // rewrite below is otherwise byte-identical - `end()` still folds to
+    // `[button+0x50]`, no address is materialised that retail lacks -
+    // and it took ??0TCombatOptionsWindow 98.47% -> 100%,
+    // ??0TPuzzleWindow 98.64% -> 100%, create_ok_widget 98.66% -> 100%,
+    // ??0TAdventureOptionsWindow 89.57% -> 95.12%, create_dismiss_widget
+    // and create_upgrade_widget 88.11% -> 89.88% in one build.
+    void set_hotkey(int code)
+    {
+        std::vector<int>* codes = &hotKeyCodes;
+        codes->insert(codes->end(), 1, code);
+    }
 
     virtual int Main(message* msg);  // slot 2, retail 0x456190
 
