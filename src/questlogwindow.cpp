@@ -4,6 +4,7 @@
 #include <va.h>
 #include "questlogwindow.h"
 #include "kb.h"
+#include "widget.h"
 
 #if 0  // @carcass
 
@@ -43,6 +44,36 @@ void TQuestLogWindow::UpdateQuestLocators()
 }
 
 #endif  // @carcass
+
+// The compiland's tail is unambiguous once the claim at 0x52e410 is taken
+// as its far end: the carve runs 0x52d8c0 (0x8af, the constructor),
+// 0x52e1b0 (0x21), 0x52e1e0 (0x8f), 0x52e270 (0x19f) and then that claim,
+// which is the roster's order for lines 43, 78, 81, 89/105 and 111. Lines
+// 89 and 105 share one carved body because retail inlines the singular
+// UpdateQuestLocator into the plural UpdateQuestLocators; that pair is
+// left alone here.
+//
+// The destructor is the 143-byte shape TTownGateWindow already carries,
+// and for the same reason: an empty source body over a class whose last
+// member is a VC6 vector<int>, so the 107-byte widget-delete loop is
+// followed by the vector's own inlined teardown - operator delete on
+// +0x64 and three stores clearing +0x64/+0x68/+0x6c - before the
+// out-of-line ??1CAdvPopup call. Its 0x640648 store is the only
+// image-wide reference to this class's table, so the wrapper comes with
+// it and needs no constructor.
+
+// E:\gamedcs\questlogwindow.cpp:78
+VA_COMPGEN(0x0052e1b0, 0x21, SCALAR_DELETING_DTOR, TQuestLogWindow)
+
+// E:\gamedcs\questlogwindow.cpp:81
+VA(0x0052e1e0, 0x8F)  // vtable 0x640648 + vector<int> teardown at +0x64, dc 0x116b6c
+TQuestLogWindow::~TQuestLogWindow()
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
 
 // E:\gamedcs\questlogwindow.cpp:111
 VA(0x0052e410, 0x1d)  // source-order map + both retail call edges, dc 0x116ca4

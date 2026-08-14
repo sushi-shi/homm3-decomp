@@ -8,15 +8,29 @@
 #include <vector>
 #include "advmgr_popup.h"
 
-// Retail DoQuestLog allocates 0x74 bytes. The constructor independently
-// proves the CAdvPopup base through +0x5f, the byte at +0x60, and the VC6
-// vector<int> storage at +0x64..+0x73; its quest-building callers pass int
-// indices into that vector. This is the canonical layout, not an access view.
+// Retail DoQuestLog allocates 0x74 bytes and the CAdvPopup base runs
+// through +0x5f, so 0x14 bytes of derived state follow. Both retail bodies
+// agree on how it is divided, and CORRECT the earlier reading that put the
+// byte first: the vector is the FIRST member, at +0x60.
+//
+// The constructor writes `byte [+0x60] = <a byte loaded from a stack
+// local>` and then zeroes +0x64/+0x68/+0x6c - which is VC6's vector
+// copy-constructing its empty allocator from the default argument's
+// temporary and then nulling _First/_Last/_End. It zeroes one more dword
+// at +0x70, and that is the whole of the object.
+//
+// The destructor closes it independently: it frees the pointer at +0x64
+// and clears +0x64/+0x68/+0x6c, touching neither +0x60 nor +0x70. A
+// leading byte member would push every one of those four offsets up by
+// four, which is exactly the 4-byte error this pair caught.
 class TQuestLogWindow : public CAdvPopup {
 public:
-    bool unknown;
     std::vector<int> seerHutLogList;
+    // Zeroed by the constructor and untouched by the destructor. Its width
+    // is proven (a dword store) and its meaning is not, so it is not named.
+    int field_70;
 
+    virtual ~TQuestLogWindow();
     virtual int WindowHandler(message* msg);
 };
 SIZE(TQuestLogWindow, 0x74);
