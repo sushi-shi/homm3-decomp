@@ -132,6 +132,71 @@ void font::DrawCursor(Bitmap16Bit* bitmap, int x, int y, int color, int clipX, i
 }
 
 // E:\gamedcs\font.cpp:138
+// RETAIL_LOCATED 0x004b5260, 0x22E - `ret 0x2c` matches the eleven-dword
+// DC frame exactly and DrawBoundedString above calls it at 0x4b5a71 with
+// this argument list verbatim. DECODED 2026-08-14 but NOT reconstructed;
+// the model below is complete enough to write from, with one open
+// question at the end.
+//
+//   y += (signed char)this[0x22];        // a signed byte inside pad_22,
+//                                        // the font's vertical bearing
+//   curX = x;
+//   if (*text && spec[(unsigned char)*text].field_0 < 0)
+//       curX = x - spec[(unsigned char)*text].field_0;   // the `mov edi,
+//                                        // [ebp+0x14]` is DUPLICATED into
+//                                        // both arms, not shared
+//   if (y < clipY || y + height > clipY + clipHeight) return;
+//   // skip the run that falls off the left clip edge
+//   while (count > 0) {
+//       c = *text;
+//       if (curX + spec[c].field_0 >= clipX) break;
+//       curX += spec[c].field_0 + spec[c].field_4 + spec[c].field_8;
+//       text++; count--;
+//   }
+//   // GetColor, already folded to two arms by /Ob2
+//   drawColor = (color_scheme & CUSTOM_COLOR)
+//             ? (color_scheme & ~CUSTOM_COLOR) : color_scheme + 9;
+//   if (count == 0 && cursorPos != -1) {
+//       DrawCharacter('_', bitmap, curX, y, drawColor); return; }
+//   highlighted = 0; index = 0;
+//   while (count > 0) {
+//       c = *text;
+//       if (c == '{') highlighted = 1;          // no advance, no draw
+//       else if (c == '}') highlighted = 0;
+//       else {
+//           if (curX + spec[c].field_0 + spec[c].field_4 + spec[c].field_8
+//                   > clipX + clipWidth) break;
+//           switch (color_scheme) { ...see below... }
+//           curX += spec[c].field_0 + spec[c].field_4 + spec[c].field_8;
+//       }
+//       text++; count--; index++;
+//   }
+//   if (cursorPos == index)
+//       DrawCharacter('_', bitmap, curX, y, drawColor + highlighted);
+//
+// Frame notes, all byte-read: retail REUSES three parameter slots as
+// locals once their last read is past - [ebp+0x2c] (clipHeight) becomes
+// drawColor, [ebp+0x24] (clipY) becomes the one-byte `highlighted`, and
+// [ebp+0x14] (x) becomes `index`. Only [ebp-4] (the scanned character)
+// and [ebp-8] (&spec[c]) are real locals, which is why `sub esp, 8`.
+//
+// THE OPEN QUESTION - the jump table at 0x4b547c. It has just TWO
+// targets, 0x4b53a6 and 0x4b53dc, selected by the byte table at
+// 0x4b5484 = {0,0,1,1,0,1,1,0,1,1} over color_scheme 1..10, with
+// everything outside that range going to 0x4b53dc. So arm 0 is
+// {PRIMARY, PRIMARY_HIGHLIGHT, WHITE_HIGHLIGHT, HEADING_HIGHLIGHT} =
+// TColor {1, 2, 5, 8} and arm 1 is the default plus {3,4,6,7,9,10}.
+// The two arms are INSTRUCTION-IDENTICAL modulo an ecx/edx swap - both
+// are `DrawCharacter(c, bitmap, curX, y, drawColor + highlighted)`
+// followed by `if (cursorPos == index) DrawCharacter('_', bitmap, curX,
+// y, drawColor)` (note: the in-loop cursor takes drawColor WITHOUT the
+// highlight, the post-loop one at 0x4b544c takes it WITH). VC6 did not
+// cross-jump them, so the source really does spell the same body twice;
+// what distinguishes the two case sets is not recoverable from these
+// bytes and is the last thing standing between this decode and a
+// reconstruction. Whoever picks it up: start from font::GetColor
+// (DC font.cpp:56) - the `+ 9` and the CUSTOM_COLOR strip above are its
+// inlined remains, and the leftover switch is probably its second half.
 DC_ONLY(0xa1e5c, 0x240)
 void font::DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, font::TColor color_scheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos)
 {
