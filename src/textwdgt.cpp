@@ -3,6 +3,22 @@
 // 22 functions in link order.
 #include <va.h>
 #include "textwdgt.h"
+#include "bitmap16.h"
+#include "bitmap816.h"
+#include "recruit.h"
+#include "window.h"
+#include "winmgr.h"
+
+// VC6's own <xutility> reference-returning min, declared file-locally for
+// the same reason ai_combat.cpp and combatresultswindow.cpp declare it: the
+// clamp in bitmapBackedTextWidget::Draw stores BOTH operands to stack temps
+// and selects between their ADDRESSES with two LEAs, which no
+// value-returning spelling produces, and the TU needs no other STL surface.
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
 
 #if 0  // @carcass
 
@@ -53,25 +69,56 @@ int textWidget::Main(message* msg)
 }
 
 // E:\gamedcs\textwdgt.cpp:232
+// EXCLUDED CLASS - no claim may sit here. The empty body compiles to a
+// bare `ret`, which /OPT:ICF folded onto the program-wide 1-byte
+// representative at 0x5bc690: forty-eight vtable slots across the whole
+// image point at it (whole-image scan of the absolute operand), so the
+// row has no single owning TU. Same standing as widget::Close and the
+// slot-3 `ret 8` fold at 0x5bc7e0 that border.h/button.h already record.
 DC_ONLY(0x164f7c, 0x4)
 void textWidget::zBufferDraw()
 {
     // @stub
 }
 
-// E:\gamedcs\textwdgt.cpp:235
-DC_ONLY(0x164f80, 0xB2)
-void textWidget::Draw()
-{
-    // @stub
-}
-
 // E:\gamedcs\textwdgt.cpp:257
+// EXCLUDED CLASS, same cause as zBufferDraw above: the empty override
+// folded onto the shared 1-byte `ret`. textWidget's vtable slot 8 and
+// the empty zBufferDraw both point at 0x5bc690 for that reason.
 DC_ONLY(0x165034, 0x4)
 void textWidget::Dim()
 {
     // @stub
 }
+
+#endif  // @carcass
+
+// E:\gamedcs\textwdgt.cpp:235
+// Slot 4 of textWidget's vtable 0x642db0, and the ONLY reference to
+// 0x5bc5f0 in the image - so the row is this class's Draw, not a fold.
+VA(0x005bc5f0, 0x92)  // anchor-vtable (0x642dc0) + font/FillRect calls, dc 0x164f80
+void textWidget::Draw()
+{
+    if (status & WIDGET_DRAWN) {
+        int drawX = x + parentWindow->x;
+        int drawY = y + parentWindow->y;
+        if (BackColor) {
+            gpWindowManager->screenBitmap->FillRect(
+                drawX, drawY, width, height,
+                gUnnamed6aacb0->backColors[BackColor]);
+        }
+        int colorScheme;
+        if (status & WIDGET_DIMMED)
+            colorScheme = Color + 2;
+        else
+            colorScheme = Color;
+        Font->DrawBoundedString(Text.c_str(), gpWindowManager->screenBitmap,
+                                drawX, drawY, width, height,
+                                colorScheme, Justify, -1);
+    }
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\textwdgt.cpp:266
 DC_ONLY(0x165038, 0x58)
@@ -166,18 +213,17 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 
 #endif  // @carcass
 
-// NO CLAIM on bitmapBackedTextWidget::`scalar deleting destructor'
-// (0x5bc6a0, 33 B, dc 0x16537c, slot 0 of vtable 0x642de8) - the
-// coloredBorderFrame case in border.cpp, same cause: this TU's only
-// bitmapBackedTextWidget body is the dtor, whose own vptr store is
-// dead-store-eliminated against the inlined ~textWidget, so nothing
-// here references ??_7bitmapBackedTextWidget@@6B@ and VC6 emits
-// neither the vtable nor the ??_G COMDAT for the claim to pair with
-// (verified: our textwdgt.obj emits only ??_7textWidget and
-// ??_GtextWidget). Retail keeps both because its textwdgt.cpp also
-// defines the two bitmapBackedTextWidget CONSTRUCTORS (dc 0x165184 /
-// 0x1651d8), which store the derived vtable. Land a ctor and the claim
-// is free.
+// STILL NO CLAIM on bitmapBackedTextWidget::`scalar deleting destructor'
+// (0x5bc6a0, 33 B, dc 0x16537c, slot 0 of vtable 0x642de8). The earlier note
+// here predicted the claim would pair once another body landed; MEASURED
+// 2026-08-14 and refuted - adding the Draw override below emits no vtable
+// and no ??_G, and the claim scored 0.0. Only a STORE of
+// ??_7bitmapBackedTextWidget@@6B@ makes VC6 emit the COMDAT pair, and this
+// class's two constructors (dc 0x165184 / 0x1651d8) are the only bodies that
+// store it - both EH-bearing (0x5bc760 opens an fs:[0] frame). The empty
+// dtor's own vptr store is dead-store-eliminated against the inlined
+// ~textWidget, so it does not count. Land a constructor and the claim is
+// free; nothing short of that works.
 
 // E:\gamedcs\textwdgt.cpp:320
 VA(0x005bc6d0, 0x8A)  // anchor-global, dc 0x1653b0
@@ -185,7 +231,18 @@ bitmapBackedTextWidget::~bitmapBackedTextWidget()
 {
 }
 
-#if 0  // @carcass
-
-
-#endif  // @carcass
+// E:\gamedcs\textwdgt.cpp:348
+// Slot 4 of vtable 0x642de8 and the ONLY reference to 0x5bc7f0 in the
+// image. Blits the backing bitmap clamped to its own extent, then runs the
+// base text draw.
+VA(0x005bc7f0, 0x7c)  // anchor-vtable (0x642df8) + Bitmap816 blit, dc 0x165258
+void bitmapBackedTextWidget::Draw()
+{
+    int drawX = x + parentWindow->x;
+    int drawY = y + parentWindow->y;
+    int blitWidth = _cpp_min<int>(image->Width, width);
+    int blitHeight = _cpp_min<int>(image->Height, height);
+    image->Draw(0, 0, blitWidth, blitHeight,
+                gpWindowManager->screenBitmap, drawX, drawY, 0);
+    textWidget::Draw();
+}
