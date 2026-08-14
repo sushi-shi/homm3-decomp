@@ -2510,6 +2510,41 @@ refuse:
     }
 }
 
+// E:\gamedcs\events.cpp:5146.  The adventure map's post-move event
+// entry point: reseed the object animations, play the object's sound,
+// dispatch it, then repaint every part of the adventure screen a visit
+// can have changed and re-check the two counting victory conditions.
+//
+// The acting hero may legitimately be NONE - the -1 arm of GetHero is
+// reached with gpCurrentPlayer's own currHeroId - and the null then
+// travels all the way into DispatchEvent and both button updaters
+// unguarded, which is exactly what retail does.
+VA(0x004aaaa0, 0x110)  // linkorder + EventSound/DispatchEvent call pair, dc 0x99abc
+void advManager::DoEvent(NewmapCell* eventCell, type_point point)
+{
+    hero* currentHero = gpGame->GetCurrHero();
+
+    Reseed(0, 0);
+    EventSound(eventCell->type, eventCell->extraInfo);
+    DispatchEvent(currentHero, eventCell, point, 1);
+
+    UpdateRadar(1, 1, 0, 0, 0);
+    advWindow->UpdateHeroLocators(-1, 1, 0);
+    advWindow->UpdateTownLocators(-1, 1, 0);
+    advWindow->UpdateQuestLogButton(1);
+    advWindow->UpdateSpellButton(currentHero);
+    advWindow->UpdateSleepButton(currentHero);
+    UpdBottomView(1, 1, 1);
+    advWindow->UpdateResourceDisplay(1, 1);
+
+    if (!gpSoundManager->MP3Playing)
+        gpSoundManager->ResumeStream();
+    if (gpGame->mapHeader.victoryCondition.CheckForTotalCreatures())
+        CheckEndGame(0);
+    if (gpGame->mapHeader.victoryCondition.CheckForTotalResources())
+        CheckEndGame(0);
+}
+
 // E:\gamedcs\events.cpp:6007.  Retires a hero from the adventure map -
 // combat loss, whirlpool, or any other vanishing - and then asks whether
 // that loss ends the game.
