@@ -51,12 +51,6 @@ inline const char* armygrp_creature_plural_name(TCreatureType creature)
 DATA(0x00693878)
 static TSplitWindow* gpSplitWindow;
 
-// Creature-card background image by town alignment. Retail indexes this
-// biased base with -1 for the neutral elemental card, so element -1 lives
-// immediately before the declared address. This is a constructor-proven
-// source-private consumer view; the owning TU remains unidentified.
-DATA(0x00682910) extern const char* akCreatureBackgrounds[9];
-
 // Runtime-loaded combat-stat description lines. Their storage addresses and
 // uses are retail-proven here; the text-resource loader owns the definitions.
 DATA(0x006a5384) extern const char* gCursedGroundLuckText;

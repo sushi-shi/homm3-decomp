@@ -23,7 +23,20 @@ struct TCreatureTypeTraits;
 // sites bound the resulting 0xb8-byte object.
 class TViewArmyWindow : public CAdvPopup {
 public:
+    // The Dreamcast CodeView type record splits these across three
+    // enums - EOtherWidgetIDs (LF_ENUM 0x2744, the 26 members 200..225),
+    // EWidgetIDs (LF_ENUM 0x273e, UPGRADE_ID alone) and an unnamed one
+    // (NWIDGETS/VIEW_ARMY_DELAY/NSPELLS). They are kept in two enums
+    // here so this header defines no more TYPES than it did before the
+    // names landed; cmbtmgr.cpp includes it and the include-set class is
+    // sensitive to that count. The dump settles ROLLOVER_ID = 224, which
+    // the one-army constructor had only inferred from its push. OK_ID,
+    // ACCEPT_ID and DISMISS_ID are NOT in either Dreamcast enum; their
+    // values stay byte-proven from the call sites.
     enum EWidgetIDs {
+        BACKGROUND_ID = 200,
+        SPRITE_ID = 201,
+        SPRITE_BACKGROUND_ID = 202,
         NAME_ID = 203,
         NUMBER_ID = 204,
         ATTACK_LABEL_ID = 205,
@@ -50,12 +63,13 @@ public:
         // spell row and the only widget id in the popup that is not
         // already named.
         ROLLOVER_ID = 224,
+        OK_BORDER_ID = 225,
         UPGRADE_ID = 300,
         OK_ID = 301,
         ACCEPT_ID = 0x7802,
         DISMISS_ID = 0x7803
     };
-    enum { VIEW_ARMY_DELAY = 100 };
+    enum { NWIDGETS = 28, VIEW_ARMY_DELAY = 100, NSPELLS = 3 };
 
     int ArmyType;
     int ArmySize;

@@ -43,6 +43,12 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_BACKPACK_FULL = 153,
     GENERAL_TEXT_BACKPACK_ARTIFACT_FORMAT = 154,
     GENERAL_TEXT_VIEW_ARMY_SPEED = 194,
+    // The two rows above HEALTH_REMAINING in the popup, both folded
+    // [Text._First + N] loads: 0x31c in
+    // TViewArmyWindow::create_shots_widget (0x5f5b30) and 0x320 in
+    // create_damage_widget (0x5f5860).
+    GENERAL_TEXT_VIEW_ARMY_SHOTS = 199,
+    GENERAL_TEXT_VIEW_ARMY_DAMAGE = 200,
     GENERAL_TEXT_VIEW_ARMY_HEALTH_REMAINING = 201,
     GENERAL_TEXT_ARMY_HELP_PREFIX = 203,
     GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE = 204,

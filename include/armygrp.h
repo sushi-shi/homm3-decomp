@@ -484,6 +484,21 @@ enum EArtifactId {
 // akCreatureTypeTraits (a const reference to the 150-entry array).
 DATA(0x006747b0) extern const TCreatureTypeTraits (&akCreatureTypeTraits)[150];
 
+// Creature-card background image by town alignment (CrBkgCas.pcx first,
+// CrBkgEle.pcx last). Retail indexes this biased base with -1 for the
+// neutral elemental card, so element -1 lives immediately before the
+// declared address. The owning TU remains unidentified; the claim moved
+// here from armygrp.cpp on 2026-08-14 when viewarmywindow.cpp's
+// create_portrait_widget (0x5f5060) became its second consumer, and it
+// sits behind the opt-in guard for the reason that guard exists:
+// declaring it UNCONDITIONALLY took initialize.obj's
+// initialize_game_data from 100.00% to 96.09% - the include-set class,
+// measured, with no semantic change anywhere. armygrp.cpp and
+// viewarmywindow.cpp are the two TUs that define the macro.
+#ifdef HOMM3_ARMYGRP_DESCRIPTION_API
+DATA(0x00682910) extern const char* akCreatureBackgrounds[9];
+#endif
+
 // Minimal stream interface for save/load: retail virtual-calls slot 1
 // to read and slot 2 to write (this in ecx, (buffer, size) on stack).
 class TAbstractFile {

@@ -1504,11 +1504,14 @@ viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b2
 viewarmywindow	?DoModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0
 viewarmywindow	?convertID2HelpID@TViewArmyWindow@@QBEHH@Z	100.0000	100.0000	100.0000	0x1f46c0
 viewarmywindow	?create_attack_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f5340
+viewarmywindow	?create_damage_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@PBVhero@@@Z	96.4286	96.4286	96.4286	0x1f5860
 viewarmywindow	?create_defense_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f55d0
 viewarmywindow	?create_dismiss_widget@TViewArmyWindow@@QAEXXZ	88.1144	88.1144	88.1144	0x1f6d50
 viewarmywindow	?create_hitpoints_left_widget@TViewArmyWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1f6070
 viewarmywindow	?create_hitpoints_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f5dd0
 viewarmywindow	?create_ok_widget@TViewArmyWindow@@QAEXXZ	98.6594	98.6594	98.6594	0x1f6870
+viewarmywindow	?create_portrait_widget@TViewArmyWindow@@QAEXPBDHH@Z	100.0000	100.0000	100.0000	0x1f5060
+viewarmywindow	?create_shots_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@HH@Z	100.0000	100.0000	100.0000	0x1f5b30
 viewarmywindow	?create_speed_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f62f0
 viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	88.1144	88.1144	88.1144	0x1f6ae0
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60
