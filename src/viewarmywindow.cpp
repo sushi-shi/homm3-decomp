@@ -19,6 +19,12 @@
 #include "hero.h"
 #include "iconwdgt.h"
 #include "recruit.h"
+#include "message.h"
+#include "mousemgr.h"
+#include "winmgr.h"
+#include "creaturetype.h"
+#include "soundmgr.h"
+#include "misc.h"
 
 // Dinkumware-era max source shape used by retail: arguments are copied into
 // homes and the selected home is returned by reference.
@@ -99,6 +105,38 @@ int ViewArmyCastSpellHandler(message* msg);
 // TU-local for the reason ai_combat.cpp keeps its own copy: the shared
 // header stays as small as its own consumers need.
 const unsigned int CTA_SHOOTER = 0x4;
+
+// The Dendroid's hold, byte-proven here by the folded
+// `akSpellTraits + 0x2650` row address. TU-local rather than an armygrp.h
+// enumerator for a MEASURED reason: adding it there took initialize.obj's
+// initialize_game_data 100.00 -> 96.09 and recruitUnit::Update 90.84 ->
+// 88.24 with no semantic change anywhere - the include-set class.
+const int SPELL_BIND = 0x48;
+
+// The two rows of convertID2HelpID's compact 0..15 domain that
+// WindowHandler builds text for instead of reading HELP.TXT.
+const int MORALE_HELP_INDEX = 9;
+const int LUCK_HELP_INDEX = 10;
+
+// The popup's own help roster, filled from HELP.TXT by text.obj's
+// spreadsheet loader (0x5b98b0), which walks 0x6a7458 in stride-8 pairs
+// up to 0x6a74d4 - i.e. fifteen THelpText rows. convertID2HelpID's
+// 0..15 range is what indexes it: [].text is the bottom strip's line
+// and [].rclick the right-click dialog body. The extent is spelled 16
+// because the id map can produce 15; the loader stops one row short.
+DATA(0x006a7458) extern THelpText gViewArmyHelp[16];
+
+// Two ARRAYTXT.TXT runs text.obj's second loader (0x5b9cc0) fills with
+// stride-4 char pointers: 42 rows from 0x6a57bc and 25 from 0x6a532c.
+// Rows 0/1/2 are the positive/neutral/negative descriptor and row 3 is
+// the carrier format both describers hand to format_string; the high
+// row is the "nothing is modifying this" fallback used when the popup's
+// own describer string came back empty. kb.cpp's standalone morale and
+// luck describers (0x4f32a0 / 0x4f3540) read the SAME rows at the same
+// offsets with the same format_string/append shape, which is what fixes
+// both bases and both roles.
+DATA(0x006a57bc) extern const char* gMoraleTexts[42];
+DATA(0x006a532c) extern const char* gLuckTexts[25];
 
 // The five inlined-away rows, spelled as the Dreamcast members they
 // are. `inline` (not a plain out-of-line definition) is what models
@@ -648,16 +686,256 @@ void TViewArmyWindow::DoModal()
     heroWindow::DoModal(0);
 }
 
-#if 0  // @carcass
+// The widget id the rollover strip was last built for, so a mouse move
+// that stays inside one widget costs nothing. This TU's own .data cell,
+// sitting immediately in front of its string literal pool (0x68c664 is
+// "Box46x32.pcx") and initialised to -1 in the image.
+DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
 
-// E:\gamedcs\viewarmywindow.cpp:404 - retail 0x5f4850, 2007 B
-DC_ONLY(0x191804, 0x604)
+// The popup's whole input surface, in three arms over one message:
+// right-click help, the three action buttons, and the rollover strip -
+// with the creature sprite's animation step as the unconditional tail.
+//
+// The help arm is the only place this window builds text of its own.
+// Morale and luck do not have a HELP.TXT row: each formats row 3 of its
+// ARRAYTXT run with the positive/neutral/negative descriptor and then
+// appends the describer string the constructor already stored in
+// morale_help/luck_help, falling back to the run's "no modifiers" row
+// when that came back empty. The `iResType1` value NormalDialog gets
+// (11/12/13 for luck, 14/15/16 for morale) is what puts the matching
+// icon in the dialog, which is why the three arms differ only in that
+// number and their descriptor row. kb.cpp's standalone describers at
+// 0x4f32a0 and 0x4f3540 are the same code over the same rows.
+//
+// The action arm's two confirming buttons share a tail: retail's
+// `jmp 0x5f4de3` from the dismiss arm lands on the upgrade arm's own
+// `call NormalDialog`, i.e. VC6 cross-jumped `call; if (dialogReturn ==
+// DIALOG_RETURN_ACCEPT) <accept>` out of both. The upgrade prompt names
+// two resources: gold is always slot 6, and the second is the HIGHEST
+// non-gold slot the upgrade actually costs - the backwards scan leaves
+// -1/0 when the upgrade is gold-only, which is exactly what the dialog
+// reads as "no second resource".
+//
+// The rollover arm's one special case is a spell icon: for the three
+// spells whose effect has no turn count (Bind, Berserk, Disrupting Ray)
+// the strip gets a fixed descriptor instead of Duration.
+//
+// Residual (35.5280%): the CALL MULTISET IS EXACT - all 50 calls agree in
+// order and target through the string destructor, including which of the
+// four `text +=` sites retail inlines and which it calls - and the first
+// 0x4af bytes are instruction-for-instruction identical. What is left is
+// ONE BLOCK PLACEMENT: retail emits the animation head (the ten
+// instructions from the glTimers load to `jmp` past the siege branch) as
+// the FALL-THROUGH of the string destructor's `operator delete` tail at
+// 0x5f4cff, so its widget and rollover arms reach it by BACKWARD jumps;
+// our CL emits the same block once, at the end, and the two arms fall
+// into it. The move is what the score is paying for: displaced branch
+// targets across the whole second half.
+// It is not source-addressable from here (D3 topology). Measured and
+// rejected, all three byte-identical to each other: the plain
+// if/else-if chain; `animate:` placed textually between the first arm and
+// the other two with `goto animate` from both (the adventureoptionswindow
+// idiom, whose own handler has this exact join at 99.94%); and the same
+// with an `else goto dispatch;` so every arm-to-tail edge is a backward
+// jump in SOURCE order too. VC6's placement here follows the flow graph,
+// not the statement order - all three spellings produce the identical
+// object.
+// One secondary item, same class: retail cross-jumps the dismiss and
+// upgrade arms' shared tail (`call NormalDialog` + the
+// DIALOG_RETURN_ACCEPT test) into one block and jumps into it from the
+// dismiss arm; our CL emits both copies, which is the one extra
+// conditional branch (base 56 against retail's 55). The two blocks are
+// identical instruction-for-instruction with identical successors, and
+// swapping the two case arms' source order is byte-inert.
+// Tried and rejected elsewhere: `_cpp_max(elapsed, VIEW_ARMY_DELAY)`
+// spelled by hand for the frame pacer (it homes both operands where
+// retail folds the clamp into registers - GameTime::NextFrameTime is the
+// shape, and its argument is what puts the glTimers load BEFORE the
+// GameTime::Get call); and `creature_type_from_int` at the three enum
+// bridges here, which costs three /Ob2 candidate call sites and starves
+// three of the four `text +=` expansions retail inlines (45 branches
+// against retail's 55) - the local unions carry the same four-byte copy
+// with no call site at all.
+VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
 int TViewArmyWindow::WindowHandler(message* msg)
 {
-    // @stub
-}
+    PollSound();
 
-#endif  // @carcass
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    if (msg->qualifier & MESSAGE_MODIFIER_RIGHT) {
+        if (msg->codeX == widget::WIDGET_SELECT
+            || msg->codeX == widget::WIDGET_RIGHT_SELECT) {
+            int helpID = convertID2HelpID(msg->codeY);
+            int iResType = -1;
+            std::string text;
+            switch (helpID) {
+            case MORALE_HELP_INDEX:
+                if (morale > 0) {
+                    text = format_string(gMoraleTexts[3], gMoraleTexts[0]);
+                    iResType = 14;
+                } else if (morale == 0) {
+                    text = format_string(gMoraleTexts[3], gMoraleTexts[1]);
+                    iResType = 15;
+                } else {
+                    text = format_string(gMoraleTexts[3], gMoraleTexts[2]);
+                    iResType = 16;
+                }
+                if (morale_help.length() == 0)
+                    text += gMoraleTexts[23];
+                else
+                    text += morale_help;
+                break;
+            case LUCK_HELP_INDEX:
+                if (luck > 0) {
+                    text = format_string(gLuckTexts[3], gLuckTexts[0]);
+                    iResType = 11;
+                } else if (luck == 0) {
+                    text = format_string(gLuckTexts[3], gLuckTexts[1]);
+                    iResType = 12;
+                } else {
+                    text = format_string(gLuckTexts[3], gLuckTexts[2]);
+                    iResType = 13;
+                }
+                if (luck_help.length() == 0)
+                    text += gLuckTexts[18];
+                else
+                    text += luck_help;
+                break;
+            default:
+                if (helpID >= 0)
+                    text = gViewArmyHelp[helpID].rclick;
+                break;
+            }
+            if (text.length() > 0)
+                NormalDialog(text.c_str(), 4, -1, -1, iResType, 0, -1, 0,
+                             -1, 0, -1, 0);
+        }
+    } else if (msg->id == MESSAGE_WIDGET) {
+        if (msg->codeX == widget::WIDGET_DESELECT) {
+            switch (msg->codeY) {
+            case UPGRADE_ID: {
+                int cost[7];
+                int amount = 0;
+                union {
+                    int value;
+                    TCreatureType creature;
+                } army_type, upgrade_type;
+                army_type.value = ArmyType;
+                upgrade_type.value = Upgrade;
+                get_upgrade_cost(army_type.creature, upgrade_type.creature,
+                                 ArmySize, cost);
+                int resource;
+                for (resource = 5; resource >= 0; resource--) {
+                    if (cost[resource] > 0)
+                        break;
+                }
+                if (resource >= 0)
+                    amount = cost[resource];
+                NormalDialog(gpGeneralText->GetText(
+                                 GENERAL_TEXT_UPGRADE_ARMY_PROMPT),
+                             2, -1, -1, 6, cost[6], resource, amount,
+                             -1, 0, -1, 0);
+                if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                    break;
+                goto accepted;
+            }
+            case DISMISS_ID:
+                NormalDialog(gpGeneralText->GetText(
+                                 GENERAL_TEXT_DISMISS_ARMY_PROMPT),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                    break;
+                goto accepted;
+            case ACCEPT_ID:
+            accepted:
+                msg->id = MESSAGE_WIDGET;
+                gpWindowManager->dialogReturn = msg->codeY;
+                msg->codeY = widget::WIDGET_END_DIALOG;
+                msg->codeX = widget::WIDGET_END_DIALOG;
+                return MESSAGE_DISPATCH_FORWARD;
+            }
+        }
+    } else if (msg->id == MESSAGE_MOUSE_MOVE) {
+        int hoverID = findWidget(msg->mouseX, msg->mouseY);
+        if (hoverID != gLastViewArmyHoverID) {
+            const char* rollover = emptyRolloverText;
+            gLastViewArmyHoverID = hoverID;
+            if (hoverID != -1) {
+                gpMouseManager->SetPointer(1, mouseManager::DEFAULT_SET);
+                int helpID = convertID2HelpID(hoverID);
+                if (helpID >= 0) {
+                    if (hoverID >= AFFECTING_SPELLS_0_ID
+                        && hoverID <= AFFECTING_SPELLS_2_ID
+                        && Influence[hoverID - AFFECTING_SPELLS_0_ID] != -1) {
+                        int spell = Influence[hoverID - AFFECTING_SPELLS_0_ID];
+                        if (spell == SPELL_BIND)
+                            sprintf(gText,
+                                    gpGeneralText->GetText(
+                                        GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
+                                    akSpellTraits[SPELL_BIND].name,
+                                    gpGeneralText->GetText(
+                                        GENERAL_TEXT_ARMY_SPELL_BIND));
+                        else if (spell == SPELL_BERSERK)
+                            sprintf(gText,
+                                    gpGeneralText->GetText(
+                                        GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
+                                    akSpellTraits[SPELL_BERSERK].name,
+                                    gpGeneralText->GetText(
+                                        GENERAL_TEXT_ARMY_SPELL_BERSERK));
+                        else if (spell == SPELL_DISRUPTING_RAY)
+                            sprintf(gText,
+                                    gpGeneralText->GetText(
+                                        GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT),
+                                    akSpellTraits[SPELL_DISRUPTING_RAY].name,
+                                    gpGeneralText->GetText(
+                                        GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY));
+                        else
+                            sprintf(gText,
+                                    gpGeneralText->GetText(
+                                        GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT),
+                                    akSpellTraits[spell].name,
+                                    Duration[hoverID - AFFECTING_SPELLS_0_ID]);
+                        rollover = gText;
+                    } else {
+                        rollover = gViewArmyHelp[helpID].text;
+                    }
+                }
+            } else {
+                gpMouseManager->SetPointer(0, mouseManager::DEFAULT_SET);
+            }
+            RolloverWidget->SetText(rollover);
+            DrawWindow(0, ROLLOVER_ID, ROLLOVER_ID);
+            gpWindowManager->UpdateScreen(x + RolloverWidget->x,
+                                          y + RolloverWidget->y,
+                                          RolloverWidget->width,
+                                          RolloverWidget->height);
+        }
+    }
+
+    // The creature sprite steps its own animation on every message the
+    // popup sees, on the shared adventure-animation clock.
+    unsigned long lastFrame = glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+    if (static_cast<long>(GameTime::Get() - lastFrame) >= 0) {
+        union {
+            int value;
+            TCreatureType creature;
+        } shown_type;
+        shown_type.value = ArmyType;
+        if (IsSiegeWeapon(shown_type.creature))
+            SpriteWidget->NextRandomSiegeEngineFrame();
+        else
+            SpriteWidget->NextRandomFrame();
+        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] =
+            GameTime::NextFrameTime(
+                glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT],
+                VIEW_ARMY_DELAY);
+    }
+    return MESSAGE_DISPATCH_CONSUME;
+}
 
 // The creature portrait: the town-alignment backdrop, the creature's own
 // animated sprite kept in SpriteWidget, and the stack size printed under
