@@ -307,11 +307,27 @@ __forceinline void UpdateCombatOptions(unsigned char bFirstUpdate)
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:278
+//
+// Residual (83.4%): the tail-block class, in both directions. Retail parks
+// the translate-command and audio-unavailable arms at the tail and reaches
+// them with `je`, where our CL hoists each to its single goto site; and
+// retail expands every case's own `GetWidget(id)->send_message(...)` plus
+// the `bPrefsChanged = 1` and shares only the DrawWindow tail, where our CL
+// tail-merges the case bodies through a shared push sequence. The same
+// class, mirrored, is CampaignWindowHandler's residual - two independent
+// functions in this window family now show our SP3 CL taking the opposite
+// tail-block placement from retail's, which is the standing
+// compiler-generation suspect (match skill, "merged-return blocks"). The
+// last register row is the right-click arm's `return`: retail spends the
+// hoisted `mov eax,ebx` where ours re-materialises the immediate.
+// The constant 1 is NOT a source variable - it is VC6's own B8 hoist into
+// EBX. An earlier `register int one = MESSAGE_DISPATCH_CONSUME;` stood in
+// for it; with the highlight helpers landed the hoist happens by itself and
+// the plain literals score identically, so the crutch is gone.
 VA(0x0046f7b0, 0x72A)  // DoModal address-take + complete message CFG, dc 0x67b7c
 int CombatOptionsWindowHandler(message& msg)
 {
     PollSound();
-    register int one = MESSAGE_DISPATCH_CONSUME;
 
     if (msg.qualifier & MESSAGE_MODIFIER_RIGHT) {
         if (msg.codeX == widget::WIDGET_SELECT
@@ -324,10 +340,10 @@ int CombatOptionsWindowHandler(message& msg)
                 NormalDialog(gCombatOptionsHelp[helpID].text,
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-        return one;
+        return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.id == one)
+    if (msg.id == MESSAGE_KEY_DOWN)
         goto consume;
 
     if (msg.id != MESSAGE_WIDGET)
@@ -448,7 +464,7 @@ int CombatOptionsWindowHandler(message& msg)
         }
 
         case TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID:
-            gUnnamed698758.animateSpellBook ^= one;
+            gUnnamed698758.animateSpellBook ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -456,7 +472,7 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::AUTO_CREATURES_ID:
-            gUnnamed698758.combatAutoCreatures ^= one;
+            gUnnamed698758.combatAutoCreatures ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_CREATURES_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -464,7 +480,7 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::AUTO_SPELLS_ID:
-            gUnnamed698758.combatAutoSpells ^= one;
+            gUnnamed698758.combatAutoSpells ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_SPELLS_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -472,7 +488,7 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::AUTO_CATAPULT_ID:
-            gUnnamed698758.combatCatapult ^= one;
+            gUnnamed698758.combatCatapult ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_CATAPULT_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -480,7 +496,7 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::AUTO_BALLISTA_ID:
-            gUnnamed698758.combatBallista ^= one;
+            gUnnamed698758.combatBallista ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_BALLISTA_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -488,7 +504,7 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID:
-            gUnnamed698758.combatFirstAidTent ^= one;
+            gUnnamed698758.combatFirstAidTent ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -541,17 +557,17 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::SHOW_GRID_ID:
-            gUnnamed698758.showCombatGrid ^= one;
+            gUnnamed698758.showCombatGrid ^= 1;
             gpCombatOptionsWindow->HighlightGrid();
             break;
 
         case TCombatOptionsWindow::MOVEMENT_SHADOW_ID:
-            gUnnamed698758.combatShadeLevel ^= one;
+            gUnnamed698758.combatShadeLevel ^= 1;
             gpCombatOptionsWindow->HighlightMovementShadow();
             break;
 
         case TCombatOptionsWindow::MOUSE_SHADOW_ID:
-            gUnnamed698758.showCombatMouseHex ^= one;
+            gUnnamed698758.showCombatMouseHex ^= 1;
             gpCombatOptionsWindow->HighlightMouseShadow();
             break;
 
@@ -570,11 +586,11 @@ handle_select:
                 && id <= TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID
                 && button::click_sample) {
             button::click_sample->field_2c = 0x40;
-            button::click_sample->field_30 = one;
+            button::click_sample->field_30 = 1;
             button::click_sample->field_28 = 3;
             gpSoundManager->MemorySample(button::click_sample);
         }
-        return one;
+        return MESSAGE_DISPATCH_CONSUME;
     }
 
 translate_command:
@@ -588,10 +604,10 @@ audio_unavailable:
     NormalDialog(
         gpGeneralText->GetText(
             GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
-        one, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 
 consume:
-    return one;
+    return MESSAGE_DISPATCH_CONSUME;
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:171
