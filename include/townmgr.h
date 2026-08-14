@@ -395,6 +395,11 @@ public:
     // columns. Takes the page it is filling, because it broadcasts every
     // one of those through the window rather than through the manager.
     void SetupWell(TCastleWindow* wellWin);
+    // Retail 0x5d5f30. Prices `buildingId`, puts up TBuyBuildWindow over
+    // the town page and, if the player confirms, debits the cost.
+    // `bQuickView` shows the panel read-only through DoQuickView instead
+    // of running the dialog, and makes the result unconditionally 0.
+    int BuyBuild(int buildingId, int infoOnly, int bQuickView);
     virtual int Open(int newPriority) OVERRIDE;   // slot 0, 0x5c63c0
     virtual void Close() OVERRIDE;                // slot 1, 0x5c71b0
     virtual int Main(message& msg) OVERRIDE;      // slot 2, 0x5d3240

@@ -1517,6 +1517,7 @@ townmgr	??_GTThievesGuildWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c9660
 townmgr	??_GTTownScreenWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c58b0
 townmgr	??_Gtype_garrison_base_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d0550
 townmgr	??_Gtype_monster_join_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1d0d60
+townmgr	?BuyBuild@townManager@@QAEHHHH@Z	68.0799	68.0799	68.0799	0x1d5f30
 townmgr	?Close@TTavernWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x1d7e70
 townmgr	?Close@townManager@@UAEXXZ	100.0000	100.0000	100.0000	0x1c71b0
 townmgr	?DoEventGarrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000	0x1d1130
