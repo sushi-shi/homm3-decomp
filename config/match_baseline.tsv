@@ -1402,6 +1402,7 @@ systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.00
 systemoptionswindow	?DoModal@TSystemOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1b30b0
 systemoptionswindow	?WindowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	91.9193	91.9193	91.9193	0x1b3140
 text	?InitializeGeneralText@@YIEXZ	100.0000	100.0000	100.0000	0x1b90f0
+textntry	??0textEntryWidget@@QAE@HHHHHPBD0W4TColor@font@@I0HHHHHH@Z	100.0000	100.0000	100.0000	0x1ba920
 textntry	??1textEntryWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1baae0
 textntry	??_GtextEntryWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ba8f0
 textntry	?Draw@textEntryWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bb400

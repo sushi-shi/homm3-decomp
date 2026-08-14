@@ -60,6 +60,16 @@ public:
         FIELD_68_SCROLLED = 3
     };
 
+    // The constructor's readType domain. Only one value is
+    // recoverable - the one both retail call sites (armygrp.obj's two
+    // split-count entries) pass and the only one the constructor
+    // branches on: at 4 the text box is inset by (insetX, insetY) on
+    // every side and field_66 latches 1. Placeholder spelling, same
+    // rule as above.
+    enum EReadType {
+        READ_TYPE_INSET = 4
+    };
+
     Bitmap816* textBack;         // 0x50, ResourceManager::GetBitmap816
     CTextEntrySave* saveBack;    // 0x54
     unsigned short cursorIndex;  // 0x58, = Text.size() after every edit
@@ -82,11 +92,15 @@ public:
     unsigned char bAutoDraw;     // 0x6e, gates SetFocus's redraw
     char pad_6F[1];
 
+    // Retail drops two of the sixteen on the floor: backgroundFrame is
+    // never read (GetBitmap816 takes the name alone) and style never
+    // reaches the base, which is handed the literal 0x100 instead.
+    // Both are kept because `ret 0x40` proves the frame is 64 bytes.
     textEntryWidget(int x, int y, int w, int h, int textSize,
-                    const char* text, const char* fontName, int color,
-                    unsigned justification, const char* backgroundIcon,
-                    int backgroundFrame, int id, int style, int readType,
-                    int insetX, int insetY);
+                    const char* text, const char* fontName,
+                    font::TColor color, unsigned justification,
+                    const char* backgroundIcon, int backgroundFrame, int id,
+                    int style, int readType, int insetX, int insetY);
     virtual ~textEntryWidget();  // retail 0x5baae0
     virtual int Main(message* msg);              // slot 2, retail 0x5bb150
     virtual void Draw();                         // slot 4, retail 0x5bb400
