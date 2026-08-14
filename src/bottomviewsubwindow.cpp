@@ -4,8 +4,12 @@
 #include <va.h>
 #include "bottomviewsubwindow.h"
 #include "border.h"
+#include "game.h"
 #include "iconwdgt.h"
 #include "kbwin.h"
+#include "misc.h"
+#include "soundmgr.h"
+#include "textresource.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "window.h"
@@ -307,7 +311,118 @@ type_bottom_view_window::~type_bottom_view_window()
 // 0x4521f0 is TBottomViewTown's constructor, not
 // type_bottom_view_window's.
 
-// BLOCKED on the constructor: VA_COMPGEN(0x004510f0, 0x21, SCALAR_DELETING_DTOR, TBottomViewNewTurn)
+// The base constructor. No retail body exists for it: every one of the
+// seven derived constructors inlines it, nothing else calls it, and
+// retail's /Gy + /OPT:REF link then drops the unreferenced copy - the
+// same mechanism that puts textWidget::SetText's COMDAT far outside
+// textwdgt.obj's band. It is defined here purely to be inlined, and
+// carries no claim. Its shape is read straight off every derived
+// constructor's first eighteen instructions: TSubWindow's default
+// constructor, then this class's vptr, then the one body statement.
+type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window)
+{
+    initialize(614, 400, 176, 166, parent_window);
+}
+
+// The four new-week announcement icons, indexed by the game's week number
+// 1..4; slot 0 is never read, which is why retail's dword there is null.
+DATA(0x00660b9c)
+static const char* gNewWeekIcons[5] = {
+    0, "NewWeek1.def", "NewWeek2.def", "NewWeek3.def", "NewWeek4.def"
+};
+
+// The new-turn banner, and the first of the seven big derived
+// constructors. Every literal is read off the body:
+//
+//   * the base is the same type_bottom_view_window(parent) inline as
+//     TBottomViewMessage's - TSubWindow's default ctor, the 0x63bb04 vptr,
+//     initialize(614, 400, 176, 166, parent) - followed here by this
+//     class's own 0x63bb0c store;
+//   * the backdrop is 'AdStatOt.pcx' at the full 176x166 with style 0x800,
+//     exactly as in TBottomViewMessage, and there is NO reserve() ahead of
+//     the three push_backs;
+//   * the calendar branch reads gpGame's three date words. THEN is taken
+//     when the day is 1 and the (week, month) pair is not (1, 1) - i.e.
+//     a week rolled over and it is not the game's opening week - and it
+//     announces the week: NewWeekN.def from the five-slot table and
+//     general text 64. Otherwise it announces the day with general text 65
+//     and plays newday.wav for 30 s on channel 3;
+//   * the icon is 175x166 (one pixel narrower than the backdrop), the text
+//     is 'medfont.fnt' in font::WHITE at 10,10,148,146, frameDelay is 100
+//     and lastStepTime is stamped at the very end.
+//
+// TWO SPELLINGS ARE LOAD-BEARING.
+//
+// THE WIDGET IDS ARE ONE INCREMENTING LOCAL, NOT THREE LITERALS. Retail
+// keeps `id` in the dead `parent` stack slot and the increments happen
+// INSIDE each `new`'s non-null arm - `mov [ebp+8],0x7d1` sits between the
+// bitmapBorder push sequence and its call, and is skipped entirely when
+// the allocation returns null. That is what MSVC does with `id++` spelled
+// in an argument list (the arguments are evaluated in the constructed
+// arm), and three plain literals would leave no stack slot at all.
+//
+// backdrop IS A textWidget*, not a widget*, and the constructor is the
+// only thing that proves it. Retail copies the pointer into a stack
+// temporary before handing it to push_back; a `widget*` member is passed
+// straight by address instead (`lea ecx,[esi+0x34]`), and only the
+// textWidget*->widget* conversion creates a temporary to take the address
+// of. The same conversion is why the icon push_back has one too. Worth
+// 2.49 points, and it is the one fact animate could not supply.
+//
+// The two calendar arms tear their format_string temporary down
+// DIFFERENTLY - THEN calls ?_Tidy@ out of line, ELSE has it inlined - and
+// so does `text` itself at the end. That asymmetry is the /Ob2 budget
+// spending itself down across the body, not a source difference; both arms
+// are the same `text = format_string(...)` statement.
+
+// E:\gamedcs\bottomviewsubwindow.cpp:77
+VA(0x00450dd0, 0x319)  // anchor-vtable 0x63bb0c + advManager::UpdBottomViewNewTurn, dc 0x5518c
+TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
+    : type_bottom_view_window(parent)
+{
+    int id = BOTTOM_VIEW_BACKGROUND_ID;
+
+    Widgets.push_back(new bitmapBorder(
+        0, 0, 176, 166, id++, "AdStatOt.pcx", 0x800));
+
+    frame = 0;
+
+    std::string text;
+    const char* iconName;
+    if (gpGame->field_1f63e == 1
+        && !(gpGame->field_1f640 == 1 && gpGame->field_1f642 == 1)) {
+        iconName = gNewWeekIcons[
+            static_cast<unsigned short>(gpGame->field_1f640)];
+        text = format_string("%s %d", gpGeneralText->GetText(64),
+            static_cast<unsigned short>(gpGame->field_1f640));
+    } else {
+        iconName = "NewDay.def";
+        text = format_string("%s %d", gpGeneralText->GetText(65),
+            static_cast<unsigned short>(gpGame->field_1f63e));
+        launch_sample("newday.wav", 30000, 3);
+    }
+
+    icon = new iconWidget(0, 0, 175, 166, id++, iconName, 0, 0, 0, 0, 0x10);
+    icon->SetIconFrame(0);
+    Widgets.push_back(icon);
+
+    frameDelay = 100;
+    backdrop = new textWidget(10, 10, 148, 146, text.c_str(), "medfont.fnt",
+        font::WHITE, id++, 1, 0, 8);
+    Widgets.push_back(backdrop);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+    }
+
+    lastStepTime = GameTime::Get();
+}
+
+// UNBLOCKED by the constructor above: it is the one image-wide reference
+// to 0x63bb0c, which is what makes VC6 emit this class's table and, with
+// it, this wrapper.
+VA_COMPGEN(0x004510f0, 0x21, SCALAR_DELETING_DTOR, TBottomViewNewTurn)
 
 
 // E:\gamedcs\bottomviewsubwindow.cpp:118
@@ -359,19 +474,6 @@ void TBottomViewNewTurn::animate()
 VA(0x004517a0, 0x78)  // anchor-vtable, dc 0x56ef0
 TBottomViewResourceMessage::~TBottomViewResourceMessage()
 {
-}
-
-// The base constructor. No retail body exists for it: every one of the
-// seven derived constructors inlines it, nothing else calls it, and
-// retail's /Gy + /OPT:REF link then drops the unreferenced copy - the
-// same mechanism that puts textWidget::SetText's COMDAT far outside
-// textwdgt.obj's band. It is defined here purely to be inlined, and
-// carries no claim. Its shape is read straight off every derived
-// constructor's first eighteen instructions: TSubWindow's default
-// constructor, then this class's vptr, then the one body statement.
-type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window)
-{
-    initialize(614, 400, 176, 166, parent_window);
 }
 
 // E:\gamedcs\bottomviewsubwindow.cpp:197

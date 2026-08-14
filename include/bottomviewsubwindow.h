@@ -8,6 +8,7 @@
 #include "subwindow.h"
 
 class iconWidget;
+class textWidget;
 
 // PROVEN narrow retail layouts. The constructor reached by
 // advManager::UpdBottomViewEnemyTurn allocates 0x74 bytes and uses the
@@ -79,9 +80,14 @@ SIZE(TBottomViewEnemyTurn, 0x74);
 // convention applied to a proven role, not an attested name.
 class TBottomViewNewTurn : public type_bottom_view_window {
 public:
-    // +0x34. Redrawn through slot 4 immediately after the icon on every
-    // frame step; that redraw is all animate does with it.
-    widget* backdrop;
+    // +0x34. A textWidget, redrawn through slot 4 immediately after the
+    // icon on every frame step. The DERIVED type is byte-proven by the
+    // constructor, not by animate (slot 4 is widget's own Draw either
+    // way): retail copies the pointer into a stack temporary before
+    // handing it to Widgets.push_back, and only a textWidget*->widget*
+    // conversion makes that temporary exist - a plain widget* member is
+    // passed by address (`lea ecx,[esi+0x34]`).
+    textWidget* backdrop;
     // +0x38. An iconWidget: animate calls SetIconFrame and send_message
     // on it and reads Sprite->GetNumFrames(0) through it.
     iconWidget* icon;
