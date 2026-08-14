@@ -9,6 +9,16 @@
 #include <vector>
 #include "va.h"
 
+// zlib's uncompress, which LODFile::read calls on every packed entry
+// (retail 0x606be0, decorated @uncompress@16 - the vendored zlib TUs
+// compile /Gr, so it is fastcall like everything else here). The vendor
+// include directory is deliberately kept off the compiler's INCLUDE
+// path, so the single prototype lodfile.obj needs is spelled here
+// rather than by pulling zlib.h into the game headers.
+extern "C" int uncompress(unsigned char* dest, unsigned long* destLen,
+                          const unsigned char* source,
+                          unsigned long sourceLen);
+
 // The 32-byte archive-directory row. Retail Find's indexing uses a five-bit
 // shift, while open reads these same five fields from the on-disk table.
 struct LODEntry {
@@ -27,6 +37,12 @@ struct LODHeader {
     int version;
     int numEntries;
     char reserved[80];
+
+    // No retail row of its own - LODFile's constructor 0x4fa780 carries
+    // it inline, in this order: the "LOD" strcpy into this+0x11c, the
+    // 500 at +4, the zero at +8, then the twenty-dword rep stosd over
+    // reserved.  Defined in lodfile.cpp beside its one call site.
+    LODHeader();
 };
 SIZE(LODHeader, 0x5c);
 
@@ -50,6 +66,8 @@ public:
     ~LODFile();
     void clear();
     LODEntry* getItemIndex(const char* item_name);
+    unsigned char pointAt(const char* itemName);
+    int read(void* dest, int numBytes);
 
 private:
     void Find(unsigned begin, unsigned end, const char* item_name);

@@ -1120,7 +1120,13 @@ levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	97.7369	97.7369	97.7369	0xf8
 levelupwindow	??1TLevelUpWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xf9730
 levelupwindow	??_GTLevelUpWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf9700
 levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	73.1787	73.1787	73.1787	0xf9780
+lodfile	??0LODFile@@QAE@XZ	100.0000	100.0000	100.0000	0xfa780
+lodfile	??1LODFile@@QAE@XZ	100.0000	100.0000	100.0000	0xfa800
+lodfile	?Find@LODFile@@AAEXIIPBD@Z	74.0901	74.0901	74.0901	0xfa660
+lodfile	?clear@LODFile@@QAEXXZ	100.0000	100.0000	100.0000	0xfa590
 lodfile	?getItemIndex@LODFile@@QAEPAULODEntry@@PBD@Z	100.0000	100.0000	100.0000	0xfa610
+lodfile	?pointAt@LODFile@@QAEEPBD@Z	100.0000	100.0000	100.0000	0xfaa70
+lodfile	?read@LODFile@@QAEHPAXH@Z	100.0000	100.0000	100.0000	0xfab20
 mainmenu	??0TMainMenu@@QAE@XZ	97.0098	97.0098	97.0098	0xfb2a0
 mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660
 mainmenu	??_GTMainMenu@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xfb630
