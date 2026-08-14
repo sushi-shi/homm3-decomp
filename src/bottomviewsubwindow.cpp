@@ -11,6 +11,7 @@
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
+#include "resourcemanager.h"
 #include "soundmgr.h"
 #include "textresource.h"
 #include "textwdgt.h"
@@ -470,7 +471,87 @@ void TBottomViewNewTurn::animate()
     lastStepTime = GameTime::Get();
 }
 
-// BLOCKED on the constructor: VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, TBottomViewResourceMessage)
+// E:\gamedcs\bottomviewsubwindow.cpp:146
+// The resource-award banner: TBottomViewMessage's text panel plus, when
+// a resource is named, its icon and the awarded quantity centred under
+// it. Read off the body:
+//
+//   * the same 'AdStatOt.pcx' backdrop and the same 'smalfont.fnt'
+//     message widget as TBottomViewMessage, at 156x146 rather than
+//     148x146, behind a reserve(5);
+//   * a NEGATIVE resource means "no award": the whole icon-and-quantity
+//     block, ostrstream included, sits inside that one guard;
+//   * 'resour82.def' is fetched through ResourceManager::GetSprite and
+//     the sprite's own Width/Height size the widget - the icon is
+//     centred with `(width - Width) / 2` (retail's cdq/sar signed
+//     halving) at y=50, and the quantity line sits at Height + 55;
+//   * the quantity is measured before it is drawn: LineWidth of the
+//     streamed text gives the widget's width and the font's `height`
+//     byte its height, both read through the same global font pointer
+//     in two separate loads. str() is therefore called TWICE, and both
+//     expansions carry their own freeze(true);
+//   * the sprite is released through vtable slot 1 - CSprite::Dispose -
+//     at the end of the guarded block.
+//
+// Residual (91.30%): THE FIRST TWO push_backs STOP ONE INLINE LEVEL
+// SHORT IN RETAIL. Retail reaches the backdrop and the message through
+// 0x422f50 - the TWO-argument `insert(iterator, const widget*&)`, kept
+// out of line - while the icon and the quantity reach 0x54d120, the
+// three-argument `insert(iterator, size_type, const widget*&)` that
+// every other constructor in this file produces. Our CL expands the
+// two-argument insert at all four sites and so always emits the
+// three-argument call. This is NOT a spelling: `push_back(w)` and
+// `Widgets.insert(Widgets.end(), w)` were measured byte-identical here,
+// both giving the three-argument form, so the divergence is inline
+// DEPTH and nothing else - the same class as TBottomViewKingdom's
+// out-of-line vector::size(). The rest of the delta is downstream
+// scheduling: retail lets the sprite's register die across the icon's
+// argument list because it reads both sprite fields first.
+VA(0x00451220, 0x393)  // anchor-vtable 0x63bb1c + advManager::UpdBottomViewResMsg, dc 0x554ac
+TBottomViewResourceMessage::TBottomViewResourceMessage(
+    heroWindow* parent, int resource, int quantity,
+    const std::string* message)
+    : type_bottom_view_window(parent)
+{
+    Widgets.reserve(5);
+
+    Widgets.push_back(new bitmapBorder(0, 0, 176, 166,
+        BOTTOM_VIEW_BACKGROUND_ID, "AdStatOt.pcx", 0x800));
+    Widgets.push_back(new textWidget(10, 10, 156, 146,
+        message->c_str(), "smalfont.fnt", font::WHITE, BOTTOM_VIEW_TEXT_ID,
+        1, 0, 8));
+
+    if (resource >= 0) {
+        CSprite* sprite = ResourceManager::GetSprite("resour82.def");
+
+        Widgets.push_back(new iconWidget((width - sprite->Width) / 2, 50,
+            sprite->Width, sprite->Height, 0x837, "resour82.def", resource,
+            0, 0, 0, 0x10));
+
+        std::ostrstream quantity_text;
+        quantity_text << quantity << std::ends;
+
+        int textWidth = gUnnamed698a08->LineWidth(quantity_text.str());
+        int fontHeight = gUnnamed698a08->height;
+
+        Widgets.push_back(new textWidget((width - textWidth) / 2,
+            sprite->Height + 55, textWidth, fontHeight,
+            quantity_text.str(), "smalfont.fnt", font::PRIMARY, 0x836,
+            1, 0, 8));
+
+        quantity_text.freeze(false);
+        sprite->Dispose();
+    }
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+    }
+}
+
+// UNBLOCKED by the constructor above - its 0x63bb1c store is the one
+// image-wide reference to this class's table.
+VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, TBottomViewResourceMessage)
 
 
 // E:\gamedcs\bottomviewsubwindow.cpp:183
