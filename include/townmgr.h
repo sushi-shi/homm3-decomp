@@ -81,8 +81,18 @@ public:
     void SetupThievesGuild(int iThievesGuilds);
 };
 
+// The town hall page: one background per town type over a grid of
+// building slots the constructor lays out from two tables it builds on
+// its own stack. Its constructor writes nothing past CAdvPopup's 0x60.
 class THallWindow : public CAdvPopup {
 public:
+    enum {
+        EXIT_BUTTON_ID = 0x7800
+    };
+
+    // `which` is the Dreamcast declarator's parameter name (dc
+    // variables.csv, THallWindow::THallWindow fp+0x4a0).
+    THallWindow(int which);
     virtual ~THallWindow();
 };
 

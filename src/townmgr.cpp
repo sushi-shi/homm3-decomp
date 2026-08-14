@@ -728,6 +728,296 @@ TThievesGuildWindow::~TThievesGuildWindow()
     }
 }
 
+// The town hall, and the compiland's largest reconstructed body: one page
+// per town type, each a background and a grid of building slots read out
+// of two nine-by-eighteen tables the constructor builds on its own stack.
+// The tables give each slot's COLUMN and ROW index; two small arrays turn
+// those into pixels (seven column x, five row y). Every slot is four
+// widgets - the name bar, the name text, the building picture out of the
+// town's own hall .def, and the built-check overlay - numbered 400/600/
+// 700/800 plus the slot. The carve names the row after TPTHBkCs.pcx, the
+// castle page's background; the vptr it stores is 0x6437a0, whose slot 0
+// holds ~THallWindow above; and `ret 4` agrees with the Dreamcast
+// roster's one-int declarator.
+//
+// Castle has sixteen slots, Rampart/Fortress/Conflux seventeen, the rest
+// eighteen; the trailing zero columns of each table row are the unused
+// tail and retail stores them, so they are written out here.
+//
+// The four local names and the parameter name are the Dreamcast
+// declarator's (dc variables.csv: params this/`which`, locals hallX,
+// hallY, slotX, slotY - and exactly those four, so retail has no local
+// this body does not model). The Dreamcast frame homes hallY 0x240 bytes
+// below hallX, i.e. EIGHT rows of eighteen: that build predates Conflux,
+// where retail's stride-0x48 nine-row tables carry it.
+//
+// Residual (85.99%): a pure /Ob2 caller-cb starvation, and the emitted
+// code is otherwise PROVEN identical. Three inline decisions diverge,
+// all of them budget arithmetic and none of them a modelling gap:
+//   * the reserve's `_Construct` - retail expands the element copy
+//     inline (`cmp ecx,edi / je / mov edx,[eax] / mov [ecx],edx`), we
+//     emit a call. That one call homes four loop pointers in memory,
+//     which keeps the edi zero-register alive for the whole body, which
+//     spills the id induction (600+i) to [ebp+8], which moves every
+//     later stack slot by eight and costs the second epilogue.
+//   * the LAST push_back of case 5 - retail expands `insert`, we call it.
+//   * one push_back of case 8 - retail calls it, we expand `insert`.
+// Titrated with dead `probe = N;` statements at the tail (byte-inert
+// front-end mass, docs/vc6/inliner.md's `budget = 2*caller_cb` lever):
+// 0 -> 85.99, 40 -> 93.21 (the two push_back/insert sites close), 60 and
+// 80 -> 99.66 with the code byte-identical to retail (only the trailing
+// jump table and reloc names differ), 100 -> 92.27, 200 -> 89.69. So
+// retail's front end sees roughly fifty to ninety statements more mass
+// in this body than our spelling presents, and there is no window where
+// LESS mass helps. Rejected as the source of that mass, each for a
+// retail-byte reason: a named local per widget (retail gives every
+// push_back its own unnamed temp slot - -0xa4/-0xb8/-0xc0/-0xe8/-0xf0 in
+// case 0 - not one reused slot); x/y locals in the loop (retail reloads
+// slotX[hallX[t][i]] and slotY[hallY[t][i]] separately for all four
+// widgets, so they are re-evaluated, not CSE'd); extra locals of any
+// kind (the frame is 0x604 either way and the Dreamcast roster lists
+// exactly four). Titration scaffolding is NOT committed.
+
+// E:\gamedcs\townmgr.cpp:4302
+VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
+THallWindow::THallWindow(int which)
+    : CAdvPopup(0, 0, 800, 600, 0)
+{
+    int slotX[7] = { 34, 131, 228, 325, 422, 519, 616 };
+    int slotY[5] = { 37, 141, 245, 349, 453 };
+    int hallX[9][18] = {
+        { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 4, 2, 0, 0 },
+        { 0, 2, 4, 6, 1, 3, 5, 3, 4, 1, 2, 0, 6, 5, 3, 1, 5, 0 },
+        { 0, 2, 4, 6, 1, 3, 5, 2, 4, 4, 0, 2, 0, 6, 5, 3, 6, 1 },
+        { 0, 2, 4, 6, 1, 3, 5, 2, 4, 0, 2, 0, 6, 3, 6, 1, 4, 5 },
+        { 0, 2, 4, 6, 1, 3, 5, 2, 4, 6, 0, 2, 0, 6, 5, 4, 3, 1 },
+        { 0, 2, 4, 6, 1, 3, 5, 2, 4, 0, 2, 0, 6, 5, 1, 4, 6, 3 },
+        { 0, 2, 4, 6, 1, 3, 5, 2, 4, 0, 2, 0, 6, 5, 1, 3, 4, 6 },
+        { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 },
+        { 0, 2, 4, 6, 1, 3, 5, 3, 4, 5, 1, 2, 0, 6, 5, 3, 1, 0 }
+    };
+    int hallY[9][18] = {
+        { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 0, 0 },
+        { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 2, 2, 1, 0 },
+        { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 1, 2 },
+        { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 1, 2, 1, 2 },
+        { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 1, 2, 2 },
+        { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 2, 1, 1, 2 },
+        { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 0, 0, 0, 2, 2, 2, 1, 1 },
+        { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 2, 0 },
+        { 3, 3, 3, 3, 4, 4, 4, 1, 0, 1, 1, 0, 0, 0, 2, 2, 2, 0 }
+    };
+
+    int i;
+
+    Widgets.reserve(77);
+
+    switch (which) {
+    case TOWN_CASTLE:
+        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+                                          "TPTHBkCs.pcx", 0x800));
+        for (i = 0; i < 16; i++) {
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[0][i]] - 1, slotY[hallY[0][i]] + 71, 150, 17,
+                400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new textWidget(
+                slotX[hallX[0][i]], slotY[hallY[0][i]] + 71, 150, 17, 0,
+                "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[0][i]], slotY[hallY[0][i]], 150, 70,
+                700 + i, "hallcstl.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[0][i]] + 135, slotY[hallY[0][i]] + 54, 16, 16,
+                800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
+        }
+        break;
+    case TOWN_RAMPART:
+        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+                                          "TPTHBkRm.pcx", 0x800));
+        for (i = 0; i < 17; i++) {
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[1][i]] - 1, slotY[hallY[1][i]] + 71, 150, 17,
+                400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new textWidget(
+                slotX[hallX[1][i]] - 1, slotY[hallY[1][i]] + 71, 150, 17, 0,
+                "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[1][i]], slotY[hallY[1][i]], 150, 70,
+                700 + i, "hallramp.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[1][i]] + 135, slotY[hallY[1][i]] + 54, 16, 16,
+                800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
+        }
+        break;
+    case TOWN_TOWER:
+        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+                                          "TPTHBkTw.pcx", 0x800));
+        for (i = 0; i < 18; i++) {
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[2][i]] - 1, slotY[hallY[2][i]] + 71, 150, 17,
+                400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new textWidget(
+                slotX[hallX[2][i]] - 1, slotY[hallY[2][i]] + 71, 150, 17, 0,
+                "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[2][i]], slotY[hallY[2][i]], 150, 70,
+                700 + i, "halltowr.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[2][i]] + 135, slotY[hallY[2][i]] + 54, 16, 16,
+                800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
+        }
+        break;
+    case TOWN_INFERNO:
+        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+                                          "TPTHBkTw.pcx", 0x800));
+        for (i = 0; i < 18; i++) {
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[3][i]] - 1, slotY[hallY[3][i]] + 71, 150, 17,
+                400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new textWidget(
+                slotX[hallX[3][i]] - 1, slotY[hallY[3][i]] + 71, 150, 17, 0,
+                "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[3][i]], slotY[hallY[3][i]], 150, 70,
+                700 + i, "hallinfr.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[3][i]] + 135, slotY[hallY[3][i]] + 54, 16, 16,
+                800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
+        }
+        break;
+    case TOWN_NECROPOLIS:
+        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+                                          "TPTHBkTw.pcx", 0x800));
+        for (i = 0; i < 18; i++) {
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[4][i]] - 1, slotY[hallY[4][i]] + 71, 150, 17,
+                400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new textWidget(
+                slotX[hallX[4][i]] - 1, slotY[hallY[4][i]] + 71, 150, 17, 0,
+                "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[4][i]], slotY[hallY[4][i]], 150, 70,
+                700 + i, "hallnecr.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[4][i]] + 135, slotY[hallY[4][i]] + 54, 16, 16,
+                800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
+        }
+        break;
+    case TOWN_DUNGEON:
+        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+                                          "TPTHBkTw.pcx", 0x800));
+        for (i = 0; i < 18; i++) {
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[5][i]] - 1, slotY[hallY[5][i]] + 71, 150, 17,
+                400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new textWidget(
+                slotX[hallX[5][i]] - 1, slotY[hallY[5][i]] + 71, 150, 17, 0,
+                "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[5][i]], slotY[hallY[5][i]], 150, 70,
+                700 + i, "halldung.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[5][i]] + 135, slotY[hallY[5][i]] + 54, 16, 16,
+                800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
+        }
+        break;
+    case TOWN_STRONGHOLD:
+        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+                                          "TPTHBkTw.pcx", 0x800));
+        for (i = 0; i < 18; i++) {
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[6][i]] - 1, slotY[hallY[6][i]] + 71, 150, 17,
+                400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new textWidget(
+                slotX[hallX[6][i]] - 1, slotY[hallY[6][i]] + 71, 150, 17, 0,
+                "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[6][i]], slotY[hallY[6][i]], 150, 70,
+                700 + i, "hallstrn.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[6][i]] + 135, slotY[hallY[6][i]] + 54, 16, 16,
+                800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
+        }
+        break;
+    case TOWN_FORTRESS:
+        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+                                          "TPTHBkRm.pcx", 0x800));
+        for (i = 0; i < 17; i++) {
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[7][i]] - 1, slotY[hallY[7][i]] + 71, 150, 17,
+                400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new textWidget(
+                slotX[hallX[7][i]] - 1, slotY[hallY[7][i]] + 71, 150, 17, 0,
+                "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[7][i]], slotY[hallY[7][i]], 150, 70,
+                700 + i, "hallfort.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[7][i]] + 135, slotY[hallY[7][i]] + 54, 16, 16,
+                800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
+        }
+        break;
+    case TOWN_CONFLUX:
+        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0,
+                                          "TPTHBkRm.pcx", 0x800));
+        for (i = 0; i < 17; i++) {
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[8][i]] - 1, slotY[hallY[8][i]] + 71, 150, 17,
+                400 + i, "TPTHBar.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new textWidget(
+                slotX[hallX[8][i]] - 1, slotY[hallY[8][i]] + 71, 150, 17, 0,
+                "smalfont.fnt", font::PRIMARY, 600 + i, 1, 0, 8));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[8][i]], slotY[hallY[8][i]], 150, 70,
+                700 + i, "hallelem.def", 0, 0, 0, 0, 0x10));
+            Widgets.push_back(new iconWidget(
+                slotX[hallX[8][i]] + 135, slotY[hallY[8][i]] + 54, 16, 16,
+                800 + i, "TPTHChk.def", 0, 0, 0, 0, 0x10));
+        }
+        break;
+    }
+
+    Widgets.push_back(new bitmapBorder(3, 555, 741, 18, 501,
+                                       "TStatBar.pcx", 0x800));
+    Widgets.push_back(new textWidget(3, 555, 741, 18, 0, "smalfont.fnt",
+                                     font::PRIMARY, 502, 1, 0, 8));
+    Widgets.push_back(new textWidget(0, 0, 800, 30,
+                                     gpGeneralText->GetText(593),
+                                     "bigfont.fnt", font::PRIMARY, 503, 1,
+                                     0, 8));
+
+    button* exitButton = new button(748, 556, 48, 40, EXIT_BUTTON_ID,
+                                    "TPMage1.def", 0, 1, 1, 28, 2);
+    exitButton->set_hotkey(1);
+    Widgets.push_back(exitButton);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+}
+
+// The sixteen bytes the linker parked between THallWindow's constructor
+// and its ??_G are TTextResource::GetText's /Gy COMDAT: `mov eax,
+// [ecx+0x20]` is Text._First, `mov eax,[eax+ecx*4]` the subscript, and
+// `ret 4` the one-int declarator. textresource.h defines it inline, and
+// every other caller in the image expands it - this compiland emits it
+// out of line because the 11.5 KB constructor above is the one caller
+// whose /Ob2 budget cannot afford it (its call site is the bigfont
+// header's text). The claim therefore belongs to townmgr.obj even
+// though nothing here is compiled: the body below is the header's,
+// reproduced for the reader inside the carcass gate.
+#if 0  // @carcass: claim-only - the definition lives in textresource.h
+// E:\gamedcs\TextResource.h:66
+VA(0x005cc8d0, 0x10)  // anchor-callee THallWindow ctor + /Gy COMDAT, dc 0x2d74
+const char* TTextResource::GetText(int r) const
+{
+    return Text[r];
+}
+#endif  // @carcass
+
 VA_COMPGEN(0x005cc8e0, 0x21, SCALAR_DELETING_DTOR, THallWindow)
 
 // E:\gamedcs\townmgr.cpp:4465
