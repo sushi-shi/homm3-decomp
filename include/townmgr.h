@@ -219,6 +219,8 @@ public:
 
     TMageGuildWindow();
     virtual ~TMageGuildWindow();
+    // Retail 0x5ce1c0 (dc 0x171020). The page's rollover line.
+    void SetRolloverText(int codeY);
 };
 
 class type_garrison_base_window : public CAdvPopup {
