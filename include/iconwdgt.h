@@ -20,11 +20,19 @@ public:
     int PostPostWalkSequence;
     unsigned short BackColor;
 
-    // Retail fixes style=2 internally and keeps eleven arguments
-    // (`ret 0x2c` at 0x4ea7a9), unlike the twelve-argument DC form.
+    // ELEVEN arguments (`ret 0x2c` at 0x4ea7a9) where DC has twelve: the
+    // trailing `focusable` is the one retail dropped, exactly as in the
+    // border family. CORRECTION 2026-08-14, now that the body at
+    // 0x4ea720 is decoded: the last argument is DC's `int style` and is
+    // pushed straight through as widget's sixth ctor parameter. The
+    // constant 2 this header used to attribute to `style` is the store
+    // `mov dword ptr [esi+0x40], 2` - PostPostWalkSequence, not style.
+    // Every existing call site passes a literal here (0x10 / 0x12), so
+    // widening the parameter off the old `unsigned char focusable`
+    // changes no caller's bytes.
     iconWidget(int x, int y, int w, int h, int id, const char* image,
                int frame, int sequence, unsigned char flipped,
-               unsigned backColor, unsigned char focusable);
+               unsigned backColor, int style);
     virtual ~iconWidget();  // retail 0x4ea7b0
     virtual int Main(message* msg);
     virtual void zBufferDraw();

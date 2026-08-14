@@ -26,6 +26,13 @@ void font::font(const char* name, const font::TFontSpec* fontspec, int dsize, un
 
 #endif  // @carcass
 
+// E:\gamedcs\font.cpp:35 - font::`scalar deleting destructor'
+// (dc 0xa27c4). Slot 0 of font's vtable 0x63e5f4, read straight out of
+// the image: the table is {0x4b5040, 0x55d0f0 (resource::Dispose's base
+// body), 0x4b5250}. The 33-byte row calls ??1font (0x4b5110) under the
+// flags&1 operator delete tail.
+VA_COMPGEN(0x004b5040, 0x21, SCALAR_DELETING_DTOR, font)
+
 // EXACT 2026-08-11. Retail's EH map registers only the resource base as
 // state 0; the embedded palette is destroyed by a direct qualified call,
 // not as an automatic nontrivial member. TFontPaletteStorage preserves the
@@ -100,6 +107,19 @@ void font::DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)
         }
         dst += bmp->Pitch;
     } while (--rows);
+}
+
+// E:\gamedcs\resrce.h - slot 2 of vtable 0x63e5f4, the resource size
+// query resource declares pure. Promoted from an unlabelled carve row
+// 2026-08-14: the vtable pins the identity, and the body
+// (`mov eax,[ecx+0x125c]; add eax,0x1260; ret`) pins the layout from the
+// other side - 0x1260 IS sizeof(font), so the dword at 0x125c is the
+// glyph payload's own byte count. DC files no such row for font because
+// its port left the query on a different slot shape.
+VA(0x004b5250, 0xC)  // anchor-vtable (slot 2 of 0x63e5f4), retail-only
+unsigned int font::_vslot2() const
+{
+    return DataSize + sizeof(font);
 }
 
 #if 0  // @carcass

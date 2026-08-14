@@ -581,6 +581,7 @@ fly	?Teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10
 fly	?TeleportTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb4e90
 fly	?ValidFlight@army@@QAEEHE@Z	89.1445	89.1445	89.1445	0xb46c0
 font	??1font@@UAE@XZ	100.0000	100.0000	100.0000	0xb5110
+font	??_Gfont@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb5040
 font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	98.7864	98.7864	98.7864	0xb5490
 font	?DrawCharacter@font@@QAEXHPAVBitmap16Bit@@HHH@Z	78.2623	78.2623	78.2623	0xb51a0
 font	?GetCharacterWidth@font@@QAEHE@Z	100.0000	100.0000	100.0000	0xb57a0
@@ -589,6 +590,7 @@ font	?LineWidth@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5920
 font	?LongestLineWidth@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5990
 font	?LongestWrappedLineWidth@font@@QAEHPBDH@Z	100.0000	100.0000	100.0000	0xb5a80
 font	?SetPalette@font@@QAEXPBVTPalette16@@@Z	100.0000	100.0000	100.0000	0xb5180
+font	?_vslot2@font@@UBEIXZ	100.0000	100.0000	100.0000	0xb5250
 font	?get_string_width@font@@QAEJPBD@Z	100.0000	100.0000	100.0000	0xb57d0
 font	?longest_word_length@font@@QAEHPBD@Z	100.0000	100.0000	100.0000	0xb5a10
 game	??0HeroExtra@@QAE@XZ	100.0000	100.0000	100.0000	0xce4b0
@@ -858,6 +860,7 @@ hiscore	??_GCHSInputDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe9800
 hiscore	??_GTHighScoreWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe9d90
 hiscore	?GetRolloverWidget@CHSInputDlg@@UAEPAVtextWidget@@XZ	100.0000	100.0000	100.0000	0xe97f0
 hiscore	?OnWidgetDeselect@CHSInputDlg@@UAEHHPAE@Z	100.0000	100.0000	100.0000	0xe9790
+iconwdgt	??0iconWidget@@QAE@HHHHHPBDHHEIH@Z	100.0000	100.0000	100.0000	0xea720
 iconwdgt	??1iconWidget@@UAE@XZ	100.0000	100.0000	100.0000	0xea7b0
 iconwdgt	??_GiconWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xea6f0
 iconwdgt	?GetRealHeight@iconWidget@@UAEHXZ	100.0000	100.0000	100.0000	0xeab30
