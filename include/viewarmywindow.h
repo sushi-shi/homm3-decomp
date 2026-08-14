@@ -89,6 +89,17 @@ public:
 
     TViewArmyWindow(const army* this_army, int x0, int y0,
                     unsigned char show_ok);
+    // TEN arguments in retail (`ret 0x28`), not the Dreamcast's nine:
+    // the trailing unsigned char is the alignment-grouping byte, passed
+    // straight through to GetArmyMorale's arg5 and get_morale_description's
+    // arg8 - the same value the one-army constructor reads out of
+    // gpCombatManager->field_54b2. `group` is non-const because
+    // GetArmyMorale and GetArmyLuck are; the Dreamcast prototype's
+    // `const armyGroup&` predates them.
+    TViewArmyWindow(armyGroup* group, int iarmy, const hero* this_hero,
+                    const town* this_town, int x0, int y0, int upgrade,
+                    unsigned char show_dismiss, unsigned char show_ok,
+                    unsigned char group_alignments);
     TViewArmyWindow(int army_type, int x0, int y0, unsigned char show_ok);
     virtual ~TViewArmyWindow();
     virtual int WindowHandler(message* msg);

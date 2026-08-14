@@ -505,6 +505,15 @@ public:
     // 0x4e5de0, RETAIL-ONLY (no DC row): the clamped field_129 getter
     // hero::IsInIdentifyRange inlines. ORDINAL PLACEHOLDER name.
     int HeroFn_004E5DE0();
+    // 0x4e6120, RETAIL-ONLY (no DC row): folds this hero's own bonuses
+    // into a CALLER-OWNED copy of a creature's table row - the two
+    // opening blocks add GetPrimarySkill(0) and (1) into the copy's
+    // attackSkill (+0x54) and defenseSkill (+0x58) before the artifact
+    // pass hero.h's stats note already cites. Const: the popup
+    // constructor at 0x5f3b50 drives it off the `const hero*` it takes.
+    // ORDINAL PLACEHOLDER name.
+    void HeroFn_004E6120(int creature_type,
+                         TCreatureTypeTraits* traits) const;
     // 0x4d9050 / 0x4e56b0, the two owner-record accessors; both open
     // with the same `owner < 0` guard.
     unsigned char belongs_to_human();

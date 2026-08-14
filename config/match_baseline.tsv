@@ -1499,6 +1499,7 @@ victorylossconditions	VictoryConditionStruct_CheckForGrailBuildingWin	0.0000	0.0
 victorylossconditions	VictoryConditionStruct_CheckForTotalCreatures	0.0000	0.0000	0.0000	0x1f1b10
 victorylossconditions	VictoryConditionStruct_CheckForUpgradedTown	0.0000	0.0000	0.0000	0x1f1d40
 viewarmywindow	??0TViewArmyWindow@@QAE@HHHE@Z	97.1018	97.1018	97.1018	0x1f4210
+viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	88.7003	88.7003	88.7003	0x1f3b50
 viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	89.9861	89.9861	89.9861	0x1f3360
 viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20
