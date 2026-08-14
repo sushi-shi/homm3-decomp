@@ -409,7 +409,15 @@ public:
     // makes get_adjusted_defense's own Frenzy early-out consistent -
     // the defense is spent, not counted twice.
     float frenzyFactor;           // +0x498
-    char pad_49c[0x4];
+    // The damage this stack still does while it is shaking off a blind:
+    // ComputeAttackerDamageReduction (0x443b90) multiplies the whole
+    // reduction by it whenever residualBlindness (+0x4c0) is up. DC name
+    // (members.csv army@1144 blindFactor), and the DC run 1140..1181 -
+    // frenzyAdjust / blindFactor / fire_shield_strength ... /
+    // shieldDamageFactor / airShieldDamageFactor / residualBlindness /
+    // residualParalyze - lands on retail +0x498..+0x4c1 unshifted
+    // against the three names this header already proved from bodies.
+    float blindFactor;            // +0x49c
     // Active Fire Shield multiplier.  get_fire_shield_strength loads
     // this float whenever fireShieldRounds is non-zero; otherwise the
     // innate Efreet Sultan path supplies the shared 0.2f constant.
@@ -419,7 +427,15 @@ public:
     // with shieldRounds and airShieldRounds above.
     float shieldFactor;           // +0x4b8
     float airShieldFactor;        // +0x4bc
-    char pad_4c0[0x4];
+    // The two "still recovering" flags ComputeAttackerDamageReduction
+    // pairs at its tail: residualBlindness scales the attack by
+    // blindFactor (+0x49c), residualParalyze by Blind's own advanced
+    // mastery percentage, and a stack carrying BOTH takes the smaller of
+    // the two. DC names (members.csv army@1180 / @1181), both T_UCHAR,
+    // and the retail body loads each with a byte `mov`/`test` pair.
+    unsigned char residualBlindness;  // +0x4c0
+    unsigned char residualParalyze;   // +0x4c1
+    char pad_4c2[0x2];
     // Forgetfulness's mastery level, the gate can_shoot pairs with
     // forgetfulnessRounds: `>= 2` (advanced or expert) stops the stack
     // shooting outright. It does NOT land on any of the per-spell rows
@@ -634,6 +650,46 @@ public:
         // Demon. NH3API spelling.
         ARMY_CREATURE_CERBERUS = 0x2f,
         ARMY_CREATURE_DEMON = 0x30,
+        // The top tier of the Dungeon block and the two Conflux
+        // elementals whose attacks ComputeAttackerDamageReduction
+        // (0x443b90) halves. All three ids are fixed by ids
+        // armygrp.h's TCreatureType already proves and by the rule the
+        // body implements, not by a roster:
+        //   - Troglodyte 0x46 / Infernal Troglodyte 0x47 open the
+        //     fourteen-id Dungeon block and Minotaur 0x4e / Minotaur
+        //     King 0x4f sit in it, which puts its top tier - the black
+        //     dragon - on 0x53;
+        //   - Air / Earth / Fire / Water Elemental 0x70..0x73 and Gold
+        //     / Diamond Golem 0x74/0x75 leave 0x76/0x77 for the pixie
+        //     pair and 0x78/0x79 for the psychic and magic elementals,
+        //     which is also exactly what puts Ice 0x7b, Magma 0x7d,
+        //     Storm 0x7f and Energy 0x81 where TCreatureType already
+        //     has them - the four unused slots between them.
+        // The body corroborates both readings on the retail rules:
+        // 0x78 halves against a defender carrying the mind-immunity
+        // bit (the psychic elemental's rule) and 0x79 halves against
+        // 0x79 or 0x53 (the magic elemental against black dragons and
+        // its own kind). NH3API spellings.
+        //
+        // BEHIND A VIEW, AND THAT IS A MEASUREMENT. Declaring these
+        // three unconditionally costs command.obj's
+        // combatManager::GetCommand 92.5714 -> 92.5357 with no
+        // semantic change anywhere - the include-set-sensitivity class
+        // again, fired here by ENUMERATORS rather than by the two
+        // member declarations that fired it on 2026-08-14. Bisected:
+        // with the three removed and the ids spelled as literals
+        // GetCommand is back at 92.5714 and
+        // ComputeAttackerDamageReduction still 100, so the field
+        // slicing in this header is innocent and only the enumerators
+        // move it. army.cpp is the only consumer, so they are scoped
+        // to it exactly as get_clockwise / get_counter_clockwise are.
+        // The block is contiguous rather than in id order because a
+        // guard cannot span three separated lines.
+#ifdef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
+        ARMY_CREATURE_BLACK_DRAGON = 0x53,
+        ARMY_CREATURE_PSYCHIC_ELEMENTAL = 0x78,
+        ARMY_CREATURE_MAGIC_ELEMENTAL = 0x79,
+#endif
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
         // The two combat participants can_shoot (0x4428f0) admits as

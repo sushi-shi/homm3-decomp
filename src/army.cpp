@@ -6,8 +6,15 @@
 // tables they index: army.cpp is their only consumer, and declaring
 // them to every consumer of army.h costs command.obj's GetCommand
 // 92.5714 -> 92.5357 (measured 2026-08-14, include-set class).
+// The three creature ids ComputeAttackerDamageReduction's two elemental
+// rules name are scoped the same way and for the same reason: declaring
+// those ENUMERATORS to every consumer costs the same 0.0357 on the same
+// function (measured 2026-08-14, bisected against the field slicing in
+// the same change, which is innocent).
 #define HOMM3_ARMY_MULTI_HEAD_VIEW
+#define HOMM3_ARMY_ELEMENTAL_RULE_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
 #undef HOMM3_ARMY_MULTI_HEAD_VIEW
 #include "armygrp.h"
 #include "cmbtmgr.h"
@@ -1109,11 +1116,70 @@ int army::ComputeDefenderDamageBonuses(int base_damage) const
 }
 
 // E:\gamedcs\army.cpp:3243
-// RETAIL_LOCATED(0x00443b90, 0x1FE)  // anchor-global, dc 0x48c60
-double army::ComputeAttackerDamageReduction(const army* defender, unsigned char is_shooting) const
+#endif  // @carcass
+
+// Everything that scales an ATTACKER's swing down, in retail's order:
+// the defence differential first, then the two elemental match-ups, the
+// two shooting penalties, the melee penalty a shooter pays for swinging
+// in person, and finally the residual blind / paralyze pair.
+//
+// The differential is `1 - (defense - attack) * 0.025` floored at 0.3 -
+// a plain TERNARY, not the _cpp_max the Bless/Curse arms use: retail
+// materializes 0.3 as two immediates into the same pair of dwords the
+// live value would come from, where the reference-returning template
+// always selects between two stack slots with a `lea`. The tail's
+// `_cpp_min` IS that template - the `lea [ebp-0x10]` / `lea [ebp-0x18]`
+// pair is its signature - and its operands land the same way every
+// other site in this TU does, the higher slot holding _Y.
+//
+// The two 0.5 elemental rules are the retail behaviour the ids are
+// named from: a psychic elemental against a mind-immune defender
+// (creature bit 10) and a magic elemental against a black dragon or
+// another magic elemental.
+VA(0x00443b90, 0x1FE)  // anchor-global, dc 0x48c60
+double army::ComputeAttackerDamageReduction(const army* defender,
+                                            unsigned char is_shooting) const
 {
-    // @stub
+    double reduction = 1.0;
+    long attack = get_adjusted_attack(defender, is_shooting);
+    long defense = defender->get_adjusted_defense(this, 1);
+    if (defense > attack) {
+        double factor = 1.0 - (defense - attack) * 0.025;
+        if (factor < 0.3)
+            factor = 0.3;
+        reduction = factor;
+    }
+    if (creatureType == ARMY_CREATURE_PSYCHIC_ELEMENTAL
+            && (defender->Is(10) & 1))
+        reduction *= 0.5;
+    if (creatureType == ARMY_CREATURE_MAGIC_ELEMENTAL
+            && (defender->creatureType == ARMY_CREATURE_MAGIC_ELEMENTAL
+                || defender->creatureType == ARMY_CREATURE_BLACK_DRAGON))
+        reduction *= 0.5;
+    if (is_shooting) {
+        int hex = gridIndex;
+        if (creatureId & 1)
+            hex += facing ? 1 : -1;
+        if (gpCombatManager->ShotIsThroughWall(this, hex, defender->gridIndex))
+            reduction *= 0.5;
+        if (gpCombatManager->ShotIsNotOptimal(this, defender))
+            reduction *= 0.5;
+    }
+    if ((Is(2) & 1) && !is_shooting && !(Is(12) & 1))
+        reduction *= 0.5;
+    if (residualBlindness && residualParalyze) {
+        double penalty = _cpp_min<double>(
+            blindFactor, akSpellTraits[SPELL_BLIND].mastery_bonus[2] / 100.0);
+        reduction = penalty * reduction;
+    } else if (residualBlindness)
+        reduction = blindFactor * reduction;
+    else if (residualParalyze)
+        reduction = akSpellTraits[SPELL_BLIND].mastery_bonus[2] / 100.0
+                    * reduction;
+    return reduction;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:3319
 #endif  // @carcass
