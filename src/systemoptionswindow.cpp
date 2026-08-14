@@ -63,18 +63,23 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     Widgets.push_back(new button(357, 415, 100, 48,
         DIALOG_RETURN_SPLIT_ACCEPT, "soretrn.def", 1, 0, 0, 1, 2));
 
-    // Residual note (the two slider loops): retail's loop variable is the
-    // SLOT, not the x - `for (slot = 0; slot < 10; ++slot)` with the x as a
-    // derived, linear-function-test-replaced induction variable, which emits
-    // `xor ebx,ebx` + `lea edx,[ebx+0xc9]` where the spelling below emits
-    // `mov ebx,0xc9` + `push ebx`. That rewrite was measured here and it
-    // reproduces retail's loop bodies EXACTLY (and fixes the ecx/edx parity
-    // of the following temps), but it removes four statements of front-end
-    // mass, and this constructor is already /Ob2 budget-STARVED - it calls
-    // vector<widget*>::size() inside the reserve expansion where retail
-    // inlines it, and calls one push_back retail expands. Net -0.02%, so it
-    // is not landed: re-apply it together with whatever restores the caller
-    // mass (the twin in combatoptionswindow.cpp carries the landed form).
+    // The two slider loops (LANDED 2026-08-14, 97.6237 -> 98.1326). Retail's
+    // loop variable is the SLOT, not the x - `for (slot = 0; slot < 10;
+    // ++slot)` with the x as a derived, linear-function-test-replaced
+    // induction variable, which emits `xor ebx,ebx` + `lea edx,[ebx+0xc9]`
+    // where the old x-stepped spelling emitted `mov ebx,0xc9` + `push ebx`.
+    // That rewrite reproduces retail's loop bodies EXACTLY and fixes the
+    // ecx/edx parity of the following temps, but on its own it was measured
+    // NEGATIVE three separate times (88.2908 against 88.3182, operands
+    // reversed 88.2908, x carried in the for-update 88.1660) because it
+    // removes front-end mass and `budget = 2 * cb(caller)`. It only becomes a
+    // win once the constructor's inline-candidate site count is right AND the
+    // mass it costs is given back: the named `musicX`/`effectsX` per iteration
+    // is that mass. Measured on top of the registration guard: bare slot-IV
+    // 97.6868, slot-IV + a named x 98.1326, + a named id as well 98.1326, and
+    // the same plateau under 2..12 dead-store pad statements, so this spelling
+    // sits inside the window rather than on its edge (16 pad statements
+    // 97.7430). The twin in combatoptionswindow.cpp carries the same form.
     //
     // RE-MEASURED 2026-08-14 after the family's other three constructors
     // closed, in case their fixes had moved this budget: unchanged, 88.26%
@@ -124,24 +129,25 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // slider-loop push_backs 88.1531, the first two top-level push_backs
     // 87.7930, the last two 94.2323, the last two behind a pointer local
     // 94.6031, the last one alone 87.4010.
-    // The slot-IV rewrite was re-measured a third time ON TOP of the
-    // initializer-list fix, in case that had moved the phase: 88.3182 ->
-    // 88.2908 (x derived as 29+slot*19), 88.2908 (operands reversed), 88.1660
-    // (x carried in the for-update). Still net negative, still not landed.
-    int slot = 0;
-    for (int musicX = 29; musicX < 219; musicX += 19) {
+    // The second /Ob2 axis - the caller's own cb, which sets budget = 2 * cb -
+    // was swept here too, as pad statements ahead of `reserve`: at the landed
+    // site count it is flat from 0 to 8 statements (97.6237), dips at 16
+    // (97.2341), peaks at 24 (97.7860) and collapses past 40 (88.9218), and
+    // every k>=1 column of that sweep is capped below the k=0 one. Unlike
+    // gametypewindow, where mass+sites together reached exact, there is no
+    // (mass, sites) cell here that beats the slot-IV spelling below.
+    for (int musicSlot = 0; musicSlot < 10; musicSlot++) {
+        int musicX = 29 + musicSlot * 19;
         Widgets.push_back(new iconWidget(
-            musicX, 359, 18, 36, slot + MUSIC_VOLUME_0_ID, "syslb.def",
+            musicX, 359, 18, 36, musicSlot + MUSIC_VOLUME_0_ID, "syslb.def",
             0, 0, 0, 0, 0x10));
-        slot++;
     }
 
-    slot = 0;
-    for (int effectsX = 29; effectsX < 219; effectsX += 19) {
+    for (int effectsSlot = 0; effectsSlot < 10; effectsSlot++) {
+        int effectsX = 29 + effectsSlot * 19;
         Widgets.push_back(new iconWidget(
-            effectsX, 425, 18, 36, slot + EFFECTS_VOLUME_0_ID, "syslb.def",
-            0, 0, 0, 0, 0x10));
-        slot++;
+            effectsX, 425, 18, 36, effectsSlot + EFFECTS_VOLUME_0_ID,
+            "syslb.def", 0, 0, 0, 0, 0x10));
     }
 
     Widgets.push_back(new button(28, 77, 46, 32,
