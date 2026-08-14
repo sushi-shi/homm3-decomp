@@ -18,6 +18,7 @@
 #include "cmbtmgr.h"
 #include "hero.h"
 #include "iconwdgt.h"
+#include "recruit.h"
 
 // Dinkumware-era max source shape used by retail: arguments are copied into
 // homes and the selected home is returned by reference.
@@ -322,16 +323,152 @@ TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
 // the virtual destructor below and precedes the remaining out-of-line rows.
 VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 
-#if 0  // @carcass
-
-// E:\gamedcs\viewarmywindow.cpp:140 - retail 0x5f3b50, 1714 B
-DC_ONLY(0x190e78, 0x614)
-void TViewArmyWindow::TViewArmyWindow(const armyGroup* group, int iarmy, const hero* this_hero, const town* this_town, int x0, int y0, int upgrade, unsigned char show_dismiss, unsigned char show_ok)
+// The garrison/hero-screen popup: one slot of an armyGroup, shown with
+// the owning hero's bonuses folded in and the upgrade/dismiss actions
+// live. Three things separate it from the one-army constructor:
+//
+//  * the traits row is COPIED BY VALUE onto the frame (`mov ecx,0x1d /
+//    rep movsd`) so hero::HeroFn_004E6120 can fold the hero's own
+//    attack/defense and artifacts into the copy without touching the
+//    table. Every "modified" column then reads the copy while its
+//    "base" column reads the table row through the cached pointer.
+//  * ShowingUpgradeButton and ShowingDismissButton are NOT in the
+//    mem-init list - retail writes each 1 only inside the branch that
+//    creates its button, and leaves them alone otherwise. Only
+//    ShowingOkButton is initialised, which is why the vptr store
+//    follows +0x96 directly.
+//  * `Upgrade` is written from the BODY, after the vptr, because the
+//    !show_ok early clean-up rewrites its incoming value first.
+//
+// Retail takes TEN arguments (`ret 0x28`), one more than the Dreamcast
+// nine: a trailing alignment-grouping byte forwarded to GetArmyMorale's
+// arg5 and get_morale_description's arg8.
+// Residual (88.7003%): base 35 conditional branches against retail's 37,
+// and the two-branch gap is ONE thing - retail INLINES the [-3, 3]
+// selector at the luck icon and CALLS it at the morale icon, in the same
+// function. That settles a question the one-army constructor's note left
+// open the wrong way: this TU DID see a body for the selector (it could
+// not inline the luck site otherwise), so the two calls that constructor
+// makes are budget, not an absent definition. Reproducing the asymmetry
+// is not available here: `_cpp_clamp` stays DECLARED-ONLY, so both sites
+// are calls, and defining it as a template was already measured to take
+// the one-army constructor from 89.62 to 87.11 - below its ratcheted MAX
+// - because create_morale_widget/create_luck_widget are shared inline
+// members and no per-call-site knob separates them. The rest of the
+// delta is register choice and scheduling inside blocks whose shapes
+// agree (`movsx ecx,al` for hero->owner where we pick eax; the table
+// base loaded before the index rather than after it in the name lookup).
+VA(0x005f3b50, 0x6B2)  // vtable-store + builder call set + describer pair, dc 0x190e78
+TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
+                                 const hero* this_hero, const town* this_town,
+                                 int x0, int y0, int upgrade,
+                                 unsigned char show_dismiss,
+                                 unsigned char show_ok,
+                                 unsigned char group_alignments)
+    : CAdvPopup(x0, y0, 298, 311, 0x12),
+      ArmyType(group->armies[iarmy]),
+      ArmySize(group->numTroops[iarmy]),
+      ShowingOkButton(show_ok)
 {
-    // @stub
-}
+    if (!show_ok) {
+        upgrade = -1;
+        show_dismiss = 0;
+    }
+    Upgrade = upgrade;
 
-#endif  // @carcass
+    const TCreatureTypeTraits* type_traits = &akCreatureTypeTraits[ArmyType];
+    TCreatureTypeTraits traits = *type_traits;
+
+    Widgets.reserve(NWIDGETS);
+
+    create_background_widget(this_hero);
+
+    const char* name;
+    if (ArmyType >= 0 && ArmyType <= 150)
+        name = akCreatureTypeTraits[ArmyType].m_plural_name;
+    else
+        name = emptyRolloverText;
+    create_name_widget(name);
+
+    int town_type;
+    if (!gpGame->f_1f698
+            && (ArmyType == CREATURE_AIR_ELEMENTAL
+                || ArmyType == CREATURE_EARTH_ELEMENTAL
+                || ArmyType == CREATURE_FIRE_ELEMENTAL
+                || ArmyType == CREATURE_WATER_ELEMENTAL))
+        town_type = -1;
+    else
+        town_type = akCreatureTypeTraits[ArmyType].townType;
+    create_portrait_widget(traits.m_sprite_name, town_type,
+                           group->numTroops[iarmy]);
+
+    if (this_hero)
+        this_hero->HeroFn_004E6120(ArmyType, &traits);
+
+    create_attack_widget(type_traits->attackSkill, traits.attackSkill);
+    create_defense_widget(type_traits->defenseSkill, traits.defenseSkill);
+    create_shots_widget(&traits, traits.numShots, traits.numShots);
+    create_damage_widget(&traits, this_hero);
+    create_hitpoints_widget(type_traits->hitPoints, traits.hitPoints);
+    create_speed_widget(type_traits->speed, traits.speed);
+
+    morale = group->GetArmyMorale(iarmy, this_hero, this_town, -1,
+                                  group_alignments, 0);
+    create_morale_widget(morale);
+#pragma inline_depth(0)
+    morale_help = group->get_morale_description(
+        creature_type_from_int(ArmyType), morale, this_hero, this_town,
+        0, 0, -1, group_alignments);
+#pragma inline_depth()
+
+    luck = group->GetArmyLuck(iarmy, this_hero, this_town, -1, 1);
+    create_luck_widget(luck);
+    luck_help = group->get_luck_description(
+        creature_type_from_int(ArmyType), luck, this_hero, this_town,
+        0, 0, -1);
+
+    if (show_ok)
+        create_ok_widget();
+
+    if (upgrade != -1) {
+        create_upgrade_widget();
+        ShowingUpgradeButton = 1;
+    }
+    if (show_dismiss) {
+        create_dismiss_widget();
+        ShowingDismissButton = 1;
+    } else if (upgrade == -1 && traits.special_ability) {
+        Widgets.push_back(new textWidget(
+            20, 232, 192, 41, traits.special_ability, "smalfont.fnt",
+            font::WHITE, -1, 0, 0, 8));
+    }
+
+    create_rollover_widget();
+
+    Influence[0] = -1;
+    Influence[1] = -1;
+    Influence[2] = -1;
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    // The upgrade button greys itself out when the player cannot pay.
+    if (upgrade != -1) {
+        int cost[7];
+        get_upgrade_cost(creature_type_from_int(ArmyType),
+                         creature_type_from_int(upgrade), ArmySize, cost);
+        for (int i = 0; i < 7; i++) {
+            if (gpCurrentPlayer->resources[i] < cost[i]) {
+                WidgetSetStatus(UPGRADE_ID, 8);
+                break;
+            }
+        }
+    }
+}
 
 // The creature-TYPE popup: the same 298x311 plate driven off a table row
 // rather than a live stack, so every base/modified pair collapses to one
