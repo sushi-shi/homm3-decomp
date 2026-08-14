@@ -305,6 +305,41 @@ public:
     __int64 available;
 
     unsigned char CanBuildDock();
+    // DC Town.h:311 header inline (dc 0x1fdac, where the Dreamcast
+    // linker kept an out-of-line copy in advmgr.obj). Packs the town's
+    // three map bytes into a type_point and returns it BY VALUE - the
+    // `__$ReturnUdt` in the Dreamcast declarator is that hidden return
+    // buffer. Retail has no out-of-line body: /Ob2 expands it at every
+    // call site.
+    //
+    // GATED, and it has to be: added ungated this declarator took
+    // initialize_game_data 100.0 -> 96.09 and recruitUnit::Update
+    // 90.84 -> 88.24 with no semantic change anywhere - the tree's two
+    // standing include-set canaries, both at once. Every consumer opens
+    // HOMM3_TOWN_LOCATION_DECLS for itself and re-measures.
+    //
+    // MEASURED 2026-08-14 against the one caller this tree can already
+    // score, and the result is NEGATIVE: rewriting ai_player.cpp's
+    // can_take_town (0x428410) to `type_point point =
+    // defending_town->get_location();` scores 86.87 with the body below
+    // and 79.06 with a `return type_point(mapX, mapY, mapZ);` body,
+    // against 98.75 for the three-short spelling that body already
+    // carries. So the standing report that a by-value UDT return closes
+    // can_take_town does NOT reproduce here; whatever closed it was a
+    // different call site or a different spelling. The declarator is
+    // landed anyway because the Dreamcast evidence for the accessor is
+    // solid and the gating requirement is now measured, but the next
+    // lane should treat the caller list as UNPROVEN and score each one.
+#ifdef HOMM3_TOWN_LOCATION_DECLS
+    type_point get_location() const
+    {
+        type_point point;
+        point.x = mapX;
+        point.y = mapY;
+        point.z = mapZ;
+        return point;
+    }
+#endif
 #ifdef HOMM3_TOWN_OBJ_DECLS
     unsigned char HasBuilding(int buildingId, unsigned char check_included);
 #endif
