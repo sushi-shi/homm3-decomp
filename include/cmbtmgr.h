@@ -810,9 +810,12 @@ public:
                                 searchArray* search_array,
                                 type_AI_combat_parameters* estimate);
                                                               // 0x41fd60
+    // Non-const `estimate` for the same reason mark_multiheaded_enemy
+    // below is: this body calls that one and reaches
+    // get_simple_attack_effect itself.
     void mark_enemy_attacks(const army* our_army, long* enemy_attacks,
                             long* dangerous_enemies,
-                            const type_AI_combat_parameters* estimate);
+                            type_AI_combat_parameters* estimate);
                                                               // 0x420260
     unsigned char choose_creature_spell(const army* current_army,
                                         long* best_value,
@@ -821,6 +824,15 @@ public:
     unsigned char choose_resurrect_action(
         const army* current_army, long* best_value,
         type_AI_combat_parameters* estimate);                 // 0x421000
+    // 0x420f00, the RETAIL-ONLY third spell chooser: same shape as the
+    // two above and the third arm of choose_spell_action's switch, the
+    // one creatureType 0x86 (Faerie Dragon) takes. It has no Dreamcast
+    // row at all, so the name is the role the switch proves. DECLARED,
+    // NOT DEFINED - ai.cpp leaves its body unclaimed and the call site
+    // only needs the signature.
+    unsigned char SOD_choose_faerie_dragon_spell(
+        const army* current_army, long* best_value,
+        type_AI_combat_parameters* estimate);                 // 0x420f00
     unsigned char choose_defense_hex(const army* current_army,
                                      const army* client, long* best_hex,
                                      long* open_hexes,
