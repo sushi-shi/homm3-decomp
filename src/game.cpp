@@ -1860,6 +1860,14 @@ int game::LoadRumours(TAbstractFile* infile)
 // The residual is one Dinkumware map-constructor inline decision: retail calls
 // its two-argument wrapper while this compile inlines the wrapper and calls
 // the three-argument tree constructor directly.
+// Re-tested 2026-08-14 against the /Ob2 budget DIVISOR lever that closed
+// TMainMenu (see src/mainmenu.cpp for the mechanism): the verdict HOLDS.
+// Titrating this constructor's inline-candidate site count with byte-inert
+// `xx_nop()` calls is monotonically worse - k=1 92.1234, k=2 90.6626, k=3 and
+// k=4 83.9869 - so the split is not reachable from the caller's site count the
+// way the vector<T*>::_Destroy family is. The candidacy axis is closed too:
+// the callee lives in the pinned toolchain's <map>, which this repo does not
+// edit.
 VA(0x004bc0e0, 0x251)  // retail SavedGameHeader constructor and H3SVG literal
 SavedGameHeader::SavedGameHeader()
 {
