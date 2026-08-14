@@ -34,6 +34,19 @@
 // builds this dialog's text out of it in TRecruitWindow::TRecruitWindow
 // and add_creature_widgets, neither of which is reconstructed yet, so
 // its declaration belongs in this TU's include closure regardless.
+//
+// button.h and border.h joined textwdgt.h 2026-08-14, on the same
+// standard and with the same kind of evidence, to buy back the handle
+// position ONE forward declaration in townmgr.h costs (see the +0x1b0
+// note there - the shift is name-independent, and two definitions here
+// absorb it: 0 -> 88.24, 1 -> 88.24, 2 -> 90.84, 3 -> 90.84). The
+// supply is honest by the image's own call edges: TRecruitWindow's
+// constructor 0x54e850, the unreconstructed row in this compiland,
+// calls the `button` constructor three times, `bitmapBorder` five and
+// `coloredBorderFrame` four - alongside the eleven `textWidget`s that
+// justified textwdgt.h.
+#include "button.h"
+#include "border.h"
 #include "resourcedisplay.h"
 #include "textwdgt.h"
 #include "townmgr.h"

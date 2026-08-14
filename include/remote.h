@@ -16,6 +16,11 @@ class sample;
 // the polymorphic class identity.
 class CNetMsgHandler {
 public:
+    // SLOT 0 IS THE DESTRUCTOR, byte-proven 2026-08-14 by
+    // townManager::Close 0x5c71b0: it deletes its CTownNetMsgHandler
+    // through vtable slot 0, so CheckHandleNet cannot live there. The
+    // shift is byte-inert across all 131 units.
+    virtual ~CNetMsgHandler();
     virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
                                     unsigned char* msgReceived);
     virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);
