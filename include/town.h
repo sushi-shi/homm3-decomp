@@ -227,16 +227,36 @@ public:
     char pad_35[0x3];
     int field_38;
     int field_3c;
-#ifdef HOMM3_TOWN_OBJ_DECLS
+#if defined(HOMM3_TOWN_SUMMONING_DECLS)
+    // +0x40. DC `summoningPopulation`, a T_SHORT at its own 56 - the row
+    // straight after `summoningType` at 52, which is retail's field_3c.
+    // Sliced 2026-08-14 for townManager::SetupWell (0x5dd5fa), which
+    // prints the summoning portal's stock with `movsx ecx, word ptr
+    // [town+0x40]`; town::SetSummoningGenerator writes it, as the note
+    // on that declarator already recorded.
+    //
+    // Behind the SUMMONING gate and nested so that every OTHER view of
+    // this class keeps the exact member COUNT it had: initialize.obj is
+    // the tree's documented include-set canary and one extra member
+    // anywhere in town takes initialize_game_data 100.0 -> 96.09.
+    short summoningPopulation;
+#  if defined(HOMM3_TOWN_OBJ_DECLS)
+    char pad_42[2];
+#  else
+    char pad_42[0x82];
+#  endif
+#elif defined(HOMM3_TOWN_OBJ_DECLS)
     char pad_40[0x4];
+#else
+    char pad_40[0x84];
+#endif
+#ifdef HOMM3_TOWN_OBJ_DECLS
     // +0x44, five mage-guild rows of six spell ids. GiveSpells walks
     // rows with a 0x18 stride and pairs them with the signed counts at
     // +0xbc; five rows close exactly at that count band.
     int mageGuildSpells[5][6];
     signed char mageGuildSpellCounts[5];
     char pad_c1[3];
-#else
-    char pad_40[0x84];
 #endif
     // +0xc4..+0xd3 is a Dinkumware vector: the constructor copies an
     // allocator byte into +0xc4 and clears its three pointer words.

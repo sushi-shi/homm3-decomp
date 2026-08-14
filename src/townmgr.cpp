@@ -3390,6 +3390,185 @@ void TCastleWindow::Recruit(int i)
     }
 }
 
+// E:\gamedcs\townmgr.cpp:9067
+// The fort page, filled in one pass. Every line of it is broadcast to the
+// page rather than written through the manager, which is why the window
+// arrives as an argument even though the manager owns the town.
+//
+// The first loop settles which dwelling each of the seven rows SHOWS -
+// the upgrade when the town has built it, the base otherwise - and parks
+// that id in the manager's own column byte, where ::Recruit and the two
+// loops below all read it again. The second fills each row's three text
+// lines; the third copies the row creature's whole traits record onto the
+// stack and prints the six stat columns out of it. The summoning portal
+// is the eighth row, and it is fixed: its codes are exactly the seven-row
+// ones at i == 7 - except the growth column, which the portal has none of.
+//
+// The two `%s %d` lines expand TTextResource::GetText in place (the vector
+// row load `[Text._First + 4*218]`) where ::Recruit next door CALLS the
+// COMDAT copy - /Ob2 budget, not a spelling difference: this body is 1662
+// bytes and gets 2*cb, ::Recruit's 294 gets the 1000 floor.
+//
+// Statement ORDER decides the second loop: the third line's codeY must be
+// assigned BEFORE the row creature is looked up. Written after it - the
+// order that reads naturally - VC6 can no longer reach the saved i+0x21
+// and builds a THIRD induction base for i+0x19, which costs a frame dword
+// and 92.96 against 98.58.
+//
+// Residual (98.6%): 493 instructions against retail's 493, schedule for
+// schedule, and every delta is one three-cycle scratch rotation
+// (ecx->eax x7, edx->ecx x7, eax->edx x6) starting at the growth-rate
+// `movsx`. why-reg finds no candidate mutation; naming the growth rate in
+// a local and naming the summoning creature in a local both measured
+// 98.58 exactly. The five remaining rows are relocation ADDENDS
+// (bitNumber reached at +0x128 / +0xf0), which the scorer does not count.
+VA(0x005dd390, 0x67E)  // anchor-bracket + arity + townManager thiscall, dc 0x17fd08
+void townManager::SetupWell(TCastleWindow* wellWin)
+{
+    message msg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    message textMessage;
+
+    gUnnamed6aa9d8 = 1;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 0;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    wellWin->BroadcastMessage(&msg);
+
+    int i;
+    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
+        if (townToView->active
+            & bitNumber[DWELLING_0_ID + TOWN_DWELLING_COUNT + i])
+            currentDwellingIDOff[i] = i + TOWN_DWELLING_COUNT;
+        else
+            currentDwellingIDOff[i] = i;
+        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.codeY = i + 1;
+        msg.extra = DWELLING_0_ID + currentDwellingIDOff[i];
+        wellWin->BroadcastMessage(&msg);
+    }
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
+        sprintf(gText, GetBuildingName(townToView->type,
+                                       DWELLING_0_ID + currentDwellingIDOff[i]));
+        msg.codeY = i + 9;
+        msg.extraText = gText;
+        wellWin->BroadcastMessage(&msg);
+        if (townToView->active
+            & bitNumber[DWELLING_0_ID + currentDwellingIDOff[i]]) {
+            sprintf(gText, "%s %d", gpGeneralText->GetText(0xda),
+                    townToView->population[currentDwellingIDOff[i]]);
+            msg.codeY = i + 0x21;
+            msg.extraText = gText;
+            wellWin->BroadcastMessage(&msg);
+        }
+        msg.codeY = i + 0x19;
+        TCreatureType rowCreature =
+            gTownDwellingCreatures[townToView->type * TOWN_DWELLING_SLOTS
+                                   + currentDwellingIDOff[i]];
+        const char* creatureName;
+        if (rowCreature >= 0 && rowCreature <= 150)
+            creatureName = akCreatureTypeTraits[rowCreature].m_plural_name;
+        else
+            creatureName = "";
+        strcpy(gText, creatureName);
+        msg.extraText = gText;
+        wellWin->BroadcastMessage(&msg);
+    }
+
+    if (wellWin->use8) {
+        sprintf(gText, "%s %d", gpGeneralText->GetText(0xda),
+                gpTownManager->townToView->summoningPopulation);
+        msg.codeY = 0x28;
+        msg.extraText = gText;
+        wellWin->BroadcastMessage(&msg);
+
+        msg.codeY = 0x20;
+        const char* summonName;
+        if (gpTownManager->townToView->field_3c >= 0
+            && gpTownManager->townToView->field_3c <= 150)
+            summonName =
+                akCreatureTypeTraits[gpTownManager->townToView->field_3c].m_plural_name;
+        else
+            summonName = "";
+        strcpy(gText, summonName);
+        msg.extraText = gText;
+        wellWin->BroadcastMessage(&msg);
+    }
+
+    for (i = 0; i < TOWN_DWELLING_COUNT; i++) {
+        TCreatureTypeTraits monInfo =
+            akCreatureTypeTraits[gTownDwellingCreatures[
+                townToView->type * TOWN_DWELLING_SLOTS
+                + currentDwellingIDOff[i]]];
+        sprintf(gText, "%d", monInfo.attackSkill);
+        textMessage.extraText = gText;
+        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                  i + 0x29, textMessage.extra);
+        sprintf(gText, "%d", monInfo.defenseSkill);
+        textMessage.extraText = gText;
+        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                  i + 0x31, textMessage.extra);
+        sprintf(gText, "%d", monInfo.damageLowBound);
+        if (monInfo.damageLowBound != monInfo.damageHighBound) {
+            char damageText[40];
+            sprintf(damageText, "-%d", monInfo.damageHighBound);
+            strcat(gText, damageText);
+        }
+        textMessage.extraText = gText;
+        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                  i + 0x69, textMessage.extra);
+        sprintf(gText, "%d", monInfo.hitPoints);
+        textMessage.extraText = gText;
+        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                  i + 0x71, textMessage.extra);
+        sprintf(gText, "%d", monInfo.speed);
+        textMessage.extraText = gText;
+        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                  i + 0x79, textMessage.extra);
+        if (townToView->active
+            & bitNumber[DWELLING_0_ID + currentDwellingIDOff[i]]) {
+            sprintf(gText, "%d",
+                    townToView->get_growth_rate(currentDwellingIDOff[i]));
+            textMessage.extraText = gText;
+            wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                      i + 0x81, textMessage.extra);
+        }
+    }
+
+    if (wellWin->use8) {
+        TCreatureTypeTraits monInfo =
+            akCreatureTypeTraits[gpTownManager->townToView->field_3c];
+        sprintf(gText, "%d", monInfo.attackSkill);
+        textMessage.extraText = gText;
+        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x30,
+                                  textMessage.extra);
+        sprintf(gText, "%d", monInfo.defenseSkill);
+        textMessage.extraText = gText;
+        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x38,
+                                  textMessage.extra);
+        sprintf(gText, "%d", monInfo.damageLowBound);
+        if (monInfo.damageLowBound != monInfo.damageHighBound) {
+            char damageText[40];
+            sprintf(damageText, "-%d", monInfo.damageHighBound);
+            strcat(gText, damageText);
+        }
+        textMessage.extraText = gText;
+        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x70,
+                                  textMessage.extra);
+        sprintf(gText, "%d", monInfo.hitPoints);
+        textMessage.extraText = gText;
+        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x78,
+                                  textMessage.extra);
+        sprintf(gText, "%d", monInfo.speed);
+        textMessage.extraText = gText;
+        wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x80,
+                                  textMessage.extra);
+    }
+}
+
 // 0x4baba0 (claimed in src/game.cpp), which has no header declaration of
 // its own; this is the file-local fallback the header discipline allows.
 int GetNumObelisks(int whichPlayer);
