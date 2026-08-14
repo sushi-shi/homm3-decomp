@@ -24,6 +24,7 @@
 #define HOMM3_QUEST_H
 
 #include <string>
+#include <vector>
 #include <va.h>
 // TAbstractFile, the two-slot save/load stream every quest deserializer
 // virtual-calls (slot 1 = Read). This adds NOTHING to seerhut.cpp's include
@@ -54,8 +55,15 @@ public:
     // Slot 1: the AI's valuation of the quest for one player. The base body
     // at 0x4ec560 is a bare `xor eax,eax / ret 4`, so the default is 0.
     virtual int GetAIValue(int player);
-    // Slot 2 of every quest vtable: does this hero satisfy the quest?
-    virtual unsigned char is_satisfied(const hero* current_hero);
+    // Slot 2 of every quest vtable: does this hero satisfy the quest? It
+    // returns a BYTE - the defeat-hero body ends `xor al,al` on its guard
+    // path and the monster body `mov al,dl`. The hero is NOT const: the
+    // artifact and resource leaves call hero::HasArtifact, which is not.
+    virtual unsigned char is_satisfied(hero* current_hero);
+    // Slot 3: take the quest's price off the hero. The base body at
+    // 0x485d80 is a bare `ret 4`; the artifact leaf removes the artifacts
+    // and the resource leaf debits the player's treasury. Provisional name.
+    virtual void TakePayment(hero* current_hero);
     // Slot 8: the quest-type discriminator. Retail's leaf bodies return a
     // bare constant; see the enumeration proof in the file header.
     virtual int quest_type();
@@ -84,18 +92,21 @@ class type_experience_quest : public type_quest {
 public:
     int required_level;  // +0x40
 
-    virtual unsigned char is_satisfied(const hero* current_hero);
+    virtual unsigned char is_satisfied(hero* current_hero);
     virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
     virtual void LoadFromMap(TAbstractFile* file);
 };
 
 // Quest type 2. The payload is four bytes read as one block by both
-// deserializers - the four primary skills, in the h3m order.
+// deserializers - the four primary skills, in the h3m order. They are
+// SIGNED: slot 2 widens each one with `movsx`, exactly as hero::stats is
+// read everywhere else.
 class type_skill_quest : public type_quest {
 public:
-    unsigned char required_skills[4];  // +0x40
+    signed char required_skills[4];  // +0x40
 
+    virtual unsigned char is_satisfied(hero* current_hero);
     virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
     virtual void LoadFromMap(TAbstractFile* file);
@@ -107,7 +118,7 @@ public:
     int defeated_hero;    // +0x44
     int satisfied_mask;   // +0x48, one bit per player
 
-    virtual unsigned char is_satisfied(const hero* current_hero);
+    virtual unsigned char is_satisfied(hero* current_hero);
     virtual int quest_type();
     virtual void NotifyHeroDefeated(int hero_id, int player);
     virtual void Load(TAbstractFile* file, int version);
@@ -120,9 +131,33 @@ public:
     int monster_id;       // +0x48
     int defeated_by;      // +0x4c, -1 until some player kills it
 
-    virtual unsigned char is_satisfied(const hero* current_hero);
+    virtual unsigned char is_satisfied(hero* current_hero);
     virtual int quest_type();
     virtual void Load(TAbstractFile* file, int version);
+};
+
+// Quest type 5: the artifacts the hero must hand over. The vector at +0x40
+// is a real VC6 Dinkumware std::vector - the `_First == 0 ? 0 : _Last -
+// _First` guard its own size() carries is visible in every body that walks
+// it, and _First/_Last sit at +0x44/+0x48, which puts the 16-byte container
+// exactly at the +0x40 payload slot every other leaf uses.
+class type_artifact_quest : public type_quest {
+public:
+    std::vector<TArtifact> artifacts;  // +0x40
+
+    virtual int GetAIValue(int player);
+    virtual unsigned char is_satisfied(hero* current_hero);
+    virtual void TakePayment(hero* current_hero);
+};
+
+// Quest type 6: parallel creature-type and creature-count vectors.
+class type_creature_quest : public type_quest {
+public:
+    std::vector<int> counts;             // +0x40
+    std::vector<TCreatureType> types;    // +0x50
+
+    virtual int GetAIValue(int player);
+    virtual unsigned char is_satisfied(hero* current_hero);
 };
 
 // Quest type 7: seven resource amounts, read as one 0x1c-byte block.
@@ -139,7 +174,7 @@ class type_be_hero_quest : public type_quest {
 public:
     int required_hero;  // +0x40
 
-    virtual unsigned char is_satisfied(const hero* current_hero);
+    virtual unsigned char is_satisfied(hero* current_hero);
     virtual int quest_type();
     virtual void Load(TAbstractFile* file, int version);
     virtual void LoadFromMap(TAbstractFile* file);
@@ -149,7 +184,7 @@ class type_belong_to_player_quest : public type_quest {
 public:
     int required_owner;  // +0x40
 
-    virtual unsigned char is_satisfied(const hero* current_hero);
+    virtual unsigned char is_satisfied(hero* current_hero);
     virtual int quest_type();
     virtual std::string GetRequirementText();
     virtual void Load(TAbstractFile* file, int version);
