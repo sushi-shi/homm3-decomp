@@ -290,9 +290,11 @@ ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000	0.0000	0.0000	0x369c0
 army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
 army	?ComputeDefenderDamageReduction@army@@QAENE@Z	100.0000	100.0000	100.0000	0x43d90
 army	?Damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090
+army	?GetName@army@@SIPBDHJ@Z	100.0000	100.0000	100.0000	0x40100
 army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0
 army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	97.0115	97.0115	97.0115	0x3df20
 army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	97.5194	97.5194	97.5194	0x3e000
+army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720
 army	?enemy_is_adjacent@army@@QAEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0
 army	?get_adjusted_defense@army@@QAEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42590
 army	?get_attack_direction@army@@QAEJJPBV1@@Z	100.0000	100.0000	100.0000	0x458b0
