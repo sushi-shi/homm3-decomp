@@ -736,6 +736,7 @@ public:
                                   type_point point, bool human_player);
     void DoEventWanderingMonster(NewmapCell* cell, class hero* current_hero,
                                  type_point point, bool human_player);
+    void FizzleCenter(int whichSound);
 #endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
