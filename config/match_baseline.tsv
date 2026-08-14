@@ -686,7 +686,7 @@ game	game_get_random_lith	0.0000	0.0000	0.0000	0xcdb80
 game	playerData_add_garrison_hero	0.0000	0.0000	0.0000	0xb9fc0
 game	playerData_load	0.0000	0.0000	0.0000	0xba260
 game	playerData_save	0.0000	0.0000	0.0000	0xba670
-gametypewindow	??0TGameTypeWindow@@QAE@E@Z	93.7258	93.7258	93.7258	0xd54c0
+gametypewindow	??0TGameTypeWindow@@QAE@E@Z	96.7000	96.7000	96.7000	0xd54c0
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860
 gametypewindow	?DoModal@TGameTypeWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xd5910
@@ -1239,7 +1239,7 @@ puzzlewindow	?WindowHandler@TPuzzleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	
 puzzlewindow	?mark_puzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0
 puzzlewindow	AI_attempt_puzzle_guess	0.0000	0.0000	0.0000	0x12c9b0
 questlogwindow	?WindowHandler@TQuestLogWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12e410
-quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	87.8597	87.8597	87.8597	0x12ead0
+quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	90.5272	90.5272	90.5272	0x12ead0
 quickherowindow	??1TQuickHeroWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12f3d0
 quickherowindow	??_GTQuickHeroWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12f3a0
 quickinfowindow	??0TQuickCreatureWindow@@QAE@W4TViewLevel@0@W4TCreatureType@@HW4TDisposition@0@H@Z	92.7916	92.7916	92.7916	0x12f8c0
@@ -1382,7 +1382,7 @@ subwindow	?RestoreBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa
 subwindow	?SaveBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa560
 subwindow	?initialize@TSubWindow@@QAEXHHHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1aa470
 swapmgr	?IsLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380
-systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	88.3182	88.3182	88.3182	0x1b1790
+systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	97.6237	97.6237	97.6237	0x1b1790
 systemoptionswindow	??1TSystemOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3040
 systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b3010
 systemoptionswindow	?DoModal@TSystemOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1b30b0
