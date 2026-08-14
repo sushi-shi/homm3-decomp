@@ -100,7 +100,7 @@ including a divergence this document's first draft got **wrong** (below).
 
 | % | size | kind | row |
 |---|---|---|---|
-| 97.1049 | 961 | COUNT | `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` |
+| ~~97.1049~~ **EXACT** | 961 | COUNT | `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` |
 | 95.7583 | 399 | ORDER | `campaignbrief:??1TCampaignBrief@@UAE@XZ` |
 | 94.3114 | 2260 | COUNT | `bottomviewsubwindow:??0TBottomViewTown` |
 | 90.9329 | 1021 | COUNT | `ai_combat:?choose_melee@type_AI_combat_data` |
@@ -134,7 +134,7 @@ predicts. Three worth naming:
 | `armygrp:?get_luck_description` | 74.7874 | **82.5689** | a whole extra lifetime: a branch-local `std::string` where retail returns the literal into the NRV |
 | `quickherowindow:??0TQuickHeroWindow` | 86.8447 | **90.7834** | an extra reset per if-arm: `push_back(new …)` in each arm, not a shared pointer pushed once |
 | `bottomviewsubwindow:??0TBottomViewTown` | 94.3114 | **95.6295** | a state store that moved: copy-initialize the `std::string`, do not default-construct and assign |
-| `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` | 97.1049 | (99.9352 measured, not landed) | the missing region is one free inline candidate site away |
+| `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` | 97.1049 | **100.0000** | the missing region is one free inline candidate site away — and that site is the post-Dreamcast version gate (below) |
 
 Two of the three landings were **invisible to every other lens**, and that is
 the finding worth keeping:
@@ -203,14 +203,27 @@ with `Widgets.capacity()`-style FREE candidates (cb ≤ 0x28, no bytes emitted):
 
 | row | extra free sites to flip | result |
 |---|---|---|
-| `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` | +1 | 97.1049 → **99.9352** |
+| `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` | +1 | 97.1049 → **100.0000, LANDED** |
 | `bottomviewsubwindow:??0TBottomViewTown` | +2 | 95.6295 → 97.4523 |
 | `armygrp:?get_luck_description` | +4 | 82.5689 → 90.1916 |
 
-**None of it is landed** — padding is a measurement, not a spelling. But the
-deficit is now a measured per-row integer, and "which candidate site does
-retail's source have here that ours does not" is a sharper question than "why
-won't this inline". Note the placement rule from `inliner.md` §5.9 still
+**The first row is landed and EXACT** (2026-08-14); the padding is not what
+landed it. `docs/dc-line-tables.md` is the instrument that answered "which
+candidate site does retail's source have here that ours does not": the
+Dreamcast **line/addr table** attributes every run of DC instructions to a
+source line, and the DC build of a compiland is an OLDER REVISION of the same
+file — so retail's post-DC edits are exactly the code with no DC line of its
+own, and that is where a site retail has and we do not must live. On
+`TViewArmyWindow(int,int,int,unsigned char)` it is the elemental/version gate
+(`dc 0x19148c` line 284 hands `traits->townType` straight to the portrait
+builder — the gate does not exist there), spelled as a call to a free
+predicate. The same table separately showed the three `Influence[i] = -1`
+stores are a counted `for` loop, which VC6 unrolls back into retail's three
+stores and which recovers retail's EDX. 97.1049 → 99.9352 → 100.0000.
+
+The other two rows are still padding-only — a measurement, not a spelling.
+The deficit is a measured per-row integer, and the line table is now the way
+to spend it. Note the placement rule from `inliner.md` §5.9 still
 applies: a site helps only if it is at or after the divergent site in the
 tuple stream, except where the divergent site is at index 0 or in the
 member-initializer prologue, where any site in the body raises the divisor.

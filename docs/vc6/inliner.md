@@ -323,10 +323,22 @@ always counts `call` + tail `jmp`.
     helps there while §5.9's placement rule still binds for divergences
     further down. Whatever the earlier probe appended was not a candidate.
 
-11. **Per-row deficits measured with the same probe (2026-08-14)**, none
-    landed: `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` +1
-    (97.1049 → 99.9352, leaving only an `edx`/`ebx` role swap on the closing
-    `Influence[0..2] = -1`), `bottomviewsubwindow:??0TBottomViewTown` +2
+11. **The `viewarmywindow` +1 is LANDED and the row is EXACT (2026-08-14).**
+    The site the model demanded is real: it is the elemental/version gate the
+    Dreamcast build of that file does not have at all (`dc 0x19148c` line 284
+    hands `traits->townType` straight to the portrait builder), spelled as a
+    call to a free predicate. Every other statement of retail's body has a DC
+    line of its own carrying the same call, so the post-DC edit was the only
+    place left for a candidate site to hide — `docs/dc-line-tables.md` is the
+    instrument. Worth 97.1049 → 99.9352 alone; a second finding off the same
+    table (the three `Influence[i] = -1` stores are a counted `for` loop,
+    which VC6 unrolls back into retail's three stores and which recovers
+    retail's EDX for the −1) took it to 100.0000. **A free candidate site is
+    an instrument, not a fix** — it says the deficit is exactly one; the line
+    table says which statement carries it.
+
+12. **Per-row deficits measured with the same probe (2026-08-14)**, the other
+    two still unlanded: `bottomviewsubwindow:??0TBottomViewTown` +2
     (95.6295 → 97.4523), `armygrp:?get_luck_description` +4
     (82.5689 → 90.1916). Every one of them is the same direction — **our
     reconstruction lets the allowance run one level deeper than retail's**
