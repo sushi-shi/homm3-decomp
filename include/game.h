@@ -114,7 +114,13 @@ SIZE(BlackBoxData, 0xe4);
 class NewfullMap {
 public:
 #ifdef HOMM3_EVENTS_VIEW
-    char pad_000[0x30];
+    // advManager::EraseObj indexes objects with a TWELVE-byte stride out of
+    // +0x14 and objectTypes with a SIXTY-EIGHT-byte one out of +0x04, which
+    // is sizeof(CObject) and sizeof(CObjectType) exactly; the three vectors
+    // fill the same 0x30 the pad did.
+    std::vector<CObjectType> objectTypes;      // +0x00, first at +0x04
+    std::vector<CObject> objects;              // +0x10, first at +0x14
+    std::vector<CSprite*> sprites;             // +0x20
     std::vector<TreasureData> customTreasure; // +0x30, first at +0x34
     // +0x40, first at +0x44. DoWanderingMonsterResult indexes it with the
     // cell's eight-bit custom-record field and a 48-byte stride, which is
@@ -160,11 +166,12 @@ public:
     int Size;
     unsigned char HasTwoLevels;
 
-#ifdef HOMM3_GAME_OBJ_DECLS
+#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW)
     // Header inline in the original map class. InsertObject expands this
-    // three-dimensional row-major lookup; other compilation personalities
-    // retain the out-of-line declaration until their own call sites prove
-    // that expansion.
+    // three-dimensional row-major lookup, and so does advManager::EraseObj
+    // - `(z*Size + y)*Size + x` then a *38 stride, all in line; other
+    // compilation personalities retain the out-of-line declaration until
+    // their own call sites prove that expansion.
     NewmapCell* cell(int x, int y, int z)
     {
         return &cellData[(z * Size + y) * Size + x];
@@ -202,7 +209,13 @@ public:
     int readSignData(TAbstractFile* infile, CObject* object);
     int loadTreasureList(TAbstractFile* infile);
     void calc_cell_extra(NewmapCell* cell, unsigned char setExtraInfo);
+#endif
+#if defined(HOMM3_MAPCELL_OBJECTS_VIEW) || defined(HOMM3_EVENTS_VIEW)
+    // 0x505a10. advManager::EraseObj re-derives every touched cell's extra
+    // info through it once the object's entry has been spliced out.
     void CalculateCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
+#endif
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     // Retail-only helper at 0x505f20. Its behavior selects or appends the
     // matching object-type/sprite pair and writes the resulting type index.
     // No surviving symbol names it, so the address-bearing spelling remains
@@ -1089,6 +1102,18 @@ public:
     void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
     void ClaimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
     void record_claim_mine(long id, long new_owner);          // 0x49bf90
+#ifdef HOMM3_EVENTS_VIEW
+    // event_record.cpp:1061 in the DC roster (dc 0x8e0b8). advManager::
+    // EraseObj is its caller and pins the retail row: a 0x18-byte record
+    // built with `new`, two vtable stores and the cell's +0x00/+0x22/+0x24
+    // copied into it, reached with the cell and the point on the stack.
+    void record_erase_object(NewmapCell* cell, type_point point); // 0x49c390
+    // Retail-only 0x4ca410, an ordinal placeholder. A no-argument sweep of
+    // the whole map (it reads gMapWidth/gMapHeight and the level count at
+    // +0x1fc48) that advManager::EraseObj runs once the object is gone.
+    // No surviving symbol names it; the row is not claimed here.
+    void GameFn_004CA410();
+#endif
     void record_show_boat(boat* current_boat, type_point point); // 0x49c900
     void SetVisibility(int startX, int startY, int z,
                        int whichPlayer, int range,

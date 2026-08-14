@@ -10,6 +10,15 @@ enum eRS_Messages {
     RS_CLAIM_GARRISON = 0x41f,
     RS_CLAIM_SHIPYARD = 0x420,
     RS_BUILD_BOAT = 0x421,
+    // GATED, and it has to be. An ENUMERATOR on an existing enum is
+    // usually free - two of them went onto winmgr.h's EDialogReturnType
+    // across 41 consumers without moving a byte - but this one is not:
+    // ungated it takes recruit.obj's recruitUnit::Update 90.84 -> 88.24,
+    // the include-set sensitivity class reaching a TU that never mentions
+    // the value. Measured both ways 2026-08-14.
+#ifdef HOMM3_EVENTS_VIEW
+    RS_ERASE_OBJECT = 0x422,
+#endif
     RS_TELEPORT_HERO = 0x424,
     RS_HIDE_HERO = 0x426
 };
@@ -118,6 +127,24 @@ public:
         : CMapChange(RS_BUILD_BOAT, sizeof(CMCBuildBoat)),
           point(location), playerPos(player) {}
 };
+
+#ifdef HOMM3_EVENTS_VIEW
+// Dreamcast CodeView names the class, its single `m_point` member at +0x14
+// and the netmsg.h:662 constructor that takes the point BY VALUE.
+// advManager::EraseObj (0x4aabb0) builds it on the stack and hands it
+// straight to SendMapChange, which fixes the 0x18 extent and the 0x422
+// subtype - the value that sits between RS_BUILD_BOAT and RS_TELEPORT_HERO
+// in the same ladder.
+class CMCEraseObject : public CMapChange {
+public:
+    type_point m_point;
+
+    CMCEraseObject(type_point location)
+        : CMapChange(RS_ERASE_OBJECT, sizeof(CMCEraseObject)),
+          m_point(location) {}
+};
+SIZE(CMCEraseObject, 0x18);
+#endif
 
 #ifdef HOMM3_HERO_OBJ_DECLS
 class CMCTeleportHero : public CMapChange {

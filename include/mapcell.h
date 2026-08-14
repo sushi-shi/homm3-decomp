@@ -5,7 +5,7 @@
 #ifndef HOMM3_MAPCELL_H
 #define HOMM3_MAPCELL_H
 
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+#if defined(HOMM3_MAPCELL_OBJECTS_VIEW) || defined(HOMM3_EVENTS_VIEW)
 #include <vector>
 #endif
 
@@ -357,11 +357,17 @@ public:
     unsigned short is_trigger : 1;
     unsigned short flags_13_15 : 3;
 #endif
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+#if defined(HOMM3_MAPCELL_OBJECTS_VIEW) || defined(HOMM3_EVENTS_VIEW)
     // Retail mapcell.obj constructs and destroys a Dinkumware vector here.
     // Its empty allocator occupies +0x0e..+0x11 and its first/last/end
     // pointers are the three dwords at +0x12/+0x16/+0x1a. The four-byte
     // element stride is independently proven by the object renderers.
+    //
+    // events.obj joins the view for advManager::EraseObj (0x4aabb0), which
+    // walks this vector element by element looking for the object it is
+    // erasing and then splices it out - `_First` at +0x12, `_Last` at
+    // +0x16, a four-byte stride and the SIXTEEN-BIT objectIndex compare are
+    // all in that one body.
     struct TObjectCell {
         unsigned short objectIndex;
         unsigned char offsets;

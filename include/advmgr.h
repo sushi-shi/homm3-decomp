@@ -842,6 +842,10 @@ public:
                        type_point point, unsigned char human_player);
     void EventSound(int eventID, int extraInfo);
     void FizzleCenter(int whichSound);
+    // 0x4183d0, claimed (still @stub) in advmgr.cpp; the Dreamcast roster
+    // gives the pair (advmgr.cpp:9785, dc 0x1b164). EraseObj is the caller
+    // that needs the declarator here.
+    void SetEnvironmentOrigin(type_point point, int reset);
 #endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
