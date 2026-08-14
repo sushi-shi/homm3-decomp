@@ -470,7 +470,7 @@ combatoptionswindow	??1TCombatOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0
 combatoptionswindow	??_GTCombatOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6f6d0
 combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	83.3598	83.3598	83.3598	0x6f7b0
 combatoptionswindow	?DoModal@TCombatOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6f780
-combatresultswindow	??0TCombatResultsWindow@@QAE@PBVhero@@0HHEH@Z	92.7799	92.7799	92.7799	0x702d0
+combatresultswindow	??0TCombatResultsWindow@@QAE@PBVhero@@0HHEH@Z	96.2269	96.2269	96.2269	0x702d0
 combatresultswindow	??1TCombatResultsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x71a70
 combatresultswindow	??_GTCombatResultsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x71a40
 combatresultswindow	?Close@TCombatResultsWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x71b50

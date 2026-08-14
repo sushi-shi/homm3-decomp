@@ -63,38 +63,52 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 // vector organically, which is why several vector<widget*>::insert
 // expansions sit inline in the body while the rest stay out of line.
 //
-// Residual (92.77%): register-homing plus one /Ob2 step. Every widget,
-// literal, id, coordinate, text index and branch shape below is retail's;
-// what differs is WHERE values live. Retail's frame carries eight scalar
-// temps (`sub esp, 0x1cc`) and ours nine (0x1d0), because VC6 gives our loss
-// run's `rowX - 5` its own induction variable where retail recomputes it as
-// `add ecx,-5` in the loop; that one extra slot cascades into the esi/edi
-// and [ebp-]/[ebp+] swaps that make up most of the delta, and into a
-// rotated-vs-guarded shape for the loss emit loop. The same extra budget
-// makes our TU INLINE `vector<int>::size()` inside the second set_hotkey
-// expansion where retail still CALLS it - the /Ob2 budget cutting the other
-// way (clamp(2*caller_cb,...) is larger for a larger caller). Tried and
-// rejected: naming the loop temps (`int creature`/`int value` in the
-// strongest-stack walks) - that spilled BOTH the running maximum and the
-// live count and cost 0.7%; `my_side ? defender : attacker` for the
-// narrated hero - inverts the branch (0.16%). Not tried, and the only
-// remaining lead: shaving one scalar temp so the frame is 0x1cc, which is
-// what the /Ob2 budget and the whole homing pattern hang off.
+// Residual (96.2%): register homing only, and the extra frame temp that
+// drove most of it is GONE. Every widget, literal, id, coordinate, text
+// index and branch shape below is retail's; what differs now is only WHERE
+// a handful of values live.
 //
-// 2026-08-14, from the two ctors closed in this family: the /Ob2 direction
-// here is REDUCE front-end statement mass (the over-inline of size() says
-// our caller_cb exceeds retail's), which is the opposite of
-// systemoptionswindow's starved ctor and the same direction that took
-// TCombatOptionsWindow's ctor 77.12 -> 98.47. The lever that worked there
-// was extracting real Dreamcast-attested helper members - this compiland's
-// DC roster has none, so the mass has to come off some other way. The other
-// lever that worked there, choosing retail's LOOP VARIABLE (retail's inner
-// loss loop homes `row`, `rowX` and `shown` and tests `row < shown`, which
-// this body already spells), does NOT apply: retail's third value is absent
-// because it had no free register, not because it spelled the subtraction
-// differently. Retail also recycles DEAD PARAMETER SLOTS ([ebp+0x14] for
-// `row`, [ebp+0x1c] for `rowX`) - the `[ebp-]/[ebp+]` swap above is that,
-// and it follows the frame size rather than leading it.
+// Three source facts closed 92.77% -> 96.23%, all of them the same lesson -
+// VC6's induction-variable machinery reads the SPELLING, not the value:
+//
+//   1. The loss run's `rowX` must be DERIVED from the loop counter, not
+//      loop-carried. `rowX += 42` at the bottom of the body makes rowX a
+//      BASIC induction variable, and `rowX - 5` is then a first-level
+//      derived IV, which VC6 strength-reduces into a slot of its own - the
+//      ninth scalar temp, `sub esp,0x1d0` against retail's 0x1cc, and the
+//      whole [ebp-]/[ebp+] cascade under it. Writing `int rowX = rowLeft +
+//      42 * row` inside the body makes rowX itself the derived IV, VC6 does
+//      not chain a second level, and `rowX - 5` comes back as retail's `add
+//      ecx,-5`. Frame exact. (+3.2%)
+//   2. Binding the strongest-stack walks' record to a reference
+//      (`army& stack = gpCombatManager->armies[side][slot]`) instead of
+//      respelling the subscript at each field. (+0.1%)
+//   3. Reading monInfoAIValue ONCE into a local. VC6 biases the walk's
+//      strength-reduced pointer to ONE of the accessed fields, and with the
+//      value read twice it biased to monInfoAIValue (+0xb4 in the record,
+//      `lea ecx,[gpCombatManager+0x5580]` and a negative displacement for
+//      creatureType); with creatureType the more-referenced field it biases
+//      to creatureType instead, which is retail's +0x5500 base. (+0.1%)
+//
+// Note this SUPERSEDES the earlier reading that retail's third loss-loop
+// value was absent "because it had no free register, not because it spelled
+// the subtraction differently". It was the spelling.
+//
+// What is left: a frame-slot permutation ([ebp-0x10]/[ebp-0x18] and
+// [ebp+0xc]/[ebp+0x10] swapped against retail), the first text[100] buffer
+// sitting 0x34 higher than retail's [ebp-0xcc], and the last two organic
+// vector<widget*>::insert expansions scheduling their capacity arithmetic
+// differently. Retail recycles DEAD PARAMETER SLOTS ([ebp+0x14] for `row`,
+// [ebp+0x1c] for `rowX`), so the [ebp-]/[ebp+] choice follows the frame
+// rather than causing it. Tried and rejected: `row++, rowX += 42` in the
+// for-increment clause (92.77%, keeps the basic IV); naming `int creature`
+// in the loss aggregation walk (spills the running maximum, -0.7%);
+// `my_side ? defender : attacker` for the narrated hero (inverts the
+// branch, -0.16%).
+//
+// The compiland's DC roster carries no helper members beyond the six
+// already landed, re-checked 2026-08-14: no HighlightX-style extraction is
+// available here.
 VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
 TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     const hero* defender, int my_side, int winning_side,
@@ -137,13 +151,15 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         int bestSlot = 0;
         int liveStacks = 0;
         for (int slot = 0; slot < 20; slot++) {
-            if (gpCombatManager->armies[0][slot].creatureType == -1)
+            army& stack = gpCombatManager->armies[0][slot];
+            if (stack.creatureType == -1)
                 continue;
-            if (gpCombatManager->armies[0][slot].creatureType == CREATURE_ARROW_TOWER)
+            if (stack.creatureType == CREATURE_ARROW_TOWER)
                 continue;
             liveStacks++;
-            if (gpCombatManager->armies[0][slot].monInfoAIValue > bestValue) {
-                bestValue = gpCombatManager->armies[0][slot].monInfoAIValue;
+            int value = stack.monInfoAIValue;
+            if (value > bestValue) {
+                bestValue = value;
                 bestSlot = slot;
             }
         }
@@ -176,13 +192,15 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         int bestSlot = 0;
         int liveStacks = 0;
         for (int slot = 0; slot < 20; slot++) {
-            if (gpCombatManager->armies[1][slot].creatureType == -1)
+            army& stack = gpCombatManager->armies[1][slot];
+            if (stack.creatureType == -1)
                 continue;
-            if (gpCombatManager->armies[1][slot].creatureType == CREATURE_ARROW_TOWER)
+            if (stack.creatureType == CREATURE_ARROW_TOWER)
                 continue;
             liveStacks++;
-            if (gpCombatManager->armies[1][slot].monInfoAIValue > bestValue) {
-                bestValue = gpCombatManager->armies[1][slot].monInfoAIValue;
+            int value = stack.monInfoAIValue;
+            if (value > bestValue) {
+                bestValue = value;
                 bestSlot = slot;
             }
         }
@@ -323,8 +341,9 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
                 42, rowY + 10, 384, 36, gpGeneralText->GetText(32),
                 "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
         int shown = _cpp_min(lossRows[lossSide], 7);
-        int rowX = (468 - 42 * shown) / 2 + 11;
+        int rowLeft = (468 - 42 * shown) / 2 + 11;
         for (int row = 0; row < shown; row++) {
+            int rowX = rowLeft + 42 * row;
             Widgets.push_back(new iconWidget(
                 rowX, rowY, 32, 32, BACKGROUND_ID, "cprsmall.def",
                 lossCreature[lossSide][row] + 2, 0, 0, 0, 0x10));
@@ -332,7 +351,6 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             Widgets.push_back(new textWidget(
                 rowX - 5, rowY + 38, 32, 32, text, "smalfont.fnt",
                 font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
-            rowX += 42;
         }
     }
 
