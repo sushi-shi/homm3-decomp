@@ -967,7 +967,7 @@ unsigned char army::can_cast_resurrect(long hex)
 
 // E:\gamedcs\army.cpp:5359
 // RETAIL_LOCATED(0x004476c0, 0x3BA)  // anchor-global, dc 0x4beec
-unsigned char army::can_cast_spell(long hex)
+unsigned char army::can_cast_spell(long hex) const
 {
     // @stub
 }

@@ -195,8 +195,19 @@ struct type_AI_spellcaster {
     // that fits, so the name is provisional.
     type_AI_enemy_data worst_enemies[20];  // +0x2d0
 
+    // dc 0x3d604 (ai_tactical.cpp:793). ai.cpp's choose_creature_spell
+    // (0x420d20) builds one on the stack with exactly (this, side, 1)
+    // and the 0x420 frame the 0x410 operator-new size predicts.
+    type_AI_spellcaster(combatManager* combat, long side,
+                        unsigned char creature_spell);
     virtual ~type_AI_spellcaster();
 
+    // 0x43c330 / 0x43c4a0. choose_creature_spell dispatches to them on
+    // creatureType - 0x5b (Dragon Fly) to the first, 0x25 (Master Genie)
+    // to the second - which is the pairing that settled the 0x420d20 /
+    // 0x420f00 twin question in the first place.
+    long get_ogre_mage_value(const army* target);
+    long get_caliph_value(const army* target);
     long get_damage_value(SpellID spell, long base_damage,
                           const hero* target_hero, const army* target);
     long get_damage_spell_value(const army* enemy, type_enchant_data caster);

@@ -127,6 +127,7 @@ ai	?IsIncapacitated@army@@QAEEXZ	100.0000	100.0000	100.0000	0x1f380
 ai	?attempt_shooter_defense@combatManager@@QAEEPBVarmy@@PAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20760
 ai	?berserk_attack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000	100.0000	100.0000	0x222c0
 ai	?can_cast_spells@combatManager@@QAEEJE@Z	100.0000	100.0000	100.0000	0x1f890
+ai	?choose_creature_spell@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	95.8926	95.8926	95.8926	0x20d20
 ai	?choose_cyclops_action@combatManager@@QAEEJJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1eea0
 ai	?choose_defense_hex@combatManager@@QAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	99.0992	99.0992	99.0992	0x205d0
 ai	?choose_melee_action@combatManager@@QAEJPBVarmy@@EEJ@Z	100.0000	100.0000	100.0000	0x21f80
@@ -149,7 +150,6 @@ ai	?mark_multiheaded_enemy@combatManager@@QAEXPBVarmy@@0PAJJPAVsearchArray@@PAUt
 ai	?move_toward@combatManager@@QAEEPBVarmy@@JPBJE@Z	100.0000	100.0000	100.0000	0x1f580
 ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	82.4884	82.4884	82.4884	0x22060
 ai	?should_stay_in_castle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x213f0
-ai	combatManager_choose_creature_spell	0.0000	0.0000	0.0000	0x20d20
 ai	combatManager_choose_melee_target	0.0000	0.0000	0.0000	0x21680
 ai	combatManager_has_ranged_advantage	0.0000	0.0000	0.0000	0x20a80
 ai_combat	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x23ee0

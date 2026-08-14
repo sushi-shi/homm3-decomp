@@ -463,7 +463,7 @@ public:
     // 0x4473d0 / 0x4476c0, carcasses in army.cpp; declared here because
     // combatManager::GetCommand (command.obj) is a caller of both.
     unsigned char can_cast_resurrect(long hex);
-    unsigned char can_cast_spell(long hex);
+    unsigned char can_cast_spell(long hex) const;
     long get_loss_combat_value(long lowest_attack, long lowest_defense,
                                unsigned char ranged, long damage,
                                unsigned char kills_only) const; // 0x442fd0
