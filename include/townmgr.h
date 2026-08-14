@@ -34,12 +34,60 @@ enum EThievesGuildStat {
 #include "advmgr_popup.h"
 
 class armyGroup;
+class Bitmap816;
+class border;
+class CSprite;
 class garrison;
 class hero;
 class iconWidget;
 class textWidget;
 class town;
 class TResourceDisplay;
+
+// IDENTIFIED 2026-08-14: the .bss cell recruit.h models as
+// SUnnamed6aacb0 is the game's 16-bit SYSTEM PALETTE. CycleOutline
+// walks the band data[128..134] out of it with an induction variable,
+// and the offset VC6 strength-reduces that walk to - 0x11c stepping by
+// 2 to 0x12a, `mov cx,[eax+edx]` with the pointer RELOADED every
+// iteration - is exactly TPalette16's resource head (0x1c) plus 2*i,
+// which places that struct's backColors[31] at data[0..30]. The array
+// view is declared HERE, under this file's narrowest gate, rather than
+// beside the struct in recruit.h: an extern added there moved
+// recruitUnit::Update 90.84 -> 88.24 (the include-set wall), and this
+// page is its only consumer.
+class TPalette16;
+extern TPalette16* gSystemPalette;  // retail .bss 0x6aacb0
+
+// One drawable object of the town panorama - a building, its outline
+// and its hotspot - forty-four slots of them on the manager at +0x5c.
+// The Dreamcast fieldlist names the members and retail confirms every
+// offset in it, with NO shift (unlike townManager itself): Draw
+// 0x5c2ff0 reads currFrame@4, x@8, y@0xc, visible@0x18, objId@0x1c and
+// objIcon@0x20; CycleOutline 0x5d6910 reads objId and objOutline@0x24;
+// and UnloadTown unhooks objBorder@0x2c from the town window before
+// freeing the object. Forty-eight bytes, no vtable - the destructor the
+// manager runs is inlined, which is why no vptr store exists.
+class townObject {
+public:
+    int numFrames;          // +0x00
+    int currFrame;          // +0x04
+    int x;                  // +0x08
+    int y;                  // +0x0c
+    int w;                  // +0x10
+    int h;                  // +0x14
+    int visible;            // +0x18
+    int objId;              // +0x1c
+    CSprite* objIcon;       // +0x20
+    Bitmap816* objOutline;  // +0x24
+    Bitmap816* objHotspot;  // +0x28
+    border* objBorder;      // +0x2c
+
+    // Retail 0x5c2ff0 (dc 0x16a2b0), not reconstructed. Declared for
+    // CycleOutline, whose two expansions of the town-redraw block are
+    // the arity evidence: thiscall plus two pushed 1s.
+    void Draw(int incFrame, unsigned char drawHotspots);
+};
+SIZE(townObject, 0x30);
 
 // The compiland's dialog family. Every one of these classes is fixed by
 // a vtable of its own, each the slot-0 owner of one 33-byte scalar
@@ -401,6 +449,10 @@ public:
     // `bQuickView` shows the panel read-only through DoQuickView instead
     // of running the dialog, and makes the result unconditionally 0.
     int BuyBuild(int buildingId, int infoOnly, int bQuickView);
+    // Retail 0x5d6910. Cycles one town object's outline palette entry
+    // through the system palette's 128..134 band, repainting the page
+    // and flushing `x,y,w,h` between steps.
+    void CycleOutline(int objectIndex, int x, int y, int w, int h);
     virtual int Open(int newPriority) OVERRIDE;   // slot 0, 0x5c63c0
     virtual void Close() OVERRIDE;                // slot 1, 0x5c71b0
     virtual int Main(message& msg) OVERRIDE;      // slot 2, 0x5d3240
