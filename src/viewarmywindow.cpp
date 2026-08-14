@@ -880,6 +880,40 @@ void TViewArmyWindow::create_speed_widget(int normal_speed,
 #if 0  // @carcass
 
 // E:\gamedcs\viewarmywindow.cpp:837 - retail 0x5f65b0, 693 B
+//
+// LOCATED and fully decoded 2026-08-14, but BLOCKED on army's layout, so
+// left a carcass deliberately. The body shows the last NSPELLS entries of
+// the stack's active-spell list, newest last:
+//
+//   for (unsigned i = _cpp_max(0, this_army->activeSpellCount - NSPELLS);
+//        i < this_army->activeSpellCount; i++) {
+//       Influence[k] = *(this_army->activeSpells.begin() + i);
+//       Duration[k]  = this_army->spellDuration[Influence[k]];
+//       Widgets.push_back(new iconWidget(x, 186, 48, 36,
+//           AFFECTING_SPELLS_0_ID + (i - first), "SpellInt.def",
+//           Influence[k] + 1, 0, 0, 0, 0x10));
+//       k++;
+//   }
+//
+// with the widget id folded as `(0xdd - first) + i` and the frame as the
+// spell id plus one. Three army members it needs are NOT modelled, and all
+// three sit inside army.h's single `char pad_2c4[0x190]`:
+//   * +0x198, the 81-dword spellInfluence/duration row. army.h already
+//     names two entries of it piecemeal (fireShieldRounds +0x20c,
+//     magicMirrorRounds +0x228 - "SPELL_MAGIC_MIRROR's entry in the
+//     81-dword spellInfluence row"), so this is a re-slice of named
+//     fields, not an additive edit.
+//   * +0x418, a Dinkumware std::deque<SpellID>. Retail copies its _First
+//     ITERATOR (the 16 bytes at +0x424, {_First,_Last,_Next,_Map}) onto
+//     the frame and CALLS _Deque_iterator::operator+= at 0x4491c0 - whose
+//     0x400-element / 0x1000-byte map arithmetic is what identifies both
+//     the container and the 4-byte element.
+//   * +0x44c, the element count the loop bound and the max() read.
+// Giving army a real std::deque member pulls <deque> into army.h, which
+// is included tree-wide - the same include-set exposure that took
+// initialize_game_data from 100.00 to 96.09 in this lane over ONE added
+// declaration. army.obj is also an external worker's, so the re-slice
+// belongs to whoever owns that layout, not to this file.
 DC_ONLY(0x192900, 0x128)
 void TViewArmyWindow::create_spell_influence_widgets(const army* this_army)
 {
@@ -912,11 +946,22 @@ void TViewArmyWindow::create_ok_widget()
 
 // The adjacent no-argument action helpers are distinguished by their unique
 // IDs, button sprites and hotkeys; both share the 46x32 backing border.
-// Residual (both 88.11441%): retail retains a Dinkumware pointer-destruction
-// call and inlines vector::size in the second push_back; this CL does the
-// inverse (14 branches/2 returns versus retail 15/3). Tried and rejected:
-// explicit insert(end(), 1, value) (78.31356%, 19 branches) and an explicit
-// derived-to-base pointer conversion (byte-identical).
+// Residual (both 88.11441%): 14 branches/2 returns against retail's 15/3,
+// and the two divergences are ONE decision, refined 2026-08-14. Inside the
+// second push_back's grow path Dinkumware's insert reaches _Destroy(first,
+// last) and then size(). Retail REJECTS _Destroy (it calls it) and still
+// has budget for size() (it inlines it); our CL ACCEPTS _Destroy - for
+// widget* the loop is empty, so the expansion vanishes entirely - is
+// charged for it, and then has nothing left for size(), which becomes a
+// call. So this is not two independent items but a single /Ob2 budget
+// crossing at the _Destroy site, and our budget is the LARGER one. The
+// sibling evidence agrees on the mechanism: create_damage_widget emits the
+// _Destroy CALL exactly as retail does, and create_ok_widget - the same
+// recipe with one more call site (a second set_hotkey), i.e. a smaller
+// nested budget after the divide-by-sites-remaining - reaches 98.66 where
+// these two stop at 88.11. A7, the OPEN calibration class. Tried and
+// rejected: explicit insert(end(), 1, value) (78.31356%, 19 branches) and
+// an explicit derived-to-base pointer conversion (byte-identical).
 VA(0x005f6ae0, 0x265)  // ctor call set + literals + arity, dc 0x192ad8
 void TViewArmyWindow::create_upgrade_widget()
 {
