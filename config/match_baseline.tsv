@@ -1302,6 +1302,9 @@ scenarioinfo	?UpdateAllyEnemyFlags@CScenarioInfoDlg@@QAEXXZ	100.0000	100.0000	10
 search	?BuildPath@searchArray@@QAEHPBVhero@@J@Z	86.3333	86.3333	86.3333	0x16a0d0
 seerhut	??0TSeerHut@@QAE@XZ	100.0000	100.0000	100.0000	0x173580
 seerhut	?GetAIValue@type_resource_quest@@UAEHH@Z	100.0000	100.0000	100.0000	0x171560
+seerhut	?GetRequirementText@type_belong_to_player_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x172650
+seerhut	?GetRequirementText@type_experience_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	100.0000	100.0000	100.0000	0x16d3e0
+seerhut	?GetRequirementText@type_skill_quest@@UAE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@XZ	95.6667	95.6667	95.6667	0x16d960
 seerhut	?Load@type_be_hero_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x172200
 seerhut	?Load@type_belong_to_player_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x172820
 seerhut	?Load@type_defeat_hero_quest@@UAEXPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0x16e580

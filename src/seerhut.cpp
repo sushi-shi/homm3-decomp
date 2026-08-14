@@ -209,6 +209,24 @@ TSeerHut* std::__copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __
 // from a header - seerhut.cpp is its only consumer in this tree.
 int AI_resource_cost(int player, const int* costs);
 
+// misc.obj's variadic string formatter, 0x50c600 - misc.h declares it, but
+// seerhut.cpp needs exactly this one symbol out of that header and the
+// include-set residual class makes a one-line declaration the cheaper edge.
+std::string format_string(const char* format, ...);
+
+// seerhut.obj's own primary-skill text builder, 0x56dfa0: it takes the four
+// skill bytes and returns their description. Unclaimed - the call form (both
+// the hidden return pointer and the argument on the stack) is what proves it
+// is not the /Gr fastcall default.
+std::string __stdcall skill_requirement_text(const unsigned char (&skills)[4]);
+
+VA(0x0056d3e0, 0x2A)  // anchor-vtable 0x641788 slot 6, retail-only
+std::string type_experience_quest::GetRequirementText()
+{
+    return format_string(DATA_COMPGEN(0x00660a1c, decimalFormat, "%d"),
+                         required_level);
+}
+
 VA(0x0056d490, 0x1A)  // anchor-vtable 0x641788 slot 2, retail-only
 unsigned char type_experience_quest::is_satisfied(const hero* current_hero)
 {
@@ -223,6 +241,20 @@ void type_experience_quest::Load(TAbstractFile* file, int version)
     file->Read(&level, sizeof(level));
     required_level = level;
     type_quest::Load(file, version);
+}
+
+// Residual (95.67%): retail spells the argument address `lea eax,[ecx+0x40]`
+// and keeps `this` in ecx; our CL takes the same three bytes as
+// `add ecx,0x40` and pushes ecx. `homm3 vc6 diagnose` reads it as a
+// scratch-register preference at register-distance 4, flow-distance 0 (its
+// predict-inline UNDER/OVER pair is the name-pairing artefact - the callee is
+// unclaimed). Tried and rejected: `const unsigned char*` parameter, a named
+// `const unsigned char* skills` local, and a `const unsigned char (&)[4]`
+// reference parameter - all three give the same `add`.
+VA(0x0056d960, 0x22)  // anchor-vtable 0x6417c4 slot 6, retail-only
+std::string type_skill_quest::GetRequirementText()
+{
+    return skill_requirement_text(required_skills);
 }
 
 VA(0x0056de60, 0x29)  // anchor-vtable 0x6417c4 slot 11, retail-only
@@ -295,6 +327,28 @@ unsigned char type_monster_quest::is_satisfied(const hero* current_hero)
         return 0;
     return owner == defeated_by;
 }
+
+// DECODED BUT NOT CLAIMED - type_monster_quest's slot-10 override, 0x56ed40,
+// 0x45 bytes. The body is unambiguous:
+//
+//     if (defeated_by >= 0) return;
+//     if (position.x != where.x) return;
+//     if (position.y != where.y) return;
+//     if (position.z != where.z) return;
+//     defeated_by = player;
+//
+// with TQuestPosition exactly as quest.h models it. The wall is a branch
+// COUNT: retail keeps four conditional branches, our CL fuses the y and z
+// tests into one `test eax,0x3fff` because their masks are adjacent in the
+// same word, giving three. Measured at 72.61% and unmoved by four spellings
+// - one `&&` chain, four separate early-return `if`s, named-padding
+// bitfields, unnamed-padding bitfields, and explicit
+// `(unsigned short)((a ^ b) & mask) != 0` casts over a plain two-short
+// struct. Retail's form materialises each mask (`and eax,0x3ff / test ax,ax`)
+// where ours tests the immediate directly, in the FIRST comparison too,
+// where nothing is reused - so this is the merged-return / stale-CL-
+// generation residual class, not a source-shape miss. Left unclaimed rather
+// than land a 72.61% row.
 
 VA(0x0056ed90, 0x51)  // anchor-vtable 0x64183c slot 11, retail-only
 void type_monster_quest::Load(TAbstractFile* file, int version)
@@ -388,6 +442,12 @@ VA(0x005724f0, 0x1A)  // anchor-vtable 0x641968 slot 2, retail-only
 unsigned char type_belong_to_player_quest::is_satisfied(const hero* current_hero)
 {
     return current_hero->owner == required_owner;
+}
+
+VA(0x00572650, 0x20)  // anchor-vtable 0x641968 slot 6, retail-only
+std::string type_belong_to_player_quest::GetRequirementText()
+{
+    return std::string();
 }
 
 VA(0x00572810, 0x06)  // anchor-vtable 0x641968 slot 8, retail-only
