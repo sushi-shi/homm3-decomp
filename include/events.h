@@ -16,6 +16,23 @@
 // water wheel 164/165, watering hole 166/167, whirlpool 168, windmill
 // 169/170, witch hut 171..173.
 enum EAdventureEventText {
+    // The wandering-stack outcome handlers, and the run is contiguous
+    // because "monster" is a single alphabetical entry: 86 is the join
+    // offer monsters_join (0x4a7000) asks with iMBType 2, 91 the
+    // surrender line monsters_flee (0x4a6df0) asks the same way, and
+    // both are sprintf formats taking the creature name alone. 87 is
+    // SHARED by monsters_join and monsters_sell_out - the line either
+    // refusal shows when the stack wanted to fight anyway. 88..90 are
+    // monsters_sell_out's (0x4a7250) prompt, split by count: 88 is the
+    // single-creature form taking (name, gold), while for a real stack
+    // 89 is strcpy'd whole and 90 - taking (count, name, gold) - is
+    // formatted into a 300-byte local and strcat'd onto it.
+    ADV_EVENT_TEXT_MONSTERS_JOIN = 86,
+    ADV_EVENT_TEXT_MONSTERS_INSULTED = 87,
+    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_ONE = 88,
+    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_LEAD = 89,
+    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_MANY = 90,
+    ADV_EVENT_TEXT_MONSTERS_FLEE = 91,
     // DoEventWarSchool (0x4a7a40). 158 is the two-picture choice offered
     // with iMBType 10 (+1 Attack against +1 Defense), 159 the
     // already-trained line and 160 the "under 1000 gold" refusal.

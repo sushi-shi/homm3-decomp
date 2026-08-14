@@ -27,6 +27,16 @@ enum EDialogReturnType {
     DIALOG_RETURN_OK = 0x7802,
     DIALOG_RETURN_SPLIT_ACCEPT = 0x7802,
     DIALOG_RETURN_ACCEPT = 0x7805,
+#ifdef HOMM3_EVENTS_VIEW
+    // ACCEPT's partner in the iMBType-2 yes/no pair, byte-proven by the
+    // two wandering-stack refusals: advManager::monsters_join (0x4a7000)
+    // and monsters_sell_out (0x4a7250) both ask with iMBType 2 and take
+    // the DECLINE arm on 0x7806, where monsters_flee (0x4a6df0) tests the
+    // same dialog's reply against 0x7805 to take the ACCEPT arm. Gated to
+    // the events view: no other modeled consumer proves the value, and an
+    // ungated enumerator counts toward the include-set threshold.
+    DIALOG_RETURN_DECLINE = 0x7806,
+#endif
     // The two picture-choice replies of the iMBType-10 dialog, byte-proven
     // by advManager::DoEventWarSchool (0x4a7a40): it offers the two
     // primary-skill pictures 0x1f and 0x20 as iResType1/iResType2 and then
