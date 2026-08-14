@@ -37,9 +37,13 @@
 #define HOMM3_TOWN_OBJ_DECLS
 #include "town.h"
 #undef HOMM3_TOWN_OBJ_DECLS
+// game.h's grail-win declarator, for handle_hall_click's one call. Held
+// on its own gate so no other consumer of that header widens.
+#define HOMM3_TOWNMGR_GRAIL_DECLS
 #define HOMM3_GAME_OBJ_DECLS
 #include "game.h"
 #undef HOMM3_GAME_OBJ_DECLS
+#undef HOMM3_TOWNMGR_GRAIL_DECLS
 #include "hero.h"
 #include "iconwdgt.h"
 #include "kb.h"
@@ -2654,6 +2658,71 @@ void townManager::DoPortalOfSummoning()
     }
 }
 
+// The town hall button, and the Grail offer that stands in front of it.
+// A hero carrying the Holy Grail into a town that has not built it, on a
+// LOCAL HUMAN player's turn, is asked whether to put it down here; every
+// other case falls through to the hall page.
+//
+// The hero is the visiting one if there is one and the garrison one
+// otherwise, and the pick MUST be an if/else on the ID. Written the
+// obvious way - `h = GetHero(visiting); if (!h) h = GetHero(garrison);`
+// - the row is 89.72, and it fails for a dominance reason worth keeping:
+// in the straight-line form the first expansion's `gpGame` load
+// DOMINATES the second, so VC6 CSEs it into a register held across the
+// whole prologue, which costs an extra callee-save (`push ebx`) and
+// then re-orders the bitNumber pair further down. In the if/else form
+// neither arm dominates the other, the load stays inside each arm, and
+// retail's register assignment falls out. It also removes the pointer
+// test between the two lookups: the arms merge on one `test esi,esi`.
+//
+// And it does NOT cost a second `cmp ecx,-1`: VC6 folds game::GetHero's
+// own -1 test into the outer `!= -1` when the two comparisons are
+// IDENTICAL. That sharpens game.h's standing note - HasGarrison keeps
+// its redundant compare because its gate is spelled `< 0`, a different
+// comparison, not because VC6 never folds one.
+//
+// Accepting the offer does NOT open the hall. The confirm arm consumes
+// the artifact, builds 26 and returns - the grail-win check tail-calls
+// CheckEndGame(0) and both arms leave through the plain epilogue, so
+// DoHall is unreachable from inside it. Only the refuse arm, the
+// already-built arm and the not-a-grail-carrier arm reach the page.
+//
+// The town that cannot legally take the Grail gets a different message
+// and gets it ONCE: gpGame's byte at +0x90 is the shown-once latch, read
+// before the dialog and set after it.
+
+// E:\gamedcs\townmgr.cpp:5733
+VA(0x005d30d0, 0x168)  // order-map(between DoSkeletonTransformer and Main) + DoHall/BuildObj call edges + arity(bare ret), dc 0x174da0
+void townManager::handle_hall_click()
+{
+    hero* townHero;
+    if (townToView->visitingHeroId != -1)
+        townHero = gpGame->GetHero(townToView->visitingHeroId);
+    else
+        townHero = gpGame->GetHero(townToView->garrisonHeroId);
+
+    if (townHero && townHero->HasArtifact(ARTIFACT_HOLY_GRAIL)
+        && !(townToView->built & bitNumber[HOLY_GRAIL_ID])
+        && gpCurrentPlayer->IsLocalHuman()) {
+        if (townToView->is_legal_building(HOLY_GRAIL_ID)) {
+            NormalDialog(gpGeneralText->GetText(598), 2, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn == DIALOG_RETURN_ACCEPT) {
+                townHero->remove_artifact(ARTIFACT_HOLY_GRAIL);
+                BuildObj(HOLY_GRAIL_ID);
+                if (gpGame->mapHeader.victoryCondition.CheckForGrailBuildingWin())
+                    CheckEndGame(0);
+                return;
+            }
+        } else if (!gpGame->field_90) {
+            NormalDialog(gpGeneralText->GetText(674), 1, -1, -1, -1, 0, -1, 0,
+                         -1, 0, -1, 0);
+            gpGame->field_90 = 1;
+        }
+    }
+    DoHall();
+}
+
 // Moving the town's visiting hero into the garrison. Only the local
 // human runs it at all - a remote or computer player reaches the same
 // state through the network path - and the move can be refused, which
@@ -3842,12 +3911,6 @@ void townManager::DoSkeletonTransformer()
 }
 
 // E:\gamedcs\townmgr.cpp:5733
-DC_ONLY(0x174da0, 0x1BE)
-void townManager::handle_hall_click()
-{
-    // @stub
-}
-
 // E:\gamedcs\townmgr.cpp:5778
 DC_ONLY(0x174f60, 0x18)
 int ExitTownManager(message* msg)
