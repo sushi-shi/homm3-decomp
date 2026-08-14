@@ -40,20 +40,36 @@ DATA(0x006823b8) static int gQuickTownArmyPositions[7][2] = {
 };
 
 // E:\gamedcs\quicktownwindow.cpp:39
-// Residual (96.31%): all 36 branches and the single return agree. Retail
+// Residual (98.42%): all 36 branches and the single return agree. Retail
 // keeps vector::reserve's empty range destroy and string::_Tidy(false) calls
 // out of line, then uses an indexed/spilled resource scan; this VC6 SP3
-// compile elides/inlines those helpers and pointer-walks the same seven rows.
+// compile elided/inlined those helpers and pointer-walks the same seven rows.
 // why-reg v2 reports identical first definitions, placing the divergence
 // after the minimum allocator slice. Tried and rejected: evaluating the name
 // accessor directly at the call site (95.50%; a named c_str local was 93.71),
 // an EGameResource loop induction variable (no resource-loop change), and
-// inline_depth(1) (byte-identical to this best spelling).
+// inline_depth(1) (byte-identical to the pre-2026-08-14 spelling).
+// FIXED 2026-08-14, 96.3088 -> 98.4193, EXACTLY the titrated ceiling: the /Ob2
+// budget divisor solved in mainmenu.cpp. This constructor wanted FOUR more
+// inline-candidate call sites (xx_nop ladder: k=0 96.3088, k=4/5/6 all
+// 98.4193) and takes them the same way mainmenu and quickherowindow do - the
+// LAST FOUR widget insertions respelled from `push_back(x)` to
+// `insert(end(), x)`, which is two candidate sites instead of one, behind a
+// `std::vector<widget*>*` local. The local is what makes the pair byte-neutral:
+// the same four conversions naming `Widgets` directly are 94.9930, while the
+// local on its own is byte-flat at 96.3088. Position obeys the placement law
+// recorded in systemoptionswindow (extra sites only bite when they sit after
+// the widget list's last push_back): any four or more of the LATE insertions
+// reach the plateau, converting all ten is 89.6790. Also measured: the
+// systemoptionswindow registration guard is a real +2 here (97.6509) and nests
+// to +4 (98.2053) but never reaches the ceiling, and guard + two inserts is
+// 98.3983.
 VA(0x00530120, 0x67D)  // townqvbk/itpt literals + town helpers, dc 0x117e48
 TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TViewLevel view_level)
     : heroWindow(200, 200, 194, 186, 0x12)
 {
-    Widgets.reserve(NWIDGETS);
+    std::vector<widget*>* widgets = &Widgets;
+    widgets->reserve(NWIDGETS);
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "townqvbk.pcx", 0x800);
@@ -61,14 +77,14 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
         thisTown->owner != -1
             ? thisTown->owner
             : gpGame->GetLocalPlayerGamePos());
-    Widgets.push_back(background);
+    widgets->push_back(background);
 
-    Widgets.push_back(new iconWidget(
+    widgets->push_back(new iconWidget(
         12, 13, 58, 64, PORTRAIT_ID, "itpt.def",
         thisTown->GetPortraitFrame(false), 0, 0, 0, 0x10));
 
     const char* town_name = thisTown->cName.begin();
-    Widgets.push_back(new textWidget(
+    widgets->push_back(new textWidget(
         75, 12, 107, 16, town_name ? town_name : "", "smalfont.fnt",
         font::WHITE, NAME_ID, 0, 0, 8));
 
@@ -85,12 +101,12 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
     town_size_name = gTownSizeNames[hall_level];
 
     if (view_level >= ViewAll) {
-        Widgets.push_back(new iconWidget(
+        widgets->push_back(new iconWidget(
             76, 42, 34, 34, HALL_LEVEL_ID, "itmtls.def", hall_level,
             0, 0, 0, 0x10));
 
         if (thisTown->garrisonHeroId != -1) {
-            Widgets.push_back(new bitmapBorder(
+            widgets->push_back(new bitmapBorder(
                 158, 86, 22, 30, GARRISON_HERO_ID, "townqkgh.pcx",
                 0x800));
         }
@@ -123,21 +139,21 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
             }
 
             if (resource_count == DOUBLE_RESOURCE_BONUS) {
-                Widgets.push_back(new iconWidget(
+                widgets->push_back(new iconWidget(
                     15, 86, 20, 18, RESOURCE_BONUS_ID, "smalres.def",
                     resource[0], 0, 0, 0, 0x10));
-                Widgets.push_back(new iconWidget(
+                widgets->insert(widgets->end(), new iconWidget(
                     15, 98, 20, 18, RESOURCE_BONUS_ID, "smalres.def",
                     resource[1], 0, 0, 0, 0x10));
             } else if (resource_count == SINGLE_RESOURCE_BONUS) {
-                Widgets.push_back(new iconWidget(
+                widgets->insert(widgets->end(), new iconWidget(
                     15, 92, 22, 18, RESOURCE_BONUS_ID, "smalres.def",
                     resource[0], 0, 0, 0, 0x10));
             }
         }
 
         sprintf(gText, "%d", thisTown->get_gold_income(1));
-        Widgets.push_back(new textWidget(
+        widgets->insert(widgets->end(), new textWidget(
             153, 65, 27, 11, gText, "tiny.fnt", font::WHITE,
             GOLD_PER_DAY_ID, 1, 0, 8));
     }
@@ -151,7 +167,7 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
         castle_level = 2;
     else
         castle_level = 3;
-    Widgets.push_back(new iconWidget(
+    widgets->insert(widgets->end(), new iconWidget(
         114, 42, 34, 34, CASTLE_LEVEL_ID, "itmcls.def", castle_level,
         0, 0, 0, 0x10));
 
