@@ -16,12 +16,23 @@
 #include "misc.h"
 #include "textwdgt.h"
 #include "widget.h"
+// E:\gamedcs\includes.h:124/134, the same pair quicktownwindow.cpp carries.
+// The DC xref graph records two calls from the constructor to the BY-VALUE
+// `limit` (dc 0x1ef5c), not to the reference template it forwards to, so the
+// wrapper is retail's spelling. It is exactly byte-neutral here (90.5272 with
+// or without) - a forwarding wrapper replaces the call site it wraps and is
+// worth zero /Ob2 divisor sites - and is landed for fidelity, not for score.
 template <class T>
-static inline const T& quick_hero_limit(const T& minimum, const T& value,
-                                        const T& maximum)
+static inline const T& t_limit(const T& minimum, const T& value,
+                               const T& maximum)
 {
     return value < minimum ? minimum
                            : (maximum < value ? maximum : value);
+}
+
+static inline int limit(int minimum, int value, int maximum)
+{
+    return t_limit(minimum, value, maximum);
 }
 
 DATA(0x00640688) static const POINT gQuickHeroSkillPositions[4] = {
@@ -65,6 +76,25 @@ DATA(0x00682378) static int gQuickHeroArmyPositions[7][2] = {
 // systemoptionswindow registration guard is a real +2 here but costs 0.016
 // (guard alone 87.8433, guard plus a 2-site supply 90.5109 against the ladder's
 // 90.5272), so these four inserts are the better supply.
+// 2026-08-14, THE FOUR SITES ARE A STEP FUNCTION, not a ladder: reverting ANY
+// one of the four inserts to push_back - morale, luck, the sprite or the troop
+// label, singly or in pairs - lands on exactly 87.8597. There is no partial
+// credit, so a replacement supply has to be worth all four at once.
+// The DC xref census (evidence/dc-xref-graph.tsv, 0x1170bc) says retail's
+// source has NO inserts here at all: push_back x10, end x1, begin x1, i.e. ten
+// plain push_backs and one registration loop. Our ten insertion points match
+// its widget census exactly (bitmapBorder x2, textWidget x5, iconWidget x3), so
+// the four inserts are standing in for four sites the DC port does not have.
+// The census names ONE of them outright: `game::get_alignment` x1
+// (E:\gamedcs\game.h:1375, dc 0x2000c) where we read
+// `gpGame->setup.alignment[owner]` as a field. Landing it needs a declaration
+// in game.h and is out of this lane's reach.
+// The census's other disagreement is the `limit` wrapper: it records the
+// by-value `limit` (dc 0x1ef5c) x2, not the reference template, so the pair
+// spelled below is now the quicktownwindow one. It is EXACTLY byte-flat
+// (90.5272 either way) and worth +0 sites, which is the general rule this
+// campaign settled - a FORWARDING WRAPPER REPLACES the call site it wraps, so
+// it never supplies a divisor site; only an EXTRA top-level call does.
 // Do not re-sweep the register or mana-string space: with the site count now
 // supplied, whatever is left is a different wall.
 VA(0x0052ead0, 0x8C8)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
@@ -107,14 +137,12 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
             font::WHITE, MANA_ID, 1, 0, 8));
 #pragma inline_depth(255)
 
-        int morale = quick_hero_limit(
-            -3, thisHero->GetMorale(0, 0, 1), 3);
+        int morale = limit(-3, thisHero->GetMorale(0, 0, 1), 3);
         widgets->insert(widgets->end(), new iconWidget(
             14, 86, 22, 12, MORALE_ID, "imrl22.def", morale + 3,
             0, 0, 0, 0x10));
 
-        int luck = quick_hero_limit(
-            -3, thisHero->GetLuck(0, 0, 1), 3);
+        int luck = limit(-3, thisHero->GetLuck(0, 0, 1), 3);
         widgets->insert(widgets->end(), new iconWidget(
             14, 103, 22, 12, LUCK_ID, "ilck22.def", luck + 3,
             0, 0, 0, 0x10));

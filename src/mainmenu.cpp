@@ -283,6 +283,55 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 // titration scaffolding, not a reconstruction of retail's source. Its value is
 // as a MEASURING instrument - it tells you what a body's k ladder is worth
 // using real source constructs, before you go looking for an honest supply.
+//
+// WHERE THE HONEST SUPPLY COMES FROM (2026-08-14, and it closed
+// ??0TQuickCreatureWindow to 100.0000 on the first spelling): THE DC XREF
+// GRAPH IS A CALL-SITE CENSUS. `awk -F'\t' '$2=="Class::Function"'
+// evidence/dc-xref-graph.tsv` lists every named callee of a function together
+// with its CALL COUNT. Diff that against the calls the body actually spells
+// and the missing /Ob2 candidate sites have names. quickinfowindow's ladder
+// wanted two sites; the census said `GetArmyName` x3 (dc 0x1ef94,
+// E:\gamedcs\CreatureType.h:296, a header inline) where our body spelled the
+// creature-name ternary three times by hand. Spelling the three calls supplied
+// the sites and was byte-identical.
+// Read the census with two corrections. (1) SUBTRACT THE DREAMCAST PLATFORM
+// DELTA FIRST - systemoptionswindow's census is 3 buttons and 1 text short of
+// ours because the DC port has no window-scroll group, and once that is taken
+// out every count agrees. (2) A COUNT THAT STILL DISAGREES IS EITHER A MISSING
+// SITE OR A PORT REWRITE, and the ladder says which: quickherowindow's census
+// records ten plain push_backs and no inserts, but reverting any one of our
+// four `insert(end(), x)` conversions costs 2.7 points, so there the DC port
+// really is four sites lighter than retail.
+//
+// AND THE RULE FOR WHICH CONSTRUCTS CAN SUPPLY A SITE AT ALL (2026-08-14,
+// measured on quickinfowindow and quickherowindow): A FORWARDING WRAPPER
+// SUPPLIES ZERO SITES, because it REPLACES the top-level call site it wraps -
+// only the nesting moves; only an EXTRA top-level call raises n. An
+// `AppendQuickWidget` in the armygrp `AppendSplitWidget` shape around a
+// `push_back` is byte-exactly flat by reference at inline_depth 2/3/default
+// across one, two and three call sites, costs 0.003-0.04 by value, and at
+// depth 0 or 1 holds `push_back` itself out of line and collapses to 53-90;
+// the `limit`/`t_limit` wrapper pair is byte-flat in quickherowindow for the
+// same reason; and this is the same fact as the rbegin note above.
+// Corollary for the other direction: `insert(end(), x)` is +1 site but ALSO
+// one nesting level shallower, so the 3-argument insert can newly expand -
+// which is why the conversion is byte-neutral in some bodies and catastrophic
+// (58.58 in quickinfowindow) in others.
+//
+// A THIRD PLACEMENT LEVER, same family as the two above (2026-08-14,
+// quicktownwindow 98.4193 -> 98.8368): MSVC evaluates `new T(args)` as
+// allocate-THEN-evaluate-args, so a value spelled INSIDE the argument list is
+// loaded after the `operator new` call, and the same value hoisted into a
+// local one statement earlier is loaded before it and pinned in a register
+// across it. `thisTown->cName.c_str()` at the call site is retail;
+// `const char* town_name = thisTown->cName.begin();` ahead of the statement is
+// not. Note also that VC6's `c_str()` IS `_Ptr == 0 ? "" : _Ptr`, so a
+// hand-written ternary can be the right bytes in the wrong place.
+// And the `widget* const&` lever HAS A SIGN, which retail picks per site:
+// armygrp wanted the raw `operator new` result and the insert's value temp in
+// SEPARATE slots (by reference), quicktownwindow's three resource-bonus
+// widgets want them COALESCED in the dead parameter slot (which is what naming
+// the widget in a local does). Read the slot out of retail before choosing.
 // E:\gamedcs\mainmenu.cpp:66
 VA(0x004fb2a0, 0x385)  // order-map: heroWindow(0,0,800,600) base + 5 button ctors from mmenung/lg/hs/cr/qt.def (ids 0x65-0x69), installs vtbl 0x63ff50, this-global 0x699660; called by oldmain; EH-bearing, dc 0xea2ec
 TMainMenu::TMainMenu()
