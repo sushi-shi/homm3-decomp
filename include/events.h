@@ -24,6 +24,16 @@ enum EAdventureEventText {
     // 0x20, the +1 Defense icon.
     ADV_EVENT_TEXT_DEFENSE_TOWER = 39,
     ADV_EVENT_TEXT_DEFENSE_TOWER_VISITED = 40,
+    // do_event_dragon_city (0x4a2140), asked with iMBType 2 - the yes/no
+    // form whose answer comes back out of heroWindowManager::dialogReturn.
+    // The utopia has only this ONE advevent.txt row: its already-emptied
+    // line comes out of genrltxt.txt instead (textresource.h's
+    // GENERAL_TEXT_DRAGON_CITY_EMPTIED). 47 lands between the defense
+    // tower's pair at 39/40 and the fountain of youth's at 57/58, which is
+    // where the alphabet puts "dragon city" and where the DC roster puts
+    // do_event_dragon_city - between DoEventDefenseTower (dc 0x92d40) and
+    // DoEventFaerieRing (dc 0x92f08). The two orderings agree again.
+    ADV_EVENT_TEXT_DRAGON_CITY_PROMPT = 47,
     // DoEventIdol (0x4a12f0). ONE reward row serves all three arms - the
     // pictures are what differ - and 63 is the already-visited line.
     ADV_EVENT_TEXT_IDOL = 62,

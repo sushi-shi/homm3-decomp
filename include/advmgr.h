@@ -879,6 +879,26 @@ public:
                        bool human_player);
     void DoEventIdol(class hero* current_hero, NewmapCell* cell,
                      bool human_player);
+    // The Dragon Utopia (jump-table arm 0x19 = OBJECT_DRAGON_UTOPIA), the
+    // one creature bank with a handler of its own. Four parameters and
+    // `ret 0x10`, the DC's own order, and the cell stays a NewmapCell*
+    // because it is forwarded to CreatureBankEvent as one.
+    void do_event_dragon_city(class hero* current_hero, NewmapCell* cell,
+                              type_point point, bool human_player);
+    // 0x4abdc0, DECLARED not defined - 1744 bytes this lane is not
+    // reconstructing. LOCATED by do_event_dragon_city, which is its only
+    // reconstructed caller: retail pushes FIVE arguments in exactly the
+    // Dreamcast's parameter order (hero, cell, text, point, human_player)
+    // with the advManager in ECX, 1744 B against the DC's 1330 is 1.31 in
+    // the SH4->x86 band, and the row sits in the events.obj bracket
+    // [0x4ab410..0x4acbb0] that already carries EventSound before it and
+    // adjust_army after it, in DC roster order. The DC decorates cText
+    // `char*`; retail's one reconstructed call site passes window.h's
+    // `const char emptyRolloverText[]`, so the declarator is const-correct
+    // rather than casting at the call.
+    int CreatureBankEvent(class hero* who, NewmapCell* cell,
+                          const char* cText, type_point point,
+                          bool human_player);
     // The two objects that pay a resource out of the cell's own packed
     // record. Both take ExtraInfoUnion for the same reason the war school
     // and the two mills do: nothing but the +0x00 dword is ever touched.
