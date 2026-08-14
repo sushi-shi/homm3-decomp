@@ -5090,16 +5090,36 @@ DATA(0x00642e70) extern const int gUnnamed642e70[8];
 // than spelled as a member: declaring one would force VC6 to emit the
 // out-of-line copy retail does not have.
 //
-// Residual (64.0%): every branch, every table read and the whole tail are
-// retail's; the entire delta is TAIL MERGING. Retail expands the inlined
-// strcpy FIVE times, once per arm, and our SP3 CL cross-jumps all five
-// into one shared block that each arm reaches with a bare `mov edi,
-// <ptr>` + jmp. This is the documented open "merged-return blocks /
-// stale-CL-generation" class, and it is not source-addressable here:
-// measured at 64.03 with the arms as an if/else chain, 64.03 with every
-// arm `goto`-ing a shared label, 62.76 with the inner band spelled
-// `> 0x3f0` instead of `>= 0x3f1`, and 60.78 with the tail duplicated
-// into an arm (which merges the tail instead and loses the shared one).
+// TWO branch senses carry this row and they are worth 33.7 points
+// between them. Retail's `cmp eax,0x3f1 / jge` sends the HIGH band
+// forward, so the 0x3e9 band is the if-body and the 0x3f1 band the else;
+// and retail's `cmp eax,0x7800 / je` sends the EXIT arm forward, so the
+// empty line is the if-body and the sprintf the else. Written the two
+// natural ways round - high band first, `== EXIT_BUTTON_ID` first - the
+// same instructions land in the wrong blocks and the row sits at 64.03.
+//
+// The earlier note here - "the entire delta is TAIL MERGING", not
+// source-addressable - was wrong, and wrong because it could never be
+// measured: this body sits behind the `#if 0 // @carcass` stub near the
+// top of the file, so every solver silently read the carcass instead.
+// With the locator fixed, `sema diff --branches` reports 12 branches and
+// 1 ret on BOTH sides - identical CFG - and names the two polarity flips
+// outright. Retail does expand the inlined strcpy five times, but so do
+// we; that was never the delta.
+//
+// Residual (97.8%): 13 bytes in two encoder/schedule classes, neither
+// source-reachable. The dwelling read is `[ecx+eax+0x1bb]` against
+// retail's `[eax+ecx+0x1bb]` - one SIB byte, base and index transposed
+// over the same effective address (B18); a named row local, an explicit
+// `*(p + i)` and the reversed `i[p]` subscript are all byte-inert. And
+// the 0x3f1 arm parks the table value in ECX where retail takes EAX,
+// which rotates the inlined strcpy's `or ecx,-1` and `xor eax,eax` past
+// each other - the 0x3e9 arm, identical source modulo the addend, is
+// byte-exact, so this is allocator state rather than spelling: a named
+// index local, a named `const char*`, and `* 2` for `2 *` all measure
+// 97.77. (why-reg cannot be pointed at this row - given the mangled name
+// it resolves to TMageGuildWindow::SetRolloverText, the file's other row
+// of that name.)
 VA(0x005dcbf0, 0x25A)  // anchor-bracket + `ret 4` arity + ShowText tail, dc 0x17f54c
 void TCastleWindow::SetRolloverText(message* msg)
 {
@@ -5122,16 +5142,18 @@ void TCastleWindow::SetRolloverText(message* msg)
             strcpy(gText, "");
         }
     } else if (code <= 0x3f7) {
-        if (code >= 0x3f1)
+        if (code < 0x3f1) {
+            if (code >= 0x3e9 && code <= 0x3f0)
+                strcpy(gText, gUnnamed6a56e0[2 * gUnnamed642e70[code - 0x3e9]]);
+            else
+                strcpy(gText, "");
+        } else {
             strcpy(gText, gUnnamed6a56e0[2 * gUnnamed642e70[code - 0x3f1]]);
-        else if (code >= 0x3e9 && code <= 0x3f0)
-            strcpy(gText, gUnnamed6a56e0[2 * gUnnamed642e70[code - 0x3e9]]);
-        else
-            strcpy(gText, "");
-    } else if (code == EXIT_BUTTON_ID) {
-        sprintf(gText, gUnnamed6a5c40, gBuildingNamesCommon[castleType]);
-    } else {
+        }
+    } else if (code != EXIT_BUTTON_ID) {
         strcpy(gText, "");
+    } else {
+        sprintf(gText, gUnnamed6a5c40, gBuildingNamesCommon[castleType]);
     }
 
     message textMessage = { 0, 0, 0, 0, 0, 0, 0, 0 };
