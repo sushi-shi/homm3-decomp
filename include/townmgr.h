@@ -565,6 +565,13 @@ public:
     // recruitUnit::Update 90.84 -> 88.24 with no semantic change.
 #ifdef HOMM3_TOWNMGR_WINDOW_DECLS
     void SetupMage(heroWindow* mageWin);
+    // Retail 0x5c33f0 (dc 0x16a644). Puts up the town's free buildings:
+    // the whole eligible mask under the "nwczion" cheat, otherwise the
+    // one faction bonus the town type has. Nested here for exactly the
+    // reason above and MEASURED - declared in the unconditional part of
+    // this class it reproduces the canary to the digit, recruitUnit::
+    // Update 90.84 -> 88.24.
+    void SetupExtraStuff();
     // Retail 0x5d6a80. Commits a purchase to the town: builds it,
     // re-syncs every panorama object's visibility, fizzles the new
     // building in over the saved rectangle and cycles its outline.
