@@ -64,6 +64,18 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     Widgets.push_back(new button(357, 415, 100, 48,
         DIALOG_RETURN_SPLIT_ACCEPT, "soretrn.def", 1, 0, 0, 1, 2));
 
+    // Residual note (the two slider loops): retail's loop variable is the
+    // SLOT, not the x - `for (slot = 0; slot < 10; ++slot)` with the x as a
+    // derived, linear-function-test-replaced induction variable, which emits
+    // `xor ebx,ebx` + `lea edx,[ebx+0xc9]` where the spelling below emits
+    // `mov ebx,0xc9` + `push ebx`. That rewrite was measured here and it
+    // reproduces retail's loop bodies EXACTLY (and fixes the ecx/edx parity
+    // of the following temps), but it removes four statements of front-end
+    // mass, and this constructor is already /Ob2 budget-STARVED - it calls
+    // vector<widget*>::size() inside the reserve expansion where retail
+    // inlines it, and calls one push_back retail expands. Net -0.02%, so it
+    // is not landed: re-apply it together with whatever restores the caller
+    // mass (the twin in combatoptionswindow.cpp carries the landed form).
     int slot = 0;
     for (int musicX = 29; musicX < 219; musicX += 19) {
         Widgets.push_back(new iconWidget(
