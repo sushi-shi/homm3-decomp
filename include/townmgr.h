@@ -19,6 +19,9 @@ void DoMapTavern(type_point point);
 class armyGroup;
 class garrison;
 class hero;
+class iconWidget;
+class textWidget;
+class town;
 
 // The compiland's dialog family. Every one of these classes is fixed by
 // a vtable of its own, each the slot-0 owner of one 33-byte scalar
@@ -103,14 +106,44 @@ public:
     virtual ~TBlacksmithWindow();
 };
 
+// The shipyard dialog. Constructor 0x5d1ef0 writes both members past
+// CAdvPopup's 0x60: +0x60 is cleared and nothing else in the compiland
+// reads it yet, and +0x64 keeps the boat picture the dialog shows.
 class TShipWindow : public CAdvPopup {
 public:
+    enum {
+        CANCEL_BUTTON_ID = 0x7801,
+        BUY_BUTTON_ID = 0x7802
+    };
+
+    int field_60;          // +0x60  cleared by the constructor
+    iconWidget* boatIcon;  // +0x64
+
+    TShipWindow(int type);
     virtual ~TShipWindow();
 };
 
+// The "build this?" confirmation popup. Both members past CAdvPopup's
+// 0x60 are written by the constructor 0x5d55c0: the rollover text widget
+// it keeps a handle on at +0x60, and the building id it is asking about
+// at +0x64 - the latter stored immediately after the vptr, which is the
+// member-initializer-list slot.
 class TBuyBuildWindow : public CAdvPopup {
 public:
+    // The two widget ids the constructor and the handler share. Both are
+    // in the compiland's 0x78xx dialog-button family; the rest of this
+    // dialog's widgets are numbered 1..9 and stay literal.
+    enum {
+        CANCEL_BUTTON_ID = 0x7801,
+        BUY_BUTTON_ID = 0x7802
+    };
+
+    textWidget* rolloverText;  // +0x60
+    int buildingId;            // +0x64
+
+    TBuyBuildWindow(int x2, int y2, int Id);
     virtual ~TBuyBuildWindow();
+    void set_prerequisite_text(const town* current_town, int building);
 };
 
 // The tavern chooser. Its vtable 0x643980 is 15 slots wide - the CAdvPopup

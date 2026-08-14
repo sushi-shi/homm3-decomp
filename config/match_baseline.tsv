@@ -1478,6 +1478,8 @@ town	town_give_event_reward	0.0000	0.0000	0.0000	0x1bfeb0
 town	town_initialize	0.0000	0.0000	0.0000	0x1c0670
 towngatewindow	??1TTownGateWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1c2370
 towngatewindow	??_GTTownGateWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1c2340
+townmgr	??0TBuyBuildWindow@@QAE@HHH@Z	100.0000	100.0000	100.0000	0x1d55c0
+townmgr	??0TShipWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x1d1ef0
 townmgr	??0townManager@@QAE@XZ	100.0000	100.0000	100.0000	0x1c3310
 townmgr	??1TBlacksmithWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d1a30
 townmgr	??1TBuyBuildWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d5b70
