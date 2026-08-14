@@ -16,6 +16,9 @@
 enum EGeneralTextIndex {
     GENERAL_TEXT_SHUTDOWN = 1,
     GENERAL_TEXT_LEVEL_UP_OR = 5,
+    // The dismiss-this-stack confirmation TViewArmyWindow::WindowHandler
+    // raises from the DISMISS button (a folded [Text._First + 0x34]).
+    GENERAL_TEXT_DISMISS_ARMY_PROMPT = 13,
     GENERAL_TEXT_PLAYER_TURN_FORMAT = 14,
     GENERAL_TEXT_HERO_ROLLOVER_FORMAT = 16,
     GENERAL_TEXT_RECRUIT_TITLE = 17,
@@ -53,6 +56,10 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_ARMY_HELP_PREFIX = 203,
     GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE = 204,
     GENERAL_TEXT_LEVEL_UP_CHOICE = 205,
+    // The upgrade-this-stack confirmation, shown with the gold slot and
+    // the highest non-gold resource the upgrade costs (a folded
+    // [Text._First + 0x340] in TViewArmyWindow::WindowHandler).
+    GENERAL_TEXT_UPGRADE_ARMY_PROMPT = 208,
     GENERAL_TEXT_ARMY_ENTRY_SEPARATOR = 238,
     GENERAL_TEXT_QUICK_CREATURE_JOIN = 244,
     GENERAL_TEXT_QUICK_CREATURE_JOIN_COST = 245,
@@ -77,6 +84,17 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_PUZZLE_WINDOW = 464,
     GENERAL_TEXT_DEFAULT_PLAYER_NAME = 469,
     GENERAL_TEXT_SYSTEM_OPTIONS_COMMAND_CONFIRM = 579,
+    // The four spell-influence rollover rows TViewArmyWindow's spell
+    // icons print, all folded [Text._First + N] loads in its
+    // WindowHandler: 0x98c carries the spell name and a turn count,
+    // 0xaa0 the same name with a fixed descriptor instead, and
+    // 0xaa4/0xaa8/0xaac are that descriptor for the three spells whose
+    // effect has no turn count.
+    GENERAL_TEXT_ARMY_SPELL_ROUNDS_FORMAT = 611,
+    GENERAL_TEXT_ARMY_SPELL_FOREVER_FORMAT = 680,
+    GENERAL_TEXT_ARMY_SPELL_BIND = 681,
+    GENERAL_TEXT_ARMY_SPELL_BERSERK = 682,
+    GENERAL_TEXT_ARMY_SPELL_DISRUPTING_RAY = 683,
     GENERAL_TEXT_GARRISON_ADVENTURE_SPELL = 685,
     GENERAL_TEXT_MAIN_MENU_LOW_DISK = 708,
     GENERAL_TEXT_MAIN_MENU_CD_DRIVE_FORMAT = 730,
