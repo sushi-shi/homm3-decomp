@@ -431,6 +431,17 @@ DATA(0x00699538) extern int gCompleteDrawAllCells;
 // Retail-only CompleteDraw gates. Their roles and widths are proved by the
 // entry predicate at 0x40f3f0; spellings remain provisional.
 DATA(0x006989c0) extern int gCompleteDrawEnabled;
+
+#ifdef HOMM3_EVENTS_VIEW
+// A .data byte advManager::EraseAndFizzle (0x49e170) saves, CLEARS for the
+// duration of the erase, and restores on every one of its three exits -
+// the same save/clear/restore bracket it puts around animCtrPaused. 86 of
+// its 87 image-wide references sit inside events.obj's link bracket, but
+// the 87th does not, so this is a DECLARATION ONLY: no DATA claim is
+// taken here and the owning TU keeps it (the winmgr.h gbInDialog
+// precedent). Name is the house ordinal placeholder.
+extern unsigned char gUnnamed67f574;
+#endif
 DATA(0x00696a04) extern unsigned char gCompleteDrawMessageBypass;
 
 // Six of these records are filled by ScanForHeroOrBoat. Retail writes the
@@ -804,6 +815,10 @@ public:
                                   type_point point, bool human_player);
     void DoEventWanderingMonster(NewmapCell* cell, class hero* current_hero,
                                  type_point point, bool human_player);
+    void EraseAndFizzle(NewmapCell* eventCell, type_point point,
+                        int fizzleSound);
+    void EraseObj(NewmapCell* thisCell, type_point point,
+                  unsigned char record);
     void DoEvent(NewmapCell* eventCell, type_point point);
     void DispatchEvent(class hero* current_hero, NewmapCell* cell,
                        type_point point, unsigned char human_player);

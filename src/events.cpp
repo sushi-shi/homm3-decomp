@@ -2049,6 +2049,33 @@ bool InitializeRandomSignText()
     return true;
 }
 
+// E:\gamedcs\events.cpp:300.  Removes a picked-up adventure object and
+// plays the vanish flash over the map centre. Both the adventure-map
+// animation pause and the .data byte at 0x67f574 are SAVED, forced, and
+// restored - and because the fizzle below can leave early, retail carries
+// three copies of that restore, one per exit.
+//
+// The flash itself is FizzleCenter (0x4acbb0) inlined, exactly as in
+// HeroLoses: the callee's own body is at the far end of this file and is
+// emitted anyway, but /Ob2 expands it at both sites.
+VA(0x0049e170, 0x16E)  // anchor-global 0x67f574 + EraseObj call, dc 0x90348
+void advManager::EraseAndFizzle(NewmapCell* eventCell, type_point point,
+                                int fizzleSound)
+{
+    unsigned char savedFlag = gUnnamed67f574;
+    gUnnamed67f574 = 0;
+    unsigned char savedPause = animCtrPaused;
+    animCtrPaused = 1;
+
+    CompleteDraw(false);
+    UpdateScreen(0, 0);
+    EraseObj(eventCell, point, 1);
+    FizzleCenter(fizzleSound);
+
+    animCtrPaused = savedPause;
+    gUnnamed67f574 = savedFlag;
+}
+
 VA(0x0049f040, 0x23)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
 {
