@@ -240,8 +240,40 @@ public:
     virtual void Close(unsigned char update);            // slot 2
 };
 
+// The fort page: one row per creature dwelling - a separator strip, a
+// faction background, the building picture out of the town's own hall
+// .def, the creature's animation, a name, a growth count and six cost
+// columns - laid out two rows across and four rows down. The fourth
+// row carries two dwellings only when Dungeon's Portal of Summoning
+// has an external dwelling to show, and one centred dwelling
+// otherwise; `use8` is that switch, re-read before every row that has
+// a bottom slot.
 class TCastleWindow : public CAdvPopup {
 public:
+    enum {
+        EXIT_BUTTON_ID = 0x7800
+    };
+
+    // +0x60. The Dreamcast fieldlist names it `use8` at its own 92,
+    // four bytes below SpriteWidget's 100 and forty-four below
+    // castleType's 132 - exactly this row's 0x60/0x68/0x88.
+    unsigned char use8;
+    // +0x61..+0x67. The constructor writes nothing here and the
+    // destructor reads nothing, so no retail byte fixes it; the DC
+    // fieldlist puts `CastleBank` in the hole (its own 96).
+    char pad_61[0x7];
+    // +0x68..+0x87, DC `SpriteWidget`: the eight dwelling animations.
+    // The constructor fills all eight BEFORE pushing any of them - the
+    // eighth goes into the widget list on its own and a seven-trip
+    // loop pushes the rest.
+    iconWidget* SpriteWidget[8];
+    // +0x88, DC `castleType` - the fort tier whose name the page
+    // header prints. int rather than the DC's type_building_id for the
+    // reason town.h's get_horde gives: this header does not see that
+    // enum, and an enum member would need a cast at the one read.
+    int castleType;
+
+    TCastleWindow();
     virtual ~TCastleWindow();
 };
 #endif
@@ -306,6 +338,15 @@ public:
     int field_1bc;                // +0x1bc
     int field_1c0;                // +0x1c0
     int field_1c4;                // +0x1c4  ResetStrips
+    char pad_1c8[0x4];            // +0x1c8  untouched by the retail bodies
+    // +0x1cc, seven bytes - the dwelling slot each of the fort page's
+    // seven base rows is currently showing. TCastleWindow's
+    // constructor uses each byte as the column of this town's 14-wide
+    // gTownDwellingCreatures row. The DC fieldlist's last member is
+    // `currentDwellingIDOff` at its own 476, which is this offset
+    // under the same 0x10 shift that puts divideStatus/recruitSelected
+    // at +0x1c4/+0x1c8.
+    unsigned char currentDwellingIDOff[7];
 
     townManager();
     void UnloadTown();

@@ -295,6 +295,17 @@ public:
     // no-fort band at +18; the town-state and small-icon flags select the
     // adjacent variants. DC's `_N` parameter proves native bool.
     int GetPortraitFrame(bool is_small) const;
+#ifdef HOMM3_TOWN_SUMMONING_DECLS
+    // 0x5bd750, the body immediately after GetPortraitFrame and the DC
+    // roster's next town.cpp row (town::SetSummoningGenerator, dc
+    // 0x165da4). Void and argument-less: retail calls it with the town
+    // in ecx and nothing on the stack, and it writes field_3c and the
+    // word at +0x40 from a candidate it collects out of gpGame's
+    // object list. Behind its own gate because TCastleWindow's
+    // constructor is the only admitted caller and town.cpp must not
+    // see a new declarator.
+    void SetSummoningGenerator();
+#endif
     // 0x5bf6d0 / 0x5bf770. `int`, not the DC's type_building_id: the
     // gHordeBuildings row is int and an enum return would need a cast
     // (the UpgradedDwellingID precedent).
