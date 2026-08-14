@@ -7,7 +7,7 @@
 #include "kbwin.h"
 #include "textresource.h"
 #include "textwdgt.h"
-#include "animateddlg.h"
+#include "remotedlg.h"
 
 // DC names the network singleton pDPlay; retail references at 0x69d808 and
 // the adjacent readiness byte are rooted throughout the remote/front-end
@@ -512,6 +512,35 @@ VA_COMPGEN(0x00554a80, 0x21, SCALAR_DELETING_DTOR, CAnimatedDlg)
 CAnimatedDlg::~CAnimatedDlg()
 {
 }
+
+// E:\gamedcs\remote.cpp:2673 - CSaveScreen's constructor, the second row in
+// this file that unblocks a vtable. Nothing else referenced
+// ??_7CSaveScreen@@6B@: the destructor is compiler-generated and its derived
+// vptr store dies against ??1Bitmap16Bit (0x557340 is the bare tail jump that
+// leaves behind), so without this `mov [esi], offset ??_7CSaveScreen` VC6
+// emitted neither the vtable nor the slot-0 ??_G the claim beneath pairs
+// against.
+//
+// Two arguments (DC: Parms = 3; retail: `ret 8`), both forwarded straight to
+// Bitmap16Bit, then the three members zeroed in the body - retail's vptr
+// store precedes all three.
+VA(0x005572e0, 0x2D)  // anchor-vtable 0x640fb0, dc 0x11eb40
+CSaveScreen::CSaveScreen(int w, int h)
+    : Bitmap16Bit(w, h)
+{
+    screenSaved = 0;
+    m_x = 0;
+    m_y = 0;
+}
+
+// E:\gamedcs\remote.cpp:2673 - CSaveScreen::`scalar deleting destructor',
+// slot 0 of vtable 0x640fb0. /OPT:ICF folded a second class's identical
+// slot-0 body onto it (0x642d8c points here too).
+//
+// NO CLAIM on the destructor 0x557340 (5 B): DC marks ~CSaveScreen
+// (compgenx), so there is no source declarator for a VA to sit on, and
+// VA_COMPGEN carries no kind for an implicit destructor.
+VA_COMPGEN(0x00557310, 0x21, SCALAR_DELETING_DTOR, CSaveScreen)
 
 // E:\gamedcs\remote.cpp:1293
 #if 0  // @carcass
