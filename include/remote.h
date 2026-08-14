@@ -34,6 +34,12 @@ public:
 
     unsigned char IsInPopup() { return m_inPopup; }
     void SetInPopup(unsigned char b) { m_inPopup = b; }
+    // Both are out-of-line retail bodies, not header inlines: 0x555150 and
+    // 0x557910. Copy takes the other handler's popup byte directly but its
+    // abort message THROUGH the vtable - `call [edx+8]`, slot 2 - which is
+    // the second independent proof of the slot numbering above.
+    void Copy(CNetMsgHandler* pOther);
+    void SetAbortPopupMsg(CNetMsg* pNetMsg);
 
 private:
     unsigned char m_inPopup;       // +0x04
@@ -146,6 +152,11 @@ DATA(0x0069d7b0) extern CChatManager chatMan;
 // call sites use (four pushes + `add esp,0x10`); the same shape already
 // has a precedent in advmgr_objects.h's UpdateCompleteDrawFps.
 void __cdecl TurnDurationMsg(CChatManager* manager, const char* format, ...);
+
+// The AddChat body that formatter hands its buffer to, in the same free
+// varargs form: retail's ReceiveChat (0x554a20) calls it with four pushes
+// and `add esp, 0x10`.
+void __cdecl AddChat(CChatManager* manager, const char* format, ...);
 
 // Retail's complete method family proves five unsigned-long lanes at
 // +0/+4/+8/+c/+10; Dreamcast CodeView supplies their source names.

@@ -475,6 +475,17 @@ void CChatManager::SetPosition(int newPos)
     changed = 1;
 }
 
+// E:\gamedcs\remote.cpp:1529 - the inbound half of the chat pair. Fastcall
+// through /Gr puts the text in ecx and the sender in edx; the text is the
+// one that survives to the last vararg, because retail saves ecx across the
+// GetPlayerName call and pushes it first.
+VA(0x00554a20, 0x21)  // anchor-callee (AddChat 0x553840), dc 0x11d1c8
+void ReceiveChat(char* chatString, int fromPlayer)
+{
+    AddChat(&chatMan, DATA_COMPGEN(0x00682ab4, chatPlayerLineFormat, "%s: %s"),
+        gpGame->GetPlayerName(fromPlayer), chatString);
+}
+
 // E:\gamedcs\remote.cpp:1539 - CAnimatedDlg's constructor, and the row
 // that unblocks this class's whole vtable. Nothing else in remote.obj
 // referenced ??_7CAnimatedDlg@@6B@: the only other body that stores it is
@@ -514,6 +525,16 @@ VA_COMPGEN(0x00554a80, 0x21, SCALAR_DELETING_DTOR, CAnimatedDlg)
 // an out-of-line virtual destructor, so that ??_G calls it.
 CAnimatedDlg::~CAnimatedDlg()
 {
+}
+
+// E:\gamedcs\remote.h:632 - CNetMsgHandler::Copy. The popup byte comes off
+// the other handler's field directly; the abort message comes back through
+// its vtable slot 2.
+VA(0x00555150, 0x1C)  // anchor-vtable (slot 2 call of 0x640f14), dc 0x11f7e0
+void CNetMsgHandler::Copy(CNetMsgHandler* pOther)
+{
+    m_inPopup = pOther->m_inPopup;
+    m_pAbortPopupMsg = pOther->GetAbortPopupMsg();
 }
 
 // E:\gamedcs\remote.cpp:2673 - CSaveScreen's constructor, the second row in
@@ -1195,6 +1216,13 @@ VA(0x00557900, 0x4)  // anchor-vtable (slot 2 of 0x640f14), dc 0x201f8
 CNetMsg* CNetMsgHandler::GetAbortPopupMsg()
 {
     return m_pAbortPopupMsg;
+}
+
+// E:\gamedcs\remote.cpp:2875
+VA(0x00557910, 0xD)  // anchor-bracket (m_pAbortPopupMsg at 8), dc 0x11efcc
+void CNetMsgHandler::SetAbortPopupMsg(CNetMsg* pNetMsg)
+{
+    m_pAbortPopupMsg = pNetMsg;
 }
 
 VA(0x00557a80, 0x15)  // anchor-global, dc 0x11f070
