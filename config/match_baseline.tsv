@@ -1242,7 +1242,7 @@ questlogwindow	?WindowHandler@TQuestLogWindow@@UAEHPAVmessage@@@Z	100.0000	100.0
 quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	90.5272	90.5272	90.5272	0x12ead0
 quickherowindow	??1TQuickHeroWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12f3d0
 quickherowindow	??_GTQuickHeroWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12f3a0
-quickinfowindow	??0TQuickCreatureWindow@@QAE@W4TViewLevel@0@W4TCreatureType@@HW4TDisposition@0@H@Z	92.7916	92.7916	92.7916	0x12f8c0
+quickinfowindow	??0TQuickCreatureWindow@@QAE@W4TViewLevel@0@W4TCreatureType@@HW4TDisposition@0@H@Z	100.0000	100.0000	100.0000	0x12f8c0
 quickinfowindow	??1TQuickCreatureWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12fd20
 quickinfowindow	??_GTQuickCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12fcf0
 quicktownwindow	??0TQuickTownWindow@@QAE@PBVgarrison@@W4TViewLevel@0@@Z	100.0000	100.0000	100.0000	0x1307d0

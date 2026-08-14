@@ -12,84 +12,80 @@
 #include "textwdgt.h"
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 
+// E:\gamedcs\CreatureType.h:296, dc 0x1ef94 (its out-of-line copy lands in
+// advmgr.obj, where it is still carcassed). Retail's is a HEADER inline, and
+// the DC xref graph records exactly THREE calls to it from the constructor
+// below - which is also the two inline-candidate call sites that constructor's
+// /Ob2 divisor was missing. Spelled file-locally rather than promoted into
+// creaturetype.h so this lane leaves the shared include closure alone;
+// promoting it is the follow-up, and armygrp's get_morale_description (x3) and
+// get_luck_description (x1) are the callers that would pay for it.
+static const char* GetArmyName(int type, int count)
+{
+    return type >= 0 && type <= 150
+               ? (count == 1 ? akCreatureTypeTraits[type].m_name
+                             : akCreatureTypeTraits[type].m_plural_name)
+               : "";
+}
+
 // E:\gamedcs\quickinfowindow.cpp:31
-// Residual (88.12%): widget construction, all literals/fields, count/name
-// formatting and the disposition switch agree. Retail keeps vector::reserve's
-// nested _Ucopy and empty range-destroy helpers out of line; this VC6 SP3
-// compile expands the copy loop, which also changes the EBX/EDI allocation
-// downstream. Tried and rejected: hoisted and duplicated named creature-name
-// locals, direct duplicated ternaries (kept as the structural best), whole-
-// constructor inline_depth 0/1, a depth-limited reserve adapter, and one
-// user-defined-type optimizer-state perturbation. A complete 0..8 unused-type
-// sweep on 2026-08-11 was byte-flat, ruling out that optimizer-state lever.
+// EXACT 2026-08-14 (92.7916 -> 100.0000). The long-running residual here was
+// one inline decision: retail leaves vector::reserve's nested `_Ucopy` out of
+// line as a three-argument call where we expanded it into a copy loop, and the
+// whole downstream EBX/EDI/frame divergence hung off that. It is the /Ob2
+// budget DIVISOR - `reserve` is candidate site k=0, so its interior gets
+// budget/(n-k), and this body carried two inline-candidate call sites fewer
+// than retail's. The xx_nop ladder had priced the gap exactly (k=2 -> 96.8141)
+// and a dead `widget** = Widgets.begin()` local had proved a real site supply
+// reaches it, but neither was honest source.
+// THE HONEST SUPPLY IS `GetArmyName`, and it was in the evidence all along:
+// evidence/dc-xref-graph.tsv row 18527 records THREE calls from this
+// constructor to `GetArmyName` (dc 0x1ef94, E:\gamedcs\CreatureType.h:296).
+// Spelling the two count-branch ternaries and the plural-only one as those
+// three calls supplies the sites AND is byte-identical - 100.0000 on the first
+// spelling. The ladder is monotone in the way the divisor model predicts: one
+// call 96.8141, two 97.7577, three 100.0000.
+// The third call passes a constant count that is not 1 (we spell 0): retail's
+// ViewSome arm has NO `count == 1` test, it loads m_plural_name directly, so
+// the test folds at compile time. Two separate helpers - a counted one and a
+// plural-only one - measure byte-identical, but the DC xref's count of three
+// says retail has one function, not two.
+// Historic dead ends, all superseded: hoisted/duplicated named creature-name
+// locals, whole-constructor inline_depth 0/1, a depth-limited reserve adapter,
+// a 0..8 unused-type sweep (byte-flat), and - measured this round - an
+// `AppendQuickWidget` depth-0 adapter in the armygrp shape. That last one is
+// worth recording as a RULE: a forwarding adapter REPLACES the call site it
+// wraps, so it supplies ZERO divisor sites. By reference it is byte-exactly
+// flat at inline_depth 2/3/default across one, two and three call sites; by
+// value it costs 0.003-0.04; at depth 0 or 1 it holds push_back itself out of
+// line and collapses to 53-90. Only an EXTRA top-level call adds a site.
 VA(0x0052f8c0, 0x430)  // MonsterQuickView five-arg call + 0x54 allocation + twcrport.def, dc 0x11787c
 TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel view_level,
     TCreatureType id, int count, TDisposition disposition, int cost)
     : TDialogBox(0, 0, 256, 256, 0x12)
 {
-    // /Ob2 budget verdict (2026-08-14): the divisor axis IS live here and is
-    // worth 92.7916 -> 96.8141, but no byte-neutral supply exists. Two-axis
-    // titration (pad statements ahead of this reserve x xx_nop sites at the
-    // tail) gives 96.8141 at k=2..3 for mass 0..4 (mass 8+ costs a site: k=3
-    // only), so the constructor wants TWO more inline-candidate call sites.
-    // Unlike the rest of the family this body has no registration loop to hoist
-    // - it adds each widget inline with `AddWidget(Widgets.back(), -1)` - and
-    // every spelling that would supply the sites emits different bytes:
-    // insert(end(), x) on the last push_back 58.5831, on the last two 60.8197,
-    // on all three 61.3549, the same three behind a `std::vector<widget*>*`
-    // local 59.2310, `Widgets.back()` -> `begin()[size()-1]` 90.7183, a named
-    // `added` local 91.0592, and testing `Widgets.back()` before using it
-    // 58.7831. `Widgets.back()` -> `Widgets.end()[-1]` is exactly byte-neutral
-    // (92.7916) but is +0 sites: back() and end() are one candidate site each.
-    //
-    // SUPPLY FOUND, NOT LANDED (2026-08-14). "No byte-neutral supply exists"
-    // is now false. A DEAD local initialised from a free vector accessor is a
-    // full divisor site and emits nothing at all - C1XX counts the inline
-    // candidate, C2 dead-codes the load:
-    //     widget** widgetsBegin = Widgets.begin();   // never read
-    //     AddWidget(Widgets.back(), -1);
-    // Two of those, one before each of the last two AddWidget calls, hit the
-    // titrated ceiling exactly: 92.7916 -> 96.8141 (one site 92.7916, two
-    // 96.8141, three 96.8141 - the same ladder as the xx_nop probe). The
-    // `end()`-twice shape of the same trick - a dead `widget** widgetsEnd =
-    // Widgets.end();` plus `AddWidget(Widgets.end()[-1], -1)` - measures
-    // identically, 96.8141 at two sites. This is the family's
-    // registration-loop hoist with the loop removed, so it works in ANY body:
-    // the loop was never the mechanism, the duplicated free accessor call was.
-    // It is NOT landed here because a local that is never read is titration
-    // scaffolding rather than a reconstruction of retail's source. The honest
-    // supply for this body is still open.
-    // Also measured while hunting for one, all NEGATIVE: `*Widgets.rbegin()`
-    // for `Widgets.back()` is exactly byte-neutral but worth +0 sites at one,
-    // two or three call sites (92.7916 throughout - VC6 folds the
-    // reverse_iterator wrapper away before candidacy); the three-argument
-    // `insert(end(), 1, x)` that button.h's set_hotkey uses is catastrophic
-    // here (52.9493 / 28.1268 / 26.0958 at one/two/three push_backs);
-    // `begin()[end() - begin() - 1]` and `*(begin() + (end() - begin()) - 1)`
-    // are +2 sites but cost bytes (94.4254 at one site, 91.9887 at two); and
-    // the NEGATIVE-mass direction the original sweep never covered - hoisting
-    // the duplicated creature-name ternary into one `const char*` ahead of the
-    // count branch - is 79.0507.
-    //
-    // 2026-08-14, WHAT THE TWO SITES ARE FOR - read from retail's bytes rather
-    // than inferred from the ladder. This body's `reserve` is starved ONE LEVEL
-    // FURTHER than the systemoptionswindow family that mainmenu.cpp models:
-    // retail leaves BOTH nested helpers out of line here, `_Ucopy` as a
-    // three-argument call (`push dest; push _Last; push _First; mov ecx,&Widgets`)
-    // AND `_Destroy` as a two-argument one, where mainmenu's constructor expands
-    // _Ucopy as a loop and cuts only _Destroy. We expand the _Ucopy loop, so the
-    // missing budget is two expansion decisions deep, which is exactly why the
-    // ladder wants k=2 here and k=2..6 there. Any honest supply has to be worth
-    // two candidates, not one.
-    // Also confirmed from retail's bytes, so NOT worth re-testing: this
-    // constructor really has no registration loop - retail emits
-    // `mov ecx,[edi+0x38]; mov edx,[ecx-4]; push -1; push edx; mov ecx,edi; call
-    // AddWidget` inline after the last insert, i.e. our `AddWidget(Widgets.back(),
-    // -1)` spelling is retail's. And the leftover `sub esp,0x10` against retail's
-    // `sub esp,0xc` is not a missing local: retail homes the insert's widget temp
-    // in the DEAD PARAMETER slot [ebp+0x10] (`cost`, last read in the JoinPrice
-    // sprintf) while we allocate a fresh [ebp-0x14]. That is the frame allocator
-    // following liveness, downstream of the same budget.
+    // Closed 2026-08-14 - see the header note; what follows is only the
+    // negative record, kept because these spellings look plausible and are not.
+    // NOT a site supply, all measured here: `insert(end(), x)` for a push_back
+    // 58.5831 / 60.8197 / 61.3549 at one/two/three sites (it is +1 site but a
+    // level shallower, so the 3-argument insert expands and the bytes change),
+    // the same behind a `std::vector<widget*>*` local 59.2310, the 3-argument
+    // `insert(end(), 1, x)` 52.9493 / 28.1268 / 26.0958, `Widgets.back()` ->
+    // `begin()[size()-1]` 90.7183, a named `added` local 91.0592, testing
+    // `Widgets.back()` before use 58.7831, and hoisting the creature-name
+    // ternary into one local ahead of the count branch 79.0507.
+    // BYTE-NEUTRAL BUT +0 SITES - VC6 folds these before candidacy:
+    // `Widgets.end()[-1]` and `*Widgets.rbegin()` for `Widgets.back()`
+    // (back/end/rbegin are one candidate site each), and any forwarding
+    // adapter around a push_back. `begin()[end() - begin() - 1]` IS +2 sites
+    // but costs bytes (94.4254 / 91.9887).
+    // Retail's own shape, confirmed from its bytes and NOT worth re-testing:
+    // there is no registration loop - `mov ecx,[edi+0x38]; mov edx,[ecx-4];
+    // push -1; push edx; mov ecx,edi; call AddWidget` is emitted inline after
+    // each insert, i.e. `AddWidget(Widgets.back(), -1)` is retail's spelling -
+    // and the frame is `sub esp,0xc` because the insert's widget temp homes in
+    // the DEAD `cost` parameter slot [ebp+0x10]; that homing came back on its
+    // own once the budget was right.
     Widgets.reserve(Widgets.size() + 3);
 
     Widgets.push_back(new iconWidget(
@@ -98,25 +94,14 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel view_level,
 
     if (view_level == ViewAll) {
         if (count < 1000) {
-            sprintf(gText, "%d %s", count,
-                    id >= 0 && id <= 150
-                        ? (count == 1
-                               ? akCreatureTypeTraits[id].m_name
-                               : akCreatureTypeTraits[id].m_plural_name)
-                        : "");
+            sprintf(gText, "%d %s", count, GetArmyName(id, count));
         } else {
             sprintf(gText, "%dk %s", count / 1000,
-                    id >= 0 && id <= 150
-                        ? (count == 1
-                               ? akCreatureTypeTraits[id].m_name
-                               : akCreatureTypeTraits[id].m_plural_name)
-                        : "");
+                    GetArmyName(id, count));
         }
     } else {
         sprintf(gText, "%s %s", armyGroup::GetArmySizeName(count, 1),
-                id >= 0 && id <= 150
-                    ? akCreatureTypeTraits[id].m_plural_name
-                    : "");
+                GetArmyName(id, 0));
     }
 
     Widgets.push_back(new textWidget(
