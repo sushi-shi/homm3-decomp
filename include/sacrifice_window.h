@@ -21,13 +21,31 @@ public:
     hero* current_hero;
     unsigned char field_64[0x1d8];
 
+    // DC types artifact_click's first parameter as TArtifactSlot; this tree
+    // has no such enum yet, so it takes the long its retail call site
+    // pushes, matching the sibling declarations.
+    void artifact_click(long slot, unsigned char right_click);
     void backpack_click(long slot, unsigned char right_click);
     void offering_click(long slot, unsigned char right_click);
+    void creature_click(long slot, unsigned char right_click,
+                        unsigned char left_pane);
 };
 SIZE(type_sacrifice_window, 0x23c);
 
 // iconWidget ends at +0x48 in retail. Each vtable's added slot 13 reads the
-// sole derived dword there before forwarding to its parent sacrifice window.
+// derived state there before forwarding to its parent sacrifice window.
+
+// The equipped-artifact doll slots. Retail 0x55fce0 reads the single dword at
+// +0x48 and forwards it with right_click, so the class adds exactly that.
+class type_doll_slot_widget : public iconWidget {
+public:
+    long slot;
+
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
+};
+SIZE(type_doll_slot_widget, 0x4c);
+
 class type_backpack_slot_widget : public iconWidget {
 public:
     long slot;
@@ -45,6 +63,20 @@ public:
                                        unsigned char right_click);
 };
 SIZE(type_artifact_offering_widget, 0x4c);
+
+// The army slots on both panes. Retail 0x55fda0 reads a dword at +0x48 AND a
+// byte at +0x4c and forwards both around right_click, which is exactly
+// creature_click's (slot, right_click, left_pane) argument list and exactly
+// the pair the Dreamcast constructor takes (new_slot, _left_pane).
+class type_army_slot_widget : public iconWidget {
+public:
+    long slot;
+    unsigned char left_pane;
+
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
+};
+SIZE(type_army_slot_widget, 0x50);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:760, dc 0x1258ac) std::basic_string<char,std::char_traits<char>,std::allocator<char> convert_with_commas(__$ReturnUdt, long value);
