@@ -332,6 +332,74 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 // SEPARATE slots (by reference), quicktownwindow's three resource-bonus
 // widgets want them COALESCED in the dead parameter slot (which is what naming
 // the widget in a local does). Read the slot out of retail before choosing.
+// THE CENSUS SWEPT TREE-WIDE (2026-08-14). The diff above was run against
+// EVERY non-exact function in the lanes reachable from here - 45 of them with
+// a `dc 0x` body map, 40 with at least one under-count row - and the honest
+// verdict is that its ACTIONABLE class is much narrower than the
+// ??0TQuickCreatureWindow success suggests. NINE leads were spelled out and
+// measured; ONE is landed (byte-flat, for fidelity), NONE converted a score.
+// The rule that explains all nine, and the thing to check BEFORE spending a
+// build on a census row:
+//
+//   A FILE-LOCAL MODEL OF A DC HEADER INLINE IS BYTE-INERT WHENEVER ITS BODY
+//   CONSTANT-FOLDS AT THE CALL SITE. C1 folds the expansion before the /Ob2
+//   inliner ever counts it, so such a call supplies neither a divisor SITE
+//   nor front-end MASS. `GetArmyName` worked because its body cannot fold: a
+//   runtime bounds test plus two array loads plus a ternary on a runtime
+//   count, at THREE sites. A one-argument accessor over a field, or a
+//   two-way ternary whose selector is a compile-time constant, is free.
+//
+// Measured this round, all byte-EXACTLY flat (do not re-spend a build on
+// them; each is recorded again at its own site):
+//   - resourcemanager ?AddToCache: census `resource::get_Name` x1 where we
+//     read `value->Name`. Flat at 86.6296 both as `inline` and as a plain
+//     file static. The wall there stays the C1 handle-state cap.
+//   - button ?Main and slider ?Main: census `GameTime::ElapsedSince` x1 each
+//     (E:\gamedcs\struct.h:411, dc 0x1eed4 = `Elapsed(Get(), t)`) where both
+//     spell `(int)(GameTime::Get() - repeatTime) > 0`. Flat at 88.1009 and
+//     95.1901. The same function's `combatManager::CombatIsOver` x3 is pure
+//     Dreamcast platform delta - the DC widget pump polls combat-over, and
+//     button::Select is already exact WITHOUT it.
+//   - levelupwindow ??0TLevelUpWindow: census `widget::set_visible` x2
+//     (E:\gamedcs\Widget.h:263, dc 0x56df8) where we send_message twice.
+//     Flat at 98.8241 - the selector argument is a constant, so the ternary
+//     folds. This CLOSES the "still open, needs widget.h" lead recorded at
+//     that constructor: it is not worth a shared-header edit.
+//   - levelupwindow ?WindowHandler: census `GameTime::IsPast` x1 (dc 0x1ef04,
+//     = `ElapsedSince(t) >= 0`). Flat at 77.7273 even though it nests three
+//     inline levels deep. Its `widget::set_visible` x4 matches our four
+//     send_message pairs EXACTLY, and `heroWindow::GetWidget` x12 matches our
+//     twelve - this handler's census is otherwise clean.
+//   - armygrp ?GetMorale: census `armyGroup::HasSomeUndead` x1 (dc 0x4eb88,
+//     the /OPT:REF-eliminated member) where we spell its scan inline. Flat at
+//     98.5654 as a file-local helper. Kept inline in source because the free
+//     static is not retail's shape and buys nothing.
+// Measured and NEGATIVE:
+//   - armygrp ?get_spell_work_chance: census `hero::IsWieldingArtifact` x11
+//     against our 8, and the residual note at that body already said retail
+//     DUPLICATES four sites we merge - so the shared
+//     `check_protection_artifact` label looked exactly like the missing
+//     supply. It is not: un-sharing all six pendant arms costs 88.5071 ->
+//     84.9089 and un-sharing three costs 83.1929. The shared label IS closer,
+//     so the DC count is a port difference. `IsMindSpell` x1 (dc 0x4fd34,
+//     E:\gamedcs\SpellDefs.h:345) likewise costs 0.46 in both an expression
+//     and an IL-preserving spelling.
+// LANDED, byte-flat, for fidelity: armygrp's house-coined `armygrp_clamp` is
+// retail's `limit`/`t_limit` pair - the census names it by COUNT as well as
+// by name (x2 from TSplitWindow::WindowHandler, x1 from GetMorale, x1 from
+// GetArmyMorale = our four sites exactly).
+//
+// SO: run the census diff on a plateau - it is one awk and it is the only
+// instrument that NAMES a missing site - but budget one build, not a
+// campaign, and screen the row first. A row is worth a build when (a) the
+// callee's body does work our spelling does not do at all, and (b) the count
+// gap is >= 2. Rows that only RENAME an expression we already spell
+// (TTextResource::operator[] for GetText, `min` for _cpp_min, `limit` for a
+// local clamp, `SpellIsAvailable` for a byte-array read) are fidelity, never
+// score. And the census's own systemoptions/levelup verdict stands: for the
+// two constructors whose wall is priced in caller mass, IT FOUND NOTHING -
+// both censuses match ours once the platform delta is subtracted, so their
+// ~20 missing statements are still unaccounted for.
 // E:\gamedcs\mainmenu.cpp:66
 VA(0x004fb2a0, 0x385)  // order-map: heroWindow(0,0,800,600) base + 5 button ctors from mmenung/lg/hs/cr/qt.def (ids 0x65-0x69), installs vtbl 0x63ff50, this-global 0x699660; called by oldmain; EH-bearing, dc 0xea2ec
 TMainMenu::TMainMenu()

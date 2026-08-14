@@ -121,10 +121,15 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
     // 98.8241 (byte-flat), `hotKeyCodes.reserve(2)` 89.75, the three-argument
     // hotkey insert 78.77, a `widget*` alias for accept 98.7670, and
     // `Widgets.insert(Widgets.end(), accept)` 88.36.
-    // Still open and NOT reachable from this file: the DC xref records
+    // CLOSED 2026-08-14, and it does NOT need a widget.h edit: the DC xref's
     // `widget::set_visible` x2 (E:\gamedcs\Widget.h:263, dc 0x56df8, retail
     // 0x1629b0) where we spell `send_message(WIDGET_CLEAR_STATUS,
-    // WIDGET_DRAWN)` twice. Declaring it needs an edit to widget.h.
+    // WIDGET_DRAWN)` twice is EXACTLY BYTE-FLAT at 98.8241, modelled
+    // file-locally as `set_visible(w, 0)` over the same ternary retail's
+    // header inline must carry. The selector argument is a compile-time
+    // constant, so C1 folds the expansion before the /Ob2 inliner counts it -
+    // no divisor site, no front-end mass. See mainmenu.cpp for the general
+    // rule; the ~24 real statements this constructor wants are still missing.
     Widgets.reserve(25);
 
     gpLevelUpWindow = this;
@@ -297,6 +302,13 @@ TLevelUpWindow::~TLevelUpWindow()
 // is therefore a source-input difference we have not found, not a stale-CL
 // artifact. Tried and rejected: repeated longhand tails, switch-vs-if dispatch,
 // reordered selection arms, an inline helper.
+// DC-census verdict (2026-08-14): this handler's census is CLEAN. Its
+// `heroWindow::GetWidget` x12 matches our twelve sites exactly and its
+// `widget::set_visible` x4 matches our four send_message pairs. The one
+// under-count row, `GameTime::IsPast` x1 (dc 0x1ef04 = `ElapsedSince(t) >= 0`,
+// itself `(long)(Get() - t)`) against our
+// `(long)(GameTime::Get() - deadline) >= 0`, is byte-EXACTLY flat at 77.7273
+// when modelled file-locally, even though it nests three inline levels deep.
 // What DID move it 73.18 -> 77.73: retail materialises each GetWidget() object
 // BEFORE pushing the member function's arguments (`push id; call GetWidget;
 // push 4; push 6; mov ecx,eax; call send_message`), where the fused
