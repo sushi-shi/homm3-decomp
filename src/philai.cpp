@@ -1012,14 +1012,23 @@ long get_school_value(const hero* our_hero, TSecondarySkill skill)
 }
 
 // E:\gamedcs\philai.cpp:3469
-DC_ONLY(0x1135ac, 0x536)
+// Retail 0x524690/1668 B: (ecx=hero, edx=skill, stack=complex_choice)
+// returning a long, opening on `skillLevel[skill]` and walking the seven
+// army slots - the DC get_skill_value shape exactly, 1334 -> 1668 B.
+// AI_choose_secondary_skill (0x52bbd0) calls it twice, at the two sites
+// DC's own body has.
+// RETAIL_LOCATED(0x00524690, 0x684)  // anchor-callee, dc 0x1135ac
 long get_skill_value(const hero* our_hero, TSecondarySkill skill, unsigned char complex_choice)
 {
     // @stub
 }
 
 // E:\gamedcs\philai.cpp:3645
-DC_ONLY(0x113ae4, 0x138)
+// Retail 0x524dd0/243 B: same (hero, skill, uchar) shape returning a
+// byte, sweeping the 28 skill slots against the hero class's
+// gainSecondarySkillChance row and calling get_skill_value above.
+// 312 -> 243 B, and AI_choose_secondary_skill's tail is its one caller.
+// RETAIL_LOCATED(0x00524dd0, 0xF3)  // anchor-callee, dc 0x113ae4
 unsigned char wants_skill(const hero* our_hero, TSecondarySkill first, unsigned char complex_choice)
 {
     // @stub
@@ -1060,12 +1069,53 @@ void AI_examine_map()
     // @stub
 }
 
-// E:\gamedcs\philai.cpp:4180
-// RETAIL_LOCATED(0x0052bbd0, 0x87)  // anchor-global, dc 0x114a5c
-TSecondarySkill AI_choose_secondary_skill(const hero* our_hero, TSecondarySkill first, TSecondarySkill second, unsigned char complex_choice)
+#endif  // @carcass
+
+// E:\gamedcs\philai.cpp:4180.  Pick between two offered secondary
+// skills.  When the hero either knows both or knows neither, the two
+// appraisals decide and a tie keeps the FIRST offer.  Otherwise exactly
+// one is already known, and retail re-orders the pair so that `first`
+// is always the one to be asked about before calling wants_skill -
+// which is why the swap arm tests the second slot for zero rather than
+// testing the first for nonzero.
+//
+// Both decisions are spelled with the KEEP-FIRST case as the
+// fall-through (`>=` then `return first`, and the positive wants_skill
+// test): the mirrored spellings put the return-second block first and
+// cost 15 points, and writing the appraisals into two named locals
+// costs another 4 - retail compares the two calls directly, which is
+// what leaves `first` in esi and the caster in edi rather than the
+// other way round.
+//
+// Both appraisal helpers are Dreamcast statics whose retail bodies are
+// located but not reconstructed (see their carcass rows below); they
+// are declared in philai.h until those bodies land, since a `static`
+// declared and called but never defined is a hard C2129 under VC6.
+VA(0x0052bbd0, 0x87)  // anchor-global, dc 0x114a5c
+TSecondarySkill AI_choose_secondary_skill(const hero* our_hero,
+    TSecondarySkill first, TSecondarySkill second,
+    unsigned char complex_choice)
 {
-    // @stub
+    if ((our_hero->skillLevel[first] > 0)
+            == (our_hero->skillLevel[second] > 0)) {
+        if (get_skill_value(our_hero, first, complex_choice)
+                >= get_skill_value(our_hero, second, complex_choice))
+            return first;
+        return second;
+    }
+
+    if (our_hero->skillLevel[second] == 0) {
+        TSecondarySkill known = first;
+        first = second;
+        second = known;
+    }
+    if (wants_skill(our_hero, first, complex_choice))
+        return first;
+    return second;
 }
+
+
+#if 0  // @carcass
 
 // E:\gamedcs\philai.cpp:4204
 DC_ONLY(0x114adc, 0x68)
