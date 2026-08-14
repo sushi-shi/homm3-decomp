@@ -944,6 +944,18 @@ public:
     // freshly default-constructed local, so the callee is the only
     // writer. Const because that caller holds the stack as `const army*`.
     void get_berserk_targets(std::vector<army*>& armies) const;
+    // 0x4456d0, claimed in army.cpp: the consumer of the vector above.
+    // NON-const, and the body is what says so - it hands `this` to
+    // combatManager::berserk_attack, whose first parameter is a plain
+    // army*.
+    //
+    // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it to every
+    // consumer costs command.obj's GetCommand 92.5714 -> 92.5357, this
+    // header's include-set class again and its third bare member
+    // DECLARATION to fire it. army.cpp is the only consumer.
+#ifdef HOMM3_ARMY_BERSERK_VIEW
+    void GoBerserk();
+#endif
     int get_second_grid_index() const;                          // 0x4466a0
     int get_mirror_effect() const;                              // 0x4487f0
     long get_AI_target_time(long speed) const;                  // 0x448bd0
