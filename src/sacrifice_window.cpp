@@ -4,6 +4,8 @@
 #include <va.h>
 #include "sacrifice_window.h"
 #include "message.h"
+#include "sample.h"
+#include "soundmgr.h"
 #include "winmgr.h"
 
 #if 0  // @carcass: unlocated Dreamcast bodies and STLport template tail
@@ -1542,6 +1544,24 @@ unsigned char type_army_slot_widget::handle_click(
     return 0;
 }
 
+// E:\gamedcs\sacrifice_window.cpp:1815
+// Slot 6. A byte test at +0x75 selects between two same-class helpers, and an
+// exhaustive order-map of the Dreamcast roster over the run between the
+// destructor and this row names them: 0x562a20 is set_artifact_mode and
+// 0x563150 set_creature_mode. The byte read is can_sacrifice_artifacts,
+// which is exactly the semantics of that choice. Retail tail-DUPLICATES the
+// heroWindow::DoModal call into both arms rather than merging them, which is
+// what the plain if/else spelling produces.
+VA(0x005653b0, 0x37)  // anchor-callee (heroWindow::DoModal) + linkorder, dc 0x127404
+int type_sacrifice_window::DoModal(unsigned char fadeIn)
+{
+    if (can_sacrifice_artifacts)
+        set_artifact_mode();
+    else
+        set_creature_mode();
+    return heroWindow::DoModal(fadeIn);
+}
+
 // E:\gamedcs\sacrifice_window.cpp:1830
 // The sacrifice window's own slot-4 hover hook, found by scanning the image
 // for the tail-merged `push emptyRolloverText / jmp +1 / push eax /
@@ -1580,6 +1600,25 @@ unsigned char type_transformer_slot::handle_click(
         return 1;
     }
     return 0;
+}
+
+// The transformer dialog's own pair, found by the same vtable-uniqueness
+// scan that carried the tradpost family: 0x565f30 is a 33-byte scalar
+// deleting destructor whose only image-wide reference is slot 0 of vtable
+// 0x641694, and its callee 0x565f60 stores that same vtable. The vtable
+// itself is referenced exactly twice - here and in the 0xa3c constructor at
+// 0x5654f0 - so neither row is an /OPT:ICF fold.
+VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
+
+// E:\gamedcs\sacrifice_window.cpp:2129
+VA(0x00565f60, 0xC2)  // anchor-vtable 0x641694 + ??_G call edge, dc 0x127a08
+type_skeleton_window::~type_skeleton_window()
+{
+    for (unsigned int i = 0; i < death_samples.size(); i++) {
+        gpSoundManager->StopSample(death_samples[i]->field_1c);
+        death_samples[i]->Dispose();
+    }
+    delete_widgets();
 }
 
 // E:\gamedcs\sacrifice_window.cpp:2281

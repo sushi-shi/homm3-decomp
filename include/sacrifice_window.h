@@ -5,11 +5,13 @@
 #ifndef HOMM3_SACRIFICE_WINDOW_H
 #define HOMM3_SACRIFICE_WINDOW_H
 
+#include <vector>
 #include "advmgr_popup.h"
 #include "iconwdgt.h"
 #include "textwdgt.h"
 
 class hero;
+class sample;
 
 // Retail's constructor at 0x55fdd0 proves the CAdvPopup base, current_hero
 // at +0x60, and eight VC6 vectors whose last storage triplet ends at +0x23c.
@@ -20,7 +22,14 @@ class hero;
 class type_sacrifice_window : public CAdvPopup {
 public:
     hero* current_hero;
-    unsigned char pad_64[0x28];
+    unsigned char pad_64[0x11];
+    // +0x75: DoModal 0x5653b0 tests this byte to choose set_artifact_mode
+    // over set_creature_mode. The Dreamcast field roster puts
+    // can_sacrifice_artifacts at DC +0x6d, and the proven 8-byte CAdvPopup
+    // delta lands it exactly here - the same widening that already places
+    // current_hero and the rollover pointer below.
+    unsigned char can_sacrifice_artifacts;
+    unsigned char pad_76[0x16];
     // +0x8c: handle_widget_hover 0x5653f0 reads it and dispatches slot 13
     // (textWidget::SetText) through it - the same rollover pointer
     // type_skeleton_window keeps at +0x60 and type_university_window at
@@ -36,8 +45,15 @@ public:
     void offering_click(long slot, unsigned char right_click);
     void creature_click(long slot, unsigned char right_click,
                         unsigned char left_pane);
+    // The two mode switches DoModal picks between. Located by an exhaustive
+    // order-map of the Dreamcast roster over the segment between the
+    // destructor and DoModal: set_artifact_mode 0x562a20, set_creature_mode
+    // 0x563150. Bodies still deferred.
+    void set_artifact_mode();
+    void set_creature_mode();
 
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
+    virtual int DoModal(unsigned char fadeIn);                 // slot 6
 };
 SIZE(type_sacrifice_window, 0x23c);
 
@@ -96,9 +112,21 @@ SIZE(type_army_slot_widget, 0x50);
 class type_skeleton_window : public CAdvPopup {
 public:
     textWidget* rolloverText;  // +0x60
+    // 0x64..0x15b is the Dreamcast field roster's buttons, selection pair,
+    // armyGroup and three parallel widget arrays. The destructor touches
+    // none of them, so none is admitted; the pad only has to carry them.
+    unsigned char pad_64[0xf8];
+    // +0x15c: the destructor 0x565f60 walks this vector by size(), stops and
+    // disposes every sample in it, then lets the member's own _Tidy run
+    // (operator delete on _First at +0x160, then the 0x160/0x164/0x168
+    // triplet zeroed). The Dreamcast roster's last member is
+    // death_samples at DC +0x154, and the proven 8-byte CAdvPopup delta -
+    // the only delta, since nothing before it is a vector - lands it here.
+    std::vector<sample*> death_samples;
 
     void creature_click(long side, long slot, unsigned char right_click);
 
+    virtual ~type_skeleton_window();
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int WindowHandler(message* msg);                   // slot 9
 };
