@@ -809,6 +809,15 @@ public:
     bool HasCapitol();
 #ifdef HOMM3_GAME_OBJ_DECLS
     int save(TAbstractFile* outfile);
+    // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
+    // townManager::SwapHeroes 0x5d5150 calls it on
+    // gpGame->players[townToView->owner] with the town it is showing,
+    // and branches on the byte result - the arity and the return type
+    // both. Nested under this gate, not added to the class outright: a
+    // bare member-function declarator on a class this widely included
+    // is the include-set wall's own trigger shape (the townManager
+    // precedent), and townmgr.cpp is the only live consumer.
+    unsigned char add_garrison_hero(town* our_town);
 #endif
     int NumOfGivenArtifact(int artifact);
     // 0x4bacb0. town::get_legion_bonus calls it on

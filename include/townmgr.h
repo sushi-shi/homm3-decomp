@@ -99,6 +99,14 @@ public:
     Bitmap816* objHotspot;  // +0x28
     border* objBorder;      // +0x2c
 
+    // The DC roster gives it its own row (dc 0x16a1a4, 128 SH4 bytes)
+    // and retail has NO out-of-line body for it: townmgr.obj's first
+    // carve row is the constructor at 0x5c2ea0 (the `%s.def` sprintf +
+    // GetSprite body), and the only expansion in the image is the one
+    // UnloadTown 0x5c70b0 carries. Declared here, DEFINED in townmgr.cpp
+    // - the four members it tears down need border.h, csprite.h and
+    // bitmap816.h complete, and none of them may enter this header.
+    ~townObject();
     // Retail 0x5c2ff0 (dc 0x16a2b0), not reconstructed. Declared for
     // CycleOutline, whose two expansions of the town-redraw block are
     // the arity evidence: thiscall plus two pushed 1s.
@@ -401,6 +409,7 @@ class townObject;
 class heroWindow;
 class widget;
 class CUnnamed69d808_f0;
+class CSprite;
 class TResourceDisplay;
 // SetupWell's argument. Defined above under the window gate; consumers
 // that take the manager alone (recruit.obj, town.obj) only need the name.
@@ -418,9 +427,16 @@ class townManager : public baseManager {
 public:
     town* townToView;             // +0x38
     widget* field_3c;             // +0x3c
-    // +0x40: seven fixed slots, each an object UnloadTown drives through
-    // vtable slot 1 without freeing it. Element type unattested.
-    void* field_40[7];
+    // +0x40, NAMED AND TYPED 2026-08-14. The Dreamcast fieldlist's
+    // `MonPix` is an LF_ARRAY of seven CSprite* at its own 72, which is
+    // this offset under the same -8 shift that puts currTown/panorama/
+    // objects/numObjects at +0x38/+0x3c/+0x5c/+0x10c. Retail agrees at
+    // both ends: SetupTown 0x5c6870 fills the seven slots from
+    // GetSprite 0x55c7b0 (one per dwelling row, indexed through
+    // currentDwellingIDOff), and UnloadTown 0x5c70b0 drives each
+    // non-null one through vtable slot 1 - CSprite::Dispose - without
+    // freeing it, which is exactly how a shared resource is released.
+    CSprite* MonPix[7];
     // +0x5c: the town's building objects, count at +0x10c. UnloadTown
     // walks exactly this many, unhooks each one's widget at +0x2c from
     // the town window and frees the object - which is ~townObject
@@ -505,6 +521,16 @@ public:
     // 0x11c-byte carve row directly ahead of it, which is the same
     // pairing; not reconstructed.
     void RedrawTownScreen();
+    // Retail 0x5c6e10 (dc 0x16c0e4), declared for SwapHeroes' tail call;
+    // not reconstructed. Four `new strip` sites at 0x5c6e5a/0x5c6f1c/
+    // 0x5c6fae/0x5c7045 (`push 0x78` into exe_new) are what identify it
+    // against the DC roster's NewStrips, and its four callers are
+    // exactly the four bodies that have just torn strips down.
+    void NewStrips();
+    // Retail 0x5d5150 (dc 0x176b88). Hands the town's visiting hero to
+    // the garrison and rebuilds the two troop strips around the new
+    // arrangement.
+    void SwapHeroes();
 #endif
     virtual int Open(int newPriority) OVERRIDE;   // slot 0, 0x5c63c0
     virtual void Close() OVERRIDE;                // slot 1, 0x5c71b0

@@ -271,7 +271,7 @@ townManager::townManager()
     field_1b0 = 0;
     field_1b4 = 0;
     field_3c = 0;
-    memset(field_40, 0, sizeof(field_40));
+    memset(MonPix, 0, sizeof(MonPix));
     memset(TownObjects, 0, sizeof(TownObjects));
     field_1a0 = 0;
     field_1a8 = 0;
@@ -651,11 +651,81 @@ void CTownNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
     pResourceDisplay->Update(1, 1);
 }
 
+// The panorama object's destructor, INLINE: retail emits no out-of-line
+// body for it anywhere in the image (townmgr.obj's first carve row is
+// the constructor at 0x5c2ea0), and its one expansion is the `delete`
+// inside UnloadTown below. It is spelled here rather than in the class
+// because border, CSprite and Bitmap816 all have to be complete, and
+// townmgr.h's include closure is load-bearing for the rest of the file.
+//
+// The asymmetry between the four members is retail's, not a guess: the
+// border is `delete`d (vtable slot 0 with a pushed 1 - the scalar
+// deleting destructor), the icon is Disposed UNGUARDED, and the outline
+// and hotspot are Disposed behind a null test each. Sprites are the
+// shared resource-manager objects the constructor got from GetSprite,
+// so releasing a reference is all the object may do; the border is the
+// only thing it owns outright.
+
+// E:\gamedcs\townmgr.cpp:1900
+inline townObject::~townObject()
+{
+    delete objBorder;
+    objIcon->Dispose();
+    if (objOutline)
+        objOutline->Dispose();
+    if (objHotspot)
+        objHotspot->Dispose();
+}
+
+// Dropping the town the manager is showing, without dropping the
+// manager: the seven dwelling sprites go back to the resource manager,
+// the two troop strips and every panorama object are freed, and the
+// panorama border itself goes last. Everything freed is nulled, because
+// SetupTown runs this exact page again on the next town.
+//
+// The two strips are `delete`d through strip's declared-but-never-
+// defined destructor (see strip.h): retail calls a real out-of-line body
+// - the image-wide empty-body fold at 0x5bc690 - and then operator
+// delete, which is what a non-virtual empty destructor compiles to.
+//
+// Each panorama object is unhooked from the town window BEFORE it is
+// freed, and the unhook reads the border straight out of the object, so
+// the window is left holding no dangling widget. The count is re-read
+// from the manager every iteration.
+
+// E:\gamedcs\townmgr.cpp:3143
+VA(0x005c70b0, 0xFA)  // anchor-caller(Close 0x5c71b0 + SetupTown) + arity(bare ret), dc 0x16c2d8
+void townManager::UnloadTown()
+{
+    int i;
+
+    for (i = 0; i < 7; i++) {
+        if (MonPix[i])
+            MonPix[i]->Dispose();
+    }
+
+    delete field_120;
+    field_120 = 0;
+    delete field_11c;
+    field_11c = 0;
+
+    for (i = 0; i < TownObjectCount; i++) {
+        TownWindow->RemoveWidget(TownObjects[i]->objBorder);
+        delete TownObjects[i];
+        TownObjects[i] = 0;
+    }
+
+    if (field_3c) {
+        delete field_3c;
+        field_3c = 0;
+    }
+}
+
 // The manager's Close, slot 1 of vtable 0x643720 and the second of its
-// three virtuals. UnloadTown 0x5c70b0 (located, not reconstructed) drops
-// the town itself; what is left here is the two windows the manager owns,
-// the fade back to the adventure map, and the network arm that hands the
-// dialog pump's helper back before dropping the popup it was driving.
+// three virtuals. UnloadTown 0x5c70b0 drops the town itself; what is
+// left here is the two windows the manager owns, the fade back to the
+// adventure map, and the network arm that hands the dialog pump's
+// helper back before dropping the popup it was driving.
 
 // E:\gamedcs\townmgr.cpp:3175
 VA(0x005c71b0, 0x9C)  // anchor-vtable 0x643720 slot 1, dc 0x16c3e8
@@ -1887,6 +1957,47 @@ TShipWindow::~TShipWindow()
         if (*it)
             delete *it;
     }
+}
+
+// Moving the town's visiting hero into the garrison. Only the local
+// human runs it at all - a remote or computer player reaches the same
+// state through the network path - and the move can be refused, which
+// is the one message this page puts up. Once the hero has actually
+// moved, both troop strips are stale, so they are dropped and NewStrips
+// rebuilds them around the new arrangement.
+//
+// The player record is computed BEFORE the ownership test rather than
+// inside the arm that uses it: retail materialises
+// `&gpGame->players[townToView->owner]` into edi (the 45*owner scaled
+// by 8 against the +0x20ad0 base, sign-extending the town's `owner`
+// byte) and carries it across the IsLocalHuman call. That is the
+// standing "a value that must survive a call has to be spelled as a
+// statement before it" lever, and no arrangement that spells it inside
+// the arm reproduces the hoist.
+
+// E:\gamedcs\townmgr.cpp:6778
+VA(0x005d5150, 0xC2)  // anchor-callee(add_garrison_hero 0x4b9fc0) + strip teardown + arity(bare ret), dc 0x176b88
+void townManager::SwapHeroes()
+{
+    playerData* player = &gpGame->players[townToView->owner];
+
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+
+    if (!player->add_garrison_hero(townToView)) {
+        // General text 276 - the refusal this page prints when the
+        // garrison will not take the hero. Spelled as the bare index,
+        // as the other unnamed general-text consumers in the tree are.
+        NormalDialog(gpGeneralText->GetText(276), 1, -1, -1, -1, 0,
+                     -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    delete field_120;
+    field_120 = 0;
+    delete field_11c;
+    field_11c = 0;
+    NewStrips();
 }
 
 // Drops the two hovered troop selections. The pair of strips it clears
