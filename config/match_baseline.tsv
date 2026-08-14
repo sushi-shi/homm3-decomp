@@ -1097,7 +1097,7 @@ kbwin	_WinMain@16	100.0000	100.0000	100.0000	0xf7a30
 levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	97.7369	97.7369	97.7369	0xf8880
 levelupwindow	??1TLevelUpWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xf9730
 levelupwindow	??_GTLevelUpWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf9700
-levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	73.1787	73.1787	73.1787	0xf9780
+levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	77.7273	77.7273	77.7273	0xf9780
 lodfile	?getItemIndex@LODFile@@QAEPAULODEntry@@PBD@Z	100.0000	100.0000	100.0000	0xfa610
 mainmenu	??0TMainMenu@@QAE@XZ	97.0098	97.0098	97.0098	0xfb2a0
 mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660

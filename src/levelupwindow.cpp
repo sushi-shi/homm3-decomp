@@ -201,13 +201,23 @@ TLevelUpWindow::~TLevelUpWindow()
 }
 
 // E:\gamedcs\levelupwindow.cpp:170
-// Residual (73.18%): the retail object duplicates the identical
-// enable/DrawWindow/return tail in four selection arms, while this VC6 SP3
-// build cross-jumps every arm to one shared tail; the first 138 bytes and the
-// complete semantics agree. Tried and rejected: repeated longhand tails,
-// switch-vs-if dispatch, reordered selection arms, and an inline helper (the
-// helper did not alter emitted code). This is the known stale-CL/tail-merge
-// generation family; leave the measured maximum until that probe lands.
+// Residual (77.73%): the retail object duplicates the identical
+// enable/DrawWindow/return tail in all four selection arms (12 GetWidget calls),
+// while this CL cross-jumps every arm to one shared tail (9 calls); it also
+// merges the several `return 0` exits that retail keeps distinct (9 rets vs our
+// 11). predict-inline's only unpaired row is exactly that GetWidget 9-vs-12
+// count, so the tail merge IS the whole remaining residual.
+// NEW 2026-08-14: the generation hypothesis in the old note is now DISPROVEN -
+// `homm3 vc6 ab run` compiles this body with the RTM C2 12.00.8168 and gets
+// output byte-identical to SP3 (104+36 both), verdict `neither`. The cross-jump
+// is therefore a source-input difference we have not found, not a stale-CL
+// artifact. Tried and rejected: repeated longhand tails, switch-vs-if dispatch,
+// reordered selection arms, an inline helper.
+// What DID move it 73.18 -> 77.73: retail materialises each GetWidget() object
+// BEFORE pushing the member function's arguments (`push id; call GetWidget;
+// push 4; push 6; mov ecx,eax; call send_message`), where the fused
+// `GetWidget(id)->send_message(a,b)` spelling pushes the arguments first. Each
+// widget is bound to a pointer local below to reproduce retail's order.
 VA(0x004f9780, 0x440)  // vtable slot 9+linkorder, dc 0xe8c64
 int TLevelUpWindow::WindowHandler(message* msg)
 {
@@ -234,30 +244,40 @@ int TLevelUpWindow::WindowHandler(message* msg)
 
     if (msg->id == MESSAGE_KEY_DOWN) {
         switch (msg->codeX) {
-        case LEVELUP_SELECT_RIGHT_KEY:
+        case LEVELUP_SELECT_RIGHT_KEY: {
             if (gpLevelUpWindow->right_skill == -1)
                 break;
-            gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID)->send_message(
+            widget* leftBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
+            leftBorder->send_message(
                 widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-            gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID)->send_message(
+            widget* rightBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
+            rightBorder->send_message(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
             gpLevelUpWindow->Selected = SKILLICON_2_ID;
-            gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID)->enable(1);
+            widget* accept = gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
+            accept->enable(1);
             gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
             return MESSAGE_DISPATCH_CONSUME;
+        }
 
-        case LEVELUP_SELECT_LEFT_KEY:
+        case LEVELUP_SELECT_LEFT_KEY: {
             if (gpLevelUpWindow->left_skill == -1)
                 break;
-            gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID)->send_message(
+            widget* leftBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
+            leftBorder->send_message(
                 widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
-            if (gpLevelUpWindow->right_skill != -1)
-                gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID)->send_message(
+            if (gpLevelUpWindow->right_skill != -1) {
+                widget* rightBorder =
+                    gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
+                rightBorder->send_message(
                     widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
+            }
             gpLevelUpWindow->Selected = SKILLICON_1_ID;
-            gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID)->enable(1);
+            widget* accept = gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
+            accept->enable(1);
             gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
             return MESSAGE_DISPATCH_CONSUME;
+        }
         }
         return 0;
     }
@@ -305,27 +325,33 @@ int TLevelUpWindow::WindowHandler(message* msg)
     case SKILLICON_1_ID:
     case SKILLBORDER_1_ID: {
         widget* rightBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
-        gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID)->send_message(
+        widget* leftBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
+        leftBorder->send_message(
             widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
         if (rightBorder)
             rightBorder->send_message(
                 widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
         gpLevelUpWindow->Selected = SKILLICON_1_ID;
-        gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID)->enable(1);
+        widget* accept = gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
+        accept->enable(1);
         gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
         return MESSAGE_DISPATCH_CONSUME;
     }
 
     case SKILLICON_2_ID:
-    case SKILLBORDER_2_ID:
-        gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID)->send_message(
+    case SKILLBORDER_2_ID: {
+        widget* leftBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_1_ID);
+        leftBorder->send_message(
             widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DRAWN);
-        gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID)->send_message(
+        widget* rightBorder = gpLevelUpWindow->GetWidget(SKILLBORDER_2_ID);
+        rightBorder->send_message(
             widget::WIDGET_SET_STATUS, widget::WIDGET_DRAWN);
         gpLevelUpWindow->Selected = SKILLICON_2_ID;
-        gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID)->enable(1);
+        widget* accept = gpLevelUpWindow->GetWidget(LEVELUP_ACCEPT_ID);
+        accept->enable(1);
         gpLevelUpWindow->DrawWindow(1, 0xffff0001, 0xffff);
         return MESSAGE_DISPATCH_CONSUME;
+    }
 
     case LEVELUP_ACCEPT_ID:
         msg->id = MESSAGE_WIDGET;
