@@ -1,0 +1,77 @@
+// animateddlg.h - CAnimatedDlg, retail's animated-sprite text dialog
+// (compiland remote.obj).
+// HAND-OWNED. Class layouts are NOT fabricated from method symbols;
+// prototypes stay comments until a retail layout is proven.
+//
+// This is deliberately NOT in remote.h. The Dreamcast field list homes
+// CAnimatedDlg in E:\gamedcs\remote.h, but seven other compiled TUs include
+// our remote.h (advmgr, ai_player, cmbtmgr, command, levelupwindow, mainmenu,
+// systemoptionswindow) and none of them needs a dialog base; pulling
+// dialogbox.h into their include closures is exactly the perturbation the
+// include-set residual class warns about. remote.cpp is the only consumer.
+#ifndef HOMM3_ANIMATEDDLG_H
+#define HOMM3_ANIMATEDDLG_H
+
+#include "dialogbox.h"
+
+class CSprite;
+
+// Layout is DC's field list shifted by the CTextDialog widening (DC's
+// CTextDialog is 0x50, retail's is 0x58, so every DC offset moves +8), and
+// every shifted offset is corroborated by retail bytes:
+//   m_lastTick     DC 80  -> 0x58   zeroed by the constructor 0x554a50
+//   m_spriteX      DC 84  -> 0x5c
+//   m_spriteY      DC 88  -> 0x60
+//   m_spriteFrame  DC 92  -> 0x64   zeroed by the constructor
+//   m_seq          DC 96  -> 0x68   written by Setup 0x554b10 (4th argument)
+//   m_sSprite      DC 100 -> 0x6c   written by Setup 0x554b10 (3rd argument)
+//   m_palUpdated   DC 104 -> 0x70   zeroed (byte) by the constructor
+//   m_pSprite      DC 108 -> 0x74   zeroed by the constructor; the destructor
+//                                   0x554ab0 Disposes it through slot 1
+// DC's total 112 becomes 0x78.
+//
+// The vtable 0x640e94 is 14 slots against CTextDialog's 13, and DC names the
+// extra one exactly: Setup is INTRODUCING VIRTUAL at "vfptr offset = 52",
+// i.e. slot 13 - which is where retail's 0x554b10 sits, and that body writes
+// m_sSprite/m_seq and then chains to CTextDialog::Setup (0x490820, slot 10).
+// The three remaining entries are overrides at their inherited slots: slot 3
+// handle_message (0x554d90), slot 5 DrawWindow (0x554e90), slot 12
+// CalcDimensions (0x554c30). Declared only, no local definition - the
+// widget::Close idiom.
+class CAnimatedDlg : public CTextDialog {
+public:
+    CAnimatedDlg();
+    virtual ~CAnimatedDlg();
+    virtual unsigned char Setup(const char* cText, font* pFont,
+                                const char* sSprite, int seq);  // slot 13
+    virtual void CalcDimensions(const char* cText, font* pFont,
+                                int& winX, int& winY,
+                                int& winWidth, int& winHeight);  // slot 12
+    virtual int handle_message(message& msg);                    // slot 3
+    virtual void DrawWindow(unsigned char update, int iLowID,
+                            int iHighID);                        // slot 5
+
+protected:
+    unsigned long m_lastTick;    // +0x58
+    int m_spriteX;               // +0x5c
+    int m_spriteY;               // +0x60
+    int m_spriteFrame;           // +0x64
+    int m_seq;                   // +0x68
+    const char* m_sSprite;       // +0x6c
+    unsigned char m_palUpdated;  // +0x70
+    CSprite* m_pSprite;          // +0x74
+};
+SIZE(CAnimatedDlg, 0x78);
+
+// --- CAnimatedDlg ---
+// CODEVIEW(E:\gamedcs\remote.cpp:1539, dc 0x11d1ec) void CAnimatedDlg::CAnimatedDlg();
+// CODEVIEW(E:\gamedcs\remote.cpp:1547, dc 0x11d250) void CAnimatedDlg::~CAnimatedDlg();
+// CODEVIEW(E:\gamedcs\remote.cpp:1553, dc 0x11d290) bool CAnimatedDlg::Setup(const char* cText, font* pFont, const char* sSprite, int seq);
+// CODEVIEW(E:\gamedcs\remote.cpp:1563, dc 0x11d2b0) void CAnimatedDlg::CalcSpriteDimensions(CSprite* pSprite, int& a, int& b, int& c);
+// CODEVIEW(E:\gamedcs\remote.cpp:1606, dc 0x11d394) void CAnimatedDlg::CalcDimensions(const char* cText, font* pFont, int& winX, int& winY, int& winWidth, int& winHeight);
+// CODEVIEW(E:\gamedcs\remote.cpp:1634, dc 0x11d490) void CAnimatedDlg::DrawSprite();
+// CODEVIEW(E:\gamedcs\remote.cpp:1651, dc 0x11d558) int CAnimatedDlg::handle_message(message& msg);
+// CODEVIEW(E:\gamedcs\remote.cpp:1658, dc 0x11d56c) void CAnimatedDlg::TickAnimation();
+// CODEVIEW(E:\gamedcs\remote.cpp:1673, dc 0x11d5dc) void CAnimatedDlg::DrawWindow(bool update, int iLowID, int iHighID);
+
+#endif  /* HOMM3_ANIMATEDDLG_H */
