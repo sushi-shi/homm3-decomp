@@ -11,7 +11,12 @@ __declspec(nothrow) void __cdecl operator delete(void* p);
 #if 0  // @carcass
 
 // E:\gamedcs\bottomviewsubwindow.cpp:39
-// RETAIL_LOCATED(0x004521f0, 0x8D4)  // anchor-global, dc 0x550b8
+// NOT LOCATED. The old note here read RETAIL_LOCATED(0x004521f0, 0x8D4);
+// that address is TBottomViewTown's constructor - its caller is
+// advManager::UpdBottomViewTown and it stores its own 0x63bb34 vftable.
+// This base constructor is inlined into all seven derived constructors
+// and no separate retail body has been found for it.
+DC_ONLY(0x550b8, 0x5C)
 void type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window)
 {
     // @stub
@@ -33,6 +38,7 @@ void type_bottom_view_window::animate()
 
 // E:\gamedcs\bottomviewsubwindow.cpp:77
 DC_ONLY(0x5518c, 0x2BC)
+// RETAIL_LOCATED(0x00450dd0, 0x319)  // anchor-vtable + anchor-caller
 void TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
 {
     // @stub
@@ -40,6 +46,7 @@ void TBottomViewNewTurn::TBottomViewNewTurn(heroWindow* parent)
 
 // E:\gamedcs\bottomviewsubwindow.cpp:121
 DC_ONLY(0x55448, 0x64)
+// RETAIL_LOCATED(0x004511a0, 0x79)  // anchor-vtable + anchor-caller
 void TBottomViewNewTurn::animate()
 {
     // @stub
@@ -47,6 +54,7 @@ void TBottomViewNewTurn::animate()
 
 // E:\gamedcs\bottomviewsubwindow.cpp:146
 DC_ONLY(0x554ac, 0x2BC)
+// RETAIL_LOCATED(0x00451220, 0x393)  // anchor-vtable + anchor-caller
 void TBottomViewResourceMessage::TBottomViewResourceMessage(heroWindow* parent, int res, int quantity, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
 {
     // @stub
@@ -54,6 +62,7 @@ void TBottomViewResourceMessage::TBottomViewResourceMessage(heroWindow* parent, 
 
 // E:\gamedcs\bottomviewsubwindow.cpp:197
 DC_ONLY(0x55768, 0x140)
+// RETAIL_LOCATED(0x00451820, 0x1DC)  // anchor-vtable + anchor-caller
 void TBottomViewMessage::TBottomViewMessage(heroWindow* parent, const std::basic_string<char,std::char_traits<char>,std::allocator<char>* message)
 {
     // @stub
@@ -61,6 +70,7 @@ void TBottomViewMessage::TBottomViewMessage(heroWindow* parent, const std::basic
 
 // E:\gamedcs\bottomviewsubwindow.cpp:222
 DC_ONLY(0x558a8, 0x54C)
+// RETAIL_LOCATED(0x00451ab0, 0x68A)  // anchor-vtable + anchor-caller
 void TBottomViewHero::TBottomViewHero(heroWindow* parent)
 {
     // @stub
@@ -68,6 +78,7 @@ void TBottomViewHero::TBottomViewHero(heroWindow* parent)
 
 // E:\gamedcs\bottomviewsubwindow.cpp:352
 DC_ONLY(0x55df4, 0x5C4)
+// RETAIL_LOCATED(0x004521f0, 0x8D4)  // anchor-vtable + anchor-caller
 void TBottomViewTown::TBottomViewTown(heroWindow* parent)
 {
     // @stub
@@ -75,6 +86,7 @@ void TBottomViewTown::TBottomViewTown(heroWindow* parent)
 
 // E:\gamedcs\bottomviewsubwindow.cpp:515
 DC_ONLY(0x563b8, 0x4C8)
+// RETAIL_LOCATED(0x00452b80, 0x620)  // anchor-vtable + anchor-caller
 void TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 {
     // @stub
@@ -82,6 +94,7 @@ void TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
 
 // E:\gamedcs\bottomviewsubwindow.cpp:599
 DC_ONLY(0x56880, 0x33C)
+// RETAIL_LOCATED(0x00453250, 0x3EE)  // anchor-vtable + anchor-caller
 void TBottomViewEnemyTurn::TBottomViewEnemyTurn(heroWindow* parent)
 {
     // @stub
@@ -96,6 +109,7 @@ long TBottomViewEnemyTurn::sum_mobility(long player_id)
 
 // E:\gamedcs\bottomviewsubwindow.cpp:661
 DC_ONLY(0x56c14, 0x1E4)
+// RETAIL_LOCATED(0x004536f0, 0x271)  // anchor-vtable + anchor-caller
 void TBottomViewEnemyTurn::animate()
 {
     // @stub
@@ -244,4 +258,94 @@ type_bottom_view_window::~type_bottom_view_window()
             delete item;
         }
     }
+}
+
+// The seven derived destructors. Each has an EMPTY body in the source -
+// no derived class owns storage that needs releasing - so all seven are
+// the same 120 bytes: the base destructor inlined whole, its 0x63bb04
+// vptr store, its widget-removal loop and its ??1TSubWindow call. The
+// derived class's OWN vptr store is dead (the inlined base overwrites it
+// immediately) and VC6 eliminates it, which is why not one of these
+// bodies mentions its own vftable and why the only image-wide reference
+// to each derived table is inside that class's constructor.
+//
+// The identity of every pair is settled by three independent facts that
+// agree, and the sizes leave no freedom:
+//
+//   ??_G     ~dtor    vftable     ctor (identified by its advManager
+//   -------  -------  ----------  caller) that precedes the pair
+//   0x4510f0 0x451120 0x63bb0c    0x450dd0  UpdBottomViewNewTurn
+//   0x451770 0x4517a0 0x63bb1c    0x451220  UpdBottomViewResMsg
+//   0x451a00 0x451a30 0x63bb24    0x451820  UpdBottomViewMessage
+//   0x452140 0x452170 0x63bb2c    0x451ab0  UpdBottomViewHero
+//   0x452ad0 0x452b00 0x63bb34    0x4521f0  UpdBottomViewTown
+//   0x4531a0 0x4531d0 0x63bb3c    0x452b80  UpdBottomViewKingdom
+//   0x453640 0x453670 0x63bb44    0x453250  UpdBottomViewEnemyTurn
+//
+// First, the eight two-slot tables 0x63bb04..0x63bb44 are consecutive and
+// each one's slot 0 is exactly one of these 33-byte wrappers, so the
+// tables enumerate the family in emission order. Second, each derived
+// table has EXACTLY ONE image-wide reference and it sits inside the
+// constructor listed above, whose own caller is the matching
+// advManager::UpdBottomViewXxx - the class name is read off the caller,
+// not guessed. Third, retail's layout is plain source order with the
+// pair falling immediately after its class's constructor, and that order
+// reproduces the Dreamcast line order (77, 146, 197, 222, 352, 515, 599)
+// exactly.
+//
+// Slot 1 corroborates the two classes DC gives an animate override to:
+// 0x63bb0c and 0x63bb44 point at their own bodies (0x4511a0, 0x4536f0)
+// while the other five share the base's 0x5bc690.
+//
+// This also corrects a misattribution left in the carcass above:
+// 0x4521f0 is TBottomViewTown's constructor, not
+// type_bottom_view_window's.
+
+// BLOCKED on the constructor: VA_COMPGEN(0x004510f0, 0x21, SCALAR_DELETING_DTOR, TBottomViewNewTurn)
+
+VA(0x00451120, 0x78)
+TBottomViewNewTurn::~TBottomViewNewTurn()
+{
+}
+
+// BLOCKED on the constructor: VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, TBottomViewResourceMessage)
+
+VA(0x004517a0, 0x78)
+TBottomViewResourceMessage::~TBottomViewResourceMessage()
+{
+}
+
+// BLOCKED on the constructor: VA_COMPGEN(0x00451a00, 0x21, SCALAR_DELETING_DTOR, TBottomViewMessage)
+
+VA(0x00451a30, 0x78)
+TBottomViewMessage::~TBottomViewMessage()
+{
+}
+
+// BLOCKED on the constructor: VA_COMPGEN(0x00452140, 0x21, SCALAR_DELETING_DTOR, TBottomViewHero)
+
+VA(0x00452170, 0x78)
+TBottomViewHero::~TBottomViewHero()
+{
+}
+
+// BLOCKED on the constructor: VA_COMPGEN(0x00452ad0, 0x21, SCALAR_DELETING_DTOR, TBottomViewTown)
+
+VA(0x00452b00, 0x78)
+TBottomViewTown::~TBottomViewTown()
+{
+}
+
+// BLOCKED on the constructor: VA_COMPGEN(0x004531a0, 0x21, SCALAR_DELETING_DTOR, TBottomViewKingdom)
+
+VA(0x004531d0, 0x78)
+TBottomViewKingdom::~TBottomViewKingdom()
+{
+}
+
+// BLOCKED on the constructor: VA_COMPGEN(0x00453640, 0x21, SCALAR_DELETING_DTOR, TBottomViewEnemyTurn)
+
+VA(0x00453670, 0x78)
+TBottomViewEnemyTurn::~TBottomViewEnemyTurn()
+{
 }

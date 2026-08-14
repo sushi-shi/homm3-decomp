@@ -373,6 +373,13 @@ border	?GetRealWidth@bitmapBorder@@UAEHXZ	100.0000	100.0000	100.0000	0x504a0
 border	?SetImage@bitmapBorder@@QAEXPBD@Z	100.0000	100.0000	100.0000	0x504c0
 border	?SetPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000	100.0000	100.0000	0x50520
 border	?zBufferDraw@bitmapBorder@@QAEXPAGH@Z	100.0000	100.0000	100.0000	0x503f0
+bottomviewsubwindow	??1TBottomViewEnemyTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x53670
+bottomviewsubwindow	??1TBottomViewHero@@UAE@XZ	100.0000	100.0000	100.0000	0x52170
+bottomviewsubwindow	??1TBottomViewKingdom@@UAE@XZ	100.0000	100.0000	100.0000	0x531d0
+bottomviewsubwindow	??1TBottomViewMessage@@UAE@XZ	100.0000	100.0000	100.0000	0x51a30
+bottomviewsubwindow	??1TBottomViewNewTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x51120
+bottomviewsubwindow	??1TBottomViewResourceMessage@@UAE@XZ	100.0000	100.0000	100.0000	0x517a0
+bottomviewsubwindow	??1TBottomViewTown@@UAE@XZ	100.0000	100.0000	100.0000	0x52b00
 bottomviewsubwindow	??1type_bottom_view_window@@UAE@XZ	100.0000	100.0000	100.0000	0x50d50
 bottomviewsubwindow	??_Gtype_bottom_view_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x50d20
 button	??0button@@QAE@HHHHHPBDHHEHH@Z	100.0000	100.0000	100.0000	0x55ef0
