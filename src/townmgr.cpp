@@ -83,6 +83,16 @@ DATA(0x006aaa48) int gMapTavern;
 // outside the admitted surface - declared here the way town::View's
 // globals are. Roles are unattested, so the names stay neutral.
 DATA(0x006aa9d8) extern int gUnnamed6aa9d8;
+// The "nwczion" cheat's toggle, and this is a NAME rather than an
+// ordinal because the retail bytes prove the semantics twice over. The
+// image has exactly four references: the game-start reset at 0x4cece9
+// clears it, the console at 0x402933/0x40293d flips it when the typed
+// line matches the ROT13 literal at 0x63a558 ("ajpmvba" -> "nwczion",
+// the build-everything cheat, the neighbouring cells being "fcbba" ->
+// "spoon" and "ajpcuvfurecevpr" -> "nwcphisherprice"), and
+// SetupExtraStuff below reads it. Owner TU outside the admitted
+// surface, so it is declared rather than claimed.
+DATA(0x006aaa5c) extern unsigned char gBuildAllBuildings;
 // A third, on the same evidence: all seven references to 0x6aa9e8 land
 // inside townmgr's bracket (townObject::Draw 0x5c328e, townManager::Open
 // 0x5c651a, 0x5c77ee/0x5c77fb, ::Main 0x5d34b2, ::CycleOutline 0x5d692e
@@ -360,6 +370,44 @@ townManager::townManager()
     field_19c = -1;
     field_1a4 = 0;
     field_1ac = 0;
+}
+
+// The town's free buildings, and the compiland's only reader of the
+// flag at 0x6aaa5c. With the flag set, every building the town type is
+// eligible for and has not built yet goes up at once - the loop walks
+// bitNumber straight through all 44 building ids and tests both 64-bit
+// masks; with it clear, only the one faction bonus each of the four
+// towns that has one gets: Castle and Fortress EXTRA_2, Stronghold
+// EXTRA_3, Conflux EXTRA_1, and nothing at all for the other five.
+//
+// The town pointer is re-read from the manager on every iteration
+// because BuildBuilding can move it - that reload is retail's, and it
+// is what the spilled `this` in the frame is for.
+
+// E:\gamedcs\townmgr.cpp:2047
+VA(0x005c33f0, 0xDC)  // anchor-bracket + anchor-callee(town::BuildBuilding/create_building) + arity(bare ret), dc 0x16a644
+void townManager::SetupExtraStuff()
+{
+    if (gBuildAllBuildings) {
+        for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
+            if (!(townToView->active & bitNumber[i])
+                && (gTownEligibleBuildMask[townToView->type] & bitNumber[i]))
+                townToView->BuildBuilding(i, 0, 1);
+        }
+    } else {
+        switch (townToView->type) {
+        case TOWN_CASTLE:
+        case TOWN_FORTRESS:
+            townToView->create_building(EXTRA_2_ID);
+            break;
+        case TOWN_STRONGHOLD:
+            townToView->create_building(EXTRA_3_ID);
+            break;
+        case TOWN_CONFLUX:
+            townToView->create_building(EXTRA_1_ID);
+            break;
+        }
+    }
 }
 
 // ---------------------------------------------------------------------
@@ -3071,13 +3119,6 @@ TTavernWindow::~TTavernWindow()
 }
 
 #if 0  // @carcass
-
-// E:\gamedcs\townmgr.cpp:2047
-DC_ONLY(0x16a644, 0xE8)
-void townManager::SetupExtraStuff()
-{
-    // @stub
-}
 
 // E:\gamedcs\townmgr.cpp:2261
 DC_ONLY(0x16a72c, 0x6C4)
