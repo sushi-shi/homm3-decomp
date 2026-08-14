@@ -307,6 +307,33 @@ always counts `call` + tail `jmp`.
    structure in this TU is a C2 budget quantity and is not reachable
    from C1 handle numbering.
 
+10. **The lever reaches the MEMBER-INITIALIZER prologue too (2026-08-14)** —
+    and this retracts a published negative. `viewarmywindow`'s
+    `TViewArmyWindow(int,int,int,unsigned char)` had been recorded as
+    "97.1049 at +0,+1,+2,+3,+5,+8 — the body's site count does not reach a
+    mem-init expansion". Re-run with real free candidates
+    (`Widgets.capacity();`, cb ≤ 0x28, emitting no bytes) it goes
+    **97.1049 → 99.9352 at +1**, flat at +2 and +3, and 92.8920 at +6. The
+    divergent decision is the SECOND `std::string` member's constructor,
+    which sits one index after the first in the same site list: their
+    allowances differ only by `(n-1)/(n-2)`, and `cb` of
+    `basic_string(const allocator&)` falls inside that gap, so the window is
+    exactly one site wide. The prologue is therefore NOT accounted separately
+    — it is simply at the head of the list, which is also why any body site
+    helps there while §5.9's placement rule still binds for divergences
+    further down. Whatever the earlier probe appended was not a candidate.
+
+11. **Per-row deficits measured with the same probe (2026-08-14)**, none
+    landed: `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` +1
+    (97.1049 → 99.9352, leaving only an `edx`/`ebx` role swap on the closing
+    `Influence[0..2] = -1`), `bottomviewsubwindow:??0TBottomViewTown` +2
+    (95.6295 → 97.4523), `armygrp:?get_luck_description` +4
+    (82.5689 → 90.1916). Every one of them is the same direction — **our
+    reconstruction lets the allowance run one level deeper than retail's**
+    — which is the mirror image of §0's under-inline guidance and the
+    dominant residual class behind the EH-transcript rows
+    (`docs/vc6/eh-cleanup.md`).
+
 ## 6. What the model does not cover
 
 * **The veto (`0x94964`)**: post-substitution re-walk, limit
