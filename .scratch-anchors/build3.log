@@ -1,0 +1,13 @@
+ninja: no work to do.
+configure: 131 VC6 units -> build.ninja + build/objdiff/objdiff.json
+[build normalize_objs] 0 normalized, 262 fresh, 0 target-padding span(s) retained -> /home/sheep/Projects/homm3/wt-coldui/build/objdiff/normalized
+configure: 131 VC6 units -> build.ninja + build/objdiff/objdiff.json
+[build] 1118/1485 functions exact (75.3%), 61.80% fuzzy across 131 unit(s)
+[build] report: build/objdiff/report.json
+[status] baseline: 7 added, 0 migrated, 0 max raised, 0 max accepted, 0 historical peaks recovered, 0 empty legacy retired -> match_baseline.tsv (1485 rows)
+[status] ratchet clean (1485 functions at or above their recorded best)
+[build] va-claims: 1417 claims in 118 files; 1 known-backlog (va-claims-baseline.tsv) - no new violations
+[build] single-view: 0 split(s) - no new splits
+[build] cleanliness: C-style casts 0, reinterpret_casts 0, cpp extern decls 0, .cpp-local views 0, .cpp-local enums 0, casts to enum types 0, magic case labels 0, unnamed domain compares 0 (floors hold)
+[status] README match-score block refreshed
+[status] executable matched: 16.34% (fuzzy bytes / 1,996,012 unfiltered B)

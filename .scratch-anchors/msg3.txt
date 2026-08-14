@@ -1,0 +1,71 @@
+Close the CAdvPopup destructor family - seven exact
+
+  0x491860 0x21  TDimensionDoorWindow::`scalar deleting dtor'  100.00
+  0x491890 0x6B  TDimensionDoorWindow::~TDimensionDoorWindow   100.00
+  0x491ac0 0x2C  TDimensionDoorWindow::ExitDialog              100.00
+  0x491c60 0x21  TSkuttleBoatWindow::`scalar deleting dtor'    100.00
+  0x491c90 0x6B  TSkuttleBoatWindow::~TSkuttleBoatWindow       100.00
+  0x52e1b0 0x21  TQuestLogWindow::`scalar deleting dtor'       100.00
+  0x52e1e0 0x8F  TQuestLogWindow::~TQuestLogWindow             100.00
+
+Seven rows, seven exact, all EH-bearing. Two units, one family: every
+body here is TAdventureOptionsWindow's 107-byte destructor - the derived
+vptr store, a loop that deletes each entry of the inherited widget
+vector, and the out-of-line ??1CAdvPopup call.
+
+DIMENSIONDOORWINDOW IS NOW CLOSED except its two constructors and two
+handlers. The compiland is ten roster rows and ten carved functions in
+one order, and the far end was already proven from its body
+(TSkuttleBoatWindow::ExitDialog at 0x491eb0), so nothing else could line
+up. TDimensionDoorWindow had no declaration at all before this; the
+Dreamcast class record gives it as 92 bytes over CAdvPopup with exactly
+one member, RolloverWidget at +0x58 - byte for byte its sibling - and
+retail's wider base moves that to +0x60 in both, which is the 0x64 the
+header now carries for each. The two tables 0x63db9c and 0x63dbd8 are
+0x3c apart, i.e. fifteen slots, which is what puts ExitDialog in slot 14.
+
+The third row is free evidence, not a third reconstruction:
+TDimensionDoorWindow::ExitDialog at 0x491ac0 is the byte-for-byte twin of
+the claim already standing at 0x491eb0, which is why 0x2c appears twice
+in the carve.
+
+AN INCOMPLETE TYPE COST 53 POINTS AND LOOKED LIKE AN EH RESIDUAL. Both
+107-byte destructors first came back at 46.39 with no EH frame at all and
+a direct ??3@YAXPAX@Z where retail calls through slot 0. Both symptoms
+had one cause: window.h only FORWARD-DECLARES `class widget`, so
+`delete *it` had no virtual destructor to find and nothing in the body
+could throw. Adding widget.h to the .cpp took both rows straight to
+100.00. Worth remembering as a screen - a missing EH frame plus a
+non-virtual delete is an incomplete element type, not a compiler-model
+wall.
+
+THE QUEST-LOG DESTRUCTOR CORRECTED ITS OWN CLASS LAYOUT. It is the
+143-byte shape TTownGateWindow carries: the same empty source body, but
+over a class whose member is a VC6 vector<int>, so the delete loop is
+followed by the vector's inlined teardown before ??1CAdvPopup. It first
+built at 99.91 with every vector offset four bytes high - +0x68/+0x6c/
++0x70 against retail's +0x64/+0x68/+0x6c - because the header had the
+byte member FIRST and the vector after it.
+
+The truth is the other way round, and both retail bodies say so. The
+constructor writes a byte at +0x60 loaded from a stack local and then
+zeroes +0x64/+0x68/+0x6c: that byte is VC6's vector copy-constructing its
+empty allocator from the default argument's temporary, not a bool member,
+and the three zeroes are _First/_Last/_End. It zeroes one further dword at
++0x70. The destructor frees +0x64 and clears +0x64/+0x68/+0x6c, touching
+neither +0x60 nor +0x70. So the vector is the FIRST derived member and the
+remaining dword follows it; the header now says that, records +0x70 as
+field_70 rather than naming it, and keeps the 0x74 total DoQuestLog
+allocates. Reordering the two members closed the row.
+
+FOUR OF THE SEVEN ARE ??_G ROWS taken with their destructors and no
+constructor anywhere, on the condition this lane established one commit
+earlier: a destructor that keeps its own vptr store is the only
+image-wide reference its table needs. Every class here derives from
+CAdvPopup, whose destructor is an out-of-line call, so VC6 can never
+prove the store dead.
+
+Tree 1111 -> 1118 exact, executable matched 16.31% -> 16.34%, full build
+exit 0, ratchet clean.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>

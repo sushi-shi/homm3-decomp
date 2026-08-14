@@ -9,6 +9,23 @@
 
 class textWidget;
 
+// The compiland's two classes are the same shape, and the Dreamcast record
+// says so outright: both are 92 bytes over CAdvPopup with exactly one
+// member, RolloverWidget, at +0x58. Retail's 8-byte wider base moves it to
+// +0x60 in both. Their tables are 0x63db9c and 0x63dbd8 - 0x3c apart, so
+// each holds the fifteen slots the CAdvPopup hierarchy declares, which is
+// what puts ExitDialog in slot 14.
+class TDimensionDoorWindow : public CAdvPopup {
+public:
+    textWidget* RolloverWidget;
+
+    TDimensionDoorWindow();
+    virtual ~TDimensionDoorWindow();
+    virtual int WindowHandler(message* msg);
+    virtual int ExitDialog(message* msg);
+};
+SIZE(TDimensionDoorWindow, 0x64);
+
 // DC places the sole derived member at its CAdvPopup end (+0x58). Retail's
 // base widening moves it to +0x60, and the stack instance in the skuttle-boat
 // adventure action proves the resulting 0x64-byte canonical layout.

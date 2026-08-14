@@ -554,6 +554,11 @@ diff	??0CDiffMaker@@QAE@PAEH0H@Z	100.0000	100.0000	100.0000	0x91030
 diff	?Apply@CDiffFile@@QAEPAXPAEH@Z	68.9643	68.9643	68.9643	0x90f60
 diff	?FindNextSame@CDiffMaker@@IAE_NHHAAH0@Z	83.2812	83.2812	83.2812	0x91050
 diff	?MakeDiff@CDiffMaker@@QAEPAVCDiffFile@@AAK@Z	81.5174	81.5174	81.5174	0x91140
+dimensiondoorwindow	??1TDimensionDoorWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x91890
+dimensiondoorwindow	??1TSkuttleBoatWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x91c90
+dimensiondoorwindow	??_GTDimensionDoorWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x91860
+dimensiondoorwindow	??_GTSkuttleBoatWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x91c60
+dimensiondoorwindow	?ExitDialog@TDimensionDoorWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91ac0
 dimensiondoorwindow	?ExitDialog@TSkuttleBoatWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91eb0
 drawing	?DrawCreatureAndHeroSubwindows@combatManager@@QAEHXZ	100.0000	100.0000	100.0000	0x95650
 drawing	?ResetLimitCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93710
@@ -1257,6 +1262,8 @@ puzzlewindow	?UpdatePuzzle@TPuzzleWindow@@QAEHH@Z	100.0000	100.0000	100.0000	0x1
 puzzlewindow	?WindowHandler@TPuzzleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12c640
 puzzlewindow	?mark_puzzle@Bitmap816@@QAEXPAEJJ@Z	100.0000	100.0000	100.0000	0x12c8b0
 puzzlewindow	AI_attempt_puzzle_guess	0.0000	0.0000	0.0000	0x12c9b0
+questlogwindow	??1TQuestLogWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12e1e0
+questlogwindow	??_GTQuestLogWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12e1b0
 questlogwindow	?WindowHandler@TQuestLogWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x12e410
 quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	86.8447	86.8447	86.8447	0x12ead0
 quickherowindow	??1TQuickHeroWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12f3d0

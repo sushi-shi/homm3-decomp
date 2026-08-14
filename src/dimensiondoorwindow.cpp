@@ -4,6 +4,7 @@
 #include <va.h>
 #include "dimensiondoorwindow.h"
 #include "message.h"
+#include "widget.h"
 #include "winmgr.h"
 
 #if 0  // @carcass
@@ -58,6 +59,76 @@ int TSkuttleBoatWindow::WindowHandler(message* msg)
 }
 
 #endif  // @carcass
+
+// The compiland is ten functions and retail emits them in plain source
+// order, so the carve between diff's tail and the claim already standing
+// at 0x491eb0 maps onto the Dreamcast roster with nothing left over:
+//
+//   retail      size   Dreamcast row                                 line
+//   0x4916f0   0x164   TDimensionDoorWindow::ctor                      53
+//   0x491860    0x21   TDimensionDoorWindow::`scalar deleting dtor'    71
+//   0x491890    0x6b   TDimensionDoorWindow::~                         74
+//   0x491900   0x1b9   TDimensionDoorWindow::WindowHandler            100
+//   0x491ac0    0x2c   TDimensionDoorWindow::ExitDialog               208
+//   0x491af0   0x164   TSkuttleBoatWindow::ctor                       235
+//   0x491c60    0x21   TSkuttleBoatWindow::`scalar deleting dtor'     250
+//   0x491c90    0x6b   TSkuttleBoatWindow::~                          254
+//   0x491d00   0x1a9   TSkuttleBoatWindow::WindowHandler              280
+//   0x491eb0    0x2c   TSkuttleBoatWindow::ExitDialog                 395  <- claimed
+//
+// Ten roster rows, ten carved functions, one order, and the last of them
+// is already proven from its body - so the run is pinned at its far end
+// and every earlier row follows. The two destructors are settled
+// independently by their vptr stores: 0x63db9c for the first class and
+// 0x63dbd8 for the second, the two tables the header shows are 0x3c apart.
+//
+// Both destructors are the 107-byte shape TAdventureOptionsWindow already
+// carries: the derived vptr store, a loop that deletes every entry of the
+// inherited widget vector, and the out-of-line ??1CAdvPopup call. That
+// out-of-line base call is also why the store survives here - VC6 cannot
+// prove it dead - and the surviving store is what lets both 33-byte
+// wrappers be claimed alongside their destructors instead of waiting on a
+// constructor.
+
+// E:\gamedcs\dimensiondoorwindow.cpp:71
+VA_COMPGEN(0x00491860, 0x21, SCALAR_DELETING_DTOR, TDimensionDoorWindow)
+
+// E:\gamedcs\dimensiondoorwindow.cpp:74
+VA(0x00491890, 0x6B)  // vtable 0x63db9c + CAdvPopup dtor callee, dc 0x82938
+TDimensionDoorWindow::~TDimensionDoorWindow()
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
+
+// The twin of the claim at 0x491eb0, to the byte: the two classes share
+// this exit path verbatim, which is why its 0x2c size shows up twice in
+// the carve.
+
+// E:\gamedcs\dimensiondoorwindow.cpp:208
+VA(0x00491ac0, 0x2C)  // vtable slot 14 + source order, dc 0x82b84
+int TDimensionDoorWindow::ExitDialog(message* msg)
+{
+    msg->id = MESSAGE_WIDGET;
+    msg->codeX = msg->codeY = 10;
+    gpWindowManager->dialogReturn = 0;
+    return MESSAGE_DISPATCH_FORWARD;
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:250
+VA_COMPGEN(0x00491c60, 0x21, SCALAR_DELETING_DTOR, TSkuttleBoatWindow)
+
+// E:\gamedcs\dimensiondoorwindow.cpp:254
+VA(0x00491c90, 0x6B)  // vtable 0x63dbd8 + CAdvPopup dtor callee, dc 0x82cb0
+TSkuttleBoatWindow::~TSkuttleBoatWindow()
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
 
 // E:\gamedcs\dimensiondoorwindow.cpp:395
 VA(0x00491eb0, 0x2c)  // vtable slot 14 + source order, dc 0x82ed0
