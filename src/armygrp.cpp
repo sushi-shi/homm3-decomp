@@ -1825,6 +1825,28 @@ after_magic_terrain:
 // against retail's 33: retail CALLS basic_string::assign(const char*,
 // size_t) where we expand it into _Grow + rep movs + _Eos, and the same one
 // level too deep repeats at the other string sites.
+//
+// THE HERO ARM ASSIGNS, IT DOES NOT APPEND (byte-flat, 2026-08-14). The
+// Dreamcast line table says so directly - dc 0x4fab4 line 1482 reaches
+// `basic_string::operator=` and no operator+= - and retail's own call at
+// that slot is `assign(const basic_string&, uint, uint)` (0x404860) where
+// ours was `append(...)` (0x41b250); every other call in the body already
+// lined up 1:1. `result` is empty there, so the two are behaviourally the
+// same and the argument sequence is identical - only the relocation target
+// differs, which objdiff does not score. Recorded because it is what retail
+// wrote and because the call multiset is what `predict-inline` reads.
+//
+// WHAT THE LINE TABLE CAN AND CANNOT SAY HERE. The DC compiland is an
+// older revision with no `creature` parameter, and it has NO line at all
+// for two blocks retail has: the clover-field arm (between DC 1482 and
+// 1485) and the halfling arm (between DC 1502 and 1505) - retail's four
+// `format_string`/append groups against DC's three corroborate the second
+// exactly. So the +4 candidate sites this row is measured to be short of
+// (docs/vc6/inliner.md §5.12) must live in those two blocks; the table
+// bounds them negatively and cannot name them. The clover arm's own
+// bytes - including its longhand four-way elemental compare, which is the
+// `is_base_elemental` shape landed in viewarmywindow - already match
+// retail exactly, so it is a site count and not a spelling.
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::get_luck_description(
     TCreatureType creature, int luck, const hero* ourHero,
@@ -1847,7 +1869,7 @@ std::string armyGroup::get_luck_description(
         ourHero, ourTown, enemyHero, enemyGroup, 0, 0);
     std::string result;
     if (ourHero)
-        result += ourHero->get_luck_description();
+        result = ourHero->get_luck_description();
 
     if (magicTerrain == MAGIC_TERRAIN_CLOVER_FIELD
         && (gpGame->f_1f698 != 0
