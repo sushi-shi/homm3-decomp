@@ -190,7 +190,7 @@ void CTextDialog::CalcDimensions(const char* cText, font* pFont,
                                  int& winWidth, int& winHeight)
 {
     int lines = pFont->LineLength(cText, 344);
-    winHeight = pFont->height;
+    winHeight = pFont->fs.height;
     winHeight *= lines;
     winWidth = pFont->LongestLineWidth(cText);
     if (winWidth > 344)
