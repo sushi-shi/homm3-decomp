@@ -983,6 +983,18 @@ public:
     // SpellCastWorks is 0x5a3c80, byte-proven as the call target of
     // ai_tactical's consider_chain_lightning (0x437310); that
     // correction is recorded on its own declaration.
+    // 0x59fe30, the spells.obj entry point. DC 0x14f7dc
+    // ?CastSpell@combatManager@@QAAXW4SpellID@@H_NHW4TSkillMastery@@J@Z
+    // with the parameter names spellId / targetIndex / bIsMonsterSpell
+    // / secondaryIndex / monster_skill / monster_power, and retail's
+    // six pushes at army::cast_caliph_spell (0x447ee0) match that arity
+    // exactly. TSkillMastery is spelled int here because its typedef
+    // lives in a header this one does not include. Not claimed.
+#ifdef HOMM3_CMBTMGR_CALIPH_VIEW
+    void CastSpell(SpellID spellId, int targetIndex,
+                   unsigned char bIsMonsterSpell, int secondaryIndex,
+                   int monster_skill, long monster_power);   // 0x59fe30
+#endif
 #ifdef HOMM3_CMBTMGR_ROUND_VIEW
     void ShowSpellMessage(int bIsMonsterSpell, int spellId,
                           army* targetArmy);                   // 0x5a8950

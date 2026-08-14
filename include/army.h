@@ -1084,6 +1084,11 @@ public:
 #ifdef HOMM3_ARMY_BERSERK_VIEW
     void GoBerserk();
 #endif
+#ifdef HOMM3_ARMY_CALIPH_VIEW
+    // 0x447ee0, claimed in army.cpp: roll one of the caliph spells the
+    // stack at `hex` is a legal target for and cast it.
+    void cast_caliph_spell(long hex);
+#endif
 #ifdef HOMM3_ARMY_ROUND_VIEW
     // 0x447120, claimed in army.cpp. Everything a stack does between
     // rounds: retaliations restored, spell rounds decremented, poison
