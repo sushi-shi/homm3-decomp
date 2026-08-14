@@ -802,14 +802,49 @@ unsigned char army::is_enemy(const army* arg) const
 // stops it regardless. Every field it reads is sliced in army.h off
 // this body.
 //
-// It scores 60.00 and is NOT claimed. The residual is the documented
-// EDI shrink-wrap: retail sinks `push edi` past the four early-out
-// tests, so its two early `return 0`s share ONE three-instruction
-// epilogue that does not pop edi, while our CL saves edi in the
-// prologue and therefore has to emit a separate popping epilogue at
-// every early exit. That is the register-homing family, not a
-// source-addressable knob, and it is the same wall an earlier lane
-// recorded here at 83.29.
+// THE "EDI SHRINK-WRAP REGISTER WALL" RECORDED HERE WAS WRONG, and the
+// re-run that overturned it is the cheapest measurement of this lane.
+// The note above used to say the residual was the register-homing
+// family and not source-addressable; re-measured 2026-08-14 with the
+// body claimed for the duration, `homm3 vc6 diagnose` answers
+// register-distance 48 | flow-distance 18, "CFG skeletons differ (20 vs
+// 18 blocks), opposite branch sense", i.e. the CONTROL-FLOW class, and
+// `why-reg --model` explicitly declines it ("no register-binding
+// divergence in this model's slice"). Three source facts then took the
+// body 60.00 -> 92.00:
+//
+//   1. THE TWO HEAD EARLY-OUTS ARE ONE GUARD. Written as two separate
+//      `if (...) return 0;` statements our CL materialises an epilogue
+//      at each; `||` in one guard - or the equivalent positive
+//      `if ((Is(2) & 1) && shotsLeft > 0) { ... }` wrapper, measured
+//      byte-identical at 73.5366 - sinks them into the ONE `xor al,al`
+//      block retail jumps to from both. Worth 13.54.
+//   2. THE LATE ARMS SHARE ONE RESULT AND ONE RETURN (89.6098, +16.07).
+//      That is what splits the epilogue WIDTHS the way retail's do -
+//      retail's late blocks are `mov eax,1` / `xor eax,eax` (dword)
+//      where its head blocks are `mov al,1` / `xor al,al` (byte), which
+//      is only possible if the late value is an `int` variable and the
+//      head values are byte return constants. AND IT IS WHAT BUYS THE
+//      EDI SHRINK-WRAP: once the head's `return 0` is no longer
+//      byte-identical to the late one, VC6 cannot tail-merge them, the
+//      merged block no longer forces a `pop edi` on the head path, and
+//      the `push edi` sinks to the get_controlling_side join exactly
+//      where retail puts it. The shrink-wrap was never the cause - it
+//      was the CONSEQUENCE of a tail-merge our four-return spelling
+//      forced.
+//   3. `int bCanShoot = 1;` MUST BE DECLARED AFTER `get_controller()`
+//      (92.00, +2.39). Declared before it, our CL common-subexpresses
+//      its literal 1 with the `1 - combatSide` inside
+//      get_controlling_side's expansion and parks the pair in EBX
+//      (`push ebx` / `mov ebx,1` / `mov eax,ebx`); retail materialises
+//      that 1 on its own. Same literal-into-EBX hoist army::Turn's
+//      residual note records, reached from the other side.
+//
+// Residual (92.00%): `bCanShoot` survives in EBX to a single
+// `xor ebx,ebx` / `mov al,bl` exit where retail constant-folds it into
+// two CLONED epilogues (`pop edi; mov eax,1` and `pop edi; xor eax,eax`).
+// Everything from the prologue through the second enemy_is_adjacent is
+// byte-identical.
 //
 // WHAT THIS COSTS ITS CALLER, measured: get_total_combat_value
 // (0x442e60) inlines this body with `excluded` constant-folded to 0,
@@ -832,31 +867,40 @@ unsigned char army::is_enemy(const army* arg) const
 // the A/B above shows the keyword is what fires it. The retail
 // out-of-line body at 0x4428f0 therefore has no counterpart in our
 // object - it had none before either, since the row was withdrawn -
-// and the trade is a parked 60.00 register wall for a caller at 100.
+// and the trade is a parked 92.00 control-flow residual for a caller
+// at 100.
+//
+// THE KEYWORD IS STILL NOT AVOIDABLE, re-measured in the CURRENT tree
+// where get_total_combat_value is carcassed and get_AI_target_time is
+// this body's ONLY live call site in the TU: dropping `inline` costs
+// get_AI_target_time 100 -> 27.8667 and STILL emits no expansion, so
+// /Ob2's single-call-site rule (A12) does not fire for a callee this
+// size no matter how few sites it has. The body below is the version
+// the caller expands, so its spelling is load-bearing at 100 even
+// though the row itself is unbanked.
 // RETAIL_LOCATED(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
 inline unsigned char army::can_shoot(const army* excluded) const
 {
     if (creatureType == ARMY_CREATURE_BALLISTA
         || creatureType == ARMY_CREATURE_ARROW_TOWER)
         return 1;
-    if (!(Is(2) & 1))
-        return 0;
-    if (shotsLeft <= 0)
+    if (!(Is(2) & 1) || shotsLeft <= 0)
         return 0;
     hero* controller = get_controller();
+    int bCanShoot = 1;
     if (!controller
         || !controller->IsWieldingArtifact(ARTIFACT_BOW_OF_THE_SHARPSHOOTER)) {
-        if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded))
-            return 0;
-        if (creatureId & 1) {
+        if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded)) {
+            bCanShoot = 0;
+        } else if (creatureId & 1) {
             int hex = gridIndex + (facing ? 1 : -1);
             if (gpCombatManager->enemy_is_adjacent(this, hex, excluded))
-                return 0;
+                bCanShoot = 0;
         }
     }
-    if (forgetfulnessRounds && forgetfulnessLevel >= 2)
-        return 0;
-    return 1;
+    if (bCanShoot && forgetfulnessRounds && forgetfulnessLevel >= 2)
+        bCanShoot = 0;
+    return static_cast<unsigned char>(bCanShoot);
 }
 
 #if 0  // @carcass
@@ -1532,11 +1576,85 @@ void army::PlayAnimation(int sequence, int nframes, int start_frame)
 }
 
 // E:\gamedcs\army.cpp:5096
-// RETAIL_LOCATED(0x00446c40, 0x1E1)  // anchor-global, dc 0x4b8c4
+#endif  // @carcass
+
+// "Can this stack stand on destIndex?" - the placement predicate
+// searchArray::mark_teleport (0x4b2ff0) already calls with (hex, 0, 0).
+// Three copies of the same on-grid test: never a margin column, never a
+// blocked hex, and the cell either empty or already MINE. A one-hex
+// stack is done after the first; a two-hex stack must also fit its
+// trailing hex, and when that fails and shifting is allowed it retries
+// one hex the OTHER way and reports the shifted anchor through
+// iNewDestIndex.
+//
+// The third copy compares the occupant against gpCombatManager's
+// actingSide/actingSlot rather than this stack's own combatSide/bitIndex
+// - retail's bytes, not a transcription slip: `this` is dead from the
+// `lea edi, [edx+ecx+0x1c4]` that overwrites it onwards.
+VA(0x00446c40, 0x1E1)  // anchor-global, dc 0x4b8c4
 int army::CanFit(int destIndex, int bAllowShifting, int* iNewDestIndex) const
 {
-    // @stub
+    if (iNewDestIndex)
+        *iNewDestIndex = destIndex;
+
+    if (destIndex < 0 || destIndex >= COMBAT_GRID_CELLS)
+        return 0;
+    if (destIndex % COMBAT_GRID_ROW_STRIDE == 0
+            || destIndex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
+        return 0;
+
+    hexcell* cell = &gpCombatManager->cells[destIndex];
+    if (gpCombatManager->HexIsBlocked(destIndex))
+        return 0;
+    if (cell->armySide >= 0) {
+        if (cell->armySide != combatSide)
+            return 0;
+        if (cell->armySlot != bitIndex)
+            return 0;
+    }
+
+    if (!(creatureId & 1))
+        return 1;
+
+    int otherIndex = GetAdjacentCellIndex(destIndex, facing ? 1 : 4);
+    if (otherIndex < 0 || otherIndex >= COMBAT_GRID_CELLS)
+        return 0;
+    if (otherIndex % COMBAT_GRID_ROW_STRIDE == 0
+            || otherIndex % COMBAT_GRID_ROW_STRIDE == COMBAT_GRID_LAST_COLUMN)
+        return 0;
+    hexcell* otherCell = &gpCombatManager->cells[otherIndex];
+    if (!gpCombatManager->HexIsBlocked(otherIndex)) {
+        if (otherCell->armySide < 0
+                || (otherCell->armySide == combatSide
+                    && otherCell->armySlot == bitIndex))
+            return 1;
+    }
+
+    if (bAllowShifting) {
+        int shiftedIndex = GetAdjacentCellIndex(destIndex, facing ? 4 : 1);
+        if (shiftedIndex < 0 || shiftedIndex >= COMBAT_GRID_CELLS)
+            return 0;
+        if (shiftedIndex % COMBAT_GRID_ROW_STRIDE == 0
+                || shiftedIndex % COMBAT_GRID_ROW_STRIDE
+                       == COMBAT_GRID_LAST_COLUMN)
+            return 0;
+        hexcell* shiftedCell = &gpCombatManager->cells[shiftedIndex];
+        if (gpCombatManager->HexIsBlocked(shiftedIndex))
+            return 0;
+        if (shiftedCell->armySide >= 0) {
+            if (shiftedCell->armySide != gpCombatManager->actingSide)
+                return 0;
+            if (shiftedCell->armySlot != gpCombatManager->actingSlot)
+                return 0;
+        }
+        if (iNewDestIndex)
+            *iNewDestIndex = shiftedIndex;
+        return 1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:5177
 // RETAIL_LOCATED(0x00446e30, 0x2E1)  // linkorder, dc 0x4ba88
