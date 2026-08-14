@@ -790,6 +790,18 @@ void heroWindowManager::ReleaseFizzleSource()
 // `((px & m) >> s) & m` expression with no named component temps
 // (77.60% - the three named temps below ARE load-bearing, they are what
 // orders the three `and`+`shr` pairs ahead of the three re-masks).
+// RE-TESTED ON THE /Ob2 AXES 2026-08-14, because a sibling lane found two
+// functions that only close at a specific (statement mass, candidate site
+// count) PAIR after each axis alone had been measured byte-flat. Both
+// fades were swept over the full grid: byte-inert statement mass
+// m = 0,1,2,3,4,6,8,20,60,120,200 crossed with k = 0,1,2,3,8,12,20,40
+// tail `xx_nop()` candidate sites (an empty file static, so each call
+// inlines to nothing yet still counts in the remaining/sites-to-come
+// divisor). Every cell is 88.5116 / 88.1358 to four decimals. The probe
+// is not inert by construction - the same insertion point with a single
+// `volatile int` mass statement moves FadeToBlack to 82.7965 - so the
+// harness reaches the function and the flat grid is a real negative.
+// This wall is on neither /Ob2 axis.
 VA(0x006030e0, 0x1F9)  // anchor-caller, dc 0x19c1bc
 void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
 {
