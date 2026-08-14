@@ -22,6 +22,7 @@ class hero;
 class iconWidget;
 class textWidget;
 class town;
+class TResourceDisplay;
 
 // The compiland's dialog family. Every one of these classes is fixed by
 // a vtable of its own, each the slot-0 owner of one 33-byte scalar
@@ -258,10 +259,13 @@ public:
     // four bytes below SpriteWidget's 100 and forty-four below
     // castleType's 132 - exactly this row's 0x60/0x68/0x88.
     unsigned char use8;
-    // +0x61..+0x67. The constructor writes nothing here and the
-    // destructor reads nothing, so no retail byte fixes it; the DC
-    // fieldlist puts `CastleBank` in the hole (its own 96).
-    char pad_61[0x7];
+    char pad_61[0x3];
+    // +0x64, DC `CastleBank` (its own 96, the same uniform four below
+    // ours). TYPED by ::Recruit, which calls
+    // ?Update@TResourceDisplay@@QAEXEE@Z through it to refresh the fort
+    // page's resource bar after a purchase; the constructor does not
+    // write it, so the window is handed the bar from outside.
+    TResourceDisplay* CastleBank;
     // +0x68..+0x87, DC `SpriteWidget`: the eight dwelling animations.
     // The constructor fills all eight BEFORE pushing any of them - the
     // eighth goes into the widget list on its own and a seven-trip
@@ -275,6 +279,8 @@ public:
 
     TCastleWindow();
     virtual ~TCastleWindow();
+    // Retail 0x5dce50, the fort page's buy button for row `i`.
+    void Recruit(int i);
 };
 #endif
 

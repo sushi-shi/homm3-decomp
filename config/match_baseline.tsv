@@ -1523,6 +1523,7 @@ townmgr	?DoEventGarrison@@YIXPAVhero@@PAVgarrison@@@Z	100.0000	100.0000	100.0000
 townmgr	?DoMapTavern@@YIXUtype_point@@@Z	100.0000	100.0000	100.0000	0x1d7e90
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0
 townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20
+townmgr	?Recruit@TCastleWindow@@QAEXH@Z	96.4286	96.4286	96.4286	0x1dce50
 townmgr	?ResetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530
 townmgr	?SortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160
 townmgr	?UpdateTownLocator@TTownScreenWindow@@QAEXH@Z	90.9302	90.9302	90.9302	0x1c5970
