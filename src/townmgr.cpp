@@ -322,6 +322,18 @@ DATA(0x006a5e00) extern const char* gUnnamed6a5e00;
 // them, so they are declared and keep neutral names.
 DATA(0x006a5db0) extern const char* gUnnamed6a5db0;
 DATA(0x006a5db4) extern const char* gUnnamed6a5db4;
+// SetHeroCommand's four, on the same standing once more. Every
+// image-wide reference to each lands inside this compiland's bracket -
+// SetHeroCommand 0x5c7250, SetArmyCommand 0x5c7400 and SetCommandAndText
+// 0x5c77a0 are the only readers between them - and nothing in the image
+// writes any of the four. 0x6a5d94 is the one-name "this hero" format,
+// 0x6a5d9c the one-name "move here" format the two empty-far-end arms
+// share, 0x6a5da0 the two-name exchange format and 0x6a5da8 the plain
+// refusal line, which is copied rather than formatted.
+DATA(0x006a5d94) extern const char* gUnnamed6a5d94;
+DATA(0x006a5d9c) extern const char* gUnnamed6a5d9c;
+DATA(0x006a5da0) extern const char* gUnnamed6a5da0;
+DATA(0x006a5da8) extern const char* gUnnamed6a5da8;
 DATA(0x006a5e04) extern const char* gUnnamed6a5e04;
 DATA(0x006a5e08) extern const char* gUnnamed6a5e08;
 DATA(0x006a5e0c) extern const char* gUnnamed6a5e0c;
@@ -906,6 +918,74 @@ void townManager::Close()
         netMsgHandler = 0;
     }
     status = 0;
+}
+
+// The status line for a hero-to-hero drag on the town page, and the
+// command that goes with it. The two strips the page is dragging
+// between are +0x12c and +0x134; the town's two hero ids pick the
+// heroes out of the game.
+//
+// Four outcomes, and the command number is what distinguishes them:
+// 4 when both ends are the same strip (a click, not a drag), 8 and 7
+// for a drop onto an empty far end - 8 dropping onto the visiting
+// slot, 7 onto the garrison - and 9 for a genuine two-hero exchange.
+// Anything that fails the ownership test takes the refusal line and
+// leaves the command alone, which is why that strcpy is the fall-
+// through of both arms rather than a return of its own.
+//
+// The asymmetry between the two arms is retail's, not a spelling: the
+// garrison arm tests the far hero's EXISTENCE first and its owner
+// second, while the visiting arm tests the hero's owner against the
+// TOWN's owner first and existence second. Written symmetrically the
+// two `cmp` pairs land in the wrong order.
+
+// E:\gamedcs\townmgr.cpp:3213
+VA(0x005c7250, 0x1AB)  // order-map(between Close and SetArmyCommand) + arity(bare ret) + statusText edge, dc 0x16c518
+void townManager::SetHeroCommand()
+{
+    if (!field_12c)
+        return;
+    if (!field_134)
+        return;
+
+    hero* visitingHero = gpGame->GetHero(townToView->visitingHeroId);
+    hero* garrisonHero = gpGame->GetHero(townToView->garrisonHeroId);
+
+    if (field_12c == field_134) {
+        hero* clickedHero = garrisonHero;
+        if (field_12c->pos)
+            clickedHero = visitingHero;
+        sprintf(statusText, gUnnamed6a5d94, clickedHero->name);
+        field_19c = 4;
+        return;
+    }
+
+    if (!field_12c->pos) {
+        if (townToView->visitingHeroId == -1) {
+            sprintf(statusText, gUnnamed6a5d9c, garrisonHero->name);
+            field_19c = 8;
+            return;
+        }
+        if (garrisonHero->owner == visitingHero->owner) {
+            sprintf(statusText, gUnnamed6a5da0, garrisonHero->name,
+                    visitingHero->name);
+            field_19c = 9;
+            return;
+        }
+    } else {
+        if (visitingHero->owner == townToView->owner) {
+            if (townToView->garrisonHeroId == -1) {
+                sprintf(statusText, gUnnamed6a5d9c, visitingHero->name);
+                field_19c = 7;
+                return;
+            }
+            sprintf(statusText, gUnnamed6a5da0, visitingHero->name,
+                    garrisonHero->name);
+            field_19c = 9;
+            return;
+        }
+    }
+    strcpy(statusText, gUnnamed6a5da8);
 }
 
 // The thieves' guild scoreboard, the widest dialog in the compiland: a
@@ -3415,12 +3495,6 @@ void townManager::Close()
 }
 
 // E:\gamedcs\townmgr.cpp:3213
-DC_ONLY(0x16c518, 0x18E)
-void townManager::SetHeroCommand()
-{
-    // @stub
-}
-
 // E:\gamedcs\townmgr.cpp:3274
 DC_ONLY(0x16c6a8, 0x296)
 void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
