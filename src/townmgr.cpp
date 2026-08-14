@@ -45,6 +45,7 @@
 #include "remote.h"
 #include "resourcedisplay.h"
 #include "smackmgr.h"
+#include "soundmgr.h"
 #include "strip.h"
 #include "textresource.h"
 #include "textwdgt.h"
@@ -60,8 +61,6 @@ namespace ResourceManager {
 CSprite* GetSprite(const char* name);
 }
 
-// soundmgr.h's one entry point this compiland needs, on the same terms.
-void PollSound();
 
 // Shared state of the tavern chooser. DoTavern selects a recruit into the
 // hero pointer; the flag distinguishes map-object hiring from town hiring.
@@ -2271,6 +2270,189 @@ void townManager::CycleOutline(int objectIndex, int x, int y, int w, int h)
     }
 
     gpWindowManager->UpdateScreen(x, y, w, h);
+}
+
+// Commits a purchase to the town. It repaints the page once without
+// hotspots, hands the id to town::BuildBuilding, re-syncs every
+// panorama object's visibility and hotspot-active bit from the town's
+// new `built` mask, and then fizzles the new building in over the
+// rectangle it occupies while `buildtwn.82M` plays.
+//
+// Two rectangles, and the split is the point of the body. A Rampart or
+// Necropolis TOWN HALL upgrade lights TWO objects - the hall itself and
+// the faction's own extra that rides on it (EXTRA_3/4/5 for
+// town/city/capitol) - so that arm unions the two objects' boxes with
+// the reference-returning min/max pair below and fizzles with no time
+// cap. Everything else fizzles just its own object's box over 0x42 ms.
+//
+// The town-redraw block is transcribed in place three times for the
+// reason recorded at CycleOutline: retail has no out-of-line
+// townManager::DrawTown, so /Ob2 expanded it at every site. The first
+// expansion differs from the other two - no zBuffer clear, and the
+// objects draw with hotspots OFF.
+//
+// Residual (98.84%): the two -1 initialisations of the hall arm, and
+// nothing else - every branch, both fizzle rectangles, all three redraw
+// expansions, the dwelling re-sync and both epilogues are retail's
+// instruction for instruction. Retail materialises the constant ONCE as
+// an immediate store into the dead parameter slot (`mov [ebp+8], -1`)
+// and has the switch's default path RELOAD it from there (`jmp` +
+// `mov edx, [ebp+8]`); our CL keeps it in a register instead
+// (`or edx, -1` + `mov [ebp+8], edx`) and lets the default fall
+// through with edx already set. Tried and rejected: swapping the two
+// declarations (98.84, identical), `int extraId = extraIndex;` so the
+// second initialiser is a load rather than a constant (98.84,
+// identical), an empty `default: break;` (98.84, identical), moving
+// `extraIndex`'s declaration below the switch (91.00), and an explicit
+// `default:` arm carrying the assignment - both `= -1` and
+// `= extraIndex` (90.68 each; a default arm with a BODY restructures the
+// whole compare chain and costs eight points). A register-allocation
+// tie-break on a rematerialised constant, not a statement.
+
+// VC6's <xutility> reference-returning min/max, spelled file-locally for
+// the reason findpath.cpp and army.cpp record: retail materialises BOTH
+// operands into stack temps and selects between their ADDRESSES with two
+// LEAs (0x5d6c4a..0x5d6c55 is this TU's instance), which is the
+// signature of a reference-returning template and not of a ternary.
+// Operands by value, the orientation the engine is byte-proven on.
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+
+// E:\gamedcs\townmgr.cpp:7564
+VA(0x005d6a80, 0x46F)  // linkorder(dc row after CycleOutline) + arity(ret 4) + BuildBuilding/CycleOutline edges, dc 0x179b28
+void townManager::BuildObj(int buildingId)
+{
+    if (townToView->active & bitNumber[buildingId])
+        return;
+
+    static_cast<bitmapBorder16*>(field_3c)->Draw2();
+    PollSound();
+    for (int i = 0; i < TownObjectCount; i++) {
+        TownObjects[i]->Draw(1, 0);
+        PollSound();
+    }
+    gpWindowManager->UpdateScreen(0, 0, 800, 374);
+
+    type_building_id newBuilding = townToView->BuildBuilding(buildingId, 1, 1);
+
+    for (int j = 0; j < TownObjectCount; j++) {
+        if (townToView->built & bitNumber[TownObjects[j]->objId]) {
+            TownObjects[j]->visible = 1;
+            TownObjects[j]->objBorder->status |= widget::WIDGET_ACTIVE;
+        } else {
+            TownObjects[j]->visible = 0;
+            TownObjects[j]->objBorder->status &= ~widget::WIDGET_ACTIVE;
+        }
+    }
+
+    int builtIndex = -1;
+    for (int k = 0; k < TownObjectCount; k++) {
+        if (TownObjects[k]->objId == newBuilding)
+            builtIndex = k;
+    }
+
+    SAMPLE2 sample;
+    if ((townToView->type == TOWN_RAMPART
+         || townToView->type == TOWN_NECROPOLIS)
+        && buildingId > HALL_VILLAGE_ID && buildingId <= HALL_CAPITOL_ID) {
+        int extraIndex = -1;
+        int extraId = -1;
+        switch (newBuilding) {
+        case HALL_TOWN_ID:
+            extraId = EXTRA_3_ID;
+            break;
+        case HALL_CITY_ID:
+            extraId = EXTRA_4_ID;
+            break;
+        case HALL_CAPITOL_ID:
+            extraId = EXTRA_5_ID;
+            break;
+        }
+        for (int m = 0; m < TownObjectCount; m++) {
+            if (TownObjects[m]->objId == extraId)
+                extraIndex = m;
+        }
+
+        townObject* hall = TownObjects[builtIndex];
+        townObject* extra = TownObjects[extraIndex];
+        int boxX = _cpp_min(hall->x, extra->x);
+        int boxY = _cpp_min(hall->y, extra->y);
+        int boxW = _cpp_max(hall->x + hall->w, extra->x + extra->w) - boxX;
+        int boxH = _cpp_max(hall->y + hall->h, extra->y + extra->h) - boxY;
+        gpWindowManager->SaveFizzleSourceX(boxX, boxY, boxW, boxH);
+
+        memset(static_cast<TTownScreenWindow*>(TownWindow)->field_50, 0,
+               800 * 600 * 2);
+        static_cast<bitmapBorder16*>(field_3c)->Draw2();
+        PollSound();
+        for (int n = 0; n < TownObjectCount; n++) {
+            TownObjects[n]->Draw(1, 1);
+            PollSound();
+        }
+
+        sample = LoadPlaySample("buildtwn.82M");
+        gpWindowManager->FizzleForwardX(boxX, boxY, boxW, boxH, -1);
+        CycleOutline(builtIndex, boxX, boxY, boxW, boxH);
+    } else {
+        // Dungeon's Mage Guild 5 raises the Portal of Summoning's own
+        // object by ten frames once that extra is standing.
+        if (townToView->type == TOWN_DUNGEON
+            && newBuilding == MAGE_GUILD5_ID
+            && (townToView->built & bitNumber[EXTRA_0_ID]))
+            TownObjects[19]->currFrame += 10;
+
+        gpWindowManager->SaveFizzleSourceX(TownObjects[builtIndex]->x,
+                                           TownObjects[builtIndex]->y,
+                                           TownObjects[builtIndex]->w,
+                                           TownObjects[builtIndex]->h);
+
+        memset(static_cast<TTownScreenWindow*>(TownWindow)->field_50, 0,
+               800 * 600 * 2);
+        static_cast<bitmapBorder16*>(field_3c)->Draw2();
+        PollSound();
+        for (int p = 0; p < TownObjectCount; p++) {
+            TownObjects[p]->Draw(1, 1);
+            PollSound();
+        }
+
+        sample = LoadPlaySample("buildtwn.82M");
+        gpWindowManager->FizzleForwardX(TownObjects[builtIndex]->x,
+                                        TownObjects[builtIndex]->y,
+                                        TownObjects[builtIndex]->w,
+                                        TownObjects[builtIndex]->h, 0x42);
+        CycleOutline(builtIndex, TownObjects[builtIndex]->x,
+                     TownObjects[builtIndex]->y, TownObjects[builtIndex]->w,
+                     TownObjects[builtIndex]->h);
+    }
+
+    WaitEndSample(sample, -1);
+    PollSound();
+    gUnnamed6aa9e8 = -1;
+    field_1b8 = -1;
+    gpWindowManager->BroadcastMessage(MESSAGE_WIDGET,
+                                      widget::WIDGET_CLEAR_STATUS,
+                                      TTownScreenWindow::EXIT_BUTTON_ID,
+                                      widget::WIDGET_UPDATE
+                                          | widget::WIDGET_DIMMED);
+
+    for (int q = 0; q < TOWN_DWELLING_COUNT; q++) {
+        if (townToView->active
+            & bitNumber[DWELLING_0_ID + TOWN_DWELLING_COUNT + q])
+            currentDwellingIDOff[q] = q + TOWN_DWELLING_COUNT;
+        else
+            currentDwellingIDOff[q] = q;
+    }
+
+    RedrawTownScreen();
 }
 
 // Fills the mage guild page. The dialog carries two parallel widget

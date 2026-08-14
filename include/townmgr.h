@@ -479,6 +479,15 @@ public:
     // recruitUnit::Update 90.84 -> 88.24 with no semantic change.
 #ifdef HOMM3_TOWNMGR_WINDOW_DECLS
     void SetupMage(heroWindow* mageWin);
+    // Retail 0x5d6a80. Commits a purchase to the town: builds it,
+    // re-syncs every panorama object's visibility, fizzles the new
+    // building in over the saved rectangle and cycles its outline.
+    void BuildObj(int buildingId);
+    // Retail 0x5d5410 (dc 0x176eb0), declared for BuildObj's tail call.
+    // Ordered after ResetStrips in the DC roster and sitting in the
+    // 0x11c-byte carve row directly ahead of it, which is the same
+    // pairing; not reconstructed.
+    void RedrawTownScreen();
 #endif
     virtual int Open(int newPriority) OVERRIDE;   // slot 0, 0x5c63c0
     virtual void Close() OVERRIDE;                // slot 1, 0x5c71b0
