@@ -935,10 +935,16 @@ public:
     float SpellCastWorkChance(SpellID spell, long side, const army* target,
                               long hex, unsigned char check_immunity,
                               long creature_spell);            // 0x5a8090
+    // 0x5a3c80, CORRECTED 2026-08-14. The address this line carried was
+    // 0x5a8950, which is refuted by arity: that body ends `ret 0xc` and
+    // this signature has five stack arguments. ai_tactical's
+    // consider_chain_lightning (0x437310) is the only call site in the
+    // tree and its retail body calls 0x5a3c80 - immediately before
+    // find_resurrection_target 0x5a3cc0. Neither body is claimed here.
     unsigned char SpellCastWorks(SpellID spell, long side,
                                  const army* target,
                                  unsigned char redirected,
-                                 long creature_spell);         // 0x5a8950
+                                 long creature_spell);         // 0x5a3c80
     // spells.obj leaves used by ai_tactical's sacrifice scan. The retail
     // call sites fix these exact stack arities; Dreamcast supplies names and
     // parameter types.
@@ -964,6 +970,28 @@ public:
     // types are the S_PUB32 mangling's
     // (?find_demonic_resurrection_target@combatManager@@QAAPAVarmy@@HH@Z).
     // Neither body is claimed here; both belong to src/spells.cpp.
+    // 0x5a8950 (2457 B), the fifth spells.obj leaf. THE COMMENT THAT USED
+    // TO CARRY THIS ADDRESS WAS WRONG: SpellCastWorks two declarations
+    // above claimed it, and the arity refutes that outright - 0x5a8950
+    // ends `ret 0xc`, three stack arguments, where SpellCastWorks takes
+    // five. It is combatManager::ShowSpellMessage (DC 0x157ae4,
+    // ?ShowSpellMessage@combatManager@@QAAXHHPAVarmy@@@Z, three
+    // parameters plus this), the ONE spells.obj row DC's ResetRound
+    // calls, and retail's ResetRound calls 0x5a8950 with exactly
+    // (1, SPELL_POISON, this) - the DC parameter names are
+    // bIsMonsterSpell / spellId / targetArmy in that order. The real
+    // SpellCastWorks is 0x5a3c80, byte-proven as the call target of
+    // ai_tactical's consider_chain_lightning (0x437310); that
+    // correction is recorded on its own declaration.
+#ifdef HOMM3_CMBTMGR_ROUND_VIEW
+    void ShowSpellMessage(int bIsMonsterSpell, int spellId,
+                          army* targetArmy);                   // 0x5a8950
+    // 0x468990, cmbtmgr.obj's own. DC cmbtmgr.cpp:4158 spells it
+    // PowEffect(TSpellEffectID spellEffect, int bResetLimitCreature);
+    // the first parameter is int-wide either way and the enum lives in
+    // a header this one does not include.
+    void PowEffect(int spellEffect, int bResetLimitCreature); // 0x468990
+#endif
     // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it
     // unconditionally costs command.obj's GetCommand 92.5714 ->
     // 92.5357, the include-set class this header pair has now fired

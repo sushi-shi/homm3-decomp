@@ -16,7 +16,9 @@
 #define HOMM3_ARMY_MOVE_VIEW
 #define HOMM3_ARMY_SPELLCAST_VIEW
 #define HOMM3_ARMY_BERSERK_VIEW
+#define HOMM3_ARMY_ROUND_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_ROUND_VIEW
 #undef HOMM3_ARMY_BERSERK_VIEW
 #undef HOMM3_ARMY_SPELLCAST_VIEW
 #undef HOMM3_ARMY_MOVE_VIEW
@@ -26,7 +28,9 @@
 #include "bitmap16.h"
 #define HOMM3_CMBTMGR_MOVE_VIEW
 #define HOMM3_CMBTMGR_RESURRECT_VIEW
+#define HOMM3_CMBTMGR_ROUND_VIEW
 #include "cmbtmgr.h"
+#undef HOMM3_CMBTMGR_ROUND_VIEW
 #undef HOMM3_CMBTMGR_RESURRECT_VIEW
 #undef HOMM3_CMBTMGR_MOVE_VIEW
 #include "drawing.h"
@@ -1305,6 +1309,11 @@ int army::Damage(int damage)
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:3481
+// The carve has ONE row between Damage (0x444090, 0x8F, ending 0x44411f)
+// and CancelSpellType (0x4444d0) - 0x444120 / 0x3A6 - and the DC roster
+// has TWO here, so one of the pair has no retail body. It is this one:
+// 44 bytes of SH4 for a `Strength()` accessor is the in-class-inline
+// shape, and 0x444120 ends `ret 4` which a no-argument member cannot.
 DC_ONLY(0x4935c, 0x44)
 unsigned long army::Strength()
 {
@@ -1312,7 +1321,25 @@ unsigned long army::Strength()
 }
 
 // E:\gamedcs\army.cpp:3492
-DC_ONLY(0x493a0, 0x2F4)
+// LOCATED 2026-08-14, and ResetRound's own tail is the proof: it ends
+// `push 1 / mov ecx,esi / call 0x444120`, a thiscall with exactly ONE
+// stack argument, and the body at 0x444120 ends `ret 4` to match - which
+// is the DC roster's two-parameter row (this + bFadeElementals) and
+// refutes the only other candidate in the gap outright. The body
+// corroborates it end to end: it walks the two bound-army vectors at
+// +0x514/+0x524 and calls remove_binding (0x43ee10), cancels all 0x51
+// spell rows through CancelIndividualSpell (0x444510), raises the death
+// bit 0x200000 in creatureId, rolls Random(1,100) twice for the two
+// morale side-effects, files the corpse into the hexcell's dead list,
+// and finally clears the CLONE link both ways - reaching the clone
+// through +0x28 and re-entering itself, which is the tail recursion C2
+// turned into the loop back to 0x44413c. DC ProcessDeath's own callee
+// set (remove_binding, remove_aura, CancelAllSpells, LeavesNoBody,
+// hexcell::HasArmy, Random) is the same body one build removed.
+// The carve size 0x3A6 against the DC row's 0x2F4 is 1.24x, inside the
+// SH4 -> x86 band. The BODY is not reconstructed here; only the
+// declaration ResetRound needs is live.
+// RETAIL_LOCATED(0x00444120, 0x3A6)  // anchor-callee + arity, dc 0x493a0
 void army::ProcessDeath(int bFadeElementals)
 {
     // @stub
@@ -1889,15 +1916,85 @@ void army::new_turn()
     // @stub
 }
 
-// E:\gamedcs\army.cpp:5238
-// RETAIL_LOCATED(0x00447120, 0x20A)  // linkorder, dc 0x4bc84
-void army::ResetRound()
-{
-    // @stub
-}
-
 // E:\gamedcs\army.cpp:5300
 #endif  // @carcass
+
+// Everything a stack does between rounds: the round-scoped creature
+// bits cleared, the retaliation allowance rebuilt, every standing spell
+// row decremented, and - if poison is on it - one more slice off its
+// maximum hit points with the sample, the pow effect and the message
+// that go with it. A summoned stack counts down here too, and the round
+// it reaches zero it is sent to ProcessDeath.
+//
+// THREE DC HELPERS ARE INLINED HERE AND NONE OF THEM HAS A RETAIL SLOT.
+// The DC roster's ResetRound calls set_retaliation_count (0x437ac),
+// DecrementSpellRounds (0x4a2e8) and adjust_hitpoints (0x496dc), and
+// the carve has no body for any of the three anywhere in army.obj's
+// bracket - retail expands all three and emits no out-of-line copy,
+// which is the in-class-inline case. They are written longhand rather
+// than as same-TU helpers precisely so no fourth body appears.
+VA(0x00447120, 0x20A)  // linkorder, dc 0x4bc84
+void army::ResetRound()
+{
+    if (numTroops <= 0)
+        return;
+
+    creatureId &= 0xf8ffffff;
+    field_4f0 = 0;
+    retaliationCount = 1;
+    if (creatureType == ARMY_CREATURE_GRIFFIN)
+        retaliationCount = 2;
+    if (creatureType == ARMY_CREATURE_ROYAL_GRIFFIN)
+        retaliationCount = 5000;
+    if (spellInfluence[SPELL_COUNTERSTRIKE])
+        retaliationCount += counterstrokeBonus;
+    if (Is(6) & 1)
+        retaliationCount = 0;
+
+    if (gpCombatManager->bCreaturePlacement)
+        return;
+
+    for (int spell = 0; spell < 81; spell++) {
+        if (spellInfluence[spell] > 0 && spell != SPELL_FRENZY) {
+            if (spellInfluence[spell] == 1)
+                CancelIndividualSpell(spell);
+            else
+                spellInfluence[spell]--;
+        }
+    }
+
+    if (iRoundsLeftBeforeVanish > 0)
+        iRoundsLeftBeforeVanish--;
+
+    if (spellInfluence[SPELL_POISON] > 0) {
+        int oldHitPoints = hitPoints;
+        double factor = _cpp_max<double>(poisonPenalty - 0.1f, 0.5);
+        poisonPenalty = static_cast<float>(factor);
+        if (spellInfluence[SPELL_AGE])
+            hitPoints = static_cast<int>(
+                origHitPoints * poisonPenalty * 0.5f + 0.95f);
+        else
+            hitPoints = static_cast<int>(
+                origHitPoints * poisonPenalty + 0.95f);
+        topCreatureDamage = _cpp_min(topCreatureDamage, hitPoints - 1);
+        if (oldHitPoints - hitPoints > 0) {
+            bShowPowEffect = 1;
+            field_e9 = 1;
+            SAMPLE2 sample;
+            if (!gpCombatManager->IsQuickCombat()) {
+                sample = LoadPlaySample(
+                    DATA_COMPGEN(0x00660aa0, poisonWaveName, "Poison.wav"));
+                gpCombatManager->ShowSpellMessage(1, SPELL_POISON, this);
+            }
+            gpCombatManager->PowEffect(SPELL_SUMMON_EARTH_ELEMENTAL, 1);
+            if (!gpCombatManager->IsQuickCombat())
+                WaitEndSample(sample, -1);
+        }
+    }
+
+    if (iRoundsLeftBeforeVanish == 0)
+        ProcessDeath(1);
+}
 
 VA(0x00447330, 0x9C)  // anchor-global, dc 0x4bd80
 long army::get_resurrection_size(const army* target) const

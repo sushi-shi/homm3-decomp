@@ -57,6 +57,34 @@ enum EAttackCriteria {
 // switch at 0x4444d0 independently proves the attack/damage values; the
 // zero move value is corroborated by the exact FlyTo consumer.  Names
 // follow the mature HoMM2 sibling domain, whose behavior is homologous.
+// TWO SPELL-ROW INDICES armygrp.h's ESpellId does not name, parked here
+// for the same reason the creature ids below are: ANY enumerator added
+// to that enum costs initialize.obj's initialize_game_data 100.0000 ->
+// 96.0880, and army.cpp is the only consumer of these two. Both ids are
+// fixed by arithmetic against ids ESpellId already proves and by the
+// rule ResetRound (0x447120) implements against each:
+//   - 0x3a is the slot between SPELL_TITANS_LIGHTNING_BOLT 0x39 and
+//     SPELL_BERSERK 0x3b, and the row it gates adds
+//     army::counterstrokeBonus to the round's retaliation allowance -
+//     which is Counterstrike's rule and nothing else in the roster;
+//   - 0x4b sits four past SPELL_POISON 0x47 on the creature-spell run
+//     whose first four slots army.h already pairs as Bind (+0x2b8,
+//     index 72) and the paralyze slot CancelSpellType cancels on damage
+//     (index 74), and the row it gates HALVES the stack's recomputed
+//     maximum hit points - which is Aging's rule and nothing else.
+// Behind the round view for the usual measured reason.
+#ifdef HOMM3_ARMY_ROUND_VIEW
+enum EArmySpellRowId {
+    // The one row ResetRound refuses to decrement. 0x38 is the slot
+    // between SPELL_SLAYER 0x37 and SPELL_TITANS_LIGHTNING_BOLT 0x39,
+    // and frenzyRounds below already pairs +0x278 == +0x198 + 56*4 on
+    // ComputeAttackerDamageReduction's own reading.
+    SPELL_FRENZY = 0x38,
+    SPELL_COUNTERSTRIKE = 0x3a,
+    SPELL_AGE = 0x4b
+};
+#endif
+
 enum EArmySpellCancelType {
     ARMY_CANCEL_SPELLS_AFTER_MOVE = 0,
     ARMY_CANCEL_SPELLS_AFTER_ATTACK = 1,
@@ -95,7 +123,19 @@ public:
     char pad_18[0x4];
     // ValidPath stores the validated destination here on success.
     int pathTarget;               // +0x1c
+#ifdef HOMM3_ARMY_ROUND_VIEW
+    // DC army.bShowPowEffect (members.csv army@32) and
+    // army.iRoundsLeftBeforeVanish (army@44) - the low run this class
+    // already pairs UNSHIFTED, IsMoving 48/+0x30 through origSpeed
+    // 100/+0x64. ResetRound (0x447120) raises the first when the round's
+    // poison bites and counts the second down, sending the stack to
+    // ProcessDeath the moment it reaches zero.
+    unsigned char bShowPowEffect;  // +0x20
+    char pad_21[0xb];
+    int iRoundsLeftBeforeVanish;   // +0x2c
+#else
     char pad_20[0x10];
+#endif
     // DC army.IsMoving (members.csv army@48, which is retail +0x30 -
     // the whole DC run 48..100 lands on retail 0x30..0x64 unshifted).
     // army::Fly (0x4b4a40) raises it for the duration of the flight
@@ -173,7 +213,17 @@ public:
     // increase to it and re-times the stack against the result, while
     // GetSpeed() returns the modified value.
     int baseSpeed;                // +0x64
+#ifdef HOMM3_ARMY_ROUND_VIEW
+    // DC army.origHitPoints (members.csv army@108), the third of the
+    // orig* trio after origPos 92/+0x5c and origSpeed 100/+0x64 that
+    // this class already carries unshifted. ResetRound recomputes
+    // hitPoints from it every round rather than from the live word.
+    char pad_68[0x4];
+    int origHitPoints;             // +0x6c
+    char pad_70[0x4];
+#else
     char pad_68[0xc];
+#endif
     // +0x74 starts an EMBEDDED copy of the creature's traits row (the
     // Dreamcast roster's `TCreatureTypeTraits sMonInfo` at 116, and the
     // retail offsets already proven in this class agree with it field
@@ -338,7 +388,37 @@ public:
     // on our side outranks the target's own value here. Name pending a
     // writer.
     int field_190;                // +0x190
+    // DC army.numSpellInfluences (members.csv army@384, which is retail
+    // +0x194 on the flat +0x14 shift this class carries from
+    // hitByCreature 220/+0xf0 onward).
+    //
+    // BEHIND A VIEW, AND THAT IS A MEASUREMENT: the array member and the
+    // union that carries it cost command.obj's GetCommand 92.5714 ->
+    // 92.5357 unconditionally - the include-set class, fired here by a
+    // union/struct pair where this header's earlier triggers were
+    // declarations, enumerators and plain data members. Only the
+    // SCAFFOLDING is scoped; the field list below appears once and is
+    // shared by both arms, so the two views cannot disagree about a
+    // single byte. army.cpp is the only consumer of the row form.
+#ifdef HOMM3_ARMY_ROUND_VIEW
+    int numSpellInfluences;       // +0x194
+    // THE ROW ITSELF, and the array is retail's own model rather than
+    // this header's. ResetRound (0x447120) walks it whole with a single
+    // `lea ebx,[esi+0x198]` and 81 iterations, which is what fixes the
+    // element count: 0x198 + 81*4 == 0x2dc, and DC's own
+    // spellInfluence[80] at 388 with spell_level[80] straight after it
+    // at 708 is the same record one element shorter. Every named field
+    // below is a SLICE of this array - shieldRounds is
+    // spellInfluence[SPELL_SHIELD], berserkFlag is [59], hypnotizeFlag
+    // is [60] - so the two spellings are the same bytes and the union
+    // lets the walkers use the row while the readers keep the names.
+    union {
+        int spellInfluence[81];   // +0x198 .. +0x2db
+        struct {
+    char pad_198[0x6c];
+#else
     char pad_194[0x70];
+#endif
     // Shield / Air Shield round counters, byte-proven by
     // ComputeDefenderDamageReduction (0x443d90): the SHOOTING arm gates
     // on +0x208 and takes its factor from +0x4bc, the melee arm gates
@@ -430,7 +510,14 @@ public:
     int boundFlag;                // +0x2b8 (FindPath: moves forced to 0)
     char pad_2bc[0x4];
     int disabled_2c0;             // +0x2c0
+#ifdef HOMM3_ARMY_ROUND_VIEW
+    char pad_2c4[0x18];
+        };
+    };
+    char pad_2dc[0x178];
+#else
     char pad_2c4[0x190];
+#endif
     // Retaliations left this round: simulate_attack (0x4359b0) only
     // lets the defender strike back while it is positive, and the DC
     // roster has army::set_retaliation_count feeding it.
@@ -456,7 +543,17 @@ public:
     // Slayer's mastery level: get_adjusted_attack admits creature bit 7
     // at any level, bit 8 from 2 up and bit 9 from 3 up.
     int slayerLevel;              // +0x48c
+#ifdef HOMM3_ARMY_ROUND_VIEW
+    // DC army.counterstrokeBonus (members.csv army@1136 on the flat
+    // +0x24 shift retaliationCount 1072/+0x454 fixes for this run;
+    // slayerLevel 1128/+0x48c two lines above is the same shift).
+    // ResetRound adds it to the round's retaliation allowance exactly
+    // while spellInfluence[SPELL_COUNTERSTRIKE] is standing.
+    char pad_490[0x4];
+    int counterstrokeBonus;        // +0x494
+#else
     char pad_490[0x8];
+#endif
     // Frenzy's defense-to-attack conversion factor: while frenzyRounds
     // is up, get_adjusted_attack answers
     // `get_adjusted_defense(enemy, 0) * this + attack`. It is also what
@@ -476,7 +573,17 @@ public:
     // this float whenever fireShieldRounds is non-zero; otherwise the
     // innate Efreet Sultan path supplies the shared 0.2f constant.
     float fireShieldStrength;     // +0x4a0
+#ifdef HOMM3_ARMY_ROUND_VIEW
+    // DC army.poison_penalty (members.csv army@1152), the word straight
+    // after fire_shield_strength 1148/+0x4a0 in the same DC run. It is
+    // a MULTIPLIER, not a count: ResetRound subtracts 0.1f from it once
+    // per round, floors the result at 0.5 and rescales the stack's
+    // hitPoints by what is left.
+    float poisonPenalty;           // +0x4a4
+    char pad_4a8[0x10];
+#else
     char pad_4a4[0x14];
+#endif
     // The two damage multipliers ComputeDefenderDamageReduction pairs
     // with shieldRounds and airShieldRounds above.
     float shieldFactor;           // +0x4b8
@@ -519,7 +626,15 @@ public:
     // the corroborating pair, not the proof.
     int morale;                   // +0x4e8
     int luck;                     // +0x4ec
+#ifdef HOMM3_ARMY_ROUND_VIEW
+    // A per-round latch ResetRound clears before anything else. No
+    // roster attests it and ResetRound is the only writer located so
+    // far, so the name is an address ordinal.
+    unsigned char field_4f0;       // +0x4f0
+    char pad_4f1[0x43];
+#else
     char pad_4f0[0x44];
+#endif
     // Damage this stack is already committed to take this turn: the
     // AI subtracts it from the stack's total hit points before every
     // simulation (get_simple_attack_effect 0x435b90).
@@ -773,6 +888,19 @@ public:
         ARMY_CREATURE_PSYCHIC_ELEMENTAL = 0x78,
         ARMY_CREATURE_MAGIC_ELEMENTAL = 0x79,
         ARMY_CREATURE_PIT_LORD = 0x33,
+        // The two creatures with a retaliation rule of their own, and
+        // ResetRound (0x447120) is what proves both: id 4 gets a
+        // retaliation allowance of 2 and id 5 gets 5000, which is
+        // "unlimited" in a word that is only ever counted down. Two
+        // retaliations is the Griffin's rule and unlimited retaliation
+        // is the Royal Griffin's, and nothing else in the roster has
+        // either. Their ids follow from the Castle block that opens the
+        // table - Pikeman / Halberdier / Archer / Marksman fill 0..3,
+        // which puts the tier-three pair on 4 and 5, exactly as
+        // CREATURE_ANGEL 0xc / CREATURE_ARCHANGEL 0xd close the same
+        // town's run eight slots later. NH3API spellings.
+        ARMY_CREATURE_GRIFFIN = 0x4,
+        ARMY_CREATURE_ROYAL_GRIFFIN = 0x5,
 #endif
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
@@ -955,6 +1083,18 @@ public:
     // DECLARATION to fire it. army.cpp is the only consumer.
 #ifdef HOMM3_ARMY_BERSERK_VIEW
     void GoBerserk();
+#endif
+#ifdef HOMM3_ARMY_ROUND_VIEW
+    // 0x447120, claimed in army.cpp. Everything a stack does between
+    // rounds: retaliations restored, spell rounds decremented, poison
+    // applied, and the summon countdown that ends in ProcessDeath.
+    void ResetRound();
+    // 0x444120, LOCATED 2026-08-14 from ResetRound's own tail
+    // (`push 1 / mov ecx,esi / call`) - a thiscall with ONE stack
+    // argument, which is what the DC roster's two-parameter row and the
+    // body's `ret 4` both say. Declared here so ResetRound can spell the
+    // call; the BODY is still a carcass.
+    void ProcessDeath(int bFadeElementals);
 #endif
     int get_second_grid_index() const;                          // 0x4466a0
     int get_mirror_effect() const;                              // 0x4487f0
