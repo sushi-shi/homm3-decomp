@@ -32,6 +32,11 @@ public:
 
     virtual ~TQuestLogWindow();
     virtual int WindowHandler(message* msg);
+
+    // 0x52e270, dc 0x116bd8. SINGULAR - it takes the row index and
+    // refreshes one log line; the plural UpdateQuestLocators has no retail
+    // body of its own because it inlines this one.
+    void UpdateQuestLocator(int i);
 };
 SIZE(TQuestLogWindow, 0x74);
 

@@ -19,6 +19,11 @@ public:
     TQuestGuard() : quest(0), visitedPlayers(0) {}
 
     std::string QuestGuardFn_00573040(int player);
+    // 0x572d60, 224 B, carved and unclaimed. NULLARY where the pair above
+    // takes a player: TQuestLogWindow::UpdateQuestLocator pushes only the
+    // hidden return buffer and calls it on the QuestGuardList element,
+    // then strcpy's its c_str() into gText. Provisional name.
+    std::string QuestGuardFn_00572D60();
 
 protected:
     // TSeerHut initializes the shared bytes in its own body; retail's store
@@ -52,6 +57,11 @@ public:
     TSeerHut();
 
     std::string SeerHutFn_005741B0(unsigned char player);
+    // 0x574070, 312 B, carved and unclaimed - the SeerHutList twin of
+    // TQuestGuard::QuestGuardFn_00572D60 and reached from the same
+    // quest-log body, on the other arm of its SeerHutList/QuestGuardList
+    // split. Provisional name.
+    std::string SeerHutFn_00574070();
 };
 SIZE(TSeerHut, 0x13);
 
