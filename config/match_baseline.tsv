@@ -1498,6 +1498,7 @@ victorylossconditions	VictoryConditionStruct_CheckForDefeatedMonsterWin	0.0000	0
 victorylossconditions	VictoryConditionStruct_CheckForGrailBuildingWin	0.0000	0.0000	0.0000	0x1f1ef0
 victorylossconditions	VictoryConditionStruct_CheckForTotalCreatures	0.0000	0.0000	0.0000	0x1f1b10
 victorylossconditions	VictoryConditionStruct_CheckForUpgradedTown	0.0000	0.0000	0.0000	0x1f1d40
+viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	89.9861	89.9861	89.9861	0x1f3360
 viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20
 viewarmywindow	?DoModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0
@@ -1510,7 +1511,6 @@ viewarmywindow	?create_hitpoints_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0
 viewarmywindow	?create_ok_widget@TViewArmyWindow@@QAEXXZ	98.6594	98.6594	98.6594	0x1f6870
 viewarmywindow	?create_speed_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f62f0
 viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	88.1144	88.1144	88.1144	0x1f6ae0
-viewarmywindow	TViewArmyWindow_TViewArmyWindow	0.0000	0.0000	0.0000	0x1f3360
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30
 widget	??0widget@@QAE@FFFFFF@Z	100.0000	100.0000	100.0000	0x1fe340

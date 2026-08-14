@@ -49,6 +49,14 @@ public:
 // No members beyond textWidget are touched, so none are modeled.
 class bitmapBackedTextWidget : public textWidget {
 public:
+    // Retail 0x5bc760 keeps all ELEVEN of the DC parameters below;
+    // TViewArmyWindow's one-army constructor (0x5f3360) is a located
+    // caller and pushes exactly them, in this order (7, 285, 284, 19,
+    // 0, "smalfont.fnt", "VARBack.pcx", PRIMARY, 224, 1, 8).
+    bitmapBackedTextWidget(int x, int y, int w, int h, const char* text,
+                           const char* fontName, const char* back,
+                           font::TColor color, int id, unsigned justify,
+                           int style);
     virtual ~bitmapBackedTextWidget();
 };
 
