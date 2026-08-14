@@ -421,14 +421,57 @@ void bitmapBorder::SetPlayerPaletteColors(int whichPlayer)
     ::SetPlayerPaletteColors(&image->p24, whichPlayer);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\border.cpp:355
-DC_ONLY(0x54a20, 0x76)
+// E:\gamedcs\border.cpp:355 - promoted from DC_ONLY 2026-08-14, slot 2 of
+// vtable 0x63ba94. Three live widget commands, and the id test is hoisted
+// OUT of them (retail checks msg->codeY against this->id once, before the
+// codeX switch) - the opposite of coloredBorderFrame::Main, which repeats
+// it per arm. The switch is the subtract chain `sub ecx,0xa / je / dec /
+// je / sub ecx,2 / jne`, VC6's three-case non-table form.
+//
+// Two of the arms are CALLS in source and inlines in the object: the
+// SET_IMAGE arm reproduces SetImage (0x4504c0) down to the inline strcmp
+// against image->Name, and SET_PLAYER_PALETTE_COLORS reproduces
+// SetPlayerPaletteColors (0x450520) with its +0x50 / +0x250 palette
+// offsets. The SET_PALETTE arm is written out longhand because retail has
+// NO bitmapBorder::SetPalette row at all - the rows either side of it
+// (GetRealWidth 0x4504a0, GetRealHeight 0x4504b0) are adjacent.
+VA(0x00450550, 0x132)  // anchor-vtable (slot 2 of 0x63ba94), dc 0x54a20
 int bitmapBorder::Main(message* msg)
 {
-    // @stub
+    if (field_2C > 0)
+        return 0;
+    if (!(status & WIDGET_ACTIVE)) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 0;
+    } else if (msg->id == MESSAGE_WIDGET && msg->codeY == id) {
+        switch (msg->codeX) {
+        case WIDGET_SET_PALETTE: {
+            // The name is read BEFORE the image test - retail hoists
+            // `mov eax,[eax+0x18]` above the `test ecx,ecx`, which is what
+            // an inlined SetPalette(msg->extraText) does to its argument.
+            const char* paletteName = msg->extraText;
+            if (image) {
+                TPalette16* newPalette =
+                    ResourceManager::GetPalette(paletteName);
+                if (newPalette) {
+                    image->SetPalette(newPalette->data);
+                    newPalette->Dispose();
+                }
+            }
+            return 1;
+        }
+        case WIDGET_SET_IMAGE:
+            SetImage(msg->extraText);
+            return 1;
+        case WIDGET_SET_PLAYER_PALETTE_COLORS:
+            SetPlayerPaletteColors(msg->extra);
+            return 1;
+        }
+    }
+    return border::Main(msg);
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 
