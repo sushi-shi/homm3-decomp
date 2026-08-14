@@ -1508,6 +1508,7 @@ townmgr	?DoMapTavern@@YIXUtype_point@@@Z	100.0000	100.0000	100.0000	0x1d7e90
 townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20
 townmgr	?ResetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530
 townmgr	?SortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160
+townmgr	?UpdateTownLocator@TTownScreenWindow@@QAEXH@Z	90.9302	90.9302	90.9302	0x1c5970
 townmgr	?UpdateTownLocators@TTownScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1c5aa0
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@PAVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0x1d12b0
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1d11d0
