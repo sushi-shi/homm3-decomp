@@ -60,7 +60,7 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // The two TResourcePtr instances account for the retail EH state and
 // failure-only Dispose paths; the static array owners account for 0x44d340
 // and 0x44d360.
-// Residual (75.01%): all 81 retail blocks are semantically represented, but
+// Residual (76.83%): all 81 retail blocks are semantically represented, but
 // VC6 makes two linked choices differently: retail leaves the nested
 // bitset<19>/bitset<144> operations out of line after folding its source
 // helper, and gives three early failures distinct returns where this spelling
@@ -78,6 +78,37 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // per iteration (`mov ecx,[edx+eax-4]` / `mov eax,[edx+eax-4]`, one per GetRow
 // call) where ours CSEs it to one load. Same enregistration-choice family that
 // diff.cpp's CDiffFile::Apply turned out to be (68.96 -> 99.64 there).
+// 2026-08-14 RESULT (75.01 -> 76.83): half of that diagnosis is now fixed by
+// source. Evaluating the [22] strlen BEFORE the [0] strlen - which is the order
+// both sides already EMIT them in - stops our CL common-subexpressioning the two
+// GetRow(row) row-pointer loads, so we now emit retail's TWO `mov r,[edx+base]`
+// loads, one per GetRow call. Retail's emission order is not the source order.
+// What did NOT move, and is now measured rather than assumed:
+//   - the LICM hoist itself. Retail keeps traitsSheet in ESI and reloads
+//     [esi+0x20] per iteration; we spill the guard's already-computed _First to
+//     [ebp-0x24] and reload it, which frees ESI for stringBytes and forces the
+//     `jmp` peel into the loop (retail falls straight through). The zero pseudo
+//     that the null checks and `stringBytes = 0` share is what wins ESI here;
+//     retail gives that pseudo ECX and memory-homes the accumulator instead.
+//   - EXHAUSTIVE NEGATIVES, all byte-flat at 76.8337: four loop forms (for /
+//     while / do-while / `while (++row < 146)`); eight declaration orderings of
+//     {stringBytes, row, destination, source, length, column, mask}; binding
+//     traitsSheet.get() to a raw or `register` pointer local; `.get()->` at both
+//     call sites; splitting the accumulate into two statements; folding the +2
+//     as two +1s. Declaration order does not reach this allocator.
+//   - MEASURED WORSE: `volatile unsigned stringBytes` 71.79 and a volatile-ref
+//     `+=` 73.61 (they do memory-home the accumulator, but add a reload at the
+//     `new char[stringBytes]` push that retail does not have); splitting the
+//     guard into two `if`s 73.83; hoisting GetNumberOfRows() to a local 72.66;
+//     declaring the bitset before the loop 74.15.
+// The `push 0x8`/`push 0x0` prologue row is NOT a defect: it is the delinker
+// symbol+addend split documented in initialize.cpp - we encode disp32=0 +
+// reloc($L12234), the delinked target disp32=8 + reloc(...unwind03). Identical
+// once linked.
+// Still open and structural: at the inlined artslots.txt GetSpreadsheet, retail
+// expands basic_string::_Eos in line (`mov ecx,[ebp-0x3c]; mov [ebp-0x38],ebx;
+// mov byte [ecx+ebx],0`) where we emit an out-of-line call - a genuine /Ob2
+// budget divergence, and the reason retail has 3 rets to our 2.
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
 unsigned char InitializeArtifactTraitsTable()
 {
@@ -92,8 +123,8 @@ unsigned char InitializeArtifactTraitsTable()
         unsigned stringBytes = 0;
         int row;
         for (row = 2; row < 146; ++row) {
-            stringBytes += strlen(traitsSheet->GetRow(row)[0])
-                + strlen(traitsSheet->GetRow(row)[22]) + 2;
+            stringBytes += strlen(traitsSheet->GetRow(row)[22])
+                + strlen(traitsSheet->GetRow(row)[0]) + 2;
         }
 
         DATA_COMPGEN_GUARD(0x006938d4, artifactStringsGuard, artifactStrings)

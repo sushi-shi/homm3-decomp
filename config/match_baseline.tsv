@@ -336,7 +336,7 @@ armygrp	?load@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x4
 armygrp	?merge_armies@armyGroup@@QAEXPAV1@@Z	100.0000	100.0000	100.0000	0x4b820
 armygrp	?modify_spell_damage@@YIJJHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4b4b0
 armygrp	?save@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x4aa00
-artifact	?InitializeArtifactTraitsTable@@YIEXZ	75.0139	75.0139	75.0139	0x4cd50
+artifact	?InitializeArtifactTraitsTable@@YIEXZ	76.8337	76.8337	76.8337	0x4cd50
 artifact	__h3cg$artifact$static_dtor$artifactSlotStrings	100.0000	100.0000	100.0000	0x4d340
 artifact	__h3cg$artifact$static_dtor$artifactStrings	100.0000	100.0000	100.0000	0x4d360
 basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530
