@@ -89,6 +89,7 @@ public:
 
     TViewArmyWindow(const army* this_army, int x0, int y0,
                     unsigned char show_ok);
+    TViewArmyWindow(int army_type, int x0, int y0, unsigned char show_ok);
     virtual ~TViewArmyWindow();
     virtual int WindowHandler(message* msg);
     int convertID2HelpID(int id) const;
