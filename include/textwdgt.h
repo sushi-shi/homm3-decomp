@@ -65,6 +65,10 @@ public:
                            font::TColor color, int id, unsigned justify,
                            int style);
     virtual ~bitmapBackedTextWidget();
+    // Slot 4 of vtable 0x642de8 (retail 0x5bc7f0): blit Background under
+    // the widget rect, clamped to the bitmap on each axis, then chain to
+    // textWidget::Draw for the string on top.
+    virtual void Draw();
 };
 
 // --- bitmapBackedTextWidget ---

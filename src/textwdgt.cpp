@@ -7,6 +7,21 @@
 // constructor calls. The header is pure forward declarations - it adds no
 // type definitions to this TU's closure.
 #include "resourcemanager.h"
+#include "bitmap816.h"
+#include "winmgr.h"
+// bitmapBackedTextWidget::Draw offsets the widget rect by its parent
+// window's origin, so this TU needs the COMPLETE heroWindow (the
+// bitmapBorder::Draw precedent in border.cpp).
+#include "window.h"
+
+// VC6's retail min site in this TU copies both operands into homes and
+// selects one by address; this by-value wrapper reproduces that shape.
+// The installed Dinkumware overload takes const references.
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
 
 #if 0  // @carcass
 
@@ -198,6 +213,23 @@ bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h,
     : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
 {
     Background = ResourceManager::GetBitmap816(back);
+}
+
+// E:\gamedcs\textwdgt.cpp:348 - bitmapBackedTextWidget::Draw, slot 4 of
+// vtable 0x642de8. It blits the whole backing bitmap under the widget rect
+// and then lets textWidget::Draw put the string on top; the clamp on each
+// axis is the reference-returning min VC6 inlines as two dword homes and an
+// address select, not the __min macro (which would reload the operand).
+VA(0x005bc7f0, 0x7C)  // anchor-vtable (slot 4 of 0x642de8), dc 0x165258
+void bitmapBackedTextWidget::Draw()
+{
+    int destX = x + parentWindow->x;
+    int destY = y + parentWindow->y;
+    int drawWidth = _cpp_min<int>(Background->Width, width);
+    int drawHeight = _cpp_min<int>(Background->Height, height);
+    Background->Draw(0, 0, drawWidth, drawHeight,
+        gpWindowManager->screenBitmap, destX, destY, 0);
+    textWidget::Draw();
 }
 
 #if 0  // @carcass

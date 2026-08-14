@@ -1447,6 +1447,7 @@ textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc6d0
 textwdgt	??1textWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc3b0
 textwdgt	??_GbitmapBackedTextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc6a0
 textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc250
+textwdgt	?Draw@bitmapBackedTextWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bc7f0
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80
 town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0
 town	?CanBuildDock@town@@QAEEXZ	100.0000	100.0000	100.0000	0x1bf4e0
