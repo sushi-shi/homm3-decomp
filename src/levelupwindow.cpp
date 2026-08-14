@@ -95,6 +95,36 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
     //    local.
     // The registration loop, both hotkey growths, both choice layouts and the
     // whole deadline tail are byte-exact.
+    //
+    // 2026-08-14, THE MASS AXIS IS LIVE AND THE OLD READING WAS A SAMPLING
+    // ARTEFACT. "mass 2/4/8 all drop to 98.0000" is true but the window is
+    // NARROW and sits past it: single-step titration (dead `int padN = x;
+    // padN = padN;` pairs, 1..32) gives 98.0000 for 1..11, 99.1299 for
+    // 12..15, 98.0713 at 16 and 88.5784 from 24. The 2/4/8 sample simply
+    // never landed in the 12..15 cell. POSITION IS IRRELEVANT - the same
+    // twelve at the very END of the body measure identically - which is what
+    // the RE'd rule predicts, since the only thing mass moves is
+    // `budget = 2 * cb(caller)` and `cb` is the whole caller's IL estimate.
+    // At mass 12 the FIRST of the two residuals above is gone: the last
+    // push_back's grow path gets its `size()` expansion and its whole
+    // register phase agrees with retail; what is left there is a small
+    // schedule slip at `reserve` plus the temp-slot rotation.
+    // So the honest fix for this function is ~24 more real statements, and
+    // nothing else. NOT them, all measured this round: `set_hotkey` for one
+    // or both `hotKeyCodes.push_back` calls (97.71 / 97.28 / 96.77 - the DC
+    // xref graph does record `button::set_hotkey` x1 for this constructor,
+    // but it does not pay), the plain unguarded registration loop 88.63 (the
+    // DC xref also records begin x1 / end x1, i.e. no guard - it does not pay
+    // either), and eight orderings of the accept block: hotkeys after the
+    // push_back 92.00, enable first 95.78, enable after the push_back 79.81,
+    // push_back first 92.41, a `std::vector<int>*` local for the hotkeys
+    // 98.8241 (byte-flat), `hotKeyCodes.reserve(2)` 89.75, the three-argument
+    // hotkey insert 78.77, a `widget*` alias for accept 98.7670, and
+    // `Widgets.insert(Widgets.end(), accept)` 88.36.
+    // Still open and NOT reachable from this file: the DC xref records
+    // `widget::set_visible` x2 (E:\gamedcs\Widget.h:263, dc 0x56df8, retail
+    // 0x1629b0) where we spell `send_message(WIDGET_CLEAR_STATUS,
+    // WIDGET_DRAWN)` twice. Declaring it needs an edit to widget.h.
     Widgets.reserve(25);
 
     gpLevelUpWindow = this;

@@ -136,6 +136,37 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // every k>=1 column of that sweep is capped below the k=0 one. Unlike
     // gametypewindow, where mass+sites together reached exact, there is no
     // (mass, sites) cell here that beats the slot-IV spelling below.
+    //
+    // 2026-08-14, RE-TITRATED AT THE LANDED SPELLING, single-step this time.
+    // The remaining residual is the same one levelupwindow carries: the LAST
+    // `Widgets.push_back`'s inlined `insert` calls `size()` where retail
+    // expands it (`_First==0 ? 0 : (_Last-_First)>>2`), and everything after
+    // that in the grow path is one divergence propagating through registers.
+    // It is a pure MASS wall - the window is 7..8 pad units (98.2455), with 5
+    // and 6 at 97.7430, 9 at 98.2163 and 10+ collapsing to 89.3196. That
+    // 98.2455 cell is +0.11 over the landed 98.1326.
+    // NO HONEST SUPPLY FOUND, and two informative negatives:
+    //   - Naming widgets in locals (the spelling that carried levelupwindow's
+    //     mass) DOES move cb here and reaches the ceiling at 19..21 names -
+    //     all 19 buttons 98.2455, the 6 checkboxes + 13 texts 98.2455, all
+    //     icons + texts 98.2455, 22..25 names 98.2163, all 40 names 89.3196.
+    //     But it is mass BY ACCIDENT, not reconstruction: at any of those
+    //     cells the frame gains a spurious local and every slot below
+    //     [ebp-0x10] shifts by 4 against retail. Higher fuzzy score, worse
+    //     structure - do not land it.
+    //   - Binding each `GetWidget(id)` to a `widget*` local before the
+    //     `send_message` (the lever that moved TLevelUpWindow::WindowHandler)
+    //     is EXACTLY byte-flat here at all 46 sites, and negative at every
+    //     partial count (4 -> 96.97, 8 -> 96.09, 12 -> 95.08, 24 -> 85.67).
+    //     Naming a value that is already a temp adds no front-end mass;
+    //     splitting `push_back(new X(...))` into two statements does.
+    // The DC xref census for this constructor otherwise MATCHES ours exactly
+    // once the Dreamcast platform delta is subtracted (DC has no window-scroll
+    // group: DC 16 buttons / 12 texts / 12 TTextResource::operator[] / 25
+    // GetWidget / 24 send_message against our 19 / 13 / 13 / 27 / 26). The one
+    // real disagreement is the registration guard - DC records begin x1 and
+    // end x1, i.e. no guard - but the guard is worth +9.3 here and is
+    // therefore standing in for two sites retail has and the DC port does not.
     for (int musicSlot = 0; musicSlot < 10; musicSlot++) {
         int musicX = 29 + musicSlot * 19;
         Widgets.push_back(new iconWidget(
