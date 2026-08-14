@@ -1485,6 +1485,7 @@ u2dvers	??1TFileVersionInfo@@QAE@XZ	100.0000	100.0000	100.0000	0x1eedf0
 u2dvers	?GetVersionInfo@TFileVersionInfo@@QAEEPBDPAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x1eee00
 uncompr	@uncompress@16	100.0000	100.0000	100.0000	0x206be0
 university_window	?ExitDialog@type_university_window@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1f1180
+university_window	?handle_widget_hover@type_university_window@@UAEXPAVwidget@@@Z	100.0000	100.0000	100.0000	0x1f0dc0
 victorylossconditions	?CheckForDefeatedTownLoss@LossConditionStruct@@QAEEHPBVtown@@@Z	99.8429	99.8429	99.8429	0x1f2e40
 victorylossconditions	?CheckForFlaggedGeneratorWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2600
 victorylossconditions	?CheckForFlaggedMineWin@VictoryConditionStruct@@QAEEXZ	100.0000	100.0000	100.0000	0x1f2720
