@@ -3,6 +3,10 @@
 // 27 functions in link order; 28 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "wingraph.h"
+#include "kbwin.h"
+#include "winmgr.h"
+#include "mousemgr.h"
+#include "misc.h"
 
 // Private desktop extents returned by the two six-byte accessors below.
 // No retail or Dreamcast symbol attests storage names, so these remain
@@ -11,6 +15,13 @@ DATA(0x0068c874)
 static int gUnnamed68c874;
 DATA(0x0068c878)
 static int gUnnamed68c878;
+
+// SetFullScreenStatus's first gate. The image references 0x6989d4 from
+// exactly one instruction (the load at 0x6019a1) and never writes it, so
+// it is a wingraph-private flag whose name no source attests - the same
+// house-ordinal treatment the desktop extents get above.
+DATA(0x006989d4)
+static int gUnnamed6989d4;
 
 #if 0  // @carcass
 
@@ -190,37 +201,57 @@ void InitGraphics()
     DDInitGraphics();
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\wingraph.cpp:1882
 // Located as AppWndProc's WM_PAINT callee, called (hwnd, NULL) - the
 // homm2 shape; a 4-byte WinCE stub on DC, a real 112-byte paint here.
-// RETAIL_LOCATED(0x00601820, 0x70): not reconstructed; anchor-callee, dc 0x19a440
+// The `hdc` parameter is dead in retail as well (BeginPaint supplies the
+// device context); /Gr puts hwnd in ecx and hdc in edx, and edx is never
+// touched.
+VA(0x00601820, 0x70)  // anchor-callee, dc 0x19a440
 int AppPaint(void* hwnd, void* hdc)
 {
-    // @stub
+    PAINTSTRUCT ps;
+    RECT rect;
+
+    BeginPaint((HWND)hwnd, &ps);
+    if (ps.rcPaint.right == 0 || ps.rcPaint.bottom == 0) {
+        GetClientRect((HWND)hwnd, &rect);
+        ps.rcPaint = rect;
+    }
+    if (ps.rcPaint.right - ps.rcPaint.left > 0
+        && ps.rcPaint.bottom - ps.rcPaint.top > 0)
+        DDAppBlit(&ps.rcPaint);
+    EndPaint((HWND)hwnd, &ps);
+    return 1;
 }
 
 // E:\gamedcs\wingraph.cpp:1916
 // Located as AppExit's first callee (kbwin 0x4f7fa0; homm2 AppExit
 // order). Retail body is a 5-byte tail jmp into 0x6018a0 - the WING
 // arm of homm2's wrapper is gone, only the DD path survives.
-// RETAIL_LOCATED(0x00601890, 0x5): not reconstructed; anchor-callee, dc 0x19a444
+VA(0x00601890, 0x5)  // anchor-callee, dc 0x19a444
 void CleanUpWinGraphics()
 {
-    // @stub
+    DDCleanUpWinGraphics();
 }
 
 // E:\gamedcs\wingraph.cpp:1922
 // Located by shape: fastcall bool(int) that early-outs on the
 // 0x6989d4 flag, compares the argument against bWindowedMode
-// (0x6987b8), calls the adjacent static DDSetFullScreenStatus
-// (0x601a00) and gpWindowManager->UpdateScreen(0,0,800,600); sole
-// caller is AppCommand's KBWIN_MENU_FULLSCREEN arm (homm2 lineage).
-// RETAIL_LOCATED(0x006019a0, 0x5A): not reconstructed; anchor-callee, dc 0x19a454
+// (0x6987b8), calls the adjacent DDSetFullScreenStatus (0x601a00) and
+// gpWindowManager->UpdateScreen(0,0,800,600); sole caller is
+// AppCommand's KBWIN_MENU_FULLSCREEN arm (homm2 lineage).
+VA(0x006019a0, 0x5A)  // anchor-callee, dc 0x19a454
 unsigned char SetFullScreenStatus(int bFullScreenOn)
 {
-    // @stub
+    if (gUnnamed6989d4)
+        return 0;
+    if (bFullScreenOn == bWindowedMode)
+        return 1;
+    unsigned char bChanged = DDSetFullScreenStatus(bFullScreenOn);
+    gpWindowManager->UpdateScreen(0, 0, 800, 600);
+    if (bFullScreenOn)
+        gpMouseManager->Update(1);
+    WritePrefs();
+    return bChanged;
 }
-
-#endif  // @carcass

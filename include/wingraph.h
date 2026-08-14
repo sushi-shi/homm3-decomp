@@ -14,6 +14,13 @@ void InitGraphics();                                     // 0x6014e0
 // Retail's wrapper tail-jumps to this zero-argument DirectDraw initializer;
 // the Dreamcast port's same-named routine instead takes mode/reinit args.
 void DDInitGraphics();                                   // 0x6014f0
+// The two DirectDraw bodies the wrappers above delegate to. Each is
+// referenced from exactly one site in the image (0x601890's tail jmp and
+// SetFullScreenStatus's single call), so retail's own linkage is not
+// observable; they are declared extern here because a used-but-undefined
+// static is a VC6 hard error and the call/jmp bytes are identical either way.
+void DDCleanUpWinGraphics();                             // 0x6018a0
+unsigned char DDSetFullScreenStatus(int iNewStatus);     // 0x601a00
 int GetDesktopWidth();                                   // 0x6014c0
 int GetDesktopHeight();                                  // 0x6014d0
 

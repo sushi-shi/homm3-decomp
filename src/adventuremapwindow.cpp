@@ -4,10 +4,13 @@
 #include <va.h>
 #include "advmgr.h"
 #include "bottomviewsubwindow.h"
+#include "button.h"
 #include "game.h"
 #include "message.h"
 #include "resourcedisplay.h"
+#include "textwdgt.h"
 #include "widget.h"
+#include "winmgr.h"
 
 #if 0  // @carcass
 
@@ -41,30 +44,9 @@ void TAdventureMapWindow::TAdventureMapWindow()
     // @stub
 }
 
-// E:\gamedcs\adventuremapwindow.cpp:489
-// RETAIL_LOCATED(0x00402b10, 0x77)  // anchor-global, dc 0xb9c
-void TAdventureMapWindow::~TAdventureMapWindow()
-{
-    // @stub
-}
-
 // E:\gamedcs\adventuremapwindow.cpp:505
 // RETAIL_LOCATED(0x00402b90, 0x24)  // anchor-global, dc 0xbf0
 void TAdventureMapWindow::animate_bottom_view(unsigned char in_background)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:514
-// RETAIL_LOCATED(0x00402bc0, 0x4E)  // anchor-global, dc 0xc1c
-void TAdventureMapWindow::draw_bottom_view(unsigned char update)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:526
-// RETAIL_LOCATED(0x00402c10, 0x3C)  // anchor-global, dc 0xc5c
-void TAdventureMapWindow::set_bottom_view(type_bottom_view_window* new_view)
 {
     // @stub
 }
@@ -86,20 +68,6 @@ unsigned char TAdventureMapWindow::ProcessRightSelect(const message* msg)
 // E:\gamedcs\adventuremapwindow.cpp:678
 // RETAIL_LOCATED(0x00403010, 0x20A)  // anchor-global, dc 0xed8
 unsigned char TAdventureMapWindow::ProcessHover(int hx, int hy)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:805
-// RETAIL_LOCATED(0x00403220, 0x59)  // anchor-global, dc 0x10dc
-void TAdventureMapWindow::DoHeroKnob()
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:827
-// RETAIL_LOCATED(0x00403280, 0x59)  // anchor-global, dc 0x10e0
-void TAdventureMapWindow::DoTownKnob()
 {
     // @stub
 }
@@ -146,23 +114,9 @@ void TAdventureMapWindow::UpdateQuestLogButton()
     // @stub
 }
 
-// E:\gamedcs\adventuremapwindow.cpp:1153
-// RETAIL_LOCATED(0x00403ba0, 0x47)  // anchor-global, dc 0x1138
-void TAdventureMapWindow::UpdateSleepButton()
-{
-    // @stub
-}
-
 // E:\gamedcs\adventuremapwindow.cpp:1171
 // RETAIL_LOCATED(0x00403bf0, 0x4C)  // anchor-global, dc 0x113c
 void TAdventureMapWindow::UpdateSpellButton(const hero* this_hero)
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1190
-// RETAIL_LOCATED(0x00403c40, 0x78)  // anchor-global, dc 0x1188
-unsigned char TAdventureMapWindow::SetElevationToggleImage(int level)
 {
     // @stub
 }
@@ -176,12 +130,112 @@ void TAdventureMapWindow::SetSleepImage()
 
 #endif  // @carcass
 
+// Retail emits the generated wrapper immediately before the destructor;
+// slot 0 of ??_7TAdventureMapWindow@@6B@ (0x63a5e4) points at it.
+VA_COMPGEN(0x00402ae0, 0x21, SCALAR_DELETING_DTOR, TAdventureMapWindow)
+
+// E:\gamedcs\adventuremapwindow.cpp:489
+// ClearBottomView is inlined again here (the guarded virtual delete plus
+// the redundant null store); ResourceDisplay by contrast is deleted
+// WITHOUT being cleared, so that arm is written out longhand.
+VA(0x00402b10, 0x77)  // anchor-global, dc 0xb9c
+TAdventureMapWindow::~TAdventureMapWindow()
+{
+    if (ResourceDisplay)
+        delete ResourceDisplay;
+    ClearBottomView();
+    delete_widgets();
+}
+
 // E:\gamedcs\adventuremapwindow.cpp:505
 VA(0x00402b90, 0x24)  // anchor-global + bottom-view virtual slot
 void TAdventureMapWindow::animate_bottom_view(unsigned char in_background)
 {
     if ((!in_background || animateInBackground) && bottomView)
         bottomView->animate();
+}
+
+// E:\gamedcs\adventuremapwindow.cpp:514
+VA(0x00402bc0, 0x4E)  // anchor-global, dc 0xc1c
+void TAdventureMapWindow::draw_bottom_view(unsigned char update)
+{
+    if (bottomView) {
+        bottomView->Draw(0, 0xffff0001, 0xffff);
+        if (update)
+            gpWindowManager->UpdateScreen(bottomView->x, bottomView->y,
+                bottomView->width, bottomView->height);
+    }
+}
+
+// E:\gamedcs\adventuremapwindow.cpp:526
+// ClearBottomView (0x403ee0) is what /Ob2 expands ahead of the store:
+// retail emits the guarded virtual delete AND the redundant `= 0` before
+// overwriting the member, which is exactly the inlined accessor and not
+// a hand-written `if (bottomView) delete bottomView;`.
+VA(0x00402c10, 0x3C)  // anchor-global, dc 0xc5c
+void TAdventureMapWindow::set_bottom_view(type_bottom_view_window* new_view)
+{
+    ClearBottomView();
+    bottomView = new_view;
+}
+
+// E:\gamedcs\adventuremapwindow.cpp:805
+// ARITY CORRECTION (both knobs): the Dreamcast rows for these two are
+// four-byte stubs, so their CodeView parameter counts are 0; the retail
+// rows are `ret 4` over one BYTE argument, matching DC's real
+// TAdvMenu::DoHeroKnob(unsigned char up) / DoTownKnob(unsigned char up).
+// GetLocalPlayer is called unconditionally even though only the
+// scroll-down arm uses the result - the stray call is retail's.
+VA(0x00403220, 0x59)  // anchor-global, dc 0x10dc
+void TAdventureMapWindow::DoHeroKnob(unsigned char up)
+{
+    playerData* player = gpGame->GetLocalPlayer();
+    if (up) {
+        if (topHero > 0)
+            topHero--;
+    } else {
+        if (topHero < player->numHeroes - NUM_HERO_BUTTONS)
+            topHero++;
+    }
+    UpdateHeroLocators(-1, 1, 1);
+}
+
+// E:\gamedcs\adventuremapwindow.cpp:827
+VA(0x00403280, 0x59)  // anchor-global, dc 0x10e0
+void TAdventureMapWindow::DoTownKnob(unsigned char up)
+{
+    playerData* player = gpGame->GetLocalPlayer();
+    if (up) {
+        if (topTown > 0)
+            topTown--;
+    } else {
+        if (topTown < player->numTowns - NUM_TOWN_BUTTONS)
+            topTown++;
+    }
+    UpdateTownLocators(-1, 1, 1);
+}
+
+// E:\gamedcs\adventuremapwindow.cpp:1153
+// ARITY CORRECTION: the carcass declarator came from the Dreamcast
+// roster, where TAdventureMapWindow::UpdateSleepButton is a FOUR-BYTE
+// stub (dc 0x1138) whose CodeView parameter count is therefore 0. The
+// retail row is `ret 4` and reads one stack argument, testing it only
+// for null - the same shape DC's real implementation
+// TAdvMenu::UpdateSleepButton(const hero*) has, and the same shape as
+// the neighbouring UpdateSpellButton. So retail's signature takes the
+// hero, and the DC arity is an artefact of the stubbed body.
+VA(0x00403ba0, 0x47)  // anchor-global, dc 0x1138
+void TAdventureMapWindow::UpdateSleepButton(const hero* this_hero)
+{
+    unsigned char enabled = 0;
+    if (this_hero)
+        enabled = 1;
+    if (!gpCurrentPlayer->IsLocalHuman())
+        enabled = 0;
+
+    BroadcastMessage(MESSAGE_WIDGET,
+        enabled ? widget::WIDGET_CLEAR_STATUS : widget::WIDGET_SET_STATUS,
+        SLEEP_ID, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:1171
@@ -198,6 +252,37 @@ void TAdventureMapWindow::UpdateSpellButton(const hero* this_hero)
     BroadcastMessage(MESSAGE_WIDGET,
         enabled ? widget::WIDGET_CLEAR_STATUS : widget::WIDGET_SET_STATUS,
         CAST_SPELL_ID, widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+}
+
+// The elevation toggle's two .data objects, in retail's own order: the
+// icon names indexed by map level, and the last level the toggle was set
+// to (initialised to -1, which is why it lands in .data rather than
+// .bss). Bounded exactly - 0x65f22c + 2*4 lands on the level cell.
+DATA(0x0065f22c)
+static const char* aszElevationIcons[2] = { "iam010.def", "iam003.def" };
+
+DATA(0x0065f234)
+static int giElevationToggleLevel = -1;
+
+// E:\gamedcs\adventuremapwindow.cpp:1190
+VA(0x00403c40, 0x78)  // anchor-global, dc 0x1188
+unsigned char TAdventureMapWindow::SetElevationToggleImage(int level)
+{
+    if (level != giElevationToggleLevel) {
+        message iconMessage;
+        iconMessage.extraText = aszElevationIcons[level];
+
+        giElevationToggleLevel = level;
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_NAME,
+            ELEVATION_TOGGLE_ID, iconMessage.extra);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_PLAYER_PALETTE_COLORS,
+            ELEVATION_TOGGLE_ID, gpGame->GetLocalPlayerGamePos());
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_DRAW,
+            ELEVATION_TOGGLE_ID, 0);
+        WidgetSetStatus(ELEVATION_TOGGLE_ID, widget::WIDGET_UPDATE);
+        return 1;
+    }
+    return 0;
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:1244
@@ -219,28 +304,53 @@ void TAdventureMapWindow::UpdateResourceDisplay(unsigned char draw, unsigned cha
     ResourceDisplay->Update(draw, update);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\adventuremapwindow.cpp:1265
-// RETAIL_LOCATED(0x00403f20, 0x3F)  // anchor-global, dc 0x11f4
+VA(0x00403f20, 0x3F)  // anchor-global, dc 0x11f4
 void TAdventureMapWindow::DrawChatText(unsigned char update)
 {
-    // @stub
+    DrawWindow(0, CHAT_TEXT_ID, CHAT_TEXT_ID);
+    if (update)
+        gpWindowManager->UpdateScreen(ChatTextWidget->x, ChatTextWidget->y,
+            ChatTextWidget->width, ChatTextWidget->height);
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:1273
-DC_ONLY(0x1238, 0x22)
-void TAdvMenu::SetAdvWinButtonPalette(int id, int player)
+// Retail has NO out-of-line row for this helper: the carve runs
+// DrawChatText (0x403f20, 0x3f) straight into UpdateButtons at 0x403f60,
+// so /Ob2 expanded it at all ten call sites below. The Dreamcast build
+// keeps it (dc 0x1238, 34 B) as TAdvMenu::SetAdvWinButtonPalette, which
+// is where the shape and the argument names come from - note it reaches
+// the window through gpAdvManager rather than through `this`, and retail
+// reloads gpAdvManager for every one of the ten expansions because of it.
+static void SetAdvWinButtonPalette(int id, int player)
 {
-    // @stub
+    widget* w = gpAdvManager->advWindow->GetWidget(id);
+    if (w)
+        static_cast<button*>(w)->SetPlayerPaletteColors(player);
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:1284
-// RETAIL_LOCATED(0x00403f60, 0x144)  // anchor-global, dc 0x125c
-void TAdventureMapWindow::UpdateButtons()
+VA(0x00403f60, 0x144)  // anchor-global, dc 0x125c
+void TAdventureMapWindow::UpdateButtons(unsigned char draw, unsigned char update)
 {
-    // @stub
+    int player = gpGame->GetLocalPlayerGamePos();
+
+    SetAdvWinButtonPalette(KINGDOM_OVERVIEW_ID, player);
+    SetAdvWinButtonPalette(ELEVATION_TOGGLE_ID, player);
+    SetAdvWinButtonPalette(QUEST_LOG_ID, player);
+    SetAdvWinButtonPalette(SLEEP_ID, player);
+    SetAdvWinButtonPalette(MOVE_ID, player);
+    SetAdvWinButtonPalette(CAST_SPELL_ID, player);
+    SetAdvWinButtonPalette(ADVENTURE_OPTIONS_ID, player);
+    SetAdvWinButtonPalette(SYSTEM_OPTIONS_ID, player);
+    SetAdvWinButtonPalette(NEXT_HERO_ID, player);
+    SetAdvWinButtonPalette(END_TURN_ID, player);
+
+    if (draw)
+        DrawWindow(update, KINGDOM_OVERVIEW_ID, END_TURN_ID);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\adventuremapwindow.cpp:1307
 DC_ONLY(0x1284, 0x708)
