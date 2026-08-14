@@ -80,9 +80,13 @@ LODEntry* LODFile::getItemIndex(const char* item_name)
 // merges them into two.  `homm3 vc6 diagnose` calls it control-flow
 // (21 vs 22 blocks, three retargeted branches, register-distance 150),
 // but the block set is downstream of that register choice, so no local
-// spelling reaches it - tried and rejected: an explicit `half` local,
-// `mid` hoisted above the loop, `mid` recomputed per use.  Same family
-// as the documented merged-return residual.
+// spelling reaches it.  Per-function fuzzy 74.09% - the objdiff move
+// penalty over a long run of near-identical instructions, not a
+// semantic gap.  Tried and rejected: an explicit `half` local, `mid`
+// hoisted above the loop, `mid` recomputed per use, and both
+// asymmetric exit forms that would give each linear scan its own
+// `matchindex = -1` block (68.87% and 69.18%).  Same family as the
+// documented merged-return residual.
 VA(0x004fa660, 0x113)  // anchor-global, dc 0xe91c0
 void LODFile::Find(unsigned begin, unsigned end, const char* item_name)
 {
