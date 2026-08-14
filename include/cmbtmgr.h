@@ -646,6 +646,24 @@ public:
     // full spells.obj identity is still provisional.
     void InitiateSpell(int spellOrCommand, int fromArmyView);
     unsigned char place_obstacle(int obstacle_id);
+    // 0x46a570 (224 B, `ret 8`): the landmine / fire-wall worker that
+    // army::check_obstacle_attacks (0x441f70) delegates to once it has
+    // cleared the arrow tower. It belongs to the COMBAT MANAGER, not to
+    // army - retail loads gpCombatManager into ecx and pushes the stack
+    // and the walking flag - and NH3API calls the same body (its
+    // 0x46a150) as THISCALL_3 on gpCombatManager, so its own
+    // `army::check_obstacle_attacks` label for this address is the
+    // wrapper's name transferred onto the worker. Its callers are
+    // exactly army::check_obstacle_attacks and army::WalkTo, plus
+    // FlyTo/TeleportTo, which inline the arrow-tower wrapper. On the DC
+    // build there is no worker at all: army::check_obstacle_attacks
+    // (dc 0x47270, 132 B) calls Is, get_second_grid_index,
+    // check_landmine and check_fire_wall itself, which is precisely
+    // what this body does - a retail-side refactor, and the reason the
+    // 38/132 size ratio of the wrapper's own slot sits outside the
+    // SH4->x86 band without the attribution being wrong.
+    unsigned char check_obstacle_attacks(army* this_army,
+                                         unsigned char is_walking);
     unsigned char should_lower_door(army* this_army, long hex);
     void LowerDoor();
     void RaiseDoor();
