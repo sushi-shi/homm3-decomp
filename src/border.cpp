@@ -52,18 +52,33 @@ border::~border()
 // inlined ~border, so only ??_7border@@6B@ survives before the
 // tail-jump to ~widget (the ~type_func_button shape in button.cpp).
 //
-// NO CLAIM ON THE sdd 0x4501a0 (33 B, dc 0x54da4) - and it is not a
-// spelling problem. That very dead-store elimination leaves nothing in
-// this TU referencing ??_7coloredBorderFrame@@6B@, so VC6 emits
-// neither the vtable nor ??_GcoloredBorderFrame@@UAEPAXI@Z and the
-// claim has no base-side function to pair with (verified: our
-// border.obj emits ??_7border/bitmapBorder/bitmapBorder16 and their
-// three ??_G COMDATs, and no coloredBorderFrame pair). Retail emits
-// both because its border.cpp also defines the coloredBorderFrame
-// CONSTRUCTOR - unclaimed 0x450130, 109 B, dc 0x54650 - which stores
-// the derived vtable and so keeps it alive. Land that ctor (it needs
-// the DC-attested color/colorize members at retail offsets) and the
-// sdd claim becomes free.
+// The sdd 0x4501a0 (33 B, dc 0x54da4) used to have NO CLAIM here, and
+// the reason recorded was exactly right: that dead-store elimination
+// left nothing in this TU referencing ??_7coloredBorderFrame@@6B@, so
+// VC6 emitted neither the vtable nor ??_GcoloredBorderFrame@@UAEPAXI@Z
+// and the claim had no base-side function to pair with. The
+// CONSTRUCTOR below is what keeps the vtable alive - its
+// `mov [esi], offset ??_7coloredBorderFrame` is a live store - and with
+// it landed the sdd pairs for free.
+// E:\gamedcs\border.cpp:201 - the constructor. It builds its border
+// base through widget's default ctor, stores the derived vtable, runs
+// widget::initialize on the six geometry arguments and only then writes
+// the two members DC names: color at +0x30 from the seventh argument,
+// colorize at +0x34 as a literal 0. Nothing sits in a member-init list -
+// retail's vptr store precedes both member stores.
+VA(0x00450130, 0x6D)  // anchor-vtable 0x63ba5c, dc 0x54650
+coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
+                                       int color_, int style)
+{
+    initialize(x, y, w, h, id, style);
+    color = color_;
+    colorize = 0;
+}
+
+// E:\gamedcs\border.cpp:178 - coloredBorderFrame::`scalar deleting
+// destructor', slot 0 of vtable 0x63ba5c.
+VA_COMPGEN(0x004501a0, 0x21, SCALAR_DELETING_DTOR, coloredBorderFrame)
+
 VA(0x004501d0, 0xB)  // anchor-vtable (slot 0 chain of 0x63ba5c), dc 0x54dd8
 coloredBorderFrame::~coloredBorderFrame()
 {
