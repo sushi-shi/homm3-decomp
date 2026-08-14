@@ -34,6 +34,20 @@ inline const _TYPE& min_ref(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _X : _Y);
 }
 
+// The MAX twin of min_ref, same by-value/reference-returning shape.
+// choose_melee_target's tail (0x421ed8) homes both operands - one of them
+// in the dead `estimate` argument slot - selects between their ADDRESSES
+// with two LEAs on `cmp best_value, best_time; jl`, and loads through the
+// winner. That is min_ref's expansion with the arms swapped, i.e. the
+// naive hand-written `_X < _Y ? _Y : _X`, not <xutility>'s `_cpp_max`
+// (which compares `_X < _Y` and returns _Y too, but takes both by
+// reference and so has no homes to select between).
+template <class _TYPE>
+inline const _TYPE& max_ref(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+
 template <class _TYPE>
 inline const _TYPE& min_ref_xvalue(_TYPE _X, const _TYPE& _Y)
 {
@@ -1768,185 +1782,337 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
     }
 }
 
-#if 0  // @carcass
-
 // UNCLAIMED, 0x421590 (225 B). Reads combatManager+0x53a8 and +0x53a4
 // and indexes the eleven-entry byte table at 0x63bce8 - the exact
 // trio searchArray::set_moat (0x4b3290) uses, so this marks the MOAT
 // hexes for the AI. The Dreamcast ai.obj roster has no such body and
-// no name for one; it is a retail-only function, and this lane does
-// not mint names.
+// no name for one; it is retail-only. Declared as combatManager::
+// mark_moat in cmbtmgr.h after its argument list turned out to be
+// mark_firewalls' exactly, and left unreconstructed - choose_melee_
+// target is its only caller and a call relocation's symbol name does
+// not gate the score.
 
 // E:\gamedcs\ai.cpp:1896
-// DECODED MAP, 2026-08-14 - the whole 2297-byte body read off retail, in
-// source order, but NOT yet written out. Everything it calls that this
-// tree does not already declare is listed at the end; that surface, not
-// the control flow, is what is left to do.
+// The melee chooser: score every enemy stack the mover could reach,
+// keep the best, and turn that into an order - or, when nothing is
+// worth attacking, into a defensive one. Four danger-map passes run
+// first (fire walls always, the moat above fortification level 2, the
+// enemy and friendly maps under the difficulty/AI gates), then the
+// mover's reachability is seeded, then the enemy walk, then a tail
+// with SEVEN exits.
 //
-// SIGNATURE / FRAME
-//   ret 0x10; [ebp+8] current_army, [ebp+0xc] teleport (byte),
-//   [ebp+0x10] action_value, [ebp+0x14] estimate (also reused as a temp
-//   after the loop). Locals, all byte-proven by their writers:
-//     [ebp-0x350] long enemy_attacks[187]   zeroed with rep stosd 0xbb
-//     [ebp-0x64]  type_AI_attack_hex_chooser chooser  (its +0x1c/+0x20/
-//                 +0x24 read back as [ebp-0x48]/[ebp-0x44]/[ebp-0x40])
-//     [ebp-0x38]  scratch  [ebp-0x34] dangerous_enemies
-//     [ebp-0x30]  budget 0x7f, then the enemy loop counter (slot reused)
-//     [ebp-0x2c]  enemy_side   [ebp-0x28] best_time  [ebp-0x24] best_troops
-//     [ebp-0x20]  best_value   [ebp-0x1c] best_hex = -1
-//     [ebp-0x15]  stay_in_castle  [ebp-0x14] side  [ebp-0x10] this
-//     [ebp-0xc]   enemy        [ebp-8]  best_enemy = 0
-//     [ebp-2]     best_flag    [ebp-1]  flag (per enemy)
+// The decoded map that preceded this body (banked 2026-08-14, now
+// spent) named seven pieces of missing surface. All seven landed:
+// mark_moat and the two Harpy ids are new declarations, max_ref is
+// this file's min_ref with the arms swapped, and the other four were
+// already in the tree under names the map did not know - gpGame->
+// f_1f698, army::boundFlag (+0x2b8), gCastleWallColumns (0x63bd00) and
+// cmbtmgr.h's InCastle / combatManager::IsInMoat.
 //
-// PROLOGUE (0x421680..0x4216ba)
-//   side = estimate->side; enemy_side = estimate->enemy_side;
-//   memset(enemy_attacks, 0, 187*4); best_enemy = 0; best_value = 0;
-//   best_troops = 0; best_time = 0; best_flag = 0; dangerous_enemies = 0;
-//   best_hex = -1; budget = 127;
-//   mark_firewalls(current_army, enemy_attacks, estimate);
-//   if (gpGame->setup.<+0x1f698> >= 2)
-//       <0x421590>(current_army, enemy_attacks, estimate);   // the moat marker
-//   if (gpGame->setup.difficulty > 0 || sideIsAI[side])
-//       mark_enemy_attacks(current_army, enemy_attacks, &dangerous_enemies, estimate);
-//   if (gpGame->setup.difficulty >= 2 || sideIsAI[side])
-//       mark_friendly_armies(current_army, enemy_attacks, dangerous_enemies, estimate);
-//   budget = (current_army->disabled_290 || ->disabled_2b0 || ->disabled_2c0) ? 0 : budget;
-//   if (teleport) gpSearchArray->mark_teleport(current_army, side);
-//   else gpSearchArray->SeedCombatPosition(current_army, side, budget,
-//                                          bCreaturePlacement, -1);
-//   stay_in_castle = should_stay_in_castle(estimate);
+// Things worth knowing about the transcription:
+//   * `budget` is spelled as an assignment from itself rather than an
+//     `if (...) budget = 0;` because retail SELECTS into EAX (`xor eax,
+//     eax` / `mov eax,[ebp-0x30]`) ahead of the teleport branch instead
+//     of storing zero into the slot.
+//   * the disabled-stack predicate is spelled out three fields at a
+//     time everywhere it appears. army::IsIncapacitated is pinned
+//     `auto_inline(off)` in this TU to protect find_move_order's single
+//     retail call, so reaching for it here would emit a CALL where
+//     retail has the fields.
+//   * the two `field_3c = 6` exits store in DIFFERENT orders - the
+//     teleport one writes 3c/40/44, the commit one 40/3c/44. Both are
+//     transcribed as retail has them.
+//   * the disengage tail is reached by fallthrough from two arms and
+//     the commit block sits AFTER it, so the commit is a labelled block
+//     entered by `goto` - the layout an if/else-if/else cannot produce.
+//   * the moat-row walk is the fortification arm's last resort: index
+//     gCastleWallColumns by the mover's row (gridIndex / 17), then scan
+//     DOWN from that hex for the first one that is both reachable and
+//     out of the moat, pricing BOTH cells of a two-hex stack.
+// Residual (80.30%): ONE register binding, and everything else follows
+// from it. Retail parks `estimate` in EBX for the whole prologue and the
+// enemy walk and re-reads `current_army` from its parameter slot; this
+// compile parks `current_army` in EBX and re-reads `estimate`. The CFG
+// is otherwise identical - 118 branches and 10 rets on both sides, with
+// two `test/jcc` polarity flips left, both inside the cellData accessor
+// and both a consequence of which scratch register holds the base rather
+// than of how the accessor is spelled. The same pressure is what makes
+// our hex scaling come out as `imul r,r,0x1e` where retail has the
+// three-lea chain: the lea form needs two free temporaries and this
+// allocation does not have them. `why-reg --model` confirms the three
+// first-def bindings (EBX/ESI/EDI at the same instructions) already
+// agree and places the divergence past the B1 minimum slice.
 //
-// THE ENEMY WALK (0x421776..0x421ba3), for i in 0..numArmies[enemy_side)
-//   enemy = &armies[enemy_side][i];
-//   skip when: enemy->Is(21)&1; creatureType == ARROW_TOWER;
-//     estimate->simulated && enemy->get_total_hit_points(1) == 0;
-//     (current_army->GetSpeed() == 0 || current_army-><+0x2b8>) and the
-//     enemy's own cellData cost is ABOVE ZERO (unsigned `ja`);
-//     stay_in_castle && !InCastle(enemy->gridIndex) && (one-hex ||
-//       !InCastle(enemy->get_second_grid_index())).
-//   change = 0; flag = 0;
-//   if (cells[enemy->gridIndex].field_4a
-//       && (difficulty >= 2 || sideIsAI[side])
-//       && !current_army->disabled_290/2b0/2c0
-//       && !(current_army->Is(21)&1)
-//       && current_army->creatureType != FIRST_AID_TENT && != AMMO_CART
-//       && !(enemy->Is(19)&1)
-//       && cellData[enemy->gridIndex].cost <= current_army->GetSpeed())
-//       change = get_attack_change(current_army, enemy, estimate);
-//   type_AI_attack_hex_chooser chooser(current_army, enemy, enemy_attacks,
-//                                      gpSearchArray, estimate);
-//   if (!chooser.find_attack_hex()) continue;
-//   if (!current_army->disabled_290/2b0/2c0 && !(Is(21)&1)
-//       && creatureType != FIRST_AID_TENT && != AMMO_CART)
-//       change += estimate->get_simple_attack_effect(current_army, enemy, 0,
-//           chooser.field_24 == 1 ? cellData[chooser.best_hex].cost : 0);
-//   value = chooser.best_value;
-//   if (value <= 0 || (current_army->Is(22)&1)
-//       || (difficulty == 0 && !sideIsAI[side]))            change += value;
-//   else if (creatureType == 0x48 || == 0x49)   // Harpy / Harpy Hag
-//       { if (change < value) { flag = 1; change = value; } }
-//   else if (change < 0 && has_ranged_advantage(estimate))
-//       { change = value; flag = 1; }
-//   else                                                    change += value;
-//   if (change < 0 && (difficulty > 0 || sideIsAI[side])
-//       && value < enemy_attacks[chooser.best_hex]) continue;
-//   random = Random(75, 100);
-//   score  = random * change / 100;      // 0x51eb851f/2^37 reciprocal
-//   troops = chooser.field_24;
-//   if (best_enemy != 0) {
-//       // a DISABLED enemy loses to a live one and beats nothing
-//       if (enemy disabled && best_enemy not disabled) continue;
-//       if (!(enemy not disabled && best_enemy disabled)) {
-//           if (best_troops < troops) continue;
-//           if (best_troops == troops) {
-//               if (best_value > score) continue;
-//               if (best_value == score) {
-//                   if (best_enemy->topCreatureDamage > enemy->topCreatureDamage)
-//                       continue;
-//                   if (equal && cellData[best_hex].cost < cellData[chooser.best_hex].cost)
-//                       continue;      // unsigned `jb`
-//               }
-//           }
-//       }
-//   }
-//   best_enemy = enemy; best_flag = flag; best_hex = chooser.best_hex;
-//   best_troops = troops;
-//   best_time  = chooser.best_value * random / (troops * 100);
-//   best_value = score / troops;
-//
-// THE TAIL (0x421bd8..0x421f78)
-//   *action_value = max_ref(best_value, best_time);   // TWO leas + one
-//       load - the address-selecting by-value helper shape min_ref already
-//       has in this TU, in its MAX orientation (`_X < _Y ? _Y : _X`).
-//   if (teleport) {
-//       if (best_enemy && *action_value >= 0)
-//           { field_3c = 6; field_40 = best_hex; field_44 = best_enemy->gridIndex; return 1; }
-//       field_3c = 3; return 1;
-//   }
-//   if (!estimate->simulated && !bCreaturePlacement
-//       && choose_spell_action(current_army, action_value, estimate)) return 1;
-//   if (best_flag) {                        // the Harpy / ranged-advantage arm
-//       *action_value = best_time;
-//       if (best_hex == current_army->gridIndex) return 0;
-//       move_toward(current_army, best_hex, enemy_attacks,
-//                   !estimate->simulated && best_troops > 1);
-//       return 1;
-//   }
-//   if (best_enemy == 0) {
-//       if (field_132f4 > 0 && currentSide == 0) {
-//           // WALK THE MOAT ROW: hex/17 indexes the eleven-byte table at
-//           // 0x63bd00 for the row's first cell, then scans DOWN from it
-//           // skipping unvisited cells and cells IsInMoat() answers for
-//           // (both halves for a two-hex stack), and moves onto the first
-//           // one that is neither.
-//           ...; if (found > current_army->gridIndex)
-//                    { move_toward(current_army, found, enemy_attacks, 0); return 1; }
-//           field_3c = 3; return 1;
-//       }
-//   } else if (best_value < 0 && best_value < best_time
-//              && !(current_army->Is(22)&1)
-//              && (difficulty > 0 || sideIsAI[side])
-//              && has_ranged_advantage(estimate)) {
-//       // fall into the same "do not engage" tail as best_enemy == 0
-//   } else goto commit;
-//   *action_value = 0;
-//   if (!estimate->simulated
-//       && get_area_effect(enemy_side, current_army, dangerous_enemies, estimate) == 0
-//       && attempt_shooter_defense(current_army, gpSearchArray, estimate)) return 1;
-//   if (best_enemy == 0) {
-//       if (!estimate->simulated
-//           && choose_to_run(current_army, enemy_attacks, gpSearchArray)) return 1;
-//       return 0;
-//   }
-// commit:
-//   *action_value = best_value;
-//   if (best_troops <= 1 && !bCreaturePlacement)
-//       { field_40 = best_hex; field_3c = 6; field_44 = best_enemy->gridIndex; return 1; }
-//   if (best_hex == current_army->gridIndex) return 0;
-//   move_toward(current_army, best_hex, enemy_attacks,
-//               !estimate->simulated && best_troops > 1);
-//   return 1;
-//
-// WHAT THE BODY STILL NEEDS (none of it is control flow):
-//   * a name and a declaration for 0x421590, the moat marker (this lane
-//     does not mint names for unclaimed retail-only bodies);
-//   * gpGame->setup's dword at +0x1f698 (difficulty is +0x1f6d8);
-//   * army's dword at +0x2b8;
-//   * the eleven-byte row table at 0x63bd00 (searchArray::set_moat uses
-//     the same family at 0x63bce8);
-//   * declarations for InCastle (?InCastle@@YIEH@Z) and
-//     combatManager::IsInMoat (?IsInMoat@combatManager@@QAEEHPAH@Z);
-//   * CREATURE_HARPY 0x48 / CREATURE_HARPY_HAG 0x49, which belong in
-//     ai.h's narrow enum, NOT armygrp.h's roster (see the
-//     initialize_game_data note on that enum);
-//   * the `max_ref` twin of this file's min_ref helper.
+// Four spellings ARE byte-load-bearing and were measured one at a time:
+//   * `long budget = 127;` must be declared NEXT TO ITS USE, after the
+//     four marking passes, not with the other initialisers. Declared up
+//     top it lives across all four calls, takes a callee-saved register
+//     out of the pool, and pushes `this` out of ESI entirely - which
+//     also costs the frame its 0x350th byte (78.30 -> 78.54, and the
+//     frame size matches retail's again).
+//   * the disabled-precedence guard tests BEST_ENEMY first and the
+//     candidate second - `!(best_disabled && !enemy_disabled)`. Written
+//     with the operands the other way round it is the same predicate but
+//     lowers with both triples' polarity flipped (78.54 -> 79.79).
+//   * the get_simple_attack_effect distance is a NAMED LOCAL initialised
+//     to 0 and conditionally assigned, not a ternary argument. The local
+//     creates the result pseudo BEFORE the cellData load, which is what
+//     hoists retail's `xor eax,eax` above the `cmp field_24,1` and lets
+//     the accessor share one register (79.79 -> 80.30).
+//   * the cellData accessor's null arm answers `cellData` itself, not a
+//     literal 0 - findpath.h's get_cell spells its own null arm exactly
+//     that way (`if (!cellData) return cellData;`), and the literal
+//     forces VC6 to materialise a fresh zero and duplicate the load.
 VA(0x00421680, 0x8F9)  // linkorder, dc 0x266d4
 unsigned char combatManager::choose_melee_target(const army* current_army, unsigned char teleport, long* action_value, type_AI_combat_parameters* estimate)
 {
-    // @stub
-}
+    long enemy_attacks[COMBAT_GRID_CELLS];
 
-#endif  // @carcass
+    long side = estimate->side;
+    long enemy_side = estimate->enemy_side;
+    memset(enemy_attacks, 0, sizeof(enemy_attacks));
+    const army* best_enemy = 0;
+    long best_value = 0;
+    long best_troops = 0;
+    long best_time = 0;
+    unsigned char best_flag = 0;
+    long dangerous_enemies = 0;
+    long best_hex = -1;
+
+    mark_firewalls(current_army, enemy_attacks, estimate);
+    if (gpGame->f_1f698 >= 2)
+        mark_moat(current_army, enemy_attacks, estimate);
+    if (gpGame->setup.difficulty > 0 || sideIsAI[side])
+        mark_enemy_attacks(current_army, enemy_attacks, &dangerous_enemies,
+                           estimate);
+    if (gpGame->setup.difficulty >= 2 || sideIsAI[side])
+        mark_friendly_armies(current_army, enemy_attacks, dangerous_enemies,
+                             estimate);
+
+    long budget = 127;
+    budget = (current_army->disabled_290 || current_army->disabled_2b0
+              || current_army->disabled_2c0)
+            ? 0
+            : budget;
+    if (teleport)
+        gpSearchArray->mark_teleport(current_army, side);
+    else
+        gpSearchArray->SeedCombatPosition(current_army, side, budget,
+                                          bCreaturePlacement, -1);
+    unsigned char stay_in_castle = should_stay_in_castle(estimate);
+
+    for (long i = 0; i < numArmies[enemy_side]; i++) {
+        const army* enemy = &armies[enemy_side][i];
+        if (enemy->Is(21) & 1)
+            continue;
+        if (enemy->creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        if (estimate->simulated && enemy->get_total_hit_points(1) == 0)
+            continue;
+        if (current_army->GetSpeed() == 0 || current_army->boundFlag) {
+            const pathCell* stand = gpSearchArray->cellData == 0
+                    ? 0
+                    : &gpSearchArray->cellData[enemy->gridIndex];
+            if (stand->cost > 0)
+                continue;
+        }
+        if (stay_in_castle && !InCastle(enemy->gridIndex)
+                && (!(enemy->creatureId & 1)
+                    || !InCastle(enemy->get_second_grid_index())))
+            continue;
+
+        long change = 0;
+        unsigned char flag = 0;
+        if (cells[enemy->gridIndex].field_4a
+                && (gpGame->setup.difficulty >= 2 || sideIsAI[side])
+                && !current_army->disabled_290
+                && !current_army->disabled_2b0
+                && !current_army->disabled_2c0
+                && !(current_army->Is(21) & 1)
+                && current_army->creatureType != CREATURE_FIRST_AID_TENT
+                && current_army->creatureType != CREATURE_AMMO_CART
+                && !(enemy->Is(19) & 1)) {
+            const pathCell* reach = gpSearchArray->cellData == 0
+                    ? 0
+                    : &gpSearchArray->cellData[enemy->gridIndex];
+            if (reach->cost <= current_army->GetSpeed())
+                change = get_attack_change(current_army, enemy, estimate);
+        }
+
+        type_AI_attack_hex_chooser chooser(current_army, enemy, enemy_attacks,
+                                           gpSearchArray, estimate);
+        if (!chooser.find_attack_hex())
+            continue;
+        if (!current_army->disabled_290 && !current_army->disabled_2b0
+                && !current_army->disabled_2c0
+                && !(current_army->Is(21) & 1)
+                && current_army->creatureType != CREATURE_FIRST_AID_TENT
+                && current_army->creatureType != CREATURE_AMMO_CART) {
+            long distance = 0;
+            if (chooser.field_24 == 1) {
+                const pathCell* attack_cell = gpSearchArray->cellData == 0
+                        ? gpSearchArray->cellData
+                        : &gpSearchArray->cellData[chooser.best_hex];
+                distance = attack_cell->cost;
+            }
+            change += estimate->get_simple_attack_effect(current_army, enemy, 0,
+                                                         distance);
+        }
+
+        long value = chooser.best_value;
+        if (value <= 0 || (current_army->Is(22) & 1)
+                || (gpGame->setup.difficulty == 0 && !sideIsAI[side])) {
+            change += value;
+        } else if (current_army->creatureType == CREATURE_HARPY
+                   || current_army->creatureType == CREATURE_HARPY_HAG) {
+            if (change < value) {
+                flag = 1;
+                change = value;
+            }
+        } else if (change < 0 && has_ranged_advantage(estimate)) {
+            change = value;
+            flag = 1;
+        } else {
+            change += value;
+        }
+        if (change < 0
+                && (gpGame->setup.difficulty > 0 || sideIsAI[side])
+                && value < enemy_attacks[chooser.best_hex])
+            continue;
+
+        long random = Random(75, 100);
+        long score = random * change / 100;
+        long troops = chooser.field_24;
+        if (best_enemy != 0) {
+            if ((enemy->disabled_290 || enemy->disabled_2b0
+                 || enemy->disabled_2c0)
+                    && !(best_enemy->disabled_290 || best_enemy->disabled_2b0
+                         || best_enemy->disabled_2c0))
+                continue;
+            if (!((best_enemy->disabled_290 || best_enemy->disabled_2b0
+                   || best_enemy->disabled_2c0)
+                  && !(enemy->disabled_290 || enemy->disabled_2b0
+                       || enemy->disabled_2c0))) {
+                if (best_troops < troops)
+                    continue;
+                if (best_troops == troops) {
+                    if (best_value > score)
+                        continue;
+                    if (best_value == score) {
+                        if (best_enemy->topCreatureDamage
+                                > enemy->topCreatureDamage)
+                            continue;
+                        if (best_enemy->topCreatureDamage
+                                == enemy->topCreatureDamage) {
+                            const pathCell* held = gpSearchArray->cellData == 0
+                                    ? 0
+                                    : &gpSearchArray->cellData[best_hex];
+                            const pathCell* offered
+                                    = gpSearchArray->cellData == 0
+                                    ? 0
+                                    : &gpSearchArray
+                                               ->cellData[chooser.best_hex];
+                            if (held->cost < offered->cost)
+                                continue;
+                        }
+                    }
+                }
+            }
+        }
+        best_enemy = enemy;
+        best_flag = flag;
+        best_hex = chooser.best_hex;
+        best_troops = troops;
+        best_time = chooser.best_value * random / (troops * 100);
+        best_value = score / troops;
+    }
+
+    *action_value = max_ref(best_value, best_time);
+    if (teleport) {
+        if (best_enemy != 0 && *action_value >= 0) {
+            field_3c = 6;
+            field_40 = best_hex;
+            field_44 = best_enemy->gridIndex;
+            return 1;
+        }
+        field_3c = 3;
+        return 1;
+    }
+    if (!estimate->simulated && !bCreaturePlacement
+            && choose_spell_action(current_army, action_value, estimate))
+        return 1;
+    if (best_flag) {
+        *action_value = best_time;
+        if (best_hex == current_army->gridIndex)
+            return 0;
+        move_toward(current_army, best_hex, enemy_attacks,
+                    static_cast<unsigned char>(!estimate->simulated
+                                               && best_troops > 1));
+        return 1;
+    }
+
+    if (best_enemy == 0) {
+        if (field_132f4 > 0 && currentSide == 0) {
+            long hex = gCastleWallColumns[current_army->gridIndex / 17];
+            while (hex > current_army->gridIndex) {
+                const pathCell* cell = gpSearchArray->cellData == 0
+                        ? 0
+                        : &gpSearchArray->cellData[hex];
+                if (cell->visited) {
+                    if (!IsInMoat(hex, 0)) {
+                        if (!(current_army->creatureId & 1))
+                            break;
+                        if (!IsInMoat(hex + (current_army->facing ? 1 : -1), 0))
+                            break;
+                    }
+                }
+                hex--;
+            }
+            if (hex > current_army->gridIndex) {
+                move_toward(current_army, hex, enemy_attacks, 0);
+                return 1;
+            }
+            field_3c = 3;
+            return 1;
+        }
+    } else if (best_value < 0 && best_value < best_time
+               && !(current_army->Is(22) & 1)
+               && (gpGame->setup.difficulty > 0 || sideIsAI[side])
+               && has_ranged_advantage(estimate)) {
+        // Deliberately empty: a shooter that would lose the exchange
+        // falls into the same disengage tail an empty board reaches.
+    } else {
+        goto commit;
+    }
+
+    *action_value = 0;
+    if (!estimate->simulated
+            && get_area_effect(enemy_side, current_army, dangerous_enemies,
+                               estimate) == 0
+            && attempt_shooter_defense(current_army, gpSearchArray, estimate))
+        return 1;
+    if (best_enemy == 0) {
+        if (!estimate->simulated
+                && choose_to_run(current_army, enemy_attacks, gpSearchArray))
+            return 1;
+        return 0;
+    }
+
+commit:
+    *action_value = best_value;
+    if (best_troops <= 1 && !bCreaturePlacement) {
+        field_40 = best_hex;
+        field_3c = 6;
+        field_44 = best_enemy->gridIndex;
+        return 1;
+    }
+    if (best_hex == current_army->gridIndex)
+        return 0;
+    move_toward(current_army, best_hex, enemy_attacks,
+                static_cast<unsigned char>(!estimate->simulated
+                                           && best_troops > 1));
+    return 1;
+}
 
 // E:\gamedcs\ai.cpp:2159
 // The melee arm. Three ways out, in retail's order: a melee target was
