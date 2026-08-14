@@ -70,6 +70,26 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel view_level,
     // the NEGATIVE-mass direction the original sweep never covered - hoisting
     // the duplicated creature-name ternary into one `const char*` ahead of the
     // count branch - is 79.0507.
+    //
+    // 2026-08-14, WHAT THE TWO SITES ARE FOR - read from retail's bytes rather
+    // than inferred from the ladder. This body's `reserve` is starved ONE LEVEL
+    // FURTHER than the systemoptionswindow family that mainmenu.cpp models:
+    // retail leaves BOTH nested helpers out of line here, `_Ucopy` as a
+    // three-argument call (`push dest; push _Last; push _First; mov ecx,&Widgets`)
+    // AND `_Destroy` as a two-argument one, where mainmenu's constructor expands
+    // _Ucopy as a loop and cuts only _Destroy. We expand the _Ucopy loop, so the
+    // missing budget is two expansion decisions deep, which is exactly why the
+    // ladder wants k=2 here and k=2..6 there. Any honest supply has to be worth
+    // two candidates, not one.
+    // Also confirmed from retail's bytes, so NOT worth re-testing: this
+    // constructor really has no registration loop - retail emits
+    // `mov ecx,[edi+0x38]; mov edx,[ecx-4]; push -1; push edx; mov ecx,edi; call
+    // AddWidget` inline after the last insert, i.e. our `AddWidget(Widgets.back(),
+    // -1)` spelling is retail's. And the leftover `sub esp,0x10` against retail's
+    // `sub esp,0xc` is not a missing local: retail homes the insert's widget temp
+    // in the DEAD PARAMETER slot [ebp+0x10] (`cost`, last read in the JoinPrice
+    // sprintf) while we allocate a fresh [ebp-0x14]. That is the frame allocator
+    // following liveness, downstream of the same budget.
     Widgets.reserve(Widgets.size() + 3);
 
     Widgets.push_back(new iconWidget(
