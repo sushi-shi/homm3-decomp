@@ -2074,6 +2074,87 @@ int game::GetTeam(int playerNum) const
     return mapHeader.teamInfo[playerNum];
 }
 
+// The two creaturetype.obj dwelling walks the modifier below calls. Both
+// live in creaturetype.h's compiland but events.cpp does not include that
+// header, so they are redeclared here rather than pulled in - the include
+// set of a TU with ten exact rows is not worth widening for two
+// declarators. UpgradedCreatureType is 0x47b1a0 (DC-attested,
+// creaturetype.cpp:246, already reconstructed in src/creaturetype.cpp).
+//
+// 0x47b220 is its MIRROR and has no Dreamcast row at all: same table
+// walk, but it matches the type against the UPGRADED half of the town's
+// dwelling pair (`[index*4 + 0x6747b4]`, i.e. gTownDwellingCreatures + 7)
+// and returns the BASE half, and it rejects an index BELOW 7 where
+// UpgradedCreatureType rejects one at or above it. The name is the role
+// the body proves and is PROVISIONAL; the row is not claimed here.
+TCreatureType UpgradedCreatureType(TCreatureType type);
+TCreatureType DowngradedCreatureType(TCreatureType type);
+
+// E:\gamedcs\events.cpp:3805.  How much a wandering stack's mood moves
+// with what the visiting hero is already carrying: the stack likes an
+// army built out of its own kind, and out of the creature one step up or
+// down its own dwelling pair.
+//
+// The result is a THREE-VALUE grade, not a count - 0 when nothing in the
+// army is kin, 1 when some is, 2 when kin outweigh everything else. The
+// weighting is what makes the last test work: the kin tally accumulates
+// TWICE each matching slot's size while the total accumulates it once, so
+// `kin > total` is exactly "more than half the army".
+//
+// The elemental guards are the Armageddon's Blade content switch. Without
+// it the four base elementals have no upgrade and the four upgraded ones
+// have no base, so each dwelling walk is skipped rather than called; the
+// guard is spelled at both call sites, which is why `gpGame->f_1f698` is
+// read three times and reloaded only after the intervening call.
+VA(0x004a75c0, 0xFD)  // anchor-global game+0x1f698 + the elemental id sets, dc 0x97144
+int advManager::get_like_modifier(hero* current_hero, TCreatureType creature)
+{
+    int kinCount = 0;
+    int armyCount = 0;
+    TCreatureType like;
+
+    if ((!gpGame->f_1f698
+         && (creature == CREATURE_AIR_ELEMENTAL
+             || creature == CREATURE_EARTH_ELEMENTAL
+             || creature == CREATURE_FIRE_ELEMENTAL
+             || creature == CREATURE_WATER_ELEMENTAL))
+        || akCreatureTypeTraits[creature].townType == -1) {
+        like = CREATURE_NONE;
+    } else {
+        if (!gpGame->f_1f698
+            && (creature == CREATURE_AIR_ELEMENTAL
+                || creature == CREATURE_EARTH_ELEMENTAL
+                || creature == CREATURE_FIRE_ELEMENTAL
+                || creature == CREATURE_WATER_ELEMENTAL))
+            like = CREATURE_NONE;
+        else
+            like = UpgradedCreatureType(creature);
+        if (like == CREATURE_NONE) {
+            if (!gpGame->f_1f698
+                && (creature == CREATURE_ICE_ELEMENTAL
+                    || creature == CREATURE_STORM_ELEMENTAL
+                    || creature == CREATURE_MAGMA_ELEMENTAL
+                    || creature == CREATURE_ENERGY_ELEMENTAL))
+                like = CREATURE_NONE;
+            else
+                like = DowngradedCreatureType(creature);
+        }
+    }
+
+    for (int i = 0; i < 7; i++) {
+        if (current_hero->army.numTroops[i] > 0) {
+            armyCount += current_hero->army.numTroops[i];
+            int type = current_hero->army.armies[i];
+            if (type == creature || type == like)
+                kinCount += current_hero->army.numTroops[i] * 2;
+        }
+    }
+
+    if (kinCount == 0)
+        return 0;
+    return kinCount > armyCount ? 2 : 1;
+}
+
 // E:\gamedcs\events.cpp:3847.  How much a wandering stack's mood moves
 // with the force ratio between the two armies.  A hero seven times the
 // monsters' strength is off the top of the scale; from parity up it is a

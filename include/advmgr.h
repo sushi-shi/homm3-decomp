@@ -893,6 +893,14 @@ public:
     // cannot decide (a member that ignores `this` and a static with one
     // float argument are the same `ret 4`), and it does not read ecx.
     static int get_force_modifier(float strength_ratio);
+#ifdef HOMM3_EVENTS_VIEW
+    // Gated only because TCreatureType is not in this header's own
+    // include closure - it reaches events.cpp through game.h, which
+    // events.cpp includes ahead of this file. Nothing else about the
+    // declarator is view-specific.
+    static int get_like_modifier(class hero* current_hero,
+                                 TCreatureType creature);
+#endif
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
