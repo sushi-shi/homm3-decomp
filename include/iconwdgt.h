@@ -13,6 +13,52 @@
 // BackColor@0x44. Vtable 0x63ec48; the dtor Disposes the sprite.
 class iconWidget : public widget {
 public:
+    // The three widget::style values iconWidget::Draw (0x4eab40)
+    // dispatches on, byte-derived from its `sub eax,0x10 / dec / dec`
+    // chain at 0x4eab64 - anything else draws nothing. NAMES ARE A
+    // BOOTSTRAP INVENTION (no DC enum exists) but the roles are
+    // byte-fixed: PLAIN draws at the widget origin; CENTERED first
+    // centres the sprite in the widget rect (horizontally by half the
+    // slack, vertically flush to the bottom less two); CREATURE runs
+    // the clipped portrait path that measures itself off the cs_wait
+    // frame's crop box.
+    enum EIconStyle {
+        ICON_STYLE_PLAIN = 0x10,
+        ICON_STYLE_CENTERED = 0x11,
+        ICON_STYLE_CREATURE = 0x12
+    };
+
+    // The EResourceType values Draw's two jump tables span: DC
+    // RType_sprite..RType_combat_hero, 64..73 (evidence/dreamcast/
+    // enums.csv), byte-proven contiguous by those tables' `resType - 64`
+    // bound of 9 and by each arm calling the CSprite entry point its
+    // type is named after. SPRITEDEF (65) and SPRITEFRAME (72) are the
+    // two that fall to the default, which is why both tables carry a
+    // default at index 1 and index 8; they are listed because that gap
+    // is what fixes the span.
+    //
+    // These belong in resource.h's EResourceType and are deliberately
+    // NOT there. resource.h sits at the head of recruit.obj's include
+    // closure and recruitUnit::Update is knife-edge on symbol-handle
+    // position: adding a SINGLE enumerator to EResourceType moves it
+    // 90.84% -> 88.24%, measured 2026-08-14 at counts 1, 2, 4, 6, 8, 9
+    // and 10 with the identical result each time (the same edit made to
+    // csprite.h instead is inert). Scoping them to iconWidget keeps the
+    // names collision-free for the lane that eventually does add them.
+    // Move them once recruitUnit::Update is closed.
+    enum ESpriteResType {
+        SPRITE_RES_SPRITE = 64,
+        SPRITE_RES_SPRITEDEF = 65,
+        SPRITE_RES_CREATURE = 66,
+        SPRITE_RES_ADVOBJ = 67,
+        SPRITE_RES_HERO = 68,
+        SPRITE_RES_TILESET = 69,
+        SPRITE_RES_POINTER = 70,
+        SPRITE_RES_INTERFACE = 71,
+        SPRITE_RES_SPRITEFRAME = 72,
+        SPRITE_RES_COMBAT_HERO = 73
+    };
+
     CSprite* Sprite;
     int Frame;
     int seqId;
