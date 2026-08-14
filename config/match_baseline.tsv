@@ -686,7 +686,7 @@ game	game_get_random_lith	0.0000	0.0000	0.0000	0xcdb80
 game	playerData_add_garrison_hero	0.0000	0.0000	0.0000	0xb9fc0
 game	playerData_load	0.0000	0.0000	0.0000	0xba260
 game	playerData_save	0.0000	0.0000	0.0000	0xba670
-gametypewindow	??0TGameTypeWindow@@QAE@E@Z	96.7000	96.7000	96.7000	0xd54c0
+gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860
 gametypewindow	?DoModal@TGameTypeWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xd5910
