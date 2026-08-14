@@ -97,6 +97,14 @@ void VideoSoundOnOff()
 // `gBinkX << 1`, and `(unsigned char*)(screenBitmap->map + gBinkX) +
 // Pitch*gBinkY` (the unsigned-short-index form that supplies the
 // scale as pointer arithmetic). CL-generation-capped.
+// RANKED 2026-08-14: 88.9254 is 5 REAL rows of 67 and 0 artefact, and they are
+// exactly the scheduling of the `2 * gBinkX` term - retail loads gBinkX into
+// ESI before `screenBitmap`, folds it with `lea edx,[edx+2*esi]` and adds
+// `map` last (`Pitch*gBinkY + 2*gBinkX + map`); our CL adds `map` first and
+// folds the scaled term after. Nine more spellings measured, all byte-flat at
+// 88.9254: all four term orders of the three-way sum, a named `unsigned char*`
+// base local, a named int offset local, `gBinkX * 2` and `gBinkX + gBinkX`.
+// C2 reassociates every one of them identically. Confirms CL-generation-capped.
 VA(0x005971f0, 0xD9)  // anchor-global, dc 0x14ac34
 void VideoRealignBuffers()
 {

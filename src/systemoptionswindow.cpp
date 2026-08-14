@@ -38,6 +38,22 @@ DATA(0x006a7584) THelpText gSystemOptionsHelp[48];
 //            animation; 578 is shared with the combat options dialog)
 
 // E:\gamedcs\systemoptionswindow.cpp:43
+// STATEMENT CENSUS + LARGE-MASS RE-SWEEP, 2026-08-14 (98.1326).
+// `*** SRCLINES ***` gives dc 0x15f588 Cb 0x10AC = 89 statement lines over
+// E:\gamedcs\systemoptionswindow.cpp:43-194, one file block, no header line
+// attributed inside the range. This body counts 106, ratio 1.191 - above the
+// exact-function third quartile (1.083; median 0.933 over 807 calibrated
+// bodies) and therefore INSIDE the instrument's noise, not a finding. See
+// levelupwindow.cpp for the calibration.
+// The mass axis was also re-swept far past the old window now that the RE'd
+// budget's LOWER CLAMP is known to hide steps from short sweeps (see
+// ai_combat::do_general_melee): with self-assign pad units the score is
+// 98.1326 / 97.7430 / 89.3196 / 89.3379 / 90.2533 / 89.5409 / 81.4751 /
+// 72.1331 / 69.3297 at masses 0, 8, 16, 32, 48, 64, 96, 128, 192. This body
+// is far above the clamp and mass is monotonically harmful past ~8 - the same
+// re-sweep is negative for combatresultswindow ??0 (96.3788 decaying to 80.85
+// at 128), ai_player::calculate_reserve (96.4566 to 6.56) and perfectly flat
+// 0..128 for ai_combat::do_aftermath. The clamp case is a SMALL-BODY case.
 VA(0x005b1790, 0x187C)  // sole sysopbck.pcx reference + vtable block, dc 0x15f588
 TSystemOptionsWindow::TSystemOptionsWindow()
     : CAdvPopup(159, 56, 481, 487, 0x12), bPrefsChanged(0)

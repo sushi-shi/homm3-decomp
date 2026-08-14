@@ -252,6 +252,8 @@ static inline void AppendSplitWidget(std::vector<widget*>& widgets,
 // + `SplitSliderCallback_unwind13` prologue split, which is not a defect and is
 // not scored (~TSplitWindow in this same file carries it at 100.0), plus one
 // trailing alignment nop. The masked asm diff is reloc NAMES only.
+// RANKER VERDICT 2026-08-14: 0 REAL rows of 569, 1 artefact. 99.9912 is not
+// reachable from source - do not re-open it.
 VA(0x00449790, 0x65B)  // anchor-callee, dc 0x4dbb8
 TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
     : CAdvPopup(x2, y2, 0x12a, 0x151, 0x12)
@@ -1236,6 +1238,18 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
 // clamp at the tail, now spelled as retail's pair. `town::HasBuilding` x1
 // against `ownerTown->built & bitNumber[TAVERN_ID]` needs town.h's
 // HOMM3_TOWN_OBJ_DECLS declaration and is out of this lane's reach.
+// RANKED 2026-08-14 (normalized disasm, real-vs-artefact split): 98.5654 is
+// 10 real rows of 237 and 5 artefact, and ALL TEN ARE THE ONE CLASS ALREADY
+// NAMED - retail's `push ebx` sits AFTER the on-cursed-ground return (first
+// def order: esi in the prologue, ebx at `xor ebx,ebx`), ours emits both in
+// the prologue in canonical ebx,esi order, and the four later exits mirror
+// `pop ebx / pop esi`. Nothing else differs: the five artefacts are the
+// unwind-label push, a `push 0x60` and three relocation addend splits. Five
+// more spellings measured against it this round, all negative or flat:
+// `int morale;` with an if/else 95.8861, the ternary initializer 95.8861,
+// declaring `alignments[10]` ahead of `morale` 98.5654 (flat), moving
+// `morale` below `GetAlignments` 87.2743, and `short morale` 90.9451. The
+// landed spelling is a local maximum in every direction tested.
 VA(0x0044ae60, 0x29A)  // dc-bracket forced, dc 0x4f078
 int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
                          const hero* otherHero, const armyGroup* otherGroup,
@@ -1708,6 +1722,45 @@ source_stack_merges:
 // tables. Variable creature-name lookups use retail's 0..150 guard and shared
 // empty-text fallback. The remaining delta is Dinkumware string-temporary/EH
 // emission and associated register allocation; every modifier is represented.
+//
+// 2026-08-14, THE RESIDUAL IS NOW MEASURED, NOT DESCRIBED, and it is one
+// class: OUR /Ob2 BUDGET IS TOO LARGE AND WE OVER-INLINE DINKUMWARE.
+// `vc6 diagnose` prices it 44 under-inline / 37 over-inline; the normalized
+// disasm ranker prices it 553 real rows of 717 with our body 162 rows LONGER
+// than retail's. Four measurements, all from the unmasked byte view:
+//   FRAME  retail `sub esp,0x50`, ours `sub esp,0x80` - 48 bytes = THREE extra
+//     sixteen-byte string slots. Retail owns exactly two string objects, the
+//     result at [ebp-0x5c] (14 sites) and ONE reused temporary at [ebp-0x40]
+//     (10 sites); ours spreads the same work over [ebp-0x60] (16), [ebp-0x70]
+//     (7), [ebp-0x44] and [ebp-0x8c].
+//   EH STATES  retail runs 1..9, ours 1..0xa. The extra state is real: at
+//     `ArmyGrpFn_0044A460().test(alignment)` retail emits the bounds check and
+//     LEAVES `std::bitset<9>::_Xran()` OUT OF LINE (`cmp esi,9 / jb / mov ecx,
+//     <bitset> / call`), while our CL inlines its whole
+//     `_THROW(out_of_range,"invalid bitset<N> position")` body - fourteen
+//     instructions, a second cold string temporary and a `__CxxThrowException`
+//     - into a far block. GetMorale (0x44ae60) spells the SAME `.test()` and
+//     neither side inlines it there, so this is caller budget, not spelling.
+//     There is no unchecked accessor in VC6's <BITSET> (`operator[] const`
+//     forwards to `test`), so no source change reaches it.
+//   RETURN COUNT  retail has ONE `ret`; ours has THREE. At each of the two
+//     early returns retail calls `basic_string::assign(const char*,size_type)`
+//     OUT OF LINE after the inlined `_Tidy(false)` + `repne scasb` strlen, then
+//     `jmp`s to the single shared epilogue. Ours inlines `assign`'s body
+//     (`_Grow` / `rep movsd` / `_Eos`, fourteen rows) at both sites, which
+//     changes the register state at the return and forces a duplicated
+//     epilogue each time. That is 2 x ~23 rows, the single largest block.
+//   PARAM-SLOT REUSE  retail recycles the dead `magicTerrain` slot [ebp+0x24]
+//     for the creature byte offset and the dead `groupAlignments` slot
+//     [ebp+0x28] for `currentMorale`; ours spends fresh locals. Downstream of
+//     the frame, not a lever of its own.
+// THE DC STATEMENT CENSUS CANNOT PRICE THIS BODY - recorded so nobody spends
+// the hour again. `*** SRCLINES ***` gives dc 0x4f708 Cb 0x3AA = 49 statement
+// lines over E:\gamedcs\armygrp.cpp:1347-1451, but that is an EARLIER SIX-ARG
+// FUNCTION: its call census is `format_string` x1, `IsMember` x1,
+// `operator+=` x2 and no magic-terrain switch at all, against this body's x4 /
+// x4 and two nine-entry selector tables. The census measures the Dreamcast
+// source, and for this compiland the Dreamcast source is a different function.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::get_morale_description(
     TCreatureType creature, int morale, const hero* ownerHero,
