@@ -846,6 +846,42 @@ public:
     // gives the pair (advmgr.cpp:9785, dc 0x1b164). EraseObj is the caller
     // that needs the declarator here.
     void SetEnvironmentOrigin(type_point point, int reset);
+    void do_event_lith_one_way(class hero* current_hero, NewmapCell* cell,
+                               bool human_player);
+    void do_event_lith_two_way(class hero* current_hero, NewmapCell* cell,
+                               bool human_player);
+    // The three previously unnamed callees of the monolith pair, all
+    // DECLARED and not defined here; their rows are not claimed from this
+    // file and a call relocation's symbol name is not scored. Each of the
+    // three is fixed by four independent screens at once:
+    //
+    //   0x4a2800 = do_event_hero (events.cpp:2029, dc 0x939bc, 346 B).
+    //     Sits in the event_record..exec bracket that owns events.obj;
+    //     `ret 0x10` against the DC's four parameters; 319/346 = 0.92 in
+    //     the SH4->x86 band; and the DC xref graph lists do_event_hero as
+    //     a callee of BOTH liths and of nothing else retail leaves
+    //     unaccounted here.
+    //   0x47f7d0 = StopCursor (cursor.cpp:85, dc 0x79a84, 134 B). In the
+    //     csprite..customcampaign bracket that owns cursor.obj; `ret 4`
+    //     against one parameter; 130/134 = 0.97; called with the literal
+    //     1 exactly where the DC has StopCursor.
+    //   0x41d930 = TeleportTo (advspells.cpp:703, dc 0x22b88, 1116 B). In
+    //     the advspells..ai bracket that owns advspells.obj; `ret 0x18`
+    //     against six parameters; 1124/1116 = 1.007; and the third pushed
+    //     argument is the string at 0x67775c, "telptout.wav", which is
+    //     TeleportTo's `sample_name` and nothing else's.
+    //
+    // Together they exhaust the liths' DC callee set: the remaining DC
+    // edges are get_random_lith_exit, SetVisibility and TransmitRemoteData
+    // (all three already spelled), plus game::get_cell, type_point's
+    // constructor and CSetVisibilityMsg's constructor, all three of which
+    // retail expands in line.
+    void do_event_hero(class hero* current_hero, NewmapCell* cell,
+                       type_point point, bool human_player);
+    void StopCursor(unsigned char standEnd);
+    void TeleportTo(class hero* who, type_point destination,
+                    const char* sample_name, unsigned char bIsRemoteMove,
+                    unsigned char draw_changes, unsigned char is_replay);
 #endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
