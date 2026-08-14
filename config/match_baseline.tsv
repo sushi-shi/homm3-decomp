@@ -378,6 +378,7 @@ bottomviewsubwindow	??0TBottomViewHero@@QAE@PAVheroWindow@@@Z	96.5197	96.5197	96
 bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	94.0575	94.0575	94.0575	0x52b80
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51820
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x50dd0
+bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.2973	91.2973	91.2973	0x51220
 bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	94.3114	94.3114	94.3114	0x521f0
 bottomviewsubwindow	??1TBottomViewEnemyTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x53670
 bottomviewsubwindow	??1TBottomViewHero@@UAE@XZ	100.0000	100.0000	100.0000	0x52170
@@ -392,6 +393,7 @@ bottomviewsubwindow	??_GTBottomViewHero@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x
 bottomviewsubwindow	??_GTBottomViewKingdom@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x531a0
 bottomviewsubwindow	??_GTBottomViewMessage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x51a00
 bottomviewsubwindow	??_GTBottomViewNewTurn@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x510f0
+bottomviewsubwindow	??_GTBottomViewResourceMessage@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x51770
 bottomviewsubwindow	??_GTBottomViewTown@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x52ad0
 bottomviewsubwindow	??_Gtype_bottom_view_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x50d20
 bottomviewsubwindow	?animate@TBottomViewEnemyTurn@@UAEXXZ	100.0000	100.0000	100.0000	0x536f0

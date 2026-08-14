@@ -113,6 +113,17 @@ public:
     int longest_word_length(const char* str);
 };
 
+// Retail .bss 0x698a08, a loaded `font*` that four bodies read (0x4514b1
+// and 0x4514bf in bottomviewsubwindow, plus 0x473064 / 0x4ee120 /
+// 0x4ee47c). TBottomViewResourceMessage measures its quantity string
+// through this pointer's LineWidth and sizes the widget with its
+// `height` byte, then renders that same string with 'smalfont.fnt' - so
+// the object is the small font, but NO roster attests a name for it
+// (the Dreamcast dump carries only `medFont`), which is why this keeps
+// the house ordinal placeholder. Owner TU unlocated - extern only, no
+// DATA claim (the gpWindowManager / gTownSizeNames pattern).
+extern font* gUnnamed698a08;
+
 // --- font ---
 // CODEVIEW(E:\gamedcs\font.cpp:33, dc 0xa1ba8) void font::font();
 // CODEVIEW(E:\gamedcs\font.cpp:41, dc 0xa1c04) void font::font(const char* name, const font::TFontSpec* fontspec, int dsize, unsigned char* d);
