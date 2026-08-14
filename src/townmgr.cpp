@@ -707,6 +707,64 @@ TBuyBuildWindow::~TBuyBuildWindow()
     }
 }
 
+// The tavern chooser's constructor - seventeen widgets over a reserve of
+// eighteen and nothing else, the purest instance of the compiland's
+// dialog recipe. Anchored by its own vftable 0x643980 (already proven
+// TTavernWindow's by the Open/Close pair and the destructor below), by
+// the TPTavern.pcx background the carve named the row after, and by
+// `ret 8` against the Dreamcast roster's two-int declarator.
+
+// E:\gamedcs\townmgr.cpp:7803
+VA(0x005d70b0, 0x7C8)  // anchor-vtable 0x643980 + anchor-string TPTavern.pcx + arity, dc 0x17a01c
+TTavernWindow::TTavernWindow(int x2, int y2)
+    : CAdvPopup(x2, y2, 0x18b, 0x1f8, 0x12)
+{
+    field_60 = 0;
+    Widgets.reserve(18);
+
+    Widgets.push_back(new bitmapBorder(0, 0, width, height, 0,
+                                       "TPTavern.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(29, 372, 234, 36, 10,
+                                       "TPTavDes.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(7, 478, 381, 19, 13,
+                                       "TPTavRol.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(70, 297, 62, 68, 8,
+                                       "TPTavSel.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(160, 297, 62, 68, 9,
+                                       "TPTavSel.pcx", 0x800));
+
+    Widgets.push_back(new textWidget(0, 20, width, 30, 0, "bigfont.fnt",
+                                     font::HEADING, 1, 1, 0, 8));
+    Widgets.push_back(new textWidget(35, 188, 326, 80, 0, "smalfont.fnt",
+                                     font::PRIMARY, 2, 1, 0, 8));
+    Widgets.push_back(new textWidget(29, 271, 233, 30, 0, "bigfont.fnt",
+                                     font::HEADING, 3, 1, 0, 8));
+    Widgets.push_back(new textWidget(273, 320, 94, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 4, 1, 0, 8));
+    Widgets.push_back(new textWidget(29, 372, 234, 40, 0, "smalfont.fnt",
+                                     font::PRIMARY, 7, 1, 0, 8));
+    rolloverText = new textWidget(7, 478, 381, 20, 0, "smalfont.fnt",
+                                  font::PRIMARY, 14, 1, 0, 8);
+    Widgets.push_back(rolloverText);
+
+    Widgets.push_back(new bitmapBorder(72, 299, 58, 64, 5, 0, 0x800));
+    Widgets.push_back(new bitmapBorder(162, 299, 58, 64, 6, 0, 0x800));
+    Widgets.push_back(new border(272, 285, 96, 54, 15, 1));
+    Widgets.push_back(new button(272, 355, 96, 54, 12, "TPTav01.def",
+                                 0, 1, 0, 28, 2));
+    Widgets.push_back(new button(22, 428, 64, 30, 11, "TPTav02.def",
+                                 0, 1, 0, 20, 2));
+    Widgets.push_back(new button(310, 428, 64, 30, CANCEL_BUTTON_ID,
+                                 "iCancel.def", 0, 1, 1, 1, 2));
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+}
+
 VA_COMPGEN(0x005d7880, 0x21, SCALAR_DELETING_DTOR, TTavernWindow)
 
 // E:\gamedcs\townmgr.cpp:7839
