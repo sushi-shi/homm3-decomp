@@ -10,8 +10,11 @@
 #undef HOMM3_TOWNMGR_WINDOW_DECLS
 #include "game.h"
 #include "hero.h"
+#include "remote.h"
 #include "smackmgr.h"
+#include "strip.h"
 #include "widget.h"
+#include "winmgr.h"
 
 // Shared state of the tavern chooser. DoTavern selects a recruit into the
 // hero pointer; the flag distinguishes map-object hiring from town hiring.
@@ -94,11 +97,11 @@ townManager::townManager()
     field_1b0 = 0;
     field_1b4 = 0;
     field_3c = 0;
+    memset(field_40, 0, sizeof(field_40));
     memset(TownObjects, 0, sizeof(TownObjects));
-    memset(Strips, 0, sizeof(Strips));
     field_1a0 = 0;
     field_1a8 = 0;
-    StripCount = 0;
+    TownObjectCount = 0;
     field_110 = -1;
     TownWindow = 0;
     field_11c = 0;
@@ -150,6 +153,67 @@ TTownScreenWindow::~TTownScreenWindow()
         delete field_50;
         field_50 = 0;
     }
+}
+
+// The town-screen locator row, immediately behind its own destructor in
+// the carve and in the Dreamcast roster alike: three locator slots
+// refreshed in a counted loop, then the two scroll arrows dimmed at the
+// ends of the player's town list, then one window redraw over the id
+// range the four broadcasts touch. The scroll offset it reads is the
+// +0x4c the destructor's class already carries.
+
+// E:\gamedcs\townmgr.cpp:2506
+VA(0x005c5aa0, 0x95)  // anchor-bracket + UpdateTownLocator call edge, dc 0x16af58
+void TTownScreenWindow::UpdateTownLocators()
+{
+    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0xa3,
+                     widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
+    for (int i = 0; i < 3; ++i)
+        UpdateTownLocator(i);
+
+    if (field_4c == 0)
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x98,
+                         widget::WIDGET_DIMMED_NODRAW);
+    else
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x98,
+                         widget::WIDGET_DIMMED_NODRAW);
+
+    if (field_4c >= gpGame->GetLocalPlayer()->numTowns - 3)
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x99,
+                         widget::WIDGET_DIMMED_NODRAW);
+    else
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x99,
+                         widget::WIDGET_DIMMED_NODRAW);
+    DrawWindow(0, 0x9b, 0xa3);
+}
+
+// The manager's Close, slot 1 of vtable 0x643720 and the second of its
+// three virtuals. UnloadTown 0x5c70b0 (located, not reconstructed) drops
+// the town itself; what is left here is the two windows the manager owns,
+// the fade back to the adventure map, and the network arm that hands the
+// dialog pump's helper back before dropping the popup it was driving.
+
+// E:\gamedcs\townmgr.cpp:3175
+VA(0x005c71b0, 0x9C)  // anchor-vtable 0x643720 slot 1, dc 0x16c3e8
+void townManager::Close()
+{
+    UnloadTown();
+    if (TownWindow) {
+        gpWindowManager->RemoveWindow(TownWindow);
+        delete TownWindow;
+    }
+    TownWindow = 0;
+    if (field_13c) {
+        delete field_13c;
+        field_13c = 0;
+    }
+    gpWindowManager->FadeScreen(1, 4, 1);
+    if (gNetworkActive69954c && field_1b0) {
+        gUnnamed69d808->set_field_f0(field_1b4);
+        delete field_1b0;
+        field_1b0 = 0;
+    }
+    status = 0;
 }
 
 VA_COMPGEN(0x005c9660, 0x21, SCALAR_DELETING_DTOR, TThievesGuildWindow)
@@ -245,6 +309,33 @@ TShipWindow::~TShipWindow()
         if (*it)
             delete *it;
     }
+}
+
+// Drops the two hovered troop selections. The pair of strips it clears
+// is the constructor's +0x12c / +0x134, and the -2 it stores through
+// them is strip::current's own "nothing selected" sentinel - the same
+// value strip's constructor writes - which is what types those two
+// members. The four -2 stores share one register, as the signedness-CSE
+// lever predicts for a repeated small negative.
+
+// E:\gamedcs\townmgr.cpp:6866
+VA(0x005d5530, 0x86)  // anchor-bracket + strip::Draw call edge, dc 0x176f24
+void townManager::ResetStrips()
+{
+    if (field_12c)
+        field_12c->current = -2;
+    if (field_134)
+        field_134->current = -2;
+    field_1c4 = 0;
+    field_120->Draw(CREATURE_NONE);
+    field_11c->Draw(CREATURE_NONE);
+    field_134 = 0;
+    field_12c = 0;
+    field_138 = -2;
+    field_130 = -2;
+    gpWindowManager->BroadcastMessage(
+        MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x9a,
+        widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
 }
 
 VA_COMPGEN(0x005d5b40, 0x21, SCALAR_DELETING_DTOR, TBuyBuildWindow)
@@ -1056,5 +1147,36 @@ TCastleWindow::~TCastleWindow()
     for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
         if (*it)
             delete *it;
+    }
+}
+
+// The compiland's last row: an in-place descending selection sort over a
+// value/index pair, the tail of the thieves-guild statistics build. Both
+// arguments arrive in registers, which is /Gr on a free function, and the
+// element count is re-read from gpGame on EVERY comparison rather than
+// cached - four separate loads in one 159-byte body.
+//
+// The count is read SIGNED (movsx), and game.h types the byte unsigned;
+// that header belongs to another lane, so the signed view is taken here
+// rather than by re-typing the member. static_cast, not a C-style cast:
+// the cleanliness board bans those outright.
+
+// E:\gamedcs\townmgr.cpp:9698
+VA(0x005df160, 0x9F)  // anchor-bracket tail + arity screen, dc 0x181350
+void SortStats(long* value, signed char* index)
+{
+    for (int i = 0; i < static_cast<signed char>(gpGame->field_1f634) - 1; ++i) {
+        for (int j = i + 1; j < static_cast<signed char>(gpGame->field_1f634); ++j) {
+            if (value[j] > value[i]) {
+                long swapValue = value[i];
+                value[i] = value[j];
+                value[j] = swapValue;
+                // int, not signed char: retail sign-extends the byte into
+                // a full register (movsx) before the store back.
+                int swapIndex = index[i];
+                index[i] = index[j];
+                index[j] = swapIndex;
+            }
+        }
     }
 }
