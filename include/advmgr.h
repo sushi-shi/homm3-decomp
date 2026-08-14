@@ -742,10 +742,15 @@ public:
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
     e_looping_sound_id GetSoundId(int x, int y, int z);
     type_point get_map_center() const;
-    // Wandering-monster mood modifiers. Neither reads `this` - the
-    // Dreamcast files both as members of advManager and retail keeps the
-    // thiscall shape.
-    int get_force_modifier(float strength_ratio);
+    // Wandering-monster mood modifiers, both STATIC. Its twin
+    // get_like_modifier (0x4a75c0) settles the question for the pair:
+    // that row is `ret` with the creature type in EDX, i.e. /Gr
+    // fastcall, which a non-static member cannot be - and the Dreamcast
+    // roster still scopes it to advManager, so `static` is the only
+    // spelling that satisfies both. get_force_modifier's own bytes
+    // cannot decide (a member that ignores `this` and a static with one
+    // float argument are the same `ret 4`), and it does not read ecx.
+    static int get_force_modifier(float strength_ratio);
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
