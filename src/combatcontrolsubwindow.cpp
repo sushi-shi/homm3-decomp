@@ -3,9 +3,20 @@
 // 40 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "combatcontrolsubwindow.h"
+#include "button.h"
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"
+
+// The combat sub-window family's help-text table. Eleven rows, and every
+// one of them is referenced from exactly one of this compiland's three
+// reconstructed-or-not constructors: the base 0x46b610 takes rows 0..3 and
+// 6..8, TCombatControlSubWindow rows 4 and 5, TCombatPlacementSubWindow
+// rows 9 and 10. The START is the lowest row any of them names; nothing in
+// the image reads the two dwords below it, so the table could in principle
+// begin earlier, and the eleven-row extent is a floor rather than a
+// measured end.
+DATA(0x006a6968) extern THelpText gCombatSubWindowHelp[11];
 
 #if 0  // @carcass
 
@@ -186,7 +197,64 @@ TCombatControlSubWindow::~TCombatControlSubWindow()
 {
 }
 
-// BLOCKED on the constructor: VA_COMPGEN(0x0046c1e0, 0x21, SCALAR_DELETING_DTOR, TCombatPlacementSubWindow)
+// The battlefield-placement bar: two buttons over the family base, and
+// the smallest of the family's constructors. Three things in it are read
+// off the bytes rather than assumed.
+//
+// THE BASE IS AN OUT-OF-LINE CALL, not an inlined body - `call 0x46b610`
+// with (parent, "CoPlacbr.pcx") on the stack - so this constructor needs
+// nothing from the base's 1392 bytes and lands without them.
+//
+// THE WIDGETS ARE COLLECTED IN A LOCAL vector<widget*> AND COPIED OVER
+// AFTERWARDS. The vector is on the stack at [ebp-0x24] (allocator byte
+// plus three nulled dwords), both buttons go into it, and only the tail
+// loop moves each one into the inherited Widgets and calls AddWidget -
+// then the local's storage is released with a bare operator delete. That
+// is a different shape from the bottom-view and CAdvPopup families, which
+// push straight into the member.
+//
+// `b` IS A widget*, NOT A button*. Retail hands push_back the ADDRESS of
+// the variable itself (`lea edx,[ebp+8]`, the reused parent slot) with no
+// intervening copy, and a button* would have to be converted into a
+// widget* temporary first - the same test that fixed TBottomViewNewTurn's
+// backdrop, reading the other way.
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:282
+VA(0x0046c050, 0x18C)  // vtable 0x63d430 + "CoPlacbr.pcx" base call, dc 0x65310
+TCombatPlacementSubWindow::TCombatPlacementSubWindow(heroWindow* parent)
+    : type_combat_sub_window(parent, "CoPlacbr.pcx")
+{
+    std::vector<widget*> buttons;
+
+    // 0x8fc has no attested name; 0x7802 is winmgr.h's DIALOG_RETURN_OK
+    // value, but nothing here proves this id is that domain, so both stay
+    // literal. The hotkeys are the SPACE and ENTER scancodes.
+    widget* b = new button(213, 4, 198, 36, 0x8fc, "ICM011.def",
+        0, 1, 0, 0x39, 2);
+    b->set_help_text(gCombatSubWindowHelp[9].text,
+        gCombatSubWindowHelp[9].rclick, 1);
+    buttons.push_back(b);
+
+    b = new button(419, 4, 198, 36, 0x7802, "ICM012.def",
+        0, 1, 0, 0x1c, 2);
+    b->set_help_text(gCombatSubWindowHelp[10].text,
+        gCombatSubWindowHelp[10].rclick, 1);
+    buttons.push_back(b);
+
+    for (widget** it = buttons.begin(); it != buttons.end(); ++it) {
+        widget* w = *it;
+        if (w) {
+            Widgets.push_back(w);
+            AddWidget(w, -1);
+        }
+    }
+}
+
+// UNBLOCKED by the constructor above, on the standing condition: its
+// 0x63d430 store is the only image-wide reference to this class's table
+// (the destructor's own store is dead, killed by the inlined base), and
+// without a reference VC6 emits neither the table nor this wrapper.
+VA_COMPGEN(0x0046c1e0, 0x21, SCALAR_DELETING_DTOR, TCombatPlacementSubWindow)
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:317
 VA(0x0046c210, 0x78)  // anchor-vtable 0x63d430 + "coplacbr.pcx" caller, dc 0x6544c

@@ -29,6 +29,11 @@ class textWidget;
 // touches only the inherited TSubWindow subobject.
 class type_combat_sub_window : public TSubWindow {
 public:
+    // Retail CALLS this out of line from both derived constructors
+    // (0x46b610), so it is declared and not defined here - the body is
+    // still one of this compiland's unreconstructed rows.
+    type_combat_sub_window(heroWindow* parent,
+                           const char* background_sprite_name);
     virtual ~type_combat_sub_window();
 };
 
@@ -45,6 +50,7 @@ public:
 // same 0x4721d0 construction site, the same empty destructor.
 class TCombatPlacementSubWindow : public type_combat_sub_window {
 public:
+    TCombatPlacementSubWindow(heroWindow* parent);
     virtual ~TCombatPlacementSubWindow();
 };
 

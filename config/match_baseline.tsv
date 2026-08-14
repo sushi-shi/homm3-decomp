@@ -477,6 +477,7 @@ cmbtmgr	combatManager_ShootBallisticMissile	0.0000	0.0000	0.0000	0x67a00
 cmbtmgr	combatManager_ShootMissile	0.0000	0.0000	0.0000	0x68220
 cmbtmgr	combatManager_damage_message	0.0000	0.0000	0.0000	0x69a90
 cmbtmgr	combatManager_place_obstacle	0.0000	0.0000	0.0000	0x66010
+combatcontrolsubwindow	??0TCombatPlacementSubWindow@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6c050
 combatcontrolsubwindow	??1TCombatControlSubWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x6bed0
 combatcontrolsubwindow	??1TCombatCreatureSubWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x6dbc0
 combatcontrolsubwindow	??1TCombatHeroSubWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x6cba0
@@ -484,6 +485,7 @@ combatcontrolsubwindow	??1TCombatPlacementSubWindow@@UAE@XZ	100.0000	100.0000	10
 combatcontrolsubwindow	??1type_combat_sub_window@@UAE@XZ	100.0000	100.0000	100.0000	0x6bbb0
 combatcontrolsubwindow	??_GTCombatCreatureSubWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6db90
 combatcontrolsubwindow	??_GTCombatHeroSubWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6cb70
+combatcontrolsubwindow	??_GTCombatPlacementSubWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6c1e0
 combatcontrolsubwindow	??_Gtype_combat_sub_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6bb80
 combatcontrolsubwindow	?Show@TCombatHeroSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6cdf0
 combatcontrolsubwindow	?UnShow@TCombatHeroSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6ce70
