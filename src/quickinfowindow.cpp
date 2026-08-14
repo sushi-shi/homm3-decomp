@@ -27,6 +27,20 @@ TQuickCreatureWindow::TQuickCreatureWindow(TViewLevel view_level,
     TCreatureType id, int count, TDisposition disposition, int cost)
     : TDialogBox(0, 0, 256, 256, 0x12)
 {
+    // /Ob2 budget verdict (2026-08-14): the divisor axis IS live here and is
+    // worth 92.7916 -> 96.8141, but no byte-neutral supply exists. Two-axis
+    // titration (pad statements ahead of this reserve x xx_nop sites at the
+    // tail) gives 96.8141 at k=2..3 for mass 0..4 (mass 8+ costs a site: k=3
+    // only), so the constructor wants TWO more inline-candidate call sites.
+    // Unlike the rest of the family this body has no registration loop to hoist
+    // - it adds each widget inline with `AddWidget(Widgets.back(), -1)` - and
+    // every spelling that would supply the sites emits different bytes:
+    // insert(end(), x) on the last push_back 58.5831, on the last two 60.8197,
+    // on all three 61.3549, the same three behind a `std::vector<widget*>*`
+    // local 59.2310, `Widgets.back()` -> `begin()[size()-1]` 90.7183, a named
+    // `added` local 91.0592, and testing `Widgets.back()` before using it
+    // 58.7831. `Widgets.back()` -> `Widgets.end()[-1]` is exactly byte-neutral
+    // (92.7916) but is +0 sites: back() and end() are one candidate site each.
     Widgets.reserve(Widgets.size() + 3);
 
     Widgets.push_back(new iconWidget(

@@ -158,6 +158,14 @@ TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
         break;
     }
 
+    // /Ob2 budget verdict (2026-08-14): this constructor does NOT respond to
+    // either budget axis, so the lever that closed gametypewindow and
+    // adventureoptionswindow is not the one here. Two-axis titration (byte-inert
+    // pad statements ahead of this reserve x xx_nop candidate sites at the tail)
+    // is byte-flat at 82.5365 for every k>=1 at every mass from 0 to 32, and at
+    // k=0 mass is strictly destructive (2..16 all 55.4069, 32 54.3832). Per the
+    // last-site screen in mainmenu.cpp, treat this as "the divergent expansion
+    // is not reachable from the caller's site count" and do not re-sweep it.
     Widgets.reserve(NWIDGETS);
 
     Widgets.push_back(new bitmapBorder16(0, 0, WINDOW_SCREEN_WIDTH,

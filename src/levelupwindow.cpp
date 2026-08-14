@@ -63,6 +63,16 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
     : CAdvPopup(205, 65, 385, 470, 0x12),
       left_skill(first_choice), right_skill(second_choice), Selected(0)
 {
+    // /Ob2 budget note (2026-08-14): 97.7369 -> 98.6395 is available on the
+    // two-axis knob described in mainmenu.cpp, but the supply is large. The
+    // cell is (front-end mass 12..24 statements, exactly ONE extra candidate
+    // site at the tail) and it is a broad plateau, not a knife edge - every
+    // mass in 12,14,16,18,20,24 at k=1 measures 98.6395, while k=0 is 97.7369
+    // for mass 0..2 then falls to 89.3019, and k>=2 collapses (79.24, 65.77).
+    // The site half is cheap (the `end()`-twice hoist), but the mass half means
+    // this reconstruction is ~12 statements lighter than retail's source, so
+    // the honest fix is to find the missing statements, not to pad. Left
+    // unlanded: no byte-inert 12-statement spelling was identified.
     Widgets.reserve(25);
 
     gpLevelUpWindow = this;
