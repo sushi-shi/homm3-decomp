@@ -5,6 +5,8 @@
 #ifndef HOMM3_EVENTS_H
 #define HOMM3_EVENTS_H
 
+#include <va.h>
+
 // Named indices into advevent.txt, the adventure-object text resource
 // events.obj loads through InitializeAdventureEventText (0x49e0e0).
 // Every value is retail-byte-proven by the [Text._First + 4*N] load in
@@ -104,6 +106,17 @@ enum EAdventureEventText {
     // fourth member of the primary-skill quartet above.
     ADV_EVENT_TEXT_POWER_SCHOOL = 100,
     ADV_EVENT_TEXT_POWER_SCHOOL_VISITED = 101,
+    // DoEventStables (0x4a60a0), and this is the only object in the enum
+    // with FOUR contiguous rows: the handler accumulates what it actually
+    // did into a two-bit value and switches over it, so every combination
+    // of "granted the movement" and "upgraded the Cavaliers" has its own
+    // line. The two upgrade rows carry picture class 0x15 with extra 11,
+    // the Champion. 136..139 sits directly before the temple's 140/141,
+    // which is where the alphabet puts "stables".
+    ADV_EVENT_TEXT_STABLES_NOTHING = 136,
+    ADV_EVENT_TEXT_STABLES_MOVEMENT = 137,
+    ADV_EVENT_TEXT_STABLES_UPGRADE = 138,
+    ADV_EVENT_TEXT_STABLES_BOTH = 139,
     // DoEventTemple (0x4a6200). ONE reward row serves both arms - the
     // Sunday visit differs only in showing the morale picture twice -
     // and 141 is the already-worshipped line.
@@ -154,6 +167,33 @@ enum EAdventureEventText {
 enum EDayOfWeek {
     DAY_OF_WEEK_SUNDAY = 7
 };
+
+// DoEventStables' (0x4a60a0) report selector: a two-bit accumulator the
+// handler builds as it goes - bit 0 set when the movement bonus was
+// granted, bit 1 when a stack of Cavaliers was upgraded - and then
+// switches over to pick one of the four advevent.txt rows above. The
+// domain is complete and closed by construction: retail range-checks the
+// widened value against 3 and lets nothing else through.
+enum EStablesResult {
+    STABLES_NOTHING = 0,
+    STABLES_MOVEMENT = 1,
+    STABLES_UPGRADE = 2,
+    STABLES_MOVEMENT_AND_UPGRADE = 3
+};
+
+// Retail .bss 0x698a94, one int, loaded by the ballist.txt parser
+// (0x4d7240) out of row 6 column 5 alongside five siblings at
+// 0x698afc..0x698b0c. The DEFINITION belongs to that parser's compiland,
+// which this tree does not own yet; it is declared here because
+// DoEventStables is the modeled consumer that needs it.
+//
+// The role is fixed by all three readers agreeing, not by the table:
+// DoEventStables adds it to hero::maxMovePoints and hero::movePoints
+// under the flag-bit-1 guard; town.obj's 0x5bd8e0 makes the SAME pair of
+// adds under the SAME guard, i.e. the Stables building; and philai's
+// ValueOfStables (0x52aac0) appraises a visit as
+// `(8 - dayOfWeek) * this / 2`, the movement still to be had this week.
+DATA(0x00698a94) extern int gStablesMovementBonus;
 
 // advManager::FizzleCenter's (0x4acbb0) sound selector, also the second
 // argument of advManager::HeroLoses. Retail lowers the two arms as a

@@ -923,6 +923,11 @@ public:
                             bool human_player);
     void DoEventRallyFlag(class hero* current_hero, NewmapCell* cell,
                           bool human_player);
+    // The Stables (jump-table arm 0x5e). Three parameters and `ret 0xc`
+    // against the Dreamcast's own `(hero*, NewmapCell*, bool)`, and the
+    // cell is never touched - the same shape do_event_watering_hole has.
+    void DoEventStables(class hero* current_hero, NewmapCell* cell,
+                        bool human_player);
     void DoEventTemple(class hero* current_hero, NewmapCell* cell,
                        bool human_player);
     void DoEventTrainingGrounds(class hero* current_hero, NewmapCell* cell,
