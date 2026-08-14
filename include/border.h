@@ -15,6 +15,14 @@ public:
     // Retail's 0x44ff10 constructor consumes six stack arguments and
     // forwards them to widget; DC's trailing focusable byte is absent.
     border(int x, int y, int w, int h, int id, int style);
+    // The default ctor has NO retail row of its own: every derived ctor
+    // (0x450130 / 0x4502d0 / 0x450690) opens with a direct
+    // ??0widget@@QAE@XZ call and a SINGLE derived vtable store, i.e. the
+    // base default ctor was expanded in place and its ??_7border@@6B@
+    // store dead-store-eliminated. Header-inline is what reproduces that;
+    // DC emitted it out of line (dc 0x5433c) because the port compiled
+    // border.cpp without /Ob2.
+    border() {}
     virtual int Main(message* msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw();      // slot 3, folded onto 0x5bc7e0
     virtual void Draw();             // slot 4
@@ -44,6 +52,8 @@ public:
     coloredBorderFrame(int x, int y, int w, int h, int id,
                        int color_, int style);
     virtual ~coloredBorderFrame();  // retail 0x4501d0
+    virtual int Main(message* msg);  // slot 2, retail 0x450240
+    virtual void Draw();             // slot 4, retail 0x4501e0
 };
 SIZE(coloredBorderFrame, 0x38);
 
@@ -58,8 +68,10 @@ public:
 
     // Retail dropped DC's final focusable argument; the 0x4502d0 body
     // consumes seven stack arguments and returns with `ret 0x1c`.
+    // `image_` trails an underscore for the same reason `color_` does one
+    // class up: the member it feeds shares the DC parameter's name.
     bitmapBorder(int x, int y, int w, int h, int id,
-                 const char* image, int style);
+                 const char* image_, int style);
     virtual ~bitmapBorder();
     virtual void Draw();          // slot 4, retail 0x450450
     virtual int GetRealHeight();  // slot 5, retail 0x4504b0
