@@ -138,6 +138,41 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // per iteration in the disabled/spell-giver loops 74.7723, naming the bitset
 // loop's cell 73.3683, naming the copy loop's source lengths 75.8257/75.9248,
 // and naming the combination's component row 76.6792.
+//
+// 2026-08-14 THE SOURCE HELPER IS REAL, AND IT IS NOT THE SEVEN STATEMENTS.
+// The DC roster row that this file's header dismisses as "folded" is
+// `InitializeArtifactTraits` at dc 0x50058: **static**, 2 parameters, 1978 B,
+// against InitializeArtifactTraitsTable's own 294 B. So on Dreamcast the table
+// function is a shell and ALL the per-row work lives in a one-call-site static
+// - which under /Ob2 inlines and vanishes, leaving retail's single 1512-byte
+// body. Reintroducing it (`static void InitializeArtifactTraits(int id, const
+// TSpreadsheetResource::TStringVector& values, char*& destination)` holding the
+// whole per-row block, called once from the row loop) is the ONLY spelling
+// found that reproduces retail's bitset emission EXACTLY: at
+// `allowableSlots.set(bit, allowed)` plus two spare candidate sites, our obj
+// calls BOTH `?set@?$bitset@$0BD@@` and `?test@?$bitset@$0JA@@` out of line -
+// i.e. the two artifact.obj COMDATs the carve names game_4cd50_sub00_4d380 and
+// game_4cd50_sub01_4d4d0, which no flat spelling of this body has ever produced
+// together (flat gets one or the other, never both). `.set(bit, allowed)` is
+// therefore retail's spelling, not `allowableSlots[bit] = allowed` - retail
+// calls `set`, we call `??4reference@?$bitset@$0BD@@`.
+// It still does not pay. Full mass x sites grid over the helper form
+// (M 0..64 pad statements x k 0..14):
+//     helper + `[bit] =`   74.8950 flat, ceiling 79.5723 at M=16..28, k=0
+//     helper + `.set(...)` 74.4178 flat, ceiling 79.6000 at M=12..20, k=0
+// against 76.8733 flat / 80.4733 titrated without it. Every cell of both grids
+// is below the corresponding flat cell of the current spelling, so the helper
+// is NOT landed: it is structurally right about the bitsets and wrong about
+// everything the extra frame costs. Whatever the seven statements are, they are
+// not "put the per-row block back in its own function".
+// Also measured this round, and a real retail fact even though it does not pay:
+// the disabled and spell-giver loops use an UNSIGNED induction variable in
+// retail (`cmp eax,<end> / jb`, ours `cmp eax,<end> / jl`). Spelling them
+// `unsigned artifactId` does emit retail's two `jb`s, but it also swaps the
+// `xor edi,edi` / `mov ebx,<aArtifactTraits+4>` pair that opens the combination
+// loop, and measures 76.8733 -> 75.8673 net. Same either way if the two flag
+// loops get their own `unsigned` and the combination loop keeps its `int`, so
+// the swap comes from the flag loops themselves.
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
 unsigned char InitializeArtifactTraitsTable()
 {
