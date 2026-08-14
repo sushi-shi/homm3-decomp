@@ -4,10 +4,15 @@
 #include <va.h>
 #include <string.h>
 #include "binkmanager.h"
+#include "border.h"
+#include "button.h"
 #include "campaignwindow.h"
+#include "font.h"
 #include "game.h"
+#include "kb.h"
 #include "message.h"
 #include "soundmgr.h"
+#include "textwdgt.h"
 #include "widget.h"
 #include "winmgr.h"
 
@@ -19,6 +24,7 @@ DATA(0x00694e2c) static TCampaignWindow* gpCampaignWindow;
 // row has eight descriptor dwords followed by a 12-dword snapshot of the
 // consecutive Bink state beginning at gBinkVideo. The constructor/helper own
 // the initialized rows; this TU view intentionally makes no DATA claim yet.
+// The row type and the caption block live in campaignwindow.h.
 
 // E:\gamedcs\campaignwindow.cpp:78
 //
@@ -40,121 +46,181 @@ inline void TCampaignWindow::HideText()
 
 // E:\gamedcs\campaignwindow.cpp:86
 //
-// DECODE MAP (read off retail 0x45ea40; the whole body is resolved - what is
-// missing is MODELLING, not reading, and the four items it needs are listed
-// at the end). `ret 8` against two parameters: +8 `unsigned char newGame`,
-// +0xc `int newCampaign`, both slots reused as temps once dead. EH frame with
-// twelve unwind states, `sub esp, 0x8c`.
+// `ret 8` against two parameters: +8 `unsigned char newGame`, +0xc `int
+// newCampaign`, both slots reused as temps once dead. EH frame with twelve
+// unwind states and `sub esp, 0x8c`.
 //
-//   base          heroWindow(0, 0, 0x320, 0x258, 0) - the full 800x600
-//                 screen - then vtable 0x63bca4, gpCampaignWindow = this,
-//                 this+0x4c = 0 and this+0x50 = -1.
-//   newGame arm   `gpGame->campaign = SCampaign();`. A default-constructed
-//                 temporary is built at [ebp-0x98], assigned into
-//                 gpGame->campaign (+0x1f458) and destroyed; BOTH the
-//                 assignment and the destruction are inlined member by
-//                 member, which is what makes this the most informative
-//                 40 bytes in the function:
-//                   +0x00/+0x01/+0x02 bytes, +0x04/+0x08 dwords,
-//                   +0x0c byte, +0x10 dword - copied straight;
-//                   +0x14 `assign(that, 0, npos)` through 0x404860 with the
-//                     npos word at 0x63a60c, i.e. +0x14 is a std::string.
-//                     CORRECTION for game.h: SCampaign models that slot as
-//                     `char campaignFilename[0x10]`. The width is right and
-//                     the type is not - the teardown confirms it by calling
-//                     basic_string::_Tidy(true) on temp+0x14. Left alone
-//                     here because game.h is shared and nothing compiled
-//                     needs the member yet.
-//                   +0x24 twenty-one bytes copied by an inlined byte loop -
-//                     campaignCompleted[21], already named;
-//                   +0x3c, +0x4c, +0x5c, +0x6c: four sub-object
-//                     assignments (0x45f5e0, 0x45f810, 0x45f9e0, 0x50ac00).
-//                     So game.h's pad_3c[0x20] hides TWO assignable members
-//                     (+0x3c, +0x4c), mapScores is the +0x5c one, and
-//                     pad_6c[0x10] is a fourth - a vector, since the
-//                     teardown destroys [temp+0x70, temp+0x74) and frees
-//                     temp+0x70 before zeroing all three words.
-//                   the destructor order is the mirror: ~vector(+0x6c),
-//                     0x46a650(+0x5c), 0x45f7b0(+0x4c), 0x45f560(+0x3c),
-//                     ~string(+0x14).
-//   availability  this+0x60..0x74 is a 21-byte block, zeroed as five dwords
-//                 plus a byte, then filled by a three-way switch on
-//                 newCampaign that also seeds firstCampaign (+0x78):
-//                   0  -> +0x78 = 0;  +0x60/+0x62/+0x64 = 1;
-//                         completed[0] && [2] && [4] -> +0x61 = +0x65 = 1;
-//                         completed[1] && [5]        -> +0x63 = 1;
-//                         completed[3]               -> +0x66 = 1.
-//                   1  -> +0x78 = 7;  +0x67..+0x6a, +0x6c, +0x6b = 1;
-//                         then `for (i = 7; i <= 12; i++)` clears +0x6b and
-//                         breaks on the first `!completed[i] && i != 11`.
-//                   2  -> +0x78 = 0xd; +0x6d..+0x70 = 1;
-//                         completed[13..16] all -> +0x71 = 1;
-//                         completed[17]         -> +0x72 = 1;
-//                         completed[18]         -> +0x73 = 1;
-//                 every gate reads gpGame->campaign.campaignCompleted, whose
-//                 element 0 is the 0x1f47c the disassembly shows.
-//   widgets       Widgets.reserve(77) - inlined, the 0x134 allocation - then
-//                 in order:
-//                   bitmapBorder16(0, 0, 0x320, 0x258, 100,
-//                       newCampaign == 2 ? "campbkx2.pcx" : "campback.pcx",
-//                       0x800);
-//                   button(0x292, 0x1e0, 0x84, 0x6a,
-//                       DIALOG_RETURN_SPLIT_CANCEL, "cmpscan.def",
-//                       0, 1, 0, 0, 2);
-//                   `for (i = 0; i < 20; i++) if (available[i]) <0x45e7c0>(i);`
-//                       - a thiscall member on this window carrying the
-//                       BinkPause import: the per-row preview opener;
-//                   the "no scenario" plate, guarded by
-//                       (newCampaign == 0 && !this->m66) || newCampaign == 1
-//                       || (newCampaign == 2 && !this->m73):
-//                       bitmapBorder16(0x181, 0x191, 0xee, 0x8f, 100,
-//                           "campnosc.pcx", 0x800);
-//                   the forward plate, guarded by !this->m6b && newCampaign
-//                       == 1: bitmapBorder16(0x1e, 0x19e, 0xcc, 0x77, 100,
-//                           "camp1fwX.pcx", 0x800);
-//                   then `last = newCampaign == 0 ? 6 : newCampaign == 1 ?
-//                       12 : 19` and one pass per campaign row,
-//                       `for (i = firstCampaign; i <= last; i++)`, walking
-//                       gCampaignPreviews with the 0x50 stride from base
-//                       0x66c49c (note: +4 into the carved 0x66c498 table)
-//                       and a SECOND eight-byte-stride table at 0x6a5f88
-//                       whose first word is the row's caption:
-//                         if (completed[i]) bitmapBorder(row[0] + 6,
-//                             row[1] + 0x4a, 0x2a, 0x28,
-//                             i - firstCampaign + 0x80, "CampChk.pcx",
-//                             0x800);
-//                         textWidget(row[2], row[3], row[4], 0x22,
-//                             caption[i], "medfont.fnt",
-//                             font::HEADING_HIGHLIGHT,
-//                             i - firstCampaign + PREVIEW_FIRST_ID,
-//                             5, 0, 8);
-//                       so the check marks answer 128..134, a range the
-//                       header's EOtherWidgetIDs roster does not yet name.
-//   tail          the usual AddWidget/MemError sweep over begin()..end(),
-//                 then `for (id = 101; id <= 107; id++)` GetWidget(id) and,
-//                 when non-null, send_message(6, 6) - HideText, inlined
-//                 exactly as the header already records.
+// The four modelling decisions the decoded map left open are taken here:
+// TCampaignWindow's +0x4c/+0x50 scalars and the 21-byte availability block
+// at +0x60, gCampaignPreviews' 0x50-byte row type, the caption block at
+// 0x6a5f88, and - the one that reaches into a shared header - the shape of
+// `gpGame->campaign = SCampaign()`.  Retail inlines BOTH the assignment and
+// the temporary's teardown member by member, which is the whole evidence for
+// game.h's SCampaign:
+//   +0x00/+0x01/+0x02 bytes, +0x04/+0x08 dwords, +0x0c byte, +0x10 dword -
+//     copied straight;
+//   +0x14 `assign(that, 0, npos)` through 0x404860 with the npos word at
+//     0x63a60c and `_Tidy(true)` in the teardown, i.e. a std::string;
+//   +0x24 twenty-one bytes copied by an inlined byte loop -
+//     campaignCompleted[21];
+//   +0x3c, +0x4c, +0x5c, +0x6c: four sub-object assignments (0x45f5e0,
+//     0x45f810, 0x45f9e0, 0x50ac00) whose mirror teardowns are 0x45f560,
+//     0x45f7b0, 0x46a650 and an INLINE `_Destroy`/`operator delete`/zero
+//     triple.  0x45f560 and 0x45f7b0 are vector-of-vector teardowns (inner
+//     stride 0x10; 0x45f560's leaves are 0x492 bytes each), 0x50ac00 is a
+//     four-byte-element vector::operator=, and mapScores is the +0x5c one.
+// game.h now carries all four as real members.
 //
-// Left as a carcass deliberately. Reading it is done; landing it needs four
-// modelling decisions that all touch shared headers, and none of them should
-// be taken in a lane that is also holding army.h open:
-//   1. TCampaignWindow's pad_4c must become +0x4c/+0x50 scalars and a
-//      21-byte availability array at +0x60 (firstCampaign at +0x78 is
-//      already there).
-//   2. gCampaignPreviews needs its real 0x50-byte row type; this body reads
-//      five dwords of it, at +0, +4, +8, +0xc and +0x10 of the 0x66c49c
-//      view.
-//   3. The caption table at 0x6a5f88 needs a name and a claim.
-//   4. game.h's SCampaign::campaignFilename must become a std::string, and
-//      pad_3c/pad_6c must be split into the three assignable sub-objects the
-//      inlined operator= proves.
-#if 0  // @carcass
+// Residual (82.5%): ONE cause, the newGame arm. Retail's SCampaign copy
+// assignment and destructor are compiler-generated and it expands both
+// inline HERE, where game::Load calls the same two COMDATs out of line
+// (0x4bdc70 and 0x45f110) - a plain /Ob2 split between two callers of the
+// same implicit member. Spelling them implicit in game.h reproduces retail
+// here exactly and takes this body 82.54% -> 91.17%, because the arm's use
+// of EBX for the temporary is what makes retail push EBX in the PROLOGUE
+// and then hold newCampaign in it for the whole widget section - with the
+// arm out of line our CL defers `push ebx` to the reserve, keeps a zero in
+// ESI instead (`cmp eax,esi` for retail's `test eax,eax`, `push esi` for
+// `push 0`), spills newCampaign to its parameter slot and reloads it at
+// every guard, and shifts every EH state number by four. Every remaining
+// difference in this function is downstream of that one decision.
+//
+// It is not landed because our game::Load is only half reconstructed, so
+// its /Ob2 budget does not starve where retail's does and it expands both
+// operations inline: game::Load 50.46% -> 43.93%, game::Save 27.94% ->
+// 17.31%. Net negative and a ratchet drop. The measurement and the
+// re-take condition are recorded at the declarations in game.h.
 VA(0x0045ea40, 0x692)  // campbkx2.pcx + vtable/global stores; Complete adds newGame, dc 0x5b570
 TCampaignWindow::TCampaignWindow(unsigned char newGame, int newCampaign)
+    : heroWindow(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0)
 {
-    // @stub
+    gpCampaignWindow = this;
+    field_4c = 0;
+    field_50 = -1;
+
+    if (newGame)
+        gpGame->campaign = SCampaign();
+
+    memset(campaignAvailable, 0, sizeof(campaignAvailable));
+
+    // Retail dispatches this three ways with `sub eax,0; je / dec; je /
+    // dec; jne`, the switch selector form, not a compare chain.
+    switch (newCampaign) {
+    case CAMPAIGN_SET_ROE:
+        firstCampaign = 0;
+        campaignAvailable[0] = 1;
+        campaignAvailable[2] = 1;
+        campaignAvailable[4] = 1;
+        if (gpGame->campaign.campaignCompleted[0]
+                && gpGame->campaign.campaignCompleted[2]
+                && gpGame->campaign.campaignCompleted[4]) {
+            campaignAvailable[1] = 1;
+            campaignAvailable[5] = 1;
+        }
+        if (gpGame->campaign.campaignCompleted[1]
+                && gpGame->campaign.campaignCompleted[5])
+            campaignAvailable[3] = 1;
+        if (gpGame->campaign.campaignCompleted[3])
+            campaignAvailable[6] = 1;
+        break;
+    case CAMPAIGN_SET_AB: {
+        firstCampaign = 7;
+        campaignAvailable[7] = 1;
+        campaignAvailable[8] = 1;
+        campaignAvailable[9] = 1;
+        campaignAvailable[10] = 1;
+        campaignAvailable[12] = 1;
+        campaignAvailable[CAMPAIGN_ROW_AB_SEALED] = 1;
+        for (int chain = 7; chain <= 12; ++chain) {
+            if (!gpGame->campaign.campaignCompleted[chain]
+                    && chain != CAMPAIGN_ROW_AB_SEALED) {
+                campaignAvailable[CAMPAIGN_ROW_AB_SEALED] = 0;
+                break;
+            }
+        }
+        break;
+    }
+    case CAMPAIGN_SET_SOD:
+        firstCampaign = 13;
+        campaignAvailable[13] = 1;
+        campaignAvailable[14] = 1;
+        campaignAvailable[15] = 1;
+        campaignAvailable[16] = 1;
+        if (gpGame->campaign.campaignCompleted[13]
+                && gpGame->campaign.campaignCompleted[14]
+                && gpGame->campaign.campaignCompleted[15]
+                && gpGame->campaign.campaignCompleted[16])
+            campaignAvailable[17] = 1;
+        if (gpGame->campaign.campaignCompleted[17])
+            campaignAvailable[18] = 1;
+        if (gpGame->campaign.campaignCompleted[18])
+            campaignAvailable[19] = 1;
+        break;
+    }
+
+    Widgets.reserve(NWIDGETS);
+
+    Widgets.push_back(new bitmapBorder16(0, 0, WINDOW_SCREEN_WIDTH,
+        WINDOW_SCREEN_HEIGHT, BACKGROUND_ID,
+        newCampaign == CAMPAIGN_SET_SOD ? "campbkx2.pcx" : "campback.pcx",
+        0x800));
+    Widgets.push_back(new button(658, 480, 132, 106, DIALOG_RETURN_CANCEL,
+        "cmpscan.def", 0, 1, 0, 0, 2));
+
+    for (int row = 0; row < 20; ++row) {
+        if (campaignAvailable[row])
+            OpenPreview(row);
+    }
+
+    if ((newCampaign == CAMPAIGN_SET_ROE && !campaignAvailable[6])
+            || newCampaign == CAMPAIGN_SET_AB
+            || (newCampaign == CAMPAIGN_SET_SOD && !campaignAvailable[19]))
+        Widgets.push_back(new bitmapBorder16(385, 401, 238, 143,
+            BACKGROUND_ID, "campnosc.pcx", 0x800));
+
+    if (!campaignAvailable[CAMPAIGN_ROW_AB_SEALED]
+            && newCampaign == CAMPAIGN_SET_AB)
+        Widgets.push_back(new bitmapBorder16(30, 414, 204, 119,
+            BACKGROUND_ID, "camp1fwX.pcx", 0x800));
+
+    int last;
+    switch (newCampaign) {
+    case CAMPAIGN_SET_ROE:
+        last = 6;
+        break;
+    case CAMPAIGN_SET_AB:
+        last = 12;
+        break;
+    case CAMPAIGN_SET_SOD:
+        last = 19;
+        break;
+    }
+
+    for (int campaign = firstCampaign; campaign <= last; ++campaign) {
+        if (gpGame->campaign.campaignCompleted[campaign])
+            Widgets.push_back(new bitmapBorder(
+                gCampaignPreviews[campaign].x + 6,
+                gCampaignPreviews[campaign].y + 74, 42, 40,
+                campaign - firstCampaign + CHECK_FIRST_ID,
+                "CampChk.pcx", 0x800));
+        Widgets.push_back(new textWidget(
+            gCampaignPreviews[campaign].textX,
+            gCampaignPreviews[campaign].textY,
+            gCampaignPreviews[campaign].textWidth, 34,
+            gCampaignCaptions[campaign].text, "medfont.fnt",
+            font::HEADING_HIGHLIGHT,
+            campaign - firstCampaign + PREVIEW_FIRST_ID, 5, 0, 8));
+    }
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    HideText();
 }
-#endif
 
 // Retail emits the compiler-generated wrapper immediately after the
 // constructor; Dreamcast appends it to the compiland.
@@ -168,7 +234,7 @@ TCampaignWindow::~TCampaignWindow()
     // globals. Restore each live copy, close it, then preserve the cleared
     // state back into its row.
     for (int preview = 0; preview < 6; ++preview) {
-        int* savedBinkState = gCampaignPreviews + 8 + preview * 20;
+        int* savedBinkState = gCampaignPreviews[preview].binkState;
         if (*savedBinkState) {
             memcpy(&gBinkVideo, savedBinkState, 12 * sizeof(int));
             CloseBinkVideo();
@@ -275,14 +341,20 @@ end_dialog:
 
         if (hoverID >= TCampaignWindow::CAMPAIGN_FIRST_ID
                 && hoverID <= TCampaignWindow::CAMPAIGN_LAST_ID) {
-            int* preview = gCampaignPreviews
-                + (hoverID - TCampaignWindow::CAMPAIGN_FIRST_ID) * 20;
+            // The ROW pointer, not the state block: retail keeps
+            // `&gCampaignPreviews[hover - 108]` live across the sweep and
+            // only reaches the snapshot with a `lea esi,[edi+0x20]` at the
+            // copy. Naming the +0x20 member here instead folds the bias
+            // into the base and swaps the sweep's counter register.
+            SCampaignPreview* preview =
+                &gCampaignPreviews[hoverID
+                    - TCampaignWindow::CAMPAIGN_FIRST_ID];
             gpCampaignWindow->HideText();
             gpCampaignWindow->GetWidget(hoverID
                     - gpCampaignWindow->firstCampaign - 7)->send_message(
                 widget::WIDGET_SET_STATUS,
                 widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN);
-            memcpy(&gBinkVideo, preview + 8, 12 * sizeof(int));
+            memcpy(&gBinkVideo, preview->binkState, 12 * sizeof(int));
             gBinkPaused = 0;
             _BinkPause(gBinkVideo, 0);
             BinkManager::RestartBink();

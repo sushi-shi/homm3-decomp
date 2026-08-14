@@ -461,6 +461,40 @@ public:
 };
 SIZE(SGameSetupOptions, 0x1cc);
 
+// The two 0x10-byte sub-objects SCampaign carries at +0x3c and +0x4c.
+// TCampaignWindow's constructor is the proof: `gpGame->campaign =
+// SCampaign()` is a compiler-generated memberwise assignment there, and it
+// calls a distinct out-of-line operator= for each slot (0x45f5e0, 0x45f810)
+// with the mirror destructors in the temporary's teardown (0x45f560,
+// 0x45f7b0). Both destructors walk an outer array of 0x10-byte vectors and
+// free each one, i.e. both members are std::vector<std::vector<T> >:
+// 0x45f560's leaves are destroyed one at a time with a 0x492 stride - the
+// byte-for-byte size of `hero`, which with the Dreamcast's
+// SCampaign::clear_carryover_pool(TCarryOverPoolNumber) identifies the
+// +0x3c slot as the campaign's carry-over hero pools - while 0x45f7b0's
+// inner elements are trivially destroyed and its element type stays
+// unidentified. Modelled as opaque objects with the two operations
+// declared out of line, which is exactly the code retail emits; spelling
+// the real nested vectors would instantiate them in every game.h consumer
+// for no gain.
+class SCampaignHeroPools {
+public:
+    char pad_00[0x10];
+
+    ~SCampaignHeroPools();
+    SCampaignHeroPools& operator=(const SCampaignHeroPools& that);
+};
+SIZE(SCampaignHeroPools, 0x10);
+
+class SCampaignPools4c {
+public:
+    char pad_00[0x10];
+
+    ~SCampaignPools4c();
+    SCampaignPools4c& operator=(const SCampaignPools4c& that);
+};
+SIZE(SCampaignPools4c, 0x10);
+
 class SCampaign {
 public:
     struct MapScore {
@@ -480,13 +514,42 @@ public:
     signed char crossoverArrayIndex;
     char pad_0d[3];
     int briefingChoice;
-    char campaignFilename[0x10];
+    // +0x14, and a std::string rather than the char[0x10] this was: the
+    // memberwise assignment in TCampaignWindow's constructor drives the
+    // slot through basic_string::assign(that, 0, npos) (0x404860, with the
+    // npos word at 0x63a60c) and the temporary's teardown ends on
+    // basic_string::_Tidy(true) against it. Same 0x10 width, so nothing
+    // after it moves.
+    std::string campaignFilename;
     unsigned char campaignCompleted[21];
     char pad_39[3];
-    char pad_3c[0x20];
+    SCampaignHeroPools carryOverHeroes;
+    SCampaignPools4c field_4c;
     std::vector<MapScore> mapScores;
-    char pad_6c[0x10];
+    // +0x6c, the fourth assignable sub-object. Its operator= is the
+    // four-byte-element vector::operator= at 0x50ac00 and its teardown is
+    // INLINE in the same constructor - _Destroy over [_First, _Last),
+    // operator delete on _First, then all three words zeroed - so the slot
+    // is a std::vector over a 4-byte element whose identity is unproven.
+    std::vector<int> field_6c;
 
+    // Retail's copy assignment and destructor are COMPILER-GENERATED, and
+    // the image proves it from both sides of the /Ob2 split:
+    // TCampaignWindow's constructor expands both inline, member by member -
+    // that expansion is the whole evidence for the four sub-objects above -
+    // while game::Load calls the out-of-line COMDATs (operator= 0x4bdc70,
+    // destructor 0x45f110) for the same two operations.
+    //
+    // MEASURED, 2026-08-14: spelling them implicit here is the faithful
+    // model and it takes TCampaignWindow's constructor 82.54% -> 91.17%,
+    // but our game::Load is only half reconstructed, so its /Ob2 budget
+    // does not starve where retail's does and it expands both inline:
+    // game::Load 50.46% -> 43.93% (implicit destructor alone costs 2.17 of
+    // that) and game::Save 27.94% -> 17.31%. Net negative overall and a
+    // ratchet drop, so both stay declared until game::Load carries retail's
+    // caller mass; re-take this the moment it does. Declaring
+    // ~SavedGameHeader to hold the same line is NOT the way - measured at
+    // the same time, it collapses game::Load to 9.88%.
     SCampaign();
     ~SCampaign();
     SCampaign& operator=(const SCampaign& that);
