@@ -475,11 +475,35 @@ void army::do_attack(int direction)
 }
 
 // E:\gamedcs\army.cpp:2358
-// RETAIL_LOCATED(0x00441f70, 0x26)  // linkorder, dc 0x47270
+#endif  // @carcass
+
+// The arrow-tower guard in front of the combat manager's landmine /
+// fire-wall worker (0x46a570). Two things worth recording.
+//
+// The SIZE RATIO IS A FALSE NEGATIVE HERE: 38 retail bytes against the
+// DC row's 132 is 0.29, just under the 0.3 screen, and the attribution
+// is nonetheless right. Retail moved the body to combatManager and
+// left this wrapper behind; the DC row does the Is /
+// get_second_grid_index / check_landmine / check_fire_wall work
+// itself, which is exactly 0x46a570's body. The screen measures a
+// refactor, not a misattribution - so it only ever demotes a pairing
+// that has no other evidence, and this one sits on its DC-order slot
+// between do_attack(int) and WalkTo with both neighbours confirmed.
+//
+// The guard is an IF, not the `&&` NH3API spells it with: retail
+// forwards the worker's AL straight out (`call` then `ret 4`) with no
+// normalization, where `creatureType != ARROW_TOWER && worker(...)`
+// would put a setne on the result. Same family as the
+// `if (!p) return false; return true;` rule.
+VA(0x00441f70, 0x26)  // linkorder + NH3API structural identity, dc 0x47270
 unsigned char army::check_obstacle_attacks(unsigned char is_walking)
 {
-    // @stub
+    if (creatureType == ARMY_CREATURE_ARROW_TOWER)
+        return 0;
+    return gpCombatManager->check_obstacle_attacks(this, is_walking);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2386
 // RETAIL_LOCATED(0x00441fa0, 0x461)  // anchor-global, dc 0x472f4

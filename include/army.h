@@ -554,6 +554,13 @@ public:
         ARMY_CREATURE_DEMON = 0x30,
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
+        // The one creature obstacles never fire at:
+        // check_obstacle_attacks (0x441f70) compares creatureType
+        // against 0x95 and returns 0 before it reaches the combat
+        // manager's worker. NH3API spells the same guard
+        // `armyType != CREATURE_ARROW_TOWER` with the same 149, and a
+        // siege tower is the one combat participant that never moves.
+        ARMY_CREATURE_ARROW_TOWER = 0x95,
         // The highest id GetName (0x440100) accepts: its range guard is
         // `type < 0 || type > 0x96`, so the name rows it indexes run
         // 0..150 inclusive - one past the 150-entry bound armygrp.h
