@@ -711,6 +711,54 @@ void advManager::do_event_lith_two_way(hero* current_hero, NewmapCell* cell, uns
 // is a static-shaped helper whose sole DC caller is DispatchEvent, i.e.
 // the /Ob2 single-call-site shape, and it was inlined here.
 // Left unclaimed only because the row is DispatchEvent-sized work.
+//
+// TABLES DECODED 2026-08-14, straight off the hash-verified image, and
+// they PROVE the whirlpool claim above from the other side. The byte
+// index at 0x4aa95c is 214 entries covering cell->type 0x02..0xd7; its
+// values reach a 94-entry jump table at 0x4aa7e4 whose last arm
+// (0x4aa7ce, 612 B) is the default 121 of those types share. Arm 0x6f -
+// the whirlpool - is 89 bytes at 0x4a95a5 and calls 0x4acaa0,
+// game::get_random_whirlpool (0x4cde20), StopCursor (0x47f7d0) and
+// TeleportTo (0x41d930): a whole handler in line, with no call to any
+// 96-byte leaf.
+//
+// FIFTY-SIX arms are a single call to one handler, which is what makes
+// this body tractable in pieces - `type -> handler`, and every one of
+// these targets is an events.obj-band row this file already carries or
+// still owes:
+//   0x3->49e670  0x4->49e7d0  0x5->49f7e0  0x6->4a0c50  0x8->4a1010
+//   0xc->4a1120  0xf->4a14b0  0x10->4a15a0  0x11,0x14->4a18b0
+//   0x16->4a5480  0x17->4a2050  0x19->4a2140  0x1d->4a2230
+//   0x1e->4a2480  0x1f->4a25f0  0x20->4a2710  0x22->4a2800
+//   0x26->4a12f0  0x27->4a31a0  0x29->4a3280  0x2b->4a8230
+//   0x2d->4a8390  0x2f->4a33e0  0x30->4a3590  0x31->4a3730
+//   0x33->4a38b0  0x35->4a39a0  0x37->4a3bc0  0x38->4a3ca0
+//   0x3d->4a3dc0  0x3e->4a3eb0  0x3f->4a4230  0x40->4a44c0
+//   0x4e->4a4600  0x4f->4a4be0  0x51->4a4dc0  0x52->4a5030
+//   0x53->573670  0x56->4a52a0  0x5c->4a5980  0x5d->4a5ea0
+//   0x5e->4a60a0  0x60->4a6200  0x63->5ea0c0  0x64->4a6330
+//   0x65->4a6520  0x66->4a6710  0x69->4a69b0  0x6b->4a7a40
+//   0x6c->4a7c30  0x6d->4a7de0  0x6e->4a7ea0  0x70->4a7fc0
+//   0x71->4a8080  0xd5->5e9e60  0xd7->572b60
+// Four of those are already exact in this file and they FIX the object
+// ids outright: 0x22 is do_event_hero, 0x2b/0x2d the one-way and two-way
+// liths, 0x6b DoEventWarSchool, 0x6c the warrior's tomb, 0x6d the water
+// wheel, 0x6e the watering hole, 0x70 the windmill and 0x71 the witch
+// hut - i.e. the tail of the alphabetical run advevent.txt indexes 158
+// upward, in the same order.
+//
+// The remaining 37 arms carry inlined work. The ones worth naming ahead
+// of a reconstruction attempt: 0x21 is the garrison (HasCreatures ->
+// DoCombat -> game::ClaimGarrison), 0x23 the hill fort (THillFortWindow
+// built, DoModal'd and destroyed in line), 0x36 the wandering stack
+// (CompleteDraw/UpdateScreen then DoWanderingMonsterResult), 0x39 the
+// obelisk (ViewPuzzle + ComputeUALoc), 0x2a a mine (game::ClaimMine),
+// 0x5f the tavern (DoMapTavern), 0x62 a town (TownEvent), 0x67 the
+// subterranean gate (game::get_underground_gate_exit, SetVisibility,
+// do_event_hero, TeleportTo), 0x68 the university - which builds the
+// window whose destructor is 0x4aaa40, the row the note below covers,
+// and reaches ~CAdvPopup at 0x41b120 through it - and 0x6a the creature
+// dwelling (recruitUnit constructed and run through executive::DoDialog).
 // RETAIL_LOCATED(0x004a84f0, 0x2542)  // body: cell->type jump table + 4 args, dc 0x9824c
 void advManager::do_event_whirlpool(hero* current_hero, NewmapCell* cell, unsigned char human_player)
 {
@@ -2138,6 +2186,67 @@ BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const
 {
     unsigned index = cell->value & 0x3ff;
     return &fullMap->blackBoxes[index];
+}
+
+// The two events.obj/philai.obj helpers this handler needs. 0x4a2940 is
+// exchange_spells (dc 0x93464), the ONE events.obj row the Dreamcast
+// xref graph gives do_event_hero as a bsr call, and retail reaches it as
+// a /Gr fastcall with the two heroes in ecx and edx. 0x525dc0 is
+// AI_friendly_hero_meeting (philai.obj, dc 0x10e678) - do_event_hero's
+// only philai callee, taking the same pair in the same registers, and it
+// is the AI's alternative to the human's HeroSwap on the very same
+// branch. Declared file locally, the AI_approximate_strength precedent.
+void exchange_spells(hero* left, hero* right);
+void AI_friendly_hero_meeting(hero* current_hero, hero* other_hero);
+
+// E:\gamedcs\events.cpp:2029.  A hero steps onto a tile another hero
+// occupies. Everything downstream turns on WHO that other hero is:
+// teammates exchange spells and then swap armies (or let the AI conduct
+// the meeting), a hostile hero standing in a town hands the tile to
+// TownEvent, and a hostile hero in the open is a battle.
+//
+// The whole of game::GetHero is expanded at the top - its `-1` arm gives
+// the null hero the cell can carry - and so is game::OnSameTeam, both
+// of its `< 0` guards included, which is what puts the two signed tests
+// ahead of the pair of teamInfo byte loads.
+//
+// The pointer is shown for a human visitor OR for a human OWNER of the
+// hero being visited, in that order: retail tests the parameter first
+// and only calls belongs_to_human when it is clear, i.e. `||`.
+//
+// The town test spends the point three times because GetTownId takes
+// the three coordinates separately; the packed `y` and `z` share one
+// 16-bit unit and both are extracted out of the SAME dword load, which
+// is why the second half of the point is read at +0x12 rather than the
+// field being addressed on its own.
+VA(0x004a2800, 0x13F)  // anchor-callee exchange_spells/HeroSwap/DoCombat, dc 0x939bc
+void advManager::do_event_hero(hero* current_hero, NewmapCell* cell,
+                               type_point point, bool human_player)
+{
+    DemobilizeCurrHero(0, 1);
+
+    hero* other_hero = gpGame->GetHero(cell->extraInfo);
+    if (human_player || other_hero->belongs_to_human()) {
+        gpMouseManager->SetPointer(0, mouseManager::ADVENTURE_SET);
+        gpMouseManager->ShowPointer(true);
+    }
+
+    if (gpGame->OnSameTeam(other_hero->owner, gNetLocalGamePos)) {
+        exchange_spells(current_hero, other_hero);
+        if (human_player)
+            HeroSwap(current_hero, other_hero);
+        else
+            AI_friendly_hero_meeting(current_hero, other_hero);
+        return;
+    }
+
+    if (gpGame->GetTownId(point.x, point.y, point.z) >= 0) {
+        TownEvent(cell, point, human_player);
+        return;
+    }
+
+    DoCombat(point, current_hero, &current_hero->army, other_hero->owner, 0,
+             other_hero, &other_hero->army, -1, 1, 0);
 }
 
 // Declared inline in the original Game.h (DC line 865); this is the retail
