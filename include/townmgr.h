@@ -156,6 +156,15 @@ public:
 // bracket the dialog with the tavern's background video.
 class TTavernWindow : public CAdvPopup {
 public:
+    enum {
+        CANCEL_BUTTON_ID = 0x7800
+    };
+
+    int field_60;              // +0x60  cleared by the constructor
+    char pad_64[8];            // +0x64  unattested
+    textWidget* rolloverText;  // +0x6c
+
+    TTavernWindow(int x2, int y2);
     virtual ~TTavernWindow();
     virtual int Open(int zOrder, unsigned char update);  // slot 1
     virtual void Close(unsigned char update);            // slot 2
