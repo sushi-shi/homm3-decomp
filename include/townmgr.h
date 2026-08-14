@@ -33,6 +33,22 @@ enum EThievesGuildStat {
 #ifdef HOMM3_TOWNMGR_WINDOW_DECLS
 #include "advmgr_popup.h"
 
+// The three states townManager::SetupMage sorts a mage-guild slot into
+// before it drives the page's two widget runs. The values are retail's
+// literals (0x3e7 is compared directly and 1 is stored into the icon
+// frame); the NAMES are provisional, the Dreamcast dump declaring no
+// enum for this domain either.
+enum EMageGuildSlotState {
+    // The slot holds a real spell: its frame stays drawn and the scroll
+    // takes that spell's icon.
+    MAGE_SLOT_KNOWN = 0,
+    // The guild reaches this slot but the town has not rolled a spell
+    // into it - frame drawn on icon 1, scroll hidden.
+    MAGE_SLOT_EMPTY = 1,
+    // The slot is past this guild level's width: both runs hidden.
+    MAGE_SLOT_ABSENT = 999
+};
+
 class armyGroup;
 class Bitmap816;
 class border;
@@ -453,6 +469,17 @@ public:
     // through the system palette's 128..134 band, repainting the page
     // and flushing `x,y,w,h` between steps.
     void CycleOutline(int objectIndex, int x, int y, int w, int h);
+    // Retail 0x5d6ef0. Fills the mage guild page: five guild levels of
+    // six slots each, over two widget runs (frames 10..39, scrolls
+    // 40..69). Nested behind the window gate for the same reason
+    // town.h nests HasBuilding: townmgr.cpp is the only definer and the
+    // only caller, and recruit.cpp - which opens the manager gate for
+    // the class itself - is the tree's include-set canary here. Adding
+    // this ONE declarator to the view recruit.cpp sees took
+    // recruitUnit::Update 90.84 -> 88.24 with no semantic change.
+#ifdef HOMM3_TOWNMGR_WINDOW_DECLS
+    void SetupMage(heroWindow* mageWin);
+#endif
     virtual int Open(int newPriority) OVERRIDE;   // slot 0, 0x5c63c0
     virtual void Close() OVERRIDE;                // slot 1, 0x5c71b0
     virtual int Main(message& msg) OVERRIDE;      // slot 2, 0x5d3240

@@ -24,6 +24,13 @@
 #define HOMM3_TOWN_OBJ_DECLS
 #include "exec.h"
 #undef HOMM3_TOWN_OBJ_DECLS
+// town.h's mage-guild slice: SetupMage reads the spell grid at +0x44 and
+// the per-level counts at +0xbc, both behind HOMM3_TOWN_OBJ_DECLS.
+// Opened for town.h ALONE and ahead of game.h's own include of it, so
+// nothing else in this file's closure widens.
+#define HOMM3_TOWN_OBJ_DECLS
+#include "town.h"
+#undef HOMM3_TOWN_OBJ_DECLS
 #define HOMM3_GAME_OBJ_DECLS
 #include "game.h"
 #undef HOMM3_GAME_OBJ_DECLS
@@ -2264,6 +2271,103 @@ void townManager::CycleOutline(int objectIndex, int x, int y, int w, int h)
     }
 
     gpWindowManager->UpdateScreen(x, y, w, h);
+}
+
+// Fills the mage guild page. The dialog carries two parallel widget
+// runs, both laid out five rows of six by TMageGuildWindow's
+// constructor: ids 10..39 are the TPMageS.def frames and ids 40..69 the
+// spellscr.def scrolls, and this pass sorts every slot into one of the
+// three EMageGuildSlotState values and drives both runs from it.
+//
+// A guild level's width comes from town.h's .data table of base counts
+// plus one for Tower's Library; a level the town cannot legally build
+// has no slots at all; and a slot the town has actually rolled a spell
+// into (below mageGuildSpellCounts[level]) is KNOWN. Conflux with the
+// Grail is the one override: every scroll shows frame 70 rather than
+// its own spell.
+//
+// Residual (99.93%): ONE SIB byte. Retail encodes the per-level count
+// read as `movsx eax, byte ptr [edx + ecx + 0xbc]` - loop variable as
+// the base register, object pointer as the index - where our CL picks
+// the opposite roles for the same two registers, `[ecx + edx + 0xbc]`.
+// Every other byte of the body, both jump structures and all six
+// broadcasts included, is retail's. Tried and rejected: the pointer form
+// `*(townToView->mageGuildSpellCounts + level)` (99.93, identical SIB),
+// the reversed-subscript form `level[townToView->mageGuildSpellCounts]`
+// (99.93, identical), and swapping the compare to
+// `mageGuildSpellCounts[level] > slot` (99.42 - that one also flips the
+// branch). An encoder tie-break, not a source lever.
+
+// E:\gamedcs\townmgr.cpp:7693
+VA(0x005d6ef0, 0x1BD)  // linkorder(dc row after BuildObj) + arity(ret 4) + is_legal_building edge, dc 0x179e74
+void townManager::SetupMage(heroWindow* mageWin)
+{
+    message msg = { 0, 0, 0, 0, 0, 0, 0, 0 };
+
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 0;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    mageWin->BroadcastMessage(&msg);
+
+    for (int level = 0; level < 5; level++) {
+        for (int slot = 0; slot < 6; slot++) {
+            int state = gMageGuildBaseSpellCounts[level];
+            if (townToView->type == TOWN_TOWER
+                && (townToView->active & bitNumber[EXTRA_1_ID]))
+                state++;
+            // The one cast into an enum domain in the tree, and the
+            // reason the cleanliness board's `casts to enum types` floor
+            // is 1 rather than 0. It is NOT the mis-modelled-domain smell
+            // that row exists to catch: type_building_id is correctly
+            // modelled, and this call's argument is a plain loop counter
+            // in retail's own code (`mov edx,[ebp-4]; push edx` - no
+            // table, no conversion), so the retail source contained the
+            // identical int-to-enum conversion. C++ offers no cast-free
+            // spelling: an enum has no increment and no implicit
+            // conversion FROM int, and town.cpp's can_build note already
+            // records this exact wall as the reason it declined to call
+            // is_legal_building at all. Revert = drop this guard and this
+            // function.
+            if (!townToView->is_legal_building(
+                    static_cast<type_building_id>(level)))
+                state = 0;
+            if (slot < townToView->mageGuildSpellCounts[level])
+                state = 0;
+            else
+                state = slot < state ? MAGE_SLOT_EMPTY : MAGE_SLOT_ABSENT;
+
+            msg.codeX = state == MAGE_SLOT_ABSENT
+                            ? widget::WIDGET_CLEAR_STATUS
+                            : widget::WIDGET_SET_STATUS;
+            msg.codeY = 10 + level * 6 + slot;
+            msg.extra = widget::WIDGET_DRAWN;
+            mageWin->BroadcastMessage(&msg);
+
+            if (state == MAGE_SLOT_EMPTY) {
+                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                msg.codeY = 10 + level * 6 + slot;
+                msg.extra = state;
+                mageWin->BroadcastMessage(&msg);
+            }
+
+            if (state) {
+                msg.codeX = widget::WIDGET_CLEAR_STATUS;
+                msg.extra = widget::WIDGET_DRAWN;
+                msg.codeY = 40 + level * 6 + slot;
+                mageWin->BroadcastMessage(&msg);
+            } else {
+                msg.codeY = 40 + level * 6 + slot;
+                msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+                if (townToView->type == TOWN_CONFLUX
+                    && (townToView->active & bitNumber[HOLY_GRAIL_ID]))
+                    msg.extra = 70;
+                else
+                    msg.extra = townToView->mageGuildSpells[level][slot];
+                mageWin->BroadcastMessage(&msg);
+            }
+        }
+    }
 }
 
 // The tavern chooser's constructor - seventeen widgets over a reserve of
