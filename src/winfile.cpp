@@ -97,6 +97,7 @@ unsigned char File::Delete(const char* sFilename)
 // open and is created (CREATE_NEW) otherwise. Both CreateFileA calls
 // share FILE_SHARE_READ / FILE_ATTRIBUTE_NORMAL|FILE_FLAG_RANDOM_ACCESS
 // and retail cross-jumps them into one call site.
+// E:\gamedcs\winfile.cpp:139
 VA(0x005ffbc0, 0x84)  // vtable-slot 1 of File (0x643d20) + import-anchor (CreateFileA); dc 0x198568
 unsigned char File::Open(const char* sFilename, FileMode mode)
 {
@@ -179,6 +180,7 @@ unsigned long File::SeekCur(int seekAmt)
 // E:\gamedcs\winfile.cpp:240
 // dStart == 0 seeks straight from the beginning; otherwise position
 // to dStart absolute, then advance dBytesToSeek relative.
+// E:\gamedcs\winfile.cpp:240
 VA(0x005ffd20, 0x4E)  // vtable-slot 5 of File (0x643d20) + import-anchor (SetFilePointer x2); dc 0x198670
 unsigned long File::Seek(unsigned long dBytesToSeek, unsigned long dStart)
 {
@@ -206,6 +208,7 @@ unsigned long File::GetPosition()
 // Save the position, seek to the end for the length, seek back. The
 // self-calls dispatch through the vtable (slots 9/7/5) - retail does
 // not devirtualize them.
+// E:\gamedcs\winfile.cpp:265
 VA(0x005ffd90, 0x32)  // vtable-slot 10 of File (0x643d20) + body (virtual self-dispatch); dc 0x198704
 unsigned long File::GetLength()
 {

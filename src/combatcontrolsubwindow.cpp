@@ -124,6 +124,7 @@ void TCombatHeroSubWindow::Update(const hero* info, const hero* otherHero, unsig
 // E:\gamedcs\combatcontrolsubwindow.cpp:472
 #endif  // @carcass
 
+// E:\gamedcs\combatcontrolsubwindow.cpp:472
 VA(0x0046cdf0, 0x74)  // closed compiland order + unique body, dc 0x65c84
 void TCombatHeroSubWindow::Show()
 {

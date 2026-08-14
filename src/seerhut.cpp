@@ -224,6 +224,7 @@ std::string format_string(const char* format, ...);
 // is not the /Gr fastcall default.
 std::string __stdcall skill_requirement_text(const signed char (&skills)[4]);
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056d3e0, 0x2A)  // anchor-vtable 0x641788 slot 6, retail-only
 std::string type_experience_quest::GetRequirementText()
 {
@@ -231,12 +232,14 @@ std::string type_experience_quest::GetRequirementText()
                          required_level);
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056d490, 0x1A)  // anchor-vtable 0x641788 slot 2, retail-only
 unsigned char type_experience_quest::is_satisfied(hero* current_hero)
 {
     return current_hero->level >= required_level;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056d5f0, 0x35)  // anchor-vtable 0x641788 slot 11, retail-only
 void type_experience_quest::Load(TAbstractFile* file, int version)
 {
@@ -255,12 +258,14 @@ void type_experience_quest::Load(TAbstractFile* file, int version)
 // unclaimed). Tried and rejected: `const unsigned char*` parameter, a named
 // `const signed char* skills` local, and a `const signed char (&)[4]`
 // reference parameter - all three give the same `add`.
+// E:\gamedcs\seerhut.cpp
 VA(0x0056d960, 0x22)  // anchor-vtable 0x6417c4 slot 6, retail-only
 std::string type_skill_quest::GetRequirementText()
 {
     return skill_requirement_text(required_skills);
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056da70, 0x60)  // anchor-vtable 0x6417c4 slot 2, retail-only
 unsigned char type_skill_quest::is_satisfied(hero* current_hero)
 {
@@ -279,6 +284,7 @@ unsigned char type_skill_quest::is_satisfied(hero* current_hero)
     return 1;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056de60, 0x29)  // anchor-vtable 0x6417c4 slot 11, retail-only
 void type_skill_quest::Load(TAbstractFile* file, int version)
 {
@@ -286,6 +292,7 @@ void type_skill_quest::Load(TAbstractFile* file, int version)
     type_quest::Load(file, version);
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056de90, 0x25)  // anchor-vtable 0x6417c4 slot 12, retail-only
 void type_skill_quest::LoadFromMap(TAbstractFile* file)
 {
@@ -293,12 +300,14 @@ void type_skill_quest::LoadFromMap(TAbstractFile* file)
     type_quest::LoadFromMap(file);
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056e3d0, 0x06)  // anchor-vtable 0x641800 slot 8, retail-only
 int type_defeat_hero_quest::quest_type()
 {
     return 3;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056e3e0, 0x29)  // anchor-vtable 0x641800 slot 2, retail-only
 unsigned char type_defeat_hero_quest::is_satisfied(hero* current_hero)
 {
@@ -307,6 +316,7 @@ unsigned char type_defeat_hero_quest::is_satisfied(hero* current_hero)
     return (satisfied_mask & (1 << current_hero->owner)) != 0;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056e550, 0x26)  // anchor-vtable 0x641800 slot 9, retail-only
 void type_defeat_hero_quest::NotifyHeroDefeated(int hero_id, int player)
 {
@@ -314,6 +324,7 @@ void type_defeat_hero_quest::NotifyHeroDefeated(int hero_id, int player)
         satisfied_mask |= 1 << player;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056e580, 0x6E)  // anchor-vtable 0x641800 slot 11, retail-only
 void type_defeat_hero_quest::Load(TAbstractFile* file, int version)
 {
@@ -334,12 +345,14 @@ void type_defeat_hero_quest::Load(TAbstractFile* file, int version)
     type_quest::Load(file, version);
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056ebc0, 0x06)  // anchor-vtable 0x64183c slot 8, retail-only
 int type_monster_quest::quest_type()
 {
     return 4;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056ebd0, 0x26)  // anchor-vtable 0x64183c slot 2, retail-only
 unsigned char type_monster_quest::is_satisfied(hero* current_hero)
 {
@@ -372,6 +385,7 @@ unsigned char type_monster_quest::is_satisfied(hero* current_hero)
 // generation residual class, not a source-shape miss. Left unclaimed rather
 // than land a 72.61% row.
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056ed90, 0x51)  // anchor-vtable 0x64183c slot 11, retail-only
 void type_monster_quest::Load(TAbstractFile* file, int version)
 {
@@ -395,6 +409,7 @@ void type_monster_quest::Load(TAbstractFile* file, int version)
 // 12 of the experience (0x641788), defeat-hero (0x641800) and monster
 // (0x64183c) vtables alike, each of which reads one dword into its own
 // +0x40. Claimed once, for the first vtable in address order.
+// E:\gamedcs\seerhut.cpp
 VA(0x0056edf0, 0x2B)  // anchor-vtable 0x641788 slot 12, retail-only
 void type_experience_quest::LoadFromMap(TAbstractFile* file)
 {
@@ -405,6 +420,7 @@ void type_experience_quest::LoadFromMap(TAbstractFile* file)
     type_quest::LoadFromMap(file);
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056f5a0, 0x4C)  // anchor-vtable 0x641878 slot 1, retail-only
 int type_artifact_quest::GetAIValue(int player)
 {
@@ -420,6 +436,7 @@ int type_artifact_quest::GetAIValue(int player)
     return total;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056f800, 0x58)  // anchor-vtable 0x641878 slot 2, retail-only
 unsigned char type_artifact_quest::is_satisfied(hero* current_hero)
 {
@@ -431,6 +448,7 @@ unsigned char type_artifact_quest::is_satisfied(hero* current_hero)
     return 1;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x0056f860, 0x37)  // anchor-vtable 0x641878 slot 3, retail-only
 void type_artifact_quest::TakePayment(hero* current_hero)
 {
@@ -438,6 +456,7 @@ void type_artifact_quest::TakePayment(hero* current_hero)
         current_hero->remove_artifact(artifacts[i]);
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x00570480, 0x55)  // anchor-vtable 0x6418b4 slot 1, retail-only
 int type_creature_quest::GetAIValue(int player)
 {
@@ -448,6 +467,7 @@ int type_creature_quest::GetAIValue(int player)
     return total;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x00570760, 0x60)  // anchor-vtable 0x6418b4 slot 2, retail-only
 unsigned char type_creature_quest::is_satisfied(hero* current_hero)
 {
@@ -459,6 +479,7 @@ unsigned char type_creature_quest::is_satisfied(hero* current_hero)
     return 1;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x005707c0, 0xB3)  // anchor-vtable 0x6418b4 slot 3, retail-only
 void type_creature_quest::TakePayment(hero* current_hero)
 {
@@ -476,12 +497,14 @@ void type_creature_quest::TakePayment(hero* current_hero)
     }
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x00571560, 0x12)  // anchor-vtable 0x6418f0 slot 1, retail-only
 int type_resource_quest::GetAIValue(int player)
 {
     return AI_resource_cost(player, resources);
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x00571b80, 0x29)  // anchor-vtable 0x6418f0 slot 11, retail-only
 void type_resource_quest::Load(TAbstractFile* file, int version)
 {
@@ -489,6 +512,7 @@ void type_resource_quest::Load(TAbstractFile* file, int version)
     type_quest::Load(file, version);
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x00571bb0, 0x25)  // anchor-vtable 0x6418f0 slot 12, retail-only
 void type_resource_quest::LoadFromMap(TAbstractFile* file)
 {
@@ -496,18 +520,21 @@ void type_resource_quest::LoadFromMap(TAbstractFile* file)
     type_quest::LoadFromMap(file);
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x00571f00, 0x19)  // anchor-vtable 0x64192c slot 2, retail-only
 unsigned char type_be_hero_quest::is_satisfied(hero* current_hero)
 {
     return current_hero->id == required_hero;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x005721f0, 0x06)  // anchor-vtable 0x64192c slot 8, retail-only
 int type_be_hero_quest::quest_type()
 {
     return 8;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x00572200, 0x30)  // anchor-vtable 0x64192c slot 11, retail-only
 void type_be_hero_quest::Load(TAbstractFile* file, int version)
 {
@@ -521,6 +548,7 @@ void type_be_hero_quest::Load(TAbstractFile* file, int version)
 // The second /OPT:ICF fold in the family: slot 12 of the be-hero
 // (0x64192c) and belong-to-player (0x641968) vtables share this body, both
 // reading one unsigned byte into their own +0x40. Claimed once.
+// E:\gamedcs\seerhut.cpp
 VA(0x00572230, 0x31)  // anchor-vtable 0x64192c slot 12, retail-only
 void type_be_hero_quest::LoadFromMap(TAbstractFile* file)
 {
@@ -531,24 +559,28 @@ void type_be_hero_quest::LoadFromMap(TAbstractFile* file)
     type_quest::LoadFromMap(file);
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x005724f0, 0x1A)  // anchor-vtable 0x641968 slot 2, retail-only
 unsigned char type_belong_to_player_quest::is_satisfied(hero* current_hero)
 {
     return current_hero->owner == required_owner;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x00572650, 0x20)  // anchor-vtable 0x641968 slot 6, retail-only
 std::string type_belong_to_player_quest::GetRequirementText()
 {
     return std::string();
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x00572810, 0x06)  // anchor-vtable 0x641968 slot 8, retail-only
 int type_belong_to_player_quest::quest_type()
 {
     return 9;
 }
 
+// E:\gamedcs\seerhut.cpp
 VA(0x00572820, 0x35)  // anchor-vtable 0x641968 slot 11, retail-only
 void type_belong_to_player_quest::Load(TAbstractFile* file, int version)
 {
@@ -561,6 +593,7 @@ void type_belong_to_player_quest::Load(TAbstractFile* file, int version)
 
 // The retail identity is fixed by its 0x13-byte vector stride, two NewfullMap
 // construction callers, and the independently verified cross-build body.
+// E:\gamedcs\seerhut.cpp
 VA(0x00573580, 0x13)
 TSeerHut::TSeerHut()
     : TQuestGuard(0), reward()

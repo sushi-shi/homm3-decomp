@@ -352,6 +352,7 @@ type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window)
 // and the tail loop reloads Widgets.end() every iteration and skips
 // nulls WITHOUT the MemError() arm that adventureoptionswindow's
 // otherwise identical loop carries.
+// E:\gamedcs\bottomviewsubwindow.cpp:197
 VA(0x00451820, 0x1DC)  // anchor-caller (advManager::UpdBottomViewMessage), dc 0x55768
 TBottomViewMessage::TBottomViewMessage(heroWindow* parent,
                                        const std::string* message)

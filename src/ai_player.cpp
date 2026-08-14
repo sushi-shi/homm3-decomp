@@ -87,6 +87,7 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 // the x and y stores 85.8, between y and z 85.8, after all three 93.0,
 // and with the z store moved up 83.5. The hoist retail performs is the
 // allocator's, not a source ordering we can spell.
+// E:\gamedcs\ai_player.cpp:69
 VA(0x00428410, 0x160)  // anchor-global, dc 0x2dc00
 unsigned char can_take_town(const hero* attacking_hero, const town* defending_town)
 {
@@ -218,6 +219,7 @@ long type_AI_player::get_resource_value(int* resources)
 // Static (DC public `?get_attack_bonus@type_AI_player@@SAMF@Z`, S =
 // public static): the retail body reads the short straight out of ECX
 // and never touches a `this`.
+// E:\gamedcs\ai_player.cpp:245
 VA(0x00428710, 0x2D)  // anchor-global, dc 0x2e15c
 float type_AI_player::get_attack_bonus(short player)
 {
@@ -242,6 +244,7 @@ float type_AI_player::get_attack_bonus(short player)
 // final-insertion implementation/register allocation for std::sort plus one
 // growth-add register choice; source-equivalent loop and temporary shapes
 // were measured and this is the stable structure-first plateau.
+// E:\gamedcs\ai_player.cpp:258
 VA(0x00428740, 0x68E)  // linkorder, dc 0x2e188
 void type_AI_player::calculate_demand()
 {
@@ -392,6 +395,7 @@ void type_AI_player::calculate_demand()
 // cursors: this compile merges the cursors into one induction plus a delta,
 // whereas retail keeps both in registers. The player/team checks are the
 // retail inline OnSameTeam form.
+// E:\gamedcs\ai_player.cpp:414
 VA(0x00428dd0, 0x33E)  // linkorder, dc 0x2e7d8
 void type_AI_player::end_turn()
 {
@@ -487,6 +491,7 @@ void type_AI_player::end_turn()
 // broader override probes regress or are byte-inert and were reverted. Other
 // residuals are register permutations in the transfer loops and one
 // deliberately retained retail gate after the human transfer.
+// E:\gamedcs\ai_player.cpp:504
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
 void type_AI_player::make_gift(long player_id)
 {
@@ -663,6 +668,7 @@ void type_AI_player::start_turn()
 // to read, xor-and-xor to write), which is what a plain `for
 // (point.x = 0; ...; point.x++)` over a bitfield compiles to; hoisting
 // them into ints and building the point inside the body does not.
+// E:\gamedcs\ai_player.cpp:664
 VA(0x00429910, 0x195)  // anchor-callee corrected, dc 0x2efc8
 long find_magus_hut_value(long player_id, unsigned char explore_mode)
 {
@@ -714,6 +720,7 @@ void type_AI_player::reset_magus_hut_value()
 // forms were tested; none exceeded this source-equivalent plateau.
 #endif  // @carcass
 
+// E:\gamedcs\ai_player.cpp:752
 VA(0x00429ad0, 0x280)  // anchor-callee, dc 0x2f280
 void type_AI_player::calculate_reserve()
 {

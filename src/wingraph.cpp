@@ -164,6 +164,7 @@ unsigned char GetDesktopInfo()
 // E:\gamedcs\wingraph.cpp:1857
 #endif  // @carcass
 
+// E:\gamedcs\wingraph.cpp:1857
 VA(0x006014c0, 0x6)  // exact load of giDesktopWidth, dc 0x19a41c
 int GetDesktopWidth()
 {
@@ -184,6 +185,7 @@ int GetDesktopHeight()
 // 5-byte tail jmp into the DirectDraw-creating 0x6014f0.
 #endif  // @carcass
 
+// E:\gamedcs\wingraph.cpp:1876
 VA(0x006014e0, 0x5)  // anchor-callee, dc 0x19a42c
 void InitGraphics()
 {

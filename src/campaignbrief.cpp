@@ -94,6 +94,7 @@ void TCampaignBrief::TCampaignBrief(unsigned char newCampaign, unsigned char bVi
 // Retail 0x45ad00. An empty user body is significant: VC6 emits the proven
 // reverse destruction of NewSMapHeader's strings, map, player-slot vectors,
 // and placeholder vector, and inlines the same sequence into ScenarioStruct.
+// E:\gamedcs\campaignbrief.cpp:192
 VA(0x0045ad00, 0x13E)
 NewSMapHeader::~NewSMapHeader()
 {

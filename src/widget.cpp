@@ -49,6 +49,7 @@ VA_COMPGEN(0x005fe3b0, 0x5C, SCALAR_DELETING_DTOR, widget)
 // at 0x5fe410, thiscall with no stack args (`ret`), storing the
 // widget vtable and exactly the five fields below - field_2C first,
 // as the six-argument ctor's initialiser list also does.
+// E:\gamedcs\widget.cpp:106
 VA(0x005fe410, 0x1D)  // anchor-vtable + body, dc 0x196bd4
 widget::widget()
     : field_2C(0)
@@ -116,6 +117,7 @@ void widget::Close()
 // DC's Main has no such guard), the DIMMED_NODRAW fast paths, and the hover tracking via
 // last_hover_widget. Returns: 0 continue, 1 consumed, 2 hover-forward
 // (names unattested).
+// E:\gamedcs\widget.cpp:249
 VA(0x005fe4f0, 0x2C8)  // linkorder bracket; Draw/Dim/process_hover slots and UpdateScreen callee byte-proven, dc 0x196cd0
 int widget::Main(message* msg)
 {
@@ -212,6 +214,7 @@ int widget::Main(message* msg)
 // that shape - zeros first, codeX before codeY, extra after codeY.
 // The sibling house order used by strip's DrawMonster family (zeros,
 // window, id, codeX, codeY) is NOT one of them: it scores 23.6.
+// E:\gamedcs\widget.cpp:477
 VA(0x005fe7c0, 0x40)  // anchor-global, dc 0x196f88
 int widget::send_message(widget::ECommands command, int extra)
 {

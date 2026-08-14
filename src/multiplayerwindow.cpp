@@ -465,6 +465,7 @@ void CHotSeatDlg::CHotSeatDlg()
 // E:\gamedcs\multiplayerwindow.cpp:700
 #endif
 
+// E:\gamedcs\multiplayerwindow.cpp:700
 VA(0x005123d0, 0x4E)  // retail vtable teardown, dc 0x102c28
 CHotSeatDlg::~CHotSeatDlg()
 {
@@ -532,6 +533,7 @@ unsigned char CHotSeatDlg::OnOK()
 
 // E:\gamedcs\multiplayerwindow.cpp:780
 
+// E:\gamedcs\multiplayerwindow.cpp:780
 VA(0x00512530, 0x4)  // retail vtable slot 13, dc 0x102e1c
 textWidget* CHotSeatDlg::GetRolloverWidget()
 {

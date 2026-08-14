@@ -66,6 +66,7 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // helper, and gives three early failures distinct returns where this spelling
 // tail-merges them. Direct set/operator[] spellings and stack-lifetime probes
 // measured the plateau; the exact static destructors remain independent.
+// E:\gamedcs\artifact.cpp:56
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
 unsigned char InitializeArtifactTraitsTable()
 {

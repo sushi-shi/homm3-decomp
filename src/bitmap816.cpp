@@ -42,6 +42,7 @@ void Bitmap816::Bitmap816(const char* name, const char* path, int rbits, int rsh
 // E:\gamedcs\bitmap816.cpp:145
 #endif  // @carcass
 
+// E:\gamedcs\bitmap816.cpp:145
 VA(0x0044f9d0, 0x70)  // anchor-global, dc 0x53ba4
 Bitmap816::~Bitmap816()
 {

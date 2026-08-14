@@ -9,6 +9,7 @@
 // E:\gamedcs\resource.cpp:25
 // A null name marks the free record: type zeroed and the reference
 // count parked at -1.
+// E:\gamedcs\resource.cpp:25
 VA(0x00558720, 0x4E)  // anchor-global, dc 0x120934
 resource::resource(const char* newName, EResourceType newType)
 {

@@ -90,6 +90,7 @@ unsigned char combatManager::AICheckRetreat()
 // already carries. creatureType is loaded ONCE and reused for the
 // arrow-tower gate and the two war-machine gates - writing the member
 // three times is what lets VC6 keep it in EAX across the whole body.
+// E:\gamedcs\ai.cpp:339
 VA(0x0041eac0, 0xB8)  // anchor-global, dc 0x23f2c
 long combatManager::get_total_combat_value(long side, long lowest_attack, long lowest_defense, unsigned char include_cripples) const
 {
@@ -156,6 +157,7 @@ long combatManager::get_total_combat_value(long side, long lowest_attack, long l
 // source assignment order (best army, output value, best hex) is what VC6
 // schedules into retail's best-hex/best-army/output store order with the exact
 // EAX/ECX/EDX colouring. All 38 blocks and all 544 bytes match.
+// E:\gamedcs\ai.cpp:397
 VA(0x0041eb80, 0x220)  // anchor-callee, dc 0x240e4
 long combatManager::choose_shooter_target(const army* current_army, type_AI_combat_parameters* data, long* best_value)
 {
@@ -257,6 +259,7 @@ accept_target:
 // two, burns ESI on the constant, saves it in the prologue and never
 // recovers (94.4 -> 100.0 on the swap alone). The allocator is reading
 // declaration order, not use order.
+// E:\gamedcs\ai.cpp:365
 VA(0x0041eda0, 0xFD)  // anchor-callee, dc 0x2400c
 long get_area_attack_value(const army* current_army, long hex, long our_group, type_AI_combat_parameters* data)
 {
@@ -288,6 +291,7 @@ long get_area_attack_value(const army* current_army, long hex, long our_group, t
 // randomly select among the weakest positive-strength walls. The output is
 // order 9, no movement hex, and the selected wall record's combat hex.
 // This literal transcription matched all 441 bytes on its first paired build.
+// E:\gamedcs\ai.cpp:475
 VA(0x0041eea0, 0x1B9)  // anchor-callee, dc 0x2429c
 unsigned char combatManager::choose_cyclops_action(long best_value, long side, type_AI_combat_parameters* estimate)
 {
@@ -361,6 +365,7 @@ unsigned char combatManager::choose_cyclops_action(long best_value, long side, t
 // retry: the parameters object is built with kills_only set by its own
 // ctor, and when the first pass comes back with a zero best_value the
 // flag is cleared and the whole target scan runs again.
+// E:\gamedcs\ai.cpp:558
 VA(0x0041f060, 0xD1)  // anchor-callee, dc 0x2452c
 void combatManager::choose_shooter_action(const army* current_army, unsigned char simulated, long side)
 {
@@ -448,6 +453,7 @@ static long get_move_order(const army* current_army)
 // `t = order[j]; order[j] = order[i]; order[i] = t` reverses the store
 // order, re-loads `_First` in the middle, and re-colours ESI/EDI and
 // ECX/EDX across the WHOLE partition loop - 94.44% instead of exact.
+// E:\gamedcs\ai.cpp:633
 VA(0x0041f140, 0x23F)  // anchor-global, dc 0x24694
 void combatManager::find_move_order(std::vector<army*>* result)
 {
@@ -533,6 +539,7 @@ long get_attack_value(const army* current_army, const army* enemy, long enemy_hi
 // same three-field predicate above, leaving this proven out-of-line body and
 // its only retail call intact.
 #pragma auto_inline(off)
+// E:\gamedcs\Army.h:840
 VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
 unsigned char army::IsIncapacitated()
 {
@@ -566,6 +573,7 @@ unsigned char army::IsIncapacitated()
 // our_hits (90.8), hoisting the armies row first (82.4), and swapping
 // the two get_total_hit_points declarations (79.6). Symmetric-
 // enregistered-parameter tie-break; capped.
+// E:\gamedcs\ai.cpp:731
 VA(0x0041f3b0, 0x1C2)  // linkorder, dc 0x24a34
 long combatManager::get_attack_change(const army* current_army, const army* enemy, const type_AI_combat_parameters* data)
 {
@@ -656,6 +664,7 @@ long combatManager::get_attack_change(const army* current_army, const army* enem
 // operand takes the fresh -0x1c home, while the explicit copy of the
 // referenced second operand coalesces with best_danger's recycled +0xc
 // argument slot. That final home assignment makes all 772 bytes exact.
+// E:\gamedcs\ai.cpp:779
 VA(0x0041f580, 0x304)  // linkorder, dc 0x24b64
 unsigned char combatManager::move_toward(const army* current_army, long target_hex, const long* enemy_attacks, unsigned char consider_waiting)
 {
@@ -756,6 +765,7 @@ unsigned char combatManager::move_toward(const army* current_army, long target_h
 // known zero on that path, so VC6 reuses the AL it tested. The two
 // Orb-of-Inhibition tests are written out per side rather than looped -
 // retail emits the pair straight-line with no induction variable.
+// E:\gamedcs\ai.cpp:897
 VA(0x0041f890, 0x8F)  // anchor-global, dc 0x24e5c
 unsigned char combatManager::can_cast_spells(long side, unsigned char hero_spell)
 {
@@ -811,6 +821,7 @@ unsigned char combatManager::can_cast_spells(long side, unsigned char hero_spell
 // folded to 1, which is why the magic-terrain arm of that function has
 // no trace in these bytes and the out-of-line body at 0x41f890 still
 // exists (extern linkage emits unconditionally).
+// E:\gamedcs\ai.cpp:926
 VA(0x0041f920, 0x234)  // linkorder, dc 0x24ef4
 long combatManager::get_area_effect(long side, const army* our_army, long marked_enemies, const type_AI_combat_parameters* estimate)
 {
@@ -886,6 +897,7 @@ long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameter
 // The direction walk runs BACKWARD - `for (long dir = count; dir-- > 0;)`,
 // the same shape ai_combat's resurrection scan carries - and count is 8
 // for a two-hex friend, 6 otherwise.
+// E:\gamedcs\ai.cpp:1014
 VA(0x0041fb60, 0x1F6)  // linkorder, dc 0x25124
 void combatManager::mark_friendly_armies(const army* our_army, long* enemy_attacks, long marked_enemies, const type_AI_combat_parameters* estimate)
 {
@@ -1026,6 +1038,7 @@ static void find_attack_hexes(const army* our_army, const army* enemy, const sea
 // direction walk, both marks and the danger arithmetic - is
 // instruction-for-instruction identical apart from one EDX/ECX tie on
 // the `facing ? 1 : -1` temp.
+// E:\gamedcs\ai.cpp:1152
 VA(0x0041fd60, 0x2F6)  // anchor-callee, dc 0x2544c
 void combatManager::mark_multiheaded_enemy(const army* our_army, const army* enemy, long* enemy_attacks, long limit_value, searchArray* search_array, type_AI_combat_parameters* estimate)
 {
@@ -1110,6 +1123,7 @@ void combatManager::mark_multiheaded_enemy(const army* our_army, const army* ene
 // flat-vs-mangled reloc names of the same STL COMDATs.
 #endif  // @carcass
 
+// E:\gamedcs\ai.cpp:1097
 VA(0x00420060, 0x1FB)  // anchor-callee, dc 0x25308
 void find_attack_hexes(const army* our_army, long target_hex, long start, long stop, long limit_cost, const searchArray* search_array, std::vector<long>* result)
 {
@@ -1138,6 +1152,7 @@ void find_attack_hexes(const army* our_army, long target_hex, long start, long s
 // the exchange would cost us, floored at minus our own worth. The
 // two-hex tail sweep adds the cells whose partner hex the stack would
 // occupy - skipping the moat, which it would be stopped in.
+// E:\gamedcs\ai.cpp:1241
 VA(0x00420260, 0x368)  // linkorder, dc 0x256a0
 void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks, long* dangerous_enemies, type_AI_combat_parameters* estimate)
 {
@@ -1253,6 +1268,7 @@ void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks
 // `long contact = 1;` with a single `contact = 2` arm (78.6, the wrong
 // branch shape), and the `if (cell) cell += hex;` accessor spelling
 // choose_to_run uses (80.9 - retail wants getCellData's ternary here).
+// E:\gamedcs\ai.cpp:1357
 VA(0x004205d0, 0x185)  // linkorder, dc 0x25998
 unsigned char combatManager::choose_defense_hex(const army* current_army, const army* client, long* best_hex, long* open_hexes, searchArray* search_array)
 {
@@ -1320,6 +1336,7 @@ unsigned char combatManager::choose_defense_hex(const army* current_army, const 
 // call wrote, whichever shooter that was - against the mover's own grid
 // index, and then moves toward [ebp-0x1c], the saved best. The two are the
 // same value only when the winning shooter was also the last one scanned.
+// E:\gamedcs\ai.cpp:1445
 VA(0x00420760, 0x187)  // linkorder, dc 0x25b0c
 unsigned char combatManager::attempt_shooter_defense(const army* current_army, searchArray* search_array, const type_AI_combat_parameters* estimate)
 {
@@ -1379,6 +1396,7 @@ unsigned char combatManager::attempt_shooter_defense(const army* current_army, s
 // both occupied cells; immobile/disabled stacks and low-difficulty human
 // sides never run. The cellData null arm deliberately mirrors retail's
 // inline accessor, which returns null and is immediately dereferenced.
+// E:\gamedcs\ai.cpp:1513
 VA(0x004208f0, 0x184)  // linkorder, dc 0x25c80
 unsigned char combatManager::choose_to_run(const army* our_army, const long* enemy_attacks, const searchArray* search_array)
 {
@@ -1461,6 +1479,7 @@ unsigned char combatManager::choose_to_run(const army* our_army, const long* ene
 // InitializeArchers fills at +0x13d78 for the same two fortification
 // tiers. CalcNumLevelArchers' second out-parameter (the archer LEVEL)
 // is filled here and never read.
+// E:\gamedcs\ai.cpp:1572
 VA(0x00420a80, 0x264)  // anchor-callee, dc 0x25df8
 unsigned char combatManager::has_ranged_advantage(type_AI_combat_parameters* data)
 {
@@ -1570,6 +1589,7 @@ unsigned char combatManager::has_ranged_advantage(type_AI_combat_parameters* dat
 // - semantically identical, 88.52 against 95.89. Retail's loop head is
 // `mov ecx,edi / dec edi / test ecx,ecx`, i.e. it tests the value BEFORE
 // the decrement, which is the `i-- > 0` form and not the `i >= 0` one.
+// E:\gamedcs\ai.cpp:1635
 VA(0x00420d20, 0x1D5)  // anchor-callee, dc 0x2600c
 unsigned char combatManager::choose_creature_spell(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
 {
@@ -1647,6 +1667,7 @@ unsigned char combatManager::choose_creature_spell(const army* current_army, lon
 // arms in st(0). The single `__ftol` is what forces the ternary
 // spelling - two `static_cast<long>` arms emit two conversions, which
 // retail does not have.
+// E:\gamedcs\ai.cpp:1694
 VA(0x00421000, 0x275)  // anchor-callee, dc 0x26140
 unsigned char combatManager::choose_resurrect_action(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
 {
@@ -1729,6 +1750,7 @@ unsigned char combatManager::choose_resurrect_action(const army* current_army, l
 // The four gates after bCreaturePlacement are can_cast_spells(side, 0)
 // INLINED with hero_spell folded to 0, which is why the spellbook arm
 // leaves no trace and `side` itself is never loaded.
+// E:\gamedcs\ai.cpp:1794
 VA(0x00421280, 0x166)  // anchor-callee, dc 0x26464
 unsigned char combatManager::choose_spell_action(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
 {
@@ -1779,6 +1801,7 @@ unsigned char combatManager::choose_spell_action(const army* current_army, long*
 // eight-row table. The bytes say so unambiguously - `lea eax,[eax+
 // 2*eax]; lea eax,[4*eax + 0x63be60]` on the same register the
 // wallStrength load just used - so it is transcribed as written.
+// E:\gamedcs\ai.cpp:1822
 VA(0x004213f0, 0xF5)  // anchor-callee, dc 0x264fc
 unsigned char combatManager::should_stay_in_castle(type_AI_combat_parameters* estimate)
 {
@@ -1837,6 +1860,7 @@ unsigned char combatManager::should_stay_in_castle(type_AI_combat_parameters* es
 // estimate->lowest_attack and estimate->lowest_defense is never read.
 // Every other caller of get_loss_combat_value in this tree passes the
 // pair. Transcribed as found.
+// E:\gamedcs\ai.cpp:1866
 VA(0x004214f0, 0x94)  // anchor-callee, dc 0x26600
 void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks, type_AI_combat_parameters* estimate)
 {
@@ -1936,6 +1960,7 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
 //     literal 0 - findpath.h's get_cell spells its own null arm exactly
 //     that way (`if (!cellData) return cellData;`), and the literal
 //     forces VC6 to materialise a fresh zero and duplicate the load.
+// E:\gamedcs\ai.cpp:1896
 VA(0x00421680, 0x8F9)  // linkorder, dc 0x266d4
 unsigned char combatManager::choose_melee_target(const army* current_army, unsigned char teleport, long* action_value, type_AI_combat_parameters* estimate)
 {
@@ -2198,6 +2223,7 @@ commit:
 // The `side` parameter slot is reused as the out-parameter both
 // choosers write through, which is why retail zeroes [ebp+0x14] after
 // the last read of `side` and returns it from two of the three exits.
+// E:\gamedcs\ai.cpp:2159
 VA(0x00421f80, 0xD5)  // anchor-callee, dc 0x26ee0
 long combatManager::choose_melee_action(const army* current_army, unsigned char teleport, unsigned char simulated, long side)
 {
@@ -2271,6 +2297,7 @@ long combatManager::choose_melee_action(const army* current_army, unsigned char 
 // roster order and merging the three wait exits raised 80.57 -> 82.49.
 // Nesting the positive gates aligns every branch target but scores 82.21;
 // spelling the last normal arm explicitly scores 81.29. Both were rejected.
+// E:\gamedcs\ai.cpp:2187
 VA(0x00422060, 0x18E)  // anchor-callee, dc 0x26fa8
 void combatManager::place_shooter(const army* current_army)
 {
@@ -2351,6 +2378,7 @@ wait:
 // mask twice by hand (`& 0xffu & 1`) is strictly WORSE (87.8) because
 // VC6 then drops the `not` shape entirely, and `% 2` in place of `& 1`
 // is worse again (81.4). Filed with the compiler-generation class.
+// E:\gamedcs\ai.cpp:2272
 VA(0x004221f0, 0xD0)  // anchor-callee, dc 0x27138
 void combatManager::DoCompAI(int whichGroup)
 {
@@ -2407,6 +2435,7 @@ void combatManager::DoCompAI(int whichGroup)
 // again and lands in ESI exactly as retail has it). The rule is
 // general - lever 8's "call the inline accessor" only works when the
 // accessor is visible in the SAME TU.
+// E:\gamedcs\ai.cpp:2313
 VA(0x004222c0, 0x175)  // anchor-callee, dc 0x27200
 void combatManager::berserk_attack(army* current_army, const army* target)
 {
@@ -2455,6 +2484,7 @@ void combatManager::berserk_attack(army* current_army, const army* target)
 // reference-returning _cpp_min is what puts the chosen operand's
 // ADDRESS in EDI: retail homes both operands in the (now dead)
 // argument slots and selects between the two LEAs.
+// E:\gamedcs\ai.cpp:2372
 VA(0x00422440, 0x99)  // anchor-global, dc 0x27318
 long combatManager::compute_fire_shield_damage(long damage, const army* attacker, const army* target, long target_hits)
 {

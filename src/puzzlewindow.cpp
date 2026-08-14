@@ -36,6 +36,7 @@ static Bitmap816* get_puzzle_bitmap(long puzzle, long piece)
 // the inlined get_puzzle_bitmap helper are exact. Tried and rejected:
 // staging the text/prefix pointers (93.619%) and spelling the bitmap loop
 // directly instead of through its single-call helper (95.361%).
+// E:\gamedcs\puzzlewindow.cpp:115
 VA(0x0052c1e0, 0x388)  // puzzle.pcx anchor + vtable + complete widget graph, dc 0x114f40
 TPuzzleWindow::TPuzzleWindow(int puzzlenum)
     : CAdvPopup(0, 0, 800, 600, 0)
@@ -191,6 +192,7 @@ void type_AI_puzzle_tile::type_AI_puzzle_tile()
 // Residual (98.843%): the object_type bitfield assignment uses EAX where
 // retail preserves EAX and merges through EDX. Signed-enum, unsigned, and
 // chained-call spellings were equal or worse; all other instructions match.
+// E:\gamedcs\puzzlewindow.cpp:294
 VA(0x0052c770, 0x140)  // link-order + cell/object callees, dc 0x115538
 type_AI_puzzle_tile::type_AI_puzzle_tile(NewmapCell* cell, type_point point)
 {
@@ -312,6 +314,7 @@ type_point match_puzzle(__$ReturnUdt, long player, []* puzzle_map)
 // mark_puzzle before calling the separate 0x52cf10 match_puzzle. Reconstruct
 // those helper semantics and the remaining game-field names first; retaining
 // a zero-match body here would add no evidence.
+// E:\gamedcs\puzzlewindow.cpp:614
 VA(0x0052c9b0, 0x55B)  // anchor-caller, dc 0x115f64
 type_point AI_attempt_puzzle_guess(long player)
 {

@@ -250,6 +250,7 @@ int combatManager::DrawSpriteObject(const CSprite* sprite, int frame, int x, int
 // instead takes no arguments, tests the shown byte of exactly two hero
 // panels and four creature panels, and draws each visible panel. That body
 // identity independently corrects the shifted proposal.
+// E:\gamedcs\drawing.cpp:1865
 VA(0x00495650, 0xD9)  // body-identified, dc 0x85f1c
 int combatManager::DrawCreatureAndHeroSubwindows()
 {

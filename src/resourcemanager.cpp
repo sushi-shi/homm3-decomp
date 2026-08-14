@@ -133,6 +133,7 @@ TTextResource* ResourceManager::GetText(const char* name)
 // spellings were measured; the VC6 v2 solver classifies the closest result as
 // a non-source-nameable C1 handle-state cap. A 0..8 unused-type population
 // sweep on 2026-08-11 was byte-flat, ruling out the include-sensitivity lever.
+// E:\gamedcs\resourcemanager.cpp:2397
 VA(0x005594b0, 0x40)  // anchor-callee/body-twin, dc 0x122984
 void ResourceManager::AddToCache(resource* value)
 {
@@ -151,6 +152,7 @@ void ResourceManager::AddToCache(resource* value)
 // reuse them for the insertion pair; the remaining fourteen scratch-register
 // scheduling slots are the same model-capped C1 class as AddToCache; the same
 // 0..8 unused-type population sweep was byte-flat.
+// E:\gamedcs\resourcemanager.cpp:1461
 VA(0x0055c0a0, 0x8A)  // anchor-callee, dc 0x122164
 TSpreadsheetResource* ResourceManager::GetSpreadsheet(const char* name)
 {

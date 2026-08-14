@@ -103,6 +103,7 @@ static unsigned char find_flyer_attack_cell(const army* self, long start,
     return 0;
 }
 
+// E:\gamedcs\fly.cpp:76
 VA(0x004b46c0, 0x2F9)  // simple_move call + ordered fly block, dc 0xa1430
 unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest)
 {
@@ -145,6 +146,7 @@ unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest)
 // Exact (118/118). The stand animation is unconditional: only the corrective
 // turn is gated by a facing change and restore_facing. That retail CFG also
 // determines the destination/old-facing EBX/EDI allocation.
+// E:\gamedcs\fly.cpp:114
 VA(0x004b49c0, 0x76)  // ordered successor + call to Fly, dc 0xa1514
 int army::FlyTo(int destIndex, unsigned char restore_facing)
 {
@@ -231,6 +233,7 @@ int army::FlyTo(int destIndex, unsigned char restore_facing)
 // the five headers that follow it, to approximate struct.h's place in
 // retail's type-handle numbering (no movement at all, 85.9145 both
 // ways - so this is NOT the include-set class).
+// E:\gamedcs\fly.cpp:147
 VA(0x004b4a40, 0x44E)  // FlyTo call + ordered fly block, dc 0xa1590
 int army::Fly(int destIndex)
 {
@@ -352,6 +355,7 @@ int army::Fly(int destIndex)
 
 // E:\gamedcs\fly.cpp:300
 // Exact (118/118), with the same unconditional stand-animation CFG as FlyTo.
+// E:\gamedcs\fly.cpp:300
 VA(0x004b4e90, 0x76)  // ordered successor + call to Teleport, dc 0xa19a0
 int army::TeleportTo(int destIndex, unsigned char restore_facing)
 {

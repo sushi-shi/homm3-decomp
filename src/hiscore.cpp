@@ -9,6 +9,7 @@
 // Located as the sole vtable-0x63eb8c constructor in the retail
 // hillfortwindow..iconwdgt bracket.  Its base call and the +0x8d0 store
 // prove both inheritance and the modeled tail field.
+// E:\gamedcs\hiscore.cpp:637
 VA(0x004e9070, 0x1C)  // vtable-store, dc 0xd7acc
 highScoreManager::highScoreManager()
 {
@@ -17,6 +18,7 @@ highScoreManager::highScoreManager()
 
 // The retail body is only the derived-vtable restore: baseManager has no
 // destructor and the opaque score table contains no constructed members.
+// E:\gamedcs\hiscore.cpp:648
 VA(0x004e9090, 0x07)  // vtable-store, dc 0xd7b08
 highScoreManager::~highScoreManager()
 {
@@ -24,6 +26,7 @@ highScoreManager::~highScoreManager()
 
 // The body owns its widget purge; the empty CHeroWindowEx layer then
 // collapses directly into ~heroWindow, as retail.
+// E:\gamedcs\hiscore.cpp:329
 VA(0x004e9740, 0x4E)  // vtable-store, dc 0xd914c
 CHSInputDlg::~CHSInputDlg()
 {
@@ -32,6 +35,7 @@ CHSInputDlg::~CHSInputDlg()
 
 // Slot 12 of vtable 0x63ebbc.  Retail tests FIELD1_ID's active bit and,
 // only while active, rejects an empty edit string before ending the dialog.
+// E:\gamedcs\hiscore.cpp:334
 VA(0x004e9790, 0x53)  // vtable-slot, dc 0xd9190
 int CHSInputDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 {
@@ -48,6 +52,7 @@ int CHSInputDlg::OnWidgetDeselect(int id, unsigned char* bExitFlag)
 
 // Slot 13 of vtable 0x63ebbc.  The single +0x58 load also corroborates
 // the retail-shifted DC field list recorded in hiscore.h.
+// E:\gamedcs\hiscore.cpp:369
 VA(0x004e97f0, 0x04)  // vtable-slot, dc 0xd9204
 textWidget* CHSInputDlg::GetRolloverWidget()
 {
@@ -62,6 +67,7 @@ VA_COMPGEN(0x004e9d90, 0x21, SCALAR_DELETING_DTOR, THighScoreWindow)
 
 // Retail disposes the two captured backgrounds in reverse array order,
 // purges the owned widgets, then runs heroWindow's base destructor.
+// E:\gamedcs\hiscore.cpp:953
 VA(0x004e9dc0, 0x81)  // vtable-store, dc 0xd8424
 THighScoreWindow::~THighScoreWindow()
 {

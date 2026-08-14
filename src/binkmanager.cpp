@@ -37,6 +37,7 @@ void BinkManager::DrawCurrentBinkFrame()
 // E:\gamedcs\binkmanager.cpp:232
 #endif  // @carcass
 
+// E:\gamedcs\binkmanager.cpp:232
 VA(0x0044da50, 0x4D)  // caller role + body + source order, dc 0x50a8c
 void BinkManager::RestartBink()
 {

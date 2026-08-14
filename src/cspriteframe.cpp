@@ -254,6 +254,7 @@ unsigned char std::_Integer_limits<unsigned char,0,255,-1>::max()
 // two importing constructors, while Dreamcast appends it to the TU.
 VA_COMPGEN(0x0047c280, 0x21, SCALAR_DELETING_DTOR, CSpriteFrame)
 
+// E:\gamedcs\cspriteframe.cpp:202
 VA(0x0047c430, 0x22)  // vtable 0x63d6bc + resource::~resource
 CSpriteFrame::~CSpriteFrame()
 {

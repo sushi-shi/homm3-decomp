@@ -97,6 +97,7 @@ void VideoSoundOnOff()
 // `gBinkX << 1`, and `(unsigned char*)(screenBitmap->map + gBinkX) +
 // Pitch*gBinkY` (the unsigned-short-index form that supplies the
 // scale as pointer arithmetic). CL-generation-capped.
+// E:\gamedcs\smackmgr.cpp:105
 VA(0x005971f0, 0xD9)  // anchor-global, dc 0x14ac34
 void VideoRealignBuffers()
 {
@@ -147,6 +148,7 @@ void VideoRealignBuffers()
 // aborted (byte-identical), split `int vw; int vh;` (identical),
 // int[2] and plain int locals for the origin (earlier lane). `vh = h`
 // before `vw = w` is worth +0.03 and is the form kept.
+// E:\gamedcs\smackmgr.cpp:130
 VA(0x005972d0, 0x29D)  // anchor-global, dc 0x14ac38
 int VideoPlay(int id, int x, int y, int w, int h)
 {
@@ -233,6 +235,7 @@ stop_playback:
 // E:\gamedcs\smackmgr.cpp:143
 // DC's stub is a plain void(); retail forwards eight arguments to
 // ShowVideo (the bink arm drops the last one).
+// E:\gamedcs\smackmgr.cpp:143
 VA(0x00597570, 0x75)  // anchor-global, dc 0x14ac3c
 void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 {
@@ -274,6 +277,7 @@ void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 // nonzero from `dec eax`, and neither `continue`, an explicit `goto
 // top_of_drain`, nor dropping the local mirror for the bare global
 // (95.85%) stops the propagation. NOT source-addressable.
+// E:\gamedcs\smackmgr.cpp:156
 VA(0x005975f0, 0xE1)  // anchor-global, dc 0x14ac40
 void VideoClose()
 {
@@ -441,6 +445,7 @@ unsigned char VideoPlaying()
 // the first-rect assignment orders moved it 89.36 -> 89.63 and `x, y,
 // w, h` is the measured optimum (h,w,x,y and x,h,w,y are the worst at
 // 89.35).
+// E:\gamedcs\smackmgr.cpp:328
 VA(0x005979d0, 0x294)  // anchor-global, dc 0x14ac60
 void VideoDrawRects()
 {
