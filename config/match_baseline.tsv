@@ -1262,6 +1262,7 @@ recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
 recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376	90.8376	90.8376	0x1503a0
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360
+remote	?CheckForWarning@CTurnDuration@@QAEXXZ	97.0930	97.0930	97.0930	0x157af0
 remote	?Clear@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157d60
 remote	?ClearChat@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1540b0
 remote	?HasOldChat@CChatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x153db0
@@ -1278,8 +1279,7 @@ remote	?SetMaxLines@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x1540d0
 remote	?SetPosition@CChatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x154170
 remote	?Start@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157d90
 remote	?UpdateWidget@CChatManager@@QAEXPAVtextWidget@@EH@Z	100.0000	100.0000	100.0000	0x153d00
-remote	CChatManager_UpdateWidgetText	0.0000	0.0000	0.0000	0x153ee0
-remote	CTurnDuration_CheckForWarning	0.0000	0.0000	0.0000	0x157af0
+remote	?UpdateWidgetText@CChatManager@@QAEXHPAVtextWidget@@@Z	100.0000	100.0000	100.0000	0x153ee0
 resource	??0resource@@QAE@PBDW4EResourceType@@@Z	100.0000	100.0000	100.0000	0x158720
 resource	??1resource@@UAE@XZ	100.0000	100.0000	100.0000	0x1587a0
 resource	??_Gresource@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x158770
