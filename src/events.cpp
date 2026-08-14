@@ -2510,6 +2510,41 @@ refuse:
     }
 }
 
+// E:\gamedcs\events.cpp:6007.  Retires a hero from the adventure map -
+// combat loss, whirlpool, or any other vanishing - and then asks whether
+// that loss ends the game.
+//
+// The owner byte is READ INTO A LOCAL before Deallocate runs and only
+// spent afterwards, because the hero record does not survive the call;
+// that ordering is what puts it in a frame slot rather than a register
+// rematerialization.
+//
+// The whole fizzle is FizzleCenter (0x4acbb0) inlined - its own body sits
+// further down this file and is emitted anyway because the function has
+// external linkage, but this is its only call site, so /Ob2 expands it
+// here as well. That is also why the gCompleteDrawEnabled gate and the
+// sound switch appear inside this body rather than behind a call.
+VA(0x004ac930, 0x163)  // anchor-callee (ai_combat adjust_army), dc 0x9b3b4
+void advManager::HeroLoses(hero* who, int vanish_sound)
+{
+    if (!who)
+        return;
+
+    CompleteDraw(false);
+    UpdateScreen(0, 0);
+
+    int owner = who->owner;
+    who->Deallocate(1, 0);
+    FizzleCenter(vanish_sound);
+
+    UpdateRadar(1, 1, 0, 0, 0);
+    advWindow->UpdateHeroLocators(-1, 1, 1);
+    if (gpGame->mapHeader.lossCondition.HeroKilled(who)) {
+        gpGame->mapHeader.lossCondition.playerLoser = owner;
+        CheckEndGame(0);
+    }
+}
+
 // E:\gamedcs\events.cpp:6076.  The pickup/vanish flash over the centre
 // of the adventure map: pick the sample by kind, play it, and fizzle the
 // 224x224 block at (192,160) forward over 65 frames with the pointer

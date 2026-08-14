@@ -482,6 +482,14 @@ public:
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
     long get_equipped_artifacts(unsigned char countWarMachines);
     long get_number_in_backpack(unsigned char countWarMachines);
+#ifdef HOMM3_EVENTS_VIEW
+    // 0x4d9ec0, hero.cpp:1732. Retires the hero from the map: retail's
+    // advManager::HeroLoses (0x4ac930) calls it THISCALL with both flags
+    // on the stack, which is what fixes it as a member rather than a
+    // /Gr free helper, and saves the owner byte into a frame slot first
+    // because the record does not survive the call.
+    void Deallocate(unsigned char bGameLoaded, unsigned char remote_move);
+#endif
     // 0x4e2370 - retypes every matching slot of the hero's own army.
     void UpgradeCreatures(int sourceCreatureType, int destCreatureType);
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads
