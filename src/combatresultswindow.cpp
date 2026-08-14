@@ -80,6 +80,21 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 // narrated hero - inverts the branch (0.16%). Not tried, and the only
 // remaining lead: shaving one scalar temp so the frame is 0x1cc, which is
 // what the /Ob2 budget and the whole homing pattern hang off.
+//
+// 2026-08-14, from the two ctors closed in this family: the /Ob2 direction
+// here is REDUCE front-end statement mass (the over-inline of size() says
+// our caller_cb exceeds retail's), which is the opposite of
+// systemoptionswindow's starved ctor and the same direction that took
+// TCombatOptionsWindow's ctor 77.12 -> 98.47. The lever that worked there
+// was extracting real Dreamcast-attested helper members - this compiland's
+// DC roster has none, so the mass has to come off some other way. The other
+// lever that worked there, choosing retail's LOOP VARIABLE (retail's inner
+// loss loop homes `row`, `rowX` and `shown` and tests `row < shown`, which
+// this body already spells), does NOT apply: retail's third value is absent
+// because it had no free register, not because it spelled the subtraction
+// differently. Retail also recycles DEAD PARAMETER SLOTS ([ebp+0x14] for
+// `row`, [ebp+0x1c] for `rowX`) - the `[ebp-]/[ebp+]` swap above is that,
+// and it follows the frame size rather than leading it.
 VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
 TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     const hero* defender, int my_side, int winning_side,
