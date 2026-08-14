@@ -1491,11 +1491,26 @@ unsigned char is_valid_caliph_spell(SpellID spell, const army* target)
 }
 
 // E:\gamedcs\army.cpp:5546
-// RETAIL_LOCATED(0x00447eb0, 0x21)  // anchor-global, dc 0x4c374
-long army::get_valid_caliph_spells(const army* target)
+// The DC row army::get_valid_caliph_spells has NO retail slot in this
+// run: 0x447eb0 is is_valid_caliph_spell (claimed below, see army.h for
+// the refutation) and 0x447a80 is the retail-only shared worker.
+#endif  // @carcass
+
+// The caliph-spell gate: a spell the Genie may cast has bit 11 of its
+// traits flags, and everything else about validity is the shared
+// worker's business. Retail TAIL-JUMPS to that worker - `jmp` after the
+// `pop esi`, with both fastcall registers already in place - which is
+// what `return <worker>(spell, target);` compiles to when the argument
+// registers already hold the forwarded values.
+VA(0x00447eb0, 0x21)  // anchor-callee (cross-build callsite), dc 0x4c210
+unsigned char is_valid_caliph_spell(int spell, const army* target)
 {
-    // @stub
+    if (!(akSpellTraits[spell].field_c & 0x800))
+        return 0;
+    return spell_is_valid_on_target(spell, target);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:5564
 // RETAIL_LOCATED(0x00447ee0, 0xF8)  // dc-callgraph unique, dc 0x4c3ac
