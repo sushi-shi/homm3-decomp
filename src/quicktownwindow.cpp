@@ -99,6 +99,22 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
             int* silo_income = thisTown->get_silo_income();
             // Retail stores the integer resource sprite frames directly;
             // Dreamcast's EGameResource[3] is layout-equivalent here.
+            // Residual note (2026-08-14) for this scan, blocks B37-B39 of the
+            // constructor's 6 differing blocks: retail runs THREE induction
+            // values - the index in ECX (it addresses the source as
+            // `cmp [eax+4*ecx],0`, i.e. it does NOT strength-reduce
+            // silo_income), the destination pointer in EDX, and the count in
+            // EDI. We run FOUR: VC6 additionally strength-reduces
+            // silo_income[current] into a walking pointer in EAX and compares
+            // `[eax]`. This is the TPalette24 "which side gets indexed" family
+            // with the roles mirrored, but no source spelling reaches it here.
+            // Byte-flat at 96.3088: this form, `!= 0` spelled out, the store
+            // and increment split, `current` declared outside the for, and the
+            // while form. Strictly worse: a destination pointer walk 95.3088,
+            // the same with a separate count 95.6070, and `< GOLD + 1` as the
+            // bound 95.4737. Constructor block B4 is separately the
+            // vector<T*>::_Destroy under-expansion characterised in
+            // mainmenu.cpp.
             int resource[3];
             int resource_count = 0;
             for (int current = WOOD; current <= GOLD; current++) {
