@@ -130,6 +130,17 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
     // constant, so C1 folds the expansion before the /Ob2 inliner counts it -
     // no divisor site, no front-end mass. See mainmenu.cpp for the general
     // rule; the ~24 real statements this constructor wants are still missing.
+    // 2026-08-14, the DC LOCAL census (S_REGREL32 after S_ENDARG, dc 0xe8344)
+    // is the other half of that hunt and it finds exactly ONE local here:
+    // `bb` at sp+0x34, CodeView type 0x1EFE = `bitmapBorder*`. So retail
+    // reuses a single border pointer where this body names `background` and
+    // `portrait` separately. Spelling retail's single reused `bb` is byte-
+    // EXACTLY flat at 98.8241 - consistent with the reused-`widget* w` row
+    // above being a NESTING loss rather than a naming one - so the count of
+    // named locals is not the missing mass either. Note also what the census
+    // does NOT list: every other widget pointer in this body is register-
+    // allocated in the DC build, so the census is a LOWER bound on retail's
+    // locals and cannot be read as "retail declared only one".
     Widgets.reserve(25);
 
     gpLevelUpWindow = this;

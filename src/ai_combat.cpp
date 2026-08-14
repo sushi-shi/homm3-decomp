@@ -1423,6 +1423,18 @@ void create_skeletons(const hero* current_hero, const armyGroup* dead_army, army
 // 79.7256). Register hints, named defender aliases, declaration order and a
 // bottom-tested loop are byte-inert; a separate inline do_eagle_eye helper
 // regresses to 70.8963.
+// 2026-08-14, the DC LOCAL census (dc 0x2be54) names retail's two
+// function-scope locals and their declaration ORDER: `defender_troop_count`
+// (T_SHORT, sp+0x16) FIRST, then `retreated` (T_UCHAR, sp+0x17) - which is
+// this body's `surrendered`. That is the shape the two scheduling slots above
+// want: a short bound off `defender` declared ahead of the flag is what puts
+// `mov edi,[ebp+0x8]` in front of the flag's zero store. It is NOT actionable
+// as it stands, and the reason is worth recording so the row is not
+// re-opened: retail's x86 body has no second stack local at all - instruction
+// counts are EQUAL at 164 and [ebp-1] is the only byte-sized frame slot - so
+// on this build the troop count was folded into a value already computed. The
+// census is Dreamcast-side evidence for the declaration ORDER only; adding a
+// real short here adds code retail does not have.
 VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
 void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, const town* enemy_town)
 {

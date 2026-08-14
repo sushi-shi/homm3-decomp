@@ -421,6 +421,76 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 // two constructors whose wall is priced in caller mass, IT FOUND NOTHING -
 // both censuses match ours once the platform delta is subtracted, so their
 // ~20 missing statements are still unaccounted for.
+//
+// THE UDT-RETURN SCREEN IS EXHAUSTED IN THESE LANES (2026-08-14, run as its
+// own lane over every non-exact function reachable from here). Method: pull
+// every DC function carrying a `__$ReturnUdt` frame slot (136 of them, one
+// awk over the dump's S_REGREL32 records) UNION every S_PUB32 whose mangled
+// return type is `?A[VUT]` (129) = 138 distinct offsets; intersect that set
+// with the census `dst_offset` of each plateau's `dc 0x` body.
+//   50 non-exact functions owned, 49 with a `dc 0x` body map, 45 with at
+//   least one census row, 10 UDT-return rows over 5 distinct callees:
+//     `format_string` (misc.obj, `std::string format_string(const char*,...)`)
+//       x8 get_morale_description, x4 get_luck_description, x3 make_gift,
+//       x1 end_turn, x1 ??0TQuickHeroWindow
+//     `hero::get_morale_description` x1, `hero::get_luck_description` x1
+//     `inputManager::GetEvent` (`?AUmessage@@`) x1 button::Main, x1 slider::Main
+//     `std::map<TCacheMapKey,resource*>::insert` x1 ResourceManager::AddToCache
+//   EVERY ONE IS ALREADY SPELLED AT THE MATCHING COUNT. Zero builds spent,
+//   zero conversions. `town::get_location` really was the last one here.
+// So the screen is CHEAP AND SHARP but its supply in these lanes is spent;
+// re-run it after any new TU lands, not against this roster.
+//
+// TWO MORE ORACLES IN THE SAME DUMP, both new here and both worth more than
+// the call census because they are FRAME-shaped rather than inliner-shaped:
+//
+//   (1) THE STATEMENT CENSUS - `*** SRCLINES ***`. Every DC module carries
+//   file/line -> address pairs. Slice them by a function's [dc, dc+Cb) and
+//   you get the EXACT source-line count of retail's body, plus which HEADER
+//   lines were inlined into it (the call census cannot see inlined-away
+//   callees; this can). Calibrated on the 249 exact functions in these lanes:
+//   median (our statement lines / DC code lines) = 1.000. That turns the /Ob2
+//   MASS axis from titration into measurement - levelupwindow's ctor is 49 DC
+//   lines, systemoptionswindow's 89, combatresultswindow's 122. The line
+//   lists are monotonic in address, so it is a source-LAYOUT oracle only, not
+//   a scheduling one.
+//
+//   (2) THE LOCAL-VARIABLE CENSUS - the S_REGREL32 records AFTER S_ENDARG,
+//   walked to the proc's matching S_END so nested S_BLOCK32 scopes are
+//   included. It NAMES retail's source locals, with stack offset, scope and
+//   CodeView type. 22 of these 50 have at least one. It is what proved
+//   `bitmapBorder* bb` in ??0TLevelUpWindow (one reused pointer where we name
+//   two - measured byte-EXACTLY flat at 98.8241, do not re-spend) and
+//   `short defender_troop_count` in do_aftermath.
+//   TWO LIMITS, both load-bearing: it is a LOWER BOUND (a local that stays in
+//   a register has no S_REGREL32 at all), and IT NEEDS THE SAME PLATFORM-DELTA
+//   SUBTRACTION AS THE CALL CENSUS - ??1TCampaignBrief's only DC local is
+//   `tempText`, type 0x2161 = `char[100]`, and the call census in the same
+//   body names `chdir` x2 and `BackupGameHeaders` x1, so that buffer is
+//   Dreamcast save-path code and retail's x86 frame (`sub esp,8`) has no room
+//   for it. Cross the two censuses before believing a local.
+//
+// AND A CHEAP RANKER THAT SHOULD RUN BEFORE ANY OF THEM (2026-08-14): diff
+// `sema disasm 0x<va>` against `sema disasm 0x<va> --base` with branch/call
+// TARGETS normalised away and trailing padding dropped, then count differing
+// instructions. Over these 50 it separated the artefacts from the residuals
+// in one pass: ??0TSplitWindow 1 instruction, ??1Bitmap816 2, VideoClose 2,
+// AI_value_of_combat 4, TSplitWindow::WindowHandler 4, do_aftermath 4 - while
+// get_morale_description is 550 differing of 712 with our body 155
+// instructions LONGER than retail's, which no census row was ever going to
+// explain. The masked `sema diff` skeleton calls all six of the first group
+// 100% exact, so the ranker sees what it cannot.
+// Run it on `--verbose` output and it also SPLITS EACH ROW into real vs
+// artefact for free: a differing row whose two texts are identical once every
+// numeric literal is blanked, AND which carries an IMAGE_REL on either side,
+// is a delinker symbol+addend split or the unwind-label prologue push - never
+// a source lever. Over these 50 that isolates exactly one function whose
+// residual is 100% artefact (??0TSplitWindow, its single `push 0xb` /
+// `push 0x0` row) and prices the rest honestly: do_aftermath 4 real / 0
+// artefact, TSplitWindow::WindowHandler 4/0, VideoClose 2/0, AI_value_of_combat
+// 1/3, ??1Bitmap816 1/1, GetMorale 10/5, ??0TQuickTownWindow 10/15. Where the
+// artefact count is the larger half, the printed score is a floor the source
+// cannot lift.
 // E:\gamedcs\mainmenu.cpp:66
 VA(0x004fb2a0, 0x385)  // order-map: heroWindow(0,0,800,600) base + 5 button ctors from mmenung/lg/hs/cr/qt.def (ids 0x65-0x69), installs vtbl 0x63ff50, this-global 0x699660; called by oldmain; EH-bearing, dc 0xea2ec
 TMainMenu::TMainMenu()
