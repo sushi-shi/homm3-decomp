@@ -4,6 +4,8 @@
 #include <va.h>
 #include "combatcontrolsubwindow.h"
 #include "button.h"
+#include "inputmgr.h"
+#include "textwdgt.h"
 #include "widget.h"
 #include "window.h"
 #include "winmgr.h"
@@ -189,7 +191,82 @@ type_combat_sub_window::~type_combat_sub_window()
     }
 }
 
-// BLOCKED on the constructor: VA_COMPGEN(0x0046bea0, 0x21, SCALAR_DELETING_DTOR, TCombatControlSubWindow)
+// The combat control bar: the rollover strip and the two message-log
+// arrows. Same family shape as the placement bar below - an out-of-line
+// base call, a LOCAL vector<widget*> that the tail loop drains into the
+// inherited Widgets, and a bare operator delete for the local's storage -
+// with three differences that the bytes fix.
+//
+// THE TAIL LOOP PUSHES UNCONDITIONALLY AND ONLY GUARDS AddWidget. Retail
+// hands push_back the iterator itself (`push edi`, no copy through a
+// local) and only then tests the element, where the placement bar's loop
+// wraps both calls in one `if`. Two loops, two shapes, both transcribed.
+//
+// rolloverWidget IS THE BASE'S MEMBER AT +0x34 and its declared type is a
+// bitmapBackedTextWidget*: retail reloads it out of +0x34 into a stack
+// temporary for push_back, which only the derived-to-widget* conversion
+// can explain. Same test as TBottomViewNewTurn::backdrop.
+//
+// The two arrows' handlers are ADDRESS-TAKEN ONLY and uncarved; see the
+// note on their declarations in the header.
+//
+// Residual (94.3558%): every widget, literal, help row, hotkey, dim and
+// both loops agree, and the only deltas are two scheduling swaps inside
+// the set_hotkey expansions. Retail emits `disabled_frame` between the
+// first arrow's argument pushes and reloads the member afterwards; this
+// build hoists both the store and the argument temp ahead of the pushes.
+// On the second arrow retail materialises &hotKeyCodes once (`add
+// ecx,0x48` then `[ecx+8]`) where this build addresses both through the
+// object (`lea ecx,[eax+0x48]`, `[eax+0x50]`) - and retail itself uses the
+// two different addressings on the two arrows, which is what makes this
+// scheduling rather than spelling. Tried and rejected: swapping
+// disabled_frame ahead of set_hotkey on the second arrow (90.91) and
+// behind it on the first (92.72); both orderings as written are retail's.
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:177
+VA(0x0046bc30, 0x26D)  // vtable 0x63d420 + "cbar.pcx" base call, dc 0x64fcc
+TCombatControlSubWindow::TCombatControlSubWindow(heroWindow* parent)
+    : type_combat_sub_window(parent, "cbar.pcx")
+{
+    std::vector<widget*> widgets;
+
+    rolloverWidget = new bitmapBackedTextWidget(214, 7, 400, 32, "",
+        "smalfont.fnt", "cRollovr.pcx", font::PRIMARY, 0x7d5, 1, 8);
+    rolloverWidget->set_help_text(gCombatSubWindowHelp[4].text,
+        gCombatSubWindowHelp[4].rclick, 1);
+    widgets.push_back(rolloverWidget);
+
+    logScrollUpButton = new type_func_button(624, 5, 18, 17, 0x7d6,
+        "ComSlide.def", combat_log_scroll_up, 0, 1);
+    logScrollUpButton->set_help_text(gCombatSubWindowHelp[5].text,
+        gCombatSubWindowHelp[5].rclick, 1);
+    logScrollUpButton->disabled_frame = 1;
+    logScrollUpButton->set_hotkey(KEYCODE_KP_8);
+    widgets.push_back(logScrollUpButton);
+
+    logScrollDownButton = new type_func_button(624, 24, 18, 17, 0x7d7,
+        "ComSlide.def", combat_log_scroll_down, 2, 3);
+    logScrollDownButton->set_help_text(gCombatSubWindowHelp[5].text,
+        gCombatSubWindowHelp[5].rclick, 1);
+    logScrollDownButton->set_hotkey(KEYCODE_KP_2);
+    logScrollDownButton->disabled_frame = 3;
+    widgets.push_back(logScrollDownButton);
+
+    for (widget** it = widgets.begin(); it != widgets.end(); ++it) {
+        Widgets.push_back(*it);
+        if (*it)
+            AddWidget(*it, -1);
+    }
+
+    logScrollUpButton->send_message(widget::WIDGET_SET_STATUS,
+        widget::WIDGET_DIMMED);
+    logScrollDownButton->send_message(widget::WIDGET_SET_STATUS,
+        widget::WIDGET_DIMMED);
+}
+
+// UNBLOCKED by the constructor above: its 0x63d420 store is the only
+// image-wide reference to this class's table.
+VA_COMPGEN(0x0046bea0, 0x21, SCALAR_DELETING_DTOR, TCombatControlSubWindow)
 
 // E:\gamedcs\combatcontrolsubwindow.cpp:222
 VA(0x0046bed0, 0x78)  // anchor-vtable 0x63d420 + "cbar.pcx" caller, dc 0x65244
