@@ -108,7 +108,7 @@ town::town()
     garrisonHeroId = -1;
     for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; slot++)
         garrison.armies[slot] = -1;
-    field_3c = -1;
+    summoningType = CREATURE_NONE;
     field_02 = 0;
     field_33 = 1;
 }

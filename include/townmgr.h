@@ -358,8 +358,40 @@ public:
 // a bottom slot.
 class TCastleWindow : public CAdvPopup {
 public:
+    // The page's widget-id families. Every family is EIGHT wide - one id
+    // per dwelling row, the eighth being the summoning portal's - and the
+    // constructor below builds each of them in a run at a fixed y. The
+    // handler dispatches the two CLICKABLE families: the row frame and
+    // the six stat labels. The stat VALUE families (0x29, 0x31, 0x69,
+    // 0x71, 0x79, 0x81) and the name/growth lines (0x19, 0x21) carry no
+    // case of their own.
     enum {
+        // `border(x, y, 386, 126, id, 1)` - the whole row's hit box.
+        ROW_FRAME_ID = 0x11,
+        // The six stat-column captions, top to bottom (gpGeneralText
+        // 191 / 192 / 200 / ... at x = 300 and 694).
+        ROW_STAT_LABEL_1_ID = 0x39,
+        ROW_STAT_LABEL_2_ID = 0x41,
+        ROW_STAT_LABEL_3_ID = 0x49,
+        ROW_STAT_LABEL_4_ID = 0x51,
+        ROW_STAT_LABEL_5_ID = 0x59,
+        ROW_STAT_LABEL_6_ID = 0x61,
+        // The eighth member of every family - the summoning portal row,
+        // which recruits through the generic dialog instead of ::Recruit.
+        ROW_SUMMONING_OFFSET = 7,
         EXIT_BUTTON_ID = 0x7800
+    };
+
+    // The resource bar's OWN ids, produced by TResourceDisplay's
+    // constructor (resourcedisplay.cpp): seven amount lines at
+    // RESOURCE_TEXT_ID + i plus the status line at RESOURCE_TEXT_ID + 7,
+    // and seven borders at RESOURCE_BORDER_ID + i. The bar is a
+    // subwindow of the town page, so its clicks arrive here, and both
+    // bands index the same shared name/description table - which is why
+    // the two arms differ only in the addend they subtract.
+    enum {
+        RESOURCE_TEXT_ID = 0x3e9,
+        RESOURCE_BORDER_ID = 0x3f1
     };
 
     // +0x60. The Dreamcast fieldlist names it `use8` at its own 92,
@@ -392,6 +424,7 @@ public:
     void SetRolloverText(message* msg);
     // Retail 0x5dce50, the fort page's buy button for row `i`.
     void Recruit(int i);
+    virtual int WindowHandler(message* msg) OVERRIDE;   // slot 9, 0x5dcf80
 };
 #endif
 
@@ -460,8 +493,13 @@ public:
     TResourceDisplay* pResourceDisplay;   // +0x13c
     int field_140;                // +0x140
     char pad_144[0x50];           // +0x144  untouched by the retail bodies
-    int field_194;                // +0x194  ctor -1
-    int field_198;                // +0x198  ctor -1
+    // +0x194 / +0x198, NAMED 2026-08-14 from the Dreamcast fieldlist
+    // (lastHover@416, lastQualifier@420 - this pair under the same -8
+    // shift, less the four bytes retail dropped with townMenu). The
+    // fort page's WindowHandler 0x5dcf80 is the reader: it refreshes
+    // the rollover line only when the pair actually changes.
+    int lastHover;                // +0x194  ctor -1
+    int lastQualifier;            // +0x198  ctor -1
     int field_19c;                // +0x19c  ctor -1
     int field_1a0;                // +0x1a0
     int field_1a4;                // +0x1a4

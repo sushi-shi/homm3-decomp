@@ -226,10 +226,18 @@ public:
     char field_34;
     char pad_35[0x3];
     int field_38;
-    int field_3c;
+    // +0x3c, NAMED AND TYPED 2026-08-14. DC `summoningType` at its own
+    // 52, the row straight ahead of summoningPopulation below; the type
+    // is what TCastleWindow::WindowHandler 0x5dcf80 proves, which hands
+    // this member to a `recruitUnit` whose parameter IS a TCreatureType
+    // (and the fort page's constructor already indexes
+    // akCreatureTypeTraits with it). Not gated: it is a rename plus an
+    // int-to-enum retype of an EXISTING member, so no view of this class
+    // gains or loses a declarator.
+    TCreatureType summoningType;
 #if defined(HOMM3_TOWN_SUMMONING_DECLS)
     // +0x40. DC `summoningPopulation`, a T_SHORT at its own 56 - the row
-    // straight after `summoningType` at 52, which is retail's field_3c.
+    // straight after `summoningType` at 52.
     // Sliced 2026-08-14 for townManager::SetupWell (0x5dd5fa), which
     // prints the summoning portal's stock with `movsx ecx, word ptr
     // [town+0x40]`; town::SetSummoningGenerator writes it, as the note
@@ -457,6 +465,19 @@ public:
     // and only ONE retail row exists for the two - /OPT:ICF folded the
     // identical bodies.
     const class armyGroup& get_army() const;
+#if defined(HOMM3_TOWN_SUMMONING_DECLS)
+    // The NON-const half of that DC pair, declared 2026-08-14 for
+    // TCastleWindow::WindowHandler 0x5dcf80: the summoning-portal row
+    // hands the town's garrison straight to a `recruitUnit`, whose first
+    // parameter is a plain `armyGroup*`, and retail's `call 0x5c1460 /
+    // push eax` is that overload's return used as a pointer - which is
+    // also the shape the DC declares (`armyGroup* town::get_army()`).
+    // Never defined: /OPT:ICF folded the two bodies onto the one row the
+    // const half already claims. Behind the SUMMONING gate, which only
+    // townmgr.cpp defines, so no other view of this class gains a
+    // declarator (the initialize.obj include-set canary).
+    class armyGroup* get_army();
+#endif
 
     // DC LF_ONEMETHOD STATIC + public ?initialize_hordes@town@@SAXXZ
     // (dc 0x1664b0); retail 0x5bdf60 is entered by a bare tail jmp
