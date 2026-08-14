@@ -1,17 +1,19 @@
-// animateddlg.h - CAnimatedDlg, retail's animated-sprite text dialog
+// remotedlg.h - the window/dialog classes retail's remote.cpp defines
 // (compiland remote.obj).
 // HAND-OWNED. Class layouts are NOT fabricated from method symbols;
 // prototypes stay comments until a retail layout is proven.
 //
 // This is deliberately NOT in remote.h. The Dreamcast field list homes
-// CAnimatedDlg in E:\gamedcs\remote.h, but seven other compiled TUs include
+// these classes in E:\gamedcs\remote.h, but seven other compiled TUs include
 // our remote.h (advmgr, ai_player, cmbtmgr, command, levelupwindow, mainmenu,
-// systemoptionswindow) and none of them needs a dialog base; pulling
-// dialogbox.h into their include closures is exactly the perturbation the
-// include-set residual class warns about. remote.cpp is the only consumer.
-#ifndef HOMM3_ANIMATEDDLG_H
-#define HOMM3_ANIMATEDDLG_H
+// systemoptionswindow) and none of them needs a dialog or bitmap base; pulling
+// dialogbox.h and bitmap16.h into their include closures is exactly the
+// perturbation the include-set residual class warns about. remote.cpp is the
+// only consumer.
+#ifndef HOMM3_REMOTEDLG_H
+#define HOMM3_REMOTEDLG_H
 
+#include "bitmap16.h"
 #include "dialogbox.h"
 
 class CSprite;
@@ -74,4 +76,32 @@ SIZE(CAnimatedDlg, 0x78);
 // CODEVIEW(E:\gamedcs\remote.cpp:1658, dc 0x11d56c) void CAnimatedDlg::TickAnimation();
 // CODEVIEW(E:\gamedcs\remote.cpp:1673, dc 0x11d5dc) void CAnimatedDlg::DrawWindow(bool update, int iLowID, int iHighID);
 
-#endif  /* HOMM3_ANIMATEDDLG_H */
+// CSaveScreen - the off-screen backing store the transfer dialog parks the
+// framebuffer in. DC's field list sits on a 184-byte Bitmap16Bit; retail's
+// Bitmap16Bit is 0x38, and the three trailing members land on exactly the
+// three offsets the constructor 0x5572e0 writes after its base call:
+//   screenSaved  DC 184 -> 0x38 (byte)
+//   m_x          DC 188 -> 0x3c
+//   m_y          DC 192 -> 0x40
+// The vtable 0x640fb0 is three slots wide - Bitmap16Bit's own - so this class
+// introduces no virtual of its own, and DC marks ~CSaveScreen (compgenx):
+// there is no user-written destructor to declare, which is why 0x557340 is a
+// bare five-byte tail jump into ??1Bitmap16Bit.
+class CSaveScreen : public Bitmap16Bit {
+public:
+    CSaveScreen(int w, int h);
+
+protected:
+    unsigned char screenSaved;  // +0x38
+    int m_x;                    // +0x3c
+    int m_y;                    // +0x40
+};
+SIZE(CSaveScreen, 0x44);
+
+// --- CSaveScreen ---
+// CODEVIEW(E:\gamedcs\remote.cpp:2673, dc 0x11eb40) void CSaveScreen::CSaveScreen(int w, int h);
+// CODEVIEW(E:\gamedcs\remote.cpp:2680, dc 0x11eb9c) void CSaveScreen::Save(int x, int y);
+// CODEVIEW(E:\gamedcs\remote.cpp:2689, dc 0x11ebc8) void CSaveScreen::Restore();
+// CODEVIEW(E:\gamedcs\remote.cpp:2701, dc 0x11ec5c) bool CSaveScreen::IsSaved();
+
+#endif  /* HOMM3_REMOTEDLG_H */
