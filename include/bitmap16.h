@@ -37,6 +37,12 @@ public:
     void Darken(int x, int y, int w, int h);
     void Grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
     void Draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
+    // Retail bodies 0x44e540 / 0x44e780, both reached from
+    // coloredBorderFrame::Draw (0x4501e0): its five-argument push run is
+    // the DC signature verbatim, and the truncating `mov dx, [ecx+0x30]`
+    // load off an int member is what fixes the 16-bit colour parameter.
+    void FrameRect(int x, int y, int w, int h, unsigned short color);
+    void Colorize(int x, int y, int width, int height, unsigned short color);
 };
 SIZE(Bitmap16Bit, 0x38);
 

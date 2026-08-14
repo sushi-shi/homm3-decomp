@@ -356,6 +356,9 @@ bitmap816	?ResetPalette@Bitmap816@@QAEXXZ	100.0000	100.0000	100.0000	0x4fe80
 bitmap816	?SetPalette@Bitmap816@@QAEXPAVTPalette24@@@Z	100.0000	100.0000	100.0000	0x4fe60
 bitmap816	?SetPalette@Bitmap816@@QAEXPBG@Z	100.0000	100.0000	100.0000	0x4fe40
 bitmap816	?_vslot2@Bitmap816@@UBEIXZ	100.0000	100.0000	100.0000	0x4fe30
+border	??0bitmapBorder@@QAE@HHHHHPBDH@Z	100.0000	100.0000	100.0000	0x502d0
+border	??0border@@QAE@HHHHHH@Z	100.0000	100.0000	100.0000	0x4ff10
+border	??0coloredBorderFrame@@QAE@HHHHHHH@Z	100.0000	100.0000	100.0000	0x50130
 border	??1bitmapBorder16@@UAE@XZ	100.0000	100.0000	100.0000	0x50750
 border	??1bitmapBorder@@UAE@XZ	100.0000	100.0000	100.0000	0x50390
 border	??1border@@UAE@XZ	100.0000	100.0000	100.0000	0x4ff50
@@ -363,11 +366,14 @@ border	??1coloredBorderFrame@@UAE@XZ	100.0000	100.0000	100.0000	0x501d0
 border	??_GbitmapBorder16@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x50720
 border	??_GbitmapBorder@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x50360
 border	??_Gborder@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4fee0
+border	??_GcoloredBorderFrame@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x501a0
 border	?Draw2@bitmapBorder16@@QAEXXZ	100.0000	100.0000	100.0000	0x50810
 border	?Draw@bitmapBorder16@@UAEXXZ	100.0000	100.0000	100.0000	0x507b0
 border	?Draw@bitmapBorder@@UAEXXZ	100.0000	100.0000	100.0000	0x50450
+border	?Draw@coloredBorderFrame@@UAEXXZ	100.0000	100.0000	100.0000	0x501e0
 border	?GetRealHeight@bitmapBorder@@UAEHXZ	100.0000	100.0000	100.0000	0x504b0
 border	?GetRealWidth@bitmapBorder@@UAEHXZ	100.0000	100.0000	100.0000	0x504a0
+border	?Main@coloredBorderFrame@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x50240
 border	?SetImage@bitmapBorder@@QAEXPBD@Z	100.0000	100.0000	100.0000	0x504c0
 border	?SetPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000	100.0000	100.0000	0x50520
 border	?zBufferDraw@bitmapBorder@@QAEXPAGH@Z	100.0000	100.0000	100.0000	0x503f0
