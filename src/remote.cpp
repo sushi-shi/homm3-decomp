@@ -8,6 +8,9 @@
 #include "textresource.h"
 #include "textwdgt.h"
 #include "remotedlg.h"
+// gpWindowManager: CSaveScreen grabs and restores through the screen
+// bitmap, and hands the dirty rect back to the window manager.
+#include "winmgr.h"
 
 // DC names the network singleton pDPlay; retail references at 0x69d808 and
 // the adjacent readiness byte are rooted throughout the remote/front-end
@@ -542,6 +545,45 @@ CSaveScreen::CSaveScreen(int w, int h)
 // VA_COMPGEN carries no kind for an implicit destructor.
 VA_COMPGEN(0x00557310, 0x21, SCALAR_DELETING_DTOR, CSaveScreen)
 
+// E:\gamedcs\remote.cpp:2680 - grab the screen into this bitmap and
+// remember where it came from. Bitmap16Bit::Grab takes the source
+// geometry, so all four screen fields come off the same screenBitmap.
+VA(0x00557350, 0x3A)  // anchor-callee (Bitmap16Bit::Grab), dc 0x11eb9c
+void CSaveScreen::Save(int x, int y)
+{
+    m_x = x;
+    m_y = y;
+    screenSaved = 1;
+    Grab(gpWindowManager->screenBitmap->map, x, y,
+        gpWindowManager->screenBitmap->Width,
+        gpWindowManager->screenBitmap->Height,
+        gpWindowManager->screenBitmap->Pitch);
+}
+
+// E:\gamedcs\remote.cpp:2689 - blit the saved rectangle back, and only
+// then tell the window manager about it. The whole body sits under the
+// screenSaved guard: retail's `je` from the entry test skips the
+// UpdateScreen call too.
+VA(0x00557390, 0x69)  // anchor-callee (Bitmap16Bit::Draw), dc 0x11ebc8
+void CSaveScreen::Restore(unsigned char update)
+{
+    if (screenSaved) {
+        Draw(0, 0, Width, Height, gpWindowManager->screenBitmap->map,
+            m_x, m_y, gpWindowManager->screenBitmap->Width,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->Pitch, 0);
+        if (update)
+            gpWindowManager->UpdateScreen(m_x, m_y, Width, Height);
+    }
+}
+
+// E:\gamedcs\remote.cpp:2701
+VA(0x00557400, 0x4)  // anchor-bracket (screenSaved at 0x38), dc 0x11ec5c
+unsigned char CSaveScreen::IsSaved()
+{
+    return screenSaved;
+}
+
 // E:\gamedcs\remote.cpp:2713 - CGameTransferSmack's constructor. It is also
 // inlined whole into CGameTransferDlg's constructor below (/Ob2 auto-inline
 // with unconditional out-of-line emission for extern linkage), and the two
@@ -557,6 +599,20 @@ CGameTransferSmack::CGameTransferSmack()
     m_saveScreen = 0;
     m_sending = 0;
     m_drawText = 1;
+}
+
+// E:\gamedcs\remote.cpp:2733 - four of CGameTransferSmack's seven members
+// rewritten from the caller. DC's `?Setup@CGameTransferSmack@@QAAXHH_N0@Z`
+// is (int, int, bool, bool) and retail's `ret 0x10` reads the two bools as
+// bytes straight into 0x0d and 0x0e.
+VA(0x00557460, 0x1E)  // anchor-bracket (CGameTransferSmack members), dc 0x11ecbc
+void CGameTransferSmack::Setup(int x, int y, unsigned char sending,
+                               unsigned char drawText)
+{
+    m_x = x;
+    m_y = y;
+    m_sending = sending;
+    m_drawText = drawText;
 }
 
 // E:\gamedcs\remote.cpp:2816 - CGameTransferDlg's constructor, the third
@@ -579,6 +635,29 @@ CGameTransferDlg::CGameTransferDlg(unsigned char sending)
 // E:\gamedcs\remote.cpp:2816 - CGameTransferDlg::`scalar deleting
 // destructor', slot 0 of vtable 0x640fbc.
 VA_COMPGEN(0x00557760, 0x21, SCALAR_DELETING_DTOR, CGameTransferDlg)
+
+// E:\gamedcs\remote.cpp:2821 - slot 12 of vtable 0x640fbc. A fixed
+// 160x160 box: the width and height are literals, winX is the literal 320
+// the centring arithmetic would have produced, and only winY is actually
+// computed - and computed by RELOADING winHeight through its reference,
+// which is what the `mov edi,[edx]` before the subtract is (that reload is
+// also why winX cannot be the same centring expression constant-folded:
+// spelling it that way would reload winWidth too). winHeight is assigned
+// BEFORE winWidth; the other way round costs 0.73. The smack
+// member is then placed fifteen pixels inside the box; CGameTransferSmack
+//::Setup inlines into the four member stores at the tail. cText and pFont
+// are dead here, as retail leaves them.
+VA(0x00557790, 0x51)  // anchor-vtable (slot 12 of 0x640fbc), dc 0x11eed8
+void CGameTransferDlg::CalcDimensions(const char* cText, font* pFont,
+                                      int& winX, int& winY,
+                                      int& winWidth, int& winHeight)
+{
+    winHeight = 160;
+    winWidth = 160;
+    winX = 320;
+    winY = (600 - winHeight) / 2;
+    smack.Setup(winX + 15, winY + 15, m_sending, 1);
+}
 
 // E:\gamedcs\remote.cpp:1293
 #if 0  // @carcass

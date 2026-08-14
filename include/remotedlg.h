@@ -90,6 +90,9 @@ SIZE(CAnimatedDlg, 0x78);
 class CSaveScreen : public Bitmap16Bit {
 public:
     CSaveScreen(int w, int h);
+    void Save(int x, int y);
+    void Restore(unsigned char update);
+    unsigned char IsSaved();
 
 protected:
     unsigned char screenSaved;  // +0x38
@@ -113,6 +116,7 @@ class CGameTransferSmack {
 public:
     CGameTransferSmack();
     ~CGameTransferSmack();
+    void Setup(int x, int y, unsigned char sending, unsigned char drawText);
 
 protected:
     int m_x;                     // +0x00
