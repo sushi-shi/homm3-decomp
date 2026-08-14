@@ -57,6 +57,17 @@ struct type_lean_to_info {
 };
 SIZE(type_lean_to_info, 4);
 
+// DoEventMagicSpring (0x4a3590) shares the same id lane and carries one
+// "still full" bit at 6 (`shr eax,6 / test al,1`); drinking clears it
+// alone (`and dword ptr [cell], 0xffffffbf`).
+struct type_magic_spring_info {
+    unsigned long id : 5;
+    unsigned long unused : 1;
+    unsigned long full : 1;
+    unsigned long tail : 25;
+};
+SIZE(type_magic_spring_info, 4);
+
 // DoEventMysticalGarden (0x4a3bc0) shares the id lane but puts a SIGNED
 // four-bit resource at bits 6..9 (`shl edi,0x16 / sar edi,0x1c`) and a
 // one-bit "still full" flag at bit 10 (`shr eax,0xa / test al,1`);
@@ -110,6 +121,7 @@ union ExtraInfoUnion {
     type_water_wheel_info water_wheel_info;
     type_windmill_info windmill_info;
     type_lean_to_info lean_to_info;
+    type_magic_spring_info magic_spring_info;
     type_garden_info garden_info;
     type_tomb_info tomb_info;
     type_witch_hut_info witch_hut_info;
@@ -134,6 +146,13 @@ union ExtraInfoUnion {
         lean_to_info.amount = amount;
         lean_to_info.resource = resource;
     }
+
+    // The magic-spring pair (MapCell.h:1002/1007). The setter takes the
+    // new state rather than clearing unconditionally, which is what the
+    // DC decoration `void (unsigned char)` says and what makes the
+    // drink-it write a plain bit clear at the one site that passes 0.
+    unsigned char MagicSpringIsFull() const { return magic_spring_info.full; }
+    void FillMagicSpring(unsigned char full) { magic_spring_info.full = full; }
 
     // The mystical-garden trio (MapCell.h:1018/1023/1035). GardenIsFull
     // is `unsigned char () const` and its `(value >> 10) & 1` shape is
@@ -858,6 +877,8 @@ public:
                                 bool human_player);
     void DoEventGarden(class hero* current_hero, NewmapCell* cell,
                        bool human_player);
+    void DoEventIdol(class hero* current_hero, NewmapCell* cell,
+                     bool human_player);
     // The two objects that pay a resource out of the cell's own packed
     // record. Both take ExtraInfoUnion for the same reason the war school
     // and the two mills do: nothing but the +0x00 dword is ever touched.
@@ -865,6 +886,13 @@ public:
                        bool human_player);
     void DoEventLibrary(class hero* current_hero, NewmapCell* cell,
                         bool human_player);
+    // The two mana refills. Both take the union pointer for the same
+    // reason as the mills: only the +0x00 dword is ever touched, and the
+    // well's whole use of it is a single `cell->value = 0`.
+    void DoEventMagicSpring(class hero* current_hero, ExtraInfoUnion* cell,
+                            bool human_player);
+    void DoEventMagicWell(class hero* current_hero, ExtraInfoUnion* cell,
+                          bool human_player);
     void DoEventMysticalGarden(class hero* current_hero, ExtraInfoUnion* cell,
                                bool human_player);
     void DoEventMercenaryCamp(class hero* current_hero, NewmapCell* cell,
@@ -873,6 +901,8 @@ public:
                       bool human_player);
     void DoEventPowerSchool(class hero* current_hero, NewmapCell* cell,
                             bool human_player);
+    void DoEventRallyFlag(class hero* current_hero, NewmapCell* cell,
+                          bool human_player);
     void DoEventTemple(class hero* current_hero, NewmapCell* cell,
                        bool human_player);
     void DoEventTrainingGrounds(class hero* current_hero, NewmapCell* cell,
