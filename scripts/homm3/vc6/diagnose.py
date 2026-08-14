@@ -19,7 +19,7 @@ from __future__ import annotations
 import json
 
 from homm3.sema import _asm
-from homm3.vc6 import _common, _unit, inline_model, report
+from homm3.vc6 import _common, _eh, _unit, inline_model, report
 
 
 def _resolve(target: str):
@@ -78,8 +78,18 @@ def run(args) -> int:
     # callee is inlined on one side only (the A-family), which reshapes blocks
     # and registers downstream - fix it before any spelling.
     inline_div = _inline_divergence(unit, fn)
-    # routing: inline -> control-flow -> register (structural before spelling)
+    # EH cleanup transcript: object lifetimes, which none of the three solvers
+    # reads. A COUNT divergence outranks everything below it - it says a
+    # statement (or a throwing callee) is missing, not mis-spelled.
+    eh_div = _eh.divergence(unit, fn)
+    # routing: eh-cleanup -> inline -> control-flow -> register
+    #          (lifetimes, then structure, then spelling)
     routes = []
+    if eh_div:
+        routes.append((None,
+                       f"EH cleanup transcript diverges ({eh_div['kind']}) - "
+                       + eh_div["note"] + "; read the unwind map before any "
+                       "spelling (docs/vc6/eh-cleanup.md)"))
     if inline_div:
         routes.append(("predict-inline",
                        f"inline structure diverges ({inline_div}) - a callee "
@@ -106,7 +116,8 @@ def run(args) -> int:
         print(json.dumps({
             "target": args.target, "unit": unit, "fn": fn,
             "reg_dist": reg, "flow_dist": flow, "class": cls,
-            "knob": d["knob"], "routes": [r[0] for r in routes],
+            "knob": d["knob"], "eh": eh_div,
+            "routes": [r[0] for r in routes],
             "commands": solver_cmds}, indent=2))
         return 0
 
@@ -117,6 +128,8 @@ def run(args) -> int:
         print(f"  reg signal : {d['reg_top']}")
     if d.get("flow_top"):
         print(f"  flow signal: {d['flow_top']}")
+    if eh_div:
+        print(f"  eh signal  : {_eh.format_line(eh_div)}")
     print(f"  knob to try: {d['knob']}")
     print("  route ->")
     for solver, why in routes:

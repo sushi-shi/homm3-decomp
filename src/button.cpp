@@ -452,6 +452,30 @@ VA_COMPGEN(0x00456a20, 0x21, SCALAR_DELETING_DTOR, textButton)
 // own stack slot before the initialize call (the by-ref insert copy
 // scheduled early) and the EH-handler reloc addend spells differently
 // across the sides; every callee and store agrees.
+//
+// THE `#0 jbe -> jae` LEAD IS CLOSED, and it was never a condition. The
+// guard is `basic_string::assign`'s length check. Retail computes the limit
+// with a CALL - 0x404bc0, six bytes, `mov eax,0xfffffffd; ret`, i.e.
+// max_size() - and compares `cmp eax,edi; jae`; this compile expands that
+// callee and constant-folds it to `cmp edi,-3; jbe`. Same predicate, one
+// side folded. The second real divergence is the same class: retail calls
+// 0x404a70 (`_Eos`: `[ecx+8]=n; [ecx+4][n]=0`, 20 bytes) where we expand it
+// inline. Both are A8/A9 depth stops inside SetText's nested expansion, so
+// this row belongs to the INLINER, not to why-branch - the v1 mutation
+// library has no site class for it because there is no source site.
+// Everything else predict-inline reports here is the UNDER/OVER
+// name-pairing artefact: `button_set_hotkey` is the delinker's label for
+// 0x404200, which is the 521-byte three-argument vector<int>::insert this
+// file's own note already identifies, and it pairs with our
+// `?insert@?$vector@H...` - the same callee under two names, as do
+// GetSprite and GetFont.
+//
+// The site-count lever has NO working setting here: appending free
+// candidate sites to the body takes the row 88.4400 (+0) -> 58.3333 (+1,
+// +2, +3, +4) -> 59.1800 (+6, +8). One site already starves SetText's whole
+// expansion; there is no intermediate that keeps SetText expanded while
+// stopping it above max_size/_Eos.
+//
 // Builds on the inlined button() default, then initializes through
 // widget::initialize - the DC shape, not a delegation to the eleven-arg
 // button ctor.

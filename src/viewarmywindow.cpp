@@ -544,6 +544,26 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 // Reproducing retail here needs _Tidy to have been rejected when it was
 // expanded INTO basic_string's constructor, which is a property of that
 // compile, not of any spelling available in this TU.
+//
+// The EH CLEANUP TRANSCRIPT names the boundary exactly (docs/vc6/
+// eh-cleanup.md): retail's state stores are [0,1,2,3,2,4,2,5,2,6,2] and
+// ours [2,3,2,4,2,5,2,6,2] - retail opens two regions we do not, and they
+// are the two string members. Retail CALLS the constructor at BOTH +0x6c
+// and +0x80; we call the first and INLINE the second, which is what the
+// /Ob2 allowance `budget / sites-remaining` predicts, since that quotient
+// GROWS along the site list and the later of two identical sites is the one
+// that gets expanded. The `xor ebx,ebx` constant-zero CSE that follows is
+// downstream of that, not a wall of its own: inlining the second string
+// constructor adds the [esi+0x84]/[esi+0x88]/[esi+0x8c] zero stores, and
+// those extra uses are what tip VC6 into parking 0 in EBX where retail
+// writes the immediate each time.
+//
+// MEASURED NEGATIVE - do not repeat: the body's site count does not reach a
+// mem-init expansion. Appending free candidate sites before `Influence[0]`
+// leaves this row at 97.1049 for +0, +1, +2, +3, +5 and +8, while the
+// armyGroup overload in the same TU moves 88.7021 -> 87.0343 -> 83.1490 on
+// the same probes. The probes reach the compiler; the member-construction
+// prologue is simply accounted separately from the body's site list.
 // E:\gamedcs\viewarmywindow.cpp:274
 VA(0x005f4210, 0x3C1)  // vtable-store + builder call set + CrStkPU.pcx, dc 0x19148c
 TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0,
