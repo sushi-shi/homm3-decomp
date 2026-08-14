@@ -855,6 +855,11 @@ public:
     void EraseObj(NewmapCell* thisCell, type_point point,
                   unsigned char record);
     void DoEvent(NewmapCell* eventCell, type_point point);
+    // 0x4aadf0, DECLARED not defined - structural-EH bytes plus two
+    // 0x4a6-byte hero copies, parked. do_event_hero is the caller that
+    // needs the declarator; the pair is (visitor, visited) in the DC's
+    // own order and a call relocation's symbol name is not scored.
+    void HeroSwap(class hero* leftHero, class hero* rightHero);
     void TownEvent(NewmapCell* cell, type_point point,
                    unsigned char human_player);
     // 0x4ad470, DECLARED not defined - 5425 EH-framed bytes this lane is
