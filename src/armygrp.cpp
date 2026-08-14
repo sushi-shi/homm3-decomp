@@ -198,6 +198,27 @@ static inline void AppendSplitWidget(std::vector<widget*>& widgets,
 // are reserve's empty nested-destroy call, one final allocation stack home and
 // EH relocation representation. Keeping the reconstruction-only dialog type
 // source-private preserves initialize_game_data's exact optimizer population.
+// 2026-08-14 (98.4605 -> 99.9789): "reserve's empty nested-destroy call" was
+// the /Ob2 budget DIVISOR, the same wall as the window-constructor family, and
+// this body wants exactly ONE more inline-candidate call site. Titrated with
+// the xx_nop probe before the registration loop: k=0 98.4605, k=1..4 99.9895,
+// flat in mass 0..24 (mass alone is worthless here, and past M=12 it starts
+// eating the site). The honest supply is one `push_back` written as
+// `Widgets.insert(Widgets.end(), x)` - `end()` is the extra candidate - and it
+// measures the same 99.9789 wherever it goes among the last three widgets
+// (StatBar border, its textWidget, the iOk button), so the position of the
+// extra site does not matter, only that it precedes the loop. The iOk button
+// is the one landed, since it makes the two buttons' spellings adjacent.
+// NOT the answer, all measured here: the 3-argument `insert(end(), 1, x)` on
+// that same push_back 76.4394; dropping the AppendSplitWidget adapter for a
+// direct 3-argument insert 75.2777 or for a plain push_back 77.6995 (so the
+// depth-zero adapter is still load-bearing); naming `Widgets` at the adapter
+// call instead of the pointer local 99.9684; a reference local 99.9789.
+// What is left at 99.9789 is TWO instructions: the last insert reads
+// `Widgets._Last` as `[edi+0x38]` (off `this`) where retail reads `[ebx+0x8]`
+// (off the &Widgets pointer it keeps in EBX), and the widget temp homes at
+// [ebp+0xc] where retail uses [ebp+0x8]. Both survive every widgetList
+// spelling above.
 VA(0x00449790, 0x65B)  // anchor-callee, dc 0x4dbb8
 TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
     : CAdvPopup(x2, y2, 0x12a, 0x151, 0x12)
@@ -258,7 +279,7 @@ TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
         8, 312, 282, 17, "", "smalfont.fnt", font::PRIMARY,
         8, 1, 0, 8));
 
-    Widgets.push_back(new button(
+    Widgets.insert(Widgets.end(), new button(
         20, 263, 64, 32, DIALOG_RETURN_SPLIT_ACCEPT,
         "iOk6432.def", 0, 1, 1, 0x1c, 2));
     std::vector<widget*>* widgetList = &Widgets;
