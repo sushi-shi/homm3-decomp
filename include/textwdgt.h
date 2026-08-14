@@ -44,12 +44,20 @@ public:
     virtual void SetText(const char* new_text);  // slot 13, retail 0x57c6d0
 };
 
+class Bitmap816;
+
 // Retail dtor 0x5bc6d0 is the empty derived dtor: the inlined
 // ~textWidget body under this class's vtable store, then ~widget.
-// No members beyond textWidget are touched, so none are modeled.
+// It does NOT free the backing bitmap - that resource is borrowed.
 class bitmapBackedTextWidget : public textWidget {
 public:
+    // +0x50: the 11-argument constructor 0x5bc760 stores GetBitmap816's
+    // result here, and Draw 0x5bc7f0 blits out of it after clamping the
+    // widget extent against its +0x24/+0x28 Width/Height.
+    Bitmap816* image;
+
     virtual ~bitmapBackedTextWidget();
+    virtual void Draw();  // slot 4, retail 0x5bc7f0
 };
 
 // --- bitmapBackedTextWidget ---

@@ -81,7 +81,12 @@ extern TRecruitWindow* gpRecruitWindow;
 // textresource.h's canonical general-text index domain moves
 // to its own header when that TU lands.
 struct SUnnamed6aacb0 {
-    char pad_00[0x5a];
+    char pad_00[0x1c];
+    // The widget back-colour table: textWidget::Draw 0x5bc5f0 indexes it
+    // with widget-level BackColor (`mov dx, [ecx + eax*2 + 0x1c]`) and
+    // hands the result to Bitmap16Bit::FillRect. The extent below is
+    // bounded by the next attested member, not proven as a count.
+    unsigned short backColors[31];  // +0x1c..+0x59
     unsigned short field_5a;
     char pad_5c[8];
     unsigned short field_64;
