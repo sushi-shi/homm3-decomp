@@ -16,6 +16,8 @@ class CHighScoreEdit : public textEntryWidget {
 public:
     CHighScoreEdit* nextEdit;
     CHighScoreEdit* prevEdit;
+
+    virtual int OnKeyPress(message* msg);  // slot 15, retail 0x4e9710
 };
 SIZE(CHighScoreEdit, 0x78);
 

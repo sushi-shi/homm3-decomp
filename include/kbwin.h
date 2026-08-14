@@ -102,6 +102,13 @@ extern int bWindowedMode;               // 0x6987b8
 extern int bVideoPaused;                // 0x69954c
 extern HMENU dfltMenu;                  // 0x6989e4 (CallManager's resume
                                         // arm restores it; name provisional)
+extern HMENU gameMenu;                  // 0x6989e8 (dfltMenu's .bss
+                                        // neighbour: kb's InitMainClasses
+                                        // loads the pair, kb's CleanUpMenus
+                                        // destroys the pair, and
+                                        // advManager::Open /
+                                        // combatManager::Open install it.
+                                        // Name provisional)
 extern int gbInSetupDialog;             // 0x6989d0 (homm2 name; selects the
                                         // setupEnabled column in SetMenus)
 extern char szAppName[];                // 0x67f820 "Heroes III" (homm2 name)
