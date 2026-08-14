@@ -590,7 +590,25 @@ public:
     void remove_binding();                   // 0x43ee10
     void play_sample(TSampleID id);          // 0x43d540
     void stop_sample(TSampleID id);          // 0x43d580
+    // simple_move is PRIVATE on its own public
+    // (?simple_move@army@@AAA_NH_N@Z) and every member of this movement
+    // family returns `_N` - bool - and takes `restore_facing` as one:
+    // WalkTo, attack_hex, move_to and ValidFlight all mangle _NH_N.
+    // RECORDED, NOT ACTED ON: the access change and the bool retype are
+    // one measured pass over the whole family (bool is not free in VC6
+    // - it normalizes), and this lane only needed the declarations.
     unsigned char simple_move(int hex, unsigned char restore_facing);
+    // BEHIND A VIEW, MEASURED: declaring WalkTo to every consumer of
+    // this header costs command.obj's combatManager::GetCommand
+    // 92.5714 -> 92.5357 with no semantic change anywhere - the
+    // include-set class, and the third distinct trigger shape this
+    // header has produced (two member declarations, three enumerators,
+    // now one). Bisected against the other three declarations added in
+    // the same change: only this one and cmbtmgr.h's mark_moving_army
+    // fire it. army.cpp is the only consumer.
+#ifdef HOMM3_ARMY_MOVE_VIEW
+    unsigned char WalkTo(int destIndex, unsigned char restore_facing);
+#endif
     unsigned char move_to(int hex, unsigned char restore_facing);
     unsigned char check_obstacle_attacks(unsigned char is_walking);
     void Turn(unsigned char play_animation); // 0x446720

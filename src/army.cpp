@@ -13,11 +13,15 @@
 // the same change, which is innocent).
 #define HOMM3_ARMY_MULTI_HEAD_VIEW
 #define HOMM3_ARMY_ELEMENTAL_RULE_VIEW
+#define HOMM3_ARMY_MOVE_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_MOVE_VIEW
 #undef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
 #undef HOMM3_ARMY_MULTI_HEAD_VIEW
 #include "armygrp.h"
+#define HOMM3_CMBTMGR_MOVE_VIEW
 #include "cmbtmgr.h"
+#undef HOMM3_CMBTMGR_MOVE_VIEW
 #include "hero.h"
 #include "misc.h"
 #include "sample.h"
@@ -1420,11 +1424,62 @@ long army::get_attack_direction(long our_hex, const army* enemy) const
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4303
-// RETAIL_LOCATED(0x00445950, 0x107)  // anchor-global, dc 0x4a6a4
+#endif  // @carcass
+
+// One stack, one hex, whichever way it travels: a flyer flies, a devil
+// teleports, everything else walks. The grid identity is INVALIDATED
+// first (side and slot both -1 out of one register, the signed-char CSE
+// this class uses everywhere), then the destination is bounds-checked
+// and CanFit'ed, and only then does the manager clear its
+// last-moved-stack slot, drop the highlighter and mark the mover's own
+// hexes.
+//
+// THE SHARED TAIL IS RETAIL'S OWN, and its bytes say so before any
+// score does: both ValidFlight refusals `je 0x445a45`, which is INSIDE
+// the teleport arm's epilogue - one instruction past its `mov al, 1`.
+// A refusal that lands on another arm's epilogue cannot be a `return
+// 0`; it is the single exit, reached with ValidFlight's own zero still
+// in AL, and `gpCombatManager->lastMovedArmy = this` runs on it too.
+// That is why the result is a variable seeded FROM ValidFlight rather
+// than four returns - the same lever ComputeBaseDamage,
+// get_multi_head_directions and can_shoot each found from their own
+// side.
+VA(0x00445950, 0x107)  // anchor-global, dc 0x4a6a4
 unsigned char army::simple_move(int hex, unsigned char restore_facing)
 {
-    // @stub
+    side = -1;
+    slot = -1;
+    if (!gpCombatManager->ValidHex(hex))
+        return 0;
+    if (!CanFit(hex, 0, 0))
+        return 0;
+    gpCombatManager->lastMovedArmy = 0;
+    gpCombatManager->TurnOffHighlighter(1);
+    gpCombatManager->mark_moving_army(this);
+    unsigned char moved;
+    if (Is(1) & 1) {
+        pathTarget = hex;
+        moved = ValidFlight(hex, 0);
+        if (moved) {
+            FlyTo(pathTarget, restore_facing);
+            moved = 1;
+        }
+    } else if (creatureType == CREATURE_DEVIL
+               || creatureType == CREATURE_ARCH_DEVIL) {
+        pathTarget = hex;
+        moved = ValidFlight(hex, 0);
+        if (moved) {
+            TeleportTo(pathTarget, restore_facing);
+            moved = 1;
+        }
+    } else {
+        moved = WalkTo(hex, restore_facing);
+    }
+    gpCombatManager->lastMovedArmy = this;
+    return moved;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4356
 // RETAIL_LOCATED(0x00445a60, 0x26D)  // anchor-global, dc 0x4a7ac
