@@ -1010,6 +1010,29 @@ public:
         return (globalInfoFlags[flag] & (1 << playerNum)) != 0;
     }
 #endif
+#ifdef HOMM3_EVENTS_VIEW
+    // Game.h:917, GetInfoFlag's setter twin. It marks the whole of
+    // playerNum's TEAM, which is why every events.obj handler that
+    // visits a global-info object ends in an eight-iteration teamInfo
+    // scan rather than a single OR - the guard is on the ARGUMENT only,
+    // and the loop reads mapHeader.teamInfo directly instead of going
+    // back through GetTeam (no per-iteration `< 0` arm survives).
+    //
+    // `flag` is spelled `int` where the Dreamcast decoration says
+    // GlobalInfoFlags purely because that enum is defined in advmgr.h,
+    // which events.cpp includes AFTER this header; every call site still
+    // passes the enumerator, so the domain is not lost.
+    void SetInfoFlag(int flag, const int playerNum)
+    {
+        if (playerNum < 0 || playerNum >= 8)
+            return;
+        int team = mapHeader.teamInfo[playerNum];
+        for (int i = 0; i < 8; i++) {
+            if (mapHeader.teamInfo[i] == team)
+                globalInfoFlags[flag] |= 1 << i;
+        }
+    }
+#endif
     int GetGamePosFromDPID(unsigned long dpid);  // 0x4cec20
     // Same `_N`-and-const family as playerData's pair above.
     bool IsLastHuman(int gamePos) const;         // 0x4cec50
