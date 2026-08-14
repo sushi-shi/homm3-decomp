@@ -521,7 +521,11 @@ public:
     // it and hands it to the net handler - the same bar as +0x13c, but
     // the one a modal page owns for as long as it is up.
     TResourceDisplay* dialogResourceDisplay;   // +0x140
-    char pad_144[0x50];           // +0x144  untouched by the retail bodies
+    // +0x144, NAMED 2026-08-14: RedrawTownScreen 0x5d5410 hands its
+    // ADDRESS to the page's status widget as a message's extraText, so
+    // the run is a buffer this object owns, not padding. The extent is
+    // still only bounded by the next proven member at +0x194.
+    char statusText[0x50];        // +0x144
     // +0x194 / +0x198, NAMED 2026-08-14 from the Dreamcast fieldlist
     // (lastHover@416, lastQualifier@420 - this pair under the same -8
     // shift, less the four bytes retail dropped with townMenu). The
@@ -619,11 +623,15 @@ public:
     // re-syncs every panorama object's visibility, fizzles the new
     // building in over the saved rectangle and cycles its outline.
     void BuildObj(int buildingId);
-    // Retail 0x5d5410 (dc 0x176eb0), declared for BuildObj's tail call.
-    // Ordered after ResetStrips in the DC roster and sitting in the
-    // 0x11c-byte carve row directly ahead of it, which is the same
-    // pairing; not reconstructed.
+    // Retail 0x5d5410 (dc 0x176eb0).
     void RedrawTownScreen();
+    // Retail 0x5c66d0 (dc 0x16ba90), declared for RedrawTownScreen's
+    // last call before the flush - and RedrawTownScreen is its ONLY
+    // caller in the image, which with the order-map is what picks
+    // UpdateTownInfo out of the two DC rows that share this carve slot
+    // (ChangeTown, the other one, is expanded inside Open). Not
+    // reconstructed.
+    void UpdateTownInfo();
     // Retail 0x5c6e10 (dc 0x16c0e4), declared for SwapHeroes' tail call;
     // not reconstructed. Four `new strip` sites at 0x5c6e5a/0x5c6f1c/
     // 0x5c6fae/0x5c7045 (`push 0x78` into exe_new) are what identify it

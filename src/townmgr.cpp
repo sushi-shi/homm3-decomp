@@ -2458,6 +2458,62 @@ void townManager::SwapHeroes()
     NewStrips();
 }
 
+// The town page repaint. It clears the window's own 800x600 16-bit
+// buffer, paints the panorama, then walks every town object drawing it
+// with hotspots and polling sound between each - which is what the
+// per-object PollSound is for, the panorama being slow enough to
+// starve the mixer. Then the status line, the two troop strips (with
+// the currently selected creature divided out of whichever strip holds
+// it), the town's info row, and one full-screen flush.
+
+// E:\gamedcs\townmgr.cpp:6843
+VA(0x005d5410, 0x11C)  // anchor-caller(DoHall/BuildObj tails) + order-map ahead of ResetStrips, dc 0x176eb0
+void townManager::RedrawTownScreen()
+{
+    memset(static_cast<TTownScreenWindow*>(TownWindow)->field_50, 0,
+           WINDOW_SCREEN_WIDTH * WINDOW_SCREEN_HEIGHT * 2);
+    static_cast<bitmapBorder16*>(field_3c)->Draw2();
+    PollSound();
+    for (int i = 0; i < TownObjectCount; i++) {
+        TownObjects[i]->Draw(1, 1);
+        PollSound();
+    }
+
+    message msg;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 0x97;
+    msg.extraText = statusText;
+    TownWindow->BroadcastMessage(&msg);
+
+    // FLOOR RAISED HERE, `casts to enum types` 1 -> 2, blessed through
+    // `board --update`. armyGroup::armies is int on purpose (armygrp.h
+    // says so: it keeps the int-typed slot writes cast-free) while
+    // strip::DrawIcons takes the Dreamcast's TCreatureType, so the
+    // domain edge has to be crossed somewhere and every alternative
+    // just moves the same cast: an accessor on armyGroup is counted the
+    // same (the metric reads headers too), and re-typing `armies`
+    // pushes casts onto every writer instead. The cast is real - the
+    // value in it IS a creature type.
+    TCreatureType creature = CREATURE_NONE;
+    if (field_1c4)
+        creature = static_cast<TCreatureType>(
+            field_12c->group->armies[field_130]);
+    pResourceDisplay->Update(1, 0);
+    field_11c->DrawIcons(0, creature);
+    field_120->DrawIcons(0, creature);
+    UpdateTownInfo();
+    TownWindow->DrawWindow(0, WINDOW_ALL_WIDGETS_LOW,
+                           WINDOW_ALL_WIDGETS_HIGH);
+    gpWindowManager->UpdateScreen(0, 0, WINDOW_SCREEN_WIDTH,
+                                  WINDOW_SCREEN_HEIGHT);
+}
+
 // Drops the two hovered troop selections. The pair of strips it clears
 // is the constructor's +0x12c / +0x134, and the -2 it stores through
 // them is strip::current's own "nothing selected" sentinel - the same
@@ -3620,13 +3676,6 @@ void townManager::MoveHeroToGarrison()
 // E:\gamedcs\townmgr.cpp:6813
 DC_ONLY(0x176cf8, 0x1B8)
 void townManager::MoveHeroFromGarrison()
-{
-    // @stub
-}
-
-// E:\gamedcs\townmgr.cpp:6843
-DC_ONLY(0x176eb0, 0x72)
-void townManager::RedrawTownScreen()
 {
     // @stub
 }
