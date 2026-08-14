@@ -761,6 +761,11 @@ static const int gHeroArmyCoords[7][2] = {
 // the plain arm each build their own format_string temporary at its own
 // frame offset (-0x40 and -0x50) and tear it down inside the arm, so
 // they are two statements in two arms, not one hoisted call.
+//
+// THE ACTING HERO COMES FROM game::GetCurrHero (96.52 -> 97.77,
+// 2026-08-14). dc 0x558a8 line 229 calls it by name; see the note on
+// TBottomViewTown below for why that accessor is not GetHero applied to
+// gpCurrentPlayer->currHeroId.
 VA(0x00451ab0, 0x68A)  // anchor-vtable 0x63bb2c + advManager::UpdBottomViewHero, dc 0x558a8
 TBottomViewHero::TBottomViewHero(heroWindow* parent)
     : type_bottom_view_window(parent)
@@ -770,7 +775,7 @@ TBottomViewHero::TBottomViewHero(heroWindow* parent)
     Widgets.push_back(new bitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatHr.pcx", 0x800));
 
-    hero* who = gpGame->GetHero(gpCurrentPlayer->currHeroId);
+    hero* who = gpGame->GetCurrHero();
 
     Widgets.push_back(new bitmapBorder(3, 2, 58, 64, 0x7d1,
         akHeroTraits[who->portrait].largePortraitName, 0x800));
@@ -886,16 +891,21 @@ static const int gTownArmyCoords[7][2] = {
 // reloads `i` after every store because the store through that cursor
 // might alias it. Both are what `slots[found++] = i` produces.
 //
-// Residual (94.31%): game::GetTown's -1 arm comes out SECOND here and
-// FIRST in TBottomViewKingdom, from the one header inline and the same
-// spelling - retail sinks the `movsx` into the taken arm and compares
-// the raw byte, and its null arm reuses a zero register that stays live
-// all the way back through the first widget's null test and its two
-// `push 0` arguments. TBottomViewHero has the identical divergence on
-// game::GetHero. Inverting the accessor to `if (id != -1) return &..;
-// return 0;` would move these two and break TBottomViewKingdom, which
-// matches with the current spelling, so game.h is left alone. The frame
-// is also 8 bytes short: retail allocates two more push_back
+// THE CURRENT TOWN COMES FROM game::GetCurrTown, NOT FROM GetTown APPLIED
+// TO THE ID (95.63 -> 97.36, 2026-08-14, and the twin below 96.52 ->
+// 97.77). This was recorded here as an unresolvable conflict - retail
+// sinks the `movsx` into the taken arm, compares the raw byte and puts
+// the null arm LAST, which is the opposite of what TBottomViewKingdom
+// proves for GetTown - and the Dreamcast line table dissolves it:
+// dc 0x55df4 line 359 calls `game::GetCurrTown` and dc 0x558a8 line 229
+// calls `game::GetCurrHero`, two SEPARATE Game.h inlines (Game.h:1023 and
+// :991) whose DC bodies re-read the id rather than take it as a parameter
+// - GetCurrTown even calls GetCurrTownId twice. Re-reading the char field
+// inside the arm is exactly what keeps the compare at byte width, and the
+// two accessors no longer contend with GetTown/GetHero's spelling. The
+// whole `mov al,[player+0x3f] / cmp al,-1 / je / movsx eax,al / ... /
+// jmp / mov [ebp+8],esi` block is byte-identical to retail now. The frame
+// is still 8 bytes short: retail allocates two more push_back
 // temporaries where our CL folds them onto the silo array's slots.
 // Tried and rejected: hoisting `slots` to function scope (no change -
 // VC6's slot reuse here is liveness-based, not scope-based).
@@ -976,7 +986,7 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
     Widgets.push_back(new bitmapBorder(0, 0, 176, 166,
         BOTTOM_VIEW_BACKGROUND_ID, "AdStatCs.pcx", 0x800));
 
-    town* which = gpGame->GetTown(gpCurrentPlayer->currTownId);
+    town* which = gpGame->GetCurrTown();
 
     Widgets.push_back(new iconWidget(3, 2, 58, 64, 0x7d1, "itpt.def",
         which->GetPortraitFrame(false), 0, 0, 0, 0x10));

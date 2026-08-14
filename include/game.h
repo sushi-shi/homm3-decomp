@@ -1149,6 +1149,25 @@ public:
             return 0;
         return &towns[townId];
     }
+    // DC `game::GetCurrHero` (dc 0x2ed4, E:\gamedcs\Game.h:991) and
+    // `game::GetCurrTown` (dc 0x1ff40, Game.h:1023) - the acting player's
+    // pair, and NOT GetHero/GetTown applied to the id. Two retail facts
+    // separate them from the general accessors, and both are visible in
+    // TBottomViewTown/TBottomViewHero, whose Dreamcast bodies call these
+    // by name where ours spelled the general accessor:
+    //   * the id is compared at CHAR width and only widened INSIDE the
+    //     taken arm (`mov al,[player+0x3f] / cmp al,-1 / je / movsx eax,al`),
+    //     which is what re-reading the field in the arm produces and what
+    //     passing it through an `int` parameter cannot - the widening would
+    //     then dominate the test;
+    //   * the null arm comes LAST (`je` to it, body falls through) and
+    //     reuses whatever zero register is already live, i.e. the source
+    //     tests `!= -1` and returns the pointer first.
+    // GetHero/GetTown keep the opposite spelling because TBottomViewKingdom
+    // and playerData::HasCapitol prove theirs; these are separate members,
+    // so the two spellings no longer contend.
+    hero* GetCurrHero();
+    town* GetCurrTown();
     // DC `game::GetBoat`, declared inline in Game.h. Retail has no
     // out-of-line row; map-cell consumers expand the 40-byte vector indexing
     // directly at their call sites.
@@ -1186,6 +1205,20 @@ extern playerData* gpCurrentPlayer;
 inline int game::GetCurrHeroId()
 {
     return gpCurrentPlayer->currHeroId;
+}
+
+inline hero* game::GetCurrHero()
+{
+    if (gpCurrentPlayer->currHeroId != -1)
+        return &heroes[gpCurrentPlayer->currHeroId];
+    return 0;
+}
+
+inline town* game::GetCurrTown()
+{
+    if (gpCurrentPlayer->currTownId != -1)
+        return &towns[gpCurrentPlayer->currTownId];
+    return 0;
 }
 
 // The world's x- and y-extents, retail .data 0x6783c8 / 0x6783cc.

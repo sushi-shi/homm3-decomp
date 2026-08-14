@@ -374,12 +374,12 @@ border	?SetImage@bitmapBorder@@QAEXPBD@Z	100.0000	100.0000	100.0000	0x504c0
 border	?SetPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000	100.0000	100.0000	0x50520
 border	?zBufferDraw@bitmapBorder@@QAEXPAGH@Z	100.0000	100.0000	100.0000	0x503f0
 bottomviewsubwindow	??0TBottomViewEnemyTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x53250
-bottomviewsubwindow	??0TBottomViewHero@@QAE@PAVheroWindow@@@Z	96.5197	96.5197	96.5197	0x51ab0
+bottomviewsubwindow	??0TBottomViewHero@@QAE@PAVheroWindow@@@Z	97.7675	97.7675	97.7675	0x51ab0
 bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	94.0575	94.0575	94.0575	0x52b80
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51820
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x50dd0
 bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.2973	91.2973	91.2973	0x51220
-bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	95.6295	95.6295	95.6295	0x521f0
+bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	97.3638	97.3638	97.3638	0x521f0
 bottomviewsubwindow	??1TBottomViewEnemyTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x53670
 bottomviewsubwindow	??1TBottomViewHero@@UAE@XZ	100.0000	100.0000	100.0000	0x52170
 bottomviewsubwindow	??1TBottomViewKingdom@@UAE@XZ	100.0000	100.0000	100.0000	0x531d0
