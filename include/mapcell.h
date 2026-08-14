@@ -427,6 +427,24 @@ public:
     // also frees EDX, which is what pushed the whole entry block's
     // register assignment off retail's.
     bool IsCustomized() const { return monster_info.custom != 0; }
+
+    // mapcell.cpp:46 in the DC roster, and the SAME inherited member
+    // IsCustomized is: retail's do_event_dragon_city (0x4a2140) passes the
+    // raw NewmapCell pointer straight to ExtraInfoUnion::SetCellVisited as
+    // `this` (`mov ecx, cell / call 0x4fbf90`), which is the implicit
+    // upcast the DC's `NewmapCell : public ExtraInfoUnion` performs. That
+    // derivation is not expressible here - ExtraInfoUnion is a UNION, and a
+    // union cannot be a base class - so the inherited declarator is
+    // re-declared on the derived side, exactly as IsCustomized is above.
+    //
+    // DECLARED, NEVER DEFINED. The one definition stays where retail put
+    // it, mapcell.obj's ?SetCellVisited@ExtraInfoUnion@@QAEXF@Z (0x4fbf90,
+    // exact); a call relocation's symbol name is not scored, so the
+    // re-declaration costs nothing at the call site. Handlers whose cell is
+    // never anything but the +0x00 dword keep taking ExtraInfoUnion*
+    // directly and call the real member; this one cannot, because the same
+    // pointer also goes to CreatureBankEvent as a NewmapCell*.
+    void SetCellVisited(short player);
 #endif
     NewmapCell* get_trigger_cell();
 };

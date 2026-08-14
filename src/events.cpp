@@ -2316,6 +2316,82 @@ void advManager::DoEventDefenseTower(hero* current_hero, NewmapCell* cell,
     current_hero->DefenseTowerFlags |= 1 << cell->extraInfo;
 }
 
+// philai.obj's two-argument event appraisal (dc 0x114b44), and the whole
+// of the AI arm's decision at three call sites in this file. Retail's
+// 0x52bd10 is a /Gr fastcall taking the hero in ECX and the packed point
+// on the STACK - type_point is a struct, so it cannot ride a register -
+// and returning long; its own body is a nine-instruction wrapper that
+// zeroes a local move-cost and forwards to the three-argument overload at
+// 0x528040. Declared file-locally at its FIRST consumer; the rest of the
+// xref evidence is in the note above monsters_flee.
+long AI_value_of_event(const hero* current_hero, type_point point);
+
+// E:\gamedcs\events.cpp:1675.  The Dragon Utopia, jump-table arm 0x19 =
+// OBJECT_DRAGON_UTOPIA, and the only creature bank retail gives a handler
+// of its own instead of routing through DoEventCreatureBank (0x4a15a0).
+// Everything specific to it is the two text rows: the generic bank
+// formats advevent.txt row 33 with the bank's name for an already-emptied
+// cell, this one shows genrltxt.txt row 425 flat.
+//
+// The shape is the generic bank's, minus the std::string work that makes
+// that row EH-framed. The visit is recorded FIRST, unconditionally and
+// for both players - the cell goes straight to SetCellVisited as `this`,
+// the implicit upcast the DC's `NewmapCell : public ExtraInfoUnion` does
+// - and only then does the emptied bit 0x2000000 decide which of the two
+// dialogs a human sees. Bit 0x2000000 is the bank's own emptied lane:
+// DoEventCreatureBank tests the identical mask on the identical dword
+// three instructions after the identical SetCellVisited call.
+//
+// The AI never sees either dialog. It reaches the fight through
+// AI_value_of_event on BOTH arms - an emptied utopia is worth nothing to
+// it, so the appraisal is what declines - and that is why retail's `jle`
+// target and the human DECLINE's `je` target are the same epilogue.
+//
+// THE `goto` IS LOAD-BEARING AND THE MEASUREMENT IS WORTH KEEPING. The
+// obvious spelling - write CreatureBankEvent out longhand in both arms and
+// let VC6 cross-jump them, the lean-to lever - produces the RIGHT CONTROL
+// FLOW and the wrong registers: 84.4943%, every instruction paired, with
+// `cell` and `current_hero` transposed across EBX/EDI for the whole body
+// and one extra `mov eax,[cell]` because the freed EBX went to
+// `human_player`. The second call site is an extra reference to each
+// argument, and that flips C2's pseudo CREATION order, which is what the
+// ESI/EDI/EBX first-fit walk consumes (docs/vc6/regalloc.md). One call
+// site reached by `goto` restores retail's order - 84.49 -> 100 - and the
+// Dreamcast agrees from the other side: its line table puts
+// CreatureBankEvent on ONE line (events.cpp:1699, dc 0x92ee4) reached from
+// both arms. So: when retail's merged tail is entered by an unconditional
+// `jmp` that SKIPS an intervening test, that is a source `goto`, not a
+// cross-jump - a cross-jump would have had to re-test.
+VA(0x004a2140, 0xE8)  // jump-table arm 0x19 + CreatureBankEvent, dc 0x92dec
+void advManager::do_event_dragon_city(hero* current_hero, NewmapCell* cell,
+                                      type_point point, bool human_player)
+{
+    cell->SetCellVisited(current_hero->owner);
+    if (cell->extraInfo & 0x2000000) {
+        if (human_player) {
+            NormalDialog(gpGeneralText->GetText(
+                             GENERAL_TEXT_DRAGON_CITY_EMPTIED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+    } else if (human_player) {
+        OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+        UpdBottomView(0, 1, 1);
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_DRAGON_CITY_PROMPT),
+                     2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+            return;
+        goto fight;
+    }
+
+    if (AI_value_of_event(current_hero, point) <= 0)
+        return;
+fight:
+    CreatureBankEvent(current_hero, cell, emptyRolloverText, point,
+                      human_player);
+}
+
 // E:\gamedcs\events.cpp:1822.  The Fountain of Youth, do_event_watering
 // hole's twin: one hero flag bit, +1 morale and +400 movement on both
 // the allowance and the remainder, and the cell argument is never
@@ -2887,8 +2963,9 @@ static const char* GetArmyName(int type, int count)
 // `short`; retail passes them as full dwords with no narrowing at any of
 // the three call sites, and the same locals reach armyGroup::Add's int
 // parameter unconverted, so the declarators here are int. Declared file
-// locally, the AI_approximate_strength precedent above.
-long AI_value_of_event(const hero* current_hero, type_point point);
+// locally, the AI_approximate_strength precedent above - AI_value_of_event
+// itself is declared further up, at do_event_dragon_city, which is its
+// first consumer in this file.
 void AI_join_decision(hero* current_hero, TCreatureType creature, int amount);
 unsigned char AI_bribe_monsters(const hero* current_hero, NewmapCell* cell,
                                 TCreatureType type, int amount,

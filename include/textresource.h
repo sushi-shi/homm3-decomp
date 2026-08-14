@@ -69,6 +69,21 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_AI_SINGLE_RESOURCE_REQUEST = 360,
     GENERAL_TEXT_AI_MULTIPLE_RESOURCE_REQUEST = 361,
     GENERAL_TEXT_VIEW_ARMY_HEALTH = 389,
+#ifdef HOMM3_EVENTS_VIEW
+    // do_event_dragon_city (0x4a2140) shows this row - and nothing else in
+    // the image does. The index is the folded `[Text._First + 0x6a4]` load
+    // at 0x4a2183, and a scan of every `mov r32,[r32+0x6a4]` in .text finds
+    // exactly ONE, so the row has a single consumer and the name can only
+    // describe it: the line a hero gets on a Dragon Utopia whose cell
+    // already carries the emptied bit 0x2000000. The generic creature bank
+    // (0x4a15a0) tests the same bit on the same dword but formats
+    // advevent.txt row 33 with the bank's own name instead, so the two are
+    // NOT shared. Gated to the events view: no other modeled consumer
+    // proves the value, and an ungated enumerator counts toward the
+    // include-set threshold - winmgr.h's DIALOG_RETURN_DECLINE sets that
+    // precedent.
+    GENERAL_TEXT_DRAGON_CITY_EMPTIED = 425,
+#endif
     GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT = 445,
     GENERAL_TEXT_LEVEL_UP_HERO_FORMAT = 446,
     GENERAL_TEXT_PUZZLE_WINDOW = 464,
