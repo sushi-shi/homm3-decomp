@@ -104,7 +104,7 @@ static unsigned char find_flyer_attack_cell(const army* self, long start,
 }
 
 VA(0x004b46c0, 0x2F9)  // simple_move call + ordered fly block, dc 0xa1430
-unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest)
+unsigned char army::ValidFlight(int destIndex, unsigned char bLiteralTest) const
 {
     if (destIndex < 0)
         return 0;

@@ -123,7 +123,7 @@ advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
 advmgr	advManager_garrison_quick_view	0.0000	0.0000	0.0000	0x16f80
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0
-ai	?IsIncapacitated@army@@QAEEXZ	100.0000	100.0000	100.0000	0x1f380
+ai	?IsIncapacitated@army@@QBEEXZ	100.0000	100.0000	100.0000	0x1f380
 ai	?berserk_attack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000	100.0000	100.0000	0x222c0
 ai	?can_cast_spells@combatManager@@QAEEJE@Z	100.0000	100.0000	100.0000	0x1f890
 ai	?choose_cyclops_action@combatManager@@QAEEJJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1eea0
@@ -288,7 +288,7 @@ ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000	0.0000	0.0000	0x3c330
 ai_tactical	type_AI_spellcaster_get_protection_value	0.0000	0.0000	0.0000	0x396e0
 ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000	0.0000	0.0000	0x369c0
 army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
-army	?ComputeDefenderDamageReduction@army@@QAENE@Z	100.0000	100.0000	100.0000	0x43d90
+army	?ComputeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x43d90
 army	?Damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090
 army	?GetName@army@@SIPBDHJ@Z	100.0000	100.0000	100.0000	0x40100
 army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0
@@ -296,10 +296,10 @@ army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	97.0115	97.0115	97
 army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	97.5194	97.5194	97.5194	0x3e000
 army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
-army	?enemy_is_adjacent@army@@QAEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0
+army	?enemy_is_adjacent@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0
 army	?get_adjusted_attack@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42410
 army	?get_adjusted_defense@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42590
-army	?get_attack_direction@army@@QAEJJPBV1@@Z	100.0000	100.0000	100.0000	0x458b0
+army	?get_attack_direction@army@@QBEJJPBV1@@Z	100.0000	100.0000	100.0000	0x458b0
 army	?get_attack_direction@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x45840
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550
 army	?get_average_damage@army@@QBEJPBV1@EJEJ@Z	100.0000	100.0000	100.0000	0x42780
@@ -310,7 +310,7 @@ army	?get_fire_shield_strength@army@@QBEMXZ	100.0000	100.0000	100.0000	0x43130
 army	?get_loss_combat_value@army@@QBEJJJEJE@Z	100.0000	100.0000	100.0000	0x42fd0
 army	?get_mirror_effect@army@@QBEHXZ	100.0000	100.0000	100.0000	0x487f0
 army	?get_owner@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x426d0
-army	?get_resurrection_size@army@@QAEJPBV1@@Z	100.0000	100.0000	100.0000	0x47330
+army	?get_resurrection_size@army@@QBEJPBV1@@Z	100.0000	100.0000	100.0000	0x47330
 army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080
 army	?is_enemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880
@@ -610,7 +610,7 @@ fly	?Fly@army@@QAEHH@Z	85.9057	85.9057	85.9057	0xb4a40
 fly	?FlyTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb49c0
 fly	?Teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10
 fly	?TeleportTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb4e90
-fly	?ValidFlight@army@@QAEEHE@Z	89.1445	89.1445	89.1445	0xb46c0
+fly	?ValidFlight@army@@QBEEHE@Z	89.1445	89.1445	89.1445	0xb46c0
 font	??1font@@UAE@XZ	100.0000	100.0000	100.0000	0xb5110
 font	?DrawBoundedString@font@@QAEXPBDPAVBitmap16Bit@@HHHHHIH@Z	98.7864	98.7864	98.7864	0xb5490
 font	?DrawCharacter@font@@QAEXHPAVBitmap16Bit@@HHH@Z	78.2623	78.2623	78.2623	0xb51a0
@@ -1261,9 +1261,9 @@ palette	?_vslot2@TPalette24@@UBEIXZ	100.0000	100.0000	100.0000	0x122f70
 path	?FindPath@army@@QAEHHHEE@Z	100.0000	100.0000	100.0000	0x1239d0
 path	?GetAdjacentCellIndex@army@@QBEHHH@Z	100.0000	100.0000	100.0000	0x123d90
 path	?GetAdjacentCellIndexNoArmy@@YIHHH@Z	100.0000	100.0000	100.0000	0x123e80
-path	?GetAttackMask@army@@QAEIHHH@Z	100.0000	100.0000	100.0000	0x123b20
+path	?GetAttackMask@army@@QBEIHHH@Z	100.0000	100.0000	100.0000	0x123b20
 path	?OppositeDirection@@YIHH@Z	100.0000	100.0000	100.0000	0x123ec0
-path	?ValidAttack@army@@QAEHHHHHPAH@Z	81.0407	81.0407	81.0407	0x123bb0
+path	?ValidAttack@army@@QBEHHHHHPAH@Z	81.0407	81.0407	81.0407	0x123bb0
 path	?ValidPath@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x123a70
 path	?get_adjacent_hex@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x123df0
 philai	?ValueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0

@@ -292,21 +292,21 @@ void army::DrawToBuffer(int x, int y, int bNumBoxOnly)
 
 // E:\gamedcs\army.cpp:891
 DC_ONLY(0x44d50, 0xC2)
-double army::ComputeKarma()
+double army::ComputeKarma() const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:917
 DC_ONLY(0x44e14, 0xAC)
-unsigned char add_item(std::vector<army* array, army* arg)
+unsigned char add_item(std::vector<army*>& array, army* arg)
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:930
 DC_ONLY(0x44ec0, 0x4A)
-void erase_item(std::vector<army* array, const army* arg)
+void erase_item(std::vector<army*>& array, const army* arg)
 {
     // @stub
 }
@@ -606,14 +606,14 @@ long army::get_adjusted_defense(const army* enemy,
 
 // E:\gamedcs\army.cpp:2670
 DC_ONLY(0x478c8, 0x32)
-long army::get_defense_modifier()
+long army::get_defense_modifier() const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:2680
 DC_ONLY(0x478fc, 0x8)
-double army::get_defense_damage_modifier(unsigned char ranged_attack)
+double army::get_defense_damage_modifier(unsigned char ranged_attack) const
 {
     // @stub
 }
@@ -848,7 +848,7 @@ unsigned char army::can_shoot(const army* excluded) const
 #endif  // @carcass
 
 VA(0x004429f0, 0x5C)  // anchor-global, dc 0x47c74
-unsigned char army::enemy_is_adjacent(const army* excluded)
+unsigned char army::enemy_is_adjacent(const army* excluded) const
 {
     if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded))
         return 1;
@@ -969,28 +969,28 @@ float army::get_fire_shield_strength() const
 
 // E:\gamedcs\army.cpp:3002
 // RETAIL_LOCATED(0x00443160, 0x1BF)  // anchor-global, dc 0x48524
-int army::ComputeBaseDamage(unsigned char simulate_only)
+int army::ComputeBaseDamage(unsigned char simulate_only) const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:3076
 // RETAIL_LOCATED(0x00443840, 0x344)  // anchor-global, dc 0x4868c
-int army::ComputeAttackerDamageBonuses(int base_damage, unsigned char is_shooting, army* defender, unsigned char simulate_only, long distance)
+int army::ComputeAttackerDamageBonuses(int base_damage, unsigned char is_shooting, army* defender, unsigned char simulate_only, long distance) const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:3230
 DC_ONLY(0x48c10, 0x50)
-int army::ComputeDefenderDamageBonuses(int base_damage)
+int army::ComputeDefenderDamageBonuses(int base_damage) const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:3243
 // RETAIL_LOCATED(0x00443b90, 0x1FE)  // anchor-global, dc 0x48c60
-double army::ComputeAttackerDamageReduction(const army* defender, unsigned char is_shooting)
+double army::ComputeAttackerDamageReduction(const army* defender, unsigned char is_shooting) const
 {
     // @stub
 }
@@ -999,7 +999,7 @@ double army::ComputeAttackerDamageReduction(const army* defender, unsigned char 
 #endif  // @carcass
 
 VA(0x00443d90, 0x9C)  // anchor-global, dc 0x48fc4
-double army::ComputeDefenderDamageReduction(unsigned char is_shooting)
+double army::ComputeDefenderDamageReduction(unsigned char is_shooting) const
 {
     double reduction = 1.0;
     if (is_shooting) {
@@ -1021,7 +1021,7 @@ double army::ComputeDefenderDamageReduction(unsigned char is_shooting)
 
 // E:\gamedcs\army.cpp:3356
 // RETAIL_LOCATED(0x00443f40, 0x14F)  // anchor-global, dc 0x490f4
-long army::adjust_damage(army* enemy, long base_damage, unsigned char bIsShot, unsigned char simulated, long distance, long* fire_damage)
+long army::adjust_damage(army* enemy, long base_damage, unsigned char bIsShot, unsigned char simulated, long distance, long* fire_damage) const
 {
     // @stub
 }
@@ -1133,7 +1133,7 @@ void army::DecrementSpellRounds()
 
 // E:\gamedcs\army.cpp:4158
 // RETAIL_LOCATED(0x00445490, 0x23B)  // anchor-global, dc 0x4a348
-void army::get_berserk_targets(std::vector<army* armies)
+void army::get_berserk_targets(std::vector<army*>& armies) const
 {
     // @stub
 }
@@ -1171,7 +1171,7 @@ long army::get_attack_direction(long our_hex, const army* enemy,
 #endif  // @carcass
 
 VA(0x004458b0, 0x9D)  // corroborates, dc 0x4a610
-long army::get_attack_direction(long our_hex, const army* enemy)
+long army::get_attack_direction(long our_hex, const army* enemy) const
 {
     // The loop bound has to be tested at the BOTTOM of an unbounded
     // loop: a plain `for (d = 0; d < 8; d++)` costs 4.68 points, all of
@@ -1251,7 +1251,7 @@ void army::AttackWall(int iTargetGridIndex)
 
 // E:\gamedcs\army.cpp:4526
 // RETAIL_LOCATED(0x00445ec0, 0x10C)  // dc-callgraph unique, dc 0x4aa3c
-void army::attack_wall(TWallTargetId wall, const type_ballistics_traits* ballistics)
+void army::attack_wall(TWallTargetId wall, const type_ballistics_traits& ballistics)
 {
     // @stub
 }
@@ -1272,49 +1272,49 @@ void army::Cure(int level, int iSpellPower, const hero* casting_hero)
 
 // E:\gamedcs\army.cpp:4773
 DC_ONLY(0x4b14c, 0x24)
-int army::MidY()
+int army::MidY() const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:4779
 DC_ONLY(0x4b170, 0x20)
-int army::TopY()
+int army::TopY() const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:4784
 DC_ONLY(0x4b190, 0x16)
-int army::BottomY()
+int army::BottomY() const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:4790
 DC_ONLY(0x4b1a8, 0x64)
-int army::MidX()
+int army::MidX() const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:4800
 DC_ONLY(0x4b20c, 0x6C)
-int army::RightX()
+int army::RightX() const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:4812
 DC_ONLY(0x4b278, 0x6C)
-int army::LeftX()
+int army::LeftX() const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:4825
 DC_ONLY(0x4b2e4, 0x6E)
-int army::FrontX()
+int army::FrontX() const
 {
     // @stub
 }
@@ -1339,14 +1339,14 @@ int army::get_second_grid_index() const
 
 // E:\gamedcs\army.cpp:4850
 DC_ONLY(0x4b398, 0x4E)
-unsigned char army::is_adjacent(int arg)
+unsigned char army::is_adjacent(int arg) const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:4864
 DC_ONLY(0x4b3e8, 0x3E)
-unsigned char army::is_adjacent(const army* other_army)
+unsigned char army::is_adjacent(const army& other_army) const
 {
     // @stub
 }
@@ -1426,7 +1426,7 @@ void army::PlayAnimation(int sequence, int nframes, int start_frame)
 
 // E:\gamedcs\army.cpp:5096
 // RETAIL_LOCATED(0x00446c40, 0x1E1)  // anchor-global, dc 0x4b8c4
-int army::CanFit(int destIndex, int bAllowShifting, int* iNewDestIndex)
+int army::CanFit(int destIndex, int bAllowShifting, int* iNewDestIndex) const
 {
     // @stub
 }
@@ -1449,7 +1449,7 @@ void army::ResetRound()
 #endif  // @carcass
 
 VA(0x00447330, 0x9C)  // anchor-global, dc 0x4bd80
-long army::get_resurrection_size(const army* target)
+long army::get_resurrection_size(const army* target) const
 {
     if (creatureType == CREATURE_ARCHANGEL) {
         int missing = target->origNumTroops - target->numTroops;
@@ -1466,14 +1466,14 @@ long army::get_resurrection_size(const army* target)
 
 // E:\gamedcs\army.cpp:5324
 // RETAIL_LOCATED(0x004473d0, 0x13D)  // anchor-bracket, dc 0x4be64
-unsigned char army::can_cast_resurrect(long hex)
+unsigned char army::can_cast_resurrect(long hex) const
 {
     // @stub
 }
 
 // E:\gamedcs\army.cpp:5359
 // RETAIL_LOCATED(0x004476c0, 0x3BA)  // anchor-global, dc 0x4beec
-unsigned char army::can_cast_spell(long hex)
+unsigned char army::can_cast_spell(long hex) const
 {
     // @stub
 }
@@ -1644,35 +1644,35 @@ double min(double a, double b)
 
 // E:\gamedcs\Army.h:760
 DC_ONLY(0x4c9ec, 0x20)
-unsigned char army::NeedToTurn(int direction)
+unsigned char army::NeedToTurn(int direction) const
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:810
 DC_ONLY(0x4ca0c, 0x20)
-const char* army::GetName()
+const char* army::GetName() const
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:815
 DC_ONLY(0x4ca2c, 0x18)
-const char* army::GetName(int count)
+const char* army::GetName(int count) const
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:869
 DC_ONLY(0x4ca44, 0x1C)
-long army::get_attack_direction(const army* enemy)
+long army::get_attack_direction(const army* enemy) const
 {
     // @stub
 }
 
 // E:\gamedcs\Army.h:875
 DC_ONLY(0x4ca60, 0x1C)
-unsigned char army::LeavesNoBody()
+unsigned char army::LeavesNoBody() const
 {
     // @stub
 }
@@ -1861,7 +1861,7 @@ void std::_Deque_iterator_base<enum SpellID,std::_Buf_size_traits<enum SpellID,0
 
 // E:\gamedcs\DC_precompiledheaders.h:41
 DC_ONLY(0x4d044, 0x38)
-const double* _cpp_min(const double* _X, const double* _Y)
+const double& _cpp_min(const double& _X, const double& _Y)
 {
     // @stub
 }
