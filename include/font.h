@@ -18,7 +18,20 @@ class Bitmap16Bit;
 class font : public resource {
 public:
     // 12-byte glyph records at 0x3c: GetCharacterWidth sums the three
-    // fields (names unattested; DC's nested TFontSpec is unprinted).
+    // fields.
+    // DC NAMES, recovered 2026-08-14 (LF_FIELDLIST 0x2372, nested type
+    // font::TFontSpec::myABC, size 12): the three fields are the Win32
+    // ABC widths - `int abcA` (left side bearing, SIGNED: it is the
+    // `field_0 < 0` leading-bearing test in DrawStringExecute),
+    // `unsigned abcB` (the inked width DrawCharacter loops over), and
+    // `int abcC` (right side bearing). The names are left as field_N
+    // here because five other lanes' sources already spell them; the
+    // identity is recorded rather than renamed.
+    // Note also that DC's `font::TFontSpec` is NOT this record - it is
+    // the whole 0x1020 header blob at font+0x1c (LF_MEMBER `fs`), whose
+    // members are first/last/depth/xspace/yspace/height/baseyoffset/
+    // pad/numpal/pal[5]/abc[256]/Offset[256]. That is where `height`
+    // (+0x21) and `baseyoffset` (+0x22) below come from.
     struct TFontSpec {
         int field_0;
         int field_4;
@@ -90,7 +103,11 @@ public:
     };
 
     unsigned char height;
-    char pad_22[0x1a];
+    // font::TFontSpec::baseyoffset (DC name, `char` at fs+6). The signed
+    // vertical bearing DrawStringExecute adds to `y` before clipping -
+    // retail reads it with `movsx eax, byte ptr [esi+0x22]`.
+    char baseyoffset;
+    char pad_23[0x19];
     TFontSpec spec[256];
     // Per-character offsets into `data` (DrawCharacter indexes this
     // int[256] at +0xc3c; formerly an opaque pad).
