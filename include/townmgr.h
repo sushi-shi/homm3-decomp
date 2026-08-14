@@ -51,13 +51,24 @@ public:
 
 class TThievesGuildWindow : public CAdvPopup {
 public:
+    // The one non-literal widget id the constructor uses; the rest of
+    // this dialog's widgets sit in the 40/600/700/800/900 bands and
+    // stay literal.
+    enum {
+        MAGE_BUTTON_ID = 0x7800
+    };
+
     char pad_60[0x20];
     // +0x80: attested only as the destructor's first teardown - deleted
     // through slot 0 before the widget list, so it is an owned object
     // with a virtual destructor and nothing else about it is proven.
     widget* field_80;
 
+    TThievesGuildWindow(int num_guilds);
     virtual ~TThievesGuildWindow();
+    // Retail 0x5dda10, the compiland's second largest body and the
+    // constructor's last statement. Declared, not reconstructed.
+    void SetupThievesGuild(int iThievesGuilds);
 };
 
 class THallWindow : public CAdvPopup {
