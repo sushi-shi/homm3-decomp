@@ -256,12 +256,25 @@ DATA(0x006aaa54) static recruitUnit* gpRecruitUnit;
 // too; same naming convention.
 DATA(0x006aa9b0) static TShipWindow* gpShipWindow;
 
+// The blacksmith's, on the same evidence: all three image-wide
+// references to 0x6aa620 are DoBlacksmith's own new/DoModal/delete
+// trio, so this compiland owns the cell.
+DATA(0x006aa620) static TBlacksmithWindow* gpBlacksmithWindow;
+
 
 // The line DoPortalOfSummoning prints when the map has nothing left for
 // the portal to summon. ONE image-wide reference and no writer in the
 // admitted surface, so it is declared rather than claimed - the same
 // standing this page's other unowned .bss text cells have.
 DATA(0x006a5dfc) extern const char* gUnnamed6a5dfc;
+// DoBlacksmith's two, on the same standing. 0x6a5e00 is the cell
+// immediately after the one above and is the FORMAT of the "you bought
+// it" line; 0x6a6524 is the one vararg the "nobody is here to buy"
+// line takes. Each has exactly ONE image-wide reference - this page's -
+// and no writer anywhere in the image, so both are declared rather than
+// claimed and both keep neutral names.
+DATA(0x006a5e00) extern const char* gUnnamed6a5e00;
+DATA(0x006a6524) extern const char* gUnnamed6a6524;
 
 #if 0  // @carcass
 
@@ -2010,6 +2023,69 @@ int TBlacksmithWindow::WindowHandler(message* msg)
         DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
     }
     return 1;
+}
+
+// The blacksmith, opened both from the town page and from the adventure
+// map. `heroId` is the buyer; -1 means nobody is standing here, and the
+// dialog is replaced by a one-line refusal.
+//
+// The purchase is settled by the DIALOG RETURN, not by the handler: the
+// window closes, and only then does this function look at the window
+// manager's dialogReturn for the buy button's id. The artifact record
+// goes to the hero whole - the address of the table row is what
+// hero::GiveArtifact takes.
+//
+// The price loop is retail's own, quirk included: it walks all seven
+// entries of the machine's cost row but subtracts every one of them
+// from GOLD (resources[6]), never from the matching resource. It is
+// harmless because a war machine costs gold and nothing else, so the
+// other six terms are zero - but it is what the bytes say, and the
+// fixed +0xb4 displacement inside the loop is the proof.
+//
+// Residual (90.75%): REGISTER BINDING, schedule aligned. Both sides emit
+// 139 instructions, the same opcodes with the same immediates in the
+// same order, and `vc6 why-reg` measures the divergence as pure binding
+// (edx->ecx x8, eax->edx x6, ecx->eax x2, ebx->edx x1) with no
+// unpaired slot. What it comes down to is one scheduling choice at
+// three sites: for `Base[index]` on an indirect base, retail emits the
+// index chain first and loads the base pointer LAST, while this CL
+// loads the base first and keeps the chain in the other register. Not
+// source-addressable so far - the guided search's whole catalog came
+// back empty, and the same expression compiles base-FIRST on both
+// sides two rows up in SetRolloverText, so the spelling is not what
+// selects it. Tried and rejected: naming the object expression as a
+// statement (`hero* buyer = &gpGame->heroes[heroId];` - VC6 coalesces
+// it away, byte-flat); the un-hoisted cost expression (65.92%).
+
+// E:\gamedcs\townmgr.cpp:5361
+VA(0x005d1d30, 0x1BE)  // anchor-callee(TBlacksmithWindow ctor 0x5d1360) + arity, dc 0x173ce0
+void DoBlacksmith(int heroId, int townType)
+{
+    if (heroId == -1) {
+        sprintf(gText, gpGeneralText->GetText(274), gUnnamed6a6524);
+        NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    gpBlacksmithWindow = new TBlacksmithWindow(heroId, townType);
+    if (!gpBlacksmithWindow)
+        MemError();
+    gpBlacksmithWindow->DoModal(0);
+    delete gpBlacksmithWindow;
+
+    if (gpCurrentPlayer->IsLocalHuman()
+        && gpWindowManager->dialogReturn
+               == TBlacksmithWindow::BUY_BUTTON_ID) {
+        gpGame->heroes[heroId].GiveArtifact(&gBlacksmithArtifacts[townType],
+                                            1, 1);
+        const int* cost =
+            akCreatureTypeTraits[gBlacksmithMachines[townType]].cost;
+        for (int i = 0; i < 7; i++)
+            gpCurrentPlayer->resources[6] -= cost[i];
+        sprintf(gText, gUnnamed6a5e00,
+                akCreatureTypeTraits[gBlacksmithMachines[townType]].m_name);
+        NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
 }
 
 // The shipyard dialog, same recipe as TBuyBuildWindow's above. The
