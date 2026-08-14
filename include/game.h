@@ -24,7 +24,11 @@
 #include "timedevent.h"
 #endif
 
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+// HOMM3_QUESTLOG_VIEW is the same two-vector slice under a narrower gate:
+// questlogwindow.cpp reads SeerHutList and QuestGuardList and nothing else
+// out of the quick-info projection, and taking the whole of it would drag
+// advmgr.h's enums into that TU for a member it never names.
+#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_QUESTLOG_VIEW)
 #include "seerhut.h"
 #endif
 
@@ -135,7 +139,7 @@ public:
     std::vector<CMapObjectData*> mapObjectData; // +0xb0
     char pad_0c0[0x10];
 #endif
-#elif defined(HOMM3_ADVMGR_QUICKINFO_VIEW)
+#elif defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_QUESTLOG_VIEW)
     char pad_000[0x60];
     std::vector<TSeerHut> SeerHutList;
     std::vector<TQuestGuard> QuestGuardList;
