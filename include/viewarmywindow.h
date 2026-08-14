@@ -69,6 +69,10 @@ public:
 
     TViewArmyWindow(const army* this_army, int x0, int y0,
                     unsigned char show_ok);
+    // dc 0x19148c (viewarmywindow.cpp:274). Declared for hillfortwindow's
+    // HandleClick, whose creature-row popup builds this overload directly
+    // from a TCreatureType; the body still belongs to this TU's own lane.
+    TViewArmyWindow(int army_type, int x0, int y0, unsigned char show_ok);
     virtual ~TViewArmyWindow();
     virtual int WindowHandler(message* msg);
     int convertID2HelpID(int id) const;
