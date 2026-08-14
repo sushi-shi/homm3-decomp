@@ -1404,8 +1404,10 @@ systemoptionswindow	?WindowHandler@TSystemOptionsWindow@@UAEHPAVmessage@@@Z	91.9
 text	?InitializeGeneralText@@YIEXZ	100.0000	100.0000	100.0000	0x1b90f0
 textntry	??1textEntryWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1baae0
 textntry	??_GtextEntryWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1ba8f0
+textntry	?Draw@textEntryWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bb400
 textntry	?GetCharPressed@textEntryWidget@@QAEDPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1baba0
 textntry	?IgnoreKey@textEntryWidget@@UAEEPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1bba20
+textntry	?Main@textEntryWidget@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1bb150
 textntry	?OnKillFocus@textEntryWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bba60
 textntry	?OnSetFocus@textEntryWidget@@UAEXXZ	100.0000	100.0000	100.0000	0x1bba50
 textntry	?SaveBackground@textEntryWidget@@MBEXXZ	100.0000	100.0000	100.0000	0x1bba70

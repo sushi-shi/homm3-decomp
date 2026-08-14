@@ -48,6 +48,18 @@ public:
 // house ordinal placeholders because no source we may read names them.
 class textEntryWidget : public textWidget {
 public:
+    // The domain of field_68 below. Only the one value the retail
+    // bodies branch on is recoverable: at 3, Draw renders a
+    // horizontally scrolled window of the string (substr from
+    // displayStart, truncated to boxWidth) and SetupDisplayString
+    // maintains displayStart; every other value renders the whole
+    // string. Nothing in the image writes the field, so the domain
+    // cannot be enumerated further and this spelling is a house
+    // placeholder describing the branch's effect, not an attested name.
+    enum EField68 {
+        FIELD_68_SCROLLED = 3
+    };
+
     Bitmap816* textBack;         // 0x50, ResourceManager::GetBitmap816
     CTextEntrySave* saveBack;    // 0x54
     unsigned short cursorIndex;  // 0x58, = Text.size() after every edit
