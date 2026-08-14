@@ -24,7 +24,35 @@
 // - `homm3 vc6 diagnose` reports flow-distance 0 with register-distance
 // 8 - but it will not close, and objdiff scores the pair 0.0 rather than
 // the ~85% the instruction stream deserves, so claiming it would bank a
-// zero row. Two residual deltas, both the same cause: retail sinks the
+// zero row.
+//
+// The 0.0 is EXPLAINED (2026-08-14) and it is NOT a pairing failure:
+// objdiff pairs the two symbols and diffs them, and the diff is sane in
+// shape (4 EQUAL head rows, 3 ARG_MISMATCH, 1 REPLACE, 2 EQUAL tail
+// rows, plus a ten-row INSERT/DELETE pair). The zero falls out of the
+// scorer's normalisation. objdiff charges a byte penalty per non-equal
+// row against a budget of the symbol's own size:
+//     match_percent = max(0, 1 - penalty / size)
+// calibrated on armygrp's ?Merge@armyGroup@@QAEEPAV1@@Z (510 B, penalty
+// 57 DELETE + 22 REPLACE + a partial charge over 189 ARG_MISMATCH bytes
+// = 104.4, which is exactly its reported 79.536%). Here the nine
+// `mov dword ptr [esi+disp], eax` stores are interchangeable under
+// objdiff's instruction hashing, so ONE instruction crossing the run -
+// the vptr store - diffs as a ten-row delete plus a ten-row insert
+// rather than as a move: 32 deleted + 3 replaced + 33 inserted bytes =
+// 68 against a 56-byte budget, past 100% penalty, so it clamps.
+// Dropping one member store from the body (a probe, reverted)
+// re-aligned the run and moved the score to 1.65%, not to anything
+// sane - the same effect.
+//
+// CONSEQUENCE for this tree: the artefact only bites SHORT functions -
+// the penalty has to exceed the whole symbol size - that differ solely
+// by an instruction moved across a run of near-identical instructions.
+// It costs nothing in the ledger, since the ratchet tracks MAX and a
+// real improvement still raises it, but such a row reads as worthless
+// when it is not. Never read a 0.0 on a name-paired row as "unpaired".
+//
+// Two residual deltas, both the same cause: retail sinks the
 // compiler's vptr store past every member store (ours emits it second)
 // and materialises the shared -1 in ECX up front (`or ecx,-1`) where our
 // allocator recycles EAX after the zero run. `homm3 vc6 why-reg --model`
@@ -133,16 +161,60 @@ int heroWindowManager::BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, i
     return Main(msg);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\winmgr.cpp:267
-DC_ONLY(0x19aa64, 0x1B0)
-void heroWindowManager::AddWindow(heroWindow* newWindow, int newPriority, unsigned char update)
+// E:\gamedcs\winmgr.cpp:267. The priority list is ordered head->tail by
+// ASCENDING priority and is walked backwards from the tail, so the
+// insertion point is the last window whose priority does not exceed the
+// newcomer's. Retail never repairs the old head's prevWindow on the
+// head-insert path - transcribed as found.
+//
+// Open's return value doubles as the NULL the whole tail is written
+// from: everything after `if (newWindow->Open(...))` knows eax is zero,
+// which is why the null tests below compile to `cmp reg, eax`.
+VA(0x006023b0, 0xE7)  // anchor-callee (heroWindow::Open) + dc order, dc 0x19aa64
+void heroWindowManager::AddWindow(heroWindow* newWindow, int newPriority,
+                                  unsigned char update)
 {
-    // @stub
-}
+    heroWindow* at = tailWindow;
 
-#endif  // @carcass
+    if (newWindow->type & WINDOW_FLAG_FIXED_LAYER) {
+        newPriority = 0;
+    } else {
+        if (newPriority == -1) {
+            if (!tailWindow)
+                newPriority = 0;
+            else
+                newPriority = tailWindow->priority + 1;
+        }
+        if (newPriority != 0 && !headWindow)
+            return;
+    }
+
+    if (newWindow->Open(newPriority, update))
+        return;
+
+    while (at && at->priority > newPriority)
+        at = at->prevWindow;
+
+    if (!at) {
+        newWindow->nextWindow = headWindow;
+        newWindow->prevWindow = 0;
+        headWindow = newWindow;
+        if (!tailWindow)
+            tailWindow = newWindow;
+    } else if (!at->nextWindow) {
+        newWindow->prevWindow = tailWindow;
+        newWindow->nextWindow = 0;
+        tailWindow->nextWindow = newWindow;
+        tailWindow = newWindow;
+    } else {
+        newWindow->prevWindow = at;
+        newWindow->nextWindow = at->nextWindow;
+        at->nextWindow->prevWindow = newWindow;
+        at->nextWindow = newWindow;
+    }
+    activeWindow = lastActive;
+    lastActive = newWindow;
+}
 
 // E:\gamedcs\winmgr.cpp:387
 VA(0x006024a0, 0x78)  // dc-callgraph unique, dc 0x19ac14
