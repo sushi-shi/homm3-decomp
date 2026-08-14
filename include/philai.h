@@ -12,6 +12,15 @@ class hero;
 
 long AI_get_spell_value(const hero* our_hero, SpellID spell);
 
+// Retail .data 0x678370, the row immediately after tradpost.h's
+// fTradingPostEfficency (0x678344): three consecutive eleven-float rows
+// fill 0x678344..0x6783c8, and get_artifact_purchase_price divides an
+// artifact's gold cost by THIS row indexed by the marketplace count.
+// The definition belongs to tradpost.cpp beside its sibling and moves
+// there with the rest of that .data band; declared here meanwhile so the
+// division has a typed name rather than a raw address.
+extern float fArtifactPurchaseEfficency[];
+
 // The two secondary-skill appraisals AI_choose_secondary_skill calls.
 // The Dreamcast roster files both as philai.obj STATICS, and their retail
 // bodies are located (0x524690 / 0x524dd0) but not yet reconstructed - so

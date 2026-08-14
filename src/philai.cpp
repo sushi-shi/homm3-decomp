@@ -7,6 +7,9 @@
 #include "philai.h"
 #include "ai_spellvalue.h"
 #include "hero.h"
+#include "town.h"
+#include "tradpost.h"
+#include "game.h"
 
 #if 0  // @carcass
 
@@ -69,13 +72,6 @@ void AI_enter_garrison(hero* current_hero, garrison* our_garrison)
 // E:\gamedcs\philai.cpp:207
 DC_ONLY(0x10d684, 0x132)
 void upgrade_creatures(hero* current_hero, const town* current_town)
-{
-    // @stub
-}
-
-// E:\gamedcs\philai.cpp:263
-// RETAIL_LOCATED(0x00524550, 0xD2)  // anchor-global, dc 0x10d7b8
-long get_artifact_purchase_price(TArtifact artifact, long market_count, EGameResource* best_resource)
 {
     // @stub
 }
@@ -341,6 +337,68 @@ int ValueOfMapArtifact(const hero* current_hero, NewmapCell* cell)
 
 #endif  // @carcass
 
+// armyGroup deliberately models its mutable roster as int while
+// get_spell_work_chance's domain is TCreatureType, and the resource
+// sweep below counts with an int while its consumers take
+// EGameResource. Same bit-preserving inline bridges ai_combat.cpp uses
+// for the same crossings, rather than lying with an enum cast; VC6
+// reduces the four-byte copy to a move.
+inline TCreatureType creature_type_from_int(int value)
+{
+    TCreatureType creature;
+    memcpy(&creature, &value, sizeof creature);
+    return creature;
+}
+
+inline EGameResource game_resource_from_int(int value)
+{
+    EGameResource resource;
+    memcpy(&resource, &value, sizeof resource);
+    return resource;
+}
+
+// E:\gamedcs\philai.cpp:263.  What the AI would really pay for an
+// artifact, and in which resource.  The gold price is the traits-table
+// cost scaled by the marketplace efficiency row; each non-gold resource
+// is then priced through the market and kept only when the player can
+// actually afford it AND the trade is worth less to him than the gold.
+// Retail seeds the answer with gold and never re-tests it, so a tie
+// against the gold valuation still switches to the resource.
+//
+// The gold price has to be ONE reused local: the traits cost is read
+// into a register and staged back through that local's own frame slot
+// before the fild, and the same slot then stages the price for the
+// double conversion.  Reading the cost straight out of the traits row
+// fild's from the table with no staging store at all, and giving the
+// cost its own named local splits the slot in two.
+VA(0x00524550, 0xD2)  // anchor-global, dc 0x10d7b8
+long get_artifact_purchase_price(TArtifact artifact, long market_count,
+    EGameResource* best_resource)
+{
+    long price = akArtifactTraits[artifact].cost;
+    *best_resource = GOLD;
+    price = static_cast<long>(static_cast<float>(price)
+        / fArtifactPurchaseEfficency[market_count]);
+    long best_price = price;
+    long best_value = static_cast<long>(static_cast<double>(price)
+        * gpCurrentPlayer->resourceValue[GOLD]);
+
+    for (int i = WOOD; i < GOLD; i++) {
+        EGameResource resource = game_resource_from_int(i);
+        long amount = price * 2 / get_market_value(resource);
+        if (amount <= gpCurrentPlayer->resources[i]) {
+            long value = static_cast<long>(static_cast<double>(amount)
+                * gpCurrentPlayer->resourceValue[i]);
+            if (value <= best_value) {
+                best_value = value;
+                best_price = amount;
+                *best_resource = resource;
+            }
+        }
+    }
+    return best_price;
+}
+
 // The AI's spell-appraisal curve, one 32-byte row per "times castable"
 // step.  Retail reaches all four columns off the same 32-byte stride
 // (`row << 5` plus 0x640398 / +8 / +0x10 / +0x18), so it is ONE array of
@@ -421,17 +479,6 @@ long type_spellvalue::get_damage_spell_value(SpellID spell, int mastery,
     if (by_ratio > by_count)
         return static_cast<long>(static_cast<double>(combat_value) * by_count);
     return static_cast<long>(static_cast<double>(combat_value) * by_ratio);
-}
-
-// armyGroup deliberately models its mutable roster as int while
-// get_spell_work_chance's domain is TCreatureType. Same bit-preserving
-// inline bridge ai_combat.cpp uses for the same crossing, rather than
-// lying with an enum cast; VC6 reduces the four-byte copy to a move.
-inline TCreatureType creature_type_from_int(int value)
-{
-    TCreatureType creature;
-    memcpy(&creature, &value, sizeof creature);
-    return creature;
 }
 
 // E:\gamedcs\philai.cpp:1439.  A mass damage spell is appraised against

@@ -1281,6 +1281,7 @@ path	?get_adjacent_hex@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x123df0
 philai	?AI_choose_secondary_skill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0
 philai	?AI_get_spell_value@@YIJPBVhero@@H@Z	100.0000	100.0000	100.0000	0x127640
 philai	?ValueOfSpell@hero@@QBEHH@Z	100.0000	100.0000	100.0000	0x127aa0
+philai	?get_artifact_purchase_price@@YIJW4TArtifact@@JPAW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x124550
 philai	?get_best_spell_value@type_spellvalue@@QBEJJ@Z	100.0000	100.0000	100.0000	0x1275b0
 philai	?get_damage_spell_value@type_spellvalue@@IBEJHHJJ@Z	100.0000	100.0000	100.0000	0x1270e0
 philai	?get_enchantment_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0000	0x127290
