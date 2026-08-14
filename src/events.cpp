@@ -1970,6 +1970,10 @@ void std::__pop_heap_aux(SpellID* __first, SpellID* __last, SpellID* __formal, s
 // return for "advevent.txt" (0x677710) into 0x696a18 and every one of
 // the 194 references to that cell is inside events.obj's link bracket.
 DATA(0x00696a18) static TTextResource* gpAdventureEventText;
+DATA(0x00696a1c) static TTextResource* gpRandomSignText;
+DATA(0x00696a2c) static char* gArtifactEventText[144];
+DATA(0x00696c70) static TTextResource* gpArtifactEventText;
+DATA(0x00696c74) static char* gRandomSignText[25];
 
 // E:\gamedcs\events.cpp:61.  Loads advevent.txt and reports whether the
 // resource manager found it; the `test` lands before the store because
@@ -1981,6 +1985,39 @@ bool InitializeAdventureEventText()
         DATA_COMPGEN(0x00677710, advEventTextName, "advevent.txt"));
     if (!gpAdventureEventText)
         return false;
+    return true;
+}
+
+// E:\gamedcs\events.cpp:265.  The artifact lines get cached into a flat
+// array as well as kept on the resource, and the retail loop reloads
+// Text._First on every iteration because the store into the array could
+// alias it.  Both the 144 rows and the 0x696a2c base are byte-proven:
+// the loop's induction variable runs 4..0x240 and stores through the
+// displacement 0x696a28, i.e. base - 4.
+VA(0x0049e100, 0x33)  // anchor-global 0x696c70 + "artevent.txt" literal, dc 0x902b0
+bool InitializeArtifactEventText()
+{
+    gpArtifactEventText = ResourceManager::GetText(
+        DATA_COMPGEN(0x00677720, artEventTextName, "artevent.txt"));
+    if (!gpArtifactEventText)
+        return false;
+    for (int i = 0; i < 144; i++)
+        gArtifactEventText[i] = gpArtifactEventText->Text[i];
+    return true;
+}
+
+// E:\gamedcs\events.cpp:284.  The same shape with 25 rows; here the
+// array (0x696c74) sits directly after the resource pointer instead of
+// before it.
+VA(0x0049e140, 0x30)  // anchor-global 0x696a1c + "randsign.txt" literal, dc 0x902fc
+bool InitializeRandomSignText()
+{
+    gpRandomSignText = ResourceManager::GetText(
+        DATA_COMPGEN(0x00677730, randomSignTextName, "randsign.txt"));
+    if (!gpRandomSignText)
+        return false;
+    for (int i = 0; i < 25; i++)
+        gRandomSignText[i] = gpRandomSignText->Text[i];
     return true;
 }
 
@@ -2031,6 +2068,34 @@ int advManager::get_force_modifier(float strength_ratio)
     return -3;
 }
 
+// E:\gamedcs\events.cpp:3948.  Parks the wandering stack's identity in
+// the three advManager cells the adventure-map draw reads, repaints so
+// the monster is on screen when the prompt opens, runs the encounter and
+// then clears the pair again.
+//
+// NOTE (naming, not bytes): +0x218 takes the cell's +0x24 and +0x21c its
+// +0x22, while advManager::DrawAdvObj - already exact - compares the
+// cell's +0x22 against the SAME +0x218. One of the four names
+// (NewmapCell::objectIndex / object_type_index, movingObjectIndex /
+// movingObjectSequence) is therefore wrong; the Dreamcast roster puts
+// monAttackObjIndex / monAttackSpriteIndex at exactly this point in
+// advManager's field run, which is what this function is setting. The
+// offsets are what the bytes fix, and both spellings agree on those, so
+// the mismatch is reported rather than renamed here.
+VA(0x004a79c0, 0x79)  // linkorder + DoWanderingMonsterResult tail-call, dc 0x975a0
+void advManager::DoEventWanderingMonster(NewmapCell* cell, hero* current_hero,
+                                         type_point point, bool human_player)
+{
+    movingObjectIndex = cell->object_type_index;
+    movingObjectSequence = cell->objectIndex;
+    movingObjectFrame = current_hero->x < point.x;
+    CompleteDraw(false);
+    UpdateScreen(0, 0);
+    DoWanderingMonsterResult(cell, current_hero, point, human_player);
+    movingObjectIndex = -1;
+    movingObjectSequence = -1;
+}
+
 // E:\gamedcs\events.cpp:4090.  The water wheel banks 500 gold per turn
 // in a five-bit counter; visiting it empties the counter and pays out.
 // `human_player` only gates the dialog - the payout and the reset run
@@ -2055,6 +2120,47 @@ void advManager::do_event_water_wheel(hero* current_hero, ExtraInfoUnion* cell,
         current_hero->GiveResource(GOLD, gold);
         cell->set_wheel_gold(0);
     }
+}
+
+// E:\gamedcs\events.cpp:4116.  The watering hole is once-per-hero, not
+// once-per-week: the visit is recorded in the hero's own flag word and
+// the +400 movement lands on both the allowance and the remainder. The
+// `cell` argument is unused - retail never touches it - which the
+// Dreamcast prototype already implies by taking it anyway.
+//
+// The eight-iteration teamInfo scan in the middle is game::SetInfoFlag
+// (Game.h:917) inlined; the flag index 27 is WateringHoleInfo, which is
+// what fixes the +0x4e35f byte as globalInfoFlags[27].
+VA(0x004a7ea0, 0x111)  // linkorder + globalInfoFlags[WateringHoleInfo], dc 0x97b7c
+void advManager::do_event_watering_hole(hero* current_hero, NewmapCell* cell,
+                                        bool human_player)
+{
+    if (current_hero->flags & 0x40) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WATERING_HOLE_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_WATERING_HOLE),
+                     1, -1, -1, 14, 0, -1, 0, -1, 0, -1, 0);
+    // The game pointer MUST be spelled as its own statement. Calling
+    // straight through gpGame creates the position pseudo first, and VC6
+    // then picks the OTHER register as the SIB base of the inlined
+    // teamInfo[playerNum] load - [gpGame + pos] where retail has
+    // [pos + gpGame]. That was the whole residual: one byte, and nothing
+    // inside SetInfoFlag itself moved it (const-ness, loop form, guard
+    // polarity, reversed subscript and compare order were all inert).
+    game* g = gpGame;
+    g->SetInfoFlag(WateringHoleInfo, gNetLocalGamePos);
+    current_hero->flags |= 0x40;
+    current_hero->field_11a++;
+    current_hero->maxMovePoints += 400;
+    current_hero->movePoints += 400;
+    if (human_player)
+        advWindow->UpdateHeroLocators(-1, 1, 1);
 }
 
 // E:\gamedcs\events.cpp:4144.  The windmill's twin: a signed resource id

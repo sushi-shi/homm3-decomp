@@ -128,6 +128,12 @@ SIZE(ExtraInfoUnion, 4);
 // matching 32-byte per-player flag band and the parallel help-name table with
 // this value; the shrine helper currently needs only the type, not individual
 // enumerator spellings.
+//
+// events.obj wants the same domain for game::SetInfoFlag's callers, so the
+// gate is widened by exactly that one view rather than opened outright -
+// the enum stays invisible to every TU that has no consumer.
+#endif
+#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_EVENTS_VIEW)
 enum GlobalInfoFlags {
     BuoyInfo = 0,
     CloverFieldInfo,
@@ -160,6 +166,8 @@ enum GlobalInfoFlags {
     const_sacrifice_info,
     MaxInfoFlags = 32
 };
+#endif
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 
 enum WiseTreePrices {
     const_tree_wants_nothing = 0,
@@ -718,10 +726,16 @@ public:
     // to ExtraInfoUnion::SetCellVisited as `this`, i.e. only the +0x00
     // dword is ever touched. The access specifier is dropped because
     // advManager is a single public block here.
+    void do_event_watering_hole(class hero* current_hero, NewmapCell* cell,
+                                bool human_player);
     void do_event_water_wheel(class hero* current_hero, ExtraInfoUnion* cell,
                               bool human_player);
     void do_event_windmill(class hero* current_hero, ExtraInfoUnion* cell,
                            bool human_player);
+    void DoWanderingMonsterResult(NewmapCell* cell, class hero* current_hero,
+                                  type_point point, bool human_player);
+    void DoEventWanderingMonster(NewmapCell* cell, class hero* current_hero,
+                                 type_point point, bool human_player);
 #endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
