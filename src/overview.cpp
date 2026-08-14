@@ -39,6 +39,7 @@ void game::SetupDynamicStuff(int bUpdate, int bForceUpdate)
 // E:\gamedcs\overview.cpp:1170. The DC name/locals and HoMM2 lineage give
 // the source vocabulary; the Complete body proves the changed player fields,
 // slider update, two-message protocol, per-mode title counts, and geometry.
+// E:\gamedcs\overview.cpp:1170
 VA(0x0051e330, 0x33A)
 void game::SetupNewOverviewType(int iWhichType, unsigned char bUpdate)
 {

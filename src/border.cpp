@@ -40,6 +40,7 @@ void border::border(int x, int y, int w, int h, int id, int style, unsigned char
 // own dtor (the DC build appends all five at the compiland tail).
 VA_COMPGEN(0x0044fee0, 0x21, SCALAR_DELETING_DTOR, border)
 
+// E:\gamedcs\border.cpp:62
 VA(0x0044ff50, 0xB)  // anchor-global, dc 0x543d8
 border::~border()
 {
@@ -66,6 +67,7 @@ border::~border()
 // the two members DC names: color at +0x30 from the seventh argument,
 // colorize at +0x34 as a literal 0. Nothing sits in a member-init list -
 // retail's vptr store precedes both member stores.
+// E:\gamedcs\border.cpp:201
 VA(0x00450130, 0x6D)  // anchor-vtable 0x63ba5c, dc 0x54650
 coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
                                        int color_, int style)
@@ -79,6 +81,7 @@ coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
 // destructor', slot 0 of vtable 0x63ba5c.
 VA_COMPGEN(0x004501a0, 0x21, SCALAR_DELETING_DTOR, coloredBorderFrame)
 
+// E:\gamedcs\border.cpp:206
 VA(0x004501d0, 0xB)  // anchor-vtable (slot 0 chain of 0x63ba5c), dc 0x54dd8
 coloredBorderFrame::~coloredBorderFrame()
 {
@@ -211,6 +214,7 @@ void bitmapBorder::SetPalette(const char* palette_name)
 // virtual, whose retail body ICF-folded away. The 11-argument push run
 // is the DC Bitmap816::zBufferDraw signature verbatim, and the three
 // literals are the 800x600 screen and its 1600-byte pitch.
+// E:\gamedcs\border.cpp:301
 VA(0x004503f0, 0x55)  // dc-bracket + body (11-arg zBufferDraw call), dc 0x5489c
 void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id)
 {
@@ -224,6 +228,7 @@ void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id)
 // already-exact Draw2 one class over, but through the screen bitmap in
 // gpWindowManager rather than a local, and with the 8-argument
 // Bitmap816 overload.
+// E:\gamedcs\border.cpp:307
 VA(0x00450450, 0x44)  // anchor-vtable (slot 4 of 0x63ba94), dc 0x548fc
 void bitmapBorder::Draw()
 {
@@ -243,6 +248,7 @@ void bitmapBorder::Draw()
 // carries Width at +0x24 and Height at +0x28 (DC fieldlist, and the
 // resource base is 0x1c on both builds). Retail's bitmapBorder does NOT
 // emit SetPalette between them, which is why the two rows are adjacent.
+// E:\gamedcs\border.cpp:313
 VA(0x004504a0, 0xE)  // anchor-vtable (slot 6 of 0x63ba94), dc 0x54948
 int bitmapBorder::GetRealWidth()
 {
@@ -332,6 +338,7 @@ void bitmapBorder16::zBufferDraw()
 // 4-byte empty one before it, ICF-folded away), and the body is Draw2
 // verbatim EXCEPT for the parent-window origin added to the destination
 // point - which is exactly what a Draw/Draw2 pair means.
+// E:\gamedcs\border.cpp:419
 VA(0x004507b0, 0x55)  // dc-bracket + body (Draw2 plus the window origin), dc 0x54ba8
 void bitmapBorder16::Draw()
 {

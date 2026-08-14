@@ -76,6 +76,7 @@ button::button(int x, int y, int w, int h, int id, const char* image, int normal
 // the resource. The `inline` idiom carries over: retail inlines this
 // body into both derived dtors (0x456bf0/0x456db0) while the vtables
 // keep this out-of-line copy.
+// E:\gamedcs\button.cpp:82
 VA(0x004560f0, 0x9A)  // anchor-global, dc 0x571ec
 inline button::~button()
 {
@@ -153,6 +154,7 @@ inline int button::DeselectSelected(message* msg)
 // widget - homm2's shape with h3's GetEvent-by-value copy. The WIDGET
 // sub-switch inlines SetText and the palette swap; a failed palette
 // load falls back to reloading the icon sprite by the same name.
+// E:\gamedcs\button.cpp:131
 VA(0x00456190, 0x6CF)  // linkorder bracket; Select/widget-Main/manager callees byte-proven, dc 0x572d0
 int button::Main(message* msg)
 {
@@ -306,6 +308,7 @@ int button::Main(message* msg)
 // field_84 toggled around the call, then the widget-select message is
 // stamped and the repeat timer armed - homm2's KBTickCount idiom with
 // the same sixty-tick delay.
+// E:\gamedcs\button.cpp:366
 VA(0x00456860, 0xDA)  // linkorder bracket; MemorySample/UpdateScreen callees byte-proven, dc 0x57730
 int button::Select(message* msg)
 {
@@ -365,6 +368,7 @@ void button::zBufferDraw()
 // Frame choice: highlighted (field_40) unless selected; dimmed or
 // disabled fall to disabled_frame; selected to selectedFrame; any
 // frame past the sequence-0 count clamps to 0.
+// E:\gamedcs\button.cpp:446
 VA(0x00456940, 0x99)  // vtable-slot 4 of button (0x63bb54), dc 0x5793c
 void button::Draw()
 {
@@ -485,6 +489,7 @@ textButton::~textButton()
 // supplies the empty-string literal when Text is unallocated. Keeping the
 // shared parentWindow pointer as a named local reproduces retail's paired
 // allocation: status stays in CX and the parent pointer occupies EAX.
+// E:\gamedcs\button.cpp:525
 VA(0x00456ca0, 0x82)  // vtable-slot 4 of textButton (0x63bb88), dc 0x57b98
 void textButton::Draw()
 {
@@ -543,6 +548,7 @@ VA_COMPGEN(0x00456d80, 0x21, SCALAR_DELETING_DTOR, type_func_button)
 // Byte-identical in shape to ~button: the derived vtable store followed
 // immediately by inlined ~button's store collapses to one (dead-store
 // elimination; ~textButton keeps both because Font->Dispose intervenes).
+// E:\gamedcs\button.cpp:559
 VA(0x00456db0, 0x9A)  // anchor-global, dc 0x57e7c
 type_func_button::~type_func_button()
 {

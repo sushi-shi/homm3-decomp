@@ -10,6 +10,7 @@ const type_creature_bank_traits* const_creature_bank_traits;
 // E:\gamedcs\creature_bank.cpp:25. Retail initializes the Dinkumware string
 // at +0 and then calls armyGroup::armyGroup four times at +0x10 with a 0x60
 // stride, exactly the implicit member construction this empty body requests.
+// E:\gamedcs\creature_bank.cpp:25
 VA(0x0047aad0, 0x5E)  // bracket + constructor shape, dc 0x714e0
 type_creature_bank_traits::type_creature_bank_traits()
 {

@@ -208,6 +208,7 @@ unsigned char CNetPlayerHandler::AddNewPlayer(CNetPlayerInfo* pNetPlayer)
 // Retail whole-body identity fixes the entry and size; its 0x7c walk and
 // member stores independently corroborate the canonical layouts in the
 // header.  Both tiny methods inline under the retail /Ob2 profile.
+// E:\gamedcs\singleselectionwindow.cpp:1125
 VA(0x00577c90, 0x4d)
 bool CNetPlayerHandler::DeletePlayer(unsigned long dpid)
 {
