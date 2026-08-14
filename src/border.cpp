@@ -53,6 +53,97 @@ border::~border()
 {
 }
 
+// E:\gamedcs\border.cpp:74 - promoted from DC_ONLY 2026-08-14. Slot 2 of
+// vtable 0x63ba24, and the row every derived Main tail-calls (both
+// coloredBorderFrame's 0x450240 and bitmapBorder's 0x450550 `call
+// 0x44ff60`). border::initialize has no retail row of its own - the
+// 461-byte span runs straight from here to coloredBorderFrame's ctor -
+// so retail folded it away.
+//
+// The four mouse arms are a JUMP TABLE, not a compare chain: retail
+// biases msg->id by -8, range-checks 0x38 and indexes a 57-byte selector
+// at 0x4500f4 into five targets at 0x4500e0. The selector's shape is the
+// proof of the source form - entries 0/8/0x18/0x38 (ids 8/0x10/0x20/0x40)
+// point at FOUR distinct labels 8 and 4 bytes apart, which is exactly a
+// disabled-guard falling through into its right-button twin.
+//
+// Disabled DOWN/UP arms `break` to widget::Main, they do not return zero -
+// that is what the `jne` to the shared base-call block says. All five
+// zero exits merge into the block the field_2C guard owns and are reached
+// with backward jumps, so the `returnZero:` label idiom carries over from
+// iconWidget::Main verbatim.
+//
+// Residual (91.98%): the SAME tail-merge divergence iconWidget::Main
+// carries, in the same TU family. Retail leaves the merged return-0 block
+// sitting where the field_2C guard puts it (`jle` hops over it) and
+// reaches the four later exits with backward jumps; this C2 sinks the
+// block to the LEFT_BUTTON_UP selected gate and inverts both polarities
+// to reach it. `--branches` reports 16/7 against retail 15/7. Tried and
+// rejected 2026-08-14: deleting the `returnZero:` label and spelling all
+// five exits as plain `return 0;` (91.7822%). Not source-reachable - the
+// merged-return generation class.
+VA(0x0044ff60, 0x1CD)  // anchor-vtable (slot 2 of 0x63ba24), dc 0x54440
+int border::Main(message* msg)
+{
+    if (field_2C > 0) {
+returnZero:
+        return 0;
+    }
+
+    if (!(status & WIDGET_ACTIVE)) {
+        if (msg->id != MESSAGE_WIDGET)
+            goto returnZero;
+        return widget::Main(msg);
+    }
+
+    unsigned char isDisabled = 0;
+    if (status & WIDGET_DISABLED)
+        isDisabled = 1;
+
+    switch (msg->id) {
+    case MESSAGE_LEFT_BUTTON_DOWN:
+        if (isDisabled)
+            break;
+        // fall through
+    case MESSAGE_RIGHT_BUTTON_DOWN: {
+        short mouseX = msg->codeX - parentWindow->x;
+        short mouseY = msg->codeY - parentWindow->y;
+        if (mouseX < x || mouseY < y || mouseX >= x + width
+            || mouseY >= y + height)
+            goto returnZero;
+        if (msg->id == MESSAGE_RIGHT_BUTTON_DOWN) {
+            msg->qualifier = MESSAGE_MODIFIER_RIGHT;
+            msg->codeX = WIDGET_RIGHT_SELECT;
+        } else {
+            status |= WIDGET_SELECTED;
+            msg->codeX = WIDGET_SELECT;
+        }
+        if (handle_click(1, msg->id == MESSAGE_RIGHT_BUTTON_DOWN))
+            return 1;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeY = id;
+        return 2;
+    }
+
+    case MESSAGE_LEFT_BUTTON_UP:
+        if (isDisabled)
+            break;
+        // fall through
+    case MESSAGE_RIGHT_BUTTON_UP:
+        if (!(status & WIDGET_SELECTED))
+            goto returnZero;
+        status &= ~WIDGET_SELECTED;
+        if (handle_click(0, msg->id == MESSAGE_RIGHT_BUTTON_UP))
+            return 1;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeX = WIDGET_DESELECT;
+        msg->codeY = id;
+        return 2;
+    }
+
+    return widget::Main(msg);
+}
+
 // E:\gamedcs\border.cpp:201 - promoted from DC_ONLY 2026-08-14, the
 // constructor the earlier sdd note asked for. `ret 0x1c` is seven stack
 // dwords; six of them go to widget::initialize in x,y,w,h,id,style order
@@ -170,13 +261,6 @@ bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
 // E:\gamedcs\border.cpp:67
 DC_ONLY(0x54408, 0x36)
 void border::initialize(int x, int y, int w, int h, int id, int style, unsigned char focusable)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:74
-DC_ONLY(0x54440, 0x150)
-int border::Main(message* msg)
 {
     // @stub
 }
@@ -346,14 +430,24 @@ int bitmapBorder::Main(message* msg)
     // @stub
 }
 
-// E:\gamedcs\border.cpp:398
-DC_ONLY(0x54a98, 0xD0)
-void bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id, const char* image, int style, unsigned char focusable)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\border.cpp:398 - promoted from DC_ONLY. bitmapBorder's
+// constructor one class over, instruction for instruction: `ret 0x1c`,
+// the same ??0widget@@QAE@XZ + single derived vtable store + body-side
+// widget::initialize, and the same duplicated-epilogue if/else on the
+// image name. Only the vtable (0x63bacc) and the loader differ -
+// ResourceManager::GetBitmap16 at 0x55afd0 instead of GetBitmap816.
+VA(0x00450690, 0x8C)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54a98
+bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
+                               const char* image_, int style)
+{
+    initialize(x, y, w, h, id, style);
+    if (image_)
+        image = ResourceManager::GetBitmap16(image_);
+    else
+        image = 0;
+}
 
 // E:\gamedcs\border.cpp:404 - bitmapBorder16::`scalar deleting
 // destructor' (dc 0x54e24). Slot 0 of vtable 0x63bacc; calls

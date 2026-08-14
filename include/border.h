@@ -26,6 +26,12 @@ public:
     virtual int Main(message* msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw();      // slot 3, folded onto 0x5bc7e0
     virtual void Draw();             // slot 4
+    // Slot 13, appended past widget's twelve-plus-_vslot12 exactly as
+    // iconWidget appends its own twin (see iconwdgt.h). Main dispatches
+    // it through `call [vptr+0x34]`, i.e. 13*4, which is what fixes the
+    // index; the 4-byte `return 0` body ICF-folded onto iconWidget's.
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
     virtual ~border();  // retail 0x44ff50
 };
 
@@ -92,7 +98,7 @@ public:
     Bitmap16Bit* image;
 
     bitmapBorder16(int x, int y, int w, int h, int id,
-                   const char* image, int style);
+                   const char* image_, int style);
     virtual ~bitmapBorder16();
     virtual void Draw();  // slot 4, retail 0x4507b0
     void Draw2();
