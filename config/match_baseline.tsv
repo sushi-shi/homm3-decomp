@@ -1605,6 +1605,7 @@ winmgr	?DoDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@
 winmgr	?DoQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x202a40
 winmgr	?FadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x202c50
 winmgr	?Main@heroWindowManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202320
+winmgr	?ReleaseFizzleSource@heroWindowManager@@QAEXXZ	100.0000	100.0000	100.0000	0x2030c0
 winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x2024a0
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90
