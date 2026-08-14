@@ -279,13 +279,24 @@ public:
         BUY_BUTTON_ID = 0x7802
     };
 
-    int field_60;             // +0x60  unattested - no body reads it
+    // +0x60, the widget the cursor was last over. Read and written by
+    // WindowHandler 0x5d1c60 and by NOTHING else - the constructor never
+    // initialises it, which is retail's own behaviour and not an
+    // omission here: the first hover simply compares against whatever
+    // the allocation left behind.
+    int lastHover;            // +0x60
     int townType;             // +0x64  selects the machine and its artifact
     int field_68;             // +0x68  cleared by the constructor
     iconWidget* machineIcon;  // +0x6c
 
     TBlacksmithWindow(int heroID, int inTownType);
     virtual ~TBlacksmithWindow();
+    // Retail 0x5d1aa0 / 0x5d1b60 (dc 0x173a88 / 0x173b00), each a `ret 4`
+    // taking the widget id. Declared for the handler's two call edges;
+    // neither is reconstructed, so neither is defined.
+    void SetRightClickText(int id);
+    void SetRolloverText(int id);
+    virtual int WindowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d1c60
 };
 
 // The shipyard dialog. Constructor 0x5d1ef0 writes both members past

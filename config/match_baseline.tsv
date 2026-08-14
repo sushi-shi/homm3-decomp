@@ -1540,8 +1540,9 @@ townmgr	?SwapHeroes@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5150
 townmgr	?UnloadTown@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c70b0
 townmgr	?UpdateTownLocator@TTownScreenWindow@@QAEXH@Z	90.9302	90.9302	90.9302	0x1c5970
 townmgr	?UpdateTownLocators@TTownScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1c5aa0
+townmgr	?WindowHandler@TBlacksmithWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1d1c60
 townmgr	?WindowHandler@TBuyBuildWindow@@UAEHPAVmessage@@@Z	98.0247	98.0247	98.0247	0x1d6810
-townmgr	?WindowHandler@TCastleWindow@@UAEHPAVmessage@@@Z	99.4506	99.4506	99.4506	0x1dcf80
+townmgr	?WindowHandler@TCastleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1dcf80
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@PAVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0x1d12b0
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1d11d0
 tradpost	??1TBuyArtifactWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e56c0
