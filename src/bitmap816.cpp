@@ -53,6 +53,21 @@ Bitmap816::~Bitmap816()
 // specification or adding one to TPalette16 makes the cleanup-state sequence
 // structurally worse (96.94%); both palette destructors themselves remain
 // exact with the retained declarations.
+// 2026-08-14, pinned to the byte. The ENTIRE residual is the single immediate
+// in our `c7 45 fc 02 00 00 00` against retail's `c7 45 fc 01 00 00 00`; every
+// other byte of all three basic blocks is identical. The state sequence is
+// body -> 0 -> -1 on BOTH sides, so our unwind map carries one extra entry that
+// this path never enters: with two destructible members (p24 then p16) the body
+// state should be 1, which is what retail has. Nothing in the body reaches it -
+// the fix is in how the palette members' cleanup states are numbered, i.e. a
+// palette.h declaration change, and the two obvious ones are measured worse
+// above. Left as an honest residual rather than risk a shared header for 0.03%.
+// NOT part of the residual, and now PROVEN so: the `push 0x0` + reloc $L696 row
+// against retail's `push 0xb` + reloc ...unwind01. Functions that already score
+// 100.0 in this tree (button::button, ~button, ~textButton, ~type_func_button,
+// armyGroup::SplitArmy, ~TSplitWindow) all show the identical 0x0-vs-0xb or
+// 0x0-vs-0x8 split, so the scorer demonstrably does not count it. Same for the
+// `__except_list` reloc rows our objects carry and the delinked ones do not.
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 

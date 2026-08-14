@@ -112,7 +112,14 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // different starting budget, i.e. retail's caller IL is SMALLER than ours
     // here. It is the one measurement that argues the missing-statement theory
     // is backwards and that the fix is a spelling that costs less front-end
-    // mass, not more.
+    // mass, not more. Fully characterised in mainmenu.cpp, where the SAME
+    // missing _Destroy call is the ONLY defect in TMainMenu::TMainMenu
+    // (34/35 blocks exact): not a generation wall (`ab run` = neither for this
+    // constructor too), not reachable by inline_depth/auto_inline pragmas, not
+    // reachable by rebinding the vector. The open lead is that button::button
+    // gets the out-of-line _Destroy for free because set_hotkey puts it at
+    // inline depth 3, so retail's window constructors are probably reaching
+    // `reserve` through a wrapper we have not found.
     // The slot-IV rewrite was re-measured a third time ON TOP of the
     // initializer-list fix, in case that had moved the phase: 88.3182 ->
     // 88.2908 (x derived as 29+slot*19), 88.2908 (operands reversed), 88.1660
