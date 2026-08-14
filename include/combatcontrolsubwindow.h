@@ -39,9 +39,11 @@ public:
     // proves, because push_back has to build a widget* temporary for it.
     bitmapBackedTextWidget* rolloverWidget;
 
-    // Retail CALLS this out of line from both derived constructors
-    // (0x46b610), so it is declared and not defined here - the body is
-    // still one of this compiland's unreconstructed rows.
+    // Retail CALLS this out of line from both derived constructors; its
+    // body is 0x46b610, reconstructed in the .cpp. That body is also what
+    // fixes the member above as the BASE's: the 0x63d410 vptr store
+    // precedes the +0x34 null, so the null is a body statement here and
+    // not a derived one.
     type_combat_sub_window(heroWindow* parent,
                            const char* background_sprite_name);
     virtual ~type_combat_sub_window();
