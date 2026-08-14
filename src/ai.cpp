@@ -4,6 +4,7 @@
 #include <va.h>
 #include <algorithm>
 #include "ai.h"
+#include "ai_spellvalue.h"
 #include "ai_tactical.h"
 #include "findpath.h"
 #include "game.h"
@@ -1431,19 +1432,87 @@ unsigned char combatManager::choose_to_run(const army* our_army, const long* ene
     return move_toward(our_army, best_hex, enemy_attacks, 0);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai.cpp:1572
-// `ret 4` = one stack argument over `this`, the DC count exactly, and
-// the body asks town::CalcNumLevelArchers alongside army::can_shoot -
-// the castle's shooter census. Its one caller is the
-// should_stay_in_castle slot below, which is what a ranged-advantage
-// test is for.
+// "Is my side's shooting worth more than the enemy's?" - the census the
+// castle-holding gate and the two melee choosers ask before committing.
+// `ret 4` = one stack argument over `this`, the DC count exactly.
+//
+// Per side it sums get_total_combat_value over every stack that can
+// still act - not petrified (creatureId bit 21), none of the three
+// disable counters set, and not the immovable Arrow Tower - and keeps a
+// second running total over just the shooters. A side whose hero can
+// still cast then adds the best spell that hero has, priced by
+// type_spellvalue with the side's WHOLE combat value as the stack
+// value: a hero's spell reaches the enemy from the back row exactly as
+// a shot does, so it belongs in the shooting column.
+//
+// The `heroes[side] != 0` test in front of can_cast_spells(side, 1) is
+// byte-visible and NOT redundant with the one inside it: retail tests
+// the pointer FIRST, then the field_53c4 latch, and the inlined
+// expansion's own null test is CSE'd away - ECX still holds
+// heroes[side] at the IsWieldingArtifact call. Bare
+// can_cast_spells(side, 1) puts the latch test first instead.
+//
+// The castle's own shooters are added afterwards and to the DEFENDER's
+// column only: a Citadel keep is worth the full Archer AI value per
+// level archer, a Castle's two towers half of one extra archer each.
+// gWallTargets' id column runs 5..14 and these three are its top - 14
+// the keep, 13 and 5 the two towers, exactly the trio
+// InitializeArchers fills at +0x13d78 for the same two fortification
+// tiers. CalcNumLevelArchers' second out-parameter (the archer LEVEL)
+// is filled here and never read.
 VA(0x00420a80, 0x264)  // anchor-callee, dc 0x25df8
 unsigned char combatManager::has_ranged_advantage(type_AI_combat_parameters* data)
 {
-    // @stub
+    long total_value[2];
+    long shooter_value[2];
+
+    for (long side = 0; side < 2; side++) {
+        shooter_value[side] = 0;
+        total_value[side] = 0;
+        const army* stack = armies[side];
+        for (long i = 0; i < numArmies[side]; i++, stack++) {
+            if (!(stack->Is(21) & 1)
+                    && !stack->disabled_290 && !stack->disabled_2b0
+                    && !stack->disabled_2c0
+                    && stack->creatureType != CREATURE_ARROW_TOWER) {
+                long value = stack->get_total_combat_value(
+                    data->lowest_attack, data->lowest_defense);
+                total_value[side] += value;
+                if (stack->can_shoot(0))
+                    shooter_value[side] += value;
+            }
+        }
+        if (heroes[side] != 0 && can_cast_spells(side, 1)) {
+            type_spellvalue valuer(heroes[side]);
+            valuer.set_stack_value(total_value[side]);
+            shooter_value[side] += valuer.get_best_spell_value(0x8000);
+        }
+    }
+
+    if (field_132f4 >= COMBAT_FORTIFICATION_CITADEL) {
+        int numArchers;
+        int archerLevel;
+        defendingTown->CalcNumLevelArchers(&numArchers, &archerLevel);
+        if (get_wall_strength(14) > 0)
+            shooter_value[1] += akCreatureTypeTraits[CREATURE_ARCHER].AI_value
+                                * numArchers;
+        if (field_132f4 == COMBAT_FORTIFICATION_CASTLE) {
+            if (get_wall_strength(13) > 0)
+                shooter_value[1] +=
+                    akCreatureTypeTraits[CREATURE_ARCHER].AI_value
+                    * (numArchers + 1) / 2;
+            if (get_wall_strength(5) > 0)
+                shooter_value[1] +=
+                    akCreatureTypeTraits[CREATURE_ARCHER].AI_value
+                    * (numArchers + 1) / 2;
+        }
+    }
+
+    return shooter_value[data->side] > shooter_value[data->enemy_side];
 }
+
+#if 0  // @carcass
 
 // UNCLAIMED, 0x420cf0 (38 B). A compiler-generated teardown, not an
 // ai.cpp body: it frees the pointer at +0x18 of its `this` and then

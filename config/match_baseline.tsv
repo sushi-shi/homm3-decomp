@@ -144,6 +144,7 @@ ai	?get_area_attack_value@@YIJPBVarmy@@JJPAUtype_AI_combat_parameters@@@Z	100.00
 ai	?get_area_effect@combatManager@@QAEJJPBVarmy@@JPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1f920
 ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	96.3533	96.3533	96.3533	0x1f3b0
 ai	?get_total_combat_value@combatManager@@QBEJJJJE@Z	100.0000	100.0000	100.0000	0x1eac0
+ai	?has_ranged_advantage@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20a80
 ai	?mark_enemy_attacks@combatManager@@QAEXPBVarmy@@PAJ1PAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20260
 ai	?mark_firewalls@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x214f0
 ai	?mark_friendly_armies@combatManager@@QAEXPBVarmy@@PAJJPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1fb60
@@ -151,7 +152,6 @@ ai	?mark_multiheaded_enemy@combatManager@@QAEXPBVarmy@@0PAJJPAVsearchArray@@PAUt
 ai	?move_toward@combatManager@@QAEEPBVarmy@@JPBJE@Z	100.0000	100.0000	100.0000	0x1f580
 ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	82.4884	82.4884	82.4884	0x22060
 ai	?should_stay_in_castle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x213f0
-ai	combatManager_has_ranged_advantage	0.0000	0.0000	0.0000	0x20a80
 ai_combat	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x23ee0
 ai_combat	??0type_monster_vector@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0x276c0
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x27650
