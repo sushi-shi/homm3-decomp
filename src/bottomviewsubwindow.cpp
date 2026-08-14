@@ -4,6 +4,8 @@
 #include <va.h>
 #include "bottomviewsubwindow.h"
 #include "border.h"
+#include "iconwdgt.h"
+#include "kbwin.h"
 #include "textwdgt.h"
 #include "widget.h"
 #include "window.h"
@@ -312,6 +314,42 @@ type_bottom_view_window::~type_bottom_view_window()
 VA(0x00451120, 0x78)  // anchor-vtable, dc 0x56ea4
 TBottomViewNewTurn::~TBottomViewNewTurn()
 {
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:121
+// Slot 1 of this class's own table 0x63bb0c, and the body that proves the
+// derived layout: five fields at +0x34..+0x44, all five read here.
+//
+// The frame count is CSprite::GetNumFrames(0) EXPANDED, not a cached
+// member - the guard pair (`numSequences > 0` and `validSeqMask[0] != 0`)
+// with its `xor eax,eax` else arm is that header inline verbatim, and
+// sequence 0 is the only sequence this widget ever shows.
+//
+// Both gates are early returns because retail's two `je`/`jl` land on one
+// shared three-instruction epilogue.
+//
+// lastStepTime IS READ INTO A LOCAL BEFORE THE CALL, and that one line is
+// worth 16.5 points (83.54 -> 100.00). Retail pins it in EDI across
+// GameTime::Get(); left as a member read inside the subtraction VC6 spills
+// the load to after the call instead, and the still-free EDI then changes
+// how the `++frame` sequence below is allocated and ordered too. Same
+// shape and the same reason as the glTimers hoist in dimensiondoorwindow.
+VA(0x004511a0, 0x79)  // anchor-vtable (0x63bb0c slot 1), dc 0x55448
+void TBottomViewNewTurn::animate()
+{
+    if (frame == icon->Sprite->GetNumFrames(0) - 1)
+        return;
+
+    unsigned long lastStep = lastStepTime;
+    if (static_cast<long>(GameTime::Get() - lastStep) < frameDelay)
+        return;
+
+    ++frame;
+    icon->SetIconFrame(frame);
+    icon->Draw();
+    backdrop->Draw();
+    icon->send_message(widget::WIDGET_SET_STATUS, widget::WIDGET_UPDATE);
+    lastStepTime = GameTime::Get();
 }
 
 // BLOCKED on the constructor: VA_COMPGEN(0x00451770, 0x21, SCALAR_DELETING_DTOR, TBottomViewResourceMessage)
