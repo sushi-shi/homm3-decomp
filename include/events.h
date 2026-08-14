@@ -19,6 +19,15 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_WINDMILL_RESOURCE = 170
 };
 
+// advManager::FizzleCenter's (0x4acbb0) sound selector, also the second
+// argument of advManager::HeroLoses. Retail lowers the two arms as a
+// SWITCH (`sub eax,0 / je` then `dec eax / jne`), and every value outside
+// the pair suppresses the flash entirely.
+enum EFizzleSound {
+    FIZZLE_SOUND_KILL_FADE = 0,
+    FIZZLE_SOUND_PICKUP = 1
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\events.cpp:61, dc 0x9028c) unsigned char InitializeAdventureEventText();
 // CODEVIEW(E:\gamedcs\events.cpp:265, dc 0x902b0) unsigned char InitializeArtifactEventText();
