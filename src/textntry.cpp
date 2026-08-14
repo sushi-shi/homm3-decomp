@@ -3,10 +3,23 @@
 // 21 functions in link order.
 #include <va.h>
 #include "textntry.h"
+#include "bitmap816.h"
 #include "inputmgr.h"
 #include "message.h"
 #include "window.h"
 #include "winmgr.h"
+
+// E:\gamedcs\textntry.cpp:44 (dc 0x163750). Inlined into
+// textEntryWidget::SaveBackground 0x5bba70, its only caller; `inline`
+// so no out-of-line body is emitted, which is what retail shows.
+inline void CTextEntrySave::Save(int saveX, int saveY)
+{
+    bSaved = 1;
+    Grab(gpWindowManager->screenBitmap->map, saveX, saveY,
+        gpWindowManager->screenBitmap->Width,
+        gpWindowManager->screenBitmap->Height,
+        gpWindowManager->screenBitmap->Pitch);
+}
 
 #if 0  // @carcass
 
@@ -126,9 +139,40 @@ char textEntryWidget::GetCharPressed(message* msg)
     return pressed;
 }
 
+// ORDER-MAP 2026-08-14, exhaustive over the seam. The ten carve rows
+// 0x5bac50..0x5bbac0 that sit between GetCharPressed and textresource's
+// first row take textntry.cpp's remaining DC roster in source-line
+// order with no leftovers on either side, and the retail vtable
+// 0x642d40 independently pins nine of the ten to a slot:
+//
+//   0x5bac50 1277  line 213  OnKeyPress          slot 15
+//   0x5bb150  678  line 335  Main                slot  2
+//   0x5bb400  596  line 477  Draw                slot  4
+//   0x5bb660  743  line 568  SetupDisplayString  (non-virtual)
+//   0x5bb950  208  line 628  SetText             slot 13
+//   0x5bba20   34  line 635  IgnoreKey           slot 16
+//   0x5bba50    8  line 648  OnSetFocus          slot 10
+//   0x5bba60    8  line 653  OnKillFocus         slot 11
+//   0x5bba70   68  line 658  SaveBackground      slot 18
+//   0x5bbac0  130  line 666  SetAutoDraw         slot 17
+//
+// The flanks are attributed: 0x5ba8d0 and 0x5bbb50 are both cinit rows
+// (guard 0x6abaa0 + atexit), the excluded class. The five CTextEntrySave
+// rows and the DC default constructor have no retail row at all - the
+// first four are inlined at their single call sites (see the class
+// above), the sdd is the far COMDAT 0x557310, and nothing in the image
+// constructs a default textEntryWidget.
+//
+// One derived class exists: thirteen byte-identical vtables (0x63a578,
+// 0x63d4bc, 0x63ebf4, 0x640054, ...) reproduce 0x642d40 slot for slot
+// except 0 / 15 / 16 and run past slot 18, i.e. a header-defined
+// subclass that overrides OnKeyPress and IgnoreKey. That is also the
+// uniqueness proof for the two bodies below that it does NOT override:
+// slot 15's 0x5bac50 is referenced exactly once image-wide.
 #if 0  // @carcass
 
 // E:\gamedcs\textntry.cpp:213
+// RETAIL_LOCATED 0x005bac50, 0x4FD - vtable slot 15 + line order.
 DC_ONLY(0x162c2c, 0x2FE)
 int textEntryWidget::OnKeyPress(message* msg)
 {
@@ -136,6 +180,7 @@ int textEntryWidget::OnKeyPress(message* msg)
 }
 
 // E:\gamedcs\textntry.cpp:335
+// RETAIL_LOCATED 0x005bb150, 0x2A6 - vtable slot 2 + line order.
 DC_ONLY(0x162f2c, 0x222)
 int textEntryWidget::Main(message* msg)
 {
@@ -143,6 +188,7 @@ int textEntryWidget::Main(message* msg)
 }
 
 // E:\gamedcs\textntry.cpp:477
+// RETAIL_LOCATED 0x005bb400, 0x254 - vtable slot 4 + line order.
 DC_ONLY(0x163150, 0x288)
 void textEntryWidget::Draw()
 {
@@ -150,74 +196,21 @@ void textEntryWidget::Draw()
 }
 
 // E:\gamedcs\textntry.cpp:568
+// RETAIL_LOCATED 0x005bb660, 0x2E7 - line order; the only non-virtual
+// row in the seam, and OnKeyPress/Main both call it.
 DC_ONLY(0x1633d8, 0x202)
 void textEntryWidget::SetupDisplayString(char* cCore, unsigned short inCursorIndex)
 {
     // @stub
 }
 
-// E:\gamedcs\textntry.cpp:628
-DC_ONLY(0x1635dc, 0x24)
-void textEntryWidget::SetText(const char* new_text)
-{
-    // @stub
-}
-
-// E:\gamedcs\textntry.cpp:635
-DC_ONLY(0x163600, 0x1E)
-unsigned char textEntryWidget::IgnoreKey(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\textntry.cpp:648
-DC_ONLY(0x163620, 0x16)
-void textEntryWidget::OnSetFocus()
-{
-    // @stub
-}
-
-// E:\gamedcs\textntry.cpp:653
-DC_ONLY(0x163638, 0x16)
-void textEntryWidget::OnKillFocus()
-{
-    // @stub
-}
-
-// E:\gamedcs\textntry.cpp:658
-DC_ONLY(0x163650, 0x2A)
-void textEntryWidget::SaveBackground()
-{
-    // @stub
-}
-
-// E:\gamedcs\textntry.cpp:666
-DC_ONLY(0x16367c, 0x90)
-void textEntryWidget::SetAutoDraw(unsigned char b)
-{
-    // @stub
-}
-
-// E:\gamedcs\textntry.cpp:38
+// E:\gamedcs\textntry.cpp:38 / :44 / :50 - CTextEntrySave's ctor, Save
+// and IsSaved. All three are inlined into their single call sites
+// (SetAutoDraw / SaveBackground / Draw); the definitions live at the
+// top of this file. No retail row.
 DC_ONLY(0x16370c, 0x44)
-void CTextEntrySave::CTextEntrySave(int w, int h)
-{
-    // @stub
-}
-
-// E:\gamedcs\textntry.cpp:44
 DC_ONLY(0x163750, 0x2C)
-void CTextEntrySave::Save(int x, int y)
-{
-    // @stub
-}
-
-// E:\gamedcs\textntry.cpp:50
 DC_ONLY(0x16377c, 0xA)
-unsigned char CTextEntrySave::IsSaved()
-{
-    // @stub
-}
 
 // E:\gamedcs\textntry.cpp:51
 DC_ONLY(0x163788, 0x34)
@@ -233,12 +226,66 @@ void CTextEntrySave::~CTextEntrySave()
     // @stub
 }
 
-// E:\gamedcs\textntry.cpp:71
-DC_ONLY(0x1637d4, 0x34)
-void* textEntryWidget::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
+// The DC default constructor (line 60, dc 0x16298c, carcass at the top
+// of this file) has no retail row either: nothing in the image stores
+// 0x642d40 except the sixteen-argument constructor 0x5ba920.
 
 #endif  // @carcass
+
+// E:\gamedcs\textntry.cpp:628 - the retail body assigns and then
+// re-reads the string's length out of the object rather than reusing
+// the count the inlined assign already has in hand, which is what
+// duplicates the `[+0x58]` store into all three assign tails.
+VA(0x005bb950, 0xD0)  // anchor-vtable slot 13, dc 0x1635dc
+void textEntryWidget::SetText(const char* new_text)
+{
+    Text = new_text;
+    cursorIndex = static_cast<unsigned short>(Text.size());
+}
+
+// E:\gamedcs\textntry.cpp:635 - the three swallowed keys are scan
+// codes: 1 Esc, 15 Tab, 28 Enter. Retail's dec/sub/sub descent is the
+// switch lowering, not a `||` chain (that emits three cmps).
+VA(0x005bba20, 0x22)  // anchor-vtable slot 16, dc 0x163600
+unsigned char textEntryWidget::IgnoreKey(message* msg)
+{
+    switch (msg->codeX) {
+        case KEYCODE_ESCAPE:
+        case KEYCODE_TAB:
+        case KEYCODE_ENTER:
+            return 1;
+    }
+    return 0;
+}
+
+// E:\gamedcs\textntry.cpp:648
+VA(0x005bba50, 0x8)  // anchor-vtable slot 10, dc 0x163620
+void textEntryWidget::OnSetFocus()
+{
+    SetFocus(1);
+}
+
+// E:\gamedcs\textntry.cpp:653
+VA(0x005bba60, 0x8)  // anchor-vtable slot 11, dc 0x163638
+void textEntryWidget::OnKillFocus()
+{
+    SetFocus(0);
+}
+
+// E:\gamedcs\textntry.cpp:658
+VA(0x005bba70, 0x44)  // anchor-vtable slot 18, dc 0x163650
+void textEntryWidget::SaveBackground() const
+{
+    if (saveBack)
+        saveBack->Save(x + parentWindow->x, y + parentWindow->y);
+}
+
+// E:\gamedcs\textntry.cpp:666 - the fs:[0] frame is the new-expression's
+// own unwind funclet, not a source-level try.
+VA(0x005bbac0, 0x82)  // anchor-vtable slot 17, dc 0x16367c
+void textEntryWidget::SetAutoDraw(unsigned char b)
+{
+    bAutoDraw = b;
+    if (b && !textBack && !saveBack)
+        saveBack = new CTextEntrySave(boxWidth, boxHeight);
+}
