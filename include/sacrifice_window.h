@@ -7,6 +7,7 @@
 
 #include "advmgr_popup.h"
 #include "iconwdgt.h"
+#include "textwdgt.h"
 
 class hero;
 
@@ -77,6 +78,36 @@ public:
                                        unsigned char right_click);
 };
 SIZE(type_army_slot_widget, 0x50);
+
+// The skeleton-transformer dialog, over the same 0x60-byte CAdvPopup base
+// its Dreamcast virtual roster attests (WindowHandler / ExitDialog /
+// handle_widget_hover, exactly type_sacrifice_window's set). Only the
+// rollover pointer is admitted: handle_widget_hover 0x566720 reads it as the
+// FIRST derived dword and dispatches slot 13 (textWidget::SetText) through
+// it. The rest of the object stays unmodelled, so no size is asserted.
+class type_skeleton_window : public CAdvPopup {
+public:
+    textWidget* rolloverText;  // +0x60
+
+    void creature_click(long side, long slot, unsigned char right_click);
+
+    virtual void handle_widget_hover(widget* current_widget);  // slot 4
+    virtual int WindowHandler(message* msg);                   // slot 9
+};
+
+// The transformer dialog's creature slots. Retail 0x5654c0 forwards TWO
+// dwords, +0x48 then +0x4c, ahead of right_click - creature_click's
+// (side, slot, right_click) - and the Dreamcast constructor takes exactly
+// that pair as (new_group, new_slot).
+class type_transformer_slot : public iconWidget {
+public:
+    long group;
+    long slot;
+
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
+};
+SIZE(type_transformer_slot, 0x50);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:760, dc 0x1258ac) std::basic_string<char,std::char_traits<char>,std::allocator<char> convert_with_commas(__$ReturnUdt, long value);

@@ -3,6 +3,8 @@
 // 211 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "sacrifice_window.h"
+#include "message.h"
+#include "winmgr.h"
 
 #if 0  // @carcass: unlocated Dreamcast bodies and STLport template tail
 
@@ -1523,6 +1525,59 @@ unsigned char type_army_slot_widget::handle_click(
         return 1;
     }
     return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1900
+// The fifth and last member of the family, over in the transformer dialog's
+// half of the compiland. It forwards +0x48 and +0x4c AHEAD of right_click
+// rather than around it - type_skeleton_window::creature_click's
+// (side, slot, right_click) - and the Dreamcast constructor takes that pair
+// as (new_group, new_slot).
+//
+// NO CLAIM on the deleting destructor at 0x55fd70 or the destructor at
+// 0x5654b0 it calls. Every slot widget in this TU is a trivial iconWidget
+// subclass, so all five destructors compile to the same `jmp ??1iconWidget`
+// and all five ??_G wrappers to the same 33 bytes; /OPT:ICF left one of
+// each, with no owning class. Excluded class, the widget::Close standing.
+VA(0x005654c0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x127598
+unsigned char type_transformer_slot::handle_click(
+    unsigned char down_click, unsigned char right_click)
+{
+    if (down_click) {
+        static_cast<type_skeleton_window*>(parentWindow)->creature_click(
+            group, slot, right_click);
+        return 1;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2281
+// Slot 9, sitting two rows past creature_click 0x566490 - the call target the
+// transformer slot above pins - in the Dreamcast roster's order.
+VA(0x005666f0, 0x2e)  // anchor-callee (CAdvPopup slot 9) + linkorder, dc 0x128048
+int type_skeleton_window::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+    if (msg->id == MESSAGE_MOUSE_MOVE)
+        return gpWindowManager->ConvertToHover(*msg);
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2306
+// The slot-4 hover hook, byte-for-byte the shape
+// type_university_window::handle_widget_hover has at 0x5f0dc0 - including
+// retail's tail-merge of the two SetText call sites - with the rollover
+// pointer at +0x60 rather than +0x70.
+VA(0x00566720, 0x38)  // anchor-vtable (slot 4 shape) + RollOver read, dc 0x128098
+void type_skeleton_window::handle_widget_hover(widget* current_widget)
+{
+    if (!current_widget->RollOver)
+        rolloverText->SetText(emptyRolloverText);
+    else
+        rolloverText->SetText(current_widget->RollOver);
+    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 #if 0  // @carcass: final duplicate STLport helper rows
