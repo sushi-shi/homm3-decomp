@@ -53,6 +53,20 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 };
 
 // E:\gamedcs\mainmenu.cpp:66
+// Residual (97.0098%): the whole delta sits in ONE of the five button
+// push_backs - the reallocating one. Retail keeps the Dinkumware
+// destroy-range helper OUT OF LINE there (`mov ecx,esi; push [esi+8];
+// push [esi+4]; call` - the delinked object names it sample_vslot03, an
+// ICF-folded empty pointer-destroy body) and only then frees the old
+// block, while this compile elides that call entirely and folds the
+// bookkeeping into the surrounding stores; the EAX/ECX/EDX rotation
+// across `lea [edi+0x28]` / `lea [edi+4*eax]` follows from it. Same
+// under-inline family as viewarmywindow's create_upgrade_widget,
+// levelupwindow's constructor and quicktownwindow: per docs/vc6/inliner.md
+// the /Ob2 budget is clamp(2*caller_cb,1000,35000), so the lever is caller
+// body mass, not a vector spelling. Everything else - all five button
+// recipes, the coordinate table, the EH state ladder and the resolution
+// tail - agrees; the remaining `movsx` rows are reloc-name-only.
 VA(0x004fb2a0, 0x385)  // order-map: heroWindow(0,0,800,600) base + 5 button ctors from mmenung/lg/hs/cr/qt.def (ids 0x65-0x69), installs vtbl 0x63ff50, this-global 0x699660; called by oldmain; EH-bearing, dc 0xea2ec
 TMainMenu::TMainMenu()
     : heroWindow(0, 0, 800, 600, 0)
