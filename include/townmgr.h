@@ -463,6 +463,7 @@ class TResourceDisplay;
 // that take the manager alone (recruit.obj, town.obj) only need the name.
 class TCastleWindow;
 
+
 // Layout proven store-for-store by townManager::townManager 0x5c3310,
 // which writes every member below, and corroborated by ::UnloadTown
 // 0x5c70b0 (the two arrays and their counts), ::Close 0x5c71b0 (the two
@@ -506,7 +507,12 @@ public:
     // (0x550344), which calls ?Update@TResourceDisplay@@QAEXEE@Z through
     // it; the manager constructs it, owns it and deletes it in ::Close.
     TResourceDisplay* pResourceDisplay;   // +0x13c
-    int field_140;                // +0x140
+    // +0x140, TYPED 2026-08-14 by DoHall 0x5d27b0: it deletes whatever
+    // is here through vtable slot 0, puts a fresh
+    // `TResourceDisplay(hallWindow, 1)` in its place, calls Update on
+    // it and hands it to the net handler - the same bar as +0x13c, but
+    // the one a modal page owns for as long as it is up.
+    TResourceDisplay* dialogResourceDisplay;   // +0x140
     char pad_144[0x50];           // +0x144  untouched by the retail bodies
     // +0x194 / +0x198, NAMED 2026-08-14 from the Dreamcast fieldlist
     // (lastHover@416, lastQualifier@420 - this pair under the same -8
@@ -520,12 +526,42 @@ public:
     int field_1a4;                // +0x1a4
     int field_1a8;                // +0x1a8
     int field_1ac;                // +0x1ac
-    heroWindow* field_1b0;        // +0x1b0
+    // +0x1b0, NAMED 2026-08-14 by DoHall 0x5d27b0, which writes the
+    // page's resource bar into +0xc of this object twice - once on the
+    // way in and once on the way out. That is
+    // CTownNetMsgHandler::SetResourceDisplay (four bytes on the DC, so
+    // /Ob2 expands it) against the +0xc this header already proves is
+    // that class's bar, so the object IS the town's net handler.
+    //
+    // The TYPE stays heroWindow* even so, and that is MEASURED, not
+    // laziness: naming CTownNetMsgHandler here needs a forward
+    // declaration in the block above, and ANY forward declaration added
+    // to recruit.cpp's view of this header costs recruitUnit::Update
+    // 90.84 -> 88.24 - verified name-independent with a dummy
+    // `class HOMM3_PROBE_ZZ;`, which moves it by exactly the same
+    // amount. That is recruit.cpp's own C1XX type-handle plateau (see
+    // the note at the top of that file); one more type DEFINITION there
+    // restores it, but `#include "button.h"` did not, so the honest
+    // supply has not been found yet. DoHall pays 90.71 -> 87.13 for it.
+    //
+    // One thing the retyping DID prove while it was in the tree, and it
+    // is recorded here rather than acted on: townManager::Close deletes
+    // this object through vtable SLOT 0, so CNetMsgHandler's slot 0 is
+    // a destructor and remote.h's `CheckHandleNet` at slot 0 is one
+    // short. Adding `virtual ~CNetMsgHandler();` ahead of it restored
+    // Close to exact and was byte-inert across all 131 units. Left for
+    // the lane that lands the typing - an unexercised vtable shift in a
+    // shared header is a trap.
+    heroWindow* netMsgHandler;    // +0x1b0
     // +0x1b4: handed to the message pump's setter (0x553770) on the way
     // out of a network game, which is what types it.
     CUnnamed69d808_f0* field_1b4;
     int field_1b8;                // +0x1b8  ctor -1
-    int field_1bc;                // +0x1bc
+    // +0x1bc, NAMED AND TYPED 2026-08-14: DoHall 0x5d27b0 stores its
+    // `new THallWindow(townToView->type)` here and drives the whole
+    // modal run - DrawWindow, DoModal, delete - through it. Held as the
+    // base pointer for the reason the note on +0x1b0 gives.
+    heroWindow* hallWindow;       // +0x1bc
     int field_1c0;                // +0x1c0
     int field_1c4;                // +0x1c4  ResetStrips
     char pad_1c8[0x4];            // +0x1c8  untouched by the retail bodies
@@ -565,6 +601,12 @@ public:
     // recruitUnit::Update 90.84 -> 88.24 with no semantic change.
 #ifdef HOMM3_TOWNMGR_WINDOW_DECLS
     void SetupMage(heroWindow* mageWin);
+    // Retail 0x5d27b0 (dc 0x17484c). Runs the town hall page.
+    void DoHall();
+    // castle.obj's, retail 0x461190 (dc 0x5c278) - the carve row
+    // directly after castle.cpp's two claimed ones, and DoHall is its
+    // only caller in the image. Declared here, defined over there.
+    void SetupCastle(heroWindow* inCasWin, int bIsReset);
     // Retail 0x5c33f0 (dc 0x16a644). Puts up the town's free buildings:
     // the whole eligible mask under the "nwczion" cheat, otherwise the
     // one faction bonus the town type has. Nested here for exactly the
