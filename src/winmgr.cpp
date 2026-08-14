@@ -523,13 +523,6 @@ void heroWindowManager::UpdateScreen()
     // @stub
 }
 
-// E:\gamedcs\winmgr.cpp:856
-DC_ONLY(0x19b230, 0xF8)
-void heroWindowManager::UpdateScreen(int x, int y, int width, int height)
-{
-    // @stub
-}
-
 // E:\gamedcs\winmgr.cpp:916
 DC_ONLY(0x19b328, 0x9C)
 void heroWindowManager::UpdateScreen(int x, int y, int width, int height, int dx, int dy)
@@ -552,6 +545,56 @@ void heroWindowManager::BlitToScreenWithPointerX(int x, int y, int w, int h, int
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\winmgr.cpp:856 - EXACT 2026-08-14. The four-int
+// UpdateScreen, the one form retail kept a body for; widget::Main is
+// its caller. Clamp the dirty rectangle into the 800x600 screen and
+// hand it to DDAppBlit (0x5ffe70) between two PollSound pumps. The
+// `isWaitingForFadeIn` gate is the byte at +0x48 and it returns before
+// the FIRST pump.
+//
+// THE ONE THING THAT MATTERED, and it is a semantics fix rather than a
+// spelling: a rectangle that clamps away to nothing skips only the
+// BLIT, not the trailing pump. Retail's `test ecx,ecx / jle` and
+// `test eax,eax / jle` both land on the second `call PollSound`, not on
+// the epilogue. Spelling those two tests as `if (width <= 0) return;`
+// pairs of early returns scores 95.43% and drags a second, apparently
+// unrelated defect with it: the early returns put an exit on the path
+// before ESI is first defined, VC6 stops shrink-wrapping the `push esi`
+// past the isWaitingForFadeIn guard, and the save/restore pair moves.
+// Four guard respellings (`!= 0`, the RECT declared after the guard, an
+// inverted wrapper, the flag latched into a local) all left it at
+// 95.43 - because the guard was never the problem. Turning the pair
+// into `if (width > 0 && height > 0) { ...blit... }` with the pump
+// below it took the function to exact in one compile, shrink-wrap and
+// all. A shrink-wrap residual is worth re-reading as a control-flow
+// question before it is treated as a register one.
+VA(0x00602bd0, 0x7C)  // anchor-caller (widget::Main), dc 0x19b230
+void heroWindowManager::UpdateScreen(int x, int y, int width, int height)
+{
+    RECT region;
+
+    if (isWaitingForFadeIn)
+        return;
+    PollSound();
+    if (x < 0)
+        x = 0;
+    if (y < 0)
+        y = 0;
+    if (x + width > WINDOW_SCREEN_WIDTH)
+        width = WINDOW_SCREEN_WIDTH - x;
+    if (y + height > WINDOW_SCREEN_HEIGHT)
+        height = WINDOW_SCREEN_HEIGHT - y;
+    if (width > 0 && height > 0) {
+        region.left = x;
+        region.top = y;
+        region.right = x + width;
+        region.bottom = y + height;
+        DDAppBlit(&region);
+    }
+    PollSound();
+}
+
 
 // E:\gamedcs\winmgr.cpp:1007
 VA(0x00602c50, 0x63)  // anchor-global, dc 0x19b428
