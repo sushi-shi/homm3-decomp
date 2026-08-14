@@ -657,6 +657,20 @@ static const int gHeroArmyCoords[7][2] = {
 // running local, and there the `id++` sits inside each `new`'s non-null
 // arm in the usual way.
 //
+// Residual (96.52%): the stats loop keeps `i` alive. Retail expresses
+// every use of it through an induction variable - the widget id off the
+// stats cursor (`0x7d3 - &stats[0]` plus the cursor), and BOTH the
+// `i >= 2` arm and the loop exit off the coordinate cursor
+// (`cmp esi, &gHeroStatCoords[2]` / `setge`, `cmp esi,
+// &gHeroStatCoords[4]` / `jl`) - so no `i` is ever materialized. Our CL
+// reduces the id the same way but reconstructs `i` as a second bias off
+// the stats cursor for the other two. The `i >= 2` compare is SIGNED
+// (`setge`), which rules out the obvious pointer-walk spelling: a real
+// pointer comparison would be unsigned. Tried and rejected: a hoisted
+// `signed char stat` local for the three-arm clamp (96.51, marginally
+// worse). A second, smaller residual is shared with TBottomViewTown -
+// see the note there on game::GetHero/GetTown arm order.
+//
 // THE TWO STRING TEMPORARIES GET SEPARATE SLOTS. The >= 10000 arm and
 // the plain arm each build their own format_string temporary at its own
 // frame offset (-0x40 and -0x50) and tear it down inside the arm, so
@@ -786,6 +800,20 @@ static const int gTownArmyCoords[7][2] = {
 // reloads `i` after every store because the store through that cursor
 // might alias it. Both are what `slots[found++] = i` produces.
 //
+// Residual (94.31%): game::GetTown's -1 arm comes out SECOND here and
+// FIRST in TBottomViewKingdom, from the one header inline and the same
+// spelling - retail sinks the `movsx` into the taken arm and compares
+// the raw byte, and its null arm reuses a zero register that stays live
+// all the way back through the first widget's null test and its two
+// `push 0` arguments. TBottomViewHero has the identical divergence on
+// game::GetHero. Inverting the accessor to `if (id != -1) return &..;
+// return 0;` would move these two and break TBottomViewKingdom, which
+// matches with the current spelling, so game.h is left alone. The frame
+// is also 8 bytes short: retail allocates two more push_back
+// temporaries where our CL folds them onto the silo array's slots.
+// Tried and rejected: hoisting `slots` to function scope (no change -
+// VC6's slot reuse here is liveness-based, not scope-based).
+//
 // get_army() IS CALLED FRESH EVERY TIME, three times per army slot;
 // retail never caches the reference. The quantity text is the same
 // ostrstream idiom TQuickTownWindow::initialize_army_display already
@@ -909,6 +937,18 @@ TBottomViewTown::~TBottomViewTown()
 // The kingdom-overview banner: a hall-level census of the acting player's
 // towns above a two-row flag strip splitting the other players into
 // allies and enemies.
+// Residual (94.06%): ONE nested inline. Retail calls
+// vector<widget*>::size() out of line (0x423110) inside reserve() where
+// our CL expands its 19 bytes, and every other byte of the delta is
+// downstream of that: the EBX save shrink-wraps past the growth block,
+// `this` lands in EDI instead of ESI, and the constant zero stays CSE'd
+// in a register because the inlined size() still needs it. capacity()
+// IS inlined on both sides, so retail's budget ran out between the two.
+// predict-inline agrees: base emits 38 out-of-line calls, retail 39,
+// and 0x423110 is the only genuine row. Tried and rejected: titrating
+// the caller with self-assignments (byte-flat - C1 eliminates them
+// before the inliner measures cb) and a single 42-stepping `x` local in
+// place of the two `42*i+N` expressions (93.56, worse).
 VA(0x00452b80, 0x620)  // anchor-vtable 0x63bb3c + advManager::UpdBottomViewKingdom, dc 0x563b8
 TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     : type_bottom_view_window(parent)
