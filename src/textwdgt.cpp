@@ -49,6 +49,7 @@ void textWidget::textWidget(int textWidgetX, int textWidgetY, int textWidgetWidt
 // operator delete tail.
 VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 
+// E:\gamedcs\textwdgt.cpp:95
 VA(0x005bc3b0, 0x8A)  // anchor-global, dc 0x164d24
 textWidget::~textWidget()
 {
@@ -220,6 +221,7 @@ bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h,
 // and then lets textWidget::Draw put the string on top; the clamp on each
 // axis is the reference-returning min VC6 inlines as two dword homes and an
 // address select, not the __min macro (which would reload the operand).
+// E:\gamedcs\textwdgt.cpp:348
 VA(0x005bc7f0, 0x7C)  // anchor-vtable (slot 4 of 0x642de8), dc 0x165258
 void bitmapBackedTextWidget::Draw()
 {

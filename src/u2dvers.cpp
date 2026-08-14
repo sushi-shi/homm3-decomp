@@ -15,6 +15,7 @@
 // E:\gamedcs\u2dvers.cpp:33
 // GetFileVersionInfoSizeA(filename, (DWORD*)&filename) - the arg slot
 // reused as the out-handle - then new[size] + GetFileVersionInfoA.
+// E:\gamedcs\u2dvers.cpp:33
 VA(0x005eeda0, 0x4C)  // anchor-import (version.dll), dc 0x18e3b0
 TFileVersionInfo::TFileVersionInfo(const char* filename)
 {

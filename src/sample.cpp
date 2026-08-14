@@ -21,6 +21,7 @@ __declspec(nothrow) void __cdecl operator delete(void* _P);
 // so the retail TU compiled /GX, contradicting this unit's noeh
 // profile note (a frameless dtor does NOT rule /GX out when the dtor
 // has no state to protect).
+// E:\gamedcs\sample.cpp:55
 VA(0x00566da0, 0x8E)  // anchor-vtable (??_7sample store), dc 0x129b3c
 sample::sample(const char* newName, const void* src, long len,
                long channel, long volume, long loop)

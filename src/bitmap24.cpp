@@ -115,6 +115,7 @@ VA_COMPGEN(0x0044ed20, 0x21, SCALAR_DELETING_DTOR, Bitmap24Bit)
 // Residual: VC6 schedules the independent Height/ImageSize/vptr stores in a
 // different order; meaningful field-order spellings were swept, with this
 // canonical order retaining the 99.51% high-water mark.
+// E:\gamedcs\bitmap24.cpp:64
 VA(0x0044ed50, 0xAA)
 Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,
                          const unsigned char* source, int size)
@@ -132,6 +133,7 @@ Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,
 // Dreamcast CodeView gives filename's array type as exactly char[261]
 // (type 0x2894); retail independently proves the resulting 0x10c-byte stack
 // allocation. The earlier 260-byte guess was the sole normalized mismatch.
+// E:\gamedcs\bitmap24.cpp:80
 VA(0x0044ee00, 0xC0)
 Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
     : resource(name, RESOURCE_TYPE_BITMAP24),
@@ -151,6 +153,7 @@ Bitmap24Bit::~Bitmap24Bit()
         delete[] data;
 }
 
+// E:\gamedcs\bitmap24.cpp:274
 VA(0x0044efd0, 0x37)
 void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
                        int dx, int dy) const

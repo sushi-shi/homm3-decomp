@@ -882,12 +882,14 @@ void std::__destroy_aux()
 
 #endif  // @carcass
 
+// E:\gamedcs\kb.cpp:5954
 VA(0x004f79b0, 0x25)  // decorated identity + map-extents arithmetic
 unsigned short GetMapExtra(int x, int y, int z)
 {
     return gMapExtra[(z * gMapHeight + y) * gMapWidth + x];
 }
 
+// E:\gamedcs\kb.cpp:5960
 VA(0x004f79e0, 0x24)  // decorated identity + map-extents arithmetic
 unsigned short* GetMapExtraPtr(int x, int y, int z)
 {

@@ -24,6 +24,7 @@ void TCombatWindow::TCombatWindow(unsigned char do_placement)
 // E:\gamedcs\combatwindow.cpp:281
 #endif  // @carcass
 
+// E:\gamedcs\combatwindow.cpp:281
 VA(0x004728d0, 0x2A)  // vtable 0x63d528 slot 2 + heroWindow::Close, dc 0x69b2c
 void TCombatWindow::Close(unsigned char update)
 {

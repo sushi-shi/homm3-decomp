@@ -28,6 +28,7 @@ static const int resourceDisplayOrder[NUM_RESOURCES] = {
 // The VC6 v2 solver classifies the surviving swap as the C1 handle-state class:
 // the pair is not source-nameable and no statement-level mutation can reorder it.
 // A bounded 0..8 unused-type population sweep on 2026-08-11 was byte-flat.
+// E:\gamedcs\resourcedisplay.cpp:40
 VA(0x00558ba0, 0x2A1)  // anchor-global, dc 0x120c54
 TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)
     : isSmall(is_small)
@@ -118,6 +119,7 @@ TResourceDisplay::~TResourceDisplay()
 // Corroborated from the other side by recruitUnit::Close (0x550344),
 // which calls it with exactly two pushes (`push 0; push 1`). DC's
 // `inMap` has no retail home; the first two names are kept.
+// E:\gamedcs\resourcedisplay.cpp:150
 VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
 void TResourceDisplay::Update(unsigned char draw, unsigned char update)
 {

@@ -1466,6 +1466,7 @@ void std::__destroy_aux()
 
 // Vtable 0x641578 slot 13 is the sole address-taker for this entry. The
 // retail body reads iconWidget's parent at +4 and this class's slot at +0x48.
+// E:\gamedcs\sacrifice_window.cpp:213
 VA(0x0055fd10, 0x26)
 unsigned char type_backpack_slot_widget::handle_click(
     unsigned char down_click, unsigned char right_click)
@@ -1480,6 +1481,7 @@ unsigned char type_backpack_slot_widget::handle_click(
 
 // Vtable 0x6415b0 slot 13 proves the offering-widget twin. Its call target is
 // the carved 0x563a80 entry, whose +0xc0 offering vector fixes the identity.
+// E:\gamedcs\sacrifice_window.cpp:243
 VA(0x0055fd40, 0x26)
 unsigned char type_artifact_offering_widget::handle_click(
     unsigned char down_click, unsigned char right_click)

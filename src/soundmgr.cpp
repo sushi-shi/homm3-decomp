@@ -82,6 +82,7 @@ static void ServeSampleStream()
 // Leaves through `this`; that asymmetry is retail's and is transcribed
 // verbatim. The two inner arms are ResumeStream() and StopMP3()
 // inlined by /Ob2, written as CALLS per the ClearMemSample precedent.
+// E:\gamedcs\soundmgr.cpp:69
 VA(0x005994b0, 0x210)  // anchor-callee + order-map, dc 0x14b07c
 void soundManager::SetMusicVolume()
 {
@@ -132,6 +133,7 @@ void soundManager::SetMusicVolume()
 // under this compile's /Ob2 budget, but retail calls it from SetMusicVolume,
 // ModifySample and MemorySample rather than expanding it.
 #pragma auto_inline(off)
+// E:\gamedcs\soundmgr.cpp:121
 VA(0x005996c0, 0x97)  // anchor-callee, dc 0x14b170
 int soundManager::ConvertVolume(int iVolumeValue, int iVolumeType)
 {
@@ -164,6 +166,7 @@ int soundManager::ConvertVolume(int iVolumeValue, int iVolumeType)
 // That construction-phase distinction makes VC6 emit its byte clear before
 // the derived vptr store, exactly as retail does; writing the same assignment
 // in the body schedules it after the vptr and plateaus at 99.0312%.
+// E:\gamedcs\soundmgr.cpp:165
 VA(0x00599760, 0x67)  // anchor-global, dc 0x14b1ec
 soundManager::soundManager()
     : MP3Playing(0)
@@ -282,6 +285,7 @@ void soundManager::StopAllSamples(int bStopMusicToo)
 // EXACT since the 2026-08-07 layout correction: the old 97.4%/99.96%
 // residual was the `ds` member sitting at 0x40 instead of 0x3c, not a
 // register choice.
+// E:\gamedcs\soundmgr.cpp:556
 VA(0x00599e80, 0x3D)  // anchor-global, dc 0x14b2c0
 void soundManager::StopSample(ds_memsample* inSample)
 {
@@ -397,6 +401,7 @@ void soundManager::SwitchAmbientMusic(int newMusicFileId)
 // volume selection as two calls preserve the exact main allocation. Only an
 // EAX/EDX/ECX scratch rotation in the inlined ServeSampleStream tail remains;
 // named stream and split section-pointer lifetimes are byte-inert.
+// E:\gamedcs\soundmgr.cpp:759
 VA(0x0059a210, 0x1DB)  // anchor-global, dc 0x14b528
 ds_memsample* soundManager::MemorySample(sample* sPtr)
 {
@@ -600,6 +605,7 @@ void soundManager::ResumeStream()
 // it this way closed the epilogue duplication AND flipped the tail-merge
 // to retail's direction in one step - both deltas were the same
 // placement decision.
+// E:\gamedcs\soundmgr.cpp:1343
 VA(0x0059acb0, 0x355)  // anchor-global, dc 0x14b924
 void soundManager::StartMP3(const char* filename, int loopCount, unsigned char bStopSamples)
 {

@@ -100,6 +100,7 @@ int executive::DoDialog(baseManager* newDialog)
 // EXACT with homm2's heroWindow-style tail-first walk; 3 is the homm2
 // OPEN_FAILURE lineage code. The older whole-body ebx/edi role-swap
 // residual disappeared once the TU's canonical include closure landed.
+// E:\gamedcs\exec.cpp:147
 VA(0x004b0b20, 0xCB)  // anchor-global, dc 0x9e778
 int executive::AddManager(baseManager* newManager, int newPriority)
 {
@@ -194,6 +195,7 @@ void executive::RemoveManager(baseManager* killManager)
 // removal regressed to 88.7372%; scoped advWindow aliases regressed to
 // 96.4234%; scoped restore-error text was byte-inert. The asymmetric direct
 // RemoveManager(currentManager) spelling is the measured maximum.
+// E:\gamedcs\exec.cpp:268
 VA(0x004b0c70, 0x1D0)  // anchor-global + contiguous catch handlers, dc 0x9e898
 void executive::CallManager(baseManager* newManager)
 {
@@ -256,6 +258,7 @@ void executive::CallManager(baseManager* newManager)
 // The command switch is deliberately asymmetric: TERMINATE_LOOP sets
 // only done, while RETURN_RESULT first copies msg.extra to dialogReturn.
 // Retail's dec/dec/sub-2 chain proves the three distinct arms.
+// E:\gamedcs\exec.cpp:340
 VA(0x004b0e40, 0xF5)  // anchor-callee, dc 0x9e9b0
 void executive::MainLoop()
 {

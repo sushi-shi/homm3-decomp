@@ -89,6 +89,7 @@
 // anchor-callee: the tail jmp lands on town::initialize_hordes
 // (0x5bdf60, claimed in src/town.cpp), matching the DC xref row
 // initialize_game_data -> town::initialize_hordes.
+// E:\gamedcs\initialize.cpp:625
 VA(0x004eb730, 0x3D5)  // anchor-callee + linkorder, dc 0xdc614
 void initialize_game_data();
 
@@ -268,6 +269,7 @@ static const int kTown8IncludeList[] = {
 // inlined into initialize_game_data) with both of create_included_mask's
 // own call sites inlined into 0x4ebb70 - the /Ob2 one-level-deep split
 // the whole TU exhibits.
+// E:\gamedcs\initialize.cpp:496
 VA(0x004ebb10, 0x5A)  // linkorder+body (the bitNumber or-walk), dc 0xdc368
 static void add_to_included_mask(const int* include_list, __int64* included_buildings)
 {
@@ -315,6 +317,7 @@ static void add_to_included_mask(const int* include_list, __int64* included_buil
 // over the same sweep. Nor is it the scheduler target: /G5 and the
 // default /GB are byte-identical here and /G6 also scores 93.8667.
 // Treat as a post-RA scheduling difference with no source handle.
+// E:\gamedcs\initialize.cpp:524
 VA(0x004ebb70, 0xD8)  // linkorder+body (common-list + arg-list walks), dc 0xdc3cc
 static void create_included_mask(const int* include_list, __int64* included_buildings)
 {
@@ -350,6 +353,7 @@ static void create_included_masks()
 // E:\gamedcs\initialize.cpp:565
 // Kept out-of-line for the six non-inlined call sites in
 // initialize_game_data (rows 3..8; rows 0..2 are inline copies).
+// E:\gamedcs\initialize.cpp:565
 VA(0x004ebc50, 0x99)  // linkorder+body (legal-mask accumulate), dc 0xdc4a4
 static void create_requirement_masks(const int* town_buildings, __int64* requirements, __int64* legal_buildings)
 {

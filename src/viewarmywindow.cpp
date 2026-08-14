@@ -227,6 +227,7 @@ inline void TViewArmyWindow::create_rollover_widget()
 // Tried and rejected: writing all five helper rows longhand in the body
 // (61.42% - the budget then reaches _Tidy AND the [-3, 3] selector at
 // both icon rows), and a defined `_cpp_clamp` template (87.11%).
+// E:\gamedcs\viewarmywindow.cpp:55
 VA(0x005f3360, 0x7B5)  // direct caller + CrStkPU.pcx, dc 0x190abc
 TViewArmyWindow::TViewArmyWindow(const army* this_army, int x0, int y0,
                                  unsigned char show_ok)
@@ -396,6 +397,7 @@ VA_COMPGEN(0x005f3b20, 0x21, SCALAR_DELETING_DTOR, TViewArmyWindow)
 // delta is register choice and scheduling inside blocks whose shapes
 // agree (`movsx ecx,al` for hero->owner where we pick eax; the table
 // base loaded before the index rather than after it in the name lookup).
+// E:\gamedcs\viewarmywindow.cpp:140
 VA(0x005f3b50, 0x6B2)  // vtable-store + builder call set + describer pair, dc 0x190e78
 TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
                                  const hero* this_hero, const town* this_town,
@@ -542,6 +544,7 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 // Reproducing retail here needs _Tidy to have been rejected when it was
 // expanded INTO basic_string's constructor, which is a property of that
 // compile, not of any spelling available in this TU.
+// E:\gamedcs\viewarmywindow.cpp:274
 VA(0x005f4210, 0x3C1)  // vtable-store + builder call set + CrStkPU.pcx, dc 0x19148c
 TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0,
                                  unsigned char show_ok)
@@ -604,6 +607,7 @@ TViewArmyWindow::TViewArmyWindow(int army_type, int x0, int y0,
 
 // Retail owns the widget objects without clearing the vector here, then
 // tears down luck_help, morale_help, and the CAdvPopup base in that order.
+// E:\gamedcs\viewarmywindow.cpp:318
 VA(0x005f45e0, 0xD5)  // vtable-store + layout, dc 0x191660
 TViewArmyWindow::~TViewArmyWindow()
 {
@@ -616,6 +620,7 @@ TViewArmyWindow::~TViewArmyWindow()
 // Maps the popup's concrete widget IDs onto its compact help-text roster.
 // Retail's 21-entry dense jump table covers NAME_ID..AFFECTING_SPELLS_2_ID;
 // the four action IDs are the sparse tail.
+// E:\gamedcs\viewarmywindow.cpp:325
 VA(0x005f46c0, 0x12C)  // jump-table + body, dc 0x1916d4
 int TViewArmyWindow::convertID2HelpID(int id) const
 {
@@ -669,6 +674,7 @@ void TViewArmyWindow::QuickView()
 // unavailable to a non-local player, and delegates to heroWindow's modal
 // pump without a fade. The two widget IDs are immediate-proven here and at
 // their constructor sites.
+// E:\gamedcs\viewarmywindow.cpp:374
 VA(0x005f47f0, 0x5C)  // call-shape + vtable, dc 0x1917a4
 void TViewArmyWindow::DoModal()
 {
@@ -767,6 +773,7 @@ DATA(0x0068c660) static int gLastViewArmyHoverID = -1;
 // IDENTICAL to the digit. The scorer does not see the addend, so the
 // array model (which text.obj's loader proves) stays and the block
 // placement really is the whole of it.
+// E:\gamedcs\viewarmywindow.cpp:404
 VA(0x005f4850, 0x7D7)  // direct caller + convertID2HelpID + help table, dc 0x191804
 int TViewArmyWindow::WindowHandler(message* msg)
 {
@@ -953,6 +960,7 @@ int TViewArmyWindow::WindowHandler(message* msg)
 // them in the popup's one Verd10B row. The count line is suppressed for an
 // empty slot, which is what the three-widget/two-widget split of the retail
 // tail encodes.
+// E:\gamedcs\viewarmywindow.cpp:646
 VA(0x005f5060, 0x2D6)  // ctor call set + CrBkg table + Verd10B.fnt, dc 0x191f2c
 void TViewArmyWindow::create_portrait_widget(const char* sprite_name,
                                              int town_type, int count)
@@ -978,6 +986,7 @@ void TViewArmyWindow::create_portrait_widget(const char* sprite_name,
 // The two text widgets are the attack label and its current value. Retail
 // prints a single number when the base and modified skills agree, otherwise
 // it shows the base value followed by the modified value in parentheses.
+// E:\gamedcs\viewarmywindow.cpp:671
 VA(0x005f5340, 0x28E)  // widget IDs + primary-skill table + format literals
 void TViewArmyWindow::create_attack_widget(int normal_attack_skill,
                                            int current_attack_skill)
@@ -998,6 +1007,7 @@ void TViewArmyWindow::create_attack_widget(int normal_attack_skill,
 
 // Defense is the immediately following twin of the attack widget recipe.
 // The retail body changes only the vertical position, table entry, and IDs.
+// E:\gamedcs\viewarmywindow.cpp:689
 VA(0x005f55d0, 0x28E)  // widget IDs + primary-skill table + format literals
 void TViewArmyWindow::create_defense_widget(int normal_defense_skill,
                                             int current_defense_skill)
@@ -1042,6 +1052,7 @@ void TViewArmyWindow::create_defense_widget(int normal_defense_skill,
 // depth 0 does anything, which would cost the push_back itself), and
 // the Dreamcast's own `const TCreatureTypeTraits&` parameter, which is
 // byte-identical here and only renames the row.
+// E:\gamedcs\viewarmywindow.cpp:707
 VA(0x005f5860, 0x2C2)  // widget IDs + text-record field + "%d - %d", dc 0x19226c
 void TViewArmyWindow::create_damage_widget(const TCreatureTypeTraits* traits,
                                            const hero* our_hero)
@@ -1074,6 +1085,7 @@ void TViewArmyWindow::create_damage_widget(const TCreatureTypeTraits* traits,
 // body sitting under one `test byte [traits+0x10], 4` says: a melee stack
 // gets neither the label nor the count. Inside, the base/modified pair is
 // the same presentation the primary skills use, on one shared y.
+// E:\gamedcs\viewarmywindow.cpp:735
 VA(0x005f5b30, 0x29D)  // widget IDs + text-record field + format literals, dc 0x1923c0
 void TViewArmyWindow::create_shots_widget(const TCreatureTypeTraits* traits,
                                           int normal_shots, int current_shots)
@@ -1101,6 +1113,7 @@ void TViewArmyWindow::create_shots_widget(const TCreatureTypeTraits* traits,
 // entry/label pointer chain through ECX after three argument pushes, while
 // this compile takes the entry through EDX before them. A named entry pointer
 // scores 98.09%, so the direct source-shaped access is retained.
+// E:\gamedcs\viewarmywindow.cpp:756
 VA(0x005f5dd0, 0x297)  // widget IDs + text-record field + format literals
 void TViewArmyWindow::create_hitpoints_widget(int normal_hitpoints,
                                               int current_hitpoints)
@@ -1124,6 +1137,7 @@ void TViewArmyWindow::create_hitpoints_widget(int normal_hitpoints,
 // Residual (99.9565%): the 16-branch/two-return graph is exact; only the same
 // central-text entry/label ECX-versus-EDX schedule as the total-health row
 // differs.
+// E:\gamedcs\viewarmywindow.cpp:774
 VA(0x005f6070, 0x27D)  // widget IDs + text-record field + integer format
 void TViewArmyWindow::create_hitpoints_left_widget(int hitpoints_left)
 {
@@ -1145,6 +1159,7 @@ void TViewArmyWindow::create_hitpoints_left_widget(int hitpoints_left)
 // Residual (99.9611%): the by-value/reference helper reproduces both clamps
 // and all 19 branches exactly. Only the central-text pointer-chain schedule
 // differs, as in the two hitpoint rows.
+// E:\gamedcs\viewarmywindow.cpp:789
 VA(0x005f62f0, 0x2BE)  // widget IDs + text-record field + clamped formats
 void TViewArmyWindow::create_speed_widget(int normal_speed,
                                           int current_speed)
@@ -1216,6 +1231,7 @@ void TViewArmyWindow::create_spell_influence_widgets(const army* this_army)
 // insertions distinguish it from the neighboring action-widget creators.
 // Residual (98.659386%): all 14 branches and both returns agree; why-reg v2
 // caps the remaining EBX/EDI transposition as front-end handle state.
+// E:\gamedcs\viewarmywindow.cpp:873
 VA(0x005f6870, 0x264)  // ctor call set + literals + arity, dc 0x192a28
 void TViewArmyWindow::create_ok_widget()
 {
@@ -1269,6 +1285,7 @@ void TViewArmyWindow::create_ok_widget()
 // remains the one observation that separates 98.66 from 88.11, and it is
 // not reproducible here without emitting a second hotkey call retail
 // does not have.
+// E:\gamedcs\viewarmywindow.cpp:889
 VA(0x005f6ae0, 0x265)  // ctor call set + literals + arity, dc 0x192ad8
 void TViewArmyWindow::create_upgrade_widget()
 {
@@ -1285,6 +1302,7 @@ void TViewArmyWindow::create_upgrade_widget()
     Widgets.push_back(upgrade);
 }
 
+// E:\gamedcs\viewarmywindow.cpp:903
 VA(0x005f6d50, 0x265)  // ctor call set + literals + arity, dc 0x192b40
 void TViewArmyWindow::create_dismiss_widget()
 {

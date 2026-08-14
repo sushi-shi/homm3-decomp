@@ -34,6 +34,7 @@ const SMonFrameInfo (&gMonFrameInfo)[150] = sMonFrameInfoTable;
 // additions, 4 SoD additions - 149 creatures, ids 0..148. The 179-row
 // floor is retail's own (a 184-row file passes it only because the
 // check predates the last groups).
+// E:\gamedcs\monframeinfo.cpp:36
 VA(0x0050c810, 0x1E9)  // anchor-global (the "cranim.txt" load below), dc 0xfe598
 unsigned char InitializeCreatureAnimationTraitsTable()
 {
@@ -126,6 +127,7 @@ unsigned char InitializeCreatureAnimationTraitsTable()
 // Column scales are the retail const pool verbatim: 9000.0 / 500.0 /
 // 500.0 / 115.0 (the 500.0 entry 0x63ac30 is an earlier TU's pool
 // constant the linker shares - not wrapped here to keep its owner).
+// E:\gamedcs\monframeinfo.cpp:170
 VA(0x0050ca00, 0x126)  // linkorder, dc 0xfe764
 static void InitializeCreatureAnimationTraits(int id,
                                               const std::vector<char*>& row)

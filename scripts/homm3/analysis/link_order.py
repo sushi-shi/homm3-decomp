@@ -19,6 +19,19 @@ counting it would stretch a span into a neighbour. Only claims whose
 source file is the unit's own .cpp anchor; header-origin claims are
 reported separately as span RESIDENTS.
 
+ORIGIN COMMENT FORMS. A claim anchors only when the line directly above
+it names its origin. Two forms are accepted:
+
+  // E:\\gamedcs\\border.cpp:62     file AND Dreamcast source line
+  // E:\\gamedcs\\seerhut.cpp       file only, line unknown (recorded 0)
+
+The second exists for RETAIL-ONLY bodies: SoD compilands carry classes
+the Dreamcast port never had (seerhut.obj's ten quest classes are the
+clear case), so no roster row supplies a line. The span carve only ever
+reads the FILE, so a line-less origin anchors exactly as well; writing a
+guessed line instead would be inventing evidence. The form is a bare
+DOS path and nothing else, which no prose comment can collide with.
+
 FINDING (2026-08-04): within the game-object group the retail link
 order is EXACTLY ALPHABETICAL by object name - 63 spanned units, zero
 inversions. That turns every gap into a named prediction: the TUs that
@@ -59,6 +72,8 @@ SYMBOLS = common.HOMM3_DIR / "build/gen/symbol_names.csv"
 OUT = common.EVIDENCE_DIR / "link-order"
 
 _ORIGIN = re.compile(r"^//\s+(\S+?):(\d+)\s*$")
+# retail-only body: origin FILE proven, source line unknown (see above)
+_ORIGIN_FILE = re.compile(r"^//\s+([A-Za-z]:\\\S+\.(?:cpp|c|cxx|h|hpp))\s*$")
 _VA = re.compile(r"^VA\(\s*(0x[0-9a-fA-F]+)\s*,\s*(0x[0-9a-fA-F]+|\d+)")
 _DC_ONLY = re.compile(r"^DC_ONLY\(\s*(0x[0-9a-fA-F]+)\s*,\s*(0x[0-9a-fA-F]+|\d+)")
 
@@ -72,6 +87,10 @@ def parse_unit(path: Path):
         if m:
             origin = (m.group(1).replace("\\", "/").rsplit("/", 1)[-1],
                       int(m.group(2)))
+            continue
+        m = _ORIGIN_FILE.match(line)
+        if m:
+            origin = (m.group(1).replace("\\", "/").rsplit("/", 1)[-1], 0)
             continue
         m = _VA.match(line)
         if m and origin:

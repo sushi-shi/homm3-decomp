@@ -1469,6 +1469,7 @@ CNetMsgHandler::~CNetMsgHandler()
 // E:\gamedcs\remote.cpp:2834 - slot 2 of vtable 0x640f14. DC has it as an
 // INTRODUCING VIRTUAL in remote.h at vfptr offset 4; retail's virtual
 // destructor in slot 0 pushes it to slot 2.
+// E:\gamedcs\remote.h:629
 VA(0x00557900, 0x4)  // anchor-vtable (slot 2 of 0x640f14), dc 0x201f8
 CNetMsg* CNetMsgHandler::GetAbortPopupMsg()
 {

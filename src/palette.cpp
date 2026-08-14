@@ -187,6 +187,7 @@ VA_COMPGEN(0x00522e50, 0x21, SCALAR_DELETING_DTOR, TPalette24)
 // generated scalar destructor in the DC row's former link-order slot, then
 // emits this constructor at 0x522e80; its size and sole caller agree with the
 // raw palette path.
+// E:\gamedcs\palette.cpp:603
 VA(0x00522e80, 0x2D)  // exact 0x300-byte payload copy, dc 0x10b904
 TPalette24::TPalette24(const unsigned char* data)
     : resource(0, RESOURCE_TYPE_NONE)
@@ -201,6 +202,7 @@ TPalette24::TPalette24(const unsigned char* data)
 // opposite ESI/EDI and EAX/ECX allocation. The v2 allocator model classifies
 // the ESI/EDI transposition as C1 front-end handle state: the pair is
 // parameter/`this` versus an expression value and is not source-nameable.
+// E:\gamedcs\palette.cpp:609
 VA(0x00522eb0, 0x42)  // dc-bracket + exact 4-to-3 stride, dc 0x10b94c
 TPalette24::TPalette24(const TRGBA* rgba)
     : resource(0, RESOURCE_TYPE_NONE)
@@ -220,6 +222,7 @@ TPalette24::TPalette24(const TRGBA* rgba)
 // Dreamcast supplies the pointer-taking copy-constructor signature. Retail
 // independently fixes the body: an unnamed resource base followed by the
 // complete 0x300-byte color payload copy, leaving resource identity fresh.
+// E:\gamedcs\palette.cpp:635
 VA(0x00522f00, 0x30)  // dc-bracket + exact payload extent, dc 0x10ba3c
 TPalette24::TPalette24(const TPalette24* copy)
     : resource(0, RESOURCE_TYPE_NONE)
@@ -227,6 +230,7 @@ TPalette24::TPalette24(const TPalette24* copy)
     memcpy(&colors, &copy->colors, sizeof(colors));
 }
 
+// E:\gamedcs\palette.cpp:640
 VA(0x00522f30, 0x21)  // payload-only assignment; resource identity retained
 TPalette24& TPalette24::operator=(const TPalette24& from)
 {

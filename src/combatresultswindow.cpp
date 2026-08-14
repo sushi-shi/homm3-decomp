@@ -80,6 +80,7 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 // narrated hero - inverts the branch (0.16%). Not tried, and the only
 // remaining lead: shaving one scalar temp so the frame is 0x1cc, which is
 // what the /Ob2 budget and the whole homing pattern hang off.
+// E:\gamedcs\combatresultswindow.cpp:72
 VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
 TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     const hero* defender, int my_side, int winning_side,

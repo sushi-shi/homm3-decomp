@@ -1944,6 +1944,7 @@ void std::__pop_heap_aux(SpellID* __first, SpellID* __last, SpellID* __formal, s
 
 #endif  // @carcass
 
+// E:\gamedcs\events.cpp:647
 VA(0x0049f040, 0x23)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
 {
@@ -1951,6 +1952,7 @@ TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
     return &fullMap->customTreasure[index];
 }
 
+// E:\gamedcs\events.cpp:1114
 VA(0x004a0c20, 0x23)  // decorated identity + event-pool index arithmetic
 BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const
 {
@@ -1961,6 +1963,7 @@ BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const
 // Declared inline in the original Game.h (DC line 865); this is the retail
 // COMDAT copy selected into events.obj. Negative player ids are their own
 // team sentinel, while real slots use the signed team byte in the map header.
+// E:\gamedcs\game.h:865
 VA(0x004a5960, 0x16)  // exact body + selected-COMDAT ownership, dc 0x37fbc
 int game::GetTeam(int playerNum) const
 {

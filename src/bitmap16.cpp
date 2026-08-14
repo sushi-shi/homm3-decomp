@@ -52,6 +52,7 @@ void Bitmap16Bit::Bitmap16Bit(const char* name, const char* path)
 // constructor; Dreamcast appends it to the compiland.
 VA_COMPGEN(0x0044e020, 0x21, SCALAR_DELETING_DTOR, Bitmap16Bit)
 
+// E:\gamedcs\bitmap16.cpp:208
 VA(0x0044e100, 0x29)  // unique dtor body + vtable, dc 0x50ebc
 Bitmap16Bit::~Bitmap16Bit()
 {
