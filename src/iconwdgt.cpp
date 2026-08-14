@@ -61,6 +61,15 @@ iconWidget::~iconWidget()
 // measured at 95.27076%; this C2 invocation duplicates one shared zero
 // epilogue and schedules the inlined sequence parameter differently after
 // source-order, helper-boundary, register-hint, and label-placement probes.
+// Located precisely 2026-08-13 with `sema diff --branches` (base 28/17 rets
+// against retail 28/16, one POLARITY flip at +0x294): retail merges EVERY
+// return-0 exit into the block that sits at the LEFT_BUTTON_UP disabled gate
+// and reaches it with backward rel8 jumps, while this C2 emits a SECOND
+// copy after the RIGHT_BUTTON_UP selected gate, cross-jumps the other five
+// exits to that late copy, and pays rel32 for them - which is the whole
+// 4.7%. Rejected 2026-08-13: deleting the `returnZero:` label and spelling
+// all five sites as plain `return 0;` (89.1336%). This is the tail-merge
+// generation family; the placement is not source-reachable here.
 VA(0x004ea810, 0x2F4)  // vtable 0x63ec48 slot 2, dc 0xd94a4
 int iconWidget::Main(message* msg)
 {
