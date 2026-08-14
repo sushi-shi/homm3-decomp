@@ -80,6 +80,11 @@ public:
     // every one, which fixes the base rather than the leaves.
     char pad_60[0x10];
 
+    // Retail 0x5ce830 (7456 B, the compiland's largest constructor);
+    // both derived constructors pass their three parameters straight
+    // through to it. Declared, not reconstructed.
+    type_garrison_base_window(hero* inHero, int garrison_owner,
+                              armyGroup* garrison_army);
     virtual ~type_garrison_base_window();
 };
 

@@ -416,8 +416,41 @@ type_monster_join_window::~type_monster_join_window()
 {
 }
 
-// NOT claimed: 0x5d1090, this class's ??_G - gated on the constructor at
-// 0x5d0e00 for the same reason as type_monster_join_window's above.
+// The constructor the previous lane predicted would free this class's
+// ??_G, and it does: it is the ONLY body that stores vftable 0x643890
+// (the empty destructor above inlines its base and drops the derived
+// store), so nothing else in the TU references the table - emit the
+// store and the table and its slot-0 wrapper come with it.
+//
+// Two widgets on top of whatever the 7456-byte base at 0x5ce830 built:
+// the garrison title in bigfont and the town-garrison picture. Both are
+// hooked into the window as they are made rather than in a trailing
+// sweep, which is why each push_back is followed by its own AddWidget
+// on the same local. The second push_back is the last candidate call
+// site in the body, so /Ob2 hands it the whole remaining budget and
+// vector::insert expands inline - the same sub-budget rule TShipWindow
+// proved, here running the other way.
+
+// E:\gamedcs\townmgr.cpp:5164
+VA(0x005d0e00, 0x28C)  // anchor-vtable 0x643890 + ??_G call edge + arity, dc 0x1730b8
+TGarrisonWindow::TGarrisonWindow(hero* inHero, int garrison_owner,
+                                 armyGroup* garrison_army)
+    : type_garrison_base_window(inHero, garrison_owner, garrison_army)
+{
+    widget* newWidget = new textWidget(0, 20, width, 30,
+                                       gpGeneralText->GetText(595),
+                                       "bigfont.fnt", font::HEADING,
+                                       203, 1, 0, 8);
+    Widgets.push_back(newWidget);
+    AddWidget(newWidget, -1);
+
+    newWidget = new iconWidget(190, 50, 128, 64, 202, "AVCgar10.def",
+                               0, 0, 0, 0, 0x10);
+    Widgets.push_back(newWidget);
+    AddWidget(newWidget, -1);
+}
+
+VA_COMPGEN(0x005d1090, 0x21, SCALAR_DELETING_DTOR, TGarrisonWindow)
 
 // E:\gamedcs\townmgr.cpp:5177
 VA(0x005d10c0, 0x6B)  // anchor-vtable 0x643890 slot 0 + ??_G call edge, dc 0x181684
