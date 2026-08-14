@@ -569,6 +569,10 @@ public:
     // the garrison and rebuilds the two troop strips around the new
     // arrangement.
     void SwapHeroes();
+    // Retail 0x5d2950 (dc 0x174bfc). Runs the Portal of Summoning's
+    // recruit dialog, rolling the generator first if the town has not
+    // picked a creature yet.
+    void DoPortalOfSummoning();
 #endif
     virtual int Open(int newPriority) OVERRIDE;   // slot 0, 0x5c63c0
     virtual void Close() OVERRIDE;                // slot 1, 0x5c71b0

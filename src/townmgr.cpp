@@ -207,6 +207,18 @@ DATA(0x006aaa50) static int gUnnamed6aaa50;
 // the name follows recruit.h's own gp<Type> convention.
 DATA(0x006aaa54) static recruitUnit* gpRecruitUnit;
 
+// The shipyard dialog. Six image-wide references, three in DoShipyard
+// 0x5d2720 and three in townManager::Main, so this compiland owns it
+// too; same naming convention.
+DATA(0x006aa9b0) static TShipWindow* gpShipWindow;
+
+
+// The line DoPortalOfSummoning prints when the map has nothing left for
+// the portal to summon. ONE image-wide reference and no writer in the
+// admitted surface, so it is declared rather than claimed - the same
+// standing this page's other unowned .bss text cells have.
+DATA(0x006a5dfc) extern const char* gUnnamed6a5dfc;
+
 #if 0  // @carcass
 
 // E:\gamedcs\townmgr.cpp:1855
@@ -1956,6 +1968,56 @@ TShipWindow::~TShipWindow()
     for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
         if (*it)
             delete *it;
+    }
+}
+
+// The shipyard dialog, opened from the adventure map's own shipyard
+// handler (0x49e2e0, the only caller in the image) rather than from the
+// town page. `type` is the town faction whose dock art the window loads,
+// and it is the one argument the constructor takes.
+//
+// Nothing nulls the global afterwards - the window is `delete`d through
+// its virtual slot 0 and the pointer left dangling, which is retail's,
+// not an omission: townManager::Main 0x5d3240 is the only other reader
+// and it always assigns before it reads.
+
+// E:\gamedcs\townmgr.cpp:5530
+VA(0x005d2720, 0x84)  // anchor-callee(TShipWindow ctor 0x5d1ef0) + arity(bare ret), dc 0x1747fc
+void DoShipyard(int type)
+{
+    gpShipWindow = new TShipWindow(type);
+    if (!gpShipWindow)
+        MemError();
+    gpShipWindow->DoModal(0);
+    delete gpShipWindow;
+}
+
+// The Portal of Summoning: Dungeon's external dwelling. The generator is
+// rolled lazily - if the town has no summoned creature yet, the town
+// picks one out of the map's object list - and if there is still none
+// afterwards, the page says so and stops. Otherwise it is exactly the
+// fort page's summoning row: the generic recruit dialog over the town's
+// own garrison, with the portal's creature and its stock as slot one.
+
+// E:\gamedcs\townmgr.cpp:5685
+VA(0x005d2950, 0xEF)  // anchor-callee(SetSummoningGenerator 0x5bd750 + recruitUnit ctor) + arity, dc 0x174bfc
+void townManager::DoPortalOfSummoning()
+{
+    if (townToView->summoningType == CREATURE_NONE)
+        townToView->SetSummoningGenerator();
+
+    if (townToView->summoningType != CREATURE_NONE) {
+        gpRecruitUnit = new recruitUnit(townToView->get_army(), 1,
+                                        townToView->summoningType,
+                                        &townToView->summoningPopulation,
+                                        CREATURE_NONE, 0, CREATURE_NONE, 0,
+                                        CREATURE_NONE, 0);
+        if (!gpRecruitUnit)
+            MemError();
+        gpExecutive->DoDialog(gpRecruitUnit);
+        delete gpRecruitUnit;
+    } else {
+        NormalDialog(gUnnamed6a5dfc, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
 }
 
