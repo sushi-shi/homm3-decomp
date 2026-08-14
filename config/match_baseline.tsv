@@ -1529,6 +1529,7 @@ townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20
 townmgr	?Recruit@TCastleWindow@@QAEXH@Z	96.4286	96.4286	96.4286	0x1dce50
 townmgr	?ResetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530
 townmgr	?SetRolloverText@TCastleWindow@@QAEXPAVmessage@@@Z	64.0269	64.0269	64.0269	0x1dcbf0
+townmgr	?SetupMage@townManager@@QAEXPAVheroWindow@@@Z	99.9275	99.9275	99.9275	0x1d6ef0
 townmgr	?SetupWell@townManager@@QAEXPAVTCastleWindow@@@Z	98.5801	98.5801	98.5801	0x1dd390
 townmgr	?SortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160
 townmgr	?UpdateTownLocator@TTownScreenWindow@@QAEXH@Z	90.9302	90.9302	90.9302	0x1c5970
