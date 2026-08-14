@@ -1259,10 +1259,12 @@ quicktownwindow	?center@TQuickTownWindow@@QAEXJJ@Z	100.0000	100.0000	100.0000	0x
 quicktownwindow	?initialize_army_display@TQuickTownWindow@@QAEXABVarmyGroup@@W4TViewLevel@1@@Z	100.0000	100.0000	100.0000	0x130990
 recruit	??0recruitUnit@@QAE@PAVarmyGroup@@EW4TCreatureType@@PAF121212@Z	97.9750	97.9750	97.9750	0x151350
 recruit	??0recruitUnit@@QAE@PAVhero@@W4TCreatureType@@PAF121212@Z	96.6709	96.6709	96.6709	0x151460
+recruit	??0recruitUnit@@QAE@PAVtown@@HH@Z	100.0000	100.0000	100.0000	0x151560
 recruit	??1TRecruitQuickWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1516e0
 recruit	??1TRecruitWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x14fb20
 recruit	??_GTRecruitQuickWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1516b0
 recruit	??_GTRecruitWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x14faf0
+recruit	?Close@recruitUnit@@UAEXXZ	100.0000	100.0000	100.0000	0x1502d0
 recruit	?GetMonsterCost@@YIXHPAH@Z	100.0000	100.0000	100.0000	0x14e7c0
 recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376	90.8376	90.8376	0x1503a0
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750

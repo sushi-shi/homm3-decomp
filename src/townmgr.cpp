@@ -24,6 +24,7 @@
 #include "misc.h"
 #include "mousemgr.h"
 #include "remote.h"
+#include "resourcedisplay.h"
 #include "smackmgr.h"
 #include "strip.h"
 #include "textresource.h"
@@ -221,7 +222,7 @@ townManager::townManager()
     field_114 = 0;
     field_1b8 = -1;
     gUnnamed6aa9d8 = 0;
-    field_13c = 0;
+    pResourceDisplay = 0;
     field_140 = 0;
     field_1c0 = 0;
     gUnnamed6aa9ec = 0;
@@ -610,9 +611,9 @@ void townManager::Close()
         delete TownWindow;
     }
     TownWindow = 0;
-    if (field_13c) {
-        delete field_13c;
-        field_13c = 0;
+    if (pResourceDisplay) {
+        delete pResourceDisplay;
+        pResourceDisplay = 0;
     }
     gpWindowManager->FadeScreen(1, 4, 1);
     if (gNetworkActive69954c && field_1b0) {
