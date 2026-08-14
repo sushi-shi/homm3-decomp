@@ -21,7 +21,7 @@ Subcommands
         back the fact the model predicts.
   atlas --regen                                         (phase 2)
         Headless-Ghidra C2 TU/globals map -> evidence/vc6/.
-  check [--argv|--il|--inline|--reg|--all]
+  check [--argv|--il|--inline|--reg|--locator|--all]
         The gates (each ships a negative control).
 
 rc: 0 = agrees / answered, 1 = disagrees / answered-NO, 2 = error.
@@ -116,7 +116,7 @@ def _build_parser() -> argparse.ArgumentParser:
     pd.add_argument("--json", action="store_true")
 
     pc = ss.add_parser("check", help="the model gates (with negative controls)")
-    for g in ("argv", "il", "inline", "reg"):
+    for g in ("argv", "il", "inline", "reg", "locator"):
         pc.add_argument(f"--{g}", action="store_true")
     pc.add_argument("--all", action="store_true")
 

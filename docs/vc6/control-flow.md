@@ -189,3 +189,148 @@ and the catalog's "document, don't grind" doctrine for the rest.
   clipped tail is uncompared and flagged `partial`.
 - Loop-form coverage is per-loop (first 3 `while` sites); nested-loop
   interactions are not modelled.
+- ~~**Constructors are unreachable.**~~ **CLOSED 2026-08-14** — see
+  "The body locator" below. Both solvers now run on constructors,
+  destructors, operators and qualified member definitions.
+- The locator finds the *definition*; the mutation library still only
+  rewrites the BODY. A member-initialiser list is never mutated, so
+  base-class-argument and member-init-order levers are not searched.
+
+## The body locator (shared with `why-reg`)
+
+`scripts/homm3/vc6/_source.py`. Both solvers must answer one question
+before they can search — "where in this .cpp is the body of the function
+the .obj calls F?" — and until 2026-08-14 they answered it with a raw-text
+`re.finditer(rf"\b{fn}\s*\(")`. Two defects, both measured on
+`src/bottomviewsubwindow.cpp`, both now covered by the `locator` gate of
+`homm3 vc6 check`:
+
+1. **Name.** `why-branch` searched the MANGLED symbol verbatim — a string
+   that never appears in source — so its guided search could only run on an
+   already-demangled `--fn`. `why-reg`'s decoder handled only
+   `?name@Class@@…`, so every `??`-special name decoded to garbage
+   (`??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z` → `QAE::?0TBottom…`).
+   **The tree's entire constructor, destructor and operator population was
+   outside both solvers** — 29 of the 373 plateaued rows are constructors
+   and 5 are destructors, and solver reach on them was exactly 0.
+2. **Carcass.** Because the search ran over raw text it returned the FIRST
+   definition, and this tree fences unreconstructed rows in
+   `#if 0  // @carcass` blocks near the top of the file, each a
+   `{ /* @stub */ }`. `sum_mobility` located to line 155 (the stub) instead
+   of line 1269; `animate` to line 100 instead of 1299. Mutating a stub is
+   a no-op, so the search reported "nothing helped" — **a CAPPED verdict it
+   had never measured**. 102 of the tree's source files carry a carcass
+   block; 25 rows resolved to the wrong body and 60 more resolved to a
+   fenced stub that has no real body at all.
+
+The locator now decodes the MSVC special names it needs (`??0`/`??1`,
+the `?2`…`?_V` operator codes, and the `??_G`/`??_E`/`??_7` family, which
+it reports as *compiler-generated — no source body*, which is an answer
+rather than a failure), searches a length-preserving MASKED view of the TU
+(comments, string/char literals, every directive line and every dead
+`#if 0` / `#if 1`-`#else` region blanked to spaces), and walks the real
+definition grammar:
+
+```
+NAME ( params ) [const|volatile|throw(..)|__decl…] [: a(x), b(y)] {
+```
+
+so qualified member definitions, member-initialiser lists, destructors,
+operators and cv/exception/calling-convention suffixes all resolve, while
+declarations and call sites (`new Foo(...)`) are still refused. When there
+is no body, `explain_miss` says WHICH of the three cases it is
+(compiler-generated / fenced carcass / defined elsewhere) instead of a bare
+"cannot locate", and `why-branch` reports it as a diagnosis-only rc 1
+rather than dying at rc 2.
+
+Reach on the 373 plateaued rows, measured before/after:
+
+| symbol kind | rows | v1 located | now |
+|---|---|---|---|
+| constructor (`??0`) | 29 | 0 | 17 |
+| destructor (`??1`) | 5 | 0 | 3 |
+| ordinary member/free | 155 | 154 | 141 |
+| flat / C name | 183 | 9 | 2 |
+| compiler-generated | 1 | 0 | 0 (correctly) |
+
+The two drops are the fix, not a regression: all 20 are carcass stubs the
+v1 locator accepted as real bodies. Every one of the 60 tree-wide rows the
+new locator "loses" was verified to be a `{ /* @stub */ }` inside an
+inactive region.
+
+Remaining v1 limits, documented not silent: template-id scopes
+(`?$vector@…`) are declined rather than guessed (those rows are
+header-defined, so "not located" is the right answer), and `#if FOO` /
+`#ifdef FOO` are treated as ACTIVE — only the literal constant idiom is
+evaluated, because guessing a macro's value would hide a real definition
+and the failure mode being fixed is the opposite one.
+
+### Calibration on six real constructors (2026-08-14)
+
+Not synthetic pairs — six recorded plateaus, run through both solvers
+against their delinked retail objects. All six previously died at
+"cannot locate the body".
+
+| row | fuzzy | `why-branch` | `why-reg` |
+|---|---|---|---|
+| `TBottomViewKingdom::TBottomViewKingdom` | 94.06 | 65, STRUCT + **D6** (retail 2 rets vs our 1), 0 sites | 201 → **99** `which->active` as a long local (B13) |
+| `TBottomViewHero::TBottomViewHero` | 96.52 | 3, D8/D13 flip → **2** short induction (D10) | 93 → **65** `who->stats[i]` as a char local (B15) |
+| `TBottomViewTown::TBottomViewTown` | 94.31 | 2, D8/D13 flip — **CAPPED**, 5 sites, none help | 139 — **CAPPED**, 13 sites, none help |
+| `TBottomViewResourceMessage::…` | 91.30 | — | 40 → 39 (`volatile`, cosmetic) |
+| `type_combat_sub_window::type_combat_sub_window` | 89.4751 | **0 — branch shapes agree** | 403 — **CAPPED**, 1 site, worse |
+| `TCombatControlSubWindow::TCombatControlSubWindow` | 94.3558 | **0 — branch shapes agree** | 28, B10/B14 scratch preference — **CAPPED** |
+
+The two combat rows are the point of the exercise: `why-branch` returning
+**0** turns "the residual is C2 processing-order state on a
+non-source-nameable value" from an assertion into a measurement. The
+control flow provably agrees with retail; `why-reg` then finds no source
+knob that moves the binding; and the surviving `why-reg` diagnosis on
+`type_combat_sub_window` is a frame-size delta (`sub esp,0x10` vs `0xc`)
+plus a callee-saved role swap — a value promoted on one side only. Nothing
+in the source spells that. The prior verdict stands, now measured.
+
+**Every candidate the solvers proposed was rejected by objdiff**, and that
+is itself the calibrating result: the masked distances improve while the
+bytes do not.
+
+| proposal | reg/flow distance | objdiff |
+|---|---|---|
+| Hero: `who->GetPrimarySkill(i)` (the DC-attested inline accessor) | B15 −28 | 96.5197 → 96.5145 |
+| Hero: `signed char stat = who->stats[i];` clamp | B15 −28 | 96.5197 → 96.5145 |
+| Hero: `short i` induction | D10 −1 | 96.5197 → **96.2632** |
+| Kingdom: `__int64 active = which->active;` | — | 94.0575 → **83.7959** |
+| Kingdom: `long active = (long)which->active;` | B13 −102 | 94.0575 → 93.8980 |
+
+Read that as the standing rule made concrete: the solvers' distances are
+proxies and **retail's bytes are the arbiter**. On these rows they
+corroborate the previous lane — the bottom-view wall is upstream of both
+solvers (inline-candidate site count), which is exactly what
+`why-branch`'s STRUCT/D6 finding on Kingdom says independently.
+
+### First sweep of the unlocked population (2026-08-14)
+
+The fix makes **20 plateaued rows** newly solver-reachable (17
+constructors, 3 destructors), spread over 17 units — from
+`bitmap816::~Bitmap816` at 99.97 down to
+`TQuickHeroWindow::TQuickHeroWindow` at 86.84. `homm3 vc6 diagnose`
+(no compile) routes twelve of them:
+
+- **11 of 12 → inliner (`predict-inline`).** The site-count wall the
+  previous lane proved on `TBottomViewKingdom` is a **population-level**
+  property of this tree's constructors, not a bottom-view quirk. That is
+  where the campaign's remaining constructor mass actually sits, and it
+  is not a `why-reg`/`why-branch` problem.
+- `palette::TPalette24` (87.07) → register-homing. `why-reg --model`
+  settles it in **0 mutation compiles**: base binds `#0:esi@5 #1:edi@12`,
+  retail `#0:edi@5 #1:esi@11`, same slots and same order, and the
+  transposed value is **`this`** — not source-nameable, so it is C1
+  handle-state, **CAPPED**. A 31-slot divergence bounded without a single
+  compile is the model doing exactly its job.
+- `button::textButton` (88.44) → a live lead: `#0 jbe->jae`, *different
+  condition computed* at the FIRST branch. Neither an arm order nor a
+  rotation — an inverted comparison or swapped operands in the guard.
+  Source-addressable; the v1 mutation library has no site for it.
+
+So the routing answer for the unlocked population is: **do not point
+`why-reg` at them**. Point `predict-inline` at them, and treat the
+`textButton` guard as the one spelling lead the sweep turned up.
