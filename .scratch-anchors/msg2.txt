@@ -1,0 +1,73 @@
+Reconstruct the combat sub-window destructor family - eight exact
+
+  0x46bb80 0x21  type_combat_sub_window::`scalar deleting dtor'    100.00
+  0x46bbb0 0x78  type_combat_sub_window::~type_combat_sub_window   100.00
+  0x46bed0 0x78  TCombatControlSubWindow::~TCombatControlSubWindow 100.00
+  0x46c210 0x78  TCombatPlacementSubWindow::~...                   100.00
+  0x46cb70 0x21  TCombatHeroSubWindow::`scalar deleting dtor'      100.00
+  0x46cba0 0x6B  TCombatHeroSubWindow::~TCombatHeroSubWindow       100.00
+  0x46db90 0x21  TCombatCreatureSubWindow::`scalar deleting dtor'  100.00
+  0x46dbc0 0x6B  TCombatCreatureSubWindow::~...                    100.00
+
+Eight rows, eight exact, all EH-bearing, all on the first compile. The
+lane arrived here with three unclaimed 33-byte wrappers named as leads;
+reading the compiland out turned them into eight.
+
+IDENTIFICATION. The carve from 0x46b610 to 0x46df80 is fourteen
+functions, and it maps one-for-one onto the Dreamcast roster's own line
+order with no freedom left, because BOTH ENDS are already pinned:
+TCombatHeroSubWindow::Show/UnShow at 0x46cdf0/0x46ce70 were claimed from
+their bodies, and 0x46df80 was proved to be TCombatCreatureSubWindow's
+UnShow from combatManager::DoCommand. Between them the five classes
+repeat one shape - a large constructor, a 33-byte wrapper, a destructor -
+in the roster's order, and every wrapper's single call target is the
+destructor 0x30 bytes later.
+
+The two derived names are read off their constructors, not guessed:
+0x46bc30 passes "cbar.pcx" (0x670030) to the base and stores 0x63d420,
+0x46c050 passes "coplacbr.pcx" (0x670054) and stores 0x63d430 - the two
+tables that follow the base's 0x63d410 at the family's 16-byte stride.
+That stride is itself the evidence for four virtual slots, which is
+exactly the roster's virtual set (destructor, set_rollover,
+set_rollover_buttons, DisableAllButtons).
+
+TWO BODY SHAPES, AND THE DIFFERENCE IS LOAD-BEARING.
+
+The first three destructors are the same 120 bytes as the bottom-view
+family: the base body inlined whole - vptr store, widget-removal loop,
+??1TSubWindow call - with the derived class's own vptr store killed as
+dead. So none of the three names its own table.
+
+The last two are 107 bytes, and the 13-byte difference is one missing
+call: their loop deletes each widget but does NOT hand it to
+parentWindow->RemoveWidget first. They also DO name their own tables
+(0x63d440 and 0x63d444). Both facts have the same cause - these two
+derive straight from TSubWindow, whose destructor is an out-of-line call
+rather than an inlined body, so VC6 cannot prove the derived vptr store
+dead and keeps it.
+
+AND THAT SURVIVING STORE IS WORTH FOUR ROWS. The standing rule from last
+round is that a derived ??_G cannot be claimed without its constructor,
+because with the vptr store dead nothing in the TU references the derived
+table and VC6 emits neither it nor the wrapper. The rule holds here for
+TCombatControlSubWindow and TCombatPlacementSubWindow, whose wrappers are
+parked as BLOCKED one-liners. But it does NOT bind whenever a destructor
+keeps its store - the family base, TCombatHeroSubWindow and
+TCombatCreatureSubWindow each reference their own table from their own
+destructor, so all three wrappers came back claimed and 100.00 with no
+constructor anywhere. That is a cheaper unblocking condition than the one
+this lane was handed, and it is measured, not argued.
+
+NO DERIVED FIELD IS NAMED. 0x4721d0 allocates TCombatPlacementSubWindow
+at 0x3c and TCombatControlSubWindow at 0x40; the base constructor writes
+one dword at +0x34, the control constructor writes +0x38 and +0x3c, and
+the placement constructor writes neither - which leaves the +0x38 dword
+attributable either to the base or to each derived class. The header says
+so and stops there. None of the eight bodies needs it: every one touches
+only the inherited TSubWindow subobject.
+
+Tree 1103 -> 1111 exact, executable matched 16.28% -> 16.31%, full build
+exit 0, ratchet clean. command.cpp and drawing.cpp also include this
+header and neither moved.
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>
