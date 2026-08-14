@@ -3296,6 +3296,57 @@ TCastleWindow::~TCastleWindow()
     }
 }
 
+// ---------------------------------------------------------------------
+// townmgr.obj's TAIL, order-mapped 2026-08-14 against the DC roster
+// (rows 130..140 of `awk -F, '$5=="townmgr.obj"' functions.csv`) and the
+// carve. Every carve row in 0x5dcb50..0x5df1ff is accounted for; the
+// unclaimed ones are LOCATED, with the evidence class noted so the next
+// lane can promote in one step.
+//
+//   0x5dcb50  0x21    TCastleWindow ??_G              CLAIMED, exact
+//   0x5dcb80  0x6b    TCastleWindow::~TCastleWindow   CLAIMED, exact
+//   0x5dcbf0  0x25a   TCastleWindow::SetRolloverText  body + order:
+//              `ret 4`, reads msg->codeY at [ebp+8]+8 and fills gText
+//              from it, and ends with ShowText INLINED (the vslot-0x14
+//              DrawWindow(0, 0x89, 0x8a) plus UpdateScreen(10, 0x22c,
+//              0x2d6, 0x13)) - which is also why the DC's separate
+//              ShowText (dc 0x17f4f8) has no retail row. Needs five
+//              unmodelled globals: 0x6a5c28 (six char*, the fort page's
+//              six cost columns, indexed (code - 0x39) / 8), 0x6a5c40
+//              (one char*, the format the 0x7800 arm prints
+//              gBuildingNamesCommon[castleType] with), 0x6a56e0 (stride
+//              8, first dword a char*), the .rdata int table at
+//              0x642e70 = {19,20,21,22,23,24,18,25} read twice - once
+//              as [code - 0x3e9] and once as [code - 0x3f1] - and
+//              0x691210, the 710-reference empty-string global
+//              combatwindow.h also names.
+//   0x5dce50  0x126   TCastleWindow::Recruit          CLAIMED, 96.4%
+//   0x5dcf80  0x401   TCastleWindow::WindowHandler    body + order:
+//              two nested byte-index/word jump tables (0x5dd318/0x5dd330
+//              and 0x5dd370/0x5dd378) whose arms all call ::Recruit with
+//              the code rebased by -0x39/-0x41/-0x49/-0x51/-0x59/-0x61;
+//              it will fight the magic-case-label floor.
+//   0x5dd390  0x67e   townManager::SetupWell          body + order:
+//              thiscall on townManager (reads townToView at +0x38 and
+//              currentDwellingIDOff at +0x1cc), one heroWindow* stack
+//              arg it broadcasts through, `ret 4` - the DC's 2 params
+//              and 5 locals exactly.
+//   0x5dda10  0x145f  TThievesGuildWindow::
+//                     SetupThievesGuild               DECLARED in
+//              townmgr.h. Two int[8][8] stack tables at ebp-0x15c and
+//              ebp-0x25c in a 0x270 frame, then the per-player
+//              statistics pass (AI_approximate_strength 0x427650,
+//              gpGame's town/hero rosters, the sort pair below).
+//   0x5dee70  0x2f0   GetCategoryStats                order + the pair
+//              it forms with SortStats, which is claimed below.
+//   0x5df160  0x9f    SortStats                       CLAIMED, exact
+//   0x5df200  0x20    excluded class (compiland tail)
+//
+// TCastleWindow::show_scroller (dc 0x17f160, 920 SH4 B) has NO retail
+// row in this span and no gap fits it: /Ob2's single-call-site rule
+// expanded it, as it did ShowText.
+// ---------------------------------------------------------------------
+
 // E:\gamedcs\townmgr.cpp:8833
 // One dwelling row's buy button. `i` is the fort page's ROW, and the
 // dwelling it currently shows is the manager's own column byte; the row
