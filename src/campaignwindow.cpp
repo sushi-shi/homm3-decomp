@@ -283,6 +283,19 @@ DATA(0x0066cad8) static int lastCampaignHoverID;
 // only by DUPLICATING the consume epilogue, which retail does not have
 // (retail's body has exactly two `ret`s) - alignment luck, not a match, so
 // both are rejected. Everything else in the body is register-exact.
+// 2026-08-14: `sema diff --branches` now reports the branch sequences AGREE
+// (17/17 mnemonics and symbolic targets, 2 rets each) - what is left is block
+// PLACEMENT plus one reloc split. Retail emits the shared end-dialog exit
+// (`msg.id = MESSAGE_WIDGET; dialogReturn = ...; codeX = codeY = END_DIALOG;
+// return FORWARD`) immediately after its first predecessor while our CL sinks
+// it past the remaining compares. The other row, our `mov edx,[4*eax-0x1b0]`
+// against retail's `mov edx,[4*eax]`, is the same delinker symbol+addend split
+// documented in initialize.cpp's create_included_mask - identical once linked.
+// Also disproved here: binding the GetWidget objects to pointer locals (the
+// lever that moved TLevelUpWindow::WindowHandler) COSTS 1.2 points, 81.64 ->
+// 80.44, so retail genuinely uses the fused `GetWidget(id)->send_message(...)`
+// spelling in this handler. The same edit costs MainMenuHandler 1.1 (90.07 ->
+// 88.94). The lever is per-call-site, not a house style.
 VA(0x0045f2f0, 0x26C)  // DoModal address-take + Complete video/widget CFG, dc 0x5bd94
 int CampaignWindowHandler(message& msg)
 {
