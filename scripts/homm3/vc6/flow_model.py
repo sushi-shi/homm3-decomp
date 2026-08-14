@@ -69,7 +69,7 @@ import sys
 from pathlib import Path
 
 from homm3.sema import _asm
-from homm3.vc6 import _common, _flow
+from homm3.vc6 import _common, _flow, _source
 
 SCRATCH = _common.REPO / "build/vc6/whybranch"
 
@@ -183,40 +183,13 @@ def _reference_side(args) -> tuple:
 # --- mutation library (regex-guided; the compiler is the verdict) ------------------
 
 
-def _fn_body_span(text: str, fn: str):
-    """(open_brace_idx, close_brace_idx) of fn's definition body."""
-    for m in re.finditer(rf"\b{re.escape(fn)}\s*\(", text):
-        i, depth = m.end() - 1, 0
-        while i < len(text):
-            if text[i] == "(":
-                depth += 1
-            elif text[i] == ")":
-                depth -= 1
-                if depth == 0:
-                    break
-            i += 1
-        else:
-            return None
-        j = i + 1
-        while j < len(text) and text[j].isspace():
-            j += 1
-        if text.startswith("const", j):
-            j += 5
-            while j < len(text) and text[j].isspace():
-                j += 1
-        if j >= len(text) or text[j] != "{":
-            continue
-        k, depth = j, 0
-        while k < len(text):
-            if text[k] == "{":
-                depth += 1
-            elif text[k] == "}":
-                depth -= 1
-                if depth == 0:
-                    return j, k
-            k += 1
-        return None
-    return None
+# Body location is _source's job (shared with why-reg). v1 searched the
+# MANGLED symbol verbatim, which never appears in source, so why-branch's
+# guided search could only ever run on an already-demangled `--fn` - every
+# real member definition, and the whole constructor population, died on
+# "cannot locate the body". _source demangles the name, walks the
+# member-initialiser list and masks `#if 0  // @carcass` regions.
+_fn_body_span = _source.body_span
 
 
 def _match(s: str, i: int, open_ch: str, close_ch: str):
@@ -601,12 +574,15 @@ def _mut_case_order(body: str):
 
 
 def _mutations(src_text: str, fn: str) -> list:
-    """Candidate mutants: [{'label','catalog','text'}], deduped, capped."""
+    """Candidate mutants: [{'label','catalog','text'}], deduped, capped.
+
+    Callers must have checked `_fn_body_span` first: a missing body is a
+    diagnosable state (compiler-generated entity, fenced carcass, body in
+    another TU), not a harness error, and run_why reports it as one.
+    """
     span = _fn_body_span(src_text, fn)
     if span is None:
-        _common.die(f"cannot locate the body of {fn!r} in the source "
-                    "(regex-guided v1 needs a plain `fn(...) {{...}}` "
-                    "definition)")
+        return []
     open_b, close_b = span
     body = src_text[open_b + 1:close_b]
     out, seen = [], {body}
@@ -657,7 +633,8 @@ def run_why(args) -> int:
 
     results = []
     src_text = src.read_text()
-    if base_dist > 0:
+    body_found = _fn_body_span(src_text, args.fn) is not None
+    if base_dist > 0 and body_found:
         mut_dir = SCRATCH / "mut"
         include_dir = _wine_dir(src.parent)
         for i, mut in enumerate(_mutations(src_text, args.fn)):
@@ -728,6 +705,12 @@ def run_why(args) -> int:
               "binding / instruction selection - hand off to `why-reg`.")
         return 0
 
+    if not body_found:
+        print(f"[guided search] SKIPPED - {_source.explain_miss(src_text, args.fn)}"
+              f"\n                (searched {src.name} for "
+              f"{' / '.join(_source.source_names(args.fn)) or '<no source name>'}); "
+              "diagnosis-only - apply the indicated D-lever by hand.")
+        return 1
     print(f"[guided search] {len(results)} candidate mutation(s) from the "
           "catalog D-lever classes"
           + ("" if results else " - no applicable sites found"))
