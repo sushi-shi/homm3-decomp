@@ -1,0 +1,26 @@
+[disasm BASE (compiled): ?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z  build/objdiff/base/armygrp.obj]
+00000000 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z>:
+    push ebp
+    mov ebp, esp
+    sub esp, 0x30
+    mov al, byte ptr [ebp + 0x18]
+    push ebx
+    push esi
+    mov esi, ecx
+    test al, al
+    mov dword ptr [ebp - 0x4], esi
+    je 0x1e <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1e>
+    pop esi
+    xor eax, eax
+    pop ebx
+    mov esp, ebp
+    pop ebp
+    ret 0x1c
+    mov ecx, dword ptr [ebp + 0x8]
+    xor ebx, ebx
+    test ecx, ecx
+    mov dword ptr [ebp + 0x18], ebx
+    je 0x3a <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x3a>
+    mov eax, dword ptr [ebp + 0x10]
+    push ebx
+    push ebx

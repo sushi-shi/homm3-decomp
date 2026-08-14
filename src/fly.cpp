@@ -288,7 +288,7 @@ int army::Fly(int destIndex)
         play_sample(PRE_WALK_SAMPLE);
         PlayAnimation(20, -1, 0);
         play_sample(WALK_SAMPLE);
-        gpCombatManager->RemoveArmyFromGrid(this);
+        gpCombatManager->RemoveArmyFromGrid(*this);
 
         currFrameType = 0;
         long frameCount = stdIcon->GetNumFrames(cs_walk);
@@ -344,7 +344,7 @@ int army::Fly(int destIndex)
         } }
     }
 
-    gpCombatManager->PlaceArmyInGrid(this, destIndex);
+    gpCombatManager->PlaceArmyInGrid(*this, destIndex);
     gridIndex = destIndex;
 
     if (!static_cast<const combatManager*>(gpCombatManager)->IsQuickCombat()) {
@@ -406,8 +406,8 @@ int army::Teleport(int destIndex)
         PlayAnimation(20, -1, 0);
     }
 
-    gpCombatManager->RemoveArmyFromGrid(this);
-    gpCombatManager->PlaceArmyInGrid(this, destIndex);
+    gpCombatManager->RemoveArmyFromGrid(*this);
+    gpCombatManager->PlaceArmyInGrid(*this, destIndex);
     gridIndex = destIndex;
 
     if (!gpCombatManager->IsQuickCombat()) {

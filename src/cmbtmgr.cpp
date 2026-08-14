@@ -365,7 +365,7 @@ void combatManager::GenerateMap()
         int lower_offset = RowIsOdd(y) ? 22 : 0;
 
         for (int x = 0; x < 17; x++) {
-            hexcell* cell = GetCell(x, y);
+            hexcell* cell = &GetCell(x, y);
             cell->field_06 = static_cast<short>(y * 42 + 86);
             cell->armySide = -1;
             cell->armySlot = -1;
@@ -518,7 +518,7 @@ const char* combatManager::GetBackgroundName()
 // the compiler does not know the absolute value is non-negative, so an
 // `unsigned` or a hand-written `d < 0 ? -d : d` does not spell it.
 VA(0x004647a0, 0x17A)  // anchor-global, dc 0x5f058
-int combatManager::GetGridIndex(int x, int y)
+int combatManager::GetGridIndex(int x, int y) const
 {
     if (gCombatHexLeft694f08 <= x && x <= gCombatHexRight694f10
             && gCombatHexTop694f0c <= y
@@ -638,7 +638,7 @@ unsigned char combatManager::CombatIsOver()
 
 // E:\gamedcs\cmbtmgr.cpp:2465
 VA(0x004658b0, 0xBC)  // anchor-global, dc 0x5fc00
-unsigned char combatManager::IsWinner(int this_side)
+unsigned char combatManager::IsWinner(int this_side) const
 {
     int other_side = 1 - this_side;
     int other;
@@ -928,7 +928,7 @@ void combatManager::RemoveObstacle(int index)
             || static_cast<unsigned>(index)
                >= static_cast<unsigned>(obstacles.end - obstacles.begin))
         return;
-    TObstacle* obstacle = GetObstacle(index);
+    TObstacle* obstacle = &GetObstacle(index);
     const type_obstacle_shape* shape = obstacle->shape;
     unsigned char row_is_odd =
         static_cast<unsigned char>((obstacle->hex / 0x11) & 1);
@@ -1026,7 +1026,7 @@ void combatManager::MakeCreaturesVanish()
 // inline: the hypnotize flag at +0x288 flips combatSide, and only the
 // defender (side 1) is ever let through the gate.
 VA(0x00467130, 0x82)  // linkorder, dc 0x60ee0
-unsigned char combatManager::should_lower_door(army* this_army, long hex)
+unsigned char combatManager::should_lower_door(army* this_army, long hex) const
 {
     int side = this_army->hypnotizeFlag ? 1 - this_army->combatSide
                                         : this_army->combatSide;
@@ -1155,7 +1155,7 @@ unsigned char LeftOfMoat(int index)
 
 // E:\gamedcs\cmbtmgr.cpp:3489
 VA(0x004674c0, 0x4C)  // anchor-global, dc 0x611a0
-unsigned char combatManager::is_adjacent(int first, int second)
+unsigned char combatManager::is_adjacent(int first, int second) const
 {
     if (first >= 0 && first < 187 && second >= 0 && second < 187) {
         for (int i = 0; i < 6; i++) {
@@ -1221,7 +1221,7 @@ unsigned char combatManager::ShotIsNotOptimal(const army* attacker, const army* 
 
 // E:\gamedcs\cmbtmgr.cpp:3566
 VA(0x00467840, 0x1B6)  // anchor-global, dc 0x61318
-unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex)
+unsigned char combatManager::InLineOfSight(int sourceIndex, int destIndex) const
 {
     if (!field_132f4)
         return 1;
@@ -1321,13 +1321,13 @@ void combatManager::CombatSystemOptions()
 // alias the int behind `a`, so only the second block (whose index is a
 // register-allocated local) gets to fold its address.
 VA(0x00468730, 0x8E)  // anchor-global, dc 0x62358
-void combatManager::RemoveArmyFromGrid(const army* a)
+void combatManager::RemoveArmyFromGrid(const army& a)
 {
-    cells[a->gridIndex].armySlot = -1;
-    cells[a->gridIndex].armySide = -1;
-    cells[a->gridIndex].field_1a = -1;
-    if (a->creatureId & 1) {
-        int hex = a->gridIndex + (a->facing != 0 ? 1 : -1);
+    cells[a.gridIndex].armySlot = -1;
+    cells[a.gridIndex].armySide = -1;
+    cells[a.gridIndex].field_1a = -1;
+    if (a.creatureId & 1) {
+        int hex = a.gridIndex + (a.facing != 0 ? 1 : -1);
         cells[hex].armySlot = -1;
         cells[hex].armySide = -1;
         cells[hex].field_1a = -1;
@@ -1341,17 +1341,17 @@ void combatManager::RemoveArmyFromGrid(const army* a)
 // occupied pair gets (facing == 0) on the anchor hex and (facing != 0)
 // on the second, i.e. the RIGHT half reads 1 either way.
 VA(0x004687c0, 0x99)  // anchor-global, dc 0x623cc
-void combatManager::PlaceArmyInGrid(const army* a, int hex)
+void combatManager::PlaceArmyInGrid(const army& a, int hex)
 {
-    cells[hex].armySide = static_cast<signed char>(a->combatSide);
-    cells[hex].armySlot = static_cast<signed char>(a->bitIndex);
+    cells[hex].armySide = static_cast<signed char>(a.combatSide);
+    cells[hex].armySlot = static_cast<signed char>(a.bitIndex);
     cells[hex].field_1a = -1;
-    if (a->creatureId & 1) {
-        cells[hex].field_1a = a->facing == 0;
-        int second = hex + (a->facing != 0 ? 1 : -1);
-        cells[second].armySide = static_cast<signed char>(a->combatSide);
-        cells[second].armySlot = static_cast<signed char>(a->bitIndex);
-        cells[second].field_1a = a->facing != 0;
+    if (a.creatureId & 1) {
+        cells[hex].field_1a = a.facing == 0;
+        int second = hex + (a.facing != 0 ? 1 : -1);
+        cells[second].armySide = static_cast<signed char>(a.combatSide);
+        cells[second].armySlot = static_cast<signed char>(a.bitIndex);
+        cells[second].field_1a = a.facing != 0;
     }
 }
 
@@ -1414,7 +1414,7 @@ void combatManager::PowEffect(TSpellEffectID spellEffect, int bResetLimitCreatur
 // (0x4428f0, const) cannot pass its own `this` without it.
 VA(0x00469600, 0x6E)  // anchor-global, dc 0x62db8
 unsigned char combatManager::enemy_is_adjacent(const army* current_army, int grid_index,
-                                               const army* excluded)
+                                               const army* excluded) const
 {
     for (int i = 0; i < 6; i++) {
         int hex = adjacentCells[grid_index][i];
@@ -1568,7 +1568,7 @@ unsigned char combatManager::DoorCanBeLowered()
 // 0x2b6c/0x2b70 and 0x2afc/0x2b00 landing exactly on cells[95].armySide
 // / .field_1c and cells[94]'s pair (0x1c4 + index*0x70 + 0x18/0x1c).
 VA(0x00469a10, 0x80)  // anchor-global, dc 0x632c4
-unsigned char combatManager::HexIsBlocked(int index)
+unsigned char combatManager::HexIsBlocked(int index) const
 {
     if (field_132f4 > 0
             && (index == COMBAT_HEX_GATE || index == COMBAT_HEX_GATE_MOAT)) {
@@ -1858,7 +1858,7 @@ unsigned char combatManager::RowIsOdd(int y)
 
 // E:\gamedcs\CmbtMgr.h:1537
 DC_ONLY(0x63a5c, 0x2C)
-hexcell* combatManager::GetCell(int x, int y)
+hexcell& combatManager::GetCell(int x, int y)
 {
     // @stub
 }

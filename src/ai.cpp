@@ -1079,7 +1079,7 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
     for (long i = 0; i < 187; i++) {
         if ((cells[i].field_10 & 0x10) == 0)
             continue;
-        TObstacle* obstacle = GetObstacle(cells[i].field_14);
+        TObstacle* obstacle = &GetObstacle(cells[i].field_14);
         long base = obstacle->spell_damage;
         long damage = ModifySpellDamage(base, 0xd,
                                         heroes[obstacle->field_09],
