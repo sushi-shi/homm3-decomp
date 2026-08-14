@@ -825,8 +825,16 @@ unsigned char army::is_enemy(const army* arg) const
 // which is exactly the literal-into-EBX hoist army::Turn's residual
 // note records. So the caller does not reach 100 by winning the inline
 // either, and BOTH rows are parked rather than landed low.
+#endif  // @carcass
+
+// UN-CARCASSED 2026-08-14 as an `inline` definition, still NOT
+// claimed: get_AI_target_time (0x448bd0) needs the EXPANSION, and
+// the A/B above shows the keyword is what fires it. The retail
+// out-of-line body at 0x4428f0 therefore has no counterpart in our
+// object - it had none before either, since the row was withdrawn -
+// and the trade is a parked 60.00 register wall for a caller at 100.
 // RETAIL_LOCATED(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
-unsigned char army::can_shoot(const army* excluded) const
+inline unsigned char army::can_shoot(const army* excluded) const
 {
     if (creatureType == ARMY_CREATURE_BALLISTA
         || creatureType == ARMY_CREATURE_ARROW_TOWER)
@@ -850,6 +858,8 @@ unsigned char army::can_shoot(const army* excluded) const
         return 0;
     return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2804
 #endif  // @carcass
@@ -1774,18 +1784,36 @@ found:
     return mask;
 }
 
+// E:\gamedcs\army.cpp:5779
+// How many turns this stack still needs to reach its AI target at a
+// given speed. A stack that can shoot needs none - it is already in
+// range of everything - and neither does a stack with no speed to
+// spend, so both of those and a sub-turn distance converge on the same
+// `return 1`.
+//
+// can_shoot is EXPANDED here, not called: retail runs the whole
+// predicate inline with `excluded` folded to 0 at both
+// enemy_is_adjacent sites, which is the /Ob2 signature of a real
+// `can_shoot(0)` call rather than duplicated source. That is why the
+// definition above carries the `inline` keyword.
+VA(0x00448bd0, 0xF6)  // anchor-bracket, dc 0x4c898
+long army::get_AI_target_time(long speed) const
+{
+    if (can_shoot(0))
+        return 1;
+    if (!speed)
+        return 1;
+    long turns = (AI_target_time + speed - 1) / speed;
+    if (turns < 1)
+        return 1;
+    return turns;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:5717
 DC_ONLY(0x4c778, 0xB4)
 void army::consider_attack(const army* enemy, long value, long attack_distance)
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:5779
-// RETAIL_LOCATED(0x00448bd0, 0xF6)  // anchor-bracket, dc 0x4c898
-long army::get_AI_target_time(long speed) const
 {
     // @stub
 }
