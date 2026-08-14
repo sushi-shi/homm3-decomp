@@ -459,6 +459,23 @@ unsigned char type_creature_quest::is_satisfied(hero* current_hero)
     return 1;
 }
 
+VA(0x005707c0, 0xB3)  // anchor-vtable 0x6418b4 slot 3, retail-only
+void type_creature_quest::TakePayment(hero* current_hero)
+{
+    for (unsigned i = 0; i < types.size(); ++i) {
+        for (int slot = 0; slot < armyGroup::ARMY_GROUP_SLOT_COUNT; ++slot) {
+            if (current_hero->army.armies[slot] != types[i])
+                continue;
+            if (current_hero->army.numTroops[slot] > counts[i]) {
+                current_hero->army.numTroops[slot] -= counts[i];
+                break;
+            }
+            counts[i] -= current_hero->army.numTroops[slot];
+            current_hero->army.Dismiss(slot);
+        }
+    }
+}
+
 VA(0x00571560, 0x12)  // anchor-vtable 0x6418f0 slot 1, retail-only
 int type_resource_quest::GetAIValue(int player)
 {
