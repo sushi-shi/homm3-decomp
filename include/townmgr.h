@@ -654,6 +654,8 @@ public:
     // recruit dialog, rolling the generator first if the town has not
     // picked a creature yet.
     void DoPortalOfSummoning();
+    // Retail 0x5d2f90 (dc 0x174d1c). Necropolis' creature converter.
+    void DoSkeletonTransformer();
     // Retail 0x5d82b0 (dc 0x17b154). The town's own tavern: the shared
     // chooser, then the hire onto the town and the page rebuild.
     void DoTownTavern();

@@ -56,6 +56,7 @@
 #include "recruit.h"
 #include "remote.h"
 #include "resourcedisplay.h"
+#include "sacrifice_window.h"
 #include "smackmgr.h"
 #include "soundmgr.h"
 #include "strip.h"
@@ -2660,6 +2661,74 @@ void townManager::DoPortalOfSummoning()
     }
 }
 
+// The Skeleton Transformer, Necropolis' creature converter. The dialog
+// works on ONE army: the visiting hero's if the town has one, the town
+// garrison's otherwise - and the garrison's regardless when the page's
+// selected strip is the town's own, which is the second, overriding
+// test. The window is a plain STACK local, 0x16c bytes of frame; its
+// scope end runs the destructor, which is why the body is EH-framed.
+//
+// It also settles a standing include-set question: sacrifice_window.h
+// entering this compiland's closure is FREE. Measured 2026-08-14 by
+// adding the include alone - all 61 exact townmgr functions held and
+// every below-100 row stayed at its recorded max - and the one forward
+// declaration that header needed for the declarator below (`class
+// armyGroup;`) left sacrifice_window's own eleven rows at 100.00.
+//
+// The gate is spelled `>= 0` with the HERO arm first: retail's `jl`
+// sends the garrison arm forward, so it is the one laid out last, and
+// written `< 0` first the row sits at 85.42. Both that gate AND
+// game::GetHero's own `== -1` are emitted - two compares against the
+// same id - because they are DIFFERENT comparisons; that is the same
+// asymmetry town::HasGarrison shows, and the reverse of
+// handle_hall_click below, where an identical `!= -1` gate folds the
+// accessor's test away.
+//
+// The window needs an explicit scope. Left to the function's own scope
+// its destructor runs after RedrawTownScreen and the row is 92.86;
+// retail destroys it the instant DoModal returns, which is a block.
+//
+// Coming back, the page's whole selection is dropped: both remembered
+// strips have their current slot parked at -2, both live strips redraw
+// with nothing divided out, and the four selection members go back to
+// their idle values before the status widget is dimmed.
+
+// E:\gamedcs\townmgr.cpp:5705
+VA(0x005d2f90, 0x132)  // order-map(between DoPortalOfSummoning and handle_hall_click) + type_skeleton_window ctor/dtor edges, dc 0x174d1c
+void townManager::DoSkeletonTransformer()
+{
+    armyGroup* transformGroup;
+    if (townToView->visitingHeroId >= 0)
+        transformGroup = &gpGame->GetHero(townToView->visitingHeroId)->army;
+    else
+        transformGroup = townToView->get_army();
+
+    if (field_12c && field_12c == field_11c)
+        transformGroup = townToView->get_army();
+
+    {
+        type_skeleton_window skeletonWin(transformGroup);
+        skeletonWin.DoModal(0);
+    }
+
+    if (field_12c)
+        field_12c->current = -2;
+    if (field_134)
+        field_134->current = -2;
+    field_1c4 = 0;
+    field_120->Draw(CREATURE_NONE);
+    field_11c->Draw(CREATURE_NONE);
+    field_134 = 0;
+    field_12c = 0;
+    field_138 = -2;
+    field_130 = -2;
+    gpWindowManager->BroadcastMessage(MESSAGE_WIDGET,
+                                      widget::WIDGET_SET_STATUS, 0x9a,
+                                      widget::WIDGET_UPDATE
+                                          | widget::WIDGET_DIMMED);
+    RedrawTownScreen();
+}
+
 // The town hall button, and the Grail offer that stands in front of it.
 // A hero carrying the Holy Grail into a town that has not built it, on a
 // LOCAL HUMAN player's turn, is asked whether to put it down here; every
@@ -3906,12 +3975,6 @@ void townManager::DoPortalOfSummoning()
 }
 
 // E:\gamedcs\townmgr.cpp:5705
-DC_ONLY(0x174d1c, 0x84)
-void townManager::DoSkeletonTransformer()
-{
-    // @stub
-}
-
 // E:\gamedcs\townmgr.cpp:5733
 // E:\gamedcs\townmgr.cpp:5778
 DC_ONLY(0x174f60, 0x18)
