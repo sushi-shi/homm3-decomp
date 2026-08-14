@@ -10,6 +10,18 @@
 #include "soundmgr.h"
 #include "town.h"
 
+// VC6's <xutility> reference-returning max, spelled file-locally for the
+// same reason findpath.cpp spells _cpp_min: retail materialises BOTH
+// operands into stack temps and selects between their ADDRESSES with two
+// LEAs, which is the signature of a reference-returning template and not
+// of a ternary. army::get_total_hit_points 0x4430b4..0x4430c8 is this TU's
+// instance. Operands by value, the orientation the engine is byte-proven on.
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:52
@@ -562,13 +574,6 @@ long army::get_loss_combat_value(long lowest_attack, long lowest_defense, unsign
     // @stub
 }
 
-// E:\gamedcs\army.cpp:2960
-// RETAIL_LOCATED(0x00443080, 0x50)  // anchor-global, dc 0x48454
-long army::get_total_hit_points(unsigned char simulated) const
-{
-    // @stub
-}
-
 // E:\gamedcs\army.cpp:2982
 // RETAIL_LOCATED(0x004430d0, 0x56)  // anchor-global, dc 0x484a0
 void army::set_AI_expected_damage(long arg)
@@ -696,6 +701,31 @@ unsigned char army::can_shoot(const army* excluded) const
     if (field_28c && field_4c4 >= 2)
         return 0;
     return 1;
+}
+
+// E:\gamedcs\army.cpp:2960
+// RECONSTRUCTED 2026-08-14 for the same delinker reason can_shoot was:
+// FindCombatPath, the ai_tactical pricers and the combat AI census all
+// call it, and an uncompiled carcass leaves every one of those call
+// relocations unpaired.
+//
+// The `Is(0x17)` arm answers ONE hit point, not the stack's real total -
+// retail jumps out of it straight into the simulated adjustment
+// (`jmp 0x4430a7` lands exactly on the `mov dl, byte [ebp+8]`), which is
+// what makes the body one assignment plus one shared tail rather than two
+// returns. The simulated arm subtracts the AI's own expected damage and
+// FLOORS the answer at zero through the reference-returning max, whose two
+// LEAs (`lea eax,[ebp+8]` / `lea eax,[ebp-4]` around a `js`) are the same
+// <xutility> signature findpath's CalcTerrainCost carries.
+VA(0x00443080, 0x50)  // anchor-global, dc 0x48454
+long army::get_total_hit_points(unsigned char simulated) const
+{
+    long total = (Is(0x17) & 1)
+        ? 1
+        : hitPoints * numTroops - topCreatureDamage;
+    if (simulated)
+        return _cpp_max<long>(0, total - AI_expected_damage);
+    return total;
 }
 
 VA(0x00443130, 0x25)  // decorated identity + exact field/constant loads
@@ -1093,6 +1123,34 @@ int army::get_mirror_effect() const
     return effect;
 }
 
+// E:\gamedcs\army.cpp:5790
+// RECONSTRUCTED 2026-08-14, again for the delinker: GetSpeed is one of the
+// combat lane's most-called leaves (FindCombatPath twice, ValidFlight,
+// fly.obj's folded find_flyer_attack_cell, SeedCombatPosition,
+// get_travel_time) and a carcass leaves every one of those relocations
+// unpaired.
+//
+// The multiplier path is guarded, not unconditional: while field_270 is
+// clear the stack simply answers its own field_c4. Inside the guard a
+// creatureId bit-6 stack answers ZERO outright, and everyone else pays
+// `(long)((float)field_c4 * field_4c8)` FLOORED AT ONE - retail's
+// fild/fstp/fld round-trip through the same stack slot is /Op keeping the
+// single-precision intermediate in memory, and __ftol is the ordinary
+// float-to-long helper.
+VA(0x00448cd0, 0x4B)  // anchor-global, dc 0x4c918
+int army::GetSpeed() const
+{
+    int speed = field_c4;
+    if (field_270) {
+        if (Is(6) & 1)
+            return 0;
+        speed = static_cast<int>(static_cast<float>(speed) * field_4c8);
+        if (speed <= 0)
+            return 1;
+    }
+    return speed;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:5717
@@ -1112,13 +1170,6 @@ long army::get_multi_head_directions(long our_hex, const army* enemy, long enemy
 // E:\gamedcs\army.cpp:5779
 // RETAIL_LOCATED(0x00448bd0, 0xF6)  // anchor-bracket, dc 0x4c898
 long army::get_AI_target_time(long speed) const
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:5790
-// RETAIL_LOCATED(0x00448cd0, 0x4B)  // anchor-global, dc 0x4c918
-int army::GetSpeed() const
 {
     // @stub
 }

@@ -290,7 +290,15 @@ public:
     int moralePenaltyRounds;      // +0x260
     int luckBonusRounds;          // +0x264
     int luckPenaltyRounds;        // +0x268
-    char pad_26c[0x18];
+    char pad_26c[0x4];
+    // The gate on army::GetSpeed's (0x448cd0) speed multiplier: while it is
+    // non-zero a stack that carries creatureId bit 6 has NO speed at all,
+    // and everyone else has their base speed scaled by field_4c8 and floored
+    // at one. Sliced 2026-08-14 from that body; the pair is the shape of a
+    // speed-altering spell effect, but nothing names either word, so both
+    // keep ADDRESS-ORDINAL names.
+    int field_270;                // +0x270
+    char pad_274[0x10];
     int berserkFlag;              // +0x284 (is_enemy: true vs everyone)
     int hypnotizeFlag;            // +0x288 (flips the effective side)
     // Sliced 2026-08-14 out of pad_28c by army::can_shoot (0x4428f0):
@@ -332,7 +340,11 @@ public:
     // field_28c is set. Sliced 2026-08-14 from the same body; see the
     // note at field_28c for why both keep address-ordinal names.
     int field_4c4;                // +0x4c4
-    char pad_4c8[0x18];
+    // The multiplier army::GetSpeed applies to field_c4 while field_270 is
+    // set - `fld dword [ebp-4]; fmul dword [this+0x4c8]; call __ftol`, so a
+    // single-precision float, not a percentage int. See field_270.
+    float field_4c8;              // +0x4c8
+    char pad_4cc[0x14];
     // Read by combatManager::ViewArmy and forwarded as the first
     // argument of the post-dialog command. The DC name for the nearby
     // scalar run does not survive the retail STL-layout shift, so keep
