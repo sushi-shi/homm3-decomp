@@ -440,7 +440,16 @@ unsigned char VideoPlaying()
 // sequences AGREE (23/23), so nothing structural is left; a sweep of
 // the first-rect assignment orders moved it 89.36 -> 89.63 and `x, y,
 // w, h` is the measured optimum (h,w,x,y and x,h,w,y are the worst at
-// 89.35).
+// 89.35). 2026-08-14: the bink arm's induction base is NOT reachable
+// from the rect expression - a rect pointer local, a walking pointer,
+// a rect reference, and a hoisted `rects` base all compile BYTE
+// IDENTICAL to the subscripted form (89.6347 each); only per-field
+// locals are worse (85.19). Retail's `lea ecx,[esi+0x44]` with loads
+// at -4/0/+4/+8 versus our `[esi+0x40]` with 0/+4/+8/+0xc is the same
+// C2 induction-bias-to-the-second-field choice that palette.cpp's
+// TPalette24 turned out to expose - but there the bias flipped when
+// the loop stopped using a pointer local, and here there is no such
+// handle because the index IS already the induction variable.
 VA(0x005979d0, 0x294)  // anchor-global, dc 0x14ac60
 void VideoDrawRects()
 {

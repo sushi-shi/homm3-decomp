@@ -549,6 +549,15 @@ void slider::SetKnob(int inX)
     // binds them to EDI/ESI. why-reg v2 (2026-08-11, --il-order) proves equal
     // definition slots but different C1 pseudo processing order and caps the
     // transposition as front-end handle state, not a statement-level knob.
+    // 2026-08-14 adds the second half of the picture: retail evaluates the
+    // offset as (-half) - base - knobSize (`neg edx` on the halved value),
+    // while our CL REASSOCIATES every spelling into (-knobSize) - half - base
+    // (`neg edi` on knobSize). Six spellings measured - plain declarations
+    // 88.36, base declared first 87.70, non-compound assignment 88.44, a named
+    // `half` local 88.44, else-if clamp 84.92, fully parenthesised negation
+    // 88.44 - so the reassociation is a C2 choice with no source handle. Retail
+    // also re-tests with `test eax,eax; jge` where our CL folds the clamp into
+    // the `add`'s flags with `jns`; no spelling separated them.
     int knobSize;
     int base = (knobSize = knob_start,
                 width > height ? static_cast<int>(x) : static_cast<int>(y));
