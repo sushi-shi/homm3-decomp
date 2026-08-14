@@ -1585,6 +1585,12 @@ void AI_auto_combat(hero* attacking_hero, hero* defending_hero, armyGroup* attac
 // that integer happens to equal VA 0x4c4b40 inside game.obj; honest source
 // emits an integer immediate. The split data symbols at 0x6604d0/+4 are the
 // open aggregate-DATA-size class recorded in decision point P0.2.
+// RANKER VERDICT 2026-08-14, upgrading the earlier "1 real / 3 artefact"
+// reading to ZERO REAL of 245 rows: the four differing rows are the unwind
+// label `push 0x8`, the two `add esi,0x4c4b40` immediates the delinker resolved
+// as `game_87d30_sub00_c4390+0x7b0`, and `mov edx,[8*ecx]` where retail carries
+// `data_2604d4` at addend 0 against our `_defense_estimates+4` - a symbol+addend
+// split, not a displacement. 99.9592 is not reachable from source.
 VA(0x00427330, 0x318)  // corroborates (hd-crossbuild + ida), dc 0x2c27c
 long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
                         const armyGroup& defending_army,

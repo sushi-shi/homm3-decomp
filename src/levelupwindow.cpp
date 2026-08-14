@@ -141,6 +141,27 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
     // does NOT list: every other widget pointer in this body is register-
     // allocated in the DC build, so the census is a LOWER bound on retail's
     // locals and cannot be read as "retail declared only one".
+    //
+    // 2026-08-14, THE STATEMENT CENSUS IS CALIBRATED AND IT CANNOT PRICE THIS
+    // BODY EITHER. `*** SRCLINES ***` gives dc 0xe8344 Cb 0x8E8 = 49 statement
+    // lines over E:\gamedcs\levelupwindow.cpp:48-155, in ONE file block - no
+    // header line is attributed inside the range, so for this dump the "which
+    // header lines were inlined" half of the oracle never fires (NB11 attributes
+    // inlined code to the CALL SITE's .cpp line; terrain.h's twenty lines at
+    // 0xe80e4-0xe8343 are a separate out-of-line COMDAT, not an inline here).
+    // This body counts 71 statement lines, ratio 1.449 - which would say we are
+    // ALREADY over, in flat contradiction with the titration above (12..15 pad
+    // units BUY 99.1299). The titration is retail bytes and wins; the census is
+    // the resolution problem. Calibrated over all 807 EXACT functions in the
+    // tree carrying a `dc 0x` map: median ratio 0.933, quartiles 0.733 and
+    // 1.083, and only 29% of exact bodies land within +-10% of 1.0 (36% for
+    // bodies of 30-60 DC lines). A +-25% instrument cannot resolve a
+    // 20-statement effect on a 71-line body. The DC call census for this range
+    // DOES confirm the same widget set (bitmapBorder / textWidget / iconWidget
+    // / coloredBorderFrame / button / CAdvPopup), so this is not the
+    // get_morale_description case of a different function - the Dreamcast
+    // source is simply tighter than retail's by about the mass the titration is
+    // asking for, and the census measures the Dreamcast source.
     Widgets.reserve(25);
 
     gpLevelUpWindow = this;
