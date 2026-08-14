@@ -1295,6 +1295,9 @@ resourcedisplay	?Clear@TResourceDisplay@@QAEXXZ	100.0000	100.0000	100.0000	0x159
 resourcedisplay	?Update@TResourceDisplay@@QAEXEE@Z	100.0000	100.0000	100.0000	0x158f20
 resourcemanager	?AddToCache@ResourceManager@@YIXPAVresource@@@Z	86.6296	86.6296	86.6296	0x1594b0
 resourcemanager	?GetSpreadsheet@ResourceManager@@YIPAVTSpreadsheetResource@@PBD@Z	93.6111	93.6111	93.6111	0x15c0a0
+sacrifice_window	??1type_skeleton_window@@UAE@XZ	100.0000	100.0000	100.0000	0x165f60
+sacrifice_window	??_Gtype_skeleton_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x165f30
+sacrifice_window	?DoModal@type_sacrifice_window@@UAEHE@Z	100.0000	100.0000	100.0000	0x1653b0
 sacrifice_window	?WindowHandler@type_skeleton_window@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1666f0
 sacrifice_window	?handle_click@type_army_slot_widget@@UAEEEE@Z	100.0000	100.0000	100.0000	0x15fda0
 sacrifice_window	?handle_click@type_artifact_offering_widget@@UAEEEE@Z	100.0000	100.0000	100.0000	0x15fd40
