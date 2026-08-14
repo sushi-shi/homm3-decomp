@@ -58,21 +58,22 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     accept->set_hotkey(1);
     Widgets.push_back(accept);
 
-    int slot = 0;
-    for (int musicX = 29; musicX < 219; musicX += 19) {
+    // The loop variable is the SLOT, not the x: retail keeps the raw 0..9 in
+    // its frame slot and adds the id base at the use (`add edx,0xca`), while
+    // the x lives in the linear-function-test-replaced derived induction
+    // variable (`add edi,0x13`, `cmp edi,0xdb`). Walking x directly and
+    // counting the slot by hand makes the slot a SECONDARY induction
+    // variable, which VC6 folds the id base into (`mov [ebp-0x10],0xca`).
+    for (int musicSlot = 0; musicSlot < 10; ++musicSlot)
         Widgets.push_back(new iconWidget(
-            musicX, 303, 18, 36, slot + MUSIC_VOLUME_0_ID, "syslb.def",
-            0, 0, 0, 0, 0x10));
-        slot++;
-    }
+            29 + musicSlot * 19, 303, 18, 36,
+            musicSlot + MUSIC_VOLUME_0_ID, "syslb.def", 0, 0, 0, 0, 0x10));
 
-    slot = 0;
-    for (int effectsX = 29; effectsX < 219; effectsX += 19) {
+    for (int effectsSlot = 0; effectsSlot < 10; ++effectsSlot)
         Widgets.push_back(new iconWidget(
-            effectsX, 369, 18, 36, slot + EFFECTS_VOLUME_0_ID, "syslb.def",
+            29 + effectsSlot * 19, 369, 18, 36,
+            effectsSlot + EFFECTS_VOLUME_0_ID, "syslb.def",
             0, 0, 0, 0, 0x10));
-        slot++;
-    }
 
     Widgets.push_back(new button(
         28, 225, 62, 32, COMBAT_SPEED_0_ID, "sysopb9.def", 0, 1, 0, 0, 2));
@@ -193,18 +194,10 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     GetWidget(gUnk698764 + EFFECTS_VOLUME_0_ID)->send_message(
         widget::WIDGET_SET_ICON_FRAME, gUnk698764);
 
-    for (int speed = COMBAT_SPEED_0_ID; speed <= COMBAT_SPEED_2_ID; ++speed)
-        GetWidget(speed)->send_message(widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_DIMMED_NODRAW);
-    GetWidget(gUnnamed698758.combatSpeed + COMBAT_SPEED_0_ID)->send_message(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
-
-    GetWidget(SHOW_GRID_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
-        gUnnamed698758.showCombatGrid);
-    GetWidget(MOVEMENT_SHADOW_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
-        gUnnamed698758.combatShadeLevel);
-    GetWidget(MOUSE_SHADOW_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
-        gUnnamed698758.showCombatMouseHex);
+    HighlightCombatSpeed();
+    HighlightGrid();
+    HighlightMovementShadow();
+    HighlightMouseShadow();
     GetWidget(AUTO_CREATURES_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
         gUnnamed698758.combatAutoCreatures);
     GetWidget(AUTO_SPELLS_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
