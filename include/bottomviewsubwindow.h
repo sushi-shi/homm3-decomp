@@ -138,7 +138,7 @@ SIZE(TBottomViewNewTurn, 0x48);
 // derived storage beyond the 0x34-byte bottom-view base.
 class TBottomViewResourceMessage : public type_bottom_view_window {
 public:
-    TBottomViewResourceMessage(heroWindow* parent, int resource,
+    TBottomViewResourceMessage(heroWindow* parent, int res,
                                int quantity, const std::string* message);
     virtual ~TBottomViewResourceMessage();
 };
