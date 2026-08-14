@@ -688,9 +688,29 @@ void heroWindowManager::ReleaseFizzleSource()
 // SOURCE pointer in edi, hoists `pDst - pSrc` into a per-row delta slot
 // and addresses the store as `[delta + src - 4]`; our CL puts the shift
 // in edi, the source pointer in ebx, and keeps a second live dst
-// pointer instead of the delta. Everything else - block graph, frame
-// layout, every mask/counter/timer slot displacement, the whole
-// post-loop tail - is byte-identical. Tried and rejected: `dst[x] =
+// pointer instead of the delta. Frame layout, every mask/counter/timer
+// slot displacement and the whole post-loop tail are byte-identical.
+//
+// CORRECTION 2026-08-14: the earlier claim that the BLOCK GRAPH agrees
+// too is WRONG, and it is why this keeps getting routed to the register
+// solver. `homm3 sema diff 0x6030e0` reports base 11 blocks vs target
+// 12, and `homm3 vc6 diagnose` classes the wall CONTROL-FLOW (flow
+// distance 1), not register-homing. The shape retail has and we do not:
+// its outer-pass head ENDS IN A JMP over a ONE-INSTRUCTION block that
+// falls into the row loop, so that instruction runs on every row
+// iteration except the first - a rotated row loop with a split update.
+// Ours falls straight through into a 4-instruction head, and our inner
+// pixel loop is 32i where retail's is 30i. Start from `why-branch`, not
+// `why-reg`. Corroboration from the allocator's own side, measured the
+// same day: why-reg --model reports the reference defines its THIRD
+// call-crossing pseudo at schedule slot 37 where ours defines it at 61
+// - retail hoists out of the row loop a value we create inside it. Its
+// verdict is CAPPED (C1 handle state), which is the wrong question.
+// Tried and rejected 2026-08-14, both fades measured together:
+// stepping pSrc/pDst in the row loop's for-INCREMENT rather than at the
+// body tail (byte-identical, 88.51/88.14); the same with named
+// srcPitch/dstPitch locals (84.63/82.72); the row loop as an explicit
+// `while` (83.88/81.93). Tried and rejected earlier: `dst[x] =
 // f(src[x])` on both sides (VC6 does build the delta form there, but
 // picks the STORE pointer as the induction variable, 87.74%); the same
 // with the pointer pair declared dst-first (86.26%); `*dst++` for the
@@ -762,8 +782,9 @@ void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
 // half-brightness frame and the full-brightness image is restored by
 // the Draw below rather than by a pass of its own.
 //
-// Residual (88.14%): the same single register-allocation divergence
-// FadeToBlack carries - see the note there.
+// Residual (88.14%): the same divergence FadeToBlack carries - see the
+// corrected note there. It is a CONTROL-FLOW wall (rotated row loop,
+// one block short), not the register swap the first note claimed.
 VA(0x006032e0, 0x1E5)  // anchor-caller, dc 0x19c3b8
 void heroWindowManager::FadeFromBlack(int speed)
 {
