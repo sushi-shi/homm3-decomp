@@ -1968,7 +1968,7 @@ VA(0x005d1ef0, 0x60C)  // anchor-vtable 0x643908 + anchor-string TPShip.pcx, dc 
 TShipWindow::TShipWindow(int type)
     : CAdvPopup(235, 106, 329, 388, 0x12)
 {
-    field_60 = 0;
+    boatFrame = 0;
     Widgets.reserve(12);
 
     bitmapBorder* background = new bitmapBorder(0, 0, width, height, 0,
@@ -2047,6 +2047,76 @@ TShipWindow::~TShipWindow()
         if (*it)
             delete *it;
     }
+}
+
+// The shipyard's handler - the same three-part recipe as the blacksmith's
+// next door, with TWO differences retail's bytes force.
+//
+// Its rollover text has no body of its own: the DC roster carries
+// TShipWindow::SetRolloverText (dc 0x174658) but retail's carve has
+// nothing between this row and DoShipyard, so /Ob2's single-call-site
+// rule expanded it here and the three statements are transcribed in
+// place (the TCastleWindow::ShowText precedent). Retail cross-jumps the
+// three strcpy expansions into one shared copy reached with a bare
+// `mov edi,<ptr>`, which is what our CL does with them too.
+//
+// And the hover cell is the WINDOW MANAGER's lastHover, not a member of
+// its own - the blacksmith keeps its own at +0x60, this dialog uses the
+// global one.
+//
+// Residual (99.98%): NOT REAL. The 378-byte body is byte-identical to
+// retail's, instruction for instruction and immediate for immediate -
+// the only rows the diff shows are relocation NAMES. What differs is
+// the trailing alignment run: our object pads the row out with six
+// nops where the retail image needed two, and the normalizer retains
+// the target's padding span.
+
+// E:\gamedcs\townmgr.cpp:5486
+VA(0x005d25a0, 0x17A)  // anchor-vtable 0x643908 slot 9 + arity + boatIcon/boatFrame edges, dc 0x1746dc
+int TShipWindow::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    switch (msg->id) {
+    case MESSAGE_MOUSE_MOVE:
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != gpWindowManager->lastHover) {
+            gpWindowManager->lastHover = msg->codeY;
+            switch (msg->codeY) {
+            case CANCEL_BUTTON_ID:
+                strcpy(gText, gpGeneralText->GetText(599));
+                break;
+            case BUY_BUTTON_ID:
+                strcpy(gText, gpGeneralText->GetText(600));
+                break;
+            default:
+                strcpy(gText, emptyRolloverText);
+                break;
+            }
+            message textMessage;
+            textMessage.extraText = gText;
+            BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
+                             textMessage.extra);
+            DrawWindow(0, 7, 8);
+            gpWindowManager->UpdateScreen(x + 8, y + 0x16b, 0x138, 0x11);
+        }
+        return 1;
+    }
+
+    long elapsed = GameTime::Get()
+                   - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+    if (elapsed >= 0) {
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+            _cpp_max(100L, elapsed);
+        boatFrame++;
+        if (boatFrame >= boatIcon->Sprite->GetNumFrames(7))
+            boatFrame = 0;
+        boatIcon->SetIconFrame(boatFrame);
+        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    }
+    return 1;
 }
 
 // The shipyard dialog, opened from the adventure map's own shipyard
