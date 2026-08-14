@@ -46,10 +46,14 @@ from homm3.sema import _asm
 
 # `mov dword ptr [ebp - 0x4], 0x2` / `mov byte ptr [ebp - 0x4], 0x0` - the
 # state store. VC6 narrows to a byte when only the low byte changes, so the
-# WIDTH is not part of the signal; the immediate is.
+# WIDTH is not part of the signal; the immediate is. The SOURCE need not be an
+# immediate at all: when the constant 0 is CSE'd into a register the state
+# store becomes `mov [ebp-4], ebx` (mouseManager::SetPointer is retail's
+# example), which is still a state store with an OPAQUE value - counted, but
+# never compared by value.
 _STATE = re.compile(
-    r"\bmov\s+(?:dword|byte)\s+ptr\s+\[ebp\s*-\s*0x4\],\s*(-?0x[0-9a-f]+|-?\d+)\s*$",
-    re.I)
+    r"\bmov\s+(?:dword|byte)\s+ptr\s+\[ebp\s*-\s*0x4\],\s*"
+    r"(-?0x[0-9a-f]+|-?\d+|[a-z]{2,3})\s*$", re.I)
 
 
 # The /GX prologue that establishes the registration node - without it there
@@ -67,10 +71,11 @@ def _to_int(tok: str) -> int:
     return v - 0x100000000 if v >= 0x80000000 else v
 
 
-def state_sequence(obj, fn: str) -> list[int] | None:
-    """The ordered EH state immediates of *fn* in *obj*, or None if it cannot
-    be read (missing object / symbol) or the function carries no EH frame.
-    Never raises: this is a side signal."""
+def state_sequence(obj, fn: str) -> list | None:
+    """The ordered EH state stores of *fn* in *obj* - an int per store, or
+    None for a register-sourced (opaque) one. Returns None outright when the
+    transcript cannot be read (missing object / symbol / no EH frame) or when
+    the slot is demonstrably an ordinary local. Never raises: side signal."""
     from homm3.vc6 import reg_model
     try:
         body = _asm.objdump(obj, reg_model._resolve_symbol(obj, fn), 0)
@@ -83,9 +88,13 @@ def state_sequence(obj, fn: str) -> list[int] | None:
         m = _STATE.search(line)
         if not m:
             continue
-        v = _to_int(m.group(1))
+        tok = m.group(1)
+        if not (tok[:1].isdigit() or tok[:1] == "-"):
+            out.append(None)     # CSE'd constant in a register - opaque
+            continue
+        v = _to_int(tok)
         if v < -1 or v > _STATE_MAX:
-            return None      # the slot is being used as a plain local
+            return None          # the slot is being used as a plain local
         out.append(v)
     return out
 
@@ -96,6 +105,10 @@ def divergence(unit: str, fn: str):
     base = state_sequence(_asm.BASE / f"{unit}.obj", fn)
     tgt = state_sequence(_asm.TARGET / f"{unit}.c.obj", fn)
     if base is None or tgt is None or base == tgt:
+        return None
+    # An opaque (register-sourced) store is still a region boundary, so the
+    # COUNT comparison stands; a value comparison does not.
+    if len(base) == len(tgt) and (None in base or None in tgt):
         return None
     if len(base) != len(tgt):
         kind = "COUNT"
@@ -109,7 +122,8 @@ def divergence(unit: str, fn: str):
                     "region(s) retail does not - an extra lifetime, or a "
                     "callee retail's TU proved nothrow (the <new> "
                     "`operator delete(void*) _THROW0()` case)")
-    elif sorted(base) == sorted(tgt):
+    elif sorted(base, key=lambda v: (v is None, v)) == \
+            sorted(tgt, key=lambda v: (v is None, v)):
         kind = "ORDER"
         note = ("same cleanup multiset, permuted - the unwind-map entries "
                 "were allocated in a different order, i.e. declaration or "
@@ -125,7 +139,7 @@ def format_line(div) -> str:
     """One-line rendering for diagnose, truncated so a 70-state Load/Save row
     does not bury the rest of the report."""
     def show(seq):
-        body = ",".join(str(v) for v in seq[:14])
+        body = ",".join("reg" if v is None else str(v) for v in seq[:14])
         return f"[{body}{',...' if len(seq) > 14 else ''}] ({len(seq)})"
     return (f"{div['kind']}: base {show(div['base'])} "
             f"vs retail {show(div['target'])}")
