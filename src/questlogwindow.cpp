@@ -4,6 +4,7 @@
 #include <va.h>
 #include "questlogwindow.h"
 #include "kb.h"
+#include "widget.h"
 
 #if 0  // @carcass
 
@@ -17,13 +18,6 @@ void QuestSliderCallback(int state, heroWindow* parent_window)
 // E:\gamedcs\questlogwindow.cpp:43
 DC_ONLY(0x116604, 0x568)
 void TQuestLogWindow::TQuestLogWindow()
-{
-    // @stub
-}
-
-// E:\gamedcs\questlogwindow.cpp:81
-DC_ONLY(0x116b6c, 0x6A)
-void TQuestLogWindow::~TQuestLogWindow()
 {
     // @stub
 }
@@ -43,6 +37,23 @@ void TQuestLogWindow::UpdateQuestLocators()
 }
 
 #endif  // @carcass
+
+// Retail vtable 0x640648 slot 0; the 33-byte wrapper calls the destructor
+// below and runs the flags&1 operator delete tail.
+VA_COMPGEN(0x0052e1b0, 0x21, SCALAR_DELETING_DTOR, TQuestLogWindow)
+
+// E:\gamedcs\questlogwindow.cpp:81
+// Identified by ??_G's call edge: it stores vtable 0x640648, walks
+// heroWindow::Widgets deleting each entry, tears the vector<int> member
+// down inline and tail-calls ~CAdvPopup.
+VA(0x0052e1e0, 0x8f)  // anchor-vtable + deleting-dtor callee, dc 0x116b6c
+TQuestLogWindow::~TQuestLogWindow()
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
 
 // E:\gamedcs\questlogwindow.cpp:111
 VA(0x0052e410, 0x1d)  // source-order map + both retail call edges, dc 0x116ca4

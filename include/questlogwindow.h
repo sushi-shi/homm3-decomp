@@ -8,15 +8,28 @@
 #include <vector>
 #include "advmgr_popup.h"
 
-// Retail DoQuestLog allocates 0x74 bytes. The constructor independently
-// proves the CAdvPopup base through +0x5f, the byte at +0x60, and the VC6
-// vector<int> storage at +0x64..+0x73; its quest-building callers pass int
-// indices into that vector. This is the canonical layout, not an access view.
+// Retail DoQuestLog allocates 0x74 bytes over the 0x60-byte CAdvPopup base.
+// CORRECTION 2026-08-14 (this replaces the earlier "bool at +0x60, vector at
+// +0x64" reading): two retail bodies fix the tail the other way round.
+//   * the destructor 0x52e1e0 deletes [this+0x64] and then zeroes
+//     0x64/0x68/0x6c - the inlined vector<int> _Tidy - so _First/_Last/_End
+//     are 0x64/0x68/0x6c;
+//   * UpdateQuestLocator 0x52e270 reads [this+0x64] and [this+0x68] as that
+//     same _First/_Last pair to compute size(), and reads [this+0x70] as a
+//     plain int it ADDS to its widget index.
+// VC6's vector homes its (empty) allocator FIRST, so _First at +0x64 puts
+// the vector itself at +0x60 with nothing in front of it, and the int at
+// +0x70 closes the object at 0x74. There is no leading byte member.
 class TQuestLogWindow : public CAdvPopup {
 public:
-    bool unknown;
-    std::vector<int> seerHutLogList;
+    std::vector<int> seerHutLogList;  // +0x60 (_First +0x64)
+    // Scroll offset of the topmost listed quest: UpdateQuestLocator adds its
+    // widget index to this before indexing seerHutLogList and bails when the
+    // sum reaches size(). Role is byte-proven, spelling is a house
+    // placeholder - no dump names it.
+    int firstVisibleQuest;            // +0x70
 
+    virtual ~TQuestLogWindow();
     virtual int WindowHandler(message* msg);
 };
 SIZE(TQuestLogWindow, 0x74);
