@@ -637,6 +637,20 @@ void TTownScreenWindow::UpdateTownLocators()
     DrawWindow(0, 0x9b, 0xa3);
 }
 
+// The town page's one network hook: a gift arriving while the player is
+// inside a town is handled exactly as the adventure map handles it, and
+// then the town's own resource bar is redrawn so the new stock shows.
+// The forward is the BASE's trade-request handler, called directly on
+// this same object.
+
+// E:\gamedcs\townmgr.cpp:1844
+VA(0x005c66b0, 0x20)  // anchor-callee(CAdvMgrNetMsgHandler::HandleTradeRequestMsg + TResourceDisplay::Update) + arity, dc 0x18146c
+void CTownNetMsgHandler::HandleGiftMsg(CNetMsg* pNetMsg)
+{
+    CAdvMgrNetMsgHandler::HandleTradeRequestMsg(pNetMsg);
+    pResourceDisplay->Update(1, 1);
+}
+
 // The manager's Close, slot 1 of vtable 0x643720 and the second of its
 // three virtuals. UnloadTown 0x5c70b0 (located, not reconstructed) drops
 // the town itself; what is left here is the two windows the manager owns,

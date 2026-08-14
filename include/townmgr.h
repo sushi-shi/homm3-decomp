@@ -32,6 +32,7 @@ enum EThievesGuildStat {
 // their include closure for no benefit. townmgr.cpp is the only consumer.
 #ifdef HOMM3_TOWNMGR_WINDOW_DECLS
 #include "advmgr_popup.h"
+#include "remote.h"
 
 // The three states townManager::SetupMage sorts a mage-guild slot into
 // before it drives the page's two widget runs. The values are retail's
@@ -104,6 +105,22 @@ public:
     void Draw(int incFrame, unsigned char drawHotspots);
 };
 SIZE(townObject, 0x30);
+
+// The town screen's network dispatch. HandleGiftMsg (0x5c66b0) forwards
+// to the adventure handler's TRADE path with the same `this` - a direct,
+// non-virtual base call, so the derivation is at offset 0 - and then
+// refreshes the resource bar it was constructed with. That refresh reads
+// the bar through +0xc, which is exactly past CNetMsgHandler's 12-byte
+// base, and the Dreamcast constructor's one parameter is that same bar.
+class CTownNetMsgHandler : public CAdvMgrNetMsgHandler {
+public:
+    TResourceDisplay* pResourceDisplay;  // +0x0c
+
+    CTownNetMsgHandler(TResourceDisplay* display);
+    void SetResourceDisplay(TResourceDisplay* display);
+    void HandleGiftMsg(CNetMsg* pNetMsg);
+};
+SIZE(CTownNetMsgHandler, 0x10);
 
 // The compiland's dialog family. Every one of these classes is fixed by
 // a vtable of its own, each the slot-0 owner of one 33-byte scalar
