@@ -48,39 +48,60 @@ comments carry as `dc 0x…` and `evidence/dc-xref-graph.tsv` as
 | want | from `dc` offset |
 |---|---|
 | the next line's start (statement size) | the following entry, or the S_GPROC32 `Cb` |
-| an **RVA into `../orig/dreamcast/H3.EXE`** | **`+ 0x1000`** (section 1 `.text` is at va 0x1000) |
+| the **raw file offset** in `../orig/dreamcast/H3.EXE` | **`+ 0x400`** |
+| the **linear VA** the literal pools hold | **`+ 0x11000`** |
+
+**Address-base correction, 2026-08-14.** The first draft of this table said
+"an RVA into H3.EXE = `dc + 0x1000`". Read off the DC PE header: the image
+base is **0x10000** and `.text` is va 0x1000 / raw 0x400, so `dc + 0x1000` is
+neither an rva nor a VA — it happened to work only because the same draft
+subtracted it straight back to reach the file offset. The two numbers that
+matter are in the table above, and the second one is load-bearing: literal
+pools hold **linear VAs**, so decoding a call target needs `− 0x11000`, not
+`− 0x1000`. `.rdata`/`.data`/`.pdata` are sections 2..4 at va 0x19e000 /
+0x1a8000 / 0x1e1000 (add the image base for the VA), which is what lets a
+pool entry that is a GLOBAL rather than a callee be named too.
 
 The scope tree sits in the `S_GPROC32` record for the same address, with the
 parameter and local `S_REGREL32` records ahead of it — those name the
 **original parameter list**, which is independently useful (they proved
 `get_luck_description`'s DC signature had no `creature` parameter at all).
 
-## Disassembling the SH4 side
+## The tool
 
-`capstone` ≥ 5 has an SH backend, so the DC bytes are readable directly and
-the line table becomes a statement-by-statement listing:
+`scripts/homm3/analysis/dc_lines.py` does the whole join — line table +
+scope tree + capstone SH4 + pool-symbol resolution — so no round of this
+should be hand-rolled again:
 
-```python
-import struct, capstone
-data = open("/home/sheep/Projects/homm3/orig/dreamcast/H3.EXE", "rb").read()
-# section 1 (.text) is va 0x1000 / raw 0x400, so rva = dc_offset + 0x1000
-md = capstone.Cs(capstone.CS_ARCH_SH, capstone.CS_MODE_SH4 | capstone.CS_MODE_LITTLE_ENDIAN)
-for i in md.disasm(data[0x400 + (rva - 0x1000):][:size], rva):
-    print("%08x  %-10s %s" % (i.address, i.mnemonic, i.op_str))
+```sh
+cd scripts
+python3 -m homm3.analysis.dc_lines 0x55df4          # statement listing
+python3 -m homm3.analysis.dc_lines 0x55df4 --asm    # + SH4 disassembly
+python3 -m homm3.analysis.dc_lines --find GetCurrTown
 ```
 
-Two practicalities:
+Each statement prints as `line N  dc 0xX  <bytes>  br=<conditional
+branches>  { }` followed by the calls it makes, with `{`/`}` marking the
+S_BLOCK32 scope opens and closes. That triple — statement size, branch
+count, call list — is what a reconstruction is compared against.
+
+Three practicalities the tool already handles, listed because they bite when
+reading the raw dump:
 
 * **literal pools sit inside functions.** SH4 materialises constants and call
   targets with `mov.l @(disp,pc)`, and the pool is emitted mid-body; capstone
   stops at it. Disassemble around the gap rather than assuming the function
   ended (`TViewArmyWindow`'s pool is 0x1925d8–0x192617 and code resumes at
-  0x192618).
+  0x192618). `--asm` steps over pool halfwords and resumes.
 * **a call is `mov.l <pool>,rN; jsr @rN`** (or `bsr` when it is near), so the
-  pool entry is the callee. `evidence/dc-xref-graph.tsv` already resolves
-  those to names — join on `src_offset` instead of decoding the pool by hand.
-  Note its `pool_refs` column counts **literal-pool references, not calls**:
-  three `jsr @r11` in a loop share one entry, so the column is a lower bound.
+  pool entry is the callee — decode the `mov.l` halfword rather than trusting
+  a disassembler's operand text, and track the last pool value loaded into
+  each register (`jsr @r11` three times in a loop shares one pool entry).
+  `evidence/dc-xref-graph.tsv` resolves the same edges by `src_offset` but
+  gives a per-function SET, not the per-statement sequence; its `pool_refs`
+  column counts literal-pool references, not calls, so it is a lower bound.
+* **a `bsr` inside a literal pool is not a call.** Pool data decodes as
+  instructions; treat a call whose target is mid-body as pool noise.
 
 ## The load-bearing caveat: the DC source is an OLDER REVISION
 
@@ -108,3 +129,46 @@ So the two directions are asymmetric, and both are useful:
 Never read a *missing* DC call as evidence that retail has no call there.
 `dc 0x19148c` does not reference `operator new` at all even though its body
 allocates a `textWidget`.
+
+## Running the table the other way, seven rows (2026-08-14)
+
+The table was applied to every remaining row of the EH transcript
+(`docs/vc6/eh-cleanup.md`) plus `TBottomViewKingdom`, cataloguing for each
+the retail code that has **no DC line**. It answers a COUNT-class residual in
+one of two ways and it is worth knowing which before spending a round on it:
+
+| row | what the no-DC-line pass named |
+|---|---|
+| `bottomviewsubwindow:??0TBottomViewTown` | the whole quantity-text block (DC 477–492 have no code): the DC revision's army loop pushes the creature icon and nothing else. **Also a positive hit:** DC line 359 is a call to `game::GetCurrTown`, not `GetTown(currTownId)` — landed, 95.63 → 97.36 |
+| `bottomviewsubwindow:??0TBottomViewHero` | DC line 229 is `game::GetCurrHero` — the twin. Landed, 96.52 → 97.77 |
+| `armygrp:?get_luck_description` | two post-DC blocks and only two: the clover-field arm (DC 1482→1485) and the halfling arm (DC 1502→1505); retail's four `format_string` groups against DC's three corroborate the second exactly. **Positive hit:** DC line 1482 uses `operator=`, not `+=`, and retail's call there is `assign` — landed byte-flat |
+| `bottomviewsubwindow:??0TBottomViewKingdom` | **NO post-DC region at all** — all 41 DC statements account for retail's body. Its missing site must therefore be a statement DC SPELLS DIFFERENTLY, and the table names the three candidates: line 524 is a `memset` where we write four assignments, lines 531/533/535 call `town::HasBuilding` where we test `active & bitNumber[id]`, lines 554/557 call `TTextResource::operator[]` where we call `GetText` |
+| `quickherowindow:??0TQuickHeroWindow` | the DC revision formats army counts with `memset`+`sprintf` into `gText` (DC 166/174/177/188); retail uses `ostrstream`, so that whole block is post-DC. Retail's and our call sequences are otherwise 1:1 across all 59 calls |
+| `campaignbrief:??1TCampaignBrief` | the DC dtor is line-complete; nothing post-DC to search |
+| `ai_combat:?choose_melee` | line-complete, and the S_REGREL32 list names the two `type_AI_combat_data` locals whose copy ctors the EH transcript is arguing about |
+
+Two rules fall out of doing it seven times.
+
+* **Do the cheap positive read first.** Every landing above came from the
+  *forward* direction — a DC statement that calls something our source
+  spelled out by hand. That read costs one `dc_lines` run; the negative
+  direction costs a full statement-by-statement alignment against retail.
+* **An accessor the DC calls by name is worth trying even when the general
+  accessor is already byte-close.** `game::GetCurrTown`/`GetCurrHero` had
+  been recorded in `bottomviewsubwindow.cpp` as an unresolvable conflict with
+  `GetTown`/`GetHero`, because the two call sites want opposite branch
+  polarity and opposite compare widths from "the one header inline". They are
+  two DIFFERENT header inlines, and the DC body says how the current-object
+  pair is written: it re-reads the id (`GetCurrTown` calls `GetCurrTownId`
+  twice) instead of taking a widened `int` parameter, which is exactly what
+  holds retail's compare at char width.
+
+### The negative bound is a real deliverable
+
+On `get_luck_description` the table cannot say what the row's measured +4
+candidate sites are, because they live in code the DC build does not have.
+What it CAN say is that they live in one of two named blocks and nowhere
+else in a 968-byte body — and that the clover arm's own bytes (including its
+longhand four-way elemental compare, the `is_base_elemental` shape) already
+match retail exactly, so it is a site count and not a spelling. That narrows
+the search from "the body" to "two blocks, neither of which is byte-wrong".

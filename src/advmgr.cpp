@@ -1588,11 +1588,7 @@ int advManager::ProcessSearch(int x, int y, int z)
     NewmapCell* currCell;
     type_artifact grail;
 
-    int currHeroId = gpCurrentPlayer->currHeroId;
-    if (currHeroId != -1)
-        currHero = &gpGame->heroes[currHeroId];
-    else
-        currHero = 0;
+    currHero = gpGame->GetCurrHero();
 
     if (currHero->movePoints != currHero->maxMovePoints) {
         if (!gpCurrentPlayer->IsHuman()) {
