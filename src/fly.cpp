@@ -231,6 +231,15 @@ int army::FlyTo(int destIndex, unsigned char restore_facing)
 // the five headers that follow it, to approximate struct.h's place in
 // retail's type-handle numbering (no movement at all, 85.9145 both
 // ways - so this is NOT the include-set class).
+// 2026-08-14: the note above ASSUMED the `&drawbridgeBounds` hoist was a
+// knock-on of the rotation rather than an independent source lever. Re-tested
+// (the TPalette24 lesson is that a register verdict can be wrong), and the
+// assumption holds. Six spellings of the inner loop's bounds access: an `int*`
+// alias for .values, reusing the four limit locals as the Draw arguments, and
+// a gpWindowManager local are all byte-flat at 85.9057; a TDrawbridgeBounds&
+// bound at the top of the inner loop is 85.8429, the same reference bound
+// after the four limit reads 78.3829, and a combatManager* local 83.7914.
+// Nothing reaches the hoist without the rotation - confirmed knock-on.
 VA(0x004b4a40, 0x44E)  // FlyTo call + ordered fly block, dc 0xa1590
 int army::Fly(int destIndex)
 {

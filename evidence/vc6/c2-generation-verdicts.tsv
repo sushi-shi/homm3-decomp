@@ -6,4 +6,5 @@
 # metric: align = _align.distance (unpaired register-visible masked slots), flow = _flow.distance (branch-shape); verdict grades at align+flow==0 - REGISTER-VISIBLE+BRANCH-SHAPE, weaker than byte-exact (absolute addresses masked)
 # retail_producer: delinked = build/objdiff/target/<unit>.c.obj (same disassembler both sides); capstone = image producer (cross-producer skew inflates distances)
 fn	unit	rva	size	sp3_align	sp3_flow	rtm_align	rtm_flow	sp3_vs_rtm	retail_producer	verdict	note
-?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	levelupwindow	0xf9780	0x440	104	36	104	36	0	delinked	neither	RTM output identical to SP3 - not a generation wall
+??0TMainMenu@@QAE@XZ	mainmenu	0xfb2a0	0x385	17	0	17	0	0	delinked	neither	RTM output identical to SP3 - not a generation wall
+??0TSystemOptionsWindow@@QAE@XZ	systemoptionswindow	0x1b1790	0x187c	580	164	580	164	0	delinked	neither	RTM output identical to SP3 - not a generation wall

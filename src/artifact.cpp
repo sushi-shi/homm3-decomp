@@ -104,7 +104,9 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // The `push 0x8`/`push 0x0` prologue row is NOT a defect: it is the delinker
 // symbol+addend split documented in initialize.cpp - we encode disp32=0 +
 // reloc($L12234), the delinked target disp32=8 + reloc(...unwind03). Identical
-// once linked.
+// once linked, and PROVEN not to be scored: EH-bearing functions that already
+// sit at 100.0 (button::button, ~button, ~textButton, ~type_func_button,
+// armyGroup::SplitArmy, ~TSplitWindow) all carry the same 0x0-vs-0xb/0x8 split.
 // Still open and structural: at the inlined artslots.txt GetSpreadsheet, retail
 // expands basic_string::_Eos in line (`mov ecx,[ebp-0x3c]; mov [ebp-0x38],ebx;
 // mov byte [ecx+ebx],0`) where we emit an out-of-line call - a genuine /Ob2

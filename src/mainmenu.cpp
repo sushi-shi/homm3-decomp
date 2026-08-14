@@ -52,6 +52,38 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
     {586, 469, 114, 102}
 };
 
+// Residual (97.0098%): ONE basic block, and it is one instance of a
+// project-wide class - call it the vector<T*>::_Destroy under-expansion.
+// 34 of 35 blocks are exact and every branch agrees. In B8 retail emits
+//   mov edx,[esi+8]; mov eax,[esi+4]; push edx; push eax; mov ecx,esi; call X
+// where X is retail 0x404140, a 3-BYTE `ret 8` body - the empty
+// std::vector<widget*>::_Destroy(iterator,iterator) (VECTOR:229, a protected
+// in-class member, so implicitly inline), which LINK then ICF-folded onto
+// sample's vtable slot 3 (evidence/retail-symbols.csv:61). We inline it away
+// to nothing. predict-inline confirms that is the whole story: every other
+// UNDER/OVER row name-pairs, and `sample_vslot03` base x0 vs retail x1 is the
+// single unpaired row (base 27 out-of-line calls to retail's 28).
+// What this is NOT, all measured 2026-08-14:
+//   - not a compiler-generation wall. `homm3 vc6 ab run` on this function and
+//     on ??0TSystemOptionsWindow returns `neither`: the RTM C2 12.00.8168
+//     compiles both byte-identically to SP3.
+//   - not reachable by inline-control pragmas. inline_depth(1), (2), (3), (4)
+//     and auto_inline(off) around the reserve statement are ALL byte-flat at
+//     97.0098; only inline_depth(0) moves it, and that costs 16 points
+//     (80.9344). VC6's inline_depth governs /Ob2 auto-inlining, not
+//     implicitly-inline in-class members, so no pragma here can reach it.
+//   - not reachable by rebinding the vector: a std::vector<widget*>* local, a
+//     reference local, and `&this->Widgets` are all byte-flat.
+// The lead worth chasing comes from the one place in this tree where our CL
+// DOES emit the out-of-line _Destroy: button::button (exact) calls
+// vector<int>::_Destroy out of line because it sits one inline level DEEPER -
+// ctor -> set_hotkey -> insert -> _Destroy, depth 3. Ours here is
+// ctor -> reserve -> _Destroy, depth 2. So our CL's cut falls between depth 2
+// and 3, and retail's window constructors must be putting _Destroy at depth 3,
+// i.e. retail reaches `reserve` through an inline wrapper we have not found.
+// 27 retail objects reference 0x404140, so finding that wrapper would pay
+// across mainmenu, systemoptionswindow, quicktownwindow, quickherowindow,
+// quickinfowindow, combatresultswindow, gametypewindow and campaignwindow.
 // E:\gamedcs\mainmenu.cpp:66
 VA(0x004fb2a0, 0x385)  // order-map: heroWindow(0,0,800,600) base + 5 button ctors from mmenung/lg/hs/cr/qt.def (ids 0x65-0x69), installs vtbl 0x63ff50, this-global 0x699660; called by oldmain; EH-bearing, dc 0xea2ec
 TMainMenu::TMainMenu()
