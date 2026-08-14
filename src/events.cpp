@@ -2555,6 +2555,89 @@ fight:
                       human_player);
 }
 
+// E:\gamedcs\events.cpp:1769.  The Fountain of Fortune, jump-table arm
+// 0x1e = OBJECT_FOUNTAIN_OF_FORTUNE: a permanent luck change whose SIZE
+// is written into the cell, so the same handler serves the cursed
+// fountain and the three blessed tiers.
+//
+// The tier is a SIGNED four-bit field at bits 13..16 of the cell's
+// extra-info dword, and retail reads it three different ways, which is
+// what pins the width and the sign: `and 0xffffe000 / shl 0xf / test /
+// jle` for the "is this a good fountain" picture choice - the masked
+// compare form VC6 folds a bitfield RELATION into, not the value form -
+// and `shl 0xf / sar 0x1c` TWICE for the two value uses. The two value
+// reads are separate because the hero's flag store sits between them:
+// the alias barrier again.
+//
+// The visit is recorded in FOUR different hero flag bits, one per tier,
+// and the entry test is two separate tests ORed (`test al,0x20` then
+// `test eax,0x38000000`) exactly as the idol's pair is. The four arms
+// then share one `flags` store, which is retail cross-jumping them.
+//
+// gpGame is spelled as its own statement for the war school's reason:
+// the inlined SetInfoFlag's teamInfo load is `[pos + gpGame]`, and a
+// direct call through the global makes VC6 pick the other SIB base.
+//
+// THE PICTURE CHOICE IS TWO CALLS, NOT A TERNARY, and that was worth
+// 85.79 -> 100. Spelled `luck > 0 ? 11 : 13` inside the argument list our
+// CL lowers it BRANCHLESSLY - `xor edx,edx / setle dl / dec edx / and
+// edx,-2 / add edx,0xd / push edx` - because both arms are integer
+// constants and the difference is a computable mask. Retail branches
+// (`test / jle / push 0xb / jmp / push 0xd`) with every other push
+// shared, which is what writing the WHOLE CALL TWICE produces: VC6 hoists
+// the seven identical leading pushes above the branch, merges the
+// trailing two plus the ECX/EDX setup, and leaves only the one differing
+// push duplicated. Swapping the ternary's polarity is inert (measured).
+//
+// This is the dragon city's finding read from the other side, and the two
+// together give the discriminator: a merged tail entered by an
+// UNCONDITIONAL jmp that skips a test is a source `goto` (one call site);
+// a TWO-WAY branch inside one argument list with everything else shared
+// is two call sites.
+VA(0x004a2480, 0x16C)  // jump-table arm 0x1e + globalInfoFlags[FountainOfFortuneInfo], dc 0x9312c
+void advManager::DoEventFountain(hero* current_hero, ExtraInfoUnion* cell,
+                                 bool human_player)
+{
+    cell->SetCellVisited(current_hero->owner);
+    if ((current_hero->flags & 0x20) || (current_hero->flags & 0x38000000)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FOUNTAIN_OF_FORTUNE_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    if (human_player) {
+        if (cell->fountain_info.luck > 0)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FOUNTAIN_OF_FORTUNE),
+                         1, -1, -1, 11, 0, -1, 0, -1, 0, -1, 0);
+        else
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FOUNTAIN_OF_FORTUNE),
+                         1, -1, -1, 13, 0, -1, 0, -1, 0, -1, 0);
+    }
+
+    switch (cell->fountain_info.luck) {
+    case FOUNTAIN_LUCK_CURSED:
+        current_hero->flags |= 0x20;
+        break;
+    case FOUNTAIN_LUCK_PLUS_1:
+        current_hero->flags |= 0x8000000;
+        break;
+    case FOUNTAIN_LUCK_PLUS_2:
+        current_hero->flags |= 0x10000000;
+        break;
+    case FOUNTAIN_LUCK_PLUS_3:
+        current_hero->flags |= 0x20000000;
+        break;
+    }
+
+    game* g = gpGame;
+    g->SetInfoFlag(FountainOfFortuneInfo, gNetLocalGamePos);
+    current_hero->field_11b += cell->fountain_info.luck;
+}
+
 // E:\gamedcs\events.cpp:1822.  The Fountain of Youth, do_event_watering
 // hole's twin: one hero flag bit, +1 morale and +400 movement on both
 // the allowance and the remainder, and the cell argument is never
