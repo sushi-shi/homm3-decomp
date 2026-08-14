@@ -1094,7 +1094,7 @@ kbwin	?Process1WindowsMessage@@YIXXZ	100.0000	100.0000	100.0000	0xf7fb0
 kbwin	?SetMenus@@YIXPAUHMENU__@@H@Z	100.0000	100.0000	100.0000	0xf8220
 kbwin	?SetNoDialogMenus@@YIXH@Z	100.0000	100.0000	100.0000	0xf81e0
 kbwin	_WinMain@16	100.0000	100.0000	100.0000	0xf7a30
-levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	97.7369	97.7369	97.7369	0xf8880
+levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	98.8241	98.8241	98.8241	0xf8880
 levelupwindow	??1TLevelUpWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xf9730
 levelupwindow	??_GTLevelUpWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf9700
 levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	77.7273	77.7273	77.7273	0xf9780

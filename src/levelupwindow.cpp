@@ -48,31 +48,53 @@ static const char* LevelUpSkillName(int encodedSkill)
 }
 
 // E:\gamedcs\levelupwindow.cpp:48
-// Residual (97.14%): the complete retail widget recipe, both choice layouts,
-// two accept hotkeys, selection state and deadline paths agree.  The remaining
-// CFG drift is confined to vector machinery: this compile elides reserve's
-// trivial pointer-destruction helper, carries one extra instruction through
-// each colored-border temporary, and rechecks the integer vector's head while
-// growing the second consecutive hotkey where retail carries the end pointer
-// directly.  The first hotkey growth and every following semantic operation
-// agree, so leave this measured source-shaped maximum pending a broader STL
-// codegen probe.
+// Residual (98.8241%, was 97.7369): the two-axis /Ob2 sweep described in
+// mainmenu.cpp, with the mass half supplied HONESTLY rather than padded.
+// The old note's "~12 statements lighter than retail" reading was right, and
+// the missing statements are found: retail NAMES every widget it builds
+// (`textWidget* t = new textWidget(...); Widgets.push_back(t);`) instead of
+// pushing the `new` expression straight into push_back. That is +17
+// byte-inert statements and it lands the mass axis by itself. Retail also
+// names the two `Widgets.back()` results, which is not mass but PLACEMENT:
+// it is what emits retail's `mov eax,[eax-4]; mov ecx,eax` where the fused
+// `Widgets.back()->send_message(...)` emitted one `mov ecx,[eax-4]`
+// (98.6141 -> 98.8241).
 VA(0x004f8880, 0xE7E)  // linkorder+caller+vtable sequence, dc 0xe8344
 TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
                                int first_choice, int second_choice)
     : CAdvPopup(205, 65, 385, 470, 0x12),
       left_skill(first_choice), right_skill(second_choice), Selected(0)
 {
-    // /Ob2 budget note (2026-08-14): 97.7369 -> 98.6395 is available on the
-    // two-axis knob described in mainmenu.cpp, but the supply is large. The
-    // cell is (front-end mass 12..24 statements, exactly ONE extra candidate
-    // site at the tail) and it is a broad plateau, not a knife edge - every
-    // mass in 12,14,16,18,20,24 at k=1 measures 98.6395, while k=0 is 97.7369
-    // for mass 0..2 then falls to 89.3019, and k>=2 collapses (79.24, 65.77).
-    // The site half is cheap (the `end()`-twice hoist), but the mass half means
-    // this reconstruction is ~12 statements lighter than retail's source, so
-    // the honest fix is to find the missing statements, not to pad. Left
-    // unlanded: no byte-inert 12-statement spelling was identified.
+    // /Ob2 budget ledger (2026-08-14). Both axes are now at a local maximum
+    // and were re-swept TOGETHER at the landed spelling: pad statements ahead
+    // of this `reserve` x xx_nop sites past the last push_back give 98.8241
+    // only at (0,0) - mass 2/4/8 all drop to 98.0000 at k=0, and every k>=1
+    // column is 88.4002 (k=1) or 79.5254 (k=2) at every mass. Dropping just
+    // the two named `Widgets.back()` results is 98.6141, so this cell is one
+    // step wide in both directions. Measured and REJECTED here:
+    // `set_hotkey(code)` for the two `hotKeyCodes.push_back` calls 96.5610
+    // (the /Ob2 NESTING knob that closed other constructors is negative here,
+    // because both hotkey growths are already byte-exact),
+    // `Widgets.insert(Widgets.end(), accept)` 88.3582, the same behind a
+    // `std::vector<widget*>*` local 89.2655, one reused `widget* w` across
+    // every creation instead of a fresh named local each 89.4263, and the
+    // begin-twice +2 loop hoist 88.3328.
+    // WHAT IS LEFT, both rooted in the LAST `Widgets.push_back(accept)`:
+    //  - retail inlines the first of the grow path's three `size()` calls as
+    //    `_First==0 ? 0 : (_Last-_First)>>2` (132 blocks against our 131) and
+    //    transposes the `_Last`/`_End` load pair with it; the whole grow path
+    //    after that is one divergence propagating through registers. That
+    //    push_back is the LAST candidate site in the body, so by the
+    //    last-site screen its divisor is budget/1 and no site knob can reach
+    //    it - confirmed by the all-negative k>=1 columns above.
+    //  - the `new`-object EH temp lands one slot lower than retail's for the
+    //    first eighteen widgets ([ebp+0x8] then [ebp-0x1c] against retail's
+    //    [ebp-0x1c] then [ebp-0x10]): our C2 finds the dead `thisHero`
+    //    parameter slot reusable one temp earlier. Frame size is identical
+    //    (`sub esp,N` matches), so this is temp numbering, not a missing
+    //    local.
+    // The registration loop, both hotkey growths, both choice layouts and the
+    // whole deadline tail are byte-exact.
     Widgets.reserve(25);
 
     gpLevelUpWindow = this;
@@ -85,31 +107,36 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
     background->SetPlayerPaletteColors(thisHero->owner);
     Widgets.push_back(background);
 
-    Widgets.push_back(new bitmapBorder(
+    bitmapBorder* portrait = new bitmapBorder(
         171, 66, 58, 64, PORTRAIT_ID,
-        akHeroTraits[thisHero->portrait].largePortraitName, 0x800));
+        akHeroTraits[thisHero->portrait].largePortraitName, 0x800);
+    Widgets.push_back(portrait);
 
     sprintf(gText, gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_TITLE_FORMAT),
             thisHero->name);
-    Widgets.push_back(new textWidget(
+    textWidget* titleText = new textWidget(
         23, 22, 339, 23, gText, "medfont.fnt", font::PRIMARY,
-        TEXT1_ID, 5, 0, 8));
+        TEXT1_ID, 5, 0, 8);
+    Widgets.push_back(titleText);
 
     const char* heroFormat =
         gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_HERO_FORMAT);
     sprintf(gText, heroFormat,
             thisHero->name, thisHero->level, thisHero->HeroFn_004D8F70());
-    Widgets.push_back(new textWidget(
+    textWidget* heroText = new textWidget(
         23, 151, 339, 23, gText, "medfont.fnt", font::PRIMARY,
-        TEXT2_ID, 5, 0, 8));
+        TEXT2_ID, 5, 0, 8);
+    Widgets.push_back(heroText);
 
     sprintf(gText, "%s +1", gPrimarySkillNames[gained_skill]);
-    Widgets.push_back(new textWidget(
+    textWidget* gainedText = new textWidget(
         23, 242, 339, 23, gText, "medfont.fnt", font::PRIMARY,
-        TEXT3_ID, 5, 0, 8));
-    Widgets.push_back(new iconWidget(
+        TEXT3_ID, 5, 0, 8);
+    Widgets.push_back(gainedText);
+    iconWidget* gainedIcon = new iconWidget(
         174, 190, 42, 42, PRISKILL_ID, "pskil42.def", gained_skill,
-        0, 0, 0, 0x10));
+        0, 0, 0, 0x10);
+    Widgets.push_back(gainedIcon);
 
     if (second_choice != -1) {
         const char* choiceFormat =
@@ -119,63 +146,77 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
                 akLevelUpSkillTraits[first_choice / 3 - 1].name,
                 gSkillMasteryNames[second_choice % 3],
                 akLevelUpSkillTraits[second_choice / 3 - 1].name);
-        Widgets.push_back(new textWidget(
+        textWidget* choiceText = new textWidget(
             23, 270, 339, 52, gText, "medfont.fnt", font::PRIMARY,
-            TEXT4_ID, 1, 0, 8));
-        Widgets.push_back(new textWidget(
+            TEXT4_ID, 1, 0, 8);
+        Widgets.push_back(choiceText);
+        textWidget* orText = new textWidget(
             169, 325, 50, 46,
             gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_OR),
-            "medfont.fnt", font::PRIMARY, TEXT5_ID, 5, 0, 8));
+            "medfont.fnt", font::PRIMARY, TEXT5_ID, 5, 0, 8);
+        Widgets.push_back(orText);
 
-        Widgets.push_back(new coloredBorderFrame(
+        coloredBorderFrame* leftBorder = new coloredBorderFrame(
             122, 325, 47, 46, SKILLBORDER_1_ID,
-            gUnnamed6aacb0->levelUpSelectionColor, 0x400));
-        Widgets.back()->send_message(widget::WIDGET_CLEAR_STATUS,
-                                     widget::WIDGET_DRAWN);
+            gUnnamed6aacb0->levelUpSelectionColor, 0x400);
+        Widgets.push_back(leftBorder);
+        widget* addedLeft = Widgets.back();
+        addedLeft->send_message(widget::WIDGET_CLEAR_STATUS,
+                                widget::WIDGET_DRAWN);
 
-        Widgets.push_back(new coloredBorderFrame(
+        coloredBorderFrame* rightBorder = new coloredBorderFrame(
             220, 325, 47, 46, SKILLBORDER_2_ID,
-            gUnnamed6aacb0->levelUpSelectionColor, 0x400));
-        Widgets.back()->send_message(widget::WIDGET_CLEAR_STATUS,
-                                     widget::WIDGET_DRAWN);
+            gUnnamed6aacb0->levelUpSelectionColor, 0x400);
+        Widgets.push_back(rightBorder);
+        widget* addedRight = Widgets.back();
+        addedRight->send_message(widget::WIDGET_CLEAR_STATUS,
+                                 widget::WIDGET_DRAWN);
 
-        Widgets.push_back(new iconWidget(
+        iconWidget* leftIcon = new iconWidget(
             124, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
-            first_choice, 0, 0, 0, 0x10));
-        Widgets.push_back(new iconWidget(
+            first_choice, 0, 0, 0, 0x10);
+        Widgets.push_back(leftIcon);
+        iconWidget* rightIcon = new iconWidget(
             222, 326, 44, 44, SKILLICON_2_ID, "secskill.def",
-            second_choice, 0, 0, 0, 0x10));
+            second_choice, 0, 0, 0, 0x10);
+        Widgets.push_back(rightIcon);
 
         sprintf(gText, "%s %s", gSkillMasteryNames[first_choice % 3],
                 akLevelUpSkillTraits[first_choice / 3 - 1].name);
-        Widgets.push_back(new textWidget(
+        textWidget* leftLabel = new textWidget(
             102, 375, 87, 40, gText, "smalfont.fnt", font::PRIMARY,
-            TEXT6_ID, 5, 0, 8));
+            TEXT6_ID, 5, 0, 8);
+        Widgets.push_back(leftLabel);
         sprintf(gText, "%s %s", gSkillMasteryNames[second_choice % 3],
                 akLevelUpSkillTraits[second_choice / 3 - 1].name);
-        Widgets.push_back(new textWidget(
+        textWidget* rightLabel = new textWidget(
             200, 375, 87, 40, gText, "smalfont.fnt", font::PRIMARY,
-            TEXT7_ID, 5, 0, 8));
+            TEXT7_ID, 5, 0, 8);
+        Widgets.push_back(rightLabel);
     } else if (first_choice != -1) {
         const char* singleChoiceFormat =
             gpGeneralText->GetText(GENERAL_TEXT_LEVEL_UP_SINGLE_CHOICE);
         sprintf(gText, singleChoiceFormat,
                 gSkillMasteryNames[first_choice % 3],
                 akLevelUpSkillTraits[first_choice / 3 - 1].name);
-        Widgets.push_back(new textWidget(
+        textWidget* soleText = new textWidget(
             23, 270, 339, 52, gText, "medfont.fnt", font::PRIMARY,
-            TEXT4_ID, 1, 0, 8));
-        Widgets.push_back(new coloredBorderFrame(
+            TEXT4_ID, 1, 0, 8);
+        Widgets.push_back(soleText);
+        coloredBorderFrame* soleBorder = new coloredBorderFrame(
             169, 325, 47, 46, SKILLBORDER_1_ID,
-            gUnnamed6aacb0->levelUpSelectionColor, 0x400));
-        Widgets.push_back(new iconWidget(
+            gUnnamed6aacb0->levelUpSelectionColor, 0x400);
+        Widgets.push_back(soleBorder);
+        iconWidget* soleIcon = new iconWidget(
             170, 326, 44, 44, SKILLICON_1_ID, "secskill.def",
-            first_choice, 0, 0, 0, 0x10));
+            first_choice, 0, 0, 0, 0x10);
+        Widgets.push_back(soleIcon);
         sprintf(gText, "%s %s", gSkillMasteryNames[first_choice % 3],
                 akLevelUpSkillTraits[first_choice / 3 - 1].name);
-        Widgets.push_back(new textWidget(
+        textWidget* soleLabel = new textWidget(
             149, 375, 87, 40, gText, "smalfont.fnt", font::PRIMARY,
-            TEXT6_ID, 5, 0, 8));
+            TEXT6_ID, 5, 0, 8);
+        Widgets.push_back(soleLabel);
         Selected = SKILLICON_1_ID;
     }
 
@@ -187,9 +228,12 @@ TLevelUpWindow::TLevelUpWindow(hero* thisHero, int gained_skill,
     accept->enable(first_choice == -1 || second_choice == -1);
     Widgets.push_back(accept);
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
-        if (*it)
-            AddWidget(*it, -1);
+    widget** first = Widgets.begin();
+    if (first != Widgets.end()) {
+        for (widget** it = first; it != Widgets.end(); ++it) {
+            if (*it)
+                AddWidget(*it, -1);
+        }
     }
 
     if (gTurnDuration69d630.IsOn()
