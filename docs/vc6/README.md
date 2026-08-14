@@ -42,6 +42,7 @@ model cannot rot.
 | `scripts/homm3/vc6/oracle.py` | real-compiler ground-truth runners |
 | `scripts/homm3/vc6/{inline_model,reg_model,il}.py` | the predictors + solvers |
 | `scripts/homm3/vc6/_source.py` | the solvers' source-body locator (demangle + definition grammar + `#if 0` masking) |
+| `scripts/homm3/vc6/_eh.py` | the EH cleanup transcript (`[ebp-4]` state stores) — object lifetimes, the one signal the three solvers do not read |
 | `scripts/homm3/vc6/census.py` | the gates (each with a negative control) |
 | `scripts/homm3/vc6/test_locator.py` | the `locator` gate's cases (`homm3 vc6 check --locator`) |
 | `scripts/homm3/vc6/shim/` | the C2-slot pass-through/instrumentation DLL |
@@ -50,6 +51,7 @@ model cannot rot.
 | `docs/vc6/behavior-catalog.md` | the model's spec: ~80 byte-verified behaviours |
 | `docs/vc6/driver-passes.md` | the CL spec-table mini-language + argv model |
 | `docs/vc6/{inliner,regalloc,il-format,c2-atlas}.md` | one model doc per subsystem |
+| `docs/vc6/eh-cleanup.md` | the EH cleanup-count rule + the tree-wide transcript divergences |
 | `evidence/vc6/*.tsv` | generated tables (regenerate, never hand-edit) |
 | `build/re/vc6/` | the Ghidra project (gitignored scratch) |
 

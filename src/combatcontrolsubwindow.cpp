@@ -222,6 +222,19 @@ void TCombatHeroSubWindow::Update(const hero* info, const hero* otherHero, unsig
 // and the transposed value is a C2-side constant rather than a named
 // local, so no statement-level knob reaches it.
 //
+// CORRECTION 2026-08-14 - the zero-CSE is a SYMPTOM, and the EH cleanup
+// transcript shows what of. Retail's `[ebp-4]` stores are
+// [1,0,2,0,3,0,4,0,5,0,6,0,7,0,8,0] and ours [1,2,3,4,5,6,7,8]: eight `new`
+// regions on both sides, but retail resets to the enclosing state between
+// them and we do not. VC6 skips that reset when nothing between two cleanup
+// regions can throw, so retail emitting it means the statements between its
+// `new`s stayed CALLS where ours were expanded away - an inliner witness,
+// not an independent register wall (docs/vc6/eh-cleanup.md). The same
+// relationship is visible in the clear on viewarmywindow's four-argument
+// TViewArmyWindow constructor, where an extra inlined expansion is what
+// supplies the extra zero stores that tip the constant into a register.
+// Converge the inline structure before grinding the binding again.
+//
 // Tried and rejected: `Widgets.reserve(10)` ahead of the rolloverWidget
 // store scores HIGHER (92.5664) but is structurally contradicted -
 // retail's `add esi,0x14` overwrites `this` with `&Widgets`, which it can
