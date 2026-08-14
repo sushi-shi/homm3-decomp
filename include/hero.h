@@ -489,6 +489,11 @@ public:
     // /Gr free helper, and saves the owner byte into a frame slot first
     // because the record does not survive the call.
     void Deallocate(unsigned char bGameLoaded, unsigned char remote_move);
+    // 0x4da720, hero.cpp:2147 in the Dreamcast roster (dc 0xcd17c) - the
+    // no-argument level-up check advManager::TownEvent runs after each
+    // combat it starts. Declared only; the body is not reconstructed and
+    // the row is not claimed from here.
+    void CheckLevel();
 #endif
     // 0x4e2370 - retypes every matching slot of the hero's own army.
     void UpgradeCreatures(int sourceCreatureType, int destCreatureType);

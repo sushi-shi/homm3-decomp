@@ -838,6 +838,21 @@ public:
     void EraseObj(NewmapCell* thisCell, type_point point,
                   unsigned char record);
     void DoEvent(NewmapCell* eventCell, type_point point);
+    void TownEvent(NewmapCell* cell, type_point point,
+                   unsigned char human_player);
+    // 0x4ad470, DECLARED not defined - 5425 EH-framed bytes this lane is
+    // not reconstructing. `ret 0x28` against the Dreamcast's TEN
+    // parameters is the arity screen, the 5425/2540 size ratio sits in
+    // the SH4->x86 band, and the DC xref graph makes DoCombat exactly the
+    // two-call callee TownEvent has left once every other edge is
+    // matched. Both retail call sites fill the left/right pairs in the
+    // DC's own order.
+    int DoCombat(type_point point, class hero* leftHero,
+                 armyGroup* leftArmyGroup, long iRightPlayer,
+                 class town* rightTown, class hero* rightHero,
+                 armyGroup* rightArmyGroup, int iSeed,
+                 unsigned char bFinishHeroes,
+                 unsigned char alternate_layout);
     void DispatchEvent(class hero* current_hero, NewmapCell* cell,
                        type_point point, unsigned char human_player);
     void EventSound(int eventID, int extraInfo);

@@ -345,6 +345,12 @@ public:
     // Gated for the same reason as its neighbour above.
     bool CheckForDefeatedMonsterWin(const hero* thisHero,
                                     type_point monster_loc);
+    // 0x5f2860, and the Dreamcast decoration gives it
+    // CheckForDefeatedMonsterWin's exact shape - a const hero and a
+    // type_point BY VALUE - which retail's `ret 8` corroborates.
+    // advManager::TownEvent asks it on both of its capture paths.
+    unsigned char CheckForArtifactTransportWin(const hero* thisHero,
+                                               type_point town_loc);
 #endif
     bool CheckForHeroDefeatWin(int winningPlayer, const hero* loser);
     unsigned char IsGrailTarget(town* thisTown);
