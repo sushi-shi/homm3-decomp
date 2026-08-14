@@ -782,12 +782,71 @@ unsigned char combatManager::can_cast_spells(long side, unsigned char hero_spell
 // (an unresolved two-into-one), and 0x421590 (a moat marker with no DC
 // twin at all).
 
+#endif  // @carcass
+
 // E:\gamedcs\ai.cpp:926
+// What the marked enemy stacks - the bitmask is over army::bitIndex -
+// would cost `our_army` if it stood where they can reach it: every
+// marked shooter's ranged average and every marked breather's melee
+// average, plus the single best area damage spell the side's own hero
+// could still afford. The sum is priced back through the stack's own
+// loss-value curve, so the return is a COMBAT VALUE, not damage.
+//
+// can_cast_spells(side, 1) is INLINED here by /Ob2 with hero_spell
+// folded to 1, which is why the magic-terrain arm of that function has
+// no trace in these bytes and the out-of-line body at 0x41f890 still
+// exists (extern linkage emits unconditionally).
 VA(0x0041f920, 0x234)  // linkorder, dc 0x24ef4
 long combatManager::get_area_effect(long side, const army* our_army, long marked_enemies, const type_AI_combat_parameters* estimate)
 {
-    // @stub
+    long total = 0;
+    const army* enemy = armies[side];
+    for (long i = 0; i < numArmies[side]; i++, enemy++) {
+        if ((marked_enemies & (1 << enemy->bitIndex)) == 0)
+            continue;
+        if ((enemy->Is(20) & 1) && enemy->can_shoot(0))
+            total += enemy->get_average_damage(our_army, 1, enemy->numTroops,
+                                               1, 0);
+        if (enemy->Is(3) & 1)
+            total += enemy->get_average_damage(our_army, 0, enemy->numTroops,
+                                               1, 0);
+    }
+    if (can_cast_spells(side, 1)) {
+        hero* casting_hero = heroes[side];
+        long best = 0;
+        for (SpellID spell = 10; spell < hero::NUM_SPELLS; spell++) {
+            if (!casting_hero->available_spells[spell])
+                continue;
+            if (spell == SPELL_FROST_RING || spell == SPELL_FIREBALL
+                    || spell == SPELL_INFERNO
+                    || spell == SPELL_METEOR_SHOWER) {
+                long mastery = casting_hero->get_spell_level(spell,
+                                                             field_53c0);
+                if (casting_hero->GetManaCost(spell, armyGroups[1 - side],
+                                              field_53c0)
+                        > casting_hero->mana)
+                    continue;
+                long damage = ComputeSpellDamage(spell, spellPower[side],
+                                                 mastery, casting_hero,
+                                                 heroes[1 - side], our_army,
+                                                 0);
+                long value = static_cast<long>(
+                        SpellCastWorkChance(spell, side, our_army, 0, 1, 0)
+                        * damage);
+                if (value > best)
+                    best = value;
+            }
+        }
+        total += best;
+    }
+    if (total <= 0)
+        return total;
+    return our_army->get_loss_combat_value(estimate->lowest_attack,
+                                           estimate->lowest_defense,
+                                           our_army->can_shoot(0), total, 0);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai.cpp:1000
 // NO RETAIL SLOT - a two-parameter static with one call site, folded
@@ -798,31 +857,215 @@ long get_enemy_attack_limit(const army* our_army, const type_AI_combat_parameter
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\ai.cpp:1014
+// Discounts the danger map by what OUR OWN side would do to a stack that
+// walked next to one of our stacks: the area price the marked enemies
+// already carry (once per hex - a second friendly reaching the same hex
+// only shaves one more point off it, which is what `checked` records) and
+// then, for breathers, the same melee price one cell further out. Every
+// touched hex is floored at minus what our_army itself is worth, so no
+// single cell can be discounted past the stack's own value.
+//
+// The direction walk runs BACKWARD - `for (long dir = count; dir-- > 0;)`,
+// the same shape ai_combat's resurrection scan carries - and count is 8
+// for a two-hex friend, 6 otherwise.
 VA(0x0041fb60, 0x1F6)  // linkorder, dc 0x25124
 void combatManager::mark_friendly_armies(const army* our_army, long* enemy_attacks, long marked_enemies, const type_AI_combat_parameters* estimate)
 {
-    // @stub
+    long enemy_side = estimate->enemy_side;
+    long area_effect = get_area_effect(enemy_side, our_army, marked_enemies,
+                                       estimate);
+    unsigned char checked[COMBAT_GRID_CELLS];
+    memset(checked, 0, COMBAT_GRID_CELLS);
+    long hit_points = our_army->get_total_hit_points(estimate->simulated);
+    long floor_value = -our_army->get_loss_combat_value(
+            estimate->lowest_attack, estimate->lowest_defense,
+            our_army->can_shoot(0), hit_points, 0);
+    const army* friendly = armies[estimate->side];
+    for (long i = 0; i < numArmies[estimate->side]; i++, friendly++) {
+        if (friendly->Is(21) & 1)
+            continue;
+        if (friendly->creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        if (friendly == our_army)
+            continue;
+        long melee_value;
+        if (friendly->Is(3) & 1) {
+            long damage = friendly->get_average_damage(our_army, 0,
+                                                       friendly->numTroops,
+                                                       1, 0);
+            melee_value = our_army->get_loss_combat_value(
+                    estimate->lowest_attack, estimate->lowest_defense,
+                    our_army->can_shoot(0), damage, 0);
+        } else {
+            melee_value = 0;
+        }
+        if (area_effect == 0 && melee_value == 0)
+            continue;
+        long count = (friendly->Is(0) & 1) ? 8 : 6;
+        for (long direction = count; direction-- > 0; ) {
+            long hex = friendly->get_adjacent_hex(friendly->gridIndex,
+                                                  direction);
+            if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+                continue;
+            if (area_effect != 0) {
+                if (checked[hex]) {
+                    enemy_attacks[hex]--;
+                } else {
+                    checked[hex] = 1;
+                    enemy_attacks[hex] -= area_effect;
+                }
+                if (enemy_attacks[hex] < floor_value)
+                    enemy_attacks[hex] = floor_value;
+            }
+            if (friendly->Is(3) & 1) {
+                long far_hex = friendly->GetAdjacentCellIndex(hex, direction);
+                if (far_hex < 0 || far_hex >= COMBAT_GRID_CELLS)
+                    continue;
+                enemy_attacks[far_hex] -= melee_value;
+                if (enemy_attacks[far_hex] < floor_value)
+                    enemy_attacks[far_hex] = floor_value;
+            }
+        }
+    }
 }
 
+// find_attack_hexes' seven-parameter form is DEFINED BELOW because this
+// file orders its bodies by retail address, and retail emits that body
+// after this one. The Dreamcast source has the definition first
+// (ai.cpp:1097 against 1152), so this prototype is the retail build's
+// own - the same declaration-before-use its reversed emission order
+// requires. It is the OWNING TU's forward declaration, not a consumer
+// re-spelling a foreign header.
+void find_attack_hexes(const army* our_army, long target_hex, long start,
+                       long stop, long limit_cost,
+                       const searchArray* search_array,
+                       std::vector<long>* result);
+
 // E:\gamedcs\ai.cpp:1121
-// NO RETAIL SLOT - the four-parameter overload; single call site, and
-// the seven-parameter one below absorbed it or its caller did.
+// NO RETAIL SLOT, and REQUIRED anyway: a `static` with a single call
+// site is the /Ob2 case that leaves no out-of-line copy, so its absence
+// from the image is what proves the internal linkage rather than what
+// argues against the function existing.
+//
+// It is also the whole reason mark_multiheaded_enemy below reproduces:
+// retail keeps its three seven-parameter find_attack_hexes calls
+// OUT-OF-LINE, which a caller with a ~1000-plus budget would never do.
+// Routing them through this wrapper makes them DEPTH-2 expansions, and
+// the RE'd rule hands a depth-2 site only `remaining budget / sites
+// still ahead` (docs/vc6/inliner.md §2) - which starves every one of
+// them exactly as retail's bytes show. Spelling the three calls inline
+// in the caller instead inlines all three and costs 52 points.
+//
+// The body is READ OFF mark_multiheaded_enemy's retail expansion: the
+// side count comes from OUR stack's two-hex bit, the extra sweep from
+// the ENEMY's, and the enemy's facing picks both the tail hex and which
+// half of the direction ring is searched.
 DC_ONLY(0x253a8, 0xA4)
-void find_attack_hexes(const army* our_army, const army* enemy, const searchArray* search_array, std::vector<long,std::allocator<long>* result)
+static void find_attack_hexes(const army* our_army, const army* enemy, const searchArray* search_array, std::vector<long>* result)
 {
-    // @stub
+    long sides = (our_army->Is(0) & 1) ? 8 : 6;
+    find_attack_hexes(our_army, our_army->gridIndex, 0, sides,
+                      enemy->GetSpeed(), search_array, result);
+    if (enemy->creatureId & 1) {
+        long second_hex = our_army->gridIndex - (enemy->facing ? 1 : -1);
+        if (enemy->facing == 0)
+            find_attack_hexes(our_army, second_hex, 0, 3, enemy->GetSpeed(),
+                              search_array, result);
+        else
+            find_attack_hexes(our_army, second_hex, 3, 6, enemy->GetSpeed(),
+                              search_array, result);
+    }
 }
 
 // E:\gamedcs\ai.cpp:1152
 // `ret 0x18` = six stack arguments over `this`, the DC count exactly,
 // and the body calls army::get_multi_head_directions - the one callee
 // in the whole TU that names this function.
+//
+// EH-bearing (P2.2) and NOT blocked by it: the fs:[0] frame is the local
+// std::vector<long>'s unwind scaffolding, one state, entered at the
+// vector's construction and never left.
+//
+// TWO parallel 187-byte marks: `priced` spans the whole call and decides
+// whether a hex is charged the full breath value or just one more point,
+// and `counted` is re-zeroed per defending stack so one stack cannot pay
+// for the same hex twice.
+//
+// `hexes.clear()` is LOAD-BEARING and not a tidier spelling of
+// `erase(begin(), end())`: written out longhand the erase body lands at
+// depth 1 and takes so much budget that the whole shape collapses
+// (67.13% against 94.54%). clear() is itself free (<=40) and pushes
+// erase to depth 2, which is also where the three find_attack_hexes
+// expansions have to be.
+//
+// Residual (94.5%): ONE inline decision - retail leaves
+// std::vector<long>::erase an out-of-line CALL (0x54cdb0) where our CL
+// still has budget for it, so our copy of the clear() carries the
+// Dinkumware copy loop inline. By the RE'd rule that puts retail's
+// caller_cb at or under the 500 that clamps the budget to the 1000
+// floor and ours just over it; no statement in this body is spare
+// enough to give back. Everything downstream of the erase - the whole
+// direction walk, both marks and the danger arithmetic - is
+// instruction-for-instruction identical apart from one EDX/ECX tie on
+// the `facing ? 1 : -1` temp.
 VA(0x0041fd60, 0x2F6)  // anchor-callee, dc 0x2544c
-void combatManager::mark_multiheaded_enemy(const army* our_army, const army* enemy, long* enemy_attacks, long limit_value, searchArray* search_array, const type_AI_combat_parameters* estimate)
+void combatManager::mark_multiheaded_enemy(const army* our_army, const army* enemy, long* enemy_attacks, long limit_value, searchArray* search_array, type_AI_combat_parameters* estimate)
 {
-    // @stub
+    const army* other = armies[estimate->side];
+    long value = -estimate->get_simple_attack_effect(enemy, our_army, 0, 0);
+    std::vector<long> hexes;
+    unsigned char priced[COMBAT_GRID_CELLS];
+    memset(priced, 0, COMBAT_GRID_CELLS);
+    for (long i = numArmies[estimate->side]; i-- > 0; other++) {
+        if (other->Is(21) & 1)
+            continue;
+        if (other == our_army)
+            continue;
+        if (other->creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        if (estimate->simulated && other->get_total_hit_points(1) == 0)
+            continue;
+        if (!cells[other->gridIndex].field_4a)
+            continue;
+        const pathCell* cell = search_array->cellData == 0
+                ? 0
+                : &search_array->cellData[other->gridIndex];
+        if (cell->cost > enemy->GetSpeed())
+            continue;
+        unsigned char counted[COMBAT_GRID_CELLS];
+        memset(counted, 0, COMBAT_GRID_CELLS);
+        hexes.clear();
+        find_attack_hexes(other, enemy, search_array, &hexes);
+        for (long j = hexes.size(); j-- > 0; ) {
+            long hex = hexes[j];
+            long directions = enemy->get_multi_head_directions(
+                    hex, other, other->gridIndex);
+            long count = (enemy->Is(0) & 1) ? 8 : 6;
+            for (long direction = count; direction-- > 0; ) {
+                if ((directions & (1 << direction)) == 0)
+                    continue;
+                long target = enemy->get_adjacent_hex(hex, direction);
+                if (target < 0 || target >= COMBAT_GRID_CELLS)
+                    continue;
+                if (counted[target])
+                    continue;
+                if (priced[target])
+                    enemy_attacks[target]--;
+                else
+                    enemy_attacks[target] += value;
+                if (enemy_attacks[target] < limit_value)
+                    enemy_attacks[target] = limit_value;
+                priced[target] = 1;
+                counted[target] = 1;
+            }
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai.cpp:1097
 // OUT OF DC LINE ORDER, exactly like get_area_attack_value above:
@@ -833,11 +1076,44 @@ void combatManager::mark_multiheaded_enemy(const army* our_army, const army* ene
 // mark_multiheaded_enemy slot immediately above. The 158 B -> 507 B
 // growth is the one number outside the usual band; the arity, the
 // convention and the caller are not.
+//
+// The 507 bytes are almost all ONE INLINED std::vector<long>::push_back:
+// the reachable hexes cost 60 of them and Dinkumware's grow-or-shift
+// expansion the rest.
+//
+// Residual (87.1%): an /Ob2 BUDGET divergence one level down inside that
+// expansion - retail leaves `std::vector<long>::size()` as an out-of-line
+// CALL (0x423110) in the reallocate path while our CL still has budget
+// and inlines it, which is the whole 22-vs-21 conditional-branch delta
+// `homm3 vc6 diagnose` reports; everything either side of it, including
+// both _Ufill/_Ucopy/_Destroy call sites and the shift loops, is
+// instruction-for-instruction identical. Nothing in this body reaches the
+// decision: `insert(result->end(), hex)` spelled by hand scores exactly
+// the same 87.11, which proves push_back IS `insert(end(), _X)` and that
+// the divergence is the sequential budget inside insert, not the call
+// form. The remaining under/over-inline pairs diagnose reports are the
+// flat-vs-mangled reloc names of the same STL COMDATs.
+#endif  // @carcass
+
 VA(0x00420060, 0x1FB)  // anchor-callee, dc 0x25308
-void find_attack_hexes(const army* our_army, long target_hex, long start, long stop, long limit_cost, const searchArray* search_array, std::vector<long,std::allocator<long>* result)
+void find_attack_hexes(const army* our_army, long target_hex, long start, long stop, long limit_cost, const searchArray* search_array, std::vector<long>* result)
 {
-    // @stub
+    for (long direction = start; direction < stop; direction++) {
+        long hex = our_army->get_adjacent_hex(target_hex, direction);
+        if (hex < 0 || hex >= COMBAT_GRID_CELLS)
+            continue;
+        const pathCell* cell = search_array->cellData == 0
+                ? 0
+                : &search_array->cellData[hex];
+        if (!cell->visited)
+            continue;
+        if (cell->cost > limit_cost)
+            continue;
+        result->push_back(hex);
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\ai.cpp:1241
 VA(0x00420260, 0x368)  // linkorder, dc 0x256a0
