@@ -195,25 +195,22 @@ TPalette24::TPalette24(const unsigned char* data)
 
 // Retail walks 256 four-byte RGBA records and copies RGB into the packed
 // three-byte palette payload, omitting Alpha exactly as the DC signature
-// implies. Residual (87.0741%): all loads, stores, strides, and branches
-// agree, but VC6 cycles `this`, source, destination, and count through the
-// opposite ESI/EDI and EAX/ECX allocation. The v2 allocator model classifies
-// the ESI/EDI transposition as C1 front-end handle state: the pair is
-// parameter/`this` versus an expression value and is not source-nameable.
+// implies. EXACT since 2026-08-14. The old 87.07 plateau was NOT the register
+// wall the previous note claimed: it came from writing the walk with two
+// pointer locals. Advancing the parameter itself, and subscripting the
+// destination with a loop index, lets VC6 strength-reduce the index into the
+// destination pointer with retail's +1 induction bias (`lea eax,[edi+0x1d]`,
+// stores at -1/0/+1) and puts every value in retail's register.
 VA(0x00522eb0, 0x42)  // dc-bracket + exact 4-to-3 stride, dc 0x10b94c
 TPalette24::TPalette24(const TRGBA* rgba)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    int remaining = 256;
-    const TRGBA* source = rgba;
-    unsigned char (*destination)[3] = colors.data;
-    do {
-        (*destination)[0] = source->Red;
-        (*destination)[1] = source->Green;
-        (*destination)[2] = source->Blue;
-        ++source;
-        ++destination;
-    } while (--remaining);
+    for (int index = 0; index < 256; ++index) {
+        colors.data[index][0] = rgba->Red;
+        colors.data[index][1] = rgba->Green;
+        colors.data[index][2] = rgba->Blue;
+        ++rgba;
+    }
 }
 
 // Dreamcast supplies the pointer-taking copy-constructor signature. Retail
