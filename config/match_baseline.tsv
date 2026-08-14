@@ -288,6 +288,7 @@ ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000	0.0000	0.0000	0x3c330
 ai_tactical	type_AI_spellcaster_get_protection_value	0.0000	0.0000	0.0000	0x396e0
 ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000	0.0000	0.0000	0x369c0
 army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
+army	?ComputeBaseDamage@army@@QBEHE@Z	100.0000	100.0000	100.0000	0x43160
 army	?ComputeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x43d90
 army	?Damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090
 army	?GetName@army@@SIPBDHJ@Z	100.0000	100.0000	100.0000	0x40100

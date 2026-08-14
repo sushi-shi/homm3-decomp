@@ -6,6 +6,7 @@
 #include "armygrp.h"
 #include "cmbtmgr.h"
 #include "hero.h"
+#include "misc.h"
 #include "sample.h"
 #include "soundmgr.h"
 #include "town.h"
@@ -965,14 +966,73 @@ float army::get_fire_shield_strength() const
     return DATA_COMPGEN(0x0063ac64, zeroFireShieldStrength, 0.0f);
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:3002
-// RETAIL_LOCATED(0x00443160, 0x1BF)  // anchor-global, dc 0x48524
+// One swing's raw damage, before any attacker or defender modifier:
+// how many creatures actually strike, what their damage range is, and
+// then Bless / Curse / simulation / the real dice, in that order.
+//
+// THE FOUR ARMS ASSIGN TO A SHARED `damage` AND FALL INTO ONE RETURN -
+// they are NOT four `return` statements, and that is worth 3.40 points
+// (96.6049 -> 100). The whole delta is the Bless arm's destination
+// register: retail materializes `(high + blessAmount) * num` in ECX
+// (reusing the dead `this` base of the blessAmount load) and only then
+// `mov eax, ecx`, where four separate returns make our CL build the
+// value straight in EAX and skip the move. A return expression gets
+// EAX preferentially; an assignment to a shared result variable gets
+// whatever the allocator picks. Tried and rejected, both byte-flat at
+// 96.6049: naming the bless arm's own local and returning it, and
+// `(blessAmount + high) * num`.
+//
+// `get_controller()` is called ONCE and its GetPrimarySkill(0) TWICE -
+// retail loads gpCombatManager->heroes[...] once and then runs the
+// accessor's whole >99 / >0 / 0 branch chain twice off one CSE'd
+// `stats[0]` byte, which is what two inline expansions of a
+// three-armed accessor look like. Writing the clamp once into a local
+// would leave a single chain. Same shape hero::get_combat_value_modifier
+// already carries for its own two stats.
+VA(0x00443160, 0x1BF)  // anchor-global, dc 0x48524
 int army::ComputeBaseDamage(unsigned char simulate_only) const
 {
-    // @stub
+    int num;
+    if (forgetfulnessRounds > 0 && (Is(2) & 1))
+        num = _cpp_max(numTroops / 2, 1);
+    else
+        num = numTroops;
+
+    int low;
+    int high;
+    if (creatureType == ARMY_CREATURE_BALLISTA) {
+        const hero* shooter = get_controller();
+        low = (shooter->GetPrimarySkill(0) + 1) * minDamage;
+        high = (shooter->GetPrimarySkill(0) + 1) * maxDamage;
+    } else {
+        low = minDamage;
+        high = maxDamage;
+    }
+
+    int damage;
+    if (blessRounds) {
+        damage = (high + blessAmount) * num;
+    } else if (curseRounds) {
+        damage = _cpp_max(low - curseAmount, 1) * num;
+    } else if (simulate_only) {
+        damage = (low + high) * num / 2;
+    } else {
+        int total = 0;
+        if (num > 10) {
+            for (int i = 0; i < 10; i++)
+                total += Random(low, high);
+            damage = total * num / 10;
+        } else {
+            for (int i = 0; i < num; i++)
+                total += Random(low, high);
+            damage = total;
+        }
+    }
+    return damage;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:3076
 // RETAIL_LOCATED(0x00443840, 0x344)  // anchor-global, dc 0x4868c

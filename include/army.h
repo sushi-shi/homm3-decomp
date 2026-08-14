@@ -698,6 +698,11 @@ public:
     // writes.
     long get_adjusted_defense(const army* enemy,
                               unsigned char frenzy_included) const;
+    // 0x443160: one swing's RAW damage - the effective creature count,
+    // the damage range (hero-attack-scaled for a ballista), then the
+    // Bless / Curse / simulation / dice arms. Const
+    // (?ComputeBaseDamage@army@@QBAH_N@Z).
+    int ComputeBaseDamage(unsigned char simulate_only) const;
     // 0x443d90: the multiplier a defender's own Shield / Air Shield,
     // petrification and hero defense skill put on incoming damage.
     // Const (?ComputeDefenderDamageReduction@army@@QBAN_N@Z), and so is
