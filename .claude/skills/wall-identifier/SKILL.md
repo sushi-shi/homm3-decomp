@@ -84,6 +84,20 @@ through the IL (proven: `docs/vc6/il-format.md`). Confirm with
 `homm3 vc6 il-diff <A.cpp> <B.cpp>` — `IL DIFFERS` ⇒ front-end (match the include
 closure); `IL IDENTICAL` ⇒ look at C2 state. There is no local body knob.
 
+### body location (fixed 2026-08-14 — re-test old CAPPED verdicts)
+Both solvers locate F's body with `homm3.vc6._source`, which now handles
+constructors **with** member-initialiser lists, destructors, operators,
+qualified `Class::method` definitions and `const`/`throw()` suffixes — the whole
+constructor and member-function population was outside both solvers before this.
+It also masks `#if 0  // @carcass` regions, which the old locator did not: it
+returned the fenced `{ /* @stub */ }` first, so every mutation was a no-op and
+the run reported a CAPPED verdict **it had never measured**. 102 source files
+carry a carcass block. **Any CAPPED verdict recorded before 2026-08-14 on a
+constructor, destructor, operator, or on a function whose file has a carcass
+block, is unmeasured — re-run it.** A row with no body now says which case it is
+(compiler-generated `??_G`, fenced carcass, defined elsewhere) instead of
+"cannot locate". Gate: `homm3 vc6 check --locator`.
+
 ## Doctrine (do not violate)
 
 - **The tools PROPOSE, never apply.** Every solver prints a diff for the matching
