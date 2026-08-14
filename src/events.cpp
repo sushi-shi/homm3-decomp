@@ -2205,6 +2205,87 @@ void advManager::DoEventWanderingMonster(NewmapCell* cell, hero* current_hero,
     movingObjectSequence = -1;
 }
 
+// A philai..puzzlewindow bracket helper (81 B at 0x527fe0) the AI arm of
+// the war school runs as its "is this worth buying?" test: it scales the
+// offered VALUE by the hero's turnExperienceToRVRatio, scales the COST by
+// that player's per-resource weight (the double row at playerData+0x128)
+// and reports whether the weighted cost outweighs the weighted value - so
+// a true answer means DECLINE. Retail takes the hero in ECX and the
+// resource in EDX with two stack arguments, the /Gr shape again; the name
+// is an ordinal placeholder and the row is not claimed here.
+unsigned char PhilAiFn_00527FE0(hero* current_hero, EGameResource resource,
+                                int cost, int value);
+
+// E:\gamedcs\events.cpp:3970.  The war school sells one point of Attack
+// or Defense for 1000 gold, once per school per hero. The per-INSTANCE
+// bookkeeping is the hero's own 32-bit WarSchoolFlags word indexed by the
+// cell's raw extra-info dword, while the team-wide GlobalInfoFlags bit is
+// set the moment the hero arrives - before the gold is even counted.
+//
+// A human picks from a two-picture dialog (iMBType 10, the primary-skill
+// pictures 0x1f and 0x20 with +1 each) and the reply is SWITCHED over
+// three values with the decrement idiom; a cancel leaves the school
+// untouched and unpaid. The AI instead asks whether 1000 gold is worth
+// one level's experience increment, and then trains whichever of its two
+// clamped skills is lower - ties go to Attack.
+VA(0x004a7a40, 0x1EA)  // linkorder + GlobalInfoFlags[WarSchoolInfo], dc 0x97628
+void advManager::DoEventWarSchool(hero* current_hero, ExtraInfoUnion* cell,
+                                  bool human_player)
+{
+    if (current_hero->WarSchoolFlags & (1 << cell->value)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WAR_SCHOOL_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    // The game pointer MUST be spelled as its own statement here, exactly
+    // as in do_event_watering_hole: calling straight through gpGame makes
+    // VC6 pick the OTHER register as the SIB base of the inlined
+    // teamInfo[playerNum] load - `[gpGame + pos]` where retail has
+    // `[pos + gpGame]`. do_event_witch_hut wants the direct call for the
+    // same byte, so the choice is per-call-site, not per-callee.
+    game* g = gpGame;
+    g->SetInfoFlag(WarSchoolInfo, gNetLocalGamePos);
+    if (gpCurrentPlayer->resources[GOLD] < 1000) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WAR_SCHOOL_NO_GOLD),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    int whichStat = 0;
+    if (human_player) {
+        OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+        UpdBottomView(0, 1, 1);
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_WAR_SCHOOL_CHOOSE),
+                     10, -1, -1, 0x1f, 1, 0x20, 1, -1, 0, -1, 0);
+        switch (gpWindowManager->dialogReturn) {
+        case DIALOG_RETURN_CANCEL:
+            return;
+        case DIALOG_RETURN_CHOICE_1:
+            whichStat = 0;
+            break;
+        case DIALOG_RETURN_CHOICE_2:
+            whichStat = 1;
+            break;
+        }
+    } else {
+        if (PhilAiFn_00527FE0(current_hero, GOLD, 1000,
+                              hero::GetExperienceIncrement(current_hero->level)))
+            return;
+        if (current_hero->GetPrimarySkill(0) > current_hero->GetPrimarySkill(1))
+            whichStat = 1;
+    }
+
+    current_hero->stats[whichStat]++;
+    current_hero->WarSchoolFlags |= 1 << cell->value;
+    gpCurrentPlayer->resources[GOLD] -= 1000;
+}
+
 // An ai_player..ai_tactical bracket helper (109 B at 0x433b40) the AI arm
 // of the tomb runs after picking the artifact up: it walks the hero's
 // backpack from get_last_backpack_index down and offers each entry to

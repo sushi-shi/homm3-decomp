@@ -26,7 +26,15 @@ enum EDialogReturnType {
     DIALOG_RETURN_CANCEL = 0x7801,
     DIALOG_RETURN_OK = 0x7802,
     DIALOG_RETURN_SPLIT_ACCEPT = 0x7802,
-    DIALOG_RETURN_ACCEPT = 0x7805
+    DIALOG_RETURN_ACCEPT = 0x7805,
+    // The two picture-choice replies of the iMBType-10 dialog, byte-proven
+    // by advManager::DoEventWarSchool (0x4a7a40): it offers the two
+    // primary-skill pictures 0x1f and 0x20 as iResType1/iResType2 and then
+    // switches the reply over 0x7801 / 0x7809 / 0x780a, taking the FIRST
+    // picture on 0x7809 and the second on 0x780a. Ordinal spellings - the
+    // pairing is proven, the words are not attested.
+    DIALOG_RETURN_CHOICE_1 = 0x7809,
+    DIALOG_RETURN_CHOICE_2 = 0x780a
 };
 
 // Bootstrap VIEW of heroWindowManager (Dreamcast size 104): only the
