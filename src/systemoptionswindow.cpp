@@ -40,9 +40,8 @@ DATA(0x006a7584) THelpText gSystemOptionsHelp[48];
 // E:\gamedcs\systemoptionswindow.cpp:43
 VA(0x005b1790, 0x187C)  // sole sysopbck.pcx reference + vtable block, dc 0x15f588
 TSystemOptionsWindow::TSystemOptionsWindow()
-    : CAdvPopup(159, 56, 481, 487, 0x12)
+    : CAdvPopup(159, 56, 481, 487, 0x12), bPrefsChanged(0)
 {
-    bPrefsChanged = 0;
     quickCombatSave = gCombatQuickMode69877c;
     Widgets.reserve(NWIDGETS);
 
@@ -91,6 +90,33 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // consumed in source order and we are out of PHASE with retail rather
     // than uniformly short of it, so the fix has to be real missing
     // statements - and nothing in the retail body evidences any.
+    //
+    // 2026-08-14, third pass. One real fix landed and one new hard datum.
+    // FIXED (88.2634 -> 88.3182): `bPrefsChanged` moved into the member
+    // initializer list. Retail stores `mov byte [esi+0x60],0` BEFORE the
+    // compiler's `mov [esi],vtbl`; a body assignment can only emit it after.
+    // Same lever that fixed TResourceDisplay's store order. Measured all four
+    // placements: bPrefsChanged-only in the list 88.3182, base 88.2634,
+    // quickCombatSave-only 88.1399, both 88.1198, body order swapped 88.1125 -
+    // so quickCombatSave genuinely belongs in the BODY and bPrefsChanged in
+    // the list, which is also the only combination that matches retail's
+    // member/vptr/member sandwich.
+    // NEW DATUM on the budget phase, and it points the opposite way to the
+    // note above: in the reserve expansion retail emits an out-of-line
+    // `push _Last; push _First; mov ecx,esi; call 0x404140` - a 3-byte `ret 8`
+    // body, i.e. the EMPTY std::_Destroy(pointer,pointer), ICF-folded by LINK
+    // onto sample's vtable slot 3 (evidence/retail-symbols.csv:61). We inline
+    // that call away entirely. So at the very FIRST statement of the body,
+    // before either side has spent budget on anything, retail is already
+    // inlining LESS than we are. That is not consumption phase - it is a
+    // different starting budget, i.e. retail's caller IL is SMALLER than ours
+    // here. It is the one measurement that argues the missing-statement theory
+    // is backwards and that the fix is a spelling that costs less front-end
+    // mass, not more.
+    // The slot-IV rewrite was re-measured a third time ON TOP of the
+    // initializer-list fix, in case that had moved the phase: 88.3182 ->
+    // 88.2908 (x derived as 29+slot*19), 88.2908 (operands reversed), 88.1660
+    // (x carried in the for-update). Still net negative, still not landed.
     int slot = 0;
     for (int musicX = 29; musicX < 219; musicX += 19) {
         Widgets.push_back(new iconWidget(
