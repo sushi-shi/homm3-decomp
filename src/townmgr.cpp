@@ -2118,6 +2118,81 @@ int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView)
     return gpWindowManager->dialogReturn == TBuyBuildWindow::BUY_BUTTON_ID;
 }
 
+// The buy-a-building panel's handler, and the compiland's cleanest
+// vtable anchor: 0x643944 slot 9 IS this address, and slot 9 is
+// heroWindow::WindowHandler. It forwards to CAdvPopup's handler first,
+// then does one job of its own - the hover rollover line, refreshed only
+// when the widget under the cursor actually changes.
+//
+// The dialog's own SetRolloverText has NO retail body. The Dreamcast
+// roster puts TBuyBuildWindow::SetRolloverText (dc 0x179900, line 7489)
+// and SetRightClickText (dc 0x1799b8, a four-byte `return`) immediately
+// ahead of this row, but retail's carve has nothing between BuyBuild's
+// last byte (0x5d680a) and 0x5d6810, and the three rows that DO follow
+// close exactly on CycleOutline / BuildObj / SetupMage (366/196,
+// 1135/842, 445/424 - all inside the SH4->x86 band). So the rollover
+// body is inlined here at its single call site and its /Gy COMDAT went
+// unreferenced, which is why its three statements are transcribed in
+// place: declaring the helper would force VC6 to emit the out-of-line
+// copy retail does not have (the TCastleWindow::ShowText precedent).
+//
+// Retail cross-jumps the two sprintf arms into one shared tail - the
+// format string and the two GetBuildingName arguments are set up per
+// arm and the call itself is written once - so the two cases are spelled
+// separately here and left to the compiler to merge, which it does.
+//
+// Residual (98.02%): TWO BYTES, and they are an encoder tie-break rather
+// than a spelling. Retail materialises the message id (`mov eax,[esi]`
+// then `cmp eax,4`); our CL folds the load into the compare
+// (`cmp [esi],4`), which is two bytes shorter and shifts every later
+// displacement. Everything else - both epilogue paths, the inline
+// strcpy, both switch arms and the merged sprintf tail - is byte for
+// byte retail's, and `vc6 diagnose` reports flow-distance 0 with
+// register-distance 3. Tried and rejected, all six folding identically:
+// `switch (msg->id)` over the single case, `MESSAGE_MOUSE_MOVE ==
+// msg->id`, the early-return form `if (msg->id != MESSAGE_MOUSE_MOVE)
+// return 1;`, a named `int id` local, and that local hoisted above the
+// base handler's result test so the load sits in its own block.
+
+// E:\gamedcs\townmgr.cpp:7513
+VA(0x005d6810, 0xFB)  // anchor-vtable 0x643944 slot 9 + arity, dc 0x1799bc
+int TBuyBuildWindow::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    if (msg->id == MESSAGE_MOUSE_MOVE) {
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != gpWindowManager->lastHover) {
+            gpWindowManager->lastHover = msg->codeY;
+
+            switch (msg->codeY) {
+            case BUY_BUTTON_ID:
+                sprintf(gText, gpGeneralText->GetText(596),
+                        GetBuildingName(gpTownManager->townToView->type,
+                                        buildingId));
+                break;
+            case CANCEL_BUTTON_ID:
+                sprintf(gText, gpGeneralText->GetText(597),
+                        GetBuildingName(gpTownManager->townToView->type,
+                                        buildingId));
+                break;
+            default:
+                strcpy(gText, emptyRolloverText);
+                break;
+            }
+
+            message textMessage;
+            textMessage.extraText = gText;
+            BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 7,
+                             textMessage.extra);
+            DrawWindow(1, 6, 7);
+        }
+    }
+    return 1;
+}
+
 // The tavern chooser's constructor - seventeen widgets over a reserve of
 // eighteen and nothing else, the purest instance of the compiland's
 // dialog recipe. Anchored by its own vftable 0x643980 (already proven

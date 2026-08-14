@@ -237,6 +237,7 @@ public:
     TBuyBuildWindow(int x2, int y2, int Id);
     virtual ~TBuyBuildWindow();
     void set_prerequisite_text(const town* current_town, int building);
+    virtual int WindowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d6810
 };
 
 // The tavern chooser. Its vtable 0x643980 is 15 slots wide - the CAdvPopup
