@@ -3,9 +3,11 @@
 // 226 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "advmgr.h"
+#include "border.h"
 #include "bottomviewsubwindow.h"
 #include "button.h"
 #include "game.h"
+#include "hero.h"
 #include "message.h"
 #include "resourcedisplay.h"
 #include "textwdgt.h"
@@ -72,13 +74,6 @@ unsigned char TAdventureMapWindow::ProcessHover(int hx, int hy)
     // @stub
 }
 
-// E:\gamedcs\adventuremapwindow.cpp:853
-// RETAIL_LOCATED(0x004032e0, 0x134)  // anchor-global, dc 0x10e4
-void TAdventureMapWindow::UpdateHeroLocators()
-{
-    // @stub
-}
-
 // E:\gamedcs\adventuremapwindow.cpp:914
 // RETAIL_LOCATED(0x00403420, 0x131)  // anchor-global, dc 0x10e8
 void TAdventureMapWindow::UpdateTownLocators()
@@ -86,23 +81,9 @@ void TAdventureMapWindow::UpdateTownLocators()
     // @stub
 }
 
-// E:\gamedcs\adventuremapwindow.cpp:972
-// RETAIL_LOCATED(0x00403560, 0x23E)  // anchor-global, dc 0x10ec
-void TAdventureMapWindow::UpdateHeroLocator()
-{
-    // @stub
-}
-
 // E:\gamedcs\adventuremapwindow.cpp:1043
 // RETAIL_LOCATED(0x004037a0, 0x117)  // anchor-global, dc 0x10f0
 void TAdventureMapWindow::UpdateTownLocator()
-{
-    // @stub
-}
-
-// E:\gamedcs\adventuremapwindow.cpp:1080
-// RETAIL_LOCATED(0x004038c0, 0xEC)  // anchor-global, dc 0x10f4
-void TAdventureMapWindow::HighlightLocators()
 {
     // @stub
 }
@@ -213,6 +194,186 @@ void TAdventureMapWindow::DoTownKnob(unsigned char up)
             topTown++;
     }
     UpdateTownLocators(-1, 1, 1);
+}
+
+// E:\gamedcs\adventuremapwindow.cpp:853
+// ARITY from retail: `ret 0xc` over (top, drawWin, update), the same
+// three the class already declares. The clamp only runs when `top` is
+// non-negative AND outside the window currently shown, which is what
+// puts retail's two comparisons against topHero on the same branch.
+VA(0x004032e0, 0x134)  // anchor-global, dc 0x10e4
+void TAdventureMapWindow::UpdateHeroLocators(int top, unsigned char drawWin,
+                                             unsigned char update)
+{
+    playerData* player = gpGame->GetLocalPlayer();
+    if (!player->IsHuman())
+        return;
+
+    if (top >= 0 && (top < topHero || top >= topHero + NUM_HERO_BUTTONS)) {
+        if (top > player->numHeroes - NUM_HERO_BUTTONS)
+            top = player->numHeroes - NUM_HERO_BUTTONS;
+        if (top < 0)
+            top = 0;
+        topHero = top;
+    }
+
+    int i;
+    for (i = 0; i < NUM_HERO_BUTTONS; i++)
+        UpdateHeroLocator(i, 0, 0);
+
+    if (!topHero)
+        WidgetSetStatus(HERO_UP_ID, widget::WIDGET_DIMMED);
+    else
+        WidgetClearStatus(HERO_UP_ID, widget::WIDGET_DIMMED);
+
+    if (player->numHeroes <= topHero + NUM_HERO_BUTTONS)
+        WidgetSetStatus(HERO_DOWN_ID, widget::WIDGET_DIMMED);
+    else
+        WidgetClearStatus(HERO_DOWN_ID, widget::WIDGET_DIMMED);
+
+    if (drawWin) {
+        DrawWindow(0, 0xffff0001, 0xffff);
+
+        for (i = 0; i < NUM_HERO_BUTTONS; i++) {
+            int heroId = player->heroes[topHero + i];
+            if (heroId != -1 && !gCompleteDrawAllCells
+                && heroId == player->currHeroId) {
+                HeroLocators[i]->send_message(widget::WIDGET_SET_STATUS,
+                                              widget::WIDGET_DRAWN);
+                HeroLocators[i]->SetImage("hpsyyy.pcx");
+                HeroLocators[i]->Draw();
+                break;
+            }
+        }
+    }
+
+    if (update)
+        gpWindowManager->UpdateScreen(0, 0, 800, 600);
+}
+
+// E:\gamedcs\adventuremapwindow.cpp:972
+// ARITY from retail: `ret 0xc` over (which, drawWinSect, update), the
+// DC TAdvMenu::UpdateHeroLocator shape. A negative `which` means "the
+// slot the current hero occupies", which is the leading search.
+// The hero pointer is `&gpGame->heroes[heroId]` written out, NOT
+// game::GetHero - retail emits the 1170-byte index with no `cmp -1`,
+// and GetHero's -1 arm is part of that accessor (see game.h), so using
+// it here would add a test retail does not have.
+VA(0x00403560, 0x23E)  // anchor-global, dc 0x10ec
+void TAdventureMapWindow::UpdateHeroLocator(int which, unsigned char drawWinSect,
+                                            unsigned char update)
+{
+    playerData* player = gpGame->GetLocalPlayer();
+
+    if (which < 0) {
+        if (player->currHeroId != -1) {
+            for (int slot = 0; slot < NUM_HERO_BUTTONS; slot++) {
+                if (player->currHeroId == player->heroes[topHero + slot]) {
+                    which = slot;
+                    break;
+                }
+            }
+        }
+        if (which < 0)
+            return;
+    }
+
+    int heroId = player->heroes[topHero + which];
+    if (heroId != -1 && !gCompleteDrawAllCells) {
+        hero* thisHero = &gpGame->heroes[heroId];
+        WidgetSetStatus(HERO_0_ID + which, widget::WIDGET_ACTIVE);
+        HeroPortraits[which]->SetImage(
+            akHeroTraits[thisHero->portrait].smallPortraitName);
+        WidgetSetStatus(HERO_MOVEMENT_0_ID + which, widget::WIDGET_ACTIVE);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+            HERO_MOVEMENT_0_ID + which, thisHero->GetMobilityFrame());
+        WidgetSetStatus(HERO_MANA_0_ID + which, widget::WIDGET_ACTIVE);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+            HERO_MANA_0_ID + which, thisHero->GetManaFrame());
+    } else {
+        HeroPortraits[which]->SetImage("hpsxxx.pcx");
+        WidgetClearStatus(HERO_0_ID + which, widget::WIDGET_ACTIVE);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+            HERO_MOVEMENT_0_ID + which, 0);
+        WidgetClearStatus(HERO_MOVEMENT_0_ID + which, widget::WIDGET_ACTIVE);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+            HERO_MANA_0_ID + which, 0);
+        WidgetClearStatus(HERO_MANA_0_ID + which, widget::WIDGET_ACTIVE);
+    }
+
+    // The flag is a BYTE: retail materialises it in eax (mov 1 / xor) but
+    // tests `al`, and the ternary on the adjacent command enumerators then
+    // BRANCHES instead of folding to `neg/sbb/add` the way it does when
+    // the flag is an int (UpdateSpellButton / UpdateSleepButton).
+    // Residual (98.58%): retail materialises this flag in eax exactly as
+    // below (`mov eax,1` / `xor eax,eax`) and then BRANCHES on `test al,al`
+    // to push 5 or 6 into one shared call; this CL folds the adjacent
+    // enumerators into `neg eax / sbb eax,eax / add eax,6`. Four spellings
+    // measured: int + ternary 98.58 (kept - only this block differs, and
+    // the 1/0 materialisation itself matches); `unsigned char` flag 98.51
+    // (materialises in al, still folds); `bool` flag 98.51 (identical);
+    // an if/else over the whole send_message call 95.85 and an if/else
+    // into a `widget::ECommands` local 96.05 - both worse, VC6 duplicates
+    // the call rather than tail-merging it the way retail's arms share one.
+    int isCurrentHero = heroId != -1 && !gCompleteDrawAllCells
+                        && heroId == player->currHeroId;
+    HeroLocators[which]->send_message(
+        isCurrentHero ? widget::WIDGET_SET_STATUS : widget::WIDGET_CLEAR_STATUS,
+        widget::WIDGET_DRAWN);
+
+    if (drawWinSect) {
+        DrawWindow(0, HERO_0_ID + which, HERO_0_ID + which);
+        DrawWindow(0, HERO_MOVEMENT_0_ID + which, HERO_MOVEMENT_0_ID + which);
+        DrawWindow(0, HERO_MANA_0_ID + which, HERO_MANA_0_ID + which);
+        if (heroId != -1 && !gCompleteDrawAllCells
+            && heroId == player->currHeroId) {
+            HeroLocators[which]->SetImage("hpsyyy.pcx");
+            HeroLocators[which]->send_message(widget::WIDGET_SET_STATUS,
+                                              widget::WIDGET_DRAWN);
+            HeroLocators[which]->Draw();
+        }
+        if (update)
+            gpWindowManager->UpdateScreen(0x261, 32 * which + 0xd4, 0x30, 0x20);
+    }
+}
+
+// E:\gamedcs\adventuremapwindow.cpp:1080
+// ARITY from retail: `ret 4` over the update byte, matching DC's real
+// TAdvMenu::HighlightLocators(unsigned char update). The town half runs
+// off widget ids (BroadcastMessage + DrawWindow over TOWN_0_ID + i) and
+// the hero half off the HeroLocators pointers - retail's own asymmetry.
+VA(0x004038c0, 0xEC)  // anchor-global, dc 0x10f4
+void TAdventureMapWindow::HighlightLocators(unsigned char update)
+{
+    playerData* player = gpGame->GetLocalPlayer();
+
+    int i;
+    for (i = 0; i < NUM_TOWN_BUTTONS; i++) {
+        int townId = player->townIds[topTown + i];
+        if (townId != -1 && !gCompleteDrawAllCells
+            && townId == player->currTownId) {
+            BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_ICON_FRAME,
+                             TOWN_0_ID + i, 1);
+            DrawWindow(update, TOWN_0_ID + i, TOWN_0_ID + i);
+            break;
+        }
+    }
+
+    for (i = 0; i < NUM_HERO_BUTTONS; i++)
+        HeroLocators[i]->send_message(widget::WIDGET_CLEAR_STATUS,
+                                      widget::WIDGET_DRAWN);
+
+    for (i = 0; i < NUM_HERO_BUTTONS; i++) {
+        int heroId = player->heroes[topHero + i];
+        if (heroId != -1 && !gCompleteDrawAllCells
+            && heroId == player->currHeroId) {
+            HeroLocators[i]->send_message(widget::WIDGET_SET_STATUS,
+                                          widget::WIDGET_DRAWN);
+            HeroLocators[i]->SetImage("hpsyyy.pcx");
+            HeroLocators[i]->Draw();
+            break;
+        }
+    }
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:1153

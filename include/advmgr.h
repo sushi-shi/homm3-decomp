@@ -429,8 +429,17 @@ public:
     // DC member name at +0x64; retail's independently proven 8-byte base
     // shift places it at +0x6c, exactly where animate_bottom_view reads it.
     unsigned char animateInBackground;
+    char pad_06d[3];
+    // +0x70 and +0x84, sliced 2026-08-14 from UpdateHeroLocator
+    // (0x403560) and HighlightLocators (0x4038c0): the first row takes
+    // bitmapBorder::SetImage with the portrait name out of akHeroTraits
+    // and is indexed `[this + i*4 + 0x70]`, the second takes SetImage
+    // with hpsyyy.pcx plus a send_message/Draw pair and is indexed
+    // `[this + i*4 + 0x84]`. Five entries each is fixed at both ends -
+    // the loops bound on 5 and 0x70 + 2*5*4 lands exactly on bottomView.
+    class bitmapBorder* HeroPortraits[5];
+    class bitmapBorder* HeroLocators[5];
     // ClearBottomView (0x403ee0) owns and clears the pointer at +0x98.
-    char pad_06d[0x2b];
     class type_bottom_view_window* bottomView;
     char pad_09c[4];
 
@@ -439,6 +448,8 @@ public:
                             unsigned char update);
     void UpdateHeroLocators(int top, unsigned char drawWin,
                             unsigned char update);
+    void UpdateHeroLocator(int which, unsigned char drawWinSect,
+                           unsigned char update);
     void DoHeroKnob(unsigned char up);
     void DoTownKnob(unsigned char up);
     unsigned char SetElevationToggleImage(int level);

@@ -25,6 +25,20 @@ extern unsigned long glTimers[10];
 // linearization is ((z * height + y) * width + x), with 16-bit elements.
 DATA(0x006989f8) extern unsigned short* gMapExtra;
 
+// The shared fonts oldmain (0x4ee3e0) loads by name and ShutDown
+// (0x4f3690) releases through the resource vtable, in retail's own .bss
+// order: 0x698a04 tiny.fnt, 0x698a08 smalfont.fnt, 0x698a0c medfont.fnt,
+// 0x698a10 bigfont.fnt, 0x698a14 Calli10R.fnt. Every cell takes the
+// return of the same one-argument loader and the name is the string that
+// load passes, which fixes both the type and the identity; ShutDown's
+// `mov edx,[cell] / call [edx+4]` teardown independently proves they are
+// resource pointers. Only the calligraphic cell has a consumer in a
+// modeled TU so far - the hill fort constructor's per-slot count widget
+// takes its y as `0x7c - font->height`, reading font+0x21, i.e.
+// TFontSpec::height at font+0x1c+5. Declare the rest as readers land.
+class font;
+DATA(0x00698a14) extern font* gpCalligraphicFont;
+
 // Retail map-extra accessor used by the adventure-map adjacency scan.
 unsigned short GetMapExtra(int x, int y, int z);
 unsigned short* GetMapExtraPtr(int x, int y, int z);

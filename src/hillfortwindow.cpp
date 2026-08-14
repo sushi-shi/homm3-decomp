@@ -148,14 +148,28 @@ static const float afUpgradeCostFactor[7] = {
 //   BroadcastMessage(MESSAGE_WIDGET, WIDGET_SET_PLAYER_PALETTE_COLORS,
 //   BACKGROUND_ID, gpGame->GetLocalPlayerGamePos()).
 //
-// <G1> = .bss 0x6a7a78, a char* the title textWidget takes; its only
-// other readers are inside advManager::SetRolloverText (0x40bbcc) and
-// 0x414562 - it has no home header yet.
-// <G2> = .bss 0x698a14, an object whose BYTE at +0x21 the count widget's
-// y-coordinate is `0x7c -` (read the same way at 0x4ee4ae / 0x4f36fb /
-// 0x4f370a); a font-metrics record by shape, likewise unhomed.
-// Declaring either file-locally would trip the cpp-extern-decls floor,
-// so both want a locate pass before this row is worth compiling.
+// BOTH GLOBALS LOCATED 2026-08-14 - neither needs a new declaration.
+//
+// <G1> = .bss 0x6a7a78 is gAdventureObjectNames[HILL_FORT], already
+// declared in advmgr.h at base 0x6a79ec: HILL_FORT is adventure-object
+// type 35 and 0x6a79ec + 35*4 == 0x6a7a78 exactly. The retail switch
+// settles it independently - advManager::SetRolloverText dispatches
+// `[cell+0x1e]` through the byte table at 0x40d314 into the jump table
+// at 0x40d228, object type 35 selects case index 18, and case index 18
+// is the arm at 0x40bbca that strcpy's this cell into gText. advmgr.cpp
+// already spells that arm `strcpy(gText, gAdventureObjectNames[HILL_FORT])`.
+//
+// <G2> = .bss 0x698a14 is the calligraphic font, now declared in kb.h as
+// gpCalligraphicFont: oldmain (0x4ee3e0) fills the five-cell font block
+// 0x698a04..0x698a14 with successive loads of tiny/smalfont/medfont/
+// bigfont/Calli10R, and ShutDown (0x4f3690) releases all of them through
+// the resource vtable. +0x21 is font+0x1c+5, i.e. TFontSpec::height, so
+// the count widget's y really is `0x7c - gpCalligraphicFont->height`.
+//
+// What is still missing is the widget surface, not the globals: the body
+// needs the bitmapBackedTextWidget constructor and the AddWidget/MemError
+// walk, and it is a single 2025-byte row against roughly fifty `new`
+// sites, so it stays parked rather than land below 100%.
 THillFortWindow::THillFortWindow()
 {
     // @stub
