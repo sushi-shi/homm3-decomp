@@ -10,13 +10,36 @@
 // Every value is retail-byte-proven by the [Text._First + 4*N] load in
 // the handler named beside it; the names describe those consumers,
 // which is the convention textresource.h's EGeneralTextIndex sets.
+// The rows run ALPHABETICALLY by adventure object, which is what makes
+// each object's lines contiguous and what places the two triples added
+// below exactly where they fall: warrior's tomb 161..163, water wheel
+// 164/165, watering hole 166/167, whirlpool 168, windmill 169/170,
+// witch hut 171..173.
 enum EAdventureEventText {
+    // do_event_warrior_tomb (0x4a7c30). 161 is asked with iMBType 2 - the
+    // yes/no form whose answer the handler reads back out of
+    // heroWindowManager::dialogReturn - 162 is a sprintf format taking the
+    // artifact name, and 163 is the empty-tomb line that costs -3 morale.
+    ADV_EVENT_TEXT_WARRIOR_TOMB_PROMPT = 161,
+    ADV_EVENT_TEXT_WARRIOR_TOMB_ARTIFACT = 162,
+    ADV_EVENT_TEXT_WARRIOR_TOMB_EMPTY = 163,
     ADV_EVENT_TEXT_WATER_WHEEL_GOLD = 164,
     ADV_EVENT_TEXT_WATER_WHEEL_EMPTY = 165,
     ADV_EVENT_TEXT_WATERING_HOLE = 166,
     ADV_EVENT_TEXT_WATERING_HOLE_VISITED = 167,
     ADV_EVENT_TEXT_WINDMILL_EMPTY = 169,
-    ADV_EVENT_TEXT_WINDMILL_RESOURCE = 170
+    ADV_EVENT_TEXT_WINDMILL_RESOURCE = 170,
+    // do_event_witch_hut (0x4a8080). All three take the secondary-skill
+    // name through sprintf; only the first one actually teaches, and the
+    // roles follow from which arm of the cascade reaches each row.
+    ADV_EVENT_TEXT_WITCH_HUT_LEARN = 171,
+    ADV_EVENT_TEXT_WITCH_HUT_KNOWN = 172,
+    ADV_EVENT_TEXT_WITCH_HUT_FULL = 173,
+    // The row the same handler shows when the cell carries no skill at
+    // all (the WitchHutNoSkillMask encoding, i.e. a -1 in the seven-bit
+    // field). It sits well outside the witch hut's own alphabetical run,
+    // so the ROLE is what names it; only the index 190 is byte-proven.
+    ADV_EVENT_TEXT_WITCH_HUT_NO_SKILL = 190
 };
 
 // advManager::FizzleCenter's (0x4acbb0) sound selector, also the second
