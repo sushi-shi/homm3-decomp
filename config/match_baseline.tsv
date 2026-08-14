@@ -1543,6 +1543,7 @@ townmgr	?UpdateTownLocators@TTownScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000
 townmgr	?WindowHandler@TBlacksmithWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1d1c60
 townmgr	?WindowHandler@TBuyBuildWindow@@UAEHPAVmessage@@@Z	98.0247	98.0247	98.0247	0x1d6810
 townmgr	?WindowHandler@TCastleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x1dcf80
+townmgr	?WindowHandler@TShipWindow@@UAEHPAVmessage@@@Z	99.9841	99.9841	99.9841	0x1d25a0
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@PAVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0x1d12b0
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1d11d0
 tradpost	??1TBuyArtifactWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e56c0

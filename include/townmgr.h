@@ -309,11 +309,16 @@ public:
         BUY_BUTTON_ID = 0x7802
     };
 
-    int field_60;          // +0x60  cleared by the constructor
+    // +0x60, the boat animation's current frame. The constructor clears
+    // it and WindowHandler 0x5d25a0 is the only other body that touches
+    // it: it steps the frame on every message and wraps at the boat
+    // sequence's own length.
+    int boatFrame;         // +0x60
     iconWidget* boatIcon;  // +0x64
 
     TShipWindow(int type);
     virtual ~TShipWindow();
+    virtual int WindowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d25a0
 };
 
 // The "build this?" confirmation popup. Both members past CAdvPopup's
