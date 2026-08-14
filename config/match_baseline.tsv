@@ -288,15 +288,22 @@ ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000	0.0000	0.0000	0x3c330
 ai_tactical	type_AI_spellcaster_get_protection_value	0.0000	0.0000	0.0000	0x396e0
 ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000	0.0000	0.0000	0x369c0
 army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
+army	?ComputeDefenderDamageReduction@army@@QAENE@Z	100.0000	100.0000	100.0000	0x43d90
+army	?Damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090
+army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0
 army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	97.0115	97.0115	97.0115	0x3df20
 army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	97.5194	97.5194	97.5194	0x3e000
 army	?enemy_is_adjacent@army@@QAEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0
+army	?get_adjusted_defense@army@@QAEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42590
+army	?get_attack_direction@army@@QAEJJPBV1@@Z	100.0000	100.0000	100.0000	0x458b0
 army	?get_attack_direction@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x45840
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550
 army	?get_average_damage@army@@QBENXZ	100.0000	100.0000	100.0000	0x426f0
 army	?get_controlling_side@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140
 army	?get_fire_shield_strength@army@@QBEMXZ	100.0000	100.0000	100.0000	0x43130
+army	?get_loss_combat_value@army@@QBEJJJEJE@Z	100.0000	100.0000	100.0000	0x42fd0
 army	?get_mirror_effect@army@@QBEHXZ	100.0000	100.0000	100.0000	0x487f0
+army	?get_resurrection_size@army@@QAEJPBV1@@Z	100.0000	100.0000	100.0000	0x47330
 army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080
 army	?is_enemy@army@@QAEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880
@@ -487,7 +494,21 @@ combatresultswindow	?Open@TCombatResultsWindow@@UAEHHE@Z	100.0000	100.0000	100.0
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
 command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
-command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
+# GetCommand hand-lowered 92.5714 -> 92.5357 (2026-08-14) for army.h's
+# batch of byte-proven field slices (shieldRounds/airShieldRounds,
+# slowRounds/frenzyRounds, shieldFactor/airShieldFactor/slowFactor,
+# +0xe9/+0xea), which land seven exact army.obj rows. The whole delta in
+# command.obj is TWO instructions swapping order - `mov ecx, [ebp-4]`
+# trades places with the `mov eax, [ebp+8]` in front of it, twice - and
+# it sits inside a region that does not match retail in EITHER state
+# (retail has `mov eax, [esi+0x132c0]` there, not the compare our CL
+# emits from both spellings), so nothing about the residual's shape
+# improved or worsened. It is the include-set-sensitivity class:
+# measured 2026-08-14, removing any ONE of the four slice groups does
+# not restore it and adding further evidenced slices (+0x28c, +0xd8) in
+# either combination does not either, so the state flips on the group
+# as a whole and no local spelling reaches it.
+command	?GetCommand@combatManager@@QAEHH@Z	92.5357	92.5357	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
 command	?is_computer_action@combatManager@@QAEEPBVarmy@@@Z	81.3696	81.3696	81.3696	0x74bf0

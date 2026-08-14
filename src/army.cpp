@@ -510,11 +510,35 @@ long army::get_attack_modifier(const army* enemy,
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2633
-// RETAIL_LOCATED(0x00442590, 0xC2)  // anchor-global, dc 0x477e8
-long army::get_adjusted_defense(const army* enemy, unsigned char frenzy_included)
+#endif  // @carcass
+
+VA(0x00442590, 0xC2)  // anchor-global, dc 0x477e8
+long army::get_adjusted_defense(const army* enemy,
+                                unsigned char frenzy_included)
 {
-    // @stub
+    if (frenzy_included && frenzyRounds)
+        return 0;
+    long defense = defenseSkill;
+    if (enemy) {
+        if (enemy->creatureType == ARMY_CREATURE_BEHEMOTH)
+            defense = static_cast<long>(defense - defense * 0.4f);
+        else if (enemy->creatureType == ARMY_CREATURE_ANCIENT_BEHEMOTH)
+            defense = static_cast<long>(defense - defense * 0.8f);
+    }
+    if (gpCombatManager->field_53a8) {
+        int second_hex;
+        if (creatureId & 1)
+            second_hex = gridIndex + (facing ? 1 : -1);
+        else
+            second_hex = -1;
+        if (gpCombatManager->IsInMoat(gridIndex, 0)
+            || gpCombatManager->IsInMoat(second_hex, 0))
+            defense -= 3;
+    }
+    return defense;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2670
 DC_ONLY(0x478c8, 0x32)
@@ -652,11 +676,26 @@ long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
 }
 
 // E:\gamedcs\army.cpp:2928
-// RETAIL_LOCATED(0x00442fd0, 0xA9)  // anchor-global, dc 0x482f0
-long army::get_loss_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, long damage, unsigned char kills_only) const
+#endif  // @carcass
+
+VA(0x00442fd0, 0xA9)  // anchor-global, dc 0x482f0
+long army::get_loss_combat_value(long lowest_attack, long lowest_defense,
+                                 unsigned char ranged, long damage,
+                                 unsigned char kills_only) const
 {
-    // @stub
+    double value = get_unit_combat_value(lowest_attack, lowest_defense,
+                                         ranged, 0);
+    if (Is(23) & 1)
+        return static_cast<long>(numTroops * value / 5.0);
+    if (kills_only)
+        value = 1000.0;
+    long lost = 0;
+    if (damage % hitPoints + topCreatureDamage >= hitPoints)
+        lost = topCreatureDamage;
+    return static_cast<long>((lost + damage) * value / hitPoints);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2960
 #endif  // @carcass
@@ -679,6 +718,17 @@ VA(0x004430d0, 0x56)  // anchor-global, dc 0x484a0
 void army::set_AI_expected_damage(long arg)
 {
     AI_expected_damage = _cpp_min(arg, get_total_hit_points(0));
+}
+
+// E:\gamedcs\army.cpp:2988
+VA(0x00443130, 0x25)  // decorated identity + exact field/constant loads
+float army::get_fire_shield_strength() const
+{
+    if (fireShieldRounds)
+        return fireShieldStrength;
+    if (creatureType == CREATURE_EFREET_SULTAN)
+        return DATA_COMPGEN(0x0063b8b4, innateFireShieldStrength, 0.2f);
+    return DATA_COMPGEN(0x0063ac64, zeroFireShieldStrength, 0.0f);
 }
 
 #if 0  // @carcass
@@ -712,11 +762,28 @@ double army::ComputeAttackerDamageReduction(const army* defender, unsigned char 
 }
 
 // E:\gamedcs\army.cpp:3319
-// RETAIL_LOCATED(0x00443d90, 0x9C)  // anchor-global, dc 0x48fc4
+#endif  // @carcass
+
+VA(0x00443d90, 0x9C)  // anchor-global, dc 0x48fc4
 double army::ComputeDefenderDamageReduction(unsigned char is_shooting)
 {
-    // @stub
+    double reduction = 1.0;
+    if (is_shooting) {
+        if (airShieldRounds)
+            reduction = airShieldFactor;
+    } else {
+        if (shieldRounds)
+            reduction = shieldFactor;
+    }
+    if (disabled_2b0)
+        reduction *= 0.5;
+    hero* casting_hero = gpCombatManager->heroes[get_controlling_side()];
+    if (casting_hero)
+        reduction *= casting_hero->GetDefenseFactor();
+    return reduction;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:3356
 // RETAIL_LOCATED(0x00443f40, 0x14F)  // anchor-global, dc 0x490f4
@@ -733,11 +800,33 @@ long army::DamageEnemy(army* enemy, int* iDamage, int* iKilled, unsigned char bI
 }
 
 // E:\gamedcs\army.cpp:3441
-// RETAIL_LOCATED(0x00444090, 0x8F)  // anchor-global, dc 0x492c8
+#endif  // @carcass
+
+VA(0x00444090, 0x8F)  // anchor-global, dc 0x492c8
 int army::Damage(int damage)
 {
-    // @stub
+    int total = damage + topCreatureDamage;
+    int killed = total / hitPoints;
+    topCreatureDamage = total % hitPoints;
+    if (Is(23) & 1) {
+        killed = numTroops;
+        topCreatureDamage = 0;
+    }
+    field_e9 = 1;
+    if (killed > 0)
+        numTroopsToShowOverride = numTroops;
+    if (killed > numTroops)
+        killed = numTroops;
+    numTroops -= killed;
+    if (numTroops <= 0)
+        field_ea = 1;
+    CancelIndividualSpell(62);
+    CancelIndividualSpell(70);
+    CancelIndividualSpell(74);
+    return killed;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:3481
 DC_ONLY(0x4935c, 0x44)
@@ -755,16 +844,6 @@ void army::ProcessDeath(int bFadeElementals)
 
 // E:\gamedcs\army.cpp:3631
 #endif  // @carcass
-
-VA(0x00443130, 0x25)  // decorated identity + exact field/constant loads
-float army::get_fire_shield_strength() const
-{
-    if (fireShieldRounds)
-        return fireShieldStrength;
-    if (creatureType == CREATURE_EFREET_SULTAN)
-        return DATA_COMPGEN(0x0063b8b4, innateFireShieldStrength, 0.2f);
-    return DATA_COMPGEN(0x0063ac64, zeroFireShieldStrength, 0.0f);
-}
 
 VA(0x004444d0, 0x3B)  // decorated identity + CancelIndividualSpell edges
 void army::CancelSpellType(int iSpellType)
@@ -855,11 +934,39 @@ long army::get_attack_direction(long our_hex, const army* enemy,
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4273
-// RETAIL_LOCATED(0x004458b0, 0x9D)  // corroborates, dc 0x4a610
+#endif  // @carcass
+
+VA(0x004458b0, 0x9D)  // corroborates, dc 0x4a610
 long army::get_attack_direction(long our_hex, const army* enemy)
 {
-    // @stub
+    // The loop bound has to be tested at the BOTTOM of an unbounded
+    // loop: a plain `for (d = 0; d < 8; d++)` costs 4.68 points, all of
+    // it block layout - retail emits `jge <exit>; jmp <top>` and puts
+    // the `return direction` epilogue AHEAD of `return best`, which is
+    // what returning `best` from inside the loop buys. `enemy` is also
+    // the LEFT operand of the identity compare (0.26).
+    long best = -1;
+    long direction = 0;
+    for (;;) {
+        if (direction < COMBAT_DIRECTION_COUNT || (creatureId & 1)) {
+            long hex = get_adjacent_hex(our_hex, direction);
+            if (hex >= 0 && hex < COMBAT_GRID_CELLS
+                && enemy == gpCombatManager->cells[hex].get_army()) {
+                if (direction >= COMBAT_DIRECTION_COUNT)
+                    return direction;
+                if ((facing == 0) == (direction >= 3))
+                    return direction;
+                if (best == -1)
+                    best = direction;
+            }
+        }
+        direction++;
+        if (direction >= 8)
+            return best;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4303
 // RETAIL_LOCATED(0x00445950, 0x107)  // anchor-global, dc 0x4a6a4
@@ -1060,11 +1167,23 @@ void army::ResetRound()
 }
 
 // E:\gamedcs\army.cpp:5300
-// RETAIL_LOCATED(0x00447330, 0x9C)  // anchor-global, dc 0x4bd80
+#endif  // @carcass
+
+VA(0x00447330, 0x9C)  // anchor-global, dc 0x4bd80
 long army::get_resurrection_size(const army* target)
 {
-    // @stub
+    if (creatureType == CREATURE_ARCHANGEL) {
+        int missing = target->origNumTroops - target->numTroops;
+        int raised = numTroops * 100 / target->hitPoints;
+        return _cpp_min(raised, missing);
+    }
+    int total_life = target->hitPoints * target->origNumTroops;
+    int raised = _cpp_min(total_life, numTroops * 50)
+        / akCreatureTypeTraits[ARMY_CREATURE_DEMON].hitPoints;
+    return _cpp_min(raised, target->origNumTroops);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:5324
 // RETAIL_LOCATED(0x004473d0, 0x13D)  // anchor-bracket, dc 0x4be64
@@ -1190,11 +1309,23 @@ long army::get_AI_target_time(long speed) const
 }
 
 // E:\gamedcs\army.cpp:5790
-// RETAIL_LOCATED(0x00448cd0, 0x4B)  // anchor-global, dc 0x4c918
+#endif  // @carcass
+
+VA(0x00448cd0, 0x4B)  // anchor-global, dc 0x4c918
 int army::GetSpeed() const
 {
-    // @stub
+    int speed = field_c4;
+    if (slowRounds) {
+        if (Is(6) & 1)
+            return 0;
+        speed = static_cast<long>(speed * slowFactor);
+        if (speed <= 0)
+            speed = 1;
+    }
+    return speed;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\struct.h:315
 DC_ONLY(0x4c968, 0x2C)

@@ -223,7 +223,15 @@ public:
     // the word is the range's top. The mirror of minDamage's proof, and
     // the two sit adjacent. Name provisional; no roster attests it.
     int maxDamage;                // +0xd4
-    char pad_d8[0x18];
+    char pad_d8[0x11];
+    // Two per-stack flags Damage (0x444090) raises: +0xe9 on EVERY hit
+    // (it is stored unconditionally, from the same materialized 1 the
+    // Is(23) test uses), +0xea only once the blow empties the stack.
+    // Names provisional - no roster attests either, and the only writer
+    // located so far is Damage itself.
+    unsigned char field_e9;       // +0xe9
+    unsigned char field_ea;       // +0xea
+    char pad_eb[0x5];
     unsigned char hitByCreature;  // +0xf0
     char pad_f1[0x3];
     // Effective combat side: is_enemy (0x442880) compares it between
@@ -267,7 +275,15 @@ public:
     // on our side outranks the target's own value here. Name pending a
     // writer.
     int field_190;                // +0x190
-    char pad_194[0x78];
+    char pad_194[0x70];
+    // Shield / Air Shield round counters, byte-proven by
+    // ComputeDefenderDamageReduction (0x443d90): the SHOOTING arm gates
+    // on +0x208 and takes its factor from +0x4bc, the melee arm gates
+    // on +0x204 and takes +0x4b8 - exactly the two spells' split, and
+    // exactly where SPELL_SHIELD (27) and SPELL_AIR_SHIELD (28) fall on
+    // the +0x198 round-row base the Bless/Curse pair fixes below.
+    int shieldRounds;             // +0x204
+    int airShieldRounds;          // +0x208
     // Rounds of Fire Shield left on this stack: get_fire_shield_strength
     // (0x443130) answers the stack's own 0x4a0 strength while it is
     // non-zero, and compute_fire_shield_damage (0x422440) uses the same
@@ -305,7 +321,19 @@ public:
     int moralePenaltyRounds;      // +0x260
     int luckBonusRounds;          // +0x264
     int luckPenaltyRounds;        // +0x268
-    char pad_26c[0x18];
+    char pad_26c[0x4];
+    // Rounds of Slow left on this stack: GetSpeed (0x448cd0) returns the
+    // stack's plain speed while this is clear and otherwise re-times it
+    // through the float at +0x4c8, flooring the result at 1.
+    // SPELL_SLOW is 54, and +0x198 + 54*4 = +0x270.
+    int slowRounds;               // +0x270
+    char pad_274[0x4];
+    // Rounds of Frenzy: get_adjusted_defense (0x442590) answers ZERO
+    // defense outright while this is up and its caller asked for
+    // frenzy to be included - which is precisely what Frenzy does.
+    // SPELL_FRENZY is 56, and +0x198 + 56*4 = +0x278.
+    int frenzyRounds;             // +0x278
+    char pad_27c[0x8];
     int berserkFlag;              // +0x284 (is_enemy: true vs everyone)
     int hypnotizeFlag;            // +0x288 (flips the effective side)
     char pad_28c[0x4];
@@ -344,7 +372,15 @@ public:
     // this float whenever fireShieldRounds is non-zero; otherwise the
     // innate Efreet Sultan path supplies the shared 0.2f constant.
     float fireShieldStrength;     // +0x4a0
-    char pad_4a4[0x3c];
+    char pad_4a4[0x14];
+    // The two damage multipliers ComputeDefenderDamageReduction pairs
+    // with shieldRounds and airShieldRounds above.
+    float shieldFactor;           // +0x4b8
+    float airShieldFactor;        // +0x4bc
+    char pad_4c0[0x8];
+    // Slow's speed multiplier, applied by GetSpeed while slowRounds is up.
+    float slowFactor;             // +0x4c8
+    char pad_4cc[0x14];
     // Read by combatManager::ViewArmy and forwarded as the first
     // argument of the post-dialog command. The DC name for the nearby
     // scalar run does not survive the retail STL-layout shift, so keep
@@ -413,6 +449,11 @@ public:
     // takes as its second parameter.
     long get_attack_direction(long our_hex, const army* enemy,
                               long enemy_hex) const;
+    // 0x4458b0, the two-argument overload: it does not take the enemy's
+    // hex but SEARCHES for it, walking this stack's own neighbours and
+    // asking the combat grid which army stands there. Non-const - the
+    // carcass prototype and the retail body agree.
+    long get_attack_direction(long our_hex, const army* enemy);
     // 0x448ab0 (claimed in army.cpp): the bitmask of the directions a
     // wide/multi-headed stack would also strike. Const for the same
     // reason - get_multi_head_bonus (0x436620) drives it off a
@@ -456,6 +497,34 @@ public:
                    const town* ownerTown, const hero* otherHero,
                    const armyGroup* otherGroup, int magicTerrain,
                    unsigned char field_54b2);
+    // THREE CREATURE IDS THAT BELONG IN armygrp.h's TCreatureType and
+    // are parked here instead. Byte-proven 2026-08-14 by two army.obj
+    // bodies (get_adjusted_defense 0x442590 multiplies the defender's
+    // rating by 0.4f / 0.8f against exactly 0x60 / 0x61 - the Behemoth
+    // and Ancient Behemoth defense-ignore rule and nothing else in the
+    // roster; get_resurrection_size 0x447330 prices every non-Archangel
+    // resurrect in akCreatureTypeTraits[0x30].hitPoints, the Pit Lord's
+    // raise-Demons rule). Both id runs are bracketed by ids TCreatureType
+    // already proves - Efreet Sultan 0x35 / Devil 0x36 / Arch Devil 0x37
+    // put Demon on 0x30, and the Stronghold block's top tier is
+    // 0x60/0x61. NH3API spellings.
+    // They are NOT in armygrp.h because ANY enumerator added to
+    // TCreatureType costs initialize.obj's initialize_game_data
+    // 100.0000 -> 96.0880 - the include-set-sensitivity class, and the
+    // same defect armygrp.h's SSpellTraits note already records for
+    // three ESpellId enumerators. MEASURED 2026-08-14 over enumerator
+    // counts 0..6: the canary sits at 100.0 for zero added enumerators
+    // and at 96.0880 for every count from one upward, so the wall fires
+    // on the FIRST one and no count restores it. army.h is outside
+    // initialize.cpp's include closure (terrain.h + town.h -> armygrp.h),
+    // which is the whole reason this enum can exist at all. Fold it back
+    // into TCreatureType when an owner moves initialize.cpp's includes.
+    enum EArmyCreatureId {
+        ARMY_CREATURE_DEMON = 0x30,
+        ARMY_CREATURE_BEHEMOTH = 0x60,
+        ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61
+    };
+
     // The engine's creatureId bit accessor - the DC roster's
     // army::Is(unsigned attribute) (Army.h:765, dc 0x27ce4, 14 B), and
     // the single most-called inline in the combat AI: the Dreamcast
@@ -511,6 +580,22 @@ public:
                                unsigned char ranged, long damage,
                                unsigned char kills_only) const; // 0x442fd0
     long get_total_hit_points(unsigned char simulated) const;   // 0x443080
+    // 0x442590: the stack's defense as the ATTACKER sees it - zero
+    // under Frenzy, reduced 40%/80% against a Behemoth / Ancient
+    // Behemoth, and 3 lower while either of the stack's hexes stands
+    // in a moat.
+    long get_adjusted_defense(const army* enemy,
+                              unsigned char frenzy_included);
+    // 0x443d90: the multiplier a defender's own Shield / Air Shield,
+    // petrification and hero defense skill put on incoming damage.
+    double ComputeDefenderDamageReduction(unsigned char is_shooting);
+    // 0x447330: how many creatures a resurrect from THIS stack would
+    // restore to `target` - the Archangel rule, or the Pit Lord's
+    // raise-Demons rule for every other caster.
+    long get_resurrection_size(const army* target);
+    // 0x444090: applies one blow's damage to the stack and answers how
+    // many creatures it killed.
+    int Damage(int damage);
     long get_average_damage(const army* enemy, unsigned char ranged_attack,
                             long amount, unsigned char limit_damage,
                             long distance) const;               // 0x442780
