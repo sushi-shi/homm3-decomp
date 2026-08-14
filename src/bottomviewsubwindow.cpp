@@ -910,6 +910,21 @@ static const int gTownArmyCoords[7][2] = {
 // what separates them into two independent classes. Nothing is landed:
 // the padding is a measurement, not a spelling.
 //
+// THE EH CLEANUP TRANSCRIPT LOCATES THAT DEFICIT EXACTLY (2026-08-14,
+// docs/vc6/eh-cleanup.md). Retail's `[ebp-4]` states run
+// ...,0xd,0xe,0xf,0x10,0x11,... and ours ...,0xd,0xe,0x10,0x11,...: retail
+// opens ONE cleanup region we never open, and the funclet chain says where.
+// Between the state-0xe call and the state-0x10 call retail does
+//     lea ecx,[ebp-0xcc] / mov [ebp-4],0xf / mov [ebp-0x38],ecx
+//     lea ecx,[ebp-0xcc] / call <no stack args>
+// i.e. one more sub-object CONSTRUCTED on a frame local, with its address
+// parked in a second slot - which is also why retail's frame is 4 bytes
+// wider here (-0xd0/-0xcc against our -0xc8/-0xc4). So the "around three
+// sites" reading is the shadow of a missing CONSTRUCTION in the ostrstream
+// chain, not a tuning number, and the honest fix is to find the statement
+// that builds that object rather than to pad the body. That is the highest
+// value open question left in this file after ResourceMessage's `str`.
+//
 // The silo sweep's own shape is a memory-homed `i`: retail indexes
 // `income[i]` as `[eax + 4*ecx]` and RELOADS `i` from [ebp-0x2c] after
 // every `slots[found++] = i` store, because that store may alias it,
