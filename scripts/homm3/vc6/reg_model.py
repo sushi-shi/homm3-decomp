@@ -68,7 +68,7 @@ from collections import Counter
 from pathlib import Path
 
 from homm3.sema import _asm
-from homm3.vc6 import _align, _common, _regmodel, _unit
+from homm3.vc6 import _align, _common, _regmodel, _source, _unit
 
 SCRATCH = _common.REPO / "build/vc6/whyreg"
 
@@ -217,82 +217,14 @@ _SIMPLE_ASSIGN = re.compile(
 _SIMPLE_VALUE = re.compile(r"-?(?:\w|->|\.|\[|\])+")
 
 
-def _source_name(fn: str) -> list[str]:
-    """Source-level identifier patterns to search for fn's DEFINITION.
-
-    `--fn` is usually the MSVC-mangled obj symbol (matches the .obj), but
-    source defines the function by its demangled `Class::method` (or bare
-    `name`) form, which never contains the mangled string. Derive the
-    searchable identifiers from the mangle:
-      ?method@class@@...   -> ["class::method", "method"]
-      ?name@@YA...         -> ["name"]           (free function)
-    A plain (already-demangled) `--fn` is returned as-is (probe case).
-    """
-    if not fn.startswith("?"):
-        return [fn]
-    core = fn[1:]
-    at = core.find("@")
-    if at < 0:
-        return [core]
-    method = core[:at]
-    rest = core[at + 1:]
-    # class chain is the @-separated tokens up to the "@@" template/type tail
-    cls = rest.split("@@", 1)[0]
-    cls_tokens = [t for t in cls.split("@") if t]
-    cands = []
-    if cls_tokens:
-        cands.append(f"{cls_tokens[0]}::{method}")  # nearest enclosing class
-    cands.append(method)
-    return cands
-
-
-def _fn_body_span(text: str, fn: str):
-    """(open_brace_idx, close_brace_idx) of fn's definition body.
-
-    Tries each source-name candidate (Class::method, then bare method) so a
-    mangled `--fn` locates a real member definition, not just plain probes.
-    """
-    pats = [rf"\b{re.escape(c)}\s*\(" for c in _source_name(fn)]
-    for pat in pats:
-        span = _body_from_pattern(text, pat)
-        if span is not None:
-            return span
-    return None
-
-
-def _body_from_pattern(text: str, pat: str):
-    for m in re.finditer(pat, text):
-        i, depth = m.end() - 1, 0
-        while i < len(text):
-            if text[i] == "(":
-                depth += 1
-            elif text[i] == ")":
-                depth -= 1
-                if depth == 0:
-                    break
-            i += 1
-        else:
-            return None
-        j = i + 1
-        while j < len(text) and text[j].isspace():
-            j += 1
-        if text.startswith("const", j):
-            j += 5
-            while j < len(text) and text[j].isspace():
-                j += 1
-        if j >= len(text) or text[j] != "{":
-            continue
-        k, depth = j, 0
-        while k < len(text):
-            if text[k] == "{":
-                depth += 1
-            elif text[k] == "}":
-                depth -= 1
-                if depth == 0:
-                    return j, k
-            k += 1
-        return None
-    return None
+# Body location is _source's job (shared with why-branch): it demangles the
+# special names (??0 / ??1 / operators) v1 could not spell, walks the full
+# definition grammar (member-initialiser list, cv / throw() / calling-
+# convention suffixes) and searches a MASKED view of the TU so a
+# `#if 0  // @carcass` stub can never be mistaken for the real body. These
+# aliases keep this module's internal call sites unchanged.
+_source_name = _source.source_names
+_fn_body_span = _source.body_span
 
 
 def _reassigned(tail: str, name: str) -> bool:
@@ -734,10 +666,10 @@ def run_why(args) -> int:
         return 0
 
     if not body_found:
-        print("[guided search] SKIPPED - could not locate the source body "
-              f"({' / '.join(_source_name(args.fn))}) in {src.name}; "
-              "diagnosis-only. Apply the indicated knob by hand, or pass a "
-              "TU where the definition is a locatable `Class::method(...)`.")
+        print(f"[guided search] SKIPPED - {_source.explain_miss(src_text, args.fn)}"
+              f"\n                (searched {src.name} for "
+              f"{' / '.join(_source_name(args.fn)) or '<no source name>'}); "
+              "diagnosis-only - apply the indicated knob by hand.")
         return 1
     print(f"[guided search] {len(results)} candidate mutation(s) from the "
           "catalog knob classes"
@@ -819,8 +751,9 @@ def _listing_defs(asm_path: Path, fn: str,
     lines = asm_path.read_text(errors="replace").splitlines()
     # the PROC block for fn (match on the mangled symbol when present)
     lo = hi = None
+    names = _source_name(fn)  # [] for a compiler-generated entity
     for i, ln in enumerate(lines):
-        if "PROC" in ln and (fn in ln or _source_name(fn)[-1] in ln):
+        if "PROC" in ln and (fn in ln or (names and names[-1] in ln)):
             lo = i
         elif lo is not None and "ENDP" in ln:
             hi = i
@@ -863,32 +796,12 @@ def _listing_defs(asm_path: Path, fn: str,
     return out
 
 
-def _fn_params(src_text: str, fn: str) -> list[str]:
-    """Parameter names of fn's located definition (last identifier of each
-    comma-separated declarator; best-effort)."""
-    span = _fn_body_span(src_text, fn)
-    if span is None:
-        return []
-    head = src_text[:span[0]]
-    close = head.rfind(")")
-    open_p = None
-    depth = 0
-    for i in range(close, -1, -1):
-        if head[i] == ")":
-            depth += 1
-        elif head[i] == "(":
-            depth -= 1
-            if depth == 0:
-                open_p = i
-                break
-    if open_p is None:
-        return []
-    out = []
-    for part in head[open_p + 1:close].split(","):
-        toks = re.findall(r"[A-Za-z_]\w*", part.split("=")[0])
-        if toks and toks[-1] not in ("void",):
-            out.append(toks[-1])
-    return out
+# Parameter names come from _source's RECORDED parameter span. Scanning
+# backwards from the body (v1) reads the last `(...)` before the brace,
+# which on a constructor is the last member-INITIALISER, not the parameter
+# list - `: type_bottom_view_window(parent)` is indistinguishable from a
+# parameter list in reverse.
+_fn_params = _source.params
 
 
 def _mut_alias_param(src_text: str, fn: str, param: str):
