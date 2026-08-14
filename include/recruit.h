@@ -197,7 +197,13 @@ public:
     };
 
     recruitUnit(town* newTown, int newDwellingIndex, int bInInTownMainScreen);
-    virtual void Close() OVERRIDE;   // slot 1, 0x5502d0
+    // The three baseManager slots of vtable 0x640c70. Only Close is
+    // reconstructed; the other two are declared so the class is
+    // concrete, which is what `new recruitUnit(...)` at the fort page's
+    // buy button needs.
+    virtual int Open(int newPriority) OVERRIDE;      // slot 0, 0x54fea0
+    virtual void Close() OVERRIDE;                   // slot 1, 0x5502d0
+    virtual int Main(message& msg) OVERRIDE;         // slot 2, 0x550940
 #endif
 
     void Update(unsigned char new_monster, long slot);

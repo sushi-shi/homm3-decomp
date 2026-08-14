@@ -12,9 +12,17 @@
 #include "townmgr.h"
 #undef HOMM3_TOWN_OBJ_DECLS
 #undef HOMM3_TOWNMGR_WINDOW_DECLS
+#define HOMM3_RECRUIT_DECLS
 #include "border.h"
 #include "button.h"
 #include "castle.h"
+// gpExecutive sits behind HOMM3_TOWN_OBJ_DECLS in exec.h, and this file
+// undefines that macro immediately after townmgr.h so game.h's town.h
+// stays in its narrow form. TCastleWindow::Recruit needs the global, so
+// the gate is re-opened for exec.h alone.
+#define HOMM3_TOWN_OBJ_DECLS
+#include "exec.h"
+#undef HOMM3_TOWN_OBJ_DECLS
 #include "game.h"
 #include "hero.h"
 #include "iconwdgt.h"
@@ -23,6 +31,7 @@
 #include "message.h"
 #include "misc.h"
 #include "mousemgr.h"
+#include "recruit.h"
 #include "remote.h"
 #include "resourcedisplay.h"
 #include "smackmgr.h"
@@ -164,6 +173,11 @@ char* GetBuildingInfo(const town* this_town, int buildingId,
 // the read in UpdateTownLocator is reconstructed, so the name stays
 // neutral.
 DATA(0x006aaa50) static int gUnnamed6aaa50;
+
+// The recruit dialog the fort page runs modally. All sixteen image-wide
+// references sit inside townmgr's bracket, so this compiland owns it;
+// the name follows recruit.h's own gp<Type> convention.
+DATA(0x006aaa54) static recruitUnit* gpRecruitUnit;
 
 #if 0  // @carcass
 
@@ -3279,6 +3293,47 @@ TCastleWindow::~TCastleWindow()
     for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
         if (*it)
             delete *it;
+    }
+}
+
+// E:\gamedcs\townmgr.cpp:8833
+// One dwelling row's buy button. `i` is the fort page's ROW, and the
+// dwelling it currently shows is the manager's own column byte; the row
+// does nothing at all unless that dwelling is active in the town.
+// The dialog is built on the heap, run modally through the executive and
+// freed with a plain operator delete - recruitUnit has virtual slots but
+// no destructor, which is what makes the free a bare ??3 call - and then
+// the page's resource bar and this row's growth count are refreshed.
+//
+// Residual (96.4%): the instruction SCHEDULE is retail's, one for one,
+// and every delta is a scratch-register rotation of the arm after the
+// mask test - retail parks each of the four re-read globals in edx where
+// our CL takes ecx/eax, and the whole tail rotates with it. why-reg
+// --model reports CAPPED: the transposed value is a call argument, not a
+// nameable local, so no statement-level knob reaches it. Tried and
+// rejected, all 96.43: binding the new'd pointer to a local before the
+// global store; the assignment folded into the null test; caching
+// townToView, and caching gpTownManager, in a local across the body;
+// early-return instead of the if-block; typing the global baseManager*
+// so the DoDialog argument needs no upcast; and a 0..4 type-definition
+// probe ahead of the body (inert - this is not the include-set knob).
+VA(0x005dce50, 0x126)  // anchor-callee(recruitUnit ctor 0x551560) + arity, dc 0x17f6e8
+void TCastleWindow::Recruit(int i)
+{
+    int dwelling = gpTownManager->currentDwellingIDOff[i];
+    if (gpTownManager->townToView->active & bitNumber[DWELLING_0_ID + dwelling]) {
+        gpRecruitUnit = new recruitUnit(gpTownManager->townToView, dwelling, 1);
+        if (!gpRecruitUnit)
+            MemError();
+        gpExecutive->DoDialog(gpRecruitUnit);
+        delete gpRecruitUnit;
+        CastleBank->Update(1, 1);
+        message textMessage;
+        textMessage.extraText = gText;
+        sprintf(gText, "%s %d", gpGeneralText->GetText(218),
+                gpTownManager->townToView->population[dwelling]);
+        BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, i + 0x21,
+                         textMessage.extra);
     }
 }
 
