@@ -34,15 +34,30 @@ DATA(0x00682378) static int gQuickHeroArmyPositions[7][2] = {
 };
 
 // E:\gamedcs\quickherowindow.cpp:37
-// Residual (86.84%): the complete widget recipe, both static coordinate
-// tables, all 54 retail branches, disguise selection, and seven-stack count
-// formatting are represented. Retail keeps vector::reserve's copy/destroy
-// helpers and the temporary mana string's _Tidy call out of line; this VC6
-// SP3 compile expands those pieces and carries a different register assignment
-// through the two disguise scans. Tried and rejected: an indexed/shared
-// ostrstream construction (75.28%), a pointer-form primary-stat loop (85.31%),
-// a named mana string with a scoped depth-zero destructor (85.07%), and a
-// depth-zero whole mana expression (86.54%).
+// Residual (90.78%): the complete widget recipe, both static coordinate
+// tables, disguise selection, and seven-stack count formatting are
+// represented. Retail keeps the temporary mana string's _Tidy call out of
+// line where this compile expands it to `if (p) operator delete(p)` - the
+// LAST call-multiset divergence in the whole function, everything else
+// pairs one for one - and carries a different register assignment through
+// the two disguise scans plus a pointer-cursor primary-stat loop where ours
+// indexes. Tried and rejected: an indexed/shared ostrstream construction
+// (75.28%), a pointer-form primary-stat loop (85.31%), a named mana string
+// with a scoped depth-zero destructor (85.07%), and a depth-zero whole mana
+// expression (86.54%).
+//
+// THE TROOP-COUNT WIDGET IS PUSHED IN EACH ARM, not assigned to a shared
+// `textWidget* troop_text` and pushed once after the if/else (86.84 ->
+// 90.78, 2026-08-14; the EH cleanup transcript is what found it, see
+// docs/vc6/eh-cleanup.md). Retail's `[ebp-4]` states ran ...,0xf,0xe,0x10,
+// 0xe,0x0 against our ...,0xf,0x10,0xe,0x0: retail closes the raw
+// textWidget pointer's cleanup region at the END OF EACH ARM, ours closed
+// it once. A region per arm is a `push_back(new ...)` per arm - VC6 then
+// tail-merges only the vector::insert call itself, so there is still just
+// one `insert` in the object, which is why the call multiset could not see
+// this and the transcript could. The proven-exact sibling
+// TQuickTownWindow::initialize_army_display writes it the same way. The eh
+// signal line is now absent from `diagnose` on this row.
 VA(0x0052ead0, 0x8C8)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
 TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
     : heroWindow(200, 200, 194, 186, 0x12)
@@ -156,7 +171,6 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
             int count = thisHero->disguiseLevel < DisguiseAdvanced
                 ? *current_count : 0;
             std::ostrstream quantity_text;
-            textWidget* troop_text;
             if (view_level >= ViewAll) {
                 if (count < 10000)
                     quantity_text << count;
@@ -164,19 +178,18 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
                     quantity_text << count / 1000 << "k";
 
                 quantity_text << std::ends;
-                troop_text = new textWidget(
+                Widgets.push_back(new textWidget(
                     coordinates[0], coordinates[1] + 34, 32, 11,
                     quantity_text.str(), "tiny.fnt", font::WHITE,
-                    widget_id++, 1, 0, 8);
+                    widget_id++, 1, 0, 8));
             } else {
                 quantity_text << armyGroup::GetArmySizeName(count, 0);
                 quantity_text << std::ends;
-                troop_text = new textWidget(
+                Widgets.push_back(new textWidget(
                     coordinates[0], coordinates[1] + 34, 32, 11,
                     quantity_text.str(), "tiny.fnt", font::WHITE,
-                    widget_id++, 1, 0, 8);
+                    widget_id++, 1, 0, 8));
             }
-            Widgets.push_back(troop_text);
             quantity_text.freeze(false);
         }
     }
