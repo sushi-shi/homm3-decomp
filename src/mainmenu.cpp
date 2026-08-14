@@ -114,17 +114,74 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 //     `_Destroy` inside the pinned toolchain's <vector>, which this repo may
 //     not edit. The divisor is the only axis this callee exposes to source.
 //
-// The other seven constructors are the SAME wall with different arithmetic;
-// each needs its own site count, titrated with the same xx_nop probe:
-//   systemoptionswindow  88.32 -> 97.18 at k=2 (k=3 95.83, k=4 84.63)
-//   quicktownwindow      96.31 -> 98.42 at k=4..6
-//   gametypewindow       93.73 -> 96.70 at k=1..4
-//   quickherowindow      86.84 -> 90.53 at k=4
-//   combatresultswindow  96.23, k>=1 strictly worse (it has NO reserve)
-//   campaignwindow       82.54, byte-flat for k=1..3
+// The other window constructors are the SAME wall with different arithmetic.
+// Settled 2026-08-14; see each file for its own ledger:
+//   systemoptionswindow  88.3182 -> 98.1326 (guard +2, then the slot-IV loops)
+//   quicktownwindow      96.3088 -> 98.4193 (last four push_backs as inserts)
+//   gametypewindow       93.7258 -> 100.0   (guard +1 AND five named rows)
+//   quickherowindow      87.8597 -> 90.5272 (last four push_backs as inserts)
+//   adventureoptionswindow 95.1212 -> 100.0 (guarded do-while, +2)
+//   quickinfowindow      92.7916, k=2 is worth 96.8141 but has NO supply
+//   levelupwindow        97.7369, (mass 12..24, k=1) is worth 98.6395
+//   combatresultswindow  96.2269, k>=1 strictly worse (it has NO reserve)
+//   campaignwindow       82.5365, flat on BOTH axes for k=1..3
 // Converting every push_back in those files is too coarse (+41, +10, +6 and +9
-// sites - all measured, all regressions); the open work is finding a
-// byte-neutral construct worth exactly the k above in each.
+// sites - all measured, all regressions).
+//
+// TWO REFINEMENTS to the rule above, both byte-measured 2026-08-14, and both
+// worth reading BEFORE titrating a new function:
+//
+// 1. THE PLACEMENT LAW / LAST-SITE SCREEN. Adding a candidate site at position
+//    p raises the divisor only for the sites BEFORE p (`budget / (n - k)`:
+//    sites after p get k and n bumped together). So first ask WHERE in the
+//    call order the divergent expansion sits.
+//      - If it is the LAST candidate site its divisor is `budget / 1` no
+//        matter how many sites precede it, and the knob simply does not exist:
+//        extra sites can then only perturb register allocation. A sibling lane
+//        measured exactly that on create_dismiss_widget / create_upgrade_widget
+//        (88.11 -> 85.5720 and 85.6314, both DOWN, the extra `end()` site
+//        breaking a `-1` materialisation retail hoists into EBX).
+//      - The window constructors are curable because the divergence sits in
+//        the LAST push_back and the body continues past it (the registration
+//        loop), so there is somewhere to put the sites. Swept directly on
+//        systemoptionswindow: two free sites are byte-flat at 88.3182 before
+//        `reserve`, immediately after `reserve`, and after each widget group,
+//        and jump to 97.1811 the moment they sit past the last push_back.
+//        That is also why converting the FIRST push_backs never paid anywhere.
+//      - The same screen explains the k=7,8 cliff to 93.34 above: past the
+//        intended site you are no longer tuning its divisor, only disturbing
+//        allocation.
+//
+// 2. THERE ARE TWO BUDGET AXES AND THEY MUST BE SWEPT TOGETHER. The divisor is
+//    one; the other is the caller's own `cb`, since `budget = 2 * cb(caller)`,
+//    so byte-inert statement mass in the CALLER raises what the head sites may
+//    spend. gametypewindow reached exact only at (mass in [4,8] statements,
+//    exactly one extra site) - and BOTH of its halves had already been
+//    measured alone, byte-flat, and recorded as dead ends in that very file.
+//    A one-axis "flat under titration" verdict is therefore not a verdict.
+//
+// The byte-neutral site knobs found so far, in order of reliability:
+//   +1  call `end()` twice - hoist the registration loop's first iterator
+//       (`widget** first = Widgets.begin(); if (first != Widgets.end())
+//       for (widget** it = first; it != Widgets.end(); ++it)`). The duplicate
+//       load is CSE-folded, so it emits nothing. Lands exactly on the k=1
+//       ladder value in systemoptionswindow (89.8628) and closes
+//       gametypewindow's site axis.
+//   +1  `push_back(x)` -> `insert(end(), x)`, but ONLY behind a
+//       `std::vector<widget*>*` local - naming `Widgets` at an insert site
+//       pins a second register. Exact ceiling in quickherowindow and
+//       quicktownwindow; NOT byte-neutral in systemoptionswindow (any
+//       position, 87.40 to 94.60) and destructive in quickinfowindow (~59).
+//   +2  the same hoist with the loop re-reading `Widgets.begin()`
+//       (begin x2 + end x2). Beats the xx_nop ceiling in systemoptionswindow
+//       (97.6237 vs 97.1811) because the hoist also fixes a begin/end load
+//       transposition; in adventureoptionswindow the transposition survives
+//       every `for`-bodied variant (99.9720) and only the guarded do-while
+//       form clears it (100.0).
+// NOT knobs, all measured: `if (!Widgets.empty())` and `Widgets.size() != 0`
+// are +1 with a byte cost; an index loop over `size()`/`operator[]`, a hoisted
+// `last`, `Widgets.back()` -> `begin()[size()-1]`, and `<` for `!=` all cost
+// bytes; `Widgets.back()` -> `Widgets.end()[-1]` is byte-neutral but +0.
 // E:\gamedcs\mainmenu.cpp:66
 VA(0x004fb2a0, 0x385)  // order-map: heroWindow(0,0,800,600) base + 5 button ctors from mmenung/lg/hs/cr/qt.def (ids 0x65-0x69), installs vtbl 0x63ff50, this-global 0x699660; called by oldmain; EH-bearing, dc 0xea2ec
 TMainMenu::TMainMenu()
