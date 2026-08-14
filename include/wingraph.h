@@ -23,6 +23,15 @@ struct tagRECT;
 void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
             IDirectDrawSurface4* srcSurface, const tagRECT* srcRect,
             unsigned long flags);                        // 0x6001d0
+// The screen blit winmgr hands a rectangle to: heroWindowManager's
+// UpdateScreen (0x602bd0) and both fades (0x6030e0 / 0x6032e0) call
+// 0x5ffe70 with `lea ecx, <rect>` and nothing else, i.e. the /Gr
+// fastcall applied to a one-pointer free function. DC files
+// DDAppBlit(const tagRECT*) as a 40-byte wrapper over
+// RobAppBlit(tagRECT*) and has winmgr call the wrapper; the retail row
+// is 860 B, so the pair is merged there. PROTOTYPE ONLY - the row is
+// wingraph.obj's to carve and claim.
+void DDAppBlit(const tagRECT* region);                   // 0x5ffe70
 
 // The DirectDraw surface pair (Blt target and game draw surface).
 // Owner attribution: the DD lifecycle (DDCreatePrimary/DDCreateSurface

@@ -13,6 +13,7 @@
 // Close deletes both owned bitmaps through the virtual slot-0 tail, so
 // this TU needs the COMPLETE Bitmap16Bit.
 #include "bitmap16.h"
+#include "wingraph.h"
 
 // E:\gamedcs\winmgr.cpp:66. The four unclaimed rows ahead of
 // ConvertToHover are the DC roster's ctor / Open / Close / Main run in
@@ -643,24 +644,6 @@ void heroWindowManager::FadeBlit(int sx, int sy, int sw, int sh, const Bitmap816
     // @stub
 }
 
-// E:\gamedcs\winmgr.cpp:1707
-// RETAIL_LOCATED 0x006030e0, 0x1F9 - FadeScreen's `mov` + `call` at
-// 0x602c78, i.e. an exact claimed caller naming it directly.
-DC_ONLY(0x19c1bc, 0x1FA)
-void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
-{
-    // @stub
-}
-
-// E:\gamedcs\winmgr.cpp:1866
-// RETAIL_LOCATED 0x006032e0, 0x1E5 - FadeScreen's second call, at
-// 0x602c91. Two other call sites, both in the DoDialog family.
-DC_ONLY(0x19c3b8, 0x230)
-void heroWindowManager::FadeFromBlack(int speed)
-{
-    // @stub
-}
-
 // E:\gamedcs\Bitmap816.h:73
 DC_ONLY(0x19c5e8, 0x8)
 const TPalette16* Bitmap816::GetPalette()
@@ -687,4 +670,151 @@ void heroWindowManager::ReleaseFizzleSource()
     if (field_4C)
         delete field_4C;
     field_4C = 0;
+}
+
+// E:\gamedcs\winmgr.cpp:1707 - the fade-out. Located by anchor-caller:
+// the already-exact FadeScreen calls this at 0x602c78.
+//
+// The three colour masks are widened into both halves of a dword so one
+// pass handles two 16-bit pixels; the fade itself is three passes that
+// shift every component right by the pass index and re-mask it into its
+// own field, so pass 0 is a plain copy. `speed` is dropped on the floor
+// - the pacing is the fixed 50 ms per pass below - but the parameter is
+// real: FadeScreen forwards it and `ret 8` fixes the frame at two
+// dwords.
+//
+// Residual (88.51%): one register-allocation choice in the pixel loop,
+// and its cascade. Retail keeps the loop's shift count in ebx and the
+// SOURCE pointer in edi, hoists `pDst - pSrc` into a per-row delta slot
+// and addresses the store as `[delta + src - 4]`; our CL puts the shift
+// in edi, the source pointer in ebx, and keeps a second live dst
+// pointer instead of the delta. Everything else - block graph, frame
+// layout, every mask/counter/timer slot displacement, the whole
+// post-loop tail - is byte-identical. Tried and rejected: `dst[x] =
+// f(src[x])` on both sides (VC6 does build the delta form there, but
+// picks the STORE pointer as the induction variable, 87.74%); the same
+// with the pointer pair declared dst-first (86.26%); `*dst++` for the
+// store (identical bytes to `dst[x]`); the fused
+// `((px & m) >> s) & m` expression with no named component temps
+// (77.60% - the three named temps below ARE load-bearing, they are what
+// orders the three `and`+`shr` pairs ahead of the three re-masks).
+VA(0x006030e0, 0x1F9)  // anchor-caller, dc 0x19c1bc
+void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
+{
+    unsigned long maskBlue = (gColorMaskBlue << 16) | gColorMaskBlue;
+    unsigned long maskGreen = (gColorMaskGreen << 16) | gColorMaskGreen;
+    unsigned long maskRed = (gColorMaskRed << 16) | gColorMaskRed;
+    Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+    RECT screenRect;
+
+    fadeFrom.Grab(screenBitmap->map, 0, 0, screenBitmap->Width,
+        screenBitmap->Height, screenBitmap->Pitch);
+
+    for (int shift = 0; shift < 3; shift++) {
+        unsigned long deadline = GameTime::Get() + 50;
+        unsigned long started = GameTime::Get();
+        unsigned char* pSrc = static_cast<unsigned char*>(
+            static_cast<void*>(fadeFrom.map));
+        unsigned char* pDst = static_cast<unsigned char*>(
+            static_cast<void*>(screenBitmap->map));
+        for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
+            unsigned long* src = static_cast<unsigned long*>(
+                static_cast<void*>(pSrc));
+            unsigned long* dst = static_cast<unsigned long*>(
+                static_cast<void*>(pDst));
+            for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
+                unsigned long pair = *src++;
+                unsigned long blue = (pair & maskBlue) >> shift;
+                unsigned long green = (pair & maskGreen) >> shift;
+                unsigned long red = (pair & maskRed) >> shift;
+                dst[x] = (red & maskRed) | (green & maskGreen)
+                    | (blue & maskBlue);
+            }
+            pSrc += fadeFrom.Pitch;
+            pDst += screenBitmap->Pitch;
+        }
+        screenRect.left = 0;
+        screenRect.top = 0;
+        screenRect.right = WINDOW_SCREEN_WIDTH;
+        screenRect.bottom = WINDOW_SCREEN_HEIGHT;
+        DDAppBlit(&screenRect);
+        if (GameTime::Get() - started > 50)
+            break;
+        GameTime::DelayTil(deadline);
+    }
+
+    screenBitmap->FillRect(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0);
+    screenRect.left = 0;
+    screenRect.top = 0;
+    screenRect.right = WINDOW_SCREEN_WIDTH;
+    screenRect.bottom = WINDOW_SCREEN_HEIGHT;
+    DDAppBlit(&screenRect);
+    if (expect_fadein) {
+        fadeFrom.Draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
+            screenBitmap->map, 0, 0, screenBitmap->Width,
+            screenBitmap->Height, screenBitmap->Pitch, 0);
+    }
+}
+
+// E:\gamedcs\winmgr.cpp:1866 - the fade-in, FadeScreen's second call at
+// 0x602c91. The mirror of FadeToBlack: the same three-pass shift walked
+// DOWNWARDS from 2 and stopping before 0, so the last pass is the
+// half-brightness frame and the full-brightness image is restored by
+// the Draw below rather than by a pass of its own.
+//
+// Residual (88.14%): the same single register-allocation divergence
+// FadeToBlack carries - see the note there.
+VA(0x006032e0, 0x1E5)  // anchor-caller, dc 0x19c3b8
+void heroWindowManager::FadeFromBlack(int speed)
+{
+    unsigned long maskBlue = (gColorMaskBlue << 16) | gColorMaskBlue;
+    unsigned long maskGreen = (gColorMaskGreen << 16) | gColorMaskGreen;
+    unsigned long maskRed = (gColorMaskRed << 16) | gColorMaskRed;
+    Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+    RECT screenRect;
+
+    fadeFrom.Grab(screenBitmap->map, 0, 0, screenBitmap->Width,
+        screenBitmap->Height, screenBitmap->Pitch);
+
+    for (int shift = 2; shift > 0; shift--) {
+        unsigned long deadline = GameTime::Get() + 50;
+        unsigned long started = GameTime::Get();
+        unsigned char* pSrc = static_cast<unsigned char*>(
+            static_cast<void*>(fadeFrom.map));
+        unsigned char* pDst = static_cast<unsigned char*>(
+            static_cast<void*>(screenBitmap->map));
+        for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
+            unsigned long* src = static_cast<unsigned long*>(
+                static_cast<void*>(pSrc));
+            unsigned long* dst = static_cast<unsigned long*>(
+                static_cast<void*>(pDst));
+            for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
+                unsigned long pair = *src++;
+                unsigned long blue = (pair & maskBlue) >> shift;
+                unsigned long green = (pair & maskGreen) >> shift;
+                unsigned long red = (pair & maskRed) >> shift;
+                dst[x] = (red & maskRed) | (green & maskGreen)
+                    | (blue & maskBlue);
+            }
+            pSrc += fadeFrom.Pitch;
+            pDst += screenBitmap->Pitch;
+        }
+        screenRect.left = 0;
+        screenRect.top = 0;
+        screenRect.right = WINDOW_SCREEN_WIDTH;
+        screenRect.bottom = WINDOW_SCREEN_HEIGHT;
+        DDAppBlit(&screenRect);
+        if (GameTime::Get() - started > 50)
+            break;
+        GameTime::DelayTil(deadline);
+    }
+
+    fadeFrom.Draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
+        screenBitmap->map, 0, 0, screenBitmap->Width, screenBitmap->Height,
+        screenBitmap->Pitch, 0);
+    screenRect.left = 0;
+    screenRect.top = 0;
+    screenRect.right = WINDOW_SCREEN_WIDTH;
+    screenRect.bottom = WINDOW_SCREEN_HEIGHT;
+    DDAppBlit(&screenRect);
 }
