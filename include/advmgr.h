@@ -788,6 +788,8 @@ public:
     // to ExtraInfoUnion::SetCellVisited as `this`, i.e. only the +0x00
     // dword is ever touched. The access specifier is dropped because
     // advManager is a single public block here.
+    void DoEventWarSchool(class hero* current_hero, ExtraInfoUnion* cell,
+                          bool human_player);
     void do_event_warrior_tomb(class hero* current_hero, ExtraInfoUnion* cell,
                                bool human_player);
     void do_event_watering_hole(class hero* current_hero, NewmapCell* cell,

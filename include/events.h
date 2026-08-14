@@ -11,11 +11,17 @@
 // the handler named beside it; the names describe those consumers,
 // which is the convention textresource.h's EGeneralTextIndex sets.
 // The rows run ALPHABETICALLY by adventure object, which is what makes
-// each object's lines contiguous and what places the two triples added
-// below exactly where they fall: warrior's tomb 161..163, water wheel
-// 164/165, watering hole 166/167, whirlpool 168, windmill 169/170,
-// witch hut 171..173.
+// each object's lines contiguous and what places every triple below
+// exactly where it falls: war school 158..160, warrior's tomb 161..163,
+// water wheel 164/165, watering hole 166/167, whirlpool 168, windmill
+// 169/170, witch hut 171..173.
 enum EAdventureEventText {
+    // DoEventWarSchool (0x4a7a40). 158 is the two-picture choice offered
+    // with iMBType 10 (+1 Attack against +1 Defense), 159 the
+    // already-trained line and 160 the "under 1000 gold" refusal.
+    ADV_EVENT_TEXT_WAR_SCHOOL_CHOOSE = 158,
+    ADV_EVENT_TEXT_WAR_SCHOOL_VISITED = 159,
+    ADV_EVENT_TEXT_WAR_SCHOOL_NO_GOLD = 160,
     // do_event_warrior_tomb (0x4a7c30). 161 is asked with iMBType 2 - the
     // yes/no form whose answer the handler reads back out of
     // heroWindowManager::dialogReturn - 162 is a sprintf format taking the

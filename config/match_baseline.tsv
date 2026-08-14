@@ -569,6 +569,7 @@ dxplay	?IsHost@CDPlay@@UAEEXZ	100.0000	100.0000	100.0000	0x96cb0
 dxplay	?SetGuid@CDPlay@@UAEXU_GUID@@@Z	100.0000	100.0000	100.0000	0x96c70
 event_record	?replay_available@game@@QBEEXZ	100.0000	100.0000	100.0000	0x9da70
 events	?DoEventWanderingMonster@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa79c0
+events	?DoEventWarSchool@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7a40
 events	?FizzleCenter@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0xacbb0
 events	?GetTeam@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xa5960
 events	?InitializeAdventureEventText@@YI_NXZ	100.0000	100.0000	100.0000	0x9e0e0
