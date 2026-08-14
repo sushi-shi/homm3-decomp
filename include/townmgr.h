@@ -505,7 +505,10 @@ public:
     heroWindow* TownWindow;       // +0x118
     strip* field_11c;             // +0x11c
     strip* field_120;             // +0x120
-    int field_124;                // +0x124
+    // +0x124 / +0x128, NAMED AND TYPED 2026-08-14 by select_army
+    // 0x5c8080: it stores the strip that was clicked and the slot
+    // inside it, in that order, before anything else it does.
+    strip* selectedStrip;         // +0x124
     int field_128;                // +0x128  ctor -1
     strip* field_12c;             // +0x12c
     int field_130;                // +0x130  ctor -1
@@ -606,6 +609,9 @@ public:
     // recruitUnit::Update 90.84 -> 88.24 with no semantic change.
 #ifdef HOMM3_TOWNMGR_WINDOW_DECLS
     void SetupMage(heroWindow* mageWin);
+    // Retail 0x5c8080 (dc 0x16d0dc). Latches the clicked troop slot and
+    // writes the status line for it.
+    void select_army(strip* fromStrip, int slot, unsigned char isOwnerCell);
     // Retail 0x5d27b0 (dc 0x17484c). Runs the town hall page.
     void DoHall();
     // castle.obj's, retail 0x461190 (dc 0x5c278) - the carve row
