@@ -570,13 +570,6 @@ int advManager::get_like_modifier(hero* current_hero, TCreatureType creature)
     // @stub
 }
 
-// E:\gamedcs\events.cpp:3847
-// RETAIL_LOCATED(0x004a76c0, 0x75)  // anchor-global, dc 0x97228
-int advManager::get_force_modifier(float strength_ratio)
-{
-    // @stub
-}
-
 // E:\gamedcs\events.cpp:3868
 // RETAIL_LOCATED(0x004a7740, 0x27E)  // linkorder, dc 0x97364
 void advManager::DoWanderingMonsterResult(NewmapCell* cell, hero* current_hero, type_point point, unsigned char human_player)
@@ -1967,4 +1960,26 @@ int game::GetTeam(int playerNum) const
     if (playerNum < 0)
         return playerNum;
     return mapHeader.teamInfo[playerNum];
+}
+
+// E:\gamedcs\events.cpp:3847.  How much a wandering stack's mood moves
+// with the force ratio between the two armies.  A hero seven times the
+// monsters' strength is off the top of the scale; from parity up it is a
+// linear `2r - 2`; below parity the three thresholds 0.5, 0.333 and
+// everything under it step down one grade each.  Retail compares against
+// DOUBLE literals but keeps the linear arm in float, which is what the
+// `fadd st,st` / `fsub dword` pair says: the `* 2` and the `- 2` are
+// integer literals inside a float expression.
+VA(0x004a76c0, 0x75)  // anchor-global, dc 0x97228
+int advManager::get_force_modifier(float strength_ratio)
+{
+    if (strength_ratio >= 7.0)
+        return 11;
+    if (strength_ratio >= 1.0)
+        return static_cast<int>(strength_ratio * 2 - 2);
+    if (strength_ratio > 0.5)
+        return -1;
+    if (strength_ratio > 0.333)
+        return -2;
+    return -3;
 }
