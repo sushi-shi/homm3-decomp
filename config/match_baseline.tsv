@@ -1267,6 +1267,7 @@ recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.00
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50
 remote	??0CGameTransferDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x157720
 remote	??0CGameTransferSmack@@QAE@XZ	100.0000	100.0000	100.0000	0x157410
+remote	??0CNetMsgHandler@@QAE@XZ	100.0000	100.0000	100.0000	0x1577f0
 remote	??0CSaveScreen@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1572e0
 remote	??_GCAnimatedDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x154a80
 remote	??_GCGameTransferDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157760
@@ -1275,6 +1276,7 @@ remote	?CalcDimensions@CGameTransferDlg@@UAEXPBDPAVfont@@AAH222@Z	100.0000	100.0
 remote	?CheckForWarning@CTurnDuration@@QAEXXZ	97.0930	97.0930	97.0930	0x157af0
 remote	?Clear@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157d60
 remote	?ClearChat@CChatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1540b0
+remote	?GetAbortPopupMsg@CNetMsgHandler@@UAEPAVCNetMsg@@XZ	100.0000	100.0000	100.0000	0x157900
 remote	?HasOldChat@CChatManager@@QAEEXZ	100.0000	100.0000	100.0000	0x153db0
 remote	?IsClose@CTurnDuration@@QAEEK@Z	100.0000	100.0000	100.0000	0x157d00
 remote	?IsExpired@CTurnDuration@@QAEEXZ	100.0000	100.0000	100.0000	0x157aa0

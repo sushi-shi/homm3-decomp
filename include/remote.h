@@ -16,12 +16,23 @@ class sample;
 // the polymorphic class identity.
 class CNetMsgHandler {
 public:
+    CNetMsgHandler();
+    // CORRECTION 2026-08-14, from retail's own vtable 0x640f14: it is FOUR
+    // slots wide, not three, and the shape is not the Dreamcast's. DC's
+    // field list introduces CheckHandleNet at vfptr offset 0,
+    // GetAbortPopupMsg at 4 and HandleNetMsg (PURE INTRO) at 8, with no
+    // virtual destructor at all. Retail put a virtual destructor in front
+    // of all three - slot 0 is the scalar deleting destructor 0x557810 -
+    // and kept the rest in the same relative order: CheckHandleNet
+    // (0x557860), GetAbortPopupMsg (0x557900), and _purecall (0x617d9a) in
+    // slot 3, which is what makes HandleNetMsg pure here too.
+    virtual ~CNetMsgHandler();                                    // slot 0
     virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
-                                    unsigned char* msgReceived);
-    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);
+                                    unsigned char* msgReceived);  // slot 1
+    virtual CNetMsg* GetAbortPopupMsg();                          // slot 2
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg) = 0;          // slot 3
 
     unsigned char IsInPopup() { return m_inPopup; }
-    CNetMsg* GetAbortPopupMsg() { return m_pAbortPopupMsg; }
     void SetInPopup(unsigned char b) { m_inPopup = b; }
 
 private:
@@ -48,6 +59,13 @@ SIZE(CAdvMgrNetMsgHandler, 0x0c);
 // bytes relative to DC's +0xe8 layout.
 class CDPlayHeroes : public CDPlayLobby {
 public:
+    // MEASURED 2026-08-14: this accessor must stay OUT OF LINE here.
+    // ~CNetMsgHandler (0x5578d0) reads and rewrites +0xf0 with no call, so
+    // retail's own header inlines it - but giving it an inline body here
+    // costs advmgr's CAdvPopup constructor 100.00 -> 69.33 (the include-set
+    // residual class, this TU's only consumer being an off-limits unit).
+    // That is why 0x5578d0 and the deleting destructor 0x557810 that
+    // inlines it are located but unclaimed.
     CNetMsgHandler* GetNetMsgHandler();
 
 private:
