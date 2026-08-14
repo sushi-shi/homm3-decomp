@@ -58,6 +58,37 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// The tree's representation-bridge idiom (game.cpp 0x60, ai_combat.cpp
+// 0x108), copied here for this compiland's two int-to-enum edges: it
+// keeps the conversion explicit without an enum cast, and VC6 reduces
+// the four-byte copy to a move.
+//
+// RedrawTownScreen crosses the creature edge because armyGroup::armies
+// is int by armygrp.h's own design while strip::DrawIcons takes the
+// Dreamcast's TCreatureType. SetupMage crosses the building edge
+// because retail passes is_legal_building a plain loop counter
+// (`mov edx,[ebp-4]; push edx` - no table, no conversion), so the
+// retail source contained the identical conversion.
+inline TCreatureType creature_type_from_int(int value)
+{
+    union {
+        int value;
+        TCreatureType creature;
+    } storage;
+    storage.value = value;
+    return storage.creature;
+}
+
+inline type_building_id building_id_from_int(int value)
+{
+    union {
+        int value;
+        type_building_id building;
+    } storage;
+    storage.value = value;
+    return storage.building;
+}
+
 // resourcemanager.h's one entry point this compiland needs, declared
 // file-locally rather than by including that header: BuyBuild is its
 // sole consumer here and townmgr.obj's include closure is load-bearing
@@ -2551,18 +2582,13 @@ void townManager::RedrawTownScreen()
     msg.extraText = statusText;
     TownWindow->BroadcastMessage(&msg);
 
-    // FLOOR RAISED HERE, `casts to enum types` 1 -> 2, blessed through
-    // `board --update`. armyGroup::armies is int on purpose (armygrp.h
-    // says so: it keeps the int-typed slot writes cast-free) while
-    // strip::DrawIcons takes the Dreamcast's TCreatureType, so the
-    // domain edge has to be crossed somewhere and every alternative
-    // just moves the same cast: an accessor on armyGroup is counted the
-    // same (the metric reads headers too), and re-typing `armies`
-    // pushes casts onto every writer instead. The cast is real - the
-    // value in it IS a creature type.
+    // armyGroup::armies is int by armygrp.h's own design (it keeps the
+    // int-typed slot writes cast-free) while strip::DrawIcons takes the
+    // Dreamcast's TCreatureType, so the domain edge is crossed through
+    // the file's representation bridge rather than through a cast.
     TCreatureType creature = CREATURE_NONE;
     if (field_1c4)
-        creature = static_cast<TCreatureType>(
+        creature = creature_type_from_int(
             field_12c->group->armies[field_130]);
     pResourceDisplay->Update(1, 0);
     field_11c->DrawIcons(0, creature);
@@ -3179,21 +3205,13 @@ void townManager::SetupMage(heroWindow* mageWin)
             if (townToView->type == TOWN_TOWER
                 && (townToView->active & bitNumber[EXTRA_1_ID]))
                 state++;
-            // The one cast into an enum domain in the tree, and the
-            // reason the cleanliness board's `casts to enum types` floor
-            // is 1 rather than 0. It is NOT the mis-modelled-domain smell
-            // that row exists to catch: type_building_id is correctly
-            // modelled, and this call's argument is a plain loop counter
-            // in retail's own code (`mov edx,[ebp-4]; push edx` - no
-            // table, no conversion), so the retail source contained the
-            // identical int-to-enum conversion. C++ offers no cast-free
-            // spelling: an enum has no increment and no implicit
-            // conversion FROM int, and town.cpp's can_build note already
-            // records this exact wall as the reason it declined to call
-            // is_legal_building at all. Revert = drop this guard and this
-            // function.
-            if (!townToView->is_legal_building(
-                    static_cast<type_building_id>(level)))
+            // The int-to-enum edge retail's own source crossed here:
+            // the argument is a plain loop counter (`mov edx,[ebp-4];
+            // push edx` - no table, no conversion). It goes through
+            // the file's representation bridge, which is what took the
+            // board's `casts to enum types` floor back to 0 - this site
+            // is the one that raised it to 1 in the first place.
+            if (!townToView->is_legal_building(building_id_from_int(level)))
                 state = 0;
             if (slot < townToView->mageGuildSpellCounts[level])
                 state = 0;
