@@ -546,10 +546,11 @@ TViewArmyWindow::TViewArmyWindow(armyGroup* group, int iarmy,
 // compile, not of any spelling available in this TU.
 //
 // The EH CLEANUP TRANSCRIPT names the boundary exactly (docs/vc6/
-// eh-cleanup.md): retail's state stores are [0,1,2,3,2,4,2,5,2,6,2] and
-// ours [2,3,2,4,2,5,2,6,2] - retail opens two regions we do not, and they
-// are the two string members. Retail CALLS the constructor at BOTH +0x6c
-// and +0x80; we call the first and INLINE the second, which is what the
+// eh-cleanup.md): retail's state stores are [0,1,2,3,2,4,2,5,2,6,2] and ours
+// [reg,2,3,2,4,2,5,2,6,2] - our first store is the CSE'd zero out of EBX, so
+// the deficit is ONE region, not two, and it is the SECOND string member's
+// construction. Retail CALLS the constructor at BOTH +0x6c and +0x80; we
+// call the first and INLINE the second, which is what the
 // /Ob2 allowance `budget / sites-remaining` predicts, since that quotient
 // GROWS along the site list and the later of two identical sites is the one
 // that gets expanded. The `xor ebx,ebx` constant-zero CSE that follows is

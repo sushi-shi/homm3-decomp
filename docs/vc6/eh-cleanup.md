@@ -81,12 +81,22 @@ The destructor's missing 14-byte funclet **is** the `mov [ebp-4],1` vs our
 - **ORDER** — same multiset, permuted. The unwind-map entries were allocated
   in a different order: a declaration-order or statement-order fact.
 
-The signal is best-effort and deliberately conservative. It is suppressed
-when the function has no `fs:[0]` prologue (an FP constant halved into the
-frame reads as `mov [ebp-4],0x3ff00000`) and when any value is outside
-`[-1, 0x1000]`. Those two guards removed **10 of 25** raw candidates.
+The signal is best-effort and deliberately conservative — **three** guards,
+and the third one is the one that matters most:
 
-## Tree-wide, 2026-08-14 (15 rows)
+1. no `fs:[0]` prologue ⇒ suppressed (an FP constant halved into the frame
+   reads as `mov [ebp-4],0x3ff00000`);
+2. any value outside `[-1, 0x1000]` ⇒ suppressed (the slot is a plain local);
+3. **the state store's source need not be an immediate.** When VC6 CSEs the
+   constant 0 into a register the store becomes `mov [ebp-4],ebx`. Those are
+   counted as region boundaries with an OPAQUE value, and when the two sides
+   have the same number of stores and either side has an opaque one, the row
+   is suppressed rather than judged.
+
+Guards 1 and 2 removed 10 of 25 raw candidates. Guard 3 removed a further 6 —
+including a divergence this document's first draft got **wrong** (below).
+
+## Tree-wide, 2026-08-14 (9 rows)
 
 | % | size | kind | row |
 |---|---|---|---|
@@ -94,33 +104,43 @@ frame reads as `mov [ebp-4],0x3ff00000`) and when any value is outside
 | 95.7583 | 399 | ORDER | `campaignbrief:??1TCampaignBrief@@UAE@XZ` |
 | 94.3114 | 2260 | COUNT | `bottomviewsubwindow:??0TBottomViewTown` |
 | 90.9329 | 1021 | COUNT | `ai_combat:?choose_melee@type_AI_combat_data` |
-| 90.0704 | 1156 | COUNT | `mainmenu:?MainMenuHandler` |
-| 89.4751 | 1392 | COUNT | `combatcontrolsubwindow:??0type_combat_sub_window` |
 | 86.8447 | 2248 | COUNT | `quickherowindow:??0TQuickHeroWindow` |
-| 82.9333 | 224 | COUNT | `mousemgr:?SetPointer@mouseManager` |
-| 77.1191 | 4896 | COUNT | `combatoptionswindow:??0TCombatOptionsWindow` |
-| 75.0139 | 1512 | COUNT | `artifact:?InitializeArtifactTraitsTable` |
 | 74.7874 | 968 | COUNT | `armygrp:?get_luck_description` |
 | 67.5649 | 2140 | COUNT | `armygrp:?get_morale_description` |
-| 59.3596 | 9632 | COUNT | `advmgr:?QuickInfo@advManager` |
 | 50.4577 | 3778 | COUNT | `game:?Load@game` |
 | 27.9354 | 2725 | COUNT | `game:?Save@game` |
 
-Two shapes recur and are worth naming:
+Every remaining COUNT row is retail-longer by exactly the pattern the rule
+predicts. Three worth naming:
 
-- **`[N, 0, N+1, 0, …]` on retail against `[N, N+1, …]` on ours**
-  (`type_combat_sub_window`, `combatoptionswindow` with the sides reversed).
-  VC6 skips the "back to the enclosing state" store when nothing between two
-  cleanup regions can throw. A side that emits the resets is a side where the
-  intervening statements can — usually because a callee stayed a CALL there.
-  So this shape is an **inliner** witness, not an independent wall.
-- **retail carries leading `0, 1` we lack** (`TViewArmyWindow(int,int,int,E)`).
-  Those two regions are the two `std::string` MEMBERS' constructors: retail
-  CALLS `basic_string::basic_string(const allocator&)` at both `+0x6c` and
-  `+0x80`, our compile calls the first and **inlines the second**. Since the
-  inliner's per-site allowance is `budget ÷ sites-remaining`, it GROWS along
-  the site list, which is exactly why the later of two identical sites is the
-  one that gets expanded.
+- **`TViewArmyWindow(int,int,int,E)`** — base `[reg,2,3,2,4,2,5,2,6,2]`,
+  retail `[0,1,2,3,2,4,2,5,2,6,2]`: retail opens ONE region we do not, and it
+  is the second `std::string` MEMBER's construction. Retail CALLS
+  `basic_string::basic_string(const allocator&)` at both `+0x6c` and `+0x80`;
+  our compile calls the first and **inlines the second**. That is what
+  `budget ÷ sites-remaining` predicts, since the quotient GROWS along the site
+  list, so the later of two identical sites is the one that gets expanded.
+- **`TBottomViewTown`** — retail's transcript carries a state `15` between our
+  `14` and `16`: one extra region, i.e. one construction we do not make. That
+  is the same deficit the site-count work measured as "+3", located exactly.
+- **`TQuickHeroWindow`** — retail has an extra `14` reset (`…,15,14,16,14,0`
+  against our `…,15,16,14,0`): a throwing statement between two regions that
+  our compile expanded away.
+
+## Correction, same day — `[N,0,N+1,0,…]` is NOT a cleanup-count divergence
+
+The first draft of this document named a second recurring shape:
+`[N,0,N+1,0,…]` on retail against `[N,N+1,…]` on ours, on
+`type_combat_sub_window` and (sides reversed) `TCombatOptionsWindow`, and read
+it as "the side that emits resets is the side whose intervening statements can
+throw". **That reading was an artefact of guard 3 not existing yet.** Both
+sides emit exactly the same number of regions; the side that "looked" to be
+missing its resets was simply spelling them `mov [ebp-4],ebx` off a CSE'd
+zero. With guard 3 both rows drop out of the table entirely, and neither has
+any EH divergence at all. The lesson generalises: **an EH state store sourced
+from a register is still an EH state store**, and any transcript comparison
+that only greps immediates will manufacture COUNT divergences on precisely the
+functions where the constant-zero CSE fired.
 
 ## Two negative results — do not re-measure these
 
@@ -136,7 +156,9 @@ Two shapes recur and are worth naming:
    second string constructor adds three more zero stores
    (`[esi+0x84]/[esi+0x88]/[esi+0x8c]`), and *that* is what tips VC6 into
    parking 0 in EBX (`xor ebx,ebx`, then `push ebx` / `mov [ebp-4],ebx` /
-   `mov [esi+0x94],bl`) where retail writes the immediate every time. The
-   same "CSE'd constant zero in the wrong register" note stands on
-   `type_combat_sub_window`; treat it as a symptom until its inline structure
-   agrees.
+   `mov [esi+0x94],bl`) where retail writes the immediate every time. This
+   one survives the guard-3 correction, because it is read off the CALL
+   structure and the store count, not off the state values. It does NOT
+   transfer to `type_combat_sub_window` on this evidence — that row's
+   transcripts agree once opaque stores are counted, so its recorded
+   constant-zero verdict stands unchanged.
