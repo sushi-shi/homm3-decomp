@@ -315,7 +315,7 @@ rva	function_count	class
 0x243cc4	9	heroWindow
 0x243ce8	14	
 0x243d20	11	File
-0x243d4c	3	
+0x243d4c	3	heroWindowManager
 0x24559c	3	
 0x2455bc	3	
 0x2455cc	3	

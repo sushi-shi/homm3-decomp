@@ -1596,6 +1596,7 @@ winfile	?Write@File@@UAEKPAXK@Z	100.0000	100.0000	100.0000	0x1ffc50
 wingraph	?GetDesktopHeight@@YIHXZ	100.0000	100.0000	100.0000	0x2014d0
 wingraph	?GetDesktopWidth@@YIHXZ	100.0000	100.0000	100.0000	0x2014c0
 wingraph	?InitGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x2014e0
+winmgr	?AddWindow@heroWindowManager@@QAEXPAVheroWindow@@HE@Z	100.0000	100.0000	100.0000	0x2023b0
 winmgr	?BroadcastMessage@heroWindowManager@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x202370
 winmgr	?Close@heroWindowManager@@UAEXXZ	100.0000	100.0000	100.0000	0x2022d0
 winmgr	?ConvertToHover@heroWindowManager@@QAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202360
