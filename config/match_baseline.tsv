@@ -574,6 +574,7 @@ events	?DoEventWarSchool@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.00
 events	?DoWanderingMonsterResult@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa7740
 events	?EraseAndFizzle@advManager@@QAEXPAVNewmapCell@@Utype_point@@H@Z	100.0000	100.0000	100.0000	0x9e170
 events	?EraseObj@advManager@@QAEXPAVNewmapCell@@Utype_point@@E@Z	100.0000	100.0000	100.0000	0xaabb0
+events	?EventSound@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xab410
 events	?FizzleCenter@advManager@@QAEXH@Z	100.0000	100.0000	100.0000	0xacbb0
 events	?GetTeam@game@@QBEHH@Z	100.0000	100.0000	100.0000	0xa5960
 events	?HeroLoses@advManager@@QAEXPAVhero@@H@Z	100.0000	100.0000	100.0000	0xac930

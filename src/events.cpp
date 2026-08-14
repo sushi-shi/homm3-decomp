@@ -3009,6 +3009,156 @@ end_game:
     CheckEndGame(0);
 }
 
+// E:\gamedcs\events.cpp:5390.  The ambient sample an adventure-map object
+// plays when a hero steps on it: one switch over the object type, one
+// std::string, and one launch_sample when the switch actually named
+// something. Every arm shares the sound with the whole family of objects
+// that carry it, which is why the 214-entry byte index in front of the
+// jump table collapses onto twenty-two arms.
+VA(0x004ab410, 0x632)  // anchor-bracket + the object sample pool, dc 0x9a288
+void advManager::EventSound(int eventID, int extraInfo)
+{
+    std::string sampleName;
+
+    switch (eventID) {
+    case MINE:
+        if (gpGame->mines[extraInfo].guards.HasCreatures())
+            sampleName = DATA_COMPGEN(0x00677898, mineGuardSampleName,
+                                      "mystery.wav");
+        else
+            sampleName = DATA_COMPGEN(0x00677888, flagMineSampleName,
+                                      "flagmine.wav");
+        break;
+    case FLOTSAM:
+    case LEAN_TO:
+    case WAGON:
+    case WATER_WHEEL:
+    case WINDMILL:
+        sampleName = DATA_COMPGEN(0x0067787c, genieSampleName, "Genie.wav");
+        break;
+    case SEPULCHER:
+    case WARRIOR_TOMB:
+        sampleName = DATA_COMPGEN(0x0067786c, graveyardSampleName, "Graveyard.wav");
+        break;
+    case ALTAR_OF_SACRIFICE:
+    case BLACK_BOX:
+    case BLACK_MARKET:
+    case DEAD_GUY:
+    case OBELISK:
+    case PYRAMID:
+    case THIEVES_DEN:
+        sampleName = DATA_COMPGEN(0x00677860, mysterySampleName, "Mystery.wav");
+        break;
+    case CREATURE_BANK:
+    case DERELICT_SHIP:
+    case PRISON:
+    case SHIPWRECK:
+        sampleName = DATA_COMPGEN(0x00677854, rogueSampleName, "Rogue.wav");
+        break;
+    case BORDER_GUARD:
+    case BORDER_TENT:
+    case UNDERGROUND_GATE:
+    case HERO_PLACEHOLDER:
+    case RANDOM_DWELLING_LEVEL:
+        sampleName = DATA_COMPGEN(0x00677844, caveHeadSampleName, "Cavehead.wav");
+        break;
+    case CARTOGRAPHER:
+    case COVER_OF_DARKNESS:
+    case EYE_OF_MAGI:
+    case HUT_OF_MAGI:
+    case LIGHTHOUSE:
+    case OBSERVATORY:
+    case PILLAR_OF_FIRE:
+        sampleName = DATA_COMPGEN(0x00677834, lighthouseSampleName, "Lighthouse.wav");
+        break;
+    case SEA_CHEST:
+    case TREASURE_CHEST:
+        sampleName = DATA_COMPGEN(0x00677828, chestSampleName, "Chest.wav");
+        break;
+    case CAMPFIRE:
+    case IDOL_OF_FORTUNE:
+    case MYSTICAL_GARDEN:
+        sampleName = DATA_COMPGEN(0x00677818, experienceSampleName, "Expernce.wav");
+        break;
+    case CREATURE_GENERATOR_1:
+    case CREATURE_GENERATOR_4:
+    case GARRISON:
+    case HILL_FORT:
+    case REFUGEE_CAMP:
+    case WAR_SCHOOL:
+        sampleName = DATA_COMPGEN(0x00677808, militarySampleName, "Military.wav");
+        break;
+    case ARENA:
+    case DEFENSE_TOWER:
+    case MERC_CAMP:
+        sampleName = DATA_COMPGEN(0x006777fc, nomadSampleName, "Nomad.wav");
+        break;
+    case ARTIFACT:
+    case SHIPWRECK_SURVIVOR:
+        sampleName = DATA_COMPGEN(0x006777ec, treasureSampleName, "Treasure.wav");
+        break;
+    case MAGIC_SCHOOL:
+    case MAGIC_SPRING:
+    case MAGIC_WELL:
+        sampleName = DATA_COMPGEN(0x006777e0, faerieSampleName, "Faerie.wav");
+        break;
+    case LIBRARY:
+    case POWER_SCHOOL:
+    case SCHOLAR:
+    case TRAINING_GROUNDS:
+    case TREE_OF_KNOWLEDGE:
+    case UNIVERSITY:
+    case WITCH_HUT:
+        sampleName = DATA_COMPGEN(0x006777d4, gazeboSampleName, "Gazebo.wav");
+        break;
+    case BUOY:
+    case FOUNTAIN_OF_YOUTH:
+    case OASIS:
+    case RALLY_FLAG:
+    case WATERING_HOLE:
+        sampleName = DATA_COMPGEN(0x006777c8, moraleSampleName, "Morale.wav");
+        break;
+    case CLOVER_FIELD:
+    case FAERIE_RING:
+    case FOUNTAIN_OF_FORTUNE:
+    case MERMAID:
+        sampleName = DATA_COMPGEN(0x006777bc, luckSampleName, "Luck.wav");
+        break;
+    case GARDEN_OF_REVELATION:
+    case SANCTUARY:
+        sampleName = DATA_COMPGEN(0x006777a8, getProtectionSampleName, "GetProtection.wav");
+        break;
+    case SHRINE1:
+    case SHRINE2:
+    case SHRINE3:
+    case TEMPLE:
+        sampleName = DATA_COMPGEN(0x0067779c, templeSampleName, "Temple.wav");
+        break;
+    case OCEAN_BOTTLE:
+    case SHIPYARD:
+    case SIGN:
+    case STABLES:
+    case TAVERN:
+    case TRADING_POST:
+    case WAR_MACHINE_FACTORY:
+        sampleName = DATA_COMPGEN(0x00677790, storeSampleName, "Store.wav");
+        break;
+    case DRAGON_CITY:
+        sampleName = DATA_COMPGEN(0x00677784, dragonSampleName, "Dragon.wav");
+        break;
+    case SEER:
+        sampleName = DATA_COMPGEN(0x00677778, questSampleName, "Quest.wav");
+        break;
+    case SIREN:
+    case WHIRLPOOL:
+        sampleName = DATA_COMPGEN(0x0067776c, dangerSampleName, "Danger.wav");
+        break;
+    }
+
+    if (sampleName.size())
+        launch_sample(sampleName.c_str(), -1, 3);
+}
+
 // E:\gamedcs\events.cpp:6007.  Retires a hero from the adventure map -
 // combat loss, whirlpool, or any other vanishing - and then asks whether
 // that loss ends the game.

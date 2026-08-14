@@ -198,6 +198,16 @@ enum TAdventureObjectType {
     // RANDOM_ARTIFACT_1..4 rows already use because an RoE
     // CLOVER_FIELD (14) is named above; none of the eight collides
     // with armygrp.h's separate MAGIC_TERRAIN_* mode enum.
+    // The two map-EDITOR placeholder types advManager::EventSound has to
+    // name: retail's 214-entry object-sound index runs to 215 and puts
+    // both of these on the border-guard arm. Neither is in the Dreamcast
+    // enum, so the names come from the same public object-type list the
+    // 222..231 block above was taken from - GATED to the events view so
+    // this enum's population is unchanged for its other consumers.
+#ifdef HOMM3_EVENTS_VIEW
+    HERO_PLACEHOLDER           = 212,
+    RANDOM_DWELLING_LEVEL      = 215,
+#endif
     CLOVER_FIELD_2             = 222,
     EVIL_FOG                   = 224,
     FAVORABLE_WINDS            = 225,
