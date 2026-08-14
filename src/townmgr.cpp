@@ -284,6 +284,16 @@ DATA(0x006a5dfc) extern const char* gUnnamed6a5dfc;
 // and no writer anywhere in the image, so both are declared rather than
 // claimed and both keep neutral names.
 DATA(0x006a5e00) extern const char* gUnnamed6a5e00;
+// select_army's five, on the same standing again: every image-wide
+// reference to each lands inside this compiland's bracket (the four
+// formats in SetCommandAndText 0x5c77a0 and in select_army 0x5c8080,
+// the "nothing here" line in both), and nothing in the image writes
+// them, so they are declared and keep neutral names.
+DATA(0x006a5db0) extern const char* gUnnamed6a5db0;
+DATA(0x006a5db4) extern const char* gUnnamed6a5db4;
+DATA(0x006a5e04) extern const char* gUnnamed6a5e04;
+DATA(0x006a5e08) extern const char* gUnnamed6a5e08;
+DATA(0x006a5e0c) extern const char* gUnnamed6a5e0c;
 DATA(0x006a6524) extern const char* gUnnamed6a6524;
 
 #if 0  // @carcass
@@ -359,7 +369,7 @@ townManager::townManager()
     TownWindow = 0;
     field_11c = 0;
     field_120 = 0;
-    field_124 = 0;
+    selectedStrip = 0;
     field_128 = -1;
     field_12c = 0;
     field_130 = -1;
@@ -873,6 +883,56 @@ void townManager::Close()
 // TThievesGuildWindow's by the destructor below), by the TPRank.pcx
 // background the carve named the row after, and by `ret 4` against the
 // Dreamcast roster's one-int declarator.
+
+// Latches which troop slot the page has selected and writes the status
+// line that goes with it. The strip and the slot are remembered on the
+// manager; the line names the creature in that slot, singular or
+// plural by its own count, and the format is picked by which of the
+// two armies the strip is showing and by whether the click was on the
+// owner cell. An empty strip or an empty slot takes the "nothing here"
+// line and parks the command at -2 instead of 0.
+//
+// Slot ids past 150 fall back to the empty rollover string, which is
+// the same clamp the creature-traits table's own extent gives.
+
+// E:\gamedcs\townmgr.cpp:3787
+VA(0x005c8080, 0x108)  // order-map(last row before the thieves' guild) + arity(ret 0xc, 3 args) + statusText edge, dc 0x16d0dc
+void townManager::select_army(strip* fromStrip, int slot,
+                              unsigned char isOwnerCell)
+{
+    selectedStrip = fromStrip;
+    field_128 = slot;
+
+    if (!fromStrip->group || fromStrip->group->armies[slot] < 0) {
+        strcpy(statusText, gUnnamed6a5db0);
+        field_19c = -2;
+        return;
+    }
+
+    const char* name;
+    if (fromStrip->group->armies[slot] <= 150) {
+        if (fromStrip->group->numTroops[slot] == 1)
+            name = akCreatureTypeTraits[fromStrip->group->armies[slot]].m_name;
+        else
+            name = akCreatureTypeTraits[fromStrip->group->armies[slot]]
+                       .m_plural_name;
+    } else {
+        name = emptyRolloverText;
+    }
+
+    if (isOwnerCell) {
+        if (!fromStrip->pos)
+            sprintf(statusText, gUnnamed6a5e08, name);
+        else
+            sprintf(statusText, gUnnamed6a5e0c, name);
+    } else {
+        if (!fromStrip->pos)
+            sprintf(statusText, gUnnamed6a5db4, name);
+        else
+            sprintf(statusText, gUnnamed6a5e04, name);
+    }
+    field_19c = 0;
+}
 
 // E:\gamedcs\townmgr.cpp:3859
 VA(0x005c8190, 0x14C8)  // anchor-vtable 0x643764 + anchor-string TPRank.pcx + arity, dc 0x16d298
@@ -1708,7 +1768,7 @@ type_garrison_base_window::type_garrison_base_window(hero* inHero,
     gpTownManager->townToView = 0;
     gpTownManager->field_134 = 0;
     gpTownManager->field_12c = 0;
-    gpTownManager->field_124 = 0;
+    gpTownManager->selectedStrip = 0;
     gpTownManager->field_138 = -2;
     gpTownManager->field_130 = -2;
     gpTownManager->field_128 = -2;

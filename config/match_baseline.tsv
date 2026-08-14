@@ -1552,6 +1552,7 @@ townmgr	?WindowHandler@TCastleWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0
 townmgr	?WindowHandler@TShipWindow@@UAEHPAVmessage@@@Z	99.9841	99.9841	99.9841	0x1d25a0
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@PAVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0x1d12b0
 townmgr	?do_monster_join_dialog@@YIXPAVhero@@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x1d11d0
+townmgr	?select_army@townManager@@QAEXPAVstrip@@HE@Z	100.0000	100.0000	100.0000	0x1c8080
 tradpost	??1TBuyArtifactWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e56c0
 tradpost	??1TGiveResourceWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e36c0
 tradpost	??1TSellArtifactWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1e7c10
