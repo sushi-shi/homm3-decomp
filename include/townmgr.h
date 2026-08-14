@@ -291,9 +291,8 @@ public:
 
     TBlacksmithWindow(int heroID, int inTownType);
     virtual ~TBlacksmithWindow();
-    // Retail 0x5d1aa0 / 0x5d1b60 (dc 0x173a88 / 0x173b00), each a `ret 4`
-    // taking the widget id. Declared for the handler's two call edges;
-    // neither is reconstructed, so neither is defined.
+    // 0x5d1aa0 / 0x5d1b60 (dc 0x173a88 / 0x173b00), each a `ret 4`
+    // taking the widget id - which the right-click one never reads.
     void SetRightClickText(int id);
     void SetRolloverText(int id);
     virtual int WindowHandler(message* msg) OVERRIDE;   // slot 9, 0x5d1c60

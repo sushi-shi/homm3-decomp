@@ -1532,6 +1532,8 @@ townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	
 townmgr	?Open@TTavernWindow@@UAEHHE@Z	100.0000	100.0000	100.0000	0x1d7e20
 townmgr	?Recruit@TCastleWindow@@QAEXH@Z	96.4286	96.4286	96.4286	0x1dce50
 townmgr	?ResetStrips@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5530
+townmgr	?SetRightClickText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1aa0
+townmgr	?SetRolloverText@TBlacksmithWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1d1b60
 townmgr	?SetRolloverText@TCastleWindow@@QAEXPAVmessage@@@Z	64.0269	64.0269	64.0269	0x1dcbf0
 townmgr	?SetupMage@townManager@@QAEXPAVheroWindow@@@Z	99.9275	99.9275	99.9275	0x1d6ef0
 townmgr	?SetupWell@townManager@@QAEXPAVTCastleWindow@@@Z	98.5801	98.5801	98.5801	0x1dd390

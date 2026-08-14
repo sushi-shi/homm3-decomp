@@ -4,6 +4,12 @@
 #include <va.h>
 #include <stdio.h>
 #include <string.h>
+// hero.h's type_artifact::get_description declarator, for the
+// blacksmith's right-click text. Set ahead of every include because
+// hero.h is reached through more than one of them and its guard makes
+// only the first inclusion count; it widens this compiland's view of
+// type_artifact by exactly one member declarator and nothing else.
+#define HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS
 #define HOMM3_TOWNMGR_WINDOW_DECLS
 #define HOMM3_TOWN_OBJ_DECLS
 // Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
@@ -140,15 +146,18 @@ DATA(0x0068a340) static const char* const gBoatDefNames[9] = {
 // that machine occupies once bought. All seven references to the
 // creature table land inside townmgr's bracket, so this compiland owns
 // it; the artifact table is also read from advmgr's town-event path
-// (0x525903), so it is a definition rather than a file-static. The
-// second column of each artifact pair is never read by a reconstructed
-// body.
+// (0x525903), so it is a definition rather than a file-static.
 // (146 ballista, 147 first aid tent, 148 ammo cart - no enumerator for
 // the war machines exists yet and armygrp.h is not this lane's to grow.)
+//
+// The artifact table is a table of RECORDS, not of int pairs:
+// SetRightClickText 0x5d1aa0 copies both dwords of a row into an 8-byte
+// local and calls type_artifact::get_description on it, which is the
+// artifact record's own member. The pair spelling was a placeholder.
 DATA(0x00642e90) static const int gBlacksmithMachines[9] = {
     146, 147, 148, 148, 147, 146, 148, 147, 146
 };
-DATA(0x006aa9f8) int gBlacksmithArtifacts[9][2];
+DATA(0x006aa9f8) type_artifact gBlacksmithArtifacts[9];
 
 // window.obj's text setter, retail 0x5ffa30: a free function, so /Gr
 // makes it fastcall (heroWindow* in ecx, the text id in edx) - which is
@@ -1888,7 +1897,7 @@ TBlacksmithWindow::TBlacksmithWindow(int heroID, int inTownType)
 
     hero* visitor = gpGame->GetHero(gpTownManager->townToView->visitingHeroId);
     if (!SmithAffordable(cost)
-        || visitor->HasArtifact(gBlacksmithArtifacts[townType][0])) {
+        || visitor->HasArtifact(gBlacksmithArtifacts[townType].artifactId)) {
         msg.codeX = widget::WIDGET_SET_STATUS;
         msg.codeY = BUY_BUTTON_ID;
         msg.extra = widget::WIDGET_DIMMED_NODRAW;
@@ -1912,6 +1921,52 @@ TBlacksmithWindow::~TBlacksmithWindow()
         if (*it)
             delete *it;
     }
+}
+
+// The right-click text of the machine on sale. The widget id is DEAD -
+// no byte of the body reads [ebp+8] - because the dialog has only one
+// thing to describe whatever was clicked: the war machine's artifact.
+// The description comes from the artifact RECORD, copied out of the
+// table by value, and comes back as a std::string by value, which is
+// what the /GX frame and the inlined refcount teardown at the tail are.
+
+// E:\gamedcs\townmgr.cpp:5296
+VA(0x005d1aa0, 0xB3)  // anchor-bracket + arity(ret 4) + the handler's call edge, dc 0x173a88
+void TBlacksmithWindow::SetRightClickText(int id)
+{
+    type_artifact machine = gBlacksmithArtifacts[townType];
+    NormalDialog(machine.get_description().c_str(), 4, -1, 28,
+                 -1, 0, -1, 0, -1, 0, -1, 0);
+}
+
+// The status-bar line, the shipyard dialog's rollover to the statement:
+// one text per button, the empty string for everything else, then the
+// same broadcast/redraw/blit tail over the same 0x138x0x11 status strip
+// at the same offset inside the same 329x388 popup.
+
+// E:\gamedcs\townmgr.cpp:5302
+VA(0x005d1b60, 0xF6)  // anchor-bracket + arity(ret 4) + the handler's call edge, dc 0x173b00
+void TBlacksmithWindow::SetRolloverText(int id)
+{
+    switch (id) {
+    case CANCEL_BUTTON_ID:
+        sprintf(gText, gpGeneralText->GetText(597),
+                akCreatureTypeTraits[gBlacksmithMachines[townType]].m_name);
+        break;
+    case BUY_BUTTON_ID:
+        sprintf(gText, gpGeneralText->GetText(596),
+                akCreatureTypeTraits[gBlacksmithMachines[townType]].m_name);
+        break;
+    default:
+        strcpy(gText, emptyRolloverText);
+        break;
+    }
+    message textMessage;
+    textMessage.extraText = gText;
+    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 8,
+                     textMessage.extra);
+    DrawWindow(0, 7, 8);
+    gpWindowManager->UpdateScreen(x + 8, y + 0x16b, 0x138, 0x11);
 }
 
 // The blacksmith's handler, and the third member of the compiland's

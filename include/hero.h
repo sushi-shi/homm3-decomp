@@ -111,7 +111,14 @@ struct type_artifact {
         : artifactId(id), extra(extraValue) {}
 #endif
 
-#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
+// townmgr.cpp's blacksmith right-click text (0x5d1aa0) calls this on a
+// copy of the war machine's artifact record, so that compiland needs the
+// declarator too. It gets its own narrow gate rather than
+// HOMM3_ADVMGR_QUICKINFO_VIEW: that macro also widens game.h, mapcell.h
+// and advmgr.h, and a compiland's include closure is load-bearing here
+// (the initialize_game_data precedent).
+#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) \
+    || defined(HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS)
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_description();
 #endif
