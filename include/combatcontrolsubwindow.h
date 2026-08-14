@@ -12,6 +12,42 @@ class hero;
 class iconWidget;
 class textWidget;
 
+// The family base. Retail's 0x46b610 constructor takes (parent, sprite
+// name), chains ??0TSubWindow, stores the 0x63d410 vptr and one dword at
+// +0x34. The two derived tables 0x63d420 and 0x63d430 follow 0x63d410 at a
+// 16-byte stride, so every table in the family holds FOUR slots - exactly
+// the Dreamcast record's virtual set: the destructor, set_rollover,
+// set_rollover_buttons and DisableAllButtons (see the CODEVIEW block).
+//
+// The base's extent is NOT settled and no derived field is named here.
+// 0x4721d0 allocates TCombatPlacementSubWindow at 0x3c and
+// TCombatControlSubWindow at 0x40; the base constructor writes +0x34, the
+// control constructor writes +0x38 and +0x3c, and the placement
+// constructor writes neither - which leaves the +0x38 dword attributable
+// either to the base or to each derived class. The three destructors
+// below need none of it: every one is the base body, and the base body
+// touches only the inherited TSubWindow subobject.
+class type_combat_sub_window : public TSubWindow {
+public:
+    virtual ~type_combat_sub_window();
+};
+
+// Its constructor stores 0x63d420 and passes "cbar.pcx" (0x670030) to the
+// base; the sole construction site is 0x4721d0, reached from
+// combatManager::Open. The destructor body is empty in retail - all 120
+// bytes are the base destructor inlined whole.
+class TCombatControlSubWindow : public type_combat_sub_window {
+public:
+    virtual ~TCombatControlSubWindow();
+};
+
+// The same shape one class over: 0x63d430, "coplacbr.pcx" (0x670054), the
+// same 0x4721d0 construction site, the same empty destructor.
+class TCombatPlacementSubWindow : public type_combat_sub_window {
+public:
+    virtual ~TCombatPlacementSubWindow();
+};
+
 // Retail's two construction sites allocate 0x5c bytes. The constructor and
 // Show/UnShow pair independently fix the TSubWindow base, the nine pointer
 // fields at +0x34..+0x54, and the shown byte at +0x58.
@@ -46,6 +82,11 @@ class TCombatCreatureSubWindow : public TSubWindow {
 public:
     char pad_34[0x34];
     bool shown;
+
+    // Its 0x63d444 table holds exactly one slot: 0x63d440 (the sibling
+    // TCombatHeroSubWindow's table) sits four bytes earlier, so neither
+    // class adds a virtual beyond the destructor.
+    virtual ~TCombatCreatureSubWindow();
 
     // 0x46df80. LOCATED 2026-08-13 from combatManager::DoCommand
     // (0x476bd0), which closes the two hero panels through the proven

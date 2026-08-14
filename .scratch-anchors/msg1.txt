@@ -1,0 +1,97 @@
+Anchor 194 orphaned claims - 3-candidate brackets 500 -> 114
+
+Comments only plus one accepting change in the link-order parser. No
+codegen change, no score change: 1103/1470 exact, 16.28% before and
+after, full build exit 0, ratchet clean.
+
+FINISHING THE SWEEP. The previous commit fixed 42 of the orphaned claims;
+this one takes every remaining unit outside the two reserved sets. 161
+claims got their origin line from the claim's OWN `dc 0x...` note - the
+Dreamcast roster offset it already records - resolved straight to
+file+line in evidence/dreamcast/functions.csv. That is a stronger
+derivation than the declarator lookup the last pass used, because the
+offset identifies one roster row outright; the declarator form was kept
+only for the 17 claims carrying no dc note, and only where the name was
+UNIQUE inside the unit's own .obj. 14 were left alone: working names
+(`_vslot2`, `GetSize`) that no roster declarator matches, a fourth
+TPalette24 constructor when the roster has exactly three, two soundmgr
+and one ai_combat body absent from the roster entirely, and remote's
+~CNetMsgHandler whose dc note points at an offset with no roster row.
+
+Two arity screens paid off inside the declarator form. bitmap24 has
+three constructors and two Draw overloads under one name each; the
+roster's param counts (which include `this`) separate them cleanly -
+6 params for (name,w,h,source,size), 3 for (name,path), 8 for the
+short Draw - so all three resolved uniquely instead of being skipped.
+
+SEERHUT NEEDED A NEW ORIGIN FORM, and it is the single biggest win here.
+Its 33 claims are the ten retail quest classes, which the Dreamcast port
+does not have: its TSeerHut carries the quest inline and switches on a
+type word, and seerhut.obj's roster is 20 rows of a different model. So
+no roster row supplies a line, and the file:line form cannot express the
+claim without inventing one. parse_unit now also accepts a bare DOS path
+with no line:
+
+  // E:\gamedcs\seerhut.cpp
+
+recorded as line 0. This is a strict superset of the old behaviour - the
+carve only ever reads the FILE, so a line-less origin anchors exactly as
+well - and it cannot collide with prose: the whole comment must be one
+DOS path and nothing else, a form that occurs zero times across src/
+outside the 33 lines added here.
+
+That one unit was worth more than everything else combined. seerhut was
+the sole unspanned candidate in the search..singleselectionpopups gap -
+46,782 B holding 182 carved functions - so anchoring it moved 155
+functions out of the 3-candidate class and put 106 more under a named
+owner.
+
+CORROBORATION. Within a TU, retail address order should reproduce DC
+source line order. Over every own-cpp anchor tree-wide with a line
+(767 claims, up from the 138 the last pass could check): 7 inversions.
+One is pre-existing in `town`, which this commit does not touch. The six
+new ones - ai x2, ai_player, hiscore, initialize, resourcemanager - are
+each a same-.obj, same-.cpp pair whose DC declarator matches the claim's
+declarator by name, so the origin FILE (all the carve reads) is right in
+every case and only the two revisions' statement order differs. Two are
+independently confirmed as real reorders: ai's get_area_attack_value and
+find_attack_hexes sit BEFORE their neighbours in the DC image as well as
+in DC line order, and after them in retail.
+
+Checked against DC EMISSION order instead, the same 744 claims give 13
+inversions, and the extra ones are all destructor-before-constructor
+pairs in units this commit does not touch (border, button, dialogbox,
+textwdgt, bottomviewsubwindow). That is the known Dreamcast habit of
+appending destructors to the compiland tail - cspriteframe.cpp already
+records it - so DC LINE order, not DC address order, is the invariant
+worth checking.
+
+STRUCTURAL RESULT, against a freshly recomputed baseline (the checked-in
+evidence/link-order tables are stale and were reverted, not committed):
+
+                        before    after
+  units spanned            109      116
+  own-cpp anchors        1,186    1,260
+  span coverage          31.5%    33.9%
+  functions owned        1,706    1,868
+  functions bracketed    2,934    2,772
+  2-candidate            2,057    2,388
+  3-candidate              500      114
+  4-candidate              377      270
+
+Link order is still exactly alphabetical and no span overlaps any other,
+so the 74 new anchors are all mutually consistent.
+
+WHAT IS LEFT is exactly two sets, neither of them this lane's to touch:
+the external worker's units (hero 46/132, game 41/94, ai_tactical 35/85,
+town 8/47, advmgr 72/109, cmbtmgr 31/62, window 11/29, findpath 4/19,
+mapcell 55/67, misc 3/15, army 1/10, command 4/11, path 3/8,
+victorylossconditions 14/18) and other lanes' (armygrp 16/35, kbwin 1/12,
+mousemgr 5/14, font 3/11, recruit 0/8, townmgr 0/1, iconwdgt 2/9,
+inputmgr 3/10, and eight more with one or two each). recruit and townmgr
+are the only zero-anchor units still standing. The residual 4-candidate
+brackets are not fixable by anchoring at all: they are gaps whose
+unspanned candidates are Dreamcast-only compilands with no retail
+claims to anchor (ds_engine, dxplay, dc_input, dc_precompiledheaders).
+
+Co-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>

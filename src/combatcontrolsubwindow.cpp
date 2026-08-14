@@ -124,6 +124,99 @@ void TCombatHeroSubWindow::Update(const hero* info, const hero* otherHero, unsig
 // E:\gamedcs\combatcontrolsubwindow.cpp:472
 #endif  // @carcass
 
+// --- the combat sub-window destructor family --------------------------
+// Retail lays this compiland out in plain source order, and that order is
+// the Dreamcast roster's, so the run from the base constructor to
+// TCombatHeroSubWindow::Show below maps one-for-one with no freedom left:
+//
+//   retail      size   Dreamcast row                                 line
+//   0x46b610   0x570   type_combat_sub_window::ctor                    44
+//   0x46bb80    0x21   type_combat_sub_window::`scalar deleting dtor' 116
+//   0x46bbb0    0x78   type_combat_sub_window::~                      122
+//   0x46bc30   0x26d   TCombatControlSubWindow::ctor                  177
+//   0x46bea0    0x21   TCombatControlSubWindow::`scalar deleting dtor'214
+//   0x46bed0    0x78   TCombatControlSubWindow::~                     222
+//   0x46c050   0x18c   TCombatPlacementSubWindow::ctor                282
+//   0x46c1e0    0x21   TCombatPlacementSubWindow::`scalar del dtor'   308
+//   0x46c210    0x78   TCombatPlacementSubWindow::~                   317
+//   0x46c370   0x7fc   TCombatHeroSubWindow::ctor                     343
+//   0x46cb70    0x21   TCombatHeroSubWindow::`scalar deleting dtor'   396
+//   0x46cba0    0x6b   TCombatHeroSubWindow::~                        407
+//   0x46cc10   0x1d7   TCombatHeroSubWindow::Update                   428
+//   0x46cdf0    0x74   TCombatHeroSubWindow::Show                     472  <- claimed
+//
+// The two ends are already fixed - Show and UnShow were claimed from
+// their bodies - and each 33-byte wrapper sits immediately ahead of its
+// destructor, so the ??_G/~dtor pairs are read off the carve, not
+// guessed. Two independent facts name the two derived classes: their
+// constructors call the base 0x46b610 with "cbar.pcx" (0x670030) and
+// "coplacbr.pcx" (0x670054) respectively, and their own vptr stores are
+// 0x63d420 and 0x63d430 - the two tables that follow the base's 0x63d410
+// at the family's 16-byte stride.
+//
+// All three destructors are the SAME 120 bytes. The derived bodies are
+// empty in retail, so each is the base destructor inlined whole: the
+// 0x63d410 vptr store, the widget-removal loop and the ??1TSubWindow
+// call. The derived class's own vptr store is dead - the inlined base
+// overwrites it - and VC6 kills it, which is why not one of these bodies
+// names its own table.
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:116
+VA_COMPGEN(0x0046bb80, 0x21, SCALAR_DELETING_DTOR, type_combat_sub_window)
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:122
+VA(0x0046bbb0, 0x78)  // vtable 0x63d410 + widget-removal loop + TSubWindow dtor, dc 0x64eec
+type_combat_sub_window::~type_combat_sub_window()
+{
+    for (std::vector<widget*>::iterator it = Widgets.begin();
+         it != Widgets.end(); ++it) {
+        widget* item = *it;
+        if (item) {
+            parentWindow->RemoveWidget(item);
+            delete item;
+        }
+    }
+}
+
+// BLOCKED on the constructor: VA_COMPGEN(0x0046bea0, 0x21, SCALAR_DELETING_DTOR, TCombatControlSubWindow)
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:222
+VA(0x0046bed0, 0x78)  // anchor-vtable 0x63d420 + "cbar.pcx" caller, dc 0x65244
+TCombatControlSubWindow::~TCombatControlSubWindow()
+{
+}
+
+// BLOCKED on the constructor: VA_COMPGEN(0x0046c1e0, 0x21, SCALAR_DELETING_DTOR, TCombatPlacementSubWindow)
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:317
+VA(0x0046c210, 0x78)  // anchor-vtable 0x63d430 + "coplacbr.pcx" caller, dc 0x6544c
+TCombatPlacementSubWindow::~TCombatPlacementSubWindow()
+{
+}
+
+// TCombatHeroSubWindow's own destructor is 107 bytes, not 120, and the
+// 13-byte difference is one missing call: its loop deletes each widget
+// but does NOT hand it to parentWindow->RemoveWidget first. That also
+// explains why this body DOES name its own table where the three above
+// do not - it derives straight from TSubWindow, whose destructor is an
+// out-of-line call rather than an inlined body, so the 0x63d440 store
+// survives. The surviving reference is what lets the wrapper be claimed
+// with it, exactly as for the family base.
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:396
+VA_COMPGEN(0x0046cb70, 0x21, SCALAR_DELETING_DTOR, TCombatHeroSubWindow)
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:407
+VA(0x0046cba0, 0x6B)  // vtable 0x63d440 + delete-only widget loop, dc 0x65ad8
+TCombatHeroSubWindow::~TCombatHeroSubWindow()
+{
+    for (std::vector<widget*>::iterator it = Widgets.begin();
+         it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
+
 // E:\gamedcs\combatcontrolsubwindow.cpp:472
 VA(0x0046cdf0, 0x74)  // closed compiland order + unique body, dc 0x65c84
 void TCombatHeroSubWindow::Show()
@@ -156,6 +249,37 @@ void TCombatHeroSubWindow::UnShow()
         }
         RestoreBackground();
         shown = false;
+    }
+}
+
+// The compiland's last class repeats the pattern one more time, and the
+// carve continues to agree with the roster row for row:
+//
+//   0x46ceb0  0xcd1  TCombatCreatureSubWindow::ctor              562
+//   0x46db90  0x21   TCombatCreatureSubWindow::`scalar del dtor' 655
+//   0x46dbc0  0x6b   TCombatCreatureSubWindow::~                 666
+//   0x46dc30  0x2c2  TCombatCreatureSubWindow::Update            688
+//   0x46df00  0x73   TCombatCreatureSubWindow::Show              773
+//   0x46df80  0x3a   TCombatCreatureSubWindow::UnShow            820
+//
+// and 0x46df80 is the entry combatManager::DoCommand already proved to
+// be this class's UnShow, so the run is pinned at both ends. The
+// destructor is TCombatHeroSubWindow's 107 bytes exactly - the same
+// delete-only loop over Widgets - differing only in the table it stores:
+// 0x63d444, four bytes past 0x63d440, so both classes carry a one-slot
+// table holding nothing but the destructor.
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:655
+VA_COMPGEN(0x0046db90, 0x21, SCALAR_DELETING_DTOR, TCombatCreatureSubWindow)
+
+// E:\gamedcs\combatcontrolsubwindow.cpp:666
+VA(0x0046dbc0, 0x6B)  // vtable 0x63d444 + delete-only widget loop, dc 0x665e0
+TCombatCreatureSubWindow::~TCombatCreatureSubWindow()
+{
+    for (std::vector<widget*>::iterator it = Widgets.begin();
+         it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
     }
 }
 
