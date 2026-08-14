@@ -578,6 +578,7 @@ events	?DoEventFountainOfYouth@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.
 events	?DoEventGarden@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa2710
 events	?DoEventIdol@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa12f0
 events	?DoEventLeanTo@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa31a0
+events	?DoEventLibrary@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa3280
 events	?DoEventMagicSpring@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa3590
 events	?DoEventMagicWell@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa3730
 events	?DoEventMercenaryCamp@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa38b0
