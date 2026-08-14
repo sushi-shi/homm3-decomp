@@ -102,6 +102,35 @@ NewSMapHeader::~NewSMapHeader()
 VA_COMPGEN(0x0045ae40, 0x21, SCALAR_DELETING_DTOR, TCampaignBrief)
 
 // E:\gamedcs\campaignbrief.cpp:1011
+// Residual (95.7583%), measured 2026-08-14 - 28 of 120 instructions, and all
+// three classes are allocator-side. Every call, constant, frame slot, block
+// and branch target agrees (skeleton 13/15 exact, the other two differing by
+// one instruction that moves across their boundary), and the automatic member
+// teardown - the widget loop at +0x34, the 0x4d4-stride element vector at
+// +0x58 with its five sub-destructors, the heroWindow base call - is present
+// and in retail's order.
+//   1. A whole-body TWO-REGISTER MIRROR: retail homes `this` in EDI and the
+//      element-vector end pointer in EBX; this compile picks the opposite,
+//      which renames every member access in the body. That alone is ~20 of
+//      the 28 rows.
+//   2. The `delete gpCampaignBriefSavedGame` null test: retail loads the
+//      global into ESI and tests it there (`mov esi,[g]; test esi,esi; je;
+//      mov ecx,esi`), where this compile loads into ECX and copies to ESI
+//      ABOVE the branch (`mov ecx,[g]; test ecx,ecx; mov esi,ecx; je`) - one
+//      instruction crossing from the taken arm into the test block.
+//   3. The EH unwind STATE INDICES inside the inlined element destructor are
+//      a cyclic rotation of retail's: retail stamps [ebp-4] = 3,2,5,4 then 0
+//      across the +0x2e0 / +0x2d0 / +0x2c0 / +0xa0-array / +0x20 sub-object
+//      destructors; this compile stamps 4,3,2,5 then 0. Same sub-objects,
+//      same order, same funclet count - only C2's numbering of the unwind map
+//      differs, so this is cleanup-emission order inside the element type,
+//      not a statement this body can spell.
+// The DC censuses were both run and both come back platform delta. The call
+// census (dc 0x5a11c) names `chdir` x2 and `BackupGameHeaders` x1 alongside
+// the five calls we do spell, and the LOCAL census's only entry is
+// `tempText`, CodeView type 0x2161 = `char[100]`, scoped to the block those
+// two calls live in - the Dreamcast save-path buffer. Retail's x86 frame is
+// `sub esp,8`, which cannot hold it, so this body correctly has no locals.
 VA(0x0045afb0, 0x18F)  // anchor-global, dc 0x5a11c
 TCampaignBrief::~TCampaignBrief()
 {
