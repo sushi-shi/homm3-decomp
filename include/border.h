@@ -12,6 +12,11 @@
 // Vtable 0x63ba24.
 class border : public widget {
 public:
+    // The no-arg form is DC-attested (dc 0x5433c) and byte-corroborated:
+    // coloredBorderFrame's retail constructor (0x450130) builds its border
+    // base by calling ??0widget@@QAE@XZ DIRECTLY, which is what an empty
+    // inline border::border() collapses to.
+    border() {}
     // Retail's 0x44ff10 constructor consumes six stack arguments and
     // forwards them to widget; DC's trailing focusable byte is absent.
     border(int x, int y, int w, int h, int id, int style);
