@@ -821,6 +821,23 @@ public:
     // and retail's `ret 0x10` / `ret 0x14` pair agrees.
     void monsters_fight(class hero* current_hero, NewmapCell* cell,
                         type_point point, bool human_player);
+    // The two callees monsters_fight needs, both DECLARED not defined and
+    // both located by it. 0x4a6b30 = monsters_give_reward (events.cpp:3579,
+    // dc 0x96994): `ret 0xc` against three parameters, 298 B against 384,
+    // and it sits immediately BEFORE monsters_fight in retail exactly as
+    // it does in the DC roster. 0x4ac580 = CombatMonsterEvent
+    // (events.cpp:5851, dc 0x9af34): ELEVEN parameters is the whole
+    // screen - retail pushes eleven arguments in the DC's own order, the
+    // three optional monster triples trailing as (-1,0,0) - and 935 B
+    // against 1152 is 0.81.
+    void monsters_give_reward(class hero* current_hero, NewmapCell* cell,
+                              bool human_player);
+    int CombatMonsterEvent(class hero* who, TCreatureType monType,
+                           int* numMons, NewmapCell* eventCell,
+                           type_point point, TCreatureType monType2,
+                           int numMons2, int numGroups2,
+                           TCreatureType monType3, int numMons3,
+                           int numGroups3);
     void monsters_flee(class hero* current_hero, NewmapCell* cell,
                        type_point point, bool human_player);
     bool monsters_join(class hero* current_hero, NewmapCell* cell,
