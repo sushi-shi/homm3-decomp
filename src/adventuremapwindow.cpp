@@ -62,6 +62,36 @@ int TAdventureMapWindow::convertID2HelpID(int id)
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:609
+// DECODED 2026-08-14, NOT reconstructed - the two blockers below are
+// both in advmgr.h, which the external worker owns.
+//
+// The switch value is msg->codeY (message +8), not msg->id, matching
+// the rest of the handler family. Retail dispatches ids 15..43 through
+// a byte-index table at 0x402fe8 into three arms at 0x402fdc:
+//
+//   15..19, 39..43 -> hero quick view   (0x402ea7)
+//   32..36         -> town quick view   (0x402f15)
+//   20..31, 37, 38 -> default           (0x402f69)
+//
+// IDS 39..43 ARE THE SECOND HERO ROW. The hero arm normalises the id to
+// a slot with `id - 15` below 39 and `id - 39` at or above it, then
+// indexes topHero + slot into playerData's hero list exactly as the
+// 15..19 arm does - i.e. the portrait buttons (HERO_0_ID..HERO_4_ID)
+// and the five-entry highlight row this header already calls
+// HeroLocators (+0x84) answer the same right-click. The Dreamcast
+// EWidgetIDs enum stops at CHAT_EDIT_ID = 38, so 39..43 are Complete-era
+// additions with no attested spelling; five HERO_LOCATOR_n_ID
+// enumerators would satisfy the magic-case-label floor.
+//
+// The default arm calls convertID2HelpID, indexes an eight-byte record
+// row at 0x6a56e4 by the returned help id, sizes the resulting text
+// through kb's 0x4f62a0 and centres it with NormalDialog (0x4f6570,
+// iMBType 4) at ((600 - h)/2 - 10, (592 - w)/2).
+//
+// BLOCKERS: advManager::HeroQuickView (0x416590) and
+// advManager::TownQuickView (0x4167a0) are unclaimed and need
+// declarations in advmgr.h, and the five ids above need enumerators in
+// the same header's EWidgetIDs.
 // RETAIL_LOCATED(0x00402e70, 0x195)  // anchor-global, dc 0xd88
 unsigned char TAdventureMapWindow::ProcessRightSelect(const message* msg)
 {
@@ -69,6 +99,23 @@ unsigned char TAdventureMapWindow::ProcessRightSelect(const message* msg)
 }
 
 // E:\gamedcs\adventuremapwindow.cpp:678
+// DECODED 2026-08-14, NOT reconstructed - same advmgr.h blockers.
+//
+// findWidget(hx, hy) against the cached last-hovered id at .data
+// 0x65f228 (an early-out when unchanged, and a mouse-pointer reset when
+// it goes to -1), then a jump table at 0x4031f8 over ids 15..36 with
+// its byte index at 0x403204:
+//
+//   15..29 -> the hero rollover chain (0x4030f6)
+//   32..36 -> the town rollover       (0x40309a)
+//   30, 31 -> default                 (0x403188)
+//
+// The hero arm is a range chain rather than more cases: 15..19 index
+// playerData at -0x34, 20..24 at -0x48, 25..29 at -0x5c and the
+// fall-through at -0x94, all off `topHero + id`. Ids 39..43 and
+// 1001..1015 reach the tail with the rollover text left at its default,
+// and everything else goes through convertID2HelpID into the SECOND
+// dword of the same 0x6a56e4 record row (0x6a56e0).
 // RETAIL_LOCATED(0x00403010, 0x20A)  // anchor-global, dc 0xed8
 unsigned char TAdventureMapWindow::ProcessHover(int hx, int hy)
 {
