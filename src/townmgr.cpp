@@ -43,6 +43,15 @@
 #include "widget.h"
 #include "winmgr.h"
 
+// resourcemanager.h's one entry point this compiland needs, declared
+// file-locally rather than by including that header: BuyBuild is its
+// sole consumer here and townmgr.obj's include closure is load-bearing
+// for the rest of the file (the initialize_game_data precedent).
+class CSprite;
+namespace ResourceManager {
+CSprite* GetSprite(const char* name);
+}
+
 // Shared state of the tavern chooser. DoTavern selects a recruit into the
 // hero pointer; the flag distinguishes map-object hiring from town hiring.
 // Roles and storage are retail-byte-proven; names are provisional.
@@ -837,6 +846,39 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // it: hoisting `int i` above slotX measured 85.99 unchanged, and putting
 // both int[9][18] tables ahead of slotX/slotY measured 84.61.
 //
+// 2026-08-14, and this SETTLES the "fifty to ninety statements" reading
+// above: it was wrong, and the frame-ordering lead it spawned is a
+// symptom rather than a cause. Two measurements say so.
+//
+//   * The STATEMENT CENSUS. The Dreamcast dump's `*** SRCLINES ***`
+//     section carries file/line -> address pairs per module; sliced by
+//     [dc, dc+Cb) it gives retail's own source-line count for a body.
+//     THallWindow's slice is 89 lines over townmgr.cpp 4302..4461, and
+//     every one of them maps: 4302 prologue+base ctor, 4303 the vptr,
+//     4306/4307 slotX and slotY, 4311-4318 hallX's EIGHT rows, 4323-4330
+//     hallY's eight, 4335 the reserve, 4338 the switch (72 B - the
+//     pre-jump-table compare chain), then eight case blocks of exactly
+//     seven lines each (background push_back, `for`, the four widget
+//     push_backs, the loop close) and an eleven-line tail. Scaling that
+//     to retail - one more case (+7) and one more row in each table (+2)
+//     - predicts 98 lines. This body spells 98. It is LINE-COMPLETE, so
+//     there are no fifty-to-ninety missing statements to go find; what
+//     the dead-store titration bought was cb, and a dead store's cb is
+//     nothing like a real statement's.
+//
+//   * The FRAME ORDERING IS DOWNSTREAM. The same note records that at
+//     titration 60-80 the emitted code is byte-identical to retail -
+//     which necessarily includes the frame layout and the edx/esi pair.
+//     So mass alone reproduces the ordering, and no declaration order
+//     can be its cause. Sweeping the remaining orders is dead work; the
+//     residual is expression-level caller cb, exactly as for BuyBuild
+//     above but with the sign reversed.
+//
+// The Dreamcast CALL census (dc-xref-graph 0x16e6cc) was screened at the
+// same time and names no missing site: its two apparent extras, a second
+// button::button and a ResourceManager::del_Spr_from_Cache, are absent
+// from retail's own call multiset, so they are Dreamcast-only.
+
 // What the two-table shape is NOT: the aggregate-initializer
 // trailing-zero collapse. Measured 2026-08-14 on SetupThievesGuild's own
 // pair of int[8][8] tables (see the note at its carcass row) - eliding a
@@ -1919,6 +1961,161 @@ TBuyBuildWindow::~TBuyBuildWindow()
         if (*it)
             delete *it;
     }
+}
+
+// The buy-a-building transaction: put up TBuyBuildWindow, price the
+// building, run the dialog and debit the player. The cost is two parallel
+// arrays the town fills - one resource id and one amount per row - and
+// the dialog shows an amount/icon pair per row, laid out from two stack
+// tables giving the pixel x and y of the i-th of n rows. One to four rows
+// sit on a single line (y 340); five, six and seven wrap onto two (303
+// and 377), which is what makes the tables int[7][7].
+//
+// Located by arity: `ret 0xc` plus the ecx spill is thiscall with three
+// arguments, matching the Dreamcast roster's four-parameter declarator,
+// where the carve rows around it are `ret 8`/`ret 4`/`ret 4`.
+// Corroborated by the TBuyBuildWindow(0xca, 0x28, buildingId)
+// construction, town::get_build_cost's out-pair, the DoQuickView arm on
+// the third argument and the tail debiting gpCurrentPlayer->resources.
+// The Dreamcast call census (dc-xref-graph 0x1793b4) agrees term for
+// term: MemError x3, BroadcastMessage x7, push_back/AddWidget x2 each,
+// one textWidget, one iconWidget, one get_build_cost, one DoQuickView.
+//
+// Two callee spellings there are the Dreamcast's, not retail's: DC reads
+// the icon width through CSprite::GetWidth and releases the sprite
+// through ResourceManager::Dispose(CSprite*). Retail emits the member
+// read and the slot-1 virtual call written here; neither DC wrapper is
+// declared in this tree, and adding either would widen csprite.h's
+// closure for every TU that includes it. The width is still read ONCE,
+// into a local ahead of the loop, because that is what retail's single
+// `mov ecx,[eax+0x30]` before the counted loop proves - and the row count
+// is an `int`, not the `short` get_build_cost returns: retail sign-
+// extends once (`movsx ebx,ax`) and stores four bytes, which is what
+// took this body from 55.35 to 68.08.
+//
+// Residual (68.08%): the prologue, both tables, the message block, the
+// whole quick-view/dialog tail, the resource debit and both epilogues are
+// retail's instruction for instruction. The ONE divergence is the /Ob2
+// expansion DEPTH of the two `Widgets.push_back` sites. Retail expands
+// `insert` and CALLS its helpers - _Ucopy x6, _Ufill x3, _Destroy x2,
+// size x2, _Construct x3; we go one level further and expand those
+// helpers' loops, leaving _Construct x10 and one call each of _Ucopy and
+// _Ufill. Both sides inline `insert` itself, so this is budget, not a
+// modelling gap: with two sites the nested budget is 2*cb(caller)/2, and
+// ours is over the knife edge. DIRECTION MEASURED so the next lane need
+// not re-derive it - a reverted +20 dead-statement probe took 68.08 ->
+// 67.65, i.e. this body carries MORE front-end mass than retail's and
+// wants a LEANER spelling, the opposite of THallWindow below. Nothing
+// byte-inert is spelled here to remove: every statement is emitted and
+// the Dreamcast call census matches term for term, so the surplus is
+// expression-level cb rather than a statement. The register rotation the
+// body carries (retail edi=0 / ebx=rows / esi=the window against our
+// ebx=0 / esi=rows / edi=the window) and the single 4-byte frame slot we
+// are short both sit downstream of that one decision.
+
+// E:\gamedcs\townmgr.cpp:7354
+VA(0x005d5f30, 0x8DA)  // arity(ret 0xc, 3 args) + anchor-callee TBuyBuildWindow ctor, dc 0x1793b4
+int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView)
+{
+    int resourceX[7][7] = {
+        { 164,   0,   0,   0,   0,   0,   0 },
+        { 124, 204,   0,   0,   0,   0,   0 },
+        {  84, 164, 244,   0,   0,   0,   0 },
+        {  44, 124, 204, 284,   0,   0,   0 },
+        {  84, 164, 244, 124, 204,   0,   0 },
+        {  84, 164, 244,  84, 164, 244,   0 },
+        {  44, 124, 204, 284,  84, 164, 244 }
+    };
+    int resourceY[7][7] = {
+        { 340,   0,   0,   0,   0,   0,   0 },
+        { 340, 340,   0,   0,   0,   0,   0 },
+        { 340, 340, 340,   0,   0,   0,   0 },
+        { 340, 340, 340, 340,   0,   0,   0 },
+        { 303, 303, 303, 377, 377,   0,   0 },
+        { 303, 303, 303, 377, 377, 377,   0 },
+        { 303, 303, 303, 303, 377, 377, 377 }
+    };
+    int types[7];
+    int amounts[7];
+    message msg;
+    int i;
+
+    int numResources = townToView->get_build_cost(
+        (type_building_id)buildingId, types, amounts);
+
+    TBuyBuildWindow* window = new TBuyBuildWindow(0xca, 0x28, buildingId);
+    if (window == 0)
+        MemError();
+
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 1;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    window->BroadcastMessage(&msg);
+
+    CSprite* icons = ResourceManager::GetSprite("Resource.def");
+    int iconWidth = icons->Width;
+    for (i = 0; i < numResources; i++) {
+        sprintf(gText, "%d", amounts[i]);
+        textWidget* amountText = new textWidget(
+            resourceX[numResources - 1][i],
+            resourceY[numResources - 1][i] + 40, 68, 20, gText,
+            "smalfont.fnt", font::PRIMARY, -1, 1, 0, 8);
+        if (amountText == 0)
+            MemError();
+        window->Widgets.push_back(amountText);
+        window->AddWidget(amountText, -1);
+
+        iconWidget* icon = new iconWidget(
+            resourceX[numResources - 1][i] + 18,
+            resourceY[numResources - 1][i], iconWidth, 32, -1,
+            "Resource.def", types[i], 0, 0, 0, 0x10);
+        if (icon == 0)
+            MemError();
+        window->Widgets.push_back(icon);
+        window->AddWidget(icon, -1);
+    }
+    icons->Dispose();
+
+    field_1b8 = -1;
+    if (bQuickView) {
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.extra = widget::WIDGET_ACTIVE | widget::WIDGET_DRAWN;
+        msg.codeY = TBuyBuildWindow::BUY_BUTTON_ID;
+        window->BroadcastMessage(&msg);
+        msg.codeY = 8;
+        window->BroadcastMessage(&msg);
+        msg.codeY = TBuyBuildWindow::CANCEL_BUTTON_ID;
+        window->BroadcastMessage(&msg);
+        msg.codeY = 9;
+        window->BroadcastMessage(&msg);
+        msg.codeY = 0;
+        window->BroadcastMessage(&msg);
+        gpWindowManager->DoQuickView(window);
+    } else {
+        if (infoOnly) {
+            msg.codeX = widget::WIDGET_SET_STATUS;
+            msg.codeY = TBuyBuildWindow::BUY_BUTTON_ID;
+            msg.extra = widget::WIDGET_DIMMED_NODRAW;
+            window->BroadcastMessage(&msg);
+        }
+        window->DoModal(0);
+        if (gpWindowManager->dialogReturn == TBuyBuildWindow::BUY_BUTTON_ID) {
+            field_1b8 = buildingId;
+            for (i = 0; i < numResources; i++)
+                gpCurrentPlayer->resources[types[i]] -= amounts[i];
+        }
+    }
+
+    delete window;
+    if (bQuickView)
+        return 0;
+    return gpWindowManager->dialogReturn == TBuyBuildWindow::BUY_BUTTON_ID;
 }
 
 // The tavern chooser's constructor - seventeen widgets over a reserve of
