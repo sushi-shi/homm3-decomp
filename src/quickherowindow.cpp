@@ -43,11 +43,23 @@ DATA(0x00682378) static int gQuickHeroArmyPositions[7][2] = {
 // ostrstream construction (75.28%), a pointer-form primary-stat loop (85.31%),
 // a named mana string with a scoped depth-zero destructor (85.07%), and a
 // depth-zero whole mana expression (86.54%).
+// 2026-08-14: 86.8367 -> 87.8641 by binding the widget list through a pointer
+// local, the button.h set_hotkey lever - naming `Widgets` at each call site
+// materialises a second object address and rotates the constructor's whole
+// register phase. The reserve half of the residual is the vector<T*>::_Destroy
+// under-expansion SOLVED in mainmenu.cpp: the /Ob2 budget divisor
+// (2*cb_ctor - cb_reserve)/n starves _Destroy out of the reserve expansion, and
+// retail's constructor simply carries more inline-candidate call sites than
+// ours. Titrated here with the same xx_nop probe: this one wants FOUR more
+// sites (k=4 -> 90.5288; k=1..3 87.8641, k=5,6 88.5185), and converting all
+// nine push_backs to insert(end(), x) is +9 - far too coarse (87.8641). Do not
+// re-sweep the register or mana-string space until that site count is supplied.
 VA(0x0052ead0, 0x8C8)  // heroqvbk.pcx + vtable/allocation block, dc 0x1170bc
 TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
     : heroWindow(200, 200, 194, 186, 0x12)
 {
-    Widgets.reserve(NWIDGETS);
+    std::vector<widget*>* widgets = &Widgets;
+    widgets->reserve(NWIDGETS);
 
     bitmapBorder* background = new bitmapBorder(
         0, 0, 194, 186, BACKGROUND_ID, "heroqvbk.pcx", 0x800);
@@ -55,20 +67,20 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
         thisHero->owner >= 0
             ? thisHero->owner
             : gpGame->GetLocalPlayerGamePos());
-    Widgets.push_back(background);
+    widgets->push_back(background);
 
-    Widgets.push_back(new bitmapBorder(
+    widgets->push_back(new bitmapBorder(
         12, 13, 58, 64, PORTRAIT_ID,
         akHeroTraits[thisHero->portrait].largePortraitName, 0x800));
 
-    Widgets.push_back(new textWidget(
+    widgets->push_back(new textWidget(
         75, 13, 107, 17, thisHero->name, "smalfont.fnt", font::WHITE,
         NAME_ID, 0, 0, 8));
 
     if (view_level >= ViewAll) {
         for (int stat = 0; stat < 4; ++stat) {
             sprintf(gText, "%d", thisHero->GetPrimarySkill(stat));
-            Widgets.push_back(new textWidget(
+            widgets->push_back(new textWidget(
                 gQuickHeroSkillPositions[stat].x,
                 gQuickHeroSkillPositions[stat].y,
                 23, 16, gText, "smalfont.fnt", font::WHITE,
@@ -76,7 +88,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
         }
 
 #pragma inline_depth(1)
-        Widgets.push_back(new textWidget(
+        widgets->push_back(new textWidget(
             154, 104, 27, 13,
             format_string("%d", thisHero->mana).c_str(), "tiny.fnt",
             font::WHITE, MANA_ID, 1, 0, 8));
@@ -84,13 +96,13 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
 
         int morale = quick_hero_limit(
             -3, thisHero->GetMorale(0, 0, 1), 3);
-        Widgets.push_back(new iconWidget(
+        widgets->push_back(new iconWidget(
             14, 86, 22, 12, MORALE_ID, "imrl22.def", morale + 3,
             0, 0, 0, 0x10));
 
         int luck = quick_hero_limit(
             -3, thisHero->GetLuck(0, 0, 1), 3);
-        Widgets.push_back(new iconWidget(
+        widgets->push_back(new iconWidget(
             14, 103, 22, 12, LUCK_ID, "ilck22.def", luck + 3,
             0, 0, 0, 0x10));
     }
@@ -149,7 +161,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
             if (disguise_creature != CREATURE_NONE)
                 creature = disguise_creature;
 
-            Widgets.push_back(new iconWidget(
+            widgets->push_back(new iconWidget(
                 coordinates[0], coordinates[1], 32, 32, widget_id++,
                 "cprsmall.def", creature + 2, 0, 0, 0, 0x10));
 
@@ -176,7 +188,7 @@ TQuickHeroWindow::TQuickHeroWindow(hero* thisHero, TViewLevel view_level)
                     quantity_text.str(), "tiny.fnt", font::WHITE,
                     widget_id++, 1, 0, 8);
             }
-            Widgets.push_back(troop_text);
+            widgets->push_back(troop_text);
             quantity_text.freeze(false);
         }
     }

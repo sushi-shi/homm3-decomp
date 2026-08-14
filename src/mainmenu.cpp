@@ -52,38 +52,73 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
     {586, 469, 114, 102}
 };
 
-// Residual (97.0098%): ONE basic block, and it is one instance of a
-// project-wide class - call it the vector<T*>::_Destroy under-expansion.
-// 34 of 35 blocks are exact and every branch agrees. In B8 retail emits
-//   mov edx,[esi+8]; mov eax,[esi+4]; push edx; push eax; mov ecx,esi; call X
-// where X is retail 0x404140, a 3-BYTE `ret 8` body - the empty
-// std::vector<widget*>::_Destroy(iterator,iterator) (VECTOR:229, a protected
-// in-class member, so implicitly inline), which LINK then ICF-folded onto
-// sample's vtable slot 3 (evidence/retail-symbols.csv:61). We inline it away
-// to nothing. predict-inline confirms that is the whole story: every other
-// UNDER/OVER row name-pairs, and `sample_vslot03` base x0 vs retail x1 is the
-// single unpaired row (base 27 out-of-line calls to retail's 28).
-// What this is NOT, all measured 2026-08-14:
-//   - not a compiler-generation wall. `homm3 vc6 ab run` on this function and
-//     on ??0TSystemOptionsWindow returns `neither`: the RTM C2 12.00.8168
-//     compiles both byte-identically to SP3.
-//   - not reachable by inline-control pragmas. inline_depth(1), (2), (3), (4)
-//     and auto_inline(off) around the reserve statement are ALL byte-flat at
-//     97.0098; only inline_depth(0) moves it, and that costs 16 points
-//     (80.9344). VC6's inline_depth governs /Ob2 auto-inlining, not
-//     implicitly-inline in-class members, so no pragma here can reach it.
-//   - not reachable by rebinding the vector: a std::vector<widget*>* local, a
-//     reference local, and `&this->Widgets` are all byte-flat.
-// The lead worth chasing comes from the one place in this tree where our CL
-// DOES emit the out-of-line _Destroy: button::button (exact) calls
-// vector<int>::_Destroy out of line because it sits one inline level DEEPER -
-// ctor -> set_hotkey -> insert -> _Destroy, depth 3. Ours here is
-// ctor -> reserve -> _Destroy, depth 2. So our CL's cut falls between depth 2
-// and 3, and retail's window constructors must be putting _Destroy at depth 3,
-// i.e. retail reaches `reserve` through an inline wrapper we have not found.
-// 27 retail objects reference 0x404140, so finding that wrapper would pay
-// across mainmenu, systemoptionswindow, quicktownwindow, quickherowindow,
-// quickinfowindow, combatresultswindow, gametypewindow and campaignwindow.
+// SOLVED 2026-08-14 (97.0098 -> 100.0). The last residual was ONE block: retail
+// emitted `mov edx,[esi+8]; mov eax,[esi+4]; push edx; push eax; mov ecx,esi;
+// call 0x404140` inside the `reserve` expansion - a 3-BYTE `ret 8`, the empty
+// std::vector<widget*>::_Destroy(iterator,iterator) (VECTOR:229, protected
+// in-class member, ICF-folded by LINK onto sample's vtable slot 3) - and we
+// inlined it away. 27 retail objects reference 0x404140, and the same
+// under-expansion sits in seven other window constructors.
+//
+// IT IS NOT A DEPTH CUT AND NOT A MISSING INLINE WRAPPER. It is the /Ob2
+// budget DIVISOR, exactly as docs/vc6/inliner.md models it:
+//     expand(body, depth, budget): for site k of n: ... budget -= cb;
+//         spent = expand(callee_body, depth+1, budget / (n - k))
+// `reserve` is candidate site k=0 of the constructor body, so the budget its
+// interior gets is (2*cb_ctor - cb_reserve) / n, where n is the number of
+// INLINE-CANDIDATE call sites in the whole constructor. Inside reserve the
+// spend order is capacity, allocate, _Ucopy, _Destroy: retail's remaining
+// budget clears _Ucopy (which it does inline, as a loop) and then falls SHORT
+// of _Destroy. Ours cleared both. So retail's constructor carries MORE
+// candidate sites than ours did - a bigger divisor, not a deeper nest.
+//
+// Proven by direct titration. Injecting k calls to a `static void xx_nop() {}`
+// at the END of the body (byte-inert, cb <= 0x28 so free, pure divisor):
+//   k=0 97.0098 | k=1 97.0098 | k=2..6 100.0000 | k=7,8 93.3401
+// A five-wide plateau at exactly 100.00, i.e. retail's site count is ours + 2
+// to + 6. The landed spelling supplies +5 of them: `push_back(x)` is one
+// candidate site, while `insert(end(), x)` is two (the `end()` call plus the
+// one-argument insert), and there are five widgets.
+//
+// The pointer local is load-bearing on top of that, for the same reason it is
+// in button.h's set_hotkey: naming `Widgets` directly at each call site pins a
+// second register across the _Ucopy loop and spills the source pointer to
+// [ebp-0x10], costing the whole B7/B8 register phase (measured 97.6981 with
+// `Widgets.insert(Widgets.end(), ...)`, 100.0 with the local).
+//
+// Also measured, and all DEAD ENDS - do not re-run:
+//   - `homm3 vc6 ab run` returns `neither`: the RTM C2 12.00.8168 compiles
+//     this constructor and ??0TSystemOptionsWindow byte-identically to SP3.
+//   - inline_depth(1..4) and auto_inline(off) around the reserve statement are
+//     byte-flat; only inline_depth(0) moves it, at -16 points. The model says
+//     why: the depth check compares against the pragma value recorded
+//     LEXICALLY AT THE SITE, and _Destroy's site lives in <vector>, so no
+//     pragma written in this file can reach it.
+//   - `_Destroy` is NOT excluded from candidacy in retail: retail's
+//     ??1heroWindow inlines the very same `_Destroy` away to nothing inside its
+//     ~vector expansion (window.c.obj has no call to 0x404140). Candidacy and
+//     the C1XX save-gate are therefore not the mechanism; only the budget is.
+//   - a `static void W(std::vector<widget*>& v, int n) { v.reserve(n); }`
+//     wrapper is NOT the answer: it over-starves (92.27), because the wrapper
+//     charges cb_reserve against the already-divided budget instead of
+//     dividing it, and _Ucopy loses its expansion too.
+//   - the three-argument `insert(end(), 1, x)` collapses to 15.63: that form
+//     puts the big insert at depth 1 and our CL then expands it inline.
+//   - `for (unsigned i = 0; i < Widgets.size(); i++)` over the widget list is
+//     +1 site but is NOT byte-neutral (tested on gametypewindow: 93.73 ->
+//     91.79), so it cannot serve as a divisor knob.
+//
+// The other seven constructors are the SAME wall with different arithmetic;
+// each needs its own site count, titrated with the same xx_nop probe:
+//   systemoptionswindow  88.32 -> 97.18 at k=2 (k=3 95.83, k=4 84.63)
+//   quicktownwindow      96.31 -> 98.42 at k=4..6
+//   gametypewindow       93.73 -> 96.70 at k=1..4
+//   quickherowindow      86.84 -> 90.53 at k=4
+//   combatresultswindow  96.23, k>=1 strictly worse (it has NO reserve)
+//   campaignwindow       82.54, byte-flat for k=1..3
+// Converting every push_back in those files is too coarse (+41, +10, +6 and +9
+// sites - all measured, all regressions); the open work is finding a
+// byte-neutral construct worth exactly the k above in each.
 // E:\gamedcs\mainmenu.cpp:66
 VA(0x004fb2a0, 0x385)  // order-map: heroWindow(0,0,800,600) base + 5 button ctors from mmenung/lg/hs/cr/qt.def (ids 0x65-0x69), installs vtbl 0x63ff50, this-global 0x699660; called by oldmain; EH-bearing, dc 0xea2ec
 TMainMenu::TMainMenu()
@@ -92,24 +127,25 @@ TMainMenu::TMainMenu()
     gpMainMenu = this;
     bShowCDMessage = gbRestrictedGameTypeMenu && !cdMessageShown;
 
-    Widgets.reserve(NWIDGETS);
-    Widgets.push_back(new button(
+    std::vector<widget*>* widgets = &Widgets;
+    widgets->reserve(NWIDGETS);
+    widgets->insert(widgets->end(), new button(
         mainMenuButtonRects[0].x, mainMenuButtonRects[0].y,
         mainMenuButtonRects[0].width, mainMenuButtonRects[0].height,
         NEW_GAME_ID, "mmenung.def", 0, 1, 0, 49, 2));
-    Widgets.push_back(new button(
+    widgets->insert(widgets->end(), new button(
         mainMenuButtonRects[1].x, mainMenuButtonRects[1].y,
         mainMenuButtonRects[1].width, mainMenuButtonRects[1].height,
         LOAD_GAME_ID, "mmenulg.def", 0, 1, 0, 38, 2));
-    Widgets.push_back(new button(
+    widgets->insert(widgets->end(), new button(
         mainMenuButtonRects[2].x, mainMenuButtonRects[2].y,
         mainMenuButtonRects[2].width, mainMenuButtonRects[2].height,
         HIGH_SCORE_ID, "mmenuhs.def", 0, 1, 0, 35, 2));
-    Widgets.push_back(new button(
+    widgets->insert(widgets->end(), new button(
         mainMenuButtonRects[3].x, mainMenuButtonRects[3].y,
         mainMenuButtonRects[3].width, mainMenuButtonRects[3].height,
         CREDITS_ID, "mmenucr.def", 0, 1, 0, 46, 2));
-    Widgets.push_back(new button(
+    widgets->insert(widgets->end(), new button(
         mainMenuButtonRects[4].x, mainMenuButtonRects[4].y,
         mainMenuButtonRects[4].width, mainMenuButtonRects[4].height,
         QUIT_ID, "mmenuqt.def", 0, 1, 0, 1, 2));
