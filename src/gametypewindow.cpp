@@ -46,14 +46,28 @@ static const char* gameTypeBackgrounds[2] = {
 };
 
 // E:\gamedcs\gametypewindow.cpp:59
-// Residual (93.73%): the complete retail widget recipe, coordinate/resource
-// tables, mode gate, EH states and final registration loop agree. The only
-// structural delta is vector<widget*>::reserve: retail keeps its empty
+// Residual (96.70%): the complete retail widget recipe, coordinate/resource
+// tables, mode gate, EH states and final registration loop agree. The
+// structural delta was vector<widget*>::reserve: retail keeps its empty
 // range-destroy helper out of line and inlines size(), while this VC6 compile
-// makes the opposite two nested-inline choices. Tried and rejected: named
+// made the opposite two nested-inline choices. Tried and rejected: named
 // row references, direct row expressions (retained as canonical), both
 // include orders, a single-call reserve adapter (85.30%), and a 1..8
 // user-defined-type population sweep (all byte-identical at 93.73%).
+// FIXED 2026-08-14, 93.7258 -> 96.7000: the /Ob2 budget divisor solved in
+// mainmenu.cpp. This constructor wanted exactly ONE more inline-candidate call
+// site (xx_nop ladder: k=0 93.7258, k=1..4 96.7000) and, unlike
+// systemoptionswindow, it accepts that site anywhere - before the last
+// push_back, before the registration loop, or at the very tail, all 96.7000.
+// The landed supply is the hoisted `first` in the registration loop below:
+// naming `Widgets.end()` twice is one extra candidate site whose second load
+// is CSE-folded away, so it emits nothing. Two other +1 spellings measured and
+// NOT landed: `insert(Widgets.end(), x)` on any one of the six push_backs is
+// 96.6806 (identical at all six positions - 0.02 short because naming
+// `Widgets` at an insert site pins a second register, the mainmenu lever), and
+// the same behind a `std::vector<widget*>*` local reaches 96.7000 but costs a
+// spare local. The bare `if (Widgets.begin() != Widgets.end())` guard is +2
+// and 96.6613.
 VA(0x004d54c0, 0x39B)  // oldmain callers + gtsingl.def + vtable/global stores, dc 0xc9164
 TGameTypeWindow::TGameTypeWindow(unsigned char loadGameMode)
     : heroWindow(0, 0, 800, 600, 0)
@@ -94,11 +108,14 @@ TGameTypeWindow::TGameTypeWindow(unsigned char loadGameMode)
         gameTypeButtonRects[4].width, gameTypeButtonRects[4].height, QUIT_ID,
         "gtback.def", 0, 1, 0, 1, 2));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
-        if (*it)
-            AddWidget(*it, -1);
-        else
-            MemError();
+    widget** first = Widgets.begin();
+    if (first != Widgets.end()) {
+        for (widget** it = first; it != Widgets.end(); ++it) {
+            if (*it)
+                AddWidget(*it, -1);
+            else
+                MemError();
+        }
     }
 }
 

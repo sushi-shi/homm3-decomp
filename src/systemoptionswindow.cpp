@@ -113,14 +113,17 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // 95.8290, k=4 84.6273, k=6 77.0523. That +8.87 is the single largest
     // available move on this function and it is NOT reachable by converting the
     // push_backs: all 41 of them to insert(end(), x) is +41 sites and lands at
-    // 86.28, and a pointer local alone is 87.89. The open work is a
-    // byte-neutral construct worth exactly +2 candidate sites. Do NOT re-test
-    // pragmas or vector rebinding - see mainmenu.cpp for the dead-end ledger.
-    // Two +2 spellings measured 2026-08-14 and REJECTED, because
-    // insert(end(), x) is not byte-neutral at these particular sites even
-    // though it is in mainmenu: the two slider-loop push_backs 88.1531, and
-    // the first two top-level push_backs (background + the first button)
-    // 87.7930. The site pair has to come from somewhere that emits nothing.
+    // 86.28, and a pointer local alone is 87.89. Do NOT re-test pragmas or
+    // vector rebinding - see mainmenu.cpp for the dead-end ledger.
+    // SUPPLIED 2026-08-14 (88.3182 -> 97.6237, i.e. PAST the xx_nop ceiling):
+    // the two sites are the hoisted-first registration guard at the bottom of
+    // this body. See the note there for the placement law and the ladder.
+    // Rejected +2 spellings, all measured the same day, because
+    // insert(end(), x) is NOT byte-neutral at these particular sites even
+    // though it is in mainmenu/gametypewindow/quickherowindow: the two
+    // slider-loop push_backs 88.1531, the first two top-level push_backs
+    // 87.7930, the last two 94.2323, the last two behind a pointer local
+    // 94.6031, the last one alone 87.4010.
     // The slot-IV rewrite was re-measured a third time ON TOP of the
     // initializer-list fix, in case that had moved the phase: 88.3182 ->
     // 88.2908 (x derived as 29+slot*19), 88.2908 (operands reversed), 88.1660
@@ -222,11 +225,37 @@ TSystemOptionsWindow::TSystemOptionsWindow()
         282, 215, 182, 24, gpGeneralText->GetText(578), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
-        if (*it)
-            AddWidget(*it, -1);
-        else
-            MemError();
+    // The registration guard is this constructor's /Ob2 site-count knob, and
+    // it is worth 88.3182 -> 97.6237 (measured 2026-08-14). Mechanism, in the
+    // terms of docs/vc6/inliner.md and mainmenu.cpp: every candidate call site
+    // in the body divides the budget handed to the sites BEFORE it
+    // (`budget / (n - k)`), so the widget list's LAST push_back - the one whose
+    // interior retail leaves as an out-of-line `insert` - only starves if the
+    // body carries more candidate sites AFTER it. Placement law, swept with the
+    // xx_nop probe: two free sites are byte-flat at 88.3182 anywhere before the
+    // last push_back (before `reserve`, straight after it, and after each of
+    // the widget groups) and jump to 97.1811 the moment they sit after it. Two
+    // vector calls on `Widgets` here are exactly that pair: `begin()` for the
+    // hoisted `first`, then `begin()` and `end()` again in the loop. Hoisting
+    // `first` is not cosmetic - it also fixes a `begin()`/`end()` load
+    // transposition at the loop head that the bare
+    // `if (Widgets.begin() != Widgets.end())` guard leaves behind (97.1779),
+    // which is why this spelling beats the xx_nop ceiling. Measured neighbours:
+    // this form 97.6237, the same without the braces around the `for` 97.1779,
+    // as a `while` 97.1779, `if (!Widgets.empty())` 89.0517 (+1 with a byte
+    // cost), `Widgets.size() != 0` 89.0517, `first` also used as the loop
+    // initialiser 89.8628 (a clean +1 - the second `end()` is CSE-folded), an
+    // index loop over `size()`/`operator[]` 88.2661, and a hoisted `last`
+    // 87.8395. Adding sites past this pair regresses exactly as the ladder
+    // predicts: +1 more 95.8281, +2 more 84.6255.
+    widget** first = Widgets.begin();
+    if (first != Widgets.end()) {
+        for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+            if (*it)
+                AddWidget(*it, -1);
+            else
+                MemError();
+        }
     }
 
     for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)
