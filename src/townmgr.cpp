@@ -1674,6 +1674,72 @@ TMageGuildWindow::~TMageGuildWindow()
     }
 }
 
+// The mage guild page's rollover line. The page lays its thirty spell
+// cells out twice - the scroll frames on one widget run and the scrolls
+// themselves on another, which is the split SetupMage fills - so the id
+// arrives on either run and the body folds both onto one 0-based index
+// before dividing it into a guild level and a slot.
+//
+// The two ranges are NOT the thirty SetupMage writes: they stop at 26
+// each, so the last four cells of the fifth level never produce a
+// rollover. That is retail's own arithmetic (`cmp eax,0x24` and
+// `cmp eax,0x42` against bases 10 and 40), and the two tests are
+// separate `if`s rather than an else-if chain - the second range is
+// re-tested even after the first has matched.
+//
+// Conflux with the Grail standing answers for EVERY cell, before the
+// level is even consulted: the Grail there fills the guild, so the line
+// is the building's name in the "all spells" format instead of any one
+// spell's. The slot-past-the-count arm is the ELSE of the spell arm and
+// not the other way round - retail jumps FORWARD to the spell lookup,
+// so the empty line is the arm that falls through.
+//
+// Two layout facts, both measured. The cell test is written on the
+// NOT-minus-one side: retail's `je` sends the no-cell case forward, so
+// the whole spell block is the if-body and the button/empty pair is the
+// else. Written the natural way round - `if (cell == -1)` first - the
+// row sits at 56.22 with the same instructions in the wrong blocks.
+// And the four inline strcpys share one `and ecx,3 / rep movsb` tail,
+// which is the compiler's own tail-merge and costs nothing to spell.
+
+// E:\gamedcs\townmgr.cpp:4617
+VA(0x005ce1c0, 0x1AB)  // order-map(between ~TMageGuildWindow and its handler) + arity(ret 4) + sole caller 0x5ce370, dc 0x171020
+void TMageGuildWindow::SetRolloverText(int codeY)
+{
+    int cell = -1;
+    if (codeY >= 10 && codeY < 36)
+        cell = codeY - 10;
+    if (codeY >= 40 && codeY < 66)
+        cell = codeY - 40;
+
+    if (cell != -1) {
+        town* thisTown = gpTownManager->townToView;
+        int level = cell / 6;
+        int slot = cell % 6;
+        if (thisTown->type == TOWN_CONFLUX
+            && (thisTown->active & bitNumber[HOLY_GRAIL_ID])) {
+            sprintf(gText, gpGeneralText->GetText(715),
+                    GetBuildingName(TOWN_CONFLUX, HOLY_GRAIL_ID));
+        } else if (slot >= thisTown->mageGuildSpellCounts[level]) {
+            strcpy(gText, emptyRolloverText);
+        } else {
+            strcpy(gText,
+                   akSpellTraits[thisTown->mageGuildSpells[level][slot]].name);
+        }
+    } else if (codeY == EXIT_BUTTON_ID) {
+        strcpy(gText, gpGeneralText->GetText(594));
+    } else {
+        strcpy(gText, emptyRolloverText);
+    }
+
+    message textMessage;
+    textMessage.extraText = gText;
+    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 3,
+                     textMessage.extra);
+    DrawWindow(0, 2, 3);
+    gpWindowManager->UpdateScreen(8, 0x22c, 0x2e0, 0x12);
+}
+
 // Residual (98.29%): one /Ob2 candidate-call-site short, and the cost of
 // buying that site back. Retail leaves the first FORTY-TWO push_backs
 // out of line and expands the last seven inline (eight inline vector
