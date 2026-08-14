@@ -627,6 +627,14 @@ public:
     // this class it reproduces the canary to the digit, recruitUnit::
     // Update 90.84 -> 88.24.
     void SetupExtraStuff();
+    // Retail 0x5c6870 (dc 0x16bba4) and 0x5c77a0 (dc 0x16c940). Neither
+    // is reconstructed; both are declared for DoTownGate below, which
+    // expands townManager::ChangeTown inline and so has to name them.
+    // Same gate, same measured reason, as SetupExtraStuff above.
+    void SetupTown(unsigned char fade);
+    void SetCommandAndText(message* msg);
+    // Retail 0x5d8480 (dc 0x17b318). Inferno's Castle Gate.
+    void DoTownGate();
     // Retail 0x5d6a80. Commits a purchase to the town: builds it,
     // re-syncs every panorama object's visibility, fizzles the new
     // building in over the saved rectangle and cycles its outline.

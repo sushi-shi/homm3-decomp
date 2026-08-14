@@ -19,6 +19,12 @@
 #undef HOMM3_TOWN_OBJ_DECLS
 #undef HOMM3_TOWNMGR_WINDOW_DECLS
 #define HOMM3_RECRUIT_DECLS
+// advspells.obj's TeleportTo declarator, for the MoveHero that
+// DoTownGate expands inline. Gated so no other includer of advmgr.h
+// widens; measured free on this compiland (1121/1504 unmoved).
+#define HOMM3_ADVMGR_TELEPORT_DECLS
+#include "advmgr.h"
+#undef HOMM3_ADVMGR_TELEPORT_DECLS
 #include "bitmap816.h"
 #include "border.h"
 #include "button.h"
@@ -36,7 +42,10 @@
 // nothing else in this file's closure widens.
 #define HOMM3_TOWN_OBJ_DECLS
 #define HOMM3_TOWNMGR_TOWN_VISIT_DECLS
+// town::get_location, for the type_point DoTownGate hands TeleportTo.
+#define HOMM3_TOWN_LOCATION_DECLS
 #include "town.h"
+#undef HOMM3_TOWN_LOCATION_DECLS
 #undef HOMM3_TOWNMGR_TOWN_VISIT_DECLS
 #undef HOMM3_TOWN_OBJ_DECLS
 // game.h's grail-win declarator, for handle_hall_click's one call. Held
@@ -62,8 +71,20 @@
 #include "strip.h"
 #include "textresource.h"
 #include "textwdgt.h"
+#include "towngatewindow.h"
 #include "widget.h"
 #include "winmgr.h"
+
+// singleselectionwindow.obj's pair, retail 0x577790 / 0x577810 (dc
+// 0x12fdb8 / 0x12fdd4). 0x577790 is the STARTER - it tests the thread
+// handle at 0x69fdcc for zero and sets the wait pointer; 0x577810 is
+// the STOPPER - it signals the event at 0x69fdd0, waits on the handle
+// and closes it. Declared file-locally rather than through
+// singleselectionwindow.h so this compiland's include closure does
+// not widen; townManager::ChangeTown, which DoTownGate expands
+// inline, is the only consumer here.
+void StartMouseThread();
+void StopMouseThread();
 
 // The tree's representation-bridge idiom (game.cpp 0x60, ai_combat.cpp
 // 0x108), copied here for this compiland's two int-to-enum edges: it
@@ -4342,14 +4363,115 @@ void townManager::DoTownTavern()
         gpGame->GetHero(townToView->visitingHeroId));
 }
 
-#if 0  // @carcass
+// Inferno's Castle Gate: pick another Inferno town of the player's that
+// has the gate built and no visiting hero, and teleport this town's
+// visiting hero there. The window is towngatewindow.obj's, built with
+// `adventure_spell` false because this is the town-screen entry rather
+// than the adventure-map spell.
+//
+// Two townmgr.obj members are EXPANDED here rather than called, which is
+// what makes retail's 609 bytes out of the Dreamcast's 270:
+//   * townManager::MoveHero(fromTown, toTown) (dc 0x17b428) - the
+//     townToView store, the TeleportTo and the GiveSpells;
+//   * townManager::ChangeTown(fade) (dc 0x16b9e4) - the mouse-thread
+//     bracket, SetupExtraStuff, SetupTown and the SetCommandAndText
+//     message. Its del_Spr_from_Cache call is Dreamcast-only: retail's
+//     multiset here does not carry it, the same finding THallWindow's
+//     note records for that TU-wide census.
+// Both are spelled out in place because neither is defined in this
+// compiland ahead of this body, so writing the call would emit the call
+// retail does not have.
+//
+// `town::get_location` is the by-value type_point accessor town.h gates:
+// retail builds the point straight into TeleportTo's argument slot with
+// the three bitfield inserts (x and y masked to 0x3ff into their own
+// 16-bit units, z shifted ten bits into the second), which is the
+// accessor inlined against its hidden return buffer.
+//
+// The hero handed to TeleportTo is the FROM town's, read before the
+// townToView store; the one handed to ApplySpecialBuildingEffect is the
+// TO town's, read after it - retail reloads `[edi+0x38]` for the second,
+// so the two are separate expressions and not one CSE.
+
+//
+// Residual (98.61%): FIVE BYTES, and they are the price of expanding
+// MoveHero by hand instead of letting /Ob2 do it. Retail reaches the
+// teleport with `mov ecx,[gpWindowManager] / mov eax,[ecx+0x38] /
+// cmp eax,-1 / je tail`, then loads fromTown and takes the GetTown null
+// arm on the SAME flags (`jne`) - one load, one compare, two branches,
+// the identical-compare fold this tree documents. Our CL keeps the load
+// (`mov ecx,[eax+0x38]`) but copies it into the argument register and
+// re-compares (`mov eax,ecx / cmp eax,-1`). The two ways out of that are
+// both worse and both measured: naming the id once and using that ONE
+// name in both the guard and GetTown lets VC6 propagate the range and
+// delete the null arm entirely (97.51), and reading the member twice
+// with no local at all folds the first read into a memory compare so
+// there is no register to CSE (98.13). Sweeping the three declaration
+// orders inside the arm gives 98.13 / 98.13 / 97.21, and putting the
+// redraw in the if-body rather than the else costs the tail-duplicated
+// epilogue outright (83.78). The spelling kept is the best of the eight:
+// the guard on the member, the id named INSIDE the arm. Retail's own
+// fold needs the two tests to arrive from different inlining phases,
+// which a hand expansion cannot reproduce; locating MoveHero's retail
+// body and letting the compiler expand it is the honest fix.
 
 // E:\gamedcs\townmgr.cpp:8203
-DC_ONLY(0x17b318, 0x10E)
+VA(0x005d8480, 0x261)  // anchor-callee TTownGateWindow ctor/AddTown/DoModal + arity(bare ret), dc 0x17b318
 void townManager::DoTownGate()
 {
-    // @stub
+    TTownGateWindow* gateWindow = new TTownGateWindow(0);
+    if (gateWindow == 0)
+        MemError();
+
+    playerData* player = gpGame->GetLocalPlayer();
+    SetWinText(gateWindow, 24);
+
+    int i;
+    for (i = 0; i < player->numTowns; i++) {
+        int townId = player->townIds[i];
+        town* otherTown = gpGame->GetTown(townId);
+        if (otherTown != townToView && otherTown->type == TOWN_INFERNO
+            && (otherTown->active & bitNumber[EXTRA_1_ID])
+            && otherTown->visitingHeroId < 0)
+            gateWindow->AddTown(townId);
+    }
+
+    gateWindow->DoModal();
+    delete gateWindow;
+
+    if (gpWindowManager->dialogReturn != -1) {
+        int selectedTown = gpWindowManager->dialogReturn;
+        town* fromTown = townToView;
+        town* toTown = gpGame->GetTown(selectedTown);
+        townToView = toTown;
+        hero* movingHero = gpGame->GetHero(fromTown->visitingHeroId);
+        gpAdvManager->TeleportTo(movingHero, toTown->get_location(),
+                                 0, 0, 0, 0);
+        toTown->GiveSpells(0);
+
+        StartMouseThread();
+        SetupExtraStuff();
+        SetupTown(1);
+        message msg;
+        msg.codeX = 0;
+        msg.qualifier = 0;
+        msg.mouseX = 0;
+        msg.mouseY = 0;
+        msg.extra = 0;
+        msg.window = 0;
+        msg.id = MESSAGE_WIDGET;
+        msg.codeY = -1;
+        SetCommandAndText(&msg);
+        StopMouseThread();
+
+        townToView->ApplySpecialBuildingEffect(
+            gpGame->GetHero(townToView->visitingHeroId));
+    } else {
+        RedrawTownScreen();
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\townmgr.cpp:8243
 DC_ONLY(0x17b428, 0x62)
