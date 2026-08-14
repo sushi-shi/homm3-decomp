@@ -232,6 +232,11 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 //       pins a second register. Exact ceiling in quickherowindow and
 //       quicktownwindow; NOT byte-neutral in systemoptionswindow (any
 //       position, 87.40 to 94.60) and destructive in quickinfowindow (~59).
+//   +1  `push_back(x)` -> `insert(end(), x)` also works with `Widgets` named
+//       directly where the body has no pointer local at all: armygrp
+//       ??0TSplitWindow 98.4605 -> 99.9789 that way, and the position among the
+//       last three widgets is irrelevant (all three measure identically) as
+//       long as the extra site precedes the registration loop.
 //   +2  the same hoist with the loop re-reading `Widgets.begin()`
 //       (begin x2 + end x2). Beats the xx_nop ceiling in systemoptionswindow
 //       (97.6237 vs 97.1811) because the hoist also fixes a begin/end load
@@ -247,6 +252,22 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 // call sites - VC6 folds the reverse_iterator wrapper away before candidacy,
 // so rbegin/ctor/operator* are not three sites, they are one.
 //
+// TWO PLACEMENT LEVERS for what the site supply leaves behind, both byte-proven
+// on armygrp ??0TSplitWindow 2026-08-14 (99.9789 -> 99.9912, body then exact):
+//   - WHERE a `std::vector<widget*>*` local is DECLARED decides whether a later
+//     `_First`/`_Last` load addresses off the vector pointer or off `this`.
+//     Declaring it one statement earlier moved `[edi+0x38]` to retail's
+//     `[ebx+0x8]`; naming `Widgets` at the call sites instead puts it back on
+//     `this`. Where it is USED is not the lever, where it is DECLARED is.
+//   - `widget* value` and `widget* const& value` are NOT the same parameter for
+//     a helper that forwards to an inlined `insert(P, 1, X)`. By value the
+//     parameter IS the object the reference binds to, so the raw `operator new`
+//     result and the value temp coalesce into one dead parameter slot; by
+//     reference the temp is materialised at the call site and the two stay in
+//     separate slots, which is retail's shape. This is the same family as the
+//     recorded `push_back(m = new X)` vs `m = new X; push_back(m)` split, and
+//     it is the only spelling that moved that store - naming the widget in a
+//     local did not, nor did reordering the helper's parameters.
 // THE LOOP WAS NEVER THE MECHANISM (2026-08-14, measured on quickinfowindow,
 // which has no registration loop at all). What supplies a divisor site is a
 // duplicated call to a FREE accessor, and it does not need a loop to live in:
