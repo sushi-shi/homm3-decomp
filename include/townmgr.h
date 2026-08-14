@@ -92,21 +92,30 @@ public:
 
 class type_garrison_base_window : public CAdvPopup {
 public:
+    enum {
+        BACKGROUND_ID = 148,
+        DIVIDE_BUTTON_ID = 154,
+        OK_BUTTON_ID = 0x7802
+    };
+
     // Sixteen bytes of its own past CAdvPopup's 0x60, and nothing in a
     // reconstructed body reads them. The extent is proven by the three
     // modal entry points that build a DERIVED window on the stack: each
     // reserves 0x70 of frame for it (object at [ebp-0x7c] under a
     // 12-byte EH record), and Widgets lands at the object's +0x34 in
     // every one, which fixes the base rather than the leaves.
-    char pad_60[0xc];
-    // +0x6c: a byte type_monster_join_window's constructor sets to 1;
-    // nothing else attested about it.
+    // +0x60: the constructor's first parameter, stored straight after
+    // the vptr and read by no reconstructed body.
+    hero* field_60;
+    char pad_64[8];
+    // +0x6c: a byte the base constructor clears and
+    // type_monster_join_window's sets to 1; nothing else attested.
     unsigned char field_6c;
     char pad_6d[3];
 
-    // Retail 0x5ce830 (7456 B, the compiland's largest constructor);
-    // both derived constructors pass their three parameters straight
-    // through to it. Declared, not reconstructed.
+    // Retail 0x5ce830, the compiland's second largest constructor; both
+    // derived constructors pass their three parameters straight through
+    // to it.
     type_garrison_base_window(hero* inHero, int garrison_owner,
                               armyGroup* garrison_army);
     virtual ~type_garrison_base_window();
