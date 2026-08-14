@@ -125,7 +125,12 @@ public:
     TResourceDisplay* pResourceDisplay;  // +0x0c
 
     CTownNetMsgHandler(TResourceDisplay* display);
-    void SetResourceDisplay(TResourceDisplay* display);
+    // Four bytes on the Dreamcast and no retail row of its own, so it
+    // is a header one-liner every caller expands: DoHall 0x5d27b0
+    // emits the bare `mov [handler+0xc], bar` at both of its two
+    // hand-over sites.
+    void SetResourceDisplay(TResourceDisplay* display)
+    { pResourceDisplay = display; }
     void HandleGiftMsg(CNetMsg* pNetMsg);
 };
 SIZE(CTownNetMsgHandler, 0x10);
@@ -462,6 +467,9 @@ class TResourceDisplay;
 // SetupWell's argument. Defined above under the window gate; consumers
 // that take the manager alone (recruit.obj, town.obj) only need the name.
 class TCastleWindow;
+// DoHall's net-handler hand-over target. Defined above under the window
+// gate; the manager only ever holds a pointer to it.
+class CTownNetMsgHandler;
 
 
 // Layout proven store-for-store by townManager::townManager 0x5c3310,
@@ -526,33 +534,26 @@ public:
     int field_1a4;                // +0x1a4
     int field_1a8;                // +0x1a8
     int field_1ac;                // +0x1ac
-    // +0x1b0, NAMED 2026-08-14 by DoHall 0x5d27b0, which writes the
-    // page's resource bar into +0xc of this object twice - once on the
-    // way in and once on the way out. That is
-    // CTownNetMsgHandler::SetResourceDisplay (four bytes on the DC, so
-    // /Ob2 expands it) against the +0xc this header already proves is
-    // that class's bar, so the object IS the town's net handler.
+    // +0x1b0, NAMED AND TYPED 2026-08-14 by DoHall 0x5d27b0, which
+    // writes the page's resource bar into +0xc of this object twice -
+    // once on the way in and once on the way out. That is
+    // CTownNetMsgHandler::SetResourceDisplay against the +0xc this
+    // header already proves is that class's bar, so the object is the
+    // town's net handler and Close's delete goes through its slot 0.
     //
-    // The TYPE stays heroWindow* even so, and that is MEASURED, not
-    // laziness: naming CTownNetMsgHandler here needs a forward
-    // declaration in the block above, and ANY forward declaration added
-    // to recruit.cpp's view of this header costs recruitUnit::Update
-    // 90.84 -> 88.24 - verified name-independent with a dummy
-    // `class HOMM3_PROBE_ZZ;`, which moves it by exactly the same
-    // amount. That is recruit.cpp's own C1XX type-handle plateau (see
-    // the note at the top of that file); one more type DEFINITION there
-    // restores it, but `#include "button.h"` did not, so the honest
-    // supply has not been found yet. DoHall pays 90.71 -> 87.13 for it.
-    //
-    // One thing the retyping DID prove while it was in the tree, and it
-    // is recorded here rather than acted on: townManager::Close deletes
-    // this object through vtable SLOT 0, so CNetMsgHandler's slot 0 is
-    // a destructor and remote.h's `CheckHandleNet` at slot 0 is one
-    // short. Adding `virtual ~CNetMsgHandler();` ahead of it restored
-    // Close to exact and was byte-inert across all 131 units. Left for
-    // the lane that lands the typing - an unexercised vtable shift in a
-    // shared header is a trap.
-    heroWindow* netMsgHandler;    // +0x1b0
+    // Naming the type here needs the forward declaration above, and
+    // that is NOT free: ANY forward declaration added to recruit.cpp's
+    // view of this header costs recruitUnit::Update 90.84 -> 88.24 -
+    // measured, and name-independent (a dummy `class HOMM3_PROBE_ZZ;`
+    // moves it by exactly the same amount), which sharpens the standing
+    // note that bare forward declarations are inert for the include-set
+    // wall. They are not, for this canary. The room was bought in
+    // recruit.cpp: button.h and border.h are two type definitions that
+    // TU's own dialog constructor proves it needs, and with them the
+    // handle stream absorbs one declaration here. +0x1bc keeps the base
+    // pointer for the same budget reason - a second declaration would
+    // spend room that buys no bytes, DoHall being byte-exact without it.
+    CTownNetMsgHandler* netMsgHandler;    // +0x1b0
     // +0x1b4: handed to the message pump's setter (0x553770) on the way
     // out of a network game, which is what types it.
     CUnnamed69d808_f0* field_1b4;

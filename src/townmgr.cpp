@@ -2336,25 +2336,19 @@ void DoShipyard(int type)
 // expanded it at its single call site as well - inside THallWindow's
 // constructor, which is where the page's two sides are actually drawn.
 //
-// Residual (87.13%): the two net-handler hand-overs, and nothing else.
-// Retail's `if (netMsgHandler) netMsgHandler->SetResourceDisplay(x)`
-// is six instructions apiece and this body has neither, because
-// spelling them needs +0x1b0 typed as CTownNetMsgHandler*, which needs
-// a forward declaration in townmgr.h that recruit.cpp would also see -
-// and ANY forward declaration there costs recruitUnit::Update
-// 90.84 -> 88.24 (measured, and name-independent: a dummy
-// `class HOMM3_PROBE_ZZ;` moves it by exactly the same amount). Written
-// out in full this row reaches 90.71 and the ratchet fails on the
-// canary, so the two statements stay out until recruit.cpp's handle
-// stream is put back the way that file's own note describes - one more
-// type DEFINITION restores it, but `#include "button.h"` is not the
-// one. See the +0x1b0 note in townmgr.h.
+// Residual (99.99%): NOT REAL. The 405-byte body is byte-identical to
+// retail's, instruction for instruction - the only rows the diff shows
+// are relocation NAMES, and the only bytes that differ are the trailing
+// alignment run, eight nops here against none there (the
+// TShipWindow::WindowHandler precedent two rows up).
 //
-// The rest is instruction for instruction. The one consequence of the
-// two missing blocks is a register cache: retail keeps hallWindow in
-// edi across the resource-display teardown and this body re-reads
-// +0x1bc, which is the live range the missing statements would have
-// created.
+// Two spellings carry it. The hand-over setter must be DEFINED inline
+// in townmgr.h, not merely declared: four bytes on the Dreamcast and no
+// retail row of its own means every caller expands it, and declared-only
+// our CL emits a call instead of the store (90.71 against 96.10). And
+// the page pointer has to be read into a local BEFORE the resource
+// display teardown - the value has to survive a virtual call, so a
+// re-read after it is one instruction adrift and costs 3.9 points.
 
 // E:\gamedcs\townmgr.cpp:5540
 VA(0x005d27b0, 0x195)  // anchor-callee(THallWindow ctor 0x5c9be0 + SetupCastle) + arity(bare ret), dc 0x17484c
@@ -2365,12 +2359,15 @@ void townManager::DoHall()
         MemError();
     SetupCastle(hallWindow, 0);
 
+    heroWindow* page = hallWindow;
     if (dialogResourceDisplay) {
         delete dialogResourceDisplay;
         dialogResourceDisplay = 0;
     }
-    dialogResourceDisplay = new TResourceDisplay(hallWindow, 1);
+    dialogResourceDisplay = new TResourceDisplay(page, 1);
     dialogResourceDisplay->Update(1, 0);
+    if (netMsgHandler)
+        netMsgHandler->SetResourceDisplay(dialogResourceDisplay);
 
 
     hallWindow->DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
@@ -2381,6 +2378,8 @@ void townManager::DoHall()
     delete hallWindow;
     delete dialogResourceDisplay;
     dialogResourceDisplay = 0;
+    if (netMsgHandler)
+        netMsgHandler->SetResourceDisplay(pResourceDisplay);
 
     RedrawTownScreen();
     if (field_1b8 != -1)
