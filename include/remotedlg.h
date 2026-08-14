@@ -15,8 +15,41 @@
 
 #include "bitmap16.h"
 #include "dialogbox.h"
+#include "remote.h"
 
 class CSprite;
+
+// CNetMsgHandlerPause - the scoped handler that parks whatever handler the
+// network singleton is carrying, installs itself for the life of a modal
+// dialog, and puts the old one back. Sixteen bytes: CNetMsgHandler's twelve
+// plus one pointer, and 0x557e30's `mov [esi+0xc], eax` is that pointer.
+//
+// Vtable 0x640f04 is four slots wide, CNetMsgHandler's own, so the class
+// introduces nothing: slot 0 is the ??_G at 0x557eb0, slot 1 the
+// CheckHandleNet override at 0x555170, slot 2 the INHERITED
+// CNetMsgHandler::GetAbortPopupMsg at 0x557900 (already claimed), and slot 3
+// the HandleNetMsg override at 0x555180. Both overrides are five bytes of
+// `xor eax,eax` and a sized return - the pause semantics are to swallow
+// everything - and both are header-origin COMDATs in retail too, which is
+// why they sit at 0x555170/0x555180 beside CNetMsgHandler::Copy rather than
+// in the 0x557exx run with the rest of the class.
+//
+// This class does NOT go in remote.h. Seven other compiled TUs include that
+// header and none of them needs it; a new user-defined type in their include
+// closures is exactly the perturbation the include-set residual class warns
+// about.
+class CNetMsgHandlerPause : public CNetMsgHandler {
+public:
+    CNetMsgHandlerPause();
+    virtual ~CNetMsgHandlerPause();
+    virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
+                                    unsigned char* msgReceived);  // slot 1
+    virtual CNetMsg* HandleNetMsg(CNetMsg* pNetMsg);              // slot 3
+
+protected:
+    CNetMsgHandler* m_pNetMsgHandlerSave;  // +0x0c
+};
+SIZE(CNetMsgHandlerPause, 0x10);
 
 // Layout is DC's field list shifted by the CTextDialog widening (DC's
 // CTextDialog is 0x50, retail's is 0x58, so every DC offset moves +8), and

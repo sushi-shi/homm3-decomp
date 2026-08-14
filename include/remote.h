@@ -65,19 +65,26 @@ SIZE(CAdvMgrNetMsgHandler, 0x0c);
 // bytes relative to DC's +0xe8 layout.
 class CDPlayHeroes : public CDPlayLobby {
 public:
-    // MEASURED 2026-08-14: this accessor must stay OUT OF LINE here.
-    // ~CNetMsgHandler (0x5578d0) reads and rewrites +0xf0 with no call, so
-    // retail's own header inlines it - but giving it an inline body here
-    // costs advmgr's CAdvPopup constructor 100.00 -> 69.33 (the include-set
-    // residual class, this TU's only consumer being an off-limits unit).
-    // That is why 0x5578d0 and the deleting destructor 0x557810 that
-    // inlines it are located but unclaimed.
+    // RESOLVED 2026-08-14, and the earlier measurement is now explained.
+    // Both handler accessors have OUT-OF-LINE retail bodies, and both of
+    // them live in remote.cpp: 0x5537a0 is GetNetMsgHandler's seven bytes
+    // (`mov eax,[ecx+0xf0]; ret`) and 0x553770 is SetNetMsgHandler's
+    // forty-eight. That is the whole resolution of "advmgr's CAdvPopup
+    // constructor drops 100.00 -> 69.33 when these get bodies": a body in
+    // THIS HEADER is visible to advmgr, whose constructor has a live
+    // `pDPlay->GetNetMsgHandler()` call site at advmgr.cpp:4838 that retail
+    // leaves as a call - so an inline here rewrites advmgr's own code. It
+    // was a semantic dependency, never an include-set perturbation. Put the
+    // bodies in remote.cpp instead and /Ob2 inlines them at remote.obj's own
+    // call sites, exactly as retail does, while every other TU keeps the
+    // call. Declarations only here.
     CNetMsgHandler* GetNetMsgHandler();
+    void SetNetMsgHandler(CNetMsgHandler* pNetMsgHandler);
     // Out of line at 0x553040 (`ret 8`), and reached from two directions in
     // remote.obj alone: the free GetRemoteData wrapper at 0x554400 passes
     // ecx through and a literal 0, and CNetMsgHandler::CheckHandleNet
-    // (0x557860) calls it with the literal pair (1, 0). Declaration only -
-    // an inline BODY on this class is what cost advmgr 30 points above.
+    // (0x557860) calls it with the literal pair (1, 0). Declaration only,
+    // for the same reason as the pair above.
     CNetMsg* GetRemoteData(unsigned char removeFromQueue,
                            unsigned char* wasCompressed);
 
