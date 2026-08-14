@@ -106,6 +106,56 @@ static const float afUpgradeCostFactor[7] = {
 // E:\gamedcs\hillfortwindow.cpp:65
 #if 0  // @carcass
 // RETAIL_LOCATED(0x004e75f0, 0x7E9): aphlftbk.pcx + vtable/global stores.
+//
+// FULLY DECODED 2026-08-14, held back on two unidentified globals only.
+// Shape (heroWindow(0x32, 0x32, 0x28c, 0x15c, 2), vftable 0x63eb68,
+// gpHillFortWindow = this, pHero = GetCurrHero(), Widgets.reserve(60)):
+//   bitmapBorder(0, 0, 0x28c, 0x15c, BACKGROUND_ID, "APhlftBk.pcx", 0x800)
+//   textWidget(0, 0x14, 0x28c, 0x15c, <G1>, "bigfont.fnt", 7, TITLE_ID,
+//              1, 0, 8)
+//   bitmapBorder(0x1e, 0x3c, 0x3a, 0x40, HERO_PORTRAIT_ID,
+//                akHeroTraits[pHero->portrait].<+0x34>, 0x800)
+//   bitmapBackedTextWidget(7, 0x142, 0x27d, 0x13, 0, "smalfont.fnt",
+//                          "APhlftrt.pcx", 1, ROLLOVER_ID, 1, 8)
+//     then RolloverWidget = Widgets.back()
+//   bitmapBorder(0x125, 0x112, 0x42, 0x20, BACKGROUND_ID, "Box64x30.pcx",
+//                0x800)
+//   button(0x126, 0x113, 0x40, 0x1e, DIALOG_RETURN_OK, "iOkay.def", 0, 1,
+//          0, 0, 2) + set_hotkey(1) + set_hotkey(0x1c)
+//   for (i = 0; i < 7; i++)   // x = 0x68 + i*0x4c, id = 0xd4 + i
+//     iconWidget(x + 3, 0x3c, 0x3a, 0x40, id - 7, "twcrport.def",
+//                0, 0, 0, 0, 0x10)
+//     textWidget(x + 3, <G2>, 0x3a, 0x40, "", "Verd10B.fnt", 1, id, 2, 0, 8)
+//     iconWidget(x, 0x80, 0x3e, 0x12, id + 7, "smalres.def", 6, 0, 0, 0,
+//                0x10)
+//     textWidget(x, 0x80, 0x3e, 0x12, "", "smalfont.fnt", 1, id + 0xe, 2,
+//                0, 8)
+//     iconWidget(x, 0x94, 0x3e, 0x12, id + 0x15, "smalres.def", 6, 0, 0,
+//                0, 0x10)
+//     textWidget(x, 0x94, 0x3e, 0x12, "", "smalfont.fnt", 1, id + 0x1c, 2,
+//                0, 8)
+//   for (i = 0; i < 7; i++)   // x = 0x68 + i*0x4c
+//     iconWidget(x, 0xed, 0x3e, 0x14, TOTAL_RES_ICON_1_ID + i,
+//                "smalres.def", i, 0, 0, 0, 0x10)
+//     textWidget(x, 0xed, 0x3e, 0x14, "", "smalfont.fnt", 1,
+//                TOTAL_RES_COST_1_ID + i, 2, 0, 8)
+//   for (i = 0; i < 7; i++)   // x = 0x6b + i*0x4c
+//     button(x, 0xab, 0x3a, 0x1d, UPGRADE_BUTTON_1_ID + i,
+//            aszUpgradeIcons[2], 0, 1, 0, 0, 2) + set_hotkey(i + 2)
+//   button(0x1e, 0xe8, 0x3a, 0x1d, UPGRADE_ALL_BUTTON_ID, "aphlf4y.def",
+//          0, 1, 0, 0, 2) + set_hotkey(0x1e)
+//   AddWidget/MemError walk (the TMainMenu idiom), then a
+//   BroadcastMessage(MESSAGE_WIDGET, WIDGET_SET_PLAYER_PALETTE_COLORS,
+//   BACKGROUND_ID, gpGame->GetLocalPlayerGamePos()).
+//
+// <G1> = .bss 0x6a7a78, a char* the title textWidget takes; its only
+// other readers are inside advManager::SetRolloverText (0x40bbcc) and
+// 0x414562 - it has no home header yet.
+// <G2> = .bss 0x698a14, an object whose BYTE at +0x21 the count widget's
+// y-coordinate is `0x7c -` (read the same way at 0x4ee4ae / 0x4f36fb /
+// 0x4f370a); a font-metrics record by shape, likewise unhomed.
+// Declaring either file-locally would trip the cpp-extern-decls floor,
+// so both want a locate pass before this row is worth compiling.
 THillFortWindow::THillFortWindow()
 {
     // @stub
