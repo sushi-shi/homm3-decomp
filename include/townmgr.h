@@ -106,8 +106,21 @@ public:
     virtual ~TGarrisonWindow();
 };
 
+// The blacksmith, which sells one war machine per town type. Its
+// constructor 0x5d1360 writes all three members past CAdvPopup's 0x60.
 class TBlacksmithWindow : public CAdvPopup {
 public:
+    enum {
+        CANCEL_BUTTON_ID = 0x7801,
+        BUY_BUTTON_ID = 0x7802
+    };
+
+    int field_60;             // +0x60  unattested - no body reads it
+    int townType;             // +0x64  selects the machine and its artifact
+    int field_68;             // +0x68  cleared by the constructor
+    iconWidget* machineIcon;  // +0x6c
+
+    TBlacksmithWindow(int heroID, int inTownType);
     virtual ~TBlacksmithWindow();
 };
 
