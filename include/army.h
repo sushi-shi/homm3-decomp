@@ -487,6 +487,10 @@ public:
     // writer. Const because that caller holds the stack as `const army*`.
     void get_berserk_targets(std::vector<army*>& armies) const;
     int get_second_grid_index() const;                          // 0x4466a0
+    // DC Army.h twin of the pair above (army.cpp:4850, dc 0x4b398).
+    // Const because ai.cpp's choose_defense_hex (0x4205d0) asks it
+    // through the `const army* client` it takes.
+    unsigned char is_adjacent(int hex) const;
     int get_mirror_effect() const;                              // 0x4487f0
     long get_AI_target_time(long speed) const;                  // 0x448bd0
     long get_total_combat_value(long lowest_attack,

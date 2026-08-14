@@ -780,6 +780,20 @@ public:
                                       long* best_value,
                                       type_AI_combat_parameters* estimate);
                                                               // 0x421280
+    // The searchArray is NON-const in both, where the Dreamcast roster
+    // prints `const searchArray*`: retail's get_travel_time is reached
+    // through it and this tree's findpath.h declares that accessor
+    // non-const. Constness is invisible to the codegen, so the
+    // divergence is spelling only - re-const both the day
+    // searchArray::get_travel_time gains its `const`.
+    unsigned char choose_defense_hex(const army* current_army,
+                                     const army* client, long* best_hex,
+                                     long* open_hexes,
+                                     searchArray* search_array);
+                                                              // 0x4205d0
+    unsigned char attempt_shooter_defense(
+        const army* current_army, searchArray* search_array,
+        const type_AI_combat_parameters* estimate);           // 0x420760
     // 0x422b20 (632 B), NOT YET CLAIMED and NOT in any TU's carve span
     // here - `homm3 sema rva` files it under seg_0002. The DC roster
     // puts combatManager::find_AI_targets in ai.obj (ai.cpp:2608, dc
