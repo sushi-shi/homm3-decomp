@@ -496,11 +496,45 @@ void army::CheckLuck()
 }
 
 // E:\gamedcs\army.cpp:2575
-// RETAIL_LOCATED(0x00442410, 0x13B)  // anchor-global, dc 0x47690
-long army::get_adjusted_attack(const army* enemy, unsigned char ranged_attack)
+#endif  // @carcass
+
+VA(0x00442410, 0x13B)  // anchor-global, dc 0x47690
+long army::get_adjusted_attack(const army* enemy,
+                               unsigned char ranged_attack) const
 {
-    // @stub
+    long attack = attackSkill;
+    if (ranged_attack) {
+        if (precisionRounds)
+            attack += precisionAmount;
+    } else {
+        if (bloodlustRounds)
+            attack += bloodlustAmount;
+    }
+    if (slayerRounds && enemy) {
+        if (((enemy->Is(7) & 1) && slayerLevel >= 0)
+            || ((enemy->Is(8) & 1) && slayerLevel >= 2)
+            || ((enemy->Is(9) & 1) && slayerLevel >= 3)) {
+            attack += 8;
+            // The controlling side's hero is derived TWICE (retail
+            // inlines get_controlling_side at both sites) and the
+            // pointer still needs its own named local for the call:
+            // folding it into the callee expression costs 3.49 points
+            // and hoisting the whole thing to one local ahead of the
+            // null test costs 17.95.
+            if (gpCombatManager->heroes[get_controlling_side()]) {
+                hero* casting_hero =
+                    gpCombatManager->heroes[get_controlling_side()];
+                attack += casting_hero->GetHeroSpellBonus(55, monInfoLevel, 8);
+            }
+        }
+    }
+    if (frenzyRounds)
+        return static_cast<long>(
+            get_adjusted_defense(enemy, 0) * frenzyFactor + attack);
+    return attack;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2623
 #endif  // @carcass
@@ -520,7 +554,7 @@ long army::get_attack_modifier(const army* enemy,
 
 VA(0x00442590, 0xC2)  // anchor-global, dc 0x477e8
 long army::get_adjusted_defense(const army* enemy,
-                                unsigned char frenzy_included)
+                                unsigned char frenzy_included) const
 {
     if (frenzy_included && frenzyRounds)
         return 0;
