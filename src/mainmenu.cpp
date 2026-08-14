@@ -159,6 +159,35 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 // stack to +0.04 while seven dead stores are worth +3.64, so a titrated M is a
 // lower bound on how much real source it takes to reach the same cell.
 //
+// THE SCREEN, APPLIED TREE-WIDE (2026-08-14, second pass). The grid was then
+// run over every remaining CONSTRUCTOR and table builder in the reachable tree
+// that the first sweep had not already covered - handlers and leaf bodies
+// deliberately skipped, since 21/21 of those were flat. Seven functions:
+//   MOVED (3/7, against 4/25 over the mixed population - the screen holds):
+//     armygrp ??0TSplitWindow          98.4605 -> 99.9895 at k=1, SUPPLIED and
+//                                      landed at 99.9789 (see armygrp.cpp)
+//     combatresultswindow ??0          96.3788 -> 96.9395 at (M=24, k=1); the
+//                                      honest 20-widget naming supply measures
+//                                      96.0972, and 95.3420 with the site, so
+//                                      the cell is real and unreachable so far
+//     systemoptionswindow ??0          98.1326 -> 98.2455 at (M=16, k=0)
+//   FLAT in every cell:
+//     quickherowindow ??0    90.5272 over M 0..32 x k 0..4 (it already sits on
+//                            its xx_nop ceiling; mass buys nothing)
+//     quicktownwindow ??0    98.4193 over M 0..24 x k 0..3
+//     campaignbrief ??1NewSMapHeader  91.5098, perfectly flat - the user body
+//                            is EMPTY, so there is no C1 statement mass to
+//                            scale and the compiler-generated member-destroy
+//                            run is emitted from the class layout, not the
+//                            body. An empty-bodied dtor is a THIRD screen-out
+//                            class alongside handlers and leaf bodies.
+//     ai_combat ?initialize_creatures 91.0075 over M 0..24 x k 0..3
+// levelupwindow ??0 was re-swept at its landed spelling in the same pass and is
+// at a local maximum on both axes (see its own note).
+// So the screen's hit rate among constructors and table builders is ~40%,
+// against 16% over the mixed population - but only one of the three cells had a
+// byte-neutral honest supply. Finding the cell is cheap; supplying it is not.
+//
 // TWO REFINEMENTS to the rule above, both byte-measured 2026-08-14, and both
 // worth reading BEFORE titrating a new function:
 //
