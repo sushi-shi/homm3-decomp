@@ -121,12 +121,43 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
 //   gametypewindow       93.7258 -> 100.0   (guard +1 AND five named rows)
 //   quickherowindow      87.8597 -> 90.5272 (last four push_backs as inserts)
 //   adventureoptionswindow 95.1212 -> 100.0 (guarded do-while, +2)
-//   quickinfowindow      92.7916, k=2 is worth 96.8141 but has NO supply
-//   levelupwindow        97.7369, (mass 12..24, k=1) is worth 98.6395
-//   combatresultswindow  96.2269, k>=1 strictly worse (it has NO reserve)
+//   levelupwindow        97.7369 -> 98.8241 (17 named widget locals for the
+//                        mass, then the two named back() results)
+//   combatresultswindow  96.2269 -> 96.3788 (one named widget local; its
+//                        recorded "k>=1 strictly worse" was true and useless -
+//                        the mass axis was the live one)
+//   quickinfowindow      92.7916, k=2 is worth 96.8141, supply now EXISTS
+//                        (see below) but is scaffolding, so unlanded
 //   campaignwindow       82.5365, flat on BOTH axes for k=1..3
 // Converting every push_back in those files is too coarse (+41, +10, +6 and +9
 // sites - all measured, all regressions).
+//
+// THE TWO-AXIS SWEEP OF THE RECORDED "FLAT"/"CAPPED" VERDICTS (2026-08-14).
+// Every residual note in the reachable tree that said "byte-flat", "flat under
+// titration", "capped" or "exhaustive negatives" was re-run as a full
+// mass x sites grid, because all of them predate the second axis. Twenty-five
+// functions, four verdicts overturned:
+//   WRONG - levelupwindow ??0 (mass, landed +1.09), combatresultswindow ??0
+//     (mass, landed +0.15), artifact InitializeArtifactTraitsTable (mass,
+//     +3.64 measured at M=7..12 and still unsupplied), quickinfowindow ??0
+//     ("no byte-neutral supply exists" - one exists, see below).
+//   HELD, flat in every cell of the grid - diff ?Apply, adventureoptionswindow
+//     ?WindowHandler, resourcedisplay ??0, soundmgr ?MemorySample, mousemgr
+//     ?LoadFrame / ?Update / ?SetPointer, window ?CenterWindow, button
+//     ??0textButton, resourcemanager ?GetSpreadsheet, campaignbrief
+//     ??1TCampaignBrief, initialize ?create_included_mask, mainmenu
+//     ?MainMenuHandler, systemoptionswindow ?WindowHandler, slider ?Main,
+//     smackmgr ?VideoClose, fly ?Fly / ?ValidFlight, search ?BuildPath,
+//     levelupwindow ?WindowHandler, campaignwindow ?CampaignWindowHandler.
+// The four that moved are all CONSTRUCTORS or table builders - bodies with a
+// long straight run of calls ahead of the divergence. Handlers and small leaf
+// bodies were flat without exception, so the screen worth applying before
+// spending a grid is: does the divergent expansion have a long call run in
+// front of it that source mass can lengthen?
+// One more mass-unit caveat, measured on artifact: a pad DEAD STORE and a
+// named ALIAS local are not the same mass. Nine byte-inert alias locals there
+// stack to +0.04 while seven dead stores are worth +3.64, so a titrated M is a
+// lower bound on how much real source it takes to reach the same cell.
 //
 // TWO REFINEMENTS to the rule above, both byte-measured 2026-08-14, and both
 // worth reading BEFORE titrating a new function:

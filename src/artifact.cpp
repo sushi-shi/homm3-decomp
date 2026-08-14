@@ -111,6 +111,33 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // expands basic_string::_Eos in line (`mov ecx,[ebp-0x3c]; mov [ebp-0x38],ebx;
 // mov byte [ecx+ebx],0`) where we emit an out-of-line call - a genuine /Ob2
 // budget divergence, and the reason retail has 3 rets to our 2.
+//
+// 2026-08-14 TWO-AXIS /Ob2 SWEEP - the "EXHAUSTIVE NEGATIVES, all byte-flat"
+// verdict above is WRONG on the axis it never tested. Every negative listed
+// there is a SPELLING at constant statement mass; `budget = 2 * cb(caller)` is
+// the other axis and it is live here. Byte-inert pad statements at the head of
+// the body x xx_nop sites before the last statement:
+//     M     0..6      7..12     20..48
+//     any k 76.8337   80.4733   79.1525
+// - i.e. +3.64 sits at exactly seven to twelve statements of extra front-end
+// mass, at every k (the divisor axis really is dead here, which is why the
+// one-axis sweep found nothing). That is the missing budget for the `_Eos`
+// expansion described above.
+// The honest supply is NOT yet found, and the reason is worth recording: a
+// named ALIAS local is not worth the same C1 mass as a pad dead store. Nine
+// byte-inert alias locals ahead of the artslots block - a `traitsSheet.get()`
+// pointer, the class cell, the combination component array, the slot-bit
+// table, the combination table, the traits table, the slot-mask table, the
+// spell-giver list and a row-vector reference - stack to 76.8733 and never
+// reach the 80.4733 plateau, where seven dead stores do. Only the class cell
+// is landed below (76.8337 -> 76.8733); the rest are inert noise and were
+// reverted. What this body needs is seven statements that CARRY something,
+// and the reconstruction has no room for them yet.
+// Measured and byte-COSTLY while hunting (so not mass at any count): splitting
+// the first loop's two strlens into named lengths 74.3842, a named reference
+// per iteration in the disabled/spell-giver loops 74.7723, naming the bitset
+// loop's cell 73.3683, naming the copy loop's source lengths 75.8257/75.9248,
+// and naming the combination's component row 76.6792.
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
 unsigned char InitializeArtifactTraitsTable()
 {
@@ -168,7 +195,8 @@ unsigned char InitializeArtifactTraitsTable()
                 ++mask;
             traits.allowableSlotMask = mask;
 
-            char artifactClass = values[21][0];
+            const char* classCell = values[21];
+            char artifactClass = classCell[0];
             if (artifactClass == 'R')
                 traits.artifactClass = 16;
             else if (artifactClass == 'J')
