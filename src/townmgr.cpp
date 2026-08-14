@@ -6,6 +6,9 @@
 #include <string.h>
 #define HOMM3_TOWNMGR_WINDOW_DECLS
 #define HOMM3_TOWN_OBJ_DECLS
+// Opens town.h's SetSummoningGenerator declarator for TCastleWindow's
+// constructor, and only for it: town.cpp never defines this.
+#define HOMM3_TOWN_SUMMONING_DECLS
 #include "townmgr.h"
 #undef HOMM3_TOWN_OBJ_DECLS
 #undef HOMM3_TOWNMGR_WINDOW_DECLS
@@ -61,6 +64,18 @@ DATA(0x0067f578) static const char* const gTownHallDefNames[9] = {
     "HALLCSTL.def", "HALLRAMP.def", "HALLtowr.def", "HALLINFR.def",
     "HALLNECR.def", "HALLDUNG.def", "HALLSTRN.def", "HALLFORT.def",
     "HALLelem.def"
+};
+
+// The fort page's creature-slot background per town type, with a
+// NEUTRAL row in front: TCastleWindow indexes it with `type + 1`, and
+// both of its loads fold the +1 into the reloc (`[4*eax + 0x68a2f8]`),
+// which is what proves the extra leading element rather than a
+// nine-long table read one short. Ten pointers close exactly on
+// gMageGuildDefNames below. Both references are this compiland's.
+DATA(0x0068a2f4) static const char* const gTownCastleDefNames[10] = {
+    "TPCasNeu.pcx", "TPCasCas.pcx", "TPCasRam.pcx", "TPCasTow.pcx",
+    "TPCasInf.pcx", "TPCasNec.pcx", "TPCasDun.pcx", "TPCasStr.pcx",
+    "TPCasFor.pcx", "TPCasEle.pcx"
 };
 
 // The mage guild background for each town type, indexed by town::type.
@@ -2587,13 +2602,6 @@ void townManager::MoveHero(town* fromTown, town* toTown)
     // @stub
 }
 
-// E:\gamedcs\townmgr.cpp:8254
-DC_ONLY(0x17b48c, 0x3C68)
-void TCastleWindow::TCastleWindow()
-{
-    // @stub
-}
-
 // E:\gamedcs\townmgr.cpp:8642
 DC_ONLY(0x17f160, 0x398)
 void TCastleWindow::show_scroller()
@@ -2707,6 +2715,559 @@ void* TTownMenu::`scalar deleting destructor'(unsigned __flags)
 }
 
 #endif  // @carcass
+
+// The compiland's largest body: the fort page, eight dwelling rows of
+// eleven widgets each over a faction background. Six rows are written
+// out unconditionally and the fourth pair sits behind `use8` - two
+// dwellings side by side when Dungeon's Portal of Summoning has an
+// external dwelling to show, one centred dwelling otherwise - which is
+// why every group of eight ends in the same if/else and why the else
+// arm's x is the midpoint of the pair it replaces.
+//
+// Anchored by the vftable 0x6439bc its destructor stores, by the
+// TPCastl7/TPCastl8.pcx backgrounds, and by `ret 0` against the
+// Dreamcast roster's declarator (this and nothing else).
+//
+// Residual (99.72%): fifteen instructions of 5870, in two places.
+//
+//   * The fort/citadel/castle chain below picks a DIFFERENT common
+//     subexpression than retail does. Both compiles start identically
+//     (gpTownManager -> eax, townToView -> ecx); ours then CSEs the
+//     whole `built` load into edx:esi and lets the town pointer die,
+//     retail keeps the POINTER in ecx and re-loads `[ecx+0x150]` in
+//     the second arm. Three instructions each way, plus the ecx/edx
+//     round-robin of the widget temp's `lea` running a phase out for
+//     the rest of the body (the diagnoser's "register binding differs,
+//     schedule aligned: ecx->edx x13, edx->ecx x12" - all downstream
+//     of this one choice). Tried and rejected: swapping the AND's
+//     operands to `bitNumber[id] & built` in both arms (VC6
+//     canonicalises the commutative AND - byte-identical output), and
+//     the else-if written as a nested else{if}. Nothing in the retail
+//     bytes between the two conditions can kill the load CSE, so the
+//     source difference that flips C2's choice is still unknown.
+//
+//   * One /Ob2 site: the push_back after the id-0x32 cost text is the
+//     LAST one retail expands (to insert(end(),1,x)) and the first one
+//     ours still expands - our transition to the fully out-of-line
+//     ?push_back comes one widget later. Ours inlines 71 of the 186,
+//     retail 70; every other site agrees, which is the divisor axis
+//     landing one step off and not a spelling.
+
+// E:\gamedcs\townmgr.cpp:8254
+VA(0x005d86f0, 0x445A)  // anchor-vtable 0x6439bc + anchor-string TPCastl8.pcx, dc 0x17b48c
+TCastleWindow::TCastleWindow()
+    : CAdvPopup(0, 0, 800, 600, 0)
+{
+    Widgets.reserve(156);
+
+    if (gpTownManager->townToView->type == TOWN_DUNGEON
+        && (gpTownManager->townToView->built & bitNumber[EXTRA_1_ID])
+        && gpTownManager->townToView->field_3c == -1)
+        gpTownManager->townToView->SetSummoningGenerator();
+
+    if (gpTownManager->townToView->type == TOWN_DUNGEON
+        && (gpTownManager->townToView->built & bitNumber[EXTRA_1_ID])
+        && gpTownManager->townToView->field_3c != -1) {
+        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl8.pcx", 0x800));
+        use8 = 1;
+    } else {
+        Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl7.pcx", 0x800));
+        use8 = 0;
+    }
+
+    if (gpTownManager->townToView->built & bitNumber[CASTLE_FORT_ID])
+        castleType = CASTLE_FORT_ID;
+    else if (gpTownManager->townToView->built & bitNumber[CASTLE_CITADEL_ID])
+        castleType = CASTLE_CITADEL_ID;
+    else
+        castleType = CASTLE_CASTLE_ID;
+
+    Widgets.push_back(new textWidget(0, 0, 800, 30, gBuildingNamesCommon[castleType],
+                                 "bigfont.fnt", font::PRIMARY, 0, 1, 0, 8));
+
+    Widgets.push_back(new bitmapBorder(271, 25, 23, 121, -1, "TPCaInfo.pcx",
+                                       0x800));
+    Widgets.push_back(new bitmapBorder(665, 25, 23, 121, -1, "TPCaInfo.pcx",
+                                       0x800));
+    Widgets.push_back(new bitmapBorder(271, 158, 23, 121, -1, "TPCaInfo.pcx",
+                                       0x800));
+    Widgets.push_back(new bitmapBorder(665, 158, 23, 121, -1, "TPCaInfo.pcx",
+                                       0x800));
+    Widgets.push_back(new bitmapBorder(271, 291, 23, 121, -1, "TPCaInfo.pcx",
+                                       0x800));
+    Widgets.push_back(new bitmapBorder(665, 291, 23, 121, -1, "TPCaInfo.pcx",
+                                       0x800));
+    if (use8) {
+        Widgets.push_back(new bitmapBorder(271, 424, 23, 121, -1, "TPCaInfo.pcx",
+                                       0x800));
+        Widgets.push_back(new bitmapBorder(665, 424, 23, 121, -1, "TPCaInfo.pcx",
+                                       0x800));
+    } else {
+        Widgets.push_back(new bitmapBorder(467, 424, 23, 121, -1, "TPCaInfo.pcx",
+                                       0x800));
+    }
+
+    int whichTown = gpTownManager->townToView->type;
+    strcpy(gText, gTownCastleDefNames[whichTown + 1]);
+
+    Widgets.push_back(new bitmapBorder(169, 26, 100, 120, -1, gText, 0x800));
+    Widgets.push_back(new bitmapBorder(563, 26, 100, 120, -1, gText, 0x800));
+    Widgets.push_back(new bitmapBorder(169, 159, 100, 120, -1, gText, 0x800));
+    Widgets.push_back(new bitmapBorder(563, 159, 100, 120, -1, gText, 0x800));
+    Widgets.push_back(new bitmapBorder(169, 292, 100, 120, -1, gText, 0x800));
+    Widgets.push_back(new bitmapBorder(563, 292, 100, 120, -1, gText, 0x800));
+    if (use8) {
+        Widgets.push_back(new bitmapBorder(169, 425, 100, 120, -1, gText, 0x800));
+        int summoned = gpTownManager->townToView->field_3c;
+        strcpy(gText, gTownCastleDefNames[
+                   ((!gpGame->f_1f698
+                     && (summoned == CREATURE_AIR_ELEMENTAL
+                         || summoned == CREATURE_EARTH_ELEMENTAL
+                         || summoned == CREATURE_FIRE_ELEMENTAL
+                         || summoned == CREATURE_WATER_ELEMENTAL))
+                        ? -1
+                        : akCreatureTypeTraits[summoned].townType)
+                   + 1]);
+        Widgets.push_back(new bitmapBorder(563, 425, 100, 120, -1, gText, 0x800));
+    } else {
+        Widgets.push_back(new bitmapBorder(365, 425, 100, 120, -1, gText, 0x800));
+    }
+
+    Widgets.push_back(new textWidget(14, 115, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x9, 1, 0, 8));
+    Widgets.push_back(new textWidget(408, 115, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0xa, 1, 0, 8));
+    Widgets.push_back(new textWidget(14, 248, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0xb, 1, 0, 8));
+    Widgets.push_back(new textWidget(408, 248, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0xc, 1, 0, 8));
+    Widgets.push_back(new textWidget(14, 381, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0xd, 1, 0, 8));
+    Widgets.push_back(new textWidget(408, 381, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0xe, 1, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(14, 514, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0xf, 1, 0, 8));
+        Widgets.push_back(new textWidget(408, 514, 150, 20, GetBuildingName(TOWN_DUNGEON, EXTRA_1_ID), "smalfont.fnt",
+                                     font::PRIMARY, 0x10, 1, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(210, 514, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0xf, 1, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(14, 133, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x21, 1, 0, 8));
+    Widgets.push_back(new textWidget(408, 133, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x22, 1, 0, 8));
+    Widgets.push_back(new textWidget(14, 266, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x23, 1, 0, 8));
+    Widgets.push_back(new textWidget(408, 266, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x24, 1, 0, 8));
+    Widgets.push_back(new textWidget(14, 399, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x25, 1, 0, 8));
+    Widgets.push_back(new textWidget(408, 399, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x26, 1, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(14, 532, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x27, 1, 0, 8));
+        Widgets.push_back(new textWidget(408, 532, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x28, 1, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(210, 532, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x27, 1, 0, 8));
+    }
+
+    strcpy(gText, gTownHallDefNames[whichTown]);
+
+    Widgets.push_back(new iconWidget(14, 43, 150, 70, 1, gText, 0, 0, 0, 0,
+                                     0x10));
+    Widgets.push_back(new iconWidget(408, 43, 150, 70, 2, gText, 0, 0, 0, 0,
+                                     0x10));
+    Widgets.push_back(new iconWidget(14, 176, 150, 70, 3, gText, 0, 0, 0, 0,
+                                     0x10));
+    Widgets.push_back(new iconWidget(408, 176, 150, 70, 4, gText, 0, 0, 0, 0,
+                                     0x10));
+    Widgets.push_back(new iconWidget(14, 309, 150, 70, 5, gText, 0, 0, 0, 0,
+                                     0x10));
+    Widgets.push_back(new iconWidget(408, 309, 150, 70, 6, gText, 0, 0, 0, 0,
+                                     0x10));
+    if (use8) {
+        Widgets.push_back(new iconWidget(14, 442, 150, 70, 7, gText, 0, 0, 0, 0,
+                                     0x10));
+        Widgets.push_back(new iconWidget(408, 442, 150, 70, 8, gText, EXTRA_1_ID, 0, 0, 0,
+                                     0x10));
+    } else {
+        Widgets.push_back(new iconWidget(210, 442, 150, 70, 7, gText, 0, 0, 0, 0,
+                                     0x10));
+    }
+
+    SpriteWidget[0] = new iconWidget(169, 26, 99, 119, -1,
+                                     akCreatureTypeTraits[gTownDwellingCreatures[
+                         gpTownManager->currentDwellingIDOff[0]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+                                     0, 2, 0, 0, 0x12);
+    SpriteWidget[1] = new iconWidget(563, 26, 99, 119, -1,
+                                     akCreatureTypeTraits[gTownDwellingCreatures[
+                         gpTownManager->currentDwellingIDOff[1]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+                                     0, 2, 0, 0, 0x12);
+    SpriteWidget[2] = new iconWidget(169, 159, 99, 119, -1,
+                                     akCreatureTypeTraits[gTownDwellingCreatures[
+                         gpTownManager->currentDwellingIDOff[2]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+                                     0, 2, 0, 0, 0x12);
+    SpriteWidget[3] = new iconWidget(563, 159, 99, 119, -1,
+                                     akCreatureTypeTraits[gTownDwellingCreatures[
+                         gpTownManager->currentDwellingIDOff[3]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+                                     0, 2, 0, 0, 0x12);
+    SpriteWidget[4] = new iconWidget(169, 292, 99, 119, -1,
+                                     akCreatureTypeTraits[gTownDwellingCreatures[
+                         gpTownManager->currentDwellingIDOff[4]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+                                     0, 2, 0, 0, 0x12);
+    SpriteWidget[5] = new iconWidget(563, 292, 99, 119, -1,
+                                     akCreatureTypeTraits[gTownDwellingCreatures[
+                         gpTownManager->currentDwellingIDOff[5]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+                                     0, 2, 0, 0, 0x12);
+    if (use8) {
+        SpriteWidget[6] = new iconWidget(169, 425, 99, 119, -1,
+                                     akCreatureTypeTraits[gTownDwellingCreatures[
+                         gpTownManager->currentDwellingIDOff[6]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+                                     0, 2, 0, 0, 0x12);
+        SpriteWidget[7] = new iconWidget(563, 425, 99, 119, -1,
+                                     akCreatureTypeTraits[
+                     gpTownManager->townToView->field_3c].m_sprite_name,
+                                     0, 2, 0, 0, 0x12);
+        Widgets.push_back(SpriteWidget[7]);
+    } else {
+        SpriteWidget[6] = new iconWidget(365, 425, 99, 119, -1,
+                                     akCreatureTypeTraits[gTownDwellingCreatures[
+                         gpTownManager->currentDwellingIDOff[6]
+                         + whichTown * TOWN_DWELLING_SLOTS]].m_sprite_name,
+                                     0, 2, 0, 0, 0x12);
+    }
+
+    for (int i = 0; i < TOWN_DWELLING_COUNT; ++i)
+        Widgets.push_back(SpriteWidget[i]);
+
+    Widgets.push_back(new textWidget(14, 24, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x19, 1, 0, 8));
+    Widgets.push_back(new textWidget(408, 24, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x1a, 1, 0, 8));
+    Widgets.push_back(new textWidget(14, 157, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x1b, 1, 0, 8));
+    Widgets.push_back(new textWidget(408, 157, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x1c, 1, 0, 8));
+    Widgets.push_back(new textWidget(14, 290, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x1d, 1, 0, 8));
+    Widgets.push_back(new textWidget(408, 290, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x1e, 1, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(14, 423, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x1f, 1, 0, 8));
+        Widgets.push_back(new textWidget(408, 423, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x20, 1, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(210, 423, 150, 20, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x1f, 1, 0, 8));
+    }
+
+    Widgets.push_back(new border(10, 22, 386, 126, 0x11, 1));
+    Widgets.push_back(new border(404, 22, 386, 126, 0x12, 1));
+    Widgets.push_back(new border(10, 155, 386, 126, 0x13, 1));
+    Widgets.push_back(new border(404, 155, 386, 126, 0x14, 1));
+    Widgets.push_back(new border(10, 288, 386, 126, 0x15, 1));
+    Widgets.push_back(new border(404, 288, 386, 126, 0x16, 1));
+    if (use8) {
+        Widgets.push_back(new border(10, 421, 386, 126, 0x17, 1));
+        Widgets.push_back(new border(404, 421, 386, 126, 0x18, 1));
+    } else {
+        Widgets.push_back(new border(206, 421, 386, 126, 0x17, 1));
+    }
+
+    Widgets.push_back(new textWidget(300, 26, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x29, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 26, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x2a, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 159, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x2b, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 159, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x2c, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 292, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x2d, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 292, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x2e, 2, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 425, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x2f, 2, 0, 8));
+        Widgets.push_back(new textWidget(694, 425, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x30, 2, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 425, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x2f, 2, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(300, 46, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x31, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 46, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x32, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 179, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x33, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 179, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x34, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 312, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x35, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 312, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x36, 2, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 445, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x37, 2, 0, 8));
+        Widgets.push_back(new textWidget(694, 445, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x38, 2, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 445, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x37, 2, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(300, 67, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x69, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 67, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x6a, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 200, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x6b, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 200, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x6c, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 333, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x6d, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 333, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x6e, 2, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 466, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x6f, 2, 0, 8));
+        Widgets.push_back(new textWidget(694, 466, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x70, 2, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 466, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x6f, 2, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(300, 87, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x71, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 87, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x72, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 220, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x73, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 220, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x74, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 353, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x75, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 353, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x76, 2, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 486, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x77, 2, 0, 8));
+        Widgets.push_back(new textWidget(694, 486, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x78, 2, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 486, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x77, 2, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(300, 108, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x79, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 108, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x7a, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 241, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x7b, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 241, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x7c, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 374, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x7d, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 374, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x7e, 2, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 507, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x7f, 2, 0, 8));
+        Widgets.push_back(new textWidget(694, 507, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x80, 2, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 507, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x7f, 2, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(300, 128, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x81, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 128, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x82, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 261, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x83, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 261, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x84, 2, 0, 8));
+    Widgets.push_back(new textWidget(300, 394, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x85, 2, 0, 8));
+    Widgets.push_back(new textWidget(694, 394, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x86, 2, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 527, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x87, 2, 0, 8));
+        Widgets.push_back(new textWidget(694, 527, 91, 30, "0", "smalfont.fnt",
+                                     font::PRIMARY, 0x88, 2, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 527, 91, 30, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x87, 2, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(300, 26, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+                                     font::PRIMARY, 0x39, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 26, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+                                     font::PRIMARY, 0x3a, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 159, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+                                     font::PRIMARY, 0x3b, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 159, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+                                     font::PRIMARY, 0x3c, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 292, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+                                     font::PRIMARY, 0x3d, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 292, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+                                     font::PRIMARY, 0x3e, 0, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 425, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+                                     font::PRIMARY, 0x3f, 0, 0, 8));
+        Widgets.push_back(new textWidget(694, 425, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+                                     font::PRIMARY, 0x40, 0, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 425, 91, 30, gpGeneralText->GetText(191), "smalfont.fnt",
+                                     font::PRIMARY, 0x3f, 0, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(300, 46, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+                                     font::PRIMARY, 0x41, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 46, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+                                     font::PRIMARY, 0x42, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 179, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+                                     font::PRIMARY, 0x43, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 179, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+                                     font::PRIMARY, 0x44, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 312, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+                                     font::PRIMARY, 0x45, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 312, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+                                     font::PRIMARY, 0x46, 0, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 445, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+                                     font::PRIMARY, 0x47, 0, 0, 8));
+        Widgets.push_back(new textWidget(694, 445, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+                                     font::PRIMARY, 0x48, 0, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 445, 91, 30, gpGeneralText->GetText(192), "smalfont.fnt",
+                                     font::PRIMARY, 0x47, 0, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(300, 67, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+                                     font::PRIMARY, 0x49, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 67, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+                                     font::PRIMARY, 0x4a, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 200, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+                                     font::PRIMARY, 0x4b, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 200, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+                                     font::PRIMARY, 0x4c, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 333, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+                                     font::PRIMARY, 0x4d, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 333, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+                                     font::PRIMARY, 0x4e, 0, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 466, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+                                     font::PRIMARY, 0x4f, 0, 0, 8));
+        Widgets.push_back(new textWidget(694, 466, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+                                     font::PRIMARY, 0x50, 0, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 466, 91, 30, gpGeneralText->GetText(200), "smalfont.fnt",
+                                     font::PRIMARY, 0x4f, 0, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(300, 87, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+                                     font::PRIMARY, 0x51, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 87, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+                                     font::PRIMARY, 0x52, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 220, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+                                     font::PRIMARY, 0x53, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 220, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+                                     font::PRIMARY, 0x54, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 353, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+                                     font::PRIMARY, 0x55, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 353, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+                                     font::PRIMARY, 0x56, 0, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 486, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+                                     font::PRIMARY, 0x57, 0, 0, 8));
+        Widgets.push_back(new textWidget(694, 486, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+                                     font::PRIMARY, 0x58, 0, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 486, 91, 30, gpGeneralText->GetText(389), "smalfont.fnt",
+                                     font::PRIMARY, 0x57, 0, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(300, 108, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+                                     font::PRIMARY, 0x59, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 108, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+                                     font::PRIMARY, 0x5a, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 241, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+                                     font::PRIMARY, 0x5b, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 241, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+                                     font::PRIMARY, 0x5c, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 374, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+                                     font::PRIMARY, 0x5d, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 374, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+                                     font::PRIMARY, 0x5e, 0, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 507, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+                                     font::PRIMARY, 0x5f, 0, 0, 8));
+        Widgets.push_back(new textWidget(694, 507, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+                                     font::PRIMARY, 0x60, 0, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 507, 91, 30, gpGeneralText->GetText(194), "smalfont.fnt",
+                                     font::PRIMARY, 0x5f, 0, 0, 8));
+    }
+
+    Widgets.push_back(new textWidget(300, 128, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+                                     font::PRIMARY, 0x61, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 128, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+                                     font::PRIMARY, 0x62, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 261, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+                                     font::PRIMARY, 0x63, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 261, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+                                     font::PRIMARY, 0x64, 0, 0, 8));
+    Widgets.push_back(new textWidget(300, 394, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+                                     font::PRIMARY, 0x65, 0, 0, 8));
+    Widgets.push_back(new textWidget(694, 394, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+                                     font::PRIMARY, 0x66, 0, 0, 8));
+    if (use8) {
+        Widgets.push_back(new textWidget(300, 527, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+                                     font::PRIMARY, 0x67, 0, 0, 8));
+        Widgets.push_back(new textWidget(694, 527, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+                                     font::PRIMARY, 0x68, 0, 0, 8));
+    } else {
+        Widgets.push_back(new textWidget(496, 527, 91, 30, gpGeneralText->GetText(195), "smalfont.fnt",
+                                     font::PRIMARY, 0x67, 0, 0, 8));
+    }
+
+    Widgets.push_back(new bitmapBorder(3, 555, 741, 18, 0x89, "TStatBar.pcx", 0x800));
+    Widgets.push_back(new textWidget(3, 555, 741, 18, 0, "smalfont.fnt",
+                                     font::PRIMARY, 0x8a, 1, 0, 8));
+
+    button* exitButton = new button(748, 556, 48, 40, EXIT_BUTTON_ID,
+                                    "TPMage1.def", 0, 1, 1, 28, 2);
+    exitButton->set_hotkey(1);
+    Widgets.push_back(exitButton);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+}
 
 VA_COMPGEN(0x005dcb50, 0x21, SCALAR_DELETING_DTOR, TCastleWindow)
 
