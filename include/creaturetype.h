@@ -7,12 +7,13 @@
 
 #include "armygrp.h"
 
+int IsBaseCreature(TCreatureType monType);
 unsigned char IsSiegeWeapon(TCreatureType creature);
 TCreatureType UpgradedCreatureType(TCreatureType type);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:202, dc 0x718dc) TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr);
-// CODEVIEW(E:\gamedcs\creaturetype.cpp:213, dc 0x718fc) unsigned char IsBaseCreature(TCreatureType monType);
+// CODEVIEW(E:\gamedcs\creaturetype.cpp:213, dc 0x718fc) int IsBaseCreature(TCreatureType monType);
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:228, dc 0x71934) unsigned char IsSiegeWeapon(TCreatureType creature);
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:246, dc 0x71948) TCreatureType UpgradedCreatureType(TCreatureType type);
 // CODEVIEW(E:\gamedcs\creaturetype.cpp:259, dc 0x71968) unsigned char InitializeCreatureTypeTraitsTable();

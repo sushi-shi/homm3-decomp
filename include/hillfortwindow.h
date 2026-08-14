@@ -5,23 +5,155 @@
 #ifndef HOMM3_HILLFORTWINDOW_H
 #define HOMM3_HILLFORTWINDOW_H
 
+#include "armygrp.h"
 #include "window.h"
 
 class message;
 
 // Retail vtable 0x63eb68 has heroWindow's nine-slot shape; the constructor
-// invokes heroWindow directly and installs that derived vptr. The substantial
-// slot/cost tail is deliberately not represented until a compiled method
-// needs it, avoiding a second partial-layout view.
+// invokes heroWindow directly and installs that derived vptr.
+//
+// PROVEN layout (2026-08-14). The Dreamcast fieldlist 0x5209 gives the tail
+// as slot[560 B] @68, totalCost @628, UpgradeAllButtonState @656,
+// RolloverWidget @660, size 664 - i.e. base + 7*80 + 7*4 + 4 + 4 over a
+// 68-byte STLport heroWindow. Retail's heroWindow is 0x4c (the Dinkumware
+// vector is four bytes wider), and every offset then falls out of the
+// retail bytes:
+//   * UpgradeSlot 0x4e8500 scales `which` by 0x50 (`lea eax,[edi+edi*4]`
+//     / `shl eax,4`) and reads [this + which*0x50 + 0x8c/0x90/0x98], so
+//     the stride is 0x50 and the array base is 0x4c;
+//   * the handler 0x4e8850 reads UpgradeAllButtonState at [this + 0x298],
+//     which is 0x4c + 7*0x50 + 7*4 exactly - the DC 656 with the four-byte
+//     base shift, closing the arithmetic from the other end;
+//   * Recalculate 0x4e7eb0 walks the slot row with `lea ebx,[this+0x90]` /
+//     `add ebx,0x50` and touches every member below through it, and clears
+//     totalCost with `lea edi,[this+0x27c]` / `mov ecx,7` / `rep stosd`.
 class THillFortWindow : public heroWindow {
 public:
+    // Dreamcast THillFortWindow::EWidgetIDs (fieldlist 0x5200), verbatim.
+    // Retail corroborates the anchors: the constructor builds 0xc8/0xc9/
+    // 0xca/0xcb, HandleClick brackets 0xcb..0xda and normalizes the
+    // CREATURE_NUM row onto the CREATURE_PORTRAIT row with `add esi,-7`,
+    // and the handler maps 0x105..0x10b onto the seven slots.
+    enum EWidgetIDs {
+        BACKGROUND_ID = 200,
+        ROLLOVER_ID = 201,
+        TITLE_ID = 202,
+        HERO_PORTRAIT_ID = 203,
+        UPGRADE_ALL_BUTTON_ID = 204,
+        CREATURE_PORTRAIT_1_ID = 205,
+        CREATURE_PORTRAIT_2_ID = 206,
+        CREATURE_PORTRAIT_3_ID = 207,
+        CREATURE_PORTRAIT_4_ID = 208,
+        CREATURE_PORTRAIT_5_ID = 209,
+        CREATURE_PORTRAIT_6_ID = 210,
+        CREATURE_PORTRAIT_7_ID = 211,
+        CREATURE_NUM_1_ID = 212,
+        CREATURE_NUM_2_ID = 213,
+        CREATURE_NUM_3_ID = 214,
+        CREATURE_NUM_4_ID = 215,
+        CREATURE_NUM_5_ID = 216,
+        CREATURE_NUM_6_ID = 217,
+        CREATURE_NUM_7_ID = 218,
+        GOLD_ICON_1_ID = 219,
+        GOLD_ICON_2_ID = 220,
+        GOLD_ICON_3_ID = 221,
+        GOLD_ICON_4_ID = 222,
+        GOLD_ICON_5_ID = 223,
+        GOLD_ICON_6_ID = 224,
+        GOLD_ICON_7_ID = 225,
+        GOLD_COST_1_ID = 226,
+        GOLD_COST_2_ID = 227,
+        GOLD_COST_3_ID = 228,
+        GOLD_COST_4_ID = 229,
+        GOLD_COST_5_ID = 230,
+        GOLD_COST_6_ID = 231,
+        GOLD_COST_7_ID = 232,
+        RES_ICON_1_ID = 233,
+        RES_ICON_2_ID = 234,
+        RES_ICON_3_ID = 235,
+        RES_ICON_4_ID = 236,
+        RES_ICON_5_ID = 237,
+        RES_ICON_6_ID = 238,
+        RES_ICON_7_ID = 239,
+        RES_COST_1_ID = 240,
+        RES_COST_2_ID = 241,
+        RES_COST_3_ID = 242,
+        RES_COST_4_ID = 243,
+        RES_COST_5_ID = 244,
+        RES_COST_6_ID = 245,
+        RES_COST_7_ID = 246,
+        TOTAL_RES_ICON_1_ID = 247,
+        TOTAL_RES_ICON_2_ID = 248,
+        TOTAL_RES_ICON_3_ID = 249,
+        TOTAL_RES_ICON_4_ID = 250,
+        TOTAL_RES_ICON_5_ID = 251,
+        TOTAL_RES_ICON_6_ID = 252,
+        TOTAL_RES_ICON_7_ID = 253,
+        TOTAL_RES_COST_1_ID = 254,
+        TOTAL_RES_COST_2_ID = 255,
+        TOTAL_RES_COST_3_ID = 256,
+        TOTAL_RES_COST_4_ID = 257,
+        TOTAL_RES_COST_5_ID = 258,
+        TOTAL_RES_COST_6_ID = 259,
+        TOTAL_RES_COST_7_ID = 260,
+        UPGRADE_BUTTON_1_ID = 261,
+        UPGRADE_BUTTON_2_ID = 262,
+        UPGRADE_BUTTON_3_ID = 263,
+        UPGRADE_BUTTON_4_ID = 264,
+        UPGRADE_BUTTON_5_ID = 265,
+        UPGRADE_BUTTON_6_ID = 266,
+        UPGRADE_BUTTON_7_ID = 267
+    };
+
+    // Dreamcast fieldlist 0x5204 (THillFortWindow::__unnamed); retail
+    // corroborates it as the constructor's Widgets.reserve argument
+    // (`cmp edx,0x3c` / `push 0xf0`).
+    enum { NWIDGETS = 60 };
+
+    // One upgrade row. Retail proves every member and the 0x50 stride:
+    // the three text caches are cleared byte-wise at +0x00/+0x0a/+0x14
+    // and sprintf'd into at exactly those offsets; cost[] is the seven
+    // dwords `rep stosd` clears at +0x20 and get_upgrade_cost fills;
+    // resourceIndex is the -1-seeded dword at +0x3c that the
+    // non-gold accumulation loop writes; and the four trailing dwords
+    // are the creature type, its count, its dwelling level and the
+    // tri-state the two icon tables index.
+    struct TUpgradeSlot {
+        char szCount[10];         // +0x00
+        char szGoldCost[10];      // +0x0a
+        char szResourceCost[12];  // +0x14
+        long cost[7];             // +0x20
+        int resourceIndex;        // +0x3c
+        int type;                 // +0x40 (TCreatureType domain)
+        int count;                // +0x44
+        int level;                // +0x48
+        int state;                // +0x4c
+    };
+
+    // slot[].state and UpgradeAllButtonState share this domain: it is
+    // the index into the two .rdata icon tables (0x63eb34 / 0x63eb40),
+    // whose entries are aphlf1y/aphlf1g/aphlf1r and aphlf4y/4g/4r.
+    enum EUpgradeState {
+        UPGRADE_STATE_NONE = 0,
+        UPGRADE_STATE_AFFORDABLE = 1,
+        UPGRADE_STATE_TOO_EXPENSIVE = 2
+    };
+
     THillFortWindow();
     virtual ~THillFortWindow();
     void DoModal();
 
-private:
+    TUpgradeSlot slot[armyGroup::ARMY_GROUP_SLOT_COUNT];   // +0x4c
+    long totalCost[armyGroup::ARMY_GROUP_SLOT_COUNT];      // +0x27c
+    int UpgradeAllButtonState;                             // +0x298
+    widget* RolloverWidget;                                // +0x29c
+
     void Recalculate(unsigned char drawDimmedButtons);
+    void UpgradeSlot(int which, unsigned char show_message);
+    void HandleClick(message& msg);
 };
+SIZE(THillFortWindow, 0x2a0);
 
 // Retail /Gr passes the message by reference in ECX, matching DoDialog.
 int HillFortWindowHandler(message& msg);

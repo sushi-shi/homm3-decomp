@@ -501,6 +501,7 @@ command	combatManager_show_looted_artifacts	0.0000	0.0000	0.0000	0x772b0
 compress	@compress2@20	100.0000	100.0000	100.0000	0x206b40
 crc32	@crc32@12	100.0000	100.0000	100.0000	0x205af0
 creature_bank	??0type_creature_bank_traits@@QAE@XZ	100.0000	100.0000	100.0000	0x7aad0
+creaturetype	?IsBaseCreature@@YIHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b120
 creaturetype	?IsSiegeWeapon@@YIEW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x7b180
 creaturetype	?UpgradedCreatureType@@YI?AW4TCreatureType@@W41@@Z	100.0000	100.0000	100.0000	0x7b1a0
 csequence	??0CSequence@@AAE@H@Z	100.0000	100.0000	100.0000	0x7b840
@@ -858,6 +859,7 @@ hexcell	?get_dead_army@hexcell@@QAEPAVarmy@@H@Z	100.0000	100.0000	100.0000	0xe71
 hillfortwindow	??1THillFortWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe7e10
 hillfortwindow	??_GTHillFortWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe7de0
 hillfortwindow	?DoModal@THillFortWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe7e90
+hillfortwindow	?UpgradeSlot@THillFortWindow@@QAEXHE@Z	100.0000	100.0000	100.0000	0xe8500
 hiscore	??0highScoreManager@@QAE@XZ	100.0000	100.0000	100.0000	0xe9070
 hiscore	??1CHSInputDlg@@UAE@XZ	100.0000	100.0000	100.0000	0xe9740
 hiscore	??1THighScoreWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe9dc0
