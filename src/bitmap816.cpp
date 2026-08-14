@@ -62,6 +62,13 @@ Bitmap816::~Bitmap816()
 // the fix is in how the palette members' cleanup states are numbered, i.e. a
 // palette.h declaration change, and the two obvious ones are measured worse
 // above. Left as an honest residual rather than risk a shared header for 0.03%.
+// 2026-08-14, the third candidate declaration is now measured too and is by far
+// the worst: `virtual ~Bitmap816() throw();` (declaration and definition
+// together, bitmap816.h being the narrow header rather than palette.h) takes
+// this row 99.9697 -> 47.2727 and touches nothing else in the tree. All three
+// reachable throw()-placement edits are therefore negative, and the two-axis
+// /Ob2 grid does not apply - this residual is one immediate in the unwind-state
+// numbering, not a budget.
 // NOT part of the residual, and now PROVEN so: the `push 0x0` + reloc $L696 row
 // against retail's `push 0xb` + reloc ...unwind01. Functions that already score
 // 100.0 in this tree (button::button, ~button, ~textButton, ~type_func_button,
