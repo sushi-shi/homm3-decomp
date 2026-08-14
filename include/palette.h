@@ -48,7 +48,11 @@ public:
     TPalette24(const TRGBA* rgba);
     TPalette24(const TPalette24* copy);
     TPalette24& operator=(const TPalette24& from);
-    virtual ~TPalette24() throw();
+    // NO exception specification: Bitmap816::~Bitmap816's retail unwind map
+    // keeps a {p16, resource} cleanup chain across the ~TPalette24 call,
+    // which VC6 only emits when that call is allowed to throw. A throw()
+    // here erases that chain (the map collapses to one entry).
+    virtual ~TPalette24();
     virtual unsigned int _vslot2() const;
 };
 SIZE(TPalette24, 0x31c);

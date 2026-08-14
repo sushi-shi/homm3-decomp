@@ -241,7 +241,7 @@ TPalette24& TPalette24::operator=(const TPalette24& from)
 
 // E:\gamedcs\palette.cpp:650
 VA(0x00522f60, 0x0b)  // TPalette24 vtable 0x640374 + resource dtor tail
-TPalette24::~TPalette24() throw()
+TPalette24::~TPalette24()
 {
 }
 
