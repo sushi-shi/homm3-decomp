@@ -420,7 +420,13 @@ public:
     // the Orb of Inhibition, and army::get_owner (0x442690) does the
     // same lookup off gpCombatManager.
     hero* heroes[2];                  // +0x53cc
-    char pad_53d4[0x8];
+    // The two combat heroes' spell power, cached per side: ai.cpp's
+    // get_area_effect (0x41f920) hands `[this + 4*side + 0x53d4]` to
+    // ComputeSpellDamage as the multiplier that leaf applies to the
+    // spell traits row's per-power damage (0x5a78ba, `imul edi,
+    // [ebp+0xc]`). Sliced out of the old pad; the pair is the whole
+    // eight bytes and the name is that argument's role.
+    int spellPower[2];                // +0x53d4
     // A per-side latch berserk_attack (0x4222c0) raises, indexed by
     // SIDE as a byte, on exactly one path: when a berserked stack's
     // chosen target turns out to be on its OWN side. Name awaits a
@@ -786,6 +792,35 @@ public:
     // non-const. Constness is invisible to the codegen, so the
     // divergence is spelling only - re-const both the day
     // searchArray::get_travel_time gains its `const`.
+    long get_area_effect(long side, const army* our_army,
+                         long marked_enemies,
+                         const type_AI_combat_parameters* estimate);
+                                                              // 0x41f920
+    void mark_friendly_armies(const army* our_army, long* enemy_attacks,
+                              long marked_enemies,
+                              const type_AI_combat_parameters* estimate);
+                                                              // 0x41fb60
+    // `estimate` is NON-const where the Dreamcast roster prints
+    // `const type_AI_combat_parameters*`, for the same reason the
+    // searchArray pair above is: the body reaches
+    // type_AI_combat_parameters::get_simple_attack_effect through it and
+    // ai_tactical.h declares that method non-const. Spelling only.
+    void mark_multiheaded_enemy(const army* our_army, const army* enemy,
+                                long* enemy_attacks, long limit_value,
+                                searchArray* search_array,
+                                type_AI_combat_parameters* estimate);
+                                                              // 0x41fd60
+    void mark_enemy_attacks(const army* our_army, long* enemy_attacks,
+                            long* dangerous_enemies,
+                            const type_AI_combat_parameters* estimate);
+                                                              // 0x420260
+    unsigned char choose_creature_spell(const army* current_army,
+                                        long* best_value,
+                                        type_AI_combat_parameters* estimate);
+                                                              // 0x420d20
+    unsigned char choose_resurrect_action(
+        const army* current_army, long* best_value,
+        type_AI_combat_parameters* estimate);                 // 0x421000
     unsigned char choose_defense_hex(const army* current_army,
                                      const army* client, long* best_hex,
                                      long* open_hexes,
@@ -875,6 +910,18 @@ public:
     // come from ai_tactical's get_damage_value (0x436e30), which calls
     // them back to back with gpCombatManager in ecx. Their own claims
     // wait for src/spells.cpp.
+    // 0x5a7890, the spells.obj leaf that sits immediately in front of
+    // ModifySpellDamage and forwards into it. It reads akSpellTraits'
+    // per-mastery damage row (`base + spell_power * per_power`) and
+    // then applies the same hero/target modifiers. The DC roster's
+    // combatManager::ComputeSpellDamage (spells.cpp:5065, dc 0x156b94)
+    // is EIGHT parameters where retail is `ret 0x1c` + `this` - the
+    // same eight - and its source line 5065 sits just before
+    // ModifySpellDamage's 5086, which is the retail order exactly.
+    long ComputeSpellDamage(SpellID spell, long spell_power, long mastery,
+                            hero* casting_hero, hero* target_hero,
+                            const army* target,
+                            unsigned char simulated);          // 0x5a7890
     long ModifySpellDamage(long base_damage, SpellID spell,
                            const hero* casting_hero, const hero* target_hero,
                            const army* target,
