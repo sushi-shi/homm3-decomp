@@ -23,7 +23,9 @@
 #define HOMM3_TOWN_OBJ_DECLS
 #include "exec.h"
 #undef HOMM3_TOWN_OBJ_DECLS
+#define HOMM3_GAME_OBJ_DECLS
 #include "game.h"
+#undef HOMM3_GAME_OBJ_DECLS
 #include "hero.h"
 #include "iconwdgt.h"
 #include "kb.h"
@@ -3385,6 +3387,108 @@ void TCastleWindow::Recruit(int i)
                 gpTownManager->townToView->population[dwelling]);
         BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, i + 0x21,
                          textMessage.extra);
+    }
+}
+
+// 0x4baba0 (claimed in src/game.cpp), which has no header declaration of
+// its own; this is the file-local fallback the header discipline allows.
+int GetNumObelisks(int whichPlayer);
+// ai_combat.h owns this pair, but that header belongs to another lane's
+// closure and this compiland needs nothing else out of it.
+long AI_approximate_strength(const hero* current_hero);
+long AI_approximate_strength(const hero* current_hero,
+                             const armyGroup* current_army);
+
+// E:\gamedcs\townmgr.cpp:9597
+// One column of the thieves' guild table: for every player position in
+// the scenario, `value[i]` gets that player's score in the requested
+// category and `index[i]` the position itself, so the descending sort
+// below can carry the two rows together. A DISABLED player scores -1,
+// which is what the table draws as a blank.
+//
+// The town, hero and town-id walks are all the header inlines, expanded:
+// the towns vector's `_First == 0` size guard is re-evaluated on every
+// comparison, and both GetHero and GetTown emit their -1 arm even where
+// the id cannot be -1. The artifact and army arms then call through the
+// resulting pointer WITHOUT a null check - retail's own behaviour.
+//
+// The body turned on ONE declaration: the army arm keeps an accumulator
+// of its own. Sharing the loop-scope `total` with it scored 91.87 with
+// every instruction in place and esi/ebx transposed across the whole
+// function - retail colours the army arm's local into the SAME frame
+// slot as the player-offset register home (and as case-0's town offset),
+// which it can only do for a block-scoped temporary, and that colouring
+// is what puts the two register homes at [ebp-4]/[ebp-8] AHEAD of the
+// named locals. `total` itself must stay at loop scope: retail zeroes it
+// above `index[i] = i`, before the switch is reached at all. The town
+// count is UNSIGNED (`jae` against vector::size(), which is also what
+// lets the `_First == 0` arm fold straight into the loop exit); casting
+// it to int scored 93.36 with an extra induction slot.
+VA(0x005dee70, 0x2F0)  // anchor-callee(SortStats pair) + arity, dc 0x1810b0
+void GetCategoryStats(int whichCat, long* value, signed char* index)
+{
+    for (int i = 0; i < static_cast<signed char>(gpGame->field_1f634); i++) {
+        long total = 0;
+        index[i] = static_cast<signed char>(i);
+        if (gpGame->playerDisabled[i]) {
+            value[i] = -1;
+        } else {
+            switch (whichCat) {
+            case TG_STAT_TOWNS: {
+                for (unsigned int t = 0; t < gpGame->towns.size(); t++) {
+                    if (gpGame->towns[t].owner == i)
+                        total++;
+                }
+                value[i] = total;
+                break;
+            }
+            case TG_STAT_HEROES:
+                value[i] = gpGame->players[i].numHeroes;
+                break;
+            case TG_STAT_GOLD:
+                value[i] = gpGame->players[i].resources[GOLD];
+                break;
+            case TG_STAT_WOOD_ORE:
+                value[i] = gpGame->players[i].resources[ORE]
+                         + gpGame->players[i].resources[WOOD];
+                break;
+            case TG_STAT_RARE_RESOURCES:
+                value[i] = gpGame->players[i].resources[GEMS]
+                         + gpGame->players[i].resources[CRYSTAL]
+                         + gpGame->players[i].resources[SULFUR]
+                         + gpGame->players[i].resources[MERCURY];
+                break;
+            case TG_STAT_OBELISKS:
+                value[i] = GetNumObelisks(i);
+                break;
+            case TG_STAT_ARTIFACTS: {
+                value[i] = 0;
+                for (int h = 0; h < gpGame->players[i].numHeroes; h++) {
+                    hero* thisHero = gpGame->GetHero(gpGame->players[i].heroes[h]);
+                    value[i] += thisHero->get_number_in_backpack(1)
+                              + thisHero->get_equipped_artifacts(1);
+                }
+                break;
+            }
+            case TG_STAT_ARMY_STRENGTH: {
+                long strength = 0;
+                for (int h = 0; h < gpGame->players[i].numHeroes; h++) {
+                    strength += AI_approximate_strength(
+                        gpGame->GetHero(gpGame->players[i].heroes[h]));
+                }
+                for (int t = 0; t < gpGame->players[i].numTowns; t++) {
+                    town* thisTown = gpGame->GetTown(gpGame->players[i].townIds[t]);
+                    if (thisTown->HasGarrison())
+                        strength += AI_approximate_strength(0, &thisTown->get_army());
+                }
+                value[i] = strength;
+                break;
+            }
+            case TG_STAT_INCOME:
+                value[i] = gpGame->ComputeDailyGold(i, 1);
+                break;
+            }
+        }
     }
 }
 

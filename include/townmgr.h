@@ -10,6 +10,23 @@ struct type_point;
 unsigned char DoTavern();
 void DoMapTavern(type_point point);
 
+// The nine columns of the thieves' guild table, in the order
+// SetupThievesGuild builds them and GetCategoryStats dispatches them.
+// The Dreamcast dump declares no enum for this domain - both bodies pass
+// a bare int - so only the NAMES are provisional; the values are the
+// retail jump-table order.
+enum EThievesGuildStat {
+    TG_STAT_TOWNS = 0,
+    TG_STAT_HEROES = 1,
+    TG_STAT_GOLD = 2,
+    TG_STAT_WOOD_ORE = 3,
+    TG_STAT_RARE_RESOURCES = 4,
+    TG_STAT_OBELISKS = 5,
+    TG_STAT_ARTIFACTS = 6,
+    TG_STAT_ARMY_STRENGTH = 7,
+    TG_STAT_INCOME = 8
+};
+
 // Gated for the same reason townManager below is: townmgr.h is pulled in by
 // advmgr.h and by town.cpp, and a class definition visible there widens
 // their include closure for no benefit. townmgr.cpp is the only consumer.
