@@ -71,35 +71,52 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 // `movzx ax, byte` loads and the single `and edx, 0xffffc000` mask that
 // clears both fields at once.
 //
-// Residual (98.8%): one scheduling slot - retail hoists the gpGame load
-// above the y/z bitfield store, ours sinks it below. Tried and
-// rejected: all 36 declaration x assignment orders of the three
-// coordinates (98.8% is the ceiling of that family; plain byte
-// assignment 86.9%, aggregate initialisation 89.3% but structurally
-// wrong - retail read-modify-writes BOTH storage units, which an
-// aggregate initialiser never does), unsigned short temporaries,
-// declaring the point before the temporaries, and static_cast<short> /
-// <int> on the byte reads (all identical to the implicit conversion).
-// Re-swept 2026-08-08 with the naming lever that closed the
-// SpellCastWorkChance family: binding gpGame to a named local is the
-// WRONG direction here and loses ground from every position tried -
-// before the point assignments or at the top of the body 89.3, between
-// the x and y stores 85.8, between y and z 85.8, after all three 93.0,
-// and with the z store moved up 83.5. The hoist retail performs is the
-// allocator's, not a source ordering we can spell.
+// EXACT 2026-08-14 (98.7523 -> 100.0000), and the DC xref census is what
+// found it. The long-standing residual was one scheduling slot - retail
+// hoisted the gpGame load above the y/z bitfield store where this compile sank
+// it below - and it survived all 36 declaration x assignment orders of the
+// three coordinates spelled INLINE here (that family's ceiling was 98.8; plain
+// byte assignment 86.9, aggregate initialisation 89.3 but structurally wrong,
+// since retail read-modify-writes BOTH storage units; unsigned short
+// temporaries, declaring the point before the temporaries and
+// static_cast<short>/<int> on the byte reads were all identical; binding
+// gpGame to a named local lost ground from every position - 89.3 at the top,
+// 85.8 between the x/y and y/z stores, 93.0 after all three, 83.5 with the z
+// store moved up). The note that "the hoist retail performs is the
+// allocator's, not a source ordering we can spell" was right about ORDER and
+// wrong about the construct: the point is not built in this frame at all.
+// evidence/dc-xref-graph.tsv records `town::get_location` x1 from this body
+// (dc 0x1fdac, E:\gamedcs\Town.h:311). Spelling it as a helper that RETURNS
+// the point by value gives the construction its own NRV slot, and retail's
+// load order falls out of that - byte-identical on the first spelling.
+// This is the census's second conversion after ??0TQuickCreatureWindow and it
+// fits the same screen: the callee's body does work the caller's spelling does
+// not (a whole struct return), so it cannot constant-fold away.
+// E:\gamedcs\Town.h:311, dc 0x1fdac - a header inline whose out-of-line copy
+// lands in advmgr.obj, where it is still carcassed. Kept file-local (a free
+// static over the same body rather than the `town::` member it is in retail)
+// so this lane leaves town.h's include closure alone; promoting it into town.h
+// behind HOMM3_TOWN_OBJ_DECLS is the obvious follow-up, and quicktownwindow's
+// and armygrp's `town::HasBuilding` rows are the neighbours that would pay for
+// the same edit.
+static type_point get_location(const town* t)
+{
+    short town_x = t->mapX;
+    short town_z = t->mapZ;
+    short town_y = t->mapY;
+    type_point point;
+    point.x = town_x;
+    point.y = town_y;
+    point.z = town_z;
+    return point;
+}
+
 VA(0x00428410, 0x160)  // anchor-global, dc 0x2dc00
 unsigned char can_take_town(const hero* attacking_hero, const town* defending_town)
 {
     armyGroup attacking_army = attacking_hero->army;
     armyGroup defending_army = defending_town->get_army();
-    short town_x = defending_town->mapX;
-    short town_z = defending_town->mapZ;
-    short town_y = defending_town->mapY;
-    type_point point;
-    point.x = town_x;
-    point.y = town_y;
-    point.z = town_z;
-    NewmapCell* cell = gpGame->get_cell(point);
+    NewmapCell* cell = gpGame->get_cell(get_location(defending_town));
     type_AI_combat_data attacker(attacking_hero, &attacking_army, 1.25, 0,
                                  defending_town, cell);
     type_AI_combat_data defender(0, &defending_army, 0.75, attacking_hero, 0,
