@@ -34,6 +34,12 @@ DATA(0x006aaa48) int gMapTavern;
 DATA(0x006aa9d8) extern int gUnnamed6aa9d8;
 DATA(0x006aa9ec) static int gUnnamed6aa9ec;
 
+// The selected entry of the town-locator row. Ten image-wide references,
+// every one inside townmgr's bracket, so this compiland owns it; only
+// the read in UpdateTownLocator is reconstructed, so the name stays
+// neutral.
+DATA(0x006aaa50) static int gUnnamed6aaa50;
+
 #if 0  // @carcass
 
 // E:\gamedcs\townmgr.cpp:1855
@@ -154,6 +160,74 @@ TTownScreenWindow::~TTownScreenWindow()
         delete field_50;
         field_50 = 0;
     }
+}
+
+// One town-locator slot. The slot is blanked and deactivated when it
+// runs past the end of the player's town list; otherwise it shows that
+// town's small portrait, and the currently selected slot additionally
+// gets its frame widget drawn and repositioned. Retail merges the two
+// arms' trailing broadcast into one, which is the same cross-jump the
+// locator row below turns on. The null-town arm is game.h's GetTown
+// inlined - it returns 0 for id -1 and retail calls GetPortraitFrame
+// on that null anyway, which is the inline's shape, not a guard.
+//
+// Residual (90.93%): register-homing, `homm3 vc6 diagnose` reports
+// flow-distance 0 and one binding pair - retail loads field_4c into ECX
+// and copies i into EDX for the selected-slot test where our CL loads
+// field_4c straight into EDX and adds. `vc6 why-reg`'s whole guided
+// catalog (24 mutations across C3/C4/B8/B13/B23) moves it 0 or worse,
+// and decl-order (B6) by hand does nothing either - tried and rejected:
+// operand order either way, reversed compare, the sum in a named local,
+// the local hoisted to the top of the function.
+
+// E:\gamedcs\townmgr.cpp:2460
+VA(0x005c5970, 0x124)  // anchor-bracket + UpdateTownLocators call edge, dc 0x16ae68
+void TTownScreenWindow::UpdateTownLocator(int i)
+{
+    message msg;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+
+    playerData* player = gpGame->GetLocalPlayer();
+    msg.codeY = i + 0x9b;
+    if (i >= player->numTowns) {
+        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.extra = 0;
+        BroadcastMessage(&msg);
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+        msg.extra = widget::WIDGET_ACTIVE;
+        BroadcastMessage(&msg);
+        return;
+    }
+
+    // `i + field_4c`, not the other way round: retail folds i into the
+    // player pointer and leaves the scroll offset as the index.
+    int townId = player->townIds[i + field_4c];
+    msg.codeX = widget::WIDGET_SET_STATUS;
+    msg.extra = widget::WIDGET_ACTIVE;
+    BroadcastMessage(&msg);
+
+    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.extra = gpGame->GetTown(townId)->GetPortraitFrame(true);
+    BroadcastMessage(&msg);
+
+    if (i + field_4c != gUnnamed6aaa50)
+        return;
+
+    msg.codeX = widget::WIDGET_SET_STATUS;
+    msg.codeY = 0xa3;
+    msg.extra = widget::WIDGET_DRAWN;
+    BroadcastMessage(&msg);
+
+    msg.codeX = 0x35;
+    msg.extra = (i << 5) + 0x1ae;
+    BroadcastMessage(&msg);
 }
 
 // The town-screen locator row, immediately behind its own destructor in
