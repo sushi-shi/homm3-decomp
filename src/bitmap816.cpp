@@ -3,6 +3,10 @@
 // 17 functions in link order.
 #include <va.h>
 #include <string.h>
+// <new> for its `void __cdecl operator delete(void*) _THROW0();` - the
+// nothrow declaration is what retail's ~Bitmap816 unwind map proves this TU
+// had (see the destructor's note below). NEW.H does NOT declare it.
+#include <new>
 #include "bitmap816.h"
 
 // Retail vtable 0x63ba14 slot 0; retail places the generated wrapper before
@@ -49,11 +53,18 @@ Bitmap816::~Bitmap816()
     if (map)
         delete[] map;
 }
-// Residual (99.9697%): all executable instructions match; only the initial
-// VC6 EH state is 2 rather than retail's 1. Removing TPalette24's throw()
-// specification or adding one to TPalette16 makes the cleanup-state sequence
-// structurally worse (96.94%); both palette destructors themselves remain
-// exact with the retained declarations.
+// The initial EH state (retail 1, ours was 2) was a CLEANUP-COUNT fact, not
+// a spelling. Retail's unwind map for this body has exactly two entries and
+// the funclets say which: 0x628600 is `mov ecx,[ebp-0x10]; jmp ~resource`
+// and 0x628608 is `add ecx,0x34; jmp ~TPalette16`. There is no
+// `add ecx,0x250; jmp ~TPalette24` funclet - although the Bitmap816
+// CONSTRUCTOR group at 0x6285a0 has all three (8/0xb/0xe bytes). VC6 emits
+// a cleanup chain only for a region that can THROW, so retail's two entries
+// say (a) this body's delete cannot throw - the TU sees <new>'s
+// `operator delete(void*) _THROW0()` rather than the implicit, throwing
+// declaration - and (b) the ~TPalette24 call CAN, which is why that
+// destructor carries no exception specification. Measured: empty body -> 1
+// entry; <new> alone -> 1; <new> plus a throwing ~TPalette24 -> 2, retail.
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
