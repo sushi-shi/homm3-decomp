@@ -25,7 +25,15 @@ public:
         BOTTOM_VIEW_TEXT_ID = 0x834,
         // The enemy-turn window numbers its own widgets from a separate
         // base; its constructor seeds one incrementing local with 0x88e.
-        BOTTOM_VIEW_ENEMY_TURN_ID = 0x88e
+        BOTTOM_VIEW_ENEMY_TURN_ID = 0x88e,
+        // The town banner's silo row has exactly two shapes, selected by
+        // how many of get_silo_income's seven entries are non-zero:
+        // TWO stacks a pair of icons at y=75 and y=87, ONE centres a
+        // single icon at y=81, and anything else draws nothing. The
+        // count IS the domain the constructor switches on, so it is
+        // named here rather than compared against a bare literal.
+        BOTTOM_VIEW_SILO_ONE_RESOURCE = 1,
+        BOTTOM_VIEW_SILO_TWO_RESOURCES = 2
     };
 
     type_bottom_view_window(heroWindow* parent_window);
