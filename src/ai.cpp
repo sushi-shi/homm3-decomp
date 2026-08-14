@@ -519,7 +519,7 @@ long get_attack_value(const army* current_army, const army* enemy, long enemy_hi
 // its only retail call intact.
 #pragma auto_inline(off)
 VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
-unsigned char army::IsIncapacitated()
+unsigned char army::IsIncapacitated() const
 {
     return static_cast<unsigned char>(disabled_290 || disabled_2b0 || disabled_2c0);
 }
@@ -1454,7 +1454,7 @@ void type_spellvalue::set_stack_value(long arg)
 
 // E:\gamedcs\Army.h:718
 DC_ONLY(0x27c78, 0x24)
-unsigned char army::can_cast_resurrect()
+unsigned char army::can_cast_resurrect() const
 {
     // @stub
 }

@@ -112,7 +112,7 @@ off_grid:
 
 // E:\gamedcs\path.cpp:97
 VA(0x00523b20, 0x89)  // anchor-global, dc 0x10c9ec
-unsigned army::GetAttackMask(int currIndex, int criteria, int iLiteralTargetIndex)
+unsigned army::GetAttackMask(int currIndex, int criteria, int iLiteralTargetIndex) const
 {
     int testCellIndex;
     unsigned char twoHex = static_cast<unsigned char>(creatureId & 1);
@@ -152,7 +152,7 @@ unsigned army::GetAttackMask(int currIndex, int criteria, int iLiteralTargetInde
 // local (byte-identical), `(facing == 1) ?` instead of `facing ?`
 // (78.2%), testing WIDE_LOWER before WIDE_UPPER (80.7%).
 VA(0x00523bb0, 0x1DF)  // anchor-global, dc 0x10ca6c
-int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIndex, int* testCellIndex)
+int army::ValidAttack(int currIndex, int direction, int criteria, int iLiteralIndex, int* testCellIndex) const
 {
     if (currIndex < 0)
         return 0;

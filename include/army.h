@@ -483,12 +483,28 @@ public:
     army(const army& other);
     ~army();
 
+    // CONSTNESS THROUGHOUT THIS CLASS IS THE DUMP'S S_PUB32 MANGLED-NAME
+    // RUN, not the roster text. The CodeView roster's printed prototypes
+    // (evidence/dreamcast/functions.csv, and the CODEVIEW comment block
+    // at the foot of this header) DROP the return type, the `this`
+    // cv-qualifier and reference-vs-pointer; the publics run
+    // (evidence/dreamcast/publics.csv) carries all three. A full pass
+    // over army's 148 publics on 2026-08-14 corrected 27 declarations
+    // here and in army.cpp - see the lane note above army::is_enemy.
+    // Where retail bytes and the roster disagree the bytes win (GetName
+    // below is the standing example: DC has two const members, retail a
+    // /Gr static), but nothing in x86 codegen can contradict a `this`
+    // cv-qualifier, so the mangling is the only evidence there is.
     int FindPath(int fpTargetCellIndex, int maxMoves,
                  unsigned char bMoveUnlimited, unsigned char bLiteralTarget);
     unsigned char ValidPath(int destIndex, unsigned char bLiteralTest);
-    unsigned GetAttackMask(int currIndex, int criteria, int iLiteralTargetIndex);
+    // Both const (?GetAttackMask@army@@QBAIHHH@Z,
+    // ?ValidAttack@army@@QBAHHHHHPAH@Z); neither body writes through
+    // `this` and both drive GetAdjacentCellIndex, already const.
+    unsigned GetAttackMask(int currIndex, int criteria,
+                           int iLiteralTargetIndex) const;
     int ValidAttack(int currIndex, int direction, int criteria,
-                    int iLiteralIndex, int* testCellIndex);
+                    int iLiteralIndex, int* testCellIndex) const;
     // Both const: ai_tactical's get_breath_bonus (0x436760) drives the
     // pair off the `const army*` it takes as its second parameter.
     int GetAdjacentCellIndex(int currIndex, int direction) const;
@@ -500,9 +516,14 @@ public:
                               long enemy_hex) const;
     // 0x4458b0, the two-argument overload: it does not take the enemy's
     // hex but SEARCHES for it, walking this stack's own neighbours and
-    // asking the combat grid which army stands there. Non-const - the
-    // carcass prototype and the retail body agree.
-    long get_attack_direction(long our_hex, const army* enemy);
+    // asking the combat grid which army stands there.
+    // CONST, corrected 2026-08-14: the note here used to read "non-const
+    // - the carcass prototype and the retail body agree", and the
+    // carcass prototype is exactly the roster text that cannot express
+    // it. ?get_attack_direction@army@@QBAJJPBV1@@Z is a const member,
+    // and the retail body reads creatureId / facing and calls
+    // get_adjacent_hex (const) and nothing else.
+    long get_attack_direction(long our_hex, const army* enemy) const;
     // 0x448ab0 (claimed in army.cpp): the bitmask of the directions a
     // wide/multi-headed stack would also strike. Const for the same
     // reason - get_multi_head_bonus (0x436620) drives it off a
@@ -533,8 +554,10 @@ public:
     void DrawToBuffer(int x, int y, int bNumBoxOnly);
     void CancelSpellType(int iSpellType);    // 0x4444d0
     void CancelIndividualSpell(int spell);   // 0x444510
+    // Const (?ValidFlight@army@@QBA_NH_N@Z): the fly.obj body only
+    // reads, and both callees it drives on `this` are already const.
     unsigned char ValidFlight(int destIndex,
-                              unsigned char bLiteralTest);
+                              unsigned char bLiteralTest) const;
     int FlyTo(int destIndex, unsigned char restore_facing);
     int Fly(int destIndex);
     int TeleportTo(int destIndex, unsigned char restore_facing);
@@ -640,8 +663,10 @@ public:
     unsigned char is_enemy(const army* arg) const; // 0x442880
     // 0x4429f0: asks the combat manager whether any enemy stack (other
     // than `excluded`) neighbours this stack's own hex, and for a
-    // two-hex creature its second hex as well.
-    unsigned char enemy_is_adjacent(const army* excluded);
+    // two-hex creature its second hex as well. Const
+    // (?enemy_is_adjacent@army@@QBA_NPBV1@@Z) - the last of the chain
+    // combatManager::enemy_is_adjacent's own const `this` needs.
+    unsigned char enemy_is_adjacent(const army* excluded) const;
     // 0x4430d0: clamps the AI's committed damage to what the stack can
     // actually absorb - `_cpp_min(get_total_hit_points(), arg)`.
     void set_AI_expected_damage(long arg);
@@ -655,8 +680,10 @@ public:
     unsigned char can_shoot(const army* excluded) const;        // 0x4428f0
     // 0x4473d0 / 0x4476c0, carcasses in army.cpp; declared here because
     // combatManager::GetCommand (command.obj) is a caller of both.
-    unsigned char can_cast_resurrect(long hex);
-    unsigned char can_cast_spell(long hex);
+    // Both const (?can_cast_resurrect@army@@QBA_NJ@Z,
+    // ?can_cast_spell@army@@QBA_NJ@Z).
+    unsigned char can_cast_resurrect(long hex) const;
+    unsigned char can_cast_spell(long hex) const;
     long get_loss_combat_value(long lowest_attack, long lowest_defense,
                                unsigned char ranged, long damage,
                                unsigned char kills_only) const; // 0x442fd0
@@ -673,11 +700,14 @@ public:
                               unsigned char frenzy_included) const;
     // 0x443d90: the multiplier a defender's own Shield / Air Shield,
     // petrification and hero defense skill put on incoming damage.
-    double ComputeDefenderDamageReduction(unsigned char is_shooting);
+    // Const (?ComputeDefenderDamageReduction@army@@QBAN_N@Z), and so is
+    // the whole ComputeXxxDamage family beside it in army.cpp.
+    double ComputeDefenderDamageReduction(unsigned char is_shooting) const;
     // 0x447330: how many creatures a resurrect from THIS stack would
     // restore to `target` - the Archangel rule, or the Pit Lord's
-    // raise-Demons rule for every other caster.
-    long get_resurrection_size(const army* target);
+    // raise-Demons rule for every other caster. Const
+    // (?get_resurrection_size@army@@QBAJPBV1@@Z).
+    long get_resurrection_size(const army* target) const;
     // 0x444090: applies one blow's damage to the stack and answers how
     // many creatures it killed.
     int Damage(int damage);
@@ -754,8 +784,9 @@ public:
     // out-of-line copy is the COMDAT the linker parked in the ai.obj
     // band at 0x41f380 - the same `disabled_290 || disabled_2b0 ||
     // disabled_2c0` test appears inlined at 23 other sites across
-    // ai/ai_tactical/army/spells.
-    unsigned char IsIncapacitated();                            // 0x41f380
+    // ai/ai_tactical/army/spells. Const
+    // (?IsIncapacitated@army@@QBA_NXZ); the body is three reads.
+    unsigned char IsIncapacitated() const;                      // 0x41f380
 };
 SIZE(army, 0x548);
 
@@ -792,6 +823,22 @@ unsigned char is_valid_caliph_spell(int spell, const army* target);
 // get_estimated_damage. Declared so the wrapper can call it; not claimed.
 unsigned char spell_is_valid_on_target(int spell, const army* target);
 
+// ====================================================================
+// THE CODEVIEW BLOCK BELOW IS ROSTER *TEXT*, AND ROSTER TEXT IS LOSSY.
+// It is a faithful transcription of what the dump prints, kept that way
+// on purpose - but the printed prototypes drop the `this` cv-qualifier
+// and render every REFERENCE as a pointer (they also truncate template
+// arguments, which is why the std::vector rows read `std::vector<army*
+// array`). The dump's S_PUB32 mangled-name run
+// (evidence/dreamcast/publics.csv) carries all of it. Measured over
+// army's 148 publics on 2026-08-14: 27 of these rows are const members
+// the text shows as non-const, and 5 take a reference the text shows as
+// a pointer (add_item / erase_item's array, is_adjacent's other army,
+// can_retaliate's, attack_wall's ballistics traits, and _cpp_min's own
+// operands). NEVER promote a row out of this block on its printed
+// prototype alone - demangle its public first. Rows already promoted
+// into the class above and into army.cpp carry the corrected form.
+// ====================================================================
 // --- globals ---
 // CODEVIEW(E:\gamedcs\army.cpp:917, dc 0x44e14) unsigned char add_item(std::vector<army* array, army* arg);
 // CODEVIEW(E:\gamedcs\army.cpp:930, dc 0x44ec0) void erase_item(std::vector<army* array, const army* arg);
