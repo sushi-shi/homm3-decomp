@@ -1802,23 +1802,37 @@ after_magic_terrain:
 // E:\gamedcs\armygrp.cpp:1464. Retail Complete's body proves the added
 // creature argument and full-width magic-terrain mode; the older Dreamcast
 // prototype omits the former and calls the latter a boolean.
-// Semantic transcription complete; residual 74.7874%. A branch-local named
-// result for cursed ground recovers retail's default-construct/assign lifetime
-// and removes three blocks. The bounded variable-creature name lookup raises
-// the body to 74.7874%. Direct initialization and a function-wide shared result
-// both regress. The remaining delta is dominated by Dinkumware string
-// return-object construction/destruction and EH layout.
+// Semantic transcription complete; residual 82.5689%. The bounded
+// variable-creature name lookup raised the body to 74.7874%; a function-wide
+// shared result regresses.
+//
+// THE CURSED-GROUND ARM RETURNS THE LITERAL, no local at all (74.79 ->
+// 82.57, 2026-08-14). The EH cleanup transcript is what named it
+// (docs/vc6/eh-cleanup.md): retail's states run [0,1,0,2,0,3,0,4,0,5,0] -
+// state 0 is `result`, each temporary opens N and closes back to 0 - while
+// ours ran [reg,-1,1,2,1,3,1,4,1,5,1,6,1], one whole extra lifetime ahead of
+// everything else and every close landing on 1 instead of 0. That leading
+// region was the branch-local `std::string result` this arm used to build
+// and then COPY into the return object. Retail builds the return object
+// itself: `mov [esi],al / call _Tidy / <strlen> / call assign` with
+// esi = [ebp+8], which is `basic_string(const char*)` expanded straight onto
+// the NRV - i.e. `return gCursedGroundLuckText;`. The hourglass arm below
+// is the same shape from the other side: retail passes [ebp+8] as
+// format_string's hidden return slot, so `return format_string(...)` elides
+// too. The eh signal line is now absent from `diagnose` on this row.
+//
+// What is left is a pure inline-depth divergence, 41 conditional branches
+// against retail's 33: retail CALLS basic_string::assign(const char*,
+// size_t) where we expand it into _Grow + rep movs + _Eos, and the same one
+// level too deep repeats at the other string sites.
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::get_luck_description(
     TCreatureType creature, int luck, const hero* ourHero,
     const town* ourTown, const hero* enemyHero,
     const armyGroup* enemyGroup, int magicTerrain) const
 {
-    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND) {
-        std::string result;
-        result = gCursedGroundLuckText;
-        return result;
-    }
+    if (magicTerrain == MAGIC_TERRAIN_CURSED_GROUND)
+        return gCursedGroundLuckText;
 
     if ((ourHero && const_cast<hero*>(ourHero)->IsWieldingArtifact(
                         ARTIFACT_HOURGLASS_OF_THE_EVIL_HOUR))
