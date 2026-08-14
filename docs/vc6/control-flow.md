@@ -306,3 +306,31 @@ proxies and **retail's bytes are the arbiter**. On these rows they
 corroborate the previous lane — the bottom-view wall is upstream of both
 solvers (inline-candidate site count), which is exactly what
 `why-branch`'s STRUCT/D6 finding on Kingdom says independently.
+
+### First sweep of the unlocked population (2026-08-14)
+
+The fix makes **20 plateaued rows** newly solver-reachable (17
+constructors, 3 destructors), spread over 17 units — from
+`bitmap816::~Bitmap816` at 99.97 down to
+`TQuickHeroWindow::TQuickHeroWindow` at 86.84. `homm3 vc6 diagnose`
+(no compile) routes twelve of them:
+
+- **11 of 12 → inliner (`predict-inline`).** The site-count wall the
+  previous lane proved on `TBottomViewKingdom` is a **population-level**
+  property of this tree's constructors, not a bottom-view quirk. That is
+  where the campaign's remaining constructor mass actually sits, and it
+  is not a `why-reg`/`why-branch` problem.
+- `palette::TPalette24` (87.07) → register-homing. `why-reg --model`
+  settles it in **0 mutation compiles**: base binds `#0:esi@5 #1:edi@12`,
+  retail `#0:edi@5 #1:esi@11`, same slots and same order, and the
+  transposed value is **`this`** — not source-nameable, so it is C1
+  handle-state, **CAPPED**. A 31-slot divergence bounded without a single
+  compile is the model doing exactly its job.
+- `button::textButton` (88.44) → a live lead: `#0 jbe->jae`, *different
+  condition computed* at the FIRST branch. Neither an arm order nor a
+  rotation — an inverted comparison or swapped operands in the guard.
+  Source-addressable; the v1 mutation library has no site for it.
+
+So the routing answer for the unlocked population is: **do not point
+`why-reg` at them**. Point `predict-inline` at them, and treat the
+`textButton` guard as the one spelling lead the sweep turned up.
