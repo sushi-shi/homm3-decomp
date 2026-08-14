@@ -7,6 +7,8 @@
 
 #include "subwindow.h"
 
+class iconWidget;
+
 // PROVEN narrow retail layouts. The constructor reached by
 // advManager::UpdBottomViewEnemyTurn allocates 0x74 bytes and uses the
 // TSubWindow subobject at offset zero; its first derived-field access is
@@ -69,13 +71,24 @@ public:
 SIZE(TBottomViewEnemyTurn, 0x74);
 
 // Retail UpdBottomViewNewTurn allocates 0x48 bytes before invoking the
-// Dreamcast-attested constructor. The derived tail remains opaque here.
-// Slot 1 of 0x63bb0c is 0x4511a0, this class's own animate.
+// Dreamcast-attested constructor. Slot 1 of 0x63bb0c is 0x4511a0, this
+// class's own animate, and that body proves the entire 0x14-byte derived
+// tail on its own: it reads all five fields and writes two of them. The
+// Dreamcast dump carries NO fieldlist for this class - only its four
+// function symbols - so every SPELLING below is the house ordinal
+// convention applied to a proven role, not an attested name.
 class TBottomViewNewTurn : public type_bottom_view_window {
-private:
-    char pad_034[0x14];
-
 public:
+    // +0x34. Redrawn through slot 4 immediately after the icon on every
+    // frame step; that redraw is all animate does with it.
+    widget* backdrop;
+    // +0x38. An iconWidget: animate calls SetIconFrame and send_message
+    // on it and reads Sprite->GetNumFrames(0) through it.
+    iconWidget* icon;
+    int frame;                   // +0x3c, the current sequence-0 frame
+    int frameDelay;              // +0x40, ticks between steps
+    unsigned long lastStepTime;  // +0x44, GameTime::Get at the last step
+
     TBottomViewNewTurn(heroWindow* parent);
     virtual ~TBottomViewNewTurn();
     virtual void animate();
