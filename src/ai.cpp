@@ -1388,8 +1388,8 @@ long combatManager::compute_fire_shield_damage(long damage, const army* attacker
         return 0;
     damage = static_cast<long>(target->get_fire_shield_strength()
                                * min_ref(target_hits, damage));
-    hero* target_hero = attacker->get_owner();
-    hero* casting_hero = target->get_owner();
+    hero* target_hero = attacker->get_controller();
+    hero* casting_hero = target->get_controller();
     return ModifySpellDamage(damage, SPELL_FIRE_SHIELD, casting_hero,
                              target_hero, attacker, 0);
 }

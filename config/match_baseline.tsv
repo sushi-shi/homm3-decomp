@@ -302,10 +302,12 @@ army	?get_attack_direction@army@@QAEJJPBV1@@Z	100.0000	100.0000	100.0000	0x458b0
 army	?get_attack_direction@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x45840
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550
 army	?get_average_damage@army@@QBENXZ	100.0000	100.0000	100.0000	0x426f0
+army	?get_controller@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x42690
 army	?get_controlling_side@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140
 army	?get_fire_shield_strength@army@@QBEMXZ	100.0000	100.0000	100.0000	0x43130
 army	?get_loss_combat_value@army@@QBEJJJEJE@Z	100.0000	100.0000	100.0000	0x42fd0
 army	?get_mirror_effect@army@@QBEHXZ	100.0000	100.0000	100.0000	0x487f0
+army	?get_owner@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x426d0
 army	?get_resurrection_size@army@@QAEJPBV1@@Z	100.0000	100.0000	100.0000	0x47330
 army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080

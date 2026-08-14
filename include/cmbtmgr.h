@@ -417,8 +417,9 @@ public:
     town* defendingTown;               // +0x53c8
     // The two combat heroes, indexed by side: can_cast_spells indexes
     // heroes[side] for the spellbook test and then walks both slots for
-    // the Orb of Inhibition, and army::get_owner (0x442690) does the
-    // same lookup off gpCombatManager.
+    // the Orb of Inhibition, and army::get_controller (0x442690) /
+    // army::get_owner (0x4426d0) do the same lookup off
+    // gpCombatManager, with and without the hypnotize flip.
     hero* heroes[2];                  // +0x53cc
     char pad_53d4[0x8];
     // A per-side latch berserk_attack (0x4222c0) raises, indexed by
