@@ -5,8 +5,10 @@
 #include <stdio.h>
 #include <string.h>
 #include <va.h>
+#include "advmgr_objects.h"
 #include "game.h"
 #include "advmgr.h"
+#include "cursor.h"
 #include "events.h"
 #include "kb.h"
 #include "misc.h"
@@ -2239,6 +2241,16 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
     return (_Y < _X ? _Y : _X);
 }
 
+// The packed-point constructor, spelled file-locally exactly as game.cpp,
+// search.cpp and victorylossconditions.cpp already do - retail keeps no
+// out-of-line copy and every consumer expands it.
+inline type_point::type_point(short new_x, short new_y, short new_z)
+{
+    x = new_x;
+    y = new_y;
+    z = new_z;
+}
+
 // The int->TCreatureType representation bridge, copied verbatim from the
 // head of game.cpp: NewmapCell's +0x22 is a GENERIC `short objectIndex`
 // shared by all 163 adventure-object types (T_SHORT in the DC fieldlist,
@@ -2739,6 +2751,87 @@ void advManager::DoEvent(NewmapCell* eventCell, type_point point)
         CheckEndGame(0);
     if (gpGame->mapHeader.victoryCondition.CheckForTotalResources())
         CheckEndGame(0);
+}
+
+// E:\gamedcs\events.cpp:5179.  Takes an adventure-map object off the map:
+// unhook every cell it covers from the object list, blank the trigger
+// cell's extra info, tell the other machines, and re-seed the environment
+// sounds around the hole it left.
+//
+// The three entry guards are retail's, transcribed rather than folded:
+// the -1 sentinel and the negative test are SEPARATE compares, and the
+// bounds test then reads the pool through Dinkumware's own
+// `size() == (_First == 0 ? 0 : _Last - _First)` - which is why a null
+// pool short-circuits straight to the return instead of computing a
+// difference.
+//
+// The double loop walks the object's bounding box from its anchor
+// BACKWARDS (the anchor is the bottom-right cell), and every cell that
+// falls off the map is skipped rather than clamped. Inside, the cell's
+// own four-byte object list is searched for this object's index and the
+// hit is spliced out with Dinkumware vector::erase - the copy-down loop
+// and the `--_Last` are both inlined, and the element is POD so _Destroy
+// vanishes.
+//
+// The 0x18-byte CMCEraseObject goes out through SendMapChange, and the
+// final SetEnvironmentOrigin re-centres on the radar origin offset by the
+// adventure viewport's own (9, 8) - the same pair type_cell_adjuster
+// carries as MOBILE_HERO_CELL_X/Y.
+//
+// That last point has to be built by the CONSTRUCTOR, not by three
+// assignments to a named local: y and z share one sixteen-bit allocation
+// unit, and only inside the constructor does VC6 merge them into the
+// single `mov word ptr` retail emits - three assignments to a local leave
+// two separate xor read-modify-writes on the same word (92.99 -> 100.00,
+// and it was the whole residual).
+VA(0x004aabb0, 0x239)  // anchor-global gMapWidth/gMapHeight + CMCEraseObject, dc 0x99bac
+void advManager::EraseObj(NewmapCell* thisCell, type_point point,
+                          unsigned char record)
+{
+    int objectIndex = thisCell->object_type_index;
+    if (objectIndex == -1)
+        return;
+    if (objectIndex < 0)
+        return;
+    if (objectIndex >= fullMap->objects.size())
+        return;
+
+    CObject* object = &fullMap->objects[objectIndex];
+    CObjectType* objectType = &fullMap->objectTypes[object->typeIndex];
+
+    if (record)
+        gpGame->record_erase_object(thisCell, point);
+
+    for (int iy = 0; iy < objectType->height; iy++) {
+        if (object->y - iy < 0 || object->y - iy >= gMapHeight)
+            continue;
+        for (int ix = 0; ix < objectType->width; ix++) {
+            if (object->x - ix < 0 || object->x - ix >= gMapWidth)
+                continue;
+            NewmapCell* cell = fullMap->cell(object->x - ix,
+                                             object->y - iy, object->z);
+            for (NewmapCell::TObjectCell* entry = cell->objects.begin();
+                 entry != cell->objects.end(); entry++) {
+                if (entry->objectIndex == objectIndex) {
+                    cell->objects.erase(entry);
+                    break;
+                }
+            }
+            fullMap->CalculateCellExtra(cell, 0);
+        }
+    }
+
+    thisCell->extraInfo = -1;
+    gpGame->GameFn_004CA410();
+
+    CMCEraseObject message(point);
+    SendMapChange(&message);
+
+    SetEnvironmentOrigin(
+        type_point(radarOrigin.x + type_cell_adjuster::MOBILE_HERO_CELL_X,
+                   radarOrigin.y + type_cell_adjuster::MOBILE_HERO_CELL_Y,
+                   radarOrigin.z),
+        1);
 }
 
 // E:\gamedcs\events.cpp:6007.  Retires a hero from the adventure map -
