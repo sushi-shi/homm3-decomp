@@ -302,6 +302,7 @@ army	?get_adjusted_defense@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42590
 army	?get_attack_direction@army@@QAEJJPBV1@@Z	100.0000	100.0000	100.0000	0x458b0
 army	?get_attack_direction@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x45840
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550
+army	?get_average_damage@army@@QBEJPBV1@EJEJ@Z	100.0000	100.0000	100.0000	0x42780
 army	?get_average_damage@army@@QBENXZ	100.0000	100.0000	100.0000	0x426f0
 army	?get_controller@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x42690
 army	?get_controlling_side@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140

@@ -718,19 +718,49 @@ double army::get_average_damage() const
     return (maxDamage + minDamage) / 2.0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:2756
 // The carve slot immediately before is_enemy (0x442880), matching the
 // DC roster's immediately-preceding row; ai_tactical's
 // AI_get_attack_damage (0x435980) and the attack-hex chooser ctor
 // (0x4360c0) both call it with EXACTLY this five-argument shape
 // (enemy, ranged, count, limit_damage=1, distance) on a this in ecx.
-// RETAIL_LOCATED(0x00442780, 0x100)  // anchor-callee, dc 0x47af8
+//
+// What one swing of `amount` creatures averages against `enemy`, run
+// through the whole damage pipeline. The no-argument overload above is
+// INLINED here - its three arms converge on one `fstp qword [ebp-0x10]`
+// that stores the average, which is what a `double` local initialized
+// from the call gives - and adjust_damage is not (335 bytes, and retail
+// calls it).
+//
+// `enemy`'s total life is the same effective-count expression
+// get_total_combat_value uses, and creature bit 23 short-circuits it to
+// 1 there too. Only `limit_damage` consults it, but retail computes it
+// UNCONDITIONALLY and ahead of the damage floor, so it is a plain local
+// initialized before both tests rather than anything folded into the
+// final `if`.
+VA(0x00442780, 0x100)  // anchor-callee, dc 0x47af8
 long army::get_average_damage(const army* enemy, unsigned char ranged_attack, long amount, unsigned char limit_damage, long distance) const
 {
-    // @stub
+    double average = get_average_damage();
+    long damage = adjust_damage(const_cast<army*>(enemy),
+                                static_cast<long>(amount * average),
+                                ranged_attack, 1, distance, 0);
+    long total_life;
+    if (enemy->Is(23) & 1)
+        total_life = 1;
+    else
+        total_life = enemy->hitPoints * enemy->numTroops
+                     - enemy->topCreatureDamage;
+    if (damage < 1)
+        damage = 1;
+    if (ranged_attack && (Is(15) & 1))
+        damage += damage;
+    if (limit_damage && damage > total_life)
+        damage = total_life;
+    return damage;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2776
 // Located by the DC-order slot directly before can_shoot (claimed
