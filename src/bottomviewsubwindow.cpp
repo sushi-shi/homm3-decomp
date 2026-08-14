@@ -20,6 +20,17 @@
 
 __declspec(nothrow) void __cdecl operator delete(void* p);
 
+// THE LOCAL NAMES BELOW ARE DREAMCAST CODEVIEW, NOT INVENTION. The DC
+// build's S_REGREL32 records for this compiland name four of them and
+// give their types: TBottomViewKingdom's `town_count` (LF_ARRAY of
+// T_INT4, length 16 - so `int[4]`, which also confirms the array's
+// width) and `text` (std::string); TBottomViewTown's `town_size_name`
+// (std::string); TBottomViewResourceMessage's parameter `res` and its
+// `char str[20]`. The DC list is INCOMPLETE - TBottomViewHero's record
+// names no stack local at all although its source plainly has a
+// std::string in the army loop - so its silence is not evidence of
+// absence, only its entries are evidence of presence.
+//
 // THE INCLUDE SET IS NOT THE WALL IN THIS TU - measured, not assumed.
 // The four constructors below plateau on inline-depth divergence, and
 // the standing hypothesis was that C1XX front-end state (the symbol
@@ -545,9 +556,22 @@ void TBottomViewNewTurn::animate()
 // unnoticed accessor, so the probe is not landed and the gap is left
 // named for the next lane. The include set is NOT the cause - see the
 // TU-level note at the top of this file.
+//
+// A LEAD FOR THAT GAP, FROM THE DREAMCAST CODEVIEW. The DC build of
+// this constructor (dc 0x554ac) names exactly one stack local, and it
+// sits inside the nested blocks that are the `res >= 0` guard: `str`,
+// whose type index resolves to LF_ARRAY of T_RCHAR length 20 - a plain
+// `char str[20]`, not a stream object. This reconstruction has no such
+// buffer. The obvious reading, `std::ostrstream(char*, streamsize)`
+// over a caller-supplied buffer, was BUILT AND REJECTED: that ctor is
+// _CRTIMP (out of line, where the default ctor is inline) and both
+// `sizeof(str)` and a literal 20 score 86.62, nearly five points BELOW
+// the default-ctor spelling. So the buffer is real evidence and the
+// buffered stream is not its explanation; what `str` is remains open,
+// and it is the first place to look for the five missing candidates.
 VA(0x00451220, 0x393)  // anchor-vtable 0x63bb1c + advManager::UpdBottomViewResMsg, dc 0x554ac
 TBottomViewResourceMessage::TBottomViewResourceMessage(
-    heroWindow* parent, int resource, int quantity,
+    heroWindow* parent, int res, int quantity,
     const std::string* message)
     : type_bottom_view_window(parent)
 {
@@ -559,11 +583,11 @@ TBottomViewResourceMessage::TBottomViewResourceMessage(
         message->c_str(), "smalfont.fnt", font::WHITE, BOTTOM_VIEW_TEXT_ID,
         1, 0, 8));
 
-    if (resource >= 0) {
+    if (res >= 0) {
         CSprite* sprite = ResourceManager::GetSprite("resour82.def");
 
         Widgets.push_back(new iconWidget((width - sprite->Width) / 2, 50,
-            sprite->Width, sprite->Height, 0x837, "resour82.def", resource,
+            sprite->Width, sprite->Height, 0x837, "resour82.def", res,
             0, 0, 0, 0x10));
 
         std::ostrstream quantity_text;
@@ -925,8 +949,8 @@ TBottomViewTown::TBottomViewTown(heroWindow* parent)
     else if (which->built & bitNumber[HALL_CAPITOL_ID])
         hallLevel = 3;
 
-    std::string sizeName;
-    sizeName = gTownSizeNames[hallLevel];
+    std::string town_size_name;
+    town_size_name = gTownSizeNames[hallLevel];
 
     Widgets.push_back(new iconWidget(67, 31, 34, 34, 0x7d3, "itmtls.def",
         hallLevel, 0, 0, 0, 0x10));
@@ -1080,40 +1104,40 @@ TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     Widgets.push_back(new bitmapBorder(
         0, 0, 176, 166, id++, "AdStatin.pcx", 0x800));
 
-    int counts[4];
-    counts[0] = 0;
-    counts[1] = 0;
-    counts[2] = 0;
-    counts[3] = 0;
+    int town_count[4];
+    town_count[0] = 0;
+    town_count[1] = 0;
+    town_count[2] = 0;
+    town_count[3] = 0;
 
     for (i = 0; i < gpCurrentPlayer->numTowns; i++) {
         town* which = gpGame->GetTown(gpCurrentPlayer->townIds[i]);
         if (which->active & bitNumber[HALL_CAPITOL_ID])
-            counts[3]++;
+            town_count[3]++;
         else if (which->active & bitNumber[HALL_CITY_ID])
-            counts[2]++;
+            town_count[2]++;
         else if (which->active & bitNumber[HALL_TOWN_ID])
-            counts[1]++;
+            town_count[1]++;
         else
-            counts[0]++;
+            town_count[0]++;
     }
 
-    std::string caption;
+    std::string text;
 
     for (i = 0; i < 4; i++) {
         Widgets.push_back(new iconWidget(42 * i + 6, 11, 38, 38, id++,
             "itmtl.def", i, 0, 0, 0, 0x10));
-        if (counts[i] > 0)
+        if (town_count[i] > 0)
             Widgets.push_back(new textWidget(42 * i + 7, 56, 37, 17,
-                format_string("%d", counts[i]).c_str(), "smalfont.fnt",
+                format_string("%d", town_count[i]).c_str(), "smalfont.fnt",
                 font::WHITE, -1, 1, 0, 8));
     }
 
-    caption = format_string("%s:", gpGeneralText->GetText(391));
-    Widgets.push_back(new textWidget(10, 103, 57, 20, caption.c_str(),
+    text = format_string("%s:", gpGeneralText->GetText(391));
+    Widgets.push_back(new textWidget(10, 103, 57, 20, text.c_str(),
         "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
-    caption = format_string("%s:", gpGeneralText->GetText(392));
-    Widgets.push_back(new textWidget(10, 134, 57, 20, caption.c_str(),
+    text = format_string("%s:", gpGeneralText->GetText(392));
+    Widgets.push_back(new textWidget(10, 134, 57, 20, text.c_str(),
         "smalfont.fnt", font::WHITE, -1, 0, 0, 8));
 
     int allyX, enemyX;
