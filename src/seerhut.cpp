@@ -3,6 +3,8 @@
 // 24 functions in link order; 21 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "seerhut.h"
+#include "hero.h"
+#include "quest.h"
 
 #if 0  // @carcass: older Dreamcast quest model, not retail SoD source order
 
@@ -175,6 +177,234 @@ TSeerHut* std::__copy_backward(TSeerHut* __first, TSeerHut* __last, TSeerHut* __
 }
 
 #endif  // @carcass
+
+// --- retail's virtual quest family ------------------------------------
+// The Dreamcast port has no counterpart for any of these: its TSeerHut
+// carries the quest inline and switches on a type word. Retail's ten quest
+// classes each own a 15-slot vtable, and the slots reconstructed below are
+// the ones whose bodies are self-identifying.
+//
+// Slot 2 is the "does this hero satisfy the quest" predicate, and the
+// bodies here name their own classes: the experience quest compares the
+// short at hero+0x55 (hero::level), the be-hero quest the dword at hero+0x1a
+// (hero::id), and the belong-to-player quest the signed byte at hero+0x22
+// (hero::owner) - three different widths at three fields hero.h already
+// names, each matching its class. Slot 8 is the type discriminator, a bare
+// constant; all ten leaf bodies read 1..9 in vtable address order, which is
+// the h3m quest-type enumeration (see quest.h).
+//
+// Slots 11 and 12 are the two deserializers, and they come as a family: each
+// leaf reads its own payload through TAbstractFile slot 1 and then chains to
+// the base body (0x56cd00 / 0x56ce50). The two differ by encoding width at
+// every class that has both - be-hero reads a short in slot 11 and a byte in
+// slot 12, the experience quest a short and a dword - which is what fixes
+// slot 11 as the savegame reader (it also carries the format version) and
+// slot 12 as the h3m reader.
+//
+// Retail-only rows: no Dreamcast roster entry corresponds to any of them.
+
+// The AI's resource valuation, 0x526cc0: player index in ecx, a seven-entry
+// cost vector in edx, summed against the per-player multiplier table the
+// same 0x168-byte player stride reaches. Declared here rather than pulled in
+// from a header - seerhut.cpp is its only consumer in this tree.
+int AI_resource_cost(int player, const int* costs);
+
+VA(0x0056d490, 0x1A)  // anchor-vtable 0x641788 slot 2, retail-only
+unsigned char type_experience_quest::is_satisfied(const hero* current_hero)
+{
+    return current_hero->level >= required_level;
+}
+
+VA(0x0056d5f0, 0x35)  // anchor-vtable 0x641788 slot 11, retail-only
+void type_experience_quest::Load(TAbstractFile* file, int version)
+{
+    unsigned short level;
+
+    file->Read(&level, sizeof(level));
+    required_level = level;
+    type_quest::Load(file, version);
+}
+
+VA(0x0056de60, 0x29)  // anchor-vtable 0x6417c4 slot 11, retail-only
+void type_skill_quest::Load(TAbstractFile* file, int version)
+{
+    file->Read(required_skills, sizeof(required_skills));
+    type_quest::Load(file, version);
+}
+
+VA(0x0056de90, 0x25)  // anchor-vtable 0x6417c4 slot 12, retail-only
+void type_skill_quest::LoadFromMap(TAbstractFile* file)
+{
+    file->Read(required_skills, sizeof(required_skills));
+    type_quest::LoadFromMap(file);
+}
+
+VA(0x0056e3d0, 0x06)  // anchor-vtable 0x641800 slot 8, retail-only
+int type_defeat_hero_quest::quest_type()
+{
+    return 3;
+}
+
+VA(0x0056e3e0, 0x29)  // anchor-vtable 0x641800 slot 2, retail-only
+unsigned char type_defeat_hero_quest::is_satisfied(const hero* current_hero)
+{
+    if (current_hero->owner < 0)
+        return 0;
+    return (satisfied_mask & (1 << current_hero->owner)) != 0;
+}
+
+VA(0x0056e550, 0x26)  // anchor-vtable 0x641800 slot 9, retail-only
+void type_defeat_hero_quest::NotifyHeroDefeated(int hero_id, int player)
+{
+    if (player >= 0 && hero_id == defeated_hero)
+        satisfied_mask |= 1 << player;
+}
+
+VA(0x0056e580, 0x6E)  // anchor-vtable 0x641800 slot 11, retail-only
+void type_defeat_hero_quest::Load(TAbstractFile* file, int version)
+{
+    {
+        short id;
+
+        file->Read(&id, sizeof(id));
+        defeated_hero = id;
+    }
+    if (version < 30 || (version > 30 && version < 36)) {
+        satisfied_mask = 0;
+    } else {
+        unsigned char mask;
+
+        file->Read(&mask, sizeof(mask));
+        satisfied_mask = mask;
+    }
+    type_quest::Load(file, version);
+}
+
+VA(0x0056ebc0, 0x06)  // anchor-vtable 0x64183c slot 8, retail-only
+int type_monster_quest::quest_type()
+{
+    return 4;
+}
+
+VA(0x0056ebd0, 0x26)  // anchor-vtable 0x64183c slot 2, retail-only
+unsigned char type_monster_quest::is_satisfied(const hero* current_hero)
+{
+    int owner = current_hero->owner;
+
+    if (owner < 0)
+        return 0;
+    return owner == defeated_by;
+}
+
+VA(0x0056ed90, 0x51)  // anchor-vtable 0x64183c slot 11, retail-only
+void type_monster_quest::Load(TAbstractFile* file, int version)
+{
+    file->Read(&position, sizeof(position));
+    {
+        short id;
+
+        file->Read(&id, sizeof(id));
+        monster_id = id;
+    }
+    {
+        signed char killer;
+
+        file->Read(&killer, sizeof(killer));
+        defeated_by = killer;
+    }
+    type_quest::Load(file, version);
+}
+
+// /OPT:ICF folded three identical bodies onto this one address: it is slot
+// 12 of the experience (0x641788), defeat-hero (0x641800) and monster
+// (0x64183c) vtables alike, each of which reads one dword into its own
+// +0x40. Claimed once, for the first vtable in address order.
+VA(0x0056edf0, 0x2B)  // anchor-vtable 0x641788 slot 12, retail-only
+void type_experience_quest::LoadFromMap(TAbstractFile* file)
+{
+    int level;
+
+    file->Read(&level, sizeof(level));
+    required_level = level;
+    type_quest::LoadFromMap(file);
+}
+
+VA(0x00571560, 0x12)  // anchor-vtable 0x6418f0 slot 1, retail-only
+int type_resource_quest::GetAIValue(int player)
+{
+    return AI_resource_cost(player, resources);
+}
+
+VA(0x00571b80, 0x29)  // anchor-vtable 0x6418f0 slot 11, retail-only
+void type_resource_quest::Load(TAbstractFile* file, int version)
+{
+    file->Read(resources, sizeof(resources));
+    type_quest::Load(file, version);
+}
+
+VA(0x00571bb0, 0x25)  // anchor-vtable 0x6418f0 slot 12, retail-only
+void type_resource_quest::LoadFromMap(TAbstractFile* file)
+{
+    file->Read(resources, sizeof(resources));
+    type_quest::LoadFromMap(file);
+}
+
+VA(0x00571f00, 0x19)  // anchor-vtable 0x64192c slot 2, retail-only
+unsigned char type_be_hero_quest::is_satisfied(const hero* current_hero)
+{
+    return current_hero->id == required_hero;
+}
+
+VA(0x005721f0, 0x06)  // anchor-vtable 0x64192c slot 8, retail-only
+int type_be_hero_quest::quest_type()
+{
+    return 8;
+}
+
+VA(0x00572200, 0x30)  // anchor-vtable 0x64192c slot 11, retail-only
+void type_be_hero_quest::Load(TAbstractFile* file, int version)
+{
+    short id;
+
+    file->Read(&id, sizeof(id));
+    required_hero = id;
+    type_quest::Load(file, version);
+}
+
+// The second /OPT:ICF fold in the family: slot 12 of the be-hero
+// (0x64192c) and belong-to-player (0x641968) vtables share this body, both
+// reading one unsigned byte into their own +0x40. Claimed once.
+VA(0x00572230, 0x31)  // anchor-vtable 0x64192c slot 12, retail-only
+void type_be_hero_quest::LoadFromMap(TAbstractFile* file)
+{
+    unsigned char id;
+
+    file->Read(&id, sizeof(id));
+    required_hero = id;
+    type_quest::LoadFromMap(file);
+}
+
+VA(0x005724f0, 0x1A)  // anchor-vtable 0x641968 slot 2, retail-only
+unsigned char type_belong_to_player_quest::is_satisfied(const hero* current_hero)
+{
+    return current_hero->owner == required_owner;
+}
+
+VA(0x00572810, 0x06)  // anchor-vtable 0x641968 slot 8, retail-only
+int type_belong_to_player_quest::quest_type()
+{
+    return 9;
+}
+
+VA(0x00572820, 0x35)  // anchor-vtable 0x641968 slot 11, retail-only
+void type_belong_to_player_quest::Load(TAbstractFile* file, int version)
+{
+    unsigned char owner;
+
+    file->Read(&owner, sizeof(owner));
+    required_owner = owner;
+    type_quest::Load(file, version);
+}
 
 // The retail identity is fixed by its 0x13-byte vector stride, two NewfullMap
 // construction callers, and the independently verified cross-build body.
