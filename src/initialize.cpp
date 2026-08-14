@@ -315,6 +315,17 @@ static void add_to_included_mask(const int* include_list, __int64* included_buil
 // over the same sweep. Nor is it the scheduler target: /G5 and the
 // default /GB are byte-identical here and /G6 also scores 93.8667.
 // Treat as a post-RA scheduling difference with no source handle.
+// 2026-08-14 - the residual is now fully accounted for and is MOSTLY NOT REAL:
+// of the ~12 mismatched bytes, 8 are the two `mov ebx,[8*ecx+4]` loads of
+// bitNumber's HIGH dword. Our object encodes disp32=4 with a reloc to
+// ?bitNumber@@3PA_JA; the delinked target encodes disp32=0 with a reloc to a
+// synthesized interior symbol (data_26cd9c = bitNumber+4). Both LINK to the
+// same address, so the retail image agrees with us byte for byte - the split
+// of `symbol + addend` is a delinker naming choice, not a codegen difference.
+// config/delink-reloc-aliases.tsv is the mechanism that would fix the target
+// side (owner=?bitNumber@@3PA_JA, addend=0x4); that is a reviewed-table change
+// and is deliberately left for the pipeline owner. The only real divergence
+// left is the position of the single `lea edi,[edx+8]` (3 bytes).
 VA(0x004ebb70, 0xD8)  // linkorder+body (common-list + arg-list walks), dc 0xdc3cc
 static void create_included_mask(const int* include_list, __int64* included_buildings)
 {

@@ -66,6 +66,18 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // helper, and gives three early failures distinct returns where this spelling
 // tail-merges them. Direct set/operator[] spellings and stack-lifetime probes
 // measured the plateau; the exact static destructors remain independent.
+// 2026-08-14 triage: predict-inline's UNDER/OVER rows all NAME-PAIR (operator
+// new <-> exe_new, the two bitset _Xran <-> the unnamed 0x4d380/0x4d4d0 rows,
+// basic_string _Grow/assign/_Eos <-> the 0x4860/0x4a90 rows), so the inliner is
+// NOT the wall despite diagnose routing there; base emits 14 out-of-line calls
+// to retail's 13. The concrete unexplored delta is in the stringBytes loop:
+// retail keeps `traitsSheet` itself in ESI and RELOADS `[esi+0x20]` (the row
+// vector's begin) on every iteration while homing stringBytes at [ebp-0x20];
+// our CL does the reverse - it LICM-hoists the begin pointer into a frame slot
+// and keeps stringBytes in ESI. Retail consequently loads the row element twice
+// per iteration (`mov ecx,[edx+eax-4]` / `mov eax,[edx+eax-4]`, one per GetRow
+// call) where ours CSEs it to one load. Same enregistration-choice family that
+// diff.cpp's CDiffFile::Apply turned out to be (68.96 -> 99.64 there).
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
 unsigned char InitializeArtifactTraitsTable()
 {
