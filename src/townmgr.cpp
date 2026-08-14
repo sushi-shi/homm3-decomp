@@ -196,6 +196,41 @@ static bool ShipyardAffordable()
 char* GetBuildingInfo(const town* this_town, int buildingId,
                       unsigned char bIncludeTitle, unsigned char extended);
 
+// VC6's <xutility> reference-returning min/max, spelled file-locally for
+// the reason findpath.cpp and army.cpp record: retail materialises BOTH
+// operands into stack temps and selects between their ADDRESSES with two
+// LEAs (0x5d6c4a..0x5d6c55 is this TU's instance), which is the
+// signature of a reference-returning template and not of a ternary.
+// Operands by value, the orientation the engine is byte-proven on.
+//
+// HOISTED to the top of the file 2026-08-14 (it used to sit just above
+// BuildObj): the three WindowHandler bodies need it too and two of them
+// are earlier in the compiland. The move is byte-inert - every score in
+// the unit, BuildObj's included, is unchanged across it.
+//
+// The OPERAND ORDER is load-bearing and it is `_cpp_max(floor, value)`,
+// not `(value, floor)`. By-value parameters home in declaration order,
+// so the argument that goes first takes the first stack temp and the
+// second becomes the ternary's default address; retail's animation tick
+// homes the ELAPSED time into the later slot and defaults to it
+// (`lea eax,[elapsed] / jg`). Written `_cpp_max(elapsed, 100L)` both
+// halves invert - 98.96 on the blacksmith's handler and 99.80 on the
+// fort page's, against 100 for the order below. The BY-VALUE parameters
+// are the other load-bearing half: an address-taken caller local is
+// homed at its definition, ahead of the sign test, where an inlined
+// by-value parameter is homed at the call site inside the branch.
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+
 // The selected entry of the town-locator row. Ten image-wide references,
 // every one inside townmgr's bracket, so this compiland owns it; only
 // the read in UpdateTownLocator is reconstructed, so the name stays
@@ -1879,6 +1914,49 @@ TBlacksmithWindow::~TBlacksmithWindow()
     }
 }
 
+// The blacksmith's handler, and the third member of the compiland's
+// WindowHandler family (TBuyBuildWindow's and the fort page's are the
+// other two). Same three jobs in the same order: forward to CAdvPopup,
+// then one rollover line and one right-click line, then the war
+// machine's idle animation on every message that got that far.
+//
+// The animation tick is the fort page's, to the instruction - including
+// the reference-returning `_cpp_max` the top of this file explains.
+
+// E:\gamedcs\townmgr.cpp:5323
+VA(0x005d1c60, 0xC2)  // anchor-vtable 0x6438cc slot 9 + arity + the two text call edges, dc 0x173bc8
+int TBlacksmithWindow::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    switch (msg->id) {
+    case MESSAGE_MOUSE_MOVE:
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != lastHover) {
+            lastHover = msg->codeY;
+            SetRolloverText(msg->codeY);
+        }
+        return 1;
+
+    case MESSAGE_WIDGET:
+        if (msg->codeX == widget::WIDGET_RIGHT_SELECT)
+            SetRightClickText(msg->codeY);
+        break;
+    }
+
+    long elapsed = GameTime::Get()
+                   - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+    if (elapsed >= 0) {
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+            _cpp_max(100L, elapsed);
+        machineIcon->SetIconFrame(machineIcon->Frame + 1);
+        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    }
+    return 1;
+}
+
 // The shipyard dialog, same recipe as TBuyBuildWindow's above. The
 // carve names the row after its background (game_tpship_pcx_1d1ef0),
 // the vptr it stores is 0x643908 - the table whose slot 0 holds
@@ -2495,24 +2573,6 @@ void townManager::CycleOutline(int objectIndex, int x, int y, int w, int h)
 // `= extraIndex` (90.68 each; a default arm with a BODY restructures the
 // whole compare chain and costs eight points). A register-allocation
 // tie-break on a rematerialised constant, not a statement.
-
-// VC6's <xutility> reference-returning min/max, spelled file-locally for
-// the reason findpath.cpp and army.cpp record: retail materialises BOTH
-// operands into stack temps and selects between their ADDRESSES with two
-// LEAs (0x5d6c4a..0x5d6c55 is this TU's instance), which is the
-// signature of a reference-returning template and not of a ternary.
-// Operands by value, the orientation the engine is byte-proven on.
-template <class _TYPE>
-inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
-{
-    return (_Y < _X ? _Y : _X);
-}
-
-template <class _TYPE>
-inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
-{
-    return (_X < _Y ? _Y : _X);
-}
 
 // E:\gamedcs\townmgr.cpp:7564
 VA(0x005d6a80, 0x46F)  // linkorder(dc row after CycleOutline) + arity(ret 4) + BuildBuilding/CycleOutline edges, dc 0x179b28
@@ -4403,13 +4463,15 @@ void TCastleWindow::Recruit(int i)
 //
 // The animation tick runs on every message the switch did not consume,
 // which is why it sits after the switch and not inside an arm. The
-// `max` in it is an LVALUE ternary over two locals, bound to a
-// reference: retail selects an ADDRESS (`lea eax,[elapsed]` /
-// `lea eax,[minStep]`) and only then loads through it, which is what
-// the conditional operator's lvalue result compiles to. Spelled as a
-// plain value (`glTimers[0] += elapsed > minStep ? elapsed : minStep`)
-// our CL const-propagates the 100 and picks the register form instead,
-// and the whole block costs 6 instructions - 85.77 against 99.45.
+// `max` in it goes through the file's reference-returning `_cpp_max`:
+// retail selects an ADDRESS (`lea eax,[elapsed]` / `lea eax,[minStep]`)
+// and only then loads through it. Spelled as a plain value
+// (`glTimers[0] += elapsed > minStep ? elapsed : minStep`) our CL
+// const-propagates the 100 and picks the register form instead, and the
+// whole block costs 6 instructions - 85.77 against 99.45; spelled as an
+// lvalue ternary bound to a reference it reaches 99.45, one instruction
+// short, because the caller local is homed at its definition rather
+// than inside the branch.
 //
 // Both dialog arms call NormalDialog TWICE, once per button. Selecting
 // the dialog type into a variable and calling once - the spelling that
@@ -4420,15 +4482,6 @@ void TCastleWindow::Recruit(int i)
 // Written as two calls the compiler merges only what retail merges: the
 // shared `mov edx,1` and the single call site.
 //
-// Residual (99.45%): ONE instruction, and it is a spill placement.
-// `elapsed` is address-taken through the reference above, so our CL
-// homes it at its definition, ahead of the sign test; retail homes it
-// after. Everything else in the body - both jump tables, all ten arms,
-// the inlined strcpy pair, the recruit dialog and the tick - is retail's
-// instruction for instruction, and the rest of the diff is reloc NAMES
-// and relocation addends, neither of which the scorer counts. Tried and
-// rejected: the early-return form `if (elapsed < 0) return 1;` (99.45,
-// byte-identical).
 
 // E:\gamedcs\townmgr.cpp:8851
 VA(0x005dcf80, 0x401)  // anchor-vtable 0x6439bc slot 9 + arity, dc 0x17f818
@@ -4590,9 +4643,8 @@ int TCastleWindow::WindowHandler(message* msg)
     long elapsed = GameTime::Get()
                    - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
     if (elapsed >= 0) {
-        long minStep = 100;
-        const long& step = elapsed > minStep ? elapsed : minStep;
-        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] += step;
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] +=
+            _cpp_max(100L, elapsed);
         for (int i = 0; i < TOWN_DWELLING_COUNT; i++)
             SpriteWidget[i]->NextRandomFrame();
         if (use8)
