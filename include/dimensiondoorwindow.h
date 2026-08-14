@@ -9,6 +9,14 @@
 
 class textWidget;
 
+// The ESC scancode, in the message::codeX domain a MESSAGE_KEY_DOWN
+// carries. Both handlers in this compiland close on it, so it sits at file
+// scope rather than in either class; puzzlewindow.h spells the same value
+// for the same role as a class-local enumerator.
+enum EDimensionDoorKey {
+    DIALOG_CLOSE_KEY = 1
+};
+
 // The compiland's two classes are the same shape, and the Dreamcast record
 // says so outright: both are 92 bytes over CAdvPopup with exactly one
 // member, RolloverWidget, at +0x58. Retail's 8-byte wider base moves it to

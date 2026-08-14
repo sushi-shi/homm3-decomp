@@ -554,12 +554,16 @@ diff	??0CDiffMaker@@QAE@PAEH0H@Z	100.0000	100.0000	100.0000	0x91030
 diff	?Apply@CDiffFile@@QAEPAXPAEH@Z	68.9643	68.9643	68.9643	0x90f60
 diff	?FindNextSame@CDiffMaker@@IAE_NHHAAH0@Z	83.2812	83.2812	83.2812	0x91050
 diff	?MakeDiff@CDiffMaker@@QAEPAVCDiffFile@@AAK@Z	81.5174	81.5174	81.5174	0x91140
+dimensiondoorwindow	??0TDimensionDoorWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x916f0
+dimensiondoorwindow	??0TSkuttleBoatWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x91af0
 dimensiondoorwindow	??1TDimensionDoorWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x91890
 dimensiondoorwindow	??1TSkuttleBoatWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x91c90
 dimensiondoorwindow	??_GTDimensionDoorWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x91860
 dimensiondoorwindow	??_GTSkuttleBoatWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x91c60
 dimensiondoorwindow	?ExitDialog@TDimensionDoorWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91ac0
 dimensiondoorwindow	?ExitDialog@TSkuttleBoatWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91eb0
+dimensiondoorwindow	?WindowHandler@TDimensionDoorWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91900
+dimensiondoorwindow	?WindowHandler@TSkuttleBoatWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91d00
 drawing	?DrawCreatureAndHeroSubwindows@combatManager@@QAEHXZ	100.0000	100.0000	100.0000	0x95650
 drawing	?ResetLimitCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93710
 dxplay	?GetGuid@CDPlay@@UAEPAU_GUID@@XZ	100.0000	100.0000	100.0000	0x96ca0

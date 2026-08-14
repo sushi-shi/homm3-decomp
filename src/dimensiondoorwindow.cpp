@@ -3,7 +3,13 @@
 // 10 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "dimensiondoorwindow.h"
+#include "advmgr.h"
+#include "border.h"
+#include "kb.h"
+#include "kbwin.h"
+#include "mapcell.h"
 #include "message.h"
+#include "mousemgr.h"
 #include "widget.h"
 #include "winmgr.h"
 
@@ -90,6 +96,39 @@ int TSkuttleBoatWindow::WindowHandler(message* msg)
 // wrappers be claimed alongside their destructors instead of waiting on a
 // constructor.
 
+// Both constructors are the SAME 356 bytes to the instruction; the only two
+// differing dwords are the vtable and the EH handler-table address. So the
+// two classes share one source shape: a full-screen CAdvPopup, a two-slot
+// reserve, one border sized to the adventure map widget, and the family's
+// AddWidget/MemError sweep. Neither writes RolloverWidget - the member the
+// Dreamcast class record gives both classes stays uninitialized in retail.
+//
+// The map widget pointer is HOISTED out of the argument list on purpose:
+// retail loads gpAdvManager->advWindow->MapWidget BEFORE `operator new`
+// (`mov edx,[gpAdvManager] / push 0x30 / mov eax,[edx+0x44] /
+// mov edi,[eax+0x50] / call new`) and keeps it in EDI across the call,
+// which is what a separate statement produces; spelled inside the `new`
+// argument list MSVC's allocate-then-arguments order would load it after.
+
+// E:\gamedcs\dimensiondoorwindow.cpp:53
+VA(0x004916f0, 0x164)  // vtable 0x63db9c + source order, dc 0x827f8
+TDimensionDoorWindow::TDimensionDoorWindow()
+    : CAdvPopup(0, 0, 800, 600, 1)
+{
+    Widgets.reserve(2);
+
+    widget* mapWidget = gpAdvManager->advWindow->MapWidget;
+    Widgets.push_back(new border(mapWidget->x, mapWidget->y,
+        mapWidget->width, mapWidget->height, 0, 1));
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+}
+
 // E:\gamedcs\dimensiondoorwindow.cpp:71
 VA_COMPGEN(0x00491860, 0x21, SCALAR_DELETING_DTOR, TDimensionDoorWindow)
 
@@ -101,6 +140,132 @@ TDimensionDoorWindow::~TDimensionDoorWindow()
         if (*it)
             delete *it;
     }
+}
+
+// The two handlers are one shape as well - a base forward, an animation
+// catch-up, then a switch on msg->id with the same three arms. They differ
+// in exactly three places: the skuttle-boat one has no WIDGET_DESELECT arm,
+// its hover test is `cell->type == BOAT && cell->is_trigger` instead of the
+// dimension-door passability mask, and it arms cursor 42 instead of 41.
+//
+// FOUR SPELLINGS ARE LOAD-BEARING HERE, each measured on the way up from
+// 73.11:
+//
+//  * mouseX/mouseY are LOCALS READ BEFORE THE SWITCH (73.11 -> 92.90, the
+//    single biggest step). Retail pins both in callee-saved registers at
+//    the switch head (`mov eax,[esi] / mov edi,[esi+0x10] /
+//    mov ebx,[esi+0x14]`), which is why the function saves EBX at all.
+//    Read inside the MESSAGE_MOUSE_MOVE arm instead, EBX stays free and
+//    VC6 spends it CSE'ing the constant zero into EDI - every `push 0`
+//    becomes `push edi` and every `x == 0` becomes `cmp x,edi`, which is
+//    a delta in a dozen places that has nothing to do with the mouse.
+//  * glTimers[0] is READ INTO A LOCAL BEFORE GameTime::Get(). Left inside
+//    the subtraction VC6 folds it into the `sub` as a memory operand;
+//    retail loads it into EDI first, which only a preceding statement
+//    produces. Same shape viewarmywindow's animation gate already carries.
+//  * The pointer set is ADVENTURE_SET, not DEFAULT_SET - both SetPointer
+//    calls push 1. The frames are type_adventure_cursor values, so the
+//    adventure set is also the only one they index.
+//  * THE WIDGET_SELECT ARM WRITES THE END-DIALOG TAIL OUT LONGHAND rather
+//    than jumping to the shared label (95.04 -> 100.00). With `goto
+//    endDialog` as the arm's last statement VC6 threads the branch - the
+//    guard becomes `je endDialog` and the shared consume epilogue is
+//    DUPLICATED inline behind it. Retail has `jne <consume> / jmp
+//    <endDialog>`, i.e. no threading, which is what an arm ending in real
+//    statements produces: the tail is emitted, then tail-merged onto the
+//    label's copy. The other three arms keep the goto because each has a
+//    store before it, so their blocks already end in code.
+//
+// The passability test is the mapcell bitfields, NOT town.cpp's whole-word
+// view: retail reads `mov ax,word ptr [cell+0xc] / test ah,0x11`, and it is
+// the 12-bit `flags_00_11` read that produces the word load, with the two
+// masks (0x100 and is_trigger's bit 12) merged by VC6 into one `test`. The
+// word-view helper spelled as one `& 0x1100` folds to a byte test at +0xd
+// instead and cost 1.28 points.
+
+// E:\gamedcs\dimensiondoorwindow.cpp:100
+VA(0x00491900, 0x1B9)  // vtable slot 9 + source order, dc 0x829a0
+int TDimensionDoorWindow::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    unsigned long lastFrame = glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+    if (static_cast<long>(GameTime::Get() - lastFrame) > 0) {
+        gpAdvManager->CompleteDraw(0);
+        gpAdvManager->UpdateScreen(0, 0);
+    }
+
+    int mouseX = msg->mouseX;
+    int mouseY = msg->mouseY;
+
+    switch (msg->id) {
+    case MESSAGE_KEY_DOWN:
+        if (msg->codeX == DIALOG_CLOSE_KEY) {
+            gpWindowManager->dialogReturn = 0;
+            goto endDialog;
+        }
+        break;
+
+    case MESSAGE_MOUSE_MOVE:
+        if (gpAdvManager->InMapArea(mouseX, mouseY)) {
+            int cellX = mouseX / 32;
+            int cellY = mouseY / 32;
+            if (gpAdvManager->lastHoverX != cellX
+                || gpAdvManager->lastHoverY != cellY) {
+                gpAdvManager->lastHoverX = cellX;
+                gpAdvManager->lastHoverY = cellY;
+                NewmapCell* cell = gpAdvManager->GetCell(
+                    gpAdvManager->get_map_center());
+                if (!(cell->flags_00_11 & 0x100) && !cell->is_trigger) {
+                    gpWindowManager->dialogReturn = 1;
+                    gpMouseManager->SetPointer(ADV_DIMENSION_DOOR_POINTER,
+                        mouseManager::ADVENTURE_SET);
+                } else {
+                    gpWindowManager->dialogReturn = 0;
+                    gpMouseManager->SetPointer(ADV_ARROW_POINTER,
+                        mouseManager::ADVENTURE_SET);
+                }
+            }
+        } else {
+            gpWindowManager->dialogReturn = 0;
+            gpMouseManager->SetPointer(ADV_ARROW_POINTER,
+                mouseManager::ADVENTURE_SET);
+        }
+        break;
+
+    case MESSAGE_WIDGET:
+        switch (msg->codeX) {
+        case widget::WIDGET_SELECT:
+            if (msg->codeY != 0)
+                break;
+            if (gpWindowManager->dialogReturn != 1)
+                break;
+            msg->id = MESSAGE_WIDGET;
+            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            return MESSAGE_DISPATCH_FORWARD;
+        case widget::WIDGET_DESELECT:
+            if (msg->codeY == DIALOG_RETURN_CANCEL) {
+                gpWindowManager->dialogReturn = 0;
+                goto endDialog;
+            }
+            break;
+        case widget::WIDGET_RIGHT_SELECT:
+            if (msg->codeY == 0) {
+                gpWindowManager->dialogReturn = 0;
+                goto endDialog;
+            }
+            break;
+        }
+        break;
+    }
+    return MESSAGE_DISPATCH_CONSUME;
+
+endDialog:
+    msg->id = MESSAGE_WIDGET;
+    msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+    return MESSAGE_DISPATCH_FORWARD;
 }
 
 // The twin of the claim at 0x491eb0, to the byte: the two classes share
@@ -117,6 +282,25 @@ int TDimensionDoorWindow::ExitDialog(message* msg)
     return MESSAGE_DISPATCH_FORWARD;
 }
 
+// E:\gamedcs\dimensiondoorwindow.cpp:235
+VA(0x00491af0, 0x164)  // vtable 0x63dbd8 + source order, dc 0x82b9c
+TSkuttleBoatWindow::TSkuttleBoatWindow()
+    : CAdvPopup(0, 0, 800, 600, 1)
+{
+    Widgets.reserve(2);
+
+    widget* mapWidget = gpAdvManager->advWindow->MapWidget;
+    Widgets.push_back(new border(mapWidget->x, mapWidget->y,
+        mapWidget->width, mapWidget->height, 0, 1));
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+}
+
 // E:\gamedcs\dimensiondoorwindow.cpp:250
 VA_COMPGEN(0x00491c60, 0x21, SCALAR_DELETING_DTOR, TSkuttleBoatWindow)
 
@@ -128,6 +312,85 @@ TSkuttleBoatWindow::~TSkuttleBoatWindow()
         if (*it)
             delete *it;
     }
+}
+
+// E:\gamedcs\dimensiondoorwindow.cpp:280
+VA(0x00491d00, 0x1A9)  // vtable slot 9 + source order, dc 0x82d14
+int TSkuttleBoatWindow::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    unsigned long lastFrame = glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+    if (static_cast<long>(GameTime::Get() - lastFrame) > 0) {
+        gpAdvManager->CompleteDraw(0);
+        gpAdvManager->UpdateScreen(0, 0);
+    }
+
+    int mouseX = msg->mouseX;
+    int mouseY = msg->mouseY;
+
+    switch (msg->id) {
+    case MESSAGE_KEY_DOWN:
+        if (msg->codeX == DIALOG_CLOSE_KEY) {
+            gpWindowManager->dialogReturn = 0;
+            goto endDialog;
+        }
+        break;
+
+    case MESSAGE_MOUSE_MOVE:
+        if (gpAdvManager->InMapArea(mouseX, mouseY)) {
+            int cellX = mouseX / 32;
+            int cellY = mouseY / 32;
+            if (gpAdvManager->lastHoverX != cellX
+                || gpAdvManager->lastHoverY != cellY) {
+                gpAdvManager->lastHoverX = cellX;
+                gpAdvManager->lastHoverY = cellY;
+                NewmapCell* cell = gpAdvManager->GetCell(
+                    gpAdvManager->get_map_center());
+                if (cell->type == BOAT && cell->is_trigger) {
+                    gpWindowManager->dialogReturn = 1;
+                    gpMouseManager->SetPointer(ADV_SKUTTLE_BOAT_POINTER,
+                        mouseManager::ADVENTURE_SET);
+                } else {
+                    gpWindowManager->dialogReturn = 0;
+                    gpMouseManager->SetPointer(ADV_ARROW_POINTER,
+                        mouseManager::ADVENTURE_SET);
+                }
+            }
+        } else {
+            gpWindowManager->dialogReturn = 0;
+            gpMouseManager->SetPointer(ADV_ARROW_POINTER,
+                mouseManager::ADVENTURE_SET);
+        }
+        break;
+
+    case MESSAGE_WIDGET:
+        switch (msg->codeX) {
+        case widget::WIDGET_SELECT:
+            if (msg->codeY != 0)
+                break;
+            if (gpWindowManager->dialogReturn != 1)
+                break;
+            msg->id = MESSAGE_WIDGET;
+            msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+            return MESSAGE_DISPATCH_FORWARD;
+        case widget::WIDGET_RIGHT_SELECT:
+            if (msg->codeY == 0) {
+                gpWindowManager->dialogReturn = 0;
+                goto endDialog;
+            }
+            break;
+        }
+        break;
+    }
+    return MESSAGE_DISPATCH_CONSUME;
+
+endDialog:
+    msg->id = MESSAGE_WIDGET;
+    msg->codeX = msg->codeY = widget::WIDGET_END_DIALOG;
+    return MESSAGE_DISPATCH_FORWARD;
 }
 
 // E:\gamedcs\dimensiondoorwindow.cpp:395
