@@ -316,6 +316,9 @@ class heroWindow;
 class widget;
 class CUnnamed69d808_f0;
 class TResourceDisplay;
+// SetupWell's argument. Defined above under the window gate; consumers
+// that take the manager alone (recruit.obj, town.obj) only need the name.
+class TCastleWindow;
 
 // Layout proven store-for-store by townManager::townManager 0x5c3310,
 // which writes every member below, and corroborated by ::UnloadTown
@@ -383,6 +386,11 @@ public:
     townManager();
     void UnloadTown();
     void ResetStrips();
+    // Retail 0x5dd390. Fills the fort page: eight dwelling frames, their
+    // names, populations and creature names, and the six creature-stat
+    // columns. Takes the page it is filling, because it broadcasts every
+    // one of those through the window rather than through the manager.
+    void SetupWell(TCastleWindow* wellWin);
     virtual int Open(int newPriority) OVERRIDE;   // slot 0, 0x5c63c0
     virtual void Close() OVERRIDE;                // slot 1, 0x5c71b0
     virtual int Main(message& msg) OVERRIDE;      // slot 2, 0x5d3240
