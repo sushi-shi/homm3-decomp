@@ -1,0 +1,297 @@
+[disasm TARGET (delinked): ?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z  build/objdiff/target/ai_combat.c.obj]
+000027b0 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z>:
+    push ebp
+    mov ebp, esp
+    sub esp, 0x14
+    push ebx
+    push esi
+    push edi
+    mov edi, ecx
+    xor ebx, ebx
+    mov esi, dword ptr [edi + 0x4]
+    mov dword ptr [ebp - 0x4], ebx
+    cmp esi, ebx
+    jne 0x27cb <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x1b>
+    xor edx, edx
+    jmp 0x27e1 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x31>
+    mov ecx, dword ptr [edi + 0x8]
+    mov eax, 0x38e38e39
+    sub ecx, esi
+    imul ecx
+    sar edx, 0x4
+    mov eax, edx
+    shr eax, 0x1f
+    add edx, eax
+    mov ecx, edx
+    dec edx
+    test ecx, ecx
+    jle 0x2818 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x68>
+    lea eax, [edx + 8*edx]
+    lea ebx, [edx + 0x1]
+    lea esi, [esi + 8*eax + 0x20]
+    fild dword ptr [esi + 0x20]
+    fstp qword ptr [ebp - 0xc]
+    fld qword ptr [ebp - 0xc]
+    fmul qword ptr [esi]
+    fild dword ptr [ebp - 0x4]
+    fstp qword ptr [ebp - 0xc]
+    qword ptr [ebp - 0xc]
+    call 0x280b <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x5b>
+    dec ebx
+    sub esi, 0x48
+    test ebx, ebx
+    mov dword ptr [ebp - 0x4], eax
+    ja 0x27f2 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x42>
+    xor ebx, ebx
+    mov esi, dword ptr [ebp + 0x8]
+    mov dword ptr [ebp - 0x8], ebx
+    fild dword ptr [ebp - 0x4]
+    mov eax, dword ptr [esi + 0x4]
+    cmp eax, ebx
+    fstp dword ptr [ebp - 0x4]
+    jne 0x282f <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x7f>
+    xor edx, edx
+    jmp 0x2845 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x95>
+    mov ecx, dword ptr [esi + 0x8]
+    sub ecx, eax
+    mov eax, 0x38e38e39
+    imul ecx
+    sar edx, 0x4
+    mov ecx, edx
+    shr ecx, 0x1f
+    add edx, ecx
+    mov eax, edx
+    dec edx
+    test eax, eax
+    jle 0x2886 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0xd6>
+    mov ebx, dword ptr [esi + 0x4]
+    lea ecx, [edx + 8*edx]
+    inc edx
+    lea ebx, [ebx + 8*ecx + 0x20]
+    mov dword ptr [ebp + 0x8], edx
+    fild dword ptr [ebx + 0x20]
+    fstp qword ptr [ebp - 0x14]
+    fld qword ptr [ebp - 0x14]
+    fmul qword ptr [ebx]
+    fild dword ptr [ebp - 0x8]
+    fstp qword ptr [ebp - 0x14]
+    qword ptr [ebp - 0x14]
+    call 0x2873 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0xc3>
+    mov dword ptr [ebp - 0x8], eax
+    mov eax, dword ptr [ebp + 0x8]
+    dec eax
+    sub ebx, 0x48
+    test eax, eax
+    mov dword ptr [ebp + 0x8], eax
+    ja 0x285a <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0xaa>
+    xor ebx, ebx
+    fild dword ptr [ebp - 0x8]
+    fstp dword ptr [ebp + 0x8]
+    fld dword ptr [ebp - 0x4]
+    fcomp qword ptr [0x0]
+    fnstsw ax
+    test ah, 0x40
+    jne 0x2a94 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x2e4>
+    fld dword ptr [ebp + 0x8]
+    fcomp qword ptr [0x0]
+    fnstsw ax
+    test ah, 0x40
+    jne 0x2a94 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x2e4>
+    fld dword ptr [ebp - 0x4]
+    fcomp dword ptr [ebp + 0x8]
+    fnstsw ax
+    test ah, 0x41
+    jne 0x29b5 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x205>
+    mov eax, dword ptr [esi + 0x4]
+    mov dword ptr [esi + 0x1c], ebx
+    cmp eax, ebx
+    jne 0x28d3 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x123>
+    xor edx, edx
+    jmp 0x28e9 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x139>
+    mov ecx, dword ptr [esi + 0x8]
+    sub ecx, eax
+    mov eax, 0x38e38e39
+    imul ecx
+    sar edx, 0x4
+    mov eax, edx
+    shr eax, 0x1f
+    add edx, eax
+    mov ecx, edx
+    dec edx
+    test ecx, ecx
+    jle 0x290f <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x15f>
+    lea eax, [edx + 8*edx]
+    lea ecx, [edx + 0x1]
+    shl eax, 0x3
+    mov edx, dword ptr [esi + 0x4]
+    dec ecx
+    mov dword ptr [eax + edx + 0x8], ebx
+    mov edx, dword ptr [esi + 0x4]
+    mov dword ptr [eax + edx + 0x40], ebx
+    sub eax, 0x48
+    cmp ecx, ebx
+    ja 0x28f9 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x149>
+    fld dword ptr [ebp + 0x8]
+    fdiv dword ptr [ebp - 0x4]
+    qword ptr [0x0]
+    fstp dword ptr [ebp - 0x8]
+    fld dword ptr [ebp - 0x8]
+    fmul dword ptr [ebp + 0x8]
+    call 0x2929 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x179>
+    mov edx, dword ptr [edi + 0x1c]
+    sub edx, eax
+    mov ecx, edx
+    mov dword ptr [edi + 0x1c], edx
+    cmp ecx, ebx
+    jg 0x298e <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x1de>
+    mov eax, dword ptr [edi + 0x4]
+    mov dword ptr [edi + 0x1c], ebx
+    cmp eax, ebx
+    jne 0x2945 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x195>
+    xor edx, edx
+    jmp 0x295b <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x1ab>
+    mov ecx, dword ptr [edi + 0x8]
+    sub ecx, eax
+    mov eax, 0x38e38e39
+    imul ecx
+    sar edx, 0x4
+    mov eax, edx
+    shr eax, 0x1f
+    add edx, eax
+    mov ecx, edx
+    dec edx
+    test ecx, ecx
+    jle 0x2a94 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x2e4>
+    lea eax, [edx + 8*edx]
+    lea ecx, [edx + 0x1]
+    shl eax, 0x3
+    mov edx, dword ptr [edi + 0x4]
+    dec ecx
+    mov dword ptr [eax + edx + 0x8], ebx
+    mov edx, dword ptr [edi + 0x4]
+    mov dword ptr [eax + edx + 0x40], ebx
+    sub eax, 0x48
+    cmp ecx, ebx
+    ja 0x296f <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x1bf>
+    pop edi
+    pop esi
+    pop ebx
+    mov esp, ebp
+    pop ebp
+    ret 0x4
+    push ebx
+    push 0x1
+    push eax
+    mov ecx, edi
+    call 0x2999 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x1e9>
+    cmp eax, ebx
+    je 0x2a94 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x2e4>
+    push 0x4
+    push ebx
+    push eax
+    mov ecx, edi
+    call 0x29ac <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x1fc>
+    pop edi
+    pop esi
+    pop ebx
+    mov esp, ebp
+    pop ebp
+    ret 0x4
+    mov eax, dword ptr [edi + 0x4]
+    mov dword ptr [edi + 0x1c], ebx
+    cmp eax, ebx
+    jne 0x29c3 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x213>
+    xor edx, edx
+    jmp 0x29d9 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x229>
+    mov ecx, dword ptr [edi + 0x8]
+    sub ecx, eax
+    mov eax, 0x38e38e39
+    imul ecx
+    sar edx, 0x4
+    mov eax, edx
+    shr eax, 0x1f
+    add edx, eax
+    mov ecx, edx
+    dec edx
+    test ecx, ecx
+    jle 0x29ff <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x24f>
+    lea eax, [edx + 8*edx]
+    lea ecx, [edx + 0x1]
+    shl eax, 0x3
+    mov edx, dword ptr [edi + 0x4]
+    dec ecx
+    mov dword ptr [eax + edx + 0x8], ebx
+    mov edx, dword ptr [edi + 0x4]
+    mov dword ptr [eax + edx + 0x40], ebx
+    sub eax, 0x48
+    cmp ecx, ebx
+    ja 0x29e9 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x239>
+    fld dword ptr [ebp - 0x4]
+    fdiv dword ptr [ebp + 0x8]
+    qword ptr [0x0]
+    fstp dword ptr [ebp - 0x8]
+    fld dword ptr [ebp - 0x8]
+    fmul dword ptr [ebp - 0x4]
+    call 0x2a19 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x269>
+    mov edx, dword ptr [esi + 0x1c]
+    sub edx, eax
+    mov ecx, edx
+    mov dword ptr [esi + 0x1c], edx
+    cmp ecx, ebx
+    jg 0x2a7a <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x2ca>
+    mov eax, dword ptr [esi + 0x4]
+    mov dword ptr [esi + 0x1c], ebx
+    cmp eax, ebx
+    jne 0x2a35 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x285>
+    xor edx, edx
+    jmp 0x2a4b <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x29b>
+    mov ecx, dword ptr [esi + 0x8]
+    sub ecx, eax
+    mov eax, 0x38e38e39
+    imul ecx
+    sar edx, 0x4
+    mov eax, edx
+    shr eax, 0x1f
+    add edx, eax
+    mov ecx, edx
+    dec edx
+    test ecx, ecx
+    jle 0x2a94 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x2e4>
+    lea eax, [edx + 8*edx]
+    lea ecx, [edx + 0x1]
+    shl eax, 0x3
+    mov edx, dword ptr [esi + 0x4]
+    dec ecx
+    mov dword ptr [eax + edx + 0x8], ebx
+    mov edx, dword ptr [esi + 0x4]
+    mov dword ptr [eax + edx + 0x40], ebx
+    sub eax, 0x48
+    cmp ecx, ebx
+    ja 0x2a5b <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x2ab>
+    pop edi
+    pop esi
+    pop ebx
+    mov esp, ebp
+    pop ebp
+    ret 0x4
+    push ebx
+    push 0x1
+    push eax
+    mov ecx, esi
+    call 0x2a85 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x2d5>
+    cmp eax, ebx
+    je 0x2a94 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x2e4>
+    push 0x4
+    push ebx
+    push eax
+    mov ecx, esi
+    call 0x2a94 <?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z+0x2e4>
+    pop edi
+    pop esi
+    pop ebx
+    mov esp, ebp
+    pop ebp
+    ret 0x4
+    nop
+    nop
+    nop

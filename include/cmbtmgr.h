@@ -630,17 +630,32 @@ public:
     // body - /Ob2 folds it into should_stay_in_castle.
     long get_wall_strength(long target) const { return wallStrength[target]; }
 
-    int GetGridIndex(int x, int y);
+    // THE S_PUB32 PASS OVER THIS CLASS, 2026-08-14, and it is the same
+    // oracle the army lane used: the CODEVIEW roster text at the foot
+    // of this header drops the RETURN TYPE, the `this` cv-qualifier and
+    // reference-vs-pointer, so a prototype read off it is never
+    // evidence for any of the three. The mangled S_PUB32 run
+    // (evidence/dreamcast/publics.csv, 156 combatManager symbols)
+    // carries all three. It corrected SEVEN declarations here to a
+    // const `this` - GetGridIndex, HexIsBlocked, InLineOfSight,
+    // IsWinner, is_adjacent, should_lower_door and enemy_is_adjacent
+    // (whose ?QBA public an earlier lane had already recorded and left
+    // unacted) - and THREE pointer/reference disagreements:
+    // PlaceArmyInGrid and RemoveArmyFromGrid take `const army&`, and
+    // GetObstacle RETURNS a reference. None of the ten can be checked
+    // against retail bytes, which is exactly why the mangling is the
+    // only evidence there is.
+    int GetGridIndex(int x, int y) const;
     unsigned char IsQuickCombat();
     unsigned char CombatIsOver();
-    unsigned char IsWinner(int this_side);
+    unsigned char IsWinner(int this_side) const;
     void ResetHitByCreature();
     void DamageWall(TWallTargetId target_wall, int damage);
-    unsigned char is_adjacent(int first, int second);
+    unsigned char is_adjacent(int first, int second) const;
     unsigned char enemy_is_adjacent(const army* current_army, int grid_index,
-                                    const army* excluded);
-    void RemoveArmyFromGrid(const army* a);
-    void PlaceArmyInGrid(const army* a, int hex);
+                                    const army* excluded) const;
+    void RemoveArmyFromGrid(const army& a);
+    void PlaceArmyInGrid(const army& a, int hex);
     void ViewArmy(army* thisArmy, int isQuickView);
     // Retail 0x59ec50, a two-argument post-dialog command leaf whose
     // full spells.obj identity is still provisional.
@@ -664,7 +679,7 @@ public:
     // SH4->x86 band without the attribution being wrong.
     unsigned char check_obstacle_attacks(army* this_army,
                                          unsigned char is_walking);
-    unsigned char should_lower_door(army* this_army, long hex);
+    unsigned char should_lower_door(army* this_army, long hex) const;
     void LowerDoor();
     void RaiseDoor();
     bool IsQuickCombat() const;
@@ -679,12 +694,12 @@ public:
                                     int destIndex);
     unsigned char ShotIsNotOptimal(const army* attacker,
                                    const army* defender);
-    unsigned char InLineOfSight(int sourceIndex, int destIndex);
+    unsigned char InLineOfSight(int sourceIndex, int destIndex) const;
     void UpdateArmyLuckAndMorale();
     void InitializeArchers();
     void FreeIcons();
     void Close();
-    unsigned char HexIsBlocked(int index);
+    unsigned char HexIsBlocked(int index) const;
     unsigned char IsInMoat(int hex, int* index);
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
                        unsigned attributes);
@@ -715,7 +730,7 @@ public:
     // NOT reproduce that (VC6 CSEs the second load away either way) -
     // it is kept because the DC roster attests the accessor, not as a
     // matching lever.
-    TObstacle* GetObstacle(int index) { return &obstacles.begin[index]; }
+    TObstacle& GetObstacle(int index) { return obstacles.begin[index]; }
     // DC header inlines (CmbtMgr.h:1506/1537). Neither has a retail
     // out-of-line body; GenerateMap folds both into its 11x17 walk.
     unsigned char RowIsOdd(int y) const
@@ -726,9 +741,13 @@ public:
     {
         return y * 17 + x;
     }
-    hexcell* GetCell(int x, int y)
+    // Returns a REFERENCE on its own public
+    // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
+    // renders every reference as a pointer, which is what this
+    // declaration read before the S_PUB32 pass.
+    hexcell& GetCell(int x, int y)
     {
-        return &cells[GetHexIndex(x, y)];
+        return cells[GetHexIndex(x, y)];
     }
     // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). No retail
     // body; place_shooter (0x422060) carries two copies of it, one on

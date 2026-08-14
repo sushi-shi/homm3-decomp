@@ -1,0 +1,241 @@
+[disasm TARGET (delinked): ?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z  build/objdiff/target/armygrp.c.obj]
+0000172c <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z>:
+    push ebp
+    mov ebp, esp
+    sub esp, 0x30
+    mov al, byte ptr [ebp + 0x18]
+    push esi
+    mov esi, ecx
+    test al, al
+    mov dword ptr [ebp - 0x4], esi
+    je 0x1748 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1c>
+    xor eax, eax
+    pop esi
+    mov esp, ebp
+    pop ebp
+    ret 0x1c
+    mov ecx, dword ptr [ebp + 0x8]
+    push ebx
+    xor ebx, ebx
+    test ecx, ecx
+    mov dword ptr [ebp + 0x18], ebx
+    je 0x1765 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x39>
+    mov eax, dword ptr [ebp + 0x10]
+    push ebx
+    push ebx
+    push eax
+    call 0x1760 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x34>
+    mov dword ptr [ebp + 0x18], eax
+    mov ebx, eax
+    lea ecx, [ebp - 0x30]
+    push edi
+    push ecx
+    mov ecx, esi
+    call 0x1771 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x45>
+    mov edi, eax
+    mov al, byte ptr [ebp + 0x1c]
+    test al, al
+    je 0x1888 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x15c>
+    xor ebx, ebx
+    or esi, -0x1
+    mov al, byte ptr [ebp + esi - 0x2f]
+    test al, al
+    jbe 0x186d <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x141>
+    cmp esi, -0x1
+    je 0x186d <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x141>
+    mov al, byte ptr [0x0]
+    test al, 0x1
+    jne 0x17c1 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x95>
+    or al, 0x1
+    push 0x0
+    mov ecx, 0x0
+    mov byte ptr [0x0], al
+    call 0x17b4 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x88>
+    push 0x60
+    call 0x17be <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x92>
+    add esp, 0x4
+    mov al, byte ptr [0x0]
+    test al, al
+    jne 0x1843 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x117>
+    push 0x1
+    push 0x0
+    mov ecx, 0x0
+    call 0x17d8 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0xac>
+    push 0x1
+    lea edx, [ebp - 0xc]
+    push 0x1
+    push edx
+    mov ecx, 0x0
+    call 0x17ea <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0xbe>
+    mov ecx, eax
+    call 0x17f1 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0xc5>
+    push 0x1
+    lea eax, [ebp - 0x14]
+    push 0x2
+    push eax
+    mov ecx, 0x0
+    call 0x1803 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0xd7>
+    mov ecx, eax
+    call 0x180a <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0xde>
+    push 0x1
+    lea ecx, [ebp - 0x1c]
+    push 0x7
+    push ecx
+    mov ecx, 0x0
+    call 0x181c <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0xf0>
+    mov ecx, eax
+    call 0x1823 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0xf7>
+    push 0x1
+    lea edx, [ebp - 0x24]
+    push 0x6
+    push edx
+    mov ecx, 0x0
+    call 0x1835 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x109>
+    mov ecx, eax
+    call 0x183c <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x110>
+    mov byte ptr [0x0], 0x1
+    cmp esi, 0x9
+    jb 0x1852 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x126>
+    mov ecx, 0x0
+    call 0x1852 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x126>
+    mov ecx, esi
+    mov eax, 0x1
+    and ecx, 0x1f
+    shl eax, cl
+    mov ecx, esi
+    shr ecx, 0x5
+    test dword ptr [4*ecx], eax
+    je 0x186d <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x141>
+    inc ebx
+    inc esi
+    cmp esi, 0x9
+    jl 0x1783 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x57>
+    cmp ebx, 0x1
+    jle 0x1885 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x159>
+    mov edx, 0x1
+    sub edx, ebx
+    add edi, edx
+    mov ebx, dword ptr [ebp + 0x18]
+    mov ecx, dword ptr [ebp - 0x4]
+    mov esi, dword ptr [0x0]
+    mov eax, 0x2
+    sub eax, edi
+    mov edi, 0x40000
+    add ebx, eax
+    xor edx, edx
+    mov dword ptr [ebp + 0x18], ebx
+    mov eax, dword ptr [ecx]
+    cmp eax, -0x1
+    je 0x18c0 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x194>
+    lea ebx, [8*eax]
+    sub ebx, eax
+    lea eax, [eax + 4*ebx]
+    test dword ptr [esi + 4*eax + 0x10], edi
+    jne 0x18cb <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x19f>
+    mov ebx, dword ptr [ebp + 0x18]
+    inc edx
+    add ecx, 0x4
+    cmp edx, 0x7
+    jl 0x18a4 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x178>
+    jmp 0x18d4 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1a8>
+    mov eax, dword ptr [ebp + 0x18]
+    dec eax
+    mov dword ptr [ebp + 0x18], eax
+    mov ebx, eax
+    mov edx, dword ptr [ebp - 0x4]
+    xor eax, eax
+    mov ecx, edx
+    cmp dword ptr [ecx], 0xc
+    je 0x18fd <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1d1>
+    inc eax
+    add ecx, 0x4
+    cmp eax, 0x7
+    jl 0x18db <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1af>
+    xor eax, eax
+    mov ecx, edx
+    cmp dword ptr [ecx], 0xd
+    je 0x18fd <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1d1>
+    inc eax
+    add ecx, 0x4
+    cmp eax, 0x7
+    jl 0x18ed <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1c1>
+    jmp 0x18fe <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1d2>
+    inc ebx
+    mov ecx, dword ptr [ebp + 0x14]
+    test ecx, ecx
+    je 0x192a <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1fe>
+    xor eax, eax
+    mov edx, ecx
+    cmp dword ptr [edx], 0x44
+    je 0x1929 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1fd>
+    inc eax
+    add edx, 0x4
+    cmp eax, 0x7
+    jl 0x1909 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1dd>
+    xor eax, eax
+    cmp dword ptr [ecx], 0x45
+    je 0x1929 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1fd>
+    inc eax
+    add ecx, 0x4
+    cmp eax, 0x7
+    jl 0x1919 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1ed>
+    jmp 0x192a <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x1fe>
+    dec ebx
+    mov ecx, dword ptr [ebp + 0xc]
+    test ecx, ecx
+    je 0x197c <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x250>
+    mov eax, dword ptr [ecx + 0x150]
+    mov edx, dword ptr [0x0]
+    mov edi, dword ptr [0x0]
+    and eax, edx
+    mov edx, dword ptr [ecx + 0x154]
+    and edx, edi
+    or eax, edx
+    je 0x1952 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x226>
+    inc ebx
+    mov al, byte ptr [ecx + 0x4]
+    test al, al
+    jne 0x197c <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x250>
+    mov eax, dword ptr [ecx + 0x158]
+    mov edi, dword ptr [0x0]
+    mov ecx, dword ptr [ecx + 0x15c]
+    mov esi, dword ptr [0x0]
+    and eax, edi
+    and ecx, esi
+    or eax, ecx
+    je 0x197c <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x250>
+    add ebx, 0x2
+    mov al, byte ptr [ebp + 0x20]
+    pop edi
+    test al, al
+    je 0x19bc <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x290>
+    cmp ebx, -0x3
+    mov dword ptr [ebp + 0x1c], 0x3
+    mov dword ptr [ebp + 0x20], ebx
+    mov dword ptr [ebp + 0x18], 0xfffffffd
+    jge 0x19a7 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x27b>
+    lea eax, [ebp + 0x18]
+    pop ebx
+    pop esi
+    mov eax, dword ptr [eax]
+    mov esp, ebp
+    pop ebp
+    ret 0x1c
+    cmp ebx, 0x3
+    lea eax, [ebp + 0x1c]
+    jg 0x19b2 <?GetMorale@armyGroup@@QAEHPBVhero@@PBVtown@@0PBV1@EEE@Z+0x286>
+    lea eax, [ebp + 0x20]
+    mov eax, dword ptr [eax]
+    pop ebx
+    pop esi
+    mov esp, ebp
+    pop ebp
+    ret 0x1c
+    mov eax, ebx
+    pop ebx
+    pop esi
+    mov esp, ebp
+    pop ebp
+    ret 0x1c
+    nop
+    nop
