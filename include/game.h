@@ -304,6 +304,15 @@ public:
 
     int applies_to_player(long playerId) const;
     unsigned char CheckForTotalResources();
+#ifdef HOMM3_EVENTS_VIEW
+    // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
+    // (0x4aaaa0) calls the pair back to back on the same
+    // `gpGame->mapHeader.victoryCondition`, each followed by its own
+    // CheckEndGame(0). Gated purely to keep the declarator out of the
+    // other twenty-odd consumers of this header until one of them needs
+    // it.
+    unsigned char CheckForTotalCreatures();
+#endif
     bool CheckForHeroDefeatWin(int winningPlayer, const hero* loser);
     unsigned char IsGrailTarget(town* thisTown);
     bool IsTownCaptureTarget(town* thisTown);
@@ -1151,6 +1160,24 @@ public:
             return 0;
         return &heroes[heroId];
     }
+#ifdef HOMM3_EVENTS_VIEW
+    // DC `game::GetCurrHero`, dc 0x2ed4, 68 B, Game.h:991 - a SEPARATE
+    // inline from GetHero (36 B) rather than a one-line forwarder, and
+    // retail agrees: advManager::DoEvent (0x4aaaa0) expands it with the
+    // NON-null arm falling through and the null arm placed after,
+    // whereas GetHero's own `if (id == -1) return 0;` spelling lays the
+    // arms out the other way round. That spelling of GetHero is not
+    // negotiable - inverting it costs TWELVE exact functions elsewhere
+    // in this tree (measured 2026-08-14) - so the difference is real and
+    // belongs to this accessor, not to that one.
+    hero* GetCurrHero()
+    {
+        int heroId = GetCurrHeroId();
+        if (heroId != -1)
+            return &heroes[heroId];
+        return 0;
+    }
+#endif
     // DC-attested inline Game.h member (dc 0x2f18). Retail CheckCastSpell
     // expands it to the acting player's widened currHero load; no standalone
     // retail row exists in the adventure-map header-method bracket.

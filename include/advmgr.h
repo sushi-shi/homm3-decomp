@@ -804,6 +804,10 @@ public:
                                   type_point point, bool human_player);
     void DoEventWanderingMonster(NewmapCell* cell, class hero* current_hero,
                                  type_point point, bool human_player);
+    void DoEvent(NewmapCell* eventCell, type_point point);
+    void DispatchEvent(class hero* current_hero, NewmapCell* cell,
+                       type_point point, unsigned char human_player);
+    void EventSound(int eventID, int extraInfo);
     void FizzleCenter(int whichSound);
 #endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
