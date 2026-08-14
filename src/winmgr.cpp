@@ -749,6 +749,35 @@ void heroWindowManager::ReleaseFizzleSource()
 // call-crossing pseudo at schedule slot 37 where ours defines it at 61
 // - retail hoists out of the row loop a value we create inside it. Its
 // verdict is CAPPED (C1 handle state), which is the wrong question.
+//
+// INSTRUCTION-ACCOUNTED 2026-08-14, and it is ONE optimizer decision:
+// INDUCTION-VARIABLE ELIMINATION. Both sides spend the SAME 61
+// instructions on the nest, only distributed differently -
+//   base    B2 11i preheader | B3  4i row head | B4 32i pixel | B5 14i tail
+//   target  B2 12i preheader | B3  1i reload   | B4  4i head  | B5 30i pixel
+// Retail's row head is `mov eax,[pDst] / mov [xcount],0x190 /
+// sub eax,edi / mov [delta],eax`: it computes delta = pDst - pSrc ONCE
+// PER ROW, so the inner loop carries exactly ONE pointer induction
+// variable, edi = src, and stores through `mov [edx+edi-4],eax` - two
+// instructions. Ours keeps a real dst POINTER, spilled to [ebp-0x28],
+// and pays four (`mov ecx,[ebp-0x28] / mov [ecx],eax / add ecx,4 /
+// mov [ebp-0x28],ecx`). That is the whole 32i-vs-30i gap. The extra
+// target block B3 is the SAME decision seen from the other end: retail's
+// preheader already leaves the initial pSrc in EDI, so the row body's
+// `src = pSrc` reload is dead on the first iteration and VC6 rotates the
+// loop around it - one instruction, `mov edi,[ebp-0x14]`, plus the `jmp`
+// that makes the preheader 12i.
+// So the wall is not an inner-loop spelling and not a control-flow shape
+// to be re-spelled: VC6 eliminates one of two lockstep pointer IVs when
+// it chooses to, and picks the survivor itself. When it DOES build the
+// delta here it picks the wrong one (see `dst[x] = f(src[x])` below, the
+// store pointer survives). Rejected 2026-08-14, byte-identical to the
+// form below to four decimals: the inner loop as an explicit DOWN
+// counter `for (x = W/2; x > 0; x--)` with `*src++` and `*dst++`.
+// Rejected the same day, marginally WORSE (88.50/88.12): declaring pDst
+// BEFORE pSrc so the outer pointer pair takes retail's stack slots -
+// they do swap to [ebp-0x10] = pDst, [ebp-0x14] = pSrc, and it buys
+// nothing.
 // Tried and rejected 2026-08-14, both fades measured together:
 // stepping pSrc/pDst in the row loop's for-INCREMENT rather than at the
 // body tail (byte-identical, 88.51/88.14); the same with named

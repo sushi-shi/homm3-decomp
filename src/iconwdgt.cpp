@@ -655,6 +655,39 @@ void iconWidget::NextRandomFrame()
 // A named `const int fidgetChance = 2` outside the retry loop, reused by all
 // three fidget rows, was tested 2026-08-11 and is likewise byte-identical:
 // VC6 folds the name away before allocation and still hoists the table.
+//
+// THE ACCOUNTING, closed 2026-08-14 - the whole residual is those eight
+// stores and nothing else. The skeleton diff is 17 vs 17 blocks, ZERO
+// flow divergence, five size-only rows, and they sum to zero:
+//   B9  preheader  base 9i (mov eax,2 + the 8 table stores) vs target 1i
+//                  (mov edi,2 alone)
+//   B10 loop head  base 6i vs target 14i (the same 8 stores, inside)
+//   B0/B13/B16     base 1i short each - exactly the `mov [ebp-4],ecx`
+//                  home and its two `mov eax,[ebp-4]` reloads
+// so closing the hoist closes the function. FOUR MORE SPELLINGS measured
+// against it 2026-08-14, all BYTE-IDENTICAL at 86.4111 (and 72.0056 for
+// NextRandomFrame), which is worth knowing because each was a different
+// theory of why VC6 hoists:
+//   - the initializer list replaced by eight element-wise assignments
+//     (so it is loop-invariant STORE motion, not aggregate-initializer
+//     materialisation - that was the leading theory);
+//   - the pick loop walking an explicit `const int* chancePtr` stepped
+//     by 2 instead of indexing sequenceList[pick] (so it is not an
+//     address-taken/aliasing question - VC6 folds the pointer back into
+//     the same strength-reduced form);
+//   - the whole table + roll + pick loop moved into a file-static helper
+//     with ONE call site, relying on /Ob2 to inline it back (the inliner
+//     runs first and the hoist happens afterwards, identically).
+// `volatile` on the table is the one probe that MOVES anything, and it
+// moves the right things for the wrong price: `const volatile` (and
+// plain `volatile`, identical) grows the frame to retail's 0x24, homes
+// `this` at [ebp-4] and makes B0 11i and B16 8i AGREE - but it still
+// does not stop the hoist, and it costs two instructions in the modulo
+// tails and one in the pick loop, netting 80.29 (and 71.43). Recorded
+// because it proves the frame/homing half is reachable; the hoist half
+// is what nothing reaches.
+// `homm3 vc6 why-reg` was run over it the same day: 20 mutations, best
+// is `volatile int cumulative` at 58 slots against 59, not exact.
 VA(0x004eb250, 0xED)  // anchor-global, dc 0xd9ee8
 void iconWidget::NextRandomSiegeEngineFrame()
 {
