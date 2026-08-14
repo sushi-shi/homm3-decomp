@@ -818,6 +818,33 @@ TThievesGuildWindow::~TThievesGuildWindow()
 // widgets, so they are re-evaluated, not CSE'd); extra locals of any
 // kind (the frame is 0x604 either way and the Dreamcast roster lists
 // exactly four). Titration scaffolding is NOT committed.
+//
+// 2026-08-14, a NEW and more specific reading of the same residual, from
+// the head rather than the score. The frame TOTAL agrees exactly (0x604
+// both sides) but the LAYOUT inside it does not: retail homes `this` at
+// [ebp-0x7c] and starts slotX at [ebp-0x50]; we home `this` at
+// [ebp-0x60] and start slotX at [ebp-0x58]. Retail therefore keeps 0x2c
+// bytes of frame BELOW its tables that we keep above them, with the same
+// total - which is an ORDERING difference in the local table, not a
+// count difference, and it is present in the first thirty instructions,
+// before any inline decision is reached. The register pair also
+// transposes right there (retail `mov edx,2 / mov esi,4`, ours `mov
+// esi,2 / mov edx,4`), and that transposition is what the rest of the
+// body carries. Next lane: sweep the DECLARATION ORDER of the four
+// locals (slotX, slotY, hallX, hallY, and `int i`) before spending any
+// more on mass - the mass titration may simply have been buying this
+// ordering by accident. Two orders ARE already swept and neither moves
+// it: hoisting `int i` above slotX measured 85.99 unchanged, and putting
+// both int[9][18] tables ahead of slotX/slotY measured 84.61.
+//
+// What the two-table shape is NOT: the aggregate-initializer
+// trailing-zero collapse. Measured 2026-08-14 on SetupThievesGuild's own
+// pair of int[8][8] tables (see the note at its carcass row) - eliding a
+// row's trailing zeros makes VC6 emit `rep stosd` runs where retail
+// stores every element, and spelling every zero out reproduces retail's
+// shape exactly. Both of THallWindow's int[9][18] initializers already
+// spell all 18 columns, and neither side emits a single `rep stosd`, so
+// that lever is already pulled here.
 
 // E:\gamedcs\townmgr.cpp:4302
 VA(0x005c9be0, 0x2CF0)  // anchor-vtable 0x6437a0 + anchor-string TPTHBkCs.pcx + arity, dc 0x16e6cc
@@ -2687,6 +2714,34 @@ void townManager::SetupWell(TCastleWindow* wellWin)
 }
 
 // E:\gamedcs\townmgr.cpp:9206
+// LOCATED at retail 0x5dda10 (carve 0x145F, 5215 B), EH-framed. Not
+// reconstructed; what IS settled is the head, and it answers a question
+// THallWindow's residual has been asking for three lanes.
+//
+// The two stack tables at ebp-0x15c and ebp-0x25c are int[8][8] laid out
+// [numPlayers-1][i] - a flag-grid layout pair, the same idea as
+// BuyBuild's resourceX/resourceY. Decoded from the immediates:
+//
+//   x: {18} {12,24} {6,18,30} {0,12,24,36} {0,12,24,36,18}
+//      {0,12,24,36,18,30} {0,12,24,36,6,18,30} {0,12,24,36,6,18,30,42}
+//   y: {1} {1,1} {1,1,1} {1,1,1,1} {1,1,1,1,5} {1,1,1,1,5,5}
+//      {1,1,1,1,5,5,5} {1,1,1,1,5,5,5,5}
+//
+// with every remaining column zero. Retail fills BOTH tables with 128
+// individual stores, CSE-ing the repeated constants into six registers
+// (esi=0, edx=0x12, ecx=0xc, eax=0x18, edi=0x24, ebx first 0x1e then 1)
+// and hoisting the four 0x1e stores ahead of everything else; 6 and 0x2a
+// stay immediates because the register file is full.
+//
+// PROBE, measured 2026-08-14 and then reverted: compiling those two
+// initializers with each row's trailing zeros ELIDED - the way C lets
+// you write them - makes our CL emit four `rep stosd` runs instead, and
+// the front end sees a fraction of the statements. Spelling every zero
+// out removes all four `rep stosd` and reproduces retail's shape
+// instruction class for instruction class, hoisted-constant run and all.
+// So a trailing-zero-elided table initializer IS a real mass sink in
+// this compiler - but it is NOT what THallWindow is short of; that pair
+// already spells all 18 columns and emits no `rep stosd` on either side.
 DC_ONLY(0x180204, 0xEAA)
 void TThievesGuildWindow::SetupThievesGuild(int iThievesGuilds)
 {
