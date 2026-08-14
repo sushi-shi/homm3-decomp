@@ -3,6 +3,8 @@
 // 31 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "bottomviewsubwindow.h"
+#include "border.h"
+#include "textwdgt.h"
 #include "widget.h"
 #include "window.h"
 
@@ -321,7 +323,55 @@ TBottomViewResourceMessage::~TBottomViewResourceMessage()
 {
 }
 
-// BLOCKED on the constructor: VA_COMPGEN(0x00451a00, 0x21, SCALAR_DELETING_DTOR, TBottomViewMessage)
+// The base constructor. No retail body exists for it: every one of the
+// seven derived constructors inlines it, nothing else calls it, and
+// retail's /Gy + /OPT:REF link then drops the unreferenced copy - the
+// same mechanism that puts textWidget::SetText's COMDAT far outside
+// textwdgt.obj's band. It is defined here purely to be inlined, and
+// carries no claim. Its shape is read straight off every derived
+// constructor's first eighteen instructions: TSubWindow's default
+// constructor, then this class's vptr, then the one body statement.
+type_bottom_view_window::type_bottom_view_window(heroWindow* parent_window)
+{
+    initialize(614, 400, 176, 166, parent_window);
+}
+
+// E:\gamedcs\bottomviewsubwindow.cpp:197
+// The smallest of the seven, and the one that proves the family's shape.
+// Every literal is read off the body: TSubWindow::initialize takes
+// (0x266, 0x190, 0xb0, 0xa6, parent) from the inlined base constructor;
+// the border is 'AdStatOt.pcx' (0x660ca0) at the full 176x166 extent with
+// style 0x800; the text widget is 'smalfont.fnt' (0x65f2f8) in
+// font::WHITE (the literal 4). The `mov ecx, 0x63a608` fallback ahead of
+// the textWidget call is Dinkumware's c_str() inlined - the shared empty
+// literal hero.cpp already names heroNameEmptyText - so the argument is
+// message->c_str() and the parameter really is a std::string POINTER,
+// exactly as the Dreamcast signature has it.
+//
+// The `cmp ecx, 2 / jae` guard ahead of the growth block is reserve(2),
+// and the tail loop reloads Widgets.end() every iteration and skips
+// nulls WITHOUT the MemError() arm that adventureoptionswindow's
+// otherwise identical loop carries.
+VA(0x00451820, 0x1DC)  // anchor-caller (advManager::UpdBottomViewMessage), dc 0x55768
+TBottomViewMessage::TBottomViewMessage(heroWindow* parent,
+                                       const std::string* message)
+    : type_bottom_view_window(parent)
+{
+    Widgets.reserve(2);
+
+    Widgets.push_back(new bitmapBorder(
+        0, 0, 176, 166, BOTTOM_VIEW_BACKGROUND_ID, "AdStatOt.pcx", 0x800));
+    Widgets.push_back(new textWidget(
+        10, 10, 148, 146, message->c_str(), "smalfont.fnt", font::WHITE,
+        BOTTOM_VIEW_TEXT_ID, 1, 0, 8));
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+    }
+}
+
+VA_COMPGEN(0x00451a00, 0x21, SCALAR_DELETING_DTOR, TBottomViewMessage)
 
 
 // E:\gamedcs\bottomviewsubwindow.cpp:209

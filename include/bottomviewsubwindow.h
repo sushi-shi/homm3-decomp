@@ -15,6 +15,13 @@
 // animate slot. No unobserved derived fields are named here.
 class type_bottom_view_window : public TSubWindow {
 public:
+    // Widget ids shared by the family; read off the constructors, which
+    // pass 0x7d0 for the backdrop and 0x834 for the text.
+    enum EWidgetIDs {
+        BOTTOM_VIEW_BACKGROUND_ID = 0x7d0,
+        BOTTOM_VIEW_TEXT_ID = 0x834
+    };
+
     type_bottom_view_window(heroWindow* parent_window);
     virtual ~type_bottom_view_window();
     virtual void animate();
