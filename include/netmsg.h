@@ -4,8 +4,19 @@
 
 #include "struct.h"
 
+// The Dreamcast enumerates this ladder from RS_GAME_TRANSMIT_INIT = 1000
+// with no gaps, and every value retail has independently produced lands on
+// the DC's own name at the same number: 1009 = 0x3f1 RS_COMBAT_TYPE, 1054 =
+// 0x41e RS_CLAIM_GENERATOR, 1055 = 0x41f RS_CLAIM_GARRISON. The numbering
+// transfers whole, so a retail subtype constant can be named from it.
 enum eRS_Messages {
     RS_COMBAT_TYPE = 0x3f1,
+    // GATED for exactly the reason RS_ERASE_OBJECT below is - see that
+    // note. DC eRS_Messages has RS_SET_VISIBILITY = 1021, and retail's two
+    // monolith handlers stamp 0x3fd into the message they transmit.
+#ifdef HOMM3_EVENTS_VIEW
+    RS_SET_VISIBILITY = 0x3fd,
+#endif
     RS_CLAIM_GENERATOR = 0x41e,
     RS_CLAIM_GARRISON = 0x41f,
     RS_CLAIM_SHIPYARD = 0x420,
@@ -144,6 +155,25 @@ public:
           m_point(location) {}
 };
 SIZE(CMCEraseObject, 0x18);
+
+// NOT a CMapChange - the Dreamcast classes list gives CSetVisibilityMsg a
+// 32-byte extent, three members and the base CNetMsg directly, and retail
+// agrees on both counts: the monolith handlers hand it to
+// TransmitRemoteData rather than to SendMapChange. The three members are
+// the DC's own m_point / m_playerPos / m_range (members list, DC offsets
+// 20/24/28), and retail's inlined constructor writes them at +0x14 / +0x18
+// / +0x1c of a 0x20-byte frame record whose subtype is 0x3fd.
+class CSetVisibilityMsg : public CNetMsg {
+public:
+    type_point m_point;
+    int m_playerPos;
+    int m_range;
+
+    CSetVisibilityMsg(type_point point, int playerPos, int range)
+        : CNetMsg(RS_SET_VISIBILITY, sizeof(CSetVisibilityMsg)),
+          m_point(point), m_playerPos(playerPos), m_range(range) {}
+};
+SIZE(CSetVisibilityMsg, 0x20);
 #endif
 
 #ifdef HOMM3_HERO_OBJ_DECLS

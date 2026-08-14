@@ -13,6 +13,7 @@
 #include "kb.h"
 #include "misc.h"
 #include "mousemgr.h"
+#include "remote.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
 #include "winmgr.h"
@@ -302,7 +303,13 @@ void exchange_spells(hero* first_hero, hero* second_hero)
 }
 
 // E:\gamedcs\events.cpp:2029
-DC_ONLY(0x939bc, 0x15A)
+// LOCATED 2026-08-14 from the monolith pair, which calls it as their only
+// unaccounted events.obj callee: 0x4a2800 sits in the event_record..exec
+// bracket that owns this compiland, ends `ret 0x10` against these four
+// parameters, is 319 B against the DC's 346 (0.92 in the SH4->x86 band),
+// and takes (hero*, NewmapCell*, packed point, human_player) in exactly
+// this order. See the declarator note in advmgr.h.
+// RETAIL_LOCATED(0x004a2800, 0x13F)  // anchor-caller, dc 0x939bc
 void advManager::do_event_hero(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
 {
     // @stub
@@ -2716,6 +2723,75 @@ refuse:
         }
         current_hero->GiveSS(skill, 1);
     }
+}
+
+// E:\gamedcs\events.cpp:4207.  A one-way monolith: pick a random exit of
+// this monolith's colour, and if the exit tile is occupied by a hero,
+// reveal it to the local player and run the hero meeting there BEFORE
+// stepping through - the meeting can kill the traveller, in which case
+// nothing teleports.
+VA(0x004a8230, 0x154)  // linkorder + get_random_lith_exit/telptout.wav, dc 0x97fa4
+void advManager::do_event_lith_one_way(hero* current_hero, NewmapCell* cell,
+                                       bool human_player)
+{
+    type_point point;
+    if (!gpGame->get_random_lith_exit(cell->objectIndex, &point))
+        return;
+
+    NewmapCell* exitCell = gpGame->worldMap.cell(point);
+    if (exitCell->type == HERO) {
+        if (gNetworkActive69954c) {
+            CSetVisibilityMsg message(point, gNetLocalGamePos, 1);
+            TransmitRemoteData(&message, 0x7f, 0, 1);
+        }
+        gpGame->SetVisibility(point.x, point.y, point.z,
+                              gNetLocalGamePos, 1, 0);
+        do_event_hero(current_hero, exitCell, point, human_player);
+        if (current_hero->owner < 0)
+            return;
+    }
+
+    StopCursor(1);
+    TeleportTo(current_hero, point,
+               DATA_COMPGEN(0x0067775c, teleportOutSampleName,
+                            "telptout.wav"),
+               0, 1, 0);
+}
+
+// E:\gamedcs\events.cpp:4244.  The two-way monolith, the same shape with
+// two differences that are both in the source and not in the codegen: the
+// exit is drawn from the two-way pool with THIS tile excluded (the cell's
+// own extra-info dword is the exclusion key, which is what stops a
+// monolith from landing you back where you started), and the closing
+// teleport is spelled through gpAdvManager rather than through `this` -
+// retail reloads the frame's own this-slot for StopCursor and then loads
+// the global for TeleportTo, where the one-way twin keeps `this` in ESI
+// across both calls.
+VA(0x004a8390, 0x155)  // linkorder + get_random_lith/telptout.wav, dc 0x980e8
+void advManager::do_event_lith_two_way(hero* current_hero, NewmapCell* cell,
+                                       bool human_player)
+{
+    type_point point;
+    if (!gpGame->get_random_lith(cell->objectIndex, cell->extraInfo, &point))
+        return;
+
+    NewmapCell* exitCell = gpGame->worldMap.cell(point);
+    if (exitCell->type == HERO) {
+        if (gNetworkActive69954c) {
+            CSetVisibilityMsg message(point, gNetLocalGamePos, 1);
+            TransmitRemoteData(&message, 0x7f, 0, 1);
+        }
+        gpGame->SetVisibility(point.x, point.y, point.z,
+                              gNetLocalGamePos, 1, 0);
+        do_event_hero(current_hero, exitCell, point, human_player);
+        if (current_hero->owner < 0)
+            return;
+    }
+
+    StopCursor(1);
+    // Same literal as the one-way twin's; VC6 pools the two spellings into
+    // the single allocation at 0x67775c that the one-way body annotates.
+    gpAdvManager->TeleportTo(current_hero, point, "telptout.wav", 0, 1, 0);
 }
 
 // E:\gamedcs\events.cpp:5146.  The adventure map's post-move event
