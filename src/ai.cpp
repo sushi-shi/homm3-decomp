@@ -1113,16 +1113,107 @@ void find_attack_hexes(const army* our_army, long target_hex, long start, long s
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\ai.cpp:1241
+// The danger map itself: every enemy stack that can act is seeded into
+// the shared search array and priced against `our_army`. A SHOOTER is
+// dangerous everywhere and only gets its bit in *dangerous_enemies; a
+// walker that can already reach one of our stacks gets the same bit
+// (and, on the hard difficulties, has its breath sweep marked); one
+// that cannot reach anybody discounts every hex it COULD reach by what
+// the exchange would cost us, floored at minus our own worth. The
+// two-hex tail sweep adds the cells whose partner hex the stack would
+// occupy - skipping the moat, which it would be stopped in.
 VA(0x00420260, 0x368)  // linkorder, dc 0x256a0
-void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks, long* dangerous_enemies, const type_AI_combat_parameters* estimate)
+void combatManager::mark_enemy_attacks(const army* our_army, long* enemy_attacks, long* dangerous_enemies, type_AI_combat_parameters* estimate)
 {
-    // @stub
+    long side = estimate->side;
+    long enemy_side = estimate->enemy_side;
+    long hit_points = our_army->get_total_hit_points(estimate->simulated);
+    long floor_value = -our_army->get_loss_combat_value(
+            estimate->lowest_attack, estimate->lowest_defense,
+            our_army->can_shoot(0), hit_points, 0);
+    const army* enemy = armies[enemy_side];
+    *dangerous_enemies = 0;
+    for (long i = 0; i < numArmies[enemy_side]; i++, enemy++) {
+        if (enemy->disabled_290)
+            continue;
+        if (enemy->disabled_2b0)
+            continue;
+        if (enemy->disabled_2c0)
+            continue;
+        if (enemy->Is(21) & 1)
+            continue;
+        if (enemy->creatureType == CREATURE_FIRST_AID_TENT
+                || enemy->creatureType == CREATURE_AMMO_CART
+                || enemy->creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        if (enemy->can_shoot(0)) {
+            *dangerous_enemies |= 1 << enemy->bitIndex;
+            continue;
+        }
+        gpSearchArray->SeedCombatPosition(enemy, enemy_side,
+                                          enemy->GetSpeed() + 1, 0,
+                                          enemy->GetSpeed() + 1);
+        long j;
+        const army* friendly = armies[side];
+        for (j = 0; j < numArmies[side]; j++, friendly++) {
+            if (friendly->Is(21) & 1)
+                continue;
+            if (friendly->creatureType == CREATURE_ARROW_TOWER)
+                continue;
+            const pathCell* cell = gpSearchArray->cellData == 0
+                    ? 0
+                    : &gpSearchArray->cellData[friendly->gridIndex];
+            if (cells[friendly->gridIndex].field_4a
+                    && cell->cost <= enemy->GetSpeed())
+                break;
+        }
+        if (j < numArmies[side]) {
+            *dangerous_enemies |= 1 << enemy->bitIndex;
+            if ((enemy->Is(19) & 1) && gpGame->setup.difficulty >= 2
+                    && !sideIsAI[side])
+                mark_multiheaded_enemy(our_army, enemy, enemy_attacks,
+                                       floor_value, gpSearchArray, estimate);
+            continue;
+        }
+        long value = -estimate->get_simple_attack_effect(enemy, our_army, 0, 0);
+        if (value >= 0)
+            continue;
+        for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
+            const pathCell* cell = gpSearchArray->cellData == 0
+                    ? 0
+                    : &gpSearchArray->cellData[hex];
+            if (!cell->visited)
+                continue;
+            enemy_attacks[hex] += value;
+            if (enemy_attacks[hex] < floor_value)
+                enemy_attacks[hex] = floor_value;
+        }
+        if (enemy->creatureId & 1) {
+            long direction = enemy->facing ? 1 : 4;
+            for (long hex = 0; hex < COMBAT_GRID_CELLS; hex++) {
+                const pathCell* cell = gpSearchArray->cellData == 0
+                        ? 0
+                        : &gpSearchArray->cellData[hex];
+                if (!cell->visited)
+                    continue;
+                if (gpSearchArray->bIsMoatSlowed[static_cast<short>(hex)])
+                    continue;
+                long adjacent = adjacentCells[hex][direction];
+                if (adjacent < 0 || adjacent >= COMBAT_GRID_CELLS)
+                    continue;
+                const pathCell* other = gpSearchArray->cellData == 0
+                        ? 0
+                        : &gpSearchArray->cellData[adjacent];
+                if (other->visited)
+                    continue;
+                enemy_attacks[adjacent] += value;
+                if (enemy_attacks[adjacent] < floor_value)
+                    enemy_attacks[adjacent] = floor_value;
+            }
+        }
+    }
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai.cpp:1357
 // Where a stack should stand to shield `client`: the walk visits the
@@ -1372,31 +1463,143 @@ unsigned char combatManager::choose_creature_spell(const army* current_army, lon
 }
 
 // UNCLAIMED, 0x420f00 (251 B) - the retail-only twin described above.
+// NAMED 2026-08-14 by choose_spell_action's jump table: it is the arm
+// creatureType 0x86 takes, so it is the Faerie Dragon's own chooser.
+// Declared in cmbtmgr.h as SOD_choose_faerie_dragon_spell and called
+// from there; its body is still unreconstructed.
+
+#endif  // @carcass
 
 // E:\gamedcs\ai.cpp:1694
 // Nothing else in the TU calls army::get_resurrection_size, and this
-// body does - twice, around two army constructors. `ret 0xc` is the
-// DC parameter count exactly.
+// body does. `ret 0xc` is the DC parameter count exactly.
+//
+// The Archangel and the Pit Lord share one chooser and differ in three
+// places: the Pit Lord looks for ANIMATE-DEAD targets (and only DEAD
+// ones), and it prices the raise as DEMONS - which is what the scratch
+// `army temp` is for, built once outside the walk and valued instead of
+// the corpse. The Archangel prices the stack it is actually restoring.
+// Either way the value doubles while our side is already ahead on live
+// value and the odds have not turned.
+//
+// EH-bearing (P2.2) and NOT blocked by it: the fs:[0] frame is the local
+// army's unwind scaffolding, one state.
+//
+// Residual (95.8%): caller-saved register ties on the estimate->side and
+// live-value loads, plus ONE redundant `fstp/fld` pair our CL inserts on
+// the non-Pit-Lord arm of the value ternary where retail merges the two
+// arms in st(0). The single `__ftol` is what forces the ternary
+// spelling - two `static_cast<long>` arms emit two conversions, which
+// retail does not have.
 VA(0x00421000, 0x275)  // anchor-callee, dc 0x26140
 unsigned char combatManager::choose_resurrect_action(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
 {
-    // @stub
+    long best_hex = -1;
+    if ((current_army->creatureType != CREATURE_ARCHANGEL
+            && current_army->creatureType != CREATURE_PIT_LORD)
+            || current_army->field_dc <= 0)
+        return 0;
+    army temp;
+    if (current_army->creatureType == CREATURE_PIT_LORD)
+        temp.initialize(CREATURE_DEMON, 1, heroes[estimate->side],
+                        estimate->side, 0, 0);
+    for (long i = numArmies[estimate->side]; i--; ) {
+        const army* target = &armies[estimate->side][i];
+        if (target == current_army)
+            continue;
+        if (target->creatureType == CREATURE_ARROW_TOWER)
+            continue;
+        long hex = target->gridIndex;
+        if (current_army->creatureType == CREATURE_PIT_LORD) {
+            if (find_animate_dead_target(estimate->side, hex) != target) {
+                if ((target->creatureId & 1) == 0)
+                    continue;
+                hex = target->get_second_grid_index();
+                if (find_animate_dead_target(estimate->side, hex) != target)
+                    continue;
+            }
+            if ((target->Is(21) & 1) == 0)
+                continue;
+        } else {
+            if (find_resurrection_target(estimate->side, hex, 1) != target) {
+                if ((target->creatureId & 1) == 0)
+                    continue;
+                hex = target->get_second_grid_index();
+                if (find_resurrection_target(estimate->side, hex, 1) != target)
+                    continue;
+            }
+        }
+        long size = current_army->get_resurrection_size(target);
+        if (size == 0)
+            continue;
+        long value = static_cast<long>(
+                current_army->creatureType == CREATURE_PIT_LORD
+                ? temp.get_unit_combat_value(estimate->lowest_attack,
+                                             estimate->lowest_defense, 0, 0)
+                        * size
+                : target->get_unit_combat_value(estimate->lowest_attack,
+                                                estimate->lowest_defense,
+                                                target->can_shoot(0), 0)
+                        * size);
+        if (estimate->our_live_value > estimate->enemy_live_value
+                && estimate->odds <= 1)
+            value += value;
+        if (value > *best_value) {
+            *best_value = value;
+            best_hex = hex;
+        }
+    }
+    if (best_hex < 0)
+        return 0;
+    field_44 = best_hex;
+    field_3c = 10;
+    return 1;
 }
 
 // E:\gamedcs\ai.cpp:1794
-// The dispatcher: its three callees are the two unresolved spell
-// choosers above and the resurrect chooser, and its own caller is the
-// choose_melee_target slot. `ret 0xc` is the DC count exactly; 150 B
-// -> 358 B is the loosest size ratio of the eighteen (2.39x, still in
-// band) and is what a dispatcher looks like once /Ob2 has pulled its
-// small helpers in.
+// The dispatcher: its three callees are the two spell choosers above and
+// the resurrect chooser, and its own caller is the choose_melee_target
+// slot. `ret 0xc` is the DC count exactly; 150 B -> 358 B is the loosest
+// size ratio of the eighteen (2.39x, still in band) and is what a
+// dispatcher looks like once /Ob2 has pulled its small helpers in.
+//
+// The 358 bytes are mostly TABLE: a real `switch` over creatureType with
+// a 122-entry byte index (creature ids 0x0d..0x86) into a four-slot jump
+// table. That table is what names the five creature casters - 0x0d and
+// 0x33 route to the resurrect chooser, 0x25 and 0x5b to the generic
+// creature-spell chooser, 0x86 to the retail-only Faerie Dragon one -
+// and the enumerators are added to armygrp.h from exactly this evidence.
+//
+// The four gates after bCreaturePlacement are can_cast_spells(side, 0)
+// INLINED with hero_spell folded to 0, which is why the spellbook arm
+// leaves no trace and `side` itself is never loaded.
 VA(0x00421280, 0x166)  // anchor-callee, dc 0x26464
 unsigned char combatManager::choose_spell_action(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
 {
-    // @stub
+    if (bCreaturePlacement)
+        return 0;
+    if (!can_cast_spells(estimate->side, 0))
+        return 0;
+    if (current_army->field_dc == 0)
+        return 0;
+    switch (current_army->creatureType) {
+    case CREATURE_ARCHANGEL:
+    case CREATURE_PIT_LORD:
+        if (choose_resurrect_action(current_army, best_value, estimate))
+            return 1;
+        break;
+    case CREATURE_MASTER_GENIE:
+    case CREATURE_DRAGON_FLY:
+        if (choose_creature_spell(current_army, best_value, estimate))
+            return 1;
+        break;
+    case CREATURE_FAERIE_DRAGON:
+        if (SOD_choose_faerie_dragon_spell(current_army, best_value, estimate))
+            return 1;
+        break;
+    }
+    return 0;
 }
-
-#endif  // @carcass
 
 // E:\gamedcs\ai.cpp:1822
 // `ret 4` = one stack argument over `this`, the DC count exactly, and

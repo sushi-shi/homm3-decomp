@@ -130,8 +130,10 @@ ai	?can_cast_spells@combatManager@@QAEEJE@Z	100.0000	100.0000	100.0000	0x1f890
 ai	?choose_cyclops_action@combatManager@@QAEEJJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1eea0
 ai	?choose_defense_hex@combatManager@@QAEEPBVarmy@@0PAJ1PAVsearchArray@@@Z	99.0992	99.0992	99.0992	0x205d0
 ai	?choose_melee_action@combatManager@@QAEJPBVarmy@@EEJ@Z	100.0000	100.0000	100.0000	0x21f80
+ai	?choose_resurrect_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	95.7822	95.7822	95.7822	0x21000
 ai	?choose_shooter_action@combatManager@@QAEXPBVarmy@@EJ@Z	100.0000	100.0000	100.0000	0x1f060
 ai	?choose_shooter_target@combatManager@@QAEJPBVarmy@@PAUtype_AI_combat_parameters@@PAJ@Z	100.0000	100.0000	100.0000	0x1eb80
+ai	?choose_spell_action@combatManager@@QAEEPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x21280
 ai	?choose_to_run@combatManager@@QAEEPBVarmy@@PBJPBVsearchArray@@@Z	100.0000	100.0000	100.0000	0x208f0
 ai	?compute_fire_shield_damage@combatManager@@QAEJJPBVarmy@@0J@Z	100.0000	100.0000	100.0000	0x22440
 ai	?find_attack_hexes@@YIXPBVarmy@@JJJJPBVsearchArray@@PAV?$vector@JV?$allocator@J@std@@@std@@@Z	87.1099	87.1099	87.1099	0x20060
@@ -140,6 +142,7 @@ ai	?get_area_attack_value@@YIJPBVarmy@@JJPAUtype_AI_combat_parameters@@@Z	100.00
 ai	?get_area_effect@combatManager@@QAEJJPBVarmy@@JPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1f920
 ai	?get_attack_change@combatManager@@QAEJPBVarmy@@0PBUtype_AI_combat_parameters@@@Z	96.3533	96.3533	96.3533	0x1f3b0
 ai	?get_total_combat_value@combatManager@@QBEJJJJE@Z	100.0000	100.0000	100.0000	0x1eac0
+ai	?mark_enemy_attacks@combatManager@@QAEXPBVarmy@@PAJ1PAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20260
 ai	?mark_firewalls@combatManager@@QAEXPBVarmy@@PAJPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x214f0
 ai	?mark_friendly_armies@combatManager@@QAEXPBVarmy@@PAJJPBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x1fb60
 ai	?mark_multiheaded_enemy@combatManager@@QAEXPBVarmy@@0PAJJPAVsearchArray@@PAUtype_AI_combat_parameters@@@Z	94.5399	94.5399	94.5399	0x1fd60
@@ -148,10 +151,7 @@ ai	?place_shooter@combatManager@@QAEXPBVarmy@@@Z	82.4884	82.4884	82.4884	0x22060
 ai	?should_stay_in_castle@combatManager@@QAEEPAUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x213f0
 ai	combatManager_choose_creature_spell	0.0000	0.0000	0.0000	0x20d20
 ai	combatManager_choose_melee_target	0.0000	0.0000	0.0000	0x21680
-ai	combatManager_choose_resurrect_action	0.0000	0.0000	0.0000	0x21000
-ai	combatManager_choose_spell_action	0.0000	0.0000	0.0000	0x21280
 ai	combatManager_has_ranged_advantage	0.0000	0.0000	0.0000	0x20a80
-ai	combatManager_mark_enemy_attacks	0.0000	0.0000	0.0000	0x20260
 ai_combat	??0type_AI_combat_data@@QAE@PBVhero@@PBVarmyGroup@@N0PBVtown@@PAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0x23ee0
 ai_combat	??0type_monster_vector@@QAE@ABU0@@Z	100.0000	100.0000	100.0000	0x276c0
 ai_combat	?AI_approximate_strength@@YIJPBVhero@@@Z	100.0000	100.0000	100.0000	0x27650

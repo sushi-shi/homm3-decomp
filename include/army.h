@@ -223,7 +223,14 @@ public:
     // the word is the range's top. The mirror of minDamage's proof, and
     // the two sit adjacent. Name provisional; no roster attests it.
     int maxDamage;                // +0xd4
-    char pad_d8[0x18];
+    char pad_d8[0x4];
+    // "This stack still has a creature spell to cast": ai.cpp's
+    // choose_spell_action (0x421280) reads the dword and returns 0
+    // outright while it is zero, before it even looks at creatureType.
+    // Another slice of the embedded traits row (sMonInfo + 0x68); the
+    // name stays an ordinal until a writer is decoded.
+    int field_dc;                 // +0xdc
+    char pad_e0[0x10];
     unsigned char hitByCreature;  // +0xf0
     char pad_f1[0x3];
     // Effective combat side: is_enemy (0x442880) compares it between
@@ -486,6 +493,19 @@ public:
     // freshly default-constructed local, so the callee is the only
     // writer. Const because that caller holds the stack as `const army*`.
     void get_berserk_targets(std::vector<army*>& armies) const;
+    // 0x43d730, army.obj. Six stack arguments over `this` - the DC
+    // roster's own count for army::initialize (army.cpp:150, dc
+    // 0x439b0) - and ai.cpp's choose_resurrect_action (0x421000) passes
+    // exactly its parameter list: the Pit Lord's scratch Demon stack,
+    // one creature, the casting side's hero, that side, slot 0, hex 0.
+    // `type` is spelled int rather than TCreatureType for the reason
+    // armyGroup's own slot array is: that enum lives in armygrp.h and
+    // this header does not include it. Same width, same codegen.
+    void initialize(int type, long number, const hero* owner,
+                    long new_group, long new_index, long new_grid_index);
+    // 0x44b7a0's twin in the AI: choose_resurrect_action asks it through
+    // the `const army*` it takes, so the retail body is const.
+    long get_resurrection_size(const army* target) const;
     int get_second_grid_index() const;                          // 0x4466a0
     // DC Army.h twin of the pair above (army.cpp:4850, dc 0x4b398).
     // Const because ai.cpp's choose_defense_hex (0x4205d0) asks it
