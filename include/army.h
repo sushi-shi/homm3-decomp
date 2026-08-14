@@ -234,9 +234,13 @@ public:
     char pad_eb[0x5];
     unsigned char hitByCreature;  // +0xf0
     char pad_f1[0x3];
-    // Effective combat side: is_enemy (0x442880) compares it between
-    // armies after the hypnotize flip; FindPath forwards it (flipped
-    // when hypnotized) into FindCombatPath.
+    // The side that OWNS this stack, written once by Init and never by
+    // a spell: the hypnotize flip is applied ON READ by
+    // get_controlling_side (0x440140), which is why is_enemy (0x442880)
+    // compares its own flipped side against the other stack's raw one
+    // and why get_owner (0x4426d0) reads this field directly while
+    // get_controller (0x442690) flips it. FindPath forwards the flipped
+    // value into FindCombatPath.
     int combatSide;               // +0xf4
     // Bit position of this stack in the AI's "already counted" masks:
     // get_hex_attack_value (0x436180) builds 1 << it and folds the bit
@@ -679,14 +683,20 @@ public:
     // fireShieldRounds is set, else the Efreet Sultan's innate
     // constant, else the zero constant (0x443130).
     float get_fire_shield_strength() const;                     // 0x443130
-    // 0x442690 (57 B, ecx only): gpCombatManager->heroes[owning side] -
-    // it UNDOES the hypnotize flip stored in combatSide before the
-    // lookup, so it answers the stack's OWNER's hero, not its current
-    // controller's. Name is the DC roster's army.cpp:2698 `get_owner`
-    // (30 SH4 bytes, ratio 1.9) - PROVISIONAL, the dump does not print
-    // the return type and `get_controller` at army.cpp:2691 is the same
-    // size.
-    hero* get_owner() const;                                    // 0x442690
+    // The controller/owner pair. combatSide (+0xf4) stores the OWNER's
+    // side, so the body that APPLIES the hypnotize flip is the
+    // controller and the raw read is the owner - the inversion this
+    // header carried until 2026-08-14, settled on retail bytes in
+    // army.cpp's note above the pair (cross-build callsite identity
+    // from compute_fire_shield_damage and the TViewArmyWindow ctor,
+    // the DC pair's own get_controlling_side / get_owning_side edges,
+    // and is_enemy's asymmetric compare - three ways, all agreeing).
+    // 0x442690 (57 B, ecx only): heroes[get_controlling_side()], the
+    // hero currently DIRECTING this stack.
+    hero* get_controller() const;                               // 0x442690
+    // 0x4426d0 (20 B, ecx only): heroes[combatSide], the hero who
+    // OWNS this stack regardless of who is directing it.
+    hero* get_owner() const;                                    // 0x4426d0
     // 0x43d8b0 / 0x43d9f0, LOCATED 2026-08-13 from combatManager::AddArmy
     // (0x47a100), which calls them back to back on the freshly claimed
     // slot. Init's SEVEN stack arguments are an exact arity match for the

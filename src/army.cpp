@@ -595,18 +595,75 @@ double army::get_defense_damage_modifier(unsigned char ranged_attack)
 }
 
 // E:\gamedcs\army.cpp:2691
-DC_ONLY(0x47904, 0x1E)
-hero* army::get_controller()
+#endif  // @carcass
+
+// The controller/owner pair, and the resolution of a naming inversion
+// that two lanes had recorded in opposite directions. The two bodies
+// differ by exactly the hypnotize flip:
+//
+//   0x442690 (57 B)  heroes[hypnotizeFlag ? 1 - combatSide : combatSide]
+//   0x4426d0 (20 B)  heroes[combatSide]
+//
+// so the whole question is which side combatSide (+0xf4) stores, and
+// it is settled three independent ways, all agreeing:
+//
+// 1. CROSS-BUILD CALLSITE IDENTITY (decisive). The DC xref graph has
+//    combatManager::compute_fire_shield_damage (dc 0x27318) calling
+//    get_controller TWICE and get_owner never; retail's
+//    compute_fire_shield_damage (0x422440, already exact in ai.cpp)
+//    calls 0x442690 twice and 0x4426d0 never. From the other end,
+//    DC's TViewArmyWindow::TViewArmyWindow calls BOTH (get_controller
+//    x2, get_owner x1) and retail's TViewArmyWindow ctor (0x5f3360)
+//    is a caller of BOTH 0x442690 and 0x4426d0. One row calls only
+//    the flipping body and the dump names what it calls
+//    get_controller; the row that calls both is the only other caller
+//    of the non-flipping one.
+// 2. THE DC CALL EDGES INSIDE THE PAIR. get_controller (dc 0x47904)
+//    calls army::get_controlling_side and get_owner (dc 0x47924)
+//    calls army::get_owning_side - two distinct side accessors. Our
+//    0x442690 has the flip inlined (it IS get_controlling_side,
+//    claimed at 0x440140) and 0x4426d0 is the raw +0xf4 read, which
+//    is what get_owning_side can only be.
+// 3. SEMANTICS OF is_enemy (0x442880, exact). It compares
+//    `this->get_controlling_side() != arg->combatSide`. Take `this`
+//    hypnotized, owned by side 0 and fighting for side 1, against a
+//    normal side-1 stack: they are allies. With combatSide = OWNER
+//    the compare is (1-0) != 1 -> false -> allies, correct. With
+//    combatSide = CONTROLLER it is (1-1) != 1 -> true, i.e. the
+//    hypnotized stack would attack the side it is fighting for. So
+//    combatSide holds the owner and the flip yields the controller.
+//
+// The DC roster order (2691 get_controller, 2698 get_owner) maps onto
+// the retail slots (0x442690, 0x4426d0) in the same order, so the
+// order-map agrees too - the earlier lane's inversion came from
+// pairing 0x442690 against the LATER roster row while 0x4426d0 was
+// not yet in view, not from the ordering itself.
+//
+// Spelling: the body CALLS get_controlling_side and lets /Ob2 inline
+// it (defined 0x442690-earlier in this same TU). VC6 duplicates the
+// indexed load down both of the inlined callee's return paths, which
+// is retail's two-tail shape, and - the deciding half - the inlined
+// side is MATERIALIZED (`mov eax,1 / sub eax,edx` against a
+// +0x53cc-displaced load) where writing `heroes[1 - combatSide]` by
+// hand lets the front end fold the array displacement into the
+// constant instead (`mov eax,0x14f4 / sub / [ecx+eax*4]`), worth 6.23
+// (93.77 -> 100). Same class as the short-returning-accessor
+// truncation barrier: an inlined accessor's value is materialized,
+// not folded into the addressing mode.
+VA(0x00442690, 0x39)  // anchor-callee (cross-build callsite), dc 0x47904
+hero* army::get_controller() const
 {
-    // @stub
+    return gpCombatManager->heroes[get_controlling_side()];
 }
 
 // E:\gamedcs\army.cpp:2698
-DC_ONLY(0x47924, 0x1E)
-hero* army::get_owner()
+VA(0x004426d0, 0x14)  // anchor-callee (cross-build callsite), dc 0x47924
+hero* army::get_owner() const
 {
-    // @stub
+    return gpCombatManager->heroes[combatSide];
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2708
 DC_ONLY(0x47944, 0xD0)
