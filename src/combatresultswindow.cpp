@@ -109,6 +109,25 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 // The compiland's DC roster carries no helper members beyond the six
 // already landed, re-checked 2026-08-14: no HighlightX-style extraction is
 // available here.
+//
+// /Ob2 TWO-AXIS RE-TEST (2026-08-14), 96.2269 -> 96.3788. The verdict
+// recorded for this constructor in mainmenu.cpp was "k>=1 strictly worse (it
+// has NO reserve)" - true, but that is the DIVISOR axis alone, and the
+// caller's own cb had never been swept here. It is live: at k=0, one to
+// three byte-inert pad statements at the head of the body are worth 96.3793,
+// and the honest supply is naming the accept box before pushing it (96.3788,
+// the same plateau to within a byte). Full grid, pad statements ahead of
+// `gpCombatResultsWindow = this` x xx_nop sites past the last push_back:
+//     M\k        0         1         2         3
+//     0     96.2269   90.1925   90.8916   84.5239
+//     1..3  96.3793   90.1925   90.8916   84.5239
+//     4      95.3358   90.8534   90.8916   84.5239
+//     8      95.4906   89.9013   90.8916   84.5239
+//     16     95.6792   95.8863   89.1713   84.5239
+// so the site axis really is dead here (no k>=1 cell beats k=0), but the
+// mass axis has a three-statement window, and naming more widgets overshoots
+// it (M=20 is 95.5336, M=24 96.1640). What is left is the frame-slot
+// permutation described above, not the inliner.
 VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
 TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     const hero* defender, int my_side, int winning_side,
@@ -354,8 +373,9 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         }
     }
 
-    Widgets.push_back(new bitmapBorder(
-        384, 506, 66, 32, BACKGROUND_ID, "Box64x30.pcx", 0x800));
+    bitmapBorder* acceptBox = new bitmapBorder(
+        384, 506, 66, 32, BACKGROUND_ID, "Box64x30.pcx", 0x800);
+    Widgets.push_back(acceptBox);
 
     button* accept = new button(
         385, 507, 64, 30, DIALOG_RETURN_SPLIT_ACCEPT, "iOkay.def",
