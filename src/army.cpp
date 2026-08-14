@@ -534,13 +534,6 @@ unsigned char army::is_enemy(const army* arg)
     // @stub
 }
 
-// E:\gamedcs\army.cpp:2790
-// RETAIL_LOCATED(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
-unsigned char army::can_shoot(const army* excluded) const
-{
-    // @stub
-}
-
 // E:\gamedcs\army.cpp:2804
 // RETAIL_LOCATED(0x004429f0, 0x5C)  // anchor-global, dc 0x47c74
 unsigned char army::enemy_is_adjacent(const army* excluded)
@@ -662,6 +655,48 @@ void army::ProcessDeath(int bFadeElementals)
 
 // E:\gamedcs\army.cpp:3631
 #endif  // @carcass
+
+// E:\gamedcs\army.cpp:2790
+// RECONSTRUCTED 2026-08-14, and the reason is a delinker contract rather
+// than this body's own score: a VA claim inside `#if 0 // @carcass` gives
+// the TARGET side no mangled name, because the delinker only learns names
+// from COMPILED base objects. Every one of can_shoot's twenty-odd callers
+// - ai_tactical's pricers, findpath's SeedCombatPosition,
+// combatManager::GetCommand - therefore carried a reloc-name mismatch that
+// no local spelling in the CALLER could reach. Compiling the body closes
+// that for all of them at once.
+//
+// The two war-machine early-outs answer TRUE unconditionally (a Ballista
+// and an Arrow Tower always "shoot"); everything below them is the real
+// predicate: the shooter attribute bit, shots remaining, the Bow of the
+// Sharpshooter override read off the acting side's hero (the side the
+// hypnotize flag may have flipped), the two adjacency vetoes - one for the
+// stack's own hex and one for a wide stack's second hex - and finally the
+// paired field_28c / field_4c4 gate that a level-2 effect closes.
+VA(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
+unsigned char army::can_shoot(const army* excluded) const
+{
+    if (creatureType == CREATURE_BALLISTA
+            || creatureType == CREATURE_ARROW_TOWER)
+        return 1;
+    if ((Is(2) & 1) == 0 || numShots <= 0)
+        return 0;
+
+    long side = hypnotizeFlag ? 1 - combatSide : combatSide;
+    hero* combat_hero = gpCombatManager->heroes[side];
+    if (combat_hero == 0 || !combat_hero->IsWieldingArtifact(0x89)) {
+        if (gpCombatManager->enemy_is_adjacent(const_cast<army*>(this),
+                                               gridIndex, excluded)
+                || ((creatureId & 1)
+                    && gpCombatManager->enemy_is_adjacent(
+                           const_cast<army*>(this),
+                           gridIndex + (facing ? 1 : -1), excluded)))
+            return 0;
+    }
+    if (field_28c && field_4c4 >= 2)
+        return 0;
+    return 1;
+}
 
 VA(0x00443130, 0x25)  // decorated identity + exact field/constant loads
 float army::get_fire_shield_strength() const

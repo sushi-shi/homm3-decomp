@@ -290,6 +290,7 @@ ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000	0.0000	0.0000	0x369c0
 army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
 army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	97.0115	97.0115	97.0115	0x3df20
 army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	97.5194	97.5194	97.5194	0x3e000
+army	?can_shoot@army@@QBEEPBV1@@Z	83.2927	83.2927	83.2927	0x428f0
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550
 army	?get_fire_shield_strength@army@@QBEMXZ	100.0000	100.0000	100.0000	0x43130
 army	?get_mirror_effect@army@@QBEHXZ	100.0000	100.0000	100.0000	0x487f0
