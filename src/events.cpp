@@ -323,62 +323,13 @@ void advManager::DoEventLeanTo(hero* current_hero, NewmapCell* cell, unsigned ch
     // @stub
 }
 
-// E:\gamedcs\events.cpp:2101.  LOCATED AND RECONSTRUCTED TO 93.47%, HELD
-// BACK 2026-08-14 - the row is not landed because this lane does not land
-// below 100.  The Library of Enlightenment: +2 to every primary skill,
-// once per hero, but only for a hero it judges worthy - `level + 2 *
-// diplomacy >= 10`, i.e. the published rule (level 10 bare, 8 with Basic,
-// 6 with Advanced, 4 with Expert) written as one comparison.  0x4a3280 is
-// jump-table arm 0x29 = LIBRARY, 348 B against the Dreamcast's 314.
-//
-// Everything below is byte-exact against retail EXCEPT the four +2
-// stores, and the difference there is SCHEDULING ONLY - identical
-// instructions, identical register assignment (dl, cl, dl, cl), different
-// order.  Retail serialises them one read-modify-write at a time:
-//     mov dl,[476] / mov al,2 / add dl,al / mov [476],dl
-//     mov cl,[477] / add cl,al / mov [477],cl        (and so on)
-// while our CL software-pipelines them two at a time, hoisting the second
-// load above the first store.  TRIED AND REJECTED, every one of them
-// byte-identical to the others: `+= 2`; `x = x + 2`; a named
-// `int bonus = 2`; source order 0,1,2,3 instead of retail's 0,1,3,2
-// (which moves only the STORES, so 0,1,3,2 is the proven source order);
-// and naming the four as members of a gated union arm over hero::stats
-// instead of indexing the array (added to hero.h, measured, withdrawn -
-// it changed nothing and moved no other row).  That leaves the
-// register-homing / scheduling residual class.
-//
-// The visit mask IS solved and is kept below: retail computes
-// `1 << cell->extraInfo` ONCE and parks it in EBX across the dialog call,
-// which is worth 88.12 -> 93.47 on its own.
-// RETAIL_LOCATED(0x004a3280, 0x15C)  // linkorder + globalInfoFlags[LibraryInfo], dc 0x93bf8
-void advManager::DoEventLibrary(hero* current_hero, NewmapCell* cell, bool human_player)
-{
-    unsigned long visit = 1 << cell->extraInfo;
-
-    if (current_hero->LibraryFlags & visit) {
-        if (human_player)
-            NormalDialog(gpAdventureEventText->GetText(
-                             ADV_EVENT_TEXT_LIBRARY_VISITED),
-                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        return;
-    }
-    if (current_hero->level + current_hero->skillLevel[4] * 2 >= 10) {
-        if (human_player)
-            NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_LIBRARY),
-                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-        current_hero->stats[0] += 2;
-        current_hero->stats[1] += 2;
-        current_hero->stats[3] += 2;
-        current_hero->stats[2] += 2;
-        gpGame->SetInfoFlag(LibraryInfo, gNetLocalGamePos);
-        current_hero->LibraryFlags |= visit;
-        return;
-    }
-    if (human_player)
-        NormalDialog(gpAdventureEventText->GetText(
-                         ADV_EVENT_TEXT_LIBRARY_UNWORTHY),
-                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
-}
+// E:\gamedcs\events.cpp:2101.  DoEventLibrary was HELD BACK here at
+// 93.47% and is now LANDED EXACT further down this file - see the note
+// over its body.  The residual was never scheduling: the four +2 awards
+// are four inlined hero::AdjustPrimarySkill calls, which the Dreamcast
+// line table (dc 0x93bf8, source lines 2120..2123) names outright. The
+// five spellings rejected on the way are recorded at the landed body so
+// that no later lane re-titrates them.
 
 // E:\gamedcs\events.cpp:2140
 DC_ONLY(0x93d34, 0x7A)
@@ -2785,6 +2736,69 @@ void advManager::DoEventLeanTo(hero* current_hero, ExtraInfoUnion* cell,
         cell->SetLeanTo(id, 0, 0);
         gpCurrentPlayer->LeanToFlags |= 1 << id;
     }
+}
+
+// E:\gamedcs\events.cpp:2101.  The Library of Enlightenment: +2 to every
+// primary skill, once per hero, but only for a hero it judges worthy -
+// `level + 2 * diplomacy >= 10`, i.e. the published rule (level 10 bare,
+// 8 with Basic, 6 with Advanced, 4 with Expert) written as ONE compare.
+//
+// THE FOUR AWARDS ARE FOUR CALLS, NOT FOUR `+=` EXPRESSIONS, and that is
+// what finally closed this row after five rejected spellings. The
+// Dreamcast line table is what found it: dc 0x93bf8 lists source lines
+// 2120..2123 as four separate statements and the first resolves to
+// `?AdjustPrimarySkill@hero@@QAAXHH@Z`, the other three reusing its
+// pooled address. Retail's /Ob2 expands that Hero.h inline, which is why
+// the x86 bytes materialise the amount ONCE (`mov al,2`) and then add the
+// REGISTER four times - an inlined int parameter, not a literal in an
+// `+=`. Spelled as four `stats[i] += 2` statements our CL software-
+// pipelines the pairs, hoisting the second load above the first store,
+// and the row plateaued at 93.47 through `+= 2`, `x = x + 2`, a named
+// `int bonus`, source order 0,1,2,3 and a named union arm over
+// hero::stats - all five inert, all five recorded here so no lane
+// re-titrates them. The FORWARD read of the DC table beat every one of
+// them in one tool run.
+//
+// The store ORDER 0,1,3,2 was already proven the source order by the
+// rejected 0,1,2,3 sweep, which moved only the stores.
+//
+// The LAST byte was the game pointer, and it is the war school's lever a
+// third time: spelled `gpGame->SetInfoFlag(...)` the inlined teamInfo
+// load comes out `[gpGame + pos]` where retail has `[pos + gpGame]`, so
+// the pointer needs its own statement. 99.91 -> 100.
+//
+// The visit mask is computed ONCE and parked in EBX across the dialog
+// call, which is worth 88.12 -> 93.47 on its own.
+VA(0x004a3280, 0x15C)  // jump-table arm 0x29 + globalInfoFlags[LibraryInfo], dc 0x93bf8
+void advManager::DoEventLibrary(hero* current_hero, NewmapCell* cell,
+                                bool human_player)
+{
+    unsigned long visit = 1 << cell->extraInfo;
+
+    if (current_hero->LibraryFlags & visit) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_LIBRARY_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (current_hero->level + current_hero->skillLevel[4] * 2 >= 10) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_LIBRARY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        current_hero->AdjustPrimarySkill(0, 2);
+        current_hero->AdjustPrimarySkill(1, 2);
+        current_hero->AdjustPrimarySkill(3, 2);
+        current_hero->AdjustPrimarySkill(2, 2);
+        game* g = gpGame;
+        g->SetInfoFlag(LibraryInfo, gNetLocalGamePos);
+        current_hero->LibraryFlags |= visit;
+        return;
+    }
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_LIBRARY_UNWORTHY),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
 // E:\gamedcs\events.cpp:2220.  The magic spring: mana back to TWICE the
