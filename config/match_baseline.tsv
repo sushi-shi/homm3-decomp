@@ -1265,8 +1265,11 @@ recruit	?Update@recruitUnit@@QAEXEJ@Z	90.8376	90.8376	90.8376	0x1503a0
 recruit	?get_upgrade_cost@@YIXW4TCreatureType@@0JPAH@Z	100.0000	100.0000	100.0000	0x14e750
 recruit	?siege_artifact_to_creature@@YI?AW4TCreatureType@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0x150360
 remote	??0CAnimatedDlg@@QAE@XZ	100.0000	100.0000	100.0000	0x154a50
+remote	??0CGameTransferDlg@@QAE@E@Z	100.0000	100.0000	100.0000	0x157720
+remote	??0CGameTransferSmack@@QAE@XZ	100.0000	100.0000	100.0000	0x157410
 remote	??0CSaveScreen@@QAE@HH@Z	100.0000	100.0000	100.0000	0x1572e0
 remote	??_GCAnimatedDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x154a80
+remote	??_GCGameTransferDlg@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157760
 remote	??_GCSaveScreen@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x157310
 remote	?CheckForWarning@CTurnDuration@@QAEXXZ	97.0930	97.0930	97.0930	0x157af0
 remote	?Clear@CTurnDuration@@QAEXXZ	100.0000	100.0000	100.0000	0x157d60

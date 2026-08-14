@@ -98,10 +98,78 @@ protected:
 };
 SIZE(CSaveScreen, 0x44);
 
+// CGameTransferSmack - the Smacker-backed progress animation the transfer
+// dialog owns by value. DC's record is 20 bytes with no vftable, and every
+// member lands on a store in the constructor 0x557410:
+//   m_x           0   m_started     12 (byte)   m_saveScreen  16
+//   m_y           4   m_sending     13 (byte)
+//   m_lastFrame   8   m_drawText    14 (byte)
+// The destructor is DECLARED ONLY: retail's 0x557430 closes the Smacker
+// handle through an unnamed smackmgr free function at 0x599050 and then
+// `delete m_saveScreen` through CSaveScreen's slot 0, and naming that
+// smackmgr entry is out of this file's scope. CGameTransferDlg's implicit
+// destructor references it and that is all the ??_G below needs.
+class CGameTransferSmack {
+public:
+    CGameTransferSmack();
+    ~CGameTransferSmack();
+
+protected:
+    int m_x;                     // +0x00
+    int m_y;                     // +0x04
+    int m_lastFrame;             // +0x08
+    unsigned char m_started;     // +0x0c
+    unsigned char m_sending;     // +0x0d
+    unsigned char m_drawText;    // +0x0e
+    CSaveScreen* m_saveScreen;   // +0x10
+};
+SIZE(CGameTransferSmack, 0x14);
+
+// CGameTransferDlg - the save-game transfer progress dialog. DC's field list
+// is a CTextDialog carrying `smack` at 80 and `m_sending` at 100 in a
+// 104-byte record; retail's CTextDialog is 0x58, so smack occupies
+// 0x58..0x6b - exactly the twenty bytes the constructor 0x557720 fills with
+// CGameTransferSmack's inlined constructor - and m_sending lands on 0x6c,
+// which is where that constructor stores its one byte argument.
+//
+// The vtable 0x640fbc is thirteen slots, CTextDialog's own width, so this
+// class introduces no virtual; slot 12 holds its CalcDimensions override at
+// 0x557790 and every other slot is inherited. DC marks ~CGameTransferDlg
+// (compgenx), and retail's copy of it sits at 0x4cbcf0 - outside remote's
+// band, i.e. a COMDAT the linker took from another object - so there is
+// nothing here to declare or claim for it.
+class CGameTransferDlg : public CTextDialog {
+public:
+    CGameTransferDlg(unsigned char sending);
+    virtual void CalcDimensions(const char* cText, font* pFont,
+                                int& winX, int& winY,
+                                int& winWidth, int& winHeight);  // slot 12
+
+protected:
+    CGameTransferSmack smack;    // +0x58
+    unsigned char m_sending;     // +0x6c
+};
+SIZE(CGameTransferDlg, 0x70);
+
 // --- CSaveScreen ---
 // CODEVIEW(E:\gamedcs\remote.cpp:2673, dc 0x11eb40) void CSaveScreen::CSaveScreen(int w, int h);
 // CODEVIEW(E:\gamedcs\remote.cpp:2680, dc 0x11eb9c) void CSaveScreen::Save(int x, int y);
 // CODEVIEW(E:\gamedcs\remote.cpp:2689, dc 0x11ebc8) void CSaveScreen::Restore();
 // CODEVIEW(E:\gamedcs\remote.cpp:2701, dc 0x11ec5c) bool CSaveScreen::IsSaved();
+
+// --- CGameTransferSmack ---
+// CODEVIEW(E:\gamedcs\remote.cpp:2713, dc 0x11ec64) void CGameTransferSmack::CGameTransferSmack();
+// CODEVIEW(E:\gamedcs\remote.cpp:2724, dc 0x11ec88) void CGameTransferSmack::~CGameTransferSmack();
+// CODEVIEW(E:\gamedcs\remote.cpp:2733, dc 0x11ecbc) void CGameTransferSmack::Setup(int x, int y, bool sending, int a);
+// CODEVIEW(E:\gamedcs\remote.cpp:2741, dc 0x11ecd8) void CGameTransferSmack::Start();
+// CODEVIEW(E:\gamedcs\remote.cpp:2747, dc 0x11ece4) void CGameTransferSmack::SetPercentage(float pct);
+// CODEVIEW(E:\gamedcs\remote.cpp:2784, dc 0x11ede8) void CGameTransferSmack::DrawCurrentFrame();
+// CODEVIEW(E:\gamedcs\remote.cpp:2789, dc 0x11edec) void CGameTransferSmack::Stop();
+// CODEVIEW(E:\gamedcs\remote.cpp:2799, dc 0x11ee04) void CGameTransferSmack::SaveScreen();
+// CODEVIEW(E:\gamedcs\remote.cpp:2807, dc 0x11ee3c) void CGameTransferSmack::RestoreScreen();
+
+// --- CGameTransferDlg ---
+// CODEVIEW(E:\gamedcs\remote.cpp:2816, dc 0x11ee54) void CGameTransferDlg::CGameTransferDlg(bool sending);
+// CODEVIEW(E:\gamedcs\remote.cpp:2821, dc 0x11eed8) void CGameTransferDlg::CalcDimensions(const char* cText, font* pFont, int& winX, int& winY, int& winWidth, int& winHeight);
 
 #endif  /* HOMM3_REMOTEDLG_H */

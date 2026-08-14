@@ -542,6 +542,44 @@ CSaveScreen::CSaveScreen(int w, int h)
 // VA_COMPGEN carries no kind for an implicit destructor.
 VA_COMPGEN(0x00557310, 0x21, SCALAR_DELETING_DTOR, CSaveScreen)
 
+// E:\gamedcs\remote.cpp:2713 - CGameTransferSmack's constructor. It is also
+// inlined whole into CGameTransferDlg's constructor below (/Ob2 auto-inline
+// with unconditional out-of-line emission for extern linkage), and the two
+// copies write the same seven members in the same source order under
+// different schedules - which is what pins the order here.
+VA(0x00557410, 0x1E)  // anchor-callee (inlined into 0x557720), dc 0x11ec64
+CGameTransferSmack::CGameTransferSmack()
+{
+    m_x = 0;
+    m_y = 0;
+    m_lastFrame = -1;
+    m_started = 0;
+    m_saveScreen = 0;
+    m_sending = 0;
+    m_drawText = 1;
+}
+
+// E:\gamedcs\remote.cpp:2816 - CGameTransferDlg's constructor, the third
+// vtable this file unblocks. ~CGameTransferDlg is compiler-generated and
+// retail's copy lives at 0x4cbcf0, outside remote's band, so the only live
+// reference to ??_7CGameTransferDlg@@6B@ in this object is the vptr store
+// here - and with it the slot-0 ??_G below pairs.
+//
+// One byte argument (DC: `??0CGameTransferDlg@@QAA@_N@Z`; retail: `ret 4`
+// reading `mov al, [ebp+8]`). The `smack` member's constructor is inlined
+// ahead of it, which is why the seven CGameTransferSmack stores sit between
+// the CTextDialog base call and m_sending.
+VA(0x00557720, 0x3C)  // anchor-vtable 0x640fbc, dc 0x11ee54
+CGameTransferDlg::CGameTransferDlg(unsigned char sending)
+    : CTextDialog(0x12)
+{
+    m_sending = sending;
+}
+
+// E:\gamedcs\remote.cpp:2816 - CGameTransferDlg::`scalar deleting
+// destructor', slot 0 of vtable 0x640fbc.
+VA_COMPGEN(0x00557760, 0x21, SCALAR_DELETING_DTOR, CGameTransferDlg)
+
 // E:\gamedcs\remote.cpp:1293
 #if 0  // @carcass
 DC_ONLY(0x11cb48, 0xAC)
