@@ -14,14 +14,18 @@
 #define HOMM3_ARMY_MULTI_HEAD_VIEW
 #define HOMM3_ARMY_ELEMENTAL_RULE_VIEW
 #define HOMM3_ARMY_MOVE_VIEW
+#define HOMM3_ARMY_SPELLCAST_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_SPELLCAST_VIEW
 #undef HOMM3_ARMY_MOVE_VIEW
 #undef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
 #undef HOMM3_ARMY_MULTI_HEAD_VIEW
 #include "armygrp.h"
 #include "bitmap16.h"
 #define HOMM3_CMBTMGR_MOVE_VIEW
+#define HOMM3_CMBTMGR_RESURRECT_VIEW
 #include "cmbtmgr.h"
+#undef HOMM3_CMBTMGR_RESURRECT_VIEW
 #undef HOMM3_CMBTMGR_MOVE_VIEW
 #include "drawing.h"
 #include "hero.h"
@@ -1837,14 +1841,33 @@ long army::get_resurrection_size(const army* target) const
     return _cpp_min(raised, target->origNumTroops);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:5324
-// RETAIL_LOCATED(0x004473d0, 0x13D)  // anchor-bracket, dc 0x4be64
+// "Would this stack's own resurrect spell do anything if cast at hex?"
+// Only the Archangel and the Pit Lord carry one, only while a charge is
+// left, only while the side they currently answer to may cast at all -
+// and only if the lookup finds a corpse there worth raising, priced by
+// get_resurrection_size just above (retail expands it here rather than
+// calling it).
+VA(0x004473d0, 0x13D)  // anchor-bracket, dc 0x4be64
 unsigned char army::can_cast_resurrect(long hex) const
 {
-    // @stub
+    if ((creatureType != CREATURE_ARCHANGEL
+         && creatureType != ARMY_CREATURE_PIT_LORD)
+        || numSpellCasts <= 0)
+        return 0;
+    long side = get_controlling_side();
+    if (!gpCombatManager->can_cast_spells(side, 0))
+        return 0;
+    army* target;
+    if (creatureType == ARMY_CREATURE_PIT_LORD)
+        target = gpCombatManager->find_demonic_resurrection_target(side, hex);
+    else
+        target = gpCombatManager->find_resurrection_target(side, hex, 1);
+    if (!target)
+        return 0;
+    return get_resurrection_size(target) > 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:5359
 // RETAIL_LOCATED(0x004476c0, 0x3BA)  // anchor-global, dc 0x4beec
