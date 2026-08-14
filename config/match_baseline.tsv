@@ -1534,6 +1534,8 @@ townmgr	?SetRolloverText@TCastleWindow@@QAEXPAVmessage@@@Z	64.0269	64.0269	64.02
 townmgr	?SetupMage@townManager@@QAEXPAVheroWindow@@@Z	99.9275	99.9275	99.9275	0x1d6ef0
 townmgr	?SetupWell@townManager@@QAEXPAVTCastleWindow@@@Z	98.5801	98.5801	98.5801	0x1dd390
 townmgr	?SortStats@@YIXPAJPAC@Z	100.0000	100.0000	100.0000	0x1df160
+townmgr	?SwapHeroes@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d5150
+townmgr	?UnloadTown@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c70b0
 townmgr	?UpdateTownLocator@TTownScreenWindow@@QAEXH@Z	90.9302	90.9302	90.9302	0x1c5970
 townmgr	?UpdateTownLocators@TTownScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1c5aa0
 townmgr	?WindowHandler@TBuyBuildWindow@@UAEHPAVmessage@@@Z	98.0247	98.0247	98.0247	0x1d6810
