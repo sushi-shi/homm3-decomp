@@ -475,6 +475,18 @@ void CChatManager::SetPosition(int newPos)
     changed = 1;
 }
 
+// E:\gamedcs\remote.cpp:1384 - the free-function face of the singleton's
+// queue read, fifteen bytes of it. Retail's takes ONE argument where DC's
+// prototype takes two: the wasCompressed out-parameter is the literal 0
+// pushed here and never leaves the wrapper, and /Gr's ecx - the only
+// register argument this body touches - is pushed straight through as the
+// removeFromQueue flag.
+VA(0x00554400, 0xF)  // anchor-callee (CDPlayHeroes::GetRemoteData 0x553040), dc 0x11cdfc
+CNetMsg* GetRemoteData(unsigned char removeFromQueue)
+{
+    return pDPlay->GetRemoteData(removeFromQueue, 0);
+}
+
 // E:\gamedcs\remote.cpp:1529 - the inbound half of the chat pair. Fastcall
 // through /Gr puts the text in ecx and the sender in edx; the text is the
 // one that survives to the last vararg, because retail saves ecx across the
@@ -1288,6 +1300,42 @@ CNetMsgHandler::CNetMsgHandler()
 // deleting destructor is 0x45 rather than the usual 0x21 because the
 // destructor is small and not EH-bearing, so /Ob2 inlines it there while
 // still emitting it out of line at 0x5578d0.
+
+// E:\gamedcs\remote.cpp:2840 - slot 1 of vtable 0x640f14, and the third
+// independent proof of the corrected numbering: it dispatches its own
+// handler through `call [edx+0xc]`, slot 3, which is the pure HandleNetMsg.
+//
+// Three exits, and the middle one is ASYMMETRIC in retail: the entry write
+// and the tail write of msgReceived are both null-guarded, but the
+// `*msgReceived = 1` on the in-popup arm is not - retail emits a bare
+// `mov byte [edi], 1` there with no test. Transcribed as retail wrote it.
+//
+// The abort message is taken into a local, cleared from the member, and
+// only then handed to HandleNetMsg; when there is none, the queue is read
+// through the singleton with the literal pair (1, 0).
+VA(0x00557860, 0x70)  // anchor-vtable (slot 1 of 0x640f14), dc 0x11ef60
+CNetMsg* CNetMsgHandler::CheckHandleNet(unsigned char inPopup,
+                                        unsigned char* msgReceived)
+{
+    if (msgReceived)
+        *msgReceived = 0;
+    m_inPopup = inPopup;
+    if (m_pAbortPopupMsg) {
+        if (inPopup) {
+            *msgReceived = 1;
+            return 0;
+        }
+        CNetMsg* pAbortMsg = m_pAbortPopupMsg;
+        m_pAbortPopupMsg = 0;
+        return HandleNetMsg(pAbortMsg);
+    }
+    CNetMsg* pNetMsg = pDPlay->GetRemoteData(1, 0);
+    if (pNetMsg == 0)
+        return 0;
+    if (msgReceived)
+        *msgReceived = 1;
+    return HandleNetMsg(pNetMsg);
+}
 
 // E:\gamedcs\remote.cpp:2834 - slot 2 of vtable 0x640f14. DC has it as an
 // INTRODUCING VIRTUAL in remote.h at vfptr offset 4; retail's virtual
