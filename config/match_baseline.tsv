@@ -1585,11 +1585,13 @@ wingraph	?GetDesktopHeight@@YIHXZ	100.0000	100.0000	100.0000	0x2014d0
 wingraph	?GetDesktopWidth@@YIHXZ	100.0000	100.0000	100.0000	0x2014c0
 wingraph	?InitGraphics@@YIXXZ	100.0000	100.0000	100.0000	0x2014e0
 winmgr	?BroadcastMessage@heroWindowManager@@QAEHHHHH@Z	100.0000	100.0000	100.0000	0x202370
+winmgr	?Close@heroWindowManager@@UAEXXZ	100.0000	100.0000	100.0000	0x2022d0
 winmgr	?ConvertToHover@heroWindowManager@@QAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202360
 winmgr	?DoDialog@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@ZH@Z	100.0000	100.0000	100.0000	0x202520
 winmgr	?DoDialogDraw@heroWindowManager@@QAEHPAVheroWindow@@P6IHAAVmessage@@@Z2H@Z	100.0000	100.0000	100.0000	0x2027a0
 winmgr	?DoQuickView@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x202a40
 winmgr	?FadeScreen@heroWindowManager@@QAEXHHE@Z	100.0000	100.0000	100.0000	0x202c50
+winmgr	?Main@heroWindowManager@@UAEHAAVmessage@@@Z	100.0000	100.0000	100.0000	0x202320
 winmgr	?RemoveWindow@heroWindowManager@@QAEXPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x2024a0
 zutil	@zcalloc@12	100.0000	100.0000	100.0000	0x206c70
 zutil	@zcfree@8	100.0000	100.0000	100.0000	0x206c90

@@ -49,7 +49,14 @@ public:
     Bitmap16Bit* screenBitmap;
     int colorCyclingOn;
     unsigned char isWaitingForFadeIn;
-    char pad_49[7];
+    char pad_49[3];
+    // +0x4c: the manager's SECOND owned bitmap. Byte-proven by Close
+    // (0x6022d0), which deletes it through the same virtual slot-0 +
+    // flag-1 tail it uses on screenBitmap, and it is the only member
+    // besides screenBitmap the destructor path touches - the fizzle
+    // source the Save/Release pair works on. Name is the house ordinal
+    // placeholder; the role is proven, the spelling is not attested.
+    Bitmap16Bit* field_4C;
     // The window list, byte-proven by RemoveWindow (located
     // 2026-08-06 by homm3.analysis.dc_callgraph): headWindow@0x50,
     // tailWindow@0x54, lastActive@0x58, activeWindow@0x5c.
@@ -61,7 +68,10 @@ public:
     // DC overload set also has () and (int,int,int,int,int,int); only
     // the consumed 4-int form (retail 0x602bd0, called by widget::Main)
     // is declared.
-    virtual int Main(message& msg);  // slot 2
+    heroWindowManager();
+    virtual int Open(int newPriority);  // slot 0, retail 0x6021b0
+    virtual void Close();               // slot 1, retail 0x6022d0
+    virtual int Main(message& msg);     // slot 2, retail 0x602320
     int ConvertToHover(message& msg);
     void UpdateScreen(int x, int y, int w, int h);
     int BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
