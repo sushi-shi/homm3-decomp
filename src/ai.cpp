@@ -1497,6 +1497,10 @@ unsigned char combatManager::has_ranged_advantage(type_AI_combat_parameters* dat
 // if/else-if: retail puts both compares up front and lays the second
 // arm first, which only switch lowering does), and `count` has to be a
 // named local (83.68 with numArmies[side] inline).
+// Tried and rejected 2026-08-14: `for (long i = count - 1; i >= 0; i--)`
+// - semantically identical, 88.52 against 95.89. Retail's loop head is
+// `mov ecx,edi / dec edi / test ecx,ecx`, i.e. it tests the value BEFORE
+// the decrement, which is the `i-- > 0` form and not the `i >= 0` one.
 VA(0x00420d20, 0x1D5)  // anchor-callee, dc 0x2600c
 unsigned char combatManager::choose_creature_spell(const army* current_army, long* best_value, type_AI_combat_parameters* estimate)
 {
