@@ -678,6 +678,206 @@ TMageGuildWindow::~TMageGuildWindow()
     }
 }
 
+// Residual (98.29%): one /Ob2 candidate-call-site short, and the cost of
+// buying that site back. Retail leaves the first FORTY-TWO push_backs
+// out of line and expands the last seven inline (eight inline vector
+// expansions counting the OK button's hotkey); with the hotkey written
+// as `hotKeyCodes.push_back(1)` our CL expands NINE - it starts inlining
+// one widget early - and the row sits at 94.86%. A byte-inert
+// single-call-site static called as the constructor's last statement
+// restores retail's split exactly (100.00%), which measures the deficit
+// at precisely ONE candidate site, and the site must sit AFTER widget
+// 42: the same probe placed at the head of the body changes nothing.
+// Spelling the hotkey as the two-argument insert buys that site
+// legitimately and restores the eight-expansion split, but it also
+// hoists the hotkey's own insert from /Ob2 depth two to depth one, and
+// that expansion is then 168 instructions different - which is the whole
+// remaining delta. Tried and rejected, with scores: set_hotkey (93.95),
+// the three-argument hotkey insert (95.73), Widgets.insert(end(), x) at
+// widget 45 / 46 / 47 / 49 (96.48 / 96.83 / 97.12 / 98.05 - each buys
+// the site but rewrites that widget's own expansion), and a real
+// single-call-site static holding the seven trailing manager stores
+// (94.86 - a static big enough to carry code is expanded off-budget and
+// is NOT counted as a candidate site, unlike the byte-inert probe).
+// What is missing is a <=0x28-byte inline call somewhere after widget 42
+// that our headers do not currently declare inline.
+
+// The garrison base window, shared by the plain garrison dialog, the
+// monster-join prompt and the town garrison: two seven-slot army rows -
+// portrait, count and the selection overlay for each - over the town's
+// crest, with the divide and OK buttons under them and the two strips
+// the manager drives hooked into the manager itself. Anchored by the
+// vftable 0x643818 the destructor above stores, by the garrison.pcx
+// background the carve named the row after, and by `ret 0xc` against
+// the Dreamcast roster's three-parameter declarator.
+
+// E:\gamedcs\townmgr.cpp:4806
+VA(0x005ce830, 0x1D20)  // anchor-vtable 0x643818 + anchor-string garrison.pcx + arity, dc 0x171554
+type_garrison_base_window::type_garrison_base_window(hero* inHero,
+                                                     int garrison_owner,
+                                                     armyGroup* garrison_army)
+    : CAdvPopup(125, 102, 549, 392, 0x12)
+{
+    field_60 = inHero;
+    field_6c = 0;
+    Widgets.reserve(51);
+
+    Widgets.push_back(new bitmapBorder(0, 0, width, height, 148,
+                                       "garrison.pcx", 0x800));
+
+    Widgets.push_back(new iconWidget(28, 126, 58, 64, 100, "crest58.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new bitmapBorder(28, 222, 58, 64, 124, 0, 0x800));
+
+    Widgets.push_back(new iconWidget(92, 126, 58, 64, 101, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(154, 126, 58, 64, 102, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(216, 126, 58, 64, 103, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(278, 126, 58, 64, 104, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(340, 126, 58, 64, 105, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(402, 126, 58, 64, 106, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(464, 126, 58, 64, 107, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(92, 175, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 108, 2, 0, 8));
+    Widgets.push_back(new textWidget(154, 175, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 109, 2, 0, 8));
+    Widgets.push_back(new textWidget(216, 175, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 110, 2, 0, 8));
+    Widgets.push_back(new textWidget(278, 175, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 111, 2, 0, 8));
+    Widgets.push_back(new textWidget(340, 175, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 112, 2, 0, 8));
+    Widgets.push_back(new textWidget(402, 175, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 113, 2, 0, 8));
+    Widgets.push_back(new textWidget(464, 175, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 114, 2, 0, 8));
+
+    Widgets.push_back(new iconWidget(92, 126, 58, 64, 115, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(154, 126, 58, 64, 116, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(216, 126, 58, 64, 117, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(278, 126, 58, 64, 118, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(340, 126, 58, 64, 119, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(402, 126, 58, 64, 120, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(464, 126, 58, 64, 121, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new iconWidget(92, 222, 58, 64, 126, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(154, 222, 58, 64, 127, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(216, 222, 58, 64, 128, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(278, 222, 58, 64, 129, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(340, 222, 58, 64, 130, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(402, 222, 58, 64, 131, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(464, 222, 58, 64, 132, "twcrport.def",
+                                     0, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new textWidget(92, 271, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 133, 2, 0, 8));
+    Widgets.push_back(new textWidget(154, 271, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 134, 2, 0, 8));
+    Widgets.push_back(new textWidget(216, 271, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 135, 2, 0, 8));
+    Widgets.push_back(new textWidget(278, 271, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 136, 2, 0, 8));
+    Widgets.push_back(new textWidget(340, 271, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 137, 2, 0, 8));
+    Widgets.push_back(new textWidget(402, 271, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 138, 2, 0, 8));
+    Widgets.push_back(new textWidget(464, 271, 58, 20, emptyRolloverText,
+                                     "Verd10B.fnt", font::WHITE, 139, 2, 0, 8));
+
+    Widgets.push_back(new iconWidget(92, 222, 58, 64, 140, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(154, 222, 58, 64, 141, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(216, 222, 58, 64, 142, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(278, 222, 58, 64, 143, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(340, 222, 58, 64, 144, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(402, 222, 58, 64, 145, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(464, 222, 58, 64, 146, "twcrport.def",
+                                     1, 0, 0, 0, 0x10));
+
+    Widgets.push_back(new bitmapBorder(7, 369, 535, 19, 200,
+                                       "TStatBar.pcx", 0x800));
+    Widgets.push_back(new textWidget(0, 369, 549, 19, emptyRolloverText,
+                                     "smalfont.fnt", font::WHITE, 201, 1, 0, 8));
+    Widgets.push_back(new button(88, 314, 64, 32, DIVIDE_BUTTON_ID,
+                                 "iDv6432.def", 0, 1, 0, 32, 2));
+
+    button* okButton = new button(399, 314, 64, 30, OK_BUTTON_ID,
+                                  "iOK6432.def", 0, 1, 1, 28, 2);
+    // push_back spelled out: the extra top-level candidate site is what
+    // keeps retail's out-of-line/inline split at the widget run above.
+    okButton->hotKeyCodes.insert(okButton->hotKeyCodes.end(), 1);
+    Widgets.push_back(okButton);
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
+
+    message msg;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = BACKGROUND_ID;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    BroadcastMessage(&msg);
+
+    gpTownManager->field_1c4 = 0;
+    msg.codeX = widget::WIDGET_SET_STATUS;
+    msg.extra = widget::WIDGET_DIMMED_NODRAW;
+    msg.codeY = DIVIDE_BUTTON_ID;
+    BroadcastMessage(&msg);
+
+    gpTownManager->field_11c = new strip(x + 28, y + 126, 0, 161,
+                                         garrison_owner, garrison_owner, 0,
+                                         garrison_army, 100, 0, this);
+    if (!gpTownManager->field_11c)
+        MemError();
+    gpTownManager->field_120 = new strip(x + 28, y + 222, 1, 162,
+                                         inHero->portrait, inHero->owner,
+                                         inHero, &inHero->army, 124, 0, this);
+    if (!gpTownManager->field_120)
+        MemError();
+
+    gpTownManager->townToView = 0;
+    gpTownManager->field_134 = 0;
+    gpTownManager->field_12c = 0;
+    gpTownManager->field_124 = 0;
+    gpTownManager->field_138 = -2;
+    gpTownManager->field_130 = -2;
+    gpTownManager->field_128 = -2;
+}
+
 VA_COMPGEN(0x005d0550, 0x21, SCALAR_DELETING_DTOR, type_garrison_base_window)
 
 // E:\gamedcs\townmgr.cpp:4932
