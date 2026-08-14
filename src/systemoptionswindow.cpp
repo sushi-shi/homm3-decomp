@@ -76,6 +76,21 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     // inlines it, and calls one push_back retail expands. Net -0.02%, so it
     // is not landed: re-apply it together with whatever restores the caller
     // mass (the twin in combatoptionswindow.cpp carries the landed form).
+    //
+    // RE-MEASURED 2026-08-14 after the family's other three constructors
+    // closed, in case their fixes had moved this budget: unchanged, 88.26%
+    // -> 88.24%, so the rewrite still costs exactly what it cost. Two other
+    // leads were ruled out at the same time. The DC roster for this
+    // compiland was re-checked for a carcassed helper of the kind that paid
+    // twice in combatoptionswindow - there is none left; convertID2HelpID
+    // and UpdateSystemOptions are both already spelled as the header
+    // inlines they are. And the divergence is NOT one-directional
+    // starvation: the reserve expansion CALLS size() where retail inlines
+    // it, but a few statements later the y=87 label's push_back is expanded
+    // INLINE here where retail calls vector<widget*>::insert. The budget is
+    // consumed in source order and we are out of PHASE with retail rather
+    // than uniformly short of it, so the fix has to be real missing
+    // statements - and nothing in the retail body evidences any.
     int slot = 0;
     for (int musicX = 29; musicX < 219; musicX += 19) {
         Widgets.push_back(new iconWidget(
