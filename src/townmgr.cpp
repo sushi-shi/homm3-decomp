@@ -13,6 +13,7 @@
 #undef HOMM3_TOWN_OBJ_DECLS
 #undef HOMM3_TOWNMGR_WINDOW_DECLS
 #define HOMM3_RECRUIT_DECLS
+#include "bitmap816.h"
 #include "border.h"
 #include "button.h"
 #include "castle.h"
@@ -52,6 +53,9 @@ namespace ResourceManager {
 CSprite* GetSprite(const char* name);
 }
 
+// soundmgr.h's one entry point this compiland needs, on the same terms.
+void PollSound();
+
 // Shared state of the tavern chooser. DoTavern selects a recruit into the
 // hero pointer; the flag distinguishes map-object hiring from town hiring.
 // Roles and storage are retail-byte-proven; names are provisional.
@@ -67,6 +71,13 @@ DATA(0x006aaa48) int gMapTavern;
 // outside the admitted surface - declared here the way town::View's
 // globals are. Roles are unattested, so the names stay neutral.
 DATA(0x006aa9d8) extern int gUnnamed6aa9d8;
+// A third, on the same evidence: all seven references to 0x6aa9e8 land
+// inside townmgr's bracket (townObject::Draw 0x5c328e, townManager::Open
+// 0x5c651a, 0x5c77ee/0x5c77fb, ::Main 0x5d34b2, ::CycleOutline 0x5d692e
+// and ::BuildObj 0x5d6e7b), so it is this compiland's file-static too.
+// CycleOutline publishes the objId of the object it is animating into
+// it and townObject::Draw reads it back, which is the whole role.
+DATA(0x006aa9e8) static int gUnnamed6aa9e8;
 DATA(0x006aa9ec) static int gUnnamed6aa9ec;
 
 // The eight resource icons of the town screen's bottom bar, as x/y
@@ -2191,6 +2202,68 @@ int TBuyBuildWindow::WindowHandler(message* msg)
         }
     }
     return 1;
+}
+
+// The town screen's selection animation: one object's OUTLINE bitmap
+// has its palette entry 96 driven through the system palette's
+// 128..134 band, the whole page repainted between steps and each step
+// paced to 100 ticks, then the entry is put back and the page painted
+// once more. `objectIndex` picks the object, the rectangle is the
+// region to flush.
+//
+// townManager::DrawTown (dc 0x177044) is TRANSCRIBED IN PLACE, twice,
+// rather than spelled as a member: retail has no out-of-line copy of it
+// anywhere - the DC roster's row falls in the 0x5d5530..0x5d55c0 gap
+// and that gap is EMPTY (ResetStrips ends at 0x5d55b6) - so /Ob2
+// expanded it at every call site, and declaring it here would force VC6
+// to emit the body retail does not have. Same treatment, same reason,
+// as TCastleWindow::ShowText above. Its `update` argument is 0 at both
+// sites: the expansion contains no UpdateScreen, and the flush this
+// body does want is the four-argument overload with its own rectangle.
+//
+// The palette write is `data[96]` of the outline's EMBEDDED TPalette16
+// (Bitmap816 +0x34), which is why the reference is homed to a frame
+// slot across the calls - `edi = objOutline + 0x34`, then `[edi+0xdc]`,
+// i.e. resource head 0x1c plus 2*96.
+
+// E:\gamedcs\townmgr.cpp:7539
+VA(0x005d6910, 0x16E)  // linkorder(dc row after TBuyBuildWindow::WindowHandler) + arity(ret 0x14, 5 args), dc 0x179a64
+void townManager::CycleOutline(int objectIndex, int x, int y, int w, int h)
+{
+    gUnnamed6aa9e8 = TownObjects[objectIndex]->objId;
+    TPalette16& pal = TownObjects[objectIndex]->objOutline->p16;
+    unsigned short saved = pal.data[96];
+
+    for (int i = 128; i < 135; i++) {
+        unsigned long nextFrame = GameTime::Get() + 100;
+        pal.data[96] = gSystemPalette->data[i];
+
+        memset(static_cast<TTownScreenWindow*>(TownWindow)->field_50, 0,
+               800 * 600 * 2);
+        static_cast<bitmapBorder16*>(field_3c)->Draw2();
+        PollSound();
+        for (int j = 0; j < TownObjectCount; j++) {
+            TownObjects[j]->Draw(1, 1);
+            PollSound();
+        }
+
+        gpWindowManager->UpdateScreen(x, y, w, h);
+        PollSound();
+        GameTime::DelayTil(nextFrame);
+    }
+
+    pal.data[96] = saved;
+
+    memset(static_cast<TTownScreenWindow*>(TownWindow)->field_50, 0,
+           800 * 600 * 2);
+    static_cast<bitmapBorder16*>(field_3c)->Draw2();
+    PollSound();
+    for (int k = 0; k < TownObjectCount; k++) {
+        TownObjects[k]->Draw(1, 1);
+        PollSound();
+    }
+
+    gpWindowManager->UpdateScreen(x, y, w, h);
 }
 
 // The tavern chooser's constructor - seventeen widgets over a reserve of
