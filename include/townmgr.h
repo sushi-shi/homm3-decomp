@@ -654,6 +654,9 @@ public:
     // recruit dialog, rolling the generator first if the town has not
     // picked a creature yet.
     void DoPortalOfSummoning();
+    // Retail 0x5d30d0 (dc 0x174da0). The town hall button, and the
+    // Grail offer that stands in front of it.
+    void handle_hall_click();
     // Retail 0x5c7250 (dc 0x16c518). Writes the status line and the
     // command for a hero-to-hero drag between the page's two strips.
     // Inside this gate rather than out of it for the reason SetupMage's
