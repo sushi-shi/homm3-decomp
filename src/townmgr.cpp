@@ -269,6 +269,15 @@ townManager::townManager()
 // a function-scope `int i` (95.59, byte-identical), and retail's own
 // induction variable - the text widget id counting 172..179 with the
 // icon id spelled `id - 8` (95.53).
+//
+// Also measured and rejected: byte-inert front-end mass, the
+// `budget = 2*caller_cb` lever that took THallWindow's constructor from
+// 85.99% to 99.66%. Here it only makes things worse - 40 dead statements
+// 95.54%, 70 of them 93.20% - so this caller's cb is already past the
+// knife edge and the slot fold is not budget starvation. What our CL
+// does differ on is the reserve's `_Construct` (`predict-inline`: ours
+// calls it once, retail zero times), which is precisely the expansion
+// that owns the folded buffer temp.
 
 // The town screen itself - the one window in the compiland that is a
 // plain heroWindow rather than a CAdvPopup, which is what its nine-slot
@@ -1198,6 +1207,17 @@ TMageGuildWindow::~TMageGuildWindow()
 // is NOT counted as a candidate site, unlike the byte-inert probe).
 // What is missing is a <=0x28-byte inline call somewhere after widget 42
 // that our headers do not currently declare inline.
+//
+// The OTHER /Ob2 axis is now measured here, and it is NOT the answer:
+// byte-inert front-end mass - the `budget = 2*caller_cb` lever that took
+// THallWindow's constructor from 85.99% to 99.66% - makes this row worse
+// monotonically (40 dead statements 97.62%, 80 of them 93.12%). This
+// body's caller_cb is already on retail's side of that knife edge and
+// the deficit really is the site count, as the probe says. The one
+// inline decision that still diverges is the reserve's `_Construct`
+// (`predict-inline`: ours calls it once, retail zero times) - the same
+// expansion THallWindow's note describes - and mass cannot buy it here
+// without overshooting everything after it.
 
 // The garrison base window, shared by the plain garrison dialog, the
 // monster-join prompt and the town garrison: two seven-slot army rows -
