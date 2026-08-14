@@ -698,6 +698,20 @@ public:
     // writes.
     long get_adjusted_defense(const army* enemy,
                               unsigned char frenzy_included) const;
+    // 0x443840 / 0x443b90, carcasses in army.cpp; declared because
+    // adjust_damage (0x443f40) calls both and retail does NOT inline
+    // either. Both const
+    // (?ComputeAttackerDamageBonuses@army@@QBAHH_NPAV1@0J@Z,
+    // ?ComputeAttackerDamageReduction@army@@QBANPBV1@_N@Z); the first
+    // takes its defender NON-const, the second const, which is the
+    // roster's own split and not a transcription slip.
+    int ComputeAttackerDamageBonuses(int base_damage,
+                                     unsigned char is_shooting,
+                                     army* defender,
+                                     unsigned char simulate_only,
+                                     long distance) const;
+    double ComputeAttackerDamageReduction(const army* defender,
+                                          unsigned char is_shooting) const;
     // 0x443160: one swing's RAW damage - the effective creature count,
     // the damage range (hero-attack-scaled for a ballista), then the
     // Bless / Curse / simulation / dice arms. Const

@@ -1077,14 +1077,45 @@ double army::ComputeDefenderDamageReduction(unsigned char is_shooting) const
     return reduction;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\army.cpp:3356
-// RETAIL_LOCATED(0x00443f40, 0x14F)  // anchor-global, dc 0x490f4
-long army::adjust_damage(army* enemy, long base_damage, unsigned char bIsShot, unsigned char simulated, long distance, long* fire_damage) const
+// The whole damage pipeline between one stack's raw swing and what the
+// defender actually takes: attacker bonuses added to the base, the fire
+// shield priced off the result, then the attacker's own reduction and
+// the DEFENDER's - the second of which is ComputeDefenderDamageReduction
+// (0x443d90, exactly above) EXPANDED on `enemy`, the /Ob2
+// extern-linkage case again.
+VA(0x00443f40, 0x14F)  // anchor-global, dc 0x490f4
+long army::adjust_damage(army* enemy, long base_damage, unsigned char bIsShot,
+                         unsigned char simulated, long distance,
+                         long* fire_damage) const
 {
-    // @stub
+    if (fire_damage)
+        *fire_damage = 0;
+    if (!enemy)
+        return 0;
+    long damage = base_damage
+        + ComputeAttackerDamageBonuses(base_damage, bIsShot, enemy, simulated,
+                                       distance);
+    if (fire_damage) {
+        long total_life;
+        if (enemy->Is(23) & 1)
+            total_life = 1;
+        else
+            total_life = enemy->hitPoints * enemy->numTroops
+                         - enemy->topCreatureDamage;
+        *fire_damage = gpCombatManager->compute_fire_shield_damage(
+            damage, this, enemy, total_life);
+    }
+    damage = static_cast<long>(damage
+                               * ComputeAttackerDamageReduction(enemy, bIsShot));
+    damage = static_cast<long>(damage
+                               * enemy->ComputeDefenderDamageReduction(bIsShot));
+    if (damage <= 0)
+        damage = 1;
+    return damage;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:3406
 DC_ONLY(0x49260, 0x68)
