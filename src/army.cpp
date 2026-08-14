@@ -39,6 +39,10 @@
 #undef HOMM3_CMBTMGR_MOVE_VIEW
 #include "csprite.h"
 #include "drawing.h"
+// get_berserk_targets (0x445490) seeds the combat search and then reads
+// the cost back out of cellData by hand; includes are TU-local and cost
+// nothing to the include-set canaries.
+#include "findpath.h"
 #include "hero.h"
 #include "kb.h"
 #include "kbwin.h"
@@ -910,6 +914,22 @@ unsigned char army::is_enemy(const army* arg) const
 // size no matter how few sites it has. The body below is the version
 // the caller expands, so its spelling is load-bearing at 100 even
 // though the row itself is unbanked.
+//
+// THE SECOND HEX IS get_second_grid_index (2026-08-14), and the proof
+// is one TU over: get_berserk_targets (0x445490) expands THIS body at
+// depth 2 and its retail bytes carry `call get_second_grid_index`
+// there, which only a source that names the accessor can produce.
+// Here at depth 1 the same site expands to the neg/sbb longhand that
+// retail's own out-of-line body at 0x4428f0 shows, so the two
+// spellings are byte-identical at every site this TU currently has -
+// the accessor is the one that also explains the third.
+// AND IT IS NOT army::enemy_is_adjacent's WRAPPER: the Dreamcast xref
+// graph pairs can_shoot -> army::enemy_is_adjacent, and spelling it
+// that way does reproduce get_AI_target_time at 100 with the
+// enemy_is_adjacent pragma lifted - but it costs get_berserk_targets
+// 92.52 -> 14.41, because the wrapper's own callees then sit at
+// depth 3 on a twice-divided budget. Retail's arithmetic only closes
+// with the two combatManager calls written here.
 // RETAIL_LOCATED(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
 inline unsigned char army::can_shoot(const army* excluded) const
 {
@@ -925,8 +945,8 @@ inline unsigned char army::can_shoot(const army* excluded) const
         if (gpCombatManager->enemy_is_adjacent(this, gridIndex, excluded)) {
             bCanShoot = 0;
         } else if (creatureId & 1) {
-            int hex = gridIndex + (facing ? 1 : -1);
-            if (gpCombatManager->enemy_is_adjacent(this, hex, excluded))
+            if (gpCombatManager->enemy_is_adjacent(
+                    this, get_second_grid_index(), excluded))
                 bCanShoot = 0;
         }
     }
@@ -940,16 +960,29 @@ inline unsigned char army::can_shoot(const army* excluded) const
 // E:\gamedcs\army.cpp:2804
 #endif  // @carcass
 
-// auto_inline(off) IS LOAD-BEARING, and the reason is /Ob2's
-// single-call-site rule rather than any cost. GoBerserk (0x4456d0) is
-// this wrapper's ONLY call site in the TU as reconstructed so far, so
-// A12 fires and our CL expands the whole 92-byte body there - two
+// auto_inline(off) IS LOAD-BEARING. GoBerserk (0x4456d0) is this
+// wrapper's ONLY call site in the TU as reconstructed so far, so our
+// CL expands the whole 92-byte body there - two
 // combatManager::enemy_is_adjacent calls where retail emits ONE call to
 // this function (predict-inline names the pair exactly). Retail's own
 // army.cpp plainly had more sites among the bodies still carcassed
-// here, which is why its A12 never fired; the pragma reproduces that
-// without inventing a call site. The out-of-line body is unaffected and
-// stays exact.
+// here; the pragma reproduces that without inventing a call site. The
+// out-of-line body is unaffected and stays exact.
+//
+// KEPT 2026-08-14, and the expected expiry did NOT arrive.
+// get_berserk_targets (0x445490) was supposed to be the second call
+// site that retires this pragma; it is not one. Its retail bytes reach
+// the adjacency test through can_shoot, whose expansion emits the two
+// combatManager::enemy_is_adjacent calls DIRECTLY - there is no
+// army::enemy_is_adjacent call anywhere in that body - so the site
+// count is unchanged and lifting the pragma still costs GoBerserk
+// 86.01 -> 65.96 (re-measured today with get_berserk_targets landed).
+// The one shape that WOULD have supplied the site, can_shoot calling
+// this wrapper instead of the two combatManager forms, is refuted by
+// get_berserk_targets: it collapses that row to 14.41. So the scaffold
+// stays, and its retirement waits on a body that genuinely calls the
+// wrapper - CalculateNextArmy, the AI move chooser, or another of the
+// carcasses above.
 #pragma auto_inline(off)
 VA(0x004429f0, 0x5C)  // anchor-global, dc 0x47c74
 unsigned char army::enemy_is_adjacent(const army* excluded) const
@@ -1408,15 +1441,112 @@ void army::DecrementSpellRounds()
     // @stub
 }
 
-// E:\gamedcs\army.cpp:4158
-// RETAIL_LOCATED(0x00445490, 0x23B)  // anchor-global, dc 0x4a348
-void army::get_berserk_targets(std::vector<army*>& armies) const
-{
-    // @stub
-}
-
 // E:\gamedcs\army.cpp:4249
 #endif  // @carcass
+
+// The legal victims of a berserked stack: every living stack on either
+// side except this one and the arrow towers, kept only while it ties or
+// beats the closest distance seen so far.
+//
+// THE PREDICATE IS A CALL TO can_shoot, not a fourth longhand copy of
+// it, and the ONE byte that proves it is the `call get_second_grid_index`
+// inside the expansion. Written longhand at this site (the first
+// reconstruction) that call sits at depth 1 where /Ob2 always expands
+// it - measured, 12.53% - and NO spelling at depth 1 can turn it back
+// into a call, because the reject needs `budget < cb` and the budget
+// opens at the 1000 floor. Behind a can_shoot call it lands at depth 2
+// on a DIVIDED budget, which is exactly where retail's own copy is:
+// can_shoot's out-of-line body (0x4428f0) expands the same accessor
+// inline, and so does the expansion inside get_AI_target_time. Same
+// callee, three sites, two different answers - only the budget
+// arithmetic explains that.
+//
+// AND THE DIVISOR IS SPELLED, not assumed. cb(get_second_grid_index)
+// measures at exactly 41 (`homm3 vc6 predict-inline --measure-cb`, 24
+// of 64 harness sites expanded) - ONE over the 40-unit free threshold,
+// so it is budget-visible by a single unit - and cb(get_controller) at
+// 48-50 is charged against the same divided budget just before it.
+// With `armies.push_back(other)` the caller carries 7 candidate sites
+// and 1000/7 clears the pair; `armies.insert(armies.end(), other)` is
+// the SAME call (VC6's push_back is `insert(end(), _X)`) with 8, and
+// 1000/8 does not - 87.30% -> 92.52%, the accessor flipping to a call
+// on that one site. The mainmenu ledger's "+1 candidate site" lever,
+// arriving here as a divisor rather than a charge.
+//
+// The distance is EITHER the straight hex distance or the search
+// array's own cost, which is why the else-arm seeds the array first.
+// The cost read spells getCellData's two-return form by hand rather
+// than calling it: the accessor lives in findpath.obj and cannot be
+// inlined across the TU. The NULL ARM IS WRITTEN FIRST
+// (`cellData == 0 ? 0 : &cellData[hex]`): that orientation puts
+// `xor eax,eax` ahead of the lea chain as retail has it and is worth
+// 3.1 points over the positive spelling.
+//
+// `best` IS DECLARED AFTER THE PREDICATE, and that is a measurement,
+// not a style: declared before it, C2 finds a third use for the
+// constant zero, hoists it into a callee-saved register and rewrites
+// every `test eax,eax` in the can_shoot expansion as `cmp <mem>,esi`
+// (83.15% against 87.06%). Declaring `other` at the top is the other
+// half - it takes the -0x8 slot retail gives it and pushes the trip
+// counter into the incoming parameter slot, where retail keeps it.
+//
+// Residual (92.52%): ONE register binding, and its consequences.
+// Retail keeps `this` in ebx and HOMES `best` in [ebp-0xc] (reusing
+// that slot for the erase's dead end() temp); our C2 promotes `best`
+// to ebx and shares esi between `this` and `value`, reloading `this`
+// from its spill after each value dies. Everything else is paired -
+// same order, same operands, same branch polarity - and why-reg
+// agrees: 53 masked slots, ALL of them B1 binding (esi->ebx x17,
+// ebx->edx x2), zero schedule divergence. Its own guided search
+// reaches it only with `volatile long best`, which is not a spelling.
+// Register-homing family, not source-addressable. Tried and rejected:
+// swapped compare operands (92.25), `!empty()` for `size() > 0`
+// (92.18), `best = value` before the insert (87.19), `int` for `long`
+// best (byte-identical), naming the melee arm's hex (byte-identical),
+// declaring `value`/`best` at the top with the assignment left where
+// it is (byte-identical).
+VA(0x00445490, 0x23B)  // anchor-global, dc 0x4a348
+void army::get_berserk_targets(std::vector<army*>& armies) const
+{
+    unsigned char canShoot;
+    army* other;
+    if (can_shoot(0)) {
+        canShoot = 1;
+    } else {
+        canShoot = 0;
+        gpSearchArray->SeedCombatPosition(this, -1, 127, 0, -1);
+    }
+    long best = 0;
+    for (int side = 0; side < 2; side++) {
+        other = gpCombatManager->armies[side];
+        long count = gpCombatManager->numArmies[side];
+        for (long i = 0; i < count; i++, other++) {
+            if (other->Is(21) & 1)
+                continue;
+            if (other == this)
+                continue;
+            if (other->creatureType == ARMY_CREATURE_ARROW_TOWER)
+                continue;
+            long value;
+            if (canShoot) {
+                value = get_distance(gridIndex, other->gridIndex);
+            } else {
+                if (!gpCombatManager->cells[other->gridIndex].field_4a)
+                    continue;
+                pathCell* cell = gpSearchArray->cellData == 0
+                                     ? 0
+                                     : &gpSearchArray->cellData[other->gridIndex];
+                value = cell->cost;
+            }
+            if (armies.size() > 0 && value > best)
+                continue;
+            if (value < best)
+                armies.erase(armies.begin(), armies.end());
+            armies.insert(armies.end(), other);
+            best = value;
+        }
+    }
+}
 
 // A berserked stack picks one of its legal victims at random and does
 // whatever it can to it - shoot if it may shoot, swing otherwise - and

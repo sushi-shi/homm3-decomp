@@ -315,6 +315,7 @@ army	?get_attack_direction@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x4584
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550
 army	?get_average_damage@army@@QBEJPBV1@EJEJ@Z	100.0000	100.0000	100.0000	0x42780
 army	?get_average_damage@army@@QBENXZ	100.0000	100.0000	100.0000	0x426f0
+army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	92.5170	92.5170	92.5170	0x45490
 army	?get_controller@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x42690
 army	?get_controlling_side@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140
 army	?get_fire_shield_strength@army@@QBEMXZ	100.0000	100.0000	100.0000	0x43130
