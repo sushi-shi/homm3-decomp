@@ -1433,8 +1433,10 @@ textresource	??_GTTextResource@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bbb70
 textresource	?GetSize@TSpreadsheetResource@@QBEIXZ	100.0000	100.0000	100.0000	0x1bc160
 textresource	?GetSize@TTextResource@@QBEIXZ	100.0000	100.0000	100.0000	0x1bbe20
 textresource	?erase@?$vector@PAV?$vector@PADV?$allocator@PAD@std@@@std@@V?$allocator@PAV?$vector@PADV?$allocator@PAD@std@@@std@@@2@@std@@QAEPAPAV?$vector@PADV?$allocator@PAD@std@@@2@PAPAV32@0@Z	100.0000	100.0000	100.0000	0x1bc1f0
+textwdgt	??0bitmapBackedTextWidget@@QAE@HHHHPBD00W4TColor@font@@HIH@Z	100.0000	100.0000	100.0000	0x1bc760
 textwdgt	??1bitmapBackedTextWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc6d0
 textwdgt	??1textWidget@@UAE@XZ	100.0000	100.0000	100.0000	0x1bc3b0
+textwdgt	??_GbitmapBackedTextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc6a0
 textwdgt	??_GtextWidget@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1bc250
 town	??0town@@QAE@XZ	100.0000	100.0000	100.0000	0x1bde80
 town	?CalcNumLevelArchers@town@@QAEXPAH0@Z	100.0000	100.0000	100.0000	0x1bf4f0
@@ -1530,9 +1532,9 @@ victorylossconditions	VictoryConditionStruct_CheckForDefeatedMonsterWin	0.0000	0
 victorylossconditions	VictoryConditionStruct_CheckForGrailBuildingWin	0.0000	0.0000	0.0000	0x1f1ef0
 victorylossconditions	VictoryConditionStruct_CheckForTotalCreatures	0.0000	0.0000	0.0000	0x1f1b10
 victorylossconditions	VictoryConditionStruct_CheckForUpgradedTown	0.0000	0.0000	0.0000	0x1f1d40
-viewarmywindow	??0TViewArmyWindow@@QAE@HHHE@Z	97.1018	97.1018	97.1018	0x1f4210
-viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	88.7003	88.7003	88.7003	0x1f3b50
-viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	89.9861	89.9861	89.9861	0x1f3360
+viewarmywindow	??0TViewArmyWindow@@QAE@HHHE@Z	97.1049	97.1049	97.1049	0x1f4210
+viewarmywindow	??0TViewArmyWindow@@QAE@PAVarmyGroup@@HPBVhero@@PBVtown@@HHHEEE@Z	88.7021	88.7021	88.7021	0x1f3b50
+viewarmywindow	??0TViewArmyWindow@@QAE@PBVarmy@@HHE@Z	89.9877	89.9877	89.9877	0x1f3360
 viewarmywindow	??1TViewArmyWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1f45e0
 viewarmywindow	??_GTViewArmyWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1f3b20
 viewarmywindow	?DoModal@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f47f0
