@@ -40,15 +40,16 @@ DATA(0x006823b8) static int gQuickTownArmyPositions[7][2] = {
 };
 
 // E:\gamedcs\quicktownwindow.cpp:39
-// Residual (98.42%): all 36 branches and the single return agree. Retail
-// keeps vector::reserve's empty range destroy and string::_Tidy(false) calls
-// out of line, then uses an indexed/spilled resource scan; this VC6 SP3
-// compile elided/inlined those helpers and pointer-walks the same seven rows.
-// why-reg v2 reports identical first definitions, placing the divergence
-// after the minimum allocator slice. Tried and rejected: evaluating the name
-// accessor directly at the call site (95.50%; a named c_str local was 93.71),
-// an EGameResource loop induction variable (no resource-loop change), and
-// inline_depth(1) (byte-identical to the pre-2026-08-14 spelling).
+// Residual (98.8368%): all 36 branches and the single return agree, and what
+// is left is SEVEN BYTES, all inside the silo resource scan - see the note on
+// that loop. Every other instruction in the body now matches retail; the
+// remaining unified-diff rows are branch displacements and relocation
+// addends, neither of which is scored.
+// Superseded verdicts - they were measured against the 96.31 spelling and are
+// WRONG at the landed one: "evaluating the name accessor directly at the call
+// site 95.50%" is now +0.39 (see the name widget below) and "a named c_str
+// local 93.71". Still true: an EGameResource loop induction variable changes
+// nothing, and inline_depth(1) is byte-identical.
 // FIXED 2026-08-14, 96.3088 -> 98.4193, EXACTLY the titrated ceiling: the /Ob2
 // budget divisor solved in mainmenu.cpp. This constructor wanted FOUR more
 // inline-candidate call sites (xx_nop ladder: k=0 96.3088, k=4/5/6 all
@@ -83,9 +84,19 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
         12, 13, 58, 64, PORTRAIT_ID, "itpt.def",
         thisTown->GetPortraitFrame(false), 0, 0, 0, 0x10));
 
-    const char* town_name = thisTown->cName.begin();
+    // 98.4509 -> 98.8368 (2026-08-14). `c_str()` AT THE CALL SITE, not a
+    // `const char* town_name = cName.begin()` local ahead of the statement.
+    // MSVC evaluates `new T(args)` as allocate-then-evaluate-args, so retail's
+    // `mov ecx,[esi+0xc8]; test ecx,ecx; jne; mov ecx,OFFSET ""` sits AFTER
+    // the `operator new` call, inside the non-null arm; a preceding local
+    // forces the load ahead of the allocation and pins it in EDI across it.
+    // This is the DECLARATION-POSITION lever from armygrp ??0TSplitWindow
+    // applied to a scalar: where the value is spelled decides the schedule.
+    // VC6's `c_str()` is `_Ptr == 0 ? "" : _Ptr`, i.e. exactly the ternary we
+    // used to write by hand - spelling the ternary inline measures identically
+    // (98.8368), and the accessor is the honest form of it.
     widgets->push_back(new textWidget(
-        75, 12, 107, 16, town_name ? town_name : "", "smalfont.fnt",
+        75, 12, 107, 16, thisTown->cName.c_str(), "smalfont.fnt",
         font::WHITE, NAME_ID, 0, 0, 8));
 
     std::string town_size_name;
@@ -131,6 +142,26 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
             // bound 95.4737. Constructor block B4 is separately the
             // vector<T*>::_Destroy under-expansion characterised in
             // mainmenu.cpp.
+            // 2026-08-14: this loop is now the WHOLE residual - seven bytes,
+            // and the ROOT is one bit, whether `current` is enregistered.
+            // Retail homes it in memory at [ebp-0x28] (which is `resource[-1]`,
+            // i.e. the slot directly below the array) and reloads it after the
+            // aliasing `mov [edx],ecx`; a memory-homed index is not a register
+            // induction variable, which is precisely why retail does NOT
+            // strength-reduce `silo_income[current]` and we do. Everything
+            // downstream - the missing `add eax,4`, the 4-byte shift of the
+            // whole `resource[]` slice ([ebp-0x24] vs our [ebp-0x28]) - falls
+            // out of that one decision, so there is exactly ONE thing to find
+            // here, not three. Re-swept 2026-08-14 at the 98.84 spelling, all
+            // byte-flat: `int* next` walking the destination, `&current` taken
+            // into a pointer used as the index (folded away), the income read
+            // hoisted into a local, the while form, store-then-increment,
+            // `unsigned` count, `*(resource + resource_count++)`,
+            // `*(silo_income + current)`, an EGameResource induction variable,
+            // an EGameResource array, and both together. Strictly worse:
+            // `resource[++resource_count]` with a -1 seed 97.4860, re-reading
+            // `thisTown->get_silo_income()` in the test 97.2123, `> 0` for the
+            // implicit test 98.7316, and `int resource[4]`/`[7]` 98.4351.
             int resource[3];
             int resource_count = 0;
             for (int current = WOOD; current <= GOLD; current++) {
@@ -138,17 +169,34 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
                     resource[resource_count++] = current;
             }
 
+            // NAMED, not pushed straight from the `new` expression: 98.4193 ->
+            // 98.4509. Retail homes the raw `operator new` result of all three
+            // of these in the DEAD `thisTown` parameter slot [ebp+0x8] - the
+            // same slot the inlined insert materialises its `widget* const&`
+            // temp in - where the unnamed form takes a separate [ebp-0x1c].
+            // That is the armygrp `widget* const&` lever with the sign
+            // reversed: here retail wants the raw pointer and the reference
+            // target COALESCED. Naming exactly these three is what does it;
+            // naming any single one is +0.011, naming the early four
+            // (portrait/name/hall/garrison) is NEGATIVE at 98.3895, and naming
+            // all nine is 98.4035. An `AppendTownWidget` depth-0 adapter in the
+            // armygrp shape does not: by reference it is byte-flat at every
+            // inline_depth (0/1/2/default), by value it costs 0.46, and on all
+            // three sites it collapses to 72-73.
             if (resource_count == DOUBLE_RESOURCE_BONUS) {
-                widgets->push_back(new iconWidget(
+                iconWidget* firstBonus = new iconWidget(
                     15, 86, 20, 18, RESOURCE_BONUS_ID, "smalres.def",
-                    resource[0], 0, 0, 0, 0x10));
-                widgets->insert(widgets->end(), new iconWidget(
+                    resource[0], 0, 0, 0, 0x10);
+                widgets->push_back(firstBonus);
+                iconWidget* secondBonus = new iconWidget(
                     15, 98, 20, 18, RESOURCE_BONUS_ID, "smalres.def",
-                    resource[1], 0, 0, 0, 0x10));
+                    resource[1], 0, 0, 0, 0x10);
+                widgets->insert(widgets->end(), secondBonus);
             } else if (resource_count == SINGLE_RESOURCE_BONUS) {
-                widgets->insert(widgets->end(), new iconWidget(
+                iconWidget* singleBonus = new iconWidget(
                     15, 92, 22, 18, RESOURCE_BONUS_ID, "smalres.def",
-                    resource[0], 0, 0, 0, 0x10));
+                    resource[0], 0, 0, 0, 0x10);
+                widgets->insert(widgets->end(), singleBonus);
             }
         }
 
