@@ -5,6 +5,6 @@ reinterpret_casts	0
 cpp extern decls	0
 .cpp-local views	0
 .cpp-local enums	0
-casts to enum types	2
+casts to enum types	0
 magic case labels	0
 unnamed domain compares	0
