@@ -248,7 +248,41 @@ public:
     // "is this stack a shooter right now" test, after the creature's
     // own shooter bit Is(2).
     int shotsLeft;                // +0xd8
+    // Spell charges left on this stack, the word straight after
+    // shotsLeft in the same embedded traits row: can_cast_resurrect
+    // (0x4473d0) refuses an Archangel or a Pit Lord whose count here
+    // has fallen to zero or below, ahead of every other test - the
+    // "once per combat" rule both creature spells carry.
+    //
+    // THE SLOT IS FIXED BY THE RECORD, not by a roster. The DC
+    // TCreatureTypeTraits run hitPoints 60 / speed 64 / attackSkill 68
+    // / defenseSkill 72 / damageLowBound 76 / damageHighBound 80 /
+    // numShots 84 lands on retail +0x4c/+0x50/+0x54/+0x58/+0x5c/+0x60/
+    // +0x64 inside the row (a flat +16), which this header already
+    // pairs field for field as hitPoints..shotsLeft; the DC record then
+    // ends 88/92 wanderingLow/wanderingHigh at 96 bytes where retail's
+    // stride is 0x74 - byte-proven by get_resurrection_size's own
+    // akCreatureTypeTraits[0x30].hitPoints, which retail addresses at
+    // +0x160c == 0x30*0x74 + 0x4c. The extra dword retail carries is
+    // the one CRTRAITS.TXT column the Dreamcast port dropped, and it
+    // sits exactly here at +0x68 in the row. Name provisional.
+    //
+    // BEHIND A VIEW, AND THAT IS A MEASUREMENT. Slicing this word
+    // unconditionally costs command.obj's GetCommand 92.5714 ->
+    // 92.5357 with no semantic change anywhere - the include-set class
+    // yet again, and the second DATA member in this header to fire it
+    // after LetsPretendImNotHere. Bisected ALONE against the cmbtmgr.h
+    // declaration below, which triggers on its own too: with both
+    // guarded GetCommand is back at 92.5714, and adding either one
+    // back by itself loses the same 0.0357. Both arms spell the SAME
+    // thirteen bytes, so the two views cannot disagree about the
+    // layout and only the name is scoped.
+#ifdef HOMM3_ARMY_SPELLCAST_VIEW
+    int numSpellCasts;            // +0xdc
+    char pad_e0[0x9];
+#else
     char pad_dc[0xd];
+#endif
     // Two per-stack flags Damage (0x444090) raises: +0xe9 on EVERY hit
     // (it is stored unconditionally, from the same materialized 1 the
     // Is(23) test uses), +0xea only once the blow empties the stack.
@@ -723,10 +757,22 @@ public:
         // to it exactly as get_clockwise / get_counter_clockwise are.
         // The block is contiguous rather than in id order because a
         // guard cannot span three separated lines.
+        // The Pit Lord joins the same guarded block for the same
+        // reason: can_cast_resurrect (0x4473d0) is the one body that
+        // needs it, army.cpp is the only consumer, and an enumerator is
+        // this header's proven trigger shape. Its id is fixed by
+        // arithmetic against ids the block above already proves - Demon
+        // 0x30 opens the Inferno upgrade run and Efreet Sultan 0x35 /
+        // Devil 0x36 / Arch Devil 0x37 close it, so 0x33 is the Pit
+        // Lord - and the body corroborates it: this is exactly the id
+        // that takes the DEMONIC resurrection arm, priced (in
+        // get_resurrection_size 0x447330, already exact) in
+        // akCreatureTypeTraits[0x30].hitPoints. NH3API spelling.
 #ifdef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
         ARMY_CREATURE_BLACK_DRAGON = 0x53,
         ARMY_CREATURE_PSYCHIC_ELEMENTAL = 0x78,
         ARMY_CREATURE_MAGIC_ELEMENTAL = 0x79,
+        ARMY_CREATURE_PIT_LORD = 0x33,
 #endif
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,

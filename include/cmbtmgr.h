@@ -949,6 +949,30 @@ public:
     army* find_resurrection_target(int armyGroup, int targetIndex,
                                    unsigned char creatureSpell);
     army* find_animate_dead_target(int armyGroup, int targetIndex);
+    // 0x5a3e40 (269 B), the Pit Lord's own lookup - the fourth spells.obj
+    // leaf and the sibling of find_resurrection_target 0x5a3cc0 (373 B)
+    // two lines above. LOCATED 2026-08-14 from army::can_cast_resurrect
+    // (0x4473d0), whose DC twin 0x4be64 calls exactly six things and
+    // whose retail body calls exactly the matching three that survive
+    // out of line: can_cast_spells, then ONE of these two by creature
+    // id. The two arities separate them with no ambiguity - the
+    // demonic lookup takes (group, hex) and the general one
+    // (group, hex, bool) - and the DC spells.obj order
+    // find_resurrection_target 0x153158 < find_demonic_resurrection_target
+    // 0x1532f8 < find_animate_dead_target 0x153400 is preserved exactly
+    // by retail 0x5a3cc0 < 0x5a3e40 < 0x5a4260. Names and parameter
+    // types are the S_PUB32 mangling's
+    // (?find_demonic_resurrection_target@combatManager@@QAAPAVarmy@@HH@Z).
+    // Neither body is claimed here; both belong to src/spells.cpp.
+    // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it
+    // unconditionally costs command.obj's GetCommand 92.5714 ->
+    // 92.5357, the include-set class this header pair has now fired
+    // three times from a bare member declaration. Bisected ALONE
+    // against army.h's numSpellCasts slice, which triggers by itself
+    // as well. army.cpp is the only consumer.
+#ifdef HOMM3_CMBTMGR_RESURRECT_VIEW
+    army* find_demonic_resurrection_target(int armyGroup, int targetIndex);
+#endif
     // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
     // lookup sites; no standalone body survives.
     army* find_resurrection_target(SpellID spell, long group, long hex,
