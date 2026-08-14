@@ -461,7 +461,19 @@ public:
     // get_attack_change (0x41f3b0) subtracts it from a rival's freshly
     // priced attack before letting that rival claim the same victim.
     long AI_target_value;         // +0x53c
-    char pad_540[0x4];
+    // How far this stack still is from AI_target, in whatever units
+    // get_AI_target_time (0x448bd0) divides by a speed to get a whole
+    // number of turns: `(this + speed - 1) / speed`, floored at 1.
+    // Sliced from that body, and NAMED positionally - the DC roster
+    // carries exactly five one-field accessors for this five-field run
+    // and their dump offsets order the same way the retail fields do
+    // (get_AI_expected_damage 0x27cf4 -> +0x534, get_AI_target 0x27cfc
+    // -> +0x538, get_AI_target_value 0x27d04 -> +0x53c,
+    // get_AI_target_time 0x27d0c -> +0x540, get_AI_possible_targets
+    // 0x27d34 -> +0x544), so this is the one field left holding the
+    // one accessor left. The stored value is PRE-division; only the
+    // speed-taking overload turns it into turns.
+    long AI_target_time;          // +0x540
     // Bitmask of the stacks this one can reach: get_attack_change tests
     // 1 << enemy->bitIndex in it to decide whether a friendly stack is
     // even a candidate for the same target.
