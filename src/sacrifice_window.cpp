@@ -1464,6 +1464,22 @@ void std::__destroy_aux()
 
 #endif  // @carcass
 
+// E:\gamedcs\sacrifice_window.cpp:178
+// The doll-slot twin of the two below: one carve row ahead of them, in the
+// Dreamcast roster's own order (doll, backpack, offering, army), same 0x26
+// body shape, and forwarding to artifact_click - the equipped-slot handler.
+VA(0x0055fce0, 0x26)  // linkorder + iconWidget parent/+0x48 read, dc 0x123f88
+unsigned char type_doll_slot_widget::handle_click(
+    unsigned char down_click, unsigned char right_click)
+{
+    if (down_click) {
+        static_cast<type_sacrifice_window*>(parentWindow)->artifact_click(
+            slot, right_click);
+        return 1;
+    }
+    return 0;
+}
+
 // Vtable 0x641578 slot 13 is the sole address-taker for this entry. The
 // retail body reads iconWidget's parent at +4 and this class's slot at +0x48.
 VA(0x0055fd10, 0x26)
@@ -1487,6 +1503,23 @@ unsigned char type_artifact_offering_widget::handle_click(
     if (down_click) {
         static_cast<type_sacrifice_window*>(parentWindow)->offering_click(
             item_number, right_click);
+        return 1;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:272
+// The army-slot member of the same family, 0x2a rather than 0x26 because it
+// forwards a THIRD value: the byte at +0x4c alongside the dword at +0x48.
+// That is creature_click's (slot, right_click, left_pane) exactly, and the
+// pair matches the Dreamcast constructor's (new_slot, _left_pane).
+VA(0x0055fda0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x12416c
+unsigned char type_army_slot_widget::handle_click(
+    unsigned char down_click, unsigned char right_click)
+{
+    if (down_click) {
+        static_cast<type_sacrifice_window*>(parentWindow)->creature_click(
+            slot, right_click, left_pane);
         return 1;
     }
     return 0;
