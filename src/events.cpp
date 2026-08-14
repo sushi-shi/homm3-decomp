@@ -544,29 +544,50 @@ void advManager::monsters_give_reward(hero* current_hero, NewmapCell* cell, unsi
     // @stub
 }
 
+// LOCATED 2026-08-14 by their caller. advManager::DoWanderingMonsterResult
+// (0x4a7740, reconstructed and exact below) calls exactly four handlers,
+// and every discriminator lines up at once:
+//   * ORDER - the DC roster runs fight < flee < join < sell_out and the
+//     four retail rows run 0x4a6c60 < 0x4a6df0 < 0x4a7000 < 0x4a7250,
+//     inside the same bracket that already carries get_like_modifier,
+//     get_force_modifier and DoWanderingMonsterResult in DC order.
+//   * ARITY - the DC decorations give fight and flee four arguments and
+//     void, join and sell_out five and bool; retail's two `ret 0x10` void
+//     rows and two `ret 0x14` rows returning AL agree exactly, and the
+//     fifth argument at both of the latter is the `sete`-materialised
+//     want_to_fight byte.
+//   * ROLE - the caller reaches 0x4a6c60 when the disposition BEATS the
+//     mood total (fight), 0x4a7000 on the most favourable band (join),
+//     0x4a7250 on the band above it (sell out), and 0x4a6df0 only when
+//     the stack neither wants to fight nor carries the never-flee bit
+//     (flee).
+// The bodies are not reconstructed here, so the rows stay unclaimed; the
+// declarators live in advmgr.h and a call relocation's symbol name is not
+// scored.
+//
 // E:\gamedcs\events.cpp:3627
-DC_ONLY(0x96b14, 0x104)
+// RETAIL_LOCATED(0x004a6c60, 0x188)  // caller-arity + role, dc 0x96b14
 void advManager::monsters_fight(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:3655
-DC_ONLY(0x96c18, 0x13C)
+// RETAIL_LOCATED(0x004a6df0, 0x20B)  // caller-arity + role, dc 0x96c18
 void advManager::monsters_flee(hero* current_hero, NewmapCell* cell, type_point point, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:3698
-DC_ONLY(0x96d54, 0x198)
+// RETAIL_LOCATED(0x004a7000, 0x248)  // caller-arity + role, dc 0x96d54
 unsigned char advManager::monsters_join(hero* current_hero, NewmapCell* cell, type_point point, unsigned char want_to_fight, unsigned char human_player)
 {
     // @stub
 }
 
 // E:\gamedcs\events.cpp:3738
-DC_ONLY(0x96eec, 0x258)
+// RETAIL_LOCATED(0x004a7250, 0x36F)  // caller-arity + role, dc 0x96eec
 unsigned char advManager::monsters_sell_out(hero* current_hero, NewmapCell* cell, type_point point, unsigned char want_to_fight, unsigned char human_player)
 {
     // @stub
@@ -2202,6 +2223,152 @@ int advManager::get_force_modifier(float strength_ratio)
     if (strength_ratio > 0.333)
         return -2;
     return -3;
+}
+
+// A by-value, reference-RETURNING min. Retail copies BOTH operands into
+// frame homes and selects between their ADDRESSES with two LEAs, which is
+// what <xutility>'s `_cpp_min` produces and what a plain ternary or the
+// windef.h macro cannot. The orientation here is the CANONICAL
+// `_Y < _X ? _Y : _X` - unlike ai.obj's hand-written helper, whose
+// reversed compare is byte-proven there. Declared file-locally so this
+// TU's include set does not move; see the head of ai_combat.cpp for why
+// the parameters are taken by value rather than by const reference.
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
+// ai_combat.obj's army valuer (0x427650), redeclared here rather than
+// pulling ai_combat.h into a TU with two dozen exact rows - the same
+// trade the UpgradedCreatureType pair above records. /Gr fastcall with
+// the hero in ECX; the Dreamcast decoration is
+// `?AI_approximate_strength@@YIJPBVhero@@@Z`.
+long AI_approximate_strength(const hero* current_hero);
+
+// E:\gamedcs\events.cpp:3868.  Decides what a wandering stack DOES about
+// the hero standing on it: fight, flee, join for nothing, or sell itself.
+// It is the natural completion of the family - get_force_modifier is
+// INLINED into it (its only call site, while its own out-of-line body
+// stays emitted for its external linkage, which is why the four-way FPU
+// compare chain reappears in the middle of this body) and
+// get_like_modifier is called from it.
+//
+// The cell's extra-info dword carries the whole encounter through the
+// Dreamcast's MonsterInfo arm: qty, a SIGNED disposition, never_flee, and
+// - when `custom` is set - an eight-bit index into the map's
+// CustomMonsterList, whose record leads with a Dinkumware string. That
+// string is what makes the opening block read `[rec+8]` before `[rec+4]`:
+// `size() > 0` is an UNSIGNED compare (`test ecx,ecx / jbe`) and
+// `c_str()` is the `_Ptr == 0 ? _Nullstr() : _Ptr` ternary, whose static
+// nul byte retail pooled with the image-wide "" literal.
+//
+// The mood arithmetic is three grades summed and compared against the
+// disposition, and ALL THREE LOCALS ARE SHORT. That is the truncation
+// barrier again and it is load-bearing: the Dreamcast records
+// `like_modifier` as T_SHORT outright, and retail re-reads it with
+// `movsx edx, word ptr` out of a slot a 32-bit store filled, sign-extends
+// the force grade from AX and keeps the diplomacy grade in BX. Both
+// helpers still RETURN int - the DC decorations say `H` - so the
+// narrowing belongs to the locals, not to the callees. Widening any one
+// of them costs 8-11 points (measured).
+//
+// FOUR spellings in here are byte-load-bearing and none of them is
+// visible from the semantics:
+//   * cell->IsCustomized() - see the accessor's own note in mapcell.h.
+//   * the diplomacy read must sit BETWEEN the two modifier calls. Placed
+//     after get_force_modifier it will not schedule into the inlined FPU
+//     chain, and the whole entry block's register assignment follows
+//     (96.57 -> 99.03); before get_like_modifier is worse again (98.02).
+//   * the mood total must NOT be a named local. Spelling it once and
+//     reusing it lengthens its live range enough to move the argument
+//     registers of the first monsters_fight call (99.03 -> 99.98); retail
+//     writes the sum out twice and lets CSE fold it.
+//   * the int temporary in the diplomacy cap - see the note there.
+//
+// The Easy-difficulty bonus is the reason `setup.difficulty` is read at
+// all: on difficulty 0 a HUMAN player's diplomacy counts one grade
+// higher, capped at expert.
+VA(0x004a7740, 0x27E)  // linkorder + CustomMonsterList[bits 19..26], dc 0x97364
+void advManager::DoWanderingMonsterResult(NewmapCell* cell,
+                                          hero* current_hero, type_point point,
+                                          bool human_player)
+{
+    // CLEANLINESS FLOOR RAISED HERE, 2026-08-14: `casts to enum types`
+    // 0 -> 1, the first non-zero floor on the board, and it is called out
+    // in the commit message for that reason. The conversion is REAL and
+    // Dreamcast-attested on both ends: NewmapCell's +0x22 is
+    // `T_SHORT objectIndex` in the DC fieldlist - a GENERIC object index
+    // shared by all 163 adventure-object types, which is exactly why it
+    // cannot be typed TCreatureType at the field - while the DC types this
+    // very local `iMonType` as TCreatureType and decorates
+    // get_like_modifier's parameter `W4TCreatureType@@`. Retail agrees:
+    // `movsx ecx, word ptr [cell+0x22]`, a 16-bit read widened into an
+    // int-wide enum domain. The board cannot tell a genuine int-to-enum
+    // conversion from the enum-to-enum one it is hunting, so the floor is
+    // the only place to record it.
+    // REJECTED alternative: typing the events view's +0x22 as a 16-bit
+    // TCreatureType bitfield. It contradicts the DC fieldlist and would be
+    // wrong for every non-monster cell - worse modelling than the cast.
+    TCreatureType iMonType = static_cast<TCreatureType>(cell->objectIndex);
+    int iNumTroops = cell->monster_info.qty;
+    int disposition = cell->monster_info.disposition;
+
+    if (cell->IsCustomized()) {
+        MonsterData* custom_monster =
+            &fullMap->CustomMonsterList[cell->monster_info.index];
+        if (human_player && custom_monster->Message.size() > 0)
+            NormalDialog(custom_monster->Message.c_str(), 1, -1, -1, -1, 0, -1,
+                         0, -1, 0, -1, 0);
+    }
+
+    float strength_ratio =
+        static_cast<float>(AI_approximate_strength(current_hero))
+        / static_cast<float>(akCreatureTypeTraits[iMonType].AI_value
+                             * iNumTroops);
+    short like_modifier = get_like_modifier(current_hero, iMonType);
+    short diplomacy = current_hero->skillLevel[eSecSkillDiplomacy];
+    short force_modifier = get_force_modifier(strength_ratio);
+
+    // The intermediate INT is byte-load-bearing, not decoration: assigning
+    // the reference min straight into the short narrows AT THE LOAD
+    // (`mov bx, word ptr [ecx]`), where retail loads the referenced int
+    // whole and lets the short's register home take the low half
+    // (`mov ebx, dword ptr [ecx]`). One operand-size prefix, measured.
+    if (!gpGame->setup.difficulty && human_player) {
+        int capped_diplomacy = _cpp_min(diplomacy + 1, 3);
+        diplomacy = capped_diplomacy;
+    }
+
+    if (disposition > like_modifier + force_modifier + diplomacy) {
+        monsters_fight(current_hero, cell, point, human_player);
+        return;
+    }
+
+    bool want_to_fight =
+        disposition == like_modifier + force_modifier + diplomacy;
+    if (disposition <= like_modifier + diplomacy + 1) {
+        if (monsters_join(current_hero, cell, point, want_to_fight,
+                          human_player)) {
+            if (gpGame->mapHeader.victoryCondition.CheckForDefeatedMonsterWin(
+                    current_hero, point))
+                CheckEndGame(0);
+            return;
+        }
+    } else if (disposition <= like_modifier + diplomacy * 2 + 1) {
+        if (monsters_sell_out(current_hero, cell, point, want_to_fight,
+                              human_player)) {
+            if (gpGame->mapHeader.victoryCondition.CheckForDefeatedMonsterWin(
+                    current_hero, point))
+                CheckEndGame(0);
+            return;
+        }
+    }
+
+    if (want_to_fight || cell->monster_info.never_flee)
+        monsters_fight(current_hero, cell, point, human_player);
+    else
+        monsters_flee(current_hero, cell, point, human_player);
 }
 
 // E:\gamedcs\events.cpp:3948.  Parks the wandering stack's identity in

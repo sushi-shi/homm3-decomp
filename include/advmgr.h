@@ -811,6 +811,24 @@ public:
                            bool human_player);
     void do_event_witch_hut(class hero* current_hero, ExtraInfoUnion* cell,
                             bool human_player);
+    // The four wandering-stack outcome handlers. DECLARED, not defined -
+    // DoWanderingMonsterResult is their only caller and its bytes are what
+    // located them (0x4a6c60 / 0x4a6df0 / 0x4a7000 / 0x4a7250, in the DC's
+    // own roster order); their rows stay unclaimed and a call
+    // relocation's symbol name is not scored. The DC decorations give the
+    // signatures outright - fight and flee are void with four arguments,
+    // join and sell_out return bool and take the extra want_to_fight -
+    // and retail's `ret 0x10` / `ret 0x14` pair agrees.
+    void monsters_fight(class hero* current_hero, NewmapCell* cell,
+                        type_point point, bool human_player);
+    void monsters_flee(class hero* current_hero, NewmapCell* cell,
+                       type_point point, bool human_player);
+    bool monsters_join(class hero* current_hero, NewmapCell* cell,
+                       type_point point, bool want_to_fight,
+                       bool human_player);
+    bool monsters_sell_out(class hero* current_hero, NewmapCell* cell,
+                           type_point point, bool want_to_fight,
+                           bool human_player);
     void DoWanderingMonsterResult(NewmapCell* cell, class hero* current_hero,
                                   type_point point, bool human_player);
     void DoEventWanderingMonster(NewmapCell* cell, class hero* current_hero,
