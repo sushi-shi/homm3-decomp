@@ -1320,6 +1320,7 @@ seerhut	?LoadFromMap@type_resource_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.
 seerhut	?LoadFromMap@type_skill_quest@@UAEXPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x16de90
 seerhut	?NotifyHeroDefeated@type_defeat_hero_quest@@UAEXHH@Z	100.0000	100.0000	100.0000	0x16e550
 seerhut	?TakePayment@type_artifact_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f860
+seerhut	?TakePayment@type_creature_quest@@UAEXPAVhero@@@Z	100.0000	100.0000	100.0000	0x1707c0
 seerhut	?is_satisfied@type_artifact_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x16f800
 seerhut	?is_satisfied@type_be_hero_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x171f00
 seerhut	?is_satisfied@type_belong_to_player_quest@@UAEEPAVhero@@@Z	100.0000	100.0000	100.0000	0x1724f0

@@ -158,6 +158,7 @@ public:
 
     virtual int GetAIValue(int player);
     virtual unsigned char is_satisfied(hero* current_hero);
+    virtual void TakePayment(hero* current_hero);
 };
 
 // Quest type 7: seven resource amounts, read as one 0x1c-byte block.
