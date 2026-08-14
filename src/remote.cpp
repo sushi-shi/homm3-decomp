@@ -249,6 +249,35 @@ void CChatManager::PlayerEnterMsg(const char* cChatMsg)
 // E:\gamedcs\remote.cpp:1033
 #endif  // @carcass
 
+// E:\gamedcs\remote.cpp:783 - install a handler and hand it whatever state
+// the outgoing one was carrying. Both null tests are retail's; the Copy is
+// inlined here (28 bytes, same TU) into the popup byte and the vtable slot-2
+// fetch of the abort message.
+//
+// This body belongs in the .cpp and NOT in remote.h. /Ob2 inlines it at
+// remote.obj's own call sites - the destructor below and both halves of
+// CNetMsgHandlerPause - while advmgr, mainmenu and the other five consumers
+// of remote.h keep the out-of-line call retail gives them. Putting it in the
+// header instead is what cost advmgr's CAdvPopup constructor 30 points on
+// 2026-08-13; that measurement was a real semantic dependency, not the
+// include-set class, and this is its resolution.
+VA(0x00553770, 0x30)  // anchor-callee (Copy 0x555150 inlined), dc 0x11c268
+void CDPlayHeroes::SetNetMsgHandler(CNetMsgHandler* pNetMsgHandler)
+{
+    CNetMsgHandler* pOld = m_pNetMsgHandler;
+    m_pNetMsgHandler = pNetMsgHandler;
+    if (pOld && pNetMsgHandler)
+        pNetMsgHandler->Copy(pOld);
+}
+
+// E:\gamedcs\remote.cpp:793 - seven bytes, frameless, and the reason
+// advmgr's CAdvPopup constructor is exact with a CALL here.
+VA(0x005537a0, 0x7)  // anchor-caller (advmgr.cpp:4838), dc 0x11c290
+CNetMsgHandler* CDPlayHeroes::GetNetMsgHandler()
+{
+    return m_pNetMsgHandler;
+}
+
 VA(0x00553d00, 0xA1)  // anchor-global, dc 0x11c6bc
 void CChatManager::UpdateWidget(textWidget* widget, unsigned char killOld, int numLines)
 {
@@ -547,6 +576,26 @@ void CNetMsgHandler::Copy(CNetMsgHandler* pOther)
 {
     m_inPopup = pOther->m_inPopup;
     m_pAbortPopupMsg = pOther->GetAbortPopupMsg();
+}
+
+// E:\gamedcs\remote.h:658 and :659 - CNetMsgHandlerPause's two overrides,
+// slots 1 and 3 of vtable 0x640f04. Five bytes each: while a modal dialog
+// holds the pause handler installed, the network is answered with nothing
+// at all. They sit HERE, beside Copy, rather than in the 0x557exx run with
+// the rest of the class, because retail's are header-origin COMDATs and
+// that is where the linker grouped them - which is itself the corroboration
+// that DC homes all three in remote.h.
+VA(0x00555170, 0x5)  // anchor-vtable (slot 1 of 0x640f04), dc 0x11f80c
+CNetMsg* CNetMsgHandlerPause::CheckHandleNet(unsigned char inPopup,
+                                             unsigned char* msgReceived)
+{
+    return 0;
+}
+
+VA(0x00555180, 0x5)  // anchor-vtable (slot 3 of 0x640f04), dc 0x11f810
+CNetMsg* CNetMsgHandlerPause::HandleNetMsg(CNetMsg* pNetMsg)
+{
+    return 0;
 }
 
 // E:\gamedcs\remote.cpp:2673 - CSaveScreen's constructor, the second row in
@@ -1290,16 +1339,11 @@ CNetMsgHandler::CNetMsgHandler()
     m_pAbortPopupMsg = 0;
 }
 
-// NO CLAIM on 0x557810 (0x45) or 0x5578d0 (0x30). They are the scalar
-// deleting destructor and ~CNetMsgHandler, and the destructor unhooks
-// itself from the network singleton in place - `if (pDPlay &&
-// pDPlay->GetNetMsgHandler() == this) pDPlay->SetNetMsgHandler(0);` with
-// both accessors inlined. Spelling that needs inline bodies on
-// CDPlayHeroes, and MEASURING it showed the cost: advmgr's CAdvPopup
-// constructor drops 100.00 -> 69.33 the moment remote.h grows them. The
-// deleting destructor is 0x45 rather than the usual 0x21 because the
-// destructor is small and not EH-bearing, so /Ob2 inlines it there while
-// still emitting it out of line at 0x5578d0.
+// E:\gamedcs\remote.cpp:2834 - CNetMsgHandler::`scalar deleting destructor',
+// slot 0 of vtable 0x640f14. It is 0x45 rather than the usual 0x21 because
+// the destructor below is small and NOT EH-bearing, so /Ob2 inlines it here
+// while still emitting it out of line.
+VA_COMPGEN(0x00557810, 0x45, SCALAR_DELETING_DTOR, CNetMsgHandler)
 
 // E:\gamedcs\remote.cpp:2840 - slot 1 of vtable 0x640f14, and the third
 // independent proof of the corrected numbering: it dispatches its own
@@ -1335,6 +1379,35 @@ CNetMsg* CNetMsgHandler::CheckHandleNet(unsigned char inPopup,
     if (msgReceived)
         *msgReceived = 1;
     return HandleNetMsg(pNetMsg);
+}
+
+// E:\gamedcs\remote.cpp:2834 - the destructor unhooks itself from the
+// network singleton, with both accessors inlined out of this same TU. No EH
+// frame, which is why the ??_G above inlines this whole body rather than
+// calling it, and why 0x557810 is 0x45 instead of 0x21.
+//
+// Residual (41.9%): the REGISTER-HOMING family, and one artefact does all
+// three rows here. Retail homes SetNetMsgHandler's `pOld` into the frame's
+// single local slot - `mov ecx,edx` then `mov [ebp-4],ecx`, a dword that is
+// written and never read - and keeps the EBP frame that home requires,
+// where our CL dead-stores it away and comes out frameless. The same two
+// instructions are the whole delta in ??_G (78.1%) and, beside one
+// eax/edx choice inside the inlined Copy, in ~CNetMsgHandlerPause (91.1%).
+// Tried and rejected: naming the fetched handler into a local in this body
+// (VC6 deletes it too); spelling SetNetMsgHandler's own `pOld` as a nested
+// GetNetMsgHandler() call, so the expansion is two levels deep; an
+// early-return `if (pDPlay == 0) return;`. All three produce byte-identical
+// output to the spelling below, so this is not a spelling.
+//
+// The rows are kept rather than withdrawn: without an out-of-line body here
+// ~CNetMsgHandlerPause cannot inline it at all - retail's 0x557ee0 shows
+// the 0x640f14 vptr store and the unhook block sitting inside it - and the
+// four exact CNetMsgHandlerPause rows depend on this class being modelled.
+VA(0x005578d0, 0x30)  // anchor-vtable (slot 0 chain of 0x640f14), dc 0x201f4
+CNetMsgHandler::~CNetMsgHandler()
+{
+    if (pDPlay && pDPlay->GetNetMsgHandler() == this)
+        pDPlay->SetNetMsgHandler(0);
 }
 
 // E:\gamedcs\remote.cpp:2834 - slot 2 of vtable 0x640f14. DC has it as an
@@ -1548,22 +1621,38 @@ void CTurnDuration::Resume()
     }
 }
 
-// E:\gamedcs\remote.cpp:3095
-#if 0  // @carcass
-DC_ONLY(0x11f448, 0x50)
-void CNetMsgHandlerPause::CNetMsgHandlerPause()
+// E:\gamedcs\remote.cpp:3095 - park the installed handler and take over.
+// The singleton is loaded TWICE: the store of m_pNetMsgHandlerSave goes
+// through `this`, which may alias pDPlay, so VC6 must re-read the global
+// before the swap. EH-bearing (the /GX frame the base subobject's lifetime
+// needs), which is not a wall.
+VA(0x00557e30, 0x7A)  // anchor-vtable 0x640f04, dc 0x11f448
+CNetMsgHandlerPause::CNetMsgHandlerPause()
 {
-    // @stub
+    if (pDPlay) {
+        m_pNetMsgHandlerSave = pDPlay->GetNetMsgHandler();
+        pDPlay->SetNetMsgHandler(this);
+    }
 }
 
-// E:\gamedcs\remote.cpp:3105
-DC_ONLY(0x11f498, 0x38)
-void CNetMsgHandlerPause::~CNetMsgHandlerPause()
+// E:\gamedcs\remote.cpp:3095 - CNetMsgHandlerPause::`scalar deleting
+// destructor', slot 0 of vtable 0x640f04. The destructor below is both
+// EH-bearing and 145 bytes, so /Ob2 leaves it as a call here rather than
+// inlining it the way it does CNetMsgHandler's.
+VA_COMPGEN(0x00557eb0, 0x21, SCALAR_DELETING_DTOR, CNetMsgHandlerPause)
+
+// E:\gamedcs\remote.cpp:3105 - put the parked handler back, then run the
+// base destructor. Both vptr stores are visible: 0x640f04 on entry, then
+// 0x640f14 before ~CNetMsgHandler's own body, which /Ob2 inlines here.
+VA(0x00557ee0, 0x91)  // anchor-vtable 0x640f04, dc 0x11f498
+CNetMsgHandlerPause::~CNetMsgHandlerPause()
 {
-    // @stub
+    if (pDPlay)
+        pDPlay->SetNetMsgHandler(m_pNetMsgHandlerSave);
 }
 
 // E:\gamedcs\remote.cpp:3114
+#if 0  // @carcass
 DC_ONLY(0x11f4d0, 0x16)
 void CHourGlass::CHourGlass(unsigned char thread)
 {
