@@ -43,8 +43,27 @@ public:
     // load off an int member is what fixes the 16-bit colour parameter.
     void FrameRect(int x, int y, int w, int h, unsigned short color);
     void Colorize(int x, int y, int width, int height, unsigned short color);
+    // 0x44e4c0, reached from heroWindowManager::FadeToBlack (0x6030e0);
+    // its five-argument push run is the DC signature verbatim.
+    void FillRect(int x, int y, int w, int h, unsigned short color);
 };
 SIZE(Bitmap16Bit, 0x38);
+
+// The live 16-bit pixel format, filled from the DirectDraw surface
+// description and read by every bitmap16.obj blender (Darken, Colorize,
+// the 24->16 importer) as well as winmgr's two fades.
+//
+// GREEN is PROVEN: wingraph 0x601bfe saves 0x694d60 across a mode
+// change and feeds `mask == 0x7e0 ? 6 : 5` to Bitmap16Bit::Remap, whose
+// parameter the DC roster names old_green_bits. RED/BLUE follow from
+// term order, corroborated twice: Bitmap16Bit::Darken (0x44e5f0) and
+// both fades emit their three `(px & m) >> n & m` terms in the order
+// 0x694d64, 0x694d60, 0x694d68, and the 24->16 importer at 0x44f0f4
+// pairs source byte 0 with 0x694d64, byte 1 (green in every 24-bit
+// order) with 0x694d60 and byte 2 with 0x694d68 - i.e. R, G, B.
+DATA(0x00694d60) extern unsigned long gColorMaskGreen;
+DATA(0x00694d64) extern unsigned long gColorMaskRed;
+DATA(0x00694d68) extern unsigned long gColorMaskBlue;
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\bitmap16.cpp:59, dc 0x50a9c) long ftol(double d);
