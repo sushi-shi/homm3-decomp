@@ -121,6 +121,7 @@ class strip;
 class townObject;
 class heroWindow;
 class widget;
+class CUnnamed69d808_f0;
 
 // Layout proven store-for-store by townManager::townManager 0x5c3310,
 // which writes every member below, and corroborated by ::UnloadTown
@@ -134,9 +135,15 @@ class townManager : public baseManager {
 public:
     town* townToView;             // +0x38
     widget* field_3c;             // +0x3c
-    townObject* TownObjects[7];   // +0x40
-    strip* Strips[44];            // +0x5c
-    int StripCount;               // +0x10c
+    // +0x40: seven fixed slots, each an object UnloadTown drives through
+    // vtable slot 1 without freeing it. Element type unattested.
+    void* field_40[7];
+    // +0x5c: the town's building objects, count at +0x10c. UnloadTown
+    // walks exactly this many, unhooks each one's widget at +0x2c from
+    // the town window and frees the object - which is ~townObject
+    // inlined, so the array is townObject* and the count is its own.
+    townObject* TownObjects[44];
+    int TownObjectCount;          // +0x10c
     int field_110;                // +0x110  ctor -1
     int field_114;                // +0x114
     heroWindow* TownWindow;       // +0x118
@@ -159,7 +166,9 @@ public:
     int field_1a8;                // +0x1a8
     int field_1ac;                // +0x1ac
     heroWindow* field_1b0;        // +0x1b0
-    int field_1b4;                // +0x1b4
+    // +0x1b4: handed to the message pump's setter (0x553770) on the way
+    // out of a network game, which is what types it.
+    CUnnamed69d808_f0* field_1b4;
     int field_1b8;                // +0x1b8  ctor -1
     int field_1bc;                // +0x1bc
     int field_1c0;                // +0x1c0
