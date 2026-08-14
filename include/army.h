@@ -690,6 +690,14 @@ public:
     // `mov ecx, enemy / call` with no stack arguments, and it divides
     // the cursed damage by the result.
     double get_average_damage() const;                          // 0x4426f0
+    // 0x443f40, a carcass in army.cpp; declared because the five-argument
+    // get_average_damage (0x442780) calls it. `enemy` is NON-const on the
+    // DC roster's own mangling (?adjust_damage@army@@QBAJPAV1@J_N1JPAJ@Z)
+    // while the caller takes its enemy const, which is why that call site
+    // casts the constness away rather than this declaration dropping it.
+    long adjust_damage(army* enemy, long base_damage, unsigned char bIsShot,
+                       unsigned char simulated, long distance,
+                       long* fire_damage) const;
     // 0x443e30 (257 B, ret 0x10 - four stack args, `this` the
     // attacker): null target answers 0, then it runs the same
     // base-damage / attacker-reduction / hero-defense-factor chain
