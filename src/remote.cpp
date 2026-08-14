@@ -605,6 +605,18 @@ unsigned char CSaveScreen::IsSaved()
     return screenSaved;
 }
 
+// The two video entry points in the 0x198xxx compiland that sorts right
+// after smackmgr - DECLARED ONLY here, exactly as src/smackmgr.cpp declares
+// the same pair for its own callers; neither is claimed by this file and a
+// call relocation's symbol name does not enter the verdict. ShowVideo's
+// eight-argument shape is smackmgr.cpp's, corroborated here by Start's six
+// pushes over ecx/edx. CloseVideo (0x599050) takes nothing: it closes both
+// Smacker handles through __imp__SmackClose@4 and clears the five globals
+// smackmgr.cpp already names (0x69fdf8, 0x69fdfc, 0x69fe18, 0x69fe5c,
+// 0x69fdf5). Name provisional, in ShowVideo's lineage.
+void ShowVideo(int id, int x, int y, int w, int h, int a6, int a7, int a8);
+void CloseVideo();  // 0x599050
+
 // E:\gamedcs\remote.cpp:2713 - CGameTransferSmack's constructor. It is also
 // inlined whole into CGameTransferDlg's constructor below (/Ob2 auto-inline
 // with unconditional out-of-line emission for extern linkage), and the two
@@ -622,6 +634,19 @@ CGameTransferSmack::CGameTransferSmack()
     m_drawText = 1;
 }
 
+// E:\gamedcs\remote.cpp:2724 - Stop() inlined ahead of `delete m_saveScreen`.
+// The first nine instructions here ARE 0x5575e0 below, instruction for
+// instruction, which is the evidence that the source statement is a Stop()
+// call: /Ob2 auto-inlines it and still emits it out of line for its extern
+// linkage. The delete dispatches through CSaveScreen's slot 0 with the
+// flag 1, the ??_G that 0x557310 pairs.
+VA(0x00557430, 0x22)  // anchor-callee (Stop 0x5575e0 inlined), dc 0x11ec88
+CGameTransferSmack::~CGameTransferSmack()
+{
+    Stop();
+    delete m_saveScreen;
+}
+
 // E:\gamedcs\remote.cpp:2733 - four of CGameTransferSmack's seven members
 // rewritten from the caller. DC's `?Setup@CGameTransferSmack@@QAAXHH_N0@Z`
 // is (int, int, bool, bool) and retail's `ret 0x10` reads the two bools as
@@ -634,6 +659,61 @@ void CGameTransferSmack::Setup(int x, int y, unsigned char sending,
     m_y = y;
     m_sending = sending;
     m_drawText = drawText;
+}
+
+// E:\gamedcs\remote.cpp:2741 - hand the transfer animation to the video
+// player. The 160x160 extent is the same literal pair CalcDimensions boxes
+// the dialog with, and the id 0x3f rides ecx as ShowVideo's first fastcall
+// argument while m_x rides edx as its second; m_started is raised BETWEEN
+// the argument pushes, which is retail scheduling a store that has no
+// ordering constraint against them.
+VA(0x00557480, 0x25)  // anchor-callee (ShowVideo 0x598af0), dc 0x11ecd8
+void CGameTransferSmack::Start()
+{
+    m_started = 1;
+    ShowVideo(0x3f, m_x, m_y, 160, 160, 0, 0, 0);
+}
+
+// E:\gamedcs\remote.cpp:2789 - the guard-and-clear half of the destructor,
+// standing on its own. Twenty-one bytes: test the byte, close the handle,
+// clear the byte.
+VA(0x005575e0, 0x15)  // anchor-callee (CloseVideo 0x599050), dc 0x11edec
+void CGameTransferSmack::Stop()
+{
+    if (m_started) {
+        CloseVideo();
+        m_started = 0;
+    }
+}
+
+// E:\gamedcs\remote.cpp:2799 - park the screen behind the animation box.
+// The CSaveScreen is built lazily at the 160x160 extent Start plays into,
+// and both its constructor and CSaveScreen::Save inline here (the vptr
+// store at 0x55764c and the three member writes are the constructor; the
+// +0x3c/+0x40/+0x38 triple after the null check is Save). m_saveScreen is
+// RELOADED out of memory for the Save, which is what makes the Save its own
+// statement rather than a use of the `new` expression's value.
+//
+// EH-bearing: the fs:[0] frame with the 0/-1 state pair is the standard
+// /GX guard `new` puts around a constructor call. It is not a wall - 118 of
+// this tree's exact rows carry one.
+VA(0x00557600, 0xAB)  // anchor-callee (Bitmap16Bit::Grab 0x44e3f0), dc 0x11ee04
+void CGameTransferSmack::SaveScreen()
+{
+    if (!m_saveScreen)
+        m_saveScreen = new CSaveScreen(160, 160);
+    m_saveScreen->Save(m_x, m_y);
+}
+
+// E:\gamedcs\remote.cpp:2807 - and put it back. CSaveScreen::Restore
+// inlines with its update argument folded to 1, which is why the
+// UpdateScreen call here is unconditional where the out-of-line 0x557390
+// branches on it; the outer `je` is this file's own null check.
+VA(0x005576b0, 0x61)  // anchor-callee (Bitmap16Bit::Draw 0x44e2b0), dc 0x11ee3c
+void CGameTransferSmack::RestoreScreen()
+{
+    if (m_saveScreen)
+        m_saveScreen->Restore(1);
 }
 
 // E:\gamedcs\remote.cpp:2816 - CGameTransferDlg's constructor, the third
