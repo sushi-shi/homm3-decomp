@@ -42,6 +42,34 @@ struct type_windmill_info {
 };
 SIZE(type_windmill_info, 4);
 
+// DoEventLeanTo (0x4a31a0) reads a five-bit id at bits 0..4 (`mov al,
+// [cell] / and eax,0x1f`), an UNSIGNED four-bit amount at bits 6..9 and
+// an UNSIGNED four-bit resource id at bits 10..13 (`shr eax,N / and
+// eax,0xf` both times). Emptying the lean-to rewrites all three fields at
+// once - `and eax,0xffffc020 / or eax,id` - which is what pins bit 5 as
+// nobody's and puts the tail at 14.
+struct type_lean_to_info {
+    unsigned long id : 5;
+    unsigned long unused : 1;
+    unsigned long amount : 4;
+    unsigned long resource : 4;
+    unsigned long tail : 18;
+};
+SIZE(type_lean_to_info, 4);
+
+// DoEventMysticalGarden (0x4a3bc0) shares the id lane but puts a SIGNED
+// four-bit resource at bits 6..9 (`shl edi,0x16 / sar edi,0x1c`) and a
+// one-bit "still full" flag at bit 10 (`shr eax,0xa / test al,1`);
+// emptying it clears that bit alone (`and ah,0xfb`).
+struct type_garden_info {
+    unsigned long id : 5;
+    unsigned long unused : 1;
+    EGameResource resource : 4;
+    unsigned long full : 1;
+    unsigned long tail : 21;
+};
+SIZE(type_garden_info, 4);
+
 // do_event_warrior_tomb (0x4a7c30) reads a ONE-BIT occupancy flag at bit 0
 // (`test byte ptr [cell],1`) and a SIGNED ten-bit artifact id at bits
 // 13..22 (`shl eax,9 / sar eax,0x16`); emptying the tomb clears bit 0
@@ -81,11 +109,39 @@ union ExtraInfoUnion {
     unsigned long value;
     type_water_wheel_info water_wheel_info;
     type_windmill_info windmill_info;
+    type_lean_to_info lean_to_info;
+    type_garden_info garden_info;
     type_tomb_info tomb_info;
     type_witch_hut_info witch_hut_info;
     type_cell_visited_info cell_visited_info;
 
     void SetCellVisited(short player);
+
+    // The lean-to trio, all three DC-published (MapCell.h:985/992/997).
+    // GetLeanToAmount is decorated `short` and that WIDTH is what makes
+    // DoEventLeanTo's emptiness test a sixteen-bit `test si,si` and its
+    // dialog argument a `movsx`. GetLeanToResource is decorated
+    // EGameResource; it is spelled `int` here because the field is read
+    // UNSIGNED and an enum bitfield sign-extends under VC6 - the width is
+    // what the bytes constrain and an enum return is int-wide anyway, so
+    // no truncation barrier is lost. The id has no DC accessor and is
+    // read off the arm directly.
+    short GetLeanToAmount() const { return lean_to_info.amount; }
+    int GetLeanToResource() const { return lean_to_info.resource; }
+    void SetLeanTo(short id, short amount, int resource)
+    {
+        lean_to_info.id = id;
+        lean_to_info.amount = amount;
+        lean_to_info.resource = resource;
+    }
+
+    // The mystical-garden trio (MapCell.h:1018/1023/1035). GardenIsFull
+    // is `unsigned char () const` and its `(value >> 10) & 1` shape is
+    // what retail inlines; a direct bitfield test would fold to a byte
+    // `test` on cell+1 instead.
+    unsigned char GardenIsFull() const { return garden_info.full; }
+    EGameResource GetGardenResource() const { return garden_info.resource; }
+    void SetGardenEmpty() { garden_info.full = 0; }
 
     // The five MapCell.h accessors the two mill handlers inline. The
     // Dreamcast publishes all five with their signatures - get_wheel_gold
@@ -791,6 +847,36 @@ public:
 #ifdef HOMM3_EVENTS_VIEW
     TreasureData* get_treasure_data(NewmapCell* cell) const;
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
+    // The "once per hero, keep the reward forever" family. All six take
+    // the Dreamcast's own `(hero*, NewmapCell*, bool)` and all six open
+    // on the same test - a per-object visit dword on the HERO, indexed
+    // by the cell's own extra-info dword as a shift count, which is the
+    // idiom hero::VisitedArena already proves.
+    void DoEventDefenseTower(class hero* current_hero, NewmapCell* cell,
+                             bool human_player);
+    void DoEventFountainOfYouth(class hero* current_hero, NewmapCell* cell,
+                                bool human_player);
+    void DoEventGarden(class hero* current_hero, NewmapCell* cell,
+                       bool human_player);
+    // The two objects that pay a resource out of the cell's own packed
+    // record. Both take ExtraInfoUnion for the same reason the war school
+    // and the two mills do: nothing but the +0x00 dword is ever touched.
+    void DoEventLeanTo(class hero* current_hero, ExtraInfoUnion* cell,
+                       bool human_player);
+    void DoEventLibrary(class hero* current_hero, NewmapCell* cell,
+                        bool human_player);
+    void DoEventMysticalGarden(class hero* current_hero, ExtraInfoUnion* cell,
+                               bool human_player);
+    void DoEventMercenaryCamp(class hero* current_hero, NewmapCell* cell,
+                              bool human_player);
+    void DoEventOasis(class hero* current_hero, NewmapCell* cell,
+                      bool human_player);
+    void DoEventPowerSchool(class hero* current_hero, NewmapCell* cell,
+                            bool human_player);
+    void DoEventTemple(class hero* current_hero, NewmapCell* cell,
+                       bool human_player);
+    void DoEventTrainingGrounds(class hero* current_hero, NewmapCell* cell,
+                                bool human_player);
     // The Dreamcast decorations give these `(hero*, NewmapCell*, bool)`
     // and make them PRIVATE members. The cell is spelled with the union
     // pointer instead because the DC's NewmapCell DERIVES from

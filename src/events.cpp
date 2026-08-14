@@ -323,11 +323,61 @@ void advManager::DoEventLeanTo(hero* current_hero, NewmapCell* cell, unsigned ch
     // @stub
 }
 
-// E:\gamedcs\events.cpp:2101
-DC_ONLY(0x93bf8, 0x13A)
-void advManager::DoEventLibrary(hero* current_hero, NewmapCell* cell, unsigned char human_player)
+// E:\gamedcs\events.cpp:2101.  LOCATED AND RECONSTRUCTED TO 93.47%, HELD
+// BACK 2026-08-14 - the row is not landed because this lane does not land
+// below 100.  The Library of Enlightenment: +2 to every primary skill,
+// once per hero, but only for a hero it judges worthy - `level + 2 *
+// diplomacy >= 10`, i.e. the published rule (level 10 bare, 8 with Basic,
+// 6 with Advanced, 4 with Expert) written as one comparison.  0x4a3280 is
+// jump-table arm 0x29 = LIBRARY, 348 B against the Dreamcast's 314.
+//
+// Everything below is byte-exact against retail EXCEPT the four +2
+// stores, and the difference there is SCHEDULING ONLY - identical
+// instructions, identical register assignment (dl, cl, dl, cl), different
+// order.  Retail serialises them one read-modify-write at a time:
+//     mov dl,[476] / mov al,2 / add dl,al / mov [476],dl
+//     mov cl,[477] / add cl,al / mov [477],cl        (and so on)
+// while our CL software-pipelines them two at a time, hoisting the second
+// load above the first store.  TRIED AND REJECTED, every one of them
+// byte-identical to the others: `+= 2`; `x = x + 2`; a named
+// `int bonus = 2`; source order 0,1,2,3 instead of retail's 0,1,3,2
+// (which moves only the STORES, so 0,1,3,2 is the proven source order);
+// and naming the four as members of a gated union arm over hero::stats
+// instead of indexing the array (added to hero.h, measured, withdrawn -
+// it changed nothing and moved no other row).  That leaves the
+// register-homing / scheduling residual class.
+//
+// The visit mask IS solved and is kept below: retail computes
+// `1 << cell->extraInfo` ONCE and parks it in EBX across the dialog call,
+// which is worth 88.12 -> 93.47 on its own.
+// RETAIL_LOCATED(0x004a3280, 0x15C)  // linkorder + globalInfoFlags[LibraryInfo], dc 0x93bf8
+void advManager::DoEventLibrary(hero* current_hero, NewmapCell* cell, bool human_player)
 {
-    // @stub
+    unsigned long visit = 1 << cell->extraInfo;
+
+    if (current_hero->LibraryFlags & visit) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_LIBRARY_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (current_hero->level + current_hero->skillLevel[4] * 2 >= 10) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_LIBRARY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        current_hero->stats[0] += 2;
+        current_hero->stats[1] += 2;
+        current_hero->stats[3] += 2;
+        current_hero->stats[2] += 2;
+        gpGame->SetInfoFlag(LibraryInfo, gNetLocalGamePos);
+        current_hero->LibraryFlags |= visit;
+        return;
+    }
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_LIBRARY_UNWORTHY),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 }
 
 // E:\gamedcs\events.cpp:2140
@@ -2188,6 +2238,86 @@ BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const
     return &fullMap->blackBoxes[index];
 }
 
+// E:\gamedcs\events.cpp:1649.  The Marletto Tower: +1 Defense forever,
+// once per hero, and the visit is remembered on the HERO rather than on
+// the cell - a per-object dword indexed by the cell's own extra-info
+// dword as a shift count, exactly the idiom hero::VisitedArena
+// (0x4e53c0) proves for the arena's lane.
+//
+// Retail RECOMPUTES the mask for the write-back instead of keeping the
+// entry value live, which is what two separate `1 << cell->extraInfo`
+// expressions produce; the eight-iteration teamInfo scan between them is
+// game::SetInfoFlag inlined.
+VA(0x004a2050, 0xE4)  // linkorder + globalInfoFlags[DefenseTowerInfo], dc 0x92d40
+void advManager::DoEventDefenseTower(hero* current_hero, NewmapCell* cell,
+                                     bool human_player)
+{
+    if (current_hero->DefenseTowerFlags & (1 << cell->extraInfo)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_DEFENSE_TOWER_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_DEFENSE_TOWER),
+                     1, -1, -1, 0x20, 1, -1, 0, -1, 0, -1, 0);
+    current_hero->stats[1]++;
+    gpGame->SetInfoFlag(DefenseTowerInfo, gNetLocalGamePos);
+    current_hero->DefenseTowerFlags |= 1 << cell->extraInfo;
+}
+
+// E:\gamedcs\events.cpp:1822.  The Fountain of Youth, do_event_watering
+// hole's twin: one hero flag bit, +1 morale and +400 movement on both
+// the allowance and the remainder, and the cell argument is never
+// touched. Only the bit (0x4000 against 0x40) and the text rows differ.
+VA(0x004a25f0, 0x113)  // linkorder + globalInfoFlags[FountainOfYouthInfo], dc 0x93298
+void advManager::DoEventFountainOfYouth(hero* current_hero, NewmapCell* cell,
+                                        bool human_player)
+{
+    if (current_hero->flags & 0x4000) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FOUNTAIN_OF_YOUTH_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_FOUNTAIN_OF_YOUTH),
+                     1, -1, -1, 14, 0, -1, 0, -1, 0, -1, 0);
+    game* g = gpGame;
+    g->SetInfoFlag(FountainOfYouthInfo, gNetLocalGamePos);
+    current_hero->flags |= 0x4000;
+    current_hero->field_11a++;
+    current_hero->maxMovePoints += 400;
+    current_hero->movePoints += 400;
+    if (human_player)
+        advWindow->UpdateHeroLocators(-1, 1, 1);
+}
+
+// E:\gamedcs\events.cpp:1854.  The Garden of Revelation, the Marletto
+// Tower's twin down to the instruction: +1 Knowledge instead of +1
+// Defense, its own hero visit dword and its own pair of text rows.
+VA(0x004a2710, 0xE4)  // linkorder + globalInfoFlags[GardenOfRevelationInfo], dc 0x93368
+void advManager::DoEventGarden(hero* current_hero, NewmapCell* cell,
+                               bool human_player)
+{
+    if (current_hero->GardenOfRevelationFlags & (1 << cell->extraInfo)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_GARDEN_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_GARDEN),
+                     1, -1, -1, 0x22, 1, -1, 0, -1, 0, -1, 0);
+    current_hero->stats[3]++;
+    gpGame->SetInfoFlag(GardenOfRevelationInfo, gNetLocalGamePos);
+    current_hero->GardenOfRevelationFlags |= 1 << cell->extraInfo;
+}
+
 // The two events.obj/philai.obj helpers this handler needs. 0x4a2940 is
 // exchange_spells (dc 0x93464), the ONE events.obj row the Dreamcast
 // xref graph gives do_event_hero as a bsr call, and retail reaches it as
@@ -2249,6 +2379,147 @@ void advManager::do_event_hero(hero* current_hero, NewmapCell* cell,
              other_hero, &other_hero->army, -1, 1, 0);
 }
 
+// E:\gamedcs\events.cpp:2069.  The lean-to: one resource pile, taken
+// once, and the visit is recorded on the PLAYER rather than the hero -
+// LeanToFlags is a per-player dword indexed by the cell's own five-bit
+// id, and BOTH arms reach that write, which is why retail shares one
+// tail between them.
+//
+// GetLeanToAmount is decorated `short`, and that width is the whole
+// reason the emptiness test is a sixteen-bit `test si,si` and the dialog
+// argument a `movsx`: an int-wide read would not truncate.
+//
+// Emptying the pile is SetLeanTo(id, 0, 0) - all three fields written at
+// once, which VC6 folds into the single `and eax,0xffffc020 / or eax,id`
+// retail carries, exactly as set_windmill does for the mill.
+VA(0x004a31a0, 0xDF)  // linkorder + playerData::LeanToFlags, dc 0x93b18
+void advManager::DoEventLeanTo(hero* current_hero, ExtraInfoUnion* cell,
+                               bool human_player)
+{
+    short id = cell->lean_to_info.id;
+    short amount = cell->GetLeanToAmount();
+
+    if (amount == 0) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_LEAN_TO_EMPTY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        gpCurrentPlayer->LeanToFlags |= 1 << id;
+    } else {
+        int resource = cell->GetLeanToResource();
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_LEAN_TO),
+                         1, -1, -1, resource, amount, -1, 0, -1, 0, -1, 0);
+        current_hero->GiveResource(resource, amount);
+        cell->SetLeanTo(id, 0, 0);
+        gpCurrentPlayer->LeanToFlags |= 1 << id;
+    }
+}
+
+// E:\gamedcs\events.cpp:2299.  The Mercenary Camp: the Marletto Tower
+// again with +1 Attack, its own hero visit dword and its own text pair.
+VA(0x004a38b0, 0xE4)  // linkorder + globalInfoFlags[MercCampInfo], dc 0x941c8
+void advManager::DoEventMercenaryCamp(hero* current_hero, NewmapCell* cell,
+                                      bool human_player)
+{
+    if (current_hero->MercCampFlags & (1 << cell->extraInfo)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MERC_CAMP_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_MERC_CAMP),
+                     1, -1, -1, 0x1f, 1, -1, 0, -1, 0, -1, 0);
+    current_hero->stats[0]++;
+    gpGame->SetInfoFlag(MercCampInfo, gNetLocalGamePos);
+    current_hero->MercCampFlags |= 1 << cell->extraInfo;
+}
+
+// E:\gamedcs\events.cpp:2423.  The mystical garden: 500 gold or five of
+// anything else, once per week per player. The visit lands in the
+// player's own MysticalGardenFlags BEFORE anything is decided, so a
+// second hero gets nothing whichever arm the first one took.
+//
+// The reward size is a BRANCHLESS ternary - retail's `sub 6 / neg / sbb /
+// and / add` is `(resource == GOLD) ? 500 : 5` and nothing else - and the
+// amount is a SHORT, which is what puts the `movsx` on both the dialog
+// argument and the GiveResource argument.
+VA(0x004a3bc0, 0xDC)  // linkorder + playerData::MysticalGardenFlags, dc 0x944d4
+void advManager::DoEventMysticalGarden(hero* current_hero, ExtraInfoUnion* cell,
+                                       bool human_player)
+{
+    short id = cell->garden_info.id;
+    EGameResource resource = cell->GetGardenResource();
+    gpCurrentPlayer->MysticalGardenFlags |= 1 << id;
+
+    if (!cell->GardenIsFull()) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MYSTICAL_GARDEN_EMPTY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    short amount = resource == GOLD ? 500 : 5;
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_MYSTICAL_GARDEN),
+                     1, -1, -1, resource, amount, -1, 0, -1, 0, -1, 0);
+    current_hero->GiveResource(resource, amount);
+    cell->SetGardenEmpty();
+}
+
+// E:\gamedcs\events.cpp:2458.  The Oasis: +1 morale and +800 movement,
+// once per hero. The same body as the Fountain of Youth except that the
+// hero flag is set BEFORE the info flag rather than after it, and that
+// this object's text pair is stored the other way round.
+VA(0x004a3ca0, 0x11C)  // linkorder + globalInfoFlags[OasisInfo], dc 0x9459c
+void advManager::DoEventOasis(hero* current_hero, NewmapCell* cell,
+                              bool human_player)
+{
+    if (current_hero->flags & 0x80) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_OASIS_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_OASIS),
+                     1, -1, -1, 14, 0, -1, 0, -1, 0, -1, 0);
+    current_hero->flags |= 0x80;
+    game* g = gpGame;
+    g->SetInfoFlag(OasisInfo, gNetLocalGamePos);
+    current_hero->field_11a++;
+    current_hero->maxMovePoints += 800;
+    current_hero->movePoints += 800;
+    if (human_player)
+        advWindow->UpdateHeroLocators(-1, 1, 1);
+}
+
+// E:\gamedcs\events.cpp:2488.  The Star Axis: the fourth member of the
+// quartet, +1 Spell Power.
+VA(0x004a3dc0, 0xE4)  // linkorder + globalInfoFlags[PowerSchoolInfo], dc 0x946b4
+void advManager::DoEventPowerSchool(hero* current_hero, NewmapCell* cell,
+                                    bool human_player)
+{
+    if (current_hero->PowerSchoolFlags & (1 << cell->extraInfo)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_POWER_SCHOOL_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_POWER_SCHOOL),
+                     1, -1, -1, 0x21, 1, -1, 0, -1, 0, -1, 0);
+    current_hero->stats[2]++;
+    gpGame->SetInfoFlag(PowerSchoolInfo, gNetLocalGamePos);
+    current_hero->PowerSchoolFlags |= 1 << cell->extraInfo;
+}
+
 // Declared inline in the original Game.h (DC line 865); this is the retail
 // COMDAT copy selected into events.obj. Negative player ids are their own
 // team sentinel, while real slots use the signed team byte in the map header.
@@ -2258,6 +2529,87 @@ int game::GetTeam(int playerNum) const
     if (playerNum < 0)
         return playerNum;
     return mapHeader.teamInfo[playerNum];
+}
+
+// E:\gamedcs\events.cpp:3308.  The Temple: +1 morale, or +2 on the
+// seventh day of the week - game::field_1f63e is the day-of-week counter
+// and 7 is its Sunday. The visit is recorded in a DIFFERENT hero flag bit
+// per arm, and one test of both bits at the top is what makes the object
+// once-per-hero either way.
+//
+// Both arms end in the same NormalDialog on the same text row and differ
+// only in iResType2 - the second morale picture the Sunday bonus shows -
+// so retail cross-jumps them into one shared call. Writing both calls
+// longhand is what lets our CL find the same merge; see do_event_witch_hut
+// for the other site in this file that needs it.
+//
+// BRANCH POLARITY, the monsters_sell_out lever again: retail lays the
+// REWARD path out as the fallthrough (`test / jne <already-visited>`) and
+// parks the one-line visited arm at the very end of the body. An early
+// return on the visited case instead puts that arm first and rotates the
+// whole function.
+VA(0x004a6200, 0x12C)  // linkorder + globalInfoFlags[TempleInfo], dc 0x960ac
+void advManager::DoEventTemple(hero* current_hero, NewmapCell* cell,
+                               bool human_player)
+{
+    if (!(current_hero->flags & 0x4000100)) {
+        game* g = gpGame;
+        g->SetInfoFlag(TempleInfo, gNetLocalGamePos);
+        if (gpGame->field_1f63e == DAY_OF_WEEK_SUNDAY) {
+            current_hero->flags |= 0x4000000;
+            current_hero->field_11a += 2;
+            if (human_player)
+                NormalDialog(
+                    gpAdventureEventText->GetText(ADV_EVENT_TEXT_TEMPLE),
+                    1, -1, -1, 14, 0, 14, 0, -1, 0, -1, 0);
+        } else {
+            current_hero->flags |= 0x100;
+            current_hero->field_11a++;
+            if (human_player)
+                NormalDialog(
+                    gpAdventureEventText->GetText(ADV_EVENT_TEXT_TEMPLE),
+                    1, -1, -1, 14, 0, -1, 0, -1, 0, -1, 0);
+        }
+    } else if (human_player) {
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_TEMPLE_VISITED),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+}
+
+// E:\gamedcs\events.cpp:3349.  The Learning Stone: 1000 experience scaled
+// by the hero's own experience bonus, once per hero. The reward is
+// computed BEFORE the dialog because the dialog shows it as its quantity,
+// and the level check runs last because the award can push the hero over
+// a level boundary.
+VA(0x004a6330, 0x106)  // linkorder + globalInfoFlags[TrainingGroundsInfo], dc 0x961dc
+void advManager::DoEventTrainingGrounds(hero* current_hero, NewmapCell* cell,
+                                        bool human_player)
+{
+    if (current_hero->TrainingGroundsFlags & (1 << cell->extraInfo)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_TRAINING_GROUNDS_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    int amount = static_cast<int>(current_hero->GetExperienceBonusFactor()
+                                  * 1000.0f);
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_TRAINING_GROUNDS),
+                     1, -1, -1, 0x11, amount, -1, 0, -1, 0, -1, 0);
+    current_hero->GiveExperience(amount, 0, 1);
+    current_hero->TrainingGroundsFlags |= 1 << cell->extraInfo;
+    // The `game* g` spelling, do_event_watering_hole's lever: it is what
+    // puts the player position first in the SIB of the inlined
+    // teamInfo[playerNum] load (`[pos + gpGame]`). The four
+    // primary-skill handlers above want the direct call for the same
+    // byte, so the choice stays per-call-site.
+    game* g = gpGame;
+    g->SetInfoFlag(TrainingGroundsInfo, gNetLocalGamePos);
+    current_hero->CheckLevel();
 }
 
 // The two creaturetype.obj dwelling walks the modifier below calls. Both

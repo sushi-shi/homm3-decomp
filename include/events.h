@@ -16,6 +16,35 @@
 // water wheel 164/165, watering hole 166/167, whirlpool 168, windmill
 // 169/170, witch hut 171..173.
 enum EAdventureEventText {
+    // The four "one permanent primary skill, once per hero" objects, and
+    // each one is a PAIR: the reward line, then the already-visited line
+    // straight after it. The rows land where the alphabet puts each
+    // object, exactly as the war school / witch hut run below does.
+    // DoEventDefenseTower (0x4a2050); the reward line carries picture
+    // 0x20, the +1 Defense icon.
+    ADV_EVENT_TEXT_DEFENSE_TOWER = 39,
+    ADV_EVENT_TEXT_DEFENSE_TOWER_VISITED = 40,
+    // DoEventFountainOfYouth (0x4a25f0). The reward carries picture 0x0e,
+    // the same morale icon do_event_watering_hole shows, and the pair is
+    // reward-then-visited like the rest of this block.
+    ADV_EVENT_TEXT_FOUNTAIN_OF_YOUTH = 57,
+    ADV_EVENT_TEXT_FOUNTAIN_OF_YOUTH_VISITED = 58,
+    // DoEventGarden (0x4a2710), picture 0x22 = +1 Knowledge.
+    ADV_EVENT_TEXT_GARDEN = 59,
+    ADV_EVENT_TEXT_GARDEN_VISITED = 60,
+    // DoEventLeanTo (0x4a31a0). 64 is the payout - a resource picture and
+    // its amount - and 65 the picked-clean line.
+    ADV_EVENT_TEXT_LEAN_TO = 64,
+    ADV_EVENT_TEXT_LEAN_TO_EMPTY = 65,
+    // DoEventLibrary (0x4a3280). 66 is the reward, 67 the already-read
+    // line and 68 the refusal a hero gets while `level + 2*diplomacy`
+    // is under ten.
+    ADV_EVENT_TEXT_LIBRARY = 66,
+    ADV_EVENT_TEXT_LIBRARY_VISITED = 67,
+    ADV_EVENT_TEXT_LIBRARY_UNWORTHY = 68,
+    // DoEventMercenaryCamp (0x4a38b0), picture 0x1f = +1 Attack.
+    ADV_EVENT_TEXT_MERC_CAMP = 80,
+    ADV_EVENT_TEXT_MERC_CAMP_VISITED = 81,
     // The wandering-stack outcome handlers, and the run is contiguous
     // because "monster" is a single alphabetical entry: 86 is the join
     // offer monsters_join (0x4a7000) asks with iMBType 2, 91 the
@@ -33,6 +62,28 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_MONSTERS_SELL_OUT_LEAD = 89,
     ADV_EVENT_TEXT_MONSTERS_SELL_OUT_MANY = 90,
     ADV_EVENT_TEXT_MONSTERS_FLEE = 91,
+    // DoEventMysticalGarden (0x4a3bc0). 92 is the payout, 93 the
+    // already-harvested line.
+    ADV_EVENT_TEXT_MYSTICAL_GARDEN = 92,
+    ADV_EVENT_TEXT_MYSTICAL_GARDEN_EMPTY = 93,
+    // DoEventOasis (0x4a3ca0), and this pair is REVERSED against every
+    // other one in this enum: 94 is the already-visited line and 95 the
+    // reward. Both indices are byte-proven by the arm that loads them.
+    ADV_EVENT_TEXT_OASIS_VISITED = 94,
+    ADV_EVENT_TEXT_OASIS = 95,
+    // DoEventPowerSchool (0x4a3dc0), picture 0x21 = +1 Spell Power - the
+    // fourth member of the primary-skill quartet above.
+    ADV_EVENT_TEXT_POWER_SCHOOL = 100,
+    ADV_EVENT_TEXT_POWER_SCHOOL_VISITED = 101,
+    // DoEventTemple (0x4a6200). ONE reward row serves both arms - the
+    // Sunday visit differs only in showing the morale picture twice -
+    // and 141 is the already-worshipped line.
+    ADV_EVENT_TEXT_TEMPLE = 140,
+    ADV_EVENT_TEXT_TEMPLE_VISITED = 141,
+    // DoEventTrainingGrounds (0x4a6330). The reward line carries picture
+    // 0x11 and the experience amount as its quantity.
+    ADV_EVENT_TEXT_TRAINING_GROUNDS = 143,
+    ADV_EVENT_TEXT_TRAINING_GROUNDS_VISITED = 144,
     // DoEventWarSchool (0x4a7a40). 158 is the two-picture choice offered
     // with iMBType 10 (+1 Attack against +1 Defense), 159 the
     // already-trained line and 160 the "under 1000 gold" refusal.
@@ -63,6 +114,16 @@ enum EAdventureEventText {
     // field). It sits well outside the witch hut's own alphabetical run,
     // so the ROLE is what names it; only the index 190 is byte-proven.
     ADV_EVENT_TEXT_WITCH_HUT_NO_SKILL = 190
+};
+
+// The one value of game::field_1f63e any retail body in this tree pins:
+// DoEventTemple (0x4a6200) doubles its morale award when that word is 7,
+// and paying double on the seventh day of the week is exactly what
+// HoMM3's temple does. Only this member is named - the field itself keeps
+// its ordinal spelling in game.h, whose own note records that the wider
+// calendar role is not yet attested.
+enum EDayOfWeek {
+    DAY_OF_WEEK_SUNDAY = 7
 };
 
 // advManager::FizzleCenter's (0x4acbb0) sound selector, also the second
