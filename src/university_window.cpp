@@ -64,13 +64,6 @@ int type_university_window::WindowHandler(message* msg)
     // @stub
 }
 
-// E:\gamedcs\university_window.cpp:419
-DC_ONLY(0x18f868, 0x48)
-void type_university_window::handle_widget_hover(widget* current_widget)
-{
-    // @stub
-}
-
 // E:\gamedcs\university_window.cpp:433
 DC_ONLY(0x18f8b0, 0x6C)
 int type_university_window::cancel_click(message* msg)
@@ -93,6 +86,21 @@ int type_university_window::purchase_click(message* msg)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\university_window.cpp:419
+// Identified by shape: heroWindow slot 4 (one widget* argument, `ret 4`),
+// reading widget::RollOver at +0x20 and dispatching slot 13
+// (textWidget::SetText) through the +0x70 rollover pointer before a
+// whole-window redraw.
+VA(0x005f0dc0, 0x38)  // anchor-vtable (slot 4 shape) + RollOver read, dc 0x18f868
+void type_university_window::handle_widget_hover(widget* current_widget)
+{
+    if (!current_widget->RollOver)
+        rolloverText->SetText(emptyRolloverText);
+    else
+        rolloverText->SetText(current_widget->RollOver);
+    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+}
 
 // E:\gamedcs\university_window.cpp:515
 VA(0x005f1180, 0x2D)  // link order + vtable slot 14, dc 0x18faa4

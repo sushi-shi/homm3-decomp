@@ -6,6 +6,7 @@
 #define HOMM3_UNIVERSITY_WINDOW_H
 
 #include "advmgr_popup.h"
+#include "textwdgt.h"
 
 // Retail's +0x70 rollover pointer and +0x74 skill-array accesses translate
 // DC's +0x68/+0x6c fields by exactly the eight-byte CAdvPopup widening already
@@ -14,6 +15,13 @@
 // needed by the first admitted method.
 class type_university_window : public CAdvPopup {
 public:
+    // 0x60..0x6f is not yet attested by any admitted body; the rollover
+    // pointer at +0x70 is - handle_widget_hover 0x5f0dc0 loads it and
+    // dispatches slot 13 (textWidget::SetText) through it.
+    char pad_60[0x10];
+    textWidget* rolloverText;  // +0x70
+
+    virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int ExitDialog(message* msg);  // slot 14
 };
 
