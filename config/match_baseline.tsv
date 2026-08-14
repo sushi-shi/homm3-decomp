@@ -374,6 +374,7 @@ border	?Draw@bitmapBorder@@UAEXXZ	100.0000	100.0000	100.0000	0x50450
 border	?Draw@coloredBorderFrame@@UAEXXZ	100.0000	100.0000	100.0000	0x501e0
 border	?GetRealHeight@bitmapBorder@@UAEHXZ	100.0000	100.0000	100.0000	0x504b0
 border	?GetRealWidth@bitmapBorder@@UAEHXZ	100.0000	100.0000	100.0000	0x504a0
+border	?Main@bitmapBorder@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x50550
 border	?Main@border@@UAEHPAVmessage@@@Z	91.9802	91.9802	91.9802	0x4ff60
 border	?Main@coloredBorderFrame@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x50240
 border	?SetImage@bitmapBorder@@QAEXPBD@Z	100.0000	100.0000	100.0000	0x504c0

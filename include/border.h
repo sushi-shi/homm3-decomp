@@ -87,6 +87,7 @@ public:
     void zBufferDraw(unsigned short* zBuffer, int id);
     void SetImage(const char* bitmap_name);
     void SetPlayerPaletteColors(int whichPlayer);
+    virtual int Main(message* msg);  // slot 2, retail 0x450550
 };
 
 class Bitmap16Bit;
