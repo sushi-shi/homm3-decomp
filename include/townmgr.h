@@ -78,7 +78,11 @@ public:
     // reserves 0x70 of frame for it (object at [ebp-0x7c] under a
     // 12-byte EH record), and Widgets lands at the object's +0x34 in
     // every one, which fixes the base rather than the leaves.
-    char pad_60[0x10];
+    char pad_60[0xc];
+    // +0x6c: a byte type_monster_join_window's constructor sets to 1;
+    // nothing else attested about it.
+    unsigned char field_6c;
+    char pad_6d[3];
 
     // Retail 0x5ce830 (7456 B, the compiland's largest constructor);
     // both derived constructors pass their three parameters straight
@@ -94,9 +98,14 @@ public:
 // 0x643818 even though 0x643854 and 0x643890 exist and hold their ??_G.
 class type_monster_join_window : public type_garrison_base_window {
 public:
+    // +0x70..0x7b unattested; the constructor sets the byte at +0x6c,
+    // which is inside the base's own sixteen-byte tail, so it is
+    // declared there rather than here.
+
     // Three parameters, not the Dreamcast's two: both retail entry
     // points push a third literal 0 behind the army pointer.
-    type_monster_join_window(hero* inHero, armyGroup* monsters, int flags);
+    type_monster_join_window(hero* inHero, armyGroup* monsters,
+                             unsigned char flags);
     virtual ~type_monster_join_window();
 };
 
