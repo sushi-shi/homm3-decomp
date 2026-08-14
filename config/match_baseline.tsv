@@ -532,9 +532,9 @@ dialogbox	?Setup@CTextDialog@@UAEEPBDPAVfont@@@Z	100.0000	100.0000	100.0000	0x90
 dialogbox	?Setup@TDialogBox@@UAEEHHHH@Z	100.0000	100.0000	100.0000	0x8ff00
 dialogbox	?UpdateText@CTextDialog@@UAEXPBD@Z	100.0000	100.0000	100.0000	0x90b50
 diff	??0CDiffMaker@@QAE@PAEH0H@Z	100.0000	100.0000	100.0000	0x91030
-diff	?Apply@CDiffFile@@QAEPAXPAEH@Z	68.9643	68.9643	68.9643	0x90f60
-diff	?FindNextSame@CDiffMaker@@IAE_NHHAAH0@Z	83.2812	83.2812	83.2812	0x91050
-diff	?MakeDiff@CDiffMaker@@QAEPAVCDiffFile@@AAK@Z	81.5174	81.5174	81.5174	0x91140
+diff	?Apply@CDiffFile@@QAEPAXPAEH@Z	99.6429	99.6429	99.6429	0x90f60
+diff	?FindNextSame@CDiffMaker@@IAE_NHHAAH0@Z	84.1667	84.1667	84.1667	0x91050
+diff	?MakeDiff@CDiffMaker@@QAEPAVCDiffFile@@AAK@Z	83.9477	83.9477	83.9477	0x91140
 dimensiondoorwindow	?ExitDialog@TSkuttleBoatWindow@@UAEHPAVmessage@@@Z	100.0000	100.0000	100.0000	0x91eb0
 drawing	?DrawCreatureAndHeroSubwindows@combatManager@@QAEHXZ	100.0000	100.0000	100.0000	0x95650
 drawing	?ResetLimitCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x93710
