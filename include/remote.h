@@ -73,6 +73,13 @@ public:
     // That is why 0x5578d0 and the deleting destructor 0x557810 that
     // inlines it are located but unclaimed.
     CNetMsgHandler* GetNetMsgHandler();
+    // Out of line at 0x553040 (`ret 8`), and reached from two directions in
+    // remote.obj alone: the free GetRemoteData wrapper at 0x554400 passes
+    // ecx through and a literal 0, and CNetMsgHandler::CheckHandleNet
+    // (0x557860) calls it with the literal pair (1, 0). Declaration only -
+    // an inline BODY on this class is what cost advmgr 30 points above.
+    CNetMsg* GetRemoteData(unsigned char removeFromQueue,
+                           unsigned char* wasCompressed);
 
 private:
     char m_remoteState[0x90];       // +0x60..+0xef
