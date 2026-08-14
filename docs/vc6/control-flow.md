@@ -189,3 +189,10 @@ and the catalog's "document, don't grind" doctrine for the rest.
   clipped tail is uncompared and flagged `partial`.
 - Loop-form coverage is per-loop (first 3 `while` sites); nested-loop
   interactions are not modelled.
+- **Constructors are unreachable.** The v1 body locator (shared with
+  `why-reg`) demands a plain `fn(...) { ... }` definition, so any
+  constructor carrying a member-initialiser list dies with "cannot
+  locate the body of ...". Measured 2026-08-14 on the bottom-view
+  family, where every plateaued row is a constructor and neither solver
+  could be run at all. Until the locator accepts `T::T(...) : base(x) {`
+  the whole constructor population of this tree is outside the solvers.

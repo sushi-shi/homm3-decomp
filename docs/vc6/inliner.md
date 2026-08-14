@@ -270,6 +270,42 @@ always counts `call` + tail `jmp`.
    our reconstruction being statement-mass-lighter than retail's source, and
    with every callee-respelling attempt at this site failing (the body's
    bytes were never the input).
+9. **`TBottomViewKingdom` (in-tree, 2026-08-14) — the site-count lever,
+   isolated.** The sharpest confirmation of `budget / sites-remaining`
+   from a real matching row, because the knob is the SITE COUNT alone
+   with the caller's bytes held fixed. Retail keeps
+   `vector<widget*>::size()` (`0x423110`) out of line inside `reserve()`
+   where our compile expands it; `capacity()` is inlined on both sides,
+   so retail's nested budget died between two 19-byte callees.
+   Introducing exactly one extra **free** candidate (cb ≤ 0x28, so it
+   takes no budget charge and emits no bytes — `Widgets.size()`,
+   `capacity()` and `empty()` are interchangeable) moves the function
+   94.06 → 98.52 and the residual from ten divergent blocks to two
+   size-only ones. The rule's position semantics fall out exactly:
+
+   | extra free sites | placed BEFORE `reserve(8)` | placed at/after it |
+   |---|---|---|
+   | 1 | 94.06 (inert, 3 placements) | **98.52** (8 placements) |
+   | 3 | — | 95.88 |
+   | 8 | — | 95.88 |
+
+   A site before `reserve` cannot help because it raises the loop index
+   and the count together, leaving `sites-remaining` at reserve
+   unchanged; only a site at or after it raises the divisor. Sibling
+   rows in the same TU show the same lever with their own thresholds
+   (`TBottomViewTown` peaks at +3, `TBottomViewResourceMessage` at +5,
+   `TBottomViewHero` is already at retail's count and only loses), which
+   makes "the reconstruction is a few candidate sites lighter than
+   retail's source" a *measurable* per-function quantity.
+
+   **Negative control on the rival hypothesis.** The same four rows were
+   swept with 45 include-set / handle-order probes (six declaration
+   kinds at counts 1..256, two localities, plus eight mutations of the
+   include list itself). All byte-flat, while `il-diff` proves each
+   probe reached the front end (gl high-water +9, ex divergence across
+   392 function spans; adding a header moved 118700 ex bytes). Inline
+   structure in this TU is a C2 budget quantity and is not reachable
+   from C1 handle numbering.
 
 ## 6. What the model does not cover
 

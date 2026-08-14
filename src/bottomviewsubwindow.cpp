@@ -20,6 +20,32 @@
 
 __declspec(nothrow) void __cdecl operator delete(void* p);
 
+// THE INCLUDE SET IS NOT THE WALL IN THIS TU - measured, not assumed.
+// The four constructors below plateau on inline-depth divergence, and
+// the standing hypothesis was that C1XX front-end state (the symbol
+// handle numbering of docs/vc6/handle-order.md, delivered through the
+// IL) carried it, so that matching retail's include closure would move
+// all four together. It does not. Forty-five controlled probes were run
+// against all four rows at once:
+//
+//   * six declaration kinds at file scope - `extern int`, forward tag,
+//     `struct { int a; }`, `extern <UDT>*`, a member-function
+//     declarator, a first-virtual declarator - at counts 1..12, then
+//     32, 64, 128 and 256, at two localities (before every #include,
+//     and after all of them);
+//   * eight mutations of the include list itself - reversing the quoted
+//     block, reversing the whole block, hoisting game.h, moving the <>
+//     headers last, and adding hero.h / town.h / castle.h.
+//
+// Every one is byte-flat: TBottomViewHero 96.52, Town 94.31, Kingdom
+// 94.06, ResourceMessage 91.30, and the whole-tree fuzzy figure
+// unchanged to four decimals. The probes are NOT null - `homm3 vc6
+// il-diff` confirms each reaches the front end (nine `extern int` move
+// the gl high-water 0xf63c -> 0xf645 and perturb the ex stream across
+// 392 function spans; adding hero.h moves 118700 ex bytes) and produce
+// identical object code anyway. The C1 handle-order lever does not
+// reach this TU. See TBottomViewKingdom for what the wall actually is.
+
 #if 0  // @carcass
 
 // E:\gamedcs\bottomviewsubwindow.cpp:39
@@ -507,6 +533,18 @@ void TBottomViewNewTurn::animate()
 // out-of-line vector::size(). The rest of the delta is downstream
 // scheduling: retail lets the sprite's register die across the icon's
 // argument list because it reads both sprite fields first.
+//
+// SAME LEVER AS TBottomViewKingdom, DIFFERENT THRESHOLD. Read that
+// function's note first for the mechanism. Padding this body with free
+// (cb <= 0x28) inline candidates traces a single-peaked curve - 1 and 2
+// sites 91.30, 3 sites 91.30, FIVE sites 93.21, 8 sites 92.80, 12 sites
+// 91.26, 20 sites 87.19 - so retail's own body carries roughly five
+// more inline candidates than this reconstruction and the two-argument
+// insert falls out of the nested budget once it does. That is a large
+// enough deficit to be a real reconstruction gap rather than one
+// unnoticed accessor, so the probe is not landed and the gap is left
+// named for the next lane. The include set is NOT the cause - see the
+// TU-level note at the top of this file.
 VA(0x00451220, 0x393)  // anchor-vtable 0x63bb1c + advManager::UpdBottomViewResMsg, dc 0x554ac
 TBottomViewResourceMessage::TBottomViewResourceMessage(
     heroWindow* parent, int resource, int quantity,
@@ -666,10 +704,34 @@ static const int gHeroArmyCoords[7][2] = {
 // reduces the id the same way but reconstructs `i` as a second bias off
 // the stats cursor for the other two. The `i >= 2` compare is SIGNED
 // (`setge`), which rules out the obvious pointer-walk spelling: a real
-// pointer comparison would be unsigned. Tried and rejected: a hoisted
-// `signed char stat` local for the three-arm clamp (96.51, marginally
-// worse). A second, smaller residual is shared with TBottomViewTown -
-// see the note there on game::GetHero/GetTown arm order.
+// pointer comparison would be unsigned. A second, smaller residual is
+// shared with TBottomViewTown - see the note there on game::GetHero /
+// GetTown arm order.
+//
+// THIS ONE IS NOT THE SITE COUNT. Unlike the other three constructors
+// in this file (see TBottomViewKingdom), padding this body with free
+// inline candidates only ever LOSES - 3 sites 95.72, 5 sites 91.56, 8
+// sites 84.60 - and vector<widget*>::size() is already out of line on
+// both sides here, so this body's candidate count is already retail's.
+// The whole delta is the one loop: base 77 blocks against retail's 76,
+// the extra block being the `mov eax,[ebp-0x10]` reload of the second
+// bias at the loop head, plus the ESI/EBX transposition that follows
+// from creating the stats cursor before the coordinate cursor. Retail
+// runs linear-function-test replacement onto the COORDINATE cursor
+// (`cmp esi,&gHeroStatCoords[2]` for the arm, `cmp esi,
+// &gHeroStatCoords[4]` for the exit) and we run it onto the STATS
+// cursor for both, which is an IV-ranking choice inside C2 with no
+// source knob found. Tried and rejected: a hoisted `signed char stat`
+// local for the three-arm clamp (96.51); a `const int* coords` cursor
+// advanced in the body (96.61) or in the for-increment (96.52); a
+// `const int (*coords)[2]` row pointer (96.52); a per-iteration
+// `const int* coords = gHeroStatCoords[i]` (96.61); `i >= 2 ? 1 : 0`
+// (96.52) and `i > 1` (96.53). The two that gain 0.09 do not change the
+// block count and are not worth a spelling that retail's operand order
+// does not independently support. `homm3 vc6 why-branch` and `why-reg`
+// cannot be run here at all: their v1 body locator needs a plain
+// `fn(...) { ... }` definition and rejects a constructor with a member
+// initialiser list.
 //
 // THE TWO STRING TEMPORARIES GET SEPARATE SLOTS. The >= 10000 arm and
 // the plain arm each build their own format_string temporary at its own
@@ -814,6 +876,26 @@ static const int gTownArmyCoords[7][2] = {
 // Tried and rejected: hoisting `slots` to function scope (no change -
 // VC6's slot reuse here is liveness-based, not scope-based).
 //
+// PART OF IT IS THE SITE COUNT - see TBottomViewKingdom's note for the
+// mechanism. Padding this body with free inline candidates gives 94.43
+// at one site, 96.13 at three AND at five, and 91.66 at eight, so the
+// deficit is around three. At three sites the silo sweep and the
+// ostrstream str() region both come right - the block count goes 81 ->
+// 82 exact - while the three residuals named above (the zero CSE, the
+// GetTown arm order and the 8-byte frame) survive untouched, which is
+// what separates them into two independent classes. Nothing is landed:
+// the padding is a measurement, not a spelling.
+//
+// The silo sweep's own shape is a memory-homed `i`: retail indexes
+// `income[i]` as `[eax + 4*ecx]` and RELOADS `i` from [ebp-0x2c] after
+// every `slots[found++] = i` store, because that store may alias it,
+// where our CL strength-reduces income to a cursor and keeps `i` in a
+// register throughout. Tried and rejected on it: `int i` hoisted out of
+// the for-statement, `slots[found] = i; found++;` split, `i < 7` for
+// `i <= 6` (94.23), declaring `slots`/`found` before `income` (94.03),
+// a `*slot++ = i` pointer cursor (93.25) and widening `slots` to 3..16
+// entries (94.30-94.33, frame-offset noise only).
+//
 // get_army() IS CALLED FRESH EVERY TIME, three times per army slot;
 // retail never caches the reference. The quantity text is the same
 // ostrstream idiom TQuickTownWindow::initialize_army_display already
@@ -937,18 +1019,55 @@ TBottomViewTown::~TBottomViewTown()
 // The kingdom-overview banner: a hall-level census of the acting player's
 // towns above a two-row flag strip splitting the other players into
 // allies and enemies.
-// Residual (94.06%): ONE nested inline. Retail calls
+// Residual (94.06%): THE WALL IS THE INLINE-CANDIDATE SITE COUNT OF
+// THIS BODY, and it is now measured rather than inferred. Retail calls
 // vector<widget*>::size() out of line (0x423110) inside reserve() where
-// our CL expands its 19 bytes, and every other byte of the delta is
-// downstream of that: the EBX save shrink-wraps past the growth block,
-// `this` lands in EDI instead of ESI, and the constant zero stays CSE'd
-// in a register because the inlined size() still needs it. capacity()
-// IS inlined on both sides, so retail's budget ran out between the two.
-// predict-inline agrees: base emits 38 out-of-line calls, retail 39,
-// and 0x423110 is the only genuine row. Tried and rejected: titrating
-// the caller with self-assignments (byte-flat - C1 eliminates them
-// before the inliner measures cb) and a single 42-stepping `x` local in
-// place of the two `42*i+N` expressions (93.56, worse).
+// our CL expands its 19 bytes; capacity() is inlined on BOTH sides, so
+// retail's nested budget ran out between two 19-byte functions.
+// predict-inline agrees on the count: base emits 38 out-of-line calls,
+// retail 39, and 0x423110 is the only genuine row.
+//
+// The RE'd /Ob2 rule (docs/vc6/inliner.md section 2) hands a nested
+// expansion `budget / sites-remaining`, so that decision is controlled
+// by the NUMBER of inline-candidate call sites in this body, not by its
+// size. Adding ONE more free (cb <= 0x28) candidate site takes this
+// function 94.06 -> 98.52 and collapses the residual from ten divergent
+// blocks to two size-only ones. The callee does not matter -
+// Widgets.size(), capacity() and empty() all give exactly 98.52 - and
+// the POSITION semantics are the rule's own: the site is inert
+// everywhere BEFORE Widgets.reserve(8) (94.06, nine placements) and
+// worth the full 4.46 points everywhere at or after it (98.52, eight
+// placements), because only a site at or after reserve raises
+// `sites-remaining` at reserve's own index. Three such sites overshoot
+// (95.88) and eight give the same, so the deficit is exactly one.
+// Retail's source therefore carries one more inline candidate than this
+// reconstruction, at or after the reserve, and it contributes no bytes
+// of its own. No plausible statement with that signature has been
+// found, so the probe is deliberately NOT landed - a bare
+// `Widgets.size();` is a score, not a reconstruction.
+//
+// The remaining 1.48 is a SECOND, independent divergence: our CL CSEs
+// the constant zero into ESI across the whole prologue (`xor esi,esi`,
+// then `cmp eax,esi` for the new-null test, `push esi` twice for the
+// backdrop's x/y, four `mov [ebp-N],esi` for counts[]) where retail
+// rematerialises it after the bitmapBorder call (`test eax,eax`,
+// `push 0x0` twice, `xor eax,eax` / `xor ecx,ecx`). TBottomViewTown has
+// the SAME divergence with the sides reversed - retail CSEs there and
+// we do not - so it is not a spelling of this body. The counts[] store
+// order is downstream of it and byte-invariant under every init form
+// tried: four statements, a chained assignment, an aggregate
+// initializer and a hand-written 3/0/1/2 order all give the same bytes.
+//
+// Tried and rejected, all measured: titrating the caller with
+// self-assignments and plain dead stores (byte-flat - the budget is
+// pinned at the clamp's 1000 floor, so caller mass cannot move it); a
+// single 42-stepping `x` local in place of the two `42*i+N` expressions
+// (93.56, worse, which is also what proves smaller IL is not smaller
+// cb); buying the site honestly by spelling one push_back as
+// `Widgets.insert(Widgets.end(), w)` (85.66-87.40 at five different
+// push_backs - unlike in TBottomViewResourceMessage the two forms are
+// NOT byte-identical here); and an index-based tail loop over
+// Widgets.size() in three forms (91.16, 93.83, 94.24).
 VA(0x00452b80, 0x620)  // anchor-vtable 0x63bb3c + advManager::UpdBottomViewKingdom, dc 0x563b8
 TBottomViewKingdom::TBottomViewKingdom(heroWindow* parent)
     : type_bottom_view_window(parent)
