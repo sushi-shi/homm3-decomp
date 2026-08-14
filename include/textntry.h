@@ -78,7 +78,15 @@ public:
     short boxHeight;             // 0x5e
     short boxX;                  // 0x60
     short boxY;                  // 0x62
-    short field_64;              // 0x64, ctor stores 1
+    short field_64;              // 0x64, ctor stores 1. OnKeyPress
+                                 // compares it against
+                                 // Font->LineLength(Text, boxWidth) and
+                                 // rolls the edit back when the typed
+                                 // character pushes the string past it,
+                                 // i.e. a line-count ceiling. Still an
+                                 // ordinal placeholder: 1 is the only
+                                 // value attested and only the ctor
+                                 // writes it.
     short field_66;              // 0x66, ctor stores the inset flag
     short field_68;              // 0x68, compared against 3 by Draw /
                                  // SetupDisplayString / OnKeyPress. NO
@@ -86,8 +94,14 @@ public:
                                  // writes it - scanned every 8/16/32-bit
                                  // store form at this displacement.
     short displayStart;          // 0x6a, first shown character
-    unsigned char field_6C;      // 0x6c, OnKeyPress sets it, SetupDisplayString
-                                 // reads then clears it
+    unsigned char field_6C;      // 0x6c, the caret blink phase: OnKeyPress
+                                 // forces it to 1 on every keystroke and
+                                 // SetupDisplayString toggles it
+                                 // (`1 - field_6C`) every 360 ticks off
+                                 // glTimers[0]. Nothing in the image
+                                 // READS it, so the renderer that would
+                                 // name it is outside this class -
+                                 // ordinal placeholder kept.
     unsigned char bHasFocus;     // 0x6d, stored by SetFocus 0x5bab50
     unsigned char bAutoDraw;     // 0x6e, gates SetFocus's redraw
     char pad_6F[1];

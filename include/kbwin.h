@@ -34,6 +34,22 @@ public:
             lag = interval;
         return this_frame + lag;
     }
+    // DC struct.h:411 / :419 (dc 0x1eed4, 0x1ef04) - the other two
+    // header inlines of the same family; no retail out-of-line body
+    // exists for either. textEntryWidget::SetupDisplayString 0x5bb660
+    // is the expansion that proves the shape: the deadline argument is
+    // loaded into a callee-saved register BEFORE the Get() call (an
+    // argument evaluated ahead of its guard), and the result is tested
+    // with `sub eax, edi; js`, i.e. the SIGN of the difference - not
+    // the unsigned `cmp` a hand-spelled `Get() >= deadline` emits.
+    static long ElapsedSince(unsigned long time)
+    {
+        return static_cast<long>(Get() - time);
+    }
+    static unsigned char IsPast(unsigned long time)
+    {
+        return ElapsedSince(time) >= 0;
+    }
 };
 
 // Live prototypes (homm2 kbwin lineage; retail bodies noted).

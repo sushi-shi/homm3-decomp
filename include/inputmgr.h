@@ -36,6 +36,20 @@ enum EKeyCodes {
     KEYCODE_KP_2 = 0x50,
     KEYCODE_KP_3 = 0x51,
     KEYCODE_KP_0 = 0x52,
+    // The numpad Del/decimal key, one past KP_0 - the caret editor's
+    // forward-delete arm. Its value is forced by the same dense jump
+    // table that fixes KP_1/KP_4/KP_6/KP_7: textEntryWidget::OnKeyPress
+    // 0x5bac50 indexes msg->codeX over 0x47..0x53 and files this case
+    // at the table's last slot.
+    KEYCODE_KP_DECIMAL = 0x53,
+    // Not a scan code: the value inputManager::AsciiConvert 0x4ec6f0
+    // leaves in msg->codeX for the backspace key, which is the only
+    // reason a consumer ever sees it. textEntryWidget::OnKeyPress tests
+    // for it immediately after the AsciiConvert call and takes its
+    // delete-left arm. Filed in this enum because codeX is the carrier
+    // for both domains and every other consumer of the ASCII half
+    // compares character literals.
+    KEYCODE_ASCII_BACKSPACE = 0x7f,
     KEYCODE_F11 = 0x57,
     KEYCODE_F12 = 0x58
 };
