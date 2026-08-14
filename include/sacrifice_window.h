@@ -20,7 +20,13 @@ class hero;
 class type_sacrifice_window : public CAdvPopup {
 public:
     hero* current_hero;
-    unsigned char field_64[0x1d8];
+    unsigned char pad_64[0x28];
+    // +0x8c: handle_widget_hover 0x5653f0 reads it and dispatches slot 13
+    // (textWidget::SetText) through it - the same rollover pointer
+    // type_skeleton_window keeps at +0x60 and type_university_window at
+    // +0x70. Offsets either side of it are unchanged.
+    textWidget* rolloverText;
+    unsigned char pad_90[0x1ac];
 
     // DC types artifact_click's first parameter as TArtifactSlot; this tree
     // has no such enum yet, so it takes the long its retail call site
@@ -30,6 +36,8 @@ public:
     void offering_click(long slot, unsigned char right_click);
     void creature_click(long slot, unsigned char right_click,
                         unsigned char left_pane);
+
+    virtual void handle_widget_hover(widget* current_widget);  // slot 4
 };
 SIZE(type_sacrifice_window, 0x23c);
 
