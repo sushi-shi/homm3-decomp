@@ -286,8 +286,8 @@ townManager::townManager()
     field_130 = -1;
     field_134 = 0;
     field_138 = -1;
-    field_194 = -1;
-    field_198 = -1;
+    lastHover = -1;
+    lastQualifier = -1;
     field_19c = -1;
     field_1a4 = 0;
     field_1ac = 0;
@@ -3615,12 +3615,12 @@ TCastleWindow::TCastleWindow()
 
     if (gpTownManager->townToView->type == TOWN_DUNGEON
         && (gpTownManager->townToView->built & bitNumber[EXTRA_1_ID])
-        && gpTownManager->townToView->field_3c == -1)
+        && gpTownManager->townToView->summoningType == -1)
         gpTownManager->townToView->SetSummoningGenerator();
 
     if (gpTownManager->townToView->type == TOWN_DUNGEON
         && (gpTownManager->townToView->built & bitNumber[EXTRA_1_ID])
-        && gpTownManager->townToView->field_3c != -1) {
+        && gpTownManager->townToView->summoningType != -1) {
         Widgets.push_back(new bitmapBorder(0, 0, 800, 600, 0, "TPCastl8.pcx", 0x800));
         use8 = 1;
     } else {
@@ -3671,7 +3671,7 @@ TCastleWindow::TCastleWindow()
     Widgets.push_back(new bitmapBorder(563, 292, 100, 120, -1, gText, 0x800));
     if (use8) {
         Widgets.push_back(new bitmapBorder(169, 425, 100, 120, -1, gText, 0x800));
-        int summoned = gpTownManager->townToView->field_3c;
+        int summoned = gpTownManager->townToView->summoningType;
         strcpy(gText, gTownCastleDefNames[
                    ((!gpGame->f_1f698
                      && (summoned == CREATURE_AIR_ELEMENTAL
@@ -3792,7 +3792,7 @@ TCastleWindow::TCastleWindow()
                                      0, 2, 0, 0, 0x12);
         SpriteWidget[7] = new iconWidget(563, 425, 99, 119, -1,
                                      akCreatureTypeTraits[
-                     gpTownManager->townToView->field_3c].m_sprite_name,
+                     gpTownManager->townToView->summoningType].m_sprite_name,
                                      0, 2, 0, 0, 0x12);
         Widgets.push_back(SpriteWidget[7]);
     } else {
@@ -4317,6 +4317,229 @@ void TCastleWindow::Recruit(int i)
     }
 }
 
+// The fort page's handler, slot 9 of vtable 0x6439bc. Three jobs: the
+// rollover line, the row clicks, and the dwelling animations.
+//
+// The row clicks are one switch over `codeY` with SEVEN eight-wide
+// families in it - the row frame and the six stat-column captions - and
+// retail's two jump tables are what prove the shape. The first table
+// covers 0x11..0x50 (byte index at 0x5dd330, six targets at 0x5dd318),
+// the second 0x58..0x60 (0x5dd378 / 0x5dd370), and the remaining
+// families fall out as range compares, which is exactly how VC6 splits
+// a case set into clusters. Within a family the first seven ids recruit
+// that row and the eighth - the summoning portal's - opens the generic
+// dialog over the town's own garrison; the eighth ids of all seven
+// families share ONE arm, which is why retail has one copy of it.
+//
+// The resource bar's two bands arrive here too, because the bar is a
+// subwindow of the page underneath. Both print the DESCRIPTION column
+// of the shared record (`+ 1` on the pair SetRolloverText reads the
+// name column of) into gText and put it up as a dialog, whose type is 4
+// for a right-click and 1 otherwise. They are spelled separately and
+// retail cross-jumps only their common tail - the same arrangement
+// TBuyBuildWindow::WindowHandler's two sprintf arms have.
+//
+// The animation tick runs on every message the switch did not consume,
+// which is why it sits after the switch and not inside an arm. The
+// `max` in it is an LVALUE ternary over two locals, bound to a
+// reference: retail selects an ADDRESS (`lea eax,[elapsed]` /
+// `lea eax,[minStep]`) and only then loads through it, which is what
+// the conditional operator's lvalue result compiles to. Spelled as a
+// plain value (`glTimers[0] += elapsed > minStep ? elapsed : minStep`)
+// our CL const-propagates the 100 and picks the register form instead,
+// and the whole block costs 6 instructions - 85.77 against 99.45.
+//
+// Both dialog arms call NormalDialog TWICE, once per button. Selecting
+// the dialog type into a variable and calling once - the spelling that
+// reads better - makes our CL build the type branchlessly
+// (`sub/neg/sbb/and/add`, five instructions) where retail branches, and
+// it also lets the cross-jumper fold the two arms' bodies into one
+// (28 instructions gone, arm 1 reduced to a table load and a jmp).
+// Written as two calls the compiler merges only what retail merges: the
+// shared `mov edx,1` and the single call site.
+//
+// Residual (99.45%): ONE instruction, and it is a spill placement.
+// `elapsed` is address-taken through the reference above, so our CL
+// homes it at its definition, ahead of the sign test; retail homes it
+// after. Everything else in the body - both jump tables, all ten arms,
+// the inlined strcpy pair, the recruit dialog and the tick - is retail's
+// instruction for instruction, and the rest of the diff is reloc NAMES
+// and relocation addends, neither of which the scorer counts. Tried and
+// rejected: the early-return form `if (elapsed < 0) return 1;` (99.45,
+// byte-identical).
+
+// E:\gamedcs\townmgr.cpp:8851
+VA(0x005dcf80, 0x401)  // anchor-vtable 0x6439bc slot 9 + arity, dc 0x17f818
+int TCastleWindow::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+
+    switch (msg->id) {
+    case MESSAGE_MOUSE_MOVE:
+        gpWindowManager->ConvertToHover(*msg);
+        if (msg->codeY != gpTownManager->lastHover
+            || msg->qualifier != gpTownManager->lastQualifier) {
+            gpTownManager->lastHover = msg->codeY;
+            gpTownManager->lastQualifier = msg->qualifier;
+            SetRolloverText(msg);
+        }
+        return 1;
+
+    case MESSAGE_WIDGET:
+        if (msg->codeX == widget::WIDGET_SELECT
+            || msg->codeX == widget::WIDGET_RIGHT_SELECT) {
+            switch (msg->codeY) {
+            case ROW_FRAME_ID:
+            case ROW_FRAME_ID + 1:
+            case ROW_FRAME_ID + 2:
+            case ROW_FRAME_ID + 3:
+            case ROW_FRAME_ID + 4:
+            case ROW_FRAME_ID + 5:
+            case ROW_FRAME_ID + 6:
+                Recruit(msg->codeY - ROW_FRAME_ID);
+                break;
+
+            case ROW_STAT_LABEL_1_ID:
+            case ROW_STAT_LABEL_1_ID + 1:
+            case ROW_STAT_LABEL_1_ID + 2:
+            case ROW_STAT_LABEL_1_ID + 3:
+            case ROW_STAT_LABEL_1_ID + 4:
+            case ROW_STAT_LABEL_1_ID + 5:
+            case ROW_STAT_LABEL_1_ID + 6:
+                Recruit(msg->codeY - ROW_STAT_LABEL_1_ID);
+                break;
+
+            case ROW_STAT_LABEL_2_ID:
+            case ROW_STAT_LABEL_2_ID + 1:
+            case ROW_STAT_LABEL_2_ID + 2:
+            case ROW_STAT_LABEL_2_ID + 3:
+            case ROW_STAT_LABEL_2_ID + 4:
+            case ROW_STAT_LABEL_2_ID + 5:
+            case ROW_STAT_LABEL_2_ID + 6:
+                Recruit(msg->codeY - ROW_STAT_LABEL_2_ID);
+                break;
+
+            case ROW_STAT_LABEL_3_ID:
+            case ROW_STAT_LABEL_3_ID + 1:
+            case ROW_STAT_LABEL_3_ID + 2:
+            case ROW_STAT_LABEL_3_ID + 3:
+            case ROW_STAT_LABEL_3_ID + 4:
+            case ROW_STAT_LABEL_3_ID + 5:
+            case ROW_STAT_LABEL_3_ID + 6:
+                Recruit(msg->codeY - ROW_STAT_LABEL_3_ID);
+                break;
+
+            case ROW_STAT_LABEL_4_ID:
+            case ROW_STAT_LABEL_4_ID + 1:
+            case ROW_STAT_LABEL_4_ID + 2:
+            case ROW_STAT_LABEL_4_ID + 3:
+            case ROW_STAT_LABEL_4_ID + 4:
+            case ROW_STAT_LABEL_4_ID + 5:
+            case ROW_STAT_LABEL_4_ID + 6:
+                Recruit(msg->codeY - ROW_STAT_LABEL_4_ID);
+                break;
+
+            case ROW_STAT_LABEL_5_ID:
+            case ROW_STAT_LABEL_5_ID + 1:
+            case ROW_STAT_LABEL_5_ID + 2:
+            case ROW_STAT_LABEL_5_ID + 3:
+            case ROW_STAT_LABEL_5_ID + 4:
+            case ROW_STAT_LABEL_5_ID + 5:
+            case ROW_STAT_LABEL_5_ID + 6:
+                Recruit(msg->codeY - ROW_STAT_LABEL_5_ID);
+                break;
+
+            case ROW_STAT_LABEL_6_ID:
+            case ROW_STAT_LABEL_6_ID + 1:
+            case ROW_STAT_LABEL_6_ID + 2:
+            case ROW_STAT_LABEL_6_ID + 3:
+            case ROW_STAT_LABEL_6_ID + 4:
+            case ROW_STAT_LABEL_6_ID + 5:
+            case ROW_STAT_LABEL_6_ID + 6:
+                Recruit(msg->codeY - ROW_STAT_LABEL_6_ID);
+                break;
+
+            case ROW_FRAME_ID + ROW_SUMMONING_OFFSET:
+            case ROW_STAT_LABEL_1_ID + ROW_SUMMONING_OFFSET:
+            case ROW_STAT_LABEL_2_ID + ROW_SUMMONING_OFFSET:
+            case ROW_STAT_LABEL_3_ID + ROW_SUMMONING_OFFSET:
+            case ROW_STAT_LABEL_4_ID + ROW_SUMMONING_OFFSET:
+            case ROW_STAT_LABEL_5_ID + ROW_SUMMONING_OFFSET:
+            case ROW_STAT_LABEL_6_ID + ROW_SUMMONING_OFFSET:
+                gpRecruitUnit = new recruitUnit(
+                    gpTownManager->townToView->get_army(), 1,
+                    gpTownManager->townToView->summoningType,
+                    &gpTownManager->townToView->summoningPopulation,
+                    CREATURE_NONE, 0, CREATURE_NONE, 0, CREATURE_NONE, 0);
+                if (!gpRecruitUnit)
+                    MemError();
+                gpExecutive->DoDialog(gpRecruitUnit);
+                delete gpRecruitUnit;
+                CastleBank->Update(1, 1);
+                {
+                    message textMessage;
+                    textMessage.extraText = gText;
+                    sprintf(gText, "%s %d", gpGeneralText->GetText(218),
+                            gpTownManager->townToView->summoningPopulation);
+                    BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT,
+                                     0x28, textMessage.extra);
+                }
+                break;
+
+            case RESOURCE_TEXT_ID:
+            case RESOURCE_TEXT_ID + 1:
+            case RESOURCE_TEXT_ID + 2:
+            case RESOURCE_TEXT_ID + 3:
+            case RESOURCE_TEXT_ID + 4:
+            case RESOURCE_TEXT_ID + 5:
+            case RESOURCE_TEXT_ID + 6:
+            case RESOURCE_TEXT_ID + 7:
+                strcpy(gText, gUnnamed6a56e0[
+                           2 * gUnnamed642e70[msg->codeY - RESOURCE_TEXT_ID]
+                           + 1]);
+                if (msg->codeX == widget::WIDGET_RIGHT_SELECT)
+                    NormalDialog(gText, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                else
+                    NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                break;
+
+            case RESOURCE_BORDER_ID:
+            case RESOURCE_BORDER_ID + 1:
+            case RESOURCE_BORDER_ID + 2:
+            case RESOURCE_BORDER_ID + 3:
+            case RESOURCE_BORDER_ID + 4:
+            case RESOURCE_BORDER_ID + 5:
+            case RESOURCE_BORDER_ID + 6:
+                strcpy(gText, gUnnamed6a56e0[
+                           2 * gUnnamed642e70[msg->codeY - RESOURCE_BORDER_ID]
+                           + 1]);
+                if (msg->codeX == widget::WIDGET_RIGHT_SELECT)
+                    NormalDialog(gText, 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                else
+                    NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+                break;
+            }
+        }
+        break;
+    }
+
+    long elapsed = GameTime::Get()
+                   - glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT];
+    if (elapsed >= 0) {
+        long minStep = 100;
+        const long& step = elapsed > minStep ? elapsed : minStep;
+        glTimers[GLOBAL_ADVENTURE_ANIMATION_TIMER_SLOT] += step;
+        for (int i = 0; i < TOWN_DWELLING_COUNT; i++)
+            SpriteWidget[i]->NextRandomFrame();
+        if (use8)
+            SpriteWidget[TOWN_DWELLING_COUNT]->NextRandomFrame();
+        DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+    }
+    return 1;
+}
+
 // E:\gamedcs\townmgr.cpp:9067
 // The fort page, filled in one pass. Every line of it is broadcast to the
 // page rather than written through the manager, which is why the window
@@ -4414,10 +4637,10 @@ void townManager::SetupWell(TCastleWindow* wellWin)
 
         msg.codeY = 0x20;
         const char* summonName;
-        if (gpTownManager->townToView->field_3c >= 0
-            && gpTownManager->townToView->field_3c <= 150)
+        if (gpTownManager->townToView->summoningType >= 0
+            && gpTownManager->townToView->summoningType <= 150)
             summonName =
-                akCreatureTypeTraits[gpTownManager->townToView->field_3c].m_plural_name;
+                akCreatureTypeTraits[gpTownManager->townToView->summoningType].m_plural_name;
         else
             summonName = "";
         strcpy(gText, summonName);
@@ -4467,7 +4690,7 @@ void townManager::SetupWell(TCastleWindow* wellWin)
 
     if (wellWin->use8) {
         TCreatureTypeTraits monInfo =
-            akCreatureTypeTraits[gpTownManager->townToView->field_3c];
+            akCreatureTypeTraits[gpTownManager->townToView->summoningType];
         sprintf(gText, "%d", monInfo.attackSkill);
         textMessage.extraText = gText;
         wellWin->BroadcastMessage(MESSAGE_WIDGET, widget::WIDGET_SET_TEXT, 0x30,
@@ -4585,7 +4808,7 @@ void GetCategoryStats(int whichCat, long* value, signed char* index)
                 for (int t = 0; t < gpGame->players[i].numTowns; t++) {
                     town* thisTown = gpGame->GetTown(gpGame->players[i].townIds[t]);
                     if (thisTown->HasGarrison())
-                        strength += AI_approximate_strength(0, &thisTown->get_army());
+                        strength += AI_approximate_strength(0, thisTown->get_army());
                 }
                 value[i] = strength;
                 break;
