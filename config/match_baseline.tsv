@@ -1480,6 +1480,8 @@ tradpost	??_GTGiveResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e3690
 tradpost	??_GTSellArtifactWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e7be0
 tradpost	??_GTSellCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e9c80
 tradpost	??_GTTradeResourceWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1e1620
+tradpost	?DoBlackMarket@@YIXPAVhero@@PAD@Z	100.0000	100.0000	100.0000	0x1ea100
+tradpost	?DoTradingPost@@YIXXZ	100.0000	100.0000	100.0000	0x1ea0c0
 tradpost	?get_market_value@@YIJW4EGameResource@@@Z	100.0000	100.0000	100.0000	0x1ecd10
 trees	@_tr_align@4	100.0000	100.0000	100.0000	0x206f70
 trees	@_tr_flush_block@16	100.0000	100.0000	100.0000	0x2071c0

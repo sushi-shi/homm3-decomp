@@ -3,6 +3,7 @@
 // 71 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "tradpost.h"
+#include "game.h"
 #include "widget.h"
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -166,19 +167,56 @@ void DoMarketplace()
     // @stub
 }
 
+#endif  // @carcass
+
+// --- the market entry points ------------------------------------------
+// Six thin setters seed one block of file-static market state and tail into
+// DoMarket 0x5ea130. Reading them side by side is what identifies them:
+//   0x5e9d20  gMarketWindow 2, gMarketSource 0, counts the player's markets
+//   0x5e9e60  gMarketWindow 4, gMarketSource 3, one pointer argument
+//   0x5e9ea0  gMarketWindow 4, gMarketSource 0, counts the player's markets
+//   0x5e9fe0  gMarketWindow 0, gMarketSource 0, counts the player's markets
+//   0x5ea0c0  gMarketWindow 0, gMarketSource 1, market count forced to 5
+//   0x5ea100  gMarketWindow 2, gMarketSource 2, market count forced to 5
+// The window index runs in the order the five dialog classes are declared -
+// 0 trade resources, 1 give resources, 2 buy artifacts, 3 sell artifacts,
+// 4 sell creatures - so 0x5ea0c0 is DoTradingPost (resource trade with the
+// gift pane, fixed efficiency) and 0x5ea100 is DoBlackMarket (buy
+// artifacts, fixed efficiency, and the only entry taking a hero AND an
+// artifact list, which is exactly DoBlackMarket's Dreamcast signature).
+// Both are also the two rows the Dreamcast source order puts immediately
+// before DoMarket.
+
+DATA(0x006aaa74) static char* gpMarketArtifacts;
+DATA(0x006aaa78) static hero* gpMarketHero;
+DATA(0x006aaa98) static int gMarketCount;
+DATA(0x006aaaa4) static int gMarketWindow;
+DATA(0x006aaac4) static int gMarketSource;
+
 // E:\gamedcs\tradpost.cpp:683
-DC_ONLY(0x18869c, 0x36)
+VA(0x005ea0c0, 0x32)  // anchor-callee (DoMarket) + linkorder, dc 0x18869c
 void DoTradingPost()
 {
-    // @stub
+    gMarketCount = 5;
+    gpMarketArtifacts = gpGame->field_1f664;
+    gMarketWindow = 0;
+    gMarketSource = 1;
+    DoMarket();
 }
 
 // E:\gamedcs\tradpost.cpp:693
-DC_ONLY(0x1886d4, 0x32)
-void DoBlackMarket(hero* inHero, TArtifact* blackArtifacts)
+VA(0x005ea100, 0x2A)  // anchor-callee (DoMarket) + arity screen, dc 0x1886d4
+void DoBlackMarket(hero* inHero, char* blackArtifacts)
 {
-    // @stub
+    gpMarketHero = inHero;
+    gpMarketArtifacts = blackArtifacts;
+    gMarketCount = 5;
+    gMarketWindow = 2;
+    gMarketSource = 2;
+    DoMarket();
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:704
 DC_ONLY(0x188708, 0x4CC)

@@ -59,6 +59,18 @@ public:
 
 long get_market_value(EGameResource resource);
 
+// The shared body all six market entry points tail into once they have
+// seeded the static market state. The Dreamcast roster has it `static`;
+// retail keeps it out of line because six call sites reach it, so the
+// linkage difference cannot change its callers' code.
+void DoMarket();
+void DoTradingPost();
+// DC types the second parameter TArtifact*. The game-side buffer this is
+// aliased against - gpGame's char[0x1c] at +0x1f664, which DoTradingPost
+// passes here - is not admitted as an artifact array yet, so the pointer
+// stays untyped rather than fabricating the element type.
+void DoBlackMarket(hero* inHero, char* blackArtifacts);
+
 // Retail .data 0x678344. The public retail name carries this spelling;
 // calculate_demand indexes entries 1..10 after clamping the number of
 // owned legal Marketplaces. Owner definition has not yet been admitted.
