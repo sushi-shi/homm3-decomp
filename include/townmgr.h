@@ -296,6 +296,10 @@ public:
 
     TCastleWindow();
     virtual ~TCastleWindow();
+    // Retail 0x5dcbf0. NOT virtual: 0x5dcbf0 appears in no vtable and in
+    // no .rdata cell image-wide, and its one caller (the page's own
+    // WindowHandler at 0x5dd2f9) reaches it with a direct call.
+    void SetRolloverText(message* msg);
     // Retail 0x5dce50, the fort page's buy button for row `i`.
     void Recruit(int i);
 };

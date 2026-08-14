@@ -2479,6 +2479,31 @@ void TBuyBuildWindow::set_prerequisite_text(const town* current_town, type_build
 }
 
 // E:\gamedcs\townmgr.cpp:7354
+// LOCATED 2026-08-14 at retail 0x5d5f30 (carve 0x8DA, 2266 B); not
+// reconstructed, so the row stays DC_ONLY. The arity screen settles it
+// alone: this body ends `ret 0xC` on both exits and spills ecx, which is
+// thiscall plus THREE dword arguments - the DC's own parameter count -
+// while the three rivals in the same order-map slot are `ret 8`
+// (set_prerequisite_text, 3 params) and `ret 4` (BuildObj, SetupMage, 2
+// each); the predecessor at 0x5d5be0 was disassembled and IS `ret 8`, so
+// the roster's next row is this one, and the successor 0x5d70b0 is the
+// claimed TTavernWindow constructor. Corroborated four more ways: it
+// constructs ??0TBuyBuildWindow@@QAE@HHH@Z(0xCA, 0x28, buildingId); it
+// calls town::get_build_cost through townToView with the DC's own
+// int[7]/EGameResource[7] out-pair; it enters
+// heroWindowManager::DoQuickView exactly when the third argument is
+// nonzero (the DC names it bQuickView); and the tail DEBITS
+// gpCurrentPlayer->resources[resources[i]] by amounts[i], which is the
+// purchase itself.
+//
+// The two stack tables are int[7][7] laid out `[numResources-1][i]` and
+// filled from immediates: resourceY is {340} / {340,340} / ... then
+// 303/377 two-row splits from five resources up, and resourceX is the
+// x-pitch row (44,84,124,164,204,244,284 centred on 164). They are the
+// cost-icon grid, and their ~98 immediate stores are why the x86 body is
+// 1.67x the SH4 one. An earlier brief called them int[8][8] and called
+// the widget vector a stack argument; both are wrong - the vector is a
+// MEMBER of the constructed window at +0x30.
 DC_ONLY(0x1793b4, 0x54A)
 int townManager::BuyBuild(int buildingId, int infoOnly, int bQuickView)
 {
@@ -3348,6 +3373,97 @@ TCastleWindow::~TCastleWindow()
 // row in this span and no gap fits it: /Ob2's single-call-site rule
 // expanded it, as it did ShowText.
 // ---------------------------------------------------------------------
+
+// Four .bss cells this page reads and nothing in the admitted surface
+// writes; every one of them is declared, not claimed static, because the
+// image gives no producer inside townmgr's bracket.
+//
+//   0x6a5c28  six char*, one per COST COLUMN of the fort page - the six
+//             hotspot bands 0x39..0x68 divide by eight onto it.
+//   0x6a5c40  the format the exit button prints the fort's own name with.
+//   0x6a56e0  a per-building record of EIGHT bytes whose first dword is
+//             the building's name. castle.obj's town-screen handler
+//             (0x461ef0) reaches it with the identical `[8*id + base]`
+//             form off its own copy of the id table below, so the record
+//             is shared, not this compiland's. Only the name column is
+//             ever read here, which is why the row is modelled as that
+//             column - `[2 * id]` IS the same address arithmetic - and
+//             the second column stays unmodelled.
+DATA(0x006a5c28) extern const char* gUnnamed6a5c28[6];
+DATA(0x006a5c40) extern const char* gUnnamed6a5c40;
+DATA(0x006a56e0) extern const char* gUnnamed6a56e0[];
+// Retail .rdata 0x642e70, eight building ids in town-screen hotspot
+// order. SetRolloverText reads it at TWO addends - `[code - 0x3e9]` for
+// the eight-wide band and `[code - 0x3f1]` for the seven-wide one - and
+// castle.obj keeps its own copy of the same eight values at 0x63bcc8.
+DATA(0x00642e70) extern const int gUnnamed642e70[8];
+
+// E:\gamedcs\townmgr.cpp:8776
+// The fort page's rollover line. `msg->codeY` is the widget under the
+// cursor and each band of codes names a different thing: the six cost
+// columns, the seven dwelling rows (whose creature name only appears
+// once the dwelling is actually built), the two town-screen building
+// bands, and the exit button. Anything else clears the line.
+//
+// TCastleWindow::ShowText is INLINED here - /Ob2's single-call-site rule,
+// which is also why the DC's separate ShowText (dc 0x17f4f8) has no
+// retail row - so its three statements are transcribed in place rather
+// than spelled as a member: declaring one would force VC6 to emit the
+// out-of-line copy retail does not have.
+//
+// Residual (64.0%): every branch, every table read and the whole tail are
+// retail's; the entire delta is TAIL MERGING. Retail expands the inlined
+// strcpy FIVE times, once per arm, and our SP3 CL cross-jumps all five
+// into one shared block that each arm reaches with a bare `mov edi,
+// <ptr>` + jmp. This is the documented open "merged-return blocks /
+// stale-CL-generation" class, and it is not source-addressable here:
+// measured at 64.03 with the arms as an if/else chain, 64.03 with every
+// arm `goto`-ing a shared label, 62.76 with the inner band spelled
+// `> 0x3f0` instead of `>= 0x3f1`, and 60.78 with the tail duplicated
+// into an arm (which merges the tail instead and loses the shared one).
+VA(0x005dcbf0, 0x25A)  // anchor-bracket + `ret 4` arity + ShowText tail, dc 0x17f54c
+void TCastleWindow::SetRolloverText(message* msg)
+{
+    int code = msg->codeY;
+    if (code > 0x38 && code < 0x69) {
+        strcpy(gText, gUnnamed6a5c28[(code - 0x39) / 8]);
+    } else if (code >= 0x11 && code <= 0x17) {
+        int dwelling = gpTownManager->currentDwellingIDOff[code - 0x11];
+        if (gpTownManager->townToView->active & bitNumber[DWELLING_0_ID + dwelling]) {
+            TCreatureType rowCreature =
+                gTownDwellingCreatures[gpTownManager->townToView->type
+                                       * TOWN_DWELLING_SLOTS + dwelling];
+            const char* creatureName;
+            if (rowCreature >= 0 && rowCreature <= 150)
+                creatureName = akCreatureTypeTraits[rowCreature].m_plural_name;
+            else
+                creatureName = "";
+            sprintf(gText, "%s %s", gpGeneralText->GetText(0x11), creatureName);
+        } else {
+            strcpy(gText, "");
+        }
+    } else if (code <= 0x3f7) {
+        if (code >= 0x3f1)
+            strcpy(gText, gUnnamed6a56e0[2 * gUnnamed642e70[code - 0x3f1]]);
+        else if (code >= 0x3e9 && code <= 0x3f0)
+            strcpy(gText, gUnnamed6a56e0[2 * gUnnamed642e70[code - 0x3e9]]);
+        else
+            strcpy(gText, "");
+    } else if (code == EXIT_BUTTON_ID) {
+        sprintf(gText, gUnnamed6a5c40, gBuildingNamesCommon[castleType]);
+    } else {
+        strcpy(gText, "");
+    }
+
+    message textMessage = { 0, 0, 0, 0, 0, 0, 0, 0 };
+    textMessage.id = MESSAGE_WIDGET;
+    textMessage.codeX = widget::WIDGET_SET_TEXT;
+    textMessage.codeY = 0x8a;
+    textMessage.extraText = gText;
+    BroadcastMessage(&textMessage);
+    DrawWindow(0, 0x89, 0x8a);
+    gpWindowManager->UpdateScreen(10, 0x22c, 0x2d6, 0x13);
+}
 
 // E:\gamedcs\townmgr.cpp:8833
 // One dwelling row's buy button. `i` is the fort page's ROW, and the
