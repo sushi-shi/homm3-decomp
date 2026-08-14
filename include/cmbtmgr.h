@@ -637,7 +637,7 @@ public:
     void ResetHitByCreature();
     void DamageWall(TWallTargetId target_wall, int damage);
     unsigned char is_adjacent(int first, int second);
-    unsigned char enemy_is_adjacent(army* current_army, int grid_index,
+    unsigned char enemy_is_adjacent(const army* current_army, int grid_index,
                                     const army* excluded);
     void RemoveArmyFromGrid(const army* a);
     void PlaceArmyInGrid(const army* a, int hex);

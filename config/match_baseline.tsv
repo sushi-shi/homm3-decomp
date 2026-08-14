@@ -312,7 +312,7 @@ army	?get_owner@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x426d0
 army	?get_resurrection_size@army@@QAEJPBV1@@Z	100.0000	100.0000	100.0000	0x47330
 army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080
-army	?is_enemy@army@@QAEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880
+army	?is_enemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880
 army	?move_to@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45d10
 army	?play_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d540
 army	?set_AI_expected_damage@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x430d0
@@ -460,7 +460,7 @@ cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000	100.0000	10
 cmbtmgr	?UpdateArmyGroup@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x641f0
 cmbtmgr	?UpdateArmyLuckAndMorale@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x69750
 cmbtmgr	?ViewArmy@combatManager@@QAEXPAVarmy@@H@Z	100.0000	100.0000	100.0000	0x68860
-cmbtmgr	?enemy_is_adjacent@combatManager@@QAEEPAVarmy@@HPBV2@@Z	100.0000	100.0000	100.0000	0x69600
+cmbtmgr	?enemy_is_adjacent@combatManager@@QAEEPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670
 cmbtmgr	?is_adjacent@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x674c0
 cmbtmgr	?should_lower_door@combatManager@@QAEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130

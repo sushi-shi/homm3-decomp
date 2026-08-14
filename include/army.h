@@ -223,7 +223,12 @@ public:
     // the word is the range's top. The mirror of minDamage's proof, and
     // the two sit adjacent. Name provisional; no roster attests it.
     int maxDamage;                // +0xd4
-    char pad_d8[0x11];
+    // Shots remaining. can_shoot (0x4428f0) refuses a shooter whose
+    // count here has fallen to zero or below - the second half of the
+    // "is this stack a shooter right now" test, after the creature's
+    // own shooter bit Is(2).
+    int shotsLeft;                // +0xd8
+    char pad_dc[0xd];
     // Two per-stack flags Damage (0x444090) raises: +0xe9 on EVERY hit
     // (it is stored unconditionally, from the same materialized 1 the
     // Is(23) test uses), +0xea only once the blow empties the stack.
@@ -352,7 +357,13 @@ public:
     char pad_27c[0x8];
     int berserkFlag;              // +0x284 (is_enemy: true vs everyone)
     int hypnotizeFlag;            // +0x288 (flips the effective side)
-    char pad_28c[0x4];
+    // Rounds of Forgetfulness, byte-proven by can_shoot (0x4428f0):
+    // while it is up AND the caster's mastery at +0x4c4 reached 2, the
+    // stack cannot shoot at all - which is exactly Forgetfulness's
+    // advanced/expert rule against its basic one. SPELL_FORGETFULNESS
+    // is 61, and +0x198 + 61*4 = +0x28c, so this is the TENTH round
+    // counter to land on the base the Bless/Curse pair fixed.
+    int forgetfulnessRounds;      // +0x28c
     // Three round counters the combat AI treats as "this stack cannot
     // act": any of them non-zero disqualifies a stack from the melee
     // threat census (set_melee_enemies 0x43bf20) and caps a ranged
@@ -408,7 +419,14 @@ public:
     // with shieldRounds and airShieldRounds above.
     float shieldFactor;           // +0x4b8
     float airShieldFactor;        // +0x4bc
-    char pad_4c0[0x8];
+    char pad_4c0[0x4];
+    // Forgetfulness's mastery level, the gate can_shoot pairs with
+    // forgetfulnessRounds: `>= 2` (advanced or expert) stops the stack
+    // shooting outright. It does NOT land on any of the per-spell rows
+    // this class already models - neither the +0x198 round base nor
+    // slayerLevel's - so it is sliced on the body alone and the row it
+    // belongs to is left open.
+    int forgetfulnessLevel;       // +0x4c4
     // Slow's speed multiplier, applied by GetSpeed while slowRounds is up.
     float slowFactor;             // +0x4c8
     char pad_4cc[0x14];
@@ -554,6 +572,12 @@ public:
         ARMY_CREATURE_DEMON = 0x30,
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
+        // The two combat participants can_shoot (0x4428f0) admits as
+        // shooters unconditionally, ahead of every other test - the
+        // ballista and the arrow tower, which are the only war machines
+        // that shoot. NH3API spellings; ai_tactical's own 0x93/0x94
+        // comparisons put the first-aid tent and ammo cart between them.
+        ARMY_CREATURE_BALLISTA = 0x92,
         // The one creature obstacles never fire at:
         // check_obstacle_attacks (0x441f70) compares creatureType
         // against 0x95 and returns 0 before it reaches the combat
@@ -609,7 +633,11 @@ public:
     // (`get_controlling_side() != other->group`) is also exactly what
     // is_enemy's asymmetric compare does.
     int get_controlling_side() const;        // 0x440140
-    unsigned char is_enemy(const army* arg); // 0x442880
+    // Const on the DC roster's own mangling
+    // (?is_enemy@army@@QBA_NPBV1@@Z), which is what lets
+    // combatManager::enemy_is_adjacent take a const army* as the
+    // roster spells it, and can_shoot pass its own const this.
+    unsigned char is_enemy(const army* arg) const; // 0x442880
     // 0x4429f0: asks the combat manager whether any enemy stack (other
     // than `excluded`) neighbours this stack's own hex, and for a
     // two-hex creature its second hex as well.

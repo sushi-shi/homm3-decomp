@@ -1405,10 +1405,15 @@ void combatManager::PowEffect(TSpellEffectID spellEffect, int bResetLimitCreatur
 #endif  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:4497
-// `current_army` drops the DC roster's const: retail calls army::is_enemy
-// on it, and that leaf is non-const in the same roster.
+// `current_army` KEEPS the DC roster's const (corrected 2026-08-14). The
+// note this replaces said army::is_enemy was non-const in the same
+// roster; it is not - the dump's own public symbol is
+// ?is_enemy@army@@QBA_NPBV1@@Z, a const member, and the whole chain
+// (is_enemy, this, can_shoot) is const on the DC side. Codegen is
+// unchanged either way; the mangling is not, and army::can_shoot
+// (0x4428f0, const) cannot pass its own `this` without it.
 VA(0x00469600, 0x6E)  // anchor-global, dc 0x62db8
-unsigned char combatManager::enemy_is_adjacent(army* current_army, int grid_index,
+unsigned char combatManager::enemy_is_adjacent(const army* current_army, int grid_index,
                                                const army* excluded)
 {
     for (int i = 0; i < 6; i++) {
