@@ -16,6 +16,10 @@ void DoMapTavern(type_point point);
 #ifdef HOMM3_TOWNMGR_WINDOW_DECLS
 #include "advmgr_popup.h"
 
+class armyGroup;
+class garrison;
+class hero;
+
 // The compiland's dialog family. Every one of these classes is fixed by
 // a vtable of its own, each the slot-0 owner of one 33-byte scalar
 // deleting destructor and each stored by the 107-byte destructor that
@@ -65,6 +69,14 @@ public:
 
 class type_garrison_base_window : public CAdvPopup {
 public:
+    // Sixteen bytes of its own past CAdvPopup's 0x60, and nothing in a
+    // reconstructed body reads them. The extent is proven by the three
+    // modal entry points that build a DERIVED window on the stack: each
+    // reserves 0x70 of frame for it (object at [ebp-0x7c] under a
+    // 12-byte EH record), and Widgets lands at the object's +0x34 in
+    // every one, which fixes the base rather than the leaves.
+    char pad_60[0x10];
+
     virtual ~type_garrison_base_window();
 };
 
@@ -74,11 +86,15 @@ public:
 // 0x643818 even though 0x643854 and 0x643890 exist and hold their ??_G.
 class type_monster_join_window : public type_garrison_base_window {
 public:
+    // Three parameters, not the Dreamcast's two: both retail entry
+    // points push a third literal 0 behind the army pointer.
+    type_monster_join_window(hero* inHero, armyGroup* monsters, int flags);
     virtual ~type_monster_join_window();
 };
 
 class TGarrisonWindow : public type_garrison_base_window {
 public:
+    TGarrisonWindow(hero* inHero, int garrison_owner, armyGroup* garrison_army);
     virtual ~TGarrisonWindow();
 };
 
