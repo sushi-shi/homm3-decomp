@@ -2238,6 +2238,55 @@ BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const
     return &fullMap->blackBoxes[index];
 }
 
+// E:\gamedcs\events.cpp:1378.  The Idol of Fortune: +1 luck on an odd day
+// of the week, +1 morale on an even one, and BOTH on the seventh - which
+// is the published rule written as `day == 7`, then `day & 1`. All three
+// arms show the same text row and differ only in the pictures.
+//
+// The day is read into a SIXTEEN-BIT local (`mov ax, word ptr [gpGame +
+// 0x1f63e]`, a partial-register write that leaves the game pointer's high
+// half in eax) and BOTH tests are taken off it - which is why the parity
+// test is `test al,1` on that same register rather than a fresh load.
+//
+// The two visit bits are tested SEPARATELY (`test al,0x10` then `test
+// eax,0x2000000` off one load), i.e. two conditions ORed, where the
+// temple tests its pair with a single masked dword. The three reward arms
+// then share one `flags` store, which is retail cross-jumping the three
+// `|=` statements.
+VA(0x004a12f0, 0x1B3)  // linkorder + globalInfoFlags[IdolOfFortuneInfo], dc 0x923b0
+void advManager::DoEventIdol(hero* current_hero, NewmapCell* cell,
+                             bool human_player)
+{
+    if (!(current_hero->flags & 0x10) && !(current_hero->flags & 0x2000000)) {
+        unsigned short day = gpGame->field_1f63e;
+        if (day == DAY_OF_WEEK_SUNDAY) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_IDOL),
+                             1, -1, -1, 0xb, 0, 0xe, 0, -1, 0, -1, 0);
+            current_hero->field_11b++;
+            current_hero->field_11a++;
+            current_hero->flags |= 0x2000010;
+        } else if (day & 1) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_IDOL),
+                             1, -1, -1, 0xb, 0, -1, 0, -1, 0, -1, 0);
+            current_hero->field_11b++;
+            current_hero->flags |= 0x10;
+        } else {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_IDOL),
+                             1, -1, -1, 0xe, 0, -1, 0, -1, 0, -1, 0);
+            current_hero->field_11a++;
+            current_hero->flags |= 0x2000000;
+        }
+        game* g = gpGame;
+        g->SetInfoFlag(IdolOfFortuneInfo, gNetLocalGamePos);
+    } else if (human_player) {
+        NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_IDOL_VISITED),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+}
+
 // E:\gamedcs\events.cpp:1649.  The Marletto Tower: +1 Defense forever,
 // once per hero, and the visit is remembered on the HERO rather than on
 // the cell - a per-object dword indexed by the cell's own extra-info
@@ -2416,6 +2465,109 @@ void advManager::DoEventLeanTo(hero* current_hero, ExtraInfoUnion* cell,
     }
 }
 
+// E:\gamedcs\events.cpp:2220.  The magic spring: mana back to TWICE the
+// hero's cap, once per week per player, and the spring is spent whether
+// or not the hero had room for it. Its info flag is set BEFORE anything
+// else in the body - the visit counts even for a hero who walks away with
+// nothing.
+//
+// The cap is `intelligence factor * (knowledge * 10)`, with the knowledge
+// clamped into 1..99 first. Retail compares the SIGNED CHAR against both
+// bounds without widening it (`cmp al,0x63`, `test al,al`) and only
+// widens on the arm that keeps the value, which is what a ternary chain
+// over the raw field produces; an int local up front puts a movsx ahead
+// of the first compare. The int-to-float conversion is a real
+// fild/fstp-to-float round trip because the other operand is a float, not
+// a double - /Op again.
+VA(0x004a3590, 0x19C)  // linkorder + globalInfoFlags[MagicSpringInfo], dc 0x93f6c
+void advManager::DoEventMagicSpring(hero* current_hero, ExtraInfoUnion* cell,
+                                    bool human_player)
+{
+    game* g = gpGame;
+    g->SetInfoFlag(MagicSpringInfo, gNetLocalGamePos);
+    // Named, exactly as in DoEventMysticalGarden: read inline, the id
+    // shares the "still full" test's DWORD load; read into its own local
+    // first, it narrows to the `mov cl, byte ptr [cell]` retail carries.
+    short id = cell->magic_spring_info.id;
+    gpCurrentPlayer->MagicSpringFlags |= 1 << id;
+
+    if (!cell->MagicSpringIsFull()) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MAGIC_SPRING_EMPTY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    int knowledge = current_hero->stats[3] > 99
+                        ? 99
+                        : (current_hero->stats[3] > 0 ? current_hero->stats[3]
+                                                      : 1);
+    int cap = static_cast<int>(current_hero->GetIntelligenceFactor()
+                               * (knowledge * 10)) * 2;
+    if (current_hero->mana >= cap) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MAGIC_SPRING_NO_ROOM),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MAGIC_SPRING),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        current_hero->mana = cap;
+        cell->FillMagicSpring(0);
+    }
+    if (human_player)
+        advWindow->UpdateHeroLocators(-1, 1, 1);
+    UpdBottomView(1, 1, 1);
+}
+
+// E:\gamedcs\events.cpp:2259.  The magic well: the same refill at the
+// hero's own cap, once per day, and the well is emptied by ZEROING the
+// cell's whole extra-info dword rather than by clearing a bit. Unlike the
+// spring, both the refill and the flag write live on the same arm - a
+// hero who was already at his cap does not spend the well's day - but the
+// info flag is set for either.
+VA(0x004a3730, 0x17E)  // linkorder + globalInfoFlags[MagicWellInfo], dc 0x94088
+void advManager::DoEventMagicWell(hero* current_hero, ExtraInfoUnion* cell,
+                                  bool human_player)
+{
+    if (current_hero->flags & 1) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MAGIC_WELL_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    cell->value = 0;
+    int knowledge = current_hero->stats[3] > 99
+                        ? 99
+                        : (current_hero->stats[3] > 0 ? current_hero->stats[3]
+                                                      : 1);
+    int cap = static_cast<int>(current_hero->GetIntelligenceFactor()
+                               * (knowledge * 10));
+    if (current_hero->mana >= cap) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MAGIC_WELL_NO_ROOM),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_MAGIC_WELL),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        current_hero->mana = cap;
+        current_hero->flags |= 1;
+    }
+    game* g = gpGame;
+    g->SetInfoFlag(MagicWellInfo, gNetLocalGamePos);
+    if (human_player)
+        advWindow->UpdateHeroLocators(-1, 1, 1);
+    UpdBottomView(1, 1, 1);
+}
+
 // E:\gamedcs\events.cpp:2299.  The Mercenary Camp: the Marletto Tower
 // again with +1 Attack, its own hero visit dword and its own text pair.
 VA(0x004a38b0, 0xE4)  // linkorder + globalInfoFlags[MercCampInfo], dc 0x941c8
@@ -2518,6 +2670,40 @@ void advManager::DoEventPowerSchool(hero* current_hero, NewmapCell* cell,
     current_hero->stats[2]++;
     gpGame->SetInfoFlag(PowerSchoolInfo, gNetLocalGamePos);
     current_hero->PowerSchoolFlags |= 1 << cell->extraInfo;
+}
+
+// E:\gamedcs\events.cpp:2677.  The Rally Flag: +1 morale, +1 luck and
+// +400 movement, once per hero. The locator refresh runs TWICE - once
+// unconditionally with both update flags clear, and again for a human
+// with them set, followed by the bottom-view refresh.
+//
+// The visit bit is materialised into a register at the top and reused for
+// the write-back, which is what one named mask expression produces.
+VA(0x004a44c0, 0x136)  // linkorder + globalInfoFlags[RallyFlagInfo], dc 0x94c8c
+void advManager::DoEventRallyFlag(hero* current_hero, NewmapCell* cell,
+                                  bool human_player)
+{
+    if (current_hero->flags & 0x10000) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_RALLY_FLAG_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_RALLY_FLAG),
+                     1, -1, -1, 0xe, 0, 0xb, 0, -1, 0, -1, 0);
+    current_hero->flags |= 0x10000;
+    game* g = gpGame;
+    g->SetInfoFlag(RallyFlagInfo, gNetLocalGamePos);
+    current_hero->field_11a++;
+    current_hero->field_11b++;
+    current_hero->maxMovePoints += 400;
+    current_hero->movePoints += 400;
+    advWindow->UpdateHeroLocators(-1, 0, 0);
+    if (human_player)
+        advWindow->UpdateHeroLocators(-1, 1, 1);
+    UpdBottomView(1, 1, 1);
 }
 
 // Declared inline in the original Game.h (DC line 865); this is the retail

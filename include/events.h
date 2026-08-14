@@ -24,6 +24,10 @@ enum EAdventureEventText {
     // 0x20, the +1 Defense icon.
     ADV_EVENT_TEXT_DEFENSE_TOWER = 39,
     ADV_EVENT_TEXT_DEFENSE_TOWER_VISITED = 40,
+    // DoEventIdol (0x4a12f0). ONE reward row serves all three arms - the
+    // pictures are what differ - and 63 is the already-visited line.
+    ADV_EVENT_TEXT_IDOL = 62,
+    ADV_EVENT_TEXT_IDOL_VISITED = 63,
     // DoEventFountainOfYouth (0x4a25f0). The reward carries picture 0x0e,
     // the same morale icon do_event_watering_hole shows, and the pair is
     // reward-then-visited like the rest of this block.
@@ -42,6 +46,16 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_LIBRARY = 66,
     ADV_EVENT_TEXT_LIBRARY_VISITED = 67,
     ADV_EVENT_TEXT_LIBRARY_UNWORTHY = 68,
+    // DoEventMagicSpring (0x4a3590) and DoEventMagicWell (0x4a3730), two
+    // contiguous triples in the same alphabetical run. Each spends one
+    // row on the refill, one on the object being spent for the week or
+    // the day, and one on a hero whose mana was already at its cap.
+    ADV_EVENT_TEXT_MAGIC_SPRING = 74,
+    ADV_EVENT_TEXT_MAGIC_SPRING_EMPTY = 75,
+    ADV_EVENT_TEXT_MAGIC_SPRING_NO_ROOM = 76,
+    ADV_EVENT_TEXT_MAGIC_WELL = 77,
+    ADV_EVENT_TEXT_MAGIC_WELL_VISITED = 78,
+    ADV_EVENT_TEXT_MAGIC_WELL_NO_ROOM = 79,
     // DoEventMercenaryCamp (0x4a38b0), picture 0x1f = +1 Attack.
     ADV_EVENT_TEXT_MERC_CAMP = 80,
     ADV_EVENT_TEXT_MERC_CAMP_VISITED = 81,
@@ -71,6 +85,11 @@ enum EAdventureEventText {
     // reward. Both indices are byte-proven by the arm that loads them.
     ADV_EVENT_TEXT_OASIS_VISITED = 94,
     ADV_EVENT_TEXT_OASIS = 95,
+    // DoEventRallyFlag (0x4a44c0), and this pair is REVERSED like the
+    // oasis: 110 is the already-visited line and 111 the reward, which
+    // shows the morale and luck pictures side by side.
+    ADV_EVENT_TEXT_RALLY_FLAG_VISITED = 110,
+    ADV_EVENT_TEXT_RALLY_FLAG = 111,
     // DoEventPowerSchool (0x4a3dc0), picture 0x21 = +1 Spell Power - the
     // fourth member of the primary-skill quartet above.
     ADV_EVENT_TEXT_POWER_SCHOOL = 100,
