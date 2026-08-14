@@ -314,7 +314,14 @@ public:
     // and for CancelIndividualSpell's consumers.
     int blessRounds;              // +0x23c
     int curseRounds;              // +0x240
-    char pad_244[0x18];
+    // Bloodlust / Precision round counters, byte-proven by
+    // get_adjusted_attack (0x442410): the MELEE arm gates on +0x244 and
+    // adds +0x464, the RANGED arm gates on +0x248 and adds +0x468 -
+    // exactly the two spells' split. SPELL_BLOODLUST is 43 and
+    // SPELL_PRECISION 44 on the +0x198 row base.
+    int bloodlustRounds;          // +0x244
+    int precisionRounds;          // +0x248
+    char pad_24c[0x10];
     // Timed morale/luck modifiers. SetMorale and SetLuck test the round
     // counters here and apply the matching signed amounts at +0x47c.
     int moraleBonusRounds;        // +0x25c
@@ -327,7 +334,12 @@ public:
     // through the float at +0x4c8, flooring the result at 1.
     // SPELL_SLOW is 54, and +0x198 + 54*4 = +0x270.
     int slowRounds;               // +0x270
-    char pad_274[0x4];
+    // Rounds of Slayer, byte-proven by get_adjusted_attack: while it is
+    // up the stack gets +8 attack against a target carrying creature
+    // bit 7, 8 or 9 - each bit gated on its own minimum mastery in
+    // +0x48c - plus the hero's own SPELL 0x37 bonus, and 0x37 IS 55,
+    // which is where SPELL_SLAYER lands on the +0x198 row base.
+    int slayerRounds;             // +0x274
     // Rounds of Frenzy: get_adjusted_defense (0x442590) answers ZERO
     // defense outright while this is up and its caller asked for
     // frenzy to be included - which is precisely what Frenzy does.
@@ -362,12 +374,27 @@ public:
     // below, so no array relation is asserted here.
     int blessAmount;              // +0x458
     int curseAmount;              // +0x45c
-    char pad_460[0x1c];
+    char pad_460[0x4];
+    // The two attack amounts get_adjusted_attack pairs with the
+    // Bloodlust and Precision round counters above.
+    int bloodlustAmount;          // +0x464
+    int precisionAmount;          // +0x468
+    char pad_46c[0x10];
     int moraleBonus;              // +0x47c
     int moralePenalty;            // +0x480
     int luckBonus;                // +0x484
     int luckPenalty;              // +0x488
-    char pad_48c[0x14];
+    // Slayer's mastery level: get_adjusted_attack admits creature bit 7
+    // at any level, bit 8 from 2 up and bit 9 from 3 up.
+    int slayerLevel;              // +0x48c
+    char pad_490[0x8];
+    // Frenzy's defense-to-attack conversion factor: while frenzyRounds
+    // is up, get_adjusted_attack answers
+    // `get_adjusted_defense(enemy, 0) * this + attack`. It is also what
+    // makes get_adjusted_defense's own Frenzy early-out consistent -
+    // the defense is spent, not counted twice.
+    float frenzyFactor;           // +0x498
+    char pad_49c[0x4];
     // Active Fire Shield multiplier.  get_fire_shield_strength loads
     // this float whenever fireShieldRounds is non-zero; otherwise the
     // innate Efreet Sultan path supplies the shared 0.2f constant.
@@ -599,8 +626,12 @@ public:
     // under Frenzy, reduced 40%/80% against a Behemoth / Ancient
     // Behemoth, and 3 lower while either of the stack's hexes stands
     // in a moat.
+    // Const because get_adjusted_attack (0x442410), which army.h
+    // already has to declare const for get_attack_modifier's sake,
+    // calls it on `this` in the Frenzy tail. Nothing in the body
+    // writes.
     long get_adjusted_defense(const army* enemy,
-                              unsigned char frenzy_included);
+                              unsigned char frenzy_included) const;
     // 0x443d90: the multiplier a defender's own Shield / Air Shield,
     // petrification and hero defense skill put on incoming damage.
     double ComputeDefenderDamageReduction(unsigned char is_shooting);
