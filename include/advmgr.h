@@ -879,6 +879,19 @@ public:
                        bool human_player);
     void DoEventIdol(class hero* current_hero, NewmapCell* cell,
                      bool human_player);
+    // Boarding a boat (jump-table arm 0x08). TWO parameters and `ret 8`,
+    // exactly the Dreamcast's `(hero*, NewmapCell*)` - the one handler in
+    // the band with no human_player, because it shows no dialog.
+    void DoEventBoat(class hero* current_hero, NewmapCell* cell);
+    // The Arena (jump-table arm 0x04), the Dreamcast's own
+    // `(hero*, NewmapCell*, bool)` against retail's `ret 0xc`.
+    void DoEventArena(class hero* current_hero, NewmapCell* cell,
+                      bool human_player);
+    // The Cover of Darkness (jump-table arm 0x0f). The Dreamcast's own
+    // `(NewmapCell*, type_point, bool)` and retail's `ret 0xc` agree; the
+    // cell is never read.
+    void DoEventCoverOfDarkness(NewmapCell* cell, type_point point,
+                                bool human_player);
     // The Dragon Utopia (jump-table arm 0x19 = OBJECT_DRAGON_UTOPIA), the
     // one creature bank with a handler of its own. Four parameters and
     // `ret 0x10`, the DC's own order, and the cell stays a NewmapCell*
@@ -923,6 +936,10 @@ public:
                             bool human_player);
     void DoEventRallyFlag(class hero* current_hero, NewmapCell* cell,
                           bool human_player);
+    // The Sirens (jump-table arm 0x5c), same three-parameter `ret 0xc`
+    // shape as the stables below and the cell equally unused.
+    void DoEventSiren(class hero* current_hero, NewmapCell* cell,
+                      bool human_player);
     // The Stables (jump-table arm 0x5e). Three parameters and `ret 0xc`
     // against the Dreamcast's own `(hero*, NewmapCell*, bool)`, and the
     // cell is never touched - the same shape do_event_watering_hole has.

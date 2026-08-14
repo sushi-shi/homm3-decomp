@@ -1134,6 +1134,18 @@ public:
     // +0x1fc48) that advManager::EraseObj runs once the object is gone.
     // No surviving symbol names it; the row is not claimed here.
     void GameFn_004CA410();
+    // event_record.cpp:1189 in the DC roster (dc 0x8e54c), the negative
+    // twin of SetVisibility below and the same five parameters in the same
+    // order. DoEventCoverOfDarkness is the caller that needs the
+    // declarator; the row is claimed as a carcass stub in event_record.cpp.
+    void ResetVisibility(int startX, int startY, int z,
+                         int whichPlayer, int range);          // 0x49d3d0
+    // Retail-only 0x4c7c50, an ordinal placeholder like GameFn_004CA410
+    // above. A no-argument sweep of all 156 hero records (stride 0x492)
+    // that re-runs game::SetVisibility for every hero still on the map -
+    // which is what has to happen after ResetVisibility blanks a disc.
+    // No surviving symbol names it; the row is not claimed here.
+    void GameFn_004C7C50();
 #endif
     void record_show_boat(boat* current_boat, type_point point); // 0x49c900
     void SetVisibility(int startX, int startY, int z,

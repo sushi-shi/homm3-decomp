@@ -18,10 +18,22 @@
 // water wheel 164/165, watering hole 166/167, whirlpool 168, windmill
 // 169/170, witch hut 171..173.
 enum EAdventureEventText {
+    // DoEventArena (0x49e7d0), and this pair is the enum's anchor: rows 0
+    // and 1, the very first in the file, because "arena" is the first
+    // adventure object alphabetically. 0 is the iMBType-10 two-picture
+    // choice (+2 Attack against +2 Defense) and 1 the already-fought line.
+    ADV_EVENT_TEXT_ARENA = 0,
+    ADV_EVENT_TEXT_ARENA_VISITED = 1,
     // The four "one permanent primary skill, once per hero" objects, and
     // each one is a PAIR: the reward line, then the already-visited line
     // straight after it. The rows land where the alphabet puts each
     // object, exactly as the war school / witch hut run below does.
+    // DoEventCoverOfDarkness (0x4a14b0), the object's only row - it has
+    // nothing to report but the fact of the visit. 31 sits below the
+    // defense tower's 39, which is where the alphabet puts "cover of
+    // darkness", and the DC roster agrees: DoEventCoverOfDarkness
+    // (dc 0x92540) runs before DoEventDefenseTower (dc 0x92d40).
+    ADV_EVENT_TEXT_COVER_OF_DARKNESS = 31,
     // DoEventDefenseTower (0x4a2050); the reward line carries picture
     // 0x20, the +1 Defense icon.
     ADV_EVENT_TEXT_DEFENSE_TOWER = 39,
@@ -106,6 +118,15 @@ enum EAdventureEventText {
     // fourth member of the primary-skill quartet above.
     ADV_EVENT_TEXT_POWER_SCHOOL = 100,
     ADV_EVENT_TEXT_POWER_SCHOOL_VISITED = 101,
+    // DoEventSiren (0x4a5980). 132 is a sprintf format taking the
+    // experience the drowned troops were worth, 133 the already-visited
+    // line and 134 the row a hero with nothing to lose gets. The trio
+    // sits just below the stables' block, which is where the alphabet
+    // puts "sirens" - and the DC roster agrees, running DoEventSiren
+    // (dc 0x95a34) before DoEventSpellScroll and DoEventStables.
+    ADV_EVENT_TEXT_SIRENS = 132,
+    ADV_EVENT_TEXT_SIRENS_VISITED = 133,
+    ADV_EVENT_TEXT_SIRENS_NO_LOSS = 134,
     // DoEventStables (0x4a60a0), and this is the only object in the enum
     // with FOUR contiguous rows: the handler accumulates what it actually
     // did into a two-bit value and switches over it, so every combination

@@ -2224,6 +2224,62 @@ void advManager::EraseAndFizzle(NewmapCell* eventCell, type_point point,
     gUnnamed67f574 = savedFlag;
 }
 
+// E:\gamedcs\events.cpp:421.  The Arena, jump-table arm 0x04 =
+// OBJECT_ARENA: +2 to Attack or +2 to Defense, once per hero, and the
+// choice is the human's. It is the war school's body with the price and
+// the flag lane taken out - same iMBType-10 two-picture dialog, same
+// CHOICE_1/CHOICE_2 reply pair, same "which primary skill is lower"
+// appraisal on the AI arm - so the two are worth reading together.
+//
+// The visit lane is the cell's, not a hero flag word: hero::VisitedArena
+// (0x4e53c0) and SetVisitedArena (0x4e53e0) index a per-hero dword by the
+// cell's own extra-info dword, which is the idiom the six "once per hero,
+// keep the reward" handlers borrow.
+//
+// `whichStat` is declared BEFORE the human test, exactly as in the war
+// school, and that is what lets retail share one zeroed EBX between the
+// default choice, OverrideBottomView's view id and UpdBottomView's first
+// argument.
+//
+// advevent.txt row 0 is the prompt and row 1 the already-fought line -
+// the first two rows in the file, because "arena" is the first adventure
+// object alphabetically. That is the strongest single check on the
+// ordering this enum rests on.
+VA(0x0049e7d0, 0x118)  // jump-table arm 0x04 + advevent.txt 0/1, dc 0x906d8
+void advManager::DoEventArena(hero* current_hero, NewmapCell* cell,
+                              bool human_player)
+{
+    if (current_hero->VisitedArena(cell)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_ARENA_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    int whichStat = 0;
+    if (human_player) {
+        OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+        UpdBottomView(0, 1, 1);
+        NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_ARENA),
+                     10, -1, -1, 0x1f, 2, 0x20, 2, -1, 0, -1, 0);
+        switch (gpWindowManager->dialogReturn) {
+        case DIALOG_RETURN_CHOICE_1:
+            whichStat = 0;
+            break;
+        case DIALOG_RETURN_CHOICE_2:
+            whichStat = 1;
+            break;
+        }
+    } else if (current_hero->GetPrimarySkill(0)
+               > current_hero->GetPrimarySkill(1)) {
+        whichStat = 1;
+    }
+
+    current_hero->stats[whichStat] += 2;
+    current_hero->SetVisitedArena(cell);
+}
+
 VA(0x0049f040, 0x23)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
 {
@@ -2236,6 +2292,77 @@ BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const
 {
     unsigned index = cell->value & 0x3ff;
     return &fullMap->blackBoxes[index];
+}
+
+// E:\gamedcs\events.cpp:1219.  Boarding a boat, jump-table arm 0x08 =
+// OBJECT_BOAT, and the only handler in this file that takes just the hero
+// and the cell - there is no dialog to gate, so no human_player.
+//
+// The cell's extra-info dword indexes game::boats directly; the boat is
+// taken out of the map with the type_obscuring_object half of itself and
+// then stamped with its new occupant. The two mastery levels are RESET
+// TOGETHER from one `or ecx,-1`, which is what two int stores of the same
+// -1 produce, and the flag OR is read back for the very next test -
+// retail never reloads +0x105.
+//
+// THE FLAG OR COMES FIRST IN THE SOURCE EVEN THOUGH IT IS SCHEDULED
+// SECOND, and that is the whole difference between 99.81 and exact. With
+// the two -1 stores written first the shared constant lands in EAX
+// (`or eax,-1`); with `flags |= 0x40000` written first it lands in ECX,
+// which is retail. The emitted SCHEDULE is identical either way -
+// `or ecx,-1` still executes before the +0x105 load - so the instruction
+// ORDER carries no information about source order here; only the register
+// binding does. C2 assigns registers first-fit in pseudo CREATION order
+// (docs/vc6/regalloc.md), and creation order is the source's, so a
+// constant in the wrong register on otherwise-aligned code means two
+// INDEPENDENT statements are in the wrong source order.
+//
+// The movement rewrite only runs for a hero not already at sea (bit
+// 0x1000000), and it PRESERVES THE FRACTION: the new allowance is
+// GetMobility(1) and the remainder is scaled by the old ratio with a
+// signed `imul`/`cdq`/`idiv`. Without the Admiral's Hat (artifact 0x88)
+// the remainder is simply zeroed - boarding costs the rest of the turn.
+VA(0x004a1010, 0x10D)  // jump-table arm 0x08 + game::boats/GetStandSequence, dc 0x91f44
+void advManager::DoEventBoat(hero* current_hero, NewmapCell* cell)
+{
+    boat* heroBoat = &gpGame->boats[cell->extraInfo];
+
+    heroBoat->restore_cell();
+    current_hero->flags |= 0x40000;
+    current_hero->flightLevel = -1;
+    current_hero->waterWalkLevel = -1;
+    if (!(current_hero->flags & 0x1000000)) {
+        if (current_hero->IsWieldingArtifact(0x88)) {
+            int oldMaxMovePoints = current_hero->maxMovePoints;
+            int oldMovePoints = current_hero->movePoints;
+            int newMaxMovePoints = current_hero->GetMobility(1);
+            current_hero->maxMovePoints = newMaxMovePoints;
+            current_hero->movePoints =
+                newMaxMovePoints * oldMovePoints / oldMaxMovePoints;
+        } else {
+            current_hero->movePoints = 0;
+        }
+        advWindow->UpdateHeroLocator(-1, 1, 1);
+    }
+
+    // The owner is read into its own local because retail reads it ONCE:
+    // the byte store into the boat sits between the two uses, and spelled
+    // inline that store is an alias barrier VC6 answers with a second
+    // load. Retail keeps the byte in AL, stores from it and sign-extends
+    // the SAME register for IsLocalHuman's int argument.
+    heroBoat->occupying_hero = current_hero->id;
+    heroBoat->occupied = 1;
+    char owner = current_hero->owner;
+    heroBoat->playerOwner = owner;
+    if (gpGame->IsLocalHuman(owner)) {
+        cursorType = CURSOR_TYPE_8;
+        cursorDirection = heroBoat->facing;
+        cursorBaseFrame = 0;
+        cursorSequence = heroBoat->GetStandSequence();
+        drawCursor = 1;
+        CompleteDraw(0);
+        UpdateScreen(0, 0);
+    }
 }
 
 // E:\gamedcs\events.cpp:1378.  The Idol of Fortune: +1 luck on an odd day
@@ -2285,6 +2412,42 @@ void advManager::DoEventIdol(hero* current_hero, NewmapCell* cell,
         NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_IDOL_VISITED),
                      1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
     }
+}
+
+// E:\gamedcs\events.cpp:1430.  The Cover of Darkness, jump-table arm
+// 0x0f = OBJECT_COVER_OF_DARKNESS: it does not READ the map, it UNSEES a
+// radius-20 disc of it for the visiting player, so the whole body is one
+// dialog, one visibility reset and a redraw. The `cell` parameter is
+// never touched - retail loads [ebp+8] nowhere - which is the same
+// take-it-anyway shape do_event_watering_hole has.
+//
+// The network arm is the monolith pair's verbatim twin: build the message
+// on the stack under gNetworkActive69954c, hand it to TransmitRemoteData
+// with the same (0x7f, 0, 1), then do the local work regardless. Only the
+// subtype differs - 0x3fe against the set message's 0x3fd - which is what
+// makes RS_RESET_VISIBILITY the very next rung of the DC's gapless
+// ladder, and the 0x20-byte frame record retail writes matches
+// CSetVisibilityMsg member for member.
+//
+// gpGame is spelled directly at BOTH call sites rather than hoisted into
+// a local: retail re-reads 0x6994e8 for the second one.
+VA(0x004a14b0, 0xEC)  // jump-table arm 0x0f + RS_RESET_VISIBILITY, dc 0x92540
+void advManager::DoEventCoverOfDarkness(NewmapCell* cell, type_point point,
+                                        bool human_player)
+{
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_COVER_OF_DARKNESS),
+                     1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+
+    if (gNetworkActive69954c) {
+        CResetVisibilityMsg message(point, gNetLocalGamePos, 20);
+        TransmitRemoteData(&message, 0x7f, 0, 1);
+    }
+    gpGame->ResetVisibility(point.x, point.y, point.z, gNetLocalGamePos, 20);
+    gpGame->GameFn_004C7C50();
+    CompleteDraw(0);
+    UpdateScreen(0, 0);
 }
 
 // E:\gamedcs\events.cpp:1649.  The Marletto Tower: +1 Defense forever,
@@ -2791,6 +2954,55 @@ int game::GetTeam(int playerNum) const
     if (playerNum < 0)
         return playerNum;
     return mapHeader.teamInfo[playerNum];
+}
+
+// philai.obj's Sirens visit (dc 0x11260c), located by its only caller
+// below: DoEventSiren's single philai callee, a /Gr two-register fastcall
+// taking (hero*, armyGroup*) in exactly the Dreamcast's parameter order
+// and returning the experience the drowned troops were worth. Retail
+// hands it `current_hero` and `&current_hero->army` - the same +0x91
+// address AI_approximate_strength already takes - and does the killing
+// INSIDE it, which is why the handler's own body never touches the army.
+// Declared file locally, the AI_approximate_strength precedent.
+int AI_VisitSirens(const hero* current_hero, armyGroup* army);
+
+// E:\gamedcs\events.cpp:3092.  The Sirens, jump-table arm 0x5c =
+// OBJECT_SIRENS: once per hero, and the whole transaction - drown part of
+// the army, count what that was worth - happens inside philai's
+// AI_VisitSirens, so this handler is three dialogs and a flag.
+//
+// The already-visited arm returns WITHOUT setting the flag again, which
+// is why retail has two epilogues; the other two arms share the `|=` at
+// 0x4a5a69. The AI takes exactly the same path a human does, dialogs
+// aside - the experience is granted either way.
+VA(0x004a5980, 0x100)  // jump-table arm 0x5c + AI_VisitSirens, dc 0x95a34
+void advManager::DoEventSiren(hero* current_hero, NewmapCell* cell,
+                              bool human_player)
+{
+    if (current_hero->flags & 0x100000) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SIRENS_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    int experience = AI_VisitSirens(current_hero, &current_hero->army);
+    if (experience) {
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(ADV_EVENT_TEXT_SIRENS),
+                    experience);
+            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+        current_hero->GiveExperience(experience, 1, 1);
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SIRENS_NO_LOSS),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+    current_hero->flags |= 0x100000;
 }
 
 // E:\gamedcs\events.cpp:3246.  The Stables, jump-table arm 0x5e =
