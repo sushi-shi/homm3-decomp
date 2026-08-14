@@ -278,7 +278,12 @@ public:
 };
 #endif
 
-#ifdef HOMM3_TOWN_OBJ_DECLS
+// HOMM3_TOWNMGR_MGR_DECLS is the same gate under a second name, for
+// consumers that need townManager but NOT town.h's own
+// HOMM3_TOWN_OBJ_DECLS members (the two gates share a macro; recruit.cpp
+// wants the manager and must leave `class town` in its narrow form,
+// because town.h is already in its include closure through game.h).
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_TOWNMGR_MGR_DECLS)
 #include "basemgr.h"
 
 class town;
@@ -287,6 +292,7 @@ class townObject;
 class heroWindow;
 class widget;
 class CUnnamed69d808_f0;
+class TResourceDisplay;
 
 // Layout proven store-for-store by townManager::townManager 0x5c3310,
 // which writes every member below, and corroborated by ::UnloadTown
@@ -320,7 +326,10 @@ public:
     int field_130;                // +0x130  ctor -1
     strip* field_134;             // +0x134
     int field_138;                // +0x138  ctor -1
-    heroWindow* field_13c;        // +0x13c
+    // +0x13c: the town page's resource bar. Typed by recruitUnit::Close
+    // (0x550344), which calls ?Update@TResourceDisplay@@QAEXEE@Z through
+    // it; the manager constructs it, owns it and deletes it in ::Close.
+    TResourceDisplay* pResourceDisplay;   // +0x13c
     int field_140;                // +0x140
     char pad_144[0x50];           // +0x144  untouched by the retail bodies
     int field_194;                // +0x194  ctor -1

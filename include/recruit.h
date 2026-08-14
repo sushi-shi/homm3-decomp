@@ -71,6 +71,15 @@ public:
 // broadcasts every widget refresh through it.
 extern TRecruitWindow* gpRecruitWindow;
 
+// recruit.obj's own .bss 0x69d5f4 - the menu recruitUnit::Open parks
+// before switching to the default one, and the menu ::Close puts back.
+// Spelled through the HMENU handle tag rather than HMENU so this header
+// keeps its promise not to drag <windows.h> into its five consumers;
+// gated because recruit.cpp is the only one that reads it.
+#ifdef HOMM3_RECRUIT_DECLS
+extern struct HMENU__* gRecruitSavedMenu;
+#endif
+
 // Provisional view of the unnamed drawing-side object at .bss
 // 0x6aacb0 (34 refs image-wide, from advManager::UpdateRadar,
 // combatManager::DrawFrame/CycleCombatScreen, army::DrawToBuffer and
@@ -172,6 +181,24 @@ public:
         TCreatureType _MonType2, short* _numMon2,
         TCreatureType _MonType3, short* _numMon3,
         TCreatureType _MonType4, short* _numMon4);
+    // Gated so the four other TUs that include recruit.h (advmgr,
+    // ai_player, levelupwindow, textwdgt) keep the symbol handles they
+    // have today: recruit.obj is knife-edge on handle position and its
+    // includers are live lanes. recruit.cpp is the only consumer.
+#ifdef HOMM3_RECRUIT_DECLS
+    // What opened this recruit. The two dialog flavours above leave -1;
+    // only the town constructor tags itself, and ::Close tests the tag
+    // before it refreshes the town page behind the dialog. The 0x62
+    // spelling is retail's own immediate, stored and compared; the name
+    // is the house ordinal placeholder.
+    enum ERecruitSource {
+        RECRUIT_SOURCE_NONE = -1,
+        RECRUIT_SOURCE_TOWN = 0x62
+    };
+
+    recruitUnit(town* newTown, int newDwellingIndex, int bInInTownMainScreen);
+    virtual void Close() OVERRIDE;   // slot 1, 0x5502d0
+#endif
 
     void Update(unsigned char new_monster, long slot);
 
