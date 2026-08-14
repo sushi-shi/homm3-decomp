@@ -1277,13 +1277,32 @@ unsigned char searchArray::check_enemy_armies(long hex, long cost,
 // and accounts for the whole gap; retail's six return points against
 // our three are the same story downstream.
 //
+// CORRECTION 2026-08-14: that count is INFLATED, and by roughly half.
+// `homm3 vc6 predict-inline` reports 21 under- against 16 over-inlines
+// here, but most of those rows PAIR OFF against each other under two
+// different spellings of the same callee - `?GetSpeed@army@@QBEHXZ` x2
+// under and `army_GetSpeed` x2 over, `?get_total_hit_points@...` x2 and
+// `army_get_total_hit_points` x2, `?CanFit@...` x1 and `army_CanFit` x1,
+// and the same again for the vector<pathCell> helper COMDATs
+// (`_Ucopy`/`_Ufill`/`_Destroy`/`size` against sample_vslot03,
+// game_1510_sub10_14d120, game_b3400_sub03_b4270). Those are UNCLAIMED
+// callees on the target side, not inline divergence; the tool's own
+// header warns it reports false UNDER/OVER pairs at equal call counts
+// when a name differs across sides. The residual expansion decisions that
+// survive the pairing are getCellData (retail calls it four times, we
+// inline three) and one vector<pathCell*>::insert.
+//
 // Per the RE'd rule (docs/vc6/inliner.md) a nested expansion gets
 // `budget / sites-remaining`, so our being MORE eager means our
 // front-end statement mass is larger than retail's at those sites, not
 // smaller - the reverse of the usual starvation case, and not something
 // a local spelling reaches. Tried and rejected (no movement at all,
 // 46.4584 both ways): hoisting the wide-stack `facing ? 1 : -1` into one
-// `side_step` local so the moat pair computes it once, as retail does.
+// `side_step` local so the moat pair computes it once, as retail does;
+// and compiling army::GetSpeed and army::get_total_hit_points so their
+// call relocations pair by name (46.458397 both ways - objdiff does not
+// weigh a call relocation's symbol name; see the note over
+// combatManager::GetCommand in command.cpp for the full control).
 VA(0x004b3400, 0x787)  // anchor-global, dc 0xa0b18
 unsigned char searchArray::FindCombatPath(const army* current_army,
                                           long current_group, long destination,

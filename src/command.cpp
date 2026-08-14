@@ -376,14 +376,26 @@ unsigned char combatManager::valid_wall_target(TWallTargetId wall)
 // a whole register whose low byte only is loaded, the ordinary
 // unsigned char argument form.
 //
-// Residual (92.6%): two bounded classes, no third.
-// (1) FOUR CALLEES ARE UNCLAIMED on the target side, so their reloc
-//     names cannot pair: army::can_cast_spell (twice), army::can_shoot
-//     and army::can_cast_resurrect are all carcasses in army.cpp, and
-//     the delinker only learns a mangled name from a COMPILED base
-//     object. This half closes for free when army.obj reconstructs
-//     those three; nothing in command.obj can reach it.
-// (2) One register-lifetime split. Retail lets its `newIndex` copy DIE
+// Residual (92.6%): ONE class. The old note claimed two; the first was
+// WITHDRAWN 2026-08-14 on a direct measurement.
+// (1) WITHDRAWN. The old reading was that four unclaimed callees
+//     (army::can_cast_spell twice, army::can_shoot, army::can_cast_resurrect)
+//     cost this body their reloc names, and that reconstructing them in
+//     army.obj would close half the residual for free. The delinker half of
+//     that is true - army::can_shoot was reconstructed and claimed on
+//     2026-08-14 and its edge here now reads
+//     `?can_shoot@army@@QBEEPBV1@@Z` on BOTH sides where the target
+//     previously read `army_can_shoot`. The SCORE half is false: this
+//     function reads 92.57143 before and 92.57143 after, to six
+//     significant figures. objdiff's fuzzy score does not weigh a call
+//     relocation's SYMBOL NAME, exactly as the match doctrine already
+//     records for data relocations (the DoDialog precedent) - so a
+//     name-only row is cosmetic on code as well. The same control ran on
+//     findpath's FindCombatPath with army::GetSpeed and
+//     army::get_total_hit_points: 46.458397 before, 46.458397 after.
+//     Reconstructing a carcass callee is worth doing for the CALLEE's own
+//     row; it buys its callers nothing.
+// (2) One register-lifetime split, and it is the whole gap. Retail lets its `newIndex` copy DIE
 //     at the bounds check and recycles EBX for the &cells[newIndex]
 //     pointer (and later for field_132f4), re-reading the parameter
 //     from [ebp+8] at all eight later uses; our CL keeps newIndex in
