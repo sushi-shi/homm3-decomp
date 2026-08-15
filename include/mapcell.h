@@ -284,6 +284,23 @@ struct TreasureInfo {
     unsigned long tail : 17;
 };
 SIZE(TreasureInfo, 4);
+
+// The scholar's arm - four lanes, one per award kind plus the selector.
+// advManager::DoEventScholar (0x4a4dc0) reads every one of them SIGNED:
+// the award at bits 0..2 (`shl ecx,0x1d / sar ecx,0x1d`), the primary
+// skill at bits 3..5 (`shl edi,0x1a / sar edi,0x1d`), the secondary skill
+// at bits 6..12 (`shl eax,0x13 / sar eax,0x19`) and the spell at bits
+// 13..22 (`shl eax,9 / sar eax,0x16`). Only ONE of the three payload lanes
+// is ever read on a given visit, which is what the award selects. GATED
+// for MonsterInfo's reason.
+struct ScholarInfo {
+    signed long award : 3;
+    signed long primary : 3;
+    signed long secondary : 7;
+    signed long spell : 10;
+    unsigned long tail : 9;
+};
+SIZE(ScholarInfo, 4);
 #endif
 
 // Stride 38 (0x26), byte-proven by game::get_cell's `*19` then `*2`
@@ -315,6 +332,7 @@ public:
         MonsterInfo monster_info;
         CampfireInfo campfire_info;
         TreasureInfo treasure_info;
+        ScholarInfo scholar_info;
     };
 #else
     unsigned long extraInfo;
@@ -481,6 +499,19 @@ public:
     bool TreasureIsArtifact() const { return treasure_info.has_artifact; }
     int GetTreasureArtifact() const { return treasure_info.artifact; }
     short GetTreasureSize() const { return treasure_info.gold * 500; }
+
+    // The scholar's four accessors, all published by the Dreamcast
+    // (MapCell.h:1063/1068/1073/1078) with their own enum return types -
+    // ScholarAwards, TPrimarySkill, TSecondarySkill and SpellID. All four
+    // are spelled `int` for get_tomb_artifact's reason: none of those
+    // domains has a modelled definition, an enum return is int-wide under
+    // VC6, and the WIDTH is what the bytes constrain. Scoped to NewmapCell
+    // for the campfire's reason - the handler hands the whole cell to
+    // EraseAndFizzle.
+    int GetScholarAward() const { return scholar_info.award; }
+    int GetScholarPrimarySkill() const { return scholar_info.primary; }
+    int GetScholarSecondarySkill() const { return scholar_info.secondary; }
+    int GetScholarSpell() const { return scholar_info.spell; }
 
     // mapcell.cpp:46 in the DC roster, and the SAME inherited member
     // IsCustomized is: retail's do_event_dragon_city (0x4a2140) passes the

@@ -3494,6 +3494,83 @@ void advManager::DoEventResource(NewmapCell* cell, hero* current_hero,
     EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
+// E:\gamedcs\events.cpp:2863.  The scholar (jump-table arm 0x51): one of
+// three awards, chosen by a three-bit selector in the cell's own dword,
+// and the object is picked up whether or not the hero could take it.
+//
+// The Dreamcast line table (dc 0x951f4) fixes both the ORDER of the three
+// tests - spell, then secondary skill, then primary, which is retail's
+// `cmp 2 / cmp 1 / test` chain and not a switch - and the shape of the
+// spell arm's guard: ONE statement carrying THREE branches (line 2875),
+// i.e. `not already known && level within wisdom+2 && carrying a
+// spellbook` as a single `if`.
+//
+// ONE text row serves all three arms; only the picture pair differs. The
+// secondary-skill arm's picture EXTRA is an icon index computed from the
+// skill and the level it just reached, which is why the mastery byte is
+// read back after GiveSS rather than before it.
+//
+// THE PRIMARY-SKILL ARM IS A FALL-THROUGH, NOT AN `else if`, and that is
+// what the whole shape turns on. All FOUR failure branches - the spell is
+// already known, its level is out of reach, the hero has no spellbook, and
+// GiveSS refused - land on the primary arm's first instruction, not on the
+// pick-up: a scholar whose intended award cannot be given hands out a
+// primary skill instead. Written as a plain three-way `else if` chain the
+// body is instruction-for-instruction identical and still only 88.79,
+// because those four branches go to the wrong block; `homm3 sema diff
+// --branches` is what says so, and the masked asm diff does not - it
+// prints the arms as matching. Ten spellings were measured against the
+// wrong shape (hero and payload locals hoisted, the award test inlined,
+// the guard reordered, nested ifs) and the best of them reached 89.01.
+//
+// The three `goto`s are retail's own: each is an unconditional jump that
+// SKIPS the remaining award tests, which is the merged-tail-by-goto
+// signature this file already records for the dragon city.
+VA(0x004a4dc0, 0x263)  // jump-table arm 0x51 + advevent.txt 115, dc 0x951f4
+void advManager::DoEventScholar(hero* current_hero, NewmapCell* cell,
+                                type_point point, bool human_player)
+{
+    int award = cell->GetScholarAward();
+    if (award == const_scholar_spell) {
+        int spell = cell->GetScholarSpell();
+        if (!current_hero->in_spellbook[spell]
+            && akSpellTraits[spell].level <= current_hero->wisdomLevel + 2
+            && current_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_SCHOLAR),
+                             1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
+            current_hero->AddSpell(spell);
+            goto pick_up;
+        }
+    } else if (award == const_scholar_secondary_skill) {
+        int skill = cell->GetScholarSecondarySkill();
+        if (current_hero->GiveSS(skill, 1)) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_SCHOLAR),
+                             1, -1, -1, 0x14,
+                             current_hero->skillLevel[skill] + skill * 3 + 2,
+                             -1, 0, -1, 0, -1, 0);
+            goto pick_up;
+        }
+    } else if (award != const_scholar_primary_skill) {
+        goto pick_up;
+    }
+
+    {
+        int primary = cell->GetScholarPrimarySkill();
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SCHOLAR),
+                         1, -1, -1, primary + 0x1f, 1, -1, 0, -1, 0, -1, 0);
+        current_hero->AdjustPrimarySkill(primary, 1);
+    }
+
+pick_up:
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+}
+
 // E:\gamedcs\events.cpp:2965.  The shipwreck survivor (jump-table arm
 // 0x56): one artifact, taken if the hero has a slot for it, and the object
 // is picked up either way.
