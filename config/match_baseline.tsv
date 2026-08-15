@@ -303,12 +303,17 @@ army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	97.0115	97.0115	97
 army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	97.5194	97.5194	97.5194	0x3e000
 army	?SetupAnimation@army@@QAEXXZ	100.0000	100.0000	100.0000	0x46830
 army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720
+army	?Walk@army@@QAEXHEE@Z	100.0000	100.0000	100.0000	0x3f0b0
 army	?add_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ea70
 army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40
+army	?attack_hex@army@@QAEEHE@Z	94.0790	94.0790	94.0790	0x45a60
 army	?attack_wall@army@@QAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0
 army	?can_cast_resurrect@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x473d0
 army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
+army	?do_attack@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x41cb0
+army	?do_fire_shield@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x409c0
+army	?do_multi_head_attack@army@@QAEXIPAH0PAJ@Z	99.9351	99.9351	99.9351	0x40310
 army	?enemy_is_adjacent@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0
 army	?erase_item@@YIXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x3ea00
 army	?get_AI_target_time@army@@QBEJJ@Z	100.0000	100.0000	100.0000	0x48bd0
