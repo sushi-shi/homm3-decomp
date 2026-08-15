@@ -287,6 +287,7 @@ ai_tactical	type_AI_spellcaster_get_muck_and_mire_value	0.0000	0.0000	0.0000	0x3
 ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000	0.0000	0.0000	0x3c330
 ai_tactical	type_AI_spellcaster_get_protection_value	0.0000	0.0000	0.0000	0x396e0
 ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000	0.0000	0.0000	0x369c0
+army	?AttackWall@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x45d30
 army	?CanFit@army@@QBEHHHPAH@Z	100.0000	100.0000	100.0000	0x46c40
 army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
 army	?ComputeAttackerDamageReduction@army@@QBENPBV1@E@Z	100.0000	100.0000	100.0000	0x43b90

@@ -1746,13 +1746,29 @@ unsigned char army::move_to(int hex, unsigned char restore_facing)
 
 #endif  // @carcass
 
+// Every segment, in order, at 0x63b820: the eight-entry run AttackWall
+// (0x445d30) re-aims over when the segment it was firing at falls, read
+// the same POINTER-RUN way as the four-entry table below - the loop
+// limit is the one-past address, which is why AttackWall's inlined
+// chooser steps `add edi,4 / cmp edi,0x63b840` and lands exactly on the
+// next table's base. NAME FROM THE DREAMCAST LINE TABLE: the static's
+// own S_LDATA32 is `all_targets` (dc 0x4aa0c hands it to
+// choose_wall_target with the count 8).
+DATA(0x0063b820)
+static const TWallTargetId all_targets[WALL_TARGET_COUNT] = {
+    WALL_TARGET_0, WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_3,
+    WALL_TARGET_4, WALL_TARGET_5, WALL_TARGET_6, WALL_TARGET_7
+};
+
 // The four segments a missed catapult shot may be re-aimed at, at
 // 0x63b840. Read as a POINTER RUN, which is why the loop's limit is the
 // one-past address 0x63b850 in its own right: attack_wall (0x445ec0)
 // steps `add edi,4 / cmp edi,0x63b850`, and one more army body at
-// 0x447530 reads the same pair.
+// 0x447530 reads the same pair. NAME FROM THE DREAMCAST LINE TABLE
+// (dc 0x4aaac, `walls` with the count 4), replacing the bootstrap
+// invention `gRetargetableWalls` this table carried.
 DATA(0x0063b840)
-static const TWallTargetId gRetargetableWalls[4] = {
+static const TWallTargetId walls[4] = {
     WALL_TARGET_1, WALL_TARGET_2, WALL_TARGET_5, WALL_TARGET_4
 };
 
@@ -1794,14 +1810,86 @@ unsigned char army::move_to(int hex, unsigned char restore_facing)
     return simple_move(hex, restore_facing);
 }
 
-#if 0  // @carcass
+// cmbtmgr.h declares GetTargetWallIndex `int` because that is what its
+// own retail public says (?GetTargetWallIndex@@YIHH@Z); the Dreamcast
+// row returns TWallTargetId. Bridge the representation rather than cast
+// - the four-byte copy costs nothing under VC6, the same way
+// creature_type_from_int does in game.cpp.
+inline TWallTargetId wall_target_from_int(int value)
+{
+    union {
+        int value;
+        TWallTargetId wall;
+    } storage;
+    storage.value = value;
+    return storage.wall;
+}
 
-// E:\gamedcs\army.cpp:4471
-// RETAIL_LOCATED(0x00445d30, 0x189)  // anchor-global, dc 0x4a97c
+// One catapult (or cyclops) bombardment: aim once at the segment the
+// grid index falls on, then fire the ballistics row's `shots` at it,
+// re-aiming at the nearest other STANDING segment whenever the one
+// being fired at comes down.
+//
+// THE DC LINE TABLE IS THE STRUCTURE, read forward (dc 0x4a97c):
+// 4472 the highlighter pair's first half, 4473 the highlighter, 4477
+// the aim, 4479 `get_controller()` AS A STATEMENT OF ITS OWN ONE LINE
+// ABOVE THE SWITCH - which is what puts the inlined
+// get_controlling_side ternary before retail's compare chain instead
+// of inside its catapult arm - 4482 the three-arm switch, 4484/4488/
+// 4492 its three bodies in that source order, 4496 the row, 4498 its
+// shot count as a separate statement, 4501 the loop, 4503 the shot,
+// 4504 a TWO-BRANCH condition (br=2: `i + 1 < shots` and the validity
+// test, which is what lets retail fold the guard into the loop's own
+// increment), 4513 the re-aim over all eight segments, 4514 the second
+// validity test and 4519 the tail store.
+//
+// THE SWITCH HAS NO DEFAULT AND `level` IS READ UNINITIALIZED ON IT.
+// Retail's default arm is `mov eax, [ebp + 8]` - the parameter slot
+// the compiler coalesced `wall` into - and the Dreamcast build carries
+// the identical hole (its `bf` skips to the join with r12 never
+// written). DO NOT INVENT A DEFAULT: the uninitialized read IS the
+// retail bytes, and any arm that writes `level` displaces them.
+//
+// `controller->ballisticsLevel` is DC's
+// `get_secondary_skill(SKILL_BALLISTICS)`, a hero.h header inline this
+// tree does not model; the byte-proven +0xd3 field read is the same
+// signed-char movsx retail emits.
+VA(0x00445d30, 0x189)  // anchor-global, dc 0x4a97c
 void army::AttackWall(int iTargetGridIndex)
 {
-    // @stub
+    gpCombatManager->lastMovedArmy = 0;
+    gpCombatManager->TurnOffHighlighter(1);
+    TWallTargetId wall =
+        wall_target_from_int(GetTargetWallIndex(iTargetGridIndex));
+    hero* controller = get_controller();
+    long level;
+    switch (creatureType) {
+    case CREATURE_CATAPULT:
+        level = controller->ballisticsLevel;
+        break;
+
+    case ARMY_CREATURE_CYCLOPS:
+        level = 1;
+        break;
+
+    case ARMY_CREATURE_CYCLOPS_KING:
+        level = 2;
+        break;
+    }
+    const type_ballistics_traits& ballistics = const_ballistics_traits[level];
+    long shots = ballistics.shots;
+    for (long i = 0; i < shots; i++) {
+        attack_wall(wall, ballistics);
+        if (i + 1 < shots && !gpCombatManager->valid_wall_target(wall)) {
+            wall = choose_wall_target(wall, all_targets, WALL_TARGET_COUNT);
+            if (!gpCombatManager->valid_wall_target(wall))
+                break;
+        }
+    }
+    gpCombatManager->lastMovedArmy = this;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4577
 // RETAIL_LOCATED(0x00445fd0, 0x526)  // anchor-callee, dc 0x4aacc
@@ -1916,7 +2004,7 @@ void army::attack_wall(TWallTargetId wall,
         break;
     }
     if (Random(1, 100) > chance) {
-        wall = choose_wall_target(wall, gRetargetableWalls, 4);
+        wall = choose_wall_target(wall, walls, 4);
     }
     attack_wall(wall, levels);
 }
