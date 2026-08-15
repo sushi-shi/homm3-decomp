@@ -1218,11 +1218,17 @@ public:
     // The controller/owner pair. combatSide (+0xf4) stores the OWNER's
     // side, so the body that APPLIES the hypnotize flip is the
     // controller and the raw read is the owner - the inversion this
-    // header carried until 2026-08-14, settled on retail bytes in
-    // army.cpp's note above the pair (cross-build callsite identity
-    // from compute_fire_shield_damage and the TViewArmyWindow ctor,
-    // the DC pair's own get_controlling_side / get_owning_side edges,
-    // and is_enemy's asymmetric compare - three ways, all agreeing).
+    // header carried until 2026-08-14, CLOSED 2026-08-15 on the DC
+    // line table plus a full `call rel32` scan of retail .text. The
+    // decisive half is that the dump names the field itself:
+    // army::get_owning_side (Army.h:795, dc 0x27d3c, 8 B) is a bare
+    // load of the side field and army::get_controlling_side
+    // (Army.h:800, dc 0x27d44, 0x30 B) is the `1 - get_owning_side()`
+    // flip - so the raw read is the OWNING side by construction. The
+    // full argument, including the retail callsite multiplicities
+    // (2:0 in compute_fire_shield_damage, 2:1 in the TViewArmyWindow
+    // ctor) and the withdrawal of the old is_enemy argument, is in
+    // army.cpp's note above the pair. Do not re-litigate.
     // 0x442690 (57 B, ecx only): heroes[get_controlling_side()], the
     // hero currently DIRECTING this stack.
     hero* get_controller() const;                               // 0x442690

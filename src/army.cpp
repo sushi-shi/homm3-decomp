@@ -675,34 +675,55 @@ double army::get_defense_damage_modifier(unsigned char ranged_attack) const
 //   0x442690 (57 B)  heroes[hypnotizeFlag ? 1 - combatSide : combatSide]
 //   0x4426d0 (20 B)  heroes[combatSide]
 //
-// so the whole question is which side combatSide (+0xf4) stores, and
-// it is settled three independent ways, all agreeing:
+// so the whole question is which side combatSide (+0xf4) stores.
+// RE-ADJUDICATED 2026-08-15 against the DC line table and a full
+// `call rel32` scan of .text; the reading below is CLOSED, and the
+// two proofs that close it are 1 and 2 - both are cross-build
+// ISOMORPHISMS, not semantic arguments.
 //
-// 1. CROSS-BUILD CALLSITE IDENTITY (decisive). The DC xref graph has
-//    combatManager::compute_fire_shield_damage (dc 0x27318) calling
-//    get_controller TWICE and get_owner never; retail's
-//    compute_fire_shield_damage (0x422440, already exact in ai.cpp)
-//    calls 0x442690 twice and 0x4426d0 never. From the other end,
-//    DC's TViewArmyWindow::TViewArmyWindow calls BOTH (get_controller
-//    x2, get_owner x1) and retail's TViewArmyWindow ctor (0x5f3360)
-//    is a caller of BOTH 0x442690 and 0x4426d0. One row calls only
-//    the flipping body and the dump names what it calls
-//    get_controller; the row that calls both is the only other caller
-//    of the non-flipping one.
-// 2. THE DC CALL EDGES INSIDE THE PAIR. get_controller (dc 0x47904)
-//    calls army::get_controlling_side and get_owner (dc 0x47924)
-//    calls army::get_owning_side - two distinct side accessors. Our
-//    0x442690 has the flip inlined (it IS get_controlling_side,
-//    claimed at 0x440140) and 0x4426d0 is the raw +0xf4 read, which
-//    is what get_owning_side can only be.
-// 3. SEMANTICS OF is_enemy (0x442880, exact). It compares
-//    `this->get_controlling_side() != arg->combatSide`. Take `this`
-//    hypnotized, owned by side 0 and fighting for side 1, against a
-//    normal side-1 stack: they are allies. With combatSide = OWNER
-//    the compare is (1-0) != 1 -> false -> allies, correct. With
-//    combatSide = CONTROLLER it is (1-1) != 1 -> true, i.e. the
-//    hypnotized stack would attack the side it is fighting for. So
-//    combatSide holds the owner and the flip yields the controller.
+// 1. THE DUMP NAMES THE FIELD ITSELF (decisive). The two side
+//    accessors are separate DC procs and their BODIES say which is
+//    which:
+//      army::get_owning_side       Army.h:795, dc 0x27d3c, Cb 8
+//        27d3c  mov.w 0x38d42,r0 / rts / mov.l @(r0,r4),r0
+//        - one raw load of the side field, nothing else;
+//      army::get_controlling_side  Army.h:800, dc 0x27d44, Cb 0x30
+//        tests the hypnotize word, then calls get_owning_side on both
+//        arms and returns `1 - it` on the set arm (mov #1,r3 / sub
+//        r0,r3).
+//    So the RAW READ IS THE OWNING SIDE and the FLIP IS THE
+//    CONTROLLING SIDE, by the dump's own names. Retail's +0xf4 is
+//    that field: 0x4426d0 is the raw read, 0x440140 is the flip.
+// 2. THE PAIR'S OWN CALL EDGES, same isomorphism one level up.
+//    DC get_controller (dc 0x47904, army.cpp:2691/2693) is
+//    `heroes[get_controlling_side()]`; DC get_owner (dc 0x47924,
+//    army.cpp:2698/2700) is `heroes[get_owning_side()]` - the two
+//    bodies are byte-for-byte the same 26-byte SH4 tail differing
+//    only in which accessor the literal pool names. Retail 0x442690
+//    has the flip inlined and 0x4426d0 is the raw read. There is no
+//    third assignment that fits.
+// 3. CROSS-BUILD CALLSITE FINGERPRINT (corroborates, exactly).
+//    Retail has 19 `call rel32` sites on 0x442690 and 2 on 0x4426d0.
+//    Every DC caller that survives into retail keeps its multiplicity:
+//      compute_fire_shield_damage  DC ctrl x2, owner none
+//        retail 0x422440 -> 0x442690 @0x4224af,0x4224b8; 0x4426d0 none
+//      TViewArmyWindow::TViewArmyWindow  DC ctrl x2, owner x1
+//        retail 0x5f3360 -> 0x442690 @0x5f3503,0x5f368c;
+//                          0x4426d0 @0x5f376e
+//      combatManager::is_computer_action  DC ctrl x1
+//        retail 0x474bf0 -> 0x442690 @0x474c09
+//      combatManager::ProcessCombatMsg  DC owner x1 - and it is the
+//        ONLY other retail caller of 0x4426d0 (0x474d80 @0x4756c7,
+//        the command.obj slot straight after is_computer_action).
+//    A 2:1 split reproduced in one function and a 2:0 split in
+//    another cannot survive swapping the names.
+//
+// WITHDRAWN as a proof: the is_enemy (0x442880) semantic argument an
+// earlier revision of this note used third. is_enemy compares
+// `this->get_controlling_side() != arg->combatSide` - one side
+// flipped, one raw - so it answers a hypnotized `this` correctly and
+// a hypnotized `arg` incorrectly under EITHER reading of +0xf4. It is
+// symmetric and settles nothing; only 1 and 2 do.
 //
 // The DC roster order (2691 get_controller, 2698 get_owner) maps onto
 // the retail slots (0x442690, 0x4426d0) in the same order, so the
@@ -902,22 +923,49 @@ unsigned char army::is_enemy(const army* arg) const
 // either, and BOTH rows are parked rather than landed low.
 #endif  // @carcass
 
-// UN-CARCASSED 2026-08-14 as an `inline` definition, still NOT
-// claimed: get_AI_target_time (0x448bd0) needs the EXPANSION, and
-// the A/B above shows the keyword is what fires it. The retail
-// out-of-line body at 0x4428f0 therefore has no counterpart in our
-// object - it had none before either, since the row was withdrawn -
-// and the trade is a parked 92.00 control-flow residual for a caller
-// at 100.
+// CLAIMED 2026-08-15, and the "claimed OR expanded" trade the merge
+// recorded is RESOLVED: retail has both, and so do we. The mechanism
+// is one sentence - VC6 emits an `inline` function's out-of-line copy
+// exactly when the TU contains a USE IT DECLINES TO EXPAND - and the
+// whole A/B matrix, measured in this tree with the claim in place, is:
 //
-// THE KEYWORD IS STILL NOT AVOIDABLE, re-measured in the CURRENT tree
-// where get_total_combat_value is carcassed and get_AI_target_time is
-// this body's ONLY live call site in the TU: dropping `inline` costs
-// get_AI_target_time 100 -> 27.8667 and STILL emits no expansion, so
-// /Ob2's single-call-site rule (A12) does not fire for a callee this
-// size no matter how few sites it has. The body below is the version
-// the caller expands, so its spelling is load-bearing at 100 even
-// though the row itself is unbanked.
+//   spelling                          can_shoot  AI_target_time  berserk
+//   `inline`, every site expands         (none)      100.0000    92.5170
+//   no keyword anywhere                  92.0000      27.8667     0.0000
+//   `inline` on the army.h declarator    (none)      100.0000    92.5170
+//   `inline` + ONE rejected site         92.0000      100.0000    92.5170
+//
+// Row 2 is the important negative: WITHOUT the keyword this body is
+// not an inline candidate ANYWHERE - get_berserk_targets loses its
+// depth-2 expansion too and collapses to zero - which is C1XX's
+// body-save cliff (docs/vc6/inliner.md §4), not the /Ob2 budget. A
+// 246-byte, ~12-statement callee is over the auto-save threshold, so
+// retail's own source must have marked it `inline` as well. Row 3
+// shows the keyword's PLACEMENT is inert: on the declarator in
+// army.h it behaves identically and moves no canary.
+//
+// Row 1 vs row 4 is the whole question, and the answer is not a
+// spelling of this function - it is a MISSING CALLER. Retail's
+// army.obj has exactly one body that calls 0x4428f0 out of line:
+// spell_is_valid_on_target (0x447a80, 0x429 B, carcassed above),
+// twice, at 0x447c0e and 0x447cb9. Those two rejected sites are why
+// retail's object carries the copy at all; every other army.obj
+// caller (get_unit_combat_value, get_total_combat_value,
+// get_berserk_targets, GoBerserk, attack_hex, get_AI_target_time)
+// expands it, and a `call rel32` scan of the whole image finds no
+// other site inside the unit. The out-of-line copy is NOT explained
+// by the other TUs that call it (ai, ai_tactical, command, findpath,
+// viewarmywindow, combatcontrolsubwindow) - the compiler cannot see
+// them; it is explained by 0x447a80 alone.
+//
+// UNTIL 0x447a80 IS RECONSTRUCTED the rejected site is supplied by a
+// SCAFFOLD: `#pragma inline_depth(0)` around get_total_combat_value
+// below, which is un-carcassed for exactly this purpose and stays
+// UNCLAIMED because the pragma makes its own body the 49.64 call-form
+// where retail expands. The scaffold buys the 92.0000 row here and
+// costs nothing in the ledger. RETIRE IT when 0x447a80 lands: drop
+// the pragma, and get_total_combat_value's own 81.97 becomes
+// claimable in the same change.
 //
 // THE SECOND HEX IS get_second_grid_index (2026-08-14), and the proof
 // is one TU over: get_berserk_targets (0x445490) expands THIS body at
@@ -934,7 +982,7 @@ unsigned char army::is_enemy(const army* arg) const
 // 92.52 -> 14.41, because the wrapper's own callees then sit at
 // depth 3 on a twice-divided budget. Retail's arithmetic only closes
 // with the two combatManager calls written here.
-// RETAIL_LOCATED(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
+VA(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
 inline unsigned char army::can_shoot(const army* excluded) const
 {
     if (creatureType == ARMY_CREATURE_BALLISTA
@@ -1014,14 +1062,17 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsi
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\army.cpp:2910
-// RECONSTRUCTED AND WITHDRAWN 2026-08-14 with can_shoot, body kept.
-// What the whole stack is worth to the AI. can_shoot is INLINED here -
-// retail's copy is the 0x4428f0 body with `excluded` constant-folded
-// to 0 at both enemy_is_adjacent calls, which is the /Ob2 signature of
-// a real `can_shoot(0)` call site rather than duplicated source - and
-// get_unit_combat_value is NOT (0x410 bytes is far over the budget,
-// and retail calls it).
+// RECONSTRUCTED AND WITHDRAWN 2026-08-14 with can_shoot; UN-CARCASSED
+// 2026-08-15 AS A SCAFFOLD, and still DELIBERATELY UNCLAIMED.
+// What the whole stack is worth to the AI. can_shoot is INLINED here
+// IN RETAIL - its copy is the 0x4428f0 body with `excluded`
+// constant-folded to 0 at both enemy_is_adjacent calls, which is the
+// /Ob2 signature of a real `can_shoot(0)` call site rather than
+// duplicated source - and get_unit_combat_value is NOT (0x410 bytes
+// is far over the budget, and retail calls it).
 //
 // The two tails are the same product seen two ways: a stack whose
 // creature bit 23 is set is priced by raw count, everyone else by the
@@ -1030,13 +1081,21 @@ double army::get_unit_combat_value(long lowest_attack, long lowest_defense, unsi
 // fraction. Both quotients divide the per-unit value, so the division
 // is written last in both arms.
 //
-// NOT CLAIMED: 49.64 as written (our CL keeps the can_shoot call) and
-// 81.97 once the inline is forced. Everything from the
-// get_unit_combat_value call to the end - both floating-point tails,
-// the argument-slot homing, the /Op fild round trips - is already
-// byte-identical in BOTH states, so this body is right and only the
-// inliner stands between it and exact. The full measurement is in
-// can_shoot's note above.
+// WHY THE PRAGMA, AND WHY THIS BODY IS NOT CLAIMED. VC6 emits
+// can_shoot's out-of-line copy only when the TU holds a call it
+// declines to expand; retail's army.obj holds two, inside
+// spell_is_valid_on_target (0x447a80), a body this TU does not have.
+// `#pragma inline_depth(0)` here supplies one in its place, which is
+// what banks can_shoot at 92.0000 - but it also compiles THIS body in
+// its 49.64 call-form instead of the 81.97 expanded form retail has,
+// so it must not be claimed while the pragma stands. Everything from
+// the get_unit_combat_value call to the end - both floating-point
+// tails, the argument-slot homing, the /Op fild round trips - is
+// byte-identical in BOTH forms, so the body itself is right and only
+// the inliner stands between it and exact. Full matrix in can_shoot's
+// note above. RETIRING 0x447a80's reconstruction retires the pragma
+// and makes 0x442e60 claimable in the same change.
+#pragma inline_depth(0)
 // RETAIL_LOCATED(0x00442e60, 0x169)  // anchor-global, dc 0x48168
 long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
 {
@@ -1050,6 +1109,9 @@ long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
     return static_cast<long>((hitPoints * numTroops - topCreatureDamage)
                              * value / hitPoints);
 }
+#pragma inline_depth()
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:2928
 #endif  // @carcass

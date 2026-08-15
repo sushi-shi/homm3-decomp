@@ -4,9 +4,11 @@
     configure -> ninja (base objs) -> normalize comparison copies ->
     configure (objdiff.json sees new normalized paths) -> objdiff report
     -> overall line -> [normal tier] baseline raise + ratchet check
-    (FATAL on regression) + cleanliness board (FATAL when a ratcheted
-    source metric rises above its committed floor - C-style casts are
-    banned at 0) + README score block + stale-delink probe.
+    (FATAL on regression) + banked-rows check (FATAL when a previously
+    banked RVA left the baseline entirely) + cleanliness board (FATAL
+    when a ratcheted source metric rises above its committed floor -
+    C-style casts are banned at 0) + README score block + stale-delink
+    probe.
 
 `--fast` stops after the overall line and says what it skipped (the gruntz
 inner-loop tier). The build never RE-delinks (homm2 rule - an existing
@@ -91,8 +93,12 @@ def main(argv=None) -> int:
     # at merge time (2026-08-08). Collect, report everything, fail once.
     failed = bool(status.cmd_check(report, gate=True))
 
-    from homm3.match import single_view, verify_va_claims
-    for gate in (verify_va_claims, single_view):
+    # banked_rows runs alongside cmd_check, not inside it: the ratchet
+    # compares the rows that ARE in the baseline, this one asks whether a
+    # row that used to be there still is. Clean ratchet + lost row is
+    # exactly how army::can_shoot left the ledger green (2026-08-15).
+    from homm3.match import banked_rows, single_view, verify_va_claims
+    for gate in (banked_rows, verify_va_claims, single_view):
         fatal = gate.run_gate()
         if fatal:
             failed = True
