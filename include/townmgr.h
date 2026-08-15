@@ -99,6 +99,11 @@ public:
     Bitmap816* objHotspot;  // +0x28
     border* objBorder;      // +0x2c
 
+    // Retail 0x5c2ea0 (dc 0x16a0b0), townmgr.obj's FIRST carve row -
+    // the `%s.def` sprintf plus GetSprite body. Declared for SetupTown,
+    // which is the only site in the image that builds one; not
+    // reconstructed.
+    townObject(int townType, int objPos, const char* basename);
     // The DC roster gives it its own row (dc 0x16a1a4, 128 SH4 bytes)
     // and retail has NO out-of-line body for it: townmgr.obj's first
     // carve row is the constructor at 0x5c2ea0 (the `%s.def` sprintf +
@@ -113,6 +118,31 @@ public:
     void Draw(int incFrame, unsigned char drawHotspots);
 };
 SIZE(townObject, 0x30);
+
+// The panorama's four per-town-type tables, all in townmgr.obj's own
+// .rdata band and all read by SetupTown 0x5c6870. Names INVENTED (no DC
+// symbol covers them) and the extents come off SetupTown's own index
+// arithmetic; every one of them is declared under this file's narrowest
+// gate, the include-set reason gSystemPalette's note above gives. The
+// extents are spelled as literals rather than as town.h's
+// TOWN_TYPE_COUNT / MAX_BUILDING_TYPE because this header is parsed
+// BEFORE town.h in its one consumer's include order.
+//
+// gTownBuildOrder: `movsx esi,byte [i + type*44 + 0x642eb4]` - a signed
+// char [9][44] of type_building_id values in PANORAMA DRAW ORDER, each
+// row closed by -1 (Castle's is 26,23,7,8,9,0,... then six -1s).
+extern signed char gTownBuildOrder[9][44];
+// gTownBackgroundPrefix: the "%sBack.pcx" stem, one per faction -
+// TBCs, TBRm, TBTw, TBIn, TBNc, TBDn, TBSt, TBFr, TBEl.
+extern const char* gTownBackgroundPrefix[9];
+// gTownBuildingSprites: `[objId + type*44]` scaled by four - a
+// char*[9][44] of the .def stem per faction and building (Castle's row
+// starts TBCsmage, TBCsmag2, TBCsmag3, TBCsmag4, TBCsmag5, TBCstvrn).
+extern const char* gTownBuildingSprites[9][44];
+// gTownMusic: the town page's MP3 per faction - CstleTown, Rampart,
+// TowerTown, InfernoTown, necroTown, dungeon, StrongHold,
+// FortressTown, ElemTown.
+extern const char* gTownMusic[9];
 
 // The town screen's network dispatch. HandleGiftMsg (0x5c66b0) forwards
 // to the adventure handler's TRADE path with the same `this` - a direct,
