@@ -21,7 +21,9 @@
 #define HOMM3_ARMY_WALL_VIEW
 #define HOMM3_ARMY_ROUND_VIEW
 #define HOMM3_ARMY_CALIPH_VIEW
+#define HOMM3_ARMY_RANGE_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_RANGE_VIEW
 #undef HOMM3_ARMY_CALIPH_VIEW
 #undef HOMM3_ARMY_ROUND_VIEW
 #undef HOMM3_ARMY_WALL_VIEW
@@ -36,7 +38,9 @@
 #define HOMM3_CMBTMGR_RESURRECT_VIEW
 #define HOMM3_CMBTMGR_ROUND_VIEW
 #define HOMM3_CMBTMGR_CALIPH_VIEW
+#define HOMM3_CMBTMGR_TOWER_VIEW
 #include "cmbtmgr.h"
+#undef HOMM3_CMBTMGR_TOWER_VIEW
 #undef HOMM3_CMBTMGR_CALIPH_VIEW
 #undef HOMM3_CMBTMGR_ROUND_VIEW
 #undef HOMM3_CMBTMGR_RESURRECT_VIEW
@@ -48,6 +52,7 @@
 // nothing to the include-set canaries.
 #include "findpath.h"
 #include "hero.h"
+#include "herospec.h"
 #include "kb.h"
 #include "kbwin.h"
 #include "misc.h"
@@ -469,15 +474,85 @@ int army::get_controlling_side() const
     return combatSide;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:1541
-// RETAIL_LOCATED(0x00440160, 0x1A6)  // anchor-global (HD masked-byte
-//     identity), dc 0x45e70 -- the DC row the carcass had on 0x440100
+// One stack's whole shooting turn: resolve the target it was told to
+// attack, turn to face it, fire between one and three volleys, turn
+// back, and drop the spells an attack cancels.
+//
+// THE DC LINE TABLE IS THE STRUCTURE (dc 0x45e70, forward read): 1544
+// the yModify clear, 1548 and 1549 the two SPLIT early-outs, 1554 the
+// target cell's x, 1557 get_second_grid_index, 1559 our own cell's x,
+// 1564 and 1570 the two facing corrections, 1579 the first volley,
+// 1583 the double-shot volley behind Is(15), 1591 a FOUR-BRANCH
+// condition calling get_controller TWICE, 1593 the artillery volley,
+// 1601 the turn back and 1607 the cancellation. Retail follows it
+// statement for statement.
+//
+// TWO PLACES WHERE RETAIL AND THE DC BUILD DIVERGE, both settled on
+// retail bytes:
+//   - the ARROW TOWER short-circuit into combatManager::KeepAttack has
+//     no Dreamcast counterpart at all (that build's range_attack goes
+//     straight from the early-outs to the cell reads), which is what
+//     accounts for retail's 422 bytes against the DC row's 336;
+//   - line 1607 is `CancelSpellType(1)` in the DC build and retail
+//     emits `push 0x3b / call CancelIndividualSpell` instead. That is
+//     NOT a different statement: CancelSpellType (0x4444d0) is a
+//     three-arm switch on a constant, so /Ob2 inlines it here and
+//     folds the whole switch down to its type-1 arm's single call.
+//     The out-of-line body still exists, which is the extern-linkage
+//     emission rule, so the constant-folded call is the proof rather
+//     than a coincidence.
+//
+// `Is(15)` is the double-shot bit: retail spells it `shr eax,0xf /
+// test al,1` off creatureId, which is this tree's Is(bit) inline, and
+// the Dreamcast build passes its own Is the MASK 0x8000 for the same
+// bit. The artillery gate is a NEW BYTE PROOF for the secondary-skill
+// ladder: `cmp byte [controller + 0xdd], 1` is skillLevel[20] against
+// the 0xc9 band base, and slot 20 is exactly where herospec.h's
+// DC-transcribed TSecondarySkill puts eSecSkillBattlefieldBallistics -
+// HoMM3's Artillery, whose Advanced/Expert mastery is the rule that
+// gives a ballista its second shot. command.cpp reads the same slot as
+// a raw 20 for the ballista's auto-combat gate; herospec.h is included
+// here to name it, and the include costs nothing (army 44/49 with the
+// raw index and with the enumerator, every row identical).
+VA(0x00440160, 0x1A6)  // anchor-global (HD masked-byte identity), dc 0x45e70
 void army::range_attack()
 {
-    // @stub
+    yModify = 0;
+    if (side < 0)
+        return;
+    if (slot < 0)
+        return;
+    army* target = &gpCombatManager->armies[side][slot];
+    if (creatureType == ARMY_CREATURE_ARROW_TOWER) {
+        gpCombatManager->KeepAttack(slot);
+        return;
+    }
+    long target_x = gpCombatManager->cells[target->gridIndex].field_00;
+    long our_x = gpCombatManager->cells[get_second_grid_index()].field_00;
+    long old_facing = facing;
+    if (target_x > our_x && facing != FACING_DEFENDER) {
+        SetupAnimation();
+        Turn(1);
+    }
+    if (target_x < our_x && facing != FACING_ATTACKER) {
+        SetupAnimation();
+        Turn(1);
+    }
+    range_attack(target);
+    if ((Is(15) & 1) && target->numTroops > 0)
+        range_attack(target);
+    if (creatureType == ARMY_CREATURE_BALLISTA && target->numTroops > 0
+        && get_controller() && get_controller()->skillLevel[eSecSkillBattlefieldBallistics] > 1) {
+        range_attack(target);
+    }
+    if (facing != old_facing) {
+        SetupAnimation();
+        Turn(1);
+    }
+    CancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1665
 // RETAIL_LOCATED(0x00440310, 0x1EB)  // anchor-global, dc 0x46050
