@@ -301,6 +301,19 @@ struct ScholarInfo {
     unsigned long tail : 9;
 };
 SIZE(ScholarInfo, 4);
+
+// The sea chest's arm. advManager::DoEventSeaChest (0x4a5030) reads a
+// SIGNED three-bit reward kind at bits 0..2 (`shl edi,0x1d / sar
+// edi,0x1d`) and a SIGNED ten-bit artifact at bits 3..12 (`shl eax,0x13 /
+// sar eax,0x16`) - the artifact lane starts one bit above the selector,
+// where the scholar's payload lanes start six and thirteen bits up.
+// GATED for MonsterInfo's reason.
+struct SeaChestInfo {
+    signed long reward : 3;
+    signed long artifact : 10;
+    unsigned long tail : 19;
+};
+SIZE(SeaChestInfo, 4);
 #endif
 
 // Stride 38 (0x26), byte-proven by game::get_cell's `*19` then `*2`
@@ -333,6 +346,7 @@ public:
         CampfireInfo campfire_info;
         TreasureInfo treasure_info;
         ScholarInfo scholar_info;
+        SeaChestInfo sea_chest_info;
     };
 #else
     unsigned long extraInfo;
@@ -512,6 +526,12 @@ public:
     int GetScholarPrimarySkill() const { return scholar_info.primary; }
     int GetScholarSecondarySkill() const { return scholar_info.secondary; }
     int GetScholarSpell() const { return scholar_info.spell; }
+
+    // The sea chest's pair, both Dreamcast-published with their own enum
+    // returns (SeaChestRewardTypes and TArtifact) and both spelled `int`
+    // for get_tomb_artifact's reason.
+    int GetSeaChestReward() const { return sea_chest_info.reward; }
+    int GetSeaChestArtifact() const { return sea_chest_info.artifact; }
 
     // mapcell.cpp:46 in the DC roster, and the SAME inherited member
     // IsCustomized is: retail's do_event_dragon_city (0x4a2140) passes the
