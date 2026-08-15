@@ -8,6 +8,12 @@
 #include "advmgr_popup.h"
 #include "textwdgt.h"
 
+#ifdef HOMM3_TOWNMGR_UNIVERSITY_DECLS
+#include <vector>
+class hero;
+struct type_university;
+#endif
+
 // Retail's +0x70 rollover pointer and +0x74 skill-array accesses translate
 // DC's +0x68/+0x6c fields by exactly the eight-byte CAdvPopup widening already
 // proven in advmgr_popup.h.  The tail layout remains undeclared until its
@@ -20,10 +26,41 @@ public:
     // dispatches slot 13 (textWidget::SetText) through it.
     char pad_60[0x10];
     textWidget* rolloverText;  // +0x70
+#ifdef HOMM3_TOWNMGR_UNIVERSITY_DECLS
+    // The tail, proven by the constructor 0x5ef500 and by the stack copy
+    // townManager::DoUniversity builds: the base runs to +0x74, then
+    // 0x64 bytes this compiland never touches, then TWO VC6 vectors -
+    // the constructor writes their allocator byte at +0xd8 and +0xe8 and
+    // zeroes each following storage triplet, and the modal run reads
+    // +0xdc/+0xe0 and +0xec/+0xf0 as begin/end. The object therefore
+    // ends at +0xf8, which is exactly the 0x11c-byte frame
+    // DoUniversity reserves less its own string, skill record and
+    // allocator temp.
+    //
+    // Held behind this gate because the two TUs that already include
+    // this header (advmgr.cpp, university_window.cpp) must keep the
+    // narrow view they are measured on; only townmgr.cpp, which places
+    // one of these on the stack and needs its size and its implicit
+    // destructor, opens it.
+    char pad_74[0x64];
+    std::vector<widget*> field_d8;
+    std::vector<widget*> field_e8;
+
+    // Retail 0x5ef500. `bTownUniversity` is the retail-added third
+    // parameter the Dreamcast pair does not have, and both image-wide
+    // call sites name it: the map object's visit (0x4aa526) passes 0,
+    // the town building's page (0x5d2f26) passes 1, and the constructor
+    // gates one extra 0x48-byte widget on it.
+    type_university_window(hero* newHero, const type_university* university,
+                           unsigned char bTownUniversity);
+#endif
 
     virtual void handle_widget_hover(widget* current_widget);  // slot 4
     virtual int ExitDialog(message* msg);  // slot 14
 };
+#ifdef HOMM3_TOWNMGR_UNIVERSITY_DECLS
+SIZE(type_university_window, 0xf8);
+#endif
 
 // --- type_university_skill_button ---
 // CODEVIEW(E:\gamedcs\university_window.cpp:65, dc 0x18e6ac) void type_university_skill_button::type_university_skill_button(long _x, long _y, long _width, long _height, long new_id, const char* _image, TSecondarySkill new_skill);

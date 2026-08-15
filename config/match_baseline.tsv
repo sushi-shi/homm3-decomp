@@ -1493,6 +1493,7 @@ townmgr	??0TTownScreenWindow@@QAE@XZ	95.5868	95.5868	95.5868	0x1c34d0
 townmgr	??0townManager@@QAE@XZ	100.0000	100.0000	100.0000	0x1c3310
 townmgr	??0type_garrison_base_window@@QAE@PAVhero@@HPAVarmyGroup@@@Z	98.2932	98.2932	98.2932	0x1ce830
 townmgr	??0type_monster_join_window@@QAE@PAVhero@@PAVarmyGroup@@E@Z	93.8770	93.8770	93.8770	0x1d0b40
+townmgr	??0type_university@@QAE@XZ	100.0000	100.0000	100.0000	0x1d2d80
 townmgr	??1TBlacksmithWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d1a30
 townmgr	??1TBuyBuildWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1d5b70
 townmgr	??1TCastleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1dcb80
@@ -1531,6 +1532,7 @@ townmgr	?DoShipyard@@YIXH@Z	100.0000	100.0000	100.0000	0x1d2720
 townmgr	?DoSkeletonTransformer@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d2f90
 townmgr	?DoTownGate@townManager@@QAEXXZ	98.6070	98.6070	98.6070	0x1d8480
 townmgr	?DoTownTavern@townManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1d82b0
+townmgr	?DoUniversity@townManager@@QAEXXZ	89.7683	89.7683	89.7683	0x1d2da0
 townmgr	?GetCategoryStats@@YIXHPAJPAC@Z	100.0000	100.0000	100.0000	0x1dee70
 townmgr	?GetText@TTextResource@@QBEPBDH@Z	100.0000	100.0000	100.0000	0x1cc8d0
 townmgr	?HandleGiftMsg@CTownNetMsgHandler@@QAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x1c66b0
