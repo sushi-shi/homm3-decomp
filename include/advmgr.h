@@ -128,6 +128,27 @@ struct type_cell_visited_info {
 };
 SIZE(type_cell_visited_info, 4);
 
+// DoEventWagon (0x4a69b0) packs five lanes into the one dword and the
+// arm proves every width: an UNSIGNED five-bit resource amount at bits
+// 0..4, read with a BYTE load because the field ends inside the first
+// byte (`mov al,[cell] / and eax,0x1f`); a "still loaded" flag at bit 13
+// and a "carries an artifact" flag at bit 14, both `shr / test cl,1`
+// against the SAME cached dword; a SIGNED ten-bit artifact id at bits
+// 15..24 (`shl eax,7 / sar eax,0x16`); and a SIGNED four-bit resource id
+// at bits 25..28 (`shl esi,3 / sar esi,0x1c`). Emptying the wagon clears
+// bit 13 alone - `and ah,0xdf` over the dword, the same one-byte
+// read-modify-write SetGardenEmpty produces at bit 10.
+struct type_wagon_info {
+    unsigned long amount : 5;
+    unsigned long unused : 8;
+    unsigned long full : 1;
+    unsigned long has_artifact : 1;
+    signed long artifact : 10;
+    EGameResource resource : 4;
+    unsigned long tail : 3;
+};
+SIZE(type_wagon_info, 4);
+
 union ExtraInfoUnion {
     unsigned long value;
     type_water_wheel_info water_wheel_info;
@@ -139,6 +160,7 @@ union ExtraInfoUnion {
     type_witch_hut_info witch_hut_info;
     type_fountain_info fountain_info;
     type_cell_visited_info cell_visited_info;
+    type_wagon_info wagon_info;
 
     void SetCellVisited(short player);
 
@@ -219,6 +241,22 @@ union ExtraInfoUnion {
     int get_tomb_artifact() const { return tomb_info.artifact; }
     void empty_tomb() { tomb_info.has_artifact = 0; }
     int get_witch_skill() const { return witch_hut_info.skill; }
+
+    // The wagon's six MapCell.h accessors, all six named and decorated by
+    // the Dreamcast line table over DoEventWagon (dc 0x96784):
+    // WagonIsFull and WagonHasArtifact are `_N` - bool, not the unsigned
+    // char the tomb's twin returns - GetWagonArtifact is `?AW4TArtifact`,
+    // GetWagonResource `?AW4EGameResource`, GetWagonAmount `F` (short,
+    // which is what makes the payout argument a `movsx ecx,di`) and
+    // EmptyWagon `void ()`. GetWagonArtifact is spelled `int` for the
+    // same reason get_tomb_artifact is: TArtifact has no modelled
+    // definition here and an enum return is int-wide under VC6 anyway.
+    bool WagonIsFull() const { return wagon_info.full; }
+    bool WagonHasArtifact() const { return wagon_info.has_artifact; }
+    int GetWagonArtifact() const { return wagon_info.artifact; }
+    EGameResource GetWagonResource() const { return wagon_info.resource; }
+    short GetWagonAmount() const { return wagon_info.amount; }
+    void EmptyWagon() { wagon_info.full = 0; }
 };
 SIZE(ExtraInfoUnion, 4);
 #endif
@@ -338,7 +376,15 @@ enum EAdvmgrRetailObjectType {
     QUEST_GUARD = 215
 };
 
+// events.obj joins the gate for the refugee camp (0x4a4600), which names
+// the object it is standing on in both of its dialogs. The guard is SPLIT
+// around this one declarator rather than moved, so the preprocessed text
+// every quick-info consumer sees is unchanged, line for line.
+#endif
+#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_EVENTS_VIEW)
 DATA(0x006a79ec) extern const char* const gAdventureObjectNames[];
+#endif
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 DATA(0x006a5e84) extern const char* const gTerrainNames[];
 DATA(0x0069778c) extern int gUnnamed69778c;
 DATA(0x006989c8) extern int gUnnamed6989c8;
@@ -955,6 +1001,12 @@ public:
                             bool human_player);
     void DoEventRallyFlag(class hero* current_hero, NewmapCell* cell,
                           bool human_player);
+    // The refugee camp (jump-table arm 0x4e). The Dreamcast decoration is
+    // `(hero*, NewmapCell*, bool)` and retail's `ret 0xc` agrees; the cell
+    // is spelled NewmapCell here rather than ExtraInfoUnion because this
+    // handler reads `type` and `objectIndex` as well as the dword.
+    void DoEventRefugeeCamp(class hero* current_hero, NewmapCell* cell,
+                            bool human_player);
     // The Sirens (jump-table arm 0x5c), same three-parameter `ret 0xc`
     // shape as the stables below and the cell equally unused.
     void DoEventSiren(class hero* current_hero, NewmapCell* cell,
@@ -976,6 +1028,11 @@ public:
     // to ExtraInfoUnion::SetCellVisited as `this`, i.e. only the +0x00
     // dword is ever touched. The access specifier is dropped because
     // advManager is a single public block here.
+    // The wagon (jump-table arm 0x69), `(hero*, NewmapCell*, bool)` on the
+    // Dreamcast and `ret 0xc` here, with the cell reaching only its +0x00
+    // dword - the same ExtraInfoUnion spelling the tomb and mills use.
+    void DoEventWagon(class hero* current_hero, ExtraInfoUnion* cell,
+                      bool human_player);
     void DoEventWarSchool(class hero* current_hero, ExtraInfoUnion* cell,
                           bool human_player);
     void do_event_warrior_tomb(class hero* current_hero, ExtraInfoUnion* cell,

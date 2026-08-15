@@ -170,6 +170,21 @@ public:
 
     void Update(unsigned char new_monster, long slot);
 
+#ifdef HOMM3_EVENTS_VIEW
+    // events.obj CONSTRUCTS a recruitUnit - the refugee camp (0x4a4600)
+    // builds one on its frame and hands it to executive::DoDialog - so the
+    // class has to be concrete there, and baseManager's three slots are
+    // pure. recruitUnit overrides all three: the Dreamcast publishes
+    // Open/Close/Main and retail has a body for each (0x54fea0 / 0x5502d0 /
+    // 0x550940). DECLARED only, and only under the events view: recruit.cpp
+    // still carries Open and Close in its carcass, a TU that merely calls
+    // the external constructor needs no vtable of its own, and every other
+    // consumer of this header sees it unchanged.
+    virtual int Open(int newPriority);
+    virtual void Close();
+    virtual int Main(message& msg);
+#endif
+
     // Defined here, not in recruit.cpp, because retail HAS NO
     // out-of-line body for it: the recruit band's carve rows are all
     // accounted for by other functions, and the same ~0x60-byte block

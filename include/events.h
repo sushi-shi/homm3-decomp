@@ -121,6 +121,19 @@ enum EAdventureEventText {
     // shows the morale and luck pictures side by side.
     ADV_EVENT_TEXT_RALLY_FLAG_VISITED = 110,
     ADV_EVENT_TEXT_RALLY_FLAG = 111,
+    // DoEventRefugeeCamp (0x4a4600), and this object is where the
+    // alphabetical run BREAKS. Its offer line lands at 112, directly after
+    // the rally flag's pair, exactly where "refugee camp" belongs - but its
+    // empty line is 44, out in the "d" band between the defense tower's
+    // pair at 39/40 and the dragon city's 47. Both indices are byte-proven
+    // (the [Text._First + 0xb0] and [+0x1c0] loads at 0x4a462c/0x4a46aa)
+    // and a full scan of every advevent.txt index reachable from
+    // gpAdventureEventText shows 44 has exactly ONE consumer image-wide, so
+    // it is not a shared generic row that happens to be borrowed. The ROLE
+    // is what names it, as with WITCH_HUT_NO_SKILL at 190 below; only the
+    // index is evidence.
+    ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY = 44,
+    ADV_EVENT_TEXT_REFUGEE_CAMP = 112,
     // DoEventPowerSchool (0x4a3dc0), picture 0x21 = +1 Spell Power - the
     // fourth member of the primary-skill quartet above.
     ADV_EVENT_TEXT_POWER_SCHOOL = 100,
@@ -154,6 +167,16 @@ enum EAdventureEventText {
     // 0x11 and the experience amount as its quantity.
     ADV_EVENT_TEXT_TRAINING_GROUNDS = 143,
     ADV_EVENT_TEXT_TRAINING_GROUNDS_VISITED = 144,
+    // DoEventWagon (0x4a69b0), the run directly below the war school's -
+    // which is where the alphabet puts "wagon" - and the only object in
+    // this enum whose reward comes in TWO flavours: 154 is the resource
+    // payout (a resource picture and its amount), 155 the sprintf format
+    // taking the artifact name and 156 the already-looted line. The DC
+    // roster agrees: DoEventWagon (dc 0x96784) runs before DoEventWarSchool
+    // (dc 0x97628).
+    ADV_EVENT_TEXT_WAGON_RESOURCE = 154,
+    ADV_EVENT_TEXT_WAGON_ARTIFACT = 155,
+    ADV_EVENT_TEXT_WAGON_EMPTY = 156,
     // DoEventWarSchool (0x4a7a40). 158 is the two-picture choice offered
     // with iMBType 10 (+1 Attack against +1 Defense), 159 the
     // already-trained line and 160 the "under 1000 gold" refusal.
