@@ -785,6 +785,20 @@ public:
 #ifdef HOMM3_CMBTMGR_MOVE_VIEW
     void mark_moving_army(const army* moving_army);           // 0x46a520
 #endif
+    // 0x465ad0 (0x443), already carved and carcassed in cmbtmgr.cpp.
+    // army::range_attack (0x440160) short-circuits into it for an ARROW
+    // TOWER, passing that stack's indexToAttack as the tower position -
+    // a thiscall on gpCombatManager with one stack argument, which is
+    // the arity the DC row's single TArcherID parameter says. THE
+    // PARAMETER TYPE IS THE ONE DIVERGENCE: the DC prototype takes
+    // combatManager::TArcherID, an enum this header does not model yet,
+    // so the declaration takes the int retail actually pushes and the
+    // enum waits for the lane that reconstructs the body. Behind a view
+    // because a bare member declaration is this header's own measured
+    // include-set trigger (mark_moving_army above).
+#ifdef HOMM3_CMBTMGR_TOWER_VIEW
+    void KeepAttack(int iTowerPos);                           // 0x465ad0
+#endif
     // 0x46a520 (68 B), the row above's only decoded writer and
     // army::simple_move's second call: it zeroes field_14031 and marks
     // the hex - or the two hexes - the passed stack stands on. It sits

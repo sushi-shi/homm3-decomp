@@ -332,6 +332,7 @@ army	?is_enemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880
 army	?is_valid_caliph_spell@@YIEHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x47eb0
 army	?move_to@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45d10
 army	?play_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d540
+army	?range_attack@army@@QAEXXZ	100.0000	100.0000	100.0000	0x40160
 army	?set_AI_expected_damage@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x430d0
 army	?simple_move@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45950
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580

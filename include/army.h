@@ -191,8 +191,20 @@ public:
     char pad_00[0x10];
     // Grid identity, byte-proven by ValidAttack (0x523bb0): the target
     // hexcell's armySide/armySlot pair compares against these.
-    int side;                     // +0x10
-    int slot;                     // +0x14
+    //
+    // NAMES ARE WRONG AND THE CORRECTION IS EVIDENCED, not acted on
+    // (the rename would touch ai.cpp, command.cpp and findpath.cpp,
+    // which this lane does not own - the same reason bitIndex below
+    // still carries its provisional name). These are the DC roster's
+    // groupToAttack (army@16) and indexToAttack (army@20), i.e. the
+    // side and slot of the stack this one is ATTACKING, not its own:
+    // range_attack (0x440160) forms `armies[+0x10][+0x14]` and fires
+    // at it, ai.cpp already assigns `target->combatSide` /
+    // `target->bitIndex` into them, and command.cpp fills them from
+    // the HOVERED cell's armySide/armySlot. This stack's own side and
+    // slot are combatSide (+0xf4) and bitIndex (+0xf8).
+    int side;                     // +0x10 == DC groupToAttack
+    int slot;                     // +0x14 == DC indexToAttack
     char pad_18[0x4];
     // ValidPath stores the validated destination here on success.
     int pathTarget;               // +0x1c
@@ -442,7 +454,21 @@ public:
     // above is sliced; the record itself is not modelled as such,
     // because that would put monframeinfo.h in every army.h consumer's
     // include closure.
+    // +0x10c, the DC roster's `yModify` (army@248, a char*) - retail
+    // sits a flat +0x14 above the DC record from hitByCreature onward,
+    // the same shift combatSide/bitIndex already carry (DC group 224 ->
+    // +0xf4, index 228 -> +0xf8, sMonFrameInfo 252 -> +0x110), so DC
+    // 248 lands here. range_attack (0x440160) clears it as its first
+    // statement and nothing located yet reads it. BEHIND A VIEW like
+    // every other name this header scopes: the bytes are identical in
+    // both arms, only the name is TU-local.
+#ifdef HOMM3_ARMY_RANGE_VIEW
+    char pad_fc[0x10];
+    char* yModify;                // +0x10c
+    char pad_110[0x48];
+#else
     char pad_fc[0x5c];
+#endif
     int frameInfoWalkCycleTime;   // +0x158 == sMonFrameInfo.iWalkCycleTime
     char pad_15c[0x4];
     int frameInfoFlightPixelSpan; // +0x160 == sMonFrameInfo.iFlightPixelSpan
@@ -874,6 +900,17 @@ public:
     // recorded here and NOT acted on: the access move is the same
     // whole-family pass simple_move's note above is waiting on.
     void attack_wall(TWallTargetId wall, long levelsDestroyed);
+#endif
+    // The shooting pair. 0x440160 is the public no-argument entry - it
+    // resolves groupToAttack/indexToAttack into the target stack, turns
+    // to face it, and fires between one and three volleys - and it
+    // hands each volley to the private one-argument overload at
+    // 0x43f900 (still a carcass), which is the animation-and-damage
+    // worker. Behind a view for the header's usual measured reason;
+    // army.cpp is the only consumer of either.
+#ifdef HOMM3_ARMY_RANGE_VIEW
+    void range_attack();
+    void range_attack(army* armyToAttack);
 #endif
     unsigned char check_obstacle_attacks(unsigned char is_walking);
     void Turn(unsigned char play_animation); // 0x446720
