@@ -1078,6 +1078,20 @@ public:
         ARMY_CREATURE_CYCLOPS = 0x5e,
         ARMY_CREATURE_CYCLOPS_KING = 0x5f,
 #endif
+        // The aura pair. add_aura (0x43ea70) is the only reader and it
+        // tests BOTH stacks against the same two ids, once in each
+        // direction, which is what says these are the creature that
+        // GIVES the aura rather than one that receives it. 0x18/0x19
+        // land on Unicorn / War Unicorn in Rampart's fourteen-slot run,
+        // and the Dendroid pair two slots earlier (0x16/0x17) is
+        // corroborated from the other side by remove_binding's own
+        // subject - Rampart owns both of HoMM3's stack-to-stack
+        // relationships, the unicorn's resistance aura and the
+        // dendroid's bind. Behind the aura view; NH3API spellings.
+#ifdef HOMM3_ARMY_AURA_VIEW
+        ARMY_CREATURE_UNICORN = 0x18,
+        ARMY_CREATURE_WAR_UNICORN = 0x19,
+#endif
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
         // The two combat participants can_shoot (0x4428f0) admits as
@@ -1127,6 +1141,26 @@ public:
         return static_cast<unsigned char>(
             static_cast<unsigned>(creatureId) >> attribute);
     }
+    // The DC roster's army::get_owning_side (Army.h:795, dc 0x27d3c,
+    // 8 B) - a CLASS-BODY inline, which is why retail has no
+    // out-of-line copy of it anywhere while its neighbour
+    // get_controlling_side (Army.h:800) does, at 0x440140.
+    //
+    // IT IS NOT INTERCHANGEABLE WITH THE RAW FIELD, and add_aura
+    // (0x43ea70) is what measures the difference: writing
+    // `other->combatSide == get_controlling_side()` lets VC6 fold the
+    // neighbour's side into the compare's memory operand AFTER the
+    // hypnotize ternary, where retail materialises it into a register
+    // BEFORE - the same "an inlined accessor's value is materialised,
+    // not folded into the addressing mode" barrier get_controller's
+    // note already records, worth 1.09 on that body. Behind the aura
+    // view; army.cpp is the only consumer.
+#ifdef HOMM3_ARMY_AURA_VIEW
+    int get_owning_side() const
+    {
+        return combatSide;
+    }
+#endif
     // 0x440140 (31 B, `this` only): the side that is CURRENTLY driving
     // this stack - combatSide, or its complement while the hypnotize
     // counter is up. Located 2026-08-14 by body identity: the same
