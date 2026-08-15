@@ -4167,6 +4167,118 @@ void advManager::DoEventTreasure(hero* current_hero, NewmapCell* cell,
     current_hero->CheckLevel();
 }
 
+// A philai..puzzlewindow bracket helper (81 B at 0x527fe0) the AI arms of
+// the Tree of Knowledge and the war school run as their "is this worth
+// buying?" test: it scales the offered VALUE by the hero's
+// turnExperienceToRVRatio, scales the COST by that player's per-resource
+// weight (the double row at playerData+0x128) and reports whether the
+// weighted cost outweighs the weighted value - so a true answer means
+// DECLINE. Retail takes the hero in ECX and the resource in EDX with two
+// stack arguments, the /Gr shape again.
+//
+// The NAME is a Dreamcast line-table read: the statements at
+// E:\gamedcs\events.cpp:3495 and 3517, inside DoEventTreeOfKnowledge
+// (dc 0x964c4), call ?AI_choose_resource_or_experience@@YA_NPBVhero@@
+// W4EGameResource@@HH@Z and nothing else, and both are exactly this
+// object's two AI price arms. The return stays `unsigned char` where the
+// Dreamcast decorates it `_N`: retail tests AL and the war school is exact
+// with that spelling. The row is not claimed here.
+unsigned char AI_choose_resource_or_experience(hero* current_hero,
+                                               EGameResource resource,
+                                               int cost, int value);
+
+// E:\gamedcs\events.cpp:3454.  The Tree of Knowledge (jump-table arm
+// 0x66): one level's worth of experience, once per tree per hero, for
+// nothing, for 2000 gold or for ten gems - which of the three the tree
+// wants is a three-bit selector in its own dword.
+//
+// The two paid arms are the war school's shape twice over: a human is
+// asked with iMBType 2 and may decline, the AI runs the same
+// value-against-cost appraisal, and the price is only taken once the
+// answer is yes. Both arms then converge on ONE GiveExperience, so retail
+// carries the award and the visit write-back exactly once.
+//
+// The visit mask is materialised at the TOP - `1 << GetItemId()` into a
+// frame slot - and read back for the write-back after the award, which is
+// what one named local produces where two `1 << id` expressions would have
+// been recomputed.
+VA(0x004a6710, 0x29D)  // jump-table arm 0x66 + advevent.txt 147..152, dc 0x964c4
+void advManager::DoEventTreeOfKnowledge(hero* current_hero,
+                                        ExtraInfoUnion* cell,
+                                        bool human_player)
+{
+    unsigned long visited = 1 << cell->GetItemId();
+    if (current_hero->TreeOfKnowledgeFlags & visited) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_TREE_VISITED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    cell->SetCellVisited(current_hero->owner);
+    // The `game* g` spelling again, per-call-site as always: it is what
+    // puts the player position first in the SIB of the inlined
+    // teamInfo[playerNum] load (`[pos + gpGame]`), and a direct call
+    // through the global makes VC6 pick the other base.
+    game* g = gpGame;
+    g->SetInfoFlag(TreeOfKnowledgeInfo, gNetLocalGamePos);
+    int experience = hero::GetExperienceIncrement(current_hero->level);
+
+    switch (cell->GetTreePrice()) {
+    case const_tree_wants_nothing:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_TREE_FREE),
+                         1, -1, -1, 0x11, -1, -1, 0, -1, 0, -1, 0);
+        break;
+    case const_tree_wants_gold:
+        if (gpCurrentPlayer->resources[GOLD] < 2000) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_TREE_NO_GOLD),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        if (human_player) {
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_TREE_GOLD_PROMPT),
+                         2, -1, -1, 0x11, -1, -1, 0, -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+                return;
+        } else if (AI_choose_resource_or_experience(current_hero, GOLD, 2000,
+                                                    experience)) {
+            return;
+        }
+        gpCurrentPlayer->resources[GOLD] -= 2000;
+        break;
+    case const_tree_wants_gems:
+        if (gpCurrentPlayer->resources[GEMS] < 10) {
+            if (human_player)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_TREE_NO_GEMS),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        if (human_player) {
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_TREE_GEMS_PROMPT),
+                         2, -1, -1, 0x11, -1, -1, 0, -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+                return;
+        } else if (AI_choose_resource_or_experience(current_hero, GEMS, 10,
+                                                    experience)) {
+            return;
+        }
+        gpCurrentPlayer->resources[GEMS] -= 10;
+        break;
+    }
+
+    current_hero->GiveExperience(experience, 0, 1);
+    current_hero->TreeOfKnowledgeFlags |= visited;
+    current_hero->CheckLevel();
+}
+
 // E:\gamedcs\events.cpp:3533.  The wagon (jump-table arm 0x69): stamped
 // visited on arrival, then either the artifact it was carrying or the
 // resources, and emptied whichever it was.
@@ -4744,17 +4856,6 @@ void advManager::DoEventWanderingMonster(NewmapCell* cell, hero* current_hero,
     movingObjectSequence = -1;
 }
 
-// A philai..puzzlewindow bracket helper (81 B at 0x527fe0) the AI arm of
-// the war school runs as its "is this worth buying?" test: it scales the
-// offered VALUE by the hero's turnExperienceToRVRatio, scales the COST by
-// that player's per-resource weight (the double row at playerData+0x128)
-// and reports whether the weighted cost outweighs the weighted value - so
-// a true answer means DECLINE. Retail takes the hero in ECX and the
-// resource in EDX with two stack arguments, the /Gr shape again; the name
-// is an ordinal placeholder and the row is not claimed here.
-unsigned char PhilAiFn_00527FE0(hero* current_hero, EGameResource resource,
-                                int cost, int value);
-
 // E:\gamedcs\events.cpp:3970.  The war school sells one point of Attack
 // or Defense for 1000 gold, once per school per hero. The per-INSTANCE
 // bookkeeping is the hero's own 32-bit WarSchoolFlags word indexed by the
@@ -4813,7 +4914,7 @@ void advManager::DoEventWarSchool(hero* current_hero, ExtraInfoUnion* cell,
             break;
         }
     } else {
-        if (PhilAiFn_00527FE0(current_hero, GOLD, 1000,
+        if (AI_choose_resource_or_experience(current_hero, GOLD, 1000,
                               hero::GetExperienceIncrement(current_hero->level)))
             return;
         if (current_hero->GetPrimarySkill(0) > current_hero->GetPrimarySkill(1))

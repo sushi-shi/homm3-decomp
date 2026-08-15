@@ -304,6 +304,18 @@ enum EAdventureEventText {
     // training grounds' pair at 143/144, which is where the alphabet puts
     // "treasure chest".
     ADV_EVENT_TEXT_TREASURE_ARTIFACT = 145,
+    // DoEventTreeOfKnowledge (0x4a6710), the longest run in this enum after
+    // the pyramid's: 147 is the already-taught line and then the three
+    // prices take two rows apiece - 148 the free tree, 149/150 the
+    // 2000-gold prompt and its refusal, 151/152 the ten-gems pair. The run
+    // sits directly after the treasure chest's 145/146, which is where the
+    // alphabet puts "tree of knowledge".
+    ADV_EVENT_TEXT_TREE_VISITED = 147,
+    ADV_EVENT_TEXT_TREE_FREE = 148,
+    ADV_EVENT_TEXT_TREE_GOLD_PROMPT = 149,
+    ADV_EVENT_TEXT_TREE_NO_GOLD = 150,
+    ADV_EVENT_TEXT_TREE_GEMS_PROMPT = 151,
+    ADV_EVENT_TEXT_TREE_NO_GEMS = 152,
     // do_event_warrior_tomb (0x4a7c30). 161 is asked with iMBType 2 - the
     // yes/no form whose answer the handler reads back out of
     // heroWindowManager::dialogReturn - 162 is a sprintf format taking the
@@ -352,6 +364,18 @@ enum EFountainLuck {
     FOUNTAIN_LUCK_PLUS_1 = 1,
     FOUNTAIN_LUCK_PLUS_2 = 2,
     FOUNTAIN_LUCK_PLUS_3 = 3
+};
+
+// The Tree of Knowledge's price selector, enumerator NAMES the
+// Dreamcast's own (evidence/dreamcast/enums.csv, enum WiseTreePrices).
+// DoEventTreeOfKnowledge (0x4a6710) switches over it with the decrement
+// chain and sends anything else straight to the experience award, which
+// is why the count enumerator has no arm of its own.
+enum WiseTreePrices {
+    const_tree_wants_nothing = 0,
+    const_tree_wants_gold = 1,
+    const_tree_wants_gems = 2,
+    const_tree_price_count = 3
 };
 
 // The sea chest's reward selector, enumerator NAMES the Dreamcast's own
