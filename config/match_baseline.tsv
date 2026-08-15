@@ -327,7 +327,7 @@ armygrp	?get_AI_value@armyGroup@@QAEJXZ	100.0000	100.0000	100.0000	0x4ac80
 armygrp	?get_creature_total@armyGroup@@QAEHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4adc0
 armygrp	?get_creature_total@armyGroup@@QAEHXZ	100.0000	100.0000	100.0000	0x4ada0
 armygrp	?get_luck_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@H@Z	82.5689	82.5689	82.5689	0x4c1c0
-armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	67.5649	67.5649	67.5649	0x4b960
+armygrp	?get_morale_description@armyGroup@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TCreatureType@@HPBVhero@@PBVtown@@1PBV1@HE@Z	74.4820	74.4820	74.4820	0x4b960
 # Retail-ordered switch bodies, the creature-record cursor, the direct
 # spell-table field_c access, and the byte-proven attrs 0x400 gate raised
 # this from 53.1589 to 88.5071 (2026-08-09).
@@ -375,11 +375,11 @@ border	?SetPlayerPaletteColors@bitmapBorder@@QAEXH@Z	100.0000	100.0000	100.0000	
 border	?zBufferDraw@bitmapBorder@@QAEXPAGH@Z	100.0000	100.0000	100.0000	0x503f0
 bottomviewsubwindow	??0TBottomViewEnemyTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x53250
 bottomviewsubwindow	??0TBottomViewHero@@QAE@PAVheroWindow@@@Z	97.7675	97.7675	97.7675	0x51ab0
-bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	94.0575	94.0575	94.0575	0x52b80
+bottomviewsubwindow	??0TBottomViewKingdom@@QAE@PAVheroWindow@@@Z	98.5213	98.5213	98.5213	0x52b80
 bottomviewsubwindow	??0TBottomViewMessage@@QAE@PAVheroWindow@@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	100.0000	100.0000	100.0000	0x51820
 bottomviewsubwindow	??0TBottomViewNewTurn@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x50dd0
 bottomviewsubwindow	??0TBottomViewResourceMessage@@QAE@PAVheroWindow@@HHPBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@Z	91.2973	91.2973	91.2973	0x51220
-bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	97.3638	97.3638	97.3638	0x521f0
+bottomviewsubwindow	??0TBottomViewTown@@QAE@PAVheroWindow@@@Z	98.7476	98.7476	98.7476	0x521f0
 bottomviewsubwindow	??1TBottomViewEnemyTurn@@UAE@XZ	100.0000	100.0000	100.0000	0x53670
 bottomviewsubwindow	??1TBottomViewHero@@UAE@XZ	100.0000	100.0000	100.0000	0x52170
 bottomviewsubwindow	??1TBottomViewKingdom@@UAE@XZ	100.0000	100.0000	100.0000	0x531d0
@@ -1296,7 +1296,7 @@ quickinfowindow	??0TQuickCreatureWindow@@QAE@W4TViewLevel@0@W4TCreatureType@@HW4
 quickinfowindow	??1TQuickCreatureWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12fd20
 quickinfowindow	??_GTQuickCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12fcf0
 quicktownwindow	??0TQuickTownWindow@@QAE@PBVgarrison@@W4TViewLevel@0@@Z	100.0000	100.0000	100.0000	0x1307d0
-quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	96.3088	96.3088	96.3088	0x130120
+quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	98.4193	98.4193	98.4193	0x130120
 quicktownwindow	??1TQuickTownWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x130920
 quicktownwindow	??_GTQuickTownWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1307a0
 quicktownwindow	?QuickWindowWait@TQuickTownWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x130d30

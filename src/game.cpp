@@ -3,6 +3,11 @@
 // 944 functions in link order; 26 compiler-generated $-thunks omitted.
 #define HOMM3_GAME_OBJ_DECLS
 #define HOMM3_MAPCELL_OBJECTS_VIEW
+// calculate_production and playerData::HasCapitol read the town masks
+// through town::HasBuilding in the Dreamcast bodies (dc 0xa3474 lines
+// with r5 = 15/22/17, dc 0xa4e80 with r5 = 13); see town.h for why the
+// inline's visibility is scoped.
+#define HOMM3_TOWN_HASBUILDING_API
 #include "advmgr_objects.h"
 #include "terrain.h"
 #include <stdio.h>
@@ -524,7 +529,7 @@ void game::calculate_production()
 
         playerData* currentPlayer = &players[currentTown->owner];
         long* production = currentPlayer->turnProductionResource;
-        if (currentTown->built & bitNumber[MARKETPLACE_SILO_ID]) {
+        if (currentTown->HasBuilding(MARKETPLACE_SILO_ID, 0)) {
             int* siloIncome = currentTown->get_silo_income();
             for (int i = 0; i < NUM_RESOURCES; ++i)
                 production[i] += siloIncome[i];
@@ -535,10 +540,10 @@ void game::calculate_production()
             crystalDragonIncome[currentTown->owner] = 1;
 
         if (currentTown->type == TOWN_RAMPART && field_1f63e == 1
-            && (currentTown->active & bitNumber[EXTRA_1_ID])) {
+            && currentTown->HasBuilding(EXTRA_1_ID, 1)) {
             production[GOLD] += currentPlayer->resources[GOLD] / 10;
         }
-        if ((currentTown->active & bitNumber[SPECIAL_BUILDING_ID])
+        if (currentTown->HasBuilding(SPECIAL_BUILDING_ID, 1)
             && currentTown->field_34 > 0) {
             production[currentTown->field_38] += currentTown->field_34;
         }
@@ -1017,7 +1022,7 @@ bool playerData::HasCapitol()
     if (nTowns <= 0)
         return false;
 loop:
-    if (gpGame->GetTown(townIds[i])->built & bitNumber[HALL_CAPITOL_ID])
+    if (gpGame->GetTown(townIds[i])->HasBuilding(HALL_CAPITOL_ID, 0))
         return true;
     i++;
     if (i >= nTowns)

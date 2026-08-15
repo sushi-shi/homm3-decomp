@@ -285,8 +285,36 @@ public:
     __int64 available;
 
     unsigned char CanBuildDock();
-#ifdef HOMM3_TOWN_OBJ_DECLS
-    unsigned char HasBuilding(int buildingId, unsigned char check_included);
+    // DC `town::HasBuilding` (dc 0x1fe14, E:\gamedcs\Town.h:324) - an
+    // INLINE MEMBER of this header, not a town.obj method. Retail's
+    // out-of-line copy at 0x4305a0 is the COMDAT VC6 emits for the call
+    // sites it declined to expand, and its body proves both arms:
+    //   check_included != 0 -> `[ecx+0x158]` = active
+    //   check_included == 0 -> `[ecx+0x150]` = built
+    // each the ordinary 64-bit `(field & bitNumber[id]) != 0` this
+    // tree's readers had been spelling by hand. Body below, after
+    // bitNumber's declaration, under HOMM3_TOWN_HASBUILDING_API.
+    //
+    // THE VISIBILITY IS SCOPED, and both halves of the scoping are
+    // measured (2026-08-15):
+    //   * declaring it unconditionally costs `initialize_game_data`
+    //     100.0 -> 90.1620 - the include-set canary, one more town.h
+    //     declarator renumbering C1XX's handles in initialize.obj with
+    //     no semantic change anywhere. Includes are TU-local, so only
+    //     the compilands that expand it are given the declarator, the
+    //     same device as destroy_extra_capitol below;
+    //   * town.obj must NOT see the BODY: retail's own get_growth_rate
+    //     emits `push 0 / push 8 / call town_HasBuilding` for its
+    //     Citadel arm, and this compile's /Ob2 budget expands the
+    //     inline there instead (100.0 -> 88.4737, predict-inline
+    //     `town_HasBuilding base x0 vs retail x1`). HOMM3_TOWN_OBJ_DECLS
+    //     therefore buys the declaration only, which is what keeps
+    //     retail's call.
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_TOWN_HASBUILDING_API)
+    // Const: the DC mangles it `?HasBuilding@town@@QBA_NH_N@Z` (QB* =
+    // const), and retail's thiscall is identical either way.
+    unsigned char HasBuilding(int buildingId,
+                              unsigned char check_included) const;
 #endif
     void CalcNumLevelArchers(int* numArchers, int* archerLevel);
     long get_castle_growth_bonus(TCreatureType creature) const;
@@ -459,6 +487,18 @@ void Unnamed526d20(int playerId, int* costs, int flag);
 // are bitNumber[7], [8], [9] and [21]. Defined by a TU not yet located
 // - extern only, no DATA claim (the gpWindowManager pattern).
 extern __int64 bitNumber[];
+
+// The Town.h inline declared above. Placed here because it indexes
+// bitNumber, which the class definition precedes.
+#ifdef HOMM3_TOWN_HASBUILDING_API
+inline unsigned char town::HasBuilding(int buildingId,
+                                       unsigned char check_included) const
+{
+    if (check_included)
+        return (active & bitNumber[buildingId]) != 0;
+    return (built & bitNumber[buildingId]) != 0;
+}
+#endif
 
 // DC public gTownSizeNames; retail 0x6a6294 is indexed by the four hall
 // levels in TQuickTownWindow. Its owning data compiland is not yet located.

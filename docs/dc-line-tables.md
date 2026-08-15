@@ -163,6 +163,52 @@ Two rules fall out of doing it seven times.
   twice) instead of taking a widened `int` parameter, which is exactly what
   holds retail's compare at char width.
 
+### The forward read scales: `town::HasBuilding`, seven compilands (2026-08-15)
+
+The row that named the instrument was the one it then closed.
+`TBottomViewKingdom` had NO post-Dreamcast region, so its missing /Ob2
+candidate site had to be a differently-spelled statement, and the table
+named three. The live one was `town::HasBuilding`: dc 0x563b8 lines
+531/533/535 are `mov #13/#12/#11,r5 / mov #1,r6 / jsr @r11` where our
+body tested `active & bitNumber[HALL_*_ID]` by hand. Retail's own
+out-of-line copy at 0x4305a0 supplies both arms - `check_included != 0`
+reads `[ecx+0x158]` = active, `== 0` reads `[ecx+0x150]` = built - and
+its inline expansion is byte-identical to the mask test, so the bytes
+never arbitrate. Only the candidate-site count does, and three real
+sites landed exactly on the +1 number the free probe had measured:
+**94.0575 -> 98.5213**.
+
+Sweeping the same call by `dc_lines` across the rest of the tree found
+seventeen more sites in six compilands, every one of them a mask test we
+had spelled by hand, and two more rows moved:
+
+| row | before -> after |
+|---|---|
+| `bottomviewsubwindow:??0TBottomViewKingdom` | 94.0575 -> **98.5213** |
+| `bottomviewsubwindow:??0TBottomViewTown` (6 of 7 sites) | 97.3638 -> **98.7476** |
+| `quicktownwindow:??0TQuickTownWindow` (7 sites) | 96.3088 -> **98.4193** |
+| `armygrp:?get_morale_description` (2 sites) | 67.5649 -> **74.4820** |
+| `armygrp:?GetMorale`, `?GetLuck`, `?get_luck_description`, `game:?calculate_production`, `?HasCapitol`, `ai_player:?end_turn`, `ai_combat:?check_wall_archery_penalty` | byte-flat |
+
+Two rules the round adds.
+
+* **A header inline's VISIBILITY is a measurement, not a given.**
+  Declaring `HasBuilding` unconditionally cost `initialize_game_data`
+  100.0 -> 90.1620 (the include-set canary, one more town.h declarator)
+  and `town::get_growth_rate` 100.0 -> 88.4737 (our /Ob2 budget expands
+  the inline where retail's `0x5bfb60` plainly emits `push 0 / push 8 /
+  call town_HasBuilding`). Scoping the declaration to the compilands
+  that expand it, and the BODY to those same compilands only, gives the
+  full-tree diff **one mover** - the intended one. `#pragma
+  inline_depth(0)` around `get_growth_rate` was tried first and is
+  worse (70.4210): it suppresses expansions that row needs.
+* **When the expansion is byte-identical to the hand-written test, the
+  count is the only evidence there is.** `TBottomViewTown` has seven DC
+  calls; landing all seven scores 94.0054, the two ladders alone 98.7476
+  (subsets: hall 96.8134, fort 97.3638, silo 97.1557, hall+silo 96.0953,
+  fort+silo 97.1960). The silo site is refused on that measurement, and
+  the refusal is recorded in the body's note rather than hidden.
+
 ### The negative bound is a real deliverable
 
 On `get_luck_description` the table cannot say what the row's measured +4
