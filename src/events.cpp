@@ -3571,6 +3571,66 @@ pick_up:
     EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
+// E:\gamedcs\events.cpp:2918.  The sea chest (jump-table arm 0x52):
+// nothing, 1500 gold, or an artifact with a thousand gold beside it.
+//
+// The artifact record is built EMPTY at the top, before the reward is even
+// looked at - the Dreamcast constructs it with ARTIFACT_NONE (line 2921)
+// and retail's `or eax,-1` feeding two stores is that constructor inlined,
+// with the two -1s sharing one register the way this file's other signed
+// stores do.
+//
+// A full backpack does not lose the chest: the artifact reward DOWNGRADES
+// to the gold one (`reward = const_sea_chest_gold`) before the switch,
+// which is why retail's `mov edi,1` sits between the backpack test and the
+// decrement chain.
+VA(0x004a5030, 0x26E)  // jump-table arm 0x52 + advevent.txt 116..118, dc 0x953cc
+void advManager::DoEventSeaChest(hero* current_hero, NewmapCell* cell,
+                                 type_point point, bool human_player)
+{
+    type_artifact artifact;
+    artifact.artifactId = ARTIFACT_NONE;
+    artifact.extra = -1;
+
+    int reward = cell->GetSeaChestReward();
+    if (reward == const_sea_chest_artifact
+        && current_hero->get_number_in_backpack(1) >= 64)
+        reward = const_sea_chest_gold;
+
+    switch (reward) {
+    case const_sea_chest_nothing:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SEA_CHEST_EMPTY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    case const_sea_chest_gold:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SEA_CHEST_GOLD),
+                         1, -1, -1, GOLD, 1500, -1, 0, -1, 0, -1, 0);
+        current_hero->GiveResource(GOLD, 1500);
+        break;
+    case const_sea_chest_artifact:
+        artifact.artifactId = cell->GetSeaChestArtifact();
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT),
+                    akArtifactTraits[artifact.artifactId].name);
+            NormalDialog(gText, 1, -1, -1, 8, artifact.artifactId,
+                         0x24, 1000, -1, 0, -1, 0);
+        }
+        current_hero->GiveArtifact(&artifact, 1, 1);
+        current_hero->GiveResource(GOLD, 1000);
+        if (!human_player)
+            AI_equip_artifacts(current_hero);
+        break;
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+}
+
 // E:\gamedcs\events.cpp:2965.  The shipwreck survivor (jump-table arm
 // 0x56): one artifact, taken if the hero has a slot for it, and the object
 // is picked up either way.

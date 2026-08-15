@@ -188,6 +188,14 @@ enum EAdventureEventText {
     // index is evidence.
     ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY = 44,
     ADV_EVENT_TEXT_REFUGEE_CAMP = 112,
+    // DoEventSeaChest (0x4a5030): 116 is the empty chest, 117 the sprintf
+    // format taking the artifact name - the only row in this enum whose
+    // dialog shows THREE pictures, the artifact plus a 0x24/1000 pair -
+    // and 118 the plain 1500-gold line. The run sits directly after the
+    // scholar's 115, which is where the alphabet puts "sea chest".
+    ADV_EVENT_TEXT_SEA_CHEST_EMPTY = 116,
+    ADV_EVENT_TEXT_SEA_CHEST_ARTIFACT = 117,
+    ADV_EVENT_TEXT_SEA_CHEST_GOLD = 118,
     // DoEventScholar (0x4a4dc0), and ONE row serves all three awards - the
     // pictures and their quantities are what differ, spell class 9 for a
     // spell, class 0x14 with a computed icon index for a secondary skill,
@@ -322,6 +330,16 @@ enum EFountainLuck {
     FOUNTAIN_LUCK_PLUS_1 = 1,
     FOUNTAIN_LUCK_PLUS_2 = 2,
     FOUNTAIN_LUCK_PLUS_3 = 3
+};
+
+// The sea chest's reward selector, enumerator NAMES the Dreamcast's own
+// (evidence/dreamcast/enums.csv, enum SeaChestRewardTypes). The domain is
+// closed by construction: DoEventSeaChest (0x4a5030) switches over it with
+// the decrement chain and sends anything else straight to the pick-up.
+enum SeaChestRewardTypes {
+    const_sea_chest_nothing = 0,
+    const_sea_chest_gold = 1,
+    const_sea_chest_artifact = 2
 };
 
 // The scholar's award selector, and the enumerator NAMES are the
