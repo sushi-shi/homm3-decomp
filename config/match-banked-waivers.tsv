@@ -1,0 +1,12 @@
+# DELIBERATE withdrawals of a banked match_baseline.tsv row, admitted by
+# hand so homm3.match.banked_rows stops reporting them. A row leaving the
+# ledger is FATAL by default: the ratchet only compares rows that are IN
+# the file, so a banked function can otherwise vanish - in an update, or
+# in a merge of the generated TSV - while every gate stays green
+# (army::can_shoot, 2026-08-15).
+#
+# Add a line only when the withdrawal is real and reviewed: a claim proven
+# wrong, an address corrected, a body promoted out of the unit. A row that
+# merely stopped being emitted is NOT a waiver case - restore it.
+#
+# rva<TAB>reason

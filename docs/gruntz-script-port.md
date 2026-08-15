@@ -260,6 +260,58 @@ code; Dreamcast CodeView as extra evidence with no Gruntz analog).
 
 ## 5. Decision log
 
+- **2026-08-15 — `army::get_controller` / `get_owner` CLOSED, and the merged
+  reading was right.** `0x442690` is `get_controller`, `0x4426d0` is
+  `get_owner`, `combatSide` (+0xf4) holds the OWNING side. The decisive proof
+  is not semantic and not the order-map: the DC dump names the field itself
+  through two separate procs — `army::get_owning_side` (Army.h:795, dc
+  `0x27d3c`, 8 B) is a bare load of the side field, `army::get_controlling_side`
+  (Army.h:800, dc `0x27d44`, 0x30 B) tests the hypnotize word and returns
+  `1 - get_owning_side()`. Retail's pair is the same isomorphism one level up
+  (`heroes[flip]` vs `heroes[raw]`), and a full `call rel32` scan reproduces
+  every DC caller multiplicity (19 sites on `0x442690`, 2 on `0x4426d0`;
+  `compute_fire_shield_damage` 2:0, the `TViewArmyWindow` ctor 2:1,
+  `is_computer_action` 1:0, `ProcessCombatMsg` 0:1). The old third argument —
+  `is_enemy`'s asymmetric compare — is WITHDRAWN as a proof: it is symmetric
+  and answers a hypnotized `arg` wrongly under either reading. No row moved.
+
+- **2026-08-15 — `army::can_shoot` re-banked at 92.0000 with
+  `get_AI_target_time` still exact; the merge's "claimed OR expanded" trade is
+  closed.** VC6 emits an `inline` function's out-of-line copy exactly when the
+  TU holds a use it DECLINES to expand — measured four ways (no keyword:
+  can_shoot 92.0000 / caller 27.8667 / `get_berserk_targets` **0.0000**, i.e.
+  without the keyword the body is not an inline candidate anywhere, which is
+  C1XX's body-save cliff and not the `/Ob2` budget; keyword on the definition
+  or on the header declarator: caller 100.0000 and no copy; keyword + one
+  rejected site: **both**). Retail's rejected site is
+  `spell_is_valid_on_target` (`0x447a80`, two calls at `0x447c0e`/`0x447cb9`),
+  the only body in retail's `army.obj` that calls `0x4428f0` out of line and
+  the reason its object carries the copy at all. Until that body is
+  reconstructed the site is supplied by a `#pragma inline_depth(0)` SCAFFOLD
+  around an un-carcassed, deliberately unclaimed `get_total_combat_value`;
+  retiring `0x447a80` retires the pragma and makes `0x442e60` claimable.
+
+- **2026-08-15 — new fatal gate `homm3.match.banked_rows`: a banked function
+  may not leave the ledger** (pipeline extension). The ratchet only compares
+  rows that are IN `config/match_baseline.tsv`, so a row that leaves the file
+  is invisible — which is how `?can_shoot@army@@QBEEPBV1@@Z` (83.2927) was
+  lost at the lane/army-6 integration: army-6 forked before townmgr-14 banked
+  it, the merge took army-6's generated baseline, and every gate stayed green.
+  The gate walks the tracked revisions of the baseline (read-only `git log -p`;
+  the status writer remains the sole TSV writer), collects every retail RVA
+  that ever carried a positive banked score, and fails when one is no longer
+  represented by ANY row. **Identity is the RVA, never the label** — fifteen
+  const-qualification/label-promotion renames landed in that one merge and a
+  label-keyed check would have drowned in them. Deliberate withdrawals are
+  admitted in `config/match-banked-waivers.tsv` (va-claims-backlog shape).
+  Negative controls: an embedded `selftest()` runs on every invocation
+  (removed row detected, same-RVA rename NOT reported, never-matched and
+  RVA-less rows ignored, waiver silences exactly one RVA), four hermetic cases
+  in `homm3.match.test_status`, and the live control — deleting the can_shoot
+  row from the real baseline reports `LOST 0x0428f0 … (banked 83.2927%)` and
+  exits 1. Replayed against the merge commit `0f768de` it reports exactly that
+  one row and zero false positives across the whole history.
+
 - **2026-08-13 — `combatManager::place_shooter` raised 80.57% → 82.49%.**
   The DC roster fixes its function-scope locals as `best_hex`,
   `best_open_hexes`, `new_hex`; retail initializes the first two before

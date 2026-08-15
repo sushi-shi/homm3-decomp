@@ -320,28 +320,30 @@ army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720
 army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40
 army	?attack_wall@army@@QAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0
 army	?can_cast_resurrect@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x473d0
+army	?can_shoot@army@@QBEEPBV1@@Z	92.0000	92.0000	92.0000	0x428f0
 army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
 army	?enemy_is_adjacent@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0
-# ONE ROW WAS TRADED AWAY HERE, deliberately, at the lane/army-6
-# integration (2026-08-15). army::can_shoot (0x4428f0) cannot be both
-# claimed and expanded in this tree, and the two lanes chose opposite
-# sides of that:
-#   * lane/townmgr-14 spelled it as an ordinary out-of-line member and
-#     banked ?can_shoot@army@@QBEEPBV1@@Z at 83.2927;
-#   * lane/army-6 measured that get_AI_target_time (0x448bd0) reaches
-#     100.0000 ONLY when can_shoot carries the `inline` keyword, that
-#     dropping the keyword costs that caller 100 -> 27.8667 and STILL
-#     produces no expansion, and that with the keyword VC6 emits no
-#     out-of-line can_shoot body at all - so the row goes away.
-# army-6's side was taken because it is worth more on every measure: it
-# lands get_AI_target_time exact and get_berserk_targets at 92.5170, and
-# its own withdrawn reconstruction of can_shoot reached 92.00 - eight
-# points ABOVE the row that was banked - with the three source facts
-# that got it there written out in army.cpp. Nothing was learned and
-# lost; only the banked number was. Recovering both at once is open
-# work: retail plainly has the out-of-line body AND the expansion, which
-# no single spelling in this tree has yet produced.
+# THE can_shoot ROW ABOVE WAS TRADED AWAY at the lane/army-6
+# integration and RECOVERED 2026-08-15; the trade is CLOSED. History so
+# it is not re-opened: lane/townmgr-14 banked
+# ?can_shoot@army@@QBEEPBV1@@Z at 83.2927 as a plain out-of-line
+# member, lane/army-6 needed the `inline` keyword for
+# get_AI_target_time (0x448bd0) to reach 100, and with the keyword VC6
+# emitted no out-of-line body, so the merge kept the caller and lost
+# the row.
+# The two were never in tension. VC6 emits an `inline` function's
+# out-of-line copy exactly when the TU holds a use it DECLINES to
+# expand, and retail's army.obj holds one: the two rejected sites in
+# spell_is_valid_on_target (0x447a80, @0x447c0e and @0x447cb9), a body
+# this tree has not reconstructed. A `#pragma inline_depth(0)` scaffold
+# on the un-carcassed, deliberately UNCLAIMED get_total_combat_value
+# stands in for them until it lands. Full matrix in army.cpp above
+# can_shoot; the key negative is that with NO keyword the body is not
+# an inline candidate anywhere (can_shoot 92.0000 / get_AI_target_time
+# 27.8667 / get_berserk_targets 0.0000) - C1XX's body-save cliff, not
+# the /Ob2 budget. can_shoot 92.0000 and get_AI_target_time 100.0000
+# now hold together.
 army	?get_AI_target_time@army@@QBEJJ@Z	100.0000	100.0000	100.0000	0x48bd0
 army	?get_adjusted_attack@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42410
 army	?get_adjusted_defense@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42590
