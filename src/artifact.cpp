@@ -60,13 +60,119 @@ const TCombinationArtifact* gCombinationArtifacts = aCombinationArtifacts;
 // The two TResourcePtr instances account for the retail EH state and
 // failure-only Dispose paths; the static array owners account for 0x44d340
 // and 0x44d360.
-// Residual (75.01%): all 81 retail blocks are semantically represented, but
+// Residual (76.83%): all 81 retail blocks are semantically represented, but
 // VC6 makes two linked choices differently: retail leaves the nested
 // bitset<19>/bitset<144> operations out of line after folding its source
 // helper, and gives three early failures distinct returns where this spelling
 // tail-merges them. Direct set/operator[] spellings and stack-lifetime probes
 // measured the plateau; the exact static destructors remain independent.
-// E:\gamedcs\artifact.cpp:56
+// 2026-08-14 triage: predict-inline's UNDER/OVER rows all NAME-PAIR (operator
+// new <-> exe_new, the two bitset _Xran <-> the unnamed 0x4d380/0x4d4d0 rows,
+// basic_string _Grow/assign/_Eos <-> the 0x4860/0x4a90 rows), so the inliner is
+// NOT the wall despite diagnose routing there; base emits 14 out-of-line calls
+// to retail's 13. The concrete unexplored delta is in the stringBytes loop:
+// retail keeps `traitsSheet` itself in ESI and RELOADS `[esi+0x20]` (the row
+// vector's begin) on every iteration while homing stringBytes at [ebp-0x20];
+// our CL does the reverse - it LICM-hoists the begin pointer into a frame slot
+// and keeps stringBytes in ESI. Retail consequently loads the row element twice
+// per iteration (`mov ecx,[edx+eax-4]` / `mov eax,[edx+eax-4]`, one per GetRow
+// call) where ours CSEs it to one load. Same enregistration-choice family that
+// diff.cpp's CDiffFile::Apply turned out to be (68.96 -> 99.64 there).
+// 2026-08-14 RESULT (75.01 -> 76.83): half of that diagnosis is now fixed by
+// source. Evaluating the [22] strlen BEFORE the [0] strlen - which is the order
+// both sides already EMIT them in - stops our CL common-subexpressioning the two
+// GetRow(row) row-pointer loads, so we now emit retail's TWO `mov r,[edx+base]`
+// loads, one per GetRow call. Retail's emission order is not the source order.
+// What did NOT move, and is now measured rather than assumed:
+//   - the LICM hoist itself. Retail keeps traitsSheet in ESI and reloads
+//     [esi+0x20] per iteration; we spill the guard's already-computed _First to
+//     [ebp-0x24] and reload it, which frees ESI for stringBytes and forces the
+//     `jmp` peel into the loop (retail falls straight through). The zero pseudo
+//     that the null checks and `stringBytes = 0` share is what wins ESI here;
+//     retail gives that pseudo ECX and memory-homes the accumulator instead.
+//   - EXHAUSTIVE NEGATIVES, all byte-flat at 76.8337: four loop forms (for /
+//     while / do-while / `while (++row < 146)`); eight declaration orderings of
+//     {stringBytes, row, destination, source, length, column, mask}; binding
+//     traitsSheet.get() to a raw or `register` pointer local; `.get()->` at both
+//     call sites; splitting the accumulate into two statements; folding the +2
+//     as two +1s. Declaration order does not reach this allocator.
+//   - MEASURED WORSE: `volatile unsigned stringBytes` 71.79 and a volatile-ref
+//     `+=` 73.61 (they do memory-home the accumulator, but add a reload at the
+//     `new char[stringBytes]` push that retail does not have); splitting the
+//     guard into two `if`s 73.83; hoisting GetNumberOfRows() to a local 72.66;
+//     declaring the bitset before the loop 74.15.
+// The `push 0x8`/`push 0x0` prologue row is NOT a defect: it is the delinker
+// symbol+addend split documented in initialize.cpp - we encode disp32=0 +
+// reloc($L12234), the delinked target disp32=8 + reloc(...unwind03). Identical
+// once linked, and PROVEN not to be scored: EH-bearing functions that already
+// sit at 100.0 (button::button, ~button, ~textButton, ~type_func_button,
+// armyGroup::SplitArmy, ~TSplitWindow) all carry the same 0x0-vs-0xb/0x8 split.
+// Still open and structural: at the inlined artslots.txt GetSpreadsheet, retail
+// expands basic_string::_Eos in line (`mov ecx,[ebp-0x3c]; mov [ebp-0x38],ebx;
+// mov byte [ecx+ebx],0`) where we emit an out-of-line call - a genuine /Ob2
+// budget divergence, and the reason retail has 3 rets to our 2.
+//
+// 2026-08-14 TWO-AXIS /Ob2 SWEEP - the "EXHAUSTIVE NEGATIVES, all byte-flat"
+// verdict above is WRONG on the axis it never tested. Every negative listed
+// there is a SPELLING at constant statement mass; `budget = 2 * cb(caller)` is
+// the other axis and it is live here. Byte-inert pad statements at the head of
+// the body x xx_nop sites before the last statement:
+//     M     0..6      7..12     20..48
+//     any k 76.8337   80.4733   79.1525
+// - i.e. +3.64 sits at exactly seven to twelve statements of extra front-end
+// mass, at every k (the divisor axis really is dead here, which is why the
+// one-axis sweep found nothing). That is the missing budget for the `_Eos`
+// expansion described above.
+// The honest supply is NOT yet found, and the reason is worth recording: a
+// named ALIAS local is not worth the same C1 mass as a pad dead store. Nine
+// byte-inert alias locals ahead of the artslots block - a `traitsSheet.get()`
+// pointer, the class cell, the combination component array, the slot-bit
+// table, the combination table, the traits table, the slot-mask table, the
+// spell-giver list and a row-vector reference - stack to 76.8733 and never
+// reach the 80.4733 plateau, where seven dead stores do. Only the class cell
+// is landed below (76.8337 -> 76.8733); the rest are inert noise and were
+// reverted. What this body needs is seven statements that CARRY something,
+// and the reconstruction has no room for them yet.
+// Measured and byte-COSTLY while hunting (so not mass at any count): splitting
+// the first loop's two strlens into named lengths 74.3842, a named reference
+// per iteration in the disabled/spell-giver loops 74.7723, naming the bitset
+// loop's cell 73.3683, naming the copy loop's source lengths 75.8257/75.9248,
+// and naming the combination's component row 76.6792.
+//
+// 2026-08-14 THE SOURCE HELPER IS REAL, AND IT IS NOT THE SEVEN STATEMENTS.
+// The DC roster row that this file's header dismisses as "folded" is
+// `InitializeArtifactTraits` at dc 0x50058: **static**, 2 parameters, 1978 B,
+// against InitializeArtifactTraitsTable's own 294 B. So on Dreamcast the table
+// function is a shell and ALL the per-row work lives in a one-call-site static
+// - which under /Ob2 inlines and vanishes, leaving retail's single 1512-byte
+// body. Reintroducing it (`static void InitializeArtifactTraits(int id, const
+// TSpreadsheetResource::TStringVector& values, char*& destination)` holding the
+// whole per-row block, called once from the row loop) is the ONLY spelling
+// found that reproduces retail's bitset emission EXACTLY: at
+// `allowableSlots.set(bit, allowed)` plus two spare candidate sites, our obj
+// calls BOTH `?set@?$bitset@$0BD@@` and `?test@?$bitset@$0JA@@` out of line -
+// i.e. the two artifact.obj COMDATs the carve names game_4cd50_sub00_4d380 and
+// game_4cd50_sub01_4d4d0, which no flat spelling of this body has ever produced
+// together (flat gets one or the other, never both). `.set(bit, allowed)` is
+// therefore retail's spelling, not `allowableSlots[bit] = allowed` - retail
+// calls `set`, we call `??4reference@?$bitset@$0BD@@`.
+// It still does not pay. Full mass x sites grid over the helper form
+// (M 0..64 pad statements x k 0..14):
+//     helper + `[bit] =`   74.8950 flat, ceiling 79.5723 at M=16..28, k=0
+//     helper + `.set(...)` 74.4178 flat, ceiling 79.6000 at M=12..20, k=0
+// against 76.8733 flat / 80.4733 titrated without it. Every cell of both grids
+// is below the corresponding flat cell of the current spelling, so the helper
+// is NOT landed: it is structurally right about the bitsets and wrong about
+// everything the extra frame costs. Whatever the seven statements are, they are
+// not "put the per-row block back in its own function".
+// Also measured this round, and a real retail fact even though it does not pay:
+// the disabled and spell-giver loops use an UNSIGNED induction variable in
+// retail (`cmp eax,<end> / jb`, ours `cmp eax,<end> / jl`). Spelling them
+// `unsigned artifactId` does emit retail's two `jb`s, but it also swaps the
+// `xor edi,edi` / `mov ebx,<aArtifactTraits+4>` pair that opens the combination
+// loop, and measures 76.8733 -> 75.8673 net. Same either way if the two flag
+// loops get their own `unsigned` and the combination loop keeps its `int`, so
+// the swap comes from the flag loops themselves.
 VA(0x0044cd50, 0x5E8)  // anchor-strings/caller, dc 0x4fec0
 unsigned char InitializeArtifactTraitsTable()
 {
@@ -81,8 +187,8 @@ unsigned char InitializeArtifactTraitsTable()
         unsigned stringBytes = 0;
         int row;
         for (row = 2; row < 146; ++row) {
-            stringBytes += strlen(traitsSheet->GetRow(row)[0])
-                + strlen(traitsSheet->GetRow(row)[22]) + 2;
+            stringBytes += strlen(traitsSheet->GetRow(row)[22])
+                + strlen(traitsSheet->GetRow(row)[0]) + 2;
         }
 
         DATA_COMPGEN_GUARD(0x006938d4, artifactStringsGuard, artifactStrings)
@@ -124,7 +230,8 @@ unsigned char InitializeArtifactTraitsTable()
                 ++mask;
             traits.allowableSlotMask = mask;
 
-            char artifactClass = values[21][0];
+            const char* classCell = values[21];
+            char artifactClass = classCell[0];
             if (artifactClass == 'R')
                 traits.artifactClass = 16;
             else if (artifactClass == 'J')

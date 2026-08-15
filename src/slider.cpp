@@ -186,6 +186,10 @@ void slider::KeyAccel(int x1, int x2, int x3, int x4, int key)
 }
 
 // E:\gamedcs\slider.cpp:244
+// DC-census verdict (2026-08-14): the sole under-count row is
+// `GameTime::ElapsedSince` x1 (dc 0x1eed4) against the
+// `(int)(GameTime::Get() - repeatTime) > 0` head below, and modelling it
+// file-locally is byte-EXACTLY flat at 95.1901. Same result in button::Main.
 // The source-compatible 60-branch/11-return CFG is complete. Retail shares
 // the KP3/KP2 forward KeyAccel suffix; this VC6 invocation instead shares the
 // equivalent KP9/KP8 backward suffix, leaving the measured 95.190125% C2
@@ -555,6 +559,15 @@ void slider::SetKnob(int inX)
     // binds them to EDI/ESI. why-reg v2 (2026-08-11, --il-order) proves equal
     // definition slots but different C1 pseudo processing order and caps the
     // transposition as front-end handle state, not a statement-level knob.
+    // 2026-08-14 adds the second half of the picture: retail evaluates the
+    // offset as (-half) - base - knobSize (`neg edx` on the halved value),
+    // while our CL REASSOCIATES every spelling into (-knobSize) - half - base
+    // (`neg edi` on knobSize). Six spellings measured - plain declarations
+    // 88.36, base declared first 87.70, non-compound assignment 88.44, a named
+    // `half` local 88.44, else-if clamp 84.92, fully parenthesised negation
+    // 88.44 - so the reassociation is a C2 choice with no source handle. Retail
+    // also re-tests with `test eax,eax; jge` where our CL folds the clamp into
+    // the `add`'s flags with `jns`; no spelling separated them.
     int knobSize;
     int base = (knobSize = knob_start,
                 width > height ? static_cast<int>(x) : static_cast<int>(y));

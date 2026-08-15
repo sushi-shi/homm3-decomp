@@ -52,6 +52,445 @@ static const TMainMenuButtonRect mainMenuButtonRects[5] = {
     {586, 469, 114, 102}
 };
 
+// SOLVED 2026-08-14 (97.0098 -> 100.0). The last residual was ONE block: retail
+// emitted `mov edx,[esi+8]; mov eax,[esi+4]; push edx; push eax; mov ecx,esi;
+// call 0x404140` inside the `reserve` expansion - a 3-BYTE `ret 8`, the empty
+// std::vector<widget*>::_Destroy(iterator,iterator) (VECTOR:229, protected
+// in-class member, ICF-folded by LINK onto sample's vtable slot 3) - and we
+// inlined it away. 27 retail objects reference 0x404140, and the same
+// under-expansion sits in seven other window constructors.
+//
+// IT IS NOT A DEPTH CUT AND NOT A MISSING INLINE WRAPPER. It is the /Ob2
+// budget DIVISOR, exactly as docs/vc6/inliner.md models it:
+//     expand(body, depth, budget): for site k of n: ... budget -= cb;
+//         spent = expand(callee_body, depth+1, budget / (n - k))
+// `reserve` is candidate site k=0 of the constructor body, so the budget its
+// interior gets is (2*cb_ctor - cb_reserve) / n, where n is the number of
+// INLINE-CANDIDATE call sites in the whole constructor. Inside reserve the
+// spend order is capacity, allocate, _Ucopy, _Destroy: retail's remaining
+// budget clears _Ucopy (which it does inline, as a loop) and then falls SHORT
+// of _Destroy. Ours cleared both. So retail's constructor carries MORE
+// candidate sites than ours did - a bigger divisor, not a deeper nest.
+//
+// Proven by direct titration. Injecting k calls to a `static void xx_nop() {}`
+// at the END of the body (byte-inert, cb <= 0x28 so free, pure divisor):
+//   k=0 97.0098 | k=1 97.0098 | k=2..6 100.0000 | k=7,8 93.3401
+// A five-wide plateau at exactly 100.00, i.e. retail's site count is ours + 2
+// to + 6. The landed spelling supplies +5 of them: `push_back(x)` is one
+// candidate site, while `insert(end(), x)` is two (the `end()` call plus the
+// one-argument insert), and there are five widgets.
+//
+// The pointer local is load-bearing on top of that, for the same reason it is
+// in button.h's set_hotkey: naming `Widgets` directly at each call site pins a
+// second register across the _Ucopy loop and spills the source pointer to
+// [ebp-0x10], costing the whole B7/B8 register phase (measured 97.6981 with
+// `Widgets.insert(Widgets.end(), ...)`, 100.0 with the local).
+//
+// Also measured, and all DEAD ENDS - do not re-run:
+//   - `homm3 vc6 ab run` returns `neither`: the RTM C2 12.00.8168 compiles
+//     this constructor and ??0TSystemOptionsWindow byte-identically to SP3.
+//   - inline_depth(1..4) and auto_inline(off) around the reserve statement are
+//     byte-flat; only inline_depth(0) moves it, at -16 points. The model says
+//     why: the depth check compares against the pragma value recorded
+//     LEXICALLY AT THE SITE, and _Destroy's site lives in <vector>, so no
+//     pragma written in this file can reach it.
+//   - `_Destroy` is NOT excluded from candidacy in retail: retail's
+//     ??1heroWindow inlines the very same `_Destroy` away to nothing inside its
+//     ~vector expansion (window.c.obj has no call to 0x404140). Candidacy and
+//     the C1XX save-gate are therefore not the mechanism; only the budget is.
+//   - a `static void W(std::vector<widget*>& v, int n) { v.reserve(n); }`
+//     wrapper is NOT the answer: it over-starves (92.27), because the wrapper
+//     charges cb_reserve against the already-divided budget instead of
+//     dividing it, and _Ucopy loses its expansion too.
+//   - the three-argument `insert(end(), 1, x)` collapses to 15.63: that form
+//     puts the big insert at depth 1 and our CL then expands it inline.
+//   - `for (unsigned i = 0; i < Widgets.size(); i++)` over the widget list is
+//     +1 site but is NOT byte-neutral (tested on gametypewindow: 93.73 ->
+//     91.79), so it cannot serve as a divisor knob.
+//   - the C1XX CANDIDACY cliff (adding byte-inert statement mass to the callee
+//     until it drops out of the save gate, the lever that closed
+//     textEntryWidget::OnKeyPress in a sibling lane) is the other axis onto the
+//     same outcome, and it is UNREACHABLE here: the callee is Dinkumware's
+//     `_Destroy` inside the pinned toolchain's <vector>, which this repo may
+//     not edit. The divisor is the only axis this callee exposes to source.
+//
+// The other window constructors are the SAME wall with different arithmetic.
+// Settled 2026-08-14; see each file for its own ledger:
+//   systemoptionswindow  88.3182 -> 98.1326 (guard +2, then the slot-IV loops)
+//   quicktownwindow      96.3088 -> 98.4193 (last four push_backs as inserts)
+//   gametypewindow       93.7258 -> 100.0   (guard +1 AND five named rows)
+//   quickherowindow      87.8597 -> 90.5272 (last four push_backs as inserts)
+//   adventureoptionswindow 95.1212 -> 100.0 (guarded do-while, +2)
+//   levelupwindow        97.7369 -> 98.8241 (17 named widget locals for the
+//                        mass, then the two named back() results)
+//   combatresultswindow  96.2269 -> 96.3788 (one named widget local; its
+//                        recorded "k>=1 strictly worse" was true and useless -
+//                        the mass axis was the live one)
+//   quickinfowindow      92.7916, k=2 is worth 96.8141, supply now EXISTS
+//                        (see below) but is scaffolding, so unlanded
+//   campaignwindow       82.5365, flat on BOTH axes for k=1..3
+// Converting every push_back in those files is too coarse (+41, +10, +6 and +9
+// sites - all measured, all regressions).
+//
+// THE TWO-AXIS SWEEP OF THE RECORDED "FLAT"/"CAPPED" VERDICTS (2026-08-14).
+// Every residual note in the reachable tree that said "byte-flat", "flat under
+// titration", "capped" or "exhaustive negatives" was re-run as a full
+// mass x sites grid, because all of them predate the second axis. Twenty-five
+// functions, four verdicts overturned:
+//   WRONG - levelupwindow ??0 (mass, landed +1.09), combatresultswindow ??0
+//     (mass, landed +0.15), artifact InitializeArtifactTraitsTable (mass,
+//     +3.64 measured at M=7..12 and still unsupplied), quickinfowindow ??0
+//     ("no byte-neutral supply exists" - one exists, see below).
+//   HELD, flat in every cell of the grid - diff ?Apply, adventureoptionswindow
+//     ?WindowHandler, resourcedisplay ??0, soundmgr ?MemorySample, mousemgr
+//     ?LoadFrame / ?Update / ?SetPointer, window ?CenterWindow, button
+//     ??0textButton, resourcemanager ?GetSpreadsheet, campaignbrief
+//     ??1TCampaignBrief, initialize ?create_included_mask, mainmenu
+//     ?MainMenuHandler, systemoptionswindow ?WindowHandler, slider ?Main,
+//     smackmgr ?VideoClose, fly ?Fly / ?ValidFlight, search ?BuildPath,
+//     levelupwindow ?WindowHandler, campaignwindow ?CampaignWindowHandler.
+// The four that moved are all CONSTRUCTORS or table builders - bodies with a
+// long straight run of calls ahead of the divergence. Handlers and small leaf
+// bodies were flat without exception, so the screen worth applying before
+// spending a grid is: does the divergent expansion have a long call run in
+// front of it that source mass can lengthen?
+// One more mass-unit caveat, measured on artifact: a pad DEAD STORE and a
+// named ALIAS local are not the same mass. Nine byte-inert alias locals there
+// stack to +0.04 while seven dead stores are worth +3.64, so a titrated M is a
+// lower bound on how much real source it takes to reach the same cell.
+//
+// THE SCREEN, APPLIED TREE-WIDE (2026-08-14, second pass). The grid was then
+// run over every remaining CONSTRUCTOR and table builder in the reachable tree
+// that the first sweep had not already covered - handlers and leaf bodies
+// deliberately skipped, since 21/21 of those were flat. Seven functions:
+//   MOVED (3/7, against 4/25 over the mixed population - the screen holds):
+//     armygrp ??0TSplitWindow          98.4605 -> 99.9895 at k=1, SUPPLIED and
+//                                      landed at 99.9789 (see armygrp.cpp)
+//     combatresultswindow ??0          96.3788 -> 96.9395 at (M=24, k=1); the
+//                                      honest 20-widget naming supply measures
+//                                      96.0972, and 95.3420 with the site, so
+//                                      the cell is real and unreachable so far
+//     systemoptionswindow ??0          98.1326 -> 98.2455 at (M=16, k=0)
+//   FLAT in every cell:
+//     quickherowindow ??0    90.5272 over M 0..32 x k 0..4 (it already sits on
+//                            its xx_nop ceiling; mass buys nothing)
+//     quicktownwindow ??0    98.4193 over M 0..24 x k 0..3
+//     campaignbrief ??1NewSMapHeader  91.5098, perfectly flat - the user body
+//                            is EMPTY, so there is no C1 statement mass to
+//                            scale and the compiler-generated member-destroy
+//                            run is emitted from the class layout, not the
+//                            body. An empty-bodied dtor is a THIRD screen-out
+//                            class alongside handlers and leaf bodies.
+//     ai_combat ?initialize_creatures 91.0075 over M 0..24 x k 0..3
+// levelupwindow ??0 was re-swept at its landed spelling in the same pass and is
+// at a local maximum on both axes (see its own note).
+// So the screen's hit rate among constructors and table builders is ~40%,
+// against 16% over the mixed population - but only one of the three cells had a
+// byte-neutral honest supply. Finding the cell is cheap; supplying it is not.
+//
+// TWO REFINEMENTS to the rule above, both byte-measured 2026-08-14, and both
+// worth reading BEFORE titrating a new function:
+//
+// 1. THE PLACEMENT LAW / LAST-SITE SCREEN. Adding a candidate site at position
+//    p raises the divisor only for the sites BEFORE p (`budget / (n - k)`:
+//    sites after p get k and n bumped together). So first ask WHERE in the
+//    call order the divergent expansion sits.
+//      - If it is the LAST candidate site its divisor is `budget / 1` no
+//        matter how many sites precede it, and the knob simply does not exist:
+//        extra sites can then only perturb register allocation. A sibling lane
+//        measured exactly that on create_dismiss_widget / create_upgrade_widget
+//        (88.11 -> 85.5720 and 85.6314, both DOWN, the extra `end()` site
+//        breaking a `-1` materialisation retail hoists into EBX).
+//      - The window constructors are curable because the divergence sits in
+//        the LAST push_back and the body continues past it (the registration
+//        loop), so there is somewhere to put the sites. Swept directly on
+//        systemoptionswindow: two free sites are byte-flat at 88.3182 before
+//        `reserve`, immediately after `reserve`, and after each widget group,
+//        and jump to 97.1811 the moment they sit past the last push_back.
+//        That is also why converting the FIRST push_backs never paid anywhere.
+//      - The same screen explains the k=7,8 cliff to 93.34 above: past the
+//        intended site you are no longer tuning its divisor, only disturbing
+//        allocation.
+//
+// 2. THERE ARE TWO BUDGET AXES AND THEY MUST BE SWEPT TOGETHER. The divisor is
+//    one; the other is the caller's own `cb`, since `budget = 2 * cb(caller)`,
+//    so byte-inert statement mass in the CALLER raises what the head sites may
+//    spend. gametypewindow reached exact only at (mass in [4,8] statements,
+//    exactly one extra site) - and BOTH of its halves had already been
+//    measured alone, byte-flat, and recorded as dead ends in that very file.
+//    A one-axis "flat under titration" verdict is therefore not a verdict.
+//
+// The byte-neutral site knobs found so far, in order of reliability:
+//   +1  call `end()` twice - hoist the registration loop's first iterator
+//       (`widget** first = Widgets.begin(); if (first != Widgets.end())
+//       for (widget** it = first; it != Widgets.end(); ++it)`). The duplicate
+//       load is CSE-folded, so it emits nothing. Lands exactly on the k=1
+//       ladder value in systemoptionswindow (89.8628) and closes
+//       gametypewindow's site axis.
+//   +1  `push_back(x)` -> `insert(end(), x)`, but ONLY behind a
+//       `std::vector<widget*>*` local - naming `Widgets` at an insert site
+//       pins a second register. Exact ceiling in quickherowindow and
+//       quicktownwindow; NOT byte-neutral in systemoptionswindow (any
+//       position, 87.40 to 94.60) and destructive in quickinfowindow (~59).
+//   +1  `push_back(x)` -> `insert(end(), x)` also works with `Widgets` named
+//       directly where the body has no pointer local at all: armygrp
+//       ??0TSplitWindow 98.4605 -> 99.9789 that way, and the position among the
+//       last three widgets is irrelevant (all three measure identically) as
+//       long as the extra site precedes the registration loop.
+//   +2  the same hoist with the loop re-reading `Widgets.begin()`
+//       (begin x2 + end x2). Beats the xx_nop ceiling in systemoptionswindow
+//       (97.6237 vs 97.1811) because the hoist also fixes a begin/end load
+//       transposition; in adventureoptionswindow the transposition survives
+//       every `for`-bodied variant (99.9720) and only the guarded do-while
+//       form clears it (100.0).
+// NOT knobs, all measured: `if (!Widgets.empty())` and `Widgets.size() != 0`
+// are +1 with a byte cost; an index loop over `size()`/`operator[]`, a hoisted
+// `last`, `Widgets.back()` -> `begin()[size()-1]`, and `<` for `!=` all cost
+// bytes; `Widgets.back()` -> `Widgets.end()[-1]` is byte-neutral but +0.
+// Also NOT a knob (2026-08-14, quickinfowindow): `*Widgets.rbegin()` for
+// `Widgets.back()` is exactly byte-neutral but +0 sites at one, two and three
+// call sites - VC6 folds the reverse_iterator wrapper away before candidacy,
+// so rbegin/ctor/operator* are not three sites, they are one.
+//
+// TWO PLACEMENT LEVERS for what the site supply leaves behind, both byte-proven
+// on armygrp ??0TSplitWindow 2026-08-14 (99.9789 -> 99.9912, body then exact):
+//   - WHERE a `std::vector<widget*>*` local is DECLARED decides whether a later
+//     `_First`/`_Last` load addresses off the vector pointer or off `this`.
+//     Declaring it one statement earlier moved `[edi+0x38]` to retail's
+//     `[ebx+0x8]`; naming `Widgets` at the call sites instead puts it back on
+//     `this`. Where it is USED is not the lever, where it is DECLARED is.
+//   - `widget* value` and `widget* const& value` are NOT the same parameter for
+//     a helper that forwards to an inlined `insert(P, 1, X)`. By value the
+//     parameter IS the object the reference binds to, so the raw `operator new`
+//     result and the value temp coalesce into one dead parameter slot; by
+//     reference the temp is materialised at the call site and the two stay in
+//     separate slots, which is retail's shape. This is the same family as the
+//     recorded `push_back(m = new X)` vs `m = new X; push_back(m)` split, and
+//     it is the only spelling that moved that store - naming the widget in a
+//     local did not, nor did reordering the helper's parameters.
+// THE LOOP WAS NEVER THE MECHANISM (2026-08-14, measured on quickinfowindow,
+// which has no registration loop at all). What supplies a divisor site is a
+// duplicated call to a FREE accessor, and it does not need a loop to live in:
+// a DEAD local initialised from one is a full site and emits nothing, because
+// C1XX counts the inline candidate and C2 dead-codes the load.
+//     widget** widgetsBegin = Widgets.begin();   // never read
+//     AddWidget(Widgets.back(), -1);
+// Two of those took ??0TQuickCreatureWindow 92.7916 -> 96.8141, landing
+// exactly on its titrated xx_nop ceiling, and the `end()`-twice spelling of
+// the same thing (dead `Widgets.end()` local + `Widgets.end()[-1]`) measures
+// identically. That makes the divisor axis reachable in ANY body.
+// It is deliberately NOT landed anywhere: a local that is never read is
+// titration scaffolding, not a reconstruction of retail's source. Its value is
+// as a MEASURING instrument - it tells you what a body's k ladder is worth
+// using real source constructs, before you go looking for an honest supply.
+//
+// WHERE THE HONEST SUPPLY COMES FROM (2026-08-14, and it closed
+// ??0TQuickCreatureWindow to 100.0000 on the first spelling): THE DC XREF
+// GRAPH IS A CALL-SITE CENSUS. `awk -F'\t' '$2=="Class::Function"'
+// evidence/dc-xref-graph.tsv` lists every named callee of a function together
+// with its CALL COUNT. Diff that against the calls the body actually spells
+// and the missing /Ob2 candidate sites have names. quickinfowindow's ladder
+// wanted two sites; the census said `GetArmyName` x3 (dc 0x1ef94,
+// E:\gamedcs\CreatureType.h:296, a header inline) where our body spelled the
+// creature-name ternary three times by hand. Spelling the three calls supplied
+// the sites and was byte-identical.
+// Read the census with two corrections. (1) SUBTRACT THE DREAMCAST PLATFORM
+// DELTA FIRST - systemoptionswindow's census is 3 buttons and 1 text short of
+// ours because the DC port has no window-scroll group, and once that is taken
+// out every count agrees. (2) A COUNT THAT STILL DISAGREES IS EITHER A MISSING
+// SITE OR A PORT REWRITE, and the ladder says which: quickherowindow's census
+// records ten plain push_backs and no inserts, but reverting any one of our
+// four `insert(end(), x)` conversions costs 2.7 points, so there the DC port
+// really is four sites lighter than retail.
+//
+// AND THE RULE FOR WHICH CONSTRUCTS CAN SUPPLY A SITE AT ALL (2026-08-14,
+// measured on quickinfowindow and quickherowindow): A FORWARDING WRAPPER
+// SUPPLIES ZERO SITES, because it REPLACES the top-level call site it wraps -
+// only the nesting moves; only an EXTRA top-level call raises n. An
+// `AppendQuickWidget` in the armygrp `AppendSplitWidget` shape around a
+// `push_back` is byte-exactly flat by reference at inline_depth 2/3/default
+// across one, two and three call sites, costs 0.003-0.04 by value, and at
+// depth 0 or 1 holds `push_back` itself out of line and collapses to 53-90;
+// the `limit`/`t_limit` wrapper pair is byte-flat in quickherowindow for the
+// same reason; and this is the same fact as the rbegin note above.
+// Corollary for the other direction: `insert(end(), x)` is +1 site but ALSO
+// one nesting level shallower, so the 3-argument insert can newly expand -
+// which is why the conversion is byte-neutral in some bodies and catastrophic
+// (58.58 in quickinfowindow) in others.
+//
+// A THIRD PLACEMENT LEVER, same family as the two above (2026-08-14,
+// quicktownwindow 98.4193 -> 98.8368): MSVC evaluates `new T(args)` as
+// allocate-THEN-evaluate-args, so a value spelled INSIDE the argument list is
+// loaded after the `operator new` call, and the same value hoisted into a
+// local one statement earlier is loaded before it and pinned in a register
+// across it. `thisTown->cName.c_str()` at the call site is retail;
+// `const char* town_name = thisTown->cName.begin();` ahead of the statement is
+// not. Note also that VC6's `c_str()` IS `_Ptr == 0 ? "" : _Ptr`, so a
+// hand-written ternary can be the right bytes in the wrong place.
+// And the `widget* const&` lever HAS A SIGN, which retail picks per site:
+// armygrp wanted the raw `operator new` result and the insert's value temp in
+// SEPARATE slots (by reference), quicktownwindow's three resource-bonus
+// widgets want them COALESCED in the dead parameter slot (which is what naming
+// the widget in a local does). Read the slot out of retail before choosing.
+// THE CENSUS SWEPT TREE-WIDE (2026-08-14). The diff above was run against
+// EVERY non-exact function in the lanes reachable from here - 51 rows, 45 of
+// them with a `dc 0x` body map, 38 carrying at least one under-count row. TEN
+// leads were spelled out and measured: ONE converted to EXACT
+// (ai_player ?can_take_town 98.7523 -> 100.0000 on `town::get_location`), one
+// is landed byte-flat for fidelity, the other eight are negatives. The method
+// works, but its ACTIONABLE class is much narrower than the
+// ??0TQuickCreatureWindow success suggests, and the two rules below are what
+// separate the two conversions from the eight misses. Check them BEFORE
+// spending a build on a census row:
+//
+//   A FILE-LOCAL MODEL OF A DC HEADER INLINE IS BYTE-INERT WHENEVER ITS BODY
+//   CONSTANT-FOLDS AT THE CALL SITE. C1 folds the expansion before the /Ob2
+//   inliner ever counts it, so such a call supplies neither a divisor SITE
+//   nor front-end MASS. `GetArmyName` worked because its body cannot fold: a
+//   runtime bounds test plus two array loads plus a ternary on a runtime
+//   count, at THREE sites. A one-argument accessor over a field, or a
+//   two-way ternary whose selector is a compile-time constant, is free.
+//
+//   AND THE STRONGEST SUB-CLASS OF ALL, because it changes the FRAME and not
+//   just the inliner's arithmetic: A CENSUS CALLEE THAT RETURNS A UDT BY
+//   VALUE. `town::get_location` (dc 0x1fdac, E:\gamedcs\Town.h:311) took
+//   ai_player ?can_take_town from 98.7523 to EXACT on the first spelling.
+//   That body built its `type_point` field by field in its own frame and had
+//   plateaued against ALL 36 declaration x assignment orders of the three
+//   coordinates; the recorded verdict there was "the hoist retail performs is
+//   the allocator's, not a source ordering we can spell". Right about order,
+//   wrong about the construct - the point is not built in that frame at all.
+//   Returning it from a helper gives the construction its own NRV slot and
+//   retail's load order falls out of that. A struct return can never fold
+//   away, so this is the one census shape worth a build ON SIGHT.
+//   Cross-referencing the DC `__$ReturnUdt` prototypes in include/*.h against
+//   the under-count rows is how to find the rest; in these lanes
+//   `town::get_location` was the only one left.
+//
+// Measured this round, all byte-EXACTLY flat (do not re-spend a build on
+// them; each is recorded again at its own site):
+//   - resourcemanager ?AddToCache: census `resource::get_Name` x1 where we
+//     read `value->Name`. Flat at 86.6296 both as `inline` and as a plain
+//     file static. The wall there stays the C1 handle-state cap.
+//   - button ?Main and slider ?Main: census `GameTime::ElapsedSince` x1 each
+//     (E:\gamedcs\struct.h:411, dc 0x1eed4 = `Elapsed(Get(), t)`) where both
+//     spell `(int)(GameTime::Get() - repeatTime) > 0`. Flat at 88.1009 and
+//     95.1901. The same function's `combatManager::CombatIsOver` x3 is pure
+//     Dreamcast platform delta - the DC widget pump polls combat-over, and
+//     button::Select is already exact WITHOUT it.
+//   - levelupwindow ??0TLevelUpWindow: census `widget::set_visible` x2
+//     (E:\gamedcs\Widget.h:263, dc 0x56df8) where we send_message twice.
+//     Flat at 98.8241 - the selector argument is a constant, so the ternary
+//     folds. This CLOSES the "still open, needs widget.h" lead recorded at
+//     that constructor: it is not worth a shared-header edit.
+//   - levelupwindow ?WindowHandler: census `GameTime::IsPast` x1 (dc 0x1ef04,
+//     = `ElapsedSince(t) >= 0`). Flat at 77.7273 even though it nests three
+//     inline levels deep. Its `widget::set_visible` x4 matches our four
+//     send_message pairs EXACTLY, and `heroWindow::GetWidget` x12 matches our
+//     twelve - this handler's census is otherwise clean.
+//   - armygrp ?GetMorale: census `armyGroup::HasSomeUndead` x1 (dc 0x4eb88,
+//     the /OPT:REF-eliminated member) where we spell its scan inline. Flat at
+//     98.5654 as a file-local helper. Kept inline in source because the free
+//     static is not retail's shape and buys nothing.
+// Measured and NEGATIVE:
+//   - armygrp ?get_spell_work_chance: census `hero::IsWieldingArtifact` x11
+//     against our 8, and the residual note at that body already said retail
+//     DUPLICATES four sites we merge - so the shared
+//     `check_protection_artifact` label looked exactly like the missing
+//     supply. It is not: un-sharing all six pendant arms costs 88.5071 ->
+//     84.9089 and un-sharing three costs 83.1929. The shared label IS closer,
+//     so the DC count is a port difference. `IsMindSpell` x1 (dc 0x4fd34,
+//     E:\gamedcs\SpellDefs.h:345) likewise costs 0.46 in both an expression
+//     and an IL-preserving spelling.
+// LANDED, EXACT: ai_player ?can_take_town on `town::get_location` x1 - the
+// UDT-return class above; the ledger at that body carries the full account.
+// LANDED, byte-flat, for fidelity: armygrp's house-coined `armygrp_clamp` is
+// retail's `limit`/`t_limit` pair - the census names it by COUNT as well as
+// by name (x2 from TSplitWindow::WindowHandler, x1 from GetMorale, x1 from
+// GetArmyMorale = our four sites exactly).
+//
+// SO: run the census diff on a plateau - it is one awk and it is the only
+// instrument that NAMES a missing site - but budget one build, not a
+// campaign, and screen the row first. A row is worth a build when the
+// callee's body does work our spelling does not do at all: UNCONDITIONALLY if
+// it returns a UDT by value, and otherwise when the count gap is >= 2.
+// Rows that only RENAME an expression we already spell
+// (TTextResource::operator[] for GetText, `min` for _cpp_min, `limit` for a
+// local clamp, `SpellIsAvailable` for a byte-array read) are fidelity, never
+// score. And the census's own systemoptions/levelup verdict stands: for the
+// two constructors whose wall is priced in caller mass, IT FOUND NOTHING -
+// both censuses match ours once the platform delta is subtracted, so their
+// ~20 missing statements are still unaccounted for.
+//
+// THE UDT-RETURN SCREEN IS EXHAUSTED IN THESE LANES (2026-08-14, run as its
+// own lane over every non-exact function reachable from here). Method: pull
+// every DC function carrying a `__$ReturnUdt` frame slot (136 of them, one
+// awk over the dump's S_REGREL32 records) UNION every S_PUB32 whose mangled
+// return type is `?A[VUT]` (129) = 138 distinct offsets; intersect that set
+// with the census `dst_offset` of each plateau's `dc 0x` body.
+//   50 non-exact functions owned, 49 with a `dc 0x` body map, 45 with at
+//   least one census row, 10 UDT-return rows over 5 distinct callees:
+//     `format_string` (misc.obj, `std::string format_string(const char*,...)`)
+//       x8 get_morale_description, x4 get_luck_description, x3 make_gift,
+//       x1 end_turn, x1 ??0TQuickHeroWindow
+//     `hero::get_morale_description` x1, `hero::get_luck_description` x1
+//     `inputManager::GetEvent` (`?AUmessage@@`) x1 button::Main, x1 slider::Main
+//     `std::map<TCacheMapKey,resource*>::insert` x1 ResourceManager::AddToCache
+//   EVERY ONE IS ALREADY SPELLED AT THE MATCHING COUNT. Zero builds spent,
+//   zero conversions. `town::get_location` really was the last one here.
+// So the screen is CHEAP AND SHARP but its supply in these lanes is spent;
+// re-run it after any new TU lands, not against this roster.
+//
+// TWO MORE ORACLES IN THE SAME DUMP, both new here and both worth more than
+// the call census because they are FRAME-shaped rather than inliner-shaped:
+//
+//   (1) THE STATEMENT CENSUS - `*** SRCLINES ***`. Every DC module carries
+//   file/line -> address pairs. Slice them by a function's [dc, dc+Cb) and
+//   you get the EXACT source-line count of retail's body, plus which HEADER
+//   lines were inlined into it (the call census cannot see inlined-away
+//   callees; this can). Calibrated on the 249 exact functions in these lanes:
+//   median (our statement lines / DC code lines) = 1.000. That turns the /Ob2
+//   MASS axis from titration into measurement - levelupwindow's ctor is 49 DC
+//   lines, systemoptionswindow's 89, combatresultswindow's 122. The line
+//   lists are monotonic in address, so it is a source-LAYOUT oracle only, not
+//   a scheduling one.
+//
+//   (2) THE LOCAL-VARIABLE CENSUS - the S_REGREL32 records AFTER S_ENDARG,
+//   walked to the proc's matching S_END so nested S_BLOCK32 scopes are
+//   included. It NAMES retail's source locals, with stack offset, scope and
+//   CodeView type. 22 of these 50 have at least one. It is what proved
+//   `bitmapBorder* bb` in ??0TLevelUpWindow (one reused pointer where we name
+//   two - measured byte-EXACTLY flat at 98.8241, do not re-spend) and
+//   `short defender_troop_count` in do_aftermath.
+//   TWO LIMITS, both load-bearing: it is a LOWER BOUND (a local that stays in
+//   a register has no S_REGREL32 at all), and IT NEEDS THE SAME PLATFORM-DELTA
+//   SUBTRACTION AS THE CALL CENSUS - ??1TCampaignBrief's only DC local is
+//   `tempText`, type 0x2161 = `char[100]`, and the call census in the same
+//   body names `chdir` x2 and `BackupGameHeaders` x1, so that buffer is
+//   Dreamcast save-path code and retail's x86 frame (`sub esp,8`) has no room
+//   for it. Cross the two censuses before believing a local.
+//
+// AND A CHEAP RANKER THAT SHOULD RUN BEFORE ANY OF THEM (2026-08-14): diff
+// `sema disasm 0x<va>` against `sema disasm 0x<va> --base` with branch/call
+// TARGETS normalised away and trailing padding dropped, then count differing
+// instructions. Over these 50 it separated the artefacts from the residuals
+// in one pass: ??0TSplitWindow 1 instruction, ??1Bitmap816 2, VideoClose 2,
+// AI_value_of_combat 4, TSplitWindow::WindowHandler 4, do_aftermath 4 - while
+// get_morale_description is 550 differing of 712 with our body 155
+// instructions LONGER than retail's, which no census row was ever going to
+// explain. The masked `sema diff` skeleton calls all six of the first group
+// 100% exact, so the ranker sees what it cannot.
+// Run it on `--verbose` output and it also SPLITS EACH ROW into real vs
+// artefact for free: a differing row whose two texts are identical once every
+// numeric literal is blanked, AND which carries an IMAGE_REL on either side,
+// is a delinker symbol+addend split or the unwind-label prologue push - never
+// a source lever. Over these 50 that isolates exactly one function whose
+// residual is 100% artefact (??0TSplitWindow, its single `push 0xb` /
+// `push 0x0` row) and prices the rest honestly: do_aftermath 4 real / 0
+// artefact, TSplitWindow::WindowHandler 4/0, VideoClose 2/0, AI_value_of_combat
+// 1/3, ??1Bitmap816 1/1, GetMorale 10/5, ??0TQuickTownWindow 10/15. Where the
+// artefact count is the larger half, the printed score is a floor the source
+// cannot lift.
 // E:\gamedcs\mainmenu.cpp:66
 // Residual (97.0098%): the whole delta sits in ONE of the five button
 // push_backs - the reallocating one. Retail keeps the Dinkumware
@@ -74,24 +513,25 @@ TMainMenu::TMainMenu()
     gpMainMenu = this;
     bShowCDMessage = gbRestrictedGameTypeMenu && !cdMessageShown;
 
-    Widgets.reserve(NWIDGETS);
-    Widgets.push_back(new button(
+    std::vector<widget*>* widgets = &Widgets;
+    widgets->reserve(NWIDGETS);
+    widgets->insert(widgets->end(), new button(
         mainMenuButtonRects[0].x, mainMenuButtonRects[0].y,
         mainMenuButtonRects[0].width, mainMenuButtonRects[0].height,
         NEW_GAME_ID, "mmenung.def", 0, 1, 0, 49, 2));
-    Widgets.push_back(new button(
+    widgets->insert(widgets->end(), new button(
         mainMenuButtonRects[1].x, mainMenuButtonRects[1].y,
         mainMenuButtonRects[1].width, mainMenuButtonRects[1].height,
         LOAD_GAME_ID, "mmenulg.def", 0, 1, 0, 38, 2));
-    Widgets.push_back(new button(
+    widgets->insert(widgets->end(), new button(
         mainMenuButtonRects[2].x, mainMenuButtonRects[2].y,
         mainMenuButtonRects[2].width, mainMenuButtonRects[2].height,
         HIGH_SCORE_ID, "mmenuhs.def", 0, 1, 0, 35, 2));
-    Widgets.push_back(new button(
+    widgets->insert(widgets->end(), new button(
         mainMenuButtonRects[3].x, mainMenuButtonRects[3].y,
         mainMenuButtonRects[3].width, mainMenuButtonRects[3].height,
         CREDITS_ID, "mmenucr.def", 0, 1, 0, 46, 2));
-    Widgets.push_back(new button(
+    widgets->insert(widgets->end(), new button(
         mainMenuButtonRects[4].x, mainMenuButtonRects[4].y,
         mainMenuButtonRects[4].width, mainMenuButtonRects[4].height,
         QUIT_ID, "mmenuqt.def", 0, 1, 0, 1, 2));

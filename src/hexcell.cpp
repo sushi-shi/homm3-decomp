@@ -27,7 +27,7 @@ hexcell::hexcell()
 
 // E:\gamedcs\hexcell.cpp:38
 VA(0x004e7170, 0x3C)  // anchor-global, dc 0xd6138
-army* hexcell::get_army()
+army* hexcell::get_army() const
 {
     if (armySide >= 0)
         return &gpCombatManager->armies[armySide][armySlot];
@@ -36,7 +36,7 @@ army* hexcell::get_army()
 
 // E:\gamedcs\hexcell.cpp:43
 VA(0x004e71b0, 0x4D)  // anchor-global, dc 0xd6178
-army* hexcell::get_dead_army(int i)
+army* hexcell::get_dead_army(int i) const
 {
     if (deadArmySide[i] < 0)
         return 0;

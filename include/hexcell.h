@@ -59,8 +59,12 @@ public:
     char pad_4e[0x22];
 
     hexcell();
-    army* get_army();
-    army* get_dead_army(int i);
+    // Const on their own S_PUB32 publics (?get_army@hexcell@@QBAPAVarmy@@XZ,
+    // ?get_dead_army@hexcell@@QBAPAVarmy@@H@Z) - the roster text at the
+    // foot of this header cannot express that, and combatManager's own
+    // const enemy_is_adjacent could not compile without it.
+    army* get_army() const;
+    army* get_dead_army(int i) const;
 };
 SIZE(hexcell, 0x70);
 

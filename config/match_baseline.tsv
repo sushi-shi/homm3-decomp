@@ -23,7 +23,7 @@ adventuremapwindow	?UpdateTownLocators@TAdventureMapWindow@@QAEXHEE@Z	100.0000	1
 adventuremapwindow	?animate_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2b90
 adventuremapwindow	?draw_bottom_view@TAdventureMapWindow@@QAEXE@Z	100.0000	100.0000	100.0000	0x2bc0
 adventuremapwindow	?set_bottom_view@TAdventureMapWindow@@QAEXPAVtype_bottom_view_window@@@Z	100.0000	100.0000	100.0000	0x2c10
-adventureoptionswindow	??0TAdventureOptionsWindow@@QAE@XZ	89.5711	89.5711	89.5711	0x51d0
+adventureoptionswindow	??0TAdventureOptionsWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x51d0
 adventureoptionswindow	??1TAdventureOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x56c0
 adventureoptionswindow	??_GTAdventureOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5690
 adventureoptionswindow	?WindowHandler@TAdventureOptionsWindow@@UAEHPAVmessage@@@Z	99.9367	99.9367	99.9367	0x5730
@@ -138,7 +138,7 @@ advmgr	advManager_advManager	0.0000	0.0000	0.0000	0x6df0
 advmgr	advManager_garrison_quick_view	0.0000	0.0000	0.0000	0x16f80
 advspells	?CheckCastSpell@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0x1c2f0
 ai	?DoCompAI@combatManager@@QAEXH@Z	98.4697	98.4697	98.4697	0x221f0
-ai	?IsIncapacitated@army@@QAEEXZ	100.0000	100.0000	100.0000	0x1f380
+ai	?IsIncapacitated@army@@QBEEXZ	100.0000	100.0000	100.0000	0x1f380
 ai	?attempt_shooter_defense@combatManager@@QAEEPBVarmy@@PAVsearchArray@@PBUtype_AI_combat_parameters@@@Z	100.0000	100.0000	100.0000	0x20760
 ai	?berserk_attack@combatManager@@QAEXPAVarmy@@PBV2@@Z	100.0000	100.0000	100.0000	0x222c0
 ai	?can_cast_spells@combatManager@@QAEEJE@Z	100.0000	100.0000	100.0000	0x1f890
@@ -185,7 +185,7 @@ ai_combat	?check_wall_archery_penalty@type_AI_combat_data@@QAEXPBVtown@@@Z	100.0
 ai_combat	?choose_melee@type_AI_combat_data@@QBE_NABV1@W4type_speed_catagory@@@Z	90.9329	90.9329	90.9329	0x267c0
 ai_combat	?create_skeletons@@YIXPBVhero@@PBVarmyGroup@@PAV2@@Z	100.0000	100.0000	100.0000	0x26df0
 ai_combat	?do_aftermath@type_AI_combat_data@@QAEXPAV1@PBVtown@@@Z	97.3171	97.3171	97.3171	0x26ee0
-ai_combat	?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z	94.7603	94.7603	94.7603	0x264d0
+ai_combat	?do_general_melee@type_AI_combat_data@@QAEXAAV1@@Z	94.7945	94.7945	94.7945	0x264d0
 ai_combat	?get_area_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@JJ@Z	100.0000	100.0000	100.0000	0x24bf0
 ai_combat	?get_attack@type_AI_combat_data@@QBEJW4type_speed_catagory@@E@Z	100.0000	100.0000	100.0000	0x26390
 ai_combat	?get_damage_spell_value@type_AI_combat_data@@QBEXAAUtype_spell_choice@@ABV1@@Z	100.0000	100.0000	100.0000	0x24d20
@@ -206,7 +206,7 @@ ai_combat	?simulate_combat@type_AI_combat_data@@QAEXAAV1@@Z	100.0000	100.0000	10
 ai_combat	?take_damage@type_monster_data@@QAEJJ@Z	100.0000	100.0000	100.0000	0x23ea0
 ai_player	?calculate_demand@type_AI_player@@QAEXXZ	86.3767	86.3767	86.3767	0x28740
 ai_player	?calculate_reserve@type_AI_player@@QAEXXZ	96.4566	96.4566	96.4566	0x29ad0
-ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	98.7523	98.7523	98.7523	0x28410
+ai_player	?can_take_town@@YIEPBVhero@@PBVtown@@@Z	100.0000	100.0000	100.0000	0x28410
 ai_player	?end_turn@type_AI_player@@QAEXXZ	89.5263	89.5263	89.5263	0x28dd0
 ai_player	?find_magus_hut_value@@YIJJE@Z	100.0000	100.0000	100.0000	0x29910
 ai_player	?get_attack_bonus@type_AI_player@@SIMF@Z	100.0000	100.0000	100.0000	0x28710
@@ -302,20 +302,73 @@ ai_tactical	type_AI_spellcaster_get_muck_and_mire_value	0.0000	0.0000	0.0000	0x3
 ai_tactical	type_AI_spellcaster_get_ogre_mage_value	0.0000	0.0000	0.0000	0x3c330
 ai_tactical	type_AI_spellcaster_get_protection_value	0.0000	0.0000	0.0000	0x396e0
 ai_tactical	type_AI_spellcaster_type_AI_spellcaster	0.0000	0.0000	0.0000	0x369c0
+army	?CanFit@army@@QBEHHHPAH@Z	100.0000	100.0000	100.0000	0x46c40
 army	?CancelSpellType@army@@QAEXH@Z	100.0000	100.0000	100.0000	0x444d0
+army	?ComputeAttackerDamageReduction@army@@QBENPBV1@E@Z	100.0000	100.0000	100.0000	0x43b90
+army	?ComputeBaseDamage@army@@QBEHE@Z	100.0000	100.0000	100.0000	0x43160
+army	?ComputeDefenderDamageReduction@army@@QBENE@Z	100.0000	100.0000	100.0000	0x43d90
+army	?Damage@army@@QAEHH@Z	100.0000	100.0000	100.0000	0x44090
+army	?GetName@army@@SIPBDHJ@Z	100.0000	100.0000	100.0000	0x40100
 army	?GetSpeed@army@@QBEHXZ	100.0000	100.0000	100.0000	0x48cd0
+army	?GoBerserk@army@@QAEXXZ	86.0096	86.0096	86.0096	0x456d0
+army	?PlayAnimation@army@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x46940
+army	?ResetRound@army@@QAEXXZ	100.0000	100.0000	100.0000	0x47120
 army	?SetLuck@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01H@Z	97.0115	97.0115	97.0115	0x3df20
 army	?SetMorale@army@@QAEXPBVhero@@PBVarmyGroup@@PBVtown@@01HE@Z	97.5194	97.5194	97.5194	0x3e000
-army	?can_shoot@army@@QBEEPBV1@@Z	83.2927	83.2927	83.2927	0x428f0
+army	?SetupAnimation@army@@QAEXXZ	100.0000	100.0000	100.0000	0x46830
+army	?Turn@army@@QAEXE@Z	91.7125	91.7125	91.7125	0x46720
+army	?adjust_damage@army@@QBEJPAV1@JEEJPAJ@Z	100.0000	100.0000	100.0000	0x43f40
+army	?attack_wall@army@@QAEXW4TWallTargetId@@ABUtype_ballistics_traits@@@Z	100.0000	100.0000	100.0000	0x45ec0
+army	?can_cast_resurrect@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x473d0
+army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
+army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
+army	?enemy_is_adjacent@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0
+# ONE ROW WAS TRADED AWAY HERE, deliberately, at the lane/army-6
+# integration (2026-08-15). army::can_shoot (0x4428f0) cannot be both
+# claimed and expanded in this tree, and the two lanes chose opposite
+# sides of that:
+#   * lane/townmgr-14 spelled it as an ordinary out-of-line member and
+#     banked ?can_shoot@army@@QBEEPBV1@@Z at 83.2927;
+#   * lane/army-6 measured that get_AI_target_time (0x448bd0) reaches
+#     100.0000 ONLY when can_shoot carries the `inline` keyword, that
+#     dropping the keyword costs that caller 100 -> 27.8667 and STILL
+#     produces no expansion, and that with the keyword VC6 emits no
+#     out-of-line can_shoot body at all - so the row goes away.
+# army-6's side was taken because it is worth more on every measure: it
+# lands get_AI_target_time exact and get_berserk_targets at 92.5170, and
+# its own withdrawn reconstruction of can_shoot reached 92.00 - eight
+# points ABOVE the row that was banked - with the three source facts
+# that got it there written out in army.cpp. Nothing was learned and
+# lost; only the banked number was. Recovering both at once is open
+# work: retail plainly has the out-of-line body AND the expansion, which
+# no single spelling in this tree has yet produced.
+army	?get_AI_target_time@army@@QBEJJ@Z	100.0000	100.0000	100.0000	0x48bd0
+army	?get_adjusted_attack@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42410
+army	?get_adjusted_defense@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42590
+army	?get_attack_direction@army@@QBEJJPBV1@@Z	100.0000	100.0000	100.0000	0x458b0
+army	?get_attack_direction@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x45840
 army	?get_attack_modifier@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42550
+army	?get_average_damage@army@@QBEJPBV1@EJEJ@Z	100.0000	100.0000	100.0000	0x42780
+army	?get_average_damage@army@@QBENXZ	100.0000	100.0000	100.0000	0x426f0
+army	?get_berserk_targets@army@@QBEXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@@Z	92.5170	92.5170	92.5170	0x45490
+army	?get_controller@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x42690
+army	?get_controlling_side@army@@QBEHXZ	100.0000	100.0000	100.0000	0x40140
 army	?get_fire_shield_strength@army@@QBEMXZ	100.0000	100.0000	100.0000	0x43130
+army	?get_loss_combat_value@army@@QBEJJJEJE@Z	100.0000	100.0000	100.0000	0x42fd0
 army	?get_mirror_effect@army@@QBEHXZ	100.0000	100.0000	100.0000	0x487f0
+army	?get_multi_head_directions@army@@QBEJJPBV1@J@Z	100.0000	100.0000	100.0000	0x48ab0
+army	?get_owner@army@@QBEPAVhero@@XZ	100.0000	100.0000	100.0000	0x426d0
+army	?get_resurrection_size@army@@QBEJPBV1@@Z	100.0000	100.0000	100.0000	0x47330
 army	?get_second_grid_index@army@@QBEHXZ	100.0000	100.0000	100.0000	0x466a0
 army	?get_total_hit_points@army@@QBEJE@Z	100.0000	100.0000	100.0000	0x43080
+army	?is_enemy@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x42880
+army	?is_valid_caliph_spell@@YIEHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x47eb0
 army	?move_to@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45d10
 army	?play_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d540
+army	?set_AI_expected_damage@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x430d0
+army	?simple_move@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45950
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
-armygrp	??0TSplitWindow@@QAE@HHH@Z	98.4605	98.4605	98.4605	0x49790
+armygrp	??0TSplitWindow@@QAE@HHH@Z	99.9912	99.9912	99.9912	0x49790
 armygrp	??0armyGroup@@QAE@W4TCreatureType@@H@Z	100.0000	100.0000	100.0000	0x4aaa0
 armygrp	??0armyGroup@@QAE@XZ	100.0000	100.0000	100.0000	0x4aa80
 armygrp	??1TSplitWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x49e20
@@ -354,7 +407,7 @@ armygrp	?load@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x4
 armygrp	?merge_armies@armyGroup@@QAEXPAV1@@Z	100.0000	100.0000	100.0000	0x4b820
 armygrp	?modify_spell_damage@@YIJJHW4TCreatureType@@@Z	100.0000	100.0000	100.0000	0x4b4b0
 armygrp	?save@armyGroup@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x4aa00
-artifact	?InitializeArtifactTraitsTable@@YIEXZ	75.0139	75.0139	75.0139	0x4cd50
+artifact	?InitializeArtifactTraitsTable@@YIEXZ	76.8733	76.8733	76.8733	0x4cd50
 artifact	__h3cg$artifact$static_dtor$artifactSlotStrings	100.0000	100.0000	100.0000	0x4d340
 artifact	__h3cg$artifact$static_dtor$artifactStrings	100.0000	100.0000	100.0000	0x4d360
 basemgr	??0baseManager@@QAE@XZ	100.0000	100.0000	100.0000	0x4d530
@@ -363,7 +416,7 @@ bitmap16	??1Bitmap16Bit@@UAE@XZ	100.0000	100.0000	100.0000	0x4e100
 bitmap16	??_GBitmap16Bit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4e020
 bitmap16	?_vslot2@Bitmap16Bit@@UBEIXZ	100.0000	100.0000	100.0000	0x4e240
 bitmap24	??0Bitmap24Bit@@QAE@PBD0@Z	100.0000	100.0000	100.0000	0x4ee00
-bitmap24	??0Bitmap24Bit@@QAE@PBDHHPBEH@Z	99.5079	99.5079	99.5079	0x4ed50
+bitmap24	??0Bitmap24Bit@@QAE@PBDHHPBEH@Z	100.0000	100.0000	100.0000	0x4ed50
 bitmap24	??1Bitmap24Bit@@UAE@XZ	100.0000	100.0000	100.0000	0x4eec0
 bitmap24	??_GBitmap24Bit@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x4ed20
 bitmap24	?Draw@Bitmap24Bit@@QBEXHHHHPAVBitmap16Bit@@HH@Z	100.0000	100.0000	100.0000	0x4efd0
@@ -444,11 +497,11 @@ campaignbrief	??1TCampaignBrief@@UAE@XZ	95.7583	95.7583	95.7583	0x5afb0
 campaignbrief	??_GTCampaignBrief@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5ae40
 campaignmap	?InitializeCampaignMapTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0x5dee0
 campaignmap	__h3cg$campaignmap$static_dtor$campaignNames	100.0000	100.0000	100.0000	0x5e1f0
+campaignwindow	??0TCampaignWindow@@QAE@EH@Z	82.5365	82.5365	82.5365	0x5ea40
 campaignwindow	??1TCampaignWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x5f210
 campaignwindow	??_GTCampaignWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x5f0e0
-campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	71.0339	71.0339	71.0339	0x5f2f0
+campaignwindow	?CampaignWindowHandler@@YIHAAVmessage@@@Z	81.6384	81.6384	81.6384	0x5f2f0
 campaignwindow	?DoModal@TCampaignWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x5f2c0
-campaignwindow	TCampaignWindow_TCampaignWindow	0.0000	0.0000	0.0000	0x5ea40
 castle	?CanBuy@@YIHPBVtown@@H@Z	100.0000	100.0000	100.0000	0x61130
 castle	?GetBuildingName@@YIPBDHH@Z	100.0000	100.0000	100.0000	0x610e0
 cmbtmgr	??0combatManager@@QAE@XZ	100.0000	100.0000	100.0000	0x62760
@@ -461,27 +514,27 @@ cmbtmgr	?DetermineCombatTerrain@combatManager@@QAEXXZ	100.0000	100.0000	100.0000
 cmbtmgr	?FreeIcons@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x63500
 cmbtmgr	?GenerateMap@combatManager@@QAEXXZ	58.8421	58.8421	58.8421	0x642d0
 cmbtmgr	?GetBackgroundName@combatManager@@QAEPBDXZ	100.0000	100.0000	100.0000	0x646d0
-cmbtmgr	?GetGridIndex@combatManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x647a0
+cmbtmgr	?GetGridIndex@combatManager@@QBEHHH@Z	100.0000	100.0000	100.0000	0x647a0
 cmbtmgr	?GetMissileStartingPosition@@YIXHHHHHHPBVCSprite@@PAH111@Z	100.0000	100.0000	100.0000	0x69880
 cmbtmgr	?GetTargetWallIndex@@YIHH@Z	100.0000	100.0000	100.0000	0x65970
-cmbtmgr	?HexIsBlocked@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x69a10
+cmbtmgr	?HexIsBlocked@combatManager@@QBEEH@Z	100.0000	100.0000	100.0000	0x69a10
 cmbtmgr	?InCastle@@YIEH@Z	100.0000	100.0000	100.0000	0x67460
-cmbtmgr	?InLineOfSight@combatManager@@QAEEHH@Z	95.4601	95.4601	95.4601	0x67840
+cmbtmgr	?InLineOfSight@combatManager@@QBEEHH@Z	95.4601	95.4601	95.4601	0x67840
 cmbtmgr	?InitializeArchers@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66c50
 cmbtmgr	?IsInMoat@combatManager@@QAEEHPAH@Z	100.0000	100.0000	100.0000	0x69dc0
 cmbtmgr	?IsQuickCombat@combatManager@@QBE_NXZ	100.0000	100.0000	100.0000	0x6a4a0
-cmbtmgr	?IsWinner@combatManager@@QAEEH@Z	100.0000	100.0000	100.0000	0x658b0
+cmbtmgr	?IsWinner@combatManager@@QBEEH@Z	100.0000	100.0000	100.0000	0x658b0
 cmbtmgr	?LearnSpellFromEagleEye@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x69fe0
 cmbtmgr	?LeftOfMoat@@YIEH@Z	100.0000	100.0000	100.0000	0x67490
 cmbtmgr	?LoadWallTraitsTable@combatManager@@SIEXZ	100.0000	100.0000	100.0000	0x62990
 cmbtmgr	?LowerDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x671c0
 cmbtmgr	?PlaceAllObstacles@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x66a70
-cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXPBVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0
+cmbtmgr	?PlaceArmyInGrid@combatManager@@QAEXABVarmy@@H@Z	100.0000	100.0000	100.0000	0x687c0
 cmbtmgr	?PlaceLargeObstacle@combatManager@@QAEHII@Z	100.0000	100.0000	100.0000	0x668a0
 cmbtmgr	?PlaceObstacle@combatManager@@QAEXPBUTObstacle@1@HHI@Z	100.0000	100.0000	100.0000	0x669b0
 cmbtmgr	?RaiseDoor@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x672e0
 cmbtmgr	?RaiseSkeletons@combatManager@@QAEXH@Z	93.2203	93.2203	93.2203	0x69f20
-cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXPBVarmy@@@Z	100.0000	100.0000	100.0000	0x68730
+cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100.0000	0x68730
 cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872	87.2872	87.2872	0x66b30
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0
@@ -490,10 +543,10 @@ cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000	100.0000	10
 cmbtmgr	?UpdateArmyGroup@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x641f0
 cmbtmgr	?UpdateArmyLuckAndMorale@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x69750
 cmbtmgr	?ViewArmy@combatManager@@QAEXPAVarmy@@H@Z	100.0000	100.0000	100.0000	0x68860
-cmbtmgr	?enemy_is_adjacent@combatManager@@QAEEPAVarmy@@HPBV2@@Z	100.0000	100.0000	100.0000	0x69600
+cmbtmgr	?enemy_is_adjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670
-cmbtmgr	?is_adjacent@combatManager@@QAEEHH@Z	100.0000	100.0000	100.0000	0x674c0
-cmbtmgr	?should_lower_door@combatManager@@QAEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
+cmbtmgr	?is_adjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0
+cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
 cmbtmgr	combatManager_CheckApplyBadMorale	0.0000	0.0000	0.0000	0x64b40
 cmbtmgr	combatManager_CheckApplyGoodMorale	0.0000	0.0000	0.0000	0x64920
 cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
@@ -513,9 +566,9 @@ cmbtmgr	combatManager_ShootBallisticMissile	0.0000	0.0000	0.0000	0x67a00
 cmbtmgr	combatManager_ShootMissile	0.0000	0.0000	0.0000	0x68220
 cmbtmgr	combatManager_damage_message	0.0000	0.0000	0.0000	0x69a90
 cmbtmgr	combatManager_place_obstacle	0.0000	0.0000	0.0000	0x66010
-combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	94.3558	94.3558	94.3558	0x6bc30
+combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30
 combatcontrolsubwindow	??0TCombatPlacementSubWindow@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6c050
-combatcontrolsubwindow	??0type_combat_sub_window@@QAE@PAVheroWindow@@PBD@Z	89.4751	89.4751	89.4751	0x6b610
+combatcontrolsubwindow	??0type_combat_sub_window@@QAE@PAVheroWindow@@PBD@Z	100.0000	100.0000	100.0000	0x6b610
 combatcontrolsubwindow	??1TCombatControlSubWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x6bed0
 combatcontrolsubwindow	??1TCombatCreatureSubWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x6dbc0
 combatcontrolsubwindow	??1TCombatHeroSubWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x6cba0
@@ -528,12 +581,12 @@ combatcontrolsubwindow	??_GTCombatPlacementSubWindow@@UAEPAXI@Z	100.0000	100.000
 combatcontrolsubwindow	??_Gtype_combat_sub_window@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6bb80
 combatcontrolsubwindow	?Show@TCombatHeroSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6cdf0
 combatcontrolsubwindow	?UnShow@TCombatHeroSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6ce70
-combatoptionswindow	??0TCombatOptionsWindow@@QAE@XZ	77.1191	77.1191	77.1191	0x6e3b0
+combatoptionswindow	??0TCombatOptionsWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x6e3b0
 combatoptionswindow	??1TCombatOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x6f700
 combatoptionswindow	??_GTCombatOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x6f6d0
-combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	81.5152	81.5152	81.5152	0x6f7b0
+combatoptionswindow	?CombatOptionsWindowHandler@@YIHAAVmessage@@@Z	83.3598	83.3598	83.3598	0x6f7b0
 combatoptionswindow	?DoModal@TCombatOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x6f780
-combatresultswindow	??0TCombatResultsWindow@@QAE@PBVhero@@0HHEH@Z	92.7678	92.7678	92.7678	0x702d0
+combatresultswindow	??0TCombatResultsWindow@@QAE@PBVhero@@0HHEH@Z	96.3788	96.3788	96.3788	0x702d0
 combatresultswindow	??1TCombatResultsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x71a70
 combatresultswindow	??_GTCombatResultsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x71a40
 combatresultswindow	?Close@TCombatResultsWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x71b50
@@ -543,6 +596,21 @@ combatresultswindow	?Open@TCombatResultsWindow@@UAEHHE@Z	100.0000	100.0000	100.0
 combatwindow	?Close@TCombatWindow@@UAEXE@Z	100.0000	100.0000	100.0000	0x728d0
 command	?AddArmy@combatManager@@QAEPAVarmy@@HHHHHH@Z	100.0000	100.0000	100.0000	0x7a100
 command	?DoCommand@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x76bd0
+# GetCommand was hand-lowered 92.5714 -> 92.5357 (2026-08-14) for army.h's
+# first batch of byte-proven field slices, and RECOVERED to 92.5714 later
+# the same day when a SECOND batch of slices (bloodlustRounds /
+# precisionRounds, slayerRounds, bloodlustAmount / precisionAmount,
+# slayerLevel, frenzyFactor) landed on the same header. Nothing in
+# command.cpp changed in either direction. Recorded because it is a clean
+# demonstration of the include-set-sensitivity class being NON-MONOTONIC
+# in the way the initialize_game_data notes describe: the whole delta in
+# the lowered state was TWO instructions swapping order (`mov ecx,
+# [ebp-4]` trading places with the `mov eax, [ebp+8]` in front of it,
+# twice), inside a region that matches retail in NEITHER state, and it
+# came back on its own as the header kept growing. Removing any ONE of
+# the four slice groups did not restore it while it was down, and adding
+# further evidenced slices (+0x28c, +0xd8) in either combination did not
+# either - only the later batch, as a whole, did.
 command	?GetCommand@combatManager@@QAEHH@Z	92.5714	92.5714	92.5714	0x76490
 command	?RightClick@combatManager@@QAEHH@Z	100.0000	100.0000	100.0000	0x769c0
 command	?get_surrender_cost@combatManager@@QAEJXZ	100.0000	100.0000	100.0000	0x77a00
@@ -597,9 +665,9 @@ dialogbox	?Setup@CTextDialog@@UAEEPBDPAVfont@@@Z	100.0000	100.0000	100.0000	0x90
 dialogbox	?Setup@TDialogBox@@UAEEHHHH@Z	100.0000	100.0000	100.0000	0x8ff00
 dialogbox	?UpdateText@CTextDialog@@UAEXPBD@Z	100.0000	100.0000	100.0000	0x90b50
 diff	??0CDiffMaker@@QAE@PAEH0H@Z	100.0000	100.0000	100.0000	0x91030
-diff	?Apply@CDiffFile@@QAEPAXPAEH@Z	68.9643	68.9643	68.9643	0x90f60
-diff	?FindNextSame@CDiffMaker@@IAE_NHHAAH0@Z	83.2812	83.2812	83.2812	0x91050
-diff	?MakeDiff@CDiffMaker@@QAEPAVCDiffFile@@AAK@Z	81.5174	81.5174	81.5174	0x91140
+diff	?Apply@CDiffFile@@QAEPAXPAEH@Z	99.6429	99.6429	99.6429	0x90f60
+diff	?FindNextSame@CDiffMaker@@IAE_NHHAAH0@Z	84.1667	84.1667	84.1667	0x91050
+diff	?MakeDiff@CDiffMaker@@QAEPAVCDiffFile@@AAK@Z	83.9477	83.9477	83.9477	0x91140
 dimensiondoorwindow	??0TDimensionDoorWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x916f0
 dimensiondoorwindow	??0TSkuttleBoatWindow@@QAE@XZ	100.0000	100.0000	100.0000	0x91af0
 dimensiondoorwindow	??1TDimensionDoorWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x91890
@@ -696,7 +764,7 @@ fly	?Fly@army@@QAEHH@Z	85.9057	85.9057	85.9057	0xb4a40
 fly	?FlyTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb49c0
 fly	?Teleport@army@@QAEHH@Z	100.0000	100.0000	100.0000	0xb4f10
 fly	?TeleportTo@army@@QAEHHE@Z	100.0000	100.0000	100.0000	0xb4e90
-fly	?ValidFlight@army@@QAEEHE@Z	89.1445	89.1445	89.1445	0xb46c0
+fly	?ValidFlight@army@@QBEEHE@Z	89.1445	89.1445	89.1445	0xb46c0
 font	??0font@@QAE@PBDABUTFontSpec@0@HPAE@Z	100.0000	100.0000	100.0000	0xb5070
 font	??1font@@UAE@XZ	100.0000	100.0000	100.0000	0xb5110
 font	??_Gfont@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xb5040
@@ -813,7 +881,7 @@ game	game_get_random_lith	0.0000	0.0000	0.0000	0xcdb80
 game	playerData_add_garrison_hero	0.0000	0.0000	0.0000	0xb9fc0
 game	playerData_load	0.0000	0.0000	0.0000	0xba260
 game	playerData_save	0.0000	0.0000	0.0000	0xba670
-gametypewindow	??0TGameTypeWindow@@QAE@E@Z	93.7258	93.7258	93.7258	0xd54c0
+gametypewindow	??0TGameTypeWindow@@QAE@E@Z	100.0000	100.0000	100.0000	0xd54c0
 gametypewindow	??1TGameTypeWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xd5890
 gametypewindow	??_GTGameTypeWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xd5860
 gametypewindow	?DoModal@TGameTypeWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xd5910
@@ -966,8 +1034,8 @@ herodefs	?InitializeHeroClassTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe69
 herodefs	?InitializeHeroTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe67a0
 herodefs	?InitializeSSkillTraitsTable@@YIEXZ	100.0000	100.0000	100.0000	0xe6b10
 hexcell	??0hexcell@@QAE@XZ	100.0000	100.0000	100.0000	0xe7150
-hexcell	?get_army@hexcell@@QAEPAVarmy@@XZ	100.0000	100.0000	100.0000	0xe7170
-hexcell	?get_dead_army@hexcell@@QAEPAVarmy@@H@Z	100.0000	100.0000	100.0000	0xe71b0
+hexcell	?get_army@hexcell@@QBEPAVarmy@@XZ	100.0000	100.0000	100.0000	0xe7170
+hexcell	?get_dead_army@hexcell@@QBEPAVarmy@@H@Z	100.0000	100.0000	100.0000	0xe71b0
 hillfortwindow	??1THillFortWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xe7e10
 hillfortwindow	??_GTHillFortWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xe7de0
 hillfortwindow	?DoModal@THillFortWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xe7e90
@@ -1234,10 +1302,10 @@ kbwin	?Process1WindowsMessage@@YIXXZ	100.0000	100.0000	100.0000	0xf7fb0
 kbwin	?SetMenus@@YIXPAUHMENU__@@H@Z	100.0000	100.0000	100.0000	0xf8220
 kbwin	?SetNoDialogMenus@@YIXH@Z	100.0000	100.0000	100.0000	0xf81e0
 kbwin	_WinMain@16	100.0000	100.0000	100.0000	0xf7a30
-levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	97.7369	97.7369	97.7369	0xf8880
+levelupwindow	??0TLevelUpWindow@@QAE@PAVhero@@HHH@Z	98.8241	98.8241	98.8241	0xf8880
 levelupwindow	??1TLevelUpWindow@@UAE@XZ	100.0000	100.0000	100.0000	0xf9730
 levelupwindow	??_GTLevelUpWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xf9700
-levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	73.1787	73.1787	73.1787	0xf9780
+levelupwindow	?WindowHandler@TLevelUpWindow@@UAEHPAVmessage@@@Z	77.7273	77.7273	77.7273	0xf9780
 lodfile	??0LODFile@@QAE@XZ	100.0000	100.0000	100.0000	0xfa780
 lodfile	??1LODFile@@QAE@XZ	100.0000	100.0000	100.0000	0xfa800
 lodfile	?Find@LODFile@@AAEXIIPBD@Z	74.0901	74.0901	74.0901	0xfa660
@@ -1245,7 +1313,7 @@ lodfile	?clear@LODFile@@QAEXXZ	100.0000	100.0000	100.0000	0xfa590
 lodfile	?getItemIndex@LODFile@@QAEPAULODEntry@@PBD@Z	100.0000	100.0000	100.0000	0xfa610
 lodfile	?pointAt@LODFile@@QAEEPBD@Z	100.0000	100.0000	100.0000	0xfaa70
 lodfile	?read@LODFile@@QAEHPAXH@Z	100.0000	100.0000	100.0000	0xfab20
-mainmenu	??0TMainMenu@@QAE@XZ	97.0098	97.0098	97.0098	0xfb2a0
+mainmenu	??0TMainMenu@@QAE@XZ	100.0000	100.0000	100.0000	0xfb2a0
 mainmenu	??1TMainMenu@@UAE@XZ	100.0000	100.0000	100.0000	0xfb660
 mainmenu	??_GTMainMenu@@UAEPAXI@Z	100.0000	100.0000	100.0000	0xfb630
 mainmenu	?DoModal@TMainMenu@@QAEXXZ	100.0000	100.0000	100.0000	0xfb6e0
@@ -1358,7 +1426,7 @@ newgame	?get_alignment_count@@YIJH@Z	100.0000	100.0000	100.0000	0x1132b0
 newgame	?pick_alignment@@YI?AW4TTownType@@HE@Z	100.0000	100.0000	100.0000	0x1132d0
 overview	?SetupNewOverviewType@game@@QAEXHE@Z	100.0000	100.0000	100.0000	0x11e330
 palette	??0TPalette24@@QAE@PBE@Z	100.0000	100.0000	100.0000	0x122e80
-palette	??0TPalette24@@QAE@PBUTRGBA@@@Z	87.0741	87.0741	87.0741	0x122eb0
+palette	??0TPalette24@@QAE@PBUTRGBA@@@Z	100.0000	100.0000	100.0000	0x122eb0
 palette	??0TPalette24@@QAE@PBV0@@Z	100.0000	100.0000	100.0000	0x122f00
 palette	??0TPalette24@@QAE@XZ	100.0000	100.0000	100.0000	0x122e30
 palette	??1TPalette16@@UAE@XZ	100.0000	100.0000	100.0000	0x122940
@@ -1370,9 +1438,9 @@ palette	?_vslot2@TPalette24@@UBEIXZ	100.0000	100.0000	100.0000	0x122f70
 path	?FindPath@army@@QAEHHHEE@Z	100.0000	100.0000	100.0000	0x1239d0
 path	?GetAdjacentCellIndex@army@@QBEHHH@Z	100.0000	100.0000	100.0000	0x123d90
 path	?GetAdjacentCellIndexNoArmy@@YIHHH@Z	100.0000	100.0000	100.0000	0x123e80
-path	?GetAttackMask@army@@QAEIHHH@Z	100.0000	100.0000	100.0000	0x123b20
+path	?GetAttackMask@army@@QBEIHHH@Z	100.0000	100.0000	100.0000	0x123b20
 path	?OppositeDirection@@YIHH@Z	100.0000	100.0000	100.0000	0x123ec0
-path	?ValidAttack@army@@QAEHHHHHPAH@Z	81.0407	81.0407	81.0407	0x123bb0
+path	?ValidAttack@army@@QBEHHHHHPAH@Z	81.0407	81.0407	81.0407	0x123bb0
 path	?ValidPath@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x123a70
 path	?get_adjacent_hex@army@@QBEJJJ@Z	100.0000	100.0000	100.0000	0x123df0
 philai	?AI_choose_secondary_skill@@YI?AW4TSecondarySkill@@PBVhero@@W41@1E@Z	100.0000	100.0000	100.0000	0x12bbd0
@@ -1384,7 +1452,7 @@ philai	?get_damage_spell_value@type_spellvalue@@IBEJHHJJ@Z	100.0000	100.0000	100
 philai	?get_enchantment_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0000	0x127290
 philai	?get_mass_damage_spell_value@type_spellvalue@@IBEJHHJ@Z	100.0000	100.0000	100.0000	0x1271c0
 philai	?get_raw_spell_value@type_spellvalue@@QBEJH@Z	100.0000	100.0000	100.0000	0x1273d0
-puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	98.6391	98.6391	98.6391	0x12c1e0
+puzzlewindow	??0TPuzzleWindow@@QAE@H@Z	100.0000	100.0000	100.0000	0x12c1e0
 puzzlewindow	??0type_AI_puzzle_tile@@QAE@PAVNewmapCell@@Utype_point@@@Z	98.8426	98.8426	98.8426	0x12c770
 puzzlewindow	??1TPuzzleWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12c5a0
 puzzlewindow	??_GTPuzzleWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12c570
@@ -1399,11 +1467,11 @@ questlogwindow	?WindowHandler@TQuestLogWindow@@UAEHPAVmessage@@@Z	100.0000	100.0
 quickherowindow	??0TQuickHeroWindow@@QAE@PAVhero@@W4TViewLevel@0@@Z	90.7834	90.7834	90.7834	0x12ead0
 quickherowindow	??1TQuickHeroWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12f3d0
 quickherowindow	??_GTQuickHeroWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12f3a0
-quickinfowindow	??0TQuickCreatureWindow@@QAE@W4TViewLevel@0@W4TCreatureType@@HW4TDisposition@0@H@Z	92.7916	92.7916	92.7916	0x12f8c0
+quickinfowindow	??0TQuickCreatureWindow@@QAE@W4TViewLevel@0@W4TCreatureType@@HW4TDisposition@0@H@Z	100.0000	100.0000	100.0000	0x12f8c0
 quickinfowindow	??1TQuickCreatureWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x12fd20
 quickinfowindow	??_GTQuickCreatureWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x12fcf0
 quicktownwindow	??0TQuickTownWindow@@QAE@PBVgarrison@@W4TViewLevel@0@@Z	100.0000	100.0000	100.0000	0x1307d0
-quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	96.3088	96.3088	96.3088	0x130120
+quicktownwindow	??0TQuickTownWindow@@QAE@PBVtown@@W4TViewLevel@0@@Z	98.8368	98.8368	98.8368	0x130120
 quicktownwindow	??1TQuickTownWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x130920
 quicktownwindow	??_GTQuickTownWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1307a0
 quicktownwindow	?QuickWindowWait@TQuickTownWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x130d30
@@ -1617,7 +1685,7 @@ subwindow	?RestoreBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa
 subwindow	?SaveBackground@TSubWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1aa560
 subwindow	?initialize@TSubWindow@@QAEXHHHHPAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x1aa470
 swapmgr	?IsLeftHero@swapManager@@QAE_NXZ	100.0000	100.0000	100.0000	0x1b1380
-systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	88.2634	88.2634	88.2634	0x1b1790
+systemoptionswindow	??0TSystemOptionsWindow@@QAE@XZ	98.1326	98.1326	98.1326	0x1b1790
 systemoptionswindow	??1TSystemOptionsWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1b3040
 systemoptionswindow	??_GTSystemOptionsWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1b3010
 systemoptionswindow	?DoModal@TSystemOptionsWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1b30b0
@@ -1850,14 +1918,14 @@ viewarmywindow	?convertID2HelpID@TViewArmyWindow@@QBEHH@Z	100.0000	100.0000	100.
 viewarmywindow	?create_attack_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f5340
 viewarmywindow	?create_damage_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@PBVhero@@@Z	96.4286	96.4286	96.4286	0x1f5860
 viewarmywindow	?create_defense_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f55d0
-viewarmywindow	?create_dismiss_widget@TViewArmyWindow@@QAEXXZ	88.1144	88.1144	88.1144	0x1f6d50
+viewarmywindow	?create_dismiss_widget@TViewArmyWindow@@QAEXXZ	89.8771	89.8771	89.8771	0x1f6d50
 viewarmywindow	?create_hitpoints_left_widget@TViewArmyWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0x1f6070
 viewarmywindow	?create_hitpoints_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f5dd0
-viewarmywindow	?create_ok_widget@TViewArmyWindow@@QAEXXZ	98.6594	98.6594	98.6594	0x1f6870
+viewarmywindow	?create_ok_widget@TViewArmyWindow@@QAEXXZ	100.0000	100.0000	100.0000	0x1f6870
 viewarmywindow	?create_portrait_widget@TViewArmyWindow@@QAEXPBDHH@Z	100.0000	100.0000	100.0000	0x1f5060
 viewarmywindow	?create_shots_widget@TViewArmyWindow@@QAEXPBUTCreatureTypeTraits@@HH@Z	100.0000	100.0000	100.0000	0x1f5b30
 viewarmywindow	?create_speed_widget@TViewArmyWindow@@QAEXHH@Z	100.0000	100.0000	100.0000	0x1f62f0
-viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	88.1144	88.1144	88.1144	0x1f6ae0
+viewarmywindow	?create_upgrade_widget@TViewArmyWindow@@QAEXXZ	89.8771	89.8771	89.8771	0x1f6ae0
 viewwrld	??1TViewWorldWindow@@UAE@XZ	100.0000	100.0000	100.0000	0x1fbd60
 viewwrld	??_GTViewWorldWindow@@UAEPAXI@Z	100.0000	100.0000	100.0000	0x1fbd30
 widget	??0widget@@QAE@FFFFFF@Z	100.0000	100.0000	100.0000	0x1fe340

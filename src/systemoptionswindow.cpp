@@ -38,11 +38,26 @@ DATA(0x006a7584) THelpText gSystemOptionsHelp[48];
 //            animation; 578 is shared with the combat options dialog)
 
 // E:\gamedcs\systemoptionswindow.cpp:43
+// STATEMENT CENSUS + LARGE-MASS RE-SWEEP, 2026-08-14 (98.1326).
+// `*** SRCLINES ***` gives dc 0x15f588 Cb 0x10AC = 89 statement lines over
+// E:\gamedcs\systemoptionswindow.cpp:43-194, one file block, no header line
+// attributed inside the range. This body counts 106, ratio 1.191 - above the
+// exact-function third quartile (1.083; median 0.933 over 807 calibrated
+// bodies) and therefore INSIDE the instrument's noise, not a finding. See
+// levelupwindow.cpp for the calibration.
+// The mass axis was also re-swept far past the old window now that the RE'd
+// budget's LOWER CLAMP is known to hide steps from short sweeps (see
+// ai_combat::do_general_melee): with self-assign pad units the score is
+// 98.1326 / 97.7430 / 89.3196 / 89.3379 / 90.2533 / 89.5409 / 81.4751 /
+// 72.1331 / 69.3297 at masses 0, 8, 16, 32, 48, 64, 96, 128, 192. This body
+// is far above the clamp and mass is monotonically harmful past ~8 - the same
+// re-sweep is negative for combatresultswindow ??0 (96.3788 decaying to 80.85
+// at 128), ai_player::calculate_reserve (96.4566 to 6.56) and perfectly flat
+// 0..128 for ai_combat::do_aftermath. The clamp case is a SMALL-BODY case.
 VA(0x005b1790, 0x187C)  // sole sysopbck.pcx reference + vtable block, dc 0x15f588
 TSystemOptionsWindow::TSystemOptionsWindow()
-    : CAdvPopup(159, 56, 481, 487, 0x12)
+    : CAdvPopup(159, 56, 481, 487, 0x12), bPrefsChanged(0)
 {
-    bPrefsChanged = 0;
     quickCombatSave = gCombatQuickMode69877c;
     Widgets.reserve(NWIDGETS);
 
@@ -64,20 +79,122 @@ TSystemOptionsWindow::TSystemOptionsWindow()
     Widgets.push_back(new button(357, 415, 100, 48,
         DIALOG_RETURN_SPLIT_ACCEPT, "soretrn.def", 1, 0, 0, 1, 2));
 
-    int slot = 0;
-    for (int musicX = 29; musicX < 219; musicX += 19) {
+    // The two slider loops (LANDED 2026-08-14, 97.6237 -> 98.1326). Retail's
+    // loop variable is the SLOT, not the x - `for (slot = 0; slot < 10;
+    // ++slot)` with the x as a derived, linear-function-test-replaced
+    // induction variable, which emits `xor ebx,ebx` + `lea edx,[ebx+0xc9]`
+    // where the old x-stepped spelling emitted `mov ebx,0xc9` + `push ebx`.
+    // That rewrite reproduces retail's loop bodies EXACTLY and fixes the
+    // ecx/edx parity of the following temps, but on its own it was measured
+    // NEGATIVE three separate times (88.2908 against 88.3182, operands
+    // reversed 88.2908, x carried in the for-update 88.1660) because it
+    // removes front-end mass and `budget = 2 * cb(caller)`. It only becomes a
+    // win once the constructor's inline-candidate site count is right AND the
+    // mass it costs is given back: the named `musicX`/`effectsX` per iteration
+    // is that mass. Measured on top of the registration guard: bare slot-IV
+    // 97.6868, slot-IV + a named x 98.1326, + a named id as well 98.1326, and
+    // the same plateau under 2..12 dead-store pad statements, so this spelling
+    // sits inside the window rather than on its edge (16 pad statements
+    // 97.7430). The twin in combatoptionswindow.cpp carries the same form.
+    //
+    // RE-MEASURED 2026-08-14 after the family's other three constructors
+    // closed, in case their fixes had moved this budget: unchanged, 88.26%
+    // -> 88.24%, so the rewrite still costs exactly what it cost. Two other
+    // leads were ruled out at the same time. The DC roster for this
+    // compiland was re-checked for a carcassed helper of the kind that paid
+    // twice in combatoptionswindow - there is none left; convertID2HelpID
+    // and UpdateSystemOptions are both already spelled as the header
+    // inlines they are. And the divergence is NOT one-directional
+    // starvation: the reserve expansion CALLS size() where retail inlines
+    // it, but a few statements later the y=87 label's push_back is expanded
+    // INLINE here where retail calls vector<widget*>::insert. The budget is
+    // consumed in source order and we are out of PHASE with retail rather
+    // than uniformly short of it, so the fix has to be real missing
+    // statements - and nothing in the retail body evidences any.
+    //
+    // 2026-08-14, third pass. One real fix landed and one new hard datum.
+    // FIXED (88.2634 -> 88.3182): `bPrefsChanged` moved into the member
+    // initializer list. Retail stores `mov byte [esi+0x60],0` BEFORE the
+    // compiler's `mov [esi],vtbl`; a body assignment can only emit it after.
+    // Same lever that fixed TResourceDisplay's store order. Measured all four
+    // placements: bPrefsChanged-only in the list 88.3182, base 88.2634,
+    // quickCombatSave-only 88.1399, both 88.1198, body order swapped 88.1125 -
+    // so quickCombatSave genuinely belongs in the BODY and bPrefsChanged in
+    // the list, which is also the only combination that matches retail's
+    // member/vptr/member sandwich.
+    // The reserve expansion's missing out-of-line `call 0x404140` (the empty
+    // std::vector<widget*>::_Destroy) is SOLVED in mainmenu.cpp, and the
+    // starting-budget reading recorded here was right in direction but wrong in
+    // cause: it is not a smaller caller IL, it is the /Ob2 budget DIVISOR.
+    // `reserve` is candidate site k=0, so its interior gets
+    // (2*cb_ctor - cb_reserve)/n, and retail's constructor carries MORE
+    // inline-candidate call sites n than ours. Titrated with the xx_nop probe
+    // (k byte-inert free calls appended to the body): this constructor wants
+    // exactly TWO more sites - k=0 88.3182, k=1 89.8642, k=2 97.1839, k=3
+    // 95.8290, k=4 84.6273, k=6 77.0523. That +8.87 is the single largest
+    // available move on this function and it is NOT reachable by converting the
+    // push_backs: all 41 of them to insert(end(), x) is +41 sites and lands at
+    // 86.28, and a pointer local alone is 87.89. Do NOT re-test pragmas or
+    // vector rebinding - see mainmenu.cpp for the dead-end ledger.
+    // SUPPLIED 2026-08-14 (88.3182 -> 97.6237, i.e. PAST the xx_nop ceiling):
+    // the two sites are the hoisted-first registration guard at the bottom of
+    // this body. See the note there for the placement law and the ladder.
+    // Rejected +2 spellings, all measured the same day, because
+    // insert(end(), x) is NOT byte-neutral at these particular sites even
+    // though it is in mainmenu/gametypewindow/quickherowindow: the two
+    // slider-loop push_backs 88.1531, the first two top-level push_backs
+    // 87.7930, the last two 94.2323, the last two behind a pointer local
+    // 94.6031, the last one alone 87.4010.
+    // The second /Ob2 axis - the caller's own cb, which sets budget = 2 * cb -
+    // was swept here too, as pad statements ahead of `reserve`: at the landed
+    // site count it is flat from 0 to 8 statements (97.6237), dips at 16
+    // (97.2341), peaks at 24 (97.7860) and collapses past 40 (88.9218), and
+    // every k>=1 column of that sweep is capped below the k=0 one. Unlike
+    // gametypewindow, where mass+sites together reached exact, there is no
+    // (mass, sites) cell here that beats the slot-IV spelling below.
+    //
+    // 2026-08-14, RE-TITRATED AT THE LANDED SPELLING, single-step this time.
+    // The remaining residual is the same one levelupwindow carries: the LAST
+    // `Widgets.push_back`'s inlined `insert` calls `size()` where retail
+    // expands it (`_First==0 ? 0 : (_Last-_First)>>2`), and everything after
+    // that in the grow path is one divergence propagating through registers.
+    // It is a pure MASS wall - the window is 7..8 pad units (98.2455), with 5
+    // and 6 at 97.7430, 9 at 98.2163 and 10+ collapsing to 89.3196. That
+    // 98.2455 cell is +0.11 over the landed 98.1326.
+    // NO HONEST SUPPLY FOUND, and two informative negatives:
+    //   - Naming widgets in locals (the spelling that carried levelupwindow's
+    //     mass) DOES move cb here and reaches the ceiling at 19..21 names -
+    //     all 19 buttons 98.2455, the 6 checkboxes + 13 texts 98.2455, all
+    //     icons + texts 98.2455, 22..25 names 98.2163, all 40 names 89.3196.
+    //     But it is mass BY ACCIDENT, not reconstruction: at any of those
+    //     cells the frame gains a spurious local and every slot below
+    //     [ebp-0x10] shifts by 4 against retail. Higher fuzzy score, worse
+    //     structure - do not land it.
+    //   - Binding each `GetWidget(id)` to a `widget*` local before the
+    //     `send_message` (the lever that moved TLevelUpWindow::WindowHandler)
+    //     is EXACTLY byte-flat here at all 46 sites, and negative at every
+    //     partial count (4 -> 96.97, 8 -> 96.09, 12 -> 95.08, 24 -> 85.67).
+    //     Naming a value that is already a temp adds no front-end mass;
+    //     splitting `push_back(new X(...))` into two statements does.
+    // The DC xref census for this constructor otherwise MATCHES ours exactly
+    // once the Dreamcast platform delta is subtracted (DC has no window-scroll
+    // group: DC 16 buttons / 12 texts / 12 TTextResource::operator[] / 25
+    // GetWidget / 24 send_message against our 19 / 13 / 13 / 27 / 26). The one
+    // real disagreement is the registration guard - DC records begin x1 and
+    // end x1, i.e. no guard - but the guard is worth +9.3 here and is
+    // therefore standing in for two sites retail has and the DC port does not.
+    for (int musicSlot = 0; musicSlot < 10; musicSlot++) {
+        int musicX = 29 + musicSlot * 19;
         Widgets.push_back(new iconWidget(
-            musicX, 359, 18, 36, slot + MUSIC_VOLUME_0_ID, "syslb.def",
+            musicX, 359, 18, 36, musicSlot + MUSIC_VOLUME_0_ID, "syslb.def",
             0, 0, 0, 0, 0x10));
-        slot++;
     }
 
-    slot = 0;
-    for (int effectsX = 29; effectsX < 219; effectsX += 19) {
+    for (int effectsSlot = 0; effectsSlot < 10; effectsSlot++) {
+        int effectsX = 29 + effectsSlot * 19;
         Widgets.push_back(new iconWidget(
-            effectsX, 425, 18, 36, slot + EFFECTS_VOLUME_0_ID, "syslb.def",
-            0, 0, 0, 0, 0x10));
-        slot++;
+            effectsX, 425, 18, 36, effectsSlot + EFFECTS_VOLUME_0_ID,
+            "syslb.def", 0, 0, 0, 0, 0x10));
     }
 
     Widgets.push_back(new button(28, 77, 46, 32,
@@ -161,11 +278,37 @@ TSystemOptionsWindow::TSystemOptionsWindow()
         282, 215, 182, 24, gpGeneralText->GetText(578), "medfont.fnt",
         font::PRIMARY, -1, 4, 0, 8));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
-        if (*it)
-            AddWidget(*it, -1);
-        else
-            MemError();
+    // The registration guard is this constructor's /Ob2 site-count knob, and
+    // it is worth 88.3182 -> 97.6237 (measured 2026-08-14). Mechanism, in the
+    // terms of docs/vc6/inliner.md and mainmenu.cpp: every candidate call site
+    // in the body divides the budget handed to the sites BEFORE it
+    // (`budget / (n - k)`), so the widget list's LAST push_back - the one whose
+    // interior retail leaves as an out-of-line `insert` - only starves if the
+    // body carries more candidate sites AFTER it. Placement law, swept with the
+    // xx_nop probe: two free sites are byte-flat at 88.3182 anywhere before the
+    // last push_back (before `reserve`, straight after it, and after each of
+    // the widget groups) and jump to 97.1811 the moment they sit after it. Two
+    // vector calls on `Widgets` here are exactly that pair: `begin()` for the
+    // hoisted `first`, then `begin()` and `end()` again in the loop. Hoisting
+    // `first` is not cosmetic - it also fixes a `begin()`/`end()` load
+    // transposition at the loop head that the bare
+    // `if (Widgets.begin() != Widgets.end())` guard leaves behind (97.1779),
+    // which is why this spelling beats the xx_nop ceiling. Measured neighbours:
+    // this form 97.6237, the same without the braces around the `for` 97.1779,
+    // as a `while` 97.1779, `if (!Widgets.empty())` 89.0517 (+1 with a byte
+    // cost), `Widgets.size() != 0` 89.0517, `first` also used as the loop
+    // initialiser 89.8628 (a clean +1 - the second `end()` is CSE-folded), an
+    // index loop over `size()`/`operator[]` 88.2661, and a hoisted `last`
+    // 87.8395. Adding sites past this pair regresses exactly as the ladder
+    // predicts: +1 more 95.8281, +2 more 84.6255.
+    widget** first = Widgets.begin();
+    if (first != Widgets.end()) {
+        for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+            if (*it)
+                AddWidget(*it, -1);
+            else
+                MemError();
+        }
     }
 
     for (int music = MUSIC_VOLUME_0_ID; music <= MUSIC_VOLUME_9_ID; ++music)

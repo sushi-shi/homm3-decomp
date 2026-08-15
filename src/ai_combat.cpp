@@ -241,7 +241,6 @@ long type_monster_data::get_spell_damage(SpellID spell, const hero* casting_hero
 // split-exit duplicates the epilogue), a `dealt` local seeded from the
 // parameter and if/else-assigned (99.91 - one copy short), and merely
 // adding the else to the original two-return form (no change).
-// E:\gamedcs\ai_combat.cpp:148
 VA(0x00423ea0, 0x36)  // anchor-global, dc 0x29dec
 long type_monster_data::take_damage(long damage)
 {
@@ -268,7 +267,6 @@ long type_monster_data::take_damage(long damage)
 // from NewmapCell::get_special_terrain and disables spellcasting without
 // assigning a magic-terrain mode. The Cursed Ground mode also carries
 // retail's pre-SoD ruleset gate.
-// E:\gamedcs\ai_combat.cpp:172
 VA(0x00423ee0, 0x233)  // anchor-bracket, dc 0x29e2c
 type_AI_combat_data::type_AI_combat_data(const hero* new_hero, const armyGroup* new_army, double base_modifier, const hero* _enemy_hero, const town* enemy_town, NewmapCell* map_cell)
 {
@@ -345,7 +343,6 @@ inline type_speed_catagory type_AI_combat_data::get_catagory(
 // E:\gamedcs\ai_combat.cpp:221
 // Retail has no out-of-line get_catagory row: the helper below expands into
 // this function and OPT:REF removes its body.
-// E:\gamedcs\ai_combat.cpp:221
 VA(0x00424120, 0x66E)  // dc-callgraph unique, dc 0x29f58
 void type_AI_combat_data::initialize_creatures(double base_modifier, const hero* enemy_hero)
 {
@@ -441,7 +438,6 @@ void type_AI_combat_data::initialize_creatures(double base_modifier, const hero*
 // two zero stores, and the dword-pair `built[0]&m[0]|built[1]&m[1]`
 // spelling the three masks used to need (the masks are bitNumber slots,
 // so the __int64 form now spells the same and/and/or shape directly).
-// E:\gamedcs\ai_combat.cpp:332
 VA(0x00424790, 0xE5)  // dc-callgraph unique, dc 0x2a470
 void type_AI_combat_data::check_wall_archery_penalty(const town* enemy_town)
 {
@@ -502,7 +498,6 @@ type_speed_catagory type_AI_combat_data::get_catagory(TCreatureType creature, lo
 // separate descending `for` with `Dismiss(i++)` (96.57). An explicit
 // two-variable `for (long i = 0, left = N; left; i++, left--)` also
 // reaches 100.0 but says the same thing less plainly.
-// E:\gamedcs\ai_combat.cpp:404
 VA(0x00424880, 0xDB)  // anchor-global, dc 0x2a588
 void type_AI_combat_data::adjust_army(unsigned char dismiss_hero)
 {
@@ -592,7 +587,6 @@ inline void type_AI_combat_data::get_chain_lightning_value(type_spell_choice& ch
 // 99.0% MAX came from spelling get_total as `monsters.size()` through
 // begin()/end(), which costs six other functions their exactness (it
 // loses the _M_start CSE), so the direct spelling is kept.
-// E:\gamedcs\ai_combat.cpp:525
 VA(0x00424bf0, 0x123)  // anchor-global, dc 0x2a7e4
 void type_AI_combat_data::get_area_value(type_spell_choice& choice, const type_AI_combat_data& defender, long damage, long extra_targets) const
 {
@@ -613,7 +607,6 @@ void type_AI_combat_data::get_area_value(type_spell_choice& choice, const type_A
 // E:\gamedcs\ai_combat.cpp:553
 // The value-side mirror of cast_damage_spell, down to the same
 // five-arm jump table (0x42519c) over spells 0x13..0x17.
-// E:\gamedcs\ai_combat.cpp:553
 VA(0x00424d20, 0x290)  // anchor-global, dc 0x2a868
 void type_AI_combat_data::get_damage_spell_value(type_spell_choice& choice, const type_AI_combat_data& defender) const
 {
@@ -652,7 +645,6 @@ void type_AI_combat_data::get_damage_spell_value(type_spell_choice& choice, cons
 // through the total-hit-point update and reproduces retail's kill/survive
 // join. Target-first and loop-counter-lifetime probes regressed or were
 // byte-inert and were reverted.
-// E:\gamedcs\ai_combat.cpp:599
 VA(0x00424fb0, 0x145)  // anchor-global, dc 0x2a938
 void type_AI_combat_data::cast_chain_lightning(type_spell_choice& choice, type_AI_combat_data& defender, long damage) const
 {
@@ -677,7 +669,6 @@ void type_AI_combat_data::cast_chain_lightning(type_spell_choice& choice, type_A
 // EXACT 2026-08-08: the whole residual was the inlined take_damage,
 // closed by spelling its return value as the overwritten PARAMETER
 // (see take_damage). No edit in this body.
-// E:\gamedcs\ai_combat.cpp:629
 VA(0x00425100, 0x15A)  // anchor-global, dc 0x2a9e8
 void type_AI_combat_data::cast_area_effect(type_spell_choice& choice, type_AI_combat_data& defender, long damage, long extra_targets) const
 {
@@ -698,7 +689,6 @@ void type_AI_combat_data::cast_area_effect(type_spell_choice& choice, type_AI_co
 // E:\gamedcs\ai_combat.cpp:658
 // EXACT 2026-08-08: the whole residual was the inlined take_damage
 // (see take_damage). No edit in this body.
-// E:\gamedcs\ai_combat.cpp:658
 VA(0x00425260, 0x180)  // anchor-global, dc 0x2aa7c
 void type_AI_combat_data::cast_damage_spell(type_spell_choice& choice, type_AI_combat_data& defender) const
 {
@@ -728,7 +718,6 @@ void type_AI_combat_data::cast_damage_spell(type_spell_choice& choice, type_AI_c
 // The carcass tied this row to has_creature; the body is the two-arg
 // get_mass_damage_value (see the file header's NAME CORRECTION).
 // has_creature has no retail row of its own.
-// E:\gamedcs\ai_combat.cpp:711
 VA(0x004253e0, 0x12F)  // corroborates (hd-crossbuild + ida + body), dc 0x2ab88
 long type_AI_combat_data::get_mass_damage_value(type_spell_choice& choice, const hero* casting_hero) const
 {
@@ -817,7 +806,6 @@ inline void type_AI_combat_data::get_enchantment_value(type_spell_choice& choice
 // it. Register-homing family. Tried and rejected: storing
 // choice.value before choice.target in the else-if (89.4%, and it
 // costs the first pass its exactness), and hoisting get_total().
-// E:\gamedcs\ai_combat.cpp:792
 VA(0x00425510, 0x382)  // corroborates (hd-crossbuild + ida), dc 0x2ad58
 void type_AI_combat_data::get_enchantment_value(type_spell_choice& choice, type_AI_combat_data& defender)
 {
@@ -856,7 +844,6 @@ void type_AI_combat_data::get_enchantment_value(type_spell_choice& choice, type_
 // E:\gamedcs\ai_combat.cpp:844
 // Retail inlines type_monster_data::get_enchantment_value AND
 // type_monster_data::cast_enchantment into both arms.
-// E:\gamedcs\ai_combat.cpp:844
 VA(0x004258a0, 0x269)  // corroborates (hd-crossbuild + ida), dc 0x2ae60
 void type_AI_combat_data::cast_enchantment(type_spell_choice& choice, const hero* casting_hero, unsigned char increase)
 {
@@ -886,7 +873,6 @@ void type_AI_combat_data::cast_enchantment(type_spell_choice& choice, const hero
 // is 0xa0 vs retail's 0xb4 because retail tail-DUPLICATES four
 // epilogues our SP3 CL merges (the merged-return residual class
 // already recorded for path.obj / kbwin AppWndProc).
-// E:\gamedcs\ai_combat.cpp:871
 VA(0x00425b10, 0xB4)  // anchor-callee, dc 0x2af04
 void type_AI_combat_data::cast_enchantment(type_spell_choice& choice, type_AI_combat_data& defender)
 {
@@ -934,7 +920,6 @@ void type_AI_combat_data::cast_summoning(type_spell_choice* choice)
 // Reconstructed from the complete retail body. The Dreamcast contributes
 // the local/helper names and the by-reference signature only; spell gates,
 // dispatch classes, loop directions and all arithmetic come from retail.
-// E:\gamedcs\ai_combat.cpp:965
 VA(0x00425bd0, 0x593)  // anchor-global, dc 0x2b094
 void type_AI_combat_data::cast_spell(
     type_AI_combat_data& defender,
@@ -1075,7 +1060,6 @@ long type_AI_combat_data::inflict_catagory_damage(long damage, type_speed_catago
 // EXACT 2026-08-08: retail's spill-and-reload of take_damage's
 // argument is what the PARAMETER-as-return-value spelling emits (see
 // take_damage); it was never a register-homing cap. No edit here.
-// E:\gamedcs\ai_combat.cpp:1122
 VA(0x00426170, 0x131)  // anchor-global, dc 0x2b408
 long type_AI_combat_data::inflict_melee_damage(long damage, long start, long speed_limit)
 {
@@ -1118,7 +1102,6 @@ void type_AI_combat_data::kill()
 // EXACT out of line and in all measured nested copies: kill() owns the
 // zeroing of total_hit_points. Repeating that store here is byte-inert in
 // this standalone body but survives in simulate_combat's deeper expansions.
-// E:\gamedcs\ai_combat.cpp:1166
 VA(0x00426300, 0x8D)  // anchor-global, dc 0x2b5ec
 void type_AI_combat_data::inflict_damage(long damage, long blocker_speed)
 {
@@ -1213,23 +1196,46 @@ inline type_AI_combat_data::type_AI_combat_data(
 }
 
 // E:\gamedcs\ai_combat.cpp:1270
-// Residual (94.8%): INLINER-DEPTH, the same class as simulate_combat.
+// Residual (94.7945%): INLINER-DEPTH, the same class as simulate_combat.
 // 79.6 -> 94.8 on 2026-08-08 when get_total became a ternary; what is
 // left is a single /Ob2 budget divergence. `kill()` inlines twice here
 // and retail expands get_total inside BOTH copies (depth 2); our CL's
 // budget runs out after the first, so the second arm keeps a real
 // `call ?get_total@...` and every register downstream of it renames.
-// Nothing in this body causes it - the register naming through the
-// float arms already agrees instruction for instruction. Tried and
-// rejected on the callee: a no-local ternary get_total and an
+// `predict-inline` names exactly that one row: base 5 out-of-line calls
+// vs retail 4, UNDER-inline `get_total` x1 and nothing else.
+// Tried and rejected on the callee: a no-local ternary get_total and an
 // unsigned-cast-free one (both identical here), a doubly-nested
-// ternary (catastrophic, 75.5). Tried and rejected here: hoisting
-// `ratio` above the early-outs (94.79 - a third of a slot, and it
-// declares a variable before the guards that can skip it), moving
+// ternary (catastrophic, 75.5). Tried and rejected here: moving
 // kill() below the ratio computation (89.30), folding ratio into the
-// argument expression (93.42), naming the damage as well (no change),
-// and inverting the compare so the else arm leads (93.80).
-// E:\gamedcs\ai_combat.cpp:1270
+// argument expression (93.42), and inverting the compare so the else
+// arm leads (93.80).
+//
+// 2026-08-14, THE BUDGET IS TITRATED AND THE SLOT IS BYTE-PROVEN.
+// Dead-store mass ahead of the body is byte-flat 0..38 units and steps to
+// 99.9657 at 40 (plateau through 128, decaying past 192): this body sits on
+// the RE'd budget's LOWER CLAMP, `clamp(2*cb,1000,35000)`, so no small
+// amount of caller mass moves it at all - the step is where 2*cb finally
+// clears 1000. At mass 40 the ONLY surviving row is the `ratio` slot:
+// retail spills it to a fresh [ebp-0x8] while ours reuses the dead
+// `defender` parameter slot [ebp+0x8], and DECLARING `ratio` ONCE AT
+// FUNCTION SCOPE (rather than a fresh one per arm) is exactly the
+// 99.9657 -> 100.0000 step. That spelling is landed below: it is retail's,
+// it costs nothing, and it is +0.0342 on its own (94.7603 -> 94.7945).
+// Position within the function is irrelevant - before the guards or after
+// them both measure 94.7945 at mass 0 and 100.0000 at mass 40 - so the form
+// after the guards is kept. `long damage` named as well is byte-flat;
+// `double ratio` regresses to 94.6747.
+// WHAT THE MASS UNIT IS (new, and it generalises): `int padN = N;` alone is
+// byte-flat to n=80, and `padv = <const>` repeated is byte-flat to n=80 -
+// C1 dead-store-eliminates both BEFORE the inliner measures `cb`. Only the
+// SELF-ASSIGNMENT survives to be counted: `padv = padv;` x80 reaches the
+// same 99.9657, and `int padN = N; padN = padN;` x40 does it with half the
+// statements, so distinct locals and assignment nodes both feed `cb`.
+// Titration scaffolding is NOT landed - the 40 units have no real-source
+// counterpart in a sixteen-statement body, and every realistic spelling
+// measured (naming either damage, float or long, at either scope) is
+// byte-flat at 94.7945. This function is budget-capped, not mis-spelled.
 VA(0x004264d0, 0x2ED)  // anchor-global, dc 0x2b948
 void type_AI_combat_data::do_general_melee(type_AI_combat_data& defender)
 {
@@ -1239,13 +1245,14 @@ void type_AI_combat_data::do_general_melee(type_AI_combat_data& defender)
         return;
     if (target == 0.0)
         return;
+    float ratio;
     if (attacker > target) {
         defender.kill();
-        float ratio = target / attacker + 0.05;
+        ratio = target / attacker + 0.05;
         inflict_damage(static_cast<long>(ratio * target), 0);
     } else {
         kill();
-        float ratio = attacker / target + 0.05;
+        ratio = attacker / target + 0.05;
         defender.inflict_damage(static_cast<long>(ratio * attacker), 0);
     }
 }
@@ -1261,7 +1268,6 @@ void type_AI_combat_data::do_general_melee(type_AI_combat_data& defender)
 // residual is bounded to stack coloring plus constructor/destructor call
 // identity: retail calls the exact type_monster_vector wrapper for both local
 // copies, while this compile expands it to the underlying vector copy call.
-// E:\gamedcs\ai_combat.cpp:1301
 VA(0x004267c0, 0x3FD)  // anchor-global, dc 0x2bad8
 bool type_AI_combat_data::choose_melee(
     const type_AI_combat_data& enemy,
@@ -1347,7 +1353,6 @@ bool type_AI_combat_data::choose_melee(
 // depth. The bool results mean "choose melee", not the former reconstructed
 // "shoot" names. Removing inflict_damage's redundant pre-kill zero then
 // makes all four damage arms and their shared tails byte-identical.
-// E:\gamedcs\ai_combat.cpp:1363
 VA(0x00426bc0, 0x224)  // anchor-global, dc 0x2bc40
 void type_AI_combat_data::simulate_combat(type_AI_combat_data& defender)
 {
@@ -1391,7 +1396,6 @@ void do_eagle_eye(hero* winner, hero* loser)
 // body walks slot by slot - armies[i] at [esi], numTroops[i] at
 // [esi+0x1c], esi stepping by 4 over seven iterations (0x426e36
 // .. 0x426e89) - i.e. the losing side's stacks.
-// E:\gamedcs\ai_combat.cpp:1424
 VA(0x00426df0, 0xED)  // corroborates (hd-crossbuild + ida), dc 0x2bd6c
 void create_skeletons(const hero* current_hero, const armyGroup* dead_army, armyGroup* destination)
 {
@@ -1444,7 +1448,18 @@ void create_skeletons(const hero* current_hero, const armyGroup* dead_army, army
 // 79.7256). Register hints, named defender aliases, declaration order and a
 // bottom-tested loop are byte-inert; a separate inline do_eagle_eye helper
 // regresses to 70.8963.
-// E:\gamedcs\ai_combat.cpp:1440
+// 2026-08-14, the DC LOCAL census (dc 0x2be54) names retail's two
+// function-scope locals and their declaration ORDER: `defender_troop_count`
+// (T_SHORT, sp+0x16) FIRST, then `retreated` (T_UCHAR, sp+0x17) - which is
+// this body's `surrendered`. That is the shape the two scheduling slots above
+// want: a short bound off `defender` declared ahead of the flag is what puts
+// `mov edi,[ebp+0x8]` in front of the flag's zero store. It is NOT actionable
+// as it stands, and the reason is worth recording so the row is not
+// re-opened: retail's x86 body has no second stack local at all - instruction
+// counts are EQUAL at 164 and [ebp-1] is the only byte-sized frame slot - so
+// on this build the troop count was folded into a value already computed. The
+// census is Dreamcast-side evidence for the declaration ORDER only; adding a
+// real short here adds code retail does not have.
 VA(0x00426ee0, 0x1D8)  // anchor-global, dc 0x2be54
 void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, const town* enemy_town)
 {
@@ -1522,7 +1537,6 @@ void type_AI_combat_data::do_aftermath(type_AI_combat_data* defender, const town
 // EH-bearing: the two stack-local type_AI_combat_data objects give the
 // function a /GX frame (push -1 / push <ehfuncinfo> / mov eax,fs:[0])
 // and the two `mov [ebp-4], state` writes between the constructors.
-// E:\gamedcs\ai_combat.cpp:1511
 VA(0x004270c0, 0x149)  // anchor-global, dc 0x2c004
 unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero, armyGroup* defending_army, town* defending_town, NewmapCell* cell)
 {
@@ -1544,7 +1558,6 @@ unsigned char AI_quick_combat(hero* attacking_hero, hero* defending_hero, armyGr
 
 // E:\gamedcs\ai_combat.cpp:1539
 // EH-bearing, same shape as AI_quick_combat.
-// E:\gamedcs\ai_combat.cpp:1539
 VA(0x00427210, 0x113)  // anchor-global, dc 0x2c140
 void AI_auto_combat(hero* attacking_hero, hero* defending_hero, armyGroup* attacking_army, armyGroup* defending_army, const town* defending_town, NewmapCell* cell)
 {
@@ -1572,7 +1585,12 @@ void AI_auto_combat(hero* attacking_hero, hero* defending_hero, armyGroup* attac
 // that integer happens to equal VA 0x4c4b40 inside game.obj; honest source
 // emits an integer immediate. The split data symbols at 0x6604d0/+4 are the
 // open aggregate-DATA-size class recorded in decision point P0.2.
-// E:\gamedcs\ai_combat.cpp:1565
+// RANKER VERDICT 2026-08-14, upgrading the earlier "1 real / 3 artefact"
+// reading to ZERO REAL of 245 rows: the four differing rows are the unwind
+// label `push 0x8`, the two `add esi,0x4c4b40` immediates the delinker resolved
+// as `game_87d30_sub00_c4390+0x7b0`, and `mov edx,[8*ecx]` where retail carries
+// `data_2604d4` at addend 0 against our `_defense_estimates+4` - a symbol+addend
+// split, not a displacement. 99.9592 is not reachable from source.
 VA(0x00427330, 0x318)  // corroborates (hd-crossbuild + ida), dc 0x2c27c
 long AI_value_of_combat(const hero* attacking_hero, const hero* defending_hero,
                         const armyGroup& defending_army,
@@ -1667,7 +1685,6 @@ long AI_value_of_combat(const hero* attacking_hero, TCreatureType type, long siz
 // LOCATED (hd-crossbuild + ida): fastcall, ecx = hero; forwards
 // &hero->army (hero + 0x91) to armyGroup::get_AI_value - i.e. the
 // two-argument overload inlined (/Ob2 single-call-site).
-// E:\gamedcs\ai_combat.cpp:1666
 VA(0x00427650, 0x33)  // corroborates (hd-crossbuild + ida), dc 0x2c614
 long AI_approximate_strength(const hero* current_hero)
 {
@@ -1676,7 +1693,6 @@ long AI_approximate_strength(const hero* current_hero)
 
 // E:\gamedcs\ai_combat.cpp:1674
 // LOCATED (hd-crossbuild + ida): same body with the group in edx.
-// E:\gamedcs\ai_combat.cpp:1674
 VA(0x00427690, 0x2F)  // corroborates (hd-crossbuild + ida), dc 0x2c628
 long AI_approximate_strength(const hero* current_hero, const armyGroup* current_army)
 {
@@ -1758,7 +1774,6 @@ type_monster_vector::type_monster_vector(const type_monster_vector& other)
 // (`last`), naming the difference (`count`, signed and unsigned), and
 // dropping the unsigned cast - all four leave the split-if shape and
 // score 83.57 unchanged.
-// E:\gamedcs\ai_combat.h:255
 VA(0x00427750, 0x21)  // anchor-global, dc 0x2c6ac
 long type_AI_combat_data::get_total() const
 {

@@ -97,7 +97,14 @@ void VideoSoundOnOff()
 // `gBinkX << 1`, and `(unsigned char*)(screenBitmap->map + gBinkX) +
 // Pitch*gBinkY` (the unsigned-short-index form that supplies the
 // scale as pointer arithmetic). CL-generation-capped.
-// E:\gamedcs\smackmgr.cpp:105
+// RANKED 2026-08-14: 88.9254 is 5 REAL rows of 67 and 0 artefact, and they are
+// exactly the scheduling of the `2 * gBinkX` term - retail loads gBinkX into
+// ESI before `screenBitmap`, folds it with `lea edx,[edx+2*esi]` and adds
+// `map` last (`Pitch*gBinkY + 2*gBinkX + map`); our CL adds `map` first and
+// folds the scaled term after. Nine more spellings measured, all byte-flat at
+// 88.9254: all four term orders of the three-way sum, a named `unsigned char*`
+// base local, a named int offset local, `gBinkX * 2` and `gBinkX + gBinkX`.
+// C2 reassociates every one of them identically. Confirms CL-generation-capped.
 VA(0x005971f0, 0xD9)  // anchor-global, dc 0x14ac34
 void VideoRealignBuffers()
 {
@@ -148,7 +155,6 @@ void VideoRealignBuffers()
 // aborted (byte-identical), split `int vw; int vh;` (identical),
 // int[2] and plain int locals for the origin (earlier lane). `vh = h`
 // before `vw = w` is worth +0.03 and is the form kept.
-// E:\gamedcs\smackmgr.cpp:130
 VA(0x005972d0, 0x29D)  // anchor-global, dc 0x14ac38
 int VideoPlay(int id, int x, int y, int w, int h)
 {
@@ -235,7 +241,6 @@ stop_playback:
 // E:\gamedcs\smackmgr.cpp:143
 // DC's stub is a plain void(); retail forwards eight arguments to
 // ShowVideo (the bink arm drops the last one).
-// E:\gamedcs\smackmgr.cpp:143
 VA(0x00597570, 0x75)  // anchor-global, dc 0x14ac3c
 void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 {
@@ -277,7 +282,6 @@ void VideoOpen(int id, int x, int y, int w, int h, int a6, int a7, int a8)
 // nonzero from `dec eax`, and neither `continue`, an explicit `goto
 // top_of_drain`, nor dropping the local mirror for the bare global
 // (95.85%) stops the propagation. NOT source-addressable.
-// E:\gamedcs\smackmgr.cpp:156
 VA(0x005975f0, 0xE1)  // anchor-global, dc 0x14ac40
 void VideoClose()
 {
@@ -444,8 +448,16 @@ unsigned char VideoPlaying()
 // sequences AGREE (23/23), so nothing structural is left; a sweep of
 // the first-rect assignment orders moved it 89.36 -> 89.63 and `x, y,
 // w, h` is the measured optimum (h,w,x,y and x,h,w,y are the worst at
-// 89.35).
-// E:\gamedcs\smackmgr.cpp:328
+// 89.35). 2026-08-14: the bink arm's induction base is NOT reachable
+// from the rect expression - a rect pointer local, a walking pointer,
+// a rect reference, and a hoisted `rects` base all compile BYTE
+// IDENTICAL to the subscripted form (89.6347 each); only per-field
+// locals are worse (85.19). Retail's `lea ecx,[esi+0x44]` with loads
+// at -4/0/+4/+8 versus our `[esi+0x40]` with 0/+4/+8/+0xc is the same
+// C2 induction-bias-to-the-second-field choice that palette.cpp's
+// TPalette24 turned out to expose - but there the bias flipped when
+// the loop stopped using a pointer local, and here there is no such
+// handle because the index IS already the induction variable.
 VA(0x005979d0, 0x294)  // anchor-global, dc 0x14ac60
 void VideoDrawRects()
 {

@@ -112,22 +112,21 @@ VA_COMPGEN(0x0044ed20, 0x21, SCALAR_DELETING_DTOR, Bitmap24Bit)
 // A zero compressed-size argument means the source already contains the
 // complete 24-bit image, so retail falls back to w*h*3 rather than skipping
 // allocation. The five-block graph is exact after restoring that behavior.
-// Residual: VC6 schedules the independent Height/ImageSize/vptr stores in a
-// different order; meaningful field-order spellings were swept, with this
-// canonical order retaining the 99.51% high-water mark. Re-measured
-// 2026-08-13: retail's order among the three scheduled stores is exactly the
-// reverse of ours (Height, ImageSize, vptr against vptr, ImageSize, Height),
-// and writing the source in that order - `Width; Height; ImageSize;` - is
-// strictly worse at 94.5714%.
-// E:\gamedcs\bitmap24.cpp:64
+// EXACT since 2026-08-14. The old 99.51% note blamed VC6's scheduling of the
+// independent Height/ImageSize/vptr stores. It was not scheduling: retail
+// stores Width, Height and ImageSize BEFORE the compiler's vptr store, which
+// only a member INITIALIZER LIST can produce - a body assignment is always
+// emitted after the vptr. DataSize genuinely stays in the body (it is the one
+// store retail puts after the vptr, inside the `size ? :` branch).
+// Measured: this spelling 100.0; ImageSize alone in the list 99.5079 (= the old
+// plateau, i.e. that member was never the one that mattered); Width/Height in
+// the list without ImageSize 94.5714; all four in the list 74.1587.
 VA(0x0044ed50, 0xAA)
 Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,
                          const unsigned char* source, int size)
-    : resource(name, RESOURCE_TYPE_BITMAP24)
+    : resource(name, RESOURCE_TYPE_BITMAP24),
+      ImageSize(w * h * 3), Width(w), Height(h)
 {
-    ImageSize = w * h * 3;
-    Width = w;
-    Height = h;
     DataSize = size ? size : ImageSize;
     data = new unsigned char[DataSize];
     if (data)
@@ -137,7 +136,6 @@ Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,
 // Dreamcast CodeView gives filename's array type as exactly char[261]
 // (type 0x2894); retail independently proves the resulting 0x10c-byte stack
 // allocation. The earlier 260-byte guess was the sole normalized mismatch.
-// E:\gamedcs\bitmap24.cpp:80
 VA(0x0044ee00, 0xC0)
 Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
     : resource(name, RESOURCE_TYPE_BITMAP24),
@@ -149,7 +147,6 @@ Bitmap24Bit::Bitmap24Bit(const char* name, const char* path)
     importPCXFile(filename);
 }
 
-// E:\gamedcs\bitmap24.cpp:94
 VA(0x0044eec0, 0x22)
 Bitmap24Bit::~Bitmap24Bit()
 {
@@ -157,7 +154,6 @@ Bitmap24Bit::~Bitmap24Bit()
         delete[] data;
 }
 
-// E:\gamedcs\bitmap24.cpp:274
 VA(0x0044efd0, 0x37)
 void Bitmap24Bit::Draw(int sx, int sy, int sw, int sh, Bitmap16Bit* dst,
                        int dx, int dy) const

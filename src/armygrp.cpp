@@ -30,15 +30,30 @@
 #include "misc.h"
 #include "armygrp_split.h"
 
-// Retail's inlined clamp users home low, high and value, then select one
-// of their addresses; returning const int& is codegen-significant. The
-// by-value inputs keep the rating enregistered until the clamp site. The
-// (low,value,high) order is byte-proven by all four users below; this is
-// the armygrp form of the three-operand selector also recovered in
-// ai_tactical.cpp.
-inline const int& armygrp_clamp(int low, int value, int high)
+// E:\gamedcs\includes.h:124/134, the pair quickherowindow.cpp and
+// quicktownwindow.cpp already carry. The DC xref census names it here by
+// COUNT as well as by name: `limit` (dc 0x1ef5c) x2 from
+// TSplitWindow::WindowHandler, x1 from GetMorale and x1 from GetArmyMorale -
+// exactly the four sites below. Retail's inlined clamp users home low, high
+// and value then select one of their ADDRESSES, which is what the reference-
+// returning template does; the by-value `limit` wrapper in front of it keeps
+// the rating enregistered until the clamp site. The (low,value,high) order is
+// byte-proven by all four users. Respelling the former house-coined
+// `armygrp_clamp` as this pair is EXACTLY byte-flat at all four sites
+// (99.9912 / 99.9170 / 98.5654 / 96.5625 unchanged), so it is landed for
+// fidelity, not for score - a forwarding wrapper replaces the call site it
+// wraps and supplies no /Ob2 divisor site.
+template <class T>
+static inline const T& t_limit(const T& minimum, const T& value,
+                               const T& maximum)
 {
-    return value < low ? low : (high < value ? high : value);
+    return value < minimum ? minimum
+                           : (maximum < value ? maximum : value);
+}
+
+static inline int limit(int minimum, int value, int maximum)
+{
+    return t_limit(minimum, value, maximum);
 }
 
 inline const char* armygrp_creature_plural_name(TCreatureType creature)
@@ -177,7 +192,7 @@ void SplitSliderCallback(int state, heroWindow*)
 
 #pragma inline_depth(0)
 static inline void AppendSplitWidget(std::vector<widget*>& widgets,
-                                     widget** position, widget* value)
+                                     widget** position, widget* const& value)
 {
     // Keep insert out of line while allowing this tiny adapter to disappear.
     widgets.insert(position, 1, value);
@@ -185,13 +200,54 @@ static inline void AppendSplitWidget(std::vector<widget*>& widgets,
 #pragma inline_depth()
 
 // E:\gamedcs\armygrp.cpp:90
-// Residual (98.3954%): a background-phase creature snapshot recovers retail's
+// Residual (99.9912%): a background-phase creature snapshot recovers retail's
 // ESI/EDI allocation, and the destination entry's byte-proven back-link is 4.
 // A depth-zero inline append scaffold keeps only the final vector::insert call
 // out of line; all 57 blocks and 25 branches then agree. The remaining deltas
 // are reserve's empty nested-destroy call, one final allocation stack home and
 // EH relocation representation. Keeping the reconstruction-only dialog type
 // source-private preserves initialize_game_data's exact optimizer population.
+// 2026-08-14 (98.4605 -> 99.9789): "reserve's empty nested-destroy call" was
+// the /Ob2 budget DIVISOR, the same wall as the window-constructor family, and
+// this body wants exactly ONE more inline-candidate call site. Titrated with
+// the xx_nop probe before the registration loop: k=0 98.4605, k=1..4 99.9895,
+// flat in mass 0..24 (mass alone is worthless here, and past M=12 it starts
+// eating the site). The honest supply is one `push_back` written as
+// `Widgets.insert(Widgets.end(), x)` - `end()` is the extra candidate - and it
+// measures the same 99.9789 wherever it goes among the last three widgets
+// (StatBar border, its textWidget, the iOk button), so the position of the
+// extra site does not matter, only that it precedes the loop. The iOk button
+// is the one landed, since it makes the two buttons' spellings adjacent.
+// NOT the answer, all measured here: the 3-argument `insert(end(), 1, x)` on
+// that same push_back 76.4394; dropping the AppendSplitWidget adapter for a
+// direct 3-argument insert 75.2777 or for a plain push_back 77.6995 (so the
+// depth-zero adapter is still load-bearing); naming `Widgets` at the adapter
+// call instead of the pointer local 99.9684; a reference local 99.9789.
+// The two instructions that supplying the site left over, and how each closed
+// (99.9789 -> 99.9895 -> 99.9912, i.e. the body is now byte-identical to
+// retail and only the two known non-defects remain):
+//   - the last insert read `Widgets._Last` as `[edi+0x38]`, off `this`, where
+//     retail reads `[ebx+0x8]`, off the &Widgets pointer it keeps in EBX. Fixed
+//     by DECLARING `widgetList` one statement earlier - ahead of the iOk button
+//     rather than between the two buttons - and spelling that button's insert
+//     through it. Naming `Widgets` at either call site puts the address back on
+//     `this` (99.9684); the declaration's position is the whole lever.
+//   - the cancel button's `operator new` result homed at [ebp+0xc], reusing the
+//     slot the insert's value temp had just vacated, where retail keeps it in
+//     [ebp+0x8] - every other widget in the body already agreed on [ebp+0x8],
+//     this was the one that did not. Fixed by taking the adapter's value
+//     parameter as `widget* const&`: by value, the parameter IS the object the
+//     inlined `insert(P, 1, X)` takes its reference to, so the raw pointer and
+//     the reference target coalesce into one slot; by reference the temp is
+//     materialised at the call site and the two stay apart, as in retail.
+//     Naming the button in a local does NOT do it (99.9895), and neither does
+//     swapping the adapter's parameter order (99.9895).
+// What remains is only the delinker's `push 0x0`+`$L24205` against `push 0xb`
+// + `SplitSliderCallback_unwind13` prologue split, which is not a defect and is
+// not scored (~TSplitWindow in this same file carries it at 100.0), plus one
+// trailing alignment nop. The masked asm diff is reloc NAMES only.
+// RANKER VERDICT 2026-08-14: 0 REAL rows of 569, 1 artefact. 99.9912 is not
+// reachable from source - do not re-open it.
 VA(0x00449790, 0x65B)  // anchor-callee, dc 0x4dbb8
 TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
     : CAdvPopup(x2, y2, 0x12a, 0x151, 0x12)
@@ -252,10 +308,10 @@ TSplitWindow::TSplitWindow(int x2, int y2, int thisArmy)
         8, 312, 282, 17, "", "smalfont.fnt", font::PRIMARY,
         8, 1, 0, 8));
 
-    Widgets.push_back(new button(
+    std::vector<widget*>* widgetList = &Widgets;
+    widgetList->insert(widgetList->end(), new button(
         20, 263, 64, 32, DIALOG_RETURN_SPLIT_ACCEPT,
         "iOk6432.def", 0, 1, 1, 0x1c, 2));
-    std::vector<widget*>* widgetList = &Widgets;
     AppendSplitWidget(*widgetList, widgetList->end(), new button(
         214, 263, 64, 30, 0x7801,
         "iCancel.def", 0, 1, 1, 1, 2));
@@ -343,7 +399,7 @@ void armyGroup::SplitArmy(int srcIndex, armyGroup* ag, int destIndex, unsigned c
     if (gpWindowManager->dialogReturn == DIALOG_RETURN_SPLIT_ACCEPT) {
         int maximumTransfer = gpSplitWindow->totalTroops
             - gpSplitWindow->sourceMustKeep;
-        gpSplitWindow->destinationTroops = armygrp_clamp(
+        gpSplitWindow->destinationTroops = limit(
             gpSplitWindow->minimumTransfer,
             gpSplitWindow->destinationTroops,
             maximumTransfer);
@@ -390,7 +446,7 @@ int TSplitWindow::WindowHandler(message* msg)
             switch (msg->codeY) {
             case SPLIT_WIDGET_DESTINATION_ENTRY:
                 destinationTroops = atoi(msg->extraText);
-                destinationTroops = armygrp_clamp(
+                destinationTroops = limit(
                     0, destinationTroops, totalTroops);
                 sourceTroops = totalTroops - destinationTroops;
                 sourceEntry->SetFocus(0);
@@ -399,7 +455,7 @@ int TSplitWindow::WindowHandler(message* msg)
 
             case SPLIT_WIDGET_SOURCE_ENTRY:
                 sourceTroops = atoi(msg->extraText);
-                sourceTroops = armygrp_clamp(0, sourceTroops, totalTroops);
+                sourceTroops = limit(0, sourceTroops, totalTroops);
                 destinationTroops = totalTroops - sourceTroops;
                 destinationEntry->SetFocus(0);
                 // The source-entry arm shares the default slider update.
@@ -594,6 +650,20 @@ const std::bitset<9>& ArmyGrpFn_0044A460()
 // hero bypasses resistance; artifact 0x31 in the field_c bit-10 family
 // when creature trait 0x400 is absent; base
 // chances 1.0/0.8/0.6 minus GetMagicResistanceFactor; floor at 0.
+// DC-CENSUS VERDICT (2026-08-14), and it is a NEGATIVE worth recording because
+// the row looked like a certainty. The census gives this body
+// `hero::IsWieldingArtifact` x11 against the EIGHT sites spelled here, and the
+// residual note below already said retail duplicates four sites we merge - so
+// the shared `check_protection_artifact` label was the obvious missing supply
+// (7 + 4 = 11 exactly). It is not: un-sharing all six pendant arms into their
+// own `IsWieldingArtifact(...) -> return 0.0f` costs 88.5071 -> 84.9089, and
+// un-sharing the three simple arms (berserk / lightning+chain / hypnotize)
+// costs 83.1929. The shared label is strictly closer, so the DC count is a
+// port difference, not a missing site.
+// The census's other row, `IsMindSpell` x1 (E:\gamedcs\SpellDefs.h:345,
+// dc 0x4fd34) against the `field_c >> 10 & 1` test below, also costs: 88.0464
+// as a folded expression AND 88.0464 with the local shift preserved inside the
+// helper, so the 0.46 is the call SITE, not the helper's internals.
 // CURRENT RESIDUAL (88.5071%): retail pushes each shared pendant id before
 // jumping to the common artifact call, while this compile keeps the id in
 // EAX and pushes it at the tail; four zero-return sites merge here but are
@@ -1146,7 +1216,7 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
 // pattern - and the whole block is the INLINE EXPANSION of the
 // accessor claimed at 0x44a460 above, which is why it does not appear
 // here as source.
-// Residual (98.5654%): the (low,value,high) armygrp_clamp form both
+// Residual (98.5654%): the (low,value,high) `limit` form both
 // closes the address-selecting tail and shifts /Ob2's budget so the set()
 // plus all four operator[]/reference assignments now match. All 57 block
 // flows agree. Retail still shrink-wraps EBX past the cursed-ground return
@@ -1155,6 +1225,37 @@ const char* armyGroup::GetArmySizeName(int howMany, int iNameSet)
 // retail's atexit argument names the empty thunk as
 // ArmyGrpFn_0044A460+0x60; the base COFF names the equivalent _$E20 COMDAT
 // at addend zero. No source statement differs there.
+// DC-census verdict (2026-08-14): the census's `armyGroup::HasSomeUndead` x1
+// (dc 0x4eb88 - the member retail emitted and /OPT:REF then removed) against
+// the undead scan spelled inline below is byte-EXACTLY flat at 98.5654 when
+// modelled as a file-local helper, so the inline scan stays. `limit` x1 is the
+// clamp at the tail, now spelled as retail's pair. `town::HasBuilding` x1
+// against `ownerTown->built & bitNumber[TAVERN_ID]` needs town.h's
+// HOMM3_TOWN_OBJ_DECLS declaration - and when town.h opened on 2026-08-14 that
+// promotion turned out to be CONTRA-INDICATED BY RETAIL BYTES, so it is closed
+// here rather than left as a standing follow-up. Two functions carry the same
+// DC `town::HasBuilding` census row and are ALREADY BYTE-EXACT with the
+// predicate spelled inline: armygrp::GetLuck (0x44b2d0, 100.0000,
+// `ownerTown->active & bitNumber[EXTRA_0_ID]`) and
+// ai_combat::check_wall_archery_penalty (0x424790, 100.0000). Retail x86
+// therefore inlined HasBuilding to exactly the form already spelled at all six
+// armygrp/ai_player sites; the census row is a DREAMCAST SOURCE FACTORING, not
+// a missing construct, and adding the declarator to a wide header can only put
+// two exact functions at risk. The remaining armygrp rows (this body,
+// get_morale_description, get_luck_description) have residuals in a different
+// class entirely - see the ranker verdict below.
+// RANKED 2026-08-14 (normalized disasm, real-vs-artefact split): 98.5654 is
+// 10 real rows of 237 and 5 artefact, and ALL TEN ARE THE ONE CLASS ALREADY
+// NAMED - retail's `push ebx` sits AFTER the on-cursed-ground return (first
+// def order: esi in the prologue, ebx at `xor ebx,ebx`), ours emits both in
+// the prologue in canonical ebx,esi order, and the four later exits mirror
+// `pop ebx / pop esi`. Nothing else differs: the five artefacts are the
+// unwind-label push, a `push 0x60` and three relocation addend splits. Five
+// more spellings measured against it this round, all negative or flat:
+// `int morale;` with an if/else 95.8861, the ternary initializer 95.8861,
+// declaring `alignments[10]` ahead of `morale` 98.5654 (flat), moving
+// `morale` below `GetAlignments` 87.2743, and `short morale` 90.9451. The
+// landed spelling is a local maximum in every direction tested.
 VA(0x0044ae60, 0x29A)  // dc-bracket forced, dc 0x4f078
 int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
                          const hero* otherHero, const armyGroup* otherGroup,
@@ -1203,10 +1304,10 @@ int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
             && (ownerTown->active & bitNumber[EXTRA_1_ID]))
             morale += 2;
     }
-    // The by-value, reference-returning three-operand selector preserves
+    // The by-value wrapper over the reference-returning template preserves
     // EBX until this site and reproduces retail's three operand homes.
     if (apply_limits)
-        return armygrp_clamp(-3, morale, 3);
+        return limit(-3, morale, 3);
     return morale;
 }
 
@@ -1302,7 +1403,7 @@ evil_done:
         && morale > 0)
         morale = 0;
     if (apply_limits)
-        return armygrp_clamp(-3, morale, 3);
+        return limit(-3, morale, 3);
     return morale;
 }
 
@@ -1311,7 +1412,7 @@ evil_done:
 // short-circuit expression, so both hero gates share retail's single
 // zero-return block. The hero luck call, inlined Devil/Arch Devil scans,
 // Rampart Fountain of Fortune bonus and all branches through the limits
-// gate are exact. armygrp_clamp(low,value,high) supplies the final retail
+// gate are exact. limit(low,value,high) supplies the final retail
 // low/high/value homes and reference-selecting return.
 VA(0x0044b2d0, 0xEB)  // anchor-global, dc 0x4f20c
 int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero* otherHero, const armyGroup* otherGroup, unsigned char on_cursed_ground, unsigned char apply_limits)
@@ -1334,7 +1435,7 @@ int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero*
         && (ownerTown->active & bitNumber[EXTRA_0_ID]))
         luck += 2;
     if (apply_limits)
-        return armygrp_clamp(-3, luck, 3);
+        return limit(-3, luck, 3);
     return luck;
 }
 
@@ -1383,7 +1484,7 @@ int armyGroup::GetArmyLuck(int index, const hero* ownerHero, const town* ownerTo
     if (armies[index] == CREATURE_HALFLING && luck < 1)
         luck = 1;
     if (apply_limits)
-        return armygrp_clamp(-3, luck, 3);
+        return limit(-3, luck, 3);
     return luck;
 }
 
@@ -1627,6 +1728,45 @@ source_stack_merges:
 // tables. Variable creature-name lookups use retail's 0..150 guard and shared
 // empty-text fallback. The remaining delta is Dinkumware string-temporary/EH
 // emission and associated register allocation; every modifier is represented.
+//
+// 2026-08-14, THE RESIDUAL IS NOW MEASURED, NOT DESCRIBED, and it is one
+// class: OUR /Ob2 BUDGET IS TOO LARGE AND WE OVER-INLINE DINKUMWARE.
+// `vc6 diagnose` prices it 44 under-inline / 37 over-inline; the normalized
+// disasm ranker prices it 553 real rows of 717 with our body 162 rows LONGER
+// than retail's. Four measurements, all from the unmasked byte view:
+//   FRAME  retail `sub esp,0x50`, ours `sub esp,0x80` - 48 bytes = THREE extra
+//     sixteen-byte string slots. Retail owns exactly two string objects, the
+//     result at [ebp-0x5c] (14 sites) and ONE reused temporary at [ebp-0x40]
+//     (10 sites); ours spreads the same work over [ebp-0x60] (16), [ebp-0x70]
+//     (7), [ebp-0x44] and [ebp-0x8c].
+//   EH STATES  retail runs 1..9, ours 1..0xa. The extra state is real: at
+//     `ArmyGrpFn_0044A460().test(alignment)` retail emits the bounds check and
+//     LEAVES `std::bitset<9>::_Xran()` OUT OF LINE (`cmp esi,9 / jb / mov ecx,
+//     <bitset> / call`), while our CL inlines its whole
+//     `_THROW(out_of_range,"invalid bitset<N> position")` body - fourteen
+//     instructions, a second cold string temporary and a `__CxxThrowException`
+//     - into a far block. GetMorale (0x44ae60) spells the SAME `.test()` and
+//     neither side inlines it there, so this is caller budget, not spelling.
+//     There is no unchecked accessor in VC6's <BITSET> (`operator[] const`
+//     forwards to `test`), so no source change reaches it.
+//   RETURN COUNT  retail has ONE `ret`; ours has THREE. At each of the two
+//     early returns retail calls `basic_string::assign(const char*,size_type)`
+//     OUT OF LINE after the inlined `_Tidy(false)` + `repne scasb` strlen, then
+//     `jmp`s to the single shared epilogue. Ours inlines `assign`'s body
+//     (`_Grow` / `rep movsd` / `_Eos`, fourteen rows) at both sites, which
+//     changes the register state at the return and forces a duplicated
+//     epilogue each time. That is 2 x ~23 rows, the single largest block.
+//   PARAM-SLOT REUSE  retail recycles the dead `magicTerrain` slot [ebp+0x24]
+//     for the creature byte offset and the dead `groupAlignments` slot
+//     [ebp+0x28] for `currentMorale`; ours spends fresh locals. Downstream of
+//     the frame, not a lever of its own.
+// THE DC STATEMENT CENSUS CANNOT PRICE THIS BODY - recorded so nobody spends
+// the hour again. `*** SRCLINES ***` gives dc 0x4f708 Cb 0x3AA = 49 statement
+// lines over E:\gamedcs\armygrp.cpp:1347-1451, but that is an EARLIER SIX-ARG
+// FUNCTION: its call census is `format_string` x1, `IsMember` x1,
+// `operator+=` x2 and no magic-terrain switch at all, against this body's x4 /
+// x4 and two nine-entry selector tables. The census measures the Dreamcast
+// source, and for this compiland the Dreamcast source is a different function.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::get_morale_description(
     TCreatureType creature, int morale, const hero* ownerHero,
@@ -1847,6 +1987,22 @@ after_magic_terrain:
 // bytes - including its longhand four-way elemental compare, which is the
 // `is_base_elemental` shape landed in viewarmywindow - already match
 // retail exactly, so it is a site count and not a spelling.
+//
+// A DC-census lead that does NOT transfer (2026-08-14): the xref graph
+// records `GetArmyName` (dc 0x1ef94, E:\gamedcs\CreatureType.h:296) from
+// both this body (x1) and get_morale_description (x3), and that helper is
+// what closed ??0TQuickCreatureWindow. Respelling
+// `armygrp_creature_plural_name(x)` as `GetArmyName(x, 0)` - the same
+// lookup, with the count test folding away - costs this row 1.9 points and
+// is byte-flat on get_morale_description (67.5649) and
+// get_spell_work_chance (88.5071). The plain plural lookup with no count
+// parameter is retail's x86 spelling in this compiland; the census counts
+// (x1/x3 against our x2/x2) already said the port's bodies differ.
+// Two further census leads are real but not reachable from this file:
+// `town::HasBuilding` x1 (E:\gamedcs\Town.h:324) where we read
+// `ourTown->active & bitNumber[EXTRA_0_ID]` as a field - town.h keeps the
+// declaration behind HOMM3_TOWN_OBJ_DECLS - and `std::string::operator+=`
+// x3 against our mixed `+=`/`append`.
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::get_luck_description(
     TCreatureType creature, int luck, const hero* ourHero,
