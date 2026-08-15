@@ -604,6 +604,7 @@ events	?DoEventSurvivor@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@
 events	?DoEventTemple@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa6200
 events	?DoEventTrainingGrounds@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa6330
 events	?DoEventTreasure@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa6520
+events	?DoEventTreeOfKnowledge@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa6710
 events	?DoEventWagon@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa69b0
 events	?DoEventWanderingMonster@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa79c0
 events	?DoEventWarSchool@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa7a40

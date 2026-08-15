@@ -168,6 +168,17 @@ struct type_skeleton_info {
 };
 SIZE(type_skeleton_info, 4);
 
+// DoEventTreeOfKnowledge (0x4a6710) shares the corpse's five-bit id lane -
+// it reads it through the same GetItemId, as the Dreamcast line table
+// says at events.cpp:3454 - and adds a SIGNED three-bit price selector at
+// bits 13..15 (`shl eax,0x10 / sar eax,0x1d`).
+struct type_tree_info {
+    unsigned long unused : 13;
+    signed long price : 3;
+    unsigned long tail : 16;
+};
+SIZE(type_tree_info, 4);
+
 union ExtraInfoUnion {
     unsigned long value;
     type_water_wheel_info water_wheel_info;
@@ -181,6 +192,7 @@ union ExtraInfoUnion {
     type_cell_visited_info cell_visited_info;
     type_wagon_info wagon_info;
     type_skeleton_info skeleton_info;
+    type_tree_info tree_info;
 
     void SetCellVisited(short player);
 
@@ -300,6 +312,11 @@ union ExtraInfoUnion {
     bool SkeletonHasTreasure() const { return skeleton_info.has_treasure; }
     int GetSkeletonArtifact() const { return skeleton_info.artifact; }
     short GetItemId() const { return skeleton_info.id; }
+
+    // `?GetTreePrice@ExtraInfoUnion@@QBA?AW4WiseTreePrices@@XZ`, named by
+    // the Dreamcast line table over DoEventTreeOfKnowledge (dc 0x964c4)
+    // and spelled `int` for get_tomb_artifact's reason.
+    int GetTreePrice() const { return tree_info.price; }
     void SetSkeleton(int id, bool has_treasure, short artifact)
     {
         skeleton_info.id = id;
@@ -1168,6 +1185,11 @@ public:
     // for four arguments.
     void DoEventMine(NewmapCell* cell, class hero* current_hero,
                      type_point point, bool human);
+    // The Tree of Knowledge (jump-table arm 0x66). Dreamcast
+    // `(hero*, NewmapCell*, bool)` and retail's `ret 0xc` agree; the cell
+    // reaches only its +0x00 dword, so it takes the union spelling.
+    void DoEventTreeOfKnowledge(class hero* current_hero,
+                                ExtraInfoUnion* cell, bool human_player);
     // The Corpse (jump-table arm 0x16). Dreamcast `(hero*, NewmapCell*,
     // bool)`; the cell reaches only its +0x00 dword, so it takes the union
     // spelling like the tomb and the wagon.
