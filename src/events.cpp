@@ -2177,6 +2177,55 @@ void advManager::EraseAndFizzle(NewmapCell* eventCell, type_point point,
     gUnnamed67f574 = savedFlag;
 }
 
+// E:\gamedcs\events.cpp:380.  The anchor point (jump-table arm 0x03): a
+// hero steps off his boat. The whole body is DoEventBoat run backwards -
+// the same 0x40000 sea bit, the same Boots-of-Levitation movement
+// recompute behind the same 0x1000000 gate, the same locator refresh and
+// the same five cursor cells - and the two are worth reading together.
+// Only three things differ: the bit is CLEARED instead of set, GetMobility
+// is asked for the LAND rate (0) instead of the sea one, and the cursor
+// parks in state 0x22 rather than 8.
+//
+// The Dreamcast body (dc 0x90658, 102 B) is SHORTER than retail's 348 and
+// the difference is two post-DC insertions: the whole IsWieldingArtifact
+// arm - the DC just zeroes movePoints - and the UpdateHeroLocator call.
+// The line table is what bounds the rest: FizzleCenter at line 401 and
+// CheckAdjacentMon at 404, with the fought-battle flag a local nobody
+// reads back.
+//
+// human_player is declared and never read. Retail keeps the parameter
+// (`ret 8`), so this does too.
+VA(0x0049e670, 0x15C)  // jump-table arm 0x03 + DoEventBoat's mirror, dc 0x90658
+void advManager::DoEventAnchor(hero* current_hero, bool human_player)
+{
+    if (current_hero->flags & 0x40000) {
+        current_hero->flags &= ~0x40000;
+        if (!(current_hero->flags & 0x1000000)) {
+            if (current_hero->IsWieldingArtifact(0x88)) {
+                int oldMaxMovePoints = current_hero->maxMovePoints;
+                int oldMovePoints = current_hero->movePoints;
+                int newMaxMovePoints = current_hero->GetMobility(0);
+                current_hero->maxMovePoints = newMaxMovePoints;
+                current_hero->movePoints =
+                    newMaxMovePoints * oldMovePoints / oldMaxMovePoints;
+            } else {
+                current_hero->movePoints = 0;
+            }
+            advWindow->UpdateHeroLocator(-1, 1, 1);
+        }
+
+        current_hero->facing = cursorDirection;
+        cursorType = CURSOR_TYPE_34;
+        cursorBaseFrame = 0;
+        cursorSequence = current_hero->GetStandSequence();
+        drawCursor = 1;
+        FizzleCenter(FIZZLE_SOUND_KILL_FADE);
+
+        int bFoughtBattle;
+        CheckAdjacentMon(&bFoughtBattle);
+    }
+}
+
 // E:\gamedcs\events.cpp:421.  The Arena, jump-table arm 0x04 =
 // OBJECT_ARENA: +2 to Attack or +2 to Defense, once per hero, and the
 // choice is the human's. It is the war school's body with the price and
@@ -2557,6 +2606,55 @@ void advManager::do_event_dragon_city(hero* current_hero, NewmapCell* cell,
 fight:
     CreatureBankEvent(current_hero, cell, emptyRolloverText, point,
                       human_player);
+}
+
+// E:\gamedcs\events.cpp:1731.  The flotsam (jump-table arm 0x1d): four
+// sizes in the cell's own extra-info dword, three of which pay, and the
+// object is picked up whatever the size was.
+//
+// The switch is retail's own - a dense UNSIGNED 0..3 range check and a
+// four-entry jump table whose default is the pick-up itself - and the two
+// payout arms are written out LONGHAND. Retail cross-jumps them into one
+// GiveResource pair: the wood-only arm jumps straight to the call with its
+// own arguments already pushed, and the wood-and-gold arm jumps one push
+// earlier. That merge is the compiler's, not the source's.
+VA(0x004a2230, 0x250)  // jump-table arm 0x1d + advevent.txt 51..54, dc 0x92fa8
+void advManager::DoEventFlotsam(hero* current_hero, NewmapCell* cell,
+                                type_point point, bool human_player)
+{
+    switch (cell->extraInfo) {
+    case FLOTSAM_NOTHING:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FLOTSAM_NOTHING),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        break;
+    case FLOTSAM_WOOD:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FLOTSAM_WOOD),
+                         1, -1, -1, WOOD, 5, -1, 0, -1, 0, -1, 0);
+        current_hero->GiveResource(WOOD, 5);
+        break;
+    case FLOTSAM_WOOD_AND_GOLD:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FLOTSAM_WOOD_AND_GOLD),
+                         1, -1, -1, WOOD, 5, GOLD, 200, -1, 0, -1, 0);
+        current_hero->GiveResource(WOOD, 5);
+        current_hero->GiveResource(GOLD, 200);
+        break;
+    case FLOTSAM_LARGE:
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_FLOTSAM_LARGE),
+                         1, -1, -1, WOOD, 10, GOLD, 500, -1, 0, -1, 0);
+        current_hero->GiveResource(WOOD, 10);
+        current_hero->GiveResource(GOLD, 500);
+        break;
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
 // E:\gamedcs\events.cpp:1769.  The Fountain of Fortune, jump-table arm
