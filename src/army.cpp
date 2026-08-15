@@ -22,7 +22,9 @@
 #define HOMM3_ARMY_ROUND_VIEW
 #define HOMM3_ARMY_CALIPH_VIEW
 #define HOMM3_ARMY_RANGE_VIEW
+#define HOMM3_ARMY_AURA_VIEW
 #include "army.h"
+#undef HOMM3_ARMY_AURA_VIEW
 #undef HOMM3_ARMY_RANGE_VIEW
 #undef HOMM3_ARMY_CALIPH_VIEW
 #undef HOMM3_ARMY_ROUND_VIEW
@@ -356,12 +358,40 @@ unsigned char add_item(std::vector<army*>& array, army* arg)
     // @stub
 }
 
-// E:\gamedcs\army.cpp:930
-DC_ONLY(0x44ec0, 0x4A)
+#endif  // @carcass
+
+// Drop the first occurrence of `arg` from `array`, searching BACKWARDS.
+//
+// LOCATED HERE, and the location is what settles this function's
+// linkage: the carve puts a 103-byte body at 0x43ea00 immediately
+// before add_aura, and its two /Gr register arguments are exactly a
+// free function's (ecx = the vector, edx = the army). It is the only
+// slot in the whole 0x43e140..0x43ea70 gap, which is also why its
+// neighbour add_item above has NO retail body - `add_item` is STATIC
+// in retail and inlined away at both its call sites, while erase_item
+// keeps external linkage and therefore an unconditional out-of-line
+// copy on top of being inlined into remove_aura and remove_binding.
+//
+// THE LOOP IS `while (i-- != 0)` AND `i` IS UNSIGNED, both read off
+// the bytes: retail materialises size() into one register, copies it,
+// decrements, and tests the COPY - the pre-decrement value - and the
+// test is `test edi,edi / je`, an equality against zero rather than
+// the signed `jle` the two teardown loops below emit for their `long`
+// counters. `size()` returns size_type, so the unsigned spelling is
+// also the one that needs no conversion.
+VA(0x0043ea00, 0x67)  // anchor-bracket (the gap's only slot) + /Gr arity, dc 0x44ec0
 void erase_item(std::vector<army*>& array, const army* arg)
 {
-    // @stub
+    unsigned i = array.size();
+    while (i-- != 0) {
+        if (array[i] == arg) {
+            array.erase(array.begin() + i);
+            return;
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:948
 // RETAIL_LOCATED(0x0043ea70, 0x1DD)  // anchor-global, dc 0x44f0c
@@ -370,19 +400,72 @@ void army::add_aura()
     // @stub
 }
 
-// E:\gamedcs\army.cpp:988
-// RETAIL_LOCATED(0x0043ec50, 0x1B4)  // anchor-global, dc 0x45000
+#endif  // @carcass
+
+// Tear this stack out of both halves of the aura relationship: every
+// stack whose aura reaches it, and every stack its own aura reaches.
+//
+// THE DC LINE TABLE GIVES THE LOOP FORM (dc 0x45000): line 991 is the
+// size() call ALONE, 992 the test-and-decrement, 994 the body and 995
+// the back branch - i.e. `long i = v.size();` on one line and
+// `while (i-- > 0)` on the next, not a `for`. Retail agrees to the
+// instruction: it computes size() once, copies it, decrements, and
+// tests the COPY with a SIGNED `jle`, which is what makes `i` a long
+// against size()'s unsigned return.
+//
+// The two loops are exact inverses - +0x524 erasing from each
+// element's +0x514, then +0x514 erasing from each element's +0x524 -
+// and that symmetry is what proves which vector is which.
+//
+// erase_item is inlined at both sites, but NOT to the same depth: the
+// first site keeps `copy` and `_Destroy` as calls where the second
+// gets the copy loop written out inline. That is the /Ob2 divisor
+// doing its job (budget / sites-still-to-come grows as the sites are
+// spent), not a source difference - both sites are the same call.
+VA(0x0043ec50, 0x1B4)  // anchor-global, dc 0x45000
 void army::remove_aura()
 {
-    // @stub
+    long i = aura_sources.size();
+    while (i-- > 0) {
+        erase_item(aura_sources[i]->aura_clients, this);
+    }
+    aura_sources.clear();
+
+    long j = aura_clients.size();
+    while (j-- > 0) {
+        erase_item(aura_clients[j]->aura_sources, this);
+    }
+    aura_clients.clear();
 }
 
-// E:\gamedcs\army.cpp:1010
-// RETAIL_LOCATED(0x0043ee10, 0x1C2)  // anchor-global, dc 0x450bc
+// The same teardown for the BIND relationship, plus the one rule that
+// makes it different: a stack stops being bound the moment the last
+// binder lets go, so each army this one had bound gets its bind row
+// cancelled once its `binders` list comes up empty.
+//
+// `binders.size() == 0` is byte-visible as `test edx, 0xfffffffc` on
+// the raw pointer difference - VC6 turning `(last - first) >> 2 == 0`
+// into a mask test - which is the size() inline, not a hand-written
+// pointer compare.
+VA(0x0043ee10, 0x1C2)  // anchor-global, dc 0x450bc
 void army::remove_binding()
 {
-    // @stub
+    long i = bound_armies.size();
+    while (i-- > 0) {
+        erase_item(bound_armies[i]->binders, this);
+        if (bound_armies[i]->binders.size() == 0)
+            bound_armies[i]->CancelIndividualSpell(SPELL_BIND);
+    }
+    bound_armies.clear();
+
+    long j = binders.size();
+    while (j-- > 0) {
+        erase_item(binders[j]->bound_armies, this);
+    }
+    binders.clear();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1034
 DC_ONLY(0x45164, 0xA0)

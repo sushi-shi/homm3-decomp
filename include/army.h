@@ -81,6 +81,11 @@ enum EArmySpellRowId {
     // ComputeAttackerDamageReduction's own reading.
     SPELL_FRENZY = 0x38,
     SPELL_COUNTERSTRIKE = 0x3a,
+    // The row remove_binding (0x43ee10) cancels on a bound stack the
+    // moment its `binders` list empties - `push 0x48 / call
+    // CancelIndividualSpell` - which is the same index 72 the +0x2b8
+    // bindRounds field already pairs, reached from the other side.
+    SPELL_BIND = 0x48,
     SPELL_AGE = 0x4b
 };
 #endif
@@ -730,7 +735,29 @@ public:
     // roster attests it and ResetRound is the only writer located so
     // far, so the name is an address ordinal.
     unsigned char field_4f0;       // +0x4f0
+    // The four army-to-army relationship lists, and the retail layout
+    // is fixed from BOTH ends: the DC roster carries exactly four
+    // std::vector<army*> members here in this order (bound_armies 1228,
+    // binders 1240, aura_clients 1252, aura_sources 1264) immediately
+    // before AI_expected_damage 1276, and retail's AI_expected_damage
+    // is +0x534 - so four SIXTEEN-byte Dinkumware vectors (allocator +
+    // three pointers, against STLport's twelve) run 0x4f4..0x534 with
+    // no slack. Every offset is then byte-confirmed by the two
+    // teardowns: remove_binding walks +0x4f4 erasing `this` from each
+    // element's +0x504, and remove_aura walks +0x524 erasing `this`
+    // from each element's +0x514, each pair being the exact inverse of
+    // the other. (+0x4f1 is the DC's is_area_effect_target byte, left
+    // in the pad until a body reads it; the +0x4f0 latch above is the
+    // DC's reset_this_round.)
+#ifdef HOMM3_ARMY_AURA_VIEW
+    char pad_4f1[0x3];
+    std::vector<army*> bound_armies;   // +0x4f4
+    std::vector<army*> binders;        // +0x504
+    std::vector<army*> aura_clients;   // +0x514
+    std::vector<army*> aura_sources;   // +0x524
+#else
     char pad_4f1[0x43];
+#endif
 #else
     char pad_4f0[0x44];
 #endif

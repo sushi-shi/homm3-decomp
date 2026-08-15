@@ -309,6 +309,7 @@ army	?can_cast_resurrect@army@@QBEEJ@Z	100.0000	100.0000	100.0000	0x473d0
 army	?cast_caliph_spell@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x47ee0
 army	?check_obstacle_attacks@army@@QAEEE@Z	100.0000	100.0000	100.0000	0x41f70
 army	?enemy_is_adjacent@army@@QBEEPBV1@@Z	100.0000	100.0000	100.0000	0x429f0
+army	?erase_item@@YIXAAV?$vector@PAVarmy@@V?$allocator@PAVarmy@@@std@@@std@@PBVarmy@@@Z	100.0000	100.0000	100.0000	0x3ea00
 army	?get_AI_target_time@army@@QBEJJ@Z	100.0000	100.0000	100.0000	0x48bd0
 army	?get_adjusted_attack@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42410
 army	?get_adjusted_defense@army@@QBEJPBV1@E@Z	100.0000	100.0000	100.0000	0x42590
@@ -333,6 +334,8 @@ army	?is_valid_caliph_spell@@YIEHPBVarmy@@@Z	100.0000	100.0000	100.0000	0x47eb0
 army	?move_to@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45d10
 army	?play_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d540
 army	?range_attack@army@@QAEXXZ	100.0000	100.0000	100.0000	0x40160
+army	?remove_aura@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ec50
+army	?remove_binding@army@@QAEXXZ	100.0000	100.0000	100.0000	0x3ee10
 army	?set_AI_expected_damage@army@@QAEXJ@Z	100.0000	100.0000	100.0000	0x430d0
 army	?simple_move@army@@QAEEHE@Z	100.0000	100.0000	100.0000	0x45950
 army	?stop_sample@army@@QAEXW4TSampleID@1@@Z	100.0000	100.0000	100.0000	0x3d580
