@@ -34,6 +34,15 @@ enum EAdventureEventText {
     // each one is a PAIR: the reward line, then the already-visited line
     // straight after it. The rows land where the alphabet puts each
     // object, exactly as the war school / witch hut run below does.
+    // DoEventBlackBox (0x4a0c50) - Pandora's Box. 14 is the yes/no prompt
+    // asked with iMBType 2, 15 the line a box that paid nothing shows and
+    // 16 the one its guardians get. All three are byte-proven by the
+    // [Text._First + 0x38] / [+0x3c] / [+0x40] loads in that body. The
+    // custom MESSAGE the box may carry is not a row at all - it comes out
+    // of the record's own std::string.
+    ADV_EVENT_TEXT_BLACK_BOX_PROMPT = 14,
+    ADV_EVENT_TEXT_BLACK_BOX_NOTHING = 15,
+    ADV_EVENT_TEXT_BLACK_BOX_GUARDED = 16,
     // DoEventCampfire (0x4a1120), the object's only row: one line carrying
     // BOTH payouts, the gold and the resource, as its two picture/quantity
     // pairs. 23 sits below the cover of darkness at 31, which is where the
@@ -170,6 +179,19 @@ enum EAdventureEventText {
     // reward. Both indices are byte-proven by the arm that loads them.
     ADV_EVENT_TEXT_OASIS_VISITED = 94,
     ADV_EVENT_TEXT_OASIS = 95,
+    // do_event_pyramid (0x4a4230), and the pyramid has the longest run in
+    // this enum after the stables: 105 is the yes/no prompt asked with
+    // iMBType 2, 106 the sprintf FRAGMENT the spell name is quoted onto
+    // with the pooled "%s'%s'.", 107 the -2 luck line an already-robbed
+    // pyramid shows with the luck picture TWICE, 108 the strcat'd tail for
+    // a hero whose wisdom is too low and 109 the one for a hero with no
+    // spellbook. The run sits between the power school's 100/101 and the
+    // rally flag's 110/111, which is where the alphabet puts "pyramid".
+    ADV_EVENT_TEXT_PYRAMID_PROMPT = 105,
+    ADV_EVENT_TEXT_PYRAMID_SPELL = 106,
+    ADV_EVENT_TEXT_PYRAMID_ROBBED = 107,
+    ADV_EVENT_TEXT_PYRAMID_NO_WISDOM = 108,
+    ADV_EVENT_TEXT_PYRAMID_NO_SPELLBOOK = 109,
     // DoEventRallyFlag (0x4a44c0), and this pair is REVERSED like the
     // oasis: 110 is the already-visited line and 111 the reward, which
     // shows the morale and luck pictures side by side.
