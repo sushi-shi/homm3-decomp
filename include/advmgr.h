@@ -448,7 +448,16 @@ DATA(0x006a7520) extern const char* const gBorderColorNames[];
 DATA(0x006a5898) extern const char* const gObjectOwnerColorNames[8];
 DATA(0x006914fc) extern const char* const gCreatureGenerator1RolloverNames[];
 DATA(0x00691354) extern const char* const gCreatureGenerator4RolloverNames[];
+// events.obj joins the gate for the resource pile (0x4a4be0), which
+// strcpy's the resource's own name out of this table and lower-cases its
+// first letter before formatting the pickup line. The guard is SPLIT
+// around the one declarator rather than moved, so the preprocessed text
+// every quick-info consumer sees is unchanged, line for line.
+#endif
+#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_EVENTS_VIEW)
 extern const char* gResourceNames[7];
+#endif
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;
 DATA(0x006a64d8) extern const char* const gWiseTreePriceNames[];
 DATA(0x006912c4) extern const char* gKnownTreePriceText;
@@ -1061,6 +1070,24 @@ public:
     // handler reads `type` and `objectIndex` as well as the dword.
     void DoEventRefugeeCamp(class hero* current_hero, NewmapCell* cell,
                             bool human_player);
+    // The resource pile (jump-table arm 0x4f) and the custom-resource
+    // handler it hands a customised cell to. Both take the CELL first -
+    // the Dreamcast's own parameter order, and retail's `[ebp+8]` is the
+    // cell in each - and both are `ret 0x10`. DoCustomResource is DECLARED
+    // only; its row (0x4a4780) is not claimed here.
+    void DoCustomResource(NewmapCell* cell, class hero* current_hero,
+                          type_point point, bool human_player);
+    void DoEventResource(NewmapCell* cell, class hero* current_hero,
+                         type_point point, bool human_player);
+    // The campfire (jump-table arm 0x0c). FOUR arguments and `ret 0x10`:
+    // the map point rides along for EraseAndFizzle, which erases the object
+    // the hero just stepped on.
+    void DoEventCampfire(class hero* current_hero, NewmapCell* cell,
+                         type_point point, bool human_player);
+    // The shipwreck survivor (jump-table arm 0x56). FOUR arguments and
+    // `ret 0x10` - the point is EraseAndFizzle's again.
+    void DoEventSurvivor(class hero* current_hero, NewmapCell* cell,
+                         type_point point, bool human_player);
     // The Corpse (jump-table arm 0x16). Dreamcast `(hero*, NewmapCell*,
     // bool)`; the cell reaches only its +0x00 dword, so it takes the union
     // spelling like the tomb and the wagon.
