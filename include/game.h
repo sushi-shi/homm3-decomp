@@ -1193,6 +1193,16 @@ public:
             return 0;
         return &towns[townId];
     }
+#ifdef HOMM3_TOWNMGR_VIEWARMY_DECLS
+    // Retail 0x4c6c50 (dc 0xb1c8c). The army/creature info panel the
+    // town page opens over a troop slot; declared here for
+    // townManager::DoCommand's two call sites, not reconstructed. The
+    // Dreamcast declarator types the group as a REFERENCE and retail
+    // pushes the pointer, which is the same thing at this call.
+    void ViewArmy(armyGroup& group, int iarmy, const hero* this_hero,
+                  const town* this_town, int x, int y,
+                  unsigned char show_dismiss, unsigned char isQuickView);
+#endif
 #ifdef HOMM3_TOWNMGR_TOWN_NAME_DECLS
     // DC `game::GetTownName` (?GetTownName@game@@QBAPBDH@Z), and another
     // inline-only member: retail has no out-of-line row and

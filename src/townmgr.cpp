@@ -9,6 +9,11 @@
 // hero.h is reached through more than one of them and its guard makes
 // only the first inclusion count; it widens this compiland's view of
 // type_artifact by exactly one member declarator and nothing else.
+// hero.h's HeroView declarator, for DoCommand's view-hero arm. Set here
+// with the artifact gate and for the same reason: hero.h is reached
+// through more than one include below and its guard makes only the
+// first inclusion count.
+#define HOMM3_TOWNMGR_HEROVIEW_DECLS
 #define HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS
 #define HOMM3_TOWNMGR_WINDOW_DECLS
 #define HOMM3_TOWN_OBJ_DECLS
@@ -51,12 +56,15 @@
 // game.h's grail-win declarator, for handle_hall_click's one call. Held
 // on its own gate so no other consumer of that header widens.
 #define HOMM3_TOWNMGR_GRAIL_DECLS
-// game.h's GetTownName inline, for SetupTown's title line. Same gate
-// discipline: this compiland opens it, nothing else does.
+// game.h's GetTownName inline, for SetupTown's title line, and its
+// ViewArmy declarator, for DoCommand's two info panels. Same gate
+// discipline: this compiland opens them, nothing else does.
 #define HOMM3_TOWNMGR_TOWN_NAME_DECLS
+#define HOMM3_TOWNMGR_VIEWARMY_DECLS
 #define HOMM3_GAME_OBJ_DECLS
 #include "game.h"
 #undef HOMM3_GAME_OBJ_DECLS
+#undef HOMM3_TOWNMGR_VIEWARMY_DECLS
 #undef HOMM3_TOWNMGR_TOWN_NAME_DECLS
 #undef HOMM3_TOWNMGR_GRAIL_DECLS
 #include "hero.h"
@@ -3223,6 +3231,187 @@ void townManager::handle_hall_click()
         }
     }
     DoHall();
+}
+
+// The town page's command dispatch, and a DENSE ten-entry jump table -
+// slot 6 points straight at the default arm, so the value space is 0..9
+// with six unused. Every arm ends in townManager::ResetStrips, which
+// retail EXPANDS here (it is 134 bytes and has other callers, so this is
+// an ordinary /Ob2 expansion, not the single-call-site rule), and VC6
+// then tail-merges the seven copies onto one. The selection arm is the
+// exception: it broadcasts and stops, and its else-branch broadcast is
+// the same statement ResetStrips ends on, which is why retail's `jne`
+// lands in the MIDDLE of the merged tail.
+//
+// `lastHover` is cleared after the switch on every path that reaches it,
+// including the arms that refuse on IsLocalHuman; the three arms that
+// find no strip at all `return` outright and skip even that.
+//
+// The move-to-garrison arm has NO out-of-line body in the image and its
+// second, redundant IsLocalHuman test is the evidence: the arm's own
+// guard is the first, the helper's own guard is the second, and VC6
+// emitted both because a call sits between them. It is spelled below as
+// a file static for the reason the MoveHero note gives - an
+// extern-linkage member would be emitted unconditionally and there is no
+// row for it - while its partner, MoveHeroFromGarrison, IS emitted at
+// 0x5d5220 and stays a call.
+//
+// The merge arm's `destGroup` local is load-bearing and is the last two
+// bytes of this row: written through `field_134->group` at both the
+// compare and the search, the row sits at 99.65 with the group load
+// scheduled AFTER the creature read and one register renamed; named
+// once ahead of the creature, retail's own schedule falls out and the
+// body goes exact. The armyGroup that is NOT named is the source one -
+// retail re-reads `field_12c->group` at every use, which is what the
+// four separate `mov edx,[eax+0x6c]` reloads in the merge tail are.
+
+// E:\gamedcs\townmgr.cpp:6792
+static void MoveHeroToGarrison(townManager* mgr)
+{
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+
+    mgr->townToView->SwapHeroes();
+    delete mgr->field_120;
+    mgr->field_120 = 0;
+    delete mgr->field_11c;
+    mgr->field_11c = 0;
+    mgr->NewStrips();
+}
+
+// E:\gamedcs\townmgr.cpp:6598
+VA(0x005d4c10, 0x53C)  // anchor-caller(Main 0x5d420a/0x5d4a9f + the garrison window's handler 0x5d0a8c) + anchor-callee(SwapHeroes/MoveHeroFromGarrison) + arity(ret 0xc, 3 args), dc 0x176634
+void townManager::DoCommand(int inCommand, unsigned char isGarrison,
+                            type_garrison_base_window* garrisonWindow)
+{
+    switch (inCommand) {
+    case TOWN_COMMAND_SELECT_SLOT:
+        if (!selectedStrip)
+            return;
+        field_12c = selectedStrip;
+        field_130 = field_128;
+        field_11c->current = -2;
+        field_120->current = -2;
+        field_12c->current = field_130;
+        field_11c->Draw(CREATURE_NONE);
+        field_120->Draw(CREATURE_NONE);
+        if (field_12c->owner == gNetLocalGamePos && field_128 > -1)
+            gpWindowManager->BroadcastMessage(
+                MESSAGE_WIDGET, widget::WIDGET_CLEAR_STATUS, 0x9a,
+                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        else
+            gpWindowManager->BroadcastMessage(
+                MESSAGE_WIDGET, widget::WIDGET_SET_STATUS, 0x9a,
+                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        break;
+
+    case TOWN_COMMAND_VIEW_ARMY:
+        if (!field_134)
+            return;
+        if (isGarrison) {
+            gpGame->ViewArmy(*field_134->group, field_138,
+                             field_134->thisHero, 0, 0x77, 0x14,
+                             !gUnnamed6aa9d8
+                                 && (field_134 != field_120
+                                     || field_134->group->GetNumArmies() > 1),
+                             0);
+        } else {
+            gpGame->ViewArmy(*field_134->group, field_138,
+                             field_134->thisHero, townToView, 0x77, 0x14,
+                             !gUnnamed6aa9d8
+                                 && (!field_134->thisHero
+                                     || field_134->group->GetNumArmies() > 1),
+                             0);
+            pResourceDisplay->Update(1, 1);
+        }
+        ResetStrips();
+        break;
+
+    case TOWN_COMMAND_MERGE_ARMY:
+        if (!field_12c)
+            return;
+        if (!field_134)
+            return;
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            if (field_134 != field_12c) {
+                armyGroup* destGroup = field_134->group;
+                int creature = field_12c->group->armies[field_130];
+                if (destGroup->armies[field_138] != creature) {
+                    int i;
+                    for (i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+                        if (destGroup->armies[i] == creature)
+                            break;
+                    }
+                    if (i < armyGroup::ARMY_GROUP_SLOT_COUNT)
+                        field_138 = i;
+                }
+            }
+            field_134->group->numTroops[field_138]
+                += field_12c->group->numTroops[field_130];
+            field_12c->group->armies[field_130] = -1;
+            field_12c->group->numTroops[field_130] = 0;
+            ResetStrips();
+        }
+        break;
+
+    case TOWN_COMMAND_SWAP_ARMY:
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            field_12c->group->Swap(field_130, field_134->group, field_138);
+            ResetStrips();
+        }
+        break;
+
+    case TOWN_COMMAND_VIEW_HERO:
+        if (isGarrison) {
+            HeroView(field_134->thisHero->id, 1, 0, 0);
+            gpAdvManager->RedrawAdvScreen(0, 0);
+            garrisonWindow->DrawWindow(0, WINDOW_ALL_WIDGETS_LOW,
+                                       WINDOW_ALL_WIDGETS_HIGH);
+            gpWindowManager->UpdateScreen(0, 0, WINDOW_SCREEN_WIDTH,
+                                          WINDOW_SCREEN_HEIGHT);
+        } else if (!field_12c->pos) {
+            HeroView(townToView->garrisonHeroId, 1, 0, 0);
+        } else {
+            HeroView(townToView->visitingHeroId, 1, 0, 0);
+        }
+        ResetStrips();
+        break;
+
+    case TOWN_COMMAND_SPLIT_ARMY:
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            field_1c4 = 0;
+            field_12c->group->SplitArmy(
+                field_130, field_134->group, field_138,
+                field_12c != field_11c
+                    || (townToView && townToView->garrisonHeroId != -1),
+                field_134 != field_11c
+                    || (townToView && townToView->garrisonHeroId != -1));
+            ResetStrips();
+        }
+        break;
+
+    case TOWN_COMMAND_SWAP_HEROES:
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            SwapHeroes();
+            ResetStrips();
+        }
+        break;
+
+    case TOWN_COMMAND_MOVE_HERO_FROM_GARRISON:
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            MoveHeroFromGarrison();
+            ResetStrips();
+        }
+        break;
+
+    case TOWN_COMMAND_MOVE_HERO_TO_GARRISON:
+        if (gpCurrentPlayer->IsLocalHuman()) {
+            MoveHeroToGarrison(this);
+            ResetStrips();
+        }
+        break;
+    }
+    lastHover = -1;
 }
 
 // Moving the town's visiting hero into the garrison. Only the local

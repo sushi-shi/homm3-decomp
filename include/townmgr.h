@@ -119,6 +119,25 @@ public:
 };
 SIZE(townObject, 0x30);
 
+// The command domain townManager::DoCommand 0x5d4c10 dispatches on, and
+// the one place in this compiland that needs names: retail's switch is a
+// DENSE ten-entry jump table at 0x5d5124 whose slot 6 points at the
+// default arm, so the value space is 0..9 with SIX unused. The Dreamcast
+// passes a bare int and declares no enum, so every NAME here is
+// provisional and describes what the arm does; the VALUES are the jump
+// table's own order.
+enum ETownCommand {
+    TOWN_COMMAND_SELECT_SLOT = 0,
+    TOWN_COMMAND_VIEW_ARMY = 1,
+    TOWN_COMMAND_MERGE_ARMY = 2,
+    TOWN_COMMAND_SWAP_ARMY = 3,
+    TOWN_COMMAND_VIEW_HERO = 4,
+    TOWN_COMMAND_SPLIT_ARMY = 5,
+    TOWN_COMMAND_SWAP_HEROES = 7,
+    TOWN_COMMAND_MOVE_HERO_FROM_GARRISON = 8,
+    TOWN_COMMAND_MOVE_HERO_TO_GARRISON = 9
+};
+
 // The panorama's four per-town-type tables, all in townmgr.obj's own
 // .rdata band and all read by SetupTown 0x5c6870. Names INVENTED (no DC
 // symbol covers them) and the extents come off SetupTown's own index
@@ -688,6 +707,17 @@ public:
     // the garrison and rebuilds the two troop strips around the new
     // arrangement.
     void SwapHeroes();
+    // Retail 0x5d5220 (dc 0x176cf8), declared for DoCommand's arm 8 and
+    // not reconstructed. IDENTIFIED against its Dreamcast twin by its
+    // callee set: it is the row that calls town::remove_garrison_hero
+    // (0x5be390), i.e. the direction that takes the hero OUT of the
+    // garrison, and it is also the one that gates on the acting
+    // player's eight-hero count before doing so. DoCommand is its only
+    // caller in the whole image, and retail still emits it out of line.
+    void MoveHeroFromGarrison();
+    // Retail 0x5d4c10 (dc 0x176634). The town page's command dispatch.
+    void DoCommand(int inCommand, unsigned char isGarrison,
+                   type_garrison_base_window* garrisonWindow);
     // Retail 0x5d2950 (dc 0x174bfc). Runs the Portal of Summoning's
     // recruit dialog, rolling the generator first if the town has not
     // picked a creature yet.
