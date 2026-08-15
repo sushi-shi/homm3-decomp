@@ -1193,6 +1193,23 @@ public:
             return 0;
         return &towns[townId];
     }
+#ifdef HOMM3_TOWNMGR_TOWN_NAME_DECLS
+    // DC `game::GetTownName` (?GetTownName@game@@QBAPBDH@Z), and another
+    // inline-only member: retail has no out-of-line row and
+    // townManager::SetupTown 0x5c68a4 expands it in place - the towns
+    // vector's _First out of +0x21614, the 360-byte stride, +0xc4 for
+    // cName and its own `_Ptr == 0 ? "" : _Ptr`. Note it does NOT go
+    // through GetTown: no `cmp id,-1` is emitted at that site.
+    //
+    // GATED, for the reason town::get_location's note gives: this
+    // header rides in initialize.cpp's closure, which carries the
+    // tree's include-set canary. Every consumer opens the macro for
+    // itself and re-measures.
+    const char* GetTownName(int townId) const
+    {
+        return towns[townId].cName.c_str();
+    }
+#endif
     // DC `game::GetBoat`, declared inline in Game.h. Retail has no
     // out-of-line row; map-cell consumers expand the 40-byte vector indexing
     // directly at their call sites.

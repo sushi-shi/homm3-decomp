@@ -51,9 +51,13 @@
 // game.h's grail-win declarator, for handle_hall_click's one call. Held
 // on its own gate so no other consumer of that header widens.
 #define HOMM3_TOWNMGR_GRAIL_DECLS
+// game.h's GetTownName inline, for SetupTown's title line. Same gate
+// discipline: this compiland opens it, nothing else does.
+#define HOMM3_TOWNMGR_TOWN_NAME_DECLS
 #define HOMM3_GAME_OBJ_DECLS
 #include "game.h"
 #undef HOMM3_GAME_OBJ_DECLS
+#undef HOMM3_TOWNMGR_TOWN_NAME_DECLS
 #undef HOMM3_TOWNMGR_GRAIL_DECLS
 #include "hero.h"
 #include "iconwdgt.h"
@@ -926,6 +930,191 @@ inline townObject::~townObject()
         objOutline->Dispose();
     if (objHotspot)
         objHotspot->Dispose();
+}
+
+// Putting a town on the screen. The page's five text/icon widgets are
+// refreshed first, and then the body forks on ONE test - whether the
+// faction of the town being shown differs from the faction the page is
+// already built for. A different faction rebuilds the panorama from
+// scratch (old town unloaded, new background border, forty-four object
+// slots walked in the faction's own draw order); the same faction keeps
+// every object and only re-syncs its visibility and frame. Both arms
+// end in the same place, which is why the fade-in block appears twice
+// rather than once after the join.
+//
+// The fork is on `field_110`, the faction the page currently holds, and
+// the -1 in front of UnloadTown is the "nothing loaded yet" sentinel the
+// constructor seeds it with.
+//
+// GetLocalPlayer is called for its side effect and its result dropped -
+// retail's own dead call, one statement ahead of the palette broadcast
+// that uses GetLocalPlayerGamePos instead. Transcribed faithfully, the
+// dead-call rule.
+//
+// The two building masks are spelled straight off town.h's bitNumber
+// table rather than through town::HasBuilding, which is a Dreamcast
+// header inline with no retail body: the panorama arm tests `built`
+// (0x150) and the dwelling sweep tests `active` (0x158), which is
+// exactly what HasBuilding's `check_included` argument selects at the
+// two Dreamcast call sites. armygrp.h's GetMorale set the precedent.
+//
+// The last sweep is the fort page's seven creature pictures. Each row
+// shows the UPGRADED dwelling's creature when the town has that upgrade
+// built, which is what the +7 slot shift is, and the picture itself
+// comes from the creature-traits table's sprite name.
+//
+// Residual (98.09%): ONE five-instruction schedule permutation, in the
+// preheader between NewStrips and the dwelling sweep. Both sides emit
+// the identical instruction multiset and the seven member stores in
+// retail's own order; retail defines eax=-2, edi=&MonPix[0], edx=type
+// and ecx=0 all BEFORE the first store, where our CL interleaves them.
+// `predict-inline` reports 34 out-of-line calls on BOTH sides and every
+// listed divergence is a delinker symbol-name pair, so no inline
+// decision differs, and `diagnose` puts the whole distance at 20 with
+// flow-distance 0.
+// Tried and rejected: the -2 stores ahead of the faction store (98.38,
+// but the store order then contradicts retail's - a false win, banked
+// only as the note that VC6 emits this group in SOURCE order); the
+// three -2 stores as one chained assignment (98.09, byte-identical);
+// walking MonPix through a `CSprite**` local so its `lea` becomes a
+// source statement ahead of the block (96.61 - it also removes the
+// strength reduction retail keeps).
+
+// E:\gamedcs\townmgr.cpp:2897
+VA(0x005c6870, 0x59F)  // anchor-caller(Open 0x5c63c0 + Main) + anchor-callee(UnloadTown/NewStrips/RedrawTownScreen) + anchor-string %sBack.pcx, dc 0x16bba4
+void townManager::SetupTown(unsigned char fade)
+{
+    message msg;
+    msg.codeX = 0;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.extra = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+
+    gTurnDuration69d630.Pause();
+    townToView->update_shipyard();
+
+    sprintf(gText, gpGame->GetTownName(townToView->id));
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.codeY = 149;
+    msg.extraText = gText;
+    TownWindow->BroadcastMessage(&msg);
+
+    strcpy(gText, gpGeneralText->GetText(51));
+    msg.codeY = 151;
+    msg.extraText = gText;
+    TownWindow->BroadcastMessage(&msg);
+
+    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.codeY = 150;
+    msg.extra = townToView->GetPortraitFrame(false);
+    TownWindow->BroadcastMessage(&msg);
+
+    msg.codeX = widget::WIDGET_SET_STATUS;
+    msg.codeY = 154;
+    msg.extra = widget::WIDGET_DIMMED_NODRAW;
+    TownWindow->BroadcastMessage(&msg);
+
+    gpGame->GetLocalPlayer();
+    msg.codeX = widget::WIDGET_SET_PLAYER_PALETTE_COLORS;
+    msg.codeY = 148;
+    msg.extra = gpGame->GetLocalPlayerGamePos();
+    TownWindow->BroadcastMessage(&msg);
+
+    if (!fade)
+        TownWindow->DrawWindow(0, 148, 150);
+
+    if (field_110 != townToView->type) {
+        if (field_110 != -1)
+            UnloadTown();
+
+        pResourceDisplay->Update(1, 0);
+        sprintf(gText, "%sBack.pcx", gTownBackgroundPrefix[townToView->type]);
+        field_3c = new bitmapBorder16(0, 0, 800, 374, 147, gText, 0x800);
+        TownObjectCount = 0;
+        for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
+            int objId = gTownBuildOrder[townToView->type][i];
+            if (objId != -1) {
+                TownObjects[TownObjectCount] = new townObject(
+                    townToView->type, objId,
+                    gTownBuildingSprites[townToView->type][objId]);
+                if (!TownObjects[TownObjectCount])
+                    MemError();
+                if (TownObjects[TownObjectCount]->objBorder) {
+                    if (!(townToView->built & bitNumber[objId])) {
+                        TownObjects[TownObjectCount]->objBorder->status
+                            &= ~widget::WIDGET_ACTIVE;
+                        TownObjects[TownObjectCount]->visible = 0;
+                    }
+                    TownWindow->AddWidget(
+                        TownObjects[TownObjectCount]->objBorder, -1);
+                }
+                TownObjectCount++;
+            }
+        }
+        if (fade && !gpWindowManager->isWaitingForFadeIn)
+            gpWindowManager->FadeScreen(1, 4, 1);
+        gpWindowManager->AddWindow(TownWindow, 0, 1);
+    } else {
+        TownObjectCount = 0;
+        for (int i = 0; i < MAX_BUILDING_TYPE; i++) {
+            int objId = gTownBuildOrder[townToView->type][i];
+            if (objId != -1) {
+                if (TownObjects[TownObjectCount]->objBorder) {
+                    if (!(townToView->built & bitNumber[objId])) {
+                        TownObjects[TownObjectCount]->objBorder->status
+                            &= ~widget::WIDGET_ACTIVE;
+                        TownObjects[TownObjectCount]->visible = 0;
+                    } else {
+                        TownObjects[TownObjectCount]->objBorder->status
+                            |= widget::WIDGET_ACTIVE;
+                        TownObjects[TownObjectCount]->visible = 1;
+                    }
+                }
+                TownObjects[TownObjectCount]->currFrame = 0;
+                TownObjectCount++;
+            }
+        }
+        if (fade && !gpWindowManager->isWaitingForFadeIn)
+            gpWindowManager->FadeScreen(1, 4, 1);
+        delete field_120;
+        field_120 = 0;
+        delete field_11c;
+        field_11c = 0;
+    }
+
+    static_cast<TTownScreenWindow*>(TownWindow)->UpdateTownLocators();
+    gpSoundManager->StartMP3(gTownMusic[townToView->type], 0, 1);
+    NewStrips();
+
+    field_134 = 0;
+    field_12c = 0;
+    selectedStrip = 0;
+    field_110 = townToView->type;
+    field_138 = -2;
+    field_130 = -2;
+    field_128 = -2;
+
+    for (int slot = 0; slot < TOWN_DWELLING_COUNT; slot++) {
+        if (townToView->active & bitNumber[DWELLING_0_UPG_ID + slot])
+            currentDwellingIDOff[slot] = slot + TOWN_DWELLING_COUNT;
+        else
+            currentDwellingIDOff[slot] = slot;
+        MonPix[slot] = ResourceManager::GetSprite(
+            akCreatureTypeTraits[gTownDwellingCreatures
+                                     [townToView->type * 2
+                                          * TOWN_DWELLING_COUNT
+                                      + currentDwellingIDOff[slot]]]
+                .m_sprite_name);
+    }
+
+    RedrawTownScreen();
+    if (fade)
+        gpWindowManager->FadeScreen(0, 4, 0);
+    gTurnDuration69d630.Resume();
 }
 
 // Dropping the town the manager is showing, without dropping the
