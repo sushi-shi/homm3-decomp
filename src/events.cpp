@@ -2282,6 +2282,53 @@ void advManager::DoEventArena(hero* current_hero, NewmapCell* cell,
     current_hero->SetVisitedArena(cell);
 }
 
+// An ai_player..ai_tactical bracket helper (109 B at 0x433b40) the AI arms
+// of the corpse, the wagon, the tomb and every artifact hand-over run after picking an artifact up: it walks
+// the hero's backpack from get_last_backpack_index down and offers each
+// entry to 0x433e20 with request 0x13. Retail takes the hero in ECX and
+// pushes nothing, which under /Gr is exactly a one-pointer free function -
+// so it is spelled that way here rather than invented as a `hero` member.
+// The NAME is a Dreamcast line-table read: the statement at
+// E:\gamedcs\events.cpp:3555, inside DoEventWagon (dc 0x96784), calls
+// ?AI_equip_artifacts@@YAXPAVhero@@@Z and nothing else. That is evidence
+// for the name only - a call relocation's symbol name is not scored, the
+// identity of the callee belongs to whichever AI TU lands it, and this
+// declarator claims nothing.
+void AI_equip_artifacts(hero* current_hero);
+
+// E:\gamedcs\events.cpp:478.  The artifact hand-over every arm of
+// DoEventArtifact (0x49f7e0) ends on: fetch the cell back out of the map,
+// give the hero whatever artifact it names, and pick the object up.
+//
+// It takes the POINT, not the cell, and re-fetches through GetCell -
+// which is what its `push point / call GetCell` opening says and what
+// makes it usable from an arm that has already lost the cell pointer.
+//
+// The artifact record is built with BOTH fields at -1 before the id is
+// written over the first of them, and retail keeps that dead store: the
+// record's address is taken by GiveArtifact, so VC6 will not eliminate a
+// store into it. Spelled longhand here because type_artifact's default
+// constructor is behind a view this TU does not open - opening it would
+// put a {-1,-1} pair in front of every OTHER artifact record in this file
+// and cost the six rows that build one field at a time.
+VA(0x0049e8f0, 0x146)  // linkorder + GetCell/EraseAndFizzle pair, dc 0x90814
+void advManager::GiveArtifact(hero* current_hero, type_point point,
+                              bool human_player)
+{
+    NewmapCell* cell = GetCell(point);
+
+    type_artifact artifact;
+    artifact.artifactId = ARTIFACT_NONE;
+    artifact.extra = -1;
+    artifact.artifactId = cell->objectIndex;
+    current_hero->GiveArtifact(&artifact, 1, 1);
+    if (!human_player)
+        AI_equip_artifacts(current_hero);
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+    current_hero->CheckLevel();
+}
+
 VA(0x0049f040, 0x23)  // decorated identity + event-pool index arithmetic
 TreasureData* advManager::get_treasure_data(NewmapCell* cell) const
 {
@@ -3493,20 +3540,6 @@ void advManager::DoEventRallyFlag(hero* current_hero, NewmapCell* cell,
         advWindow->UpdateHeroLocators(-1, 1, 1);
     UpdBottomView(1, 1, 1);
 }
-
-// An ai_player..ai_tactical bracket helper (109 B at 0x433b40) the AI arms
-// of the corpse, the wagon and the tomb all run after picking an artifact up: it walks
-// the hero's backpack from get_last_backpack_index down and offers each
-// entry to 0x433e20 with request 0x13. Retail takes the hero in ECX and
-// pushes nothing, which under /Gr is exactly a one-pointer free function -
-// so it is spelled that way here rather than invented as a `hero` member.
-// The NAME is a Dreamcast line-table read: the statement at
-// E:\gamedcs\events.cpp:3555, inside DoEventWagon (dc 0x96784), calls
-// ?AI_equip_artifacts@@YAXPAVhero@@@Z and nothing else. That is evidence
-// for the name only - a call relocation's symbol name is not scored, the
-// identity of the callee belongs to whichever AI TU lands it, and this
-// declarator claims nothing.
-void AI_equip_artifacts(hero* current_hero);
 
 // The philai.obj appraisal the refugee camp's AI arm runs, named by the
 // Dreamcast xref graph: advManager::RecruitEvent's single philai callee is
