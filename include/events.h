@@ -24,6 +24,12 @@ enum EAdventureEventText {
     // choice (+2 Attack against +2 Defense) and 1 the already-fought line.
     ADV_EVENT_TEXT_ARENA = 0,
     ADV_EVENT_TEXT_ARENA_VISITED = 1,
+    // The "no room in your backpack" line, byte-proven by the folded
+    // [Text._First + 8] load at 0x4a5ec8 in DoEventSpellScroll (0x4a5ea0).
+    // The ROLE is what names it: row 2 sits immediately after the arena's
+    // pair rather than anywhere near an object whose name begins with a
+    // letter, so it is a generic refusal rather than one object's line.
+    ADV_EVENT_TEXT_BACKPACK_FULL = 2,
     // The four "one permanent primary skill, once per hero" objects, and
     // each one is a PAIR: the reward line, then the already-visited line
     // straight after it. The rows land where the alphabet puts each
@@ -117,6 +123,17 @@ enum EAdventureEventText {
     // DoEventMercenaryCamp (0x4a38b0), picture 0x1f = +1 Attack.
     ADV_EVENT_TEXT_MERC_CAMP = 80,
     ADV_EVENT_TEXT_MERC_CAMP_VISITED = 81,
+    // DoEventMine (0x4a39a0), and the mine is the one object in this enum
+    // whose rows are SPLIT across the file. 84 is the prompt an unowned,
+    // monster-guarded mine asks with iMBType 2 and 85 the line its cleared
+    // tile shows; both sit between the mercenary camp's 80/81 and the
+    // mystical garden's 92/93, which is where the alphabet puts "mine".
+    // 187 is the same prompt for a mine that belongs to an ENEMY - a
+    // single-consumer row out past the witch hut's block, so the ROLE is
+    // what names it, as with WITCH_HUT_NO_SKILL at 190.
+    ADV_EVENT_TEXT_MINE_GUARDED = 84,
+    ADV_EVENT_TEXT_MINE_CLEARED = 85,
+    ADV_EVENT_TEXT_MINE_DEFENDED = 187,
     // The wandering-stack outcome handlers, and the run is contiguous
     // because "monster" is a single alphabetical entry: 86 is the join
     // offer monsters_join (0x4a7000) asks with iMBType 2, 91 the
@@ -191,6 +208,12 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_SIRENS = 132,
     ADV_EVENT_TEXT_SIRENS_VISITED = 133,
     ADV_EVENT_TEXT_SIRENS_NO_LOSS = 134,
+    // The scroll pickup line, SHARED by DoEventSpellScroll (0x4a5ea0) and
+    // the customised-cell handler it delegates to (0x4a5a80). It is a
+    // sprintf format taking the SPELL's name out of akSpellTraits, not an
+    // artifact name, and the dialog shows it with picture class 9 - the
+    // spell class - where every other artifact row in this enum uses 8.
+    ADV_EVENT_TEXT_SPELL_SCROLL = 135,
     // DoEventStables (0x4a60a0), and this is the only object in the enum
     // with FOUR contiguous rows: the handler accumulates what it actually
     // did into a two-bit value and switches over it, so every combination
@@ -227,6 +250,13 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_WAR_SCHOOL_CHOOSE = 158,
     ADV_EVENT_TEXT_WAR_SCHOOL_VISITED = 159,
     ADV_EVENT_TEXT_WAR_SCHOOL_NO_GOLD = 160,
+    // DoEventTreasure (0x4a6520), the treasure chest: 145 is the sprintf
+    // format taking the artifact name. Its twin 146 belongs to
+    // DoTreasureDialog (0x4a6440), which is not reconstructed here, so
+    // only the row this body proves is named. 145 sits directly after the
+    // training grounds' pair at 143/144, which is where the alphabet puts
+    // "treasure chest".
+    ADV_EVENT_TEXT_TREASURE_ARTIFACT = 145,
     // do_event_warrior_tomb (0x4a7c30). 161 is asked with iMBType 2 - the
     // yes/no form whose answer the handler reads back out of
     // heroWindowManager::dialogReturn - 162 is a sprintf format taking the

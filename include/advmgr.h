@@ -457,6 +457,25 @@ DATA(0x00691354) extern const char* const gCreatureGenerator4RolloverNames[];
 #if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_EVENTS_VIEW)
 extern const char* gResourceNames[7];
 #endif
+#ifdef HOMM3_EVENTS_VIEW
+// The two mine tables advManager::DoEventMine (0x4a39a0) reads, both
+// text.obj/game-side globals declared here because this is where the
+// adventure-object tables of the events TU already live.
+//
+// 0x678288 is the per-mine-type daily yield and its CONTENTS are the
+// proof: 2, 1, 2, 1, 1, 1, 1000 - wood, mercury, ore, sulfur, crystal,
+// gems, gold, HoMM3's published mine rates in resource order. The
+// Dreamcast publishes `?gMineCharacteristics@@3PAHA` and the shape
+// agrees exactly.
+DATA(0x00678288) extern const int gMineCharacteristics[7];
+// 0x6a5e20 is the per-mine-type capture line, indexed by the same type
+// and handed straight to NormalDialog as its text. It has exactly ONE
+// code consumer image-wide. The Dreamcast publishes TWO char** mine
+// tables - `?gMineEventText@@3PAPBDA` and `?gMineDescriptions@@3PAPBDA` -
+// and only the ROLE separates them: this one is an event dialog's text,
+// so it takes the event name. PROVISIONAL on that ground alone.
+DATA(0x006a5e20) extern const char* const gMineEventText[];
+#endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;
 DATA(0x006a64d8) extern const char* const gWiseTreePriceNames[];
@@ -1088,6 +1107,28 @@ public:
     // `ret 0x10` - the point is EraseAndFizzle's again.
     void DoEventSurvivor(class hero* current_hero, NewmapCell* cell,
                          type_point point, bool human_player);
+    // The treasure chest (jump-table arm 0x65) and the payout dialog it
+    // hands its two amounts to. Both are the Dreamcast's own signatures -
+    // the chest four arguments and `ret 0x10`, the dialog a PRIVATE
+    // `(hero*, int, bool)`. DoTreasureDialog is DECLARED only; its row
+    // (0x4a6440) is not claimed here.
+    void DoTreasureDialog(class hero* current_hero, int amount,
+                          bool human_player);
+    void DoEventTreasure(class hero* current_hero, NewmapCell* cell,
+                         type_point point, bool human_player);
+    // The spell scroll (jump-table arm 0x5d) and the customised-cell
+    // handler it delegates to. Both are the Dreamcast's own four-argument
+    // signatures with `ret 0x10`; DoCustomSpellScroll is DECLARED only, as
+    // a PRIVATE member, and its row (0x4a5a80) is not claimed here.
+    void DoCustomSpellScroll(class hero* current_hero, NewmapCell* cell,
+                             type_point point, bool human_player);
+    void DoEventSpellScroll(class hero* current_hero, NewmapCell* cell,
+                            type_point point, bool human_player);
+    // The mine (jump-table arm 0x35). The Dreamcast's own parameter order
+    // puts the CELL first, and retail's `[ebp+8]` is the cell; `ret 0x10`
+    // for four arguments.
+    void DoEventMine(NewmapCell* cell, class hero* current_hero,
+                     type_point point, bool human);
     // The Corpse (jump-table arm 0x16). Dreamcast `(hero*, NewmapCell*,
     // bool)`; the cell reaches only its +0x00 dword, so it takes the union
     // spelling like the tomb and the wagon.
@@ -1152,7 +1193,18 @@ public:
     // against 1152 is 0.81.
     void monsters_give_reward(class hero* current_hero, NewmapCell* cell,
                               bool human_player);
-    int CombatMonsterEvent(class hero* who, TCreatureType monType,
+    // monType IS `int` HERE and the Dreamcast's `W4TCreatureType@@` is not.
+    // The reason is a call site, not taste: DoEventMine (0x4a39a0) passes
+    // armyGroup::armies[0], which this tree spells `int`, so a TCreatureType
+    // parameter forces the union bridge INTO the argument list - and VC6
+    // HOISTS an inline-expanded call out of the right-to-left argument
+    // chain, creating its pseudo before every other argument and permuting
+    // the whole EAX/ECX/EDX assignment (96.30 against 100.0, measured with
+    // and without). Naming the bridge result in a local first does not
+    // help; the pseudo is created early either way. monsters_fight, which
+    // passes a TCreatureType local, stays exact across the change, and a
+    // call relocation's symbol name is not scored.
+    int CombatMonsterEvent(class hero* who, int monType,
                            int* numMons, NewmapCell* eventCell,
                            type_point point, TCreatureType monType2,
                            int numMons2, int numGroups2,

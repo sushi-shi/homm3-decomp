@@ -3055,6 +3055,94 @@ void advManager::DoEventMercenaryCamp(hero* current_hero, NewmapCell* cell,
     current_hero->MercCampFlags |= 1 << cell->extraInfo;
 }
 
+// townmgr.obj's OTHER join report - the armyGroup overload of the pair
+// monsters_join already reaches. The Dreamcast decorates it with TWO
+// parameters (`?do_monster_join_dialog@@YAXPAVhero@@PAVarmyGroup@@@Z`);
+// retail takes THREE, the hero in ECX, the group in EDX and a literal 1 on
+// the stack, so the arity screen says the retail source gained an argument
+// after the port. Declared file-locally at its only consumer here.
+void do_monster_join_dialog(hero* inHero, armyGroup* monsters, int flag);
+
+// E:\gamedcs\events.cpp:2350.  The mine (jump-table arm 0x35): a
+// same-team visit only offers the garrison back, an unowned or enemy mine
+// is fought for if the hero accepts, and the tile is claimed either way
+// once nothing is left guarding it.
+//
+// The Dreamcast's body (dc 0x94314) is NOT this one - it goes straight to
+// CombatMonsterEvent and has no armyGroup join report, no HasCreatures
+// gate and no DoCombat - so the line table bounds the statement order and
+// nothing else; the shape below is retail's own bytes.
+//
+// Three things are worth naming. The guarded mine's prompt picks its text
+// row on the sign of playerOwner with EVERY OTHER argument shared, which
+// is the fountain's lever: retail's ten pushes all precede the branch and
+// only the text load is duplicated. An unowned mine guarded by exactly ONE
+// stack goes through CombatMonsterEvent with the count written back by
+// pointer, where every other case goes through the full DoCombat. And the
+// creature id reaches CombatMonsterEvent as a PLAIN int expression, not
+// through creature_type_from_int - see the declarator's note in advmgr.h
+// for what an inline call inside an argument list costs.
+VA(0x004a39a0, 0x21D)  // jump-table arm 0x35 + game::ClaimMine + advevent.txt 84/85/187, dc 0x94314
+void advManager::DoEventMine(NewmapCell* cell, hero* current_hero,
+                             type_point point, bool human)
+{
+    mine& current_mine = gpGame->mines[cell->extraInfo];
+    if (gpGame->OnSameTeam(current_mine.playerOwner, gNetLocalGamePos)) {
+        if (current_mine.playerOwner == gNetLocalGamePos && human)
+            do_monster_join_dialog(current_hero, &current_mine.guards, 1);
+        return;
+    }
+
+    if (current_mine.guards.HasCreatures()) {
+        if (human) {
+            OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+            UpdBottomView(0, 1, 1);
+            if (current_mine.playerOwner < 0)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_MINE_GUARDED),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            else
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_MINE_DEFENDED),
+                             2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+                return;
+        } else if (AI_value_of_event(current_hero, point) <= 0) {
+            return;
+        }
+
+        if (current_mine.playerOwner < 0
+            && current_mine.guards.GetNumArmies() == 1) {
+            int guard_count = current_mine.guards.numTroops[0];
+            if (CombatMonsterEvent(
+                    current_hero, current_mine.guards.armies[0],
+                    &guard_count, cell, point,
+                    creature_type_from_int(-1), 0, 0,
+                    creature_type_from_int(-1), 0, 0)) {
+                current_mine.guards.numTroops[0] = guard_count;
+                return;
+            }
+            current_mine.guards.Initialize();
+            if (human)
+                NormalDialog(gpAdventureEventText->GetText(
+                                 ADV_EVENT_TEXT_MINE_CLEARED),
+                             1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        } else if (DoCombat(point, current_hero, &current_hero->army,
+                            current_mine.playerOwner, 0, 0,
+                            &current_mine.guards, -1, 1, 0)) {
+            return;
+        }
+        current_hero->restore_cell();
+    }
+
+    if (human)
+        NormalDialog(gMineEventText[current_mine.type], 1, -1, -1,
+                     current_mine.type,
+                     -gMineCharacteristics[current_mine.type],
+                     -1, 0, -1, 0, -1, 0);
+    gpGame->ClaimMine(cell->extraInfo, gNetLocalGamePos, const_normal_action);
+}
+
 // E:\gamedcs\events.cpp:2423.  The mystical garden: 500 gold or five of
 // anything else, once per week per player. The visit lands in the
 // player's own MysticalGardenFlags BEFORE anything is decided, so a
@@ -3467,6 +3555,54 @@ void advManager::DoEventSiren(hero* current_hero, NewmapCell* cell,
     current_hero->flags |= 0x100000;
 }
 
+// E:\gamedcs\events.cpp:3207.  The spell scroll (jump-table arm 0x5d): one
+// scroll, refused outright to a hero with all sixty-four backpack slots
+// full, and handed to DoCustomSpellScroll when the cell is customised.
+//
+// The scroll is not an artifact id at all - it is artifact 1 with the
+// SPELL in the record's second dword, which is why the dialog names it out
+// of akSpellTraits and shows it with picture class 9 instead of the 8 every
+// other artifact-bearing handler here uses. The Dreamcast builds it with a
+// dedicated `type_artifact(SpellID)` constructor (line 3222); retail's two
+// stores are that constructor inlined, id first.
+//
+// The customised test and the spell read share ONE load of the cell's
+// dword - retail's `mov edi,[eax] / mov edx,edi / shr edx,0x1f` - so the
+// spell local is written after the test, not before it.
+VA(0x004a5ea0, 0x1F9)  // jump-table arm 0x5d + advevent.txt 2/135, dc 0x95e14
+void advManager::DoEventSpellScroll(hero* current_hero, NewmapCell* cell,
+                                    type_point point, bool human_player)
+{
+    if (current_hero->get_number_in_backpack(1) >= 64) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BACKPACK_FULL),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    if (cell->IsCustomized()) {
+        DoCustomSpellScroll(current_hero, cell, point, human_player);
+        return;
+    }
+
+    int spell = cell->extraInfo;
+    type_artifact scroll;
+    scroll.artifactId = ARTIFACT_SPELL_SCROLL;
+    scroll.extra = spell;
+    if (human_player) {
+        sprintf(gText,
+                gpAdventureEventText->GetText(ADV_EVENT_TEXT_SPELL_SCROLL),
+                akSpellTraits[spell].name);
+        NormalDialog(gText, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
+    }
+    current_hero->GiveArtifact(&scroll, 1, 1);
+    if (!human_player)
+        AI_equip_artifacts(current_hero);
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+}
+
 // E:\gamedcs\events.cpp:3246.  The Stables, jump-table arm 0x5e =
 // OBJECT_STABLES, and the only adventure object in this file that does
 // TWO unrelated things and then reports whichever ones actually happened.
@@ -3613,6 +3749,50 @@ void advManager::DoEventTrainingGrounds(hero* current_hero, NewmapCell* cell,
     // byte, so the choice stays per-call-site.
     game* g = gpGame;
     g->SetInfoFlag(TrainingGroundsInfo, gNetLocalGamePos);
+    current_hero->CheckLevel();
+}
+
+// E:\gamedcs\events.cpp:3414.  The treasure chest (jump-table arm 0x65):
+// either an artifact or a pile of gold, and the gold arm is also where an
+// artifact chest lands when the hero has no backpack slot left - as a flat
+// thousand, not as the chest's own amount.
+//
+// The Dreamcast line table (dc 0x963d8) puts the type_artifact record
+// BEFORE the dialog (line 3421 against 3426/3427), the opposite of the
+// shipwreck survivor's order, and retail agrees: the id is materialised
+// into the record and the dialog argument is read back out of it.
+//
+// The chest is the only object in this file that ends with CheckLevel -
+// DoTreasureDialog can pay experience instead of gold, so the hero may
+// have levelled by the time the fizzle is over.
+VA(0x004a6520, 0x1ED)  // jump-table arm 0x65 + advevent.txt 145, dc 0x963d8
+void advManager::DoEventTreasure(hero* current_hero, NewmapCell* cell,
+                                 type_point point, bool human_player)
+{
+    if (cell->TreasureIsArtifact()) {
+        if (current_hero->get_number_in_backpack(1) < 64) {
+            type_artifact artifact;
+            artifact.artifactId = cell->GetTreasureArtifact();
+            artifact.extra = -1;
+            if (human_player) {
+                sprintf(gText,
+                        gpAdventureEventText->GetText(
+                            ADV_EVENT_TEXT_TREASURE_ARTIFACT),
+                        akArtifactTraits[artifact.artifactId].name);
+                NormalDialog(gText, 1, -1, -1, 8, artifact.artifactId,
+                             -1, 0, -1, 0, -1, 0);
+            }
+            current_hero->GiveArtifact(&artifact, 1, 1);
+            if (!human_player)
+                AI_equip_artifacts(current_hero);
+        } else {
+            DoTreasureDialog(current_hero, 1000, human_player);
+        }
+    } else {
+        DoTreasureDialog(current_hero, cell->GetTreasureSize(), human_player);
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
     current_hero->CheckLevel();
 }
 

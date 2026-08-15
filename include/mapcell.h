@@ -270,6 +270,20 @@ struct CampfireInfo {
     unsigned long size : 28;
 };
 SIZE(CampfireInfo, 4);
+
+// The treasure chest's arm. advManager::DoEventTreasure (0x4a6520) fixes
+// three lanes: a SIGNED ten-bit artifact id at bits 0..9 (`shl eax,0x16 /
+// sar eax,0x16`), the "this chest holds an artifact" flag at bit 10 (`shr
+// ecx,0xa / test cl,1`) and a four-bit UNSIGNED gold count at bits 11..14
+// (`shr eax,0xb / and eax,0xf`) in units of 500. GATED for MonsterInfo's
+// reason.
+struct TreasureInfo {
+    signed long artifact : 10;
+    unsigned long has_artifact : 1;
+    unsigned long gold : 4;
+    unsigned long tail : 17;
+};
+SIZE(TreasureInfo, 4);
 #endif
 
 // Stride 38 (0x26), byte-proven by game::get_cell's `*19` then `*2`
@@ -300,6 +314,7 @@ public:
         unsigned long extraInfo;
         MonsterInfo monster_info;
         CampfireInfo campfire_info;
+        TreasureInfo treasure_info;
     };
 #else
     unsigned long extraInfo;
@@ -453,6 +468,19 @@ public:
     // sign-extends under VC6.
     short GetCampfireSize() const { return campfire_info.size; }
     int GetCampfireResource() const { return campfire_info.resource; }
+
+    // The treasure chest's trio, named and decorated by the Dreamcast line
+    // table over DoEventTreasure (dc 0x963d8): TreasureIsArtifact is `_N`,
+    // GetTreasureArtifact `?AW4TArtifact` and GetTreasureSize `F`. Scoped
+    // to NewmapCell for the campfire's reason - the handler hands the whole
+    // cell to EraseAndFizzle. The *500 lives INSIDE GetTreasureSize,
+    // exactly as it does in get_wheel_gold, which is why retail truncates
+    // the product with `movsx eax,dx` even though 15*500 provably fits in a
+    // short. The artifact getter is spelled `int` for get_tomb_artifact's
+    // reason.
+    bool TreasureIsArtifact() const { return treasure_info.has_artifact; }
+    int GetTreasureArtifact() const { return treasure_info.artifact; }
+    short GetTreasureSize() const { return treasure_info.gold * 500; }
 
     // mapcell.cpp:46 in the DC roster, and the SAME inherited member
     // IsCustomized is: retail's do_event_dragon_city (0x4a2140) passes the
