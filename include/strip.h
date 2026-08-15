@@ -54,6 +54,17 @@ public:
     strip(int inX, int inY, int inPos, int newIcons, int newIconFrame,
           long new_owner, hero* new_hero, armyGroup* groupToDraw, int firstId,
           unsigned char update, heroWindow* inWin);
+    // Declared, deliberately NOT defined - not here and not in strip.cpp.
+    // Retail's `delete strip` calls a real out-of-line body before
+    // operator delete: townManager::UnloadTown 0x5c70b0 and ::SwapHeroes
+    // 0x5d5150 both emit `mov ecx,<p> / call 0x5bc690 / push <p> / call
+    // ??3@YAXPAX@Z`. 0x5bc690 is a lone `ret`, which is what an empty
+    // non-virtual destructor compiles to and what /OPT:ICF then folds
+    // with every other empty body in the image (the carve names the fold
+    // border_vslot04, so the address cannot be claimed here). Defining it
+    // inline, or leaving it undeclared, drops the call and blocks every
+    // body that frees a strip.
+    ~strip();
     void Draw(TCreatureType divide_creature);
     void DrawIcons(unsigned char update, TCreatureType divide_creature);
 

@@ -223,7 +223,12 @@ public:
     // the word is the range's top. The mirror of minDamage's proof, and
     // the two sit adjacent. Name provisional; no roster attests it.
     int maxDamage;                // +0xd4
-    char pad_d8[0x4];
+    // Shots left this combat. Sliced 2026-08-14 out of pad_d8 by
+    // army::can_shoot (0x4428f0), which gates the whole predicate on
+    // `mov eax,[this+0xd8]; test eax,eax; jle` right after the shooter
+    // attribute bit - a signed dword, and the only ranged resource a
+    // stack can run out of. Name provisional; no roster reaches it.
+    int numShots;                 // +0xd8
     // "This stack still has a creature spell to cast": ai.cpp's
     // choose_spell_action (0x421280) reads the dword and returns 0
     // outright while it is zero, before it even looks at creatureType.
@@ -291,10 +296,24 @@ public:
     int moralePenaltyRounds;      // +0x260
     int luckBonusRounds;          // +0x264
     int luckPenaltyRounds;        // +0x268
-    char pad_26c[0x18];
+    char pad_26c[0x4];
+    // The gate on army::GetSpeed's (0x448cd0) speed multiplier: while it is
+    // non-zero a stack that carries creatureId bit 6 has NO speed at all,
+    // and everyone else has their base speed scaled by field_4c8 and floored
+    // at one. Sliced 2026-08-14 from that body; the pair is the shape of a
+    // speed-altering spell effect, but nothing names either word, so both
+    // keep ADDRESS-ORDINAL names.
+    int field_270;                // +0x270
+    char pad_274[0x10];
     int berserkFlag;              // +0x284 (is_enemy: true vs everyone)
     int hypnotizeFlag;            // +0x288 (flips the effective side)
-    char pad_28c[0x4];
+    // Sliced 2026-08-14 out of pad_28c by army::can_shoot (0x4428f0):
+    // a shooter that has it set AND whose field_4c4 has reached 2 loses
+    // the ranged attack entirely, which is the Forgetfulness shape.
+    // ADDRESS-ORDINAL NAME - no roster, string or DC field reaches it,
+    // and the paired level word at +0x4c4 is unnamed for the same reason.
+    int field_28c;                // +0x28c
+
     // Three round counters the combat AI treats as "this stack cannot
     // act": any of them non-zero disqualifies a stack from the melee
     // threat census (set_melee_enemies 0x43bf20) and caps a ranged
@@ -322,7 +341,16 @@ public:
     // this float whenever fireShieldRounds is non-zero; otherwise the
     // innate Efreet Sultan path supplies the shared 0.2f constant.
     float fireShieldStrength;     // +0x4a0
-    char pad_4a4[0x3c];
+    char pad_4a4[0x20];
+    // The level word army::can_shoot (0x4428f0) tests against 2 while
+    // field_28c is set. Sliced 2026-08-14 from the same body; see the
+    // note at field_28c for why both keep address-ordinal names.
+    int field_4c4;                // +0x4c4
+    // The multiplier army::GetSpeed applies to field_c4 while field_270 is
+    // set - `fld dword [ebp-4]; fmul dword [this+0x4c8]; call __ftol`, so a
+    // single-precision float, not a percentage int. See field_270.
+    float field_4c8;              // +0x4c8
+    char pad_4cc[0x14];
     // Read by combatManager::ViewArmy and forwarded as the first
     // argument of the post-dialog command. The DC name for the nearby
     // scalar run does not survive the retail STL-layout shift, so keep

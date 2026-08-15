@@ -26,6 +26,9 @@ public:
     // and kept the rest in the same relative order: CheckHandleNet
     // (0x557860), GetAbortPopupMsg (0x557900), and _purecall (0x617d9a) in
     // slot 3, which is what makes HandleNetMsg pure here too.
+    // A CALL SITE corroborates slot 0 independently: townManager::Close
+    // (0x5c71b0) deletes its CTownNetMsgHandler through vtable slot 0, so
+    // CheckHandleNet cannot live there.
     virtual ~CNetMsgHandler();                                    // slot 0
     virtual CNetMsg* CheckHandleNet(unsigned char inPopup,
                                     unsigned char* msgReceived);  // slot 1

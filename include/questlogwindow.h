@@ -26,9 +26,13 @@
 class TQuestLogWindow : public CAdvPopup {
 public:
     std::vector<int> seerHutLogList;
-    // Zeroed by the constructor and untouched by the destructor. Its width
-    // is proven (a dword store) and its meaning is not, so it is not named.
-    int field_70;
+    // Scroll offset of the topmost listed quest: zeroed by the constructor,
+    // untouched by the destructor, and read by UpdateQuestLocator (0x52e270)
+    // as the base of the row index it then uses to select out of
+    // seerHutLogList, bailing when the sum reaches size(). Both lanes
+    // reached that role off the same body; the spelling is a house
+    // placeholder, no dump names it.
+    int firstVisibleQuest;  // +0x70
 
     virtual ~TQuestLogWindow();
     virtual int WindowHandler(message* msg);

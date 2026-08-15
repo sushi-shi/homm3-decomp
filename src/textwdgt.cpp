@@ -3,20 +3,18 @@
 // 22 functions in link order.
 #include <va.h>
 #include "textwdgt.h"
-// ResourceManager::GetBitmap816, the loader bitmapBackedTextWidget's
-// constructor calls. The header is pure forward declarations - it adds no
-// type definitions to this TU's closure.
-#include "resourcemanager.h"
+#include "bitmap16.h"
 #include "bitmap816.h"
-#include "winmgr.h"
-// bitmapBackedTextWidget::Draw offsets the widget rect by its parent
-// window's origin, so this TU needs the COMPLETE heroWindow (the
-// bitmapBorder::Draw precedent in border.cpp).
+#include "recruit.h"
+#include "resourcemanager.h"
 #include "window.h"
+#include "winmgr.h"
 
-// VC6's retail min site in this TU copies both operands into homes and
-// selects one by address; this by-value wrapper reproduces that shape.
-// The installed Dinkumware overload takes const references.
+// VC6's own <xutility> reference-returning min, declared file-locally for
+// the same reason ai_combat.cpp and combatresultswindow.cpp declare it: the
+// clamp in bitmapBackedTextWidget::Draw stores BOTH operands to stack temps
+// and selects between their ADDRESSES with two LEAs, which no
+// value-returning spelling produces, and the TU needs no other STL surface.
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 {
@@ -49,7 +47,6 @@ void textWidget::textWidget(int textWidgetX, int textWidgetY, int textWidgetWidt
 // operator delete tail.
 VA_COMPGEN(0x005bc250, 0x21, SCALAR_DELETING_DTOR, textWidget)
 
-// E:\gamedcs\textwdgt.cpp:95
 VA(0x005bc3b0, 0x8A)  // anchor-global, dc 0x164d24
 textWidget::~textWidget()
 {
@@ -73,25 +70,56 @@ int textWidget::Main(message* msg)
 }
 
 // E:\gamedcs\textwdgt.cpp:232
+// EXCLUDED CLASS - no claim may sit here. The empty body compiles to a
+// bare `ret`, which /OPT:ICF folded onto the program-wide 1-byte
+// representative at 0x5bc690: forty-eight vtable slots across the whole
+// image point at it (whole-image scan of the absolute operand), so the
+// row has no single owning TU. Same standing as widget::Close and the
+// slot-3 `ret 8` fold at 0x5bc7e0 that border.h/button.h already record.
 DC_ONLY(0x164f7c, 0x4)
 void textWidget::zBufferDraw()
 {
     // @stub
 }
 
-// E:\gamedcs\textwdgt.cpp:235
-DC_ONLY(0x164f80, 0xB2)
-void textWidget::Draw()
-{
-    // @stub
-}
-
 // E:\gamedcs\textwdgt.cpp:257
+// EXCLUDED CLASS, same cause as zBufferDraw above: the empty override
+// folded onto the shared 1-byte `ret`. textWidget's vtable slot 8 and
+// the empty zBufferDraw both point at 0x5bc690 for that reason.
 DC_ONLY(0x165034, 0x4)
 void textWidget::Dim()
 {
     // @stub
 }
+
+#endif  // @carcass
+
+// E:\gamedcs\textwdgt.cpp:235
+// Slot 4 of textWidget's vtable 0x642db0, and the ONLY reference to
+// 0x5bc5f0 in the image - so the row is this class's Draw, not a fold.
+VA(0x005bc5f0, 0x92)  // anchor-vtable (0x642dc0) + font/FillRect calls, dc 0x164f80
+void textWidget::Draw()
+{
+    if (status & WIDGET_DRAWN) {
+        int drawX = x + parentWindow->x;
+        int drawY = y + parentWindow->y;
+        if (BackColor) {
+            gpWindowManager->screenBitmap->FillRect(
+                drawX, drawY, width, height,
+                gUnnamed6aacb0->backColors[BackColor]);
+        }
+        int colorScheme;
+        if (status & WIDGET_DIMMED)
+            colorScheme = Color + 2;
+        else
+            colorScheme = Color;
+        Font->DrawBoundedString(Text.c_str(), gpWindowManager->screenBitmap,
+                                drawX, drawY, width, height,
+                                colorScheme, Justify, -1);
+    }
+}
+
+#if 0  // @carcass
 
 // E:\gamedcs\textwdgt.cpp:266
 DC_ONLY(0x165038, 0x58)
@@ -186,15 +214,13 @@ void* bitmapBackedTextWidget::`scalar deleting destructor'(unsigned __flags)
 
 #endif  // @carcass
 
-// E:\gamedcs\textwdgt.cpp:320 - bitmapBackedTextWidget::`scalar
-// deleting destructor' (dc 0x16537c), slot 0 of vtable 0x642de8. This
-// claim used to be blocked exactly as the note here recorded: the TU's
-// only bitmapBackedTextWidget body was the dtor, whose own vptr store is
-// dead-store-eliminated against the inlined ~textWidget, so nothing
-// referenced ??_7bitmapBackedTextWidget@@6B@ and VC6 emitted neither the
-// vtable nor the ??_G COMDAT. Landing the eleven-parameter constructor
-// below - whose `mov [esi], offset ??_7bitmapBackedTextWidget` is a LIVE
-// vptr store - supplies the reference, and the claim pairs.
+// bitmapBackedTextWidget::`scalar deleting destructor' (0x5bc6a0, 33 B,
+// dc 0x16537c, slot 0 of vtable 0x642de8). The earlier note here recorded
+// the measurement that the Draw override alone emits no vtable and no ??_G:
+// only a STORE of ??_7bitmapBackedTextWidget@@6B@ makes VC6 emit the COMDAT
+// pair, this class's constructors are the only bodies that store it, and the
+// empty destructor's own store is dead against the inlined ~textWidget. The
+// constructor is landed below, so the claim pairs exactly as predicted.
 VA_COMPGEN(0x005bc6a0, 0x21, SCALAR_DELETING_DTOR, bitmapBackedTextWidget)
 
 // E:\gamedcs\textwdgt.cpp:320
@@ -204,37 +230,36 @@ bitmapBackedTextWidget::~bitmapBackedTextWidget()
 }
 
 // E:\gamedcs\textwdgt.cpp:325
-VA(0x005bc760, 0x7B)  // anchor-vtable 0x642de8, dc 0x1651d8
-bitmapBackedTextWidget::bitmapBackedTextWidget(int x, int y, int w, int h,
-                                               const char* text,
-                                               const char* fontName,
-                                               const char* back,
-                                               font::TColor color, int id,
-                                               unsigned justify, int style)
+// The eleven-parameter constructor. Its own argument slots identify it: ten
+// of the eleven go straight through to the textWidget base in retail's push
+// order, with a literal 0 in the back-colour slot, and the one it holds
+// back - the dword at +0x20 - is the single fastcall argument to
+// GetBitmap816, whose result lands in the +0x50 image pointer Draw already
+// reads. That is the Dreamcast prototype (x, y, w, h, text, font, back,
+// color, id, justify, style) verbatim. The vptr store retail makes right
+// after the base call is the one that emits vtable 0x642de8.
+VA(0x005bc760, 0x7B)  // anchor-vtable 0x642de8 + arity screen, dc 0x1651d8
+bitmapBackedTextWidget::bitmapBackedTextWidget(
+    int x, int y, int w, int h, const char* text, const char* fontName,
+    const char* backName, font::TColor color, int id, unsigned justify,
+    int style)
     : textWidget(x, y, w, h, text, fontName, color, id, justify, 0, style)
 {
-    Background = ResourceManager::GetBitmap816(back);
+    image = ResourceManager::GetBitmap816(backName);
 }
 
-// E:\gamedcs\textwdgt.cpp:348 - bitmapBackedTextWidget::Draw, slot 4 of
-// vtable 0x642de8. It blits the whole backing bitmap under the widget rect
-// and then lets textWidget::Draw put the string on top; the clamp on each
-// axis is the reference-returning min VC6 inlines as two dword homes and an
-// address select, not the __min macro (which would reload the operand).
 // E:\gamedcs\textwdgt.cpp:348
-VA(0x005bc7f0, 0x7C)  // anchor-vtable (slot 4 of 0x642de8), dc 0x165258
+// Slot 4 of vtable 0x642de8 and the ONLY reference to 0x5bc7f0 in the
+// image. Blits the backing bitmap clamped to its own extent, then runs the
+// base text draw.
+VA(0x005bc7f0, 0x7c)  // anchor-vtable (0x642df8) + Bitmap816 blit, dc 0x165258
 void bitmapBackedTextWidget::Draw()
 {
-    int destX = x + parentWindow->x;
-    int destY = y + parentWindow->y;
-    int drawWidth = _cpp_min<int>(Background->Width, width);
-    int drawHeight = _cpp_min<int>(Background->Height, height);
-    Background->Draw(0, 0, drawWidth, drawHeight,
-        gpWindowManager->screenBitmap, destX, destY, 0);
+    int drawX = x + parentWindow->x;
+    int drawY = y + parentWindow->y;
+    int blitWidth = _cpp_min<int>(image->Width, width);
+    int blitHeight = _cpp_min<int>(image->Height, height);
+    image->Draw(0, 0, blitWidth, blitHeight,
+                gpWindowManager->screenBitmap, drawX, drawY, 0);
     textWidget::Draw();
 }
-
-#if 0  // @carcass
-
-
-#endif  // @carcass
