@@ -2318,6 +2318,57 @@ void advManager::DoEventBoat(hero* current_hero, NewmapCell* cell)
     }
 }
 
+// E:\gamedcs\events.cpp:1355.  The campfire (jump-table arm 0x0c): a
+// four-bit resource id and a count that pays out TWICE - the count itself
+// in that resource, and a hundred gold per unit of it - after which the
+// object is picked up and the map re-centres on the hero.
+//
+// The Dreamcast line table (dc 0x922e8) gives seven statements and no more:
+// two accessor reads, the human-only dialog, two GiveResource calls, the
+// EraseAndFizzle, and a human-only SetEnvironmentOrigin. `qty * 100` is
+// written at BOTH the sites that need it and retail computes the product
+// twice, once on each side of the dialog call.
+//
+// The two reads are in the DC's order, and that order is what the register
+// file confirms: `this`, then qty, then the hero take ESI/EDI/EBX in
+// creation order, which leaves the resource with no call-crossing register
+// and homes it on the frame - exactly retail's `mov [ebp-8], eax`.
+//
+// The count is held in an INT local even though GetCampfireSize returns
+// `short`. That is byte-forced, not taste: retail widens the field ONCE
+// (`shr ecx,4 / movsx edi,cx`) and then does int arithmetic on it, where a
+// short local keeps the narrow value in EDI and pays a fresh `movsx` at
+// every use - 89.35 against 100.0, with nothing else changed.
+//
+// EraseAndFizzle is INLINED here, as in monsters_fight, and FizzleCenter
+// inside it in turn; with the sound fixed at PICKUP the fizzle's switch
+// folds to the sprintf arm alone.
+//
+// The re-centre is `SetEnvironmentOrigin(hero location, 1)` - the DC calls
+// type_obscuring_object::get_location() and retail expands it, which is
+// what the three bitfield inserts into one frame temp are: x and y into
+// their own ten-bit lanes and z into the second unit's bits 10..13.
+VA(0x004a1120, 0x1C4)  // jump-table arm 0x0c + advevent.txt 23, dc 0x922e8
+void advManager::DoEventCampfire(hero* current_hero, NewmapCell* cell,
+                                 type_point point, bool human_player)
+{
+    int qty = cell->GetCampfireSize();
+    int resource = cell->GetCampfireResource();
+
+    if (human_player)
+        NormalDialog(gpAdventureEventText->GetText(ADV_EVENT_TEXT_CAMPFIRE),
+                     1, -1, -1, GOLD, qty * 100, resource, qty,
+                     -1, 0, -1, 0);
+    current_hero->GiveResource(GOLD, qty * 100);
+    current_hero->GiveResource(resource, qty);
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+    if (human_player)
+        SetEnvironmentOrigin(type_point(current_hero->x, current_hero->y,
+                                        current_hero->z),
+                             1);
+}
+
 // E:\gamedcs\events.cpp:1378.  The Idol of Fortune: +1 luck on an odd day
 // of the week, +1 morale on an even one, and BOTH on the seventh - which
 // is the published rule written as `day == 7`, then `day & 1`. All three
@@ -3211,6 +3262,92 @@ void advManager::DoEventRefugeeCamp(hero* current_hero, NewmapCell* cell,
         AI_RecruitRefugees(current_hero, creature, &available);
     }
     cell->extraInfo = available;
+}
+
+// E:\gamedcs\events.cpp:2825.  The resource pile (jump-table arm 0x4f): a
+// customised cell goes straight to DoCustomResource, an ordinary one pays
+// the cell's own extra-info dword in the resource its objectIndex names -
+// times a HUNDRED when that resource is gold - and is then picked up.
+//
+// The Dreamcast line table (dc 0x9512c) is what fixes the two locals it
+// keeps: `type` and a 200-byte `prompt` buffer. The prompt exists because
+// the text row is a format taking the resource NAME with a lower-cased
+// first letter, so the name is copied out of gResourceNames before it can
+// be edited; retail expands the strcpy as the intrinsic (repne scasb, then
+// rep movsd/movsb) and merges tolower's stack cleanup into sprintf's.
+//
+// EraseAndFizzle is inlined here exactly as in the campfire, and runs
+// whether or not anyone was watching.
+VA(0x004a4be0, 0x1D9)  // jump-table arm 0x4f + advevent.txt 113, dc 0x9512c
+void advManager::DoEventResource(NewmapCell* cell, hero* current_hero,
+                                 type_point point, bool human_player)
+{
+    if (cell->IsCustomized()) {
+        DoCustomResource(cell, current_hero, point, human_player);
+        return;
+    }
+
+    int type = cell->objectIndex;
+    int amount;
+    if (type == GOLD)
+        amount = cell->extraInfo * 100;
+    else
+        amount = cell->extraInfo;
+    current_hero->GiveResource(type, amount);
+
+    if (human_player) {
+        char prompt[200];
+        strcpy(prompt, gResourceNames[type]);
+        prompt[0] = tolower(prompt[0]);
+        sprintf(gText,
+                gpAdventureEventText->GetText(ADV_EVENT_TEXT_RESOURCE_PICKUP),
+                prompt);
+        BVResMsg(gText, type, amount);
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+}
+
+// E:\gamedcs\events.cpp:2965.  The shipwreck survivor (jump-table arm
+// 0x56): one artifact, taken if the hero has a slot for it, and the object
+// is picked up either way.
+//
+// The Dreamcast line table (dc 0x95564) puts the type_artifact record
+// AFTER the dialog (line 2975 against 2971/2973), which is why both the
+// name lookup and the picture argument read the cell's dword directly
+// instead of going through the record - retail loads `[cell]` three
+// separate times and never keeps it in a local.
+//
+// The artifact id is the RAW extra-info dword here: `shl eax,5` indexes
+// the 32-byte trait row with no mask and no shift, so this cell has no
+// bitfield lanes at all.
+VA(0x004a52a0, 0x1DE)  // jump-table arm 0x56 + advevent.txt 125/126, dc 0x95564
+void advManager::DoEventSurvivor(hero* current_hero, NewmapCell* cell,
+                                 type_point point, bool human_player)
+{
+    if (current_hero->get_number_in_backpack(1) < 64) {
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_SURVIVOR_ARTIFACT),
+                    akArtifactTraits[cell->extraInfo].name);
+            NormalDialog(gText, 1, -1, -1, 8, cell->extraInfo,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        type_artifact artifact;
+        artifact.artifactId = cell->extraInfo;
+        artifact.extra = -1;
+        current_hero->GiveArtifact(&artifact, 1, 1);
+        if (!human_player)
+            AI_equip_artifacts(current_hero);
+    } else {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_SURVIVOR_BACKPACK_FULL),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
 }
 
 // E:\gamedcs\events.cpp:2996.  The Corpse (jump-table arm 0x16, adventure

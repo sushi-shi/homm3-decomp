@@ -257,6 +257,19 @@ struct MonsterInfo {
     unsigned long custom : 1;
 };
 SIZE(MonsterInfo, 4);
+
+// The campfire's arm of the same dword. advManager::DoEventCampfire
+// (0x4a1120) fixes both lanes: a four-bit UNSIGNED resource id at bits
+// 0..3 (`and eax,0xf`, no sign extension - the lean-to's lane again) and
+// the count in EVERYTHING above it, read as `shr ecx,4 / movsx edi,cx`.
+// That pair is the signature of a WIDE unsigned field truncated by a
+// `short` return, not of a sixteen-bit signed bitfield, which would have
+// been `shl / sar`. GATED for MonsterInfo's reason.
+struct CampfireInfo {
+    unsigned long resource : 4;
+    unsigned long size : 28;
+};
+SIZE(CampfireInfo, 4);
 #endif
 
 // Stride 38 (0x26), byte-proven by game::get_cell's `*19` then `*2`
@@ -286,6 +299,7 @@ public:
     union {
         unsigned long extraInfo;
         MonsterInfo monster_info;
+        CampfireInfo campfire_info;
     };
 #else
     unsigned long extraInfo;
@@ -427,6 +441,18 @@ public:
     // also frees EDX, which is what pushed the whole entry block's
     // register assignment off retail's.
     bool IsCustomized() const { return monster_info.custom != 0; }
+
+    // The campfire's pair, `?GetCampfireSize@ExtraInfoUnion@@QBAFXZ` and
+    // `?GetCampfireResource@ExtraInfoUnion@@QBA?AW4EGameResource@@XZ` in
+    // the Dreamcast line table over DoEventCampfire (dc 0x922e8), scoped
+    // to NewmapCell for IsCustomized's reason - the handler needs the whole
+    // cell as well, because it hands it to EraseAndFizzle. The size return
+    // is `short` and the truncation it forces is the `movsx edi,cx` at
+    // 0x4a1136; the resource is spelled `int` for GetLeanToResource's
+    // reason - the field is read UNSIGNED and an enum bitfield
+    // sign-extends under VC6.
+    short GetCampfireSize() const { return campfire_info.size; }
+    int GetCampfireResource() const { return campfire_info.resource; }
 
     // mapcell.cpp:46 in the DC roster, and the SAME inherited member
     // IsCustomized is: retail's do_event_dragon_city (0x4a2140) passes the

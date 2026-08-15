@@ -28,6 +28,11 @@ enum EAdventureEventText {
     // each one is a PAIR: the reward line, then the already-visited line
     // straight after it. The rows land where the alphabet puts each
     // object, exactly as the war school / witch hut run below does.
+    // DoEventCampfire (0x4a1120), the object's only row: one line carrying
+    // BOTH payouts, the gold and the resource, as its two picture/quantity
+    // pairs. 23 sits below the cover of darkness at 31, which is where the
+    // alphabet puts "campfire".
+    ADV_EVENT_TEXT_CAMPFIRE = 23,
     // DoEventCoverOfDarkness (0x4a14b0), the object's only row - it has
     // nothing to report but the fact of the visit. 31 sits below the
     // defense tower's 39, which is where the alphabet puts "cover of
@@ -156,10 +161,27 @@ enum EAdventureEventText {
     // index is evidence.
     ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY = 44,
     ADV_EVENT_TEXT_REFUGEE_CAMP = 112,
+    // The resource-pile pickup line, SHARED by DoEventResource (0x4a4be0)
+    // and the customised-cell handler it delegates to (0x4a4780, which
+    // formats it twice). It is a sprintf format taking the resource's own
+    // name with its first letter lower-cased, which is why the handler
+    // copies the name out of gResourceNames instead of passing it through.
+    // 113 sits directly after the refugee camp's 112, which is where the
+    // alphabet puts "resource".
+    ADV_EVENT_TEXT_RESOURCE_PICKUP = 113,
     // DoEventPowerSchool (0x4a3dc0), picture 0x21 = +1 Spell Power - the
     // fourth member of the primary-skill quartet above.
     ADV_EVENT_TEXT_POWER_SCHOOL = 100,
     ADV_EVENT_TEXT_POWER_SCHOOL_VISITED = 101,
+    // DoEventSurvivor (0x4a52a0), the shipwreck survivor: 125 is a sprintf
+    // format taking the artifact name, 126 the line a hero with all
+    // sixty-four backpack slots full gets - and unlike every other
+    // artifact-bearing object in this enum the survivor's cell carries the
+    // artifact id in its RAW extra-info dword, not in a bitfield lane. The
+    // pair sits below the sirens' block, which is where the alphabet puts
+    // "shipwreck survivor".
+    ADV_EVENT_TEXT_SURVIVOR_ARTIFACT = 125,
+    ADV_EVENT_TEXT_SURVIVOR_BACKPACK_FULL = 126,
     // DoEventSiren (0x4a5980). 132 is a sprintf format taking the
     // experience the drowned troops were worth, 133 the already-visited
     // line and 134 the row a hero with nothing to lose gets. The trio
