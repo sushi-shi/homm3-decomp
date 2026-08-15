@@ -46,14 +46,35 @@ static const char* gameTypeBackgrounds[2] = {
 };
 
 // E:\gamedcs\gametypewindow.cpp:59
-// Residual (93.73%): the complete retail widget recipe, coordinate/resource
-// tables, mode gate, EH states and final registration loop agree. The only
-// structural delta is vector<widget*>::reserve: retail keeps its empty
-// range-destroy helper out of line and inlines size(), while this VC6 compile
-// makes the opposite two nested-inline choices. Tried and rejected: named
-// row references, direct row expressions (retained as canonical), both
-// include orders, a single-call reserve adapter (85.30%), and a 1..8
-// user-defined-type population sweep (all byte-identical at 93.73%).
+// EXACT 2026-08-14 (93.7258 -> 96.7000 -> 100.0). The residual was the
+// vector<widget*>::reserve phase: retail keeps its empty range-destroy helper
+// out of line and inlines size(), while this VC6 compile made the opposite two
+// nested-inline choices. It needed BOTH /Ob2 budget axes at once, and either
+// one alone is byte-flat - which is exactly why each had been tried and
+// rejected separately (named row references and a 1..8 user-defined-type
+// population sweep, all byte-identical at 93.73%; also rejected, both include
+// orders and a single-call reserve adapter at 85.30%).
+//   AXIS 1, the DIVISOR (docs/vc6/inliner.md, solved in mainmenu.cpp): every
+// candidate call site divides the budget of the sites before it, and this
+// constructor wanted exactly ONE more (xx_nop ladder k=0 93.7258, k=1..4
+// 96.7000). Unlike systemoptionswindow it takes that site anywhere. The supply
+// is the hoisted `first` in the registration loop below - naming
+// `Widgets.end()` twice is one extra candidate site whose second load is
+// CSE-folded, so it emits nothing. Rejected +1 alternatives:
+// `insert(Widgets.end(), x)` on any one of the six push_backs 96.6806 (equal
+// at all six positions; 0.02 short because naming `Widgets` at an insert site
+// pins a second register), the same behind a `std::vector<widget*>*` local
+// 96.7000, and the bare `if (Widgets.begin() != Widgets.end())` guard, which
+// is +2, 96.6613.
+//   AXIS 2, the CALLER'S OWN cb: budget = 2 * cb(caller), so byte-inert
+// statement mass in the constructor RAISES what the head sites may spend. The
+// five named row references below are that mass. Titrated with dead-store
+// padding on top of the site fix: +4 and +8 statements both 100.0000, +16 and
+// +32 fall back to 93.7258, and every k>=1 row of the same sweep is capped at
+// 96.7000 - so (mass in [4,8] statements, exactly one extra site) is a single
+// narrow window, not two independent knobs. Naming only the background string
+// is 91.1742, naming it as well as the rows 91.1097: the mass has to be the
+// five rows.
 VA(0x004d54c0, 0x39B)  // oldmain callers + gtsingl.def + vtable/global stores, dc 0xc9164
 TGameTypeWindow::TGameTypeWindow(unsigned char loadGameMode)
     : heroWindow(0, 0, 800, 600, 0)
@@ -66,39 +87,42 @@ TGameTypeWindow::TGameTypeWindow(unsigned char loadGameMode)
         114, 312, 300, 48, NEW_LOAD_ID,
         gameTypeBackgrounds[loadGameMode], 0x800));
 
+    const TGameTypeButtonRect& single = gameTypeButtonRects[0];
+    const TGameTypeButtonRect& multi = gameTypeButtonRects[1];
+    const TGameTypeButtonRect& campaign = gameTypeButtonRects[2];
+    const TGameTypeButtonRect& tutorial = gameTypeButtonRects[3];
+    const TGameTypeButtonRect& back = gameTypeButtonRects[4];
+
     if (!gbRestrictedGameTypeMenu) {
         Widgets.push_back(new button(
-            gameTypeButtonRects[0].x, gameTypeButtonRects[0].y,
-            gameTypeButtonRects[0].width, gameTypeButtonRects[0].height,
-            SINGLE_ID,
+            single.x, single.y, single.width, single.height, SINGLE_ID,
             "gtsingl.def", 0, 1, 0, 31, 2));
 
         Widgets.push_back(new button(
-            gameTypeButtonRects[2].x, gameTypeButtonRects[2].y,
-            gameTypeButtonRects[2].width, gameTypeButtonRects[2].height,
+            campaign.x, campaign.y, campaign.width, campaign.height,
             CAMPAIGN_ID, "gtcampn.def", 0, 1, 0, 46, 2));
 
         Widgets.push_back(new button(
-            gameTypeButtonRects[3].x, gameTypeButtonRects[3].y,
-            gameTypeButtonRects[3].width, gameTypeButtonRects[3].height,
+            tutorial.x, tutorial.y, tutorial.width, tutorial.height,
             TUTORIAL_ID, "gttutor.def", 0, 1, 0, 20, 2));
     }
 
     Widgets.push_back(new button(
-        gameTypeButtonRects[1].x, gameTypeButtonRects[1].y,
-        gameTypeButtonRects[1].width, gameTypeButtonRects[1].height,
+        multi.x, multi.y, multi.width, multi.height,
         MULTIPLAYER_ID, "gtmulti.def", 0, 1, 0, 50, 2));
 
     Widgets.push_back(new button(
-        gameTypeButtonRects[4].x, gameTypeButtonRects[4].y,
-        gameTypeButtonRects[4].width, gameTypeButtonRects[4].height, QUIT_ID,
+        back.x, back.y, back.width, back.height, QUIT_ID,
         "gtback.def", 0, 1, 0, 1, 2));
 
-    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
-        if (*it)
-            AddWidget(*it, -1);
-        else
-            MemError();
+    widget** first = Widgets.begin();
+    if (first != Widgets.end()) {
+        for (widget** it = first; it != Widgets.end(); ++it) {
+            if (*it)
+                AddWidget(*it, -1);
+            else
+                MemError();
+        }
     }
 }
 

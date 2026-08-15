@@ -58,21 +58,22 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     accept->set_hotkey(1);
     Widgets.push_back(accept);
 
-    int slot = 0;
-    for (int musicX = 29; musicX < 219; musicX += 19) {
+    // The loop variable is the SLOT, not the x: retail keeps the raw 0..9 in
+    // its frame slot and adds the id base at the use (`add edx,0xca`), while
+    // the x lives in the linear-function-test-replaced derived induction
+    // variable (`add edi,0x13`, `cmp edi,0xdb`). Walking x directly and
+    // counting the slot by hand makes the slot a SECONDARY induction
+    // variable, which VC6 folds the id base into (`mov [ebp-0x10],0xca`).
+    for (int musicSlot = 0; musicSlot < 10; ++musicSlot)
         Widgets.push_back(new iconWidget(
-            musicX, 303, 18, 36, slot + MUSIC_VOLUME_0_ID, "syslb.def",
-            0, 0, 0, 0, 0x10));
-        slot++;
-    }
+            29 + musicSlot * 19, 303, 18, 36,
+            musicSlot + MUSIC_VOLUME_0_ID, "syslb.def", 0, 0, 0, 0, 0x10));
 
-    slot = 0;
-    for (int effectsX = 29; effectsX < 219; effectsX += 19) {
+    for (int effectsSlot = 0; effectsSlot < 10; ++effectsSlot)
         Widgets.push_back(new iconWidget(
-            effectsX, 369, 18, 36, slot + EFFECTS_VOLUME_0_ID, "syslb.def",
+            29 + effectsSlot * 19, 369, 18, 36,
+            effectsSlot + EFFECTS_VOLUME_0_ID, "syslb.def",
             0, 0, 0, 0, 0x10));
-        slot++;
-    }
 
     Widgets.push_back(new button(
         28, 225, 62, 32, COMBAT_SPEED_0_ID, "sysopb9.def", 0, 1, 0, 0, 2));
@@ -193,18 +194,10 @@ TCombatOptionsWindow::TCombatOptionsWindow()
     GetWidget(gUnk698764 + EFFECTS_VOLUME_0_ID)->send_message(
         widget::WIDGET_SET_ICON_FRAME, gUnk698764);
 
-    for (int speed = COMBAT_SPEED_0_ID; speed <= COMBAT_SPEED_2_ID; ++speed)
-        GetWidget(speed)->send_message(widget::WIDGET_CLEAR_STATUS,
-            widget::WIDGET_DIMMED_NODRAW);
-    GetWidget(gUnnamed698758.combatSpeed + COMBAT_SPEED_0_ID)->send_message(
-        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
-
-    GetWidget(SHOW_GRID_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
-        gUnnamed698758.showCombatGrid);
-    GetWidget(MOVEMENT_SHADOW_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
-        gUnnamed698758.combatShadeLevel);
-    GetWidget(MOUSE_SHADOW_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
-        gUnnamed698758.showCombatMouseHex);
+    HighlightCombatSpeed();
+    HighlightGrid();
+    HighlightMovementShadow();
+    HighlightMouseShadow();
     GetWidget(AUTO_CREATURES_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
         gUnnamed698758.combatAutoCreatures);
     GetWidget(AUTO_SPELLS_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
@@ -264,19 +257,44 @@ void TCombatOptionsWindow::DoModal()
         WritePrefs();
 }
 
-// The four highlight helpers are present out of line on Dreamcast, but every
-// retail use is inlined into the constructor/handler; no retail entries occur
-// between DoModal and the handler.
-#if 0  // @carcass
-DC_ONLY(0x67a78, 0x52)
-void TCombatOptionsWindow::HighlightCombatSpeed() { /* @stub */ }
-DC_ONLY(0x67acc, 0x22)
-void TCombatOptionsWindow::HighlightGrid() { /* @stub */ }
-DC_ONLY(0x67af0, 0x22)
-void TCombatOptionsWindow::HighlightMovementShadow() { /* @stub */ }
-DC_ONLY(0x67b14, 0x68)
-void TCombatOptionsWindow::HighlightMouseShadow() { /* @stub */ }
-#endif
+// The four highlight helpers are present out of line on Dreamcast (dc
+// 0x67a78/0x67acc/0x67af0/0x67b14) but every retail use is expanded by /Ob2;
+// no retail entry occurs between DoModal and the handler. They are real
+// source, not open-coded loops: HighlightCombatSpeed's expansion holds its
+// inlined `this` in EDI across the whole three-widget sweep, which is what
+// retail's Default and speed cases do and what a direct
+// `gpCombatOptionsWindow->GetWidget(...)` per iteration cannot produce.
+// Spelled `inline` so no out-of-line copy lands in this obj either.
+// E:\gamedcs\combatoptionswindow.cpp:230
+inline void TCombatOptionsWindow::HighlightCombatSpeed()
+{
+    for (int speed = COMBAT_SPEED_0_ID; speed <= COMBAT_SPEED_2_ID; ++speed)
+        GetWidget(speed)->send_message(widget::WIDGET_CLEAR_STATUS,
+            widget::WIDGET_DIMMED_NODRAW);
+    GetWidget(gUnnamed698758.combatSpeed + COMBAT_SPEED_0_ID)->send_message(
+        widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:243
+inline void TCombatOptionsWindow::HighlightGrid()
+{
+    GetWidget(SHOW_GRID_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
+        gUnnamed698758.showCombatGrid);
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:254
+inline void TCombatOptionsWindow::HighlightMovementShadow()
+{
+    GetWidget(MOVEMENT_SHADOW_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
+        gUnnamed698758.combatShadeLevel);
+}
+
+// E:\gamedcs\combatoptionswindow.cpp:265
+inline void TCombatOptionsWindow::HighlightMouseShadow()
+{
+    GetWidget(MOUSE_SHADOW_ID)->send_message(widget::WIDGET_SET_ICON_FRAME,
+        gUnnamed698758.showCombatMouseHex);
+}
 
 // Dreamcast homes this helper after the handler, but retail inlines it at
 // both call sites (the next retail entry after the handler, 0x46fee0, is an
@@ -289,11 +307,27 @@ __forceinline void UpdateCombatOptions(unsigned char bFirstUpdate)
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:278
+//
+// Residual (83.4%): the tail-block class, in both directions. Retail parks
+// the translate-command and audio-unavailable arms at the tail and reaches
+// them with `je`, where our CL hoists each to its single goto site; and
+// retail expands every case's own `GetWidget(id)->send_message(...)` plus
+// the `bPrefsChanged = 1` and shares only the DrawWindow tail, where our CL
+// tail-merges the case bodies through a shared push sequence. The same
+// class, mirrored, is CampaignWindowHandler's residual - two independent
+// functions in this window family now show our SP3 CL taking the opposite
+// tail-block placement from retail's, which is the standing
+// compiler-generation suspect (match skill, "merged-return blocks"). The
+// last register row is the right-click arm's `return`: retail spends the
+// hoisted `mov eax,ebx` where ours re-materialises the immediate.
+// The constant 1 is NOT a source variable - it is VC6's own B8 hoist into
+// EBX. An earlier `register int one = MESSAGE_DISPATCH_CONSUME;` stood in
+// for it; with the highlight helpers landed the hoist happens by itself and
+// the plain literals score identically, so the crutch is gone.
 VA(0x0046f7b0, 0x72A)  // DoModal address-take + complete message CFG, dc 0x67b7c
 int CombatOptionsWindowHandler(message& msg)
 {
     PollSound();
-    register int one = MESSAGE_DISPATCH_CONSUME;
 
     if (msg.qualifier & MESSAGE_MODIFIER_RIGHT) {
         if (msg.codeX == widget::WIDGET_SELECT
@@ -306,10 +340,10 @@ int CombatOptionsWindowHandler(message& msg)
                 NormalDialog(gCombatOptionsHelp[helpID].text,
                     4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
         }
-        return one;
+        return MESSAGE_DISPATCH_CONSUME;
     }
 
-    if (msg.id == one)
+    if (msg.id == MESSAGE_KEY_DOWN)
         goto consume;
 
     if (msg.id != MESSAGE_WIDGET)
@@ -332,25 +366,10 @@ int CombatOptionsWindowHandler(message& msg)
         switch (id) {
         case TCombatOptionsWindow::DEFAULT_ID: {
             SetDefaultCombatOptions();
-            for (int speed = TCombatOptionsWindow::COMBAT_SPEED_0_ID;
-                 speed <= TCombatOptionsWindow::COMBAT_SPEED_2_ID; ++speed)
-                gpCombatOptionsWindow->GetWidget(speed)->send_message(
-                    widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DIMMED_NODRAW);
-            gpCombatOptionsWindow->GetWidget(gUnnamed698758.combatSpeed
-                    + TCombatOptionsWindow::COMBAT_SPEED_0_ID)->send_message(
-                widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::SHOW_GRID_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.showCombatGrid);
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::MOVEMENT_SHADOW_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.combatShadeLevel);
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::MOUSE_SHADOW_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.showCombatMouseHex);
+            gpCombatOptionsWindow->HighlightCombatSpeed();
+            gpCombatOptionsWindow->HighlightGrid();
+            gpCombatOptionsWindow->HighlightMovementShadow();
+            gpCombatOptionsWindow->HighlightMouseShadow();
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_CREATURES_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -445,7 +464,7 @@ int CombatOptionsWindowHandler(message& msg)
         }
 
         case TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID:
-            gUnnamed698758.animateSpellBook ^= one;
+            gUnnamed698758.animateSpellBook ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -453,7 +472,7 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::AUTO_CREATURES_ID:
-            gUnnamed698758.combatAutoCreatures ^= one;
+            gUnnamed698758.combatAutoCreatures ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_CREATURES_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -461,7 +480,7 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::AUTO_SPELLS_ID:
-            gUnnamed698758.combatAutoSpells ^= one;
+            gUnnamed698758.combatAutoSpells ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_SPELLS_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -469,7 +488,7 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::AUTO_CATAPULT_ID:
-            gUnnamed698758.combatCatapult ^= one;
+            gUnnamed698758.combatCatapult ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_CATAPULT_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -477,7 +496,7 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::AUTO_BALLISTA_ID:
-            gUnnamed698758.combatBallista ^= one;
+            gUnnamed698758.combatBallista ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_BALLISTA_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -485,7 +504,7 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID:
-            gUnnamed698758.combatFirstAidTent ^= one;
+            gUnnamed698758.combatFirstAidTent ^= 1;
             gpCombatOptionsWindow->GetWidget(
                 TCombatOptionsWindow::AUTO_FIRST_AID_TENT_ID)->send_message(
                 widget::WIDGET_SET_ICON_FRAME,
@@ -497,13 +516,7 @@ int CombatOptionsWindowHandler(message& msg)
         case TCombatOptionsWindow::COMBAT_SPEED_2_ID: {
             gUnnamed698758.combatSpeed =
                 id - TCombatOptionsWindow::COMBAT_SPEED_0_ID;
-            for (int speed = TCombatOptionsWindow::COMBAT_SPEED_0_ID;
-                 speed <= TCombatOptionsWindow::COMBAT_SPEED_2_ID; ++speed)
-                gpCombatOptionsWindow->GetWidget(speed)->send_message(
-                    widget::WIDGET_CLEAR_STATUS, widget::WIDGET_DIMMED_NODRAW);
-            gpCombatOptionsWindow->GetWidget(gUnnamed698758.combatSpeed
-                    + TCombatOptionsWindow::COMBAT_SPEED_0_ID)->send_message(
-                widget::WIDGET_SET_STATUS, widget::WIDGET_DIMMED_NODRAW);
+            gpCombatOptionsWindow->HighlightCombatSpeed();
             break;
         }
 
@@ -544,27 +557,18 @@ int CombatOptionsWindowHandler(message& msg)
             break;
 
         case TCombatOptionsWindow::SHOW_GRID_ID:
-            gUnnamed698758.showCombatGrid ^= one;
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::SHOW_GRID_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.showCombatGrid);
+            gUnnamed698758.showCombatGrid ^= 1;
+            gpCombatOptionsWindow->HighlightGrid();
             break;
 
         case TCombatOptionsWindow::MOVEMENT_SHADOW_ID:
-            gUnnamed698758.combatShadeLevel ^= one;
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::MOVEMENT_SHADOW_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.combatShadeLevel);
+            gUnnamed698758.combatShadeLevel ^= 1;
+            gpCombatOptionsWindow->HighlightMovementShadow();
             break;
 
         case TCombatOptionsWindow::MOUSE_SHADOW_ID:
-            gUnnamed698758.showCombatMouseHex ^= one;
-            gpCombatOptionsWindow->GetWidget(
-                TCombatOptionsWindow::MOUSE_SHADOW_ID)->send_message(
-                widget::WIDGET_SET_ICON_FRAME,
-                gUnnamed698758.showCombatMouseHex);
+            gUnnamed698758.showCombatMouseHex ^= 1;
+            gpCombatOptionsWindow->HighlightMouseShadow();
             break;
 
         default:
@@ -582,11 +586,11 @@ handle_select:
                 && id <= TCombatOptionsWindow::ANIMATE_SPELLBOOK_ID
                 && button::click_sample) {
             button::click_sample->field_2c = 0x40;
-            button::click_sample->field_30 = one;
+            button::click_sample->field_30 = 1;
             button::click_sample->field_28 = 3;
             gpSoundManager->MemorySample(button::click_sample);
         }
-        return one;
+        return MESSAGE_DISPATCH_CONSUME;
     }
 
 translate_command:
@@ -600,10 +604,10 @@ audio_unavailable:
     NormalDialog(
         gpGeneralText->GetText(
             GENERAL_TEXT_SYSTEM_OPTIONS_AUDIO_UNAVAILABLE),
-        one, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
 
 consume:
-    return one;
+    return MESSAGE_DISPATCH_CONSUME;
 }
 
 // E:\gamedcs\combatoptionswindow.cpp:171

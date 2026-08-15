@@ -20,16 +20,65 @@ public:
     // twenty campaigns, exactly the twenty 0x50-byte rows of
     // gCampaignPreviews (the handler's `lea edi,[edi+4*edi-0x21c]; shl
     // edi,4` is &gCampaignPreviews[id - 108]).
+    // The three plates and the backdrop all answer 100, and the
+    // per-campaign completion check marks answer 128..134 - the
+    // constructor's `i - firstCampaign + 0x80`, one per visible row.
     enum EOtherWidgetIDs {
+        BACKGROUND_ID = 100,
         PREVIEW_FIRST_ID = 101,
         PREVIEW_LAST_ID = 107,
         CAMPAIGN_FIRST_ID = 108,
-        CAMPAIGN_LAST_ID = 127
+        CAMPAIGN_LAST_ID = 127,
+        CHECK_FIRST_ID = 128
     };
 
-    // Not sliced yet: the constructor stores 0 at +0x4c, -1 at +0x50 and a
-    // 21-byte availability block at +0x60, none of which this subset needs.
-    char pad_4c[0x2c];
+    // The constructor's inlined reserve allocates 0x134 bytes for the
+    // widget vector, i.e. 77 pointers.
+    enum { NWIDGETS = 77 };
+
+    // The pages of campaigns the dialog selects between, and the
+    // constructor's second argument. Its switch is the proof of the
+    // split: page 0 seeds firstCampaign 0 and gates rows 0..6, page 1
+    // seeds 7 and gates rows 7..12, page 2 seeds 13, gates rows 13..19
+    // and swaps the backdrop to campbkx2.pcx. Seven, six and seven rows
+    // are exactly Restoration of Erathia's, Armageddon's Blade's and
+    // Shadow of Death's campaign counts, in shipping order.
+    enum ECampaignSets {
+        CAMPAIGN_SET_ROE = 0,
+        CAMPAIGN_SET_AB = 1,
+        CAMPAIGN_SET_SOD = 2
+    };
+
+    // The one campaign row that unlocks only when every other row on its
+    // page is finished: the constructor seeds it available with the rest
+    // of the Armageddon's Blade page and then clears it on the first
+    // incomplete sibling, skipping itself in that test. Its state is
+    // also what gates the page's forward plate.
+    enum ECampaignRows {
+        CAMPAIGN_ROW_AB_SEALED = 11
+    };
+
+    // The escape key, as puzzlewindow's DIALOG_CLOSE_KEY. The handler
+    // dispatches on it with a switch: retail's `mov eax,[esi+4]; dec eax`
+    // is a switch selector load, not a `cmp mem,1`, and keeping it a switch
+    // is what stops VC6 caching the literal 1 in a callee-saved register.
+    enum EKeys {
+        DIALOG_CLOSE_KEY = 1
+    };
+
+    // +0x4c/+0x50: the constructor seeds 0 and -1 into them before any
+    // other derived store and nothing else in this TU reads them, so they
+    // stay unnamed. +0x54..+0x5f is untouched by every body carved here.
+    int field_4c;
+    int field_50;
+    char pad_54[0xc];
+    // +0x60. One byte per campaign row, cleared as a single inlined
+    // 21-byte memset (five dwords plus a byte) and then filled by the
+    // constructor's three-way switch; the widget loop walks 0..19 and the
+    // page switch writes as high as index 19, so the block is the same
+    // 21 wide as SCampaign::campaignCompleted, which every gate reads.
+    unsigned char campaignAvailable[21];
+    char pad_75[3];
     // +0x78. The handler subtracts it (plus 7) from a campaign id to reach
     // that campaign's preview widget, so it is the ordinal of the first
     // campaign the current page shows; the constructor seeds 0, 7 or 13.
@@ -40,18 +89,59 @@ public:
     TCampaignWindow(unsigned char newGame, int newCampaign);
     virtual ~TCampaignWindow();
     void DoModal();
-
-private:
+    // Retail 0x45e7c0, thiscall with the campaign ordinal. Complete-only
+    // (no Dreamcast counterpart): it opens the row's preview movie through
+    // VideoOpen, snapshots the Bink state into the row's +0x20 block and
+    // pushes the row's bitmapBorder16 still. Not reconstructed here; the
+    // constructor is its only caller. Provisional name.
+    void OpenPreview(int campaignIndex);
+    // Retail emits no out-of-line body: every caller expands it under /Ob2,
+    // and the expansion is register-visible - the hoisted `this` is the EBX
+    // the handler's two preview sweeps share (see campaignwindow.cpp).
     void HideText();
 };
 
 // Retail /Gr passes the message in ECX, as DoDialog's TDialogHandler does.
 int CampaignWindowHandler(message& msg);
 
-// Complete-only initialized campaign-preview table at retail 0x66c498.
-// Its full row type lands with the constructor/helper reconstruction; the
-// destructor currently consumes only the flat dword view.
-extern int gCampaignPreviews[];
+// Complete-only initialized campaign-preview table at retail 0x66c498:
+// twenty 0x50-byte rows, one per campaign, indexed by `id -
+// CAMPAIGN_FIRST_ID`. Every one of the eight descriptor dwords is
+// byte-proven, six of them twice over - OpenPreview (0x45e7c0) hands
+// +0x00/+0x04/+0x08 to VideoOpen and then builds the row's still as
+// `bitmapBorder16(+0x04, +0x08, 200, 116, +0x1c, +0x18, 0x800)`, which
+// fixes the image name and the widget id; the constructor reads
+// +0x04/+0x08 again for the check-mark plate and +0x0c/+0x10/+0x14 for
+// the caption box. The 12-dword tail is the row's private snapshot of
+// the consecutive Bink state beginning at gBinkVideo, written by
+// OpenPreview and restored by the destructor and the hover handler.
+struct SCampaignPreview {
+    int video;
+    int x;
+    int y;
+    int textX;
+    int textY;
+    int textWidth;
+    const char* image;
+    int widgetId;
+    int binkState[12];
+};
+SIZE(SCampaignPreview, 0x50);
+extern SCampaignPreview gCampaignPreviews[20];
+
+// The per-row caption rows at retail 0x6a5f88, eight bytes apart. The
+// constructor is the ONLY code reference to the block in the whole image
+// (config/retail-reloc-evidence.tsv has one site, 0x5ef70) and the bytes
+// are zero-filled, so the first word - the string it hands to the row's
+// textWidget - is all retail proves; the second stays unnamed. Left
+// without a DATA claim for the same reason gCampaignPreviews is: nothing
+// carves the block's extent.
+struct SCampaignCaption {
+    const char* text;
+    char pad_04[4];
+};
+SIZE(SCampaignCaption, 8);
+extern SCampaignCaption gCampaignCaptions[20];
 
 // The twenty campaign data-file names the handler hands to
 // SCampaign::select_campaign. Retail addresses them as

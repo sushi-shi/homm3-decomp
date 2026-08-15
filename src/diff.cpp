@@ -28,10 +28,22 @@ unsigned char* CDiffFile::GetData()
 }
 #endif
 
-// Residual (68.9643%): exact 197-byte extent and three-branch/two-return CFG,
-// but retail colors output/diff offsets in EBX/EAX/EDI while this CL colors the
-// same lifetimes in EDI/stack/EAX. Tried and rejected: caching GetData(), a
-// common for-loop increment, declaration permutations, and register hints.
+// Residual (99.6429%): B18 commutative scale-1 SIB base/index swap on the three
+// `this + diffOffset` addresses - retail encodes base=EAX(diffOffset),
+// index=ESI(this) (SIB 0x30), our CL the reverse (SIB 0x06). Everything else is
+// byte-exact. Tried and rejected (all byte-identical): `diffOffset + GetData()`,
+// `&GetData()[diffOffset]`. Same class as hero.cpp:2162.
+// 2026-08-14 two-axis /Ob2 re-test (the campaign rule that a one-axis "flat"
+// verdict is not a verdict): HELD. Pad statements ahead of `resultOffset` x
+// xx_nop sites before the return are 99.6429 in all twelve cells of
+// M in {0,2,4,8} x k in {0,1,2}. Four further spellings measured byte-identical
+// as well: `int diffOffset`, a hoisted `GetData()` pointer local, a named
+// `diffCursor` for the header cast, and an extra unused local. The SIB
+// base/index choice is not source-reachable here.
+// The 68.96% plateau was structural, not register coloring: retail advances
+// diffOffset PAST the header before the payload memcpy and re-derives the source
+// as GetData() + diffOffset, which is what keeps diffOffset in a register and
+// homes resultOffset instead.
 // E:\gamedcs\diff.cpp:62
 VA(0x00490f60, 0xc5)  // linkorder + body: allocated output size and 12-byte copy/reference records, dc 0x822ec
 void* CDiffFile::Apply(unsigned char* oldSaveGame, int oldSaveGameSize)
@@ -46,16 +58,17 @@ void* CDiffFile::Apply(unsigned char* oldSaveGame, int oldSaveGameSize)
             static_cast<CDiffHeader*>(
                 static_cast<void*>(GetData() + diffOffset));
         if (header->m_copy) {
+            diffOffset += sizeof(CDiffHeader);
             memcpy(result + resultOffset,
-                   header->GetData(),
+                   GetData() + diffOffset,
                    header->m_numBytes);
-            diffOffset += sizeof(CDiffHeader) + header->m_numBytes;
+            diffOffset += header->m_numBytes;
             resultOffset += header->m_numBytes;
             oldOffset += header->m_oldNumBytes;
         } else {
+            diffOffset += sizeof(CDiffHeader);
             memcpy(result + resultOffset, oldSaveGame + oldOffset,
                    header->m_numBytes);
-            diffOffset += sizeof(CDiffHeader);
             resultOffset += header->m_numBytes;
             oldOffset += header->m_numBytes;
         }
@@ -81,15 +94,16 @@ int CDiffMaker::CountSameBytes(int oldOffset, int newOffset)
 }
 #endif
 
-// Residual (83.2813%): the first 71 normalized instructions agree; retail
-// places the success epilogue after the failure epilogue and chooses different
-// result registers. Tried and rejected: nested-scope counters, direct returns,
-// explicit success/failure labels, pointer-parameter spelling, and memcmp's
-// opposite (semantically symmetric) operand order. The formal 2026-08-13
-// diagnostics close the remaining source-level search: why-branch reports
-// distance 0 (identical 11-block / 5-branch / 2-return shape), while why-reg's
-// model finds no binding divergence in its source-addressable slice and its
-// seven fallback mutations are all byte-neutral or worse.
+// Residual (84.1667%): everything up to the two epilogues is now byte-identical
+// (retail's success block updates newCount BEFORE oldCount - the reverse of the
+// obvious source order - which this body now does). The sole remaining delta is
+// EPILOGUE EMISSION ORDER: retail lays the failure return (`xor al,al`) first
+// and the success return second; our CL always emits success first. Proven not
+// source-addressable - five exit shapes (goto/goto, direct `return 0` guard,
+// inlined success return, both inlined, and swapped label order) ALL compile to
+// the identical 84.1667 layout. Merged-return / block-layout generation family.
+// Earlier rejects: nested-scope counters, pointer-parameter spelling, memcmp's
+// symmetric operand order; why-branch distance 0, why-reg no addressable slice.
 // E:\gamedcs\diff.cpp:133
 VA(0x00491050, 0xed)  // linkorder + 64x64 search for a 16-byte synchronization run, dc 0x823d8
 bool CDiffMaker::FindNextSame(int oldOffset, int newOffset,
@@ -130,30 +144,36 @@ notFound:
     return 0;
 
 found:
-    oldCount += oldDelta;
     newCount += newDelta;
+    oldCount += oldDelta;
     return 1;
 }
 
-// Residual (81.5174%): exact 447-byte extent and seven-branch/one-return CFG;
-// the remaining delta is a cyclic ESI/EDI/EBX coloring of this, newOffset, and
-// diffOffset. Tried and rejected: a ternary maximum, mutable-offset
-// CountSameBytes, placement-new headers, a shared terminal tail, declaration
-// permutations, register hints, and inert type-count probes. The retained
-// indexed helper, reference-selecting max, scoped headers, reference
-// signatures, and direct terminal return are all independently DC/retail
-// evidenced and are the measured best shape.
+// Residual (83.9477%): exact 447-byte extent and seven-branch/one-return CFG.
+// The delta is a cyclic ESI/EDI/EBX coloring: retail binds ESI=diffOffset,
+// EDI=this, EBX=newOffset; our CL binds ESI=this, EDI=newOffset, EBX=diffOffset.
+// Because `rep movs` claims ESI/EDI, retail's rotation leaves newOffset (EBX)
+// live across the payload copy while ours must spill it - hence retail's frame
+// is 0x3c and ours 0x40, the one extra dword being newOffset's home slot.
+// The declaration order below is the measured optimum: an exhaustive sweep of
+// all 120 orderings of the five prologue statements (diffSize=0 / oldOffset /
+// new / diffOffset / newOffset) tops out here, and no ordering reaches the
+// retail rotation - `this` is always the first call-crossing pseudo created, so
+// it always takes ESI. That makes the binding front-end handle-state, not a
+// source-local knob. Also tried and rejected: a ternary maximum, mutable-offset
+// CountSameBytes, placement-new headers, a shared terminal tail, hoisting
+// sameCount to function scope, register hints, and inert type-count probes.
 // E:\gamedcs\diff.cpp:174
 VA(0x00491140, 0x1bf)  // linkorder + calls FindNextSame and emits 12-byte records, dc 0x82488
 CDiffFile* CDiffMaker::MakeDiff(unsigned long& diffSize)
 {
     diffSize = 0;
+    int oldOffset = 0;
     CDiffFile* diff =
         static_cast<CDiffFile*>(static_cast<void*>(
             new unsigned char[max(m_oldSize, m_newSize) + 5000]));
-    int oldOffset = 0;
-    int newOffset = 0;
     int diffOffset = sizeof(unsigned int);
+    int newOffset = 0;
 
     for (;;) {
         int sameCount = CountSameBytes(oldOffset, newOffset);

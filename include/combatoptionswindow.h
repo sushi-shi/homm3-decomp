@@ -75,8 +75,11 @@ public:
     virtual ~TCombatOptionsWindow();
     int convertID2HelpID(int id) const;
     void DoModal();
-
-private:
+    // Retail emits no out-of-line body for any of the four: /Ob2 expands
+    // them at every call site, and the free handler is one of those sites,
+    // so they cannot be private. HighlightCombatSpeed's expansion is
+    // register-visible - the inlined `this` is the EDI retail holds across
+    // the whole speed sweep, where a direct global load reloads per call.
     void HighlightCombatSpeed();
     void HighlightGrid();
     void HighlightMovementShadow();

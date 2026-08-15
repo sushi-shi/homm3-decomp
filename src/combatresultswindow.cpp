@@ -63,24 +63,71 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 // vector organically, which is why several vector<widget*>::insert
 // expansions sit inline in the body while the rest stay out of line.
 //
-// Residual (92.77%): register-homing plus one /Ob2 step. Every widget,
-// literal, id, coordinate, text index and branch shape below is retail's;
-// what differs is WHERE values live. Retail's frame carries eight scalar
-// temps (`sub esp, 0x1cc`) and ours nine (0x1d0), because VC6 gives our loss
-// run's `rowX - 5` its own induction variable where retail recomputes it as
-// `add ecx,-5` in the loop; that one extra slot cascades into the esi/edi
-// and [ebp-]/[ebp+] swaps that make up most of the delta, and into a
-// rotated-vs-guarded shape for the loss emit loop. The same extra budget
-// makes our TU INLINE `vector<int>::size()` inside the second set_hotkey
-// expansion where retail still CALLS it - the /Ob2 budget cutting the other
-// way (clamp(2*caller_cb,...) is larger for a larger caller). Tried and
-// rejected: naming the loop temps (`int creature`/`int value` in the
-// strongest-stack walks) - that spilled BOTH the running maximum and the
-// live count and cost 0.7%; `my_side ? defender : attacker` for the
-// narrated hero - inverts the branch (0.16%). Not tried, and the only
-// remaining lead: shaving one scalar temp so the frame is 0x1cc, which is
-// what the /Ob2 budget and the whole homing pattern hang off.
-// E:\gamedcs\combatresultswindow.cpp:72
+// Residual (96.2%): register homing only, and the extra frame temp that
+// drove most of it is GONE. Every widget, literal, id, coordinate, text
+// index and branch shape below is retail's; what differs now is only WHERE
+// a handful of values live.
+//
+// Three source facts closed 92.77% -> 96.23%, all of them the same lesson -
+// VC6's induction-variable machinery reads the SPELLING, not the value:
+//
+//   1. The loss run's `rowX` must be DERIVED from the loop counter, not
+//      loop-carried. `rowX += 42` at the bottom of the body makes rowX a
+//      BASIC induction variable, and `rowX - 5` is then a first-level
+//      derived IV, which VC6 strength-reduces into a slot of its own - the
+//      ninth scalar temp, `sub esp,0x1d0` against retail's 0x1cc, and the
+//      whole [ebp-]/[ebp+] cascade under it. Writing `int rowX = rowLeft +
+//      42 * row` inside the body makes rowX itself the derived IV, VC6 does
+//      not chain a second level, and `rowX - 5` comes back as retail's `add
+//      ecx,-5`. Frame exact. (+3.2%)
+//   2. Binding the strongest-stack walks' record to a reference
+//      (`army& stack = gpCombatManager->armies[side][slot]`) instead of
+//      respelling the subscript at each field. (+0.1%)
+//   3. Reading monInfoAIValue ONCE into a local. VC6 biases the walk's
+//      strength-reduced pointer to ONE of the accessed fields, and with the
+//      value read twice it biased to monInfoAIValue (+0xb4 in the record,
+//      `lea ecx,[gpCombatManager+0x5580]` and a negative displacement for
+//      creatureType); with creatureType the more-referenced field it biases
+//      to creatureType instead, which is retail's +0x5500 base. (+0.1%)
+//
+// Note this SUPERSEDES the earlier reading that retail's third loss-loop
+// value was absent "because it had no free register, not because it spelled
+// the subtraction differently". It was the spelling.
+//
+// What is left: a frame-slot permutation ([ebp-0x10]/[ebp-0x18] and
+// [ebp+0xc]/[ebp+0x10] swapped against retail), the first text[100] buffer
+// sitting 0x34 higher than retail's [ebp-0xcc], and the last two organic
+// vector<widget*>::insert expansions scheduling their capacity arithmetic
+// differently. Retail recycles DEAD PARAMETER SLOTS ([ebp+0x14] for `row`,
+// [ebp+0x1c] for `rowX`), so the [ebp-]/[ebp+] choice follows the frame
+// rather than causing it. Tried and rejected: `row++, rowX += 42` in the
+// for-increment clause (92.77%, keeps the basic IV); naming `int creature`
+// in the loss aggregation walk (spills the running maximum, -0.7%);
+// `my_side ? defender : attacker` for the narrated hero (inverts the
+// branch, -0.16%).
+//
+// The compiland's DC roster carries no helper members beyond the six
+// already landed, re-checked 2026-08-14: no HighlightX-style extraction is
+// available here.
+//
+// /Ob2 TWO-AXIS RE-TEST (2026-08-14), 96.2269 -> 96.3788. The verdict
+// recorded for this constructor in mainmenu.cpp was "k>=1 strictly worse (it
+// has NO reserve)" - true, but that is the DIVISOR axis alone, and the
+// caller's own cb had never been swept here. It is live: at k=0, one to
+// three byte-inert pad statements at the head of the body are worth 96.3793,
+// and the honest supply is naming the accept box before pushing it (96.3788,
+// the same plateau to within a byte). Full grid, pad statements ahead of
+// `gpCombatResultsWindow = this` x xx_nop sites past the last push_back:
+//     M\k        0         1         2         3
+//     0     96.2269   90.1925   90.8916   84.5239
+//     1..3  96.3793   90.1925   90.8916   84.5239
+//     4      95.3358   90.8534   90.8916   84.5239
+//     8      95.4906   89.9013   90.8916   84.5239
+//     16     95.6792   95.8863   89.1713   84.5239
+// so the site axis really is dead here (no k>=1 cell beats k=0), but the
+// mass axis has a three-statement window, and naming more widgets overshoots
+// it (M=20 is 95.5336, M=24 96.1640). What is left is the frame-slot
+// permutation described above, not the inliner.
 VA(0x004702d0, 0x176D)  // CPResult.pcx + vtable/global stores, dc 0x68364
 TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
     const hero* defender, int my_side, int winning_side,
@@ -123,13 +170,15 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         int bestSlot = 0;
         int liveStacks = 0;
         for (int slot = 0; slot < 20; slot++) {
-            if (gpCombatManager->armies[0][slot].creatureType == -1)
+            army& stack = gpCombatManager->armies[0][slot];
+            if (stack.creatureType == -1)
                 continue;
-            if (gpCombatManager->armies[0][slot].creatureType == CREATURE_ARROW_TOWER)
+            if (stack.creatureType == CREATURE_ARROW_TOWER)
                 continue;
             liveStacks++;
-            if (gpCombatManager->armies[0][slot].monInfoAIValue > bestValue) {
-                bestValue = gpCombatManager->armies[0][slot].monInfoAIValue;
+            int value = stack.monInfoAIValue;
+            if (value > bestValue) {
+                bestValue = value;
                 bestSlot = slot;
             }
         }
@@ -162,13 +211,15 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
         int bestSlot = 0;
         int liveStacks = 0;
         for (int slot = 0; slot < 20; slot++) {
-            if (gpCombatManager->armies[1][slot].creatureType == -1)
+            army& stack = gpCombatManager->armies[1][slot];
+            if (stack.creatureType == -1)
                 continue;
-            if (gpCombatManager->armies[1][slot].creatureType == CREATURE_ARROW_TOWER)
+            if (stack.creatureType == CREATURE_ARROW_TOWER)
                 continue;
             liveStacks++;
-            if (gpCombatManager->armies[1][slot].monInfoAIValue > bestValue) {
-                bestValue = gpCombatManager->armies[1][slot].monInfoAIValue;
+            int value = stack.monInfoAIValue;
+            if (value > bestValue) {
+                bestValue = value;
                 bestSlot = slot;
             }
         }
@@ -309,8 +360,9 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
                 42, rowY + 10, 384, 36, gpGeneralText->GetText(32),
                 "smalfont.fnt", font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
         int shown = _cpp_min(lossRows[lossSide], 7);
-        int rowX = (468 - 42 * shown) / 2 + 11;
+        int rowLeft = (468 - 42 * shown) / 2 + 11;
         for (int row = 0; row < shown; row++) {
+            int rowX = rowLeft + 42 * row;
             Widgets.push_back(new iconWidget(
                 rowX, rowY, 32, 32, BACKGROUND_ID, "cprsmall.def",
                 lossCreature[lossSide][row] + 2, 0, 0, 0, 0x10));
@@ -318,12 +370,12 @@ TCombatResultsWindow::TCombatResultsWindow(const hero* attacker,
             Widgets.push_back(new textWidget(
                 rowX - 5, rowY + 38, 32, 32, text, "smalfont.fnt",
                 font::PRIMARY, BACKGROUND_ID, 1, 0, 8));
-            rowX += 42;
         }
     }
 
-    Widgets.push_back(new bitmapBorder(
-        384, 506, 66, 32, BACKGROUND_ID, "Box64x30.pcx", 0x800));
+    bitmapBorder* acceptBox = new bitmapBorder(
+        384, 506, 66, 32, BACKGROUND_ID, "Box64x30.pcx", 0x800);
+    Widgets.push_back(acceptBox);
 
     button* accept = new button(
         385, 507, 64, 30, DIALOG_RETURN_SPLIT_ACCEPT, "iOkay.def",

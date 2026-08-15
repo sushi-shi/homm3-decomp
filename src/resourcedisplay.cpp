@@ -28,7 +28,31 @@ static const int resourceDisplayOrder[NUM_RESOURCES] = {
 // The VC6 v2 solver classifies the surviving swap as the C1 handle-state class:
 // the pair is not source-nameable and no statement-level mutation can reorder it.
 // A bounded 0..8 unused-type population sweep on 2026-08-11 was byte-flat.
-// E:\gamedcs\resourcedisplay.cpp:40
+// 2026-08-14 RE-TEST (the TPalette24 lesson says a register verdict can be
+// wrong, so this one was re-opened rather than trusted). It holds. Outside the
+// two register names the two bodies are byte-identical - same constants, same
+// frame slots, same shrink-wrapped push split (retail `push ebx` at entry then
+// `push esi; push edi`; ours `push edi` then `push ebx; push esi`, both in
+// canonical order among the registers each side had left). Both sides even pick
+// the same induction variable: ESI counts the BORDER id 0x3f1+i and the text
+// id is derived as `lea ecx,[esi-8]`, so the TPalette24 "which field biases the
+// IV" lever has nothing to grip here - it already agrees.
+// EXHAUSTIVE NEGATIVE, 23 spellings, none above 99.3919: all 6 declaration
+// orderings of {textX, spacing, borderWidth}; all 6 assignment orderings inside
+// the size branch (the current one is the unique best - the other five cost
+// 0.04-1.05); `int i` hoisted out of the for and to the top of the body; and 9
+// loop spellings (widget bound to a local, text id derived as 0x3f1+i-8,
+// separate id counters, borderX local, two-cursor pointer walk, textX in the
+// for-update, while form, both AddWidget calls moved after both news). The
+// best of the 23 only ties the current spelling; six are strictly worse
+// (cursor walk 91.55, id counters 90.15, AddWidget-after-both 88.27).
+// Verdict CONFIRMED: C1 handle state, not source-nameable.
+// 2026-08-14, RE-TESTED AGAIN on the second /Ob2 axis, since `predict-inline`
+// classifies this row as an inliner wall (12 under / 12 over): still HELD.
+// Pad statements ahead of the `isSmall` branch x xx_nop sites before the final
+// AddWidget are 99.3919 in all twenty cells of M in {0,2,4,8,16} x k in
+// {0,1,2,3} - the flattest grid measured in this sweep. Neither budget axis
+// touches this transposition.
 VA(0x00558ba0, 0x2A1)  // anchor-global, dc 0x120c54
 TResourceDisplay::TResourceDisplay(heroWindow* parent, unsigned char is_small)
     : isSmall(is_small)
@@ -119,7 +143,6 @@ TResourceDisplay::~TResourceDisplay()
 // Corroborated from the other side by recruitUnit::Close (0x550344),
 // which calls it with exactly two pushes (`push 0; push 1`). DC's
 // `inMap` has no retail home; the first two names are kept.
-// E:\gamedcs\resourcedisplay.cpp:150
 VA(0x00558f20, 0xF3)  // anchor-global, dc 0x120fa0
 void TResourceDisplay::Update(unsigned char draw, unsigned char update)
 {

@@ -114,21 +114,6 @@ enum EDrawbridgeState {
     DRAWBRIDGE_UP = 0x3
 };
 
-// The eight rows of gWallTargets. Retail DamageWall dispatches on all eight
-// values; names remain ordinal because no local roster names the individual
-// segments.
-enum TWallTargetId {
-    WALL_TARGET_0 = 0,
-    WALL_TARGET_1 = 1,
-    WALL_TARGET_2 = 2,
-    WALL_TARGET_3 = 3,
-    WALL_TARGET_4 = 4,
-    WALL_TARGET_5 = 5,
-    WALL_TARGET_6 = 6,
-    WALL_TARGET_7 = 7,
-    WALL_TARGET_COUNT = 8
-};
-
 // The defending town's wall tier. InitializeArchers proves that a Citadel
 // installs the keep archer and a Castle installs the two tower archers too;
 // the other combat readers only distinguish an absent wall from any tier.
@@ -417,8 +402,9 @@ public:
     town* defendingTown;               // +0x53c8
     // The two combat heroes, indexed by side: can_cast_spells indexes
     // heroes[side] for the spellbook test and then walks both slots for
-    // the Orb of Inhibition, and army::get_owner (0x442690) does the
-    // same lookup off gpCombatManager.
+    // the Orb of Inhibition, and army::get_controller (0x442690) /
+    // army::get_owner (0x4426d0) do the same lookup off
+    // gpCombatManager, with and without the hypnotize flip.
     hero* heroes[2];                  // +0x53cc
     // The two combat heroes' spell power, cached per side: ai.cpp's
     // get_area_effect (0x41f920) hands `[this + 4*side + 0x53d4]` to
@@ -505,12 +491,16 @@ public:
     // other stack) and only honours the preference while it is non-zero.
     // Name is an address ordinal.
     int field_132c4;                  // +0x132c4
-    // DoCompAI (0x4221f0) zeroes this dword as the very first thing it
-    // does, before it even turns the highlighter off - a per-stack AI
-    // turn counter or latch. Name is an address ordinal; no roster
-    // reaches the slot (the Dreamcast dump carries no combatManager
-    // fieldlist at all).
-    int field_132c8;                  // +0x132c8
+    // The stack that most recently finished a move. army::simple_move
+    // (0x445950) clears it before it moves anything and stores `this`
+    // into it on EVERY exit afterwards - the successful fly, the
+    // successful teleport, the walk and both ValidFlight refusals -
+    // and DoCompAI (0x4221f0) zeroes it as the very first thing it
+    // does, before it even turns the highlighter off. An `army*`, not
+    // a counter: simple_move's store is `mov [ecx+0x132c8], esi` with
+    // esi holding `this`. Name is provisional; no roster reaches the
+    // slot (the Dreamcast dump carries no combatManager fieldlist).
+    army* lastMovedArmy;              // +0x132c8
     unsigned char field_132cc;        // +0x132cc
     char pad_132cd[0x3];
     int field_132d0;                  // +0x132d0
@@ -635,23 +625,56 @@ public:
     // body - /Ob2 folds it into should_stay_in_castle.
     long get_wall_strength(long target) const { return wallStrength[target]; }
 
-    int GetGridIndex(int x, int y);
+    // THE S_PUB32 PASS OVER THIS CLASS, 2026-08-14, and it is the same
+    // oracle the army lane used: the CODEVIEW roster text at the foot
+    // of this header drops the RETURN TYPE, the `this` cv-qualifier and
+    // reference-vs-pointer, so a prototype read off it is never
+    // evidence for any of the three. The mangled S_PUB32 run
+    // (evidence/dreamcast/publics.csv, 156 combatManager symbols)
+    // carries all three. It corrected SEVEN declarations here to a
+    // const `this` - GetGridIndex, HexIsBlocked, InLineOfSight,
+    // IsWinner, is_adjacent, should_lower_door and enemy_is_adjacent
+    // (whose ?QBA public an earlier lane had already recorded and left
+    // unacted) - and THREE pointer/reference disagreements:
+    // PlaceArmyInGrid and RemoveArmyFromGrid take `const army&`, and
+    // GetObstacle RETURNS a reference. None of the ten can be checked
+    // against retail bytes, which is exactly why the mangling is the
+    // only evidence there is.
+    int GetGridIndex(int x, int y) const;
     unsigned char IsQuickCombat();
     unsigned char CombatIsOver();
-    unsigned char IsWinner(int this_side);
+    unsigned char IsWinner(int this_side) const;
     void ResetHitByCreature();
     void DamageWall(TWallTargetId target_wall, int damage);
-    unsigned char is_adjacent(int first, int second);
-    unsigned char enemy_is_adjacent(army* current_army, int grid_index,
-                                    const army* excluded);
-    void RemoveArmyFromGrid(const army* a);
-    void PlaceArmyInGrid(const army* a, int hex);
+    unsigned char is_adjacent(int first, int second) const;
+    unsigned char enemy_is_adjacent(const army* current_army, int grid_index,
+                                    const army* excluded) const;
+    void RemoveArmyFromGrid(const army& a);
+    void PlaceArmyInGrid(const army& a, int hex);
     void ViewArmy(army* thisArmy, int isQuickView);
     // Retail 0x59ec50, a two-argument post-dialog command leaf whose
     // full spells.obj identity is still provisional.
     void InitiateSpell(int spellOrCommand, int fromArmyView);
     unsigned char place_obstacle(int obstacle_id);
-    unsigned char should_lower_door(army* this_army, long hex);
+    // 0x46a570 (224 B, `ret 8`): the landmine / fire-wall worker that
+    // army::check_obstacle_attacks (0x441f70) delegates to once it has
+    // cleared the arrow tower. It belongs to the COMBAT MANAGER, not to
+    // army - retail loads gpCombatManager into ecx and pushes the stack
+    // and the walking flag - and NH3API calls the same body (its
+    // 0x46a150) as THISCALL_3 on gpCombatManager, so its own
+    // `army::check_obstacle_attacks` label for this address is the
+    // wrapper's name transferred onto the worker. Its callers are
+    // exactly army::check_obstacle_attacks and army::WalkTo, plus
+    // FlyTo/TeleportTo, which inline the arrow-tower wrapper. On the DC
+    // build there is no worker at all: army::check_obstacle_attacks
+    // (dc 0x47270, 132 B) calls Is, get_second_grid_index,
+    // check_landmine and check_fire_wall itself, which is precisely
+    // what this body does - a retail-side refactor, and the reason the
+    // 38/132 size ratio of the wrapper's own slot sits outside the
+    // SH4->x86 band without the attribution being wrong.
+    unsigned char check_obstacle_attacks(army* this_army,
+                                         unsigned char is_walking);
+    unsigned char should_lower_door(army* this_army, long hex) const;
     void LowerDoor();
     void RaiseDoor();
     bool IsQuickCombat() const;
@@ -666,12 +689,12 @@ public:
                                     int destIndex);
     unsigned char ShotIsNotOptimal(const army* attacker,
                                    const army* defender);
-    unsigned char InLineOfSight(int sourceIndex, int destIndex);
+    unsigned char InLineOfSight(int sourceIndex, int destIndex) const;
     void UpdateArmyLuckAndMorale();
     void InitializeArchers();
     void FreeIcons();
     void Close();
-    unsigned char HexIsBlocked(int index);
+    unsigned char HexIsBlocked(int index) const;
     unsigned char IsInMoat(int hex, int* index);
     void PlaceObstacle(const TObstacle* obstacle, int id, int hex,
                        unsigned attributes);
@@ -702,7 +725,7 @@ public:
     // NOT reproduce that (VC6 CSEs the second load away either way) -
     // it is kept because the DC roster attests the accessor, not as a
     // matching lever.
-    TObstacle* GetObstacle(int index) { return &obstacles.begin[index]; }
+    TObstacle& GetObstacle(int index) { return obstacles.begin[index]; }
     // DC header inlines (CmbtMgr.h:1506/1537). Neither has a retail
     // out-of-line body; GenerateMap folds both into its 11x17 walk.
     unsigned char RowIsOdd(int y) const
@@ -713,9 +736,13 @@ public:
     {
         return y * 17 + x;
     }
-    hexcell* GetCell(int x, int y)
+    // Returns a REFERENCE on its own public
+    // (?GetCell@combatManager@@QAAAAVhexcell@@HH@Z); the roster text
+    // renders every reference as a pointer, which is what this
+    // declaration read before the S_PUB32 pass.
+    hexcell& GetCell(int x, int y)
     {
-        return &cells[GetHexIndex(x, y)];
+        return cells[GetHexIndex(x, y)];
     }
     // DC header inline (cmbtmgr.h:1460, dc 0x27ec8, 18 B). No retail
     // body; place_shooter (0x422060) carries two copies of it, one on
@@ -749,6 +776,28 @@ public:
     // header inlines army::Is / get_current_army / the adventure-menu
     // caller). Its own claim waits for the TU that owns 0x477e10.
     void TurnOffHighlighter(unsigned char restore);           // 0x477e10
+    // 0x46a520 (68 B), army::simple_move's second call: it zeroes a
+    // 187-byte per-hex row at this + 0x14031 with a `rep stosd` of 46
+    // dwords plus a word plus a byte - the cell count exactly - and
+    // then raises the hex, or the two hexes, the passed stack stands
+    // on. It sits in cmbtmgr.obj's own bracket (immediately after
+    // IsQuickCombat 0x46a4a0) but the DC roster has no row for it
+    // there, so both the NAME and the parameter's constness are
+    // PROVISIONAL and its claim waits for the lane that reconstructs
+    // the body. The row it clears is deliberately NOT modelled here:
+    // this declaration alone already costs GetCommand 92.5714 ->
+    // 92.5357 unconditionally (include-set class, bisected), so it is
+    // scoped to army.cpp and the field waits for the same lane.
+#ifdef HOMM3_CMBTMGR_MOVE_VIEW
+    void mark_moving_army(const army* moving_army);           // 0x46a520
+#endif
+    // 0x46a520 (68 B), the row above's only decoded writer and
+    // army::simple_move's second call: it zeroes field_14031 and marks
+    // the hex - or the two hexes - the passed stack stands on. It sits
+    // in cmbtmgr.obj's own bracket (immediately after IsQuickCombat
+    // 0x46a4a0) but the DC roster has no row for it there, so both the
+    // NAME and the parameter's constness are PROVISIONAL and its claim
+    // waits for the lane that reconstructs the body.
     CSprite* LoadCreatureSprite(int creatureType);             // 0x5a92f0
     // Both live in ai.cpp (DC ai.obj) and are claimed there.
     long get_total_combat_value(long side, long lowest_attack,
@@ -956,10 +1005,16 @@ public:
     float SpellCastWorkChance(SpellID spell, long side, const army* target,
                               long hex, unsigned char check_immunity,
                               long creature_spell);            // 0x5a8090
+    // 0x5a3c80, CORRECTED 2026-08-14. The address this line carried was
+    // 0x5a8950, which is refuted by arity: that body ends `ret 0xc` and
+    // this signature has five stack arguments. ai_tactical's
+    // consider_chain_lightning (0x437310) is the only call site in the
+    // tree and its retail body calls 0x5a3c80 - immediately before
+    // find_resurrection_target 0x5a3cc0. Neither body is claimed here.
     unsigned char SpellCastWorks(SpellID spell, long side,
                                  const army* target,
                                  unsigned char redirected,
-                                 long creature_spell);         // 0x5a8950
+                                 long creature_spell);         // 0x5a3c80
     // spells.obj leaves used by ai_tactical's sacrifice scan. The retail
     // call sites fix these exact stack arities; Dreamcast supplies names and
     // parameter types.
@@ -970,6 +1025,64 @@ public:
     army* find_resurrection_target(int armyGroup, int targetIndex,
                                    unsigned char creatureSpell);
     army* find_animate_dead_target(int armyGroup, int targetIndex);
+    // 0x5a3e40 (269 B), the Pit Lord's own lookup - the fourth spells.obj
+    // leaf and the sibling of find_resurrection_target 0x5a3cc0 (373 B)
+    // two lines above. LOCATED 2026-08-14 from army::can_cast_resurrect
+    // (0x4473d0), whose DC twin 0x4be64 calls exactly six things and
+    // whose retail body calls exactly the matching three that survive
+    // out of line: can_cast_spells, then ONE of these two by creature
+    // id. The two arities separate them with no ambiguity - the
+    // demonic lookup takes (group, hex) and the general one
+    // (group, hex, bool) - and the DC spells.obj order
+    // find_resurrection_target 0x153158 < find_demonic_resurrection_target
+    // 0x1532f8 < find_animate_dead_target 0x153400 is preserved exactly
+    // by retail 0x5a3cc0 < 0x5a3e40 < 0x5a4260. Names and parameter
+    // types are the S_PUB32 mangling's
+    // (?find_demonic_resurrection_target@combatManager@@QAAPAVarmy@@HH@Z).
+    // Neither body is claimed here; both belong to src/spells.cpp.
+    // 0x5a8950 (2457 B), the fifth spells.obj leaf. THE COMMENT THAT USED
+    // TO CARRY THIS ADDRESS WAS WRONG: SpellCastWorks two declarations
+    // above claimed it, and the arity refutes that outright - 0x5a8950
+    // ends `ret 0xc`, three stack arguments, where SpellCastWorks takes
+    // five. It is combatManager::ShowSpellMessage (DC 0x157ae4,
+    // ?ShowSpellMessage@combatManager@@QAAXHHPAVarmy@@@Z, three
+    // parameters plus this), the ONE spells.obj row DC's ResetRound
+    // calls, and retail's ResetRound calls 0x5a8950 with exactly
+    // (1, SPELL_POISON, this) - the DC parameter names are
+    // bIsMonsterSpell / spellId / targetArmy in that order. The real
+    // SpellCastWorks is 0x5a3c80, byte-proven as the call target of
+    // ai_tactical's consider_chain_lightning (0x437310); that
+    // correction is recorded on its own declaration.
+    // 0x59fe30, the spells.obj entry point. DC 0x14f7dc
+    // ?CastSpell@combatManager@@QAAXW4SpellID@@H_NHW4TSkillMastery@@J@Z
+    // with the parameter names spellId / targetIndex / bIsMonsterSpell
+    // / secondaryIndex / monster_skill / monster_power, and retail's
+    // six pushes at army::cast_caliph_spell (0x447ee0) match that arity
+    // exactly. TSkillMastery is spelled int here because its typedef
+    // lives in a header this one does not include. Not claimed.
+#ifdef HOMM3_CMBTMGR_CALIPH_VIEW
+    void CastSpell(SpellID spellId, int targetIndex,
+                   unsigned char bIsMonsterSpell, int secondaryIndex,
+                   int monster_skill, long monster_power);   // 0x59fe30
+#endif
+#ifdef HOMM3_CMBTMGR_ROUND_VIEW
+    void ShowSpellMessage(int bIsMonsterSpell, int spellId,
+                          army* targetArmy);                   // 0x5a8950
+    // 0x468990, cmbtmgr.obj's own. DC cmbtmgr.cpp:4158 spells it
+    // PowEffect(TSpellEffectID spellEffect, int bResetLimitCreature);
+    // the first parameter is int-wide either way and the enum lives in
+    // a header this one does not include.
+    void PowEffect(int spellEffect, int bResetLimitCreature); // 0x468990
+#endif
+    // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it
+    // unconditionally costs command.obj's GetCommand 92.5714 ->
+    // 92.5357, the include-set class this header pair has now fired
+    // three times from a bare member declaration. Bisected ALONE
+    // against army.h's numSpellCasts slice, which triggers by itself
+    // as well. army.cpp is the only consumer.
+#ifdef HOMM3_CMBTMGR_RESURRECT_VIEW
+    army* find_demonic_resurrection_target(int armyGroup, int targetIndex);
+#endif
     // DC cmbtmgr.h:1466. Retail expands this selector in both sacrifice
     // lookup sites; no standalone body survives.
     army* find_resurrection_target(SpellID spell, long group, long hex,

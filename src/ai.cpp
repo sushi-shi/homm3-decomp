@@ -3,6 +3,17 @@
 // 219 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include <algorithm>
+// army's +0xdc spell-charge word, which choose_spell_action and
+// choose_creature_spell both gate on. army.h scopes the slice behind this
+// view because slicing it for EVERY unit costs command.obj's GetCommand
+// 0.0357 with no semantic change; the two arms spell the same thirteen
+// bytes, so opening it here changes the NAME this TU sees and nothing
+// about the layout.
+#define HOMM3_ARMY_SPELLCAST_VIEW
+// army::initialize and army::is_adjacent(int), which
+// choose_resurrect_action and choose_defense_hex call. Declaring either
+// for every unit moves GetCommand by the same 0.0357.
+#define HOMM3_ARMY_AI_VIEW
 #include "ai.h"
 #include "ai_spellvalue.h"
 #include "ai_tactical.h"
@@ -10,6 +21,8 @@
 #include "game.h"
 #include "hero.h"
 #include "misc.h"
+#undef HOMM3_ARMY_AI_VIEW
+#undef HOMM3_ARMY_SPELLCAST_VIEW
 
 // A by-value, reference-RETURNING min - compute_fire_shield_damage
 // (0x422440) homes both operands in dead argument slots and selects
@@ -541,7 +554,7 @@ long get_attack_value(const army* current_army, const army* enemy, long enemy_hi
 #pragma auto_inline(off)
 // E:\gamedcs\Army.h:840
 VA(0x0041f380, 0x27)  // anchor-callee, dc 0x27d9c
-unsigned char army::IsIncapacitated()
+unsigned char army::IsIncapacitated() const
 {
     return static_cast<unsigned char>(disabled_290 || disabled_2b0 || disabled_2c0);
 }
@@ -1674,7 +1687,7 @@ unsigned char combatManager::choose_resurrect_action(const army* current_army, l
     long best_hex = -1;
     if ((current_army->creatureType != CREATURE_ARCHANGEL
             && current_army->creatureType != CREATURE_PIT_LORD)
-            || current_army->field_dc <= 0)
+            || current_army->numSpellCasts <= 0)
         return 0;
     army temp;
     if (current_army->creatureType == CREATURE_PIT_LORD)
@@ -1758,7 +1771,7 @@ unsigned char combatManager::choose_spell_action(const army* current_army, long*
         return 0;
     if (!can_cast_spells(estimate->side, 0))
         return 0;
-    if (current_army->field_dc == 0)
+    if (current_army->numSpellCasts == 0)
         return 0;
     switch (current_army->creatureType) {
     case CREATURE_ARCHANGEL:
@@ -1867,7 +1880,7 @@ void combatManager::mark_firewalls(const army* current_army, long* enemy_attacks
     for (long i = 0; i < 187; i++) {
         if ((cells[i].field_10 & 0x10) == 0)
             continue;
-        TObstacle* obstacle = GetObstacle(cells[i].field_14);
+        TObstacle* obstacle = &GetObstacle(cells[i].field_14);
         long base = obstacle->spell_damage;
         long damage = ModifySpellDamage(base, 0xd,
                                         heroes[obstacle->field_09],
@@ -2382,7 +2395,7 @@ wait:
 VA(0x004221f0, 0xD0)  // anchor-callee, dc 0x27138
 void combatManager::DoCompAI(int whichGroup)
 {
-    field_132c8 = 0;
+    lastMovedArmy = 0;
     TurnOffHighlighter(1);
     army* current_army = get_current_army();
     current_army->side = -1;
@@ -2496,8 +2509,8 @@ long combatManager::compute_fire_shield_damage(long damage, const army* attacker
         return 0;
     damage = static_cast<long>(target->get_fire_shield_strength()
                                * min_ref(target_hits, damage));
-    hero* target_hero = attacker->get_owner();
-    hero* casting_hero = target->get_owner();
+    hero* target_hero = attacker->get_controller();
+    hero* casting_hero = target->get_controller();
     return ModifySpellDamage(damage, SPELL_FIRE_SHIELD, casting_hero,
                              target_hero, attacker, 0);
 }
@@ -2562,7 +2575,7 @@ void type_spellvalue::set_stack_value(long arg)
 
 // E:\gamedcs\Army.h:718
 DC_ONLY(0x27c78, 0x24)
-unsigned char army::can_cast_resurrect()
+unsigned char army::can_cast_resurrect() const
 {
     // @stub
 }

@@ -39,8 +39,10 @@
 // shape; the installed Dinkumware overloads take const references.
 // armyGroup and gTownDwellingCreatures both model the creature ordinal as
 // int while type_creature_value's key is the TCreatureType domain; same
-// bit-preserving inline bridge ai_combat.cpp and philai.cpp use for the
-// same crossing, rather than lying with an enum cast.
+// bit-preserving bridge ai_combat.cpp and philai.cpp use for the same
+// crossing, rather than lying with an enum cast. It writes the slot IN
+// PLACE: a value-returning form costs calculate_demand 86.38 -> 86.13,
+// its temporary's home shifting three registers.
 inline void set_creature_type(TCreatureType& slot, int value)
 {
     memcpy(&slot, &value, sizeof slot);
@@ -80,36 +82,76 @@ inline const _TYPE& _cpp_limit(_TYPE _Lo, _TYPE _V, _TYPE _Hi)
 // `movzx ax, byte` loads and the single `and edx, 0xffffc000` mask that
 // clears both fields at once.
 //
-// Residual (98.8%): one scheduling slot - retail hoists the gpGame load
-// above the y/z bitfield store, ours sinks it below. Tried and
-// rejected: all 36 declaration x assignment orders of the three
-// coordinates (98.8% is the ceiling of that family; plain byte
-// assignment 86.9%, aggregate initialisation 89.3% but structurally
-// wrong - retail read-modify-writes BOTH storage units, which an
-// aggregate initialiser never does), unsigned short temporaries,
-// declaring the point before the temporaries, and static_cast<short> /
-// <int> on the byte reads (all identical to the implicit conversion).
-// Re-swept 2026-08-08 with the naming lever that closed the
-// SpellCastWorkChance family: binding gpGame to a named local is the
-// WRONG direction here and loses ground from every position tried -
-// before the point assignments or at the top of the body 89.3, between
-// the x and y stores 85.8, between y and z 85.8, after all three 93.0,
-// and with the z store moved up 83.5. The hoist retail performs is the
-// allocator's, not a source ordering we can spell.
-// E:\gamedcs\ai_player.cpp:69
+// EXACT 2026-08-14 (98.7523 -> 100.0000), and the DC xref census is what
+// found it. The long-standing residual was one scheduling slot - retail
+// hoisted the gpGame load above the y/z bitfield store where this compile sank
+// it below - and it survived all 36 declaration x assignment orders of the
+// three coordinates spelled INLINE here (that family's ceiling was 98.8; plain
+// byte assignment 86.9, aggregate initialisation 89.3 but structurally wrong,
+// since retail read-modify-writes BOTH storage units; unsigned short
+// temporaries, declaring the point before the temporaries and
+// static_cast<short>/<int> on the byte reads were all identical; binding
+// gpGame to a named local lost ground from every position - 89.3 at the top,
+// 85.8 between the x/y and y/z stores, 93.0 after all three, 83.5 with the z
+// store moved up). The note that "the hoist retail performs is the
+// allocator's, not a source ordering we can spell" was right about ORDER and
+// wrong about the construct: the point is not built in this frame at all.
+// evidence/dc-xref-graph.tsv records `town::get_location` x1 from this body
+// (dc 0x1fdac, E:\gamedcs\Town.h:311). Spelling it as a helper that RETURNS
+// the point by value gives the construction its own NRV slot, and retail's
+// load order falls out of that - byte-identical on the first spelling.
+// This is the census's second conversion after ??0TQuickCreatureWindow and it
+// fits the same screen: the callee's body does work the caller's spelling does
+// not (a whole struct return), so it cannot constant-fold away.
+// E:\gamedcs\Town.h:311, dc 0x1fdac - a header inline whose out-of-line copy
+// lands in advmgr.obj, where it is still carcassed. Kept file-local (a free
+// static over the same body rather than the `town::` member it is in retail)
+// so this lane leaves town.h's include closure alone; promoting it into town.h
+// behind HOMM3_TOWN_OBJ_DECLS is the obvious follow-up, and quicktownwindow's
+// and armygrp's `town::HasBuilding` rows are the neighbours that would pay for
+// the same edit.
+// 2026-08-14, town.h OPENED and the follow-up was surveyed before spending the
+// edit: IT HAS NO CONSUMER THAT CAN PAY TODAY, so the helper stays file-local.
+// `town::get_location` has exactly TEN DC call sites and every one is either
+// unreconstructed, already converted, or a Dreamcast-only factoring:
+//   advManager::DoAdvCommand / TownQuickView / SetTownContext, and
+//     advspells' advManager::TownGate - all four score 0.0, not reconstructed
+//   type_town_threat_checker::mark_towns - no reconstructed row
+//   searchArray::check_town_portal - no reconstructed row
+//   townManager::MoveHero - another lane's unit
+//   town::PlaceInMap - ALREADY 100.0000 without it
+//   town::get_legion_bonus - 81.7262, and RETAIL'S x86 BODY CONTAINS NO
+//     type_point AT ALL (84 instructions, no struct return, no map lookup), so
+//     that census row is Dreamcast source too. Seven spellings measured against
+//     it while town.cpp was open, all negative or flat: explicit per-arm
+//     assignment 81.0714, `2 * growth` 81.0714, per-arm divide 75.0000, keeping
+//     `bonus = growth` ahead of an else-arm 81.7262 (flat), direct returns per
+//     arm 73.8691 twice, and two independent `if`s 63.3333. Its residual is the
+//     bonus/growth register split and retail's THREE duplicated `/2` tails
+//     against our two - a block-duplication class, not a struct return.
+//   can_take_town - this body, already converted below
+// The promotion becomes worth making when advmgr's three rows and
+// event_record are reconstructed; until then it is a wide-header edit with a
+// documented downside (an ungated town.h slice once cost initialize_game_data
+// 100.0 -> 96.09) and no upside.
+static type_point get_location(const town* t)
+{
+    short town_x = t->mapX;
+    short town_z = t->mapZ;
+    short town_y = t->mapY;
+    type_point point;
+    point.x = town_x;
+    point.y = town_y;
+    point.z = town_z;
+    return point;
+}
+
 VA(0x00428410, 0x160)  // anchor-global, dc 0x2dc00
 unsigned char can_take_town(const hero* attacking_hero, const town* defending_town)
 {
     armyGroup attacking_army = attacking_hero->army;
     armyGroup defending_army = defending_town->get_army();
-    short town_x = defending_town->mapX;
-    short town_z = defending_town->mapZ;
-    short town_y = defending_town->mapY;
-    type_point point;
-    point.x = town_x;
-    point.y = town_y;
-    point.z = town_z;
-    NewmapCell* cell = gpGame->get_cell(point);
+    NewmapCell* cell = gpGame->get_cell(get_location(defending_town));
     type_AI_combat_data attacker(attacking_hero, &attacking_army, 1.25, 0,
                                  defending_town, cell);
     type_AI_combat_data defender(0, &defending_army, 0.75, attacking_hero, 0,
@@ -228,7 +270,6 @@ long type_AI_player::get_resource_value(int* resources)
 // Static (DC public `?get_attack_bonus@type_AI_player@@SAMF@Z`, S =
 // public static): the retail body reads the short straight out of ECX
 // and never touches a `this`.
-// E:\gamedcs\ai_player.cpp:245
 VA(0x00428710, 0x2D)  // anchor-global, dc 0x2e15c
 float type_AI_player::get_attack_bonus(short player)
 {
@@ -253,7 +294,6 @@ float type_AI_player::get_attack_bonus(short player)
 // final-insertion implementation/register allocation for std::sort plus one
 // growth-add register choice; source-equivalent loop and temporary shapes
 // were measured and this is the stable structure-first plateau.
-// E:\gamedcs\ai_player.cpp:258
 VA(0x00428740, 0x68E)  // linkorder, dc 0x2e188
 void type_AI_player::calculate_demand()
 {
@@ -404,7 +444,6 @@ void type_AI_player::calculate_demand()
 // cursors: this compile merges the cursors into one induction plus a delta,
 // whereas retail keeps both in registers. The player/team checks are the
 // retail inline OnSameTeam form.
-// E:\gamedcs\ai_player.cpp:414
 VA(0x00428dd0, 0x33E)  // linkorder, dc 0x2e7d8
 void type_AI_player::end_turn()
 {
@@ -500,7 +539,6 @@ void type_AI_player::end_turn()
 // broader override probes regress or are byte-inert and were reverted. Other
 // residuals are register permutations in the transfer loops and one
 // deliberately retained retail gate after the human transfer.
-// E:\gamedcs\ai_player.cpp:504
 VA(0x00429110, 0x6AC)  // linkorder, dc 0x2ea20
 void type_AI_player::make_gift(long player_id)
 {
@@ -677,7 +715,6 @@ void type_AI_player::start_turn()
 // to read, xor-and-xor to write), which is what a plain `for
 // (point.x = 0; ...; point.x++)` over a bitfield compiles to; hoisting
 // them into ints and building the point inside the body does not.
-// E:\gamedcs\ai_player.cpp:664
 VA(0x00429910, 0x195)  // anchor-callee corrected, dc 0x2efc8
 long find_magus_hut_value(long player_id, unsigned char explore_mode)
 {
@@ -729,7 +766,6 @@ void type_AI_player::reset_magus_hut_value()
 // forms were tested; none exceeded this source-equivalent plateau.
 #endif  // @carcass
 
-// E:\gamedcs\ai_player.cpp:752
 VA(0x00429ad0, 0x280)  // anchor-callee, dc 0x2f280
 void type_AI_player::calculate_reserve()
 {

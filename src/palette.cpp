@@ -101,7 +101,6 @@ TPalette16* TPalette16::operator=(const TPalette16* from)
 // E:\gamedcs\palette.cpp:204
 #endif  // @carcass
 
-// E:\gamedcs\palette.cpp:204
 VA(0x00522940, 0xB)  // anchor-global, dc 0x10a8e0
 TPalette16::~TPalette16()
 {
@@ -187,7 +186,6 @@ VA_COMPGEN(0x00522e50, 0x21, SCALAR_DELETING_DTOR, TPalette24)
 // generated scalar destructor in the DC row's former link-order slot, then
 // emits this constructor at 0x522e80; its size and sole caller agree with the
 // raw palette path.
-// E:\gamedcs\palette.cpp:603
 VA(0x00522e80, 0x2D)  // exact 0x300-byte payload copy, dc 0x10b904
 TPalette24::TPalette24(const unsigned char* data)
     : resource(0, RESOURCE_TYPE_NONE)
@@ -197,32 +195,27 @@ TPalette24::TPalette24(const unsigned char* data)
 
 // Retail walks 256 four-byte RGBA records and copies RGB into the packed
 // three-byte palette payload, omitting Alpha exactly as the DC signature
-// implies. Residual (87.0741%): all loads, stores, strides, and branches
-// agree, but VC6 cycles `this`, source, destination, and count through the
-// opposite ESI/EDI and EAX/ECX allocation. The v2 allocator model classifies
-// the ESI/EDI transposition as C1 front-end handle state: the pair is
-// parameter/`this` versus an expression value and is not source-nameable.
-// E:\gamedcs\palette.cpp:609
+// implies. EXACT since 2026-08-14. The old 87.07 plateau was NOT the register
+// wall the previous note claimed: it came from writing the walk with two
+// pointer locals. Advancing the parameter itself, and subscripting the
+// destination with a loop index, lets VC6 strength-reduce the index into the
+// destination pointer with retail's +1 induction bias (`lea eax,[edi+0x1d]`,
+// stores at -1/0/+1) and puts every value in retail's register.
 VA(0x00522eb0, 0x42)  // dc-bracket + exact 4-to-3 stride, dc 0x10b94c
 TPalette24::TPalette24(const TRGBA* rgba)
     : resource(0, RESOURCE_TYPE_NONE)
 {
-    int remaining = 256;
-    const TRGBA* source = rgba;
-    unsigned char (*destination)[3] = colors.data;
-    do {
-        (*destination)[0] = source->Red;
-        (*destination)[1] = source->Green;
-        (*destination)[2] = source->Blue;
-        ++source;
-        ++destination;
-    } while (--remaining);
+    for (int index = 0; index < 256; ++index) {
+        colors.data[index][0] = rgba->Red;
+        colors.data[index][1] = rgba->Green;
+        colors.data[index][2] = rgba->Blue;
+        ++rgba;
+    }
 }
 
 // Dreamcast supplies the pointer-taking copy-constructor signature. Retail
 // independently fixes the body: an unnamed resource base followed by the
 // complete 0x300-byte color payload copy, leaving resource identity fresh.
-// E:\gamedcs\palette.cpp:635
 VA(0x00522f00, 0x30)  // dc-bracket + exact payload extent, dc 0x10ba3c
 TPalette24::TPalette24(const TPalette24* copy)
     : resource(0, RESOURCE_TYPE_NONE)
@@ -230,7 +223,6 @@ TPalette24::TPalette24(const TPalette24* copy)
     memcpy(&colors, &copy->colors, sizeof(colors));
 }
 
-// E:\gamedcs\palette.cpp:640
 VA(0x00522f30, 0x21)  // payload-only assignment; resource identity retained
 TPalette24& TPalette24::operator=(const TPalette24& from)
 {
@@ -239,9 +231,8 @@ TPalette24& TPalette24::operator=(const TPalette24& from)
     return *this;
 }
 
-// E:\gamedcs\palette.cpp:650
 VA(0x00522f60, 0x0b)  // TPalette24 vtable 0x640374 + resource dtor tail
-TPalette24::~TPalette24()
+TPalette24::~TPalette24() throw()
 {
 }
 
