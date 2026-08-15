@@ -1149,6 +1149,13 @@ public:
     // the Dreamcast's own signature.
     void do_event_pyramid(class hero* current_hero, NewmapCell* cell,
                           type_point point, bool human_player);
+    // The shared artifact hand-over (0x49e8f0), the Dreamcast's own
+    // `(hero*, type_point, bool)` against retail's `ret 0xc`. Six of
+    // DoEventArtifact's arms reach it - two of them by CALL, one by /Ob2
+    // expansion - and it takes the POINT rather than the cell because it
+    // re-fetches the cell itself.
+    void GiveArtifact(class hero* current_hero, type_point point,
+                      bool human_player);
     // Pandora's Box (jump-table arm 0x06). Four arguments and `ret 0x10`,
     // the Dreamcast's own signature.
     void DoEventBlackBox(class hero* current_hero, NewmapCell* cell,
