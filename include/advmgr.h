@@ -847,7 +847,11 @@ public:
     // only this distinguished state, so retain an ordinal spelling rather
     // than inventing a semantic domain name.
     enum ECursorTypeState {
-        CURSOR_TYPE_8 = 8
+        CURSOR_TYPE_8 = 8,
+        // DoEventAnchor (0x49e670) parks the map cursor in this state as a
+        // hero steps ashore, where DoEventBoat parks it in 8 as one boards.
+        // Ordinal for the reason 8 is: no surviving name covers the domain.
+        CURSOR_TYPE_34 = 0x22
     };
 
     enum EObjectDrawLayer {
@@ -1124,6 +1128,19 @@ public:
                              type_point point, bool human_player);
     void DoEventSpellScroll(class hero* current_hero, NewmapCell* cell,
                             type_point point, bool human_player);
+    // The flotsam (jump-table arm 0x1d). Four arguments and `ret 0x10`,
+    // the Dreamcast's own signature; the point is EraseAndFizzle's.
+    void DoEventFlotsam(class hero* current_hero, NewmapCell* cell,
+                        type_point point, bool human_player);
+    // The anchor point (jump-table arm 0x03). Two arguments and `ret 8`
+    // against the Dreamcast's own `(hero*, bool)`, and human_player is
+    // never read - transcribed because retail keeps the parameter.
+    void DoEventAnchor(class hero* current_hero, bool human_player);
+    // cursor.obj's adjacent-monster sweep (0x481900), an advManager member
+    // the Dreamcast declares in cursor.cpp and this tree carries in
+    // src/cursor.cpp's carcass. DoEventAnchor is its consumer here and
+    // passes a local it never reads back.
+    void CheckAdjacentMon(int* bFoughtBattle);
     // The mine (jump-table arm 0x35). The Dreamcast's own parameter order
     // puts the CELL first, and retail's `[ebp+8]` is the cell; `ret 0x10`
     // for four arguments.

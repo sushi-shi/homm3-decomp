@@ -75,6 +75,16 @@ enum EAdventureEventText {
     // pictures are what differ - and 63 is the already-visited line.
     ADV_EVENT_TEXT_IDOL = 62,
     ADV_EVENT_TEXT_IDOL_VISITED = 63,
+    // DoEventFlotsam (0x4a2230), and the flotsam is the only object in
+    // this enum with FOUR contiguous rows besides the stables: its four
+    // sizes each have their own line, 51 the empty one and 52..54 the
+    // three payouts. The run sits between the dragon city's 47 and the
+    // fountain of fortune's 55, which is where the alphabet puts
+    // "flotsam".
+    ADV_EVENT_TEXT_FLOTSAM_NOTHING = 51,
+    ADV_EVENT_TEXT_FLOTSAM_WOOD = 52,
+    ADV_EVENT_TEXT_FLOTSAM_WOOD_AND_GOLD = 53,
+    ADV_EVENT_TEXT_FLOTSAM_LARGE = 54,
     // DoEventFountain (0x4a2480), the Fountain of FORTUNE - 55 is the
     // reward and 56 the already-drunk line, immediately before the
     // fountain of youth's own pair, which is exactly where the alphabet
@@ -305,6 +315,19 @@ enum EFountainLuck {
     FOUNTAIN_LUCK_PLUS_1 = 1,
     FOUNTAIN_LUCK_PLUS_2 = 2,
     FOUNTAIN_LUCK_PLUS_3 = 3
+};
+
+// DoEventFlotsam's (0x4a2230) size selector, held in the cell's own
+// extra-info dword. The domain is closed by construction: retail
+// range-checks the UNSIGNED value against 3 and jump-tables the four
+// slots, sending anything larger straight to the pick-up. The
+// enumerators are spelled for what each slot pays, which is what the
+// four advevent.txt rows above describe.
+enum EFlotsamSize {
+    FLOTSAM_NOTHING = 0,
+    FLOTSAM_WOOD = 1,
+    FLOTSAM_WOOD_AND_GOLD = 2,
+    FLOTSAM_LARGE = 3
 };
 
 // DoEventStables' (0x4a60a0) report selector: a two-bit accumulator the
