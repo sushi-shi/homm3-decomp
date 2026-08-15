@@ -2296,6 +2296,73 @@ BlackBoxData* advManager::get_black_box(const ExtraInfoUnion* cell) const
     return &fullMap->blackBoxes[index];
 }
 
+// philai.obj's two-argument event appraisal (dc 0x114b44), and the whole
+// of the AI arm's decision at five call sites in this file. Retail's
+// 0x52bd10 is a /Gr fastcall taking the hero in ECX and the packed point
+// on the STACK - type_point is a struct, so it cannot ride a register -
+// and returning long; its own body is a nine-instruction wrapper that
+// zeroes a local move-cost and forwards to the three-argument overload at
+// 0x528040. Declared file-locally at its FIRST consumer; the rest of the
+// xref evidence is in the note above monsters_flee.
+long AI_value_of_event(const hero* current_hero, type_point point);
+
+// E:\gamedcs\events.cpp:1123.  Pandora's Box (jump-table arm 0x06): the
+// map-maker's own message, a yes/no prompt, the guardians it may carry,
+// and then whatever the record holds - all of which GiveBlackBoxReward
+// pays out, so this body is only the framing.
+//
+// The custom message is the ONE place in this file that reaches into a
+// std::string. `Message.c_str()` is expanded TWICE - once for the strlen
+// test and once for the dialog itself, exactly as the Dreamcast line table
+// splits them across lines 1128 and 1130 - and each expansion is
+// Dinkumware's `_Ptr == 0 ? &_Nul : _Ptr`, which is what retail's
+// `test edx,edx / mov ecx,<empty> / je / mov ecx,edx` pair is. strlen is
+// the intrinsic (repne scasb, then `not ecx / dec ecx`).
+//
+// The BlackBox pointer is HOMED on the frame because the guardians test
+// walks a working copy of it forward to the armyGroup at +0x14 and the
+// reward call needs the original back.
+VA(0x004a0c50, 0x277)  // jump-table arm 0x06 + advevent.txt 14..16, dc 0x91c18
+void advManager::DoEventBlackBox(hero* current_hero, NewmapCell* cell,
+                                 type_point point, bool human_player)
+{
+    BlackBoxData* BlackBox = cell->get_black_box();
+
+    if (human_player) {
+        if (strlen(BlackBox->Message.c_str()) != 0)
+            NormalDialog(BlackBox->Message.c_str(), 1, -1, -1, -1, 0,
+                         -1, 0, -1, 0, -1, 0);
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_BLACK_BOX_PROMPT),
+                     2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            return;
+    } else if (AI_value_of_event(current_hero, point) <= 0) {
+        return;
+    }
+
+    if (BlackBox->HasCustomGuardians && BlackBox->Guardians.GetNumArmies()) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BLACK_BOX_GUARDED),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (DoCombat(point, current_hero, &current_hero->army, -1, 0, 0,
+                     &BlackBox->Guardians, -1, 1, 0))
+            return;
+        current_hero->CheckLevel();
+    }
+
+    if (!GiveBlackBoxReward(emptyRolloverText, current_hero, cell, point,
+                            human_player, BlackBox)) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_BLACK_BOX_NOTHING),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+
+    EraseAndFizzle(cell, point, FIZZLE_SOUND_PICKUP);
+}
+
 // E:\gamedcs\events.cpp:1219.  Boarding a boat, jump-table arm 0x08 =
 // OBJECT_BOAT, and the only handler in this file that takes just the hero
 // and the cell - there is no dialog to gate, so no human_player.
@@ -2531,16 +2598,6 @@ void advManager::DoEventDefenseTower(hero* current_hero, NewmapCell* cell,
     gpGame->SetInfoFlag(DefenseTowerInfo, gNetLocalGamePos);
     current_hero->DefenseTowerFlags |= 1 << cell->extraInfo;
 }
-
-// philai.obj's two-argument event appraisal (dc 0x114b44), and the whole
-// of the AI arm's decision at three call sites in this file. Retail's
-// 0x52bd10 is a /Gr fastcall taking the hero in ECX and the packed point
-// on the STACK - type_point is a struct, so it cannot ride a register -
-// and returning long; its own body is a nine-instruction wrapper that
-// zeroes a local move-cost and forwards to the three-argument overload at
-// 0x528040. Declared file-locally at its FIRST consumer; the rest of the
-// xref evidence is in the note above monsters_flee.
-long AI_value_of_event(const hero* current_hero, type_point point);
 
 // E:\gamedcs\events.cpp:1675.  The Dragon Utopia, jump-table arm 0x19 =
 // OBJECT_DRAGON_UTOPIA, and the only creature bank retail gives a handler
@@ -3322,6 +3379,85 @@ void advManager::DoEventPowerSchool(hero* current_hero, NewmapCell* cell,
     current_hero->stats[2]++;
     gpGame->SetInfoFlag(PowerSchoolInfo, gNetLocalGamePos);
     current_hero->PowerSchoolFlags |= 1 << cell->extraInfo;
+}
+
+// E:\gamedcs\events.cpp:2601.  The pyramid (jump-table arm 0x3f): a
+// yes/no prompt, two Golem stacks to beat, and then the spell it was
+// built around - which a hero may still fail to take home for want of a
+// spellbook or of Wisdom. An ALREADY-ROBBED pyramid is the other arm:
+// nothing to fight, nothing to learn, and -2 luck once per hero.
+//
+// Two shapes are worth naming. The spell arm builds ONE 500-byte buffer
+// and strcats a different tail onto it in each of the three outcomes,
+// then shows it with a single dialog - retail cross-jumps the three calls
+// into one, keeping only the picture pair distinct, which is what writing
+// the three arms longhand produces. And the combat is CombatMonsterEvent
+// with BOTH optional stacks filled: forty Gold Golems and twenty Diamond
+// Golems in two groups, the first count passed by pointer.
+//
+// The spell is written back BEFORE the hero is asked whether he can carry
+// it: set_pyramid clears the guarded bit and re-stamps the same spell in
+// one masked read-modify-write, and every later arm reads the local copy.
+VA(0x004a4230, 0x28A)  // jump-table arm 0x3f + advevent.txt 105..109, dc 0x949e0
+void advManager::do_event_pyramid(hero* current_hero, NewmapCell* cell,
+                                  type_point point, bool human_player)
+{
+    if (human_player) {
+        OverrideBottomView(BOTTOM_VIEW_DEFAULT, -1);
+        UpdBottomView(0, 1, 1);
+        NormalDialog(gpAdventureEventText->GetText(
+                         ADV_EVENT_TEXT_PYRAMID_PROMPT),
+                     2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn == DIALOG_RETURN_DECLINE)
+            return;
+    } else if (AI_value_of_event(current_hero, point) <= 0) {
+        return;
+    }
+
+    cell->SetCellVisited(current_hero->owner);
+    if (!cell->pyramid_is_guarded()) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_PYRAMID_ROBBED),
+                         1, -1, -1, 0xd, 0, 0xd, 0, -1, 0, -1, 0);
+        if (!(current_hero->flags & 0x1000)) {
+            current_hero->flags |= 0x1000;
+            current_hero->field_11b -= 2;
+        }
+        return;
+    }
+
+    int gold_golems = 40;
+    if (CombatMonsterEvent(current_hero, 116, &gold_golems, cell, point,
+                           creature_type_from_int(117), 20, 2,
+                           creature_type_from_int(-1), 0, 0))
+        return;
+    current_hero->CheckLevel();
+
+    int spell = cell->get_pyramid_spell();
+    char cText[500];
+    sprintf(cText, DATA_COMPGEN(0x00677750, quotedNameFormat, "%s'%s'."),
+            gpAdventureEventText->GetText(ADV_EVENT_TEXT_PYRAMID_SPELL),
+            akSpellTraits[spell].name);
+    cell->set_pyramid(0, spell);
+
+    if (!current_hero->IsWieldingArtifact(ARTIFACT_SPELLBOOK)) {
+        if (human_player) {
+            strcat(cText, gpAdventureEventText->GetText(
+                              ADV_EVENT_TEXT_PYRAMID_NO_SPELLBOOK));
+            NormalDialog(cText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+    } else if (akSpellTraits[spell].level > current_hero->wisdomLevel + 2) {
+        if (human_player) {
+            strcat(cText, gpAdventureEventText->GetText(
+                              ADV_EVENT_TEXT_PYRAMID_NO_WISDOM));
+            NormalDialog(cText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        }
+    } else {
+        current_hero->AddSpell(spell);
+        if (human_player)
+            NormalDialog(cText, 1, -1, -1, 9, spell, -1, 0, -1, 0, -1, 0);
+    }
 }
 
 // E:\gamedcs\events.cpp:2677.  The Rally Flag: +1 morale, +1 luck and

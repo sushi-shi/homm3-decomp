@@ -314,6 +314,21 @@ struct SeaChestInfo {
     unsigned long tail : 19;
 };
 SIZE(SeaChestInfo, 4);
+
+// The pyramid's arm. advManager::do_event_pyramid (0x4a4230) reads a
+// one-bit guarded flag at bit 0 - as a plain byte test (`test byte
+// ptr [cell],1`), which is what a bool-returning accessor over a bit-0
+// field folds to - and a SIGNED eight-bit spell at bits 13..20 (`shl
+// esi,0xb / sar esi,0x18`). Emptying it writes both at once: `and
+// edx,0xffe01ffe / or edx,(spell & 0xff) << 0xd`, and that mask names the
+// two lanes and nothing between them. GATED for MonsterInfo's reason.
+struct PyramidInfo {
+    unsigned long guarded : 1;
+    unsigned long unused : 12;
+    signed long spell : 8;
+    unsigned long tail : 11;
+};
+SIZE(PyramidInfo, 4);
 #endif
 
 // Stride 38 (0x26), byte-proven by game::get_cell's `*19` then `*2`
@@ -347,6 +362,7 @@ public:
         TreasureInfo treasure_info;
         ScholarInfo scholar_info;
         SeaChestInfo sea_chest_info;
+        PyramidInfo pyramid_info;
     };
 #else
     unsigned long extraInfo;
@@ -532,6 +548,32 @@ public:
     // for get_tomb_artifact's reason.
     int GetSeaChestReward() const { return sea_chest_info.reward; }
     int GetSeaChestArtifact() const { return sea_chest_info.artifact; }
+
+    // The pyramid's trio, all three Dreamcast-published over
+    // do_event_pyramid (dc 0x949e0): pyramid_is_guarded is `_N`,
+    // get_pyramid_spell `?AW4SpellID` and set_pyramid
+    // `void (bool, SpellID)` - MapCell.h:1056, which this file's carcass
+    // already carried. The spell getter is spelled `int` for
+    // get_tomb_artifact's reason.
+    bool pyramid_is_guarded() const { return pyramid_info.guarded; }
+    int get_pyramid_spell() const { return pyramid_info.spell; }
+    void set_pyramid(bool guards, int new_spell)
+    {
+        pyramid_info.guarded = guards;
+        pyramid_info.spell = new_spell;
+    }
+
+    // `?get_black_box@ExtraInfoUnion@@QBEPAVBlackBoxData@@XZ` (0x405de0),
+    // re-declared on the derived side exactly as SetCellVisited below is
+    // and for the same reason - retail's DoEventBlackBox (0x4a0c50) hands
+    // the raw NewmapCell pointer to it as `this`, which is the DC's
+    // implicit upcast, and this tree cannot express that inheritance
+    // because ExtraInfoUnion is a union. DECLARED, NEVER DEFINED: the one
+    // definition belongs to advmgr.obj, and a call relocation's symbol
+    // name is not scored. Do NOT confuse it with advManager's
+    // same-named member (0x4a0c20, reconstructed in src/events.cpp), which
+    // takes the cell as an argument and indexes fullMap->blackBoxes.
+    class BlackBoxData* get_black_box() const;
 
     // mapcell.cpp:46 in the DC roster, and the SAME inherited member
     // IsCustomized is: retail's do_event_dragon_city (0x4a2140) passes the

@@ -1128,6 +1128,20 @@ public:
                              type_point point, bool human_player);
     void DoEventSpellScroll(class hero* current_hero, NewmapCell* cell,
                             type_point point, bool human_player);
+    // The pyramid (jump-table arm 0x3f). Four arguments and `ret 0x10`,
+    // the Dreamcast's own signature.
+    void do_event_pyramid(class hero* current_hero, NewmapCell* cell,
+                          type_point point, bool human_player);
+    // Pandora's Box (jump-table arm 0x06). Four arguments and `ret 0x10`,
+    // the Dreamcast's own signature.
+    void DoEventBlackBox(class hero* current_hero, NewmapCell* cell,
+                         type_point point, bool human_player);
+    // The reward payer the box hands its record to (0x49fa90), a PRIVATE
+    // member on the Dreamcast returning bool. DECLARED only; the row is not
+    // claimed here.
+    bool GiveBlackBoxReward(const char* text, class hero* current_hero,
+                            NewmapCell* cell, type_point point,
+                            bool human_player, class BlackBoxData* BlackBox);
     // The sea chest (jump-table arm 0x52). Four arguments and `ret 0x10`,
     // the Dreamcast's own signature.
     void DoEventSeaChest(class hero* current_hero, NewmapCell* cell,
