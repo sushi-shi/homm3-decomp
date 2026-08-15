@@ -232,8 +232,28 @@ public:
 SIZE(HeroExtra, 0x334);
 #endif
 
+// The four secondary skills a university offers, in slot order. Retail's
+// own default constructor 0x5d2d80 - `mov eax,ecx` plus four dword stores
+// of 14, 15, 16, 17 and a bare `ret`, no frame - proves the shape and the
+// element width: the record IS four ints, and the four values are the
+// elemental magic schools (Fire, Air, Water, Earth), which is exactly the
+// set the Conflux town building teaches. townManager::DoUniversity
+// 0x5d2da0 expands that constructor inline over its own stack record and
+// hands its address to the university window; the map object's copy comes
+// out of ExtraInfoUnion::get_university instead. Sixteen bytes either way,
+// unchanged.
 struct type_university {
-    char fields[0x10];
+    int skills[4];
+
+    // DEFINED in townmgr.cpp, not here, and the retail image is what says
+    // so: the out-of-line copy at 0x5d2d80 sits inside townmgr.obj's link
+    // bracket, immediately ahead of townManager::DoUniversity, while the
+    // only three callers of it in the image are AI bodies at 0x5253d0 and
+    // 0x52b1e0 - objects that link EARLIER. A header-inline constructor
+    // would have had its COMDAT kept from the first object that used it,
+    // i.e. over there; a plain out-of-line member emitted by its own
+    // compiland lands exactly where this one does.
+    type_university();
 };
 SIZE(type_university, 0x10);
 

@@ -72,6 +72,13 @@
 #include "textresource.h"
 #include "textwdgt.h"
 #include "towngatewindow.h"
+// Opens university_window.h's layout tail and constructor declarator for
+// DoUniversity, which puts one of these windows on the STACK and so needs
+// its real size and its implicit destructor. Gated so the two TUs that
+// already include that header keep the narrow view they are measured on.
+#define HOMM3_TOWNMGR_UNIVERSITY_DECLS
+#include "university_window.h"
+#undef HOMM3_TOWNMGR_UNIVERSITY_DECLS
 #include "widget.h"
 #include "winmgr.h"
 
@@ -2796,6 +2803,103 @@ void townManager::DoPortalOfSummoning()
         delete gpRecruitUnit;
     } else {
         NormalDialog(gUnnamed6a5dfc, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+    }
+}
+
+// Conflux's Magic University, and a RETAIL-ONLY row: the Dreamcast
+// townmgr.obj roster runs straight from GetBuildingInfo (dc 0x174f78) to
+// townManager::Main (dc 0x175160) with nothing in the gap, so this body
+// has no Dreamcast name and the one here is read off the bytes. Four
+// independent readings agree.
+//
+// The stack record it fills holds 14, 15, 16, 17 - Fire, Air, Water and
+// Earth Magic, exactly the four schools the Conflux building teaches -
+// and it fills it with the same four dword stores that retail's
+// out-of-line `type_university` default constructor at 0x5d2d80 makes
+// (`mov eax,ecx`, four stores, bare `ret`), expanded inline here. It
+// hands that record's ADDRESS to 0x5ef500, whose compiland is the one
+// that owns "univers1.pcx" and whose only other caller in the whole
+// image - the adventure map's university visit at 0x4aa526 - reaches it
+// through ExtraInfoUnion::get_university, which this tree already
+// declares as returning `type_university*`. The third argument is what
+// separates the two: the map object pushes 0 there, this page pushes 1,
+// and the constructor gates one extra widget on it. And the no-hero arm
+// describes building 21 - EXTRA_0_ID, the town-type-specific special
+// slot Conflux fills with the university - with the picture id
+// `townToView->type + 0x16`, the town-faction band of the dialog's
+// resource domain.
+//
+// The hero pick is the transformer's, twice over. Each of the two ids
+// keeps its own `>= 0` gate in FRONT of game::GetHero's own `== -1`
+// test, which is the two-compare asymmetry DoSkeletonTransformer
+// records; and the override underneath is the same one - when the
+// page's selected strip IS the town's own strip the garrison hero is
+// the one the page means. The garrison's `>= 0` belongs to that same
+// condition rather than to a nested if: retail's `jl` skips the
+// assignment and leaves the already-chosen hero standing.
+
+// The university record's default set, and this compiland owns the body.
+// Retail's copy is `mov eax,ecx`, four dword stores of 14, 15, 16, 17 and
+// a bare `ret` - a frameless constructor returning `this` - and it sits at
+// 0x5d2d80, inside townmgr.obj's link bracket and immediately ahead of the
+// page below, while its only three call sites in the image are the AI
+// bodies at 0x5253d0 (twice) and 0x52b1e0, whose objects link EARLIER. A
+// header-inline constructor's COMDAT would have been kept from one of
+// those; a plain out-of-line member emitted by its own compiland lands
+// exactly here, in source order between GetBuildingInfo and DoUniversity.
+// DoUniversity is its only call site in this TU, so /Ob2 expands it there
+// as well as emitting this copy.
+//
+// Residual on the page below (89.77%): the two sides emit the SAME 164
+// instructions in the SAME order and differ in exactly two coupled ways.
+// Retail CALLS basic_string::_Tidy for the string constructor's `_Tidy()`
+// where our CL expands it to the three storage stores (9 bytes either
+// way, which is why the row sizes still agree) - and BOTH sides inline
+// the destructor's `_Tidy(true)`, so this is a per-site inline share and
+// not a depth or budget cap. The candidate-site count is what this TU is
+// short of: retail's GetBuildingInfo is a townmgr.cpp static with a body
+// and fourteen call sites, ours is a bodiless declaration and so is no
+// candidate at all. Coupled to it, the callee-save binding is permuted -
+// retail takes gpGame/0/this into esi/edi/ebx where we take
+// this/gpGame/0 - and because retail's zero lands in edi it dies at the
+// `repne scasb`, which is exactly why retail's NormalDialog zeros are
+// immediates and ours are `push ebx`.
+// Tried and rejected: default-construct then `operator=` (79.45);
+// uninitialised `hero* townHero;` with an explicit `else townHero = 0`
+// (87.48); naming gpGame in a local ahead of the lookup so its pseudo is
+// created first (87.48); copy-initialising the string (89.77, byte-
+// identical to the direct-init below). `homm3 vc6 why-reg`'s guided
+// search over the B-class catalog moved nothing.
+
+VA(0x005d2d80, 0x1E)  // anchor-bracket(between GetBuildingInfo 0x5d2a40 and DoUniversity 0x5d2da0) + body(the four elemental magic schools) + arity(bare ret, thiscall), retail-only
+type_university::type_university()
+{
+    skills[0] = 14;
+    skills[1] = 15;
+    skills[2] = 16;
+    skills[3] = 17;
+}
+
+VA(0x005d2da0, 0x1E8)  // anchor-callee(GetBuildingInfo 0x5d2a40 + university window 0x5ef500) + anchor-caller(Main 0x5d3af1) + arity(bare ret), retail-only
+void townManager::DoUniversity()
+{
+    hero* townHero = 0;
+    if (townToView->visitingHeroId >= 0)
+        townHero = gpGame->GetHero(townToView->visitingHeroId);
+    else if (townToView->garrisonHeroId >= 0)
+        townHero = gpGame->GetHero(townToView->garrisonHeroId);
+
+    if (field_12c && field_12c == field_11c && townToView->garrisonHeroId >= 0)
+        townHero = gpGame->GetHero(townToView->garrisonHeroId);
+
+    if (!townHero) {
+        std::string info(GetBuildingInfo(townToView, EXTRA_0_ID, 1, 1));
+        NormalDialog(info.c_str(), 1, -1, -1, townToView->type + 0x16,
+                     EXTRA_0_ID, -1, 0, -1, 0, -1, 0);
+    } else {
+        type_university townUniversity;
+        type_university_window universityWin(townHero, &townUniversity, 1);
+        universityWin.DoModal(0);
     }
 }
 

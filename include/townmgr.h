@@ -664,6 +664,12 @@ public:
     void DoPortalOfSummoning();
     // Retail 0x5d2f90 (dc 0x174d1c). Necropolis' creature converter.
     void DoSkeletonTransformer();
+    // Retail 0x5d2da0, retail-only - the Dreamcast townmgr roster runs
+    // straight from GetBuildingInfo to Main with nothing between them.
+    // Conflux's Magic University: the page's hero, then either the
+    // university window over the four elemental schools or the
+    // building's own description when there is no hero to teach.
+    void DoUniversity();
     // Retail 0x5d82b0 (dc 0x17b154). The town's own tavern: the shared
     // chooser, then the hire onto the town and the page rebuild.
     void DoTownTavern();
