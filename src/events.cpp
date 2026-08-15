@@ -10,10 +10,12 @@
 #include "advmgr.h"
 #include "cursor.h"
 #include "events.h"
+#include "exec.h"
 #include "kb.h"
 #include "misc.h"
 #include "mousemgr.h"
 #include "philai.h"
+#include "recruit.h"
 #include "remote.h"
 #include "resourcemanager.h"
 #include "soundmgr.h"
@@ -3042,6 +3044,84 @@ void advManager::DoEventRallyFlag(hero* current_hero, NewmapCell* cell,
     UpdBottomView(1, 1, 1);
 }
 
+// The philai.obj appraisal the refugee camp's AI arm runs, named by the
+// Dreamcast xref graph: advManager::RecruitEvent's single philai callee is
+// AI_RecruitRefugees (dc 0x112208) and retail's 0x527e10 is a /Gr fastcall
+// taking the hero in ECX, the creature in EDX and the count BY POINTER on
+// the stack - the same short* the recruit dialog is handed on the other
+// arm. 0x527e10 has exactly ONE call site image-wide (measured by scanning
+// every `call rel32` in .text), which is what proves the refugee camp is
+// its only consumer and, with it, that RecruitEvent has no out-of-line
+// retail body at all - see the note on the handler.
+void AI_RecruitRefugees(hero* current_hero, TCreatureType type, short* number);
+
+// The creature-name accessor is defined further down this file; the refugee
+// camp is the first of its expansion sites in address order, so it needs
+// the declarator here. VC6 inlines callees defined later in the same TU.
+static const char* GetArmyName(int type, int count);
+
+// E:\gamedcs\events.cpp:2709.  The refugee camp (jump-table arm 0x4e): a
+// stack of one creature type waiting to be hired, run through the ordinary
+// recruit dialog for a human and through philai for the AI.
+//
+// The Dreamcast line table (dc 0x94d84) gives the statement layout, and its
+// RecruitEvent call at line 2738 gives the tail its exact shape -
+// `cell->extraInfo = RecruitEvent(hero, creature, cell->extraInfo)` with a
+// SHORT round trip at both ends (the DC sign-extends going in and coming
+// out; retail's `mov dx,[esi]` / `movsx eax,word ptr [ebp+0x10]` pair says
+// the same).
+//
+// RecruitEvent ITSELF has no retail body. Its philai callee 0x527e10 has
+// exactly one call site in the whole image and that site is INSIDE this
+// function; an extern-linkage member would have been emitted out of line
+// unconditionally under /Ob2, so retail's events.cpp did not have one and
+// the Dreamcast port factored the block out. It is written in line here,
+// which is the only spelling that leaves events.obj with no unmatched
+// symbol.
+//
+// The two-arm shape is retail's own: the `!human_player` arm is the
+// FALL-THROUGH and the human arm sits behind a forward `jne`, which is what
+// `if (!human_player) {...} else {...}` produces and what the reversed
+// spelling does not.
+VA(0x004a4600, 0x17C)  // jump-table arm 0x4e + advevent.txt 44/112, dc 0x94d84
+void advManager::DoEventRefugeeCamp(hero* current_hero, NewmapCell* cell,
+                                    bool human_player)
+{
+    if (!human_player) {
+        if (cell->extraInfo == 0)
+            return;
+    } else {
+        if (cell->extraInfo == 0) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY),
+                    gAdventureObjectNames[cell->type]);
+            NormalDialog(gText, 1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+            return;
+        }
+        sprintf(gText,
+                gpAdventureEventText->GetText(ADV_EVENT_TEXT_REFUGEE_CAMP),
+                gAdventureObjectNames[cell->type],
+                GetArmyName(cell->objectIndex, 2));
+        NormalDialog(gText, 2, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        if (gpWindowManager->dialogReturn != DIALOG_RETURN_ACCEPT)
+            return;
+    }
+
+    short available = cell->extraInfo;
+    TCreatureType creature = creature_type_from_int(cell->objectIndex);
+    if (current_hero->belongs_to_human()) {
+        recruitUnit dialog(&current_hero->army, 0, creature, &available,
+                           creature_type_from_int(-1), 0,
+                           creature_type_from_int(-1), 0,
+                           creature_type_from_int(-1), 0);
+        gpExecutive->DoDialog(&dialog);
+    } else {
+        AI_RecruitRefugees(current_hero, creature, &available);
+    }
+    cell->extraInfo = available;
+}
+
 // Declared inline in the original Game.h (DC line 865); this is the retail
 // COMDAT copy selected into events.obj. Negative player ids are their own
 // team sentinel, while real slots use the signed team byte in the map header.
@@ -3249,6 +3329,78 @@ void advManager::DoEventTrainingGrounds(hero* current_hero, NewmapCell* cell,
     game* g = gpGame;
     g->SetInfoFlag(TrainingGroundsInfo, gNetLocalGamePos);
     current_hero->CheckLevel();
+}
+
+// An ai_player..ai_tactical bracket helper (109 B at 0x433b40) the AI arms
+// of the wagon and the tomb both run after picking an artifact up: it walks
+// the hero's backpack from get_last_backpack_index down and offers each
+// entry to 0x433e20 with request 0x13. Retail takes the hero in ECX and
+// pushes nothing, which under /Gr is exactly a one-pointer free function -
+// so it is spelled that way here rather than invented as a `hero` member.
+// The NAME is a Dreamcast line-table read: the statement at
+// E:\gamedcs\events.cpp:3555, inside DoEventWagon (dc 0x96784), calls
+// ?AI_equip_artifacts@@YAXPAVhero@@@Z and nothing else. That is evidence
+// for the name only - a call relocation's symbol name is not scored, the
+// identity of the callee belongs to whichever AI TU lands it, and this
+// declarator claims nothing.
+void AI_equip_artifacts(hero* current_hero);
+
+// E:\gamedcs\events.cpp:3533.  The wagon (jump-table arm 0x69): stamped
+// visited on arrival, then either the artifact it was carrying or the
+// resources, and emptied whichever it was.
+//
+// The Dreamcast line table (dc 0x96784) is what fixes the shape, and three
+// of its statements are load-bearing:
+//   * 3535..3539 are a self-contained early-out - the emptiness test, its
+//     human-only dialog and a `return` of their own;
+//   * 3543 is ONE statement carrying TWO branches (br=2), i.e.
+//     `WagonHasArtifact() && get_number_in_backpack(1) < 64` as a single
+//     `else if`, which is why both of retail's rejections land on the same
+//     resource block;
+//   * 3570 is a SINGLE EmptyWagon() closing both arms. Retail duplicates
+//     that tail into each arm rather than cross-jumping, so it stays one
+//     statement here and the duplication is left to the compiler.
+VA(0x004a69b0, 0x178)  // jump-table arm 0x69 + advevent.txt 154..156, dc 0x96784
+void advManager::DoEventWagon(hero* current_hero, ExtraInfoUnion* cell,
+                              bool human_player)
+{
+    cell->SetCellVisited(current_hero->owner);
+    if (!cell->WagonIsFull()) {
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WAGON_EMPTY),
+                         1, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    if (cell->WagonHasArtifact()
+        && current_hero->get_number_in_backpack(1) < 64) {
+        type_artifact artifact;
+        artifact.artifactId = cell->GetWagonArtifact();
+        artifact.extra = -1;
+        if (human_player) {
+            sprintf(gText,
+                    gpAdventureEventText->GetText(
+                        ADV_EVENT_TEXT_WAGON_ARTIFACT),
+                    akArtifactTraits[artifact.artifactId].name);
+            // iResType1 8 is the artifact picture class, exactly as the
+            // warrior's tomb passes it.
+            NormalDialog(gText, 1, -1, -1, 8, artifact.artifactId,
+                         -1, 0, -1, 0, -1, 0);
+        }
+        current_hero->GiveArtifact(&artifact, 1, 1);
+        if (!human_player)
+            AI_equip_artifacts(current_hero);
+    } else {
+        EGameResource resource = cell->GetWagonResource();
+        short amount = cell->GetWagonAmount();
+        if (human_player)
+            NormalDialog(gpAdventureEventText->GetText(
+                             ADV_EVENT_TEXT_WAGON_RESOURCE),
+                         1, -1, -1, resource, amount, -1, 0, -1, 0, -1, 0);
+        current_hero->GiveResource(resource, amount);
+    }
+    cell->EmptyWagon();
 }
 
 // The two creaturetype.obj dwelling walks the modifier below calls. Both
@@ -3851,16 +4003,6 @@ void advManager::DoEventWarSchool(hero* current_hero, ExtraInfoUnion* cell,
     gpCurrentPlayer->resources[GOLD] -= 1000;
 }
 
-// An ai_player..ai_tactical bracket helper (109 B at 0x433b40) the AI arm
-// of the tomb runs after picking the artifact up: it walks the hero's
-// backpack from get_last_backpack_index down and offers each entry to
-// 0x433e20 with request 0x13. Retail takes the hero in ECX and pushes
-// nothing, which under /Gr is exactly a one-pointer free function - so it
-// is spelled that way here rather than invented as a `hero` member. The
-// call relocation's SYMBOL NAME is not scored; the identity of the callee
-// belongs to whichever AI TU lands it, and this declarator claims nothing.
-void AiFn_00433B40(hero* current_hero);
-
 // E:\gamedcs\events.cpp:4039.  The warrior's tomb: a yes/no prompt for a
 // human, a two-part "would this even help?" screen for the AI, and then
 // the same body either way - take the buried artifact if there is one and
@@ -3908,7 +4050,7 @@ void advManager::do_event_warrior_tomb(hero* current_hero, ExtraInfoUnion* cell,
         }
         current_hero->GiveArtifact(&artifact, 1, 1);
         if (!human_player)
-            AiFn_00433B40(current_hero);
+            AI_equip_artifacts(current_hero);
         cell->empty_tomb();
     } else {
         if (human_player)
