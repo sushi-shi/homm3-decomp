@@ -799,6 +799,57 @@ public:
 #ifdef HOMM3_CMBTMGR_TOWER_VIEW
     void KeepAttack(int iTowerPos);                           // 0x465ad0
 #endif
+    // DC header inline (CmbtMgr.h:1555, dc 0x4cc74, 24 B) with an
+    // out-of-line copy on that build and NONE on retail, so /Ob2 took
+    // every retail site: army::do_multi_head_attack (0x440310) carries
+    // it expanded verbatim - the `armies` stride 0x548 with a 21-wide
+    // row for the arrow-tower arm, the 20-wide byte row at +0x14000 for
+    // the ordinary one.
+    //
+    // THE ARROW-TOWER ARM IS A POST-DREAMCAST EDIT and this is the
+    // clean form of that proof: the DC body is ONE line (1556) and one
+    // statement, `field_14000[group][index] = 1`, with no test at all,
+    // where retail's expansion tests the slot's creatureType against
+    // 149 first and hands the stack to mark_tower_army instead. Retail
+    // bytes with no DC line is the direction that is valid, so the test
+    // and the call are retail's, not a misread of the SH4.
+    //
+    // Behind a view for this header's usual reason (mark_moving_army
+    // above); army.cpp is the only consumer.
+    // 0x469440 (434 B), thiscall with NO arguments: army::attack_hex
+    // (0x445a60) calls it on gpCombatManager immediately after stamping
+    // lastMovedArmy, and that call site is all that is proven about its
+    // identity. The body walks `armies` for creature 0x83 stacks that
+    // carry creatureId bit 21 (the death bit) without bit 23, spends one
+    // of the +0xdc counters, rolls rand()%5 once per fifth of
+    // origNumTroops and on a hit raises creatureId bit 26 - a rebirth
+    // roll. NO DC NAME FITS: the Dreamcast cmbtmgr.obj run between
+    // PowEffect and damage_message has six rows against retail's seven,
+    // and the one decorated anchor in it (enemy_is_adjacent 0x469600) is
+    // the THIRD retail row where it is the FIRST Dreamcast one, so this
+    // is one of the two retail-only rows. Name is a bootstrap invention.
+    // Behind the same view as MarkCreatureEffect below, for this
+    // header's usual measured reason; army.cpp is the only consumer.
+#ifdef HOMM3_CMBTMGR_MULTI_HEAD_VIEW
+    void CheckRebirth();                                      // 0x469440
+    void MarkCreatureEffect(int group, int index)
+    {
+        if (armies[group][index].creatureType == army::ARMY_CREATURE_ARROW_TOWER)
+            mark_tower_army(&armies[group][index]);
+        else
+            field_14000[group][index] = 1;
+    }
+    // 0x469a90, the combat log's own line. DC cmbtmgr.cpp:4731
+    // (?damage_message@combatManager@@QAAXPBDJJPBVarmy@@J@Z) fixes both
+    // the name and the five parameters, and do_multi_head_attack's tail
+    // pushes exactly them in exactly that order - the attacker's
+    // GetName, its numTroops, the accumulated damage, the ONE stack it
+    // hit (null when the sweep caught more than one creature type) and
+    // the accumulated kill count. Its own body is not claimed here.
+    void damage_message(const char* attacker, long attacker_qty,
+                        long damage, const army* defender,
+                        long deaths);                         // 0x469a90
+#endif
     // 0x46a520 (68 B), the row above's only decoded writer and
     // army::simple_move's second call: it zeroes field_14031 and marks
     // the hex - or the two hexes - the passed stack stands on. It sits
@@ -1002,6 +1053,17 @@ public:
     // the first parameter is int-wide either way and the enum lives in
     // a header this one does not include.
     void PowEffect(int spellEffect, int bResetLimitCreature); // 0x468990
+    // The ONE TSpellEffectID this header needs so far. Value from the
+    // Dreamcast enum table (evidence/dreamcast/enums.csv:
+    // TSpellEffectID.eSpellEffectFireShield = 11), and retail proves the
+    // number at the only site that uses it: army::do_fire_shield
+    // (0x4409c0) pushes the literal 11 into PowEffect. Named rather than
+    // spelled 11 because this tree keeps its magic-constant floor at
+    // zero; the rest of the enum waits for the lane that reconstructs
+    // PowEffect's own body.
+    enum TSpellEffectID {
+        eSpellEffectFireShield = 11
+    };
 #endif
     // BEHIND A VIEW, AND THAT IS A MEASUREMENT: declaring it
     // unconditionally costs command.obj's GetCommand 92.5714 ->

@@ -35,9 +35,14 @@
 #undef HOMM3_ARMY_MOVE_VIEW
 #undef HOMM3_ARMY_ELEMENTAL_RULE_VIEW
 #undef HOMM3_ARMY_MULTI_HEAD_VIEW
+// SSpellTraits' m_sample slice: army.cpp is its only consumer and this
+// header sits inside initialize.cpp's include closure (see the field).
+#define HOMM3_ARMYGRP_SPELL_SAMPLE_VIEW
 #include "armygrp.h"
+#undef HOMM3_ARMYGRP_SPELL_SAMPLE_VIEW
 #include "bitmap16.h"
 #define HOMM3_CMBTMGR_MOVE_VIEW
+#define HOMM3_CMBTMGR_MULTI_HEAD_VIEW
 #define HOMM3_CMBTMGR_RESURRECT_VIEW
 #define HOMM3_CMBTMGR_ROUND_VIEW
 #define HOMM3_CMBTMGR_CALIPH_VIEW
@@ -47,6 +52,7 @@
 #undef HOMM3_CMBTMGR_CALIPH_VIEW
 #undef HOMM3_CMBTMGR_ROUND_VIEW
 #undef HOMM3_CMBTMGR_RESURRECT_VIEW
+#undef HOMM3_CMBTMGR_MULTI_HEAD_VIEW
 #undef HOMM3_CMBTMGR_MOVE_VIEW
 #include "csprite.h"
 #include "drawing.h"
@@ -553,18 +559,112 @@ unsigned char army::set_inside_area_effect(unsigned char arg)
 }
 
 // E:\gamedcs\army.cpp:1062
+// NO RETAIL BODY, AND THE BRACKET PROVES IT. The carve has exactly ONE
+// row between remove_bindings (0x43ee10, 0x1C2) and Walk (0x43f0b0) -
+// 0x43efe0 / 207 B - and the Dreamcast roster has TWO here, so one of
+// the pair has no retail slot. 0x43efe0 is set_inside_area_effect: it
+// takes ONE byte argument, compares it against +0x4f1
+// (is_area_effect_target), stores it, and ends `ret 4`, which
+// EndWalk() - no arguments - cannot. Retail therefore emits no
+// out-of-line EndWalk anywhere, and its four statements are written at
+// Walk's `if (end_walk)` instead. The shape below is byte-exact for
+// this call site; whether retail's source kept the name as a header
+// inline or spelled the statements out is NOT decided here.
 DC_ONLY(0x45204, 0x50)
 void army::EndWalk()
 {
     // @stub
 }
 
-// E:\gamedcs\army.cpp:1087
-// RETAIL_LOCATED(0x0043f0b0, 0x206)  // anchor-global, dc 0x45254
-void army::Walk(int direction, unsigned char end_walk, unsigned char initial_walk)
+#endif  // @carcass
+
+// One hex of a walk: turn to face the step if it needs turning, publish
+// the from/to pair the redraw reads, play the walk animation, and move
+// the stack in the grid.
+//
+// THE DC LINE TABLE IS THE STRUCTURE (dc 0x45254, forward read): 1091
+// the initial-walk setup, 1095 the turn test, 1098 the destination
+// cell, 1102/1103/1104 the three published globals, 1105 the two-hex
+// test with 1107/1110 its arms and 1112/1113 the else, 1118 the walk
+// direction, 1120/1123 the two draw-priority rules, 1128 the
+// quick-combat gate, 1132..1142 the animation, 1147/1148/1149 the grid
+// move, 1152..1155 the four resets, 1157 the final priority, 1161 the
+// end-walk gate and 1163 EndWalk. Retail follows it statement for
+// statement, and the DC LITERAL POOL NAMES ALL FIVE GLOBALS (recorded
+// on their declarations in army.h).
+//
+// FOUR EXPANSIONS, and each one is its own small proof:
+//   - NeedToTurn and OffsetToFront are Army.h class-body inlines with
+//     no retail out-of-line copy, so /Ob2 took them here. The DC passes
+//     OffsetToFront the constant -1 and retail folds its two id-range
+//     tests away, leaving only `facing ? 1 : -1`.
+//   - `Is(0)` is the two-hex marker. The Dreamcast build passes its own
+//     Is the MASK 1 for the same bit, exactly as range_attack's site
+//     passes 0x8000 for bit 15.
+//   - play_sample (0x43d540) expands three times, each keeping its own
+//     IsQuickCombat guard - which is how the THIRD sound statement is
+//     known NOT to be stop_sample (0x43d580): that one carries the same
+//     guard and retail's `StopSample` site has none, only the null
+//     test.
+//   - EndWalk has no retail body at all (see the carcass note above),
+//     so its four statements sit at this call site.
+//
+// The trailing PlayAnimation(0, -1, FALSE) is written ONCE, after the
+// initial-walk block, and retail's two copies of it are C2's tail
+// duplication - the Dreamcast build has the single copy the source
+// does.
+VA(0x0043f0b0, 0x206)  // anchor-global, dc 0x45254
+void army::Walk(int direction, unsigned char end_walk,
+                unsigned char initial_walk)
 {
-    // @stub
+    if (initial_walk)
+        SetupAnimation();
+    if (NeedToTurn(direction))
+        Turn(initial_walk);
+    int next_cell = GetAdjacentCellIndex(gridIndex, direction);
+    giWalkingFrom = gridIndex;
+    giWalkingTo = next_cell;
+    giWalkingYMod = 0;
+    if (Is(0) & 1) {
+        giWalkingFrom2 = gridIndex + OffsetToFront(-1);
+        giWalkingTo2 = next_cell + OffsetToFront(-1);
+    } else {
+        giWalkingFrom2 = -1;
+        giWalkingTo2 = -1;
+    }
+    walkDirection = direction;
+    if (direction == COMBAT_DIRECTION_0 || direction == COMBAT_DIRECTION_5)
+        iDrawPriority = 3;
+    if (direction == COMBAT_DIRECTION_2 || direction == COMBAT_DIRECTION_3)
+        iDrawPriority = 7;
+    if (!gpCombatManager->IsQuickCombat()) {
+        if (initial_walk) {
+            play_sample(PRE_WALK_SAMPLE);
+            PlayAnimation(20, -1, 0);
+            play_sample(WALK_SAMPLE);
+        }
+        PlayAnimation(0, -1, 0);
+    }
+    gpCombatManager->RemoveArmyFromGrid(*this);
+    gridIndex = next_cell;
+    gpCombatManager->PlaceArmyInGrid(*this, next_cell);
+    giWalkingFrom = -1;
+    giWalkingFrom2 = -1;
+    giWalkingTo = -1;
+    giWalkingTo2 = -1;
+    iDrawPriority = 4;
+    if (end_walk) {
+        if (!gpCombatManager->IsQuickCombat()) {
+            play_sample(POST_WALK_SAMPLE);
+            if (armySample[WALK_SAMPLE])
+                gpSoundManager->StopSample(armySample[WALK_SAMPLE]->field_1c);
+            PlayAnimation(21, -1, 0);
+            PlayAnimation(2, 1, 0);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1171
 // RETAIL_LOCATED(0x0043f2c0, 0x63B)  // anchor-bracket, dc 0x453c8
@@ -713,14 +813,117 @@ void army::range_attack()
     CancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:1665
-// RETAIL_LOCATED(0x00440310, 0x1EB)  // anchor-global, dc 0x46050
-void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed, long* fire_damage)
+// The hydra's sweep: one swing lands on every adjacent hex the caller's
+// mask has NOT already spent, and the whole sweep reports as one combat
+// log line.
+//
+// THE DC LINE TABLE IS THE STRUCTURE (dc 0x46050, forward read): 1666
+// the eight-way loop, 1671 the mask skip, 1673 get_adjacent_hex, 1674
+// the ValidHex reject, 1676 the cell's occupant, 1679 a br=2 null /
+// already-hit reject, 1686 the damage call, 1687 the fire-shield test,
+// 1689 and 1690 its two effects, 1692 and 1693 the two accumulators,
+// 1696 MarkCreatureEffect, 1697 the hit latch, 1698 a br=2 condition
+// with 1699 and 1701 as its two arms, 1706 the mixed-type reset and
+// 1709 the log line. Retail follows it statement for statement.
+//
+// FOUR PLACES WHERE RETAIL AND THE DREAMCAST BUILD DIVERGE, every one
+// settled on retail bytes:
+//   - line 1686 is a single `DamageEnemy(target, &iTempDamage,
+//     &iTempKilled, false)` on the DC build, returning the fire
+//     component. Retail has NO such function and spells the three
+//     steps out - ComputeBaseDamage, adjust_damage into a local fire
+//     accumulator, then the target's own Damage - which is the same
+//     work with the out-parameter promoted to a plain local.
+//   - `iLuckStatus = 0` between the Damage call and the fire test has
+//     no DC line at all: retail-only code, so a post-Dreamcast edit.
+//   - MarkCreatureEffect expands here, and retail's expansion carries
+//     an arrow-tower arm the DC header inline does not have (recorded
+//     on the declaration in cmbtmgr.h).
+//   - line 1709 calls the DC's no-argument `GetName()`; retail folds in
+//     the two-argument static GetName (0x440100, defined above), whose
+//     out-of-line copy still exists - the extern-linkage emission rule,
+//     so the expansion is the proof and not a coincidence.
+//
+// THE MASK IS A SKIP MASK, not a hit mask: `test attackMask, 1 << i`
+// jumps to the increment when the bit is SET. The two accumulator
+// pointers are read-modify-written, never initialised, so the caller
+// owns them across however many sweeps a turn makes.
+//
+// `first_target` is the ONE stack the log line names, and it is nulled
+// the moment the sweep catches two different creature types - which is
+// why the flag is latched inside the loop and spent after it rather
+// than tested per head.
+//
+// THE FIRE AMOUNT IS COPIED OUT OF THE OUT-PARAMETER, and that copy is
+// worth 0.79 points on its own. Reading `iTempFire` directly in both
+// the test and the accumulate ends its live range at the test, so C2
+// hands ECX to the `fire_damage` pointer and RELOADS the value into
+// EDX; retail keeps the tested value in ECX across the byte store and
+// puts the pointer in EDX, which is exactly one non-address-taken
+// local living through the block. 99.1494 -> 99.9351, and the
+// statement order inside the `if` is settled the other way in the same
+// measurement: with the accumulate written FIRST the registers come
+// out right but the `add [mem],reg` unfolds into a load/add/store
+// (97.4026).
+//
+// Residual (99.9351%): TWO instructions, both inside the inlined
+// MarkCreatureEffect's ordinary arm. Retail associates the byte
+// address as `index + (20*group + 0x14000)` and adds `this` LAST
+// (`lea eax,[ebx+4*edx] / mov byte [eax+ecx],1`); our C2 folds `this`
+// into the lea and adds `index` last. Everything else is
+// byte-identical, including the arrow-tower arm three instructions
+// earlier which puts `this` first on BOTH sides. Tried and rejected:
+// a flat `field_14000[0][group*20 + index]` subscript (identical
+// bytes, 99.9351), a `army* marked = &armies[group][index]` local in
+// the inline (98.8961), and expanding MarkCreatureEffect by hand at
+// this call site instead of calling it (95.0519 - which is the
+// cleanest proof that the header inline is what retail has).
+VA(0x00440310, 0x1EB)  // anchor-global, dc 0x46050
+void army::do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
+                                long* fire_damage)
 {
-    // @stub
+    army* first_target = 0;
+    long iTempFire;
+    long iTempDamage;
+    int iTempKilled;
+    unsigned char bMixedTypes = 0;
+    for (int i = 0; i < 8; i++) {
+        if (attackMask & (1 << i))
+            continue;
+        long hex = get_adjacent_hex(gridIndex, i);
+        if (!gpCombatManager->ValidHex(hex))
+            continue;
+        army* target = gpCombatManager->cells[hex].get_army();
+        if (!target || target->hitByCreature)
+            continue;
+        iTempFire = 0;
+        int base_damage = ComputeBaseDamage(0);
+        iTempDamage = adjust_damage(target, base_damage, 0, 0,
+                                    joustBonus, &iTempFire);
+        iTempKilled = target->Damage(iTempDamage);
+        long fire = iTempFire;
+        iLuckStatus = 0;
+        if (fire > 0) {
+            target->show_fire_shield = 1;
+            *fire_damage += fire;
+        }
+        *damage += iTempDamage;
+        *killed += iTempKilled;
+        gpCombatManager->MarkCreatureEffect(target->combatSide,
+                                            target->bitIndex);
+        target->hitByCreature = 1;
+        if (!first_target || first_target->creatureType == target->creatureType)
+            first_target = target;
+        else
+            bMixedTypes = 1;
+    }
+    if (bMixedTypes)
+        first_target = 0;
+    gpCombatManager->damage_message(GetName(creatureType, numTroops), numTroops,
+                                    *damage, first_target, *killed);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1717
 // RETAIL_LOCATED(0x00440500, 0x4B4)  // anchor-global, dc 0x461a0
@@ -729,12 +932,69 @@ unsigned char army::check_special_attack(army* target)
     // @stub
 }
 
-// E:\gamedcs\army.cpp:1846
-// RETAIL_LOCATED(0x004409c0, 0x1F9)  // anchor-global, dc 0x464e0
+#endif  // @carcass
+
+// The retaliation a Fire Shield charges the attacker, and the one body
+// in this TU that repaints the WHOLE field: every stack the shield
+// touched is marked, the effect is played once, and the marks are
+// cleared again.
+//
+// THE DC LINE TABLE IS THE STRUCTURE (dc 0x464e0, forward read): 1851
+// the limiter reset, 1852 this stack's own mark, 1856/1858/1859 the
+// first double loop with 1861 its `if` and 1863/1864 the two things it
+// does, 1871/1873/1874/1875 the second double loop that clears the
+// flag again, 1878 the damage, 1881/1882 the sample behind the
+// quick-combat gate, 1884 the effect, 1887 the log line and 1888/1889
+// the wait. Retail follows it statement for statement, and both double
+// loops read the per-side count into a local first - the separate DC
+// lines 1858 and 1873 are exactly that statement.
+//
+// WHERE THE DREAMCAST LINE TABLE IS REFUSED: line 1884's row carries
+// the `}` that would put PowEffect inside the quick-combat guard.
+// Retail's CFG says otherwise and wins - `test al,al / jne` at 0x440b5f
+// lands on 0x440b65, the PowEffect setup itself, so ONLY LoadPlaySample
+// is gated. `sample` is therefore read uninitialised on the quick path,
+// which is safe because the same predicate gates the read.
+//
+// The two MarkCreatureEffect expansions are the second and third in
+// this TU (do_multi_head_attack has the first) and they confirm the
+// arrow-tower arm independently: both carry the creatureType-vs-149
+// test and the mark_tower_army call the Dreamcast header inline does
+// not have.
+VA(0x004409c0, 0x1F9)  // anchor-global, dc 0x464e0
 void army::do_fire_shield(long damage)
 {
-    // @stub
+    int side;
+    int i;
+    army* a;
+    gpCombatManager->ResetLimitCreature();
+    gpCombatManager->MarkCreatureEffect(combatSide, bitIndex);
+    for (side = 0; side < 2; side++) {
+        a = &gpCombatManager->armies[side][0];
+        for (i = gpCombatManager->numArmies[side]; i-- > 0; a++) {
+            if (a->show_fire_shield) {
+                gpCombatManager->MarkCreatureEffect(side, a->bitIndex);
+                a->bShowPowEffect = 1;
+            }
+        }
+    }
+    for (side = 0; side < 2; side++) {
+        a = &gpCombatManager->armies[side][0];
+        for (i = gpCombatManager->numArmies[side]; i-- > 0; a++)
+            a->show_fire_shield = 0;
+    }
+    int killed = Damage(damage);
+    SAMPLE2 sample;
+    if (!gpCombatManager->IsQuickCombat())
+        sample = LoadPlaySample(akSpellTraits[SPELL_FIRE_SHIELD].m_sample);
+    gpCombatManager->PowEffect(combatManager::eSpellEffectFireShield, 0);
+    gpCombatManager->damage_message(akSpellTraits[SPELL_FIRE_SHIELD].name, 1,
+                                    damage, this, killed);
+    if (!gpCombatManager->IsQuickCombat())
+        WaitEndSample(sample, -1);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:1896
 // RETAIL_LOCATED(0x00440bc0, 0xA41)  // anchor-global, dc 0x46658
@@ -750,15 +1010,100 @@ unsigned char army::do_attack(army* armyToAttack, int direction)
     // @stub
 }
 
-// E:\gamedcs\army.cpp:2217
-// RETAIL_LOCATED(0x00441cb0, 0x2BE)  // corroborates, dc 0x46fb0
-void army::do_attack(int direction)
-{
-    // @stub
-}
-
 // E:\gamedcs\army.cpp:2358
 #endif  // @carcass
+
+// The whole melee exchange in one direction: turn the defender to face
+// the blow, land it, let the defender retaliate, take a second swing if
+// this stack has one, and put both facings back.
+//
+// THE DC LINE TABLE IS THE STRUCTURE (dc 0x46fb0, forward read): 2223
+// the draw priority, 2229 the adjacent hex, 2232/2233 the two rejects,
+// 2238 the saved facing, 2239 the counter direction, 2247..2258 the
+// first turn-the-defender block, 2266..2270 the two residual latches,
+// 2274 the blow, 2277 the jousting reset, 2291 the retaliation gate
+// with 2293..2298 its body, 2304/2305 the two latches cleared, 2311 a
+// br=5 second-strike gate with 2314/2315, 2330/2332 the two nested
+// facing tests, 2334..2343 the second turn block, 2348 the
+// cancellation and 2350 the side reset. Retail follows it statement
+// for statement, including the DC's own SAVE/SET/RESTORE of the
+// manager's acting pair around each Turn.
+//
+// THREE EXPANSIONS THE DC LINE TABLE NAMES AND RETAIL INLINES:
+//   - can_retaliate (Army.h:847) becomes the four tests at 2291, and
+//     `!killed` is a FIFTH condition outside it - retail evaluates the
+//     four first, so the source is `can_retaliate(this) && !killed`
+//     and not the DC revision's own ordering.
+//   - IsIncapacitated (Army.h:840) becomes the disabled_290 /
+//     disabled_2b0 / disabled_2c0 run inside the br=5 second-strike
+//     gate. Its out-of-line copy lives in ai.obj and is untouched.
+//   - CancelSpellType (0x4444d0) constant-folds to its type-1 arm's
+//     single `push 0x3b / call CancelIndividualSpell`, exactly as it
+//     does in range_attack.
+//
+// The pacing is the combat-speed table: `gCombatSpeedFactors[combat
+// speed] * 150.0f` through __ftol, written twice because retail writes
+// it twice.
+VA(0x00441cb0, 0x2BE)  // corroborates, dc 0x46fb0
+void army::do_attack(int direction)
+{
+    iDrawPriority = 6;
+    int hex = get_adjacent_hex(gridIndex, direction);
+    if (!gpCombatManager->ValidHex(hex))
+        return;
+    army* armyToAttack = gpCombatManager->cells[hex].get_army();
+    if (!armyToAttack)
+        return;
+    int savedArmyToAttackFacing = armyToAttack->facing;
+    long counter_direction =
+        armyToAttack->get_attack_direction(armyToAttack->gridIndex, this);
+    if (armyToAttack->NeedToTurn(counter_direction)) {
+        int saved_side = gpCombatManager->actingSide;
+        int saved_slot = gpCombatManager->actingSlot;
+        gpCombatManager->actingSide = armyToAttack->combatSide;
+        gpCombatManager->actingSlot = armyToAttack->bitIndex;
+        armyToAttack->SetupAnimation();
+        armyToAttack->Turn(1);
+        gpCombatManager->actingSide = saved_side;
+        gpCombatManager->actingSlot = saved_slot;
+    }
+    if (armyToAttack->disabled_290)
+        armyToAttack->residualBlindness = 1;
+    if (armyToAttack->disabled_2c0)
+        armyToAttack->residualParalyze = 1;
+    unsigned char killed = do_attack(armyToAttack, direction);
+    joustBonus = 0;
+    if (armyToAttack->can_retaliate(this) && !killed) {
+        GameTime::Delay(static_cast<int>(
+            gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 150.0f));
+        gpCombatManager->currentSide = 1 - gpCombatManager->currentSide;
+        armyToAttack->do_attack(this, counter_direction);
+        gpCombatManager->currentSide = 1 - gpCombatManager->currentSide;
+        armyToAttack->retaliationCount--;
+    }
+    armyToAttack->residualBlindness = 0;
+    armyToAttack->residualParalyze = 0;
+    if ((Is(15) & 1) && armyToAttack->numTroops > 0 && !(Is(2) & 1)
+        && !IsIncapacitated() && numTroops > 0) {
+        GameTime::Delay(static_cast<int>(
+            gCombatSpeedFactors[gUnnamed698758.combatSpeed] * 150.0f));
+        do_attack(armyToAttack, direction);
+    }
+    if (!(armyToAttack->Is(21) & 1)) {
+        if (savedArmyToAttackFacing != armyToAttack->facing) {
+            int saved_side = gpCombatManager->actingSide;
+            int saved_slot = gpCombatManager->actingSlot;
+            gpCombatManager->actingSide = armyToAttack->combatSide;
+            gpCombatManager->actingSlot = armyToAttack->bitIndex;
+            armyToAttack->SetupAnimation();
+            armyToAttack->Turn(1);
+            gpCombatManager->actingSide = saved_side;
+            gpCombatManager->actingSlot = saved_slot;
+        }
+    }
+    CancelSpellType(ARMY_CANCEL_SPELLS_AFTER_ATTACK);
+    side = -1;
+}
 
 // The arrow-tower guard in front of the combat manager's landmine /
 // fire-wall worker (0x46a570). Two things worth recording.
@@ -1573,14 +1918,14 @@ int army::Damage(int damage)
         killed = numTroops;
         topCreatureDamage = 0;
     }
-    field_e9 = 1;
+    bSomeUnitsDamaged = 1;
     if (killed > 0)
         numTroopsToShowOverride = numTroops;
     if (killed > numTroops)
         killed = numTroops;
     numTroops -= killed;
     if (numTroops <= 0)
-        field_ea = 1;
+        bAllUnitsKilled = 1;
     CancelIndividualSpell(62);
     CancelIndividualSpell(70);
     CancelIndividualSpell(74);
@@ -1963,14 +2308,118 @@ unsigned char army::simple_move(int hex, unsigned char restore_facing)
     return moved;
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\army.cpp:4356
-// RETAIL_LOCATED(0x00445a60, 0x26D)  // anchor-global, dc 0x4a7ac
+// simple_move's sibling: one stack attacking one hex. The grid identity
+// is invalidated first out of the same single register, the target is
+// resolved and rejected if it is missing or is this stack itself, and
+// then the stack either shoots or walks its facing around to a
+// direction that reaches the target.
+//
+// THE DC LINE TABLE IS THE SPINE (dc 0x4a7ac, forward read): 4359/4360
+// the two -1 stores, 4365 ValidHex, 4366 the occupant, 4373 the
+// br=2 reject, 4377 TurnOffHighlighter, 4379/4380/4381 the three
+// identity stores, 4387 the can_shoot gate with 4389 range_attack,
+// 4398 the direction test, 4400 NeedToTurn with 4402/4403 its two
+// calls, 4405/4406 the two arms of the restore-facing latch, 4408
+// do_attack and 4410 the br=2 death-bit gate with 4412/4413. Retail
+// follows it.
+//
+// WHERE THE DREAMCAST BUILD IS REFUSED: its line 4395 reaches the
+// melee direction through get_attack_direction (0x4458b0), and 4385
+// runs GetAttackMask first. Retail calls NEITHER - it walks the eight
+// directions itself, comparing each adjacent cell's occupant against
+// the resolved target, and keeps the FIRST direction that needs no
+// turn (breaking) or else the first that does. Retail's bytes win and
+// the DC shape is not adopted.
+//
+// can_shoot IS THE GATE AND IT EXPANDS HERE, which is the second
+// independent witness for the spelling parked above it: retail's
+// expansion is that body's arms branch-folded straight into the
+// shoot/melee split, with `excluded` constant-folded to 0. THE ONE
+// BYTE THAT PROVES THE DEPTH: the second-hex read inside the expansion
+// leaves `call 0x445cd0` - OffsetToFront's COMDAT copy - where
+// can_shoot's own out-of-line body (0x4428f0) and get_AI_target_time's
+// expansion both write the neg/sbb longhand. Same accessor, three
+// sites, two answers, and only the divided budget explains it.
+//
+// The `restore_facing` latch is a variable with TWO arms, not an
+// initialization: retail puts `xor bl,bl` on the else path rather than
+// ahead of the test, which is what an explicit else buys.
+//
+// Residual (94.0790%): ONE register binding in the direction search,
+// and its two consequences. Retail hoists `gridIndex` into EBX for the
+// whole loop and HOMES `direction` in the dead `hex` parameter slot,
+// reaching the post-loop through EDI (`cmp [ebp+8],-1 / jne`, then
+// `mov edi,[ebp+8]` on the fall-out and nothing at all on the break,
+// where EDI already holds `i`). Our C2 promotes `direction` to EBX
+// instead, reloads `gridIndex` every iteration, and CLONES the
+// `direction = i` block into the loop exit - 42 blocks against
+// retail's 41, which is the whole flow-distance of 7. Everything
+// outside the search is paired. Tried and rejected, each measured
+// against the 94.0790 baseline: a named `int our_hex = gridIndex;`
+// ahead of the loop (90.6211), assigning the parameter
+// `hex = gridIndex;` instead (90.6211), spelling the latch test
+// `direction == -1` to match retail's own `cmp -1` (93.9421), and
+// declaring `direction` at function scope (94.0790, no movement).
+// why-reg's model agrees the bindings are identical at every first
+// definition, so this is the B1 handle-state class rather than
+// anything statement-local.
+VA(0x00445a60, 0x26D)  // anchor-global, dc 0x4a7ac
 unsigned char army::attack_hex(int hex, unsigned char restore_facing)
 {
-    // @stub
+    side = -1;
+    slot = -1;
+    if (!gpCombatManager->ValidHex(hex))
+        return 0;
+    hexcell* cell = &gpCombatManager->cells[hex];
+    army* target = cell->get_army();
+    if (!target || target == this)
+        return 0;
+    gpCombatManager->lastMovedArmy = 0;
+    gpCombatManager->TurnOffHighlighter(1);
+    side = cell->armySide;
+    slot = cell->armySlot;
+    pathTarget = hex;
+    if (can_shoot(0)) {
+        range_attack();
+    } else {
+        int direction = -1;
+        for (int i = 0; i < 8; i++) {
+            if (i >= COMBAT_DIRECTION_COUNT && !(Is(0) & 1))
+                continue;
+            long adjacent = get_adjacent_hex(gridIndex, i);
+            if (!gpCombatManager->ValidHex(adjacent))
+                continue;
+            if (target != gpCombatManager->cells[adjacent].get_army())
+                continue;
+            if (!NeedToTurn(i)) {
+                direction = i;
+                break;
+            }
+            if (direction < 0)
+                direction = i;
+        }
+        if (direction >= 0) {
+            unsigned char turned;
+            if (NeedToTurn(direction)) {
+                SetupAnimation();
+                Turn(1);
+                turned = restore_facing;
+            } else {
+                turned = 0;
+            }
+            do_attack(direction);
+            if (!(Is(21) & 1) && turned) {
+                SetupAnimation();
+                Turn(1);
+            }
+        }
+    }
+    gpCombatManager->lastMovedArmy = this;
+    gpCombatManager->CheckRebirth();
+    return 1;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\army.cpp:4427
 // The old link-order join placed move_to at 0x445cd0; decorated-symbol and
@@ -2255,7 +2704,7 @@ int army::get_second_grid_index() const
 {
     if (!(creatureId & 1))
         return gridIndex;
-    return gridIndex + (facing ? 1 : -1);
+    return gridIndex + OffsetToFront(-1);
 }
 
 #if 0  // @carcass
@@ -2588,7 +3037,7 @@ void army::ResetRound()
         topCreatureDamage = _cpp_min(topCreatureDamage, hitPoints - 1);
         if (oldHitPoints - hitPoints > 0) {
             bShowPowEffect = 1;
-            field_e9 = 1;
+            bSomeUnitsDamaged = 1;
             SAMPLE2 sample;
             if (!gpCombatManager->IsQuickCombat()) {
                 sample = LoadPlaySample(

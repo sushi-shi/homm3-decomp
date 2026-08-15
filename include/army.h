@@ -193,7 +193,20 @@ public:
         MAX_SAMPLES = 8
     };
 
+    // DC army.iDrawPriority (members.csv army@8), UNSHIFTED in this band
+    // exactly like groupToAttack 16/+0x10 two lines below. army::Walk
+    // (0x43f0b0) writes three literals into it - 3 for a step to
+    // direction 0 or 5, 7 for a step to 2 or 3, and 4 once the stack has
+    // been re-placed in the grid - i.e. the draw order a moving stack
+    // takes against the row it is entering. Pad slice, behind the move
+    // view with the rest of Walk's surface.
+#ifdef HOMM3_ARMY_MOVE_VIEW
+    char pad_00[0x8];
+    int iDrawPriority;            // +0x08
+    char pad_0c[0x4];
+#else
     char pad_00[0x10];
+#endif
     // Grid identity, byte-proven by ValidAttack (0x523bb0): the target
     // hexcell's armySide/armySlot pair compares against these.
     //
@@ -271,7 +284,17 @@ public:
     // 0 = attacker-facing, 1 = defender-facing: selects the 6/7
     // special-direction remaps in GetAdjacentCellIndex.
     int facing;                   // +0x44
+    // DC army.walkDirection (members.csv army@72), the direction id of
+    // the step in progress - the run 48..100 this class already pairs
+    // unshifted (facing 68/+0x44 one line above, numTroops 76/+0x4c one
+    // line below). army::Walk (0x43f0b0) stores its `direction`
+    // parameter here before it touches the animation. Pad slice; behind
+    // the move view with the rest of Walk's surface.
+#ifdef HOMM3_ARMY_MOVE_VIEW
+    int walkDirection;            // +0x48
+#else
     char pad_48[0x4];
+#endif
     // Stack size: set_melee_enemies (0x43bf20) feeds it to
     // get_average_damage as the attacking creature count.
     int numTroops;                // +0x4c
@@ -310,7 +333,14 @@ public:
     // hitPoints from it every round rather than from the live word.
     char pad_68[0x4];
     int origHitPoints;             // +0x6c
-    char pad_70[0x4];
+    // DC army.iLuckStatus (members.csv army@112), UNSHIFTED in this band
+    // exactly like origHitPoints 108/+0x6c above and origWalkCycleTime
+    // 104/+0x68 in the pad. do_multi_head_attack (0x440310) clears it
+    // once per head it lands, between the Damage call and the
+    // fire-shield test, so the luck roll is spent by the first head and
+    // the rest of the sweep swings plain. Pad slice - the include-set
+    // canaries do not move for one.
+    int iLuckStatus;               // +0x70
 #else
     char pad_68[0xc];
 #endif
@@ -417,19 +447,44 @@ public:
     // back by itself loses the same 0.0357. Both arms spell the SAME
     // thirteen bytes, so the two views cannot disagree about the
     // layout and only the name is scoped.
+    //
+    // The +0xe8 slice NESTS INSIDE this view rather than standing beside
+    // it, and that too is a measurement: splitting the trailing pad byte
+    // out with its own `#else char pad_e8[1]` arm gives the NON-view
+    // consumers one declarator more than they had and costs GetCommand
+    // 92.5714 -> 92.5357 on its own - the include-set class, fired by
+    // the arm nobody reads. Nested, the outside arm is the one pad it
+    // always was.
 #ifdef HOMM3_ARMY_SPELLCAST_VIEW
     int numSpellCasts;            // +0xdc
+#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
+    char pad_e0[0x8];
+    // NAMED 2026-08-15 from the Dreamcast member table: DC army@212 is
+    // show_fire_shield against this band's already-anchored +20 shift
+    // (DC hitByCreature 220 = retail +0xf0, six lines below).
+    // do_multi_head_attack (0x440310) is the witness - it raises the
+    // byte on the head it burned, and only when adjust_damage handed
+    // back a non-zero fire component.
+    unsigned char show_fire_shield;  // +0xe8
+#else
     char pad_e0[0x9];
+#endif
 #else
     char pad_dc[0xd];
 #endif
-    // Two per-stack flags Damage (0x444090) raises: +0xe9 on EVERY hit
-    // (it is stored unconditionally, from the same materialized 1 the
-    // Is(23) test uses), +0xea only once the blow empties the stack.
-    // Names provisional - no roster attests either, and the only writer
-    // located so far is Damage itself.
-    unsigned char field_e9;       // +0xe9
-    unsigned char field_ea;       // +0xea
+    // NAMED 2026-08-15 from the Dreamcast member table, and the three
+    // bytes come out of it as one run: DC army@212/213/214 are
+    // show_fire_shield / bSomeUnitsDamaged / bAllUnitsKilled against
+    // this band's already-anchored +20 shift (DC hitByCreature 220 =
+    // retail +0xf0, six lines below), so 212 -> +0xe8, 213 -> +0xe9,
+    // 214 -> +0xea. These two keep their previously-recorded writer,
+    // Damage (0x444090): bSomeUnitsDamaged on EVERY hit,
+    // bAllUnitsKilled only once the blow empties the stack - which is
+    // exactly what the DC names say. Pure RENAMES of two bytes that
+    // were already unconditional; the wall is name-independent, so a
+    // rename cannot move it (GetCommand held 92.5714 across it).
+    unsigned char bSomeUnitsDamaged; // +0xe9
+    unsigned char bAllUnitsKilled;   // +0xea
     char pad_eb[0x5];
     unsigned char hitByCreature;  // +0xf0
     char pad_f1[0x3];
@@ -653,7 +708,12 @@ public:
     // slayerLevel 1128/+0x48c two lines above is the same shift).
     // ResetRound adds it to the round's retaliation allowance exactly
     // while spellInfluence[SPELL_COUNTERSTRIKE] is standing.
-    char pad_490[0x4];
+    // DC army.joustBonus (members.csv army@1132), the same +0x24 shift
+    // one slot earlier - and the name is exactly what the field does:
+    // do_multi_head_attack (0x440310) hands it straight to
+    // adjust_damage's fifth parameter, the one the DC prototype calls
+    // `distance`, which is the Champion's per-hex charge bonus.
+    int joustBonus;                // +0x490
     int counterstrokeBonus;        // +0x494
 #else
     char pad_490[0x8];
@@ -903,6 +963,17 @@ public:
     // fire it. army.cpp is the only consumer.
 #ifdef HOMM3_ARMY_MOVE_VIEW
     unsigned char WalkTo(int destIndex, unsigned char restore_facing);
+    unsigned char attack_hex(int hex, unsigned char restore_facing);
+    // 0x445cd0 (56 B), CORRECTED 2026-08-15. This row carried the name
+    // `move_to` in an earlier link-order join and it is refuted by the
+    // body: it takes ONE stack argument, answers 1 for direction ids
+    // 0..2, -1 for 3..5 and `facing ? 1 : -1` for anything else, and
+    // ends `ret 4` - which is army::OffsetToFront (DC Army.h:736, dc
+    // 0x27c9c) statement for statement. move_to's real body is
+    // 0x445d10, exactly as the correction beside it already recorded.
+    // The row is the COMDAT copy of the header inline, emitted because
+    // attack_hex's own expansion of can_shoot leaves a real call to it
+    // at depth 2 while army::Walk inlines it at depth 1.
 #endif
     unsigned char move_to(int hex, unsigned char restore_facing);
     // The catapult pair, both claimed in army.cpp and both behind a view
@@ -943,6 +1014,37 @@ public:
     void Turn(unsigned char play_animation); // 0x446720
     void SetupAnimation();                   // 0x446830
     void PlayAnimation(int sequence, int nframes, int start_frame);
+#ifdef HOMM3_ARMY_MOVE_VIEW
+    // Two CLASS-BODY inlines the Dreamcast dump attests in Army.h and
+    // retail carries no out-of-line copy of - the /Ob2 header-inline
+    // case, same as get_owning_side above. Both are ONE statement on
+    // the DC build (Army.h:761 and the 736..744 pair) and army::Walk
+    // (0x43f0b0) expands both verbatim.
+    //
+    // NeedToTurn is the whole condition in one expression, br=1 folded
+    // out of a `&&`: retail emits `cmp 6 / jge` and then materialises
+    // BOTH sides with sete/setge before comparing them, which is what
+    // an int-vs-int `!=` between two normalised predicates gives and
+    // what a nested `if` would not.
+    unsigned char NeedToTurn(int direction) const
+    {
+        return direction < 6 && (facing == 0) != (direction >= 3);
+    }
+    // OffsetToFront answers the hex delta towards the stack's front.
+    // The two id ranges come from the DC body (Army.h:739/742); Walk
+    // passes the constant -1, which folds both away and leaves exactly
+    // retail's `neg/sbb/and 2/dec` spelling of `facing ? 1 : -1`.
+    int OffsetToFront(int direction) const
+    {
+        if (direction >= 0 && direction <= 2)
+            return 1;
+        if (direction >= 3 && direction <= 5)
+            return -1;
+        return facing ? 1 : -1;
+    }
+    void Walk(int direction, unsigned char end_walk,
+              unsigned char initial_walk);   // 0x43f0b0
+#endif
     // 0x43e140, carcass in army.cpp; declared here because army::Fly
     // (fly.obj) calls it once per animation frame.
     void DrawToBuffer(int x, int y, int bNumBoxOnly);
@@ -1249,6 +1351,21 @@ public:
     // 0x444090: applies one blow's damage to the stack and answers how
     // many creatures it killed.
     int Damage(int damage);
+    // 0x440310, the hydra's eight-way sweep, and 0x4409c0, the Fire
+    // Shield retaliation. Behind a view because a bare member
+    // declaration is this header's own measured include-set trigger;
+    // army.cpp is the only consumer of either.
+#ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
+    void do_multi_head_attack(unsigned attackMask, int* damage, int* killed,
+                              long* fire_damage);
+    void do_fire_shield(long damage);
+    // 0x441cb0, the melee swing attack_hex ends on, and the
+    // two-argument overload 0x441610 it drives up to three times -
+    // that one's own body is still a carcass, only the declaration is
+    // live.
+    void do_attack(int direction);
+    unsigned char do_attack(army* armyToAttack, int direction);
+#endif
     long get_average_damage(const army* enemy, unsigned char ranged_attack,
                             long amount, unsigned char limit_damage,
                             long distance) const;               // 0x442780
@@ -1353,7 +1470,33 @@ public:
     // disabled_2c0` test appears inlined at 23 other sites across
     // ai/ai_tactical/army/spells. Const
     // (?IsIncapacitated@army@@QBA_NXZ); the body is three reads.
+#ifdef HOMM3_ARMY_MOVE_VIEW
+    // THE DEFINITION IS SCOPED, NOT THE SYMBOL: army::do_attack
+    // (0x441cb0) expands this test where every other TU calls or
+    // re-expands it, so army.cpp needs the body while ai.cpp keeps the
+    // out-of-line definition that owns the 0x41f380 claim. Both spell
+    // the same three reads.
+    unsigned char IsIncapacitated() const
+    {
+        return static_cast<unsigned char>(disabled_290 || disabled_2b0
+                                          || disabled_2c0);
+    }
+    // The other Army.h inline of the same family (DC Army.h:847, dc
+    // 0x27dd8), RECONSTRUCTED 2026-08-15 from the ONE retail expansion
+    // that exists: army::do_attack (0x441cb0) emits its four tests in
+    // this order and nothing else - the defender still has creatures,
+    // the ATTACKER does not carry creature bit 16 (the
+    // no-retaliation ability), the defender is not disabled_2b0, and
+    // its retaliation allowance is not spent. No retail out-of-line
+    // copy has been located; ai.cpp still carries the row as DC_ONLY.
+    unsigned char can_retaliate(const army* attacker)
+    {
+        return numTroops > 0 && !(attacker->Is(16) & 1) && !disabled_2b0
+               && retaliationCount > 0;
+    }
+#else
     unsigned char IsIncapacitated() const;                      // 0x41f380
+#endif
 };
 SIZE(army, 0x548);
 
@@ -1373,6 +1516,24 @@ SIZE(army, 0x548);
 #ifdef HOMM3_ARMY_MULTI_HEAD_VIEW
 DATA(0x00660878) extern const long akWideDirectionRingIndex[8];
 DATA(0x00660898) extern const long akWideDirectionRingOrder[8];
+#endif
+
+// The five globals a walk publishes for the redraw, and their NAMES ARE
+// THE DREAMCAST LITERAL POOL'S - army::Walk's own SH4 body (dc 0x45254)
+// loads ?giWalkingFrom@@3HA / ?giWalkingFrom2@@3HA / ?giWalkingTo@@3HA /
+// ?giWalkingTo2@@3HA / ?giWalkingYMod@@3HA in exactly the order retail's
+// five stores use, so the pairing is positional AND nominal. The `2`
+// pair is the SECOND hex of a two-hex stack and is set to -1 for a
+// one-hex one; all four are reset to -1 once the move has been placed.
+// They sit immediately below akWideDirectionRingIndex at 0x660878,
+// which is the four dwords 0x660868..0x660874 exactly. Scoped to
+// army.cpp with the rest of the move surface.
+#ifdef HOMM3_ARMY_MOVE_VIEW
+DATA(0x00660868) extern int giWalkingFrom;
+DATA(0x0066086c) extern int giWalkingFrom2;
+DATA(0x00660870) extern int giWalkingTo;
+DATA(0x00660874) extern int giWalkingTo2;
+DATA(0x00693858) extern int giWalkingYMod;
 #endif
 
 // The caliph (creature-cast) spell predicates, both /Gr free functions
