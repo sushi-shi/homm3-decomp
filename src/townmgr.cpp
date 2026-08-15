@@ -4328,6 +4328,58 @@ void townManager::SetArmyCommand(int splitEnabled, unsigned char join_dialog)
     // @stub
 }
 
+// SURVEYED 2026-08-15 at retail 0x5c77a0 (carve 0x8DD, 2269 B - townmgr.h
+// has carried the address since DoTownGate needed the declarator) and NOT
+// reconstructed: the row is a four-level switch tree over TWO id domains
+// and wants a lane of its own. What the survey established, so the next
+// one starts from evidence:
+//
+// PREAMBLE. `code = msg->codeY`; when that is in 0..MAX_BUILDING_TYPE the
+// body REPLACES it with the town panorama's hotspot under the cursor -
+// `TTownScreenWindow::field_50[msg->mouseY * 800 + msg->mouseX]` read as a
+// 16-bit word, minus one - and re-checks the same range. On either
+// failure the .bss cell at 0x6aa9e8 takes -1; on success it takes the
+// hotspot and 0x4b69f0 is called with a string at 0x68c210 and 1. Then
+// `field_19c = -2` and the switch runs on `code`, which is the ORIGINAL
+// codeY on the failing paths and the hotspot id on the taken one - that
+// is why one switch carries both domains.
+//
+// THE SWITCH, from the four dispatch tables (all in townmgr.obj's own
+// .rdata, all read out of the image):
+//   0x5c7f4c  27 dwords, indexed `code + 1`, so code -1..0x19 - the
+//             low type_building_id band, plus code == 0x1a (HOLY_GRAIL)
+//             taken by a separate `je` ahead of the table;
+//   0x5c7fb8  9 dwords + a 125-byte index at 0x5c7fdc, indexed
+//             `code - 0x1e`, so code 0x1e..0x9a - the dwelling band
+//             0x1e..0x2b, then the strip WIDGET ids (0x64 owner frame,
+//             0x73..0x79 and 0x8c..0x92 the two selector runs, 0x7a..0x7d
+//             the two portrait/owner pairs, 0x9a the divide button);
+//   0x5c805c  + a 13-byte index at 0x5c8070, indexed `code - 0x9e`;
+//   plus bare compares for 0x9b..0x9d, 0xac..0xb2 and > 0xb2.
+//
+// THE ARMS. Most of the building band is three instructions - `edi =
+// <one .bss text pointer>` then the shared strcpy at 0x5c7eb8 into
+// `statusText` - over about twenty UNOWNED text cells in the 0x6a5da4..
+// 0x6a5df8 run, the same standing as the four this file already declares.
+// The dwelling and horde arms index gTownDwellingCreatures and
+// akCreatureTypeTraits and land in a shared creature-name formatter at
+// 0x5c7c3e; the hero arms inline game::GetTownName and the four
+// SetHeroCommand formats; three arms call SetHeroCommand 0x5c7250,
+// SetArmyCommand 0x5c7400 and select_army 0x5c8080.
+//
+// THE TAIL. Every arm converges on the strcpy at 0x5c7eb8 and then on
+// 0x5c7ed5, which is townManager::ShowText INLINED - a `message` local
+// carrying WIDGET_SET_TEXT/0x97/&statusText broadcast to TownWindow,
+// TownWindow->DrawWindow(0, 0x97, 0x97) and
+// gpWindowManager->UpdateScreen(7, 0x22b, 0x2de, 0x13). ShowText has no
+// retail row of its own anywhere in the carve, so it is another dropped
+// single-call-site static and has to be spelled as one here.
+//
+// COST, honestly: about twenty new DATA declarations for the text cells,
+// a named enum for the strip widget-id families (the `case <number>`
+// floor is at zero and these are not type_building_id values), and a
+// switch whose four-way tree has to come out of ONE source switch.
+
 // E:\gamedcs\townmgr.cpp:3383
 DC_ONLY(0x16c940, 0x572)
 void townManager::SetCommandAndText(message* msg)
@@ -4961,6 +5013,23 @@ void townManager::DoTownTavern()
 // fold needs the two tests to arrive from different inlining phases,
 // which a hand expansion cannot reproduce; locating MoveHero's retail
 // body and letting the compiler expand it is the honest fix.
+//
+// Six more spellings measured 2026-08-15 against the same five bytes,
+// none of them better, and between them they CLOSE the mechanism: the
+// guard is a load-and-compare only when the value is ALSO named, and
+// naming it is exactly what lets VC6 propagate the range through the
+// copy and delete GetTown's null arm. Hoisting `fromTown` out of the
+// arm (98.61, byte-identical), declaring the id uninitialised at
+// function scope and assigning it inside (98.61, byte-identical),
+// assigning townToView straight from GetTown and naming the result
+// after (98.61, byte-identical), naming the id ahead of the guard and
+// still guarding on the member (97.51 - the arm goes), naming it ahead
+// and guarding on the name (97.51, the same), and reordering the id and
+// fromTown declarations (98.13). The two outcomes are the only two the
+// compiler has: EITHER the copy survives and the second compare with
+// it, OR the range propagates and the null arm goes. Retail has
+// neither, which is what "different inlining phases" means here.
+// Withdraw the standing hope that a declaration order closes it.
 
 // E:\gamedcs\townmgr.cpp:8203
 VA(0x005d8480, 0x261)  // anchor-callee TTownGateWindow ctor/AddTown/DoModal + arity(bare ret), dc 0x17b318
