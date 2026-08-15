@@ -93,7 +93,12 @@ TAdventureOptionsWindow::TAdventureOptionsWindow()
             MemError();
     }
 
-    if (gpCurrentPlayer->currHeroId == -1) {
+    // THE DIG GATE ASKS game::GetCurrHeroId (89.5711 -> 94.3823,
+    // 2026-08-15): dc 0x4cf4 line 90 is a call to
+    // `?GetCurrHeroId@game@@QAAHXZ` where this body read
+    // `gpCurrentPlayer->currHeroId` directly. Same load either way - what
+    // moves is the /Ob2 candidate-site count.
+    if (gpGame->GetCurrHeroId() == -1) {
         widget* dig = GetWidget(DIG_ID);
         dig->enable(0);
     }
