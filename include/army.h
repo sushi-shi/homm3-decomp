@@ -148,6 +148,20 @@ struct type_ballistics_traits {
     signed char pad_07;
 };
 SIZE(type_ballistics_traits, 8);
+
+// The four rows themselves - one per Ballistics mastery - reached
+// through the cell at 0x679c84, which is a REFERENCE TO AN ARRAY OF
+// FOUR and not a pointer: the Dreamcast public is
+// ?const_ballistics_traits@@3AAY03$$CBUtype_ballistics_traits@@A,
+// i.e. `const type_ballistics_traits (&)[4]`, and that is exactly why
+// retail's read is an indirect load off 0x679c84 followed by an
+// 8-byte-strided index rather than a direct displacement. hero.cpp
+// OWNS the definition - the cell sits in .data, not .rdata, because
+// its initialize_ballistics_table (dc 0xca984, still a carcass) is
+// what binds the reference at startup, immediately before the
+// experience ladder at 0x679c88 - so no DATA claim is made here.
+// army.cpp is the only located reader.
+extern const type_ballistics_traits (&const_ballistics_traits)[4];
 #endif
 
 // Opaque head model. The 0x548 stride and the 0x54cc array base in
@@ -844,6 +858,9 @@ public:
     // (0x445d30) drives the traits overload once per shot and that one
     // tail-calls the other.
 #ifdef HOMM3_ARMY_WALL_VIEW
+    // 0x445d30. The whole bombardment: aim once, then fire the row's
+    // `shots` at that segment, re-aiming whenever it falls.
+    void AttackWall(int iTargetGridIndex);
     // 0x445ec0. Rolls this shot's damage and its target: the row's own
     // per-segment chance decides whether the aimed segment is hit at
     // all, and a miss re-aims at the nearest OTHER valid segment.
@@ -980,6 +997,22 @@ public:
         // town's run eight slots later. NH3API spellings.
         ARMY_CREATURE_GRIFFIN = 0x4,
         ARMY_CREATURE_ROYAL_GRIFFIN = 0x5,
+#endif
+        // The two creatures that bring down a wall segment without a
+        // catapult, and AttackWall (0x445d30) is what proves both: its
+        // switch answers 0x5e with ballistics row 1 and 0x5f with row
+        // 2, and the Dreamcast build's own AttackWall (dc 0x4a97c)
+        // compares the SAME two ids - 94 and 95 - which is what says
+        // they are below the Complete renumbering's break (the DC row
+        // compares 118 for the catapult where retail compares 145).
+        // The ids follow from the pair already byte-proven directly
+        // below: Stronghold's fourteen slots end Behemoth 0x60 /
+        // Ancient Behemoth 0x61, so the tier-five pair is 0x5e/0x5f,
+        // and Cyclopes are HoMM3's one wall-breaking creature.
+        // Behind the wall view for the header's usual measured reason.
+#ifdef HOMM3_ARMY_WALL_VIEW
+        ARMY_CREATURE_CYCLOPS = 0x5e,
+        ARMY_CREATURE_CYCLOPS_KING = 0x5f,
 #endif
         ARMY_CREATURE_BEHEMOTH = 0x60,
         ARMY_CREATURE_ANCIENT_BEHEMOTH = 0x61,
