@@ -1965,6 +1965,86 @@ unsigned long army::Strength()
 // The carve size 0x3A6 against the DC row's 0x2F4 is 1.24x, inside the
 // SH4 -> x86 band. The BODY is not reconstructed here; only the
 // declaration ResetRound needs is live.
+//
+// STRUCTURE FULLY DERIVED 2026-08-15 and left here for the lane that
+// lands it - the reconstruction was NOT started because every one of
+// its five prerequisites is a new SHARED-HEADER surface that wants its
+// own include-set measurement, and half a row is worse than none.
+//
+// THE DC LINE MAP (dc 0x493a0, forward read), retail agreeing at every
+// point checked:
+//   3493  if (Is(21) & 1) return;          retail's entry test, and the
+//         tail recursion at the bottom re-enters PAST it (0x44413c).
+//   3494  remove_aura();     INLINED by retail (both vector walks and
+//         both erase_item calls are open-coded here); the body already
+//         in this file expands to exactly those bytes.
+//   3497  remove_binding();  a real call to 0x43ee10.
+//   3501  if (!hypnotizeFlag) {
+//   3503    if (Random(1, 100) < 60)
+//   3504      gpCombatManager->field_53dc[get_owning_side()] = 1;
+//   3505    else if (Random(1, 100) < 80)
+//   3506      gpCombatManager->field_53de[1 - get_owning_side()] = 1;
+//         (+0x53de is inside cmbtmgr.h's pad_53de today; retail's
+//         `sub ecx,side / [ecx+0x53df]` is the 1-side index.)
+//   3512  CancelAllSpells();  INLINED - the 0x51-iteration walk of
+//         spellInfluence with CancelIndividualSpell(i) on each positive
+//         row. DC_ONLY 0x499ac has NO retail slot (the carve leaves no
+//         gap between CancelIndividualSpell 0x444510 and
+//         SetSpellInfluence 0x4448f0), the EndWalk situation again.
+//   3516  creatureId |= 0x200000;   3517  bAllUnitsKilled = 0;
+//   3521  if (combatManager::ValidHex(gridIndex)) {   -- and retail's
+//         two rejects jump to the FUNCTION epilogue, so this block runs
+//         to the end of the body, mirror links included.
+//   3522    hexcell* pCell = &gpCombatManager->cells[gridIndex];
+//   3529    if (Is(0) & 1) {          (the two-hex marker)
+//   3531      iGI2 = gridIndex + OffsetToFront(-1);
+//   3532      pCell2 = &gpCombatManager->cells[iGI2];   }
+//         BOTH ARE FUNCTION-SCOPE LOCALS ASSIGNED ONLY IN THAT ARM:
+//         retail's one-hex path reads [ebp-8] and [ebp-0xc] back
+//         UNINITIALISED. Same faithful-artifact class as AttackWall's
+//         defaultless switch - do not initialise them.
+//   3535    if (LeavesNoBody()) {     -- an Army.h inline with no
+//           retail copy, and it is a MASK not two Is() calls: retail
+//           emits one `test dword, 0x10400000`.
+//   3543      gpCombatManager->field_13438[combatSide][bitIndex] = 1;
+//   3544      gpCombatManager->field_13460 = 1;
+//   3558    } else {
+//   3562      if (pCell->field_1c < 14
+//                  && (!(Is(0) & 1) || pCell2->field_1c < 14)) {
+//   3566        if (pCell->HasArmy()) {        (armySide >= 0, inlined)
+//   3568..3571   the three dead-list rows plus the count bump - and the
+//                THIRD array is retail-only surface: hexcell's
+//                pad_3c[0xe] is deadArmySide/deadArmySlot's parallel
+//                fourteen-entry row for field_1a (`[count + cell +
+//                0x3c]`).
+//   3574..3582   the identical block for pCell2.
+//   3592..3603   gpCombatManager->field_132cc = 0, the two cell
+//                identities set back to -1, and the same pair on the
+//                second hex behind another Is(0).
+//   3607..3619   the CLONE LINK, and the DC member table names both
+//                halves: army@36 iMirrorSourceIndex is retail +0x24 and
+//                army@40 iMirrorDestIndex is +0x28 (this band is
+//                unshifted - groupToAttack 16/+0x10 anchors it).
+//                `if (iMirrorSourceIndex != -1 &&
+//                 armies[combatSide][iMirrorSourceIndex].iMirrorDestIndex
+//                 == bitIndex) that.iMirrorDestIndex = -1;` then
+//                `if (iMirrorDestIndex != -1) { clone->numTroops = 0;
+//                 clone->ProcessDeath(bFadeElementals); }`.
+//   `bFadeElementals` IS NEVER READ - retail's body has no [ebp+8]
+//   access at all. It is a dead parameter, transcribed faithfully, and
+//   that is also why C2 could turn the recursion into the loop.
+//
+// THE FIVE PREREQUISITES, none of them landed here:
+//   - hexcell: a HasArmy() class-body inline and pad_3c sliced into the
+//     third fourteen-entry dead row (hexcell.h has no view mechanism
+//     yet, so one has to be added).
+//   - cmbtmgr: field_53de beside field_53dc, and pad_13304[0x164] cut
+//     into field_13438[2][20] + field_13460 (the pad runs 0x13304 ..
+//     0x13467 and adjacentCells starts at 0x13468).
+//   - army: pad_21 cut for iMirrorSourceIndex/iMirrorDestIndex, and a
+//     LeavesNoBody class-body inline.
+//   - CancelAllSpells written at this call site, EndWalk-style.
+//   - Random(1,100) is misc.h's 0x50b230, already declared.
 // RETAIL_LOCATED(0x00444120, 0x3A6)  // anchor-callee + arity, dc 0x493a0
 void army::ProcessDeath(int bFadeElementals)
 {
