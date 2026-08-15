@@ -27,6 +27,11 @@
 // __declspec(nothrow) redeclaration in include/ai_combat.h. That one
 // declaration is what takes both entry points from 96-98% to exact.
 #include <va.h>
+// check_wall_archery_penalty's three fortification tests are
+// town::HasBuilding calls in the Dreamcast body (dc 0x2a470, three
+// `jsr @r9` with r5 = 7/8/9 and r6 = 0); see town.h for why the
+// inline's visibility is scoped.
+#define HOMM3_TOWN_HASBUILDING_API
 #include <algorithm>
 #include <math.h>
 #include <stdlib.h>
@@ -449,15 +454,15 @@ void type_AI_combat_data::check_wall_archery_penalty(const town* enemy_town)
     penalty_distance = 0;
     if (enemy_town == 0)
         return;
-    if (enemy_town->built & bitNumber[CASTLE_FORT_ID]) {
+    if (enemy_town->HasBuilding(CASTLE_FORT_ID, 0)) {
         wall_penalty = 1;
         penalty_distance = 4;
     }
-    if (enemy_town->built & bitNumber[CASTLE_CITADEL_ID]) {
+    if (enemy_town->HasBuilding(CASTLE_CITADEL_ID, 0)) {
         wall_penalty = 1;
         penalty_distance = 5;
     }
-    if (enemy_town->built & bitNumber[CASTLE_CASTLE_ID]) {
+    if (enemy_town->HasBuilding(CASTLE_CASTLE_ID, 0)) {
         wall_penalty = 1;
         penalty_distance = 6;
     }

@@ -11,6 +11,10 @@
 // instruction).
 #include <bitset>
 #define HOMM3_ARMYGRP_DESCRIPTION_API
+// get_luck_description's Rampart/Fountain-of-Fortune gate calls
+// town::HasBuilding (dc 0x4fab4 line 1499, `mov #21,r5 / mov #1,r6`);
+// see town.h for why the inline's visibility is scoped.
+#define HOMM3_TOWN_HASBUILDING_API
 #include "armygrp.h"
 #include "game.h"
 #include "hero.h"
@@ -1197,10 +1201,10 @@ int armyGroup::GetMorale(const hero* ownerHero, const town* ownerTown,
                    ->IsMember(CREATURE_GHOST_DRAGON)))
         morale--;
     if (ownerTown) {
-        if (ownerTown->built & bitNumber[TAVERN_ID])
+        if (ownerTown->HasBuilding(TAVERN_ID, 0))
             morale++;
         if (ownerTown->type == TOWN_CASTLE
-            && (ownerTown->active & bitNumber[EXTRA_1_ID]))
+            && ownerTown->HasBuilding(EXTRA_1_ID, 1))
             morale += 2;
     }
     // The by-value, reference-returning three-operand selector preserves
@@ -1331,7 +1335,7 @@ int armyGroup::GetLuck(const hero* ownerHero, const town* ownerTown, const hero*
             || const_cast<armyGroup*>(otherGroup)->IsMember(CREATURE_ARCH_DEVIL)))
         luck--;
     if (ownerTown && ownerTown->type == TOWN_RAMPART
-        && (ownerTown->active & bitNumber[EXTRA_0_ID]))
+        && ownerTown->HasBuilding(EXTRA_0_ID, 1))
         luck += 2;
     if (apply_limits)
         return armygrp_clamp(-3, luck, 3);
@@ -1627,6 +1631,16 @@ source_stack_merges:
 // tables. Variable creature-name lookups use retail's 0..150 guard and shared
 // empty-text fallback. The remaining delta is Dinkumware string-temporary/EH
 // emission and associated register allocation; every modifier is represented.
+//
+// THE TOWN GATES ARE town::HasBuilding CALLS (67.5649 -> 74.4820,
+// 2026-08-15). dc 0x4f708 lines 1415 and 1419 are `mov #5,r5 / mov #0,r6`
+// and `mov #22,r5 / mov #1,r6` on `?HasBuilding@town@@QBA_NH_N@Z` where
+// this body tested `built & bitNumber[TAVERN_ID]` and `active &
+// bitNumber[EXTRA_1_ID]` by hand. The expansion is the same instructions,
+// so what moved is the /Ob2 candidate-site count - the same lever that
+// took TBottomViewKingdom 94.06 -> 98.52 in the same round. GetMorale
+// carries the identical pair (dc 0x4f078 lines 1014/1017) and is
+// byte-flat on it.
 VA(0x0044b960, 0x859)  // retail-body signature, dc 0x4f708
 std::string armyGroup::get_morale_description(
     TCreatureType creature, int morale, const hero* ownerHero,
@@ -1764,11 +1778,11 @@ after_magic_terrain:
     }
 
     if (ownerTown) {
-        if (ownerTown->built & bitNumber[TAVERN_ID])
+        if (ownerTown->HasBuilding(TAVERN_ID, 0))
             result += format_string(
                 "\n%s +1", GetBuildingName(ownerTown->type, TAVERN_ID));
         if (ownerTown->type == TOWN_CASTLE
-            && (ownerTown->active & bitNumber[EXTRA_1_ID]))
+            && ownerTown->HasBuilding(EXTRA_1_ID, 1))
             result += format_string(
                 "\n%s +2", GetBuildingName(TOWN_CASTLE, EXTRA_1_ID));
     }
@@ -1847,6 +1861,15 @@ after_magic_terrain:
 // bytes - including its longhand four-way elemental compare, which is the
 // `is_base_elemental` shape landed in viewarmywindow - already match
 // retail exactly, so it is a site count and not a spelling.
+//
+// THE RAMPART GATE IS A town::HasBuilding CALL (byte-flat, 2026-08-15):
+// dc 0x4fab4 line 1499 is `mov #21,r5 / mov #1,r6 / jsr` on
+// `?HasBuilding@town@@QBA_NH_N@Z` where this body tested `active &
+// bitNumber[EXTRA_0_ID]`. It buys ONE candidate site, and this row is
+// short FOUR, so the score does not move - recorded because it is the
+// statement retail wrote and because it narrows the outstanding deficit
+// to +3 sites in the two post-Dreamcast blocks above. GetLuck's twin
+// gate (dc 0x4f20c line 1101) is byte-flat too and stays exact.
 VA(0x0044c1c0, 0x3C5)  // retail-body signature, dc 0x4fab4
 std::string armyGroup::get_luck_description(
     TCreatureType creature, int luck, const hero* ourHero,
@@ -1911,7 +1934,7 @@ std::string armyGroup::get_luck_description(
     }
 
     if (ourTown && ourTown->type == TOWN_RAMPART
-        && (ourTown->active & bitNumber[EXTRA_0_ID])) {
+        && ourTown->HasBuilding(EXTRA_0_ID, 1)) {
         result += format_string("\n%s +2",
                                 GetBuildingName(TOWN_RAMPART, EXTRA_0_ID));
     }

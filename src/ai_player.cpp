@@ -16,6 +16,10 @@
 //     with (team, 0), which only find_magus_hut_value can be.
 // The DC sizes corroborate the corrected pairing and reject the old one:
 // 405/382 = 1.06 and 329/286 = 1.15, against 0.86 and 1.42 swapped.
+// end_turn's marketplace gate is a town::HasBuilding call in the
+// Dreamcast body (dc 0x2e7d8 line 452, `mov #14,r5 / mov #1,r6`); see
+// town.h for why the inline's visibility is scoped.
+#define HOMM3_TOWN_HASBUILDING_API
 #include <va.h>
 #include <algorithm>
 #include <functional>
@@ -424,7 +428,7 @@ void type_AI_player::end_turn()
     if (town_index < player->numTowns) {
         while (true) {
             town* current_town = gpGame->GetTown(player->townIds[town_index]);
-            if (current_town->active & bitNumber[MARKETPLACE_ID]) {
+            if (current_town->HasBuilding(MARKETPLACE_ID, 1)) {
                 for (short player_id = 0; player_id < 8; player_id++) {
                     if (!gpGame->playerDisabled[player_id]
                         && player_id != team
