@@ -35,6 +35,9 @@ public:
     Bitmap16Bit(int w, int h);
     void reference(int w, int h, int pitch, unsigned short* data);
     void Darken(int x, int y, int w, int h);
+    // Retail 0x44e4c0, thiscall (x, y, w, h, color) - textWidget::Draw's
+    // back-colour fill is the first admitted caller.
+    void FillRect(int x, int y, int w, int h, unsigned short color);
     void Grab(const unsigned short* src, int srcX, int srcY, int srcWidth, int srcHeight, int srcPitch);
     void Draw(int srcX, int srcY, int srcWidth, int srcHeight, unsigned short* dst, int dstX, int dstY, int dstWidth, int dstHeight, int dstPitch, bool flipped) const;
 };

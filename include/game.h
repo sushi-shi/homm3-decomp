@@ -314,6 +314,16 @@ public:
     unsigned char CheckForTownCaptureWin();
     unsigned char CheckForFlaggedGeneratorWin();
     unsigned char CheckForFlaggedMineWin();
+    // Retail 0x5f1ef0 (dc 0x190124), reached as
+    // `gpGame->mapHeader.victoryCondition.CheckForGrailBuildingWin()`,
+    // which is exactly the `lea ecx,[gpGame+0x1f89c]` retail emits:
+    // mapHeader sits at +0x1f86c and this record 0x30 into it.
+    // Behind a gate of its own because townmgr.cpp is the only consumer
+    // in the admitted surface and this header's declarator count is
+    // load-bearing for every unit that includes it.
+#ifdef HOMM3_TOWNMGR_GRAIL_DECLS
+    unsigned char CheckForGrailBuildingWin();
+#endif
 };
 SIZE(VictoryConditionStruct, 0x4C);
 
@@ -813,6 +823,15 @@ public:
     bool HasCapitol();
 #ifdef HOMM3_GAME_OBJ_DECLS
     int save(TAbstractFile* outfile);
+    // 0x4b9fc0 (located in src/game.cpp, body not reconstructed).
+    // townManager::SwapHeroes 0x5d5150 calls it on
+    // gpGame->players[townToView->owner] with the town it is showing,
+    // and branches on the byte result - the arity and the return type
+    // both. Nested under this gate, not added to the class outright: a
+    // bare member-function declarator on a class this widely included
+    // is the include-set wall's own trigger shape (the townManager
+    // precedent), and townmgr.cpp is the only live consumer.
+    unsigned char add_garrison_hero(town* our_town);
 #endif
     int NumOfGivenArtifact(int artifact);
     // 0x4bacb0. town::get_legion_bonus calls it on
@@ -847,18 +866,27 @@ public:
         char pad_11[3];
     };
 
+// +0x90, one byte: a shown-once latch on the "the Grail cannot be built
+// in this town" message. townmgr's handle_hall_click (0x5d30d0) is the
+// only body in the admitted surface that touches it - it refuses to put
+// the message up a second time and sets the byte on the way out - so the
+// ROLE is retail-proven while the name is not, and stays ordinal. Split
+// out of pad_00090 in the two gated views only; the ungated view keeps
+// its single pad and so sees no declarator at all.
 #ifdef HOMM3_GAME_OBJ_DECLS
     char pad_00000[4];
     // +0x04 and +0x4a, the current draw mask and scenario prohibition mask
     // used by game::GetRandomSpell.
     unsigned char spellUsed[70];
     unsigned char spellDisabled[70];
-    char pad_00090[0x1f3c4];
+    unsigned char field_90;
+    char pad_00091[0x1f3c3];
 #elif defined(HOMM3_TOWN_OBJ_DECLS)
     char pad_00000[0x4a];
     // +0x4a, one scenario-level prohibition byte per retail town spell.
     unsigned char spellDisabled[70];
-    char pad_00090[0x1f3c4];
+    unsigned char field_90;
+    char pad_00091[0x1f3c3];
 #else
     char pad_00000[0x1f454];
 #endif

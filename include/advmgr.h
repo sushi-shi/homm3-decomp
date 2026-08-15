@@ -709,6 +709,17 @@ public:
     void ViewWorld(int whatToDraw, TSkillMastery level);
 #endif
     void DoAdventureOptions();
+#ifdef HOMM3_ADVMGR_TELEPORT_DECLS
+    // advspells.obj's, retail 0x41d930 (dc 0x22b88). townmgr.cpp's
+    // DoTownGate reaches it through the townManager::MoveHero that
+    // retail expands inline, and is the only consumer here; gated so no
+    // other includer of this header widens its view of advManager (the
+    // measured include-set hazard this tree documents at
+    // townmgr.h's SetupExtraStuff).
+    void TeleportTo(hero* who, type_point destination, const char* sample_name,
+                    unsigned char bIsRemoteMove, unsigned char draw_changes,
+                    unsigned char is_replay);
+#endif
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
     e_looping_sound_id GetSoundId(int x, int y, int z);
     type_point get_map_center() const;

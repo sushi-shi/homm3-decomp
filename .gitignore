@@ -1,6 +1,10 @@
 /build/
 /.nix-gc-roots/
 /.claude/worktrees/
+# Per-lane matcher scratch dirs. Twice now a `git add -A` has swept these
+# into a lane commit (69k lines the second time), so they are ignored
+# rather than merely untracked.
+/scratchpad*/
 __pycache__/
 .ninja_log
 .ninja_deps

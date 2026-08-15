@@ -12,11 +12,20 @@
 // with its own cinit funclet at 0x5aa320 and the TSubWindow ctors at
 // 0x5aa340.
 //
-// Absent from retail (documented, not forced): ~strip (DC :70, a 4 B
-// empty stub; the pad 0x5a9d77..0x5a9d80 is NOP fill, so retail's
-// dtor is trivial - not declared here, and townmgr's `delete` lowers
-// to plain operator delete), DrawNumber (DC :124) and DrawSelector
-// (DC :253) - both survive only /Ob2-inlined inside DrawIcons
+// ~strip (DC :70) IS in retail, but not at an address this compiland
+// can claim: it is empty, so it compiles to a lone `ret` that /OPT:ICF
+// folded into the image-wide empty-body fold at 0x5bc690 (carve name
+// border_vslot04). townmgr's `delete strip` proves the call survives -
+// ::UnloadTown 0x5c70b0 and ::SwapHeroes 0x5d5150 both emit
+// `mov ecx,<p> / call 0x5bc690 / push <p> / call ??3@YAXPAX@Z`. So
+// strip.h declares it and nothing defines it: a definition here would
+// emit an unpairable 1-byte body into strip.obj, and an inline
+// definition in the header would delete the call at every use site.
+// (Correction of an earlier note that read the NOP fill at
+// 0x5a9d77..0x5a9d80 as proof the destructor was absent.)
+//
+// Absent from retail (documented, not forced): DrawNumber (DC :124)
+// and DrawSelector (DC :253) - both survive only /Ob2-inlined inside DrawIcons
 // 0x5a9db0 (the sprintf/SET_TEXT pair; three selector expansions at
 // msg slots -0x48/-0x68/-0x68). The `inline` definitions below
 // reproduce the absence under the non-/Gy profile (winfile Exists

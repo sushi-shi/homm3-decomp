@@ -3,6 +3,8 @@
 // 71 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "tradpost.h"
+#include "game.h"
+#include "widget.h"
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
@@ -34,23 +36,9 @@ void TTradeResourceWindow::TTradeResourceWindow(int x2, int y2)
     // @stub
 }
 
-// E:\gamedcs\tradpost.cpp:187
-DC_ONLY(0x182dc0, 0x62)
-void TTradeResourceWindow::~TTradeResourceWindow()
-{
-    // @stub
-}
-
 // E:\gamedcs\tradpost.cpp:196
 DC_ONLY(0x182e24, 0x10A8)
 void TGiveResourceWindow::TGiveResourceWindow(int x2, int y2)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:290
-DC_ONLY(0x183ecc, 0x62)
-void TGiveResourceWindow::~TGiveResourceWindow()
 {
     // @stub
 }
@@ -62,23 +50,9 @@ void TBuyArtifactWindow::TBuyArtifactWindow(int x2, int y2)
     // @stub
 }
 
-// E:\gamedcs\tradpost.cpp:384
-DC_ONLY(0x1851a4, 0x62)
-void TBuyArtifactWindow::~TBuyArtifactWindow()
-{
-    // @stub
-}
-
 // E:\gamedcs\tradpost.cpp:393
 DC_ONLY(0x185208, 0x1A2C)
 void TSellArtifactWindow::TSellArtifactWindow(int x2, int y2)
-{
-    // @stub
-}
-
-// E:\gamedcs\tradpost.cpp:513
-DC_ONLY(0x186c34, 0x62)
-void TSellArtifactWindow::~TSellArtifactWindow()
 {
     // @stub
 }
@@ -90,12 +64,80 @@ void TSellCreatureWindow::TSellCreatureWindow(int x2, int y2)
     // @stub
 }
 
-// E:\gamedcs\tradpost.cpp:610
-DC_ONLY(0x18838c, 0x64)
-void TSellCreatureWindow::~TSellCreatureWindow()
+#endif  // @carcass
+
+// --- the five marketplace dialog destructors --------------------------
+// Retail emits each dialog as (constructor, ??_G, destructor); the
+// constructors above are the 8 KB EH-bearing rows still deferred, so the
+// ten rows below are written here in image order rather than in the
+// compiland's source order. Identity evidence is in tradpost.h.
+//
+// Every one of the five destructors is the same body: store the derived
+// vptr, delete each non-null entry of heroWindow::Widgets, then run the
+// CAdvPopup base. They differ only in the vtable immediate and their EH
+// state table, which is also why /OPT:ICF could not fold them.
+
+VA_COMPGEN(0x005e1620, 0x21, SCALAR_DELETING_DTOR, TTradeResourceWindow)
+
+// E:\gamedcs\tradpost.cpp:187
+VA(0x005e1650, 0x6B)  // anchor-vtable 0x6439f8 + ??_G call edge, dc 0x182dc0
+TTradeResourceWindow::~TTradeResourceWindow()
 {
-    // @stub
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
 }
+
+VA_COMPGEN(0x005e3690, 0x21, SCALAR_DELETING_DTOR, TGiveResourceWindow)
+
+// E:\gamedcs\tradpost.cpp:290
+VA(0x005e36c0, 0x6B)  // anchor-vtable 0x643a34 + ??_G call edge, dc 0x183ecc
+TGiveResourceWindow::~TGiveResourceWindow()
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
+
+VA_COMPGEN(0x005e5690, 0x21, SCALAR_DELETING_DTOR, TBuyArtifactWindow)
+
+// E:\gamedcs\tradpost.cpp:384
+VA(0x005e56c0, 0x6B)  // anchor-vtable 0x643a70 + ??_G call edge, dc 0x1851a4
+TBuyArtifactWindow::~TBuyArtifactWindow()
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
+
+VA_COMPGEN(0x005e7be0, 0x21, SCALAR_DELETING_DTOR, TSellArtifactWindow)
+
+// E:\gamedcs\tradpost.cpp:513
+VA(0x005e7c10, 0x6B)  // anchor-vtable 0x643aac + ??_G call edge, dc 0x186c34
+TSellArtifactWindow::~TSellArtifactWindow()
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
+
+VA_COMPGEN(0x005e9c80, 0x21, SCALAR_DELETING_DTOR, TSellCreatureWindow)
+
+// E:\gamedcs\tradpost.cpp:610
+VA(0x005e9cb0, 0x6B)  // anchor-vtable 0x643ae8 + ??_G call edge, dc 0x18838c
+TSellCreatureWindow::~TSellCreatureWindow()
+{
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            delete *it;
+    }
+}
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:618
 DC_ONLY(0x1883f0, 0x62)
@@ -125,19 +167,56 @@ void DoMarketplace()
     // @stub
 }
 
+#endif  // @carcass
+
+// --- the market entry points ------------------------------------------
+// Six thin setters seed one block of file-static market state and tail into
+// DoMarket 0x5ea130. Reading them side by side is what identifies them:
+//   0x5e9d20  gMarketWindow 2, gMarketSource 0, counts the player's markets
+//   0x5e9e60  gMarketWindow 4, gMarketSource 3, one pointer argument
+//   0x5e9ea0  gMarketWindow 4, gMarketSource 0, counts the player's markets
+//   0x5e9fe0  gMarketWindow 0, gMarketSource 0, counts the player's markets
+//   0x5ea0c0  gMarketWindow 0, gMarketSource 1, market count forced to 5
+//   0x5ea100  gMarketWindow 2, gMarketSource 2, market count forced to 5
+// The window index runs in the order the five dialog classes are declared -
+// 0 trade resources, 1 give resources, 2 buy artifacts, 3 sell artifacts,
+// 4 sell creatures - so 0x5ea0c0 is DoTradingPost (resource trade with the
+// gift pane, fixed efficiency) and 0x5ea100 is DoBlackMarket (buy
+// artifacts, fixed efficiency, and the only entry taking a hero AND an
+// artifact list, which is exactly DoBlackMarket's Dreamcast signature).
+// Both are also the two rows the Dreamcast source order puts immediately
+// before DoMarket.
+
+DATA(0x006aaa74) static char* gpMarketArtifacts;
+DATA(0x006aaa78) static hero* gpMarketHero;
+DATA(0x006aaa98) static int gMarketCount;
+DATA(0x006aaaa4) static int gMarketWindow;
+DATA(0x006aaac4) static int gMarketSource;
+
 // E:\gamedcs\tradpost.cpp:683
-DC_ONLY(0x18869c, 0x36)
+VA(0x005ea0c0, 0x32)  // anchor-callee (DoMarket) + linkorder, dc 0x18869c
 void DoTradingPost()
 {
-    // @stub
+    gMarketCount = 5;
+    gpMarketArtifacts = gpGame->field_1f664;
+    gMarketWindow = 0;
+    gMarketSource = 1;
+    DoMarket();
 }
 
 // E:\gamedcs\tradpost.cpp:693
-DC_ONLY(0x1886d4, 0x32)
-void DoBlackMarket(hero* inHero, TArtifact* blackArtifacts)
+VA(0x005ea100, 0x2A)  // anchor-callee (DoMarket) + arity screen, dc 0x1886d4
+void DoBlackMarket(hero* inHero, char* blackArtifacts)
 {
-    // @stub
+    gpMarketHero = inHero;
+    gpMarketArtifacts = blackArtifacts;
+    gMarketCount = 5;
+    gMarketWindow = 2;
+    gMarketSource = 2;
+    DoMarket();
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\tradpost.cpp:704
 DC_ONLY(0x188708, 0x4CC)

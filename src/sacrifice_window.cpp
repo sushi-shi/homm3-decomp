@@ -3,6 +3,10 @@
 // 211 functions in link order; 20 compiler-generated $-thunks omitted.
 #include <va.h>
 #include "sacrifice_window.h"
+#include "message.h"
+#include "sample.h"
+#include "soundmgr.h"
+#include "winmgr.h"
 
 #if 0  // @carcass: unlocated Dreamcast bodies and STLport template tail
 
@@ -350,6 +354,12 @@ void type_sacrifice_window::creature_slider_change(int state, heroWindow* parent
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1815
+// RETAIL_LOCATED(0x005653b0, 0x37): not reconstructed. One carve row ahead of
+// handle_widget_hover in the Dreamcast roster's own order, and the body is
+// that shape: a byte test at +0x75 selecting between two same-class helpers
+// (0x562a20 / 0x563150), then heroWindow::DoModal(fadeIn) tail-duplicated
+// into both arms. Blocked only on naming those two helpers - neither has a
+// call edge that fixes which roster entry it is.
 DC_ONLY(0x127404, 0x38)
 void type_sacrifice_window::DoModal(unsigned char fadeIn)
 {
@@ -364,6 +374,15 @@ void type_sacrifice_window::handle_widget_hover(widget* current_widget)
 }
 
 // E:\gamedcs\sacrifice_window.cpp:1846
+// The retail row at 0x565430 (0x80) between handle_widget_hover and the
+// transformer-slot rows is ExitDialog, NOT this: it writes MESSAGE_WIDGET
+// into msg->id, zeroes dialogReturn, stores 10 into codeY then codeX and
+// returns MESSAGE_DISPATCH_FORWARD - the ExitDialog shape this tree already
+// has exact twice - before disposing the held artifact at +0x64 through
+// hero::equip_artifact / hero::add_to_backpack. So WindowHandler has no
+// retail row of its own in this bracket. Reconstructing ExitDialog needs
+// type_artifact modelled at +0x64 and hero.h pulled into this TU's include
+// closure; deferred rather than blocked.
 DC_ONLY(0x127484, 0x36)
 int type_sacrifice_window::WindowHandler(message* msg)
 {
@@ -1464,6 +1483,22 @@ void std::__destroy_aux()
 
 #endif  // @carcass
 
+// E:\gamedcs\sacrifice_window.cpp:178
+// The doll-slot twin of the two below: one carve row ahead of them, in the
+// Dreamcast roster's own order (doll, backpack, offering, army), same 0x26
+// body shape, and forwarding to artifact_click - the equipped-slot handler.
+VA(0x0055fce0, 0x26)  // linkorder + iconWidget parent/+0x48 read, dc 0x123f88
+unsigned char type_doll_slot_widget::handle_click(
+    unsigned char down_click, unsigned char right_click)
+{
+    if (down_click) {
+        static_cast<type_sacrifice_window*>(parentWindow)->artifact_click(
+            slot, right_click);
+        return 1;
+    }
+    return 0;
+}
+
 // Vtable 0x641578 slot 13 is the sole address-taker for this entry. The
 // retail body reads iconWidget's parent at +4 and this class's slot at +0x48.
 // E:\gamedcs\sacrifice_window.cpp:213
@@ -1492,6 +1527,129 @@ unsigned char type_artifact_offering_widget::handle_click(
         return 1;
     }
     return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:272
+// The army-slot member of the same family, 0x2a rather than 0x26 because it
+// forwards a THIRD value: the byte at +0x4c alongside the dword at +0x48.
+// That is creature_click's (slot, right_click, left_pane) exactly, and the
+// pair matches the Dreamcast constructor's (new_slot, _left_pane).
+VA(0x0055fda0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x12416c
+unsigned char type_army_slot_widget::handle_click(
+    unsigned char down_click, unsigned char right_click)
+{
+    if (down_click) {
+        static_cast<type_sacrifice_window*>(parentWindow)->creature_click(
+            slot, right_click, left_pane);
+        return 1;
+    }
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1815
+// Slot 6. A byte test at +0x75 selects between two same-class helpers, and an
+// exhaustive order-map of the Dreamcast roster over the run between the
+// destructor and this row names them: 0x562a20 is set_artifact_mode and
+// 0x563150 set_creature_mode. The byte read is can_sacrifice_artifacts,
+// which is exactly the semantics of that choice. Retail tail-DUPLICATES the
+// heroWindow::DoModal call into both arms rather than merging them, which is
+// what the plain if/else spelling produces.
+VA(0x005653b0, 0x37)  // anchor-callee (heroWindow::DoModal) + linkorder, dc 0x127404
+int type_sacrifice_window::DoModal(unsigned char fadeIn)
+{
+    if (can_sacrifice_artifacts)
+        set_artifact_mode();
+    else
+        set_creature_mode();
+    return heroWindow::DoModal(fadeIn);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1830
+// The sacrifice window's own slot-4 hover hook, found by scanning the image
+// for the tail-merged `push emptyRolloverText / jmp +1 / push eax /
+// call [edx+0x34]` run: it occurs exactly three times image-wide, here and
+// in the two already landed. 59 bytes rather than 56 only because the
+// rollover pointer at +0x8c needs a 32-bit displacement.
+VA(0x005653f0, 0x3b)  // anchor-vtable (slot 4 shape) + RollOver read, dc 0x12743c
+void type_sacrifice_window::handle_widget_hover(widget* current_widget)
+{
+    if (!current_widget->RollOver)
+        rolloverText->SetText(emptyRolloverText);
+    else
+        rolloverText->SetText(current_widget->RollOver);
+    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
+}
+
+// E:\gamedcs\sacrifice_window.cpp:1900
+// The fifth and last member of the family, over in the transformer dialog's
+// half of the compiland. It forwards +0x48 and +0x4c AHEAD of right_click
+// rather than around it - type_skeleton_window::creature_click's
+// (side, slot, right_click) - and the Dreamcast constructor takes that pair
+// as (new_group, new_slot).
+//
+// NO CLAIM on the deleting destructor at 0x55fd70 or the destructor at
+// 0x5654b0 it calls. Every slot widget in this TU is a trivial iconWidget
+// subclass, so all five destructors compile to the same `jmp ??1iconWidget`
+// and all five ??_G wrappers to the same 33 bytes; /OPT:ICF left one of
+// each, with no owning class. Excluded class, the widget::Close standing.
+VA(0x005654c0, 0x2a)  // linkorder + the +0x48/+0x4c pair, dc 0x127598
+unsigned char type_transformer_slot::handle_click(
+    unsigned char down_click, unsigned char right_click)
+{
+    if (down_click) {
+        static_cast<type_skeleton_window*>(parentWindow)->creature_click(
+            group, slot, right_click);
+        return 1;
+    }
+    return 0;
+}
+
+// The transformer dialog's own pair, found by the same vtable-uniqueness
+// scan that carried the tradpost family: 0x565f30 is a 33-byte scalar
+// deleting destructor whose only image-wide reference is slot 0 of vtable
+// 0x641694, and its callee 0x565f60 stores that same vtable. The vtable
+// itself is referenced exactly twice - here and in the 0xa3c constructor at
+// 0x5654f0 - so neither row is an /OPT:ICF fold.
+VA_COMPGEN(0x00565f30, 0x21, SCALAR_DELETING_DTOR, type_skeleton_window)
+
+// E:\gamedcs\sacrifice_window.cpp:2129
+VA(0x00565f60, 0xC2)  // anchor-vtable 0x641694 + ??_G call edge, dc 0x127a08
+type_skeleton_window::~type_skeleton_window()
+{
+    for (unsigned int i = 0; i < death_samples.size(); i++) {
+        gpSoundManager->StopSample(death_samples[i]->field_1c);
+        death_samples[i]->Dispose();
+    }
+    delete_widgets();
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2281
+// Slot 9, sitting two rows past creature_click 0x566490 - the call target the
+// transformer slot above pins - in the Dreamcast roster's order.
+VA(0x005666f0, 0x2e)  // anchor-callee (CAdvPopup slot 9) + linkorder, dc 0x128048
+int type_skeleton_window::WindowHandler(message* msg)
+{
+    int result = CAdvPopup::WindowHandler(msg);
+    if (result)
+        return result;
+    if (msg->id == MESSAGE_MOUSE_MOVE)
+        return gpWindowManager->ConvertToHover(*msg);
+    return 0;
+}
+
+// E:\gamedcs\sacrifice_window.cpp:2306
+// The slot-4 hover hook, byte-for-byte the shape
+// type_university_window::handle_widget_hover has at 0x5f0dc0 - including
+// retail's tail-merge of the two SetText call sites - with the rollover
+// pointer at +0x60 rather than +0x70.
+VA(0x00566720, 0x38)  // anchor-vtable (slot 4 shape) + RollOver read, dc 0x128098
+void type_skeleton_window::handle_widget_hover(widget* current_widget)
+{
+    if (!current_widget->RollOver)
+        rolloverText->SetText(emptyRolloverText);
+    else
+        rolloverText->SetText(current_widget->RollOver);
+    DrawWindow(1, WINDOW_ALL_WIDGETS_LOW, WINDOW_ALL_WIDGETS_HIGH);
 }
 
 #if 0  // @carcass: final duplicate STLport helper rows

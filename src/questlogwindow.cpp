@@ -65,9 +65,9 @@ void TQuestLogWindow::UpdateQuestLocators()
 //
 // CORRECTED: 0x52e270 is the SINGULAR UpdateQuestLocator (line 89), not
 // the plural. It returns `ret 4`, so it takes the row index, and it reads
-// it as `field_70 + i`. The inlining runs the other way from the earlier
-// reading here - the plural UpdateQuestLocators (line 105) is what has no
-// carved body of its own, because it expands this one.
+// it as `firstVisibleQuest + i`. The inlining runs the other way from
+// the earlier reading here - the plural UpdateQuestLocators (line 105)
+// is what has no carved body of its own, because it expands this one.
 //
 // The destructor is the 143-byte shape TTownGateWindow already carries,
 // and for the same reason: an empty source body over a class whose last
@@ -96,9 +96,10 @@ TQuestLogWindow::~TQuestLogWindow()
 // (`ret 4`) and the plural is the body that inlines it. The note above
 // used to read the pair the other way round; the arity settles it.
 //
-// It refreshes ONE row of the log. The row index is `field_70 + i`, so
-// field_70 is the slider's scroll offset - the one thing the constructor
-// zeroed and neither of the other two bodies touched.
+// It refreshes ONE row of the log. The row index is
+// `firstVisibleQuest + i`, so firstVisibleQuest is the slider's scroll
+// offset - the one thing the constructor zeroed and neither of the
+// other two bodies touched.
 //
 // THE TWO POOLS ARE ONE FLAT INDEX SPACE. seerHutLogList holds indices
 // into a concatenation of NewfullMap's SeerHutList (0x13-byte stride) and
@@ -119,7 +120,7 @@ TQuestLogWindow::~TQuestLogWindow()
 // extraText are filled in on the taken path. codeY is the row's WIDGET
 // ID, i + 1, which is why the caller's loop index is one-based against
 // the log's widgets.
-VA(0x0052e270, 0x19F)  // caller 0x52e430 + seerHutLogList/field_70, dc 0x116bd8
+VA(0x0052e270, 0x19F)  // caller 0x52e430 + seerHutLogList, dc 0x116bd8
 void TQuestLogWindow::UpdateQuestLocator(int i)
 {
     message msg;
@@ -132,8 +133,8 @@ void TQuestLogWindow::UpdateQuestLocator(int i)
     msg.window = 0;
     msg.id = MESSAGE_WIDGET;
 
-    if (field_70 + i < seerHutLogList.size()) {
-        int quest = seerHutLogList[field_70 + i];
+    if (firstVisibleQuest + i < seerHutLogList.size()) {
+        int quest = seerHutLogList[firstVisibleQuest + i];
 
         if (quest >= gpGame->worldMap.SeerHutList.size())
             strcpy(gText, gpGame->worldMap.QuestGuardList[

@@ -133,6 +133,11 @@ struct SUnnamed69d808 {
     char pad_00[0xf0];
     CUnnamed69d808_f0* field_f0;      // +0xf0
     CUnnamed69d808_f0* get_field_f0();  // retail 0x5537a0
+    // The setter twin, retail 0x553770: it installs the new pump, and
+    // when both the outgoing and the incoming one are live it carries
+    // the byte at +4 and slot 2's result across. townManager::Close is
+    // the consumer that proved it.
+    void set_field_f0(CUnnamed69d808_f0* pump);
 };
 extern SUnnamed69d808* gUnnamed69d808;  // .bss 0x69d808
 

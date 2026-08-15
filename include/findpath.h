@@ -143,12 +143,17 @@ public:
     // `[result._First]` and immediately reads `word [that + 8]`,
     // pathCell::last_point.
     std::vector<pathCell*> result;
-    // Element type still UNPROVEN - no located body touches it. The DC
-    // fieldlist prints all three of these as std::vector<pathCell...>,
-    // but the dump truncates the argument list at the comma, so it
-    // cannot separate <pathCell> from <pathCell*>; queue and result are
-    // pinned by retail strides (30 and 4), this one by nothing.
-    std::vector<int> visited_points;
+    // ELEMENT TYPE PROVEN, 2026-08-14, by PushPoint (0x4b1a70) - the one
+    // located body that touches it. Its tail inserts into this vector with
+    // the four-byte stride (`sub ecx,eax; sar ecx,2` for the capacity test,
+    // `add ebx,4` / `add edx,4` in the copy loops) and the value it hands
+    // the insert is `lea edx,[ebp+0x14]`, the frame slot holding the
+    // get_cell() result - i.e. a pathCell*. The DC fieldlist prints all
+    // three of these as std::vector<pathCell...> and the dump truncates the
+    // argument list at the comma, which is why the admitted placeholder was
+    // `int`; queue is pinned by its 30-byte stride, result and this one by
+    // their 4-byte strides plus what retail stores through them.
+    std::vector<pathCell*> visited_points;
     // One byte per combat hex, indexed by a SIGN-EXTENDED hex
     // (`movsx edx, si; cmp byte [edx + eax], 0` in move_toward
     // 0x41f580) - a map, as the dtor's `delete` already implied.
@@ -171,6 +176,26 @@ public:
     // get_travel_time and SeedCombatPosition both spell by hand; the
     // null arm answers 0 and the caller still dereferences it.
     pathCell* getCellData(long pos);
+    // 0x4b1a70 / 0x4b2300, the adventure-map half of the search. The DC
+    // roster spells both first parameters const; they are spelled non-const
+    // here because every hero call the bodies make (get_creature_total,
+    // get_special_terrain, get_spell_level, IsWieldingArtifact) is non-const
+    // in this tree's hero.h and the retail bytes cannot distinguish the two.
+    void PushPoint(const pathCell* old_cell, pathCell* point, int direction,
+                   int move_cost, int limit, long barrier_value,
+                   type_point monster, int isTrigger);
+    void TestPossibleDirections(hero* current_hero, pathCell* source,
+                                long turn_mobility, long maxMobility,
+                                unsigned char adjacent_monster,
+                                type_point monster_location, long iPathfinding,
+                                type_search_type search_type,
+                                long native_terrain);
+    // 0x56aad0, search.obj's, still @stub there. Declared here because
+    // TestPossibleDirections calls it with `this` in ECX; the pairing is the
+    // DC roster's search.cpp:367 row (searchArray member, two arguments,
+    // 116 DC bytes against retail's 104) and the retail call site's shape.
+    unsigned char enter_hostile_trigger(const hero* current_hero,
+                                        pathCell* cell);
     void PushCombatPoint(int index, int direction, int cost,
                          int flight_cost, int limit);  // 0x4b3bb0
     unsigned char FindCombatPath(const army* current_army, long current_group,
@@ -277,6 +302,15 @@ extern const signed char gStepDeltaX[];   // 0x678150, stride 4
 extern const signed char gStepDeltaY[];   // 0x678151, stride 4
 
 // --- globals ---
+// 0x56a360, search.obj's, still @stub there. Declared here because
+// TestPossibleDirections calls it as a free fastcall (hero* in ECX,
+// pathCell* in EDX, the search type on the stack); the pairing is the DC
+// roster's search.cpp:113 row - the free three-argument predicate that
+// immediately follows BuildPath in both link orders, 182 DC bytes against
+// retail's 158.
+unsigned char check_adjacent_monster(const hero* current_hero,
+                                     pathCell* entry_point,
+                                     type_search_type search_type);
 int MinimumTerrainCost(const NewmapCell* cell, int points_left,
                        long iPathfinding, long flying, long water_walking,
                        unsigned char hasNomad);

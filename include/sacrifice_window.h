@@ -5,10 +5,14 @@
 #ifndef HOMM3_SACRIFICE_WINDOW_H
 #define HOMM3_SACRIFICE_WINDOW_H
 
+#include <vector>
 #include "advmgr_popup.h"
 #include "iconwdgt.h"
+#include "textwdgt.h"
 
+class armyGroup;
 class hero;
+class sample;
 
 // Retail's constructor at 0x55fdd0 proves the CAdvPopup base, current_hero
 // at +0x60, and eight VC6 vectors whose last storage triplet ends at +0x23c.
@@ -19,15 +23,55 @@ class hero;
 class type_sacrifice_window : public CAdvPopup {
 public:
     hero* current_hero;
-    unsigned char field_64[0x1d8];
+    unsigned char pad_64[0x11];
+    // +0x75: DoModal 0x5653b0 tests this byte to choose set_artifact_mode
+    // over set_creature_mode. The Dreamcast field roster puts
+    // can_sacrifice_artifacts at DC +0x6d, and the proven 8-byte CAdvPopup
+    // delta lands it exactly here - the same widening that already places
+    // current_hero and the rollover pointer below.
+    unsigned char can_sacrifice_artifacts;
+    unsigned char pad_76[0x16];
+    // +0x8c: handle_widget_hover 0x5653f0 reads it and dispatches slot 13
+    // (textWidget::SetText) through it - the same rollover pointer
+    // type_skeleton_window keeps at +0x60 and type_university_window at
+    // +0x70. Offsets either side of it are unchanged.
+    textWidget* rolloverText;
+    unsigned char pad_90[0x1ac];
 
+    // DC types artifact_click's first parameter as TArtifactSlot; this tree
+    // has no such enum yet, so it takes the long its retail call site
+    // pushes, matching the sibling declarations.
+    void artifact_click(long slot, unsigned char right_click);
     void backpack_click(long slot, unsigned char right_click);
     void offering_click(long slot, unsigned char right_click);
+    void creature_click(long slot, unsigned char right_click,
+                        unsigned char left_pane);
+    // The two mode switches DoModal picks between. Located by an exhaustive
+    // order-map of the Dreamcast roster over the segment between the
+    // destructor and DoModal: set_artifact_mode 0x562a20, set_creature_mode
+    // 0x563150. Bodies still deferred.
+    void set_artifact_mode();
+    void set_creature_mode();
+
+    virtual void handle_widget_hover(widget* current_widget);  // slot 4
+    virtual int DoModal(unsigned char fadeIn);                 // slot 6
 };
 SIZE(type_sacrifice_window, 0x23c);
 
 // iconWidget ends at +0x48 in retail. Each vtable's added slot 13 reads the
-// sole derived dword there before forwarding to its parent sacrifice window.
+// derived state there before forwarding to its parent sacrifice window.
+
+// The equipped-artifact doll slots. Retail 0x55fce0 reads the single dword at
+// +0x48 and forwards it with right_click, so the class adds exactly that.
+class type_doll_slot_widget : public iconWidget {
+public:
+    long slot;
+
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
+};
+SIZE(type_doll_slot_widget, 0x4c);
+
 class type_backpack_slot_widget : public iconWidget {
 public:
     long slot;
@@ -45,6 +89,67 @@ public:
                                        unsigned char right_click);
 };
 SIZE(type_artifact_offering_widget, 0x4c);
+
+// The army slots on both panes. Retail 0x55fda0 reads a dword at +0x48 AND a
+// byte at +0x4c and forwards both around right_click, which is exactly
+// creature_click's (slot, right_click, left_pane) argument list and exactly
+// the pair the Dreamcast constructor takes (new_slot, _left_pane).
+class type_army_slot_widget : public iconWidget {
+public:
+    long slot;
+    unsigned char left_pane;
+
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
+};
+SIZE(type_army_slot_widget, 0x50);
+
+// The skeleton-transformer dialog, over the same 0x60-byte CAdvPopup base
+// its Dreamcast virtual roster attests (WindowHandler / ExitDialog /
+// handle_widget_hover, exactly type_sacrifice_window's set). Only the
+// rollover pointer is admitted: handle_widget_hover 0x566720 reads it as the
+// FIRST derived dword and dispatches slot 13 (textWidget::SetText) through
+// it. The rest of the object stays unmodelled, so no size is asserted.
+class type_skeleton_window : public CAdvPopup {
+public:
+    textWidget* rolloverText;  // +0x60
+    // 0x64..0x15b is the Dreamcast field roster's buttons, selection pair,
+    // armyGroup and three parallel widget arrays. The destructor touches
+    // none of them, so none is admitted; the pad only has to carry them.
+    unsigned char pad_64[0xf8];
+    // +0x15c: the destructor 0x565f60 walks this vector by size(), stops and
+    // disposes every sample in it, then lets the member's own _Tidy run
+    // (operator delete on _First at +0x160, then the 0x160/0x164/0x168
+    // triplet zeroed). The Dreamcast roster's last member is
+    // death_samples at DC +0x154, and the proven 8-byte CAdvPopup delta -
+    // the only delta, since nothing before it is a vector - lands it here.
+    std::vector<sample*> death_samples;
+
+    // 0x5654f0 (dc 0x1275c0). Declared for townManager::
+    // DoSkeletonTransformer, which builds one of these on the STACK -
+    // 0x16c bytes of frame - runs it modal and lets the scope end call
+    // the destructor below. Not defined here.
+    type_skeleton_window(armyGroup* new_army);
+    void creature_click(long side, long slot, unsigned char right_click);
+
+    virtual ~type_skeleton_window();
+    virtual void handle_widget_hover(widget* current_widget);  // slot 4
+    virtual int WindowHandler(message* msg);                   // slot 9
+};
+
+// The transformer dialog's creature slots. Retail 0x5654c0 forwards TWO
+// dwords, +0x48 then +0x4c, ahead of right_click - creature_click's
+// (side, slot, right_click) - and the Dreamcast constructor takes exactly
+// that pair as (new_group, new_slot).
+class type_transformer_slot : public iconWidget {
+public:
+    long group;
+    long slot;
+
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
+};
+SIZE(type_transformer_slot, 0x50);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\sacrifice_window.cpp:760, dc 0x1258ac) std::basic_string<char,std::char_traits<char>,std::allocator<char> convert_with_commas(__$ReturnUdt, long value);

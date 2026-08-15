@@ -9,8 +9,6 @@
 #include "widget.h"
 #include "font.h"
 
-class Bitmap816;
-
 // Dreamcast roster with the STLport->VC6 string shift: Text@0x30
 // (16 B), Font@0x40, Color@0x44, BackColor@0x48, Justify@0x4c - total
 // 0x50. Vtable 0x642db0; the dtor Disposes the font, the string
@@ -46,29 +44,31 @@ public:
     virtual void SetText(const char* new_text);  // slot 13, retail 0x57c6d0
 };
 
+class Bitmap816;
+
 // Retail dtor 0x5bc6d0 is the empty derived dtor: the inlined
 // ~textWidget body under this class's vtable store, then ~widget.
+// It does NOT free the backing bitmap - that resource is borrowed.
 class bitmapBackedTextWidget : public textWidget {
 public:
-    // +0x50, the one member this class adds: its constructor stores
-    // ResourceManager::GetBitmap816(back) straight into it, immediately
-    // after the 0x642de8 vtable store. The dtor does NOT release it -
-    // 0x5bc6d0 touches nothing past ~textWidget.
-    Bitmap816* Background;
+    // +0x50: the 11-argument constructor 0x5bc760 stores GetBitmap816's
+    // result here, and Draw 0x5bc7f0 blits out of it after clamping the
+    // widget extent against its +0x24/+0x28 Width/Height.
+    Bitmap816* image;
 
-    // Retail 0x5bc760 keeps all ELEVEN of the DC parameters below;
-    // TViewArmyWindow's one-army constructor (0x5f3360) is a located
-    // caller and pushes exactly them, in this order (7, 285, 284, 19,
-    // 0, "smalfont.fnt", "VARBack.pcx", PRIMARY, 224, 1, 8).
+    // Retail 0x5bc760. Eleven parameters, ten of which it forwards straight
+    // through to the textWidget base in retail's own push order, with a
+    // literal 0 taking the back-colour slot; the eleventh - the backing
+    // bitmap's name - is the one it keeps. A located CALLER corroborates the
+    // arity independently: TViewArmyWindow's one-army constructor (0x5f3360)
+    // pushes exactly these eleven, in this order (7, 285, 284, 19, 0,
+    // "smalfont.fnt", "VARBack.pcx", PRIMARY, 224, 1, 8).
     bitmapBackedTextWidget(int x, int y, int w, int h, const char* text,
-                           const char* fontName, const char* back,
+                           const char* fontName, const char* backName,
                            font::TColor color, int id, unsigned justify,
                            int style);
     virtual ~bitmapBackedTextWidget();
-    // Slot 4 of vtable 0x642de8 (retail 0x5bc7f0): blit Background under
-    // the widget rect, clamped to the bitmap on each axis, then chain to
-    // textWidget::Draw for the string on top.
-    virtual void Draw();
+    virtual void Draw();  // slot 4, retail 0x5bc7f0
 };
 
 // --- bitmapBackedTextWidget ---

@@ -226,17 +226,45 @@ public:
     char field_34;
     char pad_35[0x3];
     int field_38;
-    int field_3c;
-#ifdef HOMM3_TOWN_OBJ_DECLS
+    // +0x3c, NAMED AND TYPED 2026-08-14. DC `summoningType` at its own
+    // 52, the row straight ahead of summoningPopulation below; the type
+    // is what TCastleWindow::WindowHandler 0x5dcf80 proves, which hands
+    // this member to a `recruitUnit` whose parameter IS a TCreatureType
+    // (and the fort page's constructor already indexes
+    // akCreatureTypeTraits with it). Not gated: it is a rename plus an
+    // int-to-enum retype of an EXISTING member, so no view of this class
+    // gains or loses a declarator.
+    TCreatureType summoningType;
+#if defined(HOMM3_TOWN_SUMMONING_DECLS)
+    // +0x40. DC `summoningPopulation`, a T_SHORT at its own 56 - the row
+    // straight after `summoningType` at 52.
+    // Sliced 2026-08-14 for townManager::SetupWell (0x5dd5fa), which
+    // prints the summoning portal's stock with `movsx ecx, word ptr
+    // [town+0x40]`; town::SetSummoningGenerator writes it, as the note
+    // on that declarator already recorded.
+    //
+    // Behind the SUMMONING gate and nested so that every OTHER view of
+    // this class keeps the exact member COUNT it had: initialize.obj is
+    // the tree's documented include-set canary and one extra member
+    // anywhere in town takes initialize_game_data 100.0 -> 96.09.
+    short summoningPopulation;
+#  if defined(HOMM3_TOWN_OBJ_DECLS)
+    char pad_42[2];
+#  else
+    char pad_42[0x82];
+#  endif
+#elif defined(HOMM3_TOWN_OBJ_DECLS)
     char pad_40[0x4];
+#else
+    char pad_40[0x84];
+#endif
+#ifdef HOMM3_TOWN_OBJ_DECLS
     // +0x44, five mage-guild rows of six spell ids. GiveSpells walks
     // rows with a 0x18 stride and pairs them with the signed counts at
     // +0xbc; five rows close exactly at that count band.
     int mageGuildSpells[5][6];
     signed char mageGuildSpellCounts[5];
     char pad_c1[3];
-#else
-    char pad_40[0x84];
 #endif
     // +0xc4..+0xd3 is a Dinkumware vector: the constructor copies an
     // allocator byte into +0xc4 and clears its three pointer words.
@@ -285,6 +313,41 @@ public:
     __int64 available;
 
     unsigned char CanBuildDock();
+    // DC Town.h:311 header inline (dc 0x1fdac, where the Dreamcast
+    // linker kept an out-of-line copy in advmgr.obj). Packs the town's
+    // three map bytes into a type_point and returns it BY VALUE - the
+    // `__$ReturnUdt` in the Dreamcast declarator is that hidden return
+    // buffer. Retail has no out-of-line body: /Ob2 expands it at every
+    // call site.
+    //
+    // GATED, and it has to be: added ungated this declarator took
+    // initialize_game_data 100.0 -> 96.09 and recruitUnit::Update
+    // 90.84 -> 88.24 with no semantic change anywhere - the tree's two
+    // standing include-set canaries, both at once. Every consumer opens
+    // HOMM3_TOWN_LOCATION_DECLS for itself and re-measures.
+    //
+    // MEASURED 2026-08-14 against the one caller this tree can already
+    // score, and the result is NEGATIVE: rewriting ai_player.cpp's
+    // can_take_town (0x428410) to `type_point point =
+    // defending_town->get_location();` scores 86.87 with the body below
+    // and 79.06 with a `return type_point(mapX, mapY, mapZ);` body,
+    // against 98.75 for the three-short spelling that body already
+    // carries. So the standing report that a by-value UDT return closes
+    // can_take_town does NOT reproduce here; whatever closed it was a
+    // different call site or a different spelling. The declarator is
+    // landed anyway because the Dreamcast evidence for the accessor is
+    // solid and the gating requirement is now measured, but the next
+    // lane should treat the caller list as UNPROVEN and score each one.
+#ifdef HOMM3_TOWN_LOCATION_DECLS
+    type_point get_location() const
+    {
+        type_point point;
+        point.x = mapX;
+        point.y = mapY;
+        point.z = mapZ;
+        return point;
+    }
+#endif
 #ifdef HOMM3_TOWN_OBJ_DECLS
     unsigned char HasBuilding(int buildingId, unsigned char check_included);
 #endif
@@ -295,6 +358,28 @@ public:
     // no-fort band at +18; the town-state and small-icon flags select the
     // adjacent variants. DC's `_N` parameter proves native bool.
     int GetPortraitFrame(bool is_small) const;
+#ifdef HOMM3_TOWN_SUMMONING_DECLS
+    // 0x5bd750, the body immediately after GetPortraitFrame and the DC
+    // roster's next town.cpp row (town::SetSummoningGenerator, dc
+    // 0x165da4). Void and argument-less: retail calls it with the town
+    // in ecx and nothing on the stack, and it writes field_3c and the
+    // word at +0x40 from a candidate it collects out of gpGame's
+    // object list. Behind its own gate because TCastleWindow's
+    // constructor is the only admitted caller and town.cpp must not
+    // see a new declarator.
+    void SetSummoningGenerator();
+#endif
+#ifdef HOMM3_TOWNMGR_TOWN_VISIT_DECLS
+    // 0x5bd8e0, 1361 B. The DC roster's row between SetSummoningGenerator
+    // (dc 0x165da4) and town::town (dc 0x166408) is
+    // ApplySpecialBuildingEffect, and the retail bracket has exactly one
+    // unclaimed body in that slot; the SH4 span 0x165ea0..0x166408 is
+    // 1384 bytes against retail's 1361, inside the band. Declared for
+    // townManager::DoTownTavern, which calls it on the town's visiting
+    // hero right after the tavern hire, and on a gate of its own because
+    // town.cpp must not see a new declarator.
+    void ApplySpecialBuildingEffect(hero* townHero);
+#endif
     // 0x5bf6d0 / 0x5bf770. `int`, not the DC's type_building_id: the
     // gHordeBuildings row is int and an enum return would need a cast
     // (the UpgradedDwellingID precedent).
@@ -391,6 +476,19 @@ public:
     // and only ONE retail row exists for the two - /OPT:ICF folded the
     // identical bodies.
     const class armyGroup& get_army() const;
+#if defined(HOMM3_TOWN_SUMMONING_DECLS)
+    // The NON-const half of that DC pair, declared 2026-08-14 for
+    // TCastleWindow::WindowHandler 0x5dcf80: the summoning-portal row
+    // hands the town's garrison straight to a `recruitUnit`, whose first
+    // parameter is a plain `armyGroup*`, and retail's `call 0x5c1460 /
+    // push eax` is that overload's return used as a pointer - which is
+    // also the shape the DC declares (`armyGroup* town::get_army()`).
+    // Never defined: /OPT:ICF folded the two bodies onto the one row the
+    // const half already claims. Behind the SUMMONING gate, which only
+    // townmgr.cpp defines, so no other view of this class gains a
+    // declarator (the initialize.obj include-set canary).
+    class armyGroup* get_army();
+#endif
 
     // DC LF_ONEMETHOD STATIC + public ?initialize_hordes@town@@SAXXZ
     // (dc 0x1664b0); retail 0x5bdf60 is entered by a bare tail jmp

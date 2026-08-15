@@ -6,8 +6,70 @@
 #define HOMM3_TRADPOST_H
 
 #include "town.h"
+#include "advmgr_popup.h"
+
+// --- the five marketplace dialogs -------------------------------------
+// Retail lays the compiland out in source order as five (constructor,
+// scalar-deleting-destructor, destructor) triples, and each constructor
+// names its own background PCX, which is what fixes the identities:
+//
+//   TPMRKRES.PCX  ctor 0x5df5f0  ??_G 0x5e1620  ~dtor 0x5e1650  vtbl 0x6439f8
+//   TPMRKPTS.PCX  ctor 0x5e16c0  ??_G 0x5e3690  ~dtor 0x5e36c0  vtbl 0x643a34
+//   TPMRKABS.PCX  ctor 0x5e3730  ??_G 0x5e5690  ~dtor 0x5e56c0  vtbl 0x643a70
+//   TPMRKASS.PCX  ctor 0x5e5730  ??_G 0x5e7be0  ~dtor 0x5e7c10  vtbl 0x643aac
+//   TPMRKCRS.PCX  ctor 0x5e7c80  ??_G 0x5e9c80  ~dtor 0x5e9cb0  vtbl 0x643ae8
+//
+// The order is corroborated twice over. Only constructors 1, 2 and 5 build
+// a `slider`, which is exactly the set the Dreamcast roster gives slider
+// callbacks for (TradeResourceSlider, GiveResourceSlider,
+// SellCreatureSlider); and only constructor 4 touches vector<int>, the
+// backpack list only TSellArtifactWindow has (UpdateMarketBackpack /
+// increment_backpack_start / decrement_backpack_start). Each vtable is
+// referenced exactly twice image-wide - by its own constructor and its own
+// destructor - so none of these rows is an /OPT:ICF fold.
+//
+// Only the vptr, the heroWindow::Widgets teardown and the CAdvPopup base
+// call are attested by the destructors, so no member is modelled and no
+// size is asserted; the constructors that would prove the tails are 8 KB
+// EH-bearing rows still deferred.
+class TTradeResourceWindow : public CAdvPopup {
+public:
+    virtual ~TTradeResourceWindow();
+};
+
+class TGiveResourceWindow : public CAdvPopup {
+public:
+    virtual ~TGiveResourceWindow();
+};
+
+class TBuyArtifactWindow : public CAdvPopup {
+public:
+    virtual ~TBuyArtifactWindow();
+};
+
+class TSellArtifactWindow : public CAdvPopup {
+public:
+    virtual ~TSellArtifactWindow();
+};
+
+class TSellCreatureWindow : public CAdvPopup {
+public:
+    virtual ~TSellCreatureWindow();
+};
 
 long get_market_value(EGameResource resource);
+
+// The shared body all six market entry points tail into once they have
+// seeded the static market state. The Dreamcast roster has it `static`;
+// retail keeps it out of line because six call sites reach it, so the
+// linkage difference cannot change its callers' code.
+void DoMarket();
+void DoTradingPost();
+// DC types the second parameter TArtifact*. The game-side buffer this is
+// aliased against - gpGame's char[0x1c] at +0x1f664, which DoTradingPost
+// passes here - is not admitted as an artifact array yet, so the pointer
+// stays untyped rather than fabricating the element type.
+void DoBlackMarket(hero* inHero, char* blackArtifacts);
 
 // Retail .data 0x678344. The public retail name carries this spelling;
 // calculate_demand indexes entries 1..10 after clamping the number of

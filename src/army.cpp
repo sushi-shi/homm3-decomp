@@ -10,6 +10,18 @@
 #include "soundmgr.h"
 #include "town.h"
 
+// VC6's <xutility> reference-returning max, spelled file-locally for the
+// same reason findpath.cpp spells _cpp_min: retail materialises BOTH
+// operands into stack temps and selects between their ADDRESSES with two
+// LEAs, which is the signature of a reference-returning template and not
+// of a ternary. army::get_total_hit_points 0x4430b4..0x4430c8 is this TU's
+// instance. Operands by value, the orientation the engine is byte-proven on.
+template <class _TYPE>
+inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
+{
+    return (_X < _Y ? _Y : _X);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:52
@@ -534,13 +546,6 @@ unsigned char army::is_enemy(const army* arg)
     // @stub
 }
 
-// E:\gamedcs\army.cpp:2790
-// RETAIL_LOCATED(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
-unsigned char army::can_shoot(const army* excluded) const
-{
-    // @stub
-}
-
 // E:\gamedcs\army.cpp:2804
 // RETAIL_LOCATED(0x004429f0, 0x5C)  // anchor-global, dc 0x47c74
 unsigned char army::enemy_is_adjacent(const army* excluded)
@@ -565,13 +570,6 @@ long army::get_total_combat_value(long lowest_attack, long lowest_defense) const
 // E:\gamedcs\army.cpp:2928
 // RETAIL_LOCATED(0x00442fd0, 0xA9)  // anchor-global, dc 0x482f0
 long army::get_loss_combat_value(long lowest_attack, long lowest_defense, unsigned char ranged, long damage, unsigned char kills_only) const
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:2960
-// RETAIL_LOCATED(0x00443080, 0x50)  // anchor-global, dc 0x48454
-long army::get_total_hit_points(unsigned char simulated) const
 {
     // @stub
 }
@@ -662,6 +660,80 @@ void army::ProcessDeath(int bFadeElementals)
 
 // E:\gamedcs\army.cpp:3631
 #endif  // @carcass
+
+// E:\gamedcs\army.cpp:2790
+// RECONSTRUCTED 2026-08-14, and the reason is a delinker contract rather
+// than this body's own score: a VA claim inside `#if 0 // @carcass` gives
+// the TARGET side no mangled name, because the delinker only learns names
+// from COMPILED base objects. Every one of can_shoot's twenty-odd callers
+// - ai_tactical's pricers, findpath's SeedCombatPosition,
+// combatManager::GetCommand - therefore carried a reloc-name mismatch that
+// no local spelling in the CALLER could reach. Compiling the body closes
+// that for all of them at once.
+//
+// The two war-machine early-outs answer TRUE unconditionally (a Ballista
+// and an Arrow Tower always "shoot"); everything below them is the real
+// predicate: the shooter attribute bit, shots remaining, the Bow of the
+// Sharpshooter override read off the acting side's hero (the side the
+// hypnotize flag may have flipped), the two adjacency vetoes - one for the
+// stack's own hex and one for a wide stack's second hex - and finally the
+// paired field_28c / field_4c4 gate that a level-2 effect closes.
+VA(0x004428f0, 0xF6)  // anchor-global, dc 0x47c04
+unsigned char army::can_shoot(const army* excluded) const
+{
+    if (creatureType == CREATURE_BALLISTA
+            || creatureType == CREATURE_ARROW_TOWER)
+        return 1;
+    if ((Is(2) & 1) == 0 || numShots <= 0)
+        return 0;
+
+    long side = hypnotizeFlag ? 1 - combatSide : combatSide;
+    hero* combat_hero = gpCombatManager->heroes[side];
+    if (combat_hero == 0 || !combat_hero->IsWieldingArtifact(0x89)) {
+        if (gpCombatManager->enemy_is_adjacent(const_cast<army*>(this),
+                                               gridIndex, excluded)
+                || ((creatureId & 1)
+                    && gpCombatManager->enemy_is_adjacent(
+                           const_cast<army*>(this),
+                           gridIndex + (facing ? 1 : -1), excluded)))
+            return 0;
+    }
+    if (field_28c && field_4c4 >= 2)
+        return 0;
+    return 1;
+}
+
+// E:\gamedcs\army.cpp:2960
+// RECONSTRUCTED 2026-08-14 for the same delinker reason can_shoot was:
+// FindCombatPath, the ai_tactical pricers and the combat AI census all
+// call it, and an uncompiled carcass leaves every one of those call
+// relocations unpaired.
+//
+// The `Is(0x17)` arm answers ONE hit point, not the stack's real total -
+// retail jumps out of it straight into the simulated adjustment
+// (`jmp 0x4430a7` lands exactly on the `mov dl, byte [ebp+8]`), which is
+// what makes the body one assignment plus one shared tail rather than two
+// returns. The simulated arm subtracts the AI's own expected damage and
+// FLOORS the answer at zero through the reference-returning max, whose two
+// LEAs (`lea eax,[ebp+8]` / `lea eax,[ebp-4]` around a `js`) are the same
+// <xutility> signature findpath's CalcTerrainCost carries.
+//
+// ARGUMENT ORDER IS THE MATCH. `_cpp_max(v, 0)` and `_cpp_max(0, v)` compute
+// the same number and differ by one byte of codegen: with the running total
+// FIRST the template's compare is `_X < _Y`, i.e. `v < 0`, and VC6 spends the
+// sign flag the subtraction already set (`js`); with zero first it has to
+// re-test the other way (`jg`) and the body plateaus at 93.63%. Written in
+// retail's order, exact.
+VA(0x00443080, 0x50)  // anchor-global, dc 0x48454
+long army::get_total_hit_points(unsigned char simulated) const
+{
+    long total = (Is(0x17) & 1)
+        ? 1
+        : hitPoints * numTroops - topCreatureDamage;
+    if (simulated)
+        return _cpp_max<long>(total - AI_expected_damage, 0);
+    return total;
+}
 
 VA(0x00443130, 0x25)  // decorated identity + exact field/constant loads
 float army::get_fire_shield_strength() const
@@ -1058,6 +1130,34 @@ int army::get_mirror_effect() const
     return effect;
 }
 
+// E:\gamedcs\army.cpp:5790
+// RECONSTRUCTED 2026-08-14, again for the delinker: GetSpeed is one of the
+// combat lane's most-called leaves (FindCombatPath twice, ValidFlight,
+// fly.obj's folded find_flyer_attack_cell, SeedCombatPosition,
+// get_travel_time) and a carcass leaves every one of those relocations
+// unpaired.
+//
+// The multiplier path is guarded, not unconditional: while field_270 is
+// clear the stack simply answers its own field_c4. Inside the guard a
+// creatureId bit-6 stack answers ZERO outright, and everyone else pays
+// `(long)((float)field_c4 * field_4c8)` FLOORED AT ONE - retail's
+// fild/fstp/fld round-trip through the same stack slot is /Op keeping the
+// single-precision intermediate in memory, and __ftol is the ordinary
+// float-to-long helper.
+VA(0x00448cd0, 0x4B)  // anchor-global, dc 0x4c918
+int army::GetSpeed() const
+{
+    int speed = field_c4;
+    if (field_270) {
+        if (Is(6) & 1)
+            return 0;
+        speed = static_cast<int>(static_cast<float>(speed) * field_4c8);
+        if (speed <= 0)
+            return 1;
+    }
+    return speed;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\army.cpp:5717
@@ -1077,13 +1177,6 @@ long army::get_multi_head_directions(long our_hex, const army* enemy, long enemy
 // E:\gamedcs\army.cpp:5779
 // RETAIL_LOCATED(0x00448bd0, 0xF6)  // anchor-bracket, dc 0x4c898
 long army::get_AI_target_time(long speed) const
-{
-    // @stub
-}
-
-// E:\gamedcs\army.cpp:5790
-// RETAIL_LOCATED(0x00448cd0, 0x4B)  // anchor-global, dc 0x4c918
-int army::GetSpeed() const
 {
     // @stub
 }
