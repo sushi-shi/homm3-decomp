@@ -1128,6 +1128,10 @@ public:
                              type_point point, bool human_player);
     void DoEventSpellScroll(class hero* current_hero, NewmapCell* cell,
                             type_point point, bool human_player);
+    // The scholar (jump-table arm 0x51). Four arguments and `ret 0x10`,
+    // the Dreamcast's own signature.
+    void DoEventScholar(class hero* current_hero, NewmapCell* cell,
+                        type_point point, bool human_player);
     // The flotsam (jump-table arm 0x1d). Four arguments and `ret 0x10`,
     // the Dreamcast's own signature; the point is EraseAndFizzle's.
     void DoEventFlotsam(class hero* current_hero, NewmapCell* cell,

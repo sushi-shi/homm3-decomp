@@ -188,6 +188,13 @@ enum EAdventureEventText {
     // index is evidence.
     ADV_EVENT_TEXT_REFUGEE_CAMP_EMPTY = 44,
     ADV_EVENT_TEXT_REFUGEE_CAMP = 112,
+    // DoEventScholar (0x4a4dc0), and ONE row serves all three awards - the
+    // pictures and their quantities are what differ, spell class 9 for a
+    // spell, class 0x14 with a computed icon index for a secondary skill,
+    // and the primary-skill picture 0x1f + skill for a stat point. 115 sits
+    // directly after the resource pile's 113, which is where the alphabet
+    // puts "scholar".
+    ADV_EVENT_TEXT_SCHOLAR = 115,
     // The resource-pile pickup line, SHARED by DoEventResource (0x4a4be0)
     // and the customised-cell handler it delegates to (0x4a4780, which
     // formats it twice). It is a sprintf format taking the resource's own
@@ -315,6 +322,16 @@ enum EFountainLuck {
     FOUNTAIN_LUCK_PLUS_1 = 1,
     FOUNTAIN_LUCK_PLUS_2 = 2,
     FOUNTAIN_LUCK_PLUS_3 = 3
+};
+
+// The scholar's award selector, and the enumerator NAMES are the
+// Dreamcast's own (evidence/dreamcast/enums.csv, enum ScholarAwards);
+// DoEventScholar (0x4a4dc0) tests the three values in the order 2, 1, 0
+// and lets anything else fall through to the pick-up unrewarded.
+enum ScholarAwards {
+    const_scholar_primary_skill = 0,
+    const_scholar_secondary_skill = 1,
+    const_scholar_spell = 2
 };
 
 // DoEventFlotsam's (0x4a2230) size selector, held in the cell's own

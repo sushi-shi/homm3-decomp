@@ -593,6 +593,7 @@ events	?DoEventPowerSchool@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000
 events	?DoEventRallyFlag@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa44c0
 events	?DoEventRefugeeCamp@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa4600
 events	?DoEventResource@advManager@@QAEXPAVNewmapCell@@PAVhero@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4be0
+events	?DoEventScholar@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa4dc0
 events	?DoEventSiren@advManager@@QAEXPAVhero@@PAVNewmapCell@@_N@Z	100.0000	100.0000	100.0000	0xa5980
 events	?DoEventSkeleton@advManager@@QAEXPAVhero@@PATExtraInfoUnion@@_N@Z	100.0000	100.0000	100.0000	0xa5480
 events	?DoEventSpellScroll@advManager@@QAEXPAVhero@@PAVNewmapCell@@Utype_point@@_N@Z	100.0000	100.0000	100.0000	0xa5ea0
