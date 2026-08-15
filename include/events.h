@@ -34,6 +34,18 @@ enum EAdventureEventText {
     // darkness", and the DC roster agrees: DoEventCoverOfDarkness
     // (dc 0x92540) runs before DoEventDefenseTower (dc 0x92d40).
     ADV_EVENT_TEXT_COVER_OF_DARKNESS = 31,
+    // DoEventSkeleton (0x4a5480) - the Corpse, whose per-player band
+    // game.h names DeadGuyFlags. 37 is a sprintf FRAGMENT joined to the
+    // artifact name by the pooled "%s %s", 38 the nothing-here line. The
+    // pair sits between the cover of darkness at 31 and the defense tower
+    // at 39/40, i.e. one rung ABOVE where a strict sort on "corpse" would
+    // put it - the second wobble this enum records in the 31..47 window
+    // (the refugee camp's 44 is the other), and unlike the 39..173 run the
+    // low band is not in handler-address order either. Both indices are
+    // byte-proven by the [Text._First + 0x94] / [+0x98] loads at
+    // 0x4a54d4 / 0x4a55b6.
+    ADV_EVENT_TEXT_SKELETON_ARTIFACT = 37,
+    ADV_EVENT_TEXT_SKELETON_EMPTY = 38,
     // DoEventDefenseTower (0x4a2050); the reward line carries picture
     // 0x20, the +1 Defense icon.
     ADV_EVENT_TEXT_DEFENSE_TOWER = 39,
@@ -77,6 +89,16 @@ enum EAdventureEventText {
     ADV_EVENT_TEXT_LIBRARY = 66,
     ADV_EVENT_TEXT_LIBRARY_VISITED = 67,
     ADV_EVENT_TEXT_LIBRARY_UNWORTHY = 68,
+    // DoEventMagicSchool (0x4a33e0) - the School of Magic - and its rows
+    // sit under M, immediately before the magic spring's, which is where
+    // the INTERNAL name puts it and not where the displayed one would.
+    // 71 is the two-picture choice offered with iMBType 10 (+1 Spell Power
+    // against +1 Knowledge, pictures 0x21 and 0x22), 72 the already-taught
+    // line and 73 the "under 1000 gold" refusal - the same triple, in the
+    // same roles, as the war school's 158..160.
+    ADV_EVENT_TEXT_MAGIC_SCHOOL_CHOOSE = 71,
+    ADV_EVENT_TEXT_MAGIC_SCHOOL_VISITED = 72,
+    ADV_EVENT_TEXT_MAGIC_SCHOOL_NO_GOLD = 73,
     // DoEventMagicSpring (0x4a3590) and DoEventMagicWell (0x4a3730), two
     // contiguous triples in the same alphabetical run. Each spends one
     // row on the refill, one on the object being spent for the week or

@@ -20,6 +20,18 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_HERO_ROLLOVER_FORMAT = 16,
     GENERAL_TEXT_RECRUIT_TITLE = 17,
     GENERAL_TEXT_MIXED_ARMY = 44,
+#ifdef HOMM3_EVENTS_VIEW
+    // DoEventSkeleton (0x4a5480) shows this row - and nothing else in the
+    // image does. The index is the folded `[Text._First + 0xbc]` load at
+    // 0x4a5540, and a scan of every such load reachable from a
+    // gpGeneralText reference finds exactly ONE, so the row has a single
+    // consumer and the name can only describe it: the 1000 gold a Corpse
+    // pays a hero whose sixty-four backpack slots are all full, wrapped in
+    // the pooled "%s." format. Gated to the events view for the reason
+    // GENERAL_TEXT_DRAGON_CITY_EMPTIED below is - an ungated enumerator
+    // counts toward the include-set threshold in every consumer.
+    GENERAL_TEXT_SKELETON_GOLD = 47,
+#endif
     GENERAL_TEXT_SEARCH_NEEDS_FULL_MOVE = 57,
     GENERAL_TEXT_SEARCH_BACKPACK_FULL_FOUND = 58,
     GENERAL_TEXT_SEARCH_FOUND_FORMAT = 59,

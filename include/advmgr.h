@@ -149,6 +149,25 @@ struct type_wagon_info {
 };
 SIZE(type_wagon_info, 4);
 
+// DoEventSkeleton (0x4a5480) - the Corpse, adventure object 22, whose
+// per-player flag game.h already names DeadGuyFlags. Three lanes: a
+// five-bit UNSIGNED item id at bits 0..4, read with a BYTE load
+// (`mov cl,[cell] / and ecx,0x1f`); a SIGNED ten-bit artifact at bits
+// 6..15 (`shl eax,0x10 / sar eax,0x16`); and the "still holds something"
+// flag at bit 16 (`shr eax,0x10 / test al,1`). Bit 5 belongs to nobody,
+// and the emptying write is what proves it: SetSkeleton folds its three
+// stores into `and eax,0xfffeffe0 / xor eax,id / or eax,0xffc0`, a mask
+// that spares bit 5 while clearing the id lane and bit 16, and an OR
+// rather than a masked insert because the artifact is set to -1.
+struct type_skeleton_info {
+    unsigned long id : 5;
+    unsigned long unused : 1;
+    signed long artifact : 10;
+    unsigned long has_treasure : 1;
+    unsigned long tail : 15;
+};
+SIZE(type_skeleton_info, 4);
+
 union ExtraInfoUnion {
     unsigned long value;
     type_water_wheel_info water_wheel_info;
@@ -161,6 +180,7 @@ union ExtraInfoUnion {
     type_fountain_info fountain_info;
     type_cell_visited_info cell_visited_info;
     type_wagon_info wagon_info;
+    type_skeleton_info skeleton_info;
 
     void SetCellVisited(short player);
 
@@ -257,6 +277,35 @@ union ExtraInfoUnion {
     EGameResource GetWagonResource() const { return wagon_info.resource; }
     short GetWagonAmount() const { return wagon_info.amount; }
     void EmptyWagon() { wagon_info.full = 0; }
+
+    // The corpse's four MapCell.h accessors, named and decorated by the
+    // Dreamcast line table over DoEventSkeleton (dc 0x95650):
+    // SkeletonHasTreasure is `_N`, GetItemId and GetSkeletonArtifact are
+    // both `F` (short) and SetSkeleton is `void (short, bool, short)` -
+    // MapCell.h:1104, which this file's carcass already carried.
+    // GetSkeletonArtifact is spelled `int` for the reason get_tomb_artifact
+    // is: retail stores the sign-extended ten-bit field straight into the
+    // artifact record with NO `movsx`, which a short return would have
+    // forced.
+    //
+    // SetSkeleton's ID PARAMETER IS INT-WIDE and the Dreamcast's `F` is
+    // not: the three folded stores end in `and eax,0xfffeffe0 / xor edx,eax
+    // / or edx,0xffc0`, i.e. the id is merged into the masked dword FIRST
+    // and the artifact constant last. A `short` parameter makes VC6
+    // reassociate the same value as `(id | 0xffc0) | masked` and emit the
+    // two ops the other way round. All four width combinations were
+    // measured against the retail bytes and exactly one is exact - short
+    // getter, int setter parameter (100.0, against 99.53 / 99.49 / 90.96),
+    // so the width is byte-determined, not a guess.
+    bool SkeletonHasTreasure() const { return skeleton_info.has_treasure; }
+    int GetSkeletonArtifact() const { return skeleton_info.artifact; }
+    short GetItemId() const { return skeleton_info.id; }
+    void SetSkeleton(int id, bool has_treasure, short artifact)
+    {
+        skeleton_info.id = id;
+        skeleton_info.artifact = artifact;
+        skeleton_info.has_treasure = has_treasure;
+    }
 };
 SIZE(ExtraInfoUnion, 4);
 #endif
@@ -999,6 +1048,11 @@ public:
                       bool human_player);
     void DoEventPowerSchool(class hero* current_hero, NewmapCell* cell,
                             bool human_player);
+    // The School of Magic (jump-table arm 0x2f). FOUR arguments and
+    // `ret 0x10` - the map point rides along because the AI arm appraises
+    // the tile with AI_value_of_event before it will pay.
+    void DoEventMagicSchool(class hero* current_hero, NewmapCell* cell,
+                            type_point point, bool human_player);
     void DoEventRallyFlag(class hero* current_hero, NewmapCell* cell,
                           bool human_player);
     // The refugee camp (jump-table arm 0x4e). The Dreamcast decoration is
@@ -1007,6 +1061,11 @@ public:
     // handler reads `type` and `objectIndex` as well as the dword.
     void DoEventRefugeeCamp(class hero* current_hero, NewmapCell* cell,
                             bool human_player);
+    // The Corpse (jump-table arm 0x16). Dreamcast `(hero*, NewmapCell*,
+    // bool)`; the cell reaches only its +0x00 dword, so it takes the union
+    // spelling like the tomb and the wagon.
+    void DoEventSkeleton(class hero* current_hero, ExtraInfoUnion* cell,
+                         bool human_player);
     // The Sirens (jump-table arm 0x5c), same three-parameter `ret 0xc`
     // shape as the stables below and the cell equally unused.
     void DoEventSiren(class hero* current_hero, NewmapCell* cell,
