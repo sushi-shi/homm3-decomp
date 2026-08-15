@@ -14,6 +14,7 @@ class resource;
 // resource acquisition (retail bodies 0x55c7b0 / 0x55bb00, fastcall
 // under /Gr; called by the button ctors).
 class Bitmap816;
+class Bitmap16Bit;
 class TSpreadsheetResource;
 class TTextResource;
 
@@ -22,6 +23,11 @@ CSprite* GetSprite(const char* name);
 font* GetFont(const char* name);
 // Retail body 0x55a800 (bitmapBorder::SetImage's loader).
 Bitmap816* GetBitmap816(const char* name);
+// Retail body 0x55afd0, the 16-bit twin: same 12-byte strncpy cache-key
+// head, and bitmapBorder16's constructor (0x450690) calls it with ONE
+// fastcall argument where DC's form carries a second `ignore_cache`
+// byte - so retail's is the single-argument overload.
+Bitmap16Bit* GetBitmap16(const char* name);
 // Retail body 0x55bdd0 (campaignmap's camptext.txt loader).
 TTextResource* GetText(const char* name);
 // Retail body 0x55c0a0 (monframeinfo's cranim.txt parser calls it).

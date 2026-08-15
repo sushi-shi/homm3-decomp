@@ -17,33 +17,50 @@ class Bitmap16Bit;
 // Vtable 0x63e5f4.
 class font : public resource {
 public:
-    // 12-byte glyph records at 0x3c: GetCharacterWidth sums the three
-    // fields (names unattested; DC's nested TFontSpec is unprinted).
+    // DC font::TFontSpec (LF_INTERFACE 0x2378, LF_FIELDLIST 0x2377,
+    // size 4128 = 0x1020) - the WHOLE header blob at font+0x1c, not the
+    // glyph record. Retail's constructor 0x4b5070 copies it wholesale
+    // (`mov ecx,0x408; rep movsd` into this+0x1c) straight out of its
+    // by-reference parameter, which is what makes it a member initializer
+    // rather than a body assignment: it runs before the Palette member's
+    // constructor. Every name and offset below is the Dreamcast field
+    // list verbatim; retail corroborates height@+5, baseyoffset@+6,
+    // abc@+0x20 and Offset@+0xc20 by use.
     struct TFontSpec {
-        int field_0;
-        int field_4;
-        int field_8;
+        // DC font::TFontSpec::myABC (LF_FIELDLIST 0x2372, size 12): the
+        // Win32 ABC widths - `int abcA` (left side bearing, SIGNED: it is
+        // the `field_0 < 0` leading-bearing test in DrawStringExecute),
+        // `unsigned abcB` (the inked width DrawCharacter loops over), and
+        // `int abcC` (right side bearing). The names are left as field_N
+        // because other lanes' sources already spell them that way; the
+        // identity is recorded rather than renamed.
+        struct myABC {
+            int field_0;
+            int field_4;
+            int field_8;
+        };
+
+        unsigned char first;
+        unsigned char last;
+        unsigned char depth;
+        char xspace;
+        char yspace;
+        // Glyph row count (DrawCharacter's outer loop bound).
+        unsigned char height;
+        // The signed vertical bearing DrawStringExecute adds to `y`
+        // before clipping - retail reads it with
+        // `movsx eax, byte ptr [esi+0x22]`.
+        char baseyoffset;
+        char pad;
+        unsigned long numpal;
+        unsigned short* pal[5];
+        myABC abc[256];
+        // Per-character offsets into `data` (DrawCharacter indexes this
+        // at font+0xc3c).
+        unsigned long Offset[256];
     };
+    SIZE(TFontSpec, 0x1020);
 
-    // Storage view of the embedded TPalette16. Retail font::~font calls the
-    // out-of-line TPalette16 destructor, but its EH map registers only the
-    // font's resource base (state 0), not the palette as an automatic member
-    // cleanup. Modelling the bytes separately and making that call explicit
-    // reproduces the observed unwind contract without changing the layout.
-    struct TFontPaletteStorage {
-        char resourcePart[0x1c];
-        unsigned short data[256];
-
-        TPalette16* asPalette()
-        {
-            return static_cast<TPalette16*>(static_cast<void*>(this));
-        }
-    };
-    SIZE(TFontPaletteStorage, 0x21c);
-
-    char pad_1c[5];
-    // Glyph row count (DrawCharacter's outer loop bound, byte at
-    // +0x21 inside the header region).
     // Glyph pixel encoding (byte-derived from DrawCharacter 0x4b51a0):
     // 0 draws nothing, SOLID takes the color slot, every other value
     // takes the shadow slot (palette.data[32]). Name is a bootstrap
@@ -89,16 +106,28 @@ public:
         CUSTOM_COLOR = 256
     };
 
-    unsigned char height;
-    char pad_22[0x1a];
-    TFontSpec spec[256];
-    // Per-character offsets into `data` (DrawCharacter indexes this
-    // int[256] at +0xc3c; formerly an opaque pad).
-    int glyphOffsets[256];
-    TFontPaletteStorage palette;
+    // DC LF_MEMBER `fs`, offset 28.
+    TFontSpec fs;
+    // DC LF_MEMBER `Palette`, offset 4156 = 0x103c, held BY VALUE - the
+    // retail constructor 0x4b5070 runs TPalette16's default constructor
+    // on this+0x103c as a member initializer (unwind state 1, funclet
+    // 0x62b4d8 destroys exactly this subobject).
+    TPalette16 palette;
+    // DC LF_MEMBER `Data`.
     void* data;
+    // The glyph payload's byte count, byte-proven by _vslot2 below: the
+    // whole class is 0x1260 and the only member past `data` is the dword
+    // at 0x125c that the size query adds to it. DC has no such member -
+    // its port left the resource size query on a different slot shape.
+    int DataSize;
 
+    font(const char* name, const TFontSpec& fontspec, int dsize,
+         unsigned char* d);  // retail 0x4b5070
     virtual ~font();  // retail 0x4b5110
+    // Slot 2 of vtable 0x63e5f4 (the resource size query, pure at the
+    // base). Retail 0x4b5250 - the twelve-byte
+    // `mov eax,[ecx+0x125c]; add eax,0x1260; ret`.
+    virtual unsigned int _vslot2() const;
 
     void DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, int color_scheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos);
     void DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x, int y, int boxWidth, int boxHeight, int color_scheme, unsigned justification, int cursorPos);
@@ -126,7 +155,7 @@ extern font* gUnnamed698a08;
 
 // --- font ---
 // CODEVIEW(E:\gamedcs\font.cpp:33, dc 0xa1ba8) void font::font();
-// CODEVIEW(E:\gamedcs\font.cpp:41, dc 0xa1c04) void font::font(const char* name, const font::TFontSpec* fontspec, int dsize, unsigned char* d);
+// CODEVIEW(E:\gamedcs\font.cpp:41, dc 0xa1c04) void font::font(const char* name, const font::TFontSpec& fontspec, int dsize, unsigned char* d);
 // CODEVIEW(E:\gamedcs\font.cpp:50, dc 0xa1c94) void font::~font();
 // CODEVIEW(E:\gamedcs\font.cpp:56, dc 0xa1ce4) int font::GetColor(font::TColor color_scheme, unsigned char highlighted);
 // CODEVIEW(E:\gamedcs\font.cpp:81, dc 0xa1d14) void font::SetPalette(const TPalette16* new_palette);

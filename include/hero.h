@@ -489,6 +489,33 @@ public:
     // 0x4d9070 / 0x4d90c0, the two artifact tallies.
     long get_equipped_artifacts(unsigned char countWarMachines);
     long get_number_in_backpack(unsigned char countWarMachines);
+#ifdef HOMM3_EVENTS_VIEW
+    // `?AdjustPrimarySkill@hero@@QAAXHH@Z`, a Hero.h inline the Dreamcast
+    // build calls OUT OF LINE and retail's /Ob2 expands. The DC line table
+    // for advManager::DoEventLibrary (dc 0x93bf8) is what found it: source
+    // lines 2120..2123 are FOUR separate statements and the first resolves
+    // to this decoration, the other three reusing its pooled address - so
+    // the Library of Enlightenment's four +2 awards are four CALLS in the
+    // source, not four `stats[i] += 2` expressions.
+    //
+    // The retail x86 bytes corroborate the shape from the other side: the
+    // expansion is `mov al,2` ONCE followed by `add dl,al` / `add cl,al`,
+    // i.e. the amount materialised in a register and reused, which is what
+    // an inlined int PARAMETER produces and not what a literal in an `+=`
+    // does. No clamp - the byte read-modify-write is all there is.
+    void AdjustPrimarySkill(int skill, int amount) { stats[skill] += amount; }
+    // 0x4d9ec0, hero.cpp:1732. Retires the hero from the map: retail's
+    // advManager::HeroLoses (0x4ac930) calls it THISCALL with both flags
+    // on the stack, which is what fixes it as a member rather than a
+    // /Gr free helper, and saves the owner byte into a frame slot first
+    // because the record does not survive the call.
+    void Deallocate(unsigned char bGameLoaded, unsigned char remote_move);
+    // 0x4da720, hero.cpp:2147 in the Dreamcast roster (dc 0xcd17c) - the
+    // no-argument level-up check advManager::TownEvent runs after each
+    // combat it starts. Declared only; the body is not reconstructed and
+    // the row is not claimed from here.
+    void CheckLevel();
+#endif
     // 0x4e2370 - retypes every matching slot of the hero's own army.
     void UpgradeCreatures(int sourceCreatureType, int destCreatureType);
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads

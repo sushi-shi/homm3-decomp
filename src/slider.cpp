@@ -189,7 +189,13 @@ void slider::KeyAccel(int x1, int x2, int x3, int x4, int key)
 // The source-compatible 60-branch/11-return CFG is complete. Retail shares
 // the KP3/KP2 forward KeyAccel suffix; this VC6 invocation instead shares the
 // equivalent KP9/KP8 backward suffix, leaving the measured 95.190125% C2
-// tail-merging plateau after ordering and lifetime probes.
+// tail-merging plateau after ordering and lifetime probes. The suffix choice
+// also decides the switch lowering: with the KP9/KP8 pair merged this C2
+// emits the compressed byte-selector form (`xor edx,edx; mov dl,[eax+tbl];
+// jmp [4*edx+jmp_tbl]`) where retail emits the direct ten-entry
+// `jmp [4*eax+tbl]` over the same 0x48..0x51 range. Rejected 2026-08-13:
+// respelling the KP8 arm's `return 0;` as the semantically identical
+// `break;` to break that pair - byte-inert, still 95.190125%.
 VA(0x005964E0, 0x4A0)  // contiguous slider block, dc 0x149f04
 int slider::Main(message* msg)
 {

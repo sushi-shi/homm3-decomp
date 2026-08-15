@@ -25,6 +25,20 @@ extern unsigned long glTimers[10];
 // linearization is ((z * height + y) * width + x), with 16-bit elements.
 DATA(0x006989f8) extern unsigned short* gMapExtra;
 
+// The shared fonts oldmain (0x4ee3e0) loads by name and ShutDown
+// (0x4f3690) releases through the resource vtable, in retail's own .bss
+// order: 0x698a04 tiny.fnt, 0x698a08 smalfont.fnt, 0x698a0c medfont.fnt,
+// 0x698a10 bigfont.fnt, 0x698a14 Calli10R.fnt. Every cell takes the
+// return of the same one-argument loader and the name is the string that
+// load passes, which fixes both the type and the identity; ShutDown's
+// `mov edx,[cell] / call [edx+4]` teardown independently proves they are
+// resource pointers. Only the calligraphic cell has a consumer in a
+// modeled TU so far - the hill fort constructor's per-slot count widget
+// takes its y as `0x7c - font->height`, reading font+0x21, i.e.
+// TFontSpec::height at font+0x1c+5. Declare the rest as readers land.
+class font;
+DATA(0x00698a14) extern font* gpCalligraphicFont;
+
 // Retail map-extra accessor used by the adventure-map adjacency scan.
 unsigned short GetMapExtra(int x, int y, int z);
 unsigned short* GetMapExtraPtr(int x, int y, int z);
@@ -55,6 +69,23 @@ int oldmain();                                           // 0x4ee3e0
 void MemError();                                         // 0x4f42c0
 int GameUnsaved();                                       // 0x4f4310
 void CheckEndGame(int bForceWin);                        // 0x4f2ce0
+// Retail .bss 0x6972b8, an INT that every CheckEndGame caller which then
+// wants to keep touching the adventure UI reads immediately afterwards -
+// 36 image-wide references, the bulk of them inside kb.obj's own band
+// beside CheckEndGame itself. The Dreamcast carries exactly one int
+// public that fits the role, `?gbGameOver@@3HA`; the name comes from
+// there and the address from retail. NOT claimed - the owning TU is
+// kb.cpp and its data band has not landed.
+//
+// GATED, and it has to be: ungated, this ONE `extern int` takes
+// recruit.obj's recruitUnit::Update 90.84 -> 88.24 - the same function
+// and the same two numbers the RS_ERASE_OBJECT enumerator produced last
+// round. So the standing note that plain externs are inert is wrong for
+// this consumer; kb.h reaches it and its include-set sensitivity counts
+// declarations of every kind. Measured both ways 2026-08-14.
+#ifdef HOMM3_EVENTS_VIEW
+extern int gbGameOver;
+#endif
 // The retail entry at 0x4f1190 is the five-byte public thunk used by
 // questlogwindow; the implementation body follows at 0x4f1820.
 int TrueFalseDialogHandler(message* msg);

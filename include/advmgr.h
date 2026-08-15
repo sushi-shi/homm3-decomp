@@ -16,10 +16,209 @@ class TreasureData;
 union ExtraInfoUnion;
 
 #ifdef HOMM3_EVENTS_VIEW
-// events.obj only needs the plain packed dword arm. Keeping this narrow
-// avoids importing the many object-specific bitfield views into its TU.
+// events.obj needs the plain packed dword arm plus the object views its
+// reconstructed handlers actually read. Keeping this narrow avoids
+// importing the remaining eighteen bitfield views into its TU.
+
+// do_event_water_wheel (0x4a7de0) loads bits 0..4 with `mov al,[cell] /
+// and eax,0x1f`, multiplies the result by 500 and clears the same bits
+// again with `and al,0xe0` after paying - an UNSIGNED five-bit count of
+// 500-gold units.
+struct type_water_wheel_info {
+    unsigned long gold : 5;
+    unsigned long tail : 27;
+};
+SIZE(type_water_wheel_info, 4);
+
+// do_event_windmill (0x4a7fc0) reads a SIGNED four-bit resource id at
+// bits 0..3 (`shl eax,0x1c / sar eax,0x1c`) and an UNSIGNED four-bit
+// amount at bits 13..16 (`shr esi,0xd / and esi,0xf`); the payout
+// clears both with `and eax,0xfffe1ff0` and re-inserts the resource.
+struct type_windmill_info {
+    EGameResource resource : 4;
+    unsigned long unused : 9;
+    unsigned long amount : 4;
+    unsigned long tail : 15;
+};
+SIZE(type_windmill_info, 4);
+
+// DoEventLeanTo (0x4a31a0) reads a five-bit id at bits 0..4 (`mov al,
+// [cell] / and eax,0x1f`), an UNSIGNED four-bit amount at bits 6..9 and
+// an UNSIGNED four-bit resource id at bits 10..13 (`shr eax,N / and
+// eax,0xf` both times). Emptying the lean-to rewrites all three fields at
+// once - `and eax,0xffffc020 / or eax,id` - which is what pins bit 5 as
+// nobody's and puts the tail at 14.
+struct type_lean_to_info {
+    unsigned long id : 5;
+    unsigned long unused : 1;
+    unsigned long amount : 4;
+    unsigned long resource : 4;
+    unsigned long tail : 18;
+};
+SIZE(type_lean_to_info, 4);
+
+// DoEventMagicSpring (0x4a3590) shares the same id lane and carries one
+// "still full" bit at 6 (`shr eax,6 / test al,1`); drinking clears it
+// alone (`and dword ptr [cell], 0xffffffbf`).
+struct type_magic_spring_info {
+    unsigned long id : 5;
+    unsigned long unused : 1;
+    unsigned long full : 1;
+    unsigned long tail : 25;
+};
+SIZE(type_magic_spring_info, 4);
+
+// DoEventMysticalGarden (0x4a3bc0) shares the id lane but puts a SIGNED
+// four-bit resource at bits 6..9 (`shl edi,0x16 / sar edi,0x1c`) and a
+// one-bit "still full" flag at bit 10 (`shr eax,0xa / test al,1`);
+// emptying it clears that bit alone (`and ah,0xfb`).
+struct type_garden_info {
+    unsigned long id : 5;
+    unsigned long unused : 1;
+    EGameResource resource : 4;
+    unsigned long full : 1;
+    unsigned long tail : 21;
+};
+SIZE(type_garden_info, 4);
+
+// do_event_warrior_tomb (0x4a7c30) reads a ONE-BIT occupancy flag at bit 0
+// (`test byte ptr [cell],1`) and a SIGNED ten-bit artifact id at bits
+// 13..22 (`shl eax,9 / sar eax,0x16`); emptying the tomb clears bit 0
+// alone (`and al,0xfe` over the whole dword), so the two lanes are
+// separate fields rather than one packed value.
+struct type_tomb_info {
+    unsigned long has_artifact : 1;
+    unsigned long unused : 12;
+    signed long artifact : 10;
+    unsigned long tail : 9;
+};
+SIZE(type_tomb_info, 4);
+
+// do_event_witch_hut (0x4a8080) reads a SIGNED seven-bit secondary-skill
+// id at bits 13..19 (`shl esi,0xc / sar esi,0x19`) and compares it with
+// -1 - the all-ones encoding this header already names
+// WitchHutNoSkillMask (0x000fe000), i.e. exactly these seven bits.
+struct type_witch_hut_info {
+    unsigned long unused : 13;
+    signed long skill : 7;
+    unsigned long tail : 12;
+};
+SIZE(type_witch_hut_info, 4);
+
+// The Fountain of Fortune's luck tier, a SIGNED four-bit field at bits
+// 13..16. DoEventFountain (0x4a2480) proves both ends of it: the value
+// reads are `shl eax,0xf / sar eax,0x1c`, the signature of a signed
+// bitfield at bit 13, and the range check that guards the jump table is
+// `lea eax,[luck+1] / cmp eax,4 / ja`, i.e. a dense -1..3 domain.
+struct type_fountain_info {
+    unsigned long unused : 13;
+    signed long luck : 4;
+    unsigned long tail : 15;
+};
+SIZE(type_fountain_info, 4);
+
+// The eight-bit team-visibility lane SetCellVisited writes. Proven from
+// the READER side here: do_event_warrior_tomb's inlined PlayerKnowsCell
+// narrows the AND to one byte (`mov ecx,[cell] / shr ecx,5 / test cl,al`),
+// which is only legal because the field is exactly eight bits wide.
+struct type_cell_visited_info {
+    unsigned long unused : 5;
+    unsigned long visited : 8;
+    unsigned long tail : 19;
+};
+SIZE(type_cell_visited_info, 4);
+
 union ExtraInfoUnion {
     unsigned long value;
+    type_water_wheel_info water_wheel_info;
+    type_windmill_info windmill_info;
+    type_lean_to_info lean_to_info;
+    type_magic_spring_info magic_spring_info;
+    type_garden_info garden_info;
+    type_tomb_info tomb_info;
+    type_witch_hut_info witch_hut_info;
+    type_fountain_info fountain_info;
+    type_cell_visited_info cell_visited_info;
+
+    void SetCellVisited(short player);
+
+    // The lean-to trio, all three DC-published (MapCell.h:985/992/997).
+    // GetLeanToAmount is decorated `short` and that WIDTH is what makes
+    // DoEventLeanTo's emptiness test a sixteen-bit `test si,si` and its
+    // dialog argument a `movsx`. GetLeanToResource is decorated
+    // EGameResource; it is spelled `int` here because the field is read
+    // UNSIGNED and an enum bitfield sign-extends under VC6 - the width is
+    // what the bytes constrain and an enum return is int-wide anyway, so
+    // no truncation barrier is lost. The id has no DC accessor and is
+    // read off the arm directly.
+    short GetLeanToAmount() const { return lean_to_info.amount; }
+    int GetLeanToResource() const { return lean_to_info.resource; }
+    void SetLeanTo(short id, short amount, int resource)
+    {
+        lean_to_info.id = id;
+        lean_to_info.amount = amount;
+        lean_to_info.resource = resource;
+    }
+
+    // The magic-spring pair (MapCell.h:1002/1007). The setter takes the
+    // new state rather than clearing unconditionally, which is what the
+    // DC decoration `void (unsigned char)` says and what makes the
+    // drink-it write a plain bit clear at the one site that passes 0.
+    unsigned char MagicSpringIsFull() const { return magic_spring_info.full; }
+    void FillMagicSpring(unsigned char full) { magic_spring_info.full = full; }
+
+    // The mystical-garden trio (MapCell.h:1018/1023/1035). GardenIsFull
+    // is `unsigned char () const` and its `(value >> 10) & 1` shape is
+    // what retail inlines; a direct bitfield test would fold to a byte
+    // `test` on cell+1 instead.
+    unsigned char GardenIsFull() const { return garden_info.full; }
+    EGameResource GetGardenResource() const { return garden_info.resource; }
+    void SetGardenEmpty() { garden_info.full = 0; }
+
+    // The five MapCell.h accessors the two mill handlers inline. The
+    // Dreamcast publishes all five with their signatures - get_wheel_gold
+    // and get_windmill_amount return `short` (?...@@QBAFXZ),
+    // get_windmill_resource returns EGameResource, and both setters take
+    // the same pair - and the retail bytes fix the bodies:
+    //   * the wheel's *500 lives INSIDE get_wheel_gold, which is why
+    //     do_event_water_wheel truncates the product with `movsx esi,ax`
+    //     even though 31*500 provably fits in a short;
+    //   * set_windmill writes BOTH fields, which is why the payout tail
+    //     is a single `and eax,0xfffe1ff0 / xor eax,edi` on the dword
+    //     instead of two read-modify-writes.
+    short get_wheel_gold() const { return water_wheel_info.gold * 500; }
+    void set_wheel_gold(short amount) { water_wheel_info.gold = amount / 500; }
+    EGameResource get_windmill_resource() const { return windmill_info.resource; }
+    short get_windmill_amount() const { return windmill_info.amount; }
+    void set_windmill(EGameResource resource, short amount)
+    {
+        windmill_info.resource = resource;
+        windmill_info.amount = amount;
+    }
+
+    // The five further MapCell.h accessors the tomb and witch-hut
+    // handlers inline. Dreamcast decorations fix every signature:
+    // PlayerKnowsCell is `unsigned char (short) const` (MapCell.h:914),
+    // tomb_is_full `unsigned char () const` (1203), get_tomb_artifact
+    // `TArtifact () const` (1198), empty_tomb `void ()` (1193) and
+    // get_witch_skill `TSecondarySkill () const` (1246).
+    //
+    // The two enum-returning getters are spelled `int` because neither
+    // TArtifact nor TSecondarySkill has a modelled definition in this
+    // tree; the WIDTH is what the bytes constrain, and an enum return is
+    // int-wide under VC6, so no truncation barrier exists on either -
+    // which is what lets do_event_witch_hut compare the raw skill with
+    // `cmp esi,-1` and index the trait table without a `movsx`.
+    unsigned char PlayerKnowsCell(short player) const
+    {
+        if (player < 0 || player >= 8)
+            return 0;
+        return (cell_visited_info.visited & (1 << player)) != 0;
+    }
+    unsigned char tomb_is_full() const { return tomb_info.has_artifact; }
+    int get_tomb_artifact() const { return tomb_info.artifact; }
+    void empty_tomb() { tomb_info.has_artifact = 0; }
+    int get_witch_skill() const { return witch_hut_info.skill; }
 };
 SIZE(ExtraInfoUnion, 4);
 #endif
@@ -79,6 +278,12 @@ SIZE(ExtraInfoUnion, 4);
 // matching 32-byte per-player flag band and the parallel help-name table with
 // this value; the shrine helper currently needs only the type, not individual
 // enumerator spellings.
+//
+// events.obj wants the same domain for game::SetInfoFlag's callers, so the
+// gate is widened by exactly that one view rather than opened outright -
+// the enum stays invisible to every TU that has no consumer.
+#endif
+#if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) || defined(HOMM3_EVENTS_VIEW)
 enum GlobalInfoFlags {
     BuoyInfo = 0,
     CloverFieldInfo,
@@ -111,6 +316,8 @@ enum GlobalInfoFlags {
     const_sacrifice_info,
     MaxInfoFlags = 32
 };
+#endif
+#ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 
 enum WiseTreePrices {
     const_tree_wants_nothing = 0,
@@ -312,6 +519,17 @@ DATA(0x00699538) extern int gCompleteDrawAllCells;
 // Retail-only CompleteDraw gates. Their roles and widths are proved by the
 // entry predicate at 0x40f3f0; spellings remain provisional.
 DATA(0x006989c0) extern int gCompleteDrawEnabled;
+
+#ifdef HOMM3_EVENTS_VIEW
+// A .data byte advManager::EraseAndFizzle (0x49e170) saves, CLEARS for the
+// duration of the erase, and restores on every one of its three exits -
+// the same save/clear/restore bracket it puts around animCtrPaused. 86 of
+// its 87 image-wide references sit inside events.obj's link bracket, but
+// the 87th does not, so this is a DECLARATION ONLY: no DATA claim is
+// taken here and the owning TU keeps it (the winmgr.h gbInDialog
+// precedent). Name is the house ordinal placeholder.
+extern unsigned char gUnnamed67f574;
+#endif
 DATA(0x00696a04) extern unsigned char gCompleteDrawMessageBypass;
 
 // Six of these records are filled by ScanForHeroOrBoat. Retail writes the
@@ -417,24 +635,54 @@ public:
     // UpdateResourceDisplay (0x403f00) calls through this +0x5c field.
     class TResourceDisplay* ResourceDisplay;
     widget* RolloverTextWidget;  // +0x60, DrawRolloverText redraw bounds
-    char pad_064[8];
+    // DC names these topHero/topTown (member offsets 88/92). Retail moved
+    // RolloverWidget ahead of the pair, so the DC->retail shift here is
+    // +12 rather than the +8 that holds above; DoHeroKnob (0x403220) and
+    // DoTownKnob (0x403280) settle the result directly - the hero knob
+    // scrolls +0x64 against `playerData::numHeroes - 5` and the town knob
+    // scrolls +0x68 against `playerData::numTowns - 5`. animateInBackground
+    // at +0x6c below is unmoved, so the pair exactly fills the old pad.
+    int topHero;
+    int topTown;
     // DC member name at +0x64; retail's independently proven 8-byte base
     // shift places it at +0x6c, exactly where animate_bottom_view reads it.
     unsigned char animateInBackground;
+    char pad_06d[3];
+    // +0x70 and +0x84, sliced 2026-08-14 from UpdateHeroLocator
+    // (0x403560) and HighlightLocators (0x4038c0): the first row takes
+    // bitmapBorder::SetImage with the portrait name out of akHeroTraits
+    // and is indexed `[this + i*4 + 0x70]`, the second takes SetImage
+    // with hpsyyy.pcx plus a send_message/Draw pair and is indexed
+    // `[this + i*4 + 0x84]`. Five entries each is fixed at both ends -
+    // the loops bound on 5 and 0x70 + 2*5*4 lands exactly on bottomView.
+    class bitmapBorder* HeroPortraits[5];
+    class bitmapBorder* HeroLocators[5];
     // ClearBottomView (0x403ee0) owns and clears the pointer at +0x98.
-    char pad_06d[0x2b];
     class type_bottom_view_window* bottomView;
     char pad_09c[4];
 
+    ~TAdventureMapWindow();
     void UpdateTownLocators(int top, unsigned char drawWin,
                             unsigned char update);
     void UpdateHeroLocators(int top, unsigned char drawWin,
                             unsigned char update);
+    void UpdateHeroLocator(int which, unsigned char drawWinSect,
+                           unsigned char update);
+    void UpdateTownLocator(int which, unsigned char drawWinSect,
+                           unsigned char update);
+    void DoHeroKnob(unsigned char up);
+    void DoTownKnob(unsigned char up);
+    unsigned char SetElevationToggleImage(int level);
     void UpdateResourceDisplay(unsigned char draw, unsigned char update);
     void UpdateButtons(unsigned char draw, unsigned char update);
     void UpdateQuestLogButton(unsigned char update);
     void HighlightLocators(unsigned char update);
     void DrawChatText(unsigned char update);
+    // Retail 0x403ba0 is `ret 4` over one null-tested stack argument; the
+    // Dreamcast roster's zero-parameter spelling comes from a four-byte
+    // stub body, so the hero parameter is retail's - matching both
+    // UpdateSpellButton below and DC's real TAdvMenu::UpdateSleepButton.
+    void UpdateSleepButton(const class hero* thisHero);
     void UpdateSpellButton(const class hero* thisHero);
     void draw_bottom_view(unsigned char update);
     void animate_bottom_view(unsigned char in_background);
@@ -631,6 +879,223 @@ public:
 #ifdef HOMM3_EVENTS_VIEW
     TreasureData* get_treasure_data(NewmapCell* cell) const;
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
+    // The "once per hero, keep the reward forever" family. All six take
+    // the Dreamcast's own `(hero*, NewmapCell*, bool)` and all six open
+    // on the same test - a per-object visit dword on the HERO, indexed
+    // by the cell's own extra-info dword as a shift count, which is the
+    // idiom hero::VisitedArena already proves.
+    void DoEventDefenseTower(class hero* current_hero, NewmapCell* cell,
+                             bool human_player);
+    void DoEventFountainOfYouth(class hero* current_hero, NewmapCell* cell,
+                                bool human_player);
+    void DoEventGarden(class hero* current_hero, NewmapCell* cell,
+                       bool human_player);
+    void DoEventIdol(class hero* current_hero, NewmapCell* cell,
+                     bool human_player);
+    // Boarding a boat (jump-table arm 0x08). TWO parameters and `ret 8`,
+    // exactly the Dreamcast's `(hero*, NewmapCell*)` - the one handler in
+    // the band with no human_player, because it shows no dialog.
+    void DoEventBoat(class hero* current_hero, NewmapCell* cell);
+    // The Fountain of Fortune (jump-table arm 0x1e). The Dreamcast gives
+    // it `(hero*, NewmapCell*, bool)`; the cell is spelled with the union
+    // pointer for the reason the whole once-per-hero family is - nothing
+    // but the +0x00 dword is ever touched.
+    void DoEventFountain(class hero* current_hero, ExtraInfoUnion* cell,
+                         bool human_player);
+    // The Arena (jump-table arm 0x04), the Dreamcast's own
+    // `(hero*, NewmapCell*, bool)` against retail's `ret 0xc`.
+    void DoEventArena(class hero* current_hero, NewmapCell* cell,
+                      bool human_player);
+    // The Cover of Darkness (jump-table arm 0x0f). The Dreamcast's own
+    // `(NewmapCell*, type_point, bool)` and retail's `ret 0xc` agree; the
+    // cell is never read.
+    void DoEventCoverOfDarkness(NewmapCell* cell, type_point point,
+                                bool human_player);
+    // The Dragon Utopia (jump-table arm 0x19 = OBJECT_DRAGON_UTOPIA), the
+    // one creature bank with a handler of its own. Four parameters and
+    // `ret 0x10`, the DC's own order, and the cell stays a NewmapCell*
+    // because it is forwarded to CreatureBankEvent as one.
+    void do_event_dragon_city(class hero* current_hero, NewmapCell* cell,
+                              type_point point, bool human_player);
+    // 0x4abdc0, DECLARED not defined - 1744 bytes this lane is not
+    // reconstructing. LOCATED by do_event_dragon_city, which is its only
+    // reconstructed caller: retail pushes FIVE arguments in exactly the
+    // Dreamcast's parameter order (hero, cell, text, point, human_player)
+    // with the advManager in ECX, 1744 B against the DC's 1330 is 1.31 in
+    // the SH4->x86 band, and the row sits in the events.obj bracket
+    // [0x4ab410..0x4acbb0] that already carries EventSound before it and
+    // adjust_army after it, in DC roster order. The DC decorates cText
+    // `char*`; retail's one reconstructed call site passes window.h's
+    // `const char emptyRolloverText[]`, so the declarator is const-correct
+    // rather than casting at the call.
+    int CreatureBankEvent(class hero* who, NewmapCell* cell,
+                          const char* cText, type_point point,
+                          bool human_player);
+    // The two objects that pay a resource out of the cell's own packed
+    // record. Both take ExtraInfoUnion for the same reason the war school
+    // and the two mills do: nothing but the +0x00 dword is ever touched.
+    void DoEventLeanTo(class hero* current_hero, ExtraInfoUnion* cell,
+                       bool human_player);
+    void DoEventLibrary(class hero* current_hero, NewmapCell* cell,
+                        bool human_player);
+    // The two mana refills. Both take the union pointer for the same
+    // reason as the mills: only the +0x00 dword is ever touched, and the
+    // well's whole use of it is a single `cell->value = 0`.
+    void DoEventMagicSpring(class hero* current_hero, ExtraInfoUnion* cell,
+                            bool human_player);
+    void DoEventMagicWell(class hero* current_hero, ExtraInfoUnion* cell,
+                          bool human_player);
+    void DoEventMysticalGarden(class hero* current_hero, ExtraInfoUnion* cell,
+                               bool human_player);
+    void DoEventMercenaryCamp(class hero* current_hero, NewmapCell* cell,
+                              bool human_player);
+    void DoEventOasis(class hero* current_hero, NewmapCell* cell,
+                      bool human_player);
+    void DoEventPowerSchool(class hero* current_hero, NewmapCell* cell,
+                            bool human_player);
+    void DoEventRallyFlag(class hero* current_hero, NewmapCell* cell,
+                          bool human_player);
+    // The Sirens (jump-table arm 0x5c), same three-parameter `ret 0xc`
+    // shape as the stables below and the cell equally unused.
+    void DoEventSiren(class hero* current_hero, NewmapCell* cell,
+                      bool human_player);
+    // The Stables (jump-table arm 0x5e). Three parameters and `ret 0xc`
+    // against the Dreamcast's own `(hero*, NewmapCell*, bool)`, and the
+    // cell is never touched - the same shape do_event_watering_hole has.
+    void DoEventStables(class hero* current_hero, NewmapCell* cell,
+                        bool human_player);
+    void DoEventTemple(class hero* current_hero, NewmapCell* cell,
+                       bool human_player);
+    void DoEventTrainingGrounds(class hero* current_hero, NewmapCell* cell,
+                                bool human_player);
+    // The Dreamcast decorations give these `(hero*, NewmapCell*, bool)`
+    // and make them PRIVATE members. The cell is spelled with the union
+    // pointer instead because the DC's NewmapCell DERIVES from
+    // ExtraInfoUnion where retail's does not, and every use in these
+    // bodies is the implicit upcast: the raw cell pointer goes straight
+    // to ExtraInfoUnion::SetCellVisited as `this`, i.e. only the +0x00
+    // dword is ever touched. The access specifier is dropped because
+    // advManager is a single public block here.
+    void DoEventWarSchool(class hero* current_hero, ExtraInfoUnion* cell,
+                          bool human_player);
+    void do_event_warrior_tomb(class hero* current_hero, ExtraInfoUnion* cell,
+                               bool human_player);
+    void do_event_watering_hole(class hero* current_hero, NewmapCell* cell,
+                                bool human_player);
+    void do_event_water_wheel(class hero* current_hero, ExtraInfoUnion* cell,
+                              bool human_player);
+    void do_event_windmill(class hero* current_hero, ExtraInfoUnion* cell,
+                           bool human_player);
+    void do_event_witch_hut(class hero* current_hero, ExtraInfoUnion* cell,
+                            bool human_player);
+    // The four wandering-stack outcome handlers. DECLARED, not defined -
+    // DoWanderingMonsterResult is their only caller and its bytes are what
+    // located them (0x4a6c60 / 0x4a6df0 / 0x4a7000 / 0x4a7250, in the DC's
+    // own roster order); their rows stay unclaimed and a call
+    // relocation's symbol name is not scored. The DC decorations give the
+    // signatures outright - fight and flee are void with four arguments,
+    // join and sell_out return bool and take the extra want_to_fight -
+    // and retail's `ret 0x10` / `ret 0x14` pair agrees.
+    void monsters_fight(class hero* current_hero, NewmapCell* cell,
+                        type_point point, bool human_player);
+    // The two callees monsters_fight needs, both DECLARED not defined and
+    // both located by it. 0x4a6b30 = monsters_give_reward (events.cpp:3579,
+    // dc 0x96994): `ret 0xc` against three parameters, 298 B against 384,
+    // and it sits immediately BEFORE monsters_fight in retail exactly as
+    // it does in the DC roster. 0x4ac580 = CombatMonsterEvent
+    // (events.cpp:5851, dc 0x9af34): ELEVEN parameters is the whole
+    // screen - retail pushes eleven arguments in the DC's own order, the
+    // three optional monster triples trailing as (-1,0,0) - and 935 B
+    // against 1152 is 0.81.
+    void monsters_give_reward(class hero* current_hero, NewmapCell* cell,
+                              bool human_player);
+    int CombatMonsterEvent(class hero* who, TCreatureType monType,
+                           int* numMons, NewmapCell* eventCell,
+                           type_point point, TCreatureType monType2,
+                           int numMons2, int numGroups2,
+                           TCreatureType monType3, int numMons3,
+                           int numGroups3);
+    void monsters_flee(class hero* current_hero, NewmapCell* cell,
+                       type_point point, bool human_player);
+    bool monsters_join(class hero* current_hero, NewmapCell* cell,
+                       type_point point, bool want_to_fight,
+                       bool human_player);
+    bool monsters_sell_out(class hero* current_hero, NewmapCell* cell,
+                           type_point point, bool want_to_fight,
+                           bool human_player);
+    void DoWanderingMonsterResult(NewmapCell* cell, class hero* current_hero,
+                                  type_point point, bool human_player);
+    void DoEventWanderingMonster(NewmapCell* cell, class hero* current_hero,
+                                 type_point point, bool human_player);
+    void EraseAndFizzle(NewmapCell* eventCell, type_point point,
+                        int fizzleSound);
+    void EraseObj(NewmapCell* thisCell, type_point point,
+                  unsigned char record);
+    void DoEvent(NewmapCell* eventCell, type_point point);
+    // 0x4aadf0, DECLARED not defined - structural-EH bytes plus two
+    // 0x4a6-byte hero copies, parked. do_event_hero is the caller that
+    // needs the declarator; the pair is (visitor, visited) in the DC's
+    // own order and a call relocation's symbol name is not scored.
+    void HeroSwap(class hero* leftHero, class hero* rightHero);
+    void TownEvent(NewmapCell* cell, type_point point,
+                   unsigned char human_player);
+    // 0x4ad470, DECLARED not defined - 5425 EH-framed bytes this lane is
+    // not reconstructing. `ret 0x28` against the Dreamcast's TEN
+    // parameters is the arity screen, the 5425/2540 size ratio sits in
+    // the SH4->x86 band, and the DC xref graph makes DoCombat exactly the
+    // two-call callee TownEvent has left once every other edge is
+    // matched. Both retail call sites fill the left/right pairs in the
+    // DC's own order.
+    int DoCombat(type_point point, class hero* leftHero,
+                 armyGroup* leftArmyGroup, long iRightPlayer,
+                 class town* rightTown, class hero* rightHero,
+                 armyGroup* rightArmyGroup, int iSeed,
+                 unsigned char bFinishHeroes,
+                 unsigned char alternate_layout);
+    void DispatchEvent(class hero* current_hero, NewmapCell* cell,
+                       type_point point, unsigned char human_player);
+    void EventSound(int eventID, int extraInfo);
+    void FizzleCenter(int whichSound);
+    // 0x4183d0, claimed (still @stub) in advmgr.cpp; the Dreamcast roster
+    // gives the pair (advmgr.cpp:9785, dc 0x1b164). EraseObj is the caller
+    // that needs the declarator here.
+    void SetEnvironmentOrigin(type_point point, int reset);
+    void do_event_lith_one_way(class hero* current_hero, NewmapCell* cell,
+                               bool human_player);
+    void do_event_lith_two_way(class hero* current_hero, NewmapCell* cell,
+                               bool human_player);
+    // The three previously unnamed callees of the monolith pair, all
+    // DECLARED and not defined here; their rows are not claimed from this
+    // file and a call relocation's symbol name is not scored. Each of the
+    // three is fixed by four independent screens at once:
+    //
+    //   0x4a2800 = do_event_hero (events.cpp:2029, dc 0x939bc, 346 B).
+    //     Sits in the event_record..exec bracket that owns events.obj;
+    //     `ret 0x10` against the DC's four parameters; 319/346 = 0.92 in
+    //     the SH4->x86 band; and the DC xref graph lists do_event_hero as
+    //     a callee of BOTH liths and of nothing else retail leaves
+    //     unaccounted here.
+    //   0x47f7d0 = StopCursor (cursor.cpp:85, dc 0x79a84, 134 B). In the
+    //     csprite..customcampaign bracket that owns cursor.obj; `ret 4`
+    //     against one parameter; 130/134 = 0.97; called with the literal
+    //     1 exactly where the DC has StopCursor.
+    //   0x41d930 = TeleportTo (advspells.cpp:703, dc 0x22b88, 1116 B). In
+    //     the advspells..ai bracket that owns advspells.obj; `ret 0x18`
+    //     against six parameters; 1124/1116 = 1.007; and the third pushed
+    //     argument is the string at 0x67775c, "telptout.wav", which is
+    //     TeleportTo's `sample_name` and nothing else's.
+    //
+    // Together they exhaust the liths' DC callee set: the remaining DC
+    // edges are get_random_lith_exit, SetVisibility and TransmitRemoteData
+    // (all three already spelled), plus game::get_cell, type_point's
+    // constructor and CSetVisibilityMsg's constructor, all three of which
+    // retail expands in line.
+    void do_event_hero(class hero* current_hero, NewmapCell* cell,
+                       type_point point, bool human_player);
+    void StopCursor(unsigned char standEnd);
+    void TeleportTo(class hero* who, type_point destination,
+                    const char* sample_name, unsigned char bIsRemoteMove,
+                    unsigned char draw_changes, unsigned char is_replay);
 #endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     BlackBoxData* get_black_box(const ExtraInfoUnion* cell) const;
@@ -723,6 +1188,23 @@ public:
     unsigned short* GetRouteArrayPtr(int x, int y, int z);
     e_looping_sound_id GetSoundId(int x, int y, int z);
     type_point get_map_center() const;
+    // Wandering-monster mood modifiers, both STATIC. Its twin
+    // get_like_modifier (0x4a75c0) settles the question for the pair:
+    // that row is `ret` with the creature type in EDX, i.e. /Gr
+    // fastcall, which a non-static member cannot be - and the Dreamcast
+    // roster still scopes it to advManager, so `static` is the only
+    // spelling that satisfies both. get_force_modifier's own bytes
+    // cannot decide (a member that ignores `this` and a static with one
+    // float argument are the same `ret 4`), and it does not read ecx.
+    static int get_force_modifier(float strength_ratio);
+#ifdef HOMM3_EVENTS_VIEW
+    // Gated only because TCreatureType is not in this header's own
+    // include closure - it reaches events.cpp through game.h, which
+    // events.cpp includes ahead of this file. Nothing else about the
+    // declarator is view-specific.
+    static int get_like_modifier(class hero* current_hero,
+                                 TCreatureType creature);
+#endif
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).

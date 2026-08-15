@@ -19,16 +19,24 @@
 //   LODHeader::LODHeader - visibly inlined in LODFile::LODFile at 0xfa780
 //     ("LOD" strcpy into this+0x11c, +0x120=500, 20 dwords zeroed).
 #include <va.h>
+#include <string.h>
 #include "lodfile.h"
 
-#if 0  // @carcass
-
-// E:\gamedcs\lodfile.cpp:38
-// RETAIL_LOCATED(0x004fa590, 0x77): not reconstructed; order-map TU head, dc 0xe908c
+// E:\gamedcs\lodfile.cpp:38.  The TU head.  subindex.clear() is
+// Dinkumware's erase(begin(), end()), which is what the zero-trip
+// 32-byte copy loop is: it only ever stores back _Last = _First.
+VA(0x004fa590, 0x77)  // order-map TU head, dc 0xe908c
 void LODFile::clear()
 {
-    // @stub
+    if (opened) {
+        subindex.clear();
+        fclose(fileptr);
+        delete dataBuffer;
+        opened = 0;
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\lodfile.cpp:53
 DC_ONLY(0xe90c0, 0x3E)
@@ -58,6 +66,65 @@ LODEntry* LODFile::getItemIndex(const char* item_name)
     return 0;
 }
 
+// E:\gamedcs\lodfile.cpp:125.  A binary search that hands off to a
+// linear scan once the live span drops to four or fewer rows.  Retail
+// carries TWO copies of that scan, one per comparison arm, so the span
+// test sits inside each arm rather than above the split.
+//
+// Residual (93.98%): instruction-for-instruction identical, four exit
+// blocks against our three.  Retail's four tails are pairwise identical
+// APART FROM one scratch register (the `matchindex = i` stores use ecx
+// in the upper arm and edx in the lower, the two `matchindex = -1`
+// blocks use eax and edx), so its tail-merger folded only the upper
+// linear hit onto the midpoint hit; ours makes all four congruent and
+// merges them into two.  `homm3 vc6 diagnose` calls it control-flow
+// (21 vs 22 blocks, three retargeted branches, register-distance 150),
+// but the block set is downstream of that register choice, so no local
+// spelling reaches it.  Per-function fuzzy 74.09% - the objdiff move
+// penalty over a long run of near-identical instructions, not a
+// semantic gap.  Tried and rejected: an explicit `half` local, `mid`
+// hoisted above the loop, `mid` recomputed per use, and both
+// asymmetric exit forms that would give each linear scan its own
+// `matchindex = -1` block (68.87% and 69.18%).  Same family as the
+// documented merged-return residual.
+VA(0x004fa660, 0x113)  // anchor-global, dc 0xe91c0
+void LODFile::Find(unsigned begin, unsigned end, const char* item_name)
+{
+    while (begin != end) {
+        unsigned span = end - begin;
+        unsigned mid = begin + span / 2;
+        int order = _strcmpi(item_name, subindex[mid].name);
+        if (order == 0) {
+            matchindex = mid;
+            return;
+        }
+        if (order < 0) {
+            if (span <= 4) {
+                for (unsigned i = begin; i < end; i++) {
+                    if (_strcmpi(item_name, subindex[i].name) == 0) {
+                        matchindex = i;
+                        return;
+                    }
+                }
+                break;
+            }
+            end = mid;
+        } else {
+            if (span <= 4) {
+                for (unsigned j = begin; j < end; j++) {
+                    if (_strcmpi(item_name, subindex[j].name) == 0) {
+                        matchindex = j;
+                        return;
+                    }
+                }
+                break;
+            }
+            begin = mid;
+        }
+    }
+    matchindex = -1;
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\lodfile.cpp:112
@@ -67,12 +134,7 @@ unsigned char LODFile::exist(const char* item_name)
     // @stub
 }
 
-// E:\gamedcs\lodfile.cpp:125
-// RETAIL_LOCATED(0x004fa660, 0x113): not reconstructed; anchor-global, dc 0xe91c0
-void LODFile::Find(unsigned begin, unsigned end, const char* item_name)
-{
-    // @stub
-}
+// E:\gamedcs\lodfile.cpp:125 - promoted to a live claim above.
 
 // E:\gamedcs\lodfile.cpp:189
 DC_ONLY(0xe92b4, 0x44)
@@ -88,26 +150,7 @@ void LODEntry::LODEntry()
     // @stub
 }
 
-// E:\gamedcs\lodfile.cpp:240
-// RETAIL_LOCATED(0x004fa780, 0x7b): not reconstructed; order-map constructor, dc 0xe9330
-void LODFile::LODFile()
-{
-    // @stub
-}
-
-// E:\gamedcs\lodfile.cpp:252
-// RETAIL_LOCATED(0x004fa800, 0x97): not reconstructed; anchor-global, dc 0xe9374
-void LODFile::~LODFile()
-{
-    // @stub
-}
-
-// E:\gamedcs\lodfile.cpp:266
-DC_ONLY(0xe93bc, 0x60)
-void LODHeader::LODHeader()
-{
-    // @stub
-}
+// E:\gamedcs\lodfile.cpp:240 / 252 / 266 - promoted to live claims below.
 
 // E:\gamedcs\lodfile.cpp:277
 // RETAIL_LOCATED(0x004fa8a0, 0x1c4): not reconstructed; anchor-bracket, dc 0xe941c
@@ -137,19 +180,9 @@ void LODFile::sort()
     // @stub
 }
 
-// E:\gamedcs\lodfile.cpp:430
-// RETAIL_LOCATED(0x004faa70, 0xab): not reconstructed; anchor-global, dc 0xe9690
-unsigned char LODFile::pointAt(const char* itemName)
-{
-    // @stub
-}
+// E:\gamedcs\lodfile.cpp:430 - promoted to a live claim below.
 
-// E:\gamedcs\lodfile.cpp:452
-// RETAIL_LOCATED(0x004fab20, 0x114): not reconstructed; anchor-global, dc 0xe96e0
-int LODFile::read(void* dest, int numBytes)
-{
-    // @stub
-}
+// E:\gamedcs\lodfile.cpp:452 - promoted to a live claim below.
 
 // ..\stlport\stl_vector.h:203
 DC_ONLY(0xe9868, 0x20)
@@ -460,3 +493,102 @@ void std::__destroy_aux()
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\lodfile.cpp:266.  No retail row of its own: /Ob2 folds it
+// into the one call site below, where the "LOD" strcpy expands to VC6's
+// repne scasb + rep movs pair.
+LODHeader::LODHeader()
+{
+    strcpy(LOD_ID, DATA_COMPGEN(0x0067fa58, lodSignature, "LOD"));
+    version = 500;
+    numEntries = 0;
+    memset(reserved, 0, sizeof(reserved));
+}
+
+// E:\gamedcs\lodfile.cpp:240.  Members construct first (header, then the
+// subindex vector - whose default constructor copies an uninitialised
+// stack allocator byte into +0x17c), and only then does the body clear
+// the three raw fields.
+VA(0x004fa780, 0x7B)  // order-map constructor, dc 0xe9330
+LODFile::LODFile()
+{
+    fileptr = 0;
+    opened = 0;
+    dataBuffer = 0;
+}
+
+// E:\gamedcs\lodfile.cpp:252.  clear() inlines here in full; the vector
+// destructor's deallocate + three-pointer tidy follows it.
+VA(0x004fa800, 0x97)  // anchor-global, dc 0xe9374
+LODFile::~LODFile()
+{
+    clear();
+}
+
+// E:\gamedcs\lodfile.cpp:430.  The shared failure block sits in the
+// MIDDLE of retail's body, not at its tail: all three failing arms jump
+// into the -1 pair and the success arm is the function's LAST block.
+// One spelling reproduces that - a `fail:` label inside the
+// `if (fileptr == 0)` arm that the two early-outs goto.  Writing the
+// failure as a duplicated tail return is otherwise instruction-for-
+// instruction identical but lets VC6 tail-merge it to the bottom, which
+// costs the placement (87.11 and 86.38 measured, both rejected).  The
+// seek is issued before the handle is checked, and dataItemIndex really
+// is stored twice - once before the check, once in the success arm.
+VA(0x004faa70, 0xAB)  // anchor-global, dc 0xe9690
+unsigned char LODFile::pointAt(const char* itemName)
+{
+    if (!opened)
+        goto fail;
+    Find(0, numEntries, itemName);
+    if (matchindex < 0)
+        goto fail;
+    fseek(fileptr, subindex[matchindex].offset, SEEK_SET);
+    dataItemIndex = matchindex;
+    if (fileptr == 0) {
+fail:
+        dataItemIndex = -1;
+        dataPos = -1;
+        return 0;
+    }
+    dataItemIndex = matchindex;
+    dataPos = 0;
+    delete dataBuffer;
+    dataBuffer = 0;
+    dataBufferSize = 0;
+    return 1;
+}
+
+// E:\gamedcs\lodfile.cpp:452.  The directory row is COPIED to the stack
+// (a 32-byte rep movsd) before any field is read.  Packed entries
+// inflate into dataBuffer on first touch and are served from it
+// afterwards; unpacked ones stream straight out of the file.  Both
+// early-outs share the -1: the second reaches it as `or eax, esi` with
+// esi already holding the sentinel it just compared against.
+VA(0x004fab20, 0x114)  // anchor-global, dc 0xe96e0
+int LODFile::read(void* dest, int numBytes)
+{
+    if (!opened)
+        return -1;
+    if (dataItemIndex == -1)
+        return -1;
+
+    LODEntry entry = subindex[dataItemIndex];
+    if (entry.csize) {
+        if (dataBuffer == 0) {
+            dataBuffer = new unsigned char[entry.size];
+            dataBufferSize = entry.size;
+            dataPos = 0;
+            unsigned char* packed = new unsigned char[entry.csize];
+            fread(packed, 1, entry.csize, fileptr);
+            unsigned long destLen = dataBufferSize;
+            uncompress(dataBuffer, &destLen, packed, entry.csize);
+            delete packed;
+        }
+        memcpy(dest, dataBuffer + dataPos, numBytes);
+        dataPos += numBytes;
+    } else {
+        fread(dest, 1, numBytes, fileptr);
+    }
+    return 0;
+}

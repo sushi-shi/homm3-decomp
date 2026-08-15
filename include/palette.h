@@ -64,6 +64,12 @@ public:
         palette colors;
     };
 
+    // Retail 0x522650 (22 B): the resource base with an empty name and
+    // type 0, plus the vptr store. Declared here because font embeds a
+    // TPalette16 BY VALUE (DC LF_MEMBER `Palette`, offset 0x103c) and
+    // its constructor 0x4b5070 runs this body on that subobject as a
+    // member initializer. Declaration only - the body stays palette's.
+    TPalette16();
     TPalette16(const TPalette24* p24);
 
     // Retail 0x522940 reinstalls the TPalette16 vptr and tail-calls the

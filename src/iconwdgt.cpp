@@ -7,10 +7,12 @@
 #include "button.h"
 #include "csprite.h"
 #include "csequence.h"
+#include "cspriteframe.h"
 #include "message.h"
 #include "palette.h"
 #include "resourcemanager.h"
 #include "window.h"
+#include "winmgr.h"
 
 // misc's Random (dc 0xfd868, retail 0x50b230).
 int Random(int min, int max);
@@ -20,20 +22,6 @@ int Random(int min, int max);
 // E:\gamedcs\iconwdgt.cpp:35
 DC_ONLY(0xd92fc, 0x54)
 void iconWidget::iconWidget()
-{
-    // @stub
-}
-
-// E:\gamedcs\iconwdgt.cpp:63
-DC_ONLY(0xd9350, 0xA2)
-void iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image, int frame, int sequence, unsigned char flipped, unsigned back_color, int style, unsigned char focusable)
-{
-    // @stub
-}
-
-// E:\gamedcs\iconwdgt.cpp:75
-DC_ONLY(0xd93f4, 0x6E)
-void iconWidget::initialize(int x, int y, int w, int h, int id, const char* image, int frame, int sequence, unsigned char flipped, unsigned back_color, int style, unsigned char focusable)
 {
     // @stub
 }
@@ -48,6 +36,49 @@ void iconWidget::initialize(int x, int y, int w, int h, int id, const char* imag
 // operator delete tail.
 VA_COMPGEN(0x004ea6f0, 0x21, SCALAR_DELETING_DTOR, iconWidget)
 
+// E:\gamedcs\iconwdgt.cpp:63 - promoted from DC_ONLY 2026-08-14. The one
+// unclaimed row between iconWidget's sdd and its dtor, and it absorbs
+// BOTH of DC's remaining head rows: `initialize` has no retail slot
+// because the ctor does the stores itself.
+//
+// Arity fixes the signature: `ret 0x2c` is eleven stack dwords, so DC's
+// trailing `focusable` is dropped and the last one - [ebp+0x30] - is
+// `style`, pushed as widget's sixth base-ctor argument. The dword 2 goes
+// to [this+0x40], PostPostWalkSequence, which is the idle machine's
+// "sequence to resume after cs_postwalk" seed; NextRandomFrame reads it
+// back at exactly that offset.
+//
+// The sprite load is a TERNARY, not an if/else: retail materialises the
+// zero once (`xor eax,eax`) and both arms fall into ONE
+// `mov [esi+0x30], eax` - the opposite of bitmapBorder's ctor, which
+// duplicates its store and its epilogue. The fs:[0] frame is here
+// because GetSprite runs in the ctor body and the widget base has to be
+// unwindable across it.
+//
+// The SPLIT is byte-forced and was the whole match (2026-08-14): the five
+// scalars are MEMBER INITIALISERS and only the sprite is assigned in the
+// body. Written as six body assignments, VC6 emits the compiler's vptr
+// store at the HEAD of the trailing store group where retail sinks it
+// past both of them; no permutation of six body statements reaches it
+// (96.65 / 97.06 / 97.14 / 97.55 over six orderings, and hoisting the
+// sprite to the front collapses to 61.14). Moving the five into the
+// mem-init list sinks the vptr store and closes the function outright.
+// Putting the SPRITE in the list too is much worse (57.08) - its ternary
+// has to run before the vptr store there.
+VA(0x004ea720, 0x8C)  // anchor-bracket + arity (`ret 0x2c`), dc 0xd9350
+iconWidget::iconWidget(int x, int y, int w, int h, int id, const char* image,
+                       int frame, int sequence, unsigned char flipped,
+                       unsigned backColor, int style)
+    : widget(x, y, w, h, id, style),
+      Frame(frame),
+      seqId(sequence),
+      IsFlipped(flipped),
+      BackColor(static_cast<unsigned short>(backColor)),
+      PostPostWalkSequence(cs_wait)
+{
+    Sprite = image ? ResourceManager::GetSprite(image) : 0;
+}
+
 VA(0x004ea7b0, 0x55)  // anchor-global, dc 0xd9464
 iconWidget::~iconWidget()
 {
@@ -61,6 +92,25 @@ iconWidget::~iconWidget()
 // measured at 95.27076%; this C2 invocation duplicates one shared zero
 // epilogue and schedules the inlined sequence parameter differently after
 // source-order, helper-boundary, register-hint, and label-placement probes.
+// Located precisely 2026-08-13 with `sema diff --branches` (base 28/17 rets
+// against retail 28/16, one POLARITY flip at +0x294): retail merges EVERY
+// return-0 exit into the block that sits at the LEFT_BUTTON_UP disabled gate
+// and reaches it with backward rel8 jumps, while this C2 emits a SECOND
+// copy after the RIGHT_BUTTON_UP selected gate, cross-jumps the other five
+// exits to that late copy, and pays rel32 for them - which is the whole
+// 4.7%. Rejected 2026-08-13: deleting the `returnZero:` label and spelling
+// all five sites as plain `return 0;` (89.1336%). This is the tail-merge
+// generation family; the placement is not source-reachable here.
+// Rejected 2026-08-14, all byte-identical at 95.2708: MOVING the
+// `returnZero:` label body out of the `field_2C > 0` gate and into each
+// of the three gates retail could be merging at - the LEFT_BUTTON_DOWN
+// disabled gate, the LEFT_BUTTON_UP disabled gate (retail's own merge
+// point) and the RIGHT_BUTTON_UP selected gate - with `isDisabled` split
+// into declaration + assignment so the leading `goto` may legally cross
+// it (that split is itself byte-inert). VC6 normalises the label
+// position away before layout, so the merge point is a C2 choice and not
+// a source one. The /Ob2 two-axis probe (byte-inert statement mass 0..32
+// crossed with 0..8 tail `xx_nop()` candidate sites) is flat here too.
 VA(0x004ea810, 0x2F4)  // vtable 0x63ec48 slot 2, dc 0xd94a4
 int iconWidget::Main(message* msg)
 {
@@ -172,13 +222,6 @@ void iconWidget::zBufferDraw()
     // @stub
 }
 
-// E:\gamedcs\iconwdgt.cpp:280
-DC_ONLY(0xd96e8, 0x592)
-void iconWidget::Draw()
-{
-    // @stub
-}
-
 #endif  // @carcass
 
 // E:\gamedcs\iconwdgt.cpp:257
@@ -215,6 +258,245 @@ VA(0x004eab30, 0x7)  // anchor-vtable (slot 5 of 0x63ec48), dc 0xd96d0
 int iconWidget::GetRealHeight()
 {
     return Sprite->Height;
+}
+
+// E:\gamedcs\iconwdgt.cpp:280
+// EXACT 2026-08-14, first compile. Slot 4 of vtable 0x63ec48 (the carve
+// labels the row iconWidget_vslot04); 1200 bytes, 44 blocks, two
+// ten-entry jump tables at 0x4eafa0 and 0x4eafc8.
+//
+// The dispatch is two-level and both levels are byte-fixed. The outer
+// one is widget::style, lowered as `sub eax,0x10 / je / dec je / dec
+// jne` - only 0x10, 0x11 and 0x12 draw anything at all. The inner one
+// is the SPRITE'S RESOURCE TYPE, `Sprite->resType - 64` bounded at 9,
+// and the two tables are the same dispatch twice: the ONLY difference
+// between ICON_STYLE_PLAIN and ICON_STYLE_CENTERED is the centring
+// applied to drawX/drawY ahead of it, so the eight arms are spelled
+// twice in the source and VC6 cross-jumped what it could. Every
+// second-copy arm is a `jmp` into the first copy's tail, and the
+// RESOURCE_TYPE_POINTER arm at 0x4eaddb is SHARED OUTRIGHT by both
+// tables - DrawPointer takes no sw/sh, so the two copies were fully
+// identical and folded onto one row.
+//
+// The arm-to-callee map is self-confirming, which is what makes it
+// safe: each retail call target, identified purely by its argument
+// shape, turns out to be the CSprite entry point named after the DC
+// resource type that selects it -
+//   64 RType_sprite      -> 0x47bcf0 Draw          14 args, tblit = 1
+//   66 RType_creature    -> 0x47bd60 DrawCreature  14 args, outcolor 0
+//   67 RType_advobj      -> 0x47bdc0 DrawAdvObj    12 args
+//   68 RType_hero        -> 0x47c080 DrawHero      13 args
+//   69 RType_tileset     -> 0x47bf50 DrawTile      13 args, vflip = 0
+//   70 RType_pointer     -> 0x47beb0 DrawPointer    8 args
+//   71 RType_interface   -> 0x47bf00 DrawInterface 12 args
+//   73 RType_combat_hero -> 0x47bd60 DrawCreature  again
+// - and that agrees row for row with the csprite order-map against the
+// DC roster (0x47bcf0 Draw, 0x47bd60 DrawCreature, 0x47bdc0 DrawAdvObj,
+// 0x47be10 DrawAdvObjWithFlag, 0x47be60 DrawAdvObjShadow, 0x47beb0
+// DrawPointer, 0x47bf00 DrawInterface, 0x47bf50 DrawTile, 0x47bfa0
+// DrawTileShadow, 0x47bff0 DrawShroudTile, 0x47c080 DrawHero - retail
+// dropped DC's two "Alpha" variants). Two independent channels with no
+// shared assumption. Only prototypes land here; the bodies stay
+// csprite's.
+//
+// The type domain is iconWidget::ESpriteResType rather than ten new
+// EResourceType enumerators, and that is a measurement, not taste - see
+// the note on the enum in iconwdgt.h. resource.h sits at the head of
+// recruit.obj's include closure and recruitUnit::Update is knife-edge
+// on symbol-handle position: growing EResourceType by FIVE or more
+// enumerators drops it 90.8376% -> 88.2360%. Corrected 2026-08-14 by
+// bisection - the threshold is five, not one; the first four are free,
+// and RESOURCE_TYPE_FONT (font::font 0x4b5070) now spends one of them.
+//
+// The creature path is the one with real arithmetic: it centres on the
+// crop box of the FIRST FRAME OF THE cs_wait SEQUENCE (Sprite->s[2]
+// ->f[0]), puts the portrait 275 rows up from the widget's bottom edge,
+// and then clips the source rectangle on all four sides - each negative
+// offset moving into sx/sy and shrinking sw/sh, each overrun clamping
+// sw/sh against the widget box.
+VA(0x004eab40, 0x4B0)  // anchor-vtable (slot 4 of 0x63ec48), dc 0xd96e8
+void iconWidget::Draw()
+{
+    int drawX = x + parentWindow->x;
+    int drawY = y + parentWindow->y;
+
+    switch (style) {
+    case ICON_STYLE_CREATURE: {
+        CSprite* sprite;
+        CSpriteFrame* frame;
+        int sx;
+        int sy;
+        int sw;
+        int sh;
+        int boxWidth;
+        int boxHeight;
+        int offX;
+        int offY;
+
+        sx = 0;
+        sy = 0;
+        sprite = Sprite;
+        sw = sprite->Width;
+        sh = sprite->Height;
+        frame = sprite->s[cs_wait]->f[0];
+        boxWidth = width;
+        offX = boxWidth / 2 - frame->CroppedWidth / 2 - frame->CroppedX;
+        boxHeight = height;
+        offY = boxHeight - 275;
+        if (offX < 0) {
+            sx = -offX;
+            sw += offX;
+            offX = 0;
+        }
+        if (offY < 0) {
+            sy = -offY;
+            sh += offY;
+            offY = 0;
+        }
+        if (offX + sw > boxWidth)
+            sw = boxWidth - offX;
+        if (offY + sh > boxHeight)
+            sh = boxHeight - offY;
+        sprite->DrawCreature(seqId, Frame, sx, sy, sw, sh,
+            gpWindowManager->screenBitmap->map, offX + drawX, offY + drawY,
+            gpWindowManager->screenBitmap->Width,
+            gpWindowManager->screenBitmap->Height,
+            gpWindowManager->screenBitmap->Pitch, 0, 0);
+        break;
+    }
+
+    case ICON_STYLE_CENTERED:
+        if (Sprite->Width < width)
+            drawX += (width - Sprite->Width) / 2;
+        if (Sprite->Height + 2 < height)
+            drawY += height - Sprite->Height - 2;
+        switch (Sprite->resType) {
+        case SPRITE_RES_SPRITE:
+            Sprite->Draw(seqId, Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 1);
+            break;
+        case SPRITE_RES_CREATURE:
+            Sprite->DrawCreature(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        case SPRITE_RES_ADVOBJ:
+            Sprite->DrawAdvObj(Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_HERO:
+            Sprite->DrawHero(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_TILESET:
+            Sprite->DrawTile(Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        case SPRITE_RES_POINTER:
+            Sprite->DrawPointer(Frame, gpWindowManager->screenBitmap->map,
+                drawX, drawY, gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_INTERFACE:
+            Sprite->DrawInterface(Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_COMBAT_HERO:
+            Sprite->DrawCreature(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        }
+        break;
+
+    case ICON_STYLE_PLAIN:
+        switch (Sprite->resType) {
+        case SPRITE_RES_SPRITE:
+            Sprite->Draw(seqId, Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 1);
+            break;
+        case SPRITE_RES_CREATURE:
+            Sprite->DrawCreature(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        case SPRITE_RES_ADVOBJ:
+            Sprite->DrawAdvObj(Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_HERO:
+            Sprite->DrawHero(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_TILESET:
+            Sprite->DrawTile(Frame, 0, 0, Sprite->Width, Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        case SPRITE_RES_POINTER:
+            Sprite->DrawPointer(Frame, gpWindowManager->screenBitmap->map,
+                drawX, drawY, gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_INTERFACE:
+            Sprite->DrawInterface(Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped);
+            break;
+        case SPRITE_RES_COMBAT_HERO:
+            Sprite->DrawCreature(seqId, Frame, 0, 0, Sprite->Width,
+                Sprite->Height,
+                gpWindowManager->screenBitmap->map, drawX, drawY,
+                gpWindowManager->screenBitmap->Width,
+                gpWindowManager->screenBitmap->Height,
+                gpWindowManager->screenBitmap->Pitch, IsFlipped, 0);
+            break;
+        }
+        break;
+    }
 }
 
 // E:\gamedcs\iconwdgt.cpp:437
@@ -383,6 +665,54 @@ void iconWidget::NextRandomFrame()
 // A named `const int fidgetChance = 2` outside the retry loop, reused by all
 // three fidget rows, was tested 2026-08-11 and is likewise byte-identical:
 // VC6 folds the name away before allocation and still hoists the table.
+//
+// THE ACCOUNTING, closed 2026-08-14 - the whole residual is those eight
+// stores and nothing else. The skeleton diff is 17 vs 17 blocks, ZERO
+// flow divergence, five size-only rows, and they sum to zero:
+//   B9  preheader  base 9i (mov eax,2 + the 8 table stores) vs target 1i
+//                  (mov edi,2 alone)
+//   B10 loop head  base 6i vs target 14i (the same 8 stores, inside)
+//   B0/B13/B16     base 1i short each - exactly the `mov [ebp-4],ecx`
+//                  home and its two `mov eax,[ebp-4]` reloads
+// so closing the hoist closes the function. FOUR MORE SPELLINGS measured
+// against it 2026-08-14, all BYTE-IDENTICAL at 86.4111 (and 72.0056 for
+// NextRandomFrame), which is worth knowing because each was a different
+// theory of why VC6 hoists:
+//   - the initializer list replaced by eight element-wise assignments
+//     (so it is loop-invariant STORE motion, not aggregate-initializer
+//     materialisation - that was the leading theory);
+//   - the pick loop walking an explicit `const int* chancePtr` stepped
+//     by 2 instead of indexing sequenceList[pick] (so it is not an
+//     address-taken/aliasing question - VC6 folds the pointer back into
+//     the same strength-reduced form);
+//   - the whole table + roll + pick loop moved into a file-static helper
+//     with ONE call site, relying on /Ob2 to inline it back (the inliner
+//     runs first and the hoist happens afterwards, identically).
+// `volatile` on the table is the one probe that MOVES anything, and it
+// moves the right things for the wrong price: `const volatile` (and
+// plain `volatile`, identical) grows the frame to retail's 0x24, homes
+// `this` at [ebp-4] and makes B0 11i and B16 8i AGREE - but it still
+// does not stop the hoist, and it costs two instructions in the modulo
+// tails and one in the pick loop, netting 80.29 (and 71.43). Recorded
+// because it proves the frame/homing half is reachable; the hoist half
+// is what nothing reaches.
+// `homm3 vc6 why-reg` was run over it the same day: 20 mutations, best
+// is `volatile int cumulative` at 58 slots against 59, not exact.
+// RE-TESTED ON THE /Ob2 AXES 2026-08-14. A sibling lane found two
+// functions that only close at a specific (statement mass, candidate
+// site count) PAIR after each axis alone had been measured byte-flat, so
+// the frame/homing half was swept over the whole grid rather than one
+// axis: byte-inert statement mass m = 0,1,2,3,4,6,8,20,60,120,200
+// crossed with k = 0,1,2,3,8,12,20,40 tail `xx_nop()` candidate sites
+// (an empty file static, so each call inlines to nothing yet still
+// counts in the remaining/sites-to-come divisor). Every cell is 86.4111
+// here and 72.0056 for NextRandomFrame, to four decimals. The probe is
+// not inert by construction - the identical harness with a single
+// `volatile int` mass statement moves winmgr's FadeToBlack 88.51 ->
+// 82.80 - so the flat grid is a real negative. Neither half of this
+// residual is on an /Ob2 axis: the inliner is not what places the
+// odds-table stores, the loop-invariant store motion that runs after it
+// is.
 VA(0x004eb250, 0xED)  // anchor-global, dc 0xd9ee8
 void iconWidget::NextRandomSiegeEngineFrame()
 {

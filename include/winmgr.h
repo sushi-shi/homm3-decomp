@@ -26,7 +26,25 @@ enum EDialogReturnType {
     DIALOG_RETURN_CANCEL = 0x7801,
     DIALOG_RETURN_OK = 0x7802,
     DIALOG_RETURN_SPLIT_ACCEPT = 0x7802,
-    DIALOG_RETURN_ACCEPT = 0x7805
+    DIALOG_RETURN_ACCEPT = 0x7805,
+#ifdef HOMM3_EVENTS_VIEW
+    // ACCEPT's partner in the iMBType-2 yes/no pair, byte-proven by the
+    // two wandering-stack refusals: advManager::monsters_join (0x4a7000)
+    // and monsters_sell_out (0x4a7250) both ask with iMBType 2 and take
+    // the DECLINE arm on 0x7806, where monsters_flee (0x4a6df0) tests the
+    // same dialog's reply against 0x7805 to take the ACCEPT arm. Gated to
+    // the events view: no other modeled consumer proves the value, and an
+    // ungated enumerator counts toward the include-set threshold.
+    DIALOG_RETURN_DECLINE = 0x7806,
+#endif
+    // The two picture-choice replies of the iMBType-10 dialog, byte-proven
+    // by advManager::DoEventWarSchool (0x4a7a40): it offers the two
+    // primary-skill pictures 0x1f and 0x20 as iResType1/iResType2 and then
+    // switches the reply over 0x7801 / 0x7809 / 0x780a, taking the FIRST
+    // picture on 0x7809 and the second on 0x780a. Ordinal spellings - the
+    // pairing is proven, the words are not attested.
+    DIALOG_RETURN_CHOICE_1 = 0x7809,
+    DIALOG_RETURN_CHOICE_2 = 0x780a
 };
 
 // Bootstrap VIEW of heroWindowManager (Dreamcast size 104): only the
@@ -49,7 +67,14 @@ public:
     Bitmap16Bit* screenBitmap;
     int colorCyclingOn;
     unsigned char isWaitingForFadeIn;
-    char pad_49[7];
+    char pad_49[3];
+    // +0x4c: the manager's SECOND owned bitmap. Byte-proven by Close
+    // (0x6022d0), which deletes it through the same virtual slot-0 +
+    // flag-1 tail it uses on screenBitmap, and it is the only member
+    // besides screenBitmap the destructor path touches - the fizzle
+    // source the Save/Release pair works on. Name is the house ordinal
+    // placeholder; the role is proven, the spelling is not attested.
+    Bitmap16Bit* field_4C;
     // The window list, byte-proven by RemoveWindow (located
     // 2026-08-06 by homm3.analysis.dc_callgraph): headWindow@0x50,
     // tailWindow@0x54, lastActive@0x58, activeWindow@0x5c.
@@ -61,7 +86,10 @@ public:
     // DC overload set also has () and (int,int,int,int,int,int); only
     // the consumed 4-int form (retail 0x602bd0, called by widget::Main)
     // is declared.
-    virtual int Main(message& msg);  // slot 2
+    heroWindowManager();
+    virtual int Open(int newPriority);  // slot 0, retail 0x6021b0
+    virtual void Close();               // slot 1, retail 0x6022d0
+    virtual int Main(message& msg);     // slot 2, retail 0x602320
     int ConvertToHover(message& msg);
     void UpdateScreen(int x, int y, int w, int h);
     int BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, int msgExtra);
@@ -87,6 +115,10 @@ public:
     void SaveFizzleSourceX(int startX, int startY, int width, int height);
     void FizzleForwardX(int startX, int startY, int width, int height,
                         int iFadeTime);
+    // 0x6030c0, the fizzle buffer's release. Order-mapped between
+    // FizzleForwardX and FadeToBlack and byte-shaped: it deletes
+    // field_4C through the virtual slot-0 tail and nulls it.
+    void ReleaseFizzleSource();
     void FadeScreen(int inOut, int speed, unsigned char expect_fadein);
     void FadeToBlack(int speed, unsigned char expect_fadein);
     void FadeFromBlack(int speed);

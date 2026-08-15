@@ -7,6 +7,7 @@
 
 #include <vector>
 #include "netmsg.h"
+#include "armygrp.h"
 
 class hero;
 class playerData;
@@ -68,7 +69,7 @@ public:
 // Dreamcast records this exact 12-byte sort key; retail calculate_reserve
 // copies it three dwords at a time and compares the value at +4.
 struct type_creature_value {
-    int type;
+    TCreatureType type;
     long value;
     short amount;
 

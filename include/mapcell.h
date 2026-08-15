@@ -5,7 +5,7 @@
 #ifndef HOMM3_MAPCELL_H
 #define HOMM3_MAPCELL_H
 
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+#if defined(HOMM3_MAPCELL_OBJECTS_VIEW) || defined(HOMM3_EVENTS_VIEW)
 #include <vector>
 #endif
 
@@ -198,6 +198,16 @@ enum TAdventureObjectType {
     // RANDOM_ARTIFACT_1..4 rows already use because an RoE
     // CLOVER_FIELD (14) is named above; none of the eight collides
     // with armygrp.h's separate MAGIC_TERRAIN_* mode enum.
+    // The two map-EDITOR placeholder types advManager::EventSound has to
+    // name: retail's 214-entry object-sound index runs to 215 and puts
+    // both of these on the border-guard arm. Neither is in the Dreamcast
+    // enum, so the names come from the same public object-type list the
+    // 222..231 block above was taken from - GATED to the events view so
+    // this enum's population is unchanged for its other consumers.
+#ifdef HOMM3_EVENTS_VIEW
+    HERO_PLACEHOLDER           = 212,
+    RANDOM_DWELLING_LEVEL      = 215,
+#endif
     CLOVER_FIELD_2             = 222,
     EVIL_FOG                   = 224,
     FAVORABLE_WINDS            = 225,
@@ -220,6 +230,35 @@ struct ShipyardInfo {
 };
 SIZE(ShipyardInfo, 4);
 
+#ifdef HOMM3_EVENTS_VIEW
+// The wandering-monster arm of the cell's extra-info dword. The Dreamcast
+// publishes the arm (`ExtraInfoUnion::MonsterInfo monster_info`) and all
+// six member names - qty, disposition, never_flee, dont_grow, index,
+// custom - and advManager::DoWanderingMonsterResult (0x4a7740) fixes every
+// position and signedness against retail:
+//   * bits 0..11  UNSIGNED qty                `and ebx, 0xfff`
+//   * bits 12..16 SIGNED disposition          `shl esi,0xf / sar esi,0x1b`
+//   * bit  17     never_flee                  `test dword [esi], 0x20000`
+//   * bit  18     dont_grow                   (named by the DC, unread here)
+//   * bits 19..26 index                       `shr eax,0x13 / and eax,0xff`
+//   * bit  31     custom                      `shr edx,0x1f / test dl,1`
+// The DC names six fields for twenty-eight bits, so the four bits between
+// index and custom stay unnamed padding rather than being invented.
+// GATED: this is a type DEFINITION in a header that rides initialize.cpp's
+// include closure - see the cellFlags note inside the class for what an
+// ungated one costs there.
+struct MonsterInfo {
+    unsigned long qty : 12;
+    signed long disposition : 5;
+    unsigned long never_flee : 1;
+    unsigned long dont_grow : 1;
+    unsigned long index : 8;
+    unsigned long unused_27 : 4;
+    unsigned long custom : 1;
+};
+SIZE(MonsterInfo, 4);
+#endif
+
 // Stride 38 (0x26), byte-proven by game::get_cell's `*19` then `*2`
 // address math. A 38-byte record cannot be 4-aligned, which is also how
 // the 4-byte object-type field lands at the odd-dword offset 0x1e that
@@ -238,7 +277,19 @@ public:
     // only: the twenty typed views are twenty type DEFINITIONS, and
     // this header rides in initialize.cpp's include closure (see the
     // cellFlags note below for what that costs).
+#ifdef HOMM3_EVENTS_VIEW
+    // events.obj is the one personality that reads a TYPED arm of the
+    // dword off a NewmapCell rather than off an ExtraInfoUnion, because
+    // DoWanderingMonsterResult needs the monster fields AND objectIndex
+    // from the same record. This anonymous union is the retail-visible
+    // half of the DC's `NewmapCell : public ExtraInfoUnion`.
+    union {
+        unsigned long extraInfo;
+        MonsterInfo monster_info;
+    };
+#else
     unsigned long extraInfo;
+#endif
     // +0x04 and +0x08: two int allocation units of SIGNED 8-BIT
     // BITFIELDS, sliced 2026-08-08 out of the old `unsigned char
     // terrain; char pad_05[7]` pair. findpath's CalcTerrainCost
@@ -316,11 +367,17 @@ public:
     unsigned short is_trigger : 1;
     unsigned short flags_13_15 : 3;
 #endif
-#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+#if defined(HOMM3_MAPCELL_OBJECTS_VIEW) || defined(HOMM3_EVENTS_VIEW)
     // Retail mapcell.obj constructs and destroys a Dinkumware vector here.
     // Its empty allocator occupies +0x0e..+0x11 and its first/last/end
     // pointers are the three dwords at +0x12/+0x16/+0x1a. The four-byte
     // element stride is independently proven by the object renderers.
+    //
+    // events.obj joins the view for advManager::EraseObj (0x4aabb0), which
+    // walks this vector element by element looking for the object it is
+    // erasing and then splices it out - `_First` at +0x12, `_Last` at
+    // +0x16, a four-byte stride and the SIXTEEN-BIT objectIndex compare are
+    // all in that one body.
     struct TObjectCell {
         unsigned short objectIndex;
         unsigned char offsets;
@@ -355,6 +412,39 @@ public:
             return 0;
         return ((extraInfo >> 5) & (1UL << player)) != 0;
     }
+#endif
+#ifdef HOMM3_EVENTS_VIEW
+    // MapCell.h:923 in the DC roster, `?IsCustomized@ExtraInfoUnion@@QBA_NXZ`
+    // - a const, no-argument, BOOL-returning accessor for the top bit.
+    // Scoped to NewmapCell here only because this tree carries the dword as
+    // a member rather than as the DC's ExtraInfoUnion base class.
+    //
+    // The accessor is BYTE-LOAD-BEARING, not decoration. Spelled inline at
+    // the call site, `if (cell->monster_info.custom)` folds all the way
+    // into `test eax, 0x80000000`; retail materialises the flag first
+    // (`mov edx,eax / shr edx,0x1f / test dl,1`), which is exactly what a
+    // value-returning accessor produces - measured both ways, and the fold
+    // also frees EDX, which is what pushed the whole entry block's
+    // register assignment off retail's.
+    bool IsCustomized() const { return monster_info.custom != 0; }
+
+    // mapcell.cpp:46 in the DC roster, and the SAME inherited member
+    // IsCustomized is: retail's do_event_dragon_city (0x4a2140) passes the
+    // raw NewmapCell pointer straight to ExtraInfoUnion::SetCellVisited as
+    // `this` (`mov ecx, cell / call 0x4fbf90`), which is the implicit
+    // upcast the DC's `NewmapCell : public ExtraInfoUnion` performs. That
+    // derivation is not expressible here - ExtraInfoUnion is a UNION, and a
+    // union cannot be a base class - so the inherited declarator is
+    // re-declared on the derived side, exactly as IsCustomized is above.
+    //
+    // DECLARED, NEVER DEFINED. The one definition stays where retail put
+    // it, mapcell.obj's ?SetCellVisited@ExtraInfoUnion@@QAEXF@Z (0x4fbf90,
+    // exact); a call relocation's symbol name is not scored, so the
+    // re-declaration costs nothing at the call site. Handlers whose cell is
+    // never anything but the +0x00 dword keep taking ExtraInfoUnion*
+    // directly and call the real member; this one cannot, because the same
+    // pointer also goes to CreatureBankEvent as a NewmapCell*.
+    void SetCellVisited(short player);
 #endif
     NewmapCell* get_trigger_cell();
 };

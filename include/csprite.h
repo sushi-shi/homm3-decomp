@@ -81,6 +81,17 @@ public:
         Draw(seqnum, framenum, sx, sy, sw, sh, dst->map, dx, dy,
              dst->Width, dst->Height, dst->Pitch, hflip, tblit);
     }
+    // Retail 0x47bd60. Order-mapped (it is the row between Draw at
+    // 0x47bcf0 and DrawAdvObj at 0x47bdc0, exactly where the DC roster
+    // puts it) and corroborated by shape from the other side:
+    // iconWidget::Draw reaches it with FOURTEEN arguments whose
+    // trailing pair is (hflip, outcolor), and reaches it from exactly
+    // the two resource types DC names RType_creature and
+    // RType_combat_hero. Prototype only - the body is csprite's.
+    void DrawCreature(int seqnum, int framenum, int sx, int sy, int sw,
+                      int sh, unsigned short* dst, int dx, int dy, int dw,
+                      int dh, int dpitch, unsigned char hflip,
+                      unsigned short outcolor);
     void DrawPointer(int framenum, unsigned short* dst, int dx, int dy,
                      int dw, int dh, int dpitch, unsigned char hflip);
     void DrawInterface(int framenum, int sx, int sy, int sw, int sh, unsigned short* dst, int dx, int dy, int dw, int dh, int dpitch, unsigned char hflip);

@@ -12,17 +12,30 @@
 // Vtable 0x63ba24.
 class border : public widget {
 public:
-    // The no-arg form is DC-attested (dc 0x5433c) and byte-corroborated:
-    // coloredBorderFrame's retail constructor (0x450130) builds its border
-    // base by calling ??0widget@@QAE@XZ DIRECTLY, which is what an empty
-    // inline border::border() collapses to.
-    border() {}
     // Retail's 0x44ff10 constructor consumes six stack arguments and
     // forwards them to widget; DC's trailing focusable byte is absent.
     border(int x, int y, int w, int h, int id, int style);
+    // The default ctor has NO retail row of its own, and it is DC-attested
+    // (dc 0x5433c) and byte-corroborated from the other side too:
+    // coloredBorderFrame's retail constructor (0x450130) builds its border
+    // base by calling ??0widget@@QAE@XZ DIRECTLY, which is what an empty
+    // inline border::border() collapses to. Every derived ctor
+    // (0x450130 / 0x4502d0 / 0x450690) opens with a direct
+    // ??0widget@@QAE@XZ call and a SINGLE derived vtable store, i.e. the
+    // base default ctor was expanded in place and its ??_7border@@6B@
+    // store dead-store-eliminated. Header-inline is what reproduces that;
+    // DC emitted it out of line (dc 0x5433c) because the port compiled
+    // border.cpp without /Ob2.
+    border() {}
     virtual int Main(message* msg);  // slot 2, retail 0x44ff60
     virtual void zBufferDraw();      // slot 3, folded onto 0x5bc7e0
     virtual void Draw();             // slot 4
+    // Slot 13, appended past widget's twelve-plus-_vslot12 exactly as
+    // iconWidget appends its own twin (see iconwdgt.h). Main dispatches
+    // it through `call [vptr+0x34]`, i.e. 13*4, which is what fixes the
+    // index; the 4-byte `return 0` body ICF-folded onto iconWidget's.
+    virtual unsigned char handle_click(unsigned char down_click,
+                                       unsigned char right_click);
     virtual ~border();  // retail 0x44ff50
 };
 
@@ -49,6 +62,8 @@ public:
     coloredBorderFrame(int x, int y, int w, int h, int id,
                        int color_, int style);
     virtual ~coloredBorderFrame();  // retail 0x4501d0
+    virtual int Main(message* msg);  // slot 2, retail 0x450240
+    virtual void Draw();             // slot 4, retail 0x4501e0
 };
 SIZE(coloredBorderFrame, 0x38);
 
@@ -63,8 +78,10 @@ public:
 
     // Retail dropped DC's final focusable argument; the 0x4502d0 body
     // consumes seven stack arguments and returns with `ret 0x1c`.
+    // `image_` trails an underscore for the same reason `color_` does one
+    // class up: the member it feeds shares the DC parameter's name.
     bitmapBorder(int x, int y, int w, int h, int id,
-                 const char* image, int style);
+                 const char* image_, int style);
     virtual ~bitmapBorder();
     virtual void Draw();          // slot 4, retail 0x450450
     virtual int GetRealHeight();  // slot 5, retail 0x4504b0
@@ -74,6 +91,7 @@ public:
     void zBufferDraw(unsigned short* zBuffer, int id);
     void SetImage(const char* bitmap_name);
     void SetPlayerPaletteColors(int whichPlayer);
+    virtual int Main(message* msg);  // slot 2, retail 0x450550
 };
 
 class Bitmap16Bit;
@@ -85,7 +103,7 @@ public:
     Bitmap16Bit* image;
 
     bitmapBorder16(int x, int y, int w, int h, int id,
-                   const char* image, int style);
+                   const char* image_, int style);
     virtual ~bitmapBorder16();
     virtual void Draw();  // slot 4, retail 0x4507b0
     void Draw2();

@@ -114,7 +114,11 @@ VA_COMPGEN(0x0044ed20, 0x21, SCALAR_DELETING_DTOR, Bitmap24Bit)
 // allocation. The five-block graph is exact after restoring that behavior.
 // Residual: VC6 schedules the independent Height/ImageSize/vptr stores in a
 // different order; meaningful field-order spellings were swept, with this
-// canonical order retaining the 99.51% high-water mark.
+// canonical order retaining the 99.51% high-water mark. Re-measured
+// 2026-08-13: retail's order among the three scheduled stores is exactly the
+// reverse of ours (Height, ImageSize, vptr against vptr, ImageSize, Height),
+// and writing the source in that order - `Width; Height; ImageSize;` - is
+// strictly worse at 94.5714%.
 // E:\gamedcs\bitmap24.cpp:64
 VA(0x0044ed50, 0xAA)
 Bitmap24Bit::Bitmap24Bit(const char* name, int w, int h,

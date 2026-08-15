@@ -13,6 +13,68 @@
 // BackColor@0x44. Vtable 0x63ec48; the dtor Disposes the sprite.
 class iconWidget : public widget {
 public:
+    // The three widget::style values iconWidget::Draw (0x4eab40)
+    // dispatches on, byte-derived from its `sub eax,0x10 / dec / dec`
+    // chain at 0x4eab64 - anything else draws nothing. NAMES ARE A
+    // BOOTSTRAP INVENTION (no DC enum exists) but the roles are
+    // byte-fixed: PLAIN draws at the widget origin; CENTERED first
+    // centres the sprite in the widget rect (horizontally by half the
+    // slack, vertically flush to the bottom less two); CREATURE runs
+    // the clipped portrait path that measures itself off the cs_wait
+    // frame's crop box.
+    enum EIconStyle {
+        ICON_STYLE_PLAIN = 0x10,
+        ICON_STYLE_CENTERED = 0x11,
+        ICON_STYLE_CREATURE = 0x12
+    };
+
+    // The EResourceType values Draw's two jump tables span: DC
+    // RType_sprite..RType_combat_hero, 64..73 (evidence/dreamcast/
+    // enums.csv), byte-proven contiguous by those tables' `resType - 64`
+    // bound of 9 and by each arm calling the CSprite entry point its
+    // type is named after. SPRITEDEF (65) and SPRITEFRAME (72) are the
+    // two that fall to the default, which is why both tables carry a
+    // default at index 1 and index 8; they are listed because that gap
+    // is what fixes the span.
+    //
+    // These belong in resource.h's EResourceType and are deliberately
+    // NOT there yet. resource.h sits at the head of recruit.obj's
+    // include closure and recruitUnit::Update is knife-edge on
+    // symbol-handle position, dropping 90.8376% -> 88.2360% when the
+    // enum grows (the same-sized edit made to csprite.h instead is
+    // inert).
+    //
+    // WHAT MOVES IT IS A BUDGET OF FOUR, not "a single enumerator" -
+    // corrected 2026-08-14 by bisection after RESOURCE_TYPE_FONT = 80
+    // was appended for font::font 0x4b5070 and nothing in the tree
+    // moved. With that enumerator in place, adding N more probe
+    // enumerators immediately before RESOURCE_TYPE_SFX gives
+    //     N = 1,2,3,4 -> 90.8376 (inert)
+    //     N = 5,6,8,10 -> 88.2360
+    // and the step is the same whether the names are appended past the
+    // last value or inserted among the existing ones, so it is the
+    // COUNT that matters, not the position. The earlier note here read
+    // its own sweep as flat from N = 1; it was not, and the low counts
+    // were never the ones that fired.
+    //
+    // Practical consequence: three more enumerators can be added to
+    // EResourceType for free, but this ten-name block still cannot
+    // move. Scoping the names to iconWidget keeps them collision-free
+    // for the lane that eventually does add them, once
+    // recruitUnit::Update is closed.
+    enum ESpriteResType {
+        SPRITE_RES_SPRITE = 64,
+        SPRITE_RES_SPRITEDEF = 65,
+        SPRITE_RES_CREATURE = 66,
+        SPRITE_RES_ADVOBJ = 67,
+        SPRITE_RES_HERO = 68,
+        SPRITE_RES_TILESET = 69,
+        SPRITE_RES_POINTER = 70,
+        SPRITE_RES_INTERFACE = 71,
+        SPRITE_RES_SPRITEFRAME = 72,
+        SPRITE_RES_COMBAT_HERO = 73
+    };
+
     CSprite* Sprite;
     int Frame;
     int seqId;
@@ -20,11 +82,19 @@ public:
     int PostPostWalkSequence;
     unsigned short BackColor;
 
-    // Retail fixes style=2 internally and keeps eleven arguments
-    // (`ret 0x2c` at 0x4ea7a9), unlike the twelve-argument DC form.
+    // ELEVEN arguments (`ret 0x2c` at 0x4ea7a9) where DC has twelve: the
+    // trailing `focusable` is the one retail dropped, exactly as in the
+    // border family. CORRECTION 2026-08-14, now that the body at
+    // 0x4ea720 is decoded: the last argument is DC's `int style` and is
+    // pushed straight through as widget's sixth ctor parameter. The
+    // constant 2 this header used to attribute to `style` is the store
+    // `mov dword ptr [esi+0x40], 2` - PostPostWalkSequence, not style.
+    // Every existing call site passes a literal here (0x10 / 0x12), so
+    // widening the parameter off the old `unsigned char focusable`
+    // changes no caller's bytes.
     iconWidget(int x, int y, int w, int h, int id, const char* image,
                int frame, int sequence, unsigned char flipped,
-               unsigned backColor, unsigned char focusable);
+               unsigned backColor, int style);
     virtual ~iconWidget();  // retail 0x4ea7b0
     virtual int Main(message* msg);
     virtual void zBufferDraw();
