@@ -10,15 +10,79 @@
 #include "inputmgr.h"
 #include "kbwin.h"
 #include "soundmgr.h"
+// Close deletes both owned bitmaps through the virtual slot-0 tail, so
+// this TU needs the COMPLETE Bitmap16Bit.
+#include "bitmap16.h"
+#include "wingraph.h"
 
+// E:\gamedcs\winmgr.cpp:66. The four unclaimed rows ahead of
+// ConvertToHover are the DC roster's ctor / Open / Close / Main run in
+// order (84->56, 282->276, 98->70, 70->54 SH4->x86); Close and Main are
+// reconstructed below.
+//
+// RETAIL_LOCATED(0x00602170, 0x38): the constructor, LOCATED and
+// reconstructed but NOT claimed. The body below is semantically complete
+// - `homm3 vc6 diagnose` reports flow-distance 0 with register-distance
+// 8 - but it will not close, and objdiff scores the pair 0.0 rather than
+// the ~85% the instruction stream deserves, so claiming it would bank a
+// zero row.
+//
+// The 0.0 is EXPLAINED (2026-08-14) and it is NOT a pairing failure:
+// objdiff pairs the two symbols and diffs them, and the diff is sane in
+// shape (4 EQUAL head rows, 3 ARG_MISMATCH, 1 REPLACE, 2 EQUAL tail
+// rows, plus a ten-row INSERT/DELETE pair). The zero falls out of the
+// scorer's normalisation. objdiff charges a byte penalty per non-equal
+// row against a budget of the symbol's own size:
+//     match_percent = max(0, 1 - penalty / size)
+// calibrated on armygrp's ?Merge@armyGroup@@QAEEPAV1@@Z (510 B, penalty
+// 57 DELETE + 22 REPLACE + a partial charge over 189 ARG_MISMATCH bytes
+// = 104.4, which is exactly its reported 79.536%). Here the nine
+// `mov dword ptr [esi+disp], eax` stores are interchangeable under
+// objdiff's instruction hashing, so ONE instruction crossing the run -
+// the vptr store - diffs as a ten-row delete plus a ten-row insert
+// rather than as a move: 32 deleted + 3 replaced + 33 inserted bytes =
+// 68 against a 56-byte budget, past 100% penalty, so it clamps.
+// Dropping one member store from the body (a probe, reverted)
+// re-aligned the run and moved the score to 1.65%, not to anything
+// sane - the same effect.
+//
+// CONSEQUENCE for this tree: the artefact only bites SHORT functions -
+// the penalty has to exceed the whole symbol size - that differ solely
+// by an instruction moved across a run of near-identical instructions.
+// It costs nothing in the ledger, since the ratchet tracks MAX and a
+// real improvement still raises it, but such a row reads as worthless
+// when it is not. Never read a 0.0 on a name-paired row as "unpaired".
+//
+// Two residual deltas, both the same cause: retail sinks the
+// compiler's vptr store past every member store (ours emits it second)
+// and materialises the shared -1 in ECX up front (`or ecx,-1`) where our
+// allocator recycles EAX after the zero run. `homm3 vc6 why-reg --model`
+// returns CAPPED: the transposed value is `this`/a parameter, i.e.
+// front-end handle state (C1), not a statement-level knob. Six body
+// orderings, a `dialogReturn = lastHover = -1` chain, a four-way pointer
+// chain and a full member-initialiser list were all measured - the
+// mem-init list is strictly worse (16 diff lines vs 10), every other
+// spelling is identical.
 #if 0  // @carcass
 
-// E:\gamedcs\winmgr.cpp:66
-DC_ONLY(0x19a7ec, 0x54)
-void heroWindowManager::heroWindowManager()
+heroWindowManager::heroWindowManager()
 {
-    // @stub
+    status = 0;
+    activeWindow = 0;
+    lastActive = 0;
+    tailWindow = 0;
+    headWindow = 0;
+    screenBitmap = 0;
+    colorCyclingOn = 0;
+    field_4C = 0;
+    isWaitingForFadeIn = 0;
+    lastHover = -1;
+    dialogReturn = -1;
 }
+
+#endif  // @carcass
+
+#if 0  // @carcass
 
 // E:\gamedcs\winmgr.cpp:101
 DC_ONLY(0x19a840, 0x11A)
@@ -27,14 +91,50 @@ int heroWindowManager::Open(int newPriority)
     // @stub
 }
 
-// E:\gamedcs\winmgr.cpp:142
-DC_ONLY(0x19a95c, 0x62)
+#endif  // @carcass
+
+// E:\gamedcs\winmgr.cpp:142 - slot 1. The teardown walks the list from
+// the TAIL through prevWindow (retail reads [w+0xc] before each
+// RemoveWindow, because RemoveWindow unlinks the node it is handed), then
+// deletes both owned bitmaps through their virtual slot-0 + flag-1 tail.
+VA(0x006022d0, 0x46)  // anchor-callee (RemoveWindow) + dc order, dc 0x19a95c
 void heroWindowManager::Close()
 {
-    // @stub
+    if (status != STATUS_ACTIVE)
+        return;
+    heroWindow* w = tailWindow;
+    while (w) {
+        heroWindow* prev = w->prevWindow;
+        RemoveWindow(w);
+        w = prev;
+    }
+    if (screenBitmap)
+        delete screenBitmap;
+    if (field_4C)
+        delete field_4C;
+    status = 0;
 }
 
-#endif  // @carcass
+// E:\gamedcs\winmgr.cpp:181 - slot 2, the manager's message pump.
+// Retail's exit test is the SIGNED RANGE `test eax,eax; jle <next>` +
+// `cmp eax,2; jle <out>`, not an equality pair: a verdict above FORWARD
+// keeps the walk going and the last verdict seen is what the manager
+// returns. Sleeping windows (field_48 > 0) are skipped without
+// disturbing it.
+VA(0x00602320, 0x36)  // anchor-callee (heroWindow::BroadcastMessage), dc 0x19a9c0
+int heroWindowManager::Main(message& msg)
+{
+    int result = 0;
+
+    for (heroWindow* w = tailWindow; w; w = w->prevWindow) {
+        if (w->field_48 > 0)
+            continue;
+        result = w->BroadcastMessage(&msg);
+        if (result > 0 && result <= MESSAGE_DISPATCH_FORWARD)
+            break;
+    }
+    return result;
+}
 
 // E:\gamedcs\winmgr.cpp:216. Retail's entire body is the virtual slot-2
 // forwarding call; the DC name and message-reference signature fit it
@@ -62,16 +162,60 @@ int heroWindowManager::BroadcastMessage(int msgId, int msgCodeX, int msgCodeY, i
     return Main(msg);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\winmgr.cpp:267
-DC_ONLY(0x19aa64, 0x1B0)
-void heroWindowManager::AddWindow(heroWindow* newWindow, int newPriority, unsigned char update)
+// E:\gamedcs\winmgr.cpp:267. The priority list is ordered head->tail by
+// ASCENDING priority and is walked backwards from the tail, so the
+// insertion point is the last window whose priority does not exceed the
+// newcomer's. Retail never repairs the old head's prevWindow on the
+// head-insert path - transcribed as found.
+//
+// Open's return value doubles as the NULL the whole tail is written
+// from: everything after `if (newWindow->Open(...))` knows eax is zero,
+// which is why the null tests below compile to `cmp reg, eax`.
+VA(0x006023b0, 0xE7)  // anchor-callee (heroWindow::Open) + dc order, dc 0x19aa64
+void heroWindowManager::AddWindow(heroWindow* newWindow, int newPriority,
+                                  unsigned char update)
 {
-    // @stub
-}
+    heroWindow* at = tailWindow;
 
-#endif  // @carcass
+    if (newWindow->type & WINDOW_FLAG_FIXED_LAYER) {
+        newPriority = 0;
+    } else {
+        if (newPriority == -1) {
+            if (!tailWindow)
+                newPriority = 0;
+            else
+                newPriority = tailWindow->priority + 1;
+        }
+        if (newPriority != 0 && !headWindow)
+            return;
+    }
+
+    if (newWindow->Open(newPriority, update))
+        return;
+
+    while (at && at->priority > newPriority)
+        at = at->prevWindow;
+
+    if (!at) {
+        newWindow->nextWindow = headWindow;
+        newWindow->prevWindow = 0;
+        headWindow = newWindow;
+        if (!tailWindow)
+            tailWindow = newWindow;
+    } else if (!at->nextWindow) {
+        newWindow->prevWindow = tailWindow;
+        newWindow->nextWindow = 0;
+        tailWindow->nextWindow = newWindow;
+        tailWindow = newWindow;
+    } else {
+        newWindow->prevWindow = at;
+        newWindow->nextWindow = at->nextWindow;
+        at->nextWindow->prevWindow = newWindow;
+        at->nextWindow = newWindow;
+    }
+    activeWindow = lastActive;
+    lastActive = newWindow;
+}
 
 // E:\gamedcs\winmgr.cpp:387
 VA(0x006024a0, 0x78)  // dc-callgraph unique, dc 0x19ac14
@@ -379,13 +523,6 @@ void heroWindowManager::UpdateScreen()
     // @stub
 }
 
-// E:\gamedcs\winmgr.cpp:856
-DC_ONLY(0x19b230, 0xF8)
-void heroWindowManager::UpdateScreen(int x, int y, int width, int height)
-{
-    // @stub
-}
-
 // E:\gamedcs\winmgr.cpp:916
 DC_ONLY(0x19b328, 0x9C)
 void heroWindowManager::UpdateScreen(int x, int y, int width, int height, int dx, int dy)
@@ -408,6 +545,56 @@ void heroWindowManager::BlitToScreenWithPointerX(int x, int y, int w, int h, int
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\winmgr.cpp:856 - EXACT 2026-08-14. The four-int
+// UpdateScreen, the one form retail kept a body for; widget::Main is
+// its caller. Clamp the dirty rectangle into the 800x600 screen and
+// hand it to DDAppBlit (0x5ffe70) between two PollSound pumps. The
+// `isWaitingForFadeIn` gate is the byte at +0x48 and it returns before
+// the FIRST pump.
+//
+// THE ONE THING THAT MATTERED, and it is a semantics fix rather than a
+// spelling: a rectangle that clamps away to nothing skips only the
+// BLIT, not the trailing pump. Retail's `test ecx,ecx / jle` and
+// `test eax,eax / jle` both land on the second `call PollSound`, not on
+// the epilogue. Spelling those two tests as `if (width <= 0) return;`
+// pairs of early returns scores 95.43% and drags a second, apparently
+// unrelated defect with it: the early returns put an exit on the path
+// before ESI is first defined, VC6 stops shrink-wrapping the `push esi`
+// past the isWaitingForFadeIn guard, and the save/restore pair moves.
+// Four guard respellings (`!= 0`, the RECT declared after the guard, an
+// inverted wrapper, the flag latched into a local) all left it at
+// 95.43 - because the guard was never the problem. Turning the pair
+// into `if (width > 0 && height > 0) { ...blit... }` with the pump
+// below it took the function to exact in one compile, shrink-wrap and
+// all. A shrink-wrap residual is worth re-reading as a control-flow
+// question before it is treated as a register one.
+VA(0x00602bd0, 0x7C)  // anchor-caller (widget::Main), dc 0x19b230
+void heroWindowManager::UpdateScreen(int x, int y, int width, int height)
+{
+    RECT region;
+
+    if (isWaitingForFadeIn)
+        return;
+    PollSound();
+    if (x < 0)
+        x = 0;
+    if (y < 0)
+        y = 0;
+    if (x + width > WINDOW_SCREEN_WIDTH)
+        width = WINDOW_SCREEN_WIDTH - x;
+    if (y + height > WINDOW_SCREEN_HEIGHT)
+        height = WINDOW_SCREEN_HEIGHT - y;
+    if (width > 0 && height > 0) {
+        region.left = x;
+        region.top = y;
+        region.right = x + width;
+        region.bottom = y + height;
+        DDAppBlit(&region);
+    }
+    PollSound();
+}
+
 
 // E:\gamedcs\winmgr.cpp:1007
 VA(0x00602c50, 0x63)  // anchor-global, dc 0x19b428
@@ -447,6 +634,7 @@ void heroWindowManager::SaveFizzleSource(int startX, int startY, int width, int 
 }
 
 // E:\gamedcs\winmgr.cpp:1125
+// RETAIL_LOCATED 0x00602cc0, 0xF2 - see winmgr.h.
 DC_ONLY(0x19b5c0, 0xAA)
 void heroWindowManager::SaveFizzleSourceX(int startX, int startY, int width, int height)
 {
@@ -461,18 +649,22 @@ void heroWindowManager::FizzleForward(int startX, int startY, int width, int hei
 }
 
 // E:\gamedcs\winmgr.cpp:1314
+// RETAIL_LOCATED 0x00602dc0, 0x2F7 - see winmgr.h.
 DC_ONLY(0x19b8fc, 0x2AA)
 void heroWindowManager::FizzleForwardX(int startX, int startY, int width, int height, int iFadeTime)
 {
     // @stub
 }
 
-// E:\gamedcs\winmgr.cpp:1447
-DC_ONLY(0x19bba8, 0x2C)
-void heroWindowManager::ReleaseFizzleSource()
-{
-    // @stub
-}
+// The three rows below have NO retail body. The winmgr tail is
+// order-mapped exhaustively: the five carve rows past FadeScreen are
+// 0x602cc0 SaveFizzleSourceX, 0x602dc0 FizzleForwardX, 0x6030c0
+// ReleaseFizzleSource, 0x6030e0 FadeToBlack, 0x6032e0 FadeFromBlack,
+// and the next row (0x6034d0) is a cinit followed by the import-thunk
+// run, so the compiland ends there. ScreenShot, SaveFizzleSource,
+// FizzleForward, NextFlashFrame, Flash and FadeBlit are all
+// retail-dropped or inlined - retail kept only the X half of the
+// fizzle pair.
 
 // E:\gamedcs\winmgr.cpp:1455
 DC_ONLY(0x19bbd4, 0x80)
@@ -495,20 +687,6 @@ void heroWindowManager::FadeBlit(int sx, int sy, int sw, int sh, const Bitmap816
     // @stub
 }
 
-// E:\gamedcs\winmgr.cpp:1707
-DC_ONLY(0x19c1bc, 0x1FA)
-void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
-{
-    // @stub
-}
-
-// E:\gamedcs\winmgr.cpp:1866
-DC_ONLY(0x19c3b8, 0x230)
-void heroWindowManager::FadeFromBlack(int speed)
-{
-    // @stub
-}
-
 // E:\gamedcs\Bitmap816.h:73
 DC_ONLY(0x19c5e8, 0x8)
 const TPalette16* Bitmap816::GetPalette()
@@ -524,3 +702,224 @@ const unsigned char* Bitmap816::GetMap(int x, int y)
 }
 
 #endif  // @carcass
+
+// E:\gamedcs\winmgr.cpp:1447. The fizzle buffer is released through the
+// same virtual slot-0 + flag-1 tail Close uses on the manager's two
+// owned bitmaps. Its only caller is 0x41aa20, the same body that calls
+// SaveFizzleSourceX (0x41a8d5) and FizzleForwardX (0x41aa13).
+VA(0x006030c0, 0x19)  // anchor-caller + dc order, dc 0x19bba8
+void heroWindowManager::ReleaseFizzleSource()
+{
+    if (field_4C)
+        delete field_4C;
+    field_4C = 0;
+}
+
+// E:\gamedcs\winmgr.cpp:1707 - the fade-out. Located by anchor-caller:
+// the already-exact FadeScreen calls this at 0x602c78.
+//
+// The three colour masks are widened into both halves of a dword so one
+// pass handles two 16-bit pixels; the fade itself is three passes that
+// shift every component right by the pass index and re-mask it into its
+// own field, so pass 0 is a plain copy. `speed` is dropped on the floor
+// - the pacing is the fixed 50 ms per pass below - but the parameter is
+// real: FadeScreen forwards it and `ret 8` fixes the frame at two
+// dwords.
+//
+// Residual (88.51%): one register-allocation choice in the pixel loop,
+// and its cascade. Retail keeps the loop's shift count in ebx and the
+// SOURCE pointer in edi, hoists `pDst - pSrc` into a per-row delta slot
+// and addresses the store as `[delta + src - 4]`; our CL puts the shift
+// in edi, the source pointer in ebx, and keeps a second live dst
+// pointer instead of the delta. Frame layout, every mask/counter/timer
+// slot displacement and the whole post-loop tail are byte-identical.
+//
+// CORRECTION 2026-08-14: the earlier claim that the BLOCK GRAPH agrees
+// too is WRONG, and it is why this keeps getting routed to the register
+// solver. `homm3 sema diff 0x6030e0` reports base 11 blocks vs target
+// 12, and `homm3 vc6 diagnose` classes the wall CONTROL-FLOW (flow
+// distance 1), not register-homing. The shape retail has and we do not:
+// its outer-pass head ENDS IN A JMP over a ONE-INSTRUCTION block that
+// falls into the row loop, so that instruction runs on every row
+// iteration except the first - a rotated row loop with a split update.
+// Ours falls straight through into a 4-instruction head, and our inner
+// pixel loop is 32i where retail's is 30i. Start from `why-branch`, not
+// `why-reg`. Corroboration from the allocator's own side, measured the
+// same day: why-reg --model reports the reference defines its THIRD
+// call-crossing pseudo at schedule slot 37 where ours defines it at 61
+// - retail hoists out of the row loop a value we create inside it. Its
+// verdict is CAPPED (C1 handle state), which is the wrong question.
+//
+// INSTRUCTION-ACCOUNTED 2026-08-14, and it is ONE optimizer decision:
+// INDUCTION-VARIABLE ELIMINATION. Both sides spend the SAME 61
+// instructions on the nest, only distributed differently -
+//   base    B2 11i preheader | B3  4i row head | B4 32i pixel | B5 14i tail
+//   target  B2 12i preheader | B3  1i reload   | B4  4i head  | B5 30i pixel
+// Retail's row head is `mov eax,[pDst] / mov [xcount],0x190 /
+// sub eax,edi / mov [delta],eax`: it computes delta = pDst - pSrc ONCE
+// PER ROW, so the inner loop carries exactly ONE pointer induction
+// variable, edi = src, and stores through `mov [edx+edi-4],eax` - two
+// instructions. Ours keeps a real dst POINTER, spilled to [ebp-0x28],
+// and pays four (`mov ecx,[ebp-0x28] / mov [ecx],eax / add ecx,4 /
+// mov [ebp-0x28],ecx`). That is the whole 32i-vs-30i gap. The extra
+// target block B3 is the SAME decision seen from the other end: retail's
+// preheader already leaves the initial pSrc in EDI, so the row body's
+// `src = pSrc` reload is dead on the first iteration and VC6 rotates the
+// loop around it - one instruction, `mov edi,[ebp-0x14]`, plus the `jmp`
+// that makes the preheader 12i.
+// So the wall is not an inner-loop spelling and not a control-flow shape
+// to be re-spelled: VC6 eliminates one of two lockstep pointer IVs when
+// it chooses to, and picks the survivor itself. When it DOES build the
+// delta here it picks the wrong one (see `dst[x] = f(src[x])` below, the
+// store pointer survives). Rejected 2026-08-14, byte-identical to the
+// form below to four decimals: the inner loop as an explicit DOWN
+// counter `for (x = W/2; x > 0; x--)` with `*src++` and `*dst++`.
+// Rejected the same day, marginally WORSE (88.50/88.12): declaring pDst
+// BEFORE pSrc so the outer pointer pair takes retail's stack slots -
+// they do swap to [ebp-0x10] = pDst, [ebp-0x14] = pSrc, and it buys
+// nothing.
+// Tried and rejected 2026-08-14, both fades measured together:
+// stepping pSrc/pDst in the row loop's for-INCREMENT rather than at the
+// body tail (byte-identical, 88.51/88.14); the same with named
+// srcPitch/dstPitch locals (84.63/82.72); the row loop as an explicit
+// `while` (83.88/81.93). Tried and rejected earlier: `dst[x] =
+// f(src[x])` on both sides (VC6 does build the delta form there, but
+// picks the STORE pointer as the induction variable, 87.74%); the same
+// with the pointer pair declared dst-first (86.26%); `*dst++` for the
+// store (identical bytes to `dst[x]`); the fused
+// `((px & m) >> s) & m` expression with no named component temps
+// (77.60% - the three named temps below ARE load-bearing, they are what
+// orders the three `and`+`shr` pairs ahead of the three re-masks).
+// RE-TESTED ON THE /Ob2 AXES 2026-08-14, because a sibling lane found two
+// functions that only close at a specific (statement mass, candidate site
+// count) PAIR after each axis alone had been measured byte-flat. Both
+// fades were swept over the full grid: byte-inert statement mass
+// m = 0,1,2,3,4,6,8,20,60,120,200 crossed with k = 0,1,2,3,8,12,20,40
+// tail `xx_nop()` candidate sites (an empty file static, so each call
+// inlines to nothing yet still counts in the remaining/sites-to-come
+// divisor). Every cell is 88.5116 / 88.1358 to four decimals. The probe
+// is not inert by construction - the same insertion point with a single
+// `volatile int` mass statement moves FadeToBlack to 82.7965 - so the
+// harness reaches the function and the flat grid is a real negative.
+// This wall is on neither /Ob2 axis.
+VA(0x006030e0, 0x1F9)  // anchor-caller, dc 0x19c1bc
+void heroWindowManager::FadeToBlack(int speed, unsigned char expect_fadein)
+{
+    unsigned long maskBlue = (gColorMaskBlue << 16) | gColorMaskBlue;
+    unsigned long maskGreen = (gColorMaskGreen << 16) | gColorMaskGreen;
+    unsigned long maskRed = (gColorMaskRed << 16) | gColorMaskRed;
+    Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+    RECT screenRect;
+
+    fadeFrom.Grab(screenBitmap->map, 0, 0, screenBitmap->Width,
+        screenBitmap->Height, screenBitmap->Pitch);
+
+    for (int shift = 0; shift < 3; shift++) {
+        unsigned long deadline = GameTime::Get() + 50;
+        unsigned long started = GameTime::Get();
+        unsigned char* pSrc = static_cast<unsigned char*>(
+            static_cast<void*>(fadeFrom.map));
+        unsigned char* pDst = static_cast<unsigned char*>(
+            static_cast<void*>(screenBitmap->map));
+        for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
+            unsigned long* src = static_cast<unsigned long*>(
+                static_cast<void*>(pSrc));
+            unsigned long* dst = static_cast<unsigned long*>(
+                static_cast<void*>(pDst));
+            for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
+                unsigned long pair = *src++;
+                unsigned long blue = (pair & maskBlue) >> shift;
+                unsigned long green = (pair & maskGreen) >> shift;
+                unsigned long red = (pair & maskRed) >> shift;
+                dst[x] = (red & maskRed) | (green & maskGreen)
+                    | (blue & maskBlue);
+            }
+            pSrc += fadeFrom.Pitch;
+            pDst += screenBitmap->Pitch;
+        }
+        screenRect.left = 0;
+        screenRect.top = 0;
+        screenRect.right = WINDOW_SCREEN_WIDTH;
+        screenRect.bottom = WINDOW_SCREEN_HEIGHT;
+        DDAppBlit(&screenRect);
+        if (GameTime::Get() - started > 50)
+            break;
+        GameTime::DelayTil(deadline);
+    }
+
+    screenBitmap->FillRect(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT, 0);
+    screenRect.left = 0;
+    screenRect.top = 0;
+    screenRect.right = WINDOW_SCREEN_WIDTH;
+    screenRect.bottom = WINDOW_SCREEN_HEIGHT;
+    DDAppBlit(&screenRect);
+    if (expect_fadein) {
+        fadeFrom.Draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
+            screenBitmap->map, 0, 0, screenBitmap->Width,
+            screenBitmap->Height, screenBitmap->Pitch, 0);
+    }
+}
+
+// E:\gamedcs\winmgr.cpp:1866 - the fade-in, FadeScreen's second call at
+// 0x602c91. The mirror of FadeToBlack: the same three-pass shift walked
+// DOWNWARDS from 2 and stopping before 0, so the last pass is the
+// half-brightness frame and the full-brightness image is restored by
+// the Draw below rather than by a pass of its own.
+//
+// Residual (88.14%): the same divergence FadeToBlack carries - see the
+// corrected note there. It is a CONTROL-FLOW wall (rotated row loop,
+// one block short), not the register swap the first note claimed.
+VA(0x006032e0, 0x1E5)  // anchor-caller, dc 0x19c3b8
+void heroWindowManager::FadeFromBlack(int speed)
+{
+    unsigned long maskBlue = (gColorMaskBlue << 16) | gColorMaskBlue;
+    unsigned long maskGreen = (gColorMaskGreen << 16) | gColorMaskGreen;
+    unsigned long maskRed = (gColorMaskRed << 16) | gColorMaskRed;
+    Bitmap16Bit fadeFrom(WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT);
+    RECT screenRect;
+
+    fadeFrom.Grab(screenBitmap->map, 0, 0, screenBitmap->Width,
+        screenBitmap->Height, screenBitmap->Pitch);
+
+    for (int shift = 2; shift > 0; shift--) {
+        unsigned long deadline = GameTime::Get() + 50;
+        unsigned long started = GameTime::Get();
+        unsigned char* pSrc = static_cast<unsigned char*>(
+            static_cast<void*>(fadeFrom.map));
+        unsigned char* pDst = static_cast<unsigned char*>(
+            static_cast<void*>(screenBitmap->map));
+        for (int y = 0; y < WINDOW_SCREEN_HEIGHT; y++) {
+            unsigned long* src = static_cast<unsigned long*>(
+                static_cast<void*>(pSrc));
+            unsigned long* dst = static_cast<unsigned long*>(
+                static_cast<void*>(pDst));
+            for (int x = 0; x < WINDOW_SCREEN_WIDTH / 2; x++) {
+                unsigned long pair = *src++;
+                unsigned long blue = (pair & maskBlue) >> shift;
+                unsigned long green = (pair & maskGreen) >> shift;
+                unsigned long red = (pair & maskRed) >> shift;
+                dst[x] = (red & maskRed) | (green & maskGreen)
+                    | (blue & maskBlue);
+            }
+            pSrc += fadeFrom.Pitch;
+            pDst += screenBitmap->Pitch;
+        }
+        screenRect.left = 0;
+        screenRect.top = 0;
+        screenRect.right = WINDOW_SCREEN_WIDTH;
+        screenRect.bottom = WINDOW_SCREEN_HEIGHT;
+        DDAppBlit(&screenRect);
+        if (GameTime::Get() - started > 50)
+            break;
+        GameTime::DelayTil(deadline);
+    }
+
+    fadeFrom.Draw(0, 0, WINDOW_SCREEN_WIDTH, WINDOW_SCREEN_HEIGHT,
+        screenBitmap->map, 0, 0, screenBitmap->Width, screenBitmap->Height,
+        screenBitmap->Pitch, 0);
+    screenRect.left = 0;
+    screenRect.top = 0;
+    screenRect.right = WINDOW_SCREEN_WIDTH;
+    screenRect.bottom = WINDOW_SCREEN_HEIGHT;
+    DDAppBlit(&screenRect);
+}

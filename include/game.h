@@ -20,6 +20,12 @@
 #if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
 #include "herospec.h"
 #endif
+#ifdef HOMM3_EVENTS_VIEW
+// NewfullMap's custom-monster pool, read by DoWanderingMonsterResult.
+// The record type was already modelled for mapcell.obj; nothing about it
+// changes here.
+#include "monsterdata.h"
+#endif
 #if defined(HOMM3_MAPCELL_OBJECTS_VIEW) && defined(HOMM3_ADVMGR_QUICKINFO_VIEW)
 #include "timedevent.h"
 #endif
@@ -112,9 +118,22 @@ SIZE(BlackBoxData, 0xe4);
 class NewfullMap {
 public:
 #ifdef HOMM3_EVENTS_VIEW
-    char pad_000[0x30];
+    // advManager::EraseObj indexes objects with a TWELVE-byte stride out of
+    // +0x14 and objectTypes with a SIXTY-EIGHT-byte one out of +0x04, which
+    // is sizeof(CObject) and sizeof(CObjectType) exactly; the three vectors
+    // fill the same 0x30 the pad did.
+    std::vector<CObjectType> objectTypes;      // +0x00, first at +0x04
+    std::vector<CObject> objects;              // +0x10, first at +0x14
+    std::vector<CSprite*> sprites;             // +0x20
     std::vector<TreasureData> customTreasure; // +0x30, first at +0x34
-    char pad_040[0x10];
+    // +0x40, first at +0x44. DoWanderingMonsterResult indexes it with the
+    // cell's eight-bit custom-record field and a 48-byte stride, which is
+    // exactly sizeof(MonsterData) once the Dinkumware string is 16 wide;
+    // the record's own +0x04/+0x08 are that string's _Ptr and _Len. The
+    // DC roster names the member CustomMonsterList and carries the
+    // matching std::vector<MonsterData> operator[]/begin rows in
+    // events.obj.
+    std::vector<MonsterData> CustomMonsterList;
     std::vector<BlackBoxData> blackBoxes;      // +0x50, first at +0x54
     char pad_060[0x70];
 #elif defined(HOMM3_MAPCELL_OBJECTS_VIEW)
@@ -151,11 +170,12 @@ public:
     int Size;
     unsigned char HasTwoLevels;
 
-#ifdef HOMM3_GAME_OBJ_DECLS
+#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW)
     // Header inline in the original map class. InsertObject expands this
-    // three-dimensional row-major lookup; other compilation personalities
-    // retain the out-of-line declaration until their own call sites prove
-    // that expansion.
+    // three-dimensional row-major lookup, and so does advManager::EraseObj
+    // - `(z*Size + y)*Size + x` then a *38 stride, all in line; other
+    // compilation personalities retain the out-of-line declaration until
+    // their own call sites prove that expansion.
     NewmapCell* cell(int x, int y, int z)
     {
         return &cellData[(z * Size + y) * Size + x];
@@ -193,7 +213,28 @@ public:
     int readSignData(TAbstractFile* infile, CObject* object);
     int loadTreasureList(TAbstractFile* infile);
     void calc_cell_extra(NewmapCell* cell, unsigned char setExtraInfo);
+#endif
+#if defined(HOMM3_MAPCELL_OBJECTS_VIEW) || defined(HOMM3_EVENTS_VIEW)
+    // 0x505a10. advManager::EraseObj re-derives every touched cell's extra
+    // info through it once the object's entry has been spliced out.
     void CalculateCellExtra(NewmapCell* cell, unsigned char setExtraInfo);
+#endif
+#ifdef HOMM3_EVENTS_VIEW
+    // Retail-only helper at 0x505d60, and RETAIL-ONLY IS LITERAL HERE: it
+    // walks the +0xb0 vector of CMapObjectData pointers - the member the
+    // Dreamcast's NewfullMap does not have at all, its nine STLport
+    // vectors running 0..108 with cellData straight after - and hands
+    // each record the same (point, player) pair through virtual slot ten.
+    // That absence is also why the DC xref graph shows no such callee for
+    // any of the four bodies that reach it here. Exactly four call sites
+    // exist image-wide (0x4a6eda, 0x4a70ee, 0x4a7444, 0x4ae499): the
+    // three no-combat ways a wandering stack leaves the map -
+    // monsters_flee, monsters_join, monsters_sell_out - and DoCombat.
+    // No surviving symbol names it, so the address-bearing spelling
+    // follows NewfullMapFn_00505F20's precedent below.
+    void NewfullMapFn_00505D60(type_point point, int player);
+#endif
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
     // Retail-only helper at 0x505f20. Its behavior selects or appends the
     // matching object-type/sprite pair and writes the resulting type index.
     // No surviving symbol names it, so the address-bearing spelling remains
@@ -308,6 +349,28 @@ public:
 
     int applies_to_player(long playerId) const;
     unsigned char CheckForTotalResources();
+#ifdef HOMM3_EVENTS_VIEW
+    // 0x5f1b10, CheckForTotalResources' twin. advManager::DoEvent
+    // (0x4aaaa0) calls the pair back to back on the same
+    // `gpGame->mapHeader.victoryCondition`, each followed by its own
+    // CheckEndGame(0). Gated purely to keep the declarator out of the
+    // other twenty-odd consumers of this header until one of them needs
+    // it.
+    unsigned char CheckForTotalCreatures();
+    // 0x5f2390. The Dreamcast decoration
+    // `?CheckForDefeatedMonsterWin@VictoryConditionStruct@@QAA_NPBVhero@@
+    // Utype_point@@@Z` fixes the whole signature - public, bool, a const
+    // hero and a type_point BY VALUE - and retail's `ret 8` agrees.
+    // Gated for the same reason as its neighbour above.
+    bool CheckForDefeatedMonsterWin(const hero* thisHero,
+                                    type_point monster_loc);
+    // 0x5f2860, and the Dreamcast decoration gives it
+    // CheckForDefeatedMonsterWin's exact shape - a const hero and a
+    // type_point BY VALUE - which retail's `ret 8` corroborates.
+    // advManager::TownEvent asks it on both of its capture paths.
+    unsigned char CheckForArtifactTransportWin(const hero* thisHero,
+                                               type_point town_loc);
+#endif
     bool CheckForHeroDefeatWin(int winningPlayer, const hero* loser);
     unsigned char IsGrailTarget(town* thisTown);
     bool IsTownCaptureTarget(town* thisTown);
@@ -1042,6 +1105,29 @@ public:
         return (globalInfoFlags[flag] & (1 << playerNum)) != 0;
     }
 #endif
+#ifdef HOMM3_EVENTS_VIEW
+    // Game.h:917, GetInfoFlag's setter twin. It marks the whole of
+    // playerNum's TEAM, which is why every events.obj handler that
+    // visits a global-info object ends in an eight-iteration teamInfo
+    // scan rather than a single OR - the guard is on the ARGUMENT only,
+    // and the loop reads mapHeader.teamInfo directly instead of going
+    // back through GetTeam (no per-iteration `< 0` arm survives).
+    //
+    // `flag` is spelled `int` where the Dreamcast decoration says
+    // GlobalInfoFlags purely because that enum is defined in advmgr.h,
+    // which events.cpp includes AFTER this header; every call site still
+    // passes the enumerator, so the domain is not lost.
+    void SetInfoFlag(int flag, const int playerNum)
+    {
+        if (playerNum < 0 || playerNum >= 8)
+            return;
+        int team = mapHeader.teamInfo[playerNum];
+        for (int i = 0; i < 8; i++) {
+            if (mapHeader.teamInfo[i] == team)
+                globalInfoFlags[flag] |= 1 << i;
+        }
+    }
+#endif
     int GetGamePosFromDPID(unsigned long dpid);  // 0x4cec20
     // Same `_N`-and-const family as playerData's pair above.
     bool IsLastHuman(int gamePos) const;         // 0x4cec50
@@ -1069,6 +1155,30 @@ public:
     void ClaimGarrison(int garrisonId, int newPlayerOwner);   // 0x4c6960
     void ClaimShipyard(type_point location, int newPlayerOwner); // 0x4c6a30
     void record_claim_mine(long id, long new_owner);          // 0x49bf90
+#ifdef HOMM3_EVENTS_VIEW
+    // event_record.cpp:1061 in the DC roster (dc 0x8e0b8). advManager::
+    // EraseObj is its caller and pins the retail row: a 0x18-byte record
+    // built with `new`, two vtable stores and the cell's +0x00/+0x22/+0x24
+    // copied into it, reached with the cell and the point on the stack.
+    void record_erase_object(NewmapCell* cell, type_point point); // 0x49c390
+    // Retail-only 0x4ca410, an ordinal placeholder. A no-argument sweep of
+    // the whole map (it reads gMapWidth/gMapHeight and the level count at
+    // +0x1fc48) that advManager::EraseObj runs once the object is gone.
+    // No surviving symbol names it; the row is not claimed here.
+    void GameFn_004CA410();
+    // event_record.cpp:1189 in the DC roster (dc 0x8e54c), the negative
+    // twin of SetVisibility below and the same five parameters in the same
+    // order. DoEventCoverOfDarkness is the caller that needs the
+    // declarator; the row is claimed as a carcass stub in event_record.cpp.
+    void ResetVisibility(int startX, int startY, int z,
+                         int whichPlayer, int range);          // 0x49d3d0
+    // Retail-only 0x4c7c50, an ordinal placeholder like GameFn_004CA410
+    // above. A no-argument sweep of all 156 hero records (stride 0x492)
+    // that re-runs game::SetVisibility for every hero still on the map -
+    // which is what has to happen after ResetVisibility blanks a disc.
+    // No surviving symbol names it; the row is not claimed here.
+    void GameFn_004C7C50();
+#endif
     void record_show_boat(boat* current_boat, type_point point); // 0x49c900
     void SetVisibility(int startX, int startY, int z,
                        int whichPlayer, int range,
@@ -1194,6 +1304,11 @@ public:
     // GetHero/GetTown keep the opposite spelling because TBottomViewKingdom
     // and playerData::HasCapitol prove theirs; these are separate members,
     // so the two spellings no longer contend.
+    // A THIRD body agrees on the arm order: advManager::DoEvent (0x4aaaa0)
+    // expands GetCurrHero with the non-null arm falling through and the
+    // null arm placed after, whereas GetHero's `if (id == -1) return 0;`
+    // lays the arms out the other way round. DC sizes them apart too - 68 B
+    // against GetHero's 36 - so this is a separate inline, not a forwarder.
     hero* GetCurrHero();
     town* GetCurrTown();
     // DC `game::GetBoat`, declared inline in Game.h. Retail has no

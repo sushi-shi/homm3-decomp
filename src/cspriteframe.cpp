@@ -52,12 +52,7 @@ void CSpriteFrame::clear()
     // @stub
 }
 
-// E:\gamedcs\cspriteframe.cpp:245
-// RETAIL_LOCATED(0x0047c460, 0xF7)  // anchor-global, dc 0x74918
-void CSpriteFrame::SetPixelFormat(unsigned rmask, unsigned gmask, unsigned bmask)
-{
-    // @stub
-}
+// E:\gamedcs\cspriteframe.cpp:245 - promoted to a live claim below.
 
 // E:\gamedcs\cspriteframe.cpp:283
 DC_ONLY(0x74a18, 0xDC)
@@ -260,6 +255,50 @@ CSpriteFrame::~CSpriteFrame()
 {
     if (map)
         delete[] map;
+}
+
+// E:\gamedcs\cspriteframe.cpp:245.  Counts the set bits of each channel
+// mask over sixteen positions, then packs the half- and quarter-
+// intensity constants: the top value of each channel, halved (resp.
+// quartered) with C's signed rounding, shifted back into place.  The
+// three counting loops share one induction variable and each rebuilds
+// its own `1 << i` in a fresh register.
+//
+// Residual (88.24%): all three loops and both packing expressions are
+// instruction-identical; retail schedules the three `(1 << n) - 1`
+// computations through ONE scratch (eax, `lea reg, [eax-1]` each time)
+// and so never homes gBits, while our CL issues the three shifts up
+// front into esi/edi/ebx and spills gBits to make room.  `homm3 vc6
+// why-reg --model` reports the first definitions binding IDENTICALLY
+// (esi/ebx/edi) and the divergence arriving later - i.e. past the
+// creation-order slice any source edit can reach.  Tried and rejected:
+// a named `rShift = gBits + bBits` local (88.12), `int i` declared
+// first, and a shared `bit` temporary feeding all three maxima.
+VA(0x0047c460, 0xF7)  // anchor-global, dc 0x74918
+void CSpriteFrame::SetPixelFormat(unsigned rmask, unsigned gmask,
+                                  unsigned bmask)
+{
+    int i;
+    int rBits = 0;
+    int gBits = 0;
+    int bBits = 0;
+    for (i = 0; i < 16; i++)
+        if (rmask & (1 << i))
+            rBits++;
+    for (i = 0; i < 16; i++)
+        if (gmask & (1 << i))
+            gBits++;
+    for (i = 0; i < 16; i++)
+        if (bmask & (1 << i))
+            bBits++;
+
+    int rMax = (1 << rBits) - 1;
+    int gMax = (1 << gBits) - 1;
+    int bMax = (1 << bBits) - 1;
+    gHalfIntensityMask = ((rMax / 2) << (gBits + bBits))
+        | ((gMax / 2) << bBits) | (bMax / 2);
+    gQuarterIntensityMask = ((rMax / 4) << (gBits + bBits))
+        | ((gMax / 4) << bBits) | (bMax / 4);
 }
 
 VA(0x0047c560, 0x07)  // vtable slot 2: fixed object extent + owned bytes

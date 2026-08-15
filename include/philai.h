@@ -6,10 +6,41 @@
 #define HOMM3_PHILAI_H
 
 #include "armygrp.h"
+#include "herospec.h"  // TSecondarySkill, the appraisals' skill parameter
 
 class hero;
+class town;
 
 long AI_get_spell_value(const hero* our_hero, SpellID spell);
+
+// 0x5253d0. DECLARED, not defined - advManager::TownEvent is the caller
+// that needs the declarator, and TownEvent is also what located the row:
+// the Dreamcast xref graph gives TownEvent exactly ONE philai.obj callee,
+// retail's call is a /Gr two-register fastcall taking (hero*, town*) in
+// that callee's own parameter order, and 0x5253d0 lands in the
+// path..philai link bracket whose only candidate compilands are path.obj
+// and philai.obj. The row is not claimed from here.
+void AI_enter_town(hero* current_hero, town* current_town);
+
+// Retail .data 0x678370, the row immediately after tradpost.h's
+// fTradingPostEfficency (0x678344): three consecutive eleven-float rows
+// fill 0x678344..0x6783c8, and get_artifact_purchase_price divides an
+// artifact's gold cost by THIS row indexed by the marketplace count.
+// The definition belongs to tradpost.cpp beside its sibling and moves
+// there with the rest of that .data band; declared here meanwhile so the
+// division has a typed name rather than a raw address.
+extern float fArtifactPurchaseEfficency[];
+
+// The two secondary-skill appraisals AI_choose_secondary_skill calls.
+// The Dreamcast roster files both as philai.obj STATICS, and their retail
+// bodies are located (0x524690 / 0x524dd0) but not yet reconstructed - so
+// they cannot be declared static here: VC6 rejects a static function that
+// is declared and called but never defined (C2129). Move them back into
+// philai.cpp as statics when the bodies land.
+long get_skill_value(const hero* our_hero, TSecondarySkill skill,
+                     unsigned char complex_choice);
+unsigned char wants_skill(const hero* our_hero, TSecondarySkill skill,
+                          unsigned char complex_choice);
 
 // --- globals ---
 // CODEVIEW(E:\gamedcs\philai.cpp:58, dc 0x10d458) int OnMySide(int iWhichPlayer);

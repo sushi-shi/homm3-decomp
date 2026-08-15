@@ -14,14 +14,40 @@ TCreatureType GetBaseCreature(TTownType townType, int baseCreatureNbr)
     // @stub
 }
 
-// E:\gamedcs\creaturetype.cpp:213
-DC_ONLY(0x718fc, 0x36)
-unsigned char IsBaseCreature(TCreatureType monType)
-{
-    // @stub
-}
-
 #endif
+
+// E:\gamedcs\creaturetype.cpp:213
+// UpgradedCreatureType's own dwelling walk, stopped one step short: it
+// answers "does this creature sit in the BASE row of its town's dwelling
+// table", which is why the +7 retry can succeed and the function still
+// returns 0 (creatureIndex is then >= 7). Located by linkorder inside the
+// GetBaseCreature..IsSiegeWeapon bracket and corroborated as
+// hillfortwindow's upgrade gate, which calls it with the creature type in
+// ecx immediately before spelling UpgradedCreatureType on the same value.
+// The return type is INT, not the Dreamcast roster's unsigned char: retail
+// materializes the two results as `mov eax,1` / `xor eax,eax` (an unsigned
+// char return is `mov al,1` / `xor al,al` - IsSiegeWeapon right below is the
+// exact control). Its hill-fort caller still tests only AL because the
+// wrapper it is inlined into returns unsigned char, which is what truncates
+// the value at the call site.
+VA(0x0047b120, 0x5D)  // linkorder + anchor-callee (hill fort), dc 0x718fc
+int IsBaseCreature(TCreatureType monType)
+{
+    const TCreatureTypeTraits& traits = akCreatureTypeTraits[monType];
+    int townType = traits.townType;
+    if (townType == -1)
+        return 0;
+
+    int creatureIndex = traits.level;
+    if (monType != gTownDwellingCreatures[townType * 14 + creatureIndex]) {
+        creatureIndex += 7;
+        if (monType != gTownDwellingCreatures[townType * 14 + creatureIndex])
+            return 0;
+    }
+    if (creatureIndex < 0 || creatureIndex >= 7)
+        return 0;
+    return 1;
+}
 
 // E:\gamedcs\creaturetype.cpp:228
 VA(0x0047b180, 0x16)  // linkorder + exact war-machine range, dc 0x71934

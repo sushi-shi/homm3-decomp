@@ -12,6 +12,15 @@
 // through map@0x44; retail omits that build's DirectDraw tail, leaving a
 // 0x48-byte resource.  Retail vtable 0x63d6bc has the ordinary resource
 // trio: scalar deleting destructor, Dispose, and the memory-size query.
+// The two 16-bit blend masks every CSpriteFrame draw routine reads
+// (retail .bss 0x6968a4 and 0x6968aa).  SetPixelFormat below is their
+// sole writer; no claimed TU owns their storage yet, so they stay
+// declaration-only here.  Names describe the value - one bit dropped
+// per channel and two bits dropped per channel - not an attested
+// spelling.
+extern unsigned short gHalfIntensityMask;     // 0x6968a4
+extern unsigned short gQuarterIntensityMask;  // 0x6968aa
+
 class CSpriteFrame : public resource {
 public:
     int DataSize;
@@ -28,6 +37,12 @@ public:
 
     virtual ~CSpriteFrame();
     virtual unsigned int _vslot2() const;
+
+    // Static: retail takes rmask/gmask in ecx/edx with bmask on the
+    // stack and never touches a `this`, which under /Gr is exactly a
+    // free/static three-argument fastcall.
+    static void SetPixelFormat(unsigned rmask, unsigned gmask,
+                               unsigned bmask);
 };
 SIZE(CSpriteFrame, 0x48);
 

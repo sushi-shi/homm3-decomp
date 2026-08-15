@@ -82,7 +82,7 @@ public:
     int mouseY;
     union {
         int extra;
-        char* extraText;
+        const char* extraText;
     };
     heroWindow* window;
 };

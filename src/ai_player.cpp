@@ -37,6 +37,15 @@
 // VC6's retail min/max sites in this TU copy both operands into homes
 // and select one by address. These by-value wrappers reproduce that
 // shape; the installed Dinkumware overloads take const references.
+// armyGroup and gTownDwellingCreatures both model the creature ordinal as
+// int while type_creature_value's key is the TCreatureType domain; same
+// bit-preserving inline bridge ai_combat.cpp and philai.cpp use for the
+// same crossing, rather than lying with an enum cast.
+inline void set_creature_type(TCreatureType& slot, int value)
+{
+    memcpy(&slot, &value, sizeof slot);
+}
+
 template <class _TYPE>
 inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 {
@@ -283,7 +292,7 @@ void type_AI_player::calculate_demand()
     std::vector<type_creature_value> creatures(145);
     int creature_index;
     for (creature_index = 0; creature_index < 145; creature_index++) {
-        creatures[creature_index].type = creature_index;
+        set_creature_type(creatures[creature_index].type, creature_index);
         creatures[creature_index].amount = 0;
     }
 
@@ -740,8 +749,9 @@ void type_AI_player::calculate_reserve()
         for (; dwelling < 14; dwelling++, population++) {
             if (*population > 0) {
                 type_creature_value creature_info;
-                creature_info.type = gTownDwellingCreatures[
-                    current_town->type * 14 + dwelling];
+                set_creature_type(creature_info.type,
+                    gTownDwellingCreatures[
+                        current_town->type * 14 + dwelling]);
                 creature_info.amount = *population;
                 creature_info.value = static_cast<short>(creature_info.amount
                     * akCreatureTypeTraits[creature_info.type].AI_value);

@@ -22,13 +22,6 @@ void border::border()
     // @stub
 }
 
-// E:\gamedcs\border.cpp:47
-DC_ONLY(0x54378, 0x60)
-void border::border(int x, int y, int w, int h, int id, int style, unsigned char focusable)
-{
-    // @stub
-}
-
 // E:\gamedcs\border.cpp:62
 
 #endif  // @carcass
@@ -40,35 +33,132 @@ void border::border(int x, int y, int w, int h, int id, int style, unsigned char
 // own dtor (the DC build appends all five at the compiland tail).
 VA_COMPGEN(0x0044fee0, 0x21, SCALAR_DELETING_DTOR, border)
 
-// E:\gamedcs\border.cpp:62
+// E:\gamedcs\border.cpp:47 - promoted from DC_ONLY. The row is the only
+// unclaimed one between border's sdd and its dtor, and the body pins the
+// signature from the other side: `ret 0x18` is SIX stack dwords, pushed
+// straight through to ??0widget@@QAE@FFFFFF@Z (six shorts) in
+// x,y,w,h,id,style order, so DC's trailing `focusable` byte is NOT a
+// retail parameter. The ??_7border@@6B@ store after the base call is the
+// implicit vtable init; there is no EH frame because the body is empty
+// (contrast the derived ctors below, which call widget::initialize IN the
+// body and so need the base unwound).
+VA(0x0044ff10, 0x32)  // anchor-bracket + arity (`ret 0x18`), dc 0x54378
+border::border(int x, int y, int w, int h, int id, int style)
+    : widget(x, y, w, h, id, style)
+{
+}
+
 VA(0x0044ff50, 0xB)  // anchor-global, dc 0x543d8
 border::~border()
 {
 }
 
-// E:\gamedcs\border.cpp:206 - the coloredBorderFrame dtor, the pair
-// that fixes vtable 0x63ba5c on this class: its sdd 0x4501a0 calls
-// 0x4501d0, and 0x4501d0 is the compiler-generated empty derived dtor
-// - the derived vtable store is dead-store-eliminated against the
-// inlined ~border, so only ??_7border@@6B@ survives before the
-// tail-jump to ~widget (the ~type_func_button shape in button.cpp).
+// E:\gamedcs\border.cpp:74 - promoted from DC_ONLY 2026-08-14. Slot 2 of
+// vtable 0x63ba24, and the row every derived Main tail-calls (both
+// coloredBorderFrame's 0x450240 and bitmapBorder's 0x450550 `call
+// 0x44ff60`). border::initialize has no retail row of its own - the
+// 461-byte span runs straight from here to coloredBorderFrame's ctor -
+// so retail folded it away.
 //
-// The sdd 0x4501a0 (33 B, dc 0x54da4) used to have NO CLAIM here, and
-// the reason recorded was exactly right: that dead-store elimination
-// left nothing in this TU referencing ??_7coloredBorderFrame@@6B@, so
-// VC6 emitted neither the vtable nor ??_GcoloredBorderFrame@@UAEPAXI@Z
-// and the claim had no base-side function to pair with. The
-// CONSTRUCTOR below is what keeps the vtable alive - its
-// `mov [esi], offset ??_7coloredBorderFrame` is a live store - and with
-// it landed the sdd pairs for free.
-// E:\gamedcs\border.cpp:201 - the constructor. It builds its border
-// base through widget's default ctor, stores the derived vtable, runs
-// widget::initialize on the six geometry arguments and only then writes
-// the two members DC names: color at +0x30 from the seventh argument,
-// colorize at +0x34 as a literal 0. Nothing sits in a member-init list -
-// retail's vptr store precedes both member stores.
-// E:\gamedcs\border.cpp:201
-VA(0x00450130, 0x6D)  // anchor-vtable 0x63ba5c, dc 0x54650
+// The four mouse arms are a JUMP TABLE, not a compare chain: retail
+// biases msg->id by -8, range-checks 0x38 and indexes a 57-byte selector
+// at 0x4500f4 into five targets at 0x4500e0. The selector's shape is the
+// proof of the source form - entries 0/8/0x18/0x38 (ids 8/0x10/0x20/0x40)
+// point at FOUR distinct labels 8 and 4 bytes apart, which is exactly a
+// disabled-guard falling through into its right-button twin.
+//
+// Disabled DOWN/UP arms `break` to widget::Main, they do not return zero -
+// that is what the `jne` to the shared base-call block says. All five
+// zero exits merge into the block the field_2C guard owns and are reached
+// with backward jumps, so the `returnZero:` label idiom carries over from
+// iconWidget::Main verbatim.
+//
+// Residual (91.98%): the SAME tail-merge divergence iconWidget::Main
+// carries, in the same TU family. Retail leaves the merged return-0 block
+// sitting where the field_2C guard puts it (`jle` hops over it) and
+// reaches the four later exits with backward jumps; this C2 sinks the
+// block to the LEFT_BUTTON_UP selected gate and inverts both polarities
+// to reach it. `--branches` reports 16/7 against retail 15/7. Tried and
+// rejected 2026-08-14: deleting the `returnZero:` label and spelling all
+// five exits as plain `return 0;` (91.7822%). Not source-reachable - the
+// merged-return generation class.
+VA(0x0044ff60, 0x1CD)  // anchor-vtable (slot 2 of 0x63ba24), dc 0x54440
+int border::Main(message* msg)
+{
+    if (field_2C > 0) {
+returnZero:
+        return 0;
+    }
+
+    if (!(status & WIDGET_ACTIVE)) {
+        if (msg->id != MESSAGE_WIDGET)
+            goto returnZero;
+        return widget::Main(msg);
+    }
+
+    unsigned char isDisabled = 0;
+    if (status & WIDGET_DISABLED)
+        isDisabled = 1;
+
+    switch (msg->id) {
+    case MESSAGE_LEFT_BUTTON_DOWN:
+        if (isDisabled)
+            break;
+        // fall through
+    case MESSAGE_RIGHT_BUTTON_DOWN: {
+        short mouseX = msg->codeX - parentWindow->x;
+        short mouseY = msg->codeY - parentWindow->y;
+        if (mouseX < x || mouseY < y || mouseX >= x + width
+            || mouseY >= y + height)
+            goto returnZero;
+        if (msg->id == MESSAGE_RIGHT_BUTTON_DOWN) {
+            msg->qualifier = MESSAGE_MODIFIER_RIGHT;
+            msg->codeX = WIDGET_RIGHT_SELECT;
+        } else {
+            status |= WIDGET_SELECTED;
+            msg->codeX = WIDGET_SELECT;
+        }
+        if (handle_click(1, msg->id == MESSAGE_RIGHT_BUTTON_DOWN))
+            return 1;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeY = id;
+        return 2;
+    }
+
+    case MESSAGE_LEFT_BUTTON_UP:
+        if (isDisabled)
+            break;
+        // fall through
+    case MESSAGE_RIGHT_BUTTON_UP:
+        if (!(status & WIDGET_SELECTED))
+            goto returnZero;
+        status &= ~WIDGET_SELECTED;
+        if (handle_click(0, msg->id == MESSAGE_RIGHT_BUTTON_UP))
+            return 1;
+        msg->id = MESSAGE_WIDGET;
+        msg->codeX = WIDGET_DESELECT;
+        msg->codeY = id;
+        return 2;
+    }
+
+    return widget::Main(msg);
+}
+
+// E:\gamedcs\border.cpp:201 - promoted from DC_ONLY 2026-08-14, the
+// constructor the earlier sdd note asked for. `ret 0x1c` is seven stack
+// dwords; six of them go to widget::initialize in x,y,w,h,id,style order
+// and the ODD one out - [ebp+0x1c], the sixth argument - is the dword
+// stored to [this+0x30], which is what fixes the DC parameter order
+// (..., int color_, int style) and colour's int width. [this+0x34] is
+// zeroed as a BYTE, fixing colorize's type.
+//
+// The base is entered through ??0widget@@QAE@XZ with a SINGLE derived
+// vtable store: border's default ctor is expanded in place and its
+// ??_7border@@6B@ store dead-store-eliminated. widget::initialize runs
+// in the ctor BODY (not a base initializer), which is why VC6 wraps the
+// whole thing in an fs:[0] frame - the base subobject has to be
+// unwindable across that call.
+VA(0x00450130, 0x6D)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54650
 coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
                                        int color_, int style)
 {
@@ -77,14 +167,93 @@ coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id,
     colorize = 0;
 }
 
-// E:\gamedcs\border.cpp:178 - coloredBorderFrame::`scalar deleting
-// destructor', slot 0 of vtable 0x63ba5c.
+// E:\gamedcs\border.cpp:206 - coloredBorderFrame::`scalar deleting
+// destructor' (dc 0x54da4). Slot 0 of vtable 0x63ba5c; the 33-byte row
+// calls ??1coloredBorderFrame (0x4501d0) under the flags&1 operator
+// delete tail. This claim was BLOCKED until the constructor above
+// landed: the derived vtable store is dead-store-eliminated out of the
+// dtor, so with no ctor in the TU nothing referenced
+// ??_7coloredBorderFrame@@6B@ and VC6 emitted neither the vtable nor
+// the ??_G COMDAT for the claim to pair with.
 VA_COMPGEN(0x004501a0, 0x21, SCALAR_DELETING_DTOR, coloredBorderFrame)
 
-// E:\gamedcs\border.cpp:206
+// E:\gamedcs\border.cpp:206 - the coloredBorderFrame dtor, the pair
+// that fixes vtable 0x63ba5c on this class: its sdd 0x4501a0 calls
+// 0x4501d0, and 0x4501d0 is the compiler-generated empty derived dtor
+// - the derived vtable store is dead-store-eliminated against the
+// inlined ~border, so only ??_7border@@6B@ survives before the
+// tail-jump to ~widget (the ~type_func_button shape in button.cpp).
 VA(0x004501d0, 0xB)  // anchor-vtable (slot 0 chain of 0x63ba5c), dc 0x54dd8
 coloredBorderFrame::~coloredBorderFrame()
 {
+}
+
+// E:\gamedcs\border.cpp:213 - slot 4 of vtable 0x63ba5c, nil-ary. Both
+// arms share the first three pushes (colour, height, width), which is
+// why retail loads dx/al up front and only the destination point and the
+// callee differ. The colour member is an int; `mov dx, [ecx+0x30]` is
+// the truncation to Colorize/FrameRect's unsigned short parameter.
+VA(0x004501e0, 0x5B)  // anchor-vtable (slot 4 of 0x63ba5c), dc 0x546d4
+void coloredBorderFrame::Draw()
+{
+    if (colorize)
+        gpWindowManager->screenBitmap->Colorize(x + parentWindow->x,
+            y + parentWindow->y, width, height, color);
+    else
+        gpWindowManager->screenBitmap->FrameRect(x + parentWindow->x,
+            y + parentWindow->y, width, height, color);
+}
+
+// E:\gamedcs\border.cpp:221 - slot 2 of vtable 0x63ba5c. Two live widget
+// commands, both re-armed only for this widget's own id: SET_COLOR (8)
+// takes the low half-word of extra into the int colour, SET_COLORIZE
+// (0x3f) normalises extra to the byte flag. The two arms are a SWITCH,
+// not an if/else chain: retail tests 8 with a FORWARD `je` past the
+// 0x3f arm, which is VC6's two-case switch layout (the DoDialogDraw
+// precedent). The inactive arm is the fallthrough, so the guard is
+// spelled negated.
+VA(0x00450240, 0x82)  // anchor-vtable (slot 2 of 0x63ba5c), dc 0x54744
+int coloredBorderFrame::Main(message* msg)
+{
+    if (field_2C > 0)
+        return 0;
+    if (!(status & WIDGET_ACTIVE)) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 0;
+    } else if (msg->id == MESSAGE_WIDGET) {
+        switch (msg->codeX) {
+        case WIDGET_SET_COLOR:
+            if (msg->codeY == id) {
+                color = msg->extra & 0xFFFF;
+                return 1;
+            }
+            break;
+        case WIDGET_SET_COLORIZE:
+            if (msg->codeY == id) {
+                colorize = msg->extra != 0;
+                return 1;
+            }
+            break;
+        }
+    }
+    return border::Main(msg);
+}
+
+// E:\gamedcs\border.cpp:280 - promoted from DC_ONLY. Same seven-dword
+// `ret 0x1c` shape as coloredBorderFrame's ctor (DC's trailing
+// `focusable` is again absent) with the odd argument [ebp+0x1c] used as
+// the image NAME rather than stored: non-null loads through
+// ResourceManager::GetBitmap816 (fastcall, ecx), null stores a literal
+// zero, and retail duplicates the whole epilogue for the two arms.
+VA(0x004502d0, 0x8C)  // anchor-bracket + arity (`ret 0x1c`), dc 0x547c0
+bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id,
+                           const char* image_, int style)
+{
+    initialize(x, y, w, h, id, style);
+    if (image_)
+        image = ResourceManager::GetBitmap816(image_);
+    else
+        image = 0;
 }
 
 #if 0  // @carcass
@@ -92,13 +261,6 @@ coloredBorderFrame::~coloredBorderFrame()
 // E:\gamedcs\border.cpp:67
 DC_ONLY(0x54408, 0x36)
 void border::initialize(int x, int y, int w, int h, int id, int style, unsigned char focusable)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:74
-DC_ONLY(0x54440, 0x150)
-int border::Main(message* msg)
 {
     // @stub
 }
@@ -145,37 +307,9 @@ void coloredBorder::Draw()
     // @stub
 }
 
-// E:\gamedcs\border.cpp:201
-DC_ONLY(0x54650, 0x80)
-void coloredBorderFrame::coloredBorderFrame(int x, int y, int w, int h, int id, int color_, int style)
-{
-    // @stub
-}
-
 // E:\gamedcs\border.cpp:210
 DC_ONLY(0x546d0, 0x4)
 void coloredBorderFrame::zBufferDraw()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:213
-DC_ONLY(0x546d4, 0x6E)
-void coloredBorderFrame::Draw()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:221
-DC_ONLY(0x54744, 0x7C)
-int coloredBorderFrame::Main(message* msg)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:280
-DC_ONLY(0x547c0, 0xA0)
-void bitmapBorder::bitmapBorder(int x, int y, int w, int h, int id, const char* image, int style, unsigned char focusable)
 {
     // @stub
 }
@@ -214,7 +348,6 @@ void bitmapBorder::SetPalette(const char* palette_name)
 // virtual, whose retail body ICF-folded away. The 11-argument push run
 // is the DC Bitmap816::zBufferDraw signature verbatim, and the three
 // literals are the 800x600 screen and its 1600-byte pitch.
-// E:\gamedcs\border.cpp:301
 VA(0x004503f0, 0x55)  // dc-bracket + body (11-arg zBufferDraw call), dc 0x5489c
 void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id)
 {
@@ -228,7 +361,6 @@ void bitmapBorder::zBufferDraw(unsigned short* zBuffer, int id)
 // already-exact Draw2 one class over, but through the screen bitmap in
 // gpWindowManager rather than a local, and with the 8-argument
 // Bitmap816 overload.
-// E:\gamedcs\border.cpp:307
 VA(0x00450450, 0x44)  // anchor-vtable (slot 4 of 0x63ba94), dc 0x548fc
 void bitmapBorder::Draw()
 {
@@ -248,7 +380,6 @@ void bitmapBorder::Draw()
 // carries Width at +0x24 and Height at +0x28 (DC fieldlist, and the
 // resource base is 0x1c on both builds). Retail's bitmapBorder does NOT
 // emit SetPalette between them, which is why the two rows are adjacent.
-// E:\gamedcs\border.cpp:313
 VA(0x004504a0, 0xE)  // anchor-vtable (slot 6 of 0x63ba94), dc 0x54948
 int bitmapBorder::GetRealWidth()
 {
@@ -290,23 +421,76 @@ void bitmapBorder::SetPlayerPaletteColors(int whichPlayer)
     ::SetPlayerPaletteColors(&image->p24, whichPlayer);
 }
 
-#if 0  // @carcass
-
-// E:\gamedcs\border.cpp:355
-DC_ONLY(0x54a20, 0x76)
+// E:\gamedcs\border.cpp:355 - promoted from DC_ONLY 2026-08-14, slot 2 of
+// vtable 0x63ba94. Three live widget commands, and the id test is hoisted
+// OUT of them (retail checks msg->codeY against this->id once, before the
+// codeX switch) - the opposite of coloredBorderFrame::Main, which repeats
+// it per arm. The switch is the subtract chain `sub ecx,0xa / je / dec /
+// je / sub ecx,2 / jne`, VC6's three-case non-table form.
+//
+// Two of the arms are CALLS in source and inlines in the object: the
+// SET_IMAGE arm reproduces SetImage (0x4504c0) down to the inline strcmp
+// against image->Name, and SET_PLAYER_PALETTE_COLORS reproduces
+// SetPlayerPaletteColors (0x450520) with its +0x50 / +0x250 palette
+// offsets. The SET_PALETTE arm is written out longhand because retail has
+// NO bitmapBorder::SetPalette row at all - the rows either side of it
+// (GetRealWidth 0x4504a0, GetRealHeight 0x4504b0) are adjacent.
+VA(0x00450550, 0x132)  // anchor-vtable (slot 2 of 0x63ba94), dc 0x54a20
 int bitmapBorder::Main(message* msg)
 {
-    // @stub
+    if (field_2C > 0)
+        return 0;
+    if (!(status & WIDGET_ACTIVE)) {
+        if (msg->id != MESSAGE_WIDGET)
+            return 0;
+    } else if (msg->id == MESSAGE_WIDGET && msg->codeY == id) {
+        switch (msg->codeX) {
+        case WIDGET_SET_PALETTE: {
+            // The name is read BEFORE the image test - retail hoists
+            // `mov eax,[eax+0x18]` above the `test ecx,ecx`, which is what
+            // an inlined SetPalette(msg->extraText) does to its argument.
+            const char* paletteName = msg->extraText;
+            if (image) {
+                TPalette16* newPalette =
+                    ResourceManager::GetPalette(paletteName);
+                if (newPalette) {
+                    image->SetPalette(newPalette->data);
+                    newPalette->Dispose();
+                }
+            }
+            return 1;
+        }
+        case WIDGET_SET_IMAGE:
+            SetImage(msg->extraText);
+            return 1;
+        case WIDGET_SET_PLAYER_PALETTE_COLORS:
+            SetPlayerPaletteColors(msg->extra);
+            return 1;
+        }
+    }
+    return border::Main(msg);
 }
 
-// E:\gamedcs\border.cpp:398
-DC_ONLY(0x54a98, 0xD0)
-void bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id, const char* image, int style, unsigned char focusable)
-{
-    // @stub
-}
+#if 0  // @carcass
 
 #endif  // @carcass
+
+// E:\gamedcs\border.cpp:398 - promoted from DC_ONLY. bitmapBorder's
+// constructor one class over, instruction for instruction: `ret 0x1c`,
+// the same ??0widget@@QAE@XZ + single derived vtable store + body-side
+// widget::initialize, and the same duplicated-epilogue if/else on the
+// image name. Only the vtable (0x63bacc) and the loader differ -
+// ResourceManager::GetBitmap16 at 0x55afd0 instead of GetBitmap816.
+VA(0x00450690, 0x8C)  // anchor-bracket + arity (`ret 0x1c`), dc 0x54a98
+bitmapBorder16::bitmapBorder16(int x, int y, int w, int h, int id,
+                               const char* image_, int style)
+{
+    initialize(x, y, w, h, id, style);
+    if (image_)
+        image = ResourceManager::GetBitmap16(image_);
+    else
+        image = 0;
+}
 
 // E:\gamedcs\border.cpp:404 - bitmapBorder16::`scalar deleting
 // destructor' (dc 0x54e24). Slot 0 of vtable 0x63bacc; calls
@@ -338,7 +522,6 @@ void bitmapBorder16::zBufferDraw()
 // 4-byte empty one before it, ICF-folded away), and the body is Draw2
 // verbatim EXCEPT for the parent-window origin added to the destination
 // point - which is exactly what a Draw/Draw2 pair means.
-// E:\gamedcs\border.cpp:419
 VA(0x004507b0, 0x55)  // dc-bracket + body (Draw2 plus the window origin), dc 0x54ba8
 void bitmapBorder16::Draw()
 {
@@ -422,20 +605,6 @@ void* coloredBorder::`scalar deleting destructor'(unsigned __flags)
 // E:\gamedcs\border.cpp:178
 DC_ONLY(0x54d8c, 0x18)
 void coloredBorder::~coloredBorder()
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:206
-DC_ONLY(0x54da4, 0x34)
-void* coloredBorderFrame::`scalar deleting destructor'(unsigned __flags)
-{
-    // @stub
-}
-
-// E:\gamedcs\border.cpp:206
-DC_ONLY(0x54dd8, 0x18)
-void coloredBorderFrame::~coloredBorderFrame()
 {
     // @stub
 }

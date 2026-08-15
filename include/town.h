@@ -411,10 +411,12 @@ public:
     // 0x5be930. Declared for update_shipyard's direct call; the body is
     // still outside the admitted surface.
     type_building_id create_building(type_building_id building);
-#ifdef HOMM3_TOWN_OBJ_DECLS
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW)
     // 0x5bec60. Downgrades this town's duplicate Capitol when another
-    // owned town already carries one. The declaration is scoped to
-    // town.obj because member population affects VC6 output elsewhere.
+    // owned town already carries one. The declaration is scoped by VIEW
+    // because member population affects VC6 output elsewhere; events.obj
+    // joins for advManager::TownEvent, which runs it immediately after
+    // ClaimTown on both of its capture paths.
     void destroy_extra_capitol();
 #endif
     // 0x5bf210. Keeps the dock-with-boat pseudo-building synchronized
@@ -438,13 +440,16 @@ public:
     int HasGarrison();
     town();
     int load(TAbstractFile* infile, int saveVersion);
-#ifdef HOMM3_TOWN_OBJ_DECLS
+#if defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_EVENTS_VIEW)
     // 0x5be030 remains outside the admitted surface; hire needs its
-    // direct town-spell handoff.
+    // direct town-spell handoff, and advManager::TownEvent closes every
+    // successful visit with it.
     void GiveSpells(hero* forceHero);
     // 0x5be210. Enters the shared town manager and restores the visiting
     // hero as the adventure-map context on return.
     void View(int bAlreadyFaded);
+#endif
+#ifdef HOMM3_TOWN_OBJ_DECLS
     // 0x5c12e0. Charges and places one of the player's tavern offers.
     void hire(hero* new_hero, long player_id);
     // 0x5be450. Exchanges the garrison and visiting heroes.

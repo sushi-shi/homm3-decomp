@@ -103,6 +103,16 @@ NewSMapHeader::~NewSMapHeader()
 VA_COMPGEN(0x0045ae40, 0x21, SCALAR_DELETING_DTOR, TCampaignBrief)
 
 // E:\gamedcs\campaignbrief.cpp:1011
+// Residual (95.7583%): every instruction, branch and memory operand agrees;
+// the whole delta is one whole-body callee-saved permutation. Retail binds
+// its three call-crossing pseudos EDI/ESI/EBX in creation order while this
+// compile binds them EBX/ESI/EDI, and the saved-game pointer's load/copy
+// pair is mirrored with it (retail `mov esi,[gp]` then `mov ecx,esi`, ours
+// the reverse). why-reg v2 (--model, 2026-08-13) reports IDENTICAL
+// definition slots and order on both sides - base ebx@9/esi@32/edi@71
+// against ref edi@11/esi@30/ebx@71 - and CAPS the transposition as the C1
+// front-end handle-state class: the value that would have to move first is
+// `this`, which no statement-level spelling can rename. 0 mutation compiles.
 VA(0x0045afb0, 0x18F)  // anchor-global, dc 0x5a11c
 TCampaignBrief::~TCampaignBrief()
 {

@@ -6,36 +6,87 @@
 #include "font.h"
 #include "bitmap16.h"
 
+// The sample.obj lever (src/sample.cpp), needed here for the opposite
+// reason: with the palette a real member, a THROWING `delete data` forces
+// ~font's ENTRY unwind state up to 1, because the palette would have to be
+// unwound out of the body. Retail's ~font enters at state 0 - the resource
+// base alone - which is the shape a nothrow-visible operator delete gives,
+// since the first throwing point then IS the palette destructor, by which
+// time the palette is already being destroyed.
+__declspec(nothrow) void __cdecl operator delete(void* _P);
+
 #if 0  // @carcass
 
 // E:\gamedcs\font.cpp:33
+// The default constructor has NO retail row: font.obj's carved span runs
+// 0x4b5020..0x4b5b90 and every row in it is accounted for below, with the
+// 32-byte 0x4b5020 an atexit/guard-byte cinit thunk (excluded class).
+// Either the retail source dropped it or its single use inlined it away.
 DC_ONLY(0xa1ba8, 0x5C)
 void font::font()
 {
     // @stub
 }
 
-// E:\gamedcs\font.cpp:41
-DC_ONLY(0xa1c04, 0x90)
-void font::font(const char* name, const font::TFontSpec* fontspec, int dsize, unsigned char* d)
-{
-    // @stub
-}
-
-// E:\gamedcs\font.cpp:50
-
 #endif  // @carcass
 
-// EXACT 2026-08-11. Retail's EH map registers only the resource base as
-// state 0; the embedded palette is destroyed by a direct qualified call,
-// not as an automatic nontrivial member. TFontPaletteStorage preserves the
-// bytes while making that unwind topology source-expressible.
+// E:\gamedcs\font.cpp:35 - font::`scalar deleting destructor'
+// (dc 0xa27c4). Slot 0 of font's vtable 0x63e5f4, read straight out of
+// the image: the table is {0x4b5040, 0x55d0f0 (resource::Dispose's base
+// body), 0x4b5250}. The 33-byte row calls ??1font (0x4b5110) under the
+// flags&1 operator delete tail.
+VA_COMPGEN(0x004b5040, 0x21, SCALAR_DELETING_DTOR, font)
+
+// E:\gamedcs\font.cpp:41
+// The TU's missing constructor, reconstructed 2026-08-14. Three things
+// the bytes force, in the order they force them:
+//
+//  1. The 0x1020-byte header copy (`mov ecx,0x408; rep movsd` into
+//     this+0x1c) runs BETWEEN the resource base constructor and the
+//     TPalette16 subobject constructor. A body assignment would have to
+//     run after every member initializer, so the copy IS a member
+//     initializer - which is why `fs` is now a real struct member and
+//     the parameter is the by-reference `const TFontSpec&` DC's mangled
+//     name (`??0font@@QAA@PBDABUTFontSpec@0@HPAE@Z`, ABU = const ref to
+//     struct) already spelled.
+//  2. The palette is a member held BY VALUE, not a byte blob: the
+//     `mov byte ptr [ebp-4], 1` after `call TPalette16::TPalette16` is a
+//     constructor unwind-state bump, and its funclet (0x62b4d8:
+//     `mov ecx,[ebp-0x10]; add ecx,0x103c; jmp ??1TPalette16`) destroys
+//     exactly the subobject at font+0x103c. DC agrees - LF_MEMBER
+//     `Palette`, offset 4156, type TPalette16.
+//  3. `data` is stored, then `DataSize`, and only then is the null tested
+//     - retail interleaves `mov [ebx+0x1258],eax / test eax,eax /
+//     mov [ebx+0x125c],esi / je`, which is the schedule of
+//     `data = new ...; DataSize = dsize; if (data) memcpy(...)`.
+//
+// The resource type is 0x50; the neighbouring proven values are
+// text 2, bitmap24 0x11 and sfx 0x20.
+VA(0x004b5070, 0x9B)  // anchor-global, dc 0xa1c04
+font::font(const char* name, const TFontSpec& fontspec, int dsize,
+           unsigned char* d)
+    : resource(name, RESOURCE_TYPE_FONT), fs(fontspec)
+{
+    data = new unsigned char[dsize];
+    DataSize = dsize;
+    if (data)
+        memcpy(data, d, dsize);
+}
+
+// EXACT 2026-08-11, re-derived 2026-08-14 when the palette became a real
+// member. The single unwind funclet (0x62b4f0) destroys only the resource
+// base, so retail ENTERS at state 0 and never bumps it for the palette -
+// and that is the whole content of the nothrow declaration at the top of
+// this file. With a throwing operator delete VC6 has to be able to unwind
+// the palette out of the body, so it enters at state 1 and inserts a
+// `mov byte ptr [ebp-4],0` before the member destructor; that one extra
+// instruction is worth 3.37 points (96.63 vs 100.00) and is the ONLY
+// difference the two spellings produce.
 VA(0x004b5110, 0x67)  // anchor-global, dc 0xa1c94
 font::~font()
 {
     if (data)
         delete data;
-    palette.asPalette()->TPalette16::~TPalette16();
 }
 
 #if 0  // @carcass
@@ -53,7 +104,7 @@ int font::GetColor(font::TColor color_scheme, unsigned char highlighted)
 VA(0x004b5180, 0x16)  // anchor-global, dc 0xa1d14
 void font::SetPalette(const TPalette16* new_palette)
 {
-    *palette.asPalette() = new_palette;
+    palette = new_palette;
 }
 
 // E:\gamedcs\font.cpp:86
@@ -68,19 +119,28 @@ void font::SetPalette(const TPalette16* new_palette)
 // 78.3 (width,src,rows,dst) with no other change, so the order below
 // is the measured optimum, not a guess. Also tried and rejected, all
 // byte-identical to it: `dst` split into declaration + `+=` statement;
-// `bmp->Pitch * y` instead of `y * bmp->Pitch`; `spec[c].field_0 + x`;
-// `glyphOffsets[c] + (unsigned char*)data`; the row loop as a negated
+// `bmp->Pitch * y` instead of `y * bmp->Pitch`; `fs.abc[c].field_0 + x`;
+// `fs.Offset[c] + (unsigned char*)data`; the row loop as a negated
 // outer `if (rows > 0)` instead of the `rows <= 0` early-out.
+// Sharpened 2026-08-14: the slot story is that retail finds TWO dead
+// parameter slots to home locals in ([ebp+8] `c` and [ebp+0x10] `x`,
+// carrying `width` and `rows`) where our CL finds one and buys the second
+// with `push ecx`. Both compiles need exactly two homes, both parameters
+// die at the same point, and every immediate and displacement agrees - so
+// this is the same one allocator bit DrawStringExecute carries, not a
+// second defect. It did NOT move when the TU's symbol state was rewritten
+// wholesale by the constructor landing; see the ledger on
+// DrawStringExecute below for the disproof.
 VA(0x004b51a0, 0xA9)  // anchor-global, dc 0xa1d58
 void font::DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)
 {
     if (c < 0 || c >= 256)
         return;
-    int width = spec[c].field_4;
-    unsigned char* src = static_cast<unsigned char*>(data) + glyphOffsets[c];
-    int rows = height;
+    int width = fs.abc[c].field_4;
+    unsigned char* src = static_cast<unsigned char*>(data) + fs.Offset[c];
+    int rows = fs.height;
     unsigned char* dst = static_cast<unsigned char*>(static_cast<void*>(bmp->map))
-                         + y * bmp->Pitch + 2 * (x + spec[c].field_0);
+                         + y * bmp->Pitch + 2 * (x + fs.abc[c].field_0);
     if (rows <= 0)
         return;
     do {
@@ -102,21 +162,234 @@ void font::DrawCharacter(int c, Bitmap16Bit* bmp, int x, int y, int color)
     } while (--rows);
 }
 
+// E:\gamedcs\resrce.h - slot 2 of vtable 0x63e5f4, the resource size
+// query resource declares pure. Promoted from an unlabelled carve row
+// 2026-08-14: the vtable pins the identity, and the body
+// (`mov eax,[ecx+0x125c]; add eax,0x1260; ret`) pins the layout from the
+// other side - 0x1260 IS sizeof(font), so the dword at 0x125c is the
+// glyph payload's own byte count. DC files no such row for font because
+// its port left the query on a different slot shape.
+VA(0x004b5250, 0xC)  // anchor-vtable (slot 2 of 0x63e5f4), retail-only
+unsigned int font::_vslot2() const
+{
+    return DataSize + sizeof(font);
+}
+
 #if 0  // @carcass
 
 // E:\gamedcs\font.cpp:123
+// DECODED from the Dreamcast body 2026-08-14 (SH4, 44 B): every clip
+// parameter is DEAD - the whole function is
+// `DrawCharacter('_', bitmap, x, y, color + highlighted)`. Retail has no
+// row for it at all (nothing between _vslot2's end at 0x4b525c and
+// DrawStringExecute at 0x4b5260), so retail's font.cpp spells the
+// underscore draw directly, exactly as the already-exact
+// DrawBoundedString does. Kept as a carcass note, not reconstructed.
 DC_ONLY(0xa1e30, 0x2C)
 void font::DrawCursor(Bitmap16Bit* bitmap, int x, int y, int color, int clipX, int clipY, int clipWidth, int clipHeight, unsigned char highlighted)
 {
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\font.cpp:138
-DC_ONLY(0xa1e5c, 0x240)
-void font::DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap, int x, int y, font::TColor color_scheme, int clipX, int clipY, int clipWidth, int clipHeight, int cursorPos)
+// 98.46% 2026-08-14. All 37 blocks agree in size, flow kind and target
+// (`homm3 sema diff 0x4b5260` reports 37/37 exact); every immediate,
+// displacement, memory operand and jump-table byte agrees. The ONLY
+// residual is the unit's known callee-saved role swap: retail parks
+// `this` in ESI and `curX` in EDI, ours the mirror image (edi->esi x15,
+// esi->edi x13), which also moves the shrink-wrapped `push edi` three
+// slots. DrawCharacter above carries the SAME mirror-image swap, so the
+// signature is TU-wide, not statement-local. See the residual ledger at
+// the end of this comment.
+//
+// THE PARTITION, and it was the one open question in the decode: the
+// jump table at 0x4b547c has two targets, 0x4b53a6 and 0x4b53dc,
+// selected by the byte table at 0x4b5484. That table is
+// {0,1,1,0,1,1,0,1,1,0} over color_scheme 1..10 - the earlier note read
+// it shifted by one and got {1,2,5,8}. Arm 0 is therefore
+// color_scheme in {1,4,7,10} = {PRIMARY, WHITE, HEADING, WHITE_PLAYER},
+// i.e. THE BASE COLOUR OF EACH TRIPLE, and everything else (plus the
+// default) is arm 1.
+//
+// The Dreamcast body settles it independently: at dc 0xa1f9c the same
+// selection is an if-chain, `cmp/eq #1`, `cmp/eq #4`, `cmp/eq #7`,
+// `cmp/eq #10`, branching to two arms (dc 0xa1fb8 / 0xa1ffc) that are
+// likewise instruction-identical modulo a scratch-register swap and
+// likewise share only their tail. Two compilers on two architectures
+// duplicated the same body, so the switch really is spelled twice in
+// the source with both arms the same - vestigial code, and the source
+// shape is not in doubt.
+//
+// Where the set comes from is font::GetColor (dc 0xa1ce4, 48 B, decoded
+// here for the first time):
+//
+//     if (color_scheme & CUSTOM_COLOR) return color_scheme & ~CUSTOM_COLOR;
+//     color = color_scheme + 9;
+//     if (highlighted && (color_scheme == PRIMARY ||
+//                         color_scheme == WHITE || color_scheme == HEADING))
+//         color++;
+//     return color;
+//
+// - the `+9` biases TColor into the font palette and the `+1` promotes a
+// base colour to its _HIGHLIGHT sibling. {1,4,7} are exactly the bases
+// GetColor promotes; the switch here is the same predicate with
+// WHITE_PLAYER added. Retail has no out-of-line GetColor row, and
+// DrawBoundedString (already exact) spells the same CUSTOM_COLOR fold by
+// hand, so it is spelled by hand below too.
+//
+// Frame notes, byte-read: retail packs three locals into PARAMETER slots
+// whose last read is past - [ebp+0x2c] (clipHeight) holds drawColor,
+// [ebp+0x24] (clipY) the one-byte `highlighted`, [ebp+0x14] (x) the
+// character index. Our CL does the same packing unprompted from plain
+// locals, which is why the frame is just `sub esp, 8` for `c` and the
+// CSE'd `&fs.abc[c]`. GetCharacterWidth inlines three times; VC6 shares
+// its `&fs.abc[c]` in [ebp-8] across the guard and the advance but
+// recomputes the abcA+abcB+abcC sum at each.
+//
+// THE ONE LEVER THAT MATTERED, worth 13.25 points on its own: `c` is
+// `unsigned char`, not `char`. Retail keeps ONE zero-extended character
+// in EAX and spends it twice - as the spec index (`lea ecx,[eax+eax*2
+// +0xf]`, the +5 folded into the lea so EAX survives) and as the
+// DrawCharacter argument (`push eax`). With `char c` our CL destroyed
+// EAX computing the index (`add eax,5; lea eax,[eax+2*eax]`, one extra
+// instruction) and re-derived the argument with `movsx eax, byte ptr
+// [ebp+..]` - which in turn let it cross-jump the count==0 cursor
+// early-out into the post-loop tail that retail spells out in full.
+// 85.21% -> 98.46% for that single word, with nothing else changed.
+//
+// RESIDUAL LEDGER - the ESI/EDI transposition, 86 spellings measured
+// 2026-08-14, none of them moved it off 98.46:
+//   - all 120 permutations of the five local declarations (75 run
+//     before the sweep was cut; every one 98.460);
+//   - `curX = x;` ahead of the guard (96.83), the guard as a ternary
+//     (98.46), the guard as nested ifs (97.59), the declaration moved
+//     below `y += baseyoffset` (98.46), `register`/`long` curX (98.46);
+//   - `drawColor` as a ternary instead of if/else (96.41 - the if/else
+//     spelling, which is also DrawBoundedString's, is the optimum);
+//   - a `font* self = this` alias used for the bearing read (98.46 -
+//     copy-propagated, exactly as docs/vc6/handle-order.md predicts);
+//   - TWO TU-content probes: a real out-of-line font::GetColor member
+//     defined and called ahead of this function, and an unrelated
+//     3-parameter static ahead of it. Both 98.46 - i.e. adding whole
+//     symbols before the function is inert, corroborating the
+//     handle-order doc's "uniform handle shifts are inert" measurement.
+// `homm3 vc6 diagnose` classifies it register-homing, and `why-reg
+// --model` reports both compiles define the same three call-crossing
+// pseudos at the same schedule slots (#0 this @6/@7, #1 curX @21,
+// #2 @28) yet bind #0/#1 the other way round - so the allocator was fed
+// the same pseudos in a different PROCESSING order. Its verdict is the
+// C1 handle-STATE class: `this` is minted between the parameters and
+// the locals by parse position, so no declaration or spelling can put a
+// local's handle ahead of it.
+//
+// THE TU-WIDE LEVER IS NOW DISPROVED, 2026-08-14. The standing advice was
+// "aim TU-wide - font.obj still owes retail its constructors and
+// DrawString". font.obj now owes retail NOTHING: the one real missing row
+// (the 155-byte constructor 0x4b5070) is reconstructed and exact, the
+// 32-byte 0x4b5020 that looked like a second constructor is a guard-byte/
+// atexit cinit thunk (excluded class), and neither the default constructor
+// nor DrawString has a retail slot anywhere in the 0x4b5020..0x4b5b90
+// span. Landing that row rewrote the TU's symbol state about as hard as it
+// can be rewritten - a whole new nested type font::TFontSpec holding the
+// 0x1020 header, every `spec`/`glyphOffsets`/`height`/`baseyoffset`
+// reference respelled through it, the palette promoted from a byte blob to
+// a real TPalette16 member, a new file-scope operator delete declaration,
+// and a new symbol emitted ahead of every function here. This function and
+// DrawCharacter did not move by one part in ten thousand: 98.4598 and
+// 78.2623 before and after. Whatever selects the ESI/EDI binding, it is
+// NOT the count or the position of the TU's symbols. Do not spend another
+// run on TU-content probes. Corroborated from the other side 2026-08-14:
+// a bare `struct probeN_t { int a; };` block inserted after the includes
+// at N = 1, 3, 6, 11 and 19 cumulative definitions - the same knob that
+// moved initialize_game_data 100.0 -> 96.09 in the include-set residual
+// class - leaves this function, DrawCharacter, DrawBoundedString and
+// LineLength unmoved to four decimals at every count. font.obj's
+// allocator state is insensitive to the TU's user-defined type
+// population as well as to its symbol population. The /Ob2 two-axis
+// probe (byte-inert statement mass 0..32 crossed with 0..8 tail
+// `xx_nop()` candidate sites, 16 cells) is likewise flat here and on
+// DrawCharacter.
+VA(0x004b5260, 0x22E)  // anchor-global, dc 0xa1e5c
+void font::DrawStringExecute(const char* text, int count, Bitmap16Bit* bitmap,
+                             int x, int y, int color_scheme, int clipX,
+                             int clipY, int clipWidth, int clipHeight,
+                             int cursorPos)
 {
-    // @stub
+    int curX;
+    int drawColor;
+    int index;
+    unsigned char highlighted;
+    unsigned char c;
+
+    y += fs.baseyoffset;
+    if (*text && fs.abc[static_cast<unsigned char>(*text)].field_0 < 0)
+        curX = x - fs.abc[static_cast<unsigned char>(*text)].field_0;
+    else
+        curX = x;
+
+    if (y < clipY)
+        return;
+    if (y + fs.height > clipY + clipHeight)
+        return;
+
+    while (count > 0) {
+        if (curX + fs.abc[static_cast<unsigned char>(*text)].field_0 >= clipX)
+            break;
+        curX += GetCharacterWidth(*text);
+        text++;
+        count--;
+    }
+
+    if (!(color_scheme & CUSTOM_COLOR))
+        drawColor = color_scheme + 9;
+    else
+        drawColor = color_scheme & ~CUSTOM_COLOR;
+
+    if (count == 0 && cursorPos != -1) {
+        DrawCharacter('_', bitmap, curX, y, drawColor);
+        return;
+    }
+
+    highlighted = 0;
+    index = 0;
+    while (count > 0) {
+        c = *text;
+        if (c == '{') {
+            highlighted = 1;
+        } else if (c == '}') {
+            highlighted = 0;
+        } else {
+            if (curX + GetCharacterWidth(c) > clipX + clipWidth)
+                break;
+            switch (color_scheme) {
+            case PRIMARY:
+            case WHITE:
+            case HEADING:
+            case WHITE_PLAYER:
+                DrawCharacter(c, bitmap, curX, y, drawColor + highlighted);
+                if (cursorPos == index)
+                    DrawCharacter('_', bitmap, curX, y, drawColor);
+                break;
+            default:
+                DrawCharacter(c, bitmap, curX, y, drawColor + highlighted);
+                if (cursorPos == index)
+                    DrawCharacter('_', bitmap, curX, y, drawColor);
+                break;
+            }
+            curX += GetCharacterWidth(c);
+        }
+        text++;
+        count--;
+        index++;
+    }
+
+    if (cursorPos == index)
+        DrawCharacter('_', bitmap, curX, y, drawColor + highlighted);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\font.cpp:246
 DC_ONLY(0xa209c, 0x6A)
@@ -161,6 +434,28 @@ void font::DrawString(const char* text, Bitmap16Bit* bitmap, int x, int y, font:
 // (98.28 but one duplicated loop guard), the first `total` (97.24),
 // register/long/initializer/address-taken spellings (96.81), and removing
 // or bypassing the loop guard (95-96% allocation cascades).
+//
+// WHAT THE VOLATILE IS DOING, read off the bytes 2026-08-14. The residual
+// is exactly three memory instructions and nothing else: retail spends
+// `imul eax,ecx / cmp eax,edi / jge / mov ecx,edi / sub ecx,eax /
+// mov [ebp-4],ecx` with `total` living only in EAX, where the volatile
+// forces `mov [ebp-0x10],eax` and reloads it for both reads. The frame
+// is the SAME six slots on both sides (-4,-8,-0xc,-0x10,-0x14,-0x18);
+// retail touches -0x10 four times, we touch it seven. What the volatile
+// buys is slot ORDER, not the slot count: with a plain `total` the pair
+// at [ebp-4] and [ebp-0xc] SWAPS against retail (visible as retail's
+// `mov eax,[ebp-0xc] / mov edi,[ebp-4] / lea eax,[edi+2*eax]` becoming
+// `mov eax,[ebp-4] / mov edi,[ebp-0xc] / lea eax,[eax+2*edi]`) and an
+// EDX/EDI scratch cascade opens through the whole tail - 96.81.
+// Rejected 2026-08-14: all sixteen single-variable relocations of the
+// eight function-scope declarations (each of pos/limit/currY/lineStart/
+// okWidthIndex/iOrigPixelWidth/iHeight/width moved to the front and to
+// the back of the block), crossed with plain and volatile `total` -
+// every one of the 32 compiles is 96.8123 or 98.7864 to four decimals,
+// so VC6's slot assignment here is NOT driven by source declaration
+// order. `why-reg --model` on the plain base declines (bindings agree at
+// every first definition). The /Ob2 two-axis probe (mass 0..32 x 0..8
+// tail candidate sites) is flat in all sixteen cells.
 VA(0x004b5490, 0x308)  // anchor-global, dc 0xa2108
 void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
                              int y, int boxWidth, int boxHeight,
@@ -195,7 +490,7 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         int total;
 
         justification &= ~VERT_CENTER_JUSTIFIED;
-        iHeight = height;
+        iHeight = fs.height;
         total = LineLength(str, boxWidth) * iHeight;
         if (total < boxHeight)
             currY = (boxHeight - total) / 2;
@@ -206,7 +501,7 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         volatile int total;
 
         justification &= ~BOTTOM_JUSTIFIED;
-        total = LineLength(str, boxWidth) * height;
+        total = LineLength(str, boxWidth) * fs.height;
         if (total < boxHeight)
             currY = boxHeight - total;
     }
@@ -219,7 +514,7 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
 
         if (str[pos] == 0)
             return;
-        iHeight = height;
+        iHeight = fs.height;
         if (currY + iHeight > boxHeight && currY != 0)
             return;
         width = 0;
@@ -227,8 +522,8 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         while (str[pos] == '{' || str[pos] == '}')
             ++pos;
         if (str[pos] != 0
-            && spec[static_cast<unsigned char>(str[pos])].field_0 < 0)
-            width = -spec[str[pos]].field_0;
+            && fs.abc[static_cast<unsigned char>(str[pos])].field_0 < 0)
+            width = -fs.abc[str[pos]].field_0;
         while (str[pos] != 0 && str[pos] != '\n' && width <= boxWidth) {
             if (str[pos] != '{' && str[pos] != '}')
                 width += GetCharacterWidth(str[pos]);
@@ -237,13 +532,13 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         k = pos - 1;
         while ((str[k] == '{' || str[k] == '}') && k > lineStart)
             --k;
-        if (pos > 0 && spec[static_cast<unsigned char>(str[k])].field_8 < 0)
-            width -= spec[static_cast<unsigned char>(str[k])].field_8;
+        if (pos > 0 && fs.abc[static_cast<unsigned char>(str[k])].field_8 < 0)
+            width -= fs.abc[static_cast<unsigned char>(str[k])].field_8;
         if (width > boxWidth) {
             iOrigPixelWidth = width;
             okWidthIndex = 0;
-            if (spec[static_cast<unsigned char>(str[k])].field_8 < 0)
-                width += spec[str[k]].field_8;
+            if (fs.abc[static_cast<unsigned char>(str[k])].field_8 < 0)
+                width += fs.abc[str[k]].field_8;
             pos = k;
             for (;;) {
                 if (str[pos] == ' ')
@@ -281,7 +576,7 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
         DrawStringExecute(str + lineStart, pos - lineStart, bitmap, x + xOff,
                           y + currY, color_scheme, x, y, boxWidth, boxHeight,
                           cursorPos);
-        currY += height;
+        currY += fs.height;
         ++pos;
     }
 }
@@ -295,7 +590,7 @@ void font::DrawBoundedString(const char* str, Bitmap16Bit* bitmap, int x,
 VA(0x004b57a0, 0x25)  // linkorder, dc 0xa2420
 int font::GetCharacterWidth(unsigned char currChar)
 {
-    const TFontSpec* record = &spec[currChar];
+    const TFontSpec::myABC* record = &fs.abc[currChar];
     return record->field_4 + record->field_8 + record->field_0;
 }
 
@@ -329,12 +624,67 @@ long font::get_string_width(const char* arg)
 //   * `int width = 0;` is declared BEFORE `int lineStart = pos;`.
 // Making `lineStart` volatile homes the backtrack boundary and raises the
 // function 91.74 -> 92.68 while preserving the exact branch sequence.
-// The remaining 17 register-visible slots are scratch allocation after
-// first definitions; a second guided sweep found no improving mutation.
 // Earlier rejected forms: `count` declared first (86.4), declared last
 // (identical), split declaration + assignment (identical), `pos` declared
 // first (identical), `str[pos] != 0 && pos < len` outer order (68.6),
 // `lineStart` before `width` (91.3), and `width` hoisted (91.3).
+//
+// WHAT THE `volatile` ACTUALLY BUYS AND COSTS, measured 2026-08-14 by
+// diffing BOTH spellings against retail instruction-for-instruction
+// instead of reading their scores. The two spellings are exact in
+// COMPLEMENTARY halves of the function, and each half is the other's
+// whole residual:
+//   * PLAIN `int lineStart` (91.74, 94 instructions) reproduces the
+//     entire BACKTRACK LOOP byte-for-byte - `mov eax,[ebp+8]` for str,
+//     retail's `lea edx,[edx+2*edx] / mov eax,[ebx+4*edx+8] /
+//     lea edx,[ebx+4*edx]` scratch order, `cmp edi,[ebp+0xc]` as a
+//     memory operand, and the FOLDED `cmp esi,[ebp-4]` at the space
+//     exit. So volatile is exactly what blocks that fold: it splits the
+//     one compare into `mov edx,[ebp-4]; cmp esi,edx`.
+//   * VOLATILE (92.68, 98 instructions against retail's 97) reproduces
+//     everything ELSE: `xor edi,edi` + `mov [ebp-8],edi` at entry,
+//     boxWidth HOISTED into EAX in the outer preheader (the back edge
+//     lands past it, at `mov ecx,[ebp+8]`), `cmp edi,eax` twice, ECX as
+//     the forward-loop width scratch, and `mov eax,edi` at the return.
+//     The plain spelling loses all of that: with EAX free it gives count
+//     EAX (saving retail's two instructions) and re-loads boxWidth into
+//     ECX at the loop HEAD instead of hoisting it.
+// The volatile residual is therefore ONE optimizer decision and its nine
+// rows: retail SPLITS the boxWidth pseudo's EAX live range across the
+// backtrack region - EAX is dead there (so str takes it and the width
+// scratch takes it) and is reloaded once at the backtrack EXIT
+// (`mov eax,[ebp+0xc]` at retail+0xd1). Our C2 keeps the pseudo live
+// through the loop and rematerialises it INSIDE, right after the `sub
+// edi,eax` that clobbers it. Live-range splitting, not a binding.
+// Measured against that and all byte-identical or worse, 2026-08-14:
+//   - all six declaration orders of len/count/pos, each crossed with
+//     `lineStart` before/after `width` (the three orders that keep
+//     `len` first are 91.7423 to four decimals; putting count or pos
+//     first costs the shared `xor eax,eax` and drops to 80-86);
+//   - a `const int limit = boxWidth` copy used in all three compares,
+//     and one used only in the backtrack compare, and one used only in
+//     the forward compares - VC6 folds the name away every time, 0 of
+//     the 3 changed a byte or the frame;
+//   - `const int boxWidth` parameter, outer loop as `for(;;)`+breaks,
+//     `count++` before `pos++`, `width`/`lineStart`/`candidate` hoisted
+//     to function scope (all 91.7423);
+//   - the space exit as `if (lineStart >= pos)` (92.06, worse), as
+//     `if (!(pos > lineStart))` and as an INVERTED guard `if (pos >
+//     lineStart) break; pos = candidate; break;` - the latter is
+//     retail's exact block layout and is byte-identical to the current
+//     spelling, so VC6 normalises it;
+//   - volatile moved to count / len / pos / width / candidate on the
+//     plain base (86.4 / 81.2 / 46.7 / 75.2 / 84.7 - all worse);
+//   - `homm3 vc6 why-reg --model` declines on both bases (bindings
+//     agree at every first definition), and its 16-mutation guided
+//     sweep on the volatile base reports no mutation moving the
+//     divergence toward the reference;
+//   - the /Ob2 two-axis probe (byte-inert statement mass 0..32 crossed
+//     with 0..8 tail `xx_nop()` candidate sites) is FLAT to four
+//     decimals in every cell, with a `volatile` mass control proving
+//     the probe reaches the function.
+// Next lever would be a loop-optimizer solver that can express "split
+// this pseudo's live range across the inner region", not a spelling.
 VA(0x004b5820, 0xF2)  // anchor-global, dc 0xa246c
 int font::LineLength(const char* str, int boxWidth)
 {

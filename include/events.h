@@ -5,6 +5,247 @@
 #ifndef HOMM3_EVENTS_H
 #define HOMM3_EVENTS_H
 
+#include <va.h>
+
+// Named indices into advevent.txt, the adventure-object text resource
+// events.obj loads through InitializeAdventureEventText (0x49e0e0).
+// Every value is retail-byte-proven by the [Text._First + 4*N] load in
+// the handler named beside it; the names describe those consumers,
+// which is the convention textresource.h's EGeneralTextIndex sets.
+// The rows run ALPHABETICALLY by adventure object, which is what makes
+// each object's lines contiguous and what places every triple below
+// exactly where it falls: war school 158..160, warrior's tomb 161..163,
+// water wheel 164/165, watering hole 166/167, whirlpool 168, windmill
+// 169/170, witch hut 171..173.
+enum EAdventureEventText {
+    // DoEventArena (0x49e7d0), and this pair is the enum's anchor: rows 0
+    // and 1, the very first in the file, because "arena" is the first
+    // adventure object alphabetically. 0 is the iMBType-10 two-picture
+    // choice (+2 Attack against +2 Defense) and 1 the already-fought line.
+    ADV_EVENT_TEXT_ARENA = 0,
+    ADV_EVENT_TEXT_ARENA_VISITED = 1,
+    // The four "one permanent primary skill, once per hero" objects, and
+    // each one is a PAIR: the reward line, then the already-visited line
+    // straight after it. The rows land where the alphabet puts each
+    // object, exactly as the war school / witch hut run below does.
+    // DoEventCoverOfDarkness (0x4a14b0), the object's only row - it has
+    // nothing to report but the fact of the visit. 31 sits below the
+    // defense tower's 39, which is where the alphabet puts "cover of
+    // darkness", and the DC roster agrees: DoEventCoverOfDarkness
+    // (dc 0x92540) runs before DoEventDefenseTower (dc 0x92d40).
+    ADV_EVENT_TEXT_COVER_OF_DARKNESS = 31,
+    // DoEventDefenseTower (0x4a2050); the reward line carries picture
+    // 0x20, the +1 Defense icon.
+    ADV_EVENT_TEXT_DEFENSE_TOWER = 39,
+    ADV_EVENT_TEXT_DEFENSE_TOWER_VISITED = 40,
+    // do_event_dragon_city (0x4a2140), asked with iMBType 2 - the yes/no
+    // form whose answer comes back out of heroWindowManager::dialogReturn.
+    // The utopia has only this ONE advevent.txt row: its already-emptied
+    // line comes out of genrltxt.txt instead (textresource.h's
+    // GENERAL_TEXT_DRAGON_CITY_EMPTIED). 47 lands between the defense
+    // tower's pair at 39/40 and the fountain of youth's at 57/58, which is
+    // where the alphabet puts "dragon city" and where the DC roster puts
+    // do_event_dragon_city - between DoEventDefenseTower (dc 0x92d40) and
+    // DoEventFaerieRing (dc 0x92f08). The two orderings agree again.
+    ADV_EVENT_TEXT_DRAGON_CITY_PROMPT = 47,
+    // DoEventIdol (0x4a12f0). ONE reward row serves all three arms - the
+    // pictures are what differ - and 63 is the already-visited line.
+    ADV_EVENT_TEXT_IDOL = 62,
+    ADV_EVENT_TEXT_IDOL_VISITED = 63,
+    // DoEventFountain (0x4a2480), the Fountain of FORTUNE - 55 is the
+    // reward and 56 the already-drunk line, immediately before the
+    // fountain of youth's own pair, which is exactly where the alphabet
+    // puts the two and where the DC roster puts DoEventFountain
+    // (dc 0x9312c) against DoEventFountainOfYouth (dc 0x93298).
+    ADV_EVENT_TEXT_FOUNTAIN_OF_FORTUNE = 55,
+    ADV_EVENT_TEXT_FOUNTAIN_OF_FORTUNE_VISITED = 56,
+    // DoEventFountainOfYouth (0x4a25f0). The reward carries picture 0x0e,
+    // the same morale icon do_event_watering_hole shows, and the pair is
+    // reward-then-visited like the rest of this block.
+    ADV_EVENT_TEXT_FOUNTAIN_OF_YOUTH = 57,
+    ADV_EVENT_TEXT_FOUNTAIN_OF_YOUTH_VISITED = 58,
+    // DoEventGarden (0x4a2710), picture 0x22 = +1 Knowledge.
+    ADV_EVENT_TEXT_GARDEN = 59,
+    ADV_EVENT_TEXT_GARDEN_VISITED = 60,
+    // DoEventLeanTo (0x4a31a0). 64 is the payout - a resource picture and
+    // its amount - and 65 the picked-clean line.
+    ADV_EVENT_TEXT_LEAN_TO = 64,
+    ADV_EVENT_TEXT_LEAN_TO_EMPTY = 65,
+    // DoEventLibrary (0x4a3280). 66 is the reward, 67 the already-read
+    // line and 68 the refusal a hero gets while `level + 2*diplomacy`
+    // is under ten.
+    ADV_EVENT_TEXT_LIBRARY = 66,
+    ADV_EVENT_TEXT_LIBRARY_VISITED = 67,
+    ADV_EVENT_TEXT_LIBRARY_UNWORTHY = 68,
+    // DoEventMagicSpring (0x4a3590) and DoEventMagicWell (0x4a3730), two
+    // contiguous triples in the same alphabetical run. Each spends one
+    // row on the refill, one on the object being spent for the week or
+    // the day, and one on a hero whose mana was already at its cap.
+    ADV_EVENT_TEXT_MAGIC_SPRING = 74,
+    ADV_EVENT_TEXT_MAGIC_SPRING_EMPTY = 75,
+    ADV_EVENT_TEXT_MAGIC_SPRING_NO_ROOM = 76,
+    ADV_EVENT_TEXT_MAGIC_WELL = 77,
+    ADV_EVENT_TEXT_MAGIC_WELL_VISITED = 78,
+    ADV_EVENT_TEXT_MAGIC_WELL_NO_ROOM = 79,
+    // DoEventMercenaryCamp (0x4a38b0), picture 0x1f = +1 Attack.
+    ADV_EVENT_TEXT_MERC_CAMP = 80,
+    ADV_EVENT_TEXT_MERC_CAMP_VISITED = 81,
+    // The wandering-stack outcome handlers, and the run is contiguous
+    // because "monster" is a single alphabetical entry: 86 is the join
+    // offer monsters_join (0x4a7000) asks with iMBType 2, 91 the
+    // surrender line monsters_flee (0x4a6df0) asks the same way, and
+    // both are sprintf formats taking the creature name alone. 87 is
+    // SHARED by monsters_join and monsters_sell_out - the line either
+    // refusal shows when the stack wanted to fight anyway. 88..90 are
+    // monsters_sell_out's (0x4a7250) prompt, split by count: 88 is the
+    // single-creature form taking (name, gold), while for a real stack
+    // 89 is strcpy'd whole and 90 - taking (count, name, gold) - is
+    // formatted into a 300-byte local and strcat'd onto it.
+    ADV_EVENT_TEXT_MONSTERS_JOIN = 86,
+    ADV_EVENT_TEXT_MONSTERS_INSULTED = 87,
+    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_ONE = 88,
+    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_LEAD = 89,
+    ADV_EVENT_TEXT_MONSTERS_SELL_OUT_MANY = 90,
+    ADV_EVENT_TEXT_MONSTERS_FLEE = 91,
+    // DoEventMysticalGarden (0x4a3bc0). 92 is the payout, 93 the
+    // already-harvested line.
+    ADV_EVENT_TEXT_MYSTICAL_GARDEN = 92,
+    ADV_EVENT_TEXT_MYSTICAL_GARDEN_EMPTY = 93,
+    // DoEventOasis (0x4a3ca0), and this pair is REVERSED against every
+    // other one in this enum: 94 is the already-visited line and 95 the
+    // reward. Both indices are byte-proven by the arm that loads them.
+    ADV_EVENT_TEXT_OASIS_VISITED = 94,
+    ADV_EVENT_TEXT_OASIS = 95,
+    // DoEventRallyFlag (0x4a44c0), and this pair is REVERSED like the
+    // oasis: 110 is the already-visited line and 111 the reward, which
+    // shows the morale and luck pictures side by side.
+    ADV_EVENT_TEXT_RALLY_FLAG_VISITED = 110,
+    ADV_EVENT_TEXT_RALLY_FLAG = 111,
+    // DoEventPowerSchool (0x4a3dc0), picture 0x21 = +1 Spell Power - the
+    // fourth member of the primary-skill quartet above.
+    ADV_EVENT_TEXT_POWER_SCHOOL = 100,
+    ADV_EVENT_TEXT_POWER_SCHOOL_VISITED = 101,
+    // DoEventSiren (0x4a5980). 132 is a sprintf format taking the
+    // experience the drowned troops were worth, 133 the already-visited
+    // line and 134 the row a hero with nothing to lose gets. The trio
+    // sits just below the stables' block, which is where the alphabet
+    // puts "sirens" - and the DC roster agrees, running DoEventSiren
+    // (dc 0x95a34) before DoEventSpellScroll and DoEventStables.
+    ADV_EVENT_TEXT_SIRENS = 132,
+    ADV_EVENT_TEXT_SIRENS_VISITED = 133,
+    ADV_EVENT_TEXT_SIRENS_NO_LOSS = 134,
+    // DoEventStables (0x4a60a0), and this is the only object in the enum
+    // with FOUR contiguous rows: the handler accumulates what it actually
+    // did into a two-bit value and switches over it, so every combination
+    // of "granted the movement" and "upgraded the Cavaliers" has its own
+    // line. The two upgrade rows carry picture class 0x15 with extra 11,
+    // the Champion. 136..139 sits directly before the temple's 140/141,
+    // which is where the alphabet puts "stables".
+    ADV_EVENT_TEXT_STABLES_NOTHING = 136,
+    ADV_EVENT_TEXT_STABLES_MOVEMENT = 137,
+    ADV_EVENT_TEXT_STABLES_UPGRADE = 138,
+    ADV_EVENT_TEXT_STABLES_BOTH = 139,
+    // DoEventTemple (0x4a6200). ONE reward row serves both arms - the
+    // Sunday visit differs only in showing the morale picture twice -
+    // and 141 is the already-worshipped line.
+    ADV_EVENT_TEXT_TEMPLE = 140,
+    ADV_EVENT_TEXT_TEMPLE_VISITED = 141,
+    // DoEventTrainingGrounds (0x4a6330). The reward line carries picture
+    // 0x11 and the experience amount as its quantity.
+    ADV_EVENT_TEXT_TRAINING_GROUNDS = 143,
+    ADV_EVENT_TEXT_TRAINING_GROUNDS_VISITED = 144,
+    // DoEventWarSchool (0x4a7a40). 158 is the two-picture choice offered
+    // with iMBType 10 (+1 Attack against +1 Defense), 159 the
+    // already-trained line and 160 the "under 1000 gold" refusal.
+    ADV_EVENT_TEXT_WAR_SCHOOL_CHOOSE = 158,
+    ADV_EVENT_TEXT_WAR_SCHOOL_VISITED = 159,
+    ADV_EVENT_TEXT_WAR_SCHOOL_NO_GOLD = 160,
+    // do_event_warrior_tomb (0x4a7c30). 161 is asked with iMBType 2 - the
+    // yes/no form whose answer the handler reads back out of
+    // heroWindowManager::dialogReturn - 162 is a sprintf format taking the
+    // artifact name, and 163 is the empty-tomb line that costs -3 morale.
+    ADV_EVENT_TEXT_WARRIOR_TOMB_PROMPT = 161,
+    ADV_EVENT_TEXT_WARRIOR_TOMB_ARTIFACT = 162,
+    ADV_EVENT_TEXT_WARRIOR_TOMB_EMPTY = 163,
+    ADV_EVENT_TEXT_WATER_WHEEL_GOLD = 164,
+    ADV_EVENT_TEXT_WATER_WHEEL_EMPTY = 165,
+    ADV_EVENT_TEXT_WATERING_HOLE = 166,
+    ADV_EVENT_TEXT_WATERING_HOLE_VISITED = 167,
+    ADV_EVENT_TEXT_WINDMILL_EMPTY = 169,
+    ADV_EVENT_TEXT_WINDMILL_RESOURCE = 170,
+    // do_event_witch_hut (0x4a8080). All three take the secondary-skill
+    // name through sprintf; only the first one actually teaches, and the
+    // roles follow from which arm of the cascade reaches each row.
+    ADV_EVENT_TEXT_WITCH_HUT_LEARN = 171,
+    ADV_EVENT_TEXT_WITCH_HUT_KNOWN = 172,
+    ADV_EVENT_TEXT_WITCH_HUT_FULL = 173,
+    // The row the same handler shows when the cell carries no skill at
+    // all (the WitchHutNoSkillMask encoding, i.e. a -1 in the seven-bit
+    // field). It sits well outside the witch hut's own alphabetical run,
+    // so the ROLE is what names it; only the index 190 is byte-proven.
+    ADV_EVENT_TEXT_WITCH_HUT_NO_SKILL = 190
+};
+
+// The one value of game::field_1f63e any retail body in this tree pins:
+// DoEventTemple (0x4a6200) doubles its morale award when that word is 7,
+// and paying double on the seventh day of the week is exactly what
+// HoMM3's temple does. Only this member is named - the field itself keeps
+// its ordinal spelling in game.h, whose own note records that the wider
+// calendar role is not yet attested.
+enum EDayOfWeek {
+    DAY_OF_WEEK_SUNDAY = 7
+};
+
+// The Fountain of Fortune's luck tiers, and the domain is closed by
+// construction: DoEventFountain (0x4a2480) range-checks `luck + 1`
+// against 4 and jump-tables the five slots, so nothing outside -1..3 can
+// reach an arm. The VALUES are the luck the fountain grants, which is why
+// the enumerators are spelled as the amounts; only the cursed tier and
+// the three positive ones carry a hero flag bit, so 0 has no arm.
+enum EFountainLuck {
+    FOUNTAIN_LUCK_CURSED = -1,
+    FOUNTAIN_LUCK_NONE = 0,
+    FOUNTAIN_LUCK_PLUS_1 = 1,
+    FOUNTAIN_LUCK_PLUS_2 = 2,
+    FOUNTAIN_LUCK_PLUS_3 = 3
+};
+
+// DoEventStables' (0x4a60a0) report selector: a two-bit accumulator the
+// handler builds as it goes - bit 0 set when the movement bonus was
+// granted, bit 1 when a stack of Cavaliers was upgraded - and then
+// switches over to pick one of the four advevent.txt rows above. The
+// domain is complete and closed by construction: retail range-checks the
+// widened value against 3 and lets nothing else through.
+enum EStablesResult {
+    STABLES_NOTHING = 0,
+    STABLES_MOVEMENT = 1,
+    STABLES_UPGRADE = 2,
+    STABLES_MOVEMENT_AND_UPGRADE = 3
+};
+
+// Retail .bss 0x698a94, one int, loaded by the ballist.txt parser
+// (0x4d7240) out of row 6 column 5 alongside five siblings at
+// 0x698afc..0x698b0c. The DEFINITION belongs to that parser's compiland,
+// which this tree does not own yet; it is declared here because
+// DoEventStables is the modeled consumer that needs it.
+//
+// The role is fixed by all three readers agreeing, not by the table:
+// DoEventStables adds it to hero::maxMovePoints and hero::movePoints
+// under the flag-bit-1 guard; town.obj's 0x5bd8e0 makes the SAME pair of
+// adds under the SAME guard, i.e. the Stables building; and philai's
+// ValueOfStables (0x52aac0) appraises a visit as
+// `(8 - dayOfWeek) * this / 2`, the movement still to be had this week.
+DATA(0x00698a94) extern int gStablesMovementBonus;
+
+// advManager::FizzleCenter's (0x4acbb0) sound selector, also the second
+// argument of advManager::HeroLoses. Retail lowers the two arms as a
+// SWITCH (`sub eax,0 / je` then `dec eax / jne`), and every value outside
+// the pair suppresses the flash entirely.
+enum EFizzleSound {
+    FIZZLE_SOUND_KILL_FADE = 0,
+    FIZZLE_SOUND_PICKUP = 1
+};
+
 // --- globals ---
 // CODEVIEW(E:\gamedcs\events.cpp:61, dc 0x9028c) unsigned char InitializeAdventureEventText();
 // CODEVIEW(E:\gamedcs\events.cpp:265, dc 0x902b0) unsigned char InitializeArtifactEventText();

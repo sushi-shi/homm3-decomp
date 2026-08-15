@@ -4,12 +4,38 @@
 
 #include "struct.h"
 
+// The Dreamcast enumerates this ladder from RS_GAME_TRANSMIT_INIT = 1000
+// with no gaps, and every value retail has independently produced lands on
+// the DC's own name at the same number: 1009 = 0x3f1 RS_COMBAT_TYPE, 1054 =
+// 0x41e RS_CLAIM_GENERATOR, 1055 = 0x41f RS_CLAIM_GARRISON. The numbering
+// transfers whole, so a retail subtype constant can be named from it.
 enum eRS_Messages {
     RS_COMBAT_TYPE = 0x3f1,
+    // GATED for exactly the reason RS_ERASE_OBJECT below is - see that
+    // note. DC eRS_Messages has RS_SET_VISIBILITY = 1021, and retail's two
+    // monolith handlers stamp 0x3fd into the message they transmit.
+#ifdef HOMM3_EVENTS_VIEW
+    RS_SET_VISIBILITY = 0x3fd,
+    // The next rung, and the DC ladder is gapless: 1022. Retail's
+    // DoEventCoverOfDarkness (0x4a14b0) stamps 0x3fe into a message whose
+    // layout is CSetVisibilityMsg's member for member, which is exactly the
+    // pairing the two names describe. Gated for the same reason its
+    // neighbours are.
+    RS_RESET_VISIBILITY = 0x3fe,
+#endif
     RS_CLAIM_GENERATOR = 0x41e,
     RS_CLAIM_GARRISON = 0x41f,
     RS_CLAIM_SHIPYARD = 0x420,
     RS_BUILD_BOAT = 0x421,
+    // GATED, and it has to be. An ENUMERATOR on an existing enum is
+    // usually free - two of them went onto winmgr.h's EDialogReturnType
+    // across 41 consumers without moving a byte - but this one is not:
+    // ungated it takes recruit.obj's recruitUnit::Update 90.84 -> 88.24,
+    // the include-set sensitivity class reaching a TU that never mentions
+    // the value. Measured both ways 2026-08-14.
+#ifdef HOMM3_EVENTS_VIEW
+    RS_ERASE_OBJECT = 0x422,
+#endif
     RS_TELEPORT_HERO = 0x424,
     RS_HIDE_HERO = 0x426
 };
@@ -118,6 +144,61 @@ public:
         : CMapChange(RS_BUILD_BOAT, sizeof(CMCBuildBoat)),
           point(location), playerPos(player) {}
 };
+
+#ifdef HOMM3_EVENTS_VIEW
+// Dreamcast CodeView names the class, its single `m_point` member at +0x14
+// and the netmsg.h:662 constructor that takes the point BY VALUE.
+// advManager::EraseObj (0x4aabb0) builds it on the stack and hands it
+// straight to SendMapChange, which fixes the 0x18 extent and the 0x422
+// subtype - the value that sits between RS_BUILD_BOAT and RS_TELEPORT_HERO
+// in the same ladder.
+class CMCEraseObject : public CMapChange {
+public:
+    type_point m_point;
+
+    CMCEraseObject(type_point location)
+        : CMapChange(RS_ERASE_OBJECT, sizeof(CMCEraseObject)),
+          m_point(location) {}
+};
+SIZE(CMCEraseObject, 0x18);
+
+// NOT a CMapChange - the Dreamcast classes list gives CSetVisibilityMsg a
+// 32-byte extent, three members and the base CNetMsg directly, and retail
+// agrees on both counts: the monolith handlers hand it to
+// TransmitRemoteData rather than to SendMapChange. The three members are
+// the DC's own m_point / m_playerPos / m_range (members list, DC offsets
+// 20/24/28), and retail's inlined constructor writes them at +0x14 / +0x18
+// / +0x1c of a 0x20-byte frame record whose subtype is 0x3fd.
+class CSetVisibilityMsg : public CNetMsg {
+public:
+    type_point m_point;
+    int m_playerPos;
+    int m_range;
+
+    CSetVisibilityMsg(type_point point, int playerPos, int range)
+        : CNetMsg(RS_SET_VISIBILITY, sizeof(CSetVisibilityMsg)),
+          m_point(point), m_playerPos(playerPos), m_range(range) {}
+};
+SIZE(CSetVisibilityMsg, 0x20);
+
+// CResetVisibilityMsg (netmsg.h:747 in the DC roster, dc 0x9ccd4) is
+// CSetVisibilityMsg with the opposite subtype and nothing else changed:
+// advManager::DoEventCoverOfDarkness builds a 0x20-byte frame record with
+// -1/0/0x3fe/0x20/0 in the CNetMsg base and the point, the player and the
+// range at +0x14/+0x18/+0x1c, then hands it to TransmitRemoteData exactly
+// as the monolith pair hands over the set message.
+class CResetVisibilityMsg : public CNetMsg {
+public:
+    type_point m_point;
+    int m_playerPos;
+    int m_range;
+
+    CResetVisibilityMsg(type_point point, int playerPos, int range)
+        : CNetMsg(RS_RESET_VISIBILITY, sizeof(CResetVisibilityMsg)),
+          m_point(point), m_playerPos(playerPos), m_range(range) {}
+};
+SIZE(CResetVisibilityMsg, 0x20);
+#endif
 
 #ifdef HOMM3_HERO_OBJ_DECLS
 class CMCTeleportHero : public CMapChange {

@@ -508,6 +508,9 @@ int gbInSetupDialog;
 DATA(0x006989e4)
 HMENU dfltMenu;
 
+DATA(0x006989e8)
+HMENU gameMenu;
+
 DATA(0x0067f820)
 char szAppName[] = "Heroes III";
 

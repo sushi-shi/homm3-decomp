@@ -18,7 +18,9 @@ enum EResourceType {
     // Byte-proven by sample::sample (0x566da0 pushes 0x20 into the base
     // ctor); the value's DC name is RType_sfx (evidence/dreamcast/
     // enums.csv), respelled to this file's convention.
-    RESOURCE_TYPE_SFX = 32
+    RESOURCE_TYPE_SFX = 32,
+    // Byte-proven by font::font (0x4b5070 pushes 0x50 into the base ctor).
+    RESOURCE_TYPE_FONT = 80
 };
 
 // PROVEN layout (retail ctor 0x558720): vptr, Name char[13]@4 (12-char

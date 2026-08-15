@@ -14,6 +14,13 @@ void InitGraphics();                                     // 0x6014e0
 // Retail's wrapper tail-jumps to this zero-argument DirectDraw initializer;
 // the Dreamcast port's same-named routine instead takes mode/reinit args.
 void DDInitGraphics();                                   // 0x6014f0
+// The two DirectDraw bodies the wrappers above delegate to. Each is
+// referenced from exactly one site in the image (0x601890's tail jmp and
+// SetFullScreenStatus's single call), so retail's own linkage is not
+// observable; they are declared extern here because a used-but-undefined
+// static is a VC6 hard error and the call/jmp bytes are identical either way.
+void DDCleanUpWinGraphics();                             // 0x6018a0
+unsigned char DDSetFullScreenStatus(int iNewStatus);     // 0x601a00
 int GetDesktopWidth();                                   // 0x6014c0
 int GetDesktopHeight();                                  // 0x6014d0
 // GetDesktopInfo's verdict: the engine's 16-bit surfaces need a desktop
@@ -48,6 +55,15 @@ struct tagRECT;
 void DDBlit(IDirectDrawSurface4* dstSurface, const tagRECT* dstRect,
             IDirectDrawSurface4* srcSurface, const tagRECT* srcRect,
             unsigned long flags);                        // 0x6001d0
+// The screen blit winmgr hands a rectangle to: heroWindowManager's
+// UpdateScreen (0x602bd0) and both fades (0x6030e0 / 0x6032e0) call
+// 0x5ffe70 with `lea ecx, <rect>` and nothing else, i.e. the /Gr
+// fastcall applied to a one-pointer free function. DC files
+// DDAppBlit(const tagRECT*) as a 40-byte wrapper over
+// RobAppBlit(tagRECT*) and has winmgr call the wrapper; the retail row
+// is 860 B, so the pair is merged there. PROTOTYPE ONLY - the row is
+// wingraph.obj's to carve and claim.
+void DDAppBlit(const tagRECT* region);                   // 0x5ffe70
 
 // The DirectDraw surface pair (Blt target and game draw surface).
 // Owner attribution: the DD lifecycle (DDCreatePrimary/DDCreateSurface
