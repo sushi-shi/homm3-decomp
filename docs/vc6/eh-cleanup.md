@@ -206,7 +206,7 @@ with `Widgets.capacity()`-style FREE candidates (cb ≤ 0x28, no bytes emitted):
 |---|---|---|
 | `viewarmywindow:??0TViewArmyWindow@@QAE@HHHE@Z` | +1 | 97.1049 → **100.0000, LANDED** |
 | `bottomviewsubwindow:??0TBottomViewTown` | +2 | ~~95.6295 → 97.4523~~ **97.3638 → 98.8631** (re-measured after the GetCurrTown landing; still +2, flat at +3) |
-| `armygrp:?get_luck_description` | +4 | 82.5689 → 90.1916 |
+| `armygrp:?get_luck_description` | +4 | ~~82.5689 → 90.1916~~ **82.5689 → 95.1557** (re-measured 2026-08-15; still +4, and the probe must be a USER-DEFINED inline — `armygrp_clamp(0,luck,3)` registers, `basic_string::size()`/`capacity()` do not) |
 
 **The first row is landed and EXACT** (2026-08-14); the padding is not what
 landed it. `docs/dc-line-tables.md` is the instrument that answered "which
@@ -221,6 +221,16 @@ builder — the gate does not exist there), spelled as a call to a free
 predicate. The same table separately showed the three `Influence[i] = -1`
 stores are a counted `for` loop, which VC6 unrolls back into retail's three
 stores and which recovers retail's EDX. 97.1049 → 99.9352 → 100.0000.
+
+**Placement is itself a bound, and on `get_luck_description` it halves the
+search** (2026-08-15). The same four probes score 95.1557 in the clover arm
+and in the devil block, but **80.5000** in the halfling arm, after the tail,
+or split 1/3, 2/2, 3/1 across clover+halfling. The four sites are therefore
+at or before the Rampart gate, which EXCLUDES the halfling arm — one of the
+two post-Dreamcast blocks the line table had allowed — and leaves the clover
+arm as the only place they can live. Two real in-window sites are landed
+(`is_base_elemental` in the clover gate, `town::HasBuilding` in the Rampart
+gate) and both are byte-flat, which is what a threshold this sharp predicts.
 
 The other two rows are still padding-only — a measurement, not a spelling.
 The deficit is a measured per-row integer, and the line table is now the way
