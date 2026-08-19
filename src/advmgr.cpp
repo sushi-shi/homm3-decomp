@@ -139,6 +139,32 @@ inline TCreatureType creature_type_from_int(int value)
     return storage.creature;
 }
 
+// townmgr.cpp's building-id twin of the creature bridge.
+inline type_building_id building_id_from_int(int value)
+{
+    union {
+        int value;
+        type_building_id building;
+    } storage;
+    storage.value = value;
+    return storage.building;
+}
+
+// E:\gamedcs\CreatureType.h:296 (dc 0x1ef94): the header's free name
+// selector - army::GetName (0x440100) is its out-of-line twin. 150 is one
+// past the akCreatureTypeTraits extent, exactly the bound the retail guard
+// tests (army.h names it ARMY_CREATURE_LAST inside class army, whose
+// header this TU does not pull).
+static inline const char* GetArmyName(int type, int count)
+{
+    if (type >= 0 && type <= 150) {
+        if (count == 1)
+            return akCreatureTypeTraits[type].m_name;
+        return akCreatureTypeTraits[type].m_plural_name;
+    }
+    return "";
+}
+
 // E:\gamedcs\advmgr.cpp:336
 #if 0  // @carcass
 DC_ONLY(0x5714, 0xB6)
@@ -4098,12 +4124,120 @@ void advManager::HeroQuickView(int heroId, int x, int y,
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
+// castle.obj's building-name reader, declared file locally (the
+// AI_approximate_strength precedent).
+const char* GetBuildingName(int townType, int buildingId);
+
 // E:\gamedcs\advmgr.cpp:9115
+// Residual (85.32%): whole-body callee-saved rotation (ours
+// townId=ESI/point=EDI/thisTown=EBX, retail EDI/EBX/ESI - one step), the
+// DrawAdvObj family's wall. why-reg v2: definition slots and order agree,
+// bindings permuted; its model-proposed edit (owner as long local) measured
+// +48 worse and it capped the pair as front-end handle state (params <
+// this < locals is parse-FIXED, handle-order.md). Declaration-order swap
+// of first/ownerPlayer measured flat. The base-only spill surplus is
+// downstream of the rotation, not a second wall.
 VA(0x004167a0, 0x7DB)  // anchor-callee, dc 0x19674
-void advManager::TownQuickView(int townId, int x, int y, unsigned char display_drop_shadow)
+void advManager::TownQuickView(int townId, int x, int y,
+                               unsigned char display_drop_shadow)
 {
-    // @stub
+    if (townId == -1)
+        return;
+
+    int localPos = gpGame->GetLocalPlayerGamePos();
+    town* thisTown = &gpGame->towns[townId];
+    type_point point(thisTown->mapX, thisTown->mapY, thisTown->mapZ);
+
+    int identifyLevel = get_identify_level(point);
+
+    if (DebugViewAll && thisTown->owner != gNetLocalGamePos) {
+        std::string text;
+        playerData* ownerPlayer = &gpGame->players[thisTown->owner];
+        unsigned char first = 1;
+
+        text = thisTown->cName;
+        text += "\n\n";
+        if (thisTown->garrisonHeroId >= 0)
+            text += gpGame->GetHero(thisTown->garrisonHeroId)->name;
+
+        for (int i = 0; i < armyGroup::ARMY_GROUP_SLOT_COUNT; i++) {
+            if (thisTown->get_army().armies[i] != -1) {
+                if (!first)
+                    text += ", ";
+                first = 0;
+                text += format_string(
+                    "%i %s", thisTown->get_army().numTroops[i],
+                    GetArmyName(thisTown->get_army().armies[i],
+                                thisTown->get_army().numTroops[i]));
+            }
+        }
+
+        if (!first)
+            text += "\n\n";
+        first = 1;
+        for (int building = 0; building < MAX_BUILDING_TYPE; building++) {
+            if ((thisTown->built & bitNumber[building])
+                && thisTown->is_legal_building(
+                       building_id_from_int(building))) {
+                if (!first)
+                    text += ", ";
+                first = 0;
+                text += GetBuildingName(thisTown->type, building);
+            }
+        }
+
+        text += "\n\n";
+        for (int res = 0; res < 7; res++) {
+            if (res > 0)
+                text += ", ";
+            text += format_string("%i %s", ownerPlayer->resources[res],
+                                  gResourceNames[res]);
+        }
+
+        text += "\n\nIncome:\n";
+        gpGame->calculate_production();
+        first = 1;
+        for (int inc = 0; inc < 7; inc++) {
+            if (ownerPlayer->turnProductionResource[inc] > 0) {
+                if (!first)
+                    text += ", ";
+                first = 0;
+                text += format_string(
+                    "%i %s", ownerPlayer->turnProductionResource[inc],
+                    gResourceNames[inc]);
+            }
+        }
+
+        NormalDialog(text.c_str(), 4, -1, -1, -1, 0, -1, 0, -1, 0, -1, 0);
+        return;
+    }
+
+    TQuickTownWindow::TViewLevel level;
+    if (gpGame->OnSameTeam(thisTown->owner, localPos)
+        || identifyLevel == eMasteryExpert)
+        level = TQuickTownWindow::ViewAll;
+    else if (gpGame->GetNumThievesGuilds(localPos) >= 2)
+        level = TQuickTownWindow::ViewArmySizes;
+    else
+        level = gpGame->GetNumThievesGuilds(localPos) >= 1
+                    ? TQuickTownWindow::ViewArmyTypes
+                    : TQuickTownWindow::ViewNone;
+
+    TQuickTownWindow window(thisTown, level);
+    window.x = limit(window.width / 2, x,
+                     WINDOW_SCREEN_WIDTH - 1 - window.width / 2)
+               - window.width / 2;
+    window.y = limit(window.height / 2, y,
+                     WINDOW_SCREEN_HEIGHT - 1 - window.height / 2)
+               - window.height / 2;
+    if (!display_drop_shadow)
+        window.type &= ~WINDOW_FLAG_SHADOWED;
+    window.QuickWindowWait();
 }
+
+#if 0  // @carcass
 
 #endif  // @carcass
 
