@@ -4,7 +4,19 @@
     homm3 labels [--unit U ...] [--all]
 
 The extraction universe is sorted(src/*.c*), NOT the manifest (see the
-package docstring). Per TU, mechanisms unchanged from the pre-port
+package docstring).
+
+EVERY MACRO IS SCANNED BY BALANCED PARENS, never per line (the mechanism
+ported from gruntz). DATA_COMPGEN sits in EXPRESSION position, so
+clang-format wraps its argument list across lines and may put two on one
+line; VA_COMPGEN's four arguments wrap for the same reason. The per-line
+regex scan this replaced required a macro's whole argument list on the
+head's own line and dropped every wrapped site SILENTLY - 18 addresses,
+present, valid and intended, contributing nothing with no error and no
+warning. `check_completeness` is the oracle that makes that
+unreintroducible, and it carries its own negative control (`selftest`).
+
+Per TU, the mechanisms are otherwise unchanged from the pre-port
 homm3.build.labels:
 
   VA(0xva, size)      lexical scan (comments/strings blanked); the claim's
@@ -16,9 +28,16 @@ homm3.build.labels:
   VA_COMPGEN          compiler-generated bodies (static-init dispatch,
                       atexit, scalar deleting dtors, ...) - the claim is
                       named __h3cg$<unit>$<kind>$<owner>; unknown kinds die.
-  DATA(0xva)          data claim, dense working name data_<rva>.
+  DATA(0xva)          data claim, dense working name data_<rva>. On a
+                      HEADER extern it claims retail's own datum, which
+                      this build never defines - a different channel; the
+                      model gates those, this module does not.
   DATA_COMPGEN(_GUARD) compiler-generated data pins, named
-                      __h3cg$<unit>$...$<name>.
+                      __h3cg$<unit>$...$<name>. Repeated expansions of
+                      one pooled datum COALESCE - the VALUE is the claim,
+                      so only a disagreeing value is a defect - both
+                      within a TU (here) and across TUs (the model, on
+                      the agreement this module proves).
 
 THE NAME BINDING (extraction's second, join-bearing concern - as in
 gruntz). Two mechanisms, in strict precedence:
@@ -55,6 +74,7 @@ build (the `homm3 delink` chain does).
 
 from __future__ import annotations
 
+import bisect
 import os
 import re
 import struct
@@ -66,17 +86,45 @@ from homm3.retail_labels.fragments import FRAGMENTS, HEADER, fragment_path
 
 SRC_DIR = common.HOMM3_DIR / "src"
 
-VA_RE = re.compile(r"^\s*VA\s*\(\s*(0x[0-9a-fA-F]+)\s*,\s*"
-                   r"(0x[0-9a-fA-F]+|\d+)\s*\)")
-VA_COMPGEN_RE = re.compile(
-    r"^\s*VA_COMPGEN\s*\(\s*(0x[0-9a-fA-F]+)\s*,\s*(0x[0-9a-fA-F]+|\d+)"
-    r"\s*,\s*(\w+)\s*,\s*(\w+)\s*\)")
-DATA_RE = re.compile(r"\bDATA\s*\(\s*(0x[0-9a-fA-F]+)\s*\)")
-DATA_COMPGEN_RE = re.compile(
-    r"\bDATA_COMPGEN\s*\(\s*(0x[0-9a-fA-F]+)\s*,\s*(\w+)\s*,")
-DATA_COMPGEN_GUARD_RE = re.compile(
-    r"\bDATA_COMPGEN_GUARD\s*\(\s*(0x[0-9a-fA-F]+)\s*,\s*(\w+)\s*,"
-    r"\s*(\w+)\s*\)")
+#: Macro HEADS - the name and its opening paren, nothing more. The
+#: argument list is then taken by balanced-paren matching
+#: (`macro_invocations`), never by a per-line regex: the argument lists
+#: WRAP. Spelled `\s*` between name and paren so the scanner is at least
+#: as permissive as `MACRO_SITE_RE`, the completeness sweep's own probe -
+#: a site the sweep can see but the scanner cannot reach would make the
+#: gate unsatisfiable.
+#:
+#: VA and VA_COMPGEN stay anchored to the start of a line: they are
+#: statement-position attributes that precede a declarator, and the
+#: anchor is what keeps the declarator scan meaningful. Anchoring the
+#: HEAD costs nothing now that the arguments may wrap past it.
+VA_HEAD_RE = re.compile(r"(?m)^[ \t]*VA\s*\(")
+VA_COMPGEN_HEAD_RE = re.compile(r"(?m)^[ \t]*VA_COMPGEN\s*\(")
+DATA_HEAD_RE = re.compile(r"\bDATA\s*\(")
+DATA_COMPGEN_HEAD_RE = re.compile(r"\bDATA_COMPGEN\s*\(")
+DATA_COMPGEN_GUARD_HEAD_RE = re.compile(r"\bDATA_COMPGEN_GUARD\s*\(")
+#: Claims nothing about the retail image, so it emits no row - indexed
+#: only so its own wrapped continuation lines are never mistaken for the
+#: declarator a VA() above it is looking for.
+DC_ONLY_HEAD_RE = re.compile(r"(?m)^[ \t]*DC_ONLY\s*\(")
+
+#: macro -> (head, arity, prototype). Iteration order is irrelevant; rows
+#: come out in TEXT order (see scan_file).
+MACRO_HEADS = {
+    "VA": (VA_HEAD_RE, 2, "VA(addr, size)"),
+    "VA_COMPGEN": (VA_COMPGEN_HEAD_RE, 4,
+                   "VA_COMPGEN(addr, size, kind, owner)"),
+    "DATA_COMPGEN_GUARD": (DATA_COMPGEN_GUARD_HEAD_RE, 3,
+                           "DATA_COMPGEN_GUARD(addr, name, owner)"),
+    "DATA_COMPGEN": (DATA_COMPGEN_HEAD_RE, 3,
+                     "DATA_COMPGEN(addr, name, value)"),
+    "DATA": (DATA_HEAD_RE, 1, "DATA(addr)"),
+    "DC_ONLY": (DC_ONLY_HEAD_RE, 2, "DC_ONLY(off, cb)"),
+}
+
+ADDR_ARG_RE = re.compile(r"0x[0-9a-fA-F]+$")
+SIZE_ARG_RE = re.compile(r"0x[0-9a-fA-F]+$|\d+$")
+IDENT_ARG_RE = re.compile(r"[A-Za-z_]\w*$")
 ANNOTATION_RE = re.compile(r"^\s*(?:VA|VA_COMPGEN|DATA|DC_ONLY)\s*\(")
 DECLARATOR_RE = re.compile(r"([~\w:]+(?:<[^<>()]*>)?)\s*\(")
 # MSVC special members render with backticks: Cls::`scalar deleting
@@ -164,6 +212,116 @@ def mask_lexical_noise(blob: str) -> str:
     return "".join(out)
 
 
+def _skip_quote(text: str, i: int) -> int:
+    """Index just past the literal opening at `text[i]` (escapes
+    honoured). `mask_lexical_noise` already blanks literal BODIES, so on
+    masked text this only steps over an empty pair - it is kept so the
+    scanner is correct on raw text too, and so a future change to the
+    masker cannot silently turn a `,` or `)` inside a string literal into
+    an argument separator."""
+    quote, n = text[i], len(text)
+    i += 1
+    while i < n and text[i] != quote:
+        i += 2 if text[i] == "\\" else 1
+    return i + 1
+
+
+def _split_top_level(body: str) -> list[str]:
+    """`body` split on its TOP-LEVEL commas - a nested call keeps its
+    own (`DATA_COMPGEN(0x.., n, f(a, b))` is three arguments, not four),
+    exactly as the preprocessor counts them."""
+    parts, depth, start, i = [], 0, 0, 0
+    while i < len(body):
+        c = body[i]
+        if c in "\"'":
+            i = _skip_quote(body, i)
+            continue
+        if c == "(":
+            depth += 1
+        elif c == ")":
+            depth -= 1
+        elif c == "," and depth == 0:
+            parts.append(body[start:i])
+            start = i + 1
+        i += 1
+    parts.append(body[start:])
+    return [p.strip() for p in parts]
+
+
+def macro_invocations(text: str, head: re.Pattern,
+                      raw: str | None = None) -> list[tuple]:
+    """[(start, end, args, raw_args)] for every invocation of one macro
+    over ALREADY-MASKED text; `end` is the offset of the closing paren,
+    or None when the parens never close.
+
+    `args` come from the MASKED text, so a comment written inside an
+    argument list is blanked and an identifier argument stays clean.
+    `raw_args` come from `raw` at the SAME offsets - masking is
+    length-preserving, it only overwrites bytes with spaces - and are the
+    only place a string literal's BODY survives. The pooled-datum
+    agreement check needs that body: masked, `"%s %s"` and `"%d %d"` are
+    both six blanks between quotes, so comparing masked values would call
+    two different literals equal.
+
+    Balanced-paren and quote-aware, NEVER line-based - the mechanism
+    ported from gruntz's retail_labels.source. DATA_COMPGEN sits in
+    EXPRESSION position, so clang-format wraps it across lines and may
+    put two of them on one line; VA_COMPGEN's four arguments wrap for the
+    same reason. The per-line regexes this replaces required a macro's
+    whole argument list on the head's own line, so every wrapped site was
+    dropped SILENTLY - a macro that is present, valid and intended
+    contributing nothing, with no error and no warning. That is the worst
+    failure class a label pipeline has, and `check_completeness` is the
+    oracle that now makes it impossible to reintroduce.
+    """
+    raw = text if raw is None else raw
+    out = []
+    for m in head.finditer(text):
+        depth, j, n = 1, m.end(), len(text)
+        while j < n and depth:
+            c = text[j]
+            if c in "\"'":
+                j = _skip_quote(text, j)
+                continue
+            if c == "(":
+                depth += 1
+            elif c == ")":
+                depth -= 1
+            j += 1
+        if depth:
+            out.append((m.start(), None, [], []))
+            continue
+        out.append((m.start(), j - 1,
+                    _split_top_level(text[m.end():j - 1]),
+                    _split_top_level(raw[m.end():j - 1])))
+    return out
+
+
+def _line_starts(text: str) -> list[int]:
+    starts = [0]
+    for i, ch in enumerate(text):
+        if ch == "\n":
+            starts.append(i + 1)
+    return starts
+
+
+def _macro_args(args, arity: int, prototype: str, where: str) -> list[str]:
+    """The invocation's arguments, or death. An arity the preprocessor
+    itself would reject can only mean a malformed source line, and a
+    malformed line that merely produced no row is exactly the silent loss
+    this module exists to prevent."""
+    if len(args) != arity:
+        common.die(f"{where}: {prototype} takes {arity} argument(s); this "
+                   f"invocation has {len(args)} ({args!r})")
+    return args
+
+
+def _arg(value: str, pattern: re.Pattern, what: str, where: str) -> str:
+    if not pattern.match(value):
+        common.die(f"{where}: {what} {value!r} is malformed")
+    return value
+
+
 def rva_of(addr_text: str, where: str) -> int:
     value = int(addr_text, 16)
     if value < common.IMAGE_BASE:
@@ -172,25 +330,102 @@ def rva_of(addr_text: str, where: str) -> int:
     return value - common.IMAGE_BASE
 
 
-def scan_file(path, functions: set[int]) -> list[dict]:
-    """All annotation rows of one src file, in scan (line) order. Names are
-    the RAW pre-join spellings; `channel` is the pre-join provenance."""
+def scan_file(path, functions: set[int],
+              problems: list[str] | None = None) -> list[dict]:
+    """All annotation rows of one src file, in scan (TEXT) order. Names
+    are the RAW pre-join spellings; `channel` is the pre-join
+    provenance.
+
+    Every macro is taken by `macro_invocations`, so a wrapped argument
+    list is read exactly like a single-line one. Row order is the order
+    the invocations START in the file, which for unwrapped macros is the
+    line order the fragment contract and the model's scan-order dedup
+    require.
+
+    REPEATED EXPANSIONS COALESCE (the gruntz rule). DATA_COMPGEN and
+    DATA_COMPGEN_GUARD sit in expression position: one pooled literal is
+    referenced from as many sites as the source needs it, and each site
+    writes the macro again. They are one datum, so they are one row - the
+    VALUE is the claim, and only a disagreeing value is a defect. (The
+    per-line scanner this replaces never had to decide, because it was
+    dropping the wrapped repeats; the moment they became visible the
+    model's duplicate-rva gate fired on all 14 of them.)"""
     unit = path.stem
-    rows = []
-    text = mask_lexical_noise(path.read_text(errors="replace"))
+    if problems is None:
+        problems = []
+    raw = path.read_text(errors="replace")
+    text = mask_lexical_noise(raw)
     lines = text.splitlines()
-    for index, line in enumerate(lines):
-        where = f"{path.name}:{index + 1}"
-        m = VA_RE.match(line)
-        if m:
-            rva = rva_of(m.group(1), where)
+    line_starts = _line_starts(text)
+
+    def line_of(offset: int) -> int:
+        return bisect.bisect_right(line_starts, offset)
+
+    found = []
+    for macro, (head, arity, prototype) in MACRO_HEADS.items():
+        for start, end, args, raw_args in macro_invocations(text, head, raw):
+            if end is None:
+                common.die(f"{path.name}:{line_of(start)}: {macro}( is "
+                           "never closed - unbalanced parentheses")
+            found.append((start, macro, end, arity, prototype, args,
+                          raw_args))
+    found.sort(key=lambda f: f[0])
+
+    # A wrapped invocation's CONTINUATION lines carry no declarator, so a
+    # VA() above one must look past them. (No VA site wraps today; the
+    # skip is what keeps that from silently becoming an orphan-annotation
+    # death the day clang-format decides one should.)
+    continuation = set()
+    for start, _macro, end, _arity, _proto, _args, _raw in found:
+        continuation.update(range(line_of(start) + 1, line_of(end) + 1))
+
+    rows = []
+    coalesced: dict[tuple, tuple] = {}     # (macro, rva) -> (payload, where)
+    for start, macro, end, arity, prototype, args, raw_args in found:
+        where = f"{path.name}:{line_of(start)}"
+        args = _macro_args(args, arity, prototype, where)
+        if macro == "DC_ONLY":
+            continue          # indexed for its line span only; claims nothing
+        rva = rva_of(_arg(args[0], ADDR_ARG_RE, "address", where), where)
+
+        if macro in ("DATA_COMPGEN", "DATA_COMPGEN_GUARD"):
+            # args[1] names the datum; raw_args[2] is what allocates it -
+            # the pooled literal, or the guard's owner. The value is the
+            # claim, so it is what decides whether two sites are one datum.
+            payload = (args[1], raw_args[2])
+            first = coalesced.get((macro, rva))
+            if first is not None:
+                seen, first_where = first
+                if seen[1] != payload[1]:
+                    problems.append(
+                        f"{unit}: {macro}(0x{rva + common.IMAGE_BASE:08x}) at "
+                        f"{where} pins {payload[1]!r} but {first_where} pins "
+                        f"{seen[1]!r} - one address, two values")
+                elif seen[0] != payload[0]:
+                    problems.append(
+                        f"{unit}: {macro}(0x{rva + common.IMAGE_BASE:08x}) at "
+                        f"{where} names the datum {payload[0]!r} but "
+                        f"{first_where} names it {seen[0]!r}; the value "
+                        f"agrees, so cl pooled one literal for both roles - "
+                        f"{seen[0]!r} wins (first in scan order)")
+                continue
+            coalesced[(macro, rva)] = (payload, where)
+
+        if macro == "VA":
             if rva not in functions:
-                common.die(f"{where}: VA {m.group(1)} is not a carved "
+                common.die(f"{where}: VA {args[0]} is not a carved "
                            "function entry")
-            declared = int(m.group(2), 0)
-            follower = next((l for l in lines[index + 1:index + 4]
-                             if l.strip()
-                             and not ANNOTATION_RE.match(l)), None)
+            declared = int(_arg(args[1], SIZE_ARG_RE, "size", where), 0)
+            follower = None
+            for lineno in range(line_of(end) + 1, line_of(end) + 4):
+                if lineno > len(lines):
+                    break
+                candidate = lines[lineno - 1]
+                if (lineno in continuation or not candidate.strip()
+                        or ANNOTATION_RE.match(candidate)):
+                    continue
+                follower = candidate
+                break
             if follower is None:
                 common.die(f"{where}: orphan VA annotation - no "
                            "declaration follows")
@@ -221,39 +456,33 @@ def scan_file(path, functions: set[int]) -> list[dict]:
                          # class_class label; the tilde in the
                          # declarator is the only discriminator left
                          "dtor": "~" in raw})
-            continue
-        m = VA_COMPGEN_RE.match(line)
-        if m:
-            rva = rva_of(m.group(1), where)
-            if m.group(3) not in COMPGEN_KINDS:
-                common.die(f"{where}: unknown VA_COMPGEN kind "
-                           f"{m.group(3)}")
-            name = f"__h3cg${unit}${m.group(3).lower()}${m.group(4)}"
+        elif macro == "VA_COMPGEN":
+            kind = _arg(args[2], IDENT_ARG_RE, "kind", where)
+            owner = _arg(args[3], IDENT_ARG_RE, "owner", where)
+            if kind not in COMPGEN_KINDS:
+                common.die(f"{where}: unknown VA_COMPGEN kind {kind}")
             rows.append({"rva": rva, "unit": unit,
-                         "size": int(m.group(2), 0), "kind": "func",
-                         "name": name,
+                         "size": int(_arg(args[1], SIZE_ARG_RE, "size",
+                                          where), 0),
+                         "kind": "func",
+                         "name": f"__h3cg${unit}${kind.lower()}${owner}",
                          "channel": "src-VA_COMPGEN",
-                         "ckind": m.group(3),
-                         "owner": m.group(4)})
-            continue
-        for m in DATA_COMPGEN_GUARD_RE.finditer(line):
-            name = f"__h3cg${unit}$static_init_guard${m.group(2)}"
-            rows.append({"rva": rva_of(m.group(1), where),
-                         "unit": unit, "size": 4, "kind": "data",
-                         "name": name,
+                         "ckind": kind, "owner": owner})
+        elif macro == "DATA_COMPGEN_GUARD":
+            name = _arg(args[1], IDENT_ARG_RE, "name", where)
+            rows.append({"rva": rva, "unit": unit, "size": 4,
+                         "kind": "data",
+                         "name": f"__h3cg${unit}$static_init_guard${name}",
                          "channel": "src-DATA_COMPGEN_GUARD"})
-        for m in DATA_COMPGEN_RE.finditer(line):
-            if DATA_COMPGEN_GUARD_RE.search(line):
-                continue
-            name = f"__h3cg${unit}$data${m.group(2)}"
-            rows.append({"rva": rva_of(m.group(1), where),
-                         "unit": unit, "size": "", "kind": "data",
-                         "name": name,
+        elif macro == "DATA_COMPGEN":
+            name = _arg(args[1], IDENT_ARG_RE, "name", where)
+            rows.append({"rva": rva, "unit": unit, "size": "",
+                         "kind": "data",
+                         "name": f"__h3cg${unit}$data${name}",
                          "channel": "src-DATA_COMPGEN"})
-        for m in DATA_RE.finditer(line):
-            rows.append({"rva": rva_of(m.group(1), where),
-                         "unit": unit, "size": "", "kind": "data",
-                         "name": f"data_{rva_of(m.group(1), where):x}",
+        else:                                              # DATA
+            rows.append({"rva": rva, "unit": unit, "size": "",
+                         "kind": "data", "name": f"data_{rva:x}",
                          "channel": "src-DATA"})
     return rows
 
@@ -598,7 +827,7 @@ def _extract_one(path, functions: set, ir_names: dict | None,
     """One unit's rows, IR-bound where clang reached the TU and lexically
     joined for the rest."""
     unit = path.stem
-    rows = scan_file(path, functions)
+    rows = scan_file(path, functions, problems)
     taken = set()
     if ir_names is not None:
         taken = ir_bind(unit, rows, ir_names, problems)
@@ -687,32 +916,310 @@ def sweep_sites() -> dict:
     return out
 
 
-def check_completeness() -> list[str]:
-    """The oracle OVER extraction: every macro site in the tree is either
-    carried by a fragment or named here as lost.
+#: What each macro claims, and which fragment `kind` must carry it.
+SITE_KINDS = (("VA", "func"), ("VA_COMPGEN", "func"), ("DATA", "data"),
+              ("DATA_COMPGEN", "data"), ("DATA_COMPGEN_GUARD", "data"))
 
-    The lexical scan reads src/*.c* only, so a claim written in a HEADER
-    reaches no fragment at all and its address silently keeps a dense
-    working label - the failure class gruntz's own sweep exists to catch,
-    and the one this tree still has (include/game.h). Reported, not fatal:
-    the fix is a source edit that moves the claim onto a definition."""
-    from homm3.retail_labels.fragments import all_claims
-    sites = sweep_sites()
-    have: dict = {}
-    for claim in all_claims():
-        have.setdefault(claim.kind, set()).add(claim.rva)
+#: The enumerated floor: header VA() sites this sweep reports as standing
+#: DEBT instead of a fatal loss. One entry, keyed on rva, each with the
+#: reason it is still open. Any OTHER header VA() is fatal; a floor entry
+#: whose site has gone is reported as stale, so the floor cannot quietly
+#: outlive its cause. It is code, not a config table, because a single
+#: entry's justification is prose that belongs beside the rule.
+HEADER_VA_FLOOR = {
+    0x0bbb60: (
+        "include/game.h - SaveAbstractString, the 0x4bbb60 /Gr string "
+        "WRITER twinned with loadString at 0x4bb990. The fix is known and "
+        "measured (2026-08-20): move the VA() onto a claim-only stub in "
+        "src/game.cpp's `#if 0 // @carcass` block, where 160 such stubs "
+        "already carry the retail functions this build does not define, and "
+        "the address takes the name SaveAbstractString from unit `game` "
+        "instead of the working label game_b9270_sub00_bbb60. It is not "
+        "made here because claiming an address also ENROLLS it: the synth "
+        "PDB puts it in module game, the delinker emits it into "
+        "game.c.obj, and `homm3 status` writes a new 0.00% row into "
+        "config/match_baseline.tsv (1809 -> 1810 rows, 73.08% -> 73.06% "
+        "fuzzy). That accounting is correct for an unreconstructed retail "
+        "function and matches every other carcass claim - but the baseline "
+        "is the matcher lanes' shared ratchet, so enrolling a function is a "
+        "MATCHER change, not an extraction one. Reconstruct the body (or "
+        "take the 0% row deliberately) and this entry goes away."),
+}
+
+
+def pooled_sites() -> dict:
+    """{(macro, rva): {unit: (name, value, 'file:line')}} - the FIRST
+    site per unit of every pooled compgen macro in src/*.c*.
+
+    Within-unit repeats are already adjudicated by `scan_file`; this is
+    the CROSS-unit view, which no single fragment can see."""
+    out: dict = {}
+    for path in src_files():
+        raw = path.read_text(errors="replace")
+        text = mask_lexical_noise(raw)
+        line_starts = _line_starts(text)
+        for macro in ("DATA_COMPGEN", "DATA_COMPGEN_GUARD"):
+            head, arity, _proto = MACRO_HEADS[macro]
+            for start, end, args, raw_args in macro_invocations(
+                    text, head, raw):
+                if end is None or len(args) != arity \
+                        or not ADDR_ARG_RE.match(args[0]):
+                    continue          # scan_file owns the fatal for these
+                rva = int(args[0], 16) - common.IMAGE_BASE
+                where = (f"{path.name}:"
+                         f"{bisect.bisect_right(line_starts, start)}")
+                out.setdefault((macro, rva), {}).setdefault(
+                    path.stem, (args[1], raw_args[2], where))
+    return out
+
+
+def pooled_agreement_problems(sites: dict) -> list[str]:
+    """Cross-TU disagreements over the pooled compiler-generated data.
+
+    The model COALESCES these claims - one pooled literal is a single
+    image-wide allocation that every TU spelling it claims - and it does
+    so blind, because a fragment carries no value. That coalesce is only
+    honest if somebody proves the claims agree, and this is that
+    somebody: extraction is the one stage that can still see the values.
+    Two units pinning one address to two different VALUES is a defect the
+    model would otherwise swallow silently."""
     problems = []
-    for macro, kind in (("VA", "func"), ("VA_COMPGEN", "func"),
-                        ("DATA", "data"), ("DATA_COMPGEN", "data"),
-                        ("DATA_COMPGEN_GUARD", "data")):
+    for (macro, rva), by_unit in sorted(sites.items()):
+        if len(by_unit) < 2:
+            continue
+        units = sorted(by_unit)      # all_claims() reads units stem-sorted,
+        owner = units[0]             # so the first one is what the model keeps
+        name, value, where = by_unit[owner]
+        va = rva + common.IMAGE_BASE
+        for unit in units[1:]:
+            other_name, other_value, other_where = by_unit[unit]
+            if other_value != value:
+                problems.append(
+                    f"{macro}(0x{va:08x}) pins {other_value!r} at "
+                    f"{other_where} but {value!r} at {where} - one address, "
+                    f"two values; the model coalesces these claims and "
+                    f"cannot see the disagreement (FATAL)")
+            elif other_name != name:
+                problems.append(
+                    f"{macro}(0x{va:08x}) is {other_name!r} in {unit} and "
+                    f"{name!r} in {owner}; the value agrees, so one pooled "
+                    f"literal serves both roles - {name!r} wins ({owner} is "
+                    f"first in scan order)")
+    return problems
+
+
+def completeness_problems(sites: dict, have: dict,
+                          floor: dict | None = None) -> list[str]:
+    """The oracle OVER extraction, as a pure function of (macro-site
+    census, fragment coverage) so the selftest can drive it.
+
+    `sites` is `sweep_sites()`; `have` is {kind: {rva}} over every
+    fragment claim. Returns the problems; a line tagged (FATAL) is a lost
+    label.
+
+    TWO CHANNELS, and the split is the whole point of this gate:
+
+    src/*.c* SITES belong to EXTRACTION. Every one must reach a fragment.
+    A macro that is present, valid and intended but reaches nothing is
+    the failure this gate exists for - it was real (18 rvas, wrapped by
+    clang-format across lines, dropped by a per-line regex scan) and it
+    was silent.
+
+    HEADER SITES belong to a different channel, and are enumerated here
+    rather than counted as losses:
+
+      DATA() on a header extern is a DECLARATION-SITE annotation. The
+      datum is retail's, not this build's - none of the 100 such externs
+      has a definition anywhere in src/, because our source only
+      REFERENCES them - so there is no storage for extraction to own and
+      no TU to own it. Nor would extraction improve them: the src-DATA
+      channel names every claim `data_<rva>`, the same grade of dense
+      working label these addresses already carry from the reloc-target
+      channel, and a worse spelling for the .rdata ones (`const_<rva>` is
+      section-correct). Their real channel is the INVENTORY, so the model
+      owns their gate - `homm3.model` fails if a header DATA() address
+      reaches no data row - and this sweep leaves them alone. Measured
+      2026-08-20: 101 header DATA() addresses, 101 already carried
+      (99 reloc-target, 1 reloc-alias, 1 src-DATA_COMPGEN).
+
+      VA() in a header is NOT excused. A function address always gets a
+      row (the working-label pass covers the whole universe), so the
+      model cannot tell that the SOURCE NAME was dropped - only this
+      sweep can. The claim belongs in the owning TU's `#if 0 //
+      @carcass` block, where 160 claim-only stubs already put the retail
+      functions this build does not define; there it reaches a fragment
+      and keeps its declarator name. `floor` enumerates the sites this
+      sweep still reports as standing debt rather than a fatal loss.
+    """
+    floor = HEADER_VA_FLOOR if floor is None else floor
+    problems = []
+    seen_floor = set()
+    for macro, kind in SITE_KINDS:
         for rva, wheres in sorted(sites.get(macro, {}).items()):
             if rva in have.get(kind, set()):
                 continue
-            problems.append(
-                f"{macro}(0x{rva + common.IMAGE_BASE:08x}) at {wheres[0]} is "
-                f"in NO fragment - extraction reads src/*.c* only, so this "
-                f"claim is a silently lost label")
+            header_only = all(":" in w and w.split(":")[0].endswith(".h")
+                              for w in wheres)
+            if macro == "DATA" and header_only:
+                continue                  # the model's gate, by doctrine
+            va = rva + common.IMAGE_BASE
+            if header_only and rva in floor:
+                seen_floor.add(rva)
+                problems.append(
+                    f"{macro}(0x{va:08x}) at {wheres[0]} is in a HEADER and "
+                    f"names nothing - KNOWN, enumerated: {floor[rva]}")
+            elif header_only:
+                problems.append(
+                    f"{macro}(0x{va:08x}) at {wheres[0]} is in a HEADER, "
+                    f"which extraction does not read - move the claim to the "
+                    f"owning TU's @carcass block or it names nothing (FATAL)")
+            else:
+                problems.append(
+                    f"{macro}(0x{va:08x}) at {wheres[0]} is in NO fragment - "
+                    f"a present, valid, intended macro that contributed "
+                    f"nothing (FATAL)")
+    for rva in sorted(set(floor) - seen_floor):
+        problems.append(
+            f"0x{rva + common.IMAGE_BASE:08x} is enumerated in "
+            f"HEADER_VA_FLOOR but no header site claims it any more - the "
+            f"debt is paid, delete the entry")
     return problems
+
+
+def check_completeness() -> list[str]:
+    """`completeness_problems` + `pooled_agreement_problems` over the
+    real tree."""
+    from homm3.retail_labels.fragments import all_claims
+    have: dict = {}
+    for claim in all_claims():
+        have.setdefault(claim.kind, set()).add(claim.rva)
+    return (completeness_problems(sweep_sites(), have)
+            + pooled_agreement_problems(pooled_sites()))
+
+
+# --- the embedded negative control ------------------------------------
+
+#: One synthetic TU carrying, in order: an unwrapped DATA_COMPGEN, the
+#: SAME claim wrapped the way clang-format wraps it, a wrapped
+#: DATA_COMPGEN_GUARD, a wrapped VA_COMPGEN, and two decoys - a macro
+#: inside a block comment and one inside a string literal. Every wrapped
+#: form here is copied from a real site the per-line scanner dropped
+#: (advmgr.cpp:919, herodefs.cpp:78, cmbtmgr.cpp:483).
+_SELFTEST_TU = '''
+    sprintf(gText, DATA_COMPGEN(0x00660000, flat, "%s, %s"), a, b);
+    sprintf(gText, DATA_COMPGEN(
+        0x00660004, wrapped, "%s, %s"),
+        a, b);
+    DATA_COMPGEN_GUARD(0x00660008, guard,
+                      owner)
+    VA_COMPGEN(0x0040100c, 0x10,
+               STATIC_INIT_DISPATCH,
+               someOwner)
+    /* DATA_COMPGEN(0x00660010, inComment, "x") */
+    puts("DATA_COMPGEN(0x00660014, inString, \\"x\\")");
+'''
+
+
+def selftest() -> list[str]:
+    """Synthetic defects that MUST be detected + clean samples that MUST
+    pass. Runs on every gate invocation: the gate proves it can still
+    fail before it judges the tree (this repo's rule - a gate shipping
+    without a negative control proves nothing)."""
+    failures = []
+    masked = mask_lexical_noise(_SELFTEST_TU)
+
+    def calls(macro):
+        head, _arity, _proto = MACRO_HEADS[macro]
+        return macro_invocations(masked, head, _SELFTEST_TU)
+
+    # 1. the defect this gate exists for: a WRAPPED macro must be read
+    #    exactly like the flat one. A per-line regex scan finds only the
+    #    flat site, so a scanner that regressed to one scores 1 here.
+    dc = calls("DATA_COMPGEN")
+    if len(dc) != 2:
+        failures.append(f"wrapped DATA_COMPGEN not scanned "
+                        f"({len(dc)} of 2 sites found)")
+    else:
+        # masked args carry the address and the name; the VALUE survives
+        # only in the raw ones (see macro_invocations)
+        got = [(a[0], a[1], r[2]) for _s, _e, a, r in dc]
+        if got != [("0x00660000", "flat", '"%s, %s"'),
+                   ("0x00660004", "wrapped", '"%s, %s"')]:
+            failures.append(f"wrapped DATA_COMPGEN differs from the flat "
+                            f"spelling: {got}")
+    if len(calls("DATA_COMPGEN_GUARD")) != 1:
+        failures.append("wrapped DATA_COMPGEN_GUARD not scanned")
+    if len(calls("VA_COMPGEN")) != 1:
+        failures.append("wrapped VA_COMPGEN not scanned")
+
+    # 2. the decoys stay invisible - blanking must survive the rewrite
+    if any("inComment" in a or "inString" in a
+           for _s, _e, args, _r in dc for a in args):
+        failures.append("a macro in a comment or string literal was scanned")
+
+    # 3. argument splitting is structural, not textual
+    if _split_top_level('0x1, n, f(a, b)') != ["0x1", "n", "f(a, b)"]:
+        failures.append("a comma inside a nested call split an argument")
+    if _split_top_level('0x1, n, "a, b"') != ["0x1", "n", '"a, b"']:
+        failures.append("a comma inside a string literal split an argument")
+
+    # 4. raw arguments must survive masking: two DIFFERENT literals of
+    #    equal length mask to the same blanks, so a pooled-agreement
+    #    check reading masked values would call them equal
+    pair = '''DATA_COMPGEN(0x00660018, a, "%s %s")
+              DATA_COMPGEN(0x00660018, b, "%d %d")'''
+    head, _arity, _proto = MACRO_HEADS["DATA_COMPGEN"]
+    got = macro_invocations(mask_lexical_noise(pair), head, pair)
+    if len({r[2] for _s, _e, _a, r in got}) != 2:
+        failures.append("masked values hid two different string literals")
+
+    # 5. the completeness oracle, driven directly
+    src_site = {"DATA_COMPGEN": {0x260000: ["src/t.cpp:1"]}}
+    if completeness_problems(src_site, {"data": {0x260000}}, floor={}):
+        failures.append("clean sample did not pass")
+    if not any("FATAL" in p for p in
+               completeness_problems(src_site, {"data": set()}, floor={})):
+        failures.append("a lost src site was not detected")
+    header_va = {"VA": {0xbbb60: ["include/game.h:753"]}}
+    if not any("FATAL" in p for p in completeness_problems(
+            header_va, {"func": set()}, floor={})):
+        failures.append("a header VA site was not detected")
+    # the enumerated floor: reported as debt, never fatal, never silent
+    got = completeness_problems(header_va, {"func": set()},
+                                floor={0xbbb60: "known"})
+    if not got or any("FATAL" in p for p in got):
+        failures.append("a floored header VA must be reported, and not fatal")
+    if not completeness_problems({}, {}, floor={0xbbb60: "known"}):
+        failures.append("a stale floor entry was not detected")
+    if any("FATAL" in p for p in completeness_problems(
+            header_va, {"func": {0xbbb60}}, floor={})):
+        failures.append("a header VA already carried was wrongly fatal")
+    if completeness_problems({"DATA": {0x298b20: ["include/hero.h:916"]}},
+                             {"data": set()}, floor={}):
+        failures.append("a header DATA site was wrongly reported as lost")
+    if not any("FATAL" in p for p in completeness_problems(
+            {"DATA": {0x298b20: ["include/hero.h:916", "src/hero.cpp:12"]}},
+            {"data": set()}, floor={})):
+        failures.append("a src DATA site was excused by a header twin")
+
+    # 6. pooled agreement - the fact the model's coalesce rests on
+    agree = {("DATA_COMPGEN", 0x260000): {
+        "advmgr": ("x", '"%s %s"', "advmgr.cpp:1"),
+        "events": ("x", '"%s %s"', "events.cpp:2")}}
+    if pooled_agreement_problems(agree):
+        failures.append("agreeing pooled claims were reported")
+    clash = {("DATA_COMPGEN", 0x260000): {
+        "advmgr": ("x", '"%s %s"', "advmgr.cpp:1"),
+        "events": ("x", '"%d %d"', "events.cpp:2")}}
+    if not any("FATAL" in p for p in pooled_agreement_problems(clash)):
+        failures.append("two values on one pooled address not detected")
+    renamed = {("DATA_COMPGEN", 0x260000): {
+        "advmgr": ("x", '"%s %s"', "advmgr.cpp:1"),
+        "events": ("y", '"%s %s"', "events.cpp:2")}}
+    got = pooled_agreement_problems(renamed)
+    if not got or any("FATAL" in p for p in got):
+        failures.append("a pooled rename must be reported, and not fatal")
+    return failures
 
 
 def _census_functions():
@@ -731,15 +1238,34 @@ def main(argv=None) -> int:
                     help="extract every src/ unit")
     ap.add_argument("-j", "--jobs", type=int, default=None,
                     help="clang probe parallelism (default: cpu count)")
+    ap.add_argument("--selftest", action="store_true",
+                    help="run the completeness gate's negative control "
+                         "and exit")
     a = ap.parse_args(argv)
+    if a.selftest:
+        broken = selftest()
+        for line in broken:
+            print(f"SELFTEST BROKEN: {line}", file=sys.stderr)
+        print("selftest OK" if not broken else "selftest FAILED")
+        return 2 if broken else 0
     if not a.unit and not a.all:
         ap.error("pick --unit U or --all")
     changed, pruned, problems = run(a.unit if not a.all else None, a.jobs)
+    fatal = []
+    if a.unit is None:
+        # The gate proves it can fail before it judges the tree.
+        broken = selftest()
+        if broken:
+            fatal += [f"completeness SELFTEST BROKEN: {b}" for b in broken]
+        else:
+            problems = problems + check_completeness()
+            fatal += [p for p in problems if "FATAL" in p]
     for problem in problems:
         print(f"[labels] {problem}", file=sys.stderr)
-    if a.unit is None:
-        for problem in check_completeness():
-            print(f"[labels] {problem}", file=sys.stderr)
+    if fatal:
+        print(f"[labels] {len(fatal)} lost label(s) - a macro site that "
+              f"reaches no claim names nothing", file=sys.stderr)
+        return 1
     print(f"[labels] {len(changed)} fragment(s) changed"
           + (f", {len(pruned)} pruned" if pruned else "")
           + f" -> {FRAGMENTS.relative_to(common.HOMM3_DIR)}")
