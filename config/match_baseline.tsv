@@ -1375,6 +1375,7 @@ mapcell	?readAbandonedMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	
 mapcell	?readArtifactData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff120
 mapcell	?readGarrisonData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x102a00
 mapcell	?readGeneratorData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xfed40
+mapcell	?readMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HH@Z	95.4717	95.4717	95.4717	0xfe220
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020
 mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	96.4729	96.4729	96.4729	0x1013b0
 mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	76.9111	76.9111	76.9111	0xff4d0
@@ -1407,7 +1408,6 @@ mapcell	NewfullMap_readBlackBox	0.0000	0.0000	0.0000	0xff6b0
 mapcell	NewfullMap_readBlackBoxData	0.0000	0.0000	0.0000	0xffbf0
 mapcell	NewfullMap_readEventData	0.0000	0.0000	0.0000	0x1008b0
 mapcell	NewfullMap_readHeroData	0.0000	0.0000	0.0000	0x1021c0
-mapcell	NewfullMap_readMapLayer	0.0000	0.0000	0.0000	0xfe220
 mapcell	NewfullMap_readMapObjects	0.0000	0.0000	0.0000	0x104470
 mapcell	NewfullMap_readObject	0.0000	0.0000	0.0000	0x102e00
 mapcell	NewfullMap_readObjectType	0.0000	0.0000	0.0000	0x103780

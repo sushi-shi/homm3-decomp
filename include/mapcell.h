@@ -437,6 +437,33 @@ public:
             unsigned short is_trigger : 1;
             unsigned short flags_13_15 : 3;
         };
+        // readMapLayer needs the low ten bits as individual declarators: it
+        // writes the six map-format flip flags ONE BIT AT A TIME (VC6 merges
+        // them into a single word RMW that preserves bits 6..15), and then
+        // sets Passable / IsBlocked / IsBeachBorder / Animated as separate
+        // single-bit stores - `or byte ptr [cell+0xd], 0x2` for
+        // IsBeachBorder is a 1-bit field write, not a word mask.
+        //
+        // The bit POSITIONS are stated Dreamcast evidence, not inferred from
+        // listing order: the CodeView LF_BITFIELD records 0x3E16..0x3E22
+        // each carry an explicit `starting position` (0, 1, ... 12), which
+        // retires the "bit ORDER is inferred from listing order" caveat
+        // above for the ten bits named here. Bits 10 and 11 (unused_bit and
+        // can_build_ship in the DC list) stay pooled: no admitted retail
+        // body reaches them.
+        struct {
+            unsigned short GroundFlippedHorizontal : 1;
+            unsigned short GroundFlippedVertical : 1;
+            unsigned short RiverFlippedHorizontal : 1;
+            unsigned short RiverFlippedVertical : 1;
+            unsigned short RoadFlippedHorizontal : 1;
+            unsigned short RoadFlippedVertical : 1;
+            unsigned short Passable : 1;
+            unsigned short Animated : 1;
+            unsigned short IsBlocked : 1;
+            unsigned short IsBeachBorder : 1;
+            unsigned short flags_10_15 : 6;
+        };
         unsigned short cellFlags;
     };
 #else
