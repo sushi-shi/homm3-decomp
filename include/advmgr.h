@@ -1415,6 +1415,12 @@ public:
                      unsigned char bPartialUpdate, unsigned char view_mines,
                      unsigned char view_heroes, unsigned char view_towns);
     void QuickInfo(int cellX, int cellY, int z);
+    void HeroQuickView(int heroId, int x, int y,
+                       unsigned char display_drop_shadow);
+    void TownQuickView(int townId, int x, int y,
+                       unsigned char display_drop_shadow);
+    void garrison_quick_view(int id, int x, int y);
+    void MonsterQuickView(const NewmapCell* cell, int cellx, int celly);
     void UpdBottomView(unsigned char forceUpdate, unsigned char drawWindow,
                        unsigned char update);
     void CheckCastSpell();

@@ -90,6 +90,7 @@ DATA(0x00697788) int gbThisNetGotAdventureControl;
 #include "winmgr.h"
 #include "window.h"
 #include "widget.h"
+#include "quickherowindow.h"
 #undef HOMM3_ADVMGR_QUICKINFO_VIEW
 #undef HOMM3_MAPCELL_OBJECTS_VIEW
 #undef HOMM3_ADVMGR_OBJ_DECLS
@@ -105,6 +106,21 @@ template <class _TYPE>
 inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
 {
     return (_X > _Y ? _X : _Y);
+}
+
+// E:\gamedcs\includes.h:124/134 - the reference-returning template and its
+// by-value wrapper, the same pair quicktownwindow and armygrp carry.
+template <class T>
+static inline const T& t_limit(const T& minimum, const T& value,
+                               const T& maximum)
+{
+    return value < minimum ? minimum
+                           : (maximum < value ? maximum : value);
+}
+
+static inline int limit(int minimum, int value, int maximum)
+{
+    return t_limit(minimum, value, maximum);
 }
 
 // E:\gamedcs\advmgr.cpp:336
@@ -4017,21 +4033,54 @@ unsigned char advManager::UpdBottomViewTown(unsigned char force_update)
     return 1;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:9063
+// DC carries this free helper out of line (dc 0x19420, 0x9C); retail's
+// /Ob2 inlines the static into every quick-view caller and drops the body.
 DC_ONLY(0x19420, 0x9C)
-TSkillMastery get_identify_level(type_point point)
+static TSkillMastery get_identify_level(type_point point)
 {
-    // @stub
+    int identifyLevel = eMasteryInvalid;
+    playerData* player = &gpGame->players[gUnnamed69778c];
+
+    for (int i = 0; i < player->numHeroes; i++) {
+        hero* iHero = gpGame->GetHero(player->heroes[i]);
+        if (iHero->HeroFn_004E5DE0() > identifyLevel
+            && iHero->IsInIdentifyRange(&point))
+            identifyLevel = iHero->HeroFn_004E5DE0();
+    }
+    return (TSkillMastery)identifyLevel;
 }
 
 // E:\gamedcs\advmgr.cpp:9085
 VA(0x00416590, 0x210)  // anchor-callee, dc 0x194bc
-void advManager::HeroQuickView(int heroId, int x, int y, unsigned char display_drop_shadow)
+void advManager::HeroQuickView(int heroId, int x, int y,
+                               unsigned char display_drop_shadow)
 {
-    // @stub
+    hero* theHero = gpGame->GetHero(heroId);
+    type_point heroPoint(theHero->x, theHero->y, theHero->z);
+
+    int identifyLevel = get_identify_level(heroPoint);
+
+    TQuickHeroWindow::TViewLevel level;
+    if (gpGame->OnSameTeam(theHero->owner, gpGame->GetLocalPlayerGamePos())
+        || identifyLevel >= eMasteryAdvanced || DebugViewAll)
+        level = TQuickHeroWindow::ViewAll;
+    else
+        level = TQuickHeroWindow::ViewSome;
+
+    TQuickHeroWindow window(theHero, level);
+    window.x = limit(window.width / 2, x,
+                     WINDOW_SCREEN_WIDTH - 1 - window.width / 2)
+               - window.width / 2;
+    window.y = limit(window.height / 2, y,
+                     WINDOW_SCREEN_HEIGHT - 1 - window.height / 2)
+               - window.height / 2;
+    if (!display_drop_shadow)
+        window.type &= ~WINDOW_FLAG_SHADOWED;
+    window.QuickWindowWait();
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9115
 VA(0x004167a0, 0x7DB)  // anchor-callee, dc 0x19674

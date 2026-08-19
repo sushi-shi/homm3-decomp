@@ -64,6 +64,7 @@ advmgr	?GetFlaggedObjectOwner@@YIHPAVNewmapCell@@@Z	100.0000	100.0000	100.0000	0
 advmgr	?GetRouteArrayPtr@advManager@@QAEPAGHHH@Z	100.0000	100.0000	100.0000	0x1b010
 advmgr	?GetSoundId@advManager@@QAE?AW4e_looping_sound_id@@HHH@Z	89.5008	89.5008	89.5008	0x18620
 advmgr	?HandleTradeRequestMsg@CAdvMgrNetMsgHandler@@IAEXPAVCNetMsg@@@Z	100.0000	100.0000	100.0000	0x6bf0
+advmgr	?HeroQuickView@advManager@@QAEXHHHE@Z	100.0000	100.0000	100.0000	0x16590
 advmgr	?HideRoute@advManager@@QAEXHHH@Z	100.0000	100.0000	100.0000	0x19300
 advmgr	?InMapArea@advManager@@QAEHHH@Z	100.0000	100.0000	100.0000	0x7ac0
 advmgr	?LoadRemote@advManager@@QAEXE@Z	100.0000	100.0000	100.0000	0x1a100
@@ -113,7 +114,6 @@ advmgr	advManager_Close	0.0000	0.0000	0.0000	0x77e0
 advmgr	advManager_DemobilizeCurrHero	0.0000	0.0000	0.0000	0x17680
 advmgr	advManager_DoAdvCommand	0.0000	0.0000	0.0000	0x7b80
 advmgr	advManager_DoSystemOptions	0.0000	0.0000	0.0000	0x1ac00
-advmgr	advManager_HeroQuickView	0.0000	0.0000	0.0000	0x16590
 advmgr	advManager_InsertSound	0.0000	0.0000	0.0000	0x18c10
 advmgr	advManager_Main	0.0000	0.0000	0.0000	0x87b0
 advmgr	advManager_MonsterQuickView	0.0000	0.0000	0.0000	0x17150
