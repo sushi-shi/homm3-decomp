@@ -2943,9 +2943,28 @@ slot_chosen:
 // skill bonuses, maintains the per-slot counts (preserving the one component
 // that occupies the assembled artifact's slot), then removes the assembled
 // artifact's own bonuses. The spell list is rebuilt if either the assembled
-// artifact or any component affects it. All 23 retail basic blocks and all
-// 13 branches agree; the residual diff is register allocation in the two
-// four-byte subtraction loops.
+// artifact or any component affects it.
+//
+// All three loops are SIGNED-INDEX loops, not pointer walks - corrected
+// 2026-08-20 after `vc6 diagnose` reported flow-distance 6 with three
+// `jb`->`jl` twins, against the older note here which had claimed all 13
+// branches agreed. A C++ pointer relational compare is UNSIGNED (`jb`);
+// retail's `jl` survives because VC6 strength-reduces `i < N` into
+// pointer form while KEEPING the original comparison's signedness, which
+// is why the outer loop can end in `cmp ebx, gArtifactPrimarySkillBonuses
+// End / jl` and still have been written as an int index. Rewriting the
+// three walks as `for (int i = 0; i < N; i++)` took the row 74.49 ->
+// 90.20 and flow-distance to 0.
+//
+// Residual (90.2%): register-homing only. Retail binds the artifact id to
+// ESI as its first call-crossing pseudo and saves ESI in the prologue; our
+// CL binds `this` there and sinks the push. `why-reg --model` reports the
+// definition slots and ORDER agree on both sides with only the ebx/esi
+// bindings permuted, and that the value retail puts in ESI would have to
+// be created before `this` - which is minted between the parameters and
+// the body locals, so no declaration, include or spelling change can
+// precede it. That is C2-side handle STATE (catalog C1), not source-
+// reachable; its one model-passing candidate measured +16 (worse).
 VA(0x004e2bd0, 0x174)  // anchor-bracket, dc 0xd3ad0
 void hero::remove_artifact(long slot)
 {
@@ -2960,18 +2979,11 @@ void hero::remove_artifact(long slot)
         const std::bitset<144>& components =
             gCombinationArtifacts[combination_index].components;
         bool kept_slot = false;
-        int component = 0;
-        const signed char* bonuses = gArtifactPrimarySkillBonuses[0];
-        for (; bonuses < gArtifactPrimarySkillBonusesEnd;
-            component++, bonuses += 4) {
+        for (int component = 0; component < 144; component++) {
             if (components.test(component)) {
-                signed char* skill = stats;
-                const signed char* bonus = bonuses;
-                do {
-                    *skill -= *bonus;
-                    skill++;
-                    bonus++;
-                } while (skill < stats + 4);
+                for (int skill = 0; skill < 4; skill++)
+                    stats[skill] -=
+                        gArtifactPrimarySkillBonuses[component][skill];
                 update_spells = update_spells
                     || akArtifactTraits[component].givesSpells;
                 int component_slot =
@@ -2988,14 +3000,8 @@ void hero::remove_artifact(long slot)
 
     equipped[slot].artifactId = ARTIFACT_NONE;
     equipped[slot].extra = -1;
-    signed char* skill = stats;
-    const signed char* bonus =
-        gArtifactPrimarySkillBonuses[artifact.artifactId];
-    do {
-        *skill -= *bonus;
-        skill++;
-        bonus++;
-    } while (skill < stats + 4);
+    for (int skill = 0; skill < 4; skill++)
+        stats[skill] -= gArtifactPrimarySkillBonuses[artifact.artifactId][skill];
     if (update_spells
         || akArtifactTraits[artifact.artifactId].givesSpells)
         update_spell_list();
