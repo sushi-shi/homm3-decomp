@@ -1073,19 +1073,13 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 // map format, and the custom record's artifact is a byte there and a short
 // after.
 //
-// Residual (81.8148%): THE TAIL IS NOT FULLY DECODED and the body below stops
-// short of retail deliberately rather than guessing.  Two things are visible
-// past the point this reconstruction ends:
-//   * the no-growth insert clears bits 27..30 as well as bit 18
-//     (`and eax,0x87fbffff`), so it is not a lone one-bit field - something
-//     in that word is written as a unit, which reads like a bitfield view
-//     this file does not model yet (the same shape blocks readScholarData);
-//   * after it retail reads TWO more bytes, checks the count, and merges the
-//     pair into the object's own x and y at [obj+4]/[obj+5] through 16-bit
-//     xor-merges - fields CObject already names, but with no evidence yet
-//     for what the stream pair means.
-// Everything before that point is byte-confirmed.  The register distance in
-// the matched region is the usual ebx/edi permutation.
+// The tail packs the object's own coordinates into a type_point and hands it
+// to the game with the identifier read at the top - which is what the odd
+// `mov ecx,[ebp-0x18] / mov [ebp-0x18],ecx` self-move near the entry is for:
+// the dword survives the whole body to reach that call.  The 16-bit
+// xor-merges at the end are type_point's bitfields (x:10, y:10, z:4), not a
+// write back into the object, and the two bytes read just before are
+// discarded padding.
 VA(0x005013b0, 0x3DC)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing, dc 0xf0390
 int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 {
@@ -1181,11 +1175,22 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
     unsigned char noGrowth;
     if (infile->Read(&noGrowth, sizeof(noGrowth)) < sizeof(noGrowth))
         return -1;
-    monsterObject->extraInfo = (monsterObject->extraInfo & 0xfffbffff)
+    // The mask retail computes clears bits 27..30 alongside bit 18, so this
+    // write lands on more than the one flag; transcribed as the object does
+    // it rather than narrowed to the single bit.
+    monsterObject->extraInfo = (monsterObject->extraInfo & 0x87fbffff)
         | ((noGrowth & 1) << 18);
 
     unsigned char padding[2];
-    return infile->Read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+
+    type_point point;
+    point.x = monsterObject->x;
+    point.y = monsterObject->y;
+    point.z = monsterObject->z;
+    gpGame->record_monster_identifier(identifier, point);
+    return 0;
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies

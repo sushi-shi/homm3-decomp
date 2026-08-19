@@ -1305,6 +1305,13 @@ private:
     int LoadRumours(TAbstractFile* infile);       // 0x4bbe40
 public:
     int LoadMinePool(TAbstractFile* infile, int saveVersion);
+    // Retail 0x4ced40, UNCLAIMED and PROVISIONALLY NAMED. readMonsterData
+    // ends by handing it the monster's stream identifier and the cell's
+    // packed point; the body appends the pair to the eight-byte-element
+    // vector at game+0x4e7bc. No Dreamcast row carries either the name or
+    // the signature, so the name describes only what the call site shows.
+    // Declared for that one call site, not reconstructed.
+    void record_monster_identifier(int identifier, type_point point);
     int LoadGarrisonPool(TAbstractFile* infile, int saveVersion);
     int SaveMinePool(TAbstractFile* outfile);     // 0x4b9580
     int SaveGarrisonPool(TAbstractFile* outfile); // 0x4b98c0
