@@ -955,6 +955,7 @@ hero	?GetManaCost@hero@@QAEHHPBVarmyGroup@@H@Z	100.0000	100.0000	100.0000	0xe524
 hero	?GetManaFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5380
 hero	?GetMobility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4d90
 hero	?GetMobilityFrame@hero@@QBEHXZ	100.0000	100.0000	100.0000	0xe5330
+hero	?GetMorale@hero@@QAEHPBV1@EE@Z	94.7974	94.7974	94.7974	0xe39b0
 hero	?GetMysticismBonus@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe3f40
 hero	?GetNecromancyCreature@hero@@QAE?AW4TCreatureType@@XZ	100.0000	100.0000	100.0000	0xe3c60
 hero	?GetNthSS@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xe23a0
@@ -1048,7 +1049,6 @@ hero	hero_CheckLevel	0.0000	0.0000	0.0000	0xda720
 hero	hero_Deallocate	0.0000	0.0000	0.0000	0xd9ec0
 hero	hero_GetLuck	0.0000	0.0000	0.0000	0xe36c0
 hero	hero_GetMobility	0.0000	0.0000	0.0000	0xe4990
-hero	hero_GetMorale	0.0000	0.0000	0.0000	0xe39b0
 hero	hero_GetNecromancyFactor	0.0000	0.0000	0.0000	0xe3cd0
 hero	hero_GiveArtifact	0.0000	0.0000	0.0000	0xe3070
 hero	hero_GiveExperience	0.0000	0.0000	0.0000	0xe33b0
