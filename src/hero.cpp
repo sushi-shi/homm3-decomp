@@ -1131,13 +1131,38 @@ TSecondarySkill get_skill_award(const hero* current_hero, TSkillMastery min_leve
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:2340
-// No retail row: inlined into update_slot below (see its note).
+// No retail row: every one of its five call sites (four in update_slot,
+// one in UpdateBackpackItem) is /Ob2-inlined, so `inline` reproduces the
+// absence. The DC xref graph counts those five expansions and nothing
+// else references it. `artifact` is the raw slot id, kept `int` because
+// the record's member is an int and TArtifact's -1 sentinel is what the
+// gate tests.
 DC_ONLY(0xcd68c, 0x5C)
-void update_artifact_slot(long id, TArtifact artifact)
+inline void update_artifact_slot(long id, int artifact)
 {
-    // @stub
+    message msg;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeY = id;
+    if (artifact == ARTIFACT_NONE) {
+        msg.codeX = widget::WIDGET_CLEAR_STATUS;
+    } else {
+        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.extra = artifact;
+        gpHeroScreenWindow->BroadcastMessage(&msg);
+        msg.codeX = widget::WIDGET_SET_STATUS;
+    }
+    msg.extra = widget::WIDGET_DRAWN;
+    gpHeroScreenWindow->BroadcastMessage(&msg);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:2365
 // Pinned from BELOW: update_all_slots (0x004db1d0, next claim) is a
@@ -1166,26 +1191,65 @@ void THeroScreenWindow::update_all_slots()
 
 #if 0  // @carcass
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:2393
-// No retail row: inlined into UpdateBackpack below.
+// No retail row: the one call site below is /Ob2-inlined into
+// UpdateBackpack, and `inline` reproduces the absence (the
+// strip::DrawNumber precedent).
 DC_ONLY(0xcd76c, 0x22)
-void UpdateBackpackItem(int i)
+inline void UpdateBackpackItem(int i)
 {
-    // @stub
+    update_artifact_slot(i + 0x28,
+                         gpCurrentHero->backpack[i].artifactId);
 }
 
 // E:\gamedcs\hero.cpp:2399
-// Walks the 64 stride-8 backpack slots of the current hero (the global
-// at 0x698b20, +0x1d4) and pushes a WIDGET message per slot through
-// heroWindow::BroadcastMessage (0x5fede0, claimed in window.obj) - the
-// per-item body DC carries separately as UpdateBackpackItem, inlined.
+// Repaints the five VISIBLE backpack slots of the current hero (the
+// global at 0x698b20, +0x1d4) and then the two scroll arrows. The DC
+// xref graph for dc 0xcd790 names every piece: UpdateBackpackItem
+// inlined x1 (the loop body), hero::get_last_backpack_index inlined x2
+// (the two descending 0x3cc walks), message::message x1 and four direct
+// heroWindow::BroadcastMessage calls - which is exactly this shape.
+// The arrow pair is driven TWICE off the same index because the two
+// status bits move in opposite directions: with more than five items
+// the arrows lose WIDGET_DIMMED_NODRAW and gain WIDGET_ACTIVE, so the
+// `setg` / `setle` pair is one ternary each and not one shared test.
 VA(0x004db1f0, 0x160)  // anchor-callee (heroWindow::BroadcastMessage), dc 0xcd790
 void UpdateBackpack()
 {
-    // @stub
+    message arrows;
+    arrows.codeX = 0;
+    arrows.codeY = 0;
+    arrows.qualifier = 0;
+    arrows.mouseX = 0;
+    arrows.mouseY = 0;
+    arrows.extra = 0;
+    arrows.window = 0;
+    arrows.id = MESSAGE_WIDGET;
+
+    for (int i = 0; i < 5; i++)
+        UpdateBackpackItem(i);
+
+    arrows.codeX = gpCurrentHero->get_last_backpack_index() + 1 > 5
+                       ? widget::WIDGET_CLEAR_STATUS
+                       : widget::WIDGET_SET_STATUS;
+    arrows.extra = widget::WIDGET_DIMMED_NODRAW;
+    arrows.codeY = 0x4d;
+    gpHeroScreenWindow->BroadcastMessage(&arrows);
+    arrows.codeY = 0x4e;
+    gpHeroScreenWindow->BroadcastMessage(&arrows);
+
+    arrows.codeX = gpCurrentHero->get_last_backpack_index() + 1 > 5
+                       ? widget::WIDGET_SET_STATUS
+                       : widget::WIDGET_CLEAR_STATUS;
+    arrows.extra = widget::WIDGET_ACTIVE;
+    arrows.codeY = 0x4d;
+    gpHeroScreenWindow->BroadcastMessage(&arrows);
+    arrows.codeY = 0x4e;
+    gpHeroScreenWindow->BroadcastMessage(&arrows);
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\hero.cpp:2432
 VA(0x004db350, 0x86)  // anchor-global, dc 0xcd86c

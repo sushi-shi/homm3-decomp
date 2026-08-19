@@ -983,6 +983,7 @@ hero	?SetSS@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2210
 hero	?SetVisitedArena@hero@@QAEXPBVNewmapCell@@@Z	100.0000	100.0000	100.0000	0xe53e0
 hero	?TakeSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe2250
 hero	?TransferArtifacts@hero@@QAEXPAV1@@Z	97.9658	97.9658	97.9658	0xe23d0
+hero	?UpdateBackpack@@YIXXZ	100.0000	100.0000	100.0000	0xdb1f0
 hero	?UpdateHeroLocator@THeroScreenWindow@@QAEXH@Z	100.0000	100.0000	100.0000	0xe1600
 hero	?UpdateStats@hero@@QAEXXZ	86.0900	86.0900	86.0900	0xe16d0
 hero	?UpgradeCreatures@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe2370
@@ -1034,7 +1035,6 @@ hero	THeroScreenWindow_THeroScreenWindow	0.0000	0.0000	0.0000	0xde710
 hero	THeroScreenWindow_UpdateHeroScreenStatusBar	0.0000	0.0000	0.0000	0xdb660
 hero	THeroScreenWindow_WindowHandler	0.0000	0.0000	0.0000	0xdd2d0
 hero	THeroScreenWindow_update_slot	0.0000	0.0000	0.0000	0xdaf90
-hero	UpdateBackpack	0.0000	0.0000	0.0000	0xdb1f0
 hero	get_skill_award	0.0000	0.0000	0.0000	0xdad00
 hero	hero_CheckLevel	0.0000	0.0000	0.0000	0xda720
 hero	hero_Deallocate	0.0000	0.0000	0.0000	0xd9ec0
