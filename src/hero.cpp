@@ -920,12 +920,87 @@ void hero::update_spell_list()
 // now settled from its retail body as (int whichStat, int isQuickView);
 // the remaining parameter lists are DC's and are NOT retail-verified. Do
 // not reconstruct those bodies without settling their arity first.
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:1594
-VA(0x004d97f0, 0x1A0)  // dc-bracket forced, dc 0xcc49c
-void THeroScreenWindow::HeroMessageUpdate(char* cText)
+// ARITY SETTLED FROM THE BYTES (2026-08-20): `ret 0`, no arguments, and
+// `this` is a HERO - the body walks army.armies through a cursor and
+// re-reads the same record as `[this + 4*slot + 0x91]` for the
+// selection compare. So the DC HeroMessageUpdate(char*) prototype does
+// not describe it; ORDINAL PLACEHOLDER name.
+// Seven army slots, widget ids 0x44..0x4a, each with an icon at id-14,
+// a count text at id-7 and the slot itself. The literal 4 does double
+// duty as WIDGET_SET_ICON_FRAME and as WIDGET_DRAWN - retail CSEs it
+// into EBX and uses the one register for both fields.
+//
+// Residual (93.6%): one callee-saved role swap and the push order it
+// drags with it. Retail keeps the widget id in ESI and the derived
+// id-7 in EDI; we bind them the other way round, so every store that
+// names either register differs while the block shape, the constants
+// and the call sequence are identical. Same C1 handle-state class
+// why-reg proves unreachable on update_slot.
+VA(0x004d97f0, 0x1A0)  // dc-bracket forced + settled arity, dc 0xcc49c
+void hero::HeroFn_004D97F0()
 {
-    // @stub
+    message msg;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+
+    int* slot = army.armies;
+    for (int widgetId = 0x44; widgetId < 0x4b; widgetId++, slot++) {
+        if (*slot == CREATURE_NONE) {
+            msg.codeX = widget::WIDGET_CLEAR_STATUS;
+            msg.extra = widget::WIDGET_DRAWN;
+            msg.codeY = widgetId - 14;
+            gpHeroScreenWindow->BroadcastMessage(&msg);
+            msg.codeY = widgetId - 7;
+            gpHeroScreenWindow->BroadcastMessage(&msg);
+            if (gHeroScreenArmyStripLive)
+                msg.codeX = widget::WIDGET_SET_STATUS;
+            msg.codeY = widgetId;
+            gpHeroScreenWindow->BroadcastMessage(&msg);
+            continue;
+        }
+
+        msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+        msg.extra = *slot + 2;
+        msg.codeY = widgetId - 14;
+        gpHeroScreenWindow->BroadcastMessage(&msg);
+        msg.codeX = widget::WIDGET_SET_STATUS;
+        msg.extra = widget::WIDGET_DRAWN;
+        gpHeroScreenWindow->BroadcastMessage(&msg);
+
+        sprintf(gText, "%d", slot[armyGroup::ARMY_GROUP_SLOT_COUNT]);
+        msg.codeX = widget::WIDGET_SET_TEXT;
+        msg.codeY = widgetId - 7;
+        msg.extraText = gText;
+        gpHeroScreenWindow->BroadcastMessage(&msg);
+        msg.codeX = widget::WIDGET_SET_STATUS;
+        msg.extra = widget::WIDGET_DRAWN;
+        gpHeroScreenWindow->BroadcastMessage(&msg);
+
+        if (gHeroScreenArmySlot == widgetId - 0x44) {
+            if (gHeroScreenArmyStripLive)
+                gpHeroScreenWindow->WidgetClearStatus(widgetId,
+                                                      widget::WIDGET_DRAWN);
+            else
+                gpHeroScreenWindow->WidgetSetStatus(widgetId,
+                                                    widget::WIDGET_DRAWN);
+        } else if (gHeroScreenArmyStripLive && gHeroScreenArmySlot >= 0 &&
+                   *slot == army.armies[gHeroScreenArmySlot]) {
+            gpHeroScreenWindow->WidgetSetStatus(widgetId,
+                                                widget::WIDGET_DRAWN);
+        } else {
+            gpHeroScreenWindow->WidgetClearStatus(widgetId,
+                                                  widget::WIDGET_DRAWN);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:1606
 #endif  // @carcass
