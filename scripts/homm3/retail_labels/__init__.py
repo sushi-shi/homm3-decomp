@@ -3,9 +3,9 @@
 One concern from two directions (the gruntz template): the committed
 inventory tables and image-derived channels are PARSED (censuses /
 providers / iat - parse-only, zero policy), the source annotations are
-EXTRACTED (source.py - the lexical VA/DATA macro scan, the per-unit
-base-obj authority join, and the per-TU fragment cache under
-build/gen/claims/; its CLI is public as `homm3 labels`). Both directions
+EXTRACTED (source.py - the VA/DATA macro scan, the clang-IR name binding
+confirmed against the per-unit base obj, and the per-TU fragment cache
+under build/gen/claims/; its CLI is public as `homm3 labels`). Both directions
 produce the same Claim record; the MODEL (homm3.model) is the only
 consumer of the records and the ONLY place policy lives - authority
 order, naming fallbacks, dedup spellings, the fatal claim gates.
@@ -19,8 +19,9 @@ The one record every parser emits:
     Claim(rva, name, kind, channel, size, unit, meta)
 
 kind is 'func' | 'data'; channel is the provenance string that
-build/gen/symbol_names.csv has always carried (src-VA, src-VA+base,
-zlib-map, runtime-map, iat-implib, reloc-target, ...); size is the claimed
+build/gen/symbol_names.csv has always carried (src-VA, src-VA+ir,
+src-VA+base, zlib-map, runtime-map, iat-implib, reloc-target, ...); size is
+the claimed
 extent in bytes, or None when the channel states none (serialized empty);
 meta carries the channel's extras verbatim (dtor flags, compgen owners).
 
