@@ -87,6 +87,12 @@ inline const _TYPE& _cpp_max(_TYPE _X, _TYPE _Y)
     return (_X < _Y ? _Y : _X);
 }
 
+template <class _TYPE>
+inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
+{
+    return (_Y < _X ? _Y : _X);
+}
+
 // The per-mastery specialty factor rows, one four-float .rdata run per
 // skill (retail 0x63e9f8 / 0x63ea08 / 0x63ea58 / 0x63ea88 / 0x63ea98,
 // read from the pinned image; they sit in one contiguous band of
@@ -1498,17 +1504,73 @@ void THeroScreenWindow::UpdateHeroLocators()
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:4240
 // UpdateHeroLocators (dc 0xd2d24, 50 B) has NO retail row - inlined -
 // so this is the next DC row in the bracket, and 304 B against DC's 296
 // is a 1.03x fit. Body rebuilds the four primary-stat widgets from the
 // current hero's +0x476 band, the same band get_primary_skill_total
 // walks.
+// The four-way clamp chain in the stat loop is GetPrimarySkill inlined
+// on gpCurrentHero, not on `this` - retail reloads the global inside the
+// loop while the luck and morale calls below go through ECX. The two
+// tail clamps are the by-value _cpp_min/_cpp_max pair: three stack homes
+// (the value, +3 and -3) selected BY ADDRESS, which is the same
+// Dinkumware-era shape the mana clamp in can_summon_boat carries.
+//
+// Residual (86.1%): the two _cpp_max expansions, and only those - the
+// message frame, the four-stat loop, both sprintf sites, both _cpp_min
+// expansions and every field store are byte-identical. Retail SPLITS the
+// max: `cmp value,-3 / jge` into the min's block, with the taken arm
+// loading the -3 home and jumping straight to the shared load - i.e. the
+// min is duplicated into the max's fall-through only and folded away on
+// the other arm. Our CL SINKS it into one `lea / jl / lea` select and
+// then runs the min once. `why-branch` reports the residual as exactly
+// two `jl->jge` flips and finds NO catalog mutation that moves it (D6,
+// retail-side duplication - an open class).
+// Tried and rejected, one compile each: VC6's own reference-taking
+// std::_cpp_min/_cpp_max (82.97 - it drops the intermediate load but
+// turns the min into a `cmp [eax],3` memory compare); binding the raw
+// GetLuck result to a named local before the clamp (75.16); leaving the
+// clamp inline in the msg.extra store instead of a hoisted local (83.44
+// - retail stores codeX and codeY AFTER the clamp, and only the local
+// reproduces that); and swapping _cpp_max's arms to `_Y < _X ? _X : _Y`
+// (86.07 here, and it costs hero::Fly 3.1 points - the helper is shared).
+// The message frame's field order IS byte-proven: every `= 0` store
+// first, then id / codeX / extraText - the strip::DrawNumber idiom.
 VA(0x004e16d0, 0x130)  // order-map + stats-band, dc 0xd2d58
 void hero::UpdateStats()
 {
-    // @stub
+    message msg;
+    msg.codeY = 0;
+    msg.qualifier = 0;
+    msg.mouseX = 0;
+    msg.mouseY = 0;
+    msg.window = 0;
+    msg.id = MESSAGE_WIDGET;
+    msg.codeX = widget::WIDGET_SET_TEXT;
+    msg.extraText = gText;
+
+    for (int i = 0; i < 4; i++) {
+        sprintf(gText, "%d", gpCurrentHero->GetPrimarySkill(i));
+        msg.codeY = i + 0x2e;
+        gpHeroScreenWindow->BroadcastMessage(&msg);
+    }
+
+    int luckFrame = _cpp_min(_cpp_max(GetLuck(0, 0, 1), -3), 3) + 3;
+    msg.codeX = widget::WIDGET_SET_ICON_FRAME;
+    msg.codeY = 0x75;
+    msg.extra = luckFrame;
+    gpHeroScreenWindow->BroadcastMessage(&msg);
+
+    int moraleFrame = _cpp_min(_cpp_max(GetMorale(0, 0, 1), -3), 3) + 3;
+    msg.codeY = 0x74;
+    msg.extra = moraleFrame;
+    gpHeroScreenWindow->BroadcastMessage(&msg);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:4273
 // /Gr FREE function - it reads ecx AND edx and stashes them into the
