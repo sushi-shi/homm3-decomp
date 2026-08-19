@@ -5211,15 +5211,68 @@ int advManager::MouseInScrollZone()
     // @stub
 }
 
+// E:\gamedcs\advmgr.cpp:10842
+#endif  // @carcass
+
 // E:\gamedcs\advmgr.cpp:10778
+// Centres the adventure view at the start of a turn. Retail picks the
+// anchor in four tiers - the current player's own current town, an
+// unstarted human turn (which just mobilises the hero and leaves), then
+// the local player's first hero and first town, and finally the map
+// corner. The -9/-8 bias converts a map cell to a viewport origin, and
+// both town tiers share one emitted block because retail's source repeats
+// the same three assignments (VC6 cross-jumps them). gpCurrentPlayer's
+// IsLocalHuman is asked three separate times; retail does not cache it.
 VA(0x00419990, 0x2E3)  // linkorder, dc 0x1cd68
 void advManager::SetInitialMapOrigin()
 {
-    // @stub
-}
+    lastHoverX = lastHoverY = 0;
 
-// E:\gamedcs\advmgr.cpp:10842
-#endif  // @carcass
+    if (gpCurrentPlayer->IsLocalHuman() && gpCurrentPlayer->currTownId != -1) {
+        town* startTown = &gpGame->towns[gpCurrentPlayer->currTownId];
+        radarOrigin.x = startTown->mapX - 9;
+        radarOrigin.y = startTown->mapY - 8;
+        radarOrigin.z = startTown->mapZ;
+    } else if (gpCurrentPlayer->IsLocalHuman()) {
+        MobilizeCurrHero(0, 0, 0);
+    } else {
+        playerData* player = gpCurrentPlayer->IsLocalHuman()
+                                 ? gpCurrentPlayer
+                                 : gpGame->GetLocalPlayer();
+        if (player->numHeroes > 0) {
+            hero* startHero = &gpGame->heroes[player->heroes[0]];
+            radarOrigin.x = startHero->x - 9;
+            radarOrigin.y = startHero->y - 8;
+            radarOrigin.z = startHero->z;
+        } else if (player->numTowns > 0) {
+            town* startTown = &gpGame->towns[player->townIds[0]];
+            radarOrigin.x = startTown->mapX - 9;
+            radarOrigin.y = startTown->mapY - 8;
+            radarOrigin.z = startTown->mapZ;
+        } else {
+            radarOrigin.x = 0;
+            radarOrigin.y = 0;
+            radarOrigin.z = 0;
+        }
+    }
+
+    advWindow->SetElevationToggleImage(radarOrigin.z);
+
+    type_point center;
+    center.x = radarOrigin.x + 9;
+    center.y = radarOrigin.y + 8;
+    center.z = radarOrigin.z;
+
+    field_58 = GetCell(center)->GroundSet;
+    gpSoundManager->SwitchAmbientMusic(gTerrainMusicIds[field_58]);
+    SetEnvironmentOrigin(center, 1);
+    seedingValid = 0;
+
+    if (gpCurrentPlayer->IsLocalHuman() && gpCurrentPlayer->HasMobileHero())
+        advWindow->WidgetClearStatus(11, 0x4008);
+    else
+        advWindow->WidgetSetStatus(11, 0x4008);
+}
 
 VA(0x00419c80, 0x171)  // anchor-callee, dc 0x1d0bc
 void PopupPlayerTurnInfo()
