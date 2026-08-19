@@ -970,7 +970,7 @@ hero	?GetStandSequence@boat@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0x
 hero	?GetStandSequence@hero@@QAE?AW4hero_seqid@@XZ	100.0000	100.0000	100.0000	0xd9110
 hero	?GetSurrenderCostFactor@hero@@QAEMXZ	100.0000	100.0000	100.0000	0xe4580
 hero	?GetVisibility@hero@@QAEHXZ	100.0000	100.0000	100.0000	0xe4070
-hero	?GiveExperience@hero@@QAEHHHE@Z	99.6891	99.6891	99.6891	0xe33b0
+hero	?GiveExperience@hero@@QAEHHHE@Z	100.0000	100.0000	100.0000	0xe33b0
 hero	?GiveResource@hero@@QAEXHH@Z	100.0000	100.0000	100.0000	0xe3600
 hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0
 hero	?HasArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91b0
