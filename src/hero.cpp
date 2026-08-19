@@ -2550,6 +2550,12 @@ void THeroScreenWindow::UpdateHeroLocators()
 // - retail stores codeX and codeY AFTER the clamp, and only the local
 // reproduces that); and swapping _cpp_max's arms to `_Y < _X ? _X : _Y`
 // (86.07 here, and it costs hero::Fly 3.1 points - the helper is shared).
+// Re-tested 2026-08-20 against the fresh `why-branch` read, one compile
+// each, BOTH worse: writing the low clamp as a statement `if (luck < -3)
+// luck = -3;` (77.29) and swapping the call-site argument order to
+// `_cpp_max(-3, GetLuck(...))` (80.83). The `jge` is retail's SPLIT max,
+// not a comparison the source can respell - the branch-kind report names
+// the symptom here, not the lever.
 // The message frame's field order IS byte-proven: every `= 0` store
 // first, then id / codeX / extraText - the strip::DrawNumber idiom.
 VA(0x004e16d0, 0x130)  // order-map + stats-band, dc 0xd2d58
