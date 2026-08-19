@@ -5557,14 +5557,79 @@ unsigned char advManager::DoSystemOptions()
     return 0;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\advmgr.cpp:11444
+// Retail proves the whole shape: a 7x7 neighbourhood clamped to the world
+// extents, a 47-entry jump table over the contiguous decorative-terrain
+// block TERRAIN_BRUSH(0x72)..TERRAIN_YUCCA_TREE(0xa0) collapsed into three
+// counted groups, and a three-way majority vote. The 0/1/2 result indexes
+// gTerrainCombatBackgrounds[combatTerrain][.] at the cmbtmgr call site,
+// so group 0 is the dead-vegetation background, 1 the mountain one and 2
+// the wooded default. type_point's `short x:10, y:10, z:4` packing puts y
+// and z in the second allocation unit, which is why retail walks the loop
+// variable through `xor word ptr [p+2]` bitfield writes.
+// Residual (99.10%): the two lower clamps only. Retail tests `value < 0`
+// and yields the zero (`jl`), where this TU's `_cpp_max` spelling
+// (`_X > _Y ? _X : _Y`) tests `value > 0` and yields the value (`jg`).
+// Swapping to `_cpp_max(0, value)` DOES buy the retail polarity but costs
+// the shared zero: retail materialises one `xor esi, esi` feeding both
+// clamps, while the swapped order creates the constant first, parks it in
+// edx and re-emits an immediate 0 for the second clamp - measured 98.73,
+// strictly worse, so the higher-scoring order stands. The template itself
+// is NOT the knob: FindAdjacentMonster four functions up uses the same
+// `_cpp_max(value, 0)` idiom and retail emits `jg` there, so this TU's
+// spelling is byte-proven and MoreTreesNear's source genuinely differed.
+// What remains beyond the polarity is frame-slot coalescing (arg-slot
+// [ebp+8] vs a negative scratch slot), the documented class.
 VA(0x0041adb0, 0x25F)  // linkorder, dc 0x1e86c
 int advManager::MoreTreesNear(type_point point)
 {
-    // @stub
+    int trees = 0;
+    int dead = 0;
+    int mountains = 0;
+
+    int minY = _cpp_max(point.y - 3, 0);
+    int maxY = _cpp_min(point.y + 4, gMapHeight);
+    int minX = _cpp_max(point.x - 3, 0);
+    int maxX = _cpp_min(point.x + 4, gMapWidth);
+
+    type_point p;
+    p.z = point.z;
+    for (p.y = minY; p.y < maxY; p.y++) {
+        for (p.x = minX; p.x < maxX; p.x++) {
+            NewmapCell* cell = GetCell(p);
+            switch (cell->type) {
+            case TERRAIN_BRUSH:
+            case TERRAIN_BUSH:
+            case TERRAIN_OAK_TREE:
+            case TERRAIN_PINE_TREE:
+            case TERRAIN_TREE:
+            case TERRAIN_WILLOW_TREE:
+            case TERRAIN_YUCCA_TREE:
+                trees++;
+                break;
+            case TERRAIN_DEAD_VEGETATION:
+                dead++;
+                break;
+            case TERRAIN_HILL:
+            case TERRAIN_MOUND:
+            case TERRAIN_MOUNTAIN:
+            case TERRAIN_OUTCROPPING:
+            case TERRAIN_VOLCANIC_VENT:
+            case TERRAIN_VOLCANO:
+                mountains++;
+                break;
+            }
+        }
+    }
+
+    if (dead > trees && dead > mountains)
+        return 0;
+    if (mountains > trees && mountains > dead)
+        return 1;
+    return 2;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:11501
 DC_ONLY(0x1eb78, 0x40)
