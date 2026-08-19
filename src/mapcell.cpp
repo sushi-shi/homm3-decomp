@@ -1056,11 +1056,139 @@ int NewfullMap::readSignData(TAbstractFile* infile, CObject* signObject)
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:2579
+#endif  // @carcass
+
+// The map file's wandering-monster record.  Everything it learns is packed
+// into the object's extraInfo, one masked insert per field: the troop count
+// at bits 0..11, the army-size grade at 12..16, the custom-record index at
+// 19..26 with its marker at 31, and the never-flees / no-growth flags above.
+//
+// The army-size grade is a five-way dispatch, and four of its arms roll:
+// grade 0 is the sentinel -4, grades 1..3 draw Random(1,7), Random(1,10) and
+// Random(4,10), grade 4 is a flat 10, and anything past 4 passes the stream
+// byte through unchanged.  The jump table is retail's.
+//
+// Two version tests, both on gpGame->mapHeader.version rather than a
+// parameter: the leading identifier dword is skipped entirely on the oldest
+// map format, and the custom record's artifact is a byte there and a short
+// after.
+//
+// Residual (81.8148%): THE TAIL IS NOT FULLY DECODED and the body below stops
+// short of retail deliberately rather than guessing.  Two things are visible
+// past the point this reconstruction ends:
+//   * the no-growth insert clears bits 27..30 as well as bit 18
+//     (`and eax,0x87fbffff`), so it is not a lone one-bit field - something
+//     in that word is written as a unit, which reads like a bitfield view
+//     this file does not model yet (the same shape blocks readScholarData);
+//   * after it retail reads TWO more bytes, checks the count, and merges the
+//     pair into the object's own x and y at [obj+4]/[obj+5] through 16-bit
+//     xor-merges - fields CObject already names, but with no evidence yet
+//     for what the stream pair means.
+// Everything before that point is byte-confirmed.  The register distance in
+// the matched region is the usual ebx/edi permutation.
 VA(0x005013b0, 0x3DC)  // order-map: calls Random 0x50b230 + readString 0x4c6010 + vector<MonsterData> grow 0x506d70; called by readObject; EH-bearing, dc 0xf0390
-int NewfullMap::readMonsterData(void* infile, CObject* monsterObject)
+int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
 {
-    // @stub
+    int customIndex = CustomMonsterList.size();
+
+    monsterObject->extraInfo = 0;
+
+    int identifier;
+    if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+        identifier = 0;
+    } else {
+        infile->Read(&identifier, sizeof(identifier));
+    }
+
+    short quantity;
+    if (infile->Read(&quantity, sizeof(quantity)) < sizeof(quantity))
+        return -1;
+    monsterObject->extraInfo = (monsterObject->extraInfo & 0xfffff000)
+        | (quantity & 0xfff);
+
+    signed char grade;
+    if (infile->Read(&grade, sizeof(grade)) < sizeof(grade))
+        return -1;
+
+    signed char armySize;
+    switch (grade) {
+    case MONSTER_QTY_UNRESOLVED:
+        armySize = -4;
+        break;
+    case MONSTER_QTY_RANDOM_1_7:
+        armySize = static_cast<signed char>(Random(1, 7));
+        break;
+    case MONSTER_QTY_RANDOM_1_10:
+        armySize = static_cast<signed char>(Random(1, 10));
+        break;
+    case MONSTER_QTY_RANDOM_4_10:
+        armySize = static_cast<signed char>(Random(4, 10));
+        break;
+    case MONSTER_QTY_FIXED_10:
+        armySize = 10;
+        break;
+    default:
+        armySize = grade;
+        break;
+    }
+    monsterObject->extraInfo = (monsterObject->extraInfo & 0xfffe0fff)
+        | ((armySize & 0x1f) << 12);
+
+    unsigned char hasCustomRecord;
+    if (infile->Read(&hasCustomRecord, sizeof(hasCustomRecord))
+        < sizeof(hasCustomRecord))
+        return -1;
+
+    if (hasCustomRecord) {
+        MonsterData tempMonster;
+        tempMonster.Artifact = ARTIFACT_NONE;
+        readMapString(infile, &tempMonster.Message);
+
+        for (int i = 0; i < 7; ++i) {
+            int quantityRead;
+            if (infile->Read(&quantityRead, sizeof(quantityRead))
+                < sizeof(quantityRead))
+                return -1;
+            tempMonster.ResQty[i] = quantityRead;
+        }
+
+        int artifact;
+        if (gpGame->mapHeader.version == MAP_FORMAT_RESTORATION_OF_ERATHIA) {
+            signed char narrow;
+            infile->Read(&narrow, sizeof(narrow));
+            artifact = narrow;
+        } else {
+            short wide;
+            infile->Read(&wide, sizeof(wide));
+            artifact = wide;
+        }
+        tempMonster.Artifact = artifact;
+
+        if (customIndex < 4000) {
+            CustomMonsterList.push_back(tempMonster);
+            monsterObject->extraInfo = (((customIndex & 0xff) | 0xfffff000)
+                                        << 19)
+                | (monsterObject->extraInfo & 0xf807ffff);
+        }
+    }
+
+    unsigned char neverFlees;
+    if (infile->Read(&neverFlees, sizeof(neverFlees)) < sizeof(neverFlees))
+        return -1;
+    monsterObject->extraInfo = (monsterObject->extraInfo & 0xfffdffff)
+        | ((neverFlees & 1) << 17);
+
+    unsigned char noGrowth;
+    if (infile->Read(&noGrowth, sizeof(noGrowth)) < sizeof(noGrowth))
+        return -1;
+    monsterObject->extraInfo = (monsterObject->extraInfo & 0xfffbffff)
+        | ((noGrowth & 1) << 18);
+
+    unsigned char padding[2];
+    return infile->Read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:2695
 DC_ONLY(0xf06e8, 0xA0)

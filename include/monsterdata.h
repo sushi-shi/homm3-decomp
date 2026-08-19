@@ -9,11 +9,28 @@
 // seven-dword resource array but widens the leading STL string from 12 to 16
 // bytes, placing Artifact at +0x2c; saveMonsterData independently proves both
 // the array base/extent and that final offset.
+// The map file's five wandering-monster quantity presets.  PROVISIONAL
+// NAMES: no Dreamcast enum covers this domain, so each is named for the roll
+// readMonsterData performs on it (0x5013b0's five-arm jump table).  Grade 0
+// stores the sentinel -4 and is resolved elsewhere.
+enum EMonsterQuantityPreset {
+    MONSTER_QTY_UNRESOLVED = 0,
+    MONSTER_QTY_RANDOM_1_7 = 1,
+    MONSTER_QTY_RANDOM_1_10 = 2,
+    MONSTER_QTY_RANDOM_4_10 = 3,
+    MONSTER_QTY_FIXED_10 = 4
+};
+
 class MonsterData {
 public:
     std::basic_string<char, std::char_traits<char>, std::allocator<char> > Message;
     int ResQty[7];
-    TArtifact Artifact;
+    // Spelled int, not TArtifact, for the reason armyGroup::armies is
+    // spelled int: readMonsterData deserializes it from a one- or two-byte
+    // stream field and saveMonsterData narrows it back to a byte, so an
+    // enum here would put a cast on every crossing.  ARTIFACT_NONE still
+    // assigns.  The Dreamcast declarator's enum is preserved in the name.
+    int Artifact;
 };
 SIZE(MonsterData, 0x30);
 

@@ -144,7 +144,12 @@ public:
     std::vector<CSprite*> sprites;
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
     std::vector<TreasureData> customTreasure;
-    char pad_040[0x20];
+    // +0x40, the same member the events view names, sliced out of the pad
+    // for readMonsterData: it indexes the list with a 48-byte stride and
+    // appends through it.  blackBoxes still rides in pad_050 because
+    // BlackBoxData is only forward-declared in this closure.
+    std::vector<MonsterData> CustomMonsterList;
+    char pad_050[0x10];
     std::vector<TSeerHut> SeerHutList;
     std::vector<TQuestGuard> QuestGuardList;
     std::vector<TTimedEvent> TimedEventList;
