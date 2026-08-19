@@ -139,6 +139,9 @@ static const float kIntelligenceFactors[kNumMasteries] =
 static const float kFirstAidFactors[kNumMasteries] =
     { 0.0f, 1.0f, 2.0f, 3.0f };
 // Sorcery's spell-damage bonus by mastery (retail 0x63ea78).
+// Necromancy's raise-rate by mastery (retail 0x63e9b8, same band).
+static const float kNecromancyFactors[kNumMasteries] =
+    { 0.0f, 0.1f, 0.2f, 0.3f };
 static const float kSorceryFactors[kNumMasteries] =
     { 0.0f, 0.05f, 0.1f, 0.15f };
 // The two SPELL-specialty ladders GetHeroSpellBonus (0x4e5ff0) indexes
@@ -2733,16 +2736,54 @@ TCreatureType hero::GetNecromancyCreature()
     return CREATURE_SKELETON;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:5332
+// The morale/luck pattern once more, in the float domain: a mastery
+// row, the hero specialty multiplier, three IsWieldingArtifact bonuses
+// and a town sweep - here over NECROPOLIS towns, adding the Necromancy
+// Amplifier (EXTRA_0_ID) and the Grail separately and WITHOUT breaking
+// out of the loop, so two amplified Necropolises both count. The
+// specialty multiply is written with the scale FIRST because that is
+// retail's operand order (`fld level / fmul 0.05 / fadd 1.0 / fmul
+// factor`), not `factor *= scale`.
+// The no-skill arm still checks one artifact, which is why the two arms
+// are an if/else and not an early return.
 VA(0x004e3cd0, 0x268)  // anchor-global, dc 0xd4390
 float hero::GetNecromancyFactor(unsigned char apply_limit)
 {
-    // @stub
-}
+    float factor = kNecromancyFactors[skillLevel[eSecSkillNecromancy]];
+    if (skillLevel[eSecSkillNecromancy] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill &&
+            ability.skill == eSecSkillNecromancy)
+            factor = (level * 0.05f + 1.0f) * factor;
 
-#endif  // @carcass
+        if (IsWieldingArtifact(0x36))
+            factor += 0.05f;
+        if (IsWieldingArtifact(0x37))
+            factor += 0.1f;
+        if (IsWieldingArtifact(0x38))
+            factor += 0.15f;
+
+        if (owner >= 0) {
+            playerData& player = gpGame->players[owner];
+            for (int i = 0; i < player.numTowns; i++) {
+                town* ownedTown = gpGame->GetTown(player.townIds[i]);
+                if (ownedTown->type == TOWN_NECROPOLIS) {
+                    if ((ownedTown->active & bitNumber[EXTRA_0_ID]) != 0)
+                        factor += 0.1f;
+                    if ((ownedTown->active & bitNumber[HOLY_GRAIL_ID]) != 0)
+                        factor += 0.2f;
+                }
+            }
+        }
+    } else if (IsWieldingArtifact(0x82)) {
+        factor += 0.3f;
+    }
+
+    if (apply_limit && factor > 1.0f)
+        factor = 1.0f;
+    return factor;
+}
 
 // E:\gamedcs\hero.cpp:5387
 // The integer half of the specialty family: the mastery row is int, so
