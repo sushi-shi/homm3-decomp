@@ -5,6 +5,9 @@
 // The hall, silo and fort tests are town::HasBuilding calls in the
 // Dreamcast body (dc 0x117e48, seven `jsr @r11` with r5 = 11/12/13,
 // 15, 7/8/9); see town.h for why the inline's visibility is scoped.
+// Only the hall and silo four are spelled as calls here - the ctor's
+// /Ob2 budget admits five expansions and the fort chain would be the
+// sixth; the sweep is at the chain.
 #define HOMM3_TOWN_HASBUILDING_API
 #include <stdio.h>
 #include <string>
@@ -210,12 +213,31 @@ TQuickTownWindow::TQuickTownWindow(const town* thisTown, TQuickTownWindow::TView
             GOLD_PER_DAY_ID, 1, 0, 8));
     }
 
+    // THE FORT CHAIN IS REFUSED THE HasBuilding SPELLING, on measurement
+    // alone. The Dreamcast body calls town::HasBuilding at all seven sites
+    // here (dc 0x117e48, r5 = 11/12/13, 15, 7/8/9), and the expansion is
+    // byte-identical to the mask test, so only the /Ob2 candidate-site count
+    // arbitrates - and this ctor's budget admits exactly FIVE. Sweeping the
+    // total with the silo site always on (2026-08-19):
+    //   hall 3 fort 0 (4 sites) 98.8368   hall 3 fort 2 (6 sites) 94.4561
+    //   hall 3 fort 1 (5 sites) 98.8368   hall 3 fort 3 (7 sites) 94.9246
+    //   hall 0 fort 3 (4 sites) 98.8368   hall 2 fort 3 (6 sites) 94.4561
+    //   hall 2 fort 2 (5 sites) 98.8368   hall 1 fort 3 (5 sites) 98.8368
+    // The cliff is the COUNT and nothing else - which group supplies the
+    // sites does not move a single digit. Landing five would mean splitting
+    // this if/else-if chain into one call and two mask tests, which is a
+    // spelling no author wrote, so the whole fort group carries the mask
+    // form and the hall+silo groups carry the calls: four sites, the max,
+    // and no chain spelled two ways. This is the integration's own finding -
+    // the hall/silo sites scored 98.4193 in the lane that landed them and
+    // 94.9246 once merged onto the tree that had already reached 98.8368 by
+    // the c_str and divisor work, which is what a shared budget looks like.
     int castle_level;
-    if (thisTown->HasBuilding(CASTLE_FORT_ID, 0))
+    if (thisTown->built & bitNumber[CASTLE_FORT_ID])
         castle_level = 0;
-    else if (thisTown->HasBuilding(CASTLE_CITADEL_ID, 0))
+    else if (thisTown->built & bitNumber[CASTLE_CITADEL_ID])
         castle_level = 1;
-    else if (thisTown->HasBuilding(CASTLE_CASTLE_ID, 0))
+    else if (thisTown->built & bitNumber[CASTLE_CASTLE_ID])
         castle_level = 2;
     else
         castle_level = 3;
