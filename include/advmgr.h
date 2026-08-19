@@ -493,6 +493,16 @@ DATA(0x00678288) extern const int gMineCharacteristics[7];
 // so it takes the event name. PROVISIONAL on that ground alone.
 DATA(0x006a5e20) extern const char* const gMineEventText[];
 #endif
+#ifdef HOMM3_ADVMGR_OBJ_DECLS
+// Route-arrow frame selector, retail .data 0x6782ac: sixty-four signed
+// bytes read as [previous step direction][current step direction], both
+// in the eight-way order gStepDeltaX/gStepDeltaY use. ShowRoute adds 2 to
+// the result, clearing the two non-directional frames. The orientation is
+// fixed by the matrix itself - the straight-through diagonal runs
+// 8,9,..,15, i.e. 8+dir - and the extent is exact, since 0x6782ec begins
+// unrelated float data.
+DATA(0x006782ac) extern const signed char gRouteArrowFrames[8][8];
+#endif
 #ifdef HOMM3_ADVMGR_QUICKINFO_VIEW
 DATA(0x006a7b84) extern const char* gTreeOfKnowledgeName;
 DATA(0x006a64d8) extern const char* const gWiseTreePriceNames[];

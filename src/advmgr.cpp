@@ -4971,14 +4971,128 @@ void advManager::InsertSound(int x, int y, int z, int soundPriority,
     touchedSounds ^= 1 << soundArray[iBest].soundId;
 }
 
-#if 0  // @carcass
+// The "no route to draw" tail, inlined at all three of ShowRoute's exits
+// where the arrow overlay has to come down: dim the move button, forget
+// the hero's path target, and repaint only if the overlay was actually up.
+// Retail expands it three times with the pathTarget clear folded away in
+// the copy reached with currHeroId already known to be -1, which is what a
+// same-TU static under /Ob2 does.
+static void clear_adventure_route(advManager* manager, int bUpdateScreen)
+{
+    if (!gpCurrentPlayer->IsLocalHuman()
+        && (!gUnnamed6989c8 || !gUnnamed69ccd4))
+        return;
+
+    gpWindowManager->BroadcastMessage(
+        MESSAGE_WIDGET, widget::WIDGET_SET_STATUS,
+        TAdventureMapWindow::MOVE_ID,
+        widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+
+    int heroId = gpCurrentPlayer->currHeroId;
+    if (heroId != -1) {
+        hero* currentHero = &gpGame->heroes[heroId];
+        currentHero->pathTargetX = -1;
+        currentHero->pathTargetY = -1;
+    }
+
+    if (!manager->bShowRoute)
+        return;
+    manager->bShowRoute = 0;
+    if (!bUpdateScreen)
+        return;
+
+    manager->CompleteDraw(0);
+    manager->UpdateScreen(0, 0);
+}
 
 // E:\gamedcs\advmgr.cpp:10436
+// Rebuilds the adventure-map route overlay. Retail runs the path search
+// from the hero's stored target, then walks the resulting cell list BACK
+// TO FRONT writing one arrow frame per step into routeArray: the final
+// step gets frame 1 (the target marker) and every other step indexes
+// gRouteArrowFrames[previous direction][this direction] + 2. Steps that
+// fall beyond the hero's remaining movement are pushed into the greyed
+// bank by adding 0x19, and reaching any affordable step is what un-dims
+// the move button at the end.
 VA(0x00418dd0, 0x4DF)  // linkorder, dc 0x1c05c
 void advManager::ShowRoute(int bUpdateScreen, int bReseed, int bChangeButton)
 {
-    // @stub
+    if (!gpCurrentPlayer->IsLocalHuman())
+        return;
+
+    int heroId = gpCurrentPlayer->currHeroId;
+    if (heroId == -1) {
+        clear_adventure_route(this, bUpdateScreen);
+        return;
+    }
+
+    hero* currentHero = &gpGame->heroes[heroId];
+    if (currentHero->pathTargetX == -1) {
+        clear_adventure_route(this, bUpdateScreen);
+        return;
+    }
+
+    SeedTo(type_point(currentHero->pathTargetX, currentHero->pathTargetY,
+                      currentHero->pathTargetZ));
+
+    int pathLength = gpSearchArray->BuildPath(currentHero, 0xea5f);
+    if (gpSearchArray->result.size() <= 0 || pathLength <= 0) {
+        clear_adventure_route(this, bUpdateScreen);
+    } else {
+        memset(routeArray, 0,
+               (gpGame->worldMap.HasTwoLevels + 1) * gMapHeight * gMapWidth
+                   * sizeof(unsigned short));
+        bShowRoute = 1;
+
+        int movePoints = currentHero->movePoints;
+        type_point step;
+        step.x = currentHero->x;
+        step.y = currentHero->y;
+        step.z = currentHero->z;
+
+        currentHero->army.GetNativeTerrain();
+
+        int routeAffordable = 0;
+        int i;
+        for (i = gpSearchArray->result.size() - 1; i >= 0; i--) {
+            int dir = gpSearchArray->result[i]->direction;
+            movePoints -= GetTerrainCost(currentHero, step, dir, movePoints);
+            step.x = step.x + gStepDeltaX[4 * dir];
+            step.y = step.y + gStepDeltaY[4 * dir];
+
+            unsigned short* arrow =
+                &routeArray[(step.z * gMapHeight + step.y) * gMapWidth
+                            + step.x];
+            if (i == 0) {
+                *arrow = 1;
+            } else {
+                int prevDir = gpSearchArray->result[i - 1]->direction;
+                *arrow = gRouteArrowFrames[prevDir][dir] + 2;
+            }
+
+            if (movePoints < 0)
+                *arrow += 0x19;
+            else
+                routeAffordable = 1;
+        }
+
+        if (bChangeButton) {
+            gpWindowManager->BroadcastMessage(
+                MESSAGE_WIDGET,
+                routeAffordable ? widget::WIDGET_CLEAR_STATUS
+                                : widget::WIDGET_SET_STATUS,
+                TAdventureMapWindow::MOVE_ID,
+                widget::WIDGET_UPDATE | widget::WIDGET_DIMMED);
+        }
+    }
+
+    if (bUpdateScreen) {
+        CompleteDraw(radarOrigin.x, radarOrigin.y, radarOrigin.z, 0, 1);
+        UpdateScreen(0, 0);
+    }
 }
+
+#if 0  // @carcass
 
 // The packed-coordinate body once mistaken for HideRoute is the type_point
 // constructor below. HideRoute itself follows that COMDAT at retail 0x419300.
