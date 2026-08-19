@@ -277,12 +277,34 @@ int TTownEvent::Save(void* outfile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:307
+// The Load twin of saveTownEventList (0x4fc770, exact): same three trailing
+// fields in the same order, with TTimedEvent::Load in place of Save and its
+// result discarded exactly as the Save side discards it.
 VA(0x004fc870, 0x1E4)  // order-map: Load-only caller, calls TTimedEvent::Load 0xfc6a0 (TTownEvent::Load inlined); EH-bearing, dc 0xebe3c
-int NewfullMap::loadTownEventList(void* infile)
+int NewfullMap::loadTownEventList(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    int count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    TownEventList.resize(count);
+    for (unsigned int i = 0; i < TownEventList.size(); ++i) {
+        TTownEvent& thisEvent = TownEventList[i];
+        thisEvent.TTimedEvent::Load(infile, saveVersion);
+        if (static_cast<unsigned>(infile->Read(&thisEvent.TownNum, 1)) < 1)
+            return -1;
+        if (static_cast<unsigned>(infile->Read(&thisEvent.BuildBuildings, 8)) < 8)
+            return -1;
+        if (static_cast<unsigned>(infile->Read(thisEvent.generatorBonuses, 14)) < 14)
+            return -1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:329
 DC_ONLY(0xebeec, 0x7E)
