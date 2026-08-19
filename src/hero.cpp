@@ -422,14 +422,164 @@ int hero::load(void* infile)
     // @stub
 }
 
-// E:\gamedcs\hero.cpp:914
-VA(0x004d80c0, 0x526)  // linkorder, dc 0xcb698
-int hero::save(void* outfile)
-{
-    // @stub
-}
-
 #endif  // @carcass
+
+// E:\gamedcs\hero.cpp:914
+// The record serialiser. Three scratch locals carry every scalar into
+// the stream - retail copies each field into a stack temp and hands
+// Write() that temp's address, never the member's, which is what makes
+// the write widths independent of the member widths (the byte writes of
+// `sex`, `id`, `heroClass`, `disguiseLevel`, `flightLevel`,
+// `waterWalkLevel` and `field_129` are all truncating stores out of
+// four-byte members, emitted as plain `mov al, byte [this+off]`).
+//
+// Only the leading type_obscuring_object::save is checked; every
+// hero-level Write ignores its result and the body always returns 0.
+// The custom name goes out as its length followed by c_str()'s bytes -
+// the `test ecx,ecx / mov ecx, heroNameEmptyText` pair at +0x64 is
+// Dinkumware's c_str() null fallback inlined, the same expansion
+// HeroFn_004D8FB0 carries.
+//
+// The tail packs TownSpecialGrantedMask into six bytes a bit at a
+// time. bitset::test's range check is what the loop's `cmp edi,0x30`
+// tests: VC6 rotated the loop and merged the peeled first-iteration
+// check with the back-edge condition, so ONE compare serves both and
+// _Xran sits above the loop body rather than inside it.
+VA(0x004d80c0, 0x526)  // linkorder, dc 0xcb698
+int hero::save(TAbstractFile* outfile)
+{
+    if (!type_obscuring_object::save(outfile))
+        return -1;
+
+    unsigned char byte_buffer;
+    short word_buffer;
+    int dword_buffer;
+
+    byte_buffer = static_cast<unsigned char>(sex);
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = hasCustomName;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+
+    dword_buffer = customName.length();
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    outfile->Write(customName.c_str(), customName.length());
+
+    byte_buffer = owner;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = patrolRadius;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = field_11a;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = field_11b;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = backpackCount;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = static_cast<unsigned char>(disguiseLevel);
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = static_cast<unsigned char>(flightLevel);
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = static_cast<unsigned char>(waterWalkLevel);
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = dWalkSpellsCast;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = static_cast<unsigned char>(field_129);
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = static_cast<unsigned char>(id);
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = static_cast<unsigned char>(heroClass);
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = portrait;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = patrolX;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = patrolY;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = facing;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = formation;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = pad_08f[0];
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+    byte_buffer = pad_08f[1];
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+
+    dword_buffer = pathTargetX;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = pathTargetY;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    word_buffer = pathTargetZ;
+    outfile->Write(&word_buffer, sizeof(word_buffer));
+    word_buffer = field_03f;
+    outfile->Write(&word_buffer, sizeof(word_buffer));
+    dword_buffer = maxMovePoints;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = movePoints;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = experience;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = skillCount;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    word_buffer = mana;
+    outfile->Write(&word_buffer, sizeof(word_buffer));
+    word_buffer = level;
+    outfile->Write(&word_buffer, sizeof(word_buffer));
+    word_buffer = field_041;
+    outfile->Write(&word_buffer, sizeof(word_buffer));
+
+    dword_buffer = TrainingGroundsFlags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = DefenseTowerFlags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = GardenOfRevelationFlags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = MercCampFlags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = PowerSchoolFlags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = TreeOfKnowledgeFlags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = LibraryFlags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = ArenaFlags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = MagicSchoolFlags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = WarSchoolFlags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = UniversityFlags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = Shrine1Flags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = Shrine2Flags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = Shrine3Flags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+    dword_buffer = flags;
+    outfile->Write(&dword_buffer, sizeof(dword_buffer));
+
+    army.save(outfile);
+
+    outfile->Write(name, sizeof(name));
+    outfile->Write(skillLevel, sizeof(skillLevel));
+    outfile->Write(skillOrder, sizeof(skillOrder));
+    outfile->Write(stats, sizeof(stats));
+    outfile->Write(in_spellbook, sizeof(in_spellbook));
+    outfile->Write(available_spells, sizeof(available_spells));
+    outfile->Write(equipped, sizeof(equipped));
+    outfile->Write(backpack, sizeof(backpack));
+    outfile->Write(artifactSlotCounts, sizeof(artifactSlotCounts));
+
+    byte_buffer = field_11c;
+    outfile->Write(&byte_buffer, sizeof(byte_buffer));
+
+    unsigned char granted_mask[6] = { 0 };
+    for (int i = 0; i < 48; ++i) {
+        if (TownSpecialGrantedMask.test(i))
+            granted_mask[i >> 3] |= 1 << (i & 7);
+    }
+    outfile->Write(granted_mask, sizeof(granted_mask));
+    return 0;
+}
 
 // E:\gamedcs\hero.cpp:1208
 // The first half of the body is entirely implicit: the base and the
