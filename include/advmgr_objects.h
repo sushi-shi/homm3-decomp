@@ -211,7 +211,24 @@ public:
     // padding spelling incorrectly conflated it with shadowCells at +0x24.
     std::bitset<48> triggerCells;
     char pad_34[4];
+    // loadObjectType stores the serialized type as a FULL DWORD - the
+    // stream carries two bytes and retail widens them into all four of
+    // +0x38..+0x3b. Overlaid rather than cast, exactly as NewmapCell's own
+    // type field is: a cast here would be the tree's first cast into an
+    // enum domain.
+    //
+    // GATED to the one view that deserializes the record. Unconditional,
+    // the extra declarator moved events.obj's monsters_sell_out 100.0 ->
+    // 99.95 through the include-set sensitivity class (measured 2026-08-20)
+    // with no semantic change anywhere; the layout is identical either way.
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    union {
+        TAdventureObjectType objectType;
+        unsigned long objectTypeValue;
+    };
+#else
     TAdventureObjectType objectType;
+#endif
     int extra;
     unsigned char suppressDraw;
     char pad_41[3];
