@@ -524,6 +524,9 @@ public:
     // the row is not claimed from here.
     void CheckLevel();
 #endif
+    // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
+    // its luck and morale icon frames.
+    void UpdateStats();
     // 0x4e2370 - retypes every matching slot of the hero's own army.
     void UpgradeCreatures(int sourceCreatureType, int destCreatureType);
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads
