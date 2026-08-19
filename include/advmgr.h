@@ -1474,6 +1474,14 @@ public:
     static int get_like_modifier(class hero* current_hero,
                                  TCreatureType creature);
 #endif
+#ifdef HOMM3_ADVMGR_MONSTER_MOOD_DECLS
+    // advmgr.cpp parses this header before game.h, so its copy of the
+    // declarator names the creature id with VC6's elaborated forward
+    // enum (the recruit.h spelling). Own macro so no other includer's
+    // closure moves.
+    static int get_like_modifier(class hero* current_hero,
+                                 enum TCreatureType creature);
+#endif
 };
 
 // Retail .bss 0x699268 (DC ?gpAdvManager@@3PAVadvManager@@A).
