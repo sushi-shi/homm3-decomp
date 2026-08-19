@@ -2064,16 +2064,100 @@ unsigned char hero::HeroFn_004E2840(long artifact, long slot)
     return accepted;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:4883
+// The mirror of remove_artifact below, sign for sign: the same
+// gArtifactPrimarySkillBonuses pointer-bound sweep over the 144 rows,
+// the same `kept_slot` rule that spares ONE component the per-class
+// count, and the same `update_spells ||` accumulation - with `+=` where
+// the twin has `-=` and `++` where it has `--`. `slot` doubles as the
+// search cursor when the caller passes -1, which is the
+// remove_backpack_artifact precedent.
+// The 0x87 arm is retail's own: equipping that artifact into a hero who
+// has no spellbook silently equips one into slot 17 first, through a
+// RECURSIVE call to this same body (retail's `call 0x4e2a00` is a
+// self-reference, not a sibling).
+//
+// Residual (85.3%): two loop-shape items, both downstream of VC6's
+// induction choice. (1) The empty-slot SEARCH: retail tests `cmp
+// slot,0x13` at the TOP and jumps back to it, our CL proves the first
+// iteration runs, drops the entry test and rotates the compare to the
+// bottom, which duplicates the return-0 epilogue. (2) The 144-row
+// component sweep: retail bounds the loop on the BONUSES pointer
+// (`cmp ebx, gArtifactPrimarySkillBonusesEnd`), our CL re-derives the
+// bound as the akArtifactTraits offset (`cmp ebx, 0x1200`), so the two
+// disagree on which of the three parallel inductions survives - the
+// same class remove_artifact's note already records for its own pair of
+// four-byte loops. Tried and rejected, one compile each: the search as
+// an explicit goto loop (85.25, byte-flat - VC6 rotates it anyway);
+// routing both failure paths through one shared `reject:` label (80.31);
+// and the inner four-byte loop as an INDEXED `for` instead of the twin's
+// pointer do-while (75.08).
 VA(0x004e2a00, 0x1C7)  // dc-callgraph unique, dc 0xd39d8
 unsigned char hero::equip_artifact(const type_artifact* artifact, long slot)
 {
-    // @stub
-}
+    if (slot == -1) {
+        for (slot = 0; slot < 19; slot++) {
+            if (HeroFn_004E2550(artifact->artifactId, slot))
+                goto slot_chosen;
+        }
+        return 0;
+    }
+    if (!HeroFn_004E2550(artifact->artifactId, slot))
+        return 0;
 
-#endif  // @carcass
+slot_chosen:
+    equipped[slot].artifactId = artifact->artifactId;
+    equipped[slot].extra = artifact->extra;
+
+    if (artifact->artifactId == 0x87
+        && equipped[17].artifactId == ARTIFACT_NONE) {
+        type_artifact spellbook(ARTIFACT_SPELLBOOK, -1);
+        equip_artifact(&spellbook, 17);
+    }
+
+    bool update_spells = false;
+    int combination_index =
+        akArtifactTraits[artifact->artifactId].comboType;
+    if (combination_index != -1) {
+        const std::bitset<144>& components =
+            gCombinationArtifacts[combination_index].components;
+        bool kept_slot = false;
+        int component = 0;
+        const signed char* bonuses = gArtifactPrimarySkillBonuses[0];
+        for (; bonuses < gArtifactPrimarySkillBonusesEnd;
+            component++, bonuses += 4) {
+            if (components.test(component)) {
+                signed char* skill = stats;
+                const signed char* bonus = bonuses;
+                do {
+                    *skill += *bonus;
+                    skill++;
+                    bonus++;
+                } while (skill < stats + 4);
+                update_spells = update_spells
+                    || akArtifactTraits[component].givesSpells;
+                int component_slot =
+                    akArtifactTraits[component].allowableSlotMask;
+                if (component_slot
+                        == akArtifactTraits[artifact->artifactId]
+                               .allowableSlotMask
+                    && !kept_slot)
+                    kept_slot = true;
+                else
+                    artifactSlotCounts[component_slot]++;
+            }
+        }
+    }
+
+    for (int skill = 0; skill < 4; skill++)
+        stats[skill] +=
+            gArtifactPrimarySkillBonuses[artifact->artifactId][skill];
+
+    if (update_spells
+        || akArtifactTraits[artifact->artifactId].givesSpells)
+        update_spell_list();
+    return 1;
+}
 
 // E:\gamedcs\hero.cpp:4919
 // Dismantling a combination artifact removes every component's four primary
