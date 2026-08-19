@@ -57,6 +57,13 @@ enum TArtifact {
     // hero::GetVisibility (0x4e4070) adds one tile of scouting radius
     // for each of 0x34/0x35; DC 52/53 are eArtifactSpeculum and
     // eArtifactSpyglass, HoMM3's two scouting artifacts.
+    // Retail witness: hero::equip_artifact (0x4e2a00) equips a SPELLBOOK
+    // into slot 17 first when this artifact lands on a hero who has
+    // none - which is Titan's Thunder's published behaviour, and 135 is
+    // its id in Shadow of Death's combination block (129 Angelic
+    // Alliance .. 140 Cornucopia). Name from the behaviour; the id and
+    // the spellbook rule are byte-proven.
+    ARTIFACT_TITANS_THUNDER = 0x87,
     ARTIFACT_SPECULUM = 0x34,
     ARTIFACT_SPYGLASS = 0x35,
     // hero::GetMagicResistanceFactor (0x4e46e0) adds +0.05/+0.10/+0.15
