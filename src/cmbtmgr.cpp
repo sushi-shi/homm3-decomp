@@ -166,16 +166,79 @@ void combatManager::Close()
     field_13300 = 0;
 }
 
-#if 0  // @carcass
+// Declared file-locally rather than by pulling border.h/button.h in: an
+// extern declaration is include-set inert where a whole header is not.
+void SetPlayerPaletteColors(palette* pal, int whichPlayer);
+
+// The eighteen combat hero animations, keyed `2 * townType + sex`.
+// Retail .rdata 0x63bd40; LoadIcons' `shl eax, 4` proves the 16-byte
+// stride and only the .def name is read, so the trailing three dwords
+// keep ordinal names (their retail values are a plausible draw offset
+// pair plus a small count).
+struct TCombatHeroSprite {
+    const char* defName;
+    int field_04;
+    int field_08;
+    int field_0c;
+};
+DATA(0x0063bd40) extern const TCombatHeroSprite kCombatHeroSprites[18];
 
 // E:\gamedcs\cmbtmgr.cpp:902
+// EXACT 2026-08-20. Two source shapes are byte-forced here. The wall-row
+// base MUST be hoisted into a local: retail computes `akWallTraits +
+// 648*type` once with a single movsx before the nest, which VC6 cannot
+// do for an in-loop `defendingTown->type` because GetBitmap816 may
+// clobber memory - with the local, VC6 strength-reduces the source walk
+// to the flat dword index 2+9*wall (bound 164) that retail carries in
+// ebx. And the guard is retail's POSITIVE form: `(a || b || c) && name`
+// puts the load on the fallthrough path and shares one zero store, where
+// the De Morgan twin `(!a && !b && !c) || !name` emits the arms swapped.
 VA(0x00463370, 0x18D)  // anchor-global, dc 0x5ddc0
 void combatManager::LoadIcons()
 {
-    // @stub
-}
+    combatCellGridBitmap = ResourceManager::GetBitmap816(
+        DATA_COMPGEN(0x0066ff30, combatCellGridBitmapName, "ccellgrd.pcx"));
+    combatShadowBitmap = ResourceManager::GetBitmap816(
+        DATA_COMPGEN(0x0066ff20, combatShadowBitmapName, "ccellshd.pcx"));
+    combatGridBitmap = ResourceManager::GetBitmap816(
+        DATA_COMPGEN(0x0066ff10, combatGridBitmapName, "CmNumWin.pcx"));
 
-#endif  // @carcass
+    if (field_132f4 > 0) {
+        TWallTraits* traits = akWallTraits[defendingTown->type];
+        for (int wall = 0; wall < 18; wall++) {
+            for (int icon = 0; icon < 5; icon++) {
+                if ((gpGame->f_1f698 >= 2 || defendingTown->type != 6
+                        || wall != 2)
+                        && traits[wall].filenames[icon] != 0)
+                    combatIcons[wall][icon] = ResourceManager::GetBitmap816(
+                        traits[wall].filenames[icon]);
+                else
+                    combatIcons[wall][icon] = 0;
+            }
+        }
+    } else {
+        memset(combatIcons, 0, sizeof(combatIcons));
+    }
+
+    for (int side = 0; side < 2; side++) {
+        field_53e4[side] = 0;
+        field_53ec[side] = 0;
+        if (heroes[side]) {
+            creatureSprites[side] = ResourceManager::GetSprite(
+                kCombatHeroSprites[
+                    2 * akHeroClasses[heroes[side]->heroClass].townType
+                    + akHeroTraits[heroes[side]->id].sex].defName);
+            heroFlagSprites[side] = ResourceManager::GetSprite(side == 0
+                ? DATA_COMPGEN(0x0066ff04, leftFlagSpriteName, "CmFlagL.def")
+                : DATA_COMPGEN(0x0066fef8, rightFlagSpriteName, "CmFlagR.def"));
+            SetPlayerPaletteColors(heroFlagSprites[side]->GetPalette(),
+                playerIds[side]);
+        } else {
+            creatureSprites[side] = 0;
+            heroFlagSprites[side] = 0;
+        }
+    }
+}
 
 // E:\gamedcs\cmbtmgr.cpp:953
 VA(0x00463500, 0xFD)  // anchor-callee, dc 0x5dfb4
