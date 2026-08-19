@@ -1366,6 +1366,7 @@ mapcell	?get_map_object@NewmapCell@@QAE?AW4TAdventureObjectType@@XZ	93.4848	93.4
 mapcell	?get_object_type_ptr@CObject@@QAEPAVCObjectType@@XZ	100.0000	100.0000	100.0000	0xfec10
 mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	79.0935	79.0935	79.0935	0xfce20
 mapcell	?is_diggable@NewmapCell@@QAEEXZ	96.1585	96.1585	96.1585	0xfccf0
+mapcell	?loadMonsterList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x101790
 mapcell	?loadObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x1036d0
 mapcell	?loadTimedEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc500
 mapcell	?loadTownEventList@NewfullMap@@QAEHPAVTAbstractFile@@H@Z	100.0000	100.0000	100.0000	0xfc870
@@ -1375,7 +1376,7 @@ mapcell	?readArtifactData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0
 mapcell	?readGarrisonData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@H@Z	100.0000	100.0000	100.0000	0x102a00
 mapcell	?readGeneratorData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xfed40
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020
-mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	96.3048	96.3048	96.3048	0x1013b0
+mapcell	?readMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	96.4729	96.4729	96.4729	0x1013b0
 mapcell	?readResourceData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	76.9111	76.9111	76.9111	0xff4d0
 mapcell	?readSignData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101270
 mapcell	?readSpellScrollData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	93.3240	93.3240	93.3240	0xff2f0
@@ -1400,7 +1401,6 @@ mapcell	NewfullMap_loadBlackBox	0.0000	0.0000	0.0000	0x100430
 mapcell	NewfullMap_loadBlackBoxList	0.0000	0.0000	0.0000	0x100200
 mapcell	NewfullMap_loadMapLayer	0.0000	0.0000	0.0000	0xfe920
 mapcell	NewfullMap_loadMapObjects	0.0000	0.0000	0.0000	0x104b70
-mapcell	NewfullMap_loadMonsterList	0.0000	0.0000	0.0000	0x101790
 mapcell	NewfullMap_loadObjectType	0.0000	0.0000	0.0000	0x103f00
 mapcell	NewfullMap_readBlackBox	0.0000	0.0000	0.0000	0xff6b0
 mapcell	NewfullMap_readBlackBoxData	0.0000	0.0000	0.0000	0xffbf0
