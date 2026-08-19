@@ -697,12 +697,41 @@ int NewfullMap::loadTreasureData(void* infile, TreasureData* thisTreasure)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:1385
 VA(0x004ff120, 0x1C9)  // order-map: calls readTreasureData 0x4fee50 + armyGroup ctor (TreasureData ctor inlined); called by readObject; EH-bearing, dc 0xee1a4
-int NewfullMap::readArtifactData(void* infile, CObject* artifactObject)
+int NewfullMap::readArtifactData(TAbstractFile* infile, CObject* artifactObject)
 {
-    // @stub
+    int treasureIndex = customTreasure.size();
+
+    unsigned char char_buffer;
+    artifactObject->extraInfo = 0;
+    if (static_cast<unsigned>(infile->Read(&char_buffer, 1)) < 1)
+        return -1;
+
+    if (char_buffer) {
+        TreasureData tempTreasure;
+        if (readTreasureData(infile, &tempTreasure) == 0) {
+            if (treasureIndex < 4000) {
+                customTreasure.push_back(tempTreasure);
+                // The object's extraInfo carries the custom-record cursor in
+                // its top thirteen bits: a twelve-bit index at 19..30 plus
+                // the "has custom record" marker at bit 31, which retail sets
+                // by OR-ing 0xfffff000 into the index before the shift
+                // discards everything above bit 12.
+                artifactObject->extraInfo = ((treasureIndex | 0xfffff000) << 19)
+                    | (artifactObject->extraInfo & 0x7ffff);
+                return 1;
+            }
+        } else {
+            return -1;
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:1421
 VA(0x004ff2f0, 0x1D8)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee2e0

@@ -208,6 +208,17 @@ public:
     int saveTimedEventList(TAbstractFile* outfile);
     int saveTownEventList(TAbstractFile* outfile);
     int readGeneratorData(TAbstractFile* infile, CObject* object);
+    int readArtifactData(TAbstractFile* infile, CObject* artifactObject);
+    int readSpellScrollData(TAbstractFile* infile, CObject* scrollObject);
+    int readResourceData(TAbstractFile* infile, CObject* resourceObject);
+    int readBlackBox(TAbstractFile* infile, BlackBoxData* thisBox);
+    int readBlackBoxData(TAbstractFile* infile, CObject* blackboxObject);
+    int readEventData(TAbstractFile* infile, CObject* eventObject);
+    int readScholarData(TAbstractFile* infile, CObject* scholarObject);
+    int readMonsterData(TAbstractFile* infile, CObject* monsterObject);
+    int readTownData(TAbstractFile* infile, CObject* townObject);
+    int readHeroData(TAbstractFile* infile, CObject* heroObject);
+    int readGarrisonData(TAbstractFile* infile, CObject* garrisonObject);
     int readMineData(TAbstractFile* infile, CObject* object);
     int readAbandonedMineData(TAbstractFile* infile, CObject* object);
     int readSignData(TAbstractFile* infile, CObject* object);

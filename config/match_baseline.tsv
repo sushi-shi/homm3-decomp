@@ -1368,6 +1368,7 @@ mapcell	?is_diggable@NewmapCell@@QAEEXZ	96.1585	96.1585	96.1585	0xfccf0
 mapcell	?loadObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x1036d0
 mapcell	?loadTreasureList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0xfef60
 mapcell	?readAbandonedMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101130
+mapcell	?readArtifactData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xff120
 mapcell	?readGeneratorData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xfed40
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020
 mapcell	?readSignData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101270
@@ -1395,7 +1396,6 @@ mapcell	NewfullMap_loadMonsterList	0.0000	0.0000	0.0000	0x101790
 mapcell	NewfullMap_loadObjectType	0.0000	0.0000	0.0000	0x103f00
 mapcell	NewfullMap_loadTimedEventList	0.0000	0.0000	0.0000	0xfc500
 mapcell	NewfullMap_loadTownEventList	0.0000	0.0000	0.0000	0xfc870
-mapcell	NewfullMap_readArtifactData	0.0000	0.0000	0.0000	0xff120
 mapcell	NewfullMap_readBlackBox	0.0000	0.0000	0.0000	0xff6b0
 mapcell	NewfullMap_readBlackBoxData	0.0000	0.0000	0.0000	0xffbf0
 mapcell	NewfullMap_readEventData	0.0000	0.0000	0.0000	0x1008b0
