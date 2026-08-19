@@ -562,6 +562,7 @@ cmbtmgr	?ViewArmy@combatManager@@QAEXPAVarmy@@H@Z	100.0000	100.0000	100.0000	0x6
 cmbtmgr	?enemy_is_adjacent@combatManager@@QBEEPBVarmy@@H0@Z	100.0000	100.0000	100.0000	0x69600
 cmbtmgr	?get_distance@@YIJJJ@Z	100.0000	100.0000	100.0000	0x69670
 cmbtmgr	?is_adjacent@combatManager@@QBEEHH@Z	100.0000	100.0000	100.0000	0x674c0
+cmbtmgr	?place_obstacle@combatManager@@QAEEH@Z	49.0890	49.0890	49.0890	0x66010
 cmbtmgr	?should_lower_door@combatManager@@QBEEPAVarmy@@J@Z	100.0000	100.0000	100.0000	0x67130
 cmbtmgr	combatManager_InitNonVisualVars	0.0000	0.0000	0.0000	0x63c60
 cmbtmgr	combatManager_KeepAttack	0.0000	0.0000	0.0000	0x65ad0
@@ -578,7 +579,6 @@ cmbtmgr	combatManager_ShootAnimatedMissile	0.0000	0.0000	0.0000	0x67db0
 cmbtmgr	combatManager_ShootBallisticMissile	0.0000	0.0000	0.0000	0x67a00
 cmbtmgr	combatManager_ShootMissile	0.0000	0.0000	0.0000	0x68220
 cmbtmgr	combatManager_damage_message	0.0000	0.0000	0.0000	0x69a90
-cmbtmgr	combatManager_place_obstacle	0.0000	0.0000	0.0000	0x66010
 combatcontrolsubwindow	??0TCombatControlSubWindow@@QAE@PAVheroWindow@@@Z	96.3990	96.3990	96.3990	0x6bc30
 combatcontrolsubwindow	??0TCombatPlacementSubWindow@@QAE@PAVheroWindow@@@Z	100.0000	100.0000	100.0000	0x6c050
 combatcontrolsubwindow	??0type_combat_sub_window@@QAE@PAVheroWindow@@PBD@Z	100.0000	100.0000	100.0000	0x6b610

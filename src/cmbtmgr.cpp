@@ -43,6 +43,7 @@
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
 #define HOMM3_CMBTMGR_MORALE_VIEW
+#define HOMM3_CMBTMGR_OBSTACLE_VIEW
 #include "cmbtmgr.h"
 #define HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatwindow.h"
@@ -177,6 +178,12 @@ void SetPlayerPaletteColors(palette* pal, int whichPlayer);
 
 // kb.cpp's shared text scratch buffer (kb.h), reached the same way.
 extern char gText[];
+
+// The obstacle table at .rdata 0x63c7c8, typed as its 20-byte rows.
+// cmbtmgr.h already owns the DATA claim for that rva under the shorts
+// name gObstacleTerrainMasks, so this alias carries no second claim -
+// the only delta it can produce is a reloc NAME.
+extern const type_obstacle_shape gObstacleShapes[];
 
 // The eighteen combat hero animations, keyed `2 * townType + sex`.
 // Retail .rdata 0x63bd40; LoadIcons' `shl eax, 4` proves the 16-byte
@@ -984,14 +991,90 @@ void combatManager::ResetHitByCreature()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:2768
+// RECONSTRUCTED 2026-08-20 (0.00 -> 49.09%). The candidate walk, both
+// placement bounds, the extra-hex sweep, the Fortress wall-column veto
+// and the whole TObstacle build/insert/PlaceObstacle tail are recovered;
+// the retail bytes settle three source shapes on the way:
+//   * the hex loop is a GOTO loop, not a while: retail has ONE Pick()
+//     call site, and a while/for(;;)+break gets rotated with the test
+//     duplicated into the failure tail (48.28 -> 49.09 on the switch);
+//   * the extra-hex rejections jump straight to the outer back edge, so
+//     they are gotos, not a break plus an `i < count` re-test (46.08 ->
+//     48.28);
+//   * the obstacle row is a 20-byte type_obstacle_shape, proven by
+//     retail forming the base as `4 * (5 * id) + table`.
+// Residual (49.09%): register transposition plus stack-slot reuse, not
+// source-addressable from here. Retail carries `hex` in ECX and the row
+// in EBX where this compile swaps them, which cascades - with EBX free,
+// retail keeps the odd-row flag in BL where we home it to a byte slot -
+// and retail spills the shape pointer into the dead `obstacle_id`
+// PARAMETER slot while our CL takes a fresh local. Retail also emits the
+// picker's vector destructor out of line on the failure path where our
+// CL inlines the operator delete. Tried and rejected: break + re-test,
+// while-loop form, and an int (rather than byte) odd-row flag.
 VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::place_obstacle(int obstacle_id)
 {
-    // @stub
+    const type_obstacle_shape* shape = &gObstacleShapes[obstacle_id];
+    TPickANumber picker(0x12, 0xa8);
+    int hex;
+next_hex:
+    hex = picker.Pick();
+    if (hex < 0x12)
+        return 0;
+    {
+        int row = hex / COMBAT_GRID_ROW_STRIDE;
+        if (shape->minRow > row)
+            goto next_hex;
+        int column = hex % COMBAT_GRID_ROW_STRIDE;
+        if (column == 0)
+            goto next_hex;
+        if (shape->width + column > 15)
+            goto next_hex;
+        if (cells[hex].field_10 & 0x3f)
+            goto next_hex;
+        unsigned char row_is_odd = static_cast<unsigned char>(row & 1);
+        for (int i = 0; i < shape->extra_hex_count; i++) {
+            int cell_index = shape->extra_hex_offsets[i] + hex;
+            if (row_is_odd
+                    && ((cell_index / COMBAT_GRID_ROW_STRIDE) & 1) == 0)
+                cell_index--;
+            int cell_column = cell_index % COMBAT_GRID_ROW_STRIDE;
+            if (cell_column <= 2)
+                goto next_hex;
+            if (cell_column >= 14)
+                goto next_hex;
+            if (cells[cell_index].field_10 & 0x3f)
+                goto next_hex;
+        }
+
+        if (gpGame->f_1f698 < 2 && field_132f4 >= 2
+                && defendingTown->type == 6) {
+            int wall_column = gCastleWallColumns[row];
+            if (wall_column == 0x60)
+                wall_column = 0x5d;
+            if (shape->width + hex >= wall_column - 2)
+                goto next_hex;
+        }
+
+        TObstacle obstacle;
+        obstacle.sprite = ResourceManager::GetSprite(shape->spriteName);
+        obstacle.shape = shape;
+        obstacle.hex = static_cast<unsigned char>(hex);
+        obstacle.field_09 = -1;
+        obstacle.field_0a = 1;
+        obstacle.spell_damage = 0;
+        obstacle.field_10 = 0;
+        obstacle.field_14 = -1;
+        obstacles.insert(obstacles.end, 1, obstacle);
+        PlaceObstacle(&obstacle, obstacles.size() - 1, hex, 2);
+        return 1;
+    }
+    goto next_hex;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2859
 VA(0x00466290, 0x607)  // anchor-callee, dc 0x60538
