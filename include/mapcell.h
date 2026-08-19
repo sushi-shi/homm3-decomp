@@ -293,6 +293,31 @@ SIZE(TreasureInfo, 4);
 // 13..22 (`shl eax,9 / sar eax,0x16`). Only ONE of the three payload lanes
 // is ever read on a given visit, which is what the award selects. GATED
 // for MonsterInfo's reason.
+#endif  // HOMM3_EVENTS_VIEW (ScholarInfo steps outside it, just below)
+
+// ScholarInfo is the one arm mapcell.obj needs as well as events.obj:
+// readScholarData (0x500b30) writes all four lanes and then switches on a
+// SIGNED three-bit award read back out of the field. It is pulled out of
+// the events-only block above rather than widening that block's gate,
+// which would put SIX type definitions into the mapcell view's closure
+// instead of one - the include-set sensitivity class charges by type
+// population, so the narrow gate is the cheap one.
+#if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
+// The award selector's own domain, DC-attested: enums.csv carries
+// ScholarAwards with exactly these three enumerators and values, and
+// events.h already carries the canonical copy for DoEventScholar.
+// readScholarData needs the same names to case on, and events.h is
+// included by exactly one TU (events.cpp), so this mirror is gated OUT of
+// that TU: events.obj keeps its enum where it always was, at its original
+// position in its own symbol order, and nothing there moves.
+#if !defined(HOMM3_EVENTS_VIEW)
+enum ScholarAwards {
+    const_scholar_primary_skill = 0,
+    const_scholar_secondary_skill = 1,
+    const_scholar_spell = 2
+};
+#endif
+
 struct ScholarInfo {
     signed long award : 3;
     signed long primary : 3;
@@ -301,6 +326,9 @@ struct ScholarInfo {
     unsigned long tail : 9;
 };
 SIZE(ScholarInfo, 4);
+#endif
+
+#ifdef HOMM3_EVENTS_VIEW
 
 // The sea chest's arm. advManager::DoEventSeaChest (0x4a5030) reads a
 // SIGNED three-bit reward kind at bits 0..2 (`shl edi,0x1d / sar
@@ -437,6 +465,33 @@ public:
             unsigned short is_trigger : 1;
             unsigned short flags_13_15 : 3;
         };
+        // readMapLayer needs the low ten bits as individual declarators: it
+        // writes the six map-format flip flags ONE BIT AT A TIME (VC6 merges
+        // them into a single word RMW that preserves bits 6..15), and then
+        // sets Passable / IsBlocked / IsBeachBorder / Animated as separate
+        // single-bit stores - `or byte ptr [cell+0xd], 0x2` for
+        // IsBeachBorder is a 1-bit field write, not a word mask.
+        //
+        // The bit POSITIONS are stated Dreamcast evidence, not inferred from
+        // listing order: the CodeView LF_BITFIELD records 0x3E16..0x3E22
+        // each carry an explicit `starting position` (0, 1, ... 12), which
+        // retires the "bit ORDER is inferred from listing order" caveat
+        // above for the ten bits named here. Bits 10 and 11 (unused_bit and
+        // can_build_ship in the DC list) stay pooled: no admitted retail
+        // body reaches them.
+        struct {
+            unsigned short GroundFlippedHorizontal : 1;
+            unsigned short GroundFlippedVertical : 1;
+            unsigned short RiverFlippedHorizontal : 1;
+            unsigned short RiverFlippedVertical : 1;
+            unsigned short RoadFlippedHorizontal : 1;
+            unsigned short RoadFlippedVertical : 1;
+            unsigned short Passable : 1;
+            unsigned short Animated : 1;
+            unsigned short IsBlocked : 1;
+            unsigned short IsBeachBorder : 1;
+            unsigned short flags_10_15 : 6;
+        };
         unsigned short cellFlags;
     };
 #else
@@ -464,7 +519,21 @@ public:
 #else
     char pad_0e[0x10];
 #endif
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    // loadMapLayer stores the serialized object type as a FULL DWORD: the
+    // stream carries two bytes and retail widens them into all four of
+    // +0x1e..+0x21 (`mov ecx, dword; and ecx, 0xffff; mov dword [cell+0x1e],
+    // ecx`). Spelled as an overlay of the same proven field rather than a
+    // cast into the enum domain - the cellFlags word above is modelled the
+    // same way and for the same reason, and a cast here would be the tree's
+    // first cast into an enum.
+    union {
+        TAdventureObjectType type;  // +0x1e
+        unsigned long type_value;
+    };
+#else
     TAdventureObjectType type;  // +0x1e
+#endif
     short objectIndex;          // +0x22
     short object_type_index;    // +0x24
 
@@ -596,6 +665,25 @@ public:
     NewmapCell* get_trigger_cell();
 };
 #pragma pack(pop)
+
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+// 0x4fe6c0, RETAIL-ONLY and unclaimed: no Dreamcast counterpart exists (the
+// DC roster for mapcell.cpp is exhausted), so the NAME is PROVISIONAL and
+// taken from what the body does. loadMapLayer hands it every cell it
+// finishes, together with the save version, and it returns at once unless
+// that version is below 25; older saves go through a seven-arm jump table
+// on the cell's object type that repacks extraInfo's bitfields into their
+// current positions.
+//
+// DECLARED BUT NOT DEFINED, deliberately. What loadMapLayer needs is the
+// call; a body written before those seven arms are decoded would claim the
+// row and score it low for nothing, and the call's reloc NAME does not
+// gate the verdict (the DoDialog precedent).
+//
+// A free function, so /Gr makes it __fastcall - which is what retail emits:
+// the cell in ECX, the save version in EDX.
+void upgrade_cell_extra_info(NewmapCell* cell, int saveVersion);
+#endif
 
 // Retail .rdata 0x660428 stores a pointer to sixteen bytes per adventure-
 // object type. can_land proves byte zero as the trigger-object landing veto;
