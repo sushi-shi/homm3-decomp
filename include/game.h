@@ -750,6 +750,30 @@ public:
 };
 SIZE(Sign, 0x14);
 
+// THIS CLAIM NAMES NOTHING, and that is enumerated debt, not an
+// oversight. Extraction's universe is src/*.c*, so a VA() written in a
+// HEADER reaches no claim fragment: 0x4bbb60 keeps the dense working
+// label game_b9270_sub00_bbb60 even though the source plainly names it.
+// Nothing used to diagnose that - a function address always gets a row
+// from the model's working-label pass, so it never looks uncovered - and
+// only the macro-site sweep in homm3.retail_labels.source can see it.
+// That sweep is now fatal on header VA(), with this one address
+// enumerated in its HEADER_VA_FLOOR; read the entry there for the fix
+// and for why an extraction lane is the wrong place to make it (moving
+// the claim to a src/game.cpp @carcass stub also ENROLLS the function in
+// the match universe and writes a row into the matcher lanes' shared
+// config/match_baseline.tsv).
+//
+// NAME FINDING. `SaveAbstractString` looks like an invention. The
+// Dreamcast CodeView dump names this pair game::loadString /
+// game::saveString (dc 0xa7414 / 0xa750c); retail makes both free /Gr
+// functions, which is why the reconstructed reader in game.cpp is
+// spelled `loadString` and not `game::loadString`; and every comment in
+// this tree that mentions 0x4bbb60 - in game.cpp and four times in
+// mapcell.cpp - already calls it saveString. Renaming this declaration
+// and its three call sites rewrites a mangled symbol in two base
+// objects, so it is a separately measurable change and is deliberately
+// not bundled into an extraction fix.
 VA(0x004bbb60, 0xBB)
 int __fastcall SaveAbstractString(
     TAbstractFile* outfile,
