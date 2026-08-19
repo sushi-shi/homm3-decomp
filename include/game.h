@@ -206,6 +206,8 @@ public:
     int loadObject(TAbstractFile* infile, CObject* object);
     int saveObject(TAbstractFile* outfile, CObject* object);
     int saveObjectType(TAbstractFile* outfile, CObjectType* objectType);
+    int readObjectType(TAbstractFile* infile, CObjectType* objectType);
+    int loadObjectType(TAbstractFile* infile, CObjectType* objectType);
     int saveMapObjects(TAbstractFile* outfile);
     // `ret 0xc`: the layer index is the third argument, and the return is
     // the cell count (size * size), not a status.

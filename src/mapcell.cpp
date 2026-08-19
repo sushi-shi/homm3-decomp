@@ -1813,11 +1813,82 @@ int NewfullMap::readObjectType(void* infile, CObjectType* tempObjectType)
 }
 
 // E:\gamedcs\mapcell.cpp:3658
+#endif  // @carcass
+
+// The object-type record: the image name, the placement footprint, then the
+// FOUR 48-cell masks - the DC field list names them PlacementMask,
+// PassableMask, ShadowMask, TriggerMask and this body writes all four, which
+// is what proved the second one out of the pad at +0x1c.
+//
+// Each mask goes out as six bytes built one bit at a time: retail does not
+// dump the bitset's own two dwords, it walks 0..47 asking test() and sets
+// the matching bit of a packed little-endian buffer.  The signed div/mod by
+// eight in the address math is the loop counter's `int`, and the range check
+// VC6 hoists out of the first test() is bitset<48>::_Xran.
+//
+// The final Write returns 1, not 0, on success - the sbb/and/inc tail is a
+// `? -1 : 1` ternary, not the `? -1 : 0` every other serializer here ends on.
 VA(0x00503c40, 0x2B9)  // order-map: calls saveString 0x4bbb60 + bitset<48> helper (DC parallel); sole caller saveMapObjects 0x504a40, dc 0xf22cc
-int NewfullMap::saveObjectType(void* outfile, CObjectType* tempObjectType)
+int NewfullMap::saveObjectType(TAbstractFile* outfile,
+                               CObjectType* tempObjectType)
 {
-    // @stub
+    game::saveString(outfile, &tempObjectType->ImageName);
+
+    char value = tempObjectType->width;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    value = tempObjectType->height;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+
+    unsigned char packed[6];
+    int i;
+
+    memset(packed, 0, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        if (tempObjectType->drawCells.test(i))
+            packed[i / 8] |= 1 << (i % 8);
+    }
+    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+        return -1;
+
+    memset(packed, 0, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        if (tempObjectType->passableCells.test(i))
+            packed[i / 8] |= 1 << (i % 8);
+    }
+    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+        return -1;
+
+    memset(packed, 0, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        if (tempObjectType->shadowCells.test(i))
+            packed[i / 8] |= 1 << (i % 8);
+    }
+    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+        return -1;
+
+    memset(packed, 0, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        if (tempObjectType->triggerCells.test(i))
+            packed[i / 8] |= 1 << (i % 8);
+    }
+    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+        return -1;
+
+    short typeValue = tempObjectType->objectType;
+    if (static_cast<unsigned>(outfile->Write(&typeValue, 2)) < 2)
+        return -1;
+
+    int extra = tempObjectType->extra;
+    if (static_cast<unsigned>(outfile->Write(&extra, 4)) < 4)
+        return -1;
+
+    value = tempObjectType->suppressDraw;
+    return static_cast<unsigned>(outfile->Write(&value, 1)) < 1 ? -1 : 1;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:3752
 VA(0x00503f00, 0x35D)  // order-map: calls loadString 0x4bb990 + bitset<48> helper (DC parallel); sole caller loadMapObjects 0x504b70, dc 0xf2784
