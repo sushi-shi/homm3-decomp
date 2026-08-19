@@ -81,7 +81,7 @@ advmgr	?PopupPlayerTurnInfo@@YIXXZ	100.0000	100.0000	100.0000	0x19c80
 advmgr	?ProcessHover@advManager@@QAEHHH@Z	78.8021	78.8021	78.8021	0xe360
 advmgr	?ProcessSearch@advManager@@QAEHHHH@Z	92.1925	92.1925	92.1925	0xec90
 advmgr	?ProcessWaitingHover@advManager@@QAEHHH@Z	80.9400	80.9400	80.9400	0xdeb0
-advmgr	?QuickInfo@advManager@@QAEXHHH@Z	89.2010	89.2010	89.2010	0x137c0
+advmgr	?QuickInfo@advManager@@QAEXHHH@Z	90.0954	90.0954	90.0954	0x137c0
 advmgr	?RedrawAdvScreen@advManager@@QAEXEE@Z	100.0000	100.0000	100.0000	0x17420
 advmgr	?Reseed@advManager@@QAEXHH@Z	100.0000	100.0000	100.0000	0xec80
 advmgr	?ScanForHeroOrBoat@advManager@@QAE_NHHHGAAY05UTDrawParts@@@Z	100.0000	100.0000	100.0000	0xfb30

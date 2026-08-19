@@ -3410,6 +3410,12 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 0x006603c4, quickInfoVisitFormat, "\n\n%s");
             const char* knownFormat = DATA_COMPGEN(
                 0x006603c0, quickInfoKnownFormat, "\n%s");
+            // LEAN_TO alone hangs its visit line off a leading SPACE
+            // rather than the two newlines every other arm uses; the
+            // literal is read straight from the retail image, where
+            // 0x0066034c follows the "%s %s" border format at 0x00660344.
+            const char* leanToFormat = DATA_COMPGEN(
+                0x0066034c, quickInfoLeanToFormat, " %s");
 
 // Retail's shape for every object that owns a GlobalInfoFlags row: the
 // "you know what this does" line is gated on the PLAYER's global info
@@ -3575,7 +3581,7 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 break;
             }
             SET_VISITED_QUICKINFO(DEAD_GUY,
-                player->DeadGuyFlags
+                gpCurrentPlayer->DeadGuyFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             SET_KNOWN_VISITED_QUICKINFO(DEFENSE_TOWER, DefenseTowerInfo,
                 currHero->DefenseTowerFlags
@@ -3656,17 +3662,31 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 break;
             }
             SET_KNOWN_VISITED_QUICKINFO(IDOL_OF_FORTUNE, IdolOfFortuneInfo,
-                currHero->flags & (0x02000000UL | 0x10UL));
-            SET_VISITED_QUICKINFO(LEAN_TO,
-                player->LeanToFlags
-                    & (1UL << (cell->extraInfo & 0x1f)));
+                (currHero->flags & 0x02000000UL)
+                    + (currHero->flags & 0x10UL));
+            case LEAN_TO:
+                strcpy(gText, gAdventureObjectNames[LEAN_TO]);
+                if (cell->is_trigger && currHero) {
+                    z = gpCurrentPlayer->LeanToFlags
+                        & (1UL << (cell->extraInfo & 0x1f));
+                    if (z)
+                        sprintf(tempText, leanToFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_VISITED_OBJECT));
+                    else
+                        sprintf(tempText, leanToFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_UNVISITED_OBJECT));
+                    strcat(gText, tempText);
+                }
+                break;
             SET_KNOWN_VISITED_QUICKINFO(LIBRARY, LibraryInfo,
                 currHero->LibraryFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             case LIGHTHOUSE:
                 strcpy(gText, gAdventureObjectNames[LIGHTHOUSE]);
                 if (cell->is_trigger) {
-                    int owner =
+                    char owner =
                         gpGame->mines[cell->extraInfo].playerOwner;
                     if (owner != -1) {
                         sprintf(tempText, visitFormat,
@@ -3679,9 +3699,9 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 currHero->MagicSchoolFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
             SET_KNOWN_VISITED_QUICKINFO(MAGIC_SPRING, MagicSpringInfo,
-                (player->MagicSpringFlags
+                (gpCurrentPlayer->MagicSpringFlags
                     & (1UL << (cell->extraInfo & 0x1f)))
-                    && !(cell->extraInfo & 0x40));
+                    && !((cell->extraInfo >> 6) & 1));
             SET_KNOWN_VISITED_QUICKINFO(MAGIC_WELL, MagicWellInfo,
                 currHero->flags & 0x1);
             SET_KNOWN_VISITED_QUICKINFO(MERC_CAMP, MercCampInfo,
@@ -3697,13 +3717,16 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 if (cell->is_trigger) {
                     unsigned long gardenBit =
                         1UL << (cell->extraInfo & 0x1f);
-                    sprintf(tempText, visitFormat,
-                        (player->MysticalGardenFlags & gardenBit)
-                            && !(cell->extraInfo & 0x400)
-                            ? gpGeneralText->GetText(
-                                  GENERAL_TEXT_VISITED_OBJECT)
-                            : gpGeneralText->GetText(
-                                  GENERAL_TEXT_UNVISITED_OBJECT));
+                    z = (gpCurrentPlayer->MysticalGardenFlags & gardenBit)
+                        && !((cell->extraInfo >> 10) & 1);
+                    if (z)
+                        sprintf(tempText, visitFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_VISITED_OBJECT));
+                    else
+                        sprintf(tempText, visitFormat,
+                                gpGeneralText->GetText(
+                                    GENERAL_TEXT_UNVISITED_OBJECT));
                     strcat(gText, tempText);
                 }
                 break;
@@ -3763,7 +3786,8 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
             SET_VISITED_QUICKINFO(STABLES,
                 currHero->flags & 0x2);
             SET_KNOWN_VISITED_QUICKINFO(TEMPLE, TempleInfo,
-                currHero->flags & (0x04000000UL | 0x100UL));
+                (currHero->flags & 0x04000000UL)
+                    + (currHero->flags & 0x100UL));
             SET_KNOWN_VISITED_QUICKINFO(TRAINING_GROUNDS, TrainingGroundsInfo,
                 currHero->TrainingGroundsFlags
                     & (1UL << (cell->extraInfo & 0x1f)));
@@ -3814,10 +3838,13 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 if (cell->is_trigger
                     && cell->PlayerKnowsCell(gNetLocalGamePos)) {
                     strcat(gText, separator);
-                    strcat(gText, (cell->extraInfo & 0x1f) == 0
-                        ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                        : gpGeneralText->GetText(
-                              GENERAL_TEXT_UNVISITED_OBJECT));
+                    short wheelGold = (cell->extraInfo & 0x1f) * 500;
+                    if (wheelGold == 0)
+                        strcat(gText, gpGeneralText->GetText(
+                                          GENERAL_TEXT_VISITED_OBJECT));
+                    else
+                        strcat(gText, gpGeneralText->GetText(
+                                          GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
             SET_KNOWN_VISITED_QUICKINFO(WATERING_HOLE, WateringHoleInfo,
@@ -3827,10 +3854,13 @@ void advManager::QuickInfo(int cellX, int cellY, int z)
                 if (cell->is_trigger
                     && cell->PlayerKnowsCell(gNetLocalGamePos)) {
                     strcat(gText, separator);
-                    strcat(gText, ((cell->extraInfo >> 13) & 0xf) == 0
-                        ? gpGeneralText->GetText(GENERAL_TEXT_VISITED_OBJECT)
-                        : gpGeneralText->GetText(
-                              GENERAL_TEXT_UNVISITED_OBJECT));
+                    unsigned long windmillAmount = cell->extraInfo >> 13;
+                    if ((windmillAmount & 0xf) == 0)
+                        strcat(gText, gpGeneralText->GetText(
+                                          GENERAL_TEXT_VISITED_OBJECT));
+                    else
+                        strcat(gText, gpGeneralText->GetText(
+                                          GENERAL_TEXT_UNVISITED_OBJECT));
                 }
                 break;
             case WITCH_HUT:
