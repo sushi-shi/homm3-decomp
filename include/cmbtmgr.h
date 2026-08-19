@@ -700,6 +700,15 @@ public:
     void UpdateArmyLuckAndMorale();
     void InitializeArchers();
     void LoadIcons();
+#ifdef HOMM3_CMBTMGR_MORALE_VIEW
+    void CheckApplyGoodMorale(int group, int index);
+    int CheckApplyBadMorale(int group, int index);
+    // drawing.obj's four-argument overload (drawing.cpp:2524, dc 0x86ea0,
+    // retail 0x496840). Declared here because both CheckApply*Morale
+    // bodies call it; the body stays drawing.cpp's.
+    void SpellEffect(int effect, army* target_army, int iDelay,
+                     unsigned char bDoWince);
+#endif
     void FreeIcons();
     void Close();
     unsigned char HexIsBlocked(int index) const;
