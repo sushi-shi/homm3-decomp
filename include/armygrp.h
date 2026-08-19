@@ -287,7 +287,25 @@ enum ESpellId {
 // its own header when spell work begins in earnest.
 struct SSpellTraits {
     int field_0;              // <= 0 short-circuits to certain-work
+    // DC TSpellTraits.m_sample (members.csv TSpellTraits@4) - the WAV
+    // this spell plays. army::do_fire_shield (0x4409c0) is the witness:
+    // it hands `akSpellTraits[SPELL_FIRE_SHIELD].m_sample` straight to
+    // LoadPlaySample as `[akSpellTraits + 29*136 + 4]`. The record's
+    // first seven fields are UNSHIFTED against the DC roster (m_flags
+    // 12/+0xc, m_name 16/+0x10, m_abbreviated_name 20/+0x14,
+    // m_level 24/+0x18 all already agree here), so 4 is 4. +8 is the
+    // DC's m_effect and stays in the pad until a body reads it.
+    //
+    // BEHIND A VIEW: this header is inside initialize.cpp's include
+    // closure, where the include-set class has fired before, and
+    // army.cpp is the only consumer of the name. Both arms spell the
+    // same eight bytes.
+#ifdef HOMM3_ARMYGRP_SPELL_SAMPLE_VIEW
+    const char* m_sample;     // +0x04
+    char pad_08[4];
+#else
     char pad_04[8];
+#endif
     unsigned int field_c;     // bit 10 gates one immunity family;
                               // bit 12 (byte +0xd & 0x10) blocks the
                               // spell against siege weapons
