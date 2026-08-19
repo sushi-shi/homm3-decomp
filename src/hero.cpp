@@ -1503,13 +1503,56 @@ void hero::HeroFn_004DC070(long slot)
     }
 }
 
-#if 0  // @carcass
-
+// The NOTIFIER half of the family. Two pieces are byte-proven beyond
+// the arithmetic: the player record's +0xe8 dword is walked as a
+// std::bitset<12> (the `cmp x,0xc` bounds check reaches bitset<12>'s own
+// _Xran, and the set is the `or` arm of `set(_P, true)` with the else
+// folded away), and the component sweep calls the TWO-ARGUMENT
+// `set(id, false)` OUT OF LINE where the sibling above inlines its
+// one-argument `reset` - a per-caller /Ob2 budget difference, not a
+// spelling one. `any()` is likewise a call here and inline there.
+// The owner index is taken WITHOUT the `owner < 0` guard get_player
+// carries; retail indexes gpGame->players directly.
 VA(0x004dc100, 0x217)  // retail-only, hero member, ret 4
-unsigned char hero::HeroFn_004DC100(long slot)
+void hero::HeroFn_004DC100(long slot)
 {
-    // @stub
+    playerData& player = gpGame->players[owner];
+    const TArtifactTraits& traits =
+        akArtifactTraits[equipped[slot].artifactId];
+
+    if (traits.comboType != -1) {
+        player.assembledCombinations.set(traits.comboType);
+        return;
+    }
+
+    int targetCombo = traits.targetCombo;
+    if (targetCombo == -1)
+        return;
+    if (player.assembledCombinations.test(targetCombo))
+        return;
+
+    std::bitset<144> missing =
+        gCombinationArtifacts[targetCombo].components;
+    for (int i = 0; i < 19; i++) {
+        int artifactId = equipped[i].artifactId;
+        if (artifactId != ARTIFACT_NONE)
+            missing.set(artifactId, false);
+    }
+    if (missing.any())
+        return;
+
+    player.assembledCombinations.set(targetCombo);
+
+    int assembled = gCombinationArtifacts[targetCombo].artifactId;
+    std::string prompt = format_string(gpGeneralText->GetText(733),
+                                       akArtifactTraits[assembled].name);
+    NormalDialog(prompt.c_str(), 2, -1, -1, 8, assembled, -1, 0, -1, 0,
+                 -1, 0);
+    if (gpWindowManager->dialogReturn == 0x7805)
+        HeroFn_004DBF30(targetCombo, slot);
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:2849
 // PROVEN BY CALLER: armygrp's armyGroup::get_morale_description

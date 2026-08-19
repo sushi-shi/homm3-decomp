@@ -774,6 +774,12 @@ public:
     // strips every worn component of `combination` (plus whatever sits
     // in `slot`) and equips the assembled artifact. ORDINAL PLACEHOLDER.
     unsigned char HeroFn_004DBF30(int combination, long slot);
+    // 0x4dc100, the same family's NOTIFIER: called after a slot changes,
+    // it records the assembled combination the artifact belongs to, or -
+    // when every component of a combination is now worn - offers the
+    // assembly through a NormalDialog and calls HeroFn_004DBF30 on yes.
+    // ORDINAL PLACEHOLDER.
+    void HeroFn_004DC100(long slot);
     boat* find_summonable_boat();
     // Claimed in src/hero.cpp (0x4d7900, dc 0xcaedc); declared here
     // because town::remove_garrison_hero calls it with the town's
