@@ -524,9 +524,20 @@ public:
     // the row is not claimed from here.
     void CheckLevel();
 #endif
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
-    // its luck and morale icon frames.
+    // its luck and morale icon frames. Same gate, same reason.
     void UpdateStats();
+#endif
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+    // Gated to hero.obj's own view: these five are used only inside
+    // hero.cpp, and declaring them unconditionally moved an UNRELATED
+    // compiland's score (recruitUnit::Update 90.84 -> 88.24) through the
+    // include-set sensitivity class with no semantic change anywhere.
+    //
+    // 0x4e2550, RETAIL-ONLY (no DC row), `ret 8`: the actual equip
+    // attempt HeroFn_004E2840 wraps. ORDINAL PLACEHOLDER.
+    unsigned char HeroFn_004E2550(long artifact, long slot);
     // 0x4e2840, RETAIL-ONLY (no DC row), `ret 8`: decides whether the
     // artifact being dragged may drop into an equipment slot.
     // THeroScreenWindow::update_slot calls it THISCALL on gpCurrentHero
@@ -535,6 +546,7 @@ public:
     // reconstructed in ai_player.cpp) - retail's is a 412-byte hero
     // member. ORDINAL PLACEHOLDER name.
     unsigned char HeroFn_004E2840(long artifact, long slot);
+#endif
     // 0x4e2370 - retypes every matching slot of the hero's own army.
     void UpgradeCreatures(int sourceCreatureType, int destCreatureType);
     // The mobility pair at 0x4e4990 / 0x4e4d90: the no-arg form reads
@@ -770,16 +782,19 @@ public:
     TCreatureType GetNecromancyCreature();
     const char* HeroFn_004D8FB0();
     unsigned char HeroFn_004DBE80(int combination);
-    // 0x4dbf30, the two-argument member of the same combination family:
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+    // Same gate and same reason as the equip pair above.
+    // 0x4dbf30, the two-argument member of the combination family:
     // strips every worn component of `combination` (plus whatever sits
     // in `slot`) and equips the assembled artifact. ORDINAL PLACEHOLDER.
     unsigned char HeroFn_004DBF30(int combination, long slot);
-    // 0x4dc100, the same family's NOTIFIER: called after a slot changes,
-    // it records the assembled combination the artifact belongs to, or -
+    // 0x4dc100, the family's NOTIFIER: called after a slot changes, it
+    // records the assembled combination the artifact belongs to, or -
     // when every component of a combination is now worn - offers the
     // assembly through a NormalDialog and calls HeroFn_004DBF30 on yes.
     // ORDINAL PLACEHOLDER.
     void HeroFn_004DC100(long slot);
+#endif
     boat* find_summonable_boat();
     // Claimed in src/hero.cpp (0x4d7900, dc 0xcaedc); declared here
     // because town::remove_garrison_hero calls it with the town's

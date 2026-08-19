@@ -1228,9 +1228,16 @@ void THeroScreenWindow::update_slot(long slot)
         }
     }
 
+    // Pinned at inline depth zero, the hero::initialize/GiveSS
+    // precedent: HeroFn_004E2840 has exactly one call site in this
+    // compiland so far, and /Ob2 expands a single-call-site EXTERN
+    // regardless of size - which retail does not do here (it CALLS
+    // 0x4e2840). The pin comes out when a second retail caller lands.
+#pragma inline_depth(0)
     if (gHeroScreenDraggedArtifact.artifactId != ARTIFACT_NONE
         && gpCurrentHero->HeroFn_004E2840(
                gHeroScreenDraggedArtifact.artifactId, slot)) {
+#pragma inline_depth()
         update_artifact_slot(slot + 0x15, artifact);
         update_artifact_slot(slot + 2, 0x90);
     } else {
@@ -2013,11 +2020,51 @@ unsigned char hero::HeroFn_004E2550(long a, long slot)
     // @stub
 }
 
+#endif  // @carcass
+
+// The wrapper: it validates the physical slot against the artifact's
+// allowable-slot class, then hands the real work to HeroFn_004E2550 -
+// but when the slot is already occupied it SAVES the displaced record,
+// removes it, runs the attempt, and puts the displaced artifact back
+// whatever the answer was. The `.test(slot)` bounds check is inlined
+// WITH bitset<19>::_Xran's whole throw body here (the string temporary,
+// the exception construction and __CxxThrowException are all in the
+// 0x4e2840 span), where the same accessor in HeroFn_004DC100 leaves
+// _Xran a call - a per-caller /Ob2 budget difference.
+//
+// Residual (44.9%): that inlined _Xran, and ONLY that. Every other
+// instruction agrees; the whole delta is retail's ~56-row expansion of
+// bitset<19>::_Xran's `_THROW(out_of_range, "invalid bitset<N>
+// position")` - the strlen, the string assign, the exception
+// construction and __CxxThrowException - against our single CALL to the
+// same COMDAT, plus the /GX frame retail therefore needs and we do not.
+// This is an UNDER-inline, the opposite direction from HeroFn_004DC100
+// six functions up, so it is not a systematic budget offset in this
+// compiland. Tried and rejected, one compile each: routing the gate
+// through DC's own artifact.h inline `artifactAllowedInSlot`
+// (dc 0x37d88), which adds an expansion level (44.93, byte-flat); and
+// eight byte-inert dead assignments to grow the caller's statement mass
+// the way the /Ob2 rule says the budget follows (44.93, byte-flat) -
+// so the lever here is NOT caller size, and no source spelling in this
+// body reaches the decision.
 VA(0x004e2840, 0x19C)  // retail-only, hero member, ret 8
 unsigned char hero::HeroFn_004E2840(long artifact, long slot)
 {
-    // @stub
+    if (!aArtifactSlotMasks[akArtifactTraits[artifact].allowableSlotMask]
+             .test(slot))
+        return 0;
+
+    if (equipped[slot].artifactId == ARTIFACT_NONE)
+        return HeroFn_004E2550(artifact, slot);
+
+    type_artifact displaced = equipped[slot];
+    remove_artifact(slot);
+    unsigned char accepted = HeroFn_004E2550(artifact, slot);
+    equip_artifact(&displaced, slot);
+    return accepted;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:4883
 VA(0x004e2a00, 0x1C7)  // dc-callgraph unique, dc 0xd39d8
