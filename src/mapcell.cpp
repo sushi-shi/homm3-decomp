@@ -63,11 +63,29 @@ void ExtraInfoUnion::SetCellVisited(short player)
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:62
+#endif  // @carcass
+
+// The Read twin of saveTimedEventList (0x4fc390, exact): a dword count, a
+// resize, then one TTimedEvent::Read per slot.  The `imul 0x4ec4ec4f / sar 4`
+// pair inlined here is the divide by 52 that sizeof(TTimedEvent) implies, and
+// the temporary the resize fills from is the TTimedEvent constructed at the
+// top of the frame.
 VA(0x004fc000, 0x19A)  // order-map: Read-only caller, loop stride 0x34 calling TTimedEvent::Read 0xfc1a0; EH-bearing, dc 0xeb73c
-int NewfullMap::readTimedEventList(void* infile)
+int NewfullMap::readTimedEventList(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    int count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    TimedEventList.resize(count);
+    for (unsigned int i = 0; i < TimedEventList.size(); ++i) {
+        if (TimedEventList[i].Read(infile, saveVersion) < 0)
+            return -1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:85
 #endif  // @carcass
@@ -164,11 +182,26 @@ int TTimedEvent::Save(TAbstractFile* outfile)
 // E:\gamedcs\mapcell.cpp:179
 #if 0  // @carcass -- located/reconstruction-pending bodies
 
+#endif  // @carcass
+
+// The save-file twin of readTimedEventList, byte-for-byte the same shape with
+// TTimedEvent::Load (0x4fc6a0, already exact) in place of Read.
 VA(0x004fc500, 0x19A)  // order-map: Load-only caller, twin of 0xfc000, loop calling TTimedEvent::Load 0xfc6a0; EH-bearing, dc 0xebb0c
-int NewfullMap::loadTimedEventList(void* infile)
+int NewfullMap::loadTimedEventList(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    int count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    TimedEventList.resize(count);
+    for (unsigned int i = 0; i < TimedEventList.size(); ++i) {
+        if (TimedEventList[i].Load(infile, saveVersion) < 0)
+            return -1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 #endif  // @carcass -- located/reconstruction-pending bodies
 
@@ -881,7 +914,14 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
 // the only structural difference between them is that the scroll's second
 // Read reuses the one-byte buffer while this one reads a fresh dword.
 // Hoisting `amount` and `padding` to the top of the function is byte-flat
-// (measured), so declaration position is not the lever either.
+// (measured), so declaration position is not the lever either.  CLOSED as
+// unreachable 2026-08-19: with routing fixed `vc6 diagnose` sends this row
+// to why-branch, whose guided search finds ZERO applicable catalog
+// mutations and prices the residual as D3 jump-threading - same branch
+// mnemonics, different landing blocks - plus a two-site polarity flip
+// (#8 jae->je, #11 je->jae).  Both are documented open D classes that are
+// often not source-addressable.  The D8 ternary unfold that closed
+// readGarrisonData is already applied here and is byte-flat.
 VA(0x004ff4d0, 0x1DA)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee410
 int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
 {
