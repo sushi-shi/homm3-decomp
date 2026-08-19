@@ -1001,6 +1001,23 @@ public:
     int bottomViewResourceQuantity;       // +0x3a4
     std::string bottomViewMessage;        // +0x3a8
 
+    advManager();
+    virtual int Open(int newPriority);
+    virtual void Close();
+    virtual int Main(message& msg);
+    NewmapCell* DoAdvCommand(type_point* trigger_point);
+    int ProcessKeyPress(const message* msg, unsigned char* exitFlag,
+                        type_point* trigger_point, NewmapCell** peventCell);
+    int ProcessSelect(const message* msg, type_point* trigger_point,
+                      NewmapCell** peventCell);
+    int ProcessDeSelect(const message* msg, unsigned char* exitFlag,
+                        type_point* trigger_point, NewmapCell** peventCell);
+    void ProcessRadarSelect(const message* msg);
+    void ProcessMapSelect(const message* msg, type_point* trigger_point,
+                          NewmapCell** peventCell);
+    void InsertSound(int x, int y, int z, int soundPriority, int soundsType);
+    void SetInitialMapOrigin();
+    unsigned char DoSystemOptions();
     void CheckDimNextHeroBut();
     void DeactivateCurrTown(unsigned char waitingPlayer);
     void DeactivateCurrHero(unsigned char waitingPlayer);
@@ -1415,6 +1432,12 @@ public:
                      unsigned char bPartialUpdate, unsigned char view_mines,
                      unsigned char view_heroes, unsigned char view_towns);
     void QuickInfo(int cellX, int cellY, int z);
+    void HeroQuickView(int heroId, int x, int y,
+                       unsigned char display_drop_shadow);
+    void TownQuickView(int townId, int x, int y,
+                       unsigned char display_drop_shadow);
+    void garrison_quick_view(int id, int x, int y);
+    void MonsterQuickView(const NewmapCell* cell, int cellx, int celly);
     void UpdBottomView(unsigned char forceUpdate, unsigned char drawWindow,
                        unsigned char update);
     void CheckCastSpell();
@@ -1428,6 +1451,8 @@ public:
                         unsigned char draw_changes);
     void ShowRoute(int updateScreen, int reseed, int changeButton);
     void StartLocalPlayerTurn();
+    void ScreenScroll(int iDir, int bChangeMouse);
+    void CheckScreenScroll();
     void LoadRemote(unsigned char makeOrig);
     void TrimLoopingSounds(int maxSoundsAllowed);
     void DisableButtons();
@@ -1467,6 +1492,17 @@ public:
     // declarator is view-specific.
     static int get_like_modifier(class hero* current_hero,
                                  TCreatureType creature);
+#endif
+#ifdef HOMM3_ADVMGR_MONSTER_MOOD_DECLS
+    // advmgr.cpp parses this header before game.h, so its copy of the
+    // declarator names the creature id with VC6's elaborated forward
+    // enum (the recruit.h spelling). Own macro so no other includer's
+    // closure moves.
+    static int get_like_modifier(class hero* current_hero,
+                                 enum TCreatureType creature);
+    // cursor.obj's 0x47f7d0, the events-view declarator repeated for
+    // advmgr.cpp's own mobilization pair.
+    void StopCursor(unsigned char standEnd);
 #endif
 };
 
