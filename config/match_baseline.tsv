@@ -1010,7 +1010,7 @@ hero	?belongs_to_human@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xd9050
 hero	?can_land@hero@@QAEEXZ	100.0000	100.0000	100.0000	0xe5ce0
 hero	?can_summon_boat@hero@@QAEEXZ	85.7031	85.7031	85.7031	0xe5550
 hero	?end@?$vector@HV?$allocator@H@std@@@std@@QAEPAHXZ	100.0000	100.0000	100.0000	0xe64f0
-hero	?equip_artifact@hero@@QAEEPBUtype_artifact@@J@Z	85.2500	85.2500	85.2500	0xe2a00
+hero	?equip_artifact@hero@@QAEEPBUtype_artifact@@J@Z	93.2051	93.2051	93.2051	0xe2a00
 hero	?find_summonable_boat@hero@@QAEPAVboat@@XZ	100.0000	100.0000	100.0000	0xe54a0
 hero	?get_backpack_error@hero@@QBE?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@W4TArtifact@@@Z	100.0000	100.0000	100.0000	0xe2ed0
 hero	?get_combat_speed_bonus@hero@@QAEJXZ	100.0000	100.0000	100.0000	0xe5aa0
