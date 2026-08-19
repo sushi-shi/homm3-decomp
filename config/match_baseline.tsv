@@ -554,7 +554,7 @@ cmbtmgr	?RemoveArmyFromGrid@combatManager@@QAEXABVarmy@@@Z	100.0000	100.0000	100
 cmbtmgr	?RemoveObstacle@combatManager@@QAEXH@Z	87.2872	87.2872	87.2872	0x66b30
 cmbtmgr	?ResetHitByCreature@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x65fe0
 cmbtmgr	?SetupAdjacencyArray@combatManager@@QAEXXZ	100.0000	100.0000	100.0000	0x640a0
-cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	89.5860	89.5860	89.5860	0x639f0
+cmbtmgr	?SetupCombat@combatManager@@QAEXUtype_point@@PAVhero@@PAVarmyGroup@@JPAVtown@@12HHHE@Z	96.4459	96.4459	96.4459	0x639f0
 cmbtmgr	?ShotIsNotOptimal@combatManager@@QAEEPBVarmy@@0@Z	100.0000	100.0000	100.0000	0x67600
 cmbtmgr	?ShotIsThroughWall@combatManager@@QAEEPBVarmy@@HH@Z	100.0000	100.0000	100.0000	0x67510
 cmbtmgr	?UpdateArmyGroup@combatManager@@QAEXH@Z	100.0000	100.0000	100.0000	0x641f0

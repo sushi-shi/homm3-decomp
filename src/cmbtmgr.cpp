@@ -302,7 +302,7 @@ VA(0x004639f0, 0x270)  // anchor-callee, dc 0x5e464
 void combatManager::SetupCombat(type_point point, hero* leftHero, armyGroup* leftArmyGroup, long right_player, town* rightTown, hero* rightHero, armyGroup* rightArmyGroup, int x, int y, int iSeed, unsigned char is_surrounded)
 {
     gCombatSeed66d840 = iSeed;
-    SRand(x * 0x1aed3 + y * 0x28fb9 + 0x13ea1);
+    SRand(x * 0x1aed3 + y * 0x28f79 + 0x13ea1);
     mapPoint = point;
     combatCell = gpAdvManager->GetCell(point);
     field_1402f = 1;
