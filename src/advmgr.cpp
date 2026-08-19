@@ -2111,7 +2111,7 @@ static inline NewmapCell* DrawBoatCell(advManager* manager, type_point point)
 static inline NewmapCell* DrawGroundCell(advManager* manager, type_point point)
 {
     if (!point.is_valid())
-        return manager->fullMap->cell(0, 0, 0);
+        return manager->fullMap->cellData;
     return &manager->fullMap->cellData[
         (point.z * manager->fullMap->Size + point.y)
         * manager->fullMap->Size + point.x];
@@ -3131,7 +3131,7 @@ void advManager::DrawGround(int srcX, int srcY, int z, int destX, int destY)
     }
 
     if (frame == -1)
-        frame = (srcY + 16) % 4 + 4 * ((srcX + 16) % 4);
+        frame = (srcX + 16) % 4 + 4 * ((srcY + 16) % 4);
 
     borderTileset->DrawTile(
         frame, tilex, tiley, tilew, tileh,
