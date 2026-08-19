@@ -1017,7 +1017,10 @@ public:
     // Constructor-initialized hero-list scroll origin. Locator i displays
     // localPlayer->heroes[topHero + i].
     int topHero;                    // +0x60
-    int field_64;                   // +0x64, role not yet admitted
+    // +0x64. The constructor stores Widgets.back() here immediately
+    // after reserving - i.e. the last widget CAdvPopup's own body left
+    // in the list. Same four bytes the ordinal placeholder used to name.
+    widget* field_64;
 
     THeroScreenWindow();
     virtual ~THeroScreenWindow();

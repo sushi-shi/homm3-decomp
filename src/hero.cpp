@@ -69,6 +69,12 @@ inline CMCTeleportHero::CMCTeleportHero(int id, type_point location)
 
 #include "mousemgr.h"
 #include "widget.h"
+// The hero screen's own widget zoo: THeroScreenWindow's constructor
+// builds 138 of them by hand.
+#include "border.h"
+#include "button.h"
+#include "iconwdgt.h"
+#include "textwdgt.h"
 
 DATA(0x0069774c) extern unsigned char gCampaignMode;
 DATA(0x0067dcec) extern const THeroClassTraits (&akHeroClasses)[18];
@@ -1870,14 +1876,449 @@ int THeroScreenWindow::WindowHandler(message* msg)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:3964
 // The 11,346-byte body, 1.05x DC's 10,852 - by far the largest row in
 // hero.obj and the only slot that can hold the constructor.
+// 138 widgets built by hand, one `Widgets.push_back(new X(...))` per
+// line, with only THREE real conditionals in the whole 11 KB - all of
+// them the same `gpGame->f_1f698 >= 2` Shadow-of-Death gate, choosing
+// the background bitmap and admitting two extra artifact slots.
+// The push_back expansions are pure /Ob2 budget: the first 99 sites
+// inline it and call `vector::insert(iterator, size_type, const T&)`
+// out of line, and once the budget runs out the remaining 39 call
+// push_back itself. Nothing in the source distinguishes them.
 VA(0x004de710, 0x2C52)  // anchor-bracket + size, dc 0xd0184
-void THeroScreenWindow::THeroScreenWindow()
+THeroScreenWindow::THeroScreenWindow()
+    : CAdvPopup(0x40, 7, 0x2a0, 0x24a, 0x12)
 {
-    // @stub
+    topHero = 0;
+    Widgets.reserve(121);
+    field_64 = Widgets.back();
+
+    const char* background =
+        gpGame->f_1f698 >= 2 ? "heroscr4.pcx" : "heroscr3.pcx";
+    Widgets.push_back(new bitmapBorder(
+        0, 0, width, height, 0, background, 0x800));
+    Widgets.push_back(new textWidget(
+        0x52, 0x1e, 0xdc, 0x28, 0, "bigfont.fnt",
+        font::HEADING, 0x1, 0x1, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x52, 0x39, 0xdc, 0x1e, 0, "medfont.fnt",
+        font::PRIMARY, 0x8c, 0x1, 0, 0x8));
+    Widgets.push_back(new bitmapBorder(
+        0x13, 0x13, 0x3a, 0x40, 0x2d, 0, 0x800));
+    Widgets.push_back(new textWidget(
+        0x14, 0x5b, 0x42, 0x12, 0, "smalfont.fnt",
+        font::HEADING, 0x67, 0x1, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x5a, 0x5b, 0x42, 0x12, 0, "smalfont.fnt",
+        font::HEADING, 0x68, 0x1, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xa0, 0x5b, 0x42, 0x12, 0, "smalfont.fnt",
+        font::HEADING, 0x69, 0x1, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xe6, 0x5b, 0x42, 0x12, 0, "smalfont.fnt",
+        font::HEADING, 0x6a, 0x1, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x44, 0xb8, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x6b, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x44, 0xe8, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x6c, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xd3, 0xe8, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x6d, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x173, 0x1af, 0x42, 0x28, 0, "smalfont.fnt",
+        font::PRIMARY, 0x6e, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x1ff, 0x1af, 0x42, 0x28, 0, "smalfont.fnt",
+        font::PRIMARY, 0x6f, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x1f, 0x9e, 0x2c, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x2e, 0x1, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x65, 0x9e, 0x2c, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x2f, 0x1, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xab, 0x9e, 0x2c, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x30, 0x1, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xf1, 0x9e, 0x2c, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x31, 0x1, 0, 0x8));
+    Widgets.push_back(new iconWidget(
+        0xf, 0x1e5, 0x3a, 0x40, 0x36, "twcrport.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x51, 0x1e5, 0x3a, 0x40, 0x37, "twcrport.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x93, 0x1e5, 0x3a, 0x40, 0x38, "twcrport.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xd5, 0x1e5, 0x3a, 0x40, 0x39, "twcrport.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x117, 0x1e5, 0x3a, 0x40, 0x3a, "twcrport.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x159, 0x1e5, 0x3a, 0x40, 0x3b, "twcrport.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x19b, 0x1e5, 0x3a, 0x40, 0x3c, "twcrport.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new textWidget(
+        0xf, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        font::PRIMARY, 0x3d, 0x2, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x51, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        font::PRIMARY, 0x3e, 0x2, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x93, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        font::PRIMARY, 0x3f, 0x2, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xd5, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        font::PRIMARY, 0x40, 0x2, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x117, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        font::PRIMARY, 0x41, 0x2, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x159, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        font::PRIMARY, 0x42, 0x2, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x19b, 0x216, 0x3a, 0x12, 0, "Verd10B.fnt",
+        font::PRIMARY, 0x43, 0x2, 0, 0x8));
+    Widgets.push_back(new iconWidget(
+        0x20, 0x6f, 0x2a, 0x2a, 0x32, "pskil42.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x66, 0x6f, 0x2a, 0x2a, 0x33, "pskil42.def",
+        0x1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xac, 0x6f, 0x2a, 0x2a, 0x34, "pskil42.def",
+        0x2, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xf2, 0x6f, 0x2a, 0x2a, 0x35, "pskil42.def",
+        0x5, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xf, 0x1e5, 0x3a, 0x40, 0x44, "twcrport.def",
+        0x1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x51, 0x1e5, 0x3a, 0x40, 0x45, "twcrport.def",
+        0x1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x93, 0x1e5, 0x3a, 0x40, 0x46, "twcrport.def",
+        0x1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xd5, 0x1e5, 0x3a, 0x40, 0x47, "twcrport.def",
+        0x1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x117, 0x1e5, 0x3a, 0x40, 0x48, "twcrport.def",
+        0x1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x159, 0x1e5, 0x3a, 0x40, 0x49, "twcrport.def",
+        0x1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x19b, 0x1e5, 0x3a, 0x40, 0x4a, "twcrport.def",
+        0x1, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x12, 0x114, 0x2c, 0x2c, 0x4f, "secskill.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xa1, 0x114, 0x2c, 0x2c, 0x50, "secskill.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x12, 0x144, 0x2c, 0x2c, 0x51, "secskill.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xa1, 0x144, 0x2c, 0x2c, 0x52, "secskill.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x12, 0x174, 0x2c, 0x2c, 0x53, "secskill.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xa1, 0x174, 0x2c, 0x2c, 0x54, "secskill.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x12, 0x1a4, 0x2c, 0x2c, 0x55, "secskill.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xa1, 0x1a4, 0x2c, 0x2c, 0x56, "secskill.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new textWidget(
+        0x44, 0x12c, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x57, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xd3, 0x12c, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x58, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x44, 0x15b, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x59, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xd3, 0x15b, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x5a, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x44, 0x18b, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x5b, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xd3, 0x18b, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x5c, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x44, 0x1bb, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x5d, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xd3, 0x1bb, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x5e, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x44, 0x118, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x5f, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xd3, 0x118, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x60, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x44, 0x148, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x61, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xd3, 0x148, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x62, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x44, 0x178, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x63, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xd3, 0x178, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x64, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x44, 0x1a8, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x65, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xd3, 0x1a8, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x66, 0, 0, 0x8));
+    Widgets.push_back(new iconWidget(
+        0x1bc, 0x16, 0x2c, 0x2c, 0x15, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1f7, 0xea, 0x2c, 0x2c, 0x16, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1bc, 0x48, 0x2c, 0x2c, 0x17, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x13e, 0x3d, 0x2c, 0x2c, 0x18, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1f1, 0xb0, 0x2c, 0x2c, 0x19, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1bc, 0x7b, 0x2c, 0x2c, 0x1a, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x16e, 0x3d, 0x2c, 0x2c, 0x1b, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x221, 0xb0, 0x2c, 0x2c, 0x1c, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1c2, 0x11f, 0x2c, 0x2c, 0x1d, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x13e, 0x87, 0x2c, 0x2c, 0x1e, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x14e, 0xb9, 0x2c, 0x2c, 0x1f, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x15e, 0xec, 0x2c, 0x2c, 0x20, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x16e, 0x11f, 0x2c, 0x2c, 0x21, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1f3, 0x16, 0x2c, 0x2c, 0x22, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x221, 0x16, 0x2c, 0x2c, 0x23, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x221, 0x44, 0x2c, 0x2c, 0x24, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x221, 0x72, 0x2c, 0x2c, 0x25, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x221, 0x12f, 0x2c, 0x2c, 0x26, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    if (gpGame->f_1f698 >= 2)
+        Widgets.push_back(new iconWidget(
+            0x13c, 0x11f, 0x2c, 0x2c, 0x27, "artifact.def",
+            0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1bc, 0x16, 0x2c, 0x2c, 0x2, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1f7, 0xea, 0x2c, 0x2c, 0x3, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1bc, 0x48, 0x2c, 0x2c, 0x4, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x13e, 0x3d, 0x2c, 0x2c, 0x5, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1f1, 0xb0, 0x2c, 0x2c, 0x6, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1bc, 0x7b, 0x2c, 0x2c, 0x7, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x16e, 0x3d, 0x2c, 0x2c, 0x8, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x221, 0xb0, 0x2c, 0x2c, 0x9, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1c2, 0x11f, 0x2c, 0x2c, 0xa, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x13e, 0x87, 0x2c, 0x2c, 0xb, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x14e, 0xb9, 0x2c, 0x2c, 0xc, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x15e, 0xec, 0x2c, 0x2c, 0xd, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x16e, 0x11f, 0x2c, 0x2c, 0xe, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1f3, 0x16, 0x2c, 0x2c, 0xf, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x221, 0x16, 0x2c, 0x2c, 0x10, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x221, 0x44, 0x2c, 0x2c, 0x11, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x221, 0x72, 0x2c, 0x2c, 0x12, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x221, 0x12f, 0x2c, 0x2c, 0x13, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    if (gpGame->f_1f698 >= 2)
+        Widgets.push_back(new iconWidget(
+            0x13c, 0x11f, 0x2c, 0x2c, 0x14, "artifact.def",
+            0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x152, 0x165, 0x2c, 0x2c, 0x28, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x180, 0x165, 0x2c, 0x2c, 0x29, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1ae, 0x165, 0x2c, 0x2c, 0x2a, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x1dc, 0x165, 0x2c, 0x2c, 0x2b, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x20a, 0x165, 0x2c, 0x2c, 0x2c, "artifact.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xb6, 0xb8, 0x2c, 0x2c, 0x74, "imrlb.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xf0, 0xb8, 0x2c, 0x2c, 0x75, "ilckb.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x12, 0xb4, 0x2c, 0x2c, 0x76, "un44.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x13, 0xe5, 0x2a, 0x2a, 0x77, "pskil42.def",
+        0x4, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0xa2, 0xe5, 0x2a, 0x2a, 0x78, "pskil42.def",
+        0x3, 0, 0, 0, 0x10));
+    Widgets.push_back(new iconWidget(
+        0x25d, 0x7, 0x3a, 0x40, 0x8d, "crest58.def",
+        0, 0, 0, 0, 0x10));
+    Widgets.push_back(new bitmapBorder(
+        0x263, 0x57, 0x30, 0x20, 0x82, 0, 0x800));
+    Widgets.push_back(new bitmapBorder(
+        0x263, 0x8d, 0x30, 0x20, 0x83, 0, 0x800));
+    Widgets.push_back(new bitmapBorder(
+        0x263, 0xc3, 0x30, 0x20, 0x84, 0, 0x800));
+    Widgets.push_back(new bitmapBorder(
+        0x263, 0xf9, 0x30, 0x20, 0x85, 0, 0x800));
+    Widgets.push_back(new bitmapBorder(
+        0x263, 0x12f, 0x30, 0x20, 0x86, 0, 0x800));
+    Widgets.push_back(new bitmapBorder(
+        0x263, 0x165, 0x30, 0x20, 0x87, 0, 0x800));
+    Widgets.push_back(new bitmapBorder(
+        0x263, 0x19b, 0x30, 0x20, 0x88, 0, 0x800));
+    Widgets.push_back(new bitmapBorder(
+        0x263, 0x1d1, 0x30, 0x20, 0x89, 0, 0x800));
+    Widgets.push_back(new bitmapBorder(
+        0x263, 0x57, 0x30, 0x20, 0x8a, "hpsyyy.pcx", 0x800));
+    Widgets.push_back(new bitmapBorder(
+        0x8, 0x22f, 0x290, 0x13, 0x72, "HeroBar.pcx", 0x800));
+    Widgets.push_back(new textWidget(
+        0x8, 0x22f, 0x290, 0x13, 0, "smalfont.fnt",
+        font::PRIMARY, 0x73, 0x1, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x44, 0xcc, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x8b, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0x44, 0xfc, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x70, 0, 0, 0x8));
+    Widgets.push_back(new textWidget(
+        0xd3, 0xfc, 0x5a, 0x12, 0, "smalfont.fnt",
+        font::PRIMARY, 0x71, 0, 0, 0x8));
+    Widgets.push_back(new button(
+        0x21b, 0x207, 0x36, 0x20, 0x7f, "hsbtns9.def",
+        0, 0x1, 0, 0, 0x2));
+    Widgets.push_back(new button(
+        0x13b, 0x1ae, 0x34, 0x24, 0x80, "hsbtns4.def",
+        0, 0x1, 0, 0x10, 0x2));
+    Widgets.push_back(new button(
+        0x1c6, 0x1ae, 0x34, 0x24, 0x81, "hsbtns2.def",
+        0, 0x1, 0, 0x20, 0x2));
+    // The exit button gets a second hotkey before it is filed: retail
+    // keeps the `new` result in a register, calls set_hotkey on it (null
+    // or not - the allocation check only zeroes the pointer) and pushes
+    // it afterwards, which is what fixes the local.
+    button* exitButton = new button(
+        0x262, 0x204, 0x34, 0x24, 0x7800, "hsbtns.def",
+        0, 0x1, 0x1, 0x1c, 0x2);
+    exitButton->set_hotkey(1);
+    Widgets.push_back(exitButton);
+    Widgets.push_back(new button(
+        0x13a, 0x164, 0x16, 0x2e, 0x4d, "hsbtns3.def",
+        0, 0x1, 0, 0x4b, 0x2));
+    Widgets.push_back(new button(
+        0x237, 0x164, 0x16, 0x2e, 0x4e, "hsbtns5.def",
+        0, 0x1, 0, 0x4d, 0x2));
+    Widgets.push_back(new button(
+        0x1e1, 0x1e3, 0x36, 0x20, 0x7a, "hsbtns6.def",
+        0, 0x1, 0, 0x26, 0x2));
+    Widgets.push_back(new button(
+        0x1e1, 0x207, 0x36, 0x20, 0x7c, "hsbtns7.def",
+        0, 0x1, 0, 0x14, 0x2));
+    Widgets.push_back(new button(
+        0x21b, 0x1e3, 0x36, 0x20, 0x7e, "hsbtns8.def",
+        0, 0x1, 0, 0x30, 0x2));
+
+    for (widget** it = Widgets.begin(); it != Widgets.end(); ++it) {
+        if (*it)
+            AddWidget(*it, -1);
+        else
+            MemError();
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:4186
 // RETAIL_LOCATED(0x004e1520, 0x21): compiler-generated ??_G immediately
