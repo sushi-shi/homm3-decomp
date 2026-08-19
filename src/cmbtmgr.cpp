@@ -42,8 +42,11 @@
 #include <va.h>
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
+#define HOMM3_CMBTMGR_MORALE_VIEW
 #include "cmbtmgr.h"
+#define HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatwindow.h"
+#undef HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatoptionswindow.h"
 #include "creaturetype.h" // UpgradedCreatureType, for RaiseSkeletons
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
@@ -57,7 +60,9 @@
 #include "resourcemanager.h"
 #include "soundmgr.h" // SAMPLE2 / LoadPlaySample / WaitEndSample
 #include "remote.h"
+#define HOMM3_TEXT_COMBAT_MORALE_VIEW
 #include "textresource.h"
+#undef HOMM3_TEXT_COMBAT_MORALE_VIEW
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
 #include "viewarmywindow.h"
 #include "winmgr.h"
@@ -169,6 +174,9 @@ void combatManager::Close()
 // Declared file-locally rather than by pulling border.h/button.h in: an
 // extern declaration is include-set inert where a whole header is not.
 void SetPlayerPaletteColors(palette* pal, int whichPlayer);
+
+// kb.cpp's shared text scratch buffer (kb.h), reached the same way.
+extern char gText[];
 
 // The eighteen combat hero animations, keyed `2 * townType + sex`.
 // Retail .rdata 0x63bd40; LoadIcons' `shl eax, 4` proves the 16-byte
@@ -635,19 +643,138 @@ void combatManager::CombineGroups(armyGroup* src, armyGroup* dest)
     // @stub
 }
 
+#endif  // @carcass
+
+// Moved AHEAD of the two CheckApply*Morale bodies (it used to sit next
+// to LowerDoor): retail expands the quick-combat gate INLINE in both of
+// them - the `setne al / test al, al` tail on the global-mode arm is the
+// signature of an inlined unsigned char return - while Close, which
+// precedes this point, still CALLS the out-of-line const twin at
+// 0x46a4a0. Position is therefore load-bearing, not cosmetic.
+//
+// Dreamcast lists this as a cmbtmgr.h inline with no retail body.
+// LowerDoor's inlined branch graph proves all four inputs and the exact
+// distinction between network-side quick combat and the global mode.
+inline unsigned char combatManager::IsQuickCombat()
+{
+    if (gpGame->field_1f69d)
+        return 0;
+    if (gNetworkActive69954c && sideIsAI[0] && sideIsAI[1])
+        return gpGame->players[playerIds[0]].quickCombat
+            && gpGame->players[playerIds[1]].quickCombat;
+    return gCombatQuickMode69877c != 0;
+}
+
+// ai_tactical.cpp's byte-proven three-operand selector, spelled locally
+// for the same reason MaxOf below is: retail homes the rating and BOTH
+// bounds and picks between their addresses, which only a const-
+// reference-in / const-reference-out select produces. The (_V, _Hi, _Lo)
+// argument order is byte-proven there and again here - both morale
+// bodies materialise the high bound before the low one.
+template <class _TYPE>
+inline const _TYPE& _cpp_clamp(_TYPE _V, _TYPE _Hi, _TYPE _Lo)
+{
+    return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
+}
+
+// army::GetName (0x440100) as retail's cmbtmgr.cpp saw it - the DC
+// roster puts that body in Army.h (dc 0x4ca0c/0x4ca2c), i.e. an inline
+// this TU could expand, and both morale bodies do expand it rather than
+// call 0x440100. Spelled file-locally so our CL has a body to expand
+// too; static with no surviving reference, so no slot is expected.
+static const char* CreatureName(int type, long count)
+{
+    if (type >= 0 && type <= army::ARMY_CREATURE_LAST) {
+        if (count == 1)
+            return akCreatureTypeTraits[type].m_name;
+        return akCreatureTypeTraits[type].m_plural_name;
+    }
+    // army.cpp already owns the 0x691210 DATA_COMPGEN row for this
+    // literal; the linker folds our COMDAT onto it, so the only delta is
+    // a reloc NAME (masked).
+    return "";
+}
+
 // E:\gamedcs\cmbtmgr.cpp:2035
+// EXACT 2026-08-20. Three shapes are forced: the two attribute tests go
+// through army::Is (one CSE'd container load, `shr`+`test cl,1` per
+// bit) - an `& (1 << n)` spelling folds both into a single `test dword
+// ptr, imm` and loses seven bytes; the quick-combat gate is INLINE, so
+// this body has to sit after the inline IsQuickCombat definition above;
+// and army::GetName is expanded from the file-local CreatureName copy
+// because retail's Army.h carried that body where our army.cpp does not.
 VA(0x00464920, 0x211)  // anchor-global, dc 0x5f2b0
 void combatManager::CheckApplyGoodMorale(int group, int index)
 {
-    // @stub
+    if (group < 0)
+        return;
+    if (index < 0)
+        return;
+    army* stack = &armies[group][index];
+    if (bCreaturePlacement)
+        return;
+    if (stack->Is(27) & 1)
+        return;
+    if (stack->Is(24) & 1)
+        return;
+    if (!stack->numTroops)
+        return;
+    if (Random(1, 24) > _cpp_clamp(stack->morale, 3, -3))
+        return;
+    stack->creatureId = (stack->creatureId & ~0x04000000) | 0x01000000;
+    if (!IsQuickCombat()) {
+        SAMPLE2 sample = LoadPlaySample(
+            DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
+        SpellEffect(20, stack, 100, 0);
+        sprintf(gText, gpGeneralText->GetText(GENERAL_TEXT_GOOD_MORALE),
+            CreatureName(stack->creatureType, stack->numTroops));
+        combatWindow->combat_message(gText, 1, 0);
+        WaitEndSample(sample, -1);
+    }
+    UpdateGrid(0, 1);
+    DrawFrame(1, 0, 0, 0, 1, 0);
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2095
+// Residual (97.73%): the ONE remaining delta is the tail of the clamp's
+// inner ternary. Retail duplicates the selector store - `jle -> &_V` with
+// a separate `lea edx,&_Hi / mov [ebp+8],edx / jmp` arm - where our CL
+// tail-merges the two arms onto a shared `mov [ebp+8],eax` and inverts
+// the branch (`jg`). `homm3 vc6 why-branch` finds no catalog mutation
+// that reaches it (D6, retail-side duplication), and the shape is NOT
+// source-addressable here: retail itself emits our merged form in
+// CheckApplyGoodMorale above, where the selector wins a register instead
+// of a frame slot, from the identical _cpp_clamp call. Tried and
+// rejected: flipping the inner ternary to (_V < _Hi ? _V : _Hi), which
+// leaves this body at 97.72 and drops CheckApplyGoodMorale to 99.53;
+// early-return guards instead of the nested-if shape (72.80 - retail
+// shares ONE `return 0` epilogue and split returns duplicate it).
 VA(0x00464b40, 0x1FB)  // anchor-global, dc 0x5f3c4
 int combatManager::CheckApplyBadMorale(int group, int index)
 {
-    // @stub
+    if (group >= 0 && index >= 0) {
+        army* stack = &armies[group][index];
+        if (Random(1, 12) <= -_cpp_clamp(stack->morale, 3, -3)) {
+            if (sideIsAI[group] || Random(1, 4) != 1) {
+                stack->creatureId |= 0x04000000;
+                if (!IsQuickCombat()) {
+                    SAMPLE2 sample = LoadPlaySample(DATA_COMPGEN(
+                        0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
+                    sprintf(gText,
+                        gpGeneralText->GetText(GENERAL_TEXT_BAD_MORALE),
+                        CreatureName(stack->creatureType, stack->numTroops));
+                    combatWindow->combat_message(gText, 1, 0);
+                    SpellEffect(30, stack, 100, 1);
+                    WaitEndSample(sample, -1);
+                }
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2152
 VA(0x00465080, 0x2A2)  // anchor-callee, dc 0x5f518
@@ -1105,19 +1232,6 @@ unsigned char combatManager::should_lower_door(army* this_army, long hex) const
             || second == COMBAT_HEX_OUTER_MOAT)
         return 1;
     return 0;
-}
-
-// Dreamcast lists this as a cmbtmgr.h inline with no retail body.
-// LowerDoor's inlined branch graph proves all four inputs and the exact
-// distinction between network-side quick combat and the global mode.
-inline unsigned char combatManager::IsQuickCombat()
-{
-    if (gpGame->field_1f69d)
-        return 0;
-    if (gNetworkActive69954c && sideIsAI[0] && sideIsAI[1])
-        return gpGame->players[playerIds[0]].quickCombat
-            && gpGame->players[playerIds[1]].quickCombat;
-    return gCombatQuickMode69877c != 0;
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3378

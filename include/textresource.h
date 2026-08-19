@@ -22,6 +22,16 @@ enum EGeneralTextIndex {
     GENERAL_TEXT_PLAYER_TURN_FORMAT = 14,
     GENERAL_TEXT_HERO_ROLLOVER_FORMAT = 16,
     GENERAL_TEXT_RECRUIT_TITLE = 17,
+#ifdef HOMM3_TEXT_COMBAT_MORALE_VIEW
+    // The two combat morale lines, both "%s" formats over the affected
+    // stack's name: combatManager::CheckApplyGoodMorale (0x464920) folds
+    // [Text._First + 0x88] and CheckApplyBadMorale (0x464b40)
+    // [Text._First + 0x8c]. Gated for the reason GENERAL_TEXT_SKELETON_
+    // GOLD below is - an ungated enumerator counts toward the include-set
+    // threshold in every consumer.
+    GENERAL_TEXT_GOOD_MORALE = 34,
+    GENERAL_TEXT_BAD_MORALE = 35,
+#endif
     GENERAL_TEXT_MIXED_ARMY = 44,
 #ifdef HOMM3_EVENTS_VIEW
     // DoEventSkeleton (0x4a5480) shows this row - and nothing else in the
