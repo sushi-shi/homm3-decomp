@@ -974,6 +974,7 @@ hero	?GiveSS@hero@@QAEHHH@Z	100.0000	100.0000	100.0000	0xe22d0
 hero	?HasArtifact@hero@@QAEEH@Z	100.0000	100.0000	100.0000	0xd91b0
 hero	?HeroFn_004D8F70@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8f70
 hero	?HeroFn_004D8FB0@hero@@QAEPBDXZ	100.0000	100.0000	100.0000	0xd8fb0
+hero	?HeroFn_004D97F0@hero@@QAEXXZ	93.5520	93.5520	93.5520	0xd97f0
 hero	?HeroFn_004D9A00@hero@@QAEXPAUtype_artifact@@H@Z	100.0000	100.0000	100.0000	0xd9a00
 hero	?HeroFn_004D9B30@hero@@QAEHH@Z	100.0000	100.0000	100.0000	0xd9b30
 hero	?HeroFn_004D9CC0@hero@@QAEHH@Z	94.1749	94.1749	94.1749	0xd9cc0
@@ -1042,7 +1043,6 @@ hero	?set@?$bitset@$0EG@@std@@QAEAAV12@I_N@Z	100.0000	100.0000	100.0000	0xe66f0
 hero	?update_all_slots@THeroScreenWindow@@QAEXXZ	100.0000	100.0000	100.0000	0xdb1d0
 hero	?update_slot@THeroScreenWindow@@QAEXJ@Z	81.7000	81.7000	81.7000	0xdaf90
 hero	HeroView	0.0000	0.0000	0.0000	0xe1800
-hero	THeroScreenWindow_HeroMessageUpdate	0.0000	0.0000	0.0000	0xd97f0
 hero	THeroScreenWindow_SetupHeroView	0.0000	0.0000	0.0000	0xe1a50
 hero	THeroScreenWindow_THeroScreenWindow	0.0000	0.0000	0.0000	0xde710
 hero	THeroScreenWindow_UpdateHeroScreenStatusBar	0.0000	0.0000	0.0000	0xdb660

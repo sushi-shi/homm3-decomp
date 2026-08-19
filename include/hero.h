@@ -545,6 +545,11 @@ public:
     // body takes ONE and views an ARTIFACT, so the name here is an
     // ORDINAL PLACEHOLDER and the arity is settled from the bytes (see
     // the arity-divergence note in hero.cpp).
+    // 0x4d97f0, `ret 0` with no arguments and `this` a HERO - it walks
+    // army.armies and the hero-screen army widgets together. The DC row
+    // owning the slot is THeroScreenWindow::HeroMessageUpdate(char*);
+    // ORDINAL PLACEHOLDER name, arity settled from the bytes.
+    void HeroFn_004D97F0();
     int HeroFn_004D9B30(int artifact);
     // 0x4d9cc0, the ASSEMBLE partner of the row above and the same
     // shape: `ret 4`, `this` unused, one artifact id in. It resolves the
@@ -1031,6 +1036,12 @@ SIZE(THeroScreenWindow, 0x68);
 // hero-screen block plus hero::hero's clear. Spelling role-derived; no
 // public symbol survives for it.
 DATA(0x00698a78) extern THeroScreenWindow* gpHeroScreenWindow;
+// Retail 0x698a44, the hero screen's "army strip is live" flag. HeroView
+// clears it on entry; the army repaint at 0x4d97f0 uses it three ways -
+// it decides whether an EMPTY slot's widget is drawn at all, and it
+// gates both selection-highlight arms of an occupied slot. Role
+// inferred from those three reads; ORDINAL PLACEHOLDER name.
+DATA(0x00698a44) extern int gHeroScreenArmyStripLive;
 
 // CODEVIEW(E:\gamedcs\hero.cpp:1594, dc 0xcc49c) void THeroScreenWindow::HeroMessageUpdate(char* cText);
 // CODEVIEW(E:\gamedcs\hero.cpp:2477, dc 0xcd9c4) void THeroScreenWindow::UpdateHeroScreenStatusBar(message* msg);
