@@ -176,11 +176,23 @@ enum ECombatMineType {
 // idiom - nothing decoded so far bounds it. Name is a BOOTSTRAP
 // INVENTION; the DC roster only attests the owning combatManager::
 // TObstacle.
+// One row of the obstacle table at .rdata 0x63c7c8. place_obstacle
+// (0x466010) proves the 20-byte stride outright - it forms the row base
+// as `4 * (5 * id) + table` - and reads the two placement bounds at +4/+5
+// and the sprite name at +0x10 out of the same row it stores into
+// TObstacle::shape.
 struct type_obstacle_shape {
-    char pad_00[0x6];
+    char pad_00[0x4];
+    // The lowest grid ROW this obstacle may be anchored in, and the
+    // number of columns it needs to the right of its anchor: retail
+    // rejects a candidate hex when `minRow > hex / 17` or when
+    // `width + hex % 17 > 15`. Names describe those two tests.
+    unsigned char minRow;             // +0x4
+    unsigned char width;              // +0x5
     unsigned char extra_hex_count;    // +0x6
     unsigned char pad_07;
-    signed char extra_hex_offsets[1]; // +0x8, extra_hex_count entries
+    signed char extra_hex_offsets[8]; // +0x8, extra_hex_count entries
+    const char* spriteName;           // +0x10
 };
 
 // Head model from the byte-proven leaves. The battlefield holds two
@@ -257,7 +269,11 @@ public:
         // obstacle deals, stored per obstacle when it is placed.
         // Name provisional; no roster reaches the slot.
         long spell_damage;                  // +0xc
-        char pad_10[0x8];
+        // place_obstacle stamps these two on every obstacle it builds -
+        // +0x10 zero and +0x14 all-ones - alongside field_09/-1 and
+        // field_0a/1. No reader is decoded, so both stay ordinals.
+        long field_10;                      // +0x10
+        long field_14;                      // +0x14
     };
 
     // Dinkumware's four-word vector representation. FreeIcons exposes the
@@ -283,6 +299,15 @@ public:
         ~TObstacleVector();
 
         void Destroy(TObstacle* first, TObstacle* last);
+#ifdef HOMM3_CMBTMGR_OBSTACLE_VIEW
+        // Dinkumware's own null-guarded size(): place_obstacle folds the
+        // `begin == 0 ? 0 : end - begin` pair and the 0x2aaaaaab/sar 2
+        // divide by sizeof(TObstacle) inline right after the insert.
+        int size() const { return begin == 0 ? 0 : end - begin; }
+        // The out-of-line worker push_back reduces to. DECLARED, NOT
+        // DEFINED: retail CALLS it, so this TU must not see a body.
+        void insert(TObstacle* where, unsigned count, const TObstacle& value);
+#endif
         void erase(TObstacle* first, TObstacle* last)
         {
             TObstacle* vectorEnd = end;
