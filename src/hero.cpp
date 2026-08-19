@@ -958,14 +958,40 @@ int hero::HeroFn_004D9B30(int artifact)
     return gpWindowManager->dialogReturn;
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\hero.cpp:1717
-VA(0x004d9cc0, 0x200)  // dc-bracket forced, dc 0xcc75c
-void hero::ViewArtifact(const type_artifact* artifact, int isQuickView)
+// The ASSEMBLE partner of 0x4d9b30 above, same arity settlement: `ret 4`,
+// ECX untouched, one artifact id in and the dialog reply out. It reads
+// the component's targetCombo, describes the ASSEMBLED artifact, and
+// asks general text 733 - the same prompt HeroFn_004DC100 uses - with
+// the assembled artifact's name formatted in and its icon (resource
+// type 8) shown beside the question. Retail reuses the incoming
+// parameter slot for the assembled id, which is why the format argument
+// and the dialog's resource extra are the same value.
+// The record describes the COMPONENT, not the assembled artifact -
+// retail's `mov [ebp-0x14], ecx` takes the incoming parameter straight
+// into the stack type_artifact - and `assembled` is computed FIRST even
+// though the record is used first (94.17 against 85.75 for the other
+// order, and 93.66 for the semantically wrong `record(assembled, -1)`).
+// Residual (94.2%): prologue instruction SCHEDULING only - the same
+// instructions, permuted around the two pushes - plus the unwind-table
+// addend in the frame push, which is a relocation and not a state count.
+VA(0x004d9cc0, 0x200)  // dc-bracket forced + settled arity, dc 0xcc75c
+int hero::HeroFn_004D9CC0(int artifact)
 {
-    // @stub
+    int assembled =
+        gCombinationArtifacts[akArtifactTraits[artifact].targetCombo]
+            .artifactId;
+    type_artifact record(artifact, -1);
+    std::string text = record.get_description();
+    text += "\n\n";
+    text += format_string(gpGeneralText->GetText(733),
+                          akArtifactTraits[assembled].name);
+    NormalDialog(text.c_str(), 2, -1, PRIMARY_STAT_DIALOG_Y, 8, assembled,
+                 -1, 0, -1, 0, -1, 0);
+    return gpWindowManager->dialogReturn;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\hero.cpp:1732
 VA(0x004d9ec0, 0x4D3)  // anchor-global, dc 0xcc800
