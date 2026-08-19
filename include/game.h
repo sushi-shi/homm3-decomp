@@ -210,6 +210,10 @@ public:
     // `ret 0xc`: the layer index is the third argument, and the return is
     // the cell count (size * size), not a status.
     int readMapLayer(TAbstractFile* infile, int size, int layer);
+    // `ret 0x10`: a fourth argument, the save version, which reaches only
+    // the per-cell upgrade pass.
+    int loadMapLayer(TAbstractFile* infile, int size, int layer,
+                     int saveVersion);
     int saveMapLayer(TAbstractFile* outfile, int size, int layer);
     int readTreasureData(TAbstractFile* infile, TreasureData* treasure);
     int saveTreasureData(TAbstractFile* outfile, TreasureData* treasure);
