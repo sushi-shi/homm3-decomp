@@ -178,6 +178,16 @@ public:
         PRIMARY_STAT_RESOURCE_FIRST = 31,
         PRIMARY_STAT_RESOURCE_QUANTITY = 0x10000
     };
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+    // The nineteenth equipped position - the one Shadow of Death added on
+    // top of the Dreamcast TArtifactSlot roster's eighteen.
+    // hero::HeroFn_004E2550 (0x4e2550) refuses it outright while the
+    // engine gate reports a pre-SoD game. GATED to hero.obj's own view:
+    // an ungated enumerator is a measured include-set cost in this tree
+    // (netmsg.h's RS_ERASE_OBJECT note records 90.84 -> 88.24 on an
+    // unrelated TU), and no other compiland needs the name.
+    enum { EQUIPPED_SLOT_SOD_MISC = 18 };
+#endif
     // Spell points. Byte-proven SHORT: the type_AI_combat_data ctor
     // (0x423f3d) widens it into the combat record's long mana, and
     // AI_auto_combat (0x4275a6/0x4275b6) writes the simulated mana back
