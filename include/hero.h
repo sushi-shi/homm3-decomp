@@ -117,8 +117,11 @@ struct type_artifact {
 // HOMM3_ADVMGR_QUICKINFO_VIEW: that macro also widens game.h, mapcell.h
 // and advmgr.h, and a compiland's include closure is load-bearing here
 // (the initialize_game_data precedent).
+// hero.obj owns the DEFINITION (0x4db3e0) and its own consumers need
+// the declarator too, so the compiland's view joins the gate.
 #if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) \
-    || defined(HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS)
+    || defined(HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS) \
+    || defined(HOMM3_GAME_HERO_EXTRA_VIEW)
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_description();
 #endif
@@ -465,6 +468,14 @@ public:
     // one-field return and preserves its float temporary before widening.
     float get_aggression() const { return field_47a; }
 
+    // 0x4d85f0, retail's own default constructor. The base and the four
+    // members that carry constructors run first (type_obscuring_object,
+    // army, TownSpecialGrantedMask, equipped/backpack, customName), then
+    // the body re-clears the identity band. The class ALREADY had a
+    // non-trivial implicit constructor - army, the bitset and the
+    // Dinkumware string each have one - so declaring this changes what
+    // that constructor does, not whether one exists.
+    hero();
     void initialize(short index);
 
     // DC-attested inline accessor (ai_combat.h roster, dc 0x2c668).
@@ -515,6 +526,66 @@ public:
     // combat it starts. Declared only; the body is not reconstructed and
     // the row is not claimed from here.
     void CheckLevel();
+#endif
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+    // hero.obj's own view of the same two. GiveExperience calls
+    // CheckLevel on both of its arms, and GetLevel (dc 0xccc8c) is a
+    // DC row with NO retail body - GiveExperience carries it expanded.
+#  ifndef HOMM3_EVENTS_VIEW
+    void CheckLevel();
+#  endif
+    int GetLevel(int iExperience);
+#endif
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+    // 0x4d9b30, `ret 4` with `this` UNUSED - retail never reads ECX.
+    // The hero screen's yes/no prompt for taking a combination artifact
+    // apart: it builds `<artifact description>\n\n<general text 734>`
+    // and returns the dialog reply. The Dreamcast row that owns this
+    // slot is called ViewStat and takes three parameters; the retail
+    // body takes ONE and views an ARTIFACT, so the name here is an
+    // ORDINAL PLACEHOLDER and the arity is settled from the bytes (see
+    // the arity-divergence note in hero.cpp).
+    // 0x4d97f0, `ret 0` with no arguments and `this` a HERO - it walks
+    // army.armies and the hero-screen army widgets together. The DC row
+    // owning the slot is THeroScreenWindow::HeroMessageUpdate(char*);
+    // ORDINAL PLACEHOLDER name, arity settled from the bytes.
+    void HeroFn_004D97F0();
+    int HeroFn_004D9B30(int artifact);
+    // 0x4d9cc0, the ASSEMBLE partner of the row above and the same
+    // shape: `ret 4`, `this` unused, one artifact id in. It resolves the
+    // component's targetCombo, describes the ASSEMBLED artifact and asks
+    // general text 733 with the component's name formatted in. The DC
+    // row owning the slot is ViewArtifact (three parameters); ORDINAL
+    // PLACEHOLDER name, arity settled from the bytes.
+    int HeroFn_004D9CC0(int artifact);
+    // 0x4d9a00, third member of the same arity-divergent block: `ret 8`,
+    // `this` unused, an artifact RECORD and the quick-view flag in. It
+    // pops the artifact's own description, adding the spell icon
+    // (resource type 9, extra = the scroll's spell) only for a spell
+    // scroll. The DC row owning the slot is UpdateArmies and takes one
+    // parameter; ORDINAL PLACEHOLDER name, arity settled from the bytes.
+    void HeroFn_004D9A00(type_artifact* artifact, int isQuickView);
+    // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
+    // its luck and morale icon frames. Same gate, same reason.
+    void UpdateStats();
+#endif
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+    // Gated to hero.obj's own view: these five are used only inside
+    // hero.cpp, and declaring them unconditionally moved an UNRELATED
+    // compiland's score (recruitUnit::Update 90.84 -> 88.24) through the
+    // include-set sensitivity class with no semantic change anywhere.
+    //
+    // 0x4e2550, RETAIL-ONLY (no DC row), `ret 8`: the actual equip
+    // attempt HeroFn_004E2840 wraps. ORDINAL PLACEHOLDER.
+    unsigned char HeroFn_004E2550(long artifact, long slot);
+    // 0x4e2840, RETAIL-ONLY (no DC row), `ret 8`: decides whether the
+    // artifact being dragged may drop into an equipment slot.
+    // THeroScreenWindow::update_slot calls it THISCALL on gpCurrentHero
+    // with both ids on the stack. It is NOT DC's artifactAllowedInSlot
+    // (dc 0x37d88, an artifact.h FREE inline of 44 B already
+    // reconstructed in ai_player.cpp) - retail's is a 412-byte hero
+    // member. ORDINAL PLACEHOLDER name.
+    unsigned char HeroFn_004E2840(long artifact, long slot);
 #endif
     // 0x4e2370 - retypes every matching slot of the hero's own army.
     void UpgradeCreatures(int sourceCreatureType, int destCreatureType);
@@ -751,6 +822,19 @@ public:
     TCreatureType GetNecromancyCreature();
     const char* HeroFn_004D8FB0();
     unsigned char HeroFn_004DBE80(int combination);
+#ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+    // Same gate and same reason as the equip pair above.
+    // 0x4dbf30, the two-argument member of the combination family:
+    // strips every worn component of `combination` (plus whatever sits
+    // in `slot`) and equips the assembled artifact. ORDINAL PLACEHOLDER.
+    unsigned char HeroFn_004DBF30(int combination, long slot);
+    // 0x4dc100, the family's NOTIFIER: called after a slot changes, it
+    // records the assembled combination the artifact belongs to, or -
+    // when every component of a combination is now worn - offers the
+    // assembly through a NormalDialog and calls HeroFn_004DBF30 on yes.
+    // ORDINAL PLACEHOLDER.
+    void HeroFn_004DC100(long slot);
+#endif
     boat* find_summonable_boat();
     // Claimed in src/hero.cpp (0x4d7900, dc 0xcaedc); declared here
     // because town::remove_garrison_hero calls it with the town's
@@ -933,7 +1017,10 @@ public:
     // Constructor-initialized hero-list scroll origin. Locator i displays
     // localPlayer->heroes[topHero + i].
     int topHero;                    // +0x60
-    int field_64;                   // +0x64, role not yet admitted
+    // +0x64. The constructor stores Widgets.back() here immediately
+    // after reserving - i.e. the last widget CAdvPopup's own body left
+    // in the list. Same four bytes the ordinal placeholder used to name.
+    widget* field_64;
 
     THeroScreenWindow();
     virtual ~THeroScreenWindow();
@@ -944,6 +1031,20 @@ public:
     virtual int ExitDialog(class message* msg);
 };
 SIZE(THeroScreenWindow, 0x68);
+
+// The live hero-screen window. HeroView (0x4e1800) stores its
+// `new THeroScreenWindow` result here (0x4e181c) before calling
+// SetupHeroView, and every hero-screen updater in this compiland
+// broadcasts through it - 49 retail references, all inside hero.obj's
+// hero-screen block plus hero::hero's clear. Spelling role-derived; no
+// public symbol survives for it.
+DATA(0x00698a78) extern THeroScreenWindow* gpHeroScreenWindow;
+// Retail 0x698a44, the hero screen's "army strip is live" flag. HeroView
+// clears it on entry; the army repaint at 0x4d97f0 uses it three ways -
+// it decides whether an EMPTY slot's widget is drawn at all, and it
+// gates both selection-highlight arms of an occupied slot. Role
+// inferred from those three reads; ORDINAL PLACEHOLDER name.
+DATA(0x00698a44) extern int gHeroScreenArmyStripLive;
 
 // CODEVIEW(E:\gamedcs\hero.cpp:1594, dc 0xcc49c) void THeroScreenWindow::HeroMessageUpdate(char* cText);
 // CODEVIEW(E:\gamedcs\hero.cpp:2477, dc 0xcd9c4) void THeroScreenWindow::UpdateHeroScreenStatusBar(message* msg);

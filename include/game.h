@@ -982,7 +982,19 @@ public:
     // row at +0x108: it pairs each entry with resources[i] while
     // deciding whether a resource trade is needed. The 0x20-byte lead
     // is the VC6-width form of the DC AI record's first two containers.
+#ifdef HOMM3_HERO_OBJ_DECLS
+    // hero.obj's NARROW VIEW of the same four bytes. Retail's
+    // hero::HeroFn_004DC100 (0x4dc100) walks this dword as a
+    // std::bitset<12> - one bit per combination artifact, "this player
+    // has already been offered / has assembled it" - and emits both the
+    // Dinkumware `12 <= _P` bounds check against bitset<12>::_Xran and
+    // the `[base + 4*(_P>>5)]` word addressing inline. Same offset, same
+    // width; every other translation unit keeps the ordinal name and its
+    // preprocessed text is unchanged.
+    std::bitset<12> assembledCombinations;      // +0xe8
+#else
     int aiField_e8;
+#endif
     char ai_pad_ec[0x1c];
     long turnProductionResource[7];  // +0x108
     // +0x128 / +0x160. calculate_demand writes each computed resource
