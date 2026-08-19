@@ -176,11 +176,40 @@ enum ECombatMineType {
 // idiom - nothing decoded so far bounds it. Name is a BOOTSTRAP
 // INVENTION; the DC roster only attests the owning combatManager::
 // TObstacle.
+// One row of the obstacle table at .rdata 0x63c7c8. place_obstacle
+// (0x466010) proves the 20-byte stride outright - it forms the row base
+// as `4 * (5 * id) + table` - and reads the two placement bounds at +4/+5
+// and the sprite name at +0x10 out of the same row it stores into
+// TObstacle::shape.
+#ifdef HOMM3_CMBTMGR_ICONS_VIEW
+// The eighteen combat hero animations, keyed `2 * townType + sex`.
+// Retail .rdata 0x63bd40; LoadIcons' `shl eax, 4` proves the 16-byte
+// stride and only the .def name is read, so the trailing three dwords
+// keep ordinal names (their retail values are a plausible draw offset
+// pair plus a small count). DC types the row combatManager::SCmbtHero
+// {SpriteName, castX, castY, castFrame}; the retail table is 18 rows
+// where the Dreamcast's is 16.
+struct TCombatHeroSprite {
+    const char* defName;
+    int field_04;
+    int field_08;
+    int field_0c;
+};
+DATA(0x0063bd40) extern const TCombatHeroSprite kCombatHeroSprites[18];
+#endif
+
 struct type_obstacle_shape {
-    char pad_00[0x6];
+    char pad_00[0x4];
+    // The lowest grid ROW this obstacle may be anchored in, and the
+    // number of columns it needs to the right of its anchor: retail
+    // rejects a candidate hex when `minRow > hex / 17` or when
+    // `width + hex % 17 > 15`. Names describe those two tests.
+    unsigned char minRow;             // +0x4
+    unsigned char width;              // +0x5
     unsigned char extra_hex_count;    // +0x6
     unsigned char pad_07;
-    signed char extra_hex_offsets[1]; // +0x8, extra_hex_count entries
+    signed char extra_hex_offsets[8]; // +0x8, extra_hex_count entries
+    const char* spriteName;           // +0x10
 };
 
 // Head model from the byte-proven leaves. The battlefield holds two
@@ -229,6 +258,18 @@ public:
         short pad_22;
     };
     static TWallTraits akWallTraits[9][18];
+#ifdef HOMM3_CMBTMGR_ICONS_VIEW
+    enum {
+        // The moat row of a town's eighteen wall records: LoadIcons
+        // (0x463370) suppresses exactly this row's five icons for
+        // Stronghold under the pre-expansion ruleset, and the static
+        // table's row 2 is the SgCsMoat.pcx group. Gated because an
+        // ungated enumerator counts toward the include-set threshold in
+        // every consumer - it moved command.obj's GetCommand when it was
+        // visible to that TU.
+        WALL_TRAITS_ROW_MOAT = 2
+    };
+#endif
     // One placed obstacle. Stride 0x18 is byte-proven by RemoveObstacle
     // (0x466b30), which divides the manager's obstacle vector extent
     // (+0x13d5c .. +0x13d60) by 24 with the 0x2aaaaaab/sar 2 magic; the
@@ -257,7 +298,11 @@ public:
         // obstacle deals, stored per obstacle when it is placed.
         // Name provisional; no roster reaches the slot.
         long spell_damage;                  // +0xc
-        char pad_10[0x8];
+        // place_obstacle stamps these two on every obstacle it builds -
+        // +0x10 zero and +0x14 all-ones - alongside field_09/-1 and
+        // field_0a/1. No reader is decoded, so both stay ordinals.
+        long field_10;                      // +0x10
+        long field_14;                      // +0x14
     };
 
     // Dinkumware's four-word vector representation. FreeIcons exposes the
@@ -283,6 +328,15 @@ public:
         ~TObstacleVector();
 
         void Destroy(TObstacle* first, TObstacle* last);
+#ifdef HOMM3_CMBTMGR_OBSTACLE_VIEW
+        // Dinkumware's own null-guarded size(): place_obstacle folds the
+        // `begin == 0 ? 0 : end - begin` pair and the 0x2aaaaaab/sar 2
+        // divide by sizeof(TObstacle) inline right after the insert.
+        int size() const { return begin == 0 ? 0 : end - begin; }
+        // The out-of-line worker push_back reduces to. DECLARED, NOT
+        // DEFINED: retail CALLS it, so this TU must not see a body.
+        void insert(TObstacle* where, unsigned count, const TObstacle& value);
+#endif
         void erase(TObstacle* first, TObstacle* last)
         {
             TObstacle* vectorEnd = end;
@@ -418,7 +472,14 @@ public:
     // chosen target turns out to be on its OWN side. Name awaits a
     // writer - no roster or string reaches the pair.
     unsigned char field_53dc[2];      // +0x53dc
-    char pad_53de[0x26];
+    char pad_53de[0x6];
+    // Two per-side dword pairs LoadIcons (0x463370) clears alongside the
+    // two sprite pointers, at full int width (`mov [esi + 4*edi + 0x53e4],
+    // edx` with edx held at zero). No reader is decoded yet, so both
+    // names stay address ordinals.
+    int field_53e4[2];                // +0x53e4
+    int field_53ec[2];                // +0x53ec
+    char pad_53f4[0x10];
     CSprite* creatureSprites[2];       // +0x5404
     CSprite* heroFlagSprites[2];       // +0x540c
     char pad_5414[0x48];
@@ -692,6 +753,16 @@ public:
     unsigned char InLineOfSight(int sourceIndex, int destIndex) const;
     void UpdateArmyLuckAndMorale();
     void InitializeArchers();
+    void LoadIcons();
+#ifdef HOMM3_CMBTMGR_MORALE_VIEW
+    void CheckApplyGoodMorale(int group, int index);
+    int CheckApplyBadMorale(int group, int index);
+    // drawing.obj's four-argument overload (drawing.cpp:2524, dc 0x86ea0,
+    // retail 0x496840). Declared here because both CheckApply*Morale
+    // bodies call it; the body stays drawing.cpp's.
+    void SpellEffect(int effect, army* target_army, int iDelay,
+                     unsigned char bDoWince);
+#endif
     void FreeIcons();
     void Close();
     unsigned char HexIsBlocked(int index) const;
@@ -1231,6 +1302,12 @@ extern const char* const gTerrainCombatBackgrounds[9][3];    // 0x63d2f0
 // referenced address independently; indexing by ten shorts preserves
 // the common 20-byte stride.
 DATA(0x0063c7c8) extern const unsigned short gObstacleTerrainMasks[];
+#ifdef HOMM3_CMBTMGR_OBSTACLE_VIEW
+// The same 0x63c7c8 table, typed as its 20-byte rows. The DATA claim for
+// the rva is the shorts view above, so this alias carries none - the only
+// delta it can produce is a reloc NAME.
+extern const type_obstacle_shape gObstacleShapes[];
+#endif
 DATA(0x0063c7ca) extern const unsigned short gObstacleMagicTerrainMasks[];
 DATA(0x0063bec0) extern const unsigned short gLargeObstacleTerrainMasks[];
 DATA(0x0063bec2) extern const unsigned short gLargeObstacleMagicTerrainMasks[];

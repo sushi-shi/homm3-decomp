@@ -42,14 +42,20 @@
 #include <va.h>
 #include "advmgr.h"  // advManager::MoreTreesNear, for GetBackgroundName
 #include "bitmap816.h"
+#define HOMM3_CMBTMGR_ICONS_VIEW
+#define HOMM3_CMBTMGR_MORALE_VIEW
+#define HOMM3_CMBTMGR_OBSTACLE_VIEW
 #include "cmbtmgr.h"
+#define HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatwindow.h"
+#undef HOMM3_COMBATWINDOW_MESSAGE_VIEW
 #include "combatoptionswindow.h"
 #include "creaturetype.h" // UpgradedCreatureType, for RaiseSkeletons
 #include "csprite.h"  // CSprite::Dispose, for RemoveObstacle
 #include "game.h"     // gpGame ruleset gate, for RaiseSkeletons
 #include "hero.h"   // hero::IsWieldingArtifact, for ShotIsThroughWall
 #include "findpath.h" // searchArray::lower_door, for LowerDoor
+#include "kb.h"   // gText, the shared combat-message scratch buffer
 #include "kbwin.h"  // bVideoPaused storage, the network-game gate here
 #include "misc.h"   // TPickANumber, for PlaceAllObstacles
 #include "prefs.h"  // the local quick-combat preference
@@ -57,7 +63,9 @@
 #include "resourcemanager.h"
 #include "soundmgr.h" // SAMPLE2 / LoadPlaySample / WaitEndSample
 #include "remote.h"
+#define HOMM3_TEXT_COMBAT_MORALE_VIEW
 #include "textresource.h"
+#undef HOMM3_TEXT_COMBAT_MORALE_VIEW
 #include "town.h"   // TTownType, for IsInMoat's Fortress row
 #include "viewarmywindow.h"
 #include "winmgr.h"
@@ -166,16 +174,67 @@ void combatManager::Close()
     field_13300 = 0;
 }
 
-#if 0  // @carcass
+// Declared file-locally rather than by pulling border.h/button.h in: an
+// extern declaration is include-set inert where a whole header is not.
+void SetPlayerPaletteColors(palette* pal, int whichPlayer);
 
 // E:\gamedcs\cmbtmgr.cpp:902
+// EXACT 2026-08-20. Two source shapes are byte-forced here. The wall-row
+// base MUST be hoisted into a local: retail computes `akWallTraits +
+// 648*type` once with a single movsx before the nest, which VC6 cannot
+// do for an in-loop `defendingTown->type` because GetBitmap816 may
+// clobber memory - with the local, VC6 strength-reduces the source walk
+// to the flat dword index 2+9*wall (bound 164) that retail carries in
+// ebx. And the guard is retail's POSITIVE form: `(a || b || c) && name`
+// puts the load on the fallthrough path and shares one zero store, where
+// the De Morgan twin `(!a && !b && !c) || !name` emits the arms swapped.
 VA(0x00463370, 0x18D)  // anchor-global, dc 0x5ddc0
 void combatManager::LoadIcons()
 {
-    // @stub
-}
+    combatCellGridBitmap = ResourceManager::GetBitmap816(
+        DATA_COMPGEN(0x0066ff30, combatCellGridBitmapName, "ccellgrd.pcx"));
+    combatShadowBitmap = ResourceManager::GetBitmap816(
+        DATA_COMPGEN(0x0066ff20, combatShadowBitmapName, "ccellshd.pcx"));
+    combatGridBitmap = ResourceManager::GetBitmap816(
+        DATA_COMPGEN(0x0066ff10, combatGridBitmapName, "CmNumWin.pcx"));
 
-#endif  // @carcass
+    if (field_132f4 > 0) {
+        TWallTraits* traits = akWallTraits[defendingTown->type];
+        for (int wall = 0; wall < 18; wall++) {
+            for (int icon = 0; icon < 5; icon++) {
+                if ((gpGame->f_1f698 >= 2
+                        || defendingTown->type != TOWN_STRONGHOLD
+                        || wall != WALL_TRAITS_ROW_MOAT)
+                        && traits[wall].filenames[icon] != 0)
+                    combatIcons[wall][icon] = ResourceManager::GetBitmap816(
+                        traits[wall].filenames[icon]);
+                else
+                    combatIcons[wall][icon] = 0;
+            }
+        }
+    } else {
+        memset(combatIcons, 0, sizeof(combatIcons));
+    }
+
+    for (int side = 0; side < 2; side++) {
+        field_53e4[side] = 0;
+        field_53ec[side] = 0;
+        if (heroes[side]) {
+            creatureSprites[side] = ResourceManager::GetSprite(
+                kCombatHeroSprites[
+                    2 * akHeroClasses[heroes[side]->heroClass].townType
+                    + akHeroTraits[heroes[side]->id].sex].defName);
+            heroFlagSprites[side] = ResourceManager::GetSprite(side == 0
+                ? DATA_COMPGEN(0x0066ff04, leftFlagSpriteName, "CmFlagL.def")
+                : DATA_COMPGEN(0x0066fef8, rightFlagSpriteName, "CmFlagR.def"));
+            SetPlayerPaletteColors(heroFlagSprites[side]->GetPalette(),
+                playerIds[side]);
+        } else {
+            creatureSprites[side] = 0;
+            heroFlagSprites[side] = 0;
+        }
+    }
+}
 
 // E:\gamedcs\cmbtmgr.cpp:953
 VA(0x00463500, 0xFD)  // anchor-callee, dc 0x5dfb4
@@ -572,19 +631,138 @@ void combatManager::CombineGroups(armyGroup* src, armyGroup* dest)
     // @stub
 }
 
+#endif  // @carcass
+
+// Moved AHEAD of the two CheckApply*Morale bodies (it used to sit next
+// to LowerDoor): retail expands the quick-combat gate INLINE in both of
+// them - the `setne al / test al, al` tail on the global-mode arm is the
+// signature of an inlined unsigned char return - while Close, which
+// precedes this point, still CALLS the out-of-line const twin at
+// 0x46a4a0. Position is therefore load-bearing, not cosmetic.
+//
+// Dreamcast lists this as a cmbtmgr.h inline with no retail body.
+// LowerDoor's inlined branch graph proves all four inputs and the exact
+// distinction between network-side quick combat and the global mode.
+inline unsigned char combatManager::IsQuickCombat()
+{
+    if (gpGame->field_1f69d)
+        return 0;
+    if (gNetworkActive69954c && sideIsAI[0] && sideIsAI[1])
+        return gpGame->players[playerIds[0]].quickCombat
+            && gpGame->players[playerIds[1]].quickCombat;
+    return gCombatQuickMode69877c != 0;
+}
+
+// ai_tactical.cpp's byte-proven three-operand selector, spelled locally
+// for the same reason MaxOf below is: retail homes the rating and BOTH
+// bounds and picks between their addresses, which only a const-
+// reference-in / const-reference-out select produces. The (_V, _Hi, _Lo)
+// argument order is byte-proven there and again here - both morale
+// bodies materialise the high bound before the low one.
+template <class _TYPE>
+inline const _TYPE& _cpp_clamp(_TYPE _V, _TYPE _Hi, _TYPE _Lo)
+{
+    return (_V < _Lo ? _Lo : (_Hi < _V ? _Hi : _V));
+}
+
+// army::GetName (0x440100) as retail's cmbtmgr.cpp saw it - the DC
+// roster puts that body in Army.h (dc 0x4ca0c/0x4ca2c), i.e. an inline
+// this TU could expand, and both morale bodies do expand it rather than
+// call 0x440100. Spelled file-locally so our CL has a body to expand
+// too; static with no surviving reference, so no slot is expected.
+static const char* CreatureName(int type, long count)
+{
+    if (type >= 0 && type <= army::ARMY_CREATURE_LAST) {
+        if (count == 1)
+            return akCreatureTypeTraits[type].m_name;
+        return akCreatureTypeTraits[type].m_plural_name;
+    }
+    // army.cpp already owns the 0x691210 DATA_COMPGEN row for this
+    // literal; the linker folds our COMDAT onto it, so the only delta is
+    // a reloc NAME (masked).
+    return "";
+}
+
 // E:\gamedcs\cmbtmgr.cpp:2035
+// EXACT 2026-08-20. Three shapes are forced: the two attribute tests go
+// through army::Is (one CSE'd container load, `shr`+`test cl,1` per
+// bit) - an `& (1 << n)` spelling folds both into a single `test dword
+// ptr, imm` and loses seven bytes; the quick-combat gate is INLINE, so
+// this body has to sit after the inline IsQuickCombat definition above;
+// and army::GetName is expanded from the file-local CreatureName copy
+// because retail's Army.h carried that body where our army.cpp does not.
 VA(0x00464920, 0x211)  // anchor-global, dc 0x5f2b0
 void combatManager::CheckApplyGoodMorale(int group, int index)
 {
-    // @stub
+    if (group < 0)
+        return;
+    if (index < 0)
+        return;
+    army* stack = &armies[group][index];
+    if (bCreaturePlacement)
+        return;
+    if (stack->Is(27) & 1)
+        return;
+    if (stack->Is(24) & 1)
+        return;
+    if (!stack->numTroops)
+        return;
+    if (Random(1, 24) > _cpp_clamp(stack->morale, 3, -3))
+        return;
+    stack->creatureId = (stack->creatureId & ~0x04000000) | 0x01000000;
+    if (!IsQuickCombat()) {
+        SAMPLE2 sample = LoadPlaySample(
+            DATA_COMPGEN(0x0066ff6c, goodMoraleSampleName, "GoodMrle.wav"));
+        SpellEffect(20, stack, 100, 0);
+        sprintf(gText, gpGeneralText->GetText(GENERAL_TEXT_GOOD_MORALE),
+            CreatureName(stack->creatureType, stack->numTroops));
+        combatWindow->combat_message(gText, 1, 0);
+        WaitEndSample(sample, -1);
+    }
+    UpdateGrid(0, 1);
+    DrawFrame(1, 0, 0, 0, 1, 0);
 }
 
 // E:\gamedcs\cmbtmgr.cpp:2095
+// Residual (97.73%): the ONE remaining delta is the tail of the clamp's
+// inner ternary. Retail duplicates the selector store - `jle -> &_V` with
+// a separate `lea edx,&_Hi / mov [ebp+8],edx / jmp` arm - where our CL
+// tail-merges the two arms onto a shared `mov [ebp+8],eax` and inverts
+// the branch (`jg`). `homm3 vc6 why-branch` finds no catalog mutation
+// that reaches it (D6, retail-side duplication), and the shape is NOT
+// source-addressable here: retail itself emits our merged form in
+// CheckApplyGoodMorale above, where the selector wins a register instead
+// of a frame slot, from the identical _cpp_clamp call. Tried and
+// rejected: flipping the inner ternary to (_V < _Hi ? _V : _Hi), which
+// leaves this body at 97.72 and drops CheckApplyGoodMorale to 99.53;
+// early-return guards instead of the nested-if shape (72.80 - retail
+// shares ONE `return 0` epilogue and split returns duplicate it).
 VA(0x00464b40, 0x1FB)  // anchor-global, dc 0x5f3c4
 int combatManager::CheckApplyBadMorale(int group, int index)
 {
-    // @stub
+    if (group >= 0 && index >= 0) {
+        army* stack = &armies[group][index];
+        if (Random(1, 12) <= -_cpp_clamp(stack->morale, 3, -3)) {
+            if (sideIsAI[group] || Random(1, 4) != 1) {
+                stack->creatureId |= 0x04000000;
+                if (!IsQuickCombat()) {
+                    SAMPLE2 sample = LoadPlaySample(DATA_COMPGEN(
+                        0x0066ff7c, badMoraleSampleName, "BadMrle.wav"));
+                    sprintf(gText,
+                        gpGeneralText->GetText(GENERAL_TEXT_BAD_MORALE),
+                        CreatureName(stack->creatureType, stack->numTroops));
+                    combatWindow->combat_message(gText, 1, 0);
+                    SpellEffect(30, stack, 100, 1);
+                    WaitEndSample(sample, -1);
+                }
+                return 1;
+            }
+        }
+    }
+    return 0;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2152
 VA(0x00465080, 0x2A2)  // anchor-callee, dc 0x5f518
@@ -794,14 +972,90 @@ void combatManager::ResetHitByCreature()
     }
 }
 
-#if 0  // @carcass
-
 // E:\gamedcs\cmbtmgr.cpp:2768
+// RECONSTRUCTED 2026-08-20 (0.00 -> 49.09%). The candidate walk, both
+// placement bounds, the extra-hex sweep, the Fortress wall-column veto
+// and the whole TObstacle build/insert/PlaceObstacle tail are recovered;
+// the retail bytes settle three source shapes on the way:
+//   * the hex loop is a GOTO loop, not a while: retail has ONE Pick()
+//     call site, and a while/for(;;)+break gets rotated with the test
+//     duplicated into the failure tail (48.28 -> 49.09 on the switch);
+//   * the extra-hex rejections jump straight to the outer back edge, so
+//     they are gotos, not a break plus an `i < count` re-test (46.08 ->
+//     48.28);
+//   * the obstacle row is a 20-byte type_obstacle_shape, proven by
+//     retail forming the base as `4 * (5 * id) + table`.
+// Residual (49.09%): register transposition plus stack-slot reuse, not
+// source-addressable from here. Retail carries `hex` in ECX and the row
+// in EBX where this compile swaps them, which cascades - with EBX free,
+// retail keeps the odd-row flag in BL where we home it to a byte slot -
+// and retail spills the shape pointer into the dead `obstacle_id`
+// PARAMETER slot while our CL takes a fresh local. Retail also emits the
+// picker's vector destructor out of line on the failure path where our
+// CL inlines the operator delete. Tried and rejected: break + re-test,
+// while-loop form, and an int (rather than byte) odd-row flag.
 VA(0x00466010, 0x243)  // dc-callgraph unique, dc 0x60354
 unsigned char combatManager::place_obstacle(int obstacle_id)
 {
-    // @stub
+    const type_obstacle_shape* shape = &gObstacleShapes[obstacle_id];
+    TPickANumber picker(0x12, 0xa8);
+    int hex;
+next_hex:
+    hex = picker.Pick();
+    if (hex < 0x12)
+        return 0;
+    {
+        int row = hex / COMBAT_GRID_ROW_STRIDE;
+        if (shape->minRow > row)
+            goto next_hex;
+        int column = hex % COMBAT_GRID_ROW_STRIDE;
+        if (column == 0)
+            goto next_hex;
+        if (shape->width + column > 15)
+            goto next_hex;
+        if (cells[hex].field_10 & 0x3f)
+            goto next_hex;
+        unsigned char row_is_odd = static_cast<unsigned char>(row & 1);
+        for (int i = 0; i < shape->extra_hex_count; i++) {
+            int cell_index = shape->extra_hex_offsets[i] + hex;
+            if (row_is_odd
+                    && ((cell_index / COMBAT_GRID_ROW_STRIDE) & 1) == 0)
+                cell_index--;
+            int cell_column = cell_index % COMBAT_GRID_ROW_STRIDE;
+            if (cell_column <= 2)
+                goto next_hex;
+            if (cell_column >= 14)
+                goto next_hex;
+            if (cells[cell_index].field_10 & 0x3f)
+                goto next_hex;
+        }
+
+        if (gpGame->f_1f698 < 2 && field_132f4 >= 2
+                && defendingTown->type == TOWN_STRONGHOLD) {
+            int wall_column = gCastleWallColumns[row];
+            if (wall_column == COMBAT_HEX_GATE)
+                wall_column = 0x5d;
+            if (shape->width + hex >= wall_column - 2)
+                goto next_hex;
+        }
+
+        TObstacle obstacle;
+        obstacle.sprite = ResourceManager::GetSprite(shape->spriteName);
+        obstacle.shape = shape;
+        obstacle.hex = static_cast<unsigned char>(hex);
+        obstacle.field_09 = -1;
+        obstacle.field_0a = 1;
+        obstacle.spell_damage = 0;
+        obstacle.field_10 = 0;
+        obstacle.field_14 = -1;
+        obstacles.insert(obstacles.end, 1, obstacle);
+        PlaceObstacle(&obstacle, obstacles.size() - 1, hex, 2);
+        return 1;
+    }
+    goto next_hex;
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\cmbtmgr.cpp:2859
 VA(0x00466290, 0x607)  // anchor-callee, dc 0x60538
@@ -1042,19 +1296,6 @@ unsigned char combatManager::should_lower_door(army* this_army, long hex) const
             || second == COMBAT_HEX_OUTER_MOAT)
         return 1;
     return 0;
-}
-
-// Dreamcast lists this as a cmbtmgr.h inline with no retail body.
-// LowerDoor's inlined branch graph proves all four inputs and the exact
-// distinction between network-side quick combat and the global mode.
-inline unsigned char combatManager::IsQuickCombat()
-{
-    if (gpGame->field_1f69d)
-        return 0;
-    if (gNetworkActive69954c && sideIsAI[0] && sideIsAI[1])
-        return gpGame->players[playerIds[0]].quickCombat
-            && gpGame->players[playerIds[1]].quickCombat;
-    return gCombatQuickMode69877c != 0;
 }
 
 // E:\gamedcs\cmbtmgr.cpp:3378

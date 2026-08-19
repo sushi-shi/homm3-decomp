@@ -32,6 +32,12 @@ public:
     // TCombatWindow::ClearCombatMessages (combatwindow.cpp:417, 58 SH4
     // bytes against 54).
     void ClearCombatMessages();
+#ifdef HOMM3_COMBATWINDOW_MESSAGE_VIEW
+    // Retail 0x472e90, the message line ClearCombatMessages forwards to
+    // and the one combatManager's morale/damage bodies print through.
+    void combat_message(const char* new_text, unsigned char keep,
+                        unsigned char priority);
+#endif
 };
 SIZE(TCombatWindow, 0x8c);
 
