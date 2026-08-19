@@ -1437,15 +1437,54 @@ unsigned char hero::HeroFn_004DBE80(int combination)
     return !missingComponents.any();
 }
 
-#if 0  // @carcass
-
+// The ASSEMBLE half of the family, and the exact inverse of
+// HeroFn_004DC070 below: it takes the component mask apart instead of
+// putting it back. Three pieces are byte-proven -
+//   * the mask is COPIED (`rep movsd` of five dwords into the frame),
+//     not referenced, because the walk destroys it;
+//   * the walk's only bound is the copy's own `any()` - the five-word
+//     descending `for (_I = _Nw; 0 <= _I; --_I)` scan Dinkumware's
+//     bitset carries - so the slot index runs down with NO test of its
+//     own, exactly as in update_slot;
+//   * the `[edx]` re-read before the reset is real: the `_Xran` call on
+//     the test path is what stops VC6 reusing the value it just tested.
+//
+// Residual (99.9%): ONE frame slot. Every instruction agrees; retail's
+// `sub esp,0x1c` packs the 20-byte mask copy at [ebp-0x1c] and lets the
+// `combination * 24` address temp live in `combined.extra`'s own
+// [ebp-4] - the two never overlap - while our CL spends a separate slot
+// and runs `sub esp,0x20`. Tried and rejected, one compile each:
+// dropping the loop's `artifactId` local (99.88, byte-flat); declaring
+// `combined` FIRST and filling its two fields at the end, which is the
+// declaration order that WOULD produce retail's layout but pays for the
+// default constructor's two -1 stores (93.35); and binding
+// `gCombinationArtifacts[combination]` to a const reference (83.38).
 VA(0x004dbf30, 0x133)  // retail-only, hero member, ret 8
-unsigned char hero::HeroFn_004DBF30(int combo, long slot)
+unsigned char hero::HeroFn_004DBF30(int combination, long slot)
 {
-    // @stub
-}
+    std::bitset<144> components =
+        gCombinationArtifacts[combination].components;
+    if (slot != -1) {
+        components.reset(equipped[slot].artifactId);
+        remove_artifact(slot);
+    }
 
-#endif  // @carcass
+    int i = 19;
+    while (components.any()) {
+        i--;
+        int artifactId = equipped[i].artifactId;
+        if (artifactId == ARTIFACT_NONE)
+            continue;
+        if (!components.test(artifactId))
+            continue;
+        components.reset(equipped[i].artifactId);
+        remove_artifact(i);
+    }
+
+    type_artifact combined(gCombinationArtifacts[combination].artifactId,
+                           -1);
+    return equip_artifact(&combined, -1);
+}
 
 VA(0x004dc070, 0x87)  // retail-only, hero member, ret 4
 void hero::HeroFn_004DC070(long slot)

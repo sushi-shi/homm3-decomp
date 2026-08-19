@@ -770,6 +770,10 @@ public:
     TCreatureType GetNecromancyCreature();
     const char* HeroFn_004D8FB0();
     unsigned char HeroFn_004DBE80(int combination);
+    // 0x4dbf30, the two-argument member of the same combination family:
+    // strips every worn component of `combination` (plus whatever sits
+    // in `slot`) and equips the assembled artifact. ORDINAL PLACEHOLDER.
+    unsigned char HeroFn_004DBF30(int combination, long slot);
     boat* find_summonable_boat();
     // Claimed in src/hero.cpp (0x4d7900, dc 0xcaedc); declared here
     // because town::remove_garrison_hero calls it with the town's
