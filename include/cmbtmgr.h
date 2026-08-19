@@ -418,7 +418,14 @@ public:
     // chosen target turns out to be on its OWN side. Name awaits a
     // writer - no roster or string reaches the pair.
     unsigned char field_53dc[2];      // +0x53dc
-    char pad_53de[0x26];
+    char pad_53de[0x6];
+    // Two per-side dword pairs LoadIcons (0x463370) clears alongside the
+    // two sprite pointers, at full int width (`mov [esi + 4*edi + 0x53e4],
+    // edx` with edx held at zero). No reader is decoded yet, so both
+    // names stay address ordinals.
+    int field_53e4[2];                // +0x53e4
+    int field_53ec[2];                // +0x53ec
+    char pad_53f4[0x10];
     CSprite* creatureSprites[2];       // +0x5404
     CSprite* heroFlagSprites[2];       // +0x540c
     char pad_5414[0x48];
@@ -692,6 +699,7 @@ public:
     unsigned char InLineOfSight(int sourceIndex, int destIndex) const;
     void UpdateArmyLuckAndMorale();
     void InitializeArchers();
+    void LoadIcons();
     void FreeIcons();
     void Close();
     unsigned char HexIsBlocked(int index) const;
