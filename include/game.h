@@ -88,9 +88,14 @@ SIZE(TreasureData, 0x4c);
 // proves their +4-shifted offsets (its Dinkumware string/vector objects are
 // four bytes wider than STLport's) through BlackBoxData's destructor.
 #if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
+// Both members spelled int rather than TSecondarySkill/TSkillMastery, for
+// the reason armyGroup::armies is spelled int: loadBlackBox deserializes
+// each from a one-byte stream field straight into the four-byte slot, and
+// an enum here would put a cast into an enum domain on every load. The DC
+// declarators' types survive in the member names.
 struct SecondarySkillData {
-    TSecondarySkill type;
-    TSkillMastery level;
+    int type;
+    int level;
 };
 SIZE(SecondarySkillData, 8);
 
@@ -106,8 +111,11 @@ public:
     int ResQty[7];                         // +0x5c
     signed char PrimarySkillBonus[4];      // +0x78
     std::vector<SecondarySkillData> SecondarySkills; // +0x7c
-    std::vector<TArtifact> Artifacts;       // +0x8c
-    std::vector<SpellID> Spells;            // +0x9c
+    // Element type int for SecondarySkillData's reason - loadBlackBox
+    // writes a widened stream byte into each slot. DC: vector<TArtifact>
+    // and vector<SpellID>, preserved in the member names.
+    std::vector<int> Artifacts;             // +0x8c
+    std::vector<int> Spells;                // +0x9c
     armyGroup Creatures;                    // +0xac
 
     ~BlackBoxData();
@@ -221,6 +229,8 @@ public:
     int saveTreasureData(TAbstractFile* outfile, TreasureData* treasure);
     int saveMonsterData(TAbstractFile* outfile, MonsterData* monster);
     int saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox);
+    int loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+                     int saveVersion);
     int loadMonsterList(TAbstractFile* infile);
     // `ret 8`: the save version rides along to TTimedEvent::Read.
     int readTimedEventList(TAbstractFile* infile, int saveVersion);

@@ -1366,6 +1366,7 @@ mapcell	?get_map_object@NewmapCell@@QAE?AW4TAdventureObjectType@@XZ	93.4848	93.4
 mapcell	?get_object_type_ptr@CObject@@QAEPAVCObjectType@@XZ	100.0000	100.0000	100.0000	0xfec10
 mapcell	?get_special_terrain@NewmapCell@@QBE?AW4TAdventureObjectType@@XZ	79.0935	79.0935	79.0935	0xfce20
 mapcell	?is_diggable@NewmapCell@@QAEEXZ	96.1585	96.1585	96.1585	0xfccf0
+mapcell	?loadBlackBox@NewfullMap@@QAEHPAVTAbstractFile@@PAVBlackBoxData@@H@Z	89.8635	89.8635	89.8635	0x100430
 mapcell	?loadMapLayer@NewfullMap@@QAEHPAVTAbstractFile@@HHH@Z	100.0000	100.0000	100.0000	0xfe920
 mapcell	?loadMonsterList@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x101790
 mapcell	?loadObject@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x1036d0
@@ -1404,7 +1405,6 @@ mapcell	NewfullMap_Read	0.0000	0.0000	0.0000	0xfd690
 mapcell	NewfullMap_Save	0.0000	0.0000	0.0000	0xfdf40
 mapcell	NewfullMap_StampObject	0.0000	0.0000	0.0000	0x105230
 mapcell	NewfullMap_calc_cell_extra	0.0000	0.0000	0.0000	0x105610
-mapcell	NewfullMap_loadBlackBox	0.0000	0.0000	0.0000	0x100430
 mapcell	NewfullMap_loadBlackBoxList	0.0000	0.0000	0.0000	0x100200
 mapcell	NewfullMap_loadMapObjects	0.0000	0.0000	0.0000	0x104b70
 mapcell	NewfullMap_readBlackBox	0.0000	0.0000	0.0000	0xff6b0
