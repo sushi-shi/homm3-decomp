@@ -1372,6 +1372,7 @@ mapcell	?readArtifactData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0
 mapcell	?readGeneratorData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0xfed40
 mapcell	?readMineData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101020
 mapcell	?readSignData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	100.0000	100.0000	100.0000	0x101270
+mapcell	?readSpellScrollData@NewfullMap@@QAEHPAVTAbstractFile@@PAVCObject@@@Z	92.9888	92.9888	92.9888	0xff2f0
 mapcell	?readTreasureData@NewfullMap@@QAEHPAVTAbstractFile@@PAVTreasureData@@@Z	100.0000	100.0000	100.0000	0xfee50
 mapcell	?saveMapObjects@NewfullMap@@QAEHPAVTAbstractFile@@@Z	100.0000	100.0000	100.0000	0x104a40
 mapcell	?saveMonsterData@NewfullMap@@QAEHPAVTAbstractFile@@PAVMonsterData@@@Z	100.0000	100.0000	100.0000	0x101980
@@ -1408,7 +1409,6 @@ mapcell	NewfullMap_readObject	0.0000	0.0000	0.0000	0x102e00
 mapcell	NewfullMap_readObjectType	0.0000	0.0000	0.0000	0x103780
 mapcell	NewfullMap_readResourceData	0.0000	0.0000	0.0000	0xff4d0
 mapcell	NewfullMap_readScholarData	0.0000	0.0000	0.0000	0x100b30
-mapcell	NewfullMap_readSpellScrollData	0.0000	0.0000	0.0000	0xff2f0
 mapcell	NewfullMap_readTimedEventList	0.0000	0.0000	0.0000	0xfc000
 mapcell	NewfullMap_readTownData	0.0000	0.0000	0.0000	0x1019f0
 mapcell	NewfullMap_saveBlackBox	0.0000	0.0000	0.0000	0xffea0

@@ -731,14 +731,72 @@ int NewfullMap::readArtifactData(TAbstractFile* infile, CObject* artifactObject)
     return 0;
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:1421
 VA(0x004ff2f0, 0x1D8)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee2e0
-int NewfullMap::readSpellScrollData(void* infile, CObject* scrollObject)
+// The scroll record is the artifact record plus a payload tail, and the
+// two share this file's custom-treasure preamble verbatim.
+//
+// The tail is what separates them: retail issues THREE virtual Read calls
+// here against readArtifactData's one (counted in the delinked object, which
+// is what put the missing statements on the map).  After the optional custom
+// treasure it reads the spell id into extraInfo's low byte - spelled
+// `x ^ ((x ^ v) & 0xff)` by the compiler, the ordinary masked insert - and
+// then three padding bytes whose short count is the only failure the tail
+// reports (`cmp eax,3 / sbb eax,eax`, i.e. -1 or 0).  Both paths through the
+// treasure block fall into it, so there is no early `return 1` the way the
+// artifact reader has.
+//
+// THE BRANCH FORM IS THE WHOLE DIFFERENCE, and it is worth 36 points.
+// Spelling the failure as an early `if (readTreasureData(...) != 0) return
+// -1;` scores 56.8659: our CL then duplicates the temporary's destructor and
+// the -1 epilogue inline at that point.  The `== 0 { ... } else { return -1; }`
+// form below scores 92.9888 - retail's `test eax,eax / jne` into the shared
+// cleanup.  Same semantics, same statements, and the arm placement is the
+// only thing that moved.
+//
+// Residual (92.9888%): retail keeps `infile` in EDI for the whole body and
+// spends the now-dead first parameter slot [ebp+0xb] as the one-byte read
+// buffer; this compile keeps reloading the parameter and gives the buffer a
+// local slot ([ebp-N]).  That is B4 stack assignment plus the ebx/edi
+// permutation that follows from it - the same class DrawAdvObj plateaus on,
+// and no source knob reaches it.  readArtifactData gets the param slot for
+// free because its single Read leaves `infile` dead immediately.
+int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject)
 {
-    // @stub
+    int treasureIndex = customTreasure.size();
+
+    unsigned char char_buffer;
+    scrollObject->extraInfo = 0;
+    if (static_cast<unsigned>(infile->Read(&char_buffer, 1)) < 1)
+        return -1;
+
+    if (char_buffer) {
+        TreasureData tempTreasure;
+        if (readTreasureData(infile, &tempTreasure) == 0) {
+            if (treasureIndex < 4000) {
+                customTreasure.push_back(tempTreasure);
+                scrollObject->extraInfo = ((treasureIndex | 0xfffff000) << 19)
+                    | (scrollObject->extraInfo & 0x7ffff);
+            }
+        } else {
+            return -1;
+        }
+    }
+
+    // The scroll's own payload, read whether or not a custom treasure
+    // record preceded it: the spell id into the low byte of extraInfo,
+    // then three bytes of padding whose short count is the only failure
+    // this tail reports.
+    if (static_cast<unsigned>(infile->Read(&char_buffer, 1)) < 1)
+        return -1;
+    scrollObject->extraInfo = (scrollObject->extraInfo & 0xffffff00)
+        | char_buffer;
+
+    unsigned char padding[3];
+    return static_cast<unsigned>(infile->Read(padding, 3)) < 3 ? -1 : 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:1470
 VA(0x004ff4d0, 0x1DA)  // order-map: sibling of 0xff120, calls readTreasureData 0x4fee50; called by readObject; EH-bearing, dc 0xee410
