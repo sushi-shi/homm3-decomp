@@ -102,6 +102,9 @@ inline const _TYPE& _cpp_min(_TYPE _X, _TYPE _Y)
 // by its own getter.
 // The two INT rows of the same band (0x63e9c8 and 0x63e9d8): mana per
 // day by Mysticism mastery and scouting radius in tiles.
+// Leadership's morale bonus by mastery (retail 0x63e9a8, the same
+// four-int band as the two rows below).
+static const int kLeadershipBonuses[kNumMasteries] = { 0, 1, 2, 3 };
 static const int kMysticismBonuses[kNumMasteries] = { 1, 2, 3, 4 };
 static const int kScoutingVisibility[kNumMasteries] = { 5, 6, 7, 8 };
 // Estates gold per day by mastery (retail 0x63ea18, the same band).
@@ -2499,12 +2502,72 @@ int hero::GetLuck(const hero* otherHero, unsigned char on_cursed_ground, unsigne
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\hero.cpp:5254
+// `otherHero` is DEAD - retail never reads [ebp+8]. The specialty arm is
+// the same shape hero::initialize carries for Intelligence, and the five
+// artifact bonuses are IsWieldingArtifact expansions: retail inlines the
+// nineteen-slot scan and its combination fallback but leaves the
+// self-recursive call out of line, which is the whole `cmp [eax],ID /
+// akArtifactTraits[ID].targetCombo / call` pattern repeated five times.
+// The Grail arm reads `active`, not `built` - the field town::HasBuilding
+// selects for check_included != 0 - and gates on TOWN_CASTLE.
+//
+// Residual (94.8%): three cosmetic items. Retail sinks `push ebx` past
+// the cursed-ground early return (our CL saves it in the prologue); the
+// final clamp homes `morale` at [ebp-8] and the +3 operand in the dead
+// `apply_limits` slot where ours picks the other assignment; and the
+// bitNumber reference is one relocation ADDEND - retail's
+// `bitNumber + 0xd0` is carved as its own data symbol, ours is the base
+// plus a displacement, which is a naming difference and not a byte one.
 VA(0x004e39b0, 0x2A9)  // anchor-global, dc 0xd41fc
-int hero::GetMorale(const hero* otherHero, unsigned char on_cursed_ground, unsigned char apply_limits)
+int hero::GetMorale(const hero* otherHero, unsigned char on_cursed_ground,
+                    unsigned char apply_limits)
 {
-    // @stub
+    if (on_cursed_ground)
+        return 0;
+
+    int morale = kLeadershipBonuses[skillLevel[eSecSkillLeadership]];
+    if (skillLevel[eSecSkillLeadership] > 0) {
+        const THeroSpecificAbility& ability = akHeroSpecificAbilities[id];
+        if (ability.type == eHeroAbilitySecondarySkill &&
+            ability.skill == eSecSkillLeadership)
+            morale = static_cast<long>((level * 0.05f + 1.0f) * morale);
+    }
+
+    if (IsWieldingArtifact(0x6c))
+        morale += 3;
+    if (IsWieldingArtifact(0x2d))
+        morale++;
+    if (IsWieldingArtifact(0x31))
+        morale++;
+    if (IsWieldingArtifact(0x32))
+        morale++;
+    if (IsWieldingArtifact(0x33))
+        morale++;
+
+    if (owner >= 0) {
+        playerData& player = gpGame->players[owner];
+        for (int i = 0; i < player.numTowns; i++) {
+            town* ownedTown = gpGame->GetTown(player.townIds[i]);
+            if ((ownedTown->active & bitNumber[HOLY_GRAIL_ID]) != 0 &&
+                ownedTown->type == TOWN_CASTLE) {
+                morale += 2;
+                break;
+            }
+        }
+    }
+
+    morale += field_11a;
+    if (flags & 0x800000)
+        morale += 500;
+    if (apply_limits)
+        return _cpp_min(_cpp_max(morale, -3), 3);
+    return morale;
 }
+
+#if 0  // @carcass
 
 // hero::GetNecromancyCreature - NO Dreamcast row; the name is the
 // PROVISIONAL one hero.h already carries (HD-crossbuild + IDA lineage,
