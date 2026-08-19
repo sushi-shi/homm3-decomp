@@ -4517,12 +4517,107 @@ unsigned char SaveGame(unsigned char bCampaignWinMode)
     // @stub
 }
 
+#endif  // @carcass
+
+// Per-priority playback volume for the adventure ambience. The row is
+// retail .rdata local to this TU (name provisional; the akScrollSpeedInc
+// pattern). It sits HERE, ahead of SetEnvironmentOrigin, because that is
+// the first of its two readers in retail's source order (advmgr.cpp:9785
+// against InsertSound's 10372) - it cannot have been declared any later.
+DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
+                                                        3,  2,  1,  0 };
+
 // E:\gamedcs\advmgr.cpp:9785
+// The adventure ambience re-seed. Retail proves all three phases: a
+// priority reset over the four active slots (silencing them outright when
+// `reset` is set), a square-ring scan that feeds InsertSound the ring
+// index as its priority, and a settle pass that drops anything left above
+// priority 5 and re-volumes whatever InsertSound touched. The scan runs
+// twice, soundsType 1 then 2 - pass 1 only re-prioritises sounds already
+// playing (InsertSound returns early on soundsType 1), pass 2 is the one
+// allowed to claim a free slot. The four running edge counters are what
+// make retail emit inc/inc/dec/dec rather than indexed addressing.
 VA(0x004183d0, 0x245)  // anchor-global, dc 0x1b164
 void advManager::SetEnvironmentOrigin(type_point point, int reset)
 {
-    // @stub
+    if (!gpSoundManager->field_84)
+        return;
+
+    int i;
+    for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
+        if (soundArray[i].soundId != LOOPING_SOUND_INVALID) {
+            if (reset) {
+                gpSoundManager->StopSample(
+                    loopedSample[soundArray[i].soundId]->field_1c);
+                soundArray[i].soundId = LOOPING_SOUND_INVALID;
+            }
+            soundArray[i].priority = 0x7f;
+        }
+    }
+
+    if (point.x == -1)
+        return;
+
+    if (!gUnk698764)
+        return;
+
+    touchedSounds = 0;
+
+    int x = point.x;
+    int y = point.y;
+    int z = point.z;
+
+    int soundsType;
+    for (soundsType = 1; soundsType <= 2; soundsType++) {
+        InsertSound(x, y, z, 0, soundsType);
+
+        int xMin = x;
+        int yMin = y;
+        int xMax = x;
+        int yMax = y;
+        int ring;
+        int edgeLength;
+        for (ring = 0, edgeLength = 0; edgeLength < 8;
+             ring++, edgeLength += 2) {
+            int topX = xMin;
+            int rightY = yMin;
+            int bottomX = xMax;
+            int leftY = yMax;
+            int k;
+            for (k = 0; k < edgeLength; k++) {
+                InsertSound(topX, yMin, z, ring, soundsType);
+                InsertSound(xMax, rightY, z, ring, soundsType);
+                InsertSound(bottomX, yMax, z, ring, soundsType);
+                InsertSound(xMin, leftY, z, ring, soundsType);
+                topX++;
+                rightY++;
+                bottomX--;
+                leftY--;
+            }
+            xMax++;
+            yMax++;
+            xMin--;
+            yMin--;
+        }
+    }
+
+    for (i = 0; i < ADVENTURE_ACTIVE_SOUND_COUNT; i++) {
+        if (soundArray[i].soundId != LOOPING_SOUND_INVALID
+            && soundArray[i].priority > 5) {
+            gpSoundManager->StopSample(
+                loopedSample[soundArray[i].soundId]->field_1c);
+            soundArray[i].soundId = LOOPING_SOUND_INVALID;
+        }
+        if (soundArray[i].soundId != LOOPING_SOUND_INVALID
+            && (touchedSounds & (1 << soundArray[i].soundId))) {
+            gpSoundManager->ModifySample(
+                loopedSample[soundArray[i].soundId]->field_1c, 100,
+                akSoundVolumes[soundArray[i].priority]);
+        }
+    }
 }
+
+#if 0  // @carcass
 
 // E:\gamedcs\advmgr.cpp:9929
 DC_ONLY(0x1b520, 0x88)
@@ -4746,12 +4841,6 @@ e_looping_sound_id advManager::GetSoundId(int x, int y, int z)
 // Consumed by InsertSound's lazy loader; owner TU unlocated, so the
 // nearest consumer declares (name provisional, role byte-proven).
 DATA(0x0065f794) extern const char* const gLoopingSoundNames[LOOPING_SOUND_COUNT];
-
-// Per-priority playback volume for the adventure ambience. The row is
-// retail .rdata local to this TU (name provisional; the akScrollSpeedInc
-// pattern).
-DATA(0x0063a64c) static const int akSoundVolumes[8] = { 32, 28, 20, 10,
-                                                        3,  2,  1,  0 };
 
 // E:\gamedcs\advmgr.cpp:10372
 VA(0x00418c10, 0x1B1)  // anchor-global, dc 0x1be10
