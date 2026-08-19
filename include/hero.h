@@ -117,8 +117,11 @@ struct type_artifact {
 // HOMM3_ADVMGR_QUICKINFO_VIEW: that macro also widens game.h, mapcell.h
 // and advmgr.h, and a compiland's include closure is load-bearing here
 // (the initialize_game_data precedent).
+// hero.obj owns the DEFINITION (0x4db3e0) and its own consumers need
+// the declarator too, so the compiland's view joins the gate.
 #if defined(HOMM3_ADVMGR_QUICKINFO_VIEW) \
-    || defined(HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS)
+    || defined(HOMM3_TOWNMGR_ARTIFACT_TEXT_DECLS) \
+    || defined(HOMM3_GAME_HERO_EXTRA_VIEW)
     std::basic_string<char, std::char_traits<char>, std::allocator<char> >
         get_description();
 #endif
@@ -525,6 +528,15 @@ public:
     void CheckLevel();
 #endif
 #ifdef HOMM3_GAME_HERO_EXTRA_VIEW
+    // 0x4d9b30, `ret 4` with `this` UNUSED - retail never reads ECX.
+    // The hero screen's yes/no prompt for taking a combination artifact
+    // apart: it builds `<artifact description>\n\n<general text 734>`
+    // and returns the dialog reply. The Dreamcast row that owns this
+    // slot is called ViewStat and takes three parameters; the retail
+    // body takes ONE and views an ARTIFACT, so the name here is an
+    // ORDINAL PLACEHOLDER and the arity is settled from the bytes (see
+    // the arity-divergence note in hero.cpp).
+    int HeroFn_004D9B30(int artifact);
     // 0x4e16d0 - repaints the hero screen's four primary-stat texts and
     // its luck and morale icon frames. Same gate, same reason.
     void UpdateStats();
