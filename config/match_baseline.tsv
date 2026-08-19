@@ -45,7 +45,7 @@ advmgr	?DrawAdvObjShadow@advManager@@QAEXHHHHH@Z	83.2068	83.2068	83.2068	0x11590
 advmgr	?DrawAdventureMapGems@advManager@@QAEXXZ	100.0000	100.0000	100.0000	0xf2f0
 advmgr	?DrawBoatPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x10760
 advmgr	?DrawBoatPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	100.0000	100.0000	100.0000	0x109b0
-advmgr	?DrawGround@advManager@@QAEXHHHHH@Z	94.8769	94.8769	94.8769	0x12900
+advmgr	?DrawGround@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x12900
 advmgr	?DrawHeroPart@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1667	98.1667	98.1667	0xfe30
 advmgr	?DrawHeroPartShadow@advManager@@QAEXHAAUTDrawParts@@HHHHHH@Z	98.1840	98.1840	98.1840	0x102c0
 advmgr	?DrawRiver@advManager@@QAEXHHHHH@Z	100.0000	100.0000	100.0000	0x11b80
