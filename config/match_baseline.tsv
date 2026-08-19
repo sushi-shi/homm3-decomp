@@ -1035,7 +1035,7 @@ hero	?modify_spell_damage@hero@@QAEJHHPBVarmy@@@Z	100.0000	100.0000	100.0000	0xe
 hero	?obscure_cell@type_obscuring_object@@QAEXW4TAdventureObjectType@@J@Z	100.0000	100.0000	100.0000	0xd75d0
 hero	?push_back@?$vector@HV?$allocator@H@std@@@std@@QAEXABH@Z	100.0000	100.0000	100.0000	0xe6500
 hero	?remove_artifact@hero@@QAEEW4TArtifact@@@Z	100.0000	100.0000	100.0000	0xe2dd0
-hero	?remove_artifact@hero@@QAEXJ@Z	74.4872	74.4872	76.0855	0xe2bd0
+hero	?remove_artifact@hero@@QAEXJ@Z	90.1966	90.1966	90.1966	0xe2bd0
 hero	?remove_backpack_artifact@hero@@QAEXF@Z	100.0000	100.0000	100.0000	0xe2d50
 hero	?restore_cell@type_obscuring_object@@QAEXXZ	100.0000	100.0000	100.0000	0xd76e0
 hero	?rotate_backpack_left@hero@@QAEXXZ	100.0000	100.0000	100.0000	0xdbdb0
