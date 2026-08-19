@@ -88,9 +88,14 @@ SIZE(TreasureData, 0x4c);
 // proves their +4-shifted offsets (its Dinkumware string/vector objects are
 // four bytes wider than STLport's) through BlackBoxData's destructor.
 #if defined(HOMM3_EVENTS_VIEW) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
+// Both members spelled int rather than TSecondarySkill/TSkillMastery, for
+// the reason armyGroup::armies is spelled int: loadBlackBox deserializes
+// each from a one-byte stream field straight into the four-byte slot, and
+// an enum here would put a cast into an enum domain on every load. The DC
+// declarators' types survive in the member names.
 struct SecondarySkillData {
-    TSecondarySkill type;
-    TSkillMastery level;
+    int type;
+    int level;
 };
 SIZE(SecondarySkillData, 8);
 
@@ -106,10 +111,17 @@ public:
     int ResQty[7];                         // +0x5c
     signed char PrimarySkillBonus[4];      // +0x78
     std::vector<SecondarySkillData> SecondarySkills; // +0x7c
-    std::vector<TArtifact> Artifacts;       // +0x8c
-    std::vector<SpellID> Spells;            // +0x9c
+    // Element type int for SecondarySkillData's reason - loadBlackBox
+    // writes a widened stream byte into each slot. DC: vector<TArtifact>
+    // and vector<SpellID>, preserved in the member names.
+    std::vector<int> Artifacts;             // +0x8c
+    std::vector<int> Spells;                // +0x9c
     armyGroup Creatures;                    // +0xac
 
+    // loadBlackBoxList's resize temp proves the constructor: after the
+    // TreasureData base and the three vectors have run their own, the only
+    // remaining store is a zero into +0x4c.
+    BlackBoxData() : HasCustomTreasure(0) {}
     ~BlackBoxData();
 };
 SIZE(BlackBoxData, 0xe4);
@@ -149,7 +161,10 @@ public:
     // appends through it.  blackBoxes still rides in pad_050 because
     // BlackBoxData is only forward-declared in this closure.
     std::vector<MonsterData> CustomMonsterList;
-    char pad_050[0x10];
+    // +0x50, first at +0x54. Sliced out of the pad now that BlackBoxData is
+    // a complete type in this closure: Save walks it with a 228-byte stride
+    // and loadBlackBoxList resizes it.
+    std::vector<BlackBoxData> blackBoxes;
     std::vector<TSeerHut> SeerHutList;
     std::vector<TQuestGuard> QuestGuardList;
     std::vector<TTimedEvent> TimedEventList;
@@ -198,7 +213,7 @@ public:
     }
     int Load(TAbstractFile* infile, int size, unsigned char twoLayers,
              int saveVersion);
-#ifdef HOMM3_GAME_OBJ_DECLS
+#if defined(HOMM3_GAME_OBJ_DECLS) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
     int Save(TAbstractFile* outfile, int size, unsigned char twoLayers);
 #endif
 #ifdef HOMM3_MAPCELL_OBJECTS_VIEW
@@ -206,15 +221,31 @@ public:
     int loadObject(TAbstractFile* infile, CObject* object);
     int saveObject(TAbstractFile* outfile, CObject* object);
     int saveObjectType(TAbstractFile* outfile, CObjectType* objectType);
+    int readObjectType(TAbstractFile* infile, CObjectType* objectType);
+    int loadObjectType(TAbstractFile* infile, CObjectType* objectType);
     int saveMapObjects(TAbstractFile* outfile);
+    // `ret 0xc`: the layer index is the third argument, and the return is
+    // the cell count (size * size), not a status.
+    int readMapLayer(TAbstractFile* infile, int size, int layer);
+    // `ret 0x10`: a fourth argument, the save version, which reaches only
+    // the per-cell upgrade pass.
+    int loadMapLayer(TAbstractFile* infile, int size, int layer,
+                     int saveVersion);
+    int saveMapLayer(TAbstractFile* outfile, int size, int layer);
     int readTreasureData(TAbstractFile* infile, TreasureData* treasure);
     int saveTreasureData(TAbstractFile* outfile, TreasureData* treasure);
     int saveMonsterData(TAbstractFile* outfile, MonsterData* monster);
+    int saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox);
+    int loadBlackBoxList(TAbstractFile* infile, int saveVersion);
+    int loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+                     int saveVersion);
+    int loadMonsterList(TAbstractFile* infile);
     // `ret 8`: the save version rides along to TTimedEvent::Read.
     int readTimedEventList(TAbstractFile* infile, int saveVersion);
     int loadTimedEventList(TAbstractFile* infile, int saveVersion);
     int saveTimedEventList(TAbstractFile* outfile);
     int saveTownEventList(TAbstractFile* outfile);
+    int loadTownEventList(TAbstractFile* infile, int saveVersion);
     int readGeneratorData(TAbstractFile* infile, CObject* object);
     int readArtifactData(TAbstractFile* infile, CObject* artifactObject);
     int readSpellScrollData(TAbstractFile* infile, CObject* scrollObject);
@@ -1049,9 +1080,12 @@ public:
     unsigned char spellDisabled[70];
     unsigned char field_90;
     char pad_00091[0x1f3c3];
-#elif defined(HOMM3_TOWN_OBJ_DECLS)
+#elif defined(HOMM3_TOWN_OBJ_DECLS) || defined(HOMM3_MAPCELL_OBJECTS_VIEW)
     char pad_00000[0x4a];
     // +0x4a, one scenario-level prohibition byte per retail town spell.
+    // mapcell.obj joins this arm for readScholarData, which rolls a random
+    // scholar reward by collecting every spell whose prohibition byte is
+    // clear and picking one.
     unsigned char spellDisabled[70];
     unsigned char field_90;
     char pad_00091[0x1f3c3];

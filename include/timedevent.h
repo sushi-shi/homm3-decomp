@@ -40,6 +40,12 @@ public:
     __int64 BuildBuildings;
     unsigned short generatorBonuses[7];
     char pad_4e[2];
+
+    // MapCell.h:400 in the DC roster - a header-inline default constructor.
+    // loadTownEventList's resize temp proves its whole body: after the base
+    // string is tidied it zeroes the eight bytes of BuildBuildings and
+    // nothing else, TownNum and the generator band staying uninitialized.
+    TTownEvent() { BuildBuildings = 0; }
 };
 SIZE(TTownEvent, 0x50);
 

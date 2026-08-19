@@ -277,12 +277,34 @@ int TTownEvent::Save(void* outfile)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:307
+// The Load twin of saveTownEventList (0x4fc770, exact): same three trailing
+// fields in the same order, with TTimedEvent::Load in place of Save and its
+// result discarded exactly as the Save side discards it.
 VA(0x004fc870, 0x1E4)  // order-map: Load-only caller, calls TTimedEvent::Load 0xfc6a0 (TTownEvent::Load inlined); EH-bearing, dc 0xebe3c
-int NewfullMap::loadTownEventList(void* infile)
+int NewfullMap::loadTownEventList(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    int count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    TownEventList.resize(count);
+    for (unsigned int i = 0; i < TownEventList.size(); ++i) {
+        TTownEvent& thisEvent = TownEventList[i];
+        thisEvent.TTimedEvent::Load(infile, saveVersion);
+        if (static_cast<unsigned>(infile->Read(&thisEvent.TownNum, 1)) < 1)
+            return -1;
+        if (static_cast<unsigned>(infile->Read(&thisEvent.BuildBuildings, 8)) < 8)
+            return -1;
+        if (static_cast<unsigned>(infile->Read(thisEvent.generatorBonuses, 14)) < 14)
+            return -1;
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:329
 DC_ONLY(0xebeec, 0x7E)
@@ -573,33 +595,398 @@ int NewfullMap::Load(void* infile, int size, unsigned char two_layers)
     // @stub
 }
 
-// E:\gamedcs\mapcell.cpp:759
-VA(0x004fdf40, 0x2D1)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save, dc 0xecdf8
-int NewfullMap::Save(void* outfile, int size, unsigned char two_layers)
+#endif  // @carcass
+
+// E:\gamedcs\mapcell.cpp:1293 / 1729 / 2695 in the DC roster, where all
+// three are members of NewfullMap. Retail inlines each at its only call
+// site - Save - and /OPT:REF drops the out-of-line copies, so there are no
+// carve rows to claim; they are file-local statics for loadMonsterData's
+// reason.
+//
+// They are NOT a tidying of Save's body, they are why Save compiles the way
+// it does. Written longhand inside Save, the caller's front-end mass lifts
+// the /Ob2 budget far enough that VC6 goes on to inline saveTreasureData,
+// saveMonsterData and saveTimedEventList as well, where retail calls all
+// three (measured: 28.0548%).
+static int saveBlackBoxList(NewfullMap* map, TAbstractFile* outfile)
 {
-    // @stub
+    int count = map->blackBoxes.size();
+    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < map->blackBoxes.size(); ++i) {
+        if (map->saveBlackBox(outfile, &map->blackBoxes[i]) < 0)
+            return -1;
+    }
+    return 0;
 }
+
+static int saveTreasureList(NewfullMap* map, TAbstractFile* outfile)
+{
+    int count = map->customTreasure.size();
+    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < map->customTreasure.size(); ++i) {
+        if (map->saveTreasureData(outfile, &map->customTreasure[i]) < 0)
+            return -1;
+    }
+    return 0;
+}
+
+static int saveMonsterList(NewfullMap* map, TAbstractFile* outfile)
+{
+    int count = map->CustomMonsterList.size();
+    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < map->CustomMonsterList.size(); ++i) {
+        if (map->saveMonsterData(outfile, &map->CustomMonsterList[i]) < 0)
+            return -1;
+    }
+    return 0;
+}
+
+// These last two have NO Dreamcast counterpart - the roster has no
+// saveSeerHutList or saveQuestGuardList - so the SPLIT is inferred, not
+// attested. What forces it is the byte evidence: with both blocks written
+// longhand inside Save, VC6 still had budget to inline saveTimedEventList
+// where retail calls it (50.7945%); splitting them out drops the budget
+// past that point and takes Save to 88.6918%. The names follow the three
+// attested list helpers above.
+static int saveSeerHutList(NewfullMap* map, TAbstractFile* outfile)
+{
+    int count = map->SeerHutList.size();
+    if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+        return -1;
+    for (unsigned int i = 0; i < map->SeerHutList.size(); ++i)
+        map->SeerHutList[i].save(outfile);
+    return 0;
+}
+
+static void saveQuestGuardList(NewfullMap* map, TAbstractFile* outfile)
+{
+    int count = map->QuestGuardList.size();
+    outfile->Write(&count, 2);
+    for (unsigned int i = 0; i < map->QuestGuardList.size(); ++i)
+        map->QuestGuardList[i].save(outfile);
+}
+
+// E:\gamedcs\mapcell.cpp:759
+// The save-game driver: two layers, the objects, then the five custom
+// record sets in the order their vectors sit in the class - black boxes,
+// treasure, monsters, seer huts, quest guards - and finally the two event
+// lists. Every list header is a two-byte count taken from size().
+//
+// The first three sets go through their own list helpers, which is what
+// keeps this body small enough for retail's inline decisions; the last two
+// are longhand here, and their size() is an out-of-line call by the time
+// the budget reaches them.
+//
+// Two asymmetries are retail's and are left alone: the quest-guard count's
+// Write carries no short-write gate where the other four do, and neither
+// seer huts nor quest guards check the per-record save's result.
+//
+// Residual (88.6918%): one inline decision, in the seer-hut helper. Retail
+// CALLS vector<TSeerHut>::size() there - twice, once before the loop and
+// once per iteration - where this compile still has budget to expand it.
+// predict-inline reports exactly that and nothing else. Every call, every
+// list and every gate is retail's; the remaining gap is how much /Ob2
+// budget is left by the time the fourth helper is expanded, and the two
+// levers that reached it are already pulled (28.0548 longhand -> 50.7945
+// with the three attested helpers -> 88.6918 with all five).
+VA(0x004fdf40, 0x2D1)  // order-map: calls saveTimedEventList 0xfc390, saveTownEventList 0xfc770, saveMapLayer 0xfe490 x2, saveMapObjects 0x104a40, TQuestGuard::save, dc 0xecdf8
+int NewfullMap::Save(TAbstractFile* outfile, int size, unsigned char twoLayers)
+{
+    if (saveMapLayer(outfile, size, 0) < 0)
+        return -1;
+    if (twoLayers) {
+        if (saveMapLayer(outfile, size, 1) < 0)
+            return -1;
+    }
+    if (saveMapObjects(outfile) < 0)
+        return -1;
+
+    if (saveBlackBoxList(this, outfile) < 0)
+        return -1;
+    if (saveTreasureList(this, outfile) < 0)
+        return -1;
+    if (saveMonsterList(this, outfile) < 0)
+        return -1;
+
+    if (saveSeerHutList(this, outfile) < 0)
+        return -1;
+    saveQuestGuardList(this, outfile);
+
+    if (saveTimedEventList(outfile) < 0)
+        return -1;
+    return saveTownEventList(outfile) >= 0 ? 0 : -1;
+}
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
+
+#endif  // @carcass
 
 // E:\gamedcs\mapcell.cpp:809
+// The .h3m map-layer reader, and NOT the twin of saveMapLayer: the map
+// format carries seven bytes per cell where the save format carries the
+// whole record.  Six of them are the terrain/river/road set-index pairs;
+// the seventh is a flag byte whose low six bits are the mirror flags, one
+// bit each, and whose bit 6 marks a coastal square.
+//
+// Everything after that byte is derived, not read, which is why this body
+// writes flags the stream never mentions:
+//   - a coastal square on anything but water becomes an ANCHOR_POINT and
+//     loses its trigger bit;
+//   - rock is the one impassable ground;
+//   - shallow water (index below 20) is beach border;
+//   - water, lava, rivers and roads are the animated surfaces.
+// The flag byte's own bit 6 and the cell's Passable bit share a position
+// by coincidence of the DC bit roster, not by assignment - the byte is
+// tested with `& 0x40` and never stored whole.
+//
+// Residual (95.4717%): every read, every derived flag and every block of
+// the CFG is retail's; what differs is where the flag byte is materialized.
+// Retail promotes it straight out of memory (`movsx eax, byte`) for the
+// five shifted bits, then RELOADS the byte for bit 0 and the `& 0x40`
+// test, and folds bit 0 into the preserved high bits with the xor-form
+// insert; this compile loads the byte into cl first, promotes out of the
+// register, keeps cl live to the end, and uses the or-form.  Everything
+// after that is the same permutation carried downstream, which is why the
+// three flag blocks below diff as register renames on identical shapes.
+// Measured and rejected: ascending bit order with a plain char (86.9764),
+// descending with a plain char (82.5519), and a per-use
+// static_cast<unsigned int> in place of the named hoist (95.4717, byte-
+// identical to this).  The unsigned hoist is what buys the 32-bit shift
+// domain at all - without it VC6 narrows every extraction to 8 bits.
+// why-reg v2 reports the bindings agreeing at every first definition, so
+// the divergence is past the B1 minimum slice: a caller-independent
+// scheduling/homing cap, not a spelling.
 VA(0x004fe220, 0x26B)  // order-map: leaf (file I/O devirtualized-inline); called x2 by Read 0xfd690 in the layer slot, dc 0xecf98
-int NewfullMap::readMapLayer(void* infile, int size, int layer)
+int NewfullMap::readMapLayer(TAbstractFile* infile, int size, int layer)
 {
-    // @stub
+    NewmapCell* thisCell = &cellData[Size * Size * layer];
+
+    for (int y = 0; y < size; ++y) {
+        for (int x = 0; x < size; ++x) {
+            signed char value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->GroundSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->GroundIndex = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RiverSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RiverIndex = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RoadSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RoadIndex = value;
+
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            unsigned int flags = value;
+            thisCell->RoadFlippedVertical = (flags >> 5) & 1;
+            thisCell->RoadFlippedHorizontal = (flags >> 4) & 1;
+            thisCell->RiverFlippedVertical = (flags >> 3) & 1;
+            thisCell->RiverFlippedHorizontal = (flags >> 2) & 1;
+            thisCell->GroundFlippedVertical = (flags >> 1) & 1;
+            thisCell->GroundFlippedHorizontal = value & 1;
+
+            if ((value & 0x40) && thisCell->GroundSet != eTerrainWater) {
+                thisCell->type = ANCHOR_POINT;
+                thisCell->is_trigger = 0;
+                thisCell->IsBeachBorder = 1;
+            }
+
+            thisCell->IsBlocked = 0;
+            thisCell->Passable = 1;
+            if (thisCell->GroundSet == eTerrainRock) {
+                thisCell->Passable = 0;
+                thisCell->IsBlocked = 1;
+            }
+
+            if (thisCell->GroundSet == eTerrainWater
+                && thisCell->GroundIndex < 20)
+                thisCell->IsBeachBorder = 1;
+
+            if (thisCell->GroundSet == eTerrainWater
+                || thisCell->GroundSet == eTerrainLava
+                || thisCell->RiverSet != 0 || thisCell->RoadSet != 0)
+                thisCell->Animated = 1;
+
+            ++thisCell;
+        }
+    }
+    return size * size;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
+
+#endif  // @carcass
 
 // E:\gamedcs\mapcell.cpp:908
+// The save-game layer writer, and the cleanest statement of NewmapCell's
+// serialized shape there is: the six signed 8-bit bitfields of the two
+// terrain units one byte at a time, then four words - the whole cellFlags
+// word, the object type narrowed to 16 bits, and the two object indices -
+// then the extraInfo dword, then the per-cell object vector as a count and
+// that many 4-byte records.
+//
+// The layer base is spelled as a flat index rather than through cell():
+// retail squares Size before multiplying by the layer, which is what
+// `Size * Size * layer` gives and what `(layer * Size + 0) * Size + 0`
+// does not.  The return value is the cell count, not a status.
 VA(0x004fe490, 0x22A)  // order-map: leaf; called x2 by Save 0xfdf40 in the layer slot, dc 0xed384
-int NewfullMap::saveMapLayer(void* outfile, int size, int layer)
+int NewfullMap::saveMapLayer(TAbstractFile* outfile, int size, int layer)
 {
-    // @stub
+    NewmapCell* thisCell = &cellData[Size * Size * layer];
+
+    for (int y = 0; y < size; ++y) {
+        for (int x = 0; x < size; ++x) {
+            char byteValue;
+            byteValue = static_cast<char>(thisCell->GroundSet);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+            byteValue = static_cast<char>(thisCell->GroundIndex);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+            byteValue = static_cast<char>(thisCell->RiverSet);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+            byteValue = static_cast<char>(thisCell->RiverIndex);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+            byteValue = static_cast<char>(thisCell->RoadSet);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+            byteValue = static_cast<char>(thisCell->RoadIndex);
+            if (static_cast<unsigned>(outfile->Write(&byteValue, 1)) < 1)
+                return -1;
+
+            short wordValue;
+            wordValue = static_cast<short>(thisCell->cellFlags);
+            if (static_cast<unsigned>(outfile->Write(&wordValue, 2)) < 2)
+                return -1;
+            wordValue = static_cast<short>(thisCell->type);
+            if (static_cast<unsigned>(outfile->Write(&wordValue, 2)) < 2)
+                return -1;
+            short indexValue;
+            indexValue = thisCell->objectIndex;
+            if (static_cast<unsigned>(outfile->Write(&indexValue, 2)) < 2)
+                return -1;
+            indexValue = thisCell->object_type_index;
+            if (static_cast<unsigned>(outfile->Write(&indexValue, 2)) < 2)
+                return -1;
+
+            unsigned long extra = thisCell->extraInfo;
+            if (static_cast<unsigned>(outfile->Write(&extra, 4)) < 4)
+                return -1;
+
+            int count = thisCell->objects.size();
+            if (static_cast<unsigned>(outfile->Write(&count, 4)) < 4)
+                return -1;
+
+            for (unsigned int i = 0; i < thisCell->objects.size(); ++i) {
+                if (static_cast<unsigned>(
+                        outfile->Write(&thisCell->objects[i], 4)) < 4)
+                    return -1;
+            }
+            ++thisCell;
+        }
+    }
+    return size * size;
 }
 
+#if 0  // @carcass -- located/reconstruction-pending bodies
+
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:995
+// The save-game layer reader, and the exact inverse of saveMapLayer field
+// for field.  FOUR arguments, not three: `ret 0x10` carries a save version
+// past the layer index, and it is spent in one place only - handing each
+// finished cell to the retail-only upgrade pass at 0x4fe6c0, which repacks
+// extraInfo for saves older than version 25.
+//
+// The two-byte object type widens into the four-byte enum field.  That is
+// the one crossing this body cannot spell without a cast: the stream
+// carries sixteen bits and TAdventureObjectType is a full int, so the
+// widening is a real domain crossing, not a modelling slip.
 VA(0x004fe920, 0x2E5)  // order-map: called x2 by Load 0xfdbc0 in the layer slot; retail body delegates to helper 0xfe6c0 (retail-only, unclaimed), dc 0xed688
-int NewfullMap::loadMapLayer(void* infile, int size, int layer)
+int NewfullMap::loadMapLayer(TAbstractFile* infile, int size, int layer,
+                             int saveVersion)
 {
-    // @stub
+    NewmapCell* thisCell = &cellData[Size * Size * layer];
+
+    for (int y = 0; y < size; ++y) {
+        for (int x = 0; x < size; ++x) {
+            signed char value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->GroundSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->GroundIndex = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RiverSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RiverIndex = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RoadSet = value;
+            if (infile->Read(&value, sizeof(value)) < sizeof(value))
+                return -1;
+            thisCell->RoadIndex = value;
+
+            unsigned short wordValue;
+            if (infile->Read(&wordValue, sizeof(wordValue)) < sizeof(wordValue))
+                return -1;
+            thisCell->cellFlags = wordValue;
+            if (infile->Read(&wordValue, sizeof(wordValue)) < sizeof(wordValue))
+                return -1;
+            thisCell->type_value = wordValue;
+
+            unsigned short indexValue;
+            if (infile->Read(&indexValue, sizeof(indexValue))
+                < sizeof(indexValue))
+                return -1;
+            thisCell->objectIndex = indexValue;
+            if (infile->Read(&indexValue, sizeof(indexValue))
+                < sizeof(indexValue))
+                return -1;
+            thisCell->object_type_index = indexValue;
+
+            unsigned long extra;
+            if (infile->Read(&extra, sizeof(extra)) < sizeof(extra))
+                return -1;
+            thisCell->extraInfo = extra;
+
+            int count;
+            if (infile->Read(&count, sizeof(count)) < sizeof(count))
+                return -1;
+            thisCell->objects.resize(count);
+
+            for (unsigned int i = 0; i < thisCell->objects.size(); ++i) {
+                if (infile->Read(&thisCell->objects[i],
+                                 sizeof(thisCell->objects[i]))
+                    < sizeof(thisCell->objects[i]))
+                    return -1;
+            }
+
+            upgrade_cell_extra_info(thisCell, saveVersion);
+            ++thisCell;
+        }
+    }
+    return size * size;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:1095
 DC_ONLY(0xed984, 0x98)
@@ -990,28 +1377,279 @@ BlackBoxData::~BlackBoxData()
 {
 }
 
-#if 0  // @carcass -- located/reconstruction-pending bodies
-
 // E:\gamedcs\mapcell.cpp:1751
+// The pandora's-box record, and the fullest statement of BlackBoxData's
+// layout there is - every offset the header models is written here in
+// order, and the total lands exactly on the armyGroup at +0xac that closes
+// the 228-byte record.
+//
+// saveTreasureData is INLINED into the leading conditional rather than
+// called, which is why the guardians flag gets a byte local of its own
+// while every other byte write shares one.
+//
+// Three list members go out as a one-byte count followed by that many
+// records; the counts are taken with the empty-vector guard, so a null
+// _First writes a literal zero rather than differencing two pointers.  The
+// fixed-length loops count with a signed `int` against 7 and 4, while the
+// three list loops compare against size() and so come out unsigned.
+//
+// The army tail is retail's own asymmetry: the creature type's Write is
+// NOT gated on a short write, only the count's is, and each rides in its
+// own short local.
 VA(0x004ffea0, 0x35A)  // order-map: calls armyGroup::GetNumArmies + armyGroup::save + saveString 0x4bbb60 (saveTreasureData inlined); called by Save (saveBlackBoxList inlined), dc 0xeebdc
-int NewfullMap::saveBlackBox(void* outfile, BlackBoxData* thisBox)
+int NewfullMap::saveBlackBox(TAbstractFile* outfile, BlackBoxData* thisBox)
 {
-    // @stub
+    unsigned char value = thisBox->HasCustomTreasure;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+
+    if (thisBox->HasCustomTreasure) {
+        if (saveTreasureData(outfile, thisBox) < 0)
+            return -1;
+    }
+
+    int dwordValue = thisBox->ExperienceBonus;
+    if (static_cast<unsigned>(outfile->Write(&dwordValue, 4)) < 4)
+        return -1;
+    dwordValue = thisBox->ManaBonus;
+    if (static_cast<unsigned>(outfile->Write(&dwordValue, 4)) < 4)
+        return -1;
+
+    value = thisBox->MoraleBonus;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    value = thisBox->LuckBonus;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+
+    int i;
+    for (i = 0; i < 7; ++i) {
+        dwordValue = thisBox->ResQty[i];
+        if (static_cast<unsigned>(outfile->Write(&dwordValue, 4)) < 4)
+            return -1;
+    }
+    for (i = 0; i < 4; ++i) {
+        value = thisBox->PrimarySkillBonus[i];
+        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+            return -1;
+    }
+
+    value = thisBox->SecondarySkills.size();
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    for (i = 0; i < thisBox->SecondarySkills.size(); ++i) {
+        value = thisBox->SecondarySkills[i].type;
+        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+            return -1;
+        value = thisBox->SecondarySkills[i].level;
+        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+            return -1;
+    }
+
+    value = thisBox->Artifacts.size();
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    for (i = 0; i < thisBox->Artifacts.size(); ++i) {
+        value = thisBox->Artifacts[i];
+        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+            return -1;
+    }
+
+    value = thisBox->Spells.size();
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    for (i = 0; i < thisBox->Spells.size(); ++i) {
+        value = thisBox->Spells[i];
+        if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+            return -1;
+    }
+
+    int numArmies = thisBox->Creatures.GetNumArmies();
+    value = numArmies;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    for (i = 0; i < numArmies; ++i) {
+        short creature = thisBox->Creatures.armies[i];
+        outfile->Write(&creature, 2);
+        short count = thisBox->Creatures.numTroops[i];
+        if (static_cast<unsigned>(outfile->Write(&count, 2)) < 2)
+            return -1;
+    }
+    return 0;
 }
 
+#if 0  // @carcass -- located/reconstruction-pending bodies
+
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:1891
+// The list header is a SHORT, as loadMonsterList's is, and the resize
+// default argument constructs a whole BlackBoxData on the frame - which is
+// where its constructor came from: after the TreasureData base and the
+// three vectors have run their own, the only remaining store is a zero
+// into HasCustomTreasure.
 VA(0x00500200, 0x222)  // order-map: calls loadBlackBox 0x500430; called by Load; EH-bearing, dc 0xef0a0
-int NewfullMap::loadBlackBoxList(void* infile)
+int NewfullMap::loadBlackBoxList(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    short count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    blackBoxes.resize(count);
+    for (unsigned int i = 0; i < blackBoxes.size(); ++i) {
+        if (loadBlackBox(infile, &blackBoxes[i], saveVersion) < 0)
+            return -1;
+    }
+    return 0;
+}
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
+
+#endif  // @carcass
+
+// E:\gamedcs\mapcell.cpp:1362 in the DC roster, where it is a member of
+// NewfullMap. Retail inlines it at its only call site and /OPT:REF drops
+// the out-of-line copy, so there is no carve row to claim - spelled a
+// file-local static for the same reason loadMonsterData is.
+static int loadTreasureData(TAbstractFile* infile, TreasureData* thisTreasure)
+{
+    loadString(infile, &thisTreasure->Message);
+
+    unsigned char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisTreasure->HasCustomGuardians = value != 0;
+    if (thisTreasure->HasCustomGuardians)
+        thisTreasure->Guardians.load(infile);
+    return 0;
 }
 
 // E:\gamedcs\mapcell.cpp:1914
+// The load twin of saveBlackBox, field for field, plus the one thing Save
+// has no counterpart for: a save VERSION, which picks the creature id's
+// width in the army tail - one byte below version 25, two from 25 on.
+//
+// The two customization flags are NORMALIZED on the way in (`setne`), not
+// copied, where every other scalar is a straight assignment. The three
+// list counts arrive as single signed bytes and are widened before resize.
+//
+// The three lists do not read alike, and the asymmetry is retail's:
+// secondary skills and spells come in as SIGNED bytes through checked
+// reads, while each artifact is an UNCHECKED one-byte read into a dword
+// local that is then masked - the same asymmetric artifact crossing
+// loadMonsterList has.
+//
+// Residual (89.8635%): every read, every field and every list is retail's;
+// the divergence is ONE inline decision. Retail CALLS
+// vector<SecondarySkillData>::erase out of the first resize and inlines it
+// (as copy + _Destroy, then as a raw copy loop) for the two later int
+// lists; this compile inlines all three, so its /Ob2 budget is still above
+// the 8-byte element's erase cost where retail's has fallen below it.
+// diagnose routes it to predict-inline and reports exactly `1 over-inline`.
+// The budget follows the caller's front-end mass, and this caller is a
+// faithful transcription of a body the DC roster gives as one function with
+// three parameters and six locals - so there is no statement to remove.
+// Measured on the way: consolidating the locals from twelve to six bought
+// back retail's reclaimed parameter slot for the byte local (89.7740 ->
+// 89.8635) but did not move the inline decision.
 VA(0x00500430, 0x478)  // order-map: calls armyGroup::load + Initialize + loadString 0x4bb990 (loadTreasureData inlined); sole caller loadBlackBoxList (DC-isomorphic), dc 0xef158
-int NewfullMap::loadBlackBox(void* infile, BlackBoxData* thisBox)
+int NewfullMap::loadBlackBox(TAbstractFile* infile, BlackBoxData* thisBox,
+                             int saveVersion)
 {
-    // @stub
+    signed char value;
+    int dwordValue;
+    int count;
+    int i;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->HasCustomTreasure = value != 0;
+    if (thisBox->HasCustomTreasure) {
+        if (loadTreasureData(infile, thisBox) < 0)
+            return -1;
+    }
+
+    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+        return -1;
+    thisBox->ExperienceBonus = dwordValue;
+    if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+        return -1;
+    thisBox->ManaBonus = dwordValue;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->MoraleBonus = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    thisBox->LuckBonus = value;
+
+    for (i = 0; i < 7; ++i) {
+        if (infile->Read(&dwordValue, sizeof(dwordValue)) < sizeof(dwordValue))
+            return -1;
+        thisBox->ResQty[i] = dwordValue;
+    }
+    for (i = 0; i < 4; ++i) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->PrimarySkillBonus[i] = value;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    thisBox->SecondarySkills.resize(count);
+    for (i = 0; i < count; ++i) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->SecondarySkills[i].type = value;
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->SecondarySkills[i].level = value;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    thisBox->Artifacts.resize(count);
+    for (i = 0; i < count; ++i) {
+        int artifact;
+        infile->Read(&artifact, sizeof(unsigned char));
+        thisBox->Artifacts[i] = artifact & 0xff;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    thisBox->Spells.resize(count);
+    for (i = 0; i < count; ++i) {
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisBox->Spells[i] = value;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    count = value;
+    thisBox->Creatures.Initialize();
+    for (i = 0; i < count; ++i) {
+        if (saveVersion < 25) {
+            signed char narrow;
+            infile->Read(&narrow, sizeof(narrow));
+            thisBox->Creatures.armies[i] = narrow;
+        } else {
+            short wide;
+            infile->Read(&wide, sizeof(wide));
+            thisBox->Creatures.armies[i] = wide;
+        }
+        short troops;
+        if (infile->Read(&troops, sizeof(troops)) < sizeof(troops))
+            return -1;
+        thisBox->Creatures.numTroops[i] = troops;
+    }
+    return 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:2073
 VA(0x005008b0, 0x27A)  // order-map: calls readBlackBox 0x4ff6b0 + armyGroup ctor; called by readObject; EH-bearing, dc 0xef5dc
@@ -1027,12 +1665,104 @@ int NewfullMap::readSeerData(void* infile, CObject* seerObject)
     // @stub
 }
 
+#endif  // @carcass
+
 // E:\gamedcs\mapcell.cpp:2300
+// One stream byte picks WHICH of the three scholar lanes is live, a second
+// carries its value, and -1 in the first means "roll it".  Everything else
+// this body does is derived.
+//
+// The three payload lanes are reset before the switch, and not to a single
+// sentinel: primary goes to 3 while secondary and spell go to -1, which as
+// signed 7- and 10-bit fields is every bit set.  VC6 folds all three writes
+// into one `and al,0xdf / or eax,0x7fffd8`, and that pair of constants is
+// what pins the lane boundaries.
+//
+// The random arms differ by lane.  A primary skill is a flat Random(0, 3),
+// but a secondary skill or a spell is drawn from a CANDIDATE LIST built on
+// the spot - every skill the scenario has not disabled, or every spell that
+// both belongs to a school and is not disabled - and then indexed by one
+// Random over the list's length.  That list is a std::vector<int> built
+// with push_back, which is why this body carries an EH frame and a vector
+// teardown on both arms.
+//
+// Residual (95.6955%): every read, every lane write, both candidate loops
+// and all eleven blocks are retail's - the whole divergence is that retail
+// keeps `infile` live in EDI for the length of the body, rematerializing it
+// (`mov edi,[ebp+8]`) after each vector teardown, where this compile lets it
+// die and re-reads the parameter slot for the final Read. Everything else in
+// the diff follows from that one register being occupied: retail spells the
+// switch normalization `sub ecx,0` with an immediate because EDI is busy,
+// this compile materializes the zero in EDI instead. why-reg v2 reports the
+// bindings agreeing at every first definition (infile->EDI on both sides),
+// so the split is past the B1 minimum slice; the B6 decl-order knob the
+// diagnoser proposes was measured - hoisting the padding buffer's
+// declaration to the top - and moved nothing (95.6955 either way).
 VA(0x00500b30, 0x2AE)  // order-map: calls Random 0x50b230 (DC parallel), only read-slot row between readEventData and readMineData; readSeerData has no retail row (quest-guard rewrite); EH-bearing, dc 0xefbb8
-int NewfullMap::readScholarData(void* infile, CObject* scholarObject)
+int NewfullMap::readScholarData(TAbstractFile* infile, CObject* scholarObject)
 {
-    // @stub
+    signed char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    unsigned char isRandom = 0;
+    if (value == -1) {
+        scholarObject->scholar_info.award = Random(0, 2);
+        isRandom = 1;
+    } else {
+        scholarObject->scholar_info.award = value;
+    }
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+
+    scholarObject->scholar_info.primary = 3;
+    scholarObject->scholar_info.secondary = -1;
+    scholarObject->scholar_info.spell = -1;
+
+    switch (scholarObject->scholar_info.award) {
+    case const_scholar_primary_skill:
+        if (isRandom)
+            scholarObject->scholar_info.primary = Random(0, 3);
+        else
+            scholarObject->scholar_info.primary = value;
+        break;
+
+    case const_scholar_secondary_skill:
+        if (isRandom) {
+            std::vector<int> candidates;
+            for (int skill = 0; skill < 28; ++skill) {
+                if (!gpGame->field_4e658[skill])
+                    candidates.push_back(skill);
+            }
+            scholarObject->scholar_info.secondary =
+                candidates[Random(0, candidates.size() - 1)];
+        } else {
+            scholarObject->scholar_info.secondary = value;
+        }
+        break;
+
+    case const_scholar_spell:
+        if (isRandom) {
+            std::vector<int> candidates;
+            for (int spell = 0; spell < 70; ++spell) {
+                if (akSpellTraits[spell].schoolBits
+                    && !gpGame->spellDisabled[spell])
+                    candidates.push_back(spell);
+            }
+            scholarObject->scholar_info.spell =
+                candidates[Random(0, candidates.size() - 1)];
+        } else {
+            scholarObject->scholar_info.spell = value;
+        }
+        break;
+    }
+
+    unsigned char padding[6];
+    return infile->Read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:2383
 DC_ONLY(0xefe28, 0x1C2)
@@ -1223,8 +1953,8 @@ int NewfullMap::readMonsterData(TAbstractFile* infile, CObject* monsterObject)
         return -1;
 
     if (hasCustomRecord) {
+        // The Artifact = ARTIFACT_NONE store is MonsterData's constructor.
         MonsterData tempMonster;
-        tempMonster.Artifact = ARTIFACT_NONE;
         readMapString(infile, &tempMonster.Message);
 
         for (int i = 0; i < 7; ++i) {
@@ -1291,12 +2021,62 @@ int NewfullMap::saveMonsterList(void* outfile)
     // @stub
 }
 
-// E:\gamedcs\mapcell.cpp:2717
-VA(0x00501790, 0x1E3)  // order-map: calls vector<MonsterData> grow 0x506d70 + loadString 0x4bb990 (loadMonsterData inlined); called by Load; EH-bearing, dc 0xf0788
-int NewfullMap::loadMonsterList(void* infile)
+#endif  // @carcass
+
+// E:\gamedcs\mapcell.cpp:2768 - the DC roster carries this as a member of
+// NewfullMap, but retail's only call site inlines it and /OPT:REF then drops
+// the out-of-line copy, so no carve row exists to claim.  It is spelled as a
+// file-local static for that reason: an inlined single-call static leaves no
+// symbol behind, where an extern member would leave one retail has not got.
+//
+// It must stay a separate function rather than being written longhand inside
+// loadMonsterList.  Longhand, the caller's front-end mass lifts the /Ob2
+// budget off its 1000 floor and VC6 inlines vector<MonsterData>::erase into
+// resize, where retail calls it.
+//
+// The artifact crossing is the asymmetric one.  saveMonsterData narrows the
+// int to a byte, so ARTIFACT_NONE goes out as 0xff; the load reads one byte
+// into a dword local and masks it, which is why the field is re-widened
+// through `& 0xff` and mapped back onto ARTIFACT_NONE rather than
+// sign-extended.  That final read carries no short-read gate in retail.
+static int loadMonsterData(TAbstractFile* infile, MonsterData* thisMonster)
 {
-    // @stub
+    loadString(infile, &thisMonster->Message);
+
+    for (int i = 0; i < 7; ++i) {
+        int value;
+        if (infile->Read(&value, sizeof(value)) < sizeof(value))
+            return -1;
+        thisMonster->ResQty[i] = value;
+    }
+
+    int artifact;
+    infile->Read(&artifact, sizeof(unsigned char));
+    thisMonster->Artifact = artifact & 0xff;
+    if (thisMonster->Artifact == (ARTIFACT_NONE & 0xff))
+        thisMonster->Artifact = ARTIFACT_NONE;
+    return 0;
 }
+
+// E:\gamedcs\mapcell.cpp:2717
+// The list count is a SHORT here, not the dword every other list header
+// uses, and it is sign-extended into resize.
+VA(0x00501790, 0x1E3)  // order-map: calls vector<MonsterData> grow 0x506d70 + loadString 0x4bb990 (loadMonsterData inlined); called by Load; EH-bearing, dc 0xf0788
+int NewfullMap::loadMonsterList(TAbstractFile* infile)
+{
+    short count;
+    if (infile->Read(&count, sizeof(count)) < sizeof(count))
+        return -1;
+
+    CustomMonsterList.resize(count);
+    for (unsigned int i = 0; i < CustomMonsterList.size(); ++i) {
+        if (loadMonsterData(infile, &CustomMonsterList[i]) < 0)
+            return -1;
+    }
+    return 0;
+}
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 #endif  // @carcass
 
@@ -1496,18 +2276,157 @@ int NewfullMap::readObjectType(void* infile, CObjectType* tempObjectType)
 }
 
 // E:\gamedcs\mapcell.cpp:3658
+#endif  // @carcass
+
+// The object-type record: the image name, the placement footprint, then the
+// FOUR 48-cell masks - the DC field list names them PlacementMask,
+// PassableMask, ShadowMask, TriggerMask and this body writes all four, which
+// is what proved the second one out of the pad at +0x1c.
+//
+// Each mask goes out as six bytes built one bit at a time: retail does not
+// dump the bitset's own two dwords, it walks 0..47 asking test() and sets
+// the matching bit of a packed little-endian buffer.  The signed div/mod by
+// eight in the address math is the loop counter's `int`, and the range check
+// VC6 hoists out of the first test() is bitset<48>::_Xran.
+//
+// The final Write returns 1, not 0, on success - the sbb/and/inc tail is a
+// `? -1 : 1` ternary, not the `? -1 : 0` every other serializer here ends on.
 VA(0x00503c40, 0x2B9)  // order-map: calls saveString 0x4bbb60 + bitset<48> helper (DC parallel); sole caller saveMapObjects 0x504a40, dc 0xf22cc
-int NewfullMap::saveObjectType(void* outfile, CObjectType* tempObjectType)
+int NewfullMap::saveObjectType(TAbstractFile* outfile,
+                               CObjectType* tempObjectType)
 {
-    // @stub
+    game::saveString(outfile, &tempObjectType->ImageName);
+
+    char value = tempObjectType->width;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+    value = tempObjectType->height;
+    if (static_cast<unsigned>(outfile->Write(&value, 1)) < 1)
+        return -1;
+
+    unsigned char packed[6];
+    int i;
+
+    memset(packed, 0, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        if (tempObjectType->drawCells.test(i))
+            packed[i / 8] |= 1 << (i % 8);
+    }
+    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+        return -1;
+
+    memset(packed, 0, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        if (tempObjectType->passableCells.test(i))
+            packed[i / 8] |= 1 << (i % 8);
+    }
+    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+        return -1;
+
+    memset(packed, 0, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        if (tempObjectType->shadowCells.test(i))
+            packed[i / 8] |= 1 << (i % 8);
+    }
+    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+        return -1;
+
+    memset(packed, 0, sizeof(packed));
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        if (tempObjectType->triggerCells.test(i))
+            packed[i / 8] |= 1 << (i % 8);
+    }
+    if (static_cast<unsigned>(outfile->Write(packed, 6)) < 6)
+        return -1;
+
+    short typeValue = tempObjectType->objectType;
+    if (static_cast<unsigned>(outfile->Write(&typeValue, 2)) < 2)
+        return -1;
+
+    int extra = tempObjectType->extra;
+    if (static_cast<unsigned>(outfile->Write(&extra, 4)) < 4)
+        return -1;
+
+    value = tempObjectType->suppressDraw;
+    return static_cast<unsigned>(outfile->Write(&value, 1)) < 1 ? -1 : 1;
 }
 
+#if 0  // @carcass -- located/reconstruction-pending bodies
+
 // E:\gamedcs\mapcell.cpp:3752
+#endif  // @carcass
+
+// The read twin of saveObjectType, and the inverse of its bit packing:
+// where Save walks the mask asking test() and builds six bytes, Load reads
+// six bytes and walks them calling set(i, bit).  Dinkumware's set() carries
+// its own range check, which is why bitset<48>::_Xran sits INSIDE this
+// loop where Save's test() let VC6 hoist it to the top.
+//
+// The trailing byte is normalized (`test al,al / setne`), not copied, so it
+// is a bool crossing where width and height are plain assignments.  And
+// like Save, this returns 1 on success rather than 0.
 VA(0x00503f00, 0x35D)  // order-map: calls loadString 0x4bb990 + bitset<48> helper (DC parallel); sole caller loadMapObjects 0x504b70, dc 0xf2784
-int NewfullMap::loadObjectType(void* infile, CObjectType* tempObjectType)
+int NewfullMap::loadObjectType(TAbstractFile* infile,
+                               CObjectType* tempObjectType)
 {
-    // @stub
+    loadString(infile, &tempObjectType->ImageName);
+
+    char value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObjectType->width = value;
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObjectType->height = value;
+
+    unsigned char packed[6];
+    int i;
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->drawCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->passableCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->shadowCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    if (infile->Read(packed, sizeof(packed)) < sizeof(packed))
+        return -1;
+    for (i = 0; i < sizeof(packed) * 8; ++i) {
+        tempObjectType->triggerCells.set(i,
+            (packed[i / 8] & (1 << (i % 8))) != 0);
+    }
+
+    unsigned short typeValue;
+    if (infile->Read(&typeValue, sizeof(typeValue)) < sizeof(typeValue))
+        return -1;
+    tempObjectType->objectTypeValue = typeValue;
+
+    int extra;
+    if (infile->Read(&extra, sizeof(extra)) < sizeof(extra))
+        return -1;
+    tempObjectType->extra = extra;
+
+    if (infile->Read(&value, sizeof(value)) < sizeof(value))
+        return -1;
+    tempObjectType->suppressDraw = value != 0;
+    return 1;
 }
+
+#if 0  // @carcass -- located/reconstruction-pending bodies
 
 // E:\gamedcs\mapcell.cpp:3838
 VA(0x00504470, 0x5C9)  // order-map: calls readObject 0x502e00 + readObjectType 0x503780 + GetSprite 0x55c7b0 + Random x2 (CObject ctor inlined) + progress-bar helpers; $E482-$E485 pair sits just before at 0x104260/0x104290 matching DC link order; EH-bearing, dc 0xf2c20

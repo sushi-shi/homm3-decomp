@@ -11,6 +11,8 @@ class type_quest;
 
 // Retail's constructor family and NewfullMap vector walks prove the packed
 // five-byte base: a quest pointer followed by the visited-player mask.
+class TAbstractFile;
+
 class TQuestGuard {
 public:
     type_quest* quest;
@@ -24,6 +26,10 @@ public:
     // hidden return buffer and calls it on the QuestGuardList element,
     // then strcpy's its c_str() into gText. Provisional name.
     std::string QuestGuardFn_00572D60();
+    // Reached from NewfullMap::Save, which calls it on every QuestGuardList
+    // element with the stream as its one argument. DECLARED, not defined:
+    // the body is an unclaimed carve row outside this compiland.
+    int save(TAbstractFile* outfile);
 
 protected:
     // TSeerHut initializes the shared bytes in its own body; retail's store
@@ -62,6 +68,10 @@ public:
     // quest-log body, on the other arm of its SeerHutList/QuestGuardList
     // split. Provisional name.
     std::string SeerHutFn_00574070();
+    // 0x573fd0, the SeerHutList twin of TQuestGuard::save and reached the
+    // same way from NewfullMap::Save. Declared, not defined - and declared
+    // separately because the TQuestGuard base is private here.
+    int save(TAbstractFile* outfile);
 };
 SIZE(TSeerHut, 0x13);
 

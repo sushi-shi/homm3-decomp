@@ -2,6 +2,7 @@
 #define HOMM3_ADVMGR_OBJECTS_H
 
 #include <bitset>
+#include <string>
 #include <vector>
 #include "armygrp.h"
 #include "mapcell.h"
@@ -157,7 +158,18 @@ int __fastcall Random(int minimum, int maximum);
 
 class CObject {
 public:
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    // readScholarData reaches the scholar lanes of this dword directly -
+    // it switches on a SIGNED three-bit award (`shl 0x1d / sar 0x1d`),
+    // which no mask spelling over the plain dword produces. Only that one
+    // arm is carried here; the other five typed views stay events-only.
+    union {
+        unsigned long extraInfo;
+        ScholarInfo scholar_info;
+    };
+#else
     unsigned long extraInfo;
+#endif
     unsigned char x;
     unsigned char y;
     unsigned char z;
@@ -189,18 +201,45 @@ SIZE(CObject, 0xc);
 
 class CObjectType {
 public:
-    char pad_00[0x10];
+    // The DC field list names every member of this record - ImageName,
+    // Width, Height, then the FOUR 48-cell masks PlacementMask,
+    // PassableMask, ShadowMask, TriggerMask, then Type/Extra/IsUnderlay -
+    // at DC offsets 0/12/13/16/24/32/40/48/52/56. Retail widens the leading
+    // string from 12 to 16 bytes and every offset after it moves by four,
+    // which saveObjectType then confirms one Write at a time.
+    std::basic_string<char, std::char_traits<char>, std::allocator<char> >
+        ImageName;
     signed char width;
     signed char height;
     char pad_12[2];
     std::bitset<48> drawCells;
-    char pad_1c[8];
+    // +0x1c, sliced out of the old pad: saveObjectType packs FOUR masks,
+    // not three, and this is the second of them. DC name PassableMask; the
+    // spelling follows its three siblings here rather than the DC's.
+    std::bitset<48> passableCells;
     std::bitset<48> shadowCells;
     // Fourth 48-cell mask, byte-proven at +0x2c by FindTrigger. The prior
     // padding spelling incorrectly conflated it with shadowCells at +0x24.
     std::bitset<48> triggerCells;
     char pad_34[4];
+    // loadObjectType stores the serialized type as a FULL DWORD - the
+    // stream carries two bytes and retail widens them into all four of
+    // +0x38..+0x3b. Overlaid rather than cast, exactly as NewmapCell's own
+    // type field is: a cast here would be the tree's first cast into an
+    // enum domain.
+    //
+    // GATED to the one view that deserializes the record. Unconditional,
+    // the extra declarator moved events.obj's monsters_sell_out 100.0 ->
+    // 99.95 through the include-set sensitivity class (measured 2026-08-20)
+    // with no semantic change anywhere; the layout is identical either way.
+#ifdef HOMM3_MAPCELL_OBJECTS_VIEW
+    union {
+        TAdventureObjectType objectType;
+        unsigned long objectTypeValue;
+    };
+#else
     TAdventureObjectType objectType;
+#endif
     int extra;
     unsigned char suppressDraw;
     char pad_41[3];
