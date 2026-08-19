@@ -70,13 +70,58 @@ int NewfullMap::readTimedEventList(void* infile)
 }
 
 // E:\gamedcs\mapcell.cpp:85
+#endif  // @carcass
+
+// The timed-event record.  Field order is fixed independently by Save
+// (0x4fc440, exact): message, seven resource deltas, the player mask, the
+// two apply-to flags, then the first-occurrence day and the repeat interval.
+//
+// Three details are retail's and none of them is tidy.  The record carries
+// TWO strings and the first is read into a throwaway - `readMapString` runs
+// once against a local and once against Message, which is why this body owns
+// a std::string it never reads and why every error path below the first read
+// releases it.  The first-occurrence day is incremented after reading
+// (`inc word ptr [ebx]`), so the stream stores it zero-based.  And the record
+// ends with sixteen discarded bytes.
+//
+// The apply-to-human flag is version-gated at save version 28, the same
+// boundary game::LoadGarrisonPool uses for its removable-units flag; below it
+// the flag is forced on rather than read.
 VA(0x004fc1a0, 0x1EE)  // order-map: callers readTimedEventList + readTownData (inlined TTownEvent::Read), calls readString 0x4c6010; EH-bearing, dc 0xeb7d0
-int TTimedEvent::Read(void* infile)
+int TTimedEvent::Read(TAbstractFile* infile, int saveVersion)
 {
-    // @stub
+    std::string ignored;
+    readMapString(infile, &ignored);
+    readMapString(infile, &Message);
+
+    if (infile->Read(ResQty, sizeof(ResQty)) < sizeof(ResQty))
+        return -1;
+    if (infile->Read(&PlayerFlags, sizeof(PlayerFlags)) < sizeof(PlayerFlags))
+        return -1;
+
+    if (saveVersion >= 28) {
+        unsigned char value;
+        infile->Read(&value, sizeof(value));
+        ApplyToHuman = value != 0;
+    } else {
+        ApplyToHuman = 1;
+    }
+
+    if (infile->Read(&ApplyToComputer, sizeof(ApplyToComputer))
+        < sizeof(ApplyToComputer))
+        return -1;
+    if (infile->Read(&FirstTime, sizeof(FirstTime)) < sizeof(FirstTime))
+        return -1;
+    ++FirstTime;
+    if (infile->Read(&Interval, sizeof(Interval)) < sizeof(Interval))
+        return -1;
+
+    unsigned char padding[16];
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+    return 0;
 }
 
-#endif  // @carcass
 
 // E:\gamedcs\mapcell.cpp:126
 VA(0x004fc390, 0xA5)  // order-map: Save-only caller, loop calling TTimedEvent::Save 0xfc440, dc 0xeb9a0
@@ -813,7 +858,9 @@ int NewfullMap::readSpellScrollData(TAbstractFile* infile, CObject* scrollObject
     scrollObject->extraInfo ^= (scrollObject->extraInfo ^ char_buffer) & 0xff;
 
     unsigned char padding[3];
-    return static_cast<unsigned>(infile->Read(padding, 3)) < 3 ? -1 : 0;
+    if (static_cast<unsigned>(infile->Read(padding, 3)) < 3)
+        return -1;
+    return 0;
 }
 
 // E:\gamedcs\mapcell.cpp:1470
@@ -864,7 +911,9 @@ int NewfullMap::readResourceData(TAbstractFile* infile, CObject* resourceObject)
     resourceObject->extraInfo ^= (resourceObject->extraInfo ^ amount) & 0x7ffff;
 
     unsigned char padding[4];
-    return static_cast<unsigned>(infile->Read(padding, 4)) < 4 ? -1 : 0;
+    if (static_cast<unsigned>(infile->Read(padding, 4)) < 4)
+        return -1;
+    return 0;
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
@@ -1333,7 +1382,9 @@ int NewfullMap::readGarrisonData(TAbstractFile* infile, CObject* garrisonObject,
     garrisonObject->extraInfo = gpGame->garrisons.size() - 1;
 
     unsigned char padding[8];
-    return infile->Read(padding, sizeof(padding)) < sizeof(padding) ? -1 : 0;
+    if (infile->Read(padding, sizeof(padding)) < sizeof(padding))
+        return -1;
+    return 0;
 }
 
 #if 0  // @carcass -- located/reconstruction-pending bodies
